@@ -33,7 +33,13 @@
 #define TD_BG     ""
 #define TR_ON     ""
 #define TABLE_DEFAULTS " CELLSPACING=0 CELLPADDING=2"
-#define DARK_BG   "BGCOLOR=\"#E7E9F2\"" /* If you change it change it into the stylesheet too */
+#define DARK_BG   "BGCOLOR=\"#E7E9F2\"" /* If you change it change it into the
+                                         * stylesheet too */
+#define TOMATO_BG "BGCOLOR=\"#FF6347\""
+#define GOLD_BG   "BGCOLOR=\"#FFD700\""
+#define SALMON_BG "BGCOLOR=\"FA8072\""
+#define WHEAT_BG  "BGCOLOR=\"F5DEB3\""
+#define AZURE_BG  "BGCOLOR=\"F0FFFF\""
 #endif
 
 
@@ -167,6 +173,7 @@ extern void printHTMLheader(char *title, char *htmlTitle, int headerFlags);
 extern char* printSSLError(int errorId);
 #endif /* HAVE_OPENSSL */
 extern void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable);
+extern int readHTTPpostData(int len, char *buf, int buflen);
 
 /* report.c */
 extern void printBandwidthFooter(void);
@@ -175,6 +182,7 @@ extern int reportValues(time_t *lastTime);
 extern void addPageIndicator(char *url, u_int beginIdx,
 			     u_int numEntries, u_int linesPerPage,
 			     int revertOrder, int numCol);
+extern void printTrafficSummary(int revertOrder);
 extern void printTrafficStatistics(int revertOrder);
 extern int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocalityMode);
 extern void printHostsTraffic(int reportType, int sortedColumn, int revertOrder,
@@ -188,7 +196,7 @@ extern void printMulticastStats(int sortedColumn /* ignored so far */,
                                 int revertOrder, int pageNum);
 extern void printVSANList(unsigned int deviceId);
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vlanId);
-extern void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum);
+extern void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vsanId);
 extern void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
                                   int revertOrder, int pageNum, char *url,
                                   int hostInfoPage);
@@ -220,12 +228,13 @@ extern void printScsiLunStats (HostTraffic *el, int actualDeviceId,
                                int sortedColumn, int revertOrder,
                                int pageNum, char *lun);
 extern void printScsiLunGraphs (HostTraffic *el, int actualDeviceId);
+extern void printFcTrafficSummary (u_short vsanId);
 extern void printIpProtocolUsage(void);
 extern void printBar(char *buf, int bufLen, unsigned short percentageS, unsigned short percentageR,
                      unsigned short maxPercentage, unsigned short ratio);
-extern void printIpProtocolDistribution(int mode, int revertOrder);
-extern void printFcProtocolDistribution(int mode, int revertOrder);
-extern void printProtoTraffic(void);
+extern void printIpProtocolDistribution(int mode, int revertOrder, int printGraph);
+extern void printFcProtocolDistribution(int mode, int revertOrder, int printGraph);
+extern void printProtoTraffic(int printGraph);
 extern void printProcessInfo(int processPid, int actualReportDeviceId);
 extern void printIpTrafficMatrix(void);
 extern void printFcTrafficMatrix (u_short vsanId, u_char sent);
@@ -241,6 +250,7 @@ extern void printVLANList(unsigned int deviceId);
 extern void showPortTraffic(u_short portNr);
 void drawVsanStatsGraph (unsigned int deviceId);
 void printVSANList(unsigned int deviceId);
+void handleNtopConfig (char *url, UserPrefDisplayPage page, int postLen);
 
 /* webInterface.c */
 extern int execCGI(char* cgiName);
@@ -258,9 +268,11 @@ extern void printHostColorCode(int textPrintFlag, int isInfo);
 #ifdef CFG_MULTITHREADED
 extern void printMutexStatusReport(int textPrintFlag);
 #endif
-extern void printNtopConfigInfo(int textPrintFlag);
+extern void printNtopConfigInfo(int textPrintFlag, UserPref *pref);
 extern void printNtopProblemReport(void);
 extern void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr);
+extern bool processNtopPref (char *key, char *value, bool savePref,
+                             UserPref *pref);
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 extern int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag);
