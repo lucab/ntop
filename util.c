@@ -5460,14 +5460,15 @@ int readInputFile(FILE* fd,
 
       if(getValue != NULL) {
         (*recordsRead)++;
-        if((countPer > 0) && ((*recordsRead) % countPer == 0))
+        if((logTag != NULL) && (countPer > 0) && ((*recordsRead) % countPer == 0))
           traceEvent(CONST_TRACE_NOISY, "%s: ....%6d records read", logTag, (*recordsRead));
         return(0);
       }
   }
 
   /* Either EOF or forceClose */
-  traceEvent(CONST_TRACE_NOISY, "%s: Closing file", logTag);
+  if(logTag != NULL) 
+    traceEvent(CONST_TRACE_NOISY, "%s: Closing file", logTag);
 
   if(fd != NULL) 
 #ifdef MAKE_WITH_ZLIB
@@ -5477,7 +5478,7 @@ int readInputFile(FILE* fd,
 #endif
       fclose(fd);
 
-  if(*recordsRead > 0) 
+  if((logTag != NULL) && (*recordsRead > 0))
     traceEvent(CONST_TRACE_INFO, "%s: ...found %d lines", logTag, *recordsRead);
 
   return(-1);
