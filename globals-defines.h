@@ -1015,6 +1015,15 @@
 #define MAX_WEBSERVER_REQUEST_QUEUE_LEN     20
 
 /*
+ * These adjust the width of the columns in the info.html report
+ */
+#define CONST_INFOHTML_COL1_WIDTH   250
+#define CONST_INFOHTML_COL2_WIDTH   175
+#define CONST_INFOHTML_COL3_WIDTH   175
+#define CONST_INFOHTML_COL23_WIDTH  350  /* columns 2 + 3 */
+#define CONST_INFOHTML_WIDTH        600  /* columns 1 + 2 + 3 */
+
+/*
  * FibreChannel/SCSI constants
  */
 

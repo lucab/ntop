@@ -218,7 +218,7 @@ void showPluginsList(char* pluginName) {
       safe_snprintf(__FILE__, __LINE__, tmpBuf1, sizeof(tmpBuf1), "<A HREF=\"/plugins/%s\" title=\"Invoke plugin\">%s</A>",
 		  flows->pluginStatus.pluginPtr->pluginURLname, flows->pluginStatus.pluginPtr->pluginURLname);
 
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT %s>",
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" align=\"left\" %s>",
 		  getRowColor(),
                   flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ?
                       "rowspan=\"2\"" :
@@ -234,7 +234,7 @@ void showPluginsList(char* pluginName) {
           sendString(tmpBuf);
       }
 
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TH "TH_BG" ALIGN=LEFT %s>",
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TH "TH_BG" align=\"left\" %s>",
                   flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ?
                       "rowspan=\"2\"" :
                       "");
@@ -254,9 +254,9 @@ void showPluginsList(char* pluginName) {
 	sendString(tmpBuf);
       }
 
-      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TD "TD_BG" ALIGN=LEFT>%s</TD>\n"
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TD "TD_BG" align=\"left\">%s</TD>\n"
 		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>\n"
-		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>\n"
+		  "<TD "TD_BG" align=\"left\">%s</TD>\n"
 		  "<TD "TD_BG" ALIGN=CENTER><A HREF=\"" CONST_SHOW_PLUGINS_HTML "?%s=%d\">%s</A></TD>"
 		  "</TR>\n",
 		  flows->pluginStatus.pluginPtr->pluginDescr,
@@ -911,24 +911,48 @@ void shutdownNtop(void) {
 
 /* ******************************** */
 
+/*  WARNING WARNING WARNING
+ *
+ *      Be very careful with closing tags in this section.  The slightest screw-up will cause
+ *      browsers other than IE to handle these tables in ways you don't expect (usually making
+ *      each cell as wide as the widest, vs. respecting the WIDTH tags.
+ *
+ */
+
+static void printInfoSectionTitle(int textPrintFlag, char* section) {
+  sendString(texthtml("\n\n", "<tr><th colspan=\"3\" width=\"" xstr(CONST_INFOHTML_WIDTH) "\" " TH_BG ">"));
+  sendString(section);
+  sendString(texthtml("\n\n", "</th></tr>\n"));
+}
+
+static void printInfoSectionNote(int textPrintFlag, char* note) {
+  if(textPrintFlag != TRUE) {
+    sendString("<tr><td colspan=\"3\" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"
+               "<table border=\"0\" width=\"85%\" align=\"right\"><tr><td valign=\"top\">NOTE:</td>\n"
+               "<td class=\"wrap\"><i>");
+    sendString(note);
+    sendString("</i></td></tr>\n</table>\n</td></tr>\n");
+  }
+}
+
 static void printFeatureConfigNum(int textPrintFlag, char* feature, int value) {
   char tmpBuf[32];
 
-  sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
+  sendString(texthtml("", "<tr><th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
   sendString(feature);
-  sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
+  sendString(texthtml(".....", "</th>\n<td "TD_BG" align=\"right\" colspan=\"2\" width=\"" xstr(CONST_INFOHTML_COL23_WIDTH) "\">"));
   safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%d", value);
   sendString(tmpBuf);
-  sendString(texthtml("\n", "</TD></TR>\n"));
+  sendString(texthtml("\n", "</td></tr>\n"));
 }
 
 static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* status) {
   char *tmpStr, tmpBuf[LEN_GENERAL_WORK_BUFFER];
   char *strtokState;
 
-  sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
+  sendString(texthtml("", "<tr><th "TH_BG" ALIGN=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
   sendString(feature);
-  sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
+  sendString(texthtml(".....", "</th>\n<td class=\"wrap\" "TD_BG" ALIGN=\"right\" colspan=\"2\" width=\"" xstr(CONST_INFOHTML_COL23_WIDTH) "\">"));
   if((status == NULL) || (status[0] == '\0')) {
     sendString("(nil)");
   } else {
@@ -938,11 +962,27 @@ static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* statu
       sendString(tmpStr);
       tmpStr = strtok_r(NULL, "\n", &strtokState);
       if(tmpStr != NULL) {
-	sendString(texthtml("\n          ", "<BR>"));
+	sendString(texthtml("\n          ", "<br>"));
       }
     }
   }
-  sendString(texthtml("\n", "</TD></TR>\n"));
+  sendString(texthtml("\n", "</td></tr>\n"));
+}
+
+static void printFeatureConfigTitle3Col(int textPrintFlag,
+                                        char *textTitle,
+                                        char *c1, char *c2, char *c3) {
+  if(textPrintFlag == TRUE) {
+    sendString(textTitle);
+  } else {
+    sendString("<tr><th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">");
+    sendString(c1);
+    sendString("</th>\n<th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL2_WIDTH) "\">");
+    sendString(c2);
+    sendString("</th>\n<th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL3_WIDTH) "\">");
+    sendString(c3);
+    sendString("</th>\n</tr>\n");
+  }
 }
 
 static void printFeatureConfigInfo3ColInt(int textPrintFlag,
@@ -954,31 +994,31 @@ static void printFeatureConfigInfo3ColInt(int textPrintFlag,
 
   if((mustShow == FALSE) && (count1+count2 == 0)) { return; }
 
-  sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"300\">"));
+  sendString(texthtml("", "<tr><th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
   sendString(feature);
-  sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
+  sendString(texthtml(".....", "</th>\n<td "TD_BG" align=\"right\" width=\"" xstr(CONST_INFOHTML_COL2_WIDTH) "\">"));
   if (flag1) {
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%d", count1);
     sendString(tmpBuf);
   } else {
     sendString("-");
   }
-  sendString(texthtml(".....", "</TD><TD "TD_BG" ALIGN=\"right\">"));
+  sendString(texthtml(".....", "</td>\n<td "TD_BG" align=\"right\" width=\"" xstr(CONST_INFOHTML_COL3_WIDTH) "\">"));
   if (flag2) {
     safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%d", count2);
     sendString(tmpBuf);
   } else {
     sendString("-");
   }
-  sendString(texthtml("\n", "</TD></TR>\n"));
+  sendString(texthtml("\n", "</td></tr>\n"));
 }
 
 /* ******************************** */
 
 static void printParameterConfigInfo(int textPrintFlag, char* feature, char* status, char* defaultValue) {
-  sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
+  sendString(texthtml("", "<tr><th "TH_BG" align=\"left\" width=\"" xstr(CONST_INFOHTML_COL1_WIDTH) "\">"));
   sendString(feature);
-  sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
+  sendString(texthtml(".....", "</th>\n<td "TD_BG" align=\"right\" colspan=\"2\" width=\"" xstr(CONST_INFOHTML_COL23_WIDTH) "\">"));
   if(status == NULL) {
     if(defaultValue == NULL) {
       sendString(CONST_REPORT_ITS_DEFAULT);
@@ -991,7 +1031,7 @@ static void printParameterConfigInfo(int textPrintFlag, char* feature, char* sta
   } else {
     sendString(status);
   }
-  sendString(texthtml("\n", "</TD></TR>\n"));
+  sendString(texthtml("\n", "</td></tr>\n"));
 }
 
 /* ******************************** */
@@ -1001,8 +1041,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 #endif
 
-  sendString(texthtml("\n\nCompile Time: Debug settings in globals-defines.h\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Debug settings in globals-defines.h</tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Compile Time: Debug settings in globals-defines.h");
 
   printFeatureConfigInfo(textPrintFlag, "DEBUG",
 #ifdef DEBUG
@@ -1260,8 +1299,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  sendString(texthtml("\n\nCompile Time: config.h\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: config.h</tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Compile Time: config.h");
 
   /*
    * Drop the autogenerated lines (utils/config_h2.awk) in HERE
@@ -2907,8 +2945,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   /* semi auto generated from globals-defines.h */
 
-  sendString(texthtml("\n\nCompile Time: globals-defines.h\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-defines.h</tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Compile Time: globals-defines.h");
 
 
   /*                                                       B E G I N
@@ -5294,9 +5331,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
    *
    */
 
-  sendString(texthtml("\n\nCompile Time: globals-report.h\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-report.h</tr>\n"));
-
+  printInfoSectionTitle(textPrintFlag, "Compile Time: globals-report.h");
   printFeatureConfigInfo(textPrintFlag, "Chart Format", CHART_FORMAT);
 
   /* ***Plugins stuff************************ */
@@ -5322,20 +5357,20 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
 void printHostColorCode(int textPrintFlag, int isInfo) {
   if(textPrintFlag != TRUE) {
-    sendString("<CENTER><TABLE BORDER=0>"
+    sendString("<CENTER>\n<TABLE border=\"0\">"
 	       "<TR>"
-	       "<TD COLSPAN=5 align=\"center\">The color of the host link");
+	       "<TD colspan=\"5\>The color of the host link");
     if(isInfo == 1)
         sendString(" on many pages");
     sendString(" indicates how recently the host was FIRST seen"
-               "</TR>"
+               "</TD></TR>\n"
                "<TR>"
-               "<TD>&nbsp;&nbsp;<A href=# class=\"age0min\">0 to 5 minutes</A>&nbsp;&nbsp;</TD>"
-               "<TD>&nbsp;&nbsp;<A href=# class=\"age5min\">5 to 15 minutes</A>&nbsp;&nbsp;</TD>"
-               "<TD>&nbsp;&nbsp;<A href=# class=\"age15min\">15 to 30 minutes</A>&nbsp;&nbsp;</TD>"
-               "<TD>&nbsp;&nbsp;<A href=# class=\"age30min\">30 to 60 minutes</A>&nbsp;&nbsp;</TD>"
-               "<TD>&nbsp;&nbsp;<A href=# class=\"age60min\">60+ minutes</A>&nbsp;&nbsp;</TD>"
-               "</TR></TABLE></CENTER>");
+               "<TD>&nbsp;&nbsp;<A href=\"#\" class=\"age0min\">0 to 5 minutes</A>&nbsp;&nbsp;</TD>\n"
+               "<TD>&nbsp;&nbsp;<A href=\"#\" class=\"age5min\">5 to 15 minutes</A>&nbsp;&nbsp;</TD>\n"
+               "<TD>&nbsp;&nbsp;<A href=\"#\" class=\"age15min\">15 to 30 minutes</A>&nbsp;&nbsp;</TD>\n"
+               "<TD>&nbsp;&nbsp;<A href=\"#\" class=\"age30min\">30 to 60 minutes</A>&nbsp;&nbsp;</TD>\n"
+               "<TD>&nbsp;&nbsp;<A href=\"#\" class=\"age60min\">60+ minutes</A>&nbsp;&nbsp;</TD>\n"
+               "</TR>\n</TABLE>\n</CENTER>\n");
   }
 }
 
@@ -5383,7 +5418,10 @@ void printMutexStatusReport(int textPrintFlag) {
 
 /* ******************************** */
 
-void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
+void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
+
+  /* This prints either as text or html, but no header so it can be included in bug reports */
+
   char buf[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
   int i, bufLength, bufPosition, bufUsed;
   unsigned int idx, minLen=-1, maxLen=0;
@@ -5402,15 +5440,11 @@ void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
   struct utsname unameData;
 #endif
 
-  if(textPrintFlag)
-    sendString("ntop Configuration\n\n");
-  else
-    printHTMLheader("ntop Configuration", NULL, 0);
+  sendString(texthtml("<pre>",
+                      "<CENTER>\n<p>&nbsp;</p>\n"
+                      "<TABLE border=\"1\" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"));
 
-  printHostColorCode(textPrintFlag, 1);
-  sendString(texthtml("\n",
-                      "<CENTER>\n<P><HR><P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
-                      "<tr><th colspan=2 "DARK_BG"" TH_BG ">Basic information</tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Basic information");
   printFeatureConfigInfo(textPrintFlag, "ntop version", version);
   printFeatureConfigInfo(textPrintFlag, "Configured on", configureDate);
   printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
@@ -5448,34 +5482,36 @@ void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.heartbeatCounter);
   printFeatureConfigInfo(textPrintFlag, "Heartbeat (counter)", buf);
-  sendString(texthtml("\n\n", "<tr><td colspan=2 "DARK_BG">"));
-  sendString("Note: The value of the heartbeat counter is meaningless.  It's just incremented "
-             "in various places. On a busy network, it will grow quickly, on a quiet network "
-             "it will grow slowly.  If it STOPS being incremented, ntop is locked up. "
-             "If you suspect ntop is locked up, check the Mutexes at the end of this report - "
-             "a value in the 'blocked' column for more than a few seconds is a bad sign.");
-  sendString(texthtml("\n\n", "</td></tr>\n"));
+  printInfoSectionNote(textPrintFlag, 
+                   "The value of the heartbeat counter is meaningless.  It's just incremented "
+                   "in various places. On a busy network, it will grow quickly, on a quiet network "
+                   "it will grow slowly.  If it STOPS being incremented, ntop is locked up. "
+                   "If you suspect ntop is locked up, check the Mutexes at the end of this report - "
+                   "a value in the 'blocked' column for more than a few seconds is a bad sign.");
 #endif
 
   /* *************************** */
 
-  sendString(texthtml("\n\nCommand line\n\n",
-                      "<tr><th colspan=2 "DARK_BG">Command line</tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Command line");
 
-  sendString(texthtml("Started as....",
-                      "<TR><TH "TH_BG" ALIGN=left>Started as</TH><TD "TD_BG" ALIGN=right>"));
-  sendString(myGlobals.startedAs);
-  sendString(texthtml("\n\n", "</TD></TR>\n"));
+  strncpy(buf, myGlobals.startedAs, sizeof(buf)-1);
+  printFeatureConfigInfo(textPrintFlag, "Started as....", buf);
 
-  sendString(texthtml("Resolved to....",
-                      "<TR><TH "TH_BG" ALIGN=left>Resolved to</TH><TD "TD_BG" ALIGN=right>"));
+  buf[0]='\0';
   for(i=0; i<myGlobals.ntop_argc; i++) {
-    sendString(myGlobals.ntop_argv[i]);
-    sendString(texthtml("\n            ", " "));
-    /* Note above needs to be a normal space for html case so that web browser can
-       break up the lines as it needs to... */
+    if(i>0)
+      strncat(buf, " ", (sizeof(buf) - strlen(buf) - 1));
+    strncat(buf, myGlobals.ntop_argv[i], (sizeof(buf) - strlen(buf) - 1));
   }
-  sendString(texthtml("\n\nPreferences used are:\n\n", "</TD></TR>\n"));
+  printFeatureConfigInfo(textPrintFlag, "Resolved to....", buf);
+  
+  printInfoSectionTitle(textPrintFlag, "Preferences used");
+
+  printInfoSectionNote(textPrintFlag, 
+                   CONST_REPORT_ITS_EFFECTIVE "   means that "
+            	   "this is the value after ntop has processed the parameter."
+                   CONST_REPORT_ITS_DEFAULT "means this is the default value, usually "
+            	   "(but not always) set by a #define in globals-defines.h.");
 
   printParameterConfigInfo(textPrintFlag, "-a | --access-log-file",
                            pref->accessLogFile,
@@ -5736,27 +5772,19 @@ void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
                            "No");
 
   if(textPrintFlag == FALSE) {
-    sendString("<tr><td colspan=\"2\">"
-               "<p><i><b>NOTE</b>: The --w3c flag makes the generated html MORE compatible with "
-               "the w3c recommendations, but it in no way addresses all of the compatibility "
-               "and markup issues.  We would like to make <b>ntop</b> more compatible, but "
-               "some basic issues of looking decent on real-world browsers mean it will "
-               "never be 100%.  If you find any issues, please report them to ntop-dev."
-               "</i></p></td></tr>\n");
+    printInfoSectionNote(textPrintFlag, 
+                     "The --w3c flag makes the generated html MORE compatible with the w3c "
+                     "recommendations, but it in no way addresses all of the compatibility "
+                     "and markup issues.  We would like to make <b>ntop</b> more compatible, "
+                     "but some basic issues of looking decent on real-world browsers mean it "
+                     "will never be 100%.  If you find any issues, please report them to "
+                     "<a href=\"http://lists.ntop.org/mailman/listinfo/ntop-dev\" "
+                     "title=\"ntop-dev list home page\">ntop-dev</a>.\n");
   }
-
-  sendString(texthtml("\n\n", "<tr><th colspan=2>"));
-  sendString("Note: " CONST_REPORT_ITS_EFFECTIVE "   means that "
-	     "this is the value after ntop has processed the parameter.");
-  sendString(texthtml("\n", "<br>\n"));
-  sendString(CONST_REPORT_ITS_DEFAULT "means this is the default value, usually "
-	     "(but not always) set by a #define in globals-defines.h.");
-  sendString(texthtml("\n\n", "</th></tr>\n"));
 
   /* *************************** */
 
-  sendString(texthtml("\n\nRun time/Internal\n\n",
-                      "<tr><th colspan=2 "DARK_BG"" TH_BG ">Run time/Internal</tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Run time/Internal");
 
   if(pref->webPort != 0) {
     if(pref->webAddr != 0) {
@@ -5807,8 +5835,8 @@ void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
   /*
    * If we've guessed at the gd version, report it
    */
-if(myGlobals.gdVersionGuessValue != NULL)
-  printFeatureConfigInfo(textPrintFlag, "gd version (guess)", myGlobals.gdVersionGuessValue);
+  if(myGlobals.gdVersionGuessValue != NULL)
+    printFeatureConfigInfo(textPrintFlag, "gd version (guess)", myGlobals.gdVersionGuessValue);
 
 #ifdef MAKE_WITH_XMLDUMP
   printFeatureConfigInfo(textPrintFlag, "XML dump (plugins/xmldump)", "Supported");
@@ -5873,13 +5901,11 @@ if(myGlobals.gdVersionGuessValue != NULL)
     }
   }
 
-  sendString(texthtml("\n\nntop Web Server\n\n",
-                      "<tr><th colspan=\"2\" "DARK_BG">ntop Web Server</th></tr>\n"
-                      "<tr><td colspan=\"2\" align=\"center\">\n"
-                        "<table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
+  printInfoSectionTitle(textPrintFlag, "ntop Web Server");
 
-  sendString(texthtml("Item..................http://...................https://",
-                      "<tr><th>Item</th><th>http://</th><th>https://</th></tr>\n"));
+  printFeatureConfigTitle3Col(textPrintFlag,
+                              "Item..................http://...................https://",
+                              "Item", "http://", "https://");
 
   printFeatureConfigInfo3ColInt(textPrintFlag,
                                 "# Handled Requests",
@@ -5991,13 +6017,14 @@ if(myGlobals.gdVersionGuessValue != NULL)
 #endif
                                 myGlobals.numUnsuccessfulInvalidversion[0],
                                 FALSE);
-  sendString(texthtml("",
-                      "<tr><td colspan=\"3\">Notes: "
-                          "<li>Counts may not total because of in-process requests."
-                          "<li>Each request to the ntop web server - frameset, individual "
-                          "page, chart, etc. is counted separately"
-                          "</td>\n"
-                      "</table>\n</td></tr>\n"));
+
+  if(textPrintFlag != TRUE) {
+    printInfoSectionNote(textPrintFlag,
+                     "</i><ul>\n"
+                     "<li><i>Counts may not total because of in-process requests.</i></li>\n"
+                     "<li><i>Each request to the ntop web server - frameset, individual "
+                     "page, chart, etc. is counted separately</i></li></ul>\n<i>");
+  }
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numHandledSIGPIPEerrors);
   printFeatureConfigInfo(textPrintFlag, "# Handled SIGPIPE Errors", buf);
@@ -6013,7 +6040,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 #endif
 
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
-  sendString(texthtml("\n\nMemory allocation - data segment\n\n", "<tr><th colspan=2 "DARK_BG">Memory allocation - data segment</th></tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Memory allocation - data segment");
 
   memStats = mallinfo();
 
@@ -6038,18 +6065,15 @@ if(myGlobals.gdVersionGuessValue != NULL)
   if(memStats.uordblks + memStats.fordblks != memStats.arena)
     printFeatureConfigInfo(textPrintFlag, "WARNING:", "Used+Free != Allocated");
 
-  sendString(texthtml("\n\nMemory allocation - mmapped\n\n", "<tr><th colspan=2 "DARK_BG">Memory allocation - mmapped</th></tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Memory allocation - mmapped");
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.hblks);
-  printFeatureConfigInfo(textPrintFlag, "Allocated blocks (hblks)", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.hblkhd);
-  printFeatureConfigInfo(textPrintFlag, "Allocated bytes (hblkhd)", buf);
+  printFeatureConfigNum(textPrintFlag, "Allocated blocks (hblks)", (int)memStats.hblks);
+  printFeatureConfigNum(textPrintFlag, "Allocated bytes (hblkhd)", (int)memStats.hblkhd);
 
 #endif
 
   if(textPrintFlag == TRUE) {
-    sendString(texthtml("\n\nMemory Usage\n\n", "<tr><th colspan=2 "DARK_BG">Memory Usage</th></tr>\n"));
+    printInfoSectionTitle(textPrintFlag, "Memory Usage");
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadSize);
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (bytes)", buf);
@@ -6092,7 +6116,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 #endif
   }
 
-  sendString(texthtml("\n\nHost Memory Cache\n\n", "<tr><th colspan=2 "DARK_BG">Host Memory Cache</th></tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Host Memory Cache");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "#define MAX_HOSTS_CACHE_LEN %d", MAX_HOSTS_CACHE_LEN);
@@ -6108,7 +6132,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
   printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
 
 #ifdef PARM_USE_SESSIONS_CACHE
-  sendString(texthtml("\n\nSession Memory Cache\n\n", "<tr><th colspan=2 "DARK_BG">Session Memory Cache</th></tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Session Memory Cache");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "#define MAX_SESSIONS_CACHE_LEN %d", MAX_SESSIONS_CACHE_LEN);
@@ -6125,7 +6149,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 #endif
 
   if(textPrintFlag == TRUE) {
-    sendString(texthtml("\n\nMAC/IPX Hash tables\n\n", "<tr><th colspan=2 "DARK_BG">MAC/IPX Hash Tables</th></tr>\n"));
+    printInfoSectionTitle(textPrintFlag, "MAC/IPX Hash tables");
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", MAX_IPXSAP_NAME_HASH);
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (entries)", buf);
@@ -6139,7 +6163,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   /* **** */
 
-  sendString(texthtml("\n\nPackets\n\n", "<tr><th colspan=2 "DARK_BG">Packets</th></tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Packets");
 
 #ifdef CFG_MULTITHREADED
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.receivedPackets);
@@ -6170,8 +6194,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   /* **** */
 
-  sendString(texthtml("\n\nHost/Session counts - global\n\n",
-		      "<tr><th colspan=2 "DARK_BG">Host/Session counts - global</th></tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Host/Session counts - global");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", (unsigned int)myGlobals.numPurgedHosts);
   printFeatureConfigInfo(textPrintFlag, "Purged Hosts", buf);
@@ -6194,10 +6217,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].activeDevice) {
       safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2),
-		    "<tr><th colspan=2 "DARK_BG">Host/Session counts - %sDevice %d (%s)</th></tr>\n",
+		    "Host/Session counts - %sDevice %d (%s)",
 		    myGlobals.device[i].virtualDevice ? "Virtual " : "",
 		    i, myGlobals.device[i].name);
-      sendString(texthtml(buf, buf2));
+      printInfoSectionTitle(textPrintFlag, buf2);
 
       printFeatureConfigInfo(textPrintFlag, "Hash Bucket Size",
 			     formatBytes(sizeof(HostTraffic), 0, buf, sizeof(buf)));
@@ -6250,115 +6273,73 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   /* **** */
 
-  sendString(texthtml("\n\nAddress Resolution\n\n", "<tr><th colspan=2 "DARK_BG">Address Resolution</th></tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "----- Address Resolution -----");
 
-  sendString(texthtml("DNS Sniffed:\n\n", "<tr><th TH "TH_BG" ALIGN=LEFT>DNS Sniffed</th>\n<td><table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
+  printInfoSectionTitle(textPrintFlag, "DNS Sniffing (other hosts requests)");
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffCount);
-  printFeatureConfigInfo(textPrintFlag, "DNS Packets sniffed", buf);
+  printFeatureConfigNum(textPrintFlag, "DNS Packets sniffed", (int)myGlobals.dnsSniffCount);
 
   if(textPrintFlag == TRUE) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffRequestCount);
-    printFeatureConfigInfo(textPrintFlag, "  less 'requests'", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffFailedCount);
-    printFeatureConfigInfo(textPrintFlag, "  less 'failed'", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffARPACount);
-    printFeatureConfigInfo(textPrintFlag, "  less 'reverse dns' (in-addr.arpa)", buf);
+    printFeatureConfigNum(textPrintFlag, "  less 'requests'", (int)myGlobals.dnsSniffRequestCount);
+    printFeatureConfigNum(textPrintFlag, "  less 'failed'", (int)myGlobals.dnsSniffFailedCount);
+    printFeatureConfigNum(textPrintFlag, "  less 'reverse dns' (in-addr.arpa)", (int)myGlobals.dnsSniffARPACount);
   }
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)(myGlobals.dnsSniffCount
-					    - myGlobals.dnsSniffRequestCount
+  printFeatureConfigNum(textPrintFlag, "DNS Packets processed", (int)(myGlobals.dnsSniffCount
+ 					    - myGlobals.dnsSniffRequestCount
 					    - myGlobals.dnsSniffFailedCount
 					    - myGlobals.dnsSniffARPACount));
-  printFeatureConfigInfo(textPrintFlag, "DNS Packets processed", buf);
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffStoredInCache);
-  printFeatureConfigInfo(textPrintFlag, "Stored in cache (includes aliases)", buf);
-
-  if(textPrintFlag != TRUE) {
-    sendString("</table></td></tr>\n");
-  }
+  printFeatureConfigNum(textPrintFlag, "Stored in cache (includes aliases)", (int)myGlobals.dnsSniffStoredInCache);
 
   if(textPrintFlag == TRUE) {
-    sendString("\n\nIP to name - ipaddr2str():\n\n");
+    printInfoSectionTitle(textPrintFlag, "IP to name - ipaddr2str():");
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numipaddr2strCalls);
-    printFeatureConfigInfo(textPrintFlag, "Total calls", buf);
+    printFeatureConfigNum(textPrintFlag, "Total calls", (int)myGlobals.numipaddr2strCalls);
 
     if(myGlobals.numipaddr2strCalls != myGlobals.numFetchAddressFromCacheCalls) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCalls);
-      printFeatureConfigInfo(textPrintFlag, "ERROR: cache fetch attempts != ipaddr2str() calls", buf);
+      printFeatureConfigNum(textPrintFlag,
+                            "ERROR: cache fetch attempts != ipaddr2str() calls",
+                            (int)myGlobals.numFetchAddressFromCacheCalls);
     }
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCallsOK);
-    printFeatureConfigInfo(textPrintFlag, "....OK", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)(myGlobals.numipaddr2strCalls
+    printFeatureConfigNum(textPrintFlag, "....OK", (int)myGlobals.numFetchAddressFromCacheCallsOK);
+    printFeatureConfigNum(textPrintFlag, "....Total not found", (int)(myGlobals.numipaddr2strCalls
 					      - myGlobals.numFetchAddressFromCacheCallsOK));
-    printFeatureConfigInfo(textPrintFlag, "....Total not found", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCallsFAIL);
-    printFeatureConfigInfo(textPrintFlag, "........Not found in cache", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCallsSTALE);
-    printFeatureConfigInfo(textPrintFlag, "........Too old in cache", buf);
+    printFeatureConfigNum(textPrintFlag, "........Not found in cache", (int)myGlobals.numFetchAddressFromCacheCallsFAIL);
+    printFeatureConfigNum(textPrintFlag, "........Too old in cache", (int)myGlobals.numFetchAddressFromCacheCallsSTALE);
   }
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
 
   if(pref->numericFlag == 0) {
-    sendString(texthtml("\n\nQueued - dequeueAddress():\n\n", "<tr><TH "TH_BG" ALIGN=LEFT>Queued</th>\n<td><table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
+    printInfoSectionTitle(textPrintFlag, "Queued - dequeueAddress()");
+    printFeatureConfigNum(textPrintFlag, "Total Queued", (int)myGlobals.addressQueuedCount);
+    printFeatureConfigNum(textPrintFlag, "Not queued (duplicate)", (int)myGlobals.addressQueuedDup);
+    printFeatureConfigNum(textPrintFlag, "Maximum Queued", (int)myGlobals.addressQueuedMax);
+    printFeatureConfigNum(textPrintFlag, "Current Queue", (int)myGlobals.addressQueuedCurrent);
 
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedCount);
-    printFeatureConfigInfo(textPrintFlag, "Total Queued", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedDup);
-    printFeatureConfigInfo(textPrintFlag, "Not queued (duplicate)", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedMax);
-    printFeatureConfigInfo(textPrintFlag, "Maximum Queued", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedCurrent);
-    printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
-
-    if(textPrintFlag != TRUE) {
-      sendString("</table></td></tr>\n");
-    }
   }
 
 #endif
 
   if(textPrintFlag == TRUE) {
-    sendString("\n\nResolved - resolveAddress():\n\n");
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numResolveAddressCalls);
-    printFeatureConfigInfo(textPrintFlag, "Addresses to resolve", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numResolveNoCacheDB);
-    printFeatureConfigInfo(textPrintFlag, "....less 'Error: No cache database'", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numResolvedFromCache);
-    printFeatureConfigInfo(textPrintFlag, "....less 'Found in ntop cache'", buf);
+    printInfoSectionTitle(textPrintFlag, "Resolved - resolveAddress():");
+    printFeatureConfigNum(textPrintFlag, "Addresses to resolve", (int)myGlobals.numResolveAddressCalls);
+    printFeatureConfigNum(textPrintFlag, "....less 'Error: No cache database'", (int)myGlobals.numResolveNoCacheDB);
+    printFeatureConfigNum(textPrintFlag, "....less 'Found in ntop cache'", (int)myGlobals.numResolvedFromCache);
 
 #ifdef PARM_USE_HOST
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numResolvedFromHostAddresses);
-    printFeatureConfigInfo(textPrintFlag, "....less 'Resolved from /usr/bin/host'", buf);
-#endif
-
-#ifdef PARM_USE_HOST
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)(myGlobals.numResolveAddressCalls
+    printFeatureConfigNum(textPrintFlag, "....less 'Resolved from /usr/bin/host'", (int)myGlobals.numResolvedFromHostAddresses);
+    printFeatureConfigNum(textPrintFlag, "Gives: # gethost (DNS lookup) calls", (int)(myGlobals.numResolveAddressCalls
 					 - myGlobals.numResolvedFromHostAddresses
 					 - myGlobals.numResolveNoCacheDB
 					 - myGlobals.numResolvedFromCache));
 #else
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)(myGlobals.numResolveAddressCalls
+    printFeatureConfigNum(textPrintFlag, "Gives: # gethost (DNS lookup) calls", (int)(myGlobals.numResolveAddressCalls
 					 - myGlobals.numResolveNoCacheDB
 					 - myGlobals.numResolvedFromCache));
 #endif
 
-    printFeatureConfigInfo(textPrintFlag, "Gives: # gethost (DNS lookup) calls", buf);
 
     if((myGlobals.numResolveAddressCalls
 #ifdef PARM_USE_HOST
@@ -6366,62 +6347,42 @@ if(myGlobals.gdVersionGuessValue != NULL)
 #endif
 	- myGlobals.numResolveNoCacheDB
 	- myGlobals.numResolvedFromCache) != myGlobals.numAttemptingResolutionWithDNS) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numAttemptingResolutionWithDNS);
-      printFeatureConfigInfo(textPrintFlag, "    ERROR: actual count does not match!", buf);
+      printFeatureConfigNum(textPrintFlag,
+                            "    ERROR: actual count does not match!",
+                            (int)myGlobals.numAttemptingResolutionWithDNS);
     }
   }
 
-  sendString(texthtml("\n\nDNS Lookup Calls:\n\n", "<tr><TH "TH_BG" ALIGN=LEFT>DNS Lookup Calls</th>\n<td><table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
+  printInfoSectionTitle(textPrintFlag, "DNS Lookup Calls:");
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numAttemptingResolutionWithDNS);
-  printFeatureConfigInfo(textPrintFlag, "DNS resolution attempts", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numResolvedWithDNSAddresses);
-  printFeatureConfigInfo(textPrintFlag, "....Success: Resolved", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)(myGlobals.numDNSErrorHostNotFound
+  printFeatureConfigNum(textPrintFlag, "DNS resolution attempts", (int)myGlobals.numAttemptingResolutionWithDNS);
+  printFeatureConfigNum(textPrintFlag, "....Success: Resolved", (int)myGlobals.numResolvedWithDNSAddresses);
+  printFeatureConfigNum(textPrintFlag, "....Failed", (int)(myGlobals.numDNSErrorHostNotFound
 					    + myGlobals.numDNSErrorNoData
 					    + myGlobals.numDNSErrorNoRecovery
 					    + myGlobals.numDNSErrorTryAgain
 					    + myGlobals.numDNSErrorOther));
-  printFeatureConfigInfo(textPrintFlag, "....Failed", buf);
 
   if(textPrintFlag == TRUE) {
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorHostNotFound);
-    printFeatureConfigInfo(textPrintFlag, "........HOST_NOT_FOUND", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorNoData);
-    printFeatureConfigInfo(textPrintFlag, "........NO_DATA", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorNoRecovery);
-    printFeatureConfigInfo(textPrintFlag, "........NO_RECOVERY", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorTryAgain);
-    printFeatureConfigInfo(textPrintFlag, "........TRY_AGAIN (don't store)", buf);
-
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorOther);
-    printFeatureConfigInfo(textPrintFlag, "........Other error (don't store)", buf);
+    printFeatureConfigNum(textPrintFlag, "........HOST_NOT_FOUND", (int)myGlobals.numDNSErrorHostNotFound);
+    printFeatureConfigNum(textPrintFlag, "........NO_DATA", (int)myGlobals.numDNSErrorNoData);
+    printFeatureConfigNum(textPrintFlag, "........NO_RECOVERY", (int)myGlobals.numDNSErrorNoRecovery);
+    printFeatureConfigNum(textPrintFlag, "........TRY_AGAIN (don't store)", (int)myGlobals.numDNSErrorTryAgain);
+    printFeatureConfigNum(textPrintFlag, "........Other error (don't store)", (int)myGlobals.numDNSErrorOther);
   }
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsCacheStoredLookup);
-  printFeatureConfigInfo(textPrintFlag, "DNS lookups stored in cache", buf);
-
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numKeptNumericAddresses);
-  printFeatureConfigInfo(textPrintFlag, "Host addresses kept numeric", buf);
+  printFeatureConfigNum(textPrintFlag, "DNS lookups stored in cache", (int)myGlobals.dnsCacheStoredLookup);
+  printFeatureConfigNum(textPrintFlag, "Host addresses kept numeric", (int)myGlobals.numKeptNumericAddresses);
 
 
-  if(textPrintFlag != TRUE) {
-    sendString("</table><br>\n");
-    sendString("<table><tr><td><b>REMEMBER</b>:&nbsp;\n"
-	       "'DNS lookups stored in cache' includes HOST_NOT_FOUND "
-	       "replies, so that it may be larger than the number of "
-	       "'Success: Resolved' queries.</td></tr></table>\n");
-  }
+  printInfoSectionNote(textPrintFlag, 
+                       "'DNS lookups stored in cache' includes HOST_NOT_FOUND replies.\n"
+                       "Thus it may be larger than the number of 'Success: Resolved' queries.\n");
 
   /* **** */
 
   if(textPrintFlag == TRUE) {
-    sendString("\n\nVendor Lookup Table\n\n");
+    printInfoSectionTitle(textPrintFlag, "Vendor Lookup Table");
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numVendorLookupRead);
     printFeatureConfigInfo(textPrintFlag, "Input lines read", buf);
@@ -6455,7 +6416,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
   /* **** */
 
 #if defined(CFG_MULTITHREADED)
-  sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=2 "DARK_BG">Thread counts</th></tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Thread counts");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numThreads);
   printFeatureConfigInfo(textPrintFlag, "Active", buf);
@@ -6469,6 +6430,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
   {
+//TODO Fixup for new table structure...
     struct tm t;
     char buf3[64], buf4[64];
     time_t lockoutExpires;
@@ -6477,8 +6439,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
     for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
       if(!addrnull(&myGlobals.weDontWantToTalkWithYou[i].addr)) {
 	if(++countBadGuys == 1) {
-	  sendString(texthtml("\n\nIP Address reject list\n\n",
-			      "<tr><th colspan=2 "DARK_BG">IP Address reject list</th></tr>\n"));
+	  printInfoSectionTitle(textPrintFlag, "IP Address reject list");
 	  sendString(texthtml("\nAddress ... Count ... Last Bad Access ... Lockout Expires\n",
 			      "<tr><th>Rejects</th>"
 			      "<td><TABLE BORDER=1>"
@@ -6540,7 +6501,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   /* **** */
 
-  sendString(texthtml("Directory (search) order\n\n", "<tr><th colspan=2 "DARK_BG">Directory (search) order</th></tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Directory (search) order");
 
   bufLength = sizeof(buf);
   bufPosition = 0;
@@ -6595,15 +6556,18 @@ if(myGlobals.gdVersionGuessValue != NULL)
   }
   printFeatureConfigInfo(textPrintFlag, "Plugins", buf);
 
+  printInfoSectionNote(textPrintFlag, "REMEMBER that the . (current working directory) value will be different "
+                                      "when you run ntop from the command line vs. a cron job or startup script!");
+
   /* *************************** *************************** */
 
 #ifndef WIN32
-  sendString(texthtml("\n\nCompile Time: ./configure\n\n", "<tr><th colspan=2 "DARK_BG"" TH_BG ">Compile Time: ./configure</tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Compile Time: ./configure");
   printFeatureConfigInfo(textPrintFlag, "./configure parameters",
 			 configure_parameters[0] == '\0' ? "&nbsp;" : configure_parameters);
   printFeatureConfigInfo(textPrintFlag, "Built on (Host)", host_system_type);
   printFeatureConfigInfo(textPrintFlag, "Built for(Target)", target_system_type);
-  printFeatureConfigInfo(textPrintFlag, "compiler (cflags)", compiler_cflags);
+  printFeatureConfigInfo(textPrintFlag, "compiler (CFLAGS)", compiler_cflags);
   printFeatureConfigInfo(textPrintFlag, "include path", include_path);
   printFeatureConfigInfo(textPrintFlag, "system libraries", system_libs);
   printFeatureConfigInfo(textPrintFlag, "install path", install_path);
@@ -6633,7 +6597,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
   }
 #endif
 
-  sendString(texthtml("\n\nInternationalization (i18n)\n\n", "<tr><th colspan=2 "DARK_BG"" TH_BG ">Internationalization (i18n)</tr>\n"));
+  printInfoSectionTitle(textPrintFlag, "Internationalization (i18n)");
 
   printFeatureConfigInfo(textPrintFlag, "i18n enabled",
 #ifdef MAKE_WITH_I18N
@@ -6734,7 +6698,8 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   /* *************************** */
 
-  sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
+  sendString(texthtml("\n\n",
+                      "</TABLE>\n<hr>\n"));
 
   /* **************************** */
 
@@ -6746,12 +6711,21 @@ if(myGlobals.gdVersionGuessValue != NULL)
 #endif /* CFG_MULTITHREADED */
 
   if(textPrintFlag != TRUE) {
-    sendString("<p>Click <a href=\"" CONST_TEXT_INFO_NTOP_HTML "\" alt=\"Text version of this page\">"
+    sendString("<p>Click <a href=\"" CONST_TEXT_INFO_NTOP_HTML "\" title=\"Text version of this page\">"
 	       "here</a> for a more extensive, text version of this page, suitable for "
 	       "inclusion into a bug report!</p>\n");
   }
 
-  sendString(texthtml("\n", "</CENTER>\n"));
+  sendString(texthtml("</pre>", "</CENTER>\n"));
+}
+
+/* ******************************** */
+
+void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
+  /* This has the header */
+  printHTMLheader("ntop Configuration", NULL, 0);
+//  sendString("<h1>ntop Configuration</h1>\n");
+  printNtopConfigInfoData(textPrintFlag, pref);
 }
 
 /* *************************** */
@@ -6831,36 +6805,49 @@ void printNtopProblemReport(void) {
 
   t = time(NULL);
 
-  sendString("Cut out this entire section and paste into an e-mail message.  Fill in the\n");
-  sendString("various sections with as much detail as possible and email to the ntop lists,\n");
-  sendString("user questions to ntop, code/development questions to ntop-dev.\n\n");
-  sendString("Note: the shortcut keys for copying the section are usually:\n");
-  sendString("    1) left click anywhere in this text (select this frame),\n");
-  sendString("    2) press control-a (select all), control-c (copy)\n");
-  sendString("  and then\n");
-  sendString("    3) press control-v (paste) in a new email message.\n\n");
-  sendString("Remember: ONE problem per report!\n\n");
-  sendString("The summary should be 5-10 words that indicate the problem and which would have\n");
-  sendString("helped you to find a previous report of the same problem, e.g.:\n");
-  sendString("   2003-02-07 cvs compile error in util.c, #define NONOPTION_P...\n\n");
-  sendString("Use the SAME 'summary' as the subject of your message, with the addition\n");
-  sendString("of the PR_xxxxxx value.\n\n");
-  sendString("For the 'Log Extract', cut and paste the last 10-15 system log messages.\n");
-  sendString("Make sure - even if it's more than 15 messages that you show at least 5\n");
-  sendString("or 6 messages (or a few minutes in time) BEFORE the first sign of failure.\n\n");
-  sendString("Assuming your system log is in /var/log/messages, the command is:\n");
-  sendString("   grep 'ntop' /var/log/messages | head -n 15\n");
-  sendString("but you may have to increase the 15 to get the right messages.\n\n");
+  printHTMLheader("ntop Problem Report", NULL, 0);
 
-  sendString("Note: The generated id below should be unique. It's essentially a random 6\n");
-  sendString("      or 7 character tracking tag for each problem report.  Since it's\n");
-  sendString("      generated on your machine, we can't just use an ever increasing global\n");
-  sendString("      number.  While it should be unique, it is not traceable back to a\n");
-  sendString("      specific user or machine.\n\n");
-  sendString("      If it makes you uncomfortable just delete it.\n\n");
-  sendString("----------------------------------------------------------------------------\n");
-  sendString(">>>>> Delete this line to the top before sending...\n");
+  sendString("<h3>Instructions (delete this before you send)</h3>\n");
+  sendString("<table border=\"1\" width=\"500\">\n<tr><td class=\"wrap\">");
+  sendString("<p>Cut out this entire section and paste into an e-mail message.  Fill in the\n");
+  sendString("various sections with as much detail as possible and email to the ntop lists.</p>\n");
+  sendString("<ul><li>User-type questions (How do I?) and usage bugs should be directed to the ntop\n");
+  sendString("mailing list (see http://lists.ntop.org/mailman/listinfo/ntop).</li>\n");
+  sendString("<li>Code/development questions belong on the ntop-dev list (at\n");
+  sendString("http://lists.ntop.org/mailman/listinfo/ntop-dev.</li></ul>\n");
+  sendString("<p><b>Remember: ONE problem per report!</b></p>\n");
+  sendString("<p>The summary should be 5-10 words that indicate the problem and which would have\n");
+  sendString("helped you to find a previous report of the same problem, e.g.:</p>\n");
+  sendString("<pre>   2003-02-07 cvs compile error in util.c, #define NONOPTION_P...</pre>\n");
+  sendString("<p>Use the SAME 'summary' as the subject of your message, with the addition\n");
+  sendString("of the PR_xxxxxx value.</p>\n");
+  sendString("<p>For the 'Log Extract', (Unix/Linux systems) cut and paste the last 10-15 system log\n");
+  sendString("messages. Try and make sure - even if it requires more than 15 messages that you show\n");
+  sendString("at least 5 or 6 messages (or a few minutes in time) BEFORE the first sign of failure.</p>\n");
+  sendString("<p>Assuming your system log is in /var/log/messages, the command is:</p>\n");
+  sendString("<pre>   grep 'ntop' /var/log/messages | head -n 15</pre>\n");
+  sendString("<p>but you may have to increase the 15 to get the right messages.</p>\n");
+  sendString("</td></tr>\n<tr><td class=\"wrap\">");
+  sendString("<p>The generated id below should be unique. It's essentially a random 6\n");
+  sendString("or 7 character tracking tag for each problem report.  Since it's\n");
+  sendString("generated on your machine, we can't just use an ever increasing global\n");
+  sendString("number.  While it should be unique, it is not traceable back to a\n");
+  sendString("specific user or machine. <em>If this makes you uncomfortable just delete it.</em></p>\n");
+  sendString("</td></tr>\n<tr><td class=\"wrap\">");
+  sendString("<p>The shortcut keys for copying this entire section are usually:</p>\n");
+  sendString("<ol><li>Left click anywhere in this text (selects the frame)</li>\n");
+  sendString("<li>Type control-a (select all)</li>\n");
+  sendString("<li>Type control-c (copy)</li>\n");
+  sendString("<li>Open a new mail message, and</li>\n");
+  sendString("<li>Type control-v (paste)</li>\n");
+  sendString("<li>Edit the generated text to fill in the _____s and empty sections.  Don't worry -\n");
+  sendString("giving us more information is usually better that giving less</li>\n");
+  sendString("<li><b>REMEMBER</b> To delete the headers and instructions (i.e. from\n");
+  sendString("this line to the top) before sending...</b></li></ol>\n");
+  sendString("</td></tr></table>\n");
+  sendString("<hr>\n");
 
+  sendString("<pre>\n");
   sendString("  n t o p   v e r s i o n  '");
   sendString(version);
   sendString("'  p r o b l e m   r e p o r t\n\n");
@@ -7158,8 +7145,10 @@ void printNtopProblemReport(void) {
   sendString("----------------------------------------------------------------------------\n");
   sendString("Problem Description\n\n\n\n\n\n\n\n\n\n");
   sendString("----------------------------------------------------------------------------\n");
-  printNtopConfigInfo(TRUE, &myGlobals.runningPref);
+  printNtopConfigInfoData(TRUE, &myGlobals.runningPref);
   sendString("----------------------------------------------------------------------------\n");
+
+  sendString("</pre>\n");
 }
 
 /* **************************************** */

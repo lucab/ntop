@@ -30,6 +30,10 @@ td
 font-size: 12px;white-space: nowrap;
 }
 
+.wrap { 
+white-space: normal;
+}
+
 address
 {font-family: Helvetica, Arial, sans-serif;
 font-size: 8pt}
