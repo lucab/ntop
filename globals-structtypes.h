@@ -1719,8 +1719,8 @@ typedef struct ntopGlobals {
   char domainName[MAXHOSTNAMELEN];   /* 'D' */
   char *flowSpecs;                   /* 'F' */
 
-#ifndef WIN32
   u_short debugMode;                 /* 'K' */
+#ifndef WIN32
   int useSyslog;                     /* 'L' */
 #endif
 

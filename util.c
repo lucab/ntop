@@ -3820,7 +3820,7 @@ char *i18n_xvert_acceptlanguage2common(const char *input) {
 void setHostFingerprint(HostTraffic *srcHost) {
   FILE *fd = NULL;
   char *WIN, *MSS, *WSS, *ttl, *flags, *work;
-  int S, N, D, T, done = 0, idx;
+  int S, N, D, T, done = 0;
   char fingerprint[32];
   char *strtokState;
   u_char compressedFormat;
@@ -5433,8 +5433,7 @@ void* checkVersion(void* notUsed _UNUSED_) {
   /* The work buffer is a big boy so we can eat the entire XML file all at once
    * and avoid making this logic any more complex!
    */
-  char buf[LEN_CHECKVERSION_BUFFER];
-  char versionSite[256], *versionFile, *site;
+  char buf[LEN_CHECKVERSION_BUFFER], *site;
   int rc=0;
 
   displayPrivacyNotice();
@@ -5564,7 +5563,7 @@ FILE* checkForInputFile(char* logTag,
 
 #ifdef MAKE_WITH_ZLIB
       *compressedFormat = 1;
-      snprintf(tmpFile, sizeof(tmpFile), "%s/%s.gz", myGlobals.configFileDirs[idx], fileName);
+      snprintf(tmpFile, sizeof(tmpFile), "%s%c%s.gz", myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName);
       if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
       fd = gzopen(tmpFile, "r");
       /* Note, if this code is inactive, fd is NULL from above, avoids fancy ifdefs */
@@ -5572,7 +5571,7 @@ FILE* checkForInputFile(char* logTag,
 
       if(fd == NULL) {
 	*compressedFormat = 0;
-	snprintf(tmpFile, sizeof(tmpFile), "%s/%s", myGlobals.configFileDirs[idx], fileName);
+	snprintf(tmpFile, sizeof(tmpFile), "%s%c%s", myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName);
         if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
 	fd = fopen(tmpFile, "r");
       }
@@ -5597,9 +5596,7 @@ FILE* checkForInputFile(char* logTag,
       if(!stat(tmpFile, &checkStat)) {
         if(dbStat->st_mtime >= checkStat.st_mtime) {
           if(logTag != NULL)
-            traceEvent(CONST_TRACE_INFO,
-                       "%s: File '%s' does not need to be reloaded",
-                       logTag, tmpFile);
+            traceEvent(CONST_TRACE_INFO,"%s: File '%s' does not need to be reloaded", logTag, tmpFile);
 #ifdef MAKE_WITH_ZLIB
           if(*compressedFormat)
             gzclose(fd);

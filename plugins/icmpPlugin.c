@@ -91,6 +91,8 @@ static int sortICMPhostsHost(const void *_a, const void *_b) {
   return(rc);
 }
 
+/* **************************************** */
+
 static int sortICMPhostsSent(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
@@ -111,6 +113,8 @@ static int sortICMPhostsSent(const void *_a, const void *_b) {
 
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
+
+/* **************************************** */
 
 static int sortICMPhostsRcvd(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
@@ -133,6 +137,8 @@ static int sortICMPhostsRcvd(const void *_a, const void *_b) {
 
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
+
+/* **************************************** */
 
 static int sortICMPhostsEcho(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
@@ -159,6 +165,8 @@ static int sortICMPhostsEcho(const void *_a, const void *_b) {
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
+/* **************************************** */
+
 static int sortICMPhostsReply(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
@@ -183,6 +191,8 @@ static int sortICMPhostsReply(const void *_a, const void *_b) {
 
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
+
+/* **************************************** */
 
 static int sortICMPhostsUnreach(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
@@ -209,6 +219,8 @@ static int sortICMPhostsUnreach(const void *_a, const void *_b) {
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
+/* **************************************** */
+
 static int sortICMPhostsRedirect(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
@@ -233,6 +245,8 @@ static int sortICMPhostsRedirect(const void *_a, const void *_b) {
 
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
+
+/* **************************************** */
 
 static int sortICMPhostsAdvert(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
@@ -259,6 +273,8 @@ static int sortICMPhostsAdvert(const void *_a, const void *_b) {
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
+/* **************************************** */
+
 static int sortICMPhostsTimeout(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
@@ -283,6 +299,8 @@ static int sortICMPhostsTimeout(const void *_a, const void *_b) {
 
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
+
+/* **************************************** */
 
 static int sortICMPhostsBadParam(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
@@ -309,6 +327,8 @@ static int sortICMPhostsBadParam(const void *_a, const void *_b) {
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
+/* **************************************** */
+
 static int sortICMPhostsQuench(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
@@ -333,6 +353,8 @@ static int sortICMPhostsQuench(const void *_a, const void *_b) {
 
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
+
+/* **************************************** */
 
 static int sortICMPhostsTimestamp(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
@@ -363,6 +385,8 @@ static int sortICMPhostsTimestamp(const void *_a, const void *_b) {
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
+/* **************************************** */
+
 static int sortICMPhostsInfo(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
@@ -391,6 +415,8 @@ static int sortICMPhostsInfo(const void *_a, const void *_b) {
 
   if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
+
+/* **************************************** */
 
 static int sortICMPhostsNetmask(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
@@ -615,7 +641,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 /* ******************************* */
 
 static void handleIcmpWatchHTTPrequest(char* url) {
-  char buf[1024], fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX";
   u_int i, revertOrder=0, num, tot = 0;
   int icmpId=-1;
   HostTraffic **hosts;

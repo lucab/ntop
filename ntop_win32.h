@@ -48,7 +48,7 @@ extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 extern u_char isNtopAservice;
 extern const char *inet_ntop(int af, const void *src, char *dst, size_t size);
 
-extern char _wdir[];
+extern char _wdir[], VERSION[];
 
 #ifndef CFG_DATAFILE_DIR
 #define CFG_DATAFILE_DIR	_wdir
@@ -80,10 +80,10 @@ extern void printAvailableInterfaces();
 extern char* getpass(const char *prompt);
 extern ULONG GetHostIPAddr();
 
-#ifdef WIN32
+#define MAKE_WITH_ZLIB
+
 #define INET6
 #define in6_addr in_addr6
-#endif
 
 /* *************************************************************** */
 

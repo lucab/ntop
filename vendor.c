@@ -389,7 +389,7 @@ char* getSpecialMacInfo(HostTraffic* el, short encodeString) {
 /* *********************************** */
 
 void createVendorTable(struct stat *dbStat) {
-  int idx, configFileFound, numRead, numLoaded;
+  int idx, numRead, numLoaded;
   FILE *fd = NULL;
   char tmpLine[LEN_GENERAL_WORK_BUFFER];
   char tmpMACkey[LEN_ETHERNET_ADDRESS_DISPLAY+1];
