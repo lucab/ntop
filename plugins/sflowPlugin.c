@@ -650,10 +650,10 @@ static u_long *readExtendedSwitch(SFSample *sample, u_long *datap, u_char *endPt
   sample->extended_data_tag |= SASAMPLE_EXTENDED_DATA_SWITCH;
 
   if(debug) {
-            traceEvent(CONST_TRACE_INFO, "in_vlan %lu\n", sample->in_vlan);
-            traceEvent(CONST_TRACE_INFO, "in_priority %lu\n", sample->in_priority);
-            traceEvent(CONST_TRACE_INFO, "out_vlan %lu\n", sample->out_vlan);
-            traceEvent(CONST_TRACE_INFO, "out_priority %lu\n", sample->out_priority);
+            traceEvent(CONST_TRACE_INFO, "in_vlan %lu", sample->in_vlan);
+            traceEvent(CONST_TRACE_INFO, "in_priority %lu", sample->in_priority);
+            traceEvent(CONST_TRACE_INFO, "out_vlan %lu", sample->out_vlan);
+            traceEvent(CONST_TRACE_INFO, "out_priority %lu", sample->out_priority);
   }
 
   return datap;
@@ -725,10 +725,10 @@ static void decodeLinkLayer(SFSample *sample)
 
   if(sample->headerLen < NFT_ETHHDR_SIZ) return; /* not enough for an Ethernet header */
 
-  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dstMAC %02x%02x%02x%02x%02x%02x\n",
+  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dstMAC %02x%02x%02x%02x%02x%02x",
 	     ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
   ptr += 6;
-  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: srcMAC %02x%02x%02x%02x%02x%02x\n",
+  if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: srcMAC %02x%02x%02x%02x%02x%02x",
 	     ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
   ptr += 6;
   type_len = (ptr[0] << 8) + ptr[1];
@@ -1042,7 +1042,7 @@ static u_long *readExtendedGateway(SFSample *sample, u_long *datap, u_char *endP
       else if(debug) traceEvent(CONST_TRACE_INFO, "-");
       if(debug) traceEvent(CONST_TRACE_INFO, "%lu", ntohl(sample->dst_as_path[i]));
     }
-    if(debug) traceEvent(CONST_TRACE_INFO, "\n");
+    if(debug) traceEvent(CONST_TRACE_INFO, "");
   }
   return datap;
 }
@@ -1825,7 +1825,7 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 #endif
 
 #ifdef CFG_MULTITHREADED
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: sFlow thread (%ld) started...\n", sFlowThread);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: sFlow thread (%ld) started...", sFlowThread);
 #endif
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
@@ -1865,7 +1865,7 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 
 #ifdef CFG_MULTITHREADED
   threadActive = 0;
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: sFlow thread (%ld) terminated...\n", sFlowThread);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: sFlow thread (%ld) terminated...", sFlowThread);
 #endif
   return(0);
 }

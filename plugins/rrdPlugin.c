@@ -885,19 +885,19 @@ static void commonRRDinit(void) {
   }
 
 #ifdef RRD_DEBUG
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Parameters:\n");
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterval %d seconds\n", dumpInterval);
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHours %d hours by %d seconds\n", dumpHours, dumpInterval);
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDays %d days by hour\n", dumpDays);
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMonths %d months by day\n", dumpMonths);
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHosts %s\n", dumpHosts == 0 ? "no" : "yes");
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterfaces %s\n", dumpInterfaces == 0 ? "no" : "yes");
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMatrix %s\n", dumpMatrix == 0 ? "no" : "yes");
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDetail %s\n",
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Parameters:");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterval %d seconds", dumpInterval);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHours %d hours by %d seconds", dumpHours, dumpInterval);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDays %d days by hour", dumpDays);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMonths %d months by day", dumpMonths);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHosts %s", dumpHosts == 0 ? "no" : "yes");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterfaces %s", dumpInterfaces == 0 ? "no" : "yes");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMatrix %s", dumpMatrix == 0 ? "no" : "yes");
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDetail %s",
 	     dumpDetail == FLAG_RRD_DETAIL_HIGH ? "high" :
              (dumpDetail == FLAG_RRD_DETAIL_MEDIUM ? "medium" : "low"));
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     hostsFilter %s\n", hostsFilter);
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     rrdPath %s\n", myGlobals.rrdPath);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     hostsFilter %s", hostsFilter);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     rrdPath %s", myGlobals.rrdPath);
 #endif
 
   initialized = 1;
@@ -1263,13 +1263,13 @@ RETSIGTYPE rrdcleanup(int signo) {
   size = backtrace(array, 20);
   strings = (char**)backtrace_symbols(array, size);
 
-  traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:     backtrace is:\n");
+  traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:     backtrace is:");
   if (size < 2) {
-    traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:         **unavailable!\n");
+    traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:         **unavailable!");
   } else {
     /* Ignore the 0th entry, that's our cleanup() */
     for (i=1; i<size; i++) {
-      traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:          %2d. %s\n", i, strings[i]);
+      traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:          %2d. %s", i, strings[i]);
     }
   }
 #endif /* HAVE_BACKTRACE */
@@ -1356,7 +1356,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     {
       struct tm workT;
       strftime(endTime, sizeof(endTime), "%Y-%m-%d %H:%M:%S", localtime_r(&end_tm, &workT));
-      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds (interval %d, end at %s)\n",
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds (interval %d, end at %s)",
 		 sleep_tm,
 		 dumpInterval,
 		 endTime);
@@ -1653,7 +1653,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     }
 
 #ifdef RRD_DEBUG
-    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: %lu RRDs updated (%lu total updates)\n",
+    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: %lu RRDs updated (%lu total updates)",
 	       (unsigned long)(numTotalRRDs-numRRDs), (unsigned long)numTotalRRDs);
 #endif
 
@@ -1700,13 +1700,13 @@ static int initRRDfunct(void) {
   snprintf(dname, sizeof(dname), "%s", myGlobals.rrdPath);
   if (_mkdir(dname) == -1) {
     if (errno != EEXIST) {
-      traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)\n", errno, dname);
+      traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)", errno, dname);
       setPluginStatus("Disabled - unable to create rrd base directory.");
       /* Return w/o creating the rrd thread ... disabled */
       return(-1);
     }
   } else {
-    traceEvent(CONST_TRACE_INFO, "RRD: Created base directory (%s)\n", dname);
+    traceEvent(CONST_TRACE_INFO, "RRD: Created base directory (%s)", dname);
   }
 
   for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
@@ -1714,13 +1714,13 @@ static int initRRDfunct(void) {
     snprintf(dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
     if (_mkdir(dname) == -1) {
       if (errno != EEXIST) {
-	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)\n", errno, dname);
+	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);
         setPluginStatus("Disabled - unable to create rrd subdirectory.");
 	/* Return w/o creating the rrd thread ... disabled */
 	return(-1);
       }
     } else {
-      traceEvent(CONST_TRACE_INFO, "RRD: Created directory (%s)\n", dname);
+      traceEvent(CONST_TRACE_INFO, "RRD: Created directory (%s)", dname);
     }
   }
 
@@ -1780,7 +1780,7 @@ PluginInfo* rrdPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Welcome to %s. (C) 2002 by Luca Deri.\n",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Welcome to %s. (C) 2002 by Luca Deri.",
 	     rrdPluginInfo->pluginName);
 
   return(rrdPluginInfo);

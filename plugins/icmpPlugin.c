@@ -234,7 +234,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
 	  for(j=0; j<ICMP_MAXTYPE; j++) {
 #ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "idx=%d/type=%d: %d/%d\n", i, j, 
+	    traceEvent(CONST_TRACE_INFO, "idx=%d/type=%d: %d/%d", i, j, 
 		       hosts[i]->icmpInfo->icmpMsgSent[j].value,
 		       hosts[i]->icmpInfo->icmpMsgRcvd[j].value);
 #endif
@@ -246,7 +246,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	}
       }
 
-      /* traceEvent(CONST_TRACE_INFO, "file=%s\n", fileName); */
+      /* traceEvent(CONST_TRACE_INFO, "file=%s", fileName); */
 
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 
@@ -276,7 +276,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     tmpStr = strtok_r(NULL, "&", &strtokState);
     hostIpAddress.s_addr = strtoul(tmpStr, (char **)NULL, 10);
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "-> %s [%u]\n", tmpStr, hostIpAddress.s_addr);
+    traceEvent(CONST_TRACE_INFO, "-> %s [%u]", tmpStr, hostIpAddress.s_addr);
 #endif
     strtok_r(NULL, "=", &strtokState);
     icmpId = atoi(strtok_r(NULL, "&", &strtokState));

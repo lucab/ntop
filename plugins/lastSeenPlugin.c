@@ -67,7 +67,7 @@ static void handleLsPacket(u_char *_deviceId,
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "%s [%x]", intoa(ip.ip_src), ip.ip_src.s_addr);
-  traceEvent(CONST_TRACE_INFO, "->%s [%x]\n", intoa(ip.ip_dst), ip.ip_dst.s_addr);
+  traceEvent(CONST_TRACE_INFO, "->%s [%x]", intoa(ip.ip_dst), ip.ip_dst.s_addr);
 #endif
 
   rc = isPseudoLocalAddress(&ip.ip_src, deviceId);
@@ -76,7 +76,7 @@ static void handleLsPacket(u_char *_deviceId,
     return;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "-->>>>%s [%d]\n", intoa(ip.ip_src), rc); 
+  traceEvent(CONST_TRACE_INFO, "-->>>>%s [%d]", intoa(ip.ip_src), rc); 
 #endif
 
   HostI.HostIpAddress = ip.ip_src;
