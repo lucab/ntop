@@ -262,7 +262,6 @@ typedef struct ntopGlobals {
   /* the table of other hosts entries */
   u_int otherHostEntryIdx;
   HostTraffic *otherHostEntry;
-  HostSerial  serialCounter;
 
   /* Administrative */
   char *shortDomainName;
