@@ -1980,7 +1980,7 @@
 #define DEFAULT_NTOP_SETNONBLOCK            TRUE
 #define DEFAULT_NTOP_DISABLE_STOPCAP        TRUE
 #define DEFAULT_NTOP_DISABLE_IS_PURGE       TRUE
-#define DEFAULT_NTOP_NOFC                   FALSE
+#define DEFAULT_NTOP_PRINTIPONLY            FALSE
 #define DEFAULT_NTOP_PRINTFCONLY            FALSE
 #define DEFAULT_NTOP_NO_INVLUN_DISPLAY      FALSE
 #define DEFAULT_NTOP_DISABLE_MUTEXINFO      TRUE
@@ -2687,8 +2687,7 @@ struct ip6_hdr
 #define NTOP_PREF_DAEMON           "ntop.daemonMode"
 #define NTOP_PREF_REFRESH_RATE     "ntop.refreshRate"
 #define NTOP_PREF_MAXLINES         "ntop.maxNumLines"
-#define NTOP_PREF_NOFC             "ntop.noFc"
-#define NTOP_PREF_PRINT_FCONLY     "ntop.printFcOnly"
+#define NTOP_PREF_PRINT_FCORIP     "ntop.printFcOrIp"
 #define NTOP_PREF_NO_INVLUN        "ntop.noInvalidLunDisplay"
 #define NTOP_PREF_FILTER_EXTRA_FRM "ntop.filterExpressionInExtraFrame"
 #define NTOP_PREF_W3C              "ntop.w3c"
@@ -2719,3 +2718,12 @@ struct ip6_hdr
 #define NTOP_PREF_USE_SYSLOG       "ntop.useSyslog"
 #define NTOP_PREF_PCAP_LOG         "ntop.pcapLog"
 #define NTOP_PREF_NO_MUTEX_EXTRA   "ntop.disableMutexExtraInfo"
+
+/* Values for the preferences */
+#define NTOP_PREF_VALUE_PRINT_IPONLY 1
+#define NTOP_PREF_VALUE_PRINT_FCONLY 2
+#define NTOP_PREF_VALUE_PRINT_BOTH   3
+
+#define NTOP_PREF_VALUE_AF_INET      AF_INET
+#define NTOP_PREF_VALUE_AF_INET6     AF_INET6
+#define NTOP_PREF_VALUE_AF_BOTH      AF_UNSPEC

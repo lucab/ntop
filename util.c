@@ -3686,7 +3686,7 @@ static void processStrPref (char *key, char *value, char **globalVar,
 {
     if (key == NULL) return;
 
-    if (value == NULL) {
+    if (strcmp (value, "") == 0) {
         /* If a value is specified as NULL but the current value is not, delete
          * the pref. This is assumed to be the way the user will change such a
          * pref. 
@@ -3756,6 +3756,7 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
 {
     bool startCap = FALSE;
     char buf[16], *tmpStr = NULL;
+    int tmpInt;
 
     if(value == NULL) value = ""; /* Safer */
     
@@ -3779,21 +3780,66 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
                         &pref->currentFilterExpression, savePref);
     }
     else if (strcmp (key, NTOP_PREF_WEBPORT) == 0) {
-        if (value == NULL) {
+        if (value != NULL) {
+            stringSanityCheck(value);
+            if(!isdigit(*value)) {
+                traceEvent (CONST_TRACE_ERROR, "flag -w expects a numeric argument.\n");
+                return;
+            }
+
+            /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
+            if((pref->webAddr = strchr(value,':'))) {
+                /* DS: Search for : to find xxx.xxx.xxx.xxx:port */
+                /* This code is to be able to bind to a particular interface */
+                if (savePref) {
+                    storePrefsValue (key, value);                    
+                }
+                *pref->webAddr = '\0';
+                pref->webPort = atoi(pref->webAddr+1);
+                pref->webAddr = strdup (value);
+            } else {
+                processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
+            }
+        }
+        else {
             safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
                            DEFAULT_NTOP_WEB_PORT);
             value = buf;
+            processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
         }
-        processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
     }
+#ifdef HAVE_OPENSSL
     else if (strcmp (key, NTOP_PREF_SSLPORT) == 0) {
+        if (value != NULL) {
+            stringSanityCheck(value);
+            if(!isdigit(*value)) {
+                traceEvent (CONST_TRACE_ERROR, "flag -w expects a numeric argument.\n");
+                return;
+            }
+
+            tmpStr = strdup (value);
+            /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
+            if((pref->sslAddr = strchr(tmpStr,':'))) {
+                /* DS: Search for : to find xxx.xxx.xxx.xxx:port */
+                /* This code is to be able to bind to a particular interface */
+                if (savePref) {
+                    storePrefsValue (key, value);                    
+                }
+                *pref->sslAddr = '\0';
+                pref->sslPort = atoi(pref->sslAddr+1);
+                pref->sslAddr = value;
+            } else {
+                processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
+            }
+        }
         if (value == NULL) {
             safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
                            DEFAULT_NTOP_WEB_PORT);
             value = buf;
+            processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
         }
-        processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
     }
+#endif    
     else if (strcmp (key, NTOP_PREF_EN_SESSION) == 0) {
         processBoolPref (NTOP_PREF_EN_SESSION, TRUE,
                          &pref->enableSessionHandling, savePref);
@@ -3846,22 +3892,19 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
         processIntPref (NTOP_PREF_MAXLINES, value, &pref->maxNumLines,
                         savePref);
     }
-    else if (strcmp (key, NTOP_PREF_NOFC) == 0) {
-        if (pref->printFcOnly) {
-            if (savePref)
-                delPrefsValue (NTOP_PREF_PRINT_FCONLY);
-            pref->printFcOnly = FALSE;
+    else if (strcmp (key, NTOP_PREF_PRINT_FCORIP) == 0) {
+        tmpInt = atoi (value);
+        if (tmpInt == NTOP_PREF_VALUE_PRINT_IPONLY) {
+            pref->printIpOnly = TRUE, pref->printFcOnly = FALSE;
         }
-        processBoolPref (NTOP_PREF_NOFC, TRUE, &pref->noFc, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_PRINT_FCONLY) == 0) {
-        if (pref->noFc) {
-            if (savePref)
-                delPrefsValue (NTOP_PREF_NOFC);
-            pref->noFc = FALSE;
+        else if (tmpInt == NTOP_PREF_VALUE_PRINT_FCONLY) {
+            pref->printIpOnly = FALSE, pref->printFcOnly = TRUE;
         }
-        processBoolPref (NTOP_PREF_PRINT_FCONLY, TRUE, &pref->printFcOnly,
-                         savePref);
+        else {
+            pref->printIpOnly = FALSE, pref->printFcOnly = FALSE;
+        }
+
+        processIntPref (NTOP_PREF_PRINT_FCORIP, value, &tmpInt, savePref);
     }
     else if (strcmp (key, NTOP_PREF_NO_INVLUN) == 0) {
         processBoolPref (NTOP_PREF_NO_INVLUN, TRUE,
@@ -3874,13 +3917,8 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
     else if (strcmp (key, NTOP_PREF_W3C) == 0) {
         processBoolPref (NTOP_PREF_W3C, TRUE, &pref->w3c, savePref);
     }
-    else if (strcmp (key, NTOP_PREF_IPV4) == 0) {
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d", AF_INET);
-        processIntPref (NTOP_PREF_IPV4V6, buf, &pref->ipv4or6, savePref);
-    }
-    else if (strcmp (key, NTOP_PREF_IPV6) == 0) {
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d", AF_INET6);
-        processIntPref (NTOP_PREF_IPV4V6, buf, &pref->ipv4or6, savePref);
+    else if (strcmp (key, NTOP_PREF_IPV4V6) == 0) {
+        processIntPref (NTOP_PREF_IPV4V6, value, &pref->ipv4or6, savePref);
     }
     else if (strcmp (key, NTOP_PREF_DOMAINNAME) == 0) {
         processStrPref (NTOP_PREF_DOMAINNAME, value, &tmpStr,
@@ -4002,6 +4040,10 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
                          &pref->disableSchedYield, savePref);
     }
 #endif
+    else if (strncmp (key, "ntop.", strlen ("ntop.")) == 0) {
+        traceEvent (CONST_TRACE_WARNING, "Unknown preference: %s, value = %s\n",
+                    key, (value == NULL) ? "(null)" : value);
+    }
 
     return (startCap);
 }

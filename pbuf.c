@@ -606,7 +606,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
     return;
   }
 
-  if (!myGlobals.runningPref.noFc) {
+  if (!myGlobals.runningPref.printIpOnly) {
       if (srcHost == dstHost) {
           /* Fabric controllers exchange link messages where the S_ID & D_ID
            * are equal. A lot of control traffic is exchanged using these
@@ -2206,7 +2206,7 @@ void queuePacket(u_char *_deviceId,
     myGlobals.receivedPacketsProcessed++;
 
     len = h->caplen;
-    if (myGlobals.runningPref.noFc) {
+    if (myGlobals.runningPref.printIpOnly) {
         /* When we do Fibre Channel, the end of the packet contains EOF
          * information and so truncating it isn't a good idea.
          */
@@ -2266,7 +2266,7 @@ void queuePacket(u_char *_deviceId,
     memset(myGlobals.packetQueue[myGlobals.packetQueueHead].p, 0, sizeof(myGlobals.packetQueue[myGlobals.packetQueueHead].p));
     /* Just to be safe */
     len = h->caplen;
-    if (myGlobals.runningPref.noFc) {
+    if (myGlobals.runningPref.printIpOnly) {
         if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
         memcpy(myGlobals.packetQueue[myGlobals.packetQueueHead].p, p, len);
         myGlobals.packetQueue[myGlobals.packetQueueHead].h.caplen = len;
@@ -2351,7 +2351,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
        && (myGlobals.runningPref.enablePacketDecoding /* Courtesy of Ken Beaty <ken@ait.com> */)) {
       traceEvent (CONST_TRACE_WARNING, "dequeuePacket: caplen %d != len %d\n", h.caplen, h.len);
     }
-    if (myGlobals.runningPref.noFc) {
+    if (myGlobals.runningPref.printIpOnly) {
         memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
     }
     else {
@@ -3327,7 +3327,7 @@ void processPacket(u_char *_deviceId,
 	}
       } else if (((eth_type == ETHERTYPE_MDSHDR) || (eth_type == ETHERTYPE_BRDWLK) ||
                   (eth_type == ETHERTYPE_UNKNOWN) || (eth_type == ETHERTYPE_BRDWLK_OLD)) &&
-                 (!myGlobals.runningPref.noFc)) {
+                 (!myGlobals.runningPref.printIpOnly)) {
           /* An FC packet can be captured as Ethernet for three different
            * Ethertypes.
            */

@@ -1137,7 +1137,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     }
 #endif
 
-    if (myGlobals.runningPref.noFc) {
+    if (myGlobals.runningPref.printIpOnly) {
       myGlobals.device[deviceId].pcapPtr =
 	pcap_open_live(myGlobals.device[deviceId].name,
 		       myGlobals.runningPref.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN,
@@ -1324,7 +1324,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
     /* Allocate FC Traffic Matrices */
 #ifdef NOT_YET    
-    if (!myGlobals.runningPref.noFc) {
+    if (!myGlobals.runningPref.printIpOnly) {
         memlen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
         myGlobals.device[deviceId].fcTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
                                                                             *myGlobals.device[deviceId].numHosts,

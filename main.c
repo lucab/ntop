@@ -660,7 +660,7 @@ static void parseOptions(int argc, char* argv []) {
       break;
       
     case 148:
-        myGlobals.runningPref.noFc = TRUE;
+        myGlobals.runningPref.printIpOnly = TRUE;
         break;
 
     case 149:
@@ -1045,7 +1045,7 @@ int main(int argc, char *argv[]) {
   if(myGlobals.runningPref.P3Puri != NULL)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "P3P: Policy reference uri is '%s'", myGlobals.runningPref.P3Puri);
 
-  if (!myGlobals.runningPref.noFc && (myGlobals.runningPref.fcNSCacheFile != NULL)) {
+  if (!myGlobals.runningPref.printIpOnly && (myGlobals.runningPref.fcNSCacheFile != NULL)) {
       processFcNSCacheFile (myGlobals.runningPref.fcNSCacheFile);
   }
   

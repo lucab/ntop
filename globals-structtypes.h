@@ -1937,7 +1937,7 @@ typedef struct _userPref {
   bool disableStopcap;          /* '142' */
 
   bool disableInstantSessionPurge; /* '144' */
-  bool noFc;                    /* '145' */
+  bool printIpOnly;                    /* '145' */
   bool noInvalidLunDisplay;     /* '146' */
 
   bool disableMutexExtraInfo;   /* '145' */

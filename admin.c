@@ -1052,7 +1052,7 @@ void initUserPrefs (UserPref *pref)
 #endif
    pref->disableStopcap = DEFAULT_NTOP_DISABLE_STOPCAP;
    pref->disableInstantSessionPurge = DEFAULT_NTOP_DISABLE_IS_PURGE;
-   pref->noFc = DEFAULT_NTOP_NOFC;
+   pref->printIpOnly = DEFAULT_NTOP_PRINTIPONLY;
    pref->printFcOnly = DEFAULT_NTOP_PRINTFCONLY;
    pref->noInvalidLunDisplay = DEFAULT_NTOP_NO_INVLUN_DISPLAY;
    pref->disableMutexExtraInfo = DEFAULT_NTOP_DISABLE_MUTEXINFO;
@@ -1124,7 +1124,7 @@ void copyUserPrefs (UserPref *from, UserPref *to)
 #endif
         to->disableStopcap = from->disableStopcap;
         to->disableInstantSessionPurge = from->disableInstantSessionPurge;
-        to->noFc = from->noFc;
+        to->printIpOnly = from->printIpOnly;
         to->printFcOnly = from->printFcOnly;
         to->noInvalidLunDisplay = from->noInvalidLunDisplay;
         to->disableMutexExtraInfo = from->disableMutexExtraInfo;
@@ -1416,7 +1416,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 
 void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 {
-    char buf[1024];
+    char buf[1024], hostStr[MAXHOSTNAMELEN+16];
     bool action = FALSE, startCap = FALSE;
     int len;
     UserPref defaults, *pref = &myGlobals.savedPref; 
@@ -1500,14 +1500,32 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
                           NTOP_PREF_FILTER,
                           50, pref->currentFilterExpression,
                           "Restrict the traffic seen by ntop. BPF syntax.");
+
+        if (pref->webAddr == NULL) {
+            safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
+                           "%d", pref->webPort);
+        }
+        else {
+            safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
+                           "%s:%d", pref->webAddr, pref->webPort);
+        }
+        CONFIG_STR_ENTRY (DARK_BG, "HTTP Server (-w)", NTOP_PREF_WEBPORT,
+                          50, hostStr,
+                          "HTTP Server [Address:]Port of ntop's web interface");
         
-        CONFIG_INT_ENTRY (DARK_BG, "HTTP Port (-w)", NTOP_PREF_WEBPORT, 50,
-                          pref->webPort,
-                          "port of the ntop web server");
-        
-        CONFIG_INT_ENTRY (DARK_BG, "HTTPS Port (-W)", NTOP_PREF_SSLPORT, 50,
-                          pref->sslPort,
-                          "port of the ntop https server");
+#ifdef HAVE_OPENSSL
+        if (pref->sslAddr == NULL) {
+            safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
+                           "%d", pref->sslPort);
+        }
+        else {
+            safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
+                           "%s:%d", pref->sslAddr, pref->sslPort);
+        }
+        CONFIG_STR_ENTRY (DARK_BG, "HTTPS Server (-W)", NTOP_PREF_SSLPORT, 50,
+                          hostStr, "HTTPS Server [Address:]Port of ntop's web "
+                          "interface");
+#endif        
         
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Enable Session Handling (-z)",
                              NTOP_PREF_EN_SESSION,
@@ -1559,20 +1577,25 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
                           "Max number of lines that ntop will display on each "
                           " generated HTML page");
         
-        sendString("<TR><TD ALIGN=LEFT "DARK_BG">Show Menus For Only</TD><TD>");
+        sendString("<TR><TD ALIGN=LEFT "DARK_BG">Show Menus For</TD><TD>");
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                      "<INPUT TYPE=radio NAME=%s VALUE=%d %s>IP\n",
-                      NTOP_PREF_NOFC, pref->noFc,
-                      (pref->noFc) ? "CHECKED" : "");
+                      "<INPUT TYPE=radio NAME=%s  VALUE=%d %s>IP\n",
+                      NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_IPONLY,
+                      (pref->printIpOnly) ? "CHECKED" : "");
         sendString(buf);
         
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                      "<INPUT TYPE=radio NAME=%s"
-                      "VALUE=%d %s>FC\n", NTOP_PREF_PRINT_FCONLY,
-                      pref->printFcOnly,
+                      "<INPUT TYPE=radio NAME=%s VALUE=%d %s>FC\n",
+                      NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_FCONLY,
                       (pref->printFcOnly) ? "CHECKED" : "");
         sendString(buf);
         
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                      "<INPUT TYPE=radio NAME=%s VALUE=%d %s>Both\n",
+                      NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_BOTH,
+                      (!pref->printIpOnly && !pref->printFcOnly) ? "CHECKED" : "");
+        sendString(buf);
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "No Info On Invalid LUNs",
                              NTOP_PREF_NO_INVLUN,
                              pref->noInvalidLunDisplay,
@@ -1594,16 +1617,22 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
         sendString("<TR><TD ALIGN=LEFT "DARK_BG">Use IPv4 or IPv6 (-4/-6)</TD><TD>");
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                       "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v4\n",
-                      NTOP_PREF_IPV4, pref->ipv4or6,
+                      NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET,
                       (pref->ipv4or6 == AF_INET) ? "CHECKED" : "");
         sendString(buf);
         
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                       "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v6\n",
-                      NTOP_PREF_IPV6, pref->ipv4or6,
+                      NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET6,
                       (pref->ipv4or6 == AF_INET6) ? "CHECKED" : "");
         sendString(buf);
         
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                      "<INPUT TYPE=radio NAME=%s VALUE=%d %s>Both\n",
+                      NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_BOTH,
+                      (pref->ipv4or6 == AF_UNSPEC) ? "CHECKED" : "");
+        sendString(buf);
+
         CONFIG_STR_ENTRY (DARK_BG, "Local Domain Name (-D)",
                           NTOP_PREF_DOMAINNAME, 10, pref->domainName,
                           "Only if ntop is having difficulty determining it "

@@ -562,7 +562,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* FC & SCSI-specific stuff */
   myGlobals.scsiDefaultDevType = SCSI_DEV_UNINIT;
 
-  if (!myGlobals.runningPref.noFc) {
+  if (!myGlobals.runningPref.printIpOnly) {
       if (myGlobals.fcnsCacheHash != NULL) {
           free (myGlobals.fcnsCacheHash);
       }
@@ -622,9 +622,11 @@ void initNtop(char *devices) {
   if((myGlobals.runningPref.rFileName != NULL) &&
      ((myGlobals.runningPref.localAddresses == NULL) &&
       !myGlobals.runningPref.printFcOnly)) {
-    traceEvent(CONST_TRACE_FATALERROR, 
-	       "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used");
-    exit(-1);
+      traceEvent(CONST_TRACE_FATALERROR, 
+                 "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used"
+                 "Capture not started");
+      myGlobals.capturePackets = FLAG_NTOPSTATE_NOTINIT;
+      return;
   }
   
   if(myGlobals.runningPref.currentFilterExpression != NULL)

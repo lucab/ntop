@@ -5716,7 +5716,7 @@ void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
                            "No");
   
   printParameterConfigInfo(textPrintFlag, "--no-fc",
-                           pref->noFc == TRUE ? "Yes" : "No",
+                           pref->printIpOnly == TRUE ? "Yes" : "No",
                            "No");
 
   printParameterConfigInfo(textPrintFlag, "--no-invalid-lun",

@@ -697,7 +697,8 @@ void printHTMLtrailer(void) {
 
   len = strlen(buf);
 
-  if(*myGlobals.runningPref.currentFilterExpression != '\0') {
+  if ((myGlobals.runningPref.currentFilterExpression != NULL) &&
+      (*myGlobals.runningPref.currentFilterExpression != '\0')) {
     safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER-len,
 		"with kernel (libpcap) filtering expression </B>\"%s\"<B>\n",
 		myGlobals.runningPref.currentFilterExpression);
@@ -1381,7 +1382,7 @@ int generateInternalPages(char* pageName) {
           menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Local Matrix", "");
       }
 
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           sendString("<p><b>FibreChannel</b></p>\n");
           /*
             Fibre Channel:  Traffic  |   Throughput  |   Activity  |   Hosts  |   Traffic Per Port  
@@ -1566,7 +1567,7 @@ static int generateNewInternalPages(char* pageName) {
           menuitem(CONST_VLAN_LIST_HTML, "VLAN Info", "");
           menuitem(CONST_HOSTS_LOCAL_FINGERPRINT_HTML, "Hosts Fingerprint", "");
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_FC_HOSTS_INFO_HTML, "FC_Ports", "");
           menuitem(CONST_VSAN_DISTRIB_HTML, "VSANs Summary", "");
       }
@@ -1581,7 +1582,7 @@ static int generateNewInternalPages(char* pageName) {
           menuitem(CONST_IP_PROTO_DISTRIB_HTML, "IP Distribution", "");
           menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Local Matrix", "");
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_FC_TRAFFIC_HTML, "FC_Ports", "");
           menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
       }
@@ -1590,7 +1591,7 @@ static int generateNewInternalPages(char* pageName) {
       if (!myGlobals.runningPref.printFcOnly) {
           menuitem(CONST_SORT_DATA_THPT_HTML, "IP_Hosts", "");
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_FC_THPT_HTML, "FC_Ports", "");
       }
 
@@ -1600,7 +1601,7 @@ static int generateNewInternalPages(char* pageName) {
           menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
           menuitem(CONST_IP_PROTO_USAGE_HTML, "Local Ports Used", "");
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_FC_ACTIVITY_HTML, "FC_Ports", "");
       }
 
@@ -1611,7 +1612,7 @@ static int generateNewInternalPages(char* pageName) {
           menuitem(CONST_SORT_DATA_IP_HTML, "TCP", "");
           menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_FC_DATA_HTML, "Fibre Channel", "");
       }
 
@@ -1619,7 +1620,7 @@ static int generateNewInternalPages(char* pageName) {
       if (!myGlobals.runningPref.printFcOnly) {
           menuitem(CONST_ACTIVE_TCP_SESSIONS_HTML, "Local Active TCP Sessions", "");
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_FC_SESSIONS_HTML, "FC Sessions", "");
           menuitem(CONST_SCSI_BYTES_HTML, "SCSI Sessions", "");
           menuitem(CONST_SCSI_STATUS_HTML, "SCSI Status", "");
@@ -1629,7 +1630,7 @@ static int generateNewInternalPages(char* pageName) {
       sendString("<p><b>Latencies</b></p>\n");
       if (!myGlobals.runningPref.printFcOnly) {
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_SCSI_TIMES_HTML, "SCSI", "");
       }
 
@@ -1758,7 +1759,7 @@ int generateNew1InternalPages(char* pageName) {
       if (!myGlobals.runningPref.printFcOnly) {
           menuitem(CONST_HOSTS_INFO_HTML, "Hosts", "");
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_FC_HOSTS_INFO_HTML, "FC_Ports", "");
       }
 
@@ -1769,7 +1770,7 @@ int generateNew1InternalPages(char* pageName) {
           menuitem(CONST_DOMAIN_STATS_HTML, "Domain", "");
       }
 
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
       }
       
@@ -1780,7 +1781,7 @@ int generateNew1InternalPages(char* pageName) {
           menuitem(CONST_IP_PROTO_DISTRIB_HTML, "IP", "");
           menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_FC_DATA_HTML, "Fibre Channel", "");
       }
 
@@ -1801,7 +1802,7 @@ int generateNew1InternalPages(char* pageName) {
           menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Traffic Matrix", "");
       }
 
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           sendString("<p><b>FC_Ports</b></p>\n");
           menuitem(CONST_FC_TRAFFIC_HTML, "FC_Ports", "");
           menuitem(CONST_FC_THPT_HTML, "Throughput", "");
@@ -1814,7 +1815,7 @@ int generateNew1InternalPages(char* pageName) {
           if(myGlobals.flowsList != NULL)
               menuitem(CONST_NET_FLOWS_HTML, "Net Flows", "");
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_FC_SESSIONS_HTML, "FC Sessions", "");
           menuitem(CONST_SCSI_BYTES_HTML, "SCSI Sessions", "");
           menuitem(CONST_SCSI_STATUS_HTML, "SCSI Status", "");
@@ -1824,7 +1825,7 @@ int generateNew1InternalPages(char* pageName) {
       sendString("<p><b>Latencies</b></p>\n");
       if (!myGlobals.runningPref.printFcOnly) {
       }
-      if (!myGlobals.runningPref.noFc) {
+      if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_SCSI_TIMES_HTML, "SCSI", "");
       }
 
@@ -2356,7 +2357,10 @@ b    }
   } else if(strncasecmp(pageName, CONST_TRAFFIC_STATS_HTML,
 			strlen(CONST_TRAFFIC_STATS_HTML)) == 0) {
       if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) {
-          printFlagedWarning ("<I>Configure Ntop first. No packet captures analyzed</I>");
+          safe_snprintf (__FILE__, __LINE__, tmpStr, sizeof (tmpStr),
+                         "<I><a href=%s>Configure Ntop</a> first. No packet "
+                         "captures analyzed</I>", CONST_CONFIG_NTOP_HTML);
+          printFlagedWarning (tmpStr);
           return (0);
       }
       
@@ -2369,7 +2373,10 @@ b    }
       printTrafficStatistics(revertOrder);
   } else {
       if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) {
-          printFlagedWarning ("<I>Configure Ntop first. No packet captures analyzed</I>");
+          safe_snprintf (__FILE__, __LINE__, tmpStr, sizeof (tmpStr),
+                         "<I><a href=%s>Configure Ntop</a> first. No packet "
+                         "captures analyzed</I>", CONST_CONFIG_NTOP_HTML);
+          printFlagedWarning (tmpStr);
           return (0);
       }
       

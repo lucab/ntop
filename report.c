@@ -452,7 +452,7 @@ void printTrafficSummary (int revertOrder)
 
     /* ****************** */
 
-    if(!myGlobals.runningPref.noFc &&
+    if(!myGlobals.runningPref.printIpOnly &&
        myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
         if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
             safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Total</th>"
@@ -555,7 +555,7 @@ void printTrafficSummary (int revertOrder)
     sendString("<p>\n");
     printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, FALSE);
   }
-  if (!myGlobals.runningPref.noFc) {
+  if (!myGlobals.runningPref.printIpOnly) {
     sendString("<p>\n");
     printFcTrafficSummary(0);
   }
@@ -945,7 +945,7 @@ void printTrafficStatistics(int revertOrder) {
 
     /* ****************** */
 
-    if(!myGlobals.runningPref.noFc &&
+    if(!myGlobals.runningPref.printIpOnly &&
        myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
       sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">FC Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">");
         
@@ -1342,7 +1342,7 @@ void printTrafficStatistics(int revertOrder) {
     sendString("<p>\n");
     printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
   }
-  if (!myGlobals.runningPref.noFc) {
+  if (!myGlobals.runningPref.printIpOnly) {
     sendString("<p>\n");
     printFcProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder, TRUE);
   }
