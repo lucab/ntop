@@ -951,8 +951,11 @@ static void addKeyIfMissing(char* key, char* value,
 
       while(pw1[0] == '\0') {
         thePw = getpass(userQuestion);
-
-        if(strlen(thePw) > 5) {
+#ifdef WIN32
+        if ( (isWinNT()) || (strlen(thePw) > 5) ) {
+#else
+        if (strlen(thePw) > 5) {
+#endif
           if(strlen(thePw) > (sizeof(pw1)-1)) thePw[sizeof(pw1)-1] = '\0';
           strcpy(pw1, thePw);
 
