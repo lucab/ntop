@@ -14,10 +14,186 @@
   =========
 
 
-  This is the list of all changes to this ntop source tree.
+  This is the list of all {significant | noteworth | major} changes to the 
+  ntop source tree.
+
   The file NEWS contains a chronology of releases and major milestone versions.
 
-          ____    ____ 
+ 2.3                            
+ =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+ (Apply Usual-caveats)
+
+ Lots of minor bug fixes for stability, proper/better function, more error
+ checking, etc.
+
+    Platforms - ntop has been developed and tested on the following platforms:
+      - Linux
+      - MacOS
+      - Win32 (Visual C++ 6.0, MinGW no longer works after 2.1.3)
+      - Solaris 8/9 (i86 and sparc)
+
+      - FreeBSD (4.8 and 5.1)
+            NOTE: At present, there is a deadlock problem in all 
+                  versions of FreeBSD and ntop does not work. 
+
+                  We are investigating this and hope to have
+                  it resolved shortly after the 2.3 release.
+
+      - NetBSD (Single Threaded only)
+
+      - OpenBSD, HP-UX and AIX have some left-over coding/configure 
+        support, but do not work or have not been tested.
+
+ Another significant update to ./configure
+   * auto* tools (automake and autoconf) are no longer required.
+   * Distributed scripts built with:
+         automake 1.6.1
+         Autoconf 2.57
+         libtool 1.4.2
+   * Most OS/Distribution/Release specific configuration is in the 
+     configureextra/ directory, in files named according to what they
+     support: <OS>[<distro>][<release>], e.g. SOLARIS, LINUXredhat8.
+   * export NTOPCONFIGDEBUG=yes to enable the debug stuff (this 
+     now includes improved tracking of the variables set in the 
+     various steps of the ./configure process. 
+   * export NTOPAUTOREBUID=yes to enable the testing of auto* tool 
+     versions and automatic rebuild - IF YOU HAVE THE TOOLS INSTALLED 
+     of the ./configure scripts. 
+   * linuxrelease script - shared with census - to determine (consistently) 
+     the OS/Distro/Release.
+   * First time install (i.e. create the directory), warn the user that 
+     the ntop user id (-u xxxxx) must be the owner of the directory and 
+     that s/he will have to chown it. 
+
+ Removed external tools and required libraries:
+   * lsof
+   * gdchart - ntop's graph.c is now a completely self-contained graph 
+     creator sufficient (only) for ntop's needs.  (still use the gd library) 
+
+ External data files
+   * Handle compressed input files.
+   * Check file to determine if internal database copies need to be 
+     recreated.
+   * Check age of dns cache and recreate if it's 'old'.
+
+ log (traceEvent) messages
+   * Lots of small cleanups
+   * --log-extra 
+       1 adds [file:line] to every message.
+       2 adds a [MSGIDnnnnnnn] to every message.  
+           These tags should (unlike file:line) be stable across ntop 
+           releases.
+
+ Removed compile and run-time options:
+   * MAKE_MICRO_NTOP
+   * --ignore-sigpipe
+   * --throughput-bar-chart
+   * --dynamic-purge-limits
+   * --large-network | -C
+   * --enable-external-tools | -E
+
+Added options:
+   * --spool-file-path | -Q
+       Allows specification of alternate directory for the 'temporary' database
+       files (addressQueue.db, dnsCache.db and macPrefix.db) vs. the 'permanent'
+       ones (prefsCache.db and ntop_pw.db).  If --spool-file-path is not 
+       specified, the value for --db-file-path (-P) (or it's CFG_DBFILE_DIR)
+       default from ./configure is used.
+   * --disable-instantsessionpurge
+       Due to a bug, ntop reclassifies a properly closed session to 
+       FLAG_STATE_TIMEOUT. So, at present, ntop doesn't retain session data
+       for more than a few seconds after the tcp/ip session is terminated. 
+       This corrected behavior is NOT the default, because a large number of
+       retained sessions can significantly increase the memory usage of the 
+       ntop instance if there are hosts that open/close large #s of sessions
+       (e.g. a web server). 
+   * (Windows) Now possible to specify the adapter using a numeric identifier
+     or its name.  ntop -h shows list of adapters at end of help text.
+   * make dnvt and make dnetter now work to download and create the vendor 
+     and Ettercap tables respectively.
+
+Startup:
+   * ntop tries to be smarter about root/non-root user during startup.
+   * When ntop is not started as root but it has been installed 
+     with the sicky bit set and root:root as owner, it asks 
+     the root password. If correct, ntop becomes root, does what's 
+     needed, then it changes the uid back to the original user. 				   
+   * Automatic fall back to our (libiberty) version of getopt_long on 
+     systems where it isn't available in system libraries.
+   * The various data files can be compressed on disk.
+   * The various data files are not reloaded if the database file is newer
+     than the file to load.
+   * Windows: use pcap_findalldevs() that is the correct way to find devices
+     with the latest winpcap 3.x.
+
+Security:
+   * Shed privledges earlier, so that the various files and databases are 
+     read/written as the ntop -u xxxxxx userid, not root.
+
+Internals
+   * Host hashing removed - no more expands
+   * Lots of work on threading, better data protection, eliminate 
+     deadlocks, etc.
+   * Moved the Win32 code closer/more unified with Unix.
+   * If -g is used, the RRD plugin saves only local hosts 
+   * oui updated to current (IEEE) as of 11Aug2003 
+   * ettercap updated to current (SourceForge) version, dated 08Jul2003 
+   * Added dynamic support for IP-based protocols. This means that protocols
+     such as OSPF/IGMP are now handled dynamically.
+     At the moment OSPF/IGMP/IPSEC are "manually" added in main.c.
+   * Added initial AS (Autonomous System) number support. Several components
+     (e.g. NetFlow plugin) need to be made AS-aware. 				   
+
+ Web Server
+   * New look for ntop's menus - takes up far less room.
+   * New 'Log' option shows the last 50 messages ntop sent to the log.
+   * Show AS numbers on separate page.
+   * URL security cleanup for better flow - we do not perform processing
+     on unvalidated (and possibly hostile) data, and we decode %nn values
+     to their equivalent characters (e.g. %41 becomes A). 
+   * [All][Local Only][Remote Only] options added to most long display lists.
+   * Update textinfo.html/PR output with new automatically generated lists
+     of #define symbols. These now automatically #ifdef the symbol so 
+     there should be no undefined symbol problems. 
+   * Drill-down view of unknown protocols.
+   * MAC addresses are now printed as <hw manufacturer>:XX:XX:XX
+
+
+ netFlow (Plugin)
+   * netFlow: 'assume high port netflow traffic is ftp' now run time option,
+     vs. ./configure in 2.2.
+   * Former ./compile option, --enable-netflowassumeftpdata - is now a run-time
+     option in the NetFlow plugin.
+   * Added signal trap in plugin, #define MAKE_WITH_NETFLOWSIGTRAP
+
+ rrd (Plugin)
+   * rrdtool - a frozen and patched copy of rrdtool 1.0.42 is part of ntop
+     in the myrrd directory. ntop should ignore any installed version.
+   * Optind is reset to 1 before every getopt_long call - prevent a 
+     random/unpredictable crash inside rrd while parsing options.
+   * Removed run-time option: --reuse-rrd-graphics.
+   * Run-time option --enable-largerrdpop is now the default (and only) 
+     supported version. 
+       Note that there is a script @ SourceForge in the user contributed area
+       to move existing .rrd files into the new structure.  Use this script
+       at your own risk (i.e. backup your data FIRST).
+   * Permissions for rrd files and directories controlled via plugin
+     setting.
+
+
+ intop
+   * Gone.  There is a separate, work-in-progress integrated shell
+            version of ntop, called ntcsh, available from the cvs.
+
+ doc
+   * FAQ has been once again completely updated and revised.
+
+Debugging 
+   * Lots of message cleanup, things that wouldn't compile, etc.
+
+
+          ____    ____
          |___ \  |___ \
            __) |   __) |
           / __/_  / __/
