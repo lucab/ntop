@@ -99,7 +99,6 @@ void updateGauge(char *hostPath, char *key, Counter value);
 void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter);
 char x2c(char *what);
 void unescape_url(char *url);
-void mkdir_p(char *path);
 static int initRRDfunct(void);
 static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void handleRRDHTTPrequest(char* url);
@@ -145,53 +144,6 @@ static void calfree (void) {
     if(calcpr)
       free(calcpr);
   }
-}
-
-/* ******************************************* */
-
-#ifdef WIN32
-#define _mkdir(a) mkdir(a)
-#else
-#define _mkdir(a) mkdir(a, myGlobals.rrdDirectoryPermissions)
-#endif
-
-void mkdir_p(char *path) {
-  int i, rc;
-
-  if(path == NULL) {
-    traceEvent(CONST_TRACE_NOISY, "RRD: mkdir(null) skipped");
-    return;
-  }
-
-#ifdef WIN32
-  revertSlash(path, 0);
-#endif
-
-  /* Start at 1 to skip the root */
-  for(i=1; path[i] != '\0'; i++)
-    if(path[i] == CONST_PATH_SEP) {
-      path[i] = '\0';
-#if RRD_DEBUG >= 3
-      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
-#endif
-      rc = _mkdir(path);
-      if((rc != 0) && (errno != EEXIST) )
-	traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
-		   path,
-		   errno,
-		   strerror(errno));
-      path[i] = CONST_PATH_SEP;
-    }
-
-#if RRD_DEBUG >= 2
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
-#endif
-  _mkdir(path);
-  if((rc != 0) && (errno != EEXIST) )
-    traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
-	       path,
-	       errno,
-	       strerror(errno));
 }
 
 /* ******************************************* */
@@ -1420,14 +1372,13 @@ static void commonRRDinit(void) {
 
 
 #ifdef WIN32
-	  /*
-		RRD does not accept ':' in path names as this
-		char is used as separator.
-	  */
-
-	  if(myGlobals.dbPath[1] == ':') idx = 2; /* e.g. c:/... */
+    /*
+      RRD does not accept ':' in path names as this
+      char is used as separator.
+    */
+    
+    if(myGlobals.dbPath[1] == ':') idx = 2; /* e.g. c:/... */
 #endif
-
 
     safe_snprintf(__FILE__, __LINE__, myGlobals.rrdPath, len, "%s%s", &myGlobals.dbPath[idx], thePath);
 
@@ -2036,7 +1987,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
     safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
 		  myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
 		  adjHostName);
-    mkdir_p(rrdPath);
+    mkdir_p(rrdPath, myGlobals.rrdDirectoryPermissions);
 
 #if RRD_DEBUG >= 2
     traceEvent(CONST_TRACE_INFO, "RRD: Updating %s [%s/%s]",
@@ -2199,7 +2150,7 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
         safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
                       myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
                       adjHostName);
-        mkdir_p(rrdPath);
+        mkdir_p(rrdPath, myGlobals.rrdDirectoryPermissions);
 
 #if RRD_DEBUG >= 2
         traceEvent(CONST_TRACE_INFO, "RRD: Updating %s [%s/%d]",
@@ -2314,7 +2265,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   if(active == 0) return(NULL);
 
   safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s", myGlobals.rrdPath);
-  if(_mkdir(dname) == -1) {
+  if(_mkdir(dname, myGlobals.rrdDirectoryPermissions) == -1) {
     if(errno != EEXIST) {
       traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)",
 		 errno, dname);
@@ -2328,7 +2279,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
   for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
     safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
-    if(_mkdir(dname) == -1) {
+    if(_mkdir(dname, myGlobals.rrdDirectoryPermissions) == -1) {
       if(errno != EEXIST) {
 	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);
         setPluginStatus("Disabled - unable to create rrd subdirectory.");
@@ -2492,7 +2443,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/domains/%s/",
 		myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
 		statsEntry->domainHost->dnsDomainValue);
-	    mkdir_p(rrdPath);
+	    mkdir_p(rrdPath, myGlobals.rrdDirectoryPermissions);
 
 #if RRD_DEBUG >= 2
 	    traceEvent(CONST_TRACE_INFO, "RRD: Updating %s", rrdPath);
@@ -2543,7 +2494,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	if(list->pluginStatus.activePlugin) {
 	  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/flows/%s/",
                       myGlobals.rrdPath, list->flowName);
-	  mkdir_p(rrdPath);
+	  mkdir_p(rrdPath, myGlobals.rrdDirectoryPermissions);
 
 	  updateCounter(rrdPath, "packets", list->packets.value);
 	  updateCounter(rrdPath, "bytes",   list->bytes.value);
@@ -2564,7 +2515,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", myGlobals.rrdPath,
                     myGlobals.device[devIdx].humanFriendlyName);
-	mkdir_p(rrdPath);
+	mkdir_p(rrdPath, myGlobals.rrdDirectoryPermissions);
 
 	updateCounter(rrdPath, "ethernetPkts",  myGlobals.device[devIdx].ethernetPkts.value);
 	updateCounter(rrdPath, "broadcastPkts", myGlobals.device[devIdx].broadcastPkts.value);
@@ -2697,7 +2648,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			    "%s/interfaces/%s/sFlow/%d/", myGlobals.rrdPath,
 			    myGlobals.device[devIdx].humanFriendlyName, i);
-	      mkdir_p(rrdIfPath);
+	      mkdir_p(rrdIfPath, myGlobals.rrdDirectoryPermissions);
 
 	      updateCounter(rrdIfPath, "ifInOctets", ifName->ifInOctets);
 	      updateCounter(rrdIfPath, "ifInUcastPkts", ifName->ifInUcastPkts);
@@ -2742,7 +2693,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			      myGlobals.device[k].humanFriendlyName,
 			      myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
 			      myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
-		mkdir_p(rrdPath);
+		mkdir_p(rrdPath, myGlobals.rrdDirectoryPermissions);
 
 		updateCounter(rrdPath, "pkts",
 			      myGlobals.device[k].ipTrafficMatrix[idx]->pktsSent.value);

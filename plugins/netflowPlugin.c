@@ -27,7 +27,7 @@
 static void* netflowMainLoop(void* _deviceId);
 #endif
 
-/* #define DEBUG_FLOWS  */ 
+/* #define DEBUG_FLOWS  */
 
 /* ********************************* */
 
@@ -329,7 +329,7 @@ static int handleGenericFlow(time_t recordActTime,
   myGlobals.actTime = time(NULL);
   recordActTime   = ntohl(recordActTime);
   recordSysUpTime = ntohl(recordSysUpTime);
-  
+
   initTime = recordActTime-(recordSysUpTime/1000);
 
   firstSeen = (ntohl(record->First)/1000) + initTime;
@@ -676,7 +676,7 @@ static int handleGenericFlow(time_t recordActTime,
       session->firstSeen = timeDiff;
 
     session->lastSeen = recordActTime;
-    
+
     record->nw_latency_sec = ntohl(record->nw_latency_sec),
       record->nw_latency_usec = ntohl(record->nw_latency_usec);
     if(record->nw_latency_sec || record->nw_latency_usec) {
@@ -688,7 +688,7 @@ static int handleGenericFlow(time_t recordActTime,
 		 dstHost->hostNumIpAddress, dport);
       */
 
-      session->nwLatency.tv_sec = record->nw_latency_sec, 
+      session->nwLatency.tv_sec = record->nw_latency_sec,
 	session->nwLatency.tv_usec = record->nw_latency_usec;
     }
   }
@@ -701,6 +701,61 @@ static int handleGenericFlow(time_t recordActTime,
 }
 
 /* *************************** */
+
+static void dumpFlow(char *buffer, int bufferLen, int deviceId) {
+  static char warningSent = 0;
+  char nfDumpPath[512];
+
+  /* traceEvent(CONST_TRACE_INFO, "DEBUG: Dumping flow (len=%d)", bufferLen); */
+
+  /* Save flow on disk if configured */
+  if(myGlobals.device[deviceId].netflowGlobals->dumpInterval > 0) {
+    time_t now = time(NULL);
+
+    if(myGlobals.device[deviceId].netflowGlobals->dumpFd
+       && ((now-myGlobals.device[deviceId].netflowGlobals->dumpFdCreationTime)
+	   > myGlobals.device[deviceId].netflowGlobals->dumpInterval)) {
+      fclose(myGlobals.device[deviceId].netflowGlobals->dumpFd);
+      myGlobals.device[deviceId].netflowGlobals->dumpFd = NULL;
+    }
+
+    if(myGlobals.device[deviceId].netflowGlobals->dumpFd == NULL) {
+      /* Create the file */
+      safe_snprintf(__FILE__, __LINE__, nfDumpPath, sizeof(nfDumpPath), "%s/interfaces/%s/",
+		    myGlobals.device[deviceId].netflowGlobals->dumpPath,
+		    myGlobals.device[deviceId].humanFriendlyName);
+      mkdir_p(nfDumpPath, 0700 /* CONST_RRD_D_PERMISSIONS_PRIVATE */);
+
+      safe_snprintf(__FILE__, __LINE__, nfDumpPath, sizeof(nfDumpPath), "%s/interfaces/%s/%u.flow",
+		    myGlobals.device[deviceId].netflowGlobals->dumpPath,
+		    myGlobals.device[deviceId].humanFriendlyName, time(NULL));
+
+      myGlobals.device[deviceId].netflowGlobals->dumpFd = fopen(nfDumpPath, "w+");
+      if(myGlobals.device[deviceId].netflowGlobals->dumpFd == NULL) {
+	if(!warningSent) {
+	  warningSent = 1;
+	  traceEvent(CONST_TRACE_WARNING, "NETFLOW: Cannot create file %s", nfDumpPath);
+	}
+      } else {
+	myGlobals.device[deviceId].netflowGlobals->dumpFdCreationTime = now;
+	/* traceEvent(CONST_TRACE_WARNING, "NETFLOW: Created file @ %u", now); */
+	warningSent = 0;
+      }
+    }
+
+    if(myGlobals.device[deviceId].netflowGlobals->dumpFd != NULL) {
+      fprintf(myGlobals.device[deviceId].netflowGlobals->dumpFd, "%04d", bufferLen);
+      if(fwrite(buffer, bufferLen, 1, myGlobals.device[deviceId].netflowGlobals->dumpFd) != 1) {
+	if(!warningSent) {
+	  warningSent = 1;
+	  traceEvent(CONST_TRACE_WARNING, "NETFLOW: Error while saving data into file %s", nfDumpPath);
+	}
+      }
+    }
+  }
+}
+
+/* ********************************************************* */
 
 static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
   NetFlow5Record the5Record;
@@ -717,6 +772,8 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     traceEvent(CONST_TRACE_INFO, "NETFLOW: dissectFlow(len=%d, device=%d)",
 	       bufferLen, deviceId);
 #endif
+
+  dumpFlow(buffer, bufferLen, deviceId);
 
   memcpy(&the5Record, buffer, bufferLen > sizeof(the5Record) ? sizeof(the5Record): bufferLen);
   flowVersion = ntohs(the5Record.flowHeader.version);
@@ -964,7 +1021,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow pdu [displ=%d][template=%d]",
 			   displ, fs.templateId);
 #endif
-	      
+
 	      /* Defaults */
 	      record.nw_latency_sec = record.nw_latency_usec = htonl(0);
 
@@ -1263,7 +1320,6 @@ static void* netflowMainLoop(void* _deviceId) {
 	int i;
 
 	myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd++;
-
 	NTOHL(fromHost.sin_addr.s_addr);
 
 	for(i=0; i<MAX_NUM_PROBES; i++) {
@@ -1402,6 +1458,19 @@ static void initNetFlowDevice(int deviceId) {
   } else
     myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = atoi(value);
 
+  if(fetchPrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1), value, sizeof(value)) == -1) {
+    storePrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1), "0" /* no */);
+    myGlobals.device[deviceId].netflowGlobals->dumpInterval = 0;
+  } else
+    myGlobals.device[deviceId].netflowGlobals->dumpInterval = atoi(value);
+
+  if(fetchPrefsValue(nfValue(deviceId, "netFlowDumpPath", 1), value, sizeof(value)) == -1) {
+    myGlobals.device[deviceId].netflowGlobals->dumpPath = strdup("./netflow-dump");
+    storePrefsValue(nfValue(deviceId, "netFlowDumpPath", 1),
+		    myGlobals.device[deviceId].netflowGlobals->dumpPath);
+  } else
+    myGlobals.device[deviceId].netflowGlobals->dumpPath = strdup(value);
+
   if(setNetFlowInSocket(deviceId) != 0)  return;
 
   if(fetchPrefsValue(nfValue(deviceId, "debug", 1), value, sizeof(value)) == -1) {
@@ -1485,7 +1554,7 @@ static void printNetFlowDeviceConfiguration(void) {
     dev = strtok_r(value, ",", &strtokState);
     while(dev != NULL) {
       int id = mapNetFlowDeviceToNtopDevice(atoi(dev));
-	   
+
       if(id == -1)
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s.%s\n",
 		      dev, i == 0 ? "CHECKED" : "", NETFLOW_DEVICE_NAME, dev);
@@ -1536,15 +1605,15 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("<tr><th colspan=\"4\" "DARK_BG">Incoming Flows</th></tr>\n");
 
   sendString("<tr><th colspan=2 "DARK_BG">NetFlow Device</th>");
- 
+
   sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n<p>");
-  
+
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
 		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
-  
+
   sendString("<input name=\"name\" size=\"24\" value=\"");
   sendString(myGlobals.device[deviceId].humanFriendlyName);
   sendString("\"> <input type=\"submit\" value=\"Set Interface Name\">");
@@ -1731,7 +1800,8 @@ static void printNetFlowConfiguration(int deviceId) {
 
   sendString("<input name=\"blackList\" size=\"60\" value=\"");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-              myGlobals.device[deviceId].netflowGlobals->netFlowBlackList == NULL ? " " : myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
+              myGlobals.device[deviceId].netflowGlobals->netFlowBlackList == NULL ? " " :
+		myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
   sendString(buf);
   sendString("\"> <input type=\"submit\" value=\"Set Black List\"></p>\n</form>\n"
              "<p>This is a list of one or more TCP/IP host(s)/network(s) which we will "
@@ -1799,6 +1869,49 @@ static void printNetFlowConfiguration(int deviceId) {
 	     "</td>\n</tr>\n");
 
   /* *************************************** */
+
+  sendString("<tr><th rowspan=\"3\" "DARK_BG">Flow Dump</th>\n");
+
+  sendString("<th "DARK_BG">Dump Interval</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(netflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+  sendString(buf);
+  sendString("<input name=\"netFlowDumpInterval\" size=\"5\" value=\"");
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d",
+		myGlobals.device[deviceId].netflowGlobals->dumpInterval);
+  sendString(buf);
+  sendString("\"> <input type=\"submit\" value=\"Set Dump Interval\"></p>\n</form>\n"
+             "<p>Specifies how often data is stored permanently. "
+	     "Set it to 0 (zero) to disable dumping</p>\n</td>\n</tr>\n");
+
+
+  sendString("<tr><th "DARK_BG">Dump File Path</th>\n");
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(netflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+  sendString(buf);
+  sendString("<input name=\"netFlowDumpPath\" size=\"60\" value=\"");
+  sendString(myGlobals.device[deviceId].netflowGlobals->dumpPath == NULL ?
+	     "./netflow-dump" : myGlobals.device[deviceId].netflowGlobals->dumpPath);
+  sendString("\"> <input type=\"submit\" value=\"Set Dump File Path\"></p>\n</form>\n"
+             "<p>Specifies the directory where dump files will be saved.</p>\n</td>\n</tr>\n");
+
+  sendString("<tr><td colspan=\"3\">You can instrument ntop to save incoming flows on disk so"
+	     " that you can use them for integration with other applications or for "
+	     "historical purposes:<ul>"
+	     "<li>Flows are stored on files whose name is &lt;time of the day&gt;.flow"
+	     "<li>The file contents is [&lt;flow length (4 digits 0 padded)&gt;&lt;raw flow&gt;]*"
+	     "</ul></td></tr>\n");
+
+
+  /* ********************************************* */
 
   sendString("<tr><th colspan=\"2\" "DARK_BG">Debug</th>\n");
   sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
@@ -2395,6 +2508,16 @@ static void handleNetflowHTTPrequest(char* _url) {
 #endif
 	    storePrefsValue(nfValue(deviceId, "blackList", 1),
 			    myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
+	  }
+	} else if(strcmp(device, "netFlowDumpInterval") == 0) {
+	  if(deviceId > 0) {
+	    myGlobals.device[deviceId].netflowGlobals->dumpInterval = atoi(value);
+	    storePrefsValue(nfValue(deviceId, "netFlowDumpInterval", 1), value);
+	  }
+	} else if(strcmp(device, "netFlowDumpPath") == 0) {
+	  if(deviceId > 0) {
+	    myGlobals.device[deviceId].netflowGlobals->dumpPath = strdup(value);
+	    storePrefsValue(nfValue(deviceId, "netFlowDumpPath", 1), value);
 	  }
 	}
       }
