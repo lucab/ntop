@@ -1820,7 +1820,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       sendString(buf);
 
       if((el->tcpSentLoc+el->tcpSentRem+el->udpSentLoc+el->udpSentRem) > 0) {
-	if(snprintf(buf, sizeof(buf), 
+	if(snprintf(buf, sizeof(buf),
 		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1></TD>",
 		    el->hostNumIpAddress) < 0)
 	  BufferTooShort();
@@ -1829,7 +1829,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	sendString("<TD>&nbsp;</TD>");
 
       if((el->tcpRcvdLoc+el->tcpRcvdFromRem+el->udpRcvdLoc+el->udpRcvdFromRem) > 0) {
-	if(snprintf(buf, sizeof(buf), 
+	if(snprintf(buf, sizeof(buf),
 		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"></TD></TR>",
 		    el->hostNumIpAddress) < 0)
 	  BufferTooShort();
@@ -1860,79 +1860,79 @@ void printHostIcmpStats(HostTraffic *el) {
 	     "<TH ALIGN=LEFT>Pkt&nbsp;Rcvd</TH></TR>\n");
 
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Echo Request</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHO]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHO]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHO])) < 0)
     BufferTooShort();
   sendString(buf);
-     
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Echo Reply</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY])) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Unreach</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_UNREACH]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_UNREACH]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH])) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Redirect</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_REDIRECT]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_REDIRECT]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT])) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Router Advertisement</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT])) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Time Exceeded</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED])) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Parameter Problem</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB])) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Network Mask Request</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREQ]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREQ]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ])) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Network Mask Reply</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY])) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Source Quench</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH])) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Timestamp</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP])) < 0)
     BufferTooShort();
   sendString(buf);
-  
+
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Info Request</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST])) < 0)
     BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Info Reply</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
-	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY]), 
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY])) < 0)
     BufferTooShort();
   sendString(buf);
@@ -2147,15 +2147,15 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 
 	if(theIdx != NO_PEER) {
 	  HostTraffic host;
-	  
+
 	  if(retrieveHost(theIdx, &host) == 0) {
 	    sendString("\n<li>");
 	    sendString(makeHostLink(&host, 0, 0, 0));
 	  }
 	}
-	
+
       }
-      
+
       sendString("</UL></TD></TR>\n");
 
       scanner = (IpGlobalSession*)(scanner->next);
@@ -3063,7 +3063,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
 	  if(printedHeader > 1) sendString("<BR>");
 
-	  if(snprintf(buf, sizeof(buf), "%s\n", 
+	  if(snprintf(buf, sizeof(buf), "%s\n",
 		      makeHostLink(&router, SHORT_FORMAT, 0, 0)) < 0)
 	    BufferTooShort();
 	  sendString(buf);
