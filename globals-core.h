@@ -66,10 +66,6 @@ extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
                              unsigned int nminutes);
 extern char* formatPkts(TrafficCounter pktNr);
 
-/* emitter.c */
-extern void dumpNtopHashes(char* options, int actualDeviceId);
-extern void dumpNtopTrafficInfo(char* options);
-
 /* event.c */
 extern void emitEvent(FilterRule *rule, HostTraffic *srcHost,
                       u_int srcHostIdx, HostTraffic *dstHost,

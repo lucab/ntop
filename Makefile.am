@@ -4,7 +4,7 @@
 ## (this file is processed with 'automake' to produce Makefile.in)
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
-# Copyright (c) 1998, 2000 Luca Deri <deri@ntop.org>
+# Copyright (c) 1998-2002 Luca Deri <deri@ntop.org>
 # Updated 1Q 2000 Rocco Carbone <rocco@ntop.org>
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -43,8 +43,7 @@ CORELIBS  = @CORELIBS@
 MORELIBS  = @MORELIBS@
 
 
-DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db \
-		 icmpWatch.db ntops ntopd ntop-config *~ *.log
+DISTCLEANFILES = *.db ntops ntopd ntop-config #* *~ *.log
 CLEANFILES     = $(DISTCLEANFILES)
 
 # A list of all the files in the current directory which can be regenerated

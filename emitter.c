@@ -40,6 +40,11 @@ char *languages[] = { "", "perl", "php", "xml", "no" };
 /* *************************** */
 
 void sendEmitterString(FILE *fDescr, char *theString) {
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "sendEmitterString(%X, '%s')", fDescr, theString);
+#endif
+
   if(fDescr == NULL)
     sendString(theString);
   else
@@ -85,7 +90,7 @@ void endWriteArray(FILE *fDescr, int lang) {
 
 /* *************************** */
 
-static void validateXMLString(char *name) {
+static void validateString(char *name) {
   int i;
   
   for(i=0; i<strlen(name); i++)
@@ -100,7 +105,9 @@ void initWriteKey(FILE *fDescr, int lang, char *indent,
 		  char *keyName, int numEntriesSent) {
   char buf[256];
 
-  switch(fDescr, lang) {
+  validateString(keyName);
+
+  switch(lang) {
   case PERL_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s'%s' => {\n",indent, keyName) < 0)
       BufferOverflow();
@@ -112,7 +119,6 @@ void initWriteKey(FILE *fDescr, int lang, char *indent,
     sendEmitterString(fDescr, buf);
     break ;
   case XML_LANGUAGE:
-    validateXMLString(keyName);
     if(snprintf(buf, sizeof(buf), "%s<%s>\n", indent, keyName) < 0)
       BufferOverflow();
     sendEmitterString(fDescr, buf);
@@ -134,7 +140,9 @@ void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, char last)
   /* If there is no indentation, this was the first level of key,
      hence the end of the list. Don't add a ',' at end.
   */
-  switch(fDescr, lang) {
+
+  validateString(keyName);
+  switch(lang) {
   case PERL_LANGUAGE:
     if(snprintf(buf, sizeof(buf),"%s}%c\n",indent,last) < 0)
       BufferOverflow();
@@ -146,7 +154,6 @@ void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, char last)
     sendEmitterString(fDescr, buf);
     break ;
   case XML_LANGUAGE:
-    validateXMLString(keyName);
     if(snprintf(buf, sizeof(buf), "%s</%s>\n",indent, keyName) < 0)
       BufferOverflow();
     sendEmitterString(fDescr, buf);
@@ -163,7 +170,9 @@ void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
 	       char *value, char last, int numEntriesSent) {
   char buf[256];
 
-  switch(fDescr, lang) {
+  validateString(name);
+
+  switch(lang) {
   case PERL_LANGUAGE:
   case PHP_LANGUAGE:
     /* In the case of hostNumIpAddress and hostSymIpAddress,
@@ -177,7 +186,6 @@ void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
     break ;
   case XML_LANGUAGE:
     if((value != NULL) && (value[0] != '\0'))  {
-      validateXMLString(name);
       if(snprintf(buf, sizeof(buf), "%s<%s>%s</%s>\n", indent, name, value, name) < 0)
 	BufferOverflow();  sendEmitterString(fDescr, buf);
     }
@@ -245,7 +253,7 @@ void wrtIntFloatItm(FILE *fDescr, int lang, char *indent, int name,
 		    float value, char last, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%d", name);
-  wrtFloatItm(fDescr, lang, indent, (fDescr, lang == XML_LANGUAGE) ? "number" : buf, value, last, numEntriesSent);
+  wrtFloatItm(fDescr, lang, indent, (lang == XML_LANGUAGE) ? "number" : buf, value, last, numEntriesSent);
 }
 
 /* *************************** */
@@ -377,7 +385,8 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
   initWriteArray(fDescr, lang);
 
   for(idx=0; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
-    if((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL) {
+    if((idx != myGlobals.otherHostEntryIdx) && 
+       ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)) {
       if(key[0] != '\0') {
 	if(strcmp(el->hostNumIpAddress, key)
 	   && strcmp(el->ethAddressString, key)
@@ -392,9 +401,9 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
     REPEAT_HOSTS:
       if(numEntries > 0)
-	endWriteKey(fDescr, lang,"",  (fDescr, lang == XML_LANGUAGE) ? "host-information" : hostKey, ','); 
+	endWriteKey(fDescr, lang,"",  (lang == XML_LANGUAGE) ? "host-information" : hostKey, ','); 
       
-      initWriteKey(fDescr, lang, "", (fDescr, lang == XML_LANGUAGE) ? "host-information" : hostKey, numEntries);
+      initWriteKey(fDescr, lang, "", (lang == XML_LANGUAGE) ? "host-information" : hostKey, numEntries);
 
       /* ************************ */
 
@@ -538,33 +547,50 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	}
       } /* shortView */
 
-      if(el->protoIPTrafficInfos && checkFilter(filter, &filterPattern, "IP")) {
+      if(shortView || (el->protoIPTrafficInfos && checkFilter(filter, &filterPattern, "IP"))) {
 	char *lastKey = NULL;
 
-	initWriteKey(fDescr, lang, "\t", "IP", numEntries);
+	if(!shortView) { initWriteKey(fDescr, lang, "\t", "IP", numEntries); }
 
 	for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
+	  if(!shortView) {
+	    if(j > 0) { endWriteKey(fDescr, lang,"\t\t", lastKey, ','); }
+	    
+	    initWriteKey(fDescr, lang, "\t\t", (lastKey = myGlobals.protoIPTrafficInfos[j]), numEntries);
+	    wrtLlongItm(fDescr, lang,"\t\t\t","sentLoc",
+			el->protoIPTrafficInfos[j].sentLoc, ',', numEntries);
+	    wrtLlongItm(fDescr, lang,"\t\t\t","sentRem",
+			el->protoIPTrafficInfos[j].sentRem, ',', numEntries);
+	    wrtLlongItm(fDescr, lang,"\t\t\t","rcvdLoc",
+			el->protoIPTrafficInfos[j].rcvdLoc, ',', numEntries);
+	    wrtLlongItm(fDescr, lang,"\t\t\t","rcvdFromRem",
+			el->protoIPTrafficInfos[j].rcvdFromRem, ' ', numEntries);	    
+	  } else {
+	    char keyName[64];
 
-	  if(j > 0) { endWriteKey(fDescr, lang,"\t\t", lastKey, ','); }
+	    sprintf(keyName, "%sSent", myGlobals.protoIPTrafficInfos[j]);
+	    wrtLlongItm(fDescr, lang, "\t\t", keyName,
+			(el->protoIPTrafficInfos == NULL) ? 0 : 
+			(el->protoIPTrafficInfos[j].sentLoc+el->protoIPTrafficInfos[j].sentRem), 
+			',', numEntries);
 
-	  initWriteKey(fDescr, lang, "\t\t", (lastKey = myGlobals.protoIPTrafficInfos[j]), numEntries);
-	  wrtLlongItm(fDescr, lang,"\t\t\t","sentLoc",
-		      el->protoIPTrafficInfos[j].sentLoc, ',', numEntries);
-	  wrtLlongItm(fDescr, lang,"\t\t\t","sentRem",
-		      el->protoIPTrafficInfos[j].sentRem, ',', numEntries);
-	  wrtLlongItm(fDescr, lang,"\t\t\t","rcvdLoc",
-		      el->protoIPTrafficInfos[j].rcvdLoc, ',', numEntries);
-	  wrtLlongItm(fDescr, lang,"\t\t\t","rcvdFromRem",
-		      el->protoIPTrafficInfos[j].rcvdFromRem, ' ', numEntries);
+	    sprintf(keyName, "%sRcvd", myGlobals.protoIPTrafficInfos[j]);
+	    wrtLlongItm(fDescr, lang,"\t\t", keyName,
+			(el->protoIPTrafficInfos == NULL) ? 0 : 
+			(el->protoIPTrafficInfos[j].rcvdLoc+el->protoIPTrafficInfos[j].rcvdFromRem), 
+			',', numEntries);	    
+	  }
+	} /* for */
+
+	if(!shortView) {
+	  if(lastKey != NULL) { endWriteKey(fDescr, lang,"\t\t", lastKey, ','); }
+	  endWriteKey(fDescr, lang,"\t", "IP", ',');
 	}
-
-	if(lastKey != NULL) { endWriteKey(fDescr, lang,"\t\t", lastKey, ','); }
-	endWriteKey(fDescr, lang,"\t", "IP", ',');
       }
 
       /* ***************************************** */
 
-      if(!shortView) {
+    if(!shortView) {
 	if(el->icmpInfo && checkFilter(filter, &filterPattern, "ICMP")) {
 	  initWriteKey(fDescr, lang, "\t", "ICMP", numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_ECHO",
@@ -767,11 +793,11 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
       numEntries++;
 
-      if((fDescr, lang == NO_LANGUAGE) && (numEntries == 1)) goto REPEAT_HOSTS;
+      if((lang == NO_LANGUAGE) && (numEntries == 1)) goto REPEAT_HOSTS;
     }
   }
 
-  if(numEntries > 0) endWriteKey(fDescr, lang,"", (fDescr, lang == XML_LANGUAGE) ? "host-information" : hostKey, ' ');
+  if(numEntries > 0) endWriteKey(fDescr, lang,"", (lang == XML_LANGUAGE) ? "host-information" : hostKey, ' ');
 
   endWriteArray(fDescr, lang);
 
@@ -911,11 +937,11 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
       continue;
 
   REPEAT:
-    if(numEntries > 0) { endWriteKey(fDescr, lang,"", (fDescr, lang == XML_LANGUAGE) ? "device-information" : keyName, ','); }
+    if(numEntries > 0) { endWriteKey(fDescr, lang,"", (lang == XML_LANGUAGE) ? "device-information" : keyName, ','); }
 
     keyName = myGlobals.device[i].name;
     
-    initWriteKey(fDescr, lang, "", (fDescr, lang == XML_LANGUAGE) ? "device-information" : keyName, numEntries);
+    initWriteKey(fDescr, lang, "", (lang == XML_LANGUAGE) ? "device-information" : keyName, numEntries);
 
     wrtStrItm(fDescr, lang, "\t", "name", myGlobals.device[i].name, ',', numEntries);
 
@@ -1105,10 +1131,10 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
     }
 
     numEntries++;
-    if((fDescr, lang == NO_LANGUAGE) && (numEntries == 1)) goto REPEAT;
+    if((lang == NO_LANGUAGE) && (numEntries == 1)) goto REPEAT;
   }
 
-  if(numEntries > 0) endWriteKey(fDescr, lang, "", (fDescr, lang == XML_LANGUAGE) ? "device-information" : keyName, ' ');
+  if(numEntries > 0) endWriteKey(fDescr, lang, "", (lang == XML_LANGUAGE) ? "device-information" : keyName, ' ');
   endWriteArray(fDescr, lang);
 
   if((filter[0] != '\0') && filterPattern.fastmap)
