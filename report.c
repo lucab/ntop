@@ -203,7 +203,7 @@ void printTrafficStatistics(void) {
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left>Sampling Since</TH>"
 	      "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 	      ctime(&myGlobals.initialSniffTime),
-	      formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime)) < 0)
+	      formatSeconds(time(NULL)-myGlobals.initialSniffTime)) < 0)
     BufferTooShort();
   sendString(buf);
 

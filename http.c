@@ -575,7 +575,7 @@ void printHTMLtrailer(void) {
   sendString("\n<HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><B>\n");
 
   if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s [%s]<br>\n",
-	      ctime(&myGlobals.actTime), formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime)) < 0)
+	      ctime(&myGlobals.actTime), formatSeconds(time(NULL)-myGlobals.initialSniffTime)) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -1395,7 +1395,7 @@ static int returnHTTPPage(char* pageName,
     sendString("\r\n");	/* mark the end of HTTP header */
 
     for(;;) {
-      len = fread(tmpStr, sizeof(char), 255, fd);
+      len = fread(tmpStr, sizeof(char), sizeof(tmpStr)-1, fd);
       if(len <= 0) break;
       sendStringLen(tmpStr, len);
     }
@@ -1413,7 +1413,11 @@ static int returnHTTPPage(char* pageName,
     struct pcap_stat pcapStats;
     
     if(pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStats) >= 0) {
+#ifdef WIN32
+      myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value =  pcapStats.ps_drop;
+#else
       incrementTrafficCounter(&myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts, pcapStats.ps_drop);
+#endif
     }
   }
 

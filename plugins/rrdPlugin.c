@@ -212,6 +212,8 @@ static void fillupArgv(int argc, int maxArgc, char *argv[]) {
 
   for(i=argc; i<maxArgc; i++)
     argv[i] = "";
+
+  optind = 1;
 }
 
 /* ******************************************* */

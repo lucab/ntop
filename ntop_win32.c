@@ -292,7 +292,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
     mutexId->lockLine = fileLine;
   }
 
-  return(1);
+  return(0);
 }
 
 /* ************************************ */
@@ -306,7 +306,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 #endif
 
   if(WaitForSingleObject(mutexId->mutex, 0) == WAIT_FAILED)
-    return(0);
+    return(1);
   else {
     mutexId->numLocks++;
     mutexId->isLocked = 1;
@@ -317,7 +317,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
       mutexId->lockLine = fileLine;
     }
 
-    return(1);
+    return(0);
   }
 }
 
@@ -365,7 +365,7 @@ int _releaseMutex(PthreadMutex *mutexId,
     mutexId->unlockLine = fileLine;
   }
 
-  return(1);
+  return(0);
 }
 
 /* ************************************ */
