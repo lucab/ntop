@@ -22,8 +22,6 @@
 
 /* #define DEBUG */
 
-/* #define GDBM_DEBUG */
-
 /* Global */
 static char hex[] = "0123456789ABCDEF";
 
@@ -31,7 +29,10 @@ static char hex[] = "0123456789ABCDEF";
 extern int h_errno; /* netdb.h */
 #endif
 
-/* #define DNS_DEBUG */
+/*
+  #define DNS_DEBUG
+  #define GDBM_DEBUG
+*/
 
 /* Forward */
 static u_int _ns_get16(const u_char *src);
@@ -346,9 +347,13 @@ static void queueAddress(struct in_addr elem) {
   accessMutex(&myGlobals.gdbmMutex, "queueAddress");
 #endif
 
+/*
   sprintf(tmpBuf, "%u", elem.s_addr);
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(tmpBuf)+1;
+*/
+  key_data.dptr = &elem.s_addr;
+  key_data.dsize = 4;
 
   data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
 
@@ -438,7 +443,8 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
   if(data_data.dptr != NULL) {
       myGlobals.addressQueueLen--;
 
-      addr.s_addr = (unsigned long)atol(data_data.dptr);
+      /* addr.s_addr = (unsigned long)atol(data_data.dptr); */
+      memcpy(&addr.s_addr, data_data.dptr, 4); 
 
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Dequeued address... [%u][key=%s] (#addr=%d)\n",
@@ -456,10 +462,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #endif
 
     if(addr.s_addr != 0x0) {
-      int i;
-
-      for(i=0; i<myGlobals.numDevices; i++)
-	resolveAddress(&addr, 0, i);
+      resolveAddress(&addr, 0, 0 /* use default device */);
 
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Resolved address %u\n", addr.s_addr);
