@@ -217,7 +217,22 @@ dnl>
 DEFS="-DHAVE_CONFIG_H"
 CFLAGS="-g $CFLAGS"
 
-echo
+dnl Test endianness
+AC_TRY_RUN([
+
+int main()
+{
+        short s = 1;
+        short* ptr = &s;
+        unsigned char c = *((char*)ptr);
+        return c;       
+}
+
+]
+, [ AC_DEFINE(NTOP_BIG_ENDIAN) ]
+, [ AC_DEFINE(NTOP_LITTLE_ENDIAN) ]
+, [ AC_DEFINE(NTOP_BIG_ENDIAN) ]
+)
 
 dnl>
 dnl> force configure to use current directory

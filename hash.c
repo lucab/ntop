@@ -795,7 +795,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  memcpy(&buf[4], &el->hostIpAddress.s_addr, 4);
 	}
 
-#ifndef _BIG_ENDIAN
+#ifdef NTOP_LITTLE_ENDIAN
 	{
 	  char buf1[8];
 	  int i;
@@ -868,7 +868,7 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
 
     memcpy(theBytes, &theSerial, 8);
 
-#ifndef _BIG_ENDIAN
+#ifdef NTOP_LITTLE_ENDIAN
     {
       char buf1[8];
       int i;
