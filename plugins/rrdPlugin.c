@@ -757,8 +757,10 @@ static char* spacer(char* _str, char *tmpStr) {
 /* ******************************* */
 
 static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
-  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], tmpStr[32];
-  char buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], fname[384], *label;
+  char path[512], *argv[6*MAX_NUM_ENTRIES], tmpStr[32], fname[384], *label;
+  char buf[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
+  char buf2[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
+  char buf4[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], buf5[MAX_NUM_ENTRIES][2*MAX_BUF_LEN];
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0;
   DIR* directoryPointer;
@@ -916,6 +918,19 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
 		    entryId, rrd_colors[entryId],
 		    spacer(rrds[i], tmpStr));
       argv[argc++] = buf1[entryId];
+
+      safe_snprintf(__FILE__, __LINE__, buf2[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MIN:Min\\: %3.1lf%s");
+      argv[argc++] = buf2[entryId];
+
+      safe_snprintf(__FILE__, __LINE__, buf3[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":MAX:Max\\: %3.1lf%s");
+      argv[argc++] = buf3[entryId];
+
+      safe_snprintf(__FILE__, __LINE__, buf4[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s");
+      argv[argc++] = buf4[entryId];
+
+      safe_snprintf(__FILE__, __LINE__, buf5[entryId], 2*MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Current\\: %3.1lf%s\\n");
+      argv[argc++] = buf5[entryId];
+
       entryId++;
     }
 
