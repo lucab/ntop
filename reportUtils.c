@@ -4269,7 +4269,7 @@ void printTableEntry(char *buf, int bufLen,
   case 100:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>100%%</TD>"
-		  "<TD ALIGN=CENTER WIDTH=200><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=200 HEIGHT=12>"
+		  "<TD "TD_BG" WIDTH=200><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=200 HEIGHT=12>"
 		  "</TD></TR>\n",
 		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf);
     break;
