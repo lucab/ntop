@@ -2562,7 +2562,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
                          "no"
 #endif
                          );
-#ifdef HAVE_OPENSSL
+#if defined(HAVE_OPENSSL) && defined(MAKE_WITH_SSLWATCHDOG)
   printFeatureConfigNum(textPrintFlag, "PARM_SSLWATCHDOG_WAITWOKE_LIMIT", PARM_SSLWATCHDOG_WAITWOKE_LIMIT);
 #endif
 
