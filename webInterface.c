@@ -3534,12 +3534,6 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* *************************** */
 
-#ifdef MAKE_WITH_XMLDUMP
-  printFeatureConfigInfo(textPrintFlag, "XML dump (dump.xml)", "Supported");
-#endif
-
-  /* *************************** */
-
 #if defined(WIN32) && defined(__GNUC__)
   /* on mingw, gdbm_version not exported by library */
 #else
@@ -3554,7 +3548,17 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "OpenSSL Version", (char*)SSLeay_version(0));
 #endif
 
+#ifdef MAKE_WITH_ZLIB
   printFeatureConfigInfo(textPrintFlag, "zlib version", (char*)zlibVersion());
+#else
+  printFeatureConfigInfo(textPrintFlag, "zlib version", "disabled via --without-zlib");
+#endif
+
+#ifdef MAKE_WITH_XMLDUMP
+  printFeatureConfigInfo(textPrintFlag, "XML dump (plugins/xmldump)", "Supported");
+#endif
+
+  /* *************************** */
 
   printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    myGlobals.enablePacketDecoding == 1 ? "Enabled" : "Disabled");
   printFeatureConfigInfo(textPrintFlag, "Fragment Handling", myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");

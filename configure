@@ -878,6 +878,7 @@ Optional Packages:
   --with-gnu-ld           assume the C compiler uses GNU ld default=no
   +--external-packages:--------------------------------------------------------+
   --without-ssl               disable HTPPS support [default=enabled]
+  --without-zlib              disable zlib [default=enabled]
   --with-tcpwrap              enable use of TCP Wrapper [default=disabled]
   +-External-source-locations:-------------------------------------------------+
   --with-pcap-root=DIR        LBNL pcap located in DIR
@@ -1329,7 +1330,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.99.010-2004-01-19"
+SCRIPTVER="v2.2.99.011-2004-01-25"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -4501,7 +4502,7 @@ test x"$silent" = xyes && libtool_flags="$libtool_flags --silent"
 case "$host" in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4504 "configure"' > conftest.$ac_ext
+  echo '#line 4505 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5635,6 +5636,15 @@ else
   ac_disable_openssl="no"
 fi;
 
+
+# Check whether --with-zlib or --without-zlib was given.
+if test "${with_zlib+set}" = set; then
+  withval="$with_zlib"
+  ac_disable_zlib="yes"
+else
+  ac_disable_zlib="no"
+fi;
+
 # Check whether --enable-sslv3 or --disable-sslv3 was given.
 if test "${enable_sslv3+set}" = set; then
   enableval="$enable_sslv3"
@@ -6002,7 +6012,8 @@ if test ".${GDBM_DIRECTORY}" != "."; then
 fi
 # Finished expansion of NTOP_SET_LIBINC()
 
-# Expansion of NTOP_SET_LIBINC(ZLIB)
+if test ".${ac_disable_zlib}" != ".yes"; then
+    # Expansion of NTOP_SET_LIBINC(ZLIB)
 if test ".${ZLIB_DIRECTORY}" != "."; then
     if test ".${ZLIB_LIB}" = "."; then
         if test -d ${ZLIB_DIRECTORY}/lib; then
@@ -6021,6 +6032,7 @@ if test ".${ZLIB_DIRECTORY}" != "."; then
 fi
 # Finished expansion of NTOP_SET_LIBINC()
 
+fi
 # Expansion of NTOP_SET_LIBINC(GD)
 if test ".${GD_DIRECTORY}" != "."; then
     if test ".${GD_LIB}" = "."; then
@@ -9760,6 +9772,36 @@ _ACEOF
 fi
 
 echo
+echo "ZLIB?"
+if test ".${ac_disable_zlib}" = ".yes"; then
+    echo "    ...Disabled via ./configure command line option --without-zlib"
+    if test ".${ZLIB_LIB}" != "." ||
+       test ".${ZLIB_INCLUDE}" != "."; then
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* WARNING:    You disabled zlib but explicitly or implicitly specified"
+        echo "*             the conflicting options:"
+        echo "*                --with-zlib-lib=${ZLIB_LIB}"
+        echo "*                --with-zlib-include=${ZLIB_INCLUDE}"
+        echo "*"
+        echo "*>>> Ignoring the option(s)"
+        echo "*"
+        echo "*???     1. Remove the --without-zlib option"
+        echo "*??? or  2. Remove the conflicting --with-xxxxx-xxxxx or "
+        echo "*           --enable-xxxxx options"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+        ZLIB_LIB=
+        ZLIB_INCLUDE=
+        HAS_WARNING="yes"
+    fi
+else
+    echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-zlib."
+fi
+
+echo
 echo "TCP Wrappers?"
 if test ".${ac_enable_tcpwrap}" = ".yes"; then
     echo "    ...Requested via ./configure command line option --with-tcpwrap"
@@ -9916,7 +9958,16 @@ if test ".${ac_disable_openssl}" != ".yes"; then
     fi
 fi
 
-if (test ".${ZLIB_LIB}" != "."      &&
+if test ".${ac_disable_zlib}" != ".yes"; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* WARNING: Disabled zlib at your request"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    HAS_WARNING="yes"
+elif (test ".${ZLIB_LIB}" != "."      &&
     test ! -d ${ZLIB_LIB})              ||
    (test ".${ZLIB_INCLUDE}" != "."  &&
     test ! -d ${ZLIB_INCLUDE}); then
@@ -15869,6 +15920,7 @@ fi
 
 done
 
+if test ".${ac_disable_zlib}" != ".yes"; then
 
 for ac_header in zlib.h
 do
@@ -16011,6 +16063,7 @@ fi
 
 done
 
+fi
 
 
 for ac_header in malloc.h
@@ -18824,6 +18877,7 @@ fi
 fi
 
 
+if test ".${ac_disable_zlib}" != ".yes"; then
 
 echo "$as_me:$LINENO: checking for zlibVersion in -lz" >&5
 echo $ECHO_N "checking for zlibVersion in -lz... $ECHO_C" >&6
@@ -18888,6 +18942,7 @@ _ACEOF
 
 fi
 
+fi
 
 
 echo "$as_me:$LINENO: checking for sin in -lc" >&5
@@ -24271,7 +24326,10 @@ fi
 
 echo "$as_me:$LINENO: checking for zlib" >&5
 echo $ECHO_N "checking for zlib... $ECHO_C" >&6
-if test ".${ac_cv_header_zlib_h}" = ".yes"         &&
+if test ".${ac_disable_zlib}" != ".yes"; then
+    { echo "$as_me:$LINENO: WARNING: Skipping at your request" >&5
+echo "$as_me: WARNING: Skipping at your request" >&2;}
+elif test ".${ac_cv_header_zlib_h}" = ".yes"         &&
    test ".${ac_cv_lib_z_zlibVersion}" = ".yes"; then
     echo "$as_me:$LINENO: result: ok" >&5
 echo "${ECHO_T}ok" >&6
@@ -24854,7 +24912,8 @@ else
 fi
 # Finished expansion of NTOP_RPT_LOC()
 
-# Expansion of NTOP_RPT_LOC(zlib     ${ZLIB_LIB} ${ZLIB_INCLUDE})
+if test ".${ac_disable_zlib}" != ".yes"; then
+    # Expansion of NTOP_RPT_LOC(zlib     ${ZLIB_LIB} ${ZLIB_INCLUDE})
 if test ".${ZLIB_INCLUDE}" = "."; then
     echo "zlib     .h             : standard system headers"
 else
@@ -24867,6 +24926,7 @@ else
 fi
 # Finished expansion of NTOP_RPT_LOC()
 
+fi
 # Expansion of NTOP_RPT_LOC(gd       ${GD_LIB} ${GD_INCLUDE})
 if test ".${GD_INCLUDE}" = "."; then
     echo "gd       .h             : standard system headers"
