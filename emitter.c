@@ -325,7 +325,7 @@ static void wrtUshortItm(FILE *fDescr, int lang, char *indent, char *name,
 
 static int checkFilter(char* theStr, char* strToMatch) {
   if((theStr == NULL) || (theStr[0] == '\0') || (strToMatch == NULL))
-    return(0);
+    return(1);
   else
     return(!strstr(theStr, strToMatch));
 }
@@ -536,11 +536,10 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	} else if(strcmp(tmpStr, "key") == 0) {
 	  strncpy(key, &tmpStr[i+1], sizeof(key));
 	} else if(strcmp(tmpStr, "view") == 0) {
-	  if(strcmp(key, "short"))
+	  if(!strcmp(&tmpStr[i+1], "short"))
 	    shortView = 1;
 	} else if(strcmp(tmpStr, "restrict") == 0) {
-	  if(strcmp(key, "local"))
-	    localView = 1;
+	  if(!strcmp(key, "local")) localView = 1;
 	} else if(strcmp(tmpStr, "filter") == 0) {
 	  strncpy(filter, &tmpStr[i+1], sizeof(filter));
 	}
@@ -596,6 +595,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       endWriteKey(fDescr, lang,"",  (lang == FLAG_XML_LANGUAGE) ? "host-information" : hostKey, ',');
 
     initWriteKey(fDescr, lang, "", (lang == FLAG_XML_LANGUAGE) ? "host-information" : hostKey, numEntries);
+    if(lang == FLAG_XML_LANGUAGE) wrtStrItm(fDescr, lang, "\t", "key", hostKey, ',', numEntries);
 
     /* ************************ */
 
@@ -1199,9 +1199,9 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	} else if(strcmp(tmpStr, "key") == 0) {
 	  strncpy(key, &tmpStr[i+1], sizeof(key));
 	} else if(strcmp(tmpStr, "view") == 0) {
-	  if(strcmp(key, "short")) shortView = 1;
+	  if(!strcmp(&tmpStr[i+1], "short")) shortView = 1;
 	} else if(strcmp(tmpStr, "restrict") == 0) {
-	  if(strcmp(key, "local")) localView = 1; /* not yet used */
+	  if(!strcmp(key, "local")) localView = 1; /* not yet used */
 	} else if(strcmp(tmpStr, "filter") == 0) {
 	  strncpy(filter, &tmpStr[i+1], sizeof(filter));
 	}
@@ -1227,6 +1227,7 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
     keyName = myGlobals.device[i].name;
 
     initWriteKey(fDescr, lang, "", (lang == FLAG_XML_LANGUAGE) ? "device-information" : keyName, numEntries);
+    if(lang == FLAG_XML_LANGUAGE) wrtStrItm(fDescr, lang, "\t", "key", keyName, ',', numEntries);
 
     wrtStrItm(fDescr, lang, "\t", "name", myGlobals.device[i].name, ',', numEntries);
 

@@ -26,58 +26,89 @@ This page shows how to dump data via HTTP from ntop.
 
 <tr><th align=left>Hosts</th>
 <td>Dump information about known hosts</td>
-<td align=center><form method=get action=/dumpData.html>
-Format: <select name=language>
+<td align=center>
+<table border=0>
+<tr><th align=left><form method=get action=/dumpData.html>Format: </th><td><select name=language>
 <option value="text">text
 <option value="xml">xml
 <option value="perl">perl
 <option value="php">php
 <option value="python">python
 </select>
-<p><input type=submit value="Dump Data">
+</td></tr>
+<tr><th align=left>Attributes List:</th><td><select name=view>
+<option value="long">Long
+<option value="short">Short
+</select>
+</td></tr>
+<tr><td colspan=2><input type=submit value="Dump Data"></td></tr>
+</table>
 </form></td></tr>
 
 
 
 <tr><th align=left>Hosts Matrix</th>
 <td>Dump local hosts traffic matrix</td>
-<td align=center><form method=get action=/dumpHostsMatrix.html>
-Format: <select name=language>
+<td align=center>
+<table border=0>
+<tr><th align=left><form method=get action=/dumpHostsMatrix.html>Format: </th><td><select name=language>
 <option value="text">text
 <option value="xml">xml
 <option value="perl">perl
 <option value="php">php
 <option value="python">python
 </select>
-<p><input type=submit value="Dump Data">
+</td></tr>
+<tr><th align=left>Attributes List:</th><td><select name=view>
+<option value="long">Long
+<option value="short">Short
+</select>
+</td></tr>
+<tr><td colspan=2><input type=submit value="Dump Data"></td></tr>
+</table>
 </form></td></tr>
 
 
 <tr><th align=left>Network Interfaces</th>
 <td>Dump traffic information according to the know network interfaces</td>
-<td align=center><form method=get action=/dumpTrafficData.html>
-Format: <select name=language>
+<td align=center>
+<table border=0>
+<tr><th align=left><form method=get action=/dumpTrafficData.html>Format: </th><td><select name=language>
 <option value="text">text
 <option value="xml">xml
 <option value="perl">perl
 <option value="php">php
 <option value="python">python
 </select>
-<p><input type=submit value="Dump Data">
+</td></tr>
+<tr><th align=left>Attributes List:</th><td><select name=view>
+<option value="long">Long
+<option value="short">Short
+</select>
+</td></tr>
+<tr><td colspan=2><input type=submit value="Dump Data"></td></tr>
+</table>
 </form></td></tr>
-
 
 <tr><th align=left>Network Flows</th>
 <td>Dump traffic information of the configured network flows</td>
-<td align=center><form method=get action=/dumpFlows.html>
-Format: <select name=language>
+<td align=center>
+<table border=0>
+<tr><th align=left><form method=get action=/dumpFlows.html>Format: </th><td><select name=language>
 <option value="text">text
 <option value="xml">xml
 <option value="perl">perl
 <option value="php">php
 <option value="python">python
 </select>
-<p><input type=submit value="Dump Data">
+</td></tr>
+<tr><th align=left>Attributes List:</th><td><select name=view>
+<option value="long">Long
+<option value="short">Short
+</select>
+</td></tr>
+<tr><td colspan=2><input type=submit value="Dump Data"></td></tr>
+</table>
 </form></td></tr>
 
 
