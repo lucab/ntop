@@ -279,56 +279,56 @@ dnl>
 dnl> Give the user an option to compile a micro version of ntop
 dnl> for embedded systems
 dnl>
-AC_ARG_ENABLE(micro-ntop, [  --enable-micro-ntop            compile a slim version of ntop [default=no]], ac_micro_ntop="yes", ac_micro_ntop="no")
+AC_ARG_ENABLE(micro-ntop, [  --enable-micro-ntop     compile a slim version of ntop [default=disabled]], ac_micro_ntop="yes", ac_micro_ntop="no")
 
 dnl>
 dnl> Give the user an option to compile without multithread support,
 dnl> for example to start a debugging session.
 dnl>
-AC_ARG_ENABLE(mt, [  --disable-mt            disable multithread support also if available [default=no]], ac_disable_multithread="yes", ac_disable_multithread="no")
+AC_ARG_ENABLE(mt, [  --disable-mt            disable multithread support also if available [default=enabled]], ac_disable_multithread="yes", ac_disable_multithread="no")
 
 
 dnl>
 dnl> Give the user an option to compile without MySQL support
 dnl>
-AC_ARG_ENABLE(mysql, [  --disable-mysql            disable MySQL support also if available [default=yes]], ac_disable_mysql="yes", ac_disable_mysql="no")
+AC_ARG_ENABLE(mysql, [  --disable-mysql         disable MySQL support also if available [default=enabled]], ac_disable_mysql="yes", ac_disable_mysql="no")
 
 dnl>
 dnl> Give the user an option to compile without the HTTPS support provided by OpenSSL.
 dnl>
-AC_ARG_ENABLE(ssl, [  --disable-ssl           disable HTPPS support also if OpenSSL is available [default=no]], ac_disable_openssl="yes", ac_disable_openssl="no")
+AC_ARG_ENABLE(ssl, [  --disable-ssl           disable HTPPS support also if OpenSSL is available [default=enabled]], ac_disable_openssl="yes", ac_disable_openssl="no")
 
 dnl>
 dnl> Give the user an option to compile without the GNU readline support.
 dnl>
-AC_ARG_ENABLE(readline, [  --disable-readline      disable GNU readline support also if available [default=no]], ac_disable_readline="yes", ac_disable_readline="no")
+AC_ARG_ENABLE(readline, [  --disable-readline      disable GNU readline support also if available [default=enabled]], ac_disable_readline="yes", ac_disable_readline="no")
 
 dnl>
 dnl> Give the user an option to compile without the curses support.
 dnl>
-AC_ARG_ENABLE(curses, [  --disable-curses        disable curses support also if available [default=no]], ac_disable_curses="yes", ac_disable_curses="no")
+AC_ARG_ENABLE(curses, [  --disable-curses        disable curses support also if available [default=enabled]], ac_disable_curses="yes", ac_disable_curses="no")
 
 dnl>
 dnl> Give the user an option to compile without the GDChart support.
 dnl>
-AC_ARG_ENABLE(gdchart, [  --disable-gdchart       disable GDChart support also if available [default=no]], ac_disable_gdchart="yes", ac_disable_gdchart="no")
+AC_ARG_ENABLE(gdchart, [  --disable-gdchart       disable GDChart support also if available [default=enabled]], ac_disable_gdchart="yes", ac_disable_gdchart="no")
 
 dnl>
 dnl> Give the user an option to compile with the TCP Wrapper support.
 dnl>
-AC_ARG_ENABLE(tcpwrap, [  --enable-tcpwrap        enable TCP Wrap support if available [default=no]], ac_enable_tcpwrap="yes")
+AC_ARG_ENABLE(tcpwrap, [  --enable-tcpwrap        enable TCP Wrap support if available [default=disabled]], ac_enable_tcpwrap="yes")
 
 AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
 
 dnl>
 dnl> Give the user an option to avoid to compile all the plugins.
 dnl>
-AC_ARG_ENABLE(plugins, [  --disable-plugins       disable compilation of plugins, also if they are available [default=no]], ac_disable_plugins="yes")
+AC_ARG_ENABLE(plugins, [  --disable-plugins       disable compilation of plugins, also if they are available [default=disabled]], ac_disable_plugins="yes")
 
 dnl>
 dnl> Give the user an option to avoid to compile the interactive version.
 dnl>
-AC_ARG_ENABLE(intop, [  --disable-intop         disable compilation of intop [default=no]], ac_disable_intop="yes")
+AC_ARG_ENABLE(intop, [  --disable-intop         disable compilation of intop [default=enabled]], ac_disable_intop="yes")
 
 
 dnl>
