@@ -328,9 +328,9 @@ static void listResource(char *rrdPath, char *rrdTitle,
     sendString("<TR><TH "DARK_BG" COLSPAN=1>Traffic Summary</TH></TR>\n");
 
     if(strncmp(rrdTitle, "interface", strlen("interface")) == 0) {
-      min = 0, max = 4;
+      min = 0, max = 5;
     } else {
-      min = 5, max = 6;
+      min = 6, max = 7;
     }
 
     for(i=min; i<=max; i++) {
@@ -807,8 +807,9 @@ static void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startT
     }
     label = "Bytes/sec";
     break;
-  case 5: rrds = (char**)rrd_summary_host_sentRcvd_packets; label = "Packets/sec"; break;
-  case 6: rrds = (char**)rrd_summary_host_sentRcvd_bytes; label = "Bytes/sec"; break;
+  case 5: rrds = (char**)rrd_summary_local_remote_ip_bytes; label = "Bytes/sec"; break;
+  case 6: rrds = (char**)rrd_summary_host_sentRcvd_packets; label = "Packets/sec"; break;
+  case 7: rrds = (char**)rrd_summary_host_sentRcvd_bytes; label = "Bytes/sec"; break;
 
   case 99:
     /* rrdName format can be IP_<proto><Rcvd|Sent><Bytes|Pkts> */
@@ -2963,6 +2964,16 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateGauge(rrdPath,   "knownHostsNum", myGlobals.device[devIdx].hostsno);
 	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(devIdx));
 	updateCounter(rrdPath, "ipBytes",       myGlobals.device[devIdx].ipBytes.value);
+
+	updateCounter(rrdPath, "ipLocalBytes",  myGlobals.device[devIdx].tcpGlobalTrafficStats.local.value +
+						myGlobals.device[devIdx].udpGlobalTrafficStats.local.value +
+						myGlobals.device[devIdx].icmpGlobalTrafficStats.local.value );
+	updateCounter(rrdPath, "ipLocalToRemoteBytes",    myGlobals.device[devIdx].tcpGlobalTrafficStats.local2remote.value +
+						myGlobals.device[devIdx].udpGlobalTrafficStats.local2remote.value +
+						myGlobals.device[devIdx].icmpGlobalTrafficStats.local2remote.value );
+	updateCounter(rrdPath, "ipRemoteToLocalBytes", myGlobals.device[devIdx].tcpGlobalTrafficStats.remote2local.value +
+						myGlobals.device[devIdx].udpGlobalTrafficStats.remote2local.value +
+						myGlobals.device[devIdx].icmpGlobalTrafficStats.remote2local.value );
 
 	if(myGlobals.device[devIdx].netflowGlobals != NULL) {
 	  updateCounter(rrdPath, "NF_numFlowPkts", myGlobals.device[devIdx].netflowGlobals->numNetFlowsPktsRcvd);
