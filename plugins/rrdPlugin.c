@@ -35,7 +35,7 @@
 
 static unsigned short initialized = 0, dumpInterval;
 static char *hostsFilter;
-static unsigned long numTotalRRDs = 0;
+static Counter numTotalRRDs = 0;
 
 #ifdef MULTITHREADED
 pthread_t rrdThread;
@@ -308,7 +308,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
   for(;myGlobals.capturePackets == 1;) {
     char *hostKey, rrdPath[512], filePath[512];
-    int i, j, numRRDs = numTotalRRDs;
+    int i, j;
+    Counter numRRDs = numTotalRRDs;
     char fileName[NAME_MAX], cmdName[NAME_MAX], tmpStr[16];
     FILE *fd;
 #if 0 && defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
