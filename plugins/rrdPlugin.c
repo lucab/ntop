@@ -1075,9 +1075,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     /* ****************************************************** */
 
     if(dumpHosts) {
-#ifdef CFG_MULTITHREADED
-      accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
-#endif
+      int mutexLocked = 0;
+
       for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
 	HostTraffic *el;
 
@@ -1087,6 +1086,13 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  continue;
 
 	/* if(((!subnetPseudoLocalHost(el)) && (!multicastHost(el)))) continue; */
+
+	if (!mutexLocked) {
+#ifdef CFG_MULTITHREADED
+	  accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
+#endif
+	  mutexLocked = 1;
+	}
 
 	if(el->bytesSent.value > 0) {
 	  if(el->hostNumIpAddress[0] != '\0') {
@@ -1194,11 +1200,25 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      }
 	    }
 	  }
+	}	
+
+	if(((i+1) & CONST_MUTEX_FHS_MASK) == 0) {
+#ifdef CFG_MULTITHREADED
+	  releaseMutex(&myGlobals.hostsHashMutex);
+#endif    
+	  mutexLocked = 0;
+#ifdef HAVE_SCHED_H
+	  sched_yield(); /* Allow other threads to run */
+#endif
 	}
       }
+      
+      if(mutexLocked) {
 #ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.hostsHashMutex);
+	releaseMutex(&myGlobals.hostsHashMutex);
 #endif    
+	mutexLocked = 0;
+      }
     }
 
     /* ************************** */
