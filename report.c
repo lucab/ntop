@@ -98,7 +98,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   char theDate[8];
   struct tm t;
   HostTraffic *el;
-  HostTraffic* tmpTable[HASHNAMESIZE];
+  HostTraffic** tmpTable;
   char buf[BUF_SIZE], buf2[BUF_SIZE];
   float sentPercent, rcvdPercent;
   struct pcap_stat stat;
@@ -111,7 +111,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   hourId = atoi(theDate);
 
   memset(buf, 0, sizeof(buf));
-  memset(tmpTable, 0, HASHNAMESIZE*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   sortSendMode = signumber_ignored;
 
@@ -783,6 +784,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   }
 
   lastRefreshTime = actTime;
+  free(tmpTable);
 }
 
 /* ******************************* */
@@ -801,12 +803,13 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   u_int idx, numEntries=0;
   int printedEntries=0;
   HostTraffic *el;
-  HostTraffic* tmpTable[HASHNAMESIZE];
+  HostTraffic** tmpTable;
   char buf[BUF_SIZE], *sign, *theAnchor[6], *arrow[6], *arrowGif;
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
-  memset(tmpTable, 0, HASHNAMESIZE*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   if(revertOrder) {
     sign = "";
@@ -930,6 +933,8 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
     sendString("</TABLE>"TABLE_OFF"\n");
   } else
     printNoDataYet();
+
+  free(tmpTable);
 }
 
 
@@ -940,12 +945,13 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
   struct hostTraffic *el;
-  struct hostTraffic* tmpTable[HASHNAMESIZE];
+  struct hostTraffic** tmpTable;
   char buf[BUF_SIZE], *arrowGif, *sign, *arrow[8], *theAnchor[8];
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
-  memset(tmpTable, 0, HASHNAMESIZE*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   if(revertOrder) {
     sign = "";
@@ -1175,7 +1181,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 
     sendString("</TABLE>"TABLE_OFF"<P>\n");
   }
-
+  free(tmpTable);
 }
 
 /* ************************************ */
@@ -1478,8 +1484,7 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
 			     int revertOrder) {
   u_int idx, numEntries;
   int printedEntries=0;
-  struct hostTraffic *el;
-  struct hostTraffic* tmpTable[HASHNAMESIZE];
+  HostTraffic *el, **tmpTable;
   char buf[BUF_SIZE], *str=NULL, *sign;
   TrafficCounter totalBytesSent, totalBytesReceived, totalBytes, a=0, b=0;
   float sentpct, rcvdpct;
@@ -1496,7 +1501,8 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
   }
 
  totalBytesSent=0, totalBytesReceived=0;
-  memset(tmpTable, 0, HASHNAMESIZE*sizeof(HostTraffic*));
+ tmpTable = (HostTraffic**)malloc(device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
+ memset(tmpTable, 0, device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   for(idx=1, numEntries=0; idx<device[actualDeviceId].actualHashSize; idx++)
     if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
@@ -1680,6 +1686,8 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
     sendString("</TABLE>"TABLE_OFF"\n");
   } else
     printNoDataYet();
+
+  free(tmpTable);
 }
 
 /* ********************************** */

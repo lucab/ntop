@@ -275,8 +275,10 @@ char* copy_argv(register char **argv)
 unsigned short isBroadcastAddress(struct in_addr *addr) {
   int i;
 
-  if((addr == NULL) || (addr->s_addr == 0x0))
+  if(addr == NULL)
     return 1;
+  else if(addr->s_addr == 0x0)
+    return 0; /* IP-less device (is it trying to boot via DHCP/BOOTP ?) */
   else {
     for(i=0; i<numDevices; i++)
       if(device[i].netmask.s_addr == 0xFFFFFFFF) /* PPP */

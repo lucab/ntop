@@ -1289,12 +1289,24 @@ typedef struct napsterStats {
 
 /* *********************** */
 
+#define DHCP_UNKNOWN_MSG    0
+#define DHCP_DISCOVER_MSG   1
+#define DHCP_OFFER_MSG      2
+#define DHCP_REQUEST_MSG    3
+#define DHCP_DECLINE_MSG    4
+#define DHCP_ACK_MSG        5
+#define DHCP_NACK_MSG       6
+#define DHCP_RELEASE_MSG    7
+#define DHCP_INFORM_MSG     8
+#define NUM_DHCP_MSG        9 /* 9 messages in total */
+
 typedef struct dhcpStats { 
   struct in_addr dhcpServerIpAddress;  /* DHCP server that assigned the address */
   struct in_addr previousIpAddress;    /* Previous IP address is any */
   time_t assignTime;                   /* when the address was assigned */
   time_t renewalTime;                  /* when the address has to be renewed */
   time_t leaseTime;                    /* when the address lease will expire */
+  unsigned long dhcpMsgSent[NUM_DHCP_MSG], dhcpMsgRcvd[NUM_DHCP_MSG];
 } DHCPStats;
 
 /* *********************** */
