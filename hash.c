@@ -78,8 +78,10 @@ u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
 	 && (!isPseudoLocalAddress(hostIpAddress, actualDeviceId))) {
 	*el = myGlobals.otherHostEntry;
 	return(OTHER_HOSTS_ENTRY);
-      } else
-	idx = hostIpAddress->s_addr;
+      } else {
+	/* idx = hostIpAddress->s_addr; */
+	idx = (hostIpAddress->s_addr & 0xffff) ^ ((hostIpAddress->s_addr >> 15) & 0xffff);
+      }
     } else {
       idx = FLAG_NO_PEER;
       traceEvent(CONST_TRACE_WARNING, "Index calculation problem (1)");

@@ -581,9 +581,19 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
    * Patch on the line below courtesy of
    * Paul Chapman <pchapman@fury.bio.dfo.ca>
    */
+  /*
   idx = (u_int)((srcHost->hostIpAddress.s_addr+
 		 dstHost->hostIpAddress.s_addr+
 		 sport+dport) % MAX_TOT_NUM_SESSIONS);
+*/
+
+  idx = (u_int)(((dstHost->hostIpAddress.s_addr) & 0xffff) ^
+    ((dstHost->hostIpAddress.s_addr >> 15) & 0xffff) ^
+    ((srcHost->hostIpAddress.s_addr << 1) & 0xffff) ^
+    ((srcHost->hostIpAddress.s_addr >> 16 ) & 0xffff) ^
+    (dport << 1) ^ (sport));
+  
+  idx %= MAX_TOT_NUM_SESSIONS;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d->%s:%d %d->",
