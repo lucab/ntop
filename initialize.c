@@ -1599,7 +1599,15 @@ void initDevices(char* devices) {
 	}
       } else {
 	/* Nothing to do: the user has specified an interface name */
+	int i;
+
 	tmpDescr = NULL;
+	for(i=0; i<ifIdx; i++) {
+	  if(!strcmp(intNames[i], devices)) {
+	    tmpDescr = intDescr[i];
+	    break;
+	  }
+	}
       }
 #endif
 

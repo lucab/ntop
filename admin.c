@@ -1391,10 +1391,9 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 	for (i = 0; devpointer != 0; i++) {
 	  if(strcmp(devpointer->name, "any")) {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-			  "<INPUT TYPE=checkbox NAME=\"%s\" VALUE=\"%s\" %s>%s (%s)<br>\n",
+			  "<INPUT TYPE=checkbox NAME=\"%s\" VALUE=\"%s\" %s>%s<br>\n",
 			  NTOP_PREF_DEVICES, devpointer->name, 
 			  (pref->devices && strstr(pref->devices, devpointer->name)) ? "CHECKED" : "", 
-			  devpointer->name,
 			  devpointer->description ? devpointer->description : devpointer->name);
 	    sendString(buf);
 	  }
