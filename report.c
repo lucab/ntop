@@ -1918,7 +1918,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 /* ********************************** */
 
 void printActiveTCPSessions(int actualDeviceId, int pageNum) {
-  int idx;
+  int idx, realNumSessions;
   char buf[BUF_SIZE];
   int numSessions, printedSessions;
 
@@ -1928,6 +1928,13 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
     printNotAvailable();
     return;
   }
+
+  /* Let's count sessions first */
+  for(idx=1, realNumSessions=0; idx<myGlobals.device[myGlobals.actualReportDeviceId].numTotSessions; idx++)
+    if((idx != myGlobals.otherHostEntryIdx)
+       && (myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL)) {
+      realNumSessions++;
+    }
 
   /*
     Due to the way sessions are handled, sessions before those to
@@ -2043,8 +2050,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
     sendString("</CENTER>\n");
 
     addPageIndicator("NetNetstat.html", pageNum,
-		     myGlobals.device[myGlobals.actualReportDeviceId].numTotSessions,
-		     myGlobals.maxNumLines, -1, 0);
+		     realNumSessions, myGlobals.maxNumLines, -1, 0);
   } else
     printFlagedWarning("<I>No Active TCP Sessions</I>");
 }
