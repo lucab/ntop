@@ -2143,29 +2143,29 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			myGlobals.device[devIdx].netflowGlobals->numBadFlowReality+
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsV9UnknTemplRcvd);
 
-	  updateGauge(rrdPath, "averageTcpNewFlowSize", 
+	  updateGauge(rrdPath, "averageTcpNetFlowSize", 
 		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize/
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
-	  updateGauge(rrdPath, "averageUdpNewFlowSize", 
+	  updateGauge(rrdPath, "averageUdpNetFlowSize", 
 		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize/
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
-	  updateGauge(rrdPath, "averageIcmpNewFlowSize", 
+	  updateGauge(rrdPath, "averageIcmpNetFlowSize", 
 		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize/
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd);
-	  updateGauge(rrdPath, "averageOtherNewFlowSize", 
+	  updateGauge(rrdPath, "averageOtherNetFlowSize", 
 		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize/
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd);
 
-	  updateGauge(rrdPath, "numTcpNewFlows", 
+	  updateGauge(rrdPath, "numTcpNetFlows", 
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
-	  updateGauge(rrdPath, "numUdpNewFlows", 
+	  updateGauge(rrdPath, "numUdpNetFlows", 
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
-	  updateGauge(rrdPath, "numIcmpNewFlows", 
+	  updateGauge(rrdPath, "numIcmpNetFlows", 
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd);
-	  updateGauge(rrdPath, "numOtherNewFlows", 
+	  updateGauge(rrdPath, "numOtherNetFlows", 
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd);
 
-	  updateGauge(rrdPath, "numNewFlows", 
+	  updateGauge(rrdPath, "numNetFlows", 
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd-
 			myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd);
 
