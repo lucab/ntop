@@ -2778,8 +2778,10 @@ void printThptStatsMatrix(int sortedColumn) {
 
       /* *************************************** */
 
-      if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
-						      last60MinutesThpt[i].topHostRcvdIdx] != NULL) {
+      
+      if((device[actualReportDeviceId].last60MinutesThpt[i].topHostRcvdIdx != NO_PEER)
+	 && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
+							  last60MinutesThpt[i].topHostRcvdIdx] != NULL)) {
 	if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		    makeHostLink(device[actualReportDeviceId].
 				 hash_hostTraffic[device[actualReportDeviceId].
@@ -2790,9 +2792,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	   sendString(buf);
 
-	if(device[actualReportDeviceId].
-	   hash_hostTraffic[device[actualReportDeviceId].
-			   last60MinutesThpt[i].secondHostRcvdIdx] != NULL) {
+	if((device[actualReportDeviceId].last60MinutesThpt[i].secondHostRcvdIdx != NO_PEER)
+	   && (device[actualReportDeviceId].
+	       hash_hostTraffic[device[actualReportDeviceId].
+			       last60MinutesThpt[i].secondHostRcvdIdx] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		      makeHostLink(device[actualReportDeviceId].
 				   hash_hostTraffic[device[actualReportDeviceId].
@@ -2804,8 +2807,9 @@ void printThptStatsMatrix(int sortedColumn) {
 	     sendString(buf);
 	}
 
-	if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
-							last60MinutesThpt[i].thirdHostRcvdIdx] != NULL) {
+	if((device[actualReportDeviceId].last60MinutesThpt[i].thirdHostRcvdIdx != NO_PEER)
+	   && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
+							    last60MinutesThpt[i].thirdHostRcvdIdx] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		      makeHostLink(device[actualReportDeviceId].
 				   hash_hostTraffic[device[actualReportDeviceId].
@@ -2851,9 +2855,9 @@ void printThptStatsMatrix(int sortedColumn) {
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 	
-	if(device[actualReportDeviceId].
-	   hash_hostTraffic[device[actualReportDeviceId].
-			   last24HoursThpt[i].topHostSentIdx] != NULL) {
+	 if((device[actualReportDeviceId].last24HoursThpt[i].topHostRcvdIdx != NO_PEER)
+	    && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
+							     last24HoursThpt[i].topHostSentIdx] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		      makeHostLink(device[actualReportDeviceId].
 				   hash_hostTraffic[device[actualReportDeviceId].
@@ -2864,8 +2868,9 @@ void printThptStatsMatrix(int sortedColumn) {
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
-	  if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
-							  last24HoursThpt[i].secondHostSentIdx] != NULL) {
+	  if((device[actualReportDeviceId].last24HoursThpt[i].secondHostRcvdIdx != NO_PEER)
+	     && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
+							      last24HoursThpt[i].secondHostSentIdx] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		    makeHostLink(device[actualReportDeviceId].
 				 hash_hostTraffic[device[actualReportDeviceId].
@@ -2876,9 +2881,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
-
-	  if(device[actualReportDeviceId].
-	     hash_hostTraffic[device[actualReportDeviceId].last24HoursThpt[i].thirdHostSentIdx] != NULL) {
+	  
+	  if((device[actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdIdx != NO_PEER)
+	     && (device[actualReportDeviceId].
+		 hash_hostTraffic[device[actualReportDeviceId].last24HoursThpt[i].thirdHostSentIdx] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		    makeHostLink(device[actualReportDeviceId].
 				 hash_hostTraffic[device[actualReportDeviceId].
@@ -2896,8 +2902,9 @@ void printThptStatsMatrix(int sortedColumn) {
 
 	/* *************************************** */
 
-	if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
-							last24HoursThpt[i].topHostRcvdIdx] != NULL) {
+	if((device[actualReportDeviceId].last24HoursThpt[i].topHostRcvdIdx != NO_PEER)
+	    && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
+							last24HoursThpt[i].topHostRcvdIdx] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		  makeHostLink(device[actualReportDeviceId].
 			       hash_hostTraffic[device[actualReportDeviceId].
@@ -2908,9 +2915,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
-	  if(device[actualReportDeviceId].
-	     hash_hostTraffic[device[actualReportDeviceId].
-			     last24HoursThpt[i].secondHostRcvdIdx] != NULL) {
+	  if((device[actualReportDeviceId].last24HoursThpt[i].secondHostRcvdIdx != NO_PEER)
+	     && (device[actualReportDeviceId].
+		 hash_hostTraffic[device[actualReportDeviceId].
+				 last24HoursThpt[i].secondHostRcvdIdx] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		    makeHostLink(device[actualReportDeviceId].
 				 hash_hostTraffic[device[actualReportDeviceId].
@@ -2922,8 +2930,9 @@ void printThptStatsMatrix(int sortedColumn) {
 	    sendString(buf);
 	  }
 
-	  if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
-							  last24HoursThpt[i].thirdHostRcvdIdx] != NULL) {
+	  if((device[actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdIdx != NO_PEER)
+	     && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
+							      last24HoursThpt[i].thirdHostRcvdIdx] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		    makeHostLink(device[actualReportDeviceId].
 				 hash_hostTraffic[device[actualReportDeviceId].
