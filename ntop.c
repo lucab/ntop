@@ -205,7 +205,7 @@ void detachFromTerminal(void) {
    * If no facility was set through -L | --use-syslog=facility
    * then force the default
    */
-  if (myGlobals.useSyslog == -1) {
+  if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
     myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
   }
 #endif

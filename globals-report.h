@@ -139,7 +139,7 @@ extern void printNoDataYet(void);
 extern void printNotAvailable(void);
 extern void listNetFlows(void);
 extern void fillDomainName(HostTraffic *el);
-extern void printNtopConfigInfo(void);
+extern void printNtopConfigInfo(int textPrintFlag);
 extern void updateHostThpt(HostTraffic *el, int hourId, int fullUpdate);
 
 /* webInterface.c */
@@ -214,6 +214,7 @@ extern int out_graph(short gifwidth,
 #define STR_SHOW_PLUGINS                "showPlugins.html"
 #define SHUTDOWN_NTOP_HTML              "shutdown.html"
 #define INFO_NTOP_HTML                  "info.html"
+#define TEXT_INFO_NTOP_HTML             "textinfo.html"
 #define TRAFFIC_STATS_HTML              "trafficStats.html"
 #define NW_EVENTS_HTML                  "networkEvents.html"
 #define STR_SORT_DATA_RCVD_HOST_TRAFFIC "dataRcvdHostTraffic.html"

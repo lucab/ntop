@@ -29,7 +29,15 @@ NtopGlobals myGlobals;
 
 
 #ifdef WIN32
-char *version, *osName, *author, *buildDate;
+char *version, *osName, *author, *buildDate,
+            *configure_parameters,
+            *host_system_type,
+            *target_system_type,
+            *compiler_cflags,
+            *include_path,
+            *core_libs,
+            *additional_libs,
+            *install_path;
 #endif
 
 static u_short _mtuSize[] = {
@@ -110,39 +118,44 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.ntop_argc = argc;
   myGlobals.ntop_argv = argv;
 
-  myGlobals.accessLogPath = NULL;    /* access log filename disabled by default */
-  myGlobals.stickyHosts = 0;
+  myGlobals.accessLogPath = NTOP_DEFAULT_ACCESS_LOG_PATH;
+  myGlobals.stickyHosts = NTOP_DEFAULT_STICKY_HOSTS;
 
-  myGlobals.daemonMode = 0;
+  myGlobals.daemonMode = NTOP_DEFAULT_DAEMON_MODE;
   if (strcmp(myGlobals.program_name, "ntopd") == 0) {
-    myGlobals.daemonMode++;
+    myGlobals.daemonMode = 1;
   }
 
-  myGlobals.rFileName = NULL;
-  myGlobals.devices = NULL;
-  myGlobals.borderSnifferMode = 0;
-  myGlobals.dontTrustMACaddr = 0;
-  myGlobals.filterExpressionInExtraFrame = 0;
-  myGlobals.pcapLog = NULL;
-  myGlobals.numericFlag = 0;
-  myGlobals.enableSuspiciousPacketDump = 0;
+  myGlobals.rFileName = NTOP_DEFAULT_TRAFFICDUMP_FILENAME;
+  myGlobals.devices = NTOP_DEFAULT_DEVICES;
+  myGlobals.borderSnifferMode = NTOP_DEFAULT_BORDER_SNIFFER_MODE;
+  myGlobals.dontTrustMACaddr = NTOP_DEFAULT_DONT_TRUST_MAC_ADDR;
+  myGlobals.filterExpressionInExtraFrame = NTOP_DEFAULT_FILTER_IN_FRAME;
+  myGlobals.pcapLog = NTOP_DEFAULT_PCAP_LOG_FILENAME;
+  myGlobals.numericFlag = NTOP_DEFAULT_NUMERIC_IP_ADDRESSES;
+  myGlobals.localAddresses = NTOP_DEFAULT_LOCAL_SUBNETS;
+  myGlobals.enableSuspiciousPacketDump = NTOP_DEFAULT_SUSPICIOUS_PKT_DUMP;
+  myGlobals.disablePromiscuousMode = NTOP_DEFAULT_DISABLE_PROMISCUOUS;
   myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
-    myGlobals.currentFilterExpression = NULL;
-  myGlobals.domainName[0] = '\0';
+  myGlobals.currentFilterExpression = NTOP_DEFAULT_FILTER_EXPRESSION;
+  strncpy((char *) &myGlobals.domainName, NTOP_DEFAULT_DOMAIN_NAME, sizeof(myGlobals.domainName));
+  myGlobals.enableExternalTools = NTOP_DEFAULT_EXTERNAL_TOOLS_ENABLE;
   myGlobals.isLsofPresent = 0;
+  myGlobals.isNmapPresent = NTOP_DEFAULT_NMAP_PRESENT;
+  myGlobals.flowSpecs = NTOP_DEFAULT_FLOW_SPECS;
 
 #ifndef WIN32
-  myGlobals.debugMode = 0;
-  myGlobals.useSyslog = -1;
+  myGlobals.debugMode = NTOP_DEFAULT_DEBUG_MODE;
+  myGlobals.useSyslog = NTOP_DEFAULT_SYSLOG;
 #endif
 
-  myGlobals.mergeInterfaces = 1;     /* by default ntop will merge network interfaces */
-  myGlobals.isNmapPresent = 0;
-  myGlobals.usePersistentStorage = 0;
-  myGlobals.mapperURL = NULL;
+  myGlobals.mergeInterfaces = NTOP_DEFAULT_MERGE_INTERFACES;
+     /* note that by default ntop will merge network interfaces */
+  myGlobals.usePersistentStorage = NTOP_DEFAULT_PERSISTENT_STORAGE;
+  myGlobals.mapperURL = NTOP_DEFAULT_MAPPER_URL;
 
 #ifdef HAVE_GDCHART
-  myGlobals.throughput_chart_type = GDC_AREA;
+  myGlobals.throughput_chart_type = NTOP_DEFAULT_CHART_TYPE;
 #endif
 
   /* Other flags (to be set via command line options one day) */
@@ -197,7 +210,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.sslPort = 0;           /* Disabled by default: it can enabled using -W <SSL port> */
 #endif
 
-  myGlobals.webPort = 3000;
+  myGlobals.webAddr = NTOP_DEFAULT_WEB_ADDR;
+  myGlobals.webPort = NTOP_DEFAULT_WEB_PORT;
 
   /* Termination flags */
   myGlobals.capturePackets = 1;    /* By default data are collected into internal variables */

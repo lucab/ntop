@@ -2,6 +2,7 @@
 
 # From configure.in 1.0
 
+CONFIGURE_PARAMETERS=$*
 
 NTOP_MAJOR_VERSION=2
 NTOP_MINOR_VERSION=0
@@ -6282,10 +6283,19 @@ test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 echo "creating version.c"
 /bin/rm -f version.c
-echo $VERSION  | sed -e 's/.*/char * version   = "&";/' > version.c
+echo $NTOP_VERSION $NTOP_VERSION_EXTRA  | sed -e 's/.*/char * version   = "&";/' > version.c
 ./config.guess | sed -e 's/.*/char * osName    = "&";/' >> version.c
 echo "char * author    = \"Luca Deri <deri@ntop.org>\";" >> version.c
 date +"%D %r" | sed -e 's/.*/char * buildDate = "&";/' >> version.c
+echo $CONFIGURE_PARAMETERS | sed -e 's/.*/char * configure_parameters   = "&";/' >> version.c
+echo ${host} | sed -e 's/.*/char * host_system_type   = "&";/' >> version.c
+echo ${target} | sed -e 's/.*/char * target_system_type   = "&";/' >> version.c
+echo ${CC} ${CFLAGS} ${DEFS} | sed -e 's/.*/char * compiler_cflags   = "&";/' >> version.c
+echo ${INCS} | sed -e 's/.*/char * include_path    = "&";/' >> version.c
+echo ${$LDFLAGS} ${LIBS} | sed -e 's/.*/char * system_libs    = "&";/' >> version.c
+echo ${CORELIBS} | sed -e 's/.*/char * core_libs   = "&";/' >> version.c
+echo ${MORELIBS} ${SNMPLIBS} | sed -e 's/.*/char * additional_libs   = "&";/' >> version.c
+echo ${prefix} | sed -e 's/.*/char * install_path   = "&";/' >> version.c
 
 echo "
 

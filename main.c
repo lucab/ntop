@@ -432,7 +432,7 @@ static int parseOptions(int argc, char* argv []) {
       break;
 
     case 'n':
-      myGlobals.numericFlag++;
+      myGlobals.numericFlag = 1;
       break;
 
     case 'p':                     /* the TCP/UDP protocols being monitored */
@@ -466,6 +466,7 @@ static int parseOptions(int argc, char* argv []) {
 #ifndef WIN32
     case 'u':
       stringSanityCheck(optarg);
+      myGlobals.effectiveUserName = strdup(optarg);
       if(strOnlyDigits(optarg))
 	myGlobals.userId = atoi(optarg);
       else {
@@ -523,6 +524,7 @@ static int parseOptions(int argc, char* argv []) {
       break;
 
     case 'E':
+      myGlobals.enableExternalTools = 1;
       myGlobals.isLsofPresent  = checkCommand("lsof");
       myGlobals.isNmapPresent  = checkCommand("nmap");
       break;
@@ -860,10 +862,6 @@ int main(int argc, char *argv[]) {
 
   /* Handle local addresses (if any) */
   handleLocalAddresses(myGlobals.localAddresses);
-  if(myGlobals.localAddresses != NULL) {
-    free(myGlobals.localAddresses);
-    myGlobals.localAddresses = NULL;
-  }
 
   initDeviceDatalink();
 
@@ -874,18 +872,9 @@ int main(int argc, char *argv[]) {
 
   /* Handle flows (if any) */
   handleFlowsSpecs();
-  if(myGlobals.flowSpecs != NULL) {
-    free(myGlobals.flowSpecs);
-    myGlobals.flowSpecs = NULL;
-  }
 
   /* Patch courtesy of Burton M. Strauss III <BStrauss3@attbi.com> */
   handleProtocols();
-
-  if(myGlobals.protoSpecs != NULL) {
-    free(myGlobals.protoSpecs);
-    myGlobals.protoSpecs = NULL;
-  }
 
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();

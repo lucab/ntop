@@ -443,7 +443,7 @@ int initGlobalValues(void) {
     myGlobals.numDequeueThreads      = MAX_NUM_DEQUEUE_THREADS;
 #endif
     myGlobals.trackOnlyLocalHosts    = 1;
-    myGlobals.enableDBsupport        = 0;
+    myGlobals.enableDBsupport        = NTOP_DEFAULT_DB_SUPPORT;
   } else {
 #ifdef MULTITHREADED
     myGlobals.numDequeueThreads = 1;

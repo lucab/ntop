@@ -647,12 +647,12 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
         void *oldPtr = myGlobals.device[actualDeviceId].hash_hostTraffic;
 
         list->idx = myGlobals.device[actualDeviceId].actualHashSize;
-        if(myGlobals.device[actualDeviceId].actualHashSize < 512)
-          myGlobals.device[actualDeviceId].actualHashSize = 512;
-        else if(myGlobals.device[actualDeviceId].actualHashSize >= 4096)
-          myGlobals.device[actualDeviceId].actualHashSize += 4096;
+        if(myGlobals.device[actualDeviceId].actualHashSize < HASH_MINIMUM_SIZE)
+          myGlobals.device[actualDeviceId].actualHashSize = HASH_MINIMUM_SIZE;
+        else if(myGlobals.device[actualDeviceId].actualHashSize >= HASH_FACTOR_MAXIMUM)
+          myGlobals.device[actualDeviceId].actualHashSize += HASH_TERMINAL_INCREASE;
         else
-          myGlobals.device[actualDeviceId].actualHashSize *= 2; /* Double */
+          myGlobals.device[actualDeviceId].actualHashSize *= HASH_INCREASE_FACTOR;
 
         ptrLen = sizeof(struct hostTraffic*);
         ptrLen *= myGlobals.device[actualDeviceId].actualHashSize;

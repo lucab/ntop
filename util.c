@@ -358,10 +358,17 @@ int dotted2bits(char *mask) {
 
 void handleLocalAddresses(char* addresses) {
   char *strtokState, *address;
+  char localAddresses[1024];
+  int laBufferLength = sizeof(localAddresses);
+  int laBufferPosition = 0;
+  int laBufferUsed = 0;
+
   int i;
 
   if (! addresses)
     return;
+
+  memset(localAddresses, 0, sizeof(localAddresses));
 
   address = strtok_r(addresses, ",", &strtokState);
 
@@ -459,6 +466,22 @@ void handleLocalAddresses(char* addresses) {
 	  networks[numLocalNets][NETWORK]   = network;
 	  networks[numLocalNets][NETMASK]   = networkMask;
 	  networks[numLocalNets][BROADCAST] = broadcast;
+
+          a = (int) ((network >> 24) & 0xff);
+          b = (int) ((network >> 16) & 0xff);
+          c = (int) ((network >>  8) & 0xff);
+          d = (int) ((network >>  0) & 0xff);
+
+          if ((laBufferUsed = snprintf(&localAddresses[laBufferPosition], 
+                                      laBufferLength, 
+                                      "%s%d.%d.%d.%d/%d",
+                                      numLocalNets == 0 ? "" : ", ",
+                                      a, b, c, d,
+                                      bits)) < 0)
+              BufferTooShort();
+          laBufferPosition += laBufferUsed;
+          laBufferLength   -= laBufferUsed;
+
 	  numLocalNets++;
 	}
       } else
@@ -470,7 +493,7 @@ void handleLocalAddresses(char* addresses) {
 
   /* Not used anymore */
   free(myGlobals.localAddresses);
-  myGlobals.localAddresses = NULL;
+  myGlobals.localAddresses = strdup(localAddresses);
 }
 
 
@@ -629,7 +652,7 @@ void handleFlowsSpecs() {
 
       /* Not used anymore */
       free(myGlobals.flowSpecs);
-      myGlobals.flowSpecs = NULL;
+      myGlobals.flowSpecs = strdup("Error reading file");
       return;
     }
 
@@ -704,7 +727,7 @@ void handleFlowsSpecs() {
 
 		/* Not used anymore */
 		free(myGlobals.flowSpecs);
-		myGlobals.flowSpecs = NULL;
+		myGlobals.flowSpecs = strdup("Error, wrong flow specification");
                 return;
               }
             }
@@ -725,9 +748,6 @@ void handleFlowsSpecs() {
   if(buffer != NULL)
     free(buffer);
 
-  /* Not used anymore */
-  free(myGlobals.flowSpecs);
-  myGlobals.flowSpecs = NULL;
 }
 
 /* ********************************* */
@@ -2095,14 +2115,14 @@ void traceEvent(int eventTraceLevel, char* file,
     struct tm t;
 
 #ifndef WIN32
-      if(myGlobals.useSyslog != -1)
+      if(myGlobals.useSyslog != NTOP_SYSLOG_NONE)
 	openlog("ntop", LOG_PID, myGlobals.useSyslog);
 #endif
 
 #ifdef WIN32
 	  if(1)
 #else
-	  if(myGlobals.useSyslog == -1)
+	  if(myGlobals.useSyslog == NTOP_SYSLOG_NONE)
 #endif
 	    {
 	      strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
@@ -2125,7 +2145,7 @@ void traceEvent(int eventTraceLevel, char* file,
 #ifdef WIN32
 	  if(1)
 #else
-      if(myGlobals.useSyslog == -1)
+      if(myGlobals.useSyslog == NTOP_SYSLOG_NONE)
 #endif
 	{
 	printf("%s", buf);
@@ -2162,7 +2182,7 @@ void traceEvent(int eventTraceLevel, char* file,
     }
 
 #ifndef WIN32
-  if(myGlobals.useSyslog != -1)
+  if(myGlobals.useSyslog != NTOP_SYSLOG_NONE)
     closelog();
 #endif
 }

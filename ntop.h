@@ -1054,8 +1054,6 @@ typedef struct processInfoList {
 #define TOP_IP_PORT           65534 /* IP ports range from 0 to 65535 */
 #define TOP_ASSIGNED_IP_PORTS  1024
 
-#define NTOP_DEFAULT_WEB_PORT 3000
-
 typedef union {
   HEADER qb1;
   u_char qb2[PACKETSZ];
@@ -1347,7 +1345,6 @@ typedef struct {
 #define DB_TIMEOUT_REFRESH_TIME      30 /* seconds */
 #define DEFAULT_DB_UPDATE_TIME       60 /* seconds */
 #define HASHNAMESIZE               4096
-#define MAX_HASH_SIZE             32768
 
 /*
  * 75% is the threshold for the hash table: it's time to
@@ -1694,7 +1691,26 @@ typedef struct icmpHostInfo {
 
 /* *********************** */
 
+/* Hash table sizing gets confusing... see the code in hash.c for the
+   actual details, but here is what's what as of May2002...
+
+   The table is created of size HASH_INITIAL_SIZE...
+   When first extended, it grows to HASH_MINIMUM_SIZE
+   Between HASH_MINIMUM_SIZE and HASH_FACTOR_MAXIMUM,
+             it grows by a multiplier, HASH_INCREASE_FACTOR
+   After growing to HASH_FACTOR_MAXIMUM it begins to grow by HASH_TERMINAL_INCREASE
+
+   So, the pattern is:
+  
+   32, 512, 1024, 2048, 4069, 8192, 12288 ...
+ */
+ 
 #define HASH_INITIAL_SIZE         32
+#define HASH_MINIMUM_SIZE         512  /* Minimum after 1st entend */
+#define HASH_FACTOR_MAXIMUM       4096 /* After it gets this big */
+#define HASH_TERMINAL_INCREASE    4096 /*      grow by */
+#define HASH_INCREASE_FACTOR      2    /* Between MINIMUM and TERMINAL, grow by... */
+
 #define MAX_HOST_SYM_NAME_LEN     64
 #define MAX_NODE_TYPES             8
 
@@ -1883,8 +1899,9 @@ struct pbuf {
 
 #define IDLE_HOST_PURGE_TIMEOUT  10*60    /*   30 minutes */
 #define IDLE_SESSION_TIMEOUT     10*60    /*   10 minutes */
-#define PURGE_ADDRESS_TIMEOUT    120*60   /*   2  hours   */
 #define PIPE_READ_TIMEOUT        15       /*      seconds */
+
+#define ADDRESS_PURGE_TIMEOUT 12*60*60 /* 12 hours */
 
 /* **************************** */
 

@@ -42,13 +42,69 @@
 #define NTOP_DEFAULT_LOGFILE     "ntop.log"
 #define NTOP_DEFAULT_ACCESSFILE  "ntop.last"
 
-#define NTOP_DEFAULT_DEBUG        0          /* that means debug disabled */
-#define NTOP_DEFAULT_SYSLOG       0          /* that means syslog disabled */
-#define NTOP_DEFAULT_WEB_PORT     3000
+#define NTOP_DEFAULT_ACCESS_LOG_PATH      NULL      /* -a */
+#define NTOP_DEFAULT_DB_SUPPORT           0         /* -b */
+                                                        /* access log disabled by default */
+#define NTOP_DEFAULT_STICKY_HOSTS         0         /* -c */
+#define NTOP_DEFAULT_DAEMON_MODE          0         /* -d */
+
+#define NTOP_DEFAULT_TRAFFICDUMP_FILENAME NULL      /* -f */
+
+#define NTOP_DEFAULT_DEVICES              NULL      /* -i */
+#define NTOP_DEFAULT_BORDER_SNIFFER_MODE  0         /* -j */
+#define NTOP_DEFAULT_FILTER_IN_FRAME      0         /* -k */
+#define NTOP_DEFAULT_PCAP_LOG_FILENAME    NULL      /* -l */
+#define NTOP_DEFAULT_LOCAL_SUBNETS        NULL      /* -m */
+#define NTOP_DEFAULT_NUMERIC_IP_ADDRESSES 0         /* -n */
+#define NTOP_DEFAULT_SUSPICIOUS_PKT_DUMP  0         /* -q */
+#define NTOP_DEFAULT_DISABLE_PROMISCUOUS  0         /* -s */
+
+#define NTOP_DEFAULT_WEB_ADDR             NULL      /* -w */ /* e.g. all interfaces & addresses */
+#define NTOP_DEFAULT_WEB_PORT             3000
+
+#define NTOP_DEFAULT_FILTER_EXPRESSION    NULL      /* -B */
+
+#define NTOP_DEFAULT_DOMAIN_NAME          ""        /* -D */
+                                   /* Note: don't use null, as this isn't a char*, its a char[] */
+#define NTOP_DEFAULT_EXTERNAL_TOOLS_ENABLE 0        /* -E */
+#define NTOP_DEFAULT_FLOW_SPECS           NULL      /* -F */
+
+#define NTOP_DEFAULT_DEBUG_MODE           0         /* -K */
+
+#define NTOP_DEFAULT_DEBUG                0              /* that means debug disabled */
+#define NTOP_SYSLOG_NONE                  -1
+#define NTOP_DEFAULT_SYSLOG       NTOP_SYSLOG_NONE /* -L */
+#define NTOP_DEFAULT_MERGE_INTERFACES     1        /* -M */
+#define NTOP_DEFAULT_NMAP_PRESENT         0        /* -N */
+
+/* -O and -P are special, see globals-core.h */
+
+#define NTOP_DEFAULT_PERSISTENT_STORAGE   0        /* -S */
+
+#define NTOP_DEFAULT_MAPPER_URL           NULL     /* -U */
+
+#define NTOP_DEFAULT_SSL_ADDR             NULL     /* -W */ /* e.g. all interfaces & addresses */
+#define NTOP_DEFAULT_SSL_PORT             0                 /* e.g. inactive */
+
+#define NTOP_DEFAULT_CHART_TYPE           GDC_AREA /* --throughput-chart-type */
 
 #define NOW ((time_t) time ((time_t *) 0))
 
 #define MAX_NUM_BAD_IP_ADDRESSES         3
+
+#define NTOP_DEFAULT_DONT_TRUST_MAC_ADDR 0
+
+/*
+ * External URLs...
+ */
+#define LSOF_URL        "http://freshmeat.net/projects/lsof/"
+#define LSOF_URL_ALT    "lsof home page at freshmeat.net"
+#define NMAP_URL        "http://www.insecure.org/nmap/>nmap"
+#define NMAP_URL_ALT    "nmap home page at insecure.org"
+#define GDCHART_URL     "http://www.fred.net/brv/chart/"
+#define GDCHART_URL_ALT "GDChart home page"
+#define OPENSSL_URL     "http://www.openssl.org/"
+#define OPENSSL_URL_ALT "OpenSSL home page"
 
 /*
  * used to drive the ntop's behaviour at run-time
@@ -63,8 +119,13 @@ typedef struct ntopGlobals {
   /* command line options */
 
   char *accessLogPath;               /* 'a' */
+  char *sqlHostName;                 /* 'b' */
+  int  sqlPortNumber;
   u_char stickyHosts;                /* 'c' */
   int daemonMode;                    /* 'd' */
+#ifndef MICRO_NTOP
+  int maxNumLines;                   /* 'e' */
+#endif
   char *rFileName;                   /* 'f' */
   char *devices;                     /* 'i' */
   short borderSnifferMode;           /* 'j' */
@@ -73,11 +134,23 @@ typedef struct ntopGlobals {
   char *pcapLog;                     /* 'l' */
   int numericFlag;                   /* 'n' */
   u_char enableSuspiciousPacketDump; /* 'q' */
-  u_int maxHashSize;                 /* 's' */
+  int refreshRate;                   /* 'r' */
+  u_char disablePromiscuousMode;     /* 's' */
   u_short traceLevel;                /* 't' */
+  char *mySQLhostName;               /* 'v' */
+  char *mySQLuser;
+   /* password is NOT stored in globals */
+  char *mySQLdatabase;
+  int  mySQLportNumber;
+
+  char *webAddr;                     /* 'w' */
+  int webPort;
+
+
   char *currentFilterExpression;     /* 'B' */
   char domainName[MAXHOSTNAMELEN];   /* 'D' */
   int isLsofPresent;                 /* 'E' */
+  u_char enableExternalTools;        /* 'E' */
 
 #ifndef WIN32
   u_short debugMode;                 /* 'K' */
@@ -91,6 +164,10 @@ typedef struct ntopGlobals {
   short usePersistentStorage;        /* 'S' */
   char *mapperURL;                   /* 'U' */
 
+#ifdef HAVE_OPENSSL
+  char *sslAddr;                     /* 'W' */
+  int sslPort;
+#endif
 
 #ifdef HAVE_GDCHART
   int throughput_chart_type;         /* '129' */
@@ -101,7 +178,6 @@ typedef struct ntopGlobals {
   u_char enablePacketDecoding;
   u_char enableFragmentHandling;
   u_char trackOnlyLocalHosts;
-  u_char disablePromiscuousMode;
 
   /* Search paths */
   char **dataFileDirs;
@@ -204,7 +280,7 @@ typedef struct ntopGlobals {
 
   /* SSL support */
 #ifdef HAVE_OPENSSL
-  int sslInitialized, sslPort;
+  int sslInitialized;
 #endif
 
   /* Termination flags */
@@ -218,7 +294,6 @@ typedef struct ntopGlobals {
   ProcessInfoList *localPorts[TOP_IP_PORT];
 
   /* Filter Chains */
-  u_short handleRules;
   FlowFilterList *flowsList;
 
   /* Address Resolution */
@@ -276,12 +351,13 @@ typedef struct ntopGlobals {
   
 #ifndef WIN32
   int userId, groupId;
+  char * effectiveUserName;
 #endif
   
-  char *webAddr, *flowSpecs, *sslAddr;  
+  char *flowSpecs;  
 
 #ifndef MICRO_NTOP
-  int maxNumLines, sortSendMode;
+  int sortSendMode;
   
   /* TCP Wrappers */
 #ifdef HAVE_LIBWRAP
@@ -290,7 +366,7 @@ typedef struct ntopGlobals {
   
 #endif /* MICRO_NTOP */  
 
-  int webPort, refreshRate, localAddrFlag, actualReportDeviceId;
+  int actualReportDeviceId;
   short columnSort, reportKind, sortFilter;
   int sock, newSock;
 #ifdef HAVE_OPENSSL

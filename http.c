@@ -1732,7 +1732,11 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       sendString("</FONT><p>\n");
     } else if(strncmp(pageName, INFO_NTOP_HTML, strlen(INFO_NTOP_HTML)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printNtopConfigInfo();
+      printNtopConfigInfo(FALSE);
+    } else if(strncmp(pageName, TEXT_INFO_NTOP_HTML, strlen(TEXT_INFO_NTOP_HTML)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+      printNtopConfigInfo(TRUE);
+      printTrailer = 0;
     } else
 #endif /* MICRO_NTOP */
       if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {

@@ -21,7 +21,15 @@
 extern NtopGlobals myGlobals;
 
 /* version.c */
-extern char *version, *osName, *author, *buildDate;
+extern char *version, *osName, *author, *buildDate,
+            *configure_parameters,
+            *host_system_type,
+            *target_system_type,
+            *compiler_cflags,
+            *include_path,
+            *core_libs,
+            *additional_libs,
+            *install_path;
 
 /****** function declarations ***** */
 
