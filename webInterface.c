@@ -617,11 +617,19 @@ void switchNwInterface(int _interface) {
   char buf[BUF_SIZE], *selected;
 
   printHTMLheader("Network Interface Switch", HTML_FLAG_NO_REFRESH);
-  sendString("<HR>\n<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
+  sendString("<HR>\n");
+
+  if(snprintf(buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\">Note that "
+                "the netFlow and sFlow plugins - if enabled - force -M to be set (i.e. "
+                "they disable interface merging).</font></p>\n") < 0)
+    BufferTooShort();
+  sendString(buf);
+
+  sendString("<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
   
   if(myGlobals.mergeInterfaces) {
-    if(snprintf(buf, sizeof(buf), "You can't switch among different inferfaces unless the -M "
-		"command line switch is used. Sorry.\n") < 0)
+    if(snprintf(buf, sizeof(buf), "Sorry, but you can not switch among different interfaces "
+                "unless the -M command line switch is used.\n") < 0)
       BufferTooShort();
     sendString(buf);
   } else if((mwInterface != -1) &&
