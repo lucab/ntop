@@ -895,30 +895,30 @@ static void returnHTTPPage(char* pageName, int postLen) {
     sendString("<CENTER><p><H1><FONT FACE=Helvetica>IP Protocol Subnet Usage</FONT></H1><p>\n");
     printIpProtocolUsage();
 #ifdef HAVE_GDCHART
-  } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
+  } else if(strncmp(pageName, "thptGraph.png", strlen("thptGraph.png")) == 0) {
     sendHTTPProtoHeader(); sendGIFHeaderType();
     drawThptGraph(sortedColumn);
-  } else if(strncmp(pageName, "ipTrafficPie", strlen("ipTrafficPie")) == 0) {
+  } else if(strncmp(pageName, "ipTrafficPie.png", strlen("ipTrafficPie.png")) == 0) {
     sendHTTPProtoHeader(); sendGIFHeaderType();
     drawTrafficPie();
-  } else if(strncmp(pageName, "pktCastDistribPie", strlen("pktCastDistribPie")) == 0) {
+  } else if(strncmp(pageName, "pktCastDistribPie.png", strlen("pktCastDistribPie.png")) == 0) {
     sendHTTPProtoHeader(); sendGIFHeaderType();
     pktCastDistribPie();
-  } else if(strncmp(pageName, "pktSizeDistribPie", strlen("pktSizeDistribPie")) == 0) {
+  } else if(strncmp(pageName, "pktSizeDistribPie.png", strlen("pktSizeDistribPie.png")) == 0) {
     sendHTTPProtoHeader(); sendGIFHeaderType();
     pktSizeDistribPie();
-  } else if(strncmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {
+  } else if(strncmp(pageName, "ipProtoDistribPie.png", strlen("ipProtoDistribPie.png")) == 0) {
     sendHTTPProtoHeader(); sendGIFHeaderType();
     ipProtoDistribPie();
-  } else if(strncmp(pageName, "interfaceTrafficPie", strlen("interfaceTrafficPie")) == 0) {
+  } else if(strncmp(pageName, "interfaceTrafficPie.png", strlen("interfaceTrafficPie.png")) == 0) {
     sendHTTPProtoHeader(); sendGIFHeaderType();
     interfaceTrafficPie();
-  } else if(strncmp(pageName, "drawGlobalProtoDistribution",
-		    strlen("drawGlobalProtoDistribution")) == 0) {
+  } else if(strncmp(pageName, "drawGlobalProtoDistribution.png",
+		    strlen("drawGlobalProtoDistribution.png")) == 0) {
     sendHTTPProtoHeader(); sendGIFHeaderType();
     drawGlobalProtoDistribution();
-  } else if(strncmp(pageName, "drawGlobalIpProtoDistribution",
-		    strlen("drawGlobalIpProtoDistribution")) == 0) {
+  } else if(strncmp(pageName, "drawGlobalIpProtoDistribution.png",
+		    strlen("drawGlobalIpProtoDistribution.png")) == 0) {
     sendHTTPProtoHeader(); sendGIFHeaderType();
     drawGlobalIpProtoDistribution();
 #endif
