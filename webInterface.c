@@ -2595,7 +2595,14 @@ void printNtopConfigInfo(int textPrintFlag) {
 #if defined(__GNUC__)
   if(snprintf(buf, sizeof(buf), "%s (%d.%d.%d)",
 	      __VERSION__, 
-              __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__) < 0)
+              __GNUC__, 
+              __GNUC_MINOR__, 
+#if defined(__GNUC_PATCHLEVEL__)
+              __GNUC_PATCHLEVEL__
+#else
+              0
+#endif
+             ) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "GNU C (gcc) version", buf);
 #endif
