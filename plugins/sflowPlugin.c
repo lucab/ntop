@@ -1552,7 +1552,7 @@ static void handlesFlowHTTPrequest(char* url) {
 	     "<td><INPUT NAME=port SIZE=5 VALUE=");
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.sflowInPort) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferTooShort();
   sendString(buf);
 
   sendString("> <INPUT TYPE=submit VALUE=Set><br>"
@@ -1595,19 +1595,19 @@ static void handlesFlowHTTPrequest(char* url) {
   if(snprintf(buf, sizeof(buf),
 	      "<TR><TH ALIGN=LEFT>Samples Num.</TH><TD ALIGN=RIGHT>%s</TD></TR>\n",
 	      formatPkts(myGlobals.numSamplesReceived)) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),
 	      "<TR><TH ALIGN=LEFT>Data Scale</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n",
 	      percentage) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),
 	      "<TR><TH ALIGN=LEFT>Estimated Error</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n",
 	      err) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   sendString("</TABLE>\n");
