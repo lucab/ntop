@@ -214,6 +214,7 @@ void initIPServices(void) {
 
 static void initIPCountryTable(void) {
   int idx, rc;
+  u_char compressedFormat;
   struct stat statBuf;
   
   traceEvent(CONST_TRACE_INFO, "IP2CC: Looking for IP address <-> Country code mapping file");
@@ -234,12 +235,22 @@ static void initIPCountryTable(void) {
     char tmpStr[256];
     FILE *fd;
 
-    snprintf(tmpStr, sizeof(tmpStr), "%s/p2c.opt.table", myGlobals.configFileDirs[idx]);
+    compressedFormat = 1;
+    snprintf(tmpStr, sizeof(tmpStr), "%s/p2c.opt.table.gz", myGlobals.configFileDirs[idx]);
     traceEvent(CONST_TRACE_NOISY, "IP2CC: ...looking for file %s", tmpStr);
-
     rc = stat(tmpStr, &statBuf);
+    if(rc != 0) {
+      compressedFormat = 0;
+      snprintf(tmpStr, sizeof(tmpStr), "%s/p2c.opt.table", myGlobals.configFileDirs[idx]);
+      traceEvent(CONST_TRACE_NOISY, "IP2CC: ...looking for file %s", tmpStr);
+      rc = stat(tmpStr, &statBuf);
+    }
+
     if(rc == 0) {
-      fd = fopen(tmpStr, "r");
+      if(compressedFormat)
+	fd = gzopen(tmpStr, "r");
+      else
+	fd = fopen(tmpStr, "r");
 
       if(fd!=NULL) {
 	char buff[256];
@@ -248,7 +259,7 @@ static void initIPCountryTable(void) {
 
 	traceEvent(CONST_TRACE_NOISY, "IP2CC: ...found - reading data");
 
-	while (fgets(buff, sizeof(buff), fd) != NULL) {
+	while ((compressedFormat ? gzgets(fd, buff, sizeof(buff)) : fgets(buff, sizeof(buff), fd)) != NULL) {
 
 	  if((cc=strtok_r(buff, ":", &strtokState))==NULL)
 	    continue;
@@ -262,9 +273,10 @@ static void initIPCountryTable(void) {
 	  addNodeInternal(xaton(ip), atoi(prefix), cc);
 	  recordsRead++;
 	}
+	
 	myGlobals.ipCountryCount += recordsRead;
 
-	if(!feof(fd)) {
+	if(!(compressedFormat ? gzeof(fd) : feof(fd))) {
 	  traceEvent(CONST_TRACE_ERROR, "IP2CC: reading file '%s'", tmpStr);
 	  traceEvent(CONST_TRACE_ERROR, "IP2CC: problem is %s(%d)", strerror(errno), errno);
 	  traceEvent(CONST_TRACE_INFO,
@@ -272,7 +284,10 @@ static void initIPCountryTable(void) {
 		     recordsRead == 0 ? "no" : "partial");
 	}
 
-	fclose(fd);
+	if(compressedFormat)
+	  gzclose(fd);
+	else
+	  fclose(fd);
 	traceEvent(CONST_TRACE_NOISY, "IP2CC: ......%d records read", recordsRead);
       } else 
 	traceEvent(CONST_TRACE_WARNING, "IP2CC: unable to open file at %s", tmpStr);

@@ -342,7 +342,13 @@ char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
 /* *********************************** */
 
 char* getVendorInfo(u_char* ethAddress, short encodeString) {
-  char* ret = getMACInfo(0, ethAddress, encodeString);
+  char* ret;
+
+  if(myGlobals.dontTrustMACaddr
+     || (memcmp(ethAddress, myGlobals.otherHostEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0))
+    return("");
+
+  ret = getMACInfo(0, ethAddress, encodeString);
   myGlobals.numVendorLookupCalls++;
 
   if((ret != NULL) && (ret[0] != '\0'))
@@ -375,42 +381,42 @@ void createVendorTable(void) {
   datum data_data, key_data;
 
 #ifdef TEST_HASHSIZE_IPXSAP
-{
-  int i, j, best, besti;
+  {
+    int i, j, best, besti;
 
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: Testing ipxSAP (%s) from 51 -> %d...wait\n",
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: Testing ipxSAP (%s) from 51 -> %d...wait\n",
 #ifdef PARM_USE_MACHASH_INVERT
-                               "invert",
+	       "invert",
 #else
-                               "normal",
+	       "normal",
 #endif
-                                MAX_IPXSAP_NAME_HASH);
-  best=99999;
-  besti=0;
-  for (i=51; i<=MAX_IPXSAP_NAME_HASH; i += 2) {
+	       MAX_IPXSAP_NAME_HASH);
+    best=99999;
+    besti=0;
+    for (i=51; i<=MAX_IPXSAP_NAME_HASH; i += 2) {
       j=0;
       for(idx=0; ipxSAP[idx].ipxsapName != NULL; idx++)
-          j += addIPXSAPTableEntry(ipxSAPhash, &ipxSAP[idx], i);
+	j += addIPXSAPTableEntry(ipxSAPhash, &ipxSAP[idx], i);
       if (j == 0) {
-          best=0;
-          besti=i;
-          break;
+	best=0;
+	besti=i;
+	break;
       } else if ( j < best ) {
-          best = j;
-          besti = i;
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP %3d %3d\n", i, j);
+	best = j;
+	besti = i;
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP %3d %3d\n", i, j);
       }
       memset(ipxSAPhash, 0, sizeof(ipxSAPhash));
+    }
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP BEST is %d collisions, size %d\n", best, besti);
   }
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP BEST is %d collisions, size %d\n", best, besti);
-}
 #endif
 
   myGlobals.ipxsapHashLoadSize = sizeof(ipxSAPhash);
   for(idx=0; ipxSAP[idx].ipxsapName != NULL; idx++) {
     myGlobals.ipxsapHashLoadSize += sizeof(IPXSAPInfo) + strlen(ipxSAP[idx].ipxsapName);
     myGlobals.ipxsapHashLoadCollisions += 
-        addIPXSAPTableEntry(ipxSAPhash, &ipxSAP[idx], MAX_IPXSAP_NAME_HASH);
+      addIPXSAPTableEntry(ipxSAPhash, &ipxSAP[idx], MAX_IPXSAP_NAME_HASH);
   }
 
   /*
@@ -420,21 +426,21 @@ void createVendorTable(void) {
    *
    *  Here's a sample entry from oui.txt:
 
-OUI                             Organization
-company_id                      Organization
-                                Address
+   OUI                             Organization
+   company_id                      Organization
+   Address
 
 
-00-00-00   (hex)                XEROX CORPORATION
-000000     (base 16)            XEROX CORPORATION
-                                M/S 105-50C
-                                800 PHILLIPS ROAD
-                                WEBSTER NY 14580
+   00-00-00   (hex)                XEROX CORPORATION
+   000000     (base 16)            XEROX CORPORATION
+   M/S 105-50C
+   800 PHILLIPS ROAD
+   WEBSTER NY 14580
 
    *  and from (our, specially created) special.txt:
 
-018024        (special 24)      Kalpana Etherswitch
-0180C2000000  (special 48)      Bridge Sp. Tree/OSI Route
+   018024        (special 24)      Kalpana Etherswitch
+   0180C2000000  (special 48)      Bridge Sp. Tree/OSI Route
 
    *  We use the (base 16) as our key and add similar values for special
    *  mac entries so we could co-mingled them.
@@ -444,94 +450,107 @@ company_id                      Organization
    *
    */
 
-   traceEvent(CONST_TRACE_INFO, "VENDOR: Loading MAC address table.\n");
-   for(idx=0; macInputFiles[idx] != NULL; idx++) {
-       configFileFound = 0;
-       for(idx2=0; myGlobals.configFileDirs[idx2] != NULL; idx2++) {
+  traceEvent(CONST_TRACE_INFO, "VENDOR: Loading MAC address table.\n");
+  for(idx=0; macInputFiles[idx] != NULL; idx++) {
+    configFileFound = 0;
+    for(idx2=0; myGlobals.configFileDirs[idx2] != NULL; idx2++) {
+      u_char compressedFormat;
 
-           snprintf(tmpLine, sizeof(tmpLine), "%s/%s", myGlobals.configFileDirs[idx2], macInputFiles[idx]);
-           traceEvent(CONST_TRACE_INFO, "VENDOR: Checking '%s'\n", tmpLine);
-           fd = fopen(tmpLine, "r");
+      compressedFormat = 1;
+      snprintf(tmpLine, sizeof(tmpLine), "%s/%s.gz", myGlobals.configFileDirs[idx2], macInputFiles[idx]);
+      traceEvent(CONST_TRACE_INFO, "VENDOR: Checking '%s'\n", tmpLine);
+      fd = gzopen(tmpLine, "r");
+	 
+      if(fd == NULL) {
+	compressedFormat = 0;
+	snprintf(tmpLine, sizeof(tmpLine), "%s/%s", myGlobals.configFileDirs[idx2], macInputFiles[idx]);
+	traceEvent(CONST_TRACE_INFO, "VENDOR: Checking '%s'\n", tmpLine);
+	fd = fopen(tmpLine, "r");
+      }
 
-           if(fd != NULL) {
-               configFileFound = 1;
-               numRead=0;
-               numLoaded=0;
+      if(fd != NULL) {
+	configFileFound = 1;
+	numRead=0;
+	numLoaded=0;
 
-               while (fgets(tmpLine, sizeof(tmpLine), fd)) {
-                   numRead++;
-                   myGlobals.numVendorLookupRead++;
-                   if ( (strstr(tmpLine, "(base") == NULL) &&
-                        (strstr(tmpLine, "(special") == NULL) ) {
-                       continue;
-                   }
-                   tmpMAC = strtok_r(tmpLine, " \t", &strtokState);
-                   if (tmpMAC == NULL) continue;
-                   tmpTag1 = strtok_r(NULL, " \t", &strtokState);
-                   if (tmpTag1 == NULL) continue;
-                   if ( (strcmp(tmpTag1, "(base") == 0) || 
-                        (strcmp(tmpTag1, "(special") == 0) ) { 
-                       tmpTag2 = strtok_r(NULL, " \t", &strtokState);
-                       if (tmpTag2 == NULL) continue;
-                       tmpVendor = strtok_r(NULL, "\n", &strtokState);
-                       if (tmpVendor == NULL) continue;
-                       /* Skip leading blanks and tabs*/
-                       while ( (tmpVendor[0] == ' ') || (tmpVendor[0] == '\t') ) tmpVendor++;
-                       memset(&macInfoEntry, 0, sizeof(macInfoEntry));
-                       if (strcmp(tmpTag1, "(special") == 0) {
-                           macInfoEntry.isSpecial = 's';
-                       } else {
-                           macInfoEntry.isSpecial = 'r';
-                       }
-                       memcpy(&(macInfoEntry.vendorName[0]),
-                              tmpVendor,
-                              min(strlen(tmpVendor)+1, sizeof(macInfoEntry.vendorName)-1));
-                       data_data.dptr = (void*)(&macInfoEntry);
-                       data_data.dsize = sizeof(macInfoEntry);
-                       tmpMACkey[0]='\0';
-                       strncat(tmpMACkey, tmpMAC, 2);
-                       strcat(tmpMACkey, ":");
-                       strncat(tmpMACkey, tmpMAC+2, 2);
-                       strcat(tmpMACkey, ":");
-                       strncat(tmpMACkey, tmpMAC+4, 2);
-                       if (strcmp(tmpTag2, "48)") == 0) {
-                           /* special 48 - full tag */
-                           strcat(tmpMACkey, ":");
-                           strncat(tmpMACkey, tmpMAC+6, 2);
-                           strcat(tmpMACkey, ":");
-                           strncat(tmpMACkey, tmpMAC+8, 2);
-                           strcat(tmpMACkey, ":");
-                           strncat(tmpMACkey, tmpMAC+10, 2);
-                       }
-                       key_data.dptr = tmpMACkey;
-                       key_data.dsize = strlen(tmpMACkey)+1;
-                       if(gdbm_store(myGlobals.macPrefixFile, key_data, data_data, GDBM_REPLACE) != 0) {
-                           traceEvent(CONST_TRACE_WARNING, "VENDOR: unable to add record '%s': {%d, %s} - skipped",
-                                      tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
-                       } else {
-                           numLoaded++;
-                           myGlobals.numVendorLookupAdded++;
-                           if (macInfoEntry.isSpecial == 's')
-                               myGlobals.numVendorLookupAddedSpecial++;
+	while (compressedFormat ? gzgets(fd, tmpLine, sizeof(tmpLine)) : fgets(tmpLine, sizeof(tmpLine), fd)) {
+	  numRead++;
+	  myGlobals.numVendorLookupRead++;
+	  if ( (strstr(tmpLine, "(base") == NULL) &&
+	       (strstr(tmpLine, "(special") == NULL) ) {
+	    continue;
+	  }
+	  tmpMAC = strtok_r(tmpLine, " \t", &strtokState);
+	  if (tmpMAC == NULL) continue;
+	  tmpTag1 = strtok_r(NULL, " \t", &strtokState);
+	  if (tmpTag1 == NULL) continue;
+	  if ( (strcmp(tmpTag1, "(base") == 0) || 
+	       (strcmp(tmpTag1, "(special") == 0) ) { 
+	    tmpTag2 = strtok_r(NULL, " \t", &strtokState);
+	    if (tmpTag2 == NULL) continue;
+	    tmpVendor = strtok_r(NULL, "\n", &strtokState);
+	    if (tmpVendor == NULL) continue;
+	    /* Skip leading blanks and tabs*/
+	    while ( (tmpVendor[0] == ' ') || (tmpVendor[0] == '\t') ) tmpVendor++;
+	    memset(&macInfoEntry, 0, sizeof(macInfoEntry));
+	    if (strcmp(tmpTag1, "(special") == 0) {
+	      macInfoEntry.isSpecial = 's';
+	    } else {
+	      macInfoEntry.isSpecial = 'r';
+	    }
+	    memcpy(&(macInfoEntry.vendorName[0]),
+		   tmpVendor,
+		   min(strlen(tmpVendor)+1, sizeof(macInfoEntry.vendorName)-1));
+	    data_data.dptr = (void*)(&macInfoEntry);
+	    data_data.dsize = sizeof(macInfoEntry);
+	    tmpMACkey[0]='\0';
+	    strncat(tmpMACkey, tmpMAC, 2);
+	    strcat(tmpMACkey, ":");
+	    strncat(tmpMACkey, tmpMAC+2, 2);
+	    strcat(tmpMACkey, ":");
+	    strncat(tmpMACkey, tmpMAC+4, 2);
+	    if (strcmp(tmpTag2, "48)") == 0) {
+	      /* special 48 - full tag */
+	      strcat(tmpMACkey, ":");
+	      strncat(tmpMACkey, tmpMAC+6, 2);
+	      strcat(tmpMACkey, ":");
+	      strncat(tmpMACkey, tmpMAC+8, 2);
+	      strcat(tmpMACkey, ":");
+	      strncat(tmpMACkey, tmpMAC+10, 2);
+	    }
+	    key_data.dptr = tmpMACkey;
+	    key_data.dsize = strlen(tmpMACkey)+1;
+	    if(gdbm_store(myGlobals.macPrefixFile, key_data, data_data, GDBM_REPLACE) != 0) {
+	      traceEvent(CONST_TRACE_WARNING, "VENDOR: unable to add record '%s': {%d, %s} - skipped",
+			 tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
+	    } else {
+	      numLoaded++;
+	      myGlobals.numVendorLookupAdded++;
+	      if (macInfoEntry.isSpecial == 's')
+		myGlobals.numVendorLookupAddedSpecial++;
 #ifdef VENDOR_DEBUG
-                           traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Added '%s': {%c, %s}\n",
-                                      tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
+	      traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Added '%s': {%c, %s}\n",
+			 tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
 #endif
-                       }
+	    }
 
-                   }
-               }
-               fclose(fd);
-               traceEvent(CONST_TRACE_INFO, "VENDOR: ...found, %d lines, loaded %d records!\n",
-                                            numRead, numLoaded);
-               break;
-           }
-       }
-       if (configFileFound == 0) {
-           traceEvent(CONST_TRACE_WARNING, "VENDOR: Unable to open file '%s'", macInputFiles[idx]);
-           traceEvent(CONST_TRACE_INFO, "VENDOR: ntop continues ok, but without or with partial MAC->Vendor mapping");
-       }
-   }
-       
+	  }
+	}
+
+	if(compressedFormat)
+	  gzclose(fd);
+	else
+	  fclose(fd);
+	traceEvent(CONST_TRACE_INFO, "VENDOR: ...found, %d lines, loaded %d records!\n",
+		   numRead, numLoaded);
+	break;
+      }
+    }
+
+    if (configFileFound == 0) {
+      traceEvent(CONST_TRACE_WARNING, "VENDOR: Unable to open file '%s'", macInputFiles[idx]);
+      traceEvent(CONST_TRACE_INFO, "VENDOR: ntop continues ok, but without or with partial MAC->Vendor mapping");
+    }
+  }      
 }
 

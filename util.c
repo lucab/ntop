@@ -1341,7 +1341,7 @@ int createSem(sem_t *semId, int initialValue) {
 void waitSem(sem_t *semId) {
   int rc = sem_wait(semId);
 
-  if((rc != 0) && (rc != 4 /* Interrupted system call */))
+  if((rc != 0) && (errno != 4 /* Interrupted system call */))
     traceEvent(CONST_TRACE_INFO, "waitSem failed [errno=%d/%s]", errno, strerror(errno));
 }
 
