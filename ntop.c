@@ -70,6 +70,24 @@ void* pcapDispatch(void *_i) {
   fd_set readMask;
   struct timeval timeout;
 
+  if((pcap_fd == -1) && (rFileName != NULL)) { 
+    /*
+      This is a patch to overcome a bug of libpcap 
+      while reading from a traffic file instead 
+      of sniffying live from a NIC.
+    */
+    struct mypcap {
+      int fd, snapshot, linktype, tzoff, offset;      
+      FILE *rfile;
+      
+      /* Other fields have been skipped. Please refer
+	 to pcap-int.h for the full datatype.
+      */
+    };
+    
+    pcap_fd = fileno(((struct mypcap *)(device[0].pcapPtr))->rfile);
+  }
+
   for(;capturePackets == 1;) {
     FD_ZERO(&readMask);
     FD_SET(pcap_fd, &readMask);
