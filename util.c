@@ -65,126 +65,6 @@ static u_short numLocalNets=0, passiveSessionsLen;
 /* [0]=network, [1]=mask, [2]=broadcast */
 static u_int32_t networks[MAX_NUM_NETWORKS][3];
 
-/*
- * secure popen by Thomas Biege <thomas@suse.de>
- *
- * Fixes by Andreas Pfaller <apfaller@yahoo.com.au>
- */
-#define __SEC_POPEN_TOKEN " "
-
-#ifndef WIN32
-#ifdef SEC_POPEN
-FILE *sec_popen(char *cmd, const char *type) {
-  pid_t pid;
-  int pfd[2];
-  FILE *pfile;
-  int rpipe = 0, wpipe = 0, i;
-  char **argv, *ptr, *cmdcpy=NULL, *strtokState;
-  if(cmd == NULL || cmd == "")
-    return(NULL);
-
-  if(strcmp(type, "r") && strcmp(type, "w"))
-    return(NULL);
-
-  if((cmdcpy = strdup(cmd)) == NULL)
-    return(NULL);
-
-  argv = NULL;
-  if((ptr = strtok_r(cmdcpy, __SEC_POPEN_TOKEN, &strtokState)) == NULL) {
-    free(cmdcpy);
-    return(NULL);
-  }
-
-  for(i = 0;; i++) {
-    if((argv = (char **)realloc(argv, (i+1) * sizeof(char*))) == NULL) {
-      free(cmdcpy);
-      return(NULL);
-    }
-
-    if((*(argv+i) = (char*)malloc((strlen(ptr)+1) * sizeof(char))) == NULL) {
-      free(cmdcpy);
-      return(NULL);
-    }
-
-    strcpy(argv[i], ptr);
-
-    if((ptr = strtok_r(NULL, __SEC_POPEN_TOKEN, &strtokState)) == NULL) {
-      if((argv = (char **) realloc(argv, (i+2) * sizeof(char*))) == NULL) {
-	free(cmdcpy);
-	return(NULL);
-      }
-      argv[i+1] = NULL;
-      break;
-    }
-  }
-
-  free(cmdcpy);
-
-  if(type[0] == 'r')
-    rpipe = 1;
-  else
-    wpipe = 1;
-
-  if(pipe(pfd) < 0)
-    return(NULL);
-
-  if((pid = fork()) < 0) {
-    close(pfd[0]);
-    close(pfd[1]);
-    return(NULL);
-  }
-
-  if(pid == 0) {
-    /* child */
-    if((pid = fork()) < 0) {
-      close(pfd[0]);
-      close(pfd[1]);
-      return(NULL);
-    }
-
-    if(pid > 0) {
-      /* parent */
-      exit(0); /* child nr. 1 exits */
-    } else {
-      /* child nr. 2 */
-      if(rpipe) {
-	close(pfd[0]); /* close reading end, we don't need it */
-	if(pfd[1] != STDOUT_FILENO)
-	  dup2(pfd[1], STDOUT_FILENO); /* redirect stdout to writing end of pipe */
-	dup2(STDOUT_FILENO, STDERR_FILENO);
-      } else {
-	close(pfd[1]);  /* close writing end, we don't need it */
-
-	if(pfd[0] != STDIN_FILENO)
-	  dup2(pfd[0], STDOUT_FILENO); /* redirect stdin to reading end of pipe */
-      }
-
-      if(strchr(argv[0], '/') == NULL)
-	execvp(argv[0], argv);  /* search in $PATH */
-      else
-	execv(argv[0], argv);
-
-      close(pfd[0]);
-      close(pfd[1]);
-      return(NULL); /* exec failed.. ooops! */
-    }
-  } else {
-    /* parent */
-    waitpid(pid, NULL, 0); /* wait for child nr. 1 */
-
-    if(rpipe) {
-      close(pfd[1]);
-      return(fdopen(pfd[0], "r"));
-    } else {
-      close(pfd[0]);
-      return(fdopen(pfd[1], "r"));
-    }
-  }
-}
-#endif /* SEC_POPEN */
-
-#endif /* WIN32 */
-
 /* ************************************ */
 
 u_int findHostIdxByNumIP(struct in_addr hostIpAddress, int actualDeviceId) {
@@ -1274,7 +1154,7 @@ int checkCommand(char* commandName) {
 #ifdef WIN32
   return(0);
 #else
-  FILE* fd = sec_popen(commandName, "r");
+  FILE* fd = popen(commandName, "r");
 
   if(fd == NULL)
     return 0;
@@ -1321,7 +1201,7 @@ void readLsofInfo(void) {
     return;
   }
 
-  fd = sec_popen("lsof -i -n -w", "r");
+  fd = popen("lsof -i -n -w", "r");
 
   if(fd == NULL) {
     fclose(fd);
@@ -1623,7 +1503,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
  if(snprintf(line, sizeof(line), "nmap -p 23,21,80,138,139,548 -O %s", ipAddr) < 0)
    BufferOverflow();
 
-  fd = sec_popen(line, "r");
+ fd = popen(line, "r");
 
 #define OS_GUESS   "Remote operating system guess: "
 #define OS_GUESS_1 "Remote OS guesses: "
@@ -3082,7 +2962,10 @@ void _incrementUsageCounter(UsageCounter *counter,
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "INFO: incrementUsageCounter(%u) @ %s:%d", peerIdx, file, line);
 #endif
-  if((peerIdx >= myGlobals.device[actualDeviceId].actualHashSize) && (peerIdx != NO_PEER)) {   
+
+  if(peerIdx == NO_PEER) return;
+
+  if(peerIdx >= myGlobals.device[actualDeviceId].actualHashSize) {
     traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d",
 	       peerIdx, myGlobals.device[actualDeviceId].actualHashSize, file, line);
     return;
@@ -3240,4 +3123,19 @@ struct tm *localtime_r(const time_t *t, struct tm *tp) {
   return(tp);
 }
 #endif
+
+/* ************************************ */
+
+int guessHops(HostTraffic *el) {
+  int numHops;
+
+  if(subnetPseudoLocalHost(el) || (el->minTTL == 0)) numHops = 0;
+  else if(el->minTTL <= 8)   numHops = el->minTTL-1;
+  else if(el->minTTL <= 32)  numHops = 32 - el->minTTL;
+  else if(el->minTTL <= 64)  numHops = 64 - el->minTTL;
+  else if(el->minTTL <= 128) numHops = 128 - el->minTTL;
+  else if(el->minTTL <= 256) numHops = 255 - el->minTTL;
+
+  return(numHops);
+}
 

@@ -174,7 +174,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 		  intoa(myAddr)) < 0)
 	BufferOverflow();
 
-      fd = sec_popen(buffer, "r");
+      fd = popen(buffer, "r");
 
       if(fd == NULL) {
 	tmpBuf[0] = '\0';

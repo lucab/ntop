@@ -352,11 +352,11 @@ char* makeHostLink(HostTraffic *el, short mode,
       dynIp = "";
   }
 
-  if(isMultihomed(el))   multihomed = "&nbsp;<IMG ALT=\"Multihomed host\" SRC=/multihomed.gif BORDER=0>&nbsp;"; else multihomed = "";
-  if(gatewayHost(el))    gwStr = "&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>&nbsp;"; else gwStr = "";
-  if(nameServerHost(el)) dnsStr = "&nbsp;<IMG ALT=\"DNS Server\" SRC=/dns.gif BORDER=0>&nbsp;"; else dnsStr = "";
-  if(isPrinter(el))      printStr = "&nbsp;<IMG ALT=Printer SRC=/printer.gif BORDER=0>&nbsp;"; else printStr = "";
-  if(isSMTPhost(el))     smtpStr = "&nbsp;<IMG ALT=\"Mail Server (SMTP)\" SRC=/mail.gif BORDER=0>&nbsp;"; else smtpStr = "";
+  if(isMultihomed(el))   multihomed = "&nbsp;<IMG ALT=\"Multihomed host\" SRC=/multihomed.gif BORDER=0>"; else multihomed = "";
+  if(gatewayHost(el))    gwStr = "&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>"; else gwStr = "";
+  if(nameServerHost(el)) dnsStr = "&nbsp;<IMG ALT=\"DNS Server\" SRC=/dns.gif BORDER=0>"; else dnsStr = "";
+  if(isPrinter(el))      printStr = "&nbsp;<IMG ALT=Printer SRC=/printer.gif BORDER=0>"; else printStr = "";
+  if(isSMTPhost(el))     smtpStr = "&nbsp;<IMG ALT=\"Mail Server (SMTP)\" SRC=/mail.gif BORDER=0>"; else smtpStr = "";
 
   switch(isHostHealthy(el)) {
   case 0: /* OK */
@@ -372,15 +372,17 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   if(mode == LONG_FORMAT) {
     if(snprintf(buf[bufIdx], BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
-		"<A HREF=\"/%s.html\">%s (%d)</A>%s%s%s%s%s%s%s%s</TH>%s",
-		blinkOn, linkName, symIp, el->numUses, dynIp,
+		"<A HREF=\"/%s.html\">%s</A>%s%s%s%s%s%s%s%s</TH>%s",
+		blinkOn, linkName, symIp, /* el->numUses, */
+		dynIp,
 		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr,
 		blinkOff, flag) < 0)
       BufferOverflow();
   } else {
-    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s (%d)</A>%s%s%s%s%s%s%s%s%s",
-		blinkOn, linkName, symIp, el->numUses,
+    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s</A>"
+		"%s%s%s%s%s%s%s%s%s",
+		blinkOn, linkName, symIp, /* el->numUses, */
 		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr,
 		dynIp, blinkOff, flag) < 0)

@@ -541,7 +541,7 @@ char* getOSFlag(char* osName, int showOsName) {
 int sortHostFctn(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
-  int rc;
+  int rc, n_a, n_b;
   char *nameA, *nameB, nameA_str[32], nameB_str[32];
 
   if((a == NULL) && (b != NULL)) {
@@ -611,6 +611,17 @@ int sortHostFctn(const void *_a, const void *_b) {
       nameB = "";
 
     return(strcasecmp(nameA, nameB));
+    break;
+  case 7:
+    n_a = guessHops(*a);
+    n_b = guessHops(*b);
+
+    if(n_a < n_b)
+      return(1);
+    else if(n_a > n_b)
+      return(-1);
+    else
+      return(0);
     break;
   case 4:
   default:
@@ -2132,7 +2143,8 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 	u_int theIdx = scanner->peers.peersIndexes[i];
 
 	if(theIdx != NO_PEER) {
-	  HostTraffic *host = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)];
+	  HostTraffic *host = myGlobals.device[myGlobals.actualReportDeviceId].
+	    hash_hostTraffic[checkSessionIdx(theIdx)];
 
 	  if(host != NULL) {
 	    sendString("\n<li>");
@@ -2449,20 +2461,6 @@ void checkHostProvidedServices(HostTraffic *el) {
     if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=/antenna.gif BORDER=0>&nbsp;<br>");
     sendString("</TD></TR>");
   }
-}
-
-/* ************************************ */
-
-static int guessHops(HostTraffic *el) {
-  int numHops;
-
-  if(subnetPseudoLocalHost(el)) numHops = 1;
-  else if(el->minTTL <= 32) numHops = 32 - el->minTTL;
-  else if(el->minTTL <= 64) numHops = 64 - el->minTTL;
-  else if(el->minTTL <= 128) numHops = 128 - el->minTTL;
-  else if(el->minTTL <= 256) numHops = 255 - el->minTTL;
-
-  return(numHops);
 }
 
 /* ************************************ */

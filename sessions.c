@@ -429,7 +429,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   char addedNewEntry = 0;
   u_short sessionType, check, found=0;
   u_short sessSport, sessDport;
-  HostTraffic *srcHost, *dstHost;
+  HostTraffic *srcHost, *dstHost, *hostToUpdate = NULL;
   struct timeval tvstrct;
   u_char rcStr[256];
   int len = 0;
@@ -1013,6 +1013,31 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
       }
 
+      if(subnetLocalHost(srcHost)) {
+	hostToUpdate = dstHost;
+      } else if(subnetLocalHost(dstHost)) {
+	hostToUpdate = srcHost;
+      } else
+	hostToUpdate = NULL;
+
+      if(hostToUpdate != NULL) {
+	u_long a, b, c;
+	
+	a = hostToUpdate->minLatency.tv_usec + 1000*hostToUpdate->minLatency.tv_sec;
+	b = hostToUpdate->maxLatency.tv_usec + 1000*hostToUpdate->maxLatency.tv_sec;
+	c = theSession->nwLatency.tv_usec + 1000*theSession->nwLatency.tv_sec;
+	
+	if(a > c) {
+	  hostToUpdate->minLatency.tv_usec = theSession->nwLatency.tv_usec;
+	  hostToUpdate->minLatency.tv_sec  = theSession->nwLatency.tv_sec;
+	}
+
+	if(b < c) {
+	  hostToUpdate->maxLatency.tv_usec = theSession->nwLatency.tv_usec;
+	  hostToUpdate->maxLatency.tv_sec  = theSession->nwLatency.tv_sec;
+	}
+      }
+      
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
       incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHostIdx, actualDeviceId);
       incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHostIdx, actualDeviceId);

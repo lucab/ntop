@@ -70,7 +70,9 @@ char* formatBytes(TrafficCounter numBytes, short encodeString) {
 
   bufIdx = (bufIdx+1)%BUFFER_SIZE;
 
-  if(numBytes < 1024) {
+  if(numBytes == 0) {
+    return("&nbsp;");
+  } else if(numBytes < 1024) {
     if(snprintf(outStr[bufIdx], 32, "%lu", (unsigned long)numBytes) < 0) 
      BufferOverflow();
   } else if (numBytes < 1048576) {

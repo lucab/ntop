@@ -1069,7 +1069,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
   struct hostTraffic *el;
   struct hostTraffic** tmpTable;
-  char buf[BUF_SIZE], *arrowGif, *sign, *arrow[8], *theAnchor[8];
+  char buf[BUF_SIZE], *arrowGif, *sign, *arrow[12], *theAnchor[12];
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
@@ -1106,6 +1106,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     }
 
   if(numEntries > 0) {
+    int i;
+
     quicksort(tmpTable, numEntries, sizeof(struct hostTraffic*), sortHostFctn);
 
     if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", HOSTS_INFO_HTML, sign) < 0)
@@ -1113,52 +1115,14 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", HOSTS_INFO_HTML) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-    if(abs(myGlobals.columnSort) == 1) {
-      arrow[1] = arrowGif;
-      theAnchor[1] = htmlAnchor;
-    } else {
-      arrow[1] = "";
-      theAnchor[1] = htmlAnchor1;
-    }
-
-    if(abs(myGlobals.columnSort) == 2) {
-      arrow[2] = arrowGif;
-      theAnchor[2] = htmlAnchor;
-    } else {
-      arrow[2] = "";
-      theAnchor[2] = htmlAnchor1;
-    }
-
-    if(abs(myGlobals.columnSort) == 3) {
-      arrow[3] = arrowGif;
-      theAnchor[3] = htmlAnchor;
-    } else {
-      arrow[3] = "";
-      theAnchor[3] = htmlAnchor1;
-    }
-
-    if(abs(myGlobals.columnSort) == 4) {
-      arrow[4] = arrowGif;
-      theAnchor[4] = htmlAnchor;
-    } else {
-      arrow[4] = "";
-      theAnchor[4] = htmlAnchor1;
-    }
-
-    if(abs(myGlobals.columnSort) == 5) {
-      arrow[5] = arrowGif;
-      theAnchor[5] = htmlAnchor;
-    } else {
-      arrow[5] = "";
-      theAnchor[5] = htmlAnchor1;
-    }
-
-    if(abs(myGlobals.columnSort) == 6) {
-      arrow[6] = arrowGif;
-      theAnchor[6] = htmlAnchor;
-    } else {
-      arrow[6] = "";
-      theAnchor[6] = htmlAnchor1;
+    for(i=1; i<=8; i++) {
+      if(abs(myGlobals.columnSort) == i) {
+	arrow[i] = arrowGif;
+	theAnchor[i] = htmlAnchor;
+      } else {
+	arrow[i] = "";
+	theAnchor[i] = htmlAnchor1;
+      }
     }
 
     if(abs(myGlobals.columnSort) == DOMAIN_DUMMY_IDX_VALUE) {
@@ -1177,6 +1141,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		"<TH "TH_BG">%s6>Other&nbsp;Name(s)%s</A></TH>"
 		"<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
 		"<TH "TH_BG">%s5>Nw&nbsp;Board&nbsp;Vendor%s</A></TH>"
+		"<TH "TH_BG">%s7>Hops&nbsp;Distance%s</A></TH>"
 		"</TR>\n",
 		theAnchor[1], arrow[1],
 		theAnchor[0], arrow[0],
@@ -1184,7 +1149,9 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		theAnchor[3], arrow[3],
 		theAnchor[6], arrow[6],
 		theAnchor[4], arrow[4],
-		theAnchor[5], arrow[5]) < 0)
+		theAnchor[5], arrow[5],
+		theAnchor[7], arrow[7]
+		) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
@@ -1340,8 +1307,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		sendString(getSAPInfo(el->ipxNodeType[i], 1));
 	      }
 
-	      if(i>0)
-		sendString("]");
+	      if(i>0) sendString("]");
 
 	      numAddresses++;
 	    }
@@ -1352,6 +1318,36 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>", tmpName2) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
+
+	  {
+	    char shortBuf[8];
+	    
+	    if(!subnetPseudoLocalHost(el)) {
+	      i = guessHops(el);
+	    } else
+	      i = 0;
+	    
+	    sprintf(shortBuf, "%d", i % 256);
+	    
+	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>&nbsp;%s</TD>", 
+			(i == 0) ? "" : shortBuf) < 0)
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	    sendString(buf);
+	  }
+
+#if 0
+	  /* Time distance */
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s-",
+		      formatLatency(el->minLatency, STATE_ACTIVE)) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
+
+	  if(snprintf(buf, sizeof(buf), "%s</TD>",
+		      formatLatency(el->maxLatency, STATE_ACTIVE)) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
+#endif
+
 	  sendString("</TR>\n");
 	  printedEntries++;
 	}

@@ -67,6 +67,7 @@ extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
 extern char* formatPkts(TrafficCounter pktNr);
 
 /* graph.c */
+extern void sendGraphFile(char* fileName);
 extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFragmentDistrib(HostTraffic *theHost, short dataSent);
@@ -263,7 +264,6 @@ extern int isInitialSshData(char* packetData);
 extern int isInitialFtpData(char* packetData);
 
 /* util.c */
-extern FILE *sec_popen(char *cmd, const char *type);
 extern HostTraffic* findHostByNumIP(char* numIPaddr, int actualDeviceId);
 extern HostTraffic* findHostByMAC(char* macAddr, int actualDeviceId);
 extern char* copy_argv(register char **argv);
@@ -371,7 +371,7 @@ extern char *strtolower(char *s);
 extern char *xstrncpy(char *dest, const char *src, size_t n);
 extern int fetchPrefsValue(char *key, char *value, int valueLen);
 extern void storePrefsValue(char *key, char *value);
-
+extern int guessHops(HostTraffic *el);
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

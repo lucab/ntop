@@ -39,8 +39,7 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 
 /* ************************ */
 
-#ifdef WIN32
-static void sendGraphFile(char* fileName) {
+void sendGraphFile(char* fileName) {
   FILE *fd;
   int len;
   char tmpStr[256];
@@ -57,7 +56,6 @@ static void sendGraphFile(char* fileName) {
 
   unlink(fileName);
 }
-#endif
 
 /* ************************ */
 
@@ -283,7 +281,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
 #ifdef WIN32
-	sendGraphFile(fileName);
+    sendGraphFile(fileName);
 #endif
   }
 }

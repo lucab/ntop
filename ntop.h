@@ -1680,6 +1680,7 @@ typedef struct hostTraffic {
   char             hostNumIpAddress[17], *fullDomainName;
   char             *dotDomainName, hostSymIpAddress[MAX_HOST_SYM_NAME_LEN], *osName;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
+  struct timeval   minLatency, maxLatency;
 
   /* NetBIOS */
   char             nbNodeType, *nbHostName, *nbAccountName, *nbDomainName, *nbDescr;
@@ -2099,10 +2100,6 @@ typedef struct pppTunnelHeader {
 
 #include "globals.h"
 #include "globals-core.h"
-
-#ifndef SEC_POPEN
-#define sec_popen(a,b) popen(a,b)
-#endif
 
 #ifndef BufferOverflow
 #define BufferOverflow()  traceEvent(TRACE_ERROR, "Buffer overflow! at %s(%d)", __FILE__, __LINE__)
