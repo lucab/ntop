@@ -253,7 +253,7 @@ void resetDevice(int devIdx) {
   resetTrafficCounter(&myGlobals.device[devIdx].egpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].igmpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].osiBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].qnxBytes);
+  resetTrafficCounter(&myGlobals.device[devIdx].ipv6Bytes);
   resetTrafficCounter(&myGlobals.device[devIdx].otherBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastFiveMinsEthernetBytes);

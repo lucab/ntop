@@ -77,14 +77,14 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       theHost->icmpSent.value+theHost->ospfSent.value+theHost->igmpSent.value+theHost->stpSent.value
       +theHost->ipxSent.value+theHost->osiSent.value+theHost->dlcSent.value+
       theHost->arp_rarpSent.value+theHost->decnetSent.value+theHost->appletalkSent.value+
-      theHost->netbiosSent.value+theHost->qnxSent.value+theHost->otherSent.value;
+      theHost->netbiosSent.value+theHost->ipv6Sent.value+theHost->otherSent.value;
   } else {
     totTraffic.value = theHost->tcpRcvdLoc.value+theHost->tcpRcvdFromRem.value+
       theHost->udpRcvdLoc.value+theHost->udpRcvdFromRem.value+
       theHost->icmpRcvd.value+theHost->ospfRcvd.value+theHost->igmpRcvd.value+theHost->stpRcvd.value
       +theHost->ipxRcvd.value+theHost->osiRcvd.value+theHost->dlcRcvd.value+
       theHost->arp_rarpRcvd.value+theHost->decnetRcvd.value+theHost->appletalkRcvd.value+
-      theHost->netbiosRcvd.value+theHost->qnxRcvd.value+theHost->otherRcvd.value;
+      theHost->netbiosRcvd.value+theHost->ipv6Rcvd.value+theHost->otherRcvd.value;
   }
 
   if(totTraffic.value > 0) {
@@ -156,9 +156,9 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	lbl[num++] = "NetBios";
       }
 
-      if(theHost->qnxSent.value > 0) {
-	p[num] = (float)((100*theHost->qnxSent.value)/totTraffic.value);
-	lbl[num++] = "QNX";
+      if(theHost->ipv6Sent.value > 0) {
+	p[num] = (float)((100*theHost->ipv6Sent.value)/totTraffic.value);
+	lbl[num++] = "IPv6";
       }
 
       if(theHost->otherSent.value > 0) {
@@ -233,9 +233,9 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	lbl[num++] = "NetBios";
       }
 
-      if(theHost->qnxRcvd.value > 0) {
-	p[num] = (float)((100*theHost->qnxRcvd.value)/totTraffic.value);
-	lbl[num++] = "QNX";
+      if(theHost->ipv6Rcvd.value > 0) {
+	p[num] = (float)((100*theHost->ipv6Rcvd.value)/totTraffic.value);
+	lbl[num++] = "IPv6";
       }
 
       if(theHost->otherRcvd.value > 0) {
@@ -1304,8 +1304,8 @@ void drawGlobalProtoDistribution(void) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes.value; lbl[idx] = "IGMP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value; lbl[idx] = "OSI"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes.value; lbl[idx] = "QNX"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value; lbl[idx] = "IPv6"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value; lbl[idx] = "STP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value > 0) {

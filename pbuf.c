@@ -2237,15 +2237,6 @@ void processPacket(u_char *_deviceId,
 	struct in_addr addr;
 	TrafficCounter ctr;
 
-	if(eth_type == ETHERTYPE_IPv6) {
-	  static int firstTimeIpv6=1;
-
-	  if(firstTimeIpv6) {
-	    traceEvent(TRACE_WARNING, "IPv6 is unsupported: assuming raw."); /* To Do */
-	    firstTimeIpv6 = 0;
-	  }
-	}
-
 	if(length > hlen)
 	  length -= hlen;
 	else
@@ -2313,10 +2304,10 @@ void processPacket(u_char *_deviceId,
 	  incrementTrafficCounter(&dstHost->appletalkRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
 	  break;
-	case ETHERTYPE_QNX:
-	  incrementTrafficCounter(&srcHost->qnxSent, length);
-	  incrementTrafficCounter(&dstHost->qnxRcvd, length);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].qnxBytes, length);
+	case ETHERTYPE_IPv6:
+	  incrementTrafficCounter(&srcHost->ipv6Sent, length);
+	  incrementTrafficCounter(&dstHost->ipv6Rcvd, length);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv6Bytes, length);
 	  break;
 	default:
 #ifdef UNKNOWN_PACKET_DEBUG

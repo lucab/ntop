@@ -905,10 +905,10 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  wrtLlongItm(fDescr, lang, "\t", "netbiosSent",    el->netbiosSent, ',', numEntries);
 	if(checkFilter(filter, &filterPattern, "netbiosRcvd"))
 	  wrtLlongItm(fDescr, lang, "\t", "netbiosRcvd", el->netbiosRcvd, ',', numEntries);
-	if(checkFilter(filter, &filterPattern, "qnxSent"))
-	  wrtLlongItm(fDescr, lang, "\t", "qnxSent",        el->qnxSent, ',', numEntries);
-	if(checkFilter(filter, &filterPattern, "qnxRcvd"))
-	  wrtLlongItm(fDescr, lang, "\t", "qnxRcvd",    el->qnxRcvd, ',', numEntries);
+	if(checkFilter(filter, &filterPattern, "ipv6Sent"))
+	  wrtLlongItm(fDescr, lang, "\t", "ipv6Sent",        el->ipv6Sent, ',', numEntries);
+	if(checkFilter(filter, &filterPattern, "ipv6Rcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "ipv6Rcvd",    el->ipv6Rcvd, ',', numEntries);
 	if(checkFilter(filter, &filterPattern, "otherSent"))
 	  wrtLlongItm(fDescr, lang, "\t", "otherSent",      el->otherSent, ',', numEntries);
 	if(checkFilter(filter, &filterPattern, "otherRcvd"))
@@ -1405,8 +1405,8 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
       wrtLlongItm(fDescr, lang, "\t", "igmpBytes",myGlobals.device[i].igmpBytes, ',', numEntries);
     if(checkFilter(filter, &filterPattern, "osiBytes"))
       wrtLlongItm(fDescr, lang, "\t", "osiBytes",myGlobals.device[i].osiBytes, ',', numEntries);
-    if(checkFilter(filter, &filterPattern, "qnxBytes"))
-      wrtLlongItm(fDescr, lang, "\t", "qnxBytes",myGlobals.device[i].qnxBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "ipv6Bytes"))
+      wrtLlongItm(fDescr, lang, "\t", "ipv6Bytes",myGlobals.device[i].ipv6Bytes, ',', numEntries);
     if(checkFilter(filter, &filterPattern, "otherBytes"))
       wrtLlongItm(fDescr, lang, "\t", "otherBytes",myGlobals.device[i].otherBytes, ',', numEntries);
 

@@ -501,7 +501,7 @@ static int parseOptions(int argc, char* argv []) {
 	myGlobals.webPort = atoi(optarg);
       break;
 
-     case 'z':
+    case 'z':
        myGlobals.enableSessionHandling = 0;
        break;
 
@@ -733,6 +733,7 @@ int main(int argc, char *argv[]) {
   mtrace();
 #endif
 
+  /* printf("HostTraffic=%d\n", sizeof(HostTraffic)); return(-1); */
   /*
    * Initialize all global run-time parameters to reasonable values
    */

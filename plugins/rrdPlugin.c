@@ -152,8 +152,6 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   revertSlash(path);
 #endif
 
-  /* traceEvent(TRACE_INFO, "Path: %s", path); */
-
   argv[argc++] = "rrd_fecth";
   argv[argc++] = path;
   argv[argc++] = "AVERAGE";
@@ -244,27 +242,29 @@ static void listResource(char *rrdPath, char *rrdTitle,
     char *rsrcName;
     Counter total;
     float  average;
-    int rc;
+    int rc, isGauge;
 
     if(dp->d_name[0] == '.')
       continue;
-    else if(strlen(dp->d_name) < strlen(RRD_EXTENSION))
+    else if(strlen(dp->d_name) < strlen(RRD_EXTENSION)+3)
       continue;
 
-    rsrcName = &dp->d_name[strlen(dp->d_name)-strlen(RRD_EXTENSION)];
+    rsrcName = &dp->d_name[strlen(dp->d_name)-strlen(RRD_EXTENSION)-3];
+    if(strcmp(rsrcName, "Num"RRD_EXTENSION) == 0)
+      isGauge = 1;
+    else
+      isGauge = 0;
 
+    rsrcName = &dp->d_name[strlen(dp->d_name)-strlen(RRD_EXTENSION)];
     if(strcmp(rsrcName, RRD_EXTENSION))
       continue;
 
     rc = sumCounter(rrdPath, dp->d_name, startTime, endTime, &total, &average);
 
-    if((rc >= 0) && (total > 0)) {
+    if(isGauge 
+       || ((rc >= 0) && (total > 0))) {
       rsrcName[0] = '\0';
       rsrcName = dp->d_name;
-
-      if(numEntries == 0) {
-
-      }
 
       sendString("<TR><TD>\n");
 
@@ -276,20 +276,24 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
       /* printf("rsrcName: %s\n", rsrcName); */
 
-      if((strncmp(rsrcName, "pkt", 3) == 0)
-	 || ((strlen(rsrcName) > 4) && (strcmp(&rsrcName[strlen(rsrcName)-4], "Pkts") == 0))) {
-	snprintf(path, sizeof(path), "%s Pkt</TD><TD ALIGN=RIGHT>%.1f Pkts/sec",
-		 formatPkts(total), (float)average);
+      if(isGauge) {
+	snprintf(path, sizeof(path), "&nbsp;</TD><TD ALIGN=RIGHT>%.0f", average);
       } else {
-	snprintf(path, sizeof(path), "%s</TD><TD ALIGN=RIGHT>%s",
-		 formatBytes(total, 1), formatThroughput(average));
+	if((strncmp(rsrcName, "pkt", 3) == 0)
+	   || ((strlen(rsrcName) > 4) && (strcmp(&rsrcName[strlen(rsrcName)-4], "Pkts") == 0))) {
+	  snprintf(path, sizeof(path), "%s Pkt</TD><TD ALIGN=RIGHT>%.1f Pkts/sec",
+		   formatPkts(total), (float)average);
+	} else {
+	  snprintf(path, sizeof(path), "%s</TD><TD ALIGN=RIGHT>%s",
+		   formatBytes(total, 1), formatThroughput(average));
+	}
       }
-      sendString(path);
-
+      
+      sendString(path);     
       sendString("</TD></TR>\n");
       numEntries++;
     }
-  }
+  } /* while */
 
   closedir(directoryPointer);
 
@@ -406,7 +410,7 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
       snprintf(counterStr, sizeof(counterStr), "DS:counter:COUNTER:%d:0:%u", step, topValue);
     } else {
       /* Unlimited */
-      snprintf(counterStr, sizeof(counterStr), "DS:counter:GAUGE:%d:0:u", step);
+      snprintf(counterStr, sizeof(counterStr), "DS:counter:GAUGE:%d:0:U", step);
     }
 
     argv[argc++] = counterStr;
@@ -978,7 +982,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateCounter(rrdPath, "broadcastPkts", myGlobals.device[i].broadcastPkts.value);
 	updateCounter(rrdPath, "multicastPkts", myGlobals.device[i].multicastPkts.value);
 	updateCounter(rrdPath, "ethernetBytes", myGlobals.device[i].ethernetBytes.value);
-	updateGauge(rrdPath,    "activeHosts",  myGlobals.device[i].hostsno);
+	updateGauge(rrdPath,    "activeHostsNum",  myGlobals.device[i].hostsno);
 
 	updateCounter(rrdPath, "ipBytes", myGlobals.device[i].ipBytes.value);
 

@@ -875,7 +875,7 @@ void printHostsTraffic(int reportType,
 		      formatBytes(el->netbiosRcvd.value, 1),
 		      formatBytes(el->igmpRcvd.value, 1),
 		      formatBytes(el->osiRcvd.value, 1),
-		      formatBytes(el->qnxRcvd.value, 1),
+		      formatBytes(el->ipv6Rcvd.value, 1),
 		      formatBytes(el->stpRcvd.value, 1),
 		      formatBytes(el->otherRcvd.value, 1)
 		      ) < 0) BufferTooShort();
@@ -916,7 +916,7 @@ void printHostsTraffic(int reportType,
 		      formatBytes(el->netbiosSent.value, 1),
 		      formatBytes(el->igmpSent.value, 1),
 		      formatBytes(el->osiSent.value, 1),
-		      formatBytes(el->qnxSent.value, 1),
+		      formatBytes(el->ipv6Sent.value, 1),
 		      formatBytes(el->stpSent.value, 1),
 		      formatBytes(el->otherSent.value, 1)
 		      ) < 0) BufferTooShort();
@@ -960,7 +960,7 @@ void printHostsTraffic(int reportType,
                       formatBytes(el->netbiosSent.value+el->netbiosRcvd.value, 1),
                       formatBytes(el->igmpSent.value+el->igmpRcvd.value, 1),
                       formatBytes(el->osiSent.value+el->osiRcvd.value, 1),
-                      formatBytes(el->qnxSent.value+el->qnxRcvd.value, 1),
+                      formatBytes(el->ipv6Sent.value+el->ipv6Rcvd.value, 1),
                       formatBytes(el->stpSent.value+el->stpRcvd.value, 1),
                       formatBytes(el->otherSent.value+el->otherRcvd.value, 1)
                       ) < 0) BufferTooShort();
@@ -2819,9 +2819,9 @@ void printProtoTraffic(void) {
   printTableEntry(buf, sizeof(buf), "OSI", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
-  printTableEntry(buf, sizeof(buf), "QNX", COLOR_1,
-		  (float)myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+  printTableEntry(buf, sizeof(buf), "IPv6", COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "STP", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));

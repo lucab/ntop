@@ -530,9 +530,6 @@ int getdomainname(char *name, size_t len);
   do not define it
 */
 
-#ifndef ETHERTYPE_QNX
-#define ETHERTYPE_QNX       0x8203
-#endif
 #ifndef ETHERTYPE_IPv6
 #define ETHERTYPE_IPv6      0x86DD
 #endif
@@ -1222,7 +1219,7 @@ typedef struct ntopInterface {
   TrafficCounter egpBytes;
   TrafficCounter igmpBytes;
   TrafficCounter osiBytes;
-  TrafficCounter qnxBytes;
+  TrafficCounter ipv6Bytes;
   TrafficCounter otherBytes;
   TrafficCounter lastMinEthernetBytes;
   TrafficCounter lastFiveMinsEthernetBytes;
@@ -1937,12 +1934,12 @@ typedef struct icmpHostInfo {
  
 #define HASH_INITIAL_SIZE           32
 #define HASH_MINIMUM_SIZE          512  /* Minimum after 1st entend */
-#define HASH_FACTOR_MAXIMUM       4096 /* After it gets this big */
-#define HASH_TERMINAL_INCREASE    4096 /*      grow by */
-#define HASH_INCREASE_FACTOR         2    /* Between MINIMUM and TERMINAL, grow by... */
+#define HASH_FACTOR_MAXIMUM       4096  /* After it gets this big */
+#define HASH_TERMINAL_INCREASE    4096  /*      grow by */
+#define HASH_INCREASE_FACTOR         2  /* Between MINIMUM and TERMINAL, grow by... */
 
 #define MAX_HOST_SYM_NAME_LEN       64
-#define MAX_HOST_SYM_NAME_LEN_HTML 256 /* Fully tricked out html version - hash.c */
+#define MAX_HOST_SYM_NAME_LEN_HTML 256  /* Fully tricked out html version - hash.c */
 #define MAX_NODE_TYPES               8
 
 #define MAX_NUM_LIST_ENTRIES        32
@@ -2064,7 +2061,7 @@ typedef struct hostTraffic {
   TrafficCounter   decnetSent, decnetRcvd;
   TrafficCounter   appletalkSent, appletalkRcvd;
   TrafficCounter   netbiosSent, netbiosRcvd;
-  TrafficCounter   qnxSent, qnxRcvd;
+  TrafficCounter   ipv6Sent, ipv6Rcvd;
   TrafficCounter   otherSent, otherRcvd;
   
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/rcvd by this host */

@@ -548,7 +548,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 		"<TH "TH_BG">%s10>NetBios%s</A></TH>"
 		"<TH "TH_BG">%s11>IGMP%s</A></TH>"
 		"<TH "TH_BG">%s12>OSI%s</A></TH>"
-		"<TH "TH_BG">%s13>QNX%s</A></TH>"
+		"<TH "TH_BG">%s13>IPv6%s</A></TH>"
 		"<TH "TH_BG">%s14>STP%s</A></TH>"
 		"<TH "TH_BG">%s15>Other%s</A></TH>",
 		theAnchor[8], arrow[8],
@@ -1028,7 +1028,7 @@ int cmpFctn(const void *_a, const void *_b) {
       a_ = (*a)->osiRcvd.value, b_ = (*b)->osiRcvd.value;
       break;
     case 13:
-      a_ = (*a)->qnxRcvd.value, b_ = (*b)->qnxRcvd.value;
+      a_ = (*a)->ipv6Rcvd.value, b_ = (*b)->ipv6Rcvd.value;
       break;
     case 14:
       a_ = (*a)->stpRcvd.value, b_ = (*b)->stpRcvd.value;
@@ -1140,7 +1140,7 @@ int cmpFctn(const void *_a, const void *_b) {
       a_ = (*a)->osiSent.value, b_ = (*b)->osiSent.value;
       break;
     case 13:
-      a_ = (*a)->qnxSent.value, b_ = (*b)->qnxSent.value;
+      a_ = (*a)->ipv6Sent.value, b_ = (*b)->ipv6Sent.value;
       break;
     case 14:
       a_ = (*a)->stpSent.value, b_ = (*b)->stpSent.value;
@@ -1257,7 +1257,7 @@ int cmpFctn(const void *_a, const void *_b) {
       a_ = (*a)->osiRcvd.value+(*a)->osiSent.value, b_ = (*b)->osiRcvd.value+(*b)->osiSent.value;
       break;
     case 13:
-      a_ = (*a)->qnxRcvd.value+(*a)->qnxSent.value, b_ = (*b)->qnxRcvd.value+(*b)->qnxSent.value;
+      a_ = (*a)->ipv6Rcvd.value+(*a)->ipv6Sent.value, b_ = (*b)->ipv6Rcvd.value+(*b)->ipv6Sent.value;
       break;
     case 14:
       a_ = (*a)->stpRcvd.value+(*a)->stpSent.value, b_ = (*b)->stpRcvd.value+(*b)->stpSent.value;
@@ -2049,14 +2049,14 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value;
   totalSent += el->icmpSent.value+el->ospfSent.value+el->igmpSent.value+el->ipxSent.value+el->dlcSent.value+el->arp_rarpSent.value;
   totalSent +=  el->decnetSent.value+el->appletalkSent.value+el->netbiosSent.value+
-    el->osiSent.value+el->qnxSent.value+el->stpSent.value+el->otherSent.value;
+    el->osiSent.value+el->ipv6Sent.value+el->stpSent.value+el->otherSent.value;
 
   totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
   totalRcvd += el->udpRcvdLoc.value+el->udpRcvdFromRem.value;
   totalRcvd += el->icmpRcvd.value+el->ospfRcvd.value+el->igmpRcvd.value;
   totalRcvd += el->ipxRcvd.value+el->dlcRcvd.value+el->arp_rarpRcvd.value;
   totalRcvd += el->decnetRcvd.value+el->appletalkRcvd.value;
-  totalRcvd += el->osiRcvd.value+el->netbiosRcvd.value+el->qnxRcvd.value
+  totalRcvd += el->osiRcvd.value+el->netbiosRcvd.value+el->ipv6Rcvd.value
     +el->stpRcvd.value+el->otherRcvd.value;
 
   actTotalSent = el->tcpSentLoc.value+el->tcpSentRem.value;
@@ -2138,10 +2138,10 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->osiRcvd.value/1024,
 			100*((float)SD(el->osiRcvd.value, totalRcvd)));
 
-  printTableDoubleEntry(buf, sizeof(buf), "QNX", COLOR_1, (float)el->qnxSent.value/1024,
-			100*((float)SD(el->qnxSent.value, totalSent)),
-			(float)el->qnxRcvd.value/1024,
-			100*((float)SD(el->qnxRcvd.value, totalRcvd)));
+  printTableDoubleEntry(buf, sizeof(buf), "IPv6", COLOR_1, (float)el->ipv6Sent.value/1024,
+			100*((float)SD(el->ipv6Sent.value, totalSent)),
+			(float)el->ipv6Rcvd.value/1024,
+			100*((float)SD(el->ipv6Rcvd.value, totalRcvd)));
 
   printTableDoubleEntry(buf, sizeof(buf), "STP", COLOR_1, (float)el->stpSent.value/1024,
 			100*((float)SD(el->stpSent.value, totalSent)),
@@ -2160,14 +2160,14 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       el->icmpSent.value+el->ospfSent.value+el->igmpSent.value+el->stpSent.value+
       el->ipxSent.value+el->osiSent.value+el->dlcSent.value+
       el->arp_rarpSent.value+el->decnetSent.value+el->appletalkSent.value+
-      el->netbiosSent.value+el->qnxSent.value+el->otherSent.value;
+      el->netbiosSent.value+el->ipv6Sent.value+el->otherSent.value;
 
     totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+
       el->udpRcvdLoc.value+el->udpRcvdFromRem.value+
       el->icmpRcvd.value+el->ospfRcvd.value+el->igmpRcvd.value+el->stpRcvd.value+
       el->ipxRcvd.value+el->osiRcvd.value+el->dlcRcvd.value+
       el->arp_rarpRcvd.value+el->decnetRcvd.value+el->appletalkRcvd.value+
-      el->netbiosRcvd.value+el->qnxRcvd.value+el->otherRcvd.value;
+      el->netbiosRcvd.value+el->ipv6Rcvd.value+el->otherRcvd.value;
 
     if((totalSent > 0) || (totalRcvd > 0)) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
