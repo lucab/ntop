@@ -118,7 +118,7 @@ lib_LTLIBRARIES    = libntop.la libntopreport.la
 # core Archive, or the 'engine'
 libntop_la_SOURCES = address.c       dataFormat.c  \
                      globals-core.c  hash.c        initialize.c       \
-                     leaks.c         logger.c      mysql.c netflow.c  \
+                     leaks.c         mysql.c       netflow.c  \
                      ntop.c 	     pbuf.c        protocols.c        \
 		     plugin.c        qsort.c       regex.c	      \
                      sql.c           sessions.c         \
