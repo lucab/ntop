@@ -579,7 +579,7 @@ int getdomainname(char *name, size_t len);
 /* Now, if we don't have gcc, we haven't created the facilitynames table, so do it
  * manually
  */
-#if !defined(__GNUC__)
+#if defined(SYSLOG_NAMES) && !defined(HAVE_FACILITYNAMES)
 
 typedef struct _code {
         char    *c_name;
@@ -619,7 +619,7 @@ CODE facilitynames[] =
     { NULL, -1 }                     /* Sentinal entry */
   };
 
-#endif /* __GNUC__ */
+#endif /* SYSLOG_NAMES && !HAVE_FACILITYNAMES */
 
 #endif /* USE_SYSLOG */
 

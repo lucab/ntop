@@ -535,7 +535,35 @@ if test $ac_cv_ether_header_has_ea = yes ; then
 fi
 
 dnl> OPTIONAL syslog headers
-AC_CHECK_HEADERS(syslog.h sys/syslog.h)
+AC_CHECK_HEADERS(sys/syslog.h, [ac_sys_syslog_h="yes"], [ac_sys_syslog_h="no"])
+AC_CHECK_HEADERS(syslog.h, [ac_syslog_h="yes"], [ac_syslog_h="no"])
+
+dnl> Test for facilitynames
+AC_MSG_CHECKING([Checking for glibc facilitynames in sys/syslog.h or syslog.h])
+if test $ac_sys_syslog_h = yes ||
+   test $ac_syslog_h = yes ; then
+    AC_TRY_COMPILE([
+        #include "confdefs.h"
+        #include <stdarg.h>
+        #include <stdio.h>
+        #define SYSLOG_NAMES
+        #if defined(HAVE_SYS_SYSLOG_H)
+        #include <sys/syslog.h>
+        #elif defined(HAVE_SYSLOG_H)
+        #include <syslog.h>
+        #endif],
+        [void * x = (void*) &(facilitynames[0]);],
+        AC_MSG_RESULT(yes)
+        ac_has_facilitynames=yes,
+        AC_MSG_RESULT(no)
+        ac_has_facilitynames=no)
+else
+    AC_MSG_RESULT(no)
+    ac_has_facilitynames=no
+fi
+if test $ac_has_facilitynames = yes ; then
+    AC_DEFINE(HAVE_FACILITYNAMES)
+fi
 
 dnl> OPTIONAL UCD-SNMP
 dnl> AC_HAVE_HEADERS(ucd-snmp/ucd-snmp-agent-includes.h)

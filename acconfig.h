@@ -114,6 +114,9 @@
 /* Define if you have the zlib */
 #undef HAVE_ZLIB
 
+/* Define if you have a glibc syslog.h or sys/syslog.h with facilitynames[] option */
+#undef HAVE_FACILITYNAMES
+
 /* Ntop directories */
 #undef PLUGIN_DIR
 #undef DATAFILE_DIR
