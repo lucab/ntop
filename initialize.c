@@ -327,16 +327,16 @@ void resetStats(void) {
       }
 
     resetDevice(i);
+  
+    for(j=0; i<device[i].numTotSessions; i++)
+      if(device[i].tcpSession[j] != NULL) {
+	free(device[i].tcpSession[j]);
+	device[i].tcpSession[j] = NULL;
+      }
+
+    device[i].numTcpSessions = 0;
   }
   
-  for(j=0; i<device[i].numTotSessions; i++)
-    if(device[i].tcpSession[j] != NULL) {
-      free(device[i].tcpSession[j]);
-      device[i].tcpSession[j] = NULL;
-    }
-
-  device[i].numTcpSessions = 0;
-
 #ifdef MULTITHREADED
   releaseMutex(&hostsHashMutex);
 #endif
