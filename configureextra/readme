@@ -38,5 +38,8 @@ HAS_WARNING="yes"
 
 You can do pretty much anything you can do in configure.
 But you can not do all the things you can do in configure.in - you 
-can NOT use autoconf macros in here.
+can NOT use autoconf macros in here.  If you really want to, look
+at functions - there's a stripped down 'AC_CHECK_HEADER' function
+(look at HPUX to see how to invoke it).
+
 

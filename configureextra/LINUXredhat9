@@ -2,6 +2,14 @@
 
 echo "        Setting RedHat 9 specific flag values"
 
+# If we have krb5.h and openssl was compiled with it, we need the -I setting
+# since there's no way to easily test the latter and no harm from an extra -I,
+# just do it...
+if test -d /usr/kerberos/include &&
+   test -f /usr/kerberos/include/krb5.h; then
+    CPPFLAGS="-I/usr/kerberos/include/ ${CPPFLAGS}"
+fi
+
 echo
 echo "*******************************************************************"
 echo "*"
