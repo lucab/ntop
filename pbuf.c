@@ -738,12 +738,12 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
 	freeSession(thisSession, actualDeviceId);
       }
+
       thisSession = nextSession;
 
       if(thisSession && (thisSession->next == thisSession)) {
 	traceEvent(TRACE_WARNING, "Internal Error (3)");
       }
-
     } /* while */
   } /* end for */
 }
@@ -944,9 +944,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
     while(theSession != NULL) {
-
       if(theSession && (theSession->next == theSession)) {
 	traceEvent(TRACE_WARNING, "Internal Error (4) (idx=%d)", idx);
+	theSession->next = NULL;
       }      
 
       if((theSession->initiatorIdx == srcHostIdx)
@@ -1128,7 +1128,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
       printSession(theSession, sessionType, 0);
 #endif
-    } else {
+    } 
+#if 0
+    else {
       /* Existing session */
 
       if(theSession != myGlobals.device[actualDeviceId].tcpSession[idx]) {
@@ -1144,6 +1146,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	*/
       }
     }
+#endif
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "->%d\n", idx);
@@ -2049,22 +2052,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     /* Immediately free the session */
     if(theSession->sessionState == STATE_TIMEOUT) {
-      if((prevSession != NULL) && (prevSession != theSession)) {	
-	prevSession->next = theSession->next;
-      } else
-	myGlobals.device[actualDeviceId].tcpSession[idx] = NULL;
-
       if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
-#ifdef DEBUG
-	traceEvent(TRACE_WARNING, "Found problem on idx %d", idx);
-#endif
 	myGlobals.device[actualDeviceId].tcpSession[idx] = theSession->next;
-	if(myGlobals.device[actualDeviceId].tcpSession[idx] == myGlobals.device[actualDeviceId].tcpSession[idx]->next) {
-	  myGlobals.device[actualDeviceId].tcpSession[idx]->next = NULL;
-#ifdef DEBUG
-	  traceEvent(TRACE_WARNING, "Patched problem on idx %d", idx);
-#endif
-	}
+      } else {
+	prevSession->next = theSession->next;
       }
 
       freeSession(theSession, actualDeviceId);

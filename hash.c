@@ -501,8 +501,13 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
       theSession->initiatorIdx  = mapIdx(theSession->initiatorIdx);
       theSession->remotePeerIdx = mapIdx(theSession->remotePeerIdx);
 
-      if((theSession->initiatorIdx == NO_PEER) || (theSession->remotePeerIdx == NO_PEER)) {
-	prevSession->next = nextSession;
+      if((theSession->initiatorIdx == NO_PEER) || (theSession->remotePeerIdx == NO_PEER)) {	
+	if(myGlobals.device[deviceToExtend].tcpSession[j] == theSession) {
+	  myGlobals.device[deviceToExtend].tcpSession[j] = theSession->next;
+	} else {
+	  prevSession->next = nextSession;
+	}
+
 	freeSession(theSession, actualDeviceId);
       } else
 	prevSession = prevSession->next;
@@ -511,6 +516,7 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
 
       if(theSession && (theSession->next == theSession)) {
 	traceEvent(TRACE_WARNING, "Internal Error (2)");
+	theSession->next = NULL;
       }
     } /* while */     
   }
@@ -561,7 +567,12 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
       nextSession = theSession->next;
 
       if((theSession->initiatorIdx == hostIdx) || (theSession->remotePeerIdx == hostIdx)) {	
-        prevSession->next = nextSession;
+       if(myGlobals.device[theDevice].tcpSession[i] == theSession) {
+	 myGlobals.device[theDevice].tcpSession[i] = theSession->next;
+       } else {
+	 prevSession->next = nextSession;
+       }
+       
         freeSession(theSession, theDevice);
       } else
 	prevSession = prevSession->next;
