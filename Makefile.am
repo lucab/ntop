@@ -108,7 +108,7 @@ ntops_DEPENDENCIES = libntopreport.la libntop.la
 ntops_LDADD        = libntopreport.la libntop.la
 ntops_LDFLAGS      = -static
 
-noinst_HEADERS     = globals-core.h globals-report.h graph.h ntop.h regex.h rules.h
+noinst_HEADERS     = globals-core.h globals-report.h ntop.h regex.h rules.h
 
 # all the Archives
 lib_LTLIBRARIES    = libntop.la libntopreport.la

@@ -176,14 +176,9 @@ case "$host" in
 dnl>    AIX is ___really___ incompatible with libtooland shared libraries, so....
 dnl>    disable the shared flag to no
 dnl>
-    *-ibm-aix4.* )
-        echo "Oh no!  *cough* AIX *cough*"
+    *-ibm-aix* )
         enable_shared=no
         enable_static=yes
-
-        echo "AIX is a so different flavor of Unix!"
-        echo "leave AIX alone! use linux. it is free, it it fun, it is linux."
-        echo "                                         rocco <rocco@ntop.org>"
         ;;
 
     * )
@@ -502,9 +497,9 @@ AC_CHECK_LIB(dl, dlopen)
 dnl>
 dnl> check for `crypt' in -lcrypt (MANDATORY)
 dnl>
-AC_CHECK_LIB(crypt, crypt, MORELIBS="$MORELIBS -lcrypt", [
+AC_CHECK_LIB(c, crypt, AC_MSG_RESULT("found in libc"), [AC_CHECK_LIB(crypt, crypt, MORELIBS="$MORELIBS -lcrypt", [
 echo "ERROR: You need libcrypt to build ntop. Verify that you have libcrypt.a or libcrypt.so installed.";
-             AC_MSG_ERROR([Fatal: libcrypt not found.])], $MORELIBS)
+             AC_MSG_ERROR([Fatal: libcrypt not found.])], $MORELIBS)])
 
 dnl>
 dnl> GDChart uses functions from math library,
@@ -533,7 +528,7 @@ fi
 AC_CHECK_LIB(socket, accept)
 AC_CHECK_LIB(resolv, inet_aton)
 
-dnl> both solaris and aix lack definition of `getdomainname'
+dnl> both Solaris and AIX lack definition of `getdomainname'
 case "$host" in
     *-sun-solaris2* )
         AC_DEFINE(NEED_GETDOMAINNAME)
@@ -589,8 +584,18 @@ dnl>
      AC_DEFINE(MULTITHREADED)
      AC_DEFINE(ASYNC_ADDRESS_RESOLUTION)
   else
+ AC_CHECK_LIB(pthreads, pthread_create)
+  if test ".`echo $LIBS | grep pthread`" != .; then
+dnl>
+dnl> check for `sem_init' in -lposix4
+dnl>
+     AC_CHECK_LIB(posix4, sem_init)
+     AC_DEFINE(MULTITHREADED)
+     AC_DEFINE(ASYNC_ADDRESS_RESOLUTION)
+  else
     multithread_mode=no
   fi
+fi
 else
   AC_MSG_WARN([Multithread support disabled via command line option!])
   multithread_mode=no
