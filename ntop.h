@@ -322,7 +322,7 @@ ntop.h
 
 #if defined(CFG_MULTITHREADED)
 # ifndef WIN32
-#  if defined(HAVE_SYS_SCHED_H)
+#  if defined(HAVE_SYS_SCHED_H) && !defined(FREEBSD)
 #   include <sys/sched.h>
 #  endif
 
