@@ -1112,8 +1112,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 #endif
 
 #if RRD_DEBUG > 0
-    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrd_create(%s, %s, %u)=%d",
-	       hostPath, key, (unsigned long)value, rc);
+    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrd_create(%s, %s)=%d",
+	       hostPath, key, rc);
 #endif
     createdCounter = 1;
   }
@@ -1214,6 +1214,11 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
       }
 
       rrd_clear_error();
+    } else {
+#if RRD_DEBUG > 0
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrd_update(%s, %s, %s)=%d",
+                 hostPath, key, cmd, rc);
+#endif
     }
   }
 
@@ -2243,11 +2248,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   int i;
 
 #ifdef CFG_MULTITHREADED
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: rrd thread (%ld) started", rrdThread);
-#else
-#ifdef RRD_DEBUG
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrdMainLoop()");
-#endif
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: RRD: Data collection thread running [p%d, t%lu]...", getpid(), pthread_self());
 #endif
 
 #ifdef MAKE_WITH_RRDSIGTRAP
@@ -2742,11 +2743,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   }
 
 #ifdef CFG_MULTITHREADED
-  traceEvent(CONST_TRACE_WARNING, "THREADMGMT: rrd thread (%ld) terminated", rrdThread);
-#else
-#ifdef RRD_DEBUG
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrdMainLoop() terminated.");
-#endif
+  rrdThread = 0;
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: RRD: Data collection thread terminated [p%d, t%lu]...", getpid(), pthread_self());
 #endif
 
   return(0);
@@ -2782,7 +2780,7 @@ static int initRRDfunct(void) {
   return(-1);
 #else
   createThread(&rrdThread, rrdMainLoop, NULL);
-  traceEvent(CONST_TRACE_INFO, "RRD: Started thread (%ld) for data collection.", rrdThread);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: RRD: Started thread (t%lu) for data collection", rrdThread);
 #endif
 
   fflush(stdout);

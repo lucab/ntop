@@ -275,6 +275,9 @@ static int setNetFlowInSocket(int deviceId) {
     /* This plugin works only with threads */
     createThread(&myGlobals.device[deviceId].netflowGlobals->netFlowThread,
 		 netflowMainLoop, (void*)deviceId);
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT: NETFLOW: Started thread (%lu) for receiving flows on port %d",
+                 (long)myGlobals.device[deviceId].netflowGlobals->netFlowThread,
+                 myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
   }
 #endif
 
@@ -1234,6 +1237,8 @@ static void* netflowMainLoop(void* _deviceId) {
 
   if(!(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket > 0)) return(NULL);
 
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: NETFLOW: thread running [p%d, t%lu]...", getpid(), pthread_self());
+
 #ifdef MAKE_WITH_NETFLOWSIGTRAP
   signal(SIGSEGV, netflowcleanup);
   signal(SIGHUP,  netflowcleanup);
@@ -1264,10 +1269,7 @@ static void* netflowMainLoop(void* _deviceId) {
 #endif /* MAKE_WITH_NETFLOWSIGTRAP */
 
   myGlobals.device[deviceId].activeDevice = 1;
-
   myGlobals.device[deviceId].netflowGlobals->threadActive = 1;
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: netFlow thread(%ld) started",
-	     myGlobals.device[deviceId].netflowGlobals->netFlowThread);
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     int maxSock = myGlobals.device[deviceId].netflowGlobals->netFlowInSocket;
@@ -1345,10 +1347,11 @@ static void* netflowMainLoop(void* _deviceId) {
   }
 
   myGlobals.device[deviceId].netflowGlobals->threadActive = 0;
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: netFlow thread(%ld) terminated",
-	     myGlobals.device[deviceId].netflowGlobals->netFlowThread);
-
+  myGlobals.device[deviceId].netflowGlobals->netFlowThread = 0;
   myGlobals.device[deviceId].activeDevice = 0;
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: NETFLOW: thread terminated [p%d, t%lu]...", getpid(), pthread_self());
+
   return(NULL);
 }
 

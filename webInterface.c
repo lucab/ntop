@@ -8349,7 +8349,7 @@ void initWeb(void) {
 #ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "INITWEB: Starting web server");
   createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for web server",
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Started thread (t%lu) for web server",
 	     myGlobals.handleWebConnectionsThreadId);
 
 #ifdef MAKE_WITH_SSLWATCHDOG
@@ -8383,7 +8383,7 @@ void initWeb(void) {
 
       sslwatchdogDebug("CreateThread", FLAG_SSLWATCHDOG_BOTH, "");
       createThread(&myGlobals.sslwatchdogChildThreadId, sslwatchdogChildThread, NULL);
-      traceEvent(CONST_TRACE_INFO, "Started thread (%ld) for ssl watchdog",
+      traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Started thread (t%lu) for ssl watchdog",
 		 myGlobals.sslwatchdogChildThreadId);
 
       signal(SIGUSR1, sslwatchdogSighandler);
@@ -8572,6 +8572,8 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
   int rc;
   struct timespec expiration;
 
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: ssl watchdog thread running [p%d, t%lu]...", getpid(), pthread_self());
+
   /* ENTRY: from above, state 0 (FLAG_SSLWATCHDOG_UNINIT) */
   sslwatchdogDebug("BEGINthread", FLAG_SSLWATCHDOG_CHILD, "");
 
@@ -8646,6 +8648,9 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
     /* Bye bye child... */
 
   sslwatchdogDebug("ENDthread", FLAG_SSLWATCHDOG_CHILD, "");
+
+  myGlobals.sslwatchdogChildThreadId = 0;
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: ssl watchdog thread terminated [p%d, t%lu]...", getpid(), pthread_self());
 
   return(NULL);
 }
@@ -8724,6 +8729,11 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
     int topSock = myGlobals.sock;
 
 #ifdef CFG_MULTITHREADED
+
+#ifndef WIN32
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Server connection thread running [p%d, t%lu]...", getpid(), pthread_self());
+#endif
+
 #ifdef MAKE_WITH_HTTPSIGTRAP
     signal(SIGSEGV, webservercleanup);
     signal(SIGHUP,  webservercleanup);
@@ -8753,9 +8763,6 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 #endif
 #endif /* MAKE_WITH_HTTPSIGTRAP */
 
-#ifndef WIN32
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%lu) started...", getpid());
-#endif
 #endif
 
 #ifndef WIN32
@@ -8895,8 +8902,9 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
     }
 
-    traceEvent(CONST_TRACE_WARNING, "THREADMGMT: web connections thread (%ld) terminated...", myGlobals.handleWebConnectionsThreadId);
     myGlobals.handleWebConnectionsThreadId = 0;
+
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT: WEB: Server connection thread terminated [p%d, t%lu]...", getpid(), pthread_self());
 
 #endif /* CFG_MULTITHREADED */
 

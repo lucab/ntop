@@ -1350,6 +1350,9 @@ static int setsFlowInSocket(int deviceId) {
     /* This plugin works only with threads */
     createThread(&myGlobals.device[deviceId].sflowGlobals->sflowThread,
 		 sflowMainLoop, (void*)deviceId);
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: Started thread (%lu) for receiving flows on port %d",
+                 (long)myGlobals.device[deviceId].sflowGlobals->sflowThread,
+                 myGlobals.device[deviceId].sflowGlobals->sflowInPort);
   }
 #endif
 
@@ -2965,6 +2968,8 @@ static void* sflowMainLoop(void* _deviceId) {
 
   if(!(myGlobals.device[deviceId].sflowGlobals->sflowInSocket > 0)) return(NULL);
 
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: thread running [p%d, t%lu]...", getpid(), pthread_self());
+
 #ifdef MAKE_WITH_SFLOWSIGTRAP
   signal(SIGSEGV, sflowcleanup);
   signal(SIGHUP,  sflowcleanup);
@@ -2996,10 +3001,7 @@ static void* sflowMainLoop(void* _deviceId) {
 
   myGlobals.device[deviceId].activeDevice = 1;
   myGlobals.device[deviceId].dummyDevice  = 0;
-
   myGlobals.device[deviceId].sflowGlobals->threadActive = 1;
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "THREADMGMT: sflow thread(%ld) started",
-	     myGlobals.device[deviceId].sflowGlobals->sflowThread);
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     int maxSock = myGlobals.device[deviceId].sflowGlobals->sflowInSocket;
@@ -3059,10 +3061,11 @@ static void* sflowMainLoop(void* _deviceId) {
   }
 
   myGlobals.device[deviceId].sflowGlobals->threadActive = 0;
-  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "THREADMGMT: sflow thread(%ld) terminated",
-	     myGlobals.device[deviceId].sflowGlobals->sflowThread);
-
+  myGlobals.device[deviceId].sflowGlobals->sflowThread = 0;
   myGlobals.device[deviceId].activeDevice = 0;
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: SFLOW: thread terminated [p%d, t%lu]...", getpid(), pthread_self());
+
   return(NULL);
 }
 

@@ -2332,7 +2332,8 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
   struct pcap_pkthdr h;
   u_char p[MAX_PACKET_LEN];
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet processor thread running...");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet processor thread running [p%d, t%lu]...",
+             getpid(), pthread_self());
 
   while(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
@@ -2401,7 +2402,11 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
     releaseMutex(&myGlobals.packetProcessMutex);
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet Processor thread (%ld) terminated...", myGlobals.dequeueThreadId);
+  myGlobals.dequeueThreadId = 0;
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet processor thread terminated [p%d, t%lu]...",
+             getpid(), pthread_self());
+
   return(NULL);
 }
 

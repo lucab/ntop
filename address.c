@@ -599,11 +599,14 @@ void cleanupAddressQueue(void) {
 
 #ifdef CFG_MULTITHREADED
 
-void* dequeueAddress(void* notUsed _UNUSED_) {
+void* dequeueAddress(void *_i) {
+  int dqaIndex = (int)_i;
+
   HostAddr addr;
   datum key_data, data_data;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution thread running...");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution(%d) thread running [p%d, t%lu]...",
+             dqaIndex+1, getpid(), pthread_self());
 
   while(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
@@ -659,7 +662,10 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     }
   } /* endless loop */
 
-  traceEvent(CONST_TRACE_WARNING, "THREADMGMT: Address resolution thread terminated...");
+  myGlobals.dequeueAddressThreadId[dqaIndex] = 0;
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution(%d) thread terminated [p%d, t%lu]...",
+             dqaIndex+1, getpid(), pthread_self());
   return(NULL); /* NOTREACHED */
 }
 

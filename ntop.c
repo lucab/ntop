@@ -84,8 +84,8 @@ void* pcapDispatch(void *_i) {
   setNonBlockingSleepCount = 0;
 #endif
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcapDispatch(%s) thread running...",
-	     myGlobals.device[i].humanFriendlyName);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcapDispatch(%s) thread running [p%d, t%lu]...",
+	     myGlobals.device[i].humanFriendlyName, getpid(), pthread_self());
 
   /* Reset stats before to start (needed by modern libpcap versions) */
   if(myGlobals.runningPref.rFileName == NULL) {
@@ -134,7 +134,10 @@ void* pcapDispatch(void *_i) {
     }
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcapDispatch thread terminated...");
+  myGlobals.device[i].pcapDispatchThreadId = 0;
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcapDispatch(%s) thread terminated [p%d, t%lu]...",
+	     myGlobals.device[i].humanFriendlyName, getpid(), pthread_self());
 
 #if 0
   cleanup(2);
@@ -641,7 +644,8 @@ static void purgeIpPorts(int theDevice) {
 
 void* scanIdleLoop(void* notUsed _UNUSED_) {
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle host scan thread running...");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle host scan thread running [p%d, t%lu]...",
+             getpid(), pthread_self());
 
   for(;;) {
     int i;
@@ -669,8 +673,8 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
     updateThpt(1);
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated",
-	     (long)myGlobals.scanIdleThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle host scan thread terminated [p%d, t%lu]...",
+             getpid(), pthread_self());
   return(NULL);
 }
 #endif
@@ -681,12 +685,12 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
 void* scanFingerprintLoop(void* notUsed _UNUSED_) {
   HostTraffic *el;
-  int deviceId, countScan, countResolved;
-#ifdef FINGERPRINT_DEBUG
-  int countCycle=0;
-#endif
+  int deviceId, countScan, countResolved, countCycle;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Fingerprint scan thread running...");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: FINGERPRINT: Scan thread running [p%d, t%lu]...",
+             getpid(), pthread_self());
+
+  countCycle=0;
 
   for(;;) {
 
@@ -702,8 +706,9 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
     HEARTBEAT(0, "scanFingerprintLoop(), sleep()...woke", NULL);
     if(myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
+        countCycle++;
 #ifdef FINGERPRINT_DEBUG
-    traceEvent(CONST_TRACE_NOISY, "FINGERPRINT_DEBUG: starting cycle %d", ++countCycle);
+    traceEvent(CONST_TRACE_NOISY, "FINGERPRINT_DEBUG: starting cycle %d", countCycle);
 #endif
 
     for(deviceId=0; deviceId<myGlobals.numDevices; deviceId++) {
@@ -725,13 +730,13 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
     }
 
     if(countScan > 0)
-      traceEvent(CONST_TRACE_NOISY, "OSFP: scanFingerprintLoop() checked %d, resolved %d",
-                 countScan, countResolved);
+      traceEvent(CONST_TRACE_NOISY, "FINGERPRINT: ending cycle %d - checked %d, resolved %d",
+                 countCycle, countScan, countResolved);
 
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Fingerprint Scan thread (%ld) terminated",
-	     myGlobals.scanFingerprintsThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: FINGERPRINT: Scan thread terminated [p%d, t%lu]...",
+             getpid(), pthread_self());
   myGlobals.nextFingerprintScan = 0;
   return(NULL);
 }
