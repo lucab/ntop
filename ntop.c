@@ -66,14 +66,26 @@ void handleSigHup(int signalId _UNUSED_) {
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
+  int pcap_fd = pcap_fileno(device[0].pcapPtr);
+  fd_set readMask;
+  struct timeval timeout;
 
   for(;capturePackets == 1;) {
-    rc = pcap_dispatch(device[i].pcapPtr, -1, queuePacket, (u_char*) &_i);
-    if(rc == -1) {
-      traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
-		 pcap_geterr(device[i].pcapPtr));
-      break;
-    } /* elsetraceEvent(TRACE_INFO, "1) %d\n", numPkts++); */
+    FD_ZERO(&readMask);
+    FD_SET(pcap_fd, &readMask);
+
+    timeout.tv_sec  = 5 /* seconds */;
+    timeout.tv_usec = 0;
+
+    if(select(pcap_fd+1, &readMask, NULL, NULL, &timeout) > 0) {
+      rc = pcap_dispatch(device[0].pcapPtr, 1, processPacket, NULL);
+
+      if(rc == -1) {
+	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
+		   pcap_geterr(device[i].pcapPtr));
+	break;
+      } /* elsetraceEvent(TRACE_INFO, "1) %d\n", numPkts++); */
+    }
   }
 
   return(NULL);
@@ -577,20 +589,30 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
 
 #ifndef MULTITHREADED
 void packetCaptureLoop(time_t *lastTime, int refreshRate) {
-  int numPkts=0;
-
+  int numPkts=0, pcap_fd = pcap_fileno(device[0].pcapPtr);
+  fd_set readMask;
+  struct timeval timeout;
+  
   for(;;) {
     short justRefreshed;
     int rc;
 
     if(!capturePackets) break;
 
-    rc = pcap_dispatch(device[0].pcapPtr, -1, processPacket, NULL);
+    FD_ZERO(&readMask);
+    FD_SET(pcap_fd, &readMask);
 
-    if(rc == -1) {
-      traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
-		 pcap_geterr(device[0].pcapPtr));
-      continue;
+    timeout.tv_sec  = 5 /* seconds */;
+    timeout.tv_usec = 0;
+
+    if(select(pcap_fd+1, &readMask, NULL, NULL, &timeout) > 0) {
+      rc = pcap_dispatch(device[0].pcapPtr, 1, processPacket, NULL);
+
+      if(rc == -1) {
+	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
+		   pcap_geterr(device[0].pcapPtr));
+	continue;
+      }
     }
 
     actTime = time(NULL);

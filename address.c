@@ -32,7 +32,7 @@ extern int h_errno; /* netdb.h */
 
 /* Forward */
 static u_int _ns_get16(const u_char *src);
-static int _ns_name_ntop(const u_char *src, 
+static int _ns_name_ntop(const u_char *src,
 			 char *dst, size_t dstsiz);
 static int _dn_skipname(const u_char *ptr, const u_char *eom); /* forward */
 static int _ns_name_uncompress(const u_char *msg,
@@ -42,6 +42,37 @@ static int _ns_name_unpack(const u_char *msg,
 			  const u_char *eom, const u_char *src,
 			  u_char *dst, size_t dstsiz);
 
+
+#define DNS_ASYNC
+
+#ifdef DNS_ASYNC
+
+struct in_addr theAddrToResolve;
+struct hostent *resolvedAddress = NULL;
+pthread_t resolveAddressNowId;
+pthread_mutex_t mutexVariable;
+pthread_cond_t condVariable;
+
+void* resolveAddressNow(void* notUsed _UNUSED_) {
+  h_errno = 0;
+
+  accessMutex(&mutexVariable, "resolveAddressNow");
+
+#ifdef DNS_DEBUG
+  traceEvent(TRACE_INFO, "Starting DNS Resolution of %s", intoa(theAddrToResolve));
+#endif
+
+  resolvedAddress = (struct hostent*)gethostbyaddr((char*)&theAddrToResolve, 4, AF_INET);
+
+#ifdef DNS_DEBUG
+  traceEvent(TRACE_INFO, "Address resolved (resolvedAddress=%x)(errno=%d)\n",
+	     resolvedAddress, h_errno);
+#endif
+  releaseMutex(&mutexVariable);
+}
+
+
+#endif /* DNS_ASYNC */
 
 /* ************************************ */
 
@@ -124,7 +155,57 @@ static void resolveAddress(char* symAddr,
 #if !defined(WIN32) &&  !defined(AIX)
     h_errno = NETDB_SUCCESS;
 #endif
+
+#ifdef DNS_ASYNC
+    {
+      int i, addrResolved=0;
+
+      createMutex(&mutexVariable);
+
+      theAddrToResolve.s_addr = theAddr.s_addr;
+
+      createThread(&resolveAddressNowId, resolveAddressNow, NULL);
+      sleep(2); /* I need to sleep to make sure the thread locked
+		   the semaphore. I cannot lock the mutex before
+		   creating the thread, because in this case the
+		   unlock to the mutex won't work (a mutex cannot
+		   be locked by thread A and unlocked by a different
+		   thread */
+
+      for(i=0; i<5; i++) {
+	if(tryLockMutex(&mutexVariable, "resolveAddressNow") == EBUSY) {
+	  traceEvent(TRACE_INFO, "Waiting");
+	} else {
+	  /* NS completed */
+#ifdef DNS_DEBUG
+	  traceEvent(TRACE_INFO, "NS completed");
+#endif
+	  addrResolved = 1;
+	  break;
+	}
+
+	sleep(1);
+      }
+
+      if(addrResolved == 0) {
+#ifdef DNS_DEBUG
+	traceEvent(TRACE_INFO, "===>>>>> DNS Timeout\n");
+#endif
+	hp = NULL;
+      } else {
+	hp = resolvedAddress;
+#ifdef DNS_DEBUG
+	traceEvent(TRACE_INFO, "DNS Resolution OK (hp=%x)", hp);
+#endif
+      }
+
+      killThread(&resolveAddressNowId);
+      deleteMutex(&mutexVariable);
+    }
+#else /* DNS_ASYNC */
     hp = (struct hostent*)gethostbyaddr((char*)&theAddr, 4, AF_INET);
+#endif
+
 #ifdef MULTITHREADED
     /* releaseMutex(&addressResolutionMutex); */
 #endif
@@ -152,7 +233,7 @@ static void resolveAddress(char* symAddr,
 	      foundDot = 1;
 	      break;
 	    }
-	  
+
 	  if(!foundDot)
 	    tmpBuf[len-1] = '\0';
 	}
@@ -234,6 +315,17 @@ static void queueAddress(struct hnamemem* elem, int elemLen) {
     /* The address is kept in numerical form
        (i.e. no conversion will take place) */
    strncpy(elem->name, _intoa(elem->addr, tmpBuf, sizeof(tmpBuf)), elemLen);
+
+#ifdef HAVE_GDBM_H
+    /*
+       Free up bucket
+
+       NOTE: do not free elem->name because it is used
+       by ipaddr2str.
+    */
+    free(elem);
+#endif
+    numKeptNumericAddresses++;
 
     droppedAddresses++;
 #ifdef HAVE_SCHED_H
@@ -423,7 +515,7 @@ void ipaddr2str(struct in_addr hostIpAddress, char* outBuf, int outBufLen) {
   }
 
   for(;;) {
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0) 
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     key_data.dptr = tmpBuf;
     key_data.dsize = strlen(key_data.dptr)+1;
@@ -479,14 +571,14 @@ void ipaddr2str(struct in_addr hostIpAddress, char* outBuf, int outBufLen) {
 	resolveAddress(p->name, &hostIpAddress, 0);
       else {
 	if(snprintf(p->name, outBufLen, "*%s*",
-		 _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0) 
+		 _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	queueAddress(p, outBufLen);
         return;
       }
 #else
       if(snprintf(p->name, outBufLen, "*%s*",
-	      _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0) 
+	      _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       queueAddress(p, outBufLen);
       return;
@@ -657,7 +749,7 @@ static int special(int ch) {
 
 /* ************************************ */
 
-static int _ns_name_ntop(const u_char *src, 
+static int _ns_name_ntop(const u_char *src,
 			 char *dst, size_t dstsiz) {
   const u_char *cp;
   char *dn, *eom;
@@ -888,7 +980,7 @@ static int _dn_skipname(const u_char *ptr, const u_char *eom) {
 
 /* ************************************ */
 
-static char* _res_skip(char *msg, 
+static char* _res_skip(char *msg,
 		      int numFieldsToSkip,
 		      char *eom) {
   char *cp;

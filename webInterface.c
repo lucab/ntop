@@ -966,6 +966,13 @@ void printNtopConfigInfo(void) {
    sendString(buf);
 
 #if defined(MULTITHREADED)
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Dropped Addresses</TH>"
+	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", droppedAddresses) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+#endif
+
+#if defined(MULTITHREADED)
    releaseMutex(&addressQueueMutex);
 #endif
 
