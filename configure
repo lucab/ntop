@@ -24996,6 +24996,8 @@ fi
 if test ".${ac_disable_plugins}" != ".yes"; then
               ac_config_files="$ac_config_files plugins/Makefile"
 
+              ac_config_files="$ac_config_files plugins/pep/Makefile"
+
 fi
 
 cat >confcache <<\_ACEOF
@@ -25542,6 +25544,7 @@ do
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "intop/Makefile" ) CONFIG_FILES="$CONFIG_FILES intop/Makefile" ;;
   "plugins/Makefile" ) CONFIG_FILES="$CONFIG_FILES plugins/Makefile" ;;
+  "plugins/pep/Makefile" ) CONFIG_FILES="$CONFIG_FILES plugins/pep/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5

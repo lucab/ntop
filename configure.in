@@ -3068,6 +3068,7 @@ fi
 
 if test ".${ac_disable_plugins}" != ".yes"; then
     AC_CONFIG_FILES([plugins/Makefile])
+    AC_CONFIG_FILES([plugins/pep/Makefile])
 fi
 
 AC_OUTPUT

@@ -64,10 +64,10 @@ pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 
-ACLOCAL = @ACLOCAL@
-AUTOCONF = @AUTOCONF@
-AUTOMAKE = @AUTOMAKE@
-AUTOHEADER = @AUTOHEADER@
+ACLOCAL = /bin/sh /home/rocco/cvs/ntop/ntop/missing --run echo
+AUTOCONF = /bin/sh /home/rocco/cvs/ntop/ntop/missing --run echo
+AUTOMAKE = /bin/sh /home/rocco/cvs/ntop/ntop/missing --run echo
+AUTOHEADER = /bin/sh /home/rocco/cvs/ntop/ntop/missing --run echo
 
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
