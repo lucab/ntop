@@ -176,8 +176,8 @@ void drawBar(short width,
   float maxval=0;
   int center_x, center_y;
   float total, yscale, txtsz, txtht;
-  int vmargin, hmargin, base, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
-  int padding, ymax, ymin, xmax, xmin, gray;
+  unsigned long vmargin, hmargin, base, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
+  unsigned long padding, ymax, ymin, xmax, xmin, gray;
 
   im = gdImageCreate(width, height);
 
@@ -656,8 +656,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     drawPie(300, 250,
 	    fd,			/* open file pointer */
-	    num,			/* number of slices */
-	    lbl,			/* slice labels (unlike out_png(), can be NULL */
+	    num,		/* number of slices */
+	    lbl,		/* slice labels */
 	    p);			/* data array */
     fclose(fd);
 
@@ -740,8 +740,8 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     if(num == 1) p[0] = 100; /* just to be safe */
     drawPie(400, 250,
 	    fd,			/* open file pointer */
-	    num,			/* number of slices */
-	    lbl,			/* slice labels (unlike out_png(), can be NULL */
+	    num,		/* number of slices */
+	    lbl,		/* slice labels */
 	    p);			/* data array */
 
     fclose(fd);
@@ -804,8 +804,8 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     if(num == 1) p[0] = 100; /* just to be safe */
     drawPie(400, 250,
 	    fd,			/* open file pointer */
-	    num,			/* number of slices */
-	    lbl,			/* slice labels (unlike out_png(), can be NULL */
+	    num,		/* number of slices */
+	    lbl,		/* slice labels */
 	    p);			/* data array */
 
     fclose(fd);
@@ -900,7 +900,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   drawPie(300, 250,
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_png(), can be NULL */
+	  lbl,			/* slice labels */
 	  p);			/* data array */
 
   fclose(fd);
@@ -982,7 +982,7 @@ void pktSizeDistribPie(void) {
   drawPie(400, 250,
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_png(), can be NULL */
+	  lbl,			/* slice labels */
 	  p);			/* data array */
 
   fclose(fd);
@@ -1069,7 +1069,7 @@ void pktTTLDistribPie(void) {
   drawPie(400, 250,
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_png(), can be NULL */
+	  lbl,			/* slice labels */
 	  p);			/* data array */
 
   fclose(fd);
@@ -1126,7 +1126,7 @@ void ipProtoDistribPie(void) {
   drawPie(400, 250,
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_png(), can be NULL */
+	  lbl,			/* slice labels */
 	  p);			/* data array */
 
   fclose(fd);
@@ -1190,7 +1190,7 @@ void interfaceTrafficPie(void) {
   drawPie(400, 250,
 	  fd,		/* open file pointer */
 	  myDevices,	/* number of slices */
-	  lbl,		/* slice labels (unlike out_png(), can be NULL) */
+	  lbl,		/* slice labels */
 	  p);		/* data array */
 
   fclose(fd);
@@ -1254,8 +1254,8 @@ void pktCastDistribPie(void) {
   if(num == 1) p[0] = 100;  /* just to be safe */
   drawPie(400, 250,
 	  fd,			/* open file pointer */
-	  num,			/* number of slic2es */
-	  lbl,			/* slice labels (unlike out_png(), can be NULL) */
+	  num,			/* number of slices */
+	  lbl,			/* slice labels */
 	  p);			/* data array */
 
   fclose(fd);
@@ -1305,7 +1305,7 @@ void drawTrafficPie(void) {
   drawPie(400, 250,
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
-	  lbl,			/* slice labels (unlike out_png(), can be NULL */
+	  lbl,			/* slice labels */
 	  p);			/* data array */
   
   fclose(fd);
@@ -1514,8 +1514,8 @@ void drawGlobalProtoDistribution(void) {
 
   drawBar(600, 250,	/* width/height */
 	  fd,	        /* open file pointer */
-	  idx,	/* number of slices */
-	  lbl,	/* slice labels (unlike out_png(), can be NULL */
+	  idx,	        /* number of slices */
+	  lbl,	        /* slice labels */
 	  p);	        /* data array */
 
   fclose(fd);
@@ -1564,11 +1564,11 @@ void drawGlobalIpProtoDistribution(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  drawBar(600, 250,		/* width/height */
-	  fd,			/* open file pointer */
+  drawBar(600, 250,	/* width/height */
+	  fd,		/* open file pointer */
 	  idx,		/* number of slices */
-	  lbl,		/* slice labels (unlike out_png(), can be NULL */
-	  p);			/* data array */
+	  lbl,		/* slice labels */
+	  p);		/* data array */
 
   fclose(fd);
 

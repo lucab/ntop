@@ -318,6 +318,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     if(host->protocolInfo->dnsStats  != NULL) free(host->protocolInfo->dnsStats);
     if(host->protocolInfo->httpStats != NULL) free(host->protocolInfo->httpStats);
     if(host->protocolInfo->dhcpStats != NULL) free(host->protocolInfo->dhcpStats);    
+    free(host->protocolInfo);
   }
 
   /* ************************************* */

@@ -2958,7 +2958,7 @@ void printProtoTraffic(void) {
 
   printSectionTitle("Global Protocol Distribution");
   sendString("<CENTER>\n");
-  sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON"><TH "TH_BG" WIDTH=150>Protocol</TH>"
+  sendString("<P>"TABLE_ON"<TABLE BORDER=1><TR "TR_ON"><TH "TH_BG" WIDTH=150>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
 
   perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value);
