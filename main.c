@@ -244,7 +244,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-N             | --no-nmap]                          Don't use nmap even if installed\n");
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            Path for log files in pcap format\n");
   fprintf(fp, "    [-P <path>      | --db-file-path <path>]              Path for ntop internal database files\n");
-  fprintf(fp, "    [-S <number>    | --store-mode <number>]              Persistent storage mode [0-none, 1-local, 2-all]\n");
+  fprintf(fp, "    [-S <number>    | --store-mode <number>]              Persistent storage mode [0-none, 1-all, 2-local only]\n");
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     URL (mapper.pl) for displaying host location\n");
   fprintf(fp, "    [-V             | --version]                          Output version information and exit\n");
 
