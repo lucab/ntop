@@ -551,7 +551,6 @@ void addDefaultProtocols(void) {
   handleProtocolList("Messenger", "1863|5000|5001|5190-5193|");
   handleProtocolList("WinMX",    "6699|7730|");
   handleProtocolList("Audiogalaxy",    "41000-41900|");
-  /* handleProtocolList("Napster",  "8888|8875|"); */
 }
 
 /* **************************************** */

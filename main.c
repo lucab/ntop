@@ -292,14 +292,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-n (numeric IP addresses)]\n");
   fprintf(fp, "    [-p <IP protocols to monitor> (see man page)]\n");
   fprintf(fp, "    [-q <create file ntop-suspicious-pkts.XXX.pcap>]\n");
-
-#ifdef WIN32
   fprintf(fp, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
-#else
-  fprintf(fp, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
-	   ALARM_TIME, REFRESH_TIME);
-#endif
-
   fprintf(fp, "    [-t (trace level [0-5])]\n");
   fprintf(fp, "    [-s Disable promiscuous mode]\n");
 #ifndef WIN32

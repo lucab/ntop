@@ -861,8 +861,6 @@ typedef struct portMapper {
 #define HTML_FLAG_NO_BODY		(1<<2)
 #define HTML_FLAG_NO_HEADING		(1<<3)
 
-#define ALARM_TIME                3
-#define MIN_ALARM_TIME            1
 #define THROUGHPUT_REFRESH_TIME   30
 #define REFRESH_TIME              120
 #define MIN_REFRESH_TIME          15
@@ -959,7 +957,6 @@ typedef struct hash_list {
 #endif
 
 #define PACKET_QUEUE_LENGTH     2048
-#define ADDRESS_QUEUE_LENGTH    512
 
 #ifdef WIN32
 typedef float Counter;
@@ -1125,14 +1122,6 @@ typedef struct ipFragment {
 #define INTERFACE_DOWN      0   /* not yet enabled via LBNL */
 #define INTERFACE_READY     1   /* ready for packet sniffing */
 #define INTERFACE_ENABLED   2   /* packet capturing currently active */
-
-/* The constant below is so large due to the
-   huge service table that Doug Royer <doug@royer.com>
-   has to handle. I have no clue what's inside such /etc/services
-   file. However, all this is quite interesting....
-*/
-#define SERVICE_HASH_SIZE     50000
-
 
 /* Forward */
 struct ipSession;
@@ -1601,8 +1590,6 @@ typedef struct {
 #define NTOHL(x)    (x) = ntohl(x)
 #endif
 
-#define DB_TIMEOUT_REFRESH_TIME      30 /* seconds */
-#define DEFAULT_DB_UPDATE_TIME       60 /* seconds */
 #define HASHNAMESIZE               4096
 
 /*
@@ -1614,22 +1601,7 @@ typedef struct {
 #define SHORTHASHNAMESIZE  1024
 #define VENDORHASHNAMESIZE (3*HASHNAMESIZE)
 
-/*
- * Max number of screen switchable using
- * the space bar (interactive mode only).
-*/
-#define MAX_NUM_SCREENS  6
-
-/*
- * Max number of TCP sessions that can be
- * recorded per host
- */
-#define MAX_NUM_TCP_SESSIONS  32
-
 #define NULL_HDRLEN 4
-
-#define SHORT_REPORT        1
-#define LONG_REPORT         2
 
 #define CLIENT_TO_SERVER       1
 #define CLIENT_FROM_SERVER     2
@@ -1645,7 +1617,6 @@ typedef struct {
 #define LOCAL_TO_LOCAL_ACCOUNTING    3
 
 #define MAX_NUM_PROTOS_SCREENS 5
-#define MAX_HOST_NAME_LEN 26
 
 struct enamemem {
   u_short e_addr0;
@@ -1896,17 +1867,6 @@ typedef struct serviceStats {
   time_t fastestMicrosecRemReqMade, slowestMicrosecRemReqMade;
   time_t fastestMicrosecRemReqServed, slowestMicrosecRemReqServed;
 } ServiceStats;
-
-/* *********************** */
-
-#ifdef ENABLE_NAPSTER
-typedef struct napsterStats {
-  TrafficCounter numConnectionsRequested, numConnectionsServed;
-  TrafficCounter numSearchSent, numSearchRcvd;
-  TrafficCounter numDownloadsRequested, numDownloadsServed;
-  TrafficCounter bytesSent, bytesRcvd;
-} NapsterStats;
-#endif
 
 /* *********************** */
 
@@ -2202,8 +2162,6 @@ struct pbuf {
 #define IDLE_HOST_PURGE_TIMEOUT  10*60    /*   30 minutes */
 #define IDLE_SESSION_TIMEOUT     10*60    /*   10 minutes */
 #define PIPE_READ_TIMEOUT        15       /*      seconds */
-
-#define ADDRESS_PURGE_TIMEOUT 12*60*60 /* 12 hours */
 
 #define PASSIVE_SESSION_PURGE_TIMEOUT    60 /* seconds */
 
