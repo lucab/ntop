@@ -1805,7 +1805,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  BufferTooShort();
 	sendString(buf);
       } else {
-	sendString("<TD width=250 "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
+	sendString("<TD width=250 "TH_BG" ALIGN=RIGHT COLSPAN=2 WIDTH=250>&nbsp;</TD>");
       }
 
       if(totalRcvd > 0) {
@@ -1815,12 +1815,13 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  BufferTooShort();
 	sendString(buf);
       } else {
-	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
+	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2 WIDTH=250>&nbsp;</TD>");
       }
 
       sendString("</TD></TR>");
 
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>", getRowColor()) < 0)
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>", 
+		  getRowColor()) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -1831,7 +1832,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  BufferTooShort();
 	sendString(buf);
       } else
-	sendString("<TD>&nbsp;</TD>");
+	sendString("<TD COLSPAN=2 WIDTH=250>&nbsp;</TD>");
 
       if((el->tcpRcvdLoc+el->tcpRcvdFromRem+el->udpRcvdLoc+el->udpRcvdFromRem) > 0) {
 	if(snprintf(buf, sizeof(buf),
@@ -1840,7 +1841,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  BufferTooShort();
 	sendString(buf);
       } else
-	sendString("<TD>&nbsp;</TD>");
+	sendString("<TD COLSPAN=2 WIDTH=250>&nbsp;</TD>");
 
       sendString("</TR>");
     }
@@ -1955,11 +1956,13 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
     int ok =0;
 
     for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-      if((el->contactedSentPeers.peersIndexes[i] != NO_PEER)
-	 && (el->contactedRcvdPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) {
-	ok = 1;
-	break;
-      }
+      if(((el->contactedSentPeers.peersIndexes[i] != NO_PEER)
+	  && (el->contactedSentPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) 	 
+	 || ((el->contactedRcvdPeers.peersIndexes[i] != NO_PEER)
+	     && (el->contactedRcvdPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx))) {
+	  ok = 1;
+	  break;
+	}
 
     if(ok) {
       struct hostTraffic el2;
@@ -2007,7 +2010,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	      if(numEntries == 0) {
 		if(!titleSent) printSectionTitle("Last Contacted Peers");
 		sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
-			   "<TR><TH "TH_BG">Recevived From</TH>"
+			   "<TR><TH "TH_BG">Received From</TH>"
 			   "<TH "TH_BG">Address</TH></TR>\n");
 	      }
 
