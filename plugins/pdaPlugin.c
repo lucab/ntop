@@ -298,7 +298,7 @@ static PluginInfo PDAPluginInfo[] = {
   { "PDAPlugin",
     "ntop PDA Interface",
     "1.1",            /* version */
-    "<A HREF=mailto:walterbrock@netscape.net>Walter Brock</A>", 
+    "<A HREF=mailto:walterbrock@netscape.net>W. Brock</A>", 
     "PDAPlugin",      /* http://<host>:<port>/plugins/PDAPlugin */
     1,                /* Active */
     NULL,             /* no special startup after init */

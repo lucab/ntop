@@ -422,6 +422,15 @@ static void handleNetflowHTTPrequest(char* url) {
 /* ****************************** */
 
 static void termNetflowFunct(void) {
+#ifdef MULTITHREADED
+  if(threadActive) {
+    killThread(&netFlowThread);
+    threadActive = 0;
+  }
+ #endif
+
+  if(myGlobals.netFlowInSocket > 0) closeNwSocket(&myGlobals.netFlowInSocket);
+
   traceEvent(TRACE_INFO, "Thanks for using ntop NetFlow");
   traceEvent(TRACE_INFO, "Done.\n");
   fflush(stdout);
@@ -432,12 +441,12 @@ static void termNetflowFunct(void) {
 static PluginInfo netflowPluginInfo[] = {
   { "NetFlow",
     "This plugin is used to tune ntop's NetFlow support",
-    "1.0", /* version */
+    "1.1", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     1,    /* Active */
     initNetFlowFunct, /* InitFunc   */
-    NULL, /* TermFunc   */
+    termNetflowFunct, /* TermFunc   */
     NULL, /* PluginFunc */
     handleNetflowHTTPrequest,
     NULL  /* no capture */
