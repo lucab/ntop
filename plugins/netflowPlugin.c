@@ -1330,7 +1330,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 /* ****************************** */
 
 static int initNetFlowFunct(void) {
-  int i, a, b, c, d, a1, b1, c1, d1;
+  int i, a, b, c, d, a1, b1, c1, d1, rc;
   char key[256], value[1024], workList[1024];
 
   setPluginStatus(NULL);
@@ -1360,13 +1360,19 @@ static int initNetFlowFunct(void) {
     myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
 
   if((fetchPrefsValue("netFlow.ifNetMask", value, sizeof(value)) == -1)
-     ||(sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d", &a, &b, &c, &d, &a1, &b1, &c1, &d1) != 8)) {
+     || (((rc = sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d", &a, &b, &c, &d, &a1, &b1, &c1, &d1)) != 8)
+	 && ((rc = sscanf(value, "%d.%d.%d.%d/%d", &a, &b, &c, &d, &a1)) != 5))) {
     storePrefsValue("netFlow.ifNetMask", "192.168.0.0/255.255.255.0");
     myGlobals.netFlowIfAddress.s_addr = 0xC0A80000;
     myGlobals.netFlowIfMask.s_addr    = 0xFFFFFF00;
   } else {
-    myGlobals.netFlowIfAddress.s_addr =(a << 24) +(b << 16) +(c << 8) + d;
-    myGlobals.netFlowIfMask.s_addr    =(a1 << 24) +(b1 << 16) +(c1 << 8) + d1;
+    myGlobals.netFlowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
+    if(rc == 8)
+      myGlobals.netFlowIfMask.s_addr = (a1 << 24) +(b1 << 16) +(c1 << 8) + d1;
+    else {
+      myGlobals.netFlowIfMask.s_addr = 0xffffffff >> a1;
+      myGlobals.netFlowIfMask.s_addr =~ myGlobals.netFlowIfMask.s_addr;
+    }
   }
 
   if(fetchPrefsValue("netFlow.whiteList", value, sizeof(value)) == -1) {
@@ -1517,6 +1523,13 @@ static void handleNetflowHTTPrequest(char* url) {
 	  myGlobals.netFlowIfMask.s_addr    =(a1 << 24) +(b1 << 16) +(c1 << 8) + d1;
 	  storePrefsValue("netFlow.ifNetMask", value);
 	  freeNetFlowMatrixMemory(); setNetFlowInterfaceMatrix();
+	} else if(sscanf(value, "%d.%d.%d.%d/%d",
+			 &a, &b, &c, &d, &a1) == 5) {
+	  myGlobals.netFlowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
+	  myGlobals.netFlowIfMask.s_addr    = 0xffffffff >> a1; 
+	  myGlobals.netFlowIfMask.s_addr =~ myGlobals.netFlowIfMask.s_addr;
+	  storePrefsValue("netFlow.ifNetMask", value);
+	  freeNetFlowMatrixMemory(); setNetFlowInterfaceMatrix();
 	} else
 	  traceEvent(CONST_TRACE_ERROR, "NETFLOW: HTTP request netmask parse error (%s)", value);
       } else if(strcmp(device, "whiteList") == 0) {
@@ -1631,8 +1644,7 @@ static void handleNetflowHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
 
-  sendString("\"><br>Format: digit.digit.digit.digit/digit.digit.digit.digit<br>"
-	     "This does not(yet) accept CIDR /xx notation)</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+  sendString("\"><br>Format: &lt;network&gt;/&lt;mask&gt;.</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Flow Aggregation<br>Policy</TH><TD "TD_BG" align=left COLSPAN=2>"
 	     "<FORM ACTION=/plugins/NetFlow METHOD=GET><SELECT NAME=netFlowAggregation>");

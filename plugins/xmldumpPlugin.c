@@ -108,7 +108,7 @@ static int dumpVersioncHeader,
            dumpInterfaces;
 
 /* Forward */
-int dumpXML(char * url);
+static int dumpXML(char * url);
 static void handleXmldumpHTTPrequest(char* url);
 
 GdomeElement * _newxml(char * filename, int linenum,
@@ -132,12 +132,21 @@ static void termXmldump(void);
 
 /* ****************************** */
 
+static void emptyHTTPhandler(char* url) {
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+  printHTMLheader("XML Dump", NULL, 0);
+  printFlagedWarning("This feature is not available as ntop<br>has not been compiled with XML support.");
+  printHTMLtrailer();
+}
+
+/* ****************************** */
+
 static PluginInfo pluginInfo[] = {
   { VERSION, /* current ntop version */
     "xmldump plugin",
     "Dumps ntop internal table structures in an xml format",
     "1.0", /* plugin version */
-    "<A HREF=\"http://www.ntopsupport.com\">Burton Strauss</A>",
+    "<A HREF=\"http://www.ntopsupport.com\">B.Strauss</A>",
 #ifdef CONST_XMLDUMP_PLUGIN_NAME
 //This seems odd, but we need CONST_XMLDUMP_PLUGIN_NAME in http.c's URLsecurity
 //so the constant should be in globals-defines.h - this is just in case...
@@ -153,7 +162,7 @@ static PluginInfo pluginInfo[] = {
 #ifdef MAKE_WITH_XMLDUMP
     handleXmldumpHTTPrequest,
 #else
-    NULL, /* no handler */
+    emptyHTTPhandler, /* no handler */
 #endif
     NULL, /* no capture */
     NULL  /* no status */
@@ -1828,7 +1837,7 @@ RETSIGTYPE xml_sighandler(int signo) {
 }
 
 
-int dumpXML(char * url) {
+static int dumpXML(char * url) {
     GdomeDocumentType* dt;
     GdomeElement *el;
     GdomeException exc;
