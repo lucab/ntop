@@ -60,9 +60,6 @@
 /* Define if you have the gdchart library from Bruce Verderaime [http://www.fred.net/brv/chart/]. */
 #undef HAVE_GDCHART
 
-/* Define if your host supports SNMP  */
-#undef HAVE_SNMP
-
 /* Define if you have the ctime_r function.  */
 #undef HAVE_CTIME_R
 
@@ -224,9 +221,6 @@
 
 /* Define if you have the <tcpd.h> header file.  */
 #undef HAVE_TCPD_H
-
-/* Define if you have the <ucd-snmp/ucd-snmp-agent-includes.h> header file.  */
-#undef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
