@@ -300,13 +300,18 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 
 int _tryLockMutex(PthreadMutex *mutexId, char* where,
 		  char* fileName, int fileLine) {
+	int rc;
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]",
 	     mutexId->mutex, where, fileName, fileLine);
   fflush(stdout);
 #endif
 
-  if(WaitForSingleObject(mutexId->mutex, 0) == WAIT_FAILED)
+  rc = WaitForSingleObject(mutexId->mutex, 0);
+
+  /* traceEvent(CONST_TRACE_INFO, "_tryLockMutex=%d", rc); */
+
+  if(rc != WAIT_OBJECT_0 /* OK */)
     return(1);
   else {
     mutexId->numLocks++;
