@@ -1,0 +1,196 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<TITLE><b>ntop</b> Privacy Notices</TITLE>
+<LINK REL=stylesheet HREF=/style.css type="text/css">
+<SCRIPT SRC=/functions.js TYPE="text/javascript" LANGUAGE="javascript"></SCRIPT>
+</head>
+<body BACKGROUND="/white_bg.gif" BGCOLOR="#FFFFFF" LINK="blue" VLINK="blue">
+<center>
+<h1><font FACE="Helvetica, Arial, Sans Serif"><b>ntop</b> Privacy Notices</font></h1>
+</center>
+<h2>End Users</h2>
+<font FACE="Helvetica">
+<p>If you have concerns about your privacy, please read this notice.
+</p>
+<p>After reading it, <i>if you have any concerns about your privacy while using any 
+networked system please contact your systems administrator(s) to discuss your concerns.</i>
+</p>
+<p>If you are seeing this notice, it is likely that the <b>ntop</b> program is being 
+used by your systems administrators to monitor network usage and that the information
+collected by <b>ntop</b> is available to end users.
+</p>
+<p>Please be aware that all <b>ntop</b> does is to examine the contents of 
+the information flowing over the networks to which it is connected. <b>ntop</b>
+has no special privileges - this information is available to ANY similarly 
+connected network user.</p>
+<p>The information collected by <b>ntop</b> does contain individually identifiable
+information, that is information about your individual usage of this computer network.
+For example, this information will indicate the sites your computer has contacted,
+the protocol used (e.g. http or ftp), the amount of information transferred and the
+duration of each contact.
+All of this is derived from the header which is a part of 
+each chunk of information (called a packet) transmitted or received over the network.
+<i>This header information is similar to the destination and return address on a postal
+card - it's visible to anyone who happens to see the card.</i></p>
+<p>In addition, some information within the packets is also examined and reported.
+This will indicate, for example, the user names used to contact mail servers, P2P
+networks, etc. 
+This information is also available to ANY computer on the network with the same
+connections as the <b>ntop</b> host.  It is just not normally viewed.
+<i>Thus you should expect information transmitted over a computer network to be
+similar to a postal card - visible to anyone who happens to look over it.</i> If this
+is a concern for you, you should discuss appropriate security measures, such as 
+encryption and Virtual Private Networks with your systems administrator(s).</p>
+<p>The information collected by <b>ntop</b> may, or may not, be made available to end 
+users - this is entirely at the discretion of the systems administrator(s).  If it is
+made available, then the information discussed above is available to other individuals.
+If this is a privacy concern for you, please contact your systems administrator(s).
+The authors of <b>ntop</b> do not have any control nor special influence over 
+the administrator(s) of your local system. Please do not contact the authors of 
+<b>ntop</b> regarding your individual privacy concerns.
+</p>
+<p>For more information about <b>ntop</b>, please ask your systems 
+administrator(s) or visit <a href="www.ntop.org" title="www.ntop.org">www.ntop.org</a>.</p>
+</font>
+<hr>
+<h2>Systems Administrators</h2>
+<font FACE="Helvetica">
+<p><i>An abbreviated version of this privacy notice is printed by <b>ntop</b>
+in the system log (or directed to the executing users' terminal) during the 
+very first run of <b>ntop</b>.</i>
+An authorized user may click
+<a href="privacyFlagForce.html">here</a>
+to force <b>ntop</b> to report the privacy notice at the beginning of EVERY
+future run.  Or you may click
+<a href="privacyFlagClear.html">here</a>
+to have <b>ntop</b> re-issue the privacy notice at the beginning of the next 
+<b>ntop</b> run and then stop issuing it for future runs.
+</p>
+</font>
+<center><hr width="200"></center>
+<font FACE="Helvetica">
+<p>By default at startup and at periodic intervals, the <b>ntop</b> program will
+retrieve a file containing current <b>ntop</b> program version information.
+Retrieving this file allows this <b>ntop</b> instance to confirm that it is
+running the most current version.</p>
+<p>The retrieval is done using standard http:// requests, which will create
+log records on the hosting system. These log records do contain
+information which identifies a specific <b>ntop</b> site. Accordingly, you
+are being notified that this individually identifiable information is
+being transmitted and recorded.</p>
+<p>You may request - via the <i>--skip-version-check</i> run-time option - that
+this check be eliminated. If you use this option, no individually
+identifiable information is transmitted or recorded, because the entire
+retrieval and check is skipped.</p>
+<p>We ask you to allow this retrieval and check, because it benefits both
+you and the <b>ntop</b> developers. It benefits you because you will be 
+automatically notified if the <b>ntop</b> program version is obsolete, becomes
+unsupported or is no longer current. It benefits the developers of
+<b>ntop</b> because it allows us to determine the number of active <b>ntop</b>
+instances, and the operating system/versions that users are running
+<b>ntop</b> under. This allows us to focus development resources on systems
+like those our users are using <b>ntop</b> on.</p>
+<p>The individually identifiable information is contained in the web
+server log records which are automatically created each time the version
+file is retrieved. This is a function of the web server and not
+of <b>ntop</b>, but we do take advantage of it. The log record shows the IP
+address of the requestor (the <b>ntop</b> instance) and a User-Agent header
+field. We place information in the User-Agent header as follows:
+</p>
+<pre>
+ ntop/&lt;version&gt;
+ host/&lt;name from config.guess&gt;
+ distro/&lt;if one&gt;
+ release/&lt;of the distro, also if one&gt;
+ kernrlse/&lt;kernel version or release&gt;
+ GCC/&lt;version&gt;
+ config() -&nbsp;condensed parameters from ./configure&
+ run() -&nbsp;condensed flags - no data - from the execution line
+ libpcap/&lt;version&gt;
+ gdbm/&lt;version&gt;
+ openssl/&lt;version&gt;
+ zlib/&lt;version&gt;
+ access/&lt;http, https, both or none&gt;
+ interfaces() &lt;given interface names&gt;
+</pre>
+<p>For example:</p>
+<pre>
+ ntop/2.2.98 host/i686-pc-linux-gnu distro/redhat release/9 kernrlse/2.4.20-8smp
+ GCC/3.2.2 config(i18n) run(i; u; P; w; t; logextra; m; instantsessionpurge;
+ schedyield; d; usesyslog=; t) gdbm/1.8.0 openssl/0.9.7a zlib/1.1.4
+ access/http interfaces(eth0,eth1)
+</pre>
+<ul>
+<li>Distro and release information is determined at compile time and consists
+of information typically found in the /etc/release (or similar) file. See the 
+<b>ntop</b> tool linuxrelease for how this is determined.</li>
+<li>gcc compiler version (if available) is the internal version #s for the
+gcc compiler, e.g. 3.2.3.</li>
+<li>kernrlse is the Linux Kernel version or the xBSD release such as
+4.9-RELEASE and is determined from the uname data (if it's available).</li>
+<li>The ./configure parameters are stripped of directory paths, leading -s,
+etc. to create a short form that shows us what ./configure parameters
+people are using.</li>
+<li>Similarly, the run time parameters are stripped of data and paths, just
+<li>showing which flags are being used.</li>
+<li>The libpcap, gdbm, openssl and zlib versions come from the strings
+returned by the various inquiry functions (if they're available).</li>
+</ul>
+
+<h3>Sample log record</h3>
+<pre>
+ 67.xxx.xxx.xxx - - [28/Dec/2003:12:11:46 -0500] "GET /version.xml HTTP/1.0"
+ 200 1568 www.burtonstrauss.com "-" "<b>ntop</b>/2.2.98 host/i686-pc-linux-gnu
+ distro/redhat release/9 kernrlse/2.4.20-8smp GCC/3.2.2 config(i18n)
+ run(i; u; P; w; t; logextra; m; instantsessionpurge; schedyield; d;
+ usesyslog=) libpcap/0.8 gdbm/1.8.0 openssl/0.9.7a zlib/1.1.4
+ access/http interfaces(eth0,eth1,eth2)" "-"
+</pre>
+<h3>ntop access log report</h3>
+<pre>
+Today, since Midnight US EST
+
+Processed from logs/access.log.02.3 on Wed Jan 7 14:01:01 EST 2004 
+
+ntop   OS      Version        Cpu     kernel/rlse     s n GCC    http? ssl    gdbm  zlib  pcap interfaces
+------ ------- -------------- ------- --------------- - - ------ ----- ------ ----- ----- ---- ----------
+2.2.98 Darwin  7.2.0          powerpc 7.2.0               3.3.0  http  0.9.7b 1.8.3 1.1.4      default NIC
+2.2.98 Darwin  7.2.0          powerpc 7.2.0               3.3.0  http  0.9.7b 1.8.3 1.1.4      en0
+...
+2.2.98 Linux   slackware9.0.0 i686    2.4.24              3.2.2  http  0.9.7c 1.8.0 1.1.4      eth0,
+2.2.98 Solaris 8              sparc                       3.3.0  both  0.9.7b 1.8.3 1.1.4      le0,le1
+non-ntop from 194.65.xxx.xxx  is host/i686-pc-linux-gnu distro/fedora release/1 kernrlse/2.4.22-1.2129.nptl GCC/3.3.2 config  run user dbfilepath daemon gdbm/1.8.0 openssl/0.9.7a zlib/1.2.1 access/http interfaces(null
+
+    72 log records processed
+    67 version.xml records
+</pre>
+<h3>ntop access log report</h3>
+<pre>
+All log files - by (blinded) IP
+
+Processed on Wed Jan 7 02:01:01 CST 2004 
+
+Count   Source(ip)      ntop   OS      Version        Cpu     kernel/rlse     s n
+------- --------------- ------ ------- -------------- ------- --------------- - -
+      1   12.41.xxx.xxx 2.2.98 Linux   fedora1        i686    2.4.22-1.2135     y
+      2  61.171.xxx.xxx 2.2.98 Linux                  i686    2.4.20-proxy       
+      4  61.220.xxx.xxx 2.2.98 FreeBSD 4.6.2          i386    4.6.2-RELEASE      
+...
+      3  219.76.xxx.xxx 2.2.98 Solaris 9              i386                       
+      1  219.76.xxx.xxx 2.2.98 Solaris 9              i386                       
+
+</pre>
+<p>NOTES: This report is prepared by sorting and compressing 
+requests using the unblinded ip address. Thus:</p>
+<ul>
+<li>Adjacent lines that are completely identical are 
+indicative of multiple requests from different machines in 
+the same /16 block.</li>
+<li>Adjacent lines that have the same /16 address but are 
+otherwise different may be different machines or may be 
+from the same machine running multiple OSes/versions</li>
+</ul>
+</font>
+</body>
+</html>
