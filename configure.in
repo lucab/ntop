@@ -381,7 +381,6 @@ AC_HAVE_HEADERS(pwd.h stdio.h errno.h stdlib.h unistd.h string.h signal.h fcntl.
 dnl> MANDATORY the GNU database manager gdbm
 AC_HAVE_HEADERS(gdbm.h)
 
-
 dnl> OPTIONAL general purpose headers
 AC_CHECK_HEADERS(sys/select.h sys/ldr.h sys/sockio.h dl.h dirent.h dlfcn.h)
 
@@ -751,7 +750,6 @@ elif test -d libpcap-0.4a6 &&
        INCS="${INCS} -I$PCAP_ROOT"
        AC_MSG_RESULT([found in $PCAP_ROOT])
 else
-     AC_MSG_RESULT([not found! fallback for standard installation.])
      AC_CHECK_LIB(pcap, pcap_lookupdev)
      if test "$ac_tr_lib" != "HAVE_LIBPCAP"; then
        AC_MSG_RESULT([not found!])
@@ -762,8 +760,17 @@ else
        AC_MSG_RESULT([ You can download the latest source tarball at http://www.tcpdump.org/])
        AC_MSG_ERROR([ The LBL Packet Capture Library, libpcap, was not found! ])
      else
-       INCS="${INCS} -I/usr/include/pcap"
-       PCAP_ROOT="standard installation"
+	if test -r /usr/include/pcap/pcap.h; then	
+	       INCS="${INCS} -I/usr/include/pcap"	
+	       PCAP_ROOT="standard installation"
+	else
+       AC_MSG_RESULT([             *** FATAL ERROR ***             ])
+       AC_MSG_RESULT([ It looks that you don't have the libpcap distribution installed.])
+       AC_MSG_RESULT([ Download, compile and, optionally, install it.])
+       AC_MSG_RESULT([ When finished please re-run this program.])
+       AC_MSG_RESULT([ You can download the latest source tarball at http://www.tcpdump.org/])
+       AC_MSG_ERROR([ The LBL Packet Capture Library, libpcap, was not found! ])
+	fi
      fi
 fi
 
@@ -839,7 +846,6 @@ if test ".`echo $CORELIBS | grep gdbm`" = .; then
          AC_DEFINE(HAVE_GDBM_H)
          AC_MSG_RESULT([found in $GDBM_ROOT])
   else
-       AC_MSG_RESULT([not found! fallback for standard installation.])
        AC_CHECK_LIB(gdbm, gdbm_close)
        if test "$ac_tr_lib" != "HAVE_LIBGDBM"; then
          AC_MSG_RESULT([             *** FATAL ERROR ***             ])
