@@ -747,7 +747,7 @@ static void printFeatureConfigNum(int textPrintFlag, char* feature, int value) {
 }
 
 static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* status) {
-  char *tmpStr, tmpBuf[384];
+  char *tmpStr, tmpBuf[LEN_GENERAL_WORK_BUFFER];
   char *strtokState;
 
   sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
@@ -756,7 +756,8 @@ static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* statu
   if(status == NULL) {
     sendString("(nil)");
   } else {
-    snprintf(tmpBuf, sizeof(tmpBuf), "%s", status);
+    if (snprintf(tmpBuf, sizeof(tmpBuf), "%s", status) < 0)
+      BufferTooShort();
     tmpStr = strtok_r(tmpBuf, "\n", &strtokState);
     while(tmpStr != NULL) {
       sendString(tmpStr);
@@ -3135,9 +3136,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 		_intoa(addr1, buf1, sizeof(buf1)),
 		_intoa(addr2, buf2, sizeof(buf2))) < 0) BufferTooShort();
     
-    strcat(buf, buf1);
+    if(snprintf(buf, sizeof(buf), "%s%s", buf, buf1) < 0)
+      BufferTooShort();
   }
-  
+ 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].activeDevice) {
       char buf1[128], buf3[64];
@@ -3146,7 +3148,8 @@ void printNtopConfigInfo(int textPrintFlag) {
 		  _intoa(myGlobals.device[i].netmask, buf3, sizeof(buf3)),
 		  myGlobals.device[i].humanFriendlyName) < 0)
 	BufferTooShort();   
-      strcat(buf, buf1);
+      if(snprintf(buf, sizeof(buf), "%s%s", buf, buf1) < 0)
+        BufferTooShort();
     }
   }
   
