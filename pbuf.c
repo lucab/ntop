@@ -1074,11 +1074,12 @@ static void handleSession(const struct pcap_pkthdr *h,
 		 && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr)
 		 || ((napsterSvr[i].serverPort == dport)
 		     && (napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
+	      welcomeToNapster:
 		theSession->napsterSession = 1;
 		napsterSvr[i].serverPort = 0; /* Free slot */
 		numNapsterSvr--;
 		FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
-		FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
+		FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
 
 		traceEvent(TRACE_INFO, "NAPSTER new download session: %s -> %s\n",
 			   srcHost->hostSymIpAddress,
@@ -1096,6 +1097,54 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 		srcHost->napsterStats->numDownloadsRequested++,
 		  dstHost->napsterStats->numDownloadsServed++;
+	      }
+	    }
+	  }
+
+	  if(!theSession->napsterSession) {
+	    /* This session has not been recognized as a Napster
+	       session. It might be that ntop has been started
+	       after the session started, or that ntop has
+	       lost a few packets. Let's do a final check...
+	    */
+	    #define NAPSTER_DOMAIN "napster.com"
+
+	    if(
+	       ((strlen(srcHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
+		&& (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-strlen(NAPSTER_DOMAIN)],
+			   NAPSTER_DOMAIN) == 0))
+	       ||
+	       ((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
+		&& (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-strlen(NAPSTER_DOMAIN)],
+			   NAPSTER_DOMAIN) == 0))) {
+	      
+	      theSession->napsterSession = 1;
+
+		traceEvent(TRACE_INFO, "NAPSTER new download session: %s -> %s\n",
+			   srcHost->hostSymIpAddress,
+			   dstHost->hostSymIpAddress);
+
+		if(srcHost->napsterStats == NULL) {
+		  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+		  memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
+		}
+
+		if(dstHost->napsterStats == NULL) {
+		  dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+		  memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
+		}
+
+	      if(strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-strlen(NAPSTER_DOMAIN)],
+			NAPSTER_DOMAIN) == 0) {
+		FD_SET(HOST_SVC_NAPSTER_SERVER, &srcHost->flags);
+		FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
+		srcHost->napsterStats->numConnectionsServed++,
+		  dstHost->napsterStats->numConnectionsRequested++;
+	      } else {
+		FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
+		FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);	
+		srcHost->napsterStats->numConnectionsRequested++,
+		  dstHost->napsterStats->numConnectionsServed++;
 	      }
 	    }
 	  }
@@ -3656,6 +3705,7 @@ void processPacket(u_char *_deviceId,
 #ifdef MULTITHREADED
   releaseMutex(&hostsHashMutex);
 #endif
+
 }
 
 /* ************************************ */
