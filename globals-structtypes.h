@@ -1290,7 +1290,10 @@ struct option
 /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 typedef struct IPNode {
   struct IPNode *b[2];
-  char cc[4];
+  union {
+    char cc[4]; /* Country */
+    u_short as; /* AS */
+  } node;
 } IPNode;
 
 
@@ -1886,9 +1889,13 @@ XML*/
   char *strftimeFormat[MAX_LANGUAGES_SUPPORTED];
 #endif
 
- /* for country flags */
+ /* Country flags */
   IPNode *countryFlagHead;
   int  ipCountryMem, ipCountryCount;
+
+  /* AS */
+  IPNode *asHead;
+  int    asMem, asCount;
 
 #ifdef PARM_ENABLE_EXPERIMENTAL
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */

@@ -2735,6 +2735,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   Counter total;
   int printedHeader, i;
   char *dynIp, *multihomed;
+  u_short as;
 
   accessAddrResMutex("printAllSessionsHTML");
 
@@ -3070,7 +3071,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString(buf);
     }
   }
-
+  
+  if((as = ip2AS(el->hostIpAddress.s_addr)) != 0) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	       "%d</TD></TR>\n", getRowColor(), "Origin&nbsp;AS", as) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+  
   if(el->vlanId != -1) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d</TD></TR>\n", getRowColor(), "VLAN&nbsp;Id", el->vlanId) < 0)

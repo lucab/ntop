@@ -465,6 +465,21 @@ void printTrafficStatistics() {
       sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=ipTrafficPie"CHART_FORMAT"></TH></TR>\n");
 
+    /* RRD */
+    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+    snprintf(buf, sizeof(buf), "%s/interfaces/%s", myGlobals.rrdPath,
+	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+    
+    if((i = stat(buf, &statbuf)) == 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "[ <A HREF=\"/plugins/rrdPlugin?action=list&key=interfaces/%s&title=interface %s\">"
+		  "<IMG BORDER=0 SRC=/graph.gif></A> ]</TD></TR>\n",
+		  getRowColor(), "RRD Stats", myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		  myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
+	BufferTooShort();
+      sendString(buf);
+    }
+    
     /* ********************* */
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value > 0) {
@@ -615,21 +630,6 @@ void printTrafficStatistics() {
   }
 
   sendString("</TABLE>"TABLE_OFF"</TR>\n");
-
-  /* RRD */
-  /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-  snprintf(buf, sizeof(buf), "%s/interfaces/%s", myGlobals.rrdPath,
-	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
-
-  if((i = stat(buf, &statbuf)) == 0) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"[ <A HREF=\"/plugins/rrdPlugin?action=list&key=interfaces/%s&title=interface %s\">"
-		"<IMG BORDER=0 SRC=/graph.gif></A> ]</TD></TR>\n",
-		getRowColor(), "RRD Stats", myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
-      BufferTooShort();
-    sendString(buf);
-  }
 
   sendString("</TABLE></CENTER>\n");
 }

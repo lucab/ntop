@@ -913,6 +913,11 @@
 #define CONST_OSFINGERPRINT_FILE            "etter.passive.os.fp.gz"
 
 /*
+ * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)
+ */
+#define CONST_ASLIST_FILE            "AS-list.txt.gz"
+
+/*
  * openSSL (https://) stuff
  *
  *  MAX_SSL_CONNECTIONS

@@ -3271,18 +3271,27 @@ u_int32_t xaton(char *s) {
 
 /* ******************************************************************* */
   
-void addNodeInternal(u_int32_t ip, int prefix, char *country) {
-  IPNode *p1=myGlobals.countryFlagHead;
+void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
+  IPNode *p1;
   IPNode *p2;
   int i, b;
-  
+
+  if(country)
+    p1 = myGlobals.countryFlagHead;
+  else
+    p1 = myGlobals.asHead;
+    
   for(i=0; i<prefix; i++) {
     b=(ip>>(31-i)) & 0x1;
     if(!p1->b[b]) {
       if(!(p2=malloc(sizeof(IPNode))))
         exit(1);
       memset(p2, 0, sizeof(IPNode));
-      myGlobals.ipCountryMem += sizeof(IPNode);
+
+      if(country != NULL)
+	myGlobals.ipCountryMem += sizeof(IPNode);
+      else
+	myGlobals.asMem += sizeof(IPNode);
       p1->b[b]=p2;
     }
     else
@@ -3291,8 +3300,12 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country) {
     p1=p2;
   }
 
-  if(p2->cc[0] == 0) {
-    strcpy(p2->cc, country);
+  if(country != NULL) {
+    if(p2->node.cc[0] == 0)
+      strcpy(p2->node.cc, country);
+  } else {
+    if(p2->node.as == 0)
+      p2->node.as = as;
   }
 }
 
@@ -3305,8 +3318,8 @@ char *ip2CountryCode(u_int32_t ip) {
 
   i=0;
   while(p!=NULL) {
-    if(p->cc[0]!=0)
-      cc=p->cc;
+    if(p->node.cc[0]!=0)
+      cc=p->node.cc;
     b=(ip>>(31-i)) & 0x1;
     p=p->b[b];
     i++;
@@ -3800,3 +3813,62 @@ int setSpecifiedUser() {
   } else
     return(0);
 }
+
+/* ******************************************************************* */
+
+u_short ip2AS(u_int32_t ip) {
+  IPNode *p;
+  int i, b;
+  u_short as=0;
+    
+  p = myGlobals.asHead;
+
+  i=0;
+  while(p!=NULL) {
+    if(p->node.as !=0 )
+      as = p->node.as;
+    b=(ip>>(31-i)) & 0x1;
+    p=p->b[b];
+    i++;
+  }
+
+
+#ifdef DEBUG
+  {
+    char buf[64];
+    struct in_addr addr;
+
+    addr.s_addr = ip;
+    traceEvent(CONST_TRACE_INFO, "%s: %d AS",  _intoa(addr, buf, sizeof(buf)), as);
+  }
+#endif
+
+  return as;
+}
+
+/* ************************************ */
+
+void readASs(FILE *fd) {
+  myGlobals.asHead = malloc(sizeof(IPNode));
+  memset(myGlobals.asHead, 0, sizeof(IPNode));
+  myGlobals.asHead->node.as = 0;
+  myGlobals.asMem += sizeof(IPNode);
+
+  while(1) {
+    char buff[256];
+    char *strtokState, *as, *ip, *prefix;
+
+    if(gzeof(fd)) break;
+    if(gzgets(fd, buff, sizeof(buff)) == NULL) continue;
+
+    if((as = strtok_r(buff, ":", &strtokState)) == NULL)  continue;
+    if((ip = strtok_r(NULL, "/", &strtokState)) == NULL)  continue;
+    if((prefix = strtok_r(NULL, "\n", &strtokState)) == NULL)  continue;
+
+    addNodeInternal(xaton(ip), atoi(prefix), NULL, atoi(as));
+    myGlobals.asCount++;
+  }
+
+  traceEvent(CONST_TRACE_INFO, "Read %d ASs [Used %d KB of memory]", myGlobals.asCount, myGlobals.asMem/1024);
+}
+

@@ -226,7 +226,7 @@ static void initIPCountryTable(void) {
   }
   myGlobals.ipCountryMem += sizeof(IPNode);
 
-  strcpy(myGlobals.countryFlagHead->cc, "***");
+  strcpy(myGlobals.countryFlagHead->node.cc, "***");
 
   myGlobals.countryFlagHead->b[0]=NULL;
   myGlobals.countryFlagHead->b[1]=NULL;
@@ -270,7 +270,7 @@ static void initIPCountryTable(void) {
 
 	  strtolower(cc);
 
-	  addNodeInternal(xaton(ip), atoi(prefix), cc);
+	  addNodeInternal(xaton(ip), atoi(prefix), cc, 0);
 	  recordsRead++;
 	}
 
@@ -519,6 +519,30 @@ void initCounters(void) {
     traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.\n", CONST_OSFINGERPRINT_FILE);
     traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without OS fingerprinting.\n");
     traceEvent(CONST_TRACE_NOISY, "OSFP: If the file 'magically' appears, OS fingerprinting will automatically be enabled.\n");
+  }
+
+  /*
+   * Check if AS file exists - warn if not.
+   */
+  traceEvent(CONST_TRACE_NOISY, "OSFP: Looking for AS list file, %s\n", CONST_ASLIST_FILE);
+
+  for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
+
+    snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[i], CONST_ASLIST_FILE);
+
+    traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'\n", buf);
+    fd = gzopen(buf, "r");
+
+    if(fd) {
+      traceEvent(CONST_TRACE_NOISY, "OSFP: ...found!\n");
+      readASs(fd);
+      gzclose(fd);
+      break;
+    }
+  }
+  if(configFileFound == 0) {
+    traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.\n", CONST_ASLIST_FILE);
+    traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without AS information.\n");
   }
 
   /* i18n */
