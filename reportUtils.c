@@ -505,7 +505,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     } else {
       arrow[0] = "";  theAnchor[0] = htmlAnchor1;
     }
-    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>Other&nbsp;IP%s</A></TH>",
+    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>Other&nbsp;TCP/UDP%s</A></TH>",
 	     theAnchor[0], i+2, arrow[0]) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
@@ -2114,7 +2114,7 @@ void printHostTrafficStats(HostTraffic *el) {
   }
 
   if((a > 0) && (b > 0)) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>"
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>TCP/UDP Distribution</TH>"
 		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1>"
 		"</TD>"
 		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT">"
@@ -3369,7 +3369,7 @@ void printHostUsedServices(HostTraffic *el) {
     tot += el->httpStats->numLocalReqSent+el->httpStats->numRemoteReqSent;
 
   if(tot > 0) {
-    printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Client&nbsp;Role");
+    printSectionTitle("TCP/UDP&nbsp;Service&nbsp;Stats:&nbsp;Client&nbsp;Role");
     sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
 	       "<TH "TH_BG">&nbsp;</TH>"
@@ -3399,7 +3399,7 @@ void printHostUsedServices(HostTraffic *el) {
     tot += el->httpStats->numLocalReqRcvd+el->httpStats->numRemoteReqRcvd;
 
   if(tot > 0) {
-    printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Server&nbsp;Role");
+    printSectionTitle("TCP/UDP&nbsp;Service&nbsp;Stats:&nbsp;Server&nbsp;Role");
     sendString("<CENTER>\n");
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
 	       "<TH "TH_BG">&nbsp;</TH>"
