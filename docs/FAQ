@@ -51,6 +51,94 @@ Post 3.0 release entries will have a author/date stamp, at the end:
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
+TOP 10 - the questions everyone asks...
+
+Q1(a) Can I store data in a SQL database?
+  (b) When ntop stops I lose all my data.  Why?
+  (c) Why doesn't the -S option work?
+
+  A. ntop used to optionally store some data in a SQL database.  The code was
+     broken, difficult to maintain, etc. and was removed.  A LONG TIME AGO.
+     If you are reading about this in 'some' documentation - update.  Current
+     ntop is 3.0.
+
+     There are scripts that various users have offered to take the data dump
+     and insert it into a SQL database.  Search the back traffic on the mailing
+     list for them.
+
+     Yes, ntop uses memory based structures to hold usage data and they are lost
+     when you reset or restart ntop.
+
+     Persistent storage is in the RRD databases - there's a paper @ SourceForge
+     that explains them.
+
+     There was another option for some persistence - it was -S - look down about
+     5K lines in this FAQ for an article about it, "What was the -S option?".
+
+
+Q2. The archive isn't indexed, so I can't search it.
+A.  Use gmane: http://search.gmain.org (lists are called gmane.linux.ntop.general
+    and gmane.linux.ntop.devel) or use Google with the keyword ntop and the site 
+    option "site:listgateway.unipi.it" plus your query:
+
+    site:listgateway.unipi.it ntop freebsd
+
+
+Q3. ntop crashed and the last log message is "xxxxx".
+A.  Sorry, that's useless.  ntop is multi-threaded and processes 100s or 1000s of
+    packets per second.  The last log message is probably from the wrong thread 
+    and many seconds out of date.
+
+    To capture the true failure point, you need to run under the debugger (gdb) 
+    and send us the bt full information.  Instructions are at the bottom of this
+    document.  Look for "GDB ultraMini-tutorial".
+
+ 3(a) What about the backtrace?
+ A. Again, probably useless.  Use gdb and capture the full failure point info. If you
+    want to see more, look for "Q. What about the backtrace?" below.
+
+Q4. I'm running out of memory.
+A. Basically ntop uses a lot of memory - it stores a chunk of information about each 
+   and every host it's monitoring. See "Q. Why does ntop use so much memory ?" and
+   the following articles below.
+
+
+Q5. Dropped packets?
+A.  There are lots of reasons - look for "Q. Why does ntop drop packets?" below.
+    Short version, is that as long as it's random, the information you glean from ntop
+    (32% of our usage is P2P Music) is still valid.  But you are probably understating
+    any problems.
+
+Q6. The docs at ntop.org say ...
+A.  Stop right there.  They're out of date (notice, for example, the man page is
+    July 2002?).
+
+    The only current stuff is this FAQ (which gets out of date quickly) the other files
+    in the distribution and the mailing lists.
+
+    You can access the updated FAQ from docs/FAQ in the cvs or from your ntop instance
+    (click on the (?) icon in the "About" menu and read down 1/2 a page or so.
+
+
+Q7. How do I report a problem?
+A.  Best way is to use the PR (Problem Report) form - it automatically includes a lot of
+    the important information about your ntop instance.  In the "About" menu, click on the
+    "Bug" icon.  This generates a text form you can copy into your email program, update
+    and send.
+
+Q8. HACK ALERT HACK ALERT - ntop is sending information to some machine called "jake".
+A.  Chill.  Take a deep breath.
+
+    Jake is the cannonical name for version.ntop.org.  All you are seeing is the version
+    check.  See "Q. What's with the version check?" below.
+
+
+Q9.
+Q10.
+ 
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 Q. Where can I find ntop?
 A. The official website can be found at http://www.ntop.org/.
@@ -2355,6 +2443,15 @@ A. Yes.  ntop limits each network to 1024 hosts (a /24). If you need more, alter
    (/8) interfaces (e.g. 10. or Cable Modems, etc.).
 
 
+Q. What's with the version check?
+Q. Why is ntop connecting to jake.ntop.org?
+A. jake.ntop.org is the cannonical name for version.ntop.org, which hosts the xml
+   file used for the version check.
+
+   See the man page, 1st run log messages and/or privacyNotice.html page (Click on the
+   "this" in this line: "For information on ntop and information privacy, see this page."
+   on the 1st page ntop presents).
+
 --------------------------------------------------------------------------------
 -----Running - On-going---------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -2401,8 +2498,11 @@ A. ntop holds a lot of information about each host it has seen in an in-memory
    There have been a couple of discussions on the ntop mailing list about ntop's
    memory usage - you might read them (search on gmane).
 
+Q. Database.
+A. No way.  This data just can't be stored in a database - while each record (row)
+   is small, we're talking 1000s of updates/second.  As in Enterprise Oracle class
+   speeds...  
 
-Q. So ntop's memory usage is dependent upon?
 A. ntop's memory usage for host tables depends on the # of hosts it sees in
    packet traffic.  This is NOT, repeat NOT controllable by ntop in ANY way.
    If a user kicks off a port scan, 100s of hosts appear.  If somebody does a
@@ -2418,7 +2518,19 @@ A. ntop's memory usage for host tables depends on the # of hosts it sees in
    disappear (http: opens a lot, does a small retrieval and closes them), ssh
    may last for days.  etc.   Memory is consumed tracking them too.
 
+   It's not just one table entry per host - there are a lot of ancillary tables 
+   which only get allocated if you have data for them.
 
+Q. Got a guess?
+A. Sure.  Look in textinfo.html and you will see the line:
+
+     (very) Approximate memory per host.....4.4KB
+
+   I'm not sure how much I trust this and I wrote it.  This calculation just
+   computes the (current usage - baseline) / # of hosts.
+
+
+Q. So ntop's memory usage is dependent upon?
 Q. So what does the purge do?
 A. ntop purges idle hosts.  Period.
 
@@ -2469,6 +2581,41 @@ A. It might, might, be possible as a soft limit - but it's got a lot of
    packets keep arriving, and FAST on the busy network that has the memory
    issues in the first place.  Since you can't lock for long, you can only
    purge a small # of entries.
+
+
+Q. But what about -x and -X.
+A. Ah, yes, grasshopper - you have been reading the man page.  Good user.
+   The -x and -X options are pretty crude.  They say "if you have allocated
+   n (hosts|sessions), fail the allocation of (host|session) n+1".
+
+   It works in the context of preventing memory exhaustion - if you can calculate
+   the right values based on your available memory (and remember that 4K or 12K or
+   whatever per host value is an AVERAGE).
+ 
+   And, no, you can't make them memory dependent - it's all ultimately virtual and
+   ntop doesn't get indication of whether a malloc() call causes swapping.  It either
+   works because the allocation (total) is under your limit (or the hard limit of real
+   memory + swap space - OS usage), or it fails.
+
+   This type of limit can't make sure you save only the RIGHT hosts.
+
+Q. These options aren't very smart, are they?
+A. No.  They don't know anything about the hosts.  Just the # of them.  So failing
+   an allocation might hurt in that the n+1th host might be an important one and yet 
+   host #2 is basically trivial junk (the printer that sends and "I'm here" message
+   every three minutes).
+
+   It also causes overhead, because the next packet for host n+1 will attempt to
+   allocate a record and fail.  Again and again.
+
+   But these options may keep ntop from crashing and that's a good thing.
+
+   If you use them, I would recommend setting them very high - just at the limit 
+   of what your memory permits.  Use this as a last resort - say you get hit by
+   a worm or virus.
+
+   I recommend that you use other options such as filter and track-local-hosts for 
+   the day-to-day controls on what ntop tracks.
 
 
 Q. Why does ntop drop packets?
@@ -3191,6 +3338,31 @@ A. man tcpdump -- see "expression"
 
         -B "net not 192.168.1.0/24" 
 
+
+Q. What about the backtrace?
+A. Sadly, probably useless.  Why?  Too much information isn't available:
+
+  Here's one (and a pretty good, obvious one at that):
+
+      ntop[23720]:   **FATAL_ERROR** RRD: caught signal 11 SIGSEGV
+      ntop[23720]:   **FATAL_ERROR** RRD: BACKTRACE: backtrace is:
+      ntop[23720]:   **FATAL_ERROR** RRD: BACKTRACE:  1. /usr/bin/ntop [0x42028c48]
+      ntop[23720]:   **FATAL_ERROR** RRD: BACKTRACE:  2. /usr/bin/ntop(getopt_long+0x43) [0x420c4e83]
+      ntop[23720]:   **FATAL_ERROR** RRD: BACKTRACE:  3. /usr/lib/ntop/plugins/rrdPlugin.so(rrd_update+0x61) [0x44157f7d]
+      ntop[23720]:   **FATAL_ERROR** RRD: BACKTRACE:  4. /usr/lib/ntop/plugins/rrdPlugin.so [0x441481a2]
+      ntop[23720]:   **FATAL_ERROR** RRD: BACKTRACE:  5. /usr/lib/ntop/plugins/rrdPlugin.so(updateCounter+0x19) [0x44148a15]
+      ntop[23720]:   **FATAL_ERROR** RRD: BACKTRACE:  6. /usr/lib/ntop/plugins/rrdPlugin.so [0x4414ba49]
+      ntop[23720]:   **FATAL_ERROR** RRD: BACKTRACE:  7. /lib/i686/libpthread.so.0 [0x41138941]
+      ntop[23720]:   **FATAL_ERROR** RRD: BACKTRACE:  8. /usr/bin/ntop(__clone+0x3a) [0x420da1ca]
+
+    See: It doesn't give the routines, just the hex offsets from some points in the executable.
+    It seems to say that rrdPlugin's updateCounter called rrd_update which called getopt_long. But
+    then getopt_long called something else and that's what died...  plus we don't see the parameters.
+
+    Sometimes it works great for me on my box, because I can use the tools to figure out precisely
+    where it means.  But often I use gdb too.  Move off my box and the odds of your compile and my 
+    compile (and our ./configure and all the tool versions) matching so that the offsets mean something
+    are pretty small.
 
 --------------------------------------------------------------------------------
 -----Running - Web Server-------------------------------------------------------
@@ -4336,8 +4508,51 @@ A. There's a 12 page writeup on what rrd is and what ntop does with it.
    A pdf version is posted at SourceForge in the "Documentation" release.
    Download it and read it.
 
+
 Q. Do I gotta?
 A. Yup - the pretty pictures won't work in this FAQ.
+
+
+Q. I'm lazy - What is rrd?
+A. RRD stands for "round-robin database". It is a special type of database designed for
+   holding sequences of information over periods of time, without growing in size. 
+
+   Rrdtool is a tool for manipulating RRDs. The home page for rrdtool is at 
+   http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/ 
+
+   What do they do? Well, suppose you want to compute the average of the traffic to your
+   web site for the last fifteen minutes. If you record the data each minute and save it
+   in a traditional database it looks like this: 
+
+
+                10:45	1.00 MB
+		10:46	1.02 MB
+		10:47	0.27 MB
+		...
+		11:00	0.54 MB
+		...
+
+   While you have the data to compute the total, the database grows in size forever. And
+   all you really need are the last 15 values. Certainly you can create a purge routine
+   and periodically remove the old data. But this type of constantly growing SQL database
+   - even with a prune process - will require reorganization and rebuilds over time. 
+
+   Suppose you had some kind of data structure where the last value was thrown away each
+   time you added a new one. When it comes time to store the 11:01 value, you overlay the
+   10:46 value. At any time, you still have the last 15 values. That - slightly simplified - 
+   is an RRD. The benefit is that your database never grows in size. The down side is that 
+   everything else in your history is gone - if your needs ever change, tough. 
+
+   The ring buffers are called round-robin archives or RRAs. The RRA actually stores the 
+   RATE (bits per second), so the 10:47 value of 0.27 Megabytes is 0.27 * 1024*1024 * 8 / 60
+   or 37748.736 (bits per second). But it functions just like the rings described above. 
+
+   ntop uses RRDs to store data over long periods of time. Separate files are created for 
+   each counter, in a structure that reflects the interfaces and hosts ntop sees. The specifics 
+   of what's recorded - interfaces or not, hosts or not, etc. is controlled by switches on the
+   ntop rrd plugin. 
+
+   (Read the paper - it goes on from here, with specific details on how ntop uses RRDs). 
 
 
 Q. What's myrrd?
@@ -4347,8 +4562,39 @@ A. ntop includes a frozen and slightly patched version of rrd 1.0.42 in the
    As of rrdtool 1.0.46 was released 04-Jan-2004.
 
 
+Q. What's rrdtool? 
+A. rrdtool is the packaged program to access the various rrd routines (export, dump, graph)
+   from the command line.
+
+Q. How do I get it?
+A. The myrrd version included with ntop doesn't have rrdtool. Assuming you haven't installed 
+   an rrdtools package (which ntop ignores), here is how to get rrdtool: 
+
+   The myrrd version is a frozen copy of rrdtool 1.0.42, so your best bet is to go to the 
+   rrdtool home page, http://www.rrdtool.com/ or the download page, 
+   http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub/ and download rrdtool-1.0.42.tar.gz. 
+
+   Once you have it, it's pretty standard. 
+
+   $ tar xfvz rrdtool-1.0.42.tar.gz $ cd rrdtool-1.0.42 $ ./configure 
+
+   (You can add --prefix=/usr if you want) 
+
+   $ make 
+
+   This runs a few minutes. 
+
+   Now you can do 
+
+   $ make install 
+
+   but remember, ntop just ignores this, so why bother? All you really need are the rrdtool
+   executable program (src/rrdtool) and maybe a few of the files in the doc/ directory. Just
+   copy them where you want them and then delete the whold build directory. 
+
+
 Q. Where do I get rrd?
-A. You should not need to do anything to get rrd (see myrrd, above).
+A. Unless you need rrdtool, you should not need to do anything to get rrd (see myrrd, above).
 
    The home page for rrd is
    http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
@@ -4557,6 +4803,20 @@ A. To enable netFlow Data Export (NDE) from a Cisco device to an ntop netFlow
    Cisco web site: http://www.cisco.com/go/netflow
                                      (Created by sholmes at snapshot, 02Feb2003)
 
+Q. Can I run ONLY w/ netFlow (Running ntop as a Collector for Net Flow only)
+A. Sure.
+
+   ntop is usually configured to capture all traffic from local interfaces. If no 
+   interface is given (e.g. option -i|--interface is missing), the "first" interface 
+   is taken. This value, typically eth0 on linux boxes, may not be what you wanted. 
+
+   If you want to use ntop as a collector for Net Flow traffic only, you may want to
+   supress all local traffic. 
+
+   In this case use -i none or --interface none. 
+
+   Remember to activate Net Flow plugin from Menu Admin->Plugin and to configure the
+   plugin by setting "Local Collector UDP Port". 
 
 --------------------------------------------------------------------------------
 -----sFlow----------------------------------------------------------------------
@@ -4583,6 +4843,25 @@ A. sFlow can be a collector or a receiver or both, depending on the
    If you configure ntop as an sFlow collector, it will use sFlow data
    for generating reports, treating the remote collector(s) as another
    network interface - see Admin | Switch NIC.
+
+Q. sFlow doesn't work.
+A. Check this out:
+
+     This talks about a bad experience I had setting up sFlow reception. For the longest
+     time, I could see that ntop was getting sflow packets, but no data would show up. 
+     It turns out the switch I was exporting from didn't see any real traffic, and it was 
+     just sending COUNTERSAMPLE packets..... 
+ 
+     - - - - - - - - I figured out that it was indeed "invalid" sflow packets. 
+
+     Apparently, sflow sends COUNTERSAMPLE and FLOWSAMPLE packets. COUNTERSAMPLE packets 
+     give a quick look at interface counters on the machine, whereas FLOWSAMPLE packets 
+     are actual packet fragments from IP connections. Ntop seems to simply parse, 
+     debug_print, and discard COUNTERSAMPLE packets...which made it confusing to look at 
+     the debug output and say "wow, lots of sflow coming in!" when in fact it was just for
+     show, as Burton suggested. I added more switches (with active connections) to the
+     switches sending sflow packets and I now have hosts with pretty graphs. 
+
 
 
 
