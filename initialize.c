@@ -472,19 +472,16 @@ int initGlobalValues(void) {
     myGlobals.enableSessionHandling = 1;
     myGlobals.enablePacketDecoding = 1;
     myGlobals.enableFragmentHandling = 1;
-    myGlobals.trackOnlyLocalHosts = 0;
     break;
   case MEDIUM_ACCURACY_LEVEL:
     myGlobals.enablePacketDecoding = 0;
     myGlobals.enableSessionHandling = 1;
     myGlobals.enableFragmentHandling = 1;
-    myGlobals.trackOnlyLocalHosts = 1;
     break;
   case LOW_ACCURACY_LEVEL:
     myGlobals.enableSessionHandling = 0;
     myGlobals.enablePacketDecoding = 0;
     myGlobals.enableFragmentHandling = 0;
-    myGlobals.trackOnlyLocalHosts = 1;
     break;
   }
 

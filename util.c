@@ -529,9 +529,6 @@ unsigned short _pseudoLocalAddress(struct in_addr *addr) {
 unsigned short isPseudoLocalAddress(struct in_addr *addr) {
   int i;
 
-  if(myGlobals.trackOnlyLocalHosts)
-    return(0);
-
   i = isLocalAddress(addr);
 
   if(i == 1) {

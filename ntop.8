@@ -19,6 +19,7 @@ ntop \- display top network users
 .RB [ -c | --sticky-hosts]
 .RB [ -f | --traffic-dump-file
 .IR file> ]
+.RB [ -g | --track-local-hosts ]
 .RB [ -h | --help ]
 .RB [ -j | --border-sniffer-mode ]
 .RB [ -k | --filter-expression-in-extra-frame ]
@@ -126,6 +127,13 @@ will display.
 
 .It2 -f --traffic-dump-file
 Specifies the file containing tcpdump captured traffic that has to be used by ntop. Note: if you specify -f ntop will not capture any traffic after the file has been read. This option is mostly used for debug purposes.
+
+.It2 -g --track-local-hosts
+Use this flag to tell
+.B ntop 
+that you do care only about local hosts (use -m to specify local nets). This flag is useful when 
+.B ntop
+sees many hosts (e.g. border gateway) but only the local ones need to be tracked.
 
 .It2 -h --help
 Print help information for 

@@ -2026,6 +2026,10 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.rFileName,
                            NTOP_DEFAULT_TRAFFICDUMP_FILENAME);
 
+  printParameterConfigInfo(textPrintFlag, "-g | --track-local-hosts",
+                           myGlobals.trackOnlyLocalHosts == 1 ? "Track local hosts only" : "Track all hosts",
+                           NTOP_DEFAULT_TRAFFICDUMP_FILENAME);
+
   printParameterConfigInfo(textPrintFlag, "-i | --interface" REPORT_ITS_EFFECTIVE,
                            myGlobals.devices,
                            NTOP_DEFAULT_DEVICES);

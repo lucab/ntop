@@ -81,14 +81,17 @@ static struct option const long_options[] = {
 #endif
 
   { "traffic-dump-file",                required_argument, NULL, 'f' },
+  { "track-local-hosts",                no_argument,       NULL, 'g' },
   { "help",                             no_argument,       NULL, 'h' },
   { "interface",                        required_argument, NULL, 'i' },
-  { "no-mac",                           no_argument,       NULL, 'o' },
-  { "border-sniffer-mode",              no_argument,       NULL, 'j' },
-  { "filter-expression-in-extra-frame", no_argument,       NULL, 'k' },
   { "pcap-log",                         required_argument, NULL, 'l' },
   { "local-subnets",                    required_argument, NULL, 'm' },
   { "numeric-ip-addresses",             no_argument,       NULL, 'n' },
+  { "no-mac",                           no_argument,       NULL, 'o' },
+  { "border-sniffer-mode",              no_argument,       NULL, 'j' },
+  { "filter-expression-in-extra-frame", no_argument,       NULL, 'k' },
+
+
   { "protocols",                        required_argument, NULL, 'p' },
   { "create-suspicious-packets",        no_argument,       NULL, 'q' },
   { "refresh-time",                     required_argument, NULL, 'r' },
@@ -191,6 +194,8 @@ void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-f <file>      | --traffic-dump-file <file>]         Traffic dump file (see tcpdump)\n");
+  fprintf(fp, "    [-g             | --track-local-hosts]                Track only local hosts\n");
+
   fprintf(fp, "    [-h             | --help]                             Display this help and exit\n");
 
 #ifndef WIN32
@@ -344,11 +349,11 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char* theOpts = "a:ce:f:g:hi:jkl:m:nop:qr:st:w:AB:D:F:MO:P:S:U:VW:";
+  char* theOpts = "a:ce:f:ghi:jkl:m:nop:qr:st:w:AB:D:F:MO:P:S:U:VW:";
 #elif defined(USE_SYSLOG)
-  char* theOpts = "a:cde:f:g:hi:jkl:m:nop:qr:st:u:w:AB:D:EF:IKLMNO:P:S:U:VW:";
+  char* theOpts = "a:cde:f:ghi:jkl:m:nop:qr:st:u:w:AB:D:EF:IKLMNO:P:S:U:VW:";
 #else
-  char* theOpts = "a:cde:f:g:hi:jkl:m:nop:qr:st:u:w:AB:D:EF:IKMNO:P:S:U:VW:";
+  char* theOpts = "a:cde:f:ghi:jkl:m:nop:qr:st:u:w:AB:D:EF:IKMNO:P:S:U:VW:";
 #endif
   int opt;
 
@@ -386,6 +391,10 @@ static int parseOptions(int argc, char* argv []) {
     case 'f':
       myGlobals.rFileName = strdup(optarg);
       myGlobals.isLsofPresent = 0;               /* Don't make debugging too complex */
+      break;
+
+    case 'g':
+      myGlobals.trackOnlyLocalHosts    = 1;
       break;
 
     case 'h':                                /* help */
