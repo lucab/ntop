@@ -2024,8 +2024,8 @@ typedef struct ntopGlobals {
   AggregationType netFlowAggregation;
   int netFlowInSocket, netFlowDeviceId;
   u_short netFlowInPort;
-  u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsV5Rcvd;
-  u_long numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed;
+  u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsSent, numNetFlowsV5Rcvd;
+  u_long numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed, numNetFlowsRcvd;
   u_long numBadNetFlowsVersionsRcvd, numBadFlowPkts, numBadFlowBytes, numBadFlowReality;
   u_long numSrcNetFlowsEntryFailedBlackList, numSrcNetFlowsEntryFailedWhiteList,
     numSrcNetFlowsEntryAccepted,

@@ -4545,7 +4545,7 @@ void listNetFlows(void) {
     while(list != NULL) {
       if(list->pluginStatus.activePlugin) {
 	if(numEntries == 0) {
-	  printSectionTitle("Network Flows");
+	  printPageTitle("Network Flows");
  	  sendString("<CENTER>\n");
 	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG"><TH "TH_BG">Flow Name</TH>"
   		     "<TH "TH_BG">Packets</TH><TH "TH_BG">Traffic</TH></TR>");

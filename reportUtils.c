@@ -4368,37 +4368,43 @@ void printFlagedWarning(char *text) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 
   snprintf(buf, LEN_GENERAL_WORK_BUFFER,
- 	   "<CENTER>\n"
- 	   "<P><IMG ALT=Warning SRC=/warning.gif>\n"
- 	   "<P><FONT COLOR=\"#FF0000\" SIZE=+1>%s</FONT>\n"
- 	   "</CENTER>\n", text);
+ 	   "<center>\n"
+ 	   "<p><img alt=\"Warning\" src=\"/warning.gif\"></p>\n"
+ 	   "<p><font color=\"#FF0000\" size=\"+1\">%s</font></p>\n"
+ 	   "</center>\n", text);
   sendString(buf);
 }
 
 /* ********************************** */
 
-void printSectionTitle(char *text) {
+void printPageTitle(char *text) {
   switch (myGlobals.capturePackets) {
       case FLAG_NTOPSTATE_RUN:
           break;
           ;;
       case FLAG_NTOPSTATE_STOPCAP:
-          sendString("<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+          sendString("<center><font face=\"Helvetica, Arial, Sans Serif\" size=\"+1\"><b>"
                      "Packet capture stopped"
-                     "</B></FONT></CENTER>");
+                     "</b></font></center>\n");
           break;
           ;;
       case FLAG_NTOPSTATE_TERM:
-          sendString("<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+          sendString("<center><font face=\"Helvetica, Arial, Sans Serif\" size=\"+1\"><b>"
                      "ntop stopped"
-                     "</B></FONT></CENTER>");
+                     "</b></font></center>\n");
           break;
           ;;
   }
 
-  sendString("<CENTER>\n<H1><FONT FACE=\"Helvetica, Arial, Sans Serif\">");
+  sendString("<center>\n<H1><font face=\"Helvetica, Arial, Sans Serif\">");
   sendString(text);
-  sendString("</FONT></H1><P>\n</CENTER>\n");
+  sendString("</font></H1>\n<p>&nbsp;</p>\n</center>\n");
+}
+
+void printSectionTitle(char *text) {
+  sendString("<center>\n<H2><font face=\"Helvetica, Arial, Sans Serif\">");
+  sendString(text);
+  sendString("</font></H2>\n<p>&nbsp;</p>\n</center>\n");
 }
 
 /* ******************************** */
@@ -7188,7 +7194,7 @@ void printVsanProtocolStats (FcFabricElementHash *hash, int actualDeviceId)
 /* ************************************ */
 
 void printPluginTrailer(char *left, char *middle) {
-  sendString("<br>\n<hr>\n<br>\n<table border=\"0\" width=\"100%\"><tr><td>");
+  sendString("<br>\n<hr>\n<br>\n<table border=\"0\" width=\"100%\"><tr><td width=\"20%\">");
 
   if(left != NULL) {
     sendString("[ <a href=\"../" CONST_PLUGINS_HEADER);
@@ -7197,14 +7203,14 @@ void printPluginTrailer(char *left, char *middle) {
   }
   sendString("&nbsp;");  /* So there's at least something in to cell */
 
-  sendString("</td>\n<td width=\"50%\" align=\"center\">");
+  sendString("</td>\n<td align=\"center\">");
 
   sendString("&nbsp;");
   if(middle != NULL) 
     sendString(middle);
   sendString("&nbsp;");
 
-  sendString("</td>\n<td align=\"right\">"
+  sendString("</td>\n<td width=\"20%\" align=\"right\">"
              "&nbsp;[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]"
              "</td></tr></table>\n<br>\n");
 }
