@@ -525,6 +525,7 @@ static int parseOptions(int argc, char* argv []) {
 	myGlobals.enablePacketDecoding = 0; /* They do not make sense here */
 	myGlobals.numericFlag = 1;
 	myGlobals.enableSessionHandling = 0;
+	myGlobals.dontTrustMACaddr = 1;
       }
       break;
 
