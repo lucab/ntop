@@ -2006,17 +2006,23 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == STATE_SYN))  {
       theSession->sessionState = STATE_SYN_ACK;
     } else if((tp->th_flags == TH_ACK) && (theSession->sessionState == STATE_SYN_ACK)) {
-      theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
-      if((h->ts.tv_usec-theSession->nwLatency.tv_usec) < 0) {
-	theSession->nwLatency.tv_usec = 1000000-(h->ts.tv_usec-theSession->nwLatency.tv_usec);
-	theSession->nwLatency.tv_sec--;
-      } else
-	theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
+      if(h->ts.tv_sec > theSession->nwLatency.tv_sec) {
+	theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
-      theSession->nwLatency.tv_sec /= 2;
-      theSession->nwLatency.tv_usec /= 2;
-      theSession->sessionState = STATE_ACTIVE;
+	if((h->ts.tv_usec-theSession->nwLatency.tv_usec) < 0) {
+	  theSession->nwLatency.tv_usec = 1000000-(h->ts.tv_usec-theSession->nwLatency.tv_usec);
+	  theSession->nwLatency.tv_sec--;
+	} else
+	  theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
+	
+	theSession->nwLatency.tv_sec /= 2;
+	theSession->nwLatency.tv_usec /= 2;
+	theSession->sessionState = STATE_ACTIVE;
+      } else {
+	/* The latency value is negative. There's something wrong so let's drop it */
+	theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
+      }
 
       allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
       incrementUsageCounter(&srcHost->securityHostPkts->establishedTCPConnSent, dstHostIdx, actualDeviceId);
