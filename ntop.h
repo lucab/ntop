@@ -429,7 +429,7 @@ int getdomainname(char *name, size_t len);
 RETSIGTYPE (*setsignal(int, RETSIGTYPE (*)(int)))(int);
 #endif
 
-#if defined(WIN32)
+#if defined(WIN32) && !defined(__GNUC__)
 /*#include "ntop_win32.h"*/
 #define n_short short
 #define n_time time_t

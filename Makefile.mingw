@@ -42,7 +42,7 @@ MANDEST = ${prefix}/man
 VERSION=1.1
 OSNAME=win2k
 
-INC_GDBM=-Ic:/scott/src/gdbm
+INC_GDBM=-Ic:/scott/include
 INC_WPDPACK=-Ic:/scott/src/wpdpack/include
 INC_GDCHART=-I../gdchart0.94c
 
