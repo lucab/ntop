@@ -549,7 +549,8 @@ void printHeader(int reportType, int revertOrder, u_int column,
     arrow[2] = ""; theAnchor[2] = htmlAnchor1;
   }
 
-  snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&showH=", url, sign, column);
+  snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&showH=", url, 
+	   revertOrder ? "-" : "", column);
 
   switch(showHostsMode) {
   case showOnlyLocalHosts:
