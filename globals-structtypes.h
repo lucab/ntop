@@ -624,6 +624,7 @@ typedef struct ntopInterface {
   pcap_dumper_t *pcapErrDumper;  /* LBNL pcap dumper - all suspicious packets are logged */
 
   char virtualDevice;            /* set to 1 for virtual devices (e.g. eth0:1) */
+  char activeDevice;             /* Is the interface active (useful for virtual interfaces) */
   char dummyDevice;              /* set to 1 for 'artificial' devices (e.g. sFlow-device) */
   int snaplen;                   /* maximum # of bytes to capture foreach pkt */
                                  /* read timeout in milliseconds */
@@ -1776,6 +1777,7 @@ XML*/
 
   /* sFlow */
   int sflowOutSocket, sflowInSocket, sflowDeviceId;
+  struct in_addr sflowIfAddress, sflowIfMask;
   u_short sflowInPort;
   u_long numSamplesReceived, initialPool, lastSample;
   u_int32_t flowSampleSeqNo, numSamplesToGo;

@@ -33,16 +33,38 @@ static ProbeInfo probeList[MAX_NUM_PROBES];
 /* Forward */
 static void setNetFlowInSocket();
 static void setNetFlowOutSocket();
-static void setInterfaceMatrix();
+static void setNetFlowInterfaceMatrix();
+static void freeNetFlowMatrixMemory();
+
+/* ****************************** */
+
+void freeNetFlowMatrixMemory() {
+  /*
+    NOTE: wee need to lock something here (TBD)
+  */
+
+  if((!myGlobals.device[myGlobals.netFlowDeviceId].activeDevice) || (myGlobals.netFlowDeviceId == -1)) return;
+
+  if(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix != NULL) {
+    int j;
+
+    /* Courtesy of Wies-Software <wies@wiessoft.de> */
+    for(j=0; j<(myGlobals.device[myGlobals.netFlowDeviceId].numHosts*myGlobals.device[myGlobals.netFlowDeviceId].numHosts); j++)
+        if(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix[j] != NULL)
+	  free(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix[j]);
+
+    free(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix);
+  }
+
+  if(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrixHosts != NULL)
+    free(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrixHosts);
+}
 
 /* ************************************************** */
 
-static void setInterfaceMatrix() {
-  /* 
-     Use the interface 0 as default.
-     We'll need to add a new field into the netflow preferences to specify
-     the local network for this interface
-  */
+static void setNetFlowInterfaceMatrix() {
+  if((!myGlobals.device[myGlobals.netFlowDeviceId].activeDevice) || (myGlobals.netFlowDeviceId == -1)) return;
+
   myGlobals.device[myGlobals.netFlowDeviceId].numHosts       = 0xFFFFFFFF - myGlobals.netFlowIfMask.s_addr+1;
   myGlobals.device[myGlobals.netFlowDeviceId].network.s_addr = myGlobals.netFlowIfAddress.s_addr;
   myGlobals.device[myGlobals.netFlowDeviceId].netmask.s_addr = myGlobals.netFlowIfMask.s_addr;
@@ -52,12 +74,12 @@ static void setInterfaceMatrix() {
 	       myGlobals.device[myGlobals.netFlowDeviceId].name, myGlobals.device[myGlobals.netFlowDeviceId].numHosts,
 	       intoa(myGlobals.device[myGlobals.netFlowDeviceId].netmask));
   }
-    
+
   myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[myGlobals.netFlowDeviceId].numHosts*
 										       myGlobals.device[myGlobals.netFlowDeviceId].numHosts,
 										       sizeof(TrafficEntry*));
   myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-												  myGlobals.device[myGlobals.netFlowDeviceId].numHosts);      
+												  myGlobals.device[myGlobals.netFlowDeviceId].numHosts);
 }
 
 /* ************************************** */
@@ -92,10 +114,12 @@ static void setNetFlowInSocket() {
 	       myGlobals.netFlowInPort);
   }
 
-  if((myGlobals.netFlowInPort > 0) && (myGlobals.netFlowDeviceId == 0)) {
+  if((myGlobals.netFlowInPort > 0) && (myGlobals.netFlowDeviceId == -1)) {
     myGlobals.netFlowDeviceId = createDummyInterface("NetFlow-device");
-    setInterfaceMatrix(0);
+    setNetFlowInterfaceMatrix();
+    myGlobals.device[myGlobals.netFlowDeviceId].activeDevice = 1;
   }
+
   myGlobals.mergeInterfaces = 0; /* Use different devices */
 }
 
@@ -134,7 +158,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
   memcpy(&the5Record, buffer, bufferLen > sizeof(the5Record) ? sizeof(the5Record): bufferLen);
   memcpy(&the7Record, buffer, bufferLen > sizeof(the7Record) ? sizeof(the7Record): bufferLen);
-  
+
   /*
     Convert V7 flows into V5 flows in order to make ntop
     able to handle V7 flows.
@@ -144,13 +168,13 @@ static void dissectFlow(char *buffer, int bufferLen) {
   if(the7Record.flowHeader.version == htons(7)) {
     int numFlows = ntohs(the7Record.flowHeader.count);
     int i, j;
-    
+
     if(numFlows > CONST_V7FLOWS_PER_PAK) numFlows = CONST_V7FLOWS_PER_PAK;
-    
+
     the5Record.flowHeader.version = htons(5);
     the5Record.flowHeader.count = htons(numFlows);
     /* rest of flowHeader will not be used */
-    
+
     for(j=i=0; i<numFlows; i++) {
       the5Record.flowRecord[i].srcaddr = the7Record.flowRecord[i].srcaddr;
       the5Record.flowRecord[i].dstaddr = the7Record.flowRecord[i].dstaddr;
@@ -162,7 +186,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
       /* rest of flowRecord will not be used */
     }
   }
-  
+
   if(the5Record.flowHeader.version == htons(5)) {
     int i, numFlows = ntohs(the5Record.flowHeader.count);
 
@@ -222,7 +246,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
       actualDeviceId = myGlobals.netFlowDeviceId;
 
-      if(actualDeviceId >= myGlobals.numDevices) {
+      if((actualDeviceId == -1) || (actualDeviceId >= myGlobals.numDevices)) {
 	traceEvent(CONST_TRACE_ERROR, "NetFlow deviceId (%d) is out range", actualDeviceId);
 	break;
       }
@@ -405,6 +429,13 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   u_char buffer[2048];
   struct sockaddr_in fromHost;
 
+  if(myGlobals.netFlowDeviceId != -1)
+    myGlobals.device[myGlobals.netFlowDeviceId].activeDevice = 1;
+
+#ifdef CFG_MULTITHREADED
+  threadActive = 1;
+#endif
+
   if(!(myGlobals.netFlowInSocket > 0)) return(NULL);
   traceEvent(CONST_TRACE_INFO, "Welcome to NetFlow: listening on UDP port %d...", myGlobals.netFlowInPort);
 #ifdef CFG_MULTITHREADED
@@ -455,7 +486,11 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   threadActive = 0;
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: netFlow thread (%ld) terminated...\n", netFlowThread);
 #endif
-  return(NULL); 
+
+  if(myGlobals.netFlowDeviceId != -1)
+    myGlobals.device[myGlobals.netFlowDeviceId].activeDevice = 0;
+
+  return(NULL);
 }
 
 /* ****************************** */
@@ -518,8 +553,7 @@ static void initNetFlowFunct(void) {
     }
 
 #ifdef CFG_MULTITHREADED
-  if((myGlobals.netFlowInPort != 0)
-     && (!threadActive)) {
+  if((myGlobals.netFlowInPort != 0) && (!threadActive)) {
     /* This plugin works only with threads */
     createThread(&netFlowThread, netflowMainLoop, NULL);
   }
@@ -554,12 +588,13 @@ static void handleNetflowHTTPrequest(char* url) {
 	storePrefsValue("netFlow.debug", value);
       } else if(strcmp(device, "ifNetMask") == 0) {
 	int a, b, c, d, a1, b1, c1, d1;
-	
-	if(sscanf(value, "%d.%d.%d.%d%%2F%d.%d.%d.%d", 
+
+	if(sscanf(value, "%d.%d.%d.%d%%2F%d.%d.%d.%d",
 		  &a, &b, &c, &d, &a1, &b1, &c1, &d1) == 8) {
 	  myGlobals.netFlowIfAddress.s_addr = (a << 24) + (b << 16) + (c << 8) + d;
 	  myGlobals.netFlowIfMask.s_addr    = (a1 << 24) + (b1 << 16) + (c1 << 8) + d1;
 	  storePrefsValue("netFlow.ifNetMask", value);
+	  freeNetFlowMatrixMemory(); setNetFlowInterfaceMatrix();
 	} else
 	  traceEvent(CONST_TRACE_INFO, "Parse Error (%s)", value);
       } else if(strcmp(device, "collectorIP") == 0) {
@@ -610,16 +645,14 @@ static void handleNetflowHTTPrequest(char* url) {
   if(myGlobals.netFlowInPort != 0) {
     sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Virtual NetFlow Interface</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	       "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
-    
-    if(snprintf(buf, sizeof(buf), "%s/%s", 
+
+    if(snprintf(buf, sizeof(buf), "%s/%s",
 		_intoa(myGlobals.netFlowIfAddress, buf1, sizeof(buf1)),
 		_intoa(myGlobals.netFlowIfMask, buf2, sizeof(buf2))) < 0)
       BufferTooShort();
     sendString(buf);
 
-    sendString("\"><br>Format: digit.digit.digit.digit/digit.digit.digit.digit\n"
-	       "<BR>NOTE: all changes will be available at ntop restart\n"
-	       "</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+    sendString("\"><br>Format: digit.digit.digit.digit/ digit.digit.digit.digit</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
   }
 
   /* *************************************** */
@@ -759,7 +792,10 @@ static void termNetflowFunct(void) {
   }
  #endif
 
-  if(myGlobals.netFlowInSocket > 0) closeNwSocket(&myGlobals.netFlowInSocket);
+  if(myGlobals.netFlowInSocket > 0) {
+    closeNwSocket(&myGlobals.netFlowInSocket);
+    myGlobals.device[myGlobals.netFlowDeviceId].activeDevice = 0;
+  }
 
   traceEvent(CONST_TRACE_INFO, "Thanks for using ntop NetFlow");
   traceEvent(CONST_TRACE_INFO, "Done.\n");

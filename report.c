@@ -101,8 +101,7 @@ void addPageIndicator(char *url, u_int pageNum,
     if(snprintf(nextBuf, sizeof(nextBuf),
 		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 ALIGN=vmiddle ALT=\"Next Page\"></A> "
 		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 ALIGN=vmiddle ALT=\"Forward to last page\"></A>",
-		url, separator, pageNum+1, shortBuf,
-		url, separator, numPages-1, shortBuf) < 0)
+		url, separator, pageNum+1, shortBuf, url, separator, numPages-1, shortBuf) < 0)
       BufferTooShort();
   }  else
     nextBuf[0] = '\0';
@@ -134,42 +133,43 @@ void printTrafficStatistics() {
 
   sendString("<TR "TR_ON"><TH "TH_BG" align=left>Network Interface(s)</TH>"
 	     "<TD "TD_BG" ALIGN=RIGHT>");
-
   
   sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR "TR_ON"><TH "TH_BG">Name</TH>"
 	     "<TH "TH_BG">Device</TH><TH "TH_BG">Type</TH><TH "TH_BG">MTU</TH><TH "TH_BG">Header</TH><TH "TH_BG">Address</TH></TR>\n");
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.rFileName == NULL) {
-      char buf1[128], buf2[64];
+      if(myGlobals.device[i].activeDevice) {
+	char buf1[128], buf2[64];
 
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
-		  myGlobals.device[i].humanFriendlyName) < 0)
-	BufferTooShort();
-      sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
+		    myGlobals.device[i].humanFriendlyName) < 0)
+	  BufferTooShort();
+	sendString(buf);
 	
-      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", myGlobals.device[i].name) < 0)
-	BufferTooShort();
-      sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", myGlobals.device[i].name) < 0)
+	  BufferTooShort();
+	sendString(buf);
 	
-      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s%s</TD>",
-		  getNwInterfaceType(i), myGlobals.device[i].virtualDevice ? " virtual" : "") < 0)
-	BufferTooShort();
-      sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s%s</TD>",
+		    getNwInterfaceType(i), myGlobals.device[i].virtualDevice ? " virtual" : "") < 0)
+	  BufferTooShort();
+	sendString(buf);
 	
-      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", myGlobals.mtuSize[myGlobals.device[i].datalink]) < 0)
-	BufferTooShort();
-      sendString(buf);
-
-     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", myGlobals.headerSize[myGlobals.device[i].datalink]) < 0)
-	BufferTooShort();
-      sendString(buf);
-
-      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s/%s</TD></TR>\n",
-		  _intoa(myGlobals.device[i].network, buf1, sizeof(buf1)),
-		  _intoa(myGlobals.device[i].netmask, buf2, sizeof(buf2))) < 0)
-	BufferTooShort();
-      sendString(buf);
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", myGlobals.mtuSize[myGlobals.device[i].datalink]) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", myGlobals.headerSize[myGlobals.device[i].datalink]) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s/%s</TD></TR>\n",
+		    _intoa(myGlobals.device[i].network, buf1, sizeof(buf1)),
+		    _intoa(myGlobals.device[i].netmask, buf2, sizeof(buf2))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
     } else {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER>Pcap file</TD><TD "TD_BG">&nbsp;</TD>") < 0)
 	BufferTooShort();

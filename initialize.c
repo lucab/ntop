@@ -772,6 +772,9 @@ int initGlobalValues(void) {
   if(myGlobals.enableSessionHandling)
     initPassiveSessions();
 
+  myGlobals.netFlowDeviceId = -1;
+  myGlobals.sflowDeviceId   = -1;
+  
   return(0);
 }
 
@@ -1487,6 +1490,7 @@ void initDeviceDatalink(void) {
 #ifdef AIX
   /* This is a bug of libpcap on AIX */
   for(i=0; i<myGlobals.numDevices; i++) {
+    myGlobals.device[i].activeDevice = 1;
     if(!myGlobals.device[i].virtualDevice) {
       switch(myGlobals.device[i].name[0]) {
       case 't': /* TokenRing */
@@ -1510,8 +1514,8 @@ void initDeviceDatalink(void) {
     }
   }
 #else /* Not AIX */
-
-  for(i=0; i<myGlobals.numDevices; i++)
+  for(i=0; i<myGlobals.numDevices; i++) {
+    myGlobals.device[i].activeDevice = 1;
     if(!myGlobals.device[i].virtualDevice) {
 #if defined(__FreeBSD__)
       if(strncmp(myGlobals.device[i].name, "tun", 3) == 0) {
@@ -1545,20 +1549,21 @@ void initDeviceDatalink(void) {
                                    myGlobals.mtuSize[myGlobals.device[i].datalink],
                                    myGlobals.headerSize[myGlobals.device[i].datalink]);
 #endif
-            if ( (myGlobals.mtuSize[myGlobals.device[i].datalink] == 0) ||
-                 (myGlobals.mtuSize[myGlobals.device[i].datalink] == CONST_UNKNOWN_MTU) ) {
-                traceEvent(CONST_TRACE_INFO, "WARNING: MTU value for DLT_  %d, is zero or unknown. " \
-                                          "Processing continues OK. " \
-                                          "Please report your MTU values (e.g. ifconfig) to the ntop-dev list.\n",
-                                          myGlobals.device[i].datalink);
-            }
-            if (myGlobals.headerSize[myGlobals.device[i].datalink] == 0) {
-                traceEvent(CONST_TRACE_INFO, "NOTE: Header value for DLT_  %d, is zero. " \
-                                          "Processing continues OK - don't use the nfs plugin. " \
-                                          "Please report this to the ntop-dev list.\n",
-                                          myGlobals.device[i].datalink);
-            }
+	  if ( (myGlobals.mtuSize[myGlobals.device[i].datalink] == 0) ||
+	       (myGlobals.mtuSize[myGlobals.device[i].datalink] == CONST_UNKNOWN_MTU) ) {
+	    traceEvent(CONST_TRACE_INFO, "WARNING: MTU value for DLT_  %d, is zero or unknown. " \
+		       "Processing continues OK. " \
+		       "Please report your MTU values (e.g. ifconfig) to the ntop-dev list.\n",
+		       myGlobals.device[i].datalink);
+	  }
+	  if (myGlobals.headerSize[myGlobals.device[i].datalink] == 0) {
+	    traceEvent(CONST_TRACE_INFO, "NOTE: Header value for DLT_  %d, is zero. " \
+		       "Processing continues OK - don't use the nfs plugin. " \
+		       "Please report this to the ntop-dev list.\n",
+		       myGlobals.device[i].datalink);
+	  }
         }
+      }
       }
     }
 #endif /* AIX */
@@ -1653,10 +1658,9 @@ void startSniffer(void) {
 /* ***************************** */
 
 u_int createDummyInterface(char *ifName) {
-  u_int mallocLen, deviceId;
+  u_int mallocLen, deviceId = myGlobals.numDevices;
   NtopInterface *tmpDevice;
-
-  deviceId = myGlobals.numDevices;    
+  
   mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
   tmpDevice = (NtopInterface*)malloc(mallocLen);
   memset(tmpDevice, 0, mallocLen);    
@@ -1665,7 +1669,7 @@ u_int createDummyInterface(char *ifName) {
 	   sizeof(NtopInterface)*myGlobals.numDevices);
     free(myGlobals.device);
   }
-    
+  
   myGlobals.device = tmpDevice;    
   myGlobals.numDevices++;
   memset(&myGlobals.device[deviceId], 0, sizeof(NtopInterface));
@@ -1679,7 +1683,8 @@ u_int createDummyInterface(char *ifName) {
   myGlobals.device[deviceId].virtualDevice = 0;
   myGlobals.device[deviceId].datalink = DLT_EN10MB;
   myGlobals.device[deviceId].hash_hostTraffic[myGlobals.broadcastEntryIdx] = myGlobals.broadcastEntry;
-  myGlobals.device[deviceId].dummyDevice = 1; /* This is basically a fake device */
+  myGlobals.device[deviceId].dummyDevice  = 1; /* This is basically a fake device */
+  myGlobals.device[deviceId].activeDevice = 1;
 
   if(myGlobals.otherHostEntry != NULL)
     myGlobals.device[deviceId].hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntry;    
