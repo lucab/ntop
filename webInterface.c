@@ -1005,7 +1005,7 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-E <enable lsof/nmap integration (if present)>]");
 #endif
   traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-p <TCP/UDP protocols to monitor> (see man page)]");
 #ifdef WIN32
   traceEvent(TRACE_INFO, "    %s%d KB)>]\n", "[-B <NDIS buffer in Kbytes (default ",
 	     (int)(SIZE_BUF/1024));
