@@ -91,15 +91,15 @@ int execCGI(char* cgiName) {
   putenv("REQUEST_METHOD=GET");
   if(num == 0) putenv("QUERY_STRING=");
 
-  if(snprintf(line, sizeof(line), "PWD=%s", myGlobals.pwd) < 0) 
+  if(snprintf(line, sizeof(line), "WD=%s", myGlobals.pwd) < 0) 
     BufferTooShort();
   putenv(line); /* PWD */
 
-  if(snprintf(line, sizeof(line), "%s/cgi/%s", getenv("PWD"), cgiName) < 0) 
+  if(snprintf(line, sizeof(line), "%s/cgi/%s", myGlobals.pwd, cgiName) < 0) 
     BufferTooShort();
 
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Executing CGI '%s'", line);
+#ifndef DEBUG
+  traceEvent(TRACE_INFO, "Executing CGI '%s' (wd=%s)", line, myGlobals.pwd);
 #endif
 
   if((fd = popen(line, "r")) == NULL) {

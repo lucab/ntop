@@ -169,9 +169,6 @@ extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h,
                         const u_char *p);
 extern void cleanupPacketQueue(void);
 extern void allocateSecurityHostPkts(HostTraffic *srcHost);
-extern int handleIP(u_short port, u_int srcHostIdx,
-		    u_int dstHostIdx, u_int length,
-		    u_short isPassiveSession, int actualDeviceId);
 extern void *dequeuePacket(void* notUsed);
 extern void updateDevicePacketStats(u_int length, int actualDeviceId);
 extern void dumpSuspiciousPacket(int actualDeviceId);

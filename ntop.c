@@ -756,18 +756,14 @@ RETSIGTYPE cleanup(int signo) {
     strings = (char**)backtrace_symbols(array, size);
 
     traceEvent(TRACE_ERROR, "\n\n\n*****ntop error: Signal(%d)\n", signo);
-    printf("\n\n\n*****ntop error: Signal(%d)\n", signo);
     
     traceEvent(TRACE_ERROR, "\n     backtrace is:\n");
-    printf("\n     backtrace is:\n");
     if (size < 2) {
       traceEvent(TRACE_ERROR, "         **unavailable!\n");
-      printf("         **unavailable**\n");
     } else {
       /* Ignore the 0th entry, that's our cleanup() */
       for (i=1; i<size; i++) {
 	traceEvent(TRACE_ERROR, "          %2d. %s\n", i, strings[i]);
-	printf("          %2d. %s\n", i, strings[i]);
       }
     }    
   }

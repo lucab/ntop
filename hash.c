@@ -622,7 +622,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  myGlobals.device[actualDeviceId].hashList[idx] = list;
 
 	  hostFound = 0;
-	  for(currentIdx=0, i=myGlobals.device[actualDeviceId].insertIdx;
+	  for(currentIdx=0, 
+		/* NOTE: we need % below because insertIdx may be beyond the list end */
+		i = (myGlobals.device[actualDeviceId].insertIdx % myGlobals.device[actualDeviceId].actualHashSize);
               currentIdx<myGlobals.device[actualDeviceId].actualHashSize; currentIdx++) {
             if(myGlobals.device[actualDeviceId].hash_hostTraffic[i] == NULL) {
               hostFound = i;
@@ -649,7 +651,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  } else
 	    list->idx = hostFound;
 
-	  myGlobals.device[actualDeviceId].insertIdx = list->idx + 1;
+	  myGlobals.device[actualDeviceId].insertIdx = list->idx + 1; /* NOTE: insertIdx can go beyond the list end */
 	  myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx] = el; /* Insert a new entry */
 	  myGlobals.device[actualDeviceId].hostsno++;
 	  el->hashListBucket = list->idx;

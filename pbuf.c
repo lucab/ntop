@@ -116,14 +116,23 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 /* ************************************ */
 
-int handleIP(u_short port,
-	     u_int srcHostIdx,
-	     u_int dstHostIdx,
-	     u_int length,
-	     u_short isPassiveSession,
+static int handleIP(u_short port,
+	     HostTraffic *srcHost, HostTraffic *dstHost,
+	     u_int length,  u_short isPassiveSession,
 	     int actualDeviceId) {
   int idx;
-  HostTraffic *srcHost, *dstHost;
+
+  if((srcHost == NULL) || (dstHost == NULL)) {
+    traceEvent(TRACE_INFO, "Sanity check failed (4) [Low memory?]");
+    return(-1);
+  }
+
+  if((srcHost->hashListBucket == myGlobals.broadcastEntryIdx)
+     || (srcHost->hashListBucket == myGlobals.otherHostEntryIdx)
+     || (dstHost->hashListBucket == myGlobals.broadcastEntryIdx)
+     || (dstHost->hashListBucket == myGlobals.otherHostEntryIdx)
+     )
+    return;
 
   if(isPassiveSession) {
     /* Emulate non passive session */
@@ -134,58 +143,26 @@ int handleIP(u_short port,
   if(idx == -1)
     return(-1); /* Unable to locate requested index */
 
-  srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-  dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
-
-  if((srcHost == NULL) || (dstHost == NULL)) {
-    traceEvent(TRACE_INFO, "Sanity check failed (4) [Low memory?]");
-    return(-1);
-  }
-
   if(idx != NO_PEER) {
     if(subnetPseudoLocalHost(srcHost)) {
       if(subnetPseudoLocalHost(dstHost)) {
-	if((srcHostIdx != myGlobals.broadcastEntryIdx) 
-	   && (srcHostIdx != myGlobals.otherHostEntryIdx) 
-	   && (!broadcastHost(srcHost)))
-	  srcHost->protoIPTrafficInfos[idx].sentLoc += length;
-	if((dstHostIdx != myGlobals.broadcastEntryIdx) 
-	   && (dstHostIdx != myGlobals.otherHostEntryIdx)
-	   && (!broadcastHost(dstHost)))
-	  dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
+	if(!broadcastHost(srcHost)) srcHost->protoIPTrafficInfos[idx].sentLoc += length;
+	if(!broadcastHost(dstHost)) dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
 	myGlobals.device[actualDeviceId].ipProtoStats[idx].local += length;
       } else {
-	if((srcHostIdx != myGlobals.broadcastEntryIdx) 
-	   && (srcHostIdx != myGlobals.otherHostEntryIdx)
-	   && (!broadcastHost(srcHost)))
-	  srcHost->protoIPTrafficInfos[idx].sentRem += length;
-	if((dstHostIdx != myGlobals.broadcastEntryIdx) 
-	   && (dstHostIdx != myGlobals.otherHostEntryIdx)
-	   && (!broadcastHost(dstHost)))
-	  dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
+	if(!broadcastHost(srcHost)) srcHost->protoIPTrafficInfos[idx].sentRem += length;
+	if(!broadcastHost(dstHost)) dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
 	myGlobals.device[actualDeviceId].ipProtoStats[idx].local2remote += length;
       }
     } else {
       /* srcHost is remote */
       if(subnetPseudoLocalHost(dstHost)) {
-	if((srcHostIdx != myGlobals.broadcastEntryIdx) 
-	   && (srcHostIdx != myGlobals.otherHostEntryIdx)
-	   && (!broadcastHost(srcHost)))
-	  srcHost->protoIPTrafficInfos[idx].sentLoc += length;
-	if((dstHostIdx != myGlobals.broadcastEntryIdx) 
-	   && (dstHostIdx != myGlobals.otherHostEntryIdx)
-	   && (!broadcastHost(dstHost)))
-	  dstHost->protoIPTrafficInfos[idx].rcvdFromRem += length;
+	if(!broadcastHost(srcHost))  srcHost->protoIPTrafficInfos[idx].sentLoc += length;
+	if(!broadcastHost(dstHost))  dstHost->protoIPTrafficInfos[idx].rcvdFromRem += length;
 	myGlobals.device[actualDeviceId].ipProtoStats[idx].remote2local += length;
       } else {
-	if((srcHostIdx != myGlobals.broadcastEntryIdx) 
-	   && (srcHostIdx != myGlobals.otherHostEntryIdx)
-	   && (!broadcastHost(srcHost)))
-	  srcHost->protoIPTrafficInfos[idx].sentRem += length;
-	if((dstHostIdx != myGlobals.broadcastEntryIdx)
-	   && (dstHostIdx != myGlobals.otherHostEntryIdx)
-	   && (!broadcastHost(dstHost)))
-	  dstHost->protoIPTrafficInfos[idx].rcvdFromRem += length;
+	if(!broadcastHost(srcHost)) srcHost->protoIPTrafficInfos[idx].sentRem += length;
+	if(!broadcastHost(dstHost)) dstHost->protoIPTrafficInfos[idx].rcvdFromRem += length;
 	myGlobals.device[actualDeviceId].ipProtoStats[idx].remote += length;
       }
     }
@@ -196,28 +173,24 @@ int handleIP(u_short port,
 
 /* ************************************ */
 
-static void addContactedPeers(HostTraffic *sender,   u_int senderIdx, 
-			      HostTraffic *receiver, u_int receiverIdx,
+static void addContactedPeers(HostTraffic *sender, 
+			      HostTraffic *receiver, 
 			      int actualDeviceId) {
   short found;
 
-  if(senderIdx == receiverIdx)
+  if((sender == NULL) 
+     || (receiver == NULL)
+     || (sender->hashListBucket == receiver->hashListBucket)) {
+    traceEvent(TRACE_ERROR, "Sanity check failed @ addContactedPeers");
     return;
-
-  if((senderIdx != myGlobals.broadcastEntryIdx)
-     && (senderIdx != myGlobals.otherHostEntryIdx)) {
-    if(sender != NULL) {
-      incrementUsageCounter(&sender->contactedSentPeers, receiverIdx, actualDeviceId);
-    }
   }
 
-  /* ******************************* */
+  if((!broadcastHost(sender))  && (sender->hashListBucket != myGlobals.otherHostEntryIdx)) {
+    incrementUsageCounter(&sender->contactedSentPeers, receiver->hashListBucket, actualDeviceId);
+  }
 
-  if((receiverIdx != myGlobals.broadcastEntryIdx) 
-     && (receiverIdx != myGlobals.otherHostEntryIdx)) {
-    if(receiver != NULL) {
-      incrementUsageCounter(&receiver->contactedRcvdPeers, senderIdx, actualDeviceId);
-    }
+  if((!broadcastHost(receiver)) && (receiver->hashListBucket != myGlobals.otherHostEntryIdx)) {
+    incrementUsageCounter(&receiver->contactedRcvdPeers, sender->hashListBucket, actualDeviceId);
   }
 }
 
@@ -495,33 +468,29 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 
 /* ************************************ */
 
-static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
-                              TrafficCounter length, int actualDeviceId) {
-  
-  HostTraffic *srcHost, *dstHost;
+static void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
+                              TrafficCounter length, int actualDeviceId) {  
   unsigned short hourId;
   struct tm t, *thisTime;
 
-  if(/* (srcHostIdx == dstHostIdx) || */
-     (srcHostIdx == NO_PEER) || (dstHostIdx == NO_PEER))
-    return; /* It looks there's something wrong here */
+  if((srcHost == NULL) || (dstHost == NULL)) {
+    traceEvent(TRACE_ERROR, "NULL host detected");
+    return;
+  }
+  
+  if((srcHost == dstHost)
+     || ((srcHost->hashListBucket == myGlobals.otherHostEntryIdx)
+	 && (dstHost->hashListBucket == myGlobals.otherHostEntryIdx)))
+    return;
 
   thisTime = localtime_r(&myGlobals.actTime, &t);
   hourId = thisTime->tm_hour % 24 /* just in case... */;;
 
-  srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-  dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
-
-  if((srcHost == NULL) || (dstHost == NULL))
-    return;
-
   srcHost->pktSent++;
 
-  srcHost->last24HoursBytesSent[hourId] += length,
-    dstHost->last24HoursBytesRcvd[hourId] += length;
+  srcHost->last24HoursBytesSent[hourId] += length, dstHost->last24HoursBytesRcvd[hourId] += length;
 
-  if((dstHostIdx == myGlobals.broadcastEntryIdx)
-     || broadcastHost(dstHost)) {
+  if(broadcastHost(dstHost)) {
     srcHost->pktBroadcastSent++;
     srcHost->bytesBroadcastSent += length;
     myGlobals.device[actualDeviceId].broadcastPkts++;
@@ -543,7 +512,7 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
   dstHost->pktRcvd++;
 
   if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
-    addContactedPeers(srcHost, srcHostIdx, dstHost, dstHostIdx, actualDeviceId);
+    addContactedPeers(srcHost, dstHost, actualDeviceId);
 }
 
 /* ************************************ */
@@ -739,7 +708,7 @@ static void processIpPkt(const u_char *bp,
 
   if((!myGlobals.borderSnifferMode) && (!myGlobals.device[actualDeviceId].dummyDevice))
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
-  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)h->len, actualDeviceId);
+  updatePacketCount(srcHost, dstHost, (TrafficCounter)h->len, actualDeviceId);
   if(!myGlobals.device[actualDeviceId].dummyDevice)
     updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
 
@@ -907,11 +876,11 @@ static void processIpPkt(const u_char *bp,
 	 * Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>
 	 */
 	if(dport < sport) {
-	  if(handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession, actualDeviceId) == -1)
-	    handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession, actualDeviceId);
+	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSession, actualDeviceId) == -1)
+	    handleIP(sport, srcHost, dstHost, length, isPassiveSession, actualDeviceId);
 	} else {
-	  if(handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession, actualDeviceId) == -1)
-	    handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession, actualDeviceId);
+	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSession, actualDeviceId) == -1)
+	    handleIP(dport, srcHost, dstHost, length, isPassiveSession, actualDeviceId);
 	}
       }
     }
@@ -1111,11 +1080,11 @@ static void processIpPkt(const u_char *bp,
 	   (BMS 12-2001)
 	*/
         if (dport < sport) {
-	  if (handleIP(dport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId) == -1)
-	    handleIP(sport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId);
+	  if (handleIP(dport, srcHost, dstHost, length, 0, actualDeviceId) == -1)
+	    handleIP(sport, srcHost, dstHost, length, 0, actualDeviceId);
         } else {
-	  if (handleIP(sport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId) == -1)
-	    handleIP(dport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId);
+	  if (handleIP(sport, srcHost, dstHost, length, 0, actualDeviceId) == -1)
+	    handleIP(dport, srcHost, dstHost, length, 0, actualDeviceId);
         }
 
 	if(nonFullyRemoteSession)
@@ -1928,7 +1897,7 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  srcHost->ipxSent += length, dstHost->ipxRcvd += length;
 	  myGlobals.device[actualDeviceId].ipxBytes += length;
-	  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length, actualDeviceId);
+	  updatePacketCount(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
 	}
       } else if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type < ETHERMTU)) {
 	trp = (struct tokenRing_header*)orig_p;
@@ -1951,7 +1920,7 @@ void processPacket(u_char *_deviceId,
 
 	srcHost->otherSent += length;
 	dstHost->otherRcvd += length;
-	updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length, actualDeviceId);
+	updatePacketCount(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
       } else if((myGlobals.device[deviceId].datalink != DLT_IEEE802)
 		&& (eth_type <= ETHERMTU) && (length > 3)) {
 	/* The code below has been taken from tcpdump */
@@ -2243,7 +2212,7 @@ void processPacket(u_char *_deviceId,
 	    dstHost->otherRcvd += length;
 	    myGlobals.device[actualDeviceId].otherBytes += length;
 	  }
-	  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length, actualDeviceId);
+	  updatePacketCount(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
 	  }
 	}
       } else if(eth_type == ETHERTYPE_IP) {
@@ -2348,7 +2317,7 @@ void processPacket(u_char *_deviceId,
 	  break;
 	}
 
-	updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length, actualDeviceId);
+	updatePacketCount(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
       }
     }
   }
