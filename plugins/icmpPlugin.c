@@ -448,11 +448,13 @@ static void termIcmpFunct(void) {
 
 static PluginInfo icmpPluginInfo[] = {
   { "icmpWatchPlugin",
-    "This plugin handles ICMP packets",
-    "1.0", /* version */
+    "This plugin produces a report about the ICMP packets that ntop has seen. "
+       "The report includes each host, byte and per-type counts (send/received).",
+    "2.0", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "icmpWatch", /* http://<host>:<port>/plugins/icmpWatch */
-    0, /* Active */
+    0, /* Active by default */
+    0, /* Inactive setup */
     NULL, /* no special startup after init */
     termIcmpFunct, /* TermFunc   */
     NULL, /* PluginFunc */

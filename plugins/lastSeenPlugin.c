@@ -397,11 +397,14 @@ static void termLsFunct(void) {
 
 static PluginInfo LsPluginInfo[] = {
   { "LastSeenWatchPlugin",
-    "This plugin handles Last Seen Time Host",
-    "1.0", /* version */
+    "This plugin produces a report about the last time packets were seen from "
+      "each specific host.  A note card database is available for recording "
+      "additional information.",
+    "2.0", /* version */
     "<A HREF=mailto:marangoni@unimc.it>A.Marangoni</A>", 
     "LastSeen", /* http://<host>:<port>/plugins/Ls */
-    0, /* Not Active */
+    0, /* Active by default */
+    0, /* Inactive setup */
     NULL, /* no special startup after init */
     termLsFunct, /* TermFunc   */
     handleLsPacket, /* PluginFunc */

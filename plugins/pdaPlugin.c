@@ -297,15 +297,16 @@ static void termPdaFunct(void) {
 
 static PluginInfo PDAPluginInfo[] = {
   { "PDAPlugin",
-    "ntop PDA Interface",
-    "1.1",            /* version */
+    "This plugin produces a minimal ntop report, suitable for display on a pda.",
+    "2.0",            /* version */
     "<A HREF=mailto:walterbrock@netscape.net>W. Brock</A>", 
     "PDAPlugin",      /* http://<host>:<port>/plugins/PDAPlugin */
-    0,                /* Active */
+    0,                /* Active by default */
+    0,                /* Inactive setup */
     NULL,             /* no special startup after init */
     termPdaFunct,     /* TermFunc   */
     NULL,             /* PluginFunc */
-    handlePDArequest,
+    handlePDArequest, /* http request handler */
     NULL              /* BPF Filter */
   }
 };

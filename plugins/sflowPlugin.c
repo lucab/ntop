@@ -2054,11 +2054,14 @@ static void termsFlowFunct(void) {
 
 static PluginInfo sFlowPluginInfo[] = {
   { "sFlowPlugin",
-    "This plugin is used to tune ntop's sFlow support",
-    "1.2.1", /* version */
+    "This plugin is used to setup, activate and deactivate ntop's sFlow support.<br>"
+      "ntop can both collect and receive sFlow data. Received sFlow data is "
+      "reported as a separate 'NIC' in the regular ntop reports.",
+    "2.0", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "sFlow", /* http://<host>:<port>/plugins/sFlowWatch */
-    0, /* Active */
+    0, /* Active by default */
+    1, /* Inactive setup */
     initsFlowFunct,    /* InitFunc   */
     termsFlowFunct,    /* TermFunc   */
     handleSflowPacket, /* PluginFunc */

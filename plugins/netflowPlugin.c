@@ -752,11 +752,14 @@ static void handleNetFlowPacket(u_char *_deviceId,
 
 static PluginInfo netflowPluginInfo[] = {
   { "NetFlow",
-    "This plugin is used to tune ntop's NetFlow support",
-    "1.2.2", /* version */
+    "This plugin is used to setup, activate and deactivate ntop's NetFlow support.<br>"
+      "ntop can both collect and receive NetFlow data. Received NetFlow data is "
+      "reported as a separate 'NIC' in the regular ntop reports.",
+    "2.0", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
-    0,    /* Active */
+    0, /* Active by default */
+    1, /* Inactive setup */
     initNetFlowFunct, /* InitFunc   */
     termNetflowFunct, /* TermFunc   */
 #ifdef DEBUG_FLOWS

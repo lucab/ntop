@@ -1150,11 +1150,14 @@ static void handleRRDHTTPrequest(char* url) {
 
 static PluginInfo rrdPluginInfo[] = {
   { "rrdPlugin",
-    "This plugin handles RRD packets",
-    "1.0.3", /* version */
+    "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
+      "This plugin also produces the graphs of rrd data, available via a"
+      "link from the various 'Info about host xxxxx' reports.",
+    "2.0", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
-    1, /* Active */
+    1, /* Active by default */ 
+    1, /* Inactive setup */
     initRrdFunct, /* TermFunc   */
     termRrdFunct, /* TermFunc   */
     NULL, /* PluginFunc */
