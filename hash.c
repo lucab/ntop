@@ -710,11 +710,15 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
     free(myflaggedHosts);
   }
 
-  for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++)
-    if(host->portsUsage[i] != NULL) {
-      free(host->portsUsage[i]);
-      host->portsUsage[i] = NULL;
-    }
+  if(host->portsUsage != NULL) {
+    for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++)
+      if(host->portsUsage[i] != NULL) {
+	free(host->portsUsage[i]);
+	host->portsUsage[i] = NULL;
+      }
+
+    free(host->portsUsage);
+  }
 
   element = host->tcpSessionList;
 

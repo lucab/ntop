@@ -1878,7 +1878,7 @@ void resetHostsVariables(HostTraffic* el) {
   memset(el->atNodeType, 0, sizeof(el->atNodeType));
   el->ipxHostName = NULL;
   el->numIpxNodeTypes = 0;
-  memset(el->portsUsage, 0, (sizeof(PortUsage*)*TOP_ASSIGNED_IP_PORTS));
+  el->portsUsage = NULL;
   el->protoIPTrafficInfos = NULL;
   el->tcpSessionList = NULL;
   el->udpSessionList = NULL;

@@ -231,11 +231,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	 if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
 	   el = resurrectHostTrafficInstance(etheraddr_string(ether_addr));
 	 else
-	   el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
-
+	   el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));	 
        } else
 	 el = NULL;
-
+       
        if(el == NULL) {
 	 el = (HostTraffic*)malloc(sizeof(HostTraffic));
 	 memset(el, 0, sizeof(HostTraffic));
@@ -243,6 +242,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
        }
 
        resetHostsVariables(el);
+
+       len = sizeof(PortUsage*)*TOP_ASSIGNED_IP_PORTS;
+       el->portsUsage = (PortUsage**)malloc(len);
+       memset(el->portsUsage, 0, len);
 
        len = (size_t)numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
        el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);

@@ -1660,7 +1660,7 @@ typedef struct hostTraffic {
                    lastCounterBytesRcvd, last24HoursBytesRcvd[25], lastDayBytesRcvd;
 
   /* IP */
-  PortUsage        *portsUsage[TOP_ASSIGNED_IP_PORTS];
+  PortUsage        **portsUsage; /* 0...TOP_ASSIGNED_IP_PORTS */
   TrafficCounter   tcpSentLocally, tcpSentRemotely, udpSentLocally,
                    udpSentRemotely, icmpSent, ospfSent, igmpSent;
   TrafficCounter   tcpReceivedLocally, tcpReceivedFromRemote, udpReceivedLocally,
