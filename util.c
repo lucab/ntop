@@ -2114,7 +2114,7 @@ void traceEvent(int eventTraceLevel, char* file,
 
 #ifndef WIN32
       if(myGlobals.useSyslog != NTOP_SYSLOG_NONE)
-	openlog("ntop", LOG_PID, myGlobals.useSyslog);
+	openlog(DAEMONNAME, LOG_PID, myGlobals.useSyslog);
 #endif
 
 #ifdef WIN32
