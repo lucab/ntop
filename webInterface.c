@@ -3195,6 +3195,10 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
 #endif
 
+#if defined(WIN32)
+  printFeatureConfigInfo(textPrintFlag, "WinPcap version", (char*)PacketGetVersion());
+#endif
+
 #ifdef HAVE_OPENSSL
   printFeatureConfigInfo(textPrintFlag, "OpenSSL Version", (char*)SSLeay_version(0));
 #endif

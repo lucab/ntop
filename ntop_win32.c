@@ -33,6 +33,8 @@ extern char* intoa(struct in_addr addr);
 extern char domainName[];
 char *buildDate;
 char _wdir[256];
+u_char isNtopAservice;
+
 
 /*
   extern char* myGlobals.device;
@@ -414,91 +416,22 @@ int signalCondvar(ConditionalVariable *condvarId) {
 
 void printAvailableInterfaces() {
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
-  int ifIdx=0, defaultIdx = -1, i, numInterfaces = 0;
-  char intNames[32][256];
-  char *tmpDev = pcap_lookupdev(ebuf);
-  
-  if(tmpDev == NULL) {
-    traceEvent(CONST_TRACE_FATALERROR, "Unable to locate default interface (%s)", ebuf);
-    exit(-1);
-  }
+  int i, numInterfaces = 0;
+  pcap_if_t *devpointer;
 
   printf("\nAvailable interfaces (-i <interface index>):\n");
 
-  if(!isWinNT()) {
-    char *ifName = tmpDev;
-
-    for(i=0;; i++) {
-      if(tmpDev[i] == 0) {
-	if(ifName[0] == '\0')
-	  break;
-	else {
-	  printf("   [index=%d] '%s'\n", ifIdx, ifName);
-	  numInterfaces++;
-
-	  if(ifIdx < 32) {
-	    strcpy(intNames[ifIdx], ifName);
-	    if(defaultIdx == -1) {
-	      if(strncmp(intNames[ifIdx], "PPP", 3) /* Avoid to use the PPP interface */
-		 && strncmp(intNames[ifIdx], "ICSHARE", 6)) { /* Avoid to use the internet sharing interface */
-		defaultIdx = ifIdx;
-	      }
-	    }
-	  }
-
-	  ifIdx++;
-	  ifName = &tmpDev[i+1];
-	}
-      }
-    }
-
-    tmpDev = intNames[defaultIdx];
+  if(pcap_findalldevs(&devpointer, ebuf) < 0) {
+	;
   } else {
-    /* WinNT/2K */
-    static char tmpString[128];
-    int i, j,ifDescrPos = 0;
-    unsigned short *ifName; /* UNICODE */
-    char *ifDescr;
+	  for (i = 0; devpointer != 0; i++) {
+	  printf("   [index=%d] %s\n             (%s)\n",
+			numInterfaces++, devpointer->description, devpointer->name);
 
-    ifName = (unsigned short*)tmpDev;
+      devpointer = devpointer->next;
+    } /* for */
+  } /* else */
 
-    while(*(ifName+ifDescrPos) || *(ifName+ifDescrPos-1))
-      ifDescrPos++;
-    ifDescrPos++;	/* Step over the extra '\0' */
-    ifDescr = (char*)(ifName + ifDescrPos); /* cast *after* addition */
-
-    while(tmpDev[0] != '\0') {
-	  char *ifDescription, *parent;
-	  int k;
-
-      for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
-	if(tmpDev[i] != 0)
-	  tmpString[j++] = tmpDev[i];
-      }
-
-      tmpString[j++] = 0;
-	  ifDescription = strdup(ifDescr);
-      ifDescr += strlen(ifDescr)+1;
-			  
-			  parent = strstr(ifDescription, "(");			  
-			  if(parent != NULL) parent[0] = '\0';
-
-			  for(k=strlen(ifDescription)-1; k>1; k--)
-				  if(ifDescription[k] != ' ') break;
-				  else ifDescription[k] = '\0';
-
-
-	  printf("   [index=%d] %s\n             (%s)\n", ifIdx, ifDescription, tmpString);
-	  free(ifDescription);
-      numInterfaces++;
-		 
-      tmpDev = &tmpDev[i+3];
-      strcpy(intNames[ifIdx++], tmpString);
-      defaultIdx = 0;
-    }
-    if(defaultIdx != -1)
-      tmpDev = intNames[defaultIdx]; /* Default */
-  } /* while */
 
   if(numInterfaces == 0) {
     traceEvent(CONST_TRACE_WARNING, "No interfaces available! This application cannot work");
@@ -1720,6 +1653,16 @@ void WINAPI serviceMain(DWORD dwArgc, LPTSTR *lpszArgv)
 
 /* ************************************ */
 
+void ifprint(pcap_if_t *d)
+{
+  /* Name */
+  printf("%s\n",d->name);
+
+  /* Description */
+  if (d->description)
+    printf("\tDescription: %s\n",d->description);
+}
+
 void main(int argc, char **argv)
 {
   // The StartServiceCtrlDispatcher requires this table to specify
@@ -1745,6 +1688,8 @@ void main(int argc, char **argv)
     return;
   }
 
+  isNtopAservice = 0;
+
   // This app may be started with one of three arguments, /i, /r, and
   // /c, or /?, followed by actual program arguments. These arguments
   // indicate if the program is to be installed, removed, run as a
@@ -1761,7 +1706,7 @@ void main(int argc, char **argv)
       bConsole = TRUE;
       runService(argc, argv);
     }
-    else{
+    else {
       printf("\nUnrecognized option: %s\n", argv[1]);
       printf("Available options:\n");
       printf("/i [ntop options] - Install ntop as service\n");
@@ -1783,6 +1728,7 @@ void main(int argc, char **argv)
   printf("Please open the services control panel to start/stop ntop,\n");
   printf("or type ntop /h to see all the available options.\n");
 
+  isNtopAservice = 1;
   if(!StartServiceCtrlDispatcher(serviceTable)) {
     printf("\n%s\n", SZFAILURE);
     AddToMessageLog(TEXT(SZFAILURE));

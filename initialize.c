@@ -991,7 +991,9 @@ void initDevices(char* devices) {
   NtopInterface *tmpDevice;
   char *tmpDev;
 #ifdef WIN32
-  char *ifName, intNames[32][256], intDescr[32][256], *tmpDescr=NULL;
+#define MAX_IF_NAME    256
+  pcap_if_t *devpointer;
+  char intNames[32][MAX_IF_NAME], intDescr[32][MAX_IF_NAME], *tmpDescr=NULL;
   int ifIdx = 0;
   int defaultIdx = -1;
 #endif
@@ -1016,86 +1018,55 @@ void initDevices(char* devices) {
   /* Determine the device name if not specified */
   ebuf[0] = '\0';
 
+	
+  /* ******************************************** */
+
 #ifdef WIN32
-  memset(intNames, 0, sizeof(intNames));
-
-  tmpDev = pcap_lookupdev(ebuf);
-
-  if(tmpDev == NULL) {
-    traceEvent(CONST_TRACE_FATALERROR, "Unable to locate default interface (%s)", ebuf);
+  if(pcap_findalldevs(&devpointer, ebuf) < 0) {
+    traceEvent(CONST_TRACE_FATALERROR, "FATAL ERROR: pcap_findalldevs() call failed [%s]", ebuf);
+    traceEvent(CONST_TRACE_FATALERROR, "FATAL ERROR: Have you instaled winpcap properly?");
     exit(-1);
-  }
+  } else {
+    for (i = 0; devpointer != 0; i++) {
+      traceEvent(CONST_TRACE_NOISY, "Found interface [index=%d] '%s'", ifIdx, devpointer->name);
 
-  ifName = tmpDev;
-
-  if(!isWinNT()) {
-    for(i=0;; i++) {
-      if(tmpDev[i] == 0) {
-	if(ifName[0] == '\0')
-	  break;
-	else {
-	  traceEvent(CONST_TRACE_NOISY, "Found interface [index=%d] '%s'", ifIdx, ifName);
-
-	  if(ifIdx < 32) {
-	    strcpy(intNames[ifIdx], ifName);
-	    strcpy(intDescr[ifIdx], ifName);
-	    if(defaultIdx == -1) {
-	      if(strncmp(intNames[ifIdx], "PPP", 3) /* Avoid to use the PPP interface */
-		 && strncmp(intNames[ifIdx], "ICSHARE", 6)) { /* Avoid to use the internet sharing interface */
-		defaultIdx = ifIdx;
-	      }
-	    }
+	  if(tmpDev == NULL) {
+		tmpDev = devpointer->name;
+		tmpDescr = devpointer->description;
 	  }
 
-	  ifIdx++;
-	  ifName = &tmpDev[i+1];
-	}
+      if(ifIdx < 32) {
+		char *descr;
+
+  	    descr = devpointer->description;
+		/* Sanitize the interface name */
+		for(i=0; i<strlen(descr); i++)
+			if(descr[i] == '(') {
+				descr[i] = '\0';
+				break;
+			}	
+		while(descr[strlen(descr)-1] == ' ')
+			descr[strlen(descr)-1] = '\0';
+
+		strncpy(intNames[ifIdx], devpointer->name, MAX_IF_NAME);
+		strncpy(intDescr[ifIdx], descr, MAX_IF_NAME);
+
+		if(defaultIdx == -1) {
+		  if((!strstr(intNames[ifIdx], "PPP")) /* Avoid to use the PPP interface */
+			 && (!strstr(intNames[ifIdx], "ICSHARE"))  /* Avoid to use the internet sharing interface */
+			 && (!strstr(intNames[ifIdx], "NdisWan"))) { /* Avoid to use the internet sharing interface */
+			defaultIdx = ifIdx;
+			tmpDev = devpointer->name;
+			tmpDescr = devpointer->description;
+		  }
+		}
+
+		ifIdx++;
       }
-    }
 
-    tmpDev   = intNames[defaultIdx];
-    tmpDescr = intDescr[defaultIdx];
-  } else {
-    /* WinNT/2K */
-    static char tmpString[128];
-    int i, j,ifDescrPos = 0;
-    unsigned short *ifName; /* UNICODE */
-    char *ifDescr, *openParent;
-
-    ifName = (unsigned short *)tmpDev;
-
-    while(*(ifName+ifDescrPos) || *(ifName+ifDescrPos-1))
-      ifDescrPos++;
-    ifDescrPos++;	/* Step over the extra '\0' */
-    ifDescr = (char*)(ifName + ifDescrPos); /* cast *after* addition */
-
-    while(tmpDev[0] != '\0') {
-
-      for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
-	if(tmpDev[i] != 0)
-	  tmpString[j++] = tmpDev[i];
-      }
-
-      tmpString[j++] = 0;		 
-      tmpDev = &tmpDev[i+3];
-      tmpDescr = ifDescr;
-      ifDescr += strlen(ifDescr)+1;
-
-      openParent = strstr(tmpDescr, "(");
-      if(openParent != NULL) openParent[0] = '\0';
-      if((defaultIdx == -1) && strstr(tmpDescr, "NdisWan")) continue; /* Skip Interface */
-      while(tmpDescr[strlen(tmpDescr)-1] == ' ') tmpDescr[strlen(tmpDescr)-1] = '\0';
-      strcpy(intDescr[ifIdx], tmpDescr);
-      strcpy(intNames[ifIdx++], tmpString);
-      
-      defaultIdx = 0;
-    }
-    
-    if(defaultIdx != -1) {
-      tmpDev   = intNames[defaultIdx]; /* Default */
-      tmpDescr = intDescr[defaultIdx];
-    }
-  }
+      devpointer = devpointer->next;
+    } /* for */
+  } /* else */
 #endif
 
   if (devices == NULL) {

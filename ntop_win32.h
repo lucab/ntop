@@ -43,6 +43,7 @@
 /* Courtesy of Wies-Software <wies@wiessoft.de> */
 extern char* getadminpass(const char *prompt);
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
+extern u_char isNtopAservice;
 
 extern char _wdir[];
 

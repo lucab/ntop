@@ -34,7 +34,6 @@ static char stateChangeMutexInitialized = 0;
 static pthread_mutex_t stateChangeMutex;
 #endif
 
-
 static SessionInfo *passiveSessions;
 static u_short passiveSessionsLen;
 
@@ -2040,6 +2039,10 @@ void traceEvent(int eventTraceLevel, char* file,
 		int line, char * format, ...) {
   va_list va_ap;
   va_start (va_ap, format);
+
+#ifdef WIN32
+  if(isNtopAservice) return;
+#endif
 
   /* Fix courtesy of "Burton M. Strauss III" <BStrauss@acm.org> */
   if(eventTraceLevel <= myGlobals.traceLevel) {
