@@ -1,0 +1,7 @@
+This directory contains the files for the FreeBSD ntop ports.
+Normally the entire contents would be a .tgz, e.g:
+
+tar cfvz ntop-2.1.92.tgz net/ntop/
+
+These are the 2.1.92 files - they are identical to the 2.2 version
+except for the checksum.

@@ -1,0 +1,10 @@
+--- ntop-2.1.92/ntop/ntop.h	Wed Apr  9 22:53:53 2003
++++ ntop.h	Thu Apr 10 21:15:13 2003
+@@ -224,7 +224,7 @@
+ #endif
+ 
+ #ifdef HAVE_IF_H
+- #include "if.h"              /* OSF1 has it */
++ /* #include "if.h"  Commented out for ports - BMSIII - April 2003 */            /* OSF1 has it */
+ #endif
+ 

@@ -1,0 +1,41 @@
+--- ntop-2.1.92/ntop/configure Apr 10 18:05:23 2003
++++ configure	Thu Apr 10 18:13:06 2003
+@@ -1376,12 +1376,8 @@
+ 
+-NTOP_VERSION_EXTRA=""
++NTOP_VERSION_EXTRA=" FreeBSD ports"
+ 
+-GDCHART_DIRECTORY="gdchart0.94c"
+-GD_DIRECTORY="gd-1.8.3"
+-LIBPNG_DIRECTORY="libpng-1.2.4"
+-ZLIB_DIRECTORY="zlib-1.1.4"
++GDCHART_DIRECTORY=""
++GD_DIRECTORY=""
++LIBPNG_DIRECTORY=""
++ZLIB_DIRECTORY=""
+ 
+-LIBPNG_DIRECTORY=`(cd ../${GDCHART_DIRECTORY}/${GD_DIRECTORY}/${LIBPNG_DIRECTORY} && pwd)`
+-GD_DIRECTORY=`(cd ../${GDCHART_DIRECTORY}/${GD_DIRECTORY} && pwd)`
+-ZLIB_DIRECTORY=`(cd ../${GDCHART_DIRECTORY}/${ZLIB_DIRECTORY} && pwd)`
+-GDCHART_DIRECTORY=`(cd ../${GDCHART_DIRECTORY} && pwd)`
+@@ -8215,7 +8215,7 @@
+         ac_disable_gdchart="yes"
+         HAS_WARNING="yes"
+     else
+-        # Expansion of NTOP_APPEND_LIBS(${GDCHART_LIB}, gdchart)
++        # Expansion of NTOP_APPEND_LIBS(${GDCHART_LIB}, gdc)
+     if test ".${GDCHART_LIB}" != "."; then
+         rc=`(echo $LIBS | grep '${GDCHART_LIB} ' > /dev/null 2> /dev/null; echo $?)`
+         if [ $rc -eq 1 ]; then
+@@ -8229,9 +8229,9 @@
+             esac
+         fi
+         if test ".gdchart" != "."; then
+-            rc=`(echo $LIBS | grep '\-lgdchart ' > /dev/null 2> /dev/null; echo $?)`
++            rc=`(echo $LIBS | grep '\-lgdc ' > /dev/null 2> /dev/null; echo $?)`
+             if [ $rc -eq 1 ]; then
+-                LIBS="$LIBS -lgdchart"
++                LIBS="$LIBS -lgdc"
+             fi
+         fi
+     fi
