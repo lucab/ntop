@@ -120,7 +120,7 @@ static int readHTTPheader(char* theRequestedURL,
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
-			  struct timeval *httpRequestedAt,
+			  int iHRThttpRequestedAt,
                           int *usedFork,
                           char *agent,
                           char *referer,
@@ -138,7 +138,7 @@ static int readHTTPheader(char* theRequestedURL,
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
-			  struct timeval *httpRequestedAt,
+			  int iHRThttpRequestedAt,
                           int *usedFork,
                           char *agent,
                           char *referer, int isPostMethod);
@@ -146,7 +146,7 @@ static int returnHTTPPage(char* pageName,
 
 static int generateNewInternalPages(char* pageName);
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
-static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent);
+static void logHTTPaccess(int rc, int iHRThttpRequestedAt, u_int gzipBytesSent);
 static void returnHTTPspecialStatusCode(int statusIdx, char *additionalText);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 static char compressedFilePath[256];
@@ -740,21 +740,16 @@ void termAccessLog(void) {
 
 /* ************************* */
 
-static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent) {
+static void logHTTPaccess(int rc, int iHRThttpRequestedAt, u_int gzipBytesSent) {
  char theDate[48], myUser[64], buf[24];
- struct timeval loggingAt;
  unsigned long msSpent;
  char theZone[6];
  unsigned long gmtoffset;
   struct tm t;
 
   if(myGlobals.accessLogFd != NULL) {
-   gettimeofday(&loggingAt, NULL);
-
-   if(httpRequestedAt != NULL)
-     msSpent = (unsigned long)(delta_time(&loggingAt, httpRequestedAt)/1000);
-   else
-     msSpent = 0;
+   hiresIntervalTimerStopAbs(iHRThttpRequestedAt);  
+   msSpent = hiresIntervalTimerElapsed_us(iHRThttpRequestedAt);
 
    /* Use standard Apache format per http://httpd.apache.org/docs/logs.html */
    strftime(theDate, sizeof(theDate), CONST_APACHELOG_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
@@ -871,7 +866,7 @@ static void returnHTTPspecialStatusCode(int statusFlag, char *additionalText) {
     sendString(additionalText);
   }
 
-  logHTTPaccess(HTTPstatus[statusIdx].statusCode, NULL, 0);
+  logHTTPaccess(HTTPstatus[statusIdx].statusCode, -1, 0);
 }
 
 /* *******************************/
@@ -1919,7 +1914,7 @@ int generateNew1InternalPages(char* pageName) {
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
-			  struct timeval *httpRequestedAt,
+			  int iHRThttpRequestedAt,
                           int *usedFork,
                           char *agent,
                           char *referer,
@@ -1929,7 +1924,7 @@ static int returnHTTPPage(char* pageName,
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
-			  struct timeval *httpRequestedAt,
+			  int iHRThttpRequestedAt,
                           int *usedFork,
                           char *agent,
                           char *referer, int isPostMethod)
@@ -2330,6 +2325,10 @@ static int returnHTTPPage(char* pageName,
 #endif
     returnHTTPpageNotFound(NULL);
     printTrailer=0;
+  } else if(strncasecmp(pageName, CONST_SHOW_HIRESTIMERS_HTML, strlen(CONST_SHOW_HIRESTIMERS_HTML)) == 0) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printTrailer=0;
+    printHiresTimersStatusReport();
 #ifdef CFG_MULTITHREADED
   } else if(strncasecmp(pageName, CONST_SHOW_MUTEX_HTML, strlen(CONST_SHOW_MUTEX_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -3090,7 +3089,7 @@ static int returnHTTPPage(char* pageName,
       compressAndSendData(&gzipBytesSent);
 #endif
     closeNwSocket(&myGlobals.newSock);
-    logHTTPaccess(200, httpRequestedAt, gzipBytesSent);
+    logHTTPaccess(200, iHRThttpRequestedAt, gzipBytesSent);
     exit(0);
   } else
     return(errorCode);
@@ -3355,11 +3354,10 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
 /* ************************* */
 
-void handleHTTPrequest(HostAddr from) {
+void handleHTTPrequest(HostAddr from, int iHRThttpRequestedAt) {
   int skipLeading, postLen, usedFork = 0;
   char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256], *requestedURLCopy=NULL;
   int rc, i;
-  struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
 #ifdef MAKE_WITH_I18N
   char workLanguage[256];
@@ -3373,7 +3371,7 @@ void handleHTTPrequest(HostAddr from) {
 
   myGlobals.numHandledRequests[myGlobals.newSock > 0]++;
 
-  gettimeofday(&httpRequestedAt, NULL);
+  hiresIntervalTimerStart(iHRThttpRequestedAt);
 
   if(from.hostFamily == AF_INET)
     from.Ip4Address.s_addr = ntohl(from.Ip4Address.s_addr);
@@ -3596,7 +3594,7 @@ void handleHTTPrequest(HostAddr from) {
  #endif
 
   rc = returnHTTPPage(&requestedURL[1], postLen,
-		      &from, &httpRequestedAt, &usedFork,
+		      &from, iHRThttpRequestedAt, &usedFork,
                       agent,
                       referer,
                       requestedLanguage,
@@ -3608,7 +3606,7 @@ void handleHTTPrequest(HostAddr from) {
 
 #else
   rc =  returnHTTPPage(&requestedURL[1], postLen,
-		       &from, &httpRequestedAt, &usedFork,
+		       &from, iHRThttpRequestedAt, &usedFork,
 		       agent, referer, isPostMethod);
 #endif
 
@@ -3622,7 +3620,6 @@ void handleHTTPrequest(HostAddr from) {
 #endif
 #endif
 
-  
   if(rc == 0) {
     myGlobals.numSuccessfulRequests[myGlobals.newSock > 0]++;
 
@@ -3634,7 +3631,7 @@ void handleHTTPrequest(HostAddr from) {
       gzipBytesSent = 0;
 
     if(!usedFork)
-      logHTTPaccess(200, &httpRequestedAt, gzipBytesSent);
+      logHTTPaccess(200, iHRThttpRequestedAt, gzipBytesSent);
 
   } else if(rc == FLAG_HTTP_INVALID_PAGE) {
     returnHTTPpageNotFound(NULL);

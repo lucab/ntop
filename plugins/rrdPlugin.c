@@ -68,9 +68,10 @@ int optind, opterr;
 static unsigned short initialized = 0, active = 0, dumpInterval, dumpDetail;
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
-static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
+static Counter numTotalRRDUpdates = 0,  numPriorTotalRRDupdates = 0;
 static unsigned long numRuns = 0, numRRDerrors = 0;
 static time_t start_tm, end_tm, rrdTime;
+static int iHRT;
 
 #ifdef CFG_MULTITHREADED
 pthread_t rrdThread;
@@ -1151,7 +1152,6 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   addRrdDelay();
   rc = rrd_update(argc, argv);
 
-  numRRDUpdates++;
   numTotalRRDUpdates++;
 
   if(rrd_test_error()) {
@@ -1410,6 +1410,8 @@ static void commonRRDinit(void) {
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     DirPerms %04o", myGlobals.rrdDirectoryPermissions);
 #endif
 #endif /* RRD_DEBUG */
+
+  iHRT = hiresIntervalTimerAlloc("RRD");
 
   initialized = 1;
 }
@@ -2199,6 +2201,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   char rrdPath[512];
   int cycleCount=0;
   ProtocolsList *protoList;
+  float elapsed;
   char dname[256];
   int i;
 
@@ -2309,7 +2312,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
     if(active == 0) return(NULL);
 
-    numRRDUpdates = 0;
+    hiresIntervalTimerStart(iHRT);
     numRuns++;
     rrdTime =  time(NULL);
 
@@ -2685,10 +2688,15 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  }
     }
 
-#ifdef RRD_DEBUG
-    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: %lu RRDs updated (%lu total updates)",
-	       (unsigned long)(numRRDUpdates), (unsigned long)numTotalRRDUpdates);
-#endif
+    elapsed = hiresIntervalTimerStopAbs(iHRT);
+    if((numTotalRRDUpdates - numPriorTotalRRDupdates) > 0) {
+      traceEvent(CONST_TRACE_NOISY,
+                 "RRD: %lu RRDs updated in %.6f seconds (%.6f per update)",
+                 (unsigned long)(numTotalRRDUpdates - numPriorTotalRRDupdates),
+                 elapsed,
+                 elapsed / (numTotalRRDUpdates - numPriorTotalRRDupdates));
+    }
+    numPriorTotalRRDupdates = numTotalRRDUpdates;
 
     /*
      * If it's FLAG_NTOPSTATE_STOPCAP, and we're still running, then this
@@ -2746,7 +2754,7 @@ static int initRRDfunct(void) {
 #endif
 
   fflush(stdout);
-  numTotalRRDUpdates = 0;
+  numTotalRRDUpdates = numPriorTotalRRDupdates = 0;
   
   active = 1; /* Show we're running */  
   return(0);
@@ -2789,6 +2797,8 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   traceEvent(CONST_TRACE_INFO, "RRD: Thanks for using the rrdPlugin");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Done");
   fflush(stdout);
+
+  hiresIntervalTimerFree(iHRT);
 
   initialized = 0; /* Reinit on restart */
   active = 0;

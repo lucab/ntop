@@ -743,6 +743,9 @@ void initCounters(void) {
   if(myGlobals.gdVersionGuessValue != NULL)
     traceEvent(CONST_TRACE_INFO, "GDVERCHK: ... as %s", myGlobals.gdVersionGuessValue);
 
+  for(i=0; i<MAX_INTERNALTIMEINTERVALS; i++)
+    hiresIntervalTimerClear(i);
+
 }
 
 
@@ -952,6 +955,7 @@ void reinitMutexes (void) {
   createMutex(&myGlobals.packetProcessMutex);
   createMutex(&myGlobals.hostsHashMutex);
   createMutex(&myGlobals.securityItemsMutex);
+  createMutex(&myGlobals.hiresTimerAllocMutex);
 
  #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.runningPref.numericFlag == 0) {

@@ -1876,6 +1876,15 @@ typedef enum {
 
 /* *********************************** */
 
+typedef struct hiresTimer {
+  Counter count,
+          usElapsed;
+  struct timeval startTm;
+  char   *name;
+} HiresTimer;
+
+/* *************************************************************** */
+
 #define BROADCAST_HOSTS_ENTRY    0
 #define OTHER_HOSTS_ENTRY        1
 #define FIRST_HOSTS_ENTRY        2 /* first available host entry */
@@ -2087,6 +2096,7 @@ typedef struct ntopGlobals {
   PthreadMutex fcSessionsMutex;
   PthreadMutex purgePortsMutex;
   PthreadMutex securityItemsMutex;
+  PthreadMutex hiresTimerAllocMutex;
 
   pthread_t handleWebConnectionsThreadId;
 
@@ -2332,5 +2342,8 @@ typedef struct ntopGlobals {
 #ifdef PARM_ENABLE_EXPERIMENTAL
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */
 #endif
+
+  HiresTimer hiresTimers[MAX_INTERNALTIMEINTERVALS];
+
 } NtopGlobals;
 

@@ -5340,6 +5340,49 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
 
 /* ******************************** */
 
+void printHiresTimersStatusReport(void) {
+
+  int i, rc;
+  char buf[500],
+       bufTime[LEN_TIMEFORMAT_BUFFER];
+  struct tm t;
+
+  memset(&buf, 0, sizeof(buf));
+  memset(&bufTime, 0, sizeof(bufTime));
+
+  sendString("<p>"TABLE_ON"<table border=\"1\">\n"
+             "<tr><th>Timer</th>"
+             "<th>Timer Name</th>"
+             "<th>Count</th>"
+             "<th>Elapsed</th>"
+             "<th>Start</th></tr>");
+
+   for(i=0; i<MAX_INTERNALTIMEINTERVALS; i++) {
+     if(myGlobals.hiresTimers[i].name != NULL) {
+       rc =strftime(bufTime, sizeof(bufTime), 
+                    "%Y-%m-%d %H:%M:%S",
+                    localtime_r(&myGlobals.hiresTimers[i].startTm.tv_sec, &t));
+
+       safe_snprintf(buf, sizeof(buf),
+                     "<tr><td align=\"right\">%d.</td>"
+                       "<td>%s</td><td align=\"right\">%llu</td><td align=\"right\">%.6f</td>"
+                       "<td>%s.%06ld</td></tr>\n", 
+                     i,
+                     myGlobals.hiresTimers[i].name,
+                     myGlobals.hiresTimers[i].count,
+                     hiresIntervalTimerElapsed_s(i),
+                     bufTime,
+                     myGlobals.hiresTimers[i].startTm.tv_usec);
+       sendString(buf);
+     }
+   }
+
+  sendString("</table>"TABLE_OFF"\n");
+
+}
+
+/* ******************************** */
+
 #ifdef CFG_MULTITHREADED
 void printMutexStatusReport(int textPrintFlag) {
   if(myGlobals.runningPref.disableMutexExtraInfo) {
@@ -5374,6 +5417,7 @@ void printMutexStatusReport(int textPrintFlag) {
   printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
   printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
   printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex,  "securityItemsMutex");
+  printMutexStatus(textPrintFlag, &myGlobals.hiresTimerAllocMutex,  "hiresTimerAllocMutex");
   sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
 
 }
@@ -7942,6 +7986,10 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 #endif
   HostAddr remote_ipaddr;
   int from_len = sizeof(from);
+  int iHRThttpRequestedAt;
+
+  iHRThttpRequestedAt = hiresIntervalTimerAlloc("HTTP Request");
+
   errno = 0;
   
   if(FD_ISSET(myGlobals.sock, fdmask)) {
@@ -8065,10 +8113,10 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 	    }
 	    else
 
-	      handleHTTPrequest(remote_ipaddr);	    
+	      handleHTTPrequest(remote_ipaddr, iHRThttpRequestedAt);
 	}
 #else
-	handleHTTPrequest(remote_ipaddr);
+	handleHTTPrequest(remote_ipaddr, iHRThttpRequestedAt);
 	
 #endif /* HAVE_LIBWRAP */
 
@@ -8076,6 +8124,8 @@ static void handleSingleWebConnection(fd_set *fdmask) {
     } else {
 	traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d: %s)", errno, strerror(errno));
     }
+
+  hiresIntervalTimerFree(iHRThttpRequestedAt);
 }
 
 /* ******************* */

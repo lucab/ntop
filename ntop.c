@@ -654,10 +654,13 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
 void* scanFingerprintLoop(void* notUsed _UNUSED_) {
   HostTraffic *el;
-  int deviceId, countScan, countResolved;
+  int deviceId, countScan, countResolved, iHRT;
 #ifdef FINGERPRINT_DEBUG
   int countCycle=0;
 #endif
+  float elapsed;
+
+  iHRT = hiresIntervalTimerAlloc("Scan Fingerprints");
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Fingerprint scan thread running...");
 
@@ -673,6 +676,7 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     HEARTBEAT(0, "scanFingerprintLoop(), sleep()...woke", NULL);
+    hiresIntervalTimerStart(iHRT);
     if(myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
 #ifdef FINGERPRINT_DEBUG
@@ -697,15 +701,26 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
 
     }
 
+    elapsed = hiresIntervalTimerStopAbs(iHRT);
+
     if(countScan > 0)
-      traceEvent(CONST_TRACE_NOISY, "OSFP: scanFingerprintLoop() checked %d, resolved %d",
-                 countScan, countResolved);
+      if((iHRT >= 0) && (iHRT < MAX_INTERNALTIMEINTERVALS)) {
+        traceEvent(CONST_TRACE_NOISY, "OSFP: scanFingerprintLoop() checked %d, resolved %d (%.6f per check)",
+                   countScan,
+                   countResolved,
+                   elapsed / countScan);
+      } else {
+        traceEvent(CONST_TRACE_NOISY, "OSFP: scanFingerprintLoop() checked %d", countScan, countResolved);  
+      }
 
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Fingerprint Scan thread (%ld) terminated", 
 	     myGlobals.scanFingerprintsThreadId);
   myGlobals.nextFingerprintScan = 0;
+
+  hiresIntervalTimerFree(iHRT);
+
   return(NULL); 
 }
 #endif
@@ -1077,6 +1092,7 @@ RETSIGTYPE cleanup(int signo) {
   tryLockMutex(&myGlobals.purgePortsMutex, "cleanup");
   deleteMutex(&myGlobals.purgePortsMutex);
   tryLockMutex(&myGlobals.securityItemsMutex, "cleanup");
+  tryLockMutex(&myGlobals.hiresTimerAllocMutex, "cleanup");
   deleteMutex(&myGlobals.securityItemsMutex);
   /* DO NOT DO deleteMutex(&myGlobals.logViewMutex); - need it for the last traceEvent()s */
 #endif

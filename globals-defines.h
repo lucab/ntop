@@ -1012,6 +1012,11 @@
  * FibreChannel/SCSI constants
  */
 
+/* 
+ * Number of hires timers
+ */
+#define MAX_INTERNALTIMEINTERVALS           10
+
 /*
  * This is the maximum number of FibreChannel domains to report on at once.
  */
@@ -1040,6 +1045,11 @@
  * Theoretical maximum number of VSANs
  */
 #define MAX_VSANS               4095
+
+/*
+ * Number of internal hires timers to maintain
+ */
+#define MAX_INTERNALTIMEINTERVALS           10
 
 /*
  * These are the constants used by the ntop web server to match requests and
@@ -1136,6 +1146,7 @@
 #define CONST_SCSI_STATUS_HTML              "ScsiStatus.html"
 #define CONST_SCSI_TIMES_HTML               "ScsiTimes.html"
 #define CONST_SCSI_TM_HTML                  "ScsiTMInfo.html"
+#define CONST_SHOW_HIRESTIMERS_HTML         "showHiresTimers.html"
 #define CONST_SHOW_MUTEX_HTML               "showMutex.html"
 #define CONST_SHOW_PLUGINS_HTML             "showPlugins.html"
 #define CONST_SHOW_PORT_TRAFFIC_HTML        "showPortTraffic.html"

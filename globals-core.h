@@ -101,6 +101,12 @@ extern void unescape_url(char *url);
 extern void revertSlash(char *str, int mode);
 extern void revertDoubleColumn(char *str);
 extern void checkUserIdentity(int userSpecified);
+extern long timeval_subtractl(struct timeval x, struct timeval y);
+extern float timeval_subtract(struct timeval x, struct timeval y);
+extern int hiresIntervalTimerAlloc(char *name);
+extern float hiresIntervalTimerStopAbs(int iHRT);
+extern Counter hiresIntervalTimerElapsed_us(int i);
+extern float hiresIntervalTimerElapsed_s(int i);
 
 /****** function declarations ***** */
 
@@ -628,7 +634,6 @@ extern unsigned short isOKtoSave(u_int32_t addr,
 				 u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], 
 				 u_int32_t blackNetworks[MAX_NUM_NETWORKS][3],
 				 u_short numWhiteNets, u_short numBlackNets);
-extern float timeval_subtract(struct timeval x, struct timeval y);
 extern void freePortsUsage(PortUsage *ports);
 extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
 
@@ -904,5 +909,57 @@ int getdomainname(char *name, size_t len);
 /* Stringification */
 #define xstr(s) str(s)
 #define str(s) #s
+
+/* **********************************************************
+   hi res timing tools
+   (except for the one that returns a value we use inline macros for speed!
+   ********************************************************** */
+
+#define hiresIntervalTimerClear(i) \
+ if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) { \
+   myGlobals.hiresTimers[i].count = 0; \
+   myGlobals.hiresTimers[i].usElapsed = 0; \
+   memset(&(myGlobals.hiresTimers[i].startTm), 0, sizeof(struct timeval)); \
+ }
+
+#define hiresIntervalTimerFree(i) \
+ if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) { \
+   accessMutex(&myGlobals.hiresTimerAllocMutex, "free"); \
+   if(myGlobals.hiresTimers[i].name != NULL) free(myGlobals.hiresTimers[i].name); \
+   hiresIntervalTimerClear(i); \
+   releaseMutex(&myGlobals.hiresTimerAllocMutex); \
+   i = -1; \
+ }
+
+#define hiresIntervalTimerStart(i) \
+ if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) { \
+   gettimeofday(&(myGlobals.hiresTimers[i].startTm), NULL); \
+ }
+
+#define hiresIntervalTimerStartDup(i, j) \
+ if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS) && (j>=0) && (j<MAX_INTERNALTIMEINTERVALS)) { \
+   memmove(&(myGlobals.hiresTimers[i].startTm), &(myGlobals.hiresTimers[i].startTm), sizeof(struct timeval)); \
+ }
+
+#define hiresIntervalTimerStopIncr(i) \
+ if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) { \
+   struct timeval hiresEndTm; \
+   gettimeofday(&hiresEndTm, NULL); \
+   myGlobals.hiresTimers[i].count++; \
+   myGlobals.hiresTimers[i].usElapsed += timeval_subtractl(hiresEndTm, (myGlobals.hiresTimers[i].startTm)); \
+ }
+
+#define hiresIntervalTimerStats(i, t, what) \
+ if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) { \
+    if(myGlobals.hiresTimers[i].count > 0) \
+      traceEvent(CONST_TRACE_INFO, \
+                 "STATS: %20s %6.2fus per %s (%llu %s(s), %lluus total)", \
+                 t, \
+                 (float)myGlobals.hiresTimers[i].usElapsed / (float)myGlobals.hiresTimers[i].count, \
+                 what, \
+                 myGlobals.hiresTimers[i].count, \
+                 what, \
+                 myGlobals.hiresTimers[i].usElapsed); \
+ }
 
 #endif /* _GLOBALS_CORE_H */
