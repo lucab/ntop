@@ -23,14 +23,16 @@
 #ifndef NTOP_H
 #define NTOP_H
 
-/* 
-   On some systems these defines make reentrant library 
+/*
+   On some systems these defines make reentrant library
    routines available.
 
    Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
 */
 #define _REENTRANT
-#define _THREAD_SAFE
+#if !defined(_THREAD_SAFE)
+# define _THREAD_SAFE
+#endif
 
 #if defined(HAVE_CONFIG_H)
 # include "config.h"
@@ -645,7 +647,7 @@ typedef struct {
   u_short last60MinutesThptIdx, last24HoursThptIdx, last30daysThptIdx;
 
   SimpleProtoTrafficInfo tcpGlobalTrafficStats, udpGlobalTrafficStats, icmpGlobalTrafficStats;
-  
+
 #ifdef MULTITHREADED
   pthread_t pcapDispatchThreadId;
 #endif
@@ -1175,7 +1177,7 @@ typedef struct atNBPheader {
 
 typedef struct usageCounter {
   TrafficCounter value;
-  u_int peersIndexes[MAX_NUM_CONTACTED_PEERS]; 
+  u_int peersIndexes[MAX_NUM_CONTACTED_PEERS];
 } UsageCounter;
 
 /* *********************** */
@@ -1221,9 +1223,9 @@ typedef struct hostTraffic
 {
   struct in_addr hostIpAddress;
    time_t         firstSeen;
-  time_t         lastSeen;     /* time when this host has 
+  time_t         lastSeen;     /* time when this host has
 				  sent/received some data  */
-  time_t         nextDBupdate; /* next time when the DB entry 
+  time_t         nextDBupdate; /* next time when the DB entry
 				  for this host will be updated */
   u_char         ethAddress[ETHERNET_ADDRESS_LEN];
   u_char         instanceInUse; /* If so, this instance cannot be purged */
@@ -1237,7 +1239,7 @@ typedef struct hostTraffic
   char           nbNodeType, *nbHostName, *nbDomainName;
 
   /* AppleTalk*/
-  u_short        atNetwork; 
+  u_short        atNetwork;
   u_char         atNode;
   char           *atNodeName;
 
@@ -1246,13 +1248,13 @@ typedef struct hostTraffic
   u_short        ipxNodeType;
 
   fd_set         flags;
-  TrafficCounter pktSent, pktReceived, 
+  TrafficCounter pktSent, pktReceived,
     pktDuplicatedAckSent, pktDuplicatedAckRcvd;
   TrafficCounter lastPktSent, lastPktReceived;
   TrafficCounter pktBroadcastSent, bytesBroadcastSent;
   TrafficCounter pktMulticastSent, bytesMulticastSent,
                  pktMulticastRcvd, bytesMulticastRcvd;
-  TrafficCounter lastBytesSent, lastHourBytesSent, 
+  TrafficCounter lastBytesSent, lastHourBytesSent,
     bytesSent, bytesSentLocally, bytesSentRemotely;
   TrafficCounter lastBytesReceived, lastHourBytesReceived, bytesReceived,
                  bytesReceivedLocally, bytesReceivedFromRemote;
@@ -1272,7 +1274,7 @@ typedef struct hostTraffic
   /* Interesting TCP Packets */
   UsageCounter synPktsSent, rstPktsSent, synFinPktsSent, finPushUrgPktsSent, nullPktsSent;
   UsageCounter synPktsRcvd, rstPktsRcvd, synFinPktsRcvd, finPushUrgPktsRcvd, nullPktsRcvd;
-  
+
   /* non IP */
   IcmpHostInfo    *icmpInfo;
   TrafficCounter  ipxSent, ipxReceived;
