@@ -29,15 +29,15 @@ static u_char printedHashWarning = 0;
 u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 			    u_char *ether_addr,
 			    short* useIPAddressForSearching) {
-  u_int idx;
+  u_int idx = 0;
 
-  if(((*useIPAddressForSearching) == 1) || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
-    if(accuracyLevel == LOW_ACCURACY_LEVEL) {
+  if(((*useIPAddressForSearching) == 1) 
+     || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
+    if(accuracyLevel <= MEDIUM_ACCURACY_LEVEL) 
       idx = otherHostEntryIdx;
-    } else {
-      idx = 0;
+    else 
       memcpy(&idx, &hostIpAddress->s_addr, 4);
-    }
+    
     (*useIPAddressForSearching) = 1;
   } else if(memcmp(ether_addr, /* 0 doesn't matter */
 		   device[0].hash_hostTraffic[broadcastEntryIdx]->ethAddress,
@@ -49,27 +49,24 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
     (*useIPAddressForSearching) = 0;
   } else if ((hostIpAddress->s_addr == 0x0)
 	     || (hostIpAddress->s_addr == 0x1)) {
-    if(accuracyLevel == LOW_ACCURACY_LEVEL) {
+    if(accuracyLevel  <= MEDIUM_ACCURACY_LEVEL) 
       idx = otherHostEntryIdx;
-    } else {
-      idx = 0;
+    else 
       memcpy(&idx, &hostIpAddress->s_addr, 4);
-    }
+    
     (*useIPAddressForSearching) = 1;
   } else if(isBroadcastAddress(hostIpAddress)) {
     idx = broadcastEntryIdx;
     (*useIPAddressForSearching) = 1;
   } else if(isPseudoLocalAddress(hostIpAddress)) {
-    memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));
+    memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));    
     (*useIPAddressForSearching) = 0;
   } else {
-    if(accuracyLevel == LOW_ACCURACY_LEVEL) {
+    if(accuracyLevel <= MEDIUM_ACCURACY_LEVEL) 
       idx = otherHostEntryIdx;
-    } else {
-      idx = 0; /* reset the whole variable */
+    else
       memcpy(&idx, &hostIpAddress->s_addr, 4); /* set what's needed */
-    }
-
+    
     (*useIPAddressForSearching) = 1;
   }
 
@@ -80,7 +77,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 	       etheraddr_string(ether_addr),
 	       (*useIPAddressForSearching), idx);
   else
-    traceEvent(TRACE_INFO, "computeInitialHashIdx(<>/%s/%d) = %u\n",
+    traceEvent(TRACE_INFO, "computeInitialHashIdx(%s/%d) = %u\n",
 	       etheraddr_string(ether_addr),
 	       (*useIPAddressForSearching), idx);
 #endif

@@ -319,7 +319,7 @@ void initCounters(int _mergeInterfaces) {
 
   broadcastEntryIdx = 0;
 
-  if(accuracyLevel == LOW_ACCURACY_LEVEL) {
+  if(accuracyLevel <= MEDIUM_ACCURACY_LEVEL) {
     otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
     memset(otherHostEntry, 0, sizeof(HostTraffic));
 

@@ -199,7 +199,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  }
 	}
       } else {       	
-	if(((accuracyLevel == LOW_ACCURACY_LEVEL) && (idx == otherHostEntryIdx))
+	if(((accuracyLevel <= MEDIUM_ACCURACY_LEVEL) && (idx == otherHostEntryIdx))
 	   || (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
 	  hostFound = 1;
 	  break;
