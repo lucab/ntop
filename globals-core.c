@@ -678,7 +678,7 @@ void initNtop(char *devices) {
   }
 
 
-  if(myGlobals.runningPref.skipVersionCheck == TRUE) {
+  if(myGlobals.runningPref.skipVersionCheck != TRUE) {
 #ifdef CFG_MULTITHREADED
     {
       pthread_t myThreadId;

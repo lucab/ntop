@@ -6718,6 +6718,10 @@ void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                            pref->P3Puri,
                            "none");
 
+  printParameterConfigInfo(textPrintFlag, "--skip-version-check",
+                           pref->skipVersionCheck == 1 ? "Yes" : "No",
+                           "No");
+
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   printParameterConfigInfo(textPrintFlag, "--ssl-watchdog",
                            pref->useSSLwatchdog == 1 ? "Yes" : "No",

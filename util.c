@@ -2566,7 +2566,11 @@ void traceEvent(int eventTraceLevel, char* file,
     time_t theTime = time(NULL);
     struct tm t;
     char bufTime[LEN_TIMEFORMAT_BUFFER];
+#ifndef CHKVER_DEBUG
     char buf[LEN_GENERAL_WORK_BUFFER];
+#else
+    char buf[LEN_CHECKVERSION_BUFFER];
+#endif
     char bufMsg[LEN_GENERAL_WORK_BUFFER];
     char bufMsgID[LEN_MEDIUM_WORK_BUFFER];
     char bufLineID[LEN_MEDIUM_WORK_BUFFER];
