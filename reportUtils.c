@@ -2977,7 +2977,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "printAllSessions-2");
 #endif
-
+    
     /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
     if(strcmp(el->hostNumIpAddress, el->hostSymIpAddress) != 0) {
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
@@ -3626,6 +3626,17 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString(buf);
     }
   }
+
+#ifdef HAVE_RRD_H
+  if(el->hostNumIpAddress[0] != '\0') {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		"[ <A HREF=\"/plugins/rrdPlugin?action=list&key=hosts/%s&title=host %s\">Show</A> ]</TD></TR>\n",
+		getRowColor(), "RRD Stats", el->hostNumIpAddress,
+		el->hostSymIpAddress[0] != '\0' ? el->hostSymIpAddress : el->hostNumIpAddress) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+#endif
 
   if(haveTrafficHistory()) {
     if(el->hostNumIpAddress[0] != '\0') {
