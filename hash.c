@@ -1126,6 +1126,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 	if(freeEntry) {
 	  /* updateHostTraffic(device[actDevice].hash_hostTraffic[idx]); */
 	  freeHostInfo(actDevice, idx);
+	  traceEvent(TRACE_INFO, "Host purged (%d hosts purged)", numFreedBuckets);
 	  numFreedBuckets++;
 	} 
       }
