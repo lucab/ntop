@@ -3513,7 +3513,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
 #endif
 
-
   /* *************************** */
 
 #ifdef MAKE_WITH_XMLDUMP
@@ -3618,70 +3617,110 @@ void printNtopConfigInfo(int textPrintFlag) {
                                 "# Handled Requests",
                                 myGlobals.webPort,
                                 myGlobals.numHandledRequests[1], 
+#ifdef HAVE_OPENSSL
                                 myGlobals.sslPort,
+#else
+				0,
+#endif
                                 myGlobals.numHandledRequests[0],
                                 TRUE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Successful requests (200)",
                                 myGlobals.webPort,
                                 myGlobals.numSuccessfulRequests[1], 
+#ifdef HAVE_OPENSSL
                                 myGlobals.sslPort,
+#else
+				0,
+#endif
                                 myGlobals.numSuccessfulRequests[0],
                                 TRUE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Bad (We don't want to talk with you) requests",
                                 myGlobals.webPort,
                                 myGlobals.numHandledBadrequests[1], 
+#ifdef HAVE_OPENSSL
                                 myGlobals.sslPort,
+#else
+				0,
+#endif
                                 myGlobals.numHandledBadrequests[0],
                                 TRUE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 400 BAD REQUEST",
                                 myGlobals.webPort,
                                 myGlobals.numUnsuccessfulInvalidrequests[1], 
+#ifdef HAVE_OPENSSL
                                 myGlobals.sslPort,
+#else
+				0,
+#endif
                                 myGlobals.numUnsuccessfulInvalidrequests[0],
                                 FALSE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 401 DENIED",
                                 myGlobals.webPort,
                                 myGlobals.numUnsuccessfulDenied[1], 
+#ifdef HAVE_OPENSSL
                                 myGlobals.sslPort,
+#else
+				0,
+#endif
                                 myGlobals.numUnsuccessfulDenied[0],
                                 FALSE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 403 FORBIDDEN",
                                 myGlobals.webPort,
                                 myGlobals.numUnsuccessfulForbidden[1], 
+#ifdef HAVE_OPENSSL
                                 myGlobals.sslPort,
+#else
+				0,
+#endif
                                 myGlobals.numUnsuccessfulForbidden[0],
                                 TRUE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 404 NOT FOUND",
                                 myGlobals.webPort,
                                 myGlobals.numUnsuccessfulNotfound[1], 
+#ifdef HAVE_OPENSSL
                                 myGlobals.sslPort,
+#else
+				0,
+#endif
                                 myGlobals.numUnsuccessfulNotfound[0],
                                 TRUE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 408 TIMEOUT",
                                 myGlobals.webPort,
                                 myGlobals.numUnsuccessfulTimeout[1], 
+#ifdef HAVE_OPENSSL
                                 myGlobals.sslPort,
+#else
+				0,
+#endif
                                 myGlobals.numUnsuccessfulTimeout[0],
                                 FALSE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 501 NOT IMPLEMENTED",
                                 myGlobals.webPort,
                                 myGlobals.numUnsuccessfulInvalidmethod[1], 
+#ifdef HAVE_OPENSSL
                                 myGlobals.sslPort,
+#else
+				0,
+#endif
                                 myGlobals.numUnsuccessfulInvalidmethod[0],
                                 FALSE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 505 INVALID VERSION",
                                 myGlobals.webPort,
                                 myGlobals.numUnsuccessfulInvalidversion[1], 
+#ifdef HAVE_OPENSSL
                                 myGlobals.sslPort,
+#else
+				0,
+#endif
                                 myGlobals.numUnsuccessfulInvalidversion[0],
                                 FALSE);
   sendString(texthtml("",
