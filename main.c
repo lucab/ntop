@@ -388,7 +388,9 @@ static int parseOptions(int argc, char* argv []) {
       exit(0);
 
     case 'i':                          /* More than one interface may be specified in a comma separated list */
-      stringSanityCheck(optarg);
+#ifndef WIN32
+	  stringSanityCheck(optarg);
+#endif
       myGlobals.devices = strdup(optarg);
       break;
 
@@ -851,7 +853,7 @@ int ntop_main(int argc, char *argv[]) {
 #else
 int main(int argc, char *argv[]) {
 #endif
-  int i, rc, userSpecified, bufLen;
+  int i, rc, userSpecified;
 #ifndef WIN32
   int effective_argc;
   char **effective_argv;
@@ -861,9 +863,6 @@ int main(int argc, char *argv[]) {
   char *cmdLineBuffer, *readBuffer, *readBufferWork;
   FILE *fd;
   struct stat fileStat;
-  int _argc;
-  char *_argv[MAX_NUM_OPTIONS];
-
   /* printf("HostTraffic=%d\n", sizeof(HostTraffic)); return(-1); */
 
   printf("Wait please: ntop is coming up...\n");

@@ -619,14 +619,12 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	dissectFlow(buffer, rc);
       }
     } else {
+		if(rc < 0) {
       traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: select() failed(%d, %s), terminating netFlow",
-                 errno,
-                (errno == EBADF ? "EBADF" :
-                    errno == EINTR ? "EINTR" :
-                    errno == EINVAL ? "EINVAL" :
-                    errno == ENOMEM ? "ENOMEM" : "other"));
+                 errno, strerror(errno));
       break;
-    }
+		}
+	}
   }
 
   threadActive = 0;

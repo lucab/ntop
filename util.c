@@ -2412,8 +2412,10 @@ void fillDomainName(HostTraffic *el) {
 
   if(theDomainHasBeenComputed(el)
      || (el->hostSymIpAddress    == NULL)
-     || (el->hostSymIpAddress[0] == '\0'))
+     || (el->hostSymIpAddress[0] == '\0')) {
+	  el->fullDomainName = "";
     return;
+  }
 
   accessAddrResMutex("fillDomainName");
 
@@ -2486,6 +2488,8 @@ void fillDomainName(HostTraffic *el) {
   if((el->hostSymIpAddress[i] == '.')
      && (strlen(el->hostSymIpAddress) > (i+1)))
     el->fullDomainName = &el->hostSymIpAddress[i+1];
+  else
+	  el->fullDomainName = "";
 
   /* traceEvent(CONST_TRACE_INFO, "'%s'\n", el->domainName); */
 

@@ -1058,6 +1058,9 @@ int cmpFctn(const void *_a, const void *_b) {
 	   (*b)->dotDomainName, (*b)->fullDomainName
 	   );
 #endif
+	if((*a)->dotDomainName == NULL) (*a)->dotDomainName = "";
+	if((*b)->dotDomainName == NULL) (*b)->dotDomainName = "";
+
     rc = strcasecmp((*a)->dotDomainName, (*b)->dotDomainName);
     if(rc == 0)
       return(strcasecmp((*a)->fullDomainName, (*b)->fullDomainName));

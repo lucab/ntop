@@ -325,9 +325,6 @@ static void resolveAddress(struct in_addr *hostAddr,
       res = tmpBuf;
       myGlobals.numResolvedWithDNSAddresses++;
     } else {
-#ifdef WIN32
-	  h_errnop = h_errno;
-#endif
       myGlobals.numKeptNumericAddresses++;
       /* Failed, but why? */
       switch (
@@ -336,7 +333,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 #elif HAVE_GETIPNODEBYADDR
               error_num
 #else
-              h_errnop
+              h_errno
 #endif
              ) {
         case NETDB_SUCCESS:
@@ -381,7 +378,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 #elif HAVE_GETIPNODEBYADDR
                   error_num
 #else
-                  h_errnop
+                  h_errno
 #endif
             );
       }

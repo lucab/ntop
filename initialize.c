@@ -952,7 +952,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   int i, deviceId, mallocLen, memlen;
   NtopInterface *tmpDevice;
   char *workDevices;
-  char myName[80], *column;
+  char myName[80], *column = NULL;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
   if(deviceName == NULL) {
@@ -989,7 +989,9 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
     /* ********************************************* */
 
+#ifndef WIN32
     column = strchr(myGlobals.device[deviceId].name, ':');
+#endif
 
     /*
       The timeout below for packet capture
@@ -1004,6 +1006,11 @@ void addDevice(char* deviceName, char* deviceDescr) {
       NetType adapter;
 
       LPADAPTER a = PacketOpenAdapter((LPTSTR)myGlobals.device[deviceId].name);
+
+	  if(a == NULL) {
+		traceEvent(CONST_TRACE_FATALERROR, "Unable to open device '%s' (invalid name?)", myGlobals.device[deviceId].name);
+		exit(-1);
+	  }
       if(PacketGetNetType (a,&adapter)) {
 	myGlobals.device[deviceId].deviceSpeed = adapter.LinkSpeed;
       } else
@@ -1221,7 +1228,6 @@ void initDevices(char* devices) {
 
   ebuf[0] = '\0';
 
-
   traceEvent(CONST_TRACE_NOISY, "Initializing network devices");
 
   if(myGlobals.rFileName != NULL) {
@@ -1340,6 +1346,8 @@ void initDevices(char* devices) {
  	}
       }
 #else /* WIN32 */
+
+	  if(isdigit(tmpDev[0])) {
       if(atoi(tmpDev) < ifIdx) {
 	tmpDescr = intDescr[atoi(tmpDev)];
 	tmpDev   = intNames[atoi(tmpDev)];
@@ -1347,6 +1355,10 @@ void initDevices(char* devices) {
 	traceEvent(CONST_TRACE_FATALERROR, "Interface index '%d' is out of range [0..%d]", atoi(tmpDev), ifIdx);
 	exit(-1);
       }
+	  } else {
+		/* Nothing to do: the user has specified an interface name */
+		tmpDescr = NULL;
+	  }
 #endif
 
       addDevice(tmpDev, tmpDescr == NULL ? tmpDev : tmpDescr);
