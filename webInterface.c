@@ -2454,11 +2454,15 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   if(myGlobals.enableSessionHandling) {
     sendString(texthtml("\n\nTCP Session counts\n\n", "<tr><th colspan=\"2\">TCP Session counts</th></tr>\n"));
-    if(snprintf(buf, sizeof(buf), "%u", myGlobals.device[myGlobals.actualReportDeviceId].numTcpSessions) < 0)
+    if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].numTcpSessions)) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
 
-    if(snprintf(buf, sizeof(buf), "%u", myGlobals.numTerminatedSessions) < 0)
+    if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].maxNumTcpSessions)) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
+
+    if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.numTerminatedSessions)) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Terminated", buf);
   }

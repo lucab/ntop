@@ -646,6 +646,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 
       myGlobals.device[actualDeviceId].numTcpSessions++;
+
+      if(myGlobals.device[actualDeviceId].numTcpSessions > myGlobals.device[actualDeviceId].maxNumTcpSessions)
+	myGlobals.device[actualDeviceId].maxNumTcpSessions = myGlobals.device[actualDeviceId].numTcpSessions;
+
       theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
       myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
 

@@ -1240,7 +1240,7 @@ typedef struct ntopInterface {
 
   IpFragment *fragmentList;
   struct ipSession **tcpSession;
-  u_short numTotSessions, numTcpSessions;
+  u_short numTotSessions, numTcpSessions, maxNumTcpSessions;
   TrafficEntry** ipTrafficMatrix; /* Subnet traffic Matrix */
   struct hostTraffic** ipTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
   fd_set ipTrafficMatrixPromiscHosts;
