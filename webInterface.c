@@ -206,7 +206,7 @@ void showPluginsList(char* pluginName) {
       if(!doPrintHeader) {
 	printHTMLheader("Available Plugins", NULL, 0);
  	sendString("<CENTER>\n"
-		   ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=500>\n"
+		   ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
 		   "<TR "DARK_BG"><TH "TH_BG">View</TH><TH "TH_BG">Configure</TH>\n"
                    "<TH "TH_BG">Description</TH>\n"
 		   "<TH "TH_BG">Version</TH><TH "TH_BG">Author</TH>\n"
@@ -928,7 +928,7 @@ static void printInfoSectionTitle(int textPrintFlag, char* section) {
 static void printInfoSectionNote(int textPrintFlag, char* note) {
   if(textPrintFlag != TRUE) {
     sendString("<tr><td colspan=\"3\" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"
-               "<table border=\"0\" width=\"85%\" align=\"right\"><tr><td valign=\"top\">NOTE:</td>\n"
+               "<table "TABLE_DEFAULTS" border=\"0\" width=\"85%\" align=\"right\"><tr><td valign=\"top\">NOTE:</td>\n"
                "<td class=\"wrap\"><i>");
     sendString(note);
     sendString("</i></td></tr>\n</table>\n</td></tr>\n");
@@ -6314,7 +6314,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
 void printHostColorCode(int textPrintFlag, int isInfo) {
   if(textPrintFlag != TRUE) {
-    sendString("<CENTER>\n<TABLE border=\"0\">"
+    sendString("<CENTER>\n<TABLE border=\"0\" "TABLE_DEFAULTS">"
 	       "<TR>"
 	       "<TD colspan=\"5\">The color of the host link");
     if(isInfo == 1)
@@ -6337,13 +6337,13 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
 void printMutexStatusReport(int textPrintFlag) {
   if(myGlobals.runningPref.disableMutexExtraInfo) {
     sendString(texthtml("\nMutexes:\n\n",
-			  "<P>"TABLE_ON"<TABLE BORDER=1>\n"
+			  "<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
 			  "<TR><TH>Mutex Name</TH>"
 			  "<TH>State</TH>"
 			  "<TH COLSPAN=2># Locks/Releases</TH>"));
   } else {
     sendString(texthtml("\nMutexes:\n\n",
-			  "<P>"TABLE_ON"<TABLE BORDER=1>\n"
+			  "<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
 			  "<TR><TH>Mutex Name</TH>"
 			  "<TH>State</TH>"
 			  "<TH>Last Lock</TH>"
@@ -6375,7 +6375,7 @@ void printMutexStatusReport(int textPrintFlag) {
 
 /* ******************************** */
 
-void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
+static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   /* This prints either as text or html, but no header so it can be included in bug reports */
 
@@ -6399,7 +6399,7 @@ void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 
   sendString(texthtml("<pre>",
                       "<CENTER>\n<p>&nbsp;</p>\n"
-                      "<TABLE border=\"1\" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"));
+                      "<TABLE border=\"1\" "TABLE_DEFAULTS" width=\"" xstr(CONST_INFOHTML_WIDTH) "\">\n"));
 
   printInfoSectionTitle(textPrintFlag, "Basic information");
   printFeatureConfigInfo(textPrintFlag, "ntop version", version);
@@ -7403,7 +7403,7 @@ void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 	  printInfoSectionTitle(textPrintFlag, "IP Address reject list");
 	  sendString(texthtml("\nAddress ... Count ... Last Bad Access ... Lockout Expires\n",
 			      "<tr><th>Rejects</th>"
-			      "<td><TABLE BORDER=1>"
+			      "<td><TABLE BORDER=1 "TABLE_DEFAULTS">"
 			      "<tr><th>Address</th><th>Count</th>"
 			      "<th>Last Bad Access</th><th>Lockout Expires</th></tr>"));
 	}
@@ -7769,7 +7769,7 @@ void printNtopProblemReport(void) {
   printHTMLheader("ntop Problem Report", NULL, 0);
 
   sendString("<h3>Instructions (delete this before you send)</h3>\n");
-  sendString("<table border=\"1\" width=\"500\">\n<tr><td class=\"wrap\">");
+  sendString("<table border=\"1\" width=\"500\" "TABLE_DEFAULTS">\n<tr><td class=\"wrap\">");
   sendString("<p>Cut out this entire section and paste into an e-mail message.  Fill in the\n");
   sendString("various sections with as much detail as possible and email to the ntop lists.</p>\n");
   sendString("<ul><li>User-type questions (How do I?) and usage bugs should be directed to the ntop\n");

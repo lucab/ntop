@@ -64,7 +64,7 @@ static PluginInfo netflowPluginInfo[] = {
     "<A HREF=http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm>NetFlow</A> "
     "V1/V5/V7/V9 and <A HREF=http://ipfix.doit.wisc.edu/>IPFIX</A> data.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
-    "reports - <em>Remember to switch the reporting NIC via Admin | Switch NIC</em>.",
+    "reports.<br><em>Remember to <A HREF=/switch.html>switch</A> the reporting NIC.</em>",
     "3.99", /* version */
     "<a href=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
@@ -1393,7 +1393,7 @@ static void printNetFlowDeviceConfiguration(void) {
   char buf[512], value[128];
   int i = 0;
 
-  sendString("<center><table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n");
+  sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
   sendString("<tr><th "DARK_BG">Available NetFlow Devices</th></tr>\n");
   sendString("<tr><td align=left>\n");
 
@@ -1455,7 +1455,7 @@ static void printNetFlowDeviceConfiguration(void) {
 static void printNetFlowConfiguration(int deviceId) {
   char buf[512], buf1[32], buf2[32];
 
-  sendString("<center><table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n");
+  sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
   sendString("<tr><th colspan=\"4\" "DARK_BG">Incoming Flows</th></tr>\n");
 
   sendString("<tr><th colspan=2 "DARK_BG">NetFlow Device</th>");
@@ -1635,7 +1635,8 @@ static void printNetFlowConfiguration(int deviceId) {
 
   sendString("<input name=\"whiteList\" size=\"60\" value=\"");
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
-              myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList == NULL ? " " : myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList);
+              myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList == NULL ?
+		" " : myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList);
   sendString(buf);
   sendString("\"> <input type=\"submit\" value=\"Set White List\"></p>\n</form>\n"
              "<p>This is a list of one or more TCP/IP host(s)/network(s) which we will "
@@ -2187,6 +2188,8 @@ static void handleNetflowHTTPrequest(char* _url) {
 
       device = strtok(url, "=");
       if(device != NULL) _value = strtok(NULL, "="); else _value = NULL;
+
+      if(_value == NULL) _value = "";
 
       if(_value && device) {
 	char value[256];

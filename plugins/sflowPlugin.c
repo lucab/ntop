@@ -1254,7 +1254,7 @@ static PluginInfo sflowPluginInfo[] = {
     "<b>ntop</b> can both collect and receive <A HREF=http://www.sflow.org/>sFlow</A> data. "
     "Note that ntop.org is a member of the <A HREF=http://www.sflow.org/organization/>sFlow consortium</A>.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
-    "reports - <em>Remember to switch the reporting NIC via Admin | Switch NIC</em>.",
+    "reports.<br><em>Remember to <A HREF=/switch.html>switch</A> the reporting NIC.</em>",
     "2.99", /* version */
     "<A HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "sFlow", /* http://<host>:<port>/plugins/sFlow */
@@ -3304,7 +3304,7 @@ static void printsFlowDeviceConfiguration(void) {
 static void printsFlowConfiguration(int deviceId) {
   char buf[512], buf1[32], buf2[32];
 
-  sendString("<center><table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n");
+  sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
   sendString("<tr><th colspan=\"4\" "DARK_BG">Incoming Flows</th></tr>\n");
 
   sendString("<tr><th colspan=2 "DARK_BG">sFlow Device</th>");
@@ -4029,6 +4029,8 @@ static void handlesFlowHTTPrequest(char* _url) {
       device = strtok(url, "=");
       if(device != NULL) _value = strtok(NULL, "="); else _value = NULL;
 
+      if(_value == NULL) _value = "";
+
       if(_value && device) {
 	char value[256];
 
@@ -4258,10 +4260,10 @@ static void handlesFlowHTTPrequest(char* _url) {
     printHTMLheader("sFlow Configuration", NULL, 0);
     printsFlowConfiguration(deviceId);
 
-    sendString("<br><hr><p>\n");
-
     if(myGlobals.device[deviceId].sflowGlobals->numsFlowsPktsRcvd > 0) {
       int headerSent = 0, i;
+
+      sendString("<br><hr><p>\n");
 
       /* ****************************
        * Print interface statistics *

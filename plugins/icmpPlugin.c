@@ -60,7 +60,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder, u_int num, Host
 static PluginInfo icmpPluginInfo[] = {
   { VERSION, /* current ntop version */
     "icmpWatchPlugin",
-    "This plugin produces a report about the ICMP packets that ntop has seen. "
+    "This plugin produces a report about the ICMP packets that ntop has seen.<br>"
     "The report includes each host, byte and per-type counts (sent/received).",
     "2.4", /* version */
     "<A HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",

@@ -4934,7 +4934,7 @@ void listNetFlows(void) {
 	if(numEntries == 0) {
 	  printPageTitle("Network Flows");
  	  sendString("<CENTER>\n");
-	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON" "DARK_BG"><TH "TH_BG">Flow Name</TH>"
+	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">Flow Name</TH>"
   		     "<TH "TH_BG">Packets</TH><TH "TH_BG">Traffic</TH></TR>");
   	}
 

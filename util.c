@@ -4203,6 +4203,7 @@ void handleWhiteBlackListAddresses(char* addresses,
                                    int outAddressesLen) {
 
   *numNets = 0;
+
   if((addresses == NULL) ||(strlen(addresses) == 0) ) {
     /* No list - return with numNets = 0 */
     outAddresses[0]='\0';

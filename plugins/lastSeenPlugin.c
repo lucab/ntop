@@ -41,7 +41,7 @@ static PluginInfo LsPluginInfo[] = {
     VERSION, /* current ntop version */
     "LastSeenWatchPlugin",
     "This plugin produces a report about the last time packets were seen from "
-    "each specific host.  A note card database is available for recording "
+    "each specific host.<br>A note card database is available for recording "
     "additional information.",
     "2.3", /* version */
     "<a href=\"mailto:&#109;&#097;&#114;&#097;&#110;&#103;&#111;&#110;&#105;&#064;&#117;&#110;&#105;&#109;&#099;&#046;&#105;&#116;\" alt=\"Mail to A. Marangoni\">A.Marangoni</a>", 
