@@ -352,6 +352,7 @@ void unloadPlugins(void) {
 	 && (flows->pluginStatus.activePlugin))
 	flows->pluginStatus.pluginPtr->termFunct();
 
+#ifndef MAKE_STATIC_PLUGIN
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
       shl_unload((shl_t)flows->pluginStatus.pluginMemoryPtr);
 #else
@@ -365,6 +366,7 @@ void unloadPlugins(void) {
 #endif /* AIX */
 #endif /* WIN32 */
 #endif /* HPUX */
+#endif
       flows->pluginStatus.pluginPtr       = NULL;
       flows->pluginStatus.pluginMemoryPtr = NULL;
     }
