@@ -2566,7 +2566,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     else {
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
 		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-		 "<TH "TH_BG" WIDTH=100 COLSPAN=2>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
 		 "Percentage</TH></TR>\n");
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
@@ -2579,7 +2579,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       sendString("</TABLE>"TABLE_OFF"\n");
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
                   "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
                  "Percentage</TH></TR>\n");
 
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
@@ -2635,7 +2635,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       sendString("</TABLE>"TABLE_OFF);
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
 		 "Percentage</TH></TR>\n");
 
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
@@ -2689,7 +2689,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       sendString("</TABLE>"TABLE_OFF"\n");
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-                 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+                 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
                  "Percentage</TH></TR>\n");
 
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
@@ -2749,7 +2749,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
 		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH>"
-		 "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
+		 "<TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
 
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
 	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value/1024;
