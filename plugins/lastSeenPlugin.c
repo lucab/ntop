@@ -142,7 +142,7 @@ static void handleLsHTTPrequest(char* url) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     printHTMLheader("Status for the \"lastSeen\" Plugin", NULL, BITFLAG_HTML_NO_REFRESH);
     printFlagedWarning("<I>This plugin is disabled.<I>");
-    sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
+    sendString("<p><center>Return to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> menu</center></p>\n");
     printHTMLtrailer();
     return;
   }
@@ -165,7 +165,7 @@ static void handleLsHTTPrequest(char* url) {
 		intoa(char_ip)) < 0) BufferTooShort();
     printSectionTitle(tmpStr);
     sendString("<br><A HREF=/plugins/LastSeen>Reload</A>");
-    sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
+    sendString("<p><center>Return to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> menu</center></p>\n");
     printHTMLtrailer();
     return;
   }
@@ -253,7 +253,7 @@ static void handleLsHTTPrequest(char* url) {
 	      "<CENTER><b>%u</b> host(s) collected.</CENTER><br>",
 	      num_hosts) < 0) BufferTooShort();
   sendString(tmpStr);
-  sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
+  sendString("<p align=right>[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]&nbsp;</p>\n");
   printHTMLtrailer();
 }
 

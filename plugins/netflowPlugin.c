@@ -1574,7 +1574,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	     "<li>NetFlow activation may require ntop restart.<br>"
 	     "<I>Changes to white / black lists take affect immediately, "
 	     "but are NOT retro-active.</I>"
-	     "<li>You can switch devices using this <A HREF=\"/switch.html\">link</A>."
+	     "<li>You can switch devices using this <A HREF=\"/" CONST_SWITCH_NIC_HTML "\">link</A>."
 	     "</ol></td></tr>\n");
   sendString("<tr><td>"
 	     "<p>Due to the way ntop works, NetFlow export capabilities are limited. "
@@ -1973,7 +1973,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("<p></CENTER></CENTER>\n");
   sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");
-  sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
+  sendString("<p align=right>[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]&nbsp;</p>\n");
 
   printHTMLtrailer();
 }

@@ -1735,7 +1735,7 @@ static void handlesFlowHTTPrequest(char* url) {
 	     "<li>sFlow packets are associated with a virtual device and not mixed to captured packets."
 	     "<li>sFlow activation may require ntop restart"
 	     "<li>A virtual sFlow device is activated only when incoming flow capture is enabled."
-	     "<li>You can switch devices using this <A HREF=/switch.html>link</A>."
+	     "<li>You can switch devices using this <A HREF=/" CONST_SWITCH_NIC_HTML ">link</A>."
 	     "</ol></td></tr>\n");
   sendString("</table></center><p>\n");
 
@@ -1744,7 +1744,7 @@ static void handlesFlowHTTPrequest(char* url) {
   if((myGlobals.sflowInSocket == 0)
      || (myGlobals.numSamplesReceived == 0)) {
     sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A></H5>\n");
-    sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
+    sendString("<p align=right>[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]&nbsp;</p>\n");
     printHTMLtrailer();
     return;
   }
@@ -1790,7 +1790,7 @@ static void handlesFlowHTTPrequest(char* url) {
 
   sendString("</TD></TR>\n</TABLE>\n</CENTER>\n");
   sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A></H5>\n");
-  sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
+  sendString("<p align=right>[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]&nbsp;</p>\n");
 
   printHTMLtrailer();
 }

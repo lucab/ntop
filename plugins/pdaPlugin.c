@@ -269,11 +269,11 @@ static void handlePDArequest(char* url) {
 
   if((url == NULL) 
      || (url[0] == 0) 
-     || (strncmp(url, "index.html", 
-		 strlen("index.html")) == 0))  {
+     || (strncmp(url, CONST_INDEX_HTML, 
+		 strlen(CONST_INDEX_HTML)) == 0))  {
     printHtmlIndex();
-  } else if(strncmp(url, "host.html", strlen("host.html")) == 0)
-    printHtmlHostInfo(&url[strlen("host.html")+1]);
+  } else if(strncmp(url, CONST_HOST_HTML, strlen(CONST_HOST_HTML)) == 0)
+    printHtmlHostInfo(&url[strlen(CONST_HOST_HTML)+1]);
   else
     printHtmlNotFoundError();
 }

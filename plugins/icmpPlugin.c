@@ -292,7 +292,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
   if(num == 0) {
     printNoDataYet();
-    sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
+    sendString("<p align=right>[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]&nbsp;</p>\n");
     printHTMLtrailer();
     return;
   }
@@ -410,7 +410,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     }
 
   sendString("</TABLE>\n<p></CENTER>\n");
-  sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
+  sendString("<p align=right>[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]&nbsp;</p>\n");
 
   printHTMLtrailer();
 

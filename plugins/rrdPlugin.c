@@ -459,6 +459,15 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     argv[argc++] = startTime;
     argv[argc++] = "--end";
     argv[argc++] = endTime;
+#ifdef CONST_RRD_DEFAULT_FONT_NAME
+    argv[argc++] = "--font";
+ #ifdef CONST_RRD_DEFAULT_FONT_PATH
+    argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" \
+                   CONST_RRD_DEFAULT_FONT_PATH CONST_RRD_DEFAULT_FONT_NAME; 
+ #else
+    argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" CONST_RRD_DEFAULT_FONT_NAME; 
+ #endif
+#endif
 #ifdef WIN32
     revertDoubleColumn(path);
 #endif
@@ -1369,7 +1378,7 @@ static void handleRRDHTTPrequest(char* url) {
   else 
     sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
   
-  sendString("<p align=right>&nbsp; [ <a href=\"../" STR_SHOW_PLUGINS "\">Back</a> to plugins ] </p>\n");
+  sendString("<p align=right>&nbsp; [ <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">Back</a> to plugins ] </p>\n");
   printHTMLtrailer();
 }
 
