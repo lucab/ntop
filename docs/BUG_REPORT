@@ -1,0 +1,66 @@
+HOWTO report a bug in ntop
+==========================
+
+Burton M. Strauss III <burton@ntopsupport.com>, June 2002
+
+1. Use a meaningful subject along with a meaningful title 
+
+"ntop problem" won't do. "ntop seg faults in xxxx.c at line xxxx" is great 
+
+
+2. Make explicit WHICH version of ntop you are reporting this against. 
+Where you got it, source or package, etc. 
+
+"RC1, downloaded from ntop.org on 18May2002, built from source according to
+BUILD-NTOP.txt." 
+
+Also indicate if you have followed the procedure in BUILD-NTOP.txt to make 
+a static linked version OR are using shared libraries installed with the OS. 
+
+
+3. Give a detailed explanation of the problem 
+
+
+4. Background information 
+
+The EXACT command line you use to invoke ntop. If it's in a script, cut & paste 
+it and resolve all the variables! 
+
+Web interface problems: The exact URL you used from the browser. (If you are in 
+the normal frameset, you may need to right click - open in a new window - to see 
+the url). Otherwise, give the FULL navigation, e.g. Data Sent | Throughput, 
+clicked on "Host" to sort) 
+
+Error Messages: Cut & paste the exact text. If it's in the log, give us 15 or 
+20 lines before. 
+
+If the problem is a segmentation fault, include the backtrace (available with the 
+gcc compiler if you specify the -K parameter). This is only a minimal trace and 
+may not give us the information we need, but it's better than nothing. 
+
+For repeatable seg faults, please see instructions on using gdb at 
+http://snapshot.ntop.org and post the "info stack" and relevant variable "print" 
+command outputs. 
+
+
+4. Environment - please give the following information: 
+
+OS & Version (e.g. Solaris 8/i386 or RedHat Linux 7.3 or whatever) 
+
+CPU (type & quantity), Memory (e.g. 1 P3-800, 128MB) 
+
+# network interfaces and types (vendor, bus, etc.), plus where they are on the 
+network (e.g. two NetGear RT311s (PCI), one on the internal network, one connected 
+to the cable modem). We're trying to see roughly where are the interface(s) you're 
+monitoring and what their bandwidth is. 
+
+How many machines (traffic sources/destinations) and users are being monitored. 
+(e.g. 10 hosts - 2 are very busy ftp servers, the rest user workstations).
+
+What else (other daemons) is/are running on the machine, load, etc. Again, we're 
+interested if this is a very busy, memory constrained machine, or ntop has a dual 
+Pentium 1000, with 1GB of ram to monitor a 56k dialup... 
+
+
+Remember, more information is always better than too little. 
+ 
