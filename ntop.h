@@ -712,13 +712,17 @@ struct hostTraffic; /* IP Session global information */
 
 /* *********************** */
 
+#define HostSerial u_int32_t
+
+/* *********************** */
+
 typedef struct thptEntry {
   float trafficValue;
   /* ****** */
-  u_int topHostSentIdx, secondHostSentIdx, thirdHostSentIdx;
+  HostSerial topHostSentSerial, secondHostSentSerial, thirdHostSentSerial;
   TrafficCounter topSentTraffic, secondSentTraffic, thirdSentTraffic;
   /* ****** */
-  u_int topHostRcvdIdx, secondHostRcvdIdx, thirdHostRcvdIdx;
+  HostSerial topHostRcvdSerial, secondHostRcvdSerial, thirdHostRcvdSerial;
   TrafficCounter topRcvdTraffic, secondRcvdTraffic, thirdRcvdTraffic;
 } ThptEntry;
 
@@ -748,10 +752,6 @@ typedef struct simpleProtoTrafficInfo {
 /* *********************** */
 
 #define ETHERNET_ADDRESS_LEN 6
-
-/* *********************** */
-
-#define HostSerial u_int32_t
 
 /* *********************** */
 

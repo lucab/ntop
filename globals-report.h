@@ -56,6 +56,7 @@
 #ifndef MICRO_NTOP
 
 /* reportUtils.c */
+extern int retrieveHost(HostSerial theSerial, HostTraffic *el);
 extern void formatUsageCounter(UsageCounter usageCtr, TrafficCounter maxValue, int actualDeviceId);
 extern void printTableDoubleEntry(char *buf, int bufLen,
 				  char *label, char* color,

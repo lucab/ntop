@@ -20,6 +20,7 @@
 
 #include "ntop.h"
 
+#define getSerial(a) myGlobals.device[deviceToUpdate].hash_hostTraffic[a]->hostSerial
 
 /* ******************************* */
 
@@ -68,29 +69,30 @@ static void updateThptStats(int deviceToUpdate,
   traceEvent(TRACE_INFO, "LastMinThpt: %s", formatThroughput(myGlobals.device[deviceToUpdate].lastMinThpt));
 #endif
 
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topHostSentIdx = topSentIdx,
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topHostSentSerial = getSerial(topSentIdx),
     myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topSentTraffic = 
     myGlobals.device[deviceToUpdate].hash_hostTraffic[topSentIdx]->actualSentThpt;
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondHostSentIdx = secondSentIdx,
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondHostSentSerial = getSerial(secondSentIdx),
     myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondSentTraffic = 
     myGlobals.device[deviceToUpdate].hash_hostTraffic[secondSentIdx]->actualSentThpt;
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdHostSentIdx = thirdSentIdx,
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdHostSentSerial = getSerial(thirdSentIdx),
     myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdSentTraffic = 
     myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdSentIdx]->actualSentThpt;
 
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topHostRcvdIdx = topRcvdIdx,
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topHostRcvdSerial = getSerial(topRcvdIdx),
     myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topRcvdTraffic = 
     myGlobals.device[deviceToUpdate].hash_hostTraffic[topRcvdIdx]->actualRcvdThpt;
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondHostRcvdIdx = secondRcvdIdx,
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondHostRcvdSerial = getSerial(secondRcvdIdx),
     myGlobals.device[deviceToUpdate].last60MinutesThpt[0].secondRcvdTraffic = 
     myGlobals.device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt;
-  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdHostRcvdIdx = thirdRcvdIdx,
+  myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdHostRcvdSerial = getSerial(thirdRcvdIdx),
     myGlobals.device[deviceToUpdate].last60MinutesThpt[0].thirdRcvdTraffic = 
     myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt;
 
   myGlobals.device[deviceToUpdate].last60MinutesThptIdx = (myGlobals.device[deviceToUpdate].last60MinutesThptIdx+1) % 60;
 
-  if(topHourSentIdx != NO_PEER) { /* It wrapped -> 1 hour is over */
+  if(topHourSentIdx != NO_PEER) { 
+    /* It wrapped -> 1 hour is over */
     float average=0;
     int i;
 
@@ -113,23 +115,23 @@ static void updateThptStats(int deviceToUpdate,
 
     myGlobals.device[deviceToUpdate].last24HoursThpt[0].trafficValue = average;
 
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].topHostSentIdx = topHourSentIdx,
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].topHostSentSerial = getSerial(topHourSentIdx),
       myGlobals.device[deviceToUpdate].last24HoursThpt[0].topSentTraffic = 
       myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourSentIdx]->lastHourSentThpt;
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondHostSentIdx = secondHourSentIdx,
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondHostSentSerial = getSerial(secondHourSentIdx),
       myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondSentTraffic = 
       myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt;
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdHostSentIdx = thirdHourSentIdx,
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdHostSentSerial = getSerial(thirdHourSentIdx),
       myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdSentTraffic = 
       myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt;
 
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].topHostRcvdIdx = topHourRcvdIdx,
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].topHostRcvdSerial = getSerial(topHourRcvdIdx),
       myGlobals.device[deviceToUpdate].last24HoursThpt[0].topRcvdTraffic = 
       myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt;
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondHostRcvdIdx = secondHourRcvdIdx,
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondHostRcvdSerial = getSerial(secondHourRcvdIdx),
       myGlobals.device[deviceToUpdate].last24HoursThpt[0].secondRcvdTraffic = 
       myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt;
-    myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdHostRcvdIdx = thirdHourRcvdIdx,
+    myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdHostRcvdSerial = getSerial(thirdHourRcvdIdx),
       myGlobals.device[deviceToUpdate].last24HoursThpt[0].thirdRcvdTraffic = 
       myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt;
 

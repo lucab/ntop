@@ -184,46 +184,6 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
     }
   }
 
-  for(i=0; i<60; i++) {
-    if(myGlobals.device[theDevice].last60MinutesThpt[i].topHostSentIdx == hostIdx)
-      myGlobals.device[theDevice].last60MinutesThpt[i].topHostSentIdx = NO_PEER;
-
-    if(myGlobals.device[theDevice].last60MinutesThpt[i].secondHostSentIdx == hostIdx)
-      myGlobals.device[theDevice].last60MinutesThpt[i].secondHostSentIdx = NO_PEER;
-
-    if(myGlobals.device[theDevice].last60MinutesThpt[i].thirdHostSentIdx == hostIdx)
-      myGlobals.device[theDevice].last60MinutesThpt[i].thirdHostSentIdx = NO_PEER;
-    /* ***** */
-    if(myGlobals.device[theDevice].last60MinutesThpt[i].topHostRcvdIdx == hostIdx)
-      myGlobals.device[theDevice].last60MinutesThpt[i].topHostRcvdIdx = NO_PEER;
-
-    if(myGlobals.device[theDevice].last60MinutesThpt[i].secondHostRcvdIdx == hostIdx)
-      myGlobals.device[theDevice].last60MinutesThpt[i].secondHostRcvdIdx = NO_PEER;
-
-    if(myGlobals.device[theDevice].last60MinutesThpt[i].thirdHostRcvdIdx == hostIdx)
-      myGlobals.device[theDevice].last60MinutesThpt[i].thirdHostRcvdIdx = NO_PEER;
-  }
-
-  for(i=0; i<24; i++) {
-    if(myGlobals.device[theDevice].last24HoursThpt[i].topHostSentIdx == hostIdx)
-      myGlobals.device[theDevice].last24HoursThpt[i].topHostSentIdx = NO_PEER;
-
-    if(myGlobals.device[theDevice].last24HoursThpt[i].secondHostSentIdx == hostIdx)
-      myGlobals.device[theDevice].last24HoursThpt[i].secondHostSentIdx = NO_PEER;
-
-    if(myGlobals.device[theDevice].last24HoursThpt[i].thirdHostSentIdx == hostIdx)
-      myGlobals.device[theDevice].last24HoursThpt[i].thirdHostSentIdx = NO_PEER;
-    /* ***** */
-    if(myGlobals.device[theDevice].last24HoursThpt[i].topHostRcvdIdx == hostIdx)
-      myGlobals.device[theDevice].last24HoursThpt[i].topHostRcvdIdx = NO_PEER;
-
-    if(myGlobals.device[theDevice].last24HoursThpt[i].secondHostRcvdIdx == hostIdx)
-      myGlobals.device[theDevice].last24HoursThpt[i].secondHostRcvdIdx = NO_PEER;
-
-    if(myGlobals.device[theDevice].last24HoursThpt[i].thirdHostRcvdIdx == hostIdx)
-      myGlobals.device[theDevice].last24HoursThpt[i].thirdHostRcvdIdx = NO_PEER;
-  }
-
   if(host->routedTraffic != NULL) free(host->routedTraffic);
 
   if(host->portsUsage != NULL) {
