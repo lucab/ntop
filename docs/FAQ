@@ -10,7 +10,10 @@
              Network Top
 
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-                        Fully revised for ntop 2.3
+                        Fully revised for ntop 3.0
+
+       (If you are reading this before 3.0 is really released, e.g.
+          3.0pre1 or some such, consider it "Back to the Future")
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Compiled by Burton M. Strauss III <Burton@ntopsupport.com> - comments to him!
@@ -36,11 +39,11 @@ At the very end are "HowTo Ask For Help" and a "GDB ultraMini-tutorial".
 Read them.  Before posting to the mailing list.
 
 
-Note that some of this FAQ is based on the entries people have contributed
-to the community FAQ at http://snapshot.ntop.org.  Lots more are based on
-messages to the ntop and ntop-dev mailing lists.
+Note that some of this FAQ is based on the entries people contributed
+to the community FAQ formerly at http://snapshot.ntop.org.  Lots more are 
+based on messages to the ntop and ntop-dev mailing lists.
 
-Post 2.3 release entries will have a author/date stamp, at the end:
+Post 3.0 release entries will have a author/date stamp, at the end:
 
 (Updated/Added ddmmmyyyy by x)
 
@@ -58,11 +61,9 @@ A. SourceForge -- http://sourceforge.net/projects/ntop/
    There is also a cvs (current development) maintained at cvs.ntop.org.
    (instructions are on the download page of www.ntop.org)
 
-     DO NOT
-          (under ANY circumstances)
-     USE THE SOURCE FILES FROM http://snapshot.ntop.org!!!!!
-
-     They are broken, incomplete and WILL NOT WORK.
+     DO NOT (under ANY circumstances) USE THE SOURCE FILES FROM 
+     http://snapshot.ntop.org!!!!! They are broken, incomplete and
+     WILL NOT WORK. (See 'snapshot, cvs and the Wiki' below)
 
 
 Q. What is ntop?
@@ -228,6 +229,16 @@ A. Not exactly.
    PPP, RAW and TOKEN-RING frames.  That is, at least enough for some basic
    counts or to extract the (layer 3) TCP/IP data in side.
 
+   ntop 3.0 adds TWO (three?) HUGE areas of new protocol support.
+
+   ntop 3.0 supports IPv6, thanks to code contributed by Olivier Festor
+   <Olivier.Festor@loria.fr> and Abdelkader Lahmadi <Abdelkader.Lahmadi@loria.fr>
+   of the MADYNES Research Time (Managing DYnamic NEtworks and Services), see
+   http://madynes.loria.fr/.
+
+   ntop 3.0 has more than a fair amount of smarts about FibreChannel and iSCSI
+   thanks to code contributed by Dinesh G Dutt <ddutt@cisco.com> of Cisco. 
+
    However, since most of ntop's displayed counts are at the TCP/IP level, it
    confuses people into thinking ntop is purely a TCP/IP analyzer.
 
@@ -237,8 +248,8 @@ A. Not exactly.
 
 
 Q. ntop runs under?
-A. ntop is known to work under Linux, Mac OS X, FreeBSD, NetBSD (with issues)
-   and Win32.
+A. ntop is known to work under Linux, Mac OS X, FreeBSD, OpenBSD (3.4, nothing
+   earlier) NetBSD (with issues) and Win32.
 
    ntop development is done primarily on RedHat Linux and Mac OS.
 
@@ -246,33 +257,65 @@ A. ntop is known to work under Linux, Mac OS X, FreeBSD, NetBSD (with issues)
    Solaris environment.
 
    I (Burton) usually work under RedHat Linux, but have a multi-boot system
-   for testing that runs various Linux distros, FreeBSD (4.8 and 5.1),
+   for testing that runs various Linux distros, FreeBSD (4.9 and 5.2),
    NetBSD, Solaris 8 i86 and OpenBSD.
 
-   During the ntop 2.3 development cycle, we did some development and
-   testing on various platforms.
+   During the ntop 3.0 development cycle, we did some development and
+   testing on various platforms.  Here's data from the version.xml log
+   showing what people were running while testing 2.2.98 and 2.2.99:
 
-      Solaris 2.6 / 7 / 8 should work.
-      Solaris 9 is an unknown quantity but there have been user efforts.
+          count OS      Version        
+        ------- ------- -------------- 
+            492	Linux                  
+             90	Windows WinNT/2K/XP    
+             11	FreeBSD 4.9            
+              9	Solaris 9              
+              7	Darwin  7.2.0          
+              6	FreeBSD 5.2            
+              6	FreeBSD 5.1            
 
-   Tested Linux distributions:
-      Debian 3.0 (Woody)
-      Gentoo 1.4
-      Mandrake 9.1
-      RedHat AS 2.1, 7.3, 8.0, 9
-      Slackware 9.0
-      SuSE 8.2
+        and <5 records for FreeBSD 4.6.2, 4.8, 5.0, 5.2.1; OpenBSD 3.4; 
+        and Solaris 8.
 
-   Tested ***BSD:
-      FreeBSD 4.8 and 5.1
-      NetBSD 1.6.1
+   So:
 
-   Running under pretty much any *nix is at least theoretically possible.
-   But it takes interested party/parties and access to resources - some of the
-   things that ntop does such as libpcap and loading plugins are tied tighter
-   to the OS than you might like.
+      Solaris 8 / 9 work, 2.6 and 7 probably would...
+      FreeBSD 4.6.2/4.8/4.9 and 5.1/5.2
+      OpenBSD 3.4
 
-   There are sections below about each specific OS.
+   NetBSD doesn't seem to have been tested.
+
+   Lots of Different Linuxes... of the ones we recognize:
+
+          count Distro    Release
+        ------- --------- --------
+            141	redhat    9
+             42	fedora    1
+             39	slackware 9.1.0
+             38	redhat    7.3
+             26	redhat    8.0
+             15	debian          (probably 3.0)
+             11	mandrake  9.2
+             10	suse      9.0
+             10	slackware 9.0.0
+              9	redhat    7.2
+              8	debian    3.0
+              7	redhat    2.1AS
+              6	mandrake  9.1
+              5	suse      8.2
+              5	redhat    3
+
+   and < 5 records for arch 0.6; aurora 1.0; aurox 9.2; fedora 0.95; 
+   gentoo 1.4.2.9, 1.4.3.10 and 1.4.3.12; immunix 7.0; mandrake 8.1 and 8.2; 
+   pld 1.1; redhat 1, 2.1, 6.2, 7.0, 7.1; slackware 7.1.0, 8.1 and 9.0-beta; 
+   suse 6.3, 7.0, 8.0 and 8.1; and yellowdog 3.0.
+
+ Running under pretty much any *nix is at least theoretically possible.
+ But it takes interested party/parties and access to resources - some of the
+ things that ntop does such as libpcap and loading plugins are tied tighter
+ to the OS than you might like.
+
+ There are sections below about each specific OS.
 
 
 --------------------------------------------------------------------------------
@@ -289,7 +332,36 @@ A. Don't know.  I could guess...
    Imagine you are the network manager for a large University network and have
    to crack down on users who are illegally exchanging copyrighted files or
    using University resources to run a business without paying for the resources
-   being consumed, or ...
+   being consumed.
+
+   or
+
+   You are a major vendor of infrastructure, whose customers are using networks
+   for new features such as storage area networks and you want to give them
+   the ability to monitor these.
+
+   or
+
+   You have a really cool technology that you've just donated to the community
+   via an RFC and wish to jump-start adoption of it.
+
+   or
+
+   You are moving heavily into IPv6 and need to be able to monitor your 'new'
+   network just like you monitored the IPv4 one.
+
+   or (my favorite)
+
+   You really, really, really hate that ntop generates such lousy html code
+   and you decide to scratch that itch.
+
+   or (what should happen)
+
+   A major corporation, with out resources, time, skills and/or inclination
+   to do it themselves sponsors the development of a feature that's critical
+   to him/her.
+
+   or
 
    Then again, it could just be because it's cool...
 
@@ -315,7 +387,7 @@ A. (A personal peeve from Burton...)
    I get real tired of people complaining that there isn't any documentation
    and then being unwilling to contribute even the simplest stuff.  I've said
    I'll edit and assemble whatever people send me... and since I started working
-   with ntop in November 2001, I've received maybe four pages of stuff.
+   with ntop in November 2001, I've received maybe six pages of stuff.
 
    I'm trying to get people - who aren't coders - to contribute to ntop the
    project.  The contribution that ANYONE can make is "documentation".  A task-
@@ -337,8 +409,8 @@ A. (A personal peeve from Burton...)
 Q. Ok, where can I find what does exist.
 A. http://www.ntop.org has pointers and some (dated) documents.
 
-   The documentation in the docs/ directory and the FAQs etc. at
-   http://snapshot.ntop.org/ are basically all that there is
+   The documentation in the docs/ directory, the Documentation files at SourceForge
+   and some at http://www.ntopsupport.com are basically all that there is.
 
    Search the ntop mailing lists at gmane, http://search.gmane.org. The lists
    are called gmane.linux.ntop.general and gmane.linux.ntop.devel.
@@ -346,7 +418,13 @@ A. http://www.ntop.org has pointers and some (dated) documents.
    Please contribute to the ntop community by writing things up for inclusion
    in this FAQ or other documents!
 
-Q. I can't find the file at SourceForge!
+   You can even do this all by yourself at the ntop Wiki, 
+   http://www.burtonstrauss.com/pmwiki/pmwiki.php?pagename=Ntop.HomePage
+   (But note that whether it remains available depends on whether people 
+   contribute)
+
+
+Q. I can't find a file at SourceForge!
 A. You can reach the archives through any SourceForge mirror, e.g.
 
       http://telia.dl.sourceforge.net/sourceforge/ntop/
@@ -364,7 +442,7 @@ A. Make sure it's a supported release!
 
    We support only the current versions of ntop.  This is either:
 
-       * the last release, e.g. v2.3.
+       * the last release, e.g. v3.0.
        * the current cvs (cvs.ntop.org)
        * the latest development version posted at SourceForge (if one)
 
@@ -400,8 +478,7 @@ A. Read the ntop mailing lists.
 Q. I looked and I didn't find my problem.
 A. Join the mailing list(s) and ask for help.
 
-   Before you post, check the "HowTo Ask for Help" at the end of this FAQ or
-   at http://snapshot.ntop.org/faq.php#83.
+   Before you post, check the "HowTo Ask for Help" at the end of this FAQ.
 
    Please, if at all possible, use the built in PR_ form (the little 'bug' icon
    on the 'About' tab).
@@ -514,7 +591,7 @@ A. If a basic ./configure can't find something, you'll have to tell ntop
    The things ntop might be looking for are in this part of the
    ./configure --help output:
 
-       +-External-source-locations:--------------------------------------------+
+       +-External-source-locations:-------------------------------------------------+
        --with-pcap-root=DIR        LBNL pcap located in DIR
        --with-pcap-lib=DIR          or libpcap located in DIR
        --with-pcap-include=DIR      or pcap.h located in DIR
@@ -535,9 +612,9 @@ A. If a basic ./configure can't find something, you'll have to tell ntop
        --with-ossl-include=DIR      or ssl.h located in DIR
        --with-localedir=DIR        LOCALE files located in DIR (i18n)
        +-----------------------------------------------------------------------+
-
-   You can see that there is a pattern, every --with-xxxxx-root has an
-   --with-xxxxx-include and --with-xxxxx-lib option.
+     
+   You can see that there is a pattern, pretty much every --with-xxxxx-root
+   has a --with-xxxxx-include and --with-xxxxx-lib option.
 
    So, if ntop tells you it can't find something, do this - first look for the
    File on your system:
@@ -616,7 +693,7 @@ A. There are some error messages where it's possible that thing work (now)
    finishing ./configure.
 
    Use it at your own risk.
-i
+
 
 Q. What are the --enable and --disable options?
 A. These (and the with/without options) pretty much do what you think - they
@@ -635,10 +712,12 @@ A. These (and the with/without options) pretty much do what you think - they
        --enable-i18n               Enable (limited) internationalization
                                    [default=disabled]
        --enable-showoses           display OS Support information.
+       --disable-ipv6              use IPv6 [default=enabled]
        +-----------------------------------------------------------------------+
 
        +--external-packages:---------------------------------------------------+
        --without-ssl               disable HTPPS support [default=enabled]
+       --without-zlib              disable zlib [default=enabled]
        --with-tcpwrap              enable use of TCP Wrapper [default=disabled]
 
 Q. What ELSE?
@@ -755,14 +834,20 @@ Q. Which packages/libraries do I need to compile ntop:
 
          (Some packages will have additional packages as pre-requisites)
 
-       gdbm (1.8.1 or 1.8.4)
+       gdbm (We have people using 1.7.3, 1.8.0, 1.8.2 and 1.8.3)
 
        libpcap
-          Note: We recommend the current 0.7.2, but ntop works with most 0.6.x
-                versions.  STAY AWAY from old versions, especially under Linux.
+          We recommend 0.7.2, but ntop works with most 0.6.x versions. 
+          The newest version, 0.8.x works too - there are ntop fixes since 
+          late 2.2.9x releases for this.
+
+          STAY AWAY from older versions, especially under Linux.
+
           Note: Building libpcap requires: bison/flex
 
+
        gd (1.8.x - stay away from 2.x development versions)
+          http://www.boutell.com/gd/gd.html
 
        libpng (1.2.x - although ntop works with 1.0.x versions, the two libpng
               versions are not compatible and will often cause version conflicts
@@ -773,8 +858,10 @@ Q. Which packages/libraries do I need to compile ntop:
        cpp
 
        gcc
-          Note: Both gcc 2.95/2.96 and 3.2 are reported to work.  Across a lot
+          Note: Both gcc 2.95/2.96 and 3.2/3.3 are reported to work.  Across a lot
                 of software, gcc 3.0 had problems - no clue re ntop.
+          For you folks still running 2.94, I think I fixed all the compile errors,
+          but upgrade for ghu's sake!
 
        libtool  1.4+ (distribution with 1.4.2)
                      (there are successes reported with 1.3.4 or 1.3.5 -
@@ -828,6 +915,8 @@ A. First, check if you're using a supported OS.
 
    It works (albeit with severe limitations) on NetBSD.
 
+   It works on OpenBSD 3.4 (only).
+
    It used to work under MinGW, but that broke after 2.1.3 and we need somebody
    with some technical skills and an interest in MinGW to fix it.
 
@@ -841,7 +930,8 @@ A. Yes.  For the latest scoop, run ./configure --enable-showoses
    ntop will perform the basic ./configure tests (make sure you have a c
    compiler that works, etc.) and then output a table.
 
-   This is from a nearly complete 2.3 release:
+   This is from a pretty complete 3.0 release (at least as far as OS support
+   goes):
 
      ntop OS Support status extract for version 2.2.91
          Run Mon Aug 18 10:00:58 CDT 2003
@@ -1091,7 +1181,7 @@ A. Basically, it's a automake 1.5 bug, related to dependency tracking.
    of automake installed and a (broken) script that's supposed to figure out
    which version to actually run.
 
-   Since we distribute ntop with scripts generated from 1.6.1, you would *think*
+   Since we distribute ntop with scripts generated from 1.6.3, you would *think*
    they should work, regardless of what version of automake is installed.
 
    That's not the case.  The problem occurs because automake gets invoked by
@@ -1377,7 +1467,7 @@ Q. ntop won't start - I get this message:
   ** FATAL ERROR** ... open of /var/ntop/addressQueue.db failed:
        File open error
 A. It's either permissions (the ntop -u userid doesn't have read/write access
-   to that file - common if you're upgrading from 2.2 to 2.3).
+   to that file - common if you're upgrading from 2.2 to 3.0).
 
    The other cause is that there's still an instance of ntop running. Make
    sure you shutdown ntop before starting it.
@@ -1402,6 +1492,8 @@ A. (from the comments in the script):
 
    Think of it as simulating make install, but not moving stuff to /usr/local
    or wherever.
+
+   Don't use it - it just causes problems...
 
 
 Q. Which libraries do I need?
@@ -1498,6 +1590,9 @@ A. The files are stored in GDBM format. You can dump their content using tools l
    this: http://tboudet.free.fr/dumpgdbm/. In principle you should not be
    interested in the file content as they are temporary caches and contain the
    configuration as well as the MD5 hash of the web passwords.
+
+   I posted a trivial dumpgdbm.c to gmane - search for it.
+
   
 Q. ntop starts up with this:
    WARNING: Discarded network 172.20.0.0/16: this is the local network.
@@ -1513,160 +1608,180 @@ A. There are a couple of options that appear only if they're not compiled in,
    The best way to see what is actually available is to run ntop with the -h or
    --help options and see.   Also read man ntop.
 
-   Here is the FULL set of real, working options as of August 2003
+   Here is the FULL set of real, working options as of February 2004
 
-      -a <path>
-      --access-log-path <path>
-                 Path for ntop web server access log
+    -4             | --ipv4
+                             Use IPv4 connections (for the ntop web server)
+    -6             | --ipv6
+                             Use IPv6 connections (for the ntop web server)
 
-      -b
-      --disable-decoders
-                 Disable protocol decoders
+    -a <file>      | --access-log-file <file>
+                             File for ntop web server access log
 
-      -c
-      --sticky-hosts
-                 Idle hosts are not purged from memory
+    -b             | --disable-decoders
+                             Disable protocol decoders
 
-      -d
-      --daemon
-                 Run ntop in daemon mode
+    -c             | --sticky-hosts
+                             Idle hosts are not purged from memory
 
-      -e <number>
-      --max-table-rows <number>
-                 Maximum number of table rows to report
+    -d             | --daemon
+                             Run ntop in daemon mode
 
-      -f <file>
-      --traffic-dump-file <file>
-                 Traffic dump file (see tcpdump)
+    -e <number>    | --max-table-rows <number>
+                             Maximum number of table rows to report
 
-      -g
-      --track-local-hosts
-                 Track only local hosts
+    -f <file>      | --traffic-dump-file <file>
+                             Traffic dump file (see tcpdump)
 
-      -h
-      --help
-                 Display this help and exit
+    -g             | --track-local-hosts
+                             Track only local hosts
 
-      -i <name>
-      --interface <name>
-                 Interface name or names to monitor
+    -h             | --help
+                             Display help and exit
 
-      -o
-      --no-mac
-                 ntop will trust just IP addresses (no MACs)
+    -i <name>      | --interface <name>
+                             Interface name or names to monitor
 
-      -k
-      --filter-expression-in-extra-frame
-                 Show kernel filter expression in extra frame
+    -j             | --create-other-packets
+                             Create file ntop-other-pkts.XXX.pcap file
 
-      -l <path>
-      --pcap-log <path>
-                 Dump packets captured to a file (debug only!)
+    -o             | --no-mac
+                             ntop will trust just IP addresses (no MACs)
 
-      -m <addresses>
-      --local-subnets <addresses>
-              Local subnetwork(s) (see man page)
+    -k             | --filter-expression-in-extra-frame
+                             Show kernel filter expression in extra frame
 
-      -n
-      --numeric-ip-addresses
-                 Numeric IP addresses - no DNS resolution
+    -l <path>      | --pcap-log <path>
+                             Dump packets captured to a file (debug only!)
 
-      -p <list>
-      --protocols <list>
-                 List of IP protocols to monitor (see man page)
+    -m <addresses> | --local-subnets <addresses>
+                             Local subnetwork(s) (see man page)
 
-      -q
-      --create-suspicious-packets
-                 Create file ntop-suspicious-pkts.XXX.pcap file
+    -n             | --numeric-ip-addresses
+                             Numeric IP addresses - no DNS resolution
 
-      -r <number>
-      --refresh-time <number>
-                 Refresh time in seconds, default is 120
+    -p <list>      | --protocols <list>
+                             List of IP protocols to monitor (see man page)
 
-      -s
-      --no-promiscuous
-                 Disable promiscuous mode
+    -q             | --create-suspicious-packets
+                             Create file ntop-suspicious-pkts.XXX.pcap file
 
-      -t <number>
-      --trace-level <number>
-                 Trace level [0-5]
+    -r <number>    | --refresh-time <number>
+                             Refresh time in seconds, default is 120
 
-      -u <user>
-      --user <user>
-                 Userid/name to run ntop under (see man page)
+    -s             | --no-promiscuous
+                             Disable promiscuous mode
 
-      -w <port>
-      --http-server <port>
-                 Web server (http:) port (or address:port) to listen on
+    -t <number>    | --trace-level <number>
+                             Trace level 0-5
 
-      -z
-      --disable-sessions
-                 Disable TCP session tracking
+    -u <user>      | --user <user>
+                             Userid/name to run ntop under (see man page)
 
-      -A
-                 Ask admin user password and exit
-      --set-admin-password=<pass>
-                 Set password for the admin user to <pass>
+    -x <max num hash entries>
+                             Max num. hash entries ntop can handle (default 4294967295)
 
-      -B <filter>
-      --filter-expression
-                 Packet filter expression, like tcpdump
+    -w <port>      | --http-server <port>
+                             Web server (http:) port (or address:port) to listen on
 
-      -D <name>
-      --domain <name>
-                 Internet domain name
+    -z             | --disable-sessions
+                             Disable TCP session tracking
 
-      -F <spec>
-      --flow-spec <specs>
-                 Flow specs (see man page)
+    -A
+                             Ask admin user password and exit
 
-      -K
-      --enable-debug
-                 Enable debug mode
+    --set-admin-password=<pass>
+                             Set password for the admin user to <pass>
 
-      -L
-                 Do logging via syslog
-      --use-syslog=<facility>
-                 Do logging via syslog, facility ('=' is REQUIRED)
+    --w3c
+                             Add extra headers to make better html
 
-      -M
-      --no-interface-merge
-                 Don't merge network interfaces (see man page)
+    -B <filter>    | --filter-expression
+                             Packet filter expression, like tcpdump
 
-      -O <path>
-      --pcap-file-path <path>
-                 Path for log files in pcap format
+    -D <name>      | --domain <name>
+                             Internet domain name
 
-      -P <path>
-      --db-file-path <path>
-                 Path for ntop internal database files
+    -F <spec>      | --flow-spec <specs>
+                             Flow specs (see man page)
 
-      -U <URL>
-      --mapper <URL>
-                 URL (mapper.pl) for displaying host location
+    -K             | --enable-debug
+                             Enable debug mode
 
-      -V
-      --version
-                 Output version information and exit
+    -L
+                             Do logging via syslog
 
-      -W <port>
-      --https-server <port>
-                 Web server (https:) port (or address:port) to listen on
+    --use-syslog=<facility>
+                             Do logging via syslog, facility ('=' is REQUIRED)
 
-      --ssl-watchdog
-                 Use ssl watchdog (NS6 problem)
+    -M             | --no-interface-merge
+                             Don't merge network interfaces (see man page)
 
-      --disable-stopcap
-                 Capture packets even if there's no memory left
+    -N             | --wwn-map
+                             Map file providing map of WWN to FCID/VSAN
 
-      --log-extra <level>
-                 Add extra information to log messages
+    -O <path>      | --pcap-file-path <path>
+                             Path for log files in pcap format
 
-      --disable-instantsessionpurge
-                 Disable instant FIN session purge
+    -P <path>      | --db-file-path <path>
+                             Path for ntop internal database files
 
-      --disable-schedyield
-                 Disable sched_yield() calls
+    -U <URL>       | --mapper <URL>
+                             URL (mapper.pl) for displaying host location
+
+    -V             | --version
+                             Output version information and exit
+
+    -X <max num TCP sessions>
+                             Max num. TCP sessions ntop can handle (default 4294967295)
+
+    -W <port>      | --https-server <port>
+                             Web server (https:) port (or address:port) to listen on
+
+    --disable-instantsessionpurge
+                             Disable instant FIN session purge
+
+    --disable-mutexextrainfo
+                             Disable extra mutex info
+
+    --disable-schedyield
+                             Turn off sched_yield() calls, if ntop is deadlocking on them
+
+    --disable-stopcap
+                             Capture packets even if there's no memory left
+
+    --fc-only
+                             Display only Fibre Channel statistics
+
+    --log-extra <level>
+                             Add extra information to log messages
+
+    --no-fc
+                             Disable processing & Display of Fibre Channel
+
+    --no-invalid-lun
+                             Don't display Invalid LUN information
+
+    --p3p-cp
+                             Set return value for p3p compact policy, header
+
+    --p3p-uri
+                             Set return value for p3p policyref header
+
+    --set-pcap-nonblocking
+                             Call pcap_setnonblock
+
+    --skip-version-check
+                             Skip ntop version check
+
+    --ssl-watchdog
+                             Use ssl watchdog (NS6 problem)
+
+
+Q. -4 and -6?
+A. The default for the ntop web server is to connect to any address and any family
+   of addresses, so if the NIC has both IPv4 and IPv6 addresses it should respond 
+   to both.  Use these to restrict the web server.
 
 
 Q. ntop starts up find and then seems to die.
@@ -1798,7 +1913,7 @@ A. If you are only interested in saving your netflow data in MySQL, use the
    you could save your data in flat files, forward the netflow data or whatever.
 
    What this script does it set itself up as a netflow collector and sql
-   inserter. The mail loop just accepts a netflow packet and inserts the flow(s)
+   inserter. The main loop just accepts a netflow packet and inserts the flow(s)
    into sql.
 
    To use this with a single instance of ntop, just set ntop up as a netflow
@@ -2145,7 +2260,8 @@ A. This MIGHT work:
    Use an un-numbered interface, so that ntop doesn't assign any implicit
    'Local' addresses.  Then use the -m | --local-subnets parameter to 
    define what is truly 'Local'.  As long as there aren't too many
-   'Local' networks, this should work.  AFAIK, it has never been tried.
+   'Local' networks, this should work.  I run something sort of like this
+   (but using /24s not subdividing a /16) for my development network.
 
 
 Q. What are the default protocols ntop monitors?
@@ -2300,20 +2416,10 @@ A. ntop purges idle hosts.  Period.
    period, 5 minutes by default.
 
    Because of the amount of linked data, these purges take time (lots of 
-   free() calls on all those char* values), so we don't purge every host that's
-   idle on each loop.  Any idle host is eligible for purge (unless you tell ntop
-   not to purge idle, which is usable only on small networks).  Roughly the limit
-   (which can be static or dynamic) is 512, or 1/3 of the total # of hosts or
-   (dynamically) enough to take 5s - but there's lots of flex here (read up on
-   dynamic purge limits in the cvs commits, the code and the back traffic).
-
-
-Q. So ntop doesn't purge all idle hosts each five minutes?
-A. It's a probabilistic purge, not an absolute one.
-
-   The purge scans the list of hosts, starting at a (pseudo-)random point 
-   and selects - up to the limit - some set of idle hosts to purge.  Those 
-   are then purged.  The purge thread sleeps.  repeat...
+   free() calls on all those char* values), so we don't purge in 'real time'.
+   First we build a list of idle hosts, then we purge from that list.
+   Any idle host is eligible for purge (unless you tell ntop not to purge idle
+   hosts, which is usable only on small networks).
 
    Over time, all idle hosts are purged.  Only to be perturbed by the 
    next burst of activity - say a port scan or everybody logging in back
@@ -2851,6 +2957,15 @@ Q. How serious are they?
 A. None of these stop ntop from processing, but they're indications of
    unprotected accesses to shared data areas, which could lead to lost counts.
 
+   Now understand that there's one set of conditions where I believe it doesn't
+   matter, and that's when there are multiple NICs and multiple processors.  
+   Under some circumstances - not well understood - gcc with the -O2 option 
+   reorders the executable code in such a way as to cause these messages.  
+   Those are spurious.
+
+   But for most users, these warning messages shouldn't be ignored if they occur
+   often.
+
    The problem is that a POSIX mutex doesn't allow for additional data, 
    such as we're using to track the access / release information.  So that 
    data is, itself protected by a single global mutex.  You can't hold that
@@ -2996,20 +3111,6 @@ A. Understand how ntop works:  It simply listens on the interface(s) for
    -i eth0,eth1.
 
 
-Q. How does ntop purge idle hosts?
-A. ntop tracks the last timestamp of a packet on a per-host and per-session
-   basis.  After a period of time - configured through a #define in
-   globals-defines.h - with no packets received, the host is eligible for
-   purge.  Purge starts in a random place in the list and selects the eligible
-   hosts s up to a per-cycle limit (512 hosts or 1/3 of the hash size).
-
-
-
-Q. ntop doesn't understand virtual hosts.
-A. Support for virtual hosts is in the 2.2 release and the folks who have
-   virtual hosts have been pretty pleased.
-
-
 Q. ntop doesn't understand xxxxx?
 A. True. IP Packets have a source address & port and a destination address &
    port... you MUST get your head out of the application layers and revert to
@@ -3020,10 +3121,14 @@ A. True. IP Packets have a source address & port and a destination address &
    3).  It does this by re-assembling packets into a layer 4 message (e.g. GET
    http://virtual.host.name.com/page.html)...
 
+   Now there are some layer 4 analysis routines - virtual hosts was added in
+   2.2 (and the folks who have virtual hosts have been pretty pleased), ftp, 
+   http, and some others - mostly looking for traffic on non-standard
+   ports, etc.
+
    So, since ntop works at the packet level, it doesn't understand virtual
-   hosts.  It's a NETWORK analyzer, not an application level one.  Which is not
-   to say you couldn't create a plugin that did the layer 4 analysis...  but
-   ntop doesn't.
+   hosts. Unless it's SPECIFICALLY coded for.  ntop is a NETWORK analyzer, not 
+   an application level one.
 
 
 Q. tcpwrappers doesn't work
@@ -3051,7 +3156,9 @@ A. Yup, it doesn't work.  Use the -B option and put the filter in quotes:
       -B "(src net 192.168.10.0/24 or src host xxx.xxx.xxx.xxx ) and 
            not dst net 192.168.10.0/24"
 
-   You should see a log warning that says maybe you forgot the quotes
+   ntop used to assume anything it didn't recognize was a filter.  But not since 
+   2.1.3.  If you try this now, you should see a log warning that says maybe you
+   forgot the quotes
 
 
 Q. I have experienced problems defining multiple filters: ntop reports 'syntax
@@ -3129,9 +3236,10 @@ A. ntop is designed to search the current working directory for data files,
 
 
 Q. What are High/Medium/Low risk flags
-A. They are set in reportUtils.c based on fairly self-obvious functions:
-      Medium: hasWrongNetmask()
-      High: hasDuplicatedMac()
+A. They are set in reportUtils.c based on fairly self-obvious functions
+   Well documented in the help.html page, reachable by clicking on
+   the problem descriptions or via http://127.0.0.1:3000/help.html
+
    Often seen if you are monitoring a backbone or common network (high)
    or if you have cloned MAC addresses for, say, a home Firewall box.
 
@@ -3666,20 +3774,22 @@ A. ls /usr/share/ntop/html/*.html (or wherever the ntop pages are installed):
    ----------
    About.html
    Admin.html
-   Copyright.html
-   DataRcvd.html
-   DataSent.html
-   IPProtocols.html
-   IPTraffic.html
-   Stats.html
-   TotalData.html
+   All.html
+   FibreChannel.html
+   IP.html
+   Local.html
+   SCSI.html
+   Summary.html
 
    Misc data
    ---------
+   Copyright.html
    dump.html
    faq.html - lots of work
    help.html - good candidate
    ntop.html - splash page
+   ntophelp.html
+   privacyNotice.html
 
 
    Also, remember that a file overrides ntop's internal page generation, so you
@@ -3749,8 +3859,7 @@ A. A browser-add-on, AT&T's privacy bird (http://www.privacybird.com/), that I'm
 
 
 Q. So when & how does ntop support p3p?
-A. A patch in the cvs on 4Dec2002 (snapshots 5Dec2002 or later) adds minimal
-   support for p3p -- specifically:
+A. A patch in the cvs on 4Dec2002 adds minimal support for p3p -- specifically:
 
       1) ntop will respond to queries for /w3c/p3p.xml and ntop.p3p -- returning
          the ntop.p3p file, IF ONE EXISTS.
@@ -3777,7 +3886,7 @@ A. Right.
    Please note that there is no sample file provided.  This is not an oversight.
 
    After careful consideration, I am not providing one.  The reason is that a
-  .p3p file is intended to be a legal contract between your site and your users.
+   .p3p file is intended to be a legal contract between your site and your users.
    While I could provide a default file that has the right tags - as I
    understand p3p - for the data ntop collects and stores, I don't want the
    responsibility and/or liability.
@@ -4211,7 +4320,7 @@ Q. What's myrrd?
 A. ntop includes a frozen and slightly patched version of rrd 1.0.42 in the
    ntop source tree.  This is called myrrd.
 
-   As of August 2003, rrdtool itself is at version 1.0.45.
+   As of rrdtool 1.0.46 was released 04-Jan-2004.
 
 
 Q. Where do I get rrd?
@@ -4330,8 +4439,9 @@ A. No. All ntop does is send a packet to the network addressed to the
 
 Q. Which versions of netFlow.
 A. v5
-   And v7 - in that internally a v7 flow is copied to a v5 buffer and then
+   And v7/v9 - in that internally a v7/v9 flow is copied to a v5 buffer and then
    processed.  We default/ignore fields that are different.
+   And nFlow - similar conversion.
 
 
 Q. netFlow doesn't work.
@@ -4458,40 +4568,54 @@ A. sFlow can be a collector or a receiver or both, depending on the
 
 
 --------------------------------------------------------------------------------
------snapshot-------------------------------------------------------------------
+-----snapshot, cvs and the Wiki-------------------------------------------------
 --------------------------------------------------------------------------------
 
-Q. What is "snapshot"
-A. Snapshot is a community FAQ and documentation resource at
-   http://snapshot.ntop.org. It's also the site of "the snapshots".
+Q. What was "snapshot"?
+A. Snapshot was a community FAQ and documentation resource at
+   http://snapshot.ntop.org. It's was also the site of "the snapshots".
+
+   Unfortunately, snapshot seems to have 'Gone to Atlanta' (404), with
+   the web server no longer responding in February 2004.
+
+   Nicolai Petri's efforts were appreciated.  But snapshot was an effort
+   of love by a gentleman who hasn't had time for the effort in quite 
+   some time.
 
 
-Q. What is "a snapshot" or "the snapshots"?
-A. A snapshot is a dump of the ntop cvs structure, automatically generated every
-   day at 5 minutes after midnight (Pisa time).
+Q. Is there a community resource that replaces (enhances) snapshot.
+A. Yes. There is now an ntop Wiki at
+     http://www.burtonstrauss.com/pmwiki/pmwiki.php?pagename=Ntop.HomePage
+   Whether it remains available depends on whether people contribute.
 
-   Snapshots are named with their creation date, in the form of
+
+Q. What was "a snapshot" or "the snapshots"?
+A. A snapshot was a dump of the ntop cvs structure, automatically generated
+   every day at 5 minutes after midnight (Pisa time).
+
+   Snapshots were named with their creation date, in the form of
    ntop-yy-mm-dd.tgz.
 
-   Snapshots are neither polished nor even "releases". They contain any
+   Snapshots were neither polished nor even "releases". They contained any
    update(s) checked into the cvs during the prior day.  No more, no less.
 
    cvs checkins (commits) are usually tested by the developer, but perhaps only
    in one (limited) environment.  Occasionally a file is missed or a typo occurs
-   and a snapshot won't compile. Snapshots frequently introduce bugs that aren't
-   apparent on a quick review.  Snapshots are basically a point-in-time capture
+   and a snapshot wouldn't compile. Snapshots frequently introduced bugs that aren't
+   apparent on a quick review.  Snapshots were basically a point-in-time capture
    of the moving development environment.  No more and no less.
 
    With release 2.2, rapid development occurred after general release and using
-   the latest snapshot was your best bet. With 2.3 we will release incremental
-   versions (e.g. 2.3a) if necessary.
+   the latest snapshot was your best bet. With 3.0, after a short period of stability
+   (releases 2.2b and 2.2c), the development again outpaced the stable version and
+   using the cvs again was almost manditory. 
 
-   If the 2.3 release doesn't work, drop by the mailing lists and check the back
+   If the 3.0 release doesn't work, drop by the mailing lists and check the back
    traffic to see if this is a common problem.  If it's not, try the latest
    snapshot or ask for a recommendation of which version is the best to use.
 
-   Unfortunately, with release 2.3, we will added a branch to allow for 2.3a/b/c
-   releases while 2.4 is being developed (2.3.1, 2.2.2, etc.).
+   As with 2.2, we plan to have a cvs branch to allow for 3.0a/b/c
+   releases while 3.1 is being developed (3.1.1, 3.1.2, etc.).
 
    Note that the ntop_2_2_patches branch broke the snapshot extract script, so
    snapshots ARE NO LONGER RECOMENDED OR SUPPORTED.
@@ -4827,7 +4951,7 @@ A. This option was used to remove the hint text from the administrative password
                                         we did development/testing under:
                                            Solaris 2.5, 7 and 8 (i86)
 
-                                        During the ntop 2.3 development cycle,
+                                        During the ntop 3.0 development cycle,
                                         we did development/testing under:
                                            Solaris 8 (i86) and 9
 --------------------------------------------------------------------------------
@@ -4869,10 +4993,14 @@ A. Always remember to use gnu make.
                                            4.7
                                            4.8
 
-                                        During the ntop 2.3 development cycle,
+                                        During the ntop 3.0 development cycle,
                                         we did development/testing under:
-                                           4.8
-                                           5.1
+                                           4.8 and 4.9
+                                           5.1 and 5.2
+
+                                        Users reported success with:
+                                           4.6.2
+                                           4.5.1
 --------------------------------------------------------------------------------
 
 
@@ -4916,19 +5044,53 @@ A. Yes.  See FreeBSD bug bin/17437 at
    the Mutexes.  It wrong and could conceivably cause problems.
 
    However - ntop ran for years without the pthread_atfork() code, so we're
-   no worse off in 2.3 under FreeBSD than in 2.2 or 2.1...
+   no worse off in 3.0 under FreeBSD than in 2.2 or 2.1...
+
+   There was a flurry of problems late in the 3.0 development cycle having to
+   do with a seeming deadlock of the ntop web server (it's actually not dead,
+   just walking at about 0.001KPH).
+
+   Thanks to Yeoman efforts by Stanley Hopcroft, Michal Meloun and, well, me,
+   we have a work-around.  
+
+   If you're running under FreeBSD, use the flag, --set-pcap-nonblocking.
+
+   For more on this, read the threads at gmane - look for "FreeBSD and pthreads" - 
+   that's probably the best summary.  But there's stuff on this back at least to 
+   October 2003 - look for Stanley's problems with CPU usage.
+
+
+Q. Um... something about bad fds?
+A. Oh yes, see bug bin/51535: uthreads bug: new opened files may get stale fcntl flags
+
+   They fixed the code, sort of:
+
+         OS      Version
+         ------- --------------
+         FreeBSD 4.9    FIXED
+         FreeBSD 5.1    BUGGY
+         FreeBSD 5.2    FIXED
+         FreeBSD 4.8    BUGGY
+         FreeBSD 4.6.2  BUGGY
+
+   There's a work-around in ntop, called the HAVE_FILEDESCRIPTORBUG fix.
+   If you even might possibly need it, it should be set in configureextra/ but 
+   go ahead and set it anyway, it can't hurt.
 
 
 --------------------------------------------------------------------------------
 -----BSD - OpenBSD--------------------------------------------------------------
-                                        During the ntop 2.3 development cycle,
+                                        During the ntop 3.0 development cycle,
                                         we tried development/testing under:
-                                           3.1
+                                           3.1 and 3.4
 --------------------------------------------------------------------------------
 
 Q. So?
-A. I could never make it work.  Problem seems to be that the gnu tools such
+A. 3.1 - I could never make it work.  Problem seems to be that the gnu tools such
    as ld don't support a.out systems very well.
+
+A. 3.4 - Should work.  Julien Touche <julien.touche@lycos.com> sweated buckets
+   to make this work and reported that it did in January 2004.
 
 
 --------------------------------------------------------------------------------
@@ -4963,7 +5125,7 @@ A. Yes.  And when NetBSD -current finally incorporates the POSIX threads (its
                                            LinuxFromScratch 3.0pre3
                                            RedHat AS2.1, 7.2, 7.3, 8.0
 
-                                        During the ntop 2.3 development cycle,
+                                        During the ntop 3.0 development cycle,
                                         we did development and/or testing under:
                                            Debian 3.0 (Woody)
                                            Gentoo 1.4 (rc5 and released)
@@ -4972,6 +5134,8 @@ A. Yes.  And when NetBSD -current finally incorporates the POSIX threads (its
                                            RedHat AS2.1, 7.3, 8.0 and 9
                                            Slackware 9.0
                                            SuSE 8.2
+
+                                        And loads more - see the list above.
 
                                         Others should certainly work and there
                                         are many user reports of success.
@@ -4989,7 +5153,7 @@ A. When RH9 came out with NPTL, we had lots of problems.  NPTL is much closer
    time, we had problems with the glibc 2.3.x (vs. 2.2.x) update.
 
    By the end of the development cycle, a couple of memory management fixes
-   seem to have made the NPTL/glibc problems go away.  But if there's still out
+   seem to have made the NPTL/glibc problems go away.  But if they're still out
    there, they are quite nasty.  Random unexplained BOMBs and such.
 
    If you hit these problems, you can try disabling NPTL via this flag.
@@ -5241,7 +5405,7 @@ A. The .exe distributed through ntop.org is built with Visual C++ 6.0.
    Forget about cygwin.
 
 
-Q. Does ntop (v2.3) work under MinGW?
+Q. Does ntop (v3.0) work under MinGW?
 A. No - There are problems with versions of ntop after 2.1.3 under MinGW -
    it won't build.
 
@@ -5277,28 +5441,28 @@ HP-UX
 =-=-=
 During the 2.2 development cycle, some work was done to make ntop work under
 HP-UX 11 without breaking the HP-UX 10.20 support (limited as it was). During
-the 2.3 development cycle, HP-UX was not considered.
+the 3.0 development cycle, HP-UX was not considered.
 
 It will almost certainly fail.
 
 
 IRIX (v1.3 information)
 =-=-=-=-=-=-=-=-=-=-=-=-
-During the ntop 2.2 and 2.3 development cycles, IRIX was not considered.
+During the ntop 2.2 and 3.0 development cycles, IRIX was not considered.
 
 It will almost certainly fail.
 
 
 Digital UNIX (v1.3)
 ===================
-During the ntop 2.2 and 2.3 development cycles, Digital UNIX was not considered.
+During the ntop 2.2 and 3.0 development cycles, Digital UNIX was not considered.
 
 It will almost certainly fail.
 
 
 AIX (v1.3)
 ==========
-During the ntop 2.2 and 2.3 development cycles, AIX was not considered.
+During the ntop 2.2 and 3.0 development cycles, AIX was not considered.
 
 It will almost certainly fail.
 
@@ -5493,9 +5657,10 @@ RESPONSES
 
 Despite any individual's frequent postings, nobody is "responsible" for
 answering your question. It's all on a "best efforts" basis. This is equally
-true of the FAQs posted at http://snapshot.ntop.org. Our responses may be
-incomplete, inaccurate, even dead wrong. Caveat Emptor! The only "guarantee"
-is that free support will be worth what you've paid for it.
+true of the entries in ntop's Wiki. Our responses may be incomplete, inaccurate,
+even dead wrong. Caveat Emptor! The only "guarantee" is that free support will 
+be worth what you've paid for it.  It may be worth MORE, it won't be worth
+LESS.
 
 Just because you post a question does NOT mean that you are OWED an answer.
 
@@ -5545,11 +5710,11 @@ WHAT IS SUPPORTED?
 
 Releases are hosted at SourceForge.
 
-At the time of this writing the stable version is 2.3. What support is available
+At the time of this writing the stable version is 3.0. What support is available
 is for the development version ("the cvs").  All support is in the form of
 fixing things in the cvs.
 
-However we also attempt to support the current "stable" release (2.3).
+However we also attempt to support the current "stable" release (3.0).
 
 Older versions are not supported -- especially 1.3 and the 2.0.99 series of
 2.1 release candidates.  If you have a problem with them, please obtain the
@@ -5605,11 +5770,11 @@ The actual flow of ntop development was 2.1 -> 2.1.1 -> 2.1.2 -> 2.1.50
    after 2.2, came 2.2a/2.2b (Win32 only), then 2.2c.  These were branches,
    containing unique 2.2 fixes and back-ports of some critical items.
 
-2.3
+3.0
 ===
 
 The actual flow of ntop development was 2.2.1..4 ->
-                                    -> 2.2.90..92 -> 2.3
+                                    -> 2.2.90..99 -> 3.0pre1 -> 3.0
 
 
 FEE-BASED SUPPORT
@@ -5640,8 +5805,7 @@ BEFORE POSTING:
     The minimum required set is just that - minimal.  This is often the source
     of "feature x or switch y doesn't work" reports.
 
-2. Please review the docs/FAQ file and also the ntop community FAQs at
-   http://snapshot.ntop.org.
+2. Please review the docs/FAQ file.
 
 3. Please review back message traffic from the mailing lists.
 
@@ -5934,5 +6098,5 @@ $4 = {dptr = 0x0, dsize = 4}
 ==========================================================================
 ==========================================================================
 Original version Luca Deri, 1999-2001
-Updated Burton M. Strauss III 2002, 2003
+Updated Burton M. Strauss III 2002, 2003, 2004
 
