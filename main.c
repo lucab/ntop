@@ -654,7 +654,7 @@ int ntop_main(int argc, char *argv[]) {
 #else
 int main(int argc, char *argv[]) {
 #endif
-  int i, j, rc, userSpecified;
+  int i, j, rc, userSpecified, bufLen;
   int effective_argc;
   char **effective_argv;
   char ifStr[196] = {0};
@@ -675,8 +675,13 @@ int main(int argc, char *argv[]) {
   mtrace();
 #endif
 
-  startedAs = (char*)malloc(LINE_BUFFERS_LENGTH) /* big just to be safe */;
-  startedAs[0]='\0';
+  bufLen=0;
+  for (i=0; i<argc; i++) {
+     bufLen += 1 + strlen(argv[i]);
+  }
+  
+  startedAs = (char*)malloc(bufLen);
+  memset(startedAs, 0, (size_t) bufLen); 
   for (i=0; i<argc; i++) {
      if (argv[i] != NULL) {
          strcat(startedAs, argv[i]);
