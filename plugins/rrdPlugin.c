@@ -33,6 +33,10 @@
 
 #if defined(HAVE_LIBRRD) || defined(HAVE_RRD_H)
 
+#ifdef WIN32
+int optind, opterr;
+#endif
+
 #define DETAIL_LOW     0
 #define DETAIL_MEDIUM  1
 #define DETAIL_HIGH    2
@@ -62,6 +66,7 @@ void updateCounter(char *hostPath, char *key, Counter value);
 void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter);
 char x2c(char *what);
 void unescape_url(char *url);
+void mkdir_p(char *path);
 
 /* ****************************************************** */
 
@@ -86,17 +91,65 @@ static void calfree (void) {
 
 /* ******************************************* */
 
+#ifdef WIN32
+void revertSlash(char *str) {
+	int i;
+
+	for(i=0; str[i] != '\0'; i++) 
+		if(str[i] == '/')
+			str[i] = '\\';
+}
+#endif
+
+/* ******************************************* */
+
+#ifdef WIN32
+#define _mkdir(a) mkdir(a)
+#define SEPARATOR '\\'
+#else
+#define _mkdir(a) mkdir(a, 0744 /* -rwxr--r-- */)
+#define SEPARATOR '/'
+#endif
+
+void mkdir_p(char *path) {
+  int i;
+
+#ifdef WIN32
+  revertSlash(path);
+#endif
+
+  for(i=0; path[i] != '\0'; i++)
+    if(path[i] == SEPARATOR) {
+      path[i] = '\0';
+      _mkdir(path);
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "mkdir(%s)", path);
+#endif
+      path[i] = SEPARATOR;
+    }
+
+  _mkdir(path);
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "mkdir(%s)", path);
+#endif
+}
+
+/* ******************************************* */
+
 int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average) {
-  char *argv[16], cmd[64], buf[96], buf1[96], path[256];
-  struct stat statbuf;
-  int argc = 0, rc;
+  char *argv[16], path[256];
+  int argc = 0;
   time_t        start,end;
-  unsigned long step, ds_cnt,i,ii;
+  unsigned long step, ds_cnt,i;
   rrd_value_t   *data,*datai, _total, _val;
   char          **ds_namv;
 
   sprintf(path, "%s/rrd/%s/%s", myGlobals.dbPath, rrdPath, rrdFilePath);
+
+#ifdef WIN32
+  revertSlash(path);
+#endif
 
   /* traceEvent(TRACE_INFO, "Path: %s", path); */
 
@@ -142,7 +195,8 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
 
 static void listResource(char *rrdPath, char *rrdTitle,
 			 char *startTime, char* endTime) {
-  char path[512], url[256];
+#ifndef WIN32
+	char path[512], url[256];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
   int numEntries = 0;
@@ -151,6 +205,10 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   sprintf(path, "%s/rrd/%s", myGlobals.dbPath, rrdPath);
 
+#ifdef WIN32
+  revertSlash(path);
+#endif
+  
   directoryPointer = opendir(path);
 
   if(directoryPointer == NULL) {
@@ -241,6 +299,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   sendString("</CENTER>");
   sendString("<br><b>NOTE: total and average values are NOT absolute but calculated on the specified time interval.</b>\n");
 
+#endif /* WIN32 */
   printHTMLtrailer();
 }
 
@@ -248,16 +307,19 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
 void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 		  char *startTime, char* endTime) {
-  char path[512], *argv[16], cmd[64], buf[96], buf1[96], fname[256];
+  char path[512], *argv[16], buf[96], buf1[96], fname[256];
   struct stat statbuf;
   int argc = 0, rc, x, y;
 
   sprintf(path, "%s/rrd/%s%s.rrd", myGlobals.dbPath, rrdPath, rrdName);
   sprintf(fname, "%s/%s.gif", myGlobals.dbPath, rrdName);
 
-  if(stat(path, &statbuf) == 0) {
-    char startStr[32], counterStr[64];
+#ifdef WIN32
+  revertSlash(path);
+  revertSlash(fname);
+#endif
 
+  if(stat(path, &statbuf) == 0) {
     argv[argc++] = "rrd_graph";
     argv[argc++] = fname;
     argv[argc++] = "--lazy";
@@ -316,6 +378,10 @@ void updateCounter(char *hostPath, char *key, Counter value) {
 
   sprintf(path, "%s%s.rrd", hostPath, key);
 
+#ifdef WIN32
+  revertSlash(path);
+#endif
+  
   if(stat(path, &statbuf) != 0) {
     char startStr[32], counterStr[64];
     int step = 300;
@@ -723,11 +789,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     char *hostKey, rrdPath[512], filePath[512];
     int i, j;
     Counter numRRDs = numTotalRRDs;
-    char fileName[NAME_MAX], cmdName[NAME_MAX], tmpStr[16];
-    FILE *fd;
-#if 0 && defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
-    int childpid;
-#endif
 
     if (start_tm != 0) end_tm = time(NULL);
     sleep_tm = dumpInterval - (end_tm - start_tm);
@@ -753,8 +814,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
       for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
 	HostTraffic *el;
 
-	if((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]) == NULL) continue;
-	/* if(((!subnetPseudoLocalHost(el)) && (!multicastHost(el))))                              continue; */
+	if((i == myGlobals.otherHostEntryIdx) || (i == myGlobals.broadcastEntryIdx)
+	   || ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]) == NULL)
+	   || broadcastHost(el))
+	  continue;
+
+	/* if(((!subnetPseudoLocalHost(el)) && (!multicastHost(el)))) continue; */
 
 	if(el->bytesSent.value > 0) {
 	  if(el->hostNumIpAddress[0] != '\0') {
@@ -770,9 +835,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  }
 
 	  sprintf(rrdPath, "%s/rrd/hosts/%s/", myGlobals.dbPath, hostKey);
-	  sprintf(filePath, "mkdir -p %s", rrdPath);
-	  system(filePath);
-
+	  mkdir_p(rrdPath);
+	  
 	  updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
 	  updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
 	  updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent);
@@ -872,8 +936,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
       while(list != NULL) {
 	if(list->pluginStatus.activePlugin) {
 	  sprintf(rrdPath, "%s/rrd/flows/%s/", myGlobals.dbPath, list->flowName);
-	  sprintf(filePath, "mkdir -p %s", rrdPath);
-	  system(filePath);
+	  mkdir_p(rrdPath);
 
 	  updateCounter(rrdPath, "packets", list->packets.value);
 	  updateCounter(rrdPath, "bytes",   list->bytes.value);
@@ -890,8 +953,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	if(myGlobals.device[i].virtualDevice) continue;
 
 	sprintf(rrdPath, "%s/rrd/interfaces/%s/", myGlobals.dbPath,  myGlobals.device[i].name);
-	sprintf(filePath, "mkdir -p %s", rrdPath);
-	system(filePath);
+	mkdir_p(rrdPath);
 
 	updateCounter(rrdPath, "ethernetPkts", myGlobals.device[i].ethernetPkts.value);
 	updateCounter(rrdPath, "broadcastPkts", myGlobals.device[i].broadcastPkts.value);
@@ -971,10 +1033,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		  sprintf(rrdPath, "%s/rrd/matrix/%s/%s/", myGlobals.dbPath,
 			  myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
 			  myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
-
-		  sprintf(filePath, "mkdir -p %s", rrdPath);
-		  system(filePath);
-
+		  mkdir_p(rrdPath);
+	
 		  updateCounter(rrdPath, "pkts",
 				myGlobals.device[k].ipTrafficMatrix[idx]->pktsSent.value);
 
