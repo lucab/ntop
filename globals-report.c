@@ -36,3 +36,9 @@ int sock_ssl;
 #ifdef MULTITHREADED
 pthread_t logFileLoopThreadId, cursesRefreshThreadId;
 #endif
+
+/* TCP Wrappers */
+#ifdef HAVE_LIBWRAP
+int allow_severity = LOG_INFO;
+int deny_severity  = LOG_WARNING;
+#endif /* HAVE_LIBWRAP */

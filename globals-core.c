@@ -100,12 +100,6 @@ u_short numProcesses;
 ProcessInfoList *localPorts[TOP_IP_PORT];
 
 
-/* TCP Wrappers */
-#ifdef HAVE_LIBWRAP
-int allow_severity = LOG_INFO;
-int deny_severity  = LOG_WARNING;
-#endif /* HAVE_LIBWRAP */
-
 /* Filter Chains */
 u_short handleRules;
 FlowFilterList *flowsList;

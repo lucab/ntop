@@ -370,9 +370,6 @@ int getdomainname(char *name, size_t len);
 #if defined(HAVE_TCPD_H)
 
 # include <tcpd.h>
-# ifndef HAVE_LIBWRAP
-# define HAVE_LIBWRAP
-# endif /* HAVE_LIBWRAP */
 # include <syslog.h>
 # ifndef SYSLOG_FACILITY
 #  define SYSLOG_FACILITY LOG_DAEMON   /* default value, if not specified otherwise */

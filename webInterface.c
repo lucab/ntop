@@ -666,7 +666,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
 /* ******************************* */
 
 char* getRowColor() {
-#define USE_COLOR
+  /* #define USE_COLOR */
 
 #ifdef USE_COLOR
   if(alternateColor == 0) {
@@ -684,7 +684,7 @@ char* getRowColor() {
 /* ******************************* */
 
 char* getActualRowColor() {
-#define USE_COLOR
+  /* #define USE_COLOR */
 
 #ifdef USE_COLOR
   if(alternateColor == 1) {
