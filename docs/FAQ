@@ -4200,6 +4200,12 @@ A. No. All ntop does is send a packet to the network addressed to the
 -----netFlow--------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+Q. Which versions of netFlow.
+A. v5
+   And v7 - in that internally a v7 flow is copied to a v5 buffer and then
+   processed.  We default/ignore fields that are different.
+
+
 Q. netFlow doesn't work.
 A. You MUST make sure the ntop plugin is ACTIVE.  With the change to allow
    setting parameters while inactive, it's easy to miss that last step.  
@@ -4242,6 +4248,9 @@ A. Dale Reed pointed out a good tech doc (no flak, just the formats) for netflow
     V1/5/7:
 
 http://www.cisco.com/univercd/cc/td/doc/product/rtrmgmt/nfc/nfc_2_0/nfc_ug/nfcform.htm
+
+   (As of Oct2003, it includes v8 and is here:)
+http://www.cisco.com/univercd/cc/td/doc/product/rtrmgmt/nfc/nfc_3_0/nfc_ug/nfcform.htm
 
 
 Q. The netFlow record input and output values are zero.
