@@ -102,7 +102,6 @@ CFG_DBFILE_DIR = @CFG_DBFILE_DIR@
 CFG_PLUGIN_DIR = @CFG_PLUGIN_DIR@
 CFG_RUN_DIR = @CFG_RUN_DIR@
 CPP = @CPP@
-CXX = @CXX@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
@@ -165,6 +164,7 @@ libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
+librrdPlugin_la_LIBADD = -L../myrrd -lmyrrd
 
 libpdaPlugin_la_SOURCES = pdaPlugin.c
 libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
@@ -201,7 +201,7 @@ libnfsPlugin_la_OBJECTS = $(am_libnfsPlugin_la_OBJECTS)
 libpdaPlugin_la_LIBADD =
 am_libpdaPlugin_la_OBJECTS = pdaPlugin.lo
 libpdaPlugin_la_OBJECTS = $(am_libpdaPlugin_la_OBJECTS)
-librrdPlugin_la_LIBADD =
+librrdPlugin_la_DEPENDENCIES =
 am_librrdPlugin_la_OBJECTS = rrdPlugin.lo
 librrdPlugin_la_OBJECTS = $(am_librrdPlugin_la_OBJECTS)
 libsflowPlugin_la_LIBADD =
