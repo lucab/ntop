@@ -23,6 +23,7 @@
 
 
 #include "ntop.h"
+#include "globals-report.h"
 
 static void initIPCountryTable(void); /* Forward */
 
