@@ -195,8 +195,9 @@ A. Not really, actually those are all protocols for sending and receiving
    things with it are called 'collectors' (if they process it and forward it on)
    or called 'displays'.
 
-   In fact, ntop can both send and receive netFlow and sFlow packets.  It can be
-   a 'probe' or a 'display'.
+   In fact, ntop can receive netFlow packets and both send and receive sFlow 
+   packets.  It can be a 'probe' or a 'display'. (ntop used to be able to send
+   netFlow packets - that was removed 2004-03 by Luca).
 
 
 Q. So ntop is like Nagios or Ipswitch's - WhatsUp Gold?.
@@ -1673,7 +1674,7 @@ A. There are a couple of options that appear only if they're not compiled in,
                              Disable promiscuous mode
 
     -t <number>    | --trace-level <number>
-                             Trace level 0-5
+                             Trace level 0-6
 
     -u <user>      | --user <user>
                              Userid/name to run ntop under (see man page)
@@ -1753,9 +1754,6 @@ A. There are a couple of options that appear only if they're not compiled in,
     --fc-only
                              Display only Fibre Channel statistics
 
-    --log-extra <level>
-                             Add extra information to log messages
-
     --no-fc
                              Disable processing & Display of Fibre Channel
 
@@ -1782,6 +1780,18 @@ Q. -4 and -6?
 A. The default for the ntop web server is to connect to any address and any family
    of addresses, so if the NIC has both IPv4 and IPv6 addresses it should respond 
    to both.  Use these to restrict the web server.
+
+
+Q. --trace-level?
+A. The settings 0..4 control the amount of information logged or displayed.
+   5 adds a [MSGIDnnnn] field and 6 adds the file:line where the message originated.
+   -t 5 can be useful with a log watch type package, -t 6 is mostly for debugging.
+
+   -t 5:
+      [MSGID8757584] OSFP: scanFingerprintLoop() checked 1, resolved 1
+
+   -t 6:
+      [MSGID8757584] [ntop:698] OSFP: scanFingerprintLoop() checked 1, resolved 1
 
 
 Q. ntop starts up find and then seems to die.
@@ -3754,6 +3764,20 @@ A. The key word is LIMITED
    These checks are performed for each of the libraries specified in the config
    value (CFG_DATAFILE_DIR).
 
+Q. What about the country flags.
+A. There are other sets available on the web, of different quality and size.
+   Rather than chase down permissions and rights, we'll stick with what we have
+   but let you know here of other options.
+
+   If you find a set you like, just download them and replace the xx.gif files 
+   in .../html/statsicons/flags
+
+   Much better, but about 4x larger:
+      http://users.skynet.be/hermandw/fl/smalgifs.html
+
+   Same height, but wider (so they look better):
+      http://www.kidlink.org/www/miniflags.html
+
 
 Q. What pages can be customized?
 A. ls /usr/share/ntop/html/*.html (or wherever the ntop pages are installed):
@@ -4399,8 +4423,8 @@ A. You need to configure ntop as a listener (it can also be a collector, but
    sFlow-device).
 
 
-Q. Is there any parameter to set to tell ntop which interface/ip address
-   to use when exporting the (netflow/sflow) flows?
+Q. Is there any parameter to set to tell sFlow which interface/ip address
+   to use when exporting the flows?
 A. No. All ntop does is send a packet to the network addressed to the
    destination you request.
 
@@ -4429,7 +4453,7 @@ A. No. All ntop does is send a packet to the network addressed to the
    but it is the best match)
 
    But how it goes out (and thus the source IP address) is totally up to the OS.
-   Just be aware when it gets to the netflow/sflow collector, it might have an
+   Just be aware when it gets to the sflow collector, it might have an
    unexpected ip address as the source.
 
 
@@ -4439,7 +4463,7 @@ A. No. All ntop does is send a packet to the network addressed to the
 
 Q. Which versions of netFlow.
 A. v5
-   And v7/v9 - in that internally a v7/v9 flow is copied to a v5 buffer and then
+   And v1/v7/v9 - in that internally a v1/v7/v9 flow is copied to a v5 buffer and then
    processed.  We default/ignore fields that are different.
    And nFlow - similar conversion.
 
@@ -4489,11 +4513,6 @@ http://www.cisco.com/univercd/cc/td/doc/product/rtrmgmt/nfc/nfc_2_0/nfc_ug/nfcfo
 
    (As of Oct2003, it includes v8 and is here:)
 http://www.cisco.com/univercd/cc/td/doc/product/rtrmgmt/nfc/nfc_3_0/nfc_ug/nfcform.htm
-
-
-Q. The netFlow record input and output values are zero.
-A. ntop doesn't have SNMP routines, so we can't determine the SNMP index of the
-   interfaces.
 
 
 Q. How Do I Enable NetFlow Data Export on a Cisco Device?
