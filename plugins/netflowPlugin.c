@@ -1400,8 +1400,14 @@ static void handleNetflowHTTPrequest(char* url) {
 
 
   sendString("<center><table border=0>\n<tr><td><table border>");
-
   sendString("<tr><th colspan=4 "DARK_BG">Incoming Flows</th></tr>");
+  if(myGlobals.netFlowInPort == 0) {
+    sendString("<tr><td colspan=4 align=\"center\">"
+               "<font color=red>WARNING</font>: "
+                 "The 'Local Collector UDP Port' is zero (none). "
+                 "You must enter a port number to receive netFlow data."
+               "</td></tr>\n");
+  }
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Collection</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Local Collector UDP Port:</td><td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");
 
@@ -1409,8 +1415,8 @@ static void handleNetflowHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
 
-  sendString("> <br>[default port is "DEFAULT_NETFLOW_PORT_STR"]</td><td>"
-	     "<INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+  sendString(">&nbsp; &nbsp;&nbsp;&nbsp;The normal port used for netFlow is "DEFAULT_NETFLOW_PORT_STR".");
+  sendString("</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
 
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Virtual NetFlow Interface<br>Network Address</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
@@ -1456,8 +1462,9 @@ static void handleNetflowHTTPrequest(char* url) {
 
   /* *************************************** */
 
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Interfaces</TH>"
-	     "<td colspan=3><table border width=100%%><tr><TH "TH_BG">Name</th><TH "TH_BG">Flow Export Enabled</TH></tr>\n");
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Interfaces</TH><td colspan=3>"
+             "<table border>"
+               "<tr><TH "TH_BG">Name</th><TH "TH_BG">Flow Export Enabled</TH></tr>\n");
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(!myGlobals.device[i].virtualDevice) {
@@ -1465,7 +1472,7 @@ static void handleNetflowHTTPrequest(char* url) {
 		  "<A HREF=/plugins/NetFlow?%s=%s>%s</A></TD></TR>\n",
 		  myGlobals.device[i].name, myGlobals.device[i].name,
 		  myGlobals.device[i].exportNetFlow == FLAG_NETFLOW_EXPORT_ENABLED ? "No" : "Yes",
-		  myGlobals.device[i].exportNetFlow == FLAG_NETFLOW_EXPORT_ENABLED ? "Yes" : "No") < 0)
+		  myGlobals.device[i].exportNetFlow == FLAG_NETFLOW_EXPORT_ENABLED ? "Enabled" : "Disabled") < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -1474,14 +1481,17 @@ static void handleNetflowHTTPrequest(char* url) {
     }
   }
 
-  sendString("<tr><td colspan=4>");
-  sendString("Press the link to toggle the interface state<br>\n");
+  sendString("<tr><td colspan=2>"
+             "<center>Click the 'Enabled' or 'Disabled' link to toggle the interface state</center>"
+             "</td></tr>\n");
 
-  if(numEnabled == 0) {
-    sendString("<center><font color=red>WARNING</font>: as all the interfaces are disabled, no flows will be exported</center>\n");
-  }
+  if(numEnabled == 0)
+    sendString("<tr><th colspan=2 align=\"center\">"
+               "<font color=red>WARNING</font>: "
+                 "ALL interfaces are disabled, so no flows will be exported!"
+               "</th></tr>\n");
 
-  sendString("</td></tr></table>\n</td></tr>\n");
+  sendString("</table>\n</td></tr>\n");
 
   /* *************************** */
 
