@@ -17,10 +17,10 @@ SSYYNNOOPPSSIISS
        wwoorrdd  _p_a_s_s_w_o_r_d]  [--BB|----ffiilltteerr--eexxpprreessssiioonn  _e_x_p_r_e_s_s_i_o_n] [--CC _<_c_o_n_f_i_gmode>_]
        [--DD|----ddoommaaiinn _<_n_a_m_e_>] [--FF|----ffllooww--ssppeecc _<_s_p_e_c_s_>] [--MM|----nnoo--iinntteerrffaaccee--mmeerrggee]
        [--OO|--------oouuttppuutt--ppaacckkeett--ppaatthh]   [--PP|----ddbb--ffiillee--ppaatthh  _<_p_a_t_h_>]  [--QQ|----ssppooooll--
-       ffiillee--ppaatthh  _<_p_a_t_h_>]  [--RR|----ffiilltteerr--rruullee  _<_f_i_l_e_>]  _<_n_u_m_b_e_r_>]  [--UU|----mmaappppeerr
-       _<_U_R_L_>]  [--VV|----vveerrssiioonn]]  [--XX _<_m_a_x___n_u_m___T_C_P___s_e_s_s_i_o_n_s_>] [----ddiissaabbllee--ssttooppccaapp]
-       [----lloogg--eexxttrraa  _<_n_u_m_b_e_r_>]   [----ddiissaabbllee--iinnssttaannttsseessssiioonnppuurrggee]   [----ddiissaabbllee--
-       sscchheeddyyiieelldd] [----ddiissaabbllee--mmuutteexxeexxttrraaiinnffoo] [----sskkiipp--vveerrssiioonn--cchheecckk]
+       ffiillee--ppaatthh    _<_p_a_t_h_>]    [--UU|----mmaappppeerr    _<_U_R_L_>]    [--VV|----vveerrssiioonn]]    [--XX
+       _<_m_a_x___n_u_m___T_C_P___s_e_s_s_i_o_n_s_>]   [----ddiissaabbllee--ssttooppccaapp]   [----lloogg--eexxttrraa  _<_n_u_m_b_e_r_>]
+       [----ddiissaabbllee--iinnssttaannttsseessssiioonnppuurrggee]   [----ddiissaabbllee--sscchheeddyyiieelldd]    [----ddiissaabbllee--
+       mmuutteexxeexxttrraaiinnffoo] [----sskkiipp--vveerrssiioonn--cchheecckk]
 
        Unix options:
 
