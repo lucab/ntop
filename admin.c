@@ -663,18 +663,22 @@ int doChangeFilter(int len) {
     sendString("<P><HR></P>\n<P><CENTER>");
   }
 
+  sendString("<FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
+
   if(err == NULL) {
     if(*currentFilterExpression != '\0'){
-      if(snprintf(buf, sizeof(buf), "<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1>"
+      if(snprintf(buf, sizeof(buf), 
 		  "<B>Filter changed to <I>%s</I>.</B></FONT>\n", 
 		 currentFilterExpression) < 0)
        traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
-    }else sendString("<B>Kernel (libpcap) filtering disabled.</B>\n");
-    if(filterExpressionInExtraFrame) sendString("</BODY>\n</HTML>\n");
-    else{
+    } else sendString("<B>Kernel (libpcap) filtering disabled.</B></FONT>\n");
+
+    if(filterExpressionInExtraFrame)
+      sendString("</BODY>\n</HTML>\n");
+    else {
       sendString("</CENTER></P>\n");
-      /*sendString("<P><CENTER>The statistics are also reset.</CENTER></P>\n");*/
+      /* sendString("<P><CENTER>The statistics are also reset.</CENTER></P>\n"); */
       printHTMLtrailer();
     }
 
