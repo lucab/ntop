@@ -396,8 +396,8 @@ void sendStringLen(char *theString, unsigned int len) {
   RESEND:
     errno=0;
 
-  if(newSock == DUMMY_SOCKET_VALUE)
-    return;
+    if(newSock == DUMMY_SOCKET_VALUE)
+      return;
 
 #ifdef HAVE_OPENSSL
     if(newSock < 0) {
@@ -420,16 +420,16 @@ void sendStringLen(char *theString, unsigned int len) {
 	retries++;
 	goto RESEND;
       } else if (errno == EPIPE /* Broken pipe: the  client has disconnected */) {
-	  closeNwSocket(&newSock);
-	  return;
-	} else if (errno == EBADF /* Bad file descriptor: a
-				     disconnected client is still sending */) {
-	  closeNwSocket(&newSock);
-	  return;
-	} else {
-	  closeNwSocket(&newSock);
-	  return;
-	}
+	closeNwSocket(&newSock);
+	return;
+      } else if (errno == EBADF /* Bad file descriptor: a
+				   disconnected client is still sending */) {
+	closeNwSocket(&newSock);
+	return;
+      } else {
+	closeNwSocket(&newSock);
+	return;
+      }
     } else {
       len -= rc;
       bytesSent += rc;
@@ -1039,8 +1039,8 @@ static int returnHTTPPage(char* pageName, int postLen) {
 #endif
 	if(webPort > 0) closeNwSocket(&sock);
 
-	alarm(120); /* Don't freeze */
 	setsignal(SIGALRM, quitNow);
+	alarm(120); /* Don't freeze */
       }
     }
 #endif    
@@ -1537,6 +1537,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
 
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
   if(usedFork) {
+    closeNwSocket(&newSock);
     exit(0);
   } else
     return(errorCode);
