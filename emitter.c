@@ -74,6 +74,17 @@ void endWriteArray(int lang) {
 
 /* *************************** */
 
+static void validateXMLString(char *name) {
+  int i;
+  
+  for(i=0; i<strlen(name); i++)
+    if(name[i] == '/') {
+      name[i] = '_';
+    }
+}
+
+/* *************************** */
+
 void initWriteKey(int lang, char *indent, char *keyName, int numEntriesSent) {
   char buf[256];
 
@@ -89,7 +100,8 @@ void initWriteKey(int lang, char *indent, char *keyName, int numEntriesSent) {
     sendString(buf);
     break ;
   case XML_LANGUAGE:
-    if(snprintf(buf, sizeof(buf), "%s<%s>\n",indent, keyName) < 0)
+    validateXMLString(keyName);
+    if(snprintf(buf, sizeof(buf), "%s<%s>\n", indent, keyName) < 0)
       BufferOverflow();
     sendString(buf);
     break ;
@@ -121,6 +133,7 @@ void endWriteKey(int lang, char *indent, char *keyName, char last) {
     sendString(buf);
     break ;
   case XML_LANGUAGE:
+    validateXMLString(keyName);
     if(snprintf(buf, sizeof(buf), "%s</%s>\n",indent, keyName) < 0)
       BufferOverflow();
     sendString(buf);
@@ -150,6 +163,7 @@ void wrtStrItm(int lang, char *indent, char *name, char *value, char last, int n
     break ;
   case XML_LANGUAGE:
     if((value != NULL) && (value[0] != '\0'))  {
+      validateXMLString(name);
       if(snprintf(buf, sizeof(buf), "%s<%s>%s</%s>\n", indent, name, value, name) < 0)
 	BufferOverflow();  sendString(buf);
     }
@@ -210,8 +224,8 @@ void wrtFloatItm(int lang, char *indent, char *name, float value, char last, int
 
 void wrtIntFloatItm(int lang, char *indent, int name, float value, char last, int numEntriesSent) {
   char buf[80];
-  sprintf(buf,"%d",name);
-  wrtFloatItm(lang, indent, buf, value, last, numEntriesSent);
+  sprintf(buf,"%d", name);
+  wrtFloatItm(lang, indent, (lang == XML_LANGUAGE) ? "number" : buf, value, last, numEntriesSent);
 }
 
 /* *************************** */
@@ -966,7 +980,7 @@ void dumpNtopTrafficInfo(char* options) {
 	initWriteKey(lang, "\t", "last60MinutesThpt", numEntries);
 
 	for(j=0; j<59; j++) {
-	  wrtIntFloatItm(lang,"\t\t",j+1,myGlobals.device[i].last60MinutesThpt[j].trafficValue, ',', numEntries);
+	  wrtIntFloatItm(lang,"\t\t",j+1, myGlobals.device[i].last60MinutesThpt[j].trafficValue, ',', numEntries);
 	}
 	wrtIntFloatItm(lang,"\t\t",j+1, myGlobals.device[i].last60MinutesThpt[j].trafficValue, ' ', numEntries);
 	endWriteKey(lang,"\t", "last60MinutesThpt", ',');
