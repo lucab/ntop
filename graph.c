@@ -1365,6 +1365,8 @@ void drawHostsDistanceGraph() {
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
+  GDC_xtitle = GDC_ytitle     = "";
+
 #ifdef WIN32
   sendGraphFile(fileName);
 #endif
