@@ -1090,7 +1090,7 @@ static void handleSession(const struct pcap_pkthdr *h,
       } else if((sport == 8875 /* Napster Redirector */) 
 		&& (tcpDataLength > 0)) {
 	char address[64];
-	in_addr_t svrAddr;
+	struct in_addr_t svrAddr;
 	int i;
 
 	FD_SET(HOST_SVC_NAPSTER_REDIRECTOR, &srcHost->flags);
@@ -2877,7 +2877,7 @@ void processPacket(u_char *_deviceId,
 		   const struct pcap_pkthdr *h,
 		   const u_char *p)
 {
-  struct ether_header *ep, ehdr;
+  struct ether_header ehdr;
   struct tokenRing_header *trp;
   struct fddi_header *fddip;
   u_int hlen, caplen = h->caplen;
@@ -2951,8 +2951,8 @@ void processPacket(u_char *_deviceId,
     HostTraffic *srcHost=NULL, *dstHost=NULL;
     u_int srcHostIdx, dstHostIdx;
 
-    ep = (struct ether_header *)p;
-
+    memcpy(&ehdr, p, sizeof(struct ether_header));
+    
     switch(device[deviceId].datalink) {
     case DLT_FDDI:
       fddip = (struct fddi_header *)p;
@@ -3048,8 +3048,8 @@ void processPacket(u_char *_deviceId,
 	eth_type = 0;
       break;
     default:
-      eth_type = ntohs(ep->ether_type);
-      ether_src = ESRC(ep), ether_dst = EDST(ep);
+      eth_type = ntohs(ehdr.ether_type);
+      ether_src = ESRC(&ehdr), ether_dst = EDST(&ehdr);
     } /* switch(device[deviceId].datalink) */
 
 #if PACKET_DEBUG
