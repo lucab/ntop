@@ -15,6 +15,9 @@
 /* Define if you want a debugging version. */
 #undef DEBUG
 
+/* Define if you have gethostbyaddr_r */
+#undef HAVE_GETHOSTBYADDR_R
+
 /* Define if you OS lacks the getdomainname(2) function. */
 #undef NEED_GETDOMAINNAME
 
@@ -45,6 +48,9 @@
 /* Define if you have the OPENSSL Toolkit (-lssl) by Open SSL Project. */
 #undef HAVE_OPENSSL
 
+/* Define if you want support for SSL v3 */
+#undef SUPPORT_SSLV3
+
 /* Define if you want to have a asyncrhonous address resolution. */
 #undef ASYNC_ADDRESS_RESOLUTION
 
@@ -55,8 +61,9 @@
 #undef HAVE_NCURSES_H
 #undef HAVE_CURSES_H
 
-/* Define if you have the TCP Wrap library (-lwrap). */
+/* Define if you have the TCP Wrap library (-lwrap) and headers. */
 #undef HAVE_LIBWRAP
+#undef HAVE_TCPD_H 
 
 /* Define if you have the GNU readline library (-lreadline). */
 #undef HAVE_READLINE
@@ -76,6 +83,9 @@
 /* Define if you have the zlib */
 #undef HAVE_ZLIB
 
+/* Define if you have a glibc syslog.h or sys/syslog.h with facilitynames[] option */
+#undef HAVE_FACILITYNAMES
+
 /* Define if you have backtrace */
 #undef HAVE_BACKTRACE
 
@@ -83,11 +93,17 @@
 #undef NTOP_LITTLE_ENDIAN
 #undef NTOP_BIG_ENDIAN
 
+/* Define for IGNORE of SIGPIPE */
+#undef YES_IGNORE_SIGPIPE
+
 /* Define for sFlowPlugin.c to define in6_addr for environments that don't have it... */
 #undef HAVE_IN6_ADDR
 
 /* Define if you have the ctime_r function.  */
 #undef HAVE_CTIME_R
+
+/* Define if you have the gethostbyaddr_r function.  */
+#undef HAVE_GETHOSTBYADDR_R
 
 /* Define if you have the getipnodebyaddr function.  */
 #undef HAVE_GETIPNODEBYADDR
