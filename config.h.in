@@ -19,9 +19,11 @@
 #undef NEED_GETDOMAINNAME
 
 /* Define to have essential fallback. */
+#undef HAVE_U_INT64_T
 #undef HAVE_U_INT32_T
 #undef HAVE_U_INT16_T
 #undef HAVE_U_INT8_T
+#undef HAVE_INT64_T
 #undef HAVE_INT32_T
 #undef HAVE_INT16_T
 #undef HAVE_INT8_T
@@ -233,6 +235,9 @@
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
+
+/* Define if you have the <zlib.h> header file.  */
+#undef HAVE_ZLIB_H
 
 /* Define if you have the c library (-lc).  */
 #undef HAVE_LIBC

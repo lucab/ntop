@@ -382,9 +382,9 @@ static void parseOptions(int argc, char * argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:s:t:w:A:D:F:MP:R:S:U:VW:12";
+  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:s:t:w:A:B:D:F:MP:R:S:U:VW:12";
 #else
-  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:s:t:u:v:w:A:D:EF:IKLMNP:R:S:U:VW:12";
+  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:s:t:u:v:w:A:B:D:EF:IKLMNP:R:S:U:VW:12";
 #endif
   int opt;
 
@@ -545,7 +545,7 @@ static void parseOptions(int argc, char * argv []) {
       }
 
       /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-      if ((webAddr = strchr(optarg,':'))) {
+      if((webAddr = strchr(optarg,':'))) {
 	/* DS: Search for : to find xxx.xxx.xxx.xxx:port */
 	/* This code is to be able to bind to a particular interface */
 	*webAddr = '\0';
@@ -568,7 +568,6 @@ static void parseOptions(int argc, char * argv []) {
       myGlobals.currentFilterExpression = (char*)malloc(strlen(optarg)+1);
       strcpy(myGlobals.currentFilterExpression, optarg);
       break;
-
 
     case 'D': /* domain */
       stringSanityCheck(optarg);
@@ -616,7 +615,8 @@ static void parseOptions(int argc, char * argv []) {
 
     case 'P': /* DB-Path */
       stringSanityCheck(optarg);
-      strncpy(myGlobals.dbPath, optarg, sizeof(myGlobals.dbPath)-1)[sizeof(myGlobals.dbPath)-1] = '\0';
+      strncpy(myGlobals.dbPath, optarg, sizeof(myGlobals.dbPath)-1)
+	[sizeof(myGlobals.dbPath)-1] = '\0';
       break;
 
     case 'R':
@@ -703,7 +703,7 @@ static void parseOptions(int argc, char * argv []) {
     default:
       printf("FATAL ERROR: unknown ntop option, '%s'\n", argv[optind-1]);
 #ifdef DEBUG
-      if (op != '?')
+      if(op != '?')
 	printf("             getopt return value is '%c', %d\n", op, op);
 #endif
       usage(stdout);
@@ -711,11 +711,11 @@ static void parseOptions(int argc, char * argv []) {
     }
   }
 
-#if (0)
+#if(0)
 
   all other arguments could be used to specify a filter expression
 
-  if (argc > optind + 1)
+  if(argc > optind + 1)
     {
       fprintf (stdout, "\nWrong option(s): \" ");
       while (optind < argc)
@@ -749,9 +749,9 @@ int main(int argc, char *argv[]) {
   /*
    * check for valid parameters
    */
-  if (webPort == 0) {
+  if(webPort == 0) {
 #ifdef HAVE_OPENSSL
-    if (myGlobals.sslPort == 0) {
+    if(myGlobals.sslPort == 0) {
       printf("FATAL ERROR: both -W and -w can't be set to 0.\n");
       exit(-1);
     }
@@ -768,7 +768,7 @@ int main(int argc, char *argv[]) {
    * in promiscuous mode is a privileged operation.
    * Verify we're running as root, unless we are reading data from a file
    */
-  if (! myGlobals.rFileName && ((getuid () && geteuid ()) || setuid (0))) {
+  if(! myGlobals.rFileName && ((getuid () && geteuid ()) || setuid (0))) {
     printf ("Sorry, %s uses network interface(s) in promiscuous mode, so it needs root permission to run.\n",
 	    myGlobals.program_name);
     exit (-1);
@@ -830,17 +830,17 @@ int main(int argc, char *argv[]) {
   traceEvent(TRACE_INFO, "ntop v.%s %s [%s] (%s build)",
 	     version, THREAD_MODE, osName, buildDate);
 
-  if (myGlobals.rFileName != NULL)
+  if(myGlobals.rFileName != NULL)
     strncpy(ifStr, PCAP_NW_INTERFACE, sizeof(ifStr));
   else
     for (i=0; i<myGlobals.numDevices; i++) {
       char tmpBuf[48];
 
-      if (i>0) {
-	if (snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
+      if(i>0) {
+	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
 	  BufferOverflow();
       } else {
-	if (snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
+	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
 	  BufferOverflow();
       }
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
@@ -866,9 +866,9 @@ int main(int argc, char *argv[]) {
     Andreas Pfaller <apfaller@yahoo.com.au>
   */
 #ifndef WIN32
-  if ((getuid() != geteuid()) || (getgid() != getegid())) {
+  if((getuid() != geteuid()) || (getgid() != getegid())) {
     /* setuid binary, drop privileges */
-    if (setgid(getgid())!=0 || setuid(getuid())!=0) {
+    if(setgid(getgid())!=0 || setuid(getuid())!=0) {
       traceEvent(TRACE_ERROR,
 		 "FATAL ERROR: Unable to drop privileges.\n");
       exit(-1);
@@ -878,21 +878,21 @@ int main(int argc, char *argv[]) {
   /*
    * set user to be as inoffensive as possible
    */
-  if ((userId != 0) || (groupId != 0)){
+  if((userId != 0) || (groupId != 0)){
     /* user id specified on commandline */
-    if ((setgid(groupId) != 0) || (setuid(userId) != 0)) {
+    if((setgid(groupId) != 0) || (setuid(userId) != 0)) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Unable to change user ID.\n");
       exit(-1);
     }
   }
 
-  if ((geteuid() == 0) || (getegid() == 0)) {
+  if((geteuid() == 0) || (getegid() == 0)) {
     traceEvent(TRACE_INFO, "WARNING: For security reasons it is STRONGLY recommended to");
     traceEvent(TRACE_INFO, "WARNING: run ntop as unprivileged user by using the -u option!");
   }
 #endif
 
-  if (localAddresses != NULL) {
+  if(localAddresses != NULL) {
     handleLocalAddresses(localAddresses);
     free(localAddresses);
     localAddresses = NULL;
@@ -900,21 +900,21 @@ int main(int argc, char *argv[]) {
 
   initDeviceDatalink();
 
-  if (myGlobals.currentFilterExpression != NULL)
+  if(myGlobals.currentFilterExpression != NULL)
     parseTrafficFilter();
   else
     myGlobals.currentFilterExpression = strdup(""); /* so that it isn't NULL! */
 
   /* Handle flows (if any) */
-  if (flowSpecs != NULL) {
-    if (flowSpecs[0] != '\0')
+  if(flowSpecs != NULL) {
+    if(flowSpecs[0] != '\0')
       handleFlowsSpecs(flowSpecs);
     free(flowSpecs);
   }
 
   /* Patch courtesy of Burton M. Strauss III <BStrauss3@attbi.com> */
-  if (protoSpecs != NULL) {
-    if (protoSpecs[0] != '\0')
+  if(protoSpecs != NULL) {
+    if(protoSpecs[0] != '\0')
       handleProtocols(protoSpecs);
     free(protoSpecs);
   }

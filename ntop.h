@@ -48,6 +48,10 @@
 /*
  * fallbacks for essential typedefs
  */
+#if !defined(HAVE_U_INT64_T)
+typedef unsigned long u_int64_t;
+#endif
+
 #if !defined(HAVE_U_INT32_T)
 typedef unsigned int u_int32_t;
 #endif
