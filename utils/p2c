@@ -35,10 +35,10 @@ fi
 echo ""
 echo " Retrieving data for ${month} ${year}"
 
-apnic="ftp://ftp.apnic.net/pub/stats/apnic/apnic-${year}-${month}-01"
-arin="ftp://ftp.arin.net/pub/stats/arin/arin.${year}${month}01"
-lacnic="ftp://ftp.lacnic.net/pub/stats/lacnic/lacnic.${year}${month}01"
-ripe="ftp://ftp.ripe.net/ripe/stats/ripencc.${year}${month}01"
+apnic="ftp://ftp.apnic.net/pub/stats/apnic/delegated-apnic-${year}${month}01"
+arin="ftp://ftp.arin.net/pub/stats/arin/delegated-arin-${year}${month}01"
+lacnic="ftp://ftp.lacnic.net/pub/stats/lacnic/delegated-lacnic-${year}${month}01"
+ripe="ftp://ftp.ripe.net/ripe/stats/${year}/delegated-ripencc-${year}${month}01.bz2"
 
 ripealt="ftp://ftp.ripe.net/ripe/dbase/split/ripe.db.inetnum.gz"
 apnicalt="ftp://ftp.apnic.net/pub/apnic/whois-data/APNIC/split/apnic.db.inetnum.gz"
@@ -90,14 +90,15 @@ echo "                  (the ripe file is over 40MB)."
 echo ""
 echo "                   Time for a cup of coffee..."
 echo ""
-gcc -c -o p2clib p2clib.c
+gcc -c -o p2clib.o p2clib.c
 gcc -lm -o prefixtablegen prefixtablegen.c p2clib.o
 gcc -o inetnum2countryalloc inetnum2countryalloc.c p2clib.o
 
 wget -O 1_apnic.data $apnic
 wget -O 1_arin.data $arin
 wget -O 1_lacnic.data $lacnic
-wget -O 1_ripe.data $ripe
+wget -O 1_ripe.data.bz2 $ripe
+bunzip2 1_ripe.data.bz2
 
 echo ""
 echo "  Downloading alternate RIPE data..."
