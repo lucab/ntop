@@ -484,6 +484,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 void handleLocalAddresses(char* addresses) {
   char localAddresses[1024];
 
+  localAddresses[0] = '\0';
+
   handleAddressLists(addresses, networks, &numLocalNets, 
 		     localAddresses, sizeof(localAddresses));
 

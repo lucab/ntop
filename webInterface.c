@@ -2626,19 +2626,14 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* *************************** *************************** */
 
-  sendString(texthtml("\n\nCompile Time: ./configure\n\n", "<tr><th colspan=\"2\"" TH_BG ">Compile Time: ./configure</tr>\n"));
-
 #ifndef WIN32
+  sendString(texthtml("\n\nCompile Time: ./configure\n\n", "<tr><th colspan=\"2\"" TH_BG ">Compile Time: ./configure</tr>\n"));
   printFeatureConfigInfo(textPrintFlag, "./configure parameters", configure_parameters);
   printFeatureConfigInfo(textPrintFlag, "Built on (Host)", host_system_type);
   printFeatureConfigInfo(textPrintFlag, "Built for (Target)", target_system_type);
-#endif
   printFeatureConfigInfo(textPrintFlag, "compiler (cflags)", compiler_cflags);
-#ifndef WIN32
   printFeatureConfigInfo(textPrintFlag, "include path", include_path);
-#endif
   printFeatureConfigInfo(textPrintFlag, "system libraries", system_libs);
-#ifndef WIN32
   printFeatureConfigInfo(textPrintFlag, "install path", install_path);
 #endif
 #if defined(__GNUC__)
