@@ -171,7 +171,8 @@ static void resolveAddress(char* symAddr,
 
       myAddr.s_addr = hostAddr->s_addr;
       if(snprintf(buffer, sizeof(buffer), 
-		  "/usr/bin/host %s", intoa(myAddr)) < 0)
+		  "/usr/bin/host %s", 
+		  intoa(myAddr)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
 
       fd = sec_popen(buffer, "r");
@@ -179,8 +180,13 @@ static void resolveAddress(char* symAddr,
       if(fd == NULL) {
 	tmpBuf[0] = '\0';
       } else {
-	fgets(tmpBuf, sizeof(tmpBuf), fd);
+	char *rspStr;
+	
+	memset(tmpBuf, 0, sizeof(tmpBuf));
+	rspStr = fgets(tmpBuf, sizeof(tmpBuf), fd);
 	pclose(fd);
+	if(rspStr == NULL)
+	  tmpBuf[0] = '\0';
       }
 
       /*
