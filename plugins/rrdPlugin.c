@@ -42,6 +42,7 @@
 static unsigned short initialized = 0, dumpInterval, dumpDetail;
 static char *hostsFilter;
 static Counter numTotalRRDs = 0;
+static unsigned long numRuns = 0;
 
 #ifdef MULTITHREADED
 pthread_t rrdThread;
@@ -67,7 +68,7 @@ static void calfree (void) {
       if (calcpr[i]){
 	free(calcpr[i]);
       }
-    } 
+    }
     if (calcpr) {
       free(calcpr);
     }
@@ -77,33 +78,106 @@ static void calfree (void) {
 
 /* ******************************************* */
 
-static void listResource(char *rrdPath, char *rrdTitle) {
-  char path[512];
+int sumCounter(char *rrdPath, char *rrdFilePath,
+	       char *startTime, char* endTime, Counter *total, float *average) {
+  char *argv[16], cmd[64], buf[96], buf1[96], path[256];
+  struct stat statbuf;
+  int argc = 0, rc;
+  time_t        start,end;
+  unsigned long step, ds_cnt,i,ii;
+  rrd_value_t   *data,*datai, _total, _val;
+  char          **ds_namv;
+
+  sprintf(path, "%s/rrd/%s/%s", myGlobals.dbPath, rrdPath, rrdFilePath);
+
+  /* traceEvent(TRACE_INFO, "Path: %s", path); */
+
+  argv[argc++] = "rrd_fecth";
+  argv[argc++] = path;
+  argv[argc++] = "AVERAGE";
+  argv[argc++] = "--start";
+  argv[argc++] = startTime;
+  argv[argc++] = "--end";
+  argv[argc++] = endTime;
+
+#ifdef DEBUG
+  for (x = 0; x < argc; x++)
+    traceEvent(TRACE_INFO, "%d: %s", x, argv[x]);
+#endif
+
+  optind=0; /* reset gnu getopt */
+  opterr=0; /* no error messages */
+
+  if(rrd_fetch(argc, argv, &start, &end, &step, &ds_cnt, &ds_namv, &data) == -1)
+    return(-1);
+
+  datai  = data, _total = 0;
+
+  for(i = start; i <= end; i += step) {
+    _val = *(datai++);
+
+    if(_val > 0)
+      _total += _val;
+  }
+
+  for(i=0;i<ds_cnt;i++) free(ds_namv[i]);
+  free(ds_namv);
+  free(data);
+
+  (*total)   = _total*step;
+  (*average) = (float)(*total)/(float)(end-start);
+  return(0);
+}
+
+
+/* ******************************************* */
+
+static void listResource(char *rrdPath, char *rrdTitle,
+			 char *startTime, char* endTime) {
+  char path[512], url[256];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
+  int numEntries = 0;
 
   sendHTTPHeader(HTTP_TYPE_HTML, 0);
 
   sprintf(path, "%s/rrd/%s", myGlobals.dbPath, rrdPath);
 
   directoryPointer = opendir(path);
-  
+
   if(directoryPointer == NULL) {
     char buf[256];
     snprintf(buf, sizeof(buf), "<I>Unable to read directory %s</I>", path);
     printFlagedWarning(buf);
     printHTMLtrailer();
     return;
-  } 
-  
+  }
+
   if(snprintf(path, sizeof(path), "Info about %s", rrdTitle) < 0)
     BufferTooShort();
 
   printHTMLheader(path, 0);
-  sendString("<CENTER>\n");
+  sendString("<CENTER>\n<p ALIGN=right>\n");
+
+  snprintf(url, sizeof(url), "/plugins/rrdPlugin?action=list&key=%s&title=%s&end=now", rrdPath, rrdTitle);
+
+  snprintf(path, sizeof(path), "<b>View:</b> [ <A HREF=\"%s&start=now-1y\">year</A> ]", url);  sendString(path);
+  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1m\">month</A> ]", url);  sendString(path);
+  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1w\">week</A> ]", url);  sendString(path);
+  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1d\">day</A> ]", url);  sendString(path);
+  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-12h\">last 12h</A> ]\n", url);  sendString(path);
+  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-6h\">last 6h</A> ]\n", url);  sendString(path);
+  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1h\">last hour</A> ]&nbsp;\n", url);  sendString(path);
+  
+  sendString("</p>\n<p>\n<TABLE BORDER>\n");
+
+  sendString("<TR><TH>Graph</TH><TH>Total</TH><TH>Average</TH></TR>\n");
 
   while((dp = readdir(directoryPointer)) != NULL) {
     char *rsrcName;
+    Counter total;
+    float  average;
+    int rc;
 
     if(dp->d_name[0] == '.')
       continue;
@@ -114,23 +188,58 @@ static void listResource(char *rrdPath, char *rrdTitle) {
 
     if(strcmp(rsrcName, RRD_EXTENSION))
       continue;
-    
-    rsrcName[0] = '\0';
-    rsrcName = dp->d_name;
 
-    snprintf(path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?action=graph&key=%s/&name=%s&title=%s\"><P>\n", 
-	     rrdPath, rsrcName, rsrcName);
-    sendString(path);
+    rc = sumCounter(rrdPath, dp->d_name, startTime, endTime, &total, &average);
+
+    if((rc >= 0) && (total > 0)) {
+      rsrcName[0] = '\0';
+      rsrcName = dp->d_name;
+
+      if(numEntries == 0) {
+
+      }
+
+      sendString("<TR><TD>\n");
+
+      snprintf(path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?action=graph&key=%s/&name=%s&title=%s&start=%s&end=%s\"><P>\n",
+	       rrdPath, rsrcName, rsrcName, startTime, endTime);
+      sendString(path);
+
+      sendString("</TD><TD ALIGN=RIGHT>\n");
+
+      /* printf("rsrcName: %s\n", rsrcName); */
+
+      if((strncmp(rsrcName, "pkt", 3) == 0) 
+	 || ((strlen(rsrcName) > 4) && (strcmp(&rsrcName[strlen(rsrcName)-4], "Pkts") == 0))) {
+	snprintf(path, sizeof(path), "%s Pkt</TD><TD ALIGN=RIGHT>%.1f Pkts/sec",
+		 formatPkts(total), (float)average);
+      } else {
+	snprintf(path, sizeof(path), "%s</TD><TD ALIGN=RIGHT>%s",
+		 formatBytes(total, 1), formatThroughput(average));
+      }
+      sendString(path);
+
+      sendString("</TD></TR>\n");
+      numEntries++;
+    }
   }
 
   closedir(directoryPointer);
+
+  if(numEntries > 0) {
+    sendString("</TABLE>\n");
+  }
+
   sendString("</CENTER>");
+  sendString("<br><b>NOTE: total and average values are NOT absolute but calculated on the specified time interval.</b>\n");
+
   printHTMLtrailer();
 }
 
 /* ******************************************* */
 
-void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle) {
+void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
+		  char *startTime, char* endTime) {
   char path[512], *argv[16], cmd[64], buf[96], buf1[96], fname[256];
   struct stat statbuf;
   int argc = 0, rc, x, y;
@@ -145,7 +254,9 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle) {
     argv[argc++] = fname;
     argv[argc++] = "--lazy";
     argv[argc++] = "--start";
-    argv[argc++] = "now-1d";
+    argv[argc++] = startTime;
+    argv[argc++] = "--end";
+    argv[argc++] = endTime;
     snprintf(buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
     argv[argc++] = buf;
     snprintf(buf1, sizeof(buf1), "AREA:ctr#00a000:%s", rrdTitle);
@@ -168,14 +279,14 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle) {
       sendGraphFile(fname);
     } else {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHTMLheader("RRD Graph", 0);  
+      printHTMLheader("RRD Graph", 0);
       snprintf(path, sizeof(path), "<I>Error while building graph of the requested file. %s</I>", rrd_get_error());
       printFlagedWarning(path);
       rrd_clear_error();
     }
   } else {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHTMLheader("RRD Graph", 0);  
+      printHTMLheader("RRD Graph", 0);
       printFlagedWarning("<I>Error while building graph of the requested file "
 			 "(unknown RRD file)</I>");
   }
@@ -186,7 +297,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle) {
 void updateCounter(char *hostPath, char *key, Counter value) {
   char path[512], *argv[16], cmd[64];
   struct stat statbuf;
-  int argc = 0, rc;
+  int argc = 0, rc, createdCounter = 0;
 
   if(value == 0) return;
 
@@ -194,13 +305,23 @@ void updateCounter(char *hostPath, char *key, Counter value) {
 
   if(stat(path, &statbuf) != 0) {
     char startStr[32], counterStr[64];
+    int step = 300;
+    unsigned long topValue;
+
+    topValue = 100000000 /* 100 Mbps */;
+
+    if(strncmp(key, "pkt", 3) == 0) {
+      topValue /= 8*64 /* 64 bytes is the shortest packet we care of */;
+    } else {
+      topValue /= 8 /* 8 bytes */;
+    }
 
     argv[argc++] = "rrd_create";
     argv[argc++] = path;
     argv[argc++] = "--start";
     snprintf(startStr, sizeof(startStr), "%u", myGlobals.actTime-1 /* -1 avoids subsequent rrd_update call problems */);
     argv[argc++] = startStr;
-    snprintf(counterStr, sizeof(counterStr), "DS:counter:COUNTER:600:0:%d", 100000000 /* 100 Mbps */);
+    snprintf(counterStr, sizeof(counterStr), "DS:counter:COUNTER:%d:0:%u", step, topValue);
     argv[argc++] = counterStr;
     argv[argc++] = "RRA:AVERAGE:0.5:1:1200";
     argv[argc++] = "RRA:MIN:0.5:12:2400";
@@ -214,35 +335,77 @@ void updateCounter(char *hostPath, char *key, Counter value) {
       traceEvent(TRACE_WARNING, "rrd_create(%s) error: %s\n", path, rrd_get_error());
       rrd_clear_error();
     }
-    
+
 #ifdef DEBUG
     if(rc != 0)
       traceEvent(TRACE_WARNING, "rrd_create(%s, %s, %u)=%d", hostPath, key, value, rc);
 #endif
+    createdCounter = 1;
   }
 
-  sprintf(cmd, "%u:%u", myGlobals.actTime, value);
 
   argc = 0;
   argv[argc++] = "rrd_update";
   argv[argc++] = path;
-  argv[argc++] = cmd;
 
-  optind=0; /* reset gnu getopt */
-  opterr=0; /* no error messages */
-  rc = rrd_update(argc, argv);
+  if((!createdCounter) && (numRuns == 1)) {
+    /* This is the first rrd update hence in order to avoid
+       wrong traffic peaks we set the value for the counter on the previous
+       interval to unknown
 
-  numTotalRRDs++;
+       # From: Alex van den Bogaerdt <alex@ergens.op.HET.NET>
+       # Date: Fri, 12 Jul 2002 01:32:45 +0200 (CEST)
+       # Subject: Re: [rrd-users] Re: To DERIVE or not to DERIVE
 
-  if (rrd_test_error()) {
-    traceEvent(TRACE_WARNING, "rrd_update(%s) error: %s\n", path, rrd_get_error());
-    rrd_clear_error();
-  }
-  
+       [...]
+
+       Oops.  OK, so the counter is unknown.  Indeed one needs to discard
+       the first interval between reboot time and poll time in that case.
+
+       [...]
+
+       But this would also make the next interval unknown.  My suggestion:
+       insert an unknown at that time minus one second, enter the fetched
+       value at that time.
+       
+       cheers,
+       -- 
+       __________________________________________________________________
+       / alex@slot.hollandcasino.nl                  alex@ergens.op.het.net \
+
+    */
+
+    sprintf(cmd, "%u:u", myGlobals.actTime-10); /* u = undefined */
+    argv[argc++] = cmd;
+    
+    optind=0; /* reset gnu getopt */
+    opterr=0; /* no error messages */
+    rc = rrd_update(argc, argv);
+
+    if (rrd_test_error()) {
+      traceEvent(TRACE_WARNING, "rrd_update(%s) error: %s\n", path, rrd_get_error());
+      rrd_clear_error();
+    }
+  } else {  
+    sprintf(cmd, "%u:%u", myGlobals.actTime, value);
+    argv[argc++] = cmd;
+
+    optind=0; /* reset gnu getopt */
+    opterr=0; /* no error messages */
+    rc = rrd_update(argc, argv);
+
+    numTotalRRDs++;
+
+    if (rrd_test_error()) {
+      traceEvent(TRACE_WARNING, "rrd_update(%s) error: %s\n", path, rrd_get_error());
+      rrd_clear_error();
+    }
+
 #ifdef DEBUG
-  if(rc != 0)
-    traceEvent(TRACE_WARNING, "rrd_update(%s, %s, %u)=%d", hostPath, key, value, rc);
+    if(rc != 0)
+      traceEvent(TRACE_WARNING, "rrd_update(%s, %u, %u)=%d", path, value, rc);
 #endif
+  }
 }
 
 /* ******************************* */
@@ -277,7 +440,8 @@ void unescape_url(char *url) {
 #define ACTION_LIST   2
 
 static void handleRRDHTTPrequest(char* url) {
-  char buf[1024], *strtokState, *mainState, *urlPiece, rrdKey[64], rrdName[64], rrdTitle[64];
+  char buf[1024], *strtokState, *mainState, *urlPiece,
+    rrdKey[64], rrdName[64], rrdTitle[64], startTime[32], endTime[32];
   u_char action = ACTION_NONE;
 
 
@@ -287,7 +451,8 @@ static void handleRRDHTTPrequest(char* url) {
     /* traceEvent(TRACE_INFO, "URL: %s", url); */
 
     urlPiece = strtok_r(url, "&", &mainState);
-    /* dumpFlows = dumpHosts = dumpInterfaces = dumpMatrix = 0; */
+    strcpy(startTime, "now-12h");
+    strcpy(endTime, "now");
 
     while(urlPiece != NULL) {
       char *key, *value;
@@ -304,22 +469,32 @@ static void handleRRDHTTPrequest(char* url) {
 	  else if(strcmp(value, "list") == 0) action = ACTION_LIST;
 	} else if(strcmp(key, "key") == 0) {
 	  int len = strlen(value);
-	  
+
 	  if(len >= sizeof(rrdKey)) len = sizeof(rrdKey)-1;
 	  strncpy(rrdKey, value, len);
 	  rrdKey[len] = '\0';
 	} else if(strcmp(key, "name") == 0) {
 	  int len = strlen(value);
-	  
+
 	  if(len >= sizeof(rrdName)) len = sizeof(rrdName)-1;
 	  strncpy(rrdName, value, len);
 	  rrdName[len] = '\0';
 	} else if(strcmp(key, "title") == 0) {
 	  int len = strlen(value);
-	  
+
 	  if(len >= sizeof(rrdTitle)) len = sizeof(rrdTitle)-1;
 	  strncpy(rrdTitle, value, len);
 	  rrdTitle[len] = '\0';
+	} else if(strcmp(key, "start") == 0) {
+	  int len = strlen(value);
+
+	  if(len >= sizeof(startTime)) len = sizeof(startTime)-1;
+	  strncpy(startTime, value, len); startTime[len] = '\0';
+	} else if(strcmp(key, "end") == 0) {
+	  int len = strlen(value);
+
+	  if(len >= sizeof(endTime)) len = sizeof(endTime)-1;
+	  strncpy(endTime, value, len); endTime[len] = '\0';
 	} else if(strcmp(key, "interval") == 0) {
 	  if(dumpInterval != atoi(value)) {
 	    dumpInterval = atoi(value);
@@ -348,7 +523,7 @@ static void handleRRDHTTPrequest(char* url) {
       urlPiece = strtok_r(NULL, "&", &mainState);
     }
 
-    if(action == ACTION_NONE) {    
+    if(action == ACTION_NONE) {
       /* traceEvent(TRACE_INFO, "dumpFlows=%d", dumpFlows); */
       sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dumpFlows", buf);
       sprintf(buf, "%d", dumpHosts);      storePrefsValue("rrd.dumpHosts", buf);
@@ -359,11 +534,11 @@ static void handleRRDHTTPrequest(char* url) {
 
   /* traceEvent(TRACE_INFO, "action=%d", action); */
 
-  if(action == ACTION_GRAPH) {    
-    graphCounter(rrdKey, rrdName, rrdTitle);
+  if(action == ACTION_GRAPH) {
+    graphCounter(rrdKey, rrdName, rrdTitle, startTime, endTime);
     return;
-  } else if(action == ACTION_LIST) {    
-    listResource(rrdKey, rrdTitle);
+  } else if(action == ACTION_LIST) {
+    listResource(rrdKey, rrdTitle, startTime, endTime);
     return;
   }
 
@@ -427,12 +602,12 @@ static void handleRRDHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Medium\n", 
+  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Medium\n",
 	      DETAIL_MEDIUM, (dumpDetail == DETAIL_MEDIUM) ? "CHECKED" : "") < 0)
     BufferTooShort();
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Full\n", 
+  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Full\n",
 	      DETAIL_HIGH, (dumpDetail == DETAIL_HIGH) ? "CHECKED" : "") < 0)
     BufferTooShort();
   sendString(buf);
@@ -515,9 +690,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   } else {
     dumpDetail  = atoi(value);
   }
-  
+
   initialized = 1;
-  
+
   for(;myGlobals.capturePackets == 1;) {
     char *hostKey, rrdPath[512], filePath[512];
     int i, j;
@@ -537,6 +712,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     sleep(sleep_tm);
 
     if(!myGlobals.capturePackets) return(NULL);
+
+    numRuns++;
 
     /* ****************************************************** */
 
@@ -559,7 +736,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	    if((numLocalNets > 0)
 	       && (!__pseudoLocalAddress(&el->hostIpAddress, networks, numLocalNets))) continue;
-	    
+
 	  } else {
 	    /* hostKey = el->ethAddressString; */
 	    /* For the time being do not save IP-less hosts */
@@ -642,15 +819,15 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 #ifdef DEBUG
 	      traceEvent(TRACE_INFO, "Updating host %s", hostKey);
 #endif
-	      
+
 	      sprintf(rrdPath, "%s/rrd/hosts/%s/IP.", myGlobals.dbPath, hostKey);
-	      
+
 	      for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 		char key[128];
 		sprintf(key, "%sSent", myGlobals.protoIPTrafficInfos[j]);
 		updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].sentLoc.value+
 			      el->protoIPTrafficInfos[j].sentRem.value);
-		
+
 		sprintf(key, "%sRcvd", myGlobals.protoIPTrafficInfos[j]);
 		updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].rcvdLoc.value+
 			      el->protoIPTrafficInfos[j].rcvdFromRem.value);
@@ -660,7 +837,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	}
       }
     }
-    
+
     /* ************************** */
 
     if(dumpFlows) {
@@ -717,29 +894,29 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  updateCounter(rrdPath, "osiBytes", myGlobals.device[i].osiBytes.value);
 	  updateCounter(rrdPath, "qnxBytes", myGlobals.device[i].qnxBytes.value);
 	  updateCounter(rrdPath, "otherBytes", myGlobals.device[i].otherBytes.value);
-	  updateCounter(rrdPath, "upTo64", myGlobals.device[i].rcvdPktStats.upTo64.value);
-	  updateCounter(rrdPath, "upTo128", myGlobals.device[i].rcvdPktStats.upTo128.value);
-	  updateCounter(rrdPath, "upTo256", myGlobals.device[i].rcvdPktStats.upTo256.value);
-	  updateCounter(rrdPath, "upTo512", myGlobals.device[i].rcvdPktStats.upTo512.value);
-	  updateCounter(rrdPath, "upTo1024", myGlobals.device[i].rcvdPktStats.upTo1024.value);
-	  updateCounter(rrdPath, "upTo1518", myGlobals.device[i].rcvdPktStats.upTo1518.value);
-	  updateCounter(rrdPath, "badChecksum", myGlobals.device[i].rcvdPktStats.badChecksum.value);
-	  updateCounter(rrdPath, "tooLong", myGlobals.device[i].rcvdPktStats.tooLong.value);
+	  updateCounter(rrdPath, "upTo64Pkts", myGlobals.device[i].rcvdPktStats.upTo64.value);
+	  updateCounter(rrdPath, "upTo128Pkts", myGlobals.device[i].rcvdPktStats.upTo128.value);
+	  updateCounter(rrdPath, "upTo256Pkts", myGlobals.device[i].rcvdPktStats.upTo256.value);
+	  updateCounter(rrdPath, "upTo512Pkts", myGlobals.device[i].rcvdPktStats.upTo512.value);
+	  updateCounter(rrdPath, "upTo1024Pkts", myGlobals.device[i].rcvdPktStats.upTo1024.value);
+	  updateCounter(rrdPath, "upTo1518Pkts", myGlobals.device[i].rcvdPktStats.upTo1518.value);
+	  updateCounter(rrdPath, "badChecksumPkts", myGlobals.device[i].rcvdPktStats.badChecksum.value);
+	  updateCounter(rrdPath, "tooLongPkts", myGlobals.device[i].rcvdPktStats.tooLong.value);
 	}
 
 	if(dumpDetail == DETAIL_HIGH) {
 	  if(myGlobals.device[i].ipProtoStats != NULL) {
 	    sprintf(rrdPath, "%s/rrd/interfaces/%s/IP.", myGlobals.dbPath,  myGlobals.device[i].name);
-	    
+
 	    for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 	      TrafficCounter ctr;
-	      
+
 	      ctr.value =
 		myGlobals.device[i].ipProtoStats[j].local.value+
 		myGlobals.device[i].ipProtoStats[j].local2remote.value+
 		myGlobals.device[i].ipProtoStats[j].remote2local.value+
 		myGlobals.device[i].ipProtoStats[j].remote.value;
-	      
+
 	      updateCounter(rrdPath, myGlobals.protoIPTrafficInfos[j], ctr.value);
 	    }
 	  }
@@ -751,7 +928,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     if(dumpMatrix) {
       int k;
-      
+
       for(k=0; k<myGlobals.numDevices; k++)
 	for(i=1; i<myGlobals.device[k].numHosts; i++)
 	  if(i != myGlobals.otherHostEntryIdx) {
@@ -777,14 +954,14 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 				myGlobals.device[k].ipTrafficMatrix[idx]->pktsSent.value);
 
 		  updateCounter(rrdPath, "bytes",
-				myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value);		  
+				myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value);
 		}
 	      }
 	    }
 	  }
     }
 
-    traceEvent(TRACE_INFO, "%lu RRDs updated (%lu total updates)", 
+    traceEvent(TRACE_INFO, "%lu RRDs updated (%lu total updates)",
 	       (unsigned long)(numTotalRRDs-numRRDs), (unsigned long)numTotalRRDs);
   }
 
