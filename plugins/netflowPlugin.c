@@ -51,6 +51,8 @@ static void setNetFlowOutSocket();
 static void setNetFlowInterfaceMatrix();
 static void freeNetFlowMatrixMemory();
 static void setPluginStatus(char * status);
+static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
+		       u_int dstAddr, u_short dport, Counter len);
 
 /* ****************************** */
 
@@ -167,27 +169,28 @@ static void setNetFlowOutSocket() {
 }
 
 /* ****************************** */
-void ignoreFlow(u_short* nextFlowIgnored, u_int srcAddr, u_short sport,
-                                         u_int dstAddr, u_short dport,
-                Counter len) {
-    u_short lastFlowIgnored;
 
-    lastFlowIgnored = (*nextFlowIgnored-1+MAX_NUM_IGNOREDFLOWS) % MAX_NUM_IGNOREDFLOWS;
-    if ( (flowIgnored[lastFlowIgnored][0] == srcAddr) &&
-         (flowIgnored[lastFlowIgnored][1] == sport) &&
-         (flowIgnored[lastFlowIgnored][2] == dstAddr) &&
-         (flowIgnored[lastFlowIgnored][3] == dport) ) {
-        flowIgnored[lastFlowIgnored][4]++;
-        flowIgnored[lastFlowIgnored][5] += len;
-    } else {
-        flowIgnored[*nextFlowIgnored][0] = srcAddr;
-        flowIgnored[*nextFlowIgnored][1] = sport;
-        flowIgnored[*nextFlowIgnored][2] = dstAddr;
-        flowIgnored[*nextFlowIgnored][3] = dport;
-        flowIgnored[*nextFlowIgnored][4] = 1;
-        flowIgnored[*nextFlowIgnored][5] = len;
-        *nextFlowIgnored = (*nextFlowIgnored + 1) % MAX_NUM_IGNOREDFLOWS;
-    }
+static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
+		       u_int dstAddr, u_short dport,
+		       Counter len) {
+  u_short lastFlowIgnored;
+
+  lastFlowIgnored = (*theNextFlowIgnored-1+MAX_NUM_IGNOREDFLOWS) % MAX_NUM_IGNOREDFLOWS;
+  if ( (flowIgnored[lastFlowIgnored][0] == srcAddr) &&
+       (flowIgnored[lastFlowIgnored][1] == sport) &&
+       (flowIgnored[lastFlowIgnored][2] == dstAddr) &&
+       (flowIgnored[lastFlowIgnored][3] == dport) ) {
+    flowIgnored[lastFlowIgnored][4]++;
+    flowIgnored[lastFlowIgnored][5] += len;
+  } else {
+    flowIgnored[*theNextFlowIgnored][0] = srcAddr;
+    flowIgnored[*theNextFlowIgnored][1] = sport;
+    flowIgnored[*theNextFlowIgnored][2] = dstAddr;
+    flowIgnored[*theNextFlowIgnored][3] = dport;
+    flowIgnored[*theNextFlowIgnored][4] = 1;
+    flowIgnored[*theNextFlowIgnored][5] = len;
+    *theNextFlowIgnored = (*theNextFlowIgnored + 1) % MAX_NUM_IGNOREDFLOWS;
+  }
 }
 
 /* ****************************** */
