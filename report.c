@@ -4290,7 +4290,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 
       while((stats[keyValue] != NULL)
 	    && (strcasecmp(stats[keyValue]->domainHost->fullDomainName, el->fullDomainName) != 0))
-	keyValue = (keyValue+1) % myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
+	keyValue = (keyValue+1) % maxHosts;
 
       if(stats[keyValue] != NULL)
 	statsEntry = stats[keyValue];

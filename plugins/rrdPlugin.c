@@ -1614,7 +1614,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    while((stats[keyValue] != NULL)
 	      && (strcasecmp(stats[keyValue]->domainHost->fullDomainName,
 	      el->fullDomainName) != 0))
-		keyValue = (keyValue+1) % myGlobals.device[devIdx].actualHashSize;
+		keyValue = (keyValue+1) % maxHosts;
 
 	    // if we just start counting for this domain...
 	    if(stats[keyValue] != NULL)
