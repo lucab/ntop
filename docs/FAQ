@@ -639,6 +639,121 @@ A. Yes.
    that simply don't work in border-sniffer-mode, so why let the user
    request those pages.
 
+Q. OK, but it changed after 2.1.2 (i.e. in 2.1.50) what are the NEW parameters?
+A. There were four new parameters introduced when -j | --border-sniffer-mode 
+   was removed.  Whether the old parameter really did all the same things as 
+   the new ones is irrelevant and left to code-archiologists.  What matters 
+   is what the new ones are and what they do!
+
+   They are:
+
+   -b | --disable-decoders
+
+     This flag disables protocol decoders. Use it for better performance 
+     or if you feel ntop has problems handling these protocols in your
+     environment.
+
+     This switch disables code in a number of places throughout ntop, code 
+     which analyzes specific protocols, but can place additional load on the 
+     host.  This switch could be used to run ntop on low-end CPUs or where 
+     ntop is acting as a collector (netFlow or sFlow) and the GUI is not
+     required.
+
+     Disabled is the analysis of:
+
+        DNS Sniffing - where ntop captures DNS information from other hosts'
+                       requests to reduce the # of DNS requests ntop must -
+                       itself - make.
+
+        NetBIOS   \
+        NetWare    \
+        AppleTalk   -- resource intensive protocol analysis of less 
+        bootp/dhcp /   common protocols.
+        OSI       /
+
+        http (80) - Request success/failure counting on port 80 and other
+                    analysis, including "Virtual Host".
+
+        ftp passive session tracking.
+
+        "Wrong Port" monitoring for: http, ftp and smtp (used with the
+              -q | --create-suspicious-packets option to dump "suspicious" 
+              packets to an analysis file)  With this option, ntop checks
+              the payload for each new connection, looking for text usually
+              present in http, ftp or smtp requests.  If these are not on the
+              "normal" ports (http's 80, ntop's 3000 or squid's 3128, ftp's
+              21 or smtp's 25) (or there is a non-ftp or smtp request on the
+              standard ports), the packet is logged.
+
+
+   -g | --track-local-hosts
+
+     Use this flag to tell ntop that you care only about local hosts (use 
+     -m | -- local-subnets to specify local nets).  This flag is useful when 
+     ntop sees many hosts (e.g. border gateway) but only the local ones need 
+     to be tracked.
+
+     This switch disables code in a number of places throughout ntop, code 
+     which allows ntop to track "foreign" hosts (that is ones not local 
+     according to the IP address(es) of ntop's interfaces or set pseudo-local
+     by -m | -- local-subnets).
+
+     Basically, ntop doesn't bother to do DNS resolution on these addresses 
+     and, for purposes of various counts, uses the "other" bucket instead of
+     creating a unique hash table bucket for the specific host.
+
+     This switch could be used to run ntop on low-end CPUs or where ntop is 
+     acting as a collector (netFlow or sFlow) and the GUI is not required.
+
+
+   -o | --no-mac
+
+     Specifies that ntop should not trust MAC addresses but just IP addresses. 
+     This option is useful whenever ntop is started on an interface where MAC 
+     (Media Access Controller - the low-level Ethernet address) addresses can
+     not really be trusted (e.g. port/VLAN mirror in Switched Ethernet 
+     environments).
+
+     Certain processing is performed differently:
+
+          Hash search is via IP not MAC
+
+     Certain capabilities are disabled:
+
+          Analysis of bootp/dhcp requests
+          localRoutersList.html report
+          Wrong net mask log message and flag
+          Analysis of non-tcp/udp protocols like NetWare and Spanning Tree
+          Router listing on Host Detailed report.
+          Traffic Matrix report
+
+     (Note that this list is subject to change as we learn more about protocols
+      that do/do not depend on the MAC address)
+
+     See also -z | --disable-sessions
+
+
+   -z | --disable-sessions
+
+     This flag disables tcp session tracking. Use it for better performance or 
+     when you don't really need the tracking of sessions.
+
+     Also, in situations where the MAC addresses can not be trusted, ntop may
+     - or may not - be able to accurately track tcp sessions.  There is no easy 
+     way to tell, so this switch puts control back into the users' hands.
+
+     In versions after 2.0 up to & including 2.1.2, the -j | --border-sniffer-mode
+     flag (predecessor of -o | --no-mac) always turned this off.  Many users wanted 
+     to try turning session tracking back on, and did via code patches with mixed 
+     results.
+
+     Suggested usage:  If you enable -o | --no-mac, try running ntop with
+     sessions enabled.  If the data looks reasonable, congratulations - your
+     network allows session tracking.  If the data does not look reasonable,
+     then you will also need to disable session tracking with this switch.
+
+    (Added 21Aug2002 - BMS)
+
 
 Q. ntop shows an older, single menu interface
 A. If ntop is unable to find the file index.html it generates the page 
