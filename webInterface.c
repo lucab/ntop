@@ -572,7 +572,9 @@ static void printFeatureConfigInfo(char* feature, char* status) {
 
 void printNtopConfigInfo(void) {
   char buf[BUF_SIZE];
+#ifdef HAVE_PCAP_VERSION
   extern char pcap_version[];
+#endif /* HAVE_PCAP_VERSION */
 
   printHTMLheader("Current ntop Configuration", 0);
   sendString("<CENTER>\n");
@@ -581,7 +583,9 @@ void printNtopConfigInfo(void) {
   printFeatureConfigInfo("OS", osName);
   printFeatureConfigInfo("ntop version", version);
   printFeatureConfigInfo("Built on", buildDate);
+#ifdef HAVE_PCAP_VERSION
   printFeatureConfigInfo("Libpcap version", pcap_version);
+#endif /* HAVE_PCAP_VERSION */
 
 #ifdef HAVE_OPENSSL
   printFeatureConfigInfo("<A HREF=http://www.openssl.org/>OpenSSL Support</A>", "Present");
