@@ -3407,7 +3407,7 @@ int _getopt_internal(argc, argv, optstring, longopts, longind, long_only)
       __getopt_initialized = 1;
     }
 
-# define NONOPTION_P (argv[optind][0] != '-' || argv[optind][1] == '\0')
+# define NONOPTION_P(argv[optind][0] != '-' || argv[optind][1] == '\0')
 
   if(nextchar == NULL || *nextchar == '\0')
     {
