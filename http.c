@@ -1529,7 +1529,8 @@ static int returnHTTPPage(char* pageName, int postLen) {
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
   if(usedFork) {
     exit(0);
-  }  
+  } else
+    return(errorCode);
 #else
   return(errorCode);
 #endif

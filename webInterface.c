@@ -29,7 +29,9 @@
 #include <ucd-snmp/version.h>
 #endif
 
+#ifdef USE_COLOR
 static short alternateColor=0;
+#endif
 
 /* Forward */
 void handleSingleWebConnection(fd_set *fdmask);
@@ -182,7 +184,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   static char buf[5][384];
   char symIp[256], *tmpStr, linkName[256], flag[128];
   char *blinkOn, *blinkOff, *dynIp;
-  char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr;
+  char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr = "";
   short specialMacAddress = 0;
   static short bufIdx=0;
   short usedEthAddress=0;
@@ -739,7 +741,7 @@ char* getCountryIconURL(char* domainName) {
 
    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Purged Hash Hosts</TH>"
 	       "<TD "TD_BG"  align=right>%u</TD></TR>\n",
-	       numPurgedHosts) < 0) 
+	       (unsigned int)numPurgedHosts) < 0) 
      traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
@@ -751,7 +753,7 @@ char* getCountryIconURL(char* domainName) {
 
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Terminated TCP Sessions</TH>"
 		"<TD "TD_BG"  align=right>%u</TD></TR>\n", 
-		numTerminatedSessions) < 0) 
+		(unsigned int)numTerminatedSessions) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
@@ -787,7 +789,7 @@ char* getCountryIconURL(char* domainName) {
 
  #if defined(MULTITHREADED)
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Dropped Addresses</TH>"
-		"<TD "TD_BG"  align=right>%ld</TD></TR>\n", droppedAddresses) < 0) 
+		"<TD "TD_BG"  align=right>%ld</TD></TR>\n", (long int)droppedAddresses) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
  #endif
@@ -815,7 +817,7 @@ char* getCountryIconURL(char* domainName) {
 
    if(isLsofPresent) {
      if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Monitored Processes</TH>"
-		 "<TD "TD_BG"  align=right>%d</TD></TR>\n", numProcesses, 0) < 0)
+		 "<TD "TD_BG"  align=right>%d</TD></TR>\n", numProcesses) < 0)
        traceEvent(TRACE_ERROR, "Buffer overflow!");
      sendString(buf);
    }

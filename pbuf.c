@@ -1296,7 +1296,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 				u_char* packetData) {
   u_int idx, initialIdx, i;
   IPSession *theSession = NULL;
-  short flowDirection;
+  short flowDirection = CLIENT_TO_SERVER;
   char addedNewEntry = 0;
   u_short sessionType, check, found;
 #ifdef ENABLE_NAPSTER
@@ -3751,7 +3751,7 @@ static void processIpPkt(const u_char *bp,
 	  int nodeType, i, udpDataLen;
 	  char *tmpdata = (char*)bp + (hlen + sizeof(struct udphdr));
 	  u_char *p;
-	  int offset, displ, notEnoughData = 0;
+	  int offset=0, displ, notEnoughData = 0;
 
 	  udpDataLen = length - (hlen + sizeof(struct udphdr));
 

@@ -1174,7 +1174,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
       len = strlen((char *)bp) + 1;
       memcpy(hostPtr->name, bp, len);
     }
-    bp += (((u_int32_t)bp) % sizeof(int32_t));
+    bp += (((u_int32_t)bp) % sizeof(u_int32_t));
 
     if (bp + dlen >= &hostbuf[sizeof(hostbuf)]) {
       break;

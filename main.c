@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
 	break;
 
 #ifdef HAVE_MYSQL
-      case 'v': /* username:password:dbname */
+      case 'v': /* username:password:dbname:host */
 	stringSanityCheck(optarg);
 	handlemySQLSupport(optarg, &enableDBsupport);
         break;

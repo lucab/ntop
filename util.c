@@ -978,7 +978,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 
   if(rc != 0)
     traceEvent(TRACE_ERROR, "ERROR: lock failed 0x%X [%s:%d] (rc=%d)\n",
-	       &(mutexId->mutex), fileName, fileLine, rc);
+	       (void*)&(mutexId->mutex), fileName, fileLine, rc);
   else {
     /* traceEvent(TRACE_ERROR, "LOCKED 0x%X", &(mutexId->mutex)); */
     mutexId->numLocks++;
@@ -1025,7 +1025,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 
   if(rc != 0)
     traceEvent(TRACE_ERROR, "ERROR: tryLockMutex failed 0x%X [%s:%d] (rc=%d)\n",
-	       &(mutexId->mutex), fileName, fileLine, rc);
+	       (void*)&(mutexId->mutex), fileName, fileLine, rc);
   else {
     /* traceEvent(TRACE_ERROR, "LOCKED 0x%X", &(mutexId->mutex)); */
     mutexId->isLocked = 1;
@@ -1093,7 +1093,7 @@ int _releaseMutex(PthreadMutex *mutexId,
 
   if(rc != 0)
     traceEvent(TRACE_ERROR, "ERROR: unlock failed 0x%X [%s:%d]\n",
-	       &(mutexId->mutex), fileName, fileLine);
+	       (void*)&(mutexId->mutex), fileName, fileLine);
   else {
     time_t lockDuration = time(NULL) - mutexId->lockTime;
 
@@ -1108,7 +1108,7 @@ int _releaseMutex(PthreadMutex *mutexId,
 
       if(mutexId->maxLockedDuration > 0) {
 	traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
-		   &(mutexId->mutex), fileName, fileLine,
+		   (void*)&(mutexId->mutex), fileName, fileLine,
 		   mutexId->maxLockedDuration);
       }
    }
@@ -1484,7 +1484,7 @@ void readLsofInfo(void) {
 #endif
 
   free(tmpProcesses);
-  traceEvent(TRACE_INFO, "readLsofInfo completed (%d sec).", (time(NULL)-startTime));
+  traceEvent(TRACE_INFO, "readLsofInfo completed (%d sec).", (int)(time(NULL)-startTime));
 #endif /* WIN32 */
 }
 
