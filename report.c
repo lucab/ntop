@@ -633,7 +633,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	TrafficCounter dummyCounter;
 
 #ifdef HAVE_GDCHART
-	sendString("<TR><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
+	sendString("<TR BGCOLOR=white><TH ALIGN=CENTER COLSPAN=3>"
 		   "<IMG SRC=pktCastDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
@@ -717,7 +717,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	sendString(buf2);
 
 #ifdef HAVE_GDCHART
-	sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3>"
+	sendString("<TR BGCOLOR=white><TH ALIGN=CENTER COLSPAN=3>"
 		   "<IMG SRC=pktSizeDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
@@ -775,7 +775,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	sendString(buf2);
 
 #ifdef HAVE_GDCHART
-	sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=2><IMG SRC=ipTrafficPie"CHART_FORMAT"></TH></TR>\n");
+	sendString("<TR BGCOLOR=white><TH ALIGN=CENTER COLSPAN=2>"
+		   "<IMG SRC=ipTrafficPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
 	updateThpt();
