@@ -4350,7 +4350,9 @@ u_short ip2AS(HostAddr ip) {
 /* ************************************ */
 
 u_int16_t getHostAS(HostTraffic *el) {
-  return(el->hostAS || (el->hostAS = ip2AS(el->hostIpAddress)));
+  if (!el->hostAS)
+    el->hostAS = ip2AS(el->hostIpAddress);
+  return (el->hostAS);
 }
 
 /* ************************************ */
