@@ -683,7 +683,6 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
                        rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
         }
 
-        free(rrdError);
         rrd_clear_error();
     }
   }
