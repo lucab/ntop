@@ -4132,6 +4132,30 @@ A. Be sure and set it.  It's important for pseudo-local classification, which
    affects L R reporting.  You need to set it to the (network) and mask for 
    the netFlow collector.  So ntop knows 'where' the data is coming from.
 
+Q. 'splain some more, Lucy...
+A. OK.
+
+   It's best to think of netFlow like this:
+
+   The physical interface which is monitoring the packets is like a
+   temperature probe you stick into a roast.
+
+   Even though the display of the data can be right there at the probe, or
+   the other end of a (long) wire, or somewhere entirely elsewhere via a 
+   wireless connection, the probe is monitoring at the tip.  If it says 145F,
+   that's the temperature of the meat - not the oven and not the kitchen.
+
+   Similarly, the netFlow data ntop is receiving is based on the probe
+   location.
+
+   So, if you have a router and are monitoring a single interface to collect
+   netFlow data, then the ip address you want to give to ntop is that of
+   the router interface.
+
+   If you are monitoring a router with more than one interface, you will 
+   need to give ntop ONE of those addresses and use the -m | --local-subnets
+   option to tell it that the other addresses are also local.
+
 
 Q. Where is info about netflow?
 A. Dale Reed pointed out a good tech doc (no flak, just the formats) for netflow
