@@ -2944,7 +2944,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 	    sizeof(el->hostNumIpAddress));
     if(myGlobals.numericFlag == 0) {
       fetchAddressFromCache(el->hostIpAddress, el->hostResolvedName, &type);
-
+      el->hostResolvedNameType = type;
       if(strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0) {
         if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
           int i;
