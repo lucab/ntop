@@ -110,7 +110,7 @@ void initWinsock32() {
 #ifdef WIN32
   if(myGlobals.runningPref.pcapLogBasePath) free(myGlobals.runningPref.pcapLogBasePath); myGlobals.runningPref.pcapLogBasePath = strdup(_wdir);
   if(myGlobals.dbPath)          free(myGlobals.dbPath); myGlobals.dbPath = strdup(_wdir);
-  if(myGlobals.runningPref.spoolPath)       free(myGlobals.runningPref.spoolPath); myGlobals.runningPref.spoolPath = strdup(_wdir);
+  if(myGlobals.spoolPath)       free(myGlobals.spoolPath); myGlobals.spoolPath = strdup(_wdir);
 #endif
 
 
