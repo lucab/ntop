@@ -829,24 +829,8 @@ static int checkURLsecurity(char *url) {
   */
 
   /* No URL?  That is our default action... */
-  if(len == 0) {
+  if(len == 0)
     return(0);
-  }
-
-  /* 
-     Unicode encoded, a : or @ or \r or \n - no dice 
-
-     NOTE (Luca Deri):
-     I have removed the ':' from the list below. This is because
-     ntop uses them for identifying MAC addresses. 
-     This needs to be changed in the near future. TODO     
-  */
-  if(strcspn(url, "%@\r\n") < len) {
-#ifndef DEBUG
-    traceEvent(TRACE_ERROR, "Found % : @ \\r or \\n in URL (%s)...\n", url);
-#endif
-    return(1);
-  }
 
   /* a double slash? */
   if(strstr(url, "//") > 0) {
@@ -1810,6 +1794,12 @@ static void compressAndSendData(u_int *gzipBytesSent) {
   gzclose(compressFileFd);
   compressFile = 0; /* Stop compression */
   fd = fopen(compressedFilePath, "rb");
+
+  if(fd == NULL) {
+    if(gzipBytesSent != NULL)
+      (*gzipBytesSent) = 0;
+    return;
+  }
 
   sendString("Content-Encoding: gzip\n");
   fseek(fd, 0, SEEK_END);

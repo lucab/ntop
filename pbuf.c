@@ -3668,11 +3668,11 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
       list->bytes += h->len;
       list->packets++;
       if(list->pluginStatus.pluginPtr != NULL) {
-	void(*pluginFunc)(const struct pcap_pkthdr *h, const u_char *p);
+	void(*pluginFunc)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
 
-	pluginFunc = (void(*)(const struct pcap_pkthdr*,
+	pluginFunc = (void(*)(u_char *_deviceId, const struct pcap_pkthdr*,
 			      const u_char*))list->pluginStatus.pluginPtr->pluginFunc;
-	pluginFunc(h, p);
+	pluginFunc((u_char*)&deviceId, h, p);
 #ifdef DEBUG
 	printf("Match on %s for '%s'\n", device[deviceId].name,
 	       list->flowName);
