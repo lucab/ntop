@@ -576,6 +576,7 @@ void initCounters(void) {
                          tmpStr,
                          dirList[iLang]->d_name);
   #endif
+                  free(tmpStr);
                   continue;
               }
 
@@ -974,7 +975,8 @@ void initApps(void) {
  *
  */
 void initDevices(char* devices) {
-  char ebuf[CONST_SIZE_PCAP_ERR_BUF], *myDevices;
+  char ebuf[CONST_SIZE_PCAP_ERR_BUF];
+  char *workDevices;
   int i, j, mallocLen;
   NtopInterface *tmpDevice;
   char *tmpDev;
@@ -998,8 +1000,6 @@ void initDevices(char* devices) {
     myGlobals.numDevices = 1;
     return;
   }
-
-  myDevices = devices;
 
   /* Determine the device name if not specified */
   ebuf[0] = '\0';
@@ -1086,7 +1086,7 @@ void initDevices(char* devices) {
   }
 #endif
 
-  if (myDevices == NULL) {
+  if (devices == NULL) {
     /* No default device selected */
 
 #ifndef WIN32
@@ -1119,7 +1119,9 @@ void initDevices(char* devices) {
 #endif
     char *strtokState;
 
-    tmpDev = strtok_r(myDevices, ",", &strtokState);
+    workDevices = strdup(devices);
+
+    tmpDev = strtok_r(workDevices, ",", &strtokState);
     myGlobals.numDevices = 0;
 
     while(tmpDev != NULL) {
@@ -1190,6 +1192,8 @@ void initDevices(char* devices) {
       }
     }
 
+    free(workDevices);
+
   }
 
 
@@ -1239,8 +1243,25 @@ void initDevices(char* devices) {
     }
   }
 
-  for(i=0; i<myGlobals.numDevices; i++)
+  mallocLen = 2;
+  for(i=0; i<myGlobals.numDevices; i++) {
+      if (myGlobals.device[i].name != NULL)
+          mallocLen += strlen(myGlobals.device[i].name) + 2;
+  }
+  workDevices = malloc(mallocLen);
+  memset(workDevices, 0, mallocLen);    
+
+  for(i=0; i<myGlobals.numDevices; i++) {
     getLocalHostAddress(&myGlobals.device[i].network, myGlobals.device[i].name);
+    if (myGlobals.device[i].name != NULL) {
+        if (i>0) {
+            strcat(workDevices, ", ");
+        }
+        strcat(workDevices, myGlobals.device[i].name);
+    }
+  }
+  free(myGlobals.devices);
+  myGlobals.devices = workDevices;
 }
 
 /* ******************************* */
