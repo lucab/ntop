@@ -352,7 +352,7 @@ static void handleArpWatchHTTPrequest(char* url) {
 
 /* ****************************** */
 
-static void termArpFunct() {
+static void termArpFunct(void) {
   traceEvent(TRACE_INFO, "Thanks for using arpWatch..."); fflush(stdout);
   
   if(arpDB != NULL) {

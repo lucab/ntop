@@ -24,7 +24,7 @@
 #include <winsock2.h> /* winsock.h is included automatically */
 
 #define HAVE_GDBM_H
-
+#define HAVE_GDCHART
 #define MULTITHREADED
 #define ASYNC_ADDRESS_RESOLUTION
 
@@ -57,6 +57,11 @@ typedef long int32_t;
 #define strcasecmp _stricmp
 
 extern int getopt(int num, char *const *argv, const char *opts);
+extern int gettimeofday(struct timeval*, struct timezone*);
+extern int getNewRandomFile(char* fileName, int len);
+
+
+extern ULONG GetHostIPAddr();
 
 #define RETSIGTYPE void
 
@@ -180,7 +185,7 @@ typedef struct _FRAMEETH
 						//      256 * Type[0] + Type[1]
 						// e non semplicemente con un cast esplicito ad 
 						// uno short, altrimenti (su una macchina INTEL) 
-						// i byte più e meno significativi risultano
+						// i byte pi· e meno significativi risultano
 						// scambiati
 
 	BYTE Dati[1500];	// Dati contenuti nel pacchetto

@@ -39,18 +39,14 @@ static unsigned long clr[] = { 0x0000FF, 0x00FF00, 0xFF0000,
 /* ************************ */
 
 void pktSizeDistribPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
   float p[7];
   char	*lbl[] = { "", "", "", "", "", "", "" };
   int len, num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
   FILE *fd;
   int tmpfd;
 
-  /* Patch courtesy of Thomas Biege <thomas@suse.de> */
-  if(((tmpfd = mkstemp(fileName)) < 0)
-     || (fchmod(tmpfd, 0600) < 0)
-     || ((fd = fdopen(tmpfd, "wb")) == NULL))
-    return;
+  fd = getNewRandomFile(fileName, NAME_MAX);
 
   if(device[actualReportDeviceId].rcvdPktStats.upTo64 > 0) {
     p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo64)/(float)device[actualReportDeviceId].ethernetPkts;
@@ -113,21 +109,22 @@ void pktSizeDistribPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  fd = fopen(fileName, "rb");
-  for(;;) {
-    len = fread(tmpStr, sizeof(char), 255, fd);
-    if(len <= 0) break;
-    sendStringLen(tmpStr, len);
+  if((fd = fopen(fileName, "rb")) != NULL) {
+	for(;;) {
+		len = fread(tmpStr, sizeof(char), 255, fd);
+		if(len <= 0) break;
+		sendStringLen(tmpStr, len);
   }
 
   fclose(fd);
+  }
 
   unlink(fileName);
 }
 
 /* ************************ */
 void ipProtoDistribPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };
   int len, num=0, expl[] = { 0, 20, 30 };
@@ -135,11 +132,7 @@ void ipProtoDistribPie(void) {
   TrafficCounter unicastPkts;
   int tmpfd;
 
-  /* Patch courtesy of Thomas Biege <thomas@suse.de> */
-  if(((tmpfd = mkstemp(fileName)) < 0)
-     || (fchmod(tmpfd, 0600) < 0)
-     || ((fd = fdopen(tmpfd, "wb")) == NULL))
-    return;
+  fd = getNewRandomFile(fileName, NAME_MAX);
 
   unicastPkts = device[actualReportDeviceId].ethernetPkts
     - device[actualReportDeviceId].broadcastPkts
@@ -187,14 +180,15 @@ void ipProtoDistribPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  fd = fopen(fileName, "rb");
-  for(;;) {
-    len = fread(tmpStr, sizeof(char), 255, fd);
-    if(len <= 0) break;
-    sendStringLen(tmpStr, len);
+   if((fd = fopen(fileName, "rb")) != NULL) {
+	for(;;) {
+		len = fread(tmpStr, sizeof(char), 255, fd);
+		if(len <= 0) break;
+		sendStringLen(tmpStr, len);
   }
 
   fclose(fd);
+  }
 
   unlink(fileName);
 }
@@ -202,7 +196,7 @@ void ipProtoDistribPie(void) {
 /* ************************ */
 
 void interfaceTrafficPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
   float p[MAX_NUM_DEVICES];
   int i, len, expl[] = { 0, 20, 30, 40, 50, 60 };
   FILE *fd;
@@ -211,11 +205,7 @@ void interfaceTrafficPie(void) {
   char	*lbl[MAX_NUM_DEVICES];
   int myDevices=0, tmpfd;
 
-  /* Patch courtesy of Thomas Biege <thomas@suse.de> */
-  if(((tmpfd = mkstemp(fileName)) < 0)
-     || (fchmod(tmpfd, 0600) < 0)
-     || ((fd = fdopen(tmpfd, "wb")) == NULL))
-    return;
+  fd = getNewRandomFile(fileName, NAME_MAX);
 
   for(i=0; i<numDevices; i++) {
     if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
@@ -260,14 +250,15 @@ void interfaceTrafficPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  fd = fopen(fileName, "rb");
-  for(;;) {
-    len = fread(tmpStr, sizeof(char), 255, fd);
-    if(len <= 0) break;
-    sendStringLen(tmpStr, len);
+   if((fd = fopen(fileName, "rb")) != NULL) {
+	for(;;) {
+		len = fread(tmpStr, sizeof(char), 255, fd);
+		if(len <= 0) break;
+		sendStringLen(tmpStr, len);
   }
 
   fclose(fd);
+  }
 
   unlink(fileName);
 }
@@ -282,9 +273,7 @@ void pktCastDistribPie(void) {
   FILE *fd;
   TrafficCounter unicastPkts;
 
-  tmpnam(fileName);
-
-  fd = fopen(fileName, "wb");
+  fd = getNewRandomFile(fileName, NAME_MAX);
 
   unicastPkts = device[actualReportDeviceId].ethernetPkts
     - device[actualReportDeviceId].broadcastPkts
@@ -337,14 +326,15 @@ void pktCastDistribPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  fd = fopen(fileName, "rb");
-  for(;;) {
-    len = fread(tmpStr, sizeof(char), 255, fd);
-    if(len <= 0) break;
-    sendStringLen(tmpStr, len);
+  if((fd = fopen(fileName, "rb")) != NULL) {
+	for(;;) {
+		len = fread(tmpStr, sizeof(char), 255, fd);
+		if(len <= 0) break;
+		sendStringLen(tmpStr, len);
   }
 
   fclose(fd);
+  }
 
   unlink(fileName);
 }
@@ -352,18 +342,14 @@ void pktCastDistribPie(void) {
 /* ************************ */
 
 void drawTrafficPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
   TrafficCounter ip, nonIp;
   float p[2];
   char	*lbl[] = { "IP", "Non IP" };
   int num=0, len, expl[] = { 5, 5 }, tmpfd;
   FILE *fd;
 
-  /* Patch courtesy of Thomas Biege <thomas@suse.de> */
-  if(((tmpfd = mkstemp(fileName)) < 0)
-     || (fchmod(tmpfd, 0600) < 0)
-     || ((fd = fdopen(tmpfd, "wb")) == NULL))
-    return;
+  fd = getNewRandomFile(fileName, NAME_MAX);
 
   ip = device[actualReportDeviceId].ipBytes;
   nonIp = device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes;
@@ -398,14 +384,15 @@ void drawTrafficPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  fd = fopen(fileName, "rb");
-  for(;;) {
-    len = fread(tmpStr, sizeof(char), 255, fd);
-    if(len <= 0) break;
-    sendStringLen(tmpStr, len);
-  }
+  if((fd = fopen(fileName, "rb")) != NULL) {
+	for(;;) {
+		len = fread(tmpStr, sizeof(char), 255, fd);
+		if(len <= 0) break;
+		sendStringLen(tmpStr, len);
+	}
 
   fclose(fd);
+  }
 
   unlink(fileName);
 }
@@ -413,7 +400,7 @@ void drawTrafficPie(void) {
 /* ************************ */
 
 void drawThptGraph(int sortedColumn) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
   int i, len, tmpfd;
   char  labels[60][32];
   char  *lbls[60];
@@ -441,11 +428,7 @@ void drawThptGraph(int sortedColumn) {
     labels[i][0] = '\0';
   }
 
-  /* Patch courtesy of Thomas Biege <thomas@suse.de> */
-  if(((tmpfd = mkstemp(fileName)) < 0)
-     || (fchmod(tmpfd, 0600) < 0)
-     || ((fd = fdopen(tmpfd, "wb")) == NULL))
-    return;
+  fd = getNewRandomFile(fileName, NAME_MAX);
 
   switch(sortedColumn) {
   case 1: /* 60 Minutes */
@@ -553,14 +536,15 @@ void drawThptGraph(int sortedColumn) {
   releaseMutex(&graphMutex);
 #endif
 
-  fd = fopen(fileName, "rb");
-  for(;;) {
-    len = fread(tmpStr, sizeof(char), 255, fd);
-    if(len <= 0) break;
-    sendStringLen(tmpStr, len);
+  if((fd = fopen(fileName, "rb")) != NULL) {
+	for(;;) {
+		len = fread(tmpStr, sizeof(char), 255, fd);
+		if(len <= 0) break;
+		sendStringLen(tmpStr, len);
   }
 
   fclose(fd);
+  }
 
   unlink(fileName);
 }
@@ -569,9 +553,9 @@ void drawThptGraph(int sortedColumn) {
 /* ************************ */
 
 void drawGlobalProtoDistribution(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
   TrafficCounter ip, nonIp;
-  int len;
+  int len, totLen;
   float p[256]; /* Fix courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
   unsigned long sc = 0xC8C8FF;
   char	*lbl[16];
@@ -581,11 +565,7 @@ void drawGlobalProtoDistribution(void) {
   ip = device[actualReportDeviceId].ipBytes;
   nonIp = device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes;
 
-  /* Patch courtesy of Thomas Biege <thomas@suse.de> */
-  if(((tmpfd = mkstemp(fileName)) < 0)
-     || (fchmod(tmpfd, 0600) < 0)
-     || ((fd = fdopen(tmpfd, "wb")) == NULL))
-    return;
+  fd = getNewRandomFile(fileName, NAME_MAX);
 
   if(device[actualReportDeviceId].tcpBytes > 0) {
     p[idx] = device[actualReportDeviceId].tcpBytes; lbl[idx] = "TCP";  idx++; }
@@ -643,14 +623,16 @@ void drawGlobalProtoDistribution(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  fd = fopen(fileName, "rb");
-  for(;;) {
-    len = fread(tmpStr, sizeof(char), 255, fd);
-    if(len <= 0) break;
-    sendStringLen(tmpStr, len);
+  if((fd = fopen(fileName, "rb")) != NULL) {
+	for(totLen=0;;) {
+		len = fread(tmpStr, sizeof(char), 255, fd);
+		if(len <= 0) break;
+		totLen += len;
+		sendStringLen(tmpStr, len);
   }
 
   fclose(fd);
+  }
 
   unlink(fileName);
 }
@@ -658,7 +640,7 @@ void drawGlobalProtoDistribution(void) {
 /* ************************ */
 
 void drawGlobalIpProtoDistribution(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
   int len, i, idx=0, tmpfd;
   float p[256];
   unsigned long sc = 0xC8C8FF;
@@ -677,11 +659,7 @@ void drawGlobalIpProtoDistribution(void) {
     }
   }
 
-  /* Patch courtesy of Thomas Biege <thomas@suse.de> */
-  if(((tmpfd = mkstemp(fileName)) < 0)
-     || (fchmod(tmpfd, 0600) < 0)
-     || ((fd = fdopen(tmpfd, "wb")) == NULL))
-    return;
+  fd = getNewRandomFile(fileName, NAME_MAX);
   
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "drawGlobalIpProtoDistribution");
@@ -707,15 +685,14 @@ void drawGlobalIpProtoDistribution(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  fd = fopen(fileName, "rb");
-  for(;;) {
-    len = fread(tmpStr, sizeof(char), 255, fd);
-    if(len <= 0) break;
-    sendStringLen(tmpStr, len);
+  if((fd = fopen(fileName, "rb")) != NULL) {
+	for(;;) {
+		len = fread(tmpStr, sizeof(char), 255, fd);
+		if(len <= 0) break;
+		sendStringLen(tmpStr, len);
   }
-
-  fclose(fd);
-
+	fclose(fd);
+  }
   unlink(fileName);
 }
 

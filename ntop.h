@@ -415,7 +415,11 @@ extern const char *gdbm_strerror (int);
 # define strncasecmp(a, b, c) strnicmp(a, b, c)
 #endif
 
+#ifdef WIN32
+#define MAX_NUM_DEVICES 1
+#else
 #define MAX_NUM_DEVICES 32       /* NIC devices */
+#endif
 #define MAX_NUM_ROUTERS 512
 
 #define DEFAULT_SNAPLEN  384 /* 68 (default) is not enough for DNS packets */

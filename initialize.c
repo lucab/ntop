@@ -546,7 +546,7 @@ void initDevices(char* devices) {
 	  }
 
 	  tmpString[j++] = 0;
-	  strncpy(tmpDev, tmpString, sizeof(tmpDev));
+	  tmpDev = tmpString;
 	} else { /* WIN95/98 */
 	  if(strncmp(tmpDev, "PPP", 3) == 0) {
 	    /* Ethernet is the only handled interface

@@ -937,8 +937,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  int rc;
 	  time_t microSecTimeDiff;
 
-	  u_int16_t transactionId = 3*srcHost->hostIpAddress.s_addr
-	    +dstHost->hostIpAddress.s_addr+5*dport+7*sport;
+	  u_int16_t transactionId = (u_int16_t)(3*srcHost->hostIpAddress.s_addr
+	    +dstHost->hostIpAddress.s_addr+5*dport+7*sport);
 
 	  /* to be 64bit-proof we have to copy the elements */
 	  tvstrct.tv_sec = h->ts.tv_sec;
@@ -1022,8 +1022,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 	   || (strncmp(rcStr, "HEAD ", 5) == 0)
 	   || (strncmp(rcStr, "POST ", 5) == 0)) {
 
-	  u_int16_t transactionId = srcHost->hostIpAddress.s_addr+3*dstHost->hostIpAddress.s_addr
-	    +5*sport+7*dport;
+	  u_int16_t transactionId = (u_int16_t)(srcHost->hostIpAddress.s_addr+3*dstHost->hostIpAddress.s_addr
+	    +5*sport+7*dport);
 
 	  /* to be 64bit-proof we have to copy the elements */
 	  tvstrct.tv_sec = h->ts.tv_sec;
@@ -2009,10 +2009,10 @@ static void processIpPkt(const u_char *bp,
   if(rFileName != NULL) {
     static int numPkt=1;
     
-    traceEvent(TRACE_INFO, "%d) %s:%d -> %s:%d", 
+    traceEvent(TRACE_INFO, "%d) %s -> %s", 
 	       numPkt++,
-	       srcHost->hostNumIpAddress, sport,
-	       srcHost->hostNumIpAddress, dport);
+	       srcHost->hostNumIpAddress,
+	       srcHost->hostNumIpAddress);
     fflush(stdout);
   }
 
@@ -2457,17 +2457,17 @@ void queuePacket(u_char * _deviceId,
      until a slot is freed
   *****************************/
 
+#ifdef WIN32_DEMO
+  static int numQueuedPackets=0;
+
+  if(numQueuedPackets++ >= MAX_NUM_PACKETS)
+    return;
+#endif
+
   if(!capturePackets) return;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Got packet from %s (%d)\n", device[*_deviceId].name, *_deviceId);
-#endif
-
-#ifdef WIN32_DEMO
-  static u_short numQueuedPackets=0;
-
-  if(numQueuedPackets++ >= MAX_NUM_PACKETS)
-    return;
 #endif
 
   if(packetQueueLen >= PACKET_QUEUE_LENGTH) {

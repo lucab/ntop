@@ -34,7 +34,10 @@ extern int webPort; /* main.c */
 static pthread_t remIntTreadId;
 #endif
 
-static int remIntSock, locIntSock;
+static int remIntSock;
+#ifndef WIN32
+static int locIntSock;
+#endif
 
 static void termRemIntFunct(void) {
   traceEvent(TRACE_INFO, "Thanks for using ntop Remote Interface..."); fflush(stdout);
@@ -43,22 +46,26 @@ static void termRemIntFunct(void) {
     closeNwSocket(&remIntSock);
     remIntSock = 0;
   }
+
+#ifndef WIN32
   if(locIntSock > 0) {
     closeNwSocket(&locIntSock);
     locIntSock = 0;
   }
+#endif
+
   traceEvent(TRACE_INFO, "Done.\n"); fflush(stdout);
 }
 
 /* ****************************** */
 
-void returnHostEntry(HostTraffic* theHost, char* udpBuf, int udpBufLen) {
+void returnHostEntry(HostTraffic* theHost, char* udpBuf) {
   char theTime[64];
 
   char buf1[384], buf2[384], buf3[384], buf4[384];
 
   if(theHost == NULL) {
-    snprintf(udpBuf, udpBufLen, "%s\n", EMPTY_SLOT_RC);
+    snprintf(udpBuf, sizeof(udpBuf), "%s\n", EMPTY_SLOT_RC);
     return;    
   }
 
@@ -147,18 +154,18 @@ void returnHostEntry(HostTraffic* theHost, char* udpBuf, int udpBufLen) {
 	  (unsigned long)theHost->otherReceived);
 
 
-  snprintf(udpBuf, udpBufLen, "%s%s%s%s", buf1, buf2, buf3, buf4);
+  snprintf(udpBuf, sizeof(udpBuf), "%s%s%s%s", buf1, buf2, buf3, buf4);
 }
 
 /* ****************************** */
 
-void returnHostEntryIdx(u_int idx, char* udpBuf, int udpBufLen) {
+void returnHostEntryIdx(u_int idx, char* udpBuf) {
   if(idx > device[actualReportDeviceId].actualHashSize) {
-    snprintf(udpBuf, udpBufLen, "%s\n", OUT_OF_RANGE_RC);
+    snprintf(udpBuf, sizeof(udpBuf), "%s\n", OUT_OF_RANGE_RC);
     return;
   }
 
-  returnHostEntry(device[actualReportDeviceId].hash_hostTraffic[idx], udpBuf, udpBufLen);
+  returnHostEntry(device[actualReportDeviceId].hash_hostTraffic[idx], udpBuf);
 }
 
 /* ****************************** */
@@ -220,12 +227,16 @@ void* remIntLoop(void* notUsed _UNUSED_) {
 
   FD_ZERO(&mask);
   FD_SET((unsigned int)remIntSock, &mask);
+#ifndef WIN32
   FD_SET((unsigned int)locIntSock, &mask);
 
   if(remIntSock > locIntSock)
     topSock = remIntSock+1;
   else
     topSock = locIntSock+1;
+#else
+  topSock = remIntSock+1;
+#endif
 
   while(1) {
     char udpBuf[4096];
@@ -238,10 +249,11 @@ void* remIntLoop(void* notUsed _UNUSED_) {
       if(!capturePackets) break;
   
       if(FD_ISSET((unsigned int)remIntSock, &mask))
-	recvIntSock = remIntSock;
+		recvIntSock = remIntSock;
+#ifndef WIN32
       else
-	recvIntSock = locIntSock;
-      
+		recvIntSock = locIntSock;
+#endif
       rc = recvfrom(recvIntSock, udpBuf, 4096, 0, (struct sockaddr*)&source, &length);
       
       if(rc > 0) {
@@ -270,7 +282,7 @@ void* remIntLoop(void* notUsed _UNUSED_) {
 	  
 	idx = atoi(strIdx);
 	
-	returnHostEntryIdx(idx, udpBuf, sizeof(udpBuf));
+	returnHostEntryIdx(idx, udpBuf);
 	rc = sendto(recvIntSock, udpBuf, strlen(udpBuf), 0, 
 		    (struct sockaddr*)&source, sizeof(source));
       } else if(strncasecmp(udpBuf, FIND_HOST_BY_IP_CMD, 
@@ -295,7 +307,7 @@ void* remIntLoop(void* notUsed _UNUSED_) {
 	  continue;
 	} 
 	
-	returnHostEntry(findHostByMAC(macAddress), udpBuf, sizeof(udpBuf));
+	returnHostEntry(findHostByMAC(macAddress), udpBuf);
 	rc = sendto(recvIntSock, udpBuf, strlen(udpBuf), 0, 
 		    (struct sockaddr*)&source, sizeof(source));
       } else {
