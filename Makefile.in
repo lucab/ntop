@@ -132,7 +132,8 @@ CCLD = @CCLD@
 CORELIBS = @CORELIBS@
 MORELIBS = @MORELIBS@
 
-DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.db ntops ntopd ntop-config
+DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db 		 icmpWatch.db ntops ntopd ntop-config
+
 CLEANFILES = $(DISTCLEANFILES)
 
 # A list of all the files in the current directory which can be regenerated
@@ -141,7 +142,7 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess              
 
 SUBDIRS = . @PLUGINS@ @INTOP@ @REMOTEINTERFACE@
 
-DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FAQ FILES HACKING               KNOWN_BUGS MANIFESTO NEWS PORTING                SUPPORT_NTOP.txt               THANKS THREADS-FAQ TODO               ntop.8 ntop.txt ntop.html               ntop-cert.pem ntop-rules.8 rules.sample
+DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog               MANIFESTO NEWS PORTING                SUPPORT_NTOP.txt               THANKS               ntop.8 ntop.txt ntop.html               ntop-cert.pem ntop-rules.8 rules.sample
 
 
 NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.css html/statsicons            html/statsicons/flags html/statsicons/os            html/statsicons/flags/*.gif html/statsicons/os/*.gif
@@ -150,13 +151,14 @@ NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.css html/statsicons   
 EXTRA_DIST = Makefile.am Makefile.in              acconfig.h acinclude.m4 acinclude.m4.in              autogen.sh config.guess config.h.in config.sub              configure configure.in              install-sh libtool ltconfig ltmain.sh              missing mkinstalldirs ntop-config.in              vt.sed
 
 
+WEBFILES = `cat www/FILES`
 PLUGINSFILES = `cat plugins/FILES`
 REMOTEAPIFILES = `cat remoteInterfaceAPI/FILES`
 INTOPFILES = `cat intop/FILES`
 DATABASEFILES = `cat database/FILES`
 DOCSFILES = `cat docs/FILES`
 
-THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) 		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES)
+THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) 		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
 
 
 #

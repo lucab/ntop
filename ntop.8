@@ -36,8 +36,6 @@ ntop \- display top network users
 .IR dbpath]
 .RB [ -m 
 .IR "local subnet" ]
-.RB [ -l 
-.IR "log period" ]
 .RB [ -a
 .IR "access log file path" ]
 .RB [ -t
@@ -162,14 +160,6 @@ This allows to specify where db-files are searched or created (default "."). In 
 
 .It -m
 This flag allows users to specify the subnets whose traffic is considered local. The format is <network address>/<# subnet mask bits>[,<network address>/<# subnet mask bits>]. For instance "131.114.21.0/24,10.0.0.0/255.0.0.0".
-
-.It -l
-This causes
-.B ntop
-to periodically (specified with the -r flag) log network information data in the file
-.B  ntop.log
-whose format is self-explanatory. This flag specifies the collection time between two consecutive log entries (in seconds). Please note that it is easy to use the log file to produce graphics (e.g. using
-.B gnuplot).
 
 .It -a
 By default 

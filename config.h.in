@@ -6,6 +6,9 @@
 /* Define if you have the ANSI C header files.  */
 #undef STDC_HEADERS
 
+/* Define if you want to build micro ntop. */
+#undef MICRO_NTOP
+
 /* Define if you want a debugging version. */
 #undef DEBUG
 

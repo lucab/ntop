@@ -262,6 +262,12 @@ AC_ARG_WITH(gdchart-root, [  --with-gdchart-root=DIR GDChart source tree located
 AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
 
 dnl>
+dnl> Give the user an option to compile a micro version of ntop
+dnl> for embedded systems
+dnl>
+AC_ARG_ENABLE(micro-ntop, [  --enable-micro-ntop            compile a slim version of ntop [default=no]], ac_micro_ntop="yes", ac_micro_ntop="no")
+
+dnl>
 dnl> Give the user an option to compile without multithread support,
 dnl> for example to start a debugging session.
 dnl>
@@ -415,6 +421,11 @@ fi
 
 dnl> OPTIONAL memory related headers
 AC_CHECK_HEADERS(alloca.h)
+
+dnl> OPTIONAL micro ntop
+if test ".$ac_micro_ntop" = ".yes"; then
+	AC_DEFINE(MICRO_NTOP)
+fi
 
 dnl> OPTIONAL thread headers
 if test ".$ac_disable_multithread" = ".no"; then
@@ -1077,11 +1088,12 @@ PLUGIN_DIR=`(
 AC_DEFINE_UNQUOTED(PLUGIN_DIR,"$PLUGIN_DIR", [Plugin installation directory])
 AC_SUBST(PLUGIN_DIR)
 
-DBFILE_DIR=$localstatedir/ntop
-DBFILE_DIR=`(
-  test "x$prefix" = xNONE && prefix=$ac_default_prefix
-  eval echo "$DBFILE_DIR"
-)`
+dnl> DBFILE_DIR=$localstatedir/ntop
+dnl> DBFILE_DIR=`(
+dnl>  test "x$prefix" = xNONE && prefix=$ac_default_prefix
+dnl>  eval echo "$DBFILE_DIR"
+dnl>)`
+DBFILE_DIR=/tmp
 AC_DEFINE_UNQUOTED(DBFILE_DIR,"$DBFILE_DIR", [Database file directory])
 AC_SUBST(DBFILE_DIR)
  

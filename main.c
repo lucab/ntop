@@ -116,8 +116,8 @@ int main(int argc, char *argv[]) {
   tcpChain = NULL, udpChain = NULL, icmpChain = NULL;
   devices = NULL;
 
-  daemonMode = 0, pflag = 0, numericFlag=0, percentMode = 0;
-  refreshRate = 0, idleFlag = 1, logd = NULL;
+  daemonMode = 0, pflag = 0, numericFlag=0;
+  refreshRate = 0;
   rFileName = NULL, grabSessionInformation = 0;
   maxHashSize = MAX_HASH_SIZE;
   traceLevel = DEFAULT_TRACE_LEVEL;
@@ -138,9 +138,9 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "e:F:hr:p:i:l:nw:m:b:B:D:s:P:R:Sgt:a:W:12";
+  theOpts = "e:F:hr:p:i:nw:m:b:B:D:s:P:R:Sgt:a:W:12";
 #else
-  theOpts = "Ide:f:F:hr:i:p:l:nNw:m:b:D:s:P:R:MSgt:a:u:W:12";
+  theOpts = "Ide:f:F:hr:i:p:nNw:m:b:D:s:P:R:MSgt:a:u:W:12";
 #endif
   
   while((op = getopt(argc, argv, theOpts)) != EOF)
@@ -207,9 +207,11 @@ int main(int argc, char *argv[]) {
 	refreshRate = atoi(optarg);
 	break;
 
+#ifndef MICRO_NTOP
       case 'e':
 	maxNumLines = atoi(optarg);
 	break;
+#endif
 
       case 's':
 	maxHashSize = atoi(optarg);
@@ -236,31 +238,6 @@ int main(int argc, char *argv[]) {
       case 'm':
 	stringSanityCheck(optarg);
 	localAddresses = strdup(optarg);
-	break;
-
-      case 'l':
-	stringSanityCheck(optarg);
-	if(!isdigit(optarg[0])) {
-	  traceEvent(TRACE_ERROR, 
-		     "FATAL ERROR: flag -l expects a numeric argument.\n");
-	  exit(-1);
-	}
-
-	logTimeout = atoi(optarg);
-
-	if(logTimeout < 0) {
-	  traceEvent(TRACE_WARNING, 
-		     "Log period out of range: set to default (30 mins)\n");
-	  logTimeout = 1800; /* seconds */
-	}
-
-	if(((fd = open("ntop.log", O_RDWR | O_CREAT | O_EXCL, 0600)) < 0) 
-	   || ((logd = fdopen(fd, "w+")) == NULL)) {
-	  traceEvent(TRACE_WARNING, 
-		     "Logging disabled: unable to log onto file ntop.log.\n");
-	  logTimeout = 0;
-	} else
-	  printLogHeader();
 	break;
 
       case 'n':
@@ -390,7 +367,9 @@ int main(int argc, char *argv[]) {
 #endif
 
   initGlobalValues();
+#ifndef MICRO_NTOP
   reportValues(&lastTime);
+#endif /* MICRO_NTOP */
   postCommandLineArgumentsInitialization(&lastTime);
   initGdbm();
   initializeWeb();
@@ -423,7 +402,9 @@ int main(int argc, char *argv[]) {
   traceEvent(TRACE_INFO, "Initialising...\n");
 
   initLibpcap(rulesFile, numDevices);
+#ifndef MICRO_NTOP
   loadPlugins();
+#endif
 
   /*
     Code fragment below courtesy of 
@@ -473,7 +454,9 @@ int main(int argc, char *argv[]) {
   initSignals();
 
   initThreads(enableThUpdate, enableIdleHosts, enableDBsupport);
+#ifndef MICRO_NTOP
   startPlugins();
+#endif
   initWeb(webPort, webAddr, sslAddr);
 
   traceEvent(TRACE_INFO, "Sniffying...\n");

@@ -43,7 +43,8 @@ CORELIBS  = @CORELIBS@
 MORELIBS  = @MORELIBS@
 
 
-DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.db ntops ntopd ntop-config
+DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db \
+		 icmpWatch.db ntops ntopd ntop-config
 CLEANFILES     = $(DISTCLEANFILES)
 
 # A list of all the files in the current directory which can be regenerated
@@ -55,7 +56,7 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 
 SUBDIRS = . @PLUGINS@ @INTOP@ @REMOTEINTERFACE@
 
-DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FILES \
+DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
               SUPPORT_NTOP.txt \
               THANKS \
@@ -74,6 +75,7 @@ EXTRA_DIST = Makefile.am Makefile.in \
              missing mkinstalldirs ntop-config.in \
              vt.sed
 
+WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`
 REMOTEAPIFILES = `cat remoteInterfaceAPI/FILES`
 INTOPFILES     = `cat intop/FILES`
@@ -81,7 +83,7 @@ DATABASEFILES  = `cat database/FILES`
 DOCSFILES      = `cat docs/FILES`
 
 THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) \
-		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES)
+		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
 
 #
 # This Makefile is responsible for creating:
