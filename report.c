@@ -1629,12 +1629,12 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   memset(tmpTable, 0, device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   for(idx=1, numEntries=0; idx<device[actualReportDeviceId].actualHashSize; idx++)
-    if((idx != otherHostEntryIdx)
-       && ((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+    if(/* (idx != otherHostEntryIdx) && */
+       ((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && (broadcastHost(el) == 0) /* No broadcast addresses please */
        && (multicastHost(el) == 0) /* No multicast addresses please */
        && ((el->hostNumIpAddress[0] != '\0')
-	   && (el->hostNumIpAddress[0] != '0' /* 0.0.0.0 */)
+	   && (el->hostIpAddress.s_addr != '0' /* 0.0.0.0 */)
 	   /* This host speaks IP */)) {
       switch(remoteToLocal) {
       case REMOTE_TO_LOCAL_ACCOUNTING:
@@ -1670,11 +1670,11 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   switch(remoteToLocal) {
   case REMOTE_TO_LOCAL_ACCOUNTING:
     str = IP_R_2_L_HTML;
-    title = "Rem to Local IP Traffic";
+    title = "Remote to Local IP Traffic";
     break;
   case LOCAL_TO_REMOTE_ACCOUNTING:
     str = IP_L_2_R_HTML;
-    title = "Local to Rem IP Traffic";
+    title = "Local to Remote IP Traffic";
     break;
   case LOCAL_TO_LOCAL_ACCOUNTING:
     str = IP_L_2_L_HTML;
@@ -2135,11 +2135,12 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
  if(mode == SHORT_FORMAT) {
    printSectionTitle("IP Protocol Distribution");
 
+   /*
   if(borderSnifferMode) {
     printNotAvailable();
     return;
   }
-
+   */
 #ifdef HAVE_GDCHART
    sendString("<CENTER><IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p>\n</CENTER>\n");
 #endif

@@ -257,7 +257,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
       resetHostsVariables(el);
 
-      if(isMultihomed) FD_SET(HOST_MULTIHOMED, &el->flags);
+      if(isMultihomed) FD_SET(HOST_MULTIHOMED, &el->flags);     
 
       el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
 
@@ -295,12 +295,12 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
 
 	  memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
-	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
+	  if(!borderSnifferMode) FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
 
 	  if(isPrivateAddress(hostIpAddress)) FD_SET(PRIVATE_IP_ADDRESS, &el->flags);
 
 	  if(!isBroadcastAddress(hostIpAddress)) {
-	    if(isPseudoLocalAddress(hostIpAddress))
+	    if(borderSnifferMode || isPseudoLocalAddress(hostIpAddress))
 	      FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
 	    else
 	      FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
@@ -2261,7 +2261,7 @@ static int handleIP(u_short port,
     return(-1);
   }
 
-  if(idx != -1) {
+  if(idx != NO_PEER) {
     if(subnetPseudoLocalHost(srcHost)) {
       if(subnetPseudoLocalHost(dstHost)) {
 	if((srcHostIdx != broadcastEntryIdx) 
@@ -3271,9 +3271,19 @@ static void processIpPkt(const u_char *bp,
 	    device[actualDeviceId].udpGlobalTrafficStats.remote += length;
 	  }
 	}
-
-	if(handleIP(dport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId) == -1)
-	  handleIP(sport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId);
+  
+        /* Handle UDP traffic like TCP, above - 
+	   That is: if we know about the lower# port, even if it's the destination,
+	   classify the traffic that way.
+	   (BMS 12-2001)
+	*/
+        if (dport < sport) {
+	  if (handleIP(dport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId) == -1)
+	    handleIP(sport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId);
+        } else {
+	  if (handleIP(sport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId) == -1)
+	    handleIP(dport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId);
+        }
 
 	handleUDPSession(h, (off & 0x3fff),
 			 srcHostIdx, sport, dstHostIdx,

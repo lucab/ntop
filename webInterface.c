@@ -708,6 +708,12 @@ void printNtopConfigInfo(void) {
 
   printFeatureConfigInfo("TCP Session Handling", enableSessionHandling == 1 ? "Enabled" : "Disabled");
   printFeatureConfigInfo("Protocol Decoders",    enablePacketDecoding == 1 ? "Enabled" : "Disabled");
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># IP Protocols Being Monitored</TH>"
+	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", numIpProtosToMonitor) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
   printFeatureConfigInfo("Fragment Handling",    enableFragmentHandling == 1 ? "Enabled" : "Disabled");
 
   if(isNmapPresent) 

@@ -323,7 +323,7 @@ void initCounters(int _mergeInterfaces) {
     memset(otherHostEntry, 0, sizeof(HostTraffic));
 
     otherHostEntry->hostIpAddress.s_addr = 0x00112233;
-    strncpy(otherHostEntry->hostNumIpAddress, "0.1.2.3",
+    strncpy(otherHostEntry->hostNumIpAddress, "&nbsp;",
 	    sizeof(otherHostEntry->hostNumIpAddress));
     strncpy(otherHostEntry->hostSymIpAddress, "Remaining Host(s)",
 	    sizeof(otherHostEntry->hostSymIpAddress));

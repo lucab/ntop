@@ -416,12 +416,21 @@ void createPortHash() {
 /* **************************************** */
 
 void handleProtocols(char *protos) {
-  char *proto, *buffer=NULL, *strtokState;
+  char *proto, *buffer=NULL, *strtokState, *bufferCurrent, *bufferWork;
   FILE *fd = fopen(protos, "rb");
 
-  if(fd == NULL)
+  /* protos is either 
+     1) a list in the form proto=port[|port][,...]
+     2) the name of a file containing a list in the same format.
+     Modification:  Allow the file to have multiple lines, each in 
+     the "standard" format.   
+     Also, ignore standard Linux comments...
+  */
+
+  if(fd == NULL) {
+    traceEvent(TRACE_INFO, "Processing protocol list: '%s'", protos);
     proto = strtok_r(protos, ",", &strtokState);
-  else {
+  } else {
     struct stat buf;
     int len, i;
 
@@ -430,12 +439,42 @@ void handleProtocols(char *protos) {
       return;
     }
 
-    buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
+    bufferCurrent = buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
 
-    for(i=0;i<buf.st_size;) {
-      len = fread(&buffer[i], sizeof(char), buf.st_size-i, fd);
-      if(len <= 0) break;
-      i += len;
+    traceEvent(TRACE_INFO, "Processing protocol file: '%s', size: %d", 
+                           protos, buf.st_size+8);
+    
+    for (;;) {
+      bufferCurrent = fgets(bufferCurrent, buf.st_size, fd);
+      /* On EOF, we're finished */
+      if (bufferCurrent == NULL) {
+	break;
+      }
+
+      /* otherwise, bufferCurrent points to the just read line in the file, 
+	 of the form:
+	 [protocol=protocol[|protocol][,]] [# comment]
+      */
+
+      /* Strip out any comments */
+      bufferWork = strchr(bufferCurrent, '#');
+      if (bufferWork != NULL) {
+	bufferWork[0] = '\n';
+	bufferWork[1] = '\0';
+      }
+      
+      /*
+	Replace the \n by a comma, so at the end the buffer will
+	look indistinguishable from a single line file...
+      */
+      bufferWork = strchr(bufferCurrent, '\n');
+      if(bufferWork != NULL) {
+	bufferWork[0] = ',';
+	bufferWork[1] = '\0';
+      }
+      
+      /* Move pointer to end-of-string for read of next line */
+      bufferCurrent = strchr(bufferCurrent, '\0');      
     }
 
     fclose(fd);
@@ -468,6 +507,10 @@ void handleProtocols(char *protos) {
 	tmpStr[len] = '|';
 	tmpStr[len+1] = '\0';
       }
+      
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "          %30s %s", proto, tmpStr);
+#endif
 
       handleProtocolList(proto, tmpStr);
 
