@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.97])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.97.002-2003-12-02"
+SCRIPTVER="v2.2.97.003-2003-12-10"
 
 dnl>
 dnl> generate the config header
@@ -130,6 +130,7 @@ AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
 # Set constants and defaults
 MYRRD=`pwd`/myrrd
 SO_VERSION_PATCH=
+MAKE_SHARED_LIBRARY_PARM="-bundle -flat_namespace -undefined suppress"
 
 AS=
 CCLD=
@@ -1020,7 +1021,6 @@ case "${target}:${CC}" in
 
     *-*-openbsd*:* )
         DEFINEOS="OPENBSD";   STATUS="WILLFAIL"
-        SO_VERSION_PATCH=.0.0
       ;;
 
     *-*-netbsd*1.5*:gcc* )
@@ -2916,6 +2916,7 @@ AC_SUBST(DYN_FLAGS)
 AC_SUBST(EXEEXT)
 AC_SUBST(INCS)
 AC_SUBST(LIBTOOL_DEPS)
+AC_SUBST(MAKE_SHARED_LIBRARY_PARM)
 AC_SUBST(NTOP_VERSION_EXTRA)
 AC_SUBST(OBJDUMP)
 AC_SUBST(OBJEXT)

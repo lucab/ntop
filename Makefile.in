@@ -113,6 +113,7 @@ LD = @LD@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
+MAKE_SHARED_LIBRARY_PARM = @MAKE_SHARED_LIBRARY_PARM@
 NM = @NM@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
@@ -354,10 +355,11 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 DIST_COMMON = README $(ETTER_PASSIVE) $(noinst_HEADERS) AUTHORS \
 	CONTENTS COPYING ChangeLog INSTALL MANIFESTO Makefile.am \
 	Makefile.in NEWS PORTING SUPPORT_NTOP.txt THANKS \ acinclude.m4 \
-	aclocal.m4 config.guess config.h.in config.sub configure \
-	configure.in depcomp html/faq.html install-sh ltconfig \
-	ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html \
-	ntop.txt oui.txt.gz p2c.opt.table.gz specialMAC.txt.gz\
+	aclocal.m4 compile config.guess config.h.in config.sub \
+	configure configure.in depcomp html/faq.html install-sh \
+	ltconfig ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 \
+	ntop.html ntop.txt oui.txt.gz p2c.opt.table.gz \
+	specialMAC.txt.gz\
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES) $(sntop_SOURCES)
 
