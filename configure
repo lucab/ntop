@@ -2542,7 +2542,7 @@ EOF
         ;;
 
     *openbsd* )
-        SO_VERSION_PATCH=0.0
+        SO_VERSION_PATCH=.0.0
         ;;
 
 esac
