@@ -172,9 +172,11 @@ static void resolveAddress(char* symAddr,
 		   be locked by thread A and unlocked by a different
 		   thread */
 
-      for(i=0; i<5; i++) {
+      for(i=0; i<10; i++) {
 	if(tryLockMutex(&mutexVariable, "resolveAddressNow") == EBUSY) {
+#ifdef DNS_DEBUG
 	  traceEvent(TRACE_INFO, "Waiting");
+#endif
 	} else {
 	  /* NS completed */
 #ifdef DNS_DEBUG
