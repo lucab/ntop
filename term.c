@@ -34,7 +34,9 @@ void termIPServices(void) {
     }
 
     if(myGlobals.tcpSvc[i] != NULL) {
-      free(myGlobals.tcpSvc[i]->name);
+      if (myGlobals.tcpSvc[i]->name != NULL) {
+          free(myGlobals.tcpSvc[i]->name);
+      }
       free(myGlobals.tcpSvc[i]);
     }
   }
