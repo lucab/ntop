@@ -118,7 +118,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 
 #ifdef HAVE_ZLIB
-#include <zlib.h>
 static char compressedFilePath[16];
 static short compressFile = 0, acceptGzEncoding;
 static FILE *compressFileFd=NULL;
@@ -1492,9 +1491,9 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
       printIpAccounting(LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
-    } else if(strcmp(pageName, "NetNetstat.html") == 0) {
+    } else if(strncmp(pageName, "NetNetstat.html", strlen("NetNetstat.html")) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printActiveTCPSessions(actualReportDeviceId);
+      printActiveTCPSessions(actualReportDeviceId, pageNum);
     } else if(strncmp(pageName, STR_MULTICAST_STATS, strlen(STR_MULTICAST_STATS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printMulticastStats(sortedColumn, revertOrder, pageNum);

@@ -1108,6 +1108,10 @@ int extendTcpSessionsHash(int actualDeviceId) {
   const short extensionFactor = 2;
   static short displayError = 1;
 
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Called extendTcpSessionsHash(%d)", actualDeviceId);
+#endif
+
   if((myGlobals.device[actualDeviceId].numTotSessions*extensionFactor) <= MAX_HASH_SIZE) {
     /* Fine we can enlarge the table now */
     IPSession** tmpSession;

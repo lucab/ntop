@@ -235,6 +235,10 @@ int getdomainname(char *name, size_t len);
 #include <openssl/err.h>
 #endif /* HAVE_OPENSSL */
 
+/* Compressed HTTP responses via zlib */
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#endif
 
 /*
  * universal headers for network programming code
@@ -1834,7 +1838,7 @@ struct pbuf {
 #define DOUBLE_TWO_MSL_TIMEOUT   (2*TWO_MSL_TIMEOUT)
 
 #define IDLE_HOST_PURGE_TIMEOUT  30*60    /*   30 minutes */
-#define IDLE_SESSION_TIMEOUT     30*60    /*   30 minutes */
+#define IDLE_SESSION_TIMEOUT     10*60    /*   10 minutes */
 #define PURGE_ADDRESS_TIMEOUT    120*60   /*   2  hours   */
 #define PIPE_READ_TIMEOUT        15       /*      seconds */
 

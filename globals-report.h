@@ -135,7 +135,7 @@ extern void printIpAccounting(int remoteToLocal, int sortedColumn,
 			      int revertOrder, int pageNum);
 extern void printHTMLtrailer(void);
 extern void returnHTTPredirect(char* destination);
-extern void printActiveTCPSessions(int actualDeviceId);
+extern void printActiveTCPSessions(int actualDeviceId, int pageNum);
 extern void printIpProtocolUsage(void);
 extern void printBar(char *buf, int bufLen, unsigned short percentage,
                      unsigned short maxPercentage, unsigned short ratio);

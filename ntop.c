@@ -534,16 +534,17 @@ void addDefaultProtocols(void) {
   handleProtocolList("NBios-IP", "netbios-ns|netbios-dgm|netbios-ssn|");
   handleProtocolList("Mail",     "pop-2|pop-3|pop3|kpop|smtp|imap|imap2|");
   handleProtocolList("DHCP/BOOTP", "67-68|");
-  handleProtocolList("SNMP", "snmp|snmp-trap|");
-  handleProtocolList("NNTP", "nntp|");
-  handleProtocolList("NFS",  "mount|pcnfs|bwnfs|nfsd|nfsd-status|");
-  handleProtocolList("X11",  "6000-6010|");
+  handleProtocolList("SNMP",     "snmp|snmp-trap|");
+  handleProtocolList("NNTP",     "nntp|");
+  handleProtocolList("NFS",      "mount|pcnfs|bwnfs|nfsd|nfsd-status|");
+  handleProtocolList("X11",      "6000-6010|");
   /* 22 == ssh (just to make sure the port is defined) */
-  handleProtocolList("SSH",  "22|");
+  handleProtocolList("SSH",      "22|");
   /* Peer-to-Peer Protocols */
   handleProtocolList("Gnutella", "6346|6347|6348|");
   handleProtocolList("Morpheus", "1214|");
   handleProtocolList("WinMX",    "6699|7730|");
+/* handleProtocolList("Napster",  "8888|8875|"); */
   createPortHash();
 }
 
@@ -975,7 +976,7 @@ RETSIGTYPE cleanup(int signo) {
   for(i=0; i<myGlobals.numDevices; i++) {
     int j;
       
-    traceEvent(TRACE_INFO, "Freeing myGlobals.device %s (idx=%d)...", myGlobals.device[i].name, i);
+    traceEvent(TRACE_INFO, "Freeing device %s (idx=%d)...", myGlobals.device[i].name, i);
 
     if(!myGlobals.device[i].virtualDevice) {
       if (pcap_stats(myGlobals.device[i].pcapPtr, &stat) >= 0) {

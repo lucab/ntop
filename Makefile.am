@@ -121,8 +121,8 @@ libntop_la_SOURCES = address.c       dataFormat.c  event.c            \
                      globals-core.c  hash.c        initialize.c       \
                      leaks.c         logger.c      mysql.c netflow.c  \
                      ntop.c 	     pbuf.c        protocols.c        \
-		     plugin.c        qsort.c     		      \
-                     regex.c         rules.c       sql.c              \
+		     plugin.c        qsort.c       regex.c	      \
+                     rules.c         sql.c         sessions.c         \
                      ssl.c           term.c        traffic.c          \
                      util.c          vendor.c      version.c          \
                      vendortable.h   ntop_darwin.c

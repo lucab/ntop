@@ -75,10 +75,14 @@ void addPageIndicator(char *url, u_int pageNum,
 
   if(numPages <= 1) return;
 
-  if(snprintf(shortBuf, sizeof(shortBuf), 
-	      "%s%d", revertOrder == 1 ? "-" : "", numCol) < 0)
-     traceEvent(TRACE_ERROR, "Buffer overflow!");  
-      
+  if(revertOrder == -1) 
+    shortBuf[0] = '\0';
+  else {
+    if(snprintf(shortBuf, sizeof(shortBuf), 
+		"%s%d", revertOrder == 1 ? "-" : "", numCol) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");  
+  }
+
   if(pageNum >= 1) {
     if(snprintf(prevBuf, sizeof(prevBuf), 
 		"<A HREF=\"%s?page=0&col=%s\"><IMG SRC=/fback.gif BORDER=0 ALIGN=vmiddle></A> "
@@ -797,56 +801,56 @@ void printHostsTraffic(int sortSendMode,
 		      getRowColor(), avgPktTTL) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf2);
-	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>TTL&lt;&nbsp;32</th>"
+	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>TTL &lt; 32</th>"
 		      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		      getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo32)/
 		      (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
 		      formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo32)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf2);
-	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>TTL&lt;&nbsp;64</th>"
+	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>32 &lt; TTL &lt; 64</th>"
 		      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		      getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo64)/
 		      (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
 		      formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo64)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf2);
-	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>TTL&lt;&nbsp;96</th>"
+	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>64 &lt; TTL &lt; 96</th>"
 		      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		      getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo96)/
 		      (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
 		      formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo96)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf2);
-	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>TTL&lt;&nbsp;128</th>"
+	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>96 &lt; TTL &lt; 128</th>"
 		      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		      getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo128)/
 		      (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
 		      formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo128)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf2);
-	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>TTL&lt;&nbsp;160</th>"
+	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>128 &lt; TTL &lt; 160</th>"
 		      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		      getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo160)/
 		      (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
 		      formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo160)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf2);
-	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>TTL&lt;&nbsp;192</th>"
+	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>160 &lt; TTL &lt; 192</th>"
 		      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		      getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo192)/
 		      (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
 		      formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo192)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf2);
-	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>TTL&lt;&nbsp;224</th>"
+	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>192 &lt; TTL &lt; 224</th>"
 		      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		      getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo224)/
 		      (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
 		      formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo224)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf2);
-	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>TTL&lt;=&nbsp;255</th>"
+	  if(snprintf(buf2, sizeof(buf2), "<TR %s><TH "TH_BG" align=left>224 &lt; TTL &lt; 256</th>"
 		      "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		      getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo255)/
 		      (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
@@ -1931,10 +1935,10 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
 /* ********************************** */
 
-void printActiveTCPSessions(int actualDeviceId) {
+void printActiveTCPSessions(int actualDeviceId, int pageNum) {
   int idx;
   char buf[BUF_SIZE];
-  int numSessions;
+  int numSessions, printedSessions;
 
   printHTMLheader("Active TCP Sessions", 0);
 
@@ -1943,13 +1947,19 @@ void printActiveTCPSessions(int actualDeviceId) {
     return;
   }
 
-  for(idx=1, numSessions=0; idx<myGlobals.device[actualReportDeviceId].numTotSessions; idx++)
+  /*
+    Due to the way sessions are handled, sessions before those to
+    display need to be skipped    
+  */
+
+  for(idx=1, numSessions=0, printedSessions=0; 
+      idx<myGlobals.device[actualReportDeviceId].numTotSessions; idx++)
     if((idx != myGlobals.otherHostEntryIdx) 
        && (myGlobals.device[actualReportDeviceId].tcpSession[idx] != NULL)) {
       char *sport, *dport;
       TrafficCounter dataSent, dataRcvd;
       IPSession *session = myGlobals.device[actualReportDeviceId].tcpSession[idx];
-      
+            
       while(session != NULL) { 
 #ifndef PRINT_ALL_ACTIVE_SESSIONS
 	if(session->sessionState != STATE_ACTIVE) {
@@ -1958,7 +1968,12 @@ void printActiveTCPSessions(int actualDeviceId) {
 	}
 #endif
 
-	if(numSessions == 0) {
+	if((numSessions++) < pageNum*maxNumLines) {
+	  session = session->next;
+	  continue;
+	}
+	
+	if(printedSessions == 0) {
 	  sendString("<CENTER>\n");
 	  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
 		     "<TH "TH_BG">Client</TH>"
@@ -2036,14 +2051,23 @@ void printActiveTCPSessions(int actualDeviceId) {
 		    ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	sendString(buf);
-	numSessions++;
+	printedSessions++;
+
+	/* Avoid huge tables */
+	if(printedSessions++ > maxNumLines)
+	  break;
+
 	session = session->next;
       }
     }
 
-  if(numSessions > 0) {
+  if(printedSessions > 0) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
+
+    addPageIndicator("NetNetstat.html", pageNum, 
+		     myGlobals.device[actualReportDeviceId].numTotSessions,
+		     maxNumLines, -1, 0);
   } else
     printFlagedWarning("<I>No Active TCP Sessions</I>");
 }
@@ -2919,7 +2943,9 @@ void printIpTrafficMatrix(void) {
 
 	if(idx == myGlobals.otherHostEntryIdx) continue;
 
-	if((i == j) && strcmp(myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress, "127.0.0.1"))
+	if((i == j) && 
+	   strcmp(myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress, 
+		  "127.0.0.1"))
 	  numConsecutiveEmptyCells++;
 	else if(activeHosts[j] == 1) {
 	  if(myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx] == NULL)

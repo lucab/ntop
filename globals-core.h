@@ -19,13 +19,13 @@
  */
 
 extern NtopGlobals myGlobals;
-extern char *version, *osName, *author, *buildDate; /* version.c */
 
+/* version.c */
+extern char *version, *osName, *author, *buildDate;
 
-/* function declaration ***************************************************** */
+/****** function declarations ***** */
 
 /* address.c */
-
 extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);
 extern char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
@@ -187,22 +187,20 @@ extern void *updateThptLoop(void *notUsed);
 extern void* updateHostTrafficStatsThptLoop(void* notUsed);
 extern void *updateDBHostsTrafficLoop(void* notUsed);
 extern void *scanIdleLoop(void *notUsed);
+#ifndef WIN32
 extern void *periodicLsofLoop(void *notUsed);
+#endif
 extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
 extern RETSIGTYPE cleanup(int signo);
 extern void* cleanupExpiredHostEntriesLoop(void*);
  
 /* pbuf.c */
-#define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
-extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
 extern u_int findHostIdxByNumIP(struct in_addr hostIpAddress, int actualDeviceId);
 extern u_int findHostInfo(struct in_addr *hostIpAddress, int actualDeviceId);
 extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr, 
 			 u_char checkForMultihoming,
 			 u_char forceUsingIPaddress, int actualDeviceId);
 extern char *getNamedPort(int port);
-extern void freeSession(IPSession *sessionToPurge, int actualDeviceId);
-extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
 extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h,
@@ -212,11 +210,7 @@ extern void *dequeuePacket(void* notUsed);
 extern void dumpSuspiciousPacket(int actualDeviceId);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
-extern void updateOSName(HostTraffic *el);
 extern void updateHostName(HostTraffic *el);
-extern void _incrementUsageCounter(UsageCounter *counter,
-				   u_int peerIdx, int deviceId,
-				   char* file, int line);
 
 /* protocols.c */
 extern void handleBootp(HostTraffic *srcHost, HostTraffic *dstHost,
@@ -348,8 +342,9 @@ extern void trimString(char*);
 extern FILE* getNewRandomFile(char* fileName, int len);
 extern void stringSanityCheck(char* string);
 extern int checkCommand(char* commandName);
+#ifndef WIN32
 extern void readLsofInfo(void);
-extern void readNepedInfo(void);
+#endif
 extern char *getHostOS(char* ipAddr, int port, char* additionalInfo);
 extern char* decodeNBstring(char* theString, char *theBuffer);
 extern void closeNwSocket(int *sockId);
@@ -392,6 +387,10 @@ extern void addPortHashEntry(ServiceEntry **theSvc, int port, char* name);
 extern void resetUsageCounter(UsageCounter *counter);
 extern void resetSecurityHostTraffic(HostTraffic *el);
 extern char *mapIcmpType(int icmpType);
+extern void updateOSName(HostTraffic *el);
+extern void _incrementUsageCounter(UsageCounter *counter,
+				   u_int peerIdx, int deviceId,
+				   char* file, int line);
 extern char *strtolower(char *s);
 extern char *xstrncpy(char *dest, const char *src, size_t n);
 
@@ -431,3 +430,25 @@ extern void sendTCPSessionFlow(IPSession *theSession, int actualDeviceId);
 
 /* globals-core.c */
 extern void initNtopGlobals();
+
+/* sessions.c */
+#define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
+extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
+extern void freeSession(IPSession *sessionToPurge, int actualDeviceId);
+#ifndef MULTITHREADED
+extern void scanTimedoutTCPSessions(int actualDeviceId);
+#endif
+
+extern IPSession* handleTCPSession(const struct pcap_pkthdr *h,
+				   u_short fragmentedData, u_int tcpWin,
+				   u_int srcHostIdx, u_short sport,
+				   u_int dstHostIdx, u_short dport,
+				   u_int length, struct tcphdr *tp,
+				   u_int tcpDataLength, u_char* packetData, 
+				   int actualDeviceId);
+
+extern IPSession* handleUDPSession(const struct pcap_pkthdr *h,
+				   u_short fragmentedData, u_int srcHostIdx,
+				   u_short sport, u_int dstHostIdx,
+				   u_short dport, u_int length,
+				   u_char* packetData, int actualDeviceId);

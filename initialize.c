@@ -920,7 +920,8 @@ void initLibpcap(char* rulesFile, int numDevices) {
 	Courtesy of: Nicolai Petri <Nicolai@atomic.dk>
       */
       if(column == NULL) {
-	myGlobals.device[i].pcapPtr = pcap_open_live(myGlobals.device[i].name, DEFAULT_SNAPLEN, 1, 100 /* ms */, ebuf);
+	myGlobals.device[i].pcapPtr = pcap_open_live(myGlobals.device[i].name, 
+	  myGlobals.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN, 1, 100 /* ms */, ebuf);
 
 	if(myGlobals.device[i].pcapPtr == NULL) {
 	  traceEvent(TRACE_INFO, ebuf);

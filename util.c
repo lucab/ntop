@@ -2957,6 +2957,133 @@ char* mapIcmpType(int icmpType) {
   }
 }
 
+/* ************************************ */
+
+void updateOSName(HostTraffic *el) {
+  datum key_data, data_data;
+
+  if(el->osName == NULL) {
+    char *theName = NULL, tmpBuf[256];
+
+    if(el->hostNumIpAddress[0] == '\0') {
+      el->osName = strdup("");
+      return;
+    }
+
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "updateOSName(%s)\n", el->hostNumIpAddress);
+#endif
+
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    key_data.dptr = tmpBuf;
+    key_data.dsize = strlen(tmpBuf)+1;
+
+#ifdef MULTITHREADED
+    accessMutex(&myGlobals.gdbmMutex, "updateOSName");
+#endif
+
+    if(myGlobals.gdbm_file == NULL) {
+#ifdef MULTITHREADED
+      releaseMutex(&myGlobals.gdbmMutex);
+#endif
+      return; /* ntop is quitting... */
+    }
+
+    data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
+
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.gdbmMutex);
+#endif
+
+    if(data_data.dptr != NULL) {
+      strncpy(tmpBuf, data_data.dptr, sizeof(tmpBuf));
+      free(data_data.dptr);
+      theName = tmpBuf;
+    }
+
+    if((theName == NULL)
+       && (subnetPseudoLocalHost(el)) /* Courtesy of Jan Johansson <j2@mupp.net> */)
+      theName = getHostOS(el->hostNumIpAddress, -1, NULL);
+
+    if(theName == NULL)
+      el->osName = strdup("");
+    else {
+      el->osName = strdup(theName);
+
+      updateDBOSname(el);
+
+#ifdef HAVE_MYSQL
+      mySQLupdateDBOSname(el);
+#endif
+
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      key_data.dptr = tmpBuf;
+      key_data.dsize = strlen(tmpBuf)+1;
+      data_data.dptr = el->osName;
+      data_data.dsize = strlen(el->osName)+1;
+
+      if(myGlobals.gdbm_file == NULL) return; /* ntop is quitting... */
+
+#ifdef MULTITHREADED
+      accessMutex(&myGlobals.gdbmMutex, "updateOSName");
+#endif
+      if(gdbm_store(myGlobals.gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
+	printf("Error while adding myGlobals.osName for '%s'\n.\n", el->hostNumIpAddress);
+      else {
+#ifdef GDBM_DEBUG
+	printf("Added data: %s [%s]\n", tmpBuf, el->osName);
+#endif
+      }
+
+#ifdef MULTITHREADED
+      releaseMutex(&myGlobals.gdbmMutex);
+#endif
+    }
+  }
+}
+
+/* ************************************ */
+
+/* Do not delete this line! */
+#undef incrementUsageCounter
+
+void _incrementUsageCounter(UsageCounter *counter,
+			    u_int peerIdx, int deviceId, 
+			    char* file, int line) {
+  u_int i, found=0;
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "INFO: incrementUsageCounter(%u) @ %s:%d", peerIdx, file, line);
+#endif
+
+  if((peerIdx >= myGlobals.device[deviceId].actualHashSize) && (peerIdx != NO_PEER)) {
+    traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d",
+	       peerIdx, myGlobals.device[deviceId].actualHashSize, file, line);
+    return;
+  }
+
+  counter->value++;
+
+  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+    if(counter->peersIndexes[i] == NO_PEER) {
+      counter->peersIndexes[i] = peerIdx, found = 1;
+      break;
+    } else if(counter->peersIndexes[i] == peerIdx) {
+      found = 1;
+      break;
+    }
+  }
+
+  if(!found) {
+    for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
+      counter->peersIndexes[i] = counter->peersIndexes[i+1];
+
+    counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = peerIdx;
+  }
+}
+
 /* ******************************** */
 
 #ifndef HAVE_LOCALTIME_R

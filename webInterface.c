@@ -670,7 +670,7 @@ void printNtopConfigInfo(void) {
 #endif
 
 #ifdef HAVE_ZLIB
-  printFeatureConfigInfo("HTTP gzip compression", "Yes");
+  printFeatureConfigInfo("HTTP gzip compression", "Yes (zlib version "ZLIB_VERSION")");
 #else
   printFeatureConfigInfo("HTTP gzip compression", "No");
 #endif
