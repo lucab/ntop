@@ -22,7 +22,7 @@
 
 static float timeval_subtract (struct timeval x, struct timeval y); /* forward */
 
-#define HASH_DEBUG
+/* #define HASH_DEBUG */
 
 #ifdef HASH_DEBUG
 static void hashSanityCheck();
@@ -207,7 +207,14 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   /* Make sure this host is not part of the ipTrafficMatrixHosts list */  
   if(isMatrixHost(host, actualDeviceId)) {
-    myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[matrixHostHash(host, actualDeviceId)] = NULL;
+    int id = matrixHostHash(host, actualDeviceId);
+
+    myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[id] = NULL;
+
+    for(i=0; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++) {
+      myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+i] = NULL;
+      myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+id] = NULL;
+    }
   }
 
   freeHostSessions(host, actualDeviceId);

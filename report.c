@@ -2253,6 +2253,11 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     return;
   }
 
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.tcpSessionsMutex, "printActiveTCPSessions");
+#endif
+
+
   /* Let's count sessions first */
   for(idx=1, realNumSessions=0; idx<myGlobals.device[myGlobals.actualReportDeviceId].numTotSessions; idx++)
     if(myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL) {
@@ -2382,6 +2387,10 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
       printFlagedWarning("<I>No Active TCP Sessions</I>");
     }
   }
+  
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.tcpSessionsMutex);
+#endif
 }
 
 
@@ -3314,10 +3323,9 @@ void printIpTrafficMatrix(void) {
 
   for(i=0; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++) {
     activeHosts[i] = 0;
-    for(j=0; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; j++) {
-      int id;
 
-      id = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;
+    for(j=0; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; j++) {
+      int id = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;
 
       if(((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id] != NULL)
 	  && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id]->bytesSent.value != 0))

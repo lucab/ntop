@@ -719,6 +719,10 @@ void resetStats(int deviceId) {
 	     myGlobals.device[deviceId].humanFriendlyName);
 
 #ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.purgeMutex, "resetStats");
+#endif
+
+#ifdef CFG_MULTITHREADED
   if(myGlobals.hostsHashMutexInitialized != 0)
     accessMutex(&myGlobals.hostsHashMutex, "resetStats");
 #endif
@@ -757,6 +761,10 @@ void resetStats(int deviceId) {
 #ifdef CFG_MULTITHREADED
   if(myGlobals.hostsHashMutexInitialized != 0)
     releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.purgeMutex);
 #endif
 }
 

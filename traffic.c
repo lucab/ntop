@@ -551,7 +551,7 @@ void updateTrafficMatrix(HostTraffic *srcHost,
   if(isMatrixHost(srcHost, actualDeviceId) 
      && isMatrixHost(dstHost, actualDeviceId)) {
     unsigned int a, b, id;    
-
+    
     a = matrixHostHash(srcHost, actualDeviceId), b = matrixHostHash(dstHost, actualDeviceId);
 
     myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[a] = srcHost, 
