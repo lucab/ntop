@@ -1,6 +1,6 @@
 /*
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
- *                          http://www.ntop.org/
+ *                          http://www.ntop.org
  *
  * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
@@ -180,7 +180,7 @@ static struct option const long_options[] = {
 
 
 /*
- * Yoy are welcome
+ * Hello World! This is ntop speaking...
  */
 static void welcome (FILE * fp)
 {
@@ -371,8 +371,7 @@ static void usage (FILE * fp)
 /*
  * Parse the command line options
  */
-static void parseOptions (int argc, char * argv [])
-{
+static void parseOptions(int argc, char * argv []) {
   int len;
 
 #ifdef WIN32
@@ -695,7 +694,7 @@ static void parseOptions (int argc, char * argv [])
       myGlobals.throughput_chart_type = GDC_BAR;
       break;
 #endif
-      
+
     case 130:
       /* Flag to remove userid/password hint from authorization dialogs (BMS 26Jan2002) */
       myGlobals.noAdminPasswordHint = 1;
@@ -705,7 +704,7 @@ static void parseOptions (int argc, char * argv [])
       traceEvent(TRACE_ERROR,
 		 "FATAL ERROR: unknown ntop option, '%s'\n", argv[optind-1]);
 #ifdef DEBUG
-      if (op != '?') 
+      if (op != '?')
 	traceEvent(TRACE_ERROR,
 		   "             getopt return value is '%c', %d\n", op, op);
 #endif
@@ -714,8 +713,12 @@ static void parseOptions (int argc, char * argv [])
     }
   }
 
+#if (0)
+
+  all other arguments could be used to specify a filter expression
+
   if (argc > optind + 1)
-    { 
+    {
       fprintf (stdout, "\nWrong option(s): \" ");
       while (optind < argc)
 	fprintf (stdout, "%s ", argv [optind ++]);
@@ -723,8 +726,7 @@ static void parseOptions (int argc, char * argv [])
       usage (stdout);
       exit (0);
     }
-
-
+#endif
 }
 
 
@@ -746,9 +748,9 @@ int main(int argc, char *argv[]) {
    */
   parseOptions (argc, argv);
 
-
-  /* ***************************** */
-
+  /*
+   * check for valid parameters
+   */
   if (webPort == 0) {
 #ifdef HAVE_OPENSSL
     if (myGlobals.sslPort == 0) {
@@ -761,10 +763,17 @@ int main(int argc, char *argv[]) {
 #endif
   }
 
-#ifdef HAVE_OPENSSL
-  if (myGlobals.sslPort == 0)
-    printf("SSL is present but https is disabled: use -W <https port> for enabling it\n");
+  /*
+   * Must run as root since opening a network interface
+   * in promiscuous mode is a privileged operation
+   */
+#ifndef WIN32
+  if (! myGlobals.rFileName && ((getuid () && geteuid ()) || setuid (0))) {
+    printf ("Sorry, you must be root in order to run this program.\n");
+    exit (-1);
+  }
 #endif
+
 
   printf("Wait please: ntop is coming up...\n");
 
@@ -773,10 +782,25 @@ int main(int argc, char *argv[]) {
   initLeaks();
 #endif
 
+#ifdef WIN32
+  initWinsock32();
+#endif
+
+  /*
+   * Initialize memory/data for the protocols being monitored
+   */
   initIPServices();
 
+  initPassiveSessions();
+
+  /*
+   * Initialize the logging database
+   */
   initLogger();
 
+  /*
+   *
+   */
   initGlobalValues();
 
 #ifndef MICRO_NTOP
@@ -787,6 +811,9 @@ int main(int argc, char *argv[]) {
 
   initGdbm();
 
+  /*
+   * time to initialize the libpcap
+   */
   initDevices(devices);
 
   traceEvent(TRACE_INFO, "ntop v.%s %s [%s] (%s build)",
@@ -813,6 +840,9 @@ int main(int argc, char *argv[]) {
   traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
   traceEvent(TRACE_INFO, "Initializing...\n");
 
+  /*
+   * time to initialize the libpcap
+   */
   initLibpcap(rulesFile, myGlobals.numDevices);
 
 #ifndef MICRO_NTOP

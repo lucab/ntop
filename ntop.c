@@ -1,42 +1,24 @@
 /*
- *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *                          http://www.ntop.org
  *
- *		 	    http://www.ntop.org/
+ * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- */
-
-/*
- * Copyright (c) 1994, 1996
- *	The Regents of the University of California.  All rights reserved.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that: (1) source code distributions
- * retain the above copyright notice and this paragraph in its entirety, (2)
- * distributions including binary code include the above copyright notice and
- * this paragraph in its entirety in the documentation or other materials
- * provided with the distribution, and (3) all advertising materials mentioning
- * features or use of this software display the following acknowledgement:
- * ``This product includes software developed by the University of California,
- * Lawrence Berkeley Laboratory and its contributors.'' Neither the name of
- * the University nor the names of its contributors may be used to endorse
- * or promote products derived from this software without specific prior
- * written permission.
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include "ntop.h"
@@ -50,15 +32,15 @@ static int *servicesMapper = NULL; /* temporary value */
 /* *************************** */
 
 #ifdef MULTITHREADED
-static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {  
+static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
 
-  traceEvent(TRACE_INFO, "%s is %s (last lock %s:%d) [max lock time %s:%d (%d sec)]", 
+  traceEvent(TRACE_INFO, "%s is %s (last lock %s:%d) [max lock time %s:%d (%d sec)]",
 	     mutexName,
 	     mutexId->isLocked ? "*locked*" : "unlocked",
 	     mutexId->lockFile, mutexId->lockLine,
 	     mutexId->maxLockedDurationUnlockFile,
 	     mutexId->maxLockedDurationUnlockLine,
-	     mutexId->maxLockedDuration);  
+	     mutexId->maxLockedDuration);
 }
 #endif
 
@@ -93,7 +75,7 @@ void* pcapDispatch(void *_i) {
   int pcap_fd;
   fd_set readMask;
   struct timeval timeout;
-  
+
   pcap_fd = pcap_fileno(myGlobals.device[i].pcapPtr);
 
   if((pcap_fd == -1) && (myGlobals.rFileName != NULL)) {
@@ -135,8 +117,8 @@ void* pcapDispatch(void *_i) {
 		   "[No more packets to read]", rc);
 	break; /* No more packets to read */
       }
-      /* else 
-	 traceEvent(TRACE_INFO, "1) %d\n", numPkts++); 
+      /* else
+	 traceEvent(TRACE_INFO, "1) %d\n", numPkts++);
       */
     }
   }
@@ -189,13 +171,13 @@ RETSIGTYPE handleDiedChild(int signal _UNUSED_) {
 
 #ifndef WIN32
 
-void daemonize(void) { 
+void daemonize(void) {
   int childpid;
 
   signal(SIGHUP, SIG_IGN);
 #ifndef WIN32
   /* setsignal(SIGCHLD, handleDiedChild); */
-     setsignal(SIGCHLD, SIG_IGN); 
+     setsignal(SIGCHLD, SIG_IGN);
 #endif
   signal(SIGQUIT, SIG_IGN);
 
@@ -221,7 +203,7 @@ void detachFromTerminal(void) {
 #ifndef WIN32
   myGlobals.useSyslog = 1; /* Log in the syslog */
 #endif
-  
+
   chdir("/");
   setsid();  /* detach from the terminal */
 
@@ -382,17 +364,17 @@ static void handleProtocolList(char* protoName,
 void createPortHash() {
   int theSize, i;
 
-  /* 
+  /*
      At this point in time servicesMapper contains all
      the port data hence we can transform it from
-     an array to a hash table.     
+     an array to a hash table.
   */
   myGlobals.numIpPortMapperSlots = 2*myGlobals.numIpPortsToHandle;
   theSize = sizeof(PortMapper)*2*myGlobals.numIpPortMapperSlots;
   myGlobals.ipPortMapper = (PortMapper*)malloc(theSize);
   for(i=0; i<myGlobals.numIpPortMapperSlots; i++) myGlobals.ipPortMapper[i].port = -1;
 
-#ifdef DEBUG  
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "Allocating %d slots", myGlobals.numIpPortMapperSlots);
 #endif
 
@@ -400,7 +382,7 @@ void createPortHash() {
     if(servicesMapper[i] != -1) {
       int slotId = (3*i) % myGlobals.numIpPortMapperSlots;
 
-      while(myGlobals.ipPortMapper[slotId].port != -1)	
+      while(myGlobals.ipPortMapper[slotId].port != -1)
 	slotId = (slotId+1) % myGlobals.numIpPortMapperSlots;
 
 #ifdef DEBUG
@@ -419,11 +401,11 @@ void handleProtocols(char *protos) {
   char *proto, *buffer=NULL, *strtokState, *bufferCurrent, *bufferWork;
   FILE *fd = fopen(protos, "rb");
 
-  /* protos is either 
+  /* protos is either
      1) a list in the form proto=port[|port][,...]
      2) the name of a file containing a list in the same format.
-     Modification:  Allow the file to have multiple lines, each in 
-     the "standard" format.   
+     Modification:  Allow the file to have multiple lines, each in
+     the "standard" format.
      Also, ignore standard Linux comments...
   */
 
@@ -432,7 +414,6 @@ void handleProtocols(char *protos) {
     proto = strtok_r(protos, ",", &strtokState);
   } else {
     struct stat buf;
-    int len, i;
 
     if(stat(protos, &buf) != 0) {
       traceEvent(TRACE_ERROR, "Error while stat() of %s\n", protos);
@@ -441,9 +422,9 @@ void handleProtocols(char *protos) {
 
     bufferCurrent = buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
 
-    traceEvent(TRACE_INFO, "Processing protocol file: '%s', size: %d", 
+    traceEvent(TRACE_INFO, "Processing protocol file: '%s', size: %ld",
                            protos, buf.st_size+8);
-    
+
     for (;;) {
       bufferCurrent = fgets(bufferCurrent, buf.st_size, fd);
       /* On EOF, we're finished */
@@ -451,7 +432,7 @@ void handleProtocols(char *protos) {
 	break;
       }
 
-      /* otherwise, bufferCurrent points to the just read line in the file, 
+      /* otherwise, bufferCurrent points to the just read line in the file,
 	 of the form:
 	 [protocol=protocol[|protocol][,]] [# comment]
       */
@@ -462,7 +443,7 @@ void handleProtocols(char *protos) {
 	bufferWork[0] = '\n';
 	bufferWork[1] = '\0';
       }
-      
+
       /*
 	Replace the \n by a comma, so at the end the buffer will
 	look indistinguishable from a single line file...
@@ -472,9 +453,9 @@ void handleProtocols(char *protos) {
 	bufferWork[0] = ',';
 	bufferWork[1] = '\0';
       }
-      
+
       /* Move pointer to end-of-string for read of next line */
-      bufferCurrent = strchr(bufferCurrent, '\0');      
+      bufferCurrent = strchr(bufferCurrent, '\0');
     }
 
     fclose(fd);
@@ -507,7 +488,7 @@ void handleProtocols(char *protos) {
 	tmpStr[len] = '|';
 	tmpStr[len+1] = '\0';
       }
-      
+
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "          %30s %s", proto, tmpStr);
 #endif
@@ -555,7 +536,7 @@ int mapGlobalToLocalIdx(int port) {
    return(-1);
   else {
     int j, found, slotId = (3*port) % myGlobals.numIpPortMapperSlots;
-    
+
     for(j=0, found=0; j<myGlobals.numIpPortMapperSlots; j++) {
       if(myGlobals.ipPortMapper[slotId].port == -1)
 	break;
@@ -563,10 +544,10 @@ int mapGlobalToLocalIdx(int port) {
 	found = 1;
 	break;
       }
-      
+
       slotId = (slotId+1) % myGlobals.numIpPortMapperSlots;
     }
-    
+
     if(found)
       return(myGlobals.ipPortMapper[slotId].mappedPort);
     else
@@ -696,7 +677,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
     if(!myGlobals.capturePackets) break;
     myGlobals.actTime = time(NULL);
-    
+
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
 	purgeIdleHosts(0 /* Delete only idle hosts */, i);
@@ -707,11 +688,11 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 #endif
       }
 
-    
+
     /* Remove !!!!!!!*/
     cleanupHostEntries();
   }
-  
+
   return(NULL);
 }
 
@@ -721,10 +702,10 @@ void* cleanupExpiredHostEntriesLoop(void* notUsed _UNUSED_) {
   for(;;) {
     sleep(PURGE_ADDRESS_TIMEOUT);
     if(!myGlobals.capturePackets) break;
-    myGlobals.actTime = time(NULL);    
+    myGlobals.actTime = time(NULL);
     cleanupHostEntries();
   }
-  
+
   return(NULL);
 }
 
@@ -844,7 +825,7 @@ RETSIGTYPE cleanup(int signo) {
     unloaded = 1;
 
   traceEvent(TRACE_INFO, "Cleaning up...");
-  
+
   myGlobals.capturePackets = 0;
 
 #ifndef WIN32
@@ -861,10 +842,10 @@ RETSIGTYPE cleanup(int signo) {
 
   if(enableDBsupport)
     killThread(&myGlobals.dbUpdateThreadId);
-  
+
   if(myGlobals.isLsofPresent)
     killThread(&myGlobals.lsofThreadId);
-  
+
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0) {
       for(i=0; i<myGlobals.numDequeueThreads; i++)
@@ -872,9 +853,9 @@ RETSIGTYPE cleanup(int signo) {
     killThread(&myGlobals.purgeAddressThreadId);
   }
 #endif
-  
+
   killThread(&myGlobals.handleWebConnectionsThreadId);
-  
+
 #ifdef FULL_MEMORY_FREE
   cleanupAddressQueue();
   cleanupPacketQueue();
@@ -884,9 +865,9 @@ RETSIGTYPE cleanup(int signo) {
 #else /* #ifndef WIN32 */
 
   /*
-    TW 06.11.2001 
+    TW 06.11.2001
     Wies-Software <wies@wiessoft.de>
-    
+
     #else clause added to force dequeue threads to terminate
     USE_SEMAPHORES is *NOT* tested!!!
   */
@@ -904,7 +885,7 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 #endif /* MULTITREADED */
 #endif /* #ifndef WIN32 */
-  
+
 #ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "Waiting until threads terminate...\n");
   sleep(3); /* Just to wait until threads complete */
@@ -925,7 +906,7 @@ RETSIGTYPE cleanup(int signo) {
   termIPSessions();
   termNetFlowExporter();
   termPassiveSessions();
-  
+
 #ifndef WIN32
   endservent();
 #endif
@@ -954,12 +935,12 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef HAVE_GDBM_H
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.gdbmMutex, "cleanup");
-#endif 
+#endif
   gdbm_close(myGlobals.gdbm_file);    myGlobals.gdbm_file = NULL;
   gdbm_close(myGlobals.addressCache); myGlobals.addressCache = NULL;
   gdbm_close(myGlobals.pwFile);       myGlobals.pwFile = NULL;
   /* Courtesy of Wies-Software <wies@wiessoft.de> */
-  gdbm_close(myGlobals.hostsInfoFile); myGlobals.hostsInfoFile = NULL; 
+  gdbm_close(myGlobals.hostsInfoFile); myGlobals.hostsInfoFile = NULL;
   if(myGlobals.eventFile != NULL) {
     gdbm_close(myGlobals.eventFile);
     myGlobals.eventFile = NULL;
@@ -972,10 +953,10 @@ RETSIGTYPE cleanup(int signo) {
   deleteMutex(&myGlobals.gdbmMutex);
 #endif
 #endif
-  
+
   for(i=0; i<myGlobals.numDevices; i++) {
     int j;
-      
+
     traceEvent(TRACE_INFO, "Freeing device %s (idx=%d)...", myGlobals.device[i].name, i);
 
     if(!myGlobals.device[i].virtualDevice) {
@@ -995,24 +976,24 @@ RETSIGTYPE cleanup(int signo) {
 
       /* Courtesy of Wies-Software <wies@wiessoft.de> */
       for(j=0; j<(myGlobals.device[i].numHosts*myGlobals.device[i].numHosts); j++)
-        if(myGlobals.device[i].ipTrafficMatrix[j] != NULL) 
+        if(myGlobals.device[i].ipTrafficMatrix[j] != NULL)
 	  free(myGlobals.device[i].ipTrafficMatrix[j]);
-      
+
       free(myGlobals.device[i].ipTrafficMatrix);
     }
-      
-    if(myGlobals.device[i].ipTrafficMatrix != NULL) 
+
+    if(myGlobals.device[i].ipTrafficMatrix != NULL)
       free(myGlobals.device[i].ipTrafficMatrix);
 
-    if(myGlobals.device[i].ipTrafficMatrixHosts != NULL) 
+    if(myGlobals.device[i].ipTrafficMatrixHosts != NULL)
       free(myGlobals.device[i].ipTrafficMatrixHosts);
 
     if(myGlobals.device[i].ipProtoStats != NULL)
       free(myGlobals.device[i].ipProtoStats);
-      
+
     if(myGlobals.device[i].hash_hostTraffic != NULL)
       free(myGlobals.device[i].hash_hostTraffic);
-      
+
     if(myGlobals.device[i].tcpSession != NULL)
       free(myGlobals.device[i].tcpSession);
 
@@ -1020,13 +1001,13 @@ RETSIGTYPE cleanup(int signo) {
 
     if(myGlobals.device[i].pcapDumper != NULL)
       pcap_dump_close(myGlobals.device[i].pcapDumper);
-      
+
     if(myGlobals.device[i].pcapErrDumper != NULL)
       pcap_dump_close(myGlobals.device[i].pcapErrDumper);
-      
-    /* 
+
+    /*
        Wies-Software <wies@wiessoft.de> on 06/11/2001 says:
-       myGlobals.device[i].pcapPtr seems to be already freed. further tests needed! 
+       myGlobals.device[i].pcapPtr seems to be already freed. further tests needed!
     */
     if(myGlobals.device[i].pcapPtr != NULL)
       free(myGlobals.device[i].pcapPtr);
@@ -1036,7 +1017,7 @@ RETSIGTYPE cleanup(int signo) {
 
   if(myGlobals.numProcesses > 0)
     free(myGlobals.processes);
-  
+
   if(enableDBsupport) {
     closeSQLsocket(); /* *** SQL Engine *** */
 #ifdef HAVE_MYSQL

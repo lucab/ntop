@@ -1,6 +1,6 @@
 /*
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
- *                          http://www.ntop.org/
+ *                          http://www.ntop.org
  *
  * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
@@ -21,10 +21,12 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+
 #include "ntop.h"
 #include "globals-report.h"
 
 NtopGlobals myGlobals;
+
 
 #ifdef WIN32
 char *version, *osName, *author, *buildDate;
@@ -127,7 +129,7 @@ void initNtopGlobals(int argc, char * argv[])
 #ifdef HAVE_GDCHART
   myGlobals.throughput_chart_type = GDC_AREA;
 #endif
-  
+
   snprintf(myGlobals.accessLogPath, sizeof(myGlobals.accessLogPath), "%s/%s",
 	   myGlobals.dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
 
@@ -164,7 +166,7 @@ void initNtopGlobals(int argc, char * argv[])
 
 #ifdef HAVE_OPENSSL
   myGlobals.sslInitialized = 0;
-  myGlobals.sslPort = 0;           /* Disabled: it can enabled using -W <SSL port> */
+  myGlobals.sslPort = 0;           /* Disabled by default: it can enabled using -W <SSL port> */
 #endif
 
   /* Logging */
@@ -337,7 +339,9 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.tcpChain = NULL;
   myGlobals.udpChain = NULL;
   myGlobals.icmpChain = NULL;
-  myGlobals.ruleSerialIdentifier;
+
+  myGlobals.ruleSerialIdentifier=1; /* 0 will break the logic */
+
   for (i = 0; i < MAX_NUM_RULES; i ++)
     myGlobals.filterRulesList[i] = NULL;
 
@@ -369,15 +373,16 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.device = NULL;
 
   /* Monitored Protocols */
+  myGlobals.numActServices = 0;
+  myGlobals.udpSvc = NULL;
+  myGlobals.tcpSvc = NULL;
+
   myGlobals.protoIPTrafficInfos = NULL;
   myGlobals.numIpProtosToMonitor = 0;
   myGlobals.numIpPortsToHandle = 0;
   myGlobals.ipPortMapper = NULL;
-  myGlobals.numActServices = 0;
-  myGlobals.numIpPortMapperSlots;
+  myGlobals.numIpPortMapperSlots = 0;
   myGlobals.numHandledHTTPrequests = 0;
-  myGlobals.udpSvc = NULL;
-  myGlobals.tcpSvc = NULL;
 
   /* Packet Capture */
 #if defined(MULTITHREADED)

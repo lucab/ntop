@@ -1,22 +1,26 @@
 /*
- *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *                          http://www.ntop.org
  *
- *                          http://www.ntop.org/
+ * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have rcvd a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
 
 #ifndef NTOP_H
 #define NTOP_H
@@ -27,7 +31,9 @@
 
    Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>.
 */
+#if !defined(_REENTRANT)
 #define _REENTRANT
+#endif
 #define _THREAD_SAFE
 
 #if defined(HAVE_CONFIG_H)
@@ -158,8 +164,8 @@ int getdomainname(char *name, size_t len);
 #include <dlfcn.h>
 #endif
 
-/* 
-   Courtesy of  
+/*
+   Courtesy of
    Brent L. Bates <blbates@vigyan.com>
 */
 #ifdef HAVE_STANDARDS_H
@@ -360,7 +366,7 @@ int getdomainname(char *name, size_t len);
 
 /*
   Leave it here as some OS (e.g. RedHat 7.0)
-  do not define it 
+  do not define it
 */
 
 # ifndef ETHERTYPE_QNX
@@ -559,7 +565,7 @@ typedef struct portMapper {
 } PortMapper;
 
 /*
-  Code below courtesy of 
+  Code below courtesy of
   Roberto F. De Luca <deluca@tandar.cnea.gov.ar>
 */
 
@@ -576,12 +582,12 @@ typedef struct portMapper {
 #define HTTP_FLAG_KEEP_OPEN		(1<<2)
 #define HTTP_FLAG_NEED_AUTHENTICATION	(1<<3)
 #define HTTP_FLAG_MORE_FIELDS		(1<<4)
- 
+
 #define HTML_FLAG_NO_REFRESH		(1<<0)
 #define HTML_FLAG_NO_STYLESHEET		(1<<1)
 #define HTML_FLAG_NO_BODY		(1<<2)
 #define HTML_FLAG_NO_HEADING		(1<<3)
-  
+
 #define ALARM_TIME                3
 #define MIN_ALARM_TIME            1
 #define THROUGHPUT_REFRESH_TIME   30
@@ -746,7 +752,7 @@ typedef struct routingCounter {
 } RoutingCounter;
 
 /* *******************************
-   
+
    NOTE
 
    Do not forget to MAP all the
@@ -755,9 +761,9 @@ typedef struct routingCounter {
    ******************************* */
 
 typedef struct securityHostProbes {
-  UsageCounter synPktsSent, rstPktsSent, rstAckPktsSent, 
+  UsageCounter synPktsSent, rstPktsSent, rstAckPktsSent,
                synFinPktsSent, finPushUrgPktsSent, nullPktsSent;
-  UsageCounter synPktsRcvd, rstPktsRcvd, rstAckPktsRcvd, 
+  UsageCounter synPktsRcvd, rstPktsRcvd, rstAckPktsRcvd,
                synFinPktsRcvd, finPushUrgPktsRcvd, nullPktsRcvd;
   UsageCounter ackScanSent, ackScanRcvd;
   UsageCounter xmasScanSent, xmasScanRcvd;
@@ -943,7 +949,7 @@ typedef struct ntopInterface {
 
   SimpleProtoTrafficInfo tcpGlobalTrafficStats, udpGlobalTrafficStats, icmpGlobalTrafficStats;
   SimpleProtoTrafficInfo *ipProtoStats;
-  
+
   TrafficCounter numEstablishedTCPConnections; /* = # really established connections */
 
 #ifdef MULTITHREADED
@@ -1007,6 +1013,7 @@ typedef union {
 #define MAXALIASES       35
 #endif
 
+/* Stefano Suin <stefano@ntop.org> */
 #ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN  256
 #endif
@@ -1297,11 +1304,6 @@ typedef struct {
 
 #define SHORTHASHNAMESIZE  1024
 #define VENDORHASHNAMESIZE (3*HASHNAMESIZE)
-
-/* Stefano Suin <stefano@ntop.org> */
-#ifndef MAXHOSTNAMELEN
-#define MAXHOSTNAMELEN  64
-#endif
 
 /*
  * Max number of screen switchable using
@@ -1620,7 +1622,7 @@ typedef struct napsterStats {
 #define DHCP_INFORM_MSG     8
 #define NUM_DHCP_MSG        9 /* 9 messages in total */
 
-typedef struct dhcpStats { 
+typedef struct dhcpStats {
   struct in_addr dhcpServerIpAddress;  /* DHCP server that assigned the address */
   struct in_addr previousIpAddress;    /* Previous IP address is any */
   time_t assignTime;                   /* when the address was assigned */
@@ -1733,9 +1735,9 @@ typedef struct hostTraffic {
   TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
                    udpFragmentsSent,  udpFragmentsRcvd,
                    icmpFragmentsSent, icmpFragmentsRcvd;
-    
-  /* Interesting Packets */  
-  SecurityHostProbes *secHostPkts;  
+
+  /* Interesting Packets */
+  SecurityHostProbes *secHostPkts;
 
   /* non IP */
   IcmpHostInfo     *icmpInfo;

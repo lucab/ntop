@@ -1,6 +1,6 @@
 /*
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
- *                          http://www.ntop.org/
+ *                          http://www.ntop.org
  *
  * Copyright (C) 2002   Luca Deri <deri@ntop.org>
  *                      Rocco Carbone <rocco@ntop.org>
@@ -49,6 +49,7 @@
 
 #define NOW ((time_t) time ((time_t *) 0))
 
+
 /*
  * used to drive the ntop's behaviour at run-time
  */
@@ -56,8 +57,8 @@ typedef struct ntopGlobals {
   /* general */
 
   char *program_name;           /* The name the program was run with, stripped of any leading path */
- 
- char domainName[MAXHOSTNAMELEN], *shortDomainName;
+
+  char domainName[MAXHOSTNAMELEN], *shortDomainName;
   HostTraffic *broadcastEntry, *otherHostEntry;
   int ntop_argc;
   char **ntop_argv;
@@ -87,7 +88,7 @@ typedef struct ntopGlobals {
   /* Debug */
   size_t allocatedMemory;
 
-  /* SSL */
+  /* SSL support */
 #ifdef HAVE_OPENSSL
   int sslInitialized, sslPort;
 #endif
@@ -165,12 +166,15 @@ typedef struct ntopGlobals {
   NtopInterface *device;
 
   /* Monitored Protocols */
+  int numActServices;                /* # of protocols being monitored (as stated by the protocol file) */
+  ServiceEntry **udpSvc, **tcpSvc;   /* the pointers to the tables of TCP/UDP Protocols to monitor */
+
   char **protoIPTrafficInfos;
+
   u_short numIpProtosToMonitor, numIpPortsToHandle;
   PortMapper *ipPortMapper;
-  int numActServices, numIpPortMapperSlots;
+  int numIpPortMapperSlots;
   unsigned long numHandledHTTPrequests;
-  ServiceEntry **udpSvc, **tcpSvc;
 
   /* Packet Capture */
 #if defined(MULTITHREADED)

@@ -1,61 +1,42 @@
 /*
- *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+ *                          http://www.ntop.org
  *
- *  			    http://www.ntop.org/
+ * Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*
- * Copyright (c) 1994, 1996
- *	The Regents of the University of California.  All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that: (1) source code distributions
- * retain the above copyright notice and this paragraph in its entirety, (2)
- * distributions including binary code include the above copyright notice and
- * this paragraph in its entirety in the documentation or other materials
- * provided with the distribution, and (3) all advertising materials mentioning
- * features or use of this software display the following acknowledgement:
- * ``This product includes software developed by the University of California,
- * Lawrence Berkeley Laboratory and its contributors.'' Neither the name of
- * the University nor the names of its contributors may be used to endorse
- * or promote products derived from this software without specific prior
- * written permission.
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- */
 
 #include "ntop.h"
 
+
 static u_char threadsInitialized = 0;
 
-/* ******************************* */
 
+/*
+ * Initialize memory/data for the protocols being monitored
+ */
 void initIPServices(void) {
   FILE* fd;
   int idx, numSlots, len;
 
   traceEvent(TRACE_INFO, "Initializing IP services...");
 
-  myGlobals.protoIPTrafficInfos = NULL;
-
-#ifdef WIN32
-  initWinsock32();
-#endif
 
   /* Let's count the entries first */
   numSlots = 0;
@@ -82,10 +63,6 @@ void initIPServices(void) {
   myGlobals.numActServices = 2*numSlots; /* Double the hash */
 
   /* ************************************* */
-
-#ifdef ENABLE_NAPSTER
-  memset(myGlobals.napsterSvr, 0, sizeof(myGlobals.napsterSvr));
-#endif
 
   len = sizeof(ServiceEntry*)*myGlobals.numActServices;
   myGlobals.udpSvc = (ServiceEntry**)malloc(len);
@@ -148,9 +125,8 @@ void initIPServices(void) {
   addPortHashEntry(myGlobals.udpSvc, 650, "bwnfs");
   addPortHashEntry(myGlobals.udpSvc, 2049,"nfsd");
   addPortHashEntry(myGlobals.udpSvc, 1110,"nfsd-status");
-
-  initPassiveSessions();
 }
+
 
 /* ******************************* */
 
@@ -408,15 +384,8 @@ void resetStats(void) {
 /* ******************************* */
 
 int initGlobalValues(void) {
-#ifndef WIN32
-  if((myGlobals.rFileName == NULL) && (geteuid() != 0)) {
-    traceEvent(TRACE_INFO, "Sorry, you must be superuser in order to run ntop.\n");
-    exit(-1);
-  }
-#endif
 
 #ifdef HAVE_OPENSSL
-  traceEvent(TRACE_INFO, "Initializing SSL...");
   init_ssl();
 #endif
 
