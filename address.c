@@ -89,8 +89,8 @@ static void resolveAddress(HostAddr *hostAddr,
   int i, addToCacheFlag=0, updateRecord=0;
   struct hostent *hp = NULL;
   char* resolvedAddress;
-  char keyBuf[47];
-  char tmpBuf[96];
+  char keyBuf[LEN_ADDRESS_BUFFER];
+  char dataBuf[sizeof(StoredAddress)+4];
   datum key_data;
   datum data_data;
   static int reportedFreaky = FALSE;
@@ -103,10 +103,11 @@ static void resolveAddress(HostAddr *hostAddr,
   traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Entering resolveAddress()");
 #endif
 
-  memset(&tmpBuf, 0, sizeof(tmpBuf));
+  memset(&keyBuf, 0, sizeof(keyBuf));
+  memset(&dataBuf, 0, sizeof(dataBuf));
 
-  key_data.dptr = _addrtonum(hostAddr, tmpBuf, sizeof(tmpBuf));
-  key_data.dsize = sizeof(keyBuf)+1;
+  key_data.dptr = _addrtonum(hostAddr, keyBuf, sizeof(keyBuf));
+  key_data.dsize = strlen(keyBuf)+1;
   
   if(myGlobals.dnsCacheFile == NULL) {
 #ifdef DNS_DEBUG
@@ -127,7 +128,7 @@ static void resolveAddress(HostAddr *hostAddr,
 
     retrievedAddress = (StoredAddress*)data_data.dptr;
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Fetched data from cache: '%s' [%s]",
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Fetched '%s' from cache for [%s]",
 	       retrievedAddress->symAddress, keyBuf);
 #endif
 
@@ -202,15 +203,15 @@ static void resolveAddress(HostAddr *hostAddr,
       fd = popen(buffer, "r");
 
       if(fd == NULL) {
-	tmpBuf[0] = '\0';
+	dataBuf[0] = '\0';
       } else {
 	char *rspStr;
 
-	memset(tmpBuf, 0, sizeof(tmpBuf));
-	rspStr = fgets(tmpBuf, sizeof(tmpBuf), fd);
+	memset(dataBuf, 0, sizeof(dataBuf));
+	rspStr = fgets(dataBuf, sizeof(dataBuf), fd);
 	pclose(fd);
 	if(rspStr == NULL)
-	  tmpBuf[0] = '\0';
+	  dataBuf[0] = '\0';
       }
 
       /*
@@ -219,21 +220,21 @@ static void resolveAddress(HostAddr *hostAddr,
 	#
       */
 
-      len = strlen(tmpBuf);
+      len = strlen(dataBuf);
       if(len > 0) {
-	tmpBuf[--len] = '\0';
+	dataBuf[--len] = '\0';
 
 	for(i=len; i>0; i--)
-	  if(tmpBuf[i] == ' ')
+	  if(dataBuf[i] == ' ')
 	    break;
       }
 
-      if((len > 0) && (i > 0) && (tmpBuf[i] == ' ')) {
-	res = &tmpBuf[i+1];
+      if((len > 0) && (i > 0) && (dataBuf[i] == ' ')) {
+	res = &dataBuf[i+1];
 	myGlobals.numResolvedFromHostAddresses++;
         symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NAME;
       } else {
-	res = _addrtostr(hostAddr, tmpBuf, sizeof(tmpBuf));
+	res = _addrtostr(hostAddr, dataBuf, sizeof(dataBuf));
 	myGlobals.numKeptNumericAddresses++;
         symAddrType=FLAG_HOST_SYM_ADDR_TYPE_IP;
       }
@@ -314,25 +315,25 @@ static void resolveAddress(HostAddr *hostAddr,
 #ifdef DNS_DEBUG
       traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved to %s.", dotp);
 #endif
-      strncpy(tmpBuf, dotp, sizeof(tmpBuf));
+      strncpy(dataBuf, dotp, sizeof(dataBuf));
 
       if(myGlobals.domainName[0] != '\0') {
-	int tmpLen = strlen(tmpBuf)-strlen(myGlobals.domainName);
+	int dataLen = strlen(dataBuf)-strlen(myGlobals.domainName);
 
-	if((tmpLen > 0) && (!strcmp(&tmpBuf[tmpLen], myGlobals.domainName))) {
+	if((dataLen > 0) && (!strcmp(&dataBuf[dataLen], myGlobals.domainName))) {
 	  int foundDot=0;
 
-	  for(i=0; i<tmpLen-1; i++)
-	    if(tmpBuf[i] == '.') {
+	  for(i=0; i<dataLen-1; i++)
+	    if(dataBuf[i] == '.') {
 	      foundDot = 1;
 	      break;
 	    }
 
 	  if(!foundDot)
-	    tmpBuf[tmpLen-1] = '\0';
+	    dataBuf[dataLen-1] = '\0';
 	}
       }
-      resolvedAddress = tmpBuf;
+      resolvedAddress = dataBuf;
       myGlobals.numResolvedWithDNSAddresses++;
       symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NAME;
     } else {
@@ -388,7 +389,7 @@ static void resolveAddress(HostAddr *hostAddr,
 #endif
             );
       }
-      resolvedAddress = _addrtostr(hostAddr, tmpBuf , sizeof(tmpBuf));
+      resolvedAddress = _addrtostr(hostAddr, dataBuf , sizeof(dataBuf));
 #ifdef DNS_DEBUG
       traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Unable to resolve %s", resolvedAddress);
 #endif
@@ -399,7 +400,7 @@ static void resolveAddress(HostAddr *hostAddr,
 #ifdef DNS_DEBUG
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Unable to resolve %s", resolvedAddress);
 #endif
-    resolvedAddress = _addrtostr(hostAddr, tmpBuf, sizeof(tmpBuf));
+    resolvedAddress = _addrtostr(hostAddr, dataBuf, sizeof(dataBuf));
   }
   
 #ifdef HAVE_GETIPNODEBYADDR
@@ -432,11 +433,11 @@ static void resolveAddress(HostAddr *hostAddr,
       if(updateRecord) {
 	updateHostNameInfo(*hostAddr, symAddr, symAddrType);
 #ifdef DNS_DEBUG
-	traceEvent(CONST_TRACE_INFO, "Updating %s", symAddr);
+	traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Updating %s", symAddr);
 #endif
       } else {
 #ifdef DNS_DEBUG
-	traceEvent(CONST_TRACE_INFO, "NOT updating %s", symAddr);
+	traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: NOT updating %s", symAddr);
 #endif
       }
 
@@ -459,7 +460,10 @@ static void resolveAddress(HostAddr *hostAddr,
         myGlobals.dnsCacheStoredLookup++;
 
 #ifdef DNS_DEBUG
-        traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Added data: '%s'='%s'", key_data.dptr, data_data.dptr);
+        traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Added data: '%s'='%s'(%d)",
+                   key_data.dptr,
+                   ((StoredAddress*)data_data.dptr)->symAddress,
+                   ((StoredAddress*)data_data.dptr)->symAddressType);
 #endif
       }
 
@@ -475,7 +479,7 @@ static void resolveAddress(HostAddr *hostAddr,
 
 static void queueAddress(HostAddr elem, int forceResolution) {
   datum key_data, data_data;
-  char tmpBuf[47];
+  char dataBuf[sizeof(StoredAddress)+4];
   int rc;
 
   if((!forceResolution)
@@ -500,7 +504,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   }
 
   /* Fix - Burton Strauss (BStrauss@acm.org) 2002-04-04
-           Make sure tmpBuf has a value and
+           Make sure dataBuf has a value and
            Prevent increment of queue length on failure (i.e. add of existing value)
            Incidentally, speed this up by eliminating the fetch/store sequence in favor of
            a single store.
@@ -516,10 +520,10 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   }
 #endif
 
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", addrtostr(&elem)) < 0)
+  if(snprintf(dataBuf, sizeof(dataBuf), "%s", addrtostr(&elem)) < 0)
     BufferTooShort();
-  data_data.dptr = tmpBuf;
-  data_data.dsize = strlen(tmpBuf)+1;
+  data_data.dptr = dataBuf;
+  data_data.dsize = strlen(dataBuf)+1;
 
   rc = gdbm_store(myGlobals.addressQueueFile, key_data, data_data, GDBM_INSERT);
 
@@ -530,19 +534,19 @@ static void queueAddress(HostAddr elem, int forceResolution) {
     
 #ifdef DNS_DEBUG
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Queued address '%s' [addr queue=%d/max=%d]",
-	       tmpBuf, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
+	       dataBuf, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
 #endif
   } else {
     /* rc = 1 is duplicate key, which is fine.  Other codes are problems... */
     if (rc != 1) {
       traceEvent(CONST_TRACE_ERROR, "Queue of address '%s' failed, code %d [addr queue=%d/max=%d]",
-		 tmpBuf, rc, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
+		 dataBuf, rc, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
       traceEvent(CONST_TRACE_INFO, "ntop processing continues, address will not be resolved");
     } else {
       myGlobals.addressQueuedDup++;
 #ifdef DNS_DEBUG
       traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Duplicate queue of address '%s' ignored",
-		 tmpBuf);
+		 dataBuf);
 #endif
     }
   }
@@ -752,16 +756,15 @@ char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen) {
 /* ******************************* */
 
 int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
-  char buf[47];
-  char tmpBuf[47];
+  char keyBuf[LEN_ADDRESS_BUFFER];
   datum key_data;
   datum data_data;
 
   if(buffer == NULL) return(0);
 
-  myGlobals.numFetchAddressFromCacheCalls++;
+  memset(&keyBuf, 0, sizeof(keyBuf));
 
-  buf[0] = '\0';
+  myGlobals.numFetchAddressFromCacheCalls++;
 
   if(addrfull(&hostIpAddress) || addrnull(&hostIpAddress)) {
     strcpy(buffer, "0.0.0.0");
@@ -769,7 +772,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
     return(0);
   }
      
-  key_data.dptr = _addrtonum(&hostIpAddress,tmpBuf, sizeof(tmpBuf));
+  key_data.dptr = _addrtonum(&hostIpAddress,keyBuf, sizeof(keyBuf));
   key_data.dsize = strlen(key_data.dptr)+1;
   
   if(myGlobals.dnsCacheFile == NULL) return(0); /* ntop is quitting... */
@@ -804,9 +807,9 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
     myGlobals.numFetchAddressFromCacheCallsFAIL++;
 #ifdef GDBM_DEBUG
     if(data_data.dptr != NULL)
-      traceEvent(CONST_TRACE_WARNING, "GDBM_DEBUG: Dropped data for %s [wrong data size]", tmpBuf);
+      traceEvent(CONST_TRACE_WARNING, "GDBM_DEBUG: Dropped data for %s [wrong data size]", keyBuf);
     else
-      traceEvent(CONST_TRACE_WARNING, "GDBM_DEBUG: Unable to retrieve %s", tmpBuf);
+      traceEvent(CONST_TRACE_WARNING, "GDBM_DEBUG: Unable to retrieve %s", keyBuf);
 #endif
 
     buffer[0] = '\0';
@@ -816,8 +819,11 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
   }
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "fetchAddressFromCache(%s) returned '%s'",
-	     _addrtostr(&hostIpAddress, buf, sizeof(buf)), buffer);
+  {
+    char buf[LEN_ADDRESS_BUFFER];
+    traceEvent(CONST_TRACE_INFO, "fetchAddressFromCache(%s) returned '%s'",
+               _addrtostr(&hostIpAddress, buf, sizeof(buf)), buffer);
+  }
 #endif
 
   return(1);

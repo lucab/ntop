@@ -1215,6 +1215,7 @@
 #define LEN_GENERAL_WORK_BUFFER             1024
 #define LEN_MEDIUM_WORK_BUFFER              128
 #define LEN_SMALL_WORK_BUFFER               24 /* nnn.nnn.nnn.nnn\n */
+#define LEN_ADDRESS_BUFFER                  sizeof("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210")+4
 
 /*
  * Static buffer used for pcap error messages in initialize.c and ntop_win32.c.
