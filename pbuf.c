@@ -799,7 +799,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 			  u_short dport,
 			  u_int length,
 			  struct tcphdr *tp,
-			  u_int tcpDataLength,
+			  u_int packetDataLength,
 			  u_char* packetData) {
   u_int idx, initialIdx;
   IPSession *theSession = NULL;
@@ -810,7 +810,153 @@ static void handleSession(const struct pcap_pkthdr *h,
   HostTraffic *dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
   struct timeval tvstrct;
 
-  if(broadcastHost(srcHost) || broadcastHost(dstHost))
+  /*
+    Note: do not move the {...} down this function
+    because BOOTP uses broadcast addresses hence
+    it would be filtered out by the (**) check 
+  */
+  if(tp == NULL /* UDP session */) {    
+    BootProtocol bootProto = { 0 };
+    int len;
+
+    switch(sport) {
+    case 67: /* BOOTP/DHCP server */
+      FD_SET(HOST_SVC_DHCP_SERVER, &srcHost->flags);
+      if(!isBroadcastAddress(&dstHost->hostIpAddress))
+	FD_SET(HOST_SVC_DHCP_CLIENT, &dstHost->flags);
+
+	traceEvent(TRACE_INFO, "%s:%d -> %s:%d",
+		   srcHost->hostNumIpAddress, sport,
+		   dstHost->hostNumIpAddress, dport);
+	
+	/*
+	  This is a server BOOTP/DHCP respose 
+	  that could be decoded. Let's try.
+
+	  For more info see http://www.dhcp.org/
+	*/
+	if(packetDataLength >= sizeof(BootProtocol))
+	  len = sizeof(BootProtocol);
+	else
+	  len = packetDataLength;
+	
+	memcpy(&bootProto, packetData, len);
+	       
+	if(bootProto.bp_op == 2) { 
+	  /* BOOTREPLY */
+	  u_long dummyMac;
+	  
+	  memcpy(&dummyMac, bootProto.bp_chaddr, sizeof(u_long));
+	  if((bootProto.bp_yiaddr.s_addr != 0) 
+	     && (dummyMac != 0) /* MAC address <> 00:00:00:..:00 */
+	     ) {
+	    NTOHL(bootProto.bp_yiaddr.s_addr);
+#ifdef DEBUG
+	    traceEvent(TRACE_INFO, "%s@%s",
+		       intoa(bootProto.bp_yiaddr),
+		       etheraddr_string(bootProto.bp_chaddr));
+#endif
+	    /* Let's check whether this is a DHCP packet */
+	    if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
+	       && (bootProto.bp_vend[2] == 0x53) && (bootProto.bp_vend[3] == 0x63)) {
+	      /*
+		RFC 1048 specifies a magic cookie 
+		{ 0x63 0x82 0x53 0x63 }
+		for recognising DHCP packets encapsulated
+		in BOOTP packets.
+	      */
+	      int idx = 4;
+	      struct in_addr hostIpAddress;
+
+	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
+		u_char optionId = bootProto.bp_vend[idx++];
+		
+		if(optionId == 255) break; /* End of options */
+		switch(optionId) { /* RFC 2132 */
+		case 1: /* Netmask */
+		  len = bootProto.bp_vend[idx++];
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  NTOHL(hostIpAddress.s_addr);
+		  traceEvent(TRACE_INFO, "Netmask: %s", 
+			     intoa(hostIpAddress));
+		  idx += len;
+		  break;
+		case 3: /* Gateway */
+		  len = bootProto.bp_vend[idx++];
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  NTOHL(hostIpAddress.s_addr);
+		  traceEvent(TRACE_INFO, "Gateway: %s", 
+			     intoa(hostIpAddress));
+		  idx += len;
+		  break;
+		case 12: /* Host name */
+		  len = bootProto.bp_vend[idx++];
+		  traceEvent(TRACE_INFO, "Host name: %s", 
+			     &bootProto.bp_vend[idx]);
+		  idx += len;
+		  break;
+		case 15: /* Domain name */
+		  len = bootProto.bp_vend[idx++];
+		  traceEvent(TRACE_INFO, "Domain name: %s", 
+			     &bootProto.bp_vend[idx]);
+		  idx += len;
+		  break;
+		case 19: /* IP Forwarding */
+		  len = bootProto.bp_vend[idx++];
+		  traceEvent(TRACE_INFO, "IP Forwarding: %s", bootProto.bp_vend[idx]);
+		  idx += len;
+		  break;
+		case 28: /* Broadcast Address */
+		  len = bootProto.bp_vend[idx++];
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  NTOHL(hostIpAddress.s_addr);
+		  traceEvent(TRACE_INFO, "Broadcast Address: %s", 
+			     intoa(hostIpAddress));
+		  idx += len;
+		  break;
+		case 44: /* WINS server */
+		  len = bootProto.bp_vend[idx++];
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  NTOHL(hostIpAddress.s_addr);
+		  traceEvent(TRACE_INFO, "WINS server: %s", 
+			     intoa(hostIpAddress));
+		  idx += len;
+		  break;
+		case 64: /* NIS+ Domain */
+		  len = bootProto.bp_vend[idx++];
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  NTOHL(hostIpAddress.s_addr);
+		  traceEvent(TRACE_INFO, "NIS+ domain: %s", 
+			     intoa(hostIpAddress));
+		  idx += len;
+		  break;
+		default:
+#ifdef DEBUG
+		  traceEvent(TRACE_INFO, "Unknown DHCP option '%d'", (int)optionId);
+#endif
+		  len = bootProto.bp_vend[idx++];
+		  idx += len;
+		  break;
+		}
+	      }
+	    }
+	  }
+	}
+	break;
+    case 68: /* BOOTP/DHCP client */
+      if(srcHost->hostIpAddress.s_addr != 0) { 
+	/* IP address <> 0.0.0.0 */
+
+	FD_SET(HOST_SVC_DHCP_CLIENT, &srcHost->flags);
+
+	if(!isBroadcastAddress(&dstHost->hostIpAddress)) 
+	  FD_SET(HOST_SVC_DHCP_SERVER, &dstHost->flags);
+      }
+      break;
+    }
+  }
+
+  if(broadcastHost(srcHost) || broadcastHost(dstHost)) /* (**) */
     return;
 
 #ifdef DEBUG
@@ -875,7 +1021,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  */
 #ifdef DEBUG
 	  traceEvent(TRACE_INFO, "Received FIN %u for unknown session\n",
-		     ntohl(tp->th_seq)+tcpDataLength);
+		     ntohl(tp->th_seq)+packetDataLength);
 #endif
 	  return; /* Nothing else to do */
 	}
@@ -969,12 +1115,13 @@ static void handleSession(const struct pcap_pkthdr *h,
 
     /* ***************************************** */
 
-    if(tcpDataLength > 0) {
+    if(packetDataLength > 0) {
 
+#ifdef DEBUG
       if((sport == 80) || (dport == 80)) {
 	int i;
 
-	for(i=0; i<tcpDataLength; i++) {
+	for(i=0; i<packetDataLength; i++) {
 	  if((!isprint(packetData[i]))
 	     && (!isspace(packetData[i])))
 	    break;
@@ -983,6 +1130,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 	printf("\n");
       }
+#endif
 
       if((sport == 80 /* HTTP */)
 	 && (theSession->bytesProtoRcvd == 0)) {
@@ -1114,13 +1262,15 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  else
 	    dstHost->httpStats->numRemoteReqRcvd++;
 	} else {
+#ifdef DEBUG
 	  traceEvent(TRACE_INFO, "Unknown HTTP request %s -> %s [%s]\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress,
 		     rcStr);
+#endif
 	}
       } else if((sport == 8875 /* Napster Redirector */)
-		&& (tcpDataLength > 0)) {
+		&& (packetDataLength > 0)) {
 	char address[64];
 	struct in_addr svrAddr;
 	int i;
@@ -1128,14 +1278,14 @@ static void handleSession(const struct pcap_pkthdr *h,
 	FD_SET(HOST_SVC_NAPSTER_REDIRECTOR, &srcHost->flags);
 	FD_SET(HOST_SVC_NAPSTER_CLIENT,     &dstHost->flags);
 
-	strncpy(address, packetData, tcpDataLength);
-	address[tcpDataLength-2] = 0;
+	strncpy(address, packetData, packetDataLength);
+	address[packetDataLength-2] = 0;
 	traceEvent(TRACE_INFO, "NAPSTER: %s -> %s [%s][len=%d]\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress,
-		     address, tcpDataLength);
+		     address, packetDataLength);
 
-	for(i=1; i<tcpDataLength-2; i++)
+	for(i=1; i<packetDataLength-2; i++)
 	  if(address[i] == ':') {
 	    address[i] = '\0';
 	    break;
@@ -1157,8 +1307,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 	srcHost->napsterStats->numConnectionsServed++,
 	  dstHost->napsterStats->numConnectionsRequested++;
-	srcHost->napsterStats->bytesSent += tcpDataLength,
-	dstHost->napsterStats->bytesRcvd += tcpDataLength;
+	srcHost->napsterStats->bytesSent += packetDataLength,
+	dstHost->napsterStats->bytesRcvd += packetDataLength;
       }
     }
 
@@ -1172,7 +1322,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 
     /* Let's decode some Napster packets */
     if((!theSession->napsterSession)
-       && (tcpDataLength == 1)
+       && (packetDataLength == 1)
        && (theSession->bytesProtoRcvd == 0) /* This condition will not hold if you
 					       move this line of code down this
 					       function */
@@ -1194,16 +1344,16 @@ static void handleSession(const struct pcap_pkthdr *h,
     }
 
     if(flowDirection == CLIENT_TO_SERVER) {
-      theSession->bytesProtoSent += tcpDataLength;
+      theSession->bytesProtoSent += packetDataLength;
       theSession->bytesSent      += length;
-      if(fragmentedData) theSession->bytesFragmentedSent += tcpDataLength;
+      if(fragmentedData) theSession->bytesFragmentedSent += packetDataLength;
     } else {
-      theSession->bytesProtoRcvd += tcpDataLength;
+      theSession->bytesProtoRcvd += packetDataLength;
       theSession->bytesReceived  += length;
-      if(fragmentedData) theSession->bytesFragmentedReceived += tcpDataLength;
+      if(fragmentedData) theSession->bytesFragmentedReceived += packetDataLength;
     }
 
-    if(theSession->napsterSession && (tcpDataLength > 0) ) {
+    if(theSession->napsterSession && (packetDataLength > 0) ) {
       if(srcHost->napsterStats == NULL) {
 	srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
 	memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
@@ -1214,8 +1364,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 	memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
       }
 
-      srcHost->napsterStats->bytesSent += tcpDataLength,
-	dstHost->napsterStats->bytesRcvd += tcpDataLength;
+      srcHost->napsterStats->bytesSent += packetDataLength,
+	dstHost->napsterStats->bytesRcvd += packetDataLength;
 
 #ifdef DEBUG
       printf("%x %x %x\n",  packetData[1], packetData[2], packetData[3]);
@@ -1250,7 +1400,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	   <remote user IP> <remote user port> <payload>
 	*/
 
-	memcpy(tmpBuf, &packetData[4], (tcpDataLength<64) ? tcpDataLength : 63);
+	memcpy(tmpBuf, &packetData[4], (packetDataLength<64) ? packetDataLength : 63);
 	strtok(tmpBuf, " "); /* remote user */
 	if((remoteHost = strtok(NULL, " ")) != NULL) {
 	  if((remotePort = strtok(NULL, " ")) != NULL) {
@@ -1276,7 +1426,7 @@ static void handleSession(const struct pcap_pkthdr *h,
      *
      */
     if(tp->th_flags & TH_FIN) {
-      u_int32_t fin = ntohl(tp->th_seq)+tcpDataLength;
+      u_int32_t fin = ntohl(tp->th_seq)+packetDataLength;
 
       if(sport < dport) /* Server -> Client */
 	check = (fin != theSession->lastSCFin);
@@ -1437,7 +1587,7 @@ static void handleSession(const struct pcap_pkthdr *h,
       tmpSession.remotePeerIdx = checkSessionIdx(dstHostIdx);
     tmpSession.bytesSent = (TrafficCounter)length, tmpSession.bytesReceived = 0;
     tmpSession.sport = sport, tmpSession.dport = dport;
-    if(fragmentedData) tmpSession.bytesFragmentedSent += tcpDataLength;
+    if(fragmentedData) tmpSession.bytesFragmentedSent += packetDataLength;
 
 #ifdef DEBUG
     printSession(&tmpSession, sessionType, 0);
@@ -1590,7 +1740,7 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
 		&numUdpSessions, fragmentedData, 0,
 		srcHostIdx, sport,
 		dstHostIdx, dport, length,
-		NULL, 0, packetData);
+		NULL, length, packetData);
 
   if(isLsofPresent)
     handleLsof(srcHostIdx, sport, dstHostIdx, dport, length);
@@ -2002,29 +2152,43 @@ static void checkNetworkRouter(HostTraffic *srcHost,
   if(subnetLocalHost(srcHost)
      && (!subnetLocalHost(dstHost))
      && (!broadcastHost(dstHost))
-     && (!multicastHost(dstHost))) {
+     && (!multicastHost(dstHost))
+     ) {
     u_int routerIdx, j;
     HostTraffic *router;
 
     routerIdx = getHostInfo(NULL, ether_dst);
 
-    for(j=0; j<MAX_NUM_HOST_ROUTERS; j++)
+    router = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
+
+    if(broadcastHost(router) 
+       || multicastHost(router) 
+       || (!subnetLocalHost(router))
+       || (router->hostNumIpAddress[0] == '\0') /* 
+						   No IP: is this a special
+						   Multicast address ? 
+						*/
+       )
+      return;
+
+    for(j=0; j<MAX_NUM_HOST_ROUTERS; j++) {
       if(srcHost->contactedRouters[j] == routerIdx)
-	break;
+	return;
       else if(srcHost->contactedRouters[j] == NO_PEER) {
 	srcHost->contactedRouters[j] = routerIdx;
 	break;
       }
-
-    router = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
+    }
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "router [%s/%s/%s] used by host [%s] for destination [%s]\n",
+    traceEvent(TRACE_INFO, "router [idx=%d/%s/%s/%s] used by host [%s] for destination [%s/%s]\n",
+	       routerIdx,
 	       router->ethAddressString,
 	       router->hostNumIpAddress,
 	       router->hostSymIpAddress,
 	       srcHost->hostSymIpAddress,
-	       dstHost->hostNumIpAddress);
+	       dstHost->hostNumIpAddress,
+	       etheraddr_string(ether_dst));
 #endif
     FD_SET(GATEWAY_HOST_FLAG, &router->flags);
   }
@@ -2278,14 +2442,13 @@ static void processIpPkt(const u_char *bp,
 #endif
 
   off = ntohs(ip.ip_off);
+  tcpDataLength = ntohs(ip.ip_len) - hlen - (tp.th_off * 4);
 
   switch(ip.ip_p) {
   case IPPROTO_TCP:
     proto = "TCP";
     device[actualDeviceId].tcpBytes += length;
-    memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
-
-    tcpDataLength = ntohs(ip.ip_len) - hlen - (tp.th_off * 4);
+    memcpy(&tp, bp+hlen, sizeof(struct tcphdr));    
 
     sport = ntohs(tp.th_sport);
     dport = ntohs(tp.th_dport);
@@ -2377,7 +2540,8 @@ static void processIpPkt(const u_char *bp,
 
   case IPPROTO_UDP:
     proto = "UDP";
-    device[actualDeviceId].udpBytes += length;
+    udpDataLength = ntohs(ip.ip_len) - hlen - sizeof(struct udphdr);
+    device[actualDeviceId].udpBytes += udpDataLength;
     memcpy(&up, bp+hlen, sizeof(struct udphdr));
 
     /* print TCP packet useful for debugging */
@@ -2404,7 +2568,7 @@ static void processIpPkt(const u_char *bp,
 
 	/* The DNS chain will be checked here */
 	FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
-	transactionId = processDNSPacket(bp, length, hlen, &isRequest, &positiveReply);
+	transactionId = processDNSPacket(bp, udpDataLength, hlen, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
 	traceEvent(TRACE_INFO, "%s -> %s [request: %d][positive reply: %d]\n",
@@ -2551,8 +2715,6 @@ static void processIpPkt(const u_char *bp,
       }
     }
 
-    udpDataLength = ntohs(ip.ip_len) - hlen - sizeof(struct udphdr);
-
     if(udpChain) {
       u_int displ;
 
@@ -2611,7 +2773,7 @@ static void processIpPkt(const u_char *bp,
 
       handleUDPSession(h, (off & 0x3fff),
 		       srcHostIdx, sport, dstHostIdx,
-		       dport, length, (u_char*)(bp+length));
+		       dport, udpDataLength, (u_char*)(bp+hlen+sizeof(struct udphdr)));
     }
     break;
 

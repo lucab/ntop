@@ -807,6 +807,28 @@ typedef struct {
 #define ICMP_TIMESTAMPREPLY              14      /* Timestamp Reply            */
 #endif
 
+
+/* RFC 951 */
+typedef struct bootProtocol {
+  unsigned char	    bp_op;	    /* packet opcode/message type.
+				       1 = BOOTREQUEST, 2 = BOOTREPLY */
+  unsigned char	    bp_htype;	    /* hardware addr type - RFC 826 */
+  unsigned char	    bp_hlen;	    /* hardware addr length (6 for 10Mb Ethernet) */
+  unsigned char	    bp_hops;	    /* gateway hops (server set) */
+  u_int32_t	    bp_xid;	    /* transaction ID (random) */
+  unsigned short    bp_secs;	    /* seconds elapsed since
+				       client started trying to boot */
+  unsigned short    bp_flags;	    /* flags (not much used): 0x8000 is broadcast */
+  struct in_addr    bp_ciaddr;	    /* client IP address */
+  struct in_addr    bp_yiaddr;	    /* 'your' (client) IP address */
+  struct in_addr    bp_siaddr;	    /* server IP address */
+  struct in_addr    bp_giaddr;	    /* relay IP address */
+  unsigned char	    bp_chaddr[16];  /* client hardware address (optional) */
+  unsigned char	    bp_sname[64];   /* server host name */
+  unsigned char	    bp_file[128];   /* boot file name */
+  unsigned char	    bp_vend[256];   /* vendor-specific area - RFC 1048 */
+} BootProtocol;
+
 /* ******************************************* */
 
 /*
@@ -1177,6 +1199,8 @@ typedef struct portUsage {
 #define HOST_SVC_NAPSTER_REDIRECTOR			 20
 #define HOST_SVC_NAPSTER_SERVER			         21
 #define HOST_SVC_NAPSTER_CLIENT			         22
+#define HOST_SVC_DHCP_CLIENT			         23
+#define HOST_SVC_DHCP_SERVER			         24
 
 
 /* Macros */
@@ -1203,6 +1227,9 @@ typedef struct portUsage {
 #define isNapsterRedirector(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_REDIRECTOR, &(a->flags)))
 #define isNapsterServer(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_SERVER, &(a->flags)))
 #define isNapsterClient(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_CLIENT, &(a->flags)))
+#define isDHCPClient(a)	            ((a != NULL) && FD_ISSET(HOST_SVC_DHCP_CLIENT, &(a->flags)))
+#define isDHCPServer(a)	            ((a != NULL) && FD_ISSET(HOST_SVC_DHCP_SERVER, &(a->flags)))
+
 
 /* ******** Napster *************** */
 

@@ -171,7 +171,7 @@ void execCGI(char* cgiName) {
       if(!printHeader) {
 	/* printHTTPheader(); */
 	sendString("<center><H1>Available Plugins</H1>\n<p>"
-		   ""TABLE_ON"<TABLE BORDER=0><TR>\n");
+		   ""TABLE_ON"<TABLE BORDER=1><TR>\n");
 	sendString("<TR><TH "TH_BG">Name</TH><TH>Description</TH>"
 		   "<TH "TH_BG">Version</TH>"
 		   "<TH "TH_BG">Author</TH>"

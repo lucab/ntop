@@ -2438,9 +2438,8 @@ void printHostDetailedInfo(HostTraffic *el) {
      || isWorkstation(el)
      || isPrinter(el)
      || isBridgeHost(el)
-     || isNapsterRedirector(el)
-     || isNapsterServer(el)
-     || isNapsterClient(el)
+     || isNapsterRedirector(el) || isNapsterServer(el)
+     || isDHCPClient(el)        || isDHCPServer(el)
      ) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>",
 	    getRowColor(),
@@ -2450,11 +2449,12 @@ void printHostDetailedInfo(HostTraffic *el) {
     if(isServer(el))              sendString("Server<br>");
     if(isWorkstation(el))         sendString("Workstation<br>");
     if(isPrinter(el))             sendString("Printer<br>");
-    if(isBridgeHost(el))          sendString("Bridge");
-    if(isNapsterRedirector(el))   sendString("Napster Redirector");
-    if(isNapsterServer(el))       sendString("Napster Server");
-    if(isNapsterClient(el))       sendString("Napster Client");
-
+    if(isBridgeHost(el))          sendString("Bridge<br>");
+    if(isNapsterRedirector(el))   sendString("Napster Redirector<br>");
+    if(isNapsterServer(el))       sendString("Napster Server<br>");
+    if(isNapsterClient(el))       sendString("Napster Client<br>");
+    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client<br>");
+    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server<br>");
     sendString("</TD></TR>");
   }
 

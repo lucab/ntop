@@ -337,16 +337,16 @@ static void handleArpWatchHTTPrequest(char* url) {
       theEntry = &theArpEntries[i];
 
     if(snprintf(tmpStr, sizeof(tmpStr), "<TR %s>%s"
-	    "<TD ALIGN=RIGHT>%s</TD>"
-	    "<TD ALIGN=RIGHT>%s</TD>"
-	    "<TD ALIGN=CENTER>%lu</TD>"
-	    "<TD ALIGN=CENTER>%lu</TD></TR>\n",
-	    getRowColor(),
-	    makeHostLink(theEntry->host, 1, 1, 0),
-	    theEntry->host->hostNumIpAddress,
-	    theEntry->host->ethAddressString,
-	    theEntry->sentPkts,
-		theEntry->rcvdPkts) < 0) 
+		"<TD ALIGN=RIGHT>%s</TD>"
+		"<TD ALIGN=RIGHT>%s</TD>"
+		"<TD ALIGN=CENTER>%s</TD>"
+		"<TD ALIGN=CENTER>%s</TD></TR>\n",
+		getRowColor(),
+		makeHostLink(theEntry->host, 1, 1, 0),
+		theEntry->host->hostNumIpAddress,
+		theEntry->host->ethAddressString,
+		formatPkts(theEntry->sentPkts),
+		formatPkts(theEntry->rcvdPkts)) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     sendString(tmpStr);

@@ -653,33 +653,34 @@ void initDevices(char* devices) {
 
   /* ******************************************* */
 
+  if(rFileName == NULL) {
+    /* When sniffing from a multihomed interface
+       it is necessary to add all the virtual interfaces
+       because ntop has to know all the local addresses */
+    for(i=0, j=numDevices; i<j; i++) {
+      getLocalHostAddress(&device[i].ifAddr, device[i].name);
 
-  /* When sniffing from a multihomed interface
-     it is necessary to add all the virtual interfaces
-     because ntop has to know all the local addresses */
-  for(i=0, j=numDevices; i<j; i++) {
-    getLocalHostAddress(&device[i].ifAddr, device[i].name);
+      if(strncmp(device[i].name, "lo", 3)) { /* Do not care of virtual loopback interfaces */
+	int k;
+	char tmpDevice[16];
+	struct in_addr myLocalHostAddress;
 
-    if(strncmp(device[i].name, "lo", 3)) { /* Do not care of virtual loopback interfaces */
-      int k;
-      char tmpDevice[16];
-      struct in_addr myLocalHostAddress;
-
-      if(numDevices < MAX_NUM_DEVICES) {
-	for(k=0; k<8; k++) {
-	  if(snprintf(tmpDevice, sizeof(tmpDevice), "%s:%d", device[i].name, k) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  if(getLocalHostAddress(&myLocalHostAddress, tmpDevice) == 0) {
-	    /* The virtual interface exists */
-	    device[numDevices].ifAddr.s_addr = myLocalHostAddress.s_addr;
-	    if(myLocalHostAddress.s_addr == device[i].ifAddr.s_addr)
-	      continue; /* No virtual Interfaces */
-	    device[numDevices++].name = strdup(tmpDevice);
+	if(numDevices < MAX_NUM_DEVICES) {
+	  for(k=0; k<8; k++) {
+	    if(snprintf(tmpDevice, sizeof(tmpDevice), "%s:%d", device[i].name, k) < 0)
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	    if(getLocalHostAddress(&myLocalHostAddress, tmpDevice) == 0) {
+	      /* The virtual interface exists */
+	      device[numDevices].ifAddr.s_addr = myLocalHostAddress.s_addr;
+	      if(myLocalHostAddress.s_addr == device[i].ifAddr.s_addr)
+		continue; /* No virtual Interfaces */
+	      device[numDevices++].name = strdup(tmpDevice);
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "Added: %s\n", tmpDevice);
+	      traceEvent(TRACE_INFO, "Added: %s\n", tmpDevice);
 #endif
-	  } else
-	    break; /* No virtual interface */
+	    } else
+	      break; /* No virtual interface */
+	  }
 	}
       }
     }
