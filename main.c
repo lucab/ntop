@@ -63,25 +63,6 @@ extern __attribute__((dllimport)) char *optarg;
 extern char *optarg;
 #endif
 
-#if defined(NEED_INET_ATON)
-/*
- * Minimal implementation of inet_aton.
- * Cannot distinguish between failure and a local broadcast address.
- */
-
-#ifndef INADDR_NONE
-#define INADDR_NONE 0xffffffff
-#endif
-
-
-static int inet_aton(const char *cp, struct in_addr *addr)
-{
-  addr->s_addr = inet_addr(cp);
-  return (addr->s_addr == INADDR_NONE) ? 0 : 1;
-}
-
-#endif
-
 void usage(void) {
   char buf[80];
 
