@@ -558,6 +558,8 @@ void printHTMLtrailer(void) {
   } else {
     int numRealDevices;
     
+    buf[0] = '\0';
+
     for(i=len=numRealDevices=0; i<myGlobals.numDevices; i++, len=strlen(buf)) {
       if(!myGlobals.device[i].virtualDevice) {
 	if(snprintf(&buf[len], BUF_SIZE-len, "%s%s",
@@ -567,7 +569,7 @@ void printHTMLtrailer(void) {
       }
     }
 
-    if(i == 0)
+    if((i == 0) || (numRealDevices == 0))
       buf[0] = '\0';
     else {
       if(snprintf(&buf[len], BUF_SIZE-len, "]\n") < 0)
@@ -1033,7 +1035,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 			  struct timeval *httpRequestedAt, int *usedFork, char *agent) {
   char *questionMark;
   int sortedColumn = 0, printTrailer=1, idx;
-  int errorCode=0, pageNum = 0, found=0;
+  int errorCode=0, pageNum = 0, found=0, portNr;
   struct stat statbuf;
   FILE *fd = NULL;
   char tmpStr[512];
@@ -1081,6 +1083,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	sortedColumn = abs(idx);
        } else if(strncmp(tkn, "dom=", 4) == 0) {
 	 domainNameParm = strdup(&tkn[4]);
+       } else if(strncmp(tkn, "port=", 5) == 0) {
+	 portNr = atoi(&tkn[5]);
        } else if(strncmp(tkn, "page=", 5) == 0) {
 	pageNum = atoi(&tkn[5]);
 	if(pageNum < 0) pageNum = 0;
@@ -1593,6 +1597,9 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     } else if(strncmp(pageName, DOMAIN_INFO_HTML, strlen(DOMAIN_INFO_HTML)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printDomainStats(domainNameParm, abs(sortedColumn), revertOrder, pageNum);
+    } else if(strncmp(pageName, SHOW_PORT_TRAFFIC, strlen(SHOW_PORT_TRAFFIC)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      showPortTraffic(portNr);
     } else if(strcmp(pageName, TRAFFIC_STATS_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printTrafficStatistics();

@@ -146,6 +146,7 @@ extern void fillDomainName(HostTraffic *el);
 extern void printNtopConfigInfo(int textPrintFlag);
 extern void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId);
 extern void printASList(unsigned int deviceId);
+extern void showPortTraffic(u_short portNr);
 
 /* webInterface.c */
 extern int execCGI(char* cgiName);
@@ -220,6 +221,7 @@ extern int out_graph(short gifwidth,
 #define STR_MULTICAST_STATS             "multicastStats.html"
 #define HOSTS_INFO_HTML                 "hostsInfo.html"
 #define STR_LSOF_DATA                   "lsofData.html"
+#define SHOW_PORT_TRAFFIC               "showPortTraffic.html"
 #define PROCESS_INFO_HTML               "processInfo.html"
 #define IP_R_2_L_HTML                   "IpR2L.html"
 #define IP_L_2_R_HTML                   "IpL2R.html"

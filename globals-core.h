@@ -202,6 +202,7 @@ extern void dumpSuspiciousPacket(int actualDeviceId);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
 extern void updateHostName(HostTraffic *el);
+extern void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length);
 
 /* protocols.c */
 extern void handleBootp(HostTraffic *srcHost, HostTraffic *dstHost,

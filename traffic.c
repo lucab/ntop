@@ -39,6 +39,9 @@ static void updateThptStats(int deviceToUpdate,
 			    u_int thirdHourRcvdIdx) {
   int i;
 
+  if(myGlobals.device[deviceToUpdate].dummyDevice)
+    return;
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "updateThptStats(%d, %d, %d, %d, %d, %d)\n",
 	 topSentIdx, secondSentIdx, thirdSentIdx,

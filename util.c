@@ -2313,7 +2313,8 @@ void fillDomainName(HostTraffic *el) {
   u_int i;
 
   if(theDomainHasBeenComputed(el)
-     || (el->hostSymIpAddress == NULL))
+     || (el->hostSymIpAddress    == NULL)
+     || (el->hostSymIpAddress[0] == '\0'))
     return;
 
 #ifdef MULTITHREADED

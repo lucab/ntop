@@ -508,7 +508,7 @@ static void updateDevicePacketTTLStats(u_int ttl, int actualDeviceId) {
 
 /* ************************************ */
 
-static updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length) {
+void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length) {
 
   if((sport >= TOP_IP_PORT) || (dport >= TOP_IP_PORT)) 
     return;

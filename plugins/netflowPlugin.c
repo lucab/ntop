@@ -176,6 +176,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	if(the5Record.flowRecord[i].tcp_flags & TH_ACK)  strcat(theFlags, "ACK ");
 	if(the5Record.flowRecord[i].tcp_flags & TH_PUSH) strcat(theFlags, "PUSH");
 
+#ifdef DEBUG
 	traceEvent(TRACE_INFO, "%2d) %s:%d <-> %s:%d pkt=%u/len=%u sAS=%d/dAS=%d flags=[%s] (proto=%d)",
 		   i+1,
 		   _intoa(a, buf, sizeof(buf)), sport,
@@ -184,6 +185,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 		   ntohs(the5Record.flowRecord[i].src_as),
 		   ntohs(the5Record.flowRecord[i].dst_as),
 		   theFlags, the5Record.flowRecord[i].prot);
+#endif
       }
 
       /* traceEvent(TRACE_INFO, "a=%u", the5Record.flowRecord[i].srcaddr); */
@@ -289,6 +291,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	  incrementUsageCounter(&dstHost->secHostPkts->terminatedTCPConnRcvd.value, srcHostIdx, actualDeviceId);
 	*/
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
+	updateInterfacePorts(actualDeviceId, sport, dport, len);
 	updateUsedPorts(srcHost, dstHost, sport, dport, len);
 
 	if(subnetPseudoLocalHost(srcHost)) {
@@ -317,6 +320,9 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
       case 17: /* UDP */
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
+	updateInterfacePorts(actualDeviceId, sport, dport, len);
+	updateUsedPorts(srcHost, dstHost, sport, dport, len);
+
 	if(subnetPseudoLocalHost(dstHost))
 	  incrementTrafficCounter(&srcHost->udpSentLoc, len);
 	else
@@ -368,15 +374,10 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   u_char buffer[2048];
   struct sockaddr_in fromHost;
 
-#ifdef DEBUG_FLOWS
-  traceEvent(TRACE_INFO, "netflowMainLoop()");
-#endif
-
   if(!(myGlobals.netFlowInSocket > 0)) return(NULL);
-
   traceEvent(TRACE_INFO, "Welcome to NetFlow: listening on UDP port %d...", myGlobals.netFlowInPort);
 #ifdef MULTITHREADED
- traceEvent(TRACE_INFO, "Started thread (%ld) for netFlow.\n", netFlowThread);
+ traceEvent(TRACE_INFO, "Started thread (%ld) for NetFlow.\n", netFlowThread);
 #endif
 
   for(;myGlobals.capturePackets == 1;) {
@@ -671,10 +672,6 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("<p></CENTER>\n");
   sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");
-
-#ifdef DEBUG_FLOWS
-#endif
-
   sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
 
   printHTMLtrailer();
@@ -769,7 +766,7 @@ static PluginInfo netflowPluginInfo[] = {
 #endif
     handleNetflowHTTPrequest,
 #ifdef DEBUG_FLOWS
-    "udp port 2100"
+    "udp and port 2055"
 #else
     NULL  /* no capture */
 #endif
