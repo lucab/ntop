@@ -33,9 +33,9 @@ AC_REVISION([1.0])
 dnl>
 dnl> version and name of the game
 dnl>
-NTOP_MAJOR_VERSION=1
-NTOP_MINOR_VERSION=3
-NTOP_MICRO_VERSION=2
+NTOP_MAJOR_VERSION=2
+NTOP_MINOR_VERSION=0
+NTOP_MICRO_VERSION=alpha
 NTOP_INTERFACE_AGE=0
 NTOP_BINARY_AGE=0
 NTOP_VERSION=$NTOP_MAJOR_VERSION.$NTOP_MINOR_VERSION.$NTOP_MICRO_VERSION
@@ -468,6 +468,8 @@ AC_CHECK_FUNCS(localtime_r)
 AC_CHECK_FUNCS(ctime_r)
 AC_CHECK_FUNCS(snprintf)
 
+dnl> Check for additional functions
+AC_CHECK_FUNCS(strsep)
 
 echo
 echo "Step 5. Looking for required system libraries...."
