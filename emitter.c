@@ -139,6 +139,11 @@ void dumpNtopHashes(char* options) {
 	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
 	}
 
+	if(el->nbDescr != NULL) {
+	  if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "nbDescr", el->nbDescr)
+	     < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
+	}
+
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %d,\n", "nbNodeType", el->nbNodeType)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
       }
