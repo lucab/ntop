@@ -67,7 +67,7 @@ int optind, opterr;
 static unsigned short initialized = 0, active = 0, dumpInterval, dumpDetail;
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
-static Counter numTotalRRDs = 0;
+static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
 static unsigned long numRuns = 0, numRRDerrors = 0;
 static time_t start_tm, end_tm, rrdTime;
 
@@ -954,7 +954,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   addRrdDelay();
   rc = rrd_update(argc, argv);
 
-  numTotalRRDs++;
+  numRRDUpdates++;
+  numTotalRRDUpdates++;
 
   if(rrd_test_error()) {
     int x;
@@ -1566,7 +1567,7 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<li>Do not use the ':' character in the path as it is forbidded by rrd</ul></TD></tr>\n");
 
   sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Updates</TH><TD>");
-  safe_snprintf(buf, sizeof(buf), "%lu RRD files updated</TD></TR>\n", (unsigned long)numTotalRRDs);
+  safe_snprintf(buf, sizeof(buf), "%lu RRD files updated</TD></TR>\n", (unsigned long)numTotalRRDUpdates);
   sendString(buf);
 
   sendString("<TR><TH ALIGN=LEFT "DARK_BG">RRD Update Errors</TH><TD>");
@@ -1780,6 +1781,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...woke", sleep_tm);
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
 
+    numRRDUpdates = 0;
     numRuns++;
     rrdTime =  time(NULL);
 
@@ -2277,7 +2279,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 #ifdef RRD_DEBUG
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: %lu RRDs updated (%lu total updates)",
-	       (unsigned long)(numTotalRRDs-numRRDs), (unsigned long)numTotalRRDs);
+	       (unsigned long)(numRRDUpdates), (unsigned long)numTotalRRDUpdates);
 #endif
 
     /*
@@ -2359,7 +2361,7 @@ static int initRRDfunct(void) {
 #endif
 
   fflush(stdout);
-  numTotalRRDs = 0;
+  numTotalRRDUpdates = 0;
   return(0);
 }
 
