@@ -158,6 +158,7 @@ extern u_short mtuSize[], headerSize[];
 
 extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);
+extern void cleanAddressQueueId(u_long queueId);
 extern char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
 extern char* intoa(struct in_addr addr);
 extern void ipaddr2str(HostTraffic *instance, struct in_addr hostIpAddress, char* outBuf,

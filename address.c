@@ -32,6 +32,11 @@ static char hex[] = "0123456789ABCDEF";
 extern int h_errno; /* netdb.h */
 #endif
 
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+static u_long addressQueueSlotId        = 1;
+static u_long lastAddressSlotIdResolved = 0;
+#endif
+
 /* #define DNS_DEBUG */
 
 /* Forward */
@@ -129,7 +134,8 @@ static void resolveAddress(char* symAddr,
       strncpy(symAddr, data_data.dptr, MAX_HOST_SYM_NAME_LEN);
 
 #ifdef MULTITHREADED
-    releaseMutex(&addressResolutionMutex);
+    lastAddressSlotIdResolved = 
+      releaseMutex(&addressResolutionMutex);
 #endif
     updateHostNameInfo(addr, data_data.dptr);
 #ifdef HAVE_MYSQL
@@ -285,14 +291,16 @@ static void resolveAddress(char* symAddr,
   accessMutex(&addressResolutionMutex, "resolveAddress-3");
 #endif
 
-  if(strlen(res) > MAX_HOST_SYM_NAME_LEN) {
+  if(strlen(res) > (MAX_HOST_SYM_NAME_LEN-1)) {
     strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN-3);
     symAddr[MAX_HOST_SYM_NAME_LEN] = '\0';
     symAddr[MAX_HOST_SYM_NAME_LEN-1] = '.';
     symAddr[MAX_HOST_SYM_NAME_LEN-2] = '.';
     symAddr[MAX_HOST_SYM_NAME_LEN-3] = '.';
-  } else
-    strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN);
+  } else {
+    /* printf("==> (%x) (%s)(len=%d)\n", symAddr, res, strlen(res)); */
+    strcpy(symAddr, res);
+  }
 
   for(i=0; symAddr[i] != '\0'; i++)
     symAddr[i] = (char)tolower(symAddr[i]);
@@ -345,11 +353,13 @@ static void resolveAddress(char* symAddr,
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
 
 static void queueAddress(struct hnamemem* elem, int elemLen) {
+
   /****************************
    - If the queue is full then wait until a slot is freed
    - If the queue is getting full then periodically wait
      until a slot is freed
   *****************************/
+
   if(addressQueueLen >= ADDRESS_QUEUE_LENGTH) {
     char tmpBuf[96];
 #ifdef DEBUG
@@ -385,18 +395,20 @@ static void queueAddress(struct hnamemem* elem, int elemLen) {
     if(addressQueueLen > maxAddressQueueLen) {
       maxAddressQueueLen = addressQueueLen; /* Update stats */
 #ifdef DEBUG
-     traceEvent(TRACE_INFO, "Max queue len: %ld\n", maxAddressQueueLen);
+      traceEvent(TRACE_INFO, "Max queue len: %ld\n", maxAddressQueueLen);
 #endif
     }
 
     releaseMutex(&addressQueueMutex);
+
 #ifdef DEBUG
    traceEvent(TRACE_INFO, "Queued address... [addr queue=%d/max=%d]\n",
 	      addressQueueLen, maxAddressQueueLen);
 #endif
 
 #ifdef DEBUG_THREADS
-   traceEvent(TRACE_INFO, "+ [addr queue=%d/max=%d]\n", addressQueueLen, maxAddressQueueLen);
+   traceEvent(TRACE_INFO, "+ [addr queue=%d/max=%d]\n", 
+	      addressQueueLen, maxAddressQueueLen);
 #endif
 
 #ifdef USE_SEMAPHORES
@@ -405,6 +417,42 @@ static void queueAddress(struct hnamemem* elem, int elemLen) {
     signalCondvar(&queueAddressCondvar);
 #endif
   }
+}
+
+/* ************************************ */
+
+void cleanAddressQueueId(u_long queueId) {
+  int i;
+  
+  if((queueId <= lastAddressSlotIdResolved)
+     && (abs(queueId-lastAddressSlotIdResolved) < ADDRESS_QUEUE_LENGTH) /* wrap check */) {
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Address %u already resolved (lastAddressSlotIdResolved=%u)...",
+	       queueId, lastAddressSlotIdResolved);
+#endif
+      return; /* Address already resolved */
+  }
+  
+  accessMutex(&addressQueueMutex, "cleanAddressQueueId");
+
+  for(i=0; i<ADDRESS_QUEUE_LENGTH; i++) {
+    if((addressQueue[i] != NULL)
+       && (addressQueue[i]->slotQueueId == queueId)) {
+      addressQueue[i]->name = NULL; /* found */
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "Address %u dropped from queue (lastAddressSlotIdResolved=%u)...", 
+		 queueId, lastAddressSlotIdResolved);
+#endif
+      break;
+    }
+  }
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "WARNING: address %u NOT found on queue (lastAddressSlotIdResolved=%u)...",
+	     queueId, lastAddressSlotIdResolved);
+#endif
+  
+  releaseMutex(&addressQueueMutex);
 }
 
 /* ************************************ */
@@ -462,17 +510,21 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 	   addressQueueLen, maxAddressQueueLen, intoa(elem->addr));
 #endif
 
-    /*
+   /* cleanAddressQueueId has cleaned the address so we skip it */
+   if(elem->name != NULL) {
+     /*
        If the queue is full enough then keep
        remote addresses numeric
-    */
-    if((addressQueueLen > (ADDRESS_QUEUE_LENGTH/2))
-       && (!isLocalAddress(&elem->addr)))
-      resolveAddress(elem->name, &elem->addr, 1); /* Keep address numeric */
-    else
-      resolveAddress(elem->name, &elem->addr, 0);
-
-    if(elem->instance) elem->instance->instanceInUse--;
+     */
+     if((addressQueueLen > (ADDRESS_QUEUE_LENGTH/2))
+	&& (!isLocalAddress(&elem->addr)))
+       resolveAddress(elem->name, &elem->addr, 1); /* Keep address numeric */
+     else
+       resolveAddress(elem->name, &elem->addr, 0);
+     
+     lastAddressSlotIdResolved = elem->slotQueueId;
+     if(elem->instance) elem->instance->instanceInUse--;
+   }
 
 #ifdef DEBUG
    traceEvent(TRACE_INFO, "Resolved address %s\n", elem->name);
@@ -611,6 +663,17 @@ void ipaddr2str(HostTraffic *instance,
     p->instance = instance;
     memset(p->name, 0, MAX_HOST_SYM_NAME_LEN);
     pName = p->name;
+    instance->addressQueueId = p->slotQueueId = addressQueueSlotId;
+
+    /* 
+       Increment addressSlotId: its values must be != 0 
+       because 0 is used to specify no slot
+    */
+    accessMutex(&addressResolutionMutex, "resolveAddress-2");
+    addressQueueSlotId++;
+    if(addressQueueSlotId == 0) 
+      addressQueueSlotId = 1;
+    releaseMutex(&addressResolutionMutex);
 #ifdef WIN32
     /*
       Under WIN32 local addresses are resolved immediately

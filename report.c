@@ -298,15 +298,16 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	    }
 #endif
 
-	    for(i=0; i<numIpProtosToMonitor; i++) {
-	      totalIPTraffic += el->protoIPTrafficInfos[i].sentLocally+
-		el->protoIPTrafficInfos[i].sentRemotely;
-	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(el->protoIPTrafficInfos[i].sentLocally+
-				      el->protoIPTrafficInfos[i].sentRemotely, 1)) < 0) 
+	    if(el->protoIPTrafficInfos != NULL) 
+	      for(i=0; i<numIpProtosToMonitor; i++) {
+		totalIPTraffic += el->protoIPTrafficInfos[i].sentLocally+
+		  el->protoIPTrafficInfos[i].sentRemotely;
+		if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			    formatBytes(el->protoIPTrafficInfos[i].sentLocally+
+					el->protoIPTrafficInfos[i].sentRemotely, 1)) < 0) 
 		traceEvent(TRACE_ERROR, "Buffer overflow!");
-	      sendString(buf);
-	    }
+		sendString(buf);
+	      }
 
 	    /* Rounding may cause troubles */
 	    if(el->bytesSent > totalIPTraffic)
@@ -409,15 +410,16 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	    }
 #endif
 
-	    for(i=0; i<numIpProtosToMonitor; i++) {
-	      totalIPTraffic += el->protoIPTrafficInfos[i].receivedLocally+
-		el->protoIPTrafficInfos[i].receivedFromRemote;
-	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(el->protoIPTrafficInfos[i].receivedLocally+
-				      el->protoIPTrafficInfos[i].receivedFromRemote, 1)) < 0) 
-		traceEvent(TRACE_ERROR, "Buffer overflow!");
-	      sendString(buf);
-	    }
+	    if(el->protoIPTrafficInfos != NULL) 
+	      for(i=0; i<numIpProtosToMonitor; i++) {
+		totalIPTraffic += el->protoIPTrafficInfos[i].receivedLocally+
+		  el->protoIPTrafficInfos[i].receivedFromRemote;
+		if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			    formatBytes(el->protoIPTrafficInfos[i].receivedLocally+
+					el->protoIPTrafficInfos[i].receivedFromRemote, 1)) < 0) 
+		  traceEvent(TRACE_ERROR, "Buffer overflow!");
+		sendString(buf);
+	      }
 
 	    /* Rounding may cause troubles */
 	    if(el->bytesReceived > totalIPTraffic)
@@ -3571,7 +3573,7 @@ void listNetFlows(void) {
 void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
   datum key_data, data_data, return_data;
   char tmpBuf[96], *arrow[6], *theAnchor[6];
-  EventMsg *theMsgTable[MAX_NUM_EVENTS] = { 0 };
+  EventMsg *theMsgTable[MAX_NUM_EVENTS];
   EventMsg theMsgs[MAX_NUM_EVENTS];
   unsigned long shost, dhost, evtTime;
   u_short numEntries = 0, i;
@@ -3584,6 +3586,8 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
     if(theHost == NULL) printNoDataYet();
     return; /* No rules are currently active */
   }
+
+  memset(theMsgTable, 0, sizeof(theMsgTable));
 
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "printHostEvent");
