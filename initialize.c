@@ -1138,7 +1138,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	myGlobals.device[deviceId].pcapDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
 	if(myGlobals.device[deviceId].pcapDumper == NULL) {
-	  traceEvent(CONST_TRACE_FATALERROR, "pcap_dump_open(): '%s'", ebuf);
+          traceEvent(CONST_TRACE_FATALERROR, "pcap_dump_open(..., '%s') failed", myName);
 	  exit(-1);
 	} else
 	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
@@ -1150,8 +1150,11 @@ void addDevice(char* deviceName, char* deviceDescr) {
 		myGlobals.device[deviceId].name);
 	myGlobals.device[deviceId].pcapErrDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
-	if(myGlobals.device[deviceId].pcapErrDumper == NULL)
-	  traceEvent(CONST_TRACE_FATALERROR, "pcap_dump_open() for suspicious packets: '%s'", ebuf);
+	if(myGlobals.device[deviceId].pcapErrDumper == NULL) {
+          myGlobals.enableSuspiciousPacketDump = 0;
+	  traceEvent(CONST_TRACE_ERROR, "pcap_dump_open(..., '%s') failed (suspicious packets)", myName);
+	  traceEvent(CONST_TRACE_INFO, "Continuing without suspicious packet dump");
+        }
       }
     } else {
       myGlobals.device[deviceId].virtualDevice = 1;
