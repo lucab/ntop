@@ -36,6 +36,10 @@ dnl> this file is processed via 'autoconf' to produce the 'configure' script
 dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl>
 
+dnl>  Note to enable debug,
+dnl>   export ac_debug=yes
+dnl>  Before running ./configure
+
 dnl>
 dnl> Initialization lines.
 dnl>   Note that the AC_INIT must, simply MUST be the first line.  
@@ -46,7 +50,7 @@ dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm vers
 dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.2.4])
-AC_PREREQ([2.50])
+AC_PREREQ([2.53])
 SCRIPTVER="v2.2.4.107-2003-07-15"
 
 dnl>
@@ -76,6 +80,23 @@ echo
 dnl> This has to be here due to some odd dependency...
 AC_CANONICAL_TARGET
 
+dnl> Basic sanity check ... does ntop.c exist?
+AC_CONFIG_SRCDIR([ntop.c])
+
+dnl> force configure to use current directory
+AC_CONFIG_AUX_DIR(.)
+
+AM_INIT_AUTOMAKE()
+
+if test ".${ac_debug}" = ".yes"; then
+    echo "DEBUG: _INIT_AUTOMAKE:"
+    echo "       ACLOCAL    is $ACLOCAL"
+    echo "       AUTOCONF   is $AUTOCONF"
+    echo "       AUTOMAKE   is $AUTOMAKE"
+    echo "       AUTOHEADER is $AUTOHEADER"
+fi
+
+echo
 echo "*******************************************************************"
 echo "*                                                                 *"
 echo "* NOTICE:  I know you're used to ignoring output from ./configure *"
@@ -93,7 +114,11 @@ echo "*                                                                 *"
 echo "*******************************************************************"
 echo
 
-dnl> early since we need it for --enable-showoses and autotool version check.
+dnl> make NTOPDIR the default for the installation
+AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
+
+# Checks for programs.
+
 AC_PROG_AWK
 if test "x${AWK}" = "x"; then
     echo
@@ -131,10 +156,113 @@ elif test "x${AWK}" = "xawk" ||
     HAS_WARNING="yes"
 fi
 
-echo "  Checking for autoheader ..."
-AC_PATH_PROG(AUTOHEADER, autoheader)
+AC_PROG_CPP
+AC_PROG_CC
+dnl> AC_PROG_CXX no c++ code (yet?)
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 
-if test "x${ac_cv_prog_AUTOHEADER}" = "x"; then
+dnl> These blocks of code check to see if the various gnu auto* tools are installed.
+
+dnl> If a tool is NOT installed, the constant used to automatically invoke them
+dnl> in Makefile is changed to just echo a blank line.
+
+dnl> This bypasses the tendency of the make process to recreate these scripts
+dnl> which REQUIRES the autotools, if versions or timestamps, etc. are different
+dnl> in any way.
+
+dnl> It is not elegant, but it seems to work - ntop no longer requires normal users
+dnl> to have the auto* tools installed.  If you are doing development work on the
+dnl> configure or Makefile stuff, WATCH OUT!
+
+dnl> libtool is different, we MUST have it installed... but, if the user
+dnl> doesn't have it installed, this will create libtool in the ntop directory
+dnl> from ltmain.sh and ltconfig (there's already a libtool file in the
+dnl> distribution directory).  So, while libtool is absolutely required,
+dnl> there's not much point in testing too hard for it.
+
+dnl> Note that to use our libtool, we have to add pwd to the path...
+dnl> TODO last vs first in path????
+export PATH=${PATH}:`pwd`
+if test ".${ac_debug}" = ".yes"; then
+    echo "DEBUG: PATH is now ${PATH}"
+fi
+
+AC_MSG_CHECKING([for libtool])
+AC_MSG_RESULT([])
+
+AC_PROG_LIBTOOL
+
+dnl> dnl> Apple, just to be difficult, calls the gnu version glibtool...
+dnl> case "${target}:${CC}" in
+dnl>     *-*-darwin*:* )
+dnl>         AC_CHECK_TOOL(LIBTOOL, glibtool)
+dnl>         ;;
+dnl>     * )
+dnl>         AC_CHECK_TOOL(LIBTOOL, libtool)
+dnl>         ;;
+dnl> esac
+
+dnl> Test before we use it, below
+AC_ARG_ENABLE(iknowbetter,
+              [  --enable-iknowbetter        Override WILLFAIL],
+              ac_willfailoverride="yes",
+              ac_willfailoverride="no")
+
+echo -n "  Checking libtool version..."
+libtoolversion=`libtool --version | grep libtool | ${ac_cv_prog_AWK} '{ print $4 }'`
+echo "${libtoolversion}"
+case "${libtoolversion}" in
+    *1\.[[0-2]]*)
+        echo "*******************************************************************"
+        echo "*"
+        echo "*ERROR: ntop requires libtool version 1.4 or newer..."
+        echo "*"
+        echo "*  You are executing ${libtoolversion}"
+        echo "*"
+        echo "*>>>   Unable to proceed with your request, aborting ./configure!"
+        echo "*"
+        NTOP_SUGGESTION([libtool], [1.4.3], [143])
+        echo "*******************************************************************"
+        exit 1
+        ;;
+    *1\.3*)
+        echo "*******************************************************************"
+        echo "*"
+        echo "*ERROR: ntop requires libtool version 1.4 or newer..."
+        echo "*"
+        echo "*  You are executing ${libtoolversion}"
+        echo "*"
+        if test "x${ac_willfailoverride}" != "xyes"; then
+            echo "*>>>   Unable to proceed with your request, aborting ./configure!"
+            echo "*"
+            echo "*  There have been SOME reports of success, so you could TRY"
+            echo "*  --enable-iknowbetter.  I don't recommend it, however."
+            echo "*"
+            NTOP_SUGGESTION([libtool], [1.4.3], [143])
+            echo "*******************************************************************"
+            exit 1
+        else
+            echo "* --enable-iknowbetter is set, so we will attempt to continue."
+            echo "*"
+            echo "* Fasten your seat belt and good luck!  If you are injured, the"
+            echo "* development team will disavow any knowledge of your intentions."
+            echo "*"
+            echo "*******************************************************************"
+        fi
+        ;;
+esac
+
+dnl> Note, originally set by _INIT_AUTOMAKE - which just points @ missing.
+dnl> Let's try for a better value, if available...
+AUTOHEADERsave="${AUTOHEADER}"
+AUTOHEADER=
+AC_CHECK_TOOL(AUTOHEADER, autoheader)
+
+if test "x${ac_cv_prog_ac_ct_AUTOHEADER}" = "x"; then
+ AUTOHEADER="${AUTOHEADERsave}"
  mv Makefile.in Makefile.in.tmp
  cat Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
  rm -f Makefile.in.tmp
@@ -145,11 +273,14 @@ if test "x${ac_cv_prog_AUTOHEADER}" = "x"; then
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
 fi
+AUTOHEADERsave=
 
-echo "  Checking for aclocal ..."
-AC_PATH_PROG(ACLOCAL, aclocal)
+ACLOCALsave="${ACLOCAL}"
+ACLOCAL=
+AC_CHECK_TOOL(ACLOCAL, aclocal)
 
-if test "x${ac_cv_prog_ACLOCAL}" = "x"; then
+if test "x${ac_cv_prog_ac_ct_ACLOCAL}" = "x"; then
+ ACLOCAL="${ACLOCALsave}"
  mv Makefile.in Makefile.in.tmp
  cat Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
  rm -f Makefile.in.tmp
@@ -157,115 +288,90 @@ if test "x${ac_cv_prog_ACLOCAL}" = "x"; then
  cat plugins/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
  rm -f plugins/Makefile.in.tmp
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
- cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+ cat plugins/pep/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
+ ACLOCAL="${SHELL} `pwd`/missing --run echo"
 fi
+ACLOCALsave=
 
-echo "  Checking for automake ..."
-AC_PATH_PROG(AUTOMAKE, automake)
+AUTOMAKEsave="${AUTOMAKE}"
+AUTOMAKE=
+AC_CHECK_TOOL(AUTOMAKE, automake)
 
-if test "x${ac_cv_prog_AUTOMAKE}" != "x"; then
+if test "x${ac_cv_prog_ac_ct_AUTOMAKE}" != "x"; then
 
-dnl>
-dnl> Check versions of autotools
+    dnl> Check versions of automake: if we have it installed, it must be v1.6 or higher!
 
-dnl> First check minimum versions...
-echo "  Checking automake version..."
-automakeversion=`automake --version | grep ^automake | ${ac_cv_prog_AWK} '{ print $4 }'`
-case "${automakeversion}" in
-    *1\.[[0-5]]*)
-        echo "*******************************************************************"
-        echo "*                                                                 *"
-        echo "*ERROR: ntop requires automake version 1.6 or newer...            *"
-        echo "*                                                                 *"
-        echo "*  You are executing ${automakeversion}"
-        echo "*                                                                 *"
-        echo "*>>>   Unable to proceed with your request, aborting ./configure! *"
-        echo "*                                                                 *"
-        echo "*???    Suggestion - Install a private copy of automake 1.6.3.    *"
-        echo "*???                 It's quite easy and does NOT require root:   *"
-        echo "*                                                                 *"
-        echo "*   Download automake 1.6.3 from gnu                              *"
-        echo "*     $ wget http://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.gz*"
-        echo "*                                                                 *"
-        echo "*   Untar it                                                      *"
-        echo "*     $ tar xfvz automake-1.6.3.tar.gz                            *"
-        echo "*                                                                 *"
-        echo "*   Make it                                                       *"
-        echo "*     $ cd automake-1.6.3                                         *"
-        echo "*     $ ./configure --prefix=/home/<whatever>/automake163         *"
-        echo "*     $ make                                                      *"
-        echo "*     $ make install                                              *"
-        echo "*                                                                 *"
-        echo "*   Add it to your path.  Under bash do this:                     *"
-        echo "*     $ PATH=/home/<whatever>automake163/bin:\$PATH                *"
-        echo "*     $ export PATH                                               *"
-        echo "*                                                                 *"
-        echo "*******************************************************************"
-        exit 1
-        ;;
-esac
+    echo -n "  Checking automake version..."
+    automakeversion=`automake --version | grep ^automake | ${ac_cv_prog_AWK} '{ print $4 }'`
+    echo "${automakeversion}"
+    case "${automakeversion}" in
+        *1\.[[0-5]]*)
+            echo "******************************************************************"
+            echo "*"
+            echo "*ERROR: ntop requires automake version 1.6 or newer..."
+            echo "*"
+            echo "*  You are executing ${automakeversion}"
+            echo "*"
+            echo "*>>>   Unable to proceed with your request, aborting ./configure!"
+            echo "*"
+            NTOP_SUGGESTION([automake], [1.6.3], [163])
+            echo "*******************************************************************"
+            exit 1
+            ;;
+    esac
 else
- mv Makefile.in Makefile.in.tmp
- cat Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
- rm -f Makefile.in.tmp
- mv plugins/Makefile.in plugins/Makefile.in.tmp
- cat plugins/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
- rm -f plugins/Makefile.in.tmp
- mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
- cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
- rm -f plugins/pep/Makefile.in.tmp
+    AUTOMAKE="${AUTOMAKEsave}"
+    mv Makefile.in Makefile.in.tmp
+    cat Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
+    rm -f Makefile.in.tmp
+    mv plugins/Makefile.in plugins/Makefile.in.tmp
+    cat plugins/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
+    rm -f plugins/Makefile.in.tmp
+    mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
+    cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+    rm -f plugins/pep/Makefile.in.tmp
 fi
+AUTOMAKEsave=
 
-echo "  Checking for autoconf ..."
-AC_PATH_PROG(AUTOCONF, autoconf)
+AUTOCONFsave="${AUTOCONF}"
+AUTOCONF=
+AC_CHECK_TOOL(AUTOCONF, autoconf)
 
-if test "x${ac_cv_prog_AUTOCONF}" != "x"; then
-echo "  Checking autoconf version..."
-case "${autoconfversion}" in
-    *2\.[[0-4]]*)
-        echo "*******************************************************************"
-        echo "*                                                                 *"  
-        echo "*ERROR: ntop requires autoconf version 2.50 or newer...           *"  
-        echo "*                                                                 *"  
-        echo "*  You are executing ${autoconfversion}"
-        echo "*                                                                 *"  
-        echo "*>>>   Unable to proceed with your request, aborting ./configure! *"
-        echo "*                                                                 *"  
-        echo "*???    Suggestion - Install a private copy of autoconf 2.5x.     *"  
-        echo "*???                 It's quite easy and does NOT require root:   *"  
-        echo "*                                                                 *"  
-        echo "*   Download autoconf 2.57 from gnu                               *"  
-        echo "*     $ wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.57.tar.gz *"
-        echo "*                                                                 *"  
-        echo "*   Untar it                                                      *"  
-        echo "*     $ tar xfvz autoconf-2.57.tar.gz                             *"  
-        echo "*                                                                 *"  
-        echo "*   Make it                                                       *"  
-        echo "*     $ cd autoconf-2.57                                          *"  
-        echo "*     $ ./configure --prefix=/home/<whatever>/autoconf257         *"  
-        echo "*     $ make                                                      *"  
-        echo "*     $ make install                                              *"  
-        echo "*                                                                 *"  
-        echo "*   Add it to your path.  Under bash do this:                     *"  
-        echo "*     $ PATH=/home/<whatever>autoconf257/bin:\$PATH                *"  
-        echo "*     $ export PATH                                               *"  
-        echo "*                                                                 *"
-        echo "*******************************************************************"
-        exit 1
-        ;;
-esac
+if test "x${ac_cv_prog_ac_ct_AUTOCONF}" != "x"; then
+
+    dnl> Check versions of autoconf: if we have it installed, it must be v2.50 or higher!
+    echo -n "  Checking autoconf version..."
+    autoconfversion=`autoconf --version | grep ^autoconf | ${ac_cv_prog_AWK} '{ print $4 }'`
+    echo "${autoconfversion}"
+    case "${autoconfversion}" in
+        *2\.[[0-4]]*)
+            echo "*******************************************************************"
+            echo ""
+            echo "*ERROR: ntop requires autoconf version 2.50 or newer..."
+            echo "*"
+            echo "*  You are executing ${autoconfversion}"
+            echo "*"
+            echo "*>>>   Unable to proceed with your request, aborting ./configure!"
+            echo "*"
+            NTOP_SUGGESTION([autoconf], [2,57], [257])
+            echo "*******************************************************************"
+            exit 1
+            ;;
+    esac
 else
- mv Makefile.in Makefile.in.tmp
- cat Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
- rm -f Makefile.in.tmp
- mv plugins/Makefile.in plugins/Makefile.in.tmp
- cat plugins/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
- rm -f plugins/Makefile.in.tmp
- mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
- cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
- rm -f plugins/pep/Makefile.in.tmp
+    AUTOCONF="${AUTOCONFsave}"
+    mv Makefile.in Makefile.in.tmp
+    cat Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
+    rm -f Makefile.in.tmp
+    mv plugins/Makefile.in plugins/Makefile.in.tmp
+    cat plugins/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
+    rm -f plugins/Makefile.in.tmp
+    mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
+    cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+    rm -f plugins/pep/Makefile.in.tmp
 fi
+AUTOCONFsave=
 
 dnl> Then check for a match with the scripts...
 dnl>
@@ -277,27 +383,22 @@ dnl>
 if test -f /tmp/autotoolversions; then
      rm -f /tmp/autotoolversions
 fi
-if test "x${ac_cv_prog_AUTOMAKE}" != "x"; then
+if test "x${ac_cv_prog_ac_ct_AUTOMAKE}" != "x"; then
   automake --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }'  >/tmp/autotoolversions
 fi
-if test "x${ac_cv_prog_AUTOCONF}" != "x"; then
+if test "x${ac_cv_prog_ac_ct_AUTOCONF}" != "x"; then
   autoconf --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
 fi
+libtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
 
-case "${target}:${CC}" in
-    *-*-darwin*:* )
-    glibtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
-    ;;
-    * )
-    libtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
-    ;;
-esac
-
+dnl> Make sure we have a file to compare against...
 touch autotoolversions
+
 diff autotoolversions /tmp/autotoolversions >/dev/null 2>/dev/null 
 rc=$?
 
-if test "x${ac_cv_prog_AUTOMAKE}" = "x" -o "x${ac_cv_prog_AUTOCONF}" = "x"; then
+dnl> If we don't have automake or autoconf, fake the result as being 'equal'...
+if test "x${ac_cv_prog_ac_ct_AUTOMAKE}" = "x" -o "x${ac_cv_prog_ac_ct_AUTOCONF}" = "x"; then
  rc=0
 fi
 
@@ -424,29 +525,6 @@ AH_TEMPLATE([HAVE_U_INT8_T],  [Define for unsigned int 8 typedef])
 AH_TEMPLATE([HAVE_LIBWRAP],   [Define for tcp wrappers (-lwrap)])
 dnl> end autoheader stuff
 
-dnl> Basic sanity check ... does ntop.c exist?
-AC_CONFIG_SRCDIR([ntop.c])
-
-dnl> force configure to use current directory
-AC_CONFIG_AUX_DIR(.)
-
-AM_INIT_AUTOMAKE()
-AC_MSG_CHECKING([for aclocal.m4])
-AC_CHECK_FILE(aclocal.m4, ,
-    echo ""
-    echo "Invoking aclocal to create aclocal.m4..."
-    aclocal
-    echo ""
-)
-AC_CHECK_FILE(depcomp, , [
-
-    echo ""
-    echo "depcomp missing... will install it in this ntop directory."
-    echo "  Invoking automake to copy depcomp..."
-    automake --gnu --copy --add-missing
-    echo ""
-])
-
 AC_ARG_ENABLE(void,
               [  +--ntop-specific:------------------------------------------------------------+])
 AC_ARG_WITH(void,
@@ -521,6 +599,58 @@ AC_ARG_WITH(  pcap-include,
               PCAP_INCLUDE="$withval",
               PCAP_INCLUDE=)
 
+AC_ARG_WITH(  gdbm-root,
+              [  --with-gdbm-root=DIR        gdbm located in DIR],
+              GDBM_DIRECTORY="$withval",
+              GDBM_DIRECTORY=)
+AC_ARG_WITH(  gdbm-lib,
+              [  --with-gdbm-lib=DIR          or libgdbm located in DIR],
+              GDBM_LIB="$withval",
+              GDBM_LIB=)
+AC_ARG_WITH(  gdbm-include,
+              [  --with-gdbm-include=DIR      or gdbm.h located in DIR],
+              GDBM_INCLUDE="$withval",
+              GDBM_INCLUDE=)
+
+AC_ARG_WITH(  zlib-root,
+              [  --with-zlib-root=DIR        zlib located in DIR],
+              ZLIB_DIRECTORY="$withval",
+              ZLIB_DIRECTORY=)
+AC_ARG_WITH(  zlib-lib,
+              [  --with-zlib-lib=DIR          or libz located in DIR],
+              ZLIB_LIB="$withval",
+              ZLIB_LIB=)
+AC_ARG_WITH(  zlib-include,
+              [  --with-zlib-include=DIR      or zlib.h located in DIR],
+              ZLIB_INCLUDE="$withval",
+              ZLIB_INCLUDE=)
+
+AC_ARG_WITH(  gd-root,
+              [  --with-gd-root=DIR          gd located in DIR],
+              GD_DIRECTORY="$withval",
+              GD_DIRECTORY=)
+AC_ARG_WITH(  gd-lib,
+              [  --with-gd-lib=DIR            or libgd located in DIR],
+              GD_LIB="$withval",
+              GD_LIB=)
+AC_ARG_WITH(  gd-include,
+              [  --with-gd-include=DIR        or gd.h located in DIR],
+              GD_INCLUDE="$withval",
+              GD_INCLUDE=)
+
+AC_ARG_WITH(  libpng-root,
+              [  --with-libpng-root=DIR      libpng located in DIR],
+              LIBPNG_DIRECTORY="$withval",
+              LIBPNG_DIRECTORY=)
+AC_ARG_WITH(  libpng-lib,
+              [  --with-libpng-lib=DIR        or libpng located in DIR],
+              LIBPNG_LIB="$withval",
+              LIBPNG_LIB=)
+AC_ARG_WITH(  libpng-include,
+              [  --with-libpng-include=DIR    or png.h located in DIR],
+              LIBPNG_INCLUDE="$withval",
+              LIBPNG_INCLUDE=)
+
 AC_ARG_WITH(  ossl-root,
               [  --with-ossl-root=DIR        openSSL located in DIR],
               OSSL_DIRECTORY="$withval",
@@ -534,56 +664,41 @@ AC_ARG_WITH(  ossl-include,
               OSSL_INCLUDE="$withval",
               OSSL_INCLUDE=)
 
-AC_ARG_WITH(  gdbm-lib,
-              [  --with-gdbm-lib=DIR          or libgdbm located in DIR],
-              GDBM_LIB="$withval",
-              GDBM_LIB=)
-AC_ARG_WITH(  gdbm-include,
-              [  --with-gdbm-include=DIR      or gdbm.h located in DIR],
-              GDBM_INCLUDE="$withval",
-              GDBM_INCLUDE=)
-
-AC_ARG_WITH(  zlib-lib,
-              [  --with-zlib-lib=DIR          or libz located in DIR],
-              ZLIB_LIB="$withval",
-              ZLIB_LIB=)
-AC_ARG_WITH(  zlib-include,
-              [  --with-zlib-include=DIR      or zlib.h located in DIR],
-              ZLIB_INCLUDE="$withval",
-              ZLIB_INCLUDE=)
-
-AC_ARG_WITH(  libpng-lib,
-              [  --with-libpng-lib=DIR         or libpng located in DIR],
-              LIBPNG_LIB="$withval",
-              LIBPNG_LIB=)
-AC_ARG_WITH(  libpng-include,
-              [  --with-libpng-include=DIR     or png.h located in DIR],
-              LIBPNG_INCLUDE="$withval",
-              LIBPNG_INCLUDE=)
-
 AC_ARG_WITH(  localedir,
               [  --with-localedir=DIR        LOCALE files located in DIR (i18n)],
               LOCALEDIR="$withval",
               LOCALEDIR=)
 
+AC_ARG_WITH(  xml2-root,
+              [  --with-xml2-root=DIR        libxml2 located in DIR],
+              XML2_DIRECTORY="$withval",
+              XML2_DIRECTORY=)
 AC_ARG_WITH(  xml2-lib,
-              [  --with-xml2-lib=DIR           or libxml2 located in DIR],
+              [  --with-xml2-lib=DIR          or libxml2 located in DIR],
               XML2_LIB="$withval",
               XML2_LIB=)
 AC_ARG_WITH(  xml2-include,
-              [  --with-xml2-include=DIR       or .h located in DIR],
+              [  --with-xml2-include=DIR      or .h located in DIR],
               XML2_INCLUDE="$withval",
               XML2_INCLUDE=)
 
+AC_ARG_WITH(  gdome-root,
+              [  --with-gdome-root=DIR       libgdome located in DIR],
+              GDOME_DIRECTORY="$withval",
+              GDOME_DIRECTORY=)
 AC_ARG_WITH(  gdome-lib,
-              [  --with-gdome-lib=DIR          or libgdome located in DIR],
+              [  --with-gdome-lib=DIR         or libgdome located in DIR],
               GDOME_LIB="$withval",
               GDOME_LIB=)
 AC_ARG_WITH(  gdome-include,
-              [  --with-gdome-include=DIR      or .h located in DIR],
+              [  --with-gdome-include=DIR     or .h located in DIR],
               GDOME_INCLUDE="$withval",
               GDOME_INCLUDE=)
 
+AC_ARG_WITH(  glib-root,
+              [  --with-glib-root=DIR        libglib located in DIR],
+              GLIB_DIRECTORY="$withval",
+              GLIB_DIRECTORY=)
 AC_ARG_WITH(  glib-lib,
               [  --with-glib-lib=DIR           or libglib located in DIR],
               GLIB_LIB="$withval",
@@ -621,35 +736,42 @@ AC_ARG_ENABLE(showoses,
                exit 0
 ])
 
-AC_ARG_ENABLE(iknowbetter,
-              [  --enable-iknowbetter        Override WILLFAIL],
-              ac_willfailoverride="yes",
-              ac_willfailoverride="no")
-
 AC_ARG_ENABLE(void,
               [  +----------------------------------------------------------------------------+])
 AC_ARG_WITH(void,
               [  +----------------------------------------------------------------------------+])
 
 
+AC_MSG_CHECKING([for aclocal.m4])
+AC_CHECK_FILE(aclocal.m4, , [
+    echo ""
+    echo "Invoking aclocal to create aclocal.m4..."
+    $ACLOCAL
+    echo ""
+])
+AC_CHECK_FILE(depcomp, , [
+    echo ""
+    echo "depcomp missing... will install it in this ntop directory."
+    echo "  Invoking automake to copy depcomp..."
+    $AUTOMAKE --gnu --copy --add-missing
+    echo ""
+])
+
 dnl> Handle the root -> lib/include settings
 NTOP_SET_LIBINC(PCAP)
 NTOP_SET_LIBINC(GDBM)
-NTOP_SET_LIBINC(OSSL)
-NTOP_SET_LIBINC(GD)
 NTOP_SET_LIBINC(ZLIB)
+NTOP_SET_LIBINC(GD)
 NTOP_SET_LIBINC(LIBPNG)
+if test ".${ac_disable_openssl}" != ".yes"; then
+    NTOP_SET_LIBINC(OSSL)
+fi
 if test ".${ac_enable_xmldump}" = ".yes"; then
-NTOP_SET_LIBINC(XML2)
-NTOP_SET_LIBINC(GDOME)
+  NTOP_SET_LIBINC(XML2)
+  NTOP_SET_LIBINC(GDOME)
+  NTOP_SET_LIBINC(GLIB)
 fi
-NTOP_SET_LIBINC(GLIB)
 dnl> From here on out, we only use the _INCLUDE and _LIB except for locale and glibconfig
-
-if test ".${ac_debug}" = ".yes"; then
-    echo "G-config: ${GLIBCONFIG_DIRECTORY}"
-    echo "  locale: ${LOCALEDIR}"
-fi
 
 # Set constants and defaults
 MYRRD=`pwd`/myrrd
@@ -693,8 +815,15 @@ if test ".${ac_cv_prog_cc_stdc}" = ".no"; then
 fi
 
 if test ".${ac_debug}" = ".yes"; then
-    echo "DEBUG:   CC starts as '${CC}')"
-    echo "DEBUG:   CFLAGS as    '${CFLAGS}')"
+    echo "DEBUG: build         is '${build}'"
+    echo "       host          is '${host}'"
+    echo "       target        is '${target}'"
+    echo "       CC     starts as '${CC}'"
+    echo "     CPPFLAGS starts as '${CPPFLAGS}'"
+    echo "       CFLAGS starts as '${CFLAGS}'"
+    echo "      LDFLAGS starts as '${LDLAGS}'"
+    echo "         LIBS starts as '${LIBS}'"
+    echo "         INCS starts as '${INCS}'"
 fi
 
 echo
@@ -704,26 +833,24 @@ dnl>
 dnl> How does this work?
 dnl>
 dnl> First off, we split up the target:cc stuff and tag each version we know
-dnl> about with a couple of paramters.
+dnl> about with a couple of parameters.
 dnl>
 dnl>    DEFINEOS becomes the -DOS_xxxxx value
 dnl>    STATUS   tells us which of the text blocks to print
 dnl>    REMEDIATE1/2 and NOTE1/2 are extra blocks of text we can print
 dnl>
-dnl>    VERIFIEDn="ntop:yyyy-mm-dd:name <email>:osversion";
+dnl>    VERIFIED[1-9]="ntop:yyyy-mm-dd:name <email>:osversion";
 dnl>    VNOTES  ="";
 dnl>
 
-dnl> Really pervasive settings (CC, CFLAGS) go here.
-dnl> The rest should be the second case $target, after we've done most 
-dnl> of the common tests.
+dnl> Any common settings required to support a specific OS, distribution or release
+dnl> go here also.
 
-if test ".${ac_debug}" = ".yes"; then
-    echo "DEBUG: build        is '${build}'"
-    echo "       host         is '${host}'"
-    echo "       target       is '${target}'"
-    echo "       CC           is '${CC}'"
-fi
+dnl> Add include file locations to CPPFLAGS (for the preprocessor)
+dnl> and add libraries (location) -L and (names) -l to LDFLAGS.
+
+dnl> Skipping cases is, I guess, ok, but always remember that you might have
+dnl> been grabbed by an earlier target.
 
 case "${target}:${CC}" in
     *-*-mingw32*:gcc* )
@@ -739,9 +866,108 @@ case "${target}:${CC}" in
 
     *-*-linux*:*gcc* )
         VERIFIED1="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com>:RedHat AS2.1, 7.3 and 8.0"
-        VERIFIED2="2.1.51:2002-10-24:Peter Sinoros-Szabo Peter <sini@cs.bme.hu>:Suse i686, 2.4.18-4GB-SMP"
-        VERIFIED2="2.2.3:2003-07-12:Luca Deri <deri@ntop.org>:Suse 8.2 i686, 2.4.20-4GB"
+        VERIFIED2="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:redhat 7.3 2.4.20-18.7"
+        VERIFIED3="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:redhat 8.0 2.4.20-18.8"
+        VERIFIED4="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:redhat 9 2.4.20-8"
+        VERIFIED5="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:suse 8.2 2.4.20-4GB"
+        VERIFIED6="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:gentoo 1.4.3.8p1 2.4.20-gentoo-r5"
+        VERIFIED7="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:mandrake 9.1 2.4.21-0.13mdk"
+        VERIFIED8="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:debian 3.0 2.4.16-686"
+        VERIFIED9="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:slackware 9.0.0 2.4.20"
+
         DEFINEOS="LINUX";     STATUS="SUPPORTED"
+
+        DISTRO=`utils/linuxrelease --distro`
+        LINUXRELEASE=`utils/linuxrelease --release`
+
+        NOTE1="Specific release is ${DISTRO} Linux ${LINUXRELEASE}"
+
+        case "${DISTRO}" in
+            redhat)
+              case "${LINUXRELEASE}" in
+                [[89]].0)
+                    echo
+                    echo "*******************************************************************"
+                    echo "*"
+                    echo "* WARNING:    Under RedHat Linux 9.0 (and 8.0 with updated glibc"
+                    echo "*             rpms), there have been reported problems due to"
+                    echo "*             the inclusion of NPTL (new POSIX Thread Library)"
+                    echo "*             including mysterious crashes, broken debug, etc."
+                    echo "*"
+                    echo "*>>> Continuing, but well, y'all been warned..."
+                    echo "*"
+                    echo "*???     1. ntop 2.2.3 (cvs versions after xx-Jul-2003) have all"
+                    echo "*???        the known fixes."
+                    echo "*???  or 2. Before both ./configure AND make, set the following flag:"
+                    echo "*???        export LD_ASSUME_KERNEL=2.4.1"
+                    echo "*???        (This forces the use of the old linuxthreads library)"
+                    echo "*"
+                    echo "*******************************************************************"
+                    echo
+                    HAS_WARNING="yes"
+                  ;;
+              esac
+              ;;
+            mandrake)
+                echo "Setting Mandrake specific flag values"
+                LDFLAGS="${LDFLAGS} -L/usr/X11R6/lib"
+                CPPFLAGS="${CPPFLAGS} -lz -lm"
+                if ! test -f /usr/X11R6/lib/libXpm.so; then
+                    echo
+                    echo "*******************************************************************"
+                    echo "*"
+                    echo "*             -lXpm not found, because the libXpm.so file does not"
+                    echo "*             exist."
+                    echo "*"
+                    echo "*>>> Continuing, but subsequent make may fail"
+                    echo "*"
+                    echo "*???     1. As root, create the link:"
+                    echo "*???        ln -s /usr/X11R6/lib/libXpm.so.4 /usr/X11R6/lib/libXpm.so"
+                    echo "*"
+                    echo "*******************************************************************"
+                    echo
+                    HAS_WARNING="yes"
+                fi
+              ;;
+            suse)
+                echo "Setting SuSE specific flag values"
+                LDFLAGS="${LDFLAGS} -L/usr/X11R6/lib"
+                if ! test -f /usr/X11R6/lib/libXpm.so; then
+                    echo
+                    echo "*******************************************************************"
+                    echo "*"
+                    echo "*             -lXpm not found, because the libXpm.so file does not"
+                    echo "*             exist."
+                    echo "*"
+                    echo "*>>> Continuing, but subsequent make may fail"
+                    echo "*"
+                    echo "*???     1. As root, create the link:"
+                    echo "*???        ln -s /usr/X11R6/lib/libXpm.so.4 /usr/X11R6/lib/libXpm.so"
+                    echo "*"
+                    echo "*******************************************************************"
+                    echo
+                    HAS_WARNING="yes"
+                fi
+                if ! test -f /usr/X11R6/lib/libX11.so; then
+                    echo
+                    echo "*******************************************************************"
+                    echo "*"
+                    echo "*             -lX11 not found, because the libX11.so file does not"
+                    echo "*             exist."
+                    echo "*"
+                    echo "*>>> Continuing, but subsequent make may fail"
+                    echo "*"
+                    echo "*???     1. As root, create the link:"
+                    echo "*???        ln -s /usr/X11R6/lib/libX11.so.6.2 /usr/X11R6/lib/libX11.so"
+                    echo "*"
+                    echo "*******************************************************************"
+                    echo
+                    HAS_WARNING="yes"
+                fi
+              ;;
+            *)
+              ;;
+        esac
       ;;
 
     *-*-solaris2.9*:* )
@@ -750,18 +976,25 @@ case "${target}:${CC}" in
       ;;
 
     *-*-solaris2.8*:* )
-        VERIFIED1="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com:Solaris 8 i86"
-        VERIFIED1="2.2:2003-04-23:Mike Tremaine <mgt@stellarcore.net>:Solaris 8 sparc"
+        VERIFIED1="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com:Solaris 8 i86"
+        VERIFIED2="2.2:2003-04-23:Mike Tremaine <mgt@stellarcore.net>:Solaris 8 sparc"
         NOTE1="Requires various gnu tools from SunFreeware.com"
         NOTE2="--enable-i18n is disabled"
         DEFINEOS="SOLARIS";   STATUS="SUPPORTED"
+
         # Added per Mike
-        LIBS='-lnsl -lsocket ${LIBS}'
+        LDFLAGS="-L/usr/local/lib -lnsl -lsocket -liconv ${LDFLAGS}"
       ;;
 
     *-*-solaris2.5*:* )
         NOTE1="Trying Solaris 2.5 configuration stuff from ntop 2.1."
         DEFINEOS="SOLARIS";   STATUS="UNTESTED"
+        AC_DEFINE_UNQUOTED(CFG_NEED_INET_ATON,
+                           1,
+                           [Solaris 2.5: private implementation of inet_aton])
+        AC_DEFINE_UNQUOTED(CFG_NEED_GETDOMAINNAME,
+                           1,
+                           [OS lacks getdomainname function.])
       ;;
 
     *-*-solaris*:* )
@@ -776,13 +1009,21 @@ case "${target}:${CC}" in
         DEFINEOS="DARWIN";    STATUS="SUPPORTED"
 
         CFLAGS="-no-cpp-precomp $CFLAGS"
+
+        case "${target}" in
+            *-*-darwin5.5* )
+                DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
+              ;;
+        esac
+
       ;;
 
     *-*-freebsd[[45]]*:*gcc* )
         VERIFIED1="2.2:2003-04-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.3-RELEASE"
         VERIFIED2="2.1.90:2003-03-18:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE-p7"
-        VERIFIED1="2.2:2003-04-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.8-RELEASE"
-        VERIFIED1="2.2:2003-04-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-5.0-RELEASE"
+        VERIFIED3="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.8-RELEASE"
+        VERIFIED4="2.2:2003-04-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-5.0-RELEASE"
+        VERIFIED5="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:FreeBSD-5.1-RELEASE"
         DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
         if test ".${LOCALEDIR}" = "."; then
             LOCALEDIR="/usr/share/locale"
@@ -795,6 +1036,7 @@ case "${target}:${CC}" in
 
     *-*-openbsd*:* )
         DEFINEOS="OPENBSD";   STATUS="WILLFAIL"
+        SO_VERSION_PATCH=.0.0
       ;;
 
     *-*-netbsd*1.5*:gcc* )
@@ -818,18 +1060,30 @@ case "${target}:${CC}" in
 
     *-*-hpux11*:gcc* )
         DEFINEOS="HPUX";      STATUS="WILLFAIL"
-        CFLAGS="${CFLAGS}"
+        dnl> plugin load function unique to HPUX
+        AC_CHECK_LIB([dld], [shl_load])
+
+        dnl> thread library
+        dnl> test for their "special" function and library with the non-standard names
+        AC_CHECK_LIB(pthread, __pthread_create_system)
+        AC_CHECK_LIB(posix4, sem_init, , [AC_CHECK_LIB(rt, sem_init)])
       ;;
 
     *-*-hpux10*:gcc* )
         NOTE1="Single Threaded only."
         DEFINEOS="HPUX"
-        CFLAGS="${CFLAGS}"
         if test ".${ac_disable_multithread}" = ".yes"; then
             STATUS="UNTESTED"
         else
             STATUS="WILLFAIL"
         fi
+        dnl> plugin load function unique to HPUX
+        AC_CHECK_LIB([dld], [shl_load])
+
+        dnl> thread library
+        dnl> test for their "special" function and library with the non-standard names
+        AC_CHECK_LIB(pthread, __pthread_create_system)
+        AC_CHECK_LIB(rt, sem_init)
       ;;
 
     *-*-aix5l*:gcc* )
@@ -844,8 +1098,15 @@ case "${target}:${CC}" in
         dnl> These are so pervasive, they MUST be here...
         GCCLIB=`gcc -print-libgcc-file-name`
         cp $GCCLIB .
-        LIBS="-L. -lgcc ${LIBS}"
+        LDFLAGS="-L. -lgcc ${LDFLAGS}"
         CCLD="cc -bI:/lib/pse.exp"
+        AC_DEFINE_UNQUOTED(CFG_NEED_GETDOMAINNAME,
+                           1,
+                           [OS lacks getdomainname function.])
+
+        dnl> plugin load function unique to AIX
+        dnl> TODO (note that c is probably the WRONG library
+        AC_CHECK_LIB([c], [open])
       ;;
 
     *-*-aix4*:* )
@@ -862,21 +1123,10 @@ case "${target}:${CC}" in
       ;;
 esac
 
-CFLAGS="${CFLAGS} -D${DEFINEOS}"
-
-dnl> Last chance default (if there is an os-specific value, set it above)
-if test ".${LOCALEDIR}" = "."; then
-    LOCALEDIR="/usr/lib/locale"
-fi
-
-NTOP_APPEND_INCS([/usr/local/include])
-NTOP_APPEND_LIBS([/usr/local/lib])
-CFLAGS="${CFLAGS} -I/usr/local/include"
-CPPFLAGS="${CPPFLAGS} -I/usr/local/include"
-LDFLAGS="${LDFLAGS} -L/usr/local/include"
-
 dnl> Leave this: it causes showoses to print it's footer
 dnl> showoses TERMS
+
+CPPFLAGS="${CPPFLAGS} -D${DEFINEOS}"
 
 echo
 echo "*******************************************************************"
@@ -986,6 +1236,21 @@ if test ".${VERIFIED1}" != "."; then
     if test ".${VERIFIED4}" != "."; then
         echo $VERIFIED4 | ${ac_cv_prog_AWK} -f utils/verified.awk
     fi
+    if test ".${VERIFIED5}" != "."; then
+        echo $VERIFIED5 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${VERIFIED6}" != "."; then
+        echo $VERIFIED6 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${VERIFIED7}" != "."; then
+        echo $VERIFIED7 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${VERIFIED8}" != "."; then
+        echo $VERIFIED8 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${VERIFIED9}" != "."; then
+        echo $VERIFIED9 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
     if test ".${VNOTES}" != "."; then
         echo "*    ${VNOTES}"
     fi
@@ -1011,145 +1276,12 @@ AC_ARG_ENABLE(test,
               [  --enable-test                Test platform and stop],
               exit 0)
 
-
-if (test ".${PCAP_LIB}" != "." &&   
-   test ! -d ${PCAP_LIB})         ||
-   (test ".${PCAP_INCLUDE}" != "." &&   
-   test ! -d ${PCAP_INCLUDE}); then
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR:    You specified or implied a non-existent directory for"
-    echo "*           libpcap:"
-    echo "*               --with-pcap-lib=${PCAP_LIB}"
-    echo "*               --with-pcap-include=${PCAP_INCLUDE}"
-    echo "*"
-    echo "*>>> Continuing without libpcap is impossible."
-    echo "*"
-    echo "*???     1. Correct the --with-pcap-xxxxx option and rerun"
-    echo "*???        ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    exit 1
-else
-    NTOP_APPEND_LIBS([${PCAP_LIB}], [pcap])
-    NTOP_APPEND_INCS([${PCAP_INCLUDE}])
+dnl>
+dnl> Last chance default (if there is an os-specific value, set it above)
+dnl>
+if test ".${LOCALEDIR}" = "."; then
+    LOCALEDIR="/usr/lib/locale"
 fi
-
-if (test ".${GDBM_LIB}" != "." &&
-   test ! -d ${GDBM_LIB})         ||
-   (test ".${GDBM_INCLUDE}" != "." &&
-   test ! -d ${GDBM_INCLUDE}); then
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR:    You specified or implied a non-existent directory for"
-    echo "*           libgdbm:"
-    echo "*               --with-gdbm-lib=${GDBM_LIB}"
-    echo "*               --with-gdbm-include=${GDBM_INCLUDE}"
-    echo "*"
-    echo "*>>> Continuing without libgdbm is impossible."
-    echo "*"
-    echo "*???     1. Correct the --with-gdbm-xxxxx option and rerun"
-    echo "*???        ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    exit 1
-else
-    NTOP_APPEND_LIBS([${GDBM_LIB}], [gdbm])
-    NTOP_APPEND_INCS([${GDBM_INCLUDE}])
-fi
-
-
-dnl> gdbm
-NTOP_RPT_LOC([GNU gdbm], [${GDBM_LIB}], [${GDBM_INCLUDE}])
-AC_CHECK_LIB([gdbm], [gdbm_open])
-AC_CHECK_HEADERS([gdbm.h])
-AC_MSG_CHECKING([for gdbm])
-if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
-   test ".${ac_cv_lib_gdbm_gdbm_open}" != ".yes"; then
-    AC_MSG_WARN(error)
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR: gdbm header or library routines are missing"
-    echo "*           (yes means it was found, no means it was not found)"
-    echo "*"
-    echo "*              gdbm.h...${ac_cv_header_gdbm_h}"
-    echo "*              gdbm_open() in -lgdbm...${ac_cv_lib_gdbm_gdbm_open}"
-    echo "*"
-    echo "*>>> No way to proceed."
-    echo "*"
-    echo "*???     1. Install libgdbm"
-    echo "*???    and Rerun ./configure"
-    echo "*???  or 2. Use the --with-gdbm-root= option"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    AC_MSG_ERROR(Unable to continue... aborting ./configure)
-else
-    AC_MSG_RESULT(ok)
-fi
-
-dnl> pcap
-NTOP_RPT_LOC([LBL pcap], [${PCAP_LIB}], [${PCAP_INCLUDE}])
-AC_CHECK_LIB([pcap], [pcap_open_live])
-AC_CHECK_LIB([pcap], [pcap_open_dead], AC_DEFINE_UNQUOTED(HAVE_PCAP_OPEN_DEAD, 1, [libpcap has pcap_open_dead]))
-AC_CHECK_HEADERS([pcap.h])
-AC_MSG_CHECKING([for pcap])
-if test ".${ac_cv_header_pcap_h}" != ".yes" ||
-   test ".${ac_cv_lib_pcap_pcap_open_live}" != ".yes"; then
-    AC_MSG_WARN(error)
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* ERROR: pcap header or library routines are missing"
-    echo "*           (yes means it was found, no means it was not found)"
-    echo "*"
-    echo "*              pcap.h...${ac_cv_header_pcap_h}"
-    echo "*              pcap_open_live() in -lpcap...${ac_cv_lib_pcap_pcap_open_live}"
-    echo "*"
-    echo "*>>> No way to proceed."
-    echo "*"
-    echo "*???     1. Install libpcap"
-    echo "*???    and Rerun ./configure"
-    echo "*???  or 2. Use the --with-pcap-root= option"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    AC_MSG_ERROR(Unable to continue... aborting ./configure)
-fi
-
-
-dnl> libpng
-AC_CHECK_HEADERS(png.h)
-AC_CHECK_LIB([png], [main],,AC_MSG_ERROR(libpng not found: check www.libpng.org.))
-
-dnl> gd
-AC_CHECK_HEADERS(gd.h)
-AC_CHECK_LIB([gd], [gdImageDestroy],,AC_MSG_ERROR(libgd not found: check www.boutell.com/gd.))
-
-
-
-echo
-echo "Initializing..."
-echo
-# Checks for programs.
-AC_PROG_CXX
-dnl> AC_PROG_AWK  performed above...
-AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PROG_MAKE_SET
-AC_PROG_RANLIB
-
-AC_PROG_LIBTOOL
-
-dnl> make NTOPDIR the default for the installation
-AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
 
 echo
 echo "Test the compiler and setup CFLAGS..."
@@ -1193,13 +1325,253 @@ AC_C_INLINE
 AC_C_CHAR_UNSIGNED
 AC_C_LONG_DOUBLE  
 
-if test ".${ac_debug}" = ".yes"; then
-    echo "DEBUG: After compiler tests, CFLAGS is '${CFLAGS}'"
-fi
-
 AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(CFG_BIG_ENDIAN, 1, [ntop built for big endian machine])],
                [AC_DEFINE_UNQUOTED(CFG_LITTLE_ENDIAN, 1,  [ntop built for little endian machine])],
                [AC_DEFINE_UNQUOTED(CFG_UNKNOWN_ENDIAN, 1, [ntop built for unknown machine])])
+
+dnl> Presets for the make flags go here...
+CFLAGS="${CFLAGS}"
+CPPFLAGS="${CPPFLAGS}"
+LDFLAGS="${LDFLAGS}"
+
+if test ".${ac_debug}" = ".yes"; then
+    echo "DEBUG: CC            is '${CC}')"
+    echo "     CPPFLAGS        is '${CPPFLAGS}')"
+    echo "       CFLAGS        is '${CFLAGS}')"
+    echo "      LDFLAGS        is '${LDFLAGS}')"
+    echo "         LIBS        is '${LIBS}')"
+    echo "         INCS        is '${INCS}')"
+fi
+
+echo
+echo "Critical library/include tests..."
+echo
+dnl>
+dnl>  Without these, don't even BOTHER testing the parameters...
+dnl>
+dnl>  We also process the ROOT/DIRECTORY entries first so we have reasonable
+dnl>  CPPFLAGS, LDFLAGS and LIBS values for the AC_CHECK_LIBS and AC_CHECK_HEADERS macros.
+dnl>
+
+AC_MSG_CHECKING([for pcap])
+AC_MSG_RESULT([])
+
+if (test ".${PCAP_LIB}" != "."      &&   
+    test ! -d ${PCAP_LIB})              ||
+   (test ".${PCAP_INCLUDE}" != "."  &&
+    test ! -d ${PCAP_INCLUDE}); then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    You specified or implied a non-existent directory for"
+    echo "*           libpcap:"
+    echo "*               --with-pcap-lib=${PCAP_LIB}"
+    echo "*               --with-pcap-include=${PCAP_INCLUDE}"
+    echo "*"
+    echo "*>>> Continuing without libpcap is impossible."
+    echo "*"
+    echo "*???     1. Correct the --with-pcap-xxxxx option and rerun"
+    echo "*???        ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 1
+else
+    NTOP_APPENDS([${PCAP_INCLUDE}], [${PCAP_LIB}], [pcap])
+fi
+
+AC_CHECK_HEADERS([pcap.h])
+AC_CHECK_LIB([pcap], [pcap_open_live])
+AC_CHECK_LIB([pcap], [pcap_open_dead], AC_DEFINE_UNQUOTED(HAVE_PCAP_OPEN_DEAD, 1, [libpcap has pcap_open_dead]))
+
+if test ".${ac_cv_header_pcap_h}" != ".yes" ||
+   test ".${ac_cv_lib_pcap_pcap_open_live}" != ".yes"; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: pcap header or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              pcap.h...${ac_cv_header_pcap_h}"
+    echo "*              pcap_open_live() in -lpcap...${ac_cv_lib_pcap_pcap_open_live}"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???     1. Install libpcap"
+    echo "*???    and Rerun ./configure"
+    echo "*???  or 2. Use the --with-pcap-root= option"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    AC_MSG_ERROR(Unable to continue... aborting ./configure)
+fi
+
+AC_MSG_CHECKING([for gdbm])
+AC_MSG_RESULT([])
+
+if (test ".${GDBM_LIB}" != "."      &&
+    test ! -d ${GDBM_LIB})              ||
+   (test ".${GDBM_INCLUDE}" != "."  &&
+    test ! -d ${GDBM_INCLUDE}); then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    You specified or implied a non-existent directory for"
+    echo "*           libgdbm:"
+    echo "*               --with-gdbm-lib=${GDBM_LIB}"
+    echo "*               --with-gdbm-include=${GDBM_INCLUDE}"
+    echo "*"
+    echo "*>>> Continuing without libgdbm is impossible."
+    echo "*"
+    echo "*???     1. Correct the --with-gdbm-xxxxx option and rerun"
+    echo "*???        ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 1
+else
+    NTOP_APPENDS([${GDBM_INCLUDE}], [${GDBM_LIB}], [gdbm])
+fi
+    
+AC_CHECK_HEADERS([gdbm.h])
+AC_CHECK_LIB([gdbm], [gdbm_open])
+
+if test ".${ac_cv_header_gdbm_h}" != ".yes" ||
+   test ".${ac_cv_lib_gdbm_gdbm_open}" != ".yes"; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: gdbm header or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              gdbm.h...${ac_cv_header_gdbm_h}"
+    echo "*              gdbm_open() in -lgdbm...${ac_cv_lib_gdbm_gdbm_open}"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???     1. Install libgdbm"
+    echo "*???    and Rerun ./configure"
+    echo "*???  or 2. Use the --with-gdbm-xxxxx= options"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    AC_MSG_ERROR(Unable to continue... aborting ./configure)
+fi
+
+dnl> gd
+AC_MSG_CHECKING([for gd])
+AC_MSG_RESULT([])
+
+if (test ".${GD_LIB}" != "."      &&
+    test ! -d ${GD_LIB})              ||
+   (test ".${GD_INCLUDE}" != "."  &&
+    test ! -d ${GD_INCLUDE}); then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    You specified or implied a non-existent directory for"
+    echo "*           gd:"
+    echo "*               --with-gd-lib=${GD_LIB}"
+    echo "*               --with-gd-include=${GD_INCLUDE}"
+    echo "*"
+    echo "*>>> Continuing without gd is impossible."
+    echo "*"
+    echo "*???     1. Correct the --with-gd-xxxxx option and rerun"
+    echo "*???        ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 1
+else
+    NTOP_APPENDS([${GD_INCLUDE}], [${GD_LIB}], [gd])
+fi
+
+AC_CHECK_HEADERS(gd.h)
+AC_CHECK_LIB([gd], [gdImageDestroy])
+
+if test ".${ac_cv_header_gd_h}" != ".yes" ||
+   test ".${ac_cv_lib_gd_gdImageDestroy}" != ".yes"; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: gd header or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              gd.h...${ac_cv_header_gd_h}"
+    echo "*              gdImageDestroy() in -lgd...${ac_cv_lib_gd_gdImageDestroy}"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???        Install gd (and/or gd-devel), check www.boutell.com/gd"
+    echo "*???    and Rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 1
+fi
+
+dnl> libpng
+AC_MSG_CHECKING([for libpng])
+AC_MSG_RESULT([])
+
+if (test ".${LIBPNG_LIB}" != "."      &&
+    test ! -d ${LIBPNG_LIB})              ||
+   (test ".${LIBPNG_INCLUDE}" != "."  &&
+    test ! -d ${LIBPNG_INCLUDE}); then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    You specified or implied a non-existent directory for"
+    echo "*           libpng:"
+    echo "*               --with-libpng-lib=${LIBPNG_LIB}"
+    echo "*               --with-libpng-include=${LIBPNG_INCLUDE}"
+    echo "*"
+    echo "*>>> Continuing without libpng is impossible."
+    echo "*"
+    echo "*???     1. Correct the --with-libpng-xxxxx option and rerun"
+    echo "*???        ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 1
+else
+    NTOP_APPENDS([${LIBPNG_INCLUDE}], [${LIBPNG_LIB}], [png])
+fi
+
+AC_CHECK_HEADERS(png.h)
+AC_CHECK_LIB([png], [png_read_info],,
+    [AC_CHECK_LIB([png], [png_read_info],,, [z m])])
+dnl> 2nd pass, above, is for Mandrake which doesn't automatically include -lz and -lm...
+
+if test ".${ac_cv_header_png_h}" != ".yes" ||
+   test ".${ac_cv_lib_png_png_read_info}" != ".yes"; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: libpng header or library routines are missing"
+    echo "*           (yes means it was found, no means it was not found)"
+    echo "*"
+    echo "*              png.h...${ac_cv_header_png_h}"
+    echo "*              png_read_info() in -lpng...${ac_cv_lib_png_png_read_info}"
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???        Install libpng (and/or libpng-devel), check www.libpng.org"
+    echo "*???    and Rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    exit 1 
+fi
+
+if test ".${ac_debug}" = ".yes"; then
+    echo "DEBUG: CC            is '${CC}')"
+    echo "     CPPFLAGS        is '${CPPFLAGS}')"
+    echo "       CFLAGS        is '${CFLAGS}')"
+    echo "      LDFLAGS        is '${LDFLAGS}')"
+    echo "         LIBS        is '${LIBS}')"
+    echo "         INCS        is '${INCS}')"
+fi
 
 dnl> Define the arguments we accept...
 dnl>
@@ -1414,43 +1786,45 @@ else
     fi
 fi
 
-dnl> Process the simple, critical ROOT/DIRECTORY entries
-dnl> So we can enter into the AC_CHECK_LIB and AC_CHECK_HEADER with a reasonable
-dnl> LIBS and INCS value.
+
+echo
+echo "Processing the rest of the ROOT/DIRECTORY entries"
+echo
+dnl> So we have even more reasonable CPPFLAGS, LDFLAGS and LIBS values for 
+dnl> the AC_CHECK_LIB and AC_CHECK_HEADER macros.
 
 dnl> Openssl
-
 if test ".${ac_disable_openssl}" != ".yes"; then
-    AC_CHECK_HEADERS([openssl/rsa.h openssl/crypto.h openssl/x509.h openssl/pem.h openssl/ssl.h openssl/err.h])
-    AC_CHECK_LIB([crypto], [SSLeay_version])
-    AC_CHECK_LIB([ssl], [SSL_accept])
-
-if test ".${OSSL_LIB}" != "." ||
-   test ".${OSSL_INCLUDE}" != "."; then
-   if test ! -d ${OSSL_LIB} ||
-      test ! -d ${OSSL_INCLUDE}; then
+    if (test ".${OSSL_LIB}" != "."      &&
+        test ! -d ${OSSL_LIB})              ||
+       (test ".${OSSL_INCLUDE}" != "."  &&
+        test ! -d ${OSSL_INCLUDE}); then
         echo
         echo "*******************************************************************"
-        echo "*" 
-        echo "* WARNING:    You specified or implied non-existent directories"
-        echo "*             for openSSL:"
-        echo "*              --with-ossl-lib=${OSSL_LIB}"
-        echo "*              --with-ossl-include=${OSSL_INCLUDE}"
-        echo "*" 
+        echo "*"
+        echo "* ERROR:    You specified or implied a non-existent directory for"
+        echo "*           the openSSL library:"
+        if test ".${OSSL_LIB}" != "."; then
+            echo "*               --with-ossl-lib=${OSSL_LIB}"
+        fi
+        if test ".${OSSL_INCLUDE}" != "."; then
+            echo "*               --with-ossl-include=${OSSL_INCLUDE}"
+        fi
+        echo "*"
         echo "*>>> Continuing without the --with-ossl-xxxxx values"
         echo "*"
-        echo "*        ./configure should complete 'successfully'" 
-        echo "*"
+        echo "*        ./configure should complete 'successfully'"
+        echo "*" 
         echo "*        ntop may find openSSL installed in a standard location."
-        echo "*"
-        echo "*        If not found, ntop will disable code dependent upon openSSL"
-        echo "*        meaning no https:// web server."
+        echo "*" 
+        echo "*        If not found, ntop will disable code dependent upon"
+        echo "*        openSSL meaning no https:// support."
         echo "*"
         echo "*    Read the remaining messages carefully!"
         echo "*"
-        echo "*???     1. Install the openSSL package and rerun ./configure"
-        echo "*??? or  2. Correct the --with-ossl-xxxxx values and rerun"
+        echo "*???     1. Correct the --with-ossl-xxxxx option and rerun"
         echo "*???        ./configure"
+        echo "*??? or  2. Install the openSSL package and rerun ./configure"
         echo "*"
         echo "*******************************************************************"
         echo
@@ -1458,50 +1832,48 @@ if test ".${OSSL_LIB}" != "." ||
         OSSL_INCLUDE=
         HAS_WARNING="yes"
     else
-        NTOP_APPEND_LIBS([${OSSL_LIB}], [ssl])
-        NTOP_APPEND_INCS([${OSSL_INCLUDE}])
-    fi  
-fi  
+        NTOP_APPENDS([${OSSL_INCLUDE}], [${OSSL_LIB}], [gdbm])
+    fi
 fi
 
-if test ".${ZLIB_LIB}" != "." ||
-   test ".${ZLIB_INCLUDE}" != "."; then
-   if test ! -d ${ZLIB_LIB} ||
-      test ! -d ${ZLIB_INCLUDE}; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:    You specified or implied non-existent directories"
-        echo "*             for zlib:"
-        echo "*              --with-zlib-lib=${ZLIB_LIB}"
-        echo "*              --with-zlib-include=${ZLIB_INCLUDE}"
-        echo "*"
-        echo "*>>> Continuing without the --with-zlib-xxxxx values"
-        echo "*" 
-        echo "*        ./configure should complete 'successfully'"
-        echo "*" 
-        echo "*        ntop may find zlib installed in a standard location."
-        echo "*" 
-        echo "*        If not found, ntop will disable code dependent upon zlib"
-        echo "*        meaning no compressed web pages and no gdchart."
-        echo "*"
-        echo "*    Read the remaining messages carefully!"
-        echo "*"
-        echo "*???     1. Download the zlib portion of the ntop source tree,"
-        echo "*???        build zlib and rerun ./configure"
-        echo "*??? or  2. Install the zlib package and rerun ./configure"
-        echo "*??? or  3. Correct the --with-zlib-xxxxx values and rerun"
-        echo "*???        ./configure"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        ZLIB_LIB=
-        ZLIB_INCLUDE=
-        HAS_WARNING="yes"
-    else
-        NTOP_APPEND_LIBS([${ZLIB_LIB}], [z])
-        NTOP_APPEND_INCS([${ZLIB_INCLUDE}])
+if (test ".${ZLIB_LIB}" != "."      &&
+    test ! -d ${ZLIB_LIB})              ||
+   (test ".${ZLIB_INCLUDE}" != "."  &&
+    test ! -d ${ZLIB_INCLUDE}); then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    You specified or implied a non-existent directory for"
+    echo "*           zlib:"
+    if test ".${ZLIB_LIB}" != "."; then
+        echo "*               --with-zlib-lib=${ZLIB_LIB}"
     fi
+    if test ".${ZLIB_INCLUDE}" != "."; then
+        echo "*               --with-zlib-include=${ZLIB_INCLUDE}"
+    fi
+    echo "*"
+    echo "*>>> Continuing without the --with-zlib-xxxxx values"
+    echo "*" 
+    echo "*        ./configure should complete 'successfully'"
+    echo "*" 
+    echo "*        ntop may find zlib installed in a standard location."
+    echo "*" 
+    echo "*        If not found, ntop will disable code dependent upon zlib"
+    echo "*        meaning no compressed web pages or input files."
+    echo "*"
+    echo "*    Read the remaining messages carefully!"
+    echo "*"
+    echo "*???     1. Correct the --with-zlib-xxxxx option and rerun"
+    echo "*???        ./configure"
+    echo "*??? or  2. Install the zlib package and rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    ZLIB_LIB=
+    ZLIB_INCLUDE=
+    HAS_WARNING="yes"
+else
+    NTOP_APPENDS([${ZLIB_INCLUDE}], [${ZLIB_LIB}], [z])
 fi
 
 if test ".${LOCALEDIR}" != "." &&
@@ -1569,24 +1941,24 @@ if test ".${ac_enable_xmldump}" = ".yes"; then
         ac_enable_xmldump="no"
         HAS_WARNING="yes"
     else
-        NTOP_APPEND_LIBS([${XML2_LIB}], [xml2])
-        NTOP_APPEND_LIBS([${GDOME_LIB}], [gdome])
-        NTOP_APPEND_LIBS([${GLIB_LIB}], [glib])
-        NTOP_APPEND_INCS([${XML2_INCLUDE}])
-        NTOP_APPEND_INCS([${GDOME_INCLUDE}])
-        NTOP_APPEND_INCS([${GLIB_INCLUDE}])
+        NTOP_APPENDS([${XML2_INCLUDE}],  [${XML2_LIB}], [xml2])
+        NTOP_APPENDS([${GDOME_INCLUDE}], [${GDOME_LIB}], [gdome])
+        NTOP_APPENDS([${GLIB_INCLUDE}],  [${GLIB_LIB}], [glib])
     fi
 fi
 
-# Force it to use our list of -I values (I know this looks odd, but
-#  the AC_CHECK_HEADER() test doesn't use the INCS list in the
-#  generated gcc command.  This forces it to do so.
-CCSAVE="${CC}"
-CC="${CC} ${INCS}"
-CPPSAVE="${CPP}"
-CPP="${CPP} ${INCS}"
-CXXSAVE="${CXX}"
-CXX="${CXX} ${INCS}"
+if test ".${ac_debug}" = ".yes"; then
+    echo "DEBUG: CC            is '${CC}')"
+    echo "     CPPFLAGS        is '${CPPFLAGS}')"
+    echo "       CFLAGS        is '${CFLAGS}')"
+    echo "      LDFLAGS        is '${LDFLAGS}')"
+    echo "         LIBS        is '${LIBS}')"
+    echo "         INCS        is '${INCS}')"
+fi
+
+echo
+echo "Testing headers and functions..."
+echo
 
 AC_HEADER_STDC
 AC_HEADER_DIRENT
@@ -1618,7 +1990,14 @@ AC_CHECK_HEADERS([netinet/tcp.h])
 AC_CHECK_HEADERS([netinet/udp.h])
 dnl>  Note - if ethertype is missing, ntop.h has the critical #defines extracted...
 AC_CHECK_HEADERS([ethertype.h])
-AC_CHECK_HEADERS([linux/if_pppox.h])
+AC_CHECK_HEADERS([linux/if_pppox.h], [], [], [net/if.h netinet/if_ether.h])
+
+dnl> OpenSSL ... if not disabled...
+if test ".${ac_disable_openssl}" != ".yes"; then
+    AC_CHECK_HEADERS([openssl/rsa.h openssl/crypto.h openssl/x509.h openssl/pem.h openssl/ssl.h openssl/err.h])
+    AC_CHECK_LIB([crypto], [SSLeay_version])
+    AC_CHECK_LIB([ssl], [SSL_accept])
+fi
 
 dnl> Security related
 dnl> Note: on some systems, e.g. FreeBSD, crypt() is defined in unistd.
@@ -1707,9 +2086,12 @@ case "${CC}" in
         echo "*"
         echo "*        Check your --with-xxxxx-xxxxx parameters - if a library (-l)"
         echo "*        is not found in the locations given (-L) it causes these global"
-        echo "*        compile problems. The library list being used is:"
+        echo "*        compile problems. The library list, includes and flags used are:"
         echo "*"
         echo "*        LIBS=${LIBS}"
+        echo "*        INCS=${INCS}"
+        echo "*        CPPFLAGS=${CPPFLAGS}"
+        echo "*        LDFLAGS=${LDFLAGS}"
         echo "*"
         echo "*        The compile error message is:"
         echo "*"
@@ -1842,70 +2224,14 @@ case "${CC}" in
     fi
 esac
 
-echo
-echo " Platform specific:"
-echo "     Tests for libraries, headers, etc."
-echo "     and flags / #define items" 
-echo
-
-dnl> This should mirror the first case on $target $CC (above), 
-dnl> but remember that $CC might have been modified since then..
-
-dnl> Skipping cases is, I guess, ok, but remember that you might have
-dnl> been grabbed by an earlier target, above (e.g. 
-
-case "${target}:${CC}" in
-
-    *-*-solaris2.5*:* )
-        AC_DEFINE_UNQUOTED(CFG_NEED_INET_ATON,
-                           1,
-                           [Solaris 2.5: private implementation of inet_aton])
-        AC_DEFINE_UNQUOTED(CFG_NEED_GETDOMAINNAME,
-                           1,
-                           [OS lacks getdomainname function.])
-      ;;
-
-    *-*-darwin5.5*:* )
-        DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
-      ;;
-
-    *-*-openbsd*:* )
-        SO_VERSION_PATCH=.0.0
-      ;;
-
-    *-*-aix[45]*:gcc* )
-        AC_DEFINE_UNQUOTED(CFG_NEED_GETDOMAINNAME,
-                           1,
-                           [OS lacks getdomainname function.])
-
-        dnl> plugin load function unique to AIX
-        dnl> TODO (note that c is probably the WRONG library
-        AC_CHECK_LIB([c], [open])
-      ;;
-
-    *-*-hpux11*:* )
-        dnl> plugin load function unique to HPUX
-        AC_CHECK_LIB([dld], [shl_load])
-
-        dnl> thread library
-        dnl> test for their "special" function and library with the non-standard names
-        AC_CHECK_LIB(pthread, __pthread_create_system)
-        AC_CHECK_LIB(posix4, sem_init, , [AC_CHECK_LIB(rt, sem_init)])
-      ;;
-
-    *-*-hpux10*:*)
-        dnl> plugin load function unique to HPUX
-        AC_CHECK_LIB([dld], [shl_load])
-
-        dnl> thread library
-        dnl> test for their "special" function and library with the non-standard names
-        AC_CHECK_LIB(pthread, __pthread_create_system)
-        AC_CHECK_LIB(rt, sem_init)
-      ;;
-
-    * )
-      ;;
-esac
+if test ".${ac_debug}" = ".yes"; then
+    echo "DEBUG: CC            is '${CC}')"
+    echo "     CPPFLAGS        is '${CPPFLAGS}')"
+    echo "       CFLAGS        is '${CFLAGS}')"
+    echo "      LDFLAGS        is '${LDFLAGS}')"
+    echo "         LIBS        is '${LIBS}')"
+    echo "         INCS        is '${INCS}')"
+fi
 
 echo
 echo "Now, let's check for problems with what we've found..."
@@ -2167,14 +2493,13 @@ else
     echo "*                  zlib.h...${ac_cv_header_zlib_h}"
     echo "*                  libz.so or libz.a...${ac_cv_lib_z_zlibVersion}"
     echo "*"
-    echo "*>>>    ntop will be built without zlib (and thus without gdchart)"
+    echo "*>>>    ntop will be built without zlib"
     echo "*"
     echo "*???     1. Install the necessary headers and libraries."
     echo "*???    and rerun ./configure"
     echo "*"
     echo "*******************************************************************"
     echo
-    ac_disable_gdchart="yes"
     HAS_WARNING="yes"
 fi
 
@@ -2306,51 +2631,6 @@ echo
 echo "Miscelaneous settings..."
 echo
 
-echo "  Directories:"
-echo "    Default prefix is     ${ac_default_prefix}"
-
-CFG_DATAFILE_DIR=$datadir/ntop
-CFG_DATAFILE_DIR=`(
-    test "x$prefix" = xNONE && prefix=${ac_default_prefix}
-    eval echo "$CFG_DATAFILE_DIR"
-)`
-AC_DEFINE_UNQUOTED(CFG_DATAFILE_DIR,"$CFG_DATAFILE_DIR", [Data file directory])
-echo "    Data files are in     $CFG_DATAFILE_DIR"
-
-CFG_CONFIGFILE_DIR=$sysconfdir/ntop
-CFG_CONFIGFILE_DIR=`(
-    test "x$prefix" = xNONE && prefix=${ac_default_prefix}
-    eval echo "$CFG_CONFIGFILE_DIR"
-)`
-AC_DEFINE_UNQUOTED(CFG_CONFIGFILE_DIR,"$CFG_CONFIGFILE_DIR", [Configuration file directory])
-echo "    Config files are in   $CFG_CONFIGFILE_DIR"
-
-CFG_RUN_DIR=$localstatedir/ntop
-CFG_RUN_DIR=`(
-    test "x$prefix" = xNONE && prefix=${ac_default_prefix}
-    eval echo "$CFG_RUN_DIR"
-)`
-AC_DEFINE_UNQUOTED(CFG_RUN_DIR,"$CFG_RUN_DIR", [Run files directory])
-echo "    Run directory is      $CFG_RUN_DIR"
-
-CFG_PLUGIN_DIR=$libdir/ntop/plugins
-CFG_PLUGIN_DIR=`(
-  test "x$prefix" = xNONE && prefix=${ac_default_prefix}
-  test "x$exec_prefix" = xNONE && exec_prefix=${prefix}
-  eval echo "$CFG_PLUGIN_DIR"
-)`
-AC_DEFINE_UNQUOTED(CFG_PLUGIN_DIR,"$CFG_PLUGIN_DIR", [Plugin installation directory])
-echo "    Plugin files are in   $CFG_PLUGIN_DIR"
-
-CFG_DBFILE_DIR=$localstatedir/ntop
-CFG_DBFILE_DIR=`(
-  test "x$prefix" = xNONE && prefix=${ac_default_prefix}
-  eval echo "$CFG_DBFILE_DIR"
-)`
-AC_DEFINE_UNQUOTED(CFG_DBFILE_DIR,"$CFG_DBFILE_DIR", [Database file directory])
-echo "    Database files are in $CFG_DBFILE_DIR"
-echo
-
 dnl>
 dnl> GNU gcc backtrace?
 dnl>
@@ -2444,13 +2724,6 @@ dnl>
 dnl> Temporary
 dnl>
 AC_DEFINE_UNQUOTED(RETSIGTYPE, void, [temporary definition])
-NTOP_APPEND_LIBS([$MYRRD], [myrrd])
-
-
-dnl> Restore version without INCS stuff
-CC="${CCSAVE}"
-CPP="${CPPSAVE}"
-CXX="${CXXSAVE}"
 
 dnl>
 dnl> Finish up...
@@ -2459,6 +2732,9 @@ if test ".${CCLD}" = "."; then
     CCLD=${CC}
 fi
 
+echo
+echo "-------------------------------------------------------------------"
+echo
 echo "Removing dups and misplaced entries from LIBS and INCS..."
 LIBS=`echo ${LIBS} | ${ac_cv_prog_AWK} '{ \
     for(i=NF; i>0; i--) { \
@@ -2478,10 +2754,91 @@ INCS=`echo ${INCS} | ${ac_cv_prog_AWK} '{ \
     } \
     print "" \
 }'`
-echo
 
-echo "-------------------------------------------------------------------"
+echo
 echo "==================================================================="
+echo
+echo "This is your $PACKAGE $VERSION configuration:"
+echo
+echo "Host System Type        : ${host}"
+if test ".${build_alias}" != .; then
+    echo "                        Note: --build=${build_alias} specified"
+fi
+echo "Preprocessor (cppflags) : ${CPPFLAGS}"
+echo "Compiler (cflags)       : ${CC} ${CFLAGS}"
+echo "Defines                 : ${DEFS}"
+echo "Loader (ldflags)        : ${LDFLAGS}"
+echo "Include path            : ${INCS}"
+echo "System Libs             : ${LIBS}"
+echo "MultiThread mode        : ${multithread_mode}"
+echo "Locale                  : ${LOCALEDIR}"
+echo 
+echo "External packages:"
+echo
+NTOP_RPT_LOC([LBL pcap], [${PCAP_LIB}], [${PCAP_INCLUDE}])
+NTOP_RPT_LOC([GNU gdbm], [${GDBM_LIB}], [${GDBM_INCLUDE}])
+NTOP_RPT_LOC([zlib    ], [${ZLIB_LIB}], [${ZLIB_INCLUDE}])
+NTOP_RPT_LOC([gd      ], [${GD_LIB}],   [${GD_INCLUDE}])
+NTOP_RPT_LOC([png     ], [${PNG_LIB}],  [${PNG_INCLUDE}])
+if test ".${ac_disable_openssl}" != ".yes"; then
+    NTOP_RPT_LOC([openSSL ], [${OSSL_LIB}], [${OSSL_INCLUDE}])
+fi
+if test ".${ac_enable_xmldump}" = ".yes"; then
+  NTOP_RPT_LOC([xml2    ], [${XML2_LIB}],  [${XML2_INCLUDE}])
+  NTOP_RPT_LOC([gdome   ], [${GDOME_LIB}], [${GDOME_INCLUDE}])
+  NTOP_RPT_LOC([gdome   ], [${GLIB_LIB}],  [${GLIB_INCLUDE}])
+  echo "GlibConfig      : ${GLIBCONFIG_DIRECTORY}"
+fi
+
+echo
+echo "Install directories:"
+echo
+echo "    Default prefix: ${ac_default_prefix}"
+echo "    Install into:   ${prefix} (default or via --prefix request)"
+echo 
+
+CFG_DATAFILE_DIR=$datadir/ntop
+CFG_DATAFILE_DIR=`(
+    test "x$prefix" = xNONE && prefix=${ac_default_prefix}
+    eval echo "$CFG_DATAFILE_DIR"
+)`
+AC_DEFINE_UNQUOTED(CFG_DATAFILE_DIR,"$CFG_DATAFILE_DIR", [Data file directory])
+echo "    Data files are in     $CFG_DATAFILE_DIR"
+
+CFG_CONFIGFILE_DIR=$sysconfdir/ntop
+CFG_CONFIGFILE_DIR=`(
+    test "x$prefix" = xNONE && prefix=${ac_default_prefix}
+    eval echo "$CFG_CONFIGFILE_DIR"
+)`
+AC_DEFINE_UNQUOTED(CFG_CONFIGFILE_DIR,"$CFG_CONFIGFILE_DIR", [Configuration file directory])
+echo "    Config files are in   $CFG_CONFIGFILE_DIR"
+
+CFG_RUN_DIR=$localstatedir/ntop
+CFG_RUN_DIR=`(
+    test "x$prefix" = xNONE && prefix=${ac_default_prefix}
+    eval echo "$CFG_RUN_DIR"
+)`
+AC_DEFINE_UNQUOTED(CFG_RUN_DIR,"$CFG_RUN_DIR", [Run files directory])
+echo "    Run directory is      $CFG_RUN_DIR"
+
+CFG_PLUGIN_DIR=$libdir/ntop/plugins
+CFG_PLUGIN_DIR=`(
+  test "x$prefix" = xNONE && prefix=${ac_default_prefix}
+  test "x$exec_prefix" = xNONE && exec_prefix=${prefix}
+  eval echo "$CFG_PLUGIN_DIR"
+)`
+AC_DEFINE_UNQUOTED(CFG_PLUGIN_DIR,"$CFG_PLUGIN_DIR", [Plugin installation directory])
+echo "    Plugin files are in   $CFG_PLUGIN_DIR"
+
+CFG_DBFILE_DIR=$localstatedir/ntop
+CFG_DBFILE_DIR=`(
+  test "x$prefix" = xNONE && prefix=${ac_default_prefix}
+  eval echo "$CFG_DBFILE_DIR"
+)`
+AC_DEFINE_UNQUOTED(CFG_DBFILE_DIR,"$CFG_DBFILE_DIR", [Database file directory])
+echo "    Database files are in $CFG_DBFILE_DIR"
+
+echo
 echo "-------------------------------------------------------------------"
 echo
 echo "Creating files..."
@@ -2518,13 +2875,15 @@ fi
 AC_OUTPUT
 
 echo
-echo "-------------------------------------------------------------------"
-echo
-echo "   Creating version.c..."
+echo "version.c..."
 echo
 /bin/rm -f version.c
 echo $PACKAGE_VERSION $NTOP_VERSION_EXTRA  | sed -e 's/.*/char * version   = "&";/' > version.c
-./config.guess | sed -e 's/.*/char * osName    = "&";/' >> version.c
+osName=`./config.guess`
+if test "x${DEFINEOS}" = "xLINUX"; then 
+    osName="${osName} (${DISTRO} Linux ${LINUXRELEASE})"
+fi
+echo "${osName}" | sed -e 's/.*/char * osName    = "&";/' >> version.c
 echo "char * author    = \"Luca Deri <deri@ntop.org>\";" >> version.c
 date +"%D %r" | sed -e 's/.*/char * buildDate = "&";/' >> version.c
 echo $CONFIGURE_PARAMETERS | sed -e 's/.*/char * configure_parameters   = "&";/' >> version.c
@@ -2537,45 +2896,21 @@ echo ${prefix} | sed -e 's/.*/char * install_path   = "&";/' >> version.c
 echo "/*i18n*/" >>version.c
 echo ${LOCALEDIR} | sed -e 's/.*/char * locale_dir   = "&";/' >> version.c
 
-echo
-echo "-------------------------------------------------------------------"
-
-dnl> MacOSX needs patched versions of some configure-related files
-
 case "${host}" in
     *darwin* )
-	echo "Welcome to OSX"
+        echo
+	echo "Copying patched versions of some configure-related files for Mac OS X"
         cp packages/MacOSX/lt* .
 	rm -f libtool
 	ln -s  /usr/bin/glibtool libtool
+        echo
         ;;
 esac
 
+echo
 echo "==================================================================="
-echo "-------------------------------------------------------------------"
 echo
-echo "(optional) packages are in:"
 echo
-if test ".${ac_disable_openssl}" != ".yes"; then
-    NTOP_RPT_LOC([openSSL ], [${OSSL_LIB}], [${OSSL_INCLUDE}])
-fi
-NTOP_RPT_LOC([zlib    ], [${ZLIB_LIB}], [${ZLIB_INCLUDE}])
-
-echo
-echo "This is your $PACKAGE $VERSION configuration:"
-echo
-echo "Host System Type  : ${host}"
-if test ".${build_alias}" != .; then
-    echo "                        Note: --build=${build_alias} specified"
-fi
-echo "Compiler (cflags) : ${CC} ${CFLAGS}"
-echo "Defines           :     ${DEFS}"
-echo "Loader (ldflags)  : ${LDFLAGS}"
-echo "Include path      : ${INCS}"
-echo "System Libs       : ${LIBS}"
-echo "MultiThread mode  : ${multithread_mode}"
-echo "Install path      : ${prefix}"
-echo 
 echo "*******************************************************************"
 echo "*"
 echo "* NOTE: ./configure is now complete!"
@@ -2595,10 +2930,13 @@ echo "*"
 echo "* NEXT STEP(S):"
 
 case "${target}:${CC}" in
-    *-*-freebsd5*:*gcc* )
-        echo "*"
-        echo "*FreeBSD5: You may encounter a problem building ntop for this OS,"
-        echo "*FreeBSD5: where the following messages are repeated many times:"
+  *-*-freebsd[[45]]*:*gcc* )
+    echo "*"
+    echo "*WARNING: You may encounter a problem building ntop for this OS!"
+    echo "*"
+    case "${target}:${CC}" in
+      *-*-freebsd5*:*gcc* )
+        echo "*FreeBSD5: Where the following messages are repeated many times:"
         echo "*FreeBSD5: "
         echo "*FreeBSD5:    expr: illegal option -- l"
         echo "*FreeBSD5:    usage: expr [-e] expression"
@@ -2608,7 +2946,25 @@ case "${target}:${CC}" in
         echo "*FreeBSD5: set the flag EXPR_COMPAT before typing make."
         echo "*FreeBSD5: "
         echo "*FreeBSD5: (Under bash, \$ export EXPR_COMPAT=Y will suffice.)"
-      ;;
+        echo "*"
+        ;;
+    esac
+    echo "*FreeBSD4,5: Do not use the -j option (e.g. make -j2) to try to make "
+    echo "*FreeBSD4,5: ntop in parallel."
+    echo "*FreeBSD4,5: "
+    echo "*FreeBSD4,5: Although the plugins/Makefile contains the .NOTPARALLEL tag"
+    echo "*FreeBSD4,5: it seems that it's not respected.  If you make in parallel,"
+    echo "*FreeBSD4,5: you will see the following errors:"
+    echo "*FreeBSD4,5: "
+    echo "*FreeBSD4,5:      Making all in plugins"
+    echo "*FreeBSD4,5:      Making all in ."
+    echo "*FreeBSD4,5:      gcc -bundle -flat_namespace -undefined suppress -o .libs/libicmpPlugin.so icmpPlugin.o"
+    echo "*FreeBSD4,5:      gcc: suppress: No such file or directory"
+    echo "*FreeBSD4,5: "
+    echo "*FreeBSD4,5:      etc."
+    echo "*FreeBSD4,5: "
+    echo "*"
+    ;;
 esac
 
 if test ".${HAS_ERROR}" = ".yes"; then

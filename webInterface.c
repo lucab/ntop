@@ -2265,22 +2265,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "__PROTOTYPES",
-#ifdef __PROTOTYPES
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "PROTOTYPES",
-#ifdef PROTOTYPES
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "SETVBUF_REVERSED",
 #ifdef SETVBUF_REVERSED
                          "yes"

@@ -63,54 +63,46 @@ fi
 ])
 
 dnl>
-dnl>  Append a value to $LIBS -- allows us to encapsulate functionality
-dnl>           for those OSes which DO NOT check subdirectories
-dnl>     And to strip dups.
+dnl>  Appends values to $CPPFLAGS, $LDFLAGS and $LIBS
+dnl>         Also: Allows us to automate for those OSes which DO NOT check subdirectories.
+dnl>               Allows us to strip dups.
 dnl>
 
-# NTOP_APPEND_LIBS(Lvalue, lvalue)
+# NTOP_APPENDS(Ivalue, Lvalue, lvalue)
 # ----------------------------------------------
-AC_DEFUN([NTOP_APPEND_LIBS],  
+AC_DEFUN([NTOP_APPENDS],
 [dnl
-# Expansion of NTOP_APPEND_LIBS($1, $2)
+# Expansion of NTOP_APPENDS($1, $2, $3)
     if test ".$1" != "."; then
-        rc=`(echo $LIBS | grep '$1 ' > /dev/null 2> /dev/null; echo $?)`
-        if [[ $rc -eq 1 ]]; then 
-            case "${DEFINEOS}" in
-              DARWIN )
-                LIBS="$LIBS -L$1 -L$1/lib"
-                ;;
-              * )
-                LIBS="$LIBS -L$1"
-                ;;
-            esac
+        rc=`(echo $CPPFLAGS | grep '$1 ' > /dev/null 2> /dev/null; echo $?)`
+        if [[ $rc -eq 1 ]]; then
+           CPPFLAGS="$CPPFLAGS -I$1"
         fi
-        if test ".$2" != "."; then
-            rc=`(echo $LIBS | grep '\-l$2 ' > /dev/null 2> /dev/null; echo $?)`
-            if [[ $rc -eq 1 ]]; then 
-                LIBS="$LIBS -l$2"
-            fi
-        fi
-    fi
-# Finished expansion of NTOP_APPEND_LIBS()
-])
-
-dnl>
-dnl>  Append a value to $INCS -- allows us to strip dups
-dnl>
-
-# NTOP_APPEND_INCS(Ivalue)
-# ----------------------------------------------
-AC_DEFUN([NTOP_APPEND_INCS],
-[dnl
-# Expansion of NTOP_APPEND_INCS($1)
-    if test ".$1" != "."; then
         rc=`(echo $INCS | grep '$1' > /dev/null 2> /dev/null; echo $?)`
         if [[ $rc -eq 1 ]]; then
             INCS="$INCS -I$1"
         fi
     fi
-# Finished expansion of NTOP_APPEND_INCS()
+    if test ".$2" != "."; then
+        rc=`(echo $LDFLAGS | grep '$2 ' > /dev/null 2> /dev/null; echo $?)`
+        if [[ $rc -eq 1 ]]; then
+            case "${DEFINEOS}" in
+              DARWIN )
+                LDFLAGS="$LDFLAGS -L$2 -L$2/lib"
+                ;;
+              * )
+                LDFLAGS="$LDFLAGS -L$2"
+                ;;
+            esac
+        fi
+    fi
+    if test ".$3" != "."; then
+        rc=`(echo $LIBS | grep '\-l$3 ' > /dev/null 2> /dev/null; echo $?)`
+        if [[ $rc -eq 1 ]]; then
+            LIBS="$LIBS -l$3"
+        fi
+    fi
+# Finished expansion of NTOP_APPENDS()
 ])
 
 dnl>
@@ -122,15 +114,15 @@ dnl>
 AC_DEFUN([NTOP_RPT_LOC],
 [dnl
 # Expansion of NTOP_RPT_LOC($1 $2 $3)
-if test ".$2" = "."; then
-    echo "$1 library      : standard system libraries"
-else
-    echo "$1 library      : $2"
-fi
 if test ".$3" = "."; then
-    echo "$1 .h           : standard system headers"
+    echo "$1 .h             : standard system headers"
 else
-    echo "$1 .h           : $3"
+    echo "$1 .h             : $3"
+fi
+if test ".$2" = "."; then
+    echo "$1 library        : standard system libraries"
+else
+    echo "$1 library        : $2"
 fi
 # Finished expansion of NTOP_RPT_LOC()
 ])
@@ -140,9 +132,6 @@ fi
 AC_DEFUN([NTOP_SET_LIBINC],
 [dnl
 # Expansion of NTOP_SET_LIBINC($1)
-if test ".${ac_debug}" = ".yes"; then
-    echo "    $1: ${$1_DIRECTORY}, ${$1_LIB}, ${$1_INCLUDE}"
-fi
 if test ".${$1_DIRECTORY}" != "."; then
     if test ".${$1_LIB}" = "."; then
         if test -d ${$1_DIRECTORY}/lib; then
@@ -159,10 +148,34 @@ if test ".${$1_DIRECTORY}" != "."; then
         fi
     fi
 fi
-if test ".${ac_debug}" = ".yes"; then
-    echo "->  $1: ${$1_DIRECTORY}, ${$1_LIB}, ${$1_INCLUDE}"
-fi
 # Finished expansion of NTOP_SET_LIBINC()
+])
+
+# NTOP_SUGGESTION(item, version)
+# ----------------------------------------------
+AC_DEFUN([NTOP_SUGGESTION],
+[dnl
+# Expansion of NTOP_SUGGESTION($1, $2, $3)
+    echo "*???    Suggestion - Install a private copy of $1 $2."
+    echo "*???                 It's quite easy and does NOT require root:"
+    echo "*"
+    echo "*   Download $1 $2 from gnu"
+    echo "*     \$ wget http://ftp.gnu.org/gnu/$1/$1-$2.tar.gz"
+    echo "*"
+    echo "*   Untar it"
+    echo "*     \$ tar xfvz $1-$2.tar.gz"
+    echo "*"
+    echo "*   Make it"
+    echo "*     \$ cd $1-$2"
+    echo "*     \$ ./configure --prefix=/home/<whatever>/$1$3"
+    echo "*     \$ make"
+    echo "*     \$ make install"
+    echo "*"
+    echo "*   Add it to your path.  Under bash do this:"
+    echo "*     \$ PATH=/home/<whatever>/$1$3/bin:\$PATH"
+    echo "*     \$ export PATH"
+    echo "*"
+# Finished expansion of NTOP_SUGGESTION()
 ])
 
 # serial 40 AC_PROG_LIBTOOL
