@@ -1384,13 +1384,14 @@ if test ".$ac_disable_openssl" = ".no"; then
  
 dnl> Test order as follow
 dnl>
-dnl>     user defined openssl development tree
+dnl>     Where the user tells us to check
+dnl>         we test the specific directory, then (if necessary)
+dnl>                       .../lib and .../include, then (if necessary)
+dnl>                       .../lib and .../include/openssl
 dnl> OR:
-dnl>     standard installation in /usr/lib and /usr/include 
-dnl>     semi-standard installation in /usr/lib/ssl and /usr/include/ssl
-dnl>     semi-standard installation in /usr/lib/openssl and /usr/include/openssl
-dnl>     default package installation in /usr/local/lib and /usr/local/include
-dnl>     openssl development tree under the same ntop's root source directory or in a subdir
+dnl>     standard installation in /usr/lib and /usr/include
+dnl>     Various semi-standard installations in /usr, /usr/local, with and without openssl or ssl
+dnl>     Last: openssl development under the same root (i.e. in parallel with ntop and gdchart)
 
   if test  ".${OSSL_ROOT}" != .; then
       ntop_testopenssl(${OSSL_ROOT}, ${OSSL_ROOT})
@@ -1416,82 +1417,17 @@ dnl>     openssl development tree under the same ntop's root source directory or
           ntop_testopenssl("/usr/local/lib/ssl", "/usr/local/include/ssl")
       fi
       if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("/usr/local/lib/ssl", "/usr/local/include/ssl")
+          ntop_testopenssl("/usr/local/lib/openssl", "/usr/local/include/openssl")
       fi
       if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("/usr/local/lib/ssl", "/usr/local/include/ssl")
+          ntop_testopenssl("/usr/local/lib", "/usr/local/include/openssl")
+      fi
+      if test ".$ac_cv_has_openssl" = ".no"; then
+          ntop_testopenssl("/usr/local/lib", "/usr/local/include")
       fi
 
       if test ".$ac_cv_has_openssl" = ".no"; then
           ntop_testopenssl("../openssl", "../openssl")
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.7b", "../openssl-0.9.7b/ssl")
-          if test ".$ac_cv_has_openssl" = ".yes"; then
-              AC_MSG_WARN([ ntop has not been tested with openssl-0.9.7b])
-              AC_MSG_RESULT([          this was unreleased as of 2.1's release date])
-              AC_MSG_RESULT([          (but we'll give it a try anyway])
-          fi
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.7a", "../openssl-0.9.7a/ssl")
-          if test ".$ac_cv_has_openssl" = ".yes"; then
-              AC_MSG_WARN([ ntop has not been tested with openssl-0.9.7a])
-              AC_MSG_RESULT([          this was unreleased as of 2.1's release date])
-              AC_MSG_RESULT([          (but we'll give it a try anyway])
-          fi
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.7", "../openssl-0.9.7/ssl")
-          if test ".$ac_cv_has_openssl" = ".yes"; then
-              AC_MSG_WARN([ ntop has not been tested with openssl-0.9.7a])
-              AC_MSG_RESULT([          this was beta as of 2.1's release date])
-              AC_MSG_RESULT([          (but we'll give it a try anyway])
-          fi
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.6h", "../openssl-0.9.6h/ssl")
-          if test ".$ac_cv_has_openssl" = ".yes"; then
-              AC_MSG_WARN([ ntop has not been tested with openssl-0.9.6h])
-              AC_MSG_RESULT([          this didn't exist])
-              AC_MSG_RESULT([          (but we'll give it a try anyway])
-          fi
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.6g", "../openssl-0.9.6g/ssl")
-          if test ".$ac_cv_has_openssl" = ".yes"; then
-              AC_MSG_WARN([ ntop has not been tested with openssl-0.9.6g])
-              AC_MSG_RESULT([          (but we'll give it a try anyway])
-          fi
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.6f", "../openssl-0.9.6f/ssl")
-          if test ".$ac_cv_has_openssl" = ".yes"; then
-              AC_MSG_WARN([ ntop has not been tested with openssl-0.9.6f])
-              AC_MSG_RESULT([          (but we'll give it a try anyway])
-          fi
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.6e", "../openssl-0.9.6e/ssl")
-          if test ".$ac_cv_has_openssl" = ".yes"; then
-              AC_MSG_WARN([ ntop has not been tested with openssl-0.9.6e])
-              AC_MSG_RESULT([          (but we'll give it a try anyway])
-          fi
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.6d", "../openssl-0.9.6d/ssl")
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.6c", "../openssl-0.9.6c/ssl")
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.6b", "../openssl-0.9.6b/ssl")
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.6a", "../openssl-0.9.6a/ssl")
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl-0.9.6", "../openssl-0.9.6/ssl")
       fi
   fi
   if test ".$ac_cv_has_openssl" = ".no"; then
