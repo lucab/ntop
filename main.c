@@ -683,6 +683,8 @@ static int parseOptions(int argc, char* argv []) {
     }
   }
 
+  /* *********************** */
+
   if(setAdminPw) {
     initGdbm(NULL);
     initThreads();
@@ -712,6 +714,8 @@ static int parseOptions(int argc, char* argv []) {
 
 /* ************************************ */
 
+#define MAX_NUM_OPTIONS 64
+
 /* That's the meat */
 #ifdef WIN32
 int ntop_main(int argc, char *argv[]) {
@@ -728,6 +732,8 @@ int main(int argc, char *argv[]) {
   char *startedAs, *cmdLineBuffer, *readBuffer, *readBufferWork;
   FILE *fd;
   struct stat fileStat;
+  int _argc;
+  char *_argv[MAX_NUM_OPTIONS];
 
   memset(&myGlobals, 0, sizeof(myGlobals));
 
@@ -746,6 +752,25 @@ int main(int argc, char *argv[]) {
 #ifdef MEMORY_DEBUG
   initLeaks(); /* Don't move this below nor above */
 #endif
+
+  /* *********************** */
+  
+  if((argc == 2) && (argv[1][0] != '-')) {
+    /* Options specified on a configuration file */
+    FILE *fd = fopen(argv[optind], "r");
+
+    if(fd != NULL) {
+
+
+    } else {
+      printf("FATAL ERROR: unable to open configuration file '%s'\n", argv[optind]);
+      exit(-1);
+    }
+  }
+
+
+  /* *********************** */
+
 
   bufLen = 0;
   for (i=0; i<argc; i++) {

@@ -991,7 +991,7 @@ void initDevices(char* devices) {
   NtopInterface *tmpDevice;
   char *tmpDev;
 #ifdef WIN32
-  char *ifName, intNames[32][256], intDescr[32][256], *tmpDescr;
+  char *ifName, intNames[32][256], intDescr[32][256], *tmpDescr=NULL;
   int ifIdx = 0;
   int defaultIdx = -1;
 #endif
@@ -1084,7 +1084,7 @@ void initDevices(char* devices) {
       openParent = strstr(tmpDescr, "(");
       if(openParent != NULL) openParent[0] = '\0';
       if((defaultIdx == -1) && strstr(tmpDescr, "NdisWan")) continue; /* Skip Interface */
-      if(tmpDescr[strlen(tmpDescr)-1] == ' ') tmpDescr[strlen(tmpDescr)-1] = '\0';
+      while(tmpDescr[strlen(tmpDescr)-1] == ' ') tmpDescr[strlen(tmpDescr)-1] = '\0';
       strcpy(intDescr[ifIdx], tmpDescr);
       strcpy(intNames[ifIdx++], tmpString);
       
@@ -1119,16 +1119,6 @@ void initDevices(char* devices) {
     myGlobals.device[0].name = strdup(tmpDev);
     myGlobals.numDevices = 1;
   } else {
-#if 0 /* WIN32 */
-    u_int selectedDevice = atoi(myGlobals.devices);
-
-    if(selectedDevice < ifIdx) {
-      tmpDev = intNames[selectedDevice];
-    } else {
-      traceEvent(CONST_TRACE_FATALERROR, "Device index out of range [0..%d]", ifIdx);
-      exit(-1);
-    }
-#endif
     char *strtokState;
 
     workDevices = strdup(devices);
@@ -1299,6 +1289,16 @@ void initLibpcap(void) {
 	Courtesy of: Nicolai Petri <Nicolai@atomic.dk>
       */
       if((!myGlobals.device[i].virtualDevice) && (column == NULL)) {
+#ifdef WIN32
+		  NetType adapter;
+
+			LPADAPTER a = PacketOpenAdapter((LPTSTR)myGlobals.device[i].name);
+			if(PacketGetNetType (a,&adapter)) {
+				myGlobals.device[i].deviceSpeed = adapter.LinkSpeed;
+			} else
+			PacketCloseAdapter((LPTSTR)myGlobals.device[i].name);
+#endif
+
 	myGlobals.device[i].pcapPtr =
 	  pcap_open_live(myGlobals.device[i].name,
 			 myGlobals.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN, 

@@ -631,6 +631,7 @@ typedef struct ntopInterface {
   char virtualDevice;            /* set to 1 for virtual devices (e.g. eth0:1) */
   char activeDevice;             /* Is the interface active (useful for virtual interfaces) */
   char dummyDevice;              /* set to 1 for 'artificial' devices (e.g. sFlow-device) */
+  u_int32_t deviceSpeed;         /* Device speed (0 if speed is unknown) */
   int snaplen;                   /* maximum # of bytes to capture foreach pkt */
                                  /* read timeout in milliseconds */
   int datalink;                  /* data-link encapsulation type (see DLT_* in net/bph.h) */

@@ -23,6 +23,8 @@
 #include <direct.h>
 
 #if defined(WIN32)
+#include "Packet32.h"
+
 #if defined(__GNUC__)
 /* on mingw, the definitions we need are in pcap.h - Scott Renfro <scott@renfro.org> */
 #include "pcap.h"

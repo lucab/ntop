@@ -101,6 +101,7 @@ extern void addDefaultAdminUser(void);
 /* dataFormat.c */
 extern char* formatKBytes(float numKBytes);
 extern char* formatBytes(Counter numBytes, short encodeString);
+extern char* formatAdapterSpeed(Counter numBits);
 extern char* formatLatency(struct timeval tv, u_short sessionState);
 extern char* formatSeconds(unsigned long sec);
 extern char* formatMicroSeconds(unsigned long microsec);

@@ -103,6 +103,44 @@ char* formatBytes(Counter numBytes, short encodeString) {
 
 /* ******************************* */
 
+char* formatAdapterSpeed(Counter numBits) {
+  static char outStr[LEN_DATAFORMAT_BUFFER][32];
+  static short bufIdx=0;
+
+  bufIdx = (bufIdx+1)%LEN_DATAFORMAT_BUFFER;
+
+  if(numBits == 0) {
+    return("0"); /* return("&nbsp;"); */
+  } else if(numBits < 1000) {
+    if(snprintf(outStr[bufIdx], 32, "%lu", (unsigned long)numBits) < 0) 
+     BufferTooShort();
+  } else if(numBits < 1000000) {
+    if(snprintf(outStr[bufIdx], 32, "%.1f Kb", (float)(numBits)/1000) < 0) 
+     BufferTooShort();
+  } else {
+    float tmpMBytes = ((float)numBits)/1000000;
+
+    if(tmpMBytes < 1000) {
+      if(snprintf(outStr[bufIdx], 32, "%.1f Mb", tmpMBytes) < 0) 
+	BufferTooShort();
+    } else {
+      tmpMBytes /= 1000;
+
+      if(tmpMBytes < 1000) {
+	if(snprintf(outStr[bufIdx], 32, "%.1f Gb", tmpMBytes) < 0) 
+	 BufferTooShort();
+      } else {
+	if(snprintf(outStr[bufIdx], 32, "%.1f Tb", ((float)(tmpMBytes)/1000)) < 0)
+	 BufferTooShort();
+      }
+    }
+  }
+
+  return(outStr[bufIdx]);
+}
+
+/* ******************************* */
+
 char* formatSeconds(unsigned long sec) {
   static char outStr[5][32];
   static short bufIdx=0;

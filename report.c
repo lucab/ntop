@@ -135,7 +135,7 @@ void printTrafficStatistics() {
 	     "<TD "TD_BG" ALIGN=RIGHT>");
   
   sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR "TR_ON"><TH "TH_BG">Name</TH>"
-	     "<TH "TH_BG">Device</TH><TH "TH_BG">Type</TH><TH "TH_BG">MTU</TH><TH "TH_BG">Header</TH><TH "TH_BG">Address</TH></TR>\n");
+	     "<TH "TH_BG">Device</TH><TH "TH_BG">Type</TH><TH "TH_BG">Speed</TH><TH "TH_BG">MTU</TH><TH "TH_BG">Header</TH><TH "TH_BG">Address</TH></TR>\n");
 
   if(myGlobals.rFileName == NULL) {
     for(i=0; i<myGlobals.numDevices; i++) {
@@ -156,6 +156,14 @@ void printTrafficStatistics() {
 	  BufferTooShort();
 	sendString(buf);
 	
+	sendString("<TD "TD_BG" ALIGN=RIGHT nowrap>&nbsp;");
+	if(myGlobals.device[i].deviceSpeed > 0) {
+		/* The speed is known */
+		sendString(formatAdapterSpeed(myGlobals.device[i].deviceSpeed));
+	} else
+		sendString("&nbsp;");
+	sendString("</TD>");
+
 	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d</TD>", myGlobals.mtuSize[myGlobals.device[i].datalink]) < 0)
 	  BufferTooShort();
 	sendString(buf);
