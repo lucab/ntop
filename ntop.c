@@ -781,6 +781,9 @@ RETSIGTYPE cleanup(int signo) {
    if(device[actualDeviceId].pcapDumper != NULL) 
      pcap_dump_close(device[actualDeviceId].pcapDumper);
 
+   if(device[actualDeviceId].pcapErrDumper != NULL) 
+     pcap_dump_close(device[actualDeviceId].pcapErrDumper);
+
   termIPServices();
   termIPSessions();
   

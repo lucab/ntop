@@ -59,7 +59,10 @@
 
  #include "ntop.h"
 
- static int numNapsterSvr = 0,napsterSvrInsertIdx = 0;
+static int numNapsterSvr = 0,napsterSvrInsertIdx = 0;
+static const struct pcap_pkthdr *h_save;
+static const u_char *p_save;
+
 
 
  /* ************************************ */
@@ -1749,6 +1752,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);
+	    dumpSuspiciousPacket();
 	  }
 
 	  free(rcStr);
@@ -1824,37 +1828,43 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  if((dport != 80)
 	     && (dport != 3000  /* ntop  */)
 	     && (dport != 3128  /* squid */)
-	     && isInitialHttpData(rcStr))
+	     && isInitialHttpData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: HTTP detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);
-	  else if((sport != 21) && (sport != 25)
-		  && isInitialFtpData(rcStr))
+	    dumpSuspiciousPacket();
+	  } else if((sport != 21) && (sport != 25)
+		    && isInitialFtpData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: FTP/SMTP detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	  else if(((sport == 21) || (sport == 25) )&& (!isInitialFtpData(rcStr)))
+	    dumpSuspiciousPacket();
+	  } else if(((sport == 21) || (sport == 25) )&& (!isInitialFtpData(rcStr))) {
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP/SMTP) detected (trojan?) "
 		       "at port %d %s:%d -> %s:%d [%s]\n", sport,
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	  else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr))
+	    dumpSuspiciousPacket();
+	  } else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: SSH detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	  else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr)))
+	    dumpSuspiciousPacket();
+	  } else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr))) {
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no SSH) detected (trojan?) "
 		       "at port 22 %s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
+	    dumpSuspiciousPacket();
+	  }
 	} else if(theSession->bytesProtoRcvd == 0) {
 	  /* Uncomment when necessary
 	    memset(rcStr, 0, sizeof(rcStr));
@@ -2179,6 +2189,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
+	dumpSuspiciousPacket();
       }
       /* Connection terminated */
       incrementUsageCounter(&srcHost->securityHostPkts.rstPktsSent, dstHostIdx);
@@ -2212,6 +2223,7 @@ static void handleSession(const struct pcap_pkthdr *h,
        && (sport == dport) && (tp->th_flags == TH_SYN)) {
       traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
 		 srcHost->hostSymIpAddress, sport);
+      dumpSuspiciousPacket();
     }
 
     if(((theSession->initiatorIdx == srcHostIdx) 
@@ -2234,9 +2246,10 @@ static void handleSession(const struct pcap_pkthdr *h,
 	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnSent, srcHostIdx);
 	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx);
 
-	traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
+	traceEvent(TRACE_WARNING, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
+	dumpSuspiciousPacket();
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && (theSession->lastRemote2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
 		|| ((theSession->initiatorIdx == dstHostIdx)
@@ -2247,6 +2260,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
+	dumpSuspiciousPacket();
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
 		|| ((theSession->initiatorIdx == dstHostIdx)
@@ -2257,6 +2271,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
+	dumpSuspiciousPacket();
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && (theSession->lastRemote2InitiatorFlags[0] == 0)
 		 && (theSession->bytesReceived > 0))
@@ -2269,6 +2284,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
+	dumpSuspiciousPacket();
       }
     }
 
@@ -3022,13 +3038,15 @@ void updateHostName(HostTraffic *el) {
 	Use NetBIOS name (when available) if the
 	IP address has not been resolved.
       */
+      memset(el->hostSymIpAddress, 0, sizeof(el->hostSymIpAddress));
       strcpy(el->hostSymIpAddress, el->nbHostName);
+      
     } else if(el->ipxHostName != NULL)
       strcpy(el->hostSymIpAddress, el->ipxHostName);
     else if(el->atNodeName != NULL)
       strcpy(el->hostSymIpAddress, el->atNodeName);
 
-    if(el->hostSymIpAddress != NULL)
+    if(el->hostSymIpAddress[0] != '\0')
       for(i=0; el->hostSymIpAddress[i] != '\0'; i++)
 	el->hostSymIpAddress[i] = (char)tolower(el->hostSymIpAddress[i]);
   }
@@ -3477,6 +3495,8 @@ static void processIpPkt(const u_char *bp,
       } else if((sport == 7) || (dport == 7) /* echo */) {
 	char *fmt = "WARNING: host [%s] sent a UDP packet to host [%s:echo] (network mapping attempt?)";
 
+	dumpSuspiciousPacket();
+
 	if(dport == 7) {
 	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortSent, dstHostIdx);
 	  incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortRcvd, srcHostIdx);
@@ -3600,28 +3620,31 @@ static void processIpPkt(const u_char *bp,
       dport = ntohs(dport);
       switch (oip->ip_p) {
       case IPPROTO_TCP:
-	traceEvent(TRACE_INFO,
+	traceEvent(TRACE_WARNING,
 		   "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
 		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	/* Simulation of rejected TCP connection */
 	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnSent, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnRcvd, srcHostIdx);
+	dumpSuspiciousPacket();
 	break;
 
       case IPPROTO_UDP:
-	traceEvent(TRACE_INFO,
+	traceEvent(TRACE_WARNING,
 		   "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
 		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx);
 	incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx);
+	dumpSuspiciousPacket();
 	break;
       }
     } else if((icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */)
 	      && (icmpPkt.icmp_code == ICMP_UNREACH_FILTER_PROHIB /* Administratively Prohibited */))
-      traceEvent(TRACE_INFO, /* See http://www.packetfactory.net/firewalk/ */
+      traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
 		 "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
 		 " (Firewalking scan attempt?)",
 		 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
+    dumpSuspiciousPacket();
     break;
 
   case IPPROTO_OSPF:
@@ -3931,6 +3954,13 @@ static void updateDevicePacketStats(u_int length) {
 
 /* ***************************************************** */
 
+void dumpSuspiciousPacket() {
+  if(device[actualDeviceId].pcapErrDumper != NULL) 
+    pcap_dump((u_char*)device[actualDeviceId].pcapErrDumper, h_save, p_save);
+}
+
+/* ***************************************************** */
+
 /*
  * This is the top level routine of the printer.  'p' is the points
  * to the ether header of the packet, 'tvp' is the timestamp,
@@ -3963,6 +3993,8 @@ void processPacket(u_char *_deviceId,
   if(!capturePackets)
     return;
 
+  h_save = h, p_save = p;
+
   if(rFileName != NULL) {
     traceEvent(TRACE_INFO, ".");
     fflush(stdout);
@@ -3994,6 +4026,7 @@ void processPacket(u_char *_deviceId,
 	       (unsigned long)length,
 	       device[actualDeviceId].name, deviceId);
 #endif
+    dumpSuspiciousPacket();
     /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
     length = mtuSize[device[deviceId].datalink];
     device[actualDeviceId].rcvdPktStats.tooLong++;

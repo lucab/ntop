@@ -315,6 +315,7 @@ extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h,
                         const u_char *p);
 extern void cleanupPacketQueue(void);
 extern void *dequeuePacket(void* notUsed);
+extern void dumpSuspiciousPacket();
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
 extern void updateOSName(HostTraffic *el);

@@ -730,6 +730,7 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
     for(i=0; i<numDevices; i++) {
       /* Fire up libpcap for each specified device */
+      char myName[80];
 
       /* Support for virtual devices */
       char *column = strchr(device[i].name, ':');
@@ -751,7 +752,11 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
 	
 	if(pcapLog != NULL) {
-	  device[i].pcapDumper = pcap_dump_open(device[i].pcapPtr, pcapLog);
+	  if(strlen(pcapLog) > 64)
+	    pcapLog[64] = '\0';
+
+	  sprintf(myName, "%s.%s.pcap", pcapLog, device[i].name);	  
+	  device[i].pcapDumper = pcap_dump_open(device[i].pcapPtr, myName);
 
 	  if(device[i].pcapDumper == NULL) {
 	    traceEvent(TRACE_INFO, ebuf);
@@ -759,6 +764,11 @@ void initLibpcap(char* rulesFile, int numDevices) {
 	  }
 	}
 	
+	sprintf(myName, "ntop-suspicious-pkts.%s.pcap", device[i].name);	  
+	device[i].pcapErrDumper = pcap_dump_open(device[i].pcapPtr, myName);
+	
+	if(device[i].pcapErrDumper == NULL)
+	  traceEvent(TRACE_INFO, ebuf);
       } else {
 	column[0] = 0;
 	device[i].virtualDevice = 1;
