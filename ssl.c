@@ -39,7 +39,7 @@ void ntop_ssl_error_report(char * whyMe) {
     es=CRYPTO_thread_id();
     while ((l=ERR_get_error_line_data(&file,&line,&data,&flags)) != 0) {
         ERR_error_string_n(l, buf, sizeof buf);
-        traceEvent(TRACE_ERROR, "SSL(%s)ERROR [Thread %lu]: %s at %s(%d) %s\n",
+        traceEvent(CONST_TRACE_ERROR, "SSL(%s)ERROR [Thread %lu]: %s at %s(%d) %s\n",
                                 whyMe,
                                 es,
                                 buf,
@@ -65,10 +65,10 @@ int init_ssl(void) {
 
   memset(myGlobals.ssl, 0, sizeof(myGlobals.ssl));
 
-  traceEvent(TRACE_INFO, "Initializing SSL...");
+  traceEvent(CONST_TRACE_INFO, "Initializing SSL...");
 
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
-    if(snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[idx], CERTF) < 0)
+    if(snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[idx], CONST_SSL_CERTF_FILENAME) < 0)
       BufferTooShort();
 
 #ifdef WIN32
@@ -83,9 +83,9 @@ int init_ssl(void) {
   }
 
   if(fd == NULL) {
-    traceEvent(TRACE_ERROR,
+    traceEvent(CONST_TRACE_ERROR,
 	       "Unable to find SSL certificate '%s'. SSL support has been disabled\n",
-	       CERTF);
+	       CONST_SSL_CERTF_FILENAME);
     return(-1);
   } else
     fclose(fd);
@@ -93,7 +93,7 @@ int init_ssl(void) {
 
   SSL_load_error_strings();
   SSLeay_add_ssl_algorithms();
-#ifdef SUPPORT_SSLV3
+#ifdef MAKE_WITH_SSLV3_SUPPORT
   meth = SSLv23_server_method();
 #else
   meth = SSLv2_server_method();
@@ -106,7 +106,7 @@ int init_ssl(void) {
 
   SSL_CTX_set_options(myGlobals.ctx, SSL_OP_ALL); /* Enable the work-arounds */
 
-#ifdef SUPPORT_SSLV3
+#ifdef MAKE_WITH_SSLV3_SUPPORT
   SSL_CTX_set_options(myGlobals.ctx, SSL_OP_NO_TLSv1); 
 #endif
 
@@ -132,12 +132,12 @@ int init_ssl(void) {
   }
 
   if (!SSL_CTX_check_private_key(myGlobals.ctx)) {
-    traceEvent(TRACE_ERROR, "Private key does not match the certificate public key");
+    traceEvent(CONST_TRACE_ERROR, "Private key does not match the certificate public key");
     return(5);
   }
 
   myGlobals.sslInitialized=1;
-  traceEvent(TRACE_INFO, "SSL initialized successfully");
+  traceEvent(CONST_TRACE_INFO, "SSL initialized successfully");
   return(0);
 }
 
@@ -152,7 +152,7 @@ static int init_ssl_connection(SSL *con) {
 
   if ((i=SSL_accept(con)) <= 0) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "SSL_accept: %d\n", i);
+    traceEvent(CONST_TRACE_INFO, "SSL_accept: %d\n", i);
 #endif
 
     if (BIO_sock_should_retry(i))
@@ -160,7 +160,7 @@ static int init_ssl_connection(SSL *con) {
 
     verify_error=SSL_get_verify_result(con);
     if (verify_error != X509_V_OK) {
-      traceEvent(TRACE_WARNING, "verify error:%s\n", X509_verify_cert_error_string(verify_error));
+      traceEvent(CONST_TRACE_WARNING, "verify error:%s\n", X509_verify_cert_error_string(verify_error));
     }
     else
       ntop_ssl_error_report("ssl_init_connection");
@@ -176,22 +176,22 @@ static int init_ssl_connection(SSL *con) {
     peer=SSL_get_peer_certificate(con);
 
     if(peer != NULL) {
-      traceEvent(TRACE_INFO, "Client certificate\n");
+      traceEvent(CONST_TRACE_INFO, "Client certificate\n");
       X509_NAME_oneline(X509_get_subject_name(peer),buf,BUFSIZ);
-      traceEvent(TRACE_INFO, "subject=%s\n",buf);
+      traceEvent(CONST_TRACE_INFO, "subject=%s\n",buf);
       X509_NAME_oneline(X509_get_issuer_name(peer),buf,BUFSIZ);
-      traceEvent(TRACE_INFO, "issuer=%s\n",buf);
+      traceEvent(CONST_TRACE_INFO, "issuer=%s\n",buf);
       X509_free(peer);
     }
 
     if (SSL_get_shared_ciphers(con,buf,BUFSIZ) != NULL)
-      traceEvent(TRACE_INFO, "Shared ciphers:%s\n",buf);
+      traceEvent(CONST_TRACE_INFO, "Shared ciphers:%s\n",buf);
     str=SSL_CIPHER_get_name(SSL_get_current_cipher(con));
-    traceEvent(TRACE_INFO, "CIPHER is %s\n",(str != NULL)?str:"(NONE)");
-    if (con->hit) traceEvent(TRACE_INFO, "Reused session-id\n");
+    traceEvent(CONST_TRACE_INFO, "CIPHER is %s\n",(str != NULL)?str:"(NONE)");
+    if (con->hit) traceEvent(CONST_TRACE_INFO, "Reused session-id\n");
     if (SSL_ctrl(con,SSL_CTRL_GET_FLAGS,0,NULL) &
 	TLS1_FLAGS_TLS_PADDING_BUG)
-      traceEvent(TRACE_WARNING, "Peer has incorrect TLSv1 block padding\n");
+      traceEvent(CONST_TRACE_WARNING, "Peer has incorrect TLSv1 block padding\n");
   }
 #endif
 

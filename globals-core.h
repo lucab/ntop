@@ -18,12 +18,13 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_RRD_H
-#include "rrd.h"
-#endif
+/****** data declarations ***** */
 
+/* globals-core.c */
 extern NtopGlobals myGlobals;
-
+#ifdef MAKE_WITH_SYSLOG
+extern MYCODE myFacilityNames[];
+#endif
 #ifdef HAVE_LIBWRAP
 extern int allow_severity, deny_severity;
 #endif
@@ -38,7 +39,19 @@ extern char *version, *osName, *author, *buildDate,
             *system_libs,
             *install_path;
 
+/* util.c */
+#ifndef HAVE_GETOPT_H
+/* Our own, minimal extract from getopt.h */
+extern char *optarg;
+extern int optind;
+extern int opterr;
+extern int optopt;
+#endif /* HAVE_GETOPT_H */
+
 /****** function declarations ***** */
+
+/* globals-core.c */
+void initNtopGlobals(int argc, char * argv[]);
 
 /* address.c */
 extern void updateHostNameInfo(unsigned long numeric, char* symbolic, int actualDeviceId);
@@ -296,7 +309,7 @@ extern int32_t gmt2local(time_t t);
 extern void handleFlowsSpecs();
 extern int getLocalHostAddress(struct in_addr *hostAddress, char* device);
 extern void fillDomainName(HostTraffic *el);
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
                         char* userParm);
 extern void killThread(pthread_t *threadId);
@@ -328,7 +341,7 @@ extern int incrementSem(sem_t *semId);
 extern int decrementSem(sem_t *semId);
 extern int deleteSem(sem_t *semId);
 #endif /* HAVE_SEMAPHORE_H */
-#endif /* MULTITHREADED */
+#endif /* CFG_MULTITHREADED */
 extern void setNBnodeNameType(HostTraffic *theHost, char nodeType, char* nbName);
 extern void trimString(char*);
 extern FILE* getNewRandomFile(char* fileName, int len);
@@ -395,44 +408,18 @@ extern void updateElementHash(ElementHash **list, u_short srcId, u_short dstId,
 extern void allocateElementHash(int deviceId, u_short hashType);
 extern u_int numActiveSenders(int deviceId);
 #ifdef HAVE_GETOPT_H
-#include "getopt.h"
-#else
-/* Our own, minimal extract from getopt.h */
-extern char *optarg;
-extern int optind;
-extern int opterr;
-extern int optopt;
-struct option
-{
-  char *name;
-  int has_arg;
-  int *flag;
-  int val;
-};
-
-# define no_argument            0
-# define required_argument      1
-# define optional_argument      2
-
 extern int getopt_long (int ___argc, char *const *___argv,
                         const char *__shortopts,
                         const struct option *__longopts, int *__longind);
 extern int getopt_long_only ();
-
 #endif /* HAVE_GETOPT_H */
 
-#ifdef SHOW_NTOP_HEARTBEAT
+#ifdef PARM_SHOW_NTOP_HEARTBEAT
     #define HEARTBEAT(a, b, ...)     _HEARTBEAT(a, __FILE__, __LINE__, b, __VA_ARGS__)
     extern void _HEARTBEAT(int beatLevel, char* file, int line, char * format, ...);
 #else
-#define HEARTBEAT	
+    #define HEARTBEAT(a, b, ...)     {}
 #endif
- 
-/* vendor.c */
-extern char* getVendorInfo(u_char* ethAddress, short encodeString);
-extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
-extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
-extern void createVendorTable(void);
 
 #if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
@@ -443,6 +430,15 @@ extern char **buildargv(const char *argv);
 #ifndef HAVE_FREEARGV
 extern void freeargv(char **argv);
 #endif
+#if defined(AIX) || defined(WIN32)
+extern int snprintf(char *str, size_t n, const char *fmt, ...);
+#endif
+ 
+/* vendor.c */
+extern char* getVendorInfo(u_char* ethAddress, short encodeString);
+extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
+extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
+extern void createVendorTable(void);
 
 /* netflow.c */
 extern void termNetFlowExporter();
@@ -452,9 +448,6 @@ extern void sendUDPflow(HostTraffic *srcHost, HostTraffic *dstHost,
 extern void sendTCPSessionFlow(IPSession *theSession, int actualDeviceId);
 extern void sendOTHERflow(HostTraffic *srcHost, HostTraffic *dstHost, 
 			  u_int8_t proto, u_int length, u_int actualDeviceId);
-
-/* globals-core.c */
-void initNtopGlobals(int argc, char * argv[]);
 
 /* sessions.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
@@ -478,4 +471,196 @@ extern IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 				   u_short dport, u_int length,
 				   u_char* packetData, int actualDeviceId);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
+
+/* Other - weird externals etc. */
+#ifdef WIN32
+#ifndef __GNUC__
+extern const char *gdbm_strerror (int);
+#endif
+#endif /* WIN32 */
+
+#ifdef HAVE_NETDB_H
+extern int h_errno; /* netdb.h */
+#endif
+
+/* Pseudo-functions.
+ *   We use these as if they were real functions, but they expand to
+ *   reference other functions (ntop and/or system)...
+ */
+
+#if !defined(min)
+#define min(a,b) ((a) > (b) ? (b) : (a))
+#endif
+
+#if !defined(max)
+#define max(a,b) ((a) > (b) ? (a) : (b))
+#endif
+
+#ifndef NTOHL
+#define NTOHL(x)    (x) = ntohl(x)
+#endif
+
+#ifndef BufferTooShort
+#define BufferTooShort()  traceEvent(CONST_TRACE_ERROR, "Buffer too short @ %s:%d", __FILE__, __LINE__)
+#endif
+
+#ifdef WIN32
+#define strncasecmp(a, b, c) strnicmp(a, b, c)
+#define sleep(a /* sec */) waitForNextEvent(1000*a /* ms */)
+#else
+#define sleep(a)  ntop_sleep(a)
+#endif
+
+#define NOW ((time_t) time ((time_t *) 0))
+
+#if defined(CFG_NEED_GETDOMAINNAME)
+int getdomainname(char *name, size_t len);
+#endif
+
+#if defined(LBL_ALIGN)
+#define EXTRACT_16BITS(p) \
+	((u_short)*((u_char *)(p) + 0) << 8 | \
+	(u_short)*((u_char *)(p) + 1))
+#define EXTRACT_32BITS(p) \
+	((u_int32_t)*((u_char *)(p) + 0) << 24 | \
+	(u_int32_t)*((u_char *)(p) + 1) << 16 | \
+	(u_int32_t)*((u_char *)(p) + 2) << 8 | \
+	(u_int32_t)*((u_char *)(p) + 3))
+#else
+#define EXTRACT_16BITS(p) \
+	((u_short)ntohs(*(u_short *)(p)))
+#define EXTRACT_32BITS(p) \
+	((u_int32_t)ntohl(*(u_int32_t *)(p)))
+#endif
+
+#define EXTRACT_24BITS(p) \
+	((u_int32_t)*((u_char *)(p) + 0) << 16 | \
+	(u_int32_t)*((u_char *)(p) + 1) << 8 | \
+	(u_int32_t)*((u_char *)(p) + 2))
+
+#define incrementUsageCounter(a, b, c) _incrementUsageCounter(a, b, c, __FILE__, __LINE__)
+
+#ifdef CFG_ETHER_HEADER_HAS_EA
+#  define ESRC(ep) ((ep)->ether_shost.ether_addr_octet)
+#  define EDST(ep) ((ep)->ether_dhost.ether_addr_octet)
+#else
+#  define ESRC(ep) ((ep)->ether_shost)
+#  define EDST(ep) ((ep)->ether_dhost)
+#endif
+
+#ifndef WIN32
+#define closesocket(a) close(a)
+#endif
+
+#ifdef PARM_SHOW_NTOP_HEARTBEAT
+    #define HEARTBEAT(a, b, ...)     _HEARTBEAT(a, __FILE__, __LINE__, b, __VA_ARGS__)
+#else
+    #define HEARTBEAT(a, b, ...)     {}
+#endif
+
+#define GetShort(cp)	_ns_get16(cp); cp += INT16SZ;
+
+/* *************************************
+
+   Code "inherited" from nslookup
+
+   ************************************* */
+
+#ifndef NS_GET16
+#define NS_GET16(s, cp) { \
+        u_char *t_cp = (u_char *)(cp); \
+        (s) = ((u_int16_t)t_cp[0] << 8) \
+            | ((u_int16_t)t_cp[1]) \
+            ; \
+        (cp) += NS_INT16SZ; \
+}
+#endif
+
+/* Bit test macros */
+#define theDomainHasBeenComputed(a) FD_ISSET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &(a->flags))
+#define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(FLAG_SUBNET_LOCALHOST, &(a->flags)))
+#define privateIPAddress(a)         ((a != NULL) && FD_ISSET(FLAG_PRIVATE_IP_ADDRESS, &(a->flags)))
+#define broadcastHost(a)            ((a != NULL) && ((a->hostTrafficBucket == myGlobals.broadcastEntryIdx) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))))
+#define multicastHost(a)            ((a != NULL) && FD_ISSET(FLAG_MULTICAST_HOST, &(a->flags)))
+#define gatewayHost(a)              ((a != NULL) && FD_ISSET(FLAG_GATEWAY_HOST, &(a->flags)))
+#define nameServerHost(a)           ((a != NULL) && FD_ISSET(FLAG_NAME_SERVER_HOST, &(a->flags)))
+#define subnetPseudoLocalHost(a)    ((a != NULL) && FD_ISSET(FLAG_SUBNET_PSEUDO_LOCALHOST, &(a->flags)))
+
+#define isServer(a)                 ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SERVER, &(a->flags)))
+#define isWorkstation(a)            ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_WORKSTATION, &(a->flags)))
+#define isMasterBrowser(a)          ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_MASTER_BROWSER, &(a->flags)))
+#define isMultihomed(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_MULTIHOMED, &(a->flags)))
+
+#define isPrinter(a)                ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_PRINTER, &(a->flags)))
+
+#define isSMTPhost(a)               ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_SMTP, &(a->flags)))
+#define isPOPhost(a)                ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_POP, &(a->flags)))
+#define isIMAPhost(a)               ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_IMAP, &(a->flags)))
+#define isDirectoryHost(a)          ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_DIRECTORY, &(a->flags)))
+#define isFTPhost(a)                ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_FTP, &(a->flags)))
+#define isHTTPhost(a)               ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_HTTP, &(a->flags)))
+#define isWINShost(a)               ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_WINS, &(a->flags)))
+#define isBridgeHost(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_BRIDGE, &(a->flags)))
+
+#define isDHCPClient(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_DHCP_CLIENT, &(a->flags)))
+#define isDHCPServer(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_DHCP_SERVER, &(a->flags)))
+
+/* Host health */
+#define hasWrongNetmask(a)          ((a != NULL) && FD_ISSET(FLAG_HOST_WRONG_NETMASK, &(a->flags)))
+#define hasDuplicatedMac(a)         ((a != NULL) && FD_ISSET(FLAG_HOST_DUPLICATED_MAC, &(a->flags)))
+
+#define ISBLANK(ch) ((ch) == ' ' || (ch) == '\t')
+
+/* Shorthand, used in traffic.c */
+#define getSerial(a) myGlobals.device[deviceToUpdate].hash_hostTraffic[a]->hostSerial
+
+#ifdef SSLWATCHDOG_DEBUG
+#define sslwatchdogDebug(text, bpcFlag, note) { \
+          traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %s\n", \
+                                 myGlobals.sslwatchdogCondvar.predicate, \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""), \
+                                 note); \
+}
+#define sslwatchdogDebugN(text, bpcFlag, note) { \
+          traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %d\n", \
+                                 myGlobals.sslwatchdogCondvar.predicate, \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""), \
+                                 note); \
+}
+#define sslwatchdogError(text, bpcFlag, note) { \
+          traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %s\n", \
+                                 myGlobals.sslwatchdogCondvar.predicate, \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""), \
+                                 note); \
+}
+#define sslwatchdogErrorN(text, bpcFlag, note) { \
+          traceEvent(CONST_TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %d\n", \
+                                 myGlobals.sslwatchdogCondvar.predicate, \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_BOTH) ? text : ""), \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_PARENT) ? text : ""), \
+                                 ((bpcFlag == FLAG_SSLWATCHDOG_CHILD) ? text : ""), \
+                                 note); \
+}
+#else
+#define sslwatchdogDebug(text, bpcFlag, note) {}
+#define sslwatchdogDebugN(text, bpcFlag, note) {}
+#define sslwatchdogError(text, bpsFlag, note) {}
+#define sslwatchdogErrorN(text, bpcFlag, note) {}
+#endif
+
+#define CONST_LLC_U_CMD(u)    ((u) & 0xef)
+#define CONST_LLC_S_CMD(is)   (((is) >> 10) & 0x03)
+#define CONST_LLC_IS_NR(is)   (((is) >> 1) & 0x7f)
+#define CONST_LLC_I_NS(is)    (((is) >> 9) & 0x7f)
+
+/* ********************************************************** 
+   Used in all the prints flowing from printNtopConfigInfo...
+   ********************************************************** */
+#define texthtml(a, b) (textPrintFlag == TRUE ? a : b)
 

@@ -45,8 +45,8 @@ char *version, *osName, *author, *buildDate,
             *install_path;
 #endif
 
-static u_short _mtuSize[DLT_ARRAY_MAXIMUM];
-static u_short _headerSize[DLT_ARRAY_MAXIMUM];
+static u_short _mtuSize[MAX_DLT_ARRAY];
+static u_short _headerSize[MAX_DLT_ARRAY];
 
 #ifdef WIN32
 extern char _wdir[];
@@ -56,9 +56,22 @@ static char *_dataFileDirs[]   = { ".",
 #ifdef WIN32
 									_wdir,
 #endif
-									DATAFILE_DIR, NULL };
-static char *_pluginDirs[]     = { "./plugins", PLUGIN_DIR, NULL };
-static char *_configFileDirs[] = { ".", CONFIGFILE_DIR, "/etc", NULL };
+									CFG_DATAFILE_DIR, NULL };
+static char *_pluginDirs[]     = { "./plugins", CFG_PLUGIN_DIR, NULL };
+static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR, "/etc", NULL };
+
+
+/*
+ *  ** TCP Wrappers
+ *
+ *      Because of limits in the way libwrap.a does things, these MUST
+ *      be open global values.
+ *
+ */
+#ifdef HAVE_LIBWRAP
+  int allow_severity, deny_severity;
+#endif /* HAVE_LIBWRAP */
+
 
 /* ************************************ */
 
@@ -78,7 +91,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   /*
    * Notice the program name
    */
-  myGlobals.program_name = strrchr(argv[0], PATH_SEP);
+  myGlobals.program_name = strrchr(argv[0], CONST_PATH_SEP);
   myGlobals.program_name =
     (!myGlobals.program_name || !myGlobals.program_name[0]) ? (argv[0]) : (++myGlobals.program_name);
 
@@ -88,56 +101,56 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.ntop_argc = argc;
   myGlobals.ntop_argv = argv;
 
-  myGlobals.accessLogPath = NTOP_DEFAULT_ACCESS_LOG_PATH;
-  myGlobals.stickyHosts = NTOP_DEFAULT_STICKY_HOSTS;
+  myGlobals.accessLogPath = DEFAULT_NTOP_ACCESS_LOG_PATH;
+  myGlobals.stickyHosts = DEFAULT_NTOP_STICKY_HOSTS;
 
-  myGlobals.daemonMode = NTOP_DEFAULT_DAEMON_MODE;
+  myGlobals.daemonMode = DEFAULT_NTOP_DAEMON_MODE;
   if (strcmp(myGlobals.program_name, "ntopd") == 0) {
     myGlobals.daemonMode = 1;
   }
 
-  myGlobals.rFileName = NTOP_DEFAULT_TRAFFICDUMP_FILENAME;
-  myGlobals.devices = NTOP_DEFAULT_DEVICES;
-  myGlobals.dontTrustMACaddr = NTOP_DEFAULT_DONT_TRUST_MAC_ADDR;
-  myGlobals.trackOnlyLocalHosts    = NTOP_DEFAULT_TRACK_ONLY_LOCAL;
-  myGlobals.enableSessionHandling  = NTOP_DEFAULT_ENABLE_SESSIONHANDLE;
-  myGlobals.enablePacketDecoding   = NTOP_DEFAULT_PACKET_DECODING;
-  myGlobals.filterExpressionInExtraFrame = NTOP_DEFAULT_FILTER_IN_FRAME;
-  myGlobals.pcapLog = NTOP_DEFAULT_PCAP_LOG_FILENAME;
-  myGlobals.numericFlag = NTOP_DEFAULT_NUMERIC_IP_ADDRESSES;
-  myGlobals.localAddresses = NTOP_DEFAULT_LOCAL_SUBNETS;
-  myGlobals.enableSuspiciousPacketDump = NTOP_DEFAULT_SUSPICIOUS_PKT_DUMP;
-  myGlobals.disablePromiscuousMode = NTOP_DEFAULT_DISABLE_PROMISCUOUS;
+  myGlobals.rFileName = DEFAULT_NTOP_TRAFFICDUMP_FILENAME;
+  myGlobals.devices = DEFAULT_NTOP_DEVICES;
+  myGlobals.dontTrustMACaddr = DEFAULT_NTOP_DONT_TRUST_MAC_ADDR;
+  myGlobals.trackOnlyLocalHosts    = DEFAULT_NTOP_TRACK_ONLY_LOCAL;
+  myGlobals.enableSessionHandling  = DEFAULT_NTOP_ENABLE_SESSIONHANDLE;
+  myGlobals.enablePacketDecoding   = DEFAULT_NTOP_PACKET_DECODING;
+  myGlobals.filterExpressionInExtraFrame = DEFAULT_NTOP_FILTER_IN_FRAME;
+  myGlobals.pcapLog = DEFAULT_NTOP_PCAP_LOG_FILENAME;
+  myGlobals.numericFlag = DEFAULT_NTOP_NUMERIC_IP_ADDRESSES;
+  myGlobals.localAddresses = DEFAULT_NTOP_LOCAL_SUBNETS;
+  myGlobals.enableSuspiciousPacketDump = DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP;
+  myGlobals.disablePromiscuousMode = DEFAULT_NTOP_DISABLE_PROMISCUOUS;
   myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
-  myGlobals.currentFilterExpression = NTOP_DEFAULT_FILTER_EXPRESSION;
-  strncpy((char *) &myGlobals.domainName, NTOP_DEFAULT_DOMAIN_NAME, sizeof(myGlobals.domainName));
-  myGlobals.enableExternalTools = NTOP_DEFAULT_EXTERNAL_TOOLS_ENABLE;
+  myGlobals.currentFilterExpression = DEFAULT_NTOP_FILTER_EXPRESSION;
+  strncpy((char *) &myGlobals.domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(myGlobals.domainName));
+  myGlobals.enableExternalTools = DEFAULT_NTOP_EXTERNAL_TOOLS_ENABLE;
   myGlobals.isLsofPresent = 0;
-  myGlobals.isNmapPresent = NTOP_DEFAULT_NMAP_PRESENT;
-  myGlobals.flowSpecs = NTOP_DEFAULT_FLOW_SPECS;
+  myGlobals.isNmapPresent = DEFAULT_NTOP_NMAP_PRESENT;
+  myGlobals.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
 
 #ifndef WIN32
-  myGlobals.debugMode = NTOP_DEFAULT_DEBUG_MODE;
-  myGlobals.useSyslog = NTOP_DEFAULT_SYSLOG;
+  myGlobals.debugMode = DEFAULT_NTOP_DEBUG_MODE;
+  myGlobals.useSyslog = DEFAULT_NTOP_SYSLOG;
 #ifdef HAVE_LIBWRAP
-  allow_severity = NTOP_DEFAULT_TCPWRAP_ALLOW;
-  deny_severity = NTOP_DEFAULT_TCPWRAP_DENY;
+  allow_severity = DEFAULT_TCPWRAP_ALLOW;
+  deny_severity = DEFAULT_TCPWRAP_DENY;
 #endif
 #endif
 
-  myGlobals.mergeInterfaces = NTOP_DEFAULT_MERGE_INTERFACES;
+  myGlobals.mergeInterfaces = DEFAULT_NTOP_MERGE_INTERFACES;
   /* note that by default ntop will merge network interfaces */
-  myGlobals.mapperURL = NTOP_DEFAULT_MAPPER_URL;
+  myGlobals.mapperURL = DEFAULT_NTOP_MAPPER_URL;
 
 #ifdef HAVE_GDCHART
-  myGlobals.throughput_chart_type = NTOP_DEFAULT_CHART_TYPE;
+  myGlobals.throughput_chart_type = DEFAULT_NTOP_CHART_TYPE;
 #endif
 
-#ifndef YES_IGNORE_SIGPIPE
+#ifndef MAKE_WITH_IGNORE_SIGPIPE
    myGlobals.ignoreSIGPIPE = 0;
 #endif
 
-#ifdef PARM_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
    myGlobals.useSSLwatchdog = 0;
 #endif
 
@@ -154,8 +167,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.dataFileDirs    = _dataFileDirs;
   myGlobals.pluginDirs      = _pluginDirs;
   myGlobals.configFileDirs  = _configFileDirs;
-  myGlobals.pcapLogBasePath = strdup(DBFILE_DIR);   /* a NULL pointer will break the logic */
-  myGlobals.dbPath          = strdup(DBFILE_DIR);   /* a NULL pointer will break the logic */
+  myGlobals.pcapLogBasePath = strdup(CFG_DBFILE_DIR);   /* a NULL pointer will break the logic */
+  myGlobals.dbPath          = strdup(CFG_DBFILE_DIR);   /* a NULL pointer will break the logic */
 
   /* NB: we can't init rrdPath here, because initGdbm hasn't been run */
 
@@ -180,27 +193,27 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* administrative */
   myGlobals.shortDomainName = NULL;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   myGlobals.hostsHashMutexInitialized = 0;
 
   myGlobals.numThreads = 0;            /* # of running threads */
 
   myGlobals.numDequeueThreads = 1;
 
-#ifdef ASYNC_ADDRESS_RESOLUTION
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   for (i = 0; i < MAX_NUM_DEQUEUE_THREADS; i ++)
     myGlobals.dequeueAddressThreadId[i] = (pthread_t)-1;
 #endif
 
-#endif /* MULTITHREADED */
+#endif /* CFG_MULTITHREADED */
 
 #ifdef HAVE_OPENSSL
   myGlobals.sslInitialized = 0;
   myGlobals.sslPort = 0;           /* Disabled by default: it can enabled using -W <SSL port> */
 #endif
 
-  myGlobals.webAddr = NTOP_DEFAULT_WEB_ADDR;
-  myGlobals.webPort = NTOP_DEFAULT_WEB_PORT;
+  myGlobals.webAddr = DEFAULT_NTOP_WEB_ADDR;
+  myGlobals.webPort = DEFAULT_NTOP_WEB_PORT;
 
   /* Termination flags */
   myGlobals.capturePackets = 1;    /* By default data are collected into internal variables */
@@ -214,10 +227,10 @@ void initNtopGlobals(int argc, char * argv[]) {
     myGlobals.updateLsof = 1;
   else
     myGlobals.updateLsof = 0;
-  for (i = 0; i < TOP_IP_PORT; i ++)
+  for (i = 0; i < MAX_IP_PORT; i ++)
     myGlobals.localPorts[i] = NULL;       /* myGlobals.localPorts is used by lsof */
 
-#if defined(ASYNC_ADDRESS_RESOLUTION)
+#if defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
   myGlobals.addressQueueLen = 0;
   myGlobals.maxAddressQueueLen = 0;
 #endif
@@ -238,7 +251,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.actTime = time(NULL);
   myGlobals.initialSniffTime = 0;
   myGlobals.lastRefreshTime = 0;
-  myGlobals.nextSessionTimeoutScan = 0;
   myGlobals.lastPktTime.tv_sec = 0;
   myGlobals.lastPktTime.tv_usec = 0;
 
@@ -256,8 +268,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.numHandledHTTPrequests = 0;
 
   /* Packet Capture */
-#if defined(MULTITHREADED)
-  for (i = 0; i <= PACKET_QUEUE_LENGTH; i ++)
+#if defined(CFG_MULTITHREADED)
+  for (i = 0; i <= CONST_PACKET_QUEUE_LENGTH; i ++)
     memset(&myGlobals.packetQueue[i], 0, sizeof(PacketInformation));
 
   myGlobals.packetQueueLen = 0;
@@ -266,7 +278,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.packetQueueTail = 0;
 #endif
 
-  for (i = 0; i < NUM_TRANSACTION_ENTRIES; i ++)
+  for (i = 0; i < CONST_NUM_TRANSACTION_ENTRIES; i ++)
     memset(&myGlobals.transTimeHash[i], 0, sizeof(TransactionTime));
 
   myGlobals.dummyEthAddress[0] = '\0';
@@ -275,7 +287,7 @@ void initNtopGlobals(int argc, char * argv[]) {
        *  Setup the mtu and header size tables. 
        *
        *  We set only the ones we specifically know... anything else will 
-       *  get mtu=UNKNOWN_MTU, header=0
+       *  get mtu=CONST_UNKNOWN_MTU, header=0
        *
        *     If mtuSize is wrong, the only problem will be 1) erroneous-/mis-classification 
        *     of packets as "too long", 2) the suspicious packet file, if one, may have
@@ -296,14 +308,14 @@ void initNtopGlobals(int argc, char * argv[]) {
        */
 
   { int ii;
-    for (ii=0; ii<DLT_ARRAY_MAXIMUM; ii++) {
-        _mtuSize[ii]    = UNKNOWN_MTU;
+    for (ii=0; ii<MAX_DLT_ARRAY; ii++) {
+        _mtuSize[ii]    = CONST_UNKNOWN_MTU;
         _headerSize[ii] = 0;
     }
   }
 
   _mtuSize[DLT_NULL] = 8232                                    /* no link-layer encapsulation */;
-  _headerSize[DLT_NULL] = NULL_HDRLEN;
+  _headerSize[DLT_NULL] = CONST_NULL_HDRLEN;
 
       /* 1500 + 14 bytes header Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
   _mtuSize[DLT_EN10MB] = 1500+sizeof(struct ether_header)      /* Ethernet (10Mb) */;
@@ -316,7 +328,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   _headerSize[DLT_IEEE802] = 1492;       /* NOTE: This has to be wrong... */
 
   /* _mtuSize[DLT_PPP] = ?                                        Point-to-point Protocol */
-  _headerSize[DLT_PPP] = PPP_HDRLEN;
+  _headerSize[DLT_PPP] = CONST_PPP_HDRLEN;
 
       /* Courtesy of Richard Parvass <Richard.Parvass@ReckittBenckiser.com> */
   _mtuSize[DLT_FDDI] = 4470                                    /* FDDI */;
@@ -369,7 +381,7 @@ void initNtopGlobals(int argc, char * argv[]) {
 
 /* ****************************** */
 
-#ifdef USE_SYSLOG
+#ifdef MAKE_WITH_SYSLOG
 /*
  * Create the table data.  If we have the headers, we use the values, which
  * is ripped from Linux's /usr/include/sys/syslog.h. If not, it's a table

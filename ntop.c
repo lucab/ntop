@@ -28,10 +28,10 @@ static int *servicesMapper = NULL; /* temporary value */
 
 /* *************************** */
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
 
-  traceEvent(TRACE_INFO, "%s is %s (last lock %s:%d) [max lock time %s:%d (%d sec)]",
+  traceEvent(CONST_TRACE_INFO, "%s is %s (last lock %s:%d) [max lock time %s:%d (%d sec)]",
 	     mutexName,
 	     mutexId->isLocked ? "*locked*" : "unlocked",
 	     mutexId->lockFile, mutexId->lockLine,
@@ -43,12 +43,12 @@ static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
 
 #ifndef WIN32
 void handleSigHup(int signalId _UNUSED_) {
-#ifdef MULTITHREADED
-  traceEvent(TRACE_INFO, "========================================");
+#ifdef CFG_MULTITHREADED
+  traceEvent(CONST_TRACE_INFO, "========================================");
    printMutexInfo(&myGlobals.gdbmMutex, "myGlobals.gdbmMutex");
    printMutexInfo(&myGlobals.packetQueueMutex, "myGlobals.packetQueueMutex");
 
-#ifdef ASYNC_ADDRESS_RESOLUTION
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
    if(myGlobals.numericFlag == 0)
      printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
 #endif
@@ -57,8 +57,8 @@ void handleSigHup(int signalId _UNUSED_) {
      printMutexInfo(&myGlobals.lsofMutex, "myGlobals.lsofMutex");
    printMutexInfo(&myGlobals.hostsHashMutex, "myGlobals.hostsHashMutex");
    printMutexInfo(&myGlobals.graphMutex, "myGlobals.graphMutex");
-  traceEvent(TRACE_INFO, "========================================");
-#endif /* MULTITHREADED */
+  traceEvent(CONST_TRACE_INFO, "========================================");
+#endif /* CFG_MULTITHREADED */
 
   (void)signal(SIGHUP,  handleSigHup);
 }
@@ -67,7 +67,7 @@ void handleSigHup(int signalId _UNUSED_) {
 
 /* *************************** */
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 #if !defined(WIN32) && !defined(DARWIN)
 void* pcapDispatch(void *_i) {
   int rc;
@@ -109,16 +109,16 @@ void* pcapDispatch(void *_i) {
       rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, processPacket, (u_char*)_i);
 
       if(rc == -1) {
-	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
+	traceEvent(CONST_TRACE_ERROR, "Error while reading packets: %s.\n",
 		   pcap_geterr(myGlobals.device[i].pcapPtr));
 	break;
       } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
-	traceEvent(TRACE_INFO, "pcap_dispatch returned %d "
+	traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d "
 		   "[No more packets to read]", rc);
 	break; /* No more packets to read */
       }
       /* else
-	 traceEvent(TRACE_INFO, "1) %d\n", numPkts++);
+	 traceEvent(CONST_TRACE_INFO, "1) %d\n", numPkts++);
       */
     }
   }
@@ -133,11 +133,11 @@ void* pcapDispatch(void *_i) {
   for(;myGlobals.capturePackets == 1;) {
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
     if(rc == -1) {
-      traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
+      traceEvent(CONST_TRACE_ERROR, "Error while reading packets: %s.\n",
 		 pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
     } /* else
-	 traceEvent(TRACE_INFO, "1) %d\n", numPkts++);
+	 traceEvent(CONST_TRACE_INFO, "1) %d\n", numPkts++);
       */
     HEARTBEAT(2, "pcapDispatch()", NULL);
   }
@@ -158,7 +158,7 @@ RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
 #ifdef DEBUG
     if(status == 0) {
       myGlobals.numChildren--;
-      traceEvent(TRACE_INFO,
+      traceEvent(CONST_TRACE_INFO,
 		 "A child has terminated [pid=%d status=%d children=%d]\n",
 		 pidId, status, myGlobals.numChildren);
     }
@@ -187,31 +187,31 @@ void daemonize(void) {
   signal(SIGQUIT, SIG_IGN);
 
   if((childpid=fork()) < 0)
-    traceEvent(TRACE_ERROR, "An error occurred while daemonizing ntop (errno=%d)...\n", errno);
+    traceEvent(CONST_TRACE_ERROR, "An error occurred while daemonizing ntop (errno=%d)...\n", errno);
   else {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Note: after fork() in %s (%d)\n", 
+    traceEvent(CONST_TRACE_INFO, "Note: after fork() in %s (%d)\n", 
                            childpid ? "parent" : "child",
                            childpid);
 #endif
     if(!childpid) { /* child */
 
       myGlobals.basentoppid = getpid();
-      sprintf(pidFileName, "%s/%s", NTOP_DEFAULT_PID_DIRECTORY, NTOP_DEFAULT_PIDFILE);
+      sprintf(pidFileName, "%s/%s", DEFAULT_NTOP_PID_DIRECTORY, DEFAULT_NTOP_PIDFILE);
       fd = fopen(pidFileName, "wb");
 
       if(fd == NULL) {
-          traceEvent(TRACE_WARNING, "Unable to create pid file (%s). ", pidFileName);
+          traceEvent(CONST_TRACE_WARNING, "Unable to create pid file (%s). ", pidFileName);
       } else {
           fprintf(fd, "%d\n", myGlobals.basentoppid);
           fclose(fd);
-          traceEvent(TRACE_INFO, "Created pid file (%s). ", pidFileName);
+          traceEvent(CONST_TRACE_INFO, "Created pid file (%s). ", pidFileName);
       }
 
-      traceEvent(TRACE_INFO, "Bye bye: I'm becoming a daemon...\n");
+      traceEvent(CONST_TRACE_INFO, "Bye bye: I'm becoming a daemon...\n");
       detachFromTerminal(1);
     } else { /* father */
-      traceEvent(TRACE_INFO, "Note: Parent process is exiting (this is normal)\n");
+      traceEvent(CONST_TRACE_INFO, "Note: Parent process is exiting (this is normal)\n");
       exit(0);
     }
   }
@@ -220,16 +220,16 @@ void daemonize(void) {
 /* **************************************** */
 
 void detachFromTerminal(int doChdir) {
-#ifndef MULTITHREADED
+#ifndef CFG_MULTITHREADED
   alarm(120); /* Don't freeze */
 #endif
 
-#if !defined(WIN32) && defined(USE_SYSLOG)
+#if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
   /* Child processes must log to syslog.
    * If no facility was set through -L | --use-syslog=facility
    * then force the default
    */
-  if(myGlobals.useSyslog == NTOP_SYSLOG_NONE)
+  if(myGlobals.useSyslog == FLAG_SYSLOG_NONE)
     myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
 #endif
 
@@ -270,7 +270,7 @@ static short handleProtocol(char* protoName, char *protocol) {
       highProtoPort = lowProtoPort;
 
     if(lowProtoPort < 0) lowProtoPort = 0;
-    if(highProtoPort >= TOP_IP_PORT) highProtoPort = TOP_IP_PORT-1;
+    if(highProtoPort >= MAX_IP_PORT) highProtoPort = MAX_IP_PORT-1;
 
     for(idx=lowProtoPort; idx<= highProtoPort; idx++) {
       if(servicesMapper[idx] == -1) {
@@ -312,7 +312,7 @@ static short handleProtocol(char* protoName, char *protocol) {
   }
 
   if(printWarnings)
-    traceEvent(TRACE_WARNING, "WARNING: unknown protocol '%s'. It has been ignored.\n",
+    traceEvent(CONST_TRACE_WARNING, "WARNING: unknown protocol '%s'. It has been ignored.\n",
 	       protocol);
 
   return(-1);
@@ -327,12 +327,12 @@ static int handleProtocolList(char* protoName,
   int increment=0, rc;
 
   if(servicesMapper == NULL) {
-    servicesMapper = (int*)malloc(sizeof(int)*TOP_IP_PORT);
-    memset(servicesMapper, -1, sizeof(int)*TOP_IP_PORT);
+    servicesMapper = (int*)malloc(sizeof(int)*MAX_IP_PORT);
+    memset(servicesMapper, -1, sizeof(int)*MAX_IP_PORT);
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "%s - %s\n", protoName, protocolList);
+  traceEvent(CONST_TRACE_INFO, "%s - %s\n", protoName, protocolList);
 #endif
 
   /* The trick below is used to avoid to modify static
@@ -361,13 +361,13 @@ static int handleProtocolList(char* protoName,
     myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
     myGlobals.numIpProtosToMonitor++;
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "%d) %s - %s\n",
+    traceEvent(CONST_TRACE_INFO, "%d) %s - %s\n",
 	       myGlobals.numIpProtosToMonitor, protoName, protocolList);
 #endif
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "handleProtocolList(%s) = %d", protoName, rc);
+  traceEvent(CONST_TRACE_INFO, "handleProtocolList(%s) = %d", protoName, rc);
 #endif
 
   return(rc);
@@ -389,10 +389,10 @@ void createPortHash() {
   for(i=0; i<myGlobals.numIpPortMapperSlots; i++) myGlobals.ipPortMapper[i].port = -1;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Allocating %d slots", myGlobals.numIpPortMapperSlots);
+  traceEvent(CONST_TRACE_INFO, "Allocating %d slots", myGlobals.numIpPortMapperSlots);
 #endif
 
-  for(i=0; i<TOP_IP_PORT; i++) {
+  for(i=0; i<MAX_IP_PORT; i++) {
     if(servicesMapper[i] != -1) {
       int slotId = (3*i) % myGlobals.numIpPortMapperSlots;
 
@@ -400,7 +400,7 @@ void createPortHash() {
 	slotId = (slotId+1) % myGlobals.numIpPortMapperSlots;
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Mapping port %d to slotId %d", i, slotId);
+      traceEvent(CONST_TRACE_INFO, "Mapping port %d to slotId %d", i, slotId);
 #endif
       myGlobals.ipPortMapper[slotId].port = i, myGlobals.ipPortMapper[slotId].mappedPort = servicesMapper[i];
     }
@@ -430,20 +430,20 @@ void handleProtocols() {
   fd = fopen(myGlobals.protoSpecs, "rb");
 
   if(fd == NULL) {
-    traceEvent(TRACE_INFO, "Processing protocol list: '%s'", myGlobals.protoSpecs);
+    traceEvent(CONST_TRACE_INFO, "Processing protocol list: '%s'", myGlobals.protoSpecs);
     proto = strtok_r(myGlobals.protoSpecs, ",", &strtokState);
   } else {
     struct stat buf;
 
     if(stat(myGlobals.protoSpecs, &buf) != 0) {
       fclose(fd);
-      traceEvent(TRACE_ERROR, "Error while stat() of %s\n", myGlobals.protoSpecs);
+      traceEvent(CONST_TRACE_ERROR, "Error while stat() of %s\n", myGlobals.protoSpecs);
       return;
     }
 
     bufferCurrent = buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
 
-    traceEvent(TRACE_INFO, "Processing protocol file: '%s', size: %ld",
+    traceEvent(CONST_TRACE_INFO, "Processing protocol file: '%s', size: %ld",
 	       myGlobals.protoSpecs, buf.st_size+8);
 
     for (;;) {
@@ -492,7 +492,7 @@ void handleProtocols() {
     char* protoName = strchr(proto, '=');
 
     if(protoName == NULL)
-      traceEvent(TRACE_INFO,
+      traceEvent(CONST_TRACE_INFO,
 		 "Unknown protocol '%s'. It has been ignored.\n",
 		 proto);
     else {
@@ -511,7 +511,7 @@ void handleProtocols() {
       }
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "          %30s %s", proto, tmpStr);
+      traceEvent(CONST_TRACE_INFO, "          %30s %s", proto, tmpStr);
 #endif
 
       handleProtocolList(proto, tmpStr);
@@ -554,7 +554,7 @@ void addDefaultProtocols(void) {
 /* **************************************** */
 
 int mapGlobalToLocalIdx(int port) {
-  if((port < 0) || (port >= TOP_IP_PORT))
+  if((port < 0) || (port >= MAX_IP_PORT))
    return(-1);
   else {
     int j, found, slotId = (3*port) % myGlobals.numIpPortMapperSlots;
@@ -585,14 +585,14 @@ static void purgeIpPorts(int theDevice) {
   int i;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Calling purgeIpPorts(%d)", theDevice);
+  traceEvent(CONST_TRACE_INFO, "Calling purgeIpPorts(%d)", theDevice);
 #endif
   
   if(myGlobals.device[myGlobals.actualReportDeviceId].numHosts == 0) return;
 
   /* **********************************
 
-  marker used to be defined ad char marker[TOP_IP_PORT];
+  marker used to be defined ad char marker[MAX_IP_PORT];
   Unfortunately under FreeBSD this caused a core dump.
   Probably because the amount of memory allocated on the
   heap was too much. With dynamic memory allocation
@@ -600,7 +600,7 @@ static void purgeIpPorts(int theDevice) {
 
   ********************************** */
 
-  marker = (char*)calloc(1, TOP_IP_PORT);
+  marker = (char*)calloc(1, MAX_IP_PORT);
   
   for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++) {
     int k;
@@ -620,21 +620,21 @@ static void purgeIpPorts(int theDevice) {
      I know that this semaphore has been designed for other tasks
      however it allows me to save memory/time... 
   */
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.gdbmMutex, "purgeIpPorts");
 #endif
   
-  for(i=1; i<TOP_IP_PORT; i++) {
+  for(i=1; i<MAX_IP_PORT; i++) {
     if((marker[i] == 0) && (myGlobals.device[theDevice].ipPorts[i] != NULL)) {
       free(myGlobals.device[theDevice].ipPorts[i]);
       myGlobals.device[theDevice].ipPorts[i] = NULL;
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Purging ipPorts(%d)", i);
+      traceEvent(CONST_TRACE_INFO, "Purging ipPorts(%d)", i);
 #endif
     }
   }
   
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
@@ -671,7 +671,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
 /* **************************************** */
 #ifndef WIN32
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 void* periodicLsofLoop(void* notUsed _UNUSED_) {
   long loopCount=0;
   for(;;) {
@@ -685,14 +685,14 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
     if(myGlobals.updateLsof) {
     HEARTBEAT(0, "periodicLsofLoop()", NULL);
 #ifdef LSOF_DEBUG
-      traceEvent(TRACE_INFO, "LSOF_DEBUG: Wait please: reading lsof information...\n");
+      traceEvent(CONST_TRACE_INFO, "LSOF_DEBUG: Wait please: reading lsof information...\n");
 #endif
       if(myGlobals.isLsofPresent) readLsofInfo();
       if ( (++loopCount == 1) && (myGlobals.numProcesses == 0) ) {
-          traceEvent(TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?\n");
+          traceEvent(CONST_TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?\n");
       }
 #ifdef LSOF_DEBUG
-      traceEvent(TRACE_INFO, "LSOF_DEBUG: Done with lsof.\n");
+      traceEvent(CONST_TRACE_INFO, "LSOF_DEBUG: Done with lsof.\n");
 #endif
     }
     HEARTBEAT(0, "periodicLsofLoop(), sleep(60)...", NULL);
@@ -707,7 +707,7 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
 
 /* **************************************** */
 
-#ifndef MULTITHREADED
+#ifndef CFG_MULTITHREADED
 void packetCaptureLoop(time_t *lastTime, int refreshRate) {
   int numPkts=0, pcap_fd = pcap_fileno(myGlobals.device[0].pcapPtr);
   fd_set readMask;
@@ -747,11 +747,11 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
       rc = pcap_dispatch(myGlobals.device[0].pcapPtr, 1, processPacket, NULL);
 
       if(rc == -1) {
-	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
+	traceEvent(CONST_TRACE_ERROR, "Error while reading packets: %s.\n",
 		   pcap_geterr(myGlobals.device[0].pcapPtr));
 	continue;
       } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
-	traceEvent(TRACE_INFO, "pcap_dispatch returned %d "
+	traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d "
 		   "[No more packets to read]", rc);
 	pcap_fd = -1;
       }
@@ -771,7 +771,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
         }
 
       updateThpt(); /* Update Throughput */
-      (*lastTime) = myGlobals.actTime + THROUGHPUT_REFRESH_TIME;
+      (*lastTime) = myGlobals.actTime + PARM_THROUGHPUT_REFRESH_INTERVAL;
     }
 
     handleWebConnections(NULL);
@@ -788,7 +788,7 @@ RETSIGTYPE cleanup(int signo) {
   int i;
 
   if(!msgSent) {
-    traceEvent(TRACE_INFO, "ntop caught signal %d", signo);
+    traceEvent(CONST_TRACE_INFO, "ntop caught signal %d", signo);
     msgSent = 1;
   }
 
@@ -805,15 +805,15 @@ RETSIGTYPE cleanup(int signo) {
     size = backtrace(array, 20);
     strings = (char**)backtrace_symbols(array, size);
 
-    traceEvent(TRACE_ERROR, "\n\n\n*****ntop error: Signal(%d)\n", signo);
+    traceEvent(CONST_TRACE_ERROR, "\n\n\n*****ntop error: Signal(%d)\n", signo);
 
-    traceEvent(TRACE_ERROR, "\n     backtrace is:\n");
+    traceEvent(CONST_TRACE_ERROR, "\n     backtrace is:\n");
     if (size < 2) {
-      traceEvent(TRACE_ERROR, "         **unavailable!\n");
+      traceEvent(CONST_TRACE_ERROR, "         **unavailable!\n");
     } else {
       /* Ignore the 0th entry, that's our cleanup() */
       for (i=1; i<size; i++) {
-	traceEvent(TRACE_ERROR, "          %2d. %s\n", i, strings[i]);
+	traceEvent(CONST_TRACE_ERROR, "          %2d. %s\n", i, strings[i]);
       }
     }
   }
@@ -824,40 +824,40 @@ RETSIGTYPE cleanup(int signo) {
   else
     unloaded = 1;
 
-  traceEvent(TRACE_INFO, "Cleaning up...");
+  traceEvent(CONST_TRACE_INFO, "Cleaning up...");
 
   myGlobals.capturePackets = 0;
 
 #ifndef WIN32
-#ifdef MULTITHREADED
+ #ifdef CFG_MULTITHREADED
 
   killThread(&myGlobals.dequeueThreadId);
 
   if(myGlobals.isLsofPresent)
     killThread(&myGlobals.lsofThreadId);
 
-#ifdef ASYNC_ADDRESS_RESOLUTION
+  #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0) {
     for(i=0; i<myGlobals.numDequeueThreads; i++)
       killThread(&myGlobals.dequeueAddressThreadId[i]);
   }
-#endif
+  #endif
 
   killThread(&myGlobals.handleWebConnectionsThreadId);
 
-#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
+  #ifdef MAKE_WITH_SSLWATCHDOG
   if (myGlobals.sslwatchdogChildThreadId != 0) {
       killThread(&myGlobals.sslwatchdogChildThreadId);
   }
-#ifdef PARM_SSLWATCHDOG
+   #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   if (myGlobals.useSSLwatchdog == 1)
-#endif
+   #endif
   {
       deleteCondvar(&myGlobals.sslwatchdogCondvar);
   }
-#endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
+  #endif
 
-#endif
+ #endif
 
 #else /* #ifndef WIN32 */
 
@@ -866,25 +866,25 @@ RETSIGTYPE cleanup(int signo) {
     Wies-Software <wies@wiessoft.de>
 
     #else clause added to force dequeue threads to terminate
-    USE_SEMAPHORES is *NOT* tested!!!
+    MAKE_WITH_SEMAPHORES is *NOT* tested!!!
   */
-#ifdef MULTITHREADED
-#ifdef USE_SEMAPHORES
+ #ifdef CFG_MULTITHREADED
+  #ifdef MAKE_WITH_SEMAPHORES
   incrementSem(&myGlobals.queueSem);
-#ifdef ASYNC_ADDRESS_RESOLUTION
+   #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   incrementSem(&myGlobals.queueAddressSem);
-#endif
-#else
+   #endif
+  #else
   signalCondvar(&myGlobals.queueCondvar);
-#ifdef ASYNC_ADDRESS_RESOLUTION
+   #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   signalCondvar(&myGlobals.queueAddressCondvar);
-#endif
-#endif
-#endif /* MULTITREADED */
+   #endif
+  #endif
+ #endif /* MULTITREADED */
 #endif /* #ifndef WIN32 */
 
-#ifdef MULTITHREADED
-  traceEvent(TRACE_INFO, "Waiting until threads terminate...\n");
+#ifdef CFG_MULTITHREADED
+  traceEvent(CONST_TRACE_INFO, "Waiting until threads terminate...\n");
   sleep(3); /* Just to wait until threads complete */
 #endif
 
@@ -907,7 +907,7 @@ RETSIGTYPE cleanup(int signo) {
     free(myGlobals.hostsCache[i]);
   myGlobals.hostsCacheLen = 0;
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
   unloadPlugins();
 #endif
 
@@ -922,9 +922,9 @@ RETSIGTYPE cleanup(int signo) {
   endservent();
 #endif
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.packetQueueMutex);
-#ifdef ASYNC_ADDRESS_RESOLUTION
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0)
     deleteMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -933,21 +933,21 @@ RETSIGTYPE cleanup(int signo) {
 
   if(myGlobals.isLsofPresent)
     deleteMutex(&myGlobals.lsofMutex);
-#ifdef USE_SEMAPHORES
+#ifdef MAKE_WITH_SEMAPHORES
   deleteSem(&myGlobals.queueSem);
-#ifdef ASYNC_ADDRESS_RESOLUTION
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   deleteSem(&myGlobals.queueAddressSem);
 #endif
 #else
   deleteCondvar(&myGlobals.queueCondvar);
-#ifdef ASYNC_ADDRESS_RESOLUTION
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   deleteCondvar(&myGlobals.queueAddressCondvar);
 #endif
 #endif
 #endif
 
 #ifdef HAVE_GDBM_H
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.gdbmMutex, "cleanup");
 #endif
   gdbm_close(myGlobals.gdbm_file);    myGlobals.gdbm_file = NULL;
@@ -961,11 +961,11 @@ RETSIGTYPE cleanup(int signo) {
     gdbm_close(myGlobals.eventFile);
     myGlobals.eventFile = NULL;
   }
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.gdbmMutex);
 #endif
 #endif
@@ -973,16 +973,16 @@ RETSIGTYPE cleanup(int signo) {
   for(i=0; i<myGlobals.numDevices; i++) {
     int j;
 
-    traceEvent(TRACE_INFO, "Freeing device %s (idx=%d)...", myGlobals.device[i].name, i);
+    traceEvent(CONST_TRACE_INFO, "Freeing device %s (idx=%d)...", myGlobals.device[i].name, i);
 
     if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
       if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
-	traceEvent(TRACE_INFO, "%s packets received by filter on %s\n",
+	traceEvent(CONST_TRACE_INFO, "%s packets received by filter on %s\n",
 		   formatPkts((Counter)pcapStat.ps_recv), myGlobals.device[i].name);
 
-	traceEvent(TRACE_INFO, "%s packets dropped by kernel\n", formatPkts((Counter)pcapStat.ps_drop));
-#ifdef MULTITHREADED
-	traceEvent(TRACE_INFO, "%s packets dropped by ntop\n",
+	traceEvent(CONST_TRACE_INFO, "%s packets dropped by kernel\n", formatPkts((Counter)pcapStat.ps_drop));
+#ifdef CFG_MULTITHREADED
+	traceEvent(CONST_TRACE_INFO, "%s packets dropped by ntop\n",
 		   formatPkts(myGlobals.device[i].droppedPkts.value));
 #endif
       }
@@ -1006,12 +1006,12 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].hash_hostTraffic != NULL)
       free(myGlobals.device[i].hash_hostTraffic);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
 #endif
     if(myGlobals.device[i].tcpSession != NULL)
       free(myGlobals.device[i].tcpSession);
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
 
@@ -1038,7 +1038,7 @@ RETSIGTYPE cleanup(int signo) {
   
   free(myGlobals.device);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.tcpSessionsMutex);
 #endif
 
@@ -1057,7 +1057,7 @@ RETSIGTYPE cleanup(int signo) {
   }
 
   if(myGlobals.localPorts != NULL) {
-    for(i=0; i<TOP_IP_PORT; i++) {
+    for(i=0; i<MAX_IP_PORT; i++) {
       while(myGlobals.localPorts[i] != NULL) {
 	ProcessInfoList *listElement = myGlobals.localPorts[i]->next;
 	free(myGlobals.localPorts[i]);
@@ -1083,18 +1083,18 @@ RETSIGTYPE cleanup(int signo) {
   myGlobals.endNtop = 1;
 
 #ifdef MEMORY_DEBUG
-  traceEvent(TRACE_INFO, "===================================\n");
+  traceEvent(CONST_TRACE_INFO, "===================================\n");
   termLeaks();
-  traceEvent(TRACE_INFO, "===================================\n");
+  traceEvent(CONST_TRACE_INFO, "===================================\n");
 #endif
 
 #ifdef MTRACE
   muntrace();
 #endif
 
-  traceEvent(TRACE_INFO, "===================================\n");
-  traceEvent(TRACE_INFO, "        ntop is shutdown...        \n");
-  traceEvent(TRACE_INFO, "===================================\n");
+  traceEvent(CONST_TRACE_INFO, "===================================\n");
+  traceEvent(CONST_TRACE_INFO, "        ntop is shutdown...        \n");
+  traceEvent(CONST_TRACE_INFO, "===================================\n");
 
   exit(0);
 }

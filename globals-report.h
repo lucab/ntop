@@ -27,7 +27,7 @@
 #include "gdcpie.h"
 #endif
 
-#ifdef  HTML_EXPERIMENTAL
+#ifdef  PARM_ENABLE_EXPERIMENTAL
 #define TABLE_ON  "<TABLE BGCOLOR=#999999 CELLSPACING=1 CELLPADDING=1 BORDER=0><TR><TD>"
 #define TABLE_OFF "</TD></TR></TABLE>"
 #define TH_BG     "BGCOLOR=#DDDDDD"
@@ -43,10 +43,10 @@
 
 #ifdef WIN32
 #define CHART_FORMAT ".gif"
-#define MIME_TYPE_CHART_FORMAT HTTP_TYPE_GIF
+#define MIME_TYPE_CHART_FORMAT FLAG_HTTP_TYPE_GIF
 #else
 #define CHART_FORMAT ".png"
-#define MIME_TYPE_CHART_FORMAT HTTP_TYPE_PNG
+#define MIME_TYPE_CHART_FORMAT FLAG_HTTP_TYPE_PNG
 #endif
 
 /*
@@ -55,7 +55,7 @@
 */
 #define SD(a,b) ((b)?((float)a)/(b):0)
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
 
 /* reportUtils.c */
 extern void formatUsageCounter(UsageCounter usageCtr, Counter maxValue, int actualDeviceId);
@@ -162,7 +162,7 @@ extern void switchNwInterface(int _interface);
 extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printNtopConfigHInfo(int textPrintFlag);
-#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
+#ifdef MAKE_WITH_SSLWATCHDOG
 extern int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag);
 extern int sslwatchdogClearLock(int parentchildFlag);
 extern int sslwatchdogGetLock(int parentchildFlag);
@@ -170,7 +170,7 @@ extern int sslwatchdogSignal(int parentchildFlag);
 extern int sslwatchdogSetState(int stateNewValue, int parentchildFlag, int enterLockedFlag, int exitLockedFlag);
 extern void sslwatchdogSighandler(int signum);
 extern void* sslwatchdogChildThread(void* notUsed _UNUSED_);
-#endif /* defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG) */
+#endif
 
 #ifdef HAVE_GDCHART
 #ifndef _GLOBALS_REPORT_C_
@@ -211,9 +211,6 @@ extern int out_graph(short gifwidth,
 #define SORT_DATA_THPT                  11
 #define SORT_DATA_HOST_TRAFFIC          12
 
-#define STR_W3C_P3P_XML                 "w3c/p3p.xml"
-#define STR_NTOP_P3P                    "ntop.p3p"
-
 #define STR_SORT_DATA_RECEIVED_PROTOS   "sortDataReceivedProtos.html"
 #define STR_SORT_DATA_RECEIVED_IP       "sortDataReceivedIP.html"
 #define STR_SORT_DATA_RECEIVED_THPT     "sortDataReceivedThpt.html"
@@ -253,6 +250,9 @@ extern int out_graph(short gifwidth,
 /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
 #define RESET_STATS_HTML              "resetStats.html"
 #endif
+
+#define STR_W3C_P3P_XML                 "w3c/p3p.xml"
+#define STR_NTOP_P3P                    "ntop.p3p"
 
 /* http.c */
 extern void sendHTTPHeader(int mimeType, int headerFlags);

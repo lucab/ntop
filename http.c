@@ -24,23 +24,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-/*    This list is derived from RFC1945 in sec 3.2 Uniform Resource Identifiers
-      which defines the permitted characters in a URI/URL.  Specifically, the
-      definitions of
-
-      reserved       = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+"
-      unsafe         = CTL | SP | <"> | "#" | "%" | "<" | ">"
-
-      DO NOT put % here - it's special cased - it's too dangerous to handle the same...
-      We allow "/" - most browsers do
-
-      Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>
-*/
-#define URL_PROHIBITED_CHARACTERS     "\001\002\003\004\005\006" \
-                                  "\010\011\012\013\014\015\016" \
-                                  "\020\021\022\023\024\025\026" \
-                                  "\030\031\032\033\034\035\036" \
-                                  " \"#&+:;<=>?@\177"
+/* Private structure definitions */
 
 struct _HTTPstatus {
     int statusCode;
@@ -98,23 +82,16 @@ struct _HTTPstatus HTTPstatus[] = {
   Note: the numbers below are offsets inside the HTTPstatus table,
         they must be corrected every time the table is modified.
 */
-#define HTTP_FLAG_STATUS_200	( 0<<8)
-#define HTTP_FLAG_STATUS_302	(11<<8)
-#define HTTP_FLAG_STATUS_400	(15<<8)
-#define HTTP_FLAG_STATUS_401	(16<<8)
-#define HTTP_FLAG_STATUS_403	(18<<8)
-#define HTTP_FLAG_STATUS_404	(19<<8)
-#define HTTP_FLAG_STATUS_408	(23<<8)
-#define HTTP_FLAG_STATUS_410	(25<<8)
-#define HTTP_FLAG_STATUS_501	(32<<8)
-#define HTTP_FLAG_STATUS_505	(36<<8)
-
-#define HTTP_INVALID_REQUEST	-2
-#define HTTP_INVALID_METHOD	-3
-#define HTTP_INVALID_VERSION	-4
-#define HTTP_REQUEST_TIMEOUT	-5
-#define HTTP_FORBIDDEN_PAGE	-6
-#define HTTP_INVALID_PAGE	-7
+#define BITFLAG_HTTP_STATUS_200	( 0<<8)
+#define BITFLAG_HTTP_STATUS_302	(11<<8)
+#define BITFLAG_HTTP_STATUS_400	(15<<8)
+#define BITFLAG_HTTP_STATUS_401	(16<<8)
+#define BITFLAG_HTTP_STATUS_403	(18<<8)
+#define BITFLAG_HTTP_STATUS_404	(19<<8)
+#define BITFLAG_HTTP_STATUS_408	(23<<8)
+#define BITFLAG_HTTP_STATUS_410	(25<<8)
+#define BITFLAG_HTTP_STATUS_501	(32<<8)
+#define BITFLAG_HTTP_STATUS_505	(36<<8)
 
 /* ************************* */
 
@@ -202,9 +179,9 @@ static int readHTTPheader(char* theRequestedURL,
       /* select returns immediately */
       wait_time.tv_sec = 10; wait_time.tv_usec = 0;
       if(select(myGlobals.newSock+1, &mask, 0, 0, &wait_time) == 0) {
-	errorCode = HTTP_REQUEST_TIMEOUT; /* Timeout */
+	errorCode = FLAG_HTTP_REQUEST_TIMEOUT; /* Timeout */
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "DEBUG: Timeout while reading from socket.\n");
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Timeout while reading from socket.\n");
 #endif
 	break;
       }
@@ -227,15 +204,15 @@ static int readHTTPheader(char* theRequestedURL,
     if(rc != 1) {
       idxChar = 0;
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "DEBUG: Socket read returned %d (errno=%d)\n", rc, errno);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Socket read returned %d (errno=%d)\n", rc, errno);
 #endif
       /* FIXME (DL): is valid to write to the socket after this condition? */
       break; /* Empty line */
 
     } else if((errorCode == 0) && !isprint(aChar[0]) && !isspace(aChar[0])) {
-      errorCode = HTTP_INVALID_REQUEST;
+      errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "DEBUG: Rcvd non expected char '%c' [%d/0x%x]\n", aChar[0], aChar[0], aChar[0]);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Rcvd non expected char '%c' [%d/0x%x]\n", aChar[0], aChar[0], aChar[0]);
 #endif
     } else {
       if(aChar[0] == '\r') {
@@ -249,7 +226,7 @@ static int readHTTPheader(char* theRequestedURL,
 	numLine++;
 	lineStr[idxChar] = '\0';
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "DEBUG: read HTTP %s line: %s [%d]\n",
+	traceEvent(CONST_TRACE_INFO, "DEBUG: read HTTP %s line: %s [%d]\n",
 	           (numLine>1) ? "header" : "request", lineStr, idxChar);
 #endif
 	if(errorCode != 0) {
@@ -259,22 +236,22 @@ static int readHTTPheader(char* theRequestedURL,
 		  sizeof(httpRequestedURL)-1)[sizeof(httpRequestedURL)-1] = '\0';
 
 	  if(idxChar < 9) {
-	    errorCode = HTTP_INVALID_REQUEST;
+	    errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "DEBUG: Too short request line.\n");
+	    traceEvent(CONST_TRACE_INFO, "DEBUG: Too short request line.\n");
 #endif
 
 	  } else if(strncmp(&lineStr[idxChar-9], " HTTP/", 6) != 0) {
-	    errorCode = HTTP_INVALID_REQUEST;
+	    errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "DEBUG: Malformed request line.\n");
+	    traceEvent(CONST_TRACE_INFO, "DEBUG: Malformed request line.\n");
 #endif
 
 	  } else if((strncmp(&lineStr[idxChar-3], "1.0", 3) != 0) &&
 	            (strncmp(&lineStr[idxChar-3], "1.1", 3) != 0)) {
-	    errorCode = HTTP_INVALID_VERSION;
+	    errorCode = FLAG_HTTP_INVALID_VERSION;
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "DEBUG: Unsupported HTTP version.\n");
+	    traceEvent(CONST_TRACE_INFO, "DEBUG: Unsupported HTTP version.\n");
 #endif
 
 	  } else {
@@ -291,9 +268,9 @@ static int readHTTPheader(char* theRequestedURL,
   tmpStr = &lineStr[5];
 */
 	    } else {
-	      errorCode = HTTP_INVALID_METHOD;
+	      errorCode = FLAG_HTTP_INVALID_METHOD;
 #ifdef DEBUG
-	      traceEvent(TRACE_INFO, "DEBUG: Unrecognized method in request line.\n");
+	      traceEvent(CONST_TRACE_INFO, "DEBUG: Unrecognized method in request line.\n");
 #endif
 	    }
 
@@ -315,7 +292,7 @@ static int readHTTPheader(char* theRequestedURL,
 		  && (strncasecmp(lineStr, "Content-Length: ", 16) == 0)) {
 	  contentLen = atoi(&lineStr[16]);
 #ifdef DEBUG
-	  traceEvent(TRACE_INFO, "DEBUG: len=%d [%s/%s]\n", contentLen, lineStr, &lineStr[16]);
+	  traceEvent(CONST_TRACE_INFO, "DEBUG: len=%d [%s/%s]\n", contentLen, lineStr, &lineStr[16]);
 #endif
 	} else if((idxChar >= 12)
 		  && (strncasecmp(lineStr, "User-Agent: ", 12) == 0)) {
@@ -324,9 +301,9 @@ static int readHTTPheader(char* theRequestedURL,
 	idxChar=0;
       } else if(idxChar > sizeof(lineStr)-2) {
 	if(errorCode == 0) {
-	  errorCode = HTTP_INVALID_REQUEST;
+	  errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef DEBUG
-	  traceEvent(TRACE_INFO, "DEBUG: Line too long (hackers ?)");
+	  traceEvent(CONST_TRACE_INFO, "DEBUG: Line too long (hackers ?)");
 #endif
 	}
       } else {
@@ -416,14 +393,14 @@ static int decodeString(char *bufcoded,
 
 void sendStringLen(char *theString, unsigned int len) {
   int bytesSent, rc, retries = 0;
-  static char buffer[2*BUF_SIZE];
+  static char buffer[2*LEN_GENERAL_WORK_BUFFER];
 
-  if(myGlobals.newSock == DUMMY_SOCKET_VALUE)
+  if(myGlobals.newSock == FLAG_DUMMY_SOCKET)
     return;
 
   httpBytesSent += len;
 
-  /* traceEvent(TRACE_INFO, "%s", theString);  */
+  /* traceEvent(CONST_TRACE_INFO, "%s", theString);  */
   if(len == 0)
     return; /* Nothing to send */
   else {
@@ -453,7 +430,7 @@ void sendStringLen(char *theString, unsigned int len) {
   RESEND:
     errno=0;
 
-    if(myGlobals.newSock == DUMMY_SOCKET_VALUE)
+    if(myGlobals.newSock == FLAG_DUMMY_SOCKET)
       return;
 
 #ifdef HAVE_OPENSSL
@@ -465,11 +442,11 @@ void sendStringLen(char *theString, unsigned int len) {
     rc = send(myGlobals.newSock, &buffer[bytesSent], (size_t)len, 0);
 #endif
 
-    /* traceEvent(TRACE_INFO, "rc=%d\n", rc); */
+    /* traceEvent(CONST_TRACE_INFO, "rc=%d\n", rc); */
 
     if((errno != 0) || (rc < 0)) {
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "DEBUG: Socket write returned %d (errno=%d)\n", rc, errno);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Socket write returned %d (errno=%d)\n", rc, errno);
 #endif
       if((errno == EAGAIN /* Resource temporarily unavailable */) && (retries<3)) {
 	len -= rc;
@@ -503,33 +480,33 @@ void sendString(char *theString) {
 /* ************************* */
 
 void printHTMLheader(char *title, int  headerFlags) {
-  char buf[BUF_SIZE];
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
   sendString("<HTML>\n<HEAD>\n");
 
   if(title != NULL) {
-    if(snprintf(buf, BUF_SIZE, "<TITLE>%s</TITLE>\n", title) < 0)
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TITLE>%s</TITLE>\n", title) < 0)
     BufferTooShort();
     sendString(buf);
   }
 
-  if((headerFlags & HTML_FLAG_NO_REFRESH) == 0) {
-    if(snprintf(buf, BUF_SIZE, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", myGlobals.refreshRate) < 0)
+  if((headerFlags & BITFLAG_HTML_NO_REFRESH) == 0) {
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", myGlobals.refreshRate) < 0)
       BufferTooShort();
     sendString(buf);
   }
   sendString("<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n");
   sendString("<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
-  if((headerFlags & HTML_FLAG_NO_STYLESHEET) == 0) {
+  if((headerFlags & BITFLAG_HTML_NO_STYLESHEET) == 0) {
     sendString("<LINK REL=stylesheet HREF=/style.css type=\"text/css\">\n");
   }
   
   sendString("<SCRIPT SRC=/functions.js TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
 
   sendString("</HEAD>\n");
-  if((headerFlags & HTML_FLAG_NO_BODY) == 0) {
+  if((headerFlags & BITFLAG_HTML_NO_BODY) == 0) {
     sendString("<BODY BACKGROUND=/white_bg.gif BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
-    if((title != NULL) && ((headerFlags & HTML_FLAG_NO_HEADING) == 0))
+    if((title != NULL) && ((headerFlags & BITFLAG_HTML_NO_HEADING) == 0))
       printSectionTitle(title);
   }
 }
@@ -537,30 +514,30 @@ void printHTMLheader(char *title, int  headerFlags) {
 /* ************************* */
 
 void printHTMLtrailer(void) {
-  char buf[BUF_SIZE];
+  char buf[LEN_GENERAL_WORK_BUFFER];
   int i, len, numRealDevices = 0;
 
   sendString("\n<P><HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><B>\n");
 
-  if(snprintf(buf, BUF_SIZE, "Report created on %s [%s]<br>\n",
+  if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s [%s]<br>\n",
 	      ctime(&myGlobals.actTime), formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime)) < 0)
     BufferTooShort();
   sendString(buf);
 
-  if(snprintf(buf, BUF_SIZE, "Generated by <A HREF=\"http://www.ntop.org/\">ntop</A> v.%s %s \n[%s] (%s build)<br>",
+  if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Generated by <A HREF=\"http://www.ntop.org/\">ntop</A> v.%s %s \n[%s] (%s build)<br>",
 	      version, THREAD_MODE, osName, buildDate) < 0)
     BufferTooShort();
   sendString(buf);
 
   if(myGlobals.rFileName != NULL) {
-    if(snprintf(buf, BUF_SIZE, "Listening on [%s]\n", PCAP_NW_INTERFACE) < 0)
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Listening on [%s]\n", CONST_PCAP_NW_INTERFACE_FILE) < 0)
       BufferTooShort();
   } else {   
     buf[0] = '\0';
 
     for(i=len=numRealDevices=0; i<myGlobals.numDevices; i++, len=strlen(buf)) {
       if(!myGlobals.device[i].virtualDevice) {
-	if(snprintf(&buf[len], BUF_SIZE-len, "%s%s",
+	if(snprintf(&buf[len], LEN_GENERAL_WORK_BUFFER - len, "%s%s",
 		    (numRealDevices>0) ? "," : "Listening on [", myGlobals.device[i].name) < 0)
 	  BufferTooShort();
 	numRealDevices++;
@@ -570,7 +547,7 @@ void printHTMLtrailer(void) {
     if((i == 0) || (numRealDevices == 0))
       buf[0] = '\0';
     else {
-      if(snprintf(&buf[len], BUF_SIZE-len, "]\n") < 0)
+      if(snprintf(&buf[len], LEN_GENERAL_WORK_BUFFER-len, "]\n") < 0)
 	BufferTooShort();
     }
   }
@@ -578,12 +555,12 @@ void printHTMLtrailer(void) {
   len = strlen(buf);
 
   if(*myGlobals.currentFilterExpression != '\0') {
-    if(snprintf(&buf[len], BUF_SIZE-len,
+    if(snprintf(&buf[len], LEN_GENERAL_WORK_BUFFER-len,
 		"with kernel (libpcap) filtering expression </B>\"%s\"<B>\n",
 		myGlobals.currentFilterExpression) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(&buf[len], BUF_SIZE-len,
+    if(snprintf(&buf[len], LEN_GENERAL_WORK_BUFFER-len,
 		"without a kernel (libpcap) filtering expression\n") < 0)
       BufferTooShort();
   }
@@ -591,7 +568,7 @@ void printHTMLtrailer(void) {
   sendString(buf);
 
   if(numRealDevices > 0) {
-    if(snprintf(buf, BUF_SIZE, "<br>Web report active on interface %s",
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<br>Web report active on interface %s",
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
       BufferTooShort();
     sendString(buf);
@@ -608,7 +585,7 @@ void initAccessLog(void) {
   if(myGlobals.accessLogPath) {
     myGlobals.accessLogFd = fopen(myGlobals.accessLogPath, "a");
     if(myGlobals.accessLogFd == NULL) {
-      traceEvent(TRACE_ERROR, "Unable to create file %s. Access log is disabled.",
+      traceEvent(CONST_TRACE_ERROR, "Unable to create file %s. Access log is disabled.",
 		 myGlobals.accessLogPath);
     }
   }
@@ -682,57 +659,57 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
 /* ************************* */
 
 void returnHTTPbadRequest() {
-  returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_400);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_400);
 }
 
 void returnHTTPaccessDenied() {
-  returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_401 | HTTP_FLAG_NEED_AUTHENTICATION);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_401 | BITFLAG_HTTP_NEED_AUTHENTICATION);
 }
 
 void returnHTTPaccessForbidden() {
-  returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_403);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_403);
 }
 
 void returnHTTPpageNotFound() {
-  returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_404);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_404);
 }
 
 void returnHTTPpageGone() {
-  returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_410);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_410);
 }
 
 void returnHTTPrequestTimedOut() {
-  returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_408);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_408);
 }
 
 void returnHTTPnotImplemented() {
-  returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_501);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_501);
 }
 
 void returnHTTPversionNotSupported() {
-  returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_505);
+  returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_505);
 }
 
 /* ************************* */
 
 static void returnHTTPspecialStatusCode(int statusFlag) {
   int statusIdx;
-  char buf[BUF_SIZE];
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
   statusIdx = (statusFlag >> 8) & 0xff;
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))) {
     statusIdx = 0;
     statusFlag = 0;
 #ifdef DEBUG
-    traceEvent(TRACE_WARNING,
+    traceEvent(CONST_TRACE_WARNING,
 	       "DEBUG: INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n", statusIdx);
 #endif
   }
 
-  sendHTTPHeader(HTTP_TYPE_HTML, statusFlag);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, statusFlag);
   if(snprintf(buf, sizeof(buf), "Error %d", HTTPstatus[statusIdx].statusCode) < 0)
       BufferTooShort();
-  printHTMLheader(buf, HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_HEADING);
+  printHTMLheader(buf, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_HEADING);
 
   if(snprintf(buf, sizeof(buf),
 	   "<H1>Error %d</H1>\n%s\n",
@@ -758,8 +735,8 @@ void returnHTTPredirect(char* destination) {
   compressFile = acceptGzEncoding = 0;
 #endif
 
-  sendHTTPHeader(HTTP_TYPE_HTML,
-		 HTTP_FLAG_STATUS_302 | HTTP_FLAG_NO_CACHE_CONTROL | HTTP_FLAG_MORE_FIELDS);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML,
+		 BITFLAG_HTTP_STATUS_302 | BITFLAG_HTTP_NO_CACHE_CONTROL | BITFLAG_HTTP_MORE_FIELDS);
   sendString("Location: /");
   sendString(destination);
   sendString("\n\n");
@@ -781,7 +758,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))){
     statusIdx = 0;
 #ifdef DEBUG
-    traceEvent(TRACE_WARNING, "DEBUG: INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n",
+    traceEvent(CONST_TRACE_WARNING, "DEBUG: INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n",
 	       statusIdx);
 #endif
   }
@@ -813,14 +790,14 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
       BufferTooShort();
   sendString(tmpStr);
 
-  if(headerFlags & HTTP_FLAG_IS_CACHEABLE) {
+  if(headerFlags & BITFLAG_HTTP_IS_CACHEABLE) {
     sendString("Cache-Control: max-age=3600, must-revalidate, public\r\n");
-  } else if((headerFlags & HTTP_FLAG_NO_CACHE_CONTROL) == 0) {
+  } else if((headerFlags & BITFLAG_HTTP_NO_CACHE_CONTROL) == 0) {
     sendString("Cache-Control: no-cache\r\n");
     sendString("Expires: 0\r\n");
   }
 
-  if((headerFlags & HTTP_FLAG_KEEP_OPEN) == 0) {
+  if((headerFlags & BITFLAG_HTTP_KEEP_OPEN) == 0) {
     sendString("Connection: close\n");
   }
 
@@ -828,46 +805,46 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
       BufferTooShort();
   sendString(tmpStr);
 
-  if(headerFlags & HTTP_FLAG_NEED_AUTHENTICATION) {
+  if(headerFlags & BITFLAG_HTTP_NEED_AUTHENTICATION) {
       sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server;\"\r\n");
   }
 
   switch(mimeType) {
-    case HTTP_TYPE_HTML:
+    case FLAG_HTTP_TYPE_HTML:
       sendString("Content-Type: text/html\r\n");
       break;
-    case HTTP_TYPE_GIF:
+    case FLAG_HTTP_TYPE_GIF:
       sendString("Content-Type: image/gif\r\n");
       break;
-    case HTTP_TYPE_JPEG:
+    case FLAG_HTTP_TYPE_JPEG:
       sendString("Content-Type: image/jpeg\r\n");
       break;
-    case HTTP_TYPE_PNG:
+    case FLAG_HTTP_TYPE_PNG:
       sendString("Content-Type: image/png\r\n");
       break;
-    case HTTP_TYPE_CSS:
+    case FLAG_HTTP_TYPE_CSS:
       sendString("Content-Type: text/css\r\n");
       break;
-    case HTTP_TYPE_TEXT:
+    case FLAG_HTTP_TYPE_TEXT:
       sendString("Content-Type: text/plain\r\n");
       break;
-    case HTTP_TYPE_ICO:
+    case FLAG_HTTP_TYPE_ICO:
       sendString("Content-Type: application/octet-stream\r\n");
       break;
-    case HTTP_TYPE_JS:
+    case FLAG_HTTP_TYPE_JS:
       sendString("Content-Type: text/javascript\r\n");
       break;
-    case HTTP_TYPE_XML:
+    case FLAG_HTTP_TYPE_XML:
       sendString("Content-Type: text/xml\r\n");
       break;
-    case HTTP_TYPE_P3P:
+    case FLAG_HTTP_TYPE_P3P:
       sendString("Content-Type: text/xml\r\n");
       break;
-    case HTTP_TYPE_NONE:
+    case FLAG_HTTP_TYPE_NONE:
       break;
 #ifdef DEBUG
     default:
-      traceEvent(TRACE_INFO,
+      traceEvent(CONST_TRACE_INFO,
 		 "DEBUG: INTERNAL ERROR: invalid MIME type code requested (%d)\n", mimeType);
 #endif
   }
@@ -881,7 +858,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   }
 #endif
 
-  if((headerFlags & HTTP_FLAG_MORE_FIELDS) == 0) {
+  if((headerFlags & BITFLAG_HTTP_MORE_FIELDS) == 0) {
     sendString("\r\n");
   }
 }
@@ -925,8 +902,8 @@ static int checkURLsecurity(char *url) {
   if((url == NULL) || (url[0] == '\0'))
     return(0);
 
-  if(strlen(url) >= URL_MAX_LEN) {
-    traceEvent(TRACE_ERROR, "URL security(2): URL too long (len=%d)", strlen(url));
+  if(strlen(url) >= MAX_LEN_URL) {
+    traceEvent(CONST_TRACE_ERROR, "URL security(2): URL too long (len=%d)", strlen(url));
     return(2);
   }
 
@@ -940,13 +917,13 @@ static int checkURLsecurity(char *url) {
    }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "DEBUG: URL security: Testing '%s'...\n", workURL);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: URL security: Testing '%s'...\n", workURL);
 #endif
 
   /* a % - Unicode?  We kill this off 1st because some of the gcc functions interpret unicode "for" us */
 
   if(((token = strstr(workURL, "%")) != NULL) && (strncmp(token, "%3A" /* : */, 3))) {
-      traceEvent(TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request (url=%s)\n", workURL);
+      traceEvent(CONST_TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request (url=%s)\n", workURL);
       /* Explicitly, we're updating the real URL, not the copy, so it's not used anywhere in ntop */
       url[0] = '\0'; 
       return(1);
@@ -971,31 +948,31 @@ static int checkURLsecurity(char *url) {
 
   /* a double slash? */
   if(strstr(workURL, "//") > 0) {
-    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request\n");
+    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request\n");
     return(2);
   }
 
   /* a double &? */
   if(strstr(workURL, "&&") > 0) {
-    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found && in URL...rejecting request\n");
+    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found && in URL...rejecting request\n");
     return(2);
   }
 
   /* a double ?? */
   if(strstr(workURL, "??") > 0) {
-    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found ?? in URL...rejecting request\n");
+    traceEvent(CONST_TRACE_ERROR, "URL security(2): ERROR: Found ?? in URL...rejecting request\n");
     return(2);
   }
 
   /* a double dot? */
   if(strstr(workURL, "..") > 0) {
-    traceEvent(TRACE_ERROR, "URL security(3): ERROR: Found .. in URL...rejecting request\n");
+    traceEvent(CONST_TRACE_ERROR, "URL security(3): ERROR: Found .. in URL...rejecting request\n");
     return(3);
   }
 
   /* Prohibited characters? */
-  if((len = strcspn(workURL, URL_PROHIBITED_CHARACTERS)) < strlen(workURL)) {
-    traceEvent(TRACE_ERROR, "URL security(4): ERROR: Prohibited character(s) [%c]"
+  if((len = strcspn(workURL, CONST_URL_PROHIBITED_CHARACTERS)) < strlen(workURL)) {
+    traceEvent(CONST_TRACE_ERROR, "URL security(4): ERROR: Prohibited character(s) [%c]"
 	       " in URL... rejecting request\n", workURL[len]);
     return(4);
   }
@@ -1027,7 +1004,7 @@ static int checkURLsecurity(char *url) {
   countSections = countOKnumeric = countOKextension = 0;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "DEBUG: URL security: NOTE: Tokenizing '%s'...\n", workURL);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: URL security: NOTE: Tokenizing '%s'...\n", workURL);
 #endif
 
   for(i=strlen(workURL)-1; i >= 0; i--)
@@ -1046,7 +1023,7 @@ static int checkURLsecurity(char *url) {
 	   (strcmp(&workURL[i], "js")   == 0) || /* Javascript */
 	   (strcmp(&workURL[i], "pl")   == 0) || /* used for Perl CGI's */
 	   (strcmp(&workURL[i], "css")  == 0)))) {
-    traceEvent(TRACE_ERROR,
+    traceEvent(CONST_TRACE_ERROR,
 	       "URL security(5): ERROR: Found bad file extension (.%s) in URL...\n",
 	       &workURL[i]);
     rc = 5;
@@ -1055,7 +1032,7 @@ static int checkURLsecurity(char *url) {
   if(workURL != NULL) free(workURL);
 
   if(rc != 0)
-    traceEvent(TRACE_ERROR,
+    traceEvent(CONST_TRACE_ERROR,
 	       "ERROR: bad char found on '%s' (rc=%d) rejecting request",
 	       url, rc);
 
@@ -1080,7 +1057,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
   char tmpStr[512];
   char *domainNameParm = NULL;
   int revertOrder=0, rc;
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   u_char mutexReleased = 0;
 #endif
   struct tm t;
@@ -1095,22 +1072,22 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
      similar chars that can be used for reading system files
   */
   if((rc = checkURLsecurity(pageName)) != 0) {
-    traceEvent(TRACE_ERROR, "ERROR: URL security: '%s' rejected (code=%d)(client=%s)",
+    traceEvent(CONST_TRACE_ERROR, "ERROR: URL security: '%s' rejected (code=%d)(client=%s)",
 	       pageName, rc, _intoa(*from, tmpStr, sizeof(tmpStr)));
     returnHTTPaccessForbidden();
-    return(HTTP_FORBIDDEN_PAGE);
+    return(FLAG_HTTP_FORBIDDEN_PAGE);
   }
 
-  /* traceEvent(TRACE_INFO, "Page: '%s'\n", pageName); */
+  /* traceEvent(CONST_TRACE_INFO, "Page: '%s'\n", pageName); */
 
   questionMark = strchr(pageName, '?');
 
   if((questionMark != NULL)
      && (questionMark[0] == '?')) {
-    char requestedURL[URL_MAX_LEN];
+    char requestedURL[MAX_LEN_URL];
     char *tkn;
     
-    /* Safe strcpy as requestedURL < URL_MAX_LEN (checked by checkURLsecurity) */
+    /* Safe strcpy as requestedURL < MAX_LEN_URL (checked by checkURLsecurity) */
     strcpy(requestedURL, &questionMark[1]);
 
     tkn = strtok(requestedURL, "&");
@@ -1153,7 +1130,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 		myGlobals.dataFileDirs[idx], pageName) < 0)
       BufferTooShort();
 	
-      /* traceEvent(TRACE_ERROR, "Searching '%s'\n", tmpStr); */
+      /* traceEvent(CONST_TRACE_ERROR, "Searching '%s'\n", tmpStr); */
 	
 #ifdef WIN32
       i=0;
@@ -1169,38 +1146,38 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	  break;
 	}
 
-	traceEvent(TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
+	traceEvent(CONST_TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
       }
     }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "DEBUG: tmpStr=%s - fd=0x%x\n", tmpStr, fd);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: tmpStr=%s - fd=0x%x\n", tmpStr, fd);
 #endif
 
   if(fd != NULL) {
     char theDate[48];
     time_t theTime;
-    int len = strlen(pageName), mimeType = HTTP_TYPE_HTML;
+    int len = strlen(pageName), mimeType = FLAG_HTTP_TYPE_HTML;
 
     if(len > 4) {
       if(strcmp(&pageName[len-4], ".gif") == 0)
-        mimeType = HTTP_TYPE_GIF;
+        mimeType = FLAG_HTTP_TYPE_GIF;
       else if(strcmp(&pageName[len-4], ".jpg") == 0)
-        mimeType = HTTP_TYPE_JPEG;
+        mimeType = FLAG_HTTP_TYPE_JPEG;
       else if(strcmp(&pageName[len-4], ".png") == 0)
-        mimeType = HTTP_TYPE_PNG;
+        mimeType = FLAG_HTTP_TYPE_PNG;
       else if(strcmp(&pageName[len-4], ".css") == 0)
-        mimeType = HTTP_TYPE_CSS;
+        mimeType = FLAG_HTTP_TYPE_CSS;
       else if(strcmp(&pageName[len-4], ".ico") == 0)
-        mimeType = HTTP_TYPE_ICO;
+        mimeType = FLAG_HTTP_TYPE_ICO;
       else if(strcmp(&pageName[len-4], ".js") == 0)
-        mimeType = HTTP_TYPE_JS;
+        mimeType = FLAG_HTTP_TYPE_JS;
       else if(strcmp(&pageName[len-4], ".xml") == 0)
         /* w3c/p3p.xml */
-        mimeType = HTTP_TYPE_XML;
+        mimeType = FLAG_HTTP_TYPE_XML;
     }
 
-    sendHTTPHeader(mimeType, HTTP_FLAG_IS_CACHEABLE | HTTP_FLAG_MORE_FIELDS);
+    sendHTTPHeader(mimeType, BITFLAG_HTTP_IS_CACHEABLE | BITFLAG_HTTP_MORE_FIELDS);
 
 #ifdef HAVE_ZLIB
     compressFile = 0; /* Don't move this */
@@ -1240,7 +1217,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     if(handlePluginHTTPRequest(&pageName[strlen(PLUGINS_HEADER)])) {
       return(0);
     } else {
-      return(HTTP_INVALID_PAGE);
+      return(FLAG_HTTP_INVALID_PAGE);
     }
   }
 
@@ -1249,28 +1226,28 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     helps because at least a partial respose
     has been send back to the user in the meantime
   */
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
   if(strncmp(pageName, SHUTDOWN_NTOP_HTML, strlen(SHUTDOWN_NTOP_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     shutdownNtop();
   } else if(strncmp(pageName, CHANGE_FILTER_HTML, strlen(CHANGE_FILTER_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     changeFilter();
   } else if(strncmp(pageName, "doChangeFilter", strlen("doChangeFilter")) == 0) {
     printTrailer=0;
     if(doChangeFilter(postLen)==0) /*resetStats()*/;
   } else if(strncmp(pageName, FILTER_INFO_HTML, strlen(FILTER_INFO_HTML)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader(NULL, HTML_FLAG_NO_REFRESH);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    printHTMLheader(NULL, BITFLAG_HTML_NO_REFRESH);
     /* printHTMLtrailer is called afterwards and inserts the relevant info */
   } else if(strncmp(pageName, RESET_STATS_HTML, strlen(RESET_STATS_HTML)) == 0) {
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader("All statistics are now reset", HTML_FLAG_NO_REFRESH);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    printHTMLheader("All statistics are now reset", BITFLAG_HTML_NO_REFRESH);
     myGlobals.resetHashNow = 1; /* resetStats(); */
   } else if(strncmp(pageName, SWITCH_NIC_HTML, strlen(SWITCH_NIC_HTML)) == 0) {
     char *equal = strchr(pageName, '=');
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
 
     if(equal == NULL)
       switchNwInterface(0);
@@ -1286,7 +1263,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     else
       deleteUser(&questionMark[1]);
   } else if(strncmp(pageName, "modifyURL", strlen("modifyURL")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     if((questionMark == NULL) || (questionMark[0] == '\0')) {
       addURL(NULL);
     } else
@@ -1301,28 +1278,28 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     printTrailer=0;
     doAddURL(postLen /* \r\n */);
   } else if(strncmp(pageName, STR_SHOW_PLUGINS, strlen(STR_SHOW_PLUGINS)) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     if(questionMark == NULL)
       showPluginsList("");
     else
       showPluginsList(&pageName[strlen(STR_SHOW_PLUGINS)+1]);
   } else if(strcmp(pageName, "showUsers.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     showUsers();
   } else if(strcmp(pageName, "addUser.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     addUser(NULL);
   } else if(strncmp(pageName, "modifyUser", strlen("modifyUser")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     if((questionMark == NULL) || (questionMark[0] == '\0'))
       addUser(NULL);
     else
       addUser(&questionMark[1]);
   } else if(strcmp(pageName, "showURLs.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     showURLs();
   } else if(strcmp(pageName, "addURL.html") == 0) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     addURL(NULL);
     /* Temporary here - begin
 
@@ -1337,12 +1314,12 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
        so punt!
     */
 #ifdef LOG_URLS
-    traceEvent(TRACE_INFO, "Note: favicon.ico request, returned 404.\n");
+    traceEvent(CONST_TRACE_INFO, "Note: favicon.ico request, returned 404.\n");
 #endif
     returnHTTPpageNotFound();
     printTrailer=0;
   } else {
-#if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
+#if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
 
     if((!myGlobals.debugMode) 
@@ -1358,17 +1335,17 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 			    creates zombies although we decided to ignore SIGCHLD
 			  */
       
-#if !defined(WIN32) && defined(USE_SYSLOG)
+#if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
       /* Child processes must log to syslog.
        * If no facility was set through -L | --use-syslog=facility
        * then force the default
        */
-      if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
+      if (myGlobals.useSyslog == FLAG_SYSLOG_NONE) {
 	static char messageSent = 0;
 
 	if(!messageSent) {
 	  messageSent = 1;
-	  traceEvent(TRACE_INFO, "NOTE: -L | --use-syslog=facility not specified, child processes will log to the default (%d).\n", 
+	  traceEvent(CONST_TRACE_INFO, "NOTE: -L | --use-syslog=facility not specified, child processes will log to the default (%d).\n", 
 		     DEFAULT_SYSLOG_FACILITY);
 	}
       }
@@ -1376,7 +1353,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 
       /* The URLs below are "read-only" hence I can fork a copy of ntop  */
       if((childpid = fork()) < 0)
-	traceEvent(TRACE_ERROR, "An error occurred while forking ntop [errno=%d]..", errno);
+	traceEvent(CONST_TRACE_ERROR, "An error occurred while forking ntop [errno=%d]..", errno);
       else {
 	*usedFork = 1;
 
@@ -1402,7 +1379,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       }
     }
 
-#if !defined(WIN32) && defined(USE_CGI)
+#if !defined(WIN32) && defined(PARM_USE_CGI)
   if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
     sendString("HTTP/1.0 200 OK\r\n");
     rc = execCGI(&pageName[strlen(CGI_HEADER)]);
@@ -1413,11 +1390,11 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
   } else
 #endif
 
-#endif /* !MICRO_NTOP */
+#endif /* !MAKE_MICRO_NTOP */
 
   if(strcmp(pageName, STR_INDEX_HTML) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_BODY);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      printHTMLheader("Welcome to ntop!", BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
       sendString("<frameset cols=160,* framespacing=0 border=0 frameborder=0>\n");
       sendString("    <frame src=leftmenu.html name=Menu marginwidth=0 marginheight=0>\n");
       sendString("    <frame src=home.html name=area marginwidth=5 marginheight=0>\n");
@@ -1430,8 +1407,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       printTrailer=0;
     } else if((strcmp(pageName, "leftmenu.html") == 0)
 	      || (strcmp(pageName, "leftmenu-nojs.html") == 0)) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHTMLheader(NULL, HTML_FLAG_NO_REFRESH);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      printHTMLheader(NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<center>\n<pre>\n\n</pre>\n\n");
       sendString("<FONT FACE=Helvetica SIZE=+2>Welcome<br>to<br>\n");
       sendString("ntop!</FONT>\n<pre>\n</pre>\n");
@@ -1525,7 +1502,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       printTrailer=0;
     } else if(strcmp(pageName, "home_.html") == 0) {
       if(myGlobals.filterExpressionInExtraFrame){
-	sendHTTPHeader(HTTP_TYPE_HTML, 0);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
         sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
         sendString("border=\"0\" frameborder=\"0\">\n");
         sendString("    <frame src=\"home.html\" marginwidth=\"2\" ");
@@ -1536,7 +1513,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
         sendString("  </frameset>\n</html>\n");
         printTrailer=0;
       } else {	/* frame so that "area" is defined */
-	sendHTTPHeader(HTTP_TYPE_HTML, 0);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
         sendString("<html>\n  <frameset rows=\"100%,*\" framespacing=\"0\" ");
         sendString("border=\"0\" frameborder=\"0\">\n");
         sendString("    <frame src=\"home.html\" marginwidth=\"0\" ");
@@ -1546,8 +1523,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
         printTrailer=0;
       }
     } else if(strcmp(pageName, "home.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      printHTMLheader("Welcome to ntop!", BITFLAG_HTML_NO_REFRESH);
       sendString("<FONT FACE=Helvetica>\n<HR>\n");
       sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
       sendString("currently using the network and reports information concerning the IP\n");
@@ -1565,59 +1542,59 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       sendString("<A HREF=mailto:ntop@ntop.org> mailing list</A>.\n</font>");
     } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_PROTOS,
 		      strlen(STR_SORT_DATA_RECEIVED_PROTOS)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_RECEIVED_PROTOS, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_PROTOS);
     } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_IP, strlen(STR_SORT_DATA_RECEIVED_IP)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_RECEIVED_IP, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_IP);
     } else if(strncmp(pageName, STR_SORT_DATA_THPT_STATS, strlen(STR_SORT_DATA_THPT_STATS)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printThptStats(sortedColumn);
     } else if(strncmp(pageName, STR_THPT_STATS_MATRIX, strlen(STR_THPT_STATS_MATRIX)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printThptStatsMatrix(sortedColumn);
     } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_THPT, strlen(STR_SORT_DATA_RECEIVED_THPT)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_RECEIVED_THPT, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_THPT);
     } else if(strncmp(pageName, STR_SORT_DATA_RCVD_HOST_TRAFFIC, strlen(STR_SORT_DATA_RCVD_HOST_TRAFFIC)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_RCVD_HOST_TRAFFIC, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RCVD_HOST_TRAFFIC);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_HOST_TRAFFIC, strlen(STR_SORT_DATA_SENT_HOST_TRAFFIC)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_SENT_HOST_TRAFFIC, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_HOST_TRAFFIC);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_PROTOS, strlen(STR_SORT_DATA_SENT_PROTOS)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_SENT_PROTOS, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_PROTOS);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_IP, strlen(STR_SORT_DATA_SENT_IP)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_SENT_IP, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_IP);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_THPT, strlen(STR_SORT_DATA_SENT_THPT)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_SENT_THPT, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_THPT);
     } else if(strncmp(pageName, HOSTS_INFO_HTML, strlen(HOSTS_INFO_HTML)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsInfo(sortedColumn, revertOrder, pageNum);
     } else if(strncmp(pageName, STR_SORT_DATA_PROTOS, strlen(STR_SORT_DATA_PROTOS)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_PROTOS, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_PROTOS);
     } else if(strncmp(pageName, STR_SORT_DATA_IP, strlen(STR_SORT_DATA_IP)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHostsTraffic(SORT_DATA_IP, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_IP);
     } else if(strncmp(pageName, STR_SORT_DATA_THPT, strlen(STR_SORT_DATA_THPT)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_THPT, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_THPT);
     } else if(strncmp(pageName, STR_SORT_DATA_HOST_TRAFFIC, strlen(STR_SORT_DATA_HOST_TRAFFIC)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
       printHostsTraffic(SORT_DATA_HOST_TRAFFIC, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_HOST_TRAFFIC);
     } else if(strncmp(pageName, PROCESS_INFO_HTML, strlen(PROCESS_INFO_HTML)) == 0) {
       if(myGlobals.isLsofPresent) {
-	sendHTTPHeader(HTTP_TYPE_HTML, 0);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
 	printProcessInfo(sortedColumn /* process PID */, myGlobals.actualReportDeviceId);
       } else {
 	returnHTTPpageGone();
@@ -1625,66 +1602,66 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       }
     } else if(strncmp(pageName, STR_LSOF_DATA, strlen(STR_LSOF_DATA)) == 0) {
       if(myGlobals.isLsofPresent) {
-	sendHTTPHeader(HTTP_TYPE_HTML, 0);
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
 	printLsofData(sortedColumn);
       } else {
 	returnHTTPpageGone();
 	printTrailer=0;
       }
     } else if(strcmp(pageName, "NetFlows.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       listNetFlows();
     } else if(strncmp(pageName, IP_R_2_L_HTML, strlen(IP_R_2_L_HTML)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
-      printIpAccounting(REMOTE_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
+      printIpAccounting(FLAG_REMOTE_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
     } else if(strncmp(pageName, IP_L_2_R_HTML, strlen(IP_L_2_R_HTML)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
-      printIpAccounting(LOCAL_TO_REMOTE_ACCOUNTING, sortedColumn, revertOrder, pageNum);
+      printIpAccounting(FLAG_LOCAL_TO_REMOTE_ACCOUNTING, sortedColumn, revertOrder, pageNum);
     } else if(strncmp(pageName, IP_L_2_L_HTML, strlen(IP_L_2_L_HTML)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = 1; }
-      printIpAccounting(LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
+      printIpAccounting(FLAG_LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
     } else if(strncmp(pageName, "NetNetstat.html", strlen("NetNetstat.html")) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printActiveTCPSessions(myGlobals.actualReportDeviceId, pageNum);
     } else if(strncmp(pageName, STR_MULTICAST_STATS, strlen(STR_MULTICAST_STATS)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printMulticastStats(sortedColumn, revertOrder, pageNum);
     } else if(strncmp(pageName, STR_DOMAIN_STATS, strlen(STR_DOMAIN_STATS)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printDomainStats(NULL, abs(sortedColumn), revertOrder, pageNum);
     } else if(strncmp(pageName, DOMAIN_INFO_HTML, strlen(DOMAIN_INFO_HTML)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printDomainStats(domainNameParm, abs(sortedColumn), revertOrder, pageNum);
     } else if(strncmp(pageName, SHOW_PORT_TRAFFIC, strlen(SHOW_PORT_TRAFFIC)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       showPortTraffic(portNr);
     } else if(strcmp(pageName, TRAFFIC_STATS_HTML) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printTrafficStatistics();
       printProtoTraffic();
       sendString("<p>\n");
-      printIpProtocolDistribution(LONG_FORMAT, revertOrder);
+      printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder);
     } else if(strcmp(pageName, "ipProtoDistrib.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader(NULL, 0);
-      printIpProtocolDistribution(SHORT_FORMAT, revertOrder);
+      printIpProtocolDistribution(FLAG_HOSTLINK_TEXT_FORMAT, revertOrder);
     } else if(strcmp(pageName, "ipTrafficMatrix.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printIpTrafficMatrix();
     } else if(strcmp(pageName, "localRoutersList.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printLocalRoutersList(myGlobals.actualReportDeviceId);
     } else if(strcmp(pageName, "asList.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printASList(myGlobals.actualReportDeviceId);
     } else if(strcmp(pageName, "vlanList.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printVLANList(myGlobals.actualReportDeviceId);
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
 #ifdef HAVE_GDCHART
     } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
@@ -1823,8 +1800,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     }
 #endif /*  HAVE_GDCHART */
     } else if(strcmp(pageName, "Credits.html") == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHTMLheader("Credits", HTML_FLAG_NO_REFRESH);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      printHTMLheader("Credits", BITFLAG_HTML_NO_REFRESH);
       sendString("<FONT FACE=Helvetica>\n");
       sendString("<p><hr><br><b>ntop</b> has been created by\n");
       sendString("<A HREF=\"http://luca.ntop.org/\">Luca Deri</A> while studying how to model\n");
@@ -1850,51 +1827,51 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       sendString("turned it into a first class network monitoring tool. Many thanks guys!<p>\n");
       sendString("</FONT><p>\n");
     } else if(strncmp(pageName, INFO_NTOP_HTML, strlen(INFO_NTOP_HTML)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printNtopConfigInfo(FALSE);
     } else if(strncmp(pageName, TEXT_INFO_NTOP_HTML, strlen(TEXT_INFO_NTOP_HTML)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+      sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
       printNtopConfigInfo(TRUE);
       printTrailer = 0;
     } else
-#endif /* MICRO_NTOP */
+#endif /* MAKE_MICRO_NTOP */
       if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
-	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
 	  dumpNtopHashes(NULL, NULL, myGlobals.actualReportDeviceId);
 	else
 	  dumpNtopHashes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_HOSTS_INDEXES_HTML, strlen(DUMP_HOSTS_INDEXES_HTML)) == 0) {
-	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
 	  dumpNtopHashIndexes(NULL, NULL, myGlobals.actualReportDeviceId);
 	else
 	  dumpNtopHashIndexes(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_NTOP_FLOWS_HTML, strlen(DUMP_NTOP_FLOWS_HTML)) == 0) {
-	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
 	  dumpNtopFlows(NULL, NULL, myGlobals.actualReportDeviceId);
 	else
 	  dumpNtopFlows(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_NTOP_HOSTS_MATRIX_HTML, strlen(DUMP_NTOP_HOSTS_MATRIX_HTML)) == 0) {
-	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
 	  dumpNtopTrafficMatrix(NULL, NULL, myGlobals.actualReportDeviceId);
 	else
 	  dumpNtopTrafficMatrix(NULL, &questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_TRAFFIC_DATA_HTML, strlen(DUMP_TRAFFIC_DATA_HTML)) == 0) {
-	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
 	  dumpNtopTrafficInfo(NULL, NULL);
 	else
 	  dumpNtopTrafficInfo(NULL, &questionMark[1]);
 	printTrailer = 0;
       }
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
       else if(strlen(pageName) > 5) {
 	int i;
 	char hostName[32];
@@ -1910,21 +1887,21 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	strncpy(hostName, pageName, sizeof(hostName));
 	printAllSessionsHTML(hostName, myGlobals.actualReportDeviceId);
       }
-#endif /* !MICRO_NTOP */
+#endif /* !MAKE_MICRO_NTOP */
       else {
 	printTrailer = 0;
-	errorCode = HTTP_INVALID_PAGE;
+	errorCode = FLAG_HTTP_INVALID_PAGE;
       }
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
   }
-#endif /* !MICRO_NTOP */
+#endif /* !MAKE_MICRO_NTOP */
 
   if(domainNameParm != NULL)
     free(domainNameParm);
 
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
 
-#if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
+#if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
   if(*usedFork) {
     u_int gzipBytesSent = 0;
 
@@ -1947,16 +1924,16 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 static int checkHTTPpassword(char *theRequestedURL,
 			     int theRequestedURLLen _UNUSED_,
 			     char* thePw, int thePwLen) {
-  char outBuffer[65], *user = NULL, users[BUF_SIZE];
+  char outBuffer[65], *user = NULL, users[LEN_GENERAL_WORK_BUFFER];
   int i, rc;
   datum key_data, return_data;
 
   theUser[0] = '\0';
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "DEBUG: Checking '%s'\n", theRequestedURL);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Checking '%s'\n", theRequestedURL);
 #endif
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.gdbmMutex, "checkHTTPpasswd");
 #endif
   return_data = gdbm_firstkey(myGlobals.pwFile);
@@ -1979,7 +1956,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   }
 
   if(outBuffer[0] == '\0') {
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
     return 1; /* This is a non protected URL */
@@ -2011,15 +1988,15 @@ static int checkHTTPpassword(char *theRequestedURL,
   strcpy(theUser, user);
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "DEBUG: User='%s' - Pw='%s'\n", user, thePw);
+  traceEvent(CONST_TRACE_INFO, "DEBUG: User='%s' - Pw='%s'\n", user, thePw);
 #endif
 
-  if(snprintf(users, BUF_SIZE, "1%s", user) < 0)
+  if(snprintf(users, LEN_GENERAL_WORK_BUFFER, "1%s", user) < 0)
     BufferTooShort();
 
   if(return_data.dptr != NULL) {
     if(strstr(return_data.dptr, users) == NULL) {
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.gdbmMutex);
 #endif
       if(return_data.dptr != NULL) free(return_data.dptr);
@@ -2039,13 +2016,13 @@ static int checkHTTPpassword(char *theRequestedURL,
     rc = !strcmp(return_data.dptr, thePw);
 #else
     rc = !strcmp(return_data.dptr,
-		 (char*)crypt((const char*)thePw, (const char*)CRYPT_SALT));
+		 (char*)crypt((const char*)thePw, (const char*)CONST_CRYPT_SALT));
 #endif
     free (return_data.dptr);
   } else
     rc = 0;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
   return(rc);
@@ -2096,7 +2073,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
 void handleHTTPrequest(struct in_addr from) {
   int skipLeading, postLen, usedFork = 0;
-  char requestedURL[URL_MAX_LEN], pw[64], agent[256];
+  char requestedURL[MAX_LEN_URL], pw[64], agent[256];
   int rc, i;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
@@ -2117,10 +2094,10 @@ void handleHTTPrequest(struct in_addr from) {
   for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
     if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr == from.s_addr) {
       myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.actTime;
-      traceEvent(TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
+      traceEvent(CONST_TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
 		 _intoa(from, requestedURL, sizeof(requestedURL)));
       return;
-    } else if((myGlobals.weDontWantToTalkWithYou[i].lastBadAccess+ NTOP_DEFAULT_BAD_ACCESS_TIMEOUT) < myGlobals.actTime) {
+    } else if((myGlobals.weDontWantToTalkWithYou[i].lastBadAccess+ PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < myGlobals.actTime) {
       /*
 	We 'forget' the address of this nasty guy after 5 minutes
 	since its last bad access as we hope that he will be nicer
@@ -2146,23 +2123,23 @@ void handleHTTPrequest(struct in_addr from) {
  postLen = readHTTPheader(requestedURL, sizeof(requestedURL), pw, sizeof(pw), agent, sizeof(agent));
 
 #ifdef DEBUG
- traceEvent(TRACE_INFO, "DEBUG: Requested URL = '%s', length = %d\n", requestedURL, postLen);
- traceEvent(TRACE_INFO, "DEBUG: User-Agent = '%s'\n", agent);
+ traceEvent(CONST_TRACE_INFO, "DEBUG: Requested URL = '%s', length = %d\n", requestedURL, postLen);
+ traceEvent(CONST_TRACE_INFO, "DEBUG: User-Agent = '%s'\n", agent);
 #endif
 
   if(postLen >= -1) {
     ; /* no errors, skip following tests */
-  } else if(postLen == HTTP_INVALID_REQUEST) {
+  } else if(postLen == FLAG_HTTP_INVALID_REQUEST) {
     returnHTTPbadRequest();
     return;
-  } else if(postLen == HTTP_INVALID_METHOD) {
+  } else if(postLen == FLAG_HTTP_INVALID_METHOD) {
     /* Courtesy of Vanja Hrustic <vanja@relaygroup.com> */
     returnHTTPnotImplemented();
     return;
-  } else if(postLen == HTTP_INVALID_VERSION) {
+  } else if(postLen == FLAG_HTTP_INVALID_VERSION) {
     returnHTTPversionNotSupported();
     return;
-  } else if(postLen == HTTP_REQUEST_TIMEOUT) {
+  } else if(postLen == FLAG_HTTP_REQUEST_TIMEOUT) {
     returnHTTPrequestTimedOut();
     return;
   }
@@ -2205,7 +2182,7 @@ void handleHTTPrequest(struct in_addr from) {
 
     if(!usedFork)
       logHTTPaccess(200, &httpRequestedAt, gzipBytesSent);
-  } else if(rc == HTTP_FORBIDDEN_PAGE) {
+  } else if(rc == FLAG_HTTP_FORBIDDEN_PAGE) {
 
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
    /* Note if the size of the table is zero, we simply nullify all of this
@@ -2238,7 +2215,7 @@ void handleHTTPrequest(struct in_addr from) {
 #endif
 
     returnHTTPaccessForbidden(0);
-  } else if(rc == HTTP_INVALID_PAGE) {
+  } else if(rc == FLAG_HTTP_INVALID_PAGE) {
     returnHTTPpageNotFound(0);
   }
 }

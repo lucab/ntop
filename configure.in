@@ -2,9 +2,8 @@ dnl> TODOs
 
 dnl>   should use STDC_HEADERS instead of __STDC__
 dnl>   delete SNMP from webInterface.c
-dnl>   Cleanup MULTITHREAD and ASYNC_ADDRESS_RESOLUTION
 dnl>   Cleanup HAVE_SYS_SYSLOG_H to match pattern in test program!
-dnl>   Cleanup NEED_GETDOMAINNAME from webInterface.c
+dnl>   Cleanup CFG_NEED_GETDOMAINNAME from webInterface.c
 dnl>   Cleanup HAVE_REGEX to use the value set by AC_CHECK_LIB
 dnl>   Cleanup Autoconf2 (obsolete Autoconf1 macros still in use)
 dnl>   Solaris 8 -- libgcc_s -- need test
@@ -838,9 +837,9 @@ if test ".${ac_debug}" = ".yes"; then
     echo "DEBUG: After compiler tests, CFLAGS is '${CFLAGS}'"
 fi
 
-AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(NTOP_BIG_ENDIAN, 1, [ntop built for big endian machine])],
-               [AC_DEFINE_UNQUOTED(NTOP_LITTLE_ENDIAN, 1,  [ntop built for little endian machine])],
-               [AC_DEFINE_UNQUOTED(NTOP_UNKNOWN_ENDIAN, 1, [ntop built for unknown machine])])
+AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(CFG_BIG_ENDIAN, 1, [ntop built for big endian machine])],
+               [AC_DEFINE_UNQUOTED(CFG_LITTLE_ENDIAN, 1,  [ntop built for little endian machine])],
+               [AC_DEFINE_UNQUOTED(CFG_UNKNOWN_ENDIAN, 1, [ntop built for unknown machine])])
 
 dnl> Define the arguments we accept...
 dnl>
@@ -877,13 +876,13 @@ else
     echo "  sslv3?"
     if test ".${ac_enable_sslv3}" = ".yes"; then
         echo "    ...Requested if available AT RUN TIME."
-        AC_DEFINE_UNQUOTED(SUPPORT_SSLV3, 1, [Support SSLv3 if available])
+        AC_DEFINE_UNQUOTED(MAKE_WITH_SSLV3_SUPPORT, 1, [Support SSLv3 if available])
     else
         echo "    ...(Default) Disabled. Request via command line option --enable-sslv3"
     fi
     if test ".${ac_enable_sslwatchdog}" = ".yes"; then
         echo "    ...Requested via command line option --enable-sslwatchdog"
-        AC_DEFINE_UNQUOTED(USE_SSLWATCHDOG, 1, [Enable SSL Watchdog])
+        AC_DEFINE_UNQUOTED(MAKE_WITH_SSLWATCHDOG_COMPILETIME, 1, [Enable SSL Watchdog])
     else
         echo "    ...(Default) Disabled. Request via command line option  --enable-sslwatchdog"
         echo "                                    or run time option."
@@ -920,7 +919,7 @@ echo
 echo "Micro ntop?"
 if test ".${ac_micro_ntop}" = ".yes"; then
     echo "    ...Requested via command line option --enable-micro-ntop."
-    AC_DEFINE_UNQUOTED(MICRO_NTOP, 1, [Define to build micro ntop])
+    AC_DEFINE_UNQUOTED(MAKE_MICRO_NTOP, 1, [Define to build micro ntop])
 else
     echo "    ...(Default) Disabled. Request via command line option --enable-micro-ntop."
 fi
@@ -980,7 +979,7 @@ echo
 echo "Ignore SIGPIPE?"
 if test ".$ac_enable_ignoresigpipe" = ".yes"; then
     echo "    ...Requested via command line option --enable-ignoresigpipe."
-    AC_DEFINE_UNQUOTED(YES_IGNORE_SIGPIPE, 1, [Define for IGNORE of SIGPIPE])
+    AC_DEFINE_UNQUOTED(MAKE_WITH_IGNORE_SIGPIPE, 1, [Define for IGNORE of SIGPIPE])
 else
     echo "    ...(Default) Disabled. Request via command line option --enable-ignoresigpipe"
     echo "                                    or run time option."
@@ -1238,10 +1237,10 @@ dnl> been grabbed by an earlier target, above (e.g.
 case "${target}:${CC}" in
 
     *-*-solaris2.5*:* )
-        AC_DEFINE_UNQUOTED(NEED_INET_ATON,
+        AC_DEFINE_UNQUOTED(CFG_NEED_INET_ATON,
                            1,
                            [Solaris 2.5: private implementation of inet_aton])
-        AC_DEFINE_UNQUOTED(NEED_GETDOMAINNAME,
+        AC_DEFINE_UNQUOTED(CFG_NEED_GETDOMAINNAME,
                            1,
                            [OS lacks getdomainname function.])
       ;;
@@ -1255,7 +1254,7 @@ case "${target}:${CC}" in
       ;;
 
     *-*-aix[45]*:gcc* )
-        AC_DEFINE_UNQUOTED(NEED_GETDOMAINNAME,
+        AC_DEFINE_UNQUOTED(CFG_NEED_GETDOMAINNAME,
                            1,
                            [OS lacks getdomainname function.])
 
@@ -1552,8 +1551,7 @@ if test ".${ac_disable_multithread}" != ".yes"; then
 
     if test ".${ac_disable_multithread}" != ".yes"; then
         AC_MSG_RESULT(ok)
-        AC_DEFINE_UNQUOTED(MULTITHREADED,            1, [Enable/disable multithread support])
-        AC_DEFINE_UNQUOTED(ASYNC_ADDRESS_RESOLUTION, 1, [Enable/disable address resolution])
+        AC_DEFINE_UNQUOTED(CFG_MULTITHREADED,        1, [Enable/disable multithread support])
         multithread_mode="enabled"
     else
         multithread_mode="disabled (Single Threaded)"
@@ -3063,46 +3061,46 @@ echo
 echo "  Directories:"
 echo "    Default prefix is     ${ac_default_prefix}"
 
-DATAFILE_DIR=$datadir/ntop
-DATAFILE_DIR=`(
+CFG_DATAFILE_DIR=$datadir/ntop
+CFG_DATAFILE_DIR=`(
     test "x$prefix" = xNONE && prefix=${ac_default_prefix}
-    eval echo "$DATAFILE_DIR"
+    eval echo "$CFG_DATAFILE_DIR"
 )`
-AC_DEFINE_UNQUOTED(DATAFILE_DIR,"$DATAFILE_DIR", [Data file directory])
-echo "    Data files are in     $DATAFILE_DIR"
+AC_DEFINE_UNQUOTED(CFG_DATAFILE_DIR,"$CFG_DATAFILE_DIR", [Data file directory])
+echo "    Data files are in     $CFG_DATAFILE_DIR"
 
-CONFIGFILE_DIR=$sysconfdir/ntop
-CONFIGFILE_DIR=`(
+CFG_CONFIGFILE_DIR=$sysconfdir/ntop
+CFG_CONFIGFILE_DIR=`(
     test "x$prefix" = xNONE && prefix=${ac_default_prefix}
-    eval echo "$CONFIGFILE_DIR"
+    eval echo "$CFG_CONFIGFILE_DIR"
 )`
-AC_DEFINE_UNQUOTED(CONFIGFILE_DIR,"$CONFIGFILE_DIR", [Configuration file directory])
-echo "    Config files are in   $CONFIGFILE_DIR"
+AC_DEFINE_UNQUOTED(CFG_CONFIGFILE_DIR,"$CFG_CONFIGFILE_DIR", [Configuration file directory])
+echo "    Config files are in   $CFG_CONFIGFILE_DIR"
 
-RUN_DIR=$localstatedir/ntop
-RUN_DIR=`(
+CFG_RUN_DIR=$localstatedir/ntop
+CFG_RUN_DIR=`(
     test "x$prefix" = xNONE && prefix=${ac_default_prefix}
-    eval echo "$RUN_DIR"
+    eval echo "$CFG_RUN_DIR"
 )`
-AC_DEFINE_UNQUOTED(RUN_DIR,"$RUN_DIR", [Run files directory])
-echo "    Run directory is      $RUN_DIR"
+AC_DEFINE_UNQUOTED(CFG_RUN_DIR,"$CFG_RUN_DIR", [Run files directory])
+echo "    Run directory is      $CFG_RUN_DIR"
 
-PLUGIN_DIR=$libdir/ntop/plugins
-PLUGIN_DIR=`(
+CFG_PLUGIN_DIR=$libdir/ntop/plugins
+CFG_PLUGIN_DIR=`(
   test "x$prefix" = xNONE && prefix=${ac_default_prefix}
   test "x$exec_prefix" = xNONE && exec_prefix=${prefix}
-  eval echo "$PLUGIN_DIR"
+  eval echo "$CFG_PLUGIN_DIR"
 )`
-AC_DEFINE_UNQUOTED(PLUGIN_DIR,"$PLUGIN_DIR", [Plugin installation directory])
-echo "    Plugin files are in   $PLUGIN_DIR"
+AC_DEFINE_UNQUOTED(CFG_PLUGIN_DIR,"$CFG_PLUGIN_DIR", [Plugin installation directory])
+echo "    Plugin files are in   $CFG_PLUGIN_DIR"
 
-DBFILE_DIR=$localstatedir/ntop
-DBFILE_DIR=`(
+CFG_DBFILE_DIR=$localstatedir/ntop
+CFG_DBFILE_DIR=`(
   test "x$prefix" = xNONE && prefix=${ac_default_prefix}
-  eval echo "$DBFILE_DIR"
+  eval echo "$CFG_DBFILE_DIR"
 )`
-AC_DEFINE_UNQUOTED(DBFILE_DIR,"$DBFILE_DIR", [Database file directory])
-echo "    Database files are in $DBFILE_DIR"
+AC_DEFINE_UNQUOTED(CFG_DBFILE_DIR,"$CFG_DBFILE_DIR", [Database file directory])
+echo "    Database files are in $CFG_DBFILE_DIR"
 echo
 
 dnl>
@@ -3169,7 +3167,7 @@ dnl>
         [u_int i =
              sizeof(((struct ether_header *)0)->ether_dhost.ether_addr_octet)],
         [AC_MSG_RESULT(yes)
-         AC_DEFINE_UNQUOTED(ETHER_HEADER_HAS_EA, 
+         AC_DEFINE_UNQUOTED(CFG_ETHER_HEADER_HAS_EA, 
                             1, 
                             [ether_header uses ether_addr structs])],
         [AC_MSG_RESULT(no)])
@@ -3214,9 +3212,9 @@ echo "Creating files..."
 echo
 AC_SUBST(AS)
 AC_SUBST(CCLD)
-AC_SUBST(CONFIGFILE_DIR)
-AC_SUBST(DATAFILE_DIR)
-AC_SUBST(DBFILE_DIR)
+AC_SUBST(CFG_CONFIGFILE_DIR)
+AC_SUBST(CFG_DATAFILE_DIR)
+AC_SUBST(CFG_DBFILE_DIR)
 AC_SUBST(DEFS)
 AC_SUBST(DLLTOOL)
 AC_SUBST(DYN_FLAGS)
@@ -3230,10 +3228,10 @@ AC_SUBST(LIBTOOL_DEPS)
 AC_SUBST(NTOP_VERSION_EXTRA)
 AC_SUBST(OBJDUMP)
 AC_SUBST(OBJEXT)
-AC_SUBST(PLUGIN_DIR)
+AC_SUBST(CFG_PLUGIN_DIR)
 AC_SUBST(PLUGINS)
 AC_SUBST(RRDLIB)
-AC_SUBST(RUN_DIR)
+AC_SUBST(CFG_RUN_DIR)
 AC_SUBST(SCRIPTVER)
 AC_SUBST(SO_VERSION_PATCH)
 

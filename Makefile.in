@@ -92,11 +92,13 @@ AS = @AS@
 AWK = @AWK@
 CC = @CC@
 CCLD = @CCLD@
-CONFIGFILE_DIR = @CONFIGFILE_DIR@
+CFG_CONFIGFILE_DIR = @CFG_CONFIGFILE_DIR@
+CFG_DATAFILE_DIR = @CFG_DATAFILE_DIR@
+CFG_DBFILE_DIR = @CFG_DBFILE_DIR@
+CFG_PLUGIN_DIR = @CFG_PLUGIN_DIR@
+CFG_RUN_DIR = @CFG_RUN_DIR@
 CPP = @CPP@
 CXX = @CXX@
-DATAFILE_DIR = @DATAFILE_DIR@
-DBFILE_DIR = @DBFILE_DIR@
 
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -117,10 +119,8 @@ NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
 PLUGINS = @PLUGINS@
-PLUGIN_DIR = @PLUGIN_DIR@
 RANLIB = @RANLIB@
 RRDLIB = @RRDLIB@
-RUN_DIR = @RUN_DIR@
 SCRIPTVER = @SCRIPTVER@
 SO_VERSION_PATCH = @SO_VERSION_PATCH@
 STRIP = @STRIP@
@@ -945,7 +945,7 @@ dnvt:
 
 # download the Novell SAP Protocol information table
 dnsapt:
-	@(cd Internet; wget -c http://www.isi.edu/in-notes/iana/assignments/novell-sap-numbers)
+	@(cd Internet; wget -c http://www.iana.org/assignments/novell-sap-numbers)
 
 # run ./configure with --showoses
 showoses:

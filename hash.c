@@ -46,11 +46,11 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
     (*useIPAddressForSearching) = 1;
   } else if(memcmp(ether_addr, /* 0 doesn't matter */
 		   myGlobals.device[0].hash_hostTraffic[myGlobals.broadcastEntryIdx]->ethAddress,
-		   ETHERNET_ADDRESS_LEN) == 0) {
+		   LEN_ETHERNET_ADDRESS) == 0) {
     idx = myGlobals.broadcastEntryIdx;
     (*useIPAddressForSearching) = 0;
   } else if(hostIpAddress == NULL) {
-    memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));
+    memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
   } else if ((hostIpAddress->s_addr == 0x0)
 	     || (hostIpAddress->s_addr == 0x1)) {
@@ -64,7 +64,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
     idx = myGlobals.broadcastEntryIdx;
     (*useIPAddressForSearching) = 1;
   } else if(isPseudoLocalAddress(hostIpAddress)) {
-    memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));
+    memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
   } else {
     if(hostIpAddress != NULL) {
@@ -73,8 +73,8 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
       else
 	memcpy(&idx, &hostIpAddress->s_addr, 4);
     } else {
-      idx = NO_PEER;
-      traceEvent(TRACE_WARNING, "WARNING: Index calculation problem");
+      idx = FLAG_NO_PEER;
+      traceEvent(CONST_TRACE_WARNING, "WARNING: Index calculation problem");
     }
 
     (*useIPAddressForSearching) = 1;
@@ -82,12 +82,12 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 
 #ifdef DEBUG
   if(hostIpAddress != NULL)
-    traceEvent(TRACE_INFO, "computeInitialHashIdx(%s/%s/%d) = %u\n",
+    traceEvent(CONST_TRACE_INFO, "computeInitialHashIdx(%s/%s/%d) = %u\n",
 	       intoa(*hostIpAddress),
 	       etheraddr_string(ether_addr),
 	       (*useIPAddressForSearching), idx);
   else
-    traceEvent(TRACE_INFO, "computeInitialHashIdx(%s/%d) = %u\n",
+    traceEvent(CONST_TRACE_INFO, "computeInitialHashIdx(%s/%d) = %u\n",
 	       etheraddr_string(ether_addr),
 	       (*useIPAddressForSearching), idx);
 #endif
@@ -103,17 +103,15 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   such host.  
 */
 
-#define MUTEX_FHS_MASK         (max(0, min(65535, (1 << MUTEX_FHS_GRANULARITY) - 1)))
-
 static void freeHostSessions(u_int hostIdx, int theDevice) {
   int i, eCount=0, mutexLocked = 0; 
 
   for(i=0; i<myGlobals.device[theDevice].numTotSessions; i++) {
     IPSession *prevSession, *nextSession, *theSession;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     if(myGlobals.capturePackets == 1 /* i.e. active, not cleanup */ ) {
-      if((i & MUTEX_FHS_MASK) == 0) {
+      if((i & CONST_MUTEX_FHS_MASK) == 0) {
 	accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
 	mutexLocked = 1;
       }
@@ -141,13 +139,13 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
       }
 
       if(theSession && (theSession->next == theSession)) {
-	traceEvent(TRACE_WARNING, "Internal Error (1)");
+	traceEvent(CONST_TRACE_WARNING, "Internal Error (1)");
       }
     } /* while */
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     if (myGlobals.capturePackets == 1 /* i.e. active, not cleanup */ ) {
-      if (((i+1) & MUTEX_FHS_MASK) == 0) {
+      if (((i+1) & CONST_MUTEX_FHS_MASK) == 0) {
 	if(mutexLocked) {
 	  releaseMutex(&myGlobals.tcpSessionsMutex);
 	  mutexLocked = 0;
@@ -160,7 +158,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 #endif
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   if(mutexLocked)
     releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
@@ -172,7 +170,7 @@ static void purgeHostIdx(int actualDeviceId, HostTraffic *el) {
   u_short allRight = 0;
 
   if(el == NULL) {
-    traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx() failed [NULL pointer]");
+    traceEvent(CONST_TRACE_ERROR, "ERROR: purgeHostIdx() failed [NULL pointer]");
     return;
   }
 
@@ -204,12 +202,12 @@ static void purgeHostIdx(int actualDeviceId, HostTraffic *el) {
       }
     }
   } else {
-    traceEvent(TRACE_ERROR, "ERROR: %d is out of range [0..%d]",  el->hostTrafficBucket,
+    traceEvent(CONST_TRACE_ERROR, "ERROR: %d is out of range [0..%d]",  el->hostTrafficBucket,
 	       myGlobals.device[actualDeviceId].actualHashSize-1);
   }
 
   if((!allRight) && (el->hostTrafficBucket != myGlobals.broadcastEntryIdx))
-    traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed [host not found]",
+    traceEvent(CONST_TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed [host not found]",
 	       actualDeviceId, el->hostTrafficBucket);
 }
 
@@ -223,13 +221,13 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     return;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Entering freeHostInfo(%u)", host->hostTrafficBucket);
+  traceEvent(CONST_TRACE_INFO, "Entering freeHostInfo(%u)", host->hostTrafficBucket);
 #endif
 
   myGlobals.device[theDevice].hostsno--;
 
 #ifdef HOST_FREE_DEBUG
-  traceEvent(TRACE_INFO, "HOST_FREE_DEBUG: Deleted a hash_hostTraffic entry [slotId=%d/%s]\n",
+  traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleted a hash_hostTraffic entry [slotId=%d/%s]\n",
 	     host->hostTrafficBucket, host->hostSymIpAddress);
 #endif
 
@@ -259,7 +257,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
       if(myGlobals.processes[i] != NULL) {
 	for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
 	  if(myGlobals.processes[i]->contactedIpPeersIndexes[j] == host->hostTrafficBucket)
-	    myGlobals.processes[i]->contactedIpPeersIndexes[j] = NO_PEER;
+	    myGlobals.processes[i]->contactedIpPeersIndexes[j] = FLAG_NO_PEER;
       }
     }
   }
@@ -267,7 +265,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   if(host->routedTraffic != NULL) free(host->routedTraffic);
 
   if(host->portsUsage != NULL) {
-    for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++) {
+    for(i=0; i<MAX_ASSIGNED_IP_PORTS; i++) {
       if(host->portsUsage[i] != NULL) {
 	free(host->portsUsage[i]);
       }
@@ -284,8 +282,8 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
 	element = host->udpSessionList;
 
       while(element != NULL) {
-	if(element->magic != MAGIC_NUMBER) {
-	  traceEvent(TRACE_ERROR, "===> Magic assertion failed (3) for host %s", host->hostNumIpAddress);
+	if(element->magic != CONST_MAGIC_NUMBER) {
+	  traceEvent(CONST_TRACE_ERROR, "===> Magic assertion failed (3) for host %s", host->hostNumIpAddress);
 	}
 
 	nextElement = element->next;
@@ -355,10 +353,10 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   /* ************************************* */
 
   if(myGlobals.isLsofPresent) {
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.lsofMutex, "readLsofInfo-2");
 #endif
-    for(j=0; j<TOP_IP_PORT; j++) {
+    for(j=0; j<MAX_IP_PORT; j++) {
       if(myGlobals.localPorts[j] != NULL) {
 	ProcessInfoList *scanner = myGlobals.localPorts[j];
 
@@ -366,7 +364,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
 	  if(scanner->element != NULL) {
 	    for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
 	      if(scanner->element->contactedIpPeersIndexes[i] == host->hostTrafficBucket)
-		scanner->element->contactedIpPeersIndexes[i] = NO_PEER;
+		scanner->element->contactedIpPeersIndexes[i] = FLAG_NO_PEER;
 	    }
 	  }
 
@@ -374,7 +372,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
 	}
       }
     }
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.lsofMutex);
 #endif
   }
@@ -401,6 +399,8 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
 
   if(myGlobals.hostsCacheLen < (MAX_HOSTS_CACHE_LEN-1)) {
     myGlobals.hostsCache[myGlobals.hostsCacheLen++] = host;
+    if (myGlobals.hostsCacheLen > myGlobals.hostsCacheLenMax) 
+        myGlobals.hostsCacheLenMax = myGlobals.hostsCacheLen;
   } else {
     /* No room left: it's time to free the bucket */
     free(host);
@@ -409,7 +409,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   myGlobals.numPurgedHosts++;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Leaving freeHostInfo()");
+  traceEvent(CONST_TRACE_INFO, "Leaving freeHostInfo()");
 #endif
 }
 
@@ -423,7 +423,7 @@ void freeHostInstances(int actualDeviceId) {
   else
     max = myGlobals.numDevices;
 
-  traceEvent(TRACE_INFO, "Freeing hash host instances... (%d device(s) to save)\n", max);
+  traceEvent(CONST_TRACE_INFO, "Freeing hash host instances... (%d device(s) to save)\n", max);
 
   for(i=0; i<max; i++) {
     actualDeviceId = i;
@@ -447,7 +447,7 @@ void freeHostInstances(int actualDeviceId) {
     }
   }
 
-  traceEvent(TRACE_INFO, "%d instances freed\n", num);
+  traceEvent(CONST_TRACE_INFO, "%d instances freed\n", num);
 }
 
 /* ************************************ */
@@ -479,8 +479,8 @@ void purgeIdleHosts(int actDevice) {
   if(myGlobals.rFileName != NULL) return;
 
   if(firstRun) {
-    traceEvent(TRACE_INFO, "IDLE_PURGE: purgeIdleHosts firstRun (mutex every %d times through the loop)\n",
-                           MUTEX_FHS_MASK+1);
+    traceEvent(CONST_TRACE_INFO, "IDLE_PURGE: purgeIdleHosts firstRun (mutex every %d times through the loop)\n",
+                           CONST_MUTEX_FHS_MASK+1);
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
   }
@@ -489,7 +489,7 @@ void purgeIdleHosts(int actDevice) {
 
   updateDeviceThpt(actDevice);
 
-  if(startTime < (lastPurgeTime[actDevice]+PURGE_HOSTS_DELAY))
+  if(startTime < (lastPurgeTime[actDevice]+PARM_HOST_PURGE_INTERVAL))
     return; /* Too short */
   else
     lastPurgeTime[actDevice] = startTime;
@@ -503,17 +503,17 @@ void purgeIdleHosts(int actDevice) {
   len = max(min(myGlobals.maximumHostsToPurgePerCycle, myGlobals.device[actDevice].hostsno/3), 8);
 
   theFlaggedHosts = (HostTraffic**)malloc(sizeof(HostTraffic*)*len);
-  purgeTime = startTime-PURGE_HOSTS_DELAY; /* Time used to decide whether a host need to be purged */
+  purgeTime = startTime-PARM_HOST_PURGE_INTERVAL; /* Time used to decide whether a host need to be purged */
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Purging Idle Hosts... [actDevice=%d]", actDevice);
+  traceEvent(CONST_TRACE_INFO, "Purging Idle Hosts... [actDevice=%d]", actDevice);
 #endif
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
 #endif
   purgeOldFragmentEntries(actDevice); /* let's do this too */
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 
@@ -523,7 +523,7 @@ void purgeIdleHosts(int actDevice) {
   hashFull=0;
 
 #ifdef IDLE_PURGE_DEBUG
-  traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: BEGINING selection: upto %d hosts, "
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: BEGINING selection: upto %d hosts, "
                          "starting ('random') at %d, actual size is %d...\n", 
                          len,
                          theIdx,
@@ -538,7 +538,7 @@ void purgeIdleHosts(int actDevice) {
       continue;
     }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
     if((el = myGlobals.device[actDevice].hash_hostTraffic[theIdx]) != NULL) {
@@ -552,7 +552,7 @@ void purgeIdleHosts(int actDevice) {
 	  theFlaggedHosts[maxBucket++] = el;
 
 	  if(el->hostTrafficBucket != theIdx) {
-	    traceEvent(TRACE_ERROR, "ERROR: Index mismatch (hostTrafficBucket=%d/theIdx=%d)",
+	    traceEvent(CONST_TRACE_ERROR, "ERROR: Index mismatch (hostTrafficBucket=%d/theIdx=%d)",
 		       el->hostTrafficBucket, theIdx);
 	    el->hostTrafficBucket = theIdx; /* Error recovery */
 	  }
@@ -560,10 +560,10 @@ void purgeIdleHosts(int actDevice) {
 	  myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
 	  if(maxBucket >= (len-1)) {
 #ifdef IDLE_PURGE_DEBUG
-            traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: selected to limit...\n");
+            traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: selected to limit...\n");
 #endif
 	    hashFull = 1;	
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 	    releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 	    continue;
@@ -572,7 +572,7 @@ void purgeIdleHosts(int actDevice) {
       }
     }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 
@@ -580,14 +580,14 @@ void purgeIdleHosts(int actDevice) {
   }
 
 #ifdef IDLE_PURGE_DEBUG
-  traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: FINISHED selection, %d hosts selected...\n",
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: FINISHED selection, %d hosts selected...\n",
                          maxBucket);
 #endif
 
   /* Now free the entries */
   for(idx=0; idx<maxBucket; idx++) {
 #ifdef IDLE_PURGE_DEBUG
-    traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Purging host %d... %s",
+    traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Purging host %d... %s",
 	                   idx, theFlaggedHosts[idx]->hostSymIpAddress);
 #endif
 
@@ -631,7 +631,7 @@ void purgeIdleHosts(int actDevice) {
           BufferTooShort();
   }
 #ifdef IDLE_PURGE_DEBUG
-  traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: %s\n", purgeStats);
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: %s\n", purgeStats);
 #endif
 
   if ((myGlobals.dynamicPurgeLimits == 1) && (numFreedBuckets > 0)) {
@@ -641,13 +641,13 @@ void purgeIdleHosts(int actDevice) {
        */
 
 #ifdef IDLE_PURGE_DEBUG
-      traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Time targets MIN %.2f ... actual %.6f ... MAX %.2f\n",
-                             NTOP_IDLE_PURGE_MINIMUM_TARGET_TIME,
+      traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Time targets MIN %.2f ... actual %.6f ... MAX %.2f\n",
+                             CONST_IDLE_PURGE_MINIMUM_TARGET_TIME,
                              hiresDeltaTime,
-                             NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME);
+                             CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME);
 #endif
 
-      if (hiresDeltaTime > NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME) {
+      if (hiresDeltaTime > CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME) {
           if (myGlobals.maximumHostsToPurgePerCycle > 64) {
               /*
                * Shrink it based on time (i.e. 1s target / 2s actual = 50%)
@@ -657,36 +657,36 @@ void purgeIdleHosts(int actDevice) {
                     max( 64, 
                          min( myGlobals.maximumHostsToPurgePerCycle - 8,
                               numFreedBuckets / 
-                              (int) (hiresDeltaTime / NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME)));
-              traceEvent(TRACE_INFO, "IDLE_PURGE: Adjusting maximumHostsToPurgePerCycle from %d to %d...\n", 
+                              (int) (hiresDeltaTime / CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME)));
+              traceEvent(CONST_TRACE_INFO, "IDLE_PURGE: Adjusting maximumHostsToPurgePerCycle from %d to %d...\n", 
                                      myGlobals.maximumHostsToPurgePerCycle,
                                      newHostsToPurgePerCycle);
               myGlobals.maximumHostsToPurgePerCycle = newHostsToPurgePerCycle;
 #ifdef IDLE_PURGE_DEBUG
            } else {
-               traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Unable to adjust below 64 host minimum...\n");
+               traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Unable to adjust below 64 host minimum...\n");
 #endif
            }
       } else if (numFreedBuckets < myGlobals.maximumHostsToPurgePerCycle - 8) {
 #ifdef IDLE_PURGE_DEBUG
-          traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: Purged too few to adjust...\n");
+          traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Purged too few to adjust...\n");
 #endif
-      } else if (hiresDeltaTime < NTOP_IDLE_PURGE_MINIMUM_TARGET_TIME) {
+      } else if (hiresDeltaTime < CONST_IDLE_PURGE_MINIMUM_TARGET_TIME) {
           /*
            * Grow it by ADJ+1/ADJ (e.g. 10%), at least 8...
            */
           newHostsToPurgePerCycle =
                 max( myGlobals.maximumHostsToPurgePerCycle + 8,
-                     (NTOP_IDLE_PURGE_ADJUST_FACTOR + 1) *
+                     (CONST_IDLE_PURGE_ADJUST_FACTOR + 1) *
                      myGlobals.maximumHostsToPurgePerCycle / 
-                     NTOP_IDLE_PURGE_ADJUST_FACTOR);
-          traceEvent(TRACE_INFO, "IDLE_PURGE: Adjusting maximumHostsToPurgePerCycle from %d to %d...\n", 
+                     CONST_IDLE_PURGE_ADJUST_FACTOR);
+          traceEvent(CONST_TRACE_INFO, "IDLE_PURGE: Adjusting maximumHostsToPurgePerCycle from %d to %d...\n", 
                      myGlobals.maximumHostsToPurgePerCycle,
                      newHostsToPurgePerCycle);
           myGlobals.maximumHostsToPurgePerCycle = newHostsToPurgePerCycle;
 #ifdef IDLE_PURGE_DEBUG
       } else {
-          traceEvent(TRACE_INFO, "IDLE_PURGE_DEBUG: No adjustment necessary...\n");
+          traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: No adjustment necessary...\n");
 #endif
       }
   }
@@ -700,23 +700,23 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char forceUsingIPaddress,
 		  int actualDeviceId) {
   u_int idx, i, isMultihomed = 0;
-#ifndef MULTITHREADED
+#ifndef CFG_MULTITHREADED
   u_int run=0;
 #endif
   HostTraffic *el=NULL;
-  unsigned char buf[MAX_HOST_SYM_NAME_LEN_HTML];
+  unsigned char buf[MAX_LEN_SYM_HOST_NAME_HTML];
   short useIPAddressForSearching = forceUsingIPaddress;
   char* symEthName = NULL, *ethAddr;
   u_char setSpoofingFlag = 0;
   u_int hostFound = 0;
   HashList *list = NULL;
 
-  /* traceEvent(TRACE_INFO, "getHostInfo(%s)", _intoa(*hostIpAddress, buf, sizeof(buf))); */
+  /* traceEvent(CONST_TRACE_INFO, "getHostInfo(%s)", _intoa(*hostIpAddress, buf, sizeof(buf))); */
 
 
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
-    traceEvent(TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
-    return(NO_PEER);
+    traceEvent(CONST_TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
+    return(FLAG_NO_PEER);
   }
 
   idx = computeInitialHashIdx(hostIpAddress, ether_addr,
@@ -736,7 +736,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	if(el != NULL) {
 	  if(useIPAddressForSearching == 0) {
 	    /* compare with the ethernet-address */
-	    if(memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
+	    if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
 
 	      if(hostIpAddress != NULL) {
 		if((!isMultihomed) && checkForMultihoming) {
@@ -745,7 +745,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		  if((el->hostIpAddress.s_addr != 0x0)
 		     && (el->hostIpAddress.s_addr != hostIpAddress->s_addr)) {
 		    isMultihomed = 1;
-		    FD_SET(HOST_MULTIHOMED, &el->flags);
+		    FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
 		  }
 
 		  if(el->hostNumIpAddress[0] == '\0') {
@@ -762,7 +762,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		       The line below isn't necessary because (**) has
 		       already set the pointer */
 		    if(isBroadcastAddress(&el->hostIpAddress))
-		      FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+		      FD_SET(FLAG_BROADCAST_HOST, &el->flags);
 		  }
 		}
 	      }
@@ -777,10 +777,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	      */
 
 	      if(!hasDuplicatedMac(el)) {
-		FD_SET(HOST_DUPLICATED_MAC, &el->flags);
+		FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
 
 		if(myGlobals.enableSuspiciousPacketDump) {
-		  traceEvent(TRACE_WARNING,
+		  traceEvent(CONST_TRACE_WARNING,
 			     "Two MAC addresses found for the same IP address "
 			     "%s: [%s/%s] (spoofing detected?)",
 			     el->hostNumIpAddress,
@@ -811,8 +811,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
       if(myGlobals.hostsCacheLen > 0) {
 	el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];
+        myGlobals.hostsCacheReused++;
 	/*
-	    traceEvent(TRACE_INFO, "Fetched host from pointers cache (len=%d)",
+	    traceEvent(CONST_TRACE_INFO, "Fetched host from pointers cache (len=%d)",
 	    (int)myGlobals.hostsCacheLen);
 	*/
       } else
@@ -824,10 +825,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       resetHostsVariables(el);
 
       if(isMultihomed)
-	FD_SET(HOST_MULTIHOMED, &el->flags);
+	FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
 
       if(!myGlobals.largeNetwork)
-	el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
+	el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
 
       len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
       el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
@@ -854,12 +855,12 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
         void *oldPtr = myGlobals.device[actualDeviceId].hash_hostTraffic;
 
         list->idx = myGlobals.device[actualDeviceId].actualHashSize;
-        if(myGlobals.device[actualDeviceId].actualHashSize < HASH_MINIMUM_SIZE)
-          myGlobals.device[actualDeviceId].actualHashSize = HASH_MINIMUM_SIZE;
-        else if(myGlobals.device[actualDeviceId].actualHashSize >= HASH_FACTOR_MAXIMUM)
-          myGlobals.device[actualDeviceId].actualHashSize += HASH_TERMINAL_INCREASE;
+        if(myGlobals.device[actualDeviceId].actualHashSize < CONST_HASH_MINIMUM_SIZE)
+          myGlobals.device[actualDeviceId].actualHashSize = CONST_HASH_MINIMUM_SIZE;
+        else if(myGlobals.device[actualDeviceId].actualHashSize >= CONST_HASH_FACTOR_MAXIMUM)
+          myGlobals.device[actualDeviceId].actualHashSize += CONST_HASH_TERMINAL_INCREASE;
         else
-          myGlobals.device[actualDeviceId].actualHashSize *= HASH_INCREASE_FACTOR;
+          myGlobals.device[actualDeviceId].actualHashSize *= CONST_HASH_INCREASE_FACTOR;
 
         ptrLen = sizeof(struct hostTraffic*);
         ptrLen *= myGlobals.device[actualDeviceId].actualHashSize;
@@ -870,7 +871,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
                oldPtr, sizeof(struct hostTraffic*)*list->idx);
         free(oldPtr);
 
-	traceEvent(TRACE_INFO, "Extending hash size [newSize=%d][deviceId=%d]",
+	traceEvent(CONST_TRACE_INFO, "Extending hash size [newSize=%d][deviceId=%d]",
 		   myGlobals.device[actualDeviceId].actualHashSize, actualDeviceId);
       } else
 	list->idx = hostFound;
@@ -891,30 +892,30 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	     ethernet address does make sense */
 	  ethAddr = etheraddr_string(ether_addr);
 
-	  memcpy(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+	  memcpy(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS);
 	  strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
 	  symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));
-	  FD_SET(SUBNET_LOCALHOST_FLAG, &el->flags);
-	  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	  FD_SET(FLAG_SUBNET_LOCALHOST, &el->flags);
+	  FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 	} else if(hostIpAddress != NULL) {
 	  /* This is packet that's being routed or belonging to a
 	     remote network that uses the same physical wire (or forged)*/
-	  memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+	  memcpy(el->lastEthAddress, ether_addr, LEN_ETHERNET_ADDRESS);
 
 	  memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
-	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
+	  FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
 
-	  if(isPrivateAddress(hostIpAddress)) FD_SET(PRIVATE_IP_ADDRESS, &el->flags);
+	  if(isPrivateAddress(hostIpAddress)) FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
 
 	  if(!isBroadcastAddress(hostIpAddress)) {
 	    if(isPseudoLocalAddress(hostIpAddress))
-	      FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	      FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 	    else
-	      FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	      FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 	  }
 	} else {
-	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
-	  FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	  FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
+	  FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 	}
 
 	if(strncmp(el->ethAddressString, "FF:", 3) == 0) {
@@ -923,13 +924,13 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    "<broadcast>" string in the code
 	  */
 	  el->hostIpAddress.s_addr = INADDR_BROADCAST;
-	  FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+	  FD_SET(FLAG_BROADCAST_HOST, &el->flags);
 	  if(isMulticastAddress(&el->hostIpAddress))
-	    FD_SET(MULTICAST_HOST_FLAG, &el->flags);
+	    FD_SET(FLAG_MULTICAST_HOST, &el->flags);
 	  strncpy(el->hostNumIpAddress,
 		  _intoa(el->hostIpAddress, buf, sizeof(buf)),
 		  strlen(el->hostNumIpAddress));
-	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN-1);
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
 
 	  if((el->hostIpAddress.s_addr != 0x0) /* 0.0.0.0 */
 	     && (el->hostIpAddress.s_addr != 0xFFFFFFFF) /* 255.255.255.255 */
@@ -941,7 +942,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	      - it has not used the FF:FF:FF:FF:FF:FF MAC address
 	    */
 
-	    traceEvent(TRACE_WARNING, "WARNING: Wrong netmask detected [%s/%s]",
+	    traceEvent(CONST_TRACE_WARNING, "WARNING: Wrong netmask detected [%s/%s]",
 		       _intoa(el->hostIpAddress, buf, sizeof(buf)),
 		       el->ethAddressString);
 	  }
@@ -961,37 +962,37 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
       if(hostIpAddress != NULL) {
 	if(myGlobals.dontTrustMACaddr && (ether_addr != NULL))
-	  memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+	  memcpy(el->lastEthAddress, ether_addr, LEN_ETHERNET_ADDRESS);
 
 	el->hostIpAddress.s_addr = hostIpAddress->s_addr;
 	strncpy(el->hostNumIpAddress,
 		_intoa(*hostIpAddress, buf, sizeof(buf)),
 		sizeof(el->hostNumIpAddress));
-	if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-	if(isMulticastAddress(&el->hostIpAddress)) FD_SET(MULTICAST_HOST_FLAG, &el->flags);
-	if(isPrivateAddress(hostIpAddress))        FD_SET(PRIVATE_IP_ADDRESS,  &el->flags);
+	if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(FLAG_BROADCAST_HOST, &el->flags);
+	if(isMulticastAddress(&el->hostIpAddress)) FD_SET(FLAG_MULTICAST_HOST, &el->flags);
+	if(isPrivateAddress(hostIpAddress))        FD_SET(FLAG_PRIVATE_IP_ADDRESS,  &el->flags);
 	if((ether_addr == NULL) && (isPseudoLocalAddress(hostIpAddress)))
-	  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	  FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 
 	/* Trick to fill up the address cache */
 	if(myGlobals.numericFlag == 0)
 	  ipaddr2str(el->hostIpAddress, actualDeviceId);
 	else
-	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN-1);
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
       } else {
 	/* el->hostNumIpAddress == "" */
 	if(symEthName[0] != '\0') {
 	  if(snprintf(buf, sizeof(buf), "%s <IMG SRC=/card.gif BORDER=0>", symEthName) < 0)
 	    BufferTooShort();
 
-	  buf[MAX_HOST_SYM_NAME_LEN-1] = '\0';
-	  strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN-1);
+	  buf[MAX_LEN_SYM_HOST_NAME-1] = '\0';
+	  strncpy(el->hostSymIpAddress, buf, MAX_LEN_SYM_HOST_NAME-1);
 	} else
-	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN-1);
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
       }
 
 #ifdef HASH_DEBUG
-      traceEvent(TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]\n",
+      traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]\n",
 		 el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
 		 myGlobals.device[actualDeviceId].actualHashSize, myGlobals.device[actualDeviceId].hostsno);
 #endif
@@ -1007,7 +1008,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  memcpy(&buf[4], &el->hostIpAddress.s_addr, 4);
 	}
 
-#ifdef NTOP_LITTLE_ENDIAN
+#ifdef CFG_LITTLE_ENDIAN
 	{
 	  unsigned char buf1[8];
 
@@ -1025,10 +1026,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       el->lastSeen = myGlobals.actTime;
 
       if(setSpoofingFlag)
-	FD_SET(HOST_DUPLICATED_MAC, &el->flags);
+	FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
+      traceEvent(CONST_TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
 		 list->idx, actualDeviceId,
 		 etheraddr_string(ether_addr), el->hostSymIpAddress,
 		 el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno,
@@ -1039,7 +1040,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
     return(idx);
 
   if(el == NULL)
-    traceEvent(TRACE_INFO, "getHostInfo(idx=%d)(ptr=%x)",
+    traceEvent(CONST_TRACE_INFO, "getHostInfo(idx=%d)(ptr=%x)",
 	       list->idx, myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx]);
 
   return(list->idx);
@@ -1052,7 +1053,7 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
   int found = 0;
   u_int idx;
 
-  if((theSerial != NO_PEER)
+  if((theSerial != FLAG_NO_PEER)
      && (theSerial != myGlobals.broadcastEntryIdx /* Safety check: broadcast */)) {
     char theBytes[8];
 
@@ -1080,7 +1081,7 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
 
     memcpy(theBytes, &theSerial, 8);
 
-#ifdef NTOP_LITTLE_ENDIAN
+#ifdef CFG_LITTLE_ENDIAN
     {
       unsigned char buf1[8];
       int i;
@@ -1129,12 +1130,12 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
       /* MAC */
       char *ethAddr;
 
-      memcpy(el->ethAddress, &theBytes[2], ETHERNET_ADDRESS_LEN);
+      memcpy(el->ethAddress, &theBytes[2], LEN_ETHERNET_ADDRESS);
 
       for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++) {
 	if((idx != myGlobals.otherHostEntryIdx) &&
 	   ((theEntry = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)) {
-	  if(memcmp(el->ethAddress, theEntry->ethAddress, ETHERNET_ADDRESS_LEN) == 0) {
+	  if(memcmp(el->ethAddress, theEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0) {
 	    found = 1;
 	    break;
 	  }
@@ -1168,7 +1169,7 @@ static void dumpHash() {
     HostTraffic *el = myGlobals.device[0].hash_hostTraffic[i];
 
     if(el != NULL) {
-      traceEvent(TRACE_INFO, "HASH_DEBUG: (%3d) %s / %s",
+      traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: (%3d) %s / %s",
                  i,
                  el->ethAddressString,
                  el->hostNumIpAddress);

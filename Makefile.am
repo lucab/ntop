@@ -228,7 +228,7 @@ dnvt:
 
 # download the Novell SAP Protocol information table
 dnsapt:
-	@(cd Internet; wget -c http://www.isi.edu/in-notes/iana/assignments/novell-sap-numbers)
+	@(cd Internet; wget -c http://www.iana.org/assignments/novell-sap-numbers)
 
 # run ./configure with --showoses
 showoses:

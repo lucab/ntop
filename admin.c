@@ -22,7 +22,7 @@
 #include "globals-report.h"
 
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
 
 /* Forward */
 static void sendMenuFooter(int itm1Idx, int itm2Idx);
@@ -34,19 +34,19 @@ static int readHTTPpostData(int len, char *buf, int buflen);
 
 void showUsers(void) {
   u_int numUsers=0;
-  char buf[BUF_SIZE], ebuf[128];
+  char buf[LEN_GENERAL_WORK_BUFFER], ebuf[128];
   datum key_data, return_data;
 
-  printHTMLheader("Registered ntop Users", HTML_FLAG_NO_REFRESH);
+  printHTMLheader("Registered ntop Users", BITFLAG_HTML_NO_REFRESH);
   sendString("<P><HR><P>\n");
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.gdbmMutex, "showUsers");
 #endif
   return_data = gdbm_firstkey(myGlobals.pwFile);
 
   while (return_data.dptr != NULL) {
-    /* traceEvent(TRACE_INFO, "1) -> %s\n", return_data.dptr); */
+    /* traceEvent(CONST_TRACE_INFO, "1) -> %s\n", return_data.dptr); */
     key_data = return_data;
 
     if(key_data.dptr[0] == '1') /* 1 = user */{
@@ -57,14 +57,14 @@ void showUsers(void) {
       }
 
       if(strcmp(key_data.dptr, "1admin") == 0) {
-	if(snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
+	if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 		    "&nbsp;%s</TH><TD "TD_BG"><A HREF=/modifyUser?%s>"
 		    "<IMG ALT=\"Modify User\" SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 		    "&nbsp;</TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr) < 0)
 	 BufferTooShort();
       } else{
 	encodeWebFormURL(key_data.dptr, ebuf, sizeof(ebuf));
-	if(snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
+	if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 		    "&nbsp;%s</TH><TD "TD_BG"><A HREF=/modifyUser?%s>"
 		"<IMG ALT=\"Modify User\" SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 		"&nbsp;<A HREF=/deleteUser?%s><IMG ALT=\"Delete User\" SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
@@ -79,7 +79,7 @@ void showUsers(void) {
     free(key_data.dptr);
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
@@ -95,7 +95,7 @@ void showUsers(void) {
 void addUser(char* user) {
   char tmpStr[128];
 
-  printHTMLheader("Manage ntop Users", HTML_FLAG_NO_REFRESH);
+  printHTMLheader("Manage ntop Users", BITFLAG_HTML_NO_REFRESH);
   sendString("<P><HR><P>\n");
 
   if((user != NULL) && ((strlen(user) < 2) || (user[0] != '1'))) {
@@ -146,8 +146,8 @@ void deleteUser(char* user) {
     returnHTTPredirect("showUsers.html");
     return;
   } else if((strlen(user) < 2) || (user[0] != '1')) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader("Delete ntop User", HTML_FLAG_NO_REFRESH);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    printHTMLheader("Delete ntop User", BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning("<I>The specified username is invalid.</I>");
   } else {
@@ -158,17 +158,17 @@ void deleteUser(char* user) {
     key_data.dptr = user;
     key_data.dsize = strlen(user)+1;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.gdbmMutex, "deleteUser");
 #endif
     rc = gdbm_delete(myGlobals.pwFile, key_data);
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
     if(rc != 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHTMLheader("Delete ntop User", HTML_FLAG_NO_REFRESH);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      printHTMLheader("Delete ntop User", BITFLAG_HTML_NO_REFRESH);
       sendString("<P><HR><P>\n");
       printFlagedWarning("<B>ERROR:</B> <I>unable to delete specified user.</I>");
     } else {
@@ -242,30 +242,30 @@ void doAddUser(int len) {
 #ifdef WIN32
       data_data.dptr = pw;
 #else
-      strncpy(cpw, (char*)crypt(pw, (const char*)CRYPT_SALT), sizeof(cpw));
+      strncpy(cpw, (char*)crypt(pw, (const char*)CONST_CRYPT_SALT), sizeof(cpw));
       cpw[sizeof(cpw)-1] = '\0';
       data_data.dptr = cpw;
 #endif
       data_data.dsize = strlen(data_data.dptr)+1;
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "User='%s' - Pw='%s [%s]'\n", user, pw, data_data.dptr);
+      traceEvent(CONST_TRACE_INFO, "User='%s' - Pw='%s [%s]'\n", user, pw, data_data.dptr);
 #endif
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       accessMutex(&myGlobals.gdbmMutex, "doAddUser");
 #endif
       if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
 	err = "FATAL ERROR: unable to add the new user.";
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.gdbmMutex);
 #endif
     }
   }
 
   if(err != NULL) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader("ntop user add", HTML_FLAG_NO_REFRESH);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    printHTMLheader("ntop user add", BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning(err);
     sendMenuFooter(1, 2);
@@ -280,20 +280,20 @@ void doAddUser(int len) {
 
 void showURLs(void) {
   u_int numUsers=0;
-  char buf[BUF_SIZE], ebuf[128];
+  char buf[LEN_GENERAL_WORK_BUFFER], ebuf[128];
   datum key_data, return_data;
 
-  printHTMLheader("Restricted ntop URLs", HTML_FLAG_NO_REFRESH);
+  printHTMLheader("Restricted ntop URLs", BITFLAG_HTML_NO_REFRESH);
   sendString("<P><HR><P>\n");
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.gdbmMutex, "showURLs");
 #endif
 
   return_data = gdbm_firstkey(myGlobals.pwFile);
 
   while (return_data.dptr != NULL) {
-    /* traceEvent(TRACE_INFO, "1) -> %s\n", return_data.dptr); */
+    /* traceEvent(CONST_TRACE_INFO, "1) -> %s\n", return_data.dptr); */
     key_data = return_data;
 
     if(key_data.dptr[0] == '2') { /* 2 = URL */
@@ -304,7 +304,7 @@ void showURLs(void) {
       }
 
       encodeWebFormURL(key_data.dptr, ebuf, sizeof(ebuf));
-      if(snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
+      if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 	      "&nbsp;'%s*'</TH><TD "TD_BG"><A HREF=/modifyURL?%s>"
 	      "<IMG ALT=\"Modify User\" SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 	      "&nbsp;<A HREF=/deleteURL?%s><IMG ALT=\"Delete User\" SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
@@ -318,7 +318,7 @@ void showURLs(void) {
     free(key_data.dptr);
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
@@ -337,7 +337,7 @@ void addURL(char* url) {
   char *aubuf=NULL, *authorisedUser[20];
   char tmpStr[128];
 
-  printHTMLheader("Manage ntop URLs", HTML_FLAG_NO_REFRESH);
+  printHTMLheader("Manage ntop URLs", BITFLAG_HTML_NO_REFRESH);
   sendString("<P><HR><P>\n");
 
   if((url != NULL) && ((strlen(url) < 1) || (url[0] != '2'))) {
@@ -369,7 +369,7 @@ void addURL(char* url) {
     sendString("<TR>\n<TH ALIGN=right VALIGN=top>Authorised Users:&nbsp;</TH>"
 	       "<TD ALIGN=left><SELECT NAME=users MULTIPLE>\n");
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.gdbmMutex, "addURL");
 #endif
 
@@ -389,7 +389,7 @@ void addURL(char* url) {
 	  item = strtok_r(NULL, "&", &strtokState);
 	}
 	if(item != NULL) {
-	  traceEvent(TRACE_ERROR, "Too many users for URL='%s'\n", url);
+	  traceEvent(CONST_TRACE_ERROR, "Too many users for URL='%s'\n", url);
 	}
 	authorisedUser[i] = NULL;
       }
@@ -421,7 +421,7 @@ void addURL(char* url) {
     if(aubuf != NULL)
       free(aubuf); /* (**) */
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
@@ -456,8 +456,8 @@ void deleteURL(char* url) {
     returnHTTPredirect("showURLs.html");
     return;
   } else if((strlen(url) < 1) || (url[0] != '2')) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader("Delete ntop URL", HTML_FLAG_NO_REFRESH);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    printHTMLheader("Delete ntop URL", BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning("<I>The specified URL is invalid.</I>");
   } else {
@@ -468,17 +468,17 @@ void deleteURL(char* url) {
     key_data.dptr = url;
     key_data.dsize = strlen(url)+1;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.gdbmMutex, "deleteURL");
 #endif
     rc = gdbm_delete(myGlobals.pwFile, key_data);
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
     if(rc != 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHTMLheader("Delete ntop URL", HTML_FLAG_NO_REFRESH);
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+      printHTMLheader("Delete ntop URL", BITFLAG_HTML_NO_REFRESH);
       sendString("<P><HR><P>\n");
       printFlagedWarning("<B>ERROR:</B> <I>unable to delete specified URL.</I>");
     } else {
@@ -560,22 +560,22 @@ void doAddURL(int len) {
     data_data.dptr = authorizedUsers;
     data_data.dsize = strlen(authorizedUsers)+1;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.gdbmMutex, "doAddURL");
 #endif
     if(gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE) != 0)
       err = "FATAL ERROR: unable to add the new URL.";
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
   }
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
   if(err != NULL) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printHTMLheader("ntop URL add", HTML_FLAG_NO_REFRESH);
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    printHTMLheader("ntop URL add", BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning(err);
     sendMenuFooter(3, 0);
@@ -593,7 +593,7 @@ int doChangeFilter(int len) {
   int i,idx,badChar=0;
   struct bpf_program fcode;
   char *currentFilterExpressionSav;
-  char buf[BUF_SIZE],postData[256],*key,*err=NULL;
+  char buf[LEN_GENERAL_WORK_BUFFER],postData[256],*key,*err=NULL;
 
   currentFilterExpressionSav = strdup(myGlobals.currentFilterExpression);  /* Backup */
 
@@ -626,9 +626,9 @@ int doChangeFilter(int len) {
   if(badChar)
     err = "ERROR: the specified filter expression contains invalid characters.";
   if(err==NULL) {
-    traceEvent(TRACE_INFO, "Changing the kernel (libpcap) filter...");
+    traceEvent(CONST_TRACE_INFO, "Changing the kernel (libpcap) filter...");
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.gdbmMutex, "changeFilter");
 #endif
 
@@ -637,27 +637,27 @@ int doChangeFilter(int len) {
 	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
 			myGlobals.device[i].netmask.s_addr) < 0)
 	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
-	  traceEvent(TRACE_ERROR,
+	  traceEvent(CONST_TRACE_ERROR,
 		    "ERROR: wrong filter '%s' (%s) on interface %s.\nUsing old filter.\n",
 		    myGlobals.currentFilterExpression, pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
 	  err="The syntax of the defined filter is wrong.";
 	} else{
 	 if(*myGlobals.currentFilterExpression!='\0'){
-	   traceEvent(TRACE_INFO, "Set filter \"%s\" on myGlobals.device %s.",
+	   traceEvent(CONST_TRACE_INFO, "Set filter \"%s\" on myGlobals.device %s.",
 		      myGlobals.currentFilterExpression, myGlobals.device[i].name);
 	 }else{
-	   traceEvent(TRACE_INFO, "Set no kernel (libpcap) filtering on myGlobals.device %s.",
+	   traceEvent(CONST_TRACE_INFO, "Set no kernel (libpcap) filtering on myGlobals.device %s.",
 		      myGlobals.device[i].name);
 	 }
 	}
       }
     }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
   }
-  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
 
   if(myGlobals.filterExpressionInExtraFrame) {
     sendString("<HTML>\n<HEAD>\n");
@@ -672,7 +672,7 @@ int doChangeFilter(int len) {
     sendString("BACKGROUND=/white_bg.gif BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
     printSectionTitle("Change kernel (libpcap) filter expression");
   } else {
-    printHTMLheader("changing kernel (libpcap) filter expression", HTML_FLAG_NO_REFRESH);
+    printHTMLheader("changing kernel (libpcap) filter expression", BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR></P>\n<P><CENTER>");
   }
 
@@ -710,7 +710,7 @@ int doChangeFilter(int len) {
 	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
 			myGlobals.device[i].netmask.s_addr) < 0)
 	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
-	  traceEvent(TRACE_ERROR,
+	  traceEvent(CONST_TRACE_ERROR,
 		    "ERROR: wrong filter '%s' (%s) on interface %s.\nUsing old filter.\n",
 		    myGlobals.currentFilterExpression, pcap_geterr(myGlobals.device[i].pcapPtr), myGlobals.device[i].name);
 	}
@@ -729,9 +729,9 @@ int doChangeFilter(int len) {
 /* Courtesy of Michael Weidel <michael.weidel@gmx.de> */
 
 void changeFilter(void) {
-  char buf[BUF_SIZE];
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
-  printHTMLheader("Change kernel (libpcap) filter expression", HTML_FLAG_NO_REFRESH);
+  printHTMLheader("Change kernel (libpcap) filter expression", BITFLAG_HTML_NO_REFRESH);
   sendString("<BR><HR><P>\n");
   sendString("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=5>\n<TR>\n");
   sendString("<TH "TH_BG" ALIGN=center>Old Filter Expression:&nbsp;</TH><TD ALIGN=left>");
@@ -842,7 +842,7 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
   memset(buf, 0, buflen);
 
   if(len > (buflen-8)) {
-    traceEvent(TRACE_ERROR, "Too much HTTP POST data");
+    traceEvent(CONST_TRACE_ERROR, "Too much HTTP POST data");
     return (-1);
   }
 
@@ -896,12 +896,12 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
 #endif
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Data: '%s' (%d)\n", buf, idx);
+  traceEvent(CONST_TRACE_INFO, "Data: '%s' (%d)\n", buf, idx);
 #endif
 
   return (idx);
 }
-#endif /* MICRO_NTOP */
+#endif /* MAKE_MICRO_NTOP */
 
 
 /* ****************************** */
@@ -922,11 +922,11 @@ static void addKeyIfMissing(char* key, char* value,
   key_data.dptr = key;
   key_data.dsize = strlen(key_data.dptr)+1;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.gdbmMutex, "addKey");
 #endif
   return_data = gdbm_fetch(myGlobals.pwFile, key_data);
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
@@ -943,7 +943,7 @@ static void addKeyIfMissing(char* key, char* value,
 	 * Courtesy of Ambrose Li <a.c.li@ieee.org>
 	 *
 	 */
-	traceEvent(TRACE_ERROR, "No password for admin user. Please re-run ntop in non-daemon mode first.\n");
+	traceEvent(CONST_TRACE_ERROR, "No password for admin user. Please re-run ntop in non-daemon mode first.\n");
 	exit(1);
       }
 
@@ -981,7 +981,7 @@ static void addKeyIfMissing(char* key, char* value,
 #ifdef WIN32
       data_data.dptr = value;
 #else
-      strncpy(cpw, (char*)crypt(value, (const char*)CRYPT_SALT), sizeof(cpw));
+      strncpy(cpw, (char*)crypt(value, (const char*)CONST_CRYPT_SALT), sizeof(cpw));
       cpw[sizeof(cpw)-1] = '\0';
       data_data.dptr = cpw;
 #endif
@@ -989,21 +989,21 @@ static void addKeyIfMissing(char* key, char* value,
       data_data.dptr = value;
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "'%s' <-> '%s'\n", key, data_data.dptr);
+    traceEvent(CONST_TRACE_INFO, "'%s' <-> '%s'\n", key, data_data.dptr);
 #endif
 
     data_data.dsize = strlen(data_data.dptr)+1;
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.gdbmMutex, "showUsers");
 #endif
     gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE);
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
     /* print notice to the user */
     if(memcmp(key,"1admin",6) == 0)
-      traceEvent(TRACE_INFO, "Admin user password has been set.\n");
+      traceEvent(CONST_TRACE_INFO, "Admin user password has been set.\n");
 
   } else
     free(return_data.dptr);

@@ -1,10 +1,40 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
-/* Enable/disable address resolution */
-#undef ASYNC_ADDRESS_RESOLUTION
+/* ntop built for big endian machine */
+#undef CFG_BIG_ENDIAN
 
 /* Configuration file directory */
-#undef CONFIGFILE_DIR
+#undef CFG_CONFIGFILE_DIR
+
+/* Data file directory */
+#undef CFG_DATAFILE_DIR
+
+/* Database file directory */
+#undef CFG_DBFILE_DIR
+
+/* ether_header uses ether_addr structs */
+#undef CFG_ETHER_HEADER_HAS_EA
+
+/* ntop built for little endian machine */
+#undef CFG_LITTLE_ENDIAN
+
+/* Enable/disable multithread support */
+#undef CFG_MULTITHREADED
+
+/* OS lacks getdomainname function. */
+#undef CFG_NEED_GETDOMAINNAME
+
+/* Solaris 2.5: private implementation of inet_aton */
+#undef CFG_NEED_INET_ATON
+
+/* Plugin installation directory */
+#undef CFG_PLUGIN_DIR
+
+/* Run files directory */
+#undef CFG_RUN_DIR
+
+/* ntop built for unknown machine */
+#undef CFG_UNKNOWN_ENDIAN
 
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
@@ -13,15 +43,6 @@
 
 /* Define to 1 if using `alloca.c'. */
 #undef C_ALLOCA
-
-/* Data file directory */
-#undef DATAFILE_DIR
-
-/* Database file directory */
-#undef DBFILE_DIR
-
-/* ether_header uses ether_addr structs */
-#undef ETHER_HEADER_HAS_EA
 
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
@@ -548,25 +569,16 @@
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
 
 /* Define to build micro ntop */
-#undef MICRO_NTOP
+#undef MAKE_MICRO_NTOP
 
-/* Enable/disable multithread support */
-#undef MULTITHREADED
+/* Define for IGNORE of SIGPIPE */
+#undef MAKE_WITH_IGNORE_SIGPIPE
 
-/* OS lacks getdomainname function. */
-#undef NEED_GETDOMAINNAME
+/* Support SSLv3 if available */
+#undef MAKE_WITH_SSLV3_SUPPORT
 
-/* Solaris 2.5: private implementation of inet_aton */
-#undef NEED_INET_ATON
-
-/* ntop built for big endian machine */
-#undef NTOP_BIG_ENDIAN
-
-/* ntop built for little endian machine */
-#undef NTOP_LITTLE_ENDIAN
-
-/* ntop built for unknown machine */
-#undef NTOP_UNKNOWN_ENDIAN
+/* Enable SSL Watchdog */
+#undef MAKE_WITH_SSLWATCHDOG_COMPILETIME
 
 /* Name of package */
 #undef PACKAGE
@@ -586,14 +598,8 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Plugin installation directory */
-#undef PLUGIN_DIR
-
 /* temporary definition */
 #undef RETSIGTYPE
-
-/* Run files directory */
-#undef RUN_DIR
 
 /* Define to 1 if the `setvbuf' function takes the buffering type as its
    second argument and the buffer pointer as the third, as on System V before
@@ -611,23 +617,14 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Support SSLv3 if available */
-#undef SUPPORT_SSLV3
-
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
 
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME
 
-/* Enable SSL Watchdog */
-#undef USE_SSLWATCHDOG
-
 /* Version number of package */
 #undef VERSION
-
-/* Define for IGNORE of SIGPIPE */
-#undef YES_IGNORE_SIGPIPE
 
 /* Define to 1 if type `char' is unsigned and you are not using gcc.  */
 #ifndef __CHAR_UNSIGNED__

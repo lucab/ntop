@@ -64,7 +64,7 @@ int handleIP(u_short port,
   int idx;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
-    traceEvent(TRACE_INFO, "Sanity check failed (4) [Low memory?]");
+    traceEvent(CONST_TRACE_INFO, "Sanity check failed (4) [Low memory?]");
     return(-1);
   }
 
@@ -74,16 +74,16 @@ int handleIP(u_short port,
   } else {
     if(p2pSessionIdx) {
       switch(p2pSessionIdx) {
-      case P2P_GNUTELLA:
+      case FLAG_P2P_GNUTELLA:
 	idx = myGlobals.GnutellaIdx;
 	break;
-      case P2P_KAZAA:
+      case FLAG_P2P_KAZAA:
 	idx = myGlobals.KazaaIdx;
 	break;
-      case P2P_WINMX:
+      case FLAG_P2P_WINMX:
 	idx = myGlobals.WinMXIdx;
 	break;
-      case P2P_DIRECTCONNECT:
+      case FLAG_P2P_DIRECTCONNECT:
 	idx = myGlobals.DirectConnectIdx;
 	break;
       default:
@@ -97,16 +97,16 @@ int handleIP(u_short port,
   if(idx == -1)
     return(-1); /* Unable to locate requested index */
   else if (idx >= myGlobals.numIpProtosToMonitor) {
-    traceEvent(TRACE_ERROR, "Discarding idx=%d for port=%d", idx, port);    
+    traceEvent(CONST_TRACE_ERROR, "Discarding idx=%d for port=%d", idx, port);    
     return(-1);
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "port=%d - isPassiveSess=%d - p2pSessionIdx=%d - idx=%d", 
+  traceEvent(CONST_TRACE_INFO, "port=%d - isPassiveSess=%d - p2pSessionIdx=%d - idx=%d", 
 	     port, isPassiveSess, p2pSessionIdx, idx);
 #endif
 
-  if(idx != NO_PEER) {
+  if(idx != FLAG_NO_PEER) {
     if(subnetPseudoLocalHost(srcHost)) {
       if(subnetPseudoLocalHost(dstHost)) {
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL))
@@ -150,7 +150,7 @@ static void addContactedPeers(HostTraffic *sender, HostTraffic *receiver,
      || (receiver == NULL)
      || (sender->hostTrafficBucket == receiver->hostTrafficBucket)) {
     if((sender != NULL) && (sender->hostTrafficBucket == 0)) return; /* This is not a problem */
-    traceEvent(TRACE_ERROR, "Sanity check failed @ addContactedPeers (0x%X, 0x%X)", sender, receiver);
+    traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (0x%X, 0x%X)", sender, receiver);
     return;
   }
   
@@ -257,21 +257,21 @@ static void checkFragmentOverlap(u_int srcHostIdx,
                                  u_int fragmentOffset,
                                  u_int dataLength,
 				 int actualDeviceId) {
-  if (fragment->fragmentOrder == UNKNOWN_FRAGMENT_ORDER) {
+  if (fragment->fragmentOrder == FLAG_UNKNOWN_FRAGMENT_ORDER) {
     if(fragment->lastOffset > fragmentOffset)
-      fragment->fragmentOrder = DECREASING_FRAGMENT_ORDER;
+      fragment->fragmentOrder = FLAG_DECREASING_FRAGMENT_ORDER;
     else
-      fragment->fragmentOrder = INCREASING_FRAGMENT_ORDER;
+      fragment->fragmentOrder = FLAG_INCREASING_FRAGMENT_ORDER;
   }
 
-  if ((fragment->fragmentOrder == INCREASING_FRAGMENT_ORDER
+  if ((fragment->fragmentOrder == FLAG_INCREASING_FRAGMENT_ORDER
        && fragment->lastOffset+fragment->lastDataLength > fragmentOffset)
       ||
-      (fragment->fragmentOrder == DECREASING_FRAGMENT_ORDER
+      (fragment->fragmentOrder == FLAG_DECREASING_FRAGMENT_ORDER
        && fragment->lastOffset < fragmentOffset+dataLength)) {
     if(myGlobals.enableSuspiciousPacketDump) {
-      char buf[BUF_SIZE];
-      snprintf(buf, BUF_SIZE, "Detected overlapping packet fragment [%s->%s]: "
+      char buf[LEN_GENERAL_WORK_BUFFER];
+      snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Detected overlapping packet fragment [%s->%s]: "
                "fragment id=%d, actual offset=%d, previous offset=%d\n",
                fragment->src->hostSymIpAddress,
                fragment->dest->hostSymIpAddress,
@@ -322,7 +322,7 @@ static u_int handleFragment(HostTraffic *srcHost,
     fragment->dest = dstHost;
     fragment->fragmentId = fragmentId;
     fragment->firstSeen = myGlobals.actTime;
-    fragment->fragmentOrder = UNKNOWN_FRAGMENT_ORDER;
+    fragment->fragmentOrder = FLAG_UNKNOWN_FRAGMENT_ORDER;
     fragment->next = myGlobals.device[actualDeviceId].fragmentList;
     fragment->prev = NULL;
     myGlobals.device[actualDeviceId].fragmentList = fragment;
@@ -376,7 +376,7 @@ void purgeOldFragmentEntries(int actualDeviceId) {
   while(fragment != NULL) {
     fragcnt++;
     next = fragment->next;
-    if((fragment->firstSeen + DOUBLE_TWO_MSL_TIMEOUT) < myGlobals.actTime) {
+    if((fragment->firstSeen + CONST_DOUBLE_TWO_MSL_TIMEOUT) < myGlobals.actTime) {
       expcnt++;
 #ifdef FRAGMENT_DEBUG
       dumpFragmentData(fragment);
@@ -416,14 +416,14 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 	    || multicastHost(router)
 	    || (!subnetLocalHost(router)) /* No IP: is this a special Multicast address ? */))
        || (router->hostIpAddress.s_addr == dstHost->hostIpAddress.s_addr)
-       || (memcmp(router->ethAddress, dstHost->ethAddress, ETHERNET_ADDRESS_LEN) == 0)
+       || (memcmp(router->ethAddress, dstHost->ethAddress, LEN_ETHERNET_ADDRESS) == 0)
        )
       return;
 
     incrementUsageCounter(&srcHost->contactedRouters, router->hostTrafficBucket, actualDeviceId);
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [idx=%d/%s/%s/%s]",
+    traceEvent(CONST_TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [idx=%d/%s/%s/%s]",
 	       srcHost->ethAddressString, srcHost->hostNumIpAddress, srcHost->hostSymIpAddress,
 	       dstHost->ethAddressString, dstHost->hostNumIpAddress, dstHost->hostSymIpAddress,
 	       routerIdx,
@@ -432,7 +432,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 	       router->hostSymIpAddress);
 
 #endif
-    FD_SET(GATEWAY_HOST_FLAG, &router->flags);
+    FD_SET(FLAG_GATEWAY_HOST, &router->flags);
     updateRoutedTraffic(router);
   }
 }
@@ -445,7 +445,7 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   struct tm t, *thisTime;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
-    traceEvent(TRACE_ERROR, "NULL host detected");
+    traceEvent(CONST_TRACE_ERROR, "NULL host detected");
     return;
   }
 
@@ -473,7 +473,7 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].broadcastPkts, 1);
   } else if(isMulticastAddress(&(dstHost->hostIpAddress))) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "%s->%s\n",
+    traceEvent(CONST_TRACE_INFO, "%s->%s\n",
 	       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
 #endif
     incrementTrafficCounter(&srcHost->pktMulticastSent, 1);
@@ -542,10 +542,10 @@ static void updateDevicePacketTTLStats(u_int ttl, int actualDeviceId) {
 
 void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length) {
 
-  if((sport >= TOP_IP_PORT) || (dport >= TOP_IP_PORT)) 
+  if((sport >= MAX_IP_PORT) || (dport >= MAX_IP_PORT)) 
     return;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.gdbmMutex, "updateInterfacePorts");
 #endif
 
@@ -566,7 +566,7 @@ void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_in
   myGlobals.device[actualDeviceId].ipPorts[sport]->sent += length;
   myGlobals.device[actualDeviceId].ipPorts[dport]->rcvd += length;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
 }
@@ -620,7 +620,7 @@ static void processIpPkt(const u_char *bp,
   */
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipBytes, ntohs(ip.ip_len));
 
-  if(ip.ip_p == GRE_PROTOCOL_TYPE) {
+  if(ip.ip_p == CONST_GRE_PROTOCOL_TYPE) {
     /*
       Cisco GRE (Generic Routing Encapsulation) Tunnels (RFC 1701, 1702)
     */
@@ -630,7 +630,7 @@ static void processIpPkt(const u_char *bp,
     memcpy(&tunnel, bp+hlen, sizeof(GreTunnel));
 
     switch(ntohs(tunnel.protocol)) {
-    case PPP_PROTOCOL_TYPE:
+    case CONST_PPP_PROTOCOL_TYPE:
       memcpy(&pppTHeader, bp+hlen+sizeof(GreTunnel), sizeof(PPPTunnelHeader));
       
       if(ntohs(pppTHeader.protocol) == 0x21 /* IP */) {	
@@ -666,11 +666,11 @@ static void processIpPkt(const u_char *bp,
       if(myGlobals.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
 	/* Dump the first packet only */
 
-	traceEvent(TRACE_WARNING, "Host %s has a wrong netmask",
+	traceEvent(CONST_TRACE_WARNING, "Host %s has a wrong netmask",
 		   etheraddr_string(ether_src));
 	dumpSuspiciousPacket(actualDeviceId);
       }
-      FD_SET(HOST_WRONG_NETMASK, &srcHost->flags);
+      FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost->flags);
     }
   }
 
@@ -692,7 +692,7 @@ static void processIpPkt(const u_char *bp,
 
   if(srcHost == NULL) {
     /* Sanity check */
-    traceEvent(TRACE_INFO, "Sanity check failed (1) [Low memory?] (idx=%d)", srcHostIdx);
+    traceEvent(CONST_TRACE_INFO, "Sanity check failed (1) [Low memory?] (idx=%d)", srcHostIdx);
     return; /* It might be that there's not enough memory that that
 	       dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst) caused
 	       srcHost to be freed */
@@ -700,7 +700,7 @@ static void processIpPkt(const u_char *bp,
 
   if(dstHost == NULL) {
     /* Sanity check */
-    traceEvent(TRACE_INFO, "Sanity check failed (2) [Low memory?]");
+    traceEvent(CONST_TRACE_INFO, "Sanity check failed (2) [Low memory?]");
     return;
   }
 
@@ -710,7 +710,7 @@ static void processIpPkt(const u_char *bp,
   if(myGlobals.rFileName != NULL) {
     static int numPkt=1;
 
-    traceEvent(TRACE_INFO, "%d) %s -> %s",
+    traceEvent(CONST_TRACE_INFO, "%d) %s -> %s",
 	       numPkt++,
 	       srcHost->hostNumIpAddress,
 	       dstHost->hostNumIpAddress);
@@ -767,7 +767,7 @@ static void processIpPkt(const u_char *bp,
   if (fd && myGlobals.device [actualDeviceId] . ipv)
       fprintf (fd, "PACKET_DEBUG: IP:     ----- IP Header -----\n\n"),
       fprintf (fd, "                      Packet %ld arrived at %s\n", myGlobals.device [actualDeviceId] ,
-	       timestamp (& myGlobals.lastPktTime, ABS_FMT)),
+	       timestamp (& myGlobals.lastPktTime, FLAG_TIMESTAMP_FMT_ABS)),
       fprintf (fd, "                      Total size  = %d : header = %d : data = %d\n",
 	       ip_size, ip_hlen, ip_size - ip_hlen),
       fprintf (fd, "                      Source      = %s\n", inet_ntoa (ip->ip_src)),
@@ -810,7 +810,7 @@ static void processIpPkt(const u_char *bp,
 
     if(tcpUdpLen < sizeof(struct tcphdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
-	traceEvent(TRACE_WARNING, "WARNING: Malformed TCP pkt %s->%s detected (packet too short)",
+	traceEvent(CONST_TRACE_WARNING, "WARNING: Malformed TCP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
 	dumpSuspiciousPacket(actualDeviceId);
@@ -913,14 +913,14 @@ static void processIpPkt(const u_char *bp,
 
 	if((dport < sport) && (! ((sportIdx != -1) && (dportIdx == -1)))
 	    || ((sportIdx == -1) && (dportIdx != -1))) {
-	  /* traceEvent(TRACE_INFO, "[1] sportIdx(%d)=%d - dportIdx(%d)=%d", sport, sportIdx, dport, dportIdx); */
+	  /* traceEvent(CONST_TRACE_INFO, "[1] sportIdx(%d)=%d - dportIdx(%d)=%d", sport, sportIdx, dport, dportIdx); */
 
 	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess, 
 		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId) == -1)
 	    handleIP(sport, srcHost, dstHost, length, isPassiveSess, 
 		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId);
 	} else {
-	  /* traceEvent(TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d", sport, sportIdx, dport, dportIdx); */
+	  /* traceEvent(CONST_TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d", sport, sportIdx, dport, dportIdx); */
 	  
 	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess, 
 		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId) == -1)
@@ -937,7 +937,7 @@ static void processIpPkt(const u_char *bp,
 
     if(tcpUdpLen < sizeof(struct udphdr)) {
       if(myGlobals.enableSuspiciousPacketDump) {
-	traceEvent(TRACE_WARNING, "WARNING: Malformed UDP pkt %s->%s detected (packet too short)",
+	traceEvent(CONST_TRACE_WARNING, "WARNING: Malformed UDP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
 	dumpSuspiciousPacket(actualDeviceId);
@@ -968,7 +968,7 @@ static void processIpPkt(const u_char *bp,
 					     udpDataLength, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
-	    traceEvent(TRACE_INFO, "DNS_SNIFF_DEBUG: %s:%d->%s:%d [request: %d][positive reply: %d]\n",
+	    traceEvent(CONST_TRACE_INFO, "DNS_SNIFF_DEBUG: %s:%d->%s:%d [request: %d][positive reply: %d]\n",
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       isRequest, positiveReply);
@@ -1012,7 +1012,7 @@ static void processIpPkt(const u_char *bp,
 
 	      if(microSecTimeDiff > 0) {
 #ifdef DEBUG
-		traceEvent(TRACE_INFO, "TransactionId=0x%X [%.1f ms]\n",
+		traceEvent(CONST_TRACE_INFO, "TransactionId=0x%X [%.1f ms]\n",
 			   transactionId, ((float)microSecTimeDiff)/1000);
 #endif
 
@@ -1046,14 +1046,14 @@ static void processIpPkt(const u_char *bp,
 		  }
 		} else {
 #ifdef DEBUG
-		  traceEvent(TRACE_INFO, "getTimeMapping(0x%X) failed for DNS",
+		  traceEvent(CONST_TRACE_INFO, "getTimeMapping(0x%X) failed for DNS",
 			     transactionId);
 #endif
 		}
 	      }
 
 	      /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-	      FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
+	      FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
 
 	      if(positiveReply) {
 		incrementTrafficCounter(&srcHost->protocolInfo->dnsStats->numPositiveReplSent, 1);
@@ -1065,7 +1065,7 @@ static void processIpPkt(const u_char *bp,
 	    }
 	  } else {
 	    /* no packet decoding (let's speculate a bit) */
-	    FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
+	    FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
 	  }
 	} else {
 	  if(myGlobals.enablePacketDecoding)
@@ -1148,7 +1148,7 @@ static void processIpPkt(const u_char *bp,
 
     if(tcpUdpLen < sizeof(struct icmp)) {
       if(myGlobals.enableSuspiciousPacketDump) {
-	traceEvent(TRACE_WARNING, "WARNING: Malformed ICMP pkt %s->%s detected (packet too short)",
+	traceEvent(CONST_TRACE_WARNING, "WARNING: Malformed ICMP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
 	dumpSuspiciousPacket(actualDeviceId);
@@ -1173,7 +1173,7 @@ static void processIpPkt(const u_char *bp,
 	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHostIdx, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHostIdx, actualDeviceId);
 	if(myGlobals.enableSuspiciousPacketDump) {
-	  traceEvent(TRACE_WARNING, fmt,
+	  traceEvent(CONST_TRACE_WARNING, fmt,
 		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
 	  dumpSuspiciousPacket(actualDeviceId);
 	}
@@ -1231,7 +1231,7 @@ static void processIpPkt(const u_char *bp,
 	      (scan attempt?)
 	    */
 
-	    traceEvent(TRACE_INFO, "Detected ICMP msg [type=%s/code=%d] %s->%s",
+	    traceEvent(CONST_TRACE_INFO, "Detected ICMP msg [type=%s/code=%d] %s->%s",
 		       mapIcmpType(icmpPkt.icmp_type), icmpPkt.icmp_code,
 		       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
 	  }
@@ -1254,7 +1254,7 @@ static void processIpPkt(const u_char *bp,
       if(myGlobals.enableSuspiciousPacketDump
 	 && (icmpPkt.icmp_type == ICMP_ECHO)
 	 && (broadcastHost(dstHost) || multicastHost(dstHost))) {
-	traceEvent(TRACE_WARNING, "Smurf packet detected for host [%s->%s]",
+	traceEvent(CONST_TRACE_WARNING, "Smurf packet detected for host [%s->%s]",
 		   srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
       } else if(icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */) {
 	struct ip *oip = &icmpPkt.icmp_ip;
@@ -1266,7 +1266,7 @@ static void processIpPkt(const u_char *bp,
 	  switch (oip->ip_p) {
 	  case IPPROTO_TCP:
 	    if(myGlobals.enableSuspiciousPacketDump)
-	      traceEvent(TRACE_WARNING,
+	      traceEvent(CONST_TRACE_WARNING,
 			 "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
 			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	    /* Simulation of rejected TCP connection */
@@ -1277,7 +1277,7 @@ static void processIpPkt(const u_char *bp,
 
 	  case IPPROTO_UDP:
 	    if(myGlobals.enableSuspiciousPacketDump)
-	      traceEvent(TRACE_WARNING,
+	      traceEvent(CONST_TRACE_WARNING,
 			 "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
 			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
@@ -1299,7 +1299,7 @@ static void processIpPkt(const u_char *bp,
 
 	case ICMP_UNREACH_PROTOCOL: /* Protocol Unreachable */
 	  if(myGlobals.enableSuspiciousPacketDump)
-	    traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
+	    traceEvent(CONST_TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
 		       "Host [%s] rcvd a ICMP protocol Unreachable from host [%s]"
 		       " (Firewalking scan attempt?)",
 		       dstHost->hostSymIpAddress,
@@ -1312,7 +1312,7 @@ static void processIpPkt(const u_char *bp,
 	case ICMP_UNREACH_HOST_PROHIB:   /* Host Administratively Prohibited */
 	case ICMP_UNREACH_FILTER_PROHIB: /* Access Administratively Prohibited */
 	  if(myGlobals.enableSuspiciousPacketDump)
-	    traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
+	    traceEvent(CONST_TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
 		       "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
 		       " (Firewalking scan attempt?)",
 		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
@@ -1355,7 +1355,7 @@ static void processIpPkt(const u_char *bp,
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "IP=%d TCP=%d UDP=%d ICMP=%d (len=%d)\n",
+  traceEvent(CONST_TRACE_INFO, "IP=%d TCP=%d UDP=%d ICMP=%d (len=%d)\n",
 	     (int)myGlobals.device[actualDeviceId].ipBytes,
 	     (int)myGlobals.device[actualDeviceId].tcpBytes,
 	     (int)myGlobals.device[actualDeviceId].udpBytes,
@@ -1365,7 +1365,7 @@ static void processIpPkt(const u_char *bp,
 
 /* ************************************ */
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 void queuePacket(u_char * _deviceId,
 		 const struct pcap_pkthdr *h,
 		 const u_char *p) {
@@ -1388,13 +1388,13 @@ void queuePacket(u_char * _deviceId,
   if(!myGlobals.capturePackets) return;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Got packet from %s (%d)\n", myGlobals.device[*_deviceId].name, *_deviceId);
+  traceEvent(CONST_TRACE_INFO, "Got packet from %s (%d)\n", myGlobals.device[*_deviceId].name, *_deviceId);
 #endif
 
-  if(myGlobals.packetQueueLen >= PACKET_QUEUE_LENGTH) {
+  if(myGlobals.packetQueueLen >= CONST_PACKET_QUEUE_LENGTH) {
     int deviceId;
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]\n",
+    traceEvent(CONST_TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]\n",
 	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
@@ -1414,7 +1414,7 @@ void queuePacket(u_char * _deviceId,
     HEARTBEAT(0, "queuePacket(), sleep(1)...woke", NULL);
   } else {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "About to queue packet... \n");
+    traceEvent(CONST_TRACE_INFO, "About to queue packet... \n");
 #endif
     accessMutex(&myGlobals.packetQueueMutex, "queuePacket");
     memcpy(&myGlobals.packetQueue[myGlobals.packetQueueHead].h, h, sizeof(struct pcap_pkthdr));
@@ -1425,22 +1425,22 @@ void queuePacket(u_char * _deviceId,
     memcpy(myGlobals.packetQueue[myGlobals.packetQueueHead].p, p, len);
     myGlobals.packetQueue[myGlobals.packetQueueHead].h.caplen = len;
     myGlobals.packetQueue[myGlobals.packetQueueHead].deviceId = (int)((void*)_deviceId);
-    myGlobals.packetQueueHead = (myGlobals.packetQueueHead+1) % PACKET_QUEUE_LENGTH;
+    myGlobals.packetQueueHead = (myGlobals.packetQueueHead+1) % CONST_PACKET_QUEUE_LENGTH;
     myGlobals.packetQueueLen++;
     if(myGlobals.packetQueueLen > myGlobals.maxPacketQueueLen)
       myGlobals.maxPacketQueueLen = myGlobals.packetQueueLen;
     releaseMutex(&myGlobals.packetQueueMutex);
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Queued packet... [packet queue=%d/max=%d]\n",
+    traceEvent(CONST_TRACE_INFO, "Queued packet... [packet queue=%d/max=%d]\n",
 	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
 #ifdef DEBUG_THREADS
-    traceEvent(TRACE_INFO, "+ [packet queue=%d/max=%d]\n", myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+    traceEvent(CONST_TRACE_INFO, "+ [packet queue=%d/max=%d]\n", myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
   }
 
-#ifdef USE_SEMAPHORES
+#ifdef MAKE_WITH_SEMAPHORES
   incrementSem(&myGlobals.queueSem);
 #else
   signalCondvar(&myGlobals.queueCondvar);
@@ -1463,12 +1463,12 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 
   while(myGlobals.capturePackets) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Waiting for packet...\n");
+    traceEvent(CONST_TRACE_INFO, "Waiting for packet...\n");
 #endif
 
     while((myGlobals.packetQueueLen == 0)
 	  && (myGlobals.capturePackets) /* Courtesy of Wies-Software <wies@wiessoft.de> */) {
-#ifdef USE_SEMAPHORES
+#ifdef MAKE_WITH_SEMAPHORES
       waitSem(&myGlobals.queueSem);
 #else
       waitCondvar(&myGlobals.queueCondvar);
@@ -1478,22 +1478,22 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
     if(!myGlobals.capturePackets) break;
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Got packet...\n");
+    traceEvent(CONST_TRACE_INFO, "Got packet...\n");
 #endif
     accessMutex(&myGlobals.packetQueueMutex, "dequeuePacket");
     memcpy(&pktInfo.h, &myGlobals.packetQueue[myGlobals.packetQueueTail].h,
 	   sizeof(struct pcap_pkthdr));
     memcpy(pktInfo.p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
     pktInfo.deviceId = myGlobals.packetQueue[myGlobals.packetQueueTail].deviceId;
-    myGlobals.packetQueueTail = (myGlobals.packetQueueTail+1) % PACKET_QUEUE_LENGTH;
+    myGlobals.packetQueueTail = (myGlobals.packetQueueTail+1) % CONST_PACKET_QUEUE_LENGTH;
     myGlobals.packetQueueLen--;
     releaseMutex(&myGlobals.packetQueueMutex);
 #ifdef DEBUG_THREADS
-    traceEvent(TRACE_INFO, "- [packet queue=%d/max=%d]\n", myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+    traceEvent(CONST_TRACE_INFO, "- [packet queue=%d/max=%d]\n", myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Processing packet... [packet queue=%d/max=%d]\n",
+    traceEvent(CONST_TRACE_INFO, "Processing packet... [packet queue=%d/max=%d]\n",
 	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
@@ -1505,7 +1505,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
   return(NULL); /* NOTREACHED */
 }
 
-#endif /* MULTITHREADED */
+#endif /* CFG_MULTITHREADED */
 
 
 /* ************************************ */
@@ -1533,7 +1533,7 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
       }
     } else {
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "No match on %s for '%s'\n", myGlobals.device[deviceId].name,
+      traceEvent(CONST_TRACE_INFO, "No match on %s for '%s'\n", myGlobals.device[deviceId].name,
 		 list->flowName);
 #endif
     }
@@ -1543,13 +1543,6 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
 }
 
 /* ************************************ */
-
-/*
- * time stamp presentation formats
- */
-#define DELTA_FMT      1   /* the time since receiving the previous packet */
-#define ABS_FMT        2   /* the current time */
-#define RELATIVE_FMT   3   /* the time relative to the first packet rcvd */
 
 
 struct timeval current_pkt = {0,0};
@@ -1598,7 +1591,7 @@ static char* timestamp(const struct timeval* t, int fmt) {
   switch(fmt)
     {
     default:
-    case DELTA_FMT:
+    case FLAG_TIMESTAMP_FMT_DELTA:
       /*
        * calculate the difference in milliseconds since
        * the previous packet was displayed
@@ -1608,13 +1601,13 @@ static char* timestamp(const struct timeval* t, int fmt) {
 	BufferTooShort();
       break;
 
-    case ABS_FMT:
+    case FLAG_TIMESTAMP_FMT_ABS:
       if(snprintf(buf, 16, "%02d:%02d:%02d.%06d",
 		  tm->tm_hour, tm->tm_min, tm->tm_sec, (int)t->tv_usec) < 0)
 	BufferTooShort();
       break;
 
-    case RELATIVE_FMT:
+    case FLAG_TIMESTAMP_FMT_RELATIVE:
       /*
        * calculate the difference in milliseconds
        * since the previous packet was displayed
@@ -1686,7 +1679,7 @@ void processPacket(u_char *_deviceId,
   {
     static long numPkt=0;
 
-    /* traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt, length); */
+    /* traceEvent(CONST_TRACE_INFO, "%ld (%ld)\n", numPkt, length); */
 
     if(numPkt ==  /* 10000 */ 1000000) {
       cleanup(2);
@@ -1711,7 +1704,7 @@ void processPacket(u_char *_deviceId,
 
 #ifdef DEBUG
   if(myGlobals.rFileName != NULL) {
-    traceEvent(TRACE_INFO, ".");
+    traceEvent(CONST_TRACE_INFO, ".");
     fflush(stdout);
   }
 #endif
@@ -1732,7 +1725,7 @@ void processPacket(u_char *_deviceId,
   actualDeviceId = getActualInterface(deviceId);
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "deviceId=%d - actualDeviceId=%ld\n", deviceId, actualDeviceId);
+  traceEvent(CONST_TRACE_INFO, "deviceId=%d - actualDeviceId=%ld\n", deviceId, actualDeviceId);
 #endif
 
   updateDevicePacketStats(length, actualDeviceId);
@@ -1743,11 +1736,11 @@ void processPacket(u_char *_deviceId,
   if(myGlobals.device[actualDeviceId].pcapDumper != NULL)
     pcap_dump((u_char*)myGlobals.device[actualDeviceId].pcapDumper, h, p);
 
-  if ( (myGlobals.device[deviceId].datalink < DLT_ARRAY_MAXIMUM) &&
+  if ( (myGlobals.device[deviceId].datalink < MAX_DLT_ARRAY) &&
        (length > myGlobals.mtuSize[myGlobals.device[deviceId].datalink]) ) {
     /* Sanity check */
     if(myGlobals.enableSuspiciousPacketDump) {
-      traceEvent(TRACE_INFO, "Packet # %u too long (len = %u)!\n",
+      traceEvent(CONST_TRACE_INFO, "Packet # %u too long (len = %u)!\n",
 		 (unsigned int)myGlobals.device[deviceId].ethernetPkts.value,
 		 (unsigned int)length);
       dumpSuspiciousPacket(actualDeviceId);
@@ -1758,15 +1751,15 @@ void processPacket(u_char *_deviceId,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.tooLong, 1);
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "processPacket");
 #endif
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "actualDeviceId = %d\n", actualDeviceId);
+  traceEvent(CONST_TRACE_INFO, "actualDeviceId = %d\n", actualDeviceId);
 #endif
 
-  hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? NULL_HDRLEN : sizeof(struct ether_header);
+  hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header);
 
   memcpy(&myGlobals.lastPktTime, &h->ts, sizeof(myGlobals.lastPktTime));
 
@@ -1797,7 +1790,7 @@ void processPacket(u_char *_deviceId,
       extract_fddi_addrs(fddip, (char *)ESRC(&ehdr), (char *)EDST(&ehdr));
       ether_src = (u_char*)ESRC(&ehdr), ether_dst = (u_char*)EDST(&ehdr);
 
-      if((fddip->fc & FDDIFC_CLFF) == FDDIFC_LLC_ASYNC) {
+      if((fddip->fc & CONST_FDDIFC_CLFF) == CONST_FDDIFC_CONST_LLC_ASYNC) {
 	struct llc llc;
 
 	/*
@@ -1808,20 +1801,20 @@ void processPacket(u_char *_deviceId,
 	*/
 	memcpy((char *)&llc, (char *)p, min(caplen, sizeof(llc)));
 	if(llc.ssap == LLCSAP_SNAP && llc.dsap == LLCSAP_SNAP
-	   && llc.llcui == LLC_UI) {
+	   && llc.ctl.snap.snap_ui == CONST_LLC_UI) {
 	  if(caplen >= sizeof(llc)) {
 	    caplen -= sizeof(llc);
 	    length -= sizeof(llc);
 	    p += sizeof(llc);
 
-	    if(EXTRACT_16BITS(&llc.ethertype[0]) == ETHERTYPE_IP) {
+	    if(EXTRACT_16BITS(&llc.ctl.snap_ether.snap_ethertype[0]) == ETHERTYPE_IP) {
 	      /* encapsulated IP packet */
 	      processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	      /*
 		Patch below courtesy of
 		Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>
 	      */
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 	      releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 	      return;
@@ -1837,7 +1830,7 @@ void processPacket(u_char *_deviceId,
 	Courtesy of Martin Kammerhofer <dada@sbox.tu-graz.ac.at>
       */
 
-      length -= NULL_HDRLEN; /* don't count nullhdr */
+      length -= CONST_NULL_HDRLEN; /* don't count nullhdr */
 
       /* All this crap is due to the old little/big endian story... */
       if((p[0] == 0) && (p[1] == 0) && (p[2] == 8) && (p[3] == 0))
@@ -1848,7 +1841,7 @@ void processPacket(u_char *_deviceId,
       break;
 
     case DLT_PPP:
-      headerDisplacement = PPP_HDRLEN;
+      headerDisplacement = CONST_PPP_HDRLEN;
       /*
 	PPP is like RAW IP. The only difference is that PPP
 	has a header that's not present in RAW IP.
@@ -1863,9 +1856,8 @@ void processPacket(u_char *_deviceId,
       break;
 
       /* PPPoE patch courtesy of Stefano Picerno <stefanopp@libero.it> */
-#ifdef _linux
+#ifdef LINUX
     case DLT_LINUX_SLL: /* Linux capture interface */
-#define SLL_HDR_LEN 16
       length = h->len;
       length -= SLL_HDR_LEN;
       ether_src = ether_dst = NULL;
@@ -1879,8 +1871,8 @@ void processPacket(u_char *_deviceId,
 
       hlen = sizeof(struct tokenRing_header) - 18;
 
-      if(trp->trn_shost[0] & TR_RII) /* Source Routed Packet */
-	hlen += ((ntohs(trp->trn_rcf) & TR_RCF_LEN_MASK) >> 8);
+      if(trp->trn_shost[0] & CONST_TR_RII) /* Source Routed Packet */
+	hlen += ((ntohs(trp->trn_rcf) & CONST_TR_RCF_LEN_MASK) >> 8);
 
       length -= hlen, caplen -= hlen;
 
@@ -1919,7 +1911,7 @@ void processPacket(u_char *_deviceId,
 	memcpy(&qType, p+sizeof(struct ether_header), sizeof(Ether80211q));
 	vlanId = ntohs(qType.vlanId) & 0xFFF;
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "VLAN Id: %d", vlanId);
+	traceEvent(CONST_TRACE_INFO, "VLAN Id: %d", vlanId);
 #endif
 	eth_type = ntohs(qType.protoType);
       }
@@ -1932,7 +1924,7 @@ void processPacket(u_char *_deviceId,
     if(fd && myGlobals.device [deviceId].ethv)
         fprintf (fd, "PACKET_DEBUG: ETHER:  ----- Ether Header -----\n\n"),
 	fprintf (fd, "                      Packet %ld arrived at %s\n",
-		 myGlobals.device [actualDeviceId].ethernetPkts, timestamp (& h->ts, ABS_FMT)),
+		 myGlobals.device [actualDeviceId].ethernetPkts, timestamp (& h->ts, FLAG_TIMESTAMP_FMT_ABS)),
 	fprintf (fd, "                      Total size  = %d : header = %d : data = %d\n",
 		 length, hlen, length - hlen),
 	fprintf (fd, "                      Source      = %s\n", etheraddr_string (ether_src)),
@@ -1942,7 +1934,7 @@ void processPacket(u_char *_deviceId,
 
     if((myGlobals.device[deviceId].datalink != DLT_PPP)
        && (myGlobals.device[deviceId].datalink != DLT_RAW)
-#ifdef _linux
+#ifdef LINUX
        && (myGlobals.device[deviceId].datalink != DLT_LINUX_SLL)  
 #endif
        ) {
@@ -1954,7 +1946,7 @@ void processPacket(u_char *_deviceId,
 	srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(TRACE_INFO, "Sanity check failed (5) [Low memory?]");
+	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (5) [Low memory?]");
 	  return;
 	}
 
@@ -1962,7 +1954,7 @@ void processPacket(u_char *_deviceId,
 	dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(TRACE_INFO, "Sanity check failed (6) [Low memory?]");
+	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (6) [Low memory?]");
 	  return;
 	}
 
@@ -1994,7 +1986,7 @@ void processPacket(u_char *_deviceId,
 	srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(TRACE_INFO, "Sanity check failed (7) [Low memory?]");
+	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (7) [Low memory?]");
 	  return;
 	}
 
@@ -2002,7 +1994,7 @@ void processPacket(u_char *_deviceId,
 	dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(TRACE_INFO, "Sanity check failed (8) [Low memory?]");
+	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (8) [Low memory?]");
 	  return;
 	}
 
@@ -2030,7 +2022,7 @@ void processPacket(u_char *_deviceId,
 	  srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	  if(srcHost == NULL) {
 	    /* Sanity check */
-	    traceEvent(TRACE_INFO, "Sanity check failed (9) [Low memory?]");
+	    traceEvent(CONST_TRACE_INFO, "Sanity check failed (9) [Low memory?]");
 	    return;
 	  }
 
@@ -2038,7 +2030,7 @@ void processPacket(u_char *_deviceId,
 	  dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	  if(dstHost == NULL) {
 	    /* Sanity check */
-	    traceEvent(TRACE_INFO, "Sanity check failed (10) [Low memory?]");
+	    traceEvent(CONST_TRACE_INFO, "Sanity check failed (10) [Low memory?]");
 	    return;
 	  }
 
@@ -2050,14 +2042,14 @@ void processPacket(u_char *_deviceId,
 	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 
-	  if((srcHostIdx != NO_PEER) && (dstHostIdx != NO_PEER)) {
+	  if((srcHostIdx != FLAG_NO_PEER) && (dstHostIdx != FLAG_NO_PEER)) {
 	    TrafficCounter ctr;
 
 	    srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	    dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
 	    if((srcHost == NULL) || (dstHost == NULL)) {
-	      traceEvent(TRACE_INFO, "Sanity check failed (13) [Low memory?]");
+	      traceEvent(CONST_TRACE_INFO, "Sanity check failed (13) [Low memory?]");
 	      return;
 	    }
 
@@ -2067,7 +2059,7 @@ void processPacket(u_char *_deviceId,
 	    /* Watch out for possible alignment problems */
 	    memcpy(&llcHeader, (char*)p1, min(length, sizeof(llcHeader)));
 
-	    sap_type = llcHeader.ssap & ~LLC_GSAP;
+	    sap_type = llcHeader.ssap & ~CONST_LLC_GSAP;
 	    llcsap_string(sap_type);
 
 	    if(sap_type == 0x42) {
@@ -2121,13 +2113,13 @@ void processPacket(u_char *_deviceId,
 		  case 0x0003: /* Print Queue */
 		  case 0x8002: /* Intel NetPort Print Server */
 		  case 0x030c: /* HP LaserJet / Quick Silver */
-		    FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
+		    FD_SET(FLAG_HOST_TYPE_PRINTER, &srcHost->flags);
 		    break;
 
 		  case 0x0027: /* TCP/IP gateway */
 		  case 0x0021: /* NAS SNA gateway */
 		  case 0x055d: /* Attachmate SNA gateway */
-		    FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
+		    FD_SET(FLAG_GATEWAY_HOST, &srcHost->flags);
 		    /* ==> updateRoutedTraffic(srcHost);
 		       is not needed as there are no routed packets */
 		    break;
@@ -2142,25 +2134,25 @@ void processPacket(u_char *_deviceId,
 		  case 0x0111: /* Test server */
 		  case 0x03e1: /* UnixWare Application Server */
 		  case 0x0810: /* ELAN License Server Demo */
-		    FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+		    FD_SET(FLAG_HOST_TYPE_SERVER, &srcHost->flags);
 		    break;
 
 		  case 0x0278: /* NetWare Directory server */
-		    FD_SET(HOST_SVC_DIRECTORY, &srcHost->flags);
+		    FD_SET(FLAG_HOST_TYPE_SVC_DIRECTORY, &srcHost->flags);
 		    break;
 
 		  case 0x0024: /* Rem bridge */
 		  case 0x0026: /* Bridge server */
-		    FD_SET(HOST_SVC_BRIDGE, &srcHost->flags);
+		    FD_SET(FLAG_HOST_TYPE_SVC_BRIDGE, &srcHost->flags);
 		    break;
 
 		  case 0x0640: /* NT Server-RPC/GW for NW/Win95 User Level Sec */
 		  case 0x064e: /* NT Server-IIS */
-		    FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+		    FD_SET(FLAG_HOST_TYPE_SERVER, &srcHost->flags);
 		    break;
 
 		  case 0x0133: /* NetWare Name Service */
-		    FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
+		    FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
 		    break;
 		  }
 		}
@@ -2172,8 +2164,8 @@ void processPacket(u_char *_deviceId,
 		      break;
 		    }
 
-		  if(strlen(serverName) >= (MAX_HOST_SYM_NAME_LEN-1))
-		    serverName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
+		  if(strlen(serverName) >= (MAX_LEN_SYM_HOST_NAME-1))
+		    serverName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
 		  srcHost->nonIPTraffic->ipxHostName = strdup(serverName);
 		  for(i=0; srcHost->nonIPTraffic->ipxHostName[i] != '\0'; i++)
 		    srcHost->nonIPTraffic->ipxHostName[i] = tolower(srcHost->nonIPTraffic->ipxHostName[i]);
@@ -2181,7 +2173,7 @@ void processPacket(u_char *_deviceId,
 		  updateHostName(srcHost);
 		}
 #ifdef DEBUG
-		traceEvent(TRACE_INFO, "%s [%s][%x]\n", serverName,
+		traceEvent(CONST_TRACE_INFO, "%s [%s][%x]\n", serverName,
 			   getSAPInfo(serverType, 0), serverType);
 #endif
 	      }
@@ -2203,7 +2195,7 @@ void processPacket(u_char *_deviceId,
 	      /* DLC (protocol used for printers) */
 	      incrementTrafficCounter(&srcHost->dlcSent, length);
 	      incrementTrafficCounter(&dstHost->dlcRcvd, length);
-	      FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
+	      FD_SET(FLAG_HOST_TYPE_PRINTER, &dstHost->flags);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].dlcBytes, length);
 	    } else if(sap_type == 0xAA /* SNAP */) {
 	      u_int16_t snapType;
@@ -2254,8 +2246,8 @@ void processPacket(u_char *_deviceId,
 		    memcpy(nodeName, &p1[6+displ], p1[5+displ]);
 		    nodeName[p1[5+displ]] = '\0';
 
-		    if(strlen(nodeName) >= (MAX_HOST_SYM_NAME_LEN-1))
-		      nodeName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
+		    if(strlen(nodeName) >= (MAX_LEN_SYM_HOST_NAME-1))
+		      nodeName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
 
 		    if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		    srcHost->nonIPTraffic->atNodeName = strdup(nodeName);
@@ -2287,7 +2279,7 @@ void processPacket(u_char *_deviceId,
 		     this is Cisco Discovery Protocol
 		  */
 
-		  FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
+		  FD_SET(FLAG_GATEWAY_HOST, &srcHost->flags);
 		}
 
 		incrementTrafficCounter(&srcHost->otherSent, length);
@@ -2304,10 +2296,10 @@ void processPacket(u_char *_deviceId,
 	    } else {
 	      /* Unknown Protocol */
 #ifdef UNKNOWN_PACKET_DEBUG
-	      traceEvent(TRACE_INFO, "UNKNOWN_PACKET_DEBUG: [%u] [%x] %s %s > %s\n", 
+	      traceEvent(CONST_TRACE_INFO, "UNKNOWN_PACKET_DEBUG: [%u] [%x] %s %s > %s\n", 
 			 (u_short)sap_type,(u_short)sap_type,
 			 etheraddr_string(ether_src),
-			 llcsap_string(llcHeader.ssap & ~LLC_GSAP),
+			 llcsap_string(llcHeader.ssap & ~CONST_LLC_GSAP),
 			 etheraddr_string(ether_dst));
 #endif
 	      incrementTrafficCounter(&srcHost->otherSent, length);
@@ -2339,7 +2331,7 @@ void processPacket(u_char *_deviceId,
 	srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(TRACE_INFO, "Sanity check failed (11) [Low memory?]");
+	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (11) [Low memory?]");
 	  return;
 	}
 
@@ -2347,7 +2339,7 @@ void processPacket(u_char *_deviceId,
 	dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(TRACE_INFO, "Sanity check failed (12) [Low memory?]");
+	  traceEvent(CONST_TRACE_INFO, "Sanity check failed (12) [Low memory?]");
 	  return;
 	}
 
@@ -2404,7 +2396,7 @@ void processPacket(u_char *_deviceId,
 	  break;
 	default:
 #ifdef UNKNOWN_PACKET_DEBUG
-	  traceEvent(TRACE_INFO, "UNKNOWN_PACKET_DEBUG: %s/%s->%s/%s [eth type %d (0x%x)]\n",
+	  traceEvent(CONST_TRACE_INFO, "UNKNOWN_PACKET_DEBUG: %s/%s->%s/%s [eth type %d (0x%x)]\n",
 		     srcHost->hostNumIpAddress, srcHost->ethAddressString,
 		     dstHost->hostNumIpAddress, dstHost->ethAddressString,
 		     eth_type, eth_type);
@@ -2426,12 +2418,12 @@ void processPacket(u_char *_deviceId,
   if(myGlobals.flowsList != NULL) /* Handle flows last */
     flowsProcess(h, p, deviceId);
   
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 
   if(myGlobals.resetHashNow == 1) {
-    traceEvent(TRACE_INFO, "Resetting stats");
+    traceEvent(CONST_TRACE_INFO, "Resetting stats");
     resetStats();
     myGlobals.resetHashNow = 0;
   }

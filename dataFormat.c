@@ -22,13 +22,12 @@
 
 
 char* formatKBytes(float numKBytes) {
-#define BUFFER_SIZE   24
-  static char outStr[BUFFER_SIZE][32];
+  static char outStr[LEN_DATAFORMAT_BUFFER][32];
   static short bufIdx=0;
 
   if(numKBytes < 0) return(""); /* It shouldn't happen */
 
-  bufIdx = (bufIdx+1)%BUFFER_SIZE;
+  bufIdx = (bufIdx+1)%LEN_DATAFORMAT_BUFFER;
 
   if(numKBytes < 1024) {
     if(snprintf(outStr[bufIdx], 32, "%.1f%sKB", numKBytes, myGlobals.separator) < 0) 
@@ -58,8 +57,7 @@ char* formatKBytes(float numKBytes) {
 /* ******************************* */
 
 char* formatBytes(Counter numBytes, short encodeString) {
-#define BUFFER_SIZE   24
-  static char outStr[BUFFER_SIZE][32];
+  static char outStr[LEN_DATAFORMAT_BUFFER][32];
   static short bufIdx=0;
   char* locSeparator;
 
@@ -68,7 +66,7 @@ char* formatBytes(Counter numBytes, short encodeString) {
   else
     locSeparator = " ";
 
-  bufIdx = (bufIdx+1)%BUFFER_SIZE;
+  bufIdx = (bufIdx+1)%LEN_DATAFORMAT_BUFFER;
 
   if(numBytes == 0) {
     return("0"); /* return("&nbsp;"); */
@@ -193,7 +191,7 @@ char* formatThroughput(float numBytes /* <=== Bytes/second */) {
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "%.2f = %s\n", numBytes, outStr[bufIdx]);
+  traceEvent(CONST_TRACE_INFO, "%.2f = %s\n", numBytes, outStr[bufIdx]);
 #endif
 
   return(outStr[bufIdx]);
@@ -204,7 +202,7 @@ char* formatThroughput(float numBytes /* <=== Bytes/second */) {
 char* formatLatency(struct timeval tv, u_short sessionState) {
   
   if(((tv.tv_sec == 0) && (tv.tv_usec == 0)) 
-     || (sessionState < STATE_ACTIVE) 
+     || (sessionState < FLAG_STATE_ACTIVE) 
      /* Patch courtesy of  
 	Andreas Pfaller <apfaller@yahoo.com.au>
      */) {
@@ -227,7 +225,6 @@ char* formatLatency(struct timeval tv, u_short sessionState) {
 char* formatTimeStamp(unsigned int ndays,
 		      unsigned int nhours,
 		      unsigned int nminutes) {
-#define TIME_STAMP_BUFFER_SIZE   2
   time_t theTime;
 
   /* printf("%u - %u - %u\n", ndays, nhours, nminutes); */
@@ -237,10 +234,10 @@ char* formatTimeStamp(unsigned int ndays,
      && (nminutes == 0))
     return("now");
   else {
-    static char timeBuffer[TIME_STAMP_BUFFER_SIZE][32];
+    static char timeBuffer[LEN_TIME_STAMP_BUFFER][32];
     static short bufIdx=0;
 
-    bufIdx = (bufIdx+1)%TIME_STAMP_BUFFER_SIZE;
+    bufIdx = (bufIdx+1)%LEN_TIME_STAMP_BUFFER;
     theTime = myGlobals.actTime-(ndays*86500)-(nhours*3600)-(nminutes*60);
     strncpy(timeBuffer[bufIdx], ctime(&theTime), 32);
     timeBuffer[bufIdx][strlen(timeBuffer[bufIdx])-1] = '\0'; /* Remove trailer '\n' */

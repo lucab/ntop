@@ -26,69 +26,20 @@
 #include "pcap.h"
 #endif
 
-#ifndef HAVE_GDBM_H
-#define HAVE_GDBM_H
-#endif
-#ifndef HAVE_GDCHART
-#define HAVE_GDCHART
-#endif
-#ifndef MULTITHREADED
-#define MULTITHREADED
-#endif
-#ifndef ASYNC_ADDRESS_RESOLUTION
-#define ASYNC_ADDRESS_RESOLUTION
-#endif
-#ifndef HAVE_LIBRRD
-/* #define HAVE_LIBRRD ****/
-#endif
-
-#define STATIC_PLUGIN
-
 /* Courtesy of Wies-Software <wies@wiessoft.de> */
 extern char* getadminpass(const char *prompt);
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 
-#define NTOP_LITTLE_ENDIAN  1
-#undef  NTOP_BIG_ENDIAN
-
 extern char _wdir[];
 
-#ifndef DATAFILE_DIR
-#define DATAFILE_DIR	_wdir
-#endif
-#ifndef PLUGIN_DIR
-#define PLUGIN_DIR		"."
-#endif
-#ifndef CONFIGFILE_DIR
-#define CONFIGFILE_DIR	"."
-#endif
-#ifndef DBFILE_DIR
-#define DBFILE_DIR      "."
+#ifndef CFG_DATAFILE_DIR
+#define CFG_DATAFILE_DIR	_wdir
 #endif
 
 /* ndis.h */
 typedef int NDIS_STATUS, *PNDIS_STATUS; 
 
 /* ******************* */
-
-/* typedef ULONGLONG TrafficCounter; */
-/* typedef unsigned long TrafficCounter; */
-#if defined (WIN32) && !defined (__GNUC__)
-typedef unsigned char  u_char;
-typedef unsigned short u_short;
-typedef unsigned int   u_int;
-typedef unsigned long  u_long;
-#endif
-typedef unsigned int   tcp_seq;
-
-typedef u_char  uint8_t;
-typedef u_short uint16_t; 
-typedef u_int	uint32_t; 
-
-/*
-typedef unsigned long u_int32, u_int32_t;
-typedef long int32_t;
-*/
 
 #define strcasecmp _stricmp
 
@@ -397,18 +348,6 @@ extern void termWinsock32();
 extern void sniffSinglePacket(void(*pbuf_process)(u_char *unused, 
 		  const struct pcap_pkthdr *h, 
 		  const u_char *p));
-
-/* ********* MULTITHREAD STUFF ********* */
-
-#define pthread_t              HANDLE
-#define pthread_mutex_t        HANDLE
-#define pthread_cond_t         HANDLE
-
-
-typedef struct conditionalVariable {
-	HANDLE condVar;
-	CRITICAL_SECTION criticalSection;
-} ConditionalVariable;
 
 /* ********************************************* */
 

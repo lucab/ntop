@@ -20,30 +20,16 @@
 
 #include "ntop.h"
 
-#if defined(WIN32)
-#define STATIC_PLUGIN /* This needs to be fixed */
-#else
-#define RMON_SUPPORT
-#endif
-
-#ifdef STATIC_PLUGIN
+#ifdef MAKE_STATIC_PLUGIN
 extern PluginInfo* icmpPluginEntryFctn(void);
 extern PluginInfo* nfsPluginEntryFctn(void);
 extern PluginInfo* sflowPluginEntryFctn(void);
 extern PluginInfo* rrdPluginEntryFctn(void);
 /* rrd never made it into the code base */
-#ifdef RMON_SUPPORT
+#ifdef MAKE_RMON_SUPPORT
 extern PluginInfo* rmonPluginEntryFctn(void);
 #endif
 extern PluginInfo* netflowPluginEntryFctn(void);
-#endif
-
-#ifndef RTLD_NOW 
-#ifdef RTLD_LAZY
-#define RTLD_NOW RTLD_LAZY 
-#else
-#define RTLD_NOW 1 /* MacOS X Patch */
-#endif
 #endif
 
 /* ******************* */
@@ -128,12 +114,12 @@ static char* dlerror() {
 
 /* ******************* */
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
 
 #if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)
 static void loadPlugin(char* dirName, char* pluginName) {
   char pluginPath[256];
-  char tmpBuf[BUF_SIZE];
+  char tmpBuf[LEN_GENERAL_WORK_BUFFER];
   int i;
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
   shl_t pluginPtr;
@@ -156,11 +142,11 @@ static void loadPlugin(char* dirName, char* pluginName) {
   if(snprintf(pluginPath, sizeof(pluginPath), "%s/%s", dirName, pluginName) < 0)
     BufferTooShort();
 
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Loading plugin '%s'...", pluginPath);
+#ifdef PLUGIN_DEBUG
+  traceEvent(CONST_TRACE_INFO, "Loading plugin '%s'...", pluginPath);
 #endif
 
-#ifndef STATIC_PLUGIN
+#ifndef MAKE_STATIC_PLUGIN
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
   /* Load the library */
   pluginPtr = shl_load(pluginPath, BIND_IMMEDIATE|BIND_VERBOSE|BIND_NOSTART ,0L);
@@ -174,11 +160,11 @@ static void loadPlugin(char* dirName, char* pluginName) {
 
   if(pluginPtr == NULL) {
 #if HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-    traceEvent(TRACE_WARNING, 
+    traceEvent(CONST_TRACE_WARNING, 
 	       "WARNING: unable to load plugin '%s'\n[%s]\n", 
 	       pluginPath, strerror(errno));
 #else
-    traceEvent(TRACE_WARNING, 
+    traceEvent(CONST_TRACE_WARNING, 
 	       "WARNING: unable to load plugin '%s'\n[%s]\n", 
 	       pluginPath, dlerror());
 #endif /* HPUX */
@@ -186,27 +172,27 @@ static void loadPlugin(char* dirName, char* pluginName) {
   }
 
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-  if(shl_findsym(&pluginPtr ,PLUGIN_ENTRY_FCTN_NAME,
+  if(shl_findsym(&pluginPtr ,CONST_PLUGIN_ENTRY_FCTN_NAME,
 		 TYPE_PROCEDURE, &pluginEntryFctnPtr) == -1)
     pluginEntryFctnPtr = NULL;
 #else
 #ifdef AIX
   pluginEntryFctnPtr = pluginPtr;
 #else
-  pluginEntryFctnPtr = dlsym(pluginPtr, PLUGIN_ENTRY_FCTN_NAME);
+  pluginEntryFctnPtr = dlsym(pluginPtr, CONST_PLUGIN_ENTRY_FCTN_NAME);
 #endif /* AIX */
 #endif /* HPUX */
 
   if(pluginEntryFctnPtr == NULL) {
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-    traceEvent(TRACE_WARNING, "\nWARNING: unable to local plugin '%s' entry function [%s] \n",
+    traceEvent(CONST_TRACE_WARNING, "\nWARNING: unable to local plugin '%s' entry function [%s] \n",
 	       pluginPath, strerror(errno));
 #else
 #ifdef WIN32
-    traceEvent(TRACE_WARNING, "WARNING: unable to local plugin '%s' entry function [%li]\n", 
+    traceEvent(CONST_TRACE_WARNING, "WARNING: unable to local plugin '%s' entry function [%li]\n", 
 	       pluginPath, GetLastError());
 #else
-    traceEvent(TRACE_WARNING, "WARNING: unable to local plugin '%s' entry function [%s]\n",
+    traceEvent(CONST_TRACE_WARNING, "WARNING: unable to local plugin '%s' entry function [%s]\n",
 	       pluginPath, dlerror());
 #endif /* WIN32 */
 #endif /* HPUX */
@@ -215,7 +201,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 
   pluginJumpFunc = (PluginInfo*(*)())pluginEntryFctnPtr;
   pluginInfo = pluginJumpFunc();
-#else /* STATIC_PLUGIN */
+#else /* MAKE_STATIC_PLUGIN */
 
   if(strcmp(pluginName, "icmpPlugin") == 0)
     pluginInfo = icmpPluginEntryFctn();
@@ -232,25 +218,25 @@ static void loadPlugin(char* dirName, char* pluginName) {
   else if(strcmp(pluginName, "rrdPlugin") == 0)
     pluginInfo = rrdPluginEntryFctn();
 
-#ifdef RMON_SUPPORT
+#ifdef MAKE_RMON_SUPPORT
   else if(strcmp(pluginName, "ntopRmon") == 0)
     pluginInfo = rmonPluginEntryFctn();
 #endif
   else
     pluginInfo = NULL;
 
-#endif /* STATIC_PLUGIN */
+#endif /* MAKE_STATIC_PLUGIN */
 
   if(pluginInfo == NULL) {
-    traceEvent(TRACE_WARNING, "WARNING: %s call of plugin '%s' failed.\n",
-	       PLUGIN_ENTRY_FCTN_NAME, pluginPath);
+    traceEvent(CONST_TRACE_WARNING, "WARNING: %s call of plugin '%s' failed.\n",
+	       CONST_PLUGIN_ENTRY_FCTN_NAME, pluginPath);
     return;
   }
 
   newFlow = (FlowFilterList*)calloc(1, sizeof(FlowFilterList));
   
   if(newFlow == NULL) {
-    traceEvent(TRACE_ERROR, "Fatal error: not enough memory. Bye!\n");
+    traceEvent(CONST_TRACE_ERROR, "Fatal error: not enough memory. Bye!\n");
     exit(-1);
   } else {
     newFlow->fcode = (struct bpf_program*)calloc(MAX_NUM_DEVICES, sizeof(struct bpf_program));
@@ -259,7 +245,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
     if((pluginInfo->bpfFilter == NULL)
        || (pluginInfo->bpfFilter[0] == '\0')) {
       /*
-	traceEvent(TRACE_WARNING, "WARNING: plugin '%s' has an empty BPF filter.\n",
+	traceEvent(CONST_TRACE_WARNING, "WARNING: plugin '%s' has an empty BPF filter.\n",
 	pluginPath);
       */
       for(i=0; i<myGlobals.numDevices; i++)
@@ -270,8 +256,8 @@ static void loadPlugin(char* dirName, char* pluginName) {
 
       for(i=0; i<myGlobals.numDevices; i++) 
 	if(!myGlobals.device[i].virtualDevice) {
-#ifdef DEBUG
-	  traceEvent(TRACE_INFO, "Compiling filter '%s' on myGlobals.device %s\n", 
+#ifdef PLUGIN_DEBUG
+	  traceEvent(CONST_TRACE_INFO, "Compiling filter '%s' on myGlobals.device %s\n", 
 		     tmpBuf, myGlobals.device[i].name);
 #endif
 	  rc = pcap_compile(myGlobals.device[i].pcapPtr, 
@@ -279,7 +265,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 			    myGlobals.device[i].netmask.s_addr);
       
 	  if(rc < 0) {
-	    traceEvent(TRACE_INFO, 
+	    traceEvent(CONST_TRACE_INFO, 
 		       "WARNING: plugin '%s' contains a wrong filter specification\n"
 		       "         \"%s\" on interface %s (%s).\n"
 		       "         This plugin has been discarded.\n",
@@ -313,11 +299,11 @@ static void loadPlugin(char* dirName, char* pluginName) {
 
     newFlow->next = myGlobals.flowsList;
     myGlobals.flowsList = newFlow;
-    /* traceEvent(TRACE_INFO, "Adding: %s\n", pluginInfo->pluginName); */
+    /* traceEvent(CONST_TRACE_INFO, "Adding: %s\n", pluginInfo->pluginName); */
   }
 
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Plugin '%s' loaded succesfully.\n", pluginPath);
+#ifdef PLUGIN_DEBUG
+  traceEvent(CONST_TRACE_INFO, "Plugin '%s' loaded succesfully.\n", pluginPath);
 #endif
 }
 
@@ -331,9 +317,9 @@ void loadPlugins(void) {
   DIR* directoryPointer=NULL;
 #endif
   
-  traceEvent(TRACE_INFO, "Loading plugins (if any)...\n");
+  traceEvent(CONST_TRACE_INFO, "Loading plugins (if any)...\n");
   
-#ifndef STATIC_PLUGIN
+#ifndef MAKE_STATIC_PLUGIN
   for(idx=0; myGlobals.pluginDirs[idx] != NULL; idx++) {
     if(snprintf(dirPath, sizeof(dirPath), "%s", myGlobals.pluginDirs[idx]) < 0) 
       BufferTooShort();
@@ -345,35 +331,35 @@ void loadPlugins(void) {
   }
 
   if(directoryPointer == NULL) {
-    traceEvent(TRACE_WARNING, 
+    traceEvent(CONST_TRACE_WARNING, 
 	       "WARNING: Unable to find the plugins/ directory.\n");
     return;
   } else
-    traceEvent(TRACE_INFO, "Searching plugins in %s\n", dirPath);
+    traceEvent(CONST_TRACE_INFO, "Searching plugins in %s\n", dirPath);
 
   while((dp = readdir(directoryPointer)) != NULL) {
     if(dp->d_name[0] == '.')
       continue;
-    else if(strlen(dp->d_name) < strlen(PLUGIN_EXTENSION))
+    else if(strlen(dp->d_name) < strlen(CONST_PLUGIN_EXTENSION))
       continue;
-    else if(strcmp(&dp->d_name[strlen(dp->d_name)-strlen(PLUGIN_EXTENSION)],
-		   PLUGIN_EXTENSION))
+    else if(strcmp(&dp->d_name[strlen(dp->d_name)-strlen(CONST_PLUGIN_EXTENSION)],
+		   CONST_PLUGIN_EXTENSION))
       continue;
     
     loadPlugin(dirPath, dp->d_name);
   }
 
   closedir(directoryPointer);
-#else /* STATIC_PLUGIN */
+#else /* MAKE_STATIC_PLUGIN */
   loadPlugin(NULL, "icmpPlugin");
   loadPlugin(NULL, "nfsPlugin");
   loadPlugin(NULL, "sflowPlugin");
   loadPlugin(NULL, "netflowPlugin");
   loadPlugin(NULL, "rrdPlugin");
-#ifdef RMON_SUPPORT
+#ifdef MAKE_RMON_SUPPORT
   loadPlugin(NULL, "rmonPlugin");
 #endif
-#endif /* STATIC_PLUGIN */
+#endif /* MAKE_STATIC_PLUGIN */
 }
 
 /* ******************* */
@@ -381,12 +367,12 @@ void loadPlugins(void) {
 void unloadPlugins(void) {
   FlowFilterList *flows = myGlobals.flowsList;
 
-  traceEvent(TRACE_INFO, "Unloading plugins (if any)...\n");
+  traceEvent(CONST_TRACE_INFO, "Unloading plugins (if any)...\n");
 
   while(flows != NULL) {
     if(flows->pluginStatus.pluginMemoryPtr != NULL) {
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "Unloading plugin '%s'...\n",
+#ifdef PLUGIN_DEBUG
+      traceEvent(CONST_TRACE_INFO, "Unloading plugin '%s'...\n",
 		 flows->pluginStatus.pluginPtr->pluginName);
 #endif
       if((flows->pluginStatus.pluginPtr->termFunc != NULL)
@@ -423,11 +409,11 @@ void unloadPlugins(void) {
 void startPlugins(void) {
   FlowFilterList *flows = myGlobals.flowsList;
 
-  traceEvent(TRACE_INFO, "Initializing plugins (if any)...\n");
+  traceEvent(CONST_TRACE_INFO, "Initializing plugins (if any)...\n");
 
   while(flows != NULL) {
     if(flows->pluginStatus.pluginPtr != NULL) {
-      traceEvent(TRACE_INFO, "Starting plugin '%s'...\n",
+      traceEvent(CONST_TRACE_INFO, "Starting plugin '%s'...\n",
 		 flows->pluginStatus.pluginPtr->pluginName);
       if((flows->pluginStatus.pluginPtr->startFunc != NULL)
 	 && (flows->pluginStatus.activePlugin))
@@ -439,5 +425,5 @@ void startPlugins(void) {
 
 /* ************************************* */
 
-#endif /* MICRO_NTOP */
+#endif /* MAKE_MICRO_NTOP */
 

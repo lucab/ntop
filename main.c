@@ -72,7 +72,7 @@ static struct option const long_options[] = {
   { "daemon",                           no_argument,       NULL, 'd' },
 #endif
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
   { "max-table-rows",                   required_argument, NULL, 'e' },
 #endif
 
@@ -138,15 +138,15 @@ static struct option const long_options[] = {
 #ifdef HAVE_GDCHART
   { "throughput-bar-chart",             no_argument,       NULL, 129 },
 #endif
-#if !defined(WIN32) && defined(USE_SYSLOG)
+#if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
   { "use-syslog",                       optional_argument, NULL, 131 },
 #endif
-#ifndef YES_IGNORE_SIGPIPE
+#ifndef MAKE_WITH_IGNORE_SIGPIPE
   { "ignore-sigpipe",                   no_argument,       NULL, 132 },
 #endif
-#ifdef PARM_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   { "ssl-watchdog",                     no_argument,       NULL, 133 },
-#endif /* PARM_SSLWATCHDOG */
+#endif
 
   { "dynamic-purge-limits",             no_argument,       NULL, 134 },
   { "set-admin-password",               optional_argument, NULL, 135 },
@@ -190,7 +190,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-d             | --daemon]                           Run ntop in daemon mode\n");
 #endif
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
   fprintf(fp, "    [-e <number>    | --max-table-rows <number>]          Maximum number of table rows to report\n");
 #endif
 
@@ -211,7 +211,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-n             | --numeric-ip-addresses]             Numeric IP addresses - no DNS resolution\n");
   fprintf(fp, "    [-p <list>      | --protocols <list>]                 List of IP protocols to monitor (see man page)\n");
   fprintf(fp, "    [-q             | --create-suspicious-packets]        Create file ntop-suspicious-pkts.XXX.pcap file\n");
-  fprintf(fp, "    [-r <number>    | --refresh-time <number>]            Refresh time in seconds, default is %d\n", REFRESH_TIME);
+  fprintf(fp, "    [-r <number>    | --refresh-time <number>]            Refresh time in seconds, default is %d\n", DEFAULT_NTOP_AUTOREFRESH_INTERVAL);
   fprintf(fp, "    [-s             | --no-promiscuous]                   Disable promiscuous mode\n");
   fprintf(fp, "    [-t <number>    | --trace-level <number>]             Trace level [0-5]\n");
 
@@ -235,10 +235,10 @@ void usage (FILE * fp) {
 
 #ifndef WIN32
   fprintf(fp, "    [-K             | --enable-debug]                     Enable debug mode\n");
-#ifdef USE_SYSLOG
+#ifdef MAKE_WITH_SYSLOG
   fprintf(fp, "    [-L ]                                                 Do logging via syslog\n");
   fprintf(fp, "    [                 --use-syslog=<facility>]            Do logging via syslog, facility - Note that the = is REQUIRED\n");
-#endif /* USE_SYSLOG */
+#endif /* MAKE_WITH_SYSLOG */
 #endif
 
   fprintf(fp, "    [-M             | --no-interface-merge]               Don't merge network interfaces (see man page)\n");
@@ -256,12 +256,12 @@ void usage (FILE * fp) {
   fprintf(fp, "    [--throughput-bar-chart]                              Use BAR chart for graphs\n");
 #endif
 
-#ifndef YES_IGNORE_SIGPIPE 
+#ifndef MAKE_WITH_IGNORE_SIGPIPE 
   fprintf(fp, "    [--ignore-sigpipe]                                    Ignore SIGPIPE errors\n");
 #endif
-#ifdef PARM_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   fprintf(fp, "    [--ssl-watchdog]                                      Use ssl watchdog (NS6 problem)\n");
-#endif /* PARM_SSLWATCHDOG */
+#endif
 
 }
 
@@ -281,7 +281,7 @@ static int parseOptions(int argc, char* argv []) {
    */
 #ifdef WIN32
   theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:BD:F:MO:P:S:U:VW:";
-#elif defined(USE_SYSLOG)
+#elif defined(MAKE_WITH_SYSLOG)
   theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKLMNO:P:S:U:VW:";
 #else
   theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:CD:EF:IKMNO:P:S:U:VW:";
@@ -293,7 +293,7 @@ static int parseOptions(int argc, char* argv []) {
    * Parse command line options to the application via standard system calls
    */
   while((opt = getopt_long(argc, argv, theOpts, long_options, (int *) 0)) != EOF) {
-    /* traceEvent(TRACE_INFO, "getopt_long(%d/%c/%s)", opt, opt, optarg); */
+    /* traceEvent(CONST_TRACE_INFO, "getopt_long(%d/%c/%s)", opt, opt, optarg); */
     switch (opt) {
     case 'a': /* ntop access log path */
       stringSanityCheck(optarg);
@@ -315,7 +315,7 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
     case 'e':
       myGlobals.maxNumLines = atoi(optarg);
       break;
@@ -385,8 +385,8 @@ static int parseOptions(int argc, char* argv []) {
     case 't':
       /* Trace Level Initialization */
       myGlobals.traceLevel = atoi(optarg);
-      if(myGlobals.traceLevel > DETAIL_TRACE_LEVEL)
-	myGlobals.traceLevel = DETAIL_TRACE_LEVEL;
+      if(myGlobals.traceLevel > CONST_DETAIL_TRACE_LEVEL)
+	myGlobals.traceLevel = CONST_DETAIL_TRACE_LEVEL;
       break;
 
 #ifndef WIN32
@@ -469,7 +469,7 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-#if !defined(WIN32) && defined(USE_SYSLOG)
+#if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
     case 'L':
       myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
       break;
@@ -537,7 +537,7 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-#if !defined(WIN32) && defined(USE_SYSLOG)
+#if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
     case 131:
       /*
        * Burton Strauss (BStrauss@acm.org) allow --use-syslog <facility>
@@ -577,19 +577,19 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-#ifndef YES_IGNORE_SIGPIPE 
+#ifndef MAKE_WITH_IGNORE_SIGPIPE 
     case 132:
       /* Burton M. Strauss III - Jun 2002 */
       myGlobals.ignoreSIGPIPE = 1;
       break;
-#endif /* YES_IGNORE_SIGPIPE */
+#endif /* MAKE_WITH_IGNORE_SIGPIPE */
 
-#ifdef PARM_SSLWATCHDOG 
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME 
     case 133:
       /* Burton M. Strauss III - Jun 2002 */
       myGlobals.useSSLwatchdog = 1;
       break;
-#endif /* PARM_SSLWATCHDOG */
+#endif
 
     case 134:
       myGlobals.dynamicPurgeLimits = 1;
@@ -684,7 +684,7 @@ int main(int argc, char *argv[]) {
 
   /* printf("HostTraffic=%d\n", sizeof(HostTraffic)); return(-1); */
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
   printf("Wait please: ntop is coming up...\n");
 #else
   printf("Wait please: ntop (micro) is coming up...\n");
@@ -708,14 +708,13 @@ int main(int argc, char *argv[]) {
      }
   }
 
-  /* Thanks to Tim Gardner <timg@tpi.com> for pointing out the erroneous use of sizeof() */
-  cmdLineBuffer = (char*)malloc(LINE_BUFFERS_LENGTH) /* big just to be safe */;
-  memset(cmdLineBuffer, 0, LINE_BUFFERS_LENGTH);
+  cmdLineBuffer = (char*)malloc(LEN_CMDLINE_BUFFER) /* big just to be safe */;
+  memset(cmdLineBuffer, 0, LEN_CMDLINE_BUFFER);
 
-  readBuffer = (char*)malloc(READ_BUFFERS_LENGTH) /* big just to be safe */;
-  memset(readBuffer, 0, READ_BUFFERS_LENGTH);
+  readBuffer = (char*)malloc(LEN_FGETS_BUFFER) /* big just to be safe */;
+  memset(readBuffer, 0, LEN_FGETS_BUFFER);
 
-  if (snprintf(cmdLineBuffer, LINE_BUFFERS_LENGTH, "%s ", argv[0]) < 0)
+  if (snprintf(cmdLineBuffer, LEN_CMDLINE_BUFFER, "%s ", argv[0]) < 0)
       BufferTooShort();
 
   /* Now we process the parameter list, looking for a @filename 
@@ -733,7 +732,7 @@ int main(int argc, char *argv[]) {
 #endif
           readBufferWork = strchr(argv[i], '=');
           if (readBufferWork != NULL) {
-              if (strlen(cmdLineBuffer) + strlen(argv[i]) + 5 >= LINE_BUFFERS_LENGTH) {
+              if (strlen(cmdLineBuffer) + strlen(argv[i]) + 5 >= LEN_CMDLINE_BUFFER) {
                   BufferTooShort();
               } else {
                   readBufferWork[0] = '\0';
@@ -745,7 +744,7 @@ int main(int argc, char *argv[]) {
           } else {
               readBufferWork = strchr(argv[i], ' ');
               if (readBufferWork != NULL) {
-                  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 4 < LINE_BUFFERS_LENGTH) {
+                  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 4 < LEN_CMDLINE_BUFFER) {
                       strcat(cmdLineBuffer, "\"");
                       strcat(cmdLineBuffer, argv[i]);
                       strcat(cmdLineBuffer, "\" ");
@@ -753,7 +752,7 @@ int main(int argc, char *argv[]) {
                       BufferTooShort();
                   }
               } else {
-                  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 2 < LINE_BUFFERS_LENGTH) {
+                  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 2 < LEN_CMDLINE_BUFFER) {
                       strcat(cmdLineBuffer, argv[i]);
                       strcat(cmdLineBuffer, " ");
                   } else {
@@ -791,7 +790,7 @@ int main(int argc, char *argv[]) {
           printf("   Processing file %s for parameters...\n", &argv[i][1]);
 
           for (;;) {
-              readBufferWork = fgets(readBuffer, min(READ_BUFFERS_LENGTH, fileStat.st_size), fd);
+              readBufferWork = fgets(readBuffer, min(LEN_FGETS_BUFFER, fileStat.st_size), fd);
               /* On EOF, we're finished */
               if (readBufferWork == NULL) {
                   break;
@@ -825,7 +824,7 @@ int main(int argc, char *argv[]) {
 #ifdef PARAM_DEBUG
               printf("PARAM_DEBUG:      -> '%s'\n", readBuffer);
 #endif
-              if (strlen(cmdLineBuffer) + strlen(readBuffer) + 2 < LINE_BUFFERS_LENGTH) {
+              if (strlen(cmdLineBuffer) + strlen(readBuffer) + 2 < LEN_CMDLINE_BUFFER) {
                   strcat(cmdLineBuffer, " ");
                   strcat(cmdLineBuffer, readBuffer);
               } else {
@@ -927,16 +926,16 @@ int main(int argc, char *argv[]) {
 
   initGlobalValues();
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
   reportValues(&lastTime);
-#endif /* MICRO_NTOP */
+#endif /* MAKE_MICRO_NTOP */
 
   initGdbm(NULL);
 
 #ifndef WIN32
   if(myGlobals.daemonMode) {
     daemonize();
-    traceEvent(TRACE_INFO, "ntop is now running daemonized...\n");
+    traceEvent(CONST_TRACE_INFO, "ntop is now running daemonized...\n");
   }
 #endif
 
@@ -945,11 +944,11 @@ int main(int argc, char *argv[]) {
    */
   initDevices(myGlobals.devices);
 
-  traceEvent(TRACE_INFO, "ntop v.%s %s [%s] (%s build)",
+  traceEvent(CONST_TRACE_INFO, "ntop v.%s %s [%s] (%s build)",
 	     version, THREAD_MODE, osName, buildDate);
 
   if(myGlobals.rFileName != NULL)
-    strncpy(ifStr, PCAP_NW_INTERFACE, sizeof(ifStr));
+    strncpy(ifStr, CONST_PCAP_NW_INTERFACE_FILE, sizeof(ifStr));
   else {
 	ifStr[0] = '\0';
 	  
@@ -968,17 +967,17 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  traceEvent(TRACE_INFO, "Listening on [%s]", ifStr);
-  traceEvent(TRACE_INFO, "Copyright 1998-2002 by %s\n", author);
-  traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
-  traceEvent(TRACE_INFO, "Initializing...\n");
+  traceEvent(CONST_TRACE_INFO, "Listening on [%s]", ifStr);
+  traceEvent(CONST_TRACE_INFO, "Copyright 1998-2002 by %s\n", author);
+  traceEvent(CONST_TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
+  traceEvent(CONST_TRACE_INFO, "Initializing...\n");
 
   /*
    * time to initialize the libpcap
    */
   initLibpcap();
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
   loadPlugins();
 #endif
 
@@ -990,7 +989,7 @@ int main(int argc, char *argv[]) {
   if((getuid() != geteuid()) || (getgid() != getegid())) {
     /* setuid binary, drop privileges */
     if(setgid(getgid())!=0 || setuid(getuid())!=0) {
-      traceEvent(TRACE_ERROR,
+      traceEvent(CONST_TRACE_ERROR,
 		 "FATAL ERROR: Unable to drop privileges.\n");
       exit(-1);
     }
@@ -1002,18 +1001,18 @@ int main(int argc, char *argv[]) {
   if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
     /* user id specified on commandline */
     if((setgid(myGlobals.groupId) != 0) || (setuid(myGlobals.userId) != 0)) {
-      traceEvent(TRACE_ERROR, "FATAL ERROR: Unable to change user ID.\n");
+      traceEvent(CONST_TRACE_ERROR, "FATAL ERROR: Unable to change user ID.\n");
       exit(-1);
     }
   } else {
     if((geteuid() == 0) || (getegid() == 0)) {
       if(!userSpecified) {
-	traceEvent(TRACE_INFO, "ERROR: For security reasons you cannot run ntop as root");
-	traceEvent(TRACE_INFO, "ERROR: unless you know what you're doing.");
-	traceEvent(TRACE_INFO, "ERROR: Please specify the user name using the -u option!");
+	traceEvent(CONST_TRACE_INFO, "ERROR: For security reasons you cannot run ntop as root");
+	traceEvent(CONST_TRACE_INFO, "ERROR: unless you know what you're doing.");
+	traceEvent(CONST_TRACE_INFO, "ERROR: Please specify the user name using the -u option!");
 	exit(0);
       } else {
-	traceEvent(TRACE_INFO, "INFO: For security reasons you should not run ntop as root (-u)!");
+	traceEvent(CONST_TRACE_INFO, "INFO: For security reasons you should not run ntop as root (-u)!");
       }
     }
   }
@@ -1046,14 +1045,14 @@ int main(int argc, char *argv[]) {
 
   initThreads();
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
   startPlugins();
 #endif
 
   /* create the main listener */
   initWeb();
 
-  traceEvent(TRACE_INFO, "Sniffying...\n");
+  traceEvent(CONST_TRACE_INFO, "Sniffying...\n");
 
 #ifdef MEMORY_DEBUG
   resetLeaks();
@@ -1062,7 +1061,7 @@ int main(int argc, char *argv[]) {
   /*
    * In multithread mode, a separate thread handles packet sniffing
    */
-#ifndef MULTITHREADED
+#ifndef CFG_MULTITHREADED
   packetCaptureLoop(&lastTime, myGlobals.refreshRate);
 #else
   startSniffer();

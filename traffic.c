@@ -20,8 +20,6 @@
 
 #include "ntop.h"
 
-#define getSerial(a) myGlobals.device[deviceToUpdate].hash_hostTraffic[a]->hostSerial
-
 /* ******************************* */
 
 static void updateThptStats(int deviceToUpdate,
@@ -43,29 +41,29 @@ static void updateThptStats(int deviceToUpdate,
     return;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "updateThptStats(%d, %d, %d, %d, %d, %d)\n",
+  traceEvent(CONST_TRACE_INFO, "updateThptStats(%d, %d, %d, %d, %d, %d)\n",
 	 topSentIdx, secondSentIdx, thirdSentIdx,
 	 topHourSentIdx, secondHourSentIdx,
 	 thirdHourSentIdx);
 #endif
 
   /* We never check enough... */
-  if(topSentIdx == NO_PEER) 
+  if(topSentIdx == FLAG_NO_PEER) 
     return;
 
-  if(topRcvdIdx == NO_PEER) 
+  if(topRcvdIdx == FLAG_NO_PEER) 
     return;
 
-  if(secondSentIdx == NO_PEER) 
+  if(secondSentIdx == FLAG_NO_PEER) 
     secondSentIdx = 0;
 
-  if(thirdSentIdx == NO_PEER)
+  if(thirdSentIdx == FLAG_NO_PEER)
     thirdSentIdx = 0;
 
-  if(secondRcvdIdx == NO_PEER)
+  if(secondRcvdIdx == FLAG_NO_PEER)
     secondRcvdIdx = 0;
 
-  if(thirdRcvdIdx == NO_PEER)
+  if(thirdRcvdIdx == FLAG_NO_PEER)
     thirdRcvdIdx = 0;
 
   for(i=58; i>=0; i--)
@@ -75,7 +73,7 @@ static void updateThptStats(int deviceToUpdate,
   myGlobals.device[deviceToUpdate].last60MinutesThpt[0].trafficValue = myGlobals.device[deviceToUpdate].lastMinThpt;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "LastMinThpt: %s", formatThroughput(myGlobals.device[deviceToUpdate].lastMinThpt));
+  traceEvent(CONST_TRACE_INFO, "LastMinThpt: %s", formatThroughput(myGlobals.device[deviceToUpdate].lastMinThpt));
 #endif
 
   myGlobals.device[deviceToUpdate].last60MinutesThpt[0].topHostSentSerial = getSerial(topSentIdx),
@@ -100,16 +98,16 @@ static void updateThptStats(int deviceToUpdate,
 
   myGlobals.device[deviceToUpdate].last60MinutesThptIdx = (myGlobals.device[deviceToUpdate].last60MinutesThptIdx+1) % 60;
 
-  if(topHourSentIdx != NO_PEER) { 
+  if(topHourSentIdx != FLAG_NO_PEER) { 
     /* It wrapped -> 1 hour is over */
     float average=0;
 
-    if(topHourSentIdx == NO_PEER) return;
-    if(topHourRcvdIdx == NO_PEER) return;
-    if(secondHourSentIdx == NO_PEER) secondHourSentIdx = 0;
-    if(thirdHourSentIdx == NO_PEER)  thirdHourSentIdx = 0;
-    if(secondHourRcvdIdx == NO_PEER) secondHourRcvdIdx = 0;
-    if(thirdHourRcvdIdx == NO_PEER)  thirdHourRcvdIdx = 0;
+    if(topHourSentIdx == FLAG_NO_PEER) return;
+    if(topHourRcvdIdx == FLAG_NO_PEER) return;
+    if(secondHourSentIdx == FLAG_NO_PEER) secondHourSentIdx = 0;
+    if(thirdHourSentIdx == FLAG_NO_PEER)  thirdHourSentIdx = 0;
+    if(secondHourRcvdIdx == FLAG_NO_PEER) secondHourRcvdIdx = 0;
+    if(thirdHourRcvdIdx == FLAG_NO_PEER)  thirdHourRcvdIdx = 0;
 
     for(i=0; i<60; i++) {
       average += myGlobals.device[deviceToUpdate].last60MinutesThpt[i].trafficValue;
@@ -169,7 +167,7 @@ static void updateThptStats(int deviceToUpdate,
   myGlobals.device[deviceToUpdate].numThptSamples++;
   
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "updateThptStats() completed.\n");
+  traceEvent(CONST_TRACE_INFO, "updateThptStats() completed.\n");
 #endif
 }
 
@@ -183,14 +181,14 @@ void updateDeviceThpt(int deviceToUpdate) {
   timeDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastThptUpdate;
 
   if(timeDiff > 10 /* secs */) {
-    u_int topSentIdx=NO_PEER, secondSentIdx=NO_PEER, thirdSentIdx=NO_PEER;
-    u_int topHourSentIdx=NO_PEER, secondHourSentIdx=NO_PEER, thirdHourSentIdx=NO_PEER;
-    u_int topRcvdIdx=NO_PEER, secondRcvdIdx=NO_PEER, thirdRcvdIdx=NO_PEER;
-    u_int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
+    u_int topSentIdx=FLAG_NO_PEER, secondSentIdx=FLAG_NO_PEER, thirdSentIdx=FLAG_NO_PEER;
+    u_int topHourSentIdx=FLAG_NO_PEER, secondHourSentIdx=FLAG_NO_PEER, thirdHourSentIdx=FLAG_NO_PEER;
+    u_int topRcvdIdx=FLAG_NO_PEER, secondRcvdIdx=FLAG_NO_PEER, thirdRcvdIdx=FLAG_NO_PEER;
+    u_int topHourRcvdIdx=FLAG_NO_PEER, secondHourRcvdIdx=FLAG_NO_PEER, thirdHourRcvdIdx=FLAG_NO_PEER;
     short updateMinThpt, updateHourThpt;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "updateDeviceStats() called.");
+  traceEvent(CONST_TRACE_INFO, "updateDeviceStats() called.");
 #endif
     
     totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
@@ -248,7 +246,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 	  el->averageTPktThpt    = ((float)el->pktRcvdSession.value+
                                     (float)el->pktSentSession.value)/totalTime;
 
-	  if((topSentIdx == NO_PEER) 
+	  if((topSentIdx == FLAG_NO_PEER) 
 	     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topSentIdx] == NULL)) {
 	    if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx))
 	      topSentIdx = idx;
@@ -260,7 +258,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 	      topSentIdx = idx;
 	      }
 	    } else {
-	      if((secondSentIdx == NO_PEER)
+	      if((secondSentIdx == FLAG_NO_PEER)
 		 || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondSentIdx] == NULL)) {
 		if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx))
 		  secondSentIdx = idx;
@@ -272,7 +270,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 		  secondSentIdx = idx;
 		  }
 		} else {
-		  if((thirdSentIdx == NO_PEER)
+		  if((thirdSentIdx == FLAG_NO_PEER)
 		     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdSentIdx] == NULL)) {
 		    if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
 		    thirdSentIdx = idx;
@@ -290,7 +288,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 	    }
 	  }
 
-	  if((topRcvdIdx == NO_PEER) 
+	  if((topRcvdIdx == FLAG_NO_PEER) 
 	     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topRcvdIdx] == NULL)) {
 	    if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) 
 	    topRcvdIdx = idx;
@@ -302,7 +300,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 		topRcvdIdx = idx;
 	      }
 	    } else {
-	      if((secondRcvdIdx == NO_PEER)
+	      if((secondRcvdIdx == FLAG_NO_PEER)
 		 || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx] == NULL)) {
 		if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx))
 		  secondRcvdIdx = idx;
@@ -314,7 +312,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 		    secondRcvdIdx = idx;
 		  }
 		} else {
-		  if((thirdRcvdIdx == NO_PEER)
+		  if((thirdRcvdIdx == FLAG_NO_PEER)
 		     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx] == NULL)) {
 		    if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx))
 		      thirdRcvdIdx = idx;
@@ -336,7 +334,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 	    el->lastHourBytesRcvd = el->bytesRcvd;
 	    el->lastHourBytesSent = el->bytesSent;
 
-	    if((topHourSentIdx == NO_PEER) 
+	    if((topHourSentIdx == FLAG_NO_PEER) 
 	       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourSentIdx] == NULL)) {
 	      topHourSentIdx = idx;
 	    } else {
@@ -345,7 +343,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 		secondHourSentIdx = topHourSentIdx;
 		topHourSentIdx = idx;
 	      } else {
-		if((secondHourSentIdx == NO_PEER)
+		if((secondHourSentIdx == FLAG_NO_PEER)
 		   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx] == NULL)) {
 		  secondHourSentIdx = idx;
 		} else {
@@ -354,7 +352,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 		    thirdHourSentIdx = secondHourSentIdx;
 		    secondHourSentIdx = idx;
 		  } else {
-		    if((thirdHourSentIdx == NO_PEER)
+		    if((thirdHourSentIdx == FLAG_NO_PEER)
 		       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx] == NULL)) {
 		      thirdHourSentIdx = idx;
 		    } else {
@@ -368,7 +366,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 	      }
 	    }
 
-	    if((topHourRcvdIdx == NO_PEER) 
+	    if((topHourRcvdIdx == FLAG_NO_PEER) 
 	       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx] == NULL)) {
 	      topHourRcvdIdx = idx;
 	    } else {
@@ -377,7 +375,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 		secondHourRcvdIdx = topHourRcvdIdx;
 		topHourRcvdIdx = idx;
 	      } else {
-		if((secondHourRcvdIdx == NO_PEER)
+		if((secondHourRcvdIdx == FLAG_NO_PEER)
 		   || (myGlobals.device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx] == NULL)) {
 		  secondHourRcvdIdx = idx;
 		} else {
@@ -386,7 +384,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 		    thirdHourRcvdIdx = secondHourRcvdIdx;
 		    secondHourRcvdIdx = idx;
 		  } else {
-		    if((thirdHourRcvdIdx == NO_PEER)
+		    if((thirdHourRcvdIdx == FLAG_NO_PEER)
 		       || (myGlobals.device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx] == NULL)) {
 		      thirdHourRcvdIdx = idx;
 		    } else {
@@ -464,10 +462,10 @@ void updateDeviceThpt(int deviceToUpdate) {
     }
 
     if((updateMinThpt || updateHourThpt) 
-       && ((topSentIdx        != NO_PEER) 
-	   || (topHourSentIdx != NO_PEER)
-	   || (topRcvdIdx     != NO_PEER)
-	   || (topHourRcvdIdx != NO_PEER)))
+       && ((topSentIdx        != FLAG_NO_PEER) 
+	   || (topHourSentIdx != FLAG_NO_PEER)
+	   || (topRcvdIdx     != FLAG_NO_PEER)
+	   || (topHourRcvdIdx != FLAG_NO_PEER)))
       updateThptStats(deviceToUpdate,
 		      topSentIdx, secondSentIdx, thirdSentIdx,
 		      topHourSentIdx, secondHourSentIdx, thirdHourSentIdx,
@@ -478,7 +476,7 @@ void updateDeviceThpt(int deviceToUpdate) {
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "updateDeviceStats() completed.");
+  traceEvent(CONST_TRACE_INFO, "updateDeviceStats() completed.");
 #endif
 }
 
@@ -488,7 +486,7 @@ void updateThpt(void) {
   int i;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "updateThpt() called");
+  traceEvent(CONST_TRACE_INFO, "updateThpt() called");
 #endif
 
   if(myGlobals.mergeInterfaces)

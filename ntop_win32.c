@@ -75,7 +75,7 @@ void initWinsock32() {
   if( err != 0 ) {
     /* Tell the user that we could not find a usable */
     /* WinSock DLL.                                  */
-    traceEvent(TRACE_ERROR, "FATAL ERROR: unable to initialise Winsock 2.x.");
+    traceEvent(CONST_TRACE_ERROR, "FATAL ERROR: unable to initialise Winsock 2.x.");
     exit(-1);
   }
 
@@ -102,17 +102,17 @@ void initWinsock32() {
 		  }
 	  }
 
-	  /* traceEvent(TRACE_ERROR, "Wdir=%s", _wdir); */
+	  /* traceEvent(CONST_TRACE_ERROR, "Wdir=%s", _wdir); */
   }
 
     
 #ifdef WIN32_DEMO
-  traceEvent(TRACE_INFO, "\n-----------------------------------------------------------");
-  traceEvent(TRACE_INFO, "WARNING: this application is a limited ntop myGlobals.version able to");
-  traceEvent(TRACE_INFO, "capture up to %d packets. If you are interested", MAX_NUM_PACKETS);
-  traceEvent(TRACE_INFO, "in the full myGlobals.version please have a look at the ntop");
-  traceEvent(TRACE_INFO, "home page http://www.ntop.org/.");
-  traceEvent(TRACE_INFO, "-----------------------------------------------------------\n");
+  traceEvent(CONST_TRACE_INFO, "\n-----------------------------------------------------------");
+  traceEvent(CONST_TRACE_INFO, "WARNING: this application is a limited ntop myGlobals.version able to");
+  traceEvent(CONST_TRACE_INFO, "capture up to %d packets. If you are interested", MAX_NUM_PACKETS);
+  traceEvent(CONST_TRACE_INFO, "in the full myGlobals.version please have a look at the ntop");
+  traceEvent(CONST_TRACE_INFO, "home page http://www.ntop.org/.");
+  traceEvent(CONST_TRACE_INFO, "-----------------------------------------------------------\n");
 #endif
 }
 
@@ -229,7 +229,7 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
 #ifdef DEBUG
   if (fileName)
-    traceEvent(TRACE_INFO,
+    traceEvent(CONST_TRACE_INFO,
 	       "INFO: createMutex() call with %x mutex [%s:%d]", mutexId,
 	       fileName, fileLine);
 #endif
@@ -243,14 +243,14 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
 #ifdef DEBUG
   if (fileName)
-    traceEvent(TRACE_INFO,
+    traceEvent(CONST_TRACE_INFO,
 	       "INFO: deleteMutex() call with %x(%c,%x) mutex [%s:%d]",
 	       mutexId, (mutexId && mutexId->isInitialized) ? 'i' : '-',
 	       mutexId ? mutexId->mutex : 0, fileName, fileLine);
 #endif
 
   if(!mutexId->isInitialized) {
-    traceEvent(TRACE_ERROR,
+    traceEvent(CONST_TRACE_ERROR,
 	       "ERROR: deleteMutex() call with a NULL mutex [%s:%d]",
 	       fileName, fileLine);
     return;
@@ -267,7 +267,7 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 int _accessMutex(PthreadMutex *mutexId, char* where,
 		 char* fileName, int fileLine) {
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "Locking 0x%X @ %s [%s:%d]",
 	     mutexId->mutex, where, fileName, fileLine);
 #endif
 
@@ -290,7 +290,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 int _tryLockMutex(PthreadMutex *mutexId, char* where,
 		  char* fileName, int fileLine) {
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]",
 	     mutexId->mutex, where, fileName, fileLine);
   fflush(stdout);
 #endif
@@ -320,13 +320,13 @@ int _releaseMutex(PthreadMutex *mutexId,
   BOOL rc;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]",
+  traceEvent(CONST_TRACE_INFO, "Unlocking 0x%X [%s:%d]",
 	     mutexId->mutex, fileName, fileLine);
 #endif
   rc = ReleaseMutex(mutexId->mutex);
 
   if((rc == 0) && (fileName)) {
-    traceEvent(TRACE_ERROR, "ERROR while unlocking 0x%X [%s:%d] (LastError=%d)",
+    traceEvent(CONST_TRACE_ERROR, "ERROR while unlocking 0x%X [%s:%d] (LastError=%d)",
 	       mutexId->mutex, fileName, fileLine, GetLastError());
   }
 
@@ -342,7 +342,7 @@ int _releaseMutex(PthreadMutex *mutexId,
     }
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs",
+    traceEvent(CONST_TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs",
 	       &(mutexId->mutex), fileName, fileLine,
 	       mutexId->maxLockedDuration);
 #endif
@@ -381,14 +381,14 @@ void deleteCondvar(ConditionalVariable *condvarId) {
 int waitCondvar(ConditionalVariable *condvarId) {
   int rc;
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Wait (%x)...", condvarId->condVar);
+  traceEvent(CONST_TRACE_INFO, "Wait (%x)...", condvarId->condVar);
 #endif
   EnterCriticalSection(&condvarId->criticalSection);
   rc = WaitForSingleObject(condvarId->condVar, INFINITE);
   LeaveCriticalSection(&condvarId->criticalSection);
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Got signal (%d)...", rc);
+  traceEvent(CONST_TRACE_INFO, "Got signal (%d)...", rc);
 #endif
 
   return(rc);
@@ -398,7 +398,7 @@ int waitCondvar(ConditionalVariable *condvarId) {
 
 int signalCondvar(ConditionalVariable *condvarId) {
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Signaling (%x)...", condvarId->condVar);
+  traceEvent(CONST_TRACE_INFO, "Signaling (%x)...", condvarId->condVar);
 #endif
   return((int)PulseEvent(condvarId->condVar));
 }
@@ -406,13 +406,13 @@ int signalCondvar(ConditionalVariable *condvarId) {
 /* ************************************ */
 
 void printAvailableInterfaces() {
-  char ebuf[PCAP_ERRBUF_SIZE];
+  char ebuf[CONST_SIZE_PCAP_ERR_BUF];
   int ifIdx=0, defaultIdx, i, numInterfaces = 0;
   char intNames[32][256];
   char *tmpDev = pcap_lookupdev(ebuf);
   
   if(tmpDev == NULL) {
-    traceEvent(TRACE_INFO, "Unable to locate default interface (%s)", ebuf);
+    traceEvent(CONST_TRACE_INFO, "Unable to locate default interface (%s)", ebuf);
     exit(-1);
   }
 
@@ -481,23 +481,23 @@ void printAvailableInterfaces() {
   } /* while */
 
   if(numInterfaces == 0) {
-    traceEvent(TRACE_WARNING, "WARNING: no interfaces available! This application cannot work");
-    traceEvent(TRACE_WARNING, "         Make sure that winpcap is installed properly");
-    traceEvent(TRACE_WARNING, "         and that you have network interfaces installed.");
+    traceEvent(CONST_TRACE_WARNING, "WARNING: no interfaces available! This application cannot work");
+    traceEvent(CONST_TRACE_WARNING, "         Make sure that winpcap is installed properly");
+    traceEvent(CONST_TRACE_WARNING, "         and that you have network interfaces installed.");
   }
 }
 
 /* ************************************ */
 
-#define _PATH_NETWORKS	"networks"
+#define CONST_WIN32_PATH_NETWORKS	"networks"
 
-#define	MAXALIASES	35
+#define	MAX_WIN32_NET_ALIASES 35
 
-static char NETDB[] = _PATH_NETWORKS;
+static char NETDB[] = CONST_WIN32_PATH_NETWORKS;
 static FILE *netf = NULL;
 static char line[BUFSIZ+1];
 static struct netent net;
-static char *net_aliases[MAXALIASES];
+static char *net_aliases[MAX_WIN32_NET_ALIASES];
 static char *any(char *, char *);
 
 int _net_stayopen;
@@ -632,7 +632,7 @@ struct netent* getnetent() {
       cp++;
       continue;
     }
-    if(q < &net_aliases[MAXALIASES - 1])
+    if(q < &net_aliases[MAX_WIN32_NET_ALIASES - 1])
       *q++ = cp;
     cp = any(cp, " \t");
     if(cp != NULL)

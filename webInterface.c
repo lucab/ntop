@@ -25,103 +25,45 @@
 #include <pwd.h>
 #endif
 
-#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
+#ifdef MAKE_WITH_SSLWATCHDOG
 /* Stuff for the watchdog */
 #include <setjmp.h>
 
 jmp_buf sslwatchdogJump;
-
-#ifdef SSLWATCHDOG_DEBUG 
-#define sslwatchdogDebug(text, bpcFlag, note) { \
-          traceEvent(TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %s\n", \
-                                 myGlobals.sslwatchdogCondvar.predicate, \
-                                 ((bpcFlag == SSLWATCHDOG_BOTH) ? text : ""), \
-                                 ((bpcFlag == SSLWATCHDOG_PARENT) ? text : ""), \
-                                 ((bpcFlag == SSLWATCHDOG_CHILD) ? text : ""), \
-                                 note); \
-}
-#define sslwatchdogDebugN(text, bpcFlag, note) { \
-          traceEvent(TRACE_INFO, "SSLWDDEBUG: %1d %-10s %-15s %-15s %d\n", \
-                                 myGlobals.sslwatchdogCondvar.predicate, \
-                                 ((bpcFlag == SSLWATCHDOG_BOTH) ? text : ""), \
-                                 ((bpcFlag == SSLWATCHDOG_PARENT) ? text : ""), \
-                                 ((bpcFlag == SSLWATCHDOG_CHILD) ? text : ""), \
-                                 note); \
-}
-#define sslwatchdogError(text, bpcFlag, note) { \
-          traceEvent(TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %s\n", \
-                                 myGlobals.sslwatchdogCondvar.predicate, \
-                                 ((bpcFlag == SSLWATCHDOG_BOTH) ? text : ""), \
-                                 ((bpcFlag == SSLWATCHDOG_PARENT) ? text : ""), \
-                                 ((bpcFlag == SSLWATCHDOG_CHILD) ? text : ""), \
-                                 note); \
-}
-#define sslwatchdogErrorN(text, bpcFlag, note) { \
-          traceEvent(TRACE_INFO, "SSLWDERROR: %1d %-10s %-15s %-15s %d\n", \
-                                 myGlobals.sslwatchdogCondvar.predicate, \
-                                 ((bpcFlag == SSLWATCHDOG_BOTH) ? text : ""), \
-                                 ((bpcFlag == SSLWATCHDOG_PARENT) ? text : ""), \
-                                 ((bpcFlag == SSLWATCHDOG_CHILD) ? text : ""), \
-                                 note); \
-}
-#else
-#define sslwatchdogDebug(text, bpcFlag, note) 
-#define sslwatchdogDebugN(text, bpcFlag, note) 
-#define sslwatchdogError(text, bpsFlag, note) 
-#define sslwatchdogErrorN(text, bpcFlag, note) 
-#endif
-
-#define SSLWATCHDOG_WAITLIMIT 5
-
-#define SSLWATCHDOG_RETURN_LOCKED 1
-#define SSLWATCHDOG_ENTER_LOCKED  2
 
 /* Forward */
 void* sslwatchdogChildThread(void* notUsed _UNUSED_);
 void sslwatchdogSighandler (int signum);
 int sslwatchdogSignal(int parentchildFlag);
 
-#endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
+#endif
 
-#ifdef USE_COLOR
+#ifdef PARM_USE_COLOR
 static short alternateColor=0;
 #endif
 
 /* Forward */
 static void handleSingleWebConnection(fd_set *fdmask);
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
 
 
-#if defined(NEED_INET_ATON)
+#if defined(CFG_NEED_INET_ATON)
 /*
  * Minimal implementation of inet_aton.
  * Cannot distinguish between failure and a local broadcast address.
  */
-
-#ifndef INADDR_NONE
-#define INADDR_NONE 0xffffffff
-#endif
-
 static int inet_aton(const char *cp, struct in_addr *addr)
 {
   addr->s_addr = inet_addr(cp);
   return (addr->s_addr == INADDR_NONE) ? 0 : 1;
 }
 
-#endif /* NEED_INET_ATON */
-
-
-/*
- *   Define the output flag values
- */
-#define REPORT_ITS_DEFAULT "(default)   "
-#define REPORT_ITS_EFFECTIVE "   (effective)"
-
+#endif /* CFG_NEED_INET_ATON */
 
 /* ************************************* */
 
-#if !defined(WIN32) && defined(USE_CGI)
+#if !defined(WIN32) && defined(PARM_USE_CGI)
 int execCGI(char* cgiName) {
   char* userName = "nobody", line[384], buf[512];
   struct passwd * newUser = NULL;
@@ -130,7 +72,7 @@ int execCGI(char* cgiName) {
   struct timeval wait_time;
 
   if(!(newUser = getpwnam(userName))) {
-    traceEvent(TRACE_WARNING, "WARNING: unable to find user %s\n", userName);
+    traceEvent(CONST_TRACE_WARNING, "WARNING: unable to find user %s\n", userName);
     return(-1);
   } else {
     setgid(newUser->pw_gid);
@@ -154,21 +96,21 @@ int execCGI(char* cgiName) {
       BufferTooShort();
     putenv(line); /* PWD */
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "NOTE: CGI %s\n", line);
+    traceEvent(CONST_TRACE_INFO, "NOTE: CGI %s\n", line);
 #endif
   }
 
-  putenv("WD="DATAFILE_DIR);
+  putenv("WD="CFG_DATAFILE_DIR);
 
-  if(snprintf(line, sizeof(line), "%s/cgi/%s", DATAFILE_DIR, cgiName) < 0) 
+  if(snprintf(line, sizeof(line), "%s/cgi/%s", CFG_DATAFILE_DIR, cgiName) < 0) 
     BufferTooShort();
   
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Executing CGI '%s'", line);
+  traceEvent(CONST_TRACE_INFO, "Executing CGI '%s'", line);
 #endif
 
   if((fd = popen(line, "r")) == NULL) {
-    traceEvent(TRACE_WARNING, "WARNING: unable to exec %s\n", cgiName);
+    traceEvent(CONST_TRACE_WARNING, "WARNING: unable to exec %s\n", cgiName);
     return(-1);
   } else {
     fd_set mask;
@@ -198,15 +140,15 @@ int execCGI(char* cgiName) {
 
 #ifdef DEBUG
     if(allRight)
-      traceEvent(TRACE_INFO, "CGI execution completed.");
+      traceEvent(CONST_TRACE_INFO, "CGI execution completed.");
     else
-      traceEvent(TRACE_INFO, "CGI execution encountered some problems.");
+      traceEvent(CONST_TRACE_INFO, "CGI execution encountered some problems.");
 #endif
     
     return(0);
   }
 }
-#endif /* !defined(WIN32) && defined(USE_CGI) */
+#endif /* !defined(WIN32) && defined(PARM_USE_CGI) */
 
 /* **************************************** */
 
@@ -214,7 +156,7 @@ int execCGI(char* cgiName) {
 void showPluginsList(char* pluginName) {
   FlowFilterList *flows = myGlobals.flowsList;
   short doPrintHeader = 0;
-  char tmpBuf[BUF_SIZE], *thePlugin, tmpBuf1[BUF_SIZE];
+  char tmpBuf[LEN_GENERAL_WORK_BUFFER], *thePlugin, tmpBuf1[LEN_GENERAL_WORK_BUFFER];
   int newPluginStatus = 0;
 
   if(pluginName[0] != '\0') {
@@ -324,7 +266,7 @@ void unloadPlugins(void) {
 
 char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag) {
-  static char buf[5][2*BUF_SIZE];
+  static char buf[5][2*LEN_GENERAL_WORK_BUFFER];
   char symIp[256], *tmpStr, linkName[256], flag[128];
   char *dynIp, *p2p;
   char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr;
@@ -339,7 +281,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(broadcastHost(el)
      || (el->hostSerial == myGlobals.broadcastEntryIdx)
      || ((el->hostIpAddress.s_addr == 0) && (el->ethAddressString[0] == '\0'))) {
-    if(mode == LONG_FORMAT) 
+    if(mode == FLAG_HOSTLINK_HTML_FORMAT) 
       return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
     else
       return("&lt;broadcast&gt;");
@@ -348,7 +290,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   bufIdx = (bufIdx+1)%5;
 
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) 
     accessMutex(&myGlobals.addressResolutionMutex, "makeHostLink");
 #endif
@@ -357,15 +299,15 @@ char* makeHostLink(HostTraffic *el, short mode,
      || (el->hostSerial == myGlobals.otherHostEntryIdx)) {
     char *fmt;
 
-    if(mode == LONG_FORMAT)
+    if(mode == FLAG_HOSTLINK_HTML_FORMAT)
       fmt = "<TH "TH_BG" ALIGN=LEFT>%s</TH>";
     else
       fmt = "%s";
 
-    if(snprintf(buf[bufIdx], BUF_SIZE, fmt, el->hostSymIpAddress) < 0)
+    if(snprintf(buf[bufIdx], LEN_GENERAL_WORK_BUFFER, fmt, el->hostSymIpAddress) < 0)
       BufferTooShort();
 
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0) 
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -402,7 +344,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     usedEthAddress = 1;
   }
 
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) 
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -410,7 +352,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(specialMacAddress) {
     tmpStr = el->ethAddressString;
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "->'%s/%s'\n", symIp, el->ethAddressString);
+    traceEvent(CONST_TRACE_INFO, "->'%s/%s'\n", symIp, el->ethAddressString);
 #endif
   } else {
     if(usedEthAddress) {
@@ -497,8 +439,8 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(linkName[i] == ':')
       linkName[i] = '_';
 
-  if(mode == LONG_FORMAT) {
-    if(snprintf(buf[bufIdx], 2*BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
+  if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
+    if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
 		"<A HREF=\"/%s.html\">%s</A>%s%s%s%s%s%s%s%s%s</TH>%s",
 		linkName, symIp,
 		dynIp,
@@ -507,7 +449,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		flag) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(buf[bufIdx], 2*BUF_SIZE, "<A HREF=\"/%s.html\" NOWRAP>%s</A>"
+    if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<A HREF=\"/%s.html\" NOWRAP>%s</A>"
 		"%s%s%s%s%s%s%s%s%s%s",
 		linkName, symIp,
 		multihomed, gwStr, dnsStr,
@@ -531,7 +473,7 @@ char* getHostName(HostTraffic *el, short cutName) {
 
   bufIdx = (bufIdx+1)%5;
 
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) 
     accessMutex(&myGlobals.addressResolutionMutex, "getHostName");
 #endif
@@ -561,7 +503,7 @@ char* getHostName(HostTraffic *el, short cutName) {
   } else
     strncpy(buf[bufIdx], el->ethAddressString, 80);
 
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) 
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -582,6 +524,28 @@ char* calculateCellColor(Counter actualValue,
     return("BGCOLOR=#FF7777"); /* light red */
 }
 
+/* ************************ */
+
+char* getHostCountryIconURL(HostTraffic *el) {
+  char path[128], *ret;
+  struct stat buf;
+
+  fillDomainName(el);
+
+  if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
+	      CFG_DATAFILE_DIR, el->fullDomainName) < 0)
+    BufferTooShort();
+
+  if(stat(path, &buf) == 0)
+    ret = getCountryIconURL(el->fullDomainName);
+  else
+    ret = getCountryIconURL(el->dotDomainName);
+
+  if(ret == NULL)
+    ret = "&nbsp;";
+
+  return(ret);
+}
 
 /* ************************ */
 
@@ -600,7 +564,7 @@ char* getCountryIconURL(char* domainName) {
 
     if(stat(path, &buf) != 0) {
       if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-		  DATAFILE_DIR, domainName) < 0)
+		  CFG_DATAFILE_DIR, domainName) < 0)
 	BufferTooShort();
 
       if(stat(path, &buf) != 0)
@@ -615,34 +579,11 @@ char* getCountryIconURL(char* domainName) {
   }
 }
 
-/* ************************ */
-
-char* getHostCountryIconURL(HostTraffic *el) {
-  char path[128], *ret;
-  struct stat buf;
-
-  fillDomainName(el);
-
-  if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-	      DATAFILE_DIR, el->fullDomainName) < 0)
-    BufferTooShort();
-
-  if(stat(path, &buf) == 0)
-    ret = getCountryIconURL(el->fullDomainName);
-  else
-    ret = getCountryIconURL(el->dotDomainName);
-
-  if(ret == NULL)
-    ret = "&nbsp;";
-
-  return(ret);
-}
-
 /* ******************************* */
 
 char* getRowColor(void) {
 
-#ifdef USE_COLOR
+#ifdef PARM_USE_COLOR
   if(alternateColor == 0) {
     alternateColor = 1;
     return("BGCOLOR=#C3C9D9"); /* EFEFEF */
@@ -659,7 +600,7 @@ char* getRowColor(void) {
 
 char* getActualRowColor(void) {
 
-#ifdef USE_COLOR
+#ifdef PARM_USE_COLOR
   if(alternateColor == 1) {
     return("BGCOLOR=#EFEFEF");
   } else
@@ -674,9 +615,9 @@ char* getActualRowColor(void) {
 
 void switchNwInterface(int _interface) {
   int i, mwInterface=_interface-1;
-  char buf[BUF_SIZE], *selected;
+  char buf[LEN_GENERAL_WORK_BUFFER], *selected;
 
-  printHTMLheader("Network Interface Switch", HTML_FLAG_NO_REFRESH);
+  printHTMLheader("Network Interface Switch", BITFLAG_HTML_NO_REFRESH);
   sendString("<HR>\n");
 
   if(snprintf(buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\">Note that "
@@ -742,17 +683,11 @@ void switchNwInterface(int _interface) {
 /* **************************************** */
 
 void shutdownNtop(void) {
-  printHTMLheader("ntop is shutting down...", HTML_FLAG_NO_REFRESH);
+  printHTMLheader("ntop is shutting down...", BITFLAG_HTML_NO_REFRESH);
   closeNwSocket(&myGlobals.newSock);
   termAccessLog();
   cleanup(0);
 }
-
-/* ********************************************************** 
-   Used in all the prints flowing from printNtopConfigInfo...
-   ********************************************************** */
-
-#define texthtml(a, b) (textPrintFlag == TRUE ? a : b)
 
 /* ******************************** */
 
@@ -787,10 +722,10 @@ static void printParameterConfigInfo(int textPrintFlag, char* feature, char* sta
   sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
   if (status == NULL) {
     if (defaultValue == NULL) {
-      sendString(REPORT_ITS_DEFAULT);
+      sendString(CONST_REPORT_ITS_DEFAULT);
     }
   } else if ( (defaultValue != NULL) && (strcmp(status, defaultValue) == 0) ){
-    sendString(REPORT_ITS_DEFAULT);
+    sendString(CONST_REPORT_ITS_DEFAULT);
   }
   if (status == NULL) {
     sendString("(nil)");
@@ -802,9 +737,9 @@ static void printParameterConfigInfo(int textPrintFlag, char* feature, char* sta
 
 /* ******************************** */
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName) {
-  char buf[BUF_SIZE];
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
   if(mutexId->lockLine == 0) /* Mutex never used */
     return;
@@ -890,10 +825,10 @@ static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
 /* ******************************** */
 
 void printNtopConfigHInfo(int textPrintFlag) {
-  char buf[BUF_SIZE];
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
-  sendString(texthtml("\n\nCompile Time: Debug settings in ntop.h\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Debug settings in ntop.h</tr>\n"));
+  sendString(texthtml("\n\nCompile Time: Debug settings in globals-defines.h\n\n",
+                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Debug settings in globals-defines.h</tr>\n"));
 
   printFeatureConfigInfo(textPrintFlag, "DEBUG",
 #ifdef DEBUG
@@ -1007,13 +942,13 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-#ifdef USE_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG
   printFeatureConfigInfo(textPrintFlag, "SSLWATCHDOG_DEBUG",
-#ifdef SSLWATCHDOG_DEBUG
+ #ifdef SSLWATCHDOG_DEBUG
 			 "yes"
-#else
+ #else
 			 "no"
-#endif
+ #endif
 			 );
 #endif
 
@@ -1033,57 +968,197 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "PRINT_ALL_SESSIONS",
-#ifdef PRINT_ALL_SESSIONS
+  sendString(texthtml("\n\nCompile Time: globals-define.h\n\n",
+                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-define.h</tr>\n"));
+
+  printFeatureConfigInfo(textPrintFlag, "PARM_PRINT_ALL_SESSIONS",
+#ifdef PARM_PRINT_ALL_SESSIONS
 			 "yes"
 #else
 			 "no"
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "PRINT_RETRANSMISSION_DATA",
-#ifdef PRINT_RETRANSMISSION_DATA
+  printFeatureConfigInfo(textPrintFlag, "PARM_PRINT_RETRANSMISSION_DATA",
+#ifdef PARM_PRINT_RETRANSMISSION_DATA
 			 "yes"
 #else
 			 "no"
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "FORK_CHILD_PROCESS",
-#ifdef FORK_CHILD_PROCESS
+  printFeatureConfigInfo(textPrintFlag, "PARM_FORK_CHILD_PROCESS",
+#ifdef PARM_FORK_CHILD_PROCESS
 			 "yes (normal)"
 #else
 			 "no"
 #endif
 			 );
 
+#ifndef WIN32
+  if(snprintf(buf, sizeof(buf),
+              "globals-defines.h: %s#define PARM_USE_CGI%s",
+#ifdef PARM_USE_CGI
+              "", ""
+#else
+              "/* ", " */"
+#endif
+              ) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "CGI Scripts", buf);
+#endif /* WIN32 */
+
+  if(snprintf(buf, sizeof(buf),
+              "globals-defines.h: %s#define PARM_USE_COLOR%s",
+#ifdef PARM_USE_COLOR
+              "", ""
+#else
+              "/* ", " */"
+#endif
+              ) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Alternate row colors", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "globals-defines.h: %s#define PARM_USE_HOST%s",
+#ifdef PARM_USE_HOST
+              "", ""
+#else
+              "/* ", " */"
+#endif
+              ) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Buggy gethostbyaddr() - use alternate implementation", buf);
+  printFeatureConfigInfo(textPrintFlag, "MAKE_ASYNC_ADDRESS_RESOLUTION",
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+			 "yes"
+#else
+			 "no"
+#endif
+			 );
+
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG",
+#ifdef MAKE_WITH_SSLWATCHDOG
+			 "yes"
+#else
+			 "no"
+#endif
+			 );
+
+#ifdef MAKE_WITH_SSLWATCHDOG
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG_RUNTIME (derived)",
+ #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+			 "yes"
+ #else
+			 "no"
+ #endif
+			 );
+#endif
+
+  if(snprintf(buf, sizeof(buf), 
+              "globals-defines.h: #define MAX_NUM_BAD_IP_ADDRESSES %d", MAX_NUM_BAD_IP_ADDRESSES) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Bad IP Address table size", buf);
+
+  if(snprintf(buf, sizeof(buf), 
+              "#define PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL %d", 
+              PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Bad IP Address timeout (seconds)", buf);
+
+  if(snprintf(buf, sizeof(buf), 
+              "#define PARM_MIN_WEBPAGE_AUTOREFRESH_TIME %d", PARM_MIN_WEBPAGE_AUTOREFRESH_TIME) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Minimum refresh interval (seconds)", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "#define MAX_NUM_PROTOS %d", MAX_NUM_PROTOS) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum # of Protocols to show in graphs", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "#define MAX_NUM_ROUTERS %d", MAX_NUM_ROUTERS) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum # of routers (Local Subnet Routers report)", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "#define MAX_NUM_DEVICES %d", MAX_NUM_DEVICES) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum # of network interface devices", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "#define MAX_NUM_PROCESSES_READLSOFINFO %d", MAX_NUM_PROCESSES_READLSOFINFO) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum # of processes for lsof report", buf);
+
+
+
+  if(snprintf(buf, sizeof(buf),
+              "#define MAX_SUBNET_HOSTS %d", MAX_SUBNET_HOSTS) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum network size (hosts per interface)", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "#define MAX_PASSIVE_FTP_SESSION_TRACKER %d", MAX_PASSIVE_FTP_SESSION_TRACKER) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Allocated # of passive FTP sessions", buf);
+
+  if(snprintf(buf, sizeof(buf),
+              "#define PARM_PASSIVE_SESSION_MINIMUM_IDLE %d", PARM_PASSIVE_SESSION_MINIMUM_IDLE) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Inactive passive FTP session timeout (seconds)", buf);
+
+
+  sendString(texthtml("\n\nCompile Time: Hash Table Sizes\n\n",
+                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Hash Table Sizes</tr>\n"));
+
+  if(snprintf(buf, sizeof(buf), 
+              "#define CONST_HASH_INITIAL_SIZE %d", CONST_HASH_INITIAL_SIZE) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Initial size", buf);
+
+  if(snprintf(buf, sizeof(buf), 
+              "#define CONST_HASH_MINIMUM_SIZE %d", CONST_HASH_MINIMUM_SIZE) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "After 1st extend", buf);
+
+  if(snprintf(buf, sizeof(buf), 
+              "#define CONST_HASH_INCREASE_FACTOR %d", CONST_HASH_INCREASE_FACTOR) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Intermediate increase factor", buf);
+
+  if(snprintf(buf, sizeof(buf), 
+              "#define CONST_HASH_FACTOR_MAXIMUM %d", CONST_HASH_FACTOR_MAXIMUM) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Factor growth until", buf);
+
+  if(snprintf(buf, sizeof(buf), 
+              "#define CONST_HASH_TERMINAL_INCREASE %d", CONST_HASH_TERMINAL_INCREASE) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Then grow (linearly) by", buf);
+
+  sendString(texthtml("\n\nCompile Time: globals-define.h\n\n",
+                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-define.h</tr>\n"));
+
+#ifdef HAVE_GDCHART
+  if(snprintf(buf, sizeof(buf), 
+              "globals-report.h: #define CHART_FORMAT \"%s\"",
+              CHART_FORMAT) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Chart Format", buf);
+#endif
+
   sendString(texthtml("\n\nCompile Time: config.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: config.h</tr>\n"));
 
-  printFeatureConfigInfo(textPrintFlag, "ASYNC_ADDRESS_RESOLUTION",
-#ifdef ASYNC_ADDRESS_RESOLUTION
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
+  printFeatureConfigInfo(textPrintFlag, "CFG_CONFIGFILE_DIR - config file directory", CFG_CONFIGFILE_DIR);
 
-  printFeatureConfigInfo(textPrintFlag, "CONFIGFILE_DIR - config file directory", CONFIGFILE_DIR);
+  printFeatureConfigInfo(textPrintFlag, "CFG_DATAFILE_DIR - data file directory", CFG_DATAFILE_DIR);
 
-  printFeatureConfigInfo(textPrintFlag, "DATAFILE_DIR - data file directory", DATAFILE_DIR);
+  printFeatureConfigInfo(textPrintFlag, "CFG_DBFILE_DIR - database file directory", CFG_DBFILE_DIR);
 
-  printFeatureConfigInfo(textPrintFlag, "DBFILE_DIR - database file directory", DBFILE_DIR);
-
-  printFeatureConfigInfo(textPrintFlag, "DEBUG",
-#ifdef DEBUG
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "SUPPORT_SSLV3",
-#ifdef SUPPORT_SSLV3
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLV3_SUPPORT",
+#ifdef MAKE_WITH_SSLV3_SUPPORT
 			 "yes"
 #else
 			 "no"
@@ -1196,7 +1271,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, 
                          texthtml("HAVE_GDCHART",
-                                  "<A HREF=\"" GDCHART_URL "\" title=\"" GDCHART_URL_ALT "\">HAVE_GDCHART</A>"),
+                                  "<A HREF=\"" HTML_GDCHART_URL "\" title=\"" CONST_HTML_GDCHART_URL_ALT "\">HAVE_GDCHART</A>"),
 #ifdef HAVE_GDCHART
 			 "present"
 #else
@@ -1506,7 +1581,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, 
                          texthtml("HAVE_OPENSSL",
-                                  "<A HREF=\"" OPENSSL_URL "\" title=\"" OPENSSL_URL_ALT "\">HAVE_OPENSSL</A>"),
+                                  "<A HREF=\"" HTML_OPENSSL_URL "\" title=\"" CONST_HTML_OPENSSL_URL_ALT "\">HAVE_OPENSSL</A>"),
 #ifdef HAVE_OPENSSL
 			 "present"
 #else
@@ -1778,50 +1853,35 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "MULTITHREADED",
-#ifdef MULTITHREADED
+  printFeatureConfigInfo(textPrintFlag, "CFG_MULTITHREADED",
+#ifdef CFG_MULTITHREADED
 			 "yes"
 #else
 			 "no"
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "YES_IGNORE_SIGPIPE",
-#ifdef YES_IGNORE_SIGPIPE
+  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_IGNORE_SIGPIPE",
+#ifdef MAKE_WITH_IGNORE_SIGPIPE
 			 "yes"
 #else
 			 "no"
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "USE_SSLWATCHDOG",
-#ifdef USE_SSLWATCHDOG
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "PARM_SSLWATCHDOG (derived)",
-#ifdef PARM_SSLWATCHDOG
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
 
   printFeatureConfigInfo(textPrintFlag, 
-                         texthtml("NEED_GETDOMAINNAME (getdomainname(2) function)",
-                                  "NEED_GETDOMAINNAME<br>&nbsp;&nbsp;&nbsp;getdomainname(2) function"),
-#ifdef NEED_GETDOMAINNAME
+                         texthtml("CFG_NEED_GETDOMAINNAME (getdomainname(2) function)",
+                                  "CFG_NEED_GETDOMAINNAME<br>&nbsp;&nbsp;&nbsp;getdomainname(2) function"),
+#ifdef CFG_NEED_GETDOMAINNAME
 			 "no"
 #else
 			 "yes"
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "NEED_INET_ATON",
-#ifdef NEED_INET_ATON
+  printFeatureConfigInfo(textPrintFlag, "CFG_NEED_INET_ATON",
+#ifdef CFG_NEED_INET_ATON
 			 "yes"
 #else
 			 "no"
@@ -1830,7 +1890,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, 
                          texthtml("NTOP_xxxxxx_ENDIAN (Hardware Endian)",
                                   "NTOP_xxxxxx_ENDIAN<br>&nbsp;&nbsp;&nbsp;Hardware Endian"),
-#ifdef NTOP_LITTLE_ENDIAN
+#ifdef CFG_LITTLE_ENDIAN
 			 "little"
 #else
 			 "big"
@@ -1838,15 +1898,15 @@ void printNtopConfigHInfo(int textPrintFlag) {
 			 );
 
   printFeatureConfigInfo(textPrintFlag,
-                         texthtml("PLUGIN_DIR (plugin file directory",
-                                  "PLUGIN_DIR<br>&nbsp;&nbsp;&nbsp;plugin file directory"),
-                         PLUGIN_DIR);
+                         texthtml("CFG_PLUGIN_DIR (plugin file directory",
+                                  "CFG_PLUGIN_DIR<br>&nbsp;&nbsp;&nbsp;plugin file directory"),
+                         CFG_PLUGIN_DIR);
 
-#ifdef RUN_DIR
+#ifdef CFG_RUN_DIR
   printFeatureConfigInfo(textPrintFlag, 
-                         texthtml("RUN_DIR (run file directory)",
-                                  "RUN_DIR<br>&nbsp;&nbsp;&nbsp;run file directory"),
-                         RUN_DIR);
+                         texthtml("CFG_RUN_DIR (run file directory)",
+                                  "CFG_RUN_DIR<br>&nbsp;&nbsp;&nbsp;run file directory"),
+                         CFG_RUN_DIR);
 #endif
 
   printFeatureConfigInfo(textPrintFlag, 
@@ -1859,150 +1919,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-  sendString(texthtml("\n\nCompile Time: Switches, Limits, etc.  (various #defines)\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Switches (#define, etc.)</tr>\n"));
-
-#ifndef WIN32
-  if(snprintf(buf, sizeof(buf),
-              "globals.h: %s USE_CGI",
-#ifdef USE_CGI
-              "#define"
-#else
-              "#undef"
-#endif
-              ) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "CGI Scripts", buf);
-#endif /* WIN32 */
-
-  if(snprintf(buf, sizeof(buf),
-              "globals.h: %s USE_COLOR",
-#ifdef USE_COLOR
-              "#define"
-#else
-              "#undef"
-#endif
-              ) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Alternate row colors", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "globals.h: %s USE_HOST",
-#ifdef USE_HOST
-              "#define"
-#else
-              "#undef"
-#endif
-              ) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Buggy gethostbyaddr() - use alternate implementation", buf);
-
-#ifdef HAVE_GDCHART
-  if(snprintf(buf, sizeof(buf), 
-              "globals-report.h: #define CHART_FORMAT \"%s\"",
-              CHART_FORMAT) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Chart Format", buf);
-#endif
-
-  if(snprintf(buf, sizeof(buf), 
-              "globals.h: #define MAX_NUM_BAD_IP_ADDRESSES %d", MAX_NUM_BAD_IP_ADDRESSES) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Bad IP Address table size", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "ntop.h: #define NTOP_DEFAULT_BAD_ACCESS_TIMEOUT %d", 
-              NTOP_DEFAULT_BAD_ACCESS_TIMEOUT) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Bad IP Address timeout (seconds)", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "ntop.h: #define MAX_HOSTS_CACHE_LEN %d", MAX_HOSTS_CACHE_LEN) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Hosts Cache table size", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "ntop.h: #define MIN_REFRESH_TIME %d", MIN_REFRESH_TIME) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Minimum refresh interval (seconds)", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "ntop.h: #define MAX_NUM_PROTOS %d", MAX_NUM_PROTOS) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum # of Protocols to show in graphs", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "ntop.h: #define MAX_NUM_ROUTERS %d", MAX_NUM_ROUTERS) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum # of routers (Local Subnet Routers report)", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "ntop.h: #define MAX_NUM_DEVICES %d", MAX_NUM_DEVICES) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum # of network interface devices", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "ntop.h: #define MAX_NUM_PROCESSES %d", MAX_NUM_PROCESSES) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum # of processes for lsof report", buf);
-
-
-
-  if(snprintf(buf, sizeof(buf),
-              "ntop.h: #define MAX_SUBNET_HOSTS %d", MAX_SUBNET_HOSTS) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum network size (hosts per interface)", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "ntop.h: #define NUM_SESSION_INFO %d", NUM_SESSION_INFO) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Allocated # of passive FTP sessions", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "ntop.h: #define MAX_NUM_SESSION_INFO %d", MAX_NUM_SESSION_INFO) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum # of passive FTP sessions (not used)", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "ntop.h: #define PASSIVE_SESSION_PURGE_TIMEOUT %d", PASSIVE_SESSION_PURGE_TIMEOUT) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Inactive passive FTP session timeout (seconds)", buf);
-
-
-  sendString(texthtml("\n\nCompile Time: Hash Table Sizes\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Hash Table Sizes</tr>\n"));
-
-  if(snprintf(buf, sizeof(buf), 
-              "ntop.h: #define HASH_INITIAL_SIZE %d", HASH_INITIAL_SIZE) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Initial size", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "ntop.h: #define HASH_MINIMUM_SIZE %d", HASH_MINIMUM_SIZE) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "After 1st extend", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "ntop.h: #define HASH_INCREASE_FACTOR %d", HASH_INCREASE_FACTOR) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Intermediate increase factor", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "ntop.h: #define HASH_FACTOR_MAXIMUM %d", HASH_FACTOR_MAXIMUM) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Factor growth until", buf);
-
-  if(snprintf(buf, sizeof(buf), 
-              "ntop.h: #define HASH_TERMINAL_INCREASE %d", HASH_TERMINAL_INCREASE) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Then grow (linearly) by", buf);
-
 }
 
 /* ******************************** */
 
 void printNtopConfigInfo(int textPrintFlag) {
-  char buf[BUF_SIZE];
+  char buf[LEN_GENERAL_WORK_BUFFER];
   int i;
   int bufLength, bufPosition, bufUsed;
 
@@ -2036,7 +1958,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   }
 #endif
-#ifdef SHOW_NTOP_HEARTBEAT
+#ifdef PARM_SHOW_NTOP_HEARTBEAT
   if (snprintf(buf, sizeof(buf), "%d", myGlobals.heartbeatCounter) < 0)
       BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Heartbeat (counter)", buf);
@@ -2071,25 +1993,25 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   printParameterConfigInfo(textPrintFlag, "-a | --access-log-path",
                            myGlobals.accessLogPath,
-                           NTOP_DEFAULT_ACCESS_LOG_PATH);
+                           DEFAULT_NTOP_ACCESS_LOG_PATH);
 
   printParameterConfigInfo(textPrintFlag, "-b | --disable-decoders",
                            myGlobals.enablePacketDecoding == 1 ? "No" : "Yes",
-                           NTOP_DEFAULT_PACKET_DECODING == 1 ? "No" : "Yes");
+                           DEFAULT_NTOP_PACKET_DECODING == 1 ? "No" : "Yes");
 
   printParameterConfigInfo(textPrintFlag, "-c | --sticky-hosts",
                            myGlobals.stickyHosts == 1 ? "Yes" : "No",
-                           NTOP_DEFAULT_STICKY_HOSTS == 1 ? "Yes" : "No");
+                           DEFAULT_NTOP_STICKY_HOSTS == 1 ? "Yes" : "No");
 
 #ifndef WIN32
   printParameterConfigInfo(textPrintFlag, "-d | --daemon",
                            myGlobals.daemonMode == 1 ? "Yes" : "No",
-                           strcmp(myGlobals.program_name, "ntopd") == 0 ? "Yes" : NTOP_DEFAULT_DAEMON_MODE);
+                           strcmp(myGlobals.program_name, "ntopd") == 0 ? "Yes" : DEFAULT_NTOP_DAEMON_MODE);
 #endif
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
   if(snprintf(buf, sizeof(buf), "%s%d",
-	      myGlobals.maxNumLines == MAX_NUM_TABLE_ROWS ? REPORT_ITS_DEFAULT : "",
+	      myGlobals.maxNumLines == CONST_NUM_TABLE_ROWS_PER_PAGE ? CONST_REPORT_ITS_DEFAULT : "",
 	      myGlobals.maxNumLines) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "-e | --max-table-rows", buf);
@@ -2097,68 +2019,68 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   printParameterConfigInfo(textPrintFlag, "-f | --traffic-dump-file",
                            myGlobals.rFileName,
-                           NTOP_DEFAULT_TRAFFICDUMP_FILENAME);
+                           DEFAULT_NTOP_TRAFFICDUMP_FILENAME);
 
   printParameterConfigInfo(textPrintFlag, "-g | --track-local-hosts",
                            myGlobals.trackOnlyLocalHosts == 1 ? "Track local hosts only" : "Track all hosts",
-                           NTOP_DEFAULT_TRACK_ONLY_LOCAL == 1 ? "Track local hosts only" : "Track all hosts");
+                           DEFAULT_NTOP_TRACK_ONLY_LOCAL == 1 ? "Track local hosts only" : "Track all hosts");
 
   printParameterConfigInfo(textPrintFlag, "-o | --no-mac",
 			   myGlobals.dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
-                           NTOP_DEFAULT_DONT_TRUST_MAC_ADDR == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses");
+                           DEFAULT_NTOP_DONT_TRUST_MAC_ADDR == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses");
 
-  printParameterConfigInfo(textPrintFlag, "-i | --interface" REPORT_ITS_EFFECTIVE,
+  printParameterConfigInfo(textPrintFlag, "-i | --interface" CONST_REPORT_ITS_EFFECTIVE,
                            myGlobals.devices,
-                           NTOP_DEFAULT_DEVICES);
+                           DEFAULT_NTOP_DEVICES);
 
   printParameterConfigInfo(textPrintFlag, "-k | --filter-expression-in-extra-frame",
                            myGlobals.filterExpressionInExtraFrame == 1 ? "Yes" : "No",
-                           NTOP_DEFAULT_FILTER_IN_FRAME == 1 ? "Yes" : "No");
+                           DEFAULT_NTOP_FILTER_IN_FRAME == 1 ? "Yes" : "No");
 
   if (myGlobals.pcapLog == NULL) {
     printParameterConfigInfo(textPrintFlag, "-l | --pcap-log",
 			     myGlobals.pcapLog,
-			     NTOP_DEFAULT_PCAP_LOG_FILENAME);
+			     DEFAULT_NTOP_PCAP_LOG_FILENAME);
   } else {
     if (snprintf(buf, sizeof(buf), "%s/%s.&lt;device&gt;.pcap",
 		 myGlobals.pcapLogBasePath,
 		 myGlobals.pcapLog) < 0)
       BufferTooShort();
-    printParameterConfigInfo(textPrintFlag, "-l | --pcap-log" REPORT_ITS_EFFECTIVE,
+    printParameterConfigInfo(textPrintFlag, "-l | --pcap-log" CONST_REPORT_ITS_EFFECTIVE,
 			     buf,
-			     NTOP_DEFAULT_PCAP_LOG_FILENAME);
+			     DEFAULT_NTOP_PCAP_LOG_FILENAME);
   }
 
-  printParameterConfigInfo(textPrintFlag, "-m | --local-subnets" REPORT_ITS_EFFECTIVE,
+  printParameterConfigInfo(textPrintFlag, "-m | --local-subnets" CONST_REPORT_ITS_EFFECTIVE,
                            myGlobals.localAddresses,
-                           NTOP_DEFAULT_LOCAL_SUBNETS);
+                           DEFAULT_NTOP_LOCAL_SUBNETS);
 
   printParameterConfigInfo(textPrintFlag, "-n | --numeric-ip-addresses",
                            myGlobals.numericFlag > 0 ? "Yes" : "No",
-                           NTOP_DEFAULT_NUMERIC_IP_ADDRESSES > 0 ? "Yes" : "No");
+                           DEFAULT_NTOP_NUMERIC_IP_ADDRESSES > 0 ? "Yes" : "No");
 
   if (myGlobals.protoSpecs == NULL) {
-    printFeatureConfigInfo(textPrintFlag, "-p | --protocols", REPORT_ITS_DEFAULT "internal list");
+    printFeatureConfigInfo(textPrintFlag, "-p | --protocols", CONST_REPORT_ITS_DEFAULT "internal list");
   } else {
     printFeatureConfigInfo(textPrintFlag, "-p | --protocols", myGlobals.protoSpecs);
   }
 
   printParameterConfigInfo(textPrintFlag, "-q | --create-suspicious-packets",
                            myGlobals.enableSuspiciousPacketDump == 1 ? "Enabled" : "Disabled",
-                           NTOP_DEFAULT_SUSPICIOUS_PKT_DUMP == 1 ? "Enabled" : "Disabled");
+                           DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP == 1 ? "Enabled" : "Disabled");
 
   if(snprintf(buf, sizeof(buf), "%s%d",
-	      myGlobals.refreshRate == REFRESH_TIME ? REPORT_ITS_DEFAULT : "",
+	      myGlobals.refreshRate == DEFAULT_NTOP_AUTOREFRESH_INTERVAL ? CONST_REPORT_ITS_DEFAULT : "",
 	      myGlobals.refreshRate) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "-r | --refresh-time", buf);
 
   printParameterConfigInfo(textPrintFlag, "-s | --no-promiscuous",
                            myGlobals.disablePromiscuousMode == 1 ? "Yes" : "No",
-                           NTOP_DEFAULT_DISABLE_PROMISCUOUS == 1 ? "Yes" : "No");
+                           DEFAULT_NTOP_DISABLE_PROMISCUOUS == 1 ? "Yes" : "No");
 
   if(snprintf(buf, sizeof(buf), "%s%d",
-	      myGlobals.traceLevel == DEFAULT_TRACE_LEVEL ? REPORT_ITS_DEFAULT : "",
+	      myGlobals.traceLevel == DEFAULT_TRACE_LEVEL ? CONST_REPORT_ITS_DEFAULT : "",
 	      myGlobals.traceLevel) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "-t | --trace-level", buf);
@@ -2177,15 +2099,15 @@ void printNtopConfigInfo(int textPrintFlag) {
   } else if (myGlobals.webAddr != 0) {
     if(snprintf(buf, sizeof(buf),
 		"%sActive, address %s, port %d",
-		( (myGlobals.webAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.webPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
+		( (myGlobals.webAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.webPort == DEFAULT_NTOP_WEB_PORT) ) ? CONST_REPORT_ITS_DEFAULT : "",
 		myGlobals.webAddr,
 		myGlobals.webPort) < 0)
       BufferTooShort();
   } else {
     if(snprintf(buf, sizeof(buf),
 		"%sActive, all interfaces, port %d",
-		((myGlobals.webAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.webPort == NTOP_DEFAULT_WEB_PORT) )
-		? REPORT_ITS_DEFAULT : "", myGlobals.webPort) < 0)
+		((myGlobals.webAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.webPort == DEFAULT_NTOP_WEB_PORT) )
+		? CONST_REPORT_ITS_DEFAULT : "", myGlobals.webPort) < 0)
       BufferTooShort();
   }
 
@@ -2193,37 +2115,37 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   printParameterConfigInfo(textPrintFlag, "-z | --disable-sessions",
                            myGlobals.enableSessionHandling == 1 ? "No" : "Yes",
-                           NTOP_DEFAULT_ENABLE_SESSIONHANDLE == 1 ? "No" : "Yes");
+                           DEFAULT_NTOP_ENABLE_SESSIONHANDLE == 1 ? "No" : "Yes");
 
   printParameterConfigInfo(textPrintFlag, "-B | --filter-expression",
                            ((myGlobals.currentFilterExpression == NULL) ||
                             (myGlobals.currentFilterExpression[0] == '\0')) ? "none" :
 			   myGlobals.currentFilterExpression,
-                           NTOP_DEFAULT_FILTER_EXPRESSION == NULL ? "none" :
-			   NTOP_DEFAULT_FILTER_EXPRESSION);
+                           DEFAULT_NTOP_FILTER_EXPRESSION == NULL ? "none" :
+			   DEFAULT_NTOP_FILTER_EXPRESSION);
 
   printParameterConfigInfo(textPrintFlag, "-D | --domain",
                            ((myGlobals.domainName == NULL) ||
                             (myGlobals.domainName[0] == '\0')) ? "none" :
 			   myGlobals.domainName,
-                           NTOP_DEFAULT_DOMAIN_NAME == NULL ? "none" :
-			   NTOP_DEFAULT_DOMAIN_NAME);
+                           DEFAULT_NTOP_DOMAIN_NAME == NULL ? "none" :
+			   DEFAULT_NTOP_DOMAIN_NAME);
 
   printParameterConfigInfo(textPrintFlag, "-E | --enable-external-tools",
 			   myGlobals.enableExternalTools == 1 ? "Yes" : "No",
-                           NTOP_DEFAULT_EXTERNAL_TOOLS_ENABLE == 1 ? "Yes" : "No");
+                           DEFAULT_NTOP_EXTERNAL_TOOLS_ENABLE == 1 ? "Yes" : "No");
 
   printParameterConfigInfo(textPrintFlag, "-F | --flow-spec",
                            myGlobals.flowSpecs == NULL ? "none" : myGlobals.flowSpecs,
-                           NTOP_DEFAULT_FLOW_SPECS == NULL ? "none" : NTOP_DEFAULT_FLOW_SPECS);
+                           DEFAULT_NTOP_FLOW_SPECS == NULL ? "none" : DEFAULT_NTOP_FLOW_SPECS);
 
 #ifndef WIN32
   printParameterConfigInfo(textPrintFlag, "-K | --enable-debug",
 			   myGlobals.debugMode == 1 ? "Yes" : "No",
-			   NTOP_DEFAULT_DEBUG_MODE == 1 ? "Yes" : "No");
+			   DEFAULT_NTOP_DEBUG_MODE == 1 ? "Yes" : "No");
 
-#ifdef USE_SYSLOG
-  if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
+#ifdef MAKE_WITH_SYSLOG
+  if (myGlobals.useSyslog == FLAG_SYSLOG_NONE) {
     printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "No");
   } else {
     for (i=0; myFacilityNames[i].c_name != NULL; i++) {
@@ -2236,29 +2158,29 @@ void printNtopConfigInfo(int textPrintFlag) {
       printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "**UNKNOWN**");
     }
   }
-#endif /* USE_SYSLOG */
+#endif /* MAKE_WITH_SYSLOG */
 #endif /* WIN32 */
 
-  printParameterConfigInfo(textPrintFlag, "-M | --no-interface-merge" REPORT_ITS_EFFECTIVE,
+  printParameterConfigInfo(textPrintFlag, "-M | --no-interface-merge" CONST_REPORT_ITS_EFFECTIVE,
                            myGlobals.mergeInterfaces == 1 ? "(Merging Interfaces) Yes" :
 			   "(parameter -M set, Interfaces separate) No",
-                           NTOP_DEFAULT_MERGE_INTERFACES == 1 ? "(Merging Interfaces) Yes" : "");
+                           DEFAULT_NTOP_MERGE_INTERFACES == 1 ? "(Merging Interfaces) Yes" : "");
 
-  printParameterConfigInfo(textPrintFlag, "-N | --no-nmap" REPORT_ITS_EFFECTIVE,
+  printParameterConfigInfo(textPrintFlag, "-N | --no-nmap" CONST_REPORT_ITS_EFFECTIVE,
                            myGlobals.isNmapPresent == 1 ? "Yes (nmap will be used)" : "No (nmap will not be used)",
-                           NTOP_DEFAULT_NMAP_PRESENT == 1 ? "Yes (nmap will be used)" : "");
+                           DEFAULT_NTOP_NMAP_PRESENT == 1 ? "Yes (nmap will be used)" : "");
 
   printParameterConfigInfo(textPrintFlag, "-O | --pcap-file-path",
                            myGlobals.pcapLogBasePath,
-                           DBFILE_DIR);
+                           CFG_DBFILE_DIR);
 
   printParameterConfigInfo(textPrintFlag, "-P | --db-file-path",
                            myGlobals.dbPath,
-                           DBFILE_DIR);
+                           CFG_DBFILE_DIR);
 
   printParameterConfigInfo(textPrintFlag, "-U | --mapper",
                            myGlobals.mapperURL,
-                           NTOP_DEFAULT_MAPPER_URL);
+                           DEFAULT_NTOP_MAPPER_URL);
 
 #ifdef HAVE_OPENSSL
   if (myGlobals.sslInitialized == 0) {
@@ -2268,14 +2190,14 @@ void printNtopConfigInfo(int textPrintFlag) {
   } else if (myGlobals.sslAddr != 0) {
     if(snprintf(buf, sizeof(buf),
 		"%sActive, address %s, port %d",
-		( (myGlobals.sslAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.sslPort == NTOP_DEFAULT_WEB_PORT) ) 
-		? REPORT_ITS_DEFAULT : "", myGlobals.sslAddr,myGlobals.sslPort) < 0)
+		( (myGlobals.sslAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.sslPort == DEFAULT_NTOP_WEB_PORT) ) 
+		? CONST_REPORT_ITS_DEFAULT : "", myGlobals.sslAddr,myGlobals.sslPort) < 0)
       BufferTooShort();
   } else {
     if(snprintf(buf, sizeof(buf),
 		"%sActive, all interfaces, port %d",
-		( (myGlobals.sslAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.sslPort == NTOP_DEFAULT_WEB_PORT) ) 
-		? REPORT_ITS_DEFAULT : "", myGlobals.sslPort) < 0)
+		( (myGlobals.sslAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.sslPort == DEFAULT_NTOP_WEB_PORT) ) 
+		? CONST_REPORT_ITS_DEFAULT : "", myGlobals.sslPort) < 0)
       BufferTooShort();
   }
   printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
@@ -2284,16 +2206,16 @@ void printNtopConfigInfo(int textPrintFlag) {
 #ifdef HAVE_GDCHART
   printParameterConfigInfo(textPrintFlag, "--throughput-chart-type",
                            myGlobals.throughput_chart_type == GDC_AREA ? "Area" : "Bar",
-                           NTOP_DEFAULT_CHART_TYPE == GDC_AREA ? "Area" : "Bar");
+                           DEFAULT_NTOP_CHART_TYPE == GDC_AREA ? "Area" : "Bar");
 #endif
 
-#ifndef YES_IGNORE_SIGPIPE
+#ifndef MAKE_WITH_IGNORE_SIGPIPE
   printParameterConfigInfo(textPrintFlag, "--ignore-sigpipe",
                            myGlobals.ignoreSIGPIPE == 1 ? "Yes" : "No",
                            "No");
 #endif
 
-#ifdef PARM_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   printParameterConfigInfo(textPrintFlag, "--ssl-watchdog",
                            myGlobals.useSSLwatchdog == 1 ? "Yes" : "No",
                            "No");
@@ -2322,11 +2244,11 @@ void printNtopConfigInfo(int textPrintFlag) {
                            "none");
 
   sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
-  sendString("Note: " REPORT_ITS_EFFECTIVE "   means that "
+  sendString("Note: " CONST_REPORT_ITS_EFFECTIVE "   means that "
 	     "this is the value after ntop has processed the parameter.");
   sendString(texthtml("\n", "<br>\n"));
-  sendString(REPORT_ITS_DEFAULT "means this is the default value, usually "
-	     "(but not always) set by a #define in globals.h.");
+  sendString(CONST_REPORT_ITS_DEFAULT "means this is the default value, usually "
+	     "(but not always) set by a #define in globals-defines.h.");
   sendString(texthtml("\n\n", "</th></tr>\n"));
 
   /* *************************** */
@@ -2340,14 +2262,14 @@ void printNtopConfigInfo(int textPrintFlag) {
       if (textPrintFlag == TRUE) {
 	printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Yes");
       } else {
-	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" LSOF_URL "\" title=\"" LSOF_URL_ALT "\">lsof</A>",
+	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_LSOF_URL "\" title=\"" CONST_HTML_LSOF_URL_ALT "\">lsof</A>",
 			       "Yes");
       }
     } else {
       if (textPrintFlag == TRUE) {
 	printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Not found on system OR unable to run suid root");
       } else {
-	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" LSOF_URL "\" title=\"" LSOF_URL_ALT "\">lsof</A>\"",
+	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_LSOF_URL "\" title=\"" CONST_HTML_LSOF_URL_ALT "\">lsof</A>\"",
 			       "Not found on system");
       }
     }
@@ -2355,7 +2277,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     if (textPrintFlag == TRUE) {
       printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "(no -E parameter): Disabled");
     } else {
-      printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" LSOF_URL "\" title=\"" LSOF_URL_ALT "\">lsof</A>",
+      printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_LSOF_URL "\" title=\"" CONST_HTML_LSOF_URL_ALT "\">lsof</A>",
 			     "(no -E parameter): Disabled");
     }
   }
@@ -2365,14 +2287,14 @@ void printNtopConfigInfo(int textPrintFlag) {
       if (textPrintFlag == TRUE) {
 	printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "Yes");
       } else {
-	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" NMAP_URL "\" title=\"" NMAP_URL_ALT "\">nmap</A>",
+	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_NMAP_URL "\" title=\"" CONST_HTML_NMAP_URL_ALT "\">nmap</A>",
 			       "Yes");
       }
     } else {
       if (textPrintFlag == TRUE) {
 	printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "-N parameter OR not found on system OR unable to run suid root");
       } else {
-	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" NMAP_URL "\" title=\"" NMAP_URL_ALT "\">nmap</A>",
+	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_NMAP_URL "\" title=\"" CONST_HTML_NMAP_URL_ALT "\">nmap</A>",
 			       "-N parameter OR not found on system");
       }
     }
@@ -2380,7 +2302,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     if (textPrintFlag == TRUE) {
       printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "(no -E parameter): Disabled");
     } else {
-      printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" NMAP_URL "\" title=\"" NMAP_URL_ALT "\">nmap</A>",
+      printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_NMAP_URL "\" title=\"" CONST_HTML_NMAP_URL_ALT "\">nmap</A>",
 			     "(no -E parameter): Disabled");
     }
   }
@@ -2464,20 +2386,16 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "# Handled HTTP Requests", buf);
 
-#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
-#ifdef PARM_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG
+ #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   if (myGlobals.useSSLwatchdog == 1)
-#endif
+ #endif
     {
       if(snprintf(buf, sizeof(buf), "%d", myGlobals.numHTTPSrequestTimeouts) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "# HTTPS Request Timeouts", buf);
     }
-#endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.hostsCacheLen) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Host Memory Cache Size", buf);
+#endif
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDevices) < 0)
     BufferTooShort();
@@ -2485,9 +2403,79 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "Domain name (short)", myGlobals.shortDomainName);
 
+  sendString(texthtml("\n\nHost Memory Cache\n\n", "<tr><th colspan=\"2\">Host Memory Cache</th></tr>\n"));
+
+  if(snprintf(buf, sizeof(buf), 
+              "#define MAX_HOSTS_CACHE_LEN %d", MAX_HOSTS_CACHE_LEN) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Limit", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.hostsCacheLen) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Current Size", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.hostsCacheLenMax) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum Size", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.hostsCacheReused) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
+
+#ifdef PARM_USE_SESSIONS_CACHE
+  sendString(texthtml("\n\nSession Memory Cache\n\n", "<tr><th colspan=\"2\">Session Memory Cache</th></tr>\n"));
+
+  if(snprintf(buf, sizeof(buf), 
+              "#define MAX_SESSIONS_CACHE_LEN %d", MAX_SESSIONS_CACHE_LEN) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Limit", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.sessionsCacheLen) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Current Size", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.sessionsCacheLenMax) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum Size", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.sessionsCacheReused) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
+#endif
+
+  sendString(texthtml("\n\nMAC/IPX Hash tables\n\n", "<tr><th colspan=\"2\">MAC/IPX Hash Tables</th></tr>\n"));
+
+  if(snprintf(buf, sizeof(buf), "%d", MAX_SPECIALMAC_NAME_HASH) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Special MAC Hash Size", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.specialHashLoadCollisions) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Special MAC Hash Collisions (load)", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", MAX_IPXSAP_NAME_HASH) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadCollisions) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Collisions (load)", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", MAX_VENDOR_NAME_HASH) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Vendor MAC Hash Size", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.vendorHashLoadCollisions) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Vendor MAC Hash Collisions (load)", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Total Hash Collisions (Vendor/Special) (lookup)", buf);
+
   /* **** */
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 
   sendString(texthtml("\n\nPacket queue\n\n", "<tr><th colspan=\"2\">Packet queue</th></tr>\n"));
 
@@ -2526,17 +2514,17 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Maximum hosts to purge per cycle", buf);
 
   if (textPrintFlag == TRUE) {
-      if(snprintf(buf, sizeof(buf), "%d", NTOP_DEFAULT_MAXIMUM_IDLE_PURGE) < 0)
+      if(snprintf(buf, sizeof(buf), "%d", DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE) < 0)
           BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "NTOP_DEFAULT_MAXIMUM_IDLE_PURGE", buf);
+      printFeatureConfigInfo(textPrintFlag, "DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE", buf);
 
       if (myGlobals.dynamicPurgeLimits == 1) {
-          if(snprintf(buf, sizeof(buf), "%f", NTOP_IDLE_PURGE_MINIMUM_TARGET_TIME) < 0)
+          if(snprintf(buf, sizeof(buf), "%f", CONST_IDLE_PURGE_MINIMUM_TARGET_TIME) < 0)
               BufferTooShort();
-          printFeatureConfigInfo(textPrintFlag, "NTOP_IDLE_PURGE_MINIMUM_TARGET_TIME", buf);
-          if(snprintf(buf, sizeof(buf), "%f", NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME) < 0)
+          printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MINIMUM_TARGET_TIME", buf);
+          if(snprintf(buf, sizeof(buf), "%f", CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME) < 0)
               BufferTooShort();
-          printFeatureConfigInfo(textPrintFlag, "NTOP_IDLE_PURGE_MAXIMUM_TARGET_TIME", buf);
+          printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME", buf);
       }
   }
 
@@ -2561,7 +2549,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   sendString(texthtml("\n\nAddress counts\n\n", "<tr><th colspan=\"2\">Address counts</th></tr>\n"));
 
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) {
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueueLen) < 0)
       BufferTooShort();
@@ -2593,7 +2581,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* **** */
 
-#if defined(MULTITHREADED)
+#if defined(CFG_MULTITHREADED)
   sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread counts</th></tr>\n"));
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numThreads) < 0)
@@ -2702,6 +2690,11 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* *************************** */
 
+    /* At Luca's request, we generate less information for the html version...
+       so I've pushed all the config.h and #define stuff into a sub-function
+       (Burton - 05-Jun-2002) (Unless we're in debug mode)
+    */
+
 #if defined(DEBUG)                     || \
     defined(ADDRESS_DEBUG)             || \
     defined(DNS_DEBUG)                 || \
@@ -2717,209 +2710,16 @@ void printNtopConfigInfo(int textPrintFlag) {
     defined(MEMORY_DEBUG)              || \
     defined(NETFLOW_DEBUG)             || \
     defined(PACKET_DEBUG)              || \
+    defined(PLUGIN_DEBUG)              || \
     defined(SEMAPHORE_DEBUG)           || \
     defined(SESSION_TRACE_DEBUG)       || \
     defined(SSLWATCHDOG_DEBUG)         || \
     defined(STORAGE_DEBUG)             || \
-    defined(UNKNOWN_PACKET_DEBUG)      || \
-    defined(PRINT_ALL_SESSIONS)        || \
-    defined(PRINT_RETRANSMISSION_DATA) || \
-    !defined(FORK_CHILD_PROCESS)
-  if (1) { /* If one of the flags are set, we display this as part of the html version too */
+    defined(UNKNOWN_PACKET_DEBUG)
 #else
-    if (textPrintFlag == TRUE) {
+    if (textPrintFlag == TRUE)
 #endif
-
-      sendString(texthtml("\n\nCompile Time: Debug settings in ntop.h\n\n",
-                          "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Debug settings in ntop.h</tr>\n"));
-
-      printFeatureConfigInfo(textPrintFlag, "DEBUG",
-#ifdef DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag, "ADDRESS_DEBUG",
-#ifdef ADDRESS_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "DNS_DEBUG",
-#ifdef DNS_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "DNS_SNIFF_DEBUG",
-#ifdef DNS_SNIFF_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "FRAGMENT_DEBUG",
-#ifdef FRAGMENT_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "FTP_DEBUG",
-#ifdef FTP_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "GDBM_DEBUG",
-#ifdef GDBM_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "HASH_DEBUG",
-#ifdef HASH_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "HOST_FREE_DEBUG",
-#ifdef HOST_FREE_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "HTTP_DEBUG",
-#ifdef HTTP_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "LSOF_DEBUG",
-#ifdef LSOF_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "MEMORY_DEBUG",
-#ifdef MEMORY_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "NETFLOW_DEBUG",
-#ifdef NETFLOW_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "PACKET_DEBUG",
-#ifdef PACKET_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "SEMAPHORE_DEBUG",
-#ifdef SEMAPHORE_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "SESSION_TRACE_DEBUG",
-#ifdef SESSION_TRACE_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "SSLWATCHDOG_DEBUG",
-#ifdef SSLWATCHDOG_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "STORAGE_DEBUG",
-#ifdef STORAGE_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "UNKNOWN_PACKET_DEBUG",
-#ifdef UNKNOWN_PACKET_DEBUG
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "PRINT_ALL_SESSIONS",
-#ifdef PRINT_ALL_SESSIONS
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag,     "PRINT_RETRANSMISSION_DATA",
-#ifdef PRINT_RETRANSMISSION_DATA
-			     "yes"
-#else
-			     "no"
-#endif
-			     );
-
-      printFeatureConfigInfo(textPrintFlag, "FORK_CHILD_PROCESS",
-#ifdef FORK_CHILD_PROCESS
-			     "yes (normal)"
-#else
-			     "no"
-#endif
-			     );
-    }
-
-    /* *************************** */
-
-    /* At Luca's request, we generate less information for the html version...
-       so I've pushed all the config.h and #define stuff into a sub-function
-       (Burton - 05-Jun-2002)
-    */
-
-    if (textPrintFlag == TRUE) {
       printNtopConfigHInfo(textPrintFlag);
-    }
 
     /* *************************** */
 
@@ -2927,7 +2727,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
     /* **************************** */
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 #if !defined(DEBUG) && !defined(WIN32)
     if(myGlobals.debugMode)
 #endif /* DEBUG or WIN32 */
@@ -2944,7 +2744,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 	printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
 	printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
 	if(myGlobals.numericFlag == 0) 
 	  printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 #endif
@@ -2961,7 +2761,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 	sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
       }
-#endif /* MULTITHREADED */
+#endif /* CFG_MULTITHREADED */
 
     if (textPrintFlag != TRUE) {
       sendString("<p>Click <a href=\"textinfo.html\" alt=\"Text version of this page\">"
@@ -2972,12 +2772,12 @@ void printNtopConfigInfo(int textPrintFlag) {
     sendString(texthtml("\n", "</CENTER>\n"));
   }
 
-#endif /* MICRO_NTOP */
+#endif /* MAKE_MICRO_NTOP */
 
   /* ******************************* */
 
   static void initializeWeb(void) {
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
     myGlobals.columnSort = 0, myGlobals.sortSendMode = 0;
 #endif
     addDefaultAdminUser();
@@ -3006,7 +2806,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     } else {
       myGlobals.actualReportDeviceId = atoi(value);
       if(myGlobals.actualReportDeviceId > myGlobals.numDevices) {
-        traceEvent(TRACE_INFO, "Note: stored actualReportDeviceId(%d) > numDevices(%d). "
+        traceEvent(CONST_TRACE_INFO, "Note: stored actualReportDeviceId(%d) > numDevices(%d). "
                                "Probably leftover, reset.\n",
                    myGlobals.actualReportDeviceId,
                    myGlobals.numDevices);
@@ -3021,11 +2821,11 @@ void printNtopConfigInfo(int textPrintFlag) {
 #ifndef WIN32
       if(myGlobals.webAddr) {
 	if(!inet_aton(myGlobals.webAddr, &sockIn.sin_addr)) {
-	  traceEvent(TRACE_ERROR, "Unable to convert address '%s'... "
+	  traceEvent(CONST_TRACE_ERROR, "Unable to convert address '%s'... "
 		     "Not binding to a particular interface!\n", myGlobals.webAddr);
 	  sockIn.sin_addr.s_addr = INADDR_ANY;
 	} else {
-	  traceEvent(TRACE_INFO, "Converted address '%s'... "
+	  traceEvent(CONST_TRACE_INFO, "Converted address '%s'... "
 		     "binding to the specific interface!\n", myGlobals.webAddr);
 	}
       } else {
@@ -3037,7 +2837,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
       myGlobals.sock = socket(AF_INET, SOCK_STREAM, 0);
       if(myGlobals.sock < 0) {
-	traceEvent(TRACE_ERROR, "Unable to create a new socket");
+	traceEvent(CONST_TRACE_ERROR, "Unable to create a new socket");
 	exit(-1);
       }
 
@@ -3050,7 +2850,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     if(myGlobals.sslInitialized) {
       myGlobals.sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
       if(myGlobals.sock_ssl < 0) {
-	traceEvent(TRACE_ERROR, "unable to create a new socket");
+	traceEvent(CONST_TRACE_ERROR, "unable to create a new socket");
 	exit(-1);
       }
 
@@ -3061,7 +2861,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
     if(myGlobals.webPort > 0) {
       if(bind(myGlobals.sock, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-	traceEvent(TRACE_WARNING, "bind: port %d already in use.", myGlobals.webPort);
+	traceEvent(CONST_TRACE_WARNING, "bind: port %d already in use.", myGlobals.webPort);
 	closeNwSocket(&myGlobals.sock);
 	exit(-1);
       }
@@ -3074,11 +2874,11 @@ void printNtopConfigInfo(int textPrintFlag) {
 #ifndef WIN32
       if(myGlobals.sslAddr) {
 	if(!inet_aton(myGlobals.sslAddr, &sockIn.sin_addr)) {
-	  traceEvent(TRACE_ERROR, "Unable to convert address '%s'... "
+	  traceEvent(CONST_TRACE_ERROR, "Unable to convert address '%s'... "
 		     "Not binding SSL to a particular interface!\n", myGlobals.sslAddr);
 	  sockIn.sin_addr.s_addr = INADDR_ANY;
 	} else {
-	  traceEvent(TRACE_INFO, "Converted address '%s'... "
+	  traceEvent(CONST_TRACE_INFO, "Converted address '%s'... "
 		     "binding SSL to the specific interface!\n", myGlobals.sslAddr);
 	}
       } else {
@@ -3090,7 +2890,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
       if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
 	/* Fix below courtesy of Matthias Kattanek <mattes@mykmk.com> */
-	traceEvent(TRACE_ERROR, "bind: port %d already in use.", myGlobals.sslPort);
+	traceEvent(CONST_TRACE_ERROR, "bind: port %d already in use.", myGlobals.sslPort);
 	closeNwSocket(&myGlobals.sock_ssl);
 	exit(-1);
       }
@@ -3099,7 +2899,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
     if(myGlobals.webPort > 0) {
       if(listen(myGlobals.sock, 2) < 0) {
-	traceEvent(TRACE_WARNING, "listen error.\n");
+	traceEvent(CONST_TRACE_WARNING, "listen error.\n");
 	closeNwSocket(&myGlobals.sock);
 	exit(-1);
       }
@@ -3108,7 +2908,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized)
       if(listen(myGlobals.sock_ssl, 2) < 0) {
-	traceEvent(TRACE_WARNING, "listen error.\n");
+	traceEvent(CONST_TRACE_WARNING, "listen error.\n");
 	closeNwSocket(&myGlobals.sock_ssl);
 	exit(-1);
       }
@@ -3117,67 +2917,67 @@ void printNtopConfigInfo(int textPrintFlag) {
     if(myGlobals.webPort > 0) {
       /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
       if(myGlobals.webAddr)
-	traceEvent(TRACE_INFO, "Waiting for HTTP connections on %s port %d...\n",
+	traceEvent(CONST_TRACE_INFO, "Waiting for HTTP connections on %s port %d...\n",
 		   myGlobals.webAddr, myGlobals.webPort);
       else
-	traceEvent(TRACE_INFO, "Waiting for HTTP connections on port %d...\n",
+	traceEvent(CONST_TRACE_INFO, "Waiting for HTTP connections on port %d...\n",
 		   myGlobals.webPort);
     }
 
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized)
       if(myGlobals.sslAddr)
-	traceEvent(TRACE_INFO, "Waiting for HTTPS (SSL) connections on %s port %d...\n",
+	traceEvent(CONST_TRACE_INFO, "Waiting for HTTPS (SSL) connections on %s port %d...\n",
 		   myGlobals.sslAddr, myGlobals.sslPort);
       else
-	traceEvent(TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
+	traceEvent(CONST_TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
 		   myGlobals.sslPort);
 #endif
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
-    traceEvent(TRACE_INFO, "Started thread (%ld) for web server.\n",
+    traceEvent(CONST_TRACE_INFO, "Started thread (%ld) for web server.\n",
 	       myGlobals.handleWebConnectionsThreadId);
 #endif
 
-#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
-#ifdef PARM_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG
+ #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
     if (myGlobals.useSSLwatchdog == 1)
-#endif
+ #endif
       {
 	int rc;
 
-#ifdef SSLWATCHDOG_DEBUG
-	traceEvent(TRACE_INFO, "SSLWDDEBUG: ****S*S*L*W*A*T*C*H*D*O*G*********STARTING\n");
-	traceEvent(TRACE_INFO, "SSLWDDEBUG: P Common     Parent         Child\n");
-	traceEvent(TRACE_INFO, "SSLWDDEBUG: - ---------- -------------- --------------\n");
-#endif
+ #ifdef SSLWATCHDOG_DEBUG
+	traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: ****S*S*L*W*A*T*C*H*D*O*G*********STARTING\n");
+	traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: P Common     Parent         Child\n");
+	traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: - ---------- -------------- --------------\n");
+ #endif
 
-	if ((rc = sslwatchdogGetLock(SSLWATCHDOG_BOTH)) != 0) {
+	if ((rc = sslwatchdogGetLock(FLAG_SSLWATCHDOG_BOTH)) != 0) {
           /* Bad thing - can't lock the mutex */
-          sslwatchdogErrorN(">LockErr", SSLWATCHDOG_BOTH, rc);
-#ifdef PARM_SSLWATCHDOG
+          sslwatchdogErrorN(">LockErr", FLAG_SSLWATCHDOG_BOTH, rc);
+ #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
           /* --use-sslwatchdog?  Let's cheat - turn it off */
-          traceEvent(TRACE_ERROR, "SSLWDERROR: *****Turning off sslWatchdog and continuing...\n");
+          traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****Turning off sslWatchdog and continuing...\n");
           myGlobals.useSSLwatchdog = 0;
-#else
+ #else
           /* ./configure parm? very bad... */
-          traceEvent(TRACE_ERROR, "SSLWDERROR: *****SSL Watchdog set via ./configure, aborting...\n");
+          traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****SSL Watchdog set via ./configure, aborting...\n");
           cleanup(0);
-#endif
+ #endif
 	}
 
-	sslwatchdogDebug("CreateThread", SSLWATCHDOG_BOTH, "");
+	sslwatchdogDebug("CreateThread", FLAG_SSLWATCHDOG_BOTH, "");
 	createThread(&myGlobals.sslwatchdogChildThreadId, sslwatchdogChildThread, NULL);
-	traceEvent(TRACE_INFO, "Started thread (%ld) for ssl watchdog",
+	traceEvent(CONST_TRACE_INFO, "Started thread (%ld) for ssl watchdog",
 		   myGlobals.sslwatchdogChildThreadId);
 
 	signal(SIGUSR1, sslwatchdogSighandler);
-	sslwatchdogDebug("setsig()", SSLWATCHDOG_BOTH, "");
+	sslwatchdogDebug("setsig()", FLAG_SSLWATCHDOG_BOTH, "");
 
-	sslwatchdogClearLock(SSLWATCHDOG_BOTH);
+	sslwatchdogClearLock(FLAG_SSLWATCHDOG_BOTH);
       }
-#endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
+#endif /* MAKE_WITH_SSLWATCHDOG */
   }
 
   /* **************************************** */
@@ -3191,7 +2991,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* **************************************** */
 
-#if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
+#ifdef MAKE_WITH_SSLWATCHDOG
 
   int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag) { 
     int waitwokeCount;
@@ -3199,7 +2999,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
     sslwatchdogDebugN("WaitFor=", parentchildFlag, stateValue);
 
-    if (alreadyLockedFlag == SSLWATCHDOG_ENTER_LOCKED) {
+    if (alreadyLockedFlag == FLAG_SSLWATCHDOG_ENTER_LOCKED) {
       sslwatchdogDebug("Lock", parentchildFlag, "");
       if ((rc = pthread_mutex_lock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
 	sslwatchdogDebugN(">LockErr", parentchildFlag, rc);
@@ -3214,7 +3014,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
     while (myGlobals.sslwatchdogCondvar.predicate != stateValue) { 
       /* Test for finished flag... */ 
-      if (myGlobals.sslwatchdogCondvar.predicate == SSLWATCHDOG_STATE_FINISHED) { 
+      if (myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_FINISHED) { 
 	sslwatchdogDebug(">ABORT", parentchildFlag, "");
 	break;
       } 
@@ -3222,7 +3022,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 	sslwatchdogDebug(">Continue", parentchildFlag, "");
 	break;
       } 
-      if (waitwokeCount > SSLWATCHDOG_WAITLIMIT) { 
+      if (waitwokeCount > PARM_SSLWATCHDOG_WAITWOKE_LIMIT) { 
 	sslwatchdogDebug(">abort(lim)", parentchildFlag, "");
 	break;
       } 
@@ -3296,7 +3096,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     
     sslwatchdogDebugN("SetState=", parentchildFlag, stateNewValue);
 
-    if (enterLockedFlag != SSLWATCHDOG_ENTER_LOCKED) {
+    if (enterLockedFlag != FLAG_SSLWATCHDOG_ENTER_LOCKED) {
       rc = sslwatchdogGetLock(parentchildFlag);
     }
 
@@ -3304,7 +3104,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     
     sslwatchdogSignal(parentchildFlag);
 
-    if (exitLockedFlag != SSLWATCHDOG_RETURN_LOCKED) {
+    if (exitLockedFlag != FLAG_SSLWATCHDOG_RETURN_LOCKED) {
       rc = sslwatchdogClearLock(parentchildFlag);
     }
 
@@ -3317,7 +3117,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     {
       /* If this goes off, the ssl_accept() below didn't respond */
       signal(SIGUSR1, SIG_DFL);
-      sslwatchdogDebug("->SIGUSR1", SSLWATCHDOG_PARENT, "");
+      sslwatchdogDebug("->SIGUSR1", FLAG_SSLWATCHDOG_PARENT, "");
       longjmp (sslwatchdogJump, 1);
     }
 
@@ -3331,89 +3131,89 @@ void printNtopConfigInfo(int textPrintFlag) {
     struct timespec expiration;
     time_t returnedAt;
 
-    /* ENTRY: from above, state 0 (SSLWATCHDOG_STATE_UNINIT) */
-    sslwatchdogDebug("BEGINthread", SSLWATCHDOG_CHILD, "");
+    /* ENTRY: from above, state 0 (FLAG_SSLWATCHDOG_UNINIT) */
+    sslwatchdogDebug("BEGINthread", FLAG_SSLWATCHDOG_CHILD, "");
 
-    rc = sslwatchdogSetState(SSLWATCHDOG_STATE_WAITINGREQUEST,
-                             SSLWATCHDOG_CHILD, 
-                             0-SSLWATCHDOG_ENTER_LOCKED,
-                             0-SSLWATCHDOG_RETURN_LOCKED);
+    rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
+                             FLAG_SSLWATCHDOG_CHILD, 
+                             0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
+                             0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
 
-    while (myGlobals.sslwatchdogCondvar.predicate != SSLWATCHDOG_STATE_FINISHED) { 
+    while (myGlobals.sslwatchdogCondvar.predicate != FLAG_SSLWATCHDOG_FINISHED) { 
     
-      sslwatchdogWaitFor(SSLWATCHDOG_STATE_HTTPREQUEST, 
-			 SSLWATCHDOG_CHILD, 
-			 0-SSLWATCHDOG_ENTER_LOCKED);
+      sslwatchdogWaitFor(FLAG_SSLWATCHDOG_HTTPREQUEST, 
+			 FLAG_SSLWATCHDOG_CHILD, 
+			 0-FLAG_SSLWATCHDOG_ENTER_LOCKED);
     
-      expiration.tv_sec = time(NULL) + 3; /* 3 second watchdog timeout */
+      expiration.tv_sec = time(NULL) + PARM_SSLWATCHDOG_WAIT_INTERVAL; /* watchdog timeout */
       expiration.tv_nsec = 0;
-      sslwatchdogDebug("Expires", SSLWATCHDOG_CHILD, formatTime(&expiration.tv_sec, 0));
+      sslwatchdogDebug("Expires", FLAG_SSLWATCHDOG_CHILD, formatTime(&expiration.tv_sec, 0));
 
-      while (myGlobals.sslwatchdogCondvar.predicate == SSLWATCHDOG_STATE_HTTPREQUEST) { 
+      while (myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_HTTPREQUEST) { 
 
-	rc = sslwatchdogGetLock(SSLWATCHDOG_CHILD);
+	rc = sslwatchdogGetLock(FLAG_SSLWATCHDOG_CHILD);
 
 	/* Suspended wait until abort or we're woken up for a request */
 	/*   Note: we hold the mutex when we come back */
-	sslwatchdogDebug("twait",    SSLWATCHDOG_CHILD, "");
-	sslwatchdogDebug("(unlock)", SSLWATCHDOG_CHILD, "");
+	sslwatchdogDebug("twait",    FLAG_SSLWATCHDOG_CHILD, "");
+	sslwatchdogDebug("(unlock)", FLAG_SSLWATCHDOG_CHILD, "");
 	rc = pthread_cond_timedwait(&myGlobals.sslwatchdogCondvar.condvar, 
 				    &myGlobals.sslwatchdogCondvar.mutex, 
 				    &expiration);
 
-	sslwatchdogDebug("(lock)",  SSLWATCHDOG_CHILD, "");
+	sslwatchdogDebug("(lock)",  FLAG_SSLWATCHDOG_CHILD, "");
 	sslwatchdogDebug("endwait", 
-			 SSLWATCHDOG_CHILD, 
+			 FLAG_SSLWATCHDOG_CHILD, 
 			 ((rc == ETIMEDOUT) ? " TIMEDOUT" : ""));
 
 	/* Something woke us up ... probably "https complete" or "finshed" message */
 	if (rc == ETIMEDOUT) {
 	  /* No response from the parent thread... oh dear... */
-	  sslwatchdogDebug("send(USR1)", SSLWATCHDOG_CHILD, "");
+	  sslwatchdogDebug("send(USR1)", FLAG_SSLWATCHDOG_CHILD, "");
 	  rc = pthread_kill(myGlobals.handleWebConnectionsThreadId, SIGUSR1);
 	  if (rc != 0) {
-	    sslwatchdogErrorN("sent(USR1)", SSLWATCHDOG_CHILD, rc);
+	    sslwatchdogErrorN("sent(USR1)", FLAG_SSLWATCHDOG_CHILD, rc);
 	  } else {
-	    sslwatchdogDebug("sent(USR1)", SSLWATCHDOG_CHILD, "");
+	    sslwatchdogDebug("sent(USR1)", FLAG_SSLWATCHDOG_CHILD, "");
 	  }
-	  rc = sslwatchdogSetState(SSLWATCHDOG_STATE_WAITINGREQUEST,
-				   SSLWATCHDOG_CHILD, 
-				   SSLWATCHDOG_ENTER_LOCKED,
-				   0-SSLWATCHDOG_RETURN_LOCKED);
+	  rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
+				   FLAG_SSLWATCHDOG_CHILD, 
+				   FLAG_SSLWATCHDOG_ENTER_LOCKED,
+				   0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
 	  break;
 	}
 	if (rc == 0) {
-	  if (myGlobals.sslwatchdogCondvar.predicate == SSLWATCHDOG_STATE_FINISHED) {
-	    sslwatchdogDebug("woke", SSLWATCHDOG_CHILD, "*finished*");
+	  if (myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_FINISHED) {
+	    sslwatchdogDebug("woke", FLAG_SSLWATCHDOG_CHILD, "*finished*");
 	    break;
 	  }
 
 	  /* Ok, hSWC() is done, so recycle the watchdog for next time */
-	  rc = sslwatchdogSetState(SSLWATCHDOG_STATE_WAITINGREQUEST,
-				   SSLWATCHDOG_CHILD, 
-				   SSLWATCHDOG_ENTER_LOCKED,
-				   0-SSLWATCHDOG_RETURN_LOCKED);
+	  rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
+				   FLAG_SSLWATCHDOG_CHILD, 
+				   FLAG_SSLWATCHDOG_ENTER_LOCKED,
+				   0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
 	  break;
 	}
 
 	/* rc != 0 --- error */
-	rc = sslwatchdogClearLock(SSLWATCHDOG_CHILD);
+	rc = sslwatchdogClearLock(FLAG_SSLWATCHDOG_CHILD);
 
-      } /* while (... == SSLWATCHDOG_STATE_HTTPREQUEST) */
-    } /* while (... != SSLWATCHDOG_STATE_FINISHED) */
+      } /* while (... == FLAG_SSLWATCHDOG_HTTPREQUEST) */
+    } /* while (... != FLAG_SSLWATCHDOG_FINISHED) */
 
     /* Bye bye child... */
 
-    sslwatchdogDebug("ENDthread", SSLWATCHDOG_CHILD, "");
+    sslwatchdogDebug("ENDthread", FLAG_SSLWATCHDOG_CHILD, "");
 
     return;
   }
-#endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
+#endif /* MAKE_WITH_SSLWATCHDOG */
 
   /* ******************************************* */
 
   void* handleWebConnections(void* notUsed _UNUSED_) {
-#ifndef MULTITHREADED
+#ifndef CFG_MULTITHREADED
     struct timeval wait_time;
 #else
     int rc;
@@ -3422,7 +3222,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     int topSock = myGlobals.sock;
 
 #ifndef WIN32
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     /*
      *  The great ntop "mysterious web server death" fix... and other tales of
      *  sorcery.
@@ -3471,11 +3271,11 @@ void printNtopConfigInfo(int textPrintFlag) {
      *
      */
 
-#ifndef YES_IGNORE_SIGPIPE
+#ifndef MAKE_WITH_IGNORE_SIGPIPE
     if (myGlobals.ignoreSIGPIPE == TRUE) {
 #else
       {
-#endif /* YES_IGNORE_SIGPIPE */
+#endif /* MAKE_WITH_IGNORE_SIGPIPE */
 
 	sigset_t a_oset, a_nset;
 	sigset_t *oset, *nset;
@@ -3487,39 +3287,39 @@ void printNtopConfigInfo(int textPrintFlag) {
 	sigemptyset(nset);
 	rc = sigemptyset(nset);
 	if (rc != 0) 
-	  traceEvent(TRACE_ERROR, "Error, SIGPIPE handler set, sigemptyset() = %d, gave %p\n", rc, nset);
+	  traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigemptyset() = %d, gave %p\n", rc, nset);
 	rc = sigaddset(nset, SIGPIPE);
 	if (rc != 0)
-	  traceEvent(TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p\n", rc, nset);
+	  traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p\n", rc, nset);
 
 #ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #endif
 #ifdef DEBUG
-	traceEvent(TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
+	traceEvent(CONST_TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
 #endif
 
 #ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
 	if (rc != 0)
-	  traceEvent(TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d\n", nset, oset, rc);
+	  traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d\n", nset, oset, rc);
 #endif
 
 #ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #endif
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
 #endif
 
 	if (rc == 0) {
           signal(SIGPIPE, PIPEhandler); 
 #ifdef DEBUG
-          traceEvent(TRACE_INFO, "DEBUG: Note: SIGPIPE handler set\n");
+          traceEvent(CONST_TRACE_INFO, "DEBUG: Note: SIGPIPE handler set\n");
 #endif
 	}
       }
-#endif /* MULTITHREADED */
+#endif /* CFG_MULTITHREADED */
 #endif /* WIN32 */
 
       FD_ZERO(&mask);
@@ -3537,43 +3337,35 @@ void printNtopConfigInfo(int textPrintFlag) {
 
       memcpy(&mask_copy, &mask, sizeof(fd_set));
 
-#ifndef MULTITHREADED
+#ifndef CFG_MULTITHREADED
       /* select returns immediately */
       wait_time.tv_sec = 0, wait_time.tv_usec = 0;
       if(select(topSock+1, &mask, 0, 0, &wait_time) == 1)
 	handleSingleWebConnection(&mask);
-#else /* MULTITHREADED */
+#else /* CFG_MULTITHREADED */
       while(myGlobals.capturePackets) {
-#ifdef USE_SSLWATCHDOG
-	sslwatchdogDebug("BEGINloop", SSLWATCHDOG_BOTH, "");
-#ifdef DEBUG
-	traceEvent(TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
-#endif
-#endif
+	sslwatchdogDebug("BEGINloop", FLAG_SSLWATCHDOG_BOTH, "");
+ #ifdef DEBUG
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
+ #endif
 	memcpy(&mask, &mask_copy, sizeof(fd_set));
 	rc = select(topSock+1, &mask, 0, 0, NULL /* Infinite */);
-#ifdef DEBUG
-	traceEvent(TRACE_INFO, "DEBUG: select returned: %d\n", rc);
-#endif
+ #ifdef DEBUG
+	traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d\n", rc);
+ #endif
 	if(rc > 0) {
           HEARTBEAT(1, "handleWebConnections()", NULL);
 	  /* Now, handle the web connection ends up in SSL_Accept() */
-#ifdef USE_SSLWATCHDOG
-	  sslwatchdogDebug("->hSWC()", SSLWATCHDOG_PARENT, "");
-#endif
+	  sslwatchdogDebug("->hSWC()", FLAG_SSLWATCHDOG_PARENT, "");
 	  handleSingleWebConnection(&mask);
-#ifdef USE_SSLWATCHDOG
-	  sslwatchdogDebug("hSWC()->", SSLWATCHDOG_PARENT, "");
-#endif
+	  sslwatchdogDebug("hSWC()->", FLAG_SSLWATCHDOG_PARENT, "");
 	}
-#ifdef USE_SSLWATCHDOG
-	sslwatchdogDebug("ENDloop", SSLWATCHDOG_BOTH, "");
-#endif
+	sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
       }
 
-      traceEvent(TRACE_INFO, "Terminating Web connections...");
+      traceEvent(CONST_TRACE_INFO, "Terminating Web connections...");
 
-#endif /* MULTITHREADED */
+#endif /* CFG_MULTITHREADED */
 
       return(NULL);
     }
@@ -3588,13 +3380,13 @@ void printNtopConfigInfo(int textPrintFlag) {
 
       if(FD_ISSET(myGlobals.sock, fdmask)) {
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "DEBUG: Accepting HTTP request...\n");
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTP request...\n");
 #endif
 	myGlobals.newSock = accept(myGlobals.sock, (struct sockaddr*)&from, &from_len);
       } else {
 #if defined(DEBUG) && defined(HAVE_OPENSSL)
 	if(myGlobals.sslInitialized)
-	  traceEvent(TRACE_INFO, "DEBUG: Accepting HTTPS request...\n");
+	  traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTPS request...\n");
 #endif
 #ifdef HAVE_OPENSSL
 	if(myGlobals.sslInitialized)
@@ -3605,18 +3397,18 @@ void printNtopConfigInfo(int textPrintFlag) {
       }
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Request accepted (sock=%d) (errno=%d)\n", myGlobals.newSock, errno);
+      traceEvent(CONST_TRACE_INFO, "Request accepted (sock=%d) (errno=%d)\n", myGlobals.newSock, errno);
 #endif
 
       if(myGlobals.newSock > 0) {
 #ifdef HAVE_OPENSSL
 	if(myGlobals.sslInitialized)
 	  if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
-#ifdef PARM_SSLWATCHDOG
+ #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
 	    if (myGlobals.useSSLwatchdog == 1)
-#endif /* PARM_SSLWATCHDOG */
+ #endif
 	      {		
-#if defined(PARM_SSLWATCHDOG) || defined(USE_SSLWATCHDOG)
+ #ifdef MAKE_WITH_SSLWATCHDOG
 		int rc;
 
 		/* The watchdog ... */
@@ -3624,9 +3416,9 @@ void printNtopConfigInfo(int textPrintFlag) {
                   int i, j, k;
                   char buf[256];
 
-                  sslwatchdogError("TIMEOUT", SSLWATCHDOG_PARENT, "processing continues!");
+                  sslwatchdogError("TIMEOUT", FLAG_SSLWATCHDOG_PARENT, "processing continues!");
                   myGlobals.numHTTPSrequestTimeouts++;
-                  traceEvent(TRACE_ERROR, 
+                  traceEvent(CONST_TRACE_ERROR, 
                              "SSLWDERROR: Watchdog timer has expired. "
                              "Aborting request, but ntop processing continues!\n");
                   for (i=0; i<MAX_SSL_CONNECTIONS; i++) {
@@ -3643,55 +3435,55 @@ void printNtopConfigInfo(int textPrintFlag) {
 		      j++;
 		    }
 		    buf[k+1]='\0';
-		    traceEvent(TRACE_ERROR, "SSLWDERROR: Failing request was (translated): %s\n", buf);
+		    traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: Failing request was (translated): %s\n", buf);
                   }
                   signal(SIGUSR1, sslwatchdogSighandler);
                   return;
 		}
 
-		rc = sslwatchdogWaitFor(SSLWATCHDOG_STATE_WAITINGREQUEST,
-					SSLWATCHDOG_PARENT, 
-					0-SSLWATCHDOG_ENTER_LOCKED);
+		rc = sslwatchdogWaitFor(FLAG_SSLWATCHDOG_WAITINGREQUEST,
+					FLAG_SSLWATCHDOG_PARENT, 
+					0-FLAG_SSLWATCHDOG_ENTER_LOCKED);
 
-		rc = sslwatchdogSetState(SSLWATCHDOG_STATE_HTTPREQUEST,
-					 SSLWATCHDOG_PARENT,
-					 0-SSLWATCHDOG_ENTER_LOCKED,
-					 0-SSLWATCHDOG_RETURN_LOCKED);
-#endif /* PARM_SSLWATCHDOG || USE_SSLWATCHDOG */
+		rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPREQUEST,
+					 FLAG_SSLWATCHDOG_PARENT,
+					 0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
+					 0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
+ #endif /* MAKE_WITH_SSLWATCHDOG */
               }
 
 	    if(accept_ssl_connection(myGlobals.newSock) == -1) {
-	      traceEvent(TRACE_WARNING, "Unable to accept SSL connection\n");
+	      traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection\n");
 	      closeNwSocket(&myGlobals.newSock);
 	      return;
 	    } else {
 	      myGlobals.newSock = -myGlobals.newSock;
             }
 
-#if defined(PARM_SSLWATCHDOG) || defined(USE_SSLWATCHDOG)
-#ifdef PARM_SSLWATCHDOG
+ #ifdef MAKE_WITH_SSLWATCHDOG
+  #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
 	    if (myGlobals.useSSLwatchdog == 1)
-#endif /* PARM_SSLWATCHDOG */
+  #endif
 	      {
-                int rc = sslwatchdogSetState(SSLWATCHDOG_STATE_HTTPCOMPLETE,
-					     SSLWATCHDOG_PARENT,
-					     0-SSLWATCHDOG_ENTER_LOCKED,
-					     0-SSLWATCHDOG_RETURN_LOCKED);
+                int rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPCOMPLETE,
+					     FLAG_SSLWATCHDOG_PARENT,
+					     0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
+					     0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
                 /* Wake up child */ 
-                rc = sslwatchdogSignal(SSLWATCHDOG_PARENT);
+                rc = sslwatchdogSignal(FLAG_SSLWATCHDOG_PARENT);
 	      }
-#endif /* PARM_SSLWATCHDOG || USE_SSLWATCHDOG */
+ #endif /* MAKE_WITH_SSLWATCHDOG */
 	  }
 #endif /* HAVE_OPENSSL */
 
 #ifdef HAVE_LIBWRAP
 	{
 	  struct request_info req;
-	  request_init(&req, RQ_DAEMON, DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
+	  request_init(&req, RQ_DAEMON, CONST_DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
 	  fromhost(&req);
 	  if(!hosts_access(&req)) {
 	    closelog(); /* just in case */
-	    openlog(DAEMONNAME, LOG_PID, deny_severity);
+	    openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
 	    syslog(deny_severity, "refused connect from %s", eval_client(&req));
 	  }
 	  else
@@ -3703,7 +3495,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 	closeNwSocket(&myGlobals.newSock);
       } else {
-	traceEvent(TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d)", errno);
+	traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d)", errno);
       }
     }
 
@@ -3723,16 +3515,16 @@ void printNtopConfigInfo(int textPrintFlag) {
 	  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
 	  if((!flows->pluginStatus.activePlugin) &&
 	     (!flows->pluginStatus.pluginPtr->inactiveSetup) ) {
-	    char buf[BUF_SIZE], name[32];
+	    char buf[LEN_GENERAL_WORK_BUFFER], name[32];
 
-	    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+	    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
 	    strncpy(name, flows->pluginStatus.pluginPtr->pluginURLname, sizeof(name));
 	    name[sizeof(name)-1] = '\0'; /* just in case pluginURLname is too long... */
 	    if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))
 	      name[strlen(name)-6] = '\0';
 	    if(snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name) < 0)
 	      BufferTooShort();
-	    printHTMLheader(buf, HTML_FLAG_NO_REFRESH);
+	    printHTMLheader(buf, BITFLAG_HTML_NO_REFRESH);
 	    printFlagedWarning("<I>This plugin is currently inactive.</I>");
 	    printHTMLtrailer();
 	    return(1);
@@ -3743,7 +3535,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 	  else
 	    arg = &url[strlen(flows->pluginStatus.pluginPtr->pluginURLname)+1];
 
-	  /* traceEvent(TRACE_INFO, "Found %s [%s]\n",
+	  /* traceEvent(CONST_TRACE_INFO, "Found %s [%s]\n",
 	     flows->pluginStatus.pluginPtr->pluginURLname, arg); */
 	  flows->pluginStatus.pluginPtr->httpFunct(arg);
 	  return(1);

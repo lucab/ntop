@@ -26,9 +26,6 @@
 
 #ifdef MEMORY_DEBUG 
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #undef malloc
 #undef free
 #undef strdup
@@ -55,16 +52,16 @@ unsigned int PrintMemoryBlocks(); /* Forward declaration */
 static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile) {
   MemoryBlock *tmpBlock;
 
-#if defined(MULTITHREADED)
+#if defined(CFG_MULTITHREADED)
   accessMutex(&myGlobals.leaksMutex, "myMalloc");
 #endif
 
   tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
 
   if(tmpBlock == NULL) {
-    traceEvent(TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n",  theFile, theLine);
+    traceEvent(CONST_TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n",  theFile, theLine);
 
-#if defined(MULTITHREADED)
+#if defined(CFG_MULTITHREADED)
     releaseMutex(&myGlobals.leaksMutex);
 #endif
     exit(-1);
@@ -78,13 +75,13 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile) {
   if(snprintf(tmpStr, sizeof(tmpStr), "%s:%d.", theFile, theLine) < 0)
     BufferTooShort();
 
-  traceEvent(TRACE_INFO, "malloc(%d):%s  [tot=%u]", ptrLen, tmpStr, myGlobals.allocatedMemory);
+  traceEvent(CONST_TRACE_INFO, "malloc(%d):%s  [tot=%u]", ptrLen, tmpStr, myGlobals.allocatedMemory);
 
   tmpBlock->programLocation = strdup(tmpStr);
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
 
-#if defined(MULTITHREADED)
+#if defined(CFG_MULTITHREADED)
   releaseMutex(&myGlobals.leaksMutex);
 #endif
 }
@@ -117,7 +114,7 @@ static void* myCalloc(size_t numObj, size_t theSize, int theLine, char* theFile)
 static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
   MemoryBlock *theScan, *lastPtr, *theNewPtr;
   
-#if defined(MULTITHREADED)
+#if defined(CFG_MULTITHREADED)
   accessMutex(&myGlobals.leaksMutex, "myRealloc");
 #endif
 
@@ -128,12 +125,12 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
     theScan = theScan->nextBlock;
   }
 
-#if defined(MULTITHREADED)
+#if defined(CFG_MULTITHREADED)
     releaseMutex(&myGlobals.leaksMutex);
 #endif
 
   if(theScan == NULL) {
-    traceEvent(TRACE_WARNING, "Realloc error (Ptr %p NOT allocated): %s, %d\n", 
+    traceEvent(CONST_TRACE_WARNING, "Realloc error (Ptr %p NOT allocated): %s, %d\n", 
 	    thePtr, theFile, theLine);
     return(NULL);
   } else {    
@@ -154,7 +151,7 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
 
     free(theScan);     
 
-#if defined(MULTITHREADED)
+#if defined(CFG_MULTITHREADED)
     releaseMutex(&myGlobals.leaksMutex);
 #endif
 
@@ -167,7 +164,7 @@ static void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile)
 static void myFree(void **thePtr, int theLine, char* theFile) {
   MemoryBlock *theScan, *lastPtr;
   
-#if defined(MULTITHREADED)
+#if defined(CFG_MULTITHREADED)
   accessMutex(&myGlobals.leaksMutex, "myFree");
 #endif
 
@@ -179,16 +176,16 @@ static void myFree(void **thePtr, int theLine, char* theFile) {
   }
 
   if(theScan == NULL) {
-    traceEvent(TRACE_WARNING, "Free error (Ptr %p NOT allocated): %s, %d\n", 
+    traceEvent(CONST_TRACE_WARNING, "Free error (Ptr %p NOT allocated): %s, %d\n", 
 	       *thePtr, theFile, theLine);
-#if defined(MULTITHREADED)
+#if defined(CFG_MULTITHREADED)
     releaseMutex(&myGlobals.leaksMutex);
 #endif
     return;
   } else {
     myGlobals.allocatedMemory -= theScan->blockSize;
 
-    traceEvent(TRACE_INFO, "free(%d):%s  [tot=%u]",
+    traceEvent(CONST_TRACE_INFO, "free(%d):%s  [tot=%u]",
 	       theScan->blockSize, theScan->programLocation, myGlobals.allocatedMemory);
 
     free(theScan->memoryLocation);
@@ -203,7 +200,7 @@ static void myFree(void **thePtr, int theLine, char* theFile) {
     *thePtr = NULL;
   }
 
-#if defined(MULTITHREADED)
+#if defined(CFG_MULTITHREADED)
   releaseMutex(&myGlobals.leaksMutex);
 #endif
 }
@@ -249,7 +246,7 @@ unsigned int PrintMemoryBlocks(void) {
     MemoryBlock* tmp;
 
     if(!theScan->alreadyTraced) {
-      traceEvent(TRACE_INFO,"Block %5d (addr %p, size %4d): %s\n", i++, 
+      traceEvent(CONST_TRACE_INFO,"Block %5d (addr %p, size %4d): %s\n", i++, 
 	      theScan->memoryLocation, theScan->blockSize, theScan->programLocation);
       totMem += theScan->blockSize;
     }
@@ -259,7 +256,7 @@ unsigned int PrintMemoryBlocks(void) {
     theScan = theScan->nextBlock;
   }
 
-  traceEvent(TRACE_INFO,"Total allocated memory: %u bytes", totMem);
+  traceEvent(CONST_TRACE_INFO,"Total allocated memory: %u bytes", totMem);
 
   /* PrintMemoryBlocks(); */
 
@@ -277,7 +274,7 @@ size_t GimmePointerSize(void* thePtr) {
     theScan = theScan->nextBlock;
 
   if(theScan == NULL) {
-    traceEvent(TRACE_WARNING, "GimmePointerSize error: Ptr %p NOT allocated\n", thePtr);
+    traceEvent(CONST_TRACE_WARNING, "GimmePointerSize error: Ptr %p NOT allocated\n", thePtr);
     return(-1);
   } else
     return(theScan->blockSize);
@@ -294,10 +291,10 @@ int GimmePointerInfo(void* thePtr) {
     theScan = theScan->nextBlock;
 
   if(theScan == NULL) {
-    traceEvent(TRACE_WARNING, "GimmePointerInfo error: Ptr %p NOT allocated\n", thePtr);
+    traceEvent(CONST_TRACE_WARNING, "GimmePointerInfo error: Ptr %p NOT allocated\n", thePtr);
     return -1;
   } else {      
-    traceEvent(TRACE_WARNING, "Block (addr %p, size %d): %s\n", theScan->memoryLocation, 
+    traceEvent(CONST_TRACE_WARNING, "Block (addr %p, size %d): %s\n", theScan->memoryLocation, 
 	    theScan->blockSize, theScan->programLocation);
     return 0;
   }
@@ -314,7 +311,7 @@ void myAddLeak(void* thePtr, int theLine, char* theFile) {
   tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
 
   if(tmpBlock == NULL) {
-    traceEvent(TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n", 
+    traceEvent(CONST_TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n", 
 	    theFile, theLine);
     return;
   }
@@ -341,7 +338,7 @@ void myRemoveLeak(void* thePtr, int theLine, char* theFile) {
   }
 
   if(theScan == NULL) {
-    traceEvent(TRACE_WARNING, "Free  block error (Ptr %p NOT allocated): %s, %d\n", 
+    traceEvent(CONST_TRACE_WARNING, "Free  block error (Ptr %p NOT allocated): %s, %d\n", 
 	       thePtr, theFile, theLine);
     return;
   } else {
@@ -359,7 +356,7 @@ void myRemoveLeak(void* thePtr, int theLine, char* theFile) {
 /* *************************************** */
 
 void initLeaks(void) {
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   createMutex(&myGlobals.leaksMutex);
 #endif
 }
@@ -368,7 +365,7 @@ void initLeaks(void) {
 
 void termLeaks(void) {
   PrintMemoryBlocks();
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.leaksMutex);
 #endif
 }
@@ -378,7 +375,7 @@ void termLeaks(void) {
 void* ntop_malloc(unsigned int sz, char* file, int line) {
 
 #ifdef DEBUG
-  traceEvent(TRACE_WARNING, "malloc(%d) [%s] @ %s:%d", 
+  traceEvent(CONST_TRACE_WARNING, "malloc(%d) [%s] @ %s:%d", 
 	     sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
 
@@ -389,7 +386,7 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 
 void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
 #ifdef DEBUG
-  traceEvent(TRACE_WARNING, "calloc(%d,%d) [%s] @ %s:%d",
+  traceEvent(CONST_TRACE_WARNING, "calloc(%d,%d) [%s] @ %s:%d",
 	     c, sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
   return(myCalloc(c, sz, line, file));
@@ -399,7 +396,7 @@ void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
 
 void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {  
 #ifdef DEBUG
-  traceEvent(TRACE_WARNING, "realloc(%p,%d) [%s] @ %s:%d",
+  traceEvent(CONST_TRACE_WARNING, "realloc(%p,%d) [%s] @ %s:%d",
 	     ptr, sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif  
   return(myRealloc(ptr, sz, line, file));
@@ -409,7 +406,7 @@ void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {
 
 char* ntop_strdup(char *str, char* file, int line) {
 #ifdef DEBUG
-  traceEvent(TRACE_WARNING, "strdup(%s) [%s] @ %s:%d", str, 
+  traceEvent(CONST_TRACE_WARNING, "strdup(%s) [%s] @ %s:%d", str, 
 	     formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
   return(myStrdup(str, line, file));
@@ -419,7 +416,7 @@ char* ntop_strdup(char *str, char* file, int line) {
 
 void ntop_free(void **ptr, char* file, int line) {
 #ifdef DEBUG
-  traceEvent(TRACE_WARNING, "free(%x) [%s] @ %s:%d", ptr, 
+  traceEvent(CONST_TRACE_WARNING, "free(%x) [%s] @ %s:%d", ptr, 
 	     formatBytes(myGlobals.allocatedMemory, 0), file, line);
 #endif
   myFree(ptr, line, file);
@@ -432,7 +429,7 @@ datum ntop_gdbm_firstkey(GDBM_FILE g, char* theFile, int theLine) {
 
   if(theData.dptr != NULL) {
     storePtr(theData.dptr, theData.dsize, theLine, theFile);
-    traceEvent(TRACE_INFO, "gdbm_firstkey(%s)", theData.dptr);
+    traceEvent(CONST_TRACE_INFO, "gdbm_firstkey(%s)", theData.dptr);
   }
 
   return(theData);
@@ -445,7 +442,7 @@ datum ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* theFile, int theLine) {
 
   if(theData.dptr != NULL) {
     storePtr(theData.dptr, theData.dsize, theLine, theFile);
-    traceEvent(TRACE_INFO, "gdbm_nextkey(%s)", theData.dptr);
+    traceEvent(CONST_TRACE_INFO, "gdbm_nextkey(%s)", theData.dptr);
   }
 
   return(theData);
@@ -458,7 +455,7 @@ datum ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine) {
 
   if(theData.dptr != NULL) {
     storePtr(theData.dptr, theData.dsize, theLine, theFile);
-    traceEvent(TRACE_INFO, "gdbm_fetch(%s) %x", theData.dptr, theData.dptr);
+    traceEvent(CONST_TRACE_INFO, "gdbm_fetch(%s) %x", theData.dptr, theData.dptr);
   }
 
   return(theData);
@@ -478,7 +475,7 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   
 #ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
-    traceEvent(TRACE_WARNING, "WARNING: called malloc(%u) @ %s:%d", sz, file, line);
+    traceEvent(CONST_TRACE_WARNING, "WARNING: called malloc(%u) @ %s:%d", sz, file, line);
     if(sz == 0) sz = 8; /*
 			  8 bytes is the minimal size ntop can allocate
 			  for doing things that make sense
@@ -489,7 +486,7 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   thePtr = malloc(sz);
   
   if(thePtr == NULL) {
-    traceEvent(TRACE_ERROR, "ERROR: malloc(%x) @ %s:%d returned NULL [no more memory?]",
+    traceEvent(CONST_TRACE_ERROR, "ERROR: malloc(%x) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
   } else
     memset(thePtr, 0xee, sz); /* Fill it with garbage */
@@ -506,7 +503,7 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
   
 #ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
-    traceEvent(TRACE_WARNING, "WARNING: called calloc(%u,%u) @ %s:%d",
+    traceEvent(CONST_TRACE_WARNING, "WARNING: called calloc(%u,%u) @ %s:%d",
 	       c, sz, file, line);
   }
 #endif
@@ -514,7 +511,7 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
   thePtr = calloc(c, sz);
 
   if(thePtr == NULL) {
-    traceEvent(TRACE_ERROR, 
+    traceEvent(CONST_TRACE_ERROR, 
 	       "ERROR: calloc(%x) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
   }
@@ -531,7 +528,7 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
   
 #ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
-    traceEvent(TRACE_WARNING, "WARNING: called realloc(%p,%u) @ %s:%d",
+    traceEvent(CONST_TRACE_WARNING, "WARNING: called realloc(%p,%u) @ %s:%d",
 	       ptr, sz, file, line);
   }
 #endif
@@ -539,7 +536,7 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
   thePtr = realloc(ptr, sz);
 
   if(thePtr == NULL) {
-    traceEvent(TRACE_ERROR, 
+    traceEvent(CONST_TRACE_ERROR, 
 	       "ERROR: realloc(%x) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
   }
@@ -553,7 +550,7 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
 void ntop_safefree(void **ptr, char* file, int line) {
 
   if((ptr == NULL) || (*ptr == NULL)) {
-    traceEvent(TRACE_WARNING, "WARNING: free of NULL pointer @ %s:%d", 
+    traceEvent(CONST_TRACE_WARNING, "WARNING: free of NULL pointer @ %s:%d", 
 	       file, line);
   } else {
     free(*ptr);
@@ -566,7 +563,7 @@ void ntop_safefree(void **ptr, char* file, int line) {
 #undef strdup /* just to be safe */
 char* ntop_safestrdup(char *ptr, char* file, int line) {  
   if(ptr == NULL) {
-    traceEvent(TRACE_WARNING, "WARNING: strdup of NULL pointer @ %s:%d", file, line);
+    traceEvent(CONST_TRACE_WARNING, "WARNING: strdup of NULL pointer @ %s:%d", file, line);
 	return(strdup(""));
   } else {
     char* theOut;

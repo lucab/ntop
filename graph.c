@@ -25,7 +25,7 @@
 
 #include "ntop.h"
 
-#ifndef MICRO_NTOP
+#ifndef MAKE_MICRO_NTOP
 #ifdef HAVE_GDCHART
 
 #define _GRAPH_C_
@@ -39,7 +39,7 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 
 /* ************************ */
 
-#if !defined(DISABLE_GDC_WATCHDOG) && !defined(WIN32)
+#if !defined(PARM_DISABLE_GDC_WATCHDOG) && !defined(WIN32)
 
 void _GDC_out_pie(short width,
                   short height,
@@ -57,19 +57,19 @@ void _GDC_out_pie(short width,
   char tmpStr[512];
 
 #ifdef GDC_WATCHDOG_DEBUG
-  traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: GDC_out_pie forking...\n");
+  traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: GDC_out_pie forking...\n");
 #endif
 
   fork_result = fork();
 
   if (fork_result == (pid_t) -1) {
-    traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(001) - fork failed!");
+    traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(001) - fork failed!");
     return;
   }
   if (fork_result == (pid_t) 0) {
 
 #ifdef GDC_WATCHDOG_DEBUG
-    traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: in child, calling\n");
+    traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: in child, calling\n");
 #endif
 
     GDC_out_pie(width,
@@ -81,7 +81,7 @@ void _GDC_out_pie(short width,
                 data);
 
 #ifdef GDC_WATCHDOG_DEBUG
-    traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: in child, returned\n");
+    traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: in child, returned\n");
 #endif
 
     exit(0);
@@ -90,20 +90,20 @@ void _GDC_out_pie(short width,
   /* parent */
 
 #ifdef GDC_WATCHDOG_DEBUG
-  traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: in parent, waiting for %d...\n", fork_result);
+  traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: in parent, waiting for %d...\n", fork_result);
 #endif
 
   wait_result = waitpid(fork_result, &status, 0);
 
   if (wait_result == (pid_t) -1) {
-      traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(002) - wait failed/interrupted");
+      traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(002) - wait failed/interrupted");
   } else if (wait_result != fork_result) {
-      traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(003) - unexpected child termination");
+      traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(003) - unexpected child termination");
   } else if (status) {
-      traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(004) - child abnormal termination");
+      traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(004) - child abnormal termination");
   } else {
 #ifdef GDC_WATCHDOG_DEBUG
-      traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: in parent, ran OK\n");
+      traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: in parent, ran OK\n");
 #endif
       return;
   }
@@ -115,7 +115,7 @@ void _GDC_out_pie(short width,
   for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
 
       if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s",
-                  myGlobals.dataFileDirs[idx], NTOP_GDC_OUT_PIE_ERROR) < 0)
+                  myGlobals.dataFileDirs[idx], HTML_GDC_OUT_PIE_ERROR_FILE) < 0)
           BufferTooShort();
   
 #ifdef WIN32
@@ -137,7 +137,7 @@ void _GDC_out_pie(short width,
   if(fd != NULL) {
       int bufsize=sizeof(tmpStr);
 #ifdef GDC_WATCHDOG_DEBUG
-      traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: sending error graphic, '%s'\n", tmpStr);
+      traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: sending error graphic, '%s'\n", tmpStr);
 #endif
       for(;;) {
           len = fread(tmpStr, sizeof(char), bufsize, fd);
@@ -147,19 +147,19 @@ void _GDC_out_pie(short width,
           if(len <= bufsize) break;
       }
 #ifdef GDC_WATCHDOG_DEBUG
-      traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: sent error graphic\n");
+      traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: sent error graphic\n");
 #endif
       fclose(fd);
   } else {
-      traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(005) - unable to find %s\n", 
-                              NTOP_GDC_OUT_PIE_ERROR);
+      traceEvent(CONST_TRACE_ERROR, "ERROR: GDC_out_pie(005) - unable to find %s\n", 
+                              HTML_GDC_OUT_PIE_ERROR_FILE);
   }
   return;
 }
 
 #define GDC_out_pie(w, h, file, type, slices, labels, data) _GDC_out_pie(w, h, file, type, slices, labels, data)
 
-#else /* DISABLE_GDC_WATCHDOG */
+#else /* PARM_DISABLE_GDC_WATCHDOG */
 
 #undef GDC_out_pie
 
@@ -172,7 +172,7 @@ void _GDC_out_pie(short width,
 #warning
 #warning
 #endif
-#endif /* DISABLE_GDC_WATCHDOG */
+#endif /* PARM_DISABLE_GDC_WATCHDOG */
 
 /* ************************ */
 
@@ -185,7 +185,7 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
 #ifdef GDC_WATCHDOG_DEBUG
   int byteCount=0;
 
-  traceEvent(TRACE_INFO, "GDC_WATCHDOG_DEBUG: Sending graphics file, %s\n", fileName);
+  traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: Sending graphics file, %s\n", fileName);
 #endif
 
   if((fd = fopen(fileName, "rb")) != NULL) {
@@ -202,12 +202,12 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
     }
 
 #ifdef GDC_WATCHDOG_DEBUG
-    traceEvent(TRACE_INFO, "DEBUG: Sent graphics file, %d bytes\n", byteCount);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Sent graphics file, %d bytes\n", byteCount);
 #endif
 
     fclose(fd);
   } else 
-    traceEvent(TRACE_WARNING, "WARNING: unable to open file %s", fileName);
+    traceEvent(CONST_TRACE_WARNING, "WARNING: unable to open file %s", fileName);
 
   if (doNotUnlink == 0) {
       unlink(fileName);
@@ -401,11 +401,11 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     }
 
     if(num == 0) {
-      traceEvent(TRACE_WARNING, "WARNING: Graph failure (1)");
+      traceEvent(CONST_TRACE_WARNING, "WARNING: Graph failure (1)");
       return; /* TODO: this has to be handled better */
     }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.graphMutex, "pktHostTrafficDistrib");
 #endif
 
@@ -444,7 +444,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -505,11 +505,11 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     }
 
     if(num == 0) {
-      traceEvent(TRACE_WARNING, "WARNING: Graph failure (2)");
+      traceEvent(CONST_TRACE_WARNING, "WARNING: Graph failure (2)");
       return; /* TODO: this has to be handled better */
     }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.graphMutex, "pktHostFragmentDistrib");
 #endif
 
@@ -547,7 +547,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 
     fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -587,11 +587,11 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     if(p[num] > 0) { lbl[num++] = "Non Frag"; }
 
     if(num == 0) {
-      traceEvent(TRACE_WARNING, "WARNING: Graph failure (3)");
+      traceEvent(CONST_TRACE_WARNING, "WARNING: Graph failure (3)");
       return; /* TODO: this has to be handled better */
     }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.graphMutex, "pktHostFragmentDistrib");
 #endif
 
@@ -629,7 +629,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 
     fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -651,7 +651,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   int useFdOpen = 0;
 
   if(theHost->protoIPTrafficInfos == NULL) {
-    traceEvent(TRACE_WARNING, "WARNING: Graph failure (5)");
+    traceEvent(CONST_TRACE_WARNING, "WARNING: Graph failure (5)");
     return;
   }
 
@@ -701,7 +701,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     }
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "pktHostTrafficDistrib");
 #endif
 
@@ -740,7 +740,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -801,7 +801,7 @@ void pktSizeDistribPie(void) {
   };
 
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "pktSizeDistrib");
 #endif
 
@@ -839,7 +839,7 @@ void pktSizeDistribPie(void) {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -905,7 +905,7 @@ void pktTTLDistribPie(void) {
     lbl[num++] = "<= 255";
   };
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "pktSizeDistrib");
 #endif
 
@@ -943,7 +943,7 @@ void pktTTLDistribPie(void) {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -979,7 +979,7 @@ void ipProtoDistribPie(void) {
     lbl[num++] = "Loc->Rem";
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "ipProtoDistribPie");
 #endif
 
@@ -1017,7 +1017,7 @@ void ipProtoDistribPie(void) {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -1060,7 +1060,7 @@ void interfaceTrafficPie(void) {
     }
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "interfaceTrafficPie");
 #endif
 
@@ -1098,7 +1098,7 @@ void interfaceTrafficPie(void) {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -1142,7 +1142,7 @@ void pktCastDistribPie(void) {
     lbl[num++] = "Multicast";
   };
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "pktCastDistribPie");
 #endif
 
@@ -1180,7 +1180,7 @@ void pktCastDistribPie(void) {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -1209,7 +1209,7 @@ void drawTrafficPie(void) {
   if(p[1] > 0)
     num++;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "drawTrafficPie");
 #endif
 
@@ -1246,7 +1246,7 @@ void drawTrafficPie(void) {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -1269,7 +1269,7 @@ void drawThptGraph(int sortedColumn) {
 
   memset(graphData, 0, sizeof(graphData));
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "drawThptGraph");
 #endif
 
@@ -1413,7 +1413,7 @@ void drawThptGraph(int sortedColumn) {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -1467,7 +1467,7 @@ void drawGlobalProtoDistribution(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value; lbl[idx] = "Other"; idx++; }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "drawGlobalProtoDistribution");
 #endif
 
@@ -1504,7 +1504,7 @@ void drawGlobalProtoDistribution(void) {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -1536,7 +1536,7 @@ void drawGlobalIpProtoDistribution(void) {
     }
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "drawGlobalIpProtoDistribution");
 #endif
 
@@ -1572,7 +1572,7 @@ void drawGlobalIpProtoDistribution(void) {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -1592,7 +1592,7 @@ void drawHostsDistanceGraph() {
 
   memset(graphData, 0, sizeof(graphData));
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "drawThptGraph");
 #endif
 
@@ -1627,7 +1627,7 @@ void drawHostsDistanceGraph() {
     graphData[i] = 0;
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "drawHostsDistanceGraph");
 #endif
 
@@ -1646,7 +1646,7 @@ void drawHostsDistanceGraph() {
     }
   }
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 
@@ -1661,7 +1661,7 @@ void drawHostsDistanceGraph() {
 
   fclose(fd);
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.graphMutex);
 #endif
 
@@ -1678,4 +1678,4 @@ void gdImageWBMP() {; }
 #endif
 
 #endif /* HAVE_GDCHART */
-#endif /* MICRO_NTOP   */
+#endif /* MAKE_MICRO_NTOP   */

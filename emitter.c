@@ -21,14 +21,6 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#define PERL_LANGUAGE       1
-#define PHP_LANGUAGE        2
-#define XML_LANGUAGE        3
-#define PYTHON_LANGUAGE     4
-#define NO_LANGUAGE         5
-#define NB_LANGUAGES        NO_LANGUAGE
-#define DEFAULT_LANGUAGE    NO_LANGUAGE
-
 /* Python support courtesy of Nicola Larosa <n.larosa@araknos.it> */
 /*
   This file has been significantly reworked
@@ -43,7 +35,7 @@ char *languages[] = { "", "perl", "php", "xml", "python", "no" };
 static void sendEmitterString(FILE *fDescr, char *theString) {
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "sendEmitterString(%X, '%s')", fDescr, theString);
+  traceEvent(CONST_TRACE_INFO, "sendEmitterString(%X, '%s')", fDescr, theString);
 #endif
 
   if(fDescr == NULL)
@@ -57,20 +49,20 @@ static void sendEmitterString(FILE *fDescr, char *theString) {
 static void initWriteArray(FILE *fDescr, int lang) {
 
   switch(lang) {
-  case PERL_LANGUAGE:
+  case FLAG_PERL_LANGUAGE:
     sendEmitterString(fDescr, "%ntopHash =(\n");
     break ;
-  case PHP_LANGUAGE:
+  case FLAG_PHP_LANGUAGE:
     sendEmitterString(fDescr, "$ntopHash = array(\n");
     break ;
-  case PYTHON_LANGUAGE:
+  case FLAG_PYTHON_LANGUAGE:
     sendEmitterString(fDescr, "ntopDict = {\n");
     break ;
-  case XML_LANGUAGE:
+  case FLAG_XML_LANGUAGE:
     sendEmitterString(fDescr, "<rpc-reply xmlns:ntop=\"http://www.ntop.org/ntop.dtd\">"
 		      "\n<ntop-traffic-information>\n");
     break ;
-  case NO_LANGUAGE:
+  case FLAG_NO_LANGUAGE:
     break ;
   }
 }
@@ -79,17 +71,17 @@ static void initWriteArray(FILE *fDescr, int lang) {
 
 static void endWriteArray(FILE *fDescr, int lang) {
   switch(lang) {
-  case PERL_LANGUAGE:
-  case PHP_LANGUAGE:
+  case FLAG_PERL_LANGUAGE:
+  case FLAG_PHP_LANGUAGE:
     sendEmitterString(fDescr, ");\n");
     break ;
-  case PYTHON_LANGUAGE:
+  case FLAG_PYTHON_LANGUAGE:
     sendEmitterString(fDescr, "}\n");
     break;
-  case XML_LANGUAGE:
+  case FLAG_XML_LANGUAGE:
     sendEmitterString(fDescr, "</ntop-traffic-information>\n</rpc-reply>\n");
     break ;
-  case NO_LANGUAGE:
+  case FLAG_NO_LANGUAGE:
     sendEmitterString(fDescr, "\n");
     break ;
   }
@@ -120,27 +112,27 @@ static void initWriteKey(FILE *fDescr, int lang, char *indent,
   validateString(keyName);
 
   switch(lang) {
-  case PERL_LANGUAGE:
+  case FLAG_PERL_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s'%s' => {\n",indent, keyName) < 0)
       BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
-  case PHP_LANGUAGE:
+  case FLAG_PHP_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s'%s' => array(\n",indent, keyName) < 0)
       BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
-  case PYTHON_LANGUAGE:
+  case FLAG_PYTHON_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s'%s': {\n",indent, keyName) < 0)
       BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
-  case XML_LANGUAGE:
+  case FLAG_XML_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s<%s>\n", indent, keyName) < 0)
       BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
-  case NO_LANGUAGE:
+  case FLAG_NO_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s|",
 		numEntriesSent == 0 ? "key" : keyName) < 0)
       BufferTooShort();
@@ -163,27 +155,27 @@ static void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, cha
 
   validateString(keyName);
   switch(lang) {
-  case PERL_LANGUAGE:
+  case FLAG_PERL_LANGUAGE:
     if(snprintf(buf, sizeof(buf),"%s}%c\n",indent,last) < 0)
       BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
-  case PHP_LANGUAGE:
+  case FLAG_PHP_LANGUAGE:
     if(snprintf(buf, sizeof(buf),"%s)%c\n",indent,last) < 0)
       BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
-  case XML_LANGUAGE:
+  case FLAG_XML_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s</%s>\n",indent, keyName) < 0)
       BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
-  case PYTHON_LANGUAGE:
+  case FLAG_PYTHON_LANGUAGE:
     if(snprintf(buf, sizeof(buf),"%s}%c\n",indent,last) < 0)
       BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
-  case NO_LANGUAGE:
+  case FLAG_NO_LANGUAGE:
     if(strcmp(indent, "") == 0) sendEmitterString(fDescr, "\n");
     break ;
   }
@@ -198,8 +190,8 @@ static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
   validateString(name);
 
   switch(lang) {
-  case PERL_LANGUAGE:
-  case PHP_LANGUAGE:
+  case FLAG_PERL_LANGUAGE:
+  case FLAG_PHP_LANGUAGE:
     /* In the case of hostNumIpAddress and hostSymIpAddress,
        the pointer is not null, but the string is empty.
        In that case, don't create the key in the array.
@@ -210,21 +202,21 @@ static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
 	  BufferTooShort();  sendEmitterString(fDescr, buf);
       }
     break ;
-  case XML_LANGUAGE:
+  case FLAG_XML_LANGUAGE:
     if((value != NULL) && (value[0] != '\0'))
       {
 	if(snprintf(buf, sizeof(buf), "%s<%s>%s</%s>\n", indent, name, value, name) < 0)
 	  BufferTooShort();  sendEmitterString(fDescr, buf);
       }
     break ;
-  case PYTHON_LANGUAGE:
+  case FLAG_PYTHON_LANGUAGE:
     if((value != NULL) && (value[0] != '\0'))
       {
 	if(snprintf(buf, sizeof(buf), "%s'%s': '%s'%c\n", indent,name,value,last) < 0)
  	  BufferTooShort();  sendEmitterString(fDescr, buf);
        }
      break ;
-  case NO_LANGUAGE:
+  case FLAG_NO_LANGUAGE:
     if(value != NULL) {
       if(snprintf(buf, sizeof(buf), "%s|", numEntriesSent == 0 ? name : value) < 0)
 	BufferTooShort();  sendEmitterString(fDescr, buf);
@@ -287,7 +279,7 @@ static void wrtIntFloatItm(FILE *fDescr, int lang, char *indent, int name,
 			   float value, char last, int numEntriesSent) {
   char buf[80];
   sprintf(buf,"%d", name);
-  wrtFloatItm(fDescr, lang, indent, (lang == XML_LANGUAGE) ? "number" : buf,
+  wrtFloatItm(fDescr, lang, indent, (lang == FLAG_XML_LANGUAGE) ? "number" : buf,
 	      value, last, numEntriesSent);
 }
 
@@ -352,7 +344,7 @@ static int checkFilter(char* theFilter,
 
 void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64], filter[128];
-  unsigned int numEntries=0, lang=DEFAULT_LANGUAGE;
+  unsigned int numEntries=0, lang=DEFAULT_FLAG_LANGUAGE;
   struct re_pattern_buffer filterPattern;
   FlowFilterList *list = myGlobals.flowsList;
 
@@ -380,8 +372,8 @@ void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
 	tmpStr[i] = 0;
 
 	if(strcasecmp(tmpStr, "language") == 0) {
-	  lang = DEFAULT_LANGUAGE;
-	  for(j=1;j <= NB_LANGUAGES;j++) {
+	  lang = DEFAULT_FLAG_LANGUAGE;
+	  for(j=1;j <= MAX_FLAG_LANGUGE;j++) {
 	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0)
 	      lang = j;
 	  }
@@ -425,7 +417,7 @@ void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
 	endWriteKey(fDescr, lang,   "", list->flowName, ',');
 	numEntries++;
 
-	if((lang == NO_LANGUAGE) && (numEntries == 1))
+	if((lang == FLAG_NO_LANGUAGE) && (numEntries == 1))
 	  goto REPEAT_FLOWS;
       }
 
@@ -443,9 +435,9 @@ void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
 
 void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64];
-  unsigned int numEntries=0, lang=DEFAULT_LANGUAGE;
+  unsigned int numEntries=0, lang=DEFAULT_FLAG_LANGUAGE;
   int i, j;
-  char buf[BUF_SIZE];
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
   memset(key, 0, sizeof(key));
 
@@ -468,8 +460,8 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 	tmpStr[i] = 0;
 
 	if(strcasecmp(tmpStr, "language") == 0) {
-	  lang = DEFAULT_LANGUAGE;
-	  for(j=1;j <= NB_LANGUAGES;j++) {
+	  lang = DEFAULT_FLAG_LANGUAGE;
+	  for(j=1;j <= MAX_FLAG_LANGUGE;j++) {
 	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0)
 	      lang = j;
 	  }
@@ -512,7 +504,7 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 	    endWriteKey(fDescr, lang,   "", buf, ',');
 	    numEntries++;
 
-	    if((lang == NO_LANGUAGE) && (numEntries == 1))
+	    if((lang == FLAG_NO_LANGUAGE) && (numEntries == 1))
 	      goto REPEAT_MATRIX;
 
 	    numEntries++;
@@ -528,11 +520,11 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 
 void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64], filter[128], *hostKey = NULL;
-  unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE, j, localView=0;
+  unsigned int idx, numEntries=0, lang=DEFAULT_FLAG_LANGUAGE, j, localView=0;
   HostTraffic *el;
   struct re_pattern_buffer filterPattern;
   unsigned char shortView = 0;
-  char workSymIpAddress[MAX_HOST_SYM_NAME_LEN_HTML];
+  char workSymIpAddress[MAX_LEN_SYM_HOST_NAME_HTML];
   char * angleLocation;
   TrafficCounter ctr;
 
@@ -560,8 +552,8 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	tmpStr[i] = 0;
 
 	if(strcasecmp(tmpStr, "language") == 0) {
-	  lang = DEFAULT_LANGUAGE;
-	  for(j=1;j <= NB_LANGUAGES;j++) {
+	  lang = DEFAULT_FLAG_LANGUAGE;
+	  for(j=1;j <= MAX_FLAG_LANGUGE;j++) {
 	    if(strcasecmp(&tmpStr[i+1], languages[j]) == 0)
 	      lang = j;
 	  }
@@ -607,21 +599,21 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
   for(idx=0; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
     if(idx != myGlobals.otherHostEntryIdx) {
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
 #endif
       if((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) == NULL) {
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
 	releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 	continue;
       } else
 	el->refCount++;
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 
-      strncpy(workSymIpAddress, el->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN_HTML);
+      strncpy(workSymIpAddress, el->hostSymIpAddress, MAX_LEN_SYM_HOST_NAME_HTML);
       if ((angleLocation = strchr(workSymIpAddress, '<')) != NULL) {
 	angleLocation[0] = '\0';
       }
@@ -647,9 +639,9 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
     REPEAT_HOSTS:
       if(numEntries > 0)
-	endWriteKey(fDescr, lang,"",  (lang == XML_LANGUAGE) ? "host-information" : hostKey, ',');
+	endWriteKey(fDescr, lang,"",  (lang == FLAG_XML_LANGUAGE) ? "host-information" : hostKey, ',');
 
-      initWriteKey(fDescr, lang, "", (lang == XML_LANGUAGE) ? "host-information" : hostKey, numEntries);
+      initWriteKey(fDescr, lang, "", (lang == FLAG_XML_LANGUAGE) ? "host-information" : hostKey, numEntries);
 
       /* ************************ */
 
@@ -1152,19 +1144,19 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
       numEntries++;
 
-      if((lang == NO_LANGUAGE) && (numEntries == 1)) goto REPEAT_HOSTS;
+      if((lang == FLAG_NO_LANGUAGE) && (numEntries == 1)) goto REPEAT_HOSTS;
 
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
 #endif
       el->refCount--;
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.hostsHashMutex);
 #endif
     }
   }
 
-  if(numEntries > 0) endWriteKey(fDescr, lang,"", (lang == XML_LANGUAGE) ? "host-information" : hostKey, ' ');
+  if(numEntries > 0) endWriteKey(fDescr, lang,"", (lang == FLAG_XML_LANGUAGE) ? "host-information" : hostKey, ' ');
 
   endWriteArray(fDescr, lang);
 
@@ -1175,7 +1167,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 /* ********************************** */
 
 void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
-  unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE;
+  unsigned int idx, numEntries=0, lang=DEFAULT_FLAG_LANGUAGE;
   HostTraffic *el;
 
   if(options != NULL) {
@@ -1195,8 +1187,8 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
 
 	if(strcmp(tmpStr, "language") == 0) {
 
-	  lang = DEFAULT_LANGUAGE;
-	  for(j=1;j <= NB_LANGUAGES;j++) {
+	  lang = DEFAULT_FLAG_LANGUAGE;
+	  for(j=1;j <= MAX_FLAG_LANGUGE;j++) {
 	    if(strcmp(&tmpStr[i+1], languages[j]) == 0)
 	      lang = j;
 	  }
@@ -1210,7 +1202,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
   initWriteArray(fDescr, lang);
 
   for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
 #endif
     if(((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
@@ -1226,7 +1218,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
 
       numEntries++;
     }
-#ifdef MULTITHREADED
+#ifdef CFG_MULTITHREADED
       releaseMutex(&myGlobals.hostsHashMutex);
 #endif
   }
@@ -1238,7 +1230,7 @@ void dumpNtopHashIndexes(FILE *fDescr, char* options, int actualDeviceId) {
 
 void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
   char intoabuf[32], key[16], localbuf[32], filter[128], *keyName = NULL;
-  int lang=DEFAULT_LANGUAGE, i, numEntries, localView=0;
+  int lang=DEFAULT_FLAG_LANGUAGE, i, numEntries, localView=0;
   struct re_pattern_buffer filterPattern;
   unsigned short shortView = 0;
 
@@ -1262,8 +1254,8 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	tmpStr[i] = 0;
 
 	if(strcmp(tmpStr, "language") == 0) {
-	  lang = DEFAULT_LANGUAGE;
-	  for(j=1;j <= NB_LANGUAGES;j++) {
+	  lang = DEFAULT_FLAG_LANGUAGE;
+	  for(j=1;j <= MAX_FLAG_LANGUGE;j++) {
 	    if(strcmp(&tmpStr[i+1], languages[j]) == 0)
 	      lang = j;
 	  }
@@ -1313,11 +1305,11 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
       continue;
 
   REPEAT:
-    if(numEntries > 0) { endWriteKey(fDescr, lang,"", (lang == XML_LANGUAGE) ? "device-information" : keyName, ','); }
+    if(numEntries > 0) { endWriteKey(fDescr, lang,"", (lang == FLAG_XML_LANGUAGE) ? "device-information" : keyName, ','); }
 
     keyName = myGlobals.device[i].name;
 
-    initWriteKey(fDescr, lang, "", (lang == XML_LANGUAGE) ? "device-information" : keyName, numEntries);
+    initWriteKey(fDescr, lang, "", (lang == FLAG_XML_LANGUAGE) ? "device-information" : keyName, numEntries);
 
     wrtStrItm(fDescr, lang, "\t", "name", myGlobals.device[i].name, ',', numEntries);
 
@@ -1602,10 +1594,10 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
     }
 
     numEntries++;
-    if((lang == NO_LANGUAGE) && (numEntries == 1)) goto REPEAT;
+    if((lang == FLAG_NO_LANGUAGE) && (numEntries == 1)) goto REPEAT;
   }
 
-  if(numEntries > 0) endWriteKey(fDescr, lang, "", (lang == XML_LANGUAGE) ? "device-information" : keyName, ' ');
+  if(numEntries > 0) endWriteKey(fDescr, lang, "", (lang == FLAG_XML_LANGUAGE) ? "device-information" : keyName, ' ');
   endWriteArray(fDescr, lang);
 
   if((filter[0] != '\0') && filterPattern.fastmap)

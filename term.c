@@ -63,7 +63,7 @@ void termIPSessions(void) {
       }
     }
 
-#ifdef USE_SESSIONS_CACHE
+#ifdef PARM_USE_SESSIONS_CACHE
     for(i=0; i<myGlobals.sessionsCacheLen; i++)
       free(myGlobals.sessionsCache[i]);
 #endif
