@@ -32,6 +32,10 @@
 #undef malloc
 #undef free
 #undef strdup
+/* gdbm routines */
+#undef gdbm_firstkey
+#undef gdbm_nextkey
+#undef gdbm_fetch
 
 typedef struct memoryBlock {
   void*               memoryLocation;   /* Malloc address              */
@@ -48,7 +52,7 @@ unsigned int PrintMemoryBlocks(); /* Forward declaration */
 
 /* *************************************** */
 
-static void* myMalloc(size_t theSize, int theLine, char* theFile) {
+static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile) {
   MemoryBlock *tmpBlock;
 
 #if defined(MULTITHREADED)
@@ -58,33 +62,24 @@ static void* myMalloc(size_t theSize, int theLine, char* theFile) {
   tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
 
   if(tmpBlock == NULL) {
-    traceEvent(TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n", 
-	    theFile, theLine);
+    traceEvent(TRACE_WARNING, "Malloc error (not enough memory): %s, %d\n",  theFile, theLine);
 
 #if defined(MULTITHREADED)
     releaseMutex(&myGlobals.leaksMutex);
 #endif
-    return(NULL);
+    exit(-1);
   }
   
-  tmpBlock->blockSize = theSize;
-  tmpBlock->memoryLocation = malloc(theSize);
-  memset(tmpBlock->memoryLocation, 0xee, theSize); /* Fill it with garbage */
-  tmpBlock->alreadyTraced = 0;
-
-  myGlobals.allocatedMemory += theSize;
-
-  if(tmpBlock->memoryLocation == NULL) {
-    traceEvent(TRACE_WARNING, "Malloc error (not enough memory): %s, %d (size = %d)\n", 
-	    theFile, theLine, (int)theSize);
-#if defined(MULTITHREADED)
-    releaseMutex(&myGlobals.leaksMutex);
-#endif
-    return(NULL);
-  }
-
-  if(snprintf(tmpStr, sizeof(tmpStr), "file %s, line %d.", theFile, theLine) < 0)
+  tmpBlock->blockSize        = ptrLen;
+  tmpBlock->memoryLocation   = ptr;
+  tmpBlock->alreadyTraced    = 0;
+  myGlobals.allocatedMemory += tmpBlock->blockSize;
+      
+  if(snprintf(tmpStr, sizeof(tmpStr), "%s:%d.", theFile, theLine) < 0)
     BufferTooShort();
+
+  traceEvent(TRACE_INFO, "malloc(%d):%s  [tot=%u]", ptrLen, tmpStr, myGlobals.allocatedMemory);
+
   tmpBlock->programLocation = strdup(tmpStr);
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
@@ -92,8 +87,17 @@ static void* myMalloc(size_t theSize, int theLine, char* theFile) {
 #if defined(MULTITHREADED)
   releaseMutex(&myGlobals.leaksMutex);
 #endif
+}
 
-  return(tmpBlock->memoryLocation);
+/* ********************************* */
+
+static void* myMalloc(size_t theSize, int theLine, char* theFile) {
+  void *theMem;
+
+  theMem = malloc(theSize);
+  memset(theMem, 0xee, theSize); /* Fill it with garbage */
+  storePtr(theMem, theSize, theLine, theFile);
+  return(theMem);
 }
 
 /* *************************************** */
@@ -184,6 +188,9 @@ static void myFree(void **thePtr, int theLine, char* theFile) {
   } else {
     myGlobals.allocatedMemory -= theScan->blockSize;
 
+    traceEvent(TRACE_INFO, "free(%d):%s  [tot=%u]",
+	       theScan->blockSize, theScan->programLocation, myGlobals.allocatedMemory);
+
     free(theScan->memoryLocation);
     free(theScan->programLocation);
 
@@ -252,7 +259,7 @@ unsigned int PrintMemoryBlocks(void) {
     theScan = theScan->nextBlock;
   }
 
-  traceEvent(TRACE_INFO,"\nTotal allocated memory: %u bytes\n\n", totMem);
+  traceEvent(TRACE_INFO,"Total allocated memory: %u bytes", totMem);
 
   /* PrintMemoryBlocks(); */
 
@@ -420,8 +427,49 @@ void ntop_free(void **ptr, char* file, int line) {
 
 /* ****************************************** */
 
+datum ntop_gdbm_firstkey(GDBM_FILE g, char* theFile, int theLine) {
+  datum theData = gdbm_firstkey(g);
+
+  if(theData.dptr != NULL) {
+    storePtr(theData.dptr, theData.dsize, theLine, theFile);
+    traceEvent(TRACE_INFO, "gdbm_firstkey(%s)", theData.dptr);
+  }
+
+  return(theData);
+}
+
+/* ******************************************* */
+
+datum ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* theFile, int theLine) {
+  datum theData = gdbm_nextkey(g, d);
+
+  if(theData.dptr != NULL) {
+    storePtr(theData.dptr, theData.dsize, theLine, theFile);
+    traceEvent(TRACE_INFO, "gdbm_nextkey(%s)", theData.dptr);
+  }
+
+  return(theData);
+}
+
+/* ******************************************* */
+
+datum ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine) {
+  datum theData = gdbm_fetch(g, d);
+
+  if(theData.dptr != NULL) {
+    storePtr(theData.dptr, theData.dsize, theLine, theFile);
+    traceEvent(TRACE_INFO, "gdbm_fetch(%s) %x", theData.dptr, theData.dptr);
+  }
+
+  return(theData);
+}
+
+/* ****************************************** */
+/* ****************************************** */
+
 #else /* MEMORY_DEBUG */
 
+/* ****************************************** */
 /* ****************************************** */
 
 #undef malloc /* just to be safe */
@@ -516,8 +564,7 @@ void ntop_safefree(void **ptr, char* file, int line) {
 /* ****************************************** */
 
 #undef strdup /* just to be safe */
-char* ntop_safestrdup(char *ptr, char* file, int line) {
-  
+char* ntop_safestrdup(char *ptr, char* file, int line) {  
   if(ptr == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: strdup of NULL pointer @ %s:%d", file, line);
 	return(strdup(""));

@@ -204,7 +204,6 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-i <number>    | --interface <number>]               Interface index number to monitor\n");
 #endif
   fprintf(fp, "    [-o             | --no-mac]                           ntop will trust just IP addresses (no MACs)\n");
-  fprintf(fp, "    [-j             | --border-sniffer-mode]              Set ntop in border/gateway sniffing mode\n");
   fprintf(fp, "    [-k             | --filter-expression-in-extra-frame] Show kernel filter expression in extra frame\n");
   fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  Dump packets captured to a file (debug only!)\n");
   fprintf(fp, "    [-m <addresses> | --local-subnets <addresses>]        Local subnetwork(s) (see man page)\n");
@@ -287,7 +286,6 @@ void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-o (do nOt trust MAC addresses but just IPs)]\n");
-  fprintf(fp, "    [-j (set ntop in border gateway sniffing mode)]\n");
   fprintf(fp, "    [-k <show kernel filter expression in extra frame>]\n");
   fprintf(fp, "    [-l <path> (dump packets captured on a file: debug only!)]\n");
   fprintf(fp, "    [-m <local addresses (see man page)>]\n");

@@ -132,6 +132,10 @@ extern void initLeaks(void);
 extern void termLeaks(void);
 extern void resetLeaks(void);
 #ifdef MEMORY_DEBUG 
+#define gdbm_firstkey(a)     ntop_gdbm_firstkey(a, __FILE__, __LINE__)
+#define gdbm_nextkey(a, b)   ntop_gdbm_nextkey(a, b, __FILE__, __LINE__)
+#define gdbm_fetch(a, b)     ntop_gdbm_fetch(a, b, __FILE__, __LINE__)
+
 #define malloc(a)     ntop_malloc((unsigned int)a, __FILE__, __LINE__)
 #define calloc(a, b)  ntop_calloc((unsigned int)a, (unsigned int)b, __FILE__, __LINE__)
 #define realloc(p, a) ntop_realloc((void*)p, (unsigned int)a,  __FILE__, __LINE__)
@@ -143,6 +147,10 @@ extern void*          ntop_calloc(unsigned int c, unsigned int sz, char* file, i
 extern void*          ntop_realloc(void* ptr, unsigned int sz, char* file, int line);
 extern char*          ntop_strdup(char *str, char* file, int line);
 extern void           ntop_free(void **ptr, char* file, int line);
+extern datum          ntop_gdbm_firstkey(GDBM_FILE g, char* file, int line);
+extern datum          ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* file, int line);
+extern datum          ntop_gdbm_fetch(GDBM_FILE g, datum d, char* file, int line);
+
 #else
 /* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
 #define free(a)       ntop_safefree((void**)&(a), __FILE__, __LINE__)

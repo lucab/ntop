@@ -63,6 +63,9 @@ void termIPSessions(void) {
       }
     }
 
+    for(i=0; i<myGlobals.sessionsCacheLen; i++)
+      free(myGlobals.sessionsCache[i]);
+
     myGlobals.device[j].numTcpSessions = 0;
 
     while (myGlobals.device[j].fragmentList != NULL)

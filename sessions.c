@@ -386,7 +386,6 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     free(sessionToPurge->virtualPeerName);
 
   myGlobals.numTerminatedSessions++;
-
   myGlobals.device[actualDeviceId].numTcpSessions--;
 
   /* Memory recycle */

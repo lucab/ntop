@@ -103,6 +103,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   memset(&myGlobals, 0, sizeof(myGlobals));
 
 #ifdef MEMORY_DEBUG
+  myGlobals.allocatedMemory = 0;
   initLeaks(); /* Don't move this below nor above */
 #endif 
 
@@ -290,10 +291,6 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   myGlobals.mtuSize        = _mtuSize;
   myGlobals.headerSize     = _headerSize;
-
-#ifdef MEMORY_DEBUG
-  myGlobals.allocatedMemory = 0;
-#endif
 
   myGlobals.enableIdleHosts = 1;
 
