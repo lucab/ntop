@@ -2699,6 +2699,10 @@ void traceEvent(int eventTraceLevel, char* file,
       /* Skip over time - syslog() adds it automatically) */
       char *bufLog = &buf[strlen(bufTime)];
 
+#ifdef FORPRENPTL
+      accessMutex(&myGlobals.preNPTLlogMutex, "message");
+#endif
+
       /* SYSLOG and set */
       openlog("ntop", LOG_PID, myGlobals.runningPref.useSyslog);
 
@@ -2723,6 +2727,11 @@ void traceEvent(int eventTraceLevel, char* file,
       syslog(LOG_ERR, "%s", bufLog);
 #endif
       closelog();
+
+#ifdef FORPRENPTL
+      releaseMutex(&myGlobals.preNPTLlogMutex);
+#endif
+
     }
 #endif /* MAKE_WITH_SYSLOG */
 

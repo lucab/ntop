@@ -347,6 +347,10 @@ void initNtopGlobals(int argc, char * argv[]) {
 /* create the logView stuff Mutex first... must be before the 1st traceEvent() call */
 #ifdef CFG_MULTITHREADED
   createMutex(&myGlobals.logViewMutex);     /* synchronize logView buffer */
+#ifdef FORPRENPTL
+  #warning Making version for Pre NPTL Thread Library...
+  createMutex(&myGlobals.preNPTLlogMutex);     /* synchronize logView buffer */
+#endif
 #endif
   myGlobals.logViewNext = 0;
   myGlobals.logView = (char**)calloc(sizeof(char*),

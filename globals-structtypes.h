@@ -2089,6 +2089,9 @@ typedef struct ntopGlobals {
   PthreadMutex fcSessionsMutex;
   PthreadMutex purgePortsMutex;
   PthreadMutex securityItemsMutex;
+#ifdef FORPRENPTL
+  PthreadMutex preNPTLlogMutex;
+#endif
 
   pthread_t handleWebConnectionsThreadId;
 

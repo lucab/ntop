@@ -2,3 +2,5 @@
 
 echo "        Setting RedHat 8.0 specific flag values"
 
+CPPFLAGS="${CPPFLAGS} -DFORPRENPTL"
+
