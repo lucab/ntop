@@ -760,7 +760,7 @@ void setHostSerial(HostTraffic *el) {
     }
     else {
       traceEvent (CONST_TRACE_ERROR, "setHostSerial: Received NULL FC"
-		  "Address entry\n");
+		  "Address entry");
     }
   }
   else if (el->hostNumIpAddress[0] == '\0') {
@@ -915,7 +915,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 
       if(!messageShown) {
 	messageShown = 1;
-	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)\n", 
+	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)", 
 		   myGlobals.maxNumHashEntries);
       }
       
@@ -1208,7 +1208,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 
       if(!messageShown) {
 	messageShown = 1;
-	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)\n", 
+	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)", 
 		   myGlobals.maxNumHashEntries);
       }
       
@@ -1260,7 +1260,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     }
     
 #ifdef HASH_DEBUG
-    traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]\n",
+    traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]",
                el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
                myGlobals.device[actualDeviceId].actualHashSize, myGlobals.device[actualDeviceId].hostsno);
 #endif

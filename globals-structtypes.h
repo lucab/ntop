@@ -1683,7 +1683,7 @@ typedef struct ntopGlobals {
    * parameter set in the switch in main.c should be here.  Group other fields
    * in sections below.
    */
-  char *accessLogPath;               /* 'a' */
+  char *accessLogFile;               /* 'a' */
   u_char enablePacketDecoding;       /* 'b' */
   u_char stickyHosts;                /* 'c' */
   int daemonMode;                    /* 'd' */
@@ -1946,7 +1946,7 @@ typedef struct ntopGlobals {
   volatile unsigned long numHandledSIGPIPEerrors;
   u_short checkVersionStatus;
   time_t checkVersionStatusAgain;
-  char *gdVersionGuess;
+  char *gdVersionGuessValue;
   Counter setNonBlockingSleepCount;
 
   /* Purge */

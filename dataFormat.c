@@ -294,16 +294,12 @@ char* formatPkts(Counter pktNr, char* outStr, int outStrLen) {
 
 /* ************************************ */
 
-char* formatTime(time_t *theTime, short encodeString, char* outStr, int outStrLen) {
+char* formatTime(time_t *theTime, char* outStr, int outStrLen) {
   struct tm *locTime;
   struct tm myLocTime;
 
   locTime = localtime_r(theTime, &myLocTime);
-
-  if(encodeString)
-    strftime(outStr, outStrLen, "%x&nbsp;%X", locTime);
-  else
-    strftime(outStr, outStrLen, "%x %X", locTime);
+  strftime(outStr, outStrLen, CONST_LOCALE_TIMESPEC, locTime);
 
   return(outStr);
 }

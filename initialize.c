@@ -755,9 +755,9 @@ void initCounters(void) {
    * of functions that have been added along the way.
    */
   traceEvent(CONST_TRACE_INFO, "GDVERCHK: Guessing at libgd version");
-  myGlobals.gdVersionGuess = strdup(gdVersionGuess());
-  if(myGlobals.gdVersionGuess != NULL)
-    traceEvent(CONST_TRACE_INFO, "GDVERCHK: ... as %s", myGlobals.gdVersionGuess);
+  myGlobals.gdVersionGuessValue = strdup(gdVersionGuess());
+  if(myGlobals.gdVersionGuessValue != NULL)
+    traceEvent(CONST_TRACE_INFO, "GDVERCHK: ... as %s", myGlobals.gdVersionGuessValue);
 
 }
 
@@ -889,8 +889,7 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 	if((statbuf->st_ctime) && (statbuf->st_ctime > st_time))
 	  st_time = statbuf->st_ctime;
 
-	/* Use universal format: 01 Jan 2003 hh:mm:ss */
-	strftime(theDate, sizeof(theDate)-1, "%d %b %Y %H:%M:%S", localtime_r(&st_time, &t));
+	strftime(theDate, sizeof(theDate)-1, CONST_LOCALE_TIMESPEC, localtime_r(&st_time, &t));
 	theDate[sizeof(theDate)-1] = '\0';
 	now  = time(NULL);
 	traceEvent(CONST_TRACE_NOISY,

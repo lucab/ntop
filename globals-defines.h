@@ -229,10 +229,6 @@
 
 #endif
 
-#ifndef WIN32
-#define MAKE_RMON_SUPPORT
-#endif
-
 /*
  *  Defined in (Linux) <arpa/nameser_compat.h> which is included from
  *                     <arpa/nameser.h>
@@ -662,8 +658,6 @@
  */
 #define CONST_COLOR_1                       "#CCCCFF"
 #define CONST_COLOR_2                       "#FFCCCC"
-#define CONST_COLOR_3                       "#EEEECC"
-#define CONST_COLOR_4                       "#FF0000"
 
 #ifdef MEMORY_DEBUG
 #define MAX_PER_DEVICE_HASH_LIST           256
@@ -864,19 +858,6 @@
 #define CONST_NUM_TABLE_ROWS_PER_PAGE       128
 
 /*
- * Values for dynamic adjustment of idle purge time...
- *
- *   The limit of hosts to purge per cycle will be adjusted (approximately)
- *   up or down until it falls between _MINIMUM and _MAXIMUM (in seconds).
- *
- *   The adjustment is down by ADJUST_FACTOR / (ADJUST_FACTOR + 1), eg 10/11ths
- *                    or up by (ADJUST_FACTOR + 1) / ADJUST_FACTOR, eg 11/10ths
- */
-#define CONST_IDLE_PURGE_MINIMUM_TARGET_TIME 0.5
-#define CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME 5.0
-#define CONST_IDLE_PURGE_ADJUST_FACTOR       10
-
-/*
  * Size of myGlobals.transTimeHash[], used to produce the "IP Service Stats"
  * in the "Info about host" report.  If you are monitoring a busy server
  * handling lots of long running requests, you might need to up this -
@@ -1058,6 +1039,7 @@
 
 #define CONST_ADD_URLS_HTML                 "addURLs.html"
 #define CONST_ADD_USERS_HTML                "addUsers.html"
+#define CONST_BAR_ALLPROTO_DIST             "allProtoDistribution"
 #define CONST_AS_LIST_HTML                  "asList.html"
 #define CONST_CHANGE_FILTER_HTML            "changeFilter.html"
 #define CONST_CREDITS_HTML                  "Credits.html"
@@ -1068,6 +1050,7 @@
 #define CONST_DELETE_USER                   "deleteUser"
 #define CONST_DO_ADD_URL                    "doAddURL"
 #define CONST_DO_ADD_USER                   "doAddUser"
+#define CONST_DO_CHANGE_FILTER              "doChangeFilter"
 #define CONST_DOMAIN_STATS_HTML             "domainStats.html"
 #define CONST_DUMP_DATA_HTML                "dumpData.html"
 #define CONST_DUMP_HOSTS_INDEXES_HTML       "dumpDataIndexes.html"
@@ -1076,27 +1059,34 @@
 #define CONST_DUMP_TRAFFIC_DATA_HTML        "dumpTrafficData.html"
 #define CONST_DUMP_NTOP_XML                 "dump.xml"
 #define CONST_FAVICON_ICO                   "favicon.ico"
-#define CONST_FC_ACTIVITY_HTML              "FcActivity.html"
-#define CONST_FC_DATA_HTML                  "FcData.html"
-#define CONST_FC_HOSTS_INFO_HTML            "FcHostsInfo.html"
-#define CONST_FC_SESSIONS_HTML              "FcSessions.html"
-#define CONST_FC_THPT_HTML                  "FcThpt.html"
-#define CONST_FC_TRAFFIC_HTML               "FcShowStats.html"
+#define CONST_FC_ACTIVITY_HTML              "fcActivity.html"
+#define CONST_FC_DATA_HTML                  "fcData.html"
+#define CONST_FC_HOSTS_INFO_HTML            "fcHostsInfo.html"
+#define CONST_PIE_FC_PKT_SZ_DIST            "fcPktSizeDistribPie"
+#define CONST_BAR_FC_PROTO_DIST             "fcProtoDistribution"
+#define CONST_FC_SESSIONS_HTML              "fcSessions.html"
+#define CONST_FC_TRAFFIC_HTML               "fcShowStats.html"
+#define CONST_FC_THPT_HTML                  "fcThpt.html"
 #define CONST_FILTER_INFO_HTML              "filterInfo.html"
 #define CONST_NTOP_HELP_HTML                "help.html"
 #define CONST_HOME_HTML                     "home.html"
 #define CONST_HOME_UNDERSCORE_HTML          "home_.html"
 #define CONST_HOST_HTML                     "host.html"
+#define CONST_BAR_HOST_DISTANCE             "hostsDistanceChart"
 #define CONST_HOSTS_INFO_HTML               "hostsInfo.html"
 #define CONST_INDEX_HTML                    "index.html"
 #define CONST_INFO_NTOP_HTML                "info.html"
-#define CONST_IP_L_2_L_HTML                 "IpL2L.html"
-#define CONST_IP_L_2_R_HTML                 "IpL2R.html"
+#define CONST_PIE_INTERFACE_DIST            "interfaceTrafficPie"
+#define CONST_IP_L_2_L_HTML                 "ipL2L.html"
+#define CONST_IP_L_2_R_HTML                 "ipL2R.html"
 #define CONST_IP_PROTO_DISTRIB_HTML         "ipProtoDistrib.html"
+#define CONST_PIE_IPPROTO_RL_DIST           "ipProtoDistribPie"
+#define CONST_BAR_IPPROTO_DIST              "ipProtoDistribution"
 #define CONST_IP_PROTO_USAGE_HTML           "ipProtoUsage.html"
-#define CONST_IP_R_2_L_HTML                 "IpR2L.html"
-#define CONST_IP_R_2_R_HTML                 "IpR2R.html"
+#define CONST_IP_R_2_L_HTML                 "ipR2L.html"
+#define CONST_IP_R_2_R_HTML                 "ipR2R.html"
 #define CONST_IP_TRAFFIC_MATRIX_HTML        "ipTrafficMatrix.html"
+#define CONST_PIE_IP_TRAFFIC                "ipTrafficPie"
 #define CONST_LEFTMENU_HTML                 "leftmenu.html"
 #define CONST_LEFTMENU_NOJS_HTML            "leftmenu-nojs.html"
 #define CONST_HOSTS_LOCAL_INFO_HTML         "localHostsInfo.html"
@@ -1110,15 +1100,19 @@
 #define CONST_MAN_NTOP_HTML                 "ntop.html"
 #define CONST_NTOP_P3P                      "ntop.p3p"
 #define CONST_PROBLEMRPT_HTML               "ntopProblemReport.html"
+#define CONST_PIE_PKT_CAST_DIST             "pktCastDistribPie"
+#define CONST_PIE_PKT_SIZE_DIST             "pktSizeDistribPie"
+#define CONST_PIE_TTL_DIST                  "pktTTLDistribPie"
+#define CONST_PLUGINS_HEADER                "plugins/"
 #define CONST_PRIVACYCLEAR_HTML             "privacyFlagClear.html"
 #define CONST_PRIVACYFORCE_HTML             "privacyFlagForce.html"
 #define CONST_PRIVACYNOTICE_HTML            "privacyNotice.html"
-#define CONST_PLUGINS_HEADER                "plugins/"
 #define CONST_RESET_STATS_HTML              "resetStats.html"
-#define CONST_SCSI_BYTES_HTML               "ScsiBytes.html"
-#define CONST_SCSI_STATUS_HTML              "ScsiStatus.html"
-#define CONST_SCSI_TIMES_HTML               "ScsiTimes.html"
-#define CONST_SCSI_TM_HTML                  "ScsiTMInfo.html"
+#define CONST_SCSI_BYTES_HTML               "scsiBytes.html"
+#define CONST_BAR_LUNSTATS_DIST             "scsiBytesLunDistribution"
+#define CONST_SCSI_STATUS_HTML              "scsiStatus.html"
+#define CONST_SCSI_TIMES_HTML               "scsiTimes.html"
+#define CONST_SCSI_TM_HTML                  "scsiTMInfo.html"
 #define CONST_SHOW_MUTEX_HTML               "showMutex.html"
 #define CONST_SHOW_PLUGINS_HTML             "showPlugins.html"
 #define CONST_SHOW_PORT_TRAFFIC_HTML        "showPortTraffic.html"
@@ -1142,8 +1136,11 @@
 #define CONST_TRAFFIC_STATS_HTML            "trafficStats.html"
 #define CONST_VIEW_LOG_HTML                 "viewLog.html"
 #define CONST_VLAN_LIST_HTML                "vlanList.html"
+#define CONST_PIE_VSAN_CNTL_TRAF_DIST       "vsanControlTrafficDistribPie"
 #define CONST_VSAN_DETAIL_HTML              "vsanDetail.html"
 #define CONST_VSAN_DISTRIB_HTML             "vsanDistrib.html"
+#define CONST_BAR_VSAN_TRAF_DIST_SENT       "vsanDomainTrafficDistribSent"
+#define CONST_BAR_VSAN_TRAF_DIST_RCVD       "vsanDomainTrafficDistribRcvd"
 #define CONST_VSAN_LIST_HTML                "vsanList.html"
 #define CONST_W3C_P3P_XML                   "w3c/p3p.xml"
 #define CONST_XMLDUMP_PLUGIN_NAME           "xmldump"
@@ -1158,8 +1155,6 @@
 #define LEN_TIMEFORMAT_BUFFER               48
 #define LEN_CMDLINE_BUFFER                  4096
 #define LEN_FGETS_BUFFER                    512
-#define LEN_DATAFORMAT_BUFFER               24
-#define LEN_TIME_STAMP_BUFFER               2
 #define LEN_CHECKVERSION_BUFFER             4096
 #define LEN_GENERAL_WORK_BUFFER             1024
 #define LEN_MEDIUM_WORK_BUFFER              128
@@ -1404,12 +1399,6 @@
 #define CONST_MAGIC_NUMBER                  1968 /* Magic year actually */
 
 /*
- * Number of args + NULL in initial argv, for buildargv() in util.c - that is, if we don't 
- * have it in libc.  Taken, but for the name change, from gcc libiberty - leave it alone.
- */
-#define CONST_INITIAL_MAXARGC               8
-
-/*
  *   Define the output flag values
  */
 #define CONST_REPORT_ITS_DEFAULT            "(default)   "
@@ -1513,21 +1502,16 @@
 #define CONST_SFLOW_PCAP_VERSION_MINOR 4
 
 /*
- * intop
+ * This is the strftime() specifications to match various 'standardized' times
  */
-#define MAX_NUM_PROTOS_SCREENS              5
-#define CONST_DUMMY_IDX                     999
-#define MAX_TRAFFIC_TABLE                   4096
-
-#define FLAG_INTERFACE_DOWN      0   /* not yet enabled via LBNL */
-#define FLAG_INTERFACE_READY     1   /* ready for packet sniffing */
-#define FLAG_INTERFACE_ENABLED   2   /* packet capturing currently active */
-
-/*
- * This is the strftime() specification to match the ISO 8601 format
- * used in html, xml, etc.
- */
+#define CONST_LOCALE_TIMESPEC               "%c"
 #define CONST_ISO8601_TIMESPEC              "%Y-%m-%dT%H:%M:%S"
+#define CONST_TOD_NOSEC_TIMESPEC            "%H:%M"
+#define CONST_TOD_WSEC_TIMESPEC             "%H:%M:%S"
+#define CONST_TOD_HOUR_TIMESPEC             "%H"
+#define CONST_RFC1945_TIMESPEC              "%a, %d %b %Y %H:%M:%S GMT"
+#define CONST_APACHELOG_TIMESPEC            "%d/%b/%Y:%H:%M:%S"
+#define CONST_THPTLABEL_TIMESPEC            "%b %d %H:%M"
 
 /*
  * html img tags for various devices
@@ -1830,9 +1814,6 @@
 #define CONST_RRD_UMASK_GROUP               0026
 #define CONST_RRD_UMASK_EVERYONE            0022
 
-#define DEFAULT_RRD_DIRECTORY_PERMISSIONS   CONST_RRD_D_PERMISSIONS_PRIVATE
-#define DEFAULT_RRD_UMASK                   CONST_RRD_UMASK_PRIVATE
-
 /* **************************** */
 
 /*
@@ -1889,17 +1870,14 @@
 /*
  * default file and directories
  */
-#define DEFAULT_NTOP_CONFFILE               "ntop.conf"
 #define DEFAULT_NTOP_PIDFILE                "ntop.pid"
-#define DEFAULT_NTOP_LOGFILE                "ntop.log"
-#define DEFAULT_NTOP_ACCESSFILE             "ntop.last"
 #define DEFAULT_NTOP_PID_DIRECTORY          "/var/run"
 
 /*
  * default configuration parameters  -- the comment gives the (short getopt) name
  *                                      which overrides this value.
  */
-#define DEFAULT_NTOP_ACCESS_LOG_PATH        NULL      /* -a */
+#define DEFAULT_NTOP_ACCESS_LOG_FILE        NULL      /* -a */
 #define DEFAULT_NTOP_PACKET_DECODING        1         /* -b */
                                                           /* access log disabled by default */
 #define DEFAULT_NTOP_STICKY_HOSTS           0         /* -c */
@@ -1930,7 +1908,6 @@
 
 #define DEFAULT_NTOP_DOMAIN_NAME            ""        /* -D */
                                    /* Note: don't use null, as this isn't a char*, its a char[] */
-#define DEFAULT_NTOP_EXTERNAL_TOOLS_ENABLE  0         /* -E */
 #define DEFAULT_NTOP_FLOW_SPECS             NULL      /* -F */
 
 #define DEFAULT_NTOP_DEBUG_MODE             0         /* -K */
@@ -1941,12 +1918,7 @@
 
 /* -O and -P are special, see globals-core.h */
 
-#define DEFAULT_NTOP_PERSISTENT_STORAGE     0        /* -S */
-
 #define DEFAULT_NTOP_MAPPER_URL             NULL     /* -U */
-
-#define DEFAULT_NTOP_SSL_ADDR               NULL     /* -W */ /* e.g. all interfaces & addresses */
-#define DEFAULT_NTOP_SSL_PORT               0                 /* e.g. inactive */
 
 /*
  * How often should we update rrd statistics?  Overridden in rrd plugin

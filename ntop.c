@@ -1065,8 +1065,8 @@ RETSIGTYPE cleanup(int signo) {
   if (myGlobals.rrdPath != NULL)
       free(myGlobals.rrdPath);
 
-  if (myGlobals.gdVersionGuess != NULL)
-      free(myGlobals.gdVersionGuess);
+  if (myGlobals.gdVersionGuessValue != NULL)
+      free(myGlobals.gdVersionGuessValue);
 
   myGlobals.endNtop = 2;
 

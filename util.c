@@ -387,7 +387,7 @@ unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int siz
 #if DEBUG
     {
       char buf[47], buf1[47];
-      traceEvent(CONST_TRACE_INFO, "DEBUG: comparing [%s/%s]: %d\n",
+      traceEvent(CONST_TRACE_INFO, "DEBUG: comparing [%s/%s]: %d",
 		 _intop(addr, buf, INET6_ADDRSTRLEN),
 		 _intop(&it->af.inet6.ifAddr, buf1, INET6_ADDRSTRLEN), found);
     }
@@ -448,7 +448,7 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
   if(tmp != NULL) tmp->next = NULL;
   iface_destroy(ih);
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: Local address is: %s\n", intop(hostAddress));
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Local address is: %s", intop(hostAddress));
 #endif
   return addrs;
 
@@ -521,7 +521,7 @@ unsigned short isLinkLocalAddress(struct in6_addr *addr) {
 unsigned short in6_isMulticastAddress(struct in6_addr *addr) {
   if(IN6_IS_ADDR_MULTICAST(addr)) {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: %s is multicast [%X/%X]\n",
+    traceEvent(CONST_TRACE_INFO, "DEBUG: %s is multicast [%X/%X]",
 	       intop(addr));
 #endif
     return 1;
@@ -542,7 +542,7 @@ unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId) {
 
   if(addrlookup(addr,myGlobals.device[deviceId].v6Addrs) == 1) {
 #ifdef ADDRESS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local\n", intop(addr));
+    traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local", intop(addr));
 #endif
     return 1;
   }
@@ -551,7 +551,7 @@ unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId) {
     return(0);
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: %s is %s\n", intop(addr));
+  traceEvent(CONST_TRACE_INFO, "DEBUG: %s is %s", intop(addr));
 #endif
   /* Link Local Addresses are local */
   return(isLinkLocalAddress(addr));
@@ -1156,7 +1156,7 @@ unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId) {
 
   if(i == 1) {
 #ifdef ADDRESS_DEBUG
-    traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s is local\n", intop(addr));
+    traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s is local", intop(addr));
 #endif
 
     return 1; /* This is a real local address */
@@ -1171,7 +1171,7 @@ unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId) {
   */
 
 #ifdef ADDRESS_DEBUG
-  traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s is remote\n", intop(addr));
+  traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s is remote", intop(addr));
 #endif
 
   return(0);
@@ -2500,7 +2500,7 @@ void traceEvent(int eventTraceLevel, char* file,
 
     /* Message time, used for printf() - remember, syslog() does it's own time stamp */
     memset(bufTime, 0, sizeof(bufTime));
-    strftime(bufTime, sizeof(bufTime), "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
+    strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC, localtime_r(&theTime, &t));
 
     /* The file/line or 'MSGID' tag, depends on logExtra */
     memset(bufMsgID, 0, sizeof(bufMsgID));
@@ -5101,8 +5101,8 @@ int retrieveVersionFile(char *versionSite, char *versionFile,
   /*
    * If we've guessed at the gd version, report it
    */
-  if(myGlobals.gdVersionGuess != NULL)
-    extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "gd", myGlobals.gdVersionGuess);
+  if(myGlobals.gdVersionGuessValue != NULL)
+    extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "gd", myGlobals.gdVersionGuessValue);
 
 #ifdef HAVE_OPENSSL
   extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "openssl", (char*)SSLeay_version(0));

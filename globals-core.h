@@ -140,7 +140,7 @@ extern char* formatThroughput(float numBytes, u_char htmlFormat, char *outStr, i
 extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
                              unsigned int nminutes, char *outStr, int outStrLen);
 extern char* formatPkts(Counter pktNr, char *outStr, int outStrLen);
-extern char* formatTime(time_t *theTime, short encodeString, char *outStr, int outStrLen);
+extern char* formatTime(time_t *theTime, char *outStr, int outStrLen);
 extern void clearUserUrlList(void);
 
 /* hash.c */

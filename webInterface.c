@@ -1074,14 +1074,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "PARM_PRINT_RETRANSMISSION_DATA",
-#ifdef PARM_PRINT_RETRANSMISSION_DATA
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
-
   printFeatureConfigInfo(textPrintFlag, "PARM_FORK_CHILD_PROCESS",
 #ifdef PARM_FORK_CHILD_PROCESS
 			 "yes (normal)"
@@ -2906,18 +2898,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_COLOR_2", "undefined");
 #endif
 
-#ifdef CONST_COLOR_3
-  printFeatureConfigInfo(textPrintFlag, "CONST_COLOR_3", CONST_COLOR_3);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_COLOR_3", "undefined");
-#endif
-
-#ifdef CONST_COLOR_4
-  printFeatureConfigInfo(textPrintFlag, "CONST_COLOR_4", CONST_COLOR_4);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_COLOR_4", "undefined");
-#endif
-
 #ifdef CONST_CONST_PCTG_LOW_COLOR
   printFeatureConfigInfo(textPrintFlag, "CONST_CONST_PCTG_LOW_COLOR", CONST_CONST_PCTG_LOW_COLOR);
 #else
@@ -2994,12 +2974,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigNum(textPrintFlag, "CONST_DOUBLE_TWO_MSL_TIMEOUT", CONST_DOUBLE_TWO_MSL_TIMEOUT);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_DOUBLE_TWO_MSL_TIMEOUT", "undefined");
-#endif
-
-#ifdef CONST_DUMMY_IDX
-  printFeatureConfigNum(textPrintFlag, "CONST_DUMMY_IDX", CONST_DUMMY_IDX);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_DUMMY_IDX", "undefined");
 #endif
 
 #ifdef CONST_DUMP_DATA_HTML
@@ -3164,24 +3138,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_HTTP_ACCEPT_ALL", CONST_HTTP_ACCEPT_ALL);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_HTTP_ACCEPT_ALL", "undefined");
-#endif
-
-#ifdef CONST_IDLE_PURGE_ADJUST_FACTOR
-  printFeatureConfigNum(textPrintFlag, "CONST_IDLE_PURGE_ADJUST_FACTOR", CONST_IDLE_PURGE_ADJUST_FACTOR);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_ADJUST_FACTOR", "undefined");
-#endif
-
-#ifdef CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME
-  printFeatureConfigNum(textPrintFlag, "CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME", CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME", "undefined");
-#endif
-
-#ifdef CONST_IDLE_PURGE_MINIMUM_TARGET_TIME
-  printFeatureConfigNum(textPrintFlag, "CONST_IDLE_PURGE_MINIMUM_TARGET_TIME", CONST_IDLE_PURGE_MINIMUM_TARGET_TIME);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MINIMUM_TARGET_TIME", "undefined");
 #endif
 
 #ifdef CONST_IMG_ARROW_DOWN
@@ -3470,12 +3426,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_INFO_NTOP_HTML", CONST_INFO_NTOP_HTML);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_INFO_NTOP_HTML", "undefined");
-#endif
-
-#ifdef CONST_INITIAL_MAXARGC
-  printFeatureConfigNum(textPrintFlag, "CONST_INITIAL_MAXARGC", CONST_INITIAL_MAXARGC);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_INITIAL_MAXARGC", "undefined");
 #endif
 
 #ifdef CONST_INVALIDNETMASK
@@ -4028,12 +3978,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_TRAFFIC_STATS_HTML", "undefined");
 #endif
 
-#ifdef CONST_TRMTU
-  printFeatureConfigNum(textPrintFlag, "CONST_TRMTU", CONST_TRMTU);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_TRMTU", "undefined");
-#endif
-
 #ifdef CONST_TWO_MSL_TIMEOUT
   printFeatureConfigNum(textPrintFlag, "CONST_TWO_MSL_TIMEOUT", CONST_TWO_MSL_TIMEOUT);
 #else
@@ -4160,24 +4104,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NETFLOW_PORT_STR", "undefined");
 #endif
 
-#ifdef DEFAULT_NTOP_ACCESSFILE
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_ACCESSFILE", DEFAULT_NTOP_ACCESSFILE);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_ACCESSFILE", "undefined");
-#endif
-
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_ACCESS_LOG_PATH", "(null)");
+  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_ACCESS_LOG_FILE", "(null)");
 
 #ifdef DEFAULT_NTOP_AUTOREFRESH_INTERVAL
   printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_AUTOREFRESH_INTERVAL", DEFAULT_NTOP_AUTOREFRESH_INTERVAL);
 #else
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_AUTOREFRESH_INTERVAL", "undefined");
-#endif
-
-#ifdef DEFAULT_NTOP_CONFFILE
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_CONFFILE", DEFAULT_NTOP_CONFFILE);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_CONFFILE", "undefined");
 #endif
 
 #ifdef DEFAULT_NTOP_DAEMON_MODE
@@ -4214,12 +4146,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-#ifdef DEFAULT_NTOP_EXTERNAL_TOOLS_ENABLE
-  printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_EXTERNAL_TOOLS_ENABLE", DEFAULT_NTOP_EXTERNAL_TOOLS_ENABLE);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_EXTERNAL_TOOLS_ENABLE", "undefined");
-#endif
-
 #ifdef DEFAULT_NTOP_FAMILY
   printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_FAMILY", DEFAULT_NTOP_FAMILY);
 #else
@@ -4237,12 +4163,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_FLOW_SPECS", "(null)");
 
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_LOCAL_SUBNETS", "(null)");
-
-#ifdef DEFAULT_NTOP_LOGFILE
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_LOGFILE", DEFAULT_NTOP_LOGFILE);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_LOGFILE", "undefined");
-#endif
 
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_MERGE_INTERFACES",
 #ifdef DEFAULT_NTOP_MERGE_INTERFACES
@@ -4274,12 +4194,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_PCAP_LOG_FILENAME", "(null)");
 
-#ifdef DEFAULT_NTOP_PERSISTENT_STORAGE
-  printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_PERSISTENT_STORAGE", DEFAULT_NTOP_PERSISTENT_STORAGE);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_PERSISTENT_STORAGE", "undefined");
-#endif
-
 #ifdef DEFAULT_NTOP_PID_DIRECTORY
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_PID_DIRECTORY", DEFAULT_NTOP_PID_DIRECTORY);
 #else
@@ -4290,14 +4204,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_PIDFILE", DEFAULT_NTOP_PIDFILE);
 #else
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_PIDFILE", "undefined");
-#endif
-
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_SSL_ADDR", "(null)");
-
-#ifdef DEFAULT_NTOP_SSL_PORT
-  printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_SSL_PORT", DEFAULT_NTOP_SSL_PORT);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_SSL_PORT", "undefined");
 #endif
 
 #ifdef DEFAULT_NTOP_STICKY_HOSTS
@@ -4334,12 +4240,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_RRD_DAYS", "undefined");
 #endif
 
-#ifdef DEFAULT_RRD_DIRECTORY_PERMISSIONS
-  printFeatureConfigNum(textPrintFlag, "DEFAULT_RRD_DIRECTORY_PERMISSIONS", DEFAULT_RRD_DIRECTORY_PERMISSIONS);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_RRD_DIRECTORY_PERMISSIONS", "undefined");
-#endif
-
 #ifdef DEFAULT_RRD_HOURS
   printFeatureConfigNum(textPrintFlag, "DEFAULT_RRD_HOURS", DEFAULT_RRD_HOURS);
 #else
@@ -4362,12 +4262,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigNum(textPrintFlag, "DEFAULT_RRD_PERMISSIONS", DEFAULT_RRD_PERMISSIONS);
 #else
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_RRD_PERMISSIONS", "undefined");
-#endif
-
-#ifdef DEFAULT_RRD_UMASK
-  printFeatureConfigNum(textPrintFlag, "DEFAULT_RRD_UMASK", DEFAULT_RRD_UMASK);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_RRD_UMASK", "undefined");
 #endif
 
 #ifdef DEFAULT_SFLOW_COLLECTOR_PORT
@@ -4442,12 +4336,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "LEN_CMDLINE_BUFFER", "undefined");
 #endif
 
-#ifdef LEN_DATAFORMAT_BUFFER
-  printFeatureConfigNum(textPrintFlag, "LEN_DATAFORMAT_BUFFER", LEN_DATAFORMAT_BUFFER);
-#else
-  printFeatureConfigInfo(textPrintFlag, "LEN_DATAFORMAT_BUFFER", "undefined");
-#endif
-
 #ifdef LEN_ETHERNET_ADDRESS_DISPLAY
   printFeatureConfigNum(textPrintFlag, "LEN_ETHERNET_ADDRESS_DISPLAY", LEN_ETHERNET_ADDRESS_DISPLAY);
 #else
@@ -4514,12 +4402,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "LEN_TIMEFORMAT_BUFFER", "undefined");
 #endif
 
-#ifdef LEN_TIME_STAMP_BUFFER
-  printFeatureConfigNum(textPrintFlag, "LEN_TIME_STAMP_BUFFER", LEN_TIME_STAMP_BUFFER);
-#else
-  printFeatureConfigInfo(textPrintFlag, "LEN_TIME_STAMP_BUFFER", "undefined");
-#endif
-
 #ifdef LEN_WWN_ADDRESS_DISPLAY
   printFeatureConfigNum(textPrintFlag, "LEN_WWN_ADDRESS_DISPLAY", LEN_WWN_ADDRESS_DISPLAY);
 #else
@@ -4542,14 +4424,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "MAKE_NTOP_PACKETSZ_DECLARATIONS",
 #ifdef MAKE_NTOP_PACKETSZ_DECLARATIONS
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "MAKE_RMON_SUPPORT",
-#ifdef MAKE_RMON_SUPPORT
                          "yes"
 #else
                          "no"
@@ -4842,12 +4716,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "MAX_NUM_PROTOS", "undefined");
 #endif
 
-#ifdef MAX_NUM_PROTOS_SCREENS
-  printFeatureConfigNum(textPrintFlag, "MAX_NUM_PROTOS_SCREENS", MAX_NUM_PROTOS_SCREENS);
-#else
-  printFeatureConfigInfo(textPrintFlag, "MAX_NUM_PROTOS_SCREENS", "undefined");
-#endif
-
 #ifdef MAX_NUM_PURGED_SESSIONS
   printFeatureConfigNum(textPrintFlag, "MAX_NUM_PURGED_SESSIONS", MAX_NUM_PURGED_SESSIONS);
 #else
@@ -4938,12 +4806,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "MAX_TOT_NUM_SESSIONS", "undefined");
 #endif
 
-#ifdef MAX_TRAFFIC_TABLE
-  printFeatureConfigNum(textPrintFlag, "MAX_TRAFFIC_TABLE", MAX_TRAFFIC_TABLE);
-#else
-  printFeatureConfigInfo(textPrintFlag, "MAX_TRAFFIC_TABLE", "undefined");
-#endif
-
 #ifdef MAX_WEBSERVER_REQUEST_QUEUE_LEN
   printFeatureConfigNum(textPrintFlag, "MAX_WEBSERVER_REQUEST_QUEUE_LEN", MAX_WEBSERVER_REQUEST_QUEUE_LEN);
 #else
@@ -5000,14 +4862,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "PARM_ENABLE_EXPERIMENTAL",
 #ifdef PARM_ENABLE_EXPERIMENTAL
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "PARM_FORK_CHILD_PROCESS",
-#ifdef PARM_FORK_CHILD_PROCESS
                          "yes"
 #else
                          "no"
@@ -5530,7 +5384,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     printFeatureConfigInfo(textPrintFlag, "This version of ntop is", reportNtopVersionCheck());
     if(myGlobals.checkVersionStatusAgain > 0) {
       struct tm t;
-      strftime(buf, sizeof(buf), "%c", localtime_r(&myGlobals.checkVersionStatusAgain, &t));
+      strftime(buf, sizeof(buf), CONST_LOCALE_TIMESPEC, localtime_r(&myGlobals.checkVersionStatusAgain, &t));
       printFeatureConfigInfo(textPrintFlag, "Next version recheck is", buf);
     }
   }
@@ -5588,9 +5442,9 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
   sendString(texthtml("\n\nCommand line parameters are:\n\n", "</TD></TR>\n"));
 
-  printParameterConfigInfo(textPrintFlag, "-a | --access-log-path",
-                           myGlobals.accessLogPath,
-                           DEFAULT_NTOP_ACCESS_LOG_PATH);
+  printParameterConfigInfo(textPrintFlag, "-a | --access-log-file",
+                           myGlobals.accessLogFile,
+                           DEFAULT_NTOP_ACCESS_LOG_FILE);
 
   printParameterConfigInfo(textPrintFlag, "-b | --disable-decoders",
                            myGlobals.enablePacketDecoding == 1 ? "No" : "Yes",
@@ -5943,8 +5797,8 @@ void printNtopConfigInfo(int textPrintFlag) {
   /*
    * If we've guessed at the gd version, report it
    */
-if(myGlobals.gdVersionGuess != NULL)
-  printFeatureConfigInfo(textPrintFlag, "gd version (guess)", myGlobals.gdVersionGuess);
+if(myGlobals.gdVersionGuessValue != NULL)
+  printFeatureConfigInfo(textPrintFlag, "gd version (guess)", myGlobals.gdVersionGuessValue);
 
 #ifdef MAKE_WITH_XMLDUMP
   printFeatureConfigInfo(textPrintFlag, "XML dump (plugins/xmldump)", "Supported");
@@ -6728,11 +6582,11 @@ if(myGlobals.gdVersionGuess != NULL)
 	  BufferTooShort();
 	if(snprintf(buf2, sizeof(buf2), "%d", myGlobals.weDontWantToTalkWithYou[i].count) < 0)
 	  BufferTooShort();
-	strftime(buf3, sizeof(buf3), "%c", 
+	strftime(buf3, sizeof(buf3), CONST_LOCALE_TIMESPEC, 
 		 localtime_r(&myGlobals.weDontWantToTalkWithYou[i].lastBadAccess, &t));
 	lockoutExpires = myGlobals.weDontWantToTalkWithYou[i].lastBadAccess + 
 	  PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL;
-	strftime(buf4, sizeof(buf4), "%c", localtime_r(&lockoutExpires, &t));
+	strftime(buf4, sizeof(buf4), CONST_LOCALE_TIMESPEC, localtime_r(&lockoutExpires, &t));
 	if(textPrintFlag) {
 	  sendString("    ");
 	  sendString(buf);
@@ -6764,7 +6618,7 @@ if(myGlobals.gdVersionGuess != NULL)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Reject duration (seconds)", buf);
   
-      strftime(buf, sizeof(buf), "%c", localtime_r(&myGlobals.actTime, &t));
+      strftime(buf, sizeof(buf), CONST_LOCALE_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
       printFeatureConfigInfo(textPrintFlag, "It is now", buf);
     }
 
@@ -7107,7 +6961,7 @@ void printNtopProblemReport(void) {
   sendString("From:  ______________________________\n\n");
   sendString("EMail: ______________________________\n\n");
   sendString("Date:  ");
-  strftime(buf, sizeof(buf)-1, "%Y-%m-%d %H:%M:%S GMT", gmtime(&t));
+  strftime(buf, sizeof(buf)-1, CONST_LOCALE_TIMESPEC, gmtime(&t));
   buf[sizeof(buf)-1] = '\0';
   sendString(buf);
   sendString("\n\n");
@@ -7157,7 +7011,7 @@ void printNtopProblemReport(void) {
 
   v += (unsigned int) t;
 #ifdef PROBLEMREPORTID_DEBUG
-  strftime(buf, sizeof(buf)-1, "%Y-%m-%d %H:%M:%S GMT", gmtime(&t));
+  strftime(buf, sizeof(buf)-1, CONST_LOCALE_TIMESPEC, gmtime(&t));
   buf[sizeof(buf)-1] = '\0';
   snprintf(buf2, sizeof(buf2), "%-12s %48s %08x %08x\n", "Date/Time", buf, t, v);
   sendString(buf2);
@@ -7842,6 +7696,7 @@ void sslwatchdogSighandler(int signum) {
 void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
   /* This is the watchdog (child) */
   int rc;
+  char buf[LEN_SMALL_WORK_BUFFER];
   struct timespec expiration;
     
   /* ENTRY: from above, state 0 (FLAG_SSLWATCHDOG_UNINIT) */
@@ -7860,7 +7715,7 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
     
     expiration.tv_sec = time(NULL) + PARM_SSLWATCHDOG_WAIT_INTERVAL; /* watchdog timeout */
     expiration.tv_nsec = 0;
-    sslwatchdogDebug("Expires", FLAG_SSLWATCHDOG_CHILD, formatTime(&expiration.tv_sec, 0));
+    sslwatchdogDebug("Expires", FLAG_SSLWATCHDOG_CHILD, formatTime(&expiration.tv_sec, 0, buf, sizeof(buf)));
 
     while(myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_HTTPREQUEST) { 
 

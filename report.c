@@ -363,7 +363,8 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
   if(myGlobals.numRealDevices > 1)
     sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-		 "<IMG SRC=\"interfaceTrafficPie"CHART_FORMAT"\" alt=\"interface traffic chart\"></TD></TR>\n");
+		 "<IMG SRC=\"" CONST_PIE_INTERFACE_DIST CHART_FORMAT "\" "
+                 "alt=\"interface traffic chart\"></TD></TR>\n");
 #endif
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
@@ -494,7 +495,8 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
           sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-                     "<IMG SRC=\"pktCastDistribPie"CHART_FORMAT"\" alt=\"pktCast distribution chart\"></TH></TR>\n");
+                     "<IMG SRC=\"" CONST_PIE_PKT_CAST_DIST CHART_FORMAT "\" "
+                     "alt=\"pktCast distribution chart\"></TH></TR>\n");
 #endif
 
       if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
@@ -586,7 +588,8 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
           if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
               sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-                         "<IMG SRC=\"pktSizeDistribPie"CHART_FORMAT"\" alt=\"pktSize distribution chart\"></TH></TR>\n");
+                         "<IMG SRC=\"" CONST_PIE_PKT_SIZE_DIST CHART_FORMAT "\" "
+                         "alt=\"pktSize distribution chart\"></TH></TR>\n");
 #endif
 
           if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Packets&nbsp;too&nbsp;long [> %d]</th>"
@@ -768,7 +771,7 @@ void printTrafficStatistics(int revertOrder) {
           sendString(buf);
       
           sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" "DARK_BG" ALIGN=CENTER COLSPAN=3 BGCOLOR=white>"
-                     "<IMG SRC=\"fcPktSizeDistribPie"CHART_FORMAT"\" alt=\"FC pktSize distribution chart\"></TH></TR>\n");
+                     "<IMG SRC=\"" CONST_PIE_FC_PKT_SZ_DIST CHART_FORMAT"\" alt=\"FC pktSize distribution chart\"></TH></TR>\n");
       
           if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
                       "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
@@ -837,7 +840,7 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
       if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
           sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-                     "<IMG SRC=\"ipTrafficPie"CHART_FORMAT"\" alt=\"ipTraffic chart\"></TH></TR>\n");
+                     "<IMG SRC=\"" CONST_PIE_IP_TRAFFIC CHART_FORMAT "\" alt=\"ipTraffic chart\"></TH></TR>\n");
 #endif
 
       /* ********************* */
@@ -936,7 +939,8 @@ void printTrafficStatistics(int revertOrder) {
 
 #ifndef EMBEDDED
               sendString("<TR "TR_ON"><TH BGCOLOR=white COLSPAN=3>"
-                         "<IMG SRC=\"pktTTLDistribPie"CHART_FORMAT"\" alt=\"pktTTD distribution chart\"></TH></TR>\n");
+                         "<IMG SRC=\"" CONST_PIE_TTL_DIST CHART_FORMAT "\" "
+                         "alt=\"pktTTD distribution chart\"></TH></TR>\n");
 #endif
           }
       }
@@ -946,8 +950,10 @@ void printTrafficStatistics(int revertOrder) {
 
 #ifndef EMBEDDED
     if(myGlobals.enableSessionHandling && drawHostsDistanceGraph(1))
-      sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Remote Hosts Distance</TH><TD BGCOLOR=white ALIGN=CENTER>"
-		 "<IMG SRC=\"hostsDistanceChart"CHART_FORMAT"\" alt=\"hosts distance chart\"></TD></TR>\n");
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT "DARK_BG">Remote Hosts Distance</TH>"
+                 "<TD BGCOLOR=white ALIGN=CENTER>"
+		 "<IMG SRC=\"" CONST_BAR_HOST_DISTANCE CHART_FORMAT "\" "
+                 "alt=\"hosts distance chart\"></TD></TR>\n");
 #endif
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
@@ -1115,7 +1121,7 @@ void printHostsTraffic(int reportType,
 
   printHTMLheader(buf, NULL, 0);
 
-  strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
+  strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
 
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno;
@@ -2948,8 +2954,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 		    dport,
 		    formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
 		    formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1)),
-		    formatTime(&(session->firstSeen), 1, formatBuf2, sizeof(formatBuf2)),
-		    formatTime(&(session->lastSeen), 1, formatBuf3, sizeof(formatBuf3)),
+		    formatTime(&(session->firstSeen), formatBuf2, sizeof(formatBuf2)),
+		    formatTime(&(session->lastSeen), formatBuf3, sizeof(formatBuf3)),
                     formatSeconds(session->lastSeen-session->firstSeen, formatBuf4, sizeof(formatBuf4)),
                     formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
 		    formatLatency(session->nwLatency, session->sessionState, formatBuf6, sizeof(formatBuf6))
@@ -3185,7 +3191,8 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     printSectionTitle("IP Protocol Distribution");
 
 #ifndef EMBEDDED
-    sendString("<CENTER><IMG SRC=\"ipProtoDistribPie"CHART_FORMAT"\" alt=\"ipProtocol distribution chart\"><p>\n</CENTER>\n");
+    sendString("<CENTER><IMG SRC=\"" CONST_PIE_IPPROTO_RL_DIST CHART_FORMAT "\" "
+               "alt=\"ipProtocol distribution chart\"><p>\n</CENTER>\n");
 #endif
 
     printSectionTitle("Local Traffic");
@@ -3466,7 +3473,8 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 #ifndef EMBEDDED
       if(numProtosFound > 0)
 	sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
-		   "<IMG SRC=\"drawGlobalIpProtoDistribution"CHART_FORMAT"\" alt=\"Global ipProtocol distribution chart\"></TD></TR>\n");
+		   "<IMG SRC=\"" CONST_BAR_IPPROTO_DIST CHART_FORMAT "\" "
+                   "alt=\"Global ipProtocol distribution chart\"></TD></TR>\n");
 #endif
       sendString("</TABLE>"TABLE_OFF"<P>\n");
 
@@ -3649,7 +3657,8 @@ void printProtoTraffic(void) {
 
 #ifndef EMBEDDED
   sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
-	     "<IMG SRC=\"drawGlobalProtoDistribution"CHART_FORMAT"\" alt=\"global protocol distribution chart\"></TD></TR>\n");
+	     "<IMG SRC=\"" CONST_BAR_ALLPROTO_DIST CHART_FORMAT "\" "
+             "alt=\"global protocol distribution chart\"></TD></TR>\n");
 #endif
 
   sendString("</TABLE>"TABLE_OFF"<P></CENTER>\n");
@@ -3827,9 +3836,9 @@ void printThptStatsMatrix(int sortedColumn) {
 	break;
 
       tmpTime = myGlobals.actTime-(i*60);
-      strftime(label, 32, "%H:%M", localtime_r(&tmpTime, &t));
+      strftime(label, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
       tmpTime = myGlobals.actTime-((i+1)*60);
-      strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
+      strftime(label1, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=CENTER>"
 		  "<B>%s&nbsp;-&nbsp;%s</B></TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"
@@ -3966,9 +3975,9 @@ void printThptStatsMatrix(int sortedColumn) {
 	  break;
 
 	tmpTime = myGlobals.actTime-(i*60*60);
-	strftime(label, 32, "%H:%M", localtime_r(&tmpTime, &t));
+	strftime(label, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
 	tmpTime = myGlobals.actTime-((i+1)*60*60);
-	strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
+	strftime(label1, sizeof(label1), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TD "TD_BG" ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT "DARK_BG">"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">",
 		    getRowColor(), label, label1,
@@ -4225,7 +4234,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   if(domainName == NULL) {
     snprintf(buf, sizeof(buf), "Statistics for all Domains");
   } else {
-    snprintf(buf, sizeof(buf), "Statistics for hosts in Domain %s", domainName);
+    snprintf(buf, sizeof(buf), "Statistics for hosts in Domain <i>%s</i>", domainName);
   }
   printHTMLheader(buf, NULL, 0);
 
@@ -4582,7 +4591,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   if(el->trafficDistribution == NULL) return;
 
-  strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
+  strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
 
   /* In FC, where traffic is mostly storage traffic, the word "host" has a
@@ -4958,7 +4967,7 @@ void printFcHostsTraffic(int reportType,
     if(tmpTable == NULL)
       return;
 
-    strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
+    strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
     hourId = atoi(theDate);
 
     for (el = getFirstHost (myGlobals.actualReportDeviceId);
@@ -5020,7 +5029,7 @@ void printFcHostsTraffic(int reportType,
     myGlobals.columnSort = sortedColumn;
 
 #ifdef FC_DEBUG
-    traceEvent(CONST_TRACE_INFO, "FC_DEBUG: reportType=%d/sortedColumn=%d/myGlobals.columnSort=%d<\n",
+    traceEvent(CONST_TRACE_INFO, "FC_DEBUG: reportType=%d/sortedColumn=%d/myGlobals.columnSort=%d",
 	       reportType, sortedColumn, myGlobals.columnSort);
 #endif
 
@@ -6245,25 +6254,25 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
                                        hostLinkBuf1, sizeof (hostLinkBuf1)),
                         entry->lun,
                         formatLatency (entry->stats->minRTT, FLAG_STATE_ACTIVE,
-                                       formatBuf[0], 32),
+                                       formatBuf[0], sizeof(formatBuf[0])),
                         formatLatency (entry->stats->maxRTT, FLAG_STATE_ACTIVE,
-                                       formatBuf[1], 32),
+                                       formatBuf[1], sizeof(formatBuf[1])),
                         formatLatency (entry->stats->minXfrRdyRTT, FLAG_STATE_ACTIVE,
-                                       formatBuf[2], 32),
+                                       formatBuf[2], sizeof(formatBuf[2])),
                         formatLatency (entry->stats->maxXfrRdyRTT, FLAG_STATE_ACTIVE,
-                                       formatBuf[3], 32),
+                                       formatBuf[3], sizeof(formatBuf[3])),
                         formatLatency (entry->stats->minRdFrstDataRTT, FLAG_STATE_ACTIVE,
-                                       formatBuf[4], 32),
+                                       formatBuf[4], sizeof(formatBuf[4])),
                         formatLatency (entry->stats->maxRdFrstDataRTT, FLAG_STATE_ACTIVE,
-                                       formatBuf[5], 32),
+                                       formatBuf[5], sizeof(formatBuf[5])),
                         formatLatency (entry->stats->minWrFrstDataRTT, FLAG_STATE_ACTIVE,
-                                       formatBuf[6], 32),
+                                       formatBuf[6], sizeof(formatBuf[6])),
                         formatLatency (entry->stats->maxWrFrstDataRTT, FLAG_STATE_ACTIVE,
-                                       formatBuf[7], 32),
-                        formatTime((time_t *)&(entry->stats->firstSeen), 1,
-                                   formatBuf[8], 32),
-                        formatTime((time_t *)&(entry->stats->lastSeen), 1,
-                                   formatBuf[9], 32)
+                                       formatBuf[7], sizeof(formatBuf[7])),
+                        formatTime((time_t *)&(entry->stats->firstSeen),
+                                   formatBuf[8], sizeof(formatBuf[8])),
+                        formatTime((time_t *)&(entry->stats->lastSeen),
+                                   formatBuf[9], sizeof(formatBuf[9]))
                    ) < 0) BufferTooShort();
                 
             sendString(buf);
@@ -6775,9 +6784,9 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
                         entry->stats->clearAcaCnt,
                         entry->stats->tgtRstCnt,
                         entry->stats->lunRstCnt,
-                        formatTime((time_t *)&(entry->stats->lastTgtRstTime), 1,
+                        formatTime((time_t *)&(entry->stats->lastTgtRstTime),
                                    formatBuf[0], 32),
-                        formatTime((time_t *)&(entry->stats->lastLunRstTime), 1,
+                        formatTime((time_t *)&(entry->stats->lastLunRstTime),
                                    formatBuf[1], 32)
                    ) < 0) BufferTooShort();
                 
@@ -7061,9 +7070,9 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
                                       formatBuf[12], 32),
                           formatBytes(session->otherBytesRcvd.value, 1,
                                       formatBuf[13], 32),
-                          formatTime((time_t *)&(session->firstSeen), 1,
+                          formatTime((time_t *)&(session->firstSeen),
                                      formatBuf[14], 32),
-                          formatTime((time_t *)&(session->lastSeen), 1,
+                          formatTime((time_t *)&(session->lastSeen),
                                      formatBuf[15], 32)
                     ) < 0) BufferTooShort();
             
@@ -7186,7 +7195,8 @@ void printFcProtocolDistribution(int mode, int revertOrder)
         
         if(numProtosFound > 0)
             sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
-                       "<IMG SRC=\"drawGlobalFcProtoDistribution"CHART_FORMAT"\" alt=\"Global FC protocol distribution chart\"></TD></TR>\n");
+                       "<IMG SRC=\"" CONST_BAR_FC_PROTO_DIST CHART_FORMAT "\" "
+                       "alt=\"Global FC protocol distribution chart\"></TD></TR>\n");
         sendString("</TABLE>"TABLE_OFF"<P>\n");
 
         /* *********************** */

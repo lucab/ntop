@@ -15,14 +15,14 @@ ntop \- display top network users
 .SH SYNOPSIS
 .B ntop
 .RB [ @filename ]
-.RB [ -a | --access-log-path
+.RB [ -a | --access-log-file
 .IR <path> ]
 .RB [ -b | --disable-decoders ]
 .RB [ -c | --sticky-hosts]
 .RB [ -f | --traffic-dump-file
 .IR file> ]
 .RB [ -g | --track-local-hosts ]
-.RB [ -h | --help ]
+.RB [ -h | --help ]-file
 .RB [ -j | --create-other-packets ]
 .RB [ -k | --filter-expression-in-extra-frame ]
 .RB [ -l | --pcap-log 
@@ -139,7 +139,7 @@ them multiple times doesn't change
 behavior. However, options that set a value, such as --trace-level, will use the LAST value
 given: --trace-level 2 --trace-level 3 will run as --trace-level 3.
 
-.It2 -a --access-log-path
+.It2 -a --access-log-file
 By default 
 .B ntop
 does not maintain a log of HTTP requests to the internal web server. 
@@ -164,8 +164,8 @@ Log entries look like this:
 192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - "GET /About.html HTTP/1.1" 200 2010 10
 .fi 
 
-Although this parameter is called a 'path', it is actually the complete
-file name of the access log. 
+This parameter is the complete file name of the access log.  In prior releases it was
+erroneously called --access-log-path.
 
 .It2 -b --disable-decoders
 This parameter disables protocol decoders.

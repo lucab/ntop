@@ -64,7 +64,7 @@ static char __see__ []    =
 static struct option const long_options[] = {
   { "ipv4",                             no_argument,       NULL, '4' },
   { "ipv6",                             no_argument,       NULL, '6' },
-  { "access-log-path",                  required_argument, NULL, 'a' },
+  { "access-log-file",                  required_argument, NULL, 'a' },
   { "disable-decoders",                 no_argument,       NULL, 'b' },
   { "sticky-hosts",                     no_argument,       NULL, 'c' },
 
@@ -195,7 +195,7 @@ void usage(FILE * fp) {
 
   fprintf(fp, "    [-4             | --ipv4]                             %sUse IPv4 connections\n",newLine);
   fprintf(fp, "    [-6             | --ipv6]                             %sUse IPv6 connections\n",newLine);
-  fprintf(fp, "    [-a <path>      | --access-log-path <path>]           %sPath for ntop web server access log\n", newLine);
+  fprintf(fp, "    [-a <file>      | --access-log-file <file>]           %sFile for ntop web server access log\n", newLine);
   fprintf(fp, "    [-b             | --disable-decoders]                 %sDisable protocol decoders\n", newLine);
   fprintf(fp, "    [-c             | --sticky-hosts]                     %sIdle hosts are not purged from memory\n", newLine);
 
@@ -383,7 +383,7 @@ static int parseOptions(int argc, char* argv []) {
       break;
     case 'a': /* ntop access log path */
       stringSanityCheck(optarg);
-      myGlobals.accessLogPath = strdup(optarg);
+      myGlobals.accessLogFile = strdup(optarg);
       break;
 
     case 'b': /* Disable protocol decoders */
@@ -825,7 +825,7 @@ static int parseOptions(int argc, char* argv []) {
   }
 
   if((myGlobals.rFileName != NULL) && ((myGlobals.localAddresses == NULL) && !myGlobals.printFcOnly)) {
-    traceEvent(CONST_TRACE_ERROR, "When -f is used you need to set -m. Please try again.\n");
+    traceEvent(CONST_TRACE_FATALERROR, "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used");
     exit(-1);
   }
   

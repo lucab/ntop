@@ -703,7 +703,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	
 	if(!messageShown) {
 	  messageShown = 1;
-	  traceEvent(CONST_TRACE_INFO, "WARNING: Max num TCP sessions (%u) reached (see -X)\n", 
+	  traceEvent(CONST_TRACE_INFO, "WARNING: Max num TCP sessions (%u) reached (see -X)", 
 		     myGlobals.maxNumSessions);
 	}
 	
@@ -2955,7 +2955,7 @@ FCSession* handleFcSession (const struct pcap_pkthdr *h,
 #ifdef DEBUG
       printf("DEBUG: NEW ");
 
-      traceEvent(CONST_TRACE_INFO, "DEBUG: FC hash [act size: %d]\n",
+      traceEvent(CONST_TRACE_INFO, "DEBUG: FC hash [act size: %d]",
 		 myGlobals.device[actualDeviceId].numFcSessions);
 #endif
 

@@ -724,11 +724,11 @@ void printHTMLtrailer(void) {
 
 void initAccessLog(void) {
 
-  if(myGlobals.accessLogPath) {
-    myGlobals.accessLogFd = fopen(myGlobals.accessLogPath, "a");
+  if(myGlobals.accessLogFile) {
+    myGlobals.accessLogFd = fopen(myGlobals.accessLogFile, "a");
     if(myGlobals.accessLogFd == NULL) {
       traceEvent(CONST_TRACE_ERROR, "Unable to create file %s. Access log is disabled.",
-		 myGlobals.accessLogPath);
+		 myGlobals.accessLogFile);
     }
   }
 }
@@ -758,8 +758,8 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipByt
    else
      msSpent = 0;
 
-   /* Use en standard for this per RFC */
-   strftime(theDate, sizeof(theDate), "%d/%b/%Y:%H:%M:%S", localtime_r(&myGlobals.actTime, &t));
+   /* Use standard Apache format per http://httpd.apache.org/docs/logs.html */
+   strftime(theDate, sizeof(theDate), CONST_APACHELOG_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
 
    gmtoffset =  (myGlobals.thisZone < 0) ? -myGlobals.thisZone : myGlobals.thisZone;
    if(snprintf(theZone, sizeof(theZone), "%c%2.2ld%2.2ld",
@@ -918,7 +918,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   }
 
   /* Use en standard for this per RFC */
-  strftime(theDate, sizeof(theDate)-1, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
+  strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));
   theDate[sizeof(theDate)-1] = '\0';
   if(snprintf(tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate) < 0)
       BufferTooShort();
@@ -1713,7 +1713,7 @@ static int returnHTTPPage(char* pageName,
     if(myGlobals.actTime > statbuf.st_mtime) { /* just in case the system clock is wrong... */
         theTime = statbuf.st_mtime - myGlobals.thisZone;
         /* Use en standard for this per RFC */
-        strftime(theDate, sizeof(theDate)-1, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
+        strftime(theDate, sizeof(theDate)-1, CONST_RFC1945_TIMESPEC, localtime_r(&theTime, &t));
         theDate[sizeof(theDate)-1] = '\0';
         if(snprintf(tmpStr, sizeof(tmpStr), "Last-Modified: %s\r\n", theDate) < 0)
 	  BufferTooShort();
@@ -1775,7 +1775,7 @@ static int returnHTTPPage(char* pageName,
   } else if(strncasecmp(pageName, CONST_CHANGE_FILTER_HTML, strlen(CONST_CHANGE_FILTER_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     changeFilter();
-  } else if(strncasecmp(pageName, "doChangeFilter", strlen("doChangeFilter")) == 0) {
+  } else if(strncasecmp(pageName, CONST_DO_CHANGE_FILTER, strlen(CONST_DO_CHANGE_FILTER)) == 0) {
     printTrailer=0;
     if(doChangeFilter(postLen)==0) /*resetStats()*/;
   } else if(strncasecmp(pageName, CONST_FILTER_INFO_HTML, strlen(CONST_FILTER_INFO_HTML)) == 0) {
@@ -2140,16 +2140,19 @@ static int returnHTTPPage(char* pageName,
       if(sortedColumn == 0) { sortedColumn = 1; }
       printScsiSessionTmInfo (myGlobals.actualReportDeviceId, sortedColumn, revertOrder,
                               pageNum, pageName, NULL);
-    } else if (strncasecmp(pageName, "VsanControlTrafficDistrib", strlen("VsanControlTrafficDistrib")) == 0) {
-        sscanf (pageName, "VsanControlTrafficDistrib-%d", &vsanId);
+    } else if (strncasecmp(pageName, CONST_PIE_VSAN_CNTL_TRAF_DIST,
+                           strlen(CONST_PIE_VSAN_CNTL_TRAF_DIST)) == 0) {
+        sscanf (pageName, CONST_PIE_VSAN_CNTL_TRAF_DIST "-%d", &vsanId);
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
         drawVsanSwilsProtoDistribution(vsanId);
-    } else if (strncasecmp(pageName, "VsanDomainTrafficDistribSent", strlen("VsanDomainTrafficDistribSent")) == 0) {
-        sscanf (pageName, "VsanDomainTrafficDistribSent-%d", &vsanId);
+    } else if (strncasecmp(pageName, CONST_BAR_VSAN_TRAF_DIST_SENT,
+                           strlen(CONST_BAR_VSAN_TRAF_DIST_SENT)) == 0) {
+        sscanf (pageName, CONST_BAR_VSAN_TRAF_DIST_SENT "-%d", &vsanId);
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
         drawVsanDomainTrafficDistribution(vsanId, TRUE);
-    } else if (strncasecmp(pageName, "VsanDomainTrafficDistribRcvd", strlen("VsanDomainTrafficDistribRcvd")) == 0) {
-        sscanf (pageName, "VsanDomainTrafficDistribRcvd-%d", &vsanId);
+    } else if (strncasecmp(pageName, CONST_BAR_VSAN_TRAF_DIST_RCVD,
+                           strlen(CONST_BAR_VSAN_TRAF_DIST_RCVD)) == 0) {
+        sscanf (pageName, CONST_BAR_VSAN_TRAF_DIST_RCVD "-%d", &vsanId);
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
         drawVsanDomainTrafficDistribution(vsanId, FALSE);
 #ifndef EMBEDDED
@@ -2158,15 +2161,17 @@ static int returnHTTPPage(char* pageName,
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawThptGraph(sortedColumn);
       printTrailer=0;
-    } else if(strncasecmp(pageName, "ipTrafficPie", strlen("ipTrafficPie")) == 0) {
+    } else if(strncasecmp(pageName, CONST_PIE_IP_TRAFFIC, strlen(CONST_PIE_IP_TRAFFIC)) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawTrafficPie();
       printTrailer=0;
-    } else if(strncasecmp(pageName, "pktCastDistribPie", strlen("pktCastDistribPie")) == 0) {
+    } else if(strncasecmp(pageName, CONST_PIE_PKT_CAST_DIST,
+                          strlen(CONST_PIE_PKT_CAST_DIST)) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       pktCastDistribPie();
       printTrailer=0;
-    } else if(strncasecmp(pageName, "pktSizeDistribPie", strlen("pktSizeDistribPie")) == 0) {
+    } else if(strncasecmp(pageName, CONST_PIE_PKT_SIZE_DIST,
+                          strlen(CONST_PIE_PKT_SIZE_DIST)) == 0) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 	pktSizeDistribPie();
@@ -2174,7 +2179,8 @@ static int returnHTTPPage(char* pageName,
       } else {
 	printNoDataYet();
       }
-    } else if(strncasecmp(pageName, "fcPktSizeDistribPie", strlen("fcPktSizeDistribPie")) == 0) {
+    } else if(strncasecmp(pageName, CONST_PIE_FC_PKT_SZ_DIST,
+                          strlen(CONST_PIE_FC_PKT_SZ_DIST)) == 0) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value > 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 	fcPktSizeDistribPie();
@@ -2182,7 +2188,7 @@ static int returnHTTPPage(char* pageName,
       } else {
 	printNoDataYet();
       }
-    } else if(strncasecmp(pageName, "pktTTLDistribPie", strlen("pktTTLDistribPie")) == 0) {
+    } else if(strncasecmp(pageName, CONST_PIE_TTL_DIST, strlen(CONST_PIE_TTL_DIST)) == 0) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value > 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 	pktTTLDistribPie();
@@ -2190,39 +2196,42 @@ static int returnHTTPPage(char* pageName,
       } else {
 	printNoDataYet();
       }
-    } else if(strncasecmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {
+    } else if(strncasecmp(pageName, CONST_PIE_IPPROTO_RL_DIST,
+                          strlen(CONST_PIE_IPPROTO_RL_DIST)) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       ipProtoDistribPie();
       printTrailer=0;
-    } else if(strncasecmp(pageName, "interfaceTrafficPie", strlen("interfaceTrafficPie")) == 0) {
+    } else if(strncasecmp(pageName, CONST_PIE_INTERFACE_DIST,
+                          strlen(CONST_PIE_INTERFACE_DIST)) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       interfaceTrafficPie();
       printTrailer=0;
-    } else if(strncasecmp(pageName, "drawGlobalProtoDistribution",
-		      strlen("drawGlobalProtoDistribution")) == 0) {
+    } else if(strncasecmp(pageName, CONST_BAR_ALLPROTO_DIST,
+		      strlen(CONST_BAR_ALLPROTO_DIST)) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawGlobalProtoDistribution();
       printTrailer=0;
-    } else if(strncasecmp(pageName, "drawGlobalIpProtoDistribution",
-		      strlen("drawGlobalIpProtoDistribution")) == 0) {
+    } else if(strncasecmp(pageName, CONST_BAR_IPPROTO_DIST,
+		      strlen(CONST_BAR_IPPROTO_DIST)) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawGlobalIpProtoDistribution();
       printTrailer=0;
-    } else if(strncasecmp(pageName, "hostsDistanceChart", strlen("hostsDistanceChart")) == 0) {
+    } else if(strncasecmp(pageName, CONST_BAR_HOST_DISTANCE,
+                          strlen(CONST_BAR_HOST_DISTANCE)) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawHostsDistanceGraph(0);
       printTrailer=0;
-    } else if(strncasecmp(pageName, "drawGlobalFcProtoDistribution",
-		      strlen("drawGlobalFcProtoDistribution")) == 0) {
+    } else if(strncasecmp(pageName, CONST_BAR_FC_PROTO_DIST,
+                          strlen(CONST_BAR_FC_PROTO_DIST)) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawGlobalFcProtoDistribution();
       printTrailer=0;
-    } else if(strncasecmp(pageName, "drawLunStatsBytesDistribution",
-		      strlen("drawLunStatsBytesDistribution")) == 0) {
+    } else if(strncasecmp(pageName, CONST_BAR_LUNSTATS_DIST,
+		      strlen(CONST_BAR_LUNSTATS_DIST)) == 0) {
         HostTraffic *el=NULL;
         char hostName[32], *theHost;
 
-        theHost = &pageName[strlen("drawLunStatsBytesDistribution")+1];
+        theHost = &pageName[strlen(CONST_BAR_LUNSTATS_DIST)+1];
         if(strlen(theHost) >= 31) theHost[31] = 0;
 
         traceEvent (CONST_TRACE_ALWAYSDISPLAY, "returnHTTPPage: theHost = %s\n", theHost);

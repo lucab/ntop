@@ -154,7 +154,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.ntop_argc = argc;
   myGlobals.ntop_argv = argv;
 
-  myGlobals.accessLogPath = DEFAULT_NTOP_ACCESS_LOG_PATH;
+  myGlobals.accessLogFile = DEFAULT_NTOP_ACCESS_LOG_FILE;
   myGlobals.stickyHosts = DEFAULT_NTOP_STICKY_HOSTS;
 
   myGlobals.daemonMode = DEFAULT_NTOP_DAEMON_MODE;

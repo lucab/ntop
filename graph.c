@@ -1555,7 +1555,7 @@ void drawThptGraph(int sortedColumn) {
     if(len > 60) len = 60;
     for(i=0; i<len; i++) {
       tmpTime = myGlobals.actTime-i*60;
-      strftime(labels[i], 32, "%H:%M", localtime_r(&tmpTime, &t));
+      strftime(labels[i], 32, CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
     }
 
     for(i=0; i<len; i++)
@@ -1578,7 +1578,7 @@ void drawThptGraph(int sortedColumn) {
     if(len > 24) len = 24;
     for(i=0; i<len; i++) {
       tmpTime = myGlobals.actTime-((i+1)*60*60);
-      strftime(labels[i], 32, "%b %d %H:%M", localtime_r(&tmpTime, &t));
+      strftime(labels[i], 32, CONST_THPTLABEL_TIMESPEC, localtime_r(&tmpTime, &t));
     }
 
     for(i=0; i<len; i++)
@@ -1601,7 +1601,7 @@ void drawThptGraph(int sortedColumn) {
     if(len > 30) len = 30;
     for(i=0; i<len; i++) {
       tmpTime = myGlobals.actTime-((i+1)*(60*60*24));
-      strftime(labels[i], 32, "%b %d %H:%M", localtime_r(&tmpTime, &t));
+      strftime(labels[i], 32, CONST_THPTLABEL_TIMESPEC, localtime_r(&tmpTime, &t));
     }
 
     for(i=0; i<len; i++)

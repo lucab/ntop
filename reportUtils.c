@@ -433,7 +433,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 
   /* printf("->%d<-\n",showHostsMode); */
 
-  strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
+  strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
   
   memset(arrow, 0, sizeof(arrow));
@@ -3478,21 +3478,21 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "Address Assigned on",
-		  formatTime(&(el->protocolInfo->dhcpStats->assignTime), 1, formatBuf, sizeof(formatBuf))) < 0)
+		  formatTime(&(el->protocolInfo->dhcpStats->assignTime), formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "To be Renewed Before",
-		  formatTime(&(el->protocolInfo->dhcpStats->renewalTime), 1, formatBuf, sizeof(formatBuf))) < 0)
+		  formatTime(&(el->protocolInfo->dhcpStats->renewalTime), formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "Lease Ends on",
-		  formatTime(&(el->protocolInfo->dhcpStats->leaseTime), 1, formatBuf, sizeof(formatBuf))) < 0)
+		  formatTime(&(el->protocolInfo->dhcpStats->leaseTime), formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -3584,8 +3584,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	      "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[%s]</TD></TR>\n",
 	      getRowColor(),
 	      "First/Last&nbsp;Seen",
-	      formatTime(&(el->firstSeen), 1, formatBuf, sizeof(formatBuf)),
-	      formatTime(&(el->lastSeen), 1, formatBuf1, sizeof(formatBuf1)),
+	      formatTime(&(el->firstSeen), formatBuf, sizeof(formatBuf)),
+	      formatTime(&(el->lastSeen), formatBuf1, sizeof(formatBuf1)),
 	      formatSeconds(el->lastSeen - el->firstSeen, formatBuf2, sizeof(formatBuf2))) < 0)
     BufferTooShort();
   sendString(buf);
@@ -4648,7 +4648,7 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
   if(mutexId->numLocks == 0) /* Mutex never used */
     return;
   memset(buf2, 0, sizeof(buf2));
-  strftime(buf2, sizeof(buf2), "%c", localtime_r(&mutexId->lockTime, &t));
+  strftime(buf2, sizeof(buf2), CONST_LOCALE_TIMESPEC, localtime_r(&mutexId->lockTime, &t));
   if(textPrintFlag == TRUE) {
     if(myGlobals.disableMutexExtraInfo) {
         if(snprintf(buf, sizeof(buf),
@@ -6379,8 +6379,8 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
                 "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[%s]</TD></TR>\n",
                 getRowColor(),
                 "First/Last&nbsp;Seen",
-                formatTime(&(el->firstSeen), 1, formatBuf, sizeof (formatBuf)),
-                formatTime(&(el->lastSeen), 1, formatBuf1, sizeof (formatBuf1)),
+                formatTime(&(el->firstSeen), formatBuf, sizeof (formatBuf)),
+                formatTime(&(el->lastSeen), formatBuf1, sizeof (formatBuf1)),
                 formatSeconds(el->lastSeen - el->firstSeen, formatBuf2,
                               sizeof (formatBuf2))) < 0)
         BufferTooShort();
@@ -6390,7 +6390,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
         if (snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                      "%s%s</TD></TR>\n",
                      getRowColor(), "Number&nbsp;Of&nbsp;Times&nbsp;Offline",
-                     formatPkts (el->numOffline.value, formatBuf, sizeof (formatBuf)),
+                     formatPkts(el->numOffline.value, formatBuf, sizeof (formatBuf)),
                      myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
             BufferTooShort();
         sendString (buf);
@@ -6398,7 +6398,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
         if (snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                      "%s%s</TD></TR>\n",
                      getRowColor(), "Last&nbsp;Offline&nbsp;Time",
-                     formatTime (&el->lastOfflineTime, 1, formatBuf, sizeof (formatBuf)),
+                     formatTime(&el->lastOfflineTime, formatBuf, sizeof (formatBuf)),
                      myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
             BufferTooShort();
         sendString (buf);
@@ -6407,7 +6407,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
             if (snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                          "%s%s</TD></TR>\n",
                          getRowColor(), "Last&nbsp;Online&nbsp;Time",
-                         formatTime (&el->lastOnlineTime, 1, formatBuf, sizeof (formatBuf)),
+                         formatTime(&el->lastOnlineTime, formatBuf, sizeof (formatBuf)),
                          myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
                 BufferTooShort();
             sendString (buf);
@@ -6739,7 +6739,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
                             entry->stats->maxXferRdySize,
                             entry->stats->numFailedCmds,
                             duration,
-                            formatTime((time_t *)&(entry->stats->lastSeen), 1,
+                            formatTime((time_t *)&(entry->stats->lastSeen),
                                        formatBuf5, sizeof (formatBuf5))
                        ) < 0)
                     BufferTooShort();
@@ -6781,8 +6781,8 @@ void printScsiLunGraphs (HostTraffic *el, int actualDeviceId)
     
     if(snprintf(buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-                "<IMG SRC=drawLunStatsBytesDistribution-%s"CHART_FORMAT"?1 ALT=\"LUN Bytes Statistics "
-                "LUN Traffic (Total Bytes) %s\"></TH></TR>",
+                "<IMG SRC=\"" CONST_BAR_LUNSTATS_DIST "-%s" CHART_FORMAT "?1 "
+                "ALT=\"LUN Traffic (Total Bytes) %s\"></TH></TR>",
                 el->hostNumFcAddress, el->hostNumFcAddress) < 0)
         BufferTooShort();
     sendString(buf);
@@ -6881,7 +6881,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
         if (snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                      "%s%s</TD></TR>\n",
                      getRowColor(), "Last&nbsp;Fabric&nbsp;Configuration&nbsp;Started&nbsp;At",
-                     formatTime (&hash->fabricConfStartTime, 1, formatBuf,
+                     formatTime(&hash->fabricConfStartTime, formatBuf,
                                  sizeof (formatBuf)),
                      myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
             BufferTooShort();
@@ -6892,7 +6892,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
         if (snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                      "%s%s</TD></TR>\n",
                      getRowColor(), "Last&nbsp;Zone&nbsp;Configuration&nbsp;Started&nbsp;At",
-                     formatTime (&hash->zoneConfStartTime, 1, formatBuf,
+                     formatTime(&hash->zoneConfStartTime, formatBuf,
                                  sizeof (formatBuf)),
                      myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
             BufferTooShort();
@@ -6962,8 +6962,8 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
     printSectionTitle("Top Domain Traffic Distribution (Sent)");
     if(snprintf(buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-                "<IMG SRC=VsanDomainTrafficDistribSent-%d"CHART_FORMAT"?1 ALT=\"VSAN Domain "
-                "Traffic Distribution for VSAN %d\"></TH></TR>",
+                "<IMG SRC=" CONST_BAR_VSAN_TRAF_DIST_SENT "-%d"CHART_FORMAT"?1 "
+                "ALT=\"VSAN Domain Traffic Distribution for VSAN %d\"></TH></TR>",
                 vsanId, vsanId) < 0)
         BufferTooShort();
     sendString(buf);
@@ -6971,8 +6971,8 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
     printSectionTitle("Top Domain Traffic Distribution (Received)");
     if(snprintf(buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-                "<IMG SRC=VsanDomainTrafficDistribRcvd-%d"CHART_FORMAT"?1 ALT=\"VSAN Domain "
-                "Traffic Distribution for VSAN %d\"></TH></TR>",
+                "<IMG SRC=" CONST_BAR_VSAN_TRAF_DIST_RCVD "-%d"CHART_FORMAT"?1 "
+                "ALT=\"VSAN Domain Traffic Distribution for VSAN %d\"></TH></TR>",
                 vsanId, vsanId) < 0)
         BufferTooShort();
     sendString(buf);
@@ -6985,7 +6985,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
     printSectionTitle("Control Traffic Distribution");
     if(snprintf(buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
-                "<IMG SRC=VsanControlTrafficDistrib-%d"CHART_FORMAT"?1 ALT=\"VSAN Control "
+                "<IMG SRC=" CONST_PIE_VSAN_CNTL_TRAF_DIST "-%d"CHART_FORMAT"?1 ALT=\"VSAN Control "
                 "Traffic Protocol Distribution for VSAN %d\"></TH></TR>",
                 vsanId, vsanId) < 0)
         BufferTooShort();
@@ -7082,7 +7082,7 @@ void dumpFcFabricElementHash (FcFabricElementHash **theHash, char* label,
                         fcwwn_to_str ((u_int8_t *)&theHash[i]->principalSwitch.str),
                         formatFcElementData(theHash[i], 1, buf1, sizeof(buf1)),
                         formatFcElementData(theHash[i], 0, buf3, sizeof(buf3)),
-                        formatTime (&theHash[i]->fabricConfStartTime, 1,
+                        formatTime(&theHash[i]->fabricConfStartTime,
                                     formatBuf, sizeof (formatBuf))) < 0)
                 BufferTooShort();
             sendString(buf);
