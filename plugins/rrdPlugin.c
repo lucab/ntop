@@ -838,6 +838,7 @@ void unescape_url(char *url) {
 
 /* ******************************* */
 
+#ifndef WIN32
 void setGlobalPermissions(int permissionsFlag) {
   switch (permissionsFlag) {
     case CONST_RRD_PERMISSIONS_GROUP:
@@ -854,6 +855,7 @@ void setGlobalPermissions(int permissionsFlag) {
       break;
   }
 }
+#endif
 
 /* ******************************* */
 
