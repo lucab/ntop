@@ -214,6 +214,10 @@ extern RETSIGTYPE cleanup(int signo);
 extern void* cleanupExpiredHostEntriesLoop(void*);
  
 /* pbuf.c */
+extern int handleIP(u_short port,
+		    HostTraffic *srcHost, HostTraffic *dstHost,
+		    const u_int _length,  u_short isPassiveSess,
+		    u_short p2pSessionIdx, int actualDeviceId);
 extern void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
 			      TrafficCounter length,
 			      Counter pktCount,

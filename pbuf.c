@@ -53,12 +53,6 @@ static const struct pcap_pkthdr *h_save;
 static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 
-/* Forward */
-static int handleIP(u_short port,
-		    HostTraffic *srcHost, HostTraffic *dstHost,
-		    const u_int _length,  u_short isPassiveSess,
-		    u_short p2pSessionIdx, int actualDeviceId);
-
 /* ******************************* */
 
 void allocateSecurityHostPkts(HostTraffic *srcHost) {
@@ -89,10 +83,10 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 /* ************************************ */
 
-static int handleIP(u_short port,
-		    HostTraffic *srcHost, HostTraffic *dstHost,
-		    u_int _length,  u_short isPassiveSess,
-		    u_short p2pSessionIdx, int actualDeviceId) {
+int handleIP(u_short port,
+	     HostTraffic *srcHost, HostTraffic *dstHost,
+	     u_int _length,  u_short isPassiveSess,
+	     u_short p2pSessionIdx, int actualDeviceId) {
   int idx;
   Counter length = (Counter)_length;
 
