@@ -103,7 +103,7 @@ extern char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen);
 extern char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen);
 extern char * addrtostr(HostAddr *addr);
 extern int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer);
-extern void ipaddr2str(HostAddr hostIpAddress, int actualDeviceId, int updateHost);
+extern void ipaddr2str(HostAddr hostIpAddress, int updateHost);
 extern char* etheraddr_string(const u_char *ep, char *buf);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,

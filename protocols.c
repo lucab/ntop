@@ -166,7 +166,7 @@ void handleBootp(HostTraffic *srcHost,
 		strncpy(realDstHost->hostNumIpAddress,
 			_intoa(realDstHost->hostIp4Address, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
-		if(myGlobals.numericFlag == 0) ipaddr2str(realDstHost->hostIpAddress, actualDeviceId, 1);
+		if(myGlobals.numericFlag == 0) ipaddr2str(realDstHost->hostIpAddress, 1);
                 if (realDstHost->fullDomainName != NULL) free(realDstHost->fullDomainName);
 		realDstHost->fullDomainName = strdup("");
 		if (realDstHost->dotDomainName != NULL) free(realDstHost->dotDomainName);

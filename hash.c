@@ -826,7 +826,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 		      sizeof(el->hostNumIpAddress));
 
 	      if(myGlobals.numericFlag == 0)
-		ipaddr2str(el->hostIpAddress, actualDeviceId, 1);
+		ipaddr2str(el->hostIpAddress, 1);
 
 	      /* else el->hostSymIpAddress = el->hostNumIpAddress;
 		 The line below isn't necessary because (**) has
@@ -1062,7 +1062,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 
       /* Trick to fill up the address cache */
       if(myGlobals.numericFlag == 0)
-	ipaddr2str(el->hostIpAddress, actualDeviceId, 1);
+	ipaddr2str(el->hostIpAddress, 1);
       else
 	strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
     } else {

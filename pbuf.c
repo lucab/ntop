@@ -263,8 +263,9 @@ static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
       elPtr = &el;
       memset(elPtr, 0, sizeof(HostTraffic));
       addrcpy(&elPtr->hostIpAddress, dstAddr);
+      
       if(myGlobals.numericFlag == 0)
-	ipaddr2str(elPtr->hostIpAddress, actualDeviceId, 0);
+	ipaddr2str(elPtr->hostIpAddress, 0);
       elPtr->hostNumIpAddress[0] = '1'; /* Trick */
       setHostSerial(elPtr);
     }
@@ -282,7 +283,7 @@ static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
       memset(elPtr, 0, sizeof(HostTraffic));
       addrcpy(&elPtr->hostIpAddress, srcAddr);
       if(myGlobals.numericFlag == 0)
-	ipaddr2str(elPtr->hostIpAddress, actualDeviceId, 0);
+	ipaddr2str(elPtr->hostIpAddress, 0);
       elPtr->hostNumIpAddress[0] = '1'; /* Trick */
       setHostSerial(elPtr);
     }

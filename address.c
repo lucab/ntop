@@ -82,7 +82,7 @@ static void updateHostNameInfo(HostAddr addr, char* symbolic) {
 /* ************************************ */
 
 static void resolveAddress(HostAddr *hostAddr,
-			   short keepAddressNumeric, int actualDeviceId) {
+			   short keepAddressNumeric) {
   char symAddr[MAX_LEN_SYM_HOST_NAME];
   StoredAddress storedAddress;
   int i, addToCacheFlag=0, updateRecord=0;
@@ -597,7 +597,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 		 myGlobals.addressQueuedCurrent);
 #endif
 
-      resolveAddress(&addr, 0, 0 /* use default device */);
+      resolveAddress(&addr, 0);
 
 #ifdef DNS_DEBUG
       traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved address %s", addrtostr(&addr));
@@ -811,7 +811,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer) {
 
 /* This function automatically updates the instance name */
 
-void ipaddr2str(HostAddr hostIpAddress, int actualDeviceId, int updateHost) {
+void ipaddr2str(HostAddr hostIpAddress, int updateHost) {
   char buf[MAX_LEN_SYM_HOST_NAME+1];
 
   myGlobals.numipaddr2strCalls++;
@@ -822,7 +822,7 @@ void ipaddr2str(HostAddr hostIpAddress, int actualDeviceId, int updateHost) {
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
     queueAddress(hostIpAddress, !updateHost);
 #else
-    resolveAddress(&hostIpAddress, 0, actualDeviceId);
+    resolveAddress(&hostIpAddress, 0);
 #endif
   }
 }
