@@ -87,7 +87,7 @@ static void resolveAddress(HostAddr *hostAddr,
   StoredAddress storedAddress;
   int i, addToCacheFlag=0, updateRecord=0;
   struct hostent *hp = NULL;
-  char* res;
+  char* resolvedAddress;
   char keyBuf[47];
   char tmpBuf[96];
   datum key_data;
@@ -323,7 +323,7 @@ static void resolveAddress(HostAddr *hostAddr,
 	    tmpBuf[tmpLen-1] = '\0';
 	}
       }
-      res = tmpBuf;
+      resolvedAddress = tmpBuf;
       myGlobals.numResolvedWithDNSAddresses++;
     } else {
       myGlobals.numKeptNumericAddresses++;
@@ -377,18 +377,18 @@ static void resolveAddress(HostAddr *hostAddr,
 #endif
             );
       }
-      res = _addrtostr(hostAddr, tmpBuf , sizeof(tmpBuf));
+      resolvedAddress = _addrtostr(hostAddr, tmpBuf , sizeof(tmpBuf));
 #ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Unable to resolve %s", res);
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Unable to resolve %s", resolvedAddress);
 #endif
     }
 #endif /* PARM_USE_HOST */
   } else {
     myGlobals.numKeptNumericAddresses++;
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Unable to resolve %s", res);
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Unable to resolve %s", resolvedAddress);
 #endif
-    res = _addrtostr(hostAddr, tmpBuf, sizeof(tmpBuf));
+    resolvedAddress = _addrtostr(hostAddr, tmpBuf, sizeof(tmpBuf));
   }
   
 #ifdef HAVE_GETIPNODEBYADDR
@@ -397,14 +397,14 @@ static void resolveAddress(HostAddr *hostAddr,
 #endif
 
   if (addToCacheFlag == 0) {
-      if(strlen(res) > MAX_LEN_SYM_HOST_NAME) {
-        strncpy(symAddr, res, MAX_LEN_SYM_HOST_NAME-4);
+      if(strlen(resolvedAddress) > MAX_LEN_SYM_HOST_NAME) {
+        strncpy(symAddr, resolvedAddress, MAX_LEN_SYM_HOST_NAME-4);
         symAddr[MAX_LEN_SYM_HOST_NAME-1] = '\0';
         symAddr[MAX_LEN_SYM_HOST_NAME-2] = '.';
         symAddr[MAX_LEN_SYM_HOST_NAME-3] = '.';
         symAddr[MAX_LEN_SYM_HOST_NAME-4] = '.';
       } else
-        strncpy(symAddr, res, MAX_LEN_SYM_HOST_NAME-1);
+        strncpy(symAddr, resolvedAddress, MAX_LEN_SYM_HOST_NAME-1);
 
       for(i=0; symAddr[i] != '\0'; i++)
         symAddr[i] = (char)tolower(symAddr[i]);
