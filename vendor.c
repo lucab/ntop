@@ -354,14 +354,11 @@ static char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
 char* getVendorInfo(u_char* ethAddress, short encodeString) {
   char* ret;
 
-  /* ROCCO */
-  return("");
-
   if(myGlobals.dontTrustMACaddr
      || (memcmp(ethAddress, myGlobals.otherHostEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0))
     return("");
 
-  ret = getMACInfo(0, ethAddress, encodeString);
+  ret = getMACInfo(1, ethAddress, encodeString);
   myGlobals.numVendorLookupCalls++;
 
   if((ret != NULL) && (ret[0] != '\0'))
