@@ -1541,7 +1541,7 @@ void drawGlobalIpProtoDistribution(void) {
       +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value;
     p[idx] += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
       +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
-    if(p[idx] > 0) {
+    if((p[idx] > 0) && ((p[idx]*100/total) > 1 /* the proto is at least 1% */)) {
       partialTotal += p[idx];
       lbl[idx] = myGlobals.protoIPTrafficInfos[i];
       idx++;
