@@ -2124,7 +2124,7 @@ static int returnHTTPPage(char* pageName,
       }
 
 #ifdef MAKE_WITH_I18N
-      b    }
+    }
 #endif
   }
 
