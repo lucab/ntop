@@ -388,16 +388,26 @@ void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
 
 void initGdbm(void) { 
   char tmpBuf[200];
+  int firstTime=1;
 
 #ifdef HAVE_GDBM_H
   /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
   snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath);
   gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
+ RETRY_INIT_GDBM:
   if(gdbm_file == NULL) {
     traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n", 
 	       tmpBuf, gdbm_strerror(gdbm_errno));
-    exit(-1);
+    if(firstTime) {
+      firstTime = 0;
+      strcpy(dbPath, "/tmp");
+      snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath);
+      gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+      traceEvent(TRACE_ERROR, "Fallback solution: reverting to /tmp for the database directory\n");
+      goto RETRY_INIT_GDBM;
+    } else
+      exit(-1);
   } else {
     /* Let's remove from the database entries that were not
        yet resolved in (i.e. those such as "*132.23.45.2*")
