@@ -1276,6 +1276,13 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
+ * Flags for myGlobals.capturePackets
+ */ 
+#define FLAG_NTOPSTATE_RUN                  0
+#define FLAG_NTOPSTATE_STOPCAP              1
+#define FLAG_NTOPSTATE_TERM                 2
+
+/*
  * When myGlobals.useSyslog is set to this, turns off the logging
  */
 #define FLAG_SYSLOG_NONE                    -1

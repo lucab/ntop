@@ -110,7 +110,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
     IPSession *prevSession, *nextSession, *theSession;
 
 #ifdef CFG_MULTITHREADED
-    if(myGlobals.capturePackets == 1 /* i.e. active, not cleanup */ ) {
+    if(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ ) {
       if((i & CONST_MUTEX_FHS_MASK) == 0) {
 	accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
 	mutexLocked = 1;
@@ -144,7 +144,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
     } /* while */
 
 #ifdef CFG_MULTITHREADED
-    if (myGlobals.capturePackets == 1 /* i.e. active, not cleanup */ ) {
+    if (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ ) {
       if (((i+1) & CONST_MUTEX_FHS_MASK) == 0) {
 	if(mutexLocked) {
 	  releaseMutex(&myGlobals.tcpSessionsMutex);
@@ -781,7 +781,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    (int)myGlobals.hostsCacheLen);
 	*/
       } else
-	el = (HostTraffic*)malloc(sizeof(HostTraffic));
+	if ( (el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) return;
       
       memset(el, 0, sizeof(HostTraffic));
       el->firstSeen = myGlobals.actTime;
@@ -795,7 +795,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
 
       len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
-      el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
+      if ( (el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len)) == NULL) return;
       memset(el->protoIPTrafficInfos, 0, len);
 
       list = malloc(sizeof(HashList));
@@ -815,28 +815,33 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       }
 
       if(!hostFound) {
-        int ptrLen;
-        void *oldPtr = myGlobals.device[actualDeviceId].hash_hostTraffic;
+        int ptrLen, 
+            newHashSize = myGlobals.device[actualDeviceId].actualHashSize;
+        void *newPtr;
 
         list->idx = myGlobals.device[actualDeviceId].actualHashSize;
-        if(myGlobals.device[actualDeviceId].actualHashSize < CONST_HASH_MINIMUM_SIZE)
-          myGlobals.device[actualDeviceId].actualHashSize = CONST_HASH_MINIMUM_SIZE;
-        else if(myGlobals.device[actualDeviceId].actualHashSize >= CONST_HASH_FACTOR_MAXIMUM)
-          myGlobals.device[actualDeviceId].actualHashSize += CONST_HASH_TERMINAL_INCREASE;
+        if(newHashSize < CONST_HASH_MINIMUM_SIZE)
+          newHashSize = CONST_HASH_MINIMUM_SIZE;
+        else if(newHashSize >= CONST_HASH_FACTOR_MAXIMUM)
+          newHashSize += CONST_HASH_TERMINAL_INCREASE;
         else
-          myGlobals.device[actualDeviceId].actualHashSize *= CONST_HASH_INCREASE_FACTOR;
+          newHashSize *= CONST_HASH_INCREASE_FACTOR;
 
-        ptrLen = sizeof(struct hostTraffic*);
-        ptrLen *= myGlobals.device[actualDeviceId].actualHashSize;
-	
-        myGlobals.device[actualDeviceId].hash_hostTraffic = (struct hostTraffic**)malloc(ptrLen);
-        memset(myGlobals.device[actualDeviceId].hash_hostTraffic, 0, ptrLen);
-        memcpy(myGlobals.device[actualDeviceId].hash_hostTraffic,
-               oldPtr, sizeof(struct hostTraffic*)*list->idx);
-        free(oldPtr);
+	traceEvent(CONST_TRACE_INFO, "Extending hash size [%d->%d][deviceId=%d]",
+		   myGlobals.device[actualDeviceId].actualHashSize, 
+                   newHashSize,
+                   actualDeviceId);
 
-	traceEvent(CONST_TRACE_INFO, "Extending hash size [newSize=%d][deviceId=%d]",
-		   myGlobals.device[actualDeviceId].actualHashSize, actualDeviceId);
+        ptrLen = sizeof(struct hostTraffic*) * newHashSize;
+        if ( (newPtr = (struct hostTraffic**)malloc(ptrLen)) == NULL) return;
+
+        myGlobals.device[actualDeviceId].actualHashSize = newHashSize;
+        
+        memset(newPtr, 0, ptrLen);
+        memcpy(newPtr, myGlobals.device[actualDeviceId].hash_hostTraffic, sizeof(struct hostTraffic*)*list->idx);
+        free(myGlobals.device[actualDeviceId].hash_hostTraffic);
+        myGlobals.device[actualDeviceId].hash_hostTraffic = newPtr;
+
       } else
 	list->idx = hostFound;
 

@@ -164,6 +164,8 @@ static struct option const long_options[] = {
   { "xmlfilein",                        required_argument, NULL, 141 },
 #endif
 
+  { "disable-stopcap",                  no_argument,       NULL, 142 },
+
   {NULL, 0, NULL, 0}
 };
 
@@ -285,6 +287,8 @@ void usage (FILE * fp) {
   fprintf(fp, "    [--xmlfilesnap]                                       File name for snapshot internal data save (xml)\n");
   fprintf(fp, "    [--xmlfilein]    ***FUTURE***                         File name to reload ntop internal data from (xml)\n");
 #endif
+
+  fprintf(fp, "    [--disable-stopcap                                    Disable 'STOPCAP' mode\n");
 
 #ifdef WIN32
   printAvailableInterfaces();
@@ -669,6 +673,10 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.xmlFileIn = strdup(optarg);
       break;
 #endif
+
+    case 142: /* disable-stopcap */
+      myGlobals.disableStopcap = TRUE;
+      break;
 
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);

@@ -31,7 +31,7 @@ static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 
 void allocateSecurityHostPkts(HostTraffic *srcHost) {
   if(srcHost->secHostPkts == NULL) {
-    srcHost->secHostPkts = (SecurityHostProbes*)malloc(sizeof(SecurityHostProbes));
+    if ( (srcHost->secHostPkts = (SecurityHostProbes*)malloc(sizeof(SecurityHostProbes))) == NULL) return;
     resetSecurityHostTraffic(srcHost);
   }
 }
@@ -1186,14 +1186,14 @@ static void processIpPkt(const u_char *bp,
       if(icmpPkt.icmp_type <= ICMP_MAXTYPE) {
 	short dumpPacket = 1;
 	if(srcHost->icmpInfo == NULL) {
-	  srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo));
+	  if ( (srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
 	  memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
 	}
 
 	incrementTrafficCounter(&srcHost->icmpInfo->icmpMsgSent[icmpPkt.icmp_type], 1);
 
 	if(dstHost->icmpInfo == NULL) {
-	  dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo));
+	  if ( (dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
 	  memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
 	}
 
@@ -1387,7 +1387,7 @@ void queuePacket(u_char * _deviceId,
     return;
 #endif
 
-  if(!myGlobals.capturePackets) return;
+  if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Got packet from %s (%d)\n", myGlobals.device[*_deviceId].name, *_deviceId);
@@ -1463,13 +1463,15 @@ void cleanupPacketQueue(void) {
 void* dequeuePacket(void* notUsed _UNUSED_) {
   PacketInformation pktInfo;
 
-  while(myGlobals.capturePackets) {
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet processor thread (%ld) started...\n", myGlobals.dequeueThreadId);
+
+  while(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Waiting for packet...\n");
 #endif
 
     while((myGlobals.packetQueueLen == 0)
-	  && (myGlobals.capturePackets) /* Courtesy of Wies-Software <wies@wiessoft.de> */) {
+	  && (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) /* Courtesy of Wies-Software <wies@wiessoft.de> */) {
 #ifdef MAKE_WITH_SEMAPHORES
       waitSem(&myGlobals.queueSem);
 #else
@@ -1477,7 +1479,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 #endif
     }
 
-    if(!myGlobals.capturePackets) break;
+    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Got packet...\n");
@@ -1504,7 +1506,8 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
     processPacket((u_char*)((long)pktInfo.deviceId), &pktInfo.h, pktInfo.p);
   }
 
-  return(NULL); /* NOTREACHED */
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Packet Processor thread (%ld) terminated...\n", myGlobals.dequeueThreadId);
+  return(NULL); 
 }
 
 #endif /* CFG_MULTITHREADED */
@@ -1699,7 +1702,7 @@ void processPacket(u_char *_deviceId,
   }
 #endif
 
-  if(!myGlobals.capturePackets)
+  if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN)
     return;
 
   h_save = h, p_save = p;

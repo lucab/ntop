@@ -76,6 +76,8 @@ void* pcapDispatch(void *_i) {
   fd_set readMask;
   struct timeval timeout;
 
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread started...\n");
+
   pcap_fd = pcap_fileno(myGlobals.device[i].pcapPtr);
 
   if((pcap_fd == -1) && (myGlobals.rFileName != NULL)) {
@@ -96,7 +98,7 @@ void* pcapDispatch(void *_i) {
     pcap_fd = fileno(((struct mypcap *)(myGlobals.device[i].pcapPtr))->rfile);
   }
 
-  for(;myGlobals.capturePackets == 1;) {
+  for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     FD_ZERO(&readMask);
     FD_SET(pcap_fd, &readMask);
 
@@ -104,7 +106,7 @@ void* pcapDispatch(void *_i) {
 
     if(select(pcap_fd+1, &readMask, NULL, NULL, NULL /* &timeout */ ) > 0) {
       /* printf("dispatch myGlobals.device %s\n", myGlobals.device[i].name);*/
-      if(!myGlobals.capturePackets) return(NULL);
+      if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
       HEARTBEAT(2, "pcapDispatch()", NULL);
       rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, processPacket, (u_char*)_i);
 
@@ -123,14 +125,18 @@ void* pcapDispatch(void *_i) {
     }
   }
 
-  return(NULL);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...\n");
+  return(NULL); 
+
 }
 #else /* WIN32 */
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
 
-  for(;myGlobals.capturePackets == 1;) {
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread started...\n");
+
+  for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
     if(rc == -1) {
       traceEvent(CONST_TRACE_ERROR, "Error while reading packets: %s.\n",
@@ -142,7 +148,9 @@ void* pcapDispatch(void *_i) {
     HEARTBEAT(2, "pcapDispatch()", NULL);
   }
 
-  return(NULL);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...\n");
+  return(NULL); 
+
 }
 #endif
 #endif
@@ -644,13 +652,16 @@ static void purgeIpPorts(int theDevice) {
 /* **************************************** */
 
 void* scanIdleLoop(void* notUsed _UNUSED_) {
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) started...\n", myGlobals.scanIdleThreadId);
+
   for(;;) {
     int i;
 
     HEARTBEAT(0, "scanIdleLoop(), sleep(60)...", NULL);
     sleep(60 /* do not change */);
 
-    if(!myGlobals.capturePackets) break;
+    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     HEARTBEAT(0, "scanIdleLoop(), sleep(60)...woke", NULL);
     myGlobals.actTime = time(NULL);
 
@@ -666,7 +677,8 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
       }
   }
 
-  return(NULL);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated...\n", myGlobals.scanIdleThreadId);
+  return(NULL); 
 }
 
 /* **************************************** */
@@ -674,13 +686,16 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 #ifdef CFG_MULTITHREADED
 void* periodicLsofLoop(void* notUsed _UNUSED_) {
   long loopCount=0;
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: lsof loop thread (%ld) started...\n", myGlobals.lsofThreadId);
+
   for(;;) {
     /*
       refresh process list each minute
       if needed
     */
 
-    if(!myGlobals.capturePackets) break;
+    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
 
     if(myGlobals.updateLsof) {
     HEARTBEAT(0, "periodicLsofLoop()", NULL);
@@ -699,7 +714,9 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
     sleep(60);
     HEARTBEAT(0, "periodicLsofLoop(), sleep(60)...woke", NULL);
   }
-  return(NULL);
+
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: lsof loop thread (%ld) terminated...\n", myGlobals.lsofThreadId);
+  return(NULL); 
 
 }
 #endif
@@ -735,7 +752,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
     short loopItem = -1;
     int rc;
 
-    if(!myGlobals.capturePackets) break;
+    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
 
     FD_ZERO(&readMask);
     if(pcap_fd != -1) FD_SET(pcap_fd, &readMask);
@@ -826,7 +843,7 @@ RETSIGTYPE cleanup(int signo) {
 
   traceEvent(CONST_TRACE_INFO, "Cleaning up...");
 
-  myGlobals.capturePackets = 0;
+  myGlobals.capturePackets = FLAG_NTOPSTATE_TERM;
 
 #ifndef WIN32
  #ifdef CFG_MULTITHREADED

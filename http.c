@@ -560,7 +560,26 @@ void printHTMLtrailer(void) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   int i, len, numRealDevices = 0;
 
-  sendString("\n<P><HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><B>\n");
+
+  switch (myGlobals.capturePackets) {
+      case FLAG_NTOPSTATE_RUN:
+          break;
+          ;;
+      case FLAG_NTOPSTATE_STOPCAP:
+          sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+                     "Packet capture stopped"
+                     "</B></FONT></CENTER>");
+          break;
+          ;;
+      case FLAG_NTOPSTATE_TERM:
+          sendString("\n<HR>\n<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+                     "ntop stopped"
+                     "</B></FONT></CENTER>");
+          break;
+          ;;
+  }
+
+  sendString("\n<HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><B>\n");
 
   if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s [%s]<br>\n",
 	      ctime(&myGlobals.actTime), formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime)) < 0)
@@ -1322,6 +1341,19 @@ static int returnHTTPPage(char* pageName,
     return(0);
   }
 
+#ifdef PARM_ENABLE_EXPERIMENTAL
+  /*
+   * This gives a run time hook for setting things...
+   *   Either based on the flag, myGlobals.experimentalFlagSet or physically done here...
+   */
+  if(strncmp(pageName, "experimentalRequest.html", strlen("experimentalRequest.html")) == 0) {
+    myGlobals.experimentalFlagSet = 1;
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    sendString("<P>Your request has been received!</P>\n");
+    return(0);
+  }
+#endif
+
   if(strncmp(pageName, PLUGINS_HEADER, strlen(PLUGINS_HEADER)) == 0) {
     if(handlePluginHTTPRequest(&pageName[strlen(PLUGINS_HEADER)])) {
       return(0);
@@ -1338,6 +1370,7 @@ static int returnHTTPPage(char* pageName,
 #ifndef MAKE_MICRO_NTOP
   if(strncmp(pageName, SHUTDOWN_NTOP_HTML, strlen(SHUTDOWN_NTOP_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    sendString("<P>Your shutdown request is being processed</P>\n");
     shutdownNtop();
   } else if(strncmp(pageName, CHANGE_FILTER_HTML, strlen(CHANGE_FILTER_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);

@@ -44,7 +44,7 @@ void updateHostNameInfo(unsigned long numeric,
   char buf[32];
   u_int idx;
 
-  if(!myGlobals.capturePackets) return;
+  if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
   addr.s_addr = numeric;
   hostName = _intoa(addr, buf, sizeof(buf));
@@ -85,7 +85,7 @@ static void resolveAddress(struct in_addr *hostAddr,
   datum key_data;
   datum data_data;
 
-  if(!myGlobals.capturePackets) return;
+  if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Entering resolveAddress()");
@@ -154,7 +154,7 @@ static void resolveAddress(struct in_addr *hostAddr,
     if(data_data.dptr != NULL) free(data_data.dptr);
   }
 
-  if((!keepAddressNumeric) && myGlobals.capturePackets) {
+  if((!keepAddressNumeric) && (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN)) {
     struct in_addr theAddr;
 #ifdef HAVE_GETIPNODEBYADDR
     int error_num;
@@ -434,7 +434,9 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
   datum key_data, data_data;
 #endif
 
-  while(myGlobals.capturePackets) {
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution thread started...\n");
+
+  while(myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Waiting for address to resolve...\n");
 #endif
@@ -458,7 +460,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #endif
 
     while(data_data.dptr != NULL) {
-      if(!myGlobals.capturePackets) return(NULL);
+      if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
 
       memcpy(&addr.s_addr, data_data.dptr, 4);
 
@@ -490,7 +492,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     }
   } /* endless loop */
 
-  traceEvent(CONST_TRACE_INFO, "Address resolution terminated...");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution thread terminated...\n");
   return(NULL); /* NOTREACHED */
 }
 

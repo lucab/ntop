@@ -3053,7 +3053,7 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
   datum key_data;
   datum data_data;
 
-  if((value == NULL) || (!myGlobals.capturePackets)) return(-1);
+  if((value == NULL) || (myGlobals.capturePackets == FLAG_NTOPSTATE_TERM)) return(-1);
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Entering fetchPrefValue()");
@@ -3101,7 +3101,7 @@ void storePrefsValue(char *key, char *value) {
   datum key_data;
   datum data_data;
 
-  if((value == NULL) || (!myGlobals.capturePackets)) return;
+  if((value == NULL) || (myGlobals.capturePackets == FLAG_NTOPSTATE_TERM)) return;
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering storePrefsValue()");

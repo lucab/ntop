@@ -1526,6 +1526,9 @@ XML*/
                                      /*XML s xmlFileIn            Options    "--xmlfilein" */
 #endif
 
+  u_char disableStopcap;             /* '142' */
+                                     /*XML b disableStopcap       Options    "--disable-stopcap" */
+
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
                                      /*XML b enableFragmentHandling Options  "" */
@@ -1821,6 +1824,10 @@ XML*/
  /* for country flags */
   IPNode *countryFlagHead;
   int  ipCountryMem, ipCountryCount;
+
+#ifdef PARM_ENABLE_EXPERIMENTAL
+  u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */
+#endif
 
 } NtopGlobals;
 

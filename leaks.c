@@ -484,10 +484,17 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
 #endif
 
   thePtr = malloc(sz);
-  
+
   if(thePtr == NULL) {
-    traceEvent(CONST_TRACE_ERROR, "ERROR: malloc(%x) @ %s:%d returned NULL [no more memory?]",
+    traceEvent(CONST_TRACE_ERROR, "ERROR: malloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
+    if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
+         (myGlobals.disableStopcap != TRUE) ) {
+        traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
+        traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
+        traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
+        myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
+    } /* else - just keep on trucking ... ouch */
   } else
     memset(thePtr, 0xee, sz); /* Fill it with garbage */
 
@@ -512,8 +519,15 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
 
   if(thePtr == NULL) {
     traceEvent(CONST_TRACE_ERROR, 
-	       "ERROR: calloc(%x) @ %s:%d returned NULL [no more memory?]",
+	       "ERROR: calloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
+    if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
+         (myGlobals.disableStopcap != TRUE) ) {
+        traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
+        traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
+        traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
+        myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
+    } /* else - just keep on trucking ... ouch */
   }
   
   return(thePtr);
@@ -537,8 +551,15 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
 
   if(thePtr == NULL) {
     traceEvent(CONST_TRACE_ERROR, 
-	       "ERROR: realloc(%x) @ %s:%d returned NULL [no more memory?]",
+	       "ERROR: realloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
+    if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
+         (myGlobals.disableStopcap != TRUE) ) {
+        traceEvent(CONST_TRACE_WARNING, "WARNING: ntop packet capture STOPPED.\n");
+        traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up.\n");
+        traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory.\n");
+        myGlobals.capturePackets = FLAG_NTOPSTATE_STOPCAP;
+    } /* else - just keep on trucking ... ouch */
   }
 
   return(thePtr);

@@ -494,7 +494,7 @@ void initCounters(void) {
 
   createVendorTable();
   myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
-  myGlobals.capturePackets = 1;
+  myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
 
   myGlobals.numHandledSIGPIPEerrors = 0;
   myGlobals.numHandledHTTPrequests = 0;

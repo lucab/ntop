@@ -2285,6 +2285,10 @@ void printNtopConfigInfo(int textPrintFlag) {
                            "(none)");
 #endif
 
+  printParameterConfigInfo(textPrintFlag, "--disable-stopcap",
+                           myGlobals.disableStopcap == TRUE ? "Yes" : "No",
+                           "No");
+
   sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
   sendString("Note: " CONST_REPORT_ITS_EFFECTIVE "   means that "
 	     "this is the value after ntop has processed the parameter.");
@@ -3413,6 +3417,8 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
     fd_set mask, mask_copy;
     int topSock = myGlobals.sock;
 
+    traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) started...\n", myGlobals.handleWebConnectionsThreadId);
+
 #ifndef WIN32
 #ifdef CFG_MULTITHREADED
     /*
@@ -3535,7 +3541,7 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
       if(select(topSock+1, &mask, 0, 0, &wait_time) == 1)
 	handleSingleWebConnection(&mask);
 #else /* CFG_MULTITHREADED */
-      while(myGlobals.capturePackets) {
+      while(myGlobals.capturePackets != FLAG_NTOPSTATE_TERM) {
 	sslwatchdogDebug("BEGINloop", FLAG_SSLWATCHDOG_BOTH, "");
  #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
@@ -3559,7 +3565,9 @@ void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
 
 #endif /* CFG_MULTITHREADED */
 
-      return(NULL);
+      traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) terminated...\n", myGlobals.handleWebConnectionsThreadId);
+      return(NULL); 
+
     }
 
     /* ************************************* */

@@ -3711,6 +3711,24 @@ void printFlagedWarning(char *text) {
 /* ********************************** */
 
 void printSectionTitle(char *text) {
+  switch (myGlobals.capturePackets) {
+      case FLAG_NTOPSTATE_RUN:
+          break;
+          ;;
+      case FLAG_NTOPSTATE_STOPCAP:
+          sendString("<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+                     "Packet capture stopped"
+                     "</B></FONT></CENTER>");
+          break;
+          ;;
+      case FLAG_NTOPSTATE_TERM:
+          sendString("<CENTER><FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=+1><B>"
+                     "ntop stopped"
+                     "</B></FONT></CENTER>");
+          break;
+          ;;
+  }
+
   sendString("<CENTER>\n<H1><FONT FACE=\"Helvetica, Arial, Sans Serif\">");
   sendString(text);
   sendString("</FONT></H1><P>\n</CENTER>\n");
