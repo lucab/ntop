@@ -3,8 +3,8 @@ plugins/Makefile.am
 plugins/Makefile.in
 plugins/icmpPlugin.c
 plugins/lastSeenPlugin.c
+plugins/netflowPlugin.c
 plugins/nfsPlugin.c
-plugins/wapPlugin.c
-plugins/rmonPlugin.c
-plugins/rmon.h
+plugins/pdaPlugin.c
+plugins/sflowPlugin.c
 
