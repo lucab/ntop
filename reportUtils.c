@@ -845,7 +845,8 @@ int sortHostFctn(const void *_a, const void *_b) {
           }
       }
       else {
-          return addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress);
+          rc = addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress);
+          return(rc);
       }
     break;
   case 3:
@@ -959,27 +960,7 @@ int sortHostFctn(const void *_a, const void *_b) {
       return(0);
     break;
   case FLAG_DOMAIN_DUMMY_IDX:
-    rc=0;
-    if(((*a)->dotDomainName != NULL) && ((*b)->dotDomainName != NULL)) {
-      if(strcasecmp((*a)->dotDomainName, "loc") != 0) {
-        nameA = (*a)->dotDomainName;
-      } else {
-        nameA = "zzz";
-      }
-      if(strcasecmp((*b)->dotDomainName, "loc") != 0) {
-        nameB = (*b)->dotDomainName;
-      } else {
-        nameB = "zzz";
-      }
-      rc = strcasecmp(nameA, nameB);
-    } else if((*a)->dotDomainName != NULL) {
-      rc=1;
-    } else if((*b)->dotDomainName != NULL) {
-      rc=-1;
-    }
-    if(rc==0) {
-      rc=cmpFctnResolvedName(a, b);
-    }
+    rc=cmpFctnLocationName(a, b);
     return(rc);
     break;
   case 4:
@@ -1116,19 +1097,14 @@ int cmpFctn(const void *_a, const void *_b) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "%s='%s'/'%s' - %s='%s'/'%s'",
 	   (*a)->hostResolvedName,
-	   (*a)->dotDomainName, (*a)->fullDomainName,
+	   (*a)->ip2ccValue, (*a)->dnsDomainValue,
 	   (*b)->hostResolvedName,
-	   (*b)->dotDomainName, (*b)->fullDomainName
+	   (*b)->ip2ccValue, (*b)->dnsDomainValue
 	   );
 #endif
-    if((*a)->dotDomainName == NULL) (*a)->dotDomainName = "";
-    if((*b)->dotDomainName == NULL) (*b)->dotDomainName = "";
 
-    rc = strcasecmp((*a)->dotDomainName, (*b)->dotDomainName);
-    if(rc == 0)
-      return(strcasecmp((*a)->fullDomainName, (*b)->fullDomainName));
-    else
-      return rc;
+    rc=cmpFctnLocationName(a, b);
+    return(rc);
   }
 
 #ifdef DEBUG
@@ -3613,10 +3589,10 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString(buf);
   }
 
-  if(el->fullDomainName && (el->fullDomainName[0] != '\0')) {
+  if(el->dnsDomainValue && (el->dnsDomainValue[0] != '\0')) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s</TD></TR>\n", getRowColor(),
-		"Domain", el->fullDomainName) < 0) BufferTooShort();
+		"Domain", el->dnsDomainValue) < 0) BufferTooShort();
     sendString(buf);
   }
 

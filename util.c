@@ -252,8 +252,29 @@ int in6_isglobal(struct in6_addr *addr) {
 /* ***************************** */
 
 short addrcmp(HostAddr *addr1, HostAddr *addr2) {
-  if (addr1->hostFamily != addr2->hostFamily)
-    return 1;
+
+  if(addr1 == NULL)
+    if(addr2 == NULL)
+      return 0;
+    else
+      return 1;
+  else if(addr2 == NULL)
+    return -1;
+
+  if(addr1->hostFamily == 0)
+    if(addr2->hostFamily == 0)
+      return 0;
+    else
+      return 1;
+  else if(addr2->hostFamily == 0)
+    return -1;
+
+  if(addr1->hostFamily != addr2->hostFamily)
+    if(addr1->hostFamily > addr2->hostFamily)
+      return 1;
+    else
+      return -1;
+
   switch (addr1->hostFamily){
   case AF_INET:
     if (addr1->Ip4Address.s_addr > addr2->Ip4Address.s_addr)
@@ -2319,10 +2340,10 @@ void resetHostsVariables(HostTraffic* el) {
 
   el->vlanId = -1;
   el->hostAS = 0;
-  if (el->fullDomainName != NULL)      free(el->fullDomainName);
-  el->fullDomainName = NULL;
-  if (el->dotDomainName != NULL)       free(el->dotDomainName);
-  el->dotDomainName = NULL;
+  if (el->dnsDomainValue != NULL)      free(el->dnsDomainValue);
+  el->dnsDomainValue = NULL;
+  if (el->ip2ccValue != NULL)       free(el->ip2ccValue);
+  el->ip2ccValue = NULL;
   el->hostResolvedName[0] = '\0';
   el->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_NONE;
   if (el->fingerprint != NULL)         free(el->fingerprint);
@@ -2906,98 +2927,52 @@ void fillDomainName(HostTraffic *el) {
 
   if(theDomainHasBeenComputed(el))
     return;
-  if((el->hostResolvedName    == NULL)
-     || (el->hostResolvedName[0] == '\0')) {
-    el->fullDomainName = strdup("");
-    return;
-  }
 
   accessAddrResMutex("fillDomainName");
 
   /* Reset values... */
-  if(el->fullDomainName != NULL) free(el->fullDomainName);
-  if(el->dotDomainName != NULL) free(el->dotDomainName);
+  if(el->dnsDomainValue != NULL) free(el->dnsDomainValue);
+  el->dnsDomainValue = NULL;
+  if(el->ip2ccValue != NULL) free(el->ip2ccValue);
+  el->ip2ccValue = NULL;
 
-  ip2cc = ip2CountryCode(el->hostIpAddress);
-
-  if(ip2cc == NULL) {
-    /* We are unable to associate a domain with an IP address. */
-    el->dotDomainName = strdup("");
-  } else {
-    el->dotDomainName = strdup(ip2cc);
-  }
-
-  if((el->hostResolvedName[0] == '*')
-     || (el->hostNumIpAddress[0] == '\0')
-     || (isdigit(el->hostResolvedName[strlen(el->hostResolvedName)-1]) &&
-	 isdigit(el->hostResolvedName[0]))) {
-    /* NOTE: theDomainHasBeenComputed(el) = 0 */
-    el->fullDomainName = strdup("");
+  if((el->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NAME) ||
+     (el->hostResolvedName    == NULL) ||
+     (el->hostResolvedName[0] == '\0')) {
+    /* Do NOT set FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED - we still might learn the DNS Name later */
     releaseAddrResMutex();
     return;
   }
 
-  FD_SET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &el->flags);
+  ip2cc = ip2CountryCode(el->hostIpAddress);
 
+  if((ip2cc == NULL) || (strcmp(ip2cc, "***") == 0)) {
+    /* We are unable to associate a domain with this IP address. */
+    el->ip2ccValue = NULL;
+  } else {
+    el->ip2ccValue = strdup(ip2cc);
+  }
 
+  /* Walk back to the last . */
   i = strlen(el->hostResolvedName)-1;
-
   while(i > 0)
     if(el->hostResolvedName[i] == '.')
       break;
     else
       i--;
 
-  if((i > 0)
-     && strcmp(el->hostResolvedName, el->hostNumIpAddress)
-     && (strlen(el->hostResolvedName) > (i+1)))
-    ;
-  else {
-    /* Let's use the local domain name */
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: '%s' [%s/%s]",
-	       el->hostResolvedName, myGlobals.domainName, myGlobals.shortDomainName);
-#endif
-    if((myGlobals.domainName[0] != '\0')
-       && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
-      int len  = strlen(el->hostResolvedName);
-      int len1 = strlen(myGlobals.domainName);
+  /* If we have it (.), use it, otherwise use the shortDomainName set at startup
+   * last choice, leave it null from above
+   */
+  if(i > 0)
+    el->dnsDomainValue = strdup(&el->hostResolvedName[i+1]);
+  else if (myGlobals.shortDomainName != NULL)
+    el->dnsDomainValue = strdup(myGlobals.shortDomainName);
 
-      /* traceEvent(CONST_TRACE_INFO, "%s [%s]",
-	 el->hostResolvedName, &el->hostResolvedName[len-len1]); */
-
-      if((len > len1)
-	 && (strcmp(&el->hostResolvedName[len-len1-1], myGlobals.domainName) == 0))
-	el->hostResolvedName[len-len1-1] = '\0';
-
-      el->fullDomainName = strdup(myGlobals.domainName);
-    } else {
-      el->fullDomainName = strdup("");
-    }
-
-    releaseAddrResMutex();
-    return;
-  }
-
-  for(i=0; el->hostResolvedName[i] != '\0'; i++)
-    el->hostResolvedName[i] = tolower(el->hostResolvedName[i]);
-
-  i = 0;
-  while(el->hostResolvedName[i] != '\0')
-    if(el->hostResolvedName[i] == '.')
-      break;
-    else
-      i++;
-
-  if((el->hostResolvedName[i] == '.')
-     && (strlen(el->hostResolvedName) > (i+1)))
-    el->fullDomainName = strdup(&el->hostResolvedName[i+1]);
-  else
-    el->fullDomainName = strdup("");
-
-  /* traceEvent(CONST_TRACE_INFO, "'%s'", el->domainName); */
+  FD_SET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &el->flags);
 
   releaseAddrResMutex();
+  return;
 }
 
 /* ********************************* */
@@ -3709,7 +3684,7 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
 
   if(country != NULL) {
     if(p2->node.cc[0] == 0)
-      strcpy(p2->node.cc, country);
+      strncpy(p2->node.cc, country, sizeof(p2->node.cc));
   } else {
     if(p2->node.as == 0)
       p2->node.as = as;
@@ -5688,23 +5663,30 @@ void urlFixupToRFC1945Inplace(char* url) {
 /* ********************************************* */
 
 void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char* file, int line) {
+  int i;
 
   if(updateValue[0] == '\0') return;
 
   /* Only update if this is a MORE important type */
   if(updateType > el->hostResolvedNameType) {
 
-#ifdef CMPFCTN_DEBUG
-    traceEvent(CONST_TRACE_INFO, "CMPFCTN_DEBUG: setResolvedName(0x%08x) %d %s -> %d %s - %s(%d)", 
-               el,
-               el->hostResolvedNameType,
-               el->hostResolvedName,
-               updateType,
-               updateValue,
-               file, line);
+#ifndef CMPFCTN_DEBUG
+    if(myGlobals.debugMode == 1)
 #endif
+      traceEvent(CONST_TRACE_INFO,
+                 "CMPFCTN_DEBUG: setResolvedName(0x%08x) %d %s -> %d %s - %s(%d)", 
+                 el,
+                 el->hostResolvedNameType,
+                 el->hostResolvedName,
+                 updateType,
+                 updateValue,
+                 file, line);
 
     strncpy(el->hostResolvedName, updateValue, MAX_LEN_SYM_HOST_NAME-1);
+    // el->hostResolvedName[MAX_LEN_SYM_HOST_NAME-1] = '\0';
+    for(i=0; el->hostResolvedName[i] != '\0'; i++)
+      el->hostResolvedName[i] = tolower(el->hostResolvedName[i]);
+
     el->hostResolvedNameType = updateType;
   }
 }
@@ -5913,7 +5895,7 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
       } else {
           /* 2A2 - unequal types, so just compare the Type field */
           if((*a)->hostResolvedNameType > (*b)->hostResolvedNameType)
-            rc = -1;
+            rc = -1; /* Higher type before lower */
           else
             rc = 1;
 #ifdef CMPFCTN_DEBUG
@@ -6012,6 +5994,69 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 #endif
 
     return(rc); 
+}
+
+/* ********************************************* */
+/* ********************************************* */
+/*       Location code compare function          */
+/* ********************************************* */
+
+int cmpFctnLocationName(const void *_a, const void *_b) {
+
+/* This function takes two HostTraffic entries and performs a 
+   standardized compare of the location, either the ip2ccValue field
+   or the fallback dnsDomainValue fields, handling unvalued
+   situations to provide a stable comparison.
+
+   We translate 'loc' (rfc1918 addresses) to sort next to last
+   and unvalued items to sort last.
+
+   Equal valued names are sorted based first on full domain name, then
+   on hostResolvedName as the tie breakers.
+ */
+
+    HostTraffic **a = (HostTraffic **)_a;
+    HostTraffic **b = (HostTraffic **)_b;
+    int rc;
+    char *nameA, *nameB;
+
+    rc=0;
+
+    if((*a)->ip2ccValue == NULL) {
+        nameA = "\xFF\xFF";
+    } else if(strcasecmp((*a)->ip2ccValue, "loc") == 0) {
+        nameA = "\xFF\xFE";
+    } else {
+        nameA = (*a)->ip2ccValue;
+    }
+    if((*b)->ip2ccValue == NULL) {
+        nameB = "\xFF\xFF";
+    } else if(strcasecmp((*b)->ip2ccValue, "loc") == 0) {
+        nameB = "\xFF\xFE";
+    } else {
+        nameB = (*b)->ip2ccValue;
+    }
+
+    rc = strcasecmp(nameA, nameB);
+    if(rc==0) {
+      if((*a)->dnsDomainValue == NULL) {
+        nameA = "\xFF\xFF";
+      } else {
+        nameA = (*a)->dnsDomainValue;
+      }
+      if((*b)->dnsDomainValue == NULL) {
+        nameB = "\xFF\xFF";
+      } else {
+        nameB = (*b)->ip2ccValue;
+      }
+      rc = strcasecmp(nameA, nameB);
+    }
+
+    if(rc==0) {
+      rc=cmpFctnResolvedName(a, b);
+    }
+
+    return(rc);
 }
 
 /* ************************************ */

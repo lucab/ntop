@@ -474,8 +474,10 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   if(host->icmpInfo != NULL) free(host->icmpInfo);
   if(host->trafficDistribution != NULL) free(host->trafficDistribution);
 
-  if(host->fullDomainName != NULL) free(host->fullDomainName);
-  if(host->dotDomainName != NULL) free(host->dotDomainName);
+  if(host->dnsDomainValue != NULL) free(host->dnsDomainValue);
+  host->dnsDomainValue = NULL;
+  if(host->ip2ccValue != NULL) free(host->ip2ccValue);
+  host->ip2ccValue = NULL;
 
   /* ********** */
   /*
@@ -509,10 +511,10 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
                   "TEMP: free of host (0x%08x) magic(%u) not cleared:", host, host->magic) < 0)
         BufferTooShort();
       ii=strlen(xbuf);
-      if(host->fullDomainName != NULL)
-        strncat(xbuf, " fullDomainName", (sizeof(xbuf) - strlen(xbuf) - 1));
-      if(host->dotDomainName != NULL)
-        strncat(xbuf, " dotDomainName", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->dnsDomainValue != NULL)
+        strncat(xbuf, " dnsDomainValue", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->ip2ccValue != NULL)
+        strncat(xbuf, " ip2ccValue", (sizeof(xbuf) - strlen(xbuf) - 1));
       if(host->fingerprint != NULL)
         strncat(xbuf, " fingerprint", (sizeof(xbuf) - strlen(xbuf) - 1));
       if(host->nonIPTraffic != NULL)
@@ -851,7 +853,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
   }
 
 #ifdef DEBUG 
-  traceEvent(CONST_TRACE_NOISY, "CMPFCTN_DEBUG: lookupHost(%s, %s, m%u, f%u, dev%d)",
+  traceEvent(CONST_TRACE_NOISY, "DEBUG: lookupHost(%s, %s, m%u, f%u, dev%d)",
              addrtostr(hostIpAddress),
              etheraddr_string(ether_addr, buf),
              checkForMultihoming, forceUsingIPaddress, actualDeviceId);

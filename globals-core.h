@@ -88,6 +88,7 @@ extern void urlFixupToRFC1945Inplace(char* url);
 extern void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char* file, int line);
 
 extern int cmpFctnResolvedName(const void *_a, const void *_b);
+extern int cmpFctnLocationName(const void *_a, const void *_b);
 
 /****** function declarations ***** */
 

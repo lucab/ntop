@@ -338,7 +338,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag,
                    char *buf, int bufLen) {
   char symIp[256], linkName[256], flag[256], colorSpec[64];
-  char osBuf[128], titleBuf[256], noteBuf[256];
+  char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64];
   char *dhcpBootpStr, *p2pStr, *multihomedStr, *gwStr, *brStr, *dnsStr, *printStr,
        *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr;
   short usedEthAddress=0;
@@ -422,35 +422,43 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(el->hostNumIpAddress[0] != '\0') {
       /* We have the IP, so the DNS is probably still getting the entry name */
       strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
-#ifdef CMPFCTN_DEBUG
-      if(snprintf(noteBuf, sizeof(noteBuf), "%s<!-- NONE:NumIpAddr(%s) -->",
-                  noteBuf, el->hostNumIpAddress) < 0)
-        BufferTooShort();
+#ifndef CMPFCTN_DEBUG
+      if(myGlobals.debugMode == 1)
 #endif
+        if(snprintf(noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:NumIpAddr(%s) -->",
+                    el->hostNumIpAddress) < 0)
+          BufferTooShort();
+        strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
     } else if(el->ethAddressString[0] != '\0') {
       /* Use the MAC address */
       strncpy(symIp, el->ethAddressString, sizeof(symIp));
       usedEthAddress = 1;
-#ifdef CMPFCTN_DEBUG
-      if(snprintf(noteBuf, sizeof(noteBuf), "%s<!-- NONE:MAC(%s) -->",
-                  noteBuf, el->ethAddressString) < 0)
-        BufferTooShort();
+#ifndef CMPFCTN_DEBUG
+      if(myGlobals.debugMode == 1)
 #endif
+        if(snprintf(noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:MAC(%s) -->",
+                    el->ethAddressString) < 0)
+          BufferTooShort();
+        strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
     } else if(el->hostNumFcAddress[0] != '\0') {
       strncpy(symIp, el->hostNumFcAddress, sizeof(symIp));
+#ifndef CMPFCTN_DEBUG
+      if(myGlobals.debugMode == 1)
+#endif
+        if(snprintf(noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:FC(%s) -->",
+                    el->hostNumFcAddress) < 0)
+          BufferTooShort();
+        strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
     } else if(el->nonIPTraffic) {    
       if(el->nonIPTraffic->nbHostName != NULL) {
         strncpy(symIp, el->nonIPTraffic->nbHostName, sizeof(symIp));
-        if(snprintf(noteBuf, sizeof(noteBuf), " [NetBIOS]%s", noteBuf) < 0)
-          BufferTooShort();
+        strncat(noteBuf, " [NetBios]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
       } else if(el->nonIPTraffic->ipxHostName != NULL) {
         strncpy(symIp, el->nonIPTraffic->ipxHostName, sizeof(symIp));
-        if(snprintf(noteBuf, sizeof(noteBuf), " [IPX]%s", noteBuf) < 0)
-          BufferTooShort();
+        strncat(noteBuf, " [IPX]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
       } else if(el->nonIPTraffic->atNodeName != NULL) {
         strncpy(symIp, el->nonIPTraffic->atNodeName, sizeof(symIp));
-        if(snprintf(noteBuf, sizeof(noteBuf), " [Appletalk]%s", noteBuf) < 0)
-          BufferTooShort();
+        strncat(noteBuf, " [Appletalk]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
       }
     } else {
       releaseAddrResMutex();
@@ -463,12 +471,35 @@ char* makeHostLink(HostTraffic *el, short mode,
     /* Got it? Use it! */
     strncpy(symIp, el->hostResolvedName, sizeof(symIp));
     strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
-#ifdef CMPFCTN_DEBUG
-    if(snprintf(noteBuf, sizeof(noteBuf), "%s<!-- NONE:hRN(%d) -->",
-             noteBuf, el->hostResolvedNameType) < 0)
-      BufferTooShort();
+    if(el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NETBIOS) {
+        strncat(noteBuf, " [NetBIOS]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+    }
+#ifndef CMPFCTN_DEBUG
+    if(myGlobals.debugMode == 1) 
 #endif
-
+      switch (el->hostResolvedNameType) {
+        case FLAG_HOST_SYM_ADDR_TYPE_FC:
+          strncat(noteBuf, " [FibreChannel]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+          break;
+        case FLAG_HOST_SYM_ADDR_TYPE_MAC:
+          strncat(noteBuf, " [MAC]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+          break;
+        case FLAG_HOST_SYM_ADDR_TYPE_IPX:
+          strncat(noteBuf, " [IPX]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+          break;
+        case FLAG_HOST_SYM_ADDR_TYPE_IP:
+          strncat(noteBuf, " [IP]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+          break;
+        case FLAG_HOST_SYM_ADDR_TYPE_ATALK:
+          strncat(noteBuf, " [Appletalk]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
+          break;
+        case FLAG_HOST_SYM_ADDR_TYPE_NETBIOS:
+          /* Do nothing - handled in open code above */
+          break;
+        case FLAG_HOST_SYM_ADDR_TYPE_NAME:
+          break;
+      }
+ 
     if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME) &&
        (el->ethAddressString[0] != '\0')) {
       strncpy(linkName, addrtostr(&(el->hostIpAddress)), sizeof(linkName));
@@ -579,7 +610,8 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(linkName[0] == '\0') {
-    traceEvent(CONST_TRACE_INFO, "Empty link!!");
+    if(snprintf(noteBuf, sizeof(noteBuf), "%s<!-- EmptyLink -->", noteBuf) < 0)
+      BufferTooShort();
   }
 
   /* Fixup ethernet addresses for RFC1945 compliance (: is bad, _ is good) */
@@ -616,7 +648,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     if(snprintf(buf, bufLen, "<th "TH_BG" align=\"left\" nowrap width=\"250\">\n"
 		"<a href=\"/%s.html\" %s%s%s>%s%s</a>\n"
-                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>\n",
+                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>%s\n",
                 linkName, 
                 titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
                 symIp, 
@@ -731,66 +763,78 @@ char* calculateCellColor(Counter actualValue,
 /* ************************ */
 
 char* getHostCountryIconURL(HostTraffic *el) {
-  char path[128], *ret;
+  char *ret, path[256], *img, *source;
+  static char flagBuf[384];
   struct stat buf;
+  int rc;
 
   fillDomainName(el);
 
-  if(el ->fullDomainName == NULL) {
-    ret = "&nbsp;";
-    return(ret);
+  if((el->ip2ccValue != NULL) && (strcasecmp(el->ip2ccValue, "loc") == 0)) {
+    return("Local<!-- RFC1918 -->");
   }
 
-  if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-	      CFG_DATAFILE_DIR, el->fullDomainName) < 0)
-    BufferTooShort();
+  /* Try all the possible combos of name and path */
+  rc = -1; /* Start bad */
 
-  if(stat(path, &buf) == 0)
-    ret = getCountryIconURL(el->fullDomainName, FALSE);
-  else
-    ret = getCountryIconURL(el->dotDomainName, el->dotDomainNameIsFallback);
-
-  if(ret == NULL)
-    ret = "&nbsp;";
-
-  return(ret);
-}
-
-/* ************************ */
-
-char* getCountryIconURL(char* domainName, u_short fullDomainNameIsFallback) {
-  if((domainName == NULL) || (domainName[0] == '\0')) {
-    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
-    return("&nbsp;");
-  } else {
-    static char flagBuf[384];
-    char path[256];
-    struct stat buf;
-
-    if(snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif",
-		domainName) < 0)
-      BufferTooShort();
-
-    if(stat(path, &buf) != 0) {
-      if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-		  CFG_DATAFILE_DIR, domainName) < 0)
-	BufferTooShort();
-
-      if(stat(path, &buf) != 0)
-	return("&nbsp;");
+  if(el->ip2ccValue != NULL) {
+    if(rc != 0) {
+      if(snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif",
+                  CFG_DATAFILE_DIR, el->ip2ccValue) < 0)
+        BufferTooShort();
+      rc = stat(path, &buf);
     }
-
-    if(snprintf(flagBuf, sizeof(flagBuf),
-		"<IMG ALT=\"Flag for(ISO 3166 code) %s %s\" ALIGN=MIDDLE SRC=\"/statsicons/flags/%s.gif\" BORDER=0>%s",
-		domainName,
-                fullDomainNameIsFallback == TRUE ? 
-		"(Guessing from gTLD/ccTLD)" :
-		"(from p2c file)",
-                domainName,
-                fullDomainNameIsFallback == TRUE ? " (?)" : "") < 0) BufferTooShort();
-
-    return(flagBuf);
+    if(rc != 0) {
+      if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
+                  CFG_DATAFILE_DIR, el->ip2ccValue) < 0)
+        BufferTooShort();
+      rc = stat(path, &buf);
+    }
+    if(rc == 0) { 
+      img = el->ip2ccValue;
+      source = "(from p2c file)";
+    }
   }
+
+  if(el->dnsDomainValue != NULL) {
+    if(snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif",
+                el->dnsDomainValue) < 0)
+      BufferTooShort();
+    rc = stat(path, &buf);
+
+    if(rc != 0) {
+      if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
+                  CFG_DATAFILE_DIR, el->dnsDomainValue) < 0)
+        BufferTooShort();
+      rc = stat(path, &buf);
+    }
+    if(rc == 0) {
+      img = el->dnsDomainValue;
+      if(strlen(img) == 2) 
+        source = "(Guessing from ccTLD)";
+      else
+        source = "(Guessing from gTLD)";
+    }
+  }
+
+  if(rc != 0) {
+    /* Nothing worked... */
+    if(snprintf(flagBuf, sizeof(flagBuf), "&nbsp;<!-- No flag for %s or %s -->",
+                el->ip2ccValue != NULL  ? el->ip2ccValue  : "null",
+                el->dnsDomainValue != NULL ? el->dnsDomainValue : "null") < 0)
+      BufferTooShort();
+  } else {
+    if(snprintf(flagBuf, sizeof(flagBuf),
+                "<img alt=\"Flag for %s code %s %s\" align=\"middle\" "
+                "src=\"/statsicons/flags/%s.gif\" border=\"0\">",
+                strlen(img) == 2 ? "ISO 3166" : "gTLD",
+                img,
+                source,
+                img) < 0)
+      BufferTooShort();
+  }
+
+  return(flagBuf);
 }
 
 /* ******************************* */

@@ -1799,27 +1799,40 @@
  * Settings for hostResolvedNameType
  *
  *   The relative order is important for makeHostLink()
- *       Items we know definitively should be negative
+ *       Items we know definitively should be positive
  *       NONE should be zero
- *       'fake' entries > zero
+ *       'fake' entries < zero
  *
  *   So the Type starts as NONE, and if it's still that, makeHostLink()
  *   can try other sources in the tables to find the 'name'.
  *
  *   If we know, explicitly, the type of an item then hostResolvedNameType
- *   becomes <0  and makeHostLink() must respect it.
+ *   becomes >0  and makeHostLink() must respect it.
  *
  *   Items for which we shouldn't create a host entry are <NONE, i.e. FAKE.
+ *
+ *   Use broad ranges for this ... the actual #s don't matter, only the
+ *   relative values.
+ *
+ *   So...  1.. 9 are low level (frame, transport) addresses such as the
+ *                        Ethernet MAC address.
+ *
+ *         11..19 are basic protocol addresses, such as IPX or IP
+ *
+ *         21..29 are high level names, such as DNS name or NetBIOS name
+ *
+ *  Use the last digit for 'family' so tcp/ip over ethernet would normally
+ *  flow MAC (9) to IP (19) to (DNS) NAME (29)
  */
 #define FLAG_HOST_SYM_ADDR_TYPE_FAKE        -9
 #define FLAG_HOST_SYM_ADDR_TYPE_NONE        0
-#define FLAG_HOST_SYM_ADDR_TYPE_ATALK       1
-#define FLAG_HOST_SYM_ADDR_TYPE_IPX         2
-#define FLAG_HOST_SYM_ADDR_TYPE_NETBIOS     3
-#define FLAG_HOST_SYM_ADDR_TYPE_FC          4
-#define FLAG_HOST_SYM_ADDR_TYPE_MAC         5
-#define FLAG_HOST_SYM_ADDR_TYPE_IP          6
-#define FLAG_HOST_SYM_ADDR_TYPE_NAME        7
+#define FLAG_HOST_SYM_ADDR_TYPE_FC          5
+#define FLAG_HOST_SYM_ADDR_TYPE_MAC         9
+#define FLAG_HOST_SYM_ADDR_TYPE_IPX         17
+#define FLAG_HOST_SYM_ADDR_TYPE_IP          19
+#define FLAG_HOST_SYM_ADDR_TYPE_ATALK       21
+#define FLAG_HOST_SYM_ADDR_TYPE_NETBIOS     27
+#define FLAG_HOST_SYM_ADDR_TYPE_NAME        29
 
 /*
  * SSLWATCHDOG stuff

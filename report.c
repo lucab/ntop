@@ -21,9 +21,6 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-/* Static */
-static short domainSort = 0;
-
 /* *************************** */
 
 #ifndef WIN32
@@ -4261,12 +4258,12 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
   }
 
   switch(myGlobals.columnSort) {
-  case 1:
-    rc = strcasecmp(a->domainHost->dotDomainName, b->domainHost->dotDomainName);
-    if(rc == 0)
-      return(strcasecmp(a->domainHost->fullDomainName, b->domainHost->fullDomainName));
-    else
-      return rc;
+  case 1: /* Domain Flag */
+    /* We don't worry about whether this is single or multi domain, since if it is a single
+       domain, our fallback to hostResolvedName will rule anyway.
+     */
+    rc = cmpFctnLocationName(a, b);
+    return(rc);
   case 2: a_  = a->bytesSent.value, b_ = b->bytesSent.value; break;
   case 3: a_  = a->bytesRcvd.value, b_ = b->bytesRcvd.value; break;
   case 4: a_  = a->tcpSent.value  , b_ = b->tcpSent.value;   break;
@@ -4278,17 +4275,8 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
   case 10:a_  = a->icmp6Sent.value , b_ = b->icmp6Sent.value;  break;
   case 11:a_  = a->icmp6Rcvd.value , b_ = b->icmp6Rcvd.value;  break;
   default:
-  case 0:
-    if(domainSort) {
-      /*
-	if((a->domainHost == NULL) || (a->domainHost->fullDomainName == NULL)) printf("A is NULL!\n");
-	if((b->domainHost == NULL) || (b->domainHost->fullDomainName == NULL)) printf("B is NULL!\n");
-      */
-      return(strcasecmp(a->domainHost->fullDomainName, b->domainHost->fullDomainName));
-    } else {
-      rc = cmpFctnResolvedName(a->domainHost, b->domainHost);
-    }
-
+  case 0: /* Host */
+    rc = cmpFctnResolvedName(a->domainHost, b->domainHost);
     return(rc);
   }
 
@@ -4347,36 +4335,31 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
   }
 
-  if(domainName == NULL)
-    domainSort = 1;
-  else
-    domainSort = 0;
-
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     fillDomainName(el);
 
-    if((el->fullDomainName == NULL)
-       || (el->fullDomainName[0] == '\0')
-       || (el->dotDomainName == NULL)
+    if((el->dnsDomainValue == NULL)
+       || (el->dnsDomainValue[0] == '\0')
+       || (el->ip2ccValue == NULL)
        || (el->hostResolvedName[0] == '\0')
-       || (el->dotDomainName == '\0')
+       || (el->ip2ccValue == '\0')
        || broadcastHost(el)
        ) {
       continue;
     } else if((domainName != NULL)
-	      && (strcmp(el->fullDomainName, domainName) != 0)) {
+	      && (strcmp(el->dnsDomainValue, domainName) != 0)) {
       continue;
     }
 
     if(domainName == NULL) {
-      for(keyValue=0, tmpIdx=0; el->fullDomainName[tmpIdx] != '\0'; tmpIdx++)
-	keyValue += (tmpIdx+1)*(u_short)el->fullDomainName[tmpIdx];
+      for(keyValue=0, tmpIdx=0; el->dnsDomainValue[tmpIdx] != '\0'; tmpIdx++)
+	keyValue += (tmpIdx+1)*(u_short)el->dnsDomainValue[tmpIdx];
 
       keyValue %= maxHosts;
 
       while((stats[keyValue] != NULL)
-	    && (strcasecmp(stats[keyValue]->domainHost->fullDomainName, el->fullDomainName) != 0))
+	    && (strcasecmp(stats[keyValue]->domainHost->dnsDomainValue, el->dnsDomainValue) != 0))
 	keyValue = (keyValue+1) % maxHosts;
 
       if(stats[keyValue] != NULL)
@@ -4386,7 +4369,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 	memset(statsEntry, 0, sizeof(DomainStats));
 	statsEntry->domainHost = el;
 	stats[keyValue] = statsEntry;
-	/* traceEvent(CONST_TRACE_INFO, "[%d] %s/%s", numEntries, el->fullDomainName, el->dotDomainName); */
+	/* traceEvent(CONST_TRACE_INFO, "[%d] %s/%s", numEntries, el->dnsDomainValue, el->ip2ccValue); */
       }
     } else {
       statsEntry = &tmpStats[numEntries++];
@@ -4499,8 +4482,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 
     if(domainName == NULL) {
       if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s>%s</A>",
-		  CONST_DOMAIN_STATS_HTML, statsEntry->domainHost->fullDomainName,
-		  statsEntry->domainHost->fullDomainName) < 0)
+		  CONST_DOMAIN_STATS_HTML, statsEntry->domainHost->dnsDomainValue,
+		  statsEntry->domainHost->dnsDomainValue) < 0)
 	BufferTooShort();
     } else {
       char tmpBuf[64], *hostLink;
@@ -4509,7 +4492,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
       accessAddrResMutex("getHostIcon");
 
       blankId = strlen(statsEntry->domainHost->hostResolvedName)-
-	strlen(statsEntry->domainHost->fullDomainName)-1;
+	strlen(statsEntry->domainHost->dnsDomainValue)-1;
 
       strncpy(tmpBuf, statsEntry->domainHost->hostResolvedName, sizeof(tmpBuf));
 

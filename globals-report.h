@@ -248,7 +248,6 @@ extern void showPluginsList(char* pluginName);
 /* CHECK ME: loadPlugins() and unloadPlugins() should not be in webInterface.c */
 extern void initWeb(void);
 extern char *calculateCellColor(Counter actualValue, Counter avgTrafficLow, Counter avgTrafficHigh);
-extern char *getCountryIconURL(char* domainName, u_short fullDomainNameIsFallback);
 extern char *getHostCountryIconURL(HostTraffic *el);
 extern char *getActualRowColor(void);
 extern void switchNwInterface(int _interface);
