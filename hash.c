@@ -67,9 +67,15 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   } else {
     if(accuracyLevel <= MEDIUM_ACCURACY_LEVEL) 
       idx = otherHostEntryIdx;
-    else
-      memcpy(&idx, &hostIpAddress->s_addr, 4); /* set what's needed */
-    
+    else {
+      if(hostIpAddress != NULL)
+	memcpy(&idx, &hostIpAddress->s_addr, 4); /* set what's needed */
+      else {
+	idx = NO_PEER;
+	traceEvent(TRACE_WARNING, "WARNING: Index calculation problem");
+      }
+    }
+
     (*useIPAddressForSearching) = 1;
   }
 

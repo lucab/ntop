@@ -4121,6 +4121,7 @@ void processPacket(u_char *_deviceId,
 	struct llc llcHeader;
 
 	if((ether_dst != NULL)
+	   && (!borderSnifferMode)
 	   && (strcmp(etheraddr_string(ether_dst), "FF:FF:FF:FF:FF:FF") == 0)
 	   && (p[sizeof(struct ether_header)] == 0xff)
 	   && (p[sizeof(struct ether_header)+1] == 0xff)
