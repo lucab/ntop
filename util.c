@@ -3020,10 +3020,6 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
   key_data.dptr  = key;
   key_data.dsize = strlen(key_data.dptr);
 
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "fetchPrefValue");
-#endif
-
   if(myGlobals.prefsFile == NULL) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving fetchPrefValue()");
@@ -3031,10 +3027,16 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
     return(-1); /* ntop is quitting... */
   }
 
+#ifdef MULTITHREADED
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    accessMutex(&myGlobals.gdbmMutex, "fetchPrefValue");
+#endif
+
   data_data = gdbm_fetch(myGlobals.prefsFile, key_data);
 
 #ifdef MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
+  if(myGlobals.gdbmMutex.isInitialized == 1)
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
   memset(value, 0, valueLen);
@@ -3069,10 +3071,6 @@ void storePrefsValue(char *key, char *value) {
   data_data.dptr  = value;
   data_data.dsize = strlen(value);
   
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "storePrefsValue");
-#endif
-
   if(myGlobals.prefsFile == NULL) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving storePrefsValue()");
@@ -3080,11 +3078,17 @@ void storePrefsValue(char *key, char *value) {
     ; /* ntop is quitting... */
   }
 
+#ifdef MULTITHREADED
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    accessMutex(&myGlobals.gdbmMutex, "storePrefsValue");
+#endif
+
   if(gdbm_store(myGlobals.prefsFile, key_data, data_data, GDBM_REPLACE) != 0)
     traceEvent(TRACE_ERROR, "Error while adding %s=%s.", key, value);
   
 #ifdef MULTITHREADED
-  releaseMutex(&myGlobals.gdbmMutex);
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
 }
 

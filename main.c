@@ -722,6 +722,11 @@ int main(int argc, char *argv[]) {
   reportValues(&lastTime);
 #endif /* MICRO_NTOP */
 
+#ifndef WIN32
+  if(myGlobals.daemonMode)
+    daemonize();
+#endif
+  
   initGdbm(myGlobals.dbPath);
 
   /*
@@ -818,17 +823,12 @@ int main(int argc, char *argv[]) {
 
   /* Patch courtesy of Burton M. Strauss III <BStrauss3@attbi.com> */
   handleProtocols();
-  if(myGlobals.protoSpecs) {
+
+  if(myGlobals.protoSpecs != NULL) {
     free(myGlobals.protoSpecs);
     myGlobals.protoSpecs = NULL;
   }
 
-  /*
-    Moved from initialize.c (postCommandLineArgumentsInitialization) so that we
-    don't add the defaults if the user has given us at least SOMETHING to monitor
-
-    Fix courtesy of Burton M. Strauss III <BStrauss3@attbi.com>
-  */
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();
 
@@ -852,8 +852,6 @@ int main(int argc, char *argv[]) {
 #ifdef MEMORY_DEBUG
   resetLeaks();
 #endif
-
-  postCommandLineArgumentsInitialization(&lastTime);
 
   /*
    * In multithread mode, a separate thread handles packet sniffing

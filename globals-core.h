@@ -112,7 +112,6 @@ extern void resetDevice(int devIdx);
 extern void initCounters();
 extern void resetStats(void);
 extern int initGlobalValues(void);
-extern void postCommandLineArgumentsInitialization(time_t *lastTime);
 extern void initGdbm(char *dbPath);
 extern void initThreads();
 extern void initApps(void);

@@ -144,7 +144,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
   void *pluginEntryFctnPtr;
 #endif
   PluginInfo* pluginInfo;
-  
+  char key[64], value[16];
   int rc;
 #ifndef WIN32
   PluginInfo* (*pluginJumpFunc)();
@@ -287,7 +287,19 @@ static void loadPlugin(char* dirName, char* pluginName) {
     }
 
     newFlow->pluginStatus.pluginPtr  = pluginInfo;
-    newFlow->pluginStatus.activePlugin = pluginInfo->activeByDefault;
+
+    if(snprintf(key, sizeof(key), "pluginStatus.%s", pluginInfo->pluginName) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+    if(fetchPrefsValue(key, value, sizeof(value)) == -1)
+      storePrefsValue(key, pluginInfo->activeByDefault ? "1" : "0");
+    else {
+      if(strcmp(value, "1")) 
+	newFlow->pluginStatus.activePlugin = 1;
+      else
+	newFlow->pluginStatus.activePlugin = 1;
+    }
+
     newFlow->next = myGlobals.flowsList;
     myGlobals.flowsList = newFlow;
     /* traceEvent(TRACE_INFO, "Adding: %s\n", pluginInfo->pluginName); */

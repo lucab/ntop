@@ -141,8 +141,17 @@ void showPluginsList(char* pluginName) {
        && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)) {
 
       if(thePlugin
-	 && (strcmp(flows->pluginStatus.pluginPtr->pluginURLname, thePlugin) == 0))
+	 && (strcmp(flows->pluginStatus.pluginPtr->pluginURLname, thePlugin) == 0)) {
+	char key[64];
+
 	flows->pluginStatus.activePlugin = newPluginStatus;
+
+	if(snprintf(key, sizeof(key), "pluginStatus.%s", 
+		    flows->pluginStatus.pluginPtr->pluginName) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+	storePrefsValue(key, newPluginStatus ? "1" : "0");
+      }
 
       if(!printHeader) {
 	/* printHTTPheader(); */

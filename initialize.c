@@ -451,15 +451,6 @@ int initGlobalValues(void) {
 
 /* ******************************* */
 
-void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
-#ifndef WIN32
-  if(myGlobals.daemonMode)
-    daemonize();
-#endif
-}
-
-/* ******************************* */
-
 void initGdbm(char * dbPath) {
   char tmpBuf[200];
 #ifdef FALLBACK
