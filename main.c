@@ -252,7 +252,9 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-W <port>      | --https-server <port>]              Web server (https:) port (or address:port) to listen on\n");
 #endif
 
+#ifdef HAVE_GDCHART
   fprintf(fp, "    [--throughput-bar-chart]                              Use BAR chart for graphs\n");
+#endif
 
 #ifndef YES_IGNORE_SIGPIPE 
   fprintf(fp, "    [--ignore-sigpipe]                                    Ignore SIGPIPE errors\n");
