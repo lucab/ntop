@@ -2165,7 +2165,6 @@ void printLocalRoutersList(int actualDeviceId) {
   HostTraffic *el, *router;
   u_int i, j, numEntries=0;
   HostSerial routerList[MAX_NUM_ROUTERS];
-  char formatBuf[32];
 
   printHTMLheader("Local Subnet Routers", NULL, 0);
 
@@ -2254,8 +2253,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   time_t timeDiff = time(NULL)-myGlobals.initialSniffTime;
   char *arrowGif, *arrow[48], *theAnchor[48], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   char htmlAnchor[64], htmlAnchor1[64];
-  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], 
-    formatBuf4[32], formatBuf5[32], formatBuf6[32];
+  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32];
 
   if(revertOrder) {
     sign = "";
@@ -2486,8 +2484,6 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int numSessions, printedSessions;
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], 
     formatBuf4[32], formatBuf5[32], formatBuf6[32];
-  char portBuf[32];
-  int portBufLen;
 
   if(!myGlobals.enableSessionHandling) {
     printNotAvailable("-z or --disable-sessions");

@@ -452,7 +452,10 @@ char* makeHostLink(HostTraffic *el, short mode,
     /* Ethernet address is used */
     if(symIp[2] == ':') {
       char *symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));  
-      snprintf(symIp, sizeof(symIp), "%s%s", symEthName, &el->ethAddressString[8]);
+	  if((symEthName != NULL) && (symEthName[0] != '\0'))
+		snprintf(symIp, sizeof(symIp), "%s%s", symEthName, &el->ethAddressString[8]);
+	  else
+		snprintf(symIp, sizeof(symIp), "%s", el->ethAddressString);
     }
   }
 

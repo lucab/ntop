@@ -59,6 +59,7 @@ typedef int NDIS_STATUS, *PNDIS_STATUS;
 
 /* ******************* */
 
+#define socklen_t int
 #define strcasecmp _stricmp
 
 extern int getopt(int num, char *const *argv, const char *opts);

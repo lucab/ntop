@@ -5169,7 +5169,13 @@ int retrieveVersionFile(char *versionSite, char *versionFile,
    * remember, buf/bufLen better be big enough to handle the whole response
    */
   memset(buf, 0, bufLen);
-  rc = recv(sock, buf, bufLen, MSG_WAITALL);
+  rc = recv(sock, buf, bufLen, 
+#ifdef WIN32
+	  0
+#else
+	  MSG_WAITALL
+#endif
+	  );
   if (rc < 0) {
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to receive http response: %s(%d)", strerror(errno), errno);
@@ -5214,7 +5220,7 @@ int processVersionFile(char *buf, int bufLen) {
     for (i=0; 1; i++) {
       if (--bufLen <= 0) {
 	traceEvent(CONST_TRACE_ERROR, "CHKVER: Past end processing http response");
-	return;
+	return(0);
       }
       /* Cleanup whitespace */
       if (hdr[i] == '\r' ||
@@ -5397,7 +5403,7 @@ void* checkVersion(void* notUsed _UNUSED_) {
   displayPrivacyNotice();
 
   if(myGlobals.skipVersionCheck == TRUE)
-    return;
+    return(NULL);
 
   /* make a working copy */
   versionSite=strdup(CONST_VERSIONCHECK_URL);

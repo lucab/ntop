@@ -62,7 +62,7 @@ ntop.h
 #ifndef NTOP_H
 #define NTOP_H
 
-#ifdef HAVE_CONFIG_H
+#if defined(HAVE_CONFIG_H) || defined(WIN32)
 #include "config.h"
 #endif
 
@@ -324,6 +324,7 @@ ntop.h
 #if defined(WIN32) && defined(__GNUC__)
  #include "bpf.h"
 #else
+#if !defined(WIN32)
  #ifdef HAVE_NET_BPF_H
   #include <net/bpf.h>
  #else
@@ -333,6 +334,7 @@ ntop.h
    #error Neither net/bpf.h nor pcap-bpf.h found
   #endif
  #endif
+#endif
 #endif
 
 /* **************************************************************************************

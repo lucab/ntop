@@ -1121,7 +1121,6 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 #endif
     HostTraffic *el=NULL;
     FcNameServerCacheEntry *fcnsEntry;
-    unsigned char buf[MAX_LEN_SYM_HOST_NAME_HTML];
     u_short numRuns=0;
     u_int hostFound = 0;
 
