@@ -352,6 +352,7 @@ int main(int argc, char *argv[]) {
 	} else {
 	  printf("ERROR: %d in stat(%s, ...)\n", errno, &argv[i][1]);
 	}
+        free(cmdLineBuffer);
 	return(-1);
       }
 
@@ -362,6 +363,7 @@ int main(int argc, char *argv[]) {
       fd = fopen(&argv[i][1], "rb");
       if (fd == NULL) {
 	printf("ERROR: Unable to open parameter file '%s' (%d)...\n", &argv[i][1], errno);
+        free(cmdLineBuffer);
 	return(-1);
       }
 
@@ -410,6 +412,7 @@ int main(int argc, char *argv[]) {
 
     }
   }
+  free(readBuffer);
 
   /* Strip trailing spaces */
   while((strlen(cmdLineBuffer) > 1) && 
@@ -418,6 +421,7 @@ int main(int argc, char *argv[]) {
   }
 
   effective_argv = buildargv(cmdLineBuffer); /* Build a new argv[] from the string */
+  free(cmdLineBuffer);
 
  /* count effective_argv[] */
   effective_argc = 0;
@@ -572,9 +576,6 @@ int main(int argc, char *argv[]) {
     HEARTBEAT(0, "main(), sleep()...woke", NULL);
   }
 #endif
-
-  free(cmdLineBuffer);
-  free(readBuffer);
 
   return(0);
 }
