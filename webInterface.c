@@ -164,7 +164,7 @@ void showPluginsList(char* pluginName) {
   FlowFilterList *flows = myGlobals.flowsList;
   short doPrintHeader = 0;
   char tmpBuf[LEN_GENERAL_WORK_BUFFER], *thePlugin, tmpBuf1[LEN_GENERAL_WORK_BUFFER];
-  int newPluginStatus = 0;
+  int newPluginStatus = 0, rc;
 
   if(pluginName[0] != '\0') {
     int i;
@@ -194,8 +194,8 @@ void showPluginsList(char* pluginName) {
 	    flows->pluginStatus.pluginPtr->termFunct();
 	} else {
 	  if(flows->pluginStatus.pluginPtr->startFunct != NULL)
-	    flows->pluginStatus.pluginPtr->startFunct();
-	  if(flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL)
+	    rc = flows->pluginStatus.pluginPtr->startFunct();
+	  if(rc || (flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL))
 	    newPluginStatus = 0 /* Disabled */;
 	}
 
