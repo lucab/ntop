@@ -1,6 +1,8 @@
 #!/bin/sh
 
 echo "        Setting FreeBSD specific flag values"
+CPPFLAGS="-DHAVE_FILEDESCRIPTORBUG ${CPPFLAGS}"
+
 if test ".${LOCALEDIR}" = "."; then
     LOCALEDIR="/usr/share/locale"
 fi
