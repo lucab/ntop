@@ -235,7 +235,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		    "<TD ALIGN=CENTER WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
 		    "</TR></TABLE></TD>"
 		    "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
-		    getRowColor(), label, flowBuf,
+		    getRowColor(), label,
 		    CONST_COLOR_1, label_1,
 		    CONST_COLOR_2,
 		    CONST_COLOR_2, label_2);
