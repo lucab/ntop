@@ -2403,8 +2403,8 @@ static int createNetFlowDevice(int netFlowDeviceId) {
 
     myGlobals.device[deviceId].activeDevice = 1;
     myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId = netFlowDeviceId;
-    setNetFlowInterfaceMatrix(deviceId);
     initNetFlowDevice(deviceId);
+    setNetFlowInterfaceMatrix(deviceId);
 
     traceEvent(CONST_TRACE_INFO, "NETFLOW: createNetFlowDevice created device %d",
 	     deviceId);    

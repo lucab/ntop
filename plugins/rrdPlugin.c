@@ -372,7 +372,8 @@ static void listResource(char *rrdPath, char *rrdTitle,
    
   for(i=min; i<=max; i++) {
     sendString("<TR><TD COLSPAN=2 ALIGN=CENTER>");
-    if(snprintf(path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
+    if(snprintf(path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary"
+		"&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
 		i, rrdPath, startTime, endTime) < 0)
       BufferTooShort();
     sendString(path);
@@ -603,6 +604,8 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0;
   DIR* directoryPointer;
+
+  path[0] = '\0';
 
   switch(graphId) {
   case 0: rrds = (char**)rrd_summary_packets; label = "Packets/sec"; break;
