@@ -132,9 +132,6 @@
 /* Define to 1 if you have the <getopt.h> header file. */
 #undef HAVE_GETOPT_H
 
-/* getopt_long() is available */
-#undef HAVE_GETOPT_LONG
-
 /* Define to 1 if you have the `getpass' function. */
 #undef HAVE_GETPASS
 
