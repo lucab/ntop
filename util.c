@@ -1035,6 +1035,7 @@ int createThread(pthread_t *threadId,
   int rc;
 
   rc = pthread_create(threadId, NULL, __start_routine, userParm);
+  traceEvent(CONST_TRACE_NOISY, "createThread(0x%x), rc = %s(%d)", threadId, strerror(rc), rc);
   myGlobals.numThreads++;
   return(rc);
 }
@@ -1400,7 +1401,6 @@ int _releaseMutex(PthreadMutex *mutexId,
     mutexId->isLocked = 0;
     mutexId->numReleases++;
     if(!myGlobals.disableMutexExtraInfo) {
-      mutexId->lockLine = 0;
       mutexId->unlockPid=getpid();
       if(fileName != NULL) {
         strcpy(mutexId->unlockFile, fileName);
