@@ -739,8 +739,9 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dumpDetail", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpDetail", FLAG_RRD_DETAIL_HIGH_STR);
-    dumpDetail = FLAG_RRD_DETAIL_HIGH;
+    sprintf(value, "%d", CONST_RRD_DETIL_DEFAULT);
+    storePrefsValue("rrd.dumpDetail", value);
+    dumpDetail = CONST_RRD_DETIL_DEFAULT;
   } else {
     dumpDetail  = atoi(value);
   }
@@ -778,10 +779,20 @@ static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
     rrdKey[64], rrdName[64], rrdTitle[64], startTime[32], endTime[32], rrdPrefix[32];
   u_char action = FLAG_RRD_ACTION_NONE;
-  int _dumpFlows=0, _dumpHosts=0, _dumpInterfaces=0, _dumpMatrix=0;
+  int _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpMatrix, _dumpDetail, _dumpInterval;
+  char * _hostsFilter;
 
   if (initialized == 0)
     commonRRDinit();
+
+  /* Initial values - remember, for checkboxes these need to be OFF (there's no html UNCHECKED option) */
+  _dumpFlows=0;
+  _dumpHosts=0;
+  _dumpInterfaces=0;
+  _dumpMatrix=0;
+  _dumpDetail=CONST_RRD_DETIL_DEFAULT;
+  _dumpInterval=300;
+  _hostsFilter = NULL;
 
   if((url != NULL) && (url[0] != '\0')) {
     unescape_url(url);
@@ -851,14 +862,10 @@ static void handleRRDHTTPrequest(char* url) {
 	  if(len >= sizeof(endTime)) len = sizeof(endTime)-1;
 	  strncpy(endTime, value, len); endTime[len] = '\0';
 	} else if(strcmp(key, "interval") == 0) {
-	  if(dumpInterval != atoi(value)) {
-	    dumpInterval = atoi(value);
-	    storePrefsValue("rrd.dataDumpInterval", value);
-	  }
+	  _dumpInterval = atoi(value);
+          if (_dumpInterval < 1) _dumpInterval = 1 /* Min 1 second */;
 	} else if(strcmp(key, "hostsFilter") == 0) {
-	  if(hostsFilter != NULL) free(hostsFilter);
-	  hostsFilter = strdup(value);
-	  storePrefsValue("rrd.hostsFilter", hostsFilter);
+	  _hostsFilter = strdup(value);
 	} else if(strcmp(key, "rrdPath") == 0) {
 	  if(myGlobals.rrdPath != NULL) free(myGlobals.rrdPath);
 	  myGlobals.rrdPath = strdup(value);
@@ -866,10 +873,9 @@ static void handleRRDHTTPrequest(char* url) {
 	} else if(strcmp(key, "dumpFlows") == 0) {
 	  _dumpFlows = 1;
 	} else if(strcmp(key, "dumpDetail") == 0) {
-	  dumpDetail = atoi(value);
-	  if(dumpDetail > FLAG_RRD_DETAIL_HIGH) dumpDetail = FLAG_RRD_DETAIL_HIGH;
-	  snprintf(buf, sizeof(buf), "%d", dumpDetail);
-	  storePrefsValue("rrd.dumpDetail", buf);
+	  _dumpDetail = atoi(value);
+	  if(_dumpDetail > FLAG_RRD_DETAIL_HIGH) _dumpDetail = FLAG_RRD_DETAIL_HIGH;
+	  if(_dumpDetail < FLAG_RRD_DETAIL_LOW)  _dumpDetail = FLAG_RRD_DETAIL_LOW;
 	} else if(strcmp(key, "dumpHosts") == 0) {
 	  _dumpHosts = 1;
 	} else if(strcmp(key, "dumpInterfaces") == 0) {
@@ -883,15 +889,31 @@ static void handleRRDHTTPrequest(char* url) {
     }
 
     if(action == FLAG_RRD_ACTION_NONE) {
+      dumpInterval = _dumpInterval;
       /* traceEvent(CONST_TRACE_INFO, "RRD: dumpFlows=%d", dumpFlows); */
-      dumpFlows=_dumpFlows, dumpHosts=_dumpHosts,
-	dumpInterfaces=_dumpInterfaces, dumpMatrix=_dumpMatrix;
+      dumpFlows=_dumpFlows;
+      dumpHosts=_dumpHosts;
+      dumpInterfaces=_dumpInterfaces;
+      dumpMatrix=_dumpMatrix;
+      dumpDetail = _dumpDetail;
+      sprintf(buf, "%d", dumpInterval);   storePrefsValue("rrd.dumpInterval", buf);
       sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dumpFlows", buf);
       sprintf(buf, "%d", dumpHosts);      storePrefsValue("rrd.dumpHosts", buf);
       sprintf(buf, "%d", dumpInterfaces); storePrefsValue("rrd.dumpInterfaces", buf);
       sprintf(buf, "%d", dumpMatrix);     storePrefsValue("rrd.dumpMatrix", buf);
+      sprintf(buf, "%d", dumpDetail);     storePrefsValue("rrd.dumpDetail", buf);
+      if(hostsFilter != NULL) free(hostsFilter);
+      if (_hostsFilter == NULL) {
+          hostsFilter  = strdup("");
+      } else {
+          hostsFilter = _hostsFilter;
+          _hostsFilter = NULL;
+      }
+      storePrefsValue("rrd.hostsFilter", hostsFilter);
     }
   }
+
+  if (_hostsFilter != NULL) free(_hostsFilter);
 
   /* traceEvent(CONST_TRACE_INFO, "RRD: action=%d", action); */
 
