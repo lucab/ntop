@@ -3264,6 +3264,7 @@ static void processIpPkt(const u_char *bp,
   u_char etherAddrSrc[ETHERNET_ADDRESS_LEN+1],
          etherAddrDst[ETHERNET_ADDRESS_LEN+1], forceUsingIPaddress = 0;
   struct timeval tvstrct;
+  u_char *theData;
 
   /* Need to copy this over in case bp isn't properly aligned.
    * This occurs on SunOS 4.x at least.
@@ -3437,10 +3438,13 @@ static void processIpPkt(const u_char *bp,
     memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
 
     /* Sanity check */
-    if(tcpUdpLen >= (tp.th_off * 4))
+    if(tcpUdpLen > (tp.th_off * 4)) {
       tcpDataLength = tcpUdpLen - (tp.th_off * 4);
-    else
+      theData = (u_char*)(bp+hlen+(tp.th_off * 4));
+    } else { 
       tcpDataLength = 0;
+      theData = NULL;
+    }
 
     device[actualDeviceId].tcpBytes += tcpUdpLen;
 
@@ -3508,7 +3512,7 @@ static void processIpPkt(const u_char *bp,
       theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
 				    srcHostIdx, sport, dstHostIdx,
 				    dport, length, &tp, tcpDataLength,
-				    (u_char*)(bp+hlen+(tp.th_off * 4)));
+				    theData);
       if(theSession == NULL)
 	isPassiveSession = 0;
       else

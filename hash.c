@@ -39,13 +39,15 @@ static void purgeIdleHostSessions(u_char *flaggedHosts, u_int flaggedHostsLen,
   while(theScanner != NULL) {
     scanner = theScanner->peersIdx;
     for(i=0, peerFound=0; i<MAX_NUM_SESSION_PEERS; i++) {
-      if(scanner[i] > flaggedHostsLen) {
-	traceEvent(TRACE_INFO, "WARNING: Index %u out of range [0..%d]", scanner[i], flaggedHostsLen);
-      } else {
-	if(flaggedHosts[scanner[i]])
-	  scanner[i] = NO_PEER;
-	if(scanner[i] != NO_PEER)
-	  peerFound++;
+      if(scanner[i] != NO_PEER) {
+	if(scanner[i] > flaggedHostsLen) {
+	  traceEvent(TRACE_INFO, "WARNING: Index %u out of range [0..%d]", scanner[i], flaggedHostsLen);
+	} else {
+	  if(flaggedHosts[scanner[i]])
+	    scanner[i] = NO_PEER;
+	  if(scanner[i] != NO_PEER)
+	    peerFound++;
+	}
       }
     }
 
@@ -535,6 +537,8 @@ static void removeGlobalHostPeers(HostTraffic *el,
   traceEvent(TRACE_INFO, "Entering removeGlobalHostPeers(0x%X)", el);
 #endif
 
+  if(!capturePackets) return;
+
   if(el->tcpSessionList != NULL)
     purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, &el->tcpSessionList);
 
@@ -725,8 +729,10 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
   }
 
   for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++)
-    if(host->portsUsage[i] != NULL)
+    if(host->portsUsage[i] != NULL) {
       free(host->portsUsage[i]);
+      host->portsUsage[i] = NULL;
+    }
 
   element = host->tcpSessionList;
 
