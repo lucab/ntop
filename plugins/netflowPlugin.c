@@ -82,7 +82,7 @@ static PluginInfo netflowPluginInfo[] = {
     handleNetflowHTTPrequest,
     NULL, /* no host creation/deletion handle */
 #ifdef DEBUG_FLOWS
-    "udp and (port 2055 or port 9995 or port 10234)",
+    "udp and (port 2055 or port 2056)",
 #else
     NULL, /* no capture */
 #endif
@@ -193,7 +193,7 @@ static int setNetFlowInSocket(int deviceId) {
     if((myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket <= 0) || (errno != 0)) {
       traceEvent(CONST_TRACE_INFO, "NETFLOW: Unable to create a SCTP socket - returned %d, error is '%s'(%d)",
 		 myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, strerror(errno), errno);
-      setPluginStatus("SCTP disabled - Unable to create listening socket.");
+      /* setPluginStatus("SCTP disabled - Unable to create listening socket."); */
     }
 #endif
 
@@ -329,10 +329,10 @@ static int handleV5Flow(time_t recordActTime,
   recordActTime   = ntohl(recordActTime);
   recordSysUpTime = ntohl(recordSysUpTime);
   
-  initTime = recordActTime-recordSysUpTime;
+  initTime = recordActTime-(recordSysUpTime/1000);
 
-  firstSeen = ntohl(record->First) + initTime;
-  lastSeen  = ntohl(record->Last) + initTime;
+  firstSeen = (ntohl(record->First)/1000) + initTime;
+  lastSeen  = (ntohl(record->Last)/1000) + initTime;
 
   /* Sanity check */
   if(firstSeen > lastSeen)
@@ -352,7 +352,8 @@ static int handleV5Flow(time_t recordActTime,
   {
     char buf1[256], buf[256];
 
-    traceEvent(CONST_TRACE_INFO, "%s:%d <-> %s:%d pkt=%u/len=%u sAS=%d/dAS=%d (proto=%d)",
+    traceEvent(CONST_TRACE_INFO,
+	       "[%s:%d <-> %s:%d][pkt=%u/len=%u][sAS=%d/dAS=%d][proto=%d]",
 	       _intoa(a, buf, sizeof(buf)), sport,
 	       _intoa(b, buf1, sizeof(buf1)), dport, numPkts, len,
 	       srcAS, dstAS, proto);
@@ -491,11 +492,17 @@ static int handleV5Flow(time_t recordActTime,
   if((srcHost == NULL) ||(dstHost == NULL)) return(0);
 
   if(srcHost->firstSeen > firstSeen) srcHost->firstSeen = firstSeen;
-  if(srcHost->lastSeen > lastSeen)   srcHost->lastSeen = lastSeen;
+  if(srcHost->lastSeen < lastSeen)   srcHost->lastSeen = lastSeen;
   if(dstHost->firstSeen > firstSeen) dstHost->firstSeen = firstSeen;
-  if(dstHost->lastSeen > lastSeen)   dstHost->lastSeen = lastSeen;
+  if(dstHost->lastSeen < lastSeen)   dstHost->lastSeen = lastSeen;
 
-  srcHost->lastSeen = dstHost->lastSeen = recordActTime;
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [last=%d][first=%d][last-first=%d]",
+	       srcHost->hostNumIpAddress, sport,
+	       dstHost->hostNumIpAddress, dport, ntohl(record->Last), ntohl(record->First),
+	       (lastSeen - firstSeen));
+#endif
+
   /* Commented out ... already done in updatePacketCount()                         */
   /* srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value     += numPkts; */
   /* srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;     */
