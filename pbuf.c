@@ -49,6 +49,8 @@
   #define FRAGMENT_DEBUG
 */
 
+/* #define HASH_DEBUG */
+
 #define SESSION_PATCH /* Experimental (L.Deri) */
 
 /* #define PRINT_UNKNOWN_PACKETS */
@@ -61,7 +63,7 @@ static const struct pcap_pkthdr *h_save;
 static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 
-#ifdef DEBUG
+#ifdef HASH_DEBUG
 static void dumpHash(); /* Forward */
 #endif
 
@@ -136,7 +138,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   for(i=0; i<device[actualDeviceId].actualHashSize; i++) {
   HASH_SLOT_FOUND:
     el = device[actualDeviceId].hash_hostTraffic[idx]; /* (**) */
+#ifdef HASH_DEBUG
     numRuns++;
+#endif
     if(el != NULL) {
       if(useIPAddressForSearching == 0) {
 	/* compare with the ethernet-address */
@@ -415,7 +419,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       goto HASH_SLOT_FOUND;
     }
   } else {
-#ifdef DEBUG
+#ifdef HASH_DEBUG
     if((numRuns*2) > device[actualDeviceId].actualHashSize) {
       traceEvent(TRACE_ERROR, "Num Runs: %d/%d [idx=%d][initialIdx=%d]", 
 		 numRuns, device[actualDeviceId].actualHashSize, 
@@ -840,7 +844,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   u_char rcStr[256];
   int len = 0;
 
-  if(accuracyLevel < MEDIUM_ACCURACY_LEVEL)
+  if(!enableSessionHandling)
     return(NULL);
 
   srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
@@ -856,7 +860,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     because BOOTP uses broadcast addresses hence
     it would be filtered out by the (**) check
   */
-  if(tp == NULL /* UDP session */)
+  if(enablePacketDecoding && (tp == NULL /* UDP session */))
     handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData);
 
   if(broadcastHost(srcHost) || broadcastHost(dstHost)) /* (**) */
@@ -2496,6 +2500,9 @@ static u_int handleFragment(HostTraffic *srcHost,
   IpFragment *fragment;
   u_int fragmentOffset, length;
 
+  if(!enableFragmentHandling)
+    return(0);
+
   fragmentOffset = (off & 0x1FFF)*8;
 
   fragment = searchFragment(srcHost, dstHost, fragmentId);
@@ -3086,6 +3093,7 @@ static void processIpPkt(const u_char *bp,
 
       if(!(off & 0x3fff)) {
 	if(((sport == 53) || (dport == 53) /* domain */)
+	   && enablePacketDecoding
 	   && (accuracyLevel == HIGH_ACCURACY_LEVEL)
 	   && (bp != NULL) /* packet long enough */) {
 	  short isRequest, positiveReply;
@@ -3190,9 +3198,10 @@ static void processIpPkt(const u_char *bp,
 	  }
 	  
 	} else {
-	  handleNetbios(srcHost, dstHost, sport, dport,
-			udpDataLength, bp,
-			length, hlen);
+	  if(enablePacketDecoding) 
+	    handleNetbios(srcHost, dstHost, sport, dport,
+			  udpDataLength, bp,
+			  length, hlen);
 	}
       }
 
@@ -3550,7 +3559,7 @@ void queuePacket(u_char * _deviceId,
     if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
     memcpy(packetQueue[packetQueueHead].p, p, len);
     packetQueue[packetQueueHead].h.caplen = len;
-    packetQueue[packetQueueHead].deviceId = _deviceId;
+    packetQueue[packetQueueHead].deviceId = (int)((void*)_deviceId);
     packetQueueHead = (packetQueueHead+1) % PACKET_QUEUE_LENGTH;
     packetQueueLen++;
     if(packetQueueLen > maxPacketQueueLen)
@@ -4173,7 +4182,7 @@ void processPacket(u_char *_deviceId,
 	    /* Spanning Tree */
 	    srcHost->stpSent += length, dstHost->stpReceived += length;
 	    device[actualDeviceId].stpBytes += length;
-	  } else if((accuracyLevel == HIGH_ACCURACY_LEVEL) && (sap_type == 0xE0)) {
+	  } else if(enablePacketDecoding && (sap_type == 0xE0)) {
 	    /* NetWare */
 	    if(!(llcHeader.ssap == LLCSAP_GLOBAL && llcHeader.dsap == LLCSAP_GLOBAL)) {
 	      p1 += 3; /* LLC Header (short version) */
@@ -4287,14 +4296,16 @@ void processPacket(u_char *_deviceId,
 
 	    srcHost->ipxSent += length, dstHost->ipxReceived += length;
 	    device[actualDeviceId].ipxBytes += length;
-	  } else if(llcHeader.ssap == LLCSAP_NETBIOS
-		     && llcHeader.dsap == LLCSAP_NETBIOS) {
+	  } else if((llcHeader.ssap == LLCSAP_NETBIOS)
+		    && (llcHeader.dsap == LLCSAP_NETBIOS)) {
 	    /* Netbios */
 	    srcHost->netbiosSent += length;
 	    dstHost->netbiosReceived += length;
 	    device[actualDeviceId].netbiosBytes += length;
-	  } else if((sap_type == 0xF0) || (sap_type == 0xB4)
-		     || (sap_type == 0xC4) || (sap_type == 0xF8)) {
+	  } else if((sap_type == 0xF0) 
+		    || (sap_type == 0xB4)
+		    || (sap_type == 0xC4)
+		    || (sap_type == 0xF8)) {
 	    /* DLC (protocol used for printers) */
 	    srcHost->dlcSent += length;
 	    dstHost->dlcReceived += length; FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
@@ -4312,11 +4323,10 @@ void processPacket(u_char *_deviceId,
 
 	      http://www.faqs.org/rfcs/rfc1060.html
 	    */
-	    if((accuracyLevel == HIGH_ACCURACY_LEVEL)
+	    if(enablePacketDecoding
 	       && ((snapType == 0x809B) || (snapType == 0x80F3))) {
 	      /* Appletalk */
 	      AtDDPheader ddpHeader;
-
 
 	      memcpy(&ddpHeader, (char*)p1, sizeof(AtDDPheader));
 
@@ -4346,7 +4356,8 @@ void processPacket(u_char *_deviceId,
 		  memcpy(nodeName, &p1[6+displ], p1[5+displ]);
 		  nodeName[p1[5+displ]] = '\0';
 
-		  if(strlen(nodeName) >= (MAX_HOST_SYM_NAME_LEN-1)) nodeName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
+		  if(strlen(nodeName) >= (MAX_HOST_SYM_NAME_LEN-1)) 
+		    nodeName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
 		  srcHost->atNodeName = strdup(nodeName);
 		  updateHostName(srcHost);
 
@@ -4383,7 +4394,7 @@ void processPacket(u_char *_deviceId,
 	      dstHost->otherReceived += length;
 	      device[actualDeviceId].otherBytes += length;
 	    }
-	  } else if((accuracyLevel == HIGH_ACCURACY_LEVEL)
+	  } else if(enablePacketDecoding
 		    && ((sap_type == 0x06)
 			|| (sap_type == 0xFE)
 			|| (sap_type == 0xFC))) {  /* OSI */
@@ -4666,7 +4677,7 @@ void _incrementUsageCounter(UsageCounter *counter,
 
 /* ************************************ */
 
-#ifdef DEBUG
+#ifdef HASH_DEBUG
 /* Debug only */
 static void dumpHash() {
   int i;

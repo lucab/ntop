@@ -113,7 +113,7 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
     StoredAddress *retrievedAddress;
 
     retrievedAddress = (StoredAddress*)data_data.dptr;
-#ifdef GDBM_DEBUG
+#ifdef DNS_DEBUG
     traceEvent(TRACE_INFO, "Fetched data (2): '%s' [%s]\n",
 	       retrievedAddress->symAddress, keyBuf);
 #endif
@@ -337,43 +337,41 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
 
 static void queueAddress(struct in_addr elem) {
-  /****************************
-   - If the queue is full then wait until a slot is freed
-   - If the queue is getting full then periodically wait
-     until a slot is freed
-  *****************************/
-  if(addressQueueLen >= ADDRESS_QUEUE_LENGTH) {
-#ifdef DEBUG
-   traceEvent(TRACE_INFO, "Dropping address!!! [addr queue=%d/max=%d]\n",
-	      addressQueueLen, maxAddressQueueLen);
+#ifdef HAVE_GDBM_H
+  datum key_data, data_data;
 #endif
-    /* The address is kept in numerical form (i.e. no conversion will take place) */
-    numKeptNumericAddresses++;
-    droppedAddresses++;
-#ifdef HAVE_SCHED_H
-    sched_yield(); /* Allow other threads (dequeue) to run */
+  char tmpBuf[32];
+
+#ifdef MULTITHREADED
+  accessMutex(&gdbmMutex, "queueAddress");
+#endif
+
+  sprintf(tmpBuf, "%u", elem.s_addr);
+  key_data.dptr = tmpBuf;
+  key_data.dsize = strlen(tmpBuf)+1;
+
+  data_data = gdbm_fetch(gdbm_file, key_data);
+
+  if(data_data.dptr == NULL) {
+    data_data.dptr = tmpBuf;
+    data_data.dsize = strlen(tmpBuf)+1;
+
+  if(gdbm_store(addressCache, key_data, data_data, GDBM_REPLACE) != 0)
+    printf("Error while adding address '%s'\n", tmpBuf);
+
+  addressQueueLen++;
+  if(addressQueueLen > maxAddressQueueLen) maxAddressQueueLen = addressQueueLen;
+
+#ifdef DNS_DEBUG
+   traceEvent(TRACE_INFO, "Queued address '%s' [addr queue=%d/max=%d]\n",
+	      tmpBuf, addressQueueLen, maxAddressQueueLen);
 #endif
   } else {
-    accessMutex(&addressQueueMutex, "queueAddress");
-    addressQueue[addressQueueHead].s_addr = elem.s_addr;
-    addressQueueHead = ((addressQueueHead+1) % ADDRESS_QUEUE_LENGTH);
-    addressQueueLen++;
-
-    if(addressQueueLen > maxAddressQueueLen) {
-      maxAddressQueueLen = addressQueueLen; /* Update stats */
-#ifdef DEBUG
-     traceEvent(TRACE_INFO, "Max queue len: %ld\n", maxAddressQueueLen);
-#endif
-    }
-
-    releaseMutex(&addressQueueMutex);
-#ifdef DEBUG
-   traceEvent(TRACE_INFO, "Queued address... [addr queue=%d/max=%d]\n",
-	      addressQueueLen, maxAddressQueueLen);
-#endif
-
-#ifdef DEBUG_THREADS
-   traceEvent(TRACE_INFO, "+ [addr queue=%d/max=%d]\n", addressQueueLen, maxAddressQueueLen);
+    /* Address already in queue */
+    free(data_data.dptr);
+  }
+#ifdef MULTITHREADED
+  releaseMutex(&gdbmMutex);
 #endif
 
 #ifdef USE_SEMAPHORES
@@ -381,14 +379,12 @@ static void queueAddress(struct in_addr elem) {
 #else
     signalCondvar(&queueAddressCondvar);
 #endif
-  }
 }
 
 /* ************************************ */
 
 void cleanupAddressQueue(void) {
-  addressQueueTail = 0;
-  addressQueueLen  = 0;
+  /* Nothing to do */
 }
 
 /* ************************************ */
@@ -397,6 +393,11 @@ void cleanupAddressQueue(void) {
 
 void* dequeueAddress(void* notUsed _UNUSED_) {
   struct in_addr addr;
+#ifdef HAVE_GDBM_H
+  datum key_data, data_data;
+#endif
+
+  key_data.dptr = NULL;
 
   while(capturePackets) {
 #ifdef DEBUG
@@ -411,38 +412,48 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #else
       waitCondvar(&queueAddressCondvar);
 #endif
+      key_data.dptr = NULL;
     }
 
     if(!capturePackets) break;
 
-    accessMutex(&addressQueueMutex, "dequeueAddress");
-    addr.s_addr = addressQueue[addressQueueTail].s_addr;
-
-    addressQueue[addressQueueTail].s_addr = 0x0; /* Just to keep the table clean */
-    addressQueueTail = ((addressQueueTail+1) % ADDRESS_QUEUE_LENGTH);
-    addressQueueLen--;
-    releaseMutex(&addressQueueMutex);
-#ifdef DEBUG_THREADS
-    traceEvent(TRACE_INFO, "- [addr queue=%d/max=%d]\n", addressQueueLen, maxAddressQueueLen);
+#ifdef MULTITHREADED
+    accessMutex(&gdbmMutex, "queueAddress");
 #endif
 
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Processing address... [addr queue=%d/max=%d]: %s\n",
-	       addressQueueLen, maxAddressQueueLen, intoa(elem->addr));
+    if(key_data.dptr == NULL) {
+	data_data = gdbm_firstkey(addressCache);
+	key_data = data_data;
+    } else {
+	data_data = gdbm_nextkey(addressCache, key_data);
+	free(key_data.dptr);
+    }
+
+  if(data_data.dptr != NULL) {
+      addressQueueLen--;
+
+      addr.s_addr = atol(data_data.dptr);
+
+#ifdef DNS_DEBUG
+      traceEvent(TRACE_INFO, "Dequeued address... [%u] (#addr=%d)\n",
+		 addr.s_addr, addressQueueLen);
 #endif
 
-    /*
-      If the queue is full enough then keep
-      remote addresses numeric
-    */
-    if((addressQueueLen > (ADDRESS_QUEUE_LENGTH/2)) && (!isLocalAddress(&addr)))
-      resolveAddress(&addr, 1); /* Keep address numeric */
-    else
+      gdbm_delete(addressCache, data_data);
+    } else
+      addr.s_addr = 0;
+
+#ifdef MULTITHREADED
+    releaseMutex(&gdbmMutex);
+#endif
+
+    if(addr.s_addr != 0) {
       resolveAddress(&addr, 0);
 
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Resolved address %s\n", elem->name);
+#ifdef DNS_DEBUG
+      traceEvent(TRACE_INFO, "Resolved address %u\n", addr.s_addr);
 #endif
+    }
   } /* endless loop */
 
   traceEvent(TRACE_INFO, "Address resultion terminated...");
@@ -1009,7 +1020,7 @@ static char* _res_skip(char *msg,
 #define GetShort(cp)	_ns_get16(cp); cp += INT16SZ;
 
 /* ************************************ */
-/* 
+/*
    This function needs to be rewritten from scratch
    as it does not check boundaries (see ** below)
 */
@@ -1055,7 +1066,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "id=0x%X - flags=0x%X\n", transactionId, flags);
 #endif
-  
+
   memset(&answer, 0, sizeof(answer));
   memcpy(&answer, ipPtr, length);
 

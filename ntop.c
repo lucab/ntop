@@ -75,10 +75,6 @@ void handleSigHup(int signalId _UNUSED_) {
      printMutexInfo(&lsofMutex, "lsofMutex");
    printMutexInfo(&hostsHashMutex, "hostsHashMutex");
    printMutexInfo(&graphMutex, "graphMutex");
-#ifdef ASYNC_ADDRESS_RESOLUTION
-  if(numericFlag == 0)
-     printMutexInfo(&addressQueueMutex, "addressQueueMutex");
-#endif
   traceEvent(TRACE_INFO, "========================================");
 #endif /* MULTITHREADED */
 
@@ -948,8 +944,9 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "cleanup");
 #endif 
-  gdbm_close(gdbm_file);     gdbm_file = NULL;
-  gdbm_close(pwFile);        pwFile = NULL;
+  gdbm_close(gdbm_file);    gdbm_file = NULL;
+  gdbm_close(addressCache); addressCache = NULL;
+  gdbm_close(pwFile);       pwFile = NULL;
   /* Courtesy of Wies-Software <wies@wiessoft.de> */
   gdbm_close(hostsInfoFile); hostsInfoFile = NULL; 
   if(eventFile != NULL) {

@@ -415,6 +415,22 @@ int initGlobalValues(void) {
   init_ssl();
 #endif
 
+  switch(accuracyLevel) {
+  case HIGH_ACCURACY_LEVEL:
+    enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 1;
+    break;
+  case MEDIUM_ACCURACY_LEVEL:
+    enableSessionHandling = 1, enablePacketDecoding = 0, enableFragmentHandling = 1;
+    break;
+  case LOW_ACCURACY_LEVEL:
+    enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 0;
+    break;    
+  }
+
+  if(borderSnifferMode) {
+    enableSessionHandling = enablePacketDecoding = enableFragmentHandling = 0;
+  }
+
   return(0);
 }
 
@@ -447,6 +463,25 @@ void initGdbm(void) {
   traceEvent(TRACE_INFO, "Initializing GDBM...");
 
 #ifdef HAVE_GDBM_H
+
+  /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", dbPath) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+  addressCache = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+
+  if(addressCache == NULL) {
+    traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
+#if defined(WIN32) && defined(__GNUC__)
+	       tmpBuf, "unknown gdbm errno");
+#else
+    tmpBuf, gdbm_strerror(gdbm_errno));
+#endif
+  
+  traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
+  exit(-1);
+ }
+
   /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -466,7 +501,7 @@ void initGdbm(void) {
 
     traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
     exit(-1);
-  } else {
+} else {
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
     pwFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
@@ -576,8 +611,6 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
   numResolvedWithDNSAddresses = numKeptNumericAddresses = numResolvedOnCacheAddresses = 0;
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(numericFlag == 0) {
-    memset(addressQueue, 0, sizeof(addressQueue));
-    createMutex(&addressQueueMutex);
     /*
      * (6) - DNSAR - DNS Address Resolution - optional
      */

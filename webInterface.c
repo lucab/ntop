@@ -685,6 +685,10 @@ void printNtopConfigInfo(void) {
     printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support",
 			   "No (Either disabled [Use -E option] or missing)");
 
+  printFeatureConfigInfo("TCP Session Handling", enableSessionHandling == 1 ? "Enabled" : "Disabled");
+  printFeatureConfigInfo("Protocol Decoders",    enablePacketDecoding == 1 ? "Enabled" : "Disabled");
+  printFeatureConfigInfo("Fragment Handling",    enableFragmentHandling == 1 ? "Enabled" : "Disabled");
+
   if(isNmapPresent) 
     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", "Yes");
   else
@@ -749,21 +753,14 @@ void printNtopConfigInfo(void) {
 
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(numericFlag == 0) {
-    accessMutex(&addressQueueMutex, "NumQueuedAddresses");
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Addresses</TH>"
 		"<TD "TD_BG"  align=right>%d</TD></TR>\n", addressQueueLen) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
-    releaseMutex(&addressQueueMutex);
   }
 #endif
 
   /* **** */
-
-#if defined(MULTITHREADED)
-    if(numericFlag == 0) 
-      accessMutex(&addressQueueMutex, "NumQueuedAddresses");
-#endif
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Resolved with DNS</TH>"
 	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numResolvedWithDNSAddresses) < 0) 
@@ -788,13 +785,6 @@ void printNtopConfigInfo(void) {
     sendString(buf);
   }
 #endif
-
-#if defined(MULTITHREADED)
-  if(numericFlag == 0) 
-    releaseMutex(&addressQueueMutex);
-#endif
-
-  /* **** */
 
 #if defined(MULTITHREADED)
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Active Threads</TH>"
@@ -833,9 +823,6 @@ void printNtopConfigInfo(void) {
   if(isLsofPresent) printMutexStatus(&lsofMutex, "lsofMutex");
   printMutexStatus(&hostsHashMutex, "hostsHashMutex");
   printMutexStatus(&graphMutex, "graphMutex");
-#ifdef ASYNC_ADDRESS_RESOLUTION
-  if(numericFlag == 0) printMutexStatus(&addressQueueMutex, "addressQueueMutex");
-#endif
   sendString("</TABLE>"TABLE_OFF"\n");
 #endif /* MULTITHREADED */
 

@@ -30,6 +30,7 @@ extern char **ntop_argv;
 
 /* command line options */
 extern u_short traceLevel, debugMode, useSyslog, accuracyLevel;
+extern u_char enableSessionHandling, enablePacketDecoding, enableFragmentHandling;
 extern u_char stickyHosts, enableSuspiciousPacketDump;
 extern char dbPath[200];
 extern char accessLogPath[200]; /* Apache-like access log */
@@ -89,7 +90,7 @@ extern u_long numResolvedWithDNSAddresses, numKeptNumericAddresses,
 
 /* Database */
 #ifdef HAVE_GDBM_H
-extern GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile;
+extern GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache;
 #endif
 
 /* lsof support */
@@ -102,7 +103,6 @@ extern ProcessInfoList *localPorts[TOP_IP_PORT];
 #ifdef HAVE_LIBWRAP
 extern int allow_severity, deny_severity;
 #endif /* HAVE_LIBWRAP */
- 
 
 /* Filter Chains */
 extern u_short handleRules;
@@ -114,7 +114,6 @@ extern FilterRule* filterRulesList[MAX_NUM_RULES];
 /* Address Resolution */
 #if defined(ASYNC_ADDRESS_RESOLUTION)
 extern u_int addressQueueLen, maxAddressQueueLen;
-extern u_int addressQueueHead, addressQueueTail;
 extern struct in_addr addressQueue[ADDRESS_QUEUE_LENGTH+1];
 #endif
 

@@ -32,6 +32,7 @@ char **ntop_argv;
 
 /* command line options */
 u_short traceLevel, debugMode, useSyslog, accuracyLevel;
+u_char enableSessionHandling, enablePacketDecoding, enableFragmentHandling;
 u_char stickyHosts, enableSuspiciousPacketDump;
 char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;
 char mapperURL[256];     /* URL of the mapper CGI */
@@ -88,13 +89,12 @@ ConditionalVariable queueAddressCondvar;
 #ifdef ASYNC_ADDRESS_RESOLUTION
 pthread_t dequeueAddressThreadId;
 TrafficCounter droppedAddresses;
-PthreadMutex addressQueueMutex;
 #endif
 #endif
 
 /* Database */
 #ifdef HAVE_GDBM_H
-GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile;
+GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache;
 #endif
 
 /* lsof support */
@@ -114,8 +114,6 @@ FilterRule* filterRulesList[MAX_NUM_RULES];
 /* Address Resolution */
 #if defined(ASYNC_ADDRESS_RESOLUTION)
 u_int addressQueueLen, maxAddressQueueLen;
-u_int addressQueueHead, addressQueueTail;
-struct in_addr addressQueue[ADDRESS_QUEUE_LENGTH+1];
 #endif
 u_long numResolvedWithDNSAddresses, numKeptNumericAddresses, numResolvedOnCacheAddresses;
 

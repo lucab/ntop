@@ -43,17 +43,17 @@ static void sendGraphFile(char* fileName) {
   FILE *fd;
   int len;
   char tmpStr[256];
-  
+
   if((fd = fopen(fileName, "rb")) != NULL) {
     for(;;) {
       len = fread(tmpStr, sizeof(char), sizeof(tmpStr)-1, fd);
       if(len <= 0) break;
       sendStringLen(tmpStr, len);
     }
-    
+
     fclose(fd);
   }
-  
+
   unlink(fileName);
 }
 
@@ -63,9 +63,9 @@ static void sendGraphFile(char* fileName) {
 void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[20];
-  char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 
+  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40,
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
@@ -78,7 +78,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       theHost->arp_rarpSent+theHost->decnetSent+theHost->appletalkSent+
       theHost->netbiosSent+theHost->qnxSent+theHost->otherSent;
   } else {
-    totTraffic = theHost->tcpReceivedLocally+theHost->tcpReceivedFromRemote+ 
+    totTraffic = theHost->tcpReceivedLocally+theHost->tcpReceivedFromRemote+
       theHost->udpReceivedLocally+theHost->udpReceivedFromRemote+
       theHost->icmpReceived+theHost->ospfReceived+theHost->igmpReceived+theHost->stpReceived
       +theHost->ipxReceived+theHost->osiReceived+theHost->dlcReceived+
@@ -93,7 +93,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 			       theHost->tcpSentRemotely))/totTraffic);
 	lbl[num++] = "TCP";
       }
-      
+
       if(theHost->udpSentLocally+theHost->udpSentRemotely > 0) {
 	p[num] = (float)((100*(theHost->udpSentLocally+
 			       theHost->udpSentRemotely))/totTraffic);
@@ -104,22 +104,22 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	p[num] = (float)((100*theHost->icmpSent)/totTraffic);
 	lbl[num++] = "ICMP";
       }
-      
+
       if(theHost->ospfSent > 0) {
 	p[num] = (float)((100*theHost->ospfSent)/totTraffic);
 	lbl[num++] = "OSPF";
       }
-      
+
       if(theHost->igmpSent > 0) {
 	p[num] = (float)((100*theHost->igmpSent)/totTraffic);
 	lbl[num++] = "IGMP";
       }
-      
+
       if(theHost->stpSent > 0) {
 	p[num] = (float)((100*theHost->stpSent)/totTraffic);
 	lbl[num++] = "STP";
       }
-      
+
       if(theHost->ipxSent > 0) {
 	p[num] = (float)((100*theHost->ipxSent)/totTraffic);
 	lbl[num++] = "IPX";
@@ -134,43 +134,43 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	p[num] = (float)((100*theHost->osiSent)/totTraffic);
 	lbl[num++] = "OSI";
       }
-      
+
       if(theHost->arp_rarpSent > 0) {
 	p[num] = (float)((100*theHost->arp_rarpSent)/totTraffic);
 	lbl[num++] = "(R)ARP";
       }
-      
+
       if(theHost->decnetSent > 0) {
 	p[num] = (float)((100*theHost->decnetSent)/totTraffic);
 	lbl[num++] = "DECNET";
       }
-      
+
       if(theHost->appletalkSent > 0) {
 	p[num] = (float)((100*theHost->appletalkSent)/totTraffic);
 	lbl[num++] = "AppleTalk";
       }
-      
+
       if(theHost->netbiosSent > 0) {
 	p[num] = (float)((100*theHost->netbiosSent)/totTraffic);
 	lbl[num++] = "NetBios";
       }
-      
+
       if(theHost->qnxSent > 0) {
 	p[num] = (float)((100*theHost->qnxSent)/totTraffic);
 	lbl[num++] = "QNX";
       }
-      
+
       if(theHost->otherSent > 0) {
 	p[num] = (float)((100*theHost->otherSent)/totTraffic);
 	lbl[num++] = "Other";
-      }      
+      }
     } else {
       if(theHost->tcpReceivedLocally+theHost->tcpReceivedFromRemote > 0) {
 	p[num] = (float)((100*(theHost->tcpReceivedLocally+
 			       theHost->tcpReceivedFromRemote))/totTraffic);
 	lbl[num++] = "TCP";
       }
-      
+
       if(theHost->udpReceivedLocally+theHost->udpReceivedFromRemote > 0) {
 	p[num] = (float)((100*(theHost->udpReceivedLocally+
 			       theHost->udpReceivedFromRemote))/totTraffic);
@@ -181,22 +181,22 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	p[num] = (float)((100*theHost->icmpReceived)/totTraffic);
 	lbl[num++] = "ICMP";
       }
-      
+
       if(theHost->ospfReceived > 0) {
 	p[num] = (float)((100*theHost->ospfReceived)/totTraffic);
 	lbl[num++] = "OSPF";
       }
-      
+
       if(theHost->igmpReceived > 0) {
 	p[num] = (float)((100*theHost->igmpReceived)/totTraffic);
 	lbl[num++] = "IGMP";
       }
-      
+
       if(theHost->stpReceived > 0) {
 	p[num] = (float)((100*theHost->stpReceived)/totTraffic);
 	lbl[num++] = "STP";
       }
-      
+
       if(theHost->ipxReceived > 0) {
 	p[num] = (float)((100*theHost->ipxReceived)/totTraffic);
 	lbl[num++] = "IPX";
@@ -211,36 +211,36 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	p[num] = (float)((100*theHost->osiReceived)/totTraffic);
 	lbl[num++] = "OSI";
       }
-      
+
       if(theHost->arp_rarpReceived > 0) {
 	p[num] = (float)((100*theHost->arp_rarpReceived)/totTraffic);
 	lbl[num++] = "(R)ARP";
       }
-      
+
       if(theHost->decnetReceived > 0) {
 	p[num] = (float)((100*theHost->decnetReceived)/totTraffic);
 	lbl[num++] = "DECNET";
       }
-      
+
       if(theHost->appletalkReceived > 0) {
 	p[num] = (float)((100*theHost->appletalkReceived)/totTraffic);
 	lbl[num++] = "AppleTalk";
       }
-      
+
       if(theHost->netbiosReceived > 0) {
 	p[num] = (float)((100*theHost->netbiosReceived)/totTraffic);
 	lbl[num++] = "NetBios";
       }
-      
+
       if(theHost->qnxReceived > 0) {
 	p[num] = (float)((100*theHost->qnxReceived)/totTraffic);
 	lbl[num++] = "QNX";
       }
-      
+
       if(theHost->otherReceived > 0) {
 	p[num] = (float)((100*theHost->otherReceived)/totTraffic);
 	lbl[num++] = "Other";
-      }      
+      }
     }
 
     if(num == 0) {
@@ -260,7 +260,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     GDCPIE_BGColor   = 0xFFFFFFL;
     GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
     GDCPIE_percent_labels = GDCPIE_PCT_NONE;
-    
+
     GDC_out_pie(250,			/* width */
 		250,			/* height */
 		fd,			/* open file pointer */
@@ -284,9 +284,9 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[20];
-  char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 
+  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40,
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
@@ -346,7 +346,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     GDCPIE_BGColor   = 0xFFFFFFL;
     GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
     GDCPIE_percent_labels = GDCPIE_PCT_NONE;
-    
+
     GDC_out_pie(250,			/* width */
 		250,			/* height */
 		fd,			/* open file pointer */
@@ -370,9 +370,9 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[20];
-  char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 
+  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40,
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totFragmentedTraffic, totTraffic;
@@ -390,13 +390,13 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
   if(totTraffic > 0) {
     p[num] = (float)((100*totFragmentedTraffic)/totTraffic);
     lbl[num++] = "Frag";
-      
+
     p[num] = 100-((float)(100*totFragmentedTraffic)/totTraffic);
     if(p[num] > 0) { lbl[num++] = "Non Frag"; }
 
     if(num == 0) {
       traceEvent(TRACE_WARNING, "WARNING: Graph failure (3)");
-      return; /* TODO: this has to be handled better */     
+      return; /* TODO: this has to be handled better */
     }
 
 #ifdef MULTITHREADED
@@ -411,7 +411,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     GDCPIE_BGColor        = 0xFFFFFFL;
     GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
     GDCPIE_percent_labels = GDCPIE_PCT_NONE;
-    
+
     GDC_out_pie(250,			/* width */
 		250,			/* height */
 		fd,			/* open file pointer */
@@ -435,7 +435,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[20];
-  char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
   int i, num=0, expl[20];
   FILE *fd;
@@ -443,7 +443,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
   if(theHost->protoIPTrafficInfos == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: Graph failure (5)");
-    return; 
+    return;
   }
 
 #ifdef ENABLE_NAPSTER
@@ -459,7 +459,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   totalIPTraffic = 0;
 #endif
 
-  for(i=0; i<numIpProtosToMonitor; i++) 
+  for(i=0; i<numIpProtosToMonitor; i++)
     if(dataSent)
       totalIPTraffic += theHost->protoIPTrafficInfos[i].sentLocally+
 	theHost->protoIPTrafficInfos[i].sentRemotely;
@@ -491,10 +491,10 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
       else
 	traffic = theHost->protoIPTrafficInfos[i].receivedLocally+
 	  theHost->protoIPTrafficInfos[i].receivedFromRemote;
-	
+
       if(traffic > 0) {
 	p[num] = (float)((100*traffic)/totalIPTraffic);
-	
+
         if(num==0)
           expl[num]=10;
         else
@@ -503,13 +503,13 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  expl[num]+=9;
 	else if (p[num]>10.0)
 	  expl[num]=10;
-       
+
 	lbl[num++] = protoIPTrafficInfos[i];
-      } 	
- 
+      }
+
       if(num >= 20) break; /* Too much stuff */
    }
-  } 
+  }
 
   if(num == 0) {
     traceEvent(TRACE_WARNING, "WARNING: Graph failure (4)");
@@ -528,7 +528,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   GDCPIE_BGColor        = 0xFFFFFFL;
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
-    
+
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
@@ -697,7 +697,7 @@ void interfaceTrafficPie(void) {
   char	*lbl[MAX_NUM_DEVICES];
   int myDevices=0;
 
-  for(i=0; i<numDevices; i++)     
+  for(i=0; i<numDevices; i++)
     if(!device[i].virtualDevice) {
       if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
 	p[i] = (float)stat.ps_recv;
@@ -705,7 +705,7 @@ void interfaceTrafficPie(void) {
       }
       expl[i] = 10*i;
     }
-  
+
   if(totPkts == 0)
     totPkts++;
 
@@ -737,7 +737,7 @@ void interfaceTrafficPie(void) {
 	      myDevices,	/* number of slices */
 	      lbl,		/* slice labels (unlike out_png(), can be NULL) */
 	      p);		/* data array */
-  
+
   fclose(fd);
 
 #ifdef MULTITHREADED
@@ -877,7 +877,7 @@ void drawThptGraph(int sortedColumn) {
   struct tm t;
 
   memset(graphData, 0, sizeof(graphData));
-  
+
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "drawThptGraph");
 #endif
@@ -923,7 +923,7 @@ void drawThptGraph(int sortedColumn) {
     GDC_title = "Last 60 Minutes Average Throughput";
     out_graph(600, 300,    /* width, height           */
 	      fd,          /* open FILE pointer       */
-	      GDC_BAR,     /* chart type              */
+	      GDC_AREA,    /* chart type              */
 	      60,          /* num points per data set */
 	      lbls,        /* X labels array of char* */
 	      1,           /* number of data sets     */
@@ -960,7 +960,7 @@ void drawThptGraph(int sortedColumn) {
     GDC_title = "Last 24 Hours Average Throughput";
     out_graph(600, 300,      /* width, height           */
 	      fd,            /* open FILE pointer       */
-	      GDC_BAR,       /* chart type              */
+	      GDC_AREA,      /* chart type              */
 	      24,            /* num points per data set */
 	      lbls,          /* X labels array of char* */
 	      1,             /* number of data sets     */
@@ -998,7 +998,7 @@ void drawThptGraph(int sortedColumn) {
 
     out_graph(600, 300,          /* width, height           */
 	      fd,                /* open FILE pointer       */
-	      GDC_BAR,           /* chart type              */
+	      GDC_AREA,          /* chart type              */
 	      30,                /* num points per data set */
 	      lbls,              /* X labels array of char* */
 	      1,                 /* number of data sets     */
@@ -1112,7 +1112,7 @@ void drawGlobalIpProtoDistribution(void) {
       idx++;
     }
   }
-  
+
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "drawGlobalIpProtoDistribution");
 #endif
