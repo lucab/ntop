@@ -3407,7 +3407,7 @@ int _getopt_internal(argc, argv, optstring, longopts, longind, long_only)
       __getopt_initialized = 1;
     }
 
-# define NONOPTION_P(argv[optind][0] != '-' || argv[optind][1] == '\0')
+# define NONOPTION_P (argv[optind][0] != '-' || argv[optind][1] == '\0')
 
   if(nextchar == NULL || *nextchar == '\0')
     {
@@ -4142,7 +4142,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
   accessAddrResMutex("makeHostLink");
 
-  strcpy(fingerprint, srcHost->fingerprint);
+  snprintf(fingerprint, sizeof(fingerprint), "%s", srcHost->fingerprint);
   strtokState = NULL;
   WIN = strtok_r(fingerprint, ":", &strtokState);
   MSS = strtok_r(NULL, ":", &strtokState);
@@ -4162,8 +4162,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
     if(fd) {
       char line[384];
-      char *b, *_c, *d, *e, *f, *g, *m, *i, *l, *ptr;
-      unsigned int a, c;
+      char *b, *d, *ptr;
 
       configFileFound = 1;
 
@@ -4215,6 +4214,8 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
       fclose(fd);
     }
+
+	if(done) break;
   }
 
   if(!configFileFound) {
