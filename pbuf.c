@@ -2685,9 +2685,9 @@ void processPacket(u_char *_deviceId,
 #endif
 	eth_type = ntohs(qType.protoType);
 	hlen += 4; /* Skip the 802.1q header */
-      } else if((ehdr.ether_dhost[0] == 0x01)    && (ehdr.ether_dhost[1] == 0x00)
-		&& (ehdr.ether_dhost[2] == 0x0C) && (ehdr.ether_dhost[3] == 0x00)
-		&& (ehdr.ether_dhost[4] == 0x00) && (ehdr.ether_dhost[5] == 0x00)) {
+      } else if((ether_dst[0] == 0x01)    && (ether_dst[1] == 0x00)
+		&& (ether_dst[2] == 0x0C) && (ether_dst[3] == 0x00)
+		&& (ether_dst[4] == 0x00) && (ether_dst[5] == 0x00)) {
 	/*
 	  Cisco InterSwitch Link (ISL) Protocol
 
