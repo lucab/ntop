@@ -52,7 +52,7 @@ static PluginInfo LsPluginInfo[] = {
     termLsFunct, /* TermFunc   */
     handleLsPacket, /* PluginFunc */
     handleLsHTTPrequest,
-    "ip", /* BPF filter: filter all the ICMP packets */
+    "ip or (vlan and ip)", /* BPF filter: filter all the IP packets */
     NULL /* no status */
   }
 };
@@ -91,7 +91,11 @@ static void handleLsPacket(u_char *_deviceId,
 #endif
 
   ep = (struct ether_header *)p;
-  memcpy(&ip, (p+sizeof(struct ether_header)), sizeof(struct ip));
+  if(ntohs(ep->ether_type) == ETHERTYPE_802_1Q)
+    /* VLAN - skip 802.1q header too */
+    memcpy(&ip, (p+sizeof(struct ether_header)+4), sizeof(struct ip));
+  else
+    memcpy(&ip, (p+sizeof(struct ether_header)), sizeof(struct ip));
 
   NTOHL(ip.ip_src.s_addr); NTOHL(ip.ip_dst.s_addr);
 
