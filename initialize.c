@@ -655,7 +655,6 @@ void initDevices(char* devices) {
     }
   }
 
-
   /* ******************************************* */
 
   if(rFileName == NULL) {
@@ -741,19 +740,18 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
 	Courtesy of: Nicolai Petri <Nicolai@atomic.dk>
       */
-      if(column == NULL)
+      if(column == NULL) {
 	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1,
-					   100 /* ms */, ebuf);
-      else {
-	column[0] = 0;
-	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1,
-					   100 /* ms */, ebuf);
-	column[0] = ':';
-      }
+					   100 /* ms */, ebuf);	
 
-      if(device[i].pcapPtr == NULL) {
-	traceEvent(TRACE_INFO, ebuf);
-	exit(-1);
+	if(device[i].pcapPtr == NULL) {
+	  traceEvent(TRACE_INFO, ebuf);
+	  exit(-1);
+	}
+      } else {
+	column[0] = 0;
+	device[i].virtualDevice = 1;
+	column[0] = ':';
       }
     }
 
@@ -839,17 +837,19 @@ void initDeviceDatalink(void) {
 #else
 
 #if defined(__FreeBSD__)
-  for(i=0; i<numDevices; i++) {
-    if(strncmp(device[i].name, "tun", 3) == 0)
-      device[i].datalink = DLT_PPP;
-    else
-      device[i].datalink = pcap_datalink(device[i].pcapPtr);
-  }
+  for(i=0; i<numDevices; i++)
+    if(!device[i].virtualDevice) {
+      if(strncmp(device[i].name, "tun", 3) == 0)
+	device[i].datalink = DLT_PPP;
+      else
+	device[i].datalink = pcap_datalink(device[i].pcapPtr);
+    }
 
 #else
-  for(i=0; i<numDevices; i++) {
-    device[i].datalink = pcap_datalink(device[i].pcapPtr);
-  }
+  for(i=0; i<numDevices; i++)
+    if(!device[i].virtualDevice) {
+      device[i].datalink = pcap_datalink(device[i].pcapPtr);
+    }
 #endif
 #endif
 }
@@ -920,13 +920,14 @@ void startSniffer(void) {
   int i;
 
 #ifdef MULTITHREADED
-  for(i=0; i<numDevices; i++) {
-    /*
-     * (8) - NPS - Network Packet Sniffer (main thread)
-     */
-    createThread(&device[i].pcapDispatchThreadId, pcapDispatch, (char*)i);
-    traceEvent (TRACE_INFO, "Thread %d for Network Packet Sniffing started (_main_ thread).\n",
-		device[i].pcapDispatchThreadId);
-  }
+  for(i=0; i<numDevices; i++)
+    if(!device[i].virtualDevice) {
+      /*
+       * (8) - NPS - Network Packet Sniffer (main thread)
+       */
+      createThread(&device[i].pcapDispatchThreadId, pcapDispatch, (char*)i);
+      traceEvent (TRACE_INFO, "Thread %d for Network Packet Sniffing started (_main_ thread).\n",
+		  device[i].pcapDispatchThreadId);
+    }
 #endif
 }

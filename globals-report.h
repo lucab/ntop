@@ -42,8 +42,10 @@
 
 #ifdef WIN32
 #define CHART_FORMAT ".gif"
+#define MIME_TYPE_CHART_FORMAT HTTP_TYPE_GIF
 #else
 #define CHART_FORMAT ".png"
+#define MIME_TYPE_CHART_FORMAT HTTP_TYPE_PNG
 #endif
 
 /*
@@ -247,6 +249,7 @@ extern FILE* getNewRandomFile(char* fileName, int len);
 #define NW_EVENTS_HTML                  "networkEvents.html"
 #define STR_SORT_DATA_RCVD_HOST_TRAFFIC "dataRcvdHostTraffic.html"
 #define STR_SORT_DATA_SENT_HOST_TRAFFIC "dataSentHostTraffic.html"
+#define SWITCH_NIC_HTML                 "switch.html"
 
 /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
 #define RESET_STATS_HTML              "resetStats.html"

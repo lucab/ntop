@@ -845,7 +845,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
 #ifdef HAVE_GDCHART
     if(strncmp(url, "chart", strlen("chart")) == 0) {
-      /* GIF */
       char tmpStr[256];
       u_int len, tot=0;
       unsigned long  sc[2] = { 0xFF0000, 0x8080FF };
@@ -891,7 +890,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
       fclose(fd);
 
-      endHTTPHeader(HTTP_TYPE_GIF, 0);
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 
       fd = fopen(fileName, "rb");
       for(;;) {

@@ -270,28 +270,29 @@ static void loadPlugin(char* dirName, char* pluginName) {
       strncpy(tmpBuf, pluginInfo->bpfFilter, sizeof(tmpBuf));
       tmpBuf[sizeof(tmpBuf)-1] = '\0'; /* just in case bpfFilter is too long... */
 
-      for(i=0; i<numDevices; i++) {
+      for(i=0; i<numDevices; i++) 
+	if(!device[i].virtualDevice) {
 #ifdef DEBUG
-	traceEvent(TRACE_INFO, "Compiling filter '%s' on device %s\n", 
-		   tmpBuf, device[i].name);
+	  traceEvent(TRACE_INFO, "Compiling filter '%s' on device %s\n", 
+		     tmpBuf, device[i].name);
 #endif
-	rc = pcap_compile(device[i].pcapPtr, 
-			  &newFlow->fcode[i], tmpBuf, 1, 
-			  device[i].netmask.s_addr);
+	  rc = pcap_compile(device[i].pcapPtr, 
+			    &newFlow->fcode[i], tmpBuf, 1, 
+			    device[i].netmask.s_addr);
       
-	if(rc < 0) {
-	  traceEvent(TRACE_INFO, 
-		     "WARNING: plugin '%s' contains a wrong filter specification\n"
-		     "         \"%s\" on interface %s (%s).\n"
-		     "         This plugin has been discarded.\n",
-		     pluginPath, 
-		     pluginInfo->bpfFilter, 
-		     device[i].name,
-		     pcap_geterr((device[i].pcapPtr)));
-	  free(newFlow);
-	  return;
+	  if(rc < 0) {
+	    traceEvent(TRACE_INFO, 
+		       "WARNING: plugin '%s' contains a wrong filter specification\n"
+		       "         \"%s\" on interface %s (%s).\n"
+		       "         This plugin has been discarded.\n",
+		       pluginPath, 
+		       pluginInfo->bpfFilter, 
+		       device[i].name,
+		       pcap_geterr((device[i].pcapPtr)));
+	    free(newFlow);
+	    return;
+	  }
 	}
-      }
     }
 
     newFlow->pluginStatus.pluginPtr  = pluginInfo;

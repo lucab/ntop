@@ -204,19 +204,20 @@ void interfaceTrafficPie(void) {
 
   fd = getNewRandomFile(fileName, NAME_MAX);
 
-  for(i=0; i<numDevices; i++) {
-    if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
-      p[i] = (float)stat.ps_recv;
-      totPkts += stat.ps_recv;
+  for(i=0; i<numDevices; i++)     
+    if(!device[i].virtualDevice) {
+      if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
+	p[i] = (float)stat.ps_recv;
+	totPkts += stat.ps_recv;
+      }
+      expl[i] = 10*i;
     }
-    expl[i] = 10*i;
-  }
-
+  
   if(totPkts == 0)
     totPkts++;
 
   for(i=0; i<numDevices; i++) {
-    if(p[i] > 0)  {
+    if((!device[i].virtualDevice) && (p[i] > 0))  {
       p[myDevices]   = 100*(((float)p[i])/totPkts);
       lbl[myDevices] = device[i].name;
       myDevices++;
@@ -234,14 +235,14 @@ void interfaceTrafficPie(void) {
   GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_RIGHT;
 
-  GDC_out_pie(250,		/* width */
-	  250,		/* height */
-	  fd,		/* open file pointer */
-	  GDC_3DPIE,	/* or GDC_2DPIE */
-	  myDevices,	/* number of slices */
-	  lbl,		/* slice labels (unlike out_png(), can be NULL */
-	  p);		/* data array */
-
+  GDC_out_pie(250,	/* width */
+	      250,		/* height */
+	      fd,		/* open file pointer */
+	      GDC_3DPIE,	/* or GDC_2DPIE */
+	      myDevices,	/* number of slices */
+	      lbl,		/* slice labels (unlike out_png(), can be NULL) */
+	      p);		/* data array */
+  
   fclose(fd);
 
 #ifdef MULTITHREADED
@@ -249,13 +250,13 @@ void interfaceTrafficPie(void) {
 #endif
 
    if((fd = fopen(fileName, "rb")) != NULL) {
-	for(;;) {
-		len = fread(tmpStr, sizeof(char), 255, fd);
-		if(len <= 0) break;
-		sendStringLen(tmpStr, len);
-  }
-
-  fclose(fd);
+     for(;;) {
+       len = fread(tmpStr, sizeof(char), 255, fd);
+       if(len <= 0) break;
+       sendStringLen(tmpStr, len);
+     }
+     
+     fclose(fd);
   }
 
   unlink(fileName);

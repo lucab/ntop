@@ -789,21 +789,22 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
   if(rFileName == NULL)
-    for(i=0; i<numDevices; i++) {
-      if (pcap_stats(device[i].pcapPtr, &stat) < 0) {
-	/*traceEvent(TRACE_INFO, "\n\npcap_stats: %s\n",
-	  pcap_geterr(device[i].pcapPtr)); */
-      } else {
-	printf("%s packets received by filter on %s\n",
-	       formatPkts((TrafficCounter)stat.ps_recv), device[i].name);
-	printf("%s packets dropped by kernel\n",
-	       formatPkts((TrafficCounter)(stat.ps_drop)));
+    for(i=0; i<numDevices; i++) 
+      if(!device[i].virtualDevice) {
+	if (pcap_stats(device[i].pcapPtr, &stat) < 0) {
+	  /*traceEvent(TRACE_INFO, "\n\npcap_stats: %s\n",
+	    pcap_geterr(device[i].pcapPtr)); */
+	} else {
+	  printf("%s packets received by filter on %s\n",
+		 formatPkts((TrafficCounter)stat.ps_recv), device[i].name);
+	  printf("%s packets dropped by kernel\n",
+		 formatPkts((TrafficCounter)(stat.ps_drop)));
 #ifdef MULTITHREADED
-	printf("%s packets dropped by ntop\n",
-	       formatPkts(device[i].droppedPackets));
+	  printf("%s packets dropped by ntop\n",
+		 formatPkts(device[i].droppedPackets));
 #endif
+	}
       }
-    }
 
   if(enableDBsupport)
     closeSQLsocket(); /* *** SQL Engine *** */

@@ -601,6 +601,7 @@ typedef struct {
   time_t lastpkt;                /* time last packet was captured */
 
   pcap_t *pcapPtr;               /* LBNL pcap handler */
+  char virtualDevice;            /* set to 1 for virtual devices (e.g. eth0:1) */
   int snaplen;                   /* maximum # of bytes to capture foreach pkt */
                                  /* read timeout in milliseconds */
   int datalink;                  /* data-link encapsulation type (see DLT_* in net/bph.h) */

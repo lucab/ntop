@@ -546,13 +546,19 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
-
       sendString("<TR><TH "TH_BG">Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
 
 #ifdef HAVE_GDCHART
       if(numDevices > 1) {
-	sendString("<TR><TD "TD_BG"  ALIGN=CENTER COLSPAN=3>"
-		   "<IMG SRC=interfaceTrafficPie"CHART_FORMAT"></TD></TR>\n");
+	int i, numRealDevices=0;
+	
+	for(i=0; i<numDevices; i++) 
+	  if(!device[i].virtualDevice)
+	    numRealDevices++;
+
+	if(numRealDevices > 1)
+	  sendString("<TR><TD "TD_BG"  ALIGN=CENTER COLSPAN=3>"
+		     "<IMG SRC=interfaceTrafficPie"CHART_FORMAT"></TD></TR>\n");
       }
 #endif
     }
@@ -565,18 +571,20 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
 	droppedByKernel=0;
 
-	for(i=0; i<numDevices; i++) {
-	  if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
-	    droppedByKernel +=  stat.ps_drop;
+	for(i=0; i<numDevices; i++) 
+	  if(!device[i].virtualDevice) {
+	    if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
+	      droppedByKernel +=  stat.ps_drop;
+	    }
 	  }
-	}
-
+	
 	unicastPkts = device[actualReportDeviceId].ethernetPkts
 	  - device[actualReportDeviceId].broadcastPkts
 	  - device[actualReportDeviceId].multicastPkts;
 	/* if(unicastPkts < 0) unicastPkts = 0; */ /* It shouldn't happen */
-	if(device[actualReportDeviceId].ethernetPkts <= 0) device[actualReportDeviceId].ethernetPkts = 1;
-
+	if(device[actualReportDeviceId].ethernetPkts <= 0)
+	  device[actualReportDeviceId].ethernetPkts = 1;
+	
 	if(snprintf(buf2, sizeof(buf2),
 		    "<tr %s><TH "TH_BG" align=left>Total</th>"
 		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
@@ -1045,7 +1053,6 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
       theAnchor[0] = htmlAnchor1;
     }
 
-    sendString("<CENTER>\n");
     if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1>\n<TR>"
 		"<TH "TH_BG">%s1>Host%s</A></TH>"
 		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"

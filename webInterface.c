@@ -734,6 +734,10 @@ void switchNwInterface(int _interface) {
 	     "command line switch is not used. Sorry.\n") < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
+  } else if((mwInterface >= numDevices) || device[mwInterface].virtualDevice) {
+    if(snprintf(buf, sizeof(buf), "Invalid interface selected. Sorry.\n") < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
   } else if(numDevices == 1) {
     if(snprintf(buf, sizeof(buf), "You're currently capturing traffic from one "
 	     "interface [%s]. The interface switch feature is active only when "
@@ -748,21 +752,20 @@ void switchNwInterface(int _interface) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   } else {
-      sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=switch.html>\n");
+      sendString("Available Network Interfaces:</B><P>\n<FORM ACTION="SWITCH_NIC_HTML">\n");
 
-      for(i=0; i<numDevices; i++) {
-
-	if(actualReportDeviceId == i)
-	  selected="CHECKED";
-	else
-	  selected = "";
-
-	if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
-		i, selected, device[i].name) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-	sendString(buf);
-      }
-
+      for(i=0; i<numDevices; i++) 
+	if(!device[i].virtualDevice) {
+	  if(actualReportDeviceId == i)
+	    selected="CHECKED";
+	  else
+	    selected = "";
+	  
+	  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
+		      i+1, selected, device[i].name) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  
+	  sendString(buf);
+	}
 
       sendString("<p><INPUT TYPE=submit>&nbsp;<INPUT TYPE=reset>\n</FORM>\n");
       sendString("<B>");
@@ -886,14 +889,15 @@ void printNtopConfigInfo(void) {
 
 #ifdef HAVE_GDCHART
   printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Present");
+  printFeatureConfigInfo("Chart Format", CHART_FORMAT);
 #else
   printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Absent");
 #endif
 
 #ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
-  printFeatureConfigInfo("<A HREF=http://ucd-snmp.ucdavis.edu/>UCD SNMP</A>", "Present");
+  printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP</A>", "Present");
 #else
-  printFeatureConfigInfo("<A HREF=http://ucd-snmp.ucdavis.edu/>UCD SNMP </A>", "Absent");
+  printFeatureConfigInfo("<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP </A>", "Absent");
 #endif
 
 #ifdef HAVE_LIBWRAP

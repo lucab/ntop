@@ -542,13 +542,21 @@ void printHTMLtrailer(void) {
     if(snprintf(buf, BUF_SIZE, "listening on [%s]\n", PCAP_NW_INTERFACE) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    for(i=len=0; i<numDevices; i++, len=strlen(buf)) {
-      if(snprintf(&buf[len], BUF_SIZE-len, "%s%s", (i>0) ? "," : "listening on [", device[i].name) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    int numRealDevices;
+    
+    for(i=len=numRealDevices=0; i<numDevices; i++, len=strlen(buf)) {      
+      if(!device[i].virtualDevice) {
+	if(snprintf(&buf[len], BUF_SIZE-len, "%s%s", 
+		    (numRealDevices>0) ? "," : "listening on [", device[i].name) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	numRealDevices++;
+      }
     }
+
     if(snprintf(&buf[len], BUF_SIZE-len, "]\n") < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
+
   sendString(buf);
 
   sendString("<BR>\n<ADDRESS>&copy; 1998-2000 by <A HREF=mailto:deri@ntop.org>L. Deri</A></ADDRESS>\n");
@@ -754,7 +762,8 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))){
     statusIdx = 0;
 #ifdef DEBUG
-    traceEvent(TRACE_WARNING, "INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n", statusIdx);
+    traceEvent(TRACE_WARNING, "INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n", 
+	       statusIdx);
 #endif
   }
   if(snprintf(tmpStr, sizeof(tmpStr), "HTTP/1.0 %d %s\n",
@@ -892,7 +901,8 @@ static int returnHTTPPage(char* pageName, int postLen) {
   }
 
   /*
-    traceEvent(TRACE_INFO, "sortedColumn: %d - revertOrder: %d\n", sortedColumn, revertOrder);
+    traceEvent(TRACE_INFO, "sortedColumn: %d - revertOrder: %d\n", 
+    sortedColumn, revertOrder);
   */
 
   if(pageName[0] == '\0')
@@ -927,8 +937,9 @@ static int returnHTTPPage(char* pageName, int postLen) {
     time_t theTime;
     struct tm t;
     int len = strlen(pageName), mimeType = HTTP_TYPE_HTML;
+
     if(len > 4) {
-      if     (strcmp(&pageName[len-4], ".gif") == 0)
+      if(strcmp(&pageName[len-4], ".gif") == 0)
         mimeType = HTTP_TYPE_GIF;
       else if(strcmp(&pageName[len-4], ".jpg") == 0)
         mimeType = HTTP_TYPE_JPEG;
@@ -937,6 +948,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       else if(strcmp(&pageName[len-4], ".css") == 0)
         mimeType = HTTP_TYPE_CSS;
     }
+
     sendHTTPHeader(mimeType, HTTP_FLAG_IS_CACHEABLE | HTTP_FLAG_MORE_FIELDS);
 
     if (actTime > statbuf.st_mtime) { /* just in case the system clock is wrong... */
@@ -1080,7 +1092,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
 #endif
 
     if(!mergeInterfaces)
-      sendString("<li><a href=switch.html target=area ALT=\"Switch NICs\">Switch NICs</a></li>\n");
+      sendString("<li><a href="SWITCH_NIC_HTML" target=area ALT=\"Switch NICs\">Switch NICs</a></li>\n");
 
     sendString("<li><a href="SHUTDOWN_NTOP_HTML" target=area ALT=\"Shutdown ntop\">"
 	       "Shutdown ntop</a></li>\n");
@@ -1092,9 +1104,14 @@ static int returnHTTPPage(char* pageName, int postLen) {
 	       "Luca Deri</A></FONT><pre>\n");
     sendString("</pre>\n</b>\n</center>\n</body>\n</html>\n");
     printTrailer=0;
-  } else if(strcmp(pageName, "switch.html") == 0) {
+  } else if(strncmp(pageName, SWITCH_NIC_HTML, strlen(SWITCH_NIC_HTML)) == 0) {
+    char *equal = strchr(pageName, '=');
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    switchNwInterface(sortedColumn);
+    
+    if(equal == NULL)
+      switchNwInterface(0);
+    else
+      switchNwInterface(atoi(&equal[1]));
   } else if(strcmp(pageName, "home.html") == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH);
@@ -1226,31 +1243,39 @@ static int returnHTTPPage(char* pageName, int postLen) {
     printIpProtocolUsage();
 #ifdef HAVE_GDCHART
   } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_GIF, 0);
+    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
     drawThptGraph(sortedColumn);
+    printTrailer=0;
   } else if(strncmp(pageName, "ipTrafficPie", strlen("ipTrafficPie")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_GIF, 0);
+    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
     drawTrafficPie();
+    printTrailer=0;
   } else if(strncmp(pageName, "pktCastDistribPie", strlen("pktCastDistribPie")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_GIF, 0);
+    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
     pktCastDistribPie();
+    printTrailer=0;
   } else if(strncmp(pageName, "pktSizeDistribPie", strlen("pktSizeDistribPie")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_GIF, 0);
+    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
     pktSizeDistribPie();
+    printTrailer=0;
   } else if(strncmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_GIF, 0);
+    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
     ipProtoDistribPie();
+    printTrailer=0;
   } else if(strncmp(pageName, "interfaceTrafficPie", strlen("interfaceTrafficPie")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_GIF, 0);
+    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
     interfaceTrafficPie();
+    printTrailer=0;
   } else if(strncmp(pageName, "drawGlobalProtoDistribution",
 		    strlen("drawGlobalProtoDistribution")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_GIF, 0);
+    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
     drawGlobalProtoDistribution();
+    printTrailer=0;
   } else if(strncmp(pageName, "drawGlobalIpProtoDistribution",
 		    strlen("drawGlobalIpProtoDistribution")) == 0) {
-    sendHTTPHeader(HTTP_TYPE_GIF, 0);
+    sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
     drawGlobalIpProtoDistribution();
+    printTrailer=0;
 #endif
   } else if(strncmp(pageName, NW_EVENTS_HTML, strlen(NW_EVENTS_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);

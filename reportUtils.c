@@ -1864,6 +1864,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 	}
 
 	if(numSessions == 0) {
+	  sendString("<CENTER>\n");
 	  if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
 		  "<TH "TH_BG" COLSPAN=2>%s&nbsp;Service</TH>"
 		  "<TH "TH_BG">Role</TH><TH "TH_BG">"
@@ -2798,7 +2799,7 @@ void printHostUsedServices(HostTraffic *el) {
     if(el->httpStats) printServiceStats("HTTP", el->httpStats, 1);
 
     sendString("</TABLE>"TABLE_OFF"\n");
-    sendString("<CENTER>\n");
+    sendString("</CENTER>\n");
   }
 
   /* ************ */
