@@ -3492,7 +3492,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
   if(!done) {
     /* Unknown fingerprint */
-    strcpy(srcHost->fingerprint, ":"); /* Empty OS name */
+    srcHost->fingerprint = strdup(":"); /* Empty OS name */
   }
 
   releaseAddrResMutex();

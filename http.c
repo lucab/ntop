@@ -2239,7 +2239,9 @@ static void compressAndSendData(u_int *gzipBytesSent) {
   }
   fclose(fd);
 
-  unlink(compressedFilePath);
+  if(unlink(compressedFilePath) != 0) {
+    traceEvent(CONST_TRACE_WARNING, "Unable to delete temporary file: %s", compressedFilePath);
+  }
 }
 
 /* ************************* */
