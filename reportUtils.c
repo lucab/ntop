@@ -705,6 +705,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
       BufferTooShort();
     sendString(buf);
+
     updateThpt();
     if(abs(column) == 1) { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
     else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
@@ -1078,9 +1079,9 @@ int cmpFctn(const void *_a, const void *_b) {
 	   (*b)->dotDomainName, (*b)->fullDomainName
 	   );
 #endif
-	if((*a)->dotDomainName == NULL) (*a)->dotDomainName = "";
-	if((*b)->dotDomainName == NULL) (*b)->dotDomainName = "";
-
+    if((*a)->dotDomainName == NULL) (*a)->dotDomainName = "";
+    if((*b)->dotDomainName == NULL) (*b)->dotDomainName = "";
+    
     rc = strcasecmp((*a)->dotDomainName, (*b)->dotDomainName);
     if(rc == 0)
       return(strcasecmp((*a)->fullDomainName, (*b)->fullDomainName));
@@ -1091,7 +1092,8 @@ int cmpFctn(const void *_a, const void *_b) {
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO,
 	     "reportKind=%d/columnSort=%d/sortSendMode=%d/numIpProtosToMonitor=%d\n",
-	     myGlobals.reportKind, myGlobals.columnSort, myGlobals.sortSendMode, myGlobals.numIpProtosToMonitor);
+	     myGlobals.reportKind, myGlobals.columnSort, 
+	     myGlobals.sortSendMode, myGlobals.numIpProtosToMonitor);
 #endif
 
 
@@ -2173,6 +2175,29 @@ static char* sap2name(u_int16_t proto, char *sap, int sap_len) {
 
 /* ************************************ */
 
+static void printUnknownProto(UnknownProto proto) {
+  char buf[64];
+
+  switch(proto.protoType) {
+  case 1:
+    snprintf(buf, sizeof(buf), "<li>Ethernet Type: 0x%04X\n", proto.proto.ethType);
+    break;
+  case 2:
+    snprintf(buf, sizeof(buf), "<li>SAP: DSAP=0x%02X/SSAP=0x%02X\n", 
+	     proto.proto.sapType.dsap, proto.proto.sapType.ssap);
+     break;
+  case 3:
+    snprintf(buf, sizeof(buf), "<li>IP Protocol: 0x%d\n", proto.proto.ipType);
+    break;
+  default:
+    return;
+  }
+
+  sendString(buf);
+}
+
+/* ************************************ */
+
 void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   Counter actTotalSent, actTotalRcvd;
@@ -2319,7 +2344,9 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Traffic Distribution for %s\"></TD>",
+		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2>"
+		    "<IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1 "
+		    "ALT=\"Sent Traffic Distribution for %s\"></TD>",
                     linkName,
                     el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
@@ -2401,6 +2428,38 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       nonIp = nonIp->next;
     }
     
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");  
+  }
+
+ /* ************************************** */
+  
+  if(el->unknownProtoSent || el->unknownProtoRcvd) {
+    printSectionTitle("Unknown Protocols");
+    
+    sendString("<CENTER>\n"
+	       ""TABLE_ON"<TABLE BORDER=1>"
+	       "<TH "TH_BG" WIDTH=200>Data&nbsp;Sent</TH>"
+	       "<TH "TH_BG" WIDTH=200>Data&nbsp;Rcvd</TH></TR>\n");
+
+    if(el->unknownProtoSent == NULL) {
+      sendString("<TR><TH "TH_BG">&nbsp;</TH>");
+    } else {
+      sendString("<TR><TH "TH_BG">");
+      for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
+	printUnknownProto(el->unknownProtoSent[i]);
+      sendString("</TH></TR>");
+    }
+
+    if(el->unknownProtoRcvd == NULL) {
+      sendString("<TH "TH_BG">&nbsp;</TH></TR>");
+    } else {
+      sendString("<TH "TH_BG">");
+      for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
+	printUnknownProto(el->unknownProtoRcvd[i]);
+      sendString("</TH></TR>");
+    }
+
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");  
   }

@@ -613,7 +613,7 @@
 #define MAX_NUM_PROCESSES_READLSOFINFO      1024
 
 /* Hash size */
-#define CONST_HASH_INITIAL_SIZE             4096
+#define CONST_HASH_INITIAL_SIZE             16*1024
 
 /*
  * These change the break points for the "Network Traffic: xxxx" reports
@@ -642,6 +642,10 @@
  *    section of the "Info about host" report.
  */
 #define MAX_NUM_RECENT_PORTS                5
+
+
+/* it defines the maximum number of undefined protocols */
+#define MAX_NUM_UNKNOWN_PROTOS                5
 
 /*
  * These are various html colors used in places throughout ntop.

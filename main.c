@@ -342,7 +342,7 @@ static int parseOptions(int argc, char* argv []) {
   theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKMO:P:S:U:VW:";
 #endif
 
-/* * * * * * * * * * */
+  /* * * * * * * * * * */
 
   /*
    * Parse command line options to the application via standard system calls

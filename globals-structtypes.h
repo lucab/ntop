@@ -359,6 +359,19 @@ typedef struct macInfo {
   char   vendorName[MAX_LEN_VENDOR_NAME];
 } MACInfo;
 
+typedef struct sapType {
+  u_char dsap, ssap;
+} SapType;
+
+typedef struct unknownProto {
+  u_char protoType; /* 0=notUsed, 1=Ethernet, 2=SAP, 3=IP */
+  union {
+    u_int16_t ethType;
+    SapType   sapType;
+    u_int16_t ipType;
+  } proto;
+} UnknownProto;
+
 typedef struct serviceStats {
   TrafficCounter numLocalReqSent, numRemReqSent;
   TrafficCounter numPositiveReplSent, numNegativeReplSent;
@@ -510,6 +523,7 @@ typedef struct hostTraffic {
   TrafficCounter   otherSent, otherRcvd; /* Other traffic we cannot classify */
   
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/rcvd by this host */
+  UnknownProto     *unknownProtoSent, *unknownProtoRcvd; /* List of MAX_NUM_UNKNOWN_PROTOS elements */
 
   Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   UsageCounter     contactedSentPeers;   /* peers that talked with this host */

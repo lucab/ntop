@@ -531,13 +531,6 @@ extern IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 				   u_char* packetData, int actualDeviceId);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
 
-/* Other - weird externals etc. */
-#ifdef WIN32
-#ifndef __GNUC__
-extern const char *gdbm_strerror (int);
-#endif
-#endif /* WIN32 */
-
 #ifdef HAVE_NETDB_H
 extern int h_errno; /* netdb.h */
 #endif

@@ -77,7 +77,7 @@ static void updateRoutedTraffic(HostTraffic *router) {
     if(router->routedTraffic != NULL) { /* malloc() didn't fail */
       incrementTrafficCounter(&router->routedTraffic->routedPkts, 1);
       incrementTrafficCounter(&router->routedTraffic->routedBytes,
-		  (Counter)(h_save->len - sizeof(struct ether_header)));
+			      (Counter)(h_save->len - sizeof(struct ether_header)));
     }
   }
 }
@@ -616,6 +616,83 @@ static u_char TTL_PREDICTOR(u_char x)		/* coded by awgn <awgn@antifork.org> */
 
 /* ************************************ */
 
+void incrementUnknownProto(HostTraffic *host, 
+			   int direction,
+			   u_int16_t eth_type,
+			   u_int16_t dsap,  u_int16_t ssap,
+			   u_int16_t ipProto) {
+  int i;
+
+  if(direction == 0) {
+    /* Sent */
+    if(host->unknownProtoSent == NULL) {
+      host->unknownProtoSent = (UnknownProto*)malloc(sizeof(UnknownProto)*MAX_NUM_UNKNOWN_PROTOS);
+      if(host->unknownProtoSent == NULL) return;
+      memset(host->unknownProtoSent, 0, sizeof(UnknownProto)*MAX_NUM_UNKNOWN_PROTOS);
+    }
+  
+    for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++) {
+      if(host->unknownProtoSent[i].protoType == 0) break;
+      if((host->unknownProtoSent[i].protoType == 1) && eth_type) {
+	if(host->unknownProtoSent[i].proto.ethType == eth_type) { return; }
+      } else if((host->unknownProtoSent[i].protoType == 2) && (dsap || ssap)) {
+	if((host->unknownProtoSent[i].proto.sapType.dsap == dsap)
+	   && (host->unknownProtoSent[i].proto.sapType.ssap == ssap)) { return; }
+      } else if((host->unknownProtoSent[i].protoType == 3) && ipProto) {
+	if(host->unknownProtoSent[i].proto.ipType == ipProto) { return; }
+      }
+    }
+
+    if(i<MAX_NUM_UNKNOWN_PROTOS) {
+      if(eth_type) {
+	host->unknownProtoSent[i].protoType = 1;
+	host->unknownProtoSent[i].proto.ethType = eth_type;
+      } else if(dsap || ssap) {
+	host->unknownProtoSent[i].protoType = 2;
+	host->unknownProtoSent[i].proto.sapType.dsap = dsap;
+	host->unknownProtoSent[i].proto.sapType.ssap = ssap;
+      } else {
+	host->unknownProtoSent[i].protoType = 3;
+	host->unknownProtoSent[i].proto.ipType = ipProto;
+      }
+    }
+  } else {
+    /* Rcvd */
+    if(host->unknownProtoRcvd == NULL) {
+      host->unknownProtoRcvd = (UnknownProto*)malloc(sizeof(UnknownProto)*MAX_NUM_UNKNOWN_PROTOS);
+      if(host->unknownProtoRcvd == NULL) return;
+      memset(host->unknownProtoRcvd, 0, sizeof(UnknownProto)*MAX_NUM_UNKNOWN_PROTOS);
+    }
+    for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++) {
+      if(host->unknownProtoRcvd[i].protoType == 0) break;
+      if((host->unknownProtoRcvd[i].protoType == 1) && eth_type) {
+	if(host->unknownProtoRcvd[i].proto.ethType == eth_type) { return; }
+      } else if((host->unknownProtoRcvd[i].protoType == 2) && (dsap || ssap)) {
+	if((host->unknownProtoRcvd[i].proto.sapType.dsap == dsap)
+	   && (host->unknownProtoRcvd[i].proto.sapType.ssap == ssap)) { return; }
+      } else if((host->unknownProtoRcvd[i].protoType == 3) && ipProto) {
+	if(host->unknownProtoRcvd[i].proto.ipType == ipProto) { return; }
+      }
+    }
+
+    if(i<MAX_NUM_UNKNOWN_PROTOS) {
+      if(eth_type) {
+	host->unknownProtoRcvd[i].protoType = 1;
+	host->unknownProtoRcvd[i].proto.ethType = eth_type;
+      } else if(dsap || ssap) {
+	host->unknownProtoRcvd[i].protoType = 2;
+	host->unknownProtoRcvd[i].proto.sapType.dsap = dsap;
+	host->unknownProtoRcvd[i].proto.sapType.ssap = ssap;
+      } else {
+	host->unknownProtoRcvd[i].protoType = 3;
+	host->unknownProtoRcvd[i].proto.ipType = ipProto;
+      }
+    }
+  }
+}
+
+/* ************************************ */
+
 static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
 			 u_int length,
@@ -630,11 +707,11 @@ static void processIpPkt(const u_char *bp,
   struct icmp icmpPkt;
   u_int hlen, tcpDataLength, udpDataLength, off, tcpUdpLen;
   char *proto;
-   HostTraffic *srcHost=NULL, *dstHost=NULL;
-   u_char forceUsingIPaddress = 0;
-   struct timeval tvstrct;
-   u_char *theData;
-   TrafficCounter ctr;
+  HostTraffic *srcHost=NULL, *dstHost=NULL;
+  u_char forceUsingIPaddress = 0;
+  struct timeval tvstrct;
+  u_char *theData;
+  TrafficCounter ctr;
 
    /* Need to copy this over in case bp isn't properly aligned.
     * This occurs on SunOS 4.x at least.
@@ -1465,7 +1542,9 @@ static void processIpPkt(const u_char *bp,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherIpBytes, length);
     sport = dport = 0;
     incrementTrafficCounter(&srcHost->otherSent, length);
+    incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, ip.ip_p);
     incrementTrafficCounter(&dstHost->otherRcvd, length);
+    incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, ip.ip_p);
     sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
     break;
   }
@@ -2182,8 +2261,12 @@ void processPacket(u_char *_deviceId,
 	}
 
 	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
+
 	incrementTrafficCounter(&srcHost->otherSent, length);
 	incrementTrafficCounter(&dstHost->otherRcvd, length);
+	incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
+	incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
+
 	ctr.value = length;
 
 	updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
@@ -2399,8 +2482,10 @@ void processPacket(u_char *_deviceId,
 		if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 
-		srcHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.srcNet), srcHost->nonIPTraffic->atNode = ddpHeader.srcNode;
-		dstHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.dstNet), dstHost->nonIPTraffic->atNode = ddpHeader.dstNode;
+		srcHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.srcNet), 
+		  srcHost->nonIPTraffic->atNode = ddpHeader.srcNode;
+		dstHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.dstNet), 
+		  dstHost->nonIPTraffic->atNode = ddpHeader.dstNode;
 
 		if(ddpHeader.ddpType == 2) {
 		  /* Appletalk NBP (Name Binding Protocol) */
@@ -2464,6 +2549,11 @@ void processPacket(u_char *_deviceId,
 		incrementTrafficCounter(&srcHost->otherSent, length);
 		incrementTrafficCounter(&dstHost->otherRcvd, length);
 		incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
+
+		incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */, 
+				      llcHeader.ssap /* ssap */, 0 /* ip */);
+		incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */, 
+				      llcHeader.ssap /* ssap */, 0 /* ip */);
 	      }
 	    } else if(myGlobals.enablePacketDecoding
 		      && ((sap_type == 0x06)
@@ -2484,6 +2574,10 @@ void processPacket(u_char *_deviceId,
 	      incrementTrafficCounter(&srcHost->otherSent, length);
 	      incrementTrafficCounter(&dstHost->otherRcvd, length);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
+	      incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */, 
+				    llcHeader.ssap /* ssap */, 0 /* ip */);
+	      incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */, 
+				    llcHeader.ssap /* ssap */, 0 /* ip */);
 	    }
 
 	    ctr.value = length;
@@ -2590,6 +2684,10 @@ void processPacket(u_char *_deviceId,
 	  incrementTrafficCounter(&srcHost->otherSent, length);
 	  incrementTrafficCounter(&dstHost->otherRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
+	  incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */, 
+				0 /* ssap */, 0 /* ip */);
+	  incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */, 
+				0 /* ssap */, 0 /* ip */);
 	  break;
 	}
 
