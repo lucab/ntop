@@ -1005,7 +1005,12 @@ int main(int argc, char *argv[]) {
   printf("PARAM_DEBUG: effective cmd line: '%s'\n", cmdLineBuffer);
 #endif
 
-  if(cmdLineBuffer[strlen(cmdLineBuffer)-1] == ' ') cmdLineBuffer[strlen(cmdLineBuffer)-1] = '\0';
+  /* Strip trailing spaces */
+  while((strlen(cmdLineBuffer) > 1) && 
+        (cmdLineBuffer[strlen(cmdLineBuffer)-1] == ' ')) {
+      cmdLineBuffer[strlen(cmdLineBuffer)-1] = '\0';
+  }
+
 #ifndef WIN32
   effective_argv=buildargv(cmdLineBuffer); /* Build a new argv[] from the string */
 
