@@ -25,6 +25,7 @@
 extern char *version, *osName, *author, *buildDate;
 extern char *program_name;
 extern char domainName[MAXHOSTNAMELEN], *shortDomainName;
+extern HostTraffic *broadcastEntry, *otherHostEntry;
 
 /* command line options */
 extern u_short traceLevel, debugMode, useSyslog, accuracyLevel;
@@ -131,7 +132,7 @@ extern struct timeval lastPktTime;
    threads deviceId is a bad idea */
 extern int deviceId; /* Set by processPacket() */
 extern int numDevices, actualDeviceId;
-extern ntopInterface_t *device;
+extern NtopInterface *device;
 
 /* Monitored Protocols */
 extern char **protoIPTrafficInfos;

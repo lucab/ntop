@@ -42,7 +42,6 @@
 
 #include "ntop.h"
 
-static HostTraffic broadcastEntry, otherHostEntry;
 static u_char threadsInitialized = 0;
 
 /* ******************************* */
@@ -80,7 +79,7 @@ void initIPServices(void) {
     }
   }
 
-  if(numSlots == 0) numSlots = 32;
+  if(numSlots == 0) numSlots = HASH_INITIAL_SIZE;
   numActServices = 2*numSlots; /* Double the hash */
 
   /* ************************************* */
@@ -162,15 +161,15 @@ void initIPServices(void) {
 */
 static void resetDevice(int deviceId) {
   int len;
-
+  void *ptr;
+  
   device[deviceId].actualHashSize = topHashSize = HASH_INITIAL_SIZE;  
   device[deviceId].hashThreshold = (unsigned int)(device[deviceId].actualHashSize*0.5);
   device[deviceId].topHashThreshold = (unsigned int)(device[deviceId].actualHashSize*0.75);
 
-  len = sizeof(HostTraffic*)*device[deviceId].actualHashSize;
-  device[deviceId].hash_hostTraffic = malloc(len);
-  memset(device[deviceId].hash_hostTraffic, 0, len);
-
+  ptr = calloc(HASH_INITIAL_SIZE, sizeof(HostTraffic*));
+  device[deviceId].hash_hostTraffic = ptr;
+  
   device[deviceId].lastTotalPkts = device[deviceId].lastBroadcastPkts = 0;
   device[deviceId].lastMulticastPkts = 0;
   device[deviceId].lastEthernetBytes = device[deviceId].lastIpBytes = 0;
@@ -189,8 +188,6 @@ static void resetDevice(int deviceId) {
   memset(&device[deviceId].tcpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
   memset(&device[deviceId].udpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
   memset(&device[deviceId].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
-  device[deviceId].hash_hostTraffic[broadcastEntryIdx] = &broadcastEntry;
-  device[deviceId].hash_hostTraffic[otherHostEntryIdx] = &otherHostEntry;
   memset(device[deviceId].last60MinutesThpt, 0, sizeof(device[deviceId].last60MinutesThpt));
   memset(device[deviceId].last24HoursThpt, 0, sizeof(device[deviceId].last24HoursThpt));
   memset(device[deviceId].last30daysThpt, 0, sizeof(device[deviceId].last30daysThpt));
@@ -295,51 +292,57 @@ void initCounters(int _mergeInterfaces) {
     dummyEthAddress[len] = len;
 
   for(i=0; i<numDevices; i++) {
-    device[i].numTotSessions = 32; /* Initial value */
+    device[i].numTotSessions = HASH_INITIAL_SIZE; /* Initial value */
     len = sizeof(IPSession*)*device[i].numTotSessions;
     device[i].tcpSession = (IPSession**)malloc(len);
     memset(device[i].tcpSession, 0, len);
     device[i].fragmentList = NULL;
   }
 
-  nextSessionTimeoutScan = time(NULL)+SESSION_SCAN_DELAY;
-  thisZone = gmt2local(0);
-
-  memset(&broadcastEntry, 0, sizeof(HostTraffic));
-  resetHostsVariables(&broadcastEntry);
+  broadcastEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
+  memset(broadcastEntry, 0, sizeof(HostTraffic));
+  resetHostsVariables(broadcastEntry);
 
   /* Set address to FF:FF:FF:FF:FF:FF */
   for(i=0; i<ETHERNET_ADDRESS_LEN; i++)
-    broadcastEntry.ethAddress[i] = 0xFF;
+    broadcastEntry->ethAddress[i] = 0xFF;
 
-  broadcastEntry.hostIpAddress.s_addr = 0xFFFFFFFF;
-  strncpy(broadcastEntry.hostNumIpAddress, "broadcast",
-	  sizeof(broadcastEntry.hostNumIpAddress));
-  strncpy(broadcastEntry.hostSymIpAddress, broadcastEntry.hostNumIpAddress,
-	  sizeof(broadcastEntry.hostSymIpAddress));
-  strcpy(broadcastEntry.ethAddressString, "FF:FF:FF:FF:FF:FF");
-  FD_SET(SUBNET_LOCALHOST_FLAG, &broadcastEntry.flags);
-  FD_SET(BROADCAST_HOST_FLAG, &broadcastEntry.flags);
-  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &broadcastEntry.flags);
+  broadcastEntry->hostIpAddress.s_addr = 0xFFFFFFFF;
+  strncpy(broadcastEntry->hostNumIpAddress, "broadcast",
+	  sizeof(broadcastEntry->hostNumIpAddress));
+  strncpy(broadcastEntry->hostSymIpAddress, broadcastEntry->hostNumIpAddress,
+	  sizeof(broadcastEntry->hostSymIpAddress));
+  strcpy(broadcastEntry->ethAddressString, "FF:FF:FF:FF:FF:FF");
+  FD_SET(SUBNET_LOCALHOST_FLAG, &broadcastEntry->flags);
+  FD_SET(BROADCAST_HOST_FLAG, &broadcastEntry->flags);
+  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &broadcastEntry->flags);
 
   broadcastEntryIdx = 0;
 
   if(accuracyLevel == LOW_ACCURACY_LEVEL) {
-    otherHostEntry.hostIpAddress.s_addr = 0x00112233;
-    strncpy(otherHostEntry.hostNumIpAddress, "0.1.2.3",
-	    sizeof(otherHostEntry.hostNumIpAddress));
-    strncpy(otherHostEntry.hostSymIpAddress, "Other Hosts",
-	    sizeof(otherHostEntry.hostSymIpAddress));
-    strcpy(otherHostEntry.ethAddressString, "00:00:00:00:00:00");   
+    otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
+    memset(otherHostEntry, 0, sizeof(HostTraffic));
+
+    otherHostEntry->hostIpAddress.s_addr = 0x00112233;
+    strncpy(otherHostEntry->hostNumIpAddress, "0.1.2.3",
+	    sizeof(otherHostEntry->hostNumIpAddress));
+    strncpy(otherHostEntry->hostSymIpAddress, "Remaining Host(s)",
+	    sizeof(otherHostEntry->hostSymIpAddress));
+    strcpy(otherHostEntry->ethAddressString, "00:00:00:00:00:00");   
     otherHostEntryIdx = broadcastEntryIdx+1;
   } else {
     /* We let ntop think that otherHostEntryIdx does not exist */
+    otherHostEntry = NULL;
     otherHostEntryIdx = broadcastEntryIdx;
   }
+
+  nextSessionTimeoutScan = time(NULL)+SESSION_SCAN_DELAY;
+  thisZone = gmt2local(0);
 
   numProcesses = 0;
   
   resetStats();
+
   createVendorTable();
   initialSniffTime = lastRefreshTime = time(NULL);
   capturePackets = 1;
@@ -384,6 +387,10 @@ void resetStats(void) {
       }
 
     device[i].numTcpSessions = 0;
+
+    device[i].hash_hostTraffic[broadcastEntryIdx] = broadcastEntry;
+    if(otherHostEntry != NULL)
+      device[i].hash_hostTraffic[otherHostEntryIdx] = otherHostEntry;      
   }
 
 #ifdef MULTITHREADED
@@ -616,7 +623,7 @@ void initApps(void) {
 void initDevices(char* devices) {
   char ebuf[PCAP_ERRBUF_SIZE], *myDevices;
   int i, j, mallocLen;
-  ntopInterface_t *tmpDevice;
+  NtopInterface *tmpDevice;
   char *tmpDev;
 #ifdef WIN32
   char *ifName, intNames[32][256];
@@ -702,8 +709,7 @@ void initDevices(char* devices) {
     }
 #endif
 
-    device = (ntopInterface_t*)malloc(sizeof(ntopInterface_t));
-    memset(device, 0, sizeof(ntopInterface_t));
+    device = (NtopInterface*)calloc(1, sizeof(NtopInterface));
     device[0].name = strdup(tmpDev);
     numDevices=1;
   } else {
@@ -748,13 +754,13 @@ void initDevices(char* devices) {
       }
 #endif
  
-      mallocLen = sizeof(ntopInterface_t)*(numDevices+1);
-      tmpDevice = (ntopInterface_t*)malloc(mallocLen);
+      mallocLen = sizeof(NtopInterface)*(numDevices+1);
+      tmpDevice = (NtopInterface*)malloc(mallocLen);
       memset(tmpDevice, 0, mallocLen);
       
 	/* Fix courtesy of Marius <marius@tbs.co.za> */
       if(numDevices > 0) {
-	memcpy(tmpDevice, device, sizeof(ntopInterface_t)*numDevices);
+	memcpy(tmpDevice, device, sizeof(NtopInterface)*numDevices);
 	free(device);
       }
 
@@ -807,10 +813,10 @@ void initDevices(char* devices) {
 	    if(getLocalHostAddress(&myLocalHostAddress, tmpDeviceName) == 0) {
 	      /* The virtual interface exists */
 
-	      mallocLen = sizeof(ntopInterface_t)*(numDevices+1);
-	      tmpDevice = (ntopInterface_t*)malloc(mallocLen);
+	      mallocLen = sizeof(NtopInterface)*(numDevices+1);
+	      tmpDevice = (NtopInterface*)malloc(mallocLen);
 	      memset(tmpDevice, 0, mallocLen);
-	      memcpy(tmpDevice, device, sizeof(ntopInterface_t)*numDevices);
+	      memcpy(tmpDevice, device, sizeof(NtopInterface)*numDevices);
 	      free(device);
 	      device = tmpDevice;
 

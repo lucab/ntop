@@ -136,9 +136,25 @@ static int _mapUsageCounter(u_int *myMappings, int mappingSize,
     if(counter->peersIndexes[i] != NO_PEER) {
       counter->peersIndexes[i] = _mapIdx(myMappings, mappingSize,
 					 counter->peersIndexes[i], file, line);
+      
       if(counter->peersIndexes[i] != NO_PEER)
 	numFull++;
     }
+  }
+
+  if(numFull > 0) {
+    int j;
+
+    for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+      for(j=i+1; j<MAX_NUM_CONTACTED_PEERS; j++) 
+	if((counter->peersIndexes[i] != NO_PEER) 
+	   && (counter->peersIndexes[i] == counter->peersIndexes[j])) {
+#ifdef DEBUG
+	  traceEvent(TRACE_INFO, "Removing duplicate entry (%d=%d, %d)", 
+		     i, j, counter->peersIndexes[j]);
+#endif
+	  counter->peersIndexes[j] = NO_PEER;
+	}
   }
 
   return(numFull);
@@ -146,28 +162,6 @@ static int _mapUsageCounter(u_int *myMappings, int mappingSize,
 
 #define mapUsageCounter(a)  _mapUsageCounter(mappings, mappingsSize, a, __FILE__, __LINE__)
 #define mapIdx(a)           _mapIdx(mappings, mappingsSize, a, __FILE__, __LINE__)
-
-/* ************************************ */
-
-static IpGlobalSession* purgeIdleHostSessions(u_int *mappings, u_int mappingsSize,
-					      IpGlobalSession *sessionScanner) {
-  if(sessionScanner != NULL) {
-    IpGlobalSession *returnValue;
-
-    if(sessionScanner->next != NULL)
-      sessionScanner->next = purgeIdleHostSessions(mappings, mappingsSize, sessionScanner->next);
-
-    if(mapUsageCounter(&sessionScanner->peers) == 0) {
-      /* There are no peers hence we can delete this entry */
-      returnValue = sessionScanner->next;
-      free(sessionScanner);
-    } else
-      returnValue = sessionScanner;
-
-    return(returnValue);
-  } else
-    return(NULL);
-}
 
 /* ******************************* */
 
@@ -554,16 +548,36 @@ static int _checkIndex(u_int *flaggedHosts, u_int flaggedHostsLen, u_int idx,
 
 /* **************************************** */
 
-static void _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen,
+static int _checkUsageCounter(u_int *flaggedHosts, u_int flaggedHostsLen,
 			       UsageCounter *counter,
 			       char *fileName, int fileLine) {
-  int i;
+  int i, numFull;
 
-  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+  for(i=0, numFull=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(_checkIndex(flaggedHosts, flaggedHostsLen, counter->peersIndexes[i],
 		   fileName, fileLine))
       counter->peersIndexes[i] = NO_PEER;
+
+    if(counter->peersIndexes[i] != NO_PEER)
+      numFull++;
   }
+
+  if(numFull > 0) {
+    int j;
+    
+    for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+      for(j=i+1; j<MAX_NUM_CONTACTED_PEERS; j++) 
+	if((counter->peersIndexes[i] != NO_PEER) 
+	   && (counter->peersIndexes[i] == counter->peersIndexes[j])) {
+#ifdef DEBUG
+	  traceEvent(TRACE_INFO, "Removing duplicate entry (%d=%d, %d)", 
+		     i, j, counter->peersIndexes[j]);
+#endif
+	  counter->peersIndexes[j] = NO_PEER;
+	}
+  }
+
+  return(numFull);
 }
 
 #define checkUsageCounter(a, b, c) _checkUsageCounter(a, b, c, __FILE__, __LINE__)
@@ -600,6 +614,29 @@ static void _checkPortUsage(u_int *flaggedHosts, u_int flaggedHostsLen,
 }
 
 #define checkPortUsage(a, b, c) _checkPortUsage(a, b, c, __FILE__, __LINE__)
+
+/* ************************************ */
+
+static IpGlobalSession* purgeIdleHostSessions(u_int *flaggedHosts, 
+					      u_int flaggedHostsLen,
+					      IpGlobalSession *sessionScanner) {
+  if(sessionScanner != NULL) {
+    IpGlobalSession *returnValue;
+
+    if(sessionScanner->next != NULL)
+      sessionScanner->next = purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, sessionScanner->next);
+
+    if(checkUsageCounter(flaggedHosts, flaggedHostsLen, &sessionScanner->peers) == 0) {
+      /* There are no peers hence we can delete this entry */
+      returnValue = sessionScanner->next;
+      free(sessionScanner);
+    } else
+      returnValue = sessionScanner;
+
+    return(returnValue);
+  } else
+    return(NULL);
+}
 
 /* **************************************** */
 
@@ -646,7 +683,6 @@ static void removeGlobalHostPeers(HostTraffic *el,
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpProtocolUnreachSent);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpAdminProhibitedSent);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->malformedPktsSent);
-
 
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synPktsRcvd);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstPktsRcvd);

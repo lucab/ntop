@@ -27,7 +27,7 @@ char *version, *osName, *author, *buildDate;
 #endif
 char *program_name;
 char domainName[MAXHOSTNAMELEN], *shortDomainName;
-
+HostTraffic *broadcastEntry, *otherHostEntry;
 
 /* command line options */
 u_short traceLevel, debugMode, useSyslog, accuracyLevel;
@@ -133,7 +133,7 @@ struct timeval lastPktTime;
 /* NICs */
 int deviceId; /* Set by processPacket() */
 int numDevices, actualDeviceId;
-ntopInterface_t *device;
+NtopInterface *device;
 
 /* Monitored Protocols */
 char **protoIPTrafficInfos;

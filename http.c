@@ -1029,10 +1029,12 @@ static int returnHTTPPage(char* pageName, int postLen) {
 
        This NEEDS to be fixed.
     */
-  } else if((strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
-	    || (strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
-	    || (strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
-	    || (strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)) {
+  }
+#ifdef HAVE_GDCHART
+  else if((strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
+	  || (strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
+	  || (strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
+	  || (strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)) {
     char hostName[32], *theHost;
     int idx;
 
@@ -1123,7 +1125,9 @@ static int returnHTTPPage(char* pageName, int postLen) {
 #endif
     }
     /* Temporary here - end */
-  } else {
+  }
+#endif /*  HAVE_GDCHART */
+ else {
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
 

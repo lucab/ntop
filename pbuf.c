@@ -543,6 +543,8 @@ static void updateHostSessionsList(u_int theHostIdx,
   scanner->lastSeen = actTime;
   scanner->sessionCounter++;
 
+  incrementUsageCounter(&scanner->peers, remotePeerIdx, actualDeviceId);
+
 #ifdef DEBUG
   printSession(theSession, sessionType, scanner->sessionCounter);
 #endif
@@ -551,7 +553,7 @@ static void updateHostSessionsList(u_int theHostIdx,
   case IPPROTO_TCP:
     /*
       The "IP Session History" table in the individual host
-      statistic page showed swapped values for the "Bytes sent"
+      statistic page shown swapped values for the "Bytes sent"
       and "Bytes rcvd" columns if the client opened the
       connection. For server initiated connections like
       standard (not passive) ftp-data it was OK.
@@ -1512,6 +1514,16 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	
 	theSession->nwLatency.tv_sec /= 2;
 	theSession->nwLatency.tv_usec /= 2;
+	
+	/* Sanity check */
+	if(theSession->nwLatency.tv_sec > 1000) {
+	  /* 
+	     This value seems to be wrong so it's better to ignore it
+	     rather than showing a false/wrong/dummy value
+	  */
+	  theSession->nwLatency.tv_usec = theSession->nwLatency.tv_sec = 0;
+	}
+
 	theSession->sessionState = STATE_ACTIVE;
       } else {
 	/* The latency value is negative. There's something wrong so let's drop it */
@@ -2310,7 +2322,9 @@ static void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
       for(found=0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	if(sender->contactedSentPeers.peersIndexes[i] != NO_PEER) {
 	  if((sender->contactedSentPeers.peersIndexes[i] == receiverIdx)
-	     || (((receiverIdx == broadcastEntryIdx) || (receiverIdx == otherHostEntryIdx) || broadcastHost(receiver))
+	     || (((receiverIdx == broadcastEntryIdx) 
+		  || (receiverIdx == otherHostEntryIdx)
+		  || broadcastHost(receiver))
 		 && broadcastHost(device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sender->contactedSentPeers.peersIndexes[i])]))) {
 	    found = 1;
 	    break;
@@ -2468,6 +2482,7 @@ static void checkFragmentOverlap(u_int srcHostIdx,
 }
 
 /* ************************************ */
+
 static u_int handleFragment(HostTraffic *srcHost,
 			    u_int srcHostIdx,
                             HostTraffic *dstHost,
@@ -2890,12 +2905,12 @@ static void processIpPkt(const u_char *bp,
   off = ntohs(ip.ip_off);
 
   if (off & 0x3fff) {
-    /* Handle fragmented packets */
-    length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
-			    &sport, &dport,
-			    ntohs(ip.ip_id), off, length,
-			    ntohs(ip.ip_len) - hlen);
-    
+    /* 
+       This is a fragment: fragment handling is handled by handleFragment()
+       called below.
+
+       Courtesy of Andreas Pfaller
+     */
     device[actualDeviceId].fragmentedIpBytes += length;
     
     switch(ip.ip_p) {
@@ -2964,6 +2979,20 @@ static void processIpPkt(const u_char *bp,
 			 tcpChain, TCP_RULE);
       }
 
+      /*
+	Don't move this code on top as it is supposed to stay here
+	as it modifies sport/sport 
+	
+	Courtesy of Andreas Pfaller
+      */
+      if(off & 0x3fff) {
+	/* Handle fragmented packets */
+	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
+				&sport, &dport,
+				ntohs(ip.ip_id), off, length,
+				ntohs(ip.ip_len) - hlen);       
+      }
+      
       if((sport > 0) && (dport > 0)) {
 	IPSession *theSession;
 	u_short isPassiveSession;
@@ -3183,6 +3212,21 @@ static void processIpPkt(const u_char *bp,
 			 udpChain, UDP_RULE);
       }
 
+      /*
+	Don't move this code on top as it is supposed to stay here
+	as it modifies sport/sport 
+	
+	Courtesy of Andreas Pfaller
+      */
+      if(off & 0x3fff) {
+	/* Handle fragmented packets */
+	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
+				&sport, &dport,
+				ntohs(ip.ip_id), off, length,
+				ntohs(ip.ip_len) - hlen);       
+      }
+      
+
       if((sport > 0) && (dport > 0)) {
 	/* It might be that udpBytes is 0 when
 	   the received packet is fragmented and the main
@@ -3247,6 +3291,7 @@ static void processIpPkt(const u_char *bp,
       if(off & 0x3fff) {
 	char *fmt = "WARNING: detected ICMP fragment [%s -> %s] (network attack attempt?)";
 
+	srcHost->icmpFragmentsSent += length, dstHost->icmpFragmentsReceived += length;
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->securityHostPkts->icmpFragmentSent, dstHostIdx, actualDeviceId);
 	incrementUsageCounter(&dstHost->securityHostPkts->icmpFragmentRcvd, srcHostIdx, actualDeviceId);

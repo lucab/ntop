@@ -2333,14 +2333,14 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
   for(sessionIdx=0; sessionIdx<2; sessionIdx++) {
     if(sessionIdx == 0) {
       if(el->tcpSessionList != NULL) {
-	printSectionTitle("IP Session History");
+	printSectionTitle("TCP Session History");
       }
 
       scanner = el->tcpSessionList;
       sessionType = "TCP";
     } else {
       if(el->udpSessionList != NULL) {
-	printSectionTitle("IP Session History");
+	printSectionTitle("UDP Session History");
       }
 
       scanner = el->udpSessionList;
@@ -2403,29 +2403,16 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       for(i=0; i < MAX_NUM_CONTACTED_PEERS; i++) {
 	u_int theIdx = scanner->peers.peersIndexes[i];
 
-	if((theIdx != NO_PEER)
-	   && (device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)] != NULL)) {
+	if(theIdx != NO_PEER) {
 	  HostTraffic *host = device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)];
-
+	
 	  if(host != NULL) {
-#ifdef MULTITHREADED
-	    accessMutex(&addressResolutionMutex, "printSession");
-#endif
-	    if(host->hostNumIpAddress[0] == '&') {
-	      if(snprintf(buf, sizeof(buf), "<LI>%s\n", host->hostSymIpAddress) < 0)
-		traceEvent(TRACE_ERROR, "Buffer overflow!");
-	    } else {
-	      if(snprintf(buf, sizeof(buf), "<LI><A HREF=%s.html>%s</A>\n",
-			  host->hostNumIpAddress, host->hostSymIpAddress) < 0)
-		traceEvent(TRACE_ERROR, "Buffer overflow!");
-	    }
-#ifdef MULTITHREADED
-	    releaseMutex(&addressResolutionMutex);
-#endif
-	    sendString(buf);
+	    sendString("\n<li>");
+	    sendString(makeHostLink(host, 0, 0, 0));
 	  }
 	}
       }
+
       sendString("</UL></TR>\n");
 
       scanner = (IpGlobalSession*)(scanner->next);
@@ -3309,21 +3296,24 @@ void printHostDetailedInfo(HostTraffic *el) {
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(el->contactedRouters.peersIndexes[i] != NO_PEER) {
       int routerIdx = el->contactedRouters.peersIndexes[i];
+      HostTraffic *router = device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
 
-      if(!printedHeader) {
-	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
-		"Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG"  ALIGN=RIGHT>\n", getRowColor()) < 0)
+      if(router != NULL) {
+	if(!printedHeader) {
+	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
+		      "Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG"  ALIGN=RIGHT>\n", 
+		      getRowColor()) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
+	}
+	printedHeader++;
+
+	if(printedHeader > 1) sendString("<BR>");
+
+	if(snprintf(buf, sizeof(buf), "%s\n", makeHostLink(router, SHORT_FORMAT, 0, 0)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
-      printedHeader++;
-
-      if(printedHeader > 1) sendString("<BR>");
-
-      if(snprintf(buf, sizeof(buf), "%s\n",
-	      makeHostLink(device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)],
-			   SHORT_FORMAT, 0, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
     }
   }
 
@@ -3350,8 +3340,6 @@ void printHostDetailedInfo(HostTraffic *el) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
-
-
 
   checkHostHealthness(el);
 

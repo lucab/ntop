@@ -815,7 +815,7 @@ typedef struct serviceEntry {
 
 /* ************************************* */
 
-typedef struct {
+typedef struct ntopInterface {
   char *name;                    /* unique interface name */
   int flags;                     /* the status of the interface as viewed by ntop */
 
@@ -937,7 +937,7 @@ typedef struct {
   TrafficEntry** ipTrafficMatrix; /* Subnet traffic Matrix */
   struct hostTraffic** ipTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
   fd_set ipTrafficMatrixPromiscHosts;
-} ntopInterface_t;
+} NtopInterface;
 
 typedef struct processInfo {
   char marker; /* internal use only */

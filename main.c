@@ -77,7 +77,7 @@ static int inet_aton(const char *cp, struct in_addr *addr)
 
 /* That's the meat */
 int main(int argc, char *argv[]) {
-  int pflag, i;
+  int pflag, i, len;
 #ifdef WIN32
   int optind=0;
 #else
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
   int enableThUpdate=1;
   int enableIdleHosts=1;
   char *cp, *localAddresses=NULL, *webAddr=NULL, *devices, *sslAddr=NULL;
-  char flowSpecs[2048], rulesFile[128], ifStr[196], *theOpts;
+  char *flowSpecs, *protoSpecs, rulesFile[128], ifStr[196], *theOpts;
   time_t lastTime;
 
   printf("Wait please: ntop is coming up...\n");
@@ -119,7 +119,8 @@ int main(int argc, char *argv[]) {
   isLsofPresent = isNmapPresent = filterExpressionInExtraFrame = 0;
 
   rulesFile[0] = '\0';
-  flowSpecs[0] = '\0';
+  flowSpecs = NULL;
+  protoSpecs = NULL;
   flowsList = NULL;
   localAddrFlag = 1;
   logTimeout = 0;
@@ -268,13 +269,20 @@ int main(int argc, char *argv[]) {
 
     case 'p':
       stringSanityCheck(optarg);
-      handleProtocols(optarg);
+      len = strlen(optarg);
+      if(len > 2048) len = 2048;
+      protoSpecs = (char*)malloc(len+1);
+      memset(protoSpecs, 0, len+1);
+      strncpy(protoSpecs, optarg, len);
       break;
 
     case 'F':
       stringSanityCheck(optarg);
-      strncpy(flowSpecs, optarg,
-	      sizeof(flowSpecs)-1)[sizeof(flowSpecs)-1] = '\0';
+      len = strlen(optarg);
+      if(len > 2048) len = 2048;
+      flowSpecs = (char*)malloc(len+1);
+      memset(flowSpecs, 0, len+1);
+      strncpy(flowSpecs, optarg, len);
       break;
 
     case 'm':
@@ -382,7 +390,7 @@ int main(int argc, char *argv[]) {
 	struct passwd *pw;
 	pw = getpwnam(optarg);
 	if(pw == NULL) {
-	  printf("FATAL ERROR: Unkown user %s.\n", optarg);
+	  printf("FATAL ERROR: Unknown user %s.\n", optarg);
 	  exit(-1);
 	}
 	userId = pw->pw_uid;
@@ -422,13 +430,6 @@ int main(int argc, char *argv[]) {
     }
   }  
 
-  initIPServices();
-
-  snprintf(accessLogPath, sizeof(accessLogPath), "%s/%s",
-	   dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
-
-  initLogger(); /* Do not call this function before dbPath
-		   is initialized */
   if(webPort == 0) {
 #ifdef HAVE_OPENSSL
     if(sslPort == 0) {
@@ -451,7 +452,16 @@ int main(int argc, char *argv[]) {
 	       "use -W <https port> for enabling it\n");
 #endif
 
+  initIPServices();
+
+  snprintf(accessLogPath, sizeof(accessLogPath), "%s/%s",
+	   dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
+
+  initLogger(); /* Do not call this function before dbPath
+		   is initialized */
+
   initGlobalValues();
+
 #ifndef MICRO_NTOP
   reportValues(&lastTime);
 #endif /* MICRO_NTOP */
@@ -529,8 +539,18 @@ int main(int argc, char *argv[]) {
   parseTrafficFilter(argv, optind);
 
   /* Handle flows (if any) */
-  if(flowSpecs[0] != '\0')
-    handleFlowsSpecs(flowSpecs);
+  if(flowSpecs != NULL) {
+    if(flowSpecs[0] != '\0')
+      handleFlowsSpecs(flowSpecs);
+    free(flowSpecs);
+  }
+
+  /* Patch courtesy of Burton M. Strauss III <BStrauss3@attbi.com> */
+  if(protoSpecs != NULL) {
+    if(protoSpecs[0] != '\0')
+      handleProtocols(protoSpecs);
+    free(protoSpecs);
+  }
 
   initCounters(mergeInterfaces);
   initApps();

@@ -2153,11 +2153,9 @@ void traceEvent(int eventTraceLevel, char* file,
 	strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
 
 	if(traceLevel == DETAIL_TRACE_LEVEL) {
-	  if(!useSyslog)
-	    printf("%s [%s:%d] ", theDate, file, line);
+	  printf("%s [%s:%d] ", theDate, file, line);
 	} else {
-	  if(!useSyslog) 
-	    printf("%s ", theDate);
+	  printf("%s ", theDate);
 	}
       }
 
