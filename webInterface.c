@@ -2343,7 +2343,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       if(snprintf(buf, sizeof(buf), "http://%s:%d", myGlobals.webAddr, myGlobals.webPort) < 0)
         BufferTooShort();
     } else {
-      if(snprintf(buf, sizeof(buf), "http://&lt;any&gt;:%d", myGlobals.webPort) < 0)
+      if(snprintf(buf, sizeof(buf), "http://any:%d", myGlobals.webPort) < 0)
         BufferTooShort();
     }
     printFeatureConfigInfo(textPrintFlag, "Web server URL", buf);
@@ -2357,9 +2357,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       if(snprintf(buf, sizeof(buf), "https://%s:%d", myGlobals.sslAddr, myGlobals.sslPort) < 0)
         BufferTooShort();
     } else {
-      if(snprintf(buf, sizeof(buf), 
-                  "https://&lt;any&gt;:%d", 
-                  myGlobals.sslPort) < 0)
+      if(snprintf(buf, sizeof(buf), "https://any:%d", myGlobals.sslPort) < 0)
         BufferTooShort();
     }
     printFeatureConfigInfo(textPrintFlag, "SSL Web server URL", buf);
@@ -2367,6 +2365,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     printFeatureConfigInfo(textPrintFlag, "SSL Web server (https://)", "Not Active");
   }
 #endif
+
 
   /* *************************** */
 
@@ -2961,6 +2960,253 @@ void printNtopConfigInfo(int textPrintFlag) {
     initAccessLog();
   }
 
+  /* *************************** */
+
+void printNtopBugReport(void) {
+  char buf[LEN_TIMEFORMAT_BUFFER];
+#ifdef BUGREPORTID_DEBUG
+  char buf2[256];
+#endif
+  static char xvert[] = "JB6XF3PRQHNA7W5ECM8S9GLVY4TDKUZ2"; /* Scrambled just 'cause */
+  time_t t;
+  unsigned int v, scramble, raw;
+  int i, j;
+
+  t = time(NULL);
+
+  sendString("Cut out this entire section and paste into an e-mail message.  Fill in the\n");
+  sendString("various sections with as much detail as possible and email to the ntop lists,\n");
+  sendString("user questions to ntop, code/development questions to ntop-dev.\n\n");
+  sendString("Note: the shortcut keys for copying the section are usually:\n");
+  sendString("    1) left click anywhere in this text (select this frame),\n");
+  sendString("    2) press control-a (select all), control-c (copy)\n");
+  sendString("  and then\n");
+  sendString("    3) press control-v (paste) in a new email message.\n\n");
+  sendString("Remember: ONE problem per report!\n\n");
+  sendString("The summary should be 5-10 words that indicate the problem and which would have\n");
+  sendString("helped you to find a previous report of the same problem, e.g.:\n");
+  sendString("   2003-02-07 cvs compile error in util.c, #define NONOPTION_P...\n\n");
+  sendString("For the 'Log Extract', cut and past the last 10-15 system log messages, i.e.:\n");
+  sendString("   grep 'ntop' /var/log/messages | head -n 15\n");
+  sendString("Assuming your system log is in /var/log/messages.\n\n");
+  sendString("Delete this line to the top before sending...\n");
+  sendString("-------------------------------------------------------------------------------\n");
+  sendString("  n t o p   v e r s i o n  '");
+  sendString(version);
+  sendString("'  b u g   r e p o r t\n\n");
+  sendString("From:  ______________________________\n\n");
+  sendString("EMail: ______________________________\n\n");
+  sendString("Date:  ");
+  strftime(buf, sizeof(buf)-1, "%Y-%m-%d %H:%M:%S GMT", gmtime(&t));
+  buf[sizeof(buf)-1] = '\0';
+  sendString(buf);
+  sendString("\n\n");
+  sendString("-------------------------------------------------------------------------------\n");
+  sendString("Summary\n\n\n\n\n\n");
+  sendString("OS: __________  version: __________\n\n");
+  sendString("ntop from: ______________________________ (rpm, source, ports, etc.)\n\n");
+  sendString("Hardware:  CPU:           _____ (i86, SPARC, etc.)\n");
+  sendString("           # Processors:  _____\n");
+  sendString("           Memory:        _____ MB\n");
+  sendString("Network:\n");
+
+  if (myGlobals.mergeInterfaces == 1) {
+      if (myGlobals.device[0].droppedPkts.value > 0) {
+          snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[0].droppedPkts.value);
+          sendString(buf);
+      }
+      if (myGlobals.device[0].ethernetPkts.value > 0) {
+          snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[0].ethernetPkts.value);
+          sendString(buf);
+      }
+      if (myGlobals.device[0].broadcastPkts.value > 0) {
+          snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[0].broadcastPkts.value);
+          sendString(buf);
+      }
+      if (myGlobals.device[0].multicastPkts.value > 0) {
+          snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[0].multicastPkts.value);
+          sendString(buf);
+      }
+      if (myGlobals.device[0].ipPkts.value > 0) {
+          snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[0].ipPkts.value);
+          sendString(buf);
+      }
+      sendString("\n");
+  }
+
+  for (i=0; i<myGlobals.numDevices; i++) {
+      snprintf(buf, sizeof(buf), "     Network Interface %2d ", i);
+      sendString(buf);
+      if (myGlobals.device[0].dummyDevice)
+          sendString(" (dummy)");
+      if (myGlobals.device[i].virtualDevice)
+          sendString(" (virtual)");
+      if (myGlobals.device[i].name != NULL) {
+          sendString(" ");
+          sendString(myGlobals.device[i].name);
+      }
+      if (myGlobals.device[i].humanFriendlyName != NULL) {
+          if (myGlobals.device[i].name != NULL) {
+              if (strcmp(myGlobals.device[i].name, myGlobals.device[i].humanFriendlyName)) {
+                  sendString(" "); 
+                  sendString(myGlobals.device[i].humanFriendlyName);
+              }
+          } else {
+              sendString(" "); 
+              sendString(myGlobals.device[i].humanFriendlyName);
+          }
+      }
+      sendString("\n");
+
+      if (myGlobals.device[i].filter != NULL) {
+          sendString("      Filter: ");
+          sendString(myGlobals.device[i].filter);
+          sendString("\n");
+      }
+
+      if (myGlobals.mergeInterfaces == 0) {
+          if (myGlobals.device[i].droppedPkts.value > 0) {
+              snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[i].droppedPkts.value);
+              sendString(buf);
+          }
+          if (myGlobals.device[i].ethernetPkts.value > 0) {
+              snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[i].ethernetPkts.value);
+              sendString(buf);
+          }
+          if (myGlobals.device[i].broadcastPkts.value > 0) {
+              snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[i].broadcastPkts.value);
+              sendString(buf);
+          }
+          if (myGlobals.device[i].multicastPkts.value > 0) {
+              snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[i].multicastPkts.value);
+              sendString(buf);
+          }
+          if (myGlobals.device[i].ipPkts.value > 0) {
+              snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[i].ipPkts.value);
+              sendString(buf);
+          }
+      }
+
+      sendString("          Mfg: ____________________  Model: ____________________\n");
+      sendString("          NIC Speed: 10/100/1000/Other  Bus: PCI ISA USB Firewire Other\n");
+      sendString("          Location:  Public Internet / LAN / WAN\n");
+      sendString("          Bandwidth: Dialup  DSL/CableModem  fT1  T1  10Mbps T3 100Mbps+\n");
+      sendString("          # Hosts (machines): __________\n\n");
+  }
+  sendString("-------------------------------------------------------------------------------\n");
+  sendString("Log extract\n\n\n\n\n\n");
+  sendString("-------------------------------------------------------------------------------\n");
+  sendString("Problem Description\n\n\n\n\n\n\n\n\n\n");
+  sendString("-------------------------------------------------------------------------------\n");
+  printNtopConfigInfo(TRUE);
+  sendString("-------------------------------------------------------------------------------\n");
+
+  sendString("Note: The generated id below should be unique. It's essentially a random 6 or 7\n");
+  sendString("      character tracking tag for each problem report.  Since it's generated on\n");
+  sendString("      your machine, we can't just use an ever increasing number global number.\n\n");
+  sendString("      While it should be unique, it is not traceable back to a specific user or\n");
+  sendString("      machine.  If it makes you uncomfortable just delete it.\n\n");
+
+  /*
+   *  Generate a (hopefully) globally unique tag for each report. The goal is to create something 
+   *  unique (i.e. with a very small chance of the same tag being generated), yet not traceable
+   *  to a specific user/machine (unless the user chooses to identify themselves) and - even then - 
+   *  which isn't traceable to a subsequent report by the same user.
+   *
+   *  We combine a variety of numbers which, while maintained by ntop, it has little control over
+   *  and so which shouldn't produce a predictable pattern.
+   *
+   *    Heartbeat count (if one)
+   *    epoch time in seconds
+   *    Elapsed time for this ntop run.
+   *
+   *  So that the higher digits aren't just dependent on TOD, we add the total # of bytes seen
+   *  by ntop, using bit ops to shift the volitile nibbles towards the bits where the TOD is 
+   *  less random.
+   *
+   *  Finally, we use a scrambled string of characters (xvert, above) to then convert
+   *  the 32 bit integer into a character tag.  Using A-Z + 0-9, but dropping the
+   *  0, 1 O and L gives us base 32 (5 bits per character).  We generate left-to-right, least 
+   *  significant to most significant because it's just easier to generate that way.
+   *
+   *  If you enable the flag in globals-defines.h:
+   *   #define BUGREPORTID_DEBUG
+   *  The data being used will be printed out for you.
+   *                                        
+   */
+  v = 0;
+
+#ifdef BUGREPORTID_DEBUG
+  snprintf(buf2, sizeof(buf2), "%-12s %48s %8s %8s\n", "Item", "Raw value", "Hex", "v value");
+  sendString(buf2);
+#endif
+
+#ifdef PARM_SHOW_NTOP_HEARTBEAT
+  v += myGlobals.heartbeatCounter /* If we have it */ ;
+ #ifdef BUGREPORTID_DEBUG
+  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat", myGlobals.heartbeatCounter, myGlobals.heartbeatCounter, v);
+  sendString(buf2);
+ #endif
+#endif
+
+  v += (unsigned int) t;
+#ifdef BUGREPORTID_DEBUG
+  strftime(buf, sizeof(buf)-1, "%Y-%m-%d %H:%M:%S GMT", gmtime(&t));
+  buf[sizeof(buf)-1] = '\0';
+  snprintf(buf2, sizeof(buf2), "%-12s %48s %08x %08x\n", "Date/Time", buf, t, v);
+  sendString(buf2);
+#endif
+
+  v += myGlobals.actTime - myGlobals.initialSniffTime;
+#ifdef BUGREPORTID_DEBUG
+  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Elapsed", (myGlobals.actTime - myGlobals.initialSniffTime), (myGlobals.actTime - myGlobals.initialSniffTime), v);
+  sendString(buf2);
+#endif
+
+  raw = 0;
+  for (i=0; i<= myGlobals.numDevices; i++)
+      raw += (unsigned int) (myGlobals.device[i].ethernetBytes.value);
+
+#ifdef BUGREPORTID_DEBUG
+  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x\n", "Bytes", raw, raw);
+  sendString(buf2);
+#endif
+  /* Scramble the nibbles so we have some data high and some low.  Arbitrary: abcdefgh -> fhgdaecb */
+  scramble = (raw & 0xf0000000) >> 16 |
+             (raw & 0x0f000000) >> 24 |
+             (raw & 0x00f00000) >> 16 |
+             (raw & 0x000f0000)       |
+             (raw & 0x0000f000) >>  4 |
+             (raw & 0x00000f00) << 20 |
+             (raw & 0x000000f0) << 16 |
+             (raw & 0x0000000f) << 24;
+  v ^= scramble;
+#ifdef BUGREPORTID_DEBUG
+  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)", scramble, scramble, v);
+  sendString(buf2);
+#endif
+
+  i=0;
+  memset(buf, 0, sizeof(buf));
+  while (v > 0) {
+      j = v % (sizeof(xvert) - 1);
+      v = v / (sizeof(xvert) - 1);
+      buf[i] = xvert[j];   
+#ifdef BUGREPORTID_DEBUG
+      snprintf(buf2, sizeof(buf2), "(%2d", j);
+      sendString(buf2);
+#endif
+      i++;
+  }
+#ifdef BUGREPORTID_DEBUG
+  sendString("\n\n");
+#endif
+
+  sendString("'Unique' BugReportId: '");
+  sendString(buf);
+  sendString("'\n\n");
+  sendString("-------------------------------------------------------------------------------\n");
+}
   /* **************************************** */
 
   /*

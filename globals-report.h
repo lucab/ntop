@@ -146,7 +146,6 @@ extern void printNoDataYet(void);
 extern void printNotAvailable(void);
 extern void listNetFlows(void);
 extern void fillDomainName(HostTraffic *el);
-extern void printNtopConfigInfo(int textPrintFlag);
 extern void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId);
 extern void printASList(unsigned int deviceId);
 extern void showPortTraffic(u_short portNr);
@@ -164,6 +163,8 @@ extern void switchNwInterface(int _interface);
 extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printNtopConfigHInfo(int textPrintFlag);
+extern void printNtopConfigInfo(int textPrintFlag);
+extern void printNtopBugReport(void);
 #ifdef MAKE_WITH_SSLWATCHDOG
 extern int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag);
 extern int sslwatchdogClearLock(int parentchildFlag);
@@ -249,6 +250,7 @@ extern int out_graph(short gifwidth,
 #define SWITCH_NIC_HTML                 "switch.html"
 #define CHANGE_FILTER_HTML              "changeFilter.html"
 #define FILTER_INFO_HTML                "filterInfo.html"
+#define STR_BUGRPT_HTML                 "ntopBugReport.html"
 
 /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
 #define RESET_STATS_HTML              "resetStats.html"

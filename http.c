@@ -1978,6 +1978,10 @@ static int returnHTTPPage(char* pageName,
       sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
       printNtopConfigInfo(TRUE);
       printTrailer = 0;
+    } else if(strncmp(pageName, STR_BUGRPT_HTML, strlen(STR_BUGRPT_HTML)) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
+      printNtopBugReport();
+      printTrailer = 0;
     } else
 #endif /* MAKE_MICRO_NTOP */
       if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
