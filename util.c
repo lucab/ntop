@@ -2057,21 +2057,6 @@ char*_strncpy(char *dest, const char *src, size_t n) {
 /* ******************************************** */
 
 /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-#ifndef HAVE_LOCALTIME_R
-struct tm *localtime_r(const time_t *t, struct tm *tp) {
-  /*
-     This is a temporary placeholder for systems that don't
-     have a reentrant localtime() function.
-     THIS VERSION IS NOT REENTRANT!
-  */
-  *tp=*localtime(t);
-  return tp;
-}
-#endif
-
-/* ******************************************** */
-
-/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
 #ifndef HAVE_STRTOK_R
 /* Reentrant string tokenizer.  Generic version.
 

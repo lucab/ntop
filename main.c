@@ -137,6 +137,8 @@ int main(int argc, char *argv[]) {
 
   /* printf("Parsing command line options...\n"); */
 
+  initIPServices();
+
 #ifdef WIN32
   theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:q";
 #else
@@ -380,9 +382,7 @@ int main(int argc, char *argv[]) {
 	exit(-1);
 	/* NOTREACHED */
       }
-  }
-
-  initIPServices();
+  }  
 
   snprintf(accessLogPath, sizeof(accessLogPath), "%s/%s",
 	   dbPath, DETAIL_ACCESS_LOG_FILE_PATH);

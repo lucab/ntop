@@ -2593,12 +2593,14 @@ void printLsofData(int mode) {
 void printIpTrafficMatrix(void) {
   int i, j, numEntries=0, numConsecutiveEmptyCells;
   char buf[BUF_SIZE];
-  short activeHosts[256];
+  short *activeHosts;
   TrafficCounter minTraffic=(TrafficCounter)LONG_MAX, maxTraffic=0, avgTraffic;
   TrafficCounter avgTrafficLow, avgTrafficHigh, tmpCounter;
 
   printHTMLheader("IP Subnet Traffic Matrix", 0);
-
+  
+  activeHosts = (short*)malloc(sizeof(short)*device[actualReportDeviceId].numHosts);
+  
   for(i=1; i<device[actualReportDeviceId].numHosts-1; i++) {
     activeHosts[i] = 0;
     for(j=1; j<device[actualReportDeviceId].numHosts-1; j++) {
@@ -2628,6 +2630,7 @@ void printIpTrafficMatrix(void) {
 
   if(numEntries == 0) {
     printNoDataYet();
+    free(activeHosts);
     return;
   } else
     sendString("</TR>\n");
@@ -2659,7 +2662,8 @@ void printIpTrafficMatrix(void) {
       numConsecutiveEmptyCells=0;
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT><SMALL>%s</SMALL></TH>",
-		  getRowColor(), makeHostLink(device[actualReportDeviceId].ipTrafficMatrixHosts[i], SHORT_FORMAT, 1, 0)) < 0) 
+		  getRowColor(), makeHostLink(device[actualReportDeviceId].ipTrafficMatrixHosts[i], 
+					      SHORT_FORMAT, 1, 0)) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
@@ -2698,7 +2702,8 @@ void printIpTrafficMatrix(void) {
 
       if(numConsecutiveEmptyCells > 0) {
 	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" COLSPAN=%d>&nbsp;</TD>\n", 
-		    numConsecutiveEmptyCells) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		    numConsecutiveEmptyCells) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 	numConsecutiveEmptyCells = 0;
       }
@@ -2708,6 +2713,8 @@ void printIpTrafficMatrix(void) {
 
   sendString("</TABLE>"TABLE_OFF"\n<P>\n");
   sendString("</CENTER>\n");
+
+  free(activeHosts);
 }
 
 /* ************************ */

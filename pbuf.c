@@ -95,7 +95,7 @@ static const u_char *p_save;
  u_int getHostInfo(struct in_addr *hostIpAddress,
 		   u_char *ether_addr) {
    u_int idx, i;
-#ifdef PURGE_CONSERVATION
+#ifndef MULTITHREADED
    u_int run=0;
 #endif
    HostTraffic *el=NULL;
@@ -357,7 +357,7 @@ static const u_char *p_save;
        }
      } else {
        /* The hashtable is full */
-#ifdef PURGE_CONSERVATION
+#ifndef MULTITHREADED
        if(run == 0) {
 	 purgeIdleHosts(1, actualDeviceId);
        } else
@@ -390,7 +390,7 @@ static const u_char *p_save;
        }
 #endif
 
-#ifdef PURGE_CONSERVATION
+#ifndef MULTITHREADED
        run++;
 #endif
        goto HASH_SLOT_FOUND;
@@ -4262,7 +4262,7 @@ void processPacket(u_char *_deviceId,
      device[deviceId].datalink, hlen, caplen);
   */
 
-#ifdef PURGE_CONSERVATION
+#ifndef MULTITHREADED
   /*
    * Let's check whether it's time to free up
    * some space before to continue....
