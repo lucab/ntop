@@ -2112,10 +2112,7 @@ void traceEvent(int eventTraceLevel, char* file,
 #endif
 
     if(traceLevel >= DEFAULT_TRACE_LEVEL) {
-      memset(theDate, 0, sizeof(theDate));
-      strftime(theDate, sizeof(theDate)-1, 
-	       "%d/%b/%Y:%H:%M:%S", 
-	       localtime_r(&theTime, &t));
+      strftime(theDate, 32, "%d/%b/%Y:%H:%M:%S", localtime_r(&theTime, &t));
 
       if(traceLevel == DETAIL_TRACE_LEVEL)
 	printf("%s [%s:%d] ", theDate, file, line);

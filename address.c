@@ -32,11 +32,6 @@ static char hex[] = "0123456789ABCDEF";
 extern int h_errno; /* netdb.h */
 #endif
 
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-static u_long addressQueueSlotId        = 1;
-static u_long lastAddressSlotIdResolved = 0;
-#endif
-
 /* #define DNS_DEBUG */
 
 /* Forward */
@@ -71,10 +66,8 @@ static int _ns_name_unpack(const u_char *msg,
 
 /* ************************************ */
 
-static void resolveAddress(char* symAddr,
-			   struct in_addr *hostAddr,
-			   short keepAddressNumeric,
-			   struct hnamemem *hm) {
+static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
+  char symAddr[MAX_HOST_SYM_NAME_LEN];
   int addr, i;
   struct hostent *hp = NULL;
   char* res;
@@ -124,7 +117,7 @@ static void resolveAddress(char* symAddr,
 #ifdef MULTITHREADED
     accessMutex(&addressResolutionMutex, "resolveAddress-2");
 #endif
-
+    
     if(strlen(data_data.dptr) > MAX_HOST_SYM_NAME_LEN) {
       strncpy(symAddr, data_data.dptr, MAX_HOST_SYM_NAME_LEN-3);
       symAddr[MAX_HOST_SYM_NAME_LEN] = '\0';
@@ -135,13 +128,9 @@ static void resolveAddress(char* symAddr,
       strncpy(symAddr, data_data.dptr, MAX_HOST_SYM_NAME_LEN);
 
 #ifdef MULTITHREADED
-    lastAddressSlotIdResolved = 
-      releaseMutex(&addressResolutionMutex);
+    releaseMutex(&addressResolutionMutex);
 #endif
     updateHostNameInfo(addr, data_data.dptr);
-#ifdef HAVE_MYSQL
-    mySQLupdateHostNameInfo(addr, data_data.dptr);
-#endif
     free(data_data.dptr);
     numResolvedOnCacheAddresses++;
 #ifdef DEBUG
@@ -251,9 +240,9 @@ static void resolveAddress(char* symAddr,
       char *dotp = (char*)hp->h_name;
 
 #ifdef DNS_DEBUG
-    traceEvent(TRACE_INFO, "Resolved to %s.", dotp);
+      traceEvent(TRACE_INFO, "Resolved to %s.", dotp);
 #endif
-    strncpy(tmpBuf, dotp, sizeof(tmpBuf));
+      strncpy(tmpBuf, dotp, sizeof(tmpBuf));
 
       if(domainName[0] != '\0') {
 	int len = strlen(tmpBuf)-strlen(domainName);
@@ -291,23 +280,15 @@ static void resolveAddress(char* symAddr,
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "resolveAddress-3");
 #endif
-
-  if(strlen(res) > (MAX_HOST_SYM_NAME_LEN-1)) {
+  
+  if(strlen(res) > MAX_HOST_SYM_NAME_LEN) {
     strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN-3);
     symAddr[MAX_HOST_SYM_NAME_LEN] = '\0';
     symAddr[MAX_HOST_SYM_NAME_LEN-1] = '.';
     symAddr[MAX_HOST_SYM_NAME_LEN-2] = '.';
     symAddr[MAX_HOST_SYM_NAME_LEN-3] = '.';
-  } else {
-    /* printf("==> (%x) (%s)(len=%d)\n", symAddr, res, strlen(res)); */
-    if(hm != NULL) {
-      if(hm->name == NULL)
-	traceEvent(TRACE_INFO, "WARNING: NULL instance found !");
-      else
-	strcpy(symAddr, res);
-
-    }
-  }
+  } else
+    strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN);
 
   for(i=0; symAddr[i] != '\0'; i++)
     symAddr[i] = (char)tolower(symAddr[i]);
@@ -321,9 +302,6 @@ static void resolveAddress(char* symAddr,
   data_data.dsize = strlen(symAddr)+1;
 
   updateHostNameInfo(addr, symAddr);
-#ifdef HAVE_MYSQL
-  mySQLupdateHostNameInfo(addr, data_data.dptr);
-#endif
   
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "resolveAddress-4");
@@ -339,7 +317,7 @@ static void resolveAddress(char* symAddr,
     return; /* ntop is quitting... */
   }
   if(gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
-   traceEvent(TRACE_ERROR, "Error while adding '%s'\n.\n", symAddr);
+    traceEvent(TRACE_ERROR, "Error while adding '%s'\n.\n", symAddr);
   else {
 #ifdef GDBM_DEBUG
     traceEvent(TRACE_INFO, "Added data: '%s' [%s]\n", symAddr, keyBuf);
@@ -359,63 +337,44 @@ static void resolveAddress(char* symAddr,
 
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
 
-static void queueAddress(struct hnamemem* elem, int elemLen) {
-
+static void queueAddress(struct in_addr elem) {
   /****************************
    - If the queue is full then wait until a slot is freed
    - If the queue is getting full then periodically wait
      until a slot is freed
   *****************************/
-
   if(addressQueueLen >= ADDRESS_QUEUE_LENGTH) {
-    char tmpBuf[96];
 #ifdef DEBUG
    traceEvent(TRACE_INFO, "Dropping address!!! [addr queue=%d/max=%d]\n",
 	      addressQueueLen, maxAddressQueueLen);
 #endif
-    /* The address is kept in numerical form
-       (i.e. no conversion will take place) */
-   strncpy(elem->name, _intoa(elem->addr, tmpBuf, sizeof(tmpBuf)), elemLen);
-
-#ifdef HAVE_GDBM_H
-    /*
-       Free up bucket
-
-       NOTE: do not free elem->name because it is used
-       by ipaddr2str.
-    */
-    free(elem);
-#endif
+    /* The address is kept in numerical form (i.e. no conversion will take place) */  
     numKeptNumericAddresses++;
-
     droppedAddresses++;
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads (dequeue) to run */
 #endif
   } else {
     accessMutex(&addressQueueMutex, "queueAddress");
-    addressQueue[addressQueueHead] = elem;
+    addressQueue[addressQueueHead].s_addr = elem.s_addr;
     addressQueueHead = ((addressQueueHead+1) % ADDRESS_QUEUE_LENGTH);
     addressQueueLen++;
-    if(elem->instance) elem->instance->instanceInUse++;
 
     if(addressQueueLen > maxAddressQueueLen) {
       maxAddressQueueLen = addressQueueLen; /* Update stats */
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Max queue len: %ld\n", maxAddressQueueLen);
+     traceEvent(TRACE_INFO, "Max queue len: %ld\n", maxAddressQueueLen);
 #endif
     }
 
     releaseMutex(&addressQueueMutex);
-
 #ifdef DEBUG
    traceEvent(TRACE_INFO, "Queued address... [addr queue=%d/max=%d]\n",
 	      addressQueueLen, maxAddressQueueLen);
 #endif
 
 #ifdef DEBUG_THREADS
-   traceEvent(TRACE_INFO, "+ [addr queue=%d/max=%d]\n", 
-	      addressQueueLen, maxAddressQueueLen);
+   traceEvent(TRACE_INFO, "+ [addr queue=%d/max=%d]\n", addressQueueLen, maxAddressQueueLen);
 #endif
 
 #ifdef USE_SEMAPHORES
@@ -428,49 +387,9 @@ static void queueAddress(struct hnamemem* elem, int elemLen) {
 
 /* ************************************ */
 
-void cleanAddressQueueId(u_long queueId) {
-  int i;
-  
-  if((queueId <= lastAddressSlotIdResolved)
-     && (abs(queueId-lastAddressSlotIdResolved) < ADDRESS_QUEUE_LENGTH) /* wrap check */) {
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Address %u already resolved (lastAddressSlotIdResolved=%u)...",
-	       queueId, lastAddressSlotIdResolved);
-#endif
-      return; /* Address already resolved */
-  }
-  
-  accessMutex(&addressQueueMutex, "cleanAddressQueueId");
-
-  for(i=0; i<ADDRESS_QUEUE_LENGTH; i++) {
-    if((addressQueue[i] != NULL)
-       && (addressQueue[i]->slotQueueId == queueId)) {
-      addressQueue[i]->name = NULL; /* found */
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "Address %u dropped from queue (lastAddressSlotIdResolved=%u)...", 
-		 queueId, lastAddressSlotIdResolved);
-#endif
-      break;
-    }
-  }
-
-#ifndef DEBUG
-  traceEvent(TRACE_INFO, "WARNING: address %u NOT found on queue (lastAddressSlotIdResolved=%u)...",
-	     queueId, lastAddressSlotIdResolved);
-#endif
-  
-  releaseMutex(&addressQueueMutex);
-}
-
-/* ************************************ */
-
 void cleanupAddressQueue(void) {
-  while(addressQueueLen > 0) {
-    free(addressQueue[addressQueueTail]->name);
-    free(addressQueue[addressQueueTail]);
-    addressQueueTail = ((addressQueueTail+1) % ADDRESS_QUEUE_LENGTH);
-    addressQueueLen--;
-  }
+  addressQueueTail = 0;
+  addressQueueLen  = 0;
 }
 
 /* ************************************ */
@@ -478,11 +397,11 @@ void cleanupAddressQueue(void) {
 #ifdef MULTITHREADED
 
 void* dequeueAddress(void* notUsed _UNUSED_) {
-  struct hnamemem *elem;
+  struct in_addr addr;
 
   while(capturePackets) {
 #ifdef DEBUG
-   traceEvent(TRACE_INFO, "Waiting for address...\n");
+    traceEvent(TRACE_INFO, "Waiting for address...\n");
 #endif
 
     while(addressQueueLen == 0) {
@@ -496,55 +415,32 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     if(!capturePackets) break;
 
     accessMutex(&addressQueueMutex, "dequeueAddress");
-    elem = addressQueue[addressQueueTail];
+    addr.s_addr = addressQueue[addressQueueTail].s_addr;
 
-    if(elem == NULL) {
-     traceEvent(TRACE_ERROR, "Internal error: queued address is NULL (%d/%d)\n",
-	     addressQueueTail, addressQueueLen);
-      releaseMutex(&addressQueueMutex);
-      continue;
-    }
-    addressQueue[addressQueueTail] = NULL; /* Just to keep the table clean */
+    addressQueue[addressQueueTail].s_addr = 0x0; /* Just to keep the table clean */
     addressQueueTail = ((addressQueueTail+1) % ADDRESS_QUEUE_LENGTH);
     addressQueueLen--;
     releaseMutex(&addressQueueMutex);
 #ifdef DEBUG_THREADS
-   traceEvent(TRACE_INFO, "- [addr queue=%d/max=%d]\n", addressQueueLen, maxAddressQueueLen);
+    traceEvent(TRACE_INFO, "- [addr queue=%d/max=%d]\n", addressQueueLen, maxAddressQueueLen);
 #endif
 
 #ifdef DEBUG
-   traceEvent(TRACE_INFO, "Processing address... [addr queue=%d/max=%d]: %s\n",
-	   addressQueueLen, maxAddressQueueLen, intoa(elem->addr));
+    traceEvent(TRACE_INFO, "Processing address... [addr queue=%d/max=%d]: %s\n",
+	       addressQueueLen, maxAddressQueueLen, intoa(elem->addr));
 #endif
 
-   /* cleanAddressQueueId has cleaned the address so we skip it */
-   if(elem->name != NULL) {
-     /*
-       If the queue is full enough then keep
-       remote addresses numeric
-     */
-     if((addressQueueLen > (ADDRESS_QUEUE_LENGTH/2))
-	&& (!isLocalAddress(&elem->addr)))
-       resolveAddress(elem->name, &elem->addr, 1, elem); /* Keep address numeric */
-     else
-       resolveAddress(elem->name, &elem->addr, 0, elem);
-     
-     lastAddressSlotIdResolved = elem->slotQueueId;
-     if(elem->instance) elem->instance->instanceInUse--;
-   }
-
-#ifdef DEBUG
-   traceEvent(TRACE_INFO, "Resolved address %s\n", elem->name);
-#endif
-
-#ifdef HAVE_GDBM_H
     /*
-       Free up bucket
-
-       NOTE: do not free elem->name because it is used
-       by ipaddr2str.
+      If the queue is full enough then keep
+      remote addresses numeric
     */
-   free(elem);
+    if((addressQueueLen > (ADDRESS_QUEUE_LENGTH/2)) && (!isLocalAddress(&addr)))
+      resolveAddress(&addr, 1); /* Keep address numeric */
+    else
+      resolveAddress(&addr, 0);
+
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Resolved address %s\n", elem->name);
 #endif
   } /* endless loop */
 
@@ -553,7 +449,6 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 }
 
 #endif /* defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION) */
-
 #endif
 
 /* ************************************ */
@@ -605,9 +500,12 @@ char* intoa(struct in_addr addr) {
 
 /* ******************************* */
 
-void ipaddr2str(HostTraffic *instance,
-		struct in_addr hostIpAddress,
-		char* outBuf, int outBufLen) {
+/*
+  This function automatically updated the
+  instance name
+*/
+
+void ipaddr2str(struct in_addr hostIpAddress) {
   unsigned int addr = hostIpAddress.s_addr;
   char buf[32];
 #ifdef HAVE_GDBM_H
@@ -615,12 +513,10 @@ void ipaddr2str(HostTraffic *instance,
   datum key_data;
   datum data_data;
 #endif
-  struct hnamemem *p;
-
-  /* traceEvent(TRACE_INFO, "Searching for %s.\n", intoa(hostIpAddress)); */
 
   if((addr == INADDR_BROADCAST) || (addr == 0x0)) {
-    strncpy(outBuf, _intoa(hostIpAddress, buf, sizeof(buf)), outBufLen);
+    updateHostNameInfo(hostIpAddress.s_addr, _intoa(hostIpAddress, buf, sizeof(buf)));
+    return;
   }
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0)
@@ -644,71 +540,12 @@ void ipaddr2str(HostTraffic *instance,
     traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]\n", data_data.dptr, tmpBuf);
 #endif
     updateHostNameInfo(hostIpAddress.s_addr, data_data.dptr);
-    strncpy(outBuf, data_data.dptr, outBufLen);
-    outBuf[outBufLen] = '\0';
     free(data_data.dptr);
-    return;
   } else {
 #ifdef GDBM_DEBUG
     traceEvent(TRACE_INFO, "Unable to retrieve %s\n", tmpBuf);
 #endif
-    p = NULL;
-  }
-
-  if(p == NULL) {
-    /* New entry */
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-    char *pName;  /* p may be freed after queueAddress, just before returning,
-		     this stores the return value (Courtesy of Andreas Pfaller) */
-#endif
-    p = (struct hnamemem*)malloc(sizeof(struct hnamemem));
-    memset(p, 0, sizeof(struct hnamemem));
-    p->addr.s_addr = addr;
-
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-    p->name = outBuf;
-    p->instance = instance;
-    memset(p->name, 0, MAX_HOST_SYM_NAME_LEN);
-    pName = p->name;
-    instance->addressQueueId = p->slotQueueId = addressQueueSlotId;
-
-    /* 
-       Increment addressSlotId: its values must be != 0 
-       because 0 is used to specify no slot
-    */
-    accessMutex(&addressResolutionMutex, "resolveAddress-2");
-    addressQueueSlotId++;
-    if(addressQueueSlotId == 0) 
-      addressQueueSlotId = 1;
-    releaseMutex(&addressResolutionMutex);
-#ifdef WIN32
-    /*
-      Under WIN32 local addresses are resolved immediately
-      because this is much more efficient under this OS
-    */
-    if(isLocalAddress(&hostIpAddress))
-      resolveAddress(p->name, &hostIpAddress, 0, NULL);
-    else {
-      if(snprintf(p->name, outBufLen, "*%s*",
-		  _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-      queueAddress(p, outBufLen);
-      return;
-    }
-#else
-    if(snprintf(p->name, outBufLen, "*%s*",
-		_intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    queueAddress(p, outBufLen);
-    return;
-#endif /* WIN32 */
-
-#else /* defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION) */
-    p->name = outBuf;
-    memset(p->name, 0, MAX_HOST_SYM_NAME_LEN);
-    resolveAddress(p->name, &hostIpAddress, 0 /* Symbolic address */, NULL);
-#endif
+    queueAddress(hostIpAddress);
   }
 }
 
@@ -803,12 +640,12 @@ static u_char fddi_bit_swap[] = {
 
 void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc, char *fdst)
 {
-    int i;
-
-	for (i = 0; i < 6; ++i)
-	  fdst[i] = fddi_bit_swap[fddip->dhost[i]];
-	for (i = 0; i < 6; ++i)
-	  fsrc[i] = fddi_bit_swap[fddip->shost[i]];
+  int i;
+  
+  for (i = 0; i < 6; ++i)
+    fdst[i] = fddi_bit_swap[fddip->dhost[i]];
+  for (i = 0; i < 6; ++i)
+    fsrc[i] = fddi_bit_swap[fddip->shost[i]];
 }
 
 /* *************************************

@@ -886,32 +886,21 @@ int cmpFctn(const void *_a, const void *_b) {
 	      a_ = b_ = 0;	    
 #endif
 	    } else {
-	      if((*a)->protoIPTrafficInfos == NULL)
-		a_ = 0;
-	      else
-		a_ = (*a)->protoIPTrafficInfos[idx-1].sentLocally
-		  +(*a)->protoIPTrafficInfos[idx-1].sentRemotely;
-	      
-	      if((*b)->protoIPTrafficInfos == NULL)
-		b_ = 0;
-	      else
-		b_ = (*b)->protoIPTrafficInfos[idx-1].sentLocally
-		  +(*b)->protoIPTrafficInfos[idx-1].sentRemotely;
+	      a_ = (*a)->protoIPTrafficInfos[idx-1].sentLocally
+		+(*a)->protoIPTrafficInfos[idx-1].sentRemotely;
+	      b_ = (*b)->protoIPTrafficInfos[idx-1].sentLocally
+		+(*b)->protoIPTrafficInfos[idx-1].sentRemotely;
 	    }
 	  } else {
 	    int i;
 
 	    a_ = 0, b_ = 0;
 
-	    
 	    for(i=0; i<numIpProtosToMonitor; i++) {
-	      if((*a)->protoIPTrafficInfos != NULL)
-		a_ += (*a)->protoIPTrafficInfos[i].sentLocally
-		  +(*a)->protoIPTrafficInfos[i].sentRemotely;
-
-	      if((*b)->protoIPTrafficInfos  != NULL)
-		b_ += (*b)->protoIPTrafficInfos[i].sentLocally
-		  +(*b)->protoIPTrafficInfos[i].sentRemotely;
+	      a_ += (*a)->protoIPTrafficInfos[i].sentLocally
+		+(*a)->protoIPTrafficInfos[i].sentRemotely;
+	      b_ += (*b)->protoIPTrafficInfos[i].sentLocally
+		+(*b)->protoIPTrafficInfos[i].sentRemotely;
 	    }
 
 	    if((*a)->bytesSent > a_)
@@ -962,17 +951,10 @@ int cmpFctn(const void *_a, const void *_b) {
 	      a_ = b_ = 0;	    
 #endif
 	    } else {
-	      if((*a)->protoIPTrafficInfos != NULL)
-		a_ = (*a)->protoIPTrafficInfos[idx-1].receivedLocally
+	      a_ = (*a)->protoIPTrafficInfos[idx-1].receivedLocally
 		+(*a)->protoIPTrafficInfos[idx-1].receivedFromRemote;
-	      else
-		a_ = 0;
-
-	      if((*b)->protoIPTrafficInfos != NULL)
-		b_ = (*b)->protoIPTrafficInfos[idx-1].receivedLocally
+	      b_ = (*b)->protoIPTrafficInfos[idx-1].receivedLocally
 		+(*b)->protoIPTrafficInfos[idx-1].receivedFromRemote;
-	      else
-		b_ = 0;
 	    }
 	  } else {
 	    int i;
@@ -980,12 +962,9 @@ int cmpFctn(const void *_a, const void *_b) {
 	    a_ = 0, b_ = 0;
 
 	    for(i=0; i<numIpProtosToMonitor; i++) {
-	      if((*a)->protoIPTrafficInfos != NULL)
-		a_ += (*a)->protoIPTrafficInfos[i].receivedLocally
+	      a_ += (*a)->protoIPTrafficInfos[i].receivedLocally
 		+(*a)->protoIPTrafficInfos[i].receivedFromRemote;
-
-	      if((*b)->protoIPTrafficInfos != NULL)
-		b_ += (*b)->protoIPTrafficInfos[i].receivedLocally
+	      b_ += (*b)->protoIPTrafficInfos[i].receivedLocally
 		+(*b)->protoIPTrafficInfos[i].receivedFromRemote;
 	    }
 
@@ -1031,29 +1010,19 @@ int cmpFctn(const void *_a, const void *_b) {
 	  break;
 	default:
 	  if(++idx < numIpProtosToMonitor) {
-	    if((*a)->protoIPTrafficInfos != NULL)
-		a_ = (*a)->protoIPTrafficInfos[idx].sentLocally
+	    a_ = (*a)->protoIPTrafficInfos[idx].sentLocally
 	      +(*a)->protoIPTrafficInfos[idx].sentRemotely;
-	    else
-	      a_ = 0;
-
-	    if((*b)->protoIPTrafficInfos != NULL)
-		b_ = (*b)->protoIPTrafficInfos[idx].sentLocally
+	    b_ = (*b)->protoIPTrafficInfos[idx].sentLocally
 	      +(*b)->protoIPTrafficInfos[idx].sentRemotely;
-	    else
-	      b_ = 0;
 	  } else {
 	    int i;
 
 	    a_ = 0, b_ = 0;
 
 	    for(i=0; i<numIpProtosToMonitor; i++) {
-	      if((*a)->protoIPTrafficInfos != NULL)
-		a_ += (*a)->protoIPTrafficInfos[i].sentLocally
+	      a_ += (*a)->protoIPTrafficInfos[i].sentLocally
 		+(*a)->protoIPTrafficInfos[i].sentRemotely;
-
-	      if((*b)->protoIPTrafficInfos != NULL)
-		b_ += (*b)->protoIPTrafficInfos[i].sentLocally
+	      b_ += (*b)->protoIPTrafficInfos[i].sentLocally
 		+(*b)->protoIPTrafficInfos[i].sentRemotely;
 	    }
 
@@ -1090,16 +1059,9 @@ int cmpFctn(const void *_a, const void *_b) {
 	  break;
 	default:
 	  if(++idx < numIpProtosToMonitor) {
-	    if((*a)->protoIPTrafficInfos == NULL)
-		a_ = 0;
-	      else
-		a_ = (*a)->protoIPTrafficInfos[idx].receivedLocally
+	    a_ = (*a)->protoIPTrafficInfos[idx].receivedLocally
 	      +(*a)->protoIPTrafficInfos[idx].receivedFromRemote;
-
-	    if((*b)->protoIPTrafficInfos == NULL)
-		b_ = 0;
-	      else
-		b_ = (*b)->protoIPTrafficInfos[idx].receivedLocally
+	    b_ = (*b)->protoIPTrafficInfos[idx].receivedLocally
 	      +(*b)->protoIPTrafficInfos[idx].receivedFromRemote;
 	  } else {
 	    int i;
@@ -1107,12 +1069,9 @@ int cmpFctn(const void *_a, const void *_b) {
 	    a_ = 0, b_ = 0;
 
 	    for(i=0; i<numIpProtosToMonitor; i++) {
-	      if((*a)->protoIPTrafficInfos != NULL)
-		a_ += (*a)->protoIPTrafficInfos[i].receivedLocally
+	      a_ += (*a)->protoIPTrafficInfos[i].receivedLocally
 		+(*a)->protoIPTrafficInfos[i].receivedFromRemote;
-
-	      if((*b)->protoIPTrafficInfos != NULL)
-		b_ += (*b)->protoIPTrafficInfos[i].receivedLocally
+	      b_ += (*b)->protoIPTrafficInfos[i].receivedLocally
 		+(*b)->protoIPTrafficInfos[i].receivedFromRemote;
 	    }
 
@@ -1155,16 +1114,9 @@ int cmpFctn(const void *_a, const void *_b) {
 	default:
 	  idx+=2;
 	  if(idx < numIpProtosToMonitor) {
-	    if((*a)->protoIPTrafficInfos == NULL)
-		a_ = 0;
-	      else
-		a_ = (*a)->protoIPTrafficInfos[idx].sentLocally
+	    a_ = (*a)->protoIPTrafficInfos[idx].sentLocally
 	      +(*a)->protoIPTrafficInfos[idx].sentRemotely;
-
-	    if((*b)->protoIPTrafficInfos == NULL)
-		b_ = 0;
-	      else
-		b_ = (*b)->protoIPTrafficInfos[idx].sentLocally
+	    b_ = (*b)->protoIPTrafficInfos[idx].sentLocally
 	      +(*b)->protoIPTrafficInfos[idx].sentRemotely;
 	  } else {
 	    int i;
@@ -1172,12 +1124,9 @@ int cmpFctn(const void *_a, const void *_b) {
 	    a_ = 0, b_ = 0;
 
 	    for(i=0; i<numIpProtosToMonitor; i++) {
-	      if((*a)->protoIPTrafficInfos != NULL)
-		a_ += (*a)->protoIPTrafficInfos[i].sentLocally
+	      a_ += (*a)->protoIPTrafficInfos[i].sentLocally
 		+(*a)->protoIPTrafficInfos[i].sentRemotely;
-
-	      if((*b)->protoIPTrafficInfos != NULL)
-		b_ += (*b)->protoIPTrafficInfos[i].sentLocally
+	      b_ += (*b)->protoIPTrafficInfos[i].sentLocally
 		+(*b)->protoIPTrafficInfos[i].sentRemotely;
 	    }
 
@@ -1214,16 +1163,9 @@ int cmpFctn(const void *_a, const void *_b) {
 	default:
 	  idx+=2;
 	  if(idx < numIpProtosToMonitor) {
-	    if((*a)->protoIPTrafficInfos == NULL)
-		a_ = 0;
-	      else
-		a_ = (*a)->protoIPTrafficInfos[idx].receivedLocally
+	    a_ = (*a)->protoIPTrafficInfos[idx].receivedLocally
 	      +(*a)->protoIPTrafficInfos[idx].receivedFromRemote;
-
-	    if((*b)->protoIPTrafficInfos == NULL)
-		b_ = 0;
-	      else
-		b_ = (*b)->protoIPTrafficInfos[idx].receivedLocally
+	    b_ = (*b)->protoIPTrafficInfos[idx].receivedLocally
 	      +(*b)->protoIPTrafficInfos[idx].receivedFromRemote;
 	  } else {
 	    int i;
@@ -1231,13 +1173,9 @@ int cmpFctn(const void *_a, const void *_b) {
 	    a_ = 0, b_ = 0;
 
 	    for(i=0; i<numIpProtosToMonitor; i++) {
-
-	      if((*a)->protoIPTrafficInfos != NULL)
-		a_ += (*a)->protoIPTrafficInfos[i].receivedLocally
+	      a_ += (*a)->protoIPTrafficInfos[i].receivedLocally
 		+(*a)->protoIPTrafficInfos[i].receivedFromRemote;
-
-	      if((*b)->protoIPTrafficInfos != NULL)
-		b_ += (*b)->protoIPTrafficInfos[i].receivedLocally
+	      b_ += (*b)->protoIPTrafficInfos[i].receivedLocally
 		+(*b)->protoIPTrafficInfos[i].receivedFromRemote;
 	    }
 
@@ -1430,21 +1368,21 @@ void getProtocolDataSent(TrafficCounter *c,
     break;
   default:
     idx = (screenNumber-MAX_NUM_PROTOS_SCREENS)*3;
-    if((el->protoIPTrafficInfos != NULL) && (idx < numIpProtosToMonitor))
+    if(idx < numIpProtosToMonitor)
       (*c) = el->protoIPTrafficInfos[idx].sentLocally
 	+ el->protoIPTrafficInfos[idx].sentRemotely;
     else
       (*c) = 0;
 
     ++idx;
-    if((el->protoIPTrafficInfos != NULL) && (idx < numIpProtosToMonitor))
+    if(idx < numIpProtosToMonitor)
       (*d) = el->protoIPTrafficInfos[idx].sentLocally
 	+ el->protoIPTrafficInfos[idx].sentRemotely;
     else
       (*d) = 0;
 
     ++idx;
-    if((el->protoIPTrafficInfos != NULL) && (idx < numIpProtosToMonitor))
+    if(idx < numIpProtosToMonitor)
       (*e) = el->protoIPTrafficInfos[idx].sentLocally
 	+ el->protoIPTrafficInfos[idx].sentRemotely;
     else
@@ -1488,21 +1426,21 @@ void getProtocolDataReceived(TrafficCounter *c,
     break;
   default:
     idx = (screenNumber-MAX_NUM_PROTOS_SCREENS)*3;
-    if((el->protoIPTrafficInfos != NULL) && (idx < numIpProtosToMonitor))
+    if(idx < numIpProtosToMonitor)
       (*c) = el->protoIPTrafficInfos[idx].receivedLocally
 	+ el->protoIPTrafficInfos[idx].receivedFromRemote;
     else
       (*c) = 0;
 
     ++idx;
-    if((el->protoIPTrafficInfos != NULL) && (idx < numIpProtosToMonitor))
+    if(idx < numIpProtosToMonitor)
       (*d) = el->protoIPTrafficInfos[idx].receivedLocally
 	+ el->protoIPTrafficInfos[idx].receivedFromRemote;
     else
       (*d) = 0;
 
     ++idx;
-    if((el->protoIPTrafficInfos != NULL) && (idx < numIpProtosToMonitor))
+    if(idx < numIpProtosToMonitor)
       (*e) = el->protoIPTrafficInfos[idx].receivedLocally
 	+ el->protoIPTrafficInfos[idx].receivedFromRemote;
     else
@@ -2168,13 +2106,11 @@ void printHostTrafficStats(HostTraffic *el) {
     a = el->napsterStats->bytesSent, b = el->napsterStats->bytesRcvd;
 #endif
 
-  if(el->protoIPTrafficInfos != NULL) {
-    for(i=0; i<numIpProtosToMonitor; i++) {
-      a += el->protoIPTrafficInfos[i].sentLocally+
-	el->protoIPTrafficInfos[i].sentRemotely;
-      b += el->protoIPTrafficInfos[i].receivedLocally+
-	el->protoIPTrafficInfos[i].receivedFromRemote;
-    }
+  for(i=0; i<numIpProtosToMonitor; i++) {
+    a += el->protoIPTrafficInfos[i].sentLocally+
+      el->protoIPTrafficInfos[i].sentRemotely;
+    b += el->protoIPTrafficInfos[i].receivedLocally+
+      el->protoIPTrafficInfos[i].receivedFromRemote;
   }
 
   if((a > 0) && (b > 0)) {
@@ -3528,7 +3464,6 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
 #endif
-
      
   if((device[actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
      || ((device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent == 0)

@@ -298,16 +298,15 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	    }
 #endif
 
-	    if(el->protoIPTrafficInfos != NULL) 
-	      for(i=0; i<numIpProtosToMonitor; i++) {
-		totalIPTraffic += el->protoIPTrafficInfos[i].sentLocally+
-		  el->protoIPTrafficInfos[i].sentRemotely;
-		if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			    formatBytes(el->protoIPTrafficInfos[i].sentLocally+
-					el->protoIPTrafficInfos[i].sentRemotely, 1)) < 0) 
+	    for(i=0; i<numIpProtosToMonitor; i++) {
+	      totalIPTraffic += el->protoIPTrafficInfos[i].sentLocally+
+		el->protoIPTrafficInfos[i].sentRemotely;
+	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  formatBytes(el->protoIPTrafficInfos[i].sentLocally+
+				      el->protoIPTrafficInfos[i].sentRemotely, 1)) < 0) 
 		traceEvent(TRACE_ERROR, "Buffer overflow!");
-		sendString(buf);
-	      }
+	      sendString(buf);
+	    }
 
 	    /* Rounding may cause troubles */
 	    if(el->bytesSent > totalIPTraffic)
@@ -410,16 +409,15 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	    }
 #endif
 
-	    if(el->protoIPTrafficInfos != NULL) 
-	      for(i=0; i<numIpProtosToMonitor; i++) {
-		totalIPTraffic += el->protoIPTrafficInfos[i].receivedLocally+
-		  el->protoIPTrafficInfos[i].receivedFromRemote;
-		if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			    formatBytes(el->protoIPTrafficInfos[i].receivedLocally+
-					el->protoIPTrafficInfos[i].receivedFromRemote, 1)) < 0) 
-		  traceEvent(TRACE_ERROR, "Buffer overflow!");
-		sendString(buf);
-	      }
+	    for(i=0; i<numIpProtosToMonitor; i++) {
+	      totalIPTraffic += el->protoIPTrafficInfos[i].receivedLocally+
+		el->protoIPTrafficInfos[i].receivedFromRemote;
+	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			  formatBytes(el->protoIPTrafficInfos[i].receivedLocally+
+				      el->protoIPTrafficInfos[i].receivedFromRemote, 1)) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      sendString(buf);
+	    }
 
 	    /* Rounding may cause troubles */
 	    if(el->bytesReceived > totalIPTraffic)

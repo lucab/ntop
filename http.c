@@ -1564,7 +1564,8 @@ static int checkHTTPpassword(char *theRequestedURL,
     strncpy(thePw, &outBuffer[i+1], thePwLen-1)[thePwLen-1] = '\0';
   }
 
-  strncpy(theUser, user, sizeof(theUser)-1)[sizeof(theUser)-1] = '\0';
+  if(strlen(user) >= sizeof(theUser)) user[sizeof(theUser)-1] = '\0';
+  strcpy(theUser, user);
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "User='%s' - Pw='%s'\n", user, thePw);

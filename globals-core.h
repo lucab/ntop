@@ -111,10 +111,7 @@ extern FilterRule* filterRulesList[MAX_NUM_RULES];
 #if defined(ASYNC_ADDRESS_RESOLUTION)
 extern u_int addressQueueLen, maxAddressQueueLen;
 extern u_int addressQueueHead, addressQueueTail;
-extern struct hnamemem *addressQueue[ADDRESS_QUEUE_LENGTH+1];
-#endif
-#ifndef HAVE_GDBM_H
-extern struct hnamemem* hnametable[HASHNAMESIZE];
+extern struct in_addr addressQueue[ADDRESS_QUEUE_LENGTH+1];
 #endif
 
 /* Misc */
@@ -158,11 +155,9 @@ extern u_short mtuSize[], headerSize[];
 
 extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);
-extern void cleanAddressQueueId(u_long queueId);
 extern char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
 extern char* intoa(struct in_addr addr);
-extern void ipaddr2str(HostTraffic *instance, struct in_addr hostIpAddress, char* outBuf,
-                       int outBufLen);
+extern void ipaddr2str(struct in_addr hostIpAddress);
 extern char* etheraddr_string(const u_char *ep);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,

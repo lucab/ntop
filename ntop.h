@@ -1625,11 +1625,9 @@ typedef struct hostTraffic {
   char             ethAddressString[18];
   char             hostNumIpAddress[17], *fullDomainName;
   char             *dotDomainName, hostSymIpAddress[MAX_HOST_SYM_NAME_LEN], *osName;
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-  u_long           addressQueueId; /* Id of the address being queued witing to be resolved */
-#endif
   struct in_addr   hostIpAddresses[MAX_MULTIHOMING_ADDRESSES];
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
+
   /* NetBIOS */
   char             nbNodeType, *nbHostName, *nbAccountName, *nbDomainName, *nbDescr;
 
@@ -1705,15 +1703,6 @@ typedef struct hostTraffic {
 
      *************** IMPORTANT *************** */
 } HostTraffic;
-
-/* **************************** */
-
-struct hnamemem {
-  HostTraffic *instance;
-  struct in_addr addr;
-  char *name;
-  u_long slotQueueId;
-};
 
 /* **************************** */
 

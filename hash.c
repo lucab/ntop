@@ -22,11 +22,6 @@
 #include "ntop.h"
 
 /* Static */
-#ifdef DELAYED_FREE
-#define FREE_LIST_LEN   32
-static HostTraffic *freeHostList[FREE_LIST_LEN];
-static int nextIdxToFree=0, freeListLen=0;
-#endif
 static u_char printedHashWarning = 0;
 
 /* ******************************* */
@@ -299,9 +294,15 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
       }
 
       for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++) {
+
+
 	if(theHost->portsUsage[i] == NULL)
 	  continue;
-	
+#ifdef DEBUG
+	else {
+	  printf("[idx=%3d][j=%3d] %x\n", i, j, theHost->portsUsage[i]);
+	}
+#endif
 	theHost->portsUsage[i]->clientUsesLastPeer = mapIdx(theHost->portsUsage[i]->clientUsesLastPeer);
 	if(theHost->portsUsage[i]->clientUsesLastPeer == NO_PEER) theHost->portsUsage[i]->clientUses = 0;
 	theHost->portsUsage[i]->serverUsesLastPeer = mapIdx(theHost->portsUsage[i]->serverUsesLastPeer);
@@ -582,7 +583,6 @@ static void removeGlobalHostPeers(HostTraffic *el,
 
 /* **************************************** */
 
-/* Delayed free */
 void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
   u_int j, i;
   HostTraffic *host;
@@ -592,12 +592,6 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
   if(host == NULL)
     return;
-
-  /*
-    if(strcmp(host->hostSymIpAddress, "jabber-priv") == 0) {
-    printf("Hello\n");
-    }
-  */
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)",
@@ -619,9 +613,6 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
   traceEvent(TRACE_INFO, "Deleted a hash_hostTraffic entry [slotId=%d/%s]\n",
 	     hostIdx, host->hostSymIpAddress);
 #endif
-
-  if(host->addressQueueId != 0)
-    cleanAddressQueueId(host->addressQueueId); /* Cleanup address queue... */
 
   if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
   if(host->nbHostName != NULL)          free(host->nbHostName);
@@ -710,8 +701,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
       if((idx != hostIdx) /* Don't remove the instance we're freeing */
 	 && (device[theDevice].hash_hostTraffic[idx] != NULL)) {
 	removeGlobalHostPeers(device[theDevice].hash_hostTraffic[idx],
-			      myflaggedHosts, 
-			      device[theDevice].actualHashSize); /* Finally refresh the hash */
+			      myflaggedHosts, len); /* Finally refresh the hash */
       }
     }
     
@@ -798,16 +788,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
       storeHostTrafficInstance(host);
   }
 
-#ifdef DELAYED_FREE
-  if(freeListLen == FREE_LIST_LEN) {
-    free(freeHostList[nextIdxToFree]); /* This is the real free */
-    freeHostList[nextIdxToFree] = host;
-    nextIdxToFree = (nextIdxToFree+1) % FREE_LIST_LEN;
-  } else
-    freeHostList[freeListLen++] = host;
-#else
   free(host);
-#endif
 
   numPurgedHosts++;
 
@@ -837,12 +818,6 @@ void freeHostInstances(void) {
       }
     }
   }
-
-#ifdef DELAYED_FREE
-  for(i=0; i<FREE_LIST_LEN; i++)
-    if(freeHostList[i] != NULL)
-      free(freeHostList[i]);
-#endif
 
   traceEvent(TRACE_INFO, "%d instances freed\n", num);
 }
@@ -905,14 +880,15 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 	 all the references to the freed instances
       */
       removeGlobalHostPeers(device[actDevice].hash_hostTraffic[idx],
-			    theFlaggedHosts, 
-			    device[actDevice].actualHashSize); /* Finally refresh the hash */
+			    theFlaggedHosts, len); /* Finally refresh the hash */
     }
   }
 
 #ifdef MULTITHREADED
   releaseMutex(&hostsHashMutex);
 #endif
+
+  free(theFlaggedHosts);
 
   traceEvent(TRACE_INFO, "Purging completed (%d sec/%d hosts deleted).",
 	     (int)(time(NULL)-startTime), numFreedBuckets);
