@@ -78,7 +78,6 @@ extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 extern void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
-extern void purgeHostIdx(int theDevice, u_int hostIdx);
 
 /* http.c */
 extern void sendStringLen(char *theString, unsigned int len);

@@ -23,6 +23,8 @@
 #define MIN_NUM_USES            1
 #define MAX_NUM_PURGED_HOSTS  768
 
+
+
 /* ******************************* */
 
 u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
@@ -131,6 +133,53 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
   }
 }
 
+/* ********************************* */
+
+static void purgeHostIdx(int actualDeviceId, HostTraffic *el) {
+  u_short allRight = 0;
+
+  if(el == NULL) {
+    traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx() failed [NULL pointer]");
+    return;
+  }
+  
+  if(el->hostTrafficBucket < myGlobals.device[actualDeviceId].actualHashSize) {
+    HashList *list, *prevList;
+
+    if((list = myGlobals.device[actualDeviceId].hashList[el->hashListBucket]) != NULL) {
+      prevList = list;
+
+      while(list != NULL) {
+	if(list->idx == el->hostTrafficBucket) {
+	  allRight = 1;
+	  break;
+	} else {
+	  prevList = list;
+	  list = list->next;
+	}
+      }
+
+      if(allRight) {
+	if(list == myGlobals.device[actualDeviceId].hashList[el->hashListBucket])
+	  myGlobals.device[actualDeviceId].hashList[el->hashListBucket] = list->next;
+	else
+	  prevList->next = list->next;
+
+	if(myGlobals.device[actualDeviceId].insertIdx > el->hostTrafficBucket)
+	  myGlobals.device[actualDeviceId].insertIdx = el->hostTrafficBucket;
+	free(list);
+      }
+    }
+  } else {
+    traceEvent(TRACE_ERROR, "ERROR: %d is out of range [0..%d]",  el->hostTrafficBucket,
+	       myGlobals.device[actualDeviceId].actualHashSize-1);
+  }
+  
+  if((!allRight) && (el->hostTrafficBucket != myGlobals.broadcastEntryIdx))
+    traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed [host not found]",
+	       actualDeviceId, el->hostTrafficBucket);
+}
+
 /* **************************************** */
 
 void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
@@ -141,7 +190,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     return;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)", host->hostNumIpAddress, host->hostTrafficBucket);
+  traceEvent(TRACE_INFO, "Entering freeHostInfo(%u)", host->hostTrafficBucket);
 #endif
 
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
@@ -268,7 +317,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
       storeHostTrafficInstance(host);
   }
 
-  purgeHostIdx(theDevice, host->hostTrafficBucket);
+  purgeHostIdx(theDevice, host);
 
   /*
     Do not free the host pointer but add it to
@@ -338,8 +387,10 @@ void purgeIdleHosts(int actDevice) {
 #endif
 
   if(firstRun) {
+    int i;
+
     firstRun = 0;
-    memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
+    for(i=0; i<MAX_NUM_DEVICES; i++) lastPurgeTime[i] = startTime;
     len = sizeof(HostTraffic*)* MAX_NUM_PURGED_HOSTS;
     theFlaggedHosts = (HostTraffic**)malloc(len);    
   }
@@ -381,18 +432,23 @@ void purgeIdleHosts(int actDevice) {
 #ifdef MULTITHREADED
 	  accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
-	    theFlaggedHosts[maxBucket++] = el;
-	    myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
+	  theFlaggedHosts[maxBucket++] = el;
+
+	  if(el->hostTrafficBucket != theIdx) 
+	    traceEvent(TRACE_ERROR, "ERROR: Index mismatch (hostTrafficBucket=%d/theIdx=%d)",
+		       el->hostTrafficBucket, theIdx);
+
+	  myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
 #ifdef MULTITHREADED
-	    releaseMutex(&myGlobals.hostsHashMutex);
+	  releaseMutex(&myGlobals.hostsHashMutex);
 #endif
-	    if(maxBucket == (MAX_NUM_PURGED_HOSTS-1)) {
-	      hashFull = 1;
-	      continue;
-	    }
+	  if(maxBucket == (MAX_NUM_PURGED_HOSTS-1)) {
+	    hashFull = 1;
+	    continue;
+	  }
 	}
       }
-
+      
       /* If (*) the entry might be NULL */
       if(myGlobals.device[actDevice].hash_hostTraffic[theIdx] != NULL)
 	myGlobals.device[actDevice].hash_hostTraffic[theIdx]->numUses = 0;
@@ -473,373 +529,326 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char checkForMultihoming,
 		  u_char forceUsingIPaddress,
 		  int actualDeviceId) {
-    u_int idx, i, isMultihomed = 0, numRuns=0, inIdx=0;
+  u_int idx, i, isMultihomed = 0, numRuns=0, inIdx=0;
 #ifndef MULTITHREADED
-    u_int run=0;
+  u_int run=0;
 #endif
-    HostTraffic *el=NULL;
-    char buf[32];
-    short useIPAddressForSearching = forceUsingIPaddress;
-    char* symEthName = NULL, *ethAddr;
-    u_char setSpoofingFlag = 0, hostFound = 0;
-    HashList *list;
+  HostTraffic *el=NULL;
+  char buf[32];
+  short useIPAddressForSearching = forceUsingIPaddress;
+  char* symEthName = NULL, *ethAddr;
+  u_char setSpoofingFlag = 0, hostFound = 0;
+  HashList *list;
 
-    if((hostIpAddress == NULL) && (ether_addr == NULL)) {
-      traceEvent(TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
-      return(NO_PEER);
-    }
+  if((hostIpAddress == NULL) && (ether_addr == NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
+    return(NO_PEER);
+  }
 
-    idx = computeInitialHashIdx(hostIpAddress, ether_addr,
-				&useIPAddressForSearching, actualDeviceId);
+  idx = computeInitialHashIdx(hostIpAddress, ether_addr,
+			      &useIPAddressForSearching, actualDeviceId);
 
-    idx = idx % HASH_LIST_SIZE;
+  idx = idx % HASH_LIST_SIZE;
 
-    if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
-	u_int16_t hostFound = 0;  /* This is the same type as the one of HashList */
+  if((idx != myGlobals.broadcastEntryIdx) && (idx != myGlobals.otherHostEntryIdx)) {
+    u_int16_t hostFound = 0;  /* This is the same type as the one of HashList */
 
-	if(myGlobals.device[actualDeviceId].hashList[idx] != NULL) {
-	    list = myGlobals.device[actualDeviceId].hashList[idx];
+    if(myGlobals.device[actualDeviceId].hashList[idx] != NULL) {
+      list = myGlobals.device[actualDeviceId].hashList[idx];
 
-	    while(list != NULL) {
-		el = myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx];
-
-		if(el != NULL) {
-		    if(useIPAddressForSearching == 0) {
-			/* compare with the ethernet-address */
-			if(memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
-			    hostFound = 1;
-			    if(hostIpAddress != NULL) {
-				if((!isMultihomed) && checkForMultihoming) {
-				    /* This is a local address hence this is a potential multihomed host. */
-
-				    if((el->hostIpAddress.s_addr != 0x0)
-				       && (el->hostIpAddress.s_addr != hostIpAddress->s_addr)) {
-					isMultihomed = 1;
-					FD_SET(HOST_MULTIHOMED, &el->flags);
-				    }
-
-				    if(el->hostNumIpAddress[0] == '\0') {
-					/* This entry didn't have IP fields set: let's set them now */
-					el->hostIpAddress.s_addr = hostIpAddress->s_addr;
-					strncpy(el->hostNumIpAddress,
-						_intoa(*hostIpAddress, buf, sizeof(buf)),
-						sizeof(el->hostNumIpAddress));
-
-					if(myGlobals.numericFlag == 0)
-					    ipaddr2str(el->hostIpAddress, actualDeviceId);
-
-					/* else el->hostSymIpAddress = el->hostNumIpAddress;
-					   The line below isn't necessary because (**) has
-					   already set the pointer */
-					if(isBroadcastAddress(&el->hostIpAddress))
-					    FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-				    }
-				}
-			    }
-
-			    hostFound = 1;
-			    break;
-			} else if((hostIpAddress != NULL)
-				  && (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
-			    /* Spoofing or duplicated MAC address:
-			       two hosts with the same IP address and different MAC
-			       addresses
-			    */
-
-			    setSpoofingFlag = 1;
-			    hostFound = 1;
-
-			    if(!hasDuplicatedMac(el)) {
-				FD_SET(HOST_DUPLICATED_MAC, &el->flags);
-
-				if(myGlobals.enableSuspiciousPacketDump) {
-				    traceEvent(TRACE_WARNING,
-					       "Two MAC addresses found for the same IP address "
-					       "%s: [%s/%s] (spoofing detected?)",
-					       el->hostNumIpAddress,
-					       etheraddr_string(ether_addr), el->ethAddressString);
-				    dumpSuspiciousPacket(actualDeviceId);
-				}
-			    }
-			}
-		    } else {
-			if(el->hostIpAddress.s_addr == hostIpAddress->s_addr) {
-			    hostFound = 1;
-			    break;
-			}
-		    }
-		}
-
-		list = list->next;
-	    }
-	}
-
-	if(!hostFound) {
-	  /* New host entry */
-	  int len, currentIdx;
-
-	  if(myGlobals.usePersistentStorage) {
-	    if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
-	      el = resurrectHostTrafficInstance(etheraddr_string(ether_addr));
-	    else
-	      el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
-	  } else
-	    el = NULL;
-
-	  if(el == NULL) {
-	    if(myGlobals.hostsCacheLen > 0) {
-	      el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];
-	      /*
-		traceEvent(TRACE_INFO, "Fetched host from pointers cache (len=%d)",
-		(int)myGlobals.hostsCacheLen);
-	      */
-	    } else {
-	      el = (HostTraffic*)malloc(sizeof(HostTraffic));
-	    }
-
-	    memset(el, 0, sizeof(HostTraffic));
-	    el->firstSeen = myGlobals.actTime;
-	  }
-
-	  resetHostsVariables(el);
-	  el->hostSerial = myGlobals.serialCounter++;
-
-	  if(isMultihomed)
-	    FD_SET(HOST_MULTIHOMED, &el->flags);
-
-	  el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
-
-	  len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
-	  el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
-	  memset(el->protoIPTrafficInfos, 0, len);
-
-	  list = malloc(sizeof(HashList));
-	  list->next = myGlobals.device[actualDeviceId].hashList[idx];
-	  myGlobals.device[actualDeviceId].hashList[idx] = list;
-
-	  hostFound = 0;
-	  for(currentIdx=0, 
-		/* NOTE: we need % below because insertIdx may be beyond the list end */
-		i = (myGlobals.device[actualDeviceId].insertIdx % myGlobals.device[actualDeviceId].actualHashSize);
-              currentIdx<myGlobals.device[actualDeviceId].actualHashSize; currentIdx++) {
-            if(myGlobals.device[actualDeviceId].hash_hostTraffic[i] == NULL) {
-              hostFound = i;
-              break;
-            } else
-              i = (i + 1) % myGlobals.device[actualDeviceId].actualHashSize;
-          }
-
-	  if(!hostFound) {
-	    int sz;
-
-	    list->idx = myGlobals.device[actualDeviceId].actualHashSize;
-	    if(myGlobals.device[actualDeviceId].actualHashSize < 512)
-	      myGlobals.device[actualDeviceId].actualHashSize = 512;
-	    else
-	      myGlobals.device[actualDeviceId].actualHashSize *= 2; /* Double */
-	    sz = myGlobals.device[actualDeviceId].actualHashSize*sizeof(struct hostTraffic*);
-	    myGlobals.device[actualDeviceId].hash_hostTraffic = (struct hostTraffic**)realloc(myGlobals.device[actualDeviceId].hash_hostTraffic, sz);
-	    memset(&myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx],
-		   0, sizeof(struct hostTraffic*)*(myGlobals.device[actualDeviceId].actualHashSize-list->idx));
-	    traceEvent(TRACE_INFO, "Extending hash size [newSize=%d][deviceId=%d]",
-		       myGlobals.device[actualDeviceId].actualHashSize,
-		       actualDeviceId);
-	  } else
-	    list->idx = hostFound;
-
-	  myGlobals.device[actualDeviceId].insertIdx = list->idx + 1; /* NOTE: insertIdx can go beyond the list end */
-	  myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx] = el; /* Insert a new entry */
-	  myGlobals.device[actualDeviceId].hostsno++;
-	  el->hostTrafficBucket = list->idx;
-	  el->hashListBucket    = idx;
-
-	  if(ether_addr != NULL) {
-	    if((hostIpAddress == NULL)
-	       || ((hostIpAddress != NULL)
-		   && isPseudoLocalAddress(hostIpAddress)
-		   /* && (!isBroadcastAddress(hostIpAddress))*/
-		   )) {
-	      /* This is a local address and then the
-		 ethernet address does make sense */
-	      ethAddr = etheraddr_string(ether_addr);
-
-	      memcpy(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN);
-	      strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
-	      symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));
-	      FD_SET(SUBNET_LOCALHOST_FLAG, &el->flags);
-	      FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-	    } else if(hostIpAddress != NULL) {
-	      /* This is packet that's being routed or belonging to a
-		 remote network that uses the same physical wire (or forged)*/
-	      memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
-
-	      memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
-	      if(!myGlobals.borderSnifferMode) FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
-
-	      if(isPrivateAddress(hostIpAddress)) FD_SET(PRIVATE_IP_ADDRESS, &el->flags);
-
-	      if(!isBroadcastAddress(hostIpAddress)) {
-		if(myGlobals.borderSnifferMode || isPseudoLocalAddress(hostIpAddress))
-		  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-		else
-		  FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-	      }
-	    } else {
-	      FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
-	      FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
-	    }
-
-	    if(strncmp(el->ethAddressString, "FF:", 3) == 0) {
-	      /*
-		The trick below allows me not to duplicate the
-		"<broadcast>" string in the code
-	      */
-	      el->hostIpAddress.s_addr = INADDR_BROADCAST;
-	      FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-	      if(isMulticastAddress(&el->hostIpAddress))
-		FD_SET(MULTICAST_HOST_FLAG, &el->flags);
-	      strncpy(el->hostNumIpAddress,
-		      _intoa(el->hostIpAddress, buf, sizeof(buf)),
-		      strlen(el->hostNumIpAddress));
-	      strncpy(el->hostSymIpAddress, el->hostNumIpAddress,
-		      MAX_HOST_SYM_NAME_LEN);
-
-	      if((el->hostIpAddress.s_addr != 0x0) /* 0.0.0.0 */
-		 && (el->hostIpAddress.s_addr != 0xFFFFFFFF) /* 255.255.255.255 */
-		 && isBroadcastAddress(&el->hostIpAddress)) {
-		/*
-		  The sender of this packet has obviously a wrong netmask because:
-		  - it is a local host
-		  - it has sent a packet to a broadcast address
-		  - it has not used the FF:FF:FF:FF:FF:FF MAC address
-		*/
-
-		traceEvent(TRACE_WARNING, "WARNING: Wrong netmask detected [%s/%s]",
-			   _intoa(el->hostIpAddress, buf, sizeof(buf)),
-			   el->ethAddressString);
-	      }
-	    }
-
-#ifdef DEBUG
-	    /*if((strcmp(etheraddr_string(ether_addr), "08:00:20:89:79:D7") == 0)
-	      || (strcmp(el->hostSymIpAddress, "more") == 0))*/
-	    printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d]\n",
-		   etheraddr_string(ether_addr), el->hostSymIpAddress,
-		   el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno);
-#endif
-
-	    el->lastSeen = myGlobals.actTime;
-	    checkSpoofing(list->idx, actualDeviceId);
-	  }
-
-	  if(hostIpAddress != NULL) {
-	      el->hostIpAddress.s_addr = hostIpAddress->s_addr;
-	      strncpy(el->hostNumIpAddress,
-		      _intoa(*hostIpAddress, buf, sizeof(buf)),
-		      sizeof(el->hostNumIpAddress));
-	      if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-	      if(isMulticastAddress(&el->hostIpAddress)) FD_SET(MULTICAST_HOST_FLAG, &el->flags);
-	      if(isPrivateAddress(hostIpAddress))        FD_SET(PRIVATE_IP_ADDRESS,  &el->flags);
-
-	      /* Trick to fill up the address cache */
-	      if(myGlobals.numericFlag == 0)
-		ipaddr2str(el->hostIpAddress, actualDeviceId);
-	      else
-		strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
-	    } else {
-	      /* el->hostNumIpAddress == "" */
-	      if(symEthName[0] != '\0') {
-		char buf[MAX_HOST_SYM_NAME_LEN];
-
-		if(snprintf(buf, sizeof(buf), "%s <IMG SRC=/card.gif BORDER=0>", symEthName) < 0)
-		  BufferTooShort();
-		else
-		  strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
-	      } else
-		strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
-	    }
-
-#ifdef HASH_DEBUG
-	  traceEvent(TRACE_INFO, "Adding %s/%s [idx=%d][device=%d][actualHashSize=%d]\n",
-		     el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
-		     myGlobals.device[actualDeviceId].actualHashSize);
-#endif
-
-	  addSerialMapping(el);
-	}
+      while(list != NULL) {
+	el = myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx];
 
 	if(el != NULL) {
-	    el->lastSeen = myGlobals.actTime;
+	  if(useIPAddressForSearching == 0) {
+	    /* compare with the ethernet-address */
+	    if(memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
 
-	    if(setSpoofingFlag)
+	      if(hostIpAddress != NULL) {
+		if((!isMultihomed) && checkForMultihoming) {
+		  /* This is a local address hence this is a potential multihomed host. */
+
+		  if((el->hostIpAddress.s_addr != 0x0)
+		     && (el->hostIpAddress.s_addr != hostIpAddress->s_addr)) {
+		    isMultihomed = 1;
+		    FD_SET(HOST_MULTIHOMED, &el->flags);
+		  }
+
+		  if(el->hostNumIpAddress[0] == '\0') {
+		    /* This entry didn't have IP fields set: let's set them now */
+		    el->hostIpAddress.s_addr = hostIpAddress->s_addr;
+		    strncpy(el->hostNumIpAddress,
+			    _intoa(*hostIpAddress, buf, sizeof(buf)),
+			    sizeof(el->hostNumIpAddress));
+
+		    if(myGlobals.numericFlag == 0)
+		      ipaddr2str(el->hostIpAddress, actualDeviceId);
+
+		    /* else el->hostSymIpAddress = el->hostNumIpAddress;
+		       The line below isn't necessary because (**) has
+		       already set the pointer */
+		    if(isBroadcastAddress(&el->hostIpAddress))
+		      FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+		  }
+		}
+	      }
+
+	      hostFound = 1;
+	      break;
+	    } else if((hostIpAddress != NULL)
+		      && (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
+	      /* Spoofing or duplicated MAC address:
+		 two hosts with the same IP address and different MAC
+		 addresses
+	      */
+
+	      if(!hasDuplicatedMac(el)) {
 		FD_SET(HOST_DUPLICATED_MAC, &el->flags);
 
-#ifdef DEBUG
-	    traceEvent(TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
-		       list->idx, actualDeviceId,
-		       etheraddr_string(ether_addr), el->hostSymIpAddress,
-		       el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno,
-		       useIPAddressForSearching);
-#endif
-	}
+		if(myGlobals.enableSuspiciousPacketDump) {
+		  traceEvent(TRACE_WARNING,
+			     "Two MAC addresses found for the same IP address "
+			     "%s: [%s/%s] (spoofing detected?)",
+			     el->hostNumIpAddress,
+			     etheraddr_string(ether_addr), el->ethAddressString);
+		  dumpSuspiciousPacket(actualDeviceId);
+		}
+	      }
 
-	el->numUses++;
-    } else
-	return(idx);
-
-    if(el == NULL)
-	traceEvent(TRACE_INFO, "getHostInfo(idx=%d)(ptr=%x)",
-		   list->idx, myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx]);
-
-    return(list->idx);
-}
-
-/* ********************************* */
-
-void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
-  u_int checkedIdx = checkSessionIdx(hostIdx);
-  u_short allRight = 0;
-  HostTraffic *el;
-
-  if(checkedIdx == hostIdx)
-    if((el = myGlobals.device[actualDeviceId].hash_hostTraffic[checkedIdx]) != NULL) {
-      if(el->hostTrafficBucket < myGlobals.device[actualDeviceId].actualHashSize) {
-	HashList *list, *prevList;
-
-	if((list = myGlobals.device[actualDeviceId].hashList[el->hashListBucket]) != NULL) {
-	  prevList = list;
-
-	  while(list != NULL) {
-	    if(list->idx == hostIdx) {
-	      allRight = 1;
+	      setSpoofingFlag = 1;
+	      hostFound = 1;
 	      break;
-	    } else {
-	      prevList = list;
-	      list = list->next;
+	    }
+	  } else {
+	    if(el->hostIpAddress.s_addr == hostIpAddress->s_addr) {
+	      hostFound = 1;
+	      break;
 	    }
 	  }
-
-	  if(allRight) {
-	    if(list == myGlobals.device[actualDeviceId].hashList[el->hostTrafficBucket])
-	      myGlobals.device[actualDeviceId].hashList[el->hostTrafficBucket] =
-		list->next;
-	    else
-	      prevList->next = list->next;
-
-	    if(myGlobals.device[actualDeviceId].insertIdx > el->hostTrafficBucket)
-	      myGlobals.device[actualDeviceId].insertIdx = el->hostTrafficBucket;
-	    free(list);
-	  }
 	}
-      } else {
-	traceEvent(TRACE_ERROR, "ERROR: %d is out of range [0..%d]",  el->hostTrafficBucket,
-		   myGlobals.device[actualDeviceId].actualHashSize-1);
+
+	list = list->next;
+      }
+    }
+
+    if(!hostFound) {
+      /* New host entry */
+      int len, currentIdx;
+
+      if(myGlobals.usePersistentStorage) {
+	if((hostIpAddress == NULL) || (isLocalAddress(hostIpAddress)))
+	  el = resurrectHostTrafficInstance(etheraddr_string(ether_addr));
+	else
+	  el = resurrectHostTrafficInstance(_intoa(*hostIpAddress, buf, sizeof(buf)));
+      } else
+	el = NULL;
+
+      if(el == NULL) {
+	if(myGlobals.hostsCacheLen > 0) {
+	  el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];
+	  /*
+	    traceEvent(TRACE_INFO, "Fetched host from pointers cache (len=%d)",
+	    (int)myGlobals.hostsCacheLen);
+	  */
+	} else {
+	  el = (HostTraffic*)malloc(sizeof(HostTraffic));
+	}
+
+	memset(el, 0, sizeof(HostTraffic));
+	el->firstSeen = myGlobals.actTime;
       }
 
-      if((!allRight) && (hostIdx != myGlobals.broadcastEntryIdx))
-	traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed [host not found]",
-		   actualDeviceId, hostIdx);
+      resetHostsVariables(el);
+      el->hostSerial = myGlobals.serialCounter++;
+
+      if(isMultihomed)
+	FD_SET(HOST_MULTIHOMED, &el->flags);
+
+      el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), TOP_ASSIGNED_IP_PORTS);
+
+      len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
+      el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
+      memset(el->protoIPTrafficInfos, 0, len);
+
+      list = malloc(sizeof(HashList));
+      list->next = myGlobals.device[actualDeviceId].hashList[idx];
+      myGlobals.device[actualDeviceId].hashList[idx] = list;
+
+      hostFound = 0;
+      for(currentIdx=0, 
+	    /* NOTE: we need % below because insertIdx may be beyond the list end */
+	    i = (myGlobals.device[actualDeviceId].insertIdx % myGlobals.device[actualDeviceId].actualHashSize);
+	  currentIdx<myGlobals.device[actualDeviceId].actualHashSize; currentIdx++) {
+	if(myGlobals.device[actualDeviceId].hash_hostTraffic[i] == NULL) {
+	  hostFound = i;
+	  break;
+	} else
+	  i = (i + 1) % myGlobals.device[actualDeviceId].actualHashSize;
+      }
+
+      if(!hostFound) {
+	int sz;
+
+	list->idx = myGlobals.device[actualDeviceId].actualHashSize;
+	if(myGlobals.device[actualDeviceId].actualHashSize < 512)
+	  myGlobals.device[actualDeviceId].actualHashSize = 512;
+	else
+	  myGlobals.device[actualDeviceId].actualHashSize *= 2; /* Double */
+	sz = myGlobals.device[actualDeviceId].actualHashSize*sizeof(struct hostTraffic*);
+	myGlobals.device[actualDeviceId].hash_hostTraffic = (struct hostTraffic**)realloc(myGlobals.device[actualDeviceId].hash_hostTraffic, sz);
+	memset(&myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx],
+	       0, sizeof(struct hostTraffic*)*(myGlobals.device[actualDeviceId].actualHashSize-list->idx));
+	traceEvent(TRACE_INFO, "Extending hash size [newSize=%d][deviceId=%d]",
+		   myGlobals.device[actualDeviceId].actualHashSize,
+		   actualDeviceId);
+      } else
+	list->idx = hostFound;
+
+      myGlobals.device[actualDeviceId].insertIdx = list->idx + 1; /* NOTE: insertIdx can go beyond the list end */
+      myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx] = el; /* Insert a new entry */
+      myGlobals.device[actualDeviceId].hostsno++;
+      el->hostTrafficBucket = list->idx;
+      el->hashListBucket    = idx;
+
+      if(ether_addr != NULL) {
+	if((hostIpAddress == NULL)
+	   || ((hostIpAddress != NULL)
+	       && isPseudoLocalAddress(hostIpAddress)
+	       /* && (!isBroadcastAddress(hostIpAddress))*/
+	       )) {
+	  /* This is a local address and then the
+	     ethernet address does make sense */
+	  ethAddr = etheraddr_string(ether_addr);
+
+	  memcpy(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+	  strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
+	  symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));
+	  FD_SET(SUBNET_LOCALHOST_FLAG, &el->flags);
+	  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	} else if(hostIpAddress != NULL) {
+	  /* This is packet that's being routed or belonging to a
+	     remote network that uses the same physical wire (or forged)*/
+	  memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+
+	  memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
+	  if(!myGlobals.borderSnifferMode) FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
+
+	  if(isPrivateAddress(hostIpAddress)) FD_SET(PRIVATE_IP_ADDRESS, &el->flags);
+
+	  if(!isBroadcastAddress(hostIpAddress)) {
+	    if(myGlobals.borderSnifferMode || isPseudoLocalAddress(hostIpAddress))
+	      FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	    else
+	      FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	  }
+	} else {
+	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
+	  FD_CLR(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
+	}
+
+	if(strncmp(el->ethAddressString, "FF:", 3) == 0) {
+	  /*
+	    The trick below allows me not to duplicate the
+	    "<broadcast>" string in the code
+	  */
+	  el->hostIpAddress.s_addr = INADDR_BROADCAST;
+	  FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+	  if(isMulticastAddress(&el->hostIpAddress))
+	    FD_SET(MULTICAST_HOST_FLAG, &el->flags);
+	  strncpy(el->hostNumIpAddress,
+		  _intoa(el->hostIpAddress, buf, sizeof(buf)),
+		  strlen(el->hostNumIpAddress));
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress,
+		  MAX_HOST_SYM_NAME_LEN);
+
+	  if((el->hostIpAddress.s_addr != 0x0) /* 0.0.0.0 */
+	     && (el->hostIpAddress.s_addr != 0xFFFFFFFF) /* 255.255.255.255 */
+	     && isBroadcastAddress(&el->hostIpAddress)) {
+	    /*
+	      The sender of this packet has obviously a wrong netmask because:
+	      - it is a local host
+	      - it has sent a packet to a broadcast address
+	      - it has not used the FF:FF:FF:FF:FF:FF MAC address
+	    */
+
+	    traceEvent(TRACE_WARNING, "WARNING: Wrong netmask detected [%s/%s]",
+		       _intoa(el->hostIpAddress, buf, sizeof(buf)),
+		       el->ethAddressString);
+	  }
+	}
+
+#ifdef DEBUG
+	/*if((strcmp(etheraddr_string(ether_addr), "08:00:20:89:79:D7") == 0)
+	  || (strcmp(el->hostSymIpAddress, "more") == 0))*/
+	printf("Added a new hash_hostTraffic entry [%s/%s/%s/%d]\n",
+	       etheraddr_string(ether_addr), el->hostSymIpAddress,
+	       el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno);
+#endif
+
+	el->lastSeen = myGlobals.actTime;
+	checkSpoofing(list->idx, actualDeviceId);
+      }
+
+      if(hostIpAddress != NULL) {
+	el->hostIpAddress.s_addr = hostIpAddress->s_addr;
+	strncpy(el->hostNumIpAddress,
+		_intoa(*hostIpAddress, buf, sizeof(buf)),
+		sizeof(el->hostNumIpAddress));
+	if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+	if(isMulticastAddress(&el->hostIpAddress)) FD_SET(MULTICAST_HOST_FLAG, &el->flags);
+	if(isPrivateAddress(hostIpAddress))        FD_SET(PRIVATE_IP_ADDRESS,  &el->flags);
+
+	/* Trick to fill up the address cache */
+	if(myGlobals.numericFlag == 0)
+	  ipaddr2str(el->hostIpAddress, actualDeviceId);
+	else
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
+      } else {
+	/* el->hostNumIpAddress == "" */
+	if(symEthName[0] != '\0') {
+	  char buf[MAX_HOST_SYM_NAME_LEN];
+
+	  if(snprintf(buf, sizeof(buf), "%s <IMG SRC=/card.gif BORDER=0>", symEthName) < 0)
+	    BufferTooShort();
+	  else
+	    strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
+	} else
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
+      }
+
+#ifdef HASH_DEBUG
+      traceEvent(TRACE_INFO, "Adding %s/%s [idx=%d][device=%d][actualHashSize=%d]\n",
+		 el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
+		 myGlobals.device[actualDeviceId].actualHashSize);
+#endif
+
+      addSerialMapping(el);
     }
+
+    if(el != NULL) {
+      el->lastSeen = myGlobals.actTime;
+
+      if(setSpoofingFlag)
+	FD_SET(HOST_DUPLICATED_MAC, &el->flags);
+
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
+		 list->idx, actualDeviceId,
+		 etheraddr_string(ether_addr), el->hostSymIpAddress,
+		 el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno,
+		 useIPAddressForSearching);
+#endif
+    }
+
+    el->numUses++;
+  } else
+    return(idx);
+
+  if(el == NULL)
+    traceEvent(TRACE_INFO, "getHostInfo(idx=%d)(ptr=%x)",
+	       list->idx, myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx]);
+
+  return(list->idx);
 }
 
 /* ************************************ */

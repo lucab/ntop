@@ -332,7 +332,7 @@ void initCounters() {
     myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx;
   }
 
-  myGlobals.nextSessionTimeoutScan = time(NULL)+SESSION_SCAN_DELAY;
+  myGlobals.nextSessionTimeoutScan = time(NULL)+PURGE_HOSTS_DELAY;
 
   myGlobals.numProcesses = 0;
 

@@ -665,7 +665,11 @@ typedef struct hash_list {
   struct hash_list *next;
 } HashList;
 
+#ifdef MEMORY_DEBUG
+#define HASH_LIST_SIZE    256
+#else
 #define HASH_LIST_SIZE    ((u_int16_t)-1) /* Static hash size */
+#endif
 
 # if defined(HAVE_OPENSSL)
 #  define THREAD_MODE "MT (SSL)"
@@ -1672,7 +1676,7 @@ typedef struct storedAddress {
 /* Host Traffic */
 typedef struct hostTraffic {
   u_short          hostTrafficBucket /* Index in the **hash_hostTraffic list */;
-  u_short          hashListBucket /* Index in the **hash_hostTraffic list */;
+  u_short          hashListBucket    /* Index in the **hashList         list */;
   u_int16_t        numUses;
   HostSerial       hostSerial;
   struct in_addr   hostIpAddress;
@@ -1841,12 +1845,10 @@ struct pbuf {
 
 /* **************************** */
 
-/* Timedout sessions are scanned each SESSION_SCAN_DELAY seconds */
-#define SESSION_SCAN_DELAY        60        /* 60 secs */
-#define PURGE_HOSTS_DELAY        300        /* 5 mins  */
+#define PURGE_HOSTS_DELAY        300      /* 5 mins  */
 
 /* This is the 2MSL timeout as defined in the TCP standard (RFC 761) */
-#define TWO_MSL_TIMEOUT          120        /* 2 minutes */
+#define TWO_MSL_TIMEOUT          120      /* 2 minutes */
 #define DOUBLE_TWO_MSL_TIMEOUT   (2*TWO_MSL_TIMEOUT)
 
 #define IDLE_HOST_PURGE_TIMEOUT  10*60    /*   30 minutes */
