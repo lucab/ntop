@@ -287,7 +287,7 @@ unsigned short isBroadcastAddress(struct in_addr *addr) {
   if(addr == NULL)
     return 1;
   else if(addr->s_addr == 0x0)
-    return 0; /* IP-less myGlobals.device (is it trying to boot via DHCP/BOOTP ?) */
+    return 0; /* IP-less device (is it trying to boot via DHCP/BOOTP ?) */
   else {
     for(i=0; i<myGlobals.numDevices; i++)
       if(myGlobals.device[i].netmask.s_addr == 0xFFFFFFFF) /* PPP */
@@ -367,9 +367,9 @@ unsigned short isPrivateAddress(struct in_addr *addr) {
  * Description:
  *
  *  It converts an integer in the range
- *  from  0 to 255 in number of bits
+ *  from 0 to 255 in number of bits
  *  useful for netmask  calculation.
- *  The conmyGlobals.version is  valid if there
+ *  The version is valid if there
  *  is an uninterrupted sequence of
  *  bits set to 1 at the most signi-
  *  ficant positions. Example:
@@ -428,11 +428,11 @@ static int int2bits(int number) {
  * Description:
  *
  *  Converts a dotted quad notation
- *  netmask  specification  to  the
+ *  netmask specification to the
  *  equivalent number of bits.
- *  from  0 to 255 in number of bits
- *  useful for netmask  calculation.
- *  The converion is  valid if there
+ *  from 0 to 255 in number of bits
+ *  useful for netmask calculation.
+ *  The conversion is valid if there
  *  is an  uninterrupted sequence of
  *  bits set to 1 at the most signi-
  *  ficant positions. Example:
@@ -945,17 +945,17 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   /* *************************************************
      There seems to be some problem with mutexes and some
-     glibc myGlobals.versions. See
+     glibc versions. See
 
      http://sdb.suse.de/sdb/de/html/aj_pthread7.0.html
 
-     (in German but an english myGlobals.version is probably available on their
+     (in German but an english version is probably available on their
      international web site). Suggested workaround is either to use
 
      pthread_mutexattr_settype (&mutattr, PTHREAD_MUTEX_ERRORCHECK_NP);
 
      as checked mutexes dont have the error or use a corrected
-     glibc (Suse offers a patched myGlobals.version for their system).
+     glibc (Suse offers a patched version for their system).
 
      Andreas Pfaeller <apfaller@yahoo.com.au>
 
@@ -1352,7 +1352,7 @@ void readLsofInfo(void) {
   numLines--;
 
   if(numLines <= 0)
-    return; /* No myGlobals.processes */
+    return; /* No processes */
 
   fd = fopen(fileName, "r");
   if(fd == NULL) {
@@ -2242,7 +2242,7 @@ char* _strncpy(char *dest, const char *src, size_t n) {
 
 /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 #ifndef HAVE_STRTOK_R
-/* Reentrant string tokenizer.  Generic myGlobals.version.
+/* Reentrant string tokenizer.  Generic version.
 
    Slightly modified from: glibc 2.1.3
 
