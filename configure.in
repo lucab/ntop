@@ -762,25 +762,14 @@ dnl>
 dnl> The GNU database manager gdbm (MANDATORY)
 dnl> check for `gdbm_open' in -lgdbm
 dnl>
-dnl> AC_CHECK_LIB(gdbm, gdbm_open)
-dnl> if test "$ac_tr_lib" != "HAVE_LIBGDBM"; then
-dnl>   AC_MSG_RESULT([not found!])
-dnl>   AC_MSG_RESULT([             *** FATAL ERROR ***             ])
-dnl>   AC_MSG_RESULT([ It looks that you don't have the libgdbm distribution installed.])
-dnl>     AC_MSG_RESULT([ Download, compile and, optionally, install it.])
-dnl>   AC_MSG_RESULT([ When finished please re-run this program.])
-dnl>   AC_MSG_RESULT([ You can download the latest source tarball at http://www.gnu.org/software/gdbm/gdbm.html])
-dnl>  AC_MSG_ERROR([ The GDBM Library, libgdbm, was not found! ])
-dnl> fi
-
 dnl> order as follow
 dnl> 1. user defined gdbm development tree
 dnl> 2. standard installation in /usr/lib and /usr/include respectively
 dnl> 3. default package installation in /usr/local/lib and /usr/local/include respectively
 dnl> 4. gdbm development tree under the same ntop's root source directory or in a subdir
 
-AC_MSG_CHECKING([for the GNU Database Manager Library gdbm (required package)])
 if test ".${GDBM_ROOT}" != .; then
+  AC_MSG_CHECKING([for the GNU Database Manager Library gdbm (required package)])
   if test -d $GDBM_ROOT &&
      test -r $GDBM_ROOT/libgdbm.a &&
      test -r $GDBM_ROOT/gdbm.h; then
@@ -798,12 +787,12 @@ if test ".${GDBM_ROOT}" != .; then
     AC_MSG_RESULT([ You can download the latest source tarball at http://www.gnu.org/software/gdbm/gdbm.html])
     AC_MSG_ERROR([ The GNU Gdbm Library development tree seems corrupted or incomplete!])
   fi
+else
+  AC_CHECK_LIB(gdbm, gdbm_open, CORELIBS="$CORELIBS -lgdbm")
 fi
 
 
-AC_CHECK_LIB(gdbm, gdbm_open)
-
-if test ".`echo $LIBS | grep gdbm`" = .; then
+if test ".`echo $CORELIBS | grep gdbm`" = .; then
   if test -d /usr/local &&
      test -r /usr/local/lib/libgdbm.a &&
      test -r /usr/local/include/gdbm.h; then

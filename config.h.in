@@ -222,6 +222,9 @@
 /* Define if you have the pthread library (-lpthread).  */
 #undef HAVE_LIBPTHREAD
 
+/* Define if you have the pthreads library (-lpthreads).  */
+#undef HAVE_LIBPTHREADS
+
 /* Define if you have the resolv library (-lresolv).  */
 #undef HAVE_LIBRESOLV
 
