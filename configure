@@ -1340,7 +1340,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.98.005-2003-12-23"
+SCRIPTVER="v2.2.98.006-2003-12-25"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -13206,6 +13206,9 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif

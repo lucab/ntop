@@ -193,12 +193,6 @@ ntop.h
 #ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
 #endif
-#ifdef HAVE_NET_IF_DL_H
-#include <net/if_dl.h>
-#endif
-#ifdef HAVE_NET_ROUTE_H
-#include <net/route.h>
-#endif
 
 /*
    Courtesy of
@@ -276,6 +270,17 @@ ntop.h
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+
+/* 
+   Additions below courtesy of 
+   Abdelkader Lahmadi <Abdelkader.Lahmadi@loria.fr> 
+*/
+#ifdef HAVE_NET_IF_DL_H
+#include <net/if_dl.h>
+#endif
+#ifdef HAVE_NET_ROUTE_H
+#include <net/route.h>
+#endif
 
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
