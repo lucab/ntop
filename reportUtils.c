@@ -374,43 +374,98 @@ void printTableEntryPercentage(char *buf, int bufLen,
 
 /* ******************************* */
 
+void printFooterHostLink(void) {
+
+    char buf[LEN_GENERAL_WORK_BUFFER];
+
+    sendString("<TABLE BORDER=\"0\">"
+                 "<TR>"
+                   "<TD COLSPAN=5 align=\"center\">The host link color indicates how recently the host was last seen</TD>"
+                 "</TR>"
+                 "<TR>"
+                   "<TD>&nbsp;&nbsp;<A href=# class=\"age0min\">0 to 5 minutes</A>&nbsp;&nbsp;</TD>"
+                   "<TD>&nbsp;&nbsp;<A href=# class=\"age5min\">5 to 15 minutes</A>&nbsp;&nbsp;</TD>"
+                   "<TD>&nbsp;&nbsp;<A href=# class=\"age15min\">15 to 30 minutes</A>&nbsp;&nbsp;</TD>"
+                   "<TD>&nbsp;&nbsp;<A href=# class=\"age30min\">30 to 60 minutes</A>&nbsp;&nbsp;</TD>"
+                   "<TD>&nbsp;&nbsp;<A href=# class=\"age60min\">60+ minutes</A>&nbsp;&nbsp;</TD>"
+                 "</TR></TABLE>\n");
+}
+
+void printFooterTrafficPct(void) {
+
+    char buf[LEN_GENERAL_WORK_BUFFER];
+
+    if (snprintf(buf, sizeof(buf),
+                 "<TABLE BORDER=\"0\">"
+                   "<TR>"
+                     "<TD COLSPAN=4>The percentage value is - for a given host - the traffic for that host "
+                     "during that hour divided by the total traffic for that host for the last 24 hours.</TD>"
+                   "</TR>"
+                   "<TR>"
+                     "<TD ALIGN=CENTER NOWRAP "TD_BG" WIDTH=100> 0%% </TD>"
+                     "<TD ALIGN=CENTER NOWRAP "CONST_CONST_PCTG_LOW_COLOR" WIDTH=100> 0%% to %d%% </TD>"
+                     "<TD ALIGN=CENTER NOWRAP "CONST_CONST_PCTG_MID_COLOR" WIDTH=100> %d%% to %d%% </TD>"
+                     "<TD ALIGN=CENTER NOWRAP "CONST_PCTG_HIGH_COLOR" WIDTH=100> &gt;%d%% to 100%% </TD>"
+                   "</TR>"
+                 "</TABLE>\n",
+                 CONST_PCTG_LOW, CONST_PCTG_LOW, CONST_PCTG_MID, CONST_PCTG_MID) < 0)
+	  
+        BufferTooShort();
+    sendString(buf);
+}
+
 void printFooter(int reportType) {
-  char buf[LEN_GENERAL_WORK_BUFFER];
+
+  switch(reportType) {
+    case TRAFFIC_STATS:
+        break;
+
+    case SORT_DATA_RECEIVED_PROTOS:
+    case SORT_DATA_SENT_PROTOS:
+    case SORT_DATA_PROTOS:
+    case SORT_DATA_RECEIVED_IP:
+    case SORT_DATA_SENT_IP:
+    case SORT_DATA_IP:
+    case SORT_DATA_RCVD_HOST_TRAFFIC:
+    case SORT_DATA_SENT_HOST_TRAFFIC:
+    case SORT_DATA_RECEIVED_THPT:
+    case SORT_DATA_SENT_THPT:
+    case SORT_DATA_THPT:
+    case SORT_DATA_HOST_TRAFFIC:      
+        sendString("<BR><b>Color Code</b>");
+        break;
+  }
 
   sendString("<CENTER>\n");
 
   switch(reportType) {
+    case TRAFFIC_STATS:
+        break;
     case SORT_DATA_RECEIVED_PROTOS:
     case SORT_DATA_RECEIVED_IP:
     case SORT_DATA_SENT_PROTOS:
     case SORT_DATA_SENT_IP:
     case SORT_DATA_PROTOS:
     case SORT_DATA_IP:
-    case TRAFFIC_STATS:
+        printFooterHostLink();
         break;
 
     case SORT_DATA_RCVD_HOST_TRAFFIC:
     case SORT_DATA_SENT_HOST_TRAFFIC:
     case SORT_DATA_HOST_TRAFFIC:      
-        if (snprintf(buf, sizeof(buf), "<BR><b>Color Code</b><TABLE BORDER><TR>"
-		     "<TD ALIGN=CENTER NOWRAP "TD_BG" WIDTH=100> 0%% </TD>"
-		     "<TD ALIGN=CENTER NOWRAP "CONST_CONST_PCTG_LOW_COLOR" WIDTH=100> 0%% to %d%% </TD>"
-		     "<TD ALIGN=CENTER NOWRAP "CONST_CONST_PCTG_MID_COLOR" WIDTH=100> %d%% to %d%% </TD>"
-		     "<TD ALIGN=CENTER NOWRAP "CONST_PCTG_HIGH_COLOR" WIDTH=100> &gt;%d%% to 100%% </TD></TR>"
-		     "<TR><TD COLSPAN=4>The percentage value is - for a given host - the traffic for that host"
-		     " during that hour divided by the total traffic for that host for the last 24 hours.</TD>"
-		     "</TR></TABLE>\n",
-		     CONST_PCTG_LOW, CONST_PCTG_LOW, CONST_PCTG_MID, CONST_PCTG_MID) < 0)
-	  BufferTooShort();
-        sendString(buf);
+        printFooterHostLink();
+        printFooterTrafficPct();
         break;
+
     case SORT_DATA_RECEIVED_THPT:
     case SORT_DATA_SENT_THPT:
     case SORT_DATA_THPT:
+        printFooterHostLink();
         sendString("<P>Peak values are the maximum value for any 10 second interval.<br>Average values are recomputed each 60 seconds, using values accumulated since this run of ntop was started.</P>\n");
         sendString("<P>Note: Both values are reset each time ntop is restarted.</P>\n");
         break;
   }
+
   sendString("</CENTER>\n");
 }
 

@@ -1320,6 +1320,10 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
     addPageIndicator(STR_MULTICAST_STATS, pageNum, numEntries, myGlobals.maxNumLines,
 		     revertOrder, abs(sortedColumn));
+
+    sendString("<BR><b>Color Code</b>");
+    printFooterHostLink();
+
   } else
     printNoDataYet();
 
@@ -1680,6 +1684,9 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
 
+    sendString("<BR><b>Color Code</b>");
+    printFooterHostLink();
+
     addPageIndicator(HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.maxNumLines,
 		     revertOrder, abs(sortedColumn));
   }
@@ -1970,6 +1977,9 @@ void printLocalRoutersList(int actualDeviceId) {
 
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
+
+    sendString("<BR><b>Color Code</b>");
+    printFooterHostLink();
   }
 }
 
@@ -2201,6 +2211,10 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     sendString(buf);
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
+
+    sendString("<BR><b>Color Code</b>");
+    printFooterHostLink();
+
   } else
     printNoDataYet();
 
@@ -2350,6 +2364,10 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 
     addPageIndicator("NetNetstat.html", pageNum,
 		     realNumSessions, myGlobals.maxNumLines, -1, 0);
+
+    sendString("<BR><b>Color Code</b>");
+    printFooterHostLink();
+
   } else {
     if(el == NULL) {
       printHTMLheader("Active TCP Sessions", 0);
@@ -2450,6 +2468,10 @@ void printIpProtocolUsage(void) {
 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");
+
+  sendString("<BR><b>Color Code</b>");
+  printFooterHostLink();
+
   free(hosts);
 }
 
@@ -3420,6 +3442,9 @@ void printIpTrafficMatrix(void) {
 
   sendString("</TABLE>"TABLE_OFF"\n<P>\n");
   sendString("</CENTER>\n");
+
+  sendString("<BR><b>Color Code</b>");
+  printFooterHostLink();
 
   free(activeHosts);
 }

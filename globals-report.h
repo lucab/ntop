@@ -70,6 +70,7 @@ extern void printTableEntryPercentage(char *buf, int bufLen,
 extern void printSectionTitle(char *text);
 extern void printFlagedWarning(char *text);
 extern void printHeader(int reportType, int revertOrder, u_int column);
+extern void printFooterHostLink(void);
 extern void printFooter(int reportType);
 extern char* getOSFlag(char* theOsName, int showOsName);
 extern int sortHostFctn(const void *_a, const void *_b);
