@@ -255,6 +255,8 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-W <port>      | --https-server <port>]              Web server (https:) port (or address:port) to listen on\n");
 #endif
 
+  fprintf(fp, "    [--throughput-bar-chart]                              Use BAR chart for graphs\n");
+
 #else /* !HAVE_GETOPT_LONG */
 
   fprintf(fp, "    [-a <path> path for ntop web server access log]\n");
@@ -442,16 +444,16 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.enableSuspiciousPacketDump = 1;
       break;
 
-    case 's':
-      myGlobals.disablePromiscuousMode = 1;
-      break;
-
     case 'r':
       if(!isdigit(optarg[0])) {
 	printf("FATAL ERROR: flag -r expects a numeric argument.\n");
 	exit(-1);
       }
       myGlobals.refreshRate = atoi(optarg);
+      break;
+
+    case 's':
+      myGlobals.disablePromiscuousMode = 1;
       break;
 
     case 't':
