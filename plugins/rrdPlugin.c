@@ -1889,7 +1889,8 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
   int j;
   
   if((el == myGlobals.otherHostEntry) || (el == myGlobals.broadcastEntry)
-     || broadcastHost(el) || (myGlobals.trackOnlyLocalHosts && (!subnetPseudoLocalHost(el)))) {
+     || broadcastHost(el) || (myGlobals.runningPref.trackOnlyLocalHosts &&
+                              (!subnetPseudoLocalHost(el)))) {
     return;
   }
 
@@ -1910,7 +1911,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 	return;
       }
 
-      if((!myGlobals.dontTrustMACaddr)
+      if((!myGlobals.runningPref.dontTrustMACaddr)
 	 && subnetPseudoLocalHost(el)
 	 && (el->ethAddressString[0] != '\0')) /*
 						 NOTE:
@@ -2629,7 +2630,7 @@ static int initRRDfunct(void) {
 
   setPluginStatus(NULL);
 
-  if (myGlobals.rFileName != NULL) {
+  if (myGlobals.runningPref.rFileName != NULL) {
       /* Don't start RRD Plugin for capture files as it doesn't work */
       traceEvent(CONST_TRACE_INFO, "RRD: RRD plugin disabled on capture files");
 

@@ -555,33 +555,35 @@ void createVendorTable(struct stat *dbStat) {
 
   } /* for macInputFiles */
 
-  traceEvent(CONST_TRACE_INFO, "Fingeprint: Loading signature file.");
+  if (!myGlobals.runningPref.printFcOnly) {
+      traceEvent(CONST_TRACE_INFO, "Fingeprint: Loading signature file.");
+      
+      fd = checkForInputFile(NULL, NULL, CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
 
-  fd = checkForInputFile(NULL, NULL, CONST_OSFINGERPRINT_FILE, NULL, &compressedFormat);
-
-  if(fd != NULL) {
-     char line[384], lineKey[8];
-     int numEntries=0;
-
-     numLoaded = 0;
-
-     while(readInputFile(fd, NULL, FALSE, compressedFormat, 0, line, sizeof(line), &numLoaded) == 0) {
-       if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
-       line[strlen(line)-1] = '\0';
-
-       safe_snprintf(__FILE__, __LINE__, lineKey, sizeof(lineKey), "%d", numEntries++);
-       memset(&key_data, 0, sizeof(key_data));
-       key_data.dptr   = lineKey; key_data.dsize  = strlen(key_data.dptr);
-       
-       memset(&data_data, 0, sizeof(data_data));
-       data_data.dptr  = line; data_data.dsize = strlen(line);
-
-       if(gdbm_store(myGlobals.fingerprintFile, key_data, data_data, GDBM_REPLACE) != 0)
-	 traceEvent(CONST_TRACE_ERROR, "While adding %s=%s.", lineKey, line);       
-     }
-     
-     traceEvent(CONST_TRACE_INFO, "Fingeprint: ...loaded %d records", numEntries);
-  } else
-    traceEvent(CONST_TRACE_NOISY, "Unable to find fingeprint signature file.");
+      if(fd != NULL) {
+          char line[384], lineKey[8];
+          int numEntries=0;
+          
+          numLoaded = 0;
+          
+          while(readInputFile(fd, NULL, FALSE, compressedFormat, 0, line, sizeof(line), &numLoaded) == 0) {
+              if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
+              line[strlen(line)-1] = '\0';
+              
+              safe_snprintf(__FILE__, __LINE__, lineKey, sizeof(lineKey), "%d", numEntries++);
+              memset(&key_data, 0, sizeof(key_data));
+              key_data.dptr   = lineKey; key_data.dsize  = strlen(key_data.dptr);
+              
+              memset(&data_data, 0, sizeof(data_data));
+              data_data.dptr  = line; data_data.dsize = strlen(line);
+              
+              if(gdbm_store(myGlobals.fingerprintFile, key_data, data_data, GDBM_REPLACE) != 0)
+                  traceEvent(CONST_TRACE_ERROR, "While adding %s=%s.", lineKey, line);       
+          }
+          
+          traceEvent(CONST_TRACE_INFO, "Fingeprint: ...loaded %d records", numEntries);
+      } else
+          traceEvent(CONST_TRACE_NOISY, "Unable to find fingeprint signature file.");
+  }
 }
 

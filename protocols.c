@@ -57,9 +57,9 @@ void handleBootp(HostTraffic *srcHost,
 		    Axel Thimm <Axel.Thimm+ntop@physik.fu-berlin.de>
 		 */
 
-  if((!myGlobals.enablePacketDecoding)
+  if((!myGlobals.runningPref.enablePacketDecoding)
      || (packetData == NULL) /* packet too short ? */
-     || (myGlobals.dontTrustMACaddr))
+     || (myGlobals.runningPref.dontTrustMACaddr))
     return;
 
   memset(&bootProto, 0, sizeof(BootProtocol));
@@ -168,7 +168,7 @@ void handleBootp(HostTraffic *srcHost,
 		strncpy(realDstHost->hostNumIpAddress,
 			_intoa(realDstHost->hostIp4Address, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
-		if(myGlobals.numericFlag == 0) ipaddr2str(realDstHost->hostIpAddress, 1);
+		if(myGlobals.runningPref.numericFlag == 0) ipaddr2str(realDstHost->hostIpAddress, 1);
                 if (realDstHost->dnsDomainValue != NULL) free(realDstHost->dnsDomainValue);
 		realDstHost->dnsDomainValue = NULL;
                 if (realDstHost->dnsTLDValue != NULL) free(realDstHost->dnsTLDValue);
@@ -583,7 +583,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
 
   if(myGlobals.dnsCacheFile == NULL) return(-1); /* ntop is quitting... */
 
-  if((!myGlobals.enablePacketDecoding)
+  if((!myGlobals.runningPref.enablePacketDecoding)
      ||(packetData == NULL) /* packet too short ? */)
     return(transactionId);
 
@@ -676,7 +676,8 @@ void handleNetbios(HostTraffic *srcHost,
   u_char *p;
   int offset=0, displ, notEnoughData = 0;
 
-  if((!myGlobals.enablePacketDecoding) || (srcHost->nonIPTraffic != NULL) /* Already set */
+  if((!myGlobals.runningPref.enablePacketDecoding) ||
+     (srcHost->nonIPTraffic != NULL) /* Already set */
      || (packetData == NULL)) /* packet too short ? */
     return;
   

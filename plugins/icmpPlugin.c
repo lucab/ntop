@@ -612,7 +612,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
       sendString("</TR>\n");
 
       /* Avoid huge tables */
-      if(printedEntries++ > myGlobals.maxNumLines)
+      if(printedEntries++ > myGlobals.runningPref.maxNumLines)
 	break;
     }
 
@@ -683,7 +683,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     if(strncmp(url, "chart", strlen("chart")) == 0) {
 
       /* Avoid to draw too many entries */
-      if(num > myGlobals.maxNumLines) num = myGlobals.maxNumLines;
+      if(num > myGlobals.runningPref.maxNumLines) num = myGlobals.runningPref.maxNumLines;
 
       if(icmpColumnSort<0) icmpColumnSort=0;
       if(icmpColumnSort>cmpFctnICMPmax) icmpColumnSort=0;

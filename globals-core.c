@@ -157,55 +157,56 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.ntop_argc = argc;
   myGlobals.ntop_argv = argv;
 
-  myGlobals.accessLogFile = DEFAULT_NTOP_ACCESS_LOG_FILE;
-  myGlobals.stickyHosts = DEFAULT_NTOP_STICKY_HOSTS;
+  myGlobals.runningPref.accessLogFile = DEFAULT_NTOP_ACCESS_LOG_FILE;
+  myGlobals.runningPref.stickyHosts = DEFAULT_NTOP_STICKY_HOSTS;
 
-  myGlobals.daemonMode = DEFAULT_NTOP_DAEMON_MODE;
+  myGlobals.runningPref.daemonMode = DEFAULT_NTOP_DAEMON_MODE;
   if (strcmp(myGlobals.program_name, "ntopd") == 0) {
-    myGlobals.daemonMode = 1;
+    myGlobals.runningPref.daemonMode = 1;
   }
   
-  myGlobals.rFileName = DEFAULT_NTOP_TRAFFICDUMP_FILENAME;
-  myGlobals.devices = DEFAULT_NTOP_DEVICES;
-  myGlobals.dontTrustMACaddr = DEFAULT_NTOP_DONT_TRUST_MAC_ADDR;
-  myGlobals.trackOnlyLocalHosts    = DEFAULT_NTOP_TRACK_ONLY_LOCAL;
-  myGlobals.enableSessionHandling  = DEFAULT_NTOP_ENABLE_SESSIONHANDLE;
-  myGlobals.enablePacketDecoding   = DEFAULT_NTOP_PACKET_DECODING;
-  myGlobals.filterExpressionInExtraFrame = DEFAULT_NTOP_FILTER_IN_FRAME;
-  myGlobals.pcapLog = DEFAULT_NTOP_PCAP_LOG_FILENAME;
-  myGlobals.numericFlag = DEFAULT_NTOP_NUMERIC_IP_ADDRESSES;
-  myGlobals.localAddresses = DEFAULT_NTOP_LOCAL_SUBNETS;
-  myGlobals.enableSuspiciousPacketDump = DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP;
-  myGlobals.enableOtherPacketDump = DEFAULT_NTOP_OTHER_PKT_DUMP;
-  myGlobals.disablePromiscuousMode = DEFAULT_NTOP_DISABLE_PROMISCUOUS;
-  myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
-  myGlobals.currentFilterExpression = DEFAULT_NTOP_FILTER_EXPRESSION;
-  strncpy((char *) &myGlobals.domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(myGlobals.domainName));
-  myGlobals.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
-  myGlobals.maxNumHashEntries = myGlobals.maxNumSessions = (u_int)-1;
-  myGlobals.skipVersionCheck = FALSE;
+  myGlobals.runningPref.rFileName = DEFAULT_NTOP_TRAFFICDUMP_FILENAME;
+  myGlobals.runningPref.devices = DEFAULT_NTOP_DEVICES;
+  myGlobals.runningPref.dontTrustMACaddr = DEFAULT_NTOP_DONT_TRUST_MAC_ADDR;
+  myGlobals.runningPref.trackOnlyLocalHosts    = DEFAULT_NTOP_TRACK_ONLY_LOCAL;
+  myGlobals.runningPref.enableSessionHandling  = DEFAULT_NTOP_ENABLE_SESSIONHANDLE;
+  myGlobals.runningPref.enablePacketDecoding   = DEFAULT_NTOP_PACKET_DECODING;
+  myGlobals.runningPref.filterExpressionInExtraFrame = DEFAULT_NTOP_FILTER_IN_FRAME;
+  myGlobals.runningPref.pcapLog = DEFAULT_NTOP_PCAP_LOG_FILENAME;
+  myGlobals.runningPref.numericFlag = DEFAULT_NTOP_NUMERIC_IP_ADDRESSES;
+  myGlobals.runningPref.localAddresses = DEFAULT_NTOP_LOCAL_SUBNETS;
+  myGlobals.runningPref.enableSuspiciousPacketDump = DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP;
+  myGlobals.runningPref.enableOtherPacketDump = DEFAULT_NTOP_OTHER_PKT_DUMP;
+  myGlobals.runningPref.disablePromiscuousMode = DEFAULT_NTOP_DISABLE_PROMISCUOUS;
+  myGlobals.runningPref.traceLevel = DEFAULT_TRACE_LEVEL;
+  myGlobals.runningPref.currentFilterExpression = DEFAULT_NTOP_FILTER_EXPRESSION;
+  strncpy((char *) &myGlobals.runningPref.domainName,
+          DEFAULT_NTOP_DOMAIN_NAME, sizeof(myGlobals.runningPref.domainName));
+  myGlobals.runningPref.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
+  myGlobals.runningPref.maxNumHashEntries = myGlobals.runningPref.maxNumSessions = (u_int)-1;
+  myGlobals.runningPref.skipVersionCheck = FALSE;
   myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCHECKED;
   myGlobals.checkVersionStatusAgain = 0;
   
 #ifndef WIN32
-  myGlobals.debugMode = DEFAULT_NTOP_DEBUG_MODE;
-  myGlobals.useSyslog = DEFAULT_NTOP_SYSLOG;
+  myGlobals.runningPref.debugMode = DEFAULT_NTOP_DEBUG_MODE;
+  myGlobals.runningPref.useSyslog = DEFAULT_NTOP_SYSLOG;
 #ifdef HAVE_LIBWRAP
   allow_severity = DEFAULT_TCPWRAP_ALLOW;
   deny_severity = DEFAULT_TCPWRAP_DENY;
 #endif
 #endif
 
-  myGlobals.mergeInterfaces = DEFAULT_NTOP_MERGE_INTERFACES;
+  myGlobals.runningPref.mergeInterfaces = DEFAULT_NTOP_MERGE_INTERFACES;
   /* note that by default ntop will merge network interfaces */
-  myGlobals.mapperURL = DEFAULT_NTOP_MAPPER_URL;
+  myGlobals.runningPref.mapperURL = DEFAULT_NTOP_MAPPER_URL;
 
 #ifdef MAKE_WITH_GDCHART
   myGlobals.throughput_chart_type = DEFAULT_NTOP_CHART_TYPE;
 #endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-   myGlobals.useSSLwatchdog = 0;
+   myGlobals.runningPref.useSSLwatchdog = 0;
 #endif
 
   /* Other flags (to be set via command line options one day) */
@@ -221,9 +222,9 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.dataFileDirs    = _dataFileDirs;
   myGlobals.pluginDirs      = _pluginDirs;
   myGlobals.configFileDirs  = _configFileDirs;
-  myGlobals.pcapLogBasePath = strdup(defaultPath);     /* a NULL pointer will break the logic */
+  myGlobals.runningPref.pcapLogBasePath = strdup(defaultPath);     /* a NULL pointer will break the logic */
   myGlobals.dbPath          = strdup(defaultPath);     /* a NULL pointer will break the logic */
-  myGlobals.spoolPath       = strdup("");              /* a NULL pointer will break the logic */
+  myGlobals.runningPref.spoolPath       = strdup("");              /* a NULL pointer will break the logic */
 
   /* NB: we can't init rrdPath here, because initGdbm hasn't been run */
 
@@ -259,15 +260,15 @@ void initNtopGlobals(int argc, char * argv[]) {
 
 #ifdef HAVE_OPENSSL
   myGlobals.sslInitialized = 0;
-  myGlobals.sslPort = 0;           /* Disabled by default: it can enabled using -W <SSL port> */
+  myGlobals.runningPref.sslPort = 0; /* Disabled by default: enabled via -W */
 #endif
 
-  myGlobals.webAddr = DEFAULT_NTOP_WEB_ADDR;
-  myGlobals.webPort = DEFAULT_NTOP_WEB_PORT;
-  myGlobals.ipv4or6 = DEFAULT_NTOP_FAMILY;
+  myGlobals.runningPref.webAddr = DEFAULT_NTOP_WEB_ADDR;
+  myGlobals.runningPref.webPort = DEFAULT_NTOP_WEB_PORT;
+  myGlobals.runningPref.ipv4or6 = DEFAULT_NTOP_FAMILY;
 
   /* Termination flags */
-  myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;    /* By default data are collected into internal variables */
+  myGlobals.capturePackets = FLAG_NTOPSTATE_NOTINIT; 
   myGlobals.endNtop = 0;
 
   myGlobals.dnsSniffCount = 0;
@@ -345,6 +346,57 @@ void initNtopGlobals(int argc, char * argv[]) {
     myGlobals.numUnsuccessfulForbidden[i] = 0;
   }
 
+/* create the logView stuff Mutex first... must be before the 1st traceEvent() call */
+#ifdef CFG_MULTITHREADED
+  createMutex(&myGlobals.logViewMutex);     /* synchronize logView buffer */
+#endif
+  myGlobals.logViewNext = 0;
+  myGlobals.logView = calloc(sizeof(char*),
+                             CONST_LOG_VIEW_BUFFER_SIZE);
+
+  traceEvent(CONST_TRACE_INFO, "Initializing semaphores, mutexes and threads");
+
+  /* ============================================================
+   * Create semaphores and mutexes associated with packet capture
+   * ============================================================
+   */
+#ifdef CFG_MULTITHREADED
+#ifdef HAVE_PTHREAD_ATFORK
+  i = pthread_atfork(NULL, NULL, &reinitMutexes);
+  traceEvent(CONST_TRACE_INFO, "NOTE: atfork() handler registered for mutexes, rc %d", i);
+#endif
+
+  /*
+   * Create two variables (semaphores) used by functions in pbuf.c to queue packets
+   */
+#ifdef MAKE_WITH_SEMAPHORES
+
+  createSem(&myGlobals.queueSem, 0);
+
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+  createSem(&myGlobals.queueAddressSem, 0);
+#endif
+
+#else
+
+  createCondvar(&myGlobals.queueCondvar);
+
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+  createCondvar(&myGlobals.queueAddressCondvar);
+#endif
+
+#endif
+
+  createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
+  createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */
+  createMutex(&myGlobals.fcSessionsMutex); /* data to synchronize TCP sessions access */
+  createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
+  createMutex(&myGlobals.purgeMutex);       /* synchronize purging */
+  createMutex(&myGlobals.securityItemsMutex);
+  createMutex(&myGlobals.packetProcessMutex);
+  createMutex(&myGlobals.packetQueueMutex);
+  createMutex(&myGlobals.hostsHashMutex);
+
   /* Packet Capture */
 #if defined(CFG_MULTITHREADED)
   for (i = 0; i <= CONST_PACKET_QUEUE_LENGTH; i ++)
@@ -360,6 +412,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.packetQueueTail = 0;
 #endif
 
+#endif /* CFG_MULTITHREADED */
+  
   /* NB: Log View is allocated in main.c so it's available for the very 1st traceEvent() */
 
   for (i = 0; i < CONST_NUM_TRANSACTION_ENTRIES; i ++)
@@ -507,7 +561,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* FC & SCSI-specific stuff */
   myGlobals.scsiDefaultDevType = SCSI_DEV_UNINIT;
 
-  if (!myGlobals.noFc) {
+  if (!myGlobals.runningPref.noFc) {
       if (myGlobals.fcnsCacheHash != NULL) {
           free (myGlobals.fcnsCacheHash);
       }
@@ -520,8 +574,8 @@ void initNtopGlobals(int argc, char * argv[]) {
              CONST_HASH_INITIAL_SIZE * sizeof(FcNameServerCacheEntry *));
 
       myGlobals.displayOption = DISPLAY_FC_DEFAULT;
-      if (!myGlobals.defaultVsan)
-          myGlobals.defaultVsan = DEFAULT_VSAN;
+      if (!myGlobals.runningPref.defaultVsan)
+          myGlobals.runningPref.defaultVsan = DEFAULT_VSAN;
   }
   myGlobals.fcMatrixHashCollisions = 0;
   myGlobals.fcMatrixHashUnresCollisions = 0;
@@ -540,37 +594,42 @@ void initNtop(char *devices) {
     addDefaultProtocols();
 
   /*
-   * initialize memory and data
+   * initialize memory and data. capturePackets must be set before invoking
+   * this routine.
    */
-  initDevices(devices);
+  if (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
+      initDevices(devices);
+  }
 
-  if(myGlobals.enableSessionHandling)
+  if(myGlobals.runningPref.enableSessionHandling)
     initPassiveSessions();
 
   /* ********************************** */
 
-  initGdbm(myGlobals.dbPath, myGlobals.spoolPath, 0);
+  initGdbm(myGlobals.dbPath, myGlobals.runningPref.spoolPath, 0);
 
 #ifndef WIN32
-  if(myGlobals.daemonMode) {
+  if(myGlobals.runningPref.daemonMode) {
     daemonize();
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as a daemon");
   }
 #endif
 
   /* Handle local addresses (if any) */
-  handleLocalAddresses(myGlobals.localAddresses);
+  handleLocalAddresses(myGlobals.runningPref.localAddresses);
 
-  if((myGlobals.rFileName != NULL) && ((myGlobals.localAddresses == NULL) && !myGlobals.printFcOnly)) {
+  if((myGlobals.runningPref.rFileName != NULL) &&
+     ((myGlobals.runningPref.localAddresses == NULL) &&
+      !myGlobals.runningPref.printFcOnly)) {
     traceEvent(CONST_TRACE_FATALERROR, 
 	       "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used");
     exit(-1);
   }
   
-  if(myGlobals.currentFilterExpression != NULL)
+  if(myGlobals.runningPref.currentFilterExpression != NULL)
     parseTrafficFilter();
   else
-    myGlobals.currentFilterExpression = strdup(""); /* so that it isn't NULL! */
+    myGlobals.runningPref.currentFilterExpression = strdup(""); /* so that it isn't NULL! */
 
   /* Handle flows (if any) */
   handleFlowsSpecs();
@@ -581,12 +640,9 @@ void initNtop(char *devices) {
   initThreads();
 
 #ifndef MAKE_MICRO_NTOP
-  if (!myGlobals.printFcOnly) {
-      /* No support for any plugins in FC mode for now */
-      traceEvent(CONST_TRACE_NOISY, "Starting Plugins");
-      startPlugins();
-      traceEvent(CONST_TRACE_NOISY, "Plugins started... continuing with initialization");
-  }
+  traceEvent(CONST_TRACE_NOISY, "Starting Plugins");
+  startPlugins();
+  traceEvent(CONST_TRACE_NOISY, "Plugins started... continuing with initialization");
 #endif
 
 #ifdef MEMORY_DEBUG
@@ -626,7 +682,7 @@ void initNtop(char *devices) {
   }
 
 
-  if(myGlobals.skipVersionCheck == TRUE) {
+  if(myGlobals.runningPref.skipVersionCheck == TRUE) {
 #ifdef CFG_MULTITHREADED
     {
       pthread_t myThreadId;

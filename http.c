@@ -116,7 +116,7 @@ static int readHTTPheader(char* theRequestedURL,
                           char *theReferer,
                           int theRefererLen,
                           char *theLanguage,
-                          int theLanguageLen);
+                          int theLanguageLen, int *isPostMethod);
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
@@ -125,7 +125,7 @@ static int returnHTTPPage(char* pageName,
                           char *agent,
                           char *referer,
                           char *requestedLanguage[],
-                          int numLang);
+                          int numLang, int isPostMethod);
 #else
 static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
@@ -134,14 +134,14 @@ static int readHTTPheader(char* theRequestedURL,
                           char *theAgent,
                           int theAgentLen,
                           char *theReferer,
-                          int theRefererLen);
+                          int theRefererLen, int *isPostMethod);
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
 			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent,
-                          char *referer);
+                          char *referer, int isPostMethod);
 #endif
 
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
@@ -181,13 +181,15 @@ static int readHTTPheader(char* theRequestedURL,
                           char *thePw, int thePwLen,
                           char *theAgent, int theAgentLen,
                           char *theReferer, int theRefererLen,
-                          char *theLanguage, int theLanguageLen)
+                          char *theLanguage, int theLanguageLen,
+                          int *isPostMethod)
 #else
 static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
                           char *thePw, int thePwLen,
                           char *theAgent, int theAgentLen,
-                          char *theReferer, int theRefererLen)
+                          char *theReferer, int theRefererLen,
+                          int *isPostMethod)
 #endif
 {
 #ifdef HAVE_OPENSSL
@@ -201,6 +203,7 @@ static int readHTTPheader(char* theRequestedURL,
   int errorCode=0;
   char *tmpStr;
 
+  *isPostMethod = FALSE;        /* Assume GET Method by default */
   thePw[0] = '\0';
   preLastChar = '\r';
   lastChar = '\n';
@@ -311,6 +314,7 @@ static int readHTTPheader(char* theRequestedURL,
 	      tmpStr = &lineStr[4];
 	    } else if((idxChar >= 4) && (strncmp(lineStr, "POST ", 5) == 0)) {
 	      tmpStr = &lineStr[5];
+              *isPostMethod = TRUE;
 	      /*
 		HEAD method could be supported with some litle modifications...
 		} else if((idxChar >= 4) && (strncmp(lineStr, "HEAD ", 5) == 0)) {
@@ -571,18 +575,18 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
 
   if(htmlTitle != NULL) theTitle = htmlTitle; else theTitle = title;
 
-  sendString((myGlobals.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE "\n" : "");
+  sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE "\n" : "");
   sendString("<HTML>\n<HEAD>\n");
-  sendString((myGlobals.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "");
+  sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "");
 
   if(title != NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TITLE>%s</TITLE>\n", title);
     sendString(buf);
-  } else if(myGlobals.w3c == TRUE)
+  } else if(myGlobals.runningPref.w3c == TRUE)
     sendString("<!-- w3c requires --><title>ntop page</title>\n");
 
   if((headerFlags & BITFLAG_HTML_NO_REFRESH) == 0) {
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", myGlobals.refreshRate);
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", myGlobals.runningPref.refreshRate);
     sendString(buf);
   }
 
@@ -633,11 +637,11 @@ void printHTMLtrailer(void) {
 	      ctime(&myGlobals.actTime));
   sendString(buf);
 
-  if(myGlobals.rFileName == NULL) {
+  if(myGlobals.runningPref.rFileName == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "[ntop uptime: %s]<br>\n",
 	      formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
   } else {
-    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "[from file %s]<br>\n", myGlobals.rFileName);
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "[from file %s]<br>\n", myGlobals.runningPref.rFileName);
   }
   sendString(buf);
 
@@ -670,7 +674,7 @@ void printHTMLtrailer(void) {
     sendString("<br>\n");
   }
 
-  if(myGlobals.rFileName != NULL) {
+  if(myGlobals.runningPref.rFileName != NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Listening on [%s]\n", CONST_PCAP_NW_INTERFACE_FILE);
   } else {   
     buf[0] = '\0';
@@ -692,10 +696,10 @@ void printHTMLtrailer(void) {
 
   len = strlen(buf);
 
-  if(*myGlobals.currentFilterExpression != '\0') {
+  if(*myGlobals.runningPref.currentFilterExpression != '\0') {
     safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER-len,
 		"with kernel (libpcap) filtering expression </B>\"%s\"<B>\n",
-		myGlobals.currentFilterExpression);
+		myGlobals.runningPref.currentFilterExpression);
   } else {
     safe_snprintf(__FILE__, __LINE__, &buf[len], LEN_GENERAL_WORK_BUFFER-len,
 		"without a kernel (libpcap) filtering expression\n");
@@ -717,11 +721,11 @@ void printHTMLtrailer(void) {
 
 void initAccessLog(void) {
 
-  if(myGlobals.accessLogFile) {
-    myGlobals.accessLogFd = fopen(myGlobals.accessLogFile, "a");
+  if(myGlobals.runningPref.accessLogFile) {
+    myGlobals.accessLogFd = fopen(myGlobals.runningPref.accessLogFile, "a");
     if(myGlobals.accessLogFd == NULL) {
       traceEvent(CONST_TRACE_ERROR, "Unable to create file %s. Access log is disabled.",
-		 myGlobals.accessLogFile);
+		 myGlobals.runningPref.accessLogFile);
     }
   }
 }
@@ -903,16 +907,16 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
                    HTTPstatus[statusIdx].statusCode, HTTPstatus[statusIdx].reasonPhrase);
   sendString(tmpStr);
 
-  if( (myGlobals.P3Pcp != NULL) || (myGlobals.P3Puri != NULL) ) {
+  if( (myGlobals.runningPref.P3Pcp != NULL) || (myGlobals.runningPref.P3Puri != NULL) ) {
       sendString("P3P: ");
-      if(myGlobals.P3Pcp != NULL) {
+      if(myGlobals.runningPref.P3Pcp != NULL) {
           safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "cp=\"%s\"%s", 
-                              myGlobals.P3Pcp, myGlobals.P3Puri != NULL ? ", " : "");
+                              myGlobals.runningPref.P3Pcp, myGlobals.runningPref.P3Puri != NULL ? ", " : "");
           sendString(tmpStr);
       }
     
-      if(myGlobals.P3Puri != NULL) {
-          safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "policyref=\"%s\"", myGlobals.P3Puri);
+      if(myGlobals.runningPref.P3Puri != NULL) {
+          safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "policyref=\"%s\"", myGlobals.runningPref.P3Puri);
           sendString(tmpStr);
        }
        sendString("\r\n");
@@ -1318,7 +1322,7 @@ int generateInternalPages(char* pageName) {
       sendString("<frameset cols=160,* framespacing=\"0\" border=\"0\" frameborder=\"0\">\n");
       sendString("    <frame src=\"" CONST_LEFTMENU_HTML "\" name=\"Menu\" "
                      "marginwidth=\"0\" marginheight=\"0\">\n");
-      sendString("    <frame src=\"" CONST_HOME_HTML "\" name=\"area\" "
+      sendString("    <frame src=\"" CONST_TRAFFIC_STATS_HTML "\" name=\"area\" "
                      "marginwidth=\"5\" marginheight=\"0\">\n");
       sendString("    <noframes>\n");
       sendString("    <body>\n\n");
@@ -1341,8 +1345,77 @@ int generateInternalPages(char* pageName) {
       sendString("<h3>Welcome to ntop!</h3>\n");
       sendString("<ol>\n");
 
+      sendString("<p><b>Summary</b></p>\n");
+      menuitem(CONST_TRAFFIC_STATS_HTML, "Traffic", "");
+      menuitem(CONST_HOSTS_INFO_HTML, "Hosts", "");
+      menuitem(CONST_SORT_DATA_THPT_STATS_HTML, "Network Load", "");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_AS_LIST_HTML, "ASN Info", "");
+          menuitem(CONST_VLAN_LIST_HTML, "VLAN Info", "");
+          if(myGlobals.flowsList != NULL)
+              menuitem(CONST_NET_FLOWS_HTML, "Net Flows", "");
+      }
+
+      if (!myGlobals.runningPref.printFcOnly) {
+          sendString("<p><b>All Protocols</b></p>\n");
+          menuitem(CONST_SORT_DATA_PROTOS_HTML, "Traffic", "");
+          menuitem(CONST_SORT_DATA_THPT_HTML, "Throughput", "");
+          menuitem(CONST_SORT_DATA_HOST_TRAFFIC_HTML, "Activity", "");
+          
+          sendString("<p><b>IP Summary</b></p>\n");
+          menuitem(CONST_SORT_DATA_IP_HTML, "Traffic", "");
+          menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
+          menuitem(CONST_DOMAIN_STATS_HTML, "Domain", "");
+          menuitem(CONST_IP_PROTO_DISTRIB_HTML, "Distribution", "");
+          menuitem(CONST_IP_L_2_L_HTML, "Local &raquo; Local", "");
+          menuitem(CONST_IP_L_2_R_HTML, "Local &raquo; Remote", "");
+          menuitem(CONST_IP_R_2_L_HTML, "Remote &raquo; Local", "");
+          menuitem(CONST_IP_R_2_R_HTML, "Remote &raquo; Remote", "");
+          
+          sendString("<p><b>Local IP</b></p>\n");
+          menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
+          menuitem(CONST_IP_PROTO_USAGE_HTML, "Ports Used", "");
+          menuitem(CONST_ACTIVE_TCP_SESSIONS_HTML, "Active TCP Sessions", "");
+          menuitem(CONST_HOSTS_LOCAL_FINGERPRINT_HTML, "Hosts Fingerprint", "");
+          menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Local Matrix", "");
+      }
+
+      if (!myGlobals.runningPref.noFc) {
+          sendString("<p><b>FibreChannel</b></p>\n");
+          /*
+            Fibre Channel:  Traffic  |   Throughput  |   Activity  |   Hosts  |   Traffic Per Port  
+            |   Sessions  |   VSANs  |   VSAN Summary 
+          */
+          menuitem(CONST_FC_DATA_HTML, "Traffic", "");
+          menuitem(CONST_FC_THPT_HTML, "Throughput", "");
+          menuitem(CONST_FC_ACTIVITY_HTML, "Activty", "");
+          menuitem(CONST_FC_HOSTS_INFO_HTML, "Hosts", "");
+          menuitem(CONST_FC_TRAFFIC_HTML, "Throughput", "");
+          menuitem(CONST_FC_SESSIONS_HTML, "Sessions", "");
+          menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
+          menuitem(CONST_VSAN_DISTRIB_HTML, "VSAN Summary", "");
+
+          sendString("<p><b>SCSI</b></p>\n");
+          menuitem(CONST_SCSI_BYTES_HTML, "Bytes", "");
+          menuitem(CONST_SCSI_STATUS_HTML, "Status", "");
+          menuitem(CONST_SCSI_TIMES_HTML, "Times", "");
+          menuitem(CONST_SCSI_TM_HTML, "Task Management", "");
+      }
+          
+      sendString("<p><b>Admin</b></p>\n");
+      menuitem(CONST_SHOW_PLUGINS_HTML, "Plugins", "");
+      if(!myGlobals.runningPref.mergeInterfaces)
+          menuitem(CONST_SWITCH_NIC_HTML, "Switch NIC", "");
+      menuitem("dump.html", "Dump Data", "");
+      menuitem(CONST_VIEW_LOG_HTML, "Log", "");
+      menuitem(CONST_CHANGE_FILTER_HTML, "Change Filter", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_RESET_STATS_HTML, "Reset Statistics", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHOW_USERS_HTML, "show Users", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHOW_URLS_HTML, "show URLs", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHUTDOWN_NTOP_HTML, "Shutdown", CONST_IMG_LOCK "&nbsp;");
+
       sendString("<p><b>About</b></p>\n");
-      menuitem(CONST_HOME_UNDERSCORE_HTML,  "What's ntop?", "");
+      menuitem(CONST_ABTNTOP_HTML,  "What's ntop?", "");
       menuitem(CONST_INFO_NTOP_HTML, "Configuration", "");
       menuitem(CONST_CREDITS_HTML, "Credits", "");
       menuitem(CONST_MAN_NTOP_HTML, "Man Page", "");
@@ -1353,69 +1426,6 @@ int generateInternalPages(char* pageName) {
                "<img src=\"/help.png\" alt=\"HELP! page\" width=\"20\" height=\"20\" "
                  "border=\"0\" align=\"middle\">");
 
-      sendString("<p><b>Summary</b></p>\n");
-      menuitem(CONST_TRAFFIC_STATS_HTML, "Traffic", "");
-      menuitem(CONST_HOSTS_INFO_HTML, "Hosts", "");
-      menuitem(CONST_SORT_DATA_THPT_STATS_HTML, "Network Load", "");
-      menuitem(CONST_AS_LIST_HTML, "ASN Info", "");
-      menuitem(CONST_VLAN_LIST_HTML, "VLAN Info", "");
-      if(myGlobals.flowsList != NULL)
-        menuitem(CONST_NET_FLOWS_HTML, "Net Flows", "");
-
-      sendString("<p><b>All Protocols</b></p>\n");
-      menuitem(CONST_SORT_DATA_PROTOS_HTML, "Traffic", "");
-      menuitem(CONST_SORT_DATA_THPT_HTML, "Throughput", "");
-      menuitem(CONST_SORT_DATA_HOST_TRAFFIC_HTML, "Activity", "");
-
-      sendString("<p><b>IP Summary</b></p>\n");
-      menuitem(CONST_SORT_DATA_IP_HTML, "Traffic", "");
-      menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
-      menuitem(CONST_DOMAIN_STATS_HTML, "Domain", "");
-      menuitem(CONST_IP_PROTO_DISTRIB_HTML, "Distribution", "");
-      menuitem(CONST_IP_L_2_L_HTML, "Local &raquo; Local", "");
-      menuitem(CONST_IP_L_2_R_HTML, "Local &raquo; Remote", "");
-      menuitem(CONST_IP_R_2_L_HTML, "Remote &raquo; Local", "");
-      menuitem(CONST_IP_R_2_R_HTML, "Remote &raquo; Remote", "");
-
-      sendString("<p><b>Local IP</b></p>\n");
-      menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
-      menuitem(CONST_IP_PROTO_USAGE_HTML, "Ports Used", "");
-      menuitem(CONST_ACTIVE_TCP_SESSIONS_HTML, "Active TCP Sessions", "");
-      menuitem(CONST_HOSTS_LOCAL_FINGERPRINT_HTML, "Hosts Fingerprint", "");
-      menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Local Matrix", "");
-
-      sendString("<p><b>FibreChannel</b></p>\n");
-      /*
-	Fibre Channel:  Traffic  |   Throughput  |   Activity  |   Hosts  |   Traffic Per Port  
-	|   Sessions  |   VSANs  |   VSAN Summary 
-      */
-      menuitem(CONST_FC_DATA_HTML, "Traffic", "");
-      menuitem(CONST_FC_THPT_HTML, "Throughput", "");
-      menuitem(CONST_FC_ACTIVITY_HTML, "Activty", "");
-      menuitem(CONST_FC_HOSTS_INFO_HTML, "Hosts", "");
-      menuitem(CONST_FC_TRAFFIC_HTML, "Throughput", "");
-      menuitem(CONST_FC_SESSIONS_HTML, "Sessions", "");
-      menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
-      menuitem(CONST_VSAN_DISTRIB_HTML, "VSAN Summary", "");
-
-      sendString("<p><b>SCSI</b></p>\n");
-      menuitem(CONST_SCSI_BYTES_HTML, "Bytes", "");
-      menuitem(CONST_SCSI_STATUS_HTML, "Status", "");
-      menuitem(CONST_SCSI_TIMES_HTML, "Times", "");
-      menuitem(CONST_SCSI_TM_HTML, "Task Management", "");
-
-      sendString("<p><b>Admin</b></p>\n");
-      menuitem(CONST_SHOW_PLUGINS_HTML, "Plugins", "");
-      if(!myGlobals.mergeInterfaces)
-        menuitem(CONST_SWITCH_NIC_HTML, "Switch NIC", "");
-      menuitem("dump.html", "Dump Data", "");
-      menuitem(CONST_VIEW_LOG_HTML, "Log", "");
-      menuitem(CONST_CHANGE_FILTER_HTML, "Change Filter", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_RESET_STATS_HTML, "Reset Statistics", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHOW_USERS_HTML, "show Users", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHOW_URLS_HTML, "show URLs", CONST_IMG_LOCK "&nbsp;");
-      menuitem(CONST_SHUTDOWN_NTOP_HTML, "Shutdown", CONST_IMG_LOCK "&nbsp;");
-
       sendString("</ol>\n"
                  "<p><center><b>&copy; 1998-2004 by "
                  "<a href=\"http://luca.ntop.org/\">Luca Deri</a></b></center></p>\n"
@@ -1425,7 +1435,7 @@ int generateInternalPages(char* pageName) {
 #undef menuitem
 
     if(strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
-      if(myGlobals.filterExpressionInExtraFrame){
+      if(myGlobals.runningPref.filterExpressionInExtraFrame){
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
         sendString("<!-- Internally generated page -->\n");
         sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
@@ -1449,7 +1459,400 @@ int generateInternalPages(char* pageName) {
       return 0;
     }
 
-    if(strcasecmp(pageName, CONST_HOME_HTML) == 0) {
+    if(strcasecmp(pageName, CONST_ABTNTOP_HTML) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      sendString("<!-- Internally generated page -->\n");
+      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
+      sendString("<FONT FACE=Helvetica>\n<HR>\n");
+      sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
+      sendString("currently using the network and reports information concerning the IP\n");
+      sendString("(Internet Protocol) and Fibre Channel (FC) traffic generated by each host. The traffic is \n");
+      sendString("sorted according to host and protocol. Protocols (user configurable) include:\n");
+      sendString("<ul><li>TCP/UDP/ICMP<li>(R)ARP<li>IPX<li>DLC<li>"
+		 "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
+		 "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
+      sendString("NFS<li>X11</ul>\n<p>\n");
+      sendString("<li>Fibre Channel<ul><li>Control Traffic - SW2,GS3,ELS<li>SCSI</ul></ul><p>\n");
+      sendString("<p><b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
+      sendString("open source software</A> and encourages everyone to modify, improve\n ");
+      sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
+      sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
+      sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
+      sendString("<A HREF=\"mailto:&#110;&#116;&#111;&#112;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\"> mailing list</A>.</p>\n");
+      sendString("<p>For information on <b>ntop</b> and information privacy, see ");
+      sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
+      return 0;
+    }
+    return 1; /* Not in this bunch, boss */
+}
+
+/* **************************************** */
+
+int generateNewInternalPages(char* pageName) {
+  if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
+      sendString("<!-- Internally generated page -->\n");
+      sendString("<frameset cols=160,* framespacing=\"0\" border=\"0\" frameborder=\"0\">\n");
+      sendString("    <frame src=\"" CONST_LEFTMENU_HTML "\" name=\"Menu\" "
+                 "marginwidth=\"0\" marginheight=\"0\">\n");
+      if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) {
+          sendString("    <frame src=\"" CONST_CONFIG_NTOP_HTML "\" name=\"area\" "
+                     "marginwidth=\"5\" marginheight=\"0\">\n");
+      }
+      else {
+          sendString("    <frame src=\"" CONST_TRAFFIC_STATS_HTML "\" name=\"area\" "
+                     "marginwidth=\"5\" marginheight=\"0\">\n");
+      }
+      sendString("    <noframes>\n");
+      sendString("    <body>\n\n");
+      sendString("    </body>\n");
+      sendString("    </noframes>\n");
+      sendString("</frameset>\n");
+      sendString("</html>\n");
+      return 0;
+    }
+
+#define menuitem(const,title,img) sendString("<li><a href=\"" const "\" alt=\"" title "\" target=\"area\">" img title "</a></li>\n");
+
+    if((strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
+       (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0)) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
+      sendString("<!-- Internally generated page -->\n");
+      sendString("<!-- This is a menu for the internally generated frameset and is"
+                 "     usable for those whose browsers do not support frames... -->\n");
+      sendString("<h3>Welcome to ntop!</h3>\n");
+      sendString("<ol>\n");
+
+      sendString("<p><b>Summary</b></p>\n");
+      menuitem(CONST_TRAFFIC_STATS_HTML, "Traffic", "");
+      menuitem(CONST_SORT_DATA_THPT_STATS_HTML, "Network Load", "");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_HOSTS_INFO_HTML, "Hosts", "");
+          menuitem(CONST_AS_LIST_HTML, "ASN Info", "");
+          menuitem(CONST_VLAN_LIST_HTML, "VLAN Info", "");
+          menuitem(CONST_HOSTS_LOCAL_FINGERPRINT_HTML, "Hosts Fingerprint", "");
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_FC_HOSTS_INFO_HTML, "FC_Ports", "");
+          menuitem(CONST_VSAN_DISTRIB_HTML, "VSANs Summary", "");
+      }
+
+      sendString("<p><b>Traffic</b></p>\n");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_DOMAIN_STATS_HTML, "Domain", "");
+          menuitem(CONST_IP_L_2_L_HTML, "Local &raquo; Local", "");
+          menuitem(CONST_IP_L_2_R_HTML, "Local &raquo; Remote", "");
+          menuitem(CONST_IP_R_2_L_HTML, "Remote &raquo; Local", "");
+          menuitem(CONST_IP_R_2_R_HTML, "Remote &raquo; Remote", "");
+          menuitem(CONST_IP_PROTO_DISTRIB_HTML, "IP Distribution", "");
+          menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Local Matrix", "");
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_FC_TRAFFIC_HTML, "FC_Ports", "");
+          menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
+      }
+      
+      sendString("<p><b>Throughput</b></p>\n");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_SORT_DATA_THPT_HTML, "IP_Hosts", "");
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_FC_THPT_HTML, "FC_Ports", "");
+      }
+
+      sendString("<p><b>Activity</b></p>\n");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_SORT_DATA_HOST_TRAFFIC_HTML, "IP_Hosts", "");
+          menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
+          menuitem(CONST_IP_PROTO_USAGE_HTML, "Local Ports Used", "");
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_FC_ACTIVITY_HTML, "FC_Ports", "");
+      }
+
+      sendString("<p><b>Protocols</b></p>\n");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_SORT_DATA_PROTOS_HTML, "All Protocols", "");
+          /* menuitem(CONST_SORT_DATA_ETH_PROTOS_HTML, "Ethernet", ""); */
+          menuitem(CONST_SORT_DATA_IP_HTML, "TCP", "");
+          menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_FC_DATA_HTML, "Fibre Channel", "");
+      }
+
+      sendString("<p><b>Sessions</b></p>\n");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_ACTIVE_TCP_SESSIONS_HTML, "Local Active TCP Sessions", "");
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_FC_SESSIONS_HTML, "FC Sessions", "");
+          menuitem(CONST_SCSI_BYTES_HTML, "SCSI Sessions", "");
+          menuitem(CONST_SCSI_STATUS_HTML, "SCSI Status", "");
+          menuitem(CONST_SCSI_TM_HTML, "SCSI Task Management", "");
+      }
+
+      sendString("<p><b>Latencies</b></p>\n");
+      if (!myGlobals.runningPref.printFcOnly) {
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_SCSI_TIMES_HTML, "SCSI", "");
+      }
+
+      sendString("<p><b>Admin</b></p>\n");
+      menuitem(CONST_CONFIG_NTOP_HTML, "Configure ntop", "");
+      menuitem(CONST_SHOW_PLUGINS_HTML, "Plugins", "");
+      if(!myGlobals.runningPref.mergeInterfaces)
+          menuitem(CONST_SWITCH_NIC_HTML, "Switch NIC", "");
+      menuitem("dump.html", "Dump Data", "");
+      menuitem(CONST_VIEW_LOG_HTML, "Log", "");
+      menuitem(CONST_CHANGE_FILTER_HTML, "Change Filter", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_RESET_STATS_HTML, "Reset Statistics", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHOW_USERS_HTML, "show Users", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHOW_URLS_HTML, "show URLs", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHUTDOWN_NTOP_HTML, "Shutdown", CONST_IMG_LOCK "&nbsp;");
+
+      sendString("<p><b>About</b></p>\n");
+      menuitem(CONST_ABTNTOP_HTML,  "What's ntop?", "");
+      menuitem(CONST_INFO_NTOP_HTML, "Show Configuration", "");
+      menuitem(CONST_CREDITS_HTML, "Credits", "");
+      menuitem(CONST_MAN_NTOP_HTML, "Man Page", "");
+      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report", 
+               "<img src=\"/bug.png\" alt=\"create ntop problem report\" "
+                "width=\"23\" height=\"20\" border=\"0\" align=\"middle\">");
+      menuitem("ntophelp.html", "Help Me!", 
+               "<img src=\"/help.png\" alt=\"HELP! page\" width=\"20\" height=\"20\" "
+                 "border=\"0\" align=\"middle\">");
+
+      sendString("</ol>\n"
+                 "<p><center><b>&copy; 1998-2004 by "
+                 "<a href=\"http://luca.ntop.org/\">Luca Deri</a></b></center></p>\n"
+                 "</body>\n</html>\n");
+      return 0;
+    }
+#undef menuitem
+
+    if(strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
+      if(myGlobals.runningPref.filterExpressionInExtraFrame){
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+        sendString("<!-- Internally generated page -->\n");
+        sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
+        sendString("border=\"0\" frameborder=\"0\">\n");
+        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"2\" ");
+        sendString("marginheight=\"2\" name=\"area\">\n");
+        sendString("    <frame src=\"" CONST_FILTER_INFO_HTML"\" marginwidth=\"0\" ");
+        sendString("marginheight=\"0\" name=\"filterinfo\">\n");
+        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
+        sendString("  </frameset>\n</html>\n");
+      } else {	/* frame so that "area" is defined */
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+        sendString("<!-- Internally generated page -->\n");
+        sendString("<html>\n  <frameset rows=\"100%,*\" framespacing=\"0\" ");
+        sendString("border=\"0\" frameborder=\"0\">\n");
+        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"0\" ");
+        sendString("marginheight=\"0\" name=\"area\">\n");
+        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
+        sendString("  </frameset>\n</html>\n");
+      }
+      return 0;
+    }
+
+    if(strcasecmp(pageName, CONST_ABTNTOP_HTML) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      sendString("<!-- Internally generated page -->\n");
+      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
+      sendString("<FONT FACE=Helvetica>\n<HR>\n");
+      sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
+      sendString("currently using the network and reports information concerning the IP\n");
+      sendString("(Internet Protocol) and Fibre Channel (FC) traffic generated by each host. The traffic is \n");
+      sendString("sorted according to host and protocol. Protocols (user configurable) include:\n");
+      sendString("<ul><li>TCP/UDP/ICMP<li>(R)ARP<li>IPX<li>DLC<li>"
+		 "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
+		 "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
+      sendString("NFS<li>X11</ul>\n<p>\n");
+      sendString("<li>Fibre Channel<ul><li>Control Traffic - SW2,GS3,ELS<li>SCSI</ul></ul><p>\n");
+      sendString("<p><b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
+      sendString("open source software</A> and encourages everyone to modify, improve\n ");
+      sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
+      sendString("to the enclosed licence (see COPYING).</p><p>Problems, bugs, questions, ");
+      sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
+      sendString("<A HREF=\"mailto:&#110;&#116;&#111;&#112;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\"> mailing list</A>.</p>\n");
+      sendString("<p>For information on <b>ntop</b> and information privacy, see ");
+      sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.</p>\n</font>");
+      return 0;
+    }
+    return 1; /* Not in this bunch, boss */
+}
+
+/* **************************************** */
+
+int generateNew1InternalPages(char* pageName) {
+  if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
+      sendString("<!-- Internally generated page -->\n");
+      sendString("<frameset cols=160,* framespacing=\"0\" border=\"0\" frameborder=\"0\">\n");
+      sendString("    <frame src=\"" CONST_LEFTMENU_HTML "\" name=\"Menu\" "
+                     "marginwidth=\"0\" marginheight=\"0\">\n");
+      sendString("    <frame src=\"" CONST_TRAFFIC_STATS_HTML "\" name=\"area\" "
+                     "marginwidth=\"5\" marginheight=\"0\">\n");
+      sendString("    <noframes>\n");
+      sendString("    <body>\n\n");
+      sendString("    </body>\n");
+      sendString("    </noframes>\n");
+      sendString("</frameset>\n");
+      sendString("</html>\n");
+      return 0;
+    }
+
+#define menuitem(const,title,img) sendString("<li><a href=\"" const "\" alt=\"" title "\" target=\"area\">" img title "</a></li>\n");
+
+    if((strcasecmp(pageName, CONST_LEFTMENU_HTML) == 0) ||
+       (strcasecmp(pageName, CONST_LEFTMENU_NOJS_HTML) == 0)) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
+      sendString("<!-- Internally generated page -->\n");
+      sendString("<!-- This is a menu for the internally generated frameset and is"
+                 "     usable for those whose browsers do not support frames... -->\n");
+      sendString("<h3>Welcome to ntop!</h3>\n");
+      sendString("<ol>\n");
+
+      sendString("<p><b>Summary</b></p>\n");
+      menuitem(CONST_TRAFFIC_STATS_HTML, "Traffic", "");
+      menuitem(CONST_SORT_DATA_THPT_STATS_HTML, "Network Load", "");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_HOSTS_INFO_HTML, "Hosts", "");
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_FC_HOSTS_INFO_HTML, "FC_Ports", "");
+      }
+
+      sendString("<p><b>Network</b></p>\n");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_VLAN_LIST_HTML, "VLAN Info", "");
+          menuitem(CONST_AS_LIST_HTML, "ASN Info", "");
+          menuitem(CONST_DOMAIN_STATS_HTML, "Domain", "");
+      }
+
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
+      }
+      
+      sendString("<p><b>Protocols</b></p>\n");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_SORT_DATA_PROTOS_HTML, "All Protocols", "");
+          /* menuitem(CONST_SORT_DATA_ETH_PROTOS_HTML, "Ethernet", ""); */
+          menuitem(CONST_IP_PROTO_DISTRIB_HTML, "IP", "");
+          menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_FC_DATA_HTML, "Fibre Channel", "");
+      }
+
+      if (!myGlobals.runningPref.printFcOnly) {
+          sendString("<p><b>IP Hosts</b></p>\n");
+          menuitem(CONST_SORT_DATA_IP_HTML, "Traffic", "");
+          menuitem(CONST_SORT_DATA_THPT_HTML, "Throuhhput", "");
+          menuitem(CONST_SORT_DATA_HOST_TRAFFIC_HTML, "Activity", "");
+          menuitem(CONST_IP_L_2_L_HTML, "Local &raquo; Local", "");
+          menuitem(CONST_IP_L_2_R_HTML, "Local &raquo; Remote", "");
+          menuitem(CONST_IP_R_2_L_HTML, "Remote &raquo; Local", "");
+          menuitem(CONST_IP_R_2_R_HTML, "Remote &raquo; Remote", "");
+          
+          sendString ("<p><b>Local IP</b></p>\n");
+          menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
+          menuitem(CONST_IP_PROTO_USAGE_HTML, "Local Ports Used", "");
+          menuitem(CONST_HOSTS_LOCAL_FINGERPRINT_HTML, "Hosts Fingerprint", "");
+          menuitem(CONST_IP_TRAFFIC_MATRIX_HTML, "Traffic Matrix", "");
+      }
+
+      if (!myGlobals.runningPref.noFc) {
+          sendString("<p><b>FC_Ports</b></p>\n");
+          menuitem(CONST_FC_TRAFFIC_HTML, "FC_Ports", "");
+          menuitem(CONST_FC_THPT_HTML, "Throughput", "");
+          menuitem(CONST_FC_ACTIVITY_HTML, "Activity", "");
+      }
+
+      sendString("<p><b>Sessions</b></p>\n");
+      if (!myGlobals.runningPref.printFcOnly) {
+          menuitem(CONST_ACTIVE_TCP_SESSIONS_HTML, "Local Active TCP Sessions", "");
+          if(myGlobals.flowsList != NULL)
+              menuitem(CONST_NET_FLOWS_HTML, "Net Flows", "");
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_FC_SESSIONS_HTML, "FC Sessions", "");
+          menuitem(CONST_SCSI_BYTES_HTML, "SCSI Sessions", "");
+          menuitem(CONST_SCSI_STATUS_HTML, "SCSI Status", "");
+          menuitem(CONST_SCSI_TM_HTML, "SCSI Task Management", "");
+      }
+
+      sendString("<p><b>Latencies</b></p>\n");
+      if (!myGlobals.runningPref.printFcOnly) {
+      }
+      if (!myGlobals.runningPref.noFc) {
+          menuitem(CONST_SCSI_TIMES_HTML, "SCSI", "");
+      }
+
+      sendString("<p><b>Admin</b></p>\n");
+      menuitem(CONST_SHOW_PLUGINS_HTML, "Plugins", "");
+      if(!myGlobals.runningPref.mergeInterfaces)
+          menuitem(CONST_SWITCH_NIC_HTML, "Switch NIC", "");
+      menuitem("dump.html", "Dump Data", "");
+      menuitem(CONST_VIEW_LOG_HTML, "Log", "");
+      menuitem(CONST_CHANGE_FILTER_HTML, "Change Filter", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_RESET_STATS_HTML, "Reset Statistics", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHOW_USERS_HTML, "show Users", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHOW_URLS_HTML, "show URLs", CONST_IMG_LOCK "&nbsp;");
+      menuitem(CONST_SHUTDOWN_NTOP_HTML, "Shutdown", CONST_IMG_LOCK "&nbsp;");
+
+      sendString("<p><b>About</b></p>\n");
+      menuitem(CONST_ABTNTOP_HTML,  "What's ntop?", "");
+      menuitem(CONST_INFO_NTOP_HTML, "Configuration", "");
+      menuitem(CONST_CREDITS_HTML, "Credits", "");
+      menuitem(CONST_MAN_NTOP_HTML, "Man Page", "");
+      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report", 
+               "<img src=\"/bug.png\" alt=\"create ntop problem report\" "
+                "width=\"23\" height=\"20\" border=\"0\" align=\"middle\">");
+      menuitem("ntophelp.html", "Help Me!", 
+               "<img src=\"/help.png\" alt=\"HELP! page\" width=\"20\" height=\"20\" "
+                 "border=\"0\" align=\"middle\">");
+
+      sendString("</ol>\n"
+                 "<p><center><b>&copy; 1998-2004 by "
+                 "<a href=\"http://luca.ntop.org/\">Luca Deri</a></b></center></p>\n"
+                 "</body>\n</html>\n");
+      return 0;
+    }
+#undef menuitem
+
+    if(strcasecmp(pageName, CONST_HOME_UNDERSCORE_HTML) == 0) {
+      if(myGlobals.runningPref.filterExpressionInExtraFrame){
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+        sendString("<!-- Internally generated page -->\n");
+        sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
+        sendString("border=\"0\" frameborder=\"0\">\n");
+        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"2\" ");
+        sendString("marginheight=\"2\" name=\"area\">\n");
+        sendString("    <frame src=\"" CONST_FILTER_INFO_HTML"\" marginwidth=\"0\" ");
+        sendString("marginheight=\"0\" name=\"filterinfo\">\n");
+        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
+        sendString("  </frameset>\n</html>\n");
+      } else {	/* frame so that "area" is defined */
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+        sendString("<!-- Internally generated page -->\n");
+        sendString("<html>\n  <frameset rows=\"100%,*\" framespacing=\"0\" ");
+        sendString("border=\"0\" frameborder=\"0\">\n");
+        sendString("    <frame src=\"" CONST_HOME_HTML "\" marginwidth=\"0\" ");
+        sendString("marginheight=\"0\" name=\"area\">\n");
+        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
+        sendString("  </frameset>\n</html>\n");
+      }
+      return 0;
+    }
+
+    if(strcasecmp(pageName, CONST_ABTNTOP_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       sendString("<!-- Internally generated page -->\n");
       printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
@@ -1487,7 +1890,7 @@ static int returnHTTPPage(char* pageName,
                           char *agent,
                           char *referer,
                           char *requestedLanguage[],
-                          int numLang)
+                          int numLang, int isPostMethod)
 #else
 static int returnHTTPPage(char* pageName,
                           int postLen,
@@ -1495,12 +1898,12 @@ static int returnHTTPPage(char* pageName,
 			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent,
-                          char *referer)
+                          char *referer, int isPostMethod)
 #endif
 {
   char *questionMark, *pageURI, *token;
   int sortedColumn = 0, printTrailer=1, idx;
-  int errorCode=0, pageNum = 0, found=0, portNr=0, vsanNr=0;
+  int errorCode=0, pageNum = 0, found=0, portNr=0;
   struct stat statbuf;
   FILE *fd = NULL;
   char tmpStr[512], *domainNameParm = NULL, *minus;
@@ -1509,7 +1912,8 @@ static int returnHTTPPage(char* pageName,
   HostsDisplayPolicy showHostsMode = myGlobals.hostsDisplayPolicy;
   LocalityDisplayPolicy showLocalityMode = myGlobals.localityDisplayPolicy;
   int showFcHostsPage = showHostMainPage;
-  u_short vsanId;
+  int showPrefPage    = showPrefBasicPref;
+  int vsanId = 0;
 #if !defined(WIN32) && defined(PARM_USE_CGI)
   int rc;
 #endif
@@ -1546,12 +1950,12 @@ static int returnHTTPPage(char* pageName,
 	domainNameParm = strdup(&tkn[4]);
       } else if(strncmp(tkn, "port=", 5) == 0) {
 	portNr = atoi(&tkn[5]);
-      } else if(strncmp(tkn, "vsan=", 5) == 0) {
-	vsanNr = atoi(&tkn[5]);
       } else if(strncmp(tkn, "unit=", 5) == 0) {
 	showBytes = atoi(&tkn[5]);
       } else if(strncmp(tkn, "vlan=", 5) == 0) {
 	vlanId = atoi(&tkn[5]);
+      } else if(strncmp(tkn, "vsan=", 5) == 0) {
+	vsanId = atoi(&tkn[5]);
       } else if(strncmp(tkn, "showH=", 6) == 0) {
 	showHostsMode = atoi(&tkn[6]);
 	if((showHostsMode < showAllHosts) || (showHostsMode > showOnlyRemoteHosts))
@@ -1563,6 +1967,9 @@ static int returnHTTPPage(char* pageName,
       } else if(strncmp(tkn, "showF=", 6) == 0) {
 	/* This is the FC Show Hosts Mode */
 	showFcHostsPage = atoi(&tkn[6]);
+      } else if(strncmp(tkn, "showD=", 6) == 0) {
+	/* This is the configure NTOP preferences Page */
+	showPrefPage = atoi(&tkn[6]);
       } else if(strncmp(tkn, "page=", 5) == 0) {
 	pageNum = atoi(&tkn[5]);
 	if(pageNum < 0) pageNum = 0;
@@ -1764,6 +2171,22 @@ b    }
     }
   }
 
+  if(strncasecmp(pageName, CONST_CONFIG_NTOP_HTML, strlen(CONST_CONFIG_NTOP_HTML)) == 0) {
+      handleNtopConfig (pageName, showPrefPage, isPostMethod ? postLen : 0);
+      return(0);
+  }
+
+  if ((strncasecmp(pageName, CONST_INDEX_HTML, strlen(CONST_INDEX_HTML)) == 0)
+      || (strncasecmp(pageName, CONST_LEFTMENU_HTML,
+                      strlen(CONST_LEFTMENU_HTML)) == 0)) {
+      if (generateNewInternalPages(pageName) == 0) {
+          /* We did the work in the function except for this */
+          if(strcasecmp(pageName, CONST_HOME_HTML) != 0) 
+              printTrailer=0;
+      }
+      return (0);
+  }
+  
   /*
     Putting this here (and not on top of this function)
     helps because at least a partial respose
@@ -1887,20 +2310,39 @@ b    }
     storePrefsValue("globals.displayPrivacyNotice", "2");
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PRIVACY: Flag forced, notice will display each run");
     returnHTTPredirect(CONST_PRIVACYNOTICE_HTML);
-  } else if(strncasecmp(pageName, CONST_TRAFFIC_STATS_HTML,
-			strlen(CONST_TRAFFIC_STATS_HTML)) == 0) {
+  } else if(strncasecmp(pageName, CONST_TRAFFIC_SUMMARY_HTML,
+			strlen(CONST_TRAFFIC_SUMMARY_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     /*
       It needs to go here otherwise when we update the pcap dropped packets
       this value is updated only in the child process and not
       into the main one.
     */
-    printTrafficStatistics(revertOrder);
+    printTrafficSummary(revertOrder);
+  } else if(strncasecmp(pageName, CONST_TRAFFIC_STATS_HTML,
+			strlen(CONST_TRAFFIC_STATS_HTML)) == 0) {
+      if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) {
+          printFlagedWarning ("<I>Configure Ntop first. No packet captures analyzed</I>");
+          return (0);
+      }
+      
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      /*
+        It needs to go here otherwise when we update the pcap dropped packets
+        this value is updated only in the child process and not
+        into the main one.
+      */
+      printTrafficStatistics(revertOrder);
   } else {
+      if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) {
+          printFlagedWarning ("<I>Configure Ntop first. No packet captures analyzed</I>");
+          return (0);
+      }
+      
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
 
-    if(!myGlobals.debugMode) {
+    if(!myGlobals.runningPref.debugMode) {
 #ifdef HANDLE_DIED_CHILD
       handleDiedChild(0); /*
 			    Workaround because on this OpenBSD and
@@ -1914,7 +2356,7 @@ b    }
        * If no facility was set through -L | --use-syslog=facility
        * then force the default
        */
-      if(myGlobals.useSyslog == FLAG_SYSLOG_NONE) {
+      if(myGlobals.runningPref.useSyslog == FLAG_SYSLOG_NONE) {
 	static char messageSent = 0;
 
 	if(!messageSent) {
@@ -1977,7 +2419,7 @@ b    }
 #ifdef HAVE_OPENSSL
 	  if(myGlobals.sslInitialized) closeNwSocket(&myGlobals.sock_ssl);
 #endif /* HAVE_OPENSSL */
-	  if(myGlobals.webPort > 0) closeNwSocket(&myGlobals.sock);
+	  if(myGlobals.runningPref.webPort > 0) closeNwSocket(&myGlobals.sock);
 
 	  signal(SIGALRM, quitNow);
 	  alarm(15); /* Don't freeze */
@@ -1997,7 +2439,7 @@ b    }
     } else
 #endif
 
-      if(generateInternalPages(pageName) == 0) {
+      if(generateNewInternalPages(pageName) == 0) {
 	/* We did the work in the function except for this */
 	if(strcasecmp(pageName, CONST_HOME_HTML) != 0) 
 	  printTrailer=0;
@@ -2019,7 +2461,7 @@ b    }
 	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vlanId);
       } else if(strncasecmp(pageName, CONST_FC_HOSTS_INFO_HTML,
 			    strlen(CONST_FC_HOSTS_INFO_HTML)) == 0) {
-        printFcHostsInfo(sortedColumn, revertOrder, pageNum);
+        printFcHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vsanId);
       } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_FINGERPRINT_HTML, 
 			    strlen(CONST_HOSTS_LOCAL_FINGERPRINT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2102,7 +2544,7 @@ b    }
       } else if(strcasecmp(pageName, CONST_IP_PROTO_DISTRIB_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHTMLheader(NULL, NULL, 0);
-	printIpProtocolDistribution(FLAG_HOSTLINK_TEXT_FORMAT, revertOrder);
+	printIpProtocolDistribution(FLAG_HOSTLINK_TEXT_FORMAT, revertOrder, TRUE);
       } else if(strcasecmp(pageName, CONST_IP_TRAFFIC_MATRIX_HTML) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printIpTrafficMatrix();
@@ -2131,7 +2573,7 @@ b    }
 	drawVsanStatsGraph(myGlobals.actualReportDeviceId);
       } else if(strncasecmp (pageName, CONST_VSAN_DETAIL_HTML, strlen (CONST_VSAN_DETAIL_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printVsanDetailedInfo (vsanNr, myGlobals.actualReportDeviceId);
+	printVsanDetailedInfo (vsanId, myGlobals.actualReportDeviceId);
       } else if(strncasecmp(pageName, CONST_FC_SESSIONS_HTML,
 			    strlen(CONST_FC_SESSIONS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2509,10 +2951,10 @@ b    }
 	sendString(" and turned it into a first class network monitoring tool. Many thanks guys!</p>");
       } else if(strncasecmp(pageName, CONST_INFO_NTOP_HTML, strlen(CONST_INFO_NTOP_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printNtopConfigInfo(FALSE);
+	printNtopConfigInfo(FALSE, &myGlobals.runningPref);
       } else if(strncasecmp(pageName, CONST_TEXT_INFO_NTOP_HTML, strlen(CONST_TEXT_INFO_NTOP_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
-	printNtopConfigInfo(TRUE);
+	printNtopConfigInfo(TRUE, &myGlobals.runningPref);
 	printTrailer = 0;
       } else if(strncasecmp(pageName, CONST_PROBLEMRPT_HTML, strlen(CONST_PROBLEMRPT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0, 1);
@@ -2881,6 +3323,7 @@ void handleHTTPrequest(HostAddr from) {
 #endif
 
   char tmpStr[512];
+  int isPostMethod = FALSE;
 
   myGlobals.numHandledRequests[myGlobals.newSock > 0]++;
 
@@ -2944,7 +3387,8 @@ void handleHTTPrequest(HostAddr from) {
                           referer,
                           sizeof(referer),
                           workLanguage,
-                          sizeof(workLanguage));
+                          sizeof(workLanguage),
+                          &isPostMethod);
 #else
  postLen = readHTTPheader(requestedURL,
                           sizeof(requestedURL),
@@ -2953,7 +3397,8 @@ void handleHTTPrequest(HostAddr from) {
                           agent,
                           sizeof(agent),
                           referer,
-                          sizeof(referer));
+                          sizeof(referer),
+                          &isPostMethod);
 #endif
 
 #if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
@@ -3109,7 +3554,7 @@ void handleHTTPrequest(HostAddr from) {
                       agent,
                       referer,
                       requestedLanguage,
-                      numLang);
+                      numLang, isPostMethod);
 
   for (i=numLang-1; i>=0; i--) {
       free(requestedLanguage[i]);
@@ -3118,7 +3563,7 @@ void handleHTTPrequest(HostAddr from) {
 #else
   rc =  returnHTTPPage(&requestedURL[1], postLen,
 		       &from, &httpRequestedAt, &usedFork,
-		       agent, referer);
+		       agent, referer, isPostMethod);
 #endif
 
 #ifdef CFG_MULTITHREADED
@@ -3149,3 +3594,77 @@ void handleHTTPrequest(HostAddr from) {
     returnHTTPpageNotFound(NULL);
   }
 }
+
+/* *******************************/
+
+int readHTTPpostData(int len, char *buf, int buflen)
+{
+  int rc, idx=0;
+
+#ifdef HAVE_OPENSSL
+  SSL* ssl = getSSLsocket(-myGlobals.newSock);
+#endif
+
+  memset(buf, 0, buflen);
+
+  if(len > (buflen-8)) {
+    BufferTooSmall(buf, buflen);
+    return (-1);
+  }
+
+  while(len > 0) {
+#ifdef HAVE_OPENSSL
+    if(myGlobals.newSock < 0)
+      rc = SSL_read(ssl, &buf[idx], len);
+    else
+      rc = recv(myGlobals.newSock, &buf[idx], len, 0);
+#else
+    rc = recv(myGlobals.newSock, &buf[idx], len, 0);
+#endif
+    if(rc < 0)
+      return (-1);
+
+    idx += rc;
+    len -= rc;
+  }
+
+  buf[idx] = '\0';
+
+  while(1) {
+    fd_set mask;
+    struct timeval wait_time;
+
+    FD_ZERO(&mask);
+    FD_SET((unsigned int)abs(myGlobals.newSock), &mask);
+
+    /* select returns immediately */
+    wait_time.tv_sec = 0, wait_time.tv_usec = 0;
+    if(select(myGlobals.newSock+1, &mask, 0, 0, &wait_time) == 1) {
+      char aChar[8]; /* just in case */
+
+#ifdef HAVE_OPENSSL
+      if(myGlobals.newSock < 0)
+	rc = SSL_read(ssl, aChar, 1);
+      else
+	rc = recv(myGlobals.newSock, aChar, 1, 0);
+#else
+      rc = recv(myGlobals.newSock, aChar, 1, 0);
+#endif
+      if(rc <= 0)
+	break;
+    } else
+      break;
+  }
+
+#if 0
+  printf("HTTP POST data: '%s' (%d)\n", buf, idx);
+  fflush(stdout);
+#endif
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "Data: '%s' (%d)", buf, idx);
+#endif
+
+  return (idx);
+}
+

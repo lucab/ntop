@@ -592,7 +592,7 @@ unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId) {
     return 1;
   }
 
-  if(myGlobals.trackOnlyLocalHosts)
+  if(myGlobals.runningPref.trackOnlyLocalHosts)
     return(0);
 
 #ifdef DEBUG
@@ -673,7 +673,7 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId) {
 
   if(addr == NULL) return(0);
 
-  if(!myGlobals.mergeInterfaces) {
+  if(!myGlobals.runningPref.mergeInterfaces) {
     if((addr->s_addr & myGlobals.device[deviceId].netmask.s_addr) == myGlobals.device[deviceId].network.s_addr) {
 #ifdef ADDRESS_DEBUG
       traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local", intoa(*addr));
@@ -692,7 +692,7 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId) {
       }
   }
 
-  if(myGlobals.trackOnlyLocalHosts)
+  if(myGlobals.runningPref.trackOnlyLocalHosts)
     return(0);
 
 #ifdef DEBUG
@@ -1096,10 +1096,10 @@ void handleLocalAddresses(char* addresses) {
                      localAddresses, sizeof(localAddresses), CONST_HANDLEADDRESSLISTS_MAIN);
 
   /* Not used anymore */
-  if(myGlobals.localAddresses != NULL) free(myGlobals.localAddresses);
+  if(myGlobals.runningPref.localAddresses != NULL) free(myGlobals.runningPref.localAddresses);
 
   if(localAddresses[0]  != '\0')
-    myGlobals.localAddresses = strdup(localAddresses);
+    myGlobals.runningPref.localAddresses = strdup(localAddresses);
 }
 
 /* ********************************* */
@@ -1406,7 +1406,7 @@ void handleFlowsSpecs(void) {
   FILE *fd;
   char *flow, *buffer=NULL, *strtokState, *flows;
 
-  flows = myGlobals.flowSpecs;
+  flows = myGlobals.runningPref.flowSpecs;
 
   if((!flows) || (!flows[0]))
     return;
@@ -1424,8 +1424,8 @@ void handleFlowsSpecs(void) {
       traceEvent(CONST_TRACE_INFO, "Error while stat() of %s", flows);
 
       /* Not used anymore */
-      free(myGlobals.flowSpecs);
-      myGlobals.flowSpecs = strdup("Error reading file");
+      free(myGlobals.runningPref.flowSpecs);
+      myGlobals.runningPref.flowSpecs = strdup("Error reading file");
       return;
     }
 
@@ -1504,8 +1504,8 @@ void handleFlowsSpecs(void) {
                 free(newFlow);
 
 		/* Not used anymore */
-		free(myGlobals.flowSpecs);
-		myGlobals.flowSpecs = strdup("Error, wrong flow specification");
+		free(myGlobals.runningPref.flowSpecs);
+		myGlobals.runningPref.flowSpecs = strdup("Error, wrong flow specification");
                 return;
               }
             }
@@ -1727,7 +1727,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
              where, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
-  if(!myGlobals.disableMutexExtraInfo) {
+  if(!myGlobals.runningPref.disableMutexExtraInfo) {
     myPid=getpid();
     if(mutexId->isLocked) {
       if((fileLine == mutexId->lockLine)
@@ -1748,7 +1748,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   rc = pthread_mutex_lock(&(mutexId->mutex));
 
   pthread_mutex_lock(&stateChangeMutex);
-  if(!myGlobals.disableMutexExtraInfo) {
+  if(!myGlobals.runningPref.disableMutexExtraInfo) {
     mutexId->lockAttemptFile[0] = '\0';
     mutexId->lockAttemptLine=0;
     mutexId->lockAttemptPid=(pid_t) 0;
@@ -1767,7 +1767,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 
     mutexId->numLocks++;
     mutexId->isLocked = 1;
-    if(!myGlobals.disableMutexExtraInfo) {
+    if(!myGlobals.runningPref.disableMutexExtraInfo) {
       mutexId->lockTime = time(NULL);
       mutexId->lockPid  = myPid;
       if(fileName != NULL) {
@@ -1816,7 +1816,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
              where, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
-  if(!myGlobals.disableMutexExtraInfo) {
+  if(!myGlobals.runningPref.disableMutexExtraInfo) {
     myPid = getpid();
     if(mutexId->isLocked) {
       if((strcmp(fileName, mutexId->lockFile) == 0)
@@ -1844,7 +1844,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   */
   rc = pthread_mutex_trylock(&(mutexId->mutex));
   pthread_mutex_lock(&stateChangeMutex);
-  if(!myGlobals.disableMutexExtraInfo) {
+  if(!myGlobals.runningPref.disableMutexExtraInfo) {
     mutexId->lockAttemptFile[0] = '\0';
     mutexId->lockAttemptLine = 0;
     mutexId->lockAttemptPid = (pid_t) 0;
@@ -1863,7 +1863,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 
     mutexId->numLocks++;
     mutexId->isLocked = 1;
-    if(!myGlobals.disableMutexExtraInfo) {
+    if(!myGlobals.runningPref.disableMutexExtraInfo) {
       mutexId->lockTime = time(NULL);
       mutexId->lockPid = myPid;
       mutexId->lockThread = pthread_self();
@@ -1965,7 +1965,7 @@ int _releaseMutex(PthreadMutex *mutexId,
     traceEvent(CONST_TRACE_ERROR, "releaseMutex() failed (rc=%d) [0x%X@%s:%d]",
                rc, (void*)&(mutexId->mutex), fileName, fileLine);
   else {
-    if(!myGlobals.disableMutexExtraInfo) {
+    if(!myGlobals.runningPref.disableMutexExtraInfo) {
       time_t lockDuration = time(NULL) - mutexId->lockTime;
 
       if((mutexId->maxLockedDuration < lockDuration)
@@ -1991,7 +1991,7 @@ int _releaseMutex(PthreadMutex *mutexId,
 
     mutexId->isLocked = 0;
     mutexId->numReleases++;
-    if(!myGlobals.disableMutexExtraInfo) {
+    if(!myGlobals.runningPref.disableMutexExtraInfo) {
       mutexId->unlockPid=getpid();
       if(fileName != NULL) {
         strcpy(mutexId->unlockFile, fileName);
@@ -2346,7 +2346,7 @@ char* getNwInterfaceType(int i) {
 /* ************************************ */
 
 int getActualInterface(u_int deviceId) {
-  if(myGlobals.mergeInterfaces) {
+  if(myGlobals.runningPref.mergeInterfaces) {
     return(myGlobals.device[0].dummyDevice == 0 ? 0 : deviceId);
   } else
     return(deviceId);
@@ -2542,7 +2542,7 @@ void traceEvent(int eventTraceLevel, char* file,
   va_start (va_ap, format);
 
   /* Fix courtesy of "Burton M. Strauss III" <BStrauss@acm.org> */
-  if(eventTraceLevel <= myGlobals.traceLevel) {
+  if(eventTraceLevel <= myGlobals.runningPref.traceLevel) {
     time_t theTime = time(NULL);
     struct tm t;
     char bufTime[LEN_TIMEFORMAT_BUFFER];
@@ -2563,7 +2563,7 @@ void traceEvent(int eventTraceLevel, char* file,
     /* The file/line or 'MSGID' tag, depends on logExtra */
     memset(bufMsgID, 0, sizeof(bufMsgID));
 
-    if(myGlobals.traceLevel > CONST_NOISY_TRACE_LEVEL) {
+    if(myGlobals.runningPref.traceLevel > CONST_NOISY_TRACE_LEVEL) {
       mFile = strdup(file);
 
       for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
@@ -2575,7 +2575,7 @@ void traceEvent(int eventTraceLevel, char* file,
 #endif
       }
 
-      if(myGlobals.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
+      if(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
         unsigned int messageid = 0;
         int i;
 
@@ -2606,8 +2606,8 @@ void traceEvent(int eventTraceLevel, char* file,
     memset(buf, 0, sizeof(buf));
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s %s %s%s%s",
 		bufTime,
-		(myGlobals.traceLevel >= CONST_DETAIL_TRACE_LEVEL) ? bufMsgID : "",
-		(myGlobals.traceLevel > CONST_DETAIL_TRACE_LEVEL) ? bufLineID : "",
+		(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) ? bufMsgID : "",
+		(myGlobals.runningPref.traceLevel > CONST_DETAIL_TRACE_LEVEL) ? bufLineID : "",
 		eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
 		eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
 		eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
@@ -2657,7 +2657,7 @@ void traceEvent(int eventTraceLevel, char* file,
      */
 
 #ifdef MAKE_WITH_SYSLOG
-    if(myGlobals.useSyslog == FLAG_SYSLOG_NONE) {
+    if(myGlobals.runningPref.useSyslog == FLAG_SYSLOG_NONE) {
 #endif
 
       printf("%s\n", buf);
@@ -2669,11 +2669,11 @@ void traceEvent(int eventTraceLevel, char* file,
       char *bufLog = &buf[strlen(bufTime)];
 
       /* SYSLOG and set */
-      openlog("ntop", LOG_PID, myGlobals.useSyslog);
+      openlog("ntop", LOG_PID, myGlobals.runningPref.useSyslog);
 
       /* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
 #ifdef MAKE_WITH_LOG_XXXXXX
-      switch(myGlobals.traceLevel) {
+      switch(myGlobals.runningPref.traceLevel) {
       case CONST_FATALERROR_TRACE_LEVEL:
       case CONST_ERROR_TRACE_LEVEL:
 	syslog(LOG_ERR, "%s", bufLog);
@@ -3266,7 +3266,7 @@ void initPassiveSessions(void) {
 /* ******************************* */
 
 void termPassiveSessions(void) {
-  if(myGlobals.enableSessionHandling)
+  if(myGlobals.runningPref.enableSessionHandling)
     free(passiveSessions);
 }
 
@@ -3524,6 +3524,52 @@ int _incrementUsageCounter(UsageCounter *counter,
   return(0);
 }
 
+/* **************************************************** */
+
+static void checkUserIdentity(int userSpecified) {
+  /*
+    Code fragment below courtesy of
+    Andreas Pfaller <apfaller@yahoo.com.au>
+  */
+#ifndef WIN32
+  if((getuid() != geteuid()) || (getgid() != getegid())) {
+    /* setuid binary, drop privileges */
+    if((setgid(getgid()) != 0) || (setuid(getuid()) != 0)) {
+      traceEvent(CONST_TRACE_FATALERROR, "Unable to drop privileges");
+      exit(-1);
+    }
+  }
+
+  /*
+   * set user to be as inoffensive as possible
+   */
+  if(!setSpecifiedUser()) {
+    if(userSpecified) {
+      /* User located */
+      if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
+	if((setgid(myGlobals.groupId) != 0) || (setuid(myGlobals.userId) != 0)) {
+	  traceEvent(CONST_TRACE_FATALERROR, "Unable to change user");
+	  exit(-1);
+	}
+      }
+    } else {
+      if((geteuid() == 0) || (getegid() == 0)) {
+	if(!userSpecified) {
+	  traceEvent(CONST_TRACE_FATALERROR, "For security reasons you cannot run ntop as root - aborting");
+	  traceEvent(CONST_TRACE_INFO, "Unless you really, really, know what you're doing");
+	  traceEvent(CONST_TRACE_INFO, "Please specify the user name using the -u option!");
+	  exit(0);
+	} else {
+	  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "For security reasons you should not run ntop as root (-u)!");
+	}
+      } else {
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as requested user... continuing with initialization");
+      }
+    }
+  }
+#endif
+}
+
 /* ******************************** */
 
 /* #define DEBUG */
@@ -3540,7 +3586,7 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
   value[0] = '\0';
 
   key_data.dptr  = key;
-  key_data.dsize = strlen(key_data.dptr);
+  key_data.dsize = strlen(key_data.dptr)+1;
 
   if(myGlobals.prefsFile == NULL) {
 #ifdef DEBUG
@@ -3580,11 +3626,11 @@ void storePrefsValue(char *key, char *value) {
 
   memset(&key_data, 0, sizeof(key_data));
   key_data.dptr   = key;
-  key_data.dsize  = strlen(key_data.dptr);
+  key_data.dsize  = strlen(key_data.dptr)+1;
 
   memset(&data_data, 0, sizeof(data_data));
   data_data.dptr  = value;
-  data_data.dsize = strlen(value);
+  data_data.dsize = strlen(value)+1;
 
   if(myGlobals.prefsFile == NULL) {
 #ifdef DEBUG
@@ -3602,7 +3648,494 @@ void storePrefsValue(char *key, char *value) {
   }
 }
 
-/* #undef DEBUG */
+/* ******************************** */
+
+void delPrefsValue (char *key) {
+  datum key_data;
+
+  if((key == NULL) || (myGlobals.capturePackets == FLAG_NTOPSTATE_TERM)) return;
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering storePrefsValue()");
+#endif
+
+  memset(&key_data, 0, sizeof(key_data));
+  key_data.dptr   = key;
+  key_data.dsize  = strlen(key_data.dptr)+1;
+
+  if(myGlobals.prefsFile == NULL) {
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Leaving storePrefsValue()");
+#endif
+    ; /* ntop is quitting... */
+  }
+
+  if(gdbm_delete (myGlobals.prefsFile, key_data) != 0)
+    traceEvent(CONST_TRACE_ERROR, "While deleting %s", key);
+  else {
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "Deleted %s", key); 
+#endif
+  }
+}
+
+/* ******************************** */
+
+static void processStrPref (char *key, char *value, char **globalVar,
+                            bool savePref)
+{
+    if (key == NULL) return;
+
+    if (value == NULL) {
+        /* If a value is specified as NULL but the current value is not, delete
+         * the pref. This is assumed to be the way the user will change such a
+         * pref. 
+         */
+        if (*globalVar != NULL) {
+            free (*globalVar);
+            *globalVar = NULL;
+            if (savePref) {
+                delPrefsValue (key);
+            }
+        }
+    }
+    else {
+        if (savePref) {
+            storePrefsValue (key, value);
+        }
+
+        if (*globalVar)
+            free (*globalVar);
+
+        *globalVar = strdup (value);
+    }
+}
+
+/* ******************************** */
+
+static void processIntPref (char *key, char *value, int *globalVar,
+                            bool savePref)
+{
+    char buf[512];
+    
+    if ((key == NULL) || (value == NULL)) return;
+
+    if (savePref) {
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf),
+                       "%d", atoi (value));
+        storePrefsValue (key, buf);
+    }
+    
+    *globalVar = atoi (value);
+}
+
+/* ******************************** */
+
+static void processBoolPref (char *key, bool value, bool *globalVar,
+                             bool savePref)
+{
+    char buf[512];
+    
+    if (key == NULL) return;
+
+    if (savePref) {
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf),
+                       "%d", value);
+        storePrefsValue (key, buf);
+    }
+
+    *globalVar = value;
+}
+
+/* ******************************** */
+
+bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
+{
+    bool startCap = FALSE;
+    char buf[16], *tmpStr = NULL;
+    
+    if (strcmp(key, NTOP_PREF_DEVICES) == 0) {
+        if ((pref->devices != NULL) &&
+            (strcmp (pref->devices, value))) {
+            startCap = TRUE;
+        }
+        processStrPref (NTOP_PREF_DEVICES, value, &pref->devices, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_CAPFILE) == 0) {
+        if (((value != NULL) &&
+             (((pref->rFileName != NULL) && (strcmp (pref->rFileName, value)))))
+            || ((value != NULL) && ((pref->rFileName == NULL)))) {
+            startCap = TRUE;
+        }
+        processStrPref (NTOP_PREF_CAPFILE, value, &pref->rFileName, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_FILTER) == 0) {
+        processStrPref (NTOP_PREF_FILTER, value,
+                        &pref->currentFilterExpression, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_WEBPORT) == 0) {
+        if (value == NULL) {
+            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+                           DEFAULT_NTOP_WEB_PORT);
+            value = buf;
+        }
+        processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_SSLPORT) == 0) {
+        if (value == NULL) {
+            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+                           DEFAULT_NTOP_WEB_PORT);
+            value = buf;
+        }
+        processIntPref (NTOP_PREF_SSLPORT, value, &pref->sslPort, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_EN_SESSION) == 0) {
+        processBoolPref (NTOP_PREF_EN_SESSION, TRUE,
+                         &pref->enableSessionHandling, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_EN_PROTO_DECODE) == 0) {
+        processBoolPref (NTOP_PREF_EN_PROTO_DECODE, TRUE,
+                         &pref->enablePacketDecoding, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_FLOWSPECS) == 0) {
+        processStrPref (NTOP_PREF_FLOWSPECS, value, &pref->flowSpecs, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_LOCALADDR) == 0) {
+        processStrPref (NTOP_PREF_LOCALADDR, value, &pref->localAddresses,
+                        savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_SPOOLPATH) == 0) {
+        processStrPref (NTOP_PREF_SPOOLPATH, value, &pref->spoolPath, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_STICKY_HOSTS) == 0) {
+        processBoolPref (NTOP_PREF_STICKY_HOSTS, TRUE, &pref->stickyHosts,
+                         savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_TRACK_LOCAL) == 0) {
+        processBoolPref (NTOP_PREF_TRACK_LOCAL, TRUE,
+                         &pref->trackOnlyLocalHosts, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_NO_PROMISC) == 0) {
+        processBoolPref (NTOP_PREF_NO_PROMISC, TRUE,
+                         &pref->disablePromiscuousMode, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_DAEMON) == 0) {
+        processBoolPref (NTOP_PREF_DAEMON, TRUE, &pref->daemonMode,
+                         savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_REFRESH_RATE) == 0) {
+        if (value == NULL) {
+            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+                           DEFAULT_NTOP_AUTOREFRESH_INTERVAL);
+            value = buf;
+        }
+        processIntPref (NTOP_PREF_REFRESH_RATE, value, &pref->refreshRate,
+                        savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_MAXLINES) == 0) {
+        if (value == NULL) {
+            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+                           CONST_NUM_TABLE_ROWS_PER_PAGE);
+            value = buf;
+        }
+        processIntPref (NTOP_PREF_MAXLINES, value, &pref->maxNumLines,
+                        savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_NOFC) == 0) {
+        if (pref->printFcOnly) {
+            if (savePref)
+                delPrefsValue (NTOP_PREF_PRINT_FCONLY);
+            pref->printFcOnly = FALSE;
+        }
+        processBoolPref (NTOP_PREF_NOFC, TRUE, &pref->noFc, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_PRINT_FCONLY) == 0) {
+        if (pref->noFc) {
+            if (savePref)
+                delPrefsValue (NTOP_PREF_NOFC);
+            pref->noFc = FALSE;
+        }
+        processBoolPref (NTOP_PREF_PRINT_FCONLY, TRUE, &pref->printFcOnly,
+                         savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_NO_INVLUN) == 0) {
+        processBoolPref (NTOP_PREF_NO_INVLUN, TRUE,
+                         &pref->noInvalidLunDisplay, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_FILTER_EXTRA_FRM) == 0) {
+        processBoolPref (NTOP_PREF_FILTER_EXTRA_FRM, TRUE,
+                         &pref->filterExpressionInExtraFrame, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_W3C) == 0) {
+        processBoolPref (NTOP_PREF_W3C, TRUE, &pref->w3c, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_IPV4) == 0) {
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d", AF_INET);
+        processIntPref (NTOP_PREF_IPV4V6, buf, &pref->ipv4or6, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_IPV6) == 0) {
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d", AF_INET6);
+        processIntPref (NTOP_PREF_IPV4V6, buf, &pref->ipv4or6, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_DOMAINNAME) == 0) {
+        processStrPref (NTOP_PREF_DOMAINNAME, value, &tmpStr,
+                        savePref);
+        if (tmpStr != NULL) {
+            strncpy (pref->domainName, tmpStr, sizeof (pref->domainName));
+            free (tmpStr);      /* alloc'd in processStrPref() */
+        }
+    }
+    else if (strcmp (key, NTOP_PREF_NUMERIC_IP) == 0) {
+        processBoolPref (NTOP_PREF_NUMERIC_IP, TRUE, &pref->numericFlag,
+                         savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_PROTOSPECS) == 0) {
+        processStrPref (NTOP_PREF_PROTOSPECS, value, &pref->protoSpecs,
+                        savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_P3PCP) == 0) {
+        processStrPref (NTOP_PREF_P3PCP, value, &pref->P3Pcp, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_P3PURI) == 0) {
+        processStrPref (NTOP_PREF_P3PURI, value, &pref->P3Puri, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_MAPPERURL) == 0) {
+        processStrPref (NTOP_PREF_MAPPERURL, value, &pref->mapperURL, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_WWN_MAP) == 0) {
+        processStrPref (NTOP_PREF_WWN_MAP, value, &pref->fcNSCacheFile,
+                        savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_MAXHASH) == 0) {
+        if (value == NULL) {
+            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+                           -1);
+            value = buf;
+        }
+        processIntPref (NTOP_PREF_MAXHASH, value,
+                        &pref->maxNumHashEntries, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_MERGEIF) == 0) {
+        processBoolPref (NTOP_PREF_MERGEIF, TRUE,
+                         &pref->mergeInterfaces, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_NO_ISESS_PURGE) == 0) {
+        processBoolPref (NTOP_PREF_NO_ISESS_PURGE, TRUE,
+                         &pref->disableInstantSessionPurge, savePref);
+    }
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)                
+    else if (strcmp (key, NTOP_PREF_NOBLOCK) == 0) {
+        processBoolPref (NTOP_PREF_NOBLOCK, TRUE,
+                         &pref->setNonBlocking, savePref);
+    }
+#endif                
+    else if (strcmp (key, NTOP_PREF_NO_STOPCAP) == 0) {
+        processBoolPref (NTOP_PREF_NO_STOPCAP, TRUE,
+                         &pref->disableStopcap, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_NO_TRUST_MAC) == 0) {
+        processBoolPref (NTOP_PREF_NO_TRUST_MAC, TRUE,
+                         &pref->dontTrustMACaddr, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_PCAP_LOGBASE) == 0) {
+        processStrPref (NTOP_PREF_PCAP_LOGBASE, value,
+                        &pref->pcapLogBasePath, savePref);
+    }
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME                
+    else if (strcmp (key, NTOP_PREF_USE_SSLWATCH) == 0) {
+        processBoolPref (NTOP_PREF_USE_SSLWATCH, TRUE,
+                         &pref->useSSLwatchdog, savePref);
+    }
+#endif                
+    else if (strcmp (key, NTOP_PREF_DBG_MODE) == 0) {
+        processBoolPref (NTOP_PREF_DBG_MODE, TRUE, &pref->debugMode,
+                         savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_TRACE_LVL) == 0) {
+        if (value == NULL) {
+            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+                           DEFAULT_TRACE_LEVEL);
+            value = buf;
+        }
+        processIntPref (NTOP_PREF_TRACE_LVL, value, &pref->traceLevel,
+                        savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_DUMP_OTHER) == 0) {
+        processBoolPref (NTOP_PREF_DUMP_OTHER, TRUE,
+                         &pref->enableOtherPacketDump, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_DUMP_SUSP) == 0) {
+        processBoolPref (NTOP_PREF_DUMP_SUSP, TRUE,
+                         &pref->enableSuspiciousPacketDump, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_ACCESS_LOG) == 0) {
+        processStrPref (NTOP_PREF_ACCESS_LOG, value,
+                        &pref->accessLogFile,
+                        savePref);
+    }
+#ifndef WIN32                
+    else if (strcmp (key, NTOP_PREF_USE_SYSLOG) == 0) {
+        if (value == NULL) {
+            safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "%d",
+                           DEFAULT_NTOP_SYSLOG);
+            value = buf;
+        }
+        processIntPref (NTOP_PREF_USE_SYSLOG, value,
+                        &pref->useSyslog, savePref);
+    }
+#endif                
+    else if (strcmp (key, NTOP_PREF_PCAP_LOG) == 0) {
+        processStrPref (NTOP_PREF_PCAP_LOG, value, &pref->pcapLog, savePref);
+    }
+    else if (strcmp (key, NTOP_PREF_NO_MUTEX_EXTRA) == 0) {
+        processBoolPref (NTOP_PREF_NO_MUTEX_EXTRA, TRUE,
+                         &pref->disableMutexExtraInfo, savePref);
+    }
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)                
+    else if (strcmp (key, NTOP_PREF_NO_SCHEDYLD) == 0) {
+        processBoolPref (NTOP_PREF_NO_SCHEDYLD, TRUE,
+                         &pref->disableSchedYield, savePref);
+    }
+#endif
+
+    return (startCap);
+}
+
+/* ******************************** */
+
+void loadPrefs (int argc, char *argv[])
+{
+    datum key, nextkey;
+    char buf[1024];
+    int opt_index, opt;
+    char *theOpts, *adminPw = NULL;
+#ifdef WIN32
+    int optind=0;
+#else
+    bool userSpecified = FALSE;
+#endif
+
+    struct option const long_options[] = {
+        { "db-file-path",                     required_argument, NULL, 'P' },
+        { "help",                             no_argument,       NULL, 'h' },
+#ifndef WIN32
+        { "user",                             required_argument, NULL, 'u' },
+#endif
+    };
+    
+    /* Retrieve the name of the global database file from the command line, if
+     * specified. This is a key option that changes where we search for the
+     * preferences file and so must be read first.
+     */
+#ifndef WIN32    
+    theOpts = "hu:P:";
+#else
+    theOpts = "hP:";
+#endif    
+  
+    traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
+    while ((opt = getopt_long(argc, argv, theOpts, long_options, &opt_index)) != EOF) {
+#ifdef DEBUG
+        traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering storePrefsValue()");
+#endif
+        switch (opt) {
+        case 'h':                                /* help */
+            usage(stdout);
+            exit(0);
+
+#ifndef WIN32
+        case 'u':
+            stringSanityCheck(optarg);
+            myGlobals.effectiveUserName = strdup(optarg);
+            if(strOnlyDigits(optarg))
+                myGlobals.userId = atoi(optarg);
+            else {
+                struct passwd *pw;
+                pw = getpwnam(optarg);
+                if(pw == NULL) {
+                    printf("FATAL ERROR: Unknown user %s.\n", optarg);
+                    exit(-1);
+                }
+                myGlobals.userId = pw->pw_uid;
+                myGlobals.groupId = pw->pw_gid;
+                endpwent();
+            }
+            userSpecified = TRUE;
+            break;
+#endif /* WIN32 */
+
+        case 'P':
+            stringSanityCheck(optarg);
+            if(myGlobals.dbPath != NULL)
+                free(myGlobals.dbPath);
+
+            myGlobals.dbPath = strdup(optarg);
+            break;
+        }
+    }
+        
+#ifndef WIN32
+    /*
+      The user has not specified the uid using the -u flag.
+      We try to locate a user with no privileges
+    */
+
+    if(!userSpecified) {
+        struct passwd *pw = NULL;
+        
+        if(getuid() == 0) {
+            /* We're root */
+            char *user;
+
+            pw = getpwnam(user = "nobody");
+            if(pw == NULL) pw = getpwnam(user = "anonymous");
+     
+            if(pw != NULL) {
+                myGlobals.userId  = pw->pw_uid;
+                myGlobals.groupId = pw->pw_gid;
+                myGlobals.effectiveUserName = strdup(user);
+                traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop will be started as user %s", user);
+            }
+        }
+      
+        if(pw == NULL) {
+            myGlobals.userId  = getuid();
+            myGlobals.groupId = getgid();
+        }
+    }
+#endif
+    
+    /* ******************************* */
+    
+    checkUserIdentity(userSpecified);
+
+    /* ******************************* */
+
+    /* open/create all the databases */
+    initGdbm(NULL, NULL, 1);
+    
+    if(myGlobals.prefsFile == NULL) {
+#ifdef DEBUG
+        traceEvent(CONST_TRACE_INFO, "DEBUG: No preferences file to read from()");
+#endif
+        return;
+    }
+
+    /* Read preferences and store them in memory */
+    key = gdbm_firstkey (myGlobals.prefsFile);
+    while (key.dptr) {
+        if (fetchPrefsValue (key.dptr, buf, sizeof (buf)) == 0) {
+            processNtopPref (key.dptr, buf, FALSE, &myGlobals.runningPref);
+        }
+      
+        nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
+        free (key.dptr);
+        key = nextkey;
+    }
+
+    myGlobals.savedPref = myGlobals.runningPref;
+    return;
+}
 
 /* ******************************** */
 
@@ -4599,7 +5132,7 @@ extern int ntop_sched_yield(char *file, int line) {
   }
 #endif
 
-  if(!myGlobals.disableSchedYield) {
+  if(!myGlobals.runningPref.disableSchedYield) {
     sched_yield();
 #ifdef DEBUG
   } else {
@@ -4942,7 +5475,7 @@ void displayPrivacyNotice(void) {
 	       "CHKVER: * check.                                                  *");
     traceEvent(CONST_TRACE_ALWAYSDISPLAY,
 	       "CHKVER: *                                                         *");
-    if(myGlobals.skipVersionCheck == TRUE) {
+    if(myGlobals.runningPref.skipVersionCheck == TRUE) {
       traceEvent(CONST_TRACE_ALWAYSDISPLAY,
 		 "CHKVER: * You have requested - via the --skip-version-check       *");
       traceEvent(CONST_TRACE_ALWAYSDISPLAY,
@@ -5268,22 +5801,23 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   /* Special case for webPort+sslPort... */
   strncat(userAgent, " access/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
 #ifdef HAVE_OPENSSL
-  if (myGlobals.sslPort != 0) {
-    if(myGlobals.webPort != 0)
+  if (myGlobals.runningPref.sslPort != 0) {
+    if(myGlobals.runningPref.webPort != 0)
       strncat(userAgent, "both", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
     else
       strncat(userAgent, "https", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
   } else
 #endif
-    if(myGlobals.webPort != 0)
+    if(myGlobals.runningPref.webPort != 0)
       strncat(userAgent, "http", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
     else
       strncat(userAgent, "none", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
 
   /* Special case for interfaces */
   strncat(userAgent, " interfaces(", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
-  if(myGlobals.devices != NULL) {
-    strncat(userAgent, myGlobals.devices, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
+  if(myGlobals.runningPref.devices != NULL) {
+    strncat(userAgent, myGlobals.runningPref.devices,
+            (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
   } else {
     strncat(userAgent, "null", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
   }
@@ -5799,7 +6333,7 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
   if(updateType > el->hostResolvedNameType) {
 
 #ifdef CMPFCTN_DEBUG
-    if(myGlobals.debugMode == 1)
+    if(myGlobals.runningPref.debugMode == 1)
       traceEvent(CONST_TRACE_INFO,
                  "CMPFCTN_DEBUG: setResolvedName(0x%08x) %d %s -> %d %s - %s(%d)",
                  el,

@@ -49,7 +49,7 @@ void handleSigHup(int signalId _UNUSED_) {
   printMutexInfo(&myGlobals.packetQueueMutex, "myGlobals.packetQueueMutex");
 
 #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-  if(myGlobals.numericFlag == 0)
+  if(myGlobals.runningPref.numericFlag == 0)
     printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
 #endif
 
@@ -74,7 +74,7 @@ void* pcapDispatch(void *_i) {
 	     myGlobals.device[i].humanFriendlyName);
 
   /* Reset stats before to start */
-  if (myGlobals.rFileName == NULL) {
+  if (myGlobals.runningPref.rFileName == NULL) {
     pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats);
   }
 
@@ -91,13 +91,13 @@ void* pcapDispatch(void *_i) {
 		   pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
     } else if(rc == 0) {
-      if(myGlobals.rFileName != NULL) {
+      if(myGlobals.runningPref.rFileName != NULL) {
 	traceEvent(CONST_TRACE_INFO, "pcap_dispatch (%s) returned %d [No more packets to read]", 
 		   myGlobals.device[i].humanFriendlyName, rc);
 	break; /* No more packets to read */
       } 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-      if(myGlobals.setNonBlocking == TRUE) {
+      if(myGlobals.runningPref.setNonBlocking == TRUE) {
 	/* select returned no data - either a signal or setNonBlock */
 	struct timespec sleepAmount;
 	sleepAmount.tv_sec = 0; sleepAmount.tv_nsec = CONST_PCAPNONBLOCKING_SLEEP_TIME;
@@ -190,8 +190,8 @@ void detachFromTerminal(int doChdir) {
    * If no facility was set through -L | --use-syslog=facility
    * then force the default
    */
-  if(myGlobals.useSyslog == FLAG_SYSLOG_NONE)
-    myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
+  if(myGlobals.runningPref.useSyslog == FLAG_SYSLOG_NONE)
+    myGlobals.runningPref.useSyslog = DEFAULT_SYSLOG_FACILITY;
 #endif
 
   if(doChdir) chdir("/");
@@ -421,29 +421,29 @@ void handleProtocols(void) {
      Also, ignore standard Linux comments...
   */
 
-  if((!myGlobals.protoSpecs)
-     || (!myGlobals.protoSpecs[0]))
+  if((!myGlobals.runningPref.protoSpecs)
+     || (!myGlobals.runningPref.protoSpecs[0]))
     return;
 
-  fd = fopen(myGlobals.protoSpecs, "rb");
+  fd = fopen(myGlobals.runningPref.protoSpecs, "rb");
 
   if(fd == NULL) {
-    traceEvent(CONST_TRACE_INFO, "PROTO_INIT: Processing protocol list: '%s'", myGlobals.protoSpecs);
-    proto = strtok_r(myGlobals.protoSpecs, ",", &strtokState);
+    traceEvent(CONST_TRACE_INFO, "PROTO_INIT: Processing protocol list: '%s'", myGlobals.runningPref.protoSpecs);
+    proto = strtok_r(myGlobals.runningPref.protoSpecs, ",", &strtokState);
   } else {
     struct stat buf;
 
-    if(stat(myGlobals.protoSpecs, &buf) != 0) {
+    if(stat(myGlobals.runningPref.protoSpecs, &buf) != 0) {
       fclose(fd);
       traceEvent(CONST_TRACE_ERROR, "PROTO_INIT: Unable to get information about file '%s'", 
-		 myGlobals.protoSpecs);
+		 myGlobals.runningPref.protoSpecs);
       return;
     }
 
     bufferCurrent = buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
 
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PROTO_INIT: Processing protocol file: '%s', size: %ld",
-	       myGlobals.protoSpecs, (long)(buf.st_size+8));
+	       myGlobals.runningPref.protoSpecs, (long)(buf.st_size+8));
 
     for (;;) {
       bufferCurrent = fgets(bufferCurrent, buf.st_size, fd);
@@ -625,12 +625,12 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     HEARTBEAT(0, "scanIdleLoop(), sleep(60)...woke", NULL);
-    if (myGlobals.rFileName == NULL)
+    if (myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
 
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
-        if(!myGlobals.stickyHosts) purgeIdleHosts(i);
+        if(!myGlobals.runningPref.stickyHosts) purgeIdleHosts(i);
 #if !defined(__FreeBSD__)
 	purgeIpPorts(i);
 #endif
@@ -674,7 +674,7 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     HEARTBEAT(0, "scanFingerprintLoop(), sleep()...woke", NULL);
-    if (myGlobals.rFileName == NULL)
+    if (myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
 #ifdef FINGERPRINT_DEBUG
     traceEvent(CONST_TRACE_NOISY, "FINGERPRINT_DEBUG: starting cycle %d", ++countCycle);
@@ -719,7 +719,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
   fd_set readMask;
   struct timeval timeout;
 
-  if((pcap_fd == -1) && (myGlobals.rFileName != NULL)) {
+  if((pcap_fd == -1) && (myGlobals.runningPref.rFileName != NULL)) {
     /*
       This is a patch to overcome a bug of libpcap
       while reading from a traffic file instead
@@ -756,7 +756,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
 	traceEvent(CONST_TRACE_ERROR, "Reading packets: '%s'",
 		   pcap_geterr(myGlobals.device[0].pcapPtr));
 	continue;
-      } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
+      } else if((rc == 0) && (myGlobals.runningPref.rFileName != NULL)) {
 	traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d "
 		   "[No more packets to read]", rc);
 	pcap_fd = -1;
@@ -841,7 +841,7 @@ RETSIGTYPE cleanup(int signo) {
   killThread(&myGlobals.dequeueThreadId);
 
 #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-  if(myGlobals.numericFlag == 0) {
+  if(myGlobals.runningPref.numericFlag == 0) {
     for(i=0; i<myGlobals.numDequeueThreads; i++)
       killThread(&myGlobals.dequeueAddressThreadId[i]);
   }
@@ -858,7 +858,7 @@ RETSIGTYPE cleanup(int signo) {
     killThread(&myGlobals.sslwatchdogChildThreadId);
   }
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if (myGlobals.useSSLwatchdog == 1)
+  if (myGlobals.runningPref.useSSLwatchdog == 1)
 #endif
     {
       deleteCondvar(&myGlobals.sslwatchdogCondvar);
@@ -963,7 +963,7 @@ RETSIGTYPE cleanup(int signo) {
   tryLockMutex(&myGlobals.packetQueueMutex, "cleanup");
   deleteMutex(&myGlobals.packetQueueMutex);
 #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-  if(myGlobals.numericFlag == 0) {
+  if(myGlobals.runningPref.numericFlag == 0) {
     tryLockMutex(&myGlobals.addressResolutionMutex, "cleanup");
     deleteMutex(&myGlobals.addressResolutionMutex);
   }
@@ -1086,7 +1086,8 @@ RETSIGTYPE cleanup(int signo) {
 
   }
   
-  free(myGlobals.device);
+  if (myGlobals.device)
+      free(myGlobals.device);
 
   if(myGlobals.broadcastEntry != NULL) free(myGlobals.broadcastEntry);
   if(myGlobals.otherHostEntry != NULL) {
@@ -1123,20 +1124,21 @@ RETSIGTYPE cleanup(int signo) {
   free(myGlobals.protoIPTrafficInfos);
   free(myGlobals.ipPortMapper.theMapper);
 
-  if(myGlobals.currentFilterExpression != NULL)
-    free(myGlobals.currentFilterExpression);
+  if(myGlobals.runningPref.currentFilterExpression != NULL)
+    free(myGlobals.runningPref.currentFilterExpression);
 
-  if(myGlobals.localAddresses != NULL) free(myGlobals.localAddresses);
+  if(myGlobals.runningPref.localAddresses != NULL)
+      free(myGlobals.runningPref.localAddresses);
 #ifndef WIN32
   if(myGlobals.effectiveUserName != NULL) free(myGlobals.effectiveUserName);
 #endif
-  if(myGlobals.devices != NULL) free(myGlobals.devices);
+  if(myGlobals.runningPref.devices != NULL) free(myGlobals.runningPref.devices);
 
   /* One day we should free myGlobals.countryFlagHead */
 
-  free(myGlobals.pcapLogBasePath);
+  free(myGlobals.runningPref.pcapLogBasePath);
   /* free(myGlobals.dbPath); -- later, need this to remove pid */
-  free(myGlobals.spoolPath);
+  free(myGlobals.runningPref.spoolPath);
   if (myGlobals.rrdPath != NULL)
     free(myGlobals.rrdPath);
 
@@ -1166,3 +1168,4 @@ RETSIGTYPE cleanup(int signo) {
 
   exit(0);
 }
+

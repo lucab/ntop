@@ -143,7 +143,7 @@ void printPdaData(HostTraffic* tmpTable[MAX_PDA_HOST_TABLE], u_int numEntries) {
   char formatBuf[32];
 
   sendString("  <table ");
-  sendString((myGlobals.w3c == TRUE) ? "" : "columns=\"2\" ");
+  sendString((myGlobals.runningPref.w3c == TRUE) ? "" : "columns=\"2\" ");
   sendString("align=\"left\">\n");
   sendString("      <tr><td><b><u>Top Sending Hosts</u></b></td><td><b><u>Total</u></b></td></tr>\n");
   
@@ -179,7 +179,7 @@ void printPdaData(HostTraffic* tmpTable[MAX_PDA_HOST_TABLE], u_int numEntries) {
              "</td></tr>\n"
              " <tr><td>\n");
   sendString("  <table ");
-  sendString((myGlobals.w3c == TRUE) ? "" : "columns=\"2\" ");
+  sendString((myGlobals.runningPref.w3c == TRUE) ? "" : "columns=\"2\" ");
   sendString("align=\"left\">\n");
   sendString("    <tr><td><b><u>Top Receiving Hosts</u></b></td><td><b><u>Total</u></b></td></tr>\n");
 
@@ -223,7 +223,7 @@ void printPdaSummaryData(void) {
   Counter unicastPkts=0;
 
   sendString("  <table ");
-  sendString((myGlobals.w3c == TRUE) ? "" : "columns=\"2\" ");
+  sendString((myGlobals.runningPref.w3c == TRUE) ? "" : "columns=\"2\" ");
   sendString("align=\"left\">\n");
   sendString("  <tr><td><b><u>Stats</u></b></td><td><b><u>Total</u></b></td></tr>\n");
 
@@ -322,10 +322,10 @@ static void printHtmlHostInfo(char *host _UNUSED_) {
 static void handlePDArequest(char* url) {
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, BITFLAG_HTTP_NO_CACHE_CONTROL | BITFLAG_HTTP_MORE_FIELDS, 1);
-  sendString((myGlobals.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE_32 "\n" : "");
+  sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE_32 "\n" : "");
   sendString("<html>\n"
              "<head>\n");
-  sendString((myGlobals.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "");
+  sendString((myGlobals.runningPref.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "");
   sendString("<meta http-equiv=REFRESH content=\"240\">\n"
              "<title>ntop for PDAs</title>\n");
   /* sendString("<link rel=stylesheet href=\"/stylepda.css\" type=\"text/css\">\n"); */
@@ -334,7 +334,7 @@ static void handlePDArequest(char* url) {
              "<b>ntop for PDAs</b>\n"
              "<br><br>\n");
   sendString("<table ");
-  sendString((myGlobals.w3c == TRUE) ? "" : "columns=\"1\" ");
+  sendString((myGlobals.runningPref.w3c == TRUE) ? "" : "columns=\"1\" ");
   sendString("align=\"left\">\n");
   sendString("<tr><td>\n");
 

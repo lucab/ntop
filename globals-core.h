@@ -38,8 +38,8 @@ extern struct in6_addr _in6addr_linklocal_allnodes;
 
 /* Fix courtesy of Tim Gardner <timg@tpi.com> */
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-#define accessAddrResMutex(a) if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex,a)
-#define releaseAddrResMutex() if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex)
+#define accessAddrResMutex(a) if(myGlobals.runningPref.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex,a)
+#define releaseAddrResMutex() if(myGlobals.runningPref.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex)
 #else
 #define accessAddrResMutex(a) 
 #define releaseAddrResMutex() 
@@ -145,6 +145,8 @@ extern int doChangeFilter(int len);
 extern void changeFilter(void);
 extern void setAdminPassword(char* pass);
 extern void addDefaultAdminUser(void);
+extern void initUserPrefs (UserPref *pref);
+extern void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr);
 
 /* dataFormat.c */
 extern char* formatKBytes(float numKBytes, char *outStr, int outStrLen);
@@ -515,6 +517,8 @@ extern char *strtolower(char *s);
 extern char *xstrncpy(char *dest, const char *src, size_t n);
 extern int fetchPrefsValue(char *key, char *value, int valueLen);
 extern void storePrefsValue(char *key, char *value);
+extern void delPrefsValue(char *key);
+extern void loadPrefs (int argc, char *argv[]);
 extern int guessHops(HostTraffic *el);
 extern unsigned int ntop_sleep(unsigned int secs);
 extern void unescape(char *dest, int destLen, char *url);
@@ -555,6 +559,7 @@ extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);
 extern int copySerial(HostSerial *a, HostSerial *b);
 extern void addPortToList(HostTraffic *host, int *thePorts /* 0...MAX_NUM_RECENT_PORTS */, u_short thePort);
+extern bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref);
 #ifndef WIN32
 extern void saveNtopPid(void);
 extern void removeNtopPid(void);
@@ -776,6 +781,7 @@ int getdomainname(char *name, size_t len);
 /* Bit test macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &(a->flags))
 #define isFcHost(a)                 (a->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
+#define isValidVsanId(a)            ((a > 0) && (a < MAX_USER_VSAN))
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(FLAG_SUBNET_LOCALHOST, &(a->flags)))
 #define privateIPAddress(a)         ((a != NULL) && FD_ISSET(FLAG_PRIVATE_IP_ADDRESS, &(a->flags)))
 #define broadcastHost(a)            ((a != NULL) && (!isFcHost (a)) && ((cmpSerial(&a->hostSerial, &myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))) || ((a->hostIp4Address.s_addr == 0) && (a->ethAddressString[0] == '\0'))))

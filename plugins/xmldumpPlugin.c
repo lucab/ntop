@@ -307,10 +307,10 @@ static int initXmldump(void) {
   else {
     traceEvent(CONST_TRACE_NOISY, "On this system, gethostname() returned '%s'", hostName);
 
-    if(strcmp(hostName, myGlobals.domainName) == 0) {
+    if(strcmp(hostName, myGlobals.runningPref.domainName) == 0) {
       /* The returned hostName doesn't appear to have the domainName in it... */
-      traceEvent(CONST_TRACE_NOISY, "Appending the domain name, '%s'", myGlobals.domainName);
-      safe_snprintf(__FILE__, __LINE__, hostName, sizeof(hostName), "%s.%s", hostName, myGlobals.domainName);
+      traceEvent(CONST_TRACE_NOISY, "Appending the domain name, '%s'", myGlobals.runningPref.domainName);
+      safe_snprintf(__FILE__, __LINE__, hostName, sizeof(hostName), "%s.%s", hostName, myGlobals.runningPref.domainName);
     }
   }
 
@@ -1874,12 +1874,12 @@ static int dumpXML(char * url) {
      */
 /* TODO Schema? */
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s://%s:%d/%s",
-                                   myGlobals.webPort != 0 ? "http" :
-                                                            (myGlobals.sslPort != 0 ? "https" :
+                                   myGlobals.runningPref.webPort != 0 ? "http" :
+                                                            (myGlobals.runningPref.sslPort != 0 ? "https" :
                                                                                       "file"),
                                    hostName,
-                                   myGlobals.webPort != 0 ? myGlobals.webPort :
-                                                            (myGlobals.sslPort != 0 ? myGlobals.sslPort :
+                                   myGlobals.runningPref.webPort != 0 ? myGlobals.runningPref.webPort :
+                                                            (myGlobals.runningPref.sslPort != 0 ? myGlobals.runningPref.sslPort :
                                                                                       0),
                                    CONST_XML_DTD_NAME);
     dtdURI = strdup(buf);

@@ -104,6 +104,8 @@ typedef short int16_t;
 typedef char int8_t;
 #endif
 
+typedef unsigned char bool;
+
 #include "fcUtils.h"
 #include "scsiUtils.h"
 
@@ -747,13 +749,21 @@ typedef struct fcScsiCounters {
   /* FC Counters */
   TrafficCounter   class2Sent, class2Rcvd, class3Sent, class3Rcvd;
   TrafficCounter   classFSent, classFRcvd;
+  TrafficCounter   fcPktsSent, fcPktsRcvd;
   TrafficCounter   fcBytesSent, fcBytesRcvd;
+  TrafficCounter   fcFcpPktsSent, fcFcpPktsRcvd;
   TrafficCounter   fcFcpBytesSent, fcFcpBytesRcvd;
+  TrafficCounter   fcFiconPktsSent, fcFiconPktsRcvd;
   TrafficCounter   fcFiconBytesSent, fcFiconBytesRcvd;
+  TrafficCounter   fcIpfcPktsSent, fcIpfcPktsRcvd;
   TrafficCounter   fcIpfcBytesSent, fcIpfcBytesRcvd;
+  TrafficCounter   fcElsPktsSent, fcElsPktsRcvd;
   TrafficCounter   fcElsBytesSent, fcElsBytesRcvd;
+  TrafficCounter   fcDnsPktsSent, fcDnsPktsRcvd;
   TrafficCounter   fcDnsBytesSent, fcDnsBytesRcvd;
+  TrafficCounter   fcSwilsPktsSent, fcSwilsPktsRcvd;
   TrafficCounter   fcSwilsBytesSent, fcSwilsBytesRcvd;
+  TrafficCounter   fcOtherFcPktsSent, fcOtherFcPktsRcvd;
   TrafficCounter   otherFcBytesSent, otherFcBytesRcvd;
   TrafficCounter   fcRscnsRcvd;
 
@@ -1836,9 +1846,104 @@ typedef enum {
 
 /* *************************************************************** */
 
+typedef enum {
+  showPrefBasicPref = 1,
+  showPrefDisplayPref,
+  showPrefIPPref,
+  showPrefFCPref,
+  showPrefAdvPref,
+  showPrefDbgPref,
+  showPrefPluginPref,
+} UserPrefDisplayPage;
+
+/* *********************************** */
+
 #define BROADCAST_HOSTS_ENTRY    0
 #define OTHER_HOSTS_ENTRY        1
 #define FIRST_HOSTS_ENTRY        2 /* first available host entry */
+
+/*
+ * Preferences settable by a user, from the web page & cmd line
+ * 
+ */
+typedef struct _userPref {
+  char *accessLogFile;          /* 'a' */
+  bool enablePacketDecoding;    /* 'b' */
+  bool stickyHosts;             /* 'c' */
+  bool daemonMode;              /* 'd' */
+  int  maxNumLines;             /* 'e' */
+  char *rFileName;              /* 'f' */
+  bool trackOnlyLocalHosts;     /* 'g' */
+  char *devices;                /* 'i' */
+  bool enableOtherPacketDump;   /* 'j' */
+  bool filterExpressionInExtraFrame; /* 'k' */
+  char *pcapLog;                /* 'l' */
+  char *localAddresses;         /* 'm' */
+  bool numericFlag;             /* 'n' */
+  bool dontTrustMACaddr;        /* 'o' */
+  char *protoSpecs;             /* 'p' */
+  bool enableSuspiciousPacketDump; /* 'q' */
+  int  refreshRate;             /* 'r' */
+  bool disablePromiscuousMode;  /* 's' */
+  int  traceLevel;              /* 't' */
+
+  u_int     maxNumHashEntries;  /* 'x' */
+  u_int     maxNumSessions;     /* 'X' */
+
+  u_int16_t defaultVsan;        /* 'v' */
+  char      *webAddr;           /* 'w' */
+  int       webPort;
+  int       ipv4or6;            /* '6/4' */
+  bool      enableSessionHandling; /* 'z' */
+
+  char *currentFilterExpression;/* 'B' */
+  char domainName[MAXHOSTNAMELEN]; /* 'D' */
+  char *flowSpecs;              /* 'F' */
+
+  bool debugMode;               /* 'K' */
+#ifndef WIN32
+  int  useSyslog;               /* 'L' */
+#endif
+
+  bool mergeInterfaces;         /* 'M' */
+  char *pcapLogBasePath;        /* 'O' */ /* Added by Ola Lundqvist <opal@debian.org>. */
+  char *fcNSCacheFile;          /* 'N' */
+  char *spoolPath;              /* 'Q' */
+  bool printFcOnly;             /* 'S' */
+  char *mapperURL;              /* 'U' */
+
+#ifdef HAVE_OPENSSL
+  char *sslAddr;                /* 'W' */
+  int  sslPort;
+#endif
+
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+  bool useSSLwatchdog;          /* '133' */
+#endif
+
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+  bool disableSchedYield;       /* '134' */
+#endif
+
+  bool w3c;                     /* '136' */
+
+  char *P3Pcp;                  /* '137' */
+  char *P3Puri;                 /* '138' */
+
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
+  bool setNonBlocking;          /* '139' */
+#endif
+
+  bool disableStopcap;          /* '142' */
+
+  bool disableInstantSessionPurge; /* '144' */
+  bool noFc;                    /* '145' */
+  bool noInvalidLunDisplay;     /* '146' */
+
+  bool disableMutexExtraInfo;   /* '145' */
+
+  bool skipVersionCheck;        /* '150' */
+} UserPref;
 
 typedef struct ntopGlobals {
 
@@ -1859,93 +1964,17 @@ typedef struct ntopGlobals {
   char **pluginDirs;
   char **configFileDirs;
 
-  /* Command line parameters - please keep these in order.  Only the actual
-   * parameter set in the switch in main.c should be here.  Group other fields
-   * in sections below.
-   */
-  char *accessLogFile;               /* 'a' */
-  u_char enablePacketDecoding;       /* 'b' */
-  u_char stickyHosts;                /* 'c' */
-  int daemonMode;                    /* 'd' */
-  int maxNumLines;                   /* 'e' */
-  char *rFileName;                   /* 'f' */
-  u_char trackOnlyLocalHosts;        /* 'g' */
-  char *devices;                     /* 'i' */
-  u_char enableOtherPacketDump;      /* 'j' */
-  int filterExpressionInExtraFrame;  /* 'k' */
-  char *pcapLog;                     /* 'l' */
-  char *localAddresses;              /* 'm' */
-  int numericFlag;                   /* 'n' */
-  short dontTrustMACaddr;            /* 'o' */
-  char *protoSpecs;                  /* 'p' */
-  u_char enableSuspiciousPacketDump; /* 'q' */
-  int refreshRate;                   /* 'r' */
-  u_char disablePromiscuousMode;     /* 's' */
-  short traceLevel;                  /* 't' */
-
-  u_int maxNumHashEntries;           /* 'x' */
-  u_int maxNumSessions;              /* 'X' */
+  /* User-configurable parameters via the command line and the web page. */ 
+  UserPref savedPref;         /* this is what is saved */
+  UserPref runningPref;       /* this is what is currently used */
 #ifndef WIN32
-  char * effectiveUserName;
-  int userId, groupId;               /* 'u' */
+  char      *effectiveUserName;
+  int       userId, groupId;    /* 'u' */
 #endif
-  u_int16_t defaultVsan;             /* 'v' */
-  char *webAddr;                     /* 'w' */
-  int webPort;
-  int ipv4or6;                       /* '6/4' */
-  u_char enableSessionHandling;      /* 'z' */
-
-  char *currentFilterExpression;     /* 'B' */
-  char domainName[MAXHOSTNAMELEN];   /* 'D' */
-  char *flowSpecs;                   /* 'F' */
-
-  u_short debugMode;                 /* 'K' */
-#ifndef WIN32
-  int useSyslog;                     /* 'L' */
-#endif
-
-  int mergeInterfaces;               /* 'M' */
-  char *pcapLogBasePath;             /* 'O' */ /* Added by Ola Lundqvist <opal@debian.org>. */
-  char *fcNSCacheFile;               /* 'N' */
-  char *dbPath;                      /* 'P' */
-  char *spoolPath;                   /* 'Q' */
-  u_char printFcOnly;                /* 'S' */
-  char *mapperURL;                   /* 'U' */
-
-#ifdef HAVE_OPENSSL
-  char *sslAddr;                     /* 'W' */
-  int sslPort;
-#endif
-
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  int useSSLwatchdog;                /* '133' */
-#endif
-
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-  short disableSchedYield;           /* '134' */
-#endif
-
-  short w3c;                         /* '136' */
-
-  char *P3Pcp;                       /* '137' */
-  char *P3Puri;                      /* '138' */
-
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-  short setNonBlocking;              /* '139' */
-#endif
-
-  u_char disableStopcap;             /* '142' */
-
-  u_char disableInstantSessionPurge; /* '144' */
-  u_char noFc;                       /* '145' */
-  char noInvalidLunDisplay;          /* '146' */
-
-  u_char disableMutexExtraInfo;      /* '145' */
-
-  u_char skipVersionCheck;           /* '150' */
+  char *dbPath;                 /* 'P' */
 
   /* Other flags (these could set via command line options one day) */
-  u_char enableFragmentHandling;
+  bool enableFragmentHandling;
 
   HostsDisplayPolicy hostsDisplayPolicy;
   LocalityDisplayPolicy localityDisplayPolicy;

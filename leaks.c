@@ -356,8 +356,8 @@ void myRemoveLeak(void* thePtr, int theLine, char* theFile) {
 /* *************************************** */
 
 void initLeaks(void) {
-  myGlobals.useSyslog       = FLAG_SYSLOG_NONE;
-  myGlobals.traceLevel      = 999;
+  myGlobals.runningPref.useSyslog       = FLAG_SYSLOG_NONE;
+  myGlobals.runningPref.traceLevel      = 999;
   myGlobals.allocatedMemory = 0;  
 
 #ifdef CFG_MULTITHREADED
@@ -512,7 +512,7 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
     traceEvent(CONST_TRACE_FATALERROR, "malloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ((myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
-	(myGlobals.disableStopcap != TRUE)) {
+	(myGlobals.runningPref.disableStopcap != TRUE)) {
       traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
       traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
       traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory");
@@ -549,7 +549,7 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
 	       "calloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
-         (myGlobals.disableStopcap != TRUE) ) {
+         (myGlobals.runningPref.disableStopcap != TRUE) ) {
       traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
       traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
       traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory");
@@ -585,7 +585,7 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
 	       "realloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
     if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
-         (myGlobals.disableStopcap != TRUE) ) {
+         (myGlobals.runningPref.disableStopcap != TRUE) ) {
       traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
       traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
       traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory");

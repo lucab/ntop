@@ -3132,7 +3132,7 @@ static int initsFlowFunct(void) {
   char value[128];
 
   pluginActive = 1;
-  myGlobals.mergeInterfaces = 0; /* Use different devices */
+  myGlobals.runningPref.mergeInterfaces = 0; /* Use different devices */
 
   if((fetchPrefsValue(sfValue(0, "knownDevices", 0), value, sizeof(value)) != -1)
      && (strlen(value) > 0)) {
@@ -4175,7 +4175,7 @@ static void handlesFlowPacket(u_char *_deviceId,
   int sampledPacketSize;
   int deviceId, rc;
 
-  if(myGlobals.rFileName != NULL) {
+  if(myGlobals.runningPref.rFileName != NULL) {
     /* ntop is reading packets from a file */
     struct ether_header ehdr;
     u_int caplen = h->caplen;

@@ -108,9 +108,9 @@ void initWinsock32() {
 
     
 #ifdef WIN32
-  if(myGlobals.pcapLogBasePath) free(myGlobals.pcapLogBasePath); myGlobals.pcapLogBasePath = strdup(_wdir);
+  if(myGlobals.runningPref.pcapLogBasePath) free(myGlobals.runningPref.pcapLogBasePath); myGlobals.runningPref.pcapLogBasePath = strdup(_wdir);
   if(myGlobals.dbPath)          free(myGlobals.dbPath); myGlobals.dbPath = strdup(_wdir);
-  if(myGlobals.spoolPath)       free(myGlobals.spoolPath); myGlobals.spoolPath = strdup(_wdir);
+  if(myGlobals.runningPref.spoolPath)       free(myGlobals.runningPref.spoolPath); myGlobals.runningPref.spoolPath = strdup(_wdir);
 #endif
 
 
@@ -166,7 +166,7 @@ ULONG GetHostIPAddr () {
 	for(i=0; (dotp[i] != '\0') && (dotp[i] != '.'); i++)
 	  ;
 
-	if(dotp[i] == '.') strncpy(myGlobals.domainName, &dotp[i+1], sizeof(myGlobals.domainName));
+	if(dotp[i] == '.') strncpy(myGlobals.runningPref.domainName, &dotp[i+1], sizeof(myGlobals.runningPref.domainName));
       }
     }
   }

@@ -40,23 +40,23 @@ static void setDomainName(void) {
    * The name of the local domain is now calculated properly
    * Kimmo Suominen <kim@tac.nyc.ny.us>
    */
-  if(myGlobals.domainName[0] == '\0') {
-    if((getdomainname(myGlobals.domainName, MAXHOSTNAMELEN) != 0)
-       || (myGlobals.domainName[0] == '\0')
-       || (strcmp(myGlobals.domainName, "(none)") == 0)) {
-      if((gethostname(myGlobals.domainName, MAXHOSTNAMELEN) == 0)
-	 && ((p = memchr(myGlobals.domainName, '.', MAXHOSTNAMELEN)) != NULL)) {
-	myGlobals.domainName[MAXHOSTNAMELEN - 1] = '\0';
+  if(myGlobals.runningPref.domainName[0] == '\0') {
+    if((getdomainname(myGlobals.runningPref.domainName, MAXHOSTNAMELEN) != 0)
+       || (myGlobals.runningPref.domainName[0] == '\0')
+       || (strcmp(myGlobals.runningPref.domainName, "(none)") == 0)) {
+      if((gethostname(myGlobals.runningPref.domainName, MAXHOSTNAMELEN) == 0)
+	 && ((p = memchr(myGlobals.runningPref.domainName, '.', MAXHOSTNAMELEN)) != NULL)) {
+	myGlobals.runningPref.domainName[MAXHOSTNAMELEN - 1] = '\0';
 	++p;
-	memmove(myGlobals.domainName, p, (MAXHOSTNAMELEN+myGlobals.domainName-p));
+	memmove(myGlobals.runningPref.domainName, p, (MAXHOSTNAMELEN+myGlobals.runningPref.domainName-p));
       } else
-	myGlobals.domainName[0] = '\0';
+	myGlobals.runningPref.domainName[0] = '\0';
     }
 
     /*
      * Still unresolved! Try again
      */
-    if(myGlobals.domainName[0] == '\0') {
+    if(myGlobals.runningPref.domainName[0] == '\0') {
       char szLclHost[64];
       struct hostent *lpstHostent;
       struct in_addr stLclAddr;
@@ -78,28 +78,28 @@ static void setDomainName(void) {
 	    ;
 
 	  if(dotp[i] == '.')
-	    strncpy(myGlobals.domainName, &dotp[i+1], MAXHOSTNAMELEN);
+	    strncpy(myGlobals.runningPref.domainName, &dotp[i+1], MAXHOSTNAMELEN);
 	}
       }
     }
 
-    if(myGlobals.domainName[0] == '\0') {
+    if(myGlobals.runningPref.domainName[0] == '\0') {
       /* Last chance.... */
-      /* strncpy(myGlobals.domainName, "please_set_your_local_domain.org", MAXHOSTNAMELEN); */
+      /* strncpy(myGlobals.runningPref.domainName, "please_set_your_local_domain.org", MAXHOSTNAMELEN); */
       ;
     }
   }
 #endif
 
-  len = strlen(myGlobals.domainName)-1;
+  len = strlen(myGlobals.runningPref.domainName)-1;
 
-  while((len > 0) && (myGlobals.domainName[len] != '.'))
+  while((len > 0) && (myGlobals.runningPref.domainName[len] != '.'))
     len--;
 
   if(len == 0)
-    myGlobals.shortDomainName = myGlobals.domainName;
+    myGlobals.shortDomainName = myGlobals.runningPref.domainName;
   else
-    myGlobals.shortDomainName = &myGlobals.domainName[len+1];
+    myGlobals.shortDomainName = &myGlobals.runningPref.domainName[len+1];
 }
 
 /* ------------------------------------------------------------ */
@@ -225,37 +225,39 @@ static void initIPCountryTable(void) {
   myGlobals.countryFlagHead->b[0]=NULL;
   myGlobals.countryFlagHead->b[1]=NULL;
 
-  fd=checkForInputFile("IP2CC",
-                       "IP address <-> Country Code mapping",
-                       CONST_P2C_FILE,
-                       NULL,
-                       &compressedFormat);
-  if(fd != NULL) {
-      char *strtokState, *cc, *ip, *prefix;
-      int numRead=0;
-
-      while(readInputFile(fd,
-                          "IP2CC",
-                          FALSE,
-                          compressedFormat,
+  if (!myGlobals.runningPref.printFcOnly) {
+      fd=checkForInputFile("IP2CC",
+                           "IP address <-> Country Code mapping",
+                           CONST_P2C_FILE,
+                           NULL,
+                           &compressedFormat);
+      if(fd != NULL) {
+          char *strtokState, *cc, *ip, *prefix;
+          int numRead=0;
+          
+          while(readInputFile(fd,
+                              "IP2CC",
+                              FALSE,
+                              compressedFormat,
                           10000,
-                          buf, sizeof(buf),
-                          &numRead) == 0) {
-	  if((cc=strtok_r(buf, ":", &strtokState))==NULL)       continue;
-	  if((ip=strtok_r(NULL, "/", &strtokState))==NULL)      continue;
-	  if((prefix=strtok_r(NULL, "\n", &strtokState))==NULL) continue;
-
-	  strtolower(cc);
-
-	  addNodeInternal(xaton(ip), atoi(prefix), cc, 0);
+                              buf, sizeof(buf),
+                              &numRead) == 0) {
+              if((cc=strtok_r(buf, ":", &strtokState))==NULL)       continue;
+              if((ip=strtok_r(NULL, "/", &strtokState))==NULL)      continue;
+              if((prefix=strtok_r(NULL, "\n", &strtokState))==NULL) continue;
+              
+              strtolower(cc);
+              
+              addNodeInternal(xaton(ip), atoi(prefix), cc, 0);
+          }
+          
+          myGlobals.ipCountryCount += numRead;
+      } else {
+          traceEvent(CONST_TRACE_WARNING,
+                     "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data)");
+          traceEvent(CONST_TRACE_INFO,
+                     "IP2CC: ntop will perform correctly but without this minor feature");
       }
-
-      myGlobals.ipCountryCount += numRead;
-  } else {
-    traceEvent(CONST_TRACE_WARNING,
-               "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data)");
-    traceEvent(CONST_TRACE_INFO,
-               "IP2CC: ntop will perform correctly but without this minor feature");
   }
 }
 
@@ -372,7 +374,7 @@ void resetDevice(int devIdx) {
   myGlobals.device[devIdx].last30daysThptIdx = 0;
   myGlobals.device[devIdx].hostsno = 0;
 
-  if (myGlobals.rFileName == NULL) {
+  if (myGlobals.runningPref.rFileName == NULL) {
       myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
           myGlobals.device[devIdx].lastHourThptUpdate = myGlobals.device[devIdx].lastFiveMinsThptUpdate = time(NULL);
   }
@@ -458,7 +460,7 @@ void initCounters(void) {
     myGlobals.dummyEthAddress[len] = len;
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    if(myGlobals.enableSessionHandling) {
+    if(myGlobals.runningPref.enableSessionHandling) {
       len = sizeof(IPSession*)*MAX_TOT_NUM_SESSIONS;
       myGlobals.device[i].tcpSession = (IPSession**)malloc(len);
       memset(myGlobals.device[i].tcpSession, 0, len);
@@ -487,14 +489,13 @@ void initCounters(void) {
   myGlobals.numVendorLookupFoundMulticast = 0;
   myGlobals.numVendorLookupFoundLAA = 0;
 
-  if (myGlobals.rFileName == NULL) {
+  if (myGlobals.runningPref.rFileName == NULL) {
       myGlobals.initialSniffTime = myGlobals.lastRefreshTime = time(NULL);
   }
   else {
       myGlobals.initialSniffTime = 0; /* We set the start when first pkt is
                                        * read */ 
   }
-  myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
 
 /* TODO why here AND in globals-core.c? */
   myGlobals.numHandledSIGPIPEerrors = 0;
@@ -526,41 +527,42 @@ void initCounters(void) {
    * Process ASN file
    */
   numRead=0;
-  fd=checkForInputFile("ASN",
-                       "Autonomous System Number table",
-                       CONST_ASLIST_FILE,
-                       NULL,
-                       &compressedFormat);
-  if(fd != NULL) {
-      char *strtokState, *as, *ip, *prefix;
-
-      memset(&buf, 0, sizeof(buf));
-
-      myGlobals.asHead = malloc(sizeof(IPNode));
-      memset(myGlobals.asHead, 0, sizeof(IPNode));
-      myGlobals.asHead->node.as = 0;
-      myGlobals.asMem += sizeof(IPNode);
-    
-      while(readInputFile(fd,
-                          "ASN",
-                          FALSE,
-                          compressedFormat,
-                          25000,
-                          buf, sizeof(buf),
-                          &numRead) == 0) {
-
-        if((as = strtok_r(buf, ":", &strtokState)) == NULL)  continue;
-        if((ip = strtok_r(NULL, "/", &strtokState)) == NULL)  continue;
-        if((prefix = strtok_r(NULL, "\n", &strtokState)) == NULL)  continue;
-
-        addNodeInternal(xaton(ip), atoi(prefix), NULL, atoi(as));
-        myGlobals.asCount++;
-      }
-      traceEvent(CONST_TRACE_INFO, "ASN: ....Used %d KB of memory (%d per entry)",
-                 ((myGlobals.asMem+512)/1024), sizeof(IPNode));
-  } else
-    traceEvent(CONST_TRACE_NOISY, "ASN: ntop continues ok, but without ASN information.");
-
+  if (!myGlobals.runningPref.printFcOnly) {
+      fd=checkForInputFile("ASN",
+                           "Autonomous System Number table",
+                           CONST_ASLIST_FILE,
+                           NULL,
+                           &compressedFormat);
+      if(fd != NULL) {
+          char *strtokState, *as, *ip, *prefix;
+          
+          memset(&buf, 0, sizeof(buf));
+          
+          myGlobals.asHead = malloc(sizeof(IPNode));
+          memset(myGlobals.asHead, 0, sizeof(IPNode));
+          myGlobals.asHead->node.as = 0;
+          myGlobals.asMem += sizeof(IPNode);
+          
+          while(readInputFile(fd,
+                              "ASN",
+                              FALSE,
+                              compressedFormat,
+                              25000,
+                              buf, sizeof(buf),
+                              &numRead) == 0) {
+              
+              if((as = strtok_r(buf, ":", &strtokState)) == NULL)  continue;
+              if((ip = strtok_r(NULL, "/", &strtokState)) == NULL)  continue;
+              if((prefix = strtok_r(NULL, "\n", &strtokState)) == NULL)  continue;
+              
+              addNodeInternal(xaton(ip), atoi(prefix), NULL, atoi(as));
+              myGlobals.asCount++;
+          }
+          traceEvent(CONST_TRACE_INFO, "ASN: ....Used %d KB of memory (%d per entry)",
+                     ((myGlobals.asMem+512)/1024), sizeof(IPNode));
+      } else
+          traceEvent(CONST_TRACE_NOISY, "ASN: ntop continues ok, but without ASN information.");
+  }
   /* i18n */
 #ifdef MAKE_WITH_I18N
   /*
@@ -952,7 +954,7 @@ void reinitMutexes (void) {
   createMutex(&myGlobals.securityItemsMutex);
 
  #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-  if(myGlobals.numericFlag == 0) {
+  if(myGlobals.runningPref.numericFlag == 0) {
     createMutex(&myGlobals.addressResolutionMutex);
   }
  #endif
@@ -969,55 +971,12 @@ void reinitMutexes (void) {
 void initThreads(void) {
   int i;
 
-  traceEvent(CONST_TRACE_INFO, "Initializing semaphores, mutexes and threads");
-
-#ifdef CFG_MULTITHREADED
- #ifdef HAVE_PTHREAD_ATFORK
-  i = pthread_atfork(NULL, NULL, &reinitMutexes);
-  traceEvent(CONST_TRACE_INFO, "NOTE: atfork() handler registered for mutexes, rc %d", i);
- #endif
-
-  /*
-   * Create two variables (semaphores) used by functions in pbuf.c to queue packets
-   */
-#ifdef MAKE_WITH_SEMAPHORES
-
-  createSem(&myGlobals.queueSem, 0);
-
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-  createSem(&myGlobals.queueAddressSem, 0);
-#endif
-
-#else
-
-  createCondvar(&myGlobals.queueCondvar);
-
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-  createCondvar(&myGlobals.queueAddressCondvar);
-#endif
-
-#endif
-
-  createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
-  createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */
-  createMutex(&myGlobals.fcSessionsMutex); /* data to synchronize TCP sessions access */
-  createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
-  createMutex(&myGlobals.purgeMutex);       /* synchronize purging */
-  createMutex(&myGlobals.securityItemsMutex);
-
-  /*
-   * Create the thread (1) - NPA - Network Packet Analyzer (main thread)
-   */
-  createMutex(&myGlobals.packetProcessMutex);
-  createMutex(&myGlobals.packetQueueMutex);
-  createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for network packet analyser",
-	     (long)myGlobals.dequeueThreadId);
-
-  /*
-   * Create the thread (2) - HTS - Host Traffic Statistics
-   */
-  createMutex(&myGlobals.hostsHashMutex);
+#ifdef CFG_MULTITHREADED  
+  if (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
+      createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
+      traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for network packet analyser",
+                 (long)myGlobals.dequeueThreadId);
+  }
 
   /*
    * Create the thread (3) - SFP - Scan Fingerprints
@@ -1029,14 +988,15 @@ void initThreads(void) {
   /*
    * Create the thread (4) - SIH - Scan Idle Hosts - optional
    */
-  if(myGlobals.rFileName == NULL) {
+  if ((myGlobals.runningPref.rFileName == NULL) &&
+      (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN)) {
     createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
     traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for idle hosts detection",
 	       (long)myGlobals.scanIdleThreadId);
   }
 
 #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-  if(myGlobals.numericFlag == 0) {
+  if(myGlobals.runningPref.numericFlag == 0) {
     createMutex(&myGlobals.addressResolutionMutex);
 
     /*
@@ -1054,7 +1014,7 @@ void initThreads(void) {
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if(myGlobals.useSSLwatchdog == 1)
+  if(myGlobals.runningPref.useSSLwatchdog == 1)
 #endif
     {
       traceEvent(CONST_TRACE_NOISY, "Initializing Condvar for ssl watchdog");
@@ -1177,47 +1137,47 @@ void addDevice(char* deviceName, char* deviceDescr) {
     }
 #endif
 
-    if (myGlobals.noFc) {
+    if (myGlobals.runningPref.noFc) {
       myGlobals.device[deviceId].pcapPtr =
 	pcap_open_live(myGlobals.device[deviceId].name,
-		       myGlobals.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN,
-		       myGlobals.disablePromiscuousMode == 1 ? 0 : 1,
+		       myGlobals.runningPref.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN,
+		       myGlobals.runningPref.disablePromiscuousMode == 1 ? 0 : 1,
 		       100 /* ms */, ebuf);
     }
     else {
         myGlobals.device[deviceId].pcapPtr =
 	pcap_open_live(myGlobals.device[deviceId].name,
 		       MAX_PACKET_LEN,
-		       myGlobals.disablePromiscuousMode == 1 ? 0 : 1,
+		       myGlobals.runningPref.disablePromiscuousMode == 1 ? 0 : 1,
 		       100 /* ms */, ebuf);
     }
 
       if(myGlobals.device[deviceId].pcapPtr == NULL) {
 	traceEvent(CONST_TRACE_FATALERROR, "pcap_open_live(): '%s'", ebuf);
-	if(myGlobals.disablePromiscuousMode == 1)
+	if(myGlobals.runningPref.disablePromiscuousMode == 1)
 	  traceEvent(CONST_TRACE_INFO,
 		     "Sorry, but on this system, even with -s, it appears that ntop must be started as root");
 	traceEvent(CONST_TRACE_INFO, "Please correct the problem or select a different interface using the -i flag");
-	exit(-1);
+	return;
       }
 
-      if(myGlobals.pcapLog != NULL) {
-	if(strlen(myGlobals.pcapLog) > 64)
-	  myGlobals.pcapLog[64] = '\0';
+      if(myGlobals.runningPref.pcapLog != NULL) {
+	if(strlen(myGlobals.runningPref.pcapLog) > 64)
+	  myGlobals.runningPref.pcapLog[64] = '\0';
 //#ifdef WIN32
 //        safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%c%s.%s.pcap",
-//                myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//                myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 //                CONST_PATH_SEP, myGlobals.pcapLog,
 //                myGlobals.device[deviceId].humanFriendlyName);
 //#else
 //        safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%c%s.%s.pcap",
-//                myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//                myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 //                CONST_PATH_SEP, myGlobals.pcapLog,
 //                myGlobals.device[deviceId].name);
 //#endif
         safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%c%s.%s.pcap",
-                myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-                CONST_PATH_SEP, myGlobals.pcapLog,
+                myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+                CONST_PATH_SEP, myGlobals.runningPref.pcapLog,
                 myGlobals.device[deviceId].humanFriendlyName != NULL ?
                     myGlobals.device[deviceId].humanFriendlyName :
                     myGlobals.device[deviceId].name);
@@ -1231,20 +1191,20 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	  traceEvent(CONST_TRACE_NOISY, "Saving packets into file %s", myName);
       }
 
-    if(myGlobals.enableSuspiciousPacketDump) {
+    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 //#ifdef WIN32
 //	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
-//		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//		myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 //		CONST_PATH_SEP,
 //		myGlobals.device[deviceId].humanFriendlyName);
 //#else
 //	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
-//		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//		myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 //		CONST_PATH_SEP,
 //		myGlobals.device[deviceId].name);
 //#endif
         safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
-                myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+                myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
                 CONST_PATH_SEP,
                 myGlobals.device[deviceId].humanFriendlyName != NULL ?
                     myGlobals.device[deviceId].humanFriendlyName :
@@ -1253,26 +1213,26 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	myGlobals.device[deviceId].pcapErrDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
 	if(myGlobals.device[deviceId].pcapErrDumper == NULL) {
-          myGlobals.enableSuspiciousPacketDump = 0;
+          myGlobals.runningPref.enableSuspiciousPacketDump = 0;
 	  traceEvent(CONST_TRACE_ERROR, "pcap_dump_open(..., '%s') failed (suspicious packets)", myName);
 	  traceEvent(CONST_TRACE_INFO, "Continuing without suspicious packet dump");
         }
       }
 
-      if(myGlobals.enableOtherPacketDump) {
+      if(myGlobals.runningPref.enableOtherPacketDump) {
 //#ifdef WIN32
 //	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
-//		myGlobals.pcapLogBasePath,
+//		myGlobals.runningPref.pcapLogBasePath,
 //		CONST_PATH_SEP,
 //		myGlobals.device[deviceId].humanFriendlyName);
 //#else
 //        safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
-//                myGlobals.pcapLogBasePath,
+//                myGlobals.runningPref.pcapLogBasePath,
 //                CONST_PATH_SEP,
 //                myGlobals.device[deviceId].name);
 //#endif
         safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
-                myGlobals.pcapLogBasePath,
+                myGlobals.runningPref.pcapLogBasePath,
                 CONST_PATH_SEP,
                 myGlobals.device[deviceId].humanFriendlyName != NULL ?
                     myGlobals.device[deviceId].humanFriendlyName :
@@ -1281,7 +1241,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	myGlobals.device[deviceId].pcapOtherDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
 	if(myGlobals.device[deviceId].pcapOtherDumper == NULL) {
-          myGlobals.enableOtherPacketDump = 0;
+          myGlobals.runningPref.enableOtherPacketDump = 0;
 	  traceEvent(CONST_TRACE_ERROR, "pcap_dump_open(..., '%s') failed (other (unknown) packets)", myName);
 	  traceEvent(CONST_TRACE_INFO, "Continuing without other (unknown) packet dump");
         }
@@ -1364,7 +1324,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
     /* Allocate FC Traffic Matrices */
 #ifdef NOT_YET    
-    if (!myGlobals.noFc) {
+    if (!myGlobals.runningPref.noFc) {
         memlen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
         myGlobals.device[deviceId].fcTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
                                                                             *myGlobals.device[deviceId].numHosts,
@@ -1409,8 +1369,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
     }
   }
   
-  if(myGlobals.devices != NULL) free(myGlobals.devices);
-  myGlobals.devices = workDevices;
+  if(myGlobals.runningPref.devices != NULL) free(myGlobals.runningPref.devices);
+  myGlobals.runningPref.devices = workDevices;
 
   /* ********************************************** */
 
@@ -1461,6 +1421,9 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
   if((myGlobals.actualReportDeviceId == 0) && myGlobals.device[0].dummyDevice)
     myGlobals.actualReportDeviceId = deviceId;
+
+  /* We have at least one device; switch the state of the ntop state var */
+  myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
 }
 
 /* ******************************* */
@@ -1486,33 +1449,33 @@ void initDevices(char* devices) {
 
   traceEvent(CONST_TRACE_NOISY, "Initializing network devices");
 
-  if(myGlobals.rFileName != NULL) {
+  if(myGlobals.runningPref.rFileName != NULL) {
     createDummyInterface("none");
     myGlobals.device[0].dummyDevice = 0;
-    myGlobals.device[0].pcapPtr  = pcap_open_offline(myGlobals.rFileName, ebuf);
+    myGlobals.device[0].pcapPtr  = pcap_open_offline(myGlobals.runningPref.rFileName, ebuf);
     
     if(myGlobals.device[0].pcapPtr == NULL) {
-      traceEvent(CONST_TRACE_FATALERROR, "pcap_open_offline(): '%s'", ebuf);
-      exit(-1);
+      traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(): '%s'", ebuf);
+      return;
     }
 
     resetStats(0);
     initDeviceDatalink(0);
 
-    if(myGlobals.enableSuspiciousPacketDump) {
+    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 //#ifdef WIN32
 //      safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
-//	      myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//	      myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 //	      CONST_PATH_SEP,
 //	      myGlobals.device[0].humanFriendlyName);
 //#else
 //      safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
-//              myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+//              myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 //              CONST_PATH_SEP,
 //              myGlobals.device[0].name);
 //#endif
       safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
-              myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+              myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
               CONST_PATH_SEP,
               myGlobals.device[0].humanFriendlyName != NULL ?
                   myGlobals.device[0].humanFriendlyName :
@@ -1527,15 +1490,17 @@ void initDevices(char* devices) {
     free(myGlobals.device[0].name);
     myGlobals.device[0].name = strdup("pcap-file");
     myGlobals.numDevices = 1;
+    myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
 
     return;
+
   }
 
 #ifdef WIN32
   if(pcap_findalldevs(&devpointer, ebuf) < 0) {
-    traceEvent(CONST_TRACE_FATALERROR, "pcap_findalldevs() call failed [%s]", ebuf);
-    traceEvent(CONST_TRACE_FATALERROR, "Have you instaled winpcap properly?");
-    exit(-1);
+    traceEvent(CONST_TRACE_ERROR, "pcap_findalldevs() call failed [%s]", ebuf);
+    traceEvent(CONST_TRACE_ERROR, "Have you instaled winpcap properly?");
+    return;
   } else {
     int i;
 
@@ -1589,8 +1554,8 @@ void initDevices(char* devices) {
     tmpDev = pcap_lookupdev(ebuf);
 
     if(tmpDev == NULL) {
-      traceEvent(CONST_TRACE_FATALERROR, "Unable to locate default interface (%s)", ebuf);
-      exit(-1);
+      traceEvent(CONST_TRACE_ERROR, "Unable to locate default interface (%s)", ebuf);
+      return;
     }
 
     tmpDescr = tmpDev;    
@@ -1655,8 +1620,8 @@ void initDevices(char* devices) {
 	  tmpDescr = intDescr[atoi(tmpDev)];
 	  tmpDev   = intNames[atoi(tmpDev)];
 	} else {
-	  traceEvent(CONST_TRACE_FATALERROR, "Interface index '%d' is out of range [0..%d]", atoi(tmpDev), ifIdx);
-	  exit(-1);
+	  traceEvent(CONST_TRACE_ERROR, "Interface index '%d' is out of range [0..%d]", atoi(tmpDev), ifIdx);
+	  return;
 	}
       } else {
 	/* Nothing to do: the user has specified an interface name */
@@ -1776,31 +1741,31 @@ void initDeviceDatalink(int deviceId) {
 
 void parseTrafficFilter(void) {
   /* Construct, compile and set filter */
-  if(myGlobals.currentFilterExpression != NULL) {
+  if(myGlobals.runningPref.currentFilterExpression != NULL) {
     int i;
     struct bpf_program fcode;
 
     for(i=0; i<myGlobals.numDevices; i++) {
       if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
-	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
+	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.runningPref.currentFilterExpression, 1,
 			 myGlobals.device[i].netmask.s_addr) < 0)
 	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
 	  traceEvent(CONST_TRACE_FATALERROR,
 		     "Wrong filter '%s' (%s) on interface %s",
-		     myGlobals.currentFilterExpression,
+		     myGlobals.runningPref.currentFilterExpression,
 		     pcap_geterr(myGlobals.device[i].pcapPtr),
 		     myGlobals.device[i].name[0] == '0' ? "<pcap file>" : myGlobals.device[i].name);
 	  exit(-1);
 	} else
 	  traceEvent(CONST_TRACE_NOISY, "Setting filter to \"%s\" on device %s.",
-		     myGlobals.currentFilterExpression, myGlobals.device[i].name);
+		     myGlobals.runningPref.currentFilterExpression, myGlobals.device[i].name);
 #ifdef HAVE_PCAP_FREECODE
 	pcap_freecode(&fcode);
 #endif
       }
     }
   } else
-    myGlobals.currentFilterExpression = strdup("");	/* so that it isn't NULL! */
+    myGlobals.runningPref.currentFilterExpression = strdup("");	/* so that it isn't NULL! */
 }
 
 
@@ -1840,7 +1805,7 @@ void initSignals(void) {
   signal(SIGPIPE, ignoreThisSignal);
   signal(SIGABRT, ignoreThisSignal);
 #if 0
-  if(myGlobals.debugMode) {
+  if(myGlobals.runningPref.debugMode) {
     /* Activate backtrace trap on -K flag */
     signal(SIGSEGV, cleanup);
   }
@@ -1854,6 +1819,11 @@ void startSniffer(void) {
   int i;
 
 #ifdef CFG_MULTITHREADED
+  if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT)
+      return;
+
+  myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
+  
   for(i=0; i<myGlobals.numDevices; i++)
     if((!myGlobals.device[i].virtualDevice)
        && (!myGlobals.device[i].dummyDevice)
@@ -1932,7 +1902,7 @@ u_int createDummyInterface(char *ifName) {
   }
 #endif 
 
-  if(myGlobals.enableSessionHandling) {
+  if(myGlobals.runningPref.enableSessionHandling) {
     int len = sizeof(IPSession*)*MAX_TOT_NUM_SESSIONS;
     myGlobals.device[deviceId].tcpSession = (IPSession**)malloc(len);
     memset(myGlobals.device[deviceId].tcpSession, 0, len);

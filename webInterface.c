@@ -415,7 +415,7 @@ char* makeHostLink(HostTraffic *el, short mode,
       /* We have the IP, so the DNS is probably still getting the entry name */
       strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
 #ifndef CMPFCTN_DEBUG
-      if(myGlobals.debugMode == 1)
+      if(myGlobals.runningPref.debugMode == 1)
 #endif
         safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:NumIpAddr(%s) -->",
                     el->hostNumIpAddress);
@@ -425,7 +425,7 @@ char* makeHostLink(HostTraffic *el, short mode,
       strncpy(symIp, el->ethAddressString, sizeof(symIp));
       usedEthAddress = 1;
 #ifndef CMPFCTN_DEBUG
-      if(myGlobals.debugMode == 1)
+      if(myGlobals.runningPref.debugMode == 1)
 #endif
         safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:MAC(%s) -->",
                     el->ethAddressString);
@@ -433,7 +433,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     } else if(el->fcCounters->hostNumFcAddress[0] != '\0') {
       strncpy(symIp, el->fcCounters->hostNumFcAddress, sizeof(symIp));
 #ifndef CMPFCTN_DEBUG
-      if(myGlobals.debugMode == 1)
+      if(myGlobals.runningPref.debugMode == 1)
 #endif
         safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:FC(%s) -->",
                     el->fcCounters->hostNumFcAddress);
@@ -464,7 +464,7 @@ char* makeHostLink(HostTraffic *el, short mode,
         strncat(noteBuf, " [NetBIOS]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
     }
 #ifndef CMPFCTN_DEBUG
-    if(myGlobals.debugMode == 1) 
+    if(myGlobals.runningPref.debugMode == 1) 
 #endif
       switch (el->hostResolvedNameType) {
         case FLAG_HOST_SYM_ADDR_TYPE_FCID:
@@ -851,7 +851,7 @@ void switchNwInterface(int _interface) {
 
   sendString("<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
   
-  if(myGlobals.mergeInterfaces) {
+  if(myGlobals.runningPref.mergeInterfaces) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, but you cannot switch among different interfaces "
                 "unless the -M command line switch is specified at run time.");
     sendString(buf);
@@ -5353,7 +5353,7 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
 
 #ifdef CFG_MULTITHREADED
 void printMutexStatusReport(int textPrintFlag) {
-  if(myGlobals.disableMutexExtraInfo) {
+  if(myGlobals.runningPref.disableMutexExtraInfo) {
     sendString(texthtml("\nMutexes:\n\n", 
 			  "<P>"TABLE_ON"<TABLE BORDER=1>\n"
 			  "<TR><TH>Mutex Name</TH>"
@@ -5377,7 +5377,7 @@ void printMutexStatusReport(int textPrintFlag) {
   printMutexStatus(textPrintFlag, &myGlobals.purgeMutex, "purgeMutex");
 
 #if defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-  if(myGlobals.numericFlag == 0) 
+  if(myGlobals.runningPref.numericFlag == 0) 
     printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 #endif
 
@@ -5393,7 +5393,7 @@ void printMutexStatusReport(int textPrintFlag) {
 
 /* ******************************** */
 
-void printNtopConfigInfo(int textPrintFlag) {
+void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
   char buf[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
   int i, bufLength, bufPosition, bufUsed;
   unsigned int idx, minLen=-1, maxLen=0;
@@ -5443,7 +5443,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   {
     char pid[16];
 
-    if(myGlobals.daemonMode == 1) {
+    if(pref->daemonMode == 1) {
       safe_snprintf(__FILE__, __LINE__, pid, sizeof(pid), "%d", myGlobals.basentoppid);
       printFeatureConfigInfo(textPrintFlag, "ntop Process Id", pid);
       safe_snprintf(__FILE__, __LINE__, pid, sizeof(pid), "%d", getppid());
@@ -5485,98 +5485,98 @@ void printNtopConfigInfo(int textPrintFlag) {
     /* Note above needs to be a normal space for html case so that web browser can
        break up the lines as it needs to... */
   }
-  sendString(texthtml("\n\nCommand line parameters are:\n\n", "</TD></TR>\n"));
+  sendString(texthtml("\n\nPreferences used are:\n\n", "</TD></TR>\n"));
 
   printParameterConfigInfo(textPrintFlag, "-a | --access-log-file",
-                           myGlobals.accessLogFile,
+                           pref->accessLogFile,
                            DEFAULT_NTOP_ACCESS_LOG_FILE);
 
   printParameterConfigInfo(textPrintFlag, "-b | --disable-decoders",
-                           myGlobals.enablePacketDecoding == 1 ? "No" : "Yes",
+                           pref->enablePacketDecoding == 1 ? "No" : "Yes",
                            DEFAULT_NTOP_PACKET_DECODING == 1 ? "No" : "Yes");
 
   printParameterConfigInfo(textPrintFlag, "-c | --sticky-hosts",
-                           myGlobals.stickyHosts == 1 ? "Yes" : "No",
+                           pref->stickyHosts == 1 ? "Yes" : "No",
                            DEFAULT_NTOP_STICKY_HOSTS == 1 ? "Yes" : "No");
 
 #ifndef WIN32
   printParameterConfigInfo(textPrintFlag, "-d | --daemon",
-                           myGlobals.daemonMode == 1 ? "Yes" : "No",
+                           pref->daemonMode == 1 ? "Yes" : "No",
                            strcmp(myGlobals.program_name, "ntopd") == 0 ? "Yes" : DEFAULT_NTOP_DAEMON_MODE);
 #endif
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%d",
-	      myGlobals.maxNumLines == CONST_NUM_TABLE_ROWS_PER_PAGE ? CONST_REPORT_ITS_DEFAULT : "",
-	      myGlobals.maxNumLines);
+	      pref->maxNumLines == CONST_NUM_TABLE_ROWS_PER_PAGE ? CONST_REPORT_ITS_DEFAULT : "",
+	      pref->maxNumLines);
   printFeatureConfigInfo(textPrintFlag, "-e | --max-table-rows", buf);
 
   printParameterConfigInfo(textPrintFlag, "-f | --traffic-dump-file",
-                           myGlobals.rFileName,
+                           pref->rFileName,
                            DEFAULT_NTOP_TRAFFICDUMP_FILENAME);
 
   printParameterConfigInfo(textPrintFlag, "-g | --track-local-hosts",
-                           myGlobals.trackOnlyLocalHosts == 1 ? "Track local hosts only" : "Track all hosts",
+                           pref->trackOnlyLocalHosts == 1 ? "Track local hosts only" : "Track all hosts",
                            DEFAULT_NTOP_TRACK_ONLY_LOCAL == 1 ? "Track local hosts only" : "Track all hosts");
 
   printParameterConfigInfo(textPrintFlag, "-o | --no-mac",
-			   myGlobals.dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
+			   pref->dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
                            DEFAULT_NTOP_DONT_TRUST_MAC_ADDR == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses");
 
   printParameterConfigInfo(textPrintFlag, "-i | --interface" CONST_REPORT_ITS_EFFECTIVE,
-                           myGlobals.devices,
+                           pref->devices,
                            DEFAULT_NTOP_DEVICES);
 
   printParameterConfigInfo(textPrintFlag, "-j | --create-other-packets",
-                           myGlobals.enableOtherPacketDump == 1 ? "Enabled" : "Disabled",
+                           pref->enableOtherPacketDump == 1 ? "Enabled" : "Disabled",
                            DEFAULT_NTOP_OTHER_PKT_DUMP == 1 ? "Enabled" : "Disabled");
 
   printParameterConfigInfo(textPrintFlag, "-k | --filter-expression-in-extra-frame",
-                           myGlobals.filterExpressionInExtraFrame == 1 ? "Yes" : "No",
+                           pref->filterExpressionInExtraFrame == 1 ? "Yes" : "No",
                            DEFAULT_NTOP_FILTER_IN_FRAME == 1 ? "Yes" : "No");
 
-  if(myGlobals.pcapLog == NULL) {
+  if(pref->pcapLog == NULL) {
     printParameterConfigInfo(textPrintFlag, "-l | --pcap-log",
-			     myGlobals.pcapLog,
+			     pref->pcapLog,
 			     DEFAULT_NTOP_PCAP_LOG_FILENAME);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s.&lt;device&gt;.pcap",
-		myGlobals.pcapLogBasePath,
-		myGlobals.pcapLog);
+		pref->pcapLogBasePath,
+		pref->pcapLog);
     printParameterConfigInfo(textPrintFlag, "-l | --pcap-log" CONST_REPORT_ITS_EFFECTIVE,
 			     buf,
 			     DEFAULT_NTOP_PCAP_LOG_FILENAME);
   }
 
   printParameterConfigInfo(textPrintFlag, "-m | --local-subnets" CONST_REPORT_ITS_EFFECTIVE,
-                           myGlobals.localAddresses,
+                           pref->localAddresses,
                            DEFAULT_NTOP_LOCAL_SUBNETS);
 
   printParameterConfigInfo(textPrintFlag, "-n | --numeric-ip-addresses",
-                           myGlobals.numericFlag > 0 ? "Yes" : "No",
+                           pref->numericFlag > 0 ? "Yes" : "No",
                            DEFAULT_NTOP_NUMERIC_IP_ADDRESSES > 0 ? "Yes" : "No");
 
-  if(myGlobals.protoSpecs == NULL) {
+  if(pref->protoSpecs == NULL) {
     printFeatureConfigInfo(textPrintFlag, "-p | --protocols", CONST_REPORT_ITS_DEFAULT "internal list");
   } else {
-    printFeatureConfigInfo(textPrintFlag, "-p | --protocols", myGlobals.protoSpecs);
+    printFeatureConfigInfo(textPrintFlag, "-p | --protocols", pref->protoSpecs);
   }
 
   printParameterConfigInfo(textPrintFlag, "-q | --create-suspicious-packets",
-                           myGlobals.enableSuspiciousPacketDump == 1 ? "Enabled" : "Disabled",
+                           pref->enableSuspiciousPacketDump == 1 ? "Enabled" : "Disabled",
                            DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP == 1 ? "Enabled" : "Disabled");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%d",
-	      myGlobals.refreshRate == DEFAULT_NTOP_AUTOREFRESH_INTERVAL ? CONST_REPORT_ITS_DEFAULT : "",
-	      myGlobals.refreshRate);
+	      pref->refreshRate == DEFAULT_NTOP_AUTOREFRESH_INTERVAL ? CONST_REPORT_ITS_DEFAULT : "",
+	      pref->refreshRate);
   printFeatureConfigInfo(textPrintFlag, "-r | --refresh-time", buf);
 
   printParameterConfigInfo(textPrintFlag, "-s | --no-promiscuous",
-                           myGlobals.disablePromiscuousMode == 1 ? "Yes" : "No",
+                           pref->disablePromiscuousMode == 1 ? "Yes" : "No",
                            DEFAULT_NTOP_DISABLE_PROMISCUOUS == 1 ? "Yes" : "No");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%d",
-	      myGlobals.traceLevel == DEFAULT_TRACE_LEVEL ? CONST_REPORT_ITS_DEFAULT : "",
-	      myGlobals.traceLevel);
+	      pref->traceLevel == DEFAULT_TRACE_LEVEL ? CONST_REPORT_ITS_DEFAULT : "",
+	      pref->traceLevel);
   printFeatureConfigInfo(textPrintFlag, "-t | --trace-level", buf);
 
 #ifndef WIN32
@@ -5587,56 +5587,56 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "-u | --user", buf);
 #endif
 
-  if(myGlobals.webPort == 0) {
+  if(pref->webPort == 0) {
     strcpy(buf, "Inactive");
-  } else if(myGlobals.webAddr != 0) {
+  } else if(pref->webAddr != 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"%sActive, address %s, port %d",
-		( (myGlobals.webAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.webPort == DEFAULT_NTOP_WEB_PORT) ) ? CONST_REPORT_ITS_DEFAULT : "",
-		myGlobals.webAddr,
-		myGlobals.webPort);
+		( (pref->webAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->webPort == DEFAULT_NTOP_WEB_PORT) ) ? CONST_REPORT_ITS_DEFAULT : "",
+		pref->webAddr,
+		pref->webPort);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"%sActive, all interfaces, port %d",
-		((myGlobals.webAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.webPort == DEFAULT_NTOP_WEB_PORT) )
-		? CONST_REPORT_ITS_DEFAULT : "", myGlobals.webPort);
+		((pref->webAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->webPort == DEFAULT_NTOP_WEB_PORT) )
+		? CONST_REPORT_ITS_DEFAULT : "", pref->webPort);
   }
 
   printFeatureConfigInfo(textPrintFlag, "-w | --http-server", buf);
 
   printParameterConfigInfo(textPrintFlag, "-z | --disable-sessions",
-                           myGlobals.enableSessionHandling == 1 ? "No" : "Yes",
+                           pref->enableSessionHandling == 1 ? "No" : "Yes",
                            DEFAULT_NTOP_ENABLE_SESSIONHANDLE == 1 ? "No" : "Yes");
 
   printParameterConfigInfo(textPrintFlag, "-B | --filter-expression",
-                           ((myGlobals.currentFilterExpression == NULL) ||
-                            (myGlobals.currentFilterExpression[0] == '\0')) ? "none" :
-			   myGlobals.currentFilterExpression,
+                           ((pref->currentFilterExpression == NULL) ||
+                            (pref->currentFilterExpression[0] == '\0')) ? "none" :
+			   pref->currentFilterExpression,
                            DEFAULT_NTOP_FILTER_EXPRESSION == NULL ? "none" :
 			   DEFAULT_NTOP_FILTER_EXPRESSION);
 
   printParameterConfigInfo(textPrintFlag, "-D | --domain",
-                           ((myGlobals.domainName == NULL) ||
-                            (myGlobals.domainName[0] == '\0')) ? "none" :
-			   myGlobals.domainName,
+                           ((pref->domainName == NULL) ||
+                            (pref->domainName[0] == '\0')) ? "none" :
+			   pref->domainName,
                            DEFAULT_NTOP_DOMAIN_NAME == NULL ? "none" :
 			   DEFAULT_NTOP_DOMAIN_NAME);
 
   printParameterConfigInfo(textPrintFlag, "-F | --flow-spec",
-                           myGlobals.flowSpecs == NULL ? "none" : myGlobals.flowSpecs,
+                           pref->flowSpecs == NULL ? "none" : pref->flowSpecs,
                            DEFAULT_NTOP_FLOW_SPECS == NULL ? "none" : DEFAULT_NTOP_FLOW_SPECS);
 
 #ifndef WIN32
   printParameterConfigInfo(textPrintFlag, "-K | --enable-debug",
-			   myGlobals.debugMode == 1 ? "Yes" : "No",
+			   pref->debugMode == 1 ? "Yes" : "No",
 			   DEFAULT_NTOP_DEBUG_MODE == 1 ? "Yes" : "No");
 
 #ifdef MAKE_WITH_SYSLOG
-  if(myGlobals.useSyslog == FLAG_SYSLOG_NONE) {
+  if(pref->useSyslog == FLAG_SYSLOG_NONE) {
     printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "No");
   } else {
     for(i=0; myFacilityNames[i].c_name != NULL; i++) {
-      if(myFacilityNames[i].c_val == myGlobals.useSyslog) {
+      if(myFacilityNames[i].c_val == pref->useSyslog) {
 	printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", myFacilityNames[i].c_name);
 	break;
       }
@@ -5649,17 +5649,17 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif /* WIN32 */
 
   printParameterConfigInfo(textPrintFlag, "-M | --no-interface-merge" CONST_REPORT_ITS_EFFECTIVE,
-                           myGlobals.mergeInterfaces == 1 ? "(Merging Interfaces) Yes" :
+                           pref->mergeInterfaces == 1 ? "(Merging Interfaces) Yes" :
 			   "(parameter -M set, Interfaces separate) No",
                            DEFAULT_NTOP_MERGE_INTERFACES == 1 ? "(Merging Interfaces) Yes" : "");
 
   printParameterConfigInfo(textPrintFlag, "-N | --wwn-map",
-                           myGlobals.fcNSCacheFile,
+                           pref->fcNSCacheFile,
                            NULL);
 
 
   printParameterConfigInfo(textPrintFlag, "-O | --pcap-file-path",
-                           myGlobals.pcapLogBasePath,
+                           pref->pcapLogBasePath,
                            CFG_DBFILE_DIR);
 
   printParameterConfigInfo(textPrintFlag, "-P | --db-file-path",
@@ -5667,88 +5667,88 @@ void printNtopConfigInfo(int textPrintFlag) {
                            CFG_DBFILE_DIR);
 
   printParameterConfigInfo(textPrintFlag, "-Q | --spool-file-path",
-                           myGlobals.spoolPath,
+                           pref->spoolPath,
                            CFG_DBFILE_DIR);
 
   printParameterConfigInfo(textPrintFlag, "-U | --mapper",
-                           myGlobals.mapperURL,
+                           pref->mapperURL,
                            DEFAULT_NTOP_MAPPER_URL);
 
 #ifdef HAVE_OPENSSL
   if(myGlobals.sslInitialized == 0) {
     strcpy(buf, "Uninitialized");
-  } else if(myGlobals.sslPort == 0) {
+  } else if(pref->sslPort == 0) {
     strcpy(buf, "Inactive");
-  } else if(myGlobals.sslAddr != 0) {
+  } else if(pref->sslAddr != 0) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"%sActive, address %s, port %d",
-		( (myGlobals.sslAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.sslPort == DEFAULT_NTOP_WEB_PORT) ) 
-		? CONST_REPORT_ITS_DEFAULT : "", myGlobals.sslAddr,myGlobals.sslPort);
+		( (pref->sslAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->sslPort == DEFAULT_NTOP_WEB_PORT) ) 
+		? CONST_REPORT_ITS_DEFAULT : "", pref->sslAddr,pref->sslPort);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"%sActive, all interfaces, port %d",
-		( (myGlobals.sslAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.sslPort == DEFAULT_NTOP_WEB_PORT) ) 
-		? CONST_REPORT_ITS_DEFAULT : "", myGlobals.sslPort);
+		( (pref->sslAddr == DEFAULT_NTOP_WEB_ADDR) && (pref->sslPort == DEFAULT_NTOP_WEB_PORT) ) 
+		? CONST_REPORT_ITS_DEFAULT : "", pref->sslPort);
   }
   printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
 #endif
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
   printParameterConfigInfo(textPrintFlag, "--disable-schedYield",
-                           myGlobals.disableSchedYield == TRUE ? "Yes" : "No",
+                           pref->disableSchedYield == TRUE ? "Yes" : "No",
                            "No");
 #endif
 
   printParameterConfigInfo(textPrintFlag, "--disable-instantsessionpurge",
-                           myGlobals.disableInstantSessionPurge == TRUE ? "Yes" : "No",
+                           pref->disableInstantSessionPurge == TRUE ? "Yes" : "No",
                            "No");
 
   printParameterConfigInfo(textPrintFlag, "--disable-mutexextrainfo",
-                           myGlobals.disableMutexExtraInfo == TRUE ? "Yes" : "No",
+                           pref->disableMutexExtraInfo == TRUE ? "Yes" : "No",
                            "No");
 
   printParameterConfigInfo(textPrintFlag, "--disable-stopcap",
-                           myGlobals.disableStopcap == TRUE ? "Yes" : "No",
+                           pref->disableStopcap == TRUE ? "Yes" : "No",
                            "No");
 
   printParameterConfigInfo(textPrintFlag, "--fc-only",
-                           myGlobals.printFcOnly == TRUE ? "Yes" : "No",
+                           pref->printFcOnly == TRUE ? "Yes" : "No",
                            "No");
   
   printParameterConfigInfo(textPrintFlag, "--no-fc",
-                           myGlobals.noFc == TRUE ? "Yes" : "No",
+                           pref->noFc == TRUE ? "Yes" : "No",
                            "No");
 
   printParameterConfigInfo(textPrintFlag, "--no-invalid-lun",
-                           myGlobals.noInvalidLunDisplay == TRUE ? "Yes" : "No",
+                           pref->noInvalidLunDisplay == TRUE ? "Yes" : "No",
                            "No");
 
   printParameterConfigInfo(textPrintFlag, "--p3p-cp",
-                           ((myGlobals.P3Pcp == NULL) ||
-                            (myGlobals.P3Pcp[0] == '\0')) ? "none" :
-                           myGlobals.P3Pcp,
+                           ((pref->P3Pcp == NULL) ||
+                            (pref->P3Pcp[0] == '\0')) ? "none" :
+                           pref->P3Pcp,
                            "none");
 
   printParameterConfigInfo(textPrintFlag, "--p3p-uri",
-                           ((myGlobals.P3Puri == NULL) ||
-                            (myGlobals.P3Puri[0] == '\0')) ? "none" :
-                           myGlobals.P3Puri,
+                           ((pref->P3Puri == NULL) ||
+                            (pref->P3Puri[0] == '\0')) ? "none" :
+                           pref->P3Puri,
                            "none");
 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
   printParameterConfigInfo(textPrintFlag, "--set-pcap-nonblocking",
-                           myGlobals.setNonBlocking == TRUE ? "Yes" : "No",
+                           pref->setNonBlocking == TRUE ? "Yes" : "No",
                            "No");
 #endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   printParameterConfigInfo(textPrintFlag, "--ssl-watchdog",
-                           myGlobals.useSSLwatchdog == 1 ? "Yes" : "No",
+                           pref->useSSLwatchdog == 1 ? "Yes" : "No",
                            "No");
 #endif
 
   printParameterConfigInfo(textPrintFlag, "--w3c",
-                           myGlobals.w3c == TRUE ? "Yes" : "No",
+                           pref->w3c == TRUE ? "Yes" : "No",
                            "No");
 
   if(textPrintFlag == FALSE) {
@@ -5774,11 +5774,11 @@ void printNtopConfigInfo(int textPrintFlag) {
   sendString(texthtml("\n\nRun time/Internal\n\n", 
                       "<tr><th colspan=2 "DARK_BG"" TH_BG ">Run time/Internal</tr>\n"));
   
-  if(myGlobals.webPort != 0) {
-    if(myGlobals.webAddr != 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://%s:%d", myGlobals.webAddr, myGlobals.webPort);
+  if(pref->webPort != 0) {
+    if(pref->webAddr != 0) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://%s:%d", pref->webAddr, pref->webPort);
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://any:%d", myGlobals.webPort);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://any:%d", pref->webPort);
     }
     printFeatureConfigInfo(textPrintFlag, "Web server URL", buf);
   } else {
@@ -5786,11 +5786,11 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
 
 #ifdef HAVE_OPENSSL
-  if(myGlobals.sslPort != 0) {
-    if(myGlobals.sslAddr != 0) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://%s:%d", myGlobals.sslAddr, myGlobals.sslPort);
+  if(pref->sslPort != 0) {
+    if(pref->sslAddr != 0) {
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://%s:%d", pref->sslAddr, pref->sslPort);
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://any:%d", myGlobals.sslPort);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://any:%d", pref->sslPort);
     }
     printFeatureConfigInfo(textPrintFlag, "SSL Web server URL", buf);
   } else {
@@ -5832,9 +5832,9 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   /* *************************** */
 
-  printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    myGlobals.enablePacketDecoding == 1 ? "Enabled" : "Disabled");
+  printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    pref->enablePacketDecoding == 1 ? "Enabled" : "Disabled");
   printFeatureConfigInfo(textPrintFlag, "Fragment Handling", myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");
-  printFeatureConfigInfo(textPrintFlag, "Tracking only local hosts", myGlobals.trackOnlyLocalHosts == 1 ? "Yes" : "No");
+  printFeatureConfigInfo(textPrintFlag, "Tracking only local hosts", pref->trackOnlyLocalHosts == 1 ? "Yes" : "No");
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numIpProtosToMonitor);
   printFeatureConfigInfo(textPrintFlag, "# IP Protocols Being Monitored", buf);
@@ -5899,10 +5899,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Handled Requests",
-                                myGlobals.webPort,
+                                pref->webPort,
                                 myGlobals.numHandledRequests[1], 
 #ifdef HAVE_OPENSSL
-                                myGlobals.sslPort,
+                                pref->sslPort,
 #else
 				0,
 #endif
@@ -5910,10 +5910,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
                                 TRUE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Successful requests (200)",
-                                myGlobals.webPort,
+                                pref->webPort,
                                 myGlobals.numSuccessfulRequests[1], 
 #ifdef HAVE_OPENSSL
-                                myGlobals.sslPort,
+                                pref->sslPort,
 #else
 				0,
 #endif
@@ -5921,10 +5921,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
                                 TRUE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Bad (We don't want to talk with you) requests",
-                                myGlobals.webPort,
+                                pref->webPort,
                                 myGlobals.numHandledBadrequests[1], 
 #ifdef HAVE_OPENSSL
-                                myGlobals.sslPort,
+                                pref->sslPort,
 #else
 				0,
 #endif
@@ -5932,10 +5932,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
                                 TRUE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 400 BAD REQUEST",
-                                myGlobals.webPort,
+                                pref->webPort,
                                 myGlobals.numUnsuccessfulInvalidrequests[1], 
 #ifdef HAVE_OPENSSL
-                                myGlobals.sslPort,
+                                pref->sslPort,
 #else
 				0,
 #endif
@@ -5943,10 +5943,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
                                 FALSE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 401 DENIED",
-                                myGlobals.webPort,
+                                pref->webPort,
                                 myGlobals.numUnsuccessfulDenied[1], 
 #ifdef HAVE_OPENSSL
-                                myGlobals.sslPort,
+                                pref->sslPort,
 #else
 				0,
 #endif
@@ -5954,10 +5954,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
                                 FALSE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 403 FORBIDDEN",
-                                myGlobals.webPort,
+                                pref->webPort,
                                 myGlobals.numUnsuccessfulForbidden[1], 
 #ifdef HAVE_OPENSSL
-                                myGlobals.sslPort,
+                                pref->sslPort,
 #else
 				0,
 #endif
@@ -5965,10 +5965,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
                                 TRUE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 404 NOT FOUND",
-                                myGlobals.webPort,
+                                pref->webPort,
                                 myGlobals.numUnsuccessfulNotfound[1], 
 #ifdef HAVE_OPENSSL
-                                myGlobals.sslPort,
+                                pref->sslPort,
 #else
 				0,
 #endif
@@ -5976,10 +5976,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
                                 TRUE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 408 TIMEOUT",
-                                myGlobals.webPort,
+                                pref->webPort,
                                 myGlobals.numUnsuccessfulTimeout[1], 
 #ifdef HAVE_OPENSSL
-                                myGlobals.sslPort,
+                                pref->sslPort,
 #else
 				0,
 #endif
@@ -5987,10 +5987,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
                                 FALSE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 501 NOT IMPLEMENTED",
-                                myGlobals.webPort,
+                                pref->webPort,
                                 myGlobals.numUnsuccessfulInvalidmethod[1], 
 #ifdef HAVE_OPENSSL
-                                myGlobals.sslPort,
+                                pref->sslPort,
 #else
 				0,
 #endif
@@ -5998,10 +5998,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
                                 FALSE);
   printFeatureConfigInfo3ColInt(textPrintFlag, 
                                 "# Invalid requests - 505 INVALID VERSION",
-                                myGlobals.webPort,
+                                pref->webPort,
                                 myGlobals.numUnsuccessfulInvalidversion[1], 
 #ifdef HAVE_OPENSSL
-                                myGlobals.sslPort,
+                                pref->sslPort,
 #else
 				0,
 #endif
@@ -6020,7 +6020,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if(myGlobals.useSSLwatchdog == 1)
+  if(pref->useSSLwatchdog == 1)
 #endif
     {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numHTTPSrequestTimeouts);
@@ -6204,7 +6204,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
   }
 #endif
 
-  if(myGlobals.enableSessionHandling) {
+  if(pref->enableSessionHandling) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
 	formatPkts(myGlobals.numTerminatedSessions, buf2, sizeof(buf2)));
     printFeatureConfigInfo(textPrintFlag, "Terminated Sessions", buf);
@@ -6251,7 +6251,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].hashListMaxLookups);
     printFeatureConfigInfo(textPrintFlag, "Max host lookup", buf);
 
-    if(myGlobals.enableSessionHandling) {
+    if(pref->enableSessionHandling) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
 		  formatBytes(sizeof(IPSession), 0, buf2, sizeof(buf2)));
       printFeatureConfigInfo(textPrintFlag, "Session Bucket Size", buf);
@@ -6326,7 +6326,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
 
-  if(myGlobals.numericFlag == 0) {
+  if(pref->numericFlag == 0) {
     sendString(texthtml("\n\nQueued - dequeueAddress():\n\n", "<tr><TH "TH_BG" ALIGN=LEFT>Queued</th>\n<td><table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedCount);
@@ -6758,7 +6758,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
 #ifdef CFG_MULTITHREADED
  #if !defined(DEBUG) && !defined(WIN32)
-  if(myGlobals.debugMode)
+  if(pref->debugMode)
  #endif /* DEBUG or WIN32 */
     printMutexStatusReport(textPrintFlag);
 #endif /* CFG_MULTITHREADED */
@@ -7043,7 +7043,7 @@ void printNtopProblemReport(void) {
 
   sendString("\nNetwork:\n");
 
-  if(myGlobals.mergeInterfaces == 1) {
+  if(myGlobals.runningPref.mergeInterfaces == 1) {
     sendString("Merged packet counts:\n");
     if(myGlobals.device[0].receivedPkts.value > 0) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Received:  %10u\n",
@@ -7123,7 +7123,7 @@ void printNtopProblemReport(void) {
     }
 #endif
 
-    if(myGlobals.mergeInterfaces == 0) {
+    if(myGlobals.runningPref.mergeInterfaces == 0) {
       if(myGlobals.device[i].receivedPkts.value > 0) {
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Received:       %10u\n",
                      myGlobals.device[i].receivedPkts.value);
@@ -7166,7 +7166,7 @@ void printNtopProblemReport(void) {
 
   sendString("----------------------------------------------------------------------------\n");
   sendString("Log extract\n\n");
-  if(myGlobals.traceLevel >= CONST_NOISY_TRACE_LEVEL) {
+  if(myGlobals.runningPref.traceLevel >= CONST_NOISY_TRACE_LEVEL) {
     sendString("  (Please cut and paste actual log lines)\n");
   } else {
     if(printNtopLogReport(TRUE) == 0) 
@@ -7176,7 +7176,7 @@ void printNtopProblemReport(void) {
   sendString("----------------------------------------------------------------------------\n");
   sendString("Problem Description\n\n\n\n\n\n\n\n\n\n");
   sendString("----------------------------------------------------------------------------\n");
-  printNtopConfigInfo(TRUE);
+  printNtopConfigInfo(TRUE, &myGlobals.runningPref);
   sendString("----------------------------------------------------------------------------\n");
 }
 
@@ -7388,31 +7388,31 @@ void initWeb(void) {
   traceEvent(CONST_TRACE_INFO, "INITWEB: Initializing web server");
 
   myGlobals.columnSort = 0;
-  addDefaultAdminUser();
+  addDefaultAdminUser(); 
   initAccessLog();
 
   traceEvent(CONST_TRACE_INFO, "INITWEB: Initializing tcp/ip socket connections for web server");
 
-  if(myGlobals.webPort > 0) {
-    initSocket(FALSE, myGlobals.ipv4or6, &myGlobals.webPort, &myGlobals.sock, myGlobals.webAddr);
+  if(myGlobals.runningPref.webPort > 0) {
+    initSocket(FALSE, myGlobals.runningPref.ipv4or6, &myGlobals.runningPref.webPort, &myGlobals.sock, myGlobals.runningPref.webAddr);
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-    if(myGlobals.webAddr)
+    if(myGlobals.runningPref.webAddr)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "INITWEB: Waiting for HTTP connections on %s port %d",
-		 myGlobals.webAddr, myGlobals.webPort);
+		 myGlobals.runningPref.webAddr, myGlobals.runningPref.webPort);
     else
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "INITWEB: Waiting for HTTP connections on port %d",
-		 myGlobals.webPort);
+		 myGlobals.runningPref.webPort);
   }
 
 #ifdef HAVE_OPENSSL
-  if((myGlobals.sslInitialized) && (myGlobals.sslPort > 0)) {
-    initSocket(TRUE, myGlobals.ipv4or6, &myGlobals.sslPort, &myGlobals.sock_ssl, myGlobals.sslAddr);
-    if(myGlobals.sslAddr)
+  if((myGlobals.sslInitialized) && (myGlobals.runningPref.sslPort > 0)) {
+    initSocket(TRUE, myGlobals.runningPref.ipv4or6, &myGlobals.runningPref.sslPort, &myGlobals.sock_ssl, myGlobals.runningPref.sslAddr);
+    if(myGlobals.runningPref.sslAddr)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "INITWEB: Waiting for HTTPS (SSL) connections on %s port %d",
-		 myGlobals.sslAddr, myGlobals.sslPort);
+		 myGlobals.runningPref.sslAddr, myGlobals.runningPref.sslPort);
     else
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "INITWEB: Waiting for HTTPS (SSL) connections on port %d",
-		 myGlobals.sslPort);
+		 myGlobals.runningPref.sslPort);
   }
 #endif
 
@@ -7424,7 +7424,7 @@ void initWeb(void) {
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if(myGlobals.useSSLwatchdog == 1)
+  if(myGlobals.runningPref.useSSLwatchdog == 1)
 #endif
     {
       int rc;
@@ -7443,7 +7443,7 @@ void initWeb(void) {
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
 	/* --use-sslwatchdog?  Let's cheat - turn it off */
 	traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****Turning off sslWatchdog and continuing...");
-	myGlobals.useSSLwatchdog = 0;
+	myGlobals.runningPref.useSSLwatchdog = 0;
 #else
 	/* ./configure parm? very bad... */
 	traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****SSL Watchdog set via ./configure, aborting...");
@@ -7924,7 +7924,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
     FD_ZERO(&mask);
 
-    if(myGlobals.webPort > 0)
+    if(myGlobals.runningPref.webPort > 0)
 	FD_SET((unsigned int)myGlobals.sock, &mask);
 
 #ifdef HAVE_OPENSSL
@@ -8024,7 +8024,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 	if(myGlobals.sslInitialized)
 	    if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-		if(myGlobals.useSSLwatchdog == 1)
+		if(myGlobals.runningPref.useSSLwatchdog == 1)
 #endif
 		{		
 #ifdef MAKE_WITH_SSLWATCHDOG
@@ -8081,7 +8081,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-		if(myGlobals.useSSLwatchdog == 1)
+		if(myGlobals.runningPref.useSSLwatchdog == 1)
 #endif
 		{
 		    int rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPCOMPLETE,
@@ -8168,5 +8168,4 @@ int handlePluginHTTPRequest(char* url) {
 
   return(0); /* Plugin not found */
 }
-
 

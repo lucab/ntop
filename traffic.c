@@ -293,7 +293,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   traceEvent(CONST_TRACE_INFO, "updateDeviceStats() called.");
 #endif
 
-  if (myGlobals.rFileName != NULL) {
+  if (myGlobals.runningPref.rFileName != NULL) {
       totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
   }
   else {
@@ -531,7 +531,7 @@ void updateThpt(int fullUpdate) {
   traceEvent(CONST_TRACE_INFO, "updateThpt() called");
 #endif
 
-  if(myGlobals.mergeInterfaces)
+  if(myGlobals.runningPref.mergeInterfaces)
     updateDeviceThpt(0, !fullUpdate);
   else {
     for(i=0; i<myGlobals.numDevices; i++)

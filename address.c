@@ -348,10 +348,10 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 #endif
       strncpy(dataBuf, dotp, sizeof(dataBuf));
 
-      if(myGlobals.domainName[0] != '\0') {
-	int dataLen = strlen(dataBuf)-strlen(myGlobals.domainName);
+      if(myGlobals.runningPref.domainName[0] != '\0') {
+	int dataLen = strlen(dataBuf)-strlen(myGlobals.runningPref.domainName);
 
-	if((dataLen > 0) && (!strcmp(&dataBuf[dataLen], myGlobals.domainName))) {
+	if((dataLen > 0) && (!strcmp(&dataBuf[dataLen], myGlobals.runningPref.domainName))) {
 	  int foundDot=0;
 
 	  for(i=0; i<dataLen-1; i++)
@@ -514,7 +514,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   int rc;
 
   if((!forceResolution)
-     && myGlobals.trackOnlyLocalHosts 
+     && myGlobals.runningPref.trackOnlyLocalHosts 
      && (!_pseudoLocalAddress(&elem)))
     return;
 
@@ -1632,7 +1632,7 @@ void checkSpoofing(HostTraffic *hostToCheck, int actualDeviceId) {
 	FD_SET(FLAG_HOST_DUPLICATED_MAC, &hostToCheck->flags);
 	FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
 
-	if(myGlobals.enableSuspiciousPacketDump) {
+	if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING,
 		     "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)",
 		     el->hostNumIpAddress, hostToCheck->ethAddressString, el->ethAddressString);

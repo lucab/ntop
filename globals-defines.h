@@ -1091,6 +1091,8 @@
 #define CONST_FILTER_INFO_HTML              "filterInfo.html"
 #define CONST_NTOP_HELP_HTML                "help.html"
 #define CONST_HOME_HTML                     "home.html"
+#define CONST_TRAFFIC_SUMMARY_HTML          "trafficSummary.html"
+#define CONST_ABTNTOP_HTML                  "aboutNtop.html"
 #define CONST_HOME_UNDERSCORE_HTML          "home_.html"
 #define CONST_HOST_HTML                     "host.html"
 #define CONST_BAR_HOST_DISTANCE             "hostsDistanceChart"
@@ -1098,6 +1100,7 @@
 #define CONST_HOST_SORT_NOTE_HTML           "hostSortNote.html"
 #define CONST_INDEX_HTML                    "index.html"
 #define CONST_INFO_NTOP_HTML                "info.html"
+#define CONST_CONFIG_NTOP_HTML              "configNtop.html"
 #define CONST_PIE_INTERFACE_DIST            "interfaceTrafficPie"
 #define CONST_IP_L_2_L_HTML                 "ipL2L.html"
 #define CONST_IP_L_2_R_HTML                 "ipL2R.html"
@@ -1586,6 +1589,7 @@
 #define FLAG_NTOPSTATE_RUN                  0
 #define FLAG_NTOPSTATE_STOPCAP              1
 #define FLAG_NTOPSTATE_TERM                 2
+#define FLAG_NTOPSTATE_NOTINIT              3
 
 /*
  * When myGlobals.useSyslog is set to this, turns off the logging
@@ -1930,6 +1934,7 @@
 #define DEFAULT_NTOP_LOCAL_SUBNETS          NULL      /* -m */
 #define DEFAULT_NTOP_NUMERIC_IP_ADDRESSES   0         /* -n */
 #define DEFAULT_NTOP_DONT_TRUST_MAC_ADDR    0         /* -o */
+#define DEFAULT_NTOP_PROTO_SPECS            NULL      /* -p */
 #define DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP    0         /* -q */
 #define DEFAULT_NTOP_AUTOREFRESH_INTERVAL   120       /* -r */
 
@@ -1963,6 +1968,23 @@
  */
 #define DEFAULT_TRACE_LEVEL                 3
 
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
+#define DEFAULT_NTOP_SCHED_YIELD            TRUE    
+#endif
+
+#define DEFAULT_NTOP_FCNS_FILE              NULL
+#define DEFAULT_NTOP_W3C                    TRUE
+#define DEFAULT_NTOP_P3PCP                  NULL
+#define DEFAULT_NTOP_P3PURI                 NULL
+#define DEFAULT_NTOP_SETNONBLOCK            TRUE
+#define DEFAULT_NTOP_DISABLE_STOPCAP        TRUE
+#define DEFAULT_NTOP_DISABLE_IS_PURGE       TRUE
+#define DEFAULT_NTOP_NOFC                   FALSE
+#define DEFAULT_NTOP_PRINTFCONLY            FALSE
+#define DEFAULT_NTOP_NO_INVLUN_DISPLAY      FALSE
+#define DEFAULT_NTOP_DISABLE_MUTEXINFO      TRUE
+#define DEFAULT_NTOP_SKIP_VERSION_CHECK     TRUE    
+    
 /*
  * Bytes to save out of each packet - 
  *    remember, if we're decoding packets, 68 (the default) is not enough 
@@ -2644,3 +2666,55 @@ struct ip6_hdr
 #define IP_TCP_PORT_GNUTELLA3      6348
 #define IP_TCP_PORT_WINMX          6699
 #define IP_TCP_PORT_JETDIRECT      9100
+
+#define NULL_VALUE                 "(null)"
+
+/* NTOP preference names */
+#define NTOP_PREF_DEVICES          "ntop.devices"
+#define NTOP_PREF_CAPFILE          "ntop.rFileName"
+#define NTOP_PREF_FILTER           "ntop.currentFilterExpression"
+#define NTOP_PREF_WEBPORT          "ntop.webPort"
+#define NTOP_PREF_SSLPORT          "ntop.sslPort"
+#define NTOP_PREF_EN_SESSION       "ntop.enableSessionHandling"
+#define NTOP_PREF_EN_PROTO_DECODE  "ntop.enablePacketDecoding"
+#define NTOP_PREF_FLOWSPECS        "ntop.flowSpecs"
+#define NTOP_PREF_LOCALADDR        "ntop.localAddresses"
+#define NTOP_PREF_SPOOLPATH        "ntop.spoolPath"
+#define NTOP_PREF_STICKY_HOSTS     "ntop.stickyHosts"
+#define NTOP_PREF_TRACK_LOCAL      "ntop.trackOnlyLocalHosts"
+#define NTOP_PREF_NO_PROMISC       "ntop.disablePromiscuousMode"
+#define NTOP_PREF_DAEMON           "ntop.daemonMode"
+#define NTOP_PREF_REFRESH_RATE     "ntop.refreshRate"
+#define NTOP_PREF_MAXLINES         "ntop.maxNumLines"
+#define NTOP_PREF_NOFC             "ntop.noFc"
+#define NTOP_PREF_PRINT_FCONLY     "ntop.printFcOnly"
+#define NTOP_PREF_NO_INVLUN        "ntop.noInvalidLunDisplay"
+#define NTOP_PREF_FILTER_EXTRA_FRM "ntop.filterExpressionInExtraFrame"
+#define NTOP_PREF_W3C              "ntop.w3c"
+#define NTOP_PREF_IPV4             "ntop.ipv4"
+#define NTOP_PREF_IPV6             "ntop.ipv6"
+#define NTOP_PREF_IPV4V6           "ntop.ipv4orv6"
+#define NTOP_PREF_DOMAINNAME       "ntop.domainName"
+#define NTOP_PREF_NUMERIC_IP       "ntop.numericFlag"
+#define NTOP_PREF_PROTOSPECS       "ntop.protoSpecs"
+#define NTOP_PREF_P3PCP            "ntop.P3Pcp"
+#define NTOP_PREF_P3PURI           "ntop.P3Puri"
+#define NTOP_PREF_MAPPERURL        "ntop.mapperURL"
+#define NTOP_PREF_WWN_MAP          "ntop.fcNSCacheFile"
+#define NTOP_PREF_MAXHASH          "ntop.maxNumHashEntries"
+#define NTOP_PREF_MERGEIF          "ntop.mergeInterfaces"
+#define NTOP_PREF_NO_ISESS_PURGE   "ntop.disableInstantSessionPurge"
+#define NTOP_PREF_NOBLOCK          "ntop.setNonBlocking"
+#define NTOP_PREF_NO_STOPCAP       "ntop.disableStopcap"
+#define NTOP_PREF_NO_TRUST_MAC     "ntop.dontTrustMACaddr"
+#define NTOP_PREF_PCAP_LOGBASE     "ntop.pcapLogBasePath"
+#define NTOP_PREF_USE_SSLWATCH     "ntop.useSSLwatchdog"
+#define NTOP_PREF_NO_SCHEDYLD      "ntop.schedYield"
+#define NTOP_PREF_DBG_MODE         "ntop.debugMode"
+#define NTOP_PREF_TRACE_LVL        "ntop.traceLevel"
+#define NTOP_PREF_DUMP_OTHER       "ntop.enableOtherPacketDump"
+#define NTOP_PREF_DUMP_SUSP        "ntop.enableSuspiciousPacketDump"
+#define NTOP_PREF_ACCESS_LOG       "ntop.accessLogFile"
+#define NTOP_PREF_USE_SYSLOG       "ntop.useSyslog"
+#define NTOP_PREF_PCAP_LOG         "ntop.pcapLog"
+#define NTOP_PREF_NO_MUTEX_EXTRA   "ntop.disableMutexExtraInfo"

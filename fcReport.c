@@ -1985,12 +1985,12 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
 #ifdef WIN32        
         safe_snprintf(__FILE__, __LINE__, pcapFilename, sizeof(pcapFilename),
                 "file:%s\ntop-suspicious-pkts.none.pcap",
-                myGlobals.pcapLogBasePath);
+                myGlobals.runningPref.pcapLogBasePath);
 
 #else
         safe_snprintf(__FILE__, __LINE__, pcapFilename, sizeof(pcapFilename),
                 "file://%s/ntop-suspicious-pkts.none.pcap",
-                myGlobals.pcapLogBasePath);
+                myGlobals.runningPref.pcapLogBasePath);
 #endif
         
         sendString("<CENTER>\n");
@@ -2040,7 +2040,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
             else
                 entry = &sortedLunTbl[idx];
 
-            if((skipEntries++) < pageNum*myGlobals.maxNumLines) {
+            if((skipEntries++) < pageNum*myGlobals.runningPref.maxNumLines) {
                 continue;
             }
             
@@ -2091,7 +2091,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
                 sendString(buf);
 
                 /* Avoid huge tables */
-                if(printedEntries++ > myGlobals.maxNumLines)
+                if(printedEntries++ > myGlobals.runningPref.maxNumLines)
                     break;
             }
         }
@@ -2099,7 +2099,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
         sendString("</TABLE>"TABLE_OFF"\n");
         sendString("</CENTER>\n");
 
-        addPageIndicator(pageUrl, pageNum, numEntries, myGlobals.maxNumLines,
+        addPageIndicator(pageUrl, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
                          revertOrder, sortedColumn);
 
         printFooterHostLink();
@@ -2514,7 +2514,8 @@ void printVsanProtocolStats (FcFabricElementHash *hash, int actualDeviceId)
 
 /* ******************************* */
 
-void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
+void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vsanId)
+{
     u_int idx, numEntries, maxHosts;
     int printedEntries=0, i;
     unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
@@ -2523,14 +2524,21 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[12], *theAnchor[12];
     char vsanBuf[LEN_MEDIUM_WORK_BUFFER], formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
     char htmlAnchor[64], htmlAnchor1[64], tmpbuf[LEN_FC_ADDRESS_DISPLAY];
+    u_char *vsanList, foundVsan = 0, vsanStr[16];
+    
+    vsanList = calloc(1, MAX_USER_VSAN);
+    if(vsanList == NULL) return;
+    vsanId = abs(vsanId);
 
     printHTMLheader("FibreChannel Hosts Information", 0, 0);
 
     maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
 
     tmpTable = (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*), "printFcHostsInfo");
-    if(tmpTable == NULL)
-      return;
+    if(tmpTable == NULL) {
+        free (vsanList);
+        return;
+    }
 
     memset(buf, 0, sizeof(buf));
 
@@ -2548,27 +2556,51 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
     for(el=getFirstHost(myGlobals.actualReportDeviceId);
         el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-        unsigned short actUsage;
+        unsigned short actUsage, actUsageS, actUsageR;
 
-        if(!isFcHost (el) || (el->fcCounters->vsanId > MAX_USER_VSAN)) continue;
+        if (!isFcHost (el) || (el->fcCounters->vsanId > MAX_USER_VSAN)) continue;
+
+        if (isValidVsanId (el->fcCounters->vsanId)) {
+            vsanList[el->fcCounters->vsanId] = 1;
+            foundVsan = 1;
+        }
+            
+        if ((vsanId > 0) && (vsanId != el->fcCounters->vsanId)) continue;
             
         if((el->fcCounters->hostNumFcAddress[0] != '\0') &&
             el->fcCounters->fcBytesSent.value) {
-            actUsage = (unsigned short)(100*((float)el->fcCounters->fcBytesSent.value/
-                                             (float)myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value));
+            if(showBytes) {
+                actUsage  = (unsigned short)(0.5+100.0*(((float)el->fcCounters->fcBytesSent.value+(float)el->fcCounters->fcBytesRcvd.value)/
+                                                        (float)myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value));
+                actUsageS = (unsigned short)(0.5+100.0*((float)el->fcCounters->fcBytesSent.value/
+                                                        (float)myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value));
+                actUsageR = (unsigned short)(0.5+100.0*((float)el->fcCounters->fcBytesRcvd.value/
+                                                        (float)myGlobals.device[myGlobals.actualReportDeviceId].fcBytes.value));
+            } else {
+                actUsage  = (unsigned short)(0.5+100.0*(((float)el->fcCounters->fcPktsSent.value+(float)el->fcCounters->fcPktsRcvd.value)/
+                                                        (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value));
+                actUsageS = (unsigned short)(0.5+100.0*((float)el->fcCounters->fcPktsSent.value/
+                                                        (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value));
+                actUsageR = (unsigned short)(0.5+100.0*((float)el->fcCounters->fcPktsRcvd.value/
+                                                        (float)myGlobals.device[myGlobals.actualReportDeviceId].fcPkts.value));
+            }
+            
             el->actBandwidthUsage = actUsage;
             if(el->actBandwidthUsage > maxBandwidthUsage)
                 maxBandwidthUsage = actUsage;
-            
-            tmpTable[numEntries++]=el;
-            
-            if(numEntries >= maxHosts)
-                break;
+            el->actBandwidthUsageS = actUsageS;
+            el->actBandwidthUsageR = actUsageR;
         }
+        
+        tmpTable[numEntries++]=el;
+        
+        if(numEntries >= maxHosts)
+            break;
     }
 
     if(numEntries <= 0) {
         printNoDataYet();
+        free(vsanList);
         free(tmpTable);
         return;
     }
@@ -2598,11 +2630,57 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
         theAnchor[0] = htmlAnchor1;
     }
 
+    sendString("<P ALIGN=LEFT>");
+
+    if(vsanId > 0)
+      safe_snprintf(__FILE__, __LINE__, vsanStr, sizeof(vsanStr), "&VSAN=%d", vsanId);
+    else
+      vsanStr[0] = '\0';
+
+    if(showBytes)
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<b>Traffic Unit:</b> [ <B>Bytes</B> ]&nbsp;"
+		    "[ <A HREF=\"/%s?col=%d&unit=0%s\">Packets</A> ]&nbsp;</TD>",
+		    CONST_FC_HOSTS_INFO_HTML, myGlobals.columnSort, vsanStr);
+    else
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		    "<b>Traffic Unit:</b> [ <A HREF=\"/%s?col=%d&unit=1%s\">Bytes</A> ]&nbsp;"
+		    "[ <B>Packets</B> ]&nbsp;</TD>", 
+		    CONST_FC_HOSTS_INFO_HTML, myGlobals.columnSort, vsanStr);
+
+    sendString(buf);
+    sendString("</P>\n");
+
+    if(foundVsan) {
+      u_char found = 0;
+
+      sendString("<p><b>VSAN</b>: ");
+
+      for(i=0; i< MAX_USER_VSAN; i++)
+	if(vsanList[i] == 1) {
+	  if(i == vsanId)
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%d</b> ] ", i), found = 1;
+	  else
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d&vsan=%d\">%d</A> ] ",
+			  CONST_FC_HOSTS_INFO_HTML, showBytes, i, i);
+	
+	  sendString(buf);
+	}
+
+      if(!found)
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>All</b> ] ");
+      else
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d\">All</A> ] ", 
+		      CONST_FC_HOSTS_INFO_HTML, showBytes);
+
+      sendString(buf);
+    }
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                  "<TH "TH_BG" "DARK_BG">%s3>VSAN%s</A></TH>"
                  "<TH "TH_BG" "DARK_BG">%s1>FC_Port%s</A></TH>"
                  "</TH><TH "TH_BG" "DARK_BG">%s2>FC&nbsp;Address%s</A></TH>\n"
-                 "<TH "TH_BG" "DARK_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
+                 "<TH "TH_BG" "DARK_BG">%s4>Bandwidth%s</A></TH>"
                  "<TH "TH_BG" "DARK_BG">Nw&nbsp;Board&nbsp;Vendor</TH>"
                  "<TH "TH_BG" "DARK_BG">%s9>Age%s</A></TH>"
                  "</TR>\n",
@@ -2615,7 +2693,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
     sendString(buf);
 
-    for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
+    for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
         if(revertOrder)
             el = tmpTable[numEntries-idx-1];
         else
@@ -2670,7 +2748,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
             printedEntries++;
             
             /* Avoid huge tables */
-            if(printedEntries > myGlobals.maxNumLines)
+            if(printedEntries > myGlobals.runningPref.maxNumLines)
                 break;
         } else {
             traceEvent(CONST_TRACE_WARNING, "quicksort() problem!");
@@ -2684,8 +2762,9 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     printBandwidthFooter();   
 
     addPageIndicator(CONST_HOSTS_INFO_HTML, pageNum, numEntries,
-                     myGlobals.maxNumLines, revertOrder, abs(sortedColumn));
+                     myGlobals.runningPref.maxNumLines, revertOrder, abs(sortedColumn));
 
+    free(vsanList);
     free(tmpTable);
 }
 
@@ -2777,7 +2856,7 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
 
     sendString(buf);
 
-    for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
+    for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
 
         if(revertOrder)
             el = tmpTable[numEntries-idx-1];
@@ -2821,14 +2900,14 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
             sendString(buf);
 
             /* Avoid huge tables */
-            if(printedEntries++ > myGlobals.maxNumLines)
+            if(printedEntries++ > myGlobals.runningPref.maxNumLines)
                 break;
         }
     }
 
     sendString("</TABLE>"TABLE_OFF"\n");
 
-    addPageIndicator(CONST_FC_TRAFFIC_HTML, pageNum, numEntries, myGlobals.maxNumLines,
+    addPageIndicator(CONST_FC_TRAFFIC_HTML, pageNum, numEntries, myGlobals.runningPref.maxNumLines,
                      revertOrder, abs(sortedColumn));
 
     sendString("<P><CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
@@ -2869,9 +2948,9 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
          hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
     char pageUrl[64];
 
-    printHTMLheader("SCSI Sessions: Bytes", 0, 0);
+    printHTMLheader("SCSI Sessions", 0, 0);
 
-    if(!myGlobals.enableSessionHandling) {
+    if(!myGlobals.runningPref.enableSessionHandling) {
         printNotAvailable("-z or --disable-sessions");
         return 0;
     }
@@ -2915,7 +2994,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
                     for (j = 0; j < MAX_LUNS_SUPPORTED; j++) {
                         if(session->activeLuns[j] != NULL) {
                             if((session->activeLuns[j]->invalidLun &&
-                                 !myGlobals.noInvalidLunDisplay) ||
+                                 !myGlobals.runningPref.noInvalidLunDisplay) ||
                                 (!session->activeLuns[j]->invalidLun)) {
                                 tmpTable[numSessions].initiator = session->initiator;
                                 tmpTable[numSessions].target = session->remotePeer;
@@ -3022,7 +3101,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
             continue;
         }
         
-        if(printedSessions < myGlobals.maxNumLines) {
+        if(printedSessions < myGlobals.runningPref.maxNumLines) {
 
             if(el
                && (entry->initiator  != el)
@@ -3030,7 +3109,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
                 continue;
             }
 
-            if((skipSessions++) < pageNum*myGlobals.maxNumLines) {
+            if((skipSessions++) < pageNum*myGlobals.runningPref.maxNumLines) {
                 continue;
             }
             
@@ -3204,7 +3283,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
         sendString("</TABLE>"TABLE_OFF"<P>\n");
         sendString("</CENTER>\n");
         sendString("<P><I>Note: Entries with LUN as N/A indicate traffic for which no command frame was seen</I></P>\n");
-        addPageIndicator(pageUrl, pageNum, numSessions-1, myGlobals.maxNumLines,
+        addPageIndicator(pageUrl, pageNum, numSessions-1, myGlobals.runningPref.maxNumLines,
                          revertOrder, sortedColumn);
 
         printFooterHostLink();
@@ -3233,9 +3312,9 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
     char *arrowGif, *arrow[48], *theAnchor[48];
     char htmlAnchor[64], htmlAnchor1[64], pageUrl[64];
 
-    printHTMLheader("SCSI Sessions: Times", 0, 0);
+    printHTMLheader("SCSI Sessions: Latencies", 0, 0);
 
-    if(!myGlobals.enableSessionHandling) {
+    if(!myGlobals.runningPref.enableSessionHandling) {
         printNotAvailable("-z or --disable-sessions");
         return 0;
     }
@@ -3278,7 +3357,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
                     for (j = 0; j < MAX_LUNS_SUPPORTED; j++) {
                         if(session->activeLuns[j] != NULL) {
                             if((session->activeLuns[j]->invalidLun &&
-                                 !myGlobals.noInvalidLunDisplay) ||
+                                 !myGlobals.runningPref.noInvalidLunDisplay) ||
                                 (!session->activeLuns[j]->invalidLun)) {
                                 tmpTable[numSessions].initiator = session->initiator;
                                 tmpTable[numSessions].target = session->remotePeer;
@@ -3373,7 +3452,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
             continue;
         }
         
-        if(printedSessions < myGlobals.maxNumLines) {
+        if(printedSessions < myGlobals.runningPref.maxNumLines) {
 
             if(el
                && (entry->initiator  != el)
@@ -3381,7 +3460,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
                 continue;
             }
 
-            if((skipSessions++) < pageNum*myGlobals.maxNumLines) {
+            if((skipSessions++) < pageNum*myGlobals.runningPref.maxNumLines) {
                 continue;
             }
             
@@ -3491,7 +3570,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
         sendString("</TABLE>"TABLE_OFF"<P>\n");
         sendString("</CENTER>\n");
 
-        addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.maxNumLines,
+        addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.runningPref.maxNumLines,
                          revertOrder, sortedColumn);
 
         printFooterHostLink();
@@ -3523,7 +3602,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
 
   printHTMLheader("SCSI Sessions: Status Info", 0, 0);
 
-  if(!myGlobals.enableSessionHandling) {
+  if(!myGlobals.runningPref.enableSessionHandling) {
     printNotAvailable("-z or --disable-sessions");
     return 0;
   }
@@ -3565,7 +3644,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
 	  for (j = 0; j < MAX_LUNS_SUPPORTED; j++) {
 	    if(session->activeLuns[j] != NULL) {
 	      if((session->activeLuns[j]->invalidLun &&
-		   !myGlobals.noInvalidLunDisplay) ||
+		   !myGlobals.runningPref.noInvalidLunDisplay) ||
 		  (!session->activeLuns[j]->invalidLun)) {
 		tmpTable[numSessions].initiator = session->initiator;
 		tmpTable[numSessions].target = session->remotePeer;
@@ -3656,7 +3735,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
       continue;
     }
         
-    if(printedSessions < myGlobals.maxNumLines) {
+    if(printedSessions < myGlobals.runningPref.maxNumLines) {
 
       if(el
 	 && (entry->initiator  != el)
@@ -3664,7 +3743,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
 	continue;
       }
 
-      if((skipSessions++) < pageNum*myGlobals.maxNumLines) {
+      if((skipSessions++) < pageNum*myGlobals.runningPref.maxNumLines) {
 	continue;
       }
             
@@ -3734,7 +3813,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
 
-    addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.maxNumLines,
+    addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.runningPref.maxNumLines,
 		     revertOrder, sortedColumn);
 
     printFooterHostLink();
@@ -3764,7 +3843,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
 
     printHTMLheader("SCSI Sessions: Task Management Info", 0, 0);
 
-    if(!myGlobals.enableSessionHandling) {
+    if(!myGlobals.runningPref.enableSessionHandling) {
         printNotAvailable("-z or --disable-sessions");
         return 0;
     }
@@ -3807,7 +3886,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
                     for (j = 0; j < MAX_LUNS_SUPPORTED; j++) {
                         if(session->activeLuns[j] != NULL) {
                             if((session->activeLuns[j]->invalidLun &&
-                                 !myGlobals.noInvalidLunDisplay) ||
+                                 !myGlobals.runningPref.noInvalidLunDisplay) ||
                                 (!session->activeLuns[j]->invalidLun)) {
                                 tmpTable[numSessions].initiator = session->initiator;
                                 tmpTable[numSessions].target = session->remotePeer;
@@ -3899,7 +3978,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
             continue;
         }
         
-        if(printedSessions < myGlobals.maxNumLines) {
+        if(printedSessions < myGlobals.runningPref.maxNumLines) {
 
             if(el
                && (entry->initiator  != el)
@@ -3907,7 +3986,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
                 continue;
             }
 
-            if((skipSessions++) < pageNum*myGlobals.maxNumLines) {
+            if((skipSessions++) < pageNum*myGlobals.runningPref.maxNumLines) {
                 continue;
             }
             
@@ -3983,7 +4062,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
         sendString("</TABLE>"TABLE_OFF"<P>\n");
         sendString("</CENTER>\n");
 
-        addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.maxNumLines,
+        addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.runningPref.maxNumLines,
                          revertOrder, sortedColumn);
 
         printFooterHostLink();
@@ -4014,7 +4093,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
 
     printHTMLheader("FibreChannel Sessions", 0, 0);
 
-    if(!myGlobals.enableSessionHandling) {
+    if(!myGlobals.runningPref.enableSessionHandling) {
         printNotAvailable("-z or --disable-sessions");
         return;
     }
@@ -4109,7 +4188,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
             continue;
         }
         
-        if(printedSessions < myGlobals.maxNumLines) {
+        if(printedSessions < myGlobals.runningPref.maxNumLines) {
             
             if(el
                && (session->initiator  != el)
@@ -4117,7 +4196,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
                 continue;
             }
 
-            if((skipSessions++) < pageNum*myGlobals.maxNumLines) {
+            if((skipSessions++) < pageNum*myGlobals.runningPref.maxNumLines) {
                 continue;
             }
             
@@ -4258,7 +4337,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
         sendString("</TABLE>"TABLE_OFF"<P>\n");
         sendString("</CENTER>\n");
 
-        addPageIndicator(url, pageNum, numSessions, myGlobals.maxNumLines,
+        addPageIndicator(url, pageNum, numSessions, myGlobals.runningPref.maxNumLines,
                          revertOrder, sortedColumn);
 
         printFooterHostLink();
@@ -4273,7 +4352,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
 
 /* ********************************** */
 
-void printFcProtocolDistribution(int mode, int revertOrder)
+void printFcProtocolDistribution(int mode, int revertOrder, int printGraph)
 {
     char buf[2*LEN_GENERAL_WORK_BUFFER], *sign;
     float total, partialTotal, remainingTraffic;
@@ -4366,7 +4445,7 @@ void printFcProtocolDistribution(int mode, int revertOrder)
                             CONST_COLOR_1, partialTotal/1024, percentage);
         }
         
-        if(numProtosFound > 0)
+        if ((numProtosFound > 0) && printGraph)
             sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
                        "<IMG SRC=\"" CONST_BAR_FC_PROTO_DIST CHART_FORMAT "\" "
                        "alt=\"Global FC protocol distribution chart\"></TD></TR>\n");
@@ -4642,3 +4721,54 @@ void drawVsanStatsGraph (unsigned int deviceId)
 }
 
 /* ******************************************* */
+
+void printFcTrafficSummary (u_short vsanId)
+{
+    int deviceId = myGlobals.actualReportDeviceId;
+    char buf[LEN_GENERAL_WORK_BUFFER], vsanBuf[LEN_MEDIUM_WORK_BUFFER];
+    FcFabricElementHash **theHash;
+    FcFabricElementHash *tmpTable[MAX_ELEMENT_HASH];
+    int i, numVsans, j;
+    char vsanLabel[LEN_GENERAL_WORK_BUFFER];
+    
+    if((theHash = myGlobals.device[deviceId].vsanHash) == NULL) {
+        return;
+    }
+
+    numVsans = 0;
+    memset (tmpTable, sizeof (FcFabricElementHash *)*MAX_ELEMENT_HASH, 0);
+
+    for (i=0; i<MAX_ELEMENT_HASH; i++) {
+      if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
+	 (theHash[i]->vsanId < MAX_USER_VSAN)) {
+	if(theHash[i]->totBytes.value)
+	  tmpTable[numVsans++] = theHash[i];
+      }
+    }
+
+    myGlobals.columnSort = 3;
+    qsort (tmpTable, numVsans, sizeof (FcFabricElementHash **), cmpVsanFctn);
+
+    sendString("<P ALIGN=LEFT>");
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=225><CAPTION><B>Top 10 VSANS</B></CAPTION><TR "TR_ON"><TH "TH_BG" "DARK_BG" WIDTH=10>"
+               "VSAN</TH>"
+               "<TH "TH_BG" "DARK_BG" WIDTH=15>Total&nbsp;Bytes</TH><TH "TH_BG" "DARK_BG" WIDTH=200 COLSPAN=2>"
+               "Percentage</TH></TR>\n");
+
+
+    for (i = numVsans-1, j = 0; i >= 0; i--, j++) {
+        if(tmpTable[i] != NULL) {
+            safe_snprintf(__FILE__, __LINE__, vsanLabel, sizeof (vsanLabel), "%s",
+                      makeVsanLink (tmpTable[i]->vsanId, 0, vsanBuf, sizeof (vsanBuf)));
+            printTableEntry (buf, sizeof (buf), vsanLabel, CONST_COLOR_1,
+                             (float) tmpTable[i]->totBytes.value/1024,
+                             100*((float)SD(tmpTable[i]->totBytes.value,
+                                            myGlobals.device[deviceId].fcBytes.value)));
+                             
+        }
+        
+        if(j >= MAX_VSANS_GRAPHED)
+	  break;
+    }
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+}

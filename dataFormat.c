@@ -231,7 +231,7 @@ char* formatTimeStamp(unsigned int ndays,
   if((ndays == 0)
      && (nhours == 0)
      && (nminutes == 0)) {
-      if (myGlobals.rFileName != NULL) {
+      if (myGlobals.runningPref.rFileName != NULL) {
           theTime = myGlobals.lastPktTime.tv_sec;
       }
       else {
@@ -239,7 +239,7 @@ char* formatTimeStamp(unsigned int ndays,
       }
   }
   else {
-      if (myGlobals.rFileName != NULL) {
+      if (myGlobals.runningPref.rFileName != NULL) {
           theTime = myGlobals.lastPktTime.tv_sec-(ndays*86400)-(nhours*3600)-(nminutes*60);
       }
       else {

@@ -411,7 +411,7 @@ static void checkFragmentOverlap(HostTraffic *srcHost,
       ||
       (fragment->fragmentOrder == FLAG_DECREASING_FRAGMENT_ORDER
        && fragment->lastOffset < fragmentOffset+dataLength)) {
-    if(myGlobals.enableSuspiciousPacketDump) {
+    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
       char buf[LEN_GENERAL_WORK_BUFFER];
       safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
 		    "Detected overlapping packet fragment [%s->%s]: "
@@ -606,7 +606,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
     return;
   }
 
-  if (!myGlobals.noFc) {
+  if (!myGlobals.runningPref.noFc) {
       if (srcHost == dstHost) {
           /* Fabric controllers exchange link messages where the S_ID & D_ID
            * are equal. A lot of control traffic is exchanged using these
@@ -1011,7 +1011,7 @@ static void processIpPkt(const u_char *bp,
 #ifdef INET6
   if(ip6 == NULL) {
 #endif
-    if((!myGlobals.dontTrustMACaddr)
+    if((!myGlobals.runningPref.dontTrustMACaddr)
        && isBroadcastAddress(&dstAddr)
        && (ether_src != NULL) && (ether_dst != NULL) /* PPP has no ethernet */
        && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
@@ -1020,7 +1020,7 @@ static void processIpPkt(const u_char *bp,
       srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
       if(srcHost != NULL) {
 	if(vlanId != -1) srcHost->vlanId = vlanId;
-	if(myGlobals.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
+	if(myGlobals.runningPref.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
 	  /* Dump the first packet only */
 	  char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
@@ -1067,7 +1067,7 @@ static void processIpPkt(const u_char *bp,
   if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 #ifdef DEBUG
-  if(myGlobals.rFileName != NULL) {
+  if(myGlobals.runningPref.rFileName != NULL) {
     static int numPkt=1;
 
     traceEvent(CONST_TRACE_INFO, "%d) %s -> %s",
@@ -1108,7 +1108,7 @@ static void processIpPkt(const u_char *bp,
   updatePacketCount(srcHost, &srcAddr, dstHost, &dstAddr,
 		    ctr, 1, actualDeviceId);
 
-  if((!myGlobals.dontTrustMACaddr) && (!myGlobals.device[actualDeviceId].dummyDevice)) {
+  if((!myGlobals.runningPref.dontTrustMACaddr) && (!myGlobals.device[actualDeviceId].dummyDevice)) {
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
     ctr.value = length;
     updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
@@ -1227,7 +1227,7 @@ static void processIpPkt(const u_char *bp,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpBytes, length);
 
     if(tcpUdpLen < sizeof(struct tcphdr)) {
-      if(myGlobals.enableSuspiciousPacketDump) {
+      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	traceEvent(CONST_TRACE_WARNING, "Malformed TCP pkt %s->%s detected (packet too short)",
 		   srcHost->hostResolvedName,
 		   dstHost->hostResolvedName);
@@ -1413,7 +1413,7 @@ static void processIpPkt(const u_char *bp,
 	  }
 	}
 
-	if(nonFullyRemoteSession) {
+	if(1 /* nonFullyRemoteSession */) {
 #ifdef INET6
 	  if(ip6)
               theSession = handleSession (h, fragmented, tp.th_win,
@@ -1434,7 +1434,8 @@ static void processIpPkt(const u_char *bp,
 
 	sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
 
-	if ((myGlobals.enableOtherPacketDump) && ((sportIdx == -1) && (dportIdx == -1)))
+	if ((myGlobals.runningPref.enableOtherPacketDump) &&
+            ((sportIdx == -1) && (dportIdx == -1)))
 	  {
 	    /*
 	       Both source & destination port are unknown. The packet will be counted to
@@ -1491,7 +1492,7 @@ static void processIpPkt(const u_char *bp,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, length);
 
     if(tcpUdpLen < sizeof(struct udphdr)) {
-      if(myGlobals.enableSuspiciousPacketDump) {
+      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	traceEvent(CONST_TRACE_WARNING, "Malformed UDP pkt %s->%s detected (packet too short)",
 		   srcHost->hostResolvedName,
 		   dstHost->hostResolvedName);
@@ -1515,7 +1516,7 @@ static void processIpPkt(const u_char *bp,
 	  short isRequest = 0, positiveReply = 0;
 	  u_int16_t transactionId = 0;
 
-	  if(myGlobals.enablePacketDecoding
+	  if(myGlobals.runningPref.enablePacketDecoding
 	     && (bp != NULL) /* packet long enough */) {
 	    /* The DNS chain will be checked here */
 	    transactionId = processDNSPacket(bp+hlen+sizeof(struct udphdr),
@@ -1627,7 +1628,7 @@ static void processIpPkt(const u_char *bp,
 	    FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
 	  }
 	} else if(sport == 123) /* NTP */ {
-	  if(myGlobals.enablePacketDecoding) {
+	  if(myGlobals.runningPref.enablePacketDecoding) {
 	    char *ntpPktPtr = (char*)bp+hlen+sizeof(struct udphdr);
 	    u_char ntpRole = ntpPktPtr[0] & 0x07;
 
@@ -1635,7 +1636,7 @@ static void processIpPkt(const u_char *bp,
 	      FD_SET(FLAG_HOST_TYPE_SVC_NTP_SERVER, &srcHost->flags);
 	  }
 	} else {
-	  if(myGlobals.enablePacketDecoding)
+	  if(myGlobals.runningPref.enablePacketDecoding)
 	    handleNetbios(srcHost, dstHost, sport, dport,
 			  udpDataLength, bp,
 			  length, hlen);
@@ -1698,7 +1699,7 @@ static void processIpPkt(const u_char *bp,
 
         sportIdx = mapGlobalToLocalIdx(sport), dportIdx = mapGlobalToLocalIdx(dport);
 
-        if ((myGlobals.enableOtherPacketDump) && ((sportIdx == -1) && (dportIdx == -1)))
+        if ((myGlobals.runningPref.enableOtherPacketDump) && ((sportIdx == -1) && (dportIdx == -1)))
 	  {
 	    /* Both source & destination port are unknown. The packet will be counted to "Other TCP/UDP prot." : We dump the packet if requested */
 	    dumpOtherPacket(actualDeviceId);
@@ -1748,7 +1749,7 @@ static void processIpPkt(const u_char *bp,
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpBytes, length);
 
     if(tcpUdpLen < sizeof(struct icmp)) {
-      if(myGlobals.enableSuspiciousPacketDump) {
+      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	traceEvent(CONST_TRACE_WARNING, "Malformed ICMP pkt %s->%s detected (packet too short)",
 		   srcHost->hostResolvedName,
 		   dstHost->hostResolvedName);
@@ -1775,7 +1776,7 @@ static void processIpPkt(const u_char *bp,
 	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHost, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHost, actualDeviceId);
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.icmpFragment, 1);
-	if(myGlobals.enableSuspiciousPacketDump) {
+	if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING, fmt,
 		     srcHost->hostResolvedName, dstHost->hostResolvedName);
 	  dumpSuspiciousPacket(actualDeviceId);
@@ -1819,13 +1820,13 @@ static void processIpPkt(const u_char *bp,
 	case ICMP_TIMESTAMP:
 	case ICMP_TIMESTAMPREPLY:
 	case ICMP_SOURCE_QUENCH:
-	  if(myGlobals.enableSuspiciousPacketDump) {
+	  if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
 	  break;
 	}
 
-	if(myGlobals.enableSuspiciousPacketDump && dumpPacket) {
+	if(myGlobals.runningPref.enableSuspiciousPacketDump && dumpPacket) {
 	  if(!((icmpPkt.icmp_type == 3) && (icmpPkt.icmp_code == 3))) {
 	    /*
 	      Avoid to print twice the same message:
@@ -1854,7 +1855,7 @@ static void processIpPkt(const u_char *bp,
 	else
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote, length);
 
-      if(myGlobals.enableSuspiciousPacketDump
+      if(myGlobals.runningPref.enableSuspiciousPacketDump
 	 && (icmpPkt.icmp_type == ICMP_ECHO)
 	 && (broadcastHost(dstHost) || multicastHost(dstHost))) {
 	traceEvent(CONST_TRACE_WARNING, "Smurf packet detected for host [%s->%s]",
@@ -1868,7 +1869,7 @@ static void processIpPkt(const u_char *bp,
 	  dport = ntohs(dport);
 	  switch (oip->ip_p) {
 	  case IPPROTO_TCP:
-	    if(myGlobals.enableSuspiciousPacketDump)
+	    if(myGlobals.runningPref.enableSuspiciousPacketDump)
 	      traceEvent(CONST_TRACE_WARNING,
 			 "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
 			 dstHost->hostResolvedName, srcHost->hostResolvedName, dport);
@@ -1880,7 +1881,7 @@ static void processIpPkt(const u_char *bp,
 	    break;
 
 	  case IPPROTO_UDP:
-	    if(myGlobals.enableSuspiciousPacketDump)
+	    if(myGlobals.runningPref.enableSuspiciousPacketDump)
 	      traceEvent(CONST_TRACE_WARNING,
 			 "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
 			 dstHost->hostResolvedName, srcHost->hostResolvedName, dport);
@@ -1905,7 +1906,7 @@ static void processIpPkt(const u_char *bp,
 	  break;
 
 	case ICMP_UNREACH_PROTOCOL: /* Protocol Unreachable */
-	  if(myGlobals.enableSuspiciousPacketDump)
+	  if(myGlobals.runningPref.enableSuspiciousPacketDump)
 	    traceEvent(CONST_TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
 		       "Host [%s] rcvd a ICMP protocol Unreachable from host [%s]"
 		       " (Firewalking scan attempt?)",
@@ -1918,7 +1919,7 @@ static void processIpPkt(const u_char *bp,
 	case ICMP_UNREACH_NET_PROHIB:    /* Net Administratively Prohibited */
 	case ICMP_UNREACH_HOST_PROHIB:   /* Host Administratively Prohibited */
 	case ICMP_UNREACH_FILTER_PROHIB: /* Access Administratively Prohibited */
-	  if(myGlobals.enableSuspiciousPacketDump)
+	  if(myGlobals.runningPref.enableSuspiciousPacketDump)
 	    traceEvent(CONST_TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
 		       "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
 		       " (Firewalking scan attempt?)",
@@ -1929,14 +1930,14 @@ static void processIpPkt(const u_char *bp,
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.icmpAdminProhibited, 1);
 	  break;
 	}
-	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
+	if(myGlobals.runningPref.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
       }
     }
     break;
 #ifdef INET6
   case IPPROTO_ICMPV6:
     if(ip6 == NULL) {
-      if(myGlobals.enableSuspiciousPacketDump) {
+      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	traceEvent(CONST_TRACE_WARNING,"Protocol violation: ICMPv6 protocol in IPv4 packet: %s->%s",
 		   srcHost->hostResolvedName,
 		   dstHost->hostResolvedName);
@@ -1948,7 +1949,7 @@ static void processIpPkt(const u_char *bp,
     if(ip6->ip6_plen)
       icmp6len = ntohs(ip6->ip6_plen); /* TODO: considering the pointers cp et bp*/
     if(icmp6len < sizeof(struct icmp6_hdr)) {
-      if(myGlobals.enableSuspiciousPacketDump) {
+      if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	traceEvent(CONST_TRACE_WARNING, "Malformed ICMPv6 pkt %s->%s detected (packet too short)",
 		   srcHost->hostResolvedName,
 		   dstHost->hostResolvedName);
@@ -1972,7 +1973,7 @@ static void processIpPkt(const u_char *bp,
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHost, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHost, actualDeviceId);
-	if(myGlobals.enableSuspiciousPacketDump) {
+	if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING, fmt,
 		     srcHost->hostResolvedName, dstHost->hostResolvedName);
 	  dumpSuspiciousPacket(actualDeviceId);
@@ -2007,7 +2008,7 @@ static void processIpPkt(const u_char *bp,
 	case ICMP6_PARAM_PROB:
 	case ICMP6_NI_QUERY:
 	case ICMP6_NI_REPLY:
-	  if(myGlobals.enableSuspiciousPacketDump) {
+	  if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	    dumpSuspiciousPacket(actualDeviceId);
 	  }
 	  break;
@@ -2042,7 +2043,7 @@ static void processIpPkt(const u_char *bp,
 	  dport = ntohs(dport);
 	  switch (oip->ip6_nxt) {
 	  case IPPROTO_TCP:
-	    if(myGlobals.enableSuspiciousPacketDump)
+	    if(myGlobals.runningPref.enableSuspiciousPacketDump)
 	      traceEvent(CONST_TRACE_WARNING,
 			 "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
 			 dstHost->hostResolvedName, srcHost->hostResolvedName, dport);
@@ -2053,7 +2054,7 @@ static void processIpPkt(const u_char *bp,
 	    break;
 
 	  case IPPROTO_UDP:
-	    if(myGlobals.enableSuspiciousPacketDump)
+	    if(myGlobals.runningPref.enableSuspiciousPacketDump)
 	      traceEvent(CONST_TRACE_WARNING,
 			 "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
 			 dstHost->hostResolvedName, srcHost->hostResolvedName, dport);
@@ -2075,7 +2076,7 @@ static void processIpPkt(const u_char *bp,
 	  break;
 
 	case ICMP6_DST_UNREACH_ADMIN:    /* Administratively Prohibited */
-	  if(myGlobals.enableSuspiciousPacketDump)
+	  if(myGlobals.runningPref.enableSuspiciousPacketDump)
 	    traceEvent(CONST_TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
 		       "Host [%s] sent ICMPv6 Administratively Prohibited packet to host [%s]"
 		       " (Firewalking scan attempt?)",
@@ -2085,7 +2086,7 @@ static void processIpPkt(const u_char *bp,
 	  incrementUsageCounter(&dstHost->secHostPkts->icmpAdminProhibitedRcvd, srcHost, actualDeviceId);
 	  break;
 	}
-	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
+	if(myGlobals.runningPref.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
       }
     }
     break;
@@ -2130,7 +2131,8 @@ static void processIpPkt(const u_char *bp,
       proto = "IP (Other)";
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherIpBytes, length);
       sport = dport = 0;
-      if(myGlobals.enableOtherPacketDump) dumpOtherPacket(actualDeviceId);
+      if(myGlobals.runningPref.enableOtherPacketDump)
+          dumpOtherPacket(actualDeviceId);
 
       if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
       if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
@@ -2204,7 +2206,7 @@ void queuePacket(u_char *_deviceId,
     myGlobals.receivedPacketsProcessed++;
 
     len = h->caplen;
-    if (myGlobals.noFc) {
+    if (myGlobals.runningPref.noFc) {
         /* When we do Fibre Channel, the end of the packet contains EOF
          * information and so truncating it isn't a good idea.
          */
@@ -2264,7 +2266,7 @@ void queuePacket(u_char *_deviceId,
     memset(myGlobals.packetQueue[myGlobals.packetQueueHead].p, 0, sizeof(myGlobals.packetQueue[myGlobals.packetQueueHead].p));
     /* Just to be safe */
     len = h->caplen;
-    if (myGlobals.noFc) {
+    if (myGlobals.runningPref.noFc) {
         if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
         memcpy(myGlobals.packetQueue[myGlobals.packetQueueHead].p, p, len);
         myGlobals.packetQueue[myGlobals.packetQueueHead].h.caplen = len;
@@ -2346,11 +2348,11 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
        3. all the functions must check that they are not going beyond packet boundaries
     */
     if((h.caplen != h.len)
-       && (myGlobals.enablePacketDecoding /* Courtesy of Ken Beaty <ken@ait.com> */)) {
+       && (myGlobals.runningPref.enablePacketDecoding /* Courtesy of Ken Beaty <ken@ait.com> */)) {
       traceEvent (CONST_TRACE_WARNING, "dequeuePacket: caplen %d != len %d\n", h.caplen, h.len);
     }
-    if (myGlobals.noFc) {
-      memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
+    if (myGlobals.runningPref.noFc) {
+        memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
     }
     else {
       memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, MAX_PACKET_LEN);
@@ -2577,7 +2579,7 @@ void processPacket(u_char *_deviceId,
   h_save = h, p_save = p;
 
 #ifdef DEBUG
-  if(myGlobals.rFileName != NULL) {
+  if(myGlobals.runningPref.rFileName != NULL) {
     traceEvent(CONST_TRACE_INFO, ".");
     fflush(stdout);
   }
@@ -2603,7 +2605,7 @@ void processPacket(u_char *_deviceId,
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetPkts, 1);
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetBytes, h->len);
 
-  if(myGlobals.mergeInterfaces && actualDeviceId != deviceId)
+  if(myGlobals.runningPref.mergeInterfaces && actualDeviceId != deviceId)
     incrementTrafficCounter(&myGlobals.device[deviceId].ethernetPkts, 1);
 
   if(myGlobals.device[actualDeviceId].pcapDumper != NULL)
@@ -2612,7 +2614,7 @@ void processPacket(u_char *_deviceId,
   if((myGlobals.device[deviceId].mtuSize != CONST_UNKNOWN_MTU) &&
      (length > myGlobals.device[deviceId].mtuSize) ) {
     /* Sanity check */
-    if(myGlobals.enableSuspiciousPacketDump) {
+    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
       traceEvent(CONST_TRACE_WARNING, "Packet # %u too long (len = %u)!",
 		 (unsigned int)myGlobals.device[deviceId].ethernetPkts.value,
 		 (unsigned int)length);
@@ -2642,7 +2644,7 @@ void processPacket(u_char *_deviceId,
 
   hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header);
 
-  if (!myGlobals.initialSniffTime && (myGlobals.rFileName != NULL)) {
+  if (!myGlobals.initialSniffTime && (myGlobals.runningPref.rFileName != NULL)) {
       myGlobals.initialSniffTime = h->ts.tv_sec;
       myGlobals.device[deviceId].lastThptUpdate = myGlobals.device[deviceId].lastMinThptUpdate =
           myGlobals.device[deviceId].lastHourThptUpdate = myGlobals.device[deviceId].lastFiveMinsThptUpdate = myGlobals.initialSniffTime;
@@ -2831,7 +2833,7 @@ void processPacket(u_char *_deviceId,
     if((myGlobals.device[deviceId].datalink != DLT_PPP)
        && (myGlobals.device[deviceId].datalink != DLT_RAW)
        && (myGlobals.device[deviceId].datalink != DLT_ANY)) {
-      if((!myGlobals.dontTrustMACaddr) && (eth_type == 0x8137)) {
+      if((!myGlobals.runningPref.dontTrustMACaddr) && (eth_type == 0x8137)) {
 	/* IPX */
 	IPXpacket ipxPkt;
 
@@ -2921,7 +2923,8 @@ void processPacket(u_char *_deviceId,
 	incrementTrafficCounter(&dstHost->nonIPTraffic->otherRcvd, length);
 	incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
 	incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */, 0 /* ssap */, 0 /* ip */);
-	if(myGlobals.enableOtherPacketDump) dumpOtherPacket(actualDeviceId);
+	if(myGlobals.runningPref.enableOtherPacketDump)
+            dumpOtherPacket(actualDeviceId);
 
 	ctr.value = length;
 
@@ -2940,7 +2943,7 @@ void processPacket(u_char *_deviceId,
 	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
 	if((ether_dst != NULL)
-	   && (!myGlobals.dontTrustMACaddr)
+	   && (!myGlobals.runningPref.dontTrustMACaddr)
 	   && (strcmp(etheraddr_string(ether_dst, etherbuf), "FF:FF:FF:FF:FF:FF") == 0)
 	   && (p[sizeof(struct ether_header)] == 0xff)
 	   && (p[sizeof(struct ether_header)+1] == 0xff)
@@ -2977,7 +2980,7 @@ void processPacket(u_char *_deviceId,
 	  incrementTrafficCounter(&srcHost->nonIPTraffic->ipxSent, length);
 	  incrementTrafficCounter(&dstHost->nonIPTraffic->ipxRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
-	} else if(!myGlobals.dontTrustMACaddr) {
+	} else if(!myGlobals.runningPref.dontTrustMACaddr) {
 	  /* MAC addresses are meaningful here */
 	  srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
 	  dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
@@ -3020,7 +3023,7 @@ void processPacket(u_char *_deviceId,
 		 incrementTrafficCounter(&dstHost->nonIPTraffic->stpRcvd, length);
 	      FD_SET(FLAG_HOST_TYPE_SVC_BRIDGE, &srcHost->flags);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].stpBytes, length);
-	    } else if(myGlobals.enablePacketDecoding && (sap_type == 0xE0)) {
+	    } else if(myGlobals.runningPref.enablePacketDecoding && (sap_type == 0xE0)) {
 	      /* NetWare */
 	      if(!(llcHeader.ssap == LLCSAP_GLOBAL && llcHeader.dsap == LLCSAP_GLOBAL)) {
 		p1 += 3; /* LLC Header (short myGlobals.version) */
@@ -3178,7 +3181,7 @@ void processPacket(u_char *_deviceId,
 
 		http://www.faqs.org/rfcs/rfc1060.html
 	      */
-	      if(myGlobals.enablePacketDecoding
+	      if(myGlobals.runningPref.enablePacketDecoding
 		 && ((snapType == 0x809B) || (snapType == 0x80F3))) {
 		/* Appletalk */
 		AtDDPheader ddpHeader;
@@ -3271,9 +3274,10 @@ void processPacket(u_char *_deviceId,
 				      llcHeader.ssap /* ssap */, 0 /* ip */);
 		incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				      llcHeader.ssap /* ssap */, 0 /* ip */);
-		if(myGlobals.enableOtherPacketDump) dumpOtherPacket(actualDeviceId);
+		if(myGlobals.runningPref.enableOtherPacketDump)
+                    dumpOtherPacket(actualDeviceId);
 	      }
-	    } else if(myGlobals.enablePacketDecoding
+	    } else if(myGlobals.runningPref.enablePacketDecoding
 		      && ((sap_type == 0x06)
 			  || (sap_type == 0xFE)
 			  || (sap_type == 0xFC))) {  /* OSI */
@@ -3307,7 +3311,8 @@ void processPacket(u_char *_deviceId,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
 	      incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
-	      if(myGlobals.enableOtherPacketDump) dumpOtherPacket(actualDeviceId);
+	      if(myGlobals.runningPref.enableOtherPacketDump)
+                  dumpOtherPacket(actualDeviceId);
 	    }
 
 	    ctr.value = length;
@@ -3322,7 +3327,7 @@ void processPacket(u_char *_deviceId,
 	}
       } else if (((eth_type == ETHERTYPE_MDSHDR) || (eth_type == ETHERTYPE_BRDWLK) ||
                   (eth_type == ETHERTYPE_UNKNOWN) || (eth_type == ETHERTYPE_BRDWLK_OLD)) &&
-                 (!myGlobals.noFc)) {
+                 (!myGlobals.runningPref.noFc)) {
           /* An FC packet can be captured as Ethernet for three different
            * Ethertypes.
            */
@@ -3344,7 +3349,7 @@ void processPacket(u_char *_deviceId,
           hlen+=8; /* length of pppoe header */
 	  processIpPkt(p+hlen, h, length, NULL, NULL, actualDeviceId, vlanId);
         }
-      } else  /* Non IP */ if(!myGlobals.dontTrustMACaddr) {
+      } else  /* Non IP */ if(!myGlobals.runningPref.dontTrustMACaddr) {
 	/* MAC addresses are meaningful here */
 	struct ether_arp arpHdr;
 	HostAddr addr;
@@ -3418,7 +3423,7 @@ void processPacket(u_char *_deviceId,
 			sizeof(srcHost->hostNumIpAddress));
 		setResolvedName(srcHost, srcHost->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
 
-		if(myGlobals.numericFlag == 0)
+		if(myGlobals.runningPref.numericFlag == 0)
 		  ipaddr2str(srcHost->hostIpAddress, 1);
 
 		if(isPseudoLocalAddress(&srcHost->hostIpAddress, actualDeviceId)) {
@@ -3493,7 +3498,8 @@ void processPacket(u_char *_deviceId,
 				0 /* ssap */, 0 /* ip */);
 	  incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */,
 				0 /* ssap */, 0 /* ip */);
-	  if(myGlobals.enableOtherPacketDump) dumpOtherPacket(actualDeviceId);
+	  if(myGlobals.runningPref.enableOtherPacketDump)
+              dumpOtherPacket(actualDeviceId);
 	  break;
 	}
 
@@ -3518,7 +3524,7 @@ void processPacket(u_char *_deviceId,
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 
-  if (myGlobals.rFileName != NULL) {
+  if (myGlobals.runningPref.rFileName != NULL) {
       if (myGlobals.actTime > (lastUpdateThptTime + PARM_THROUGHPUT_REFRESH_INTERVAL)) {
           updateThpt (1);
           lastUpdateThptTime = myGlobals.actTime;
@@ -3659,7 +3665,7 @@ static void processFcPkt(const u_char *bp,
     /* Unless a frame is truncated by libpcap, we should have valid EOF */
     if ((actLen == h->len) && (eof != MDSHDR_EOFn) && (eof != MDSHDR_EOFt)) {
         incrementTrafficCounter (&myGlobals.device[actualDeviceId].rcvdFcPktStats.badCRC, 1);
-        if (myGlobals.enableSuspiciousPacketDump) {
+        if (myGlobals.runningPref.enableSuspiciousPacketDump) {
             traceEvent(CONST_TRACE_WARNING, "Bad EOF Frame Received");
             dumpSuspiciousPacket(actualDeviceId);
         }
@@ -3708,6 +3714,8 @@ static void processFcPkt(const u_char *bp,
 
     incrementTrafficCounter(&srcHost->fcCounters->fcBytesSent, fcFrameLen);
     incrementTrafficCounter(&dstHost->fcCounters->fcBytesRcvd, fcFrameLen);
+    incrementTrafficCounter(&srcHost->fcCounters->fcPktsSent, 1);
+    incrementTrafficCounter(&dstHost->fcCounters->fcPktsRcvd, 1);
 
     /* Class-Based Stats */
     if ((sof == MDSHDR_SOFi3) || (sof == MDSHDR_SOFn3)) {

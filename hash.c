@@ -38,7 +38,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
   u_int idx = 0;
   *el = NULL;
 
-  if(myGlobals.dontTrustMACaddr)  /* MAC addresses don't make sense here */
+  if(myGlobals.runningPref.dontTrustMACaddr)  /* MAC addresses don't make sense here */
     (*useIPAddressForSearching) = 1;
 
   if((*useIPAddressForSearching) && (hostIpAddress == NULL)) {
@@ -51,7 +51,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 
   if(((*useIPAddressForSearching) == 1)
      || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
-    if(myGlobals.trackOnlyLocalHosts
+    if(myGlobals.runningPref.trackOnlyLocalHosts
        && (!isLocalAddress(hostIpAddress, actualDeviceId))
        && (!_pseudoLocalAddress(hostIpAddress))) {
       *el = myGlobals.otherHostEntry;
@@ -81,7 +81,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
     (*useIPAddressForSearching) = 0;
   } else {
     if(hostIpAddress != NULL) {
-      if(myGlobals.trackOnlyLocalHosts
+      if(myGlobals.runningPref.trackOnlyLocalHosts
 	 && (!isPseudoLocalAddress(hostIpAddress, actualDeviceId))) {
 	*el = myGlobals.otherHostEntry;
 	return(OTHER_HOSTS_ENTRY);
@@ -447,7 +447,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     free(host->portsUsage);
   }
 
-  if(myGlobals.enablePacketDecoding && (host->protocolInfo != NULL)) {
+  if(myGlobals.runningPref.enablePacketDecoding && (host->protocolInfo != NULL)) {
     if(host->protocolInfo->httpVirtualHosts != NULL) {
       VirtualHostList *list = host->protocolInfo->httpVirtualHosts;
 
@@ -592,7 +592,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 void freeHostInstances(int actualDeviceId) {
   u_int idx, i, max, num=0;
 
-  if(myGlobals.mergeInterfaces)
+  if(myGlobals.runningPref.mergeInterfaces)
     max = 1;
   else
     max = myGlobals.numDevices;
@@ -648,7 +648,7 @@ void purgeIdleHosts(int actDevice) {
   struct timeval hiresTimeStart, hiresTimeEnd;
   HostTraffic *el, *prev, *next;
 
-  if(myGlobals.rFileName != NULL) return;
+  if(myGlobals.runningPref.rFileName != NULL) return;
 
 #ifdef IDLE_PURGE_DEBUG
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: purgeIdleHosts() invoked");
@@ -713,7 +713,7 @@ void purgeIdleHosts(int actDevice) {
 	   && (   ((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
 	       || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
 	   && (!broadcastHost(el))
-	   && ((!myGlobals.stickyHosts)
+	   && ((!myGlobals.runningPref.stickyHosts)
 	       || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
                    ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
                     || (!subnetPseudoLocalHost(el))))      /* Purge remote
@@ -789,7 +789,7 @@ void purgeIdleHosts(int actDevice) {
 
   free(theFlaggedHosts);
 
-  if(myGlobals.enableSessionHandling)
+  if(myGlobals.runningPref.enableSessionHandling)
     scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
 
   gettimeofday(&hiresTimeEnd, NULL);
@@ -944,7 +944,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 	  if(!hasDuplicatedMac(el)) {
 	    FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
 
-	    if(myGlobals.enableSuspiciousPacketDump) {
+	    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
 	      char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
 	      traceEvent(CONST_TRACE_WARNING,
@@ -987,7 +987,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
               sizeof(el->hostNumIpAddress));
       setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
   
-      if(myGlobals.numericFlag == 0)
+      if(myGlobals.runningPref.numericFlag == 0)
         ipaddr2str(el->hostIpAddress, 1);
 
       if(isBroadcastAddress(&el->hostIpAddress))
@@ -998,13 +998,13 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
     /* New host entry */
     int len;
 
-    if(myGlobals.device[actualDeviceId].hostsno >= myGlobals.maxNumHashEntries) {
+    if(myGlobals.device[actualDeviceId].hostsno >= myGlobals.runningPref.maxNumHashEntries) {
       static char messageShown = 0;
 
       if(!messageShown) {
 	messageShown = 1;
 	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)", 
-		   myGlobals.maxNumHashEntries);
+		   myGlobals.runningPref.maxNumHashEntries);
       }
       
       return(NULL);
@@ -1156,12 +1156,12 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 
       el->lastSeen = myGlobals.actTime;
 
-      if(myGlobals.enableSuspiciousPacketDump)
+      if(myGlobals.runningPref.enableSuspiciousPacketDump)
 	checkSpoofing(el, actualDeviceId);
     }
 
     if(hostIpAddress != NULL) {
-      if(myGlobals.dontTrustMACaddr && (ether_addr != NULL))
+      if(myGlobals.runningPref.dontTrustMACaddr && (ether_addr != NULL))
 	memcpy(el->lastEthAddress, ether_addr, LEN_ETHERNET_ADDRESS);
 
       addrcpy(&el->hostIpAddress,hostIpAddress);
@@ -1177,7 +1177,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
       setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
 
       /* Trick to fill up the address cache */
-      if(myGlobals.numericFlag == 0)
+      if(myGlobals.runningPref.numericFlag == 0)
 	ipaddr2str(el->hostIpAddress, 1);
 
     } else {
@@ -1295,13 +1295,13 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
   if(!hostFound) {
       /* New host entry */
       
-    if(myGlobals.device[actualDeviceId].hostsno >= myGlobals.maxNumHashEntries) {
+    if(myGlobals.device[actualDeviceId].hostsno >= myGlobals.runningPref.maxNumHashEntries) {
       static char messageShown = 0;
 
       if(!messageShown) {
 	messageShown = 1;
 	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)", 
-		   myGlobals.maxNumHashEntries);
+		   myGlobals.runningPref.maxNumHashEntries);
       }
       
       return(NULL);

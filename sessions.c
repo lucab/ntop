@@ -360,7 +360,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.closedEmptyTCPConn, 1);
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.terminatedTCPConn, 1);
 
-      if(myGlobals.enableSuspiciousPacketDump)
+      if(myGlobals.runningPref.enableSuspiciousPacketDump)
 	traceEvent(CONST_TRACE_WARNING, fmt,
 		   theHost->hostResolvedName, sessionToPurge->sport,
 		   theRemHost->hostResolvedName, sessionToPurge->dport,
@@ -475,7 +475,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   static u_int idx = 0;
     
   /* Patch below courtesy of "Kouprie, Robbert" <R.Kouprie@DTO.TUDelft.NL> */
-     if((!myGlobals.enableSessionHandling) 
+     if((!myGlobals.runningPref.enableSessionHandling) 
 	|| (myGlobals.device[actualDeviceId].tcpSession == NULL)
 	|| (myGlobals.device[actualDeviceId].numTcpSessions == 0))
      return;
@@ -1324,7 +1324,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
                 /* printf("==>\n\n%s\n\n", rcStr); */
 
             } else {
-                if(myGlobals.enableSuspiciousPacketDump) {
+                if(myGlobals.runningPref.enableSuspiciousPacketDump) {
                     traceEvent(CONST_TRACE_WARNING, "unknown protocol (no HTTP) detected (trojan?) "
                                "at port 80 %s:%d->%s:%d [%s]\n",
                                srcHost->hostResolvedName, sport,
@@ -1385,12 +1385,12 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
             memset(tmpStr, 0, sizeof(tmpStr));
             memcpy(tmpStr, packetData, len);
 
-            if(myGlobals.enablePacketDecoding) {
+            if(myGlobals.runningPref.enablePacketDecoding) {
                 if ((dport != IP_TCP_PORT_HTTP)
                     && (dport != IP_TCP_PORT_NTOP)
                     && (dport != IP_TCP_PORT_SQUID)
                     && isInitialHttpData(tmpStr)) {
-                    if(myGlobals.enableSuspiciousPacketDump) {
+                    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
                         traceEvent(CONST_TRACE_WARNING, "HTTP detected at wrong port (trojan?) "
                                    "%s:%d -> %s:%d [%s]",
                                    srcHost->hostResolvedName, sport,
@@ -1400,7 +1400,7 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
                     }
                 } else if((sport != IP_TCP_PORT_FTP) && (sport != IP_TCP_PORT_SMTP)
                           && isInitialFtpData(tmpStr)) {
-                    if(myGlobals.enableSuspiciousPacketDump) {
+                    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
                         traceEvent(CONST_TRACE_WARNING, "FTP/SMTP detected at wrong port (trojan?) "
                                    "%s:%d -> %s:%d [%s]",
                                    dstHost->hostResolvedName, dport,
@@ -1410,7 +1410,7 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
                     }
                 } else if(((sport == IP_TCP_PORT_FTP) || (sport == IP_TCP_PORT_SMTP)) &&
                           (!isInitialFtpData(tmpStr))) {
-                    if(myGlobals.enableSuspiciousPacketDump) {
+                    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
                         traceEvent(CONST_TRACE_WARNING, "Unknown protocol (no FTP/SMTP) detected (trojan?) "
                                    "at port %d %s:%d -> %s:%d [%s]", sport,
                                    dstHost->hostResolvedName, dport,
@@ -1420,7 +1420,7 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
                     }
                 } else if((sport != IP_TCP_PORT_SSH) && (dport != IP_TCP_PORT_SSH)
                           &&  isInitialSshData(tmpStr)) {
-                    if(myGlobals.enableSuspiciousPacketDump) {
+                    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
                         traceEvent(CONST_TRACE_WARNING, "SSH detected at wrong port (trojan?) "
                                    "%s:%d -> %s:%d [%s]  ",
                                    dstHost->hostResolvedName, dport,
@@ -1430,7 +1430,7 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
                     }
                 } else if(((sport == IP_TCP_PORT_SSH) || (dport == IP_TCP_PORT_SSH)) &&
                           (!isInitialSshData(tmpStr))) {
-                    if(myGlobals.enableSuspiciousPacketDump) {
+                    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
                         traceEvent(CONST_TRACE_WARNING, "Unknown protocol (no SSH) detected (trojan?) "
                                    "at port 22 %s:%d -> %s:%d [%s]",
                                    dstHost->hostResolvedName, dport,
@@ -1496,7 +1496,7 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
             incrementUsageCounter(&dstHost->secHostPkts->ackXmasFinSynNullScanSent, srcHost, actualDeviceId);
             incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.ackXmasFinSynNullScan, 1);
 
-            if(myGlobals.enableSuspiciousPacketDump) {
+            if(myGlobals.runningPref.enableSuspiciousPacketDump) {
                 traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed ACK scan of host [%s:%d]",
                            dstHost->hostResolvedName, dport,
                            srcHost->hostResolvedName, sport);
@@ -1534,7 +1534,7 @@ static void tcpSessionSecurityChecks (const struct pcap_pkthdr *h,
 
     /* **************************** */
 
-    if(myGlobals.enableSuspiciousPacketDump) {
+    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
         /*
           For more info about checks below see
           http://www.synnergy.net/Archives/Papers/dethy/host-detection.txt
@@ -1702,13 +1702,13 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
         printf("DEBUG: NEW ");
 #endif
       
-        if(myGlobals.device[actualDeviceId].numTcpSessions >= myGlobals.maxNumSessions) {
+        if(myGlobals.device[actualDeviceId].numTcpSessions >= myGlobals.runningPref.maxNumSessions) {
             static char messageShown = 0;
 	
             if(!messageShown) {
                 messageShown = 1;
                 traceEvent(CONST_TRACE_INFO, "WARNING: Max num TCP sessions (%u) reached (see -X)", 
-                           myGlobals.maxNumSessions);
+                           myGlobals.runningPref.maxNumSessions);
             }
 	
             return(NULL);
@@ -1786,7 +1786,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
     else
         len = packetDataLength;
 
-    if(myGlobals.enablePacketDecoding) {
+    if(myGlobals.runningPref.enablePacketDecoding) {
         if (((sport == IP_TCP_PORT_HTTP) || (dport == IP_TCP_PORT_HTTP))
             && (packetDataLength > 0)) {
             handleHTTPSession (h, srcHost, sport, dstHost, dport,
@@ -2219,7 +2219,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
               FLAG_STATE_SYN this message has not to be emitted because this is
               a rejected session.
             */
-            if(myGlobals.enableSuspiciousPacketDump) {
+            if(myGlobals.runningPref.enableSuspiciousPacketDump) {
                 traceEvent(CONST_TRACE_WARNING, "TCP session [%s:%d]<->[%s:%d] reset by %s "
                            "without completing 3-way handshake",
                            srcHost->hostResolvedName, sport,
@@ -2231,7 +2231,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
             theSession->sessionState = FLAG_STATE_TIMEOUT;
         }
 
-        if(myGlobals.disableInstantSessionPurge != TRUE)
+        if(myGlobals.runningPref.disableInstantSessionPurge != TRUE)
             theSession->sessionState = FLAG_STATE_TIMEOUT;
 
         if(sport == IP_TCP_PORT_HTTP)
@@ -2318,7 +2318,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
     IPSession *theSession = NULL;
     u_short sessionType, check, found=0;
 
-    if((!myGlobals.enableSessionHandling) || (myGlobals.device[actualDeviceId].tcpSession == NULL))
+    if((!myGlobals.runningPref.enableSessionHandling) || (myGlobals.device[actualDeviceId].tcpSession == NULL))
         return(NULL);
 
     if((srcHost == NULL) || (dstHost == NULL)) {
@@ -2331,7 +2331,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
       because BOOTP uses broadcast addresses hence
       it would be filtered out by the (**) check
     */
-    if (myGlobals.enablePacketDecoding && (tp == NULL /* UDP session */) &&
+    if (myGlobals.runningPref.enablePacketDecoding && (tp == NULL /* UDP session */) &&
         (srcHost->hostIpAddress.hostFamily == AF_INET && 
          dstHost->hostIpAddress.hostFamily == AF_INET)) 
         handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData, actualDeviceId);
@@ -2384,7 +2384,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
         char *fmt = "Detected traffic [%s:%d] -> [%s:%d] on "
             "a diagnostic port (network mapping attempt?)";
 
-        if(myGlobals.enableSuspiciousPacketDump) {
+        if(myGlobals.runningPref.enableSuspiciousPacketDump) {
             traceEvent(CONST_TRACE_WARNING, fmt,
                        srcHost->hostResolvedName, sport,
                        dstHost->hostResolvedName, dport);
@@ -2427,7 +2427,7 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
         incrementUsageCounter(&dstHost->secHostPkts->tinyFragmentRcvd, srcHost, actualDeviceId);
         incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.tinyFragment, 1);
 
-        if(myGlobals.enableSuspiciousPacketDump) {
+        if(myGlobals.runningPref.enableSuspiciousPacketDump) {
             traceEvent(CONST_TRACE_WARNING, fmt, packetDataLength,
                        srcHost->hostResolvedName, sport,
                        dstHost->hostResolvedName, dport);
@@ -3082,7 +3082,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
             lunStats->numFailedCmds++;
             hostLunStats->numFailedCmds++;
 
-            if (myGlobals.enableSuspiciousPacketDump) {
+            if (myGlobals.runningPref.enableSuspiciousPacketDump) {
                 dumpSuspiciousPacket (actualDeviceId);
             }
 
@@ -3194,7 +3194,7 @@ FCSession* handleFcSession (const struct pcap_pkthdr *h,
     u_char opcode;
     u_char gs_type, gs_stype;
 
-    if(!myGlobals.enableSessionHandling)
+    if(!myGlobals.runningPref.enableSessionHandling)
         return(NULL);
 
     if((srcHost == NULL) || (dstHost == NULL)) {

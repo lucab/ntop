@@ -2958,7 +2958,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     strncpy(el->hostNumIpAddress,
 	    _addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 	    sizeof(el->hostNumIpAddress));
-    if(myGlobals.numericFlag == 0) {
+    if(myGlobals.runningPref.numericFlag == 0) {
       fetchAddressFromCache(el->hostIpAddress, el->hostResolvedName, &type);
       el->hostResolvedNameType = type;
       if(strcmp(el->hostResolvedName, el->hostNumIpAddress) == 0) {
@@ -3664,7 +3664,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     strcpy(symLink, symMacAddr);
     urlFixupToRFC1945Inplace(symLink);
 
-    if(!myGlobals.dontTrustMACaddr) {
+    if(!myGlobals.runningPref.dontTrustMACaddr) {
       safe_snprintf(__FILE__, __LINE__, shortBuf, sizeof(shortBuf), "<A HREF=%s.html>%s</A>", symLink, symMacAddr);
     } else {
       strcpy(shortBuf, symMacAddr);
@@ -3986,12 +3986,12 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		getRowColor(), "Further Host Information", el->hostNumIpAddress);
     sendString(buf);
 
-    if(myGlobals.mapperURL) {
+    if(myGlobals.runningPref.mapperURL) {
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "<IMG SRC=\"%s?host=%s\" alt=\"map of host location\" WIDTH=320 HEIGHT=200></TD></TR>\n",
 		  getRowColor(),
 		  "Host Physical Location",
-		  myGlobals.mapperURL, el->hostNumIpAddress);
+		  myGlobals.runningPref.mapperURL, el->hostNumIpAddress);
       sendString(buf);
     }
   }
@@ -4001,7 +4001,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     struct stat statbuf;
     char *key;
 
-    if((!myGlobals.dontTrustMACaddr) && subnetPseudoLocalHost(el) 
+    if((!myGlobals.runningPref.dontTrustMACaddr) && subnetPseudoLocalHost(el) 
        && (el->ethAddressString[0] != '\0') /* Really safe in case a host that was supposed to be local isn't really so*/)
       key = el->ethAddressString;
     else
@@ -4588,7 +4588,7 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
 #ifdef CFG_MULTITHREADED
   if((myGlobals.nextFingerprintScan > 0) &&
      (countUnknownFP > 0) &&
-     (myGlobals.debugMode != 1)) {
+     (myGlobals.runningPref.debugMode != 1)) {
         strftime(buf, sizeof(buf), 
                  CONST_LOCALE_TIMESPEC, localtime_r(&myGlobals.nextFingerprintScan, &t));
         sendString("<li>May be resolved during the next scan, scheduled for ");
@@ -4862,7 +4862,7 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
   memset(buf2, 0, sizeof(buf2));
   strftime(buf2, sizeof(buf2), CONST_LOCALE_TIMESPEC, localtime_r(&mutexId->lockTime, &t));
   if(textPrintFlag == TRUE) {
-    if(myGlobals.disableMutexExtraInfo) {
+    if(myGlobals.runningPref.disableMutexExtraInfo) {
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "Mutex %s is %s, locked: %u times.\n",
                     mutexName, mutexId->isLocked ? "locked" : "unlocked",
@@ -4904,7 +4904,7 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
                     mutexId->maxLockedDurationUnlockLine);
     }
   } else {
-    if(myGlobals.disableMutexExtraInfo) {
+    if(myGlobals.runningPref.disableMutexExtraInfo) {
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
                     "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=RIGHT>%u</TD></TR>\n",
