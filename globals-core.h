@@ -128,7 +128,8 @@ extern void*          ntop_realloc(void* ptr, unsigned int sz, char* file, int l
 extern char*          ntop_strdup(char *str, char* file, int line);
 extern void           ntop_free(void **ptr, char* file, int line);
 #else
-#define free(a)       ntop_safefree((void*)&(a), __FILE__, __LINE__)
+/* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
+#define free(a)       ntop_safefree((void**)&(a), __FILE__, __LINE__)
 extern void           ntop_safefree(void **ptr, char* file, int line);
 #define malloc(sz)    ntop_safemalloc(sz, __FILE__, __LINE__)
 extern void*          ntop_safemalloc(unsigned int sz, char* file, int line);
