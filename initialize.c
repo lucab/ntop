@@ -265,7 +265,7 @@ void initCounters(int _mergeInterfaces) {
   memset(hnametable, 0, sizeof(hnametable));
 #endif
 
-  numTotSessions = HASHNAMESIZE; /* Initial value */
+  numTotSessions = 32; /* Initial value */
   len = sizeof(IPSession*)*numTotSessions;
   tcpSession = (IPSession**)malloc(len);
   memset(tcpSession, 0, len);

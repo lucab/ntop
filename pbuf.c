@@ -1404,30 +1404,10 @@ static void handleSession(const struct pcap_pkthdr *h,
 	if((*numSessions) > (numTotSessions*0.75)) {
 	  /* If possible this table will be enlarged */
 
-	  if((numTotSessions*2) < MAX_HASH_SIZE) {
-	    /* Fine we can enlarge the table now */
-	    IPSession** tmpSession;
-	    int len;
-
-	    len = sizeof(IPSession*)*numTotSessions;
-
-	    tmpSession = tcpSession;
-	    tcpSession = (IPSession**)malloc(2*len);
-	    memset(tcpSession, len, len);
-	    memcpy(tcpSession, tmpSession, len);
-	    free(tmpSession);
-
-	    tmpSession = udpSession;
-	    udpSession = (IPSession**)malloc(2*len);
-	    memset(udpSession, len, len);
-	    memcpy(udpSession, tmpSession, len);
-	    free(tmpSession);
-
-	    numTotSessions *= 2;
-	  }
+	  extendTcpUdpSessionsHash();
 	}
 
-	if((*numSessions) > (numTotSessions*0.75)) {
+	if((*numSessions) > (numTotSessions*0.7)) {
 	  /* The hash table is getting large: let's replace the oldest session
 	     with this one we're allocating */
 	  u_int usedIdx=0;

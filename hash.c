@@ -636,6 +636,31 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 
 /* ************************************ */
 
+static void freeHostSessions(u_int hostIdx) {
+  int i;
+  
+  for(i=0; i<numTotSessions; i++) {
+    if((tcpSession[i] != NULL)
+       && ((tcpSession[i]->initiatorIdx == hostIdx) 
+	   || (tcpSession[i]->remotePeerIdx == hostIdx))) {
+      
+      free(tcpSession[i]);
+      tcpSession[i] = NULL;
+      numTcpSessions--;
+    }
+
+    if((udpSession[i] != NULL)
+       && ((udpSession[i]->initiatorIdx == hostIdx) 
+	   || (udpSession[i]->remotePeerIdx == hostIdx))) {      
+      free(udpSession[i]);
+      udpSession[i] = NULL;
+      numUdpSessions--;
+    }
+  }
+}
+
+/* ************************************ */
+
 /* Delayed free */
 void freeHostInfo(int theDevice, u_int hostIdx) {
   u_int idx, j, i;
@@ -809,6 +834,10 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
     }
   }
 
+  freeHostSessions(hostIdx);
+
+  /* ************************************* */
+
 #ifdef MULTITHREADED
   accessMutex(&lsofMutex, "readLsofInfo-2");
 #endif
@@ -925,3 +954,55 @@ void purgeIdleHosts(int ignoreIdleTime) {
     }
 }
 
+/* ******************************************** */
+
+void extendTcpUdpSessionsHash() {
+  if((numTotSessions*2) < MAX_HASH_SIZE) {
+    /* Fine we can enlarge the table now */
+    IPSession** tmpSession;
+    int len, i, newLen, idx;
+
+    newLen = numTotSessions*2;
+    len = sizeof(IPSession*)*numTotSessions;
+
+    tmpSession = tcpSession;
+    tcpSession = (IPSession**)malloc(2*len);
+    memset(tcpSession, 0, 2*len);
+    for(i=0; i<numTotSessions; i++) {
+      if(tmpSession[i] != NULL) {
+	idx = (u_int)((tmpSession[i]->initiatorRealIp.s_addr+
+		       tmpSession[i]->remotePeerRealIp.s_addr+
+		       tmpSession[i]->sport+
+		       tmpSession[i]->dport) % newLen);
+		
+	while(tcpSession[idx] != NULL)
+	  idx = (idx+1) % newLen;
+		
+	tcpSession[idx] = tmpSession[i];
+      }
+    }
+    free(tmpSession);
+
+    tmpSession = udpSession;
+    udpSession = (IPSession**)malloc(2*len);
+    memset(udpSession, 0, 2*len);
+    for(i=0; i<numTotSessions; i++) {
+      if(tmpSession[i] != NULL) {
+	idx = (u_int)((tmpSession[i]->initiatorRealIp.s_addr+
+		       tmpSession[i]->remotePeerRealIp.s_addr+
+		       tmpSession[i]->sport+
+		       tmpSession[i]->dport) % newLen);
+		
+	while(udpSession[idx] != NULL)
+	  idx = (idx+1) % newLen;
+
+	udpSession[idx] = tmpSession[i];
+      }
+    }
+    free(tmpSession);
+
+    numTotSessions *= 2;
+
+    traceEvent(TRACE_INFO, "Extending TCP/UDP hash [new size: %d]", numTotSessions);
+  }
+}

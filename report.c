@@ -3139,7 +3139,6 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   printHTMLheader(buf, 0);
 
   if(numEntries == 0) {
-    sendString("<CENTER><P><H1>Internet Domain Stats</H1><P>\n");
     printNoDataYet();
     free(tmpStats);
     return;
