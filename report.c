@@ -137,8 +137,8 @@ void printTrafficStatistics() {
   sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR "TR_ON"><TH "TH_BG">Name</TH>"
 	     "<TH "TH_BG">Device</TH><TH "TH_BG">Type</TH><TH "TH_BG">MTU</TH><TH "TH_BG">Header</TH><TH "TH_BG">Address</TH></TR>\n");
 
-  for(i=0; i<myGlobals.numDevices; i++) {
-    if(myGlobals.rFileName == NULL) {
+  if(myGlobals.rFileName == NULL) {
+    for(i=0; i<myGlobals.numDevices; i++) {
       if(myGlobals.device[i].activeDevice) {
 	char buf1[128], buf2[64];
 
@@ -170,19 +170,19 @@ void printTrafficStatistics() {
 	  BufferTooShort();
 	sendString(buf);
       }
-    } else {
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER>Pcap file</TD><TD "TD_BG">&nbsp;</TD>") < 0)
+    } 
+  } else {
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG">&nbsp;</TD>", CONST_PCAP_NW_INTERFACE_FILE) < 0)
 	BufferTooShort();
       sendString(buf);
 	
-      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", CONST_PCAP_NW_INTERFACE_FILE) < 0)
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", myGlobals.rFileName) < 0)
 	BufferTooShort();
       sendString(buf);
 	
       sendString("<TD "TD_BG">&nbsp;</TD>");
       sendString("<TD "TD_BG">&nbsp;</TD>");
       sendString("<TD "TD_BG">&nbsp;</TD></TR>\n");
-    }
   }
 
   sendString("</TABLE>"TABLE_OFF);
