@@ -2082,6 +2082,11 @@
  */
 #define CONST_IMG_LOCK                 "<img src=\"/lock.png\" alt=\"secured URL\" title=\"secured URL\" border=\"0\">"
 
+/*
+ * Password set message - long enough to be noticeable in the console output
+ */
+#define CONST_ADMINPW_QUESTION         "\n\nntop startup - waiting for user response!\n\n\nPlease enter the password for the admin user: "
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* MISSING items                                                                   */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

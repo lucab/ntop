@@ -965,7 +965,7 @@ static void addKeyIfMissing(char* key, char* value,
 
 void setAdminPassword(char* pass) {
   if (pass == NULL)
-    addKeyIfMissing("1admin", NULL, 1, 1, "\nPlease enter the password for the admin user: ");
+    addKeyIfMissing("1admin", NULL, 1, 1, CONST_ADMINPW_QUESTION);
   else
     addKeyIfMissing("1admin", pass, 1, 1, NULL);
 }
@@ -974,7 +974,7 @@ void setAdminPassword(char* pass) {
 
 void addDefaultAdminUser(void) {
   /* Add user 'admin' and ask for password if not existing */
-  addKeyIfMissing("1admin", NULL, 1, 0, "\nPlease enter the password for the admin user: ");
+  addKeyIfMissing("1admin", NULL, 1, 0, CONST_ADMINPW_QUESTION);
 
   /* Add user 'admin' for URL 'show...' if not existing */
   addKeyIfMissing("2showU",      "users=1admin", 0, 0, NULL);
