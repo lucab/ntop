@@ -2450,6 +2450,20 @@ void checkHostProvidedServices(HostTraffic *el) {
 
 /* ************************************ */
 
+static int guessHops(HostTraffic *el) {
+  int numHops;
+
+  if(subnetPseudoLocalHost(el)) numHops = 1;
+  else if(el->minTTL <= 32) numHops = 32 - el->minTTL;
+  else if(el->minTTL <= 64) numHops = 64 - el->minTTL;
+  else if(el->minTTL <= 128) numHops = 128 - el->minTTL;
+  else if(el->minTTL <= 256) numHops = 255 - el->minTTL;
+  
+  return(numHops);
+}
+  
+/* ************************************ */
+
 void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   char buf[BUF_SIZE], buf1[64], sniffedName[MAXDNAME];
   float percentage;
@@ -2918,17 +2932,10 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if((!myGlobals.borderSnifferMode) && (el->minTTL > 0)) {
-    int numHops;
-
-    if(el->minTTL < 32) numHops = 32 - el->minTTL;
-    else if(el->minTTL < 64) numHops = 64 - el->minTTL;
-    else if(el->minTTL < 128) numHops = 128 - el->minTTL;
-    else if(el->minTTL < 256) numHops = 255 - el->minTTL;
-
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d:%d&nbsp;[~%d&nbsp;hop(s)]</TD></TR>\n",
 		getRowColor(), "IP&nbsp;TTL&nbsp;(Time to Live)",
-		el->minTTL, el->maxTTL, numHops) < 0) BufferOverflow();
+		el->minTTL, el->maxTTL, guessHops(el)) < 0) BufferOverflow();
     sendString(buf);
   }
 

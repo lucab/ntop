@@ -349,11 +349,11 @@ static void checkFragmentOverlap(u_int srcHostIdx,
       fragment->fragmentOrder = INCREASING_FRAGMENT_ORDER;
   }
 
-  if ( (fragment->fragmentOrder == INCREASING_FRAGMENT_ORDER
-        && fragment->lastOffset+fragment->lastDataLength > fragmentOffset)
-       ||
-       (fragment->fragmentOrder == DECREASING_FRAGMENT_ORDER
-        && fragment->lastOffset < fragmentOffset+dataLength)) {
+  if ((fragment->fragmentOrder == INCREASING_FRAGMENT_ORDER
+       && fragment->lastOffset+fragment->lastDataLength > fragmentOffset)
+      ||
+      (fragment->fragmentOrder == DECREASING_FRAGMENT_ORDER
+       && fragment->lastOffset < fragmentOffset+dataLength)) {
     if(myGlobals.enableSuspiciousPacketDump) {
       char buf[BUF_SIZE];
       snprintf(buf, BUF_SIZE, "Detected overlapping packet fragment [%s->%s]: "
@@ -1189,7 +1189,7 @@ static void processIpPkt(const u_char *bp,
 			   dport, udpDataLength,
 			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
 	
-	if(myGlobals.enableNetFlowSupport) sendUDPflow(srcHost, dstHost, sport, dport, length);	
+	if(myGlobals.enableNetFlowSupport) sendUDPflow(srcHost, dstHost, sport, dport, length, actualDeviceId);	
       }
     }
     break;
@@ -1384,7 +1384,7 @@ static void processIpPkt(const u_char *bp,
 	}
 	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
       }
-      sendICMPflow(srcHost, dstHost, length);
+      if(myGlobals.enableNetFlowSupport) sendICMPflow(srcHost, dstHost, length, actualDeviceId);
     }
     break;
 
@@ -1393,6 +1393,7 @@ static void processIpPkt(const u_char *bp,
     myGlobals.device[actualDeviceId].ospfBytes += length;
     srcHost->ospfSent += length;
     dstHost->ospfRcvd += length;
+    if(myGlobals.enableNetFlowSupport) sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
     break;
 
   case IPPROTO_IGMP:
@@ -1400,6 +1401,7 @@ static void processIpPkt(const u_char *bp,
     myGlobals.device[actualDeviceId].igmpBytes += length;
     srcHost->igmpSent += length;
     dstHost->igmpRcvd += length;
+    if(myGlobals.enableNetFlowSupport) sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
     break;
 
   default:
@@ -2451,3 +2453,4 @@ static void dumpHash() {
   }
 }
 #endif /* DEBUG */
+

@@ -311,6 +311,12 @@ typedef struct ntopGlobals {
 #endif
 
   int numChildren;
+
+  /* NetFlow */
+  int netflowSocket;
+  struct sockaddr_in dest;
+  u_int32_t destAddr, globalFlowSequence, globalFlowPktCount;
+  NetFlow5Record theRecord;
 } NtopGlobals;
 
 #endif /* GLOBALS_H */

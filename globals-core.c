@@ -80,8 +80,7 @@ static char *_configFileDirs[] = { ".", CONFIGFILE_DIR, "/etc", NULL };
 /*
  * Initialize all global run-time parameters to default (reasonable!!!) values
  */
-void initNtopGlobals(int argc, char * argv[])
-{
+void initNtopGlobals(int argc, char * argv[]) {
   int i;
 
   memset(&myGlobals, 0, sizeof(myGlobals));
@@ -285,4 +284,7 @@ void initNtopGlobals(int argc, char * argv[])
 
   myGlobals.enableThUpdate  = 1;
   myGlobals.enableIdleHosts = 1;
+
+  myGlobals.netflowSocket = -1;  
+  myGlobals.globalFlowSequence = myGlobals.globalFlowPktCount = 0;
 }

@@ -1884,6 +1884,60 @@ typedef struct logMessage {
 #define DOMAIN_DUMMY_IDX_VALUE  98
 #define DOMAIN_DUMMY_IDX_STR    "98"
 
+/* *************************** */
+
+/*
+  For more info see:
+
+  http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm
+
+  ftp://ftp.net.ohio-state.edu/users/maf/cisco/
+*/
+
+#define FLOW_VERSION_5		 5
+#define V5FLOWS_PER_PAK		30
+
+struct flow_ver5_hdr {
+  u_int16_t version;         /* Current myGlobals.version=5*/
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  u_int8_t  engine_type;     /* Type of flow switching engine (RP,VIP,etc.)*/
+  u_int8_t  engine_id;       /* Slot number of the flow switching engine */
+};
+
+ struct flow_ver5_rec {
+   u_int32_t srcaddr;    /* Source IP Address */
+   u_int32_t dstaddr;    /* Destination IP Address */
+   u_int32_t nexthop;    /* Next hop router's IP Address */
+   u_int16_t input;      /* Input interface index */
+   u_int16_t output;     /* Output interface index */
+   u_int32_t dPkts;      /* Packets sent in Duration (milliseconds between 1st
+			   & last packet in this flow)*/
+   u_int32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st
+			   & last packet in  this flow)*/
+   u_int32_t First;      /* SysUptime at start of flow */
+   u_int32_t Last;       /* and of last packet of the flow */
+   u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+   u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+   u_int8_t pad1;        /* pad to word boundary */
+   u_int8_t tcp_flags;   /* Cumulative OR of tcp flags */
+   u_int8_t prot;        /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+   u_int8_t tos;         /* IP Type-of-Service */
+   u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+   u_int16_t src_as;     /* source peer/origin Autonomous System */
+   u_int8_t dst_mask;    /* destination route's mask bits */
+   u_int8_t src_mask;    /* source route's mask bits */
+   u_int16_t pad2;       /* pad to word boundary */
+};
+
+typedef struct single_flow_ver5_rec {
+  struct flow_ver5_hdr flowHeader;
+  struct flow_ver5_rec flowRecord[V5FLOWS_PER_PAK];
+} NetFlow5Record;
+
 /* **************************** */
 
 #ifndef WNOHANG

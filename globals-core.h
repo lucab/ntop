@@ -421,10 +421,12 @@ extern NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
 /* netflow.c */
 extern int handleNetFlowSupport(char* addr /* host:port */);
 extern void termNetFlowExporter();
-extern void sendICMPflow(HostTraffic *srcHost, HostTraffic *dstHost, u_int length);
+extern void sendICMPflow(HostTraffic *srcHost, HostTraffic *dstHost, u_int length, u_int actualDeviceId);
 extern void sendUDPflow(HostTraffic *srcHost, HostTraffic *dstHost, 
-			u_int sport, u_int dport, u_int length);
+			u_int sport, u_int dport, u_int length, u_int actualDeviceId);
 extern void sendTCPSessionFlow(IPSession *theSession, int actualDeviceId);
+extern void sendOTHERflow(HostTraffic *srcHost, HostTraffic *dstHost, 
+			  u_int8_t proto, u_int length, u_int actualDeviceId);
 
 /* globals-core.c */
 void initNtopGlobals(int argc, char * argv[]);
@@ -451,3 +453,4 @@ extern IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 				   u_short dport, u_int length,
 				   u_char* packetData, int actualDeviceId);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
+
