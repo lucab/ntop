@@ -595,6 +595,10 @@ typedef struct ether80211q {
 
 #ifndef DEFAULT_SYSLOG_FACILITY
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON   /* default value, if not specified otherwise */
+
+#ifndef LOG_AUTHPRIV
+#define LOG_AUTHPRIV LOG_AUTH
+#endif
 #endif
 
 /* Now, if we don't have gcc, we haven't created the facilitynames table, so do it
