@@ -26,7 +26,6 @@ extern char *version, *osName, *author, *buildDate;
 extern char *program_name;
 extern char domainName[MAXHOSTNAMELEN], *shortDomainName;
 
-
 /* command line options */
 extern u_short traceLevel;
 extern u_char stickyHosts, enableSuspiciousPacketDump;
@@ -487,3 +486,5 @@ extern void mySQLnotifyHostCreation(HostTraffic *el);
 extern void mySQLnotifyTCPSession(IPSession *session);
 extern void mySQLupdateDBOSname(HostTraffic *el);
 #endif /* HAVE_MYSQL */
+
+extern NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];

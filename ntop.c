@@ -60,7 +60,7 @@ void handleSigHup(int signalId _UNUSED_) {
 
 #ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "========================================");
-  traceEvent(TRACE_INFO, "gdbmMutex is %s", isMutexLocked(&gdbmMutex) ? "*locked*" : "unlocked");
+rm   traceEvent(TRACE_INFO, "gdbmMutex is %s", isMutexLocked(&gdbmMutex) ? "*locked*" : "unlocked");
   traceEvent(TRACE_INFO, "packetQueueMutex is %s", isMutexLocked(&packetQueueMutex) ? "*locked*" : "unlocked");
   traceEvent(TRACE_INFO, "addressResolutionMutex is %s", isMutexLocked(&addressResolutionMutex) ? "*locked*" : "unlocked");
   traceEvent(TRACE_INFO, "hashResizeMutex is %s", isMutexLocked(&hashResizeMutex) ? "*locked*" : "unlocked");

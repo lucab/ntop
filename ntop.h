@@ -1491,8 +1491,6 @@ typedef struct napsterServer {
   u_short serverPort;
 } NapsterServer;
 
-NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
-
 /* *********************** */
 
 /* Appletalk Datagram Delivery Protocol */

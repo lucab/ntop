@@ -28,6 +28,7 @@ char *version, *osName, *author, *buildDate;
 char *program_name;
 char domainName[MAXHOSTNAMELEN], *shortDomainName;
 
+
 /* command line options */
 u_short traceLevel;
 u_char stickyHosts, enableSuspiciousPacketDump;
@@ -188,3 +189,5 @@ u_short headerSize[] = {
   UNKNOWN_MTU,  /* BSD/OS Serial Line IP */
   UNKNOWN_MTU	/* BSD/OS Point-to-point Protocol */
 };
+
+NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
