@@ -198,8 +198,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    }
 	  }
 	}
-      } else {
-	if (el->hostIpAddress.s_addr == hostIpAddress->s_addr) {
+      } else {       	
+	if(((accuracyLevel == LOW_ACCURACY_LEVEL) && (idx == otherHostEntryIdx))
+	   || (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
 	  hostFound = 1;
 	  break;
 	}
@@ -328,6 +329,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 
 	  if((el->hostIpAddress.s_addr != 0x0) /* 0.0.0.0 */
+	     && (el->hostIpAddress.s_addr != 0xFFFFFFFF) /* 255.255.255.255 */
 	     && isBroadcastAddress(&el->hostIpAddress)) {
 	    /* 
 	       The sender of this packet has obviously a wrong netmask because:
@@ -479,6 +481,7 @@ static void updateHostSessionsList(u_int theHostIdx,
   HostTraffic *theHost, *theRemHost;
 
   if((theHostIdx == broadcastEntryIdx)
+     || (theHostIdx == otherHostEntryIdx)
      || (remotePeerIdx == broadcastEntryIdx)
      || (remotePeerIdx == NO_PEER)
      || (theHostIdx == NO_PEER)
@@ -592,7 +595,7 @@ void allocateSecurityHostPkts(HostTraffic *srcHost) {
 void scanTimedoutTCPSessions(void) {
   u_int idx, i;
 
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions\n");
 #endif
 
@@ -712,6 +715,7 @@ static PortUsage* allocatePortUsage(void) {
 
 
 /* ************************************ */
+
 static void updateUsedPorts(HostTraffic *srcHost,
 			    u_int srcHostIdx,
 			    HostTraffic *dstHost,
@@ -722,7 +726,11 @@ static void updateUsedPorts(HostTraffic *srcHost,
 
   /* traceEvent(TRACE_INFO, "%d\n", length); */
 
-  if(srcHostIdx != broadcastEntryIdx) {
+  if((srcHost->portsUsage == NULL) || (dstHost->portsUsage == NULL))
+    return;
+
+  if((srcHostIdx != broadcastEntryIdx) 
+     && (srcHostIdx != otherHostEntryIdx)) {
     if(sport < TOP_ASSIGNED_IP_PORTS) {
       if(srcHost->portsUsage[sport] == NULL)
 	srcHost->portsUsage[sport] = allocatePortUsage();
@@ -735,7 +743,9 @@ static void updateUsedPorts(HostTraffic *srcHost,
       srcHost->portsUsage[sport]->serverUses++;
       srcHost->portsUsage[sport]->serverUsesLastPeer = dstHostIdx;
 
-      if(dstHostIdx != broadcastEntryIdx) {
+      if((dstHostIdx != broadcastEntryIdx)
+	 && (dstHostIdx != otherHostEntryIdx)) {
+
 	if(dstHost->portsUsage[sport] == NULL)
 	  dstHost->portsUsage[sport] = allocatePortUsage();
 
@@ -750,7 +760,8 @@ static void updateUsedPorts(HostTraffic *srcHost,
     }
   }
 
-  if(dstHostIdx != broadcastEntryIdx) {
+  if((dstHostIdx != broadcastEntryIdx)
+     && (dstHostIdx != otherHostEntryIdx)) {
     if(dport < TOP_ASSIGNED_IP_PORTS) {
       if(srcHost->portsUsage[dport] == NULL)
 	srcHost->portsUsage[dport] = allocatePortUsage();
@@ -763,7 +774,8 @@ static void updateUsedPorts(HostTraffic *srcHost,
       srcHost->portsUsage[dport]->clientUses++;
       srcHost->portsUsage[dport]->clientUsesLastPeer = dstHostIdx;
       
-      if(srcHostIdx != broadcastEntryIdx) {
+      if((srcHostIdx != broadcastEntryIdx)
+	 && (srcHostIdx != otherHostEntryIdx)) {
 	if(dstHost->portsUsage[dport] == NULL)
 	  dstHost->portsUsage[dport] = allocatePortUsage();
 
@@ -820,12 +832,17 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   u_short napsterDownload = 0;
 #endif
   u_short sessSport, sessDport;
-  HostTraffic *srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-  HostTraffic *dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+  HostTraffic *srcHost, *dstHost;
   struct timeval tvstrct;
   u_int firstEmptySlot = NO_PEER;
   u_char rcStr[256];
   int len = 0;
+
+  if(accuracyLevel < MEDIUM_ACCURACY_LEVEL)
+    return(NULL);
+
+  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(TRACE_INFO, "Sanity check failed (3) [Low memory?]");
@@ -2224,30 +2241,46 @@ static int handleIP(u_short port,
   if(idx != -1) {
     if(subnetPseudoLocalHost(srcHost)) {
       if(subnetPseudoLocalHost(dstHost)) {
-	if((srcHostIdx != broadcastEntryIdx) && (!broadcastHost(srcHost)))
+	if((srcHostIdx != broadcastEntryIdx) 
+	   && (srcHostIdx != otherHostEntryIdx) 
+	   && (!broadcastHost(srcHost)))
 	  srcHost->protoIPTrafficInfos[idx].sentLocally += length;
-	if((dstHostIdx != broadcastEntryIdx) && (!broadcastHost(dstHost)))
+	if((dstHostIdx != broadcastEntryIdx) 
+	   && (dstHostIdx != otherHostEntryIdx)
+	   && (!broadcastHost(dstHost)))
 	  dstHost->protoIPTrafficInfos[idx].receivedLocally += length;
 	device[actualDeviceId].ipProtoStats[idx].local += length;
       } else {
-	if((srcHostIdx != broadcastEntryIdx) && (!broadcastHost(srcHost)))
+	if((srcHostIdx != broadcastEntryIdx) 
+	   && (srcHostIdx != otherHostEntryIdx)
+	   && (!broadcastHost(srcHost)))
 	  srcHost->protoIPTrafficInfos[idx].sentRemotely += length;
-	if((dstHostIdx != broadcastEntryIdx) && (!broadcastHost(dstHost)))
+	if((dstHostIdx != broadcastEntryIdx) 
+	   && (dstHostIdx != otherHostEntryIdx)
+	   && (!broadcastHost(dstHost)))
 	  dstHost->protoIPTrafficInfos[idx].receivedLocally += length;
 	device[actualDeviceId].ipProtoStats[idx].local2remote += length;
       }
     } else {
       /* srcHost is remote */
       if(subnetPseudoLocalHost(dstHost)) {
-	if((srcHostIdx != broadcastEntryIdx) && (!broadcastHost(srcHost)))
+	if((srcHostIdx != broadcastEntryIdx) 
+	   && (srcHostIdx != otherHostEntryIdx)
+	   && (!broadcastHost(srcHost)))
 	  srcHost->protoIPTrafficInfos[idx].sentLocally += length;
-	if((dstHostIdx != broadcastEntryIdx) && (!broadcastHost(dstHost)))
+	if((dstHostIdx != broadcastEntryIdx) 
+	   && (dstHostIdx != otherHostEntryIdx)
+	   && (!broadcastHost(dstHost)))
 	  dstHost->protoIPTrafficInfos[idx].receivedFromRemote += length;
 	device[actualDeviceId].ipProtoStats[idx].remote2local += length;
       } else {
-	if((srcHostIdx != broadcastEntryIdx) && (!broadcastHost(srcHost)))
+	if((srcHostIdx != broadcastEntryIdx) 
+	   && (srcHostIdx != otherHostEntryIdx)
+	   && (!broadcastHost(srcHost)))
 	  srcHost->protoIPTrafficInfos[idx].sentRemotely += length;
-	if((dstHostIdx != broadcastEntryIdx) && (!broadcastHost(dstHost)))
+	if((dstHostIdx != broadcastEntryIdx)
+	   && (dstHostIdx != otherHostEntryIdx)
+	   && (!broadcastHost(dstHost)))
 	  dstHost->protoIPTrafficInfos[idx].receivedFromRemote += length;
 	device[actualDeviceId].ipProtoStats[idx].remote += length;
       }
@@ -2271,12 +2304,13 @@ static void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
 
   /* ******************************* */
 
-  if(senderIdx != broadcastEntryIdx) {
+  if((senderIdx != broadcastEntryIdx) 
+     && (senderIdx != otherHostEntryIdx)) {
     if(sender != NULL) {
       for(found=0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	if(sender->contactedSentPeers.peersIndexes[i] != NO_PEER) {
 	  if((sender->contactedSentPeers.peersIndexes[i] == receiverIdx)
-	     || (((receiverIdx == broadcastEntryIdx) || broadcastHost(receiver))
+	     || (((receiverIdx == broadcastEntryIdx) || (receiverIdx == otherHostEntryIdx) || broadcastHost(receiver))
 		 && broadcastHost(device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sender->contactedSentPeers.peersIndexes[i])]))) {
 	    found = 1;
 	    break;
@@ -2289,12 +2323,15 @@ static void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
   }
 
   /* ******************************* */
-  if(receiverIdx != broadcastEntryIdx) {
+  if((receiverIdx != broadcastEntryIdx) 
+     && (receiverIdx != otherHostEntryIdx)) {
     if(receiver != NULL) {
       for(found=0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	if(receiver->contactedRcvdPeers.peersIndexes[i] != NO_PEER) {
 	  if((receiver->contactedRcvdPeers.peersIndexes[i] == senderIdx)
-	     || (((senderIdx == broadcastEntryIdx) || broadcastHost(sender))
+	     || (((senderIdx == broadcastEntryIdx) 
+		  || (senderIdx == otherHostEntryIdx)
+		  || broadcastHost(sender))
 		 && broadcastHost(device[actualDeviceId].
 				  hash_hostTraffic[checkSessionIdx(receiver->contactedRcvdPeers.peersIndexes[i])]))) {
 	    found = 1;
@@ -2590,6 +2627,7 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
 
   if(/* (srcHostIdx == dstHostIdx) || */
      (srcHostIdx == broadcastEntryIdx)
+     || (srcHostIdx == otherHostEntryIdx)
      || (srcHostIdx == NO_PEER)
      || (dstHostIdx == NO_PEER))
     return; /* It looks there's something wrong here */
@@ -2608,7 +2646,9 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
   srcHost->last24HoursBytesSent[hourId] += length,
     dstHost->last24HoursBytesRcvd[hourId] += length;
 
-  if((dstHostIdx == broadcastEntryIdx) || broadcastHost(dstHost)) {
+  if((dstHostIdx == broadcastEntryIdx)
+     || (dstHostIdx == otherHostEntryIdx) 
+     || broadcastHost(dstHost)) {
     srcHost->pktBroadcastSent++;
     srcHost->bytesBroadcastSent += length;
     device[actualDeviceId].broadcastPkts++;
@@ -4087,7 +4127,7 @@ void processPacket(u_char *_deviceId,
 	    /* Spanning Tree */
 	    srcHost->stpSent += length, dstHost->stpReceived += length;
 	    device[actualDeviceId].stpBytes += length;
-	  } else if(sap_type == 0xE0) {
+	  } else if((accuracyLevel == HIGH_ACCURACY_LEVEL) && (sap_type == 0xE0)) {
 	    /* NetWare */
 	    if(!(llcHeader.ssap == LLCSAP_GLOBAL && llcHeader.dsap == LLCSAP_GLOBAL)) {
 	      p1 += 3; /* LLC Header (short version) */
@@ -4226,7 +4266,8 @@ void processPacket(u_char *_deviceId,
 
 	      http://www.faqs.org/rfcs/rfc1060.html
 	    */
-	    if((snapType == 0x809B) || (snapType == 0x80F3)) {
+	    if((accuracyLevel == HIGH_ACCURACY_LEVEL)
+	       && ((snapType == 0x809B) || (snapType == 0x80F3))) {
 	      /* Appletalk */
 	      AtDDPheader ddpHeader;
 
@@ -4296,9 +4337,10 @@ void processPacket(u_char *_deviceId,
 	      dstHost->otherReceived += length;
 	      device[actualDeviceId].otherBytes += length;
 	    }
-	  } else if((sap_type == 0x06)
-		    || (sap_type == 0xFE)
-		    || (sap_type == 0xFC)) {  /* OSI */
+	  } else if((accuracyLevel == HIGH_ACCURACY_LEVEL)
+		    && ((sap_type == 0x06)
+			|| (sap_type == 0xFE)
+			|| (sap_type == 0xFC))) {  /* OSI */
 	    srcHost->osiSent += length;
 	    dstHost->osiReceived += length;
 	    device[actualDeviceId].osiBytes += length;

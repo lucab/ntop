@@ -56,7 +56,8 @@ void handleBootp(HostTraffic *srcHost,
   BootProtocol bootProto = { 0 };
   int len;
 
-  if(packetData == NULL) /* packet too short ? */
+  if((accuracyLevel < HIGH_ACCURACY_LEVEL)
+     || (packetData == NULL) /* packet too short ? */)
     return;
 
   switch(sport) {
@@ -544,8 +545,10 @@ void handleBootp(HostTraffic *srcHost,
 
 /* ************************************ */
 
-u_int16_t processDNSPacket(const u_char *packetData, u_int length, u_int hlen,
-			   short *isRequest, short *positiveReply) {
+u_int16_t processDNSPacket(const u_char *packetData, 
+			   u_int length, u_int hlen,
+			   short *isRequest, 
+			   short *positiveReply) {
   DNSHostInfo hostPtr;
   struct in_addr hostIpAddress;
 #ifdef HAVE_GDBM_H
@@ -555,7 +558,8 @@ u_int16_t processDNSPacket(const u_char *packetData, u_int length, u_int hlen,
   u_int16_t transactionId;
   int i;
 
-  if(packetData == NULL) /* packet too short ? */
+  if((accuracyLevel < HIGH_ACCURACY_LEVEL)
+     ||(packetData == NULL) /* packet too short ? */)
     return(NULL);
 
   memset(&hostPtr, 0, sizeof(DNSHostInfo));
@@ -658,7 +662,8 @@ void handleNapster(HostTraffic *srcHost,
   u_short napsterDownload = 0;
 #endif
 
-  if(packetData == NULL) /* packet too short ? */
+  if((accuracyLevel < HIGH_ACCURACY_LEVEL)
+     || (packetData == NULL) /* packet too short ? */)
     return(NULL);
 
   /* Let's check whether this is a Napster session */
@@ -907,8 +912,9 @@ void handleNetbios(HostTraffic *srcHost,
   u_char *p;
   int offset=0, displ, notEnoughData = 0;
 
-  if(!((srcHost->nbHostName == NULL)
-       || (srcHost->nbDomainName == NULL)))
+  if((accuracyLevel < HIGH_ACCURACY_LEVEL)
+     || (!((srcHost->nbHostName == NULL)
+	   || (srcHost->nbDomainName == NULL))))
     return; /* Already set */
 
   if(packetData == NULL) /* packet too short ? */
@@ -1132,4 +1138,5 @@ void handleNetbios(HostTraffic *srcHost,
     }
   }
 }
+
 

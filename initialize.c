@@ -42,7 +42,7 @@
 
 #include "ntop.h"
 
-static HostTraffic broadcastEntry;
+static HostTraffic broadcastEntry, otherHostEntry;
 static u_char threadsInitialized = 0;
 
 /* ******************************* */
@@ -190,6 +190,7 @@ static void resetDevice(int deviceId) {
   memset(&device[deviceId].udpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
   memset(&device[deviceId].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
   device[deviceId].hash_hostTraffic[broadcastEntryIdx] = &broadcastEntry;
+  device[deviceId].hash_hostTraffic[otherHostEntryIdx] = &otherHostEntry;
   memset(device[deviceId].last60MinutesThpt, 0, sizeof(device[deviceId].last60MinutesThpt));
   memset(device[deviceId].last24HoursThpt, 0, sizeof(device[deviceId].last24HoursThpt));
   memset(device[deviceId].last30daysThpt, 0, sizeof(device[deviceId].last30daysThpt));
@@ -322,6 +323,19 @@ void initCounters(int _mergeInterfaces) {
   FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &broadcastEntry.flags);
 
   broadcastEntryIdx = 0;
+
+  if(accuracyLevel == LOW_ACCURACY_LEVEL) {
+    otherHostEntry.hostIpAddress.s_addr = 0x00112233;
+    strncpy(otherHostEntry.hostNumIpAddress, "0.1.2.3",
+	    sizeof(otherHostEntry.hostNumIpAddress));
+    strncpy(otherHostEntry.hostSymIpAddress, "Other Hosts",
+	    sizeof(otherHostEntry.hostSymIpAddress));
+    strcpy(otherHostEntry.ethAddressString, "00:00:00:00:00:00");   
+    otherHostEntryIdx = broadcastEntryIdx+1;
+  } else {
+    /* We let ntop think that otherHostEntryIdx does not exist */
+    otherHostEntryIdx = broadcastEntryIdx;
+  }
 
   numProcesses = 0;
   

@@ -46,6 +46,8 @@ ntop \- display top network users
 .IR "client:port NetFlow Collector" ]
 .RB [ -t
 .IR "trace level" ]
+.RB [ -A
+.IR "accuracy level" ]
 .RB [ -u
 .IR "user name" ]
 .RB [ -l
@@ -219,6 +221,11 @@ It specifies the UTR of the mapper.pl utility (it's part of the ntop distributio
 This flag specifies the level of
 .B ntop
 tracings on stdout. The trace level ranges between 0 (no trace) and 5 (full debug tracings). The default trace value is 3. The higher is the trace level the more information are printed. Trace level 1 is used to print errors only, level 2 for both warnings and errors, and so on. 
+
+.It -A
+This flag specifies the level of
+.B ntop's
+traffic analysis accuracy. Level 2 (high accuracy) is full accuracy. Level 1 (medium accuracy): ntop filters out non-local traffic and disables protocol decoding. Level 0 (low accuracy): ntop acts as level 1 and also disables TCP session handling. This flag has to be used when the network is overloaded and ntop can't keep up with the current traffic.
 
 .It -F 
 It is used to specify network flows similar to more powerful applications such as NeTraMet. A flow is a stream of captured packets that match a specified rule. The format is <flow-label>='<matching expression>'[,<flow-label>='<matching expression>'], where the label is used to symbolically identify the flow specified by the expression. The expression format is specified in the appendix. If an expression is specified, then the information concerning flows can be accessed following the HTML link named 'List NetFlows'.

@@ -31,10 +31,13 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 			    short* useIPAddressForSearching) {
   u_int idx;
 
-  if(((*useIPAddressForSearching) == 1)
-     || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
-    idx = 0;
-    memcpy(&idx, &hostIpAddress->s_addr, 4);
+  if(((*useIPAddressForSearching) == 1) || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
+    if(accuracyLevel == LOW_ACCURACY_LEVEL) {
+      idx = otherHostEntryIdx;
+    } else {
+      idx = 0;
+      memcpy(&idx, &hostIpAddress->s_addr, 4);
+    }
     (*useIPAddressForSearching) = 1;
   } else if(memcmp(ether_addr, /* 0 doesn't matter */
 		   device[0].hash_hostTraffic[broadcastEntryIdx]->ethAddress,
@@ -46,8 +49,12 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
     (*useIPAddressForSearching) = 0;
   } else if ((hostIpAddress->s_addr == 0x0)
 	     || (hostIpAddress->s_addr == 0x1)) {
-    idx = 0;
-    memcpy(&idx, &hostIpAddress->s_addr, 4);
+    if(accuracyLevel == LOW_ACCURACY_LEVEL) {
+      idx = otherHostEntryIdx;
+    } else {
+      idx = 0;
+      memcpy(&idx, &hostIpAddress->s_addr, 4);
+    }
     (*useIPAddressForSearching) = 1;
   } else if(isBroadcastAddress(hostIpAddress)) {
     idx = broadcastEntryIdx;
@@ -56,8 +63,13 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
     memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
   } else {
-    idx = 0;
-    memcpy(&idx, &hostIpAddress->s_addr, 4);
+    if(accuracyLevel == LOW_ACCURACY_LEVEL) {
+      idx = otherHostEntryIdx;
+    } else {
+      idx = 0; /* reset the whole variable */
+      memcpy(&idx, &hostIpAddress->s_addr, 4); /* set what's needed */
+    }
+
     (*useIPAddressForSearching) = 1;
   }
 
@@ -231,8 +243,12 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   hash_hostTraffic[broadcastEntryIdx] = device[deviceToExtend].hash_hostTraffic[broadcastEntryIdx];
   mappings[broadcastEntryIdx] = broadcastEntryIdx;
 
+  hash_hostTraffic[otherHostEntryIdx] = device[deviceToExtend].hash_hostTraffic[otherHostEntryIdx];
+  mappings[otherHostEntryIdx] = otherHostEntryIdx;
+
   for(i=1; i<device[deviceToExtend].actualHashSize; i++)
-    if(device[deviceToExtend].hash_hostTraffic[i] != NULL) {
+    if((i != otherHostEntryIdx) 
+       && (device[deviceToExtend].hash_hostTraffic[i] != NULL)) {
       idx = computeInitialHashIdx(&device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress,
 				  device[deviceToExtend].hash_hostTraffic[i]->ethAddress,
 				  &numCmp);
@@ -264,7 +280,8 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
     (unsigned int)(device[deviceToExtend].actualHashSize*HASH_EXTEND_THRESHOLD);
 
   for(j=1; j<newSize; j++)
-    if(device[deviceToExtend].hash_hostTraffic[j] != NULL) {
+    if((j != otherHostEntryIdx) 
+       && (device[deviceToExtend].hash_hostTraffic[j] != NULL)) {
       HostTraffic *theHost = device[deviceToExtend].hash_hostTraffic[j];
 
       mapUsageCounter(&theHost->contactedRouters);
@@ -658,7 +675,9 @@ static void removeGlobalHostPeers(HostTraffic *el,
   }
 
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRouters);
-  checkPortUsage(flaggedHosts, flaggedHostsLen, el->portsUsage);
+
+  if(el->portsUsage != NULL)
+    checkPortUsage(flaggedHosts, flaggedHostsLen, el->portsUsage);
   
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Leaving removeGlobalHostPeers()");
@@ -783,6 +802,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
     for(idx=1; idx<device[theDevice].actualHashSize; idx++) {
       if((idx != hostIdx) /* Don't remove the instance we're freeing */
+	 && (idx != otherHostEntryIdx)
 	 && (device[theDevice].hash_hostTraffic[idx] != NULL)) {
 	removeGlobalHostPeers(device[theDevice].hash_hostTraffic[idx],
 			      myflaggedHosts, 
@@ -946,6 +966,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   /* Calculates entries to free */
   for(idx=1; idx<device[actDevice].actualHashSize; idx++)
     if((device[actDevice].hash_hostTraffic[idx] != NULL)
+       && (idx != otherHostEntryIdx)
        && (device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
        && (!subnetPseudoLocalHost(device[actDevice].hash_hostTraffic[idx]))) {
 
@@ -957,14 +978,15 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 
   /* Now free the entries */
   for(idx=1; idx<device[actDevice].actualHashSize; idx++) {
-    if(theFlaggedHosts[idx] == 1) {
+    if((idx != otherHostEntryIdx) && (theFlaggedHosts[idx] == 1)) {
       freeHostInfo(actDevice, idx, 0);
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Host (idx=%d) purged (%d hosts purged)",
 		 idx, numFreedBuckets);
 #endif
       numFreedBuckets++;
-    } else if(device[actDevice].hash_hostTraffic[idx] != NULL) {
+    } else if((device[actDevice].hash_hostTraffic[idx] != NULL)
+	      && (idx != otherHostEntryIdx)) {
       /*
 	 This entry is not removed but we need to remove
 	 all the references to the freed instances

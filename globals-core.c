@@ -30,7 +30,7 @@ char domainName[MAXHOSTNAMELEN], *shortDomainName;
 
 
 /* command line options */
-u_short traceLevel, debugMode, useSyslog;
+u_short traceLevel, debugMode, useSyslog, accuracyLevel;
 u_char stickyHosts, enableSuspiciousPacketDump;
 char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;
 char mapperURL[256];     /* URL of the mapper CGI */
@@ -151,7 +151,7 @@ u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
 
 TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
 
-u_int broadcastEntryIdx;
+u_int broadcastEntryIdx, otherHostEntryIdx;
 u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
 
 u_short mtuSize[] = {

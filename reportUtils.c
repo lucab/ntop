@@ -2839,7 +2839,11 @@ void printHostDetailedInfo(HostTraffic *el) {
       sendString(buf);
 
       for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
-	HostTraffic *theHost = device[actualReportDeviceId].hash_hostTraffic[elIdx];
+	HostTraffic *theHost;
+
+	if(elIdx == otherHostEntryIdx) continue;
+
+	theHost = device[actualReportDeviceId].hash_hostTraffic[elIdx];
 
 	if((theHost != NULL)
 	   && (theHost != el)

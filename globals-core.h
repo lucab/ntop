@@ -27,7 +27,7 @@ extern char *program_name;
 extern char domainName[MAXHOSTNAMELEN], *shortDomainName;
 
 /* command line options */
-extern u_short traceLevel, debugMode, useSyslog;
+extern u_short traceLevel, debugMode, useSyslog, accuracyLevel;
 extern u_char stickyHosts, enableSuspiciousPacketDump;
 extern char dbPath[200];
 extern char accessLogPath[200]; /* Apache-like access log */
@@ -148,7 +148,7 @@ extern unsigned int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQu
 #endif
 
 extern TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
-extern u_int broadcastEntryIdx;
+extern u_int broadcastEntryIdx, otherHostEntryIdx;
 extern u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
 extern u_short mtuSize[], headerSize[];
 extern char *currentFilterExpression;

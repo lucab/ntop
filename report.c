@@ -108,7 +108,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   printHeader(reportType, revertOrder, abs(sortedColumn));
 
   for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++) {
-    if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+    if((idx != otherHostEntryIdx)
+	&& ((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && (broadcastHost(el) == 0)) {
       if((sortSendMode && (el->bytesSent > 0))
 	 || ((!sortSendMode) && (el->bytesReceived > 0))) {
@@ -854,7 +855,8 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   }
 
   for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++) {
-    if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+    if((idx != otherHostEntryIdx) 
+       && ((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && ((el->pktMulticastSent > 0) || (el->pktMulticastRcvd > 0))
        && (!broadcastHost(el))
        )
@@ -1003,7 +1005,8 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
   /* printHeader(0, revertOrder, abs(sortedColumn)); */
 
   for(idx=1, numEntries=0; idx<device[actualReportDeviceId].actualHashSize; idx++)
-    if((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL) {
+    if((idx != otherHostEntryIdx)
+       && ((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)) {
       unsigned short actUsage;
 
       actUsage = (unsigned short)(100*((float)el->bytesSent/
@@ -1293,6 +1296,7 @@ void printAllSessionsHTML(char* host) {
     el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
 
     if((elIdx != broadcastEntryIdx)
+       && (elIdx != otherHostEntryIdx)
        && (el != NULL)
        && ((strcmp(el->hostNumIpAddress, host) == 0)
 	   || (strcmp(el->ethAddressString, host) == 0))) {
@@ -1423,7 +1427,8 @@ void printLocalRoutersList(void) {
   printHTMLheader("Local Subnet Routers", 0);
 
   for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++) {
-    if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+    if((idx != otherHostEntryIdx) &&
+       ((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && subnetLocalHost(el)) {
 
       for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
@@ -1461,7 +1466,8 @@ void printLocalRoutersList(void) {
 	sendString(buf);
 
 	for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++)
-	  if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+	  if((idx != otherHostEntryIdx) &&
+	     ((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
 	     && subnetLocalHost(el)) {
 	    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
 	      if(el->contactedRouters.peersIndexes[j] == routerList[i]) {
@@ -1547,7 +1553,7 @@ static void printSessions(IPSession *sessions[], u_short type) {
 
   if (logTimeout) {
     for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++)
-      if(sessions[idx] != NULL) {
+      if((idx != otherHostEntryIdx) && (sessions[idx] != NULL)) {
 
 	char *_sport = getPortByNum(sessions[idx]->sport, type);
 	char *_dport = getPortByNum(sessions[idx]->dport, type);
@@ -1619,7 +1625,8 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
   memset(tmpTable, 0, device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
   
   for(idx=1, numEntries=0; idx<device[actualReportDeviceId].actualHashSize; idx++)
-    if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+    if((idx != otherHostEntryIdx) 
+       && ((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && (broadcastHost(el) == 0) /* No broadcast addresses please */
        && (multicastHost(el) == 0) /* No multicast addresses please */
        && ((el->hostNumIpAddress[0] != '\0')
@@ -1831,7 +1838,7 @@ void printActiveTCPSessions(void) {
   printHTMLheader("Active TCP Sessions", 0);
 
   for(idx=1, numSessions=0; idx<device[actualReportDeviceId].numTotSessions; idx++)
-    if((device[actualReportDeviceId].tcpSession[idx] != NULL)
+    if((idx != otherHostEntryIdx) && (device[actualReportDeviceId].tcpSession[idx] != NULL)
 #ifndef PRINT_ALL_ACTIVE_SESSIONS
        && (device[actualReportDeviceId].tcpSession[idx]->sessionState == STATE_ACTIVE)
 #endif
@@ -2701,9 +2708,17 @@ void printIpTrafficMatrix(void) {
   activeHosts = (short*)malloc(sizeof(short)*device[actualReportDeviceId].numHosts);
   
   for(i=1; i<device[actualReportDeviceId].numHosts-1; i++) {
+    if(i == otherHostEntryIdx) 
+      continue;
+    
     activeHosts[i] = 0;
     for(j=1; j<device[actualReportDeviceId].numHosts-1; j++) {
-      int id = i*device[actualReportDeviceId].numHosts+j;
+      int id;
+      
+      if(j == otherHostEntryIdx) 
+	continue;
+      
+      id = i*device[actualReportDeviceId].numHosts+j;
       
       if(((device[actualReportDeviceId].ipTrafficMatrix[id] != NULL)
 	  && (device[actualReportDeviceId].ipTrafficMatrix[id]->bytesSent != 0))
@@ -2740,6 +2755,8 @@ void printIpTrafficMatrix(void) {
     for(j=1; j<device[actualReportDeviceId].numHosts-1; j++) {
       int idx = i*device[actualReportDeviceId].numHosts+j;
 	
+      if(idx == otherHostEntryIdx) continue;
+
       if(((device[actualReportDeviceId].ipTrafficMatrix[idx] != NULL)
 	 && ((device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent != 0)
 	     || (device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived != 0)))) {
@@ -2760,7 +2777,7 @@ void printIpTrafficMatrix(void) {
 
 
   for(i=1; i<device[actualReportDeviceId].numHosts; i++)
-    if(activeHosts[i] == 1) {
+    if((i == otherHostEntryIdx) && (activeHosts[i] == 1)) {
       numConsecutiveEmptyCells=0;
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT><SMALL>%s</SMALL></TH>",
@@ -2772,6 +2789,8 @@ void printIpTrafficMatrix(void) {
       for(j=1; j<device[actualReportDeviceId].numHosts; j++) {
 	int idx = i*device[actualReportDeviceId].numHosts+j;
 	
+	if(idx == otherHostEntryIdx) continue;
+
 	if((i == j) && strcmp(device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress, "127.0.0.1"))
 	  numConsecutiveEmptyCells++;
 	else if(activeHosts[j] == 1) {
@@ -3281,6 +3300,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
     domainSort = 0;
 
   for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++) {
+    if(idx == otherHostEntryIdx) continue;
+
     if((el = device[actualReportDeviceId].hash_hostTraffic[idx]) == NULL)
       continue;
     else

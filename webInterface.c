@@ -1016,6 +1016,7 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-P <path for db-files>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-g <client:port (Cisco NetFlow client)>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-A (accuracy level [0-2])]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-U <mapper.pl URL> | \"\" for not displaying host location ]");  
   traceEvent(TRACE_INFO, "    %s\n",   "[-k <show kernel filter expression in extra frame>]");

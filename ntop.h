@@ -1626,6 +1626,12 @@ typedef struct icmpHostInfo {
 
 /* *********************** */
 
+#define HIGH_ACCURACY_LEVEL        2
+#define MEDIUM_ACCURACY_LEVEL      1
+#define LOW_ACCURACY_LEVEL         0
+
+/* *********************** */
+
 #define HASH_INITIAL_SIZE         32
 #define MAX_HOST_SYM_NAME_LEN     64
 #define MAX_NODE_TYPES             8

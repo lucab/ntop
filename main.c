@@ -135,6 +135,7 @@ int main(int argc, char *argv[]) {
   rFileName = NULL;
   maxHashSize = MAX_HASH_SIZE;
   traceLevel = DEFAULT_TRACE_LEVEL;
+  accuracyLevel = HIGH_ACCURACY_LEVEL;
   domainName[0] = '\0';
   strcpy(mapperURL, "http://jake.ntop.org/cgi-bin/mapper.pl");
   pcapLog = NULL;
@@ -151,9 +152,9 @@ int main(int argc, char *argv[]) {
   }
 
 #ifdef WIN32
-  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:k";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:kA:";
 #else
-  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kKL";
+  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kKLA:";
 #endif
 
   while((op = getopt(argc, argv, theOpts)) != EOF) {
@@ -363,6 +364,13 @@ int main(int argc, char *argv[]) {
       traceLevel = atoi(optarg);
       if(traceLevel > DETAIL_TRACE_LEVEL)
 	traceLevel = DETAIL_TRACE_LEVEL;
+      break;
+
+    case 'A':
+      /* Accuracy Level */
+      accuracyLevel = atoi(optarg);
+      if(accuracyLevel > HIGH_ACCURACY_LEVEL)
+	accuracyLevel = HIGH_ACCURACY_LEVEL;
       break;
 
 #ifndef WIN32
