@@ -843,6 +843,7 @@ RETSIGTYPE cleanup(int signo) {
   deleteMutex(&myGlobals.hashResizeMutex);
   deleteMutex(&myGlobals.hostsHashMutex);
   deleteMutex(&myGlobals.graphMutex);
+
   if(myGlobals.isLsofPresent)
     deleteMutex(&myGlobals.lsofMutex);
 #ifdef USE_SEMAPHORES
@@ -921,8 +922,15 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].hash_hostTraffic != NULL)
       free(myGlobals.device[i].hash_hostTraffic);
 
+#ifdef MULTITHREADED
+    accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
+#endif
     if(myGlobals.device[i].tcpSession != NULL)
       free(myGlobals.device[i].tcpSession);
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.tcpSessionsMutex);
+    deleteMutex(&myGlobals.tcpSessionsMutex);
+#endif
 
     free(myGlobals.device[i].name);
 

@@ -28,7 +28,6 @@ static pthread_t netFlowThread;
 static int threadActive;
 #endif
 
-static int debug = 0;
 static ProbeInfo probeList[MAX_NUM_PROBES];
 
 /* ****************************** */
@@ -124,10 +123,8 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
       rc = recvfrom(myGlobals.netFlowInSocket, (char*)&buffer, sizeof(buffer),
 		    0, (struct sockaddr*)&fromHost, &len);
 
-      /*
-	traceEvent(TRACE_INFO, "=>>> rawSampleLen: %d (deviceId=%d)",
-	rc,  myGlobals.netFlowDeviceId);
-      */
+      traceEvent(TRACE_INFO, "Received NetFlow packet (len=%d) (deviceId=%d)",
+		 rc,  myGlobals.netFlowDeviceId);
 
       if(rc > 0) {
 	NetFlow5Record theRecord;
@@ -172,7 +169,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	    sport = ntohs(theRecord.flowRecord[i].srcport);
 	    dport = ntohs(theRecord.flowRecord[i].dstport);
 
-	    if(debug)
+	    if(myGlobals.netFlowDebug)
 	      traceEvent(TRACE_INFO, "%2d) %s:%d <-> %s:%d %u/%u (proto=%d)",
 			 i+1, _intoa(a, buf, sizeof(buf)),
 			 sport, _intoa(b, buf1, sizeof(buf1)),
@@ -307,10 +304,12 @@ static void initNetFlowFunct(void) {
 
   setNetFlowOutSocket();
 
-  if(fetchPrefsValue("netFlow.debug", value, sizeof(value)) == -1)
+  if(fetchPrefsValue("netFlow.debug", value, sizeof(value)) == -1) {
     storePrefsValue("netFlow.debug", "0");
-  else
-    debug = atoi(value);
+    myGlobals.netFlowDebug = 0;
+  } else {
+    myGlobals.netFlowDebug = atoi(value);
+  }
 
   for(i=0; i<myGlobals.numDevices; i++)
     if(!myGlobals.device[i].virtualDevice) {
@@ -364,7 +363,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	storePrefsValue("netFlow.netFlowInPort", value);
 	setNetFlowInSocket();
       } else if(strcmp(device, "debug") == 0) {
-	debug = atoi(value);
+	myGlobals.netFlowDebug = atoi(value);
 	storePrefsValue("netFlow.debug", value);
       } else if(strcmp(device, "collectorIP") == 0) {
 	storePrefsValue("netFlow.netFlowDest", value);
@@ -422,7 +421,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("<TR "TR_ON"><TH "TH_BG">Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
 	     "<FORM ACTION=/plugins/NetFlow METHOD=GET>");
-  if(debug) {
+  if(myGlobals.netFlowDebug) {
     sendString("<INPUT TYPE=radio NAME=debug VALUE=1 CHECKED>On");
     sendString("<INPUT TYPE=radio NAME=debug VALUE=0>Off");
     sendString("<br>NOTE: NetFlow packets are dumped on the ntop log");
@@ -441,6 +440,8 @@ static void handleNetflowHTTPrequest(char* url) {
 	     "<li>NetFlow activation may require ntop restart"
 	     "<li>A virtual NetFlow device is activated only when incoming flow capture is enabled."
 	     "<li>You can switch devices using this <A HREF=/switch.html>link</A>."
+	     "<li>Due to the way ntop works, NetFlow export capabilities are limited. If you need a fast,<br>"
+	     " light, memory savvy, highly configurable NetFlow probe, you better give <b><A HREF=http://www.ntop.org/nProbe.html>nProbe</A></b> a try."
 	     "</ol></td></tr>\n");
   sendString("</table><p><hr><p>\n");
 
@@ -471,49 +472,60 @@ static void handleNetflowHTTPrequest(char* url) {
 
 /* ************************************* */
 
-  if(myGlobals.numNetFlowsPktsRcvd > 0) {
+  if((myGlobals.numNetFlowsPktsRcvd > 0) || (myGlobals.numNetFlowsPktsSent > 0)) {
     sendString("<TABLE BORDER>\n");
     sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
     
-    if(snprintf(buf, sizeof(buf),
-		"<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Pkts Rcvd.value</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		formatPkts(myGlobals.numNetFlowsPktsRcvd)) < 0)
-      BufferTooShort();
-    sendString(buf);
+    if(myGlobals.numNetFlowsPktsRcvd > 0) {
+      if(snprintf(buf, sizeof(buf),
+		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Pkts Rcvd.value</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  formatPkts(myGlobals.numNetFlowsPktsRcvd)) < 0)
+	BufferTooShort();
+      sendString(buf);
     
-    if(snprintf(buf, sizeof(buf),
-	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flows Rcvd.value</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		formatPkts(myGlobals.numNetFlowsRcvd)) < 0)
-      BufferTooShort();
-    sendString(buf);
+      if(snprintf(buf, sizeof(buf),
+		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flows Rcvd.value</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  formatPkts(myGlobals.numNetFlowsRcvd)) < 0)
+	BufferTooShort();
+      sendString(buf);
     
-    if(snprintf(buf, sizeof(buf),
-		"<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flow with Bad Version</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		formatPkts(myGlobals.numBadFlowsVersionsRcvd)) < 0)
-      BufferTooShort();
-    sendString(buf);
+      if(snprintf(buf, sizeof(buf),
+		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Flow with Bad Version</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  formatPkts(myGlobals.numBadFlowsVersionsRcvd)) < 0)
+	BufferTooShort();
+      sendString(buf);
     
-  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD "TD_BG" ALIGN=LEFT>");
+      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD "TD_BG" ALIGN=LEFT>");
   
-  for(i=0; i<MAX_NUM_PROBES; i++) {
-    if(probeList[i].probeAddr.s_addr == 0) break;
+      for(i=0; i<MAX_NUM_PROBES; i++) {
+	if(probeList[i].probeAddr.s_addr == 0) break;
 
-    if(snprintf(buf, sizeof(buf), "%s [%s pkts]\n",
-		_intoa(probeList[i].probeAddr, buf, sizeof(buf)),
-		formatPkts(probeList[i].pkts)) < 0)
-      BufferTooShort();
-    sendString(buf);
+	if(snprintf(buf, sizeof(buf), "%s [%s pkts]\n",
+		    _intoa(probeList[i].probeAddr, buf, sizeof(buf)),
+		    formatPkts(probeList[i].pkts)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
+
+      sendString("</TD></TR>\n");
+    }
+
+    if(myGlobals.numNetFlowsPktsSent > 0) {
+      if(snprintf(buf, sizeof(buf),
+		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Exported Flows</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  formatPkts(myGlobals.numNetFlowsPktsSent)) < 0)
+	BufferTooShort();
+      sendString(buf);    
+    }
+
+    sendString("</TABLE>\n");
   }
 
-  sendString("</TD></TR>\n</TABLE>\n");
-}
 
 /* ************************************* */
 
-  sendString("<p></CENTER>\n");
-
-  sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");
-
+  sendString("<p></CENTER>\n");  
+  sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");  
   printHTMLtrailer();
 }
 
@@ -539,7 +551,7 @@ static void termNetflowFunct(void) {
 static PluginInfo netflowPluginInfo[] = {
   { "NetFlow",
     "This plugin is used to tune ntop's NetFlow support",
-    "1.2", /* version */
+    "1.2.1", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0,    /* Active */

@@ -416,7 +416,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
     prevSession = thisSession;
 
 #ifdef MULTITHREADED
-    accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
+    accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
 #endif
 
     while(thisSession != NULL) {
@@ -460,7 +460,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       }
     } /* while */
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.hostsHashMutex);
+    releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
   } /* end for */
 
@@ -544,6 +544,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
   if(sessionType == IPPROTO_TCP) {
     IPSession *prevSession;
+
+#ifdef MULTITHREADED
+    accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
+#endif
 
     prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
@@ -1804,8 +1808,15 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
 
       freeSession(theSession, actualDeviceId, 1);
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.tcpSessionsMutex);
+#endif
       return(NULL);
     }
+
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.tcpSessionsMutex);
+#endif
   } else if(sessionType == IPPROTO_UDP) {
     IPSession tmpSession;
 

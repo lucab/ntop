@@ -944,7 +944,7 @@ typedef struct hash_list {
 #define ADDRESS_QUEUE_LENGTH    512
 
 #ifdef WIN32
-tyepdef float Counter;
+typedef float Counter;
 #else
 typedef unsigned long long Counter;
 #endif

@@ -315,6 +315,8 @@ typedef struct ntopGlobals {
   PthreadMutex gdbmMutex;
   PthreadMutex hashResizeMutex;
   PthreadMutex graphMutex;
+  PthreadMutex tcpSessionsMutex;
+
 #ifdef MEMORY_DEBUG 
   PthreadMutex leaksMutex;
 #endif
@@ -433,6 +435,7 @@ typedef struct ntopGlobals {
 
   /* NetFlow */
   /* Flow emission */
+  u_char netFlowDebug;
   int netFlowOutSocket;
   u_int32_t globalFlowSequence, globalFlowPktCount;
   NetFlow5Record theRecord;
@@ -440,7 +443,7 @@ typedef struct ntopGlobals {
   /* Flow reception */
   int netFlowInSocket, netFlowDeviceId;
   u_short netFlowInPort;
-  u_long numNetFlowsPktsRcvd, numNetFlowsRcvd, numBadFlowsVersionsRcvd;
+  u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsRcvd, numBadFlowsVersionsRcvd;
 
   /* sFlow */
   int sflowOutSocket, sflowInSocket, sflowDeviceId;

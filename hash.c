@@ -102,7 +102,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
     IPSession *prevSession, *nextSession, *theSession;
 
 #ifdef MULTITHREADED
-    accessMutex(&myGlobals.hostsHashMutex, "freeHostSessions");
+    accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
 #endif
 
     prevSession = theSession = myGlobals.device[theDevice].tcpSession[i];
@@ -131,7 +131,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
     } /* while */
 
 #ifdef MULTITHREADED
-    releaseMutex(&myGlobals.hostsHashMutex);
+    releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
   }
 }
