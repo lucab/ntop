@@ -1418,7 +1418,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     /* ****************************************************** */
 
     numLocalNets = 0;
-    strcpy(rrdPath, hostsFilter); /* It avoids strtok to blanks into hostsFilter */
+    snprintf(rrdPath, sizeof(rrdPath), "%s", hostsFilter); /* It avoids strtok to blanks into hostsFilter */
     handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value), CONST_HANDLEADDRESSLISTS_RRD);
 
     /* ****************************************************** */
@@ -1461,8 +1461,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	      snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
 		       myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
-		       adjHostName
-		       );
+		       adjHostName);
 	      mkdir_p(rrdPath);
 
 	      updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
@@ -1755,7 +1754,8 @@ static int initRRDfunct(void) {
   snprintf(dname, sizeof(dname), "%s", myGlobals.rrdPath);
   if(_mkdir(dname) == -1) {
     if(errno != EEXIST) {
-      traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)", errno, dname);
+      traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)", 
+		 errno, dname);
       setPluginStatus("Disabled - unable to create rrd base directory.");
       /* Return w/o creating the rrd thread ... disabled */
       return(-1);
