@@ -138,6 +138,11 @@ man_MANS = ntop.8
 
 .PHONY: snapshot
 
+
+aclocal.m4: acinclude.m4
+	@aclocal
+
+
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # rules to handle nroff documentation
