@@ -377,6 +377,7 @@ extern char* copy_argv(register char **argv);
 extern unsigned short isBroadcastAddress(struct in_addr *addr);
 extern unsigned short isMulticastAddress(struct in_addr *addr);
 extern unsigned short isLocalAddress(struct in_addr *addr);
+extern int dotted2bits(char *mask);
 extern void handleLocalAddresses(char* addresses);
 extern unsigned short isPseudoLocalAddress(struct in_addr *addr);
 extern unsigned short isPseudoBroadcastAddress(struct in_addr *addr);

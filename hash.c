@@ -117,7 +117,8 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 
 /* ******************************* */
 
-static int _mapIdx(int* mappings, int idx, int lastHashSize, 
+static int _mapIdx(u_int* mappings, u_int idx, 
+		   u_int lastHashSize, 
 		   char* fileName, int fileLine) {
 
   if(idx == NO_PEER) {

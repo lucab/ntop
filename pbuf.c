@@ -197,7 +197,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 {
   u_int idx, i, run=0;
   HostTraffic *el=NULL;
-  int firstEmptySlot = NO_PEER;
+  u_int firstEmptySlot = NO_PEER;
   char buf[32];
   short useIPAddressForSearching;
   char* symEthName = NULL, *ethAddr;

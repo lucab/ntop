@@ -143,7 +143,7 @@ void execCGI(char* cgiName) {
    FlowFilterList *flows = flowsList;
    short printHeader = 0;
    char tmpBuf[BUF_SIZE], *thePlugin;
-   int newPluginStatus;
+   int newPluginStatus = 0;
    
    if(pluginName[0] != '\0') {
     int i;
@@ -703,19 +703,24 @@ void switchNwInterface(int _interface) {
   int i, mwInterface=_interface-1;
   char buf[BUF_SIZE], *selected;
 
-  sendString("<html>\n<body BACKGROUND=/white_bg.gif bgcolor=#FFFFFF><CENTER><FONT FACE=Helvetica><H1>"
-	     "Network Interface Switch"
+  sendString("<html>\n<body BACKGROUND=/white_bg.gif bgcolor=#FFFFFF><CENTER>"
+	     "<FONT FACE=Helvetica><H1>Network Interface Switch"
 	     "</H1></center><hr><p><b>");
 
   if(mergeInterfaces) {
-    snprintf(buf, sizeof(buf), "You can switch among different inferfaces if the -M command line switch is not used. Sorry.\n", device[actualReportDeviceId].name);
+    snprintf(buf, sizeof(buf), "You can switch among different inferfaces if the -M "
+	     "command line switch is not used. Sorry.\n");
     sendString(buf);
   } else if(numDevices == 1) {
-    snprintf(buf, sizeof(buf), "You're currently capturing traffic from one interface [%s]. The interface switch feature is active only when you active ntop with multiple interfaces (-i command line switch). Sorry.\n", device[actualReportDeviceId].name);
+    snprintf(buf, sizeof(buf), "You're currently capturing traffic from one "
+	     "interface [%s]. The interface switch feature is active only when "
+	     "you active ntop with multiple interfaces (-i command line switch). "
+	     "Sorry.\n", device[actualReportDeviceId].name);
     sendString(buf);
   } else if(mwInterface >= 0) {
     actualReportDeviceId = (mwInterface)%numDevices;
-    snprintf(buf, sizeof(buf), "The current interface is now [%s].\n", device[actualReportDeviceId].name);
+    snprintf(buf, sizeof(buf), "The current interface is now [%s].\n", 
+	     device[actualReportDeviceId].name);
     sendString(buf);
   } else {
       sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=switch.html>\n");

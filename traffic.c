@@ -26,12 +26,12 @@
 /* ******************************* */
 
 static void updateThptStats(int deviceToUpdate,
-			    int topSentIdx, int secondSentIdx, int thirdSentIdx,
-			    int topHourSentIdx, int secondHourSentIdx,
-			    int thirdHourSentIdx,
-			    int topRcvdIdx, int secondRcvdIdx, int thirdRcvdIdx,
-			    int topHourRcvdIdx, int secondHourRcvdIdx,
-			    int thirdHourRcvdIdx) {
+			    u_int topSentIdx, u_int secondSentIdx,  u_int thirdSentIdx,
+			    u_int topHourSentIdx, u_int secondHourSentIdx,
+			    u_int thirdHourSentIdx,
+			    u_int topRcvdIdx, u_int secondRcvdIdx, u_int thirdRcvdIdx,
+			    u_int topHourRcvdIdx, u_int secondHourRcvdIdx,
+			    u_int thirdHourRcvdIdx) {
   int i;
 
 #ifdef DEBUG
@@ -159,12 +159,12 @@ static void updateDeviceThpt(int deviceToUpdate) {
   /* traceEvent(TRACE_INFO, "%u %u %u\n", timeDiff, throughput, ethernetBytes); */
 
   if(timeDiff > 5 /* secs */) {
-    int topSentIdx=NO_PEER, secondSentIdx=NO_PEER, thirdSentIdx=NO_PEER;\
-    int topHourSentIdx=NO_PEER, secondHourSentIdx=NO_PEER, thirdHourSentIdx=NO_PEER;
-    int topRcvdIdx=NO_PEER, secondRcvdIdx=NO_PEER, thirdRcvdIdx=NO_PEER;\
-    int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
+    u_int topSentIdx=NO_PEER, secondSentIdx=NO_PEER, thirdSentIdx=NO_PEER;
+    u_int topHourSentIdx=NO_PEER, secondHourSentIdx=NO_PEER, thirdHourSentIdx=NO_PEER;
+    u_int topRcvdIdx=NO_PEER, secondRcvdIdx=NO_PEER, thirdRcvdIdx=NO_PEER;
+    u_int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
     short updateMinThpt, updateHourThpt;
-
+    
     totalTime = actTime-initialSniffTime;
 
     updateHourThpt = 0;

@@ -25,9 +25,9 @@
 
 static int sortSendMode=0;
 
-/* #define PRINT_PKTS */
-/* #define PRINT_ALL_ACTIVE_SESSIONS */
-/* #define PRINT_RETRANSMISSON_DATA  */
+/* #define PRINT_PKTS                 */
+/* #define PRINT_ALL_ACTIVE_SESSIONS  */
+/* #define PRINT_RETRANSMISSION_DATA  */
 
 /*
   Courtesy of
@@ -4659,7 +4659,7 @@ static char* buildHTMLBrowserWindowsLabel(int i, int j) {
   static char buf[BUF_SIZE];
 
 #ifdef MULTITHREADED
-  accessMutex(&addressResolutionMutex, "printThpsStat");
+  accessMutex(&addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
 #endif
 
   if((ipTrafficMatrix[i][j].bytesSent == 0)
@@ -4795,7 +4795,7 @@ void printIpTrafficMatrix(void) {
 
 /* ************************ */
 
-void printThptStatsMatrix(int sortedColumn _UNUSED_) {
+void printThptStatsMatrix(int sortedColumn) {
   int i, ratio=1;
   char label[32], label1[32], buf[BUF_SIZE];
   time_t tmpTime;
@@ -5023,7 +5023,7 @@ void printThptStatsMatrix(int sortedColumn _UNUSED_) {
 
 /* ************************ */
 
-void printThptStats(int sortedColumn) {
+void printThptStats(int sortedColumn _UNUSED_) {
   char tmpBuf[128];
 
   printHTTPheader();

@@ -38,9 +38,9 @@ static void freeFilterRule(FilterRule *rule)  {
 
 /* ************************** */
 
-FilterRule* parseFilterRule(u_short ruleType, 
-			    char* line, 
-			    u_short lineNum) {
+static FilterRule* parseFilterRule(u_short ruleType, 
+				   char* line, 
+				   u_short lineNum) {
   FilterRule *rule;
   char *token, *strtokState;
   int i;

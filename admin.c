@@ -33,7 +33,7 @@ void showUsers(void) {
 
   sendString("<html>\n");
   sendString("<title>Welcome to ntop!</title>\n");
-  sendString("</head><BODY  BACKGROUND=white_bg.gif><FONT FACE=Helvetica>\n");
+  sendString("</head><BODY BACKGROUND=/white_bg.gif><FONT FACE=Helvetica>\n");
   sendString("<H1><CENTER>Registered ntop Users</CENTER></H1><p><hr><p>\n");
 
 #ifdef MULTITHREADED
@@ -89,7 +89,7 @@ void showUsers(void) {
 void addUser(char* user) {
   sendString("<html>\n");
   sendString("<title>Welcome to ntop!</title>\n");
-  sendString("</head><BODY BACKGROUND=white_bg.gif><FONT FACE=Helvetica>\n");
+  sendString("</head><BODY BACKGROUND=/white_bg.gif><FONT FACE=Helvetica>\n");
   sendString("<H1><CENTER>Manage ntop Users</CENTER></H1><p><hr><p>\n");
   sendString("<FORM METHOD=POST ACTION=/doAddUser>\n");
   if(user != NULL) {
@@ -142,7 +142,7 @@ void deleteUser(char* user) {
     sendHTTPProtoHeader(); sendString("Content-type: text/html\n\n");
     sendString("<html>\n");
     sendString("<title>Welcome to ntop!</title>\n");
-    sendString("</head><BODY BACKGROUND=white_bg.gif><FONT FACE=Helvetica>\n");
+    sendString("</head><BODY BACKGROUND=/white_bg.gif><FONT FACE=Helvetica>\n");
     sendString("<H1><CENTER>ntop user delete</CENTER></H1><p><p><hr>\n");
     sendString("FATAL ERROR: unable to delete specified user.");
     sendString("<hr><p><H4>[<A HREF=addUser.html>Add User</A>]"
@@ -269,7 +269,7 @@ void doAddUser(int _len) {
     sendHTTPProtoHeader(); sendString("Content-type: text/html\n\n");
     sendString("<html>\n");
     sendString("<title>Welcome to ntop!</title>\n");
-    sendString("</head><BODY BACKGROUND=white_bg.gif><FONT FACE=Helvetica>\n");
+    sendString("</head><BODY BACKGROUND=/white_bg.gif><FONT FACE=Helvetica>\n");
     sendString("<H1><CENTER>ntop user add</CENTER></H1><p><p><hr>\n");
     sendString(err);
     sendString("<hr><p><H4>[<A HREF=addUser.html>Add User</A>]&nbsp;"
@@ -290,7 +290,7 @@ void showURLs(void) {
 
   sendString("<html>\n");
   sendString("<title>Welcome to ntop!</title>\n");
-  sendString("</head><BODY BACKGROUND=white_bg.gif><FONT FACE=Helvetica>\n");
+  sendString("</head><BODY BACKGROUND=/white_bg.gif><FONT FACE=Helvetica>\n");
   sendString("<H1><CENTER>Restricted ntop URLs</CENTER></H1><p><hr><p>\n");
 
 #ifdef MULTITHREADED
@@ -341,7 +341,7 @@ void addURL(char* url) {
 
   sendString("<html>\n");
   sendString("<title>Welcome to ntop!</title>\n");
-  sendString("</head><BODY BACKGROUND=white_bg.gif><FONT FACE=Helvetica>\n");
+  sendString("</head><BODY BACKGROUND=/white_bg.gif><FONT FACE=Helvetica>\n");
   sendString("<H1><CENTER>Manage ntop URLs</CENTER></H1><p><hr><p>\n");
   sendString("<FORM METHOD=POST ACTION=/doAddURL>\n");
 
@@ -429,7 +429,7 @@ void deleteURL(char* user) {
     sendHTTPProtoHeader(); sendString("Content-type: text/html\n\n");
     sendString("<html>\n");
     sendString("<title>Welcome to ntop!</title>\n");
-    sendString("</head><BODY BACKGROUND=white_bg.gif><FONT FACE=Helvetica>\n");
+    sendString("</head><BODY BACKGROUND=/white_bg.gif><FONT FACE=Helvetica>\n");
     sendString("<H1><CENTER>ntop URL delete</CENTER></H1><p><p><hr>\n");
     sendString("FATAL ERROR: unable to delete specified URL.");
     sendString("<hr><p><H4>[<A HREF=addURL.html>Add URL</A>]"
@@ -541,7 +541,7 @@ void doAddURL(int _len) {
     sendHTTPProtoHeader(); sendString("Content-type: text/html\n\n");
     sendString("<html>\n");
     sendString("<title>Welcome to ntop!</title>\n");
-    sendString("</head><BODY BACKGROUND=white_bg.gif><FONT FACE=Helvetica>\n");
+    sendString("</head><BODY BACKGROUND=/white_bg.gif><FONT FACE=Helvetica>\n");
     sendString("<H1><CENTER>ntop URL add</CENTER></H1><p><p><hr>\n");
     sendString(err);
     sendString("<hr><p><H4>[<A HREF=addURL.html>Add URL</A>]"
