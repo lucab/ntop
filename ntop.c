@@ -620,62 +620,11 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
 /* **************************************** */
 
-static void cleanupSerialEntries() {
-  datum data_data, key_data, return_data;
-  u_int numDbEntries = 0;
-  SerialCacheEntry entry;
-
-#ifndef DEBUG
-  traceEvent(TRACE_INFO, "Entering cleanupSerialEntries()");
-#endif
-
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.gdbmMutex, "cleanupSerialEntries");
-#endif
-  return_data = gdbm_firstkey(myGlobals.gdbm_file);
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
-
-  while(return_data.dptr != NULL) {
-    numDbEntries++;
-    key_data = return_data;
-#ifdef MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "cleanupSerialEntries");
-#endif
-    return_data = gdbm_nextkey(myGlobals.gdbm_file, key_data);
-    data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);
-
-    if((data_data.dptr != NULL) && (data_data.dsize == sizeof(SerialCacheEntry))) {
-      memcpy(&entry, data_data.dptr, sizeof(SerialCacheEntry));
-      if(entry.creationTime < (myGlobals.actTime-24*60*60)) {
-	gdbm_delete(myGlobals.gdbm_file, key_data);
-#ifdef DEBUG
-	traceEvent(TRACE_INFO, "Deleted '%s' entry.\n", data_data.dptr);
-#endif
-	numDbEntries--;
-      }
-    }
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#ifdef HAVE_SCHED_H
-    sched_yield(); /* Allow other threads to run */
-#endif
-#endif
-
-    if(data_data.dptr != NULL) free(data_data.dptr);
-    free(key_data.dptr);
-  } /* while */
-}
-
-/* **************************************** */
-
 void* cleanupExpiredHostEntriesLoop(void* notUsed _UNUSED_) {
   for(;;) {
     if(!myGlobals.capturePackets) break;
     myGlobals.actTime = time(NULL);
     cleanupHostEntries();
-    cleanupSerialEntries();
   }
 
   return(NULL);
