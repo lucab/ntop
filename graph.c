@@ -1517,7 +1517,6 @@ void drawHostsDistanceGraph() {
 /* ************************ */
 
 #ifdef HAVE_RRD_H
-void gdImageCreateFromPng() {;} 
 void gdImageWBMP() {; }
 #endif
 
