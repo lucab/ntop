@@ -2613,6 +2613,62 @@ static void checkHostHealthness(HostTraffic *el) {
 
 /* ************************************ */
 
+void checkHostProvidedServices(HostTraffic *el) {
+  char buf[BUF_SIZE];
+
+  if(isServer(el)
+     || isWorkstation(el)
+     || isMasterBrowser(el)
+     || isPrinter(el)
+     || isBridgeHost(el)
+     || nameServerHost(el)
+     || gatewayHost(el)
+     || isSMTPhost(el) || isIMAPhost(el) || isPOPhost(el)
+     || isDirectoryHost(el)
+     || isFTPhost(el)
+     || isHTTPhost(el)
+     || isWINShost(el)
+#ifdef ENABLE_NAPSTER
+     || isNapsterRedirector(el) || isNapsterServer(el) || isNapsterClient(el)
+#endif
+     || isDHCPClient(el)        || isDHCPServer(el)
+     ) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		"<TD "TD_BG"  ALIGN=RIGHT>", getRowColor(),
+		"Host Type") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    if(isServer(el))              sendString("Server<br>");
+    if(isWorkstation(el))         sendString("Workstation<br>");
+    if(isMasterBrowser(el))       sendString("Master Browser<br>");
+    if(isPrinter(el))             sendString("Printer&nbsp;<IMG SRC=printer.gif BORDER=0><br>");
+    if(isBridgeHost(el))          sendString("Bridge<br>");
+
+    if(nameServerHost(el))     sendString("&nbsp;<IMG SRC=/dns.gif BORDER=0>&nbsp;Name Server<br>");
+    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG SRC=/router.gif BORDER=0>&nbsp;<br>");
+    if(isSMTPhost(el))         sendString("SMTP Server&nbsp;<IMG SRC=/mail.gif BORDER=0>&nbsp;<br>");
+    if(isPOPhost(el))          sendString("POP Server<br>");
+    if(isIMAPhost(el))         sendString("IMAP Server<br>");
+    if(isDirectoryHost(el))    sendString("Directory Server<br>");
+    if(isFTPhost(el))          sendString("FTP Server<br>");
+    if(isHTTPhost(el))         sendString("HTTP Server<br>");
+    if(isWINShost(el))         sendString("WINS Server<br>");
+
+
+#ifdef ENABLE_NAPSTER
+    if(isNapsterRedirector(el))   sendString("Napster Redirector<br>");
+    if(isNapsterServer(el))       sendString("Napster Server<br>");
+    if(isNapsterClient(el))       sendString("Napster Client<br>");
+#endif
+
+    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client<br>");
+    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server<br>");
+    sendString("</TD></TR>");
+  }
+}
+
+/* ************************************ */
+
 void printHostDetailedInfo(HostTraffic *el) {
   char buf[BUF_SIZE], buf1[64], sniffedName[MAXDNAME];
   float percentage;
@@ -3165,71 +3221,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     }
   }
 
-  if(gatewayHost(el)
-     || nameServerHost(el)
-     || isSMTPhost(el)
-     || isPOPhost(el)
-     || isIMAPhost(el)
-     || isDirectoryHost(el)
-     || isFTPhost(el)
-     || isHTTPhost(el)
-     || isWINShost(el)
-     ) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>",
-	    getRowColor(),
-		"Provided&nbsp;Services") < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-    if(nameServerHost(el))     sendString("&nbsp;<IMG SRC=/dns.gif BORDER=0>&nbsp;Name Server<br>");
-    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG SRC=/router.gif BORDER=0>&nbsp;<br>");
-    if(isSMTPhost(el))         sendString("SMTP Server&nbsp;<IMG SRC=/mail.gif BORDER=0>&nbsp;<br>");
-    if(isPOPhost(el))          sendString("POP Server<br>");
-    if(isIMAPhost(el))         sendString("IMAP Server<br>");
-    if(isDirectoryHost(el))    sendString("Directory Server<br>");
-    if(isFTPhost(el))          sendString("FTP Server<br>");
-    if(isHTTPhost(el))         sendString("HTTP Server<br>");
-    if(isWINShost(el))         sendString("WINS Server<br>");
-
-#ifdef ENABLE_NAPSTER
-    if(isNapsterServer(el))    sendString("Napster Server<br>");
-    if(isNapsterRedirector(el))    sendString("Napster Redirector<br>");
-#endif
-
-    sendString("</TD></TR>");
-  }
-
-  /* **************************** */
-
-  if(isServer(el)
-     || isWorkstation(el)
-     || isMasterBrowser(el)
-     || isPrinter(el)
-     || isBridgeHost(el)
-#ifdef ENABLE_NAPSTER
-     || isNapsterRedirector(el) || isNapsterServer(el) || isNapsterClient(el)
-#endif
-     || isDHCPClient(el)        || isDHCPServer(el)
-     ) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD "TD_BG"  ALIGN=RIGHT>", getRowColor(),
-		"Host Type") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-
-    if(isServer(el))              sendString("Server<br>");
-    if(isMasterBrowser(el))       sendString("Master Browser<br>");
-    if(isWorkstation(el))         sendString("Workstation<br>");
-    if(isPrinter(el))             sendString("Printer&nbsp;<IMG SRC=printer.gif BORDER=0><br>");
-    if(isBridgeHost(el))          sendString("Bridge<br>");
-#ifdef ENABLE_NAPSTER
-    if(isNapsterRedirector(el))   sendString("Napster Redirector<br>");
-    if(isNapsterServer(el))       sendString("Napster Server<br>");
-    if(isNapsterClient(el))       sendString("Napster Client<br>");
-#endif
-    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client<br>");
-    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server<br>");
-    sendString("</TD></TR>");
-  }
+  checkHostProvidedServices(el);
 
   /* **************************** */
   /*

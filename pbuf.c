@@ -740,10 +740,6 @@ static void updateUsedPorts(HostTraffic *srcHost,
       srcHost->portsUsage[sport]->serverUses++;
       srcHost->portsUsage[sport]->serverUsesLastPeer = dstHostIdx;
 
-      if(sport == 25 /* SMTP */) FD_SET(HOST_SVC_SMTP, &srcHost->flags);
-      else if((sport == 109)  /* pop2 */ || (sport == 110) /* pop3 */) FD_SET(HOST_SVC_POP, &srcHost->flags);
-      else if((sport == 143) /* imap */) FD_SET(HOST_SVC_IMAP, &srcHost->flags);
-
       if(dstHostIdx != broadcastEntryIdx) {
 	if(dstHost->portsUsage[sport] == NULL)
 	  dstHost->portsUsage[sport] = allocatePortUsage();
@@ -1778,12 +1774,22 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  free(rcStr);
 	}
-      } else if(((dport == 515 /* printer */) || (sport == 515))
+      } else if(((sport == 25 /* SMTP */)  || (dport == 25 /* SMTP */))
 		&& (theSession->sessionState == STATE_ACTIVE)) {
-	if(sport == 515)
-	  FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
+	if(sport == 25) FD_SET(HOST_SVC_SMTP, &srcHost->flags); else FD_SET(HOST_SVC_SMTP, &dstHost->flags);
+      } else if(((dport == 515 /* printer */) || (sport == 515)) && (theSession->sessionState == STATE_ACTIVE)) {
+	if(sport == 515) FD_SET(HOST_TYPE_PRINTER, &srcHost->flags); else FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
+      } else if(((sport == 109 /* pop2 */) || (sport == 110 /* pop3 */)
+		 || (dport == 109 /* pop2 */) || (dport == 110 /* pop3 */))
+		&& (theSession->sessionState == STATE_ACTIVE)) {
+	if((sport == 109) || (sport == 110))
+	  FD_SET(HOST_SVC_POP, &srcHost->flags); 
 	else
-	  FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
+	  FD_SET(HOST_SVC_POP, &dstHost->flags);
+
+      } else if(((sport == 143 /* imap */) || (dport == 143 /* imap */))
+		&& (theSession->sessionState == STATE_ACTIVE)) {
+	if(sport == 143) FD_SET(HOST_SVC_IMAP, &srcHost->flags); else FD_SET(HOST_SVC_IMAP, &dstHost->flags);
 #ifdef ENABLE_NAPSTER
       } else if((sport == 8875 /* Napster Redirector */)
 		&& (packetDataLength > 5)) {
