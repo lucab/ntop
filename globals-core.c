@@ -658,14 +658,17 @@ void initNtop(char *devices) {
       myGlobals.localityDisplayPolicy = showSentReceived;
   }
 
+
+  if(myGlobals.skipVersionCheck == TRUE) {
 #ifdef CFG_MULTITHREADED
-  {
-    pthread_t myThreadId;
-    createThread(&myThreadId, checkVersion, NULL);
-  }
+    {
+      pthread_t myThreadId;
+      createThread(&myThreadId, checkVersion, NULL);
+    }
 #else
-  checkVersion(NULL);
+    checkVersion(NULL);
 #endif
+  }
 }
 
 /* ****************************** */

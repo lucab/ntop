@@ -5459,9 +5459,6 @@ void* checkVersion(void* notUsed _UNUSED_) {
 
   displayPrivacyNotice();
 
-  if(myGlobals.skipVersionCheck == TRUE)
-    return(NULL);
-
   for(idx = 0; versionSite[idx] != NULL; idx++) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY,
 	       "CHKVER: Checking current ntop version at %s/%s", versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
