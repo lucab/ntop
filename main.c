@@ -1050,7 +1050,9 @@ int main(int argc, char *argv[]) {
 /* Above here, the -L value wasn't set, so we use printf(). */
 
 /* create the logView stuff Mutex first... must be before the 1st traceEvent() call */
+#ifdef CFG_MULTITHREADED
   createMutex(&myGlobals.logViewMutex);     /* synchronize logView buffer */
+#endif
   myGlobals.logViewNext = 0;
   myGlobals.logView = calloc(sizeof(char*),
                              CONST_LOG_VIEW_BUFFER_SIZE);

@@ -2156,8 +2156,10 @@ void traceEvent(int eventTraceLevel, char* file,
     if ((eventTraceLevel <= CONST_INFO_TRACE_LEVEL) &&
         (myGlobals.logView != NULL)) {
       
+#ifdef CFG_MULTITHREADED
       if(myGlobals.logViewMutex.isInitialized)
        accessMutex(&myGlobals.logViewMutex, "reporting");
+#endif
 
        if (myGlobals.logView[myGlobals.logViewNext] != NULL)
            free(myGlobals.logView[myGlobals.logViewNext]);
@@ -2166,8 +2168,11 @@ void traceEvent(int eventTraceLevel, char* file,
 
        myGlobals.logViewNext = (myGlobals.logViewNext + 1) % CONST_LOG_VIEW_BUFFER_SIZE;
 
+#ifdef CFG_MULTITHREADED
       if(myGlobals.logViewMutex.isInitialized)
        releaseMutex(&myGlobals.logViewMutex);
+#endif
+
     }
 
     /* If ntop is a Win32 service, we're done - we don't (yet) write to the

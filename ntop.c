@@ -66,6 +66,7 @@ void handleSigHup(int signalId _UNUSED_) {
 
 /* *************************** */
 
+#ifdef CFG_MULTITHREADED
 #ifndef WIN32
 void* pcapDispatch(void *_i) {
   int rc;
@@ -149,6 +150,7 @@ void* pcapDispatch(void *_i) {
 
 }
 #endif /* WIN32 */
+#endif /* CFG_MULTITHREADED */
 
 /* **************************************** */
 

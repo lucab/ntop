@@ -1925,7 +1925,9 @@ XML*/
   /* LogView */
   char ** logView;         /* vector of log messages */
   int logViewNext;
+#ifdef CFG_MULTITHREADED
   PthreadMutex logViewMutex;
+#endif
 
 #ifdef PARM_ENABLE_EXPERIMENTAL
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */
