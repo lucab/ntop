@@ -1419,7 +1419,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       printDomainStats(&pageName[strlen(DOMAIN_INFO_HTML)+1], abs(sortedColumn), revertOrder, pageNum);
     } else if(strcmp(pageName, TRAFFIC_STATS_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostsTraffic(8, 0, revertOrder, pageNum, TRAFFIC_STATS_HTML);
+      printTrafficStatistics();
       printProtoTraffic();
       sendString("<p>\n");
       printIpProtocolDistribution(LONG_FORMAT, revertOrder);

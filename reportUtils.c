@@ -240,8 +240,8 @@ void printTableEntryPercentage(char *buf, int bufLen,
 
 void printHeader(int reportType, int revertOrder, u_int column) {
   char buf[BUF_SIZE];
-  char *sign, *arrowGif, *arrow[48], *theAnchor[48];
-  int i;
+  char *sign, *arrowGif, *arrow[48], *theAnchor[48], *url;
+  int i, soFar=2;
   char htmlAnchor[64], htmlAnchor1[64];
 
   /* printf("->%d<-\n",screenNumber); */
@@ -256,142 +256,54 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 
   memset(buf, 0, sizeof(buf));
 
-  if(sortSendMode) {
-   if((reportType == 0) || (reportType == 1)) {
-      if(reportType == 0) {
-	if(snprintf(htmlAnchor, sizeof(htmlAnchor),
-		    "<A HREF=/%s?col=%s", STR_SORT_DATA_SENT_PROTOS, sign) < 0)
-	  BufferOverflow();
-	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1),
-		    "<A HREF=/%s?col=", STR_SORT_DATA_SENT_PROTOS) < 0)
-	  BufferOverflow();
-      } else {
-	if(snprintf(htmlAnchor, sizeof(htmlAnchor),
-		    "<A HREF=/%s?col=%s", STR_SORT_DATA_SENT_IP, sign) < 0)
-	  BufferOverflow();
-	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1),
-		    "<A HREF=/%s?col=", STR_SORT_DATA_SENT_IP) < 0)
-	  BufferOverflow();
-      }
-    } else if(reportType == 2) {
-      if(snprintf(htmlAnchor, sizeof(htmlAnchor),
-		  "<A HREF=/%s?col=%s",   STR_SORT_DATA_SENT_THPT, sign) < 0)
-	BufferOverflow();
-      if(snprintf(htmlAnchor1, sizeof(htmlAnchor1),
-		  "<A HREF=/%s?col=",   STR_SORT_DATA_SENT_THPT) < 0)
-	BufferOverflow();
-    } else if(reportType == 3) {
-      if(snprintf(htmlAnchor, sizeof(htmlAnchor),
-		  "<A HREF=/%s?col=%s",   STR_SORT_DATA_SENT_HOST_TRAFFIC, sign) < 0)
-	BufferOverflow();
-      if(snprintf(htmlAnchor1, sizeof(htmlAnchor1),
-		  "<A HREF=/%s?col=",   STR_SORT_DATA_SENT_HOST_TRAFFIC) < 0)
-	BufferOverflow();
-    }
-
-    if((reportType == 0) || (reportType == 1)) {
-      if(abs(column) == HOST_DUMMY_IDX_VALUE)
-	{ arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
-      else { arrow[0] = ""; theAnchor[0] = htmlAnchor1; }
-      if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
-	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
-      else { arrow[1] = "";  theAnchor[1] = htmlAnchor1;}
-      if(abs(column) == 0)
-	{ arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
-      else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
-     sendString("<CENTER>\n");
-     if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
-		  "<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
-		  "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
-		  "<TH "TH_BG" COLSPAN=2>%s0>Sent%s</A></TH>\n",
-		  theAnchor[0], arrow[0], theAnchor[1], arrow[1],
-		  theAnchor[2], arrow[2]) < 0)
-	BufferOverflow();
-    } else {
-      if(abs(column) == HOST_DUMMY_IDX_VALUE)
-	{ arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
-      else { arrow[0] = ""; theAnchor[0] = htmlAnchor1; }
-      if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
-	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
-      else { arrow[1] = ""; theAnchor[1] = htmlAnchor1; }
-      sendString("<CENTER>\n");
-      if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
-		  "<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
-		  "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
-		  theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
-	BufferOverflow();
-    }
-
-    sendString(buf);
-  } else {
-    if((reportType == 0) || (reportType == 1)) {
-      if(reportType == 0) {
-	if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s",
-		    STR_SORT_DATA_RECEIVED_PROTOS, sign) < 0)
-	  BufferOverflow();
-	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",
-		    STR_SORT_DATA_RECEIVED_PROTOS) < 0)
-	  BufferOverflow();
-      } else {
-	if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s",
-		    STR_SORT_DATA_RECEIVED_IP, sign) < 0)
-	  BufferOverflow();
-	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",
-		    STR_SORT_DATA_RECEIVED_IP) < 0)
-	  BufferOverflow();
-      }
-    } else if(reportType == 2) {
-      if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s",
-		  STR_SORT_DATA_RECEIVED_THPT, sign) < 0)
-	BufferOverflow();
-      if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",
-		  STR_SORT_DATA_RECEIVED_THPT) < 0)
-	BufferOverflow();
-    } else if(reportType == 3) {
-      if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s",
-		  STR_SORT_DATA_RCVD_HOST_TRAFFIC, sign)  < 0)
-	BufferOverflow();
-      if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",
-		  STR_SORT_DATA_RCVD_HOST_TRAFFIC) < 0)
-	BufferOverflow();
-    }
-
-    if((reportType == 0) || (reportType == 1)) {
-      if(abs(column) == HOST_DUMMY_IDX_VALUE)
-	{ arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
-      else { arrow[0] = ""; theAnchor[0] = htmlAnchor1; }
-      if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
-	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
-      else { arrow[1] = "";  theAnchor[1] = htmlAnchor1;}
-      if(abs(column) == 0)
-	{ arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
-      else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
-      sendString("<CENTER>\n");
-      if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
-		  "<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
-		  "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
-		  "<TH "TH_BG" COLSPAN=2>%s0>Data%s</A></TH>\n",
-		  theAnchor[0], arrow[0], theAnchor[1],
-		  arrow[1], theAnchor[2], arrow[2]) < 0)
-	BufferOverflow();
-    } else {
-      if(abs(column) == HOST_DUMMY_IDX_VALUE)
-	{ arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
-      else { arrow[0] = ""; theAnchor[0] = htmlAnchor1; }
-      if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
-	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor; }
-      else { arrow[1] = ""; theAnchor[1] = htmlAnchor1;}
-      sendString("<CENTER>\n");
-      if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
-	       "<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
-	      "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
-	      theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
-	BufferOverflow();
-    }
-    sendString(buf);
+  switch(reportType) {
+  case 0: url = STR_SORT_DATA_RECEIVED_PROTOS; break;
+  case 1: url = STR_SORT_DATA_RECEIVED_IP; break;
+  case 2: url = STR_SORT_DATA_RECEIVED_THPT; break;
+  case 3: url = STR_SORT_DATA_RCVD_HOST_TRAFFIC; break;
+  case 4: url = STR_SORT_DATA_SENT_HOST_TRAFFIC; break;
+  case 5: url = STR_SORT_DATA_SENT_PROTOS; break;
+  case 6: url = STR_SORT_DATA_SENT_IP; break;
+  case 7: url = STR_SORT_DATA_SENT_THPT; break;
+  case 8: url = TRAFFIC_STATS_HTML; break;
   }
 
-  if(reportType == 0) {
+  if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
+    BufferOverflow();
+  if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",  url) < 0)
+    BufferOverflow();
+
+  if(abs(column) == HOST_DUMMY_IDX_VALUE) {
+    arrow[0] = arrowGif; theAnchor[0] = htmlAnchor;
+  } else {
+    arrow[0] = ""; theAnchor[0] = htmlAnchor1;
+  }
+
+  if(abs(column) == DOMAIN_DUMMY_IDX_VALUE) {
+    arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;
+  } else {
+    arrow[1] = "";  theAnchor[1] = htmlAnchor1;
+  }
+  
+  if(abs(column) == 0) {
+    arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;
+  } else {
+    arrow[2] = ""; theAnchor[2] = htmlAnchor1;
+  }
+
+  switch(reportType) {
+  case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
+  case 5: /* STR_SORT_DATA_SENT_PROTOS */
+    sendString("<CENTER>\n");
+    if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
+		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
+		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
+		"<TH "TH_BG" COLSPAN=2>%s0>Data%s</A></TH>\n",
+		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
+		theAnchor[2], arrow[2]) < 0)
+      BufferOverflow();
+    sendString(buf);
+
     if(abs(column) == 1)
       { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
     else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
@@ -466,9 +378,19 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 		theAnchor[14], arrow[14]) < 0)
       BufferOverflow();
     sendString(buf);
-  } else if(reportType == 1) {
-    int soFar=2;
+    break;
 
+  case 1: /* STR_SORT_DATA_RECEIVED_IP */
+  case 6: /* STR_SORT_DATA_SENT_IP */   
+    sendString("<CENTER>\n");
+    if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
+		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
+		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
+		"<TH "TH_BG" COLSPAN=2>%s0>Data%s</A></TH>\n",
+		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
+		theAnchor[2], arrow[2]) < 0)
+      BufferOverflow();
+    sendString(buf);
     if(abs(column) == 1) {
 	arrow[0] = arrowGif;
 	theAnchor[0] = htmlAnchor;
@@ -508,7 +430,36 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	     theAnchor[0], i+2, arrow[0]) < 0)
       BufferOverflow();
     sendString(buf);
-  } else if(reportType == 2) {
+    break;
+
+  case 3: /* STR_SORT_DATA_RCVD_HOST_TRAFFIC */
+  case 4: /* STR_SORT_DATA_SENT_HOST_TRAFFIC */
+    sendString("<CENTER>\n");
+    if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
+		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
+		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n",
+		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
+      BufferOverflow();
+    sendString(buf);
+    sendString("<TH "TH_BG">0<br>AM</TH><TH "TH_BG">1<br>AM</TH>"
+	       "<TH "TH_BG">2<br>AM</TH><TH "TH_BG">3<br>AM</TH>"
+	       "<TH "TH_BG">4<br>AM</TH><TH "TH_BG">5<br>AM</TH><TH "TH_BG">6<br>AM</TH>"
+	       "<TH "TH_BG">7<br>AM</TH><TH "TH_BG">8<br>AM</TH><TH "TH_BG">9<br>AM</TH>"
+	       "<TH "TH_BG">10<br>AM</TH><TH "TH_BG">11<br>AM</TH><TH "TH_BG">12<br>AM</TH>\n");
+    sendString("<TH "TH_BG">1<br>PM</TH><TH "TH_BG">2<br>PM</TH><TH "TH_BG">3<br>PM</TH>"
+	       "<TH "TH_BG">4<br>PM</TH><TH "TH_BG">5<br>PM</TH><TH "TH_BG">6<br>PM</TH>"
+	       "<TH "TH_BG">7<br>PM</TH><TH "TH_BG">8<br>PM</TH><TH "TH_BG">9<br>PM</TH>"
+	       "<TH "TH_BG">10<br>PM</TH><TH "TH_BG">11<br>PM</TH>\n");
+    break;
+  case 2: /* STR_SORT_DATA_RECEIVED_THPT */
+  case 7: /* STR_SORT_DATA_SENT_THPT */
+    sendString("<CENTER>\n");
+    if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
+		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
+		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
+		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
+      BufferOverflow();
+    sendString(buf);
     updateThpt();
     if(abs(column) == 1) { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
     else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
@@ -532,17 +483,18 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	    theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]) < 0)
       BufferOverflow();
     sendString(buf);
-  } else if(reportType == 3) {
-    sendString("<TH "TH_BG">0<br>AM</TH><TH "TH_BG">1<br>AM</TH>"
-	       "<TH "TH_BG">2<br>AM</TH><TH "TH_BG">3<br>AM</TH>"
-	       "<TH "TH_BG">4<br>AM</TH><TH "TH_BG">5<br>AM</TH><TH "TH_BG">6<br>AM</TH>"
-	       "<TH "TH_BG">7<br>AM</TH><TH "TH_BG">8<br>AM</TH><TH "TH_BG">9<br>AM</TH>"
-	       "<TH "TH_BG">10<br>AM</TH><TH "TH_BG">11<br>AM</TH><TH "TH_BG">12<br>AM</TH>\n");
-    sendString("<TH "TH_BG">1<br>PM</TH><TH "TH_BG">2<br>PM</TH><TH "TH_BG">3<br>PM</TH>"
-	       "<TH "TH_BG">4<br>PM</TH><TH "TH_BG">5<br>PM</TH><TH "TH_BG">6<br>PM</TH>"
-	       "<TH "TH_BG">7<br>PM</TH><TH "TH_BG">8<br>PM</TH><TH "TH_BG">9<br>PM</TH>"
-	       "<TH "TH_BG">10<br>PM</TH><TH "TH_BG">11<br>PM</TH>\n");
+    break;
+  case 8: /* TRAFFIC_STATS_HTML */
+    sendString("<CENTER>\n");
+    if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
+		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
+		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
+		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
+      BufferOverflow();
+    sendString(buf);
+    break;
   }
+
   sendString("</TR>\n");
 }
 
@@ -567,7 +519,7 @@ char* getOSFlag(char* osName, int showOsName) {
     flagImg = "<IMG  ALT=\"OS: Apple Mac\" ALIGN=MIDDLE SRC=/statsicons/os/mac.gif>";
   else if(strstr(osName, "Novell") != NULL)
     flagImg = "<IMG ALT=\"OS: Novell\" ALIGN=MIDDLE SRC=/statsicons/os/novell.gif>";
-  else if((strstr(osName, "BSD") != NULL) 
+  else if((strstr(osName, "BSD") != NULL)
 	  || (strstr(osName, "Unix") != NULL)
 	  || (strstr(osName, "Berkeley") != NULL))
     flagImg = "<IMG ALT=\"OS: BSD Unix\" ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>";
@@ -817,7 +769,7 @@ int cmpFctn(const void *_a, const void *_b) {
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, 
+  traceEvent(TRACE_INFO,
 	     "reportKind=%d/columnSort=%d/sortSendMode=%d/numIpProtosToMonitor=%d\n",
 	     reportKind, columnSort, sortSendMode, myGlobals.numIpProtosToMonitor);
 #endif
@@ -887,7 +839,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	  a_ = 0;
 	else
 	  a_ = (*a)->napsterStats->bytesRcvd;
-	
+
 	if((*b)->napsterStats == NULL)
 	  b_ = 0;
 	else
@@ -901,21 +853,21 @@ int cmpFctn(const void *_a, const void *_b) {
       }
     } else {
       int i;
-      
+
       a_ = 0, b_ = 0;
-      
+
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
 	a_ += (*a)->protoIPTrafficInfos[i].rcvdLoc
 	  +(*a)->protoIPTrafficInfos[i].rcvdFromRem;
 	b_ += (*b)->protoIPTrafficInfos[i].rcvdLoc
 	  +(*b)->protoIPTrafficInfos[i].rcvdFromRem;
       }
-      
+
       if((*a)->bytesRcvd > a_)
 	a_ = (*a)->bytesRcvd-a_;
       else
 	a_ = 0;
-      
+
       if((*b)->bytesRcvd > b_)
 	b_ = (*b)->bytesRcvd-b_;
       else
@@ -992,7 +944,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	  a_ = 0;
 	else
 	  a_ = (*a)->napsterStats->bytesSent;
-	
+
 	if((*b)->napsterStats == NULL)
 	  b_ = 0;
 	else
@@ -1008,21 +960,21 @@ int cmpFctn(const void *_a, const void *_b) {
       }
     } else {
       int i;
-      
+
       a_ = 0, b_ = 0;
-      
+
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
 	a_ += (*a)->protoIPTrafficInfos[i].sentLoc
 	  +(*a)->protoIPTrafficInfos[i].sentRem;
 	b_ += (*b)->protoIPTrafficInfos[i].sentLoc
 	  +(*b)->protoIPTrafficInfos[i].sentRem;
       }
-      
+
       if((*a)->bytesSent > a_)
 	a_ = (*a)->bytesSent-a_;
       else
 	a_ = 0;
-      
+
       if((*b)->bytesSent > b_)
 	b_ = (*b)->bytesSent-b_;
       else
@@ -1586,7 +1538,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
   totalSent = el->tcpFragmentsSent + el->udpFragmentsSent + el->icmpFragmentsSent;
   totalRcvd = el->tcpFragmentsRcvd + el->udpFragmentsRcvd + el->icmpFragmentsRcvd;
-  
+
  if((totalSent == 0) && (totalRcvd == 0))
     return;
 
@@ -1615,12 +1567,12 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 #ifdef HAVE_GDCHART
   {
     if((totalSent > 0) || (totalRcvd > 0)) {
-      if(snprintf(buf, sizeof(buf), 
+      if(snprintf(buf, sizeof(buf),
 		  "<TR %s><TH "TH_BG" ALIGN=LEFT>Fragment Distribution</TH>",
 		  getRowColor()) < 0)
 	BufferOverflow();
       sendString(buf);
-      
+
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"?1></TD>",
@@ -1645,12 +1597,12 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
       /* ***************************************** */
 
-      if(snprintf(buf, sizeof(buf), 
+      if(snprintf(buf, sizeof(buf),
 		  "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Fragment Distribution</TH>",
 		  getRowColor()) < 0)
 	BufferOverflow();
       sendString(buf);
-      
+
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT"?1></TD>",
@@ -1677,7 +1629,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 #endif
 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
-  sendString("</CENTER>\n");  
+  sendString("</CENTER>\n");
 }
 
 /* ************************************ */
@@ -1904,7 +1856,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 		 "<TABLE BORDER=0 WIDTH=100%%><TR><TD "TD_BG" VALIGN=TOP>\n");
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	  if((el->contactedSentPeers.peersIndexes[i] != NO_PEER) 
+	  if((el->contactedSentPeers.peersIndexes[i] != NO_PEER)
 	     && (el->contactedRcvdPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) {
 	      el1 = myGlobals.device[actualReportDeviceId].hash_hostTraffic[
 		  checkSessionIdx(el->contactedSentPeers.peersIndexes[i])];
@@ -2081,7 +2033,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 
 	if(theIdx != NO_PEER) {
 	  HostTraffic *host = myGlobals.device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)];
-	
+
 	  if(host != NULL) {
 	    sendString("\n<li>");
 	    sendString(makeHostLink(host, 0, 0, 0));
@@ -2112,7 +2064,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 	  char fragStrSent[64], fragStrRcvd[64], *moreSessionInfo;
 	  IPSession *session = myGlobals.device[actualReportDeviceId].tcpSession[idx];
 
-	  while(session != NULL) { 
+	  while(session != NULL) {
 #ifndef PRINT_ALL_ACTIVE_SESSIONS
 	    if(session->sessionState != STATE_ACTIVE) {
 	      session = session->next;
@@ -2442,7 +2394,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   } else {
     if(el->hostNumIpAddress[0] == '\0') {
       if(snprintf(buf, sizeof(buf), "Info about host %s", el->hostSymIpAddress) < 0)
-	BufferOverflow();    
+	BufferOverflow();
     } else {
       if(snprintf(buf, sizeof(buf), "Info about host"
 		  " <A HREF=http://%s/>%s %s</A>\n",
@@ -2528,7 +2480,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	  sendString(buf);
 	}
       }
-      
+
       sendString("</TD></TR>");
     }
 
@@ -2749,7 +2701,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s"
 		"%s</TD></TR>\n",
-		getRowColor(), 
+		getRowColor(),
 		"Last MAC Address/Router <IMG ALT=\"Network Interface Card (NIC)/Router\" SRC=/card.gif BORDER=0>",
 		shortBuf,
 		myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
@@ -2882,7 +2834,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
-		  "Rem (outside specified/local subnet)") < 0) 
+		  "Rem (outside specified/local subnet)") < 0)
 	BufferOverflow();
     }
     sendString(buf);
@@ -2926,7 +2878,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  formatBytes(el->routedTraffic->routedBytes, 1),
 		  formatPkts(el->routedTraffic->routedPkts)) < 0)
 	BufferOverflow();
-      sendString(buf);    
+      sendString(buf);
     }
   }
 
@@ -2955,7 +2907,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
 
     if(el->bytesSent > 0) {
-      percentage = (((float)el->ipBytesSent*100)/el->bytesSent);    
+      percentage = (((float)el->ipBytesSent*100)/el->bytesSent);
       printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Sent",
 				"IP", "Non-IP", -1, percentage);
     }
@@ -2980,27 +2932,27 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Rcvd&nbsp;Stats",
 				"Local", "Rem", -1, percentage);
   }
-  
+
   if(el->bytesRcvd > 0) {
-    percentage = (((float)el->ipBytesRcvd*100)/el->bytesRcvd);    
+    percentage = (((float)el->ipBytesRcvd*100)/el->bytesRcvd);
     printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Rcvd",
 			      "IP", "Non-IP", -1, percentage);
   }
 
   total = el->pktSent+el->pktRcvd;
   if(total > 0) {
-    percentage = ((float)el->pktSent*100)/((float)total);    
+    percentage = ((float)el->pktSent*100)/((float)total);
     printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vs.&nbsp;Rcvd&nbsp;Pkts",
 			      "Sent", "Rcvd", -1, percentage);
   }
 
   total = el->bytesSent+el->bytesRcvd;
   if(total > 0) {
-    percentage = ((float)el->bytesSent*100)/((float)total);    
+    percentage = ((float)el->bytesSent*100)/((float)total);
     printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vs.&nbsp;Rcvd&nbsp;Data",
 			      "Sent", "Rcvd", -1, percentage);
   }
-  
+
   /* ******************** */
 
   printedHeader=0;
@@ -3012,7 +2964,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(router != NULL) {
 	if(!printedHeader) {
 	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
-		      "Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG" ALIGN=RIGHT>\n", 
+		      "Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG" ALIGN=RIGHT>\n",
 		      getRowColor()) < 0)
 	    BufferOverflow();
 	  sendString(buf);
@@ -3021,7 +2973,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
 	if(printedHeader > 1) sendString("<BR>");
 
-	if(snprintf(buf, sizeof(buf), "%s\n", makeHostLink(router, SHORT_FORMAT, 0, 0)) < 0) 
+	if(snprintf(buf, sizeof(buf), "%s\n", makeHostLink(router, SHORT_FORMAT, 0, 0)) < 0)
 	  BufferOverflow();
 	sendString(buf);
       }
@@ -3300,7 +3252,7 @@ void printTableEntry(char *buf, int bufLen,
 		"</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
 		"<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
 		getRowColor(), label, formatKBytes(total),
-		int_perc, (250*int_perc)/100, 
+		int_perc, (250*int_perc)/100,
 		(250*(100-int_perc))/100, getActualRowColor()) < 0)
       BufferOverflow();
   }

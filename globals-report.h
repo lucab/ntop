@@ -114,6 +114,7 @@ extern void printMulticastStats(int sortedColumn /* ignored so far */,
 extern void addPageIndicator(char *url, u_int beginIdx,
 			     u_int numEntries, u_int linesPerPage,
 			     int revertOrder, int numCol);
+extern void printTrafficStatistics();
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum);
 extern void printAllSessionsHTML(char* host, int actualDeviceId);
 extern void printLocalRoutersList(int actualDeviceId);
