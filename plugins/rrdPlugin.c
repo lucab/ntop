@@ -82,6 +82,11 @@ static Counter rrdGraphicRequests=0, rrdGraphicReuse=0;
 static DIR * workDir;
 static struct dirent *workDirent;
 
+#ifdef RRD_DEBUG
+char startTimeBuf[32], endTimeBuf[32], fileTimeBuf[32];
+struct tm workT;
+#endif
+
 /* forward */
 int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average);
@@ -422,9 +427,9 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     rc = stat(fname, &reusebuf);
 
 #if RRD_DEBUG >= 2
-    strftime(startTimeBuf, sizeof(startTimeBuf), "%H:%M:%S", localtime_r(&start_tm, &t));
-    strftime(endTimeBuf,   sizeof(endTimeBuf), "%H:%M:%S", localtime_r(&end_tm, &t));
-    strftime(fileTimeBuf,  sizeof(fileTimeBuf), "%H:%M:%S", localtime_r(&reusebuf.st_mtime, &t));
+    strftime(startTimeBuf, sizeof(startTimeBuf), "%H:%M:%S", localtime_r(&start_tm, &workT));
+    strftime(endTimeBuf,   sizeof(endTimeBuf), "%H:%M:%S", localtime_r(&end_tm, &workT));
+    strftime(fileTimeBuf,  sizeof(fileTimeBuf), "%H:%M:%S", localtime_r(&reusebuf.st_mtime, &workT));
     traceEvent(TRACE_INFO, "RRD_DEBUG: Reuse of '%s' (%s > %s > %s)? is %spossible...\n",
 	       fname,
 	       startTimeBuf,
@@ -1043,20 +1048,17 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     } while (sleep_tm < 0);
 
 #if RRD_DEBUG >= 1
-    strftime(endTime, sizeof(endTime), "%Y-%m-%d %H:%M:%S", localtime_r(&end_tm, &t));
+    strftime(endTime, sizeof(endTime), "%Y-%m-%d %H:%M:%S", localtime_r(&end_tm, &workT));
     traceEvent(TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds (interval %d, end at %s)\n", 
 	       sleep_tm, 
 	       dumpInterval,
 	       endTime);
 #endif
 
+    HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...", sleep_tm);
     sleep(sleep_tm);
-
-#if RRD_DEBUG >= 1
-    traceEvent(TRACE_INFO, "RRD_DEBUG: Woke");
-#endif
-
     if(!myGlobals.capturePackets) return(NULL);
+    HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...woke", sleep_tm);
 
     numRuns++;
 
@@ -1313,8 +1315,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  }
     }
 
-#ifdef SHOW_NTOP_HEARTBEAT
-    traceEvent(TRACE_INFO, "RRD: %lu RRDs updated (%lu total updates)",
+#ifdef RRD_DEBUG
+    traceEvent(TRACE_INFO, "RRD_DEBUG: %lu RRDs updated (%lu total updates)\n",
 	       (unsigned long)(numTotalRRDs-numRRDs), (unsigned long)numTotalRRDs);
 #endif
 
@@ -1328,8 +1330,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     purgeCountErrors=0;
 
     sprintf(rrdPath, "%s/%s", myGlobals.rrdPath, rrd_subdirs[0]);
-#ifdef SHOW_NTOP_HEARTBEAT
-    traceEvent(TRACE_INFO, "RRD: beginning old file purge (%s).", rrdPath);
+#ifdef RRD_DEBUG
+    traceEvent(TRACE_INFO, "RRD_DEBUG: beginning old file purge (%s).", rrdPath);
 #endif
 
     workDir = opendir(rrdPath);
@@ -1343,7 +1345,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 #ifdef RRD_DEBUG
 	      strftime(fileTimeBuf, sizeof(fileTimeBuf), 
 		       "%H:%M:%S", 
-		       localtime_r(&statbuf.st_mtime, &t));
+		       localtime_r(&statbuf.st_mtime, &workT));
 	      traceEvent(TRACE_INFO, "RRD_DEBUG: oldfilepurge %s, mod @ %s\n",
 			 fname,
 			 fileTimeBuf);
@@ -1358,7 +1360,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  }
 	}
       }
-#ifdef SHOW_NTOP_HEARTBEAT
+#ifdef RRD_DEBUG
       traceEvent(TRACE_INFO, "RRD: finished old file purge (%d files, %d deleted, %d errors).",
 		 purgeCountFiles,
 		 purgeCountUnlink,
