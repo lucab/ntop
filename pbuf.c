@@ -987,7 +987,7 @@ static void processIpPkt(const u_char *bp,
 	char WSS[3], _MSS[5];
 	struct tcphdr *tcp = (struct tcphdr*)(bp+hlen);
 	u_char *tcp_opt = (u_char *)(tcp + 1);
-	u_char *tcp_data = (u_char *)((int)tcp + tcp->th_off * 4);
+	u_char *tcp_data = (u_char *)((int)tcp + tp.th_off * 4);
 
 	if (tcp->th_flags & TH_SYN)   /* only SYN or SYN-2ACK packets */
 	  {
