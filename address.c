@@ -1033,6 +1033,12 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   memcpy(&transactionId, cp, 2); transactionId = ntohs(transactionId);
   memcpy(&flags, &cp[2], 2); flags = ntohs(flags);
 
+  /* reset variables */
+  memset(host_aliases, 0, sizeof(host_aliases));
+  memset(host_aliases_len, 0, sizeof(host_aliases_len));
+  memset(hostbuf, 0, sizeof(hostbuf));
+  memset(addr_list, 0, sizeof(addr_list));
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "id=0x%X - flags=0x%X\n", transactionId, flags);
 #endif

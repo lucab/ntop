@@ -288,7 +288,7 @@ static FilterRule* parseFilterRule(u_short ruleType,
 
 	strncpy(tmpString, matchString, sizeof(tmpString));
 	re_err = (const char *) re_compile_pattern(tmpString, strlen(tmpString), rule->pktContentPattern);
-	if (re_err) {
+	if(re_err) {
 	  traceEvent(TRACE_INFO, "Skipping line %d (invalid pattern specified)\n", lineNum);
 	  freeFilterRule(rule);
 	  return(NULL);
@@ -297,6 +297,7 @@ static FilterRule* parseFilterRule(u_short ruleType,
 	rule->pktContentPattern->fastmap = (char*)malloc(256);
 	if (re_compile_fastmap(rule->pktContentPattern)) {
 	  traceEvent(TRACE_INFO, "Skipping line %d (invalid pattern specified, compile error)\n", lineNum);
+	  free(rule->pktContentPattern->fastmap);
 	  freeFilterRule(rule);
 	  return(NULL);
 	}
