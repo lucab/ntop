@@ -1631,7 +1631,7 @@ static void setSflowInSocket() {
   }
 
   if((myGlobals.sflowInPort > 0) && (myGlobals.sflowDeviceId == -1)) {
-    myGlobals.sflowDeviceId = createDummyInterface("Sflow-device");
+    myGlobals.sflowDeviceId = createDummyInterface(SFLOW_DEVICE_NAME);
     setSflowInterfaceMatrix();
     myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 1;
   }
@@ -1904,7 +1904,7 @@ static void initSflowInSocket(void) {
   }
 
   if((myGlobals.sflowInSocket > 0) && (myGlobals.sflowDeviceId == -1)) {
-    myGlobals.sflowDeviceId = createDummyInterface("sFlow-device");
+    myGlobals.sflowDeviceId = createDummyInterface(SFLOW_DEVICE_NAME);
     setSflowInterfaceMatrix();
     myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 1;
   }
@@ -1969,7 +1969,7 @@ static void setSflowOutSocket() {
   }
 
   if((myGlobals.sflowOutSocket != 0) && (myGlobals.sflowDeviceId == 1)) {
-    myGlobals.sflowDeviceId = createDummyInterface("sFlow-device");
+    myGlobals.sflowDeviceId = createDummyInterface(SFLOW_DEVICE_NAME);
     setSflowInterfaceMatrix();
     myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 1;
   }

@@ -104,7 +104,7 @@ static void setNetFlowInterfaceMatrix() {
 
 static void setNetFlowInSocket() {
   struct sockaddr_in sockIn;
-  int sockopt = 1;
+  int sockopt = 1, i;
 
   if(myGlobals.netFlowInSocket > 0) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Collector terminated");
@@ -133,7 +133,26 @@ static void setNetFlowInSocket() {
   }
 
   if((myGlobals.netFlowInPort > 0) &&(myGlobals.netFlowDeviceId == -1)) {
-    myGlobals.netFlowDeviceId = createDummyInterface("NetFlow-device");
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if(!strcmp(myGlobals.device[i].name, NETFLOW_DEVICE_NAME)) {
+        myGlobals.netFlowDeviceId = i;
+        break;
+      }
+    }
+    if(myGlobals.netFlowDeviceId > -1) {
+      if(myGlobals.device[myGlobals.netFlowDeviceId].dummyDevice == 1) {
+        if(myGlobals.device[myGlobals.netFlowDeviceId].activeDevice == 1) {
+          traceEvent(CONST_TRACE_ERROR, NETFLOW_DEVICE_NAME " is already active - request ignored");
+          return;
+        }
+        traceEvent(CONST_TRACE_INFO,
+                   NETFLOW_DEVICE_NAME " reusing existing device, %d",
+                   myGlobals.netFlowDeviceId);
+      }
+    } else {
+      myGlobals.netFlowDeviceId = createDummyInterface(NETFLOW_DEVICE_NAME);
+    }
+
     setNetFlowInterfaceMatrix();
     myGlobals.device[myGlobals.netFlowDeviceId].activeDevice = 1;
   }
@@ -1182,7 +1201,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	     "<b>NOTE</b>:<ol>"
 	     "<li>Use 0 as port, and 0.0.0.0 as IP address to disable export/collection. "
                  "Use a space to disable the white / black lists."
-	     "<li>The virtual NIC, 'NetFlow-device' is activated only when incoming flow "
+	     "<li>The virtual NIC, '" NETFLOW_DEVICE_NAME "' is activated only when incoming flow "
                  "capture is enabled."
 	     "<li>NetFlow packets are associated with this separate, virtual device and are "
                  "not mixed with captured packets."

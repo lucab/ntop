@@ -1648,6 +1648,8 @@ u_int createDummyInterface(char *ifName) {
   u_int mallocLen, deviceId = myGlobals.numDevices;
   NtopInterface *tmpDevice;
 
+  traceEvent(CONST_TRACE_INFO, "Creating dummy interface, '%s'", ifName);
+
   mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
   tmpDevice = (NtopInterface*)malloc(mallocLen);
   memset(tmpDevice, 0, mallocLen);

@@ -686,6 +686,12 @@
 #define MAX_NUM_DEVICES                     32
 
 /*
+ * Display name for netFlow/sFlow 'dummy' or virtual devices
+ */
+#define NETFLOW_DEVICE_NAME                 "NetFlow-device"
+#define SFLOW_DEVICE_NAME                   "sFlow-device"
+
+/*
  * This defines the maximum number of entries in the ntop pwFile
  * note that both 'users' and 'urls' are stored in here.
  */
