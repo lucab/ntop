@@ -1,0 +1,71 @@
+/* Luca Deri 1st Semptember 2000 */
+
+body
+{font-family: Helvetica, Arial, sans-serif;
+font-size: 10pt}
+
+th
+{font-family: Helvetica, Arial, sans-serif;
+font-size: 10pt;
+font-weight: bold}
+
+tbody
+{}
+
+td
+{font-family: Helvetica, Arial, sans-serif;
+font-size: 10pt}
+
+address
+{font-family: Helvetica, Arial, sans-serif;
+font-size: 8pt}
+
+h5
+{font-family: Helvetica, Arial, sans-serif;
+font-size: 8pt}
+
+table
+{}
+
+form
+{font-family: Helvetica, Arial, sans-serif;
+font-size: 10pt}
+
+h1
+{font-family: Helvetica, Verdana, Arial, sans-serif;
+font-size: 16pt;
+font-weight: bold}
+
+A:link
+{color: blue;
+font-family: Helvetica, Arial, sans-serif;
+font-size: 10pt;
+text-decoration: none}
+
+A:visited
+{color: blue;
+font-family: Helvetica, Arial, sans-serif;
+font-size: 10pt;
+text-decoration: none}
+
+A:hover
+{color: red;
+font-family: Helvetica, Arial, sans-serif;
+font-size: 10pt;
+text-decoration: underline}
+
+A:link.nav
+{color: #000000;
+font-family: Helvetica, Verdana, Arial, sans-serif}
+
+A:visited.nav
+{color: #000000;
+font-family: Helvetica, Verdana, Arial, sans-serif}
+
+A:hover.nav
+{color: red;
+font-family: Helvetica, Verdana, Arial, sans-serif}
+
+.nav
+{color: #000000;
+font-family: Helvetica, Verdana, Arial, sans-serif}
