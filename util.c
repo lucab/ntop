@@ -1115,8 +1115,10 @@ int _releaseMutex(PthreadMutex *mutexId,
 
   if(!mutexId->isLocked) {
     traceEvent(CONST_TRACE_WARNING,
-	       "WARNING: releaseMutex() call with an UN-LOCKED mutex [%s:%d]\n",
-	       fileName, fileLine);
+	       "WARNING: releaseMutex() call with an UN-LOCKED mutex [%s:%d] last unlock [pid %d, %s:%d]\n",
+	       fileName, fileLine,
+               mutexId->unlockPid, mutexId->unlockFile, mutexId->unlockLine);
+
   }
 
 #ifdef SEMAPHORE_DEBUG
