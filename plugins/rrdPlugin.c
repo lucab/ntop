@@ -134,28 +134,11 @@ void revertSlash(char *str, int mode) {
 
 void revertDoubleColumn(char *str) {
   int i, j;
-  char str1[384];
+  char str1[512];
   
   for(i=0, j=0; str[i] != '\0'; i++) {
     if(str[i] == ':') {
       str1[j++] = '\\';
-      str1[j++] = str[i];
-    } else {
-      str1[j++] = str[i];
-    }
-  }
-  
-  str1[j] = '\0';
-  strcpy(str, str1);
-}
-
-void doubleSlash(char *str) {
-  int i, j;
-  char str1[384];
-  
-  for(i=0, j=0; str[i] != '\0'; i++) {
-    if(str[i] == '\\') {
-      str1[j++] = str[i];
       str1[j++] = str[i];
     } else {
       str1[j++] = str[i];
@@ -219,14 +202,15 @@ void mkdir_p(char *path) {
 
 int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average) {
-  char *argv[32], path[256];
+  char *argv[32], path[512];
   int argc = 0, rc;
   time_t        start,end;
   unsigned long step, ds_cnt,i;
   rrd_value_t   *data,*datai, _total, _val;
   char          **ds_namv;
 
-  sprintf(path, "%s/%s/%s", myGlobals.rrdPath, rrdPath, rrdFilePath);
+  snprintf(path, sizeof(path), "%s/%s/%s", 
+	   myGlobals.rrdPath, rrdPath, rrdFilePath);
 
 #ifdef WIN32
   revertSlash(path, 0);
@@ -287,7 +271,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
 
-  sprintf(path, "%s/%s", myGlobals.rrdPath, rrdPath);
+  snprintf(path, sizeof(path), "%s/%s", myGlobals.rrdPath, rrdPath);
 
 #ifdef WIN32
   revertSlash(path, 0);
@@ -412,10 +396,12 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
   struct stat statbuf;
   int argc = 0, rc, x, y;
 
-  sprintf(path, "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
+  snprintf(path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
+
   /* startTime[4] skips the 'now-' */
-  sprintf(fname, "%s/%s/%s-%s%s%s", myGlobals.rrdPath, rrd_subdirs[0], startTime, rrdPrefix, rrdName,
-	  CHART_FORMAT);
+  snprintf(fname, sizeof(fname), "%s/%s/%s-%s%s%s", 
+	   myGlobals.rrdPath, rrd_subdirs[0], startTime, rrdPrefix, rrdName,
+	   CHART_FORMAT);
 
 #ifdef WIN32
   revertSlash(path, 0);
@@ -492,7 +478,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
   if(value == 0) return;
 
-  sprintf(path, "%s%s.rrd", hostPath, key);
+  snprintf(path, sizeof(path), "%s%s.rrd", hostPath, key);
 
 #ifdef WIN32
   revertSlash(path, 0);
@@ -636,9 +622,9 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
     */
 
-    sprintf(cmd, "%u:u", rrdTime-10); /* u = undefined */
+    snprintf(cmd, sizeof(cmd), "%u:u", rrdTime-10); /* u = undefined */
   } else {
-    sprintf(cmd, "%u:%u", rrdTime, (unsigned long)value);
+    snprintf(cmd, sizeof(cmd), "%u:%u", rrdTime, (unsigned long)value);
   }
 
   argv[argc++] = cmd;
@@ -743,7 +729,7 @@ static void commonRRDinit(void) {
   shownCreate=0;
 
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
-    sprintf(value, "%d", DEFAULT_RRD_INTERVAL);
+    snprintf(value, sizeof(value), "%d", DEFAULT_RRD_INTERVAL);
     storePrefsValue("rrd.dataDumpInterval", value);
     dumpInterval = DEFAULT_RRD_INTERVAL;
   } else {
@@ -751,7 +737,7 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dataDumpHours", value, sizeof(value)) == -1) {
-    sprintf(value, "%d", DEFAULT_RRD_HOURS);
+    snprintf(value, sizeof(value), "%d", DEFAULT_RRD_HOURS);
     storePrefsValue("rrd.dataDumpHours", value);
     dumpHours = DEFAULT_RRD_HOURS;
   } else {
@@ -759,7 +745,7 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dataDumpDays", value, sizeof(value)) == -1) {
-    sprintf(value, "%d", DEFAULT_RRD_DAYS);
+    snprintf(value, sizeof(value), "%d", DEFAULT_RRD_DAYS);
     storePrefsValue("rrd.dataDumpDays", value);
     dumpDays = DEFAULT_RRD_DAYS;
   } else {
@@ -767,7 +753,7 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dataDumpMonths", value, sizeof(value)) == -1) {
-    sprintf(value, "%d", DEFAULT_RRD_MONTHS);
+    snprintf(value, sizeof(value), "%d", DEFAULT_RRD_MONTHS);
     storePrefsValue("rrd.dataDumpMonths", value);
     dumpMonths = DEFAULT_RRD_MONTHS;
   } else {
@@ -810,7 +796,7 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dataDumpDetail", value, sizeof(value)) == -1) {
-    sprintf(value, "%d", CONST_RRD_DETIL_DEFAULT);
+    snprintf(value, sizeof(value), "%d", CONST_RRD_DETIL_DEFAULT);
     storePrefsValue("rrd.dataDumpDetail", value);
     dumpDetail = CONST_RRD_DETIL_DEFAULT;
   } else {
@@ -992,15 +978,15 @@ static void handleRRDHTTPrequest(char* url) {
       dumpInterfaces=_dumpInterfaces;
       dumpMatrix=_dumpMatrix;
       dumpDetail = _dumpDetail;
-      sprintf(buf, "%d", dumpInterval);   storePrefsValue("rrd.dataDumpInterval", buf);
-      sprintf(buf, "%d", dumpHours);      storePrefsValue("rrd.dataDumpHours", buf);
-      sprintf(buf, "%d", dumpDays);       storePrefsValue("rrd.dataDumpDays", buf);
-      sprintf(buf, "%d", dumpMonths);     storePrefsValue("rrd.dataDumpMonths", buf);
-      sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dataDumpFlows", buf);
-      sprintf(buf, "%d", dumpHosts);      storePrefsValue("rrd.dataDumpHosts", buf);
-      sprintf(buf, "%d", dumpInterfaces); storePrefsValue("rrd.dataDumpInterfaces", buf);
-      sprintf(buf, "%d", dumpMatrix);     storePrefsValue("rrd.dataDumpMatrix", buf);
-      sprintf(buf, "%d", dumpDetail);     storePrefsValue("rrd.dataDumpDetail", buf);
+      snprintf(buf, sizeof(buf), "%d", dumpInterval);   storePrefsValue("rrd.dataDumpInterval", buf);
+      snprintf(buf, sizeof(buf), "%d", dumpHours);      storePrefsValue("rrd.dataDumpHours", buf);
+      snprintf(buf, sizeof(buf), "%d", dumpDays);       storePrefsValue("rrd.dataDumpDays", buf);
+      snprintf(buf, sizeof(buf), "%d", dumpMonths);     storePrefsValue("rrd.dataDumpMonths", buf);
+      snprintf(buf, sizeof(buf), "%d", dumpFlows);      storePrefsValue("rrd.dataDumpFlows", buf);
+      snprintf(buf, sizeof(buf), "%d", dumpHosts);      storePrefsValue("rrd.dataDumpHosts", buf);
+      snprintf(buf, sizeof(buf), "%d", dumpInterfaces); storePrefsValue("rrd.dataDumpInterfaces", buf);
+      snprintf(buf, sizeof(buf), "%d", dumpMatrix);     storePrefsValue("rrd.dataDumpMatrix", buf);
+      snprintf(buf, sizeof(buf), "%d", dumpDetail);     storePrefsValue("rrd.dataDumpDetail", buf);
       if(hostsFilter != NULL) free(hostsFilter);
       if (_hostsFilter == NULL) {
           hostsFilter  = strdup("");
@@ -1373,7 +1359,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
             adjHostName = dotToSlash(hostKey);
 
-	    sprintf(rrdPath, "%s/interfaces/%s/hosts/%s/",
+	    snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
 		    myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName, 
                     adjHostName
                    );
@@ -1455,7 +1441,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Updating host %s", hostKey);
 #endif
 
-		sprintf(rrdPath, "%s/interfaces/%s/hosts/%s/IP_",
+		snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/IP_",
                         myGlobals.rrdPath,  
 			myGlobals.device[devIdx].humanFriendlyName,
                         adjHostName
@@ -1463,11 +1449,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 		for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 		  char key[128];
-		  sprintf(key, "%sSentBytes", myGlobals.protoIPTrafficInfos[j]);
+		  snprintf(key, sizeof(key), "%sSentBytes", myGlobals.protoIPTrafficInfos[j]);
 		  updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].sentLoc.value+
 				el->protoIPTrafficInfos[j].sentRem.value);
 
-		  sprintf(key, "%sRcvdBytes", myGlobals.protoIPTrafficInfos[j]);
+		  snprintf(key, sizeof(key), "%sRcvdBytes", myGlobals.protoIPTrafficInfos[j]);
 		  updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].rcvdLoc.value+
 				el->protoIPTrafficInfos[j].rcvdFromRem.value);
 		}
@@ -1505,7 +1491,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
       while(list != NULL) {
 	if(list->pluginStatus.activePlugin) {
-	  sprintf(rrdPath, "%s/flows/%s/", myGlobals.rrdPath, list->flowName);
+	  snprintf(rrdPath, sizeof(rrdPath), "%s/flows/%s/", myGlobals.rrdPath, list->flowName);
 	  mkdir_p(rrdPath);
 
 	  updateCounter(rrdPath, "packets", list->packets.value);
@@ -1523,7 +1509,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if(myGlobals.device[devIdx].virtualDevice) continue;
 
-	sprintf(rrdPath, "%s/interfaces/%s/", myGlobals.rrdPath,  myGlobals.device[devIdx].humanFriendlyName);
+	snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", myGlobals.rrdPath, 
+		 myGlobals.device[devIdx].humanFriendlyName);
 	mkdir_p(rrdPath);
 
 	updateCounter(rrdPath, "ethernetPkts",  myGlobals.device[devIdx].ethernetPkts.value);
@@ -1605,7 +1592,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 		if(myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value > 0) {
 
-		  sprintf(rrdPath, "%s/interfaces/%s/matrix/%s/%s/", myGlobals.rrdPath,
+		  snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/matrix/%s/%s/", myGlobals.rrdPath,
 			  myGlobals.device[k].humanFriendlyName,
 			  myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
 			  myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
@@ -1641,7 +1628,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     purgeCountUnlink=0;
     purgeCountErrors=0;
 
-    sprintf(rrdPath, "%s/%s", myGlobals.rrdPath, rrd_subdirs[0]);
+    snprintf(rrdPath, sizeof(rrdPath), "%s/%s", myGlobals.rrdPath, rrd_subdirs[0]);
 #ifdef RRD_DEBUG
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: beginning old file purge (%s).", rrdPath);
 #endif
@@ -1651,7 +1638,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
       while((workDirent = readdir(workDir)) != NULL) {
 	if(workDirent->d_name[0] != '.') {
 	  purgeCountFiles++;
-	  sprintf(fname, "%s/%s", rrdPath, workDirent->d_name);
+	  snprintf(fname, sizeof(fname), "%s/%s", rrdPath, workDirent->d_name);
 	  if(stat(fname, &statbuf) == 0) {
 	    if (myGlobals.actTime - statbuf.st_mtime > 2 * dumpInterval) {
 #ifdef RRD_DEBUG
@@ -1714,7 +1701,7 @@ static int initRRDfunct(void) {
   return(-1);
 #endif
 
-  sprintf(dname, "%s", myGlobals.rrdPath);
+  snprintf(dname, sizeof(dname), "%s", myGlobals.rrdPath);
   if (_mkdir(dname) == -1) { 
     if (errno != EEXIST) {
       traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)\n", errno, dname);
@@ -1728,7 +1715,7 @@ static int initRRDfunct(void) {
 
   for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
       
-    sprintf(dname, "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
+    snprintf(dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
     if (_mkdir(dname) == -1) {
       if (errno != EEXIST) {
 	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)\n", errno, dname);
@@ -1792,7 +1779,7 @@ static PluginInfo rrdPluginInfo[] = {
 #else
    PluginInfo* PluginEntryFctn(void)
 #endif
-   {
+{
      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Welcome to %s. (C) 2002 by Luca Deri.\n",
 		rrdPluginInfo->pluginName);
      
