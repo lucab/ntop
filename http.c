@@ -726,7 +726,6 @@ static void returnHTTPaccessForbidden(void) {
 }
 
 void returnHTTPpageNotFound(void) {
-traceEvent(CONST_TRACE_INFO, "TEMP: myGlobals.numUnsuccessfulNotfound[]++");
   myGlobals.numUnsuccessfulNotfound[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_404);
 }
