@@ -1651,9 +1651,6 @@ void startSniffer(void) {
 }
 
 /* ***************************** */
-/* NOTE: As of 2.0.99RC2, this was determined to be dead code.
- *        It has been retained in the source for future use.
- */
 
 u_int createDummyInterface(char *ifName) {
   u_int mallocLen, deviceId;
@@ -1676,6 +1673,7 @@ u_int createDummyInterface(char *ifName) {
   resetDevice(deviceId);
   myGlobals.device[deviceId].network.s_addr = 0xFFFFFFFF;
   myGlobals.device[deviceId].netmask.s_addr = 0xFFFFFFFF;
+  myGlobals.device[deviceId].numHosts = myGlobals.device[0].numHosts;
   myGlobals.device[deviceId].name = strdup(ifName);
   myGlobals.device[deviceId].humanFriendlyName = strdup(ifName);
   myGlobals.device[deviceId].virtualDevice = 0;

@@ -497,9 +497,9 @@ char* getHostName(HostTraffic *el, short cutName) {
   accessAddrResMutex("getHostName");
   tmpStr = el->hostSymIpAddress;
 
-  if(tmpStr == NULL) {
+  if((tmpStr == NULL) || (tmpStr[0] == '\0')) {
     /* The DNS is still getting the entry name */
-    if(el->hostNumIpAddress[0] == '\0')
+    if(el->hostNumIpAddress[0] != '\0')
       strncpy(buf[bufIdx], el->hostNumIpAddress, 80);
     else
       strncpy(buf[bufIdx], el->ethAddressString, 80);

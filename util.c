@@ -535,6 +535,28 @@ unsigned short _pseudoLocalAddress(struct in_addr *addr) {
 
 /* ********************************* */
 
+unsigned short deviceLocalAddress(struct in_addr *addr, int deviceId) {
+  int rc;
+
+  if((addr->s_addr & myGlobals.device[deviceId].netmask.s_addr) == myGlobals.device[deviceId].network.s_addr)
+    rc = 1;
+  else
+    rc = 0;
+
+#if DEBUG
+  {
+    char buf[32], buf1[32];
+    traceEvent(CONST_TRACE_INFO, "DEBUG: comparing [%s/%s]: %d\n",
+	       _intoa(*addr, buf, sizeof(buf)),
+	       _intoa(myGlobals.device[deviceId].network, buf1, sizeof(buf1)), rc);
+  }
+#endif
+
+  return(rc);
+}
+
+/* ********************************* */
+
 /* This function returns true when a host is considered local
    as specified using the 'm' flag */
 unsigned short isPseudoLocalAddress(struct in_addr *addr) {

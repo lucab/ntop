@@ -66,9 +66,24 @@ static void setNetFlowInSocket() {
 	       myGlobals.netFlowInPort);
   }
 
-  if((myGlobals.netFlowInPort > 0) && (myGlobals.netFlowDeviceId == 0))
+  if((myGlobals.netFlowInPort > 0) && (myGlobals.netFlowDeviceId == 0)) {
     myGlobals.netFlowDeviceId = createDummyInterface("NetFlow-device");
 
+    /* 
+       Use the interface 0 as default.
+       We'll need to add a new field into the netflow preferences to specify
+       the local network for this interface
+    */
+    myGlobals.device[myGlobals.netFlowDeviceId].numHosts       = myGlobals.device[0].numHosts;
+    myGlobals.device[myGlobals.netFlowDeviceId].network.s_addr = myGlobals.device[0].network.s_addr;
+    myGlobals.device[myGlobals.netFlowDeviceId].netmask.s_addr = myGlobals.device[0].netmask.s_addr;
+
+    myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[myGlobals.netFlowDeviceId].numHosts*
+											 myGlobals.device[myGlobals.netFlowDeviceId].numHosts,
+											 sizeof(TrafficEntry*));
+    myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
+												    myGlobals.device[myGlobals.netFlowDeviceId].numHosts);      
+  }
   myGlobals.mergeInterfaces = 0; /* Use different devices */
 }
 
@@ -248,6 +263,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
       }
 
       ctr.value = len;
+      updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
       updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
 
       if(subnetPseudoLocalHost(srcHost)) {
@@ -546,6 +562,8 @@ static void handleNetflowHTTPrequest(char* url) {
     }
   }
 
+  printHTMLheader("Plugin Preferences", 0);
+
   sendString("<table border=0>\n<tr><td><table border>");
 
   sendString("<TR "TR_ON"><TH "TH_BG">Incoming Flows</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
@@ -592,11 +610,13 @@ static void handleNetflowHTTPrequest(char* url) {
 	     "<li>You can switch devices using this <A HREF=/switch.html>link</A>."
 	     "<li>Due to the way ntop works, NetFlow export capabilities are limited. If you need a fast,<br>"
 	     " light, memory savvy, highly configurable NetFlow probe, you better give <b><A HREF=http://www.ntop.org/nProbe.html>nProbe</A></b> a try."
+	     "<li>If you look for a cheap hardware NetFlow probe you can use <b><A HREF=http://www.ntop.org/nBox.html>nBox</A></b> <IMG SRC=/nboxLogo.gif>"
 	     "</ol></td></tr>\n");
   sendString("</table><p><hr><p>\n");
 
   /* ************************ */
 
+  printHTMLheader("Flow Export Preferences", 0);
   sendString("<TABLE BORDER>\n");
   sendString("<TR "TR_ON"><TH "TH_BG">Interface Name</TH><TH "TH_BG">NetFlow Enabled</TH></TR>\n");
 
@@ -623,6 +643,8 @@ static void handleNetflowHTTPrequest(char* url) {
 /* ************************************* */
 
   if((myGlobals.numNetFlowsPktsRcvd > 0) || (myGlobals.numNetFlowsPktsSent > 0)) {
+    sendString("<hr>\n");
+    printHTMLheader("Incoming Flow Statistics", 0);
     sendString("<TABLE BORDER>\n");
     sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
 
@@ -650,7 +672,7 @@ static void handleNetflowHTTPrequest(char* url) {
       for(i=0; i<MAX_NUM_PROBES; i++) {
 	if(probeList[i].probeAddr.s_addr == 0) break;
 
-	if(snprintf(buf, sizeof(buf), "%s [%s pkts]\n",
+	if(snprintf(buf, sizeof(buf), "%s [%s pkts]<br>\n",
 		    _intoa(probeList[i].probeAddr, buf, sizeof(buf)),
 		    formatPkts(probeList[i].pkts)) < 0)
 	  BufferTooShort();
@@ -676,7 +698,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("<p></CENTER>\n");
   sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");
-  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
+  sendString("<p align=right>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</p>\n");
 
   printHTMLtrailer();
 }

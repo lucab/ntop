@@ -503,8 +503,8 @@ void updateTrafficMatrix(HostTraffic *srcHost,
 			 HostTraffic *dstHost,
 			 TrafficCounter length, 
 			 int actualDeviceId) {
-  if((subnetLocalHost(srcHost) || multicastHost(srcHost))
-     && (subnetLocalHost(dstHost) || multicastHost(dstHost))
+  if((deviceLocalAddress(&srcHost->hostIpAddress, actualDeviceId) || multicastHost(srcHost))
+     && (deviceLocalAddress(&dstHost->hostIpAddress, actualDeviceId) || multicastHost(dstHost))
      && (!broadcastHost(srcHost))
      && (!broadcastHost(dstHost))) {
     unsigned long a, b, id;    
