@@ -2121,6 +2121,11 @@ void fillDomainName(HostTraffic *el) {
 
   i = strlen(el->hostSymIpAddress)-1;
 
+  if(el->hostSymIpAddress[i] == '\n') {
+    el->hostSymIpAddress[i] = '\0';
+    i--;
+  }
+
   while(i > 0)
     if(el->hostSymIpAddress[i] == '.')
       break;

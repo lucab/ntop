@@ -1213,7 +1213,7 @@ void dumpNtopHashes(char* options) {
 
 void dumpNtopTrafficInfo(char* options) {
   char buf[256], intoabuf[32], key[16];
-  int numEntries=0, languageType=DEFAULT_LANGUAGE, i, j;
+  int numEntries=0, languageType=DEFAULT_LANGUAGE, i;
 
    memset(key, 0, sizeof(key));
 
