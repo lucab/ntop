@@ -696,8 +696,6 @@ void unescape_url(char *url) {
 static void commonRRDinit(void) {
   char value[64];
 
-  /* **************************** */
-
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
     sprintf(value, "%d", DEFAULT_RRD_INTERVAL);
     storePrefsValue("rrd.dataDumpInterval", value);
@@ -742,8 +740,11 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.rrdPath", value, sizeof(value)) == -1) {
-    myGlobals.rrdPath = strdup(myGlobals.dbPath);
-    strcat(myGlobals.rrdPath, "/rrd");
+    char *thePath = "/rrd";
+	int len = strlen(myGlobals.dbPath)+strlen(thePath)+1;
+
+	myGlobals.rrdPath = (char*)malloc(len);
+	snprintf(myGlobals.rrdPath, len, "%s%s", myGlobals.dbPath, thePath);
     storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
   } else {
     myGlobals.rrdPath  = strdup(value);
