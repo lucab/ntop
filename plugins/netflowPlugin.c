@@ -1240,11 +1240,11 @@ static void handleNetflowHTTPrequest(char* url) {
 
   if((myGlobals.numNetFlowsPktsRcvd > 0) ||(myGlobals.numNetFlowsPktsSent > 0)) {
     sendString("<hr>\n");
-    printHTMLheader("Incoming Flow Statistics", 0);
+    printHTMLheader("Flow Statistics", 0);
     sendString("<TABLE BORDER>\n");
-    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Received Flows</TH></TR>\n");
 
     if(myGlobals.numNetFlowsPktsRcvd > 0) {
+      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Received Flows</TH></TR>\n");
       sendString("<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>");
 
       for(i=0; i<MAX_NUM_PROBES; i++) {
@@ -1560,8 +1560,9 @@ static void handleNetflowHTTPrequest(char* url) {
     }
 
     if(myGlobals.numNetFlowsPktsSent > 0) {
+      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Sent Flows</TH></TR>\n");
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Exported Flows</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT COLSPAN=3># Exported Flows</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsPktsSent)) < 0)
 	BufferTooShort();
       sendString(buf);
