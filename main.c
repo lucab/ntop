@@ -860,12 +860,9 @@ int main(int argc, char *argv[]) {
   initNtopGlobals(argc, argv);
 #endif
 
-  myGlobals.startedAs = strdup(startedAs);
-
-  free(startedAs);
+  myGlobals.startedAs = startedAs;
   free(cmdLineBuffer);
   free(readBuffer);
-
 
   /*
    * Parse command line options to the application via standard system calls
