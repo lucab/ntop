@@ -1,0 +1,29 @@
+<html>
+<HEAD>
+<LINK REL=stylesheet HREF=/style.css type="text/css">
+</HEAD>
+<BODY BACKGROUND=/white_bg.gif BGCOLOR="#FFFFFF" LINK=blue VLINK=blue>
+
+<center><H1>ntop Error Codes</H1></center>
+<p>
+<hr>
+<p>
+<ol>
+<p><li><A NAME=#1><b>Wrong network mask or bridging enabled</b></A><br>
+ntop will report this problem for those hosts that apparently have a wrong netmask. ntop detects this problem when a host sends a packet to a broadcast address where the destination MAC address is not FF:FF:FF:FF:FF:FF. This could indicate that:
+<ul>
+<li> such host has a wrong netmask 
+<li>it is a bridge.
+</ul>
+
+<p><li><A NAME=#2><b>Duplicated MAC found for this IP address</b></A><br>
+ntop will report this problem for those hosts that for a single MAC address sport several IP addresses. This could indicate that:
+<ul>
+<li> Someone is sending spoofed packets
+<li> A host has a wrong netmask hence it routes packets to the default gateway that routes them to destination. This is quite common on networks where the netmask has changed and some of the hosts still use the old netmask.
+</ul>
+
+</ul>
+<hr>
+
+</body>
