@@ -647,23 +647,28 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       }
 
       if(!hostFound) {
-	int sz;
+        int ptrLen;
+        void *oldPtr = myGlobals.device[actualDeviceId].hash_hostTraffic;
 
-	list->idx = myGlobals.device[actualDeviceId].actualHashSize;
-	if(myGlobals.device[actualDeviceId].actualHashSize < 512)
-	  myGlobals.device[actualDeviceId].actualHashSize = 512;
-	else if(myGlobals.device[actualDeviceId].actualHashSize >= 4096)
-	  myGlobals.device[actualDeviceId].actualHashSize += 4096;
-	else
-	  myGlobals.device[actualDeviceId].actualHashSize *= 2; /* Double */
+        list->idx = myGlobals.device[actualDeviceId].actualHashSize;
+        if(myGlobals.device[actualDeviceId].actualHashSize < 512)
+          myGlobals.device[actualDeviceId].actualHashSize = 512;
+        else if(myGlobals.device[actualDeviceId].actualHashSize >= 4096)
+          myGlobals.device[actualDeviceId].actualHashSize += 4096;
+        else
+          myGlobals.device[actualDeviceId].actualHashSize *= 2; /* Double */
 
-	sz = myGlobals.device[actualDeviceId].actualHashSize*sizeof(struct hostTraffic*);
-	myGlobals.device[actualDeviceId].hash_hostTraffic = (struct hostTraffic**)realloc(myGlobals.device[actualDeviceId].hash_hostTraffic, sz);
-	memset(&myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx],
-	       0, sizeof(struct hostTraffic*)*(myGlobals.device[actualDeviceId].actualHashSize-list->idx));
+        ptrLen = sizeof(struct hostTraffic*);
+        ptrLen *= myGlobals.device[actualDeviceId].actualHashSize;
+	
+        myGlobals.device[actualDeviceId].hash_hostTraffic = (struct hostTraffic**)malloc(ptrLen);
+        memset(myGlobals.device[actualDeviceId].hash_hostTraffic, 0, ptrLen);
+        memcpy(myGlobals.device[actualDeviceId].hash_hostTraffic,
+               oldPtr, sizeof(struct hostTraffic*)*list->idx);
+        free(oldPtr);
+
 	traceEvent(TRACE_INFO, "Extending hash size [newSize=%d][deviceId=%d]",
-		   myGlobals.device[actualDeviceId].actualHashSize,
-		   actualDeviceId);
+		   myGlobals.device[actualDeviceId].actualHashSize, actualDeviceId);
       } else
 	list->idx = hostFound;
 

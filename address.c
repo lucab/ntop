@@ -72,6 +72,11 @@ static void resolveAddress(struct in_addr *hostAddr,
   StoredAddress storedAddress;
   int addr, i;
   struct hostent *hp = NULL;
+#ifdef HAVE_GETHOSTBYADDR_R
+  struct hostent _hp;
+  int h_errnop;
+  char buffer[512];
+#endif
   char* res;
   char keyBuf[16];
   char tmpBuf[96];
@@ -87,6 +92,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 
   if(snprintf(keyBuf, sizeof(keyBuf), "%u", addr) < 0)
     BufferTooShort();
+
   key_data.dptr = keyBuf;
   key_data.dsize = strlen(keyBuf)+1;
 
@@ -107,8 +113,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 #endif
 
   /* First check whether the address we search for is cached... */
-  if((data_data.dptr != NULL)
-     && (data_data.dsize == (sizeof(StoredAddress)+1))) {
+  if((data_data.dptr != NULL) && (data_data.dsize == (sizeof(StoredAddress)+1))) {
     StoredAddress *retrievedAddress;
 
     retrievedAddress = (StoredAddress*)data_data.dptr;
@@ -155,6 +160,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 #ifdef DNS_DEBUG
     traceEvent(TRACE_INFO, "Resolving %s...", intoa(*hostAddr));
 #endif
+
     theAddr.s_addr = ntohl(hostAddr->s_addr); /* big/little endian crap */
 
 #if !defined(WIN32) &&  !defined(AIX)
@@ -222,9 +228,12 @@ static void resolveAddress(struct in_addr *hostAddr,
 			  sizeof(struct in_addr), AF_INET,
 			  &error_num);
 #else /* default */
-    hp = (struct hostent*)gethostbyaddr((char*)&theAddr,
-					sizeof(struct in_addr),
-					AF_INET);
+#ifdef HAVE_GETHOSTBYADDR_R
+    hp = gethostbyaddr_r((const char*)&theAddr, sizeof(struct in_addr), AF_INET,
+			 &_hp, buffer, sizeof(buffer), &h_errnop);
+#else
+    hp = (struct hostent*)gethostbyaddr((char*)&theAddr, sizeof(struct in_addr), AF_INET);
+#endif
 #endif
 
     if (

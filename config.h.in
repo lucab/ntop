@@ -18,7 +18,12 @@
 /* Define if you OS lacks the getdomainname(2) function. */
 #undef NEED_GETDOMAINNAME
 
+/* Endianess checks */
+#undef NTOP_BIG_ENDIAN
+#undef NTOP_LITTLE_ENDIAN
+
 /* Define to have essential fallback. */
+#undef HAVE_UINT64_T
 #undef HAVE_U_INT64_T
 #undef HAVE_U_INT32_T
 #undef HAVE_U_INT16_T
@@ -73,6 +78,10 @@
 
 /* Define if you have backtrace */
 #undef HAVE_BACKTRACE
+
+/* Defines for endian-ness... */
+#undef NTOP_LITTLE_ENDIAN
+#undef NTOP_BIG_ENDIAN
 
 /* Define if you have the ctime_r function.  */
 #undef HAVE_CTIME_R
@@ -217,6 +226,9 @@
 
 /* Define if you have the <sys/stat.h> header file.  */
 #undef HAVE_SYS_STAT_H
+
+/* Define if you have the <sys/syslog.h> header file.  */
+#undef HAVE_SYS_SYSLOG_H
 
 /* Define if you have the <sys/time.h> header file.  */
 #undef HAVE_SYS_TIME_H
