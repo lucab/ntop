@@ -416,15 +416,52 @@ static float timeval_subtract (struct timeval x, struct timeval y) {
 
 /* ************************************ */
 
+static int cmpLastSeenFctn(const void *_a, const void *_b) {
+  HostTraffic **a = (HostTraffic **)_a;
+  HostTraffic **b = (HostTraffic **)_b;
+  Counter a_=0, b_=0, a_val, b_val;
+  float fa_=0, fb_=0;
+  short floatCompare=0, columnProtoId;
+
+  if((a == NULL) && (b != NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (1)");
+    return(1);
+  } else if((a != NULL) && (b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (2)");
+    return(-1);
+  } else if((a == NULL) && (b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (3)");
+    return(0);
+  }
+  if((*a == NULL) && (*b != NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (4)");
+    return(1);
+  } else if((*a != NULL) && (*b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (5)");
+    return(-1);
+  } else if((*a == NULL) && (*b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (6)");
+    return(0);
+  }
+
+  if((*a)->lastSeen > (*b)->lastSeen)
+    return(1);
+  else
+    return(-1);
+}
+
+/* ************************************ */
+
 void purgeIdleHosts(int actDevice) {
-  u_int idx, numFreedBuckets=0, maxBucket = 0, theIdx, hashFull = 0, hashLen;
+  u_int idx, numFreedBuckets=0, numHosts = 0, theIdx;
   time_t startTime = time(NULL), purgeTime;
   static time_t lastPurgeTime[MAX_NUM_DEVICES];
   static char firstRun = 1;
   HostTraffic **theFlaggedHosts = NULL;
-  u_int len;
+  u_int maxPurgeableHosts, maxHosts, scannedHosts=0;
   float hiresDeltaTime;
   struct timeval hiresTimeStart, hiresTimeEnd;
+  HostTraffic *el, *prev, *next;
 
   if(myGlobals.rFileName != NULL) return;
 
@@ -446,9 +483,12 @@ void purgeIdleHosts(int actDevice) {
    *  to a constant (512) and may -- if the --dynamic-purge-limits was specified,
    *  be adjusted up or down below...
    */
-  len = max(min(myGlobals.maximumHostsToPurgePerCycle, myGlobals.device[actDevice].hostsno/3), 8);
+  maxPurgeableHosts = max(min(myGlobals.maximumHostsToPurgePerCycle, myGlobals.device[actDevice].hostsno/3), 8);
 
-  theFlaggedHosts = (HostTraffic**)malloc(sizeof(HostTraffic*)*len);
+  maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
+  theFlaggedHosts = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
+  memset(theFlaggedHosts, 0, maxHosts*sizeof(HostTraffic*));
+
   purgeTime = startTime-PARM_HOST_PURGE_INTERVAL; /* Time used to decide whether a host need to be purged */
 
 #ifdef CFG_MULTITHREADED
@@ -463,81 +503,72 @@ void purgeIdleHosts(int actDevice) {
   accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
 #endif
 
-  /* Calculates entries to free */
-  hashLen = myGlobals.device[actDevice].actualHashSize;
-  theIdx = (myGlobals.actTime % hashLen) /* random start */;
-  hashFull=0;
-
-  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d [%s], up to %d of %d hosts",
-	     actDevice, myGlobals.device[actDevice].name, len, hashLen);
-
 #ifdef HASH_DEBUG
   hashSanityCheck();
 #endif
 
-  for (idx=0; idx<hashLen; idx++) {
-    HostTraffic *el, *prev;
-
-    if(theIdx < FIRST_HOSTS_ENTRY) {
-      theIdx = FIRST_HOSTS_ENTRY;
-      continue;
-    }
-
 #ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
+  accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
-    el = myGlobals.device[actDevice].hash_hostTraffic[theIdx];
-    prev = NULL;
 
-    while(el != NULL) {
-      if((!hashFull)
-	 && (el->refCount == 0)
-	 && (el->lastSeen < purgeTime)) {
-	if((!myGlobals.stickyHosts)
-	   || (el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
-	   || (!subnetPseudoLocalHost(el))      /* Purge remote hosts only */
-	   ) {
-	  theFlaggedHosts[maxBucket++] = el;
+  for(el = getFirstHost(actDevice); el != NULL;) {
+    if(el == myGlobals.device[actDevice].hash_hostTraffic[el->hostTrafficBucket])
+      prev = NULL;
 
-	  if(prev == NULL) {
-	    myGlobals.device[actDevice].hash_hostTraffic[el->hostTrafficBucket] = el->next; /* (*) */
-	    el = el->next;
-	  } else {
-	    prev->next = el->next;
-	    el = el->next;
-	  }
+    if((el->refCount == 0) && (el->lastSeen < purgeTime) && (!broadcastHost(el))) {
+      theFlaggedHosts[numHosts++] = el;
+      
+      next = getNextHost(actDevice, el);
 
-	  if(maxBucket >= (len-1)) {
-	    traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: selected to limit...");
-	    hashFull = 1;
-	    break;
-	  }
-
-	  continue; /* We have updated our pointers already */
-	}
+      if(prev == NULL) {	
+	if(next && (el->hostTrafficBucket == next->hostTrafficBucket))
+	  myGlobals.device[actDevice].hash_hostTraffic[el->hostTrafficBucket] = next;
+	else
+	  myGlobals.device[actDevice].hash_hostTraffic[el->hostTrafficBucket] = NULL;
+      } else {
+	if(next && (el->hostTrafficBucket == next->hostTrafficBucket))
+	  prev->next = next;
+	else
+	  prev->next = NULL;
       }
-
-      prev = el; el = el->next;
+      
+      el = next;
+    } else {
+      el = getNextHost(actDevice, el);
     }
 
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.hostsHashMutex);
-#endif
-
-    theIdx = (theIdx+1) % hashLen;
+    scannedHosts++;
   }
 
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+
 #ifdef HASH_DEBUG
   hashSanityCheck();
 #endif
 
-  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: FINISHED selection, %d hosts selected", maxBucket);
+  traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: FINISHED selection, %d [out of %d] hosts selected", 
+	     numHosts, scannedHosts);
+
+  qsort(theFlaggedHosts, numHosts, sizeof(HostTraffic*), cmpLastSeenFctn);
+
+  if(maxPurgeableHosts > numHosts) {
+    /*
+      Too many entries: let's sort them to delete the hosts that have not been active
+      for a long time
+    */
+
+    /* HERE */
+    
+    maxPurgeableHosts = numHosts;
+  }
 
   /* Now free the entries */
-  for(idx=0; idx<maxBucket; idx++) {
+  for(idx=0; idx<maxPurgeableHosts; idx++) {
 #ifdef IDLE_PURGE_DEBUG
-    traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Purging host %d... %s",
-	       idx, theFlaggedHosts[idx]->hostSymIpAddress);
+    traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Purging host %d [last seen=%d]... %s",
+	       idx, theFlaggedHosts[idx]->lastSeen, theFlaggedHosts[idx]->hostSymIpAddress);
 #endif
 
     freeHostInfo(theFlaggedHosts[idx], actDevice);
@@ -568,7 +599,6 @@ void purgeIdleHosts(int actDevice) {
 	       hiresDeltaTime / numFreedBuckets);
   else
     traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d: no hosts deleted", actDevice);
-
 }
 
 /* **************************************************** */

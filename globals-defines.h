@@ -147,7 +147,7 @@
 /*
  *  How long between runs of the idle host purge?
  */
-#define PARM_HOST_PURGE_INTERVAL            5*60
+#define PARM_HOST_PURGE_INTERVAL            2*60
 
 /*
  *  How long must a host be idle to be considered for purge?
