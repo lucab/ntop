@@ -41,6 +41,9 @@ static void updateThptStats(int deviceToUpdate,
   int i;
   HostTraffic *topHost;
   float topThpt;
+#ifdef DEBUG  
+  char formatBuf[32];
+#endif  
 
   /*
   if(myGlobals.device[deviceToUpdate].dummyDevice)
@@ -79,9 +82,10 @@ static void updateThptStats(int deviceToUpdate,
 
   myGlobals.device[deviceToUpdate].last60MinutesThpt[0].trafficValue = myGlobals.device[deviceToUpdate].lastMinThpt;
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "LastMinThpt: %s", formatThroughput(myGlobals.device[deviceToUpdate].lastMinThpt));
-#endif
+#ifdef DEBUG  
+  traceEvent (CONST_TRACE_ALWAYSDISPLAY, "LastMinThpt: %s",
+              formatThroughput(myGlobals.device[deviceToUpdate].lastMinThpt, 0, formatBuf, sizeof (formatBuf)));
+#endif  
 
   topHost = findHostBySerial(topSentSerial, deviceToUpdate); 
   if(topHost != NULL) topThpt = topHost->actualSentThpt; else topThpt = 0;
@@ -232,13 +236,13 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   /* timeDiff++; */
   myGlobals.device[deviceToUpdate].actualThpt = (float)myGlobals.device[deviceToUpdate].throughput/(float)timeDiff;
   myGlobals.device[deviceToUpdate].actualPktsThpt = 
-    (float)myGlobals.device[deviceToUpdate].packetThroughput/(float)timeDiff;
-
+      (float)myGlobals.device[deviceToUpdate].packetThroughput/(float)timeDiff;
+  
   if(myGlobals.device[deviceToUpdate].actualThpt > myGlobals.device[deviceToUpdate].peakThroughput)
-    myGlobals.device[deviceToUpdate].peakThroughput = myGlobals.device[deviceToUpdate].actualThpt;
-
+      myGlobals.device[deviceToUpdate].peakThroughput = myGlobals.device[deviceToUpdate].actualThpt;
+  
   if(myGlobals.device[deviceToUpdate].actualPktsThpt > myGlobals.device[deviceToUpdate].peakPacketThroughput)
-    myGlobals.device[deviceToUpdate].peakPacketThroughput = myGlobals.device[deviceToUpdate].actualPktsThpt;
+      myGlobals.device[deviceToUpdate].peakPacketThroughput = myGlobals.device[deviceToUpdate].actualPktsThpt;
 
   myGlobals.device[deviceToUpdate].throughput = myGlobals.device[deviceToUpdate].ethernetBytes.value;
   myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts.value;
@@ -280,13 +284,21 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
     myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = myGlobals.actTime;
   }
 
-  if(quickUpdate) return;
+  if(quickUpdate) {
+      myGlobals.device[deviceToUpdate].lastThptUpdate = myGlobals.actTime;
+      return;
+  }
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "updateDeviceStats() called.");
 #endif
-    
-  totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
+
+  if (myGlobals.rFileName != NULL) {
+      totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
+  }
+  else {
+      totalTime = myGlobals.actTime;
+  }
 
   if((timeHourDiff = myGlobals.actTime-myGlobals.
       device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
@@ -295,7 +307,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   }
 
   for(el=getFirstHost(deviceToUpdate); el != NULL; el = getNextHost(deviceToUpdate, el)) {
-    if(broadcastHost(el)) {
+    if(!isFcHost (el) && broadcastHost(el)) {
       continue;
     }
 
@@ -346,8 +358,8 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 	  }
 	} else {
 	    if(emptySerial(&secondSentSerial)) {
-	    if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
-	      secondSentSerial = el->hostSerial;
+                if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
+                    secondSentSerial = el->hostSerial;
 	  } else {
 	    topHost = findHostBySerial(secondSentSerial, deviceToUpdate); 
 	    if(topHost != NULL) topThpt = topHost->actualSentThpt; else topThpt = 0;
