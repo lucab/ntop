@@ -470,9 +470,10 @@ void updateTrafficMatrix(HostTraffic *srcHost,
     unsigned long a = (unsigned long)(srcHost->hostIpAddress.s_addr) % 256 /* C-class */;
     unsigned long b = (unsigned long)(dstHost->hostIpAddress.s_addr) % 256 /* C-class */;
 
-    ipTrafficMatrixHosts[a] = srcHost, ipTrafficMatrixHosts[b] = dstHost;
-    ipTrafficMatrix[a][b].bytesSent += length,
-      ipTrafficMatrix[b][a].bytesReceived += length;
+    device[actualDeviceId].ipTrafficMatrixHosts[a] = srcHost, 
+      device[actualDeviceId].ipTrafficMatrixHosts[b] = dstHost;
+    device[actualDeviceId].ipTrafficMatrix[a][b].bytesSent += length,
+      device[actualDeviceId].ipTrafficMatrix[b][a].bytesReceived += length;
   }
 }
 

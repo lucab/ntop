@@ -669,77 +669,76 @@
 
  /* ************************************ */
 
- void scanTimedoutTCPSessions(void) {
-   u_int idx;
+void scanTimedoutTCPSessions(void) {
+  u_int idx, i;
 
- #ifdef DEBUG
-   traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions\n");
- #endif
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions\n");
+#endif
+  for(i=0; i<numDevices; i++) {
+    for(idx=0; idx<device[i].numTotSessions; idx++) {
+      if(device[i].tcpSession[idx] != NULL) {
 
-   for(idx=0; idx<numTotSessions; idx++) {
-     if(tcpSession[idx] != NULL) {
+	if(device[i].tcpSession[idx]->magic != MAGIC_NUMBER) {
+	  device[i].tcpSession[idx] = NULL;
+	  device[i].numTcpSessions--;
+	  traceEvent(TRACE_ERROR, "===> Magic assertion failed!");
+	  continue;
+	}
 
-       if(tcpSession[idx]->magic != MAGIC_NUMBER) {
-	 tcpSession[idx] = NULL;
-	 numTcpSessions--;
-	 traceEvent(TRACE_ERROR, "===> Magic assertion failed!");
-	 continue;
-       }
+	if(((device[i].tcpSession[idx]->sessionState == STATE_TIMEOUT)
+	    && ((device[i].tcpSession[idx]->lastSeen+TWO_MSL_TIMEOUT) < actTime))
+	   || /* The branch below allows to flush sessions which have not been
+		 terminated properly (we've received just one FIN (not two). It might be
+		 that we've lost some packets (hopefully not). */
+	   ((device[i].tcpSession[idx]->sessionState >= STATE_FIN1_ACK0)
+	    && ((device[i].tcpSession[idx]->lastSeen+DOUBLE_TWO_MSL_TIMEOUT) < actTime))
+	   /* The line below allows to avoid keeping very old sessions that
+	      might be still open, but that are probably closed and we've
+	      lost some packets */
+	   || ((device[i].tcpSession[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < actTime)
+	   || ((device[i].tcpSession[idx]->lastSeen+IDLE_SESSION_TIMEOUT) < actTime)
+	   ) {
+	    IPSession *sessionToPurge = device[i].tcpSession[idx];
 
-       if(((tcpSession[idx]->sessionState == STATE_TIMEOUT)
-	   && ((tcpSession[idx]->lastSeen+TWO_MSL_TIMEOUT) < actTime))
-	  || /* The branch below allows to flush sessions which have not been
-		terminated properly (we've received just one FIN (not two). It might be
-		that we've lost some packets (hopefully not). */
-	  ((tcpSession[idx]->sessionState >= STATE_FIN1_ACK0)
-	   && ((tcpSession[idx]->lastSeen+DOUBLE_TWO_MSL_TIMEOUT) < actTime))
-	  /* The line below allows to avoid keeping very old sessions that
-	     might be still open, but that are probably closed and we've
-	     lost some packets */
-	  || ((tcpSession[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < actTime)
-	  || ((tcpSession[idx]->lastSeen+IDLE_SESSION_TIMEOUT) < actTime)
-	  )
-	 {
-	   IPSession *sessionToPurge = tcpSession[idx];
+	    device[i].tcpSession[idx] = NULL;
+	    device[i].numTcpSessions--;
 
-	   tcpSession[idx] = NULL;
-	   numTcpSessions--;
+	    /* Session to purge */
 
-	   /* Session to purge */
+	    if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
+	      if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
+		updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
+				       sessionToPurge->remotePeerIdx, sessionToPurge,
+				       IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE);
+		updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->sport,
+				       sessionToPurge->initiatorIdx, sessionToPurge,
+				       IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE);
+	      }
+	    } else { /* Client->Server */
+	      if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
+		updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
+				       sessionToPurge->initiatorIdx, sessionToPurge,
+				       IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE);
+		updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->dport,
+				       sessionToPurge->remotePeerIdx, sessionToPurge,
+				       IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE);
+	      }
+	    }
 
-	   if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
-	     if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
-	       updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
-				      sessionToPurge->remotePeerIdx, sessionToPurge,
-				      IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE);
-	       updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->sport,
-				      sessionToPurge->initiatorIdx, sessionToPurge,
-				      IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE);
-	     }
-	   } else { /* Client->Server */
-	     if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
-	       updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
-				      sessionToPurge->initiatorIdx, sessionToPurge,
-				      IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE);
-	       updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->dport,
-				      sessionToPurge->remotePeerIdx, sessionToPurge,
-				      IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE);
-	     }
-	   }
+	    /*
+	     * Having updated the session information, 'theSession'
+	     * can now be purged.
+	     */
+	    sessionToPurge->magic = 0;
 
-	   /*
-	    * Having updated the session information, 'theSession'
-	    * can now be purged.
-	    */
-	   sessionToPurge->magic = 0;
-
-	   notifyTCPSession(sessionToPurge);
-	   free(sessionToPurge); /* No inner pointers to free */
-	 }
-     }
-   } /* end for */
-
- }
+	    notifyTCPSession(sessionToPurge);
+	    free(sessionToPurge); /* No inner pointers to free */
+	  }
+      }
+    } /* end for */
+  }
+}
 
  /* ************************************ */
 
@@ -1372,15 +1371,13 @@ static void handleSession(const struct pcap_pkthdr *h,
    */
   initialIdx = idx = (u_int)((srcHost->hostIpAddress.s_addr+
 			      dstHost->hostIpAddress.s_addr+
-			      sport+dport) % numTotSessions);
+			      sport+dport) % device[actualDeviceId].numTotSessions);
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "%s:%d->%s:%d %d->",
 	     srcHost->hostSymIpAddress, sport,
 	     dstHost->hostSymIpAddress, dport, idx);
 #endif
-
-
 
   if(sessionType == IPPROTO_TCP) {
     for(;;) {
@@ -1405,18 +1402,18 @@ static void handleSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
 	printf(" NEW ");
 #endif
-	if((*numSessions) > (numTotSessions*0.75)) {
+	if((*numSessions) > (device[actualDeviceId].numTotSessions*0.75)) {
 	  /* If possible this table will be enlarged */
 
 	  extendTcpUdpSessionsHash();
 	}
 
-	if((*numSessions) > (numTotSessions*0.7)) {
+	if((*numSessions) > (device[actualDeviceId].numTotSessions*0.7)) {
 	  /* The hash table is getting large: let's replace the oldest session
 	     with this one we're allocating */
 	  u_int usedIdx=0;
 
-	  for(idx=0; idx<numTotSessions; idx++) {
+	  for(idx=0; idx<device[actualDeviceId].numTotSessions; idx++) {
 	    if(sessions[idx] != NULL) {
 	      if(theSession == NULL) {
 		theSession = sessions[idx];
@@ -1531,7 +1528,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	}
 
 	while(sessions[initialIdx] != NULL)
-	  initialIdx = ((initialIdx+1) % numTotSessions);
+	  initialIdx = ((initialIdx+1) % device[actualDeviceId].numTotSessions);
 
 	sessions[initialIdx] = theSession;
 
@@ -1548,7 +1545,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	break;
       }
 
-      idx = ((idx+1) % numTotSessions);
+      idx = ((idx+1) % device[actualDeviceId].numTotSessions);
     }
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "->%d\n", idx);
@@ -2223,13 +2220,15 @@ static void handleSession(const struct pcap_pkthdr *h,
 		 srcHost->hostSymIpAddress, sport);
     }
 
-    if(((theSession->initiatorIdx == srcHostIdx) && (theSession->lastRemote2InitiatorFlags[0] == TH_SYN))
-       || ((theSession->initiatorIdx == dstHostIdx) && (theSession->lastInitiator2RemoteFlags[0] == TH_SYN))
+    if(((theSession->initiatorIdx == srcHostIdx) 
+	&& (theSession->lastRemote2InitiatorFlags[0] == TH_SYN))
+       || ((theSession->initiatorIdx == dstHostIdx) 
+	   && (theSession->lastInitiator2RemoteFlags[0] == TH_SYN))
        && (tp->th_flags == (TH_SYN|TH_ACK)))  {
       traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
 		 dstHost->hostSymIpAddress, dport,
 		 srcHost->hostSymIpAddress, sport,
-		 numTcpSessions);
+		 device[actualDeviceId].numTcpSessions);
     }
 
     if(tp->th_flags == (TH_RST|TH_ACK)) {
@@ -2449,11 +2448,12 @@ static void handleTCPSession(const struct pcap_pkthdr *h,
        open. That's why we don't count this as a session in this
        case.
     */
-    handleSession(h, tcpSession,
-		  &numTcpSessions, fragmentedData, tcpWin,
+    handleSession(h, device[actualDeviceId].tcpSession,
+		  &device[actualDeviceId].numTcpSessions, fragmentedData, tcpWin,
 		  srcHostIdx, sport,
 		  dstHostIdx, dport,
-		  length, tp, tcpDataLength, packetData);
+		  length, tp, 
+		  tcpDataLength, packetData);
   }
 
   if(isLsofPresent)
@@ -2652,25 +2652,26 @@ static void dumpFragmentData(IpFragment *fragment) {
 static IpFragment *searchFragment(HostTraffic *srcHost,
 				  HostTraffic *dstHost,
 				  u_int fragmentId) {
-  IpFragment *fragment=fragmentList;
+  IpFragment *fragment = device[actualDeviceId].fragmentList;
 
-  while ((fragment!=NULL)
+  while ((fragment != NULL)
          && ((fragment->src != srcHost)
 	     || (fragment->dest != dstHost)
 	     || (fragment->fragmentId != fragmentId)))
-    fragment=fragment->next;
+    fragment = fragment->next;
 
-  return fragment;
+  return(fragment);
 }
 
 /* ************************************ */
 
 void deleteFragment(IpFragment *fragment) {
+
   if (fragment->prev == NULL)
-    fragmentList = fragment->next;
+    device[actualDeviceId].fragmentList = fragment->next;
   else
     fragment->prev->next = fragment->next;
-
+  
   free(fragment);
 }
 
@@ -2701,10 +2702,10 @@ static u_int handleFragment(HostTraffic *srcHost,
     fragment->dest = dstHost;
     fragment->fragmentId = fragmentId;
     fragment->firstSeen = actTime;
-    fragment->next = fragmentList;
+    fragment->next = device[actualDeviceId].fragmentList;
     fragment->prev = NULL;
     fragment->fragmentOrder = UNKNOWN_FRAGMENT_ORDER;
-    fragmentList = fragment;
+    device[actualDeviceId].fragmentList = fragment;
   } else {
     if(fragment->fragmentOrder == UNKNOWN_FRAGMENT_ORDER) {
       if(fragment->lastOffset > fragmentOffset)
@@ -2788,7 +2789,7 @@ void purgeOldFragmentEntries(void) {
   IpFragment *fragment, *next;
   u_int fragcnt=0, expcnt=0;
 
-  fragment = fragmentList;
+  fragment = device[actualDeviceId].fragmentList;
 
   while(fragment != NULL) {
     fragcnt++;
@@ -4017,6 +4018,7 @@ void processPacket(u_char *_deviceId,
 
   hlen = (device[deviceId].datalink == DLT_NULL) ? NULL_HDRLEN : sizeof(struct ether_header);
 
+  printf ("Datalink=%d, (hlen=%d)(caplen=%d)\n", device[deviceId].datalink, hlen, caplen);
   /*
    * Let's check whether it's time to free up
    * some space before to continue....

@@ -563,18 +563,20 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
   releaseMutex(&lsofMutex);
 #endif
 
-  for(j=0; j<numTotSessions; j++) {
-    if(tcpSession[j] != NULL) {
-      tcpSession[j]->initiatorIdx  = mapIdx(tcpSession[j]->initiatorIdx);
-      tcpSession[j]->remotePeerIdx = mapIdx(tcpSession[j]->remotePeerIdx);
+  for(j=0; j<device[deviceToExtend].numTotSessions; j++) {
+    if(device[deviceToExtend].tcpSession[j] != NULL) {
+      device[deviceToExtend].tcpSession[j]->initiatorIdx  = 
+	mapIdx(device[deviceToExtend].tcpSession[j]->initiatorIdx);
+      device[deviceToExtend].tcpSession[j]->remotePeerIdx = 
+	mapIdx(device[deviceToExtend].tcpSession[j]->remotePeerIdx);
 
-      if((tcpSession[j]->initiatorIdx == NO_PEER)
-	 || (tcpSession[j]->remotePeerIdx == NO_PEER)) {
+      if((device[deviceToExtend].tcpSession[j]->initiatorIdx == NO_PEER)
+	 || (device[deviceToExtend].tcpSession[j]->remotePeerIdx == NO_PEER)) {
 	/* Session to purge */
-	notifyTCPSession(tcpSession[j]);
-	free(tcpSession[j]); /* No inner pointers to free */
-	numTcpSessions--;
-	tcpSession[j] = NULL;
+	notifyTCPSession(device[deviceToExtend].tcpSession[j]);
+	free(device[deviceToExtend].tcpSession[j]); /* No inner pointers to free */
+	device[deviceToExtend].numTcpSessions--;
+	device[deviceToExtend].tcpSession[j] = NULL;
       }
     }
   }
@@ -613,17 +615,17 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 
 /* ************************************ */
 
-static void freeHostSessions(u_int hostIdx) {
+static void freeHostSessions(u_int hostIdx, int theDevice) {
   int i;
   
-  for(i=0; i<numTotSessions; i++) {
-    if((tcpSession[i] != NULL)
-       && ((tcpSession[i]->initiatorIdx == hostIdx) 
-	   || (tcpSession[i]->remotePeerIdx == hostIdx))) {
+  for(i=0; i<device[theDevice].numTotSessions; i++) {
+    if((device[theDevice].tcpSession[i] != NULL)
+       && ((device[theDevice].tcpSession[i]->initiatorIdx == hostIdx) 
+	   || (device[theDevice].tcpSession[i]->remotePeerIdx == hostIdx))) {
       
-      free(tcpSession[i]);
-      tcpSession[i] = NULL;
-      numTcpSessions--;
+      free(device[theDevice].tcpSession[i]);
+      device[theDevice].tcpSession[i] = NULL;
+     device[theDevice]. numTcpSessions--;
     }
   }
 }
@@ -794,7 +796,7 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
       element = nextElement;
   }
 
-  freeHostSessions(hostIdx);
+  freeHostSessions(hostIdx, theDevice);
 
   /* ************************************* */
 
@@ -917,34 +919,35 @@ void purgeIdleHosts(int ignoreIdleTime) {
 /* ******************************************** */
 
 void extendTcpUdpSessionsHash() {
-  if((numTotSessions*2) < MAX_HASH_SIZE) {
+  if((device[actualDeviceId].numTotSessions*2) < MAX_HASH_SIZE) {
     /* Fine we can enlarge the table now */
     IPSession** tmpSession;
     int len, i, newLen, idx;
 
-    newLen = numTotSessions*2;
-    len = sizeof(IPSession*)*numTotSessions;
+    newLen = device[actualDeviceId].numTotSessions*2;
+    len = sizeof(IPSession*)*device[actualDeviceId].numTotSessions;
 
-    tmpSession = tcpSession;
-    tcpSession = (IPSession**)malloc(2*len);
-    memset(tcpSession, 0, 2*len);
-    for(i=0; i<numTotSessions; i++) {
+    tmpSession = device[actualDeviceId].tcpSession;
+    device[actualDeviceId].tcpSession = (IPSession**)malloc(2*len);
+    memset(device[actualDeviceId].tcpSession, 0, 2*len);
+    for(i=0; i<device[actualDeviceId].numTotSessions; i++) {
       if(tmpSession[i] != NULL) {
 	idx = (u_int)((tmpSession[i]->initiatorRealIp.s_addr+
 		       tmpSession[i]->remotePeerRealIp.s_addr+
 		       tmpSession[i]->sport+
 		       tmpSession[i]->dport) % newLen);
 		
-	while(tcpSession[idx] != NULL)
+	while(device[actualDeviceId].tcpSession[idx] != NULL)
 	  idx = (idx+1) % newLen;
 		
-	tcpSession[idx] = tmpSession[i];
+	device[actualDeviceId].tcpSession[idx] = tmpSession[i];
       }
     }
     free(tmpSession);
 
-    numTotSessions *= 2;
+    device[actualDeviceId].numTotSessions *= 2;
 
-    traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d]", numTotSessions);
+    traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d]", 
+	       device[actualDeviceId].numTotSessions);
   }
 }

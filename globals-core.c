@@ -54,7 +54,7 @@ int sslInitialized, sslPort;
 time_t nextLogTime;
 
 /* Flags */
-int isLsofPresent=1, isNepedPresent=1, isNmapPresent=1;
+int isLsofPresent=1, isNmapPresent=1;
 short capturePackets;
 short endNtop;
 
@@ -137,7 +137,7 @@ ntopInterface_t device[MAX_NUM_DEVICES];
 char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS];
 u_short numIpProtosToMonitor, numIpPortsToHandle;
 int* ipPortMapper;
-
+ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
 
 /* Packet Capture */
 #if defined(MULTITHREADED)
@@ -150,13 +150,6 @@ TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
 u_int broadcastEntryIdx;
 HostTraffic broadcastEntry;
 u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
-IpFragment *fragmentList;
-IPSession **tcpSession /* TCP sessions */;
-u_short numTotSessions, numTcpSessions;
-ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
-TrafficEntry ipTrafficMatrix[256][256]; /* Subnet traffic Matrix */
-HostTraffic* ipTrafficMatrixHosts[256]; /* Subnet traffic Matrix Hosts */
-fd_set ipTrafficMatrixPromiscHosts;
 
 u_short mtuSize[] = {
   8232,   	/* no link-layer encapsulation */

@@ -137,6 +137,7 @@ extern ntopInterface_t device[MAX_NUM_DEVICES];
 extern char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS]; /* array 0-numIpProtosToMonitor */
 extern u_short numIpProtosToMonitor, numIpPortsToHandle;
 extern int* ipPortMapper;
+extern ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
 
 /* Packet Capture */
 #if defined(MULTITHREADED)
@@ -149,13 +150,6 @@ extern u_int broadcastEntryIdx;
 extern HostTraffic broadcastEntry;
 extern u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
 extern u_short mtuSize[], headerSize[];
-extern IpFragment *fragmentList;
-extern IPSession **tcpSession;
-extern u_short numTotSessions, numTcpSessions;
-extern ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
-extern TrafficEntry ipTrafficMatrix[256][256]; /* Subnet traffic Matrix */
-extern HostTraffic* ipTrafficMatrixHosts[256]; /* Subnet traffic Matrix Hosts */
-extern fd_set ipTrafficMatrixPromiscHosts;
 
 /* function declaration ***************************************************** */
 

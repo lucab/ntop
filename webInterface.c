@@ -193,14 +193,7 @@ char* makeHostLink(HostTraffic *el, short mode,
       return("&lt;broadcast&gt;");
   }
 
-  if(subnetLocalHost(el)
-     && FD_ISSET((unsigned long)(el->hostIpAddress.s_addr) % 256 /* C-class */,
-		 &ipTrafficMatrixPromiscHosts)) {
-    /* Promiscuous mode */
-    blinkOn = "<BLINK><FONT COLOR=#FF0000>", blinkOff = "</FONT></BLINK>";
-  } else {
-    blinkOn = "", blinkOff = "";
-  }
+  blinkOn = "", blinkOff = "";
 
   bufIdx = (bufIdx+1)%5;
 
@@ -514,7 +507,8 @@ void switchNwInterface(int _interface) {
 	     "command line switch is not used. Sorry.\n") < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
-  } else if((mwInterface >= numDevices) || device[mwInterface].virtualDevice) {
+  } else if((mwInterface != -1) &&
+	    ((mwInterface >= numDevices) || device[mwInterface].virtualDevice)) {
     if(snprintf(buf, sizeof(buf), "Invalid interface selected. Sorry.\n") < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
@@ -630,12 +624,6 @@ void printNtopConfigInfo(void) {
     printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support",
 			   "No (Either disabled or missing)");
 
-  if(isNepedPresent) 
-    printFeatureConfigInfo("<A HREF=http://apostols.org/projectz/neped/>neped</A> Support", "Yes");
-  else
-    printFeatureConfigInfo("<A HREF=http://apostols.org/projectz/neped/>neped</A> Support", 
-			   "No (Either disabled or missing)");
-
   if(isNmapPresent) 
     printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", "Yes");
   else
@@ -657,7 +645,8 @@ void printNtopConfigInfo(void) {
 
 
    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. TCP Sessions</TH>"
-	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", numTcpSessions) < 0) 
+	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", 
+	       device[actualReportDeviceId].numTcpSessions) < 0) 
      traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
 

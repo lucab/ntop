@@ -97,7 +97,8 @@ void* pcapDispatch(void *_i) {
     timeout.tv_usec = 0;
 
     if(select(pcap_fd+1, &readMask, NULL, NULL, &timeout) > 0) {
-      rc = pcap_dispatch(device[i].pcapPtr, 1, processPacket, NULL);
+      /* printf("dispatch device %s\n", device[i].name);*/
+      rc = pcap_dispatch(device[i].pcapPtr, 1, processPacket, (u_char*) _i);
 
       if(rc == -1) {
 	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
@@ -614,7 +615,6 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
       traceEvent(TRACE_INFO, "Wait please: reading lsof information...\n");
 #endif
       if(isLsofPresent) readLsofInfo();
-      if(isNepedPresent) readNepedInfo();
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Done with lsof.\n");
 #endif

@@ -45,15 +45,16 @@ void termIPServices(void) {
 /* ******************************* */
 
 void termIPSessions(void) {
-  int i;
+  int i, j;
 
-  for(i=0; i<numTotSessions; i++) {
-    if(tcpSession[i] != NULL) 
-      free(tcpSession[i]);    
-
-    numTcpSessions = 0;
-
-    while (fragmentList != NULL)
-      deleteFragment(fragmentList);
+  for(j=0; j<numDevices; j++) {
+    for(i=0; i<device[j].numTotSessions; i++)
+      if(device[j].tcpSession[i] != NULL) 
+	free(device[j].tcpSession[i]);    
+    
+    device[j].numTcpSessions = 0;
+    
+    while (device[j].fragmentList != NULL)
+      deleteFragment(device[j].fragmentList);
   }
 }

@@ -98,8 +98,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   hourId = atoi(theDate);
 
   memset(buf, 0, sizeof(buf));
-  tmpTable = (HostTraffic**)malloc(device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(tmpTable, 0, device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   sortSendMode = signumber_ignored;
 
@@ -116,7 +116,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
   printHeader(reportType, revertOrder, abs(sortedColumn));
 
-  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
+  for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++) {
     if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && (broadcastHost(el) == 0)) {
       if((sortSendMode && (el->bytesSent > 0))
@@ -476,7 +476,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
       sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
 
-      sendString("<TR><TH "TH_BG">Nw&nbsp;Interface&nbsp;Type</TH>"
+      sendString("<TR><TH "TH_BG">Nw Interface Type</TH>"
 		 "<TD "TD_BG" ALIGN=RIGHT>");
 
       if(mergeInterfaces) {
@@ -515,14 +515,14 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString("</TD></TR>\n");
 
       if(domainName[0] != '\0') {
-	if(snprintf(buf2, sizeof(buf2), "<TR><TH "TH_BG">Local&nbsp;Domain&nbsp;Name</TH>"
+	if(snprintf(buf2, sizeof(buf2), "<TR><TH "TH_BG">Local Domain Name</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
 		    domainName) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
       }
 
-      if(snprintf(buf2, sizeof(buf2), "<TR><TH "TH_BG">Sampling&nbsp;Since</TH>"
+      if(snprintf(buf2, sizeof(buf2), "<TR><TH "TH_BG">Sampling Since</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 		  ctime(&initialSniffTime),
 		  formatSeconds(actTime-initialSniffTime)) < 0) 
@@ -532,7 +532,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString("<TR><TH "TH_BG">Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
 
 #ifdef HAVE_GDCHART
-      if(numDevices > 1) {
+      if(mergeInterfaces && (numDevices > 1)) {
 	int i, numRealDevices=0;
 	
 	for(i=0; i<numDevices; i++) 
@@ -700,7 +700,10 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       sendString(buf2);
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3><IMG SRC=pktSizeDistribPie"CHART_FORMAT"></TH></TR>\n");
+      if(device[actualReportDeviceId].ethernetPkts > 0) {
+	sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3>"
+		   "<IMG SRC=pktSizeDistribPie"CHART_FORMAT"></TH></TR>\n");
+      }
 #endif
 
       if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Packets&nbsp;too&nbsp;long</th>"
@@ -814,8 +817,8 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
-  tmpTable = (HostTraffic**)malloc(device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(tmpTable, 0, device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   if(revertOrder) {
     sign = "";
@@ -825,7 +828,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
     arrowGif = "&nbsp;<IMG SRC=arrow_down.gif BORDER=0>";
   }
 
-  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
+  for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++) {
     if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && ((el->pktMulticastSent > 0) || (el->pktMulticastRcvd > 0))
        && (!broadcastHost(el))
@@ -957,8 +960,8 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
-  tmpTable = (HostTraffic**)malloc(device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(tmpTable, 0, device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   if(revertOrder) {
     sign = "";
@@ -974,7 +977,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 
   /* printHeader(0, revertOrder, abs(sortedColumn)); */
 
-  for(idx=1, numEntries=0; idx<device[actualDeviceId].actualHashSize; idx++)
+  for(idx=1, numEntries=0; idx<device[actualReportDeviceId].actualHashSize; idx++)
     if((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL) {
       unsigned short actUsage;
 
@@ -1211,7 +1214,7 @@ void printAllSessionsHTML(char* host) {
   HostTraffic *el=NULL;
   char buf[BUF_SIZE];
 
-  for(elIdx=1; elIdx<device[actualDeviceId].actualHashSize; elIdx++) {
+  for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
     el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
 
     if((elIdx != broadcastEntryIdx)
@@ -1333,7 +1336,7 @@ void printLocalRoutersList(void) {
 
   printHTMLheader("Local Subnet Routers", 0);
 
-  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
+  for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++) {
     if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && subnetLocalHost(el)) {
 
@@ -1373,7 +1376,7 @@ void printLocalRoutersList(void) {
 		makeHostLink(router, SHORT_FORMAT, 0, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 
-	for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++)
+	for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++)
 	  if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
 	     && subnetLocalHost(el)) {
 	    for(j=0; j<MAX_NUM_HOST_ROUTERS; j++)
@@ -1459,7 +1462,7 @@ static void printSessions(IPSession *sessions[], u_short type) {
 
 
   if (logTimeout) {
-    for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++)
+    for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++)
       if(sessions[idx] != NULL) {
 
 	char *_sport = getPortByNum(sessions[idx]->sport, type);
@@ -1499,7 +1502,9 @@ static void printSessions(IPSession *sessions[], u_short type) {
 
 }
 
-void printTCPSessions(void) { printSessions(tcpSession, IPPROTO_TCP); }
+void printTCPSessions(void) { 
+  printSessions(device[actualReportDeviceId].tcpSession, IPPROTO_TCP); 
+}
 
 #endif /* DEBUG */
 
@@ -1526,10 +1531,10 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
   }
 
   totalBytesSent=0, totalBytesReceived=0;
-  tmpTable = (HostTraffic**)malloc(device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(tmpTable, 0, device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
   
-  for(idx=1, numEntries=0; idx<device[actualDeviceId].actualHashSize; idx++)
+  for(idx=1, numEntries=0; idx<device[actualReportDeviceId].actualHashSize; idx++)
     if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && (broadcastHost(el) == 0) /* No broadcast addresses please */
        && ((el->hostNumIpAddress[0] != '\0')
@@ -1731,10 +1736,10 @@ void printActiveTCPSessions(void) {
 
   printHTMLheader("Active TCP Sessions", 0);
 
-  for(idx=1, numSessions=0; idx<numTotSessions; idx++)
-    if((tcpSession[idx] != NULL)
+  for(idx=1, numSessions=0; idx<device[actualReportDeviceId].numTotSessions; idx++)
+    if((device[actualReportDeviceId].tcpSession[idx] != NULL)
 #ifndef PRINT_ALL_ACTIVE_SESSIONS
-       && (tcpSession[idx]->sessionState == STATE_ACTIVE)
+       && (device[actualReportDeviceId].tcpSession[idx]->sessionState == STATE_ACTIVE)
 #endif
        ) {
 
@@ -1758,29 +1763,29 @@ void printActiveTCPSessions(void) {
 		   "</TR>\n");
       }
 
-      sport = getPortByNum(tcpSession[idx]->sport, IPPROTO_TCP);
-      dport = getPortByNum(tcpSession[idx]->dport, IPPROTO_TCP);
-      dataSent = tcpSession[idx]->bytesSent;
-      dataReceived = tcpSession[idx]->bytesReceived;
+      sport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->sport, IPPROTO_TCP);
+      dport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->dport, IPPROTO_TCP);
+      dataSent = device[actualReportDeviceId].tcpSession[idx]->bytesSent;
+      dataReceived = device[actualReportDeviceId].tcpSession[idx]->bytesReceived;
 
       if(sport == NULL) {
 	static char _sport[8];
-	if(snprintf(_sport, 8, "%d", tcpSession[idx]->sport) < 0) 
+	if(snprintf(_sport, 8, "%d", device[actualReportDeviceId].tcpSession[idx]->sport) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sport = _sport;
       }
 
       if(dport == NULL) {
 	static char _dport[8];
-	if(snprintf(_dport, 8, "%d", tcpSession[idx]->dport) < 0)
+	if(snprintf(_dport, 8, "%d", device[actualReportDeviceId].tcpSession[idx]->dport) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	dport = _dport;
       }
 
       /* Sanity check */
-      if((actTime < tcpSession[idx]->firstSeen)
-	 || (tcpSession[idx]->firstSeen == 0))
-	tcpSession[idx]->firstSeen = actTime;
+      if((actTime < device[actualReportDeviceId].tcpSession[idx]->firstSeen)
+	 || (device[actualReportDeviceId].tcpSession[idx]->firstSeen == 0))
+	device[actualReportDeviceId].tcpSession[idx]->firstSeen = actTime;
 
       if(snprintf(buf, sizeof(buf), "<TR %s>"
 	      "<TD "TD_BG" ALIGN=RIGHT>%s:%s</TD>"
@@ -1797,22 +1802,24 @@ void printActiveTCPSessions(void) {
 		  "</TR>\n",
 		  getRowColor(),
 		  makeHostLink(device[actualReportDeviceId].
-			       hash_hostTraffic[checkSessionIdx(tcpSession[idx]->initiatorIdx)], 
+			       hash_hostTraffic[checkSessionIdx(device[actualReportDeviceId].
+								tcpSession[idx]->initiatorIdx)], 
 			       SHORT_FORMAT, 0, 0),
 		  sport,
 		  makeHostLink(device[actualReportDeviceId].
-			       hash_hostTraffic[checkSessionIdx(tcpSession[idx]->remotePeerIdx)], 
+			       hash_hostTraffic[checkSessionIdx(device[actualReportDeviceId].
+								tcpSession[idx]->remotePeerIdx)], 
 			       SHORT_FORMAT, 0, 0),
 		  dport,
 		  formatBytes(dataSent, 1),
 		  formatBytes(dataReceived, 1),
-		  formatTime(&(tcpSession[idx]->firstSeen), 1),
-		  formatTime(&(tcpSession[idx]->lastSeen), 1),
-		  formatSeconds(actTime-tcpSession[idx]->firstSeen),
-		  formatLatency(tcpSession[idx]->nwLatency, 
-				tcpSession[idx]->sessionState)
+		  formatTime(&(device[actualReportDeviceId].tcpSession[idx]->firstSeen), 1),
+		  formatTime(&(device[actualReportDeviceId].tcpSession[idx]->lastSeen), 1),
+		  formatSeconds(actTime-device[actualReportDeviceId].tcpSession[idx]->firstSeen),
+		  formatLatency(device[actualReportDeviceId].tcpSession[idx]->nwLatency, 
+				device[actualReportDeviceId].tcpSession[idx]->sessionState)
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
-		  , getSessionState(tcpSession[idx])
+		  , getSessionState(device[actualReportDeviceId].tcpSession[idx])
 #endif
 		  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
@@ -1841,10 +1848,10 @@ void printIpProtocolUsage(void) {
   memset(clientPorts, 0, sizeof(clientPorts));
   memset(serverPorts, 0, sizeof(serverPorts));
 
-  hosts = (HostTraffic**)malloc(device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(hosts, 0, device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
+  hosts = (HostTraffic**)malloc(device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(hosts, 0, device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
-  for(i=0; i<device[actualDeviceId].actualHashSize; i++)
+  for(i=0; i<device[actualReportDeviceId].actualHashSize; i++)
     if((device[actualReportDeviceId].hash_hostTraffic[i] != NULL)
        && subnetPseudoLocalHost(device[actualReportDeviceId].hash_hostTraffic[i])
        && (device[actualReportDeviceId].hash_hostTraffic[i]->hostNumIpAddress[0] != '\0')) {
@@ -2567,8 +2574,8 @@ void printIpTrafficMatrix(void) {
   for(i=1; i<255; i++) {
     activeHosts[i] = 0;
     for(j=1; j<255; j++) {
-      if((ipTrafficMatrix[i][j].bytesSent != 0)
-	 || (ipTrafficMatrix[i][j].bytesReceived != 0)) {
+      if((device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent != 0)
+	 || (device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived != 0)) {
 	activeHosts[i] = 1;
 	numEntries++;
 	break;
@@ -2583,7 +2590,7 @@ void printIpTrafficMatrix(void) {
       }
 
       if(snprintf(buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER><SMALL>%s</SMALL></TH>",
-		  getHostName(ipTrafficMatrixHosts[i], 1)) < 0) 
+		  getHostName(device[actualReportDeviceId].ipTrafficMatrixHosts[i], 1)) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
@@ -2597,16 +2604,16 @@ void printIpTrafficMatrix(void) {
 
   for(i=1; i<255; i++)
     for(j=1; j<255; j++)
-      if((ipTrafficMatrix[i][j].bytesSent != 0)
-	 || (ipTrafficMatrix[i][j].bytesReceived != 0)) {
-	if(minTraffic > ipTrafficMatrix[i][j].bytesSent)
-	  minTraffic = ipTrafficMatrix[i][j].bytesSent;
-	if(minTraffic > ipTrafficMatrix[i][j].bytesReceived)
-	  minTraffic = ipTrafficMatrix[i][j].bytesReceived;
-	if(maxTraffic < ipTrafficMatrix[i][j].bytesSent)
-	  maxTraffic = ipTrafficMatrix[i][j].bytesSent;
-	if(maxTraffic < ipTrafficMatrix[i][j].bytesReceived)
-	  maxTraffic = ipTrafficMatrix[i][j].bytesReceived;
+      if((device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent != 0)
+	 || (device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived != 0)) {
+	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent)
+	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent;
+	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived)
+	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived;
+	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent)
+	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent;
+	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived)
+	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived;
       }
 
   avgTraffic = (TrafficCounter)(((float)minTraffic+(float)maxTraffic)/2);
@@ -2619,15 +2626,16 @@ void printIpTrafficMatrix(void) {
       numConsecutiveEmptyCells=0;
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT><SMALL>%s</SMALL></TH>",
-		  getRowColor(), makeHostLink(ipTrafficMatrixHosts[i], SHORT_FORMAT, 1, 0)) < 0) 
+		  getRowColor(), makeHostLink(device[actualReportDeviceId].ipTrafficMatrixHosts[i], SHORT_FORMAT, 1, 0)) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       for(j=1; j<255; j++) {
-	if((i == j) && strcmp(ipTrafficMatrixHosts[i]->hostNumIpAddress, "127.0.0.1"))
+	if((i == j) && strcmp(device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress, "127.0.0.1"))
 	  numConsecutiveEmptyCells++;
 	else if(activeHosts[j] == 1) {
-	  if((ipTrafficMatrix[i][j].bytesReceived == 0) && (ipTrafficMatrix[i][j].bytesSent == 0))
+	  if((device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived == 0) 
+	     && (device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent == 0))
 	    numConsecutiveEmptyCells++;
 	  else {
 	    if(numConsecutiveEmptyCells > 0) {
@@ -2637,7 +2645,8 @@ void printIpTrafficMatrix(void) {
 	      numConsecutiveEmptyCells = 0;
 	    }
 
-	    tmpCounter = ipTrafficMatrix[i][j].bytesSent+ipTrafficMatrix[i][j].bytesReceived;
+	    tmpCounter = device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesSent+
+	      device[actualReportDeviceId].ipTrafficMatrix[i][j].bytesReceived;
 	    /* Fix below courtesy of Danijel Doriae <danijel.doric@industrogradnja.tel.hr> */
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER %s>"
 			"<A HREF=# onMouseOver=\"window.status='"
@@ -3058,7 +3067,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   TrafficCounter totBytesSent=0, totBytesRcvd=0;
 
   tmpStats = (DomainStats*)malloc(sizeof(DomainStats)*
-				  device[actualDeviceId].actualHashSize);
+				  device[actualReportDeviceId].actualHashSize);
 
   /* traceEvent(TRACE_INFO, "'%s' '%d' '%d'\n", domainName, sortedColumn, revertOrder); */
 
@@ -3077,7 +3086,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   else
     domainSort = 0;
 
-  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
+  for(idx=1; idx<device[actualReportDeviceId].actualHashSize; idx++) {
     if((el = device[actualReportDeviceId].hash_hostTraffic[idx]) == NULL)
       continue;
     else
@@ -3096,11 +3105,11 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
       for(keyValue=0, tmpIdx=0; el->fullDomainName[tmpIdx] != '\0'; tmpIdx++)
 	keyValue += (tmpIdx+1)*(u_short)el->fullDomainName[tmpIdx];
 
-      keyValue %= device[actualDeviceId].actualHashSize;
+      keyValue %= device[actualReportDeviceId].actualHashSize;
 
       while((stats[keyValue] != NULL)
 	    && (strcasecmp(stats[keyValue]->domainHost->fullDomainName, el->fullDomainName) != 0))
-	keyValue = (keyValue+1) % device[actualDeviceId].actualHashSize;
+	keyValue = (keyValue+1) % device[actualReportDeviceId].actualHashSize;
 
       if(stats[keyValue] != NULL)
 	statsEntry = stats[keyValue];

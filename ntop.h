@@ -720,12 +720,55 @@ typedef struct securityHostProbes {
   UsageCounter udpToClosedPortSent, udpToClosedPortRcvd;
 } SecurityHostProbes;
 
+/* **************************** */
+
+struct hostTraffic;
+
+#define UNKNOWN_FRAGMENT_ORDER       0
+#define INCREASING_FRAGMENT_ORDER    1
+#define DECREASING_FRAGMENT_ORDER    2
+
+typedef struct ipFragment {
+  struct hostTraffic *src, *dest;
+  char fragmentOrder;
+  u_int fragmentId, lastOffset;
+  u_int totalDataLength, expectedDataLength;
+  u_int totalPacketLength;
+  u_short sport, dport;
+  time_t firstSeen;
+  struct ipFragment *prev, *next;
+} IpFragment;
+
+/* **************************** */
+
 /*
  * Interface's flags.
  */
 #define INTERFACE_DOWN      0   /* not yet enabled via LBNL */
 #define INTERFACE_READY     1   /* ready for packet sniffing */
 #define INTERFACE_ENABLED   2   /* packet capturing currently active */
+
+/* The constant below is so large due to the
+   huge service table that Doug Royer <doug@royer.com>
+   has to handle. I have no clue what's inside such /etc/services
+   file. However, all this is quite interesting....
+*/
+#define SERVICE_HASH_SIZE     50000
+
+/* Forward */
+struct ipSession;
+struct hostTraffic;
+
+typedef struct trafficEntry {
+  TrafficCounter bytesSent, bytesReceived;
+} TrafficEntry;
+
+typedef struct serviceEntry {
+  u_short port;
+  char* name;
+} ServiceEntry;
+
+/* ************************************* */
 
 typedef struct {
   char *name;                    /* unique interface name */
@@ -838,6 +881,15 @@ typedef struct {
   u_int  hostsno;        /* # of valid entries in the following table */
   u_int  actualHashSize, hashThreshold, topHashThreshold;
   struct hostTraffic **hash_hostTraffic;
+
+  /* ************************** */
+
+  IpFragment *fragmentList;
+  struct ipSession **tcpSession;
+  u_short numTotSessions, numTcpSessions;
+  TrafficEntry ipTrafficMatrix[256][256]; /* Subnet traffic Matrix */
+  struct hostTraffic* ipTrafficMatrixHosts[256]; /* Subnet traffic Matrix Hosts */
+  fd_set ipTrafficMatrixPromiscHosts;
 } ntopInterface_t;
 
 typedef struct processInfo {
@@ -1187,13 +1239,6 @@ typedef struct {
  */
 #define MAX_NUM_TCP_SESSIONS  32
 
-/* The constant below is so large due to the
-   huge service table that Doug Royer <doug@royer.com>
-   has to handle. I have no clue what's inside such /etc/services
-   file. However, all this is quite interesting....
-*/
-#define SERVICE_HASH_SIZE     50000
-
 #define NULL_HDRLEN 4
 
 #define SHORT_REPORT        1
@@ -1230,15 +1275,6 @@ struct enamemem {
   u_char *e_nsap;  /* used only for nsaptable[] */
   struct enamemem *e_nxt;
 };
-
-typedef struct trafficEntry {
-  TrafficCounter bytesSent, bytesReceived;
-} TrafficEntry;
-
-typedef struct serviceEntry {
-  u_short port;
-  char* name;
-} ServiceEntry;
 
 typedef struct protoTrafficInfo {
   TrafficCounter sentLocally, sentRemotely;
@@ -1643,23 +1679,6 @@ typedef struct transactionTime {
   u_int16_t transactionId;
   struct timeval theTime;
 } TransactionTime;
-
-/* **************************** */
-
-#define UNKNOWN_FRAGMENT_ORDER       0
-#define INCREASING_FRAGMENT_ORDER    1
-#define DECREASING_FRAGMENT_ORDER    2
-
-typedef struct ipFragment {
-  HostTraffic *src, *dest;
-  char fragmentOrder;
-  u_int fragmentId, lastOffset;
-  u_int totalDataLength, expectedDataLength;
-  u_int totalPacketLength;
-  u_short sport, dport;
-  time_t firstSeen;
-  struct ipFragment *prev, *next;
-} IpFragment;
 
 /* **************************** */
 

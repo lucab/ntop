@@ -104,7 +104,6 @@ int main(int argc, char *argv[]) {
   /* Initialization of local variables */
   isLsofPresent  = checkCommand("lsof");
   /* isLsofPresent = 0; */
-  isNepedPresent = checkCommand("neped");
   isNmapPresent  = checkCommand("nmap");
 
   rulesFile[0] = '\0';

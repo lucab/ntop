@@ -265,10 +265,13 @@ void initCounters(int _mergeInterfaces) {
   memset(hnametable, 0, sizeof(hnametable));
 #endif
 
-  numTotSessions = 32; /* Initial value */
-  len = sizeof(IPSession*)*numTotSessions;
-  tcpSession = (IPSession**)malloc(len);
-  memset(tcpSession, 0, len);
+  for(i=0; i<numDevices; i++) {
+    device[i].numTotSessions = 32; /* Initial value */
+    len = sizeof(IPSession*)*device[i].numTotSessions;
+    device[i].tcpSession = (IPSession**)malloc(len);
+    memset(device[i].tcpSession, 0, len);
+    device[i].fragmentList = NULL;
+  }
 
   nextSessionTimeoutScan = time(NULL)+SESSION_SCAN_DELAY;
   thisZone = gmt2local(0);
@@ -287,8 +290,6 @@ void initCounters(int _mergeInterfaces) {
   FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &broadcastEntry.flags);
 
   broadcastEntryIdx = 0;
-
-  fragmentList = NULL;
 
   resetStats();
   createVendorTable();
@@ -325,16 +326,14 @@ void resetStats(void) {
 
     resetDevice(i);
   }
-
-  FD_ZERO(&ipTrafficMatrixPromiscHosts);
-
-  for(i=0; i<numTotSessions; i++)
-    if(tcpSession[i] != NULL) {
-      free(tcpSession[i]);
-      tcpSession[i] = NULL;
+  
+  for(i=0; i<device[i].numTotSessions; i++)
+    if(device[i].tcpSession[i] != NULL) {
+      free(device[i].tcpSession[i]);
+      device[i].tcpSession[i] = NULL;
     }
 
-  numTcpSessions = 0;
+  device[i].numTcpSessions = 0;
 
  #ifdef MULTITHREADED
   releaseMutex(&hostsHashMutex);
@@ -500,14 +499,14 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
    * (1) - NPA - Network Packet Analyzer (main thread)
    */
   createThread(&dequeueThreadId, dequeuePacket, NULL);
-  traceEvent (TRACE_INFO, "Thread %d for Network Packet Capturing started (_main_ thread).\n",
+  traceEvent (TRACE_INFO, "Thread %d for network packet analyser started.\n",
 	      dequeueThreadId);
 
   /*
    * (2) - HTS - Host Traffic Statistics
    */
   createThread(&hostTrafficStatsThreadId, updateHostTrafficStatsThptLoop, NULL);
-  traceEvent (TRACE_INFO, "Thread %d for Host Traffic Statistics started.\n",
+  traceEvent (TRACE_INFO, "Thread %d for host traffic statistics started.\n",
 	      hostTrafficStatsThreadId);
 
   /*
@@ -515,7 +514,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
    */
   if (enableThUpdate) {
     createThread(&thptUpdateThreadId, updateThptLoop, NULL);
-    traceEvent (TRACE_INFO, "Thread %d for Throughput Update started.\n", thptUpdateThreadId);
+    traceEvent (TRACE_INFO, "Thread %d for throughput update started.\n", thptUpdateThreadId);
   }
 
   /*
@@ -523,7 +522,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
    */
   if (enableIdleHosts) {
     createThread(&scanIdleThreadId, scanIdleLoop, NULL);
-    traceEvent (TRACE_INFO, "Thread %d for Scan Idle Host started.\n", scanIdleThreadId);
+    traceEvent (TRACE_INFO, "Thread %d for scan idle host started.\n", scanIdleThreadId);
   }
 
 #ifndef MICRO_NTOP
@@ -532,7 +531,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
    */
   if (enableDBsupport) {
     createThread(&dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);
-    traceEvent (TRACE_INFO, "Thread %d for DB Update started.\n", dbUpdateThreadId);
+    traceEvent (TRACE_INFO, "Thread %d for DB update started.\n", dbUpdateThreadId);
   }
 #endif /* MICRO_NTOP */
 
@@ -545,7 +544,8 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
      * (6) - DNSAR - DNS Address Resolution - optional
      */
     createThread(&dequeueAddressThreadId, dequeueAddress, NULL);
-    traceEvent (TRACE_INFO, "Thread %d for DNS Address Resolution started.\n", dequeueAddressThreadId);
+    traceEvent (TRACE_INFO, "Thread %d for DNS address resolution started.\n", 
+		dequeueAddressThreadId);
   }
 #endif
 #endif
@@ -567,7 +567,6 @@ void initApps(void) {
 #endif /* WIN32 */
 #else
     if(isLsofPresent) readLsofInfo();
-    if(isNepedPresent) readNepedInfo();
 #endif
   }
 }
@@ -835,15 +834,17 @@ void initDeviceDatalink(void) {
 #ifdef AIX
   /* This is a bug of libpcap on AIX */
   for(i=0; i<numDevices; i++) {
-    switch(device[i].name[0]) {
-    case 't': /* TokenRing */
-      device[i].datalink = DLT_IEEE802;
-      break;
-    case 'l': /* Loopback */
-       device[i].datalink = DLT_NULL;
-      break;
-    default:
-      device[i].datalink = DLT_EN10MB; /* Ethernet */
+    if(!device[i].virtualDevice) {
+      switch(device[i].name[0]) {
+      case 't': /* TokenRing */
+	device[i].datalink = DLT_IEEE802;
+	break;
+      case 'l': /* Loopback */
+	device[i].datalink = DLT_NULL;
+	break;
+      default:
+	device[i].datalink = DLT_EN10MB; /* Ethernet */
+      }
     }
   }
 #else
@@ -861,6 +862,8 @@ void initDeviceDatalink(void) {
   for(i=0; i<numDevices; i++)
     if(!device[i].virtualDevice) {
       device[i].datalink = pcap_datalink(device[i].pcapPtr);
+      if(device[i].name[0] == 'l') /* loopback check */
+	device[i].datalink = DLT_NULL;
     }
 #endif
 #endif
@@ -940,8 +943,8 @@ void startSniffer(void) {
        * (8) - NPS - Network Packet Sniffer (main thread)
        */
       createThread(&device[i].pcapDispatchThreadId, pcapDispatch, (char*)i);
-      traceEvent (TRACE_INFO, "Thread %d for Network Packet Sniffing started (_main_ thread).\n",
-		  device[i].pcapDispatchThreadId);
+      traceEvent (TRACE_INFO, "Thread %d for network packet sniffing on %s started.\n",
+		  device[i].pcapDispatchThreadId, device[i].name);
     }
 #endif
 }
