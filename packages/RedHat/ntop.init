@@ -168,7 +168,6 @@ fi
 
 # Process what will become the parm string so we have things we need...
 parmfile=`mktemp /tmp/${name}initparms.XXXXXX`
-if [ "${debug}" = "y" ]; then echo "DEBUG: parm file temp is ${parmfile}"; fi
 if [ $? -ne 0 ]; then
   echo ""
   echo "ERROR -"
@@ -178,11 +177,8 @@ if [ $? -ne 0 ]; then
   echo ""
   exit 1
 fi
+if [ "${debug}" = "y" ]; then echo "DEBUG: parm file temp is ${parmfile}"; fi
  
-if [ -f ${parmfile} ]; then
-    rm -f ${parmfile}
-fi
-
 cmd=`echo -i tbd \
                @${conf} \
                $extra $@`
@@ -261,7 +257,7 @@ END { f=0; gsub(/[=`;\n\r\t]/, " ", eff); gsub(/ *$/, "", eff); \
     f++; \
   } \
   print "#!/bin/sh\n#"; \
-  for(i=0; i<f; i++) { gsub(/[",]/, " ", value[i]); printf("ntop%s=\"%s\"\n", options[i], value[i]) } \
+  for(i=0; i<f; i++) { gsub(/[$",]/, " ", value[i]); printf("ntop%s=\"%s\"\n", options[i], value[i]) } \
 }' > ${parmfile}
 
 . ${parmfile}
