@@ -608,11 +608,16 @@ void initDevices(char* devices) {
       numDevices=1;
     }
   } else {
-    char *strtokState, *tmpDev = strtok_r(devices, ",", &strtokState);
+    char *strtokState, *tmpDev;
+    int i, found;
+
+    tmpDev = strtok_r(devices, ",", &strtokState);
     numDevices = 0;
 
     while(tmpDev != NULL) {
       char *nwInterface;
+
+      deviceSanityCheck(tmpDev);
 
       if((nwInterface = strchr(tmpDev, ':')) != NULL) {
 	/* This is a virtual nwInterface */

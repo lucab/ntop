@@ -52,6 +52,8 @@
 
 /* #define MEMORY_DEBUG  */
 
+#define MAX_DEVICE_NAME_LEN   32
+
 #ifdef MEMORY_DEBUG
 #include "leaks.h"
 #endif
@@ -2000,3 +2002,36 @@ void stringSanityCheck(char* string) {
     exit(-1);
   }  
 }
+
+/* ****************************************************** */
+
+/*
+  Function added in order to catch invalid (too long)
+  device names specified on the command line.
+  
+  Thanks to Bailleux Christophe <cb@grolier.fr> for
+  pointing out the finger at the problem.
+*/
+
+void deviceSanityCheck(char* string) {
+  int i, j;
+
+  if(strlen(string) > MAX_DEVICE_NAME_LEN)
+    j = 0;
+  else {
+    for(i=0, j=1; i<strlen(string); i++) {
+      switch(string[i]) {
+      case ' ':
+      case ',':
+	j=0;
+	break;
+      }
+    }
+  }
+
+  if(j == 0) {
+    traceEvent(TRACE_ERROR, "FATAL ERROR: Invalid device specified.");
+    exit(-1);
+  }  
+}
+
