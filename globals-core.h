@@ -305,7 +305,8 @@ extern u_int _checkSessionIdx(u_int idx, char* file, int line);
 extern u_int findHostIdxByNumIP(struct in_addr hostIpAddress);
 extern u_int findHostInfo(struct in_addr *hostIpAddress);
 extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr, 
-			 u_char checkForMultihoming);
+			 u_char checkForMultihoming,
+			 u_char forceUsingIPaddress);
 extern char *getNamedPort(int port);
 extern void scanTimedoutTCPSessions(void);
 extern void deleteFragment(IpFragment *fragment);
@@ -494,7 +495,9 @@ extern void mySQLnotifyTCPSession(IPSession *session);
 extern void mySQLupdateDBOSname(HostTraffic *el);
 #endif /* HAVE_MYSQL */
 
+#ifdef ENABLE_NAPSTER
 extern NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
+#endif
 
 /* netflow.c */
 extern int handleNetFlowSupport(char* addr /* host:port */);

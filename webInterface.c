@@ -182,7 +182,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   static char buf[5][384];
   char symIp[256], *tmpStr, linkName[256], flag[128];
   char *blinkOn, *blinkOff, *dynIp;
-  char *multihomed, *gwStr, *dnsStr, *printStr;
+  char *multihomed, *gwStr, *dnsStr, *printStr, *healthStr;
   short specialMacAddress = 0;
   static short bufIdx=0;
   short usedEthAddress=0;
@@ -320,22 +320,34 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(isDHCPClient(el)) dynIp = "&nbsp;(dyn)"; else dynIp = "";
-  if(el->hostIpAddresses[1].s_addr != 0x0) multihomed = "<IMG SRC=multihomed.gif BORDER=0>"; else multihomed = "";
-  if(gatewayHost(el)) gwStr = "<IMG SRC=router.gif BORDER=0>"; else gwStr = "";
+  if(el->hostIpAddresses[1].s_addr != 0x0) multihomed = "<IMG SRC=/multihomed.gif BORDER=0>"; else multihomed = "";
+  if(gatewayHost(el)) gwStr = "<IMG SRC=/router.gif BORDER=0>"; else gwStr = "";
   if(nameServerHost(el)) dnsStr = "(DNS)"; else dnsStr = "";
-  if(isPrinter(el)) printStr = "<IMG SRC=printer.gif BORDER=0>"; else printStr = "";
+  if(isPrinter(el)) printStr = "<IMG SRC=/printer.gif BORDER=0>"; else printStr = "";
   
+  switch(isHostHealthy(el)) {
+  case 0: /* OK */
+    healthStr = "";
+    break;
+  case 1: /* Warning */
+    healthStr = "<IMG SRC=/Risk_medium.gif BORDER=0>";
+    break;
+  case 2: /* Error */
+    healthStr = "<IMG SRC=/Risk_high.gif BORDER=0>";
+    break;
+  }  
+ 
   if(mode == LONG_FORMAT) {
     if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
-		"<A HREF=\"/%s.html\">%s%s %s%s%s%s</A>%s</TH>%s",
+		"<A HREF=\"/%s.html\">%s%s %s%s%s%s%s</A>%s</TH>%s",
 		blinkOn, linkName, symIp, dynIp, 
-		multihomed, gwStr, dnsStr, printStr,
+		multihomed, gwStr, dnsStr, printStr, healthStr,
 		blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\" NOWRAP>%s%s %s%s%s%s</A>%s%s",
+    if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\" NOWRAP>%s%s %s%s%s%s%s</A>%s%s",
 		blinkOn, linkName, symIp, 
-		multihomed, gwStr, dnsStr, printStr,
+		multihomed, gwStr, dnsStr, printStr, healthStr,
 		dynIp, blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }

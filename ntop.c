@@ -877,6 +877,8 @@ RETSIGTYPE cleanup(int signo) {
 
   if(rFileName == NULL)
     for(i=0; i<numDevices; i++) {
+      int j;
+      
       if(!device[i].virtualDevice) {
 	if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
 	  printf("%s packets received by filter on %s\n",
@@ -889,6 +891,10 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 	}
       }
+      
+      for(j=0; j<device[i].numHosts*device[i].numHosts; j++) 
+	if(device[i].ipTrafficMatrix[j] != NULL)
+	  free(device[i].ipTrafficMatrix[j]);
 
       free(device[i].ipTrafficMatrix);
       free(device[i].ipTrafficMatrixHosts);

@@ -86,7 +86,9 @@ void initIPServices(void) {
 
   /* ************************************* */
 
+#ifdef ENABLE_NAPSTER
   memset(napsterSvr, 0, sizeof(napsterSvr));
+#endif
 
   for(i=0; i<TOP_IP_PORT; i++) ipPortMapper[i] = -1;
 
@@ -940,9 +942,9 @@ void initLibpcap(char* rulesFile, int numDevices) {
 		   device[i].numHosts, intoa(device[i].netmask));  
       }
 
-      memlen = sizeof(TrafficEntry)*device[i].numHosts*device[i].numHosts;
-      device[i].ipTrafficMatrix = (TrafficEntry*)calloc(device[i].numHosts*device[i].numHosts, 
-							sizeof(TrafficEntry));
+      memlen = sizeof(TrafficEntry*)*device[i].numHosts*device[i].numHosts;
+      device[i].ipTrafficMatrix = (TrafficEntry**)calloc(device[i].numHosts*device[i].numHosts, 
+							sizeof(TrafficEntry*));
 #ifdef DEBUG
       traceEvent(TRACE_WARNING, "ipTrafficMatrix memlen=%.1f Mbytes", 
 		 (float)memlen/(float)(1024*1024));

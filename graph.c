@@ -289,6 +289,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   accessMutex(&graphMutex, "pktHostTrafficDistrib");
 #endif
 
+#ifdef ENABLE_NAPSTER
   if(theHost->napsterStats == NULL)
     totalIPTraffic = 0;
   else {
@@ -297,6 +298,9 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     else
       totalIPTraffic = theHost->napsterStats->bytesRcvd;
   }
+#else
+  totalIPTraffic = 0;
+#endif
 
   for(i=0; i<numIpProtosToMonitor; i++) 
     if(dataSent)
@@ -306,6 +310,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
       totalIPTraffic += theHost->protoIPTrafficInfos[i].receivedLocally+
 	theHost->protoIPTrafficInfos[i].receivedFromRemote;
 
+#ifdef ENABLE_NAPSTER
   if(theHost->napsterStats != NULL) {
     if(dataSent) {
       if(theHost->napsterStats->bytesSent > 0) {
@@ -319,6 +324,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
       }
     }
   }
+#endif
 
   if(totalIPTraffic > 0) {
     for(i=0; i<numIpProtosToMonitor; i++) {

@@ -1350,20 +1350,30 @@ void checkSpoofing(u_int idxToCheck) {
 	/* Spoofing detected */
 	FilterRule spoofing;
 
-	memset(&spoofing, 0, sizeof(FilterRule));
-	spoofing.ruleId = 999;
-	spoofing.ruleLabel = "spoofing";
-	spoofing.actionType = ACTION_ALARM;
+	
+	if((!hasDuplicatedMac(el))
+	   && (!hasDuplicatedMac(device[actualDeviceId].hash_hostTraffic[idxToCheck]))) {
+	  FD_SET(HOST_DUPLICATED_MAC, &device[actualDeviceId].hash_hostTraffic[idxToCheck]->flags);
+	  FD_SET(HOST_DUPLICATED_MAC, &el->flags);
 
-	emitEvent(&spoofing, el, i,
-		  device[actualDeviceId].hash_hostTraffic[idxToCheck],
-		  idxToCheck, -1, 0, 0);
+	  memset(&spoofing, 0, sizeof(FilterRule));
+	  spoofing.ruleId = 999;
+	  spoofing.ruleLabel = "spoofing";
+	  spoofing.actionType = ACTION_ALARM;
 
-#ifdef DEBUG
-	printf("WARNING: spoofer detected (%s [%s])\n",
-	       device[actualDeviceId].hash_hostTraffic[idxToCheck]->ethAddressString,
-	       device[actualDeviceId].hash_hostTraffic[idxToCheck]->hostNumIpAddress);
-#endif
+	  emitEvent(&spoofing, el, i,
+		    device[actualDeviceId].hash_hostTraffic[idxToCheck],
+		    idxToCheck, -1, 0, 0);
+
+	  if(enableSuspiciousPacketDump) {
+	    traceEvent(TRACE_WARNING, 
+		       "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)", 
+		       el->hostIpAddresses,
+		       device[actualDeviceId].hash_hostTraffic[idxToCheck]->ethAddressString,
+		       el->ethAddressString);
+	    dumpSuspiciousPacket();
+	  }
+	}
       }
     }
   }

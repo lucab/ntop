@@ -1859,7 +1859,9 @@ static void resetHostsVariables(HostTraffic* el) {
   el->icmpInfo = NULL;
   el->dnsStats = NULL;
   el->httpStats = NULL;
+#ifdef ENABLE_NAPSTER
   el->napsterStats = NULL;
+#endif
   el->dhcpStats = NULL;
 }
 
@@ -2641,3 +2643,4 @@ void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
   }
 }
 
+/* ******************************* */

@@ -100,6 +100,7 @@ extern void printHostTrafficStats(HostTraffic *el);
 extern void printHostContactedPeers(HostTraffic *el);
 extern char *getSessionState(IPSession *session);
 extern void printHostSessions(HostTraffic *el, u_int elIdx);
+extern u_short isHostHealthy(HostTraffic *el);
 extern void printHostDetailedInfo(HostTraffic *el);
 extern void printServiceStats(char* svcName, ServiceStats* ss,
 			      short printSentStats);

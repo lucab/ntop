@@ -192,4 +192,6 @@ u_short headerSize[] = {
   UNKNOWN_MTU	/* BSD/OS Point-to-point Protocol */
 };
 
+#ifdef ENABLE_NAPSTER
 NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
+#endif

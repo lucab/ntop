@@ -933,7 +933,7 @@ typedef struct {
   IpFragment *fragmentList;
   struct ipSession **tcpSession;
   u_short numTotSessions, numTcpSessions;
-  TrafficEntry* ipTrafficMatrix; /* Subnet traffic Matrix */
+  TrafficEntry** ipTrafficMatrix; /* Subnet traffic Matrix */
   struct hostTraffic** ipTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
   fd_set ipTrafficMatrixPromiscHosts;
 } ntopInterface_t;
@@ -1426,7 +1426,9 @@ typedef struct ipSession {
   u_char lastInitiator2RemoteFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
   u_char lastRemote2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
   u_short sessionState;             /* actual session state                     */
+#ifdef ENABLE_NAPSTER
   u_char  napsterSession;           /* checked if this is a Napster session     */
+#endif
   u_char  passiveFtpSession;        /* checked if this is a passive FTP session */
 } IPSession;
 
@@ -1465,12 +1467,23 @@ typedef struct portUsage {
 #define HOST_SVC_HTTP					 17
 #define HOST_SVC_WINS					 18
 #define HOST_SVC_BRIDGE					 19
+
+#ifdef ENABLE_NAPSTER
 #define HOST_SVC_NAPSTER_REDIRECTOR			 20
 #define HOST_SVC_NAPSTER_SERVER			         21
 #define HOST_SVC_NAPSTER_CLIENT			         22
+#endif
+
 #define HOST_SVC_DHCP_CLIENT			         23
 #define HOST_SVC_DHCP_SERVER			         24
 #define HOST_TYPE_MASTER_BROWSER			 25
+
+
+/* Flags for possible error codes */
+#define HOST_WRONG_NETMASK                               65
+#define HOST_DUPLICATED_MAC                              66
+
+
 
 /* Macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG, &(a->flags))
@@ -1494,15 +1507,22 @@ typedef struct portUsage {
 #define isHTTPhost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_HTTP, &(a->flags)))
 #define isWINShost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_WINS, &(a->flags)))
 #define isBridgeHost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_BRIDGE, &(a->flags)))
+
+#ifdef ENABLE_NAPSTER
 #define isNapsterRedirector(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_REDIRECTOR, &(a->flags)))
 #define isNapsterServer(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_SERVER, &(a->flags)))
 #define isNapsterClient(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_NAPSTER_CLIENT, &(a->flags)))
+#endif
+
 #define isDHCPClient(a)	            ((a != NULL) && FD_ISSET(HOST_SVC_DHCP_CLIENT, &(a->flags)))
 #define isDHCPServer(a)	            ((a != NULL) && FD_ISSET(HOST_SVC_DHCP_SERVER, &(a->flags)))
 
+/* Host health */
+#define hasWrongNetmask(a)	    ((a != NULL) && FD_ISSET(HOST_WRONG_NETMASK, &(a->flags)))
+#define hasDuplicatedMac(a)    	    ((a != NULL) && FD_ISSET(HOST_DUPLICATED_MAC, &(a->flags)))
 
-/* ******** Napster *************** */
 
+#ifdef ENABLE_NAPSTER
 /* Cache of Napster Servers */
 #define MAX_NUM_NAPSTER_SERVER  32
 
@@ -1510,6 +1530,7 @@ typedef struct napsterServer {
   struct in_addr serverAddress;
   u_short serverPort;
 } NapsterServer;
+#endif
 
 /* *********************** */
 
@@ -1542,12 +1563,14 @@ typedef struct serviceStats {
 
 /* *********************** */
 
+#ifdef ENABLE_NAPSTER
 typedef struct napsterStats {
   TrafficCounter numConnectionsRequested, numConnectionsServed;
   TrafficCounter numSearchSent, numSearchRcvd;
   TrafficCounter numDownloadsRequested, numDownloadsServed;
   TrafficCounter bytesSent, bytesRcvd;
 } NapsterStats;
+#endif
 
 /* *********************** */
 
@@ -1681,7 +1704,9 @@ typedef struct hostTraffic {
   u_int contactedRcvdPeersIdx;
   u_int contactedRouters[MAX_NUM_HOST_ROUTERS]; /* routers contacted by this host */
   ServiceStats *dnsStats, *httpStats;
+#ifdef ENABLE_NAPSTER
   NapsterStats *napsterStats;
+#endif
   DHCPStats    *dhcpStats;
 
   /* *************** IMPORTANT ***************

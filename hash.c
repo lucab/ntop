@@ -70,7 +70,8 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 			    short* useIPAddressForSearching) {
   u_int idx;
 
-  if((ether_addr == NULL) && (hostIpAddress != NULL)) {
+  if(((*useIPAddressForSearching) == 1)
+     || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
     idx = 0;
     memcpy(&idx, &hostIpAddress->s_addr, 4);
     (*useIPAddressForSearching) = 1;
@@ -1026,7 +1027,9 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
   if(host->icmpInfo     != NULL) free(host->icmpInfo);
   if(host->dnsStats     != NULL) free(host->dnsStats);
   if(host->httpStats    != NULL) free(host->httpStats);
+#ifdef ENABLE_NAPSTER
   if(host->napsterStats != NULL) free(host->napsterStats);
+#endif
   if(host->dhcpStats    != NULL) free(host->dhcpStats);
 
   /* ********** */

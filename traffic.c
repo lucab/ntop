@@ -474,14 +474,23 @@ void updateTrafficMatrix(HostTraffic *srcHost,
 			 HostTraffic *dstHost,
 			 TrafficCounter length) {
   if(subnetLocalHost(srcHost) && subnetLocalHost(dstHost)) {
-    unsigned long a, b;
+    unsigned long a, b, id;    
+
     a = (unsigned long)(srcHost->hostIpAddress.s_addr) % device[actualDeviceId].numHosts;
     b = (unsigned long)(dstHost->hostIpAddress.s_addr) % device[actualDeviceId].numHosts;
 
     device[actualDeviceId].ipTrafficMatrixHosts[a] = srcHost, 
       device[actualDeviceId].ipTrafficMatrixHosts[b] = dstHost;
-    device[actualDeviceId].ipTrafficMatrix[a*device[actualDeviceId].numHosts+b].bytesSent += length,
-      device[actualDeviceId].ipTrafficMatrix[b*device[actualDeviceId].numHosts+a].bytesReceived += length;
+
+    id = a*device[actualDeviceId].numHosts+b;
+    if(device[actualDeviceId].ipTrafficMatrix[id] == NULL)
+      device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
+    device[actualDeviceId].ipTrafficMatrix[id]->bytesSent += length;
+
+    id = b*device[actualDeviceId].numHosts+a;
+    if(device[actualDeviceId].ipTrafficMatrix[id] == NULL)
+      device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
+    device[actualDeviceId].ipTrafficMatrix[id]->bytesReceived += length;
   }
 }
 

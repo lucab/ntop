@@ -478,10 +478,12 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	theAnchor[0] = htmlAnchor1;
       }
 
+#ifdef ENABLE_NAPSTER
     if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>%s%s</A></TH>",
 		theAnchor[0], 1, "Napster", arrow[0]) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
+#endif
 
     for(i=0; i<numIpProtosToMonitor; i++) {
       if(abs(column) == soFar) {
@@ -870,6 +872,7 @@ int cmpFctn(const void *_a, const void *_b) {
 
 	  if(idx <= numIpProtosToMonitor) {
 	    if(idx == 0) {
+#ifdef ENABLE_NAPSTER
 	      if((*a)->napsterStats == NULL)
 		a_ = 0;
 	      else
@@ -879,6 +882,9 @@ int cmpFctn(const void *_a, const void *_b) {
 		b_ = 0;
 	      else
 		b_ = (*b)->napsterStats->bytesSent;
+#else
+	      a_ = b_ = 0;	    
+#endif
 	    } else {
 	      a_ = (*a)->protoIPTrafficInfos[idx-1].sentLocally
 		+(*a)->protoIPTrafficInfos[idx-1].sentRemotely;
@@ -931,6 +937,7 @@ int cmpFctn(const void *_a, const void *_b) {
 	default:
 	  if(idx <= numIpProtosToMonitor) {
 	    if(idx == 0) {
+#ifdef ENABLE_NAPSTER
 	      if((*a)->napsterStats == NULL)
 		a_ = 0;
 	      else
@@ -940,6 +947,9 @@ int cmpFctn(const void *_a, const void *_b) {
 		b_ = 0;
 	      else
 		b_ = (*b)->napsterStats->bytesRcvd;
+#else
+	      a_ = b_ = 0;	    
+#endif
 	    } else {
 	      a_ = (*a)->protoIPTrafficInfos[idx-1].receivedLocally
 		+(*a)->protoIPTrafficInfos[idx-1].receivedFromRemote;
@@ -1908,21 +1918,16 @@ void printHostTrafficStats(HostTraffic *el) {
   printHostHourlyTraffic(el);
   printPacketStats(el);
 
-  /*
-  if((el->tcpSentLocally+el->tcpSentRemotely+
-      el->tcpReceivedLocally+el->tcpReceivedFromRemote+
-      el->udpSentLocally+el->udpSentRemotely+
-      el->udpReceivedLocally+el->udpReceivedFromRemote) == 0)
+  if((totalSent == 0 ) && (totalReceived == 0))
     return;
-  */
-
-    printSectionTitle("Protocol Distribution");
-
-    sendString("<CENTER>\n"
+  
+  printSectionTitle("Protocol Distribution");
+  
+  sendString("<CENTER>\n"
 	     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
 	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Received</TH></TR>\n");
-
+  
   printTableDoubleEntry(buf, sizeof(buf), "TCP", COLOR_1, (float)actTotalSent/1024,
 			100*((float)SD(actTotalSent, totalSent)),
 			(float)actTotalReceived/1024,
@@ -2078,10 +2083,14 @@ void printHostTrafficStats(HostTraffic *el) {
   }
 #endif
 
+#ifndef ENABLE_NAPSTER
+  a = b = 0;
+#else
   if(el->napsterStats == NULL)
-    a =0, b = 0;
+    a = 0, b = 0;
   else
     a = el->napsterStats->bytesSent, b = el->napsterStats->bytesRcvd;
+#endif
 
   for(i=0; i<numIpProtosToMonitor; i++) {
     a += el->protoIPTrafficInfos[i].sentLocally+
@@ -2447,10 +2456,14 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
 
+#ifndef ENABLE_NAPSTER
+      moreSessionInfo = "";
+#else
       if(device[actualReportDeviceId].tcpSession[idx]->napsterSession)
 	moreSessionInfo = "&nbsp;[Napster]";
       else
 	moreSessionInfo = "";
+#endif
 
       if(device[actualReportDeviceId].tcpSession[idx]->passiveFtpSession)
 	moreSessionInfo = "&nbsp;[FTP]";
@@ -2515,6 +2528,53 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
   if(numSessions > 0) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
+  }
+}
+
+/* ******************************* */
+/* 
+   Return codes:
+   
+   OK          0
+   Warning     1
+   Error       2!
+*/
+
+u_short isHostHealthy(HostTraffic *el) {
+  u_char riskFactor = 0;
+
+  if(hasWrongNetmask(el)) {
+    if(riskFactor < 1) riskFactor = 1;
+  }
+
+  if(hasDuplicatedMac(el)) {
+    if(riskFactor < 2) riskFactor = 2;
+  }
+
+  return(riskFactor);
+}
+
+/* ************************************ */
+
+static void checkHostHealthness(HostTraffic *el) {
+  char buf[BUF_SIZE];
+
+  if(hasWrongNetmask(el)
+     || hasDuplicatedMac(el)
+     ) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s "
+		"<IMG SRC=/Risk_high.gif> <IMG SRC=/Risk_medium.gif> <IMG SRC=/Risk_low.gif>"
+		"</TH><TD "TD_BG" ALIGN=RIGHT NOWRAP><OL>", getRowColor(),
+		"Network Healthness") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    if(hasWrongNetmask(el)) 
+      sendString("<LI><IMG SRC=/Risk_medium.gif> Wrong network mask or bridging enabled\n");
+
+    if(hasDuplicatedMac(el)) 
+      sendString("<LI><IMG SRC=/Risk_high.gif> Duplicated MAC found for this IP address (spoofing?)\n");
+
+    sendString("</OL></TD></TR>\n");
   }
 }
 
@@ -2607,7 +2667,7 @@ void printHostDetailedInfo(HostTraffic *el) {
 	  break;
       }
 
-      if(snprintf(buf, sizeof(buf), "</ol>%s&nbsp;[%s - multihomed&nbsp;<IMG SRC=multihomed.gif BORDER=0>]",
+      if(snprintf(buf, sizeof(buf), "</ol>%s&nbsp;[%s - multihomed&nbsp;<IMG SRC=/multihomed.gif BORDER=0>]",
 		  countryIcon, hostType) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
@@ -3053,8 +3113,11 @@ void printHostDetailedInfo(HostTraffic *el) {
     if(isFTPhost(el))          sendString("FTP Server<br>");
     if(isHTTPhost(el))         sendString("HTTP Server<br>");
     if(isWINShost(el))         sendString("WINS Server<br>");
+
+#ifdef ENABLE_NAPSTER
     if(isNapsterServer(el))    sendString("Napster Server<br>");
     if(isNapsterRedirector(el))    sendString("Napster Redirector<br>");
+#endif
 
     sendString("</TD></TR>");
   }
@@ -3066,7 +3129,9 @@ void printHostDetailedInfo(HostTraffic *el) {
      || isMasterBrowser(el)
      || isPrinter(el)
      || isBridgeHost(el)
+#ifdef ENABLE_NAPSTER
      || isNapsterRedirector(el) || isNapsterServer(el) || isNapsterClient(el)
+#endif
      || isDHCPClient(el)        || isDHCPServer(el)
      ) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -3079,9 +3144,11 @@ void printHostDetailedInfo(HostTraffic *el) {
     if(isWorkstation(el))         sendString("Workstation<br>");
     if(isPrinter(el))             sendString("Printer&nbsp;<IMG SRC=printer.gif BORDER=0><br>");
     if(isBridgeHost(el))          sendString("Bridge<br>");
+#ifdef ENABLE_NAPSTER
     if(isNapsterRedirector(el))   sendString("Napster Redirector<br>");
     if(isNapsterServer(el))       sendString("Napster Server<br>");
     if(isNapsterClient(el))       sendString("Napster Client<br>");
+#endif
     if(isDHCPClient(el))          sendString("BOOTP/DHCP Client<br>");
     if(isDHCPServer(el))          sendString("BOOTP/DHCP Server<br>");
     sendString("</TD></TR>");
@@ -3094,6 +3161,8 @@ void printHostDetailedInfo(HostTraffic *el) {
   */
   if(printedHeader > 1)
     sendString("</OL></TD></TR>\n");
+
+  checkHostHealthness(el);
 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");
@@ -3190,6 +3259,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
 
 /* ************************************ */
 
+#ifdef ENABLE_NAPSTER
 static void printNapsterStats(HostTraffic *el) {
 
   printSectionTitle("Napster Stats");
@@ -3222,14 +3292,17 @@ static void printNapsterStats(HostTraffic *el) {
 
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
 }
+#endif
 
 /* ************************************ */
 
 void printHostUsedServices(HostTraffic *el) {
   TrafficCounter tot;
 
+#ifdef ENABLE_NAPSTER
   if(el->napsterStats != NULL)
     printNapsterStats(el);
+#endif
 
   if((el->dnsStats == NULL) && (el->httpStats == NULL))
     return;
@@ -3354,31 +3427,33 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
   accessMutex(&addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
 #endif
 
-  if((device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent == 0)
-     && (device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived == 0))
+     
+  if((device[actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
+     || ((device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent == 0)
+	 && (device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived == 0)))
     buf[0]='\0';
-  else if ((device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent > 0)
-	   && (device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived == 0)) {
+  else if ((device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent > 0)
+	   && (device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived == 0)) {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s",
 		device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
 		device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
-		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent, 1)) < 0)
+		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent, 1)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-  } else if ((device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent == 0)
-	     && (device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived > 0)) {
+  } else if ((device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent == 0)
+	     && (device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived > 0)) {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s",
 		device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
 		device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
-		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived, 1)) < 0)
+		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived, 1)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s, (%s->%s)=%s",
 		device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
 		device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
-		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent, 1),
+		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent, 1),
 		device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
 		device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
-		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived, 1)) < 0)
+		formatBytes(device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived, 1)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 

@@ -287,6 +287,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 
+#ifdef ENABLE_NAPSTER
 	    if(el->napsterStats != NULL) {
 	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			  formatBytes(el->napsterStats->bytesSent, 1)) < 0)
@@ -295,6 +296,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	    } else {
 	      sendString("<TD "TD_BG" ALIGN=RIGHT>0</TD>");
 	    }
+#endif
 
 	    for(i=0; i<numIpProtosToMonitor; i++) {
 	      totalIPTraffic += el->protoIPTrafficInfos[i].sentLocally+
@@ -396,6 +398,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 
+#ifdef ENABLE_NAPSTER
 	    if(el->napsterStats != NULL) {
 	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			  formatBytes(el->napsterStats->bytesRcvd, 1)) < 0)
@@ -404,6 +407,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	    } else {
 	      sendString("<TD "TD_BG" ALIGN=RIGHT>0</TD>");
 	    }
+#endif
 
 	    for(i=0; i<numIpProtosToMonitor; i++) {
 	      totalIPTraffic += el->protoIPTrafficInfos[i].receivedLocally+
@@ -2621,10 +2625,12 @@ void printIpTrafficMatrix(void) {
   for(i=1; i<device[actualReportDeviceId].numHosts-1; i++) {
     activeHosts[i] = 0;
     for(j=1; j<device[actualReportDeviceId].numHosts-1; j++) {
-      if((device[actualReportDeviceId].
-	  ipTrafficMatrix[i*device[actualReportDeviceId].numHosts+j].bytesSent != 0)
-	 || (device[actualReportDeviceId].
-	     ipTrafficMatrix[i*device[actualReportDeviceId].numHosts+j].bytesReceived != 0)) {
+      int id = i*device[actualReportDeviceId].numHosts+j;
+      
+      if(((device[actualReportDeviceId].ipTrafficMatrix[id] != NULL)
+	  && (device[actualReportDeviceId].ipTrafficMatrix[id]->bytesSent != 0))
+	 || ((device[actualReportDeviceId].ipTrafficMatrix[id] != NULL) 
+	     && (device[actualReportDeviceId].ipTrafficMatrix[id]->bytesReceived != 0))) {
 	activeHosts[i] = 1;
 	numEntries++;
 	break;
@@ -2656,16 +2662,17 @@ void printIpTrafficMatrix(void) {
     for(j=1; j<device[actualReportDeviceId].numHosts-1; j++) {
       int idx = i*device[actualReportDeviceId].numHosts+j;
 	
-      if((device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent != 0)
-	 || (device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived != 0)) {
-	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent)
-	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent;
-	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived)
-	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived;
-	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent)
-	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent;
-	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived)
-	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived;
+      if(((device[actualReportDeviceId].ipTrafficMatrix[idx] != NULL)
+	 && ((device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent != 0)
+	     || (device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived != 0)))) {
+	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent)
+	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent;
+	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived)
+	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived;
+	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent)
+	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent;
+	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived)
+	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived;
       }
     }
 
@@ -2690,8 +2697,7 @@ void printIpTrafficMatrix(void) {
 	if((i == j) && strcmp(device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress, "127.0.0.1"))
 	  numConsecutiveEmptyCells++;
 	else if(activeHosts[j] == 1) {
-	  if((device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived == 0) 
-	     && (device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent == 0))
+	  if(device[actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
 	    numConsecutiveEmptyCells++;
 	  else {
 	    if(numConsecutiveEmptyCells > 0) {
@@ -2701,8 +2707,8 @@ void printIpTrafficMatrix(void) {
 	      numConsecutiveEmptyCells = 0;
 	    }
 
-	    tmpCounter = device[actualReportDeviceId].ipTrafficMatrix[idx].bytesSent+
-	      device[actualReportDeviceId].ipTrafficMatrix[idx].bytesReceived;
+	    tmpCounter = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent+
+	      device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived;
 	    /* Fix below courtesy of Danijel Doriae <danijel.doric@industrogradnja.tel.hr> */
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER %s>"
 			"<A HREF=# onMouseOver=\"window.status='"
