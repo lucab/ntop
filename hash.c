@@ -470,6 +470,9 @@ void purgeIdleHosts(int actDevice) {
 	  myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
 	  if(maxBucket >= (len-1)) {
 	    hashFull = 1;
+#ifdef MULTITHREADED
+	    releaseMutex(&myGlobals.hostsHashMutex);
+#endif
 	    continue;
 	  }
 	}
