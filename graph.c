@@ -64,7 +64,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40,
+  int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40,
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
@@ -269,7 +269,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
     GDCPIE_LineColor = 0x000000L;
-    GDCPIE_explode   = expl;    /* default: NULL - no explosion */
+    GDCPIE_explode   = explodePieces;    /* default: NULL - no explosion */
     GDCPIE_Color     = clr;
     GDCPIE_BGColor   = 0xFFFFFFL;
     GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
@@ -303,7 +303,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40,
+  int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40,
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
@@ -373,7 +373,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
     GDCPIE_LineColor = 0x000000L;
-    GDCPIE_explode   = expl;    /* default: NULL - no explosion */
+    GDCPIE_explode   = explodePieces;    /* default: NULL - no explosion */
     GDCPIE_Color     = clr;
     GDCPIE_BGColor   = 0xFFFFFFL;
     GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
@@ -406,7 +406,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40,
+  int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40,
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totFragmentedTraffic, totTraffic;
@@ -455,7 +455,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
     GDCPIE_LineColor      = 0x000000L;
-    GDCPIE_explode        = expl;      /* default: NULL - no explosion */
+    GDCPIE_explode        = explodePieces;      /* default: NULL - no explosion */
     GDCPIE_Color          = clr;
     GDCPIE_BGColor        = 0xFFFFFFL;
     GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
@@ -488,7 +488,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   float p[MAX_NUM_PROTOS];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int i, num=0, expl[MAX_NUM_PROTOS];
+  int i, num=0, explodePieces[MAX_NUM_PROTOS];
   FILE *fd;
   TrafficCounter traffic, totalIPTraffic, diffTraffic;
   int useFdOpen = 0;
@@ -518,10 +518,10 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	diffTraffic.value += traffic.value;
 
         if(num == 0)
-          expl[num]=10;
+          explodePieces[num]=10;
         else
-          expl[num]=expl[num-1];
-	if (p[num]<5.0) expl[num]+=9; else if (p[num]>10.0) expl[num]=10;
+          explodePieces[num]=explodePieces[num-1];
+	if (p[num]<5.0) explodePieces[num]+=9; else if (p[num]>10.0) explodePieces[num]=10;
 
 	lbl[num++] = myGlobals.protoIPTrafficInfos[i];
       }
@@ -532,14 +532,14 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
   if(num == 0) {
     p[num] = 1;
-    expl[num] = 10;
+    explodePieces[num] = 10;
     lbl[num++] = "Other";
   } else {
     if(diffTraffic.value < totalIPTraffic.value) {
       diffTraffic.value = totalIPTraffic.value - diffTraffic.value;
       p[num] = (float)((100*diffTraffic.value)/totalIPTraffic.value);
-      expl[num]=expl[num-1];
-      if(p[num]<5.0) expl[num]+=9; else if (p[num]>10.0) expl[num]=10;
+      explodePieces[num]=explodePieces[num-1];
+      if(p[num]<5.0) explodePieces[num]+=9; else if (p[num]>10.0) explodePieces[num]=10;
       lbl[num++] = "Other";
     }
   }
@@ -565,7 +565,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
   GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = expl;    /* default: NULL - no explosion */
+  GDCPIE_explode        = explodePieces;    /* default: NULL - no explosion */
   GDCPIE_Color          = clr;
   GDCPIE_BGColor        = 0xFFFFFFL;
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
@@ -597,7 +597,7 @@ void pktSizeDistribPie(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[7];
   char	*lbl[] = { "", "", "", "", "", "", "" };
-  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
+  int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35 };
   FILE *fd;
   int useFdOpen = 0;
 
@@ -665,7 +665,7 @@ void pktSizeDistribPie(void) {
 #endif
 
   GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = expl;    /* default: NULL - no explosion */
+  GDCPIE_explode        = explodePieces;    /* default: NULL - no explosion */
   GDCPIE_Color          = clr;
   GDCPIE_BGColor        = 0xFFFFFFL;
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
@@ -696,7 +696,7 @@ void pktTTLDistribPie(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[8];
   char	*lbl[] = { "", "", "", "", "", "", "" };
-  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
+  int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
   FILE *fd;
   int useFdOpen = 0;
 
@@ -769,7 +769,7 @@ void pktTTLDistribPie(void) {
 #endif
 
   GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = expl;    /* default: NULL - no explosion */
+  GDCPIE_explode        = explodePieces;    /* default: NULL - no explosion */
   GDCPIE_Color          = clr;
   GDCPIE_BGColor        = 0xFFFFFFL;
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
@@ -800,7 +800,7 @@ void ipProtoDistribPie(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };
-  int num=0, expl[] = { 0, 20, 30 };
+  int num=0, explodePieces[] = { 0, 20, 30 };
   FILE *fd;
   int useFdOpen = 0;
 
@@ -843,7 +843,7 @@ void ipProtoDistribPie(void) {
 #endif
 
   GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = expl;    /* default: NULL - no explosion */
+  GDCPIE_explode        = explodePieces;    /* default: NULL - no explosion */
   GDCPIE_Color          = clr;
   GDCPIE_BGColor        = 0xFFFFFFL;
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
@@ -873,7 +873,7 @@ void ipProtoDistribPie(void) {
 void interfaceTrafficPie(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[MAX_NUM_DEVICES];
-  int i, expl[MAX_NUM_DEVICES];
+  int i, explodePieces[MAX_NUM_DEVICES];
   FILE *fd;
   TrafficCounter totPkts;
   struct pcap_stat stat;
@@ -889,7 +889,7 @@ void interfaceTrafficPie(void) {
 	p[i] = (float)stat.ps_recv;
 	totPkts.value += stat.ps_recv;
       }
-      expl[i] = 10*i;
+      explodePieces[i] = 10*i;
     }
 
   if(totPkts.value == 0)
@@ -924,7 +924,7 @@ void interfaceTrafficPie(void) {
 #endif
 
   GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = expl;
+  GDCPIE_explode        = explodePieces;
   GDCPIE_Color          = clr;
   GDCPIE_BGColor        = 0xFFFFFFL;
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
@@ -955,7 +955,7 @@ void pktCastDistribPie(void) {
   char fileName[64] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "", "", "" };
-  int num=0, expl[] = { 0, 20, 30 }, useFdOpen = 0;
+  int num=0, explodePieces[] = { 0, 20, 30 }, useFdOpen = 0;
   FILE *fd;
   TrafficCounter unicastPkts;
 
@@ -1006,7 +1006,7 @@ void pktCastDistribPie(void) {
 #endif
 
   GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = expl;         /* default: NULL - no explosion */
+  GDCPIE_explode        = explodePieces;         /* default: NULL - no explosion */
   GDCPIE_Color          = clr;
   GDCPIE_BGColor        = 0xFFFFFFL;
   GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
@@ -1038,7 +1038,7 @@ void drawTrafficPie(void) {
   TrafficCounter ip;
   float p[2];
   char	*lbl[] = { "IP", "Non IP" };
-  int num=0, expl[] = { 5, 5 };
+  int num=0, explodePieces[] = { 5, 5 };
   FILE *fd;
   int useFdOpen = 0;
 
@@ -1075,7 +1075,7 @@ void drawTrafficPie(void) {
   GDCPIE_LineColor = 0x000000L;
   GDCPIE_BGColor   = 0xFFFFFFL;
   GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-  GDCPIE_explode   = expl;    /* default: NULL - no explosion */
+  GDCPIE_explode   = explodePieces;    /* default: NULL - no explosion */
   GDCPIE_Color     = clr;
 
   if(num == 1) p[0] = 100; /* just to be safe */
@@ -1515,6 +1515,11 @@ void drawHostsDistanceGraph() {
 }
 
 /* ************************ */
+
+#ifdef HAVE_RRD_H
+void gdImageCreateFromPng() {;} 
+void gdImageWBMP() {; }
+#endif
 
 #endif /* HAVE_GDCHART */
 #endif /* MICRO_NTOP   */

@@ -1233,8 +1233,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  about the protocol.
        */
        ) {
-      if(packetDataLength >= sizeof(rcStr))
-	len = sizeof(rcStr)-1;
+      if(packetDataLength >= sizeof(tmpStr))
+	len = sizeof(tmpStr)-1;
       else
 	len = packetDataLength;
 
@@ -1244,56 +1244,56 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	an unknown port)
       */
       if((theSession->bytesProtoSent.value == 0) && (len > 0)) {
-	memset(rcStr, 0, sizeof(rcStr));
-	strncpy(rcStr, packetData, len);
+	memset(tmpStr, 0, sizeof(tmpStr));
+	strncpy(tmpStr, packetData, len);
 
 	if(myGlobals.enablePacketDecoding) {
 	  if((dport != 80)
 	     && (dport != 3000  /* ntop  */)
 	     && (dport != 3128  /* squid */)
-	     && isInitialHttpData(rcStr)) {
+	     && isInitialHttpData(tmpStr)) {
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(TRACE_WARNING, "WARNING: HTTP detected at wrong port (trojan?) "
 			 "%s:%d -> %s:%d [%s]",
 			 srcHost->hostSymIpAddress, sport,
 			 dstHost->hostSymIpAddress, dport,
-			 rcStr);
+			 tmpStr);
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
-	  } else if((sport != 21) && (sport != 25) && isInitialFtpData(rcStr)) {
+	  } else if((sport != 21) && (sport != 25) && isInitialFtpData(tmpStr)) {
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(TRACE_WARNING, "WARNING: FTP/SMTP detected at wrong port (trojan?) "
 			 "%s:%d -> %s:%d [%s]",
 			 dstHost->hostSymIpAddress, dport,
 			 srcHost->hostSymIpAddress, sport,
-			 rcStr);
+			 tmpStr);
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
-	  } else if(((sport == 21) || (sport == 25)) && (!isInitialFtpData(rcStr))) {
+	  } else if(((sport == 21) || (sport == 25)) && (!isInitialFtpData(tmpStr))) {
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP/SMTP) detected (trojan?) "
 			 "at port %d %s:%d -> %s:%d [%s]", sport,
 			 dstHost->hostSymIpAddress, dport,
 			 srcHost->hostSymIpAddress, sport,
-			 rcStr);
+			 tmpStr);
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
-	  } else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr)) {
+	  } else if((sport != 22) && (dport != 22) &&  isInitialSshData(tmpStr)) {
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(TRACE_WARNING, "WARNING: SSH detected at wrong port (trojan?) "
 			 "%s:%d -> %s:%d [%s]  ",
 			 dstHost->hostSymIpAddress, dport,
 			 srcHost->hostSymIpAddress, sport,
-			 rcStr);
+			 tmpStr);
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
-	  } else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr))) {
+	  } else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(tmpStr))) {
 	    if(myGlobals.enableSuspiciousPacketDump) {
 	      traceEvent(TRACE_WARNING, "WARNING: unknown protocol (no SSH) detected (trojan?) "
 			 "at port 22 %s:%d -> %s:%d [%s]",
 			 dstHost->hostSymIpAddress, dport,
 			 srcHost->hostSymIpAddress, sport,
-			 rcStr);
+			 tmpStr);
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
 	  }
@@ -1301,8 +1301,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
     }
 
-    if(packetDataLength >= sizeof(rcStr))
-      len = sizeof(rcStr)-1;
+    if(packetDataLength >= sizeof(tmpStr))
+      len = sizeof(tmpStr)-1;
     else
       len = packetDataLength;
 

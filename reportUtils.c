@@ -3057,7 +3057,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
-	      getRowColor(), "Total&nbsp;Data&nbsp;Sent.value",
+	      getRowColor(), "Total&nbsp;Data&nbsp;Sent",
 	      formatBytes(el->bytesSent.value, 1), formatPkts(el->pktSent.value),
 	      formatPkts(el->pktDuplicatedAckSent.value),
 	      (int)(((float)el->pktDuplicatedAckSent.value*100)/(float)(el->pktSent.value+1))
@@ -3066,7 +3066,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s Pkts</TD></TR>\n",
-	      getRowColor(), "Broadcast&nbsp;Pkts&nbsp;Sent.value",
+	      getRowColor(), "Broadcast&nbsp;Pkts&nbsp;Sent",
 	      formatPkts(el->pktBroadcastSent.value)) < 0) BufferTooShort();
   sendString(buf);
 
@@ -3088,14 +3088,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString(buf);
 
     if(el->pktMulticastSent.value > 0) {
-      if(snprintf(buf, sizeof(buf), "Sent.value&nbsp;%s/%s&nbsp;Pkts&nbsp;-",
+      if(snprintf(buf, sizeof(buf), "Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;-",
 		  formatBytes(el->bytesMulticastSent.value, 1),
 		  formatPkts(el->pktMulticastSent.value)) < 0) BufferTooShort();
       sendString(buf);
     }
 
     if(el->pktMulticastRcvd.value > 0) {
-      if(snprintf(buf, sizeof(buf), "Rcvd.value&nbsp;%s/%s&nbsp;Pkts",
+      if(snprintf(buf, sizeof(buf), "Rcvd&nbsp;%s/%s&nbsp;Pkts",
 		  formatBytes(el->bytesMulticastRcvd.value, 1),
 		  formatPkts(el->pktMulticastRcvd.value)) < 0) BufferTooShort();
       sendString(buf);
@@ -3111,20 +3111,20 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(!myGlobals.borderSnifferMode) {
     if(el->hostNumIpAddress[0] != '\0') {
-      printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Sent.value&nbsp;Stats",
+      printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Sent&nbsp;Stats",
 				"Local", "Rem", -1, percentage);
     }
 
     if(el->bytesSent.value > 0) {
       percentage = (((float)el->ipBytesSent.value*100)/el->bytesSent.value);
-      printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Sent.value",
+      printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Sent",
 				"IP", "Non-IP", -1, percentage);
     }
   }
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
-	      getRowColor(), "Total&nbsp;Data&nbsp;Rcvd.value",
+	      getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
 	      formatBytes(el->bytesRcvd.value, 1), formatPkts(el->pktRcvd.value),
 	      formatPkts(el->pktDuplicatedAckRcvd.value),
 	      (int)((float)(el->pktDuplicatedAckRcvd.value*100)/(float)(el->pktRcvd.value+1))) < 0)
@@ -3138,28 +3138,28 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       percentage = 100 - (((float)el->bytesRcvdFromRem.value*100)/el->bytesRcvd.value);
 
     if(el->hostNumIpAddress[0] != '\0')
-      printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Rcvd.value&nbsp;Stats",
+      printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Rcvd&nbsp;Stats",
 				"Local", "Rem", -1, percentage);
   }
 
   if(el->bytesRcvd.value > 0) {
     percentage = (((float)el->ipBytesRcvd.value*100)/el->bytesRcvd.value);
-    printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Rcvd.value",
+    printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Rcvd",
 			      "IP", "Non-IP", -1, percentage);
   }
 
   total = el->pktSent.value+el->pktRcvd.value;
   if(total > 0) {
     percentage = ((float)el->pktSent.value*100)/((float)total);
-    printTableEntryPercentage(buf, sizeof(buf), "Sent.value&nbsp;vs.&nbsp;Rcvd.value&nbsp;Pkts",
-			      "Sent.value", "Rcvd.value", -1, percentage);
+    printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vs.&nbsp;Rcvd&nbsp;Pkts",
+			      "Sent", "Rcvd", -1, percentage);
   }
 
   total = el->bytesSent.value+el->bytesRcvd.value;
   if(total > 0) {
     percentage = ((float)el->bytesSent.value*100)/((float)total);
-    printTableEntryPercentage(buf, sizeof(buf), "Sent.value&nbsp;vs.&nbsp;Rcvd.value&nbsp;Data",
-			      "Sent.value", "Rcvd.value", -1, percentage);
+    printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vs.&nbsp;Rcvd&nbsp;Data",
+			      "Sent", "Rcvd", -1, percentage);
   }
 
   /* ******************** */
@@ -3380,10 +3380,10 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
     sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>\n<TR "TR_ON">"
 	       "<TH "TH_BG">&nbsp;</TH>"
-	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Sent.value</TH>"
-	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Sent.value</TH>"
-	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Pos.&nbsp;Reply&nbsp;Rcvd.value</TH>"
-	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Neg.&nbsp;Reply&nbsp;Rcvd.value</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Sent</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Sent</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Pos.&nbsp;Reply&nbsp;Rcvd</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Neg.&nbsp;Reply&nbsp;Rcvd</TH>"
 	       "<TH "TH_BG">Local&nbsp;RndTrip</TH>"
 	       "<TH "TH_BG">Rem&nbsp;RndTrip</TH>"
 	       "</TR>\n");
@@ -3410,10 +3410,10 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
     sendString("<CENTER>\n");
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=100%>\n<TR "TR_ON">"
 	       "<TH "TH_BG">&nbsp;</TH>"
-	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Rcvd.value</TH>"
-	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Rcvd.value</TH>"
-	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Pos.&nbsp;Reply&nbsp;Sent.value</TH>"
-	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Neg.&nbsp;Reply&nbsp;Sent.value</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Rcvd</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Rcvd</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Pos.&nbsp;Reply&nbsp;Sent</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Neg.&nbsp;Reply&nbsp;Sent</TH>"
 	       "<TH "TH_BG">Local&nbsp;RndTrip</TH>"
 	       "<TH "TH_BG">Rem&nbsp;RndTrip</TH>"
 	       "</TR>\n");

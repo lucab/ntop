@@ -3277,3 +3277,4 @@ void incrementTrafficCounter(TrafficCounter *ctr, Counter value) {
 void resetTrafficCounter(TrafficCounter *ctr) {
   ctr->value = 0, ctr->modified = 0;
 }
+

@@ -79,23 +79,31 @@ int handleIP(u_short port,
   if(idx != NO_PEER) {
     if(subnetPseudoLocalHost(srcHost)) {
       if(subnetPseudoLocalHost(dstHost)) {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentLoc, length);
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdLoc, length);
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL))
+	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentLoc, length);
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL))
+	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdLoc, length);
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local, length);
       } else {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentRem, length);
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdLoc, length);
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL))
+	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentRem, length);
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) 
+	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdLoc, length);
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local2remote, length);
       }
     } else {
       /* srcHost is remote */
       if(subnetPseudoLocalHost(dstHost)) {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentLoc, length);
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdFromRem, length);
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) 
+	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentLoc, length);
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) 
+	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdFromRem, length);
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].remote2local, length);
       } else {
-	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentRem, length);
-	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdFromRem, length);
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL))
+	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx].sentRem, length);
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL))
+	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx].rcvdFromRem, length);
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].remote, length);
       }
     }
@@ -640,7 +648,8 @@ static void processIpPkt(const u_char *bp,
     updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
   }
 
-  incrementTrafficCounter(&srcHost->ipBytesSent, length), incrementTrafficCounter(&dstHost->ipBytesRcvd, length);
+  incrementTrafficCounter(&srcHost->ipBytesSent, length),
+    incrementTrafficCounter(&dstHost->ipBytesRcvd, length);
 
   if(subnetPseudoLocalHost(srcHost)) {
     if(subnetPseudoLocalHost(dstHost)) {
@@ -689,13 +698,16 @@ static void processIpPkt(const u_char *bp,
 
     switch(ip.ip_p) {
     case IPPROTO_TCP:
-      incrementTrafficCounter(&srcHost->tcpFragmentsSent, length), incrementTrafficCounter(&dstHost->tcpFragmentsRcvd, length);
+      incrementTrafficCounter(&srcHost->tcpFragmentsSent, length),
+	incrementTrafficCounter(&dstHost->tcpFragmentsRcvd, length);
       break;
     case IPPROTO_UDP:
-      incrementTrafficCounter(&srcHost->udpFragmentsSent, length), incrementTrafficCounter(&dstHost->udpFragmentsRcvd, length);
+      incrementTrafficCounter(&srcHost->udpFragmentsSent, length), 
+	incrementTrafficCounter(&dstHost->udpFragmentsRcvd, length);
       break;
     case IPPROTO_ICMP:
-      incrementTrafficCounter(&srcHost->icmpFragmentsSent, length), incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
+      incrementTrafficCounter(&srcHost->icmpFragmentsSent, length),
+	incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
       break;
     }
   }
@@ -1053,7 +1065,8 @@ static void processIpPkt(const u_char *bp,
       if(off & 0x3fff) {
 	char *fmt = "WARNING: detected ICMP fragment [%s -> %s] (network attack attempt?)";
 
-	incrementTrafficCounter(&srcHost->icmpFragmentsSent, length), incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
+	incrementTrafficCounter(&srcHost->icmpFragmentsSent, length), 
+	  incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHostIdx, actualDeviceId);
 	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHostIdx, actualDeviceId);
