@@ -603,7 +603,6 @@ int mapGlobalToLocalIdx(int port) {
 /* **************************************** */
 
 static void purgeIpPorts(int theDevice) {
-  HostTraffic *el;
   int i;
 
 #ifdef DEBUG
@@ -656,10 +655,13 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 #if !defined(__FreeBSD__)
 	purgeIpPorts(i);
 #endif
+	
 #ifdef MAKE_WITH_SCHED_YIELD
 	sched_yield(); /* Allow other threads to run */
 #endif
       }
+
+    updateThpt(1);
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated", 

@@ -2128,7 +2128,7 @@ void traceEvent(int eventTraceLevel, char* file,
     char buf[LEN_GENERAL_WORK_BUFFER];
     char bufMsg[LEN_GENERAL_WORK_BUFFER];
     char bufMsgID[LEN_MEDIUM_WORK_BUFFER];
-    char *bufLog;
+
     int beginFileIdx=0;
     char *mFile = NULL;
 
@@ -2141,17 +2141,17 @@ void traceEvent(int eventTraceLevel, char* file,
     /* The 'MSGID' tag, only at the DETAIL level */
     memset(bufMsgID, 0, sizeof(bufMsgID));
     if(myGlobals.traceLevel == CONST_DETAIL_TRACE_LEVEL) {
-        mFile = strdup(file);
-        for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
-            if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
+      mFile = strdup(file);
+      for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
+	if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
 #if defined(WIN32)
-            if(mFile[beginFileIdx-1] == '\\') break;  /* Start after \ (Win32)  */
+	if(mFile[beginFileIdx-1] == '\\') break;  /* Start after \ (Win32)  */
 #else
-            if(mFile[beginFileIdx-1] == '/') break;   /* Start after / (!Win32) */
+	if(mFile[beginFileIdx-1] == '/') break;   /* Start after / (!Win32) */
 #endif
-        }
-        snprintf(bufMsgID, sizeof(bufMsgID), " [MSGID%d:%s]", line, &mFile[beginFileIdx]);
-        free(mFile);
+      }
+      snprintf(bufMsgID, sizeof(bufMsgID), "[%s:%d]", &mFile[beginFileIdx], line);
+      free(mFile);
     }
 
     /* Now we use the variable functions to 'print' the user's message */
@@ -2166,13 +2166,12 @@ void traceEvent(int eventTraceLevel, char* file,
      *    (time)(msgtag)(the actual message)(msgid)
      */
     memset(buf, 0, sizeof(buf));
-    snprintf(buf, sizeof(buf), "%s %s%s%s",
-                  bufTime, 
-                  eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
-                    eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
-                    eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
-                  bufMsg,
-                  bufMsgID);
+    snprintf(buf, sizeof(buf), "%s %s %s%s",
+	     bufTime, bufMsgID,
+	     eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
+	     eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
+	     eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
+	     bufMsg);
 
     /* Finished preparing message fields */
 
@@ -2182,19 +2181,19 @@ void traceEvent(int eventTraceLevel, char* file,
       
 #ifdef CFG_MULTITHREADED
       if(myGlobals.logViewMutex.isInitialized)
-       accessMutex(&myGlobals.logViewMutex, "reporting");
+	accessMutex(&myGlobals.logViewMutex, "reporting");
 #endif
 
-       if (myGlobals.logView[myGlobals.logViewNext] != NULL)
-           free(myGlobals.logView[myGlobals.logViewNext]);
+      if (myGlobals.logView[myGlobals.logViewNext] != NULL)
+	free(myGlobals.logView[myGlobals.logViewNext]);
 
-       myGlobals.logView[myGlobals.logViewNext] = strdup(buf);
+      myGlobals.logView[myGlobals.logViewNext] = strdup(buf);
 
-       myGlobals.logViewNext = (myGlobals.logViewNext + 1) % CONST_LOG_VIEW_BUFFER_SIZE;
+      myGlobals.logViewNext = (myGlobals.logViewNext + 1) % CONST_LOG_VIEW_BUFFER_SIZE;
 
 #ifdef CFG_MULTITHREADED
       if(myGlobals.logViewMutex.isInitialized)
-       releaseMutex(&myGlobals.logViewMutex);
+	releaseMutex(&myGlobals.logViewMutex);
 #endif
 
     }
@@ -2217,46 +2216,44 @@ void traceEvent(int eventTraceLevel, char* file,
     if(myGlobals.useSyslog == FLAG_SYSLOG_NONE) {
 #endif
 
-        printf("%s\n", buf);
-        fflush(stdout);
+      printf("%s\n", buf);
+      fflush(stdout);
 
 #ifdef MAKE_WITH_SYSLOG
     } else {
+      /* Skip over time - syslog() adds it automatically) */
+      char *bufLog = &buf[strlen(bufTime)];
 
-        /* Skip over time - syslog() adds it automatically) */
-        bufLog = &buf[strlen(bufTime)];
+      /* SYSLOG and set */
+      openlog("ntop", LOG_PID, myGlobals.useSyslog);
 
-        /* SYSLOG and set */
-        openlog("ntop", LOG_PID, myGlobals.useSyslog);
-
-        /* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
- #ifdef MAKE_WITH_LOG_XXXXXX
-        switch(myGlobals.traceLevel) {
-          case CONST_FATALERROR_TRACE_LEVEL:
-          case CONST_ERROR_TRACE_LEVEL:
-            syslog(LOG_ERR, "%s", bufLog);
-            break;
-          case CONST_WARNING_TRACE_LEVEL:
-	    syslog(LOG_WARNING, "%s", bufLog);
-            break;
-          case CONST_ALWAYSDISPLAY_TRACE_LEVEL:
-            syslog(LOG_NOTICE, "%s", bufLog);
-            break;
-          default:
-            syslog(LOG_INFO, "%s", bufLog);
-            break;
-        }
- #else
-        syslog(LOG_ERR, "%s", bufLog);
- #endif
-        closelog();
+      /* syslog(..) call fix courtesy of Peter Suschlik <peter@zilium.de> */
+#ifdef MAKE_WITH_LOG_XXXXXX
+      switch(myGlobals.traceLevel) {
+      case CONST_FATALERROR_TRACE_LEVEL:
+      case CONST_ERROR_TRACE_LEVEL:
+	syslog(LOG_ERR, "%s", bufLog);
+	break;
+      case CONST_WARNING_TRACE_LEVEL:
+	syslog(LOG_WARNING, "%s", bufLog);
+	break;
+      case CONST_ALWAYSDISPLAY_TRACE_LEVEL:
+	syslog(LOG_NOTICE, "%s", bufLog);
+	break;
+      default:
+	syslog(LOG_INFO, "%s", bufLog);
+	break;
+      }
+#else
+      syslog(LOG_ERR, "%s", bufLog);
+#endif
+      closelog();
     }
 #endif /* MAKE_WITH_SYSLOG */
 
   }
 
   va_end (va_ap);
-
 }
 
 /* ******************************************** */
@@ -3212,7 +3209,6 @@ void resetTrafficCounter(TrafficCounter *ctr) {
 
 u_int numActiveSenders(u_int deviceId) {
   u_int numSenders = 0;
-  int i;
   HostTraffic *el;
 
   for(el=getFirstHost(deviceId);

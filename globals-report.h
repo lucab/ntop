@@ -198,6 +198,7 @@ extern int sslwatchdogSetState(int stateNewValue, int parentchildFlag, int enter
 extern void sslwatchdogSighandler(int signum);
 extern void* sslwatchdogChildThread(void* notUsed _UNUSED_);
 #endif
+extern void printNtopLogReport(void);
 
 /* **************************** */
 

@@ -4859,7 +4859,9 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 #endif
 #endif /* MAKE_WITH_HTTPSIGTRAP */
 
+#ifndef WIN32
     traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) started...", getpid());
+#endif
 #endif
 
 #ifndef WIN32

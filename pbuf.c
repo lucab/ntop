@@ -86,7 +86,7 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 int handleIP(u_short port,
 	     HostTraffic *srcHost, HostTraffic *dstHost,
-	     u_int _length,  u_short isPassiveSess,
+	     const u_int _length,  u_short isPassiveSess,
 	     u_short p2pSessionIdx, int actualDeviceId) {
   int idx;
   Counter length = (Counter)_length;
@@ -1851,7 +1851,9 @@ void processPacket(u_char *_deviceId,
   struct tokenRing_llc *trllc;
   unsigned char ipxBuffer[128];
   int deviceId, actualDeviceId, vlanId=-1;
+#ifdef LINUX
   AnyHeader *anyHeader;
+#endif
 
 #ifdef MEMORY_DEBUG
   {

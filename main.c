@@ -315,7 +315,10 @@ static void checkUserIdentity(int userSpecified) {
  * Parse the command line options
  */
 static int parseOptions(int argc, char* argv []) {
-  int userSpecified = 0, setAdminPw = 0, opt, opt_index;
+  int userSpecified = 0, setAdminPw = 0, opt;
+#ifdef HAVE_GETOPT_LONG
+  int opt_index;
+#endif
   char *theOpts, *adminPw = NULL;
 #ifdef WIN32
   int optind=0;

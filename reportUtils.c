@@ -2730,8 +2730,6 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
   HostTraffic *theEntry = NULL;
   int found = 0;
-  u_int idx;
-  u_char theBytes[8];
 
   if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
     memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
@@ -3042,7 +3040,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   Counter total;
   int printedHeader, i;
   char *dynIp, *multihomed;
-  u_short as;
+  u_short as=0;
   HostTraffic *theHost, tmpEl;
 
   accessAddrResMutex("printAllSessionsHTML");
@@ -3374,7 +3372,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
   }
   
-  if(getHostAS(el) != 0) {
+  if((as = getHostAS(el)) != 0) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d</TD></TR>\n", getRowColor(), "Origin&nbsp;AS", as) < 0)
       BufferTooShort();

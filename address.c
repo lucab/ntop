@@ -43,7 +43,6 @@ static void updateHostNameInfo(unsigned long numeric, char* symbolic);
 
 static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int actualDeviceId) {
   struct in_addr addr;
-  char buf[32];
   HostTraffic *el;
 
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
@@ -632,7 +631,7 @@ int fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
   datum key_data;
   datum data_data;
 
-  if(buffer == NULL) return;
+  if(buffer == NULL) return(0);
 
   myGlobals.numFetchAddressFromCacheCalls++;
 
@@ -649,7 +648,7 @@ int fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(key_data.dptr)+1;
 
-  if(myGlobals.dnsCacheFile == NULL) return; /* ntop is quitting... */
+  if(myGlobals.dnsCacheFile == NULL) return(0); /* ntop is quitting... */
 
   data_data = gdbm_fetch(myGlobals.dnsCacheFile, key_data);
 

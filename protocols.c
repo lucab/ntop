@@ -95,7 +95,9 @@ void handleBootp(HostTraffic *srcHost,
 	if((bootProto.bp_yiaddr.s_addr != 0)
 	   && (dummyMac != 0) /* MAC address <> 00:00:00:..:00 */
 	   ) {
+#ifdef DHCP_DEBUG
 	  char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+#endif
 
 	  NTOHL(bootProto.bp_yiaddr.s_addr);
 #ifdef DHCP_DEBUG
@@ -113,7 +115,6 @@ void handleBootp(HostTraffic *srcHost,
 	      in BOOTP packets.
 	    */
 	    u_int idx = 4;
-	    u_int hostIdx;
 	    struct in_addr hostIpAddress;
 	    HostTraffic *trafficHost, *realDstHost;
 	    /*
@@ -436,7 +437,9 @@ void handleBootp(HostTraffic *srcHost,
 
 	memcpy(&dummyMac, bootProto.bp_chaddr, sizeof(u_long));
 	if((dummyMac != 0) /* MAC address <> 00:00:00:..:00 */) {
+#ifdef FLAG_DHCP_DEBUG
 	  char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+#endif
 
 	  NTOHL(bootProto.bp_yiaddr.s_addr);
 #ifdef FLAG_DHCP_DEBUG

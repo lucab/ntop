@@ -198,23 +198,23 @@ static void updateThptStats(int deviceToUpdate,
 
 void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   time_t timeDiff, timeMinDiff, timeHourDiff=0, totalTime;
-  u_int idx;
   HostTraffic *el, *topHost;
   float topThpt;
   HostSerial topSentSerial, secondSentSerial, thirdSentSerial;
   HostSerial topHourSentSerial, secondHourSentSerial, thirdHourSentSerial;
   HostSerial topRcvdSerial, secondRcvdSerial, thirdRcvdSerial;
   HostSerial topHourRcvdSerial, secondHourRcvdSerial, thirdHourRcvdSerial;
-  short updateMinThpt, updateHourThpt;
+  short updateMinThpt=0, updateHourThpt=0;
   
+  timeDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastThptUpdate;
+  if(timeDiff < 10 /* secs */) return;
+
+  /* ******************************** */
+
   setEmptySerial(&topSentSerial), setEmptySerial(&secondSentSerial), setEmptySerial(&thirdSentSerial);
   setEmptySerial(&topHourSentSerial), setEmptySerial(&secondHourSentSerial), setEmptySerial(&thirdHourSentSerial);
   setEmptySerial(&topRcvdSerial), setEmptySerial(&secondRcvdSerial), setEmptySerial(&thirdRcvdSerial);
   setEmptySerial(&topHourRcvdSerial), setEmptySerial(&secondHourRcvdSerial), setEmptySerial(&thirdHourRcvdSerial);
-
-  timeDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastThptUpdate;
-
-  if(timeDiff < 10 /* secs */) return;
 
   /* ******************************** */
 
@@ -238,7 +238,8 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   myGlobals.device[deviceToUpdate].throughput = myGlobals.device[deviceToUpdate].ethernetBytes.value;
   myGlobals.device[deviceToUpdate].packetThroughput = myGlobals.device[deviceToUpdate].ethernetPkts.value;
 
-  if(updateMinThpt) {
+  if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastMinThptUpdate) > 60 /* 1 minute */) {
+    updateMinThpt = 1;
     myGlobals.device[deviceToUpdate].lastMinEthernetBytes.value = myGlobals.device[deviceToUpdate].ethernetBytes.value -
       myGlobals.device[deviceToUpdate].lastMinEthernetBytes.value;
     myGlobals.device[deviceToUpdate].lastMinThpt = 
@@ -253,8 +254,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
     myGlobals.device[deviceToUpdate].lastMinThptUpdate = myGlobals.actTime;
   }
 
-  if((timeMinDiff = myGlobals.actTime-myGlobals.
-      device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
+  if((timeMinDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
     myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes.value = 
       myGlobals.device[deviceToUpdate].ethernetBytes.value - myGlobals.device[deviceToUpdate].lastFiveMinsEthernetBytes.value;
     myGlobals.device[deviceToUpdate].lastFiveMinsThptUpdate = timeMinDiff;
@@ -283,22 +283,13 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
     
   totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
 
-  updateHourThpt = 0;
-  updateMinThpt = 0;
-
-  if((timeMinDiff = myGlobals.actTime-myGlobals.
-      device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
-    updateMinThpt = 1;
-    myGlobals.device[deviceToUpdate].lastMinThptUpdate = myGlobals.actTime;
-    if((timeHourDiff = myGlobals.actTime-myGlobals.
-	device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
-      updateHourThpt = 1;
-      myGlobals.device[deviceToUpdate].lastHourThptUpdate = myGlobals.actTime;
-    }
+  if((timeHourDiff = myGlobals.actTime-myGlobals.
+      device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
+    updateHourThpt = 1;
+    myGlobals.device[deviceToUpdate].lastHourThptUpdate = myGlobals.actTime;
   }
 
-  for(el=getFirstHost(deviceToUpdate); 
-      el != NULL; el = getNextHost(deviceToUpdate, el)) {
+  for(el=getFirstHost(deviceToUpdate); el != NULL; el = getNextHost(deviceToUpdate, el)) {
     if(broadcastHost(el)) {
       continue;
     }
@@ -524,10 +515,10 @@ void updateThpt(int fullUpdate) {
 #endif
 
   if(myGlobals.mergeInterfaces)
-    updateDeviceThpt(0, fullUpdate);
+    updateDeviceThpt(0, !fullUpdate);
   else {
     for(i=0; i<myGlobals.numDevices; i++)
-      updateDeviceThpt(i, fullUpdate);
+      updateDeviceThpt(i, !fullUpdate);
   }
 }
 
