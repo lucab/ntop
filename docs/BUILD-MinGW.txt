@@ -1,6 +1,6 @@
-The remainder of this note describes how to build ntop on win2k using
-the MinGW toolchain (MinGW allows you to build native win32 binaries
-linked against the Microsoft runtime and not the cygwin runtime).
+This note describes how to build ntop on win2k using the MinGW
+toolchain (MinGW allows you to build native win32 binaries linked
+against the Microsoft runtime and not the cygwin runtime).
 
 Prerequistes:
 
@@ -23,13 +23,9 @@ Steps
 
   1) Install all prerequisites
 
-  2) Apply the patch distributed with these notes.  This patch adds
-     the appropriate Makefiles and redefines a few preprocessor
-     conditionals to values more appropriate for MinGW.
-
   2) Edit the ntop/Makefile.mingw and fill in the following values:
 
-     INC_GDBM (where the gdbm header files can be found)
+     INC_GDBM        (where the gdbm header files can be found)
      INC_WPDPACK     (where the winpcap header files can be found)
      LIB_GDBM        (where libgdbm.a is found)
      LIB_WPDPACK     (where libpcap.a is found)
@@ -61,6 +57,7 @@ Steps
 
          cd gdchart0.94c
          make -f Makefile.mingw
+	 cd ..
 
   4) Build ntop itself
 
@@ -76,10 +73,16 @@ Steps
      Ensure that the appropriate DLL's are in your path.  For this
      build, that includes libgdbm-2.dll and wpcap.dll.
 
+     If you have grep installed, the following commandline will tell
+     you which files need to be in either the same directory as
+     ntop.exe or in the path:
+
+         objdump -p ntop.exe |grep "DLL Name"
+
   6) Use it
 
      Execute ntop.exe from the install directory.  You can get command
      line help by running ntop.exe -h
 
 -- 
-8 Nov 2001 - Scott Renfro <scott@renfro.org>
+November 2001 - Scott Renfro <scott@renfro.org>
