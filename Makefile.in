@@ -100,7 +100,7 @@ CXX = @CXX@
 DATAFILE_DIR = @DATAFILE_DIR@
 DBFILE_DIR = @DBFILE_DIR@
 DLLTOOL = @DLLTOOL@
-INTOPAPP = @INTOPAPP@
+INTOP = @INTOP@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBCURSES = @LIBCURSES@
@@ -113,9 +113,11 @@ NTOP_RELEASE = @NTOP_RELEASE@
 NTOP_VERSION_INFO = @NTOP_VERSION_INFO@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
+PLUGINS = @PLUGINS@
 PLUGIN_DIR = @PLUGIN_DIR@
 RANLIB = @RANLIB@
 REMOTEINTERFACE = @REMOTEINTERFACE@
+SNMPLIBS = @SNMPLIBS@
 
 PKGNAME = ntop
 VERSION = @VERSION@
@@ -129,14 +131,14 @@ INCLUDES = -I. $(INCS)
 LIBS = @LIBS@
 CCLD = @CCLD@
 
-DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.db ntops ntopd
+DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.db ntops ntopd ntop-config
 CLEANFILES = $(DISTCLEANFILES)
 
 # A list of all the files in the current directory which can be regenerated
 MAINTAINERCLEANFILES = COPYING INSTALL Makefile.in aclocal.m4 config.guess                        config.h.in config.sub configure install-sh                        ltconfig ltmain.sh missing mkinstalldirs                        ntop-config stamp-h.in
 
 
-SUBDIRS = . plugins @INTOPAPP@ @REMOTEINTERFACE@
+SUBDIRS = . @PLUGINS@ @INTOP@ @REMOTEINTERFACE@
 
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FAQ FILES HACKING               INSTALL KNOWN_BUGS MANIFESTO NEWS PORTING README               README.Suse SUPPORT_NTOP.txt               THANKS THREADS-FAQ TODO               ntop.8 ntop.txt ntop.html               ntop-cert.pem ntop-rules.8 rules.sample
 
@@ -147,16 +149,16 @@ NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.css html/statsicons   
 EXTRA_DIST = Makefile.am Makefile.in              acconfig.h acinclude.m4 acinclude.m4.in              autogen.sh config.guess config.h.in config.sub              configure configure.in              install-sh libtool ltconfig ltmain.sh              missing mkinstalldirs ntop-config.in              vt.sed
 
 
-PLUGINS = `cat plugins/FILES`
-REMOTEAPI = `cat remoteInterfaceAPI/FILES`
-INTOP = `cat intop/FILES`
+PLUGINSFILES = `cat plugins/FILES`
+REMOTEAPIFILES = `cat remoteInterfaceAPI/FILES`
+INTOPFILES = `cat intop/FILES`
 
-THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINS) $(REMOTEAPI) $(INTOP)
+THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) $(INTOPFILES)
 
 #
 # This Makefile is responsible for creating:
-# 1. libntopreport.la, the archive with all the code for html report
-# 2. libntop.la, the core archive
+# 1. libntop.la, the ntop core library
+# 2. libntopreport.la, the ntop library with all the code for html report
 # 3. ntop, the binary dynamically linked
 # 4. ntops, the binary statically linked
 # 5. ntopd, the ntop daemon, simply a link to the ntop binary
@@ -173,20 +175,20 @@ ntop_SOURCES = main.c
 ntops_SOURCES = $(ntop_SOURCES)
 ntopd_SOURCES = $(ntop_SOURCES)
 
-ntop_DEPENDENCIES = libntopreport.la libntop.la build.c
-ntop_LDADD = libntopreport.la libntop.la
+ntop_DEPENDENCIES = libntop.la libntopreport.la
+ntop_LDADD = libntop.la libntopreport.la
 ntop_LDFLAGS = 
 
-ntops_DEPENDENCIES = libntopreport.la libntop.la build.c
-ntops_LDADD = libntopreport.la libntop.la
+ntops_DEPENDENCIES = libntop.la libntopreport.la
+ntops_LDADD = libntop.la libntopreport.la
 ntops_LDFLAGS = -static
 
 noinst_HEADERS = globals-core.h globals-report.h graph.h ntop.h regex.h rules.h
 
 # the Archive
-lib_LTLIBRARIES = libntopreport.la libntop.la
+lib_LTLIBRARIES = libntop.la libntopreport.la
 
-libntop_la_SOURCES = address.c  build.c dataFormat.c event.c                      globals-core.c  hash.c initialize.c                         leaks.c logger.c   ntop.c     pbuf.c                         plugin.c   qsort.c    regex.c                        rules.c    sql.c      ssl.c   term.c                      traffic.c  util.c     vendor.c                       vendortable.h  version.c
+libntop_la_SOURCES = address.c       dataFormat.c  event.c                           globals-core.c  hash.c        initialize.c                      leaks.c         logger.c      ntop.c                            pbuf.c          plugin.c      qsort.c                           regex.c         rules.c       sql.c                             ssl.c           term.c        traffic.c                         util.c          vendor.c      version.c                         vendortable.h
 
 
 libntop_la_DEPENDENCIES = config.h
@@ -194,7 +196,7 @@ libntop_la_LIBADD =
 libntop_la_LDFLAGS = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
 
 # the Archive
-libntopreport_la_SOURCES = admin.c                            globals-report.c  graph.c                               http.c                                report.c                                          webInterface.c
+libntopreport_la_SOURCES = admin.c                            globals-report.c                            graph.c                            http.c                             report.c                            webInterface.c
 
 
 libntopreport_la_DEPENDENCIES = config.h
@@ -209,12 +211,12 @@ CONFIG_CLEAN_FILES =  ntop-config
 LTLIBRARIES =  $(lib_LTLIBRARIES)
 
 CPPFLAGS = @CPPFLAGS@
+libntop_la_OBJECTS =  address.lo dataFormat.lo event.lo globals-core.lo \
+hash.lo initialize.lo leaks.lo logger.lo ntop.lo pbuf.lo plugin.lo \
+qsort.lo regex.lo rules.lo sql.lo ssl.lo term.lo traffic.lo util.lo \
+vendor.lo version.lo
 libntopreport_la_OBJECTS =  admin.lo globals-report.lo graph.lo http.lo \
 report.lo webInterface.lo
-libntop_la_OBJECTS =  address.lo build.lo dataFormat.lo event.lo \
-globals-core.lo hash.lo initialize.lo leaks.lo logger.lo ntop.lo \
-pbuf.lo plugin.lo qsort.lo regex.lo rules.lo sql.lo ssl.lo term.lo \
-traffic.lo util.lo vendor.lo version.lo
 PROGRAMS =  $(bin_PROGRAMS)
 
 ntops_OBJECTS =  main.o
@@ -240,16 +242,15 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP_ENV = --best
-DEP_FILES =  .deps/address.P .deps/admin.P .deps/build.P \
-.deps/dataFormat.P .deps/event.P .deps/globals-core.P \
-.deps/globals-report.P .deps/graph.P .deps/hash.P .deps/http.P \
-.deps/initialize.P .deps/leaks.P .deps/logger.P .deps/main.P \
-.deps/ntop.P .deps/pbuf.P .deps/plugin.P .deps/qsort.P .deps/regex.P \
-.deps/report.P .deps/rules.P .deps/sql.P .deps/ssl.P .deps/term.P \
-.deps/traffic.P .deps/util.P .deps/vendor.P .deps/version.P \
-.deps/webInterface.P
-SOURCES = $(libntopreport_la_SOURCES) $(libntop_la_SOURCES) $(ntops_SOURCES) $(ntopd_SOURCES) $(ntop_SOURCES)
-OBJECTS = $(libntopreport_la_OBJECTS) $(libntop_la_OBJECTS) $(ntops_OBJECTS) $(ntopd_OBJECTS) $(ntop_OBJECTS)
+DEP_FILES =  .deps/address.P .deps/admin.P .deps/dataFormat.P \
+.deps/event.P .deps/globals-core.P .deps/globals-report.P .deps/graph.P \
+.deps/hash.P .deps/http.P .deps/initialize.P .deps/leaks.P \
+.deps/logger.P .deps/main.P .deps/ntop.P .deps/pbuf.P .deps/plugin.P \
+.deps/qsort.P .deps/regex.P .deps/report.P .deps/rules.P .deps/sql.P \
+.deps/ssl.P .deps/term.P .deps/traffic.P .deps/util.P .deps/vendor.P \
+.deps/version.P .deps/webInterface.P
+SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntops_SOURCES) $(ntopd_SOURCES) $(ntop_SOURCES)
+OBJECTS = $(libntop_la_OBJECTS) $(libntopreport_la_OBJECTS) $(ntops_OBJECTS) $(ntopd_OBJECTS) $(ntop_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
@@ -356,11 +357,11 @@ distclean-libtool:
 
 maintainer-clean-libtool:
 
-libntopreport.la: $(libntopreport_la_OBJECTS) $(libntopreport_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libntopreport_la_LDFLAGS) $(libntopreport_la_OBJECTS) $(libntopreport_la_LIBADD) $(LIBS)
-
 libntop.la: $(libntop_la_OBJECTS) $(libntop_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libntop_la_LDFLAGS) $(libntop_la_OBJECTS) $(libntop_la_LIBADD) $(LIBS)
+
+libntopreport.la: $(libntopreport_la_OBJECTS) $(libntopreport_la_DEPENDENCIES)
+	$(LINK) -rpath $(libdir) $(libntopreport_la_LDFLAGS) $(libntopreport_la_OBJECTS) $(libntopreport_la_LIBADD) $(LIBS)
 
 mostlyclean-binPROGRAMS:
 
@@ -742,10 +743,6 @@ installdirs mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
-build.c:
-	/bin/rm -f build.c
-	date +"%D %r" | sed -e 's/.*/char *buildDate = "&";/' > build.c
-
 .PHONY: snapshot
 
 ntopd: ntop
@@ -755,7 +752,7 @@ ntopd: ntop
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # Distribution
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-snapshot: version.c build.c
+snapshot: version.c
 	@echo "generating configuration files ............. please wait"
 	@automake --add-missing --gnu --include-deps >/dev/null 2>&1
 	@autoconf  >/dev/null 2>&1

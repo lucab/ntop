@@ -61,7 +61,7 @@ libnfsPlugin_la_SOURCES = nfsPlugin.c
 libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 
 librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
-librmonPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@
 
 libremoteInterface_la_SOURCES = remoteInterface.c remoteInterface.h
 libremoteInterface_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@

@@ -99,7 +99,7 @@ DATAFILE_DIR = @DATAFILE_DIR@
 DBFILE_DIR = @DBFILE_DIR@
 DLLTOOL = @DLLTOOL@
 INCS = @INCS@
-INTOPAPP = @INTOPAPP@
+INTOP = @INTOP@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBCURSES = @LIBCURSES@
@@ -113,9 +113,11 @@ NTOP_RELEASE = @NTOP_RELEASE@
 NTOP_VERSION_INFO = @NTOP_VERSION_INFO@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
+PLUGINS = @PLUGINS@
 PLUGIN_DIR = @PLUGIN_DIR@
 RANLIB = @RANLIB@
 REMOTEINTERFACE = @REMOTEINTERFACE@
+SNMPLIBS = @SNMPLIBS@
 VERSION = @VERSION@
 
 DIST_COMMON = Makefile.am Makefile.in
@@ -153,7 +155,7 @@ libnfsPlugin_la_SOURCES = nfsPlugin.c
 libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 
 librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
-librmonPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
+librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@
 
 libremoteInterface_la_SOURCES = remoteInterface.c remoteInterface.h
 libremoteInterface_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
