@@ -729,11 +729,19 @@ void initLibpcap(char* rulesFile, int numDevices) {
       /* Support for virtual devices */
       char *column = strchr(device[i].name, ':');
 
+      /*
+	The timeout below for packet capture 
+	has been set to 100ms.
+
+	Courtesy of: Nicolai Petri <Nicolai@atomic.dk> 
+      */
       if(column == NULL)
-	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1, 1000, ebuf);
+	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1,
+					   100 /* ms */, ebuf);
       else {
 	column[0] = 0;
-	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1, 1000, ebuf);
+	device[i].pcapPtr = pcap_open_live(device[i].name, DEFAULT_SNAPLEN, 1, 
+					   100 /* ms */, ebuf);
 	column[0] = ':';
       }
 

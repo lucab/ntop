@@ -46,7 +46,9 @@ static void printWmlNoDataYet(void) {
 
 }
 
-static int cmpFctn(const void *_a, const void *_b) {
+/* ********************** */
+
+static int cmpWapFctn(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   TrafficCounter a_, b_;
@@ -119,7 +121,7 @@ static void printWmlIndex(void) {
   
   /* Data Sent */
   wapColumnSort = 0;  
-  quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn); 
+  quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpWapFctn); 
   
   for(idx=0; idx<numEntries; idx++) {
     if(idx == 5) break;

@@ -309,18 +309,14 @@ dnl> Give the user an option to compile without the C++ support.
 dnl>
 AC_ARG_ENABLE(ri, [  --disable-ri            disable support for Remote Interface also if a C++ compiler is available [default=no]], ac_disable_ri="yes")
 
-
-
 dnl>
-dnl> OPTIONAL Look a C++ Compiler.
+dnl> OPTIONAL Look for a C++ Compiler.
 dnl>
 if test ".$ac_disable_ri" = ".no"; then
   AC_PROG_CXX
-  case "$CC" in
-      gcc )
-      CXXFLAGS="$CXXFLAGS -fhandle-exceptions"
-        ;;
-  esac
+if test ".$GXX" = ".yes"; then
+    CXXFLAGS="$CXXFLAGS -fhandle-exceptions"
+  fi
 else
   REMOTEINTERFACE=
 fi
@@ -396,7 +392,10 @@ AC_HAVE_HEADERS(gdbm.h)
 
 
 dnl> OPTIONAL general purpose headers
-AC_CHECK_HEADERS(sys/select.h sys/ldr.h sys/sockio.h dl.h dirent.h dlfcn.h crypt.h)
+AC_CHECK_HEADERS(sys/select.h sys/ldr.h sys/sockio.h dl.h dirent.h dlfcn.h)
+
+dnl> OPTIONAL security headers
+AC_CHECK_HEADERS(security/pam_appl.h shadow.h crypt.h)
 
 dnl> OPTIONAL curses headers
 if test ".$ac_disable_curses" = ".no"; then
@@ -497,9 +496,10 @@ AC_CHECK_LIB(dl, dlopen)
 dnl>
 dnl> check for `crypt' in -lcrypt (MANDATORY)
 dnl>
-AC_CHECK_LIB(c, crypt, AC_MSG_RESULT("found in libc"), [AC_CHECK_LIB(crypt, crypt, MORELIBS="$MORELIBS -lcrypt", [
-echo "ERROR: You need libcrypt to build ntop. Verify that you have libcrypt.a or libcrypt.so installed.";
-             AC_MSG_ERROR([Fatal: libcrypt not found.])], $MORELIBS)])
+AC_CHECK_FUNC(crypt, , AC_CHECK_LIB(c, crypt, ,
+  [AC_CHECK_LIB(crypt, crypt, MORELIBS="$MORELIBS -lcrypt",
+    AC_MSG_ERROR(you need the crypt library to build ntop), $MORELIBS)]))
+
 
 dnl>
 dnl> GDChart uses functions from math library,
@@ -997,7 +997,7 @@ fi
 dnl>
 dnl> check for `UCD-SNMP' library by University of California [http://ucd-snmp.ucdavis.edu]
 dnl>
-AC_CHECK_LIB(ucdagent, register_mib, SNMPLIBS="-lsnmp -lucdagent -lucdmibs", AC_MSG_RESULT([ No RMON]), -lsnmp -lucdmibs)
+AC_CHECK_LIB(ucdagent, register_mib, SNMPLIBS="-lsnmp -lucdagent -lucdmibs", , -lsnmp -lucdmibs)
 
 
 echo

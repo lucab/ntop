@@ -55,7 +55,8 @@ void logMessage(char* message, u_short severity) {
   datum key_data, data_data;
   char tmpStr[16];
 
-  if(message == NULL) return;
+  if((message == NULL) || (logDB == NULL))
+    return;
 
   memset(&msg, 0, sizeof(LogMessage));
   msg.severity = severity;
@@ -79,7 +80,7 @@ void logMessage(char* message, u_short severity) {
 }
 #else
 void logMessage(char* message, u_short severity) {
-  traceEvent(TRACE_INO,"%s [severity %d]\n", message, severity);
+  traceEvent(TRACE_INFO,"%s [severity %d]\n", message, severity);
 }
 #endif
 
