@@ -83,6 +83,9 @@
 #undef NTOP_LITTLE_ENDIAN
 #undef NTOP_BIG_ENDIAN
 
+/* Define for sFlowPlugin.c to define in6_addr for environments that don't have it... */
+#undef HAVE_IN6_ADDR
+
 /* Define if you have the ctime_r function.  */
 #undef HAVE_CTIME_R
 

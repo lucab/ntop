@@ -482,6 +482,11 @@ if test ".$ac_disable_curses" = ".no"; then
      ac_disable_intop=yes
     fi
   fi
+dnl>
+dnl> check for ip6 address used by sFlow...
+dnl>
+AC_CHECK_TYPEDEF(in6_addr, netinet/ip.h)
+
 fi
 
 dnl> OPTIONAL memory related headers

@@ -133,4 +133,7 @@
 /* Define for IGNORE of SIGPIPE */
 #undef YES_IGNORE_SIGPIPE
 
+/* Define for sFlowPlugin.c to define in6_addr for environments that don't have it... */
+#undef HAVE_IN6_ADDR
+
 #endif /* _CONFIG_H_ */
