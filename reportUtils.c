@@ -473,7 +473,9 @@ void printFooter(int reportType) {
     case SORT_DATA_SENT_THPT:
     case SORT_DATA_THPT:
         printFooterHostLink();
-        sendString("<P>Peak values are the maximum value for any 10 second interval.<br>Average values are recomputed each 60 seconds, using values accumulated since this run of ntop was started.</P>\n");
+        sendString("<P>Peak values are the maximum value for any 10 second interval."
+		   "<br>Average values are recomputed each 60 seconds, using values "
+		   "accumulated since this run of ntop was started.</P>\n");
         sendString("<P>Note: Both values are reset each time ntop is restarted.</P>\n");
         break;
   }
@@ -483,14 +485,15 @@ void printFooter(int reportType) {
 
 /* ******************************* */
 
-void printHeader(int reportType, int revertOrder, u_int column, 
+void printHeader(int reportType, int revertOrder, u_int column,
 		 HostsDisplayPolicy showHostsMode) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char *sign, *arrowGif, *arrow[64], *theAnchor[64], *url=NULL;
   int i, soFar=2, idx;
   char htmlAnchor[64], htmlAnchor1[64], theLink[64];
   ProtocolsList *protoList;
-  /* printf("->%d<-\n",screenNumber); */
+
+  /* printf("->%d<-\n",showHostsMode); */
 
   memset(arrow, 0, sizeof(arrow));
   memset(theAnchor, 0, sizeof(theAnchor));
@@ -528,19 +531,6 @@ void printHeader(int reportType, int revertOrder, u_int column,
   if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?showH=%d&col=", url, showHostsMode) < 0)
     BufferTooShort();
 
-  if(myGlobals.hostsDisplayPolicy != showHostsMode) {
-    char tmp[8];
-
-    myGlobals.hostsDisplayPolicy = showHostsMode;
-
-    if((myGlobals.hostsDisplayPolicy < showAllHosts) 
-       || (myGlobals.hostsDisplayPolicy > showOnlyRemoteHosts))
-      myGlobals.hostsDisplayPolicy = showAllHosts;
-
-    snprintf(tmp, sizeof(tmp), "%d", myGlobals.hostsDisplayPolicy);
-    storePrefsValue("globals.displayPolicy", tmp);
-  }
-
   if(abs(column) == FLAG_HOST_DUMMY_IDX) {
     arrow[0] = arrowGif; theAnchor[0] = htmlAnchor;
   } else {
@@ -563,25 +553,25 @@ void printHeader(int reportType, int revertOrder, u_int column,
 
   switch(showHostsMode) {
   case showOnlyLocalHosts:
-  snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
-	   "[ <A HREF=%s0>All</A> ]&nbsp;"
-	   "<B>[ <A HREF=%s1>Local Only</A> ]</B>&nbsp;"
-	   "[ <A HREF=%s2>Remote Only</A> ]&nbsp;</p>", 
-	   theLink, theLink, theLink);
+    snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+	     "[ <A HREF=%s0>All</A> ]&nbsp;"
+	     "<B>[ <A HREF=%s1>Local Only</A> ]</B>&nbsp;"
+	     "[ <A HREF=%s2>Remote Only</A> ]&nbsp;</p>",
+	     theLink, theLink, theLink);
     break;
   case showOnlyRemoteHosts:
-  snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
-	   "[ <A HREF=%s0>All</A> ]&nbsp;"
-	   "[ <A HREF=%s1>Local Only</A> ]&nbsp;"
-	   "<B>[ <A HREF=%s2>Remote Only</A> ]</B>&nbsp;</p>",
-	   theLink, theLink, theLink);
+    snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+	     "[ <A HREF=%s0>All</A> ]&nbsp;"
+	     "[ <A HREF=%s1>Local Only</A> ]&nbsp;"
+	     "<B>[ <A HREF=%s2>Remote Only</A> ]</B>&nbsp;</p>",
+	     theLink, theLink, theLink);
     break;
   default:
-  snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
-	   "<B>[ <A HREF=%s0>All</A> ]</B>&nbsp;"
-	   "[ <A HREF=%s1>Local Only</A> ]&nbsp;"
-	   "[ <A HREF=%s2>Remote Only</A> ]&nbsp;</p>", 
-	   theLink, theLink, theLink);
+    snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+	     "<B>[ <A HREF=%s0>All</A> ]</B>&nbsp;"
+	     "[ <A HREF=%s1>Local Only</A> ]&nbsp;"
+	     "[ <A HREF=%s2>Remote Only</A> ]&nbsp;</p>",
+	     theLink, theLink, theLink);
     break;
   }
   sendString(buf);
@@ -647,14 +637,14 @@ void printHeader(int reportType, int revertOrder, u_int column,
     else { arrow[14] = "";  theAnchor[14] = htmlAnchor1;  }
 
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1>TCP%s</A></TH>"
-	     "<TH "TH_BG">%s2>UDP%s</A></TH><TH "TH_BG">%s3>ICMP%s</A></TH>"
-	    "<TH "TH_BG">%s4>DLC%s</A></TH><TH "TH_BG">%s5>IPX%s</A>"
-	     "</TH><TH "TH_BG">%s6>Decnet%s</A></TH>"
-	     "<TH "TH_BG">%s7>(R)ARP%s</A></TH><TH "TH_BG">%s8>AppleTalk%s</A></TH>",
-	    theAnchor[0], arrow[0], theAnchor[1], arrow[1],
-	    theAnchor[2], arrow[2], theAnchor[3], arrow[3],
-	    theAnchor[4], arrow[4], theAnchor[5], arrow[5],
-	    theAnchor[6], arrow[6], theAnchor[7], arrow[7]) < 0)
+		"<TH "TH_BG">%s2>UDP%s</A></TH><TH "TH_BG">%s3>ICMP%s</A></TH>"
+		"<TH "TH_BG">%s4>DLC%s</A></TH><TH "TH_BG">%s5>IPX%s</A>"
+		"</TH><TH "TH_BG">%s6>Decnet%s</A></TH>"
+		"<TH "TH_BG">%s7>(R)ARP%s</A></TH><TH "TH_BG">%s8>AppleTalk%s</A></TH>",
+		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
+		theAnchor[2], arrow[2], theAnchor[3], arrow[3],
+		theAnchor[4], arrow[4], theAnchor[5], arrow[5],
+		theAnchor[6], arrow[6], theAnchor[7], arrow[7]) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -673,20 +663,20 @@ void printHeader(int reportType, int revertOrder, u_int column,
     protoList = myGlobals.ipProtosList, idx=0;
     while(protoList != NULL) {
 
-      if(abs(column) == BASE_PROTOS_IDX+idx) { 
-	arrow[BASE_PROTOS_IDX+idx] = arrowGif; 
-	theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor; 
-      } else { 
-	arrow[BASE_PROTOS_IDX+idx] = ""; 
-	theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor1; 
+      if(abs(column) == BASE_PROTOS_IDX+idx) {
+	arrow[BASE_PROTOS_IDX+idx] = arrowGif;
+	theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor;
+      } else {
+	arrow[BASE_PROTOS_IDX+idx] = "";
+	theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor1;
       }
-       
+
       if(snprintf(buf, sizeof(buf), "<TH "TH_BG">%s%d>%s%s</A></TH>",
-		  theAnchor[BASE_PROTOS_IDX+idx], BASE_PROTOS_IDX+idx, 
+		  theAnchor[BASE_PROTOS_IDX+idx], BASE_PROTOS_IDX+idx,
 		  protoList->protocolName, arrow[BASE_PROTOS_IDX+idx]) < 0)
 	BufferTooShort();
       sendString(buf);
-      
+
       idx++, protoList = protoList->next;
     }
 
@@ -710,12 +700,12 @@ void printHeader(int reportType, int revertOrder, u_int column,
       BufferTooShort();
     sendString(buf);
     if(abs(column) == 1) {
-	arrow[0] = arrowGif;
-	theAnchor[0] = htmlAnchor;
-      } else {
-	arrow[0] = "";
-	theAnchor[0] = htmlAnchor1;
-      }
+      arrow[0] = arrowGif;
+      theAnchor[0] = htmlAnchor;
+    } else {
+      arrow[0] = "";
+      theAnchor[0] = htmlAnchor1;
+    }
 
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
       if(abs(column) == soFar) {
@@ -726,7 +716,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 	theAnchor[0] = htmlAnchor1;
       }
       if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d>%s%s</A></TH>",
-	      theAnchor[0], i+2, myGlobals.protoIPTrafficInfos[i], arrow[0]) < 0)
+		  theAnchor[0], i+2, myGlobals.protoIPTrafficInfos[i], arrow[0]) < 0)
 	BufferTooShort();
       sendString(buf);
       soFar++;
@@ -738,7 +728,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
       arrow[0] = "";  theAnchor[0] = htmlAnchor1;
     }
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d>Other&nbsp;IP%s</A></TH>",
-	     theAnchor[0], i+2, arrow[0]) < 0)
+		theAnchor[0], i+2, arrow[0]) < 0)
       BufferTooShort();
     sendString(buf);
     break;
@@ -789,17 +779,17 @@ void printHeader(int reportType, int revertOrder, u_int column,
     else { arrow[5] = "";  theAnchor[5] = htmlAnchor1;}
 
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\">Data</TH>"
-	    "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\">Packets</TH>"
-            "</TR><TR "TR_ON">") < 0)
+		"<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\">Packets</TH>"
+		"</TR><TR "TR_ON">") < 0)
       BufferTooShort();
     sendString(buf);
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1>Current%s</A></TH>"
-	     "<TH "TH_BG">%s2>Avg%s</A></TH>"
-	     "<TH "TH_BG">%s3>Peak%s</A></TH>"
-	    "<TH "TH_BG">%s4>Current%s</A></TH><TH "TH_BG">%s5>Avg%s</A></TH>"
-	     "<TH "TH_BG">%s6>Peak%s</A></TH>",
-	    theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2],
-	    theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]) < 0)
+		"<TH "TH_BG">%s2>Avg%s</A></TH>"
+		"<TH "TH_BG">%s3>Peak%s</A></TH>"
+		"<TH "TH_BG">%s4>Current%s</A></TH><TH "TH_BG">%s5>Avg%s</A></TH>"
+		"<TH "TH_BG">%s6>Peak%s</A></TH>",
+		theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2],
+		theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]) < 0)
       BufferTooShort();
     sendString(buf);
     break;
@@ -1149,7 +1139,7 @@ int cmpFctn(const void *_a, const void *_b) {
 #endif
     if((*a)->dotDomainName == NULL) (*a)->dotDomainName = "";
     if((*b)->dotDomainName == NULL) (*b)->dotDomainName = "";
-    
+
     rc = strcasecmp((*a)->dotDomainName, (*b)->dotDomainName);
     if(rc == 0)
       return(strcasecmp((*a)->fullDomainName, (*b)->fullDomainName));
@@ -1160,7 +1150,7 @@ int cmpFctn(const void *_a, const void *_b) {
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO,
 	     "reportKind=%d/columnSort=%d/sortSendMode=%d/numIpProtosToMonitor=%d\n",
-	     myGlobals.reportKind, myGlobals.columnSort, 
+	     myGlobals.reportKind, myGlobals.columnSort,
 	     myGlobals.sortSendMode, myGlobals.numIpProtosToMonitor);
 #endif
 
@@ -2229,7 +2219,7 @@ static char* sap2name(u_int16_t proto, char *sap, int sap_len) {
   case SAP_PROWAY_ASLM:    snprintf(sap, sap_len, "PROWAY (IEC955) Active Station List Maintenance"); break;
   case SAP_ARP:            snprintf(sap, sap_len, "ARP"); break;
   case SAP_SNAP:           snprintf(sap, sap_len, "SNAP"); break;
-  case SAP_VINES1:         
+  case SAP_VINES1:
   case SAP_VINES2:         snprintf(sap, sap_len, "Banyan Vines"); break;
   case SAP_NETWARE:        snprintf(sap, sap_len, "NetWare"); break;
   case SAP_NETBIOS:        snprintf(sap, sap_len, "NetBIOS"); break;
@@ -2255,7 +2245,7 @@ static void printUnknownProto(UnknownProto proto) {
     snprintf(buf, sizeof(buf), "<li>Ethernet Type: 0x%04X\n", proto.proto.ethType);
     break;
   case 2:
-    snprintf(buf, sizeof(buf), "<li>SAP: DSAP=0x%02X/SSAP=0x%02X\n", 
+    snprintf(buf, sizeof(buf), "<li>SAP: DSAP=0x%02X/SSAP=0x%02X\n",
 	     proto.proto.sapType.dsap, proto.proto.sapType.ssap);
      break;
   case 3:
@@ -2277,7 +2267,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   char linkName[LEN_GENERAL_WORK_BUFFER/2];
   int i, idx;
   ProtocolsList *protoList;
-    
+
   totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value;
   totalSent += el->icmpSent.value+el->ipxSent.value+el->dlcSent.value+el->arp_rarpSent.value;
   totalSent +=  el->decnetSent.value+el->appletalkSent.value+el->netbiosSent.value+
@@ -2291,9 +2281,9 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   totalRcvd += el->osiRcvd.value+el->netbiosRcvd.value+el->ipv6Rcvd.value
     +el->stpRcvd.value+el->otherRcvd.value;
 
-  protoList = myGlobals.ipProtosList;    
+  protoList = myGlobals.ipProtosList;
   idx = 0;
-  
+
   while(protoList != NULL) {
     totalSent += el->ipProtosList[idx].sent.value;
     totalRcvd += el->ipProtosList[idx].rcvd.value;
@@ -2380,11 +2370,11 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			100*((float)SD(el->stpRcvd.value, totalRcvd)));
 
   {
-    protoList = myGlobals.ipProtosList;    
+    protoList = myGlobals.ipProtosList;
     idx = 0;
-    
+
     while(protoList != NULL) {
-      printTableDoubleEntry(buf, sizeof(buf), protoList->protocolName, CONST_COLOR_1, 
+      printTableDoubleEntry(buf, sizeof(buf), protoList->protocolName, CONST_COLOR_1,
 			    (float)el->ipProtosList[idx].sent.value/1024,
 			    100*((float)SD(el->ipProtosList[idx].sent.value, totalSent)),
 			    (float)el->ipProtosList[idx].rcvd.value/1024,
@@ -2413,15 +2403,15 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       el->arp_rarpRcvd.value+el->decnetRcvd.value+el->appletalkRcvd.value+
       el->netbiosRcvd.value+el->ipv6Rcvd.value+el->otherRcvd.value;
 
-    protoList = myGlobals.ipProtosList;    
+    protoList = myGlobals.ipProtosList;
     idx = 0;
-    
+
     while(protoList != NULL) {
       totalSent += el->ipProtosList[idx].sent.value;
       totalRcvd += el->ipProtosList[idx].rcvd.value;
       idx++, protoList = protoList->next;
     }
-    
+
     if((totalSent > 0) || (totalRcvd > 0)) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
 		  getRowColor()) < 0)
@@ -2499,12 +2489,12 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   sendString("</CENTER>\n");
 
   /* ************************************** */
-  
+
   if(el->nonIpProtoTrafficInfos != NULL) {
     NonIpProtoTrafficInfo *nonIp = el->nonIpProtoTrafficInfos;
 
     printSectionTitle("Non IP Protocol Distribution");
-    
+
     sendString("<CENTER>\n"
 	       ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
 	       "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
@@ -2514,24 +2504,24 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
     while(nonIp != NULL) {
       char buf1[64];
 
-      printTableDoubleEntry(buf, sizeof(buf), sap2name(nonIp->protocolId, buf1, sizeof(buf1)), 
+      printTableDoubleEntry(buf, sizeof(buf), sap2name(nonIp->protocolId, buf1, sizeof(buf1)),
 			    CONST_COLOR_1, (float)nonIp->sentBytes.value/1024,
 			    100*((float)SD(nonIp->sentBytes.value, el->otherSent.value)),
 			    (float)nonIp->rcvdBytes.value/1024,
 			    100*((float)SD(nonIp->rcvdBytes.value, el->otherRcvd.value)));
-      
+
       nonIp = nonIp->next;
     }
-    
+
     sendString("</TABLE>"TABLE_OFF"<P>\n");
-    sendString("</CENTER>\n");  
+    sendString("</CENTER>\n");
   }
 
  /* ************************************** */
-  
+
   if(el->unknownProtoSent || el->unknownProtoRcvd) {
     printSectionTitle("Unknown Protocols");
-    
+
     sendString("<CENTER>\n"
 	       ""TABLE_ON"<TABLE BORDER=1>"
 	       "<TH "TH_BG" WIDTH=200>Data&nbsp;Sent</TH>"
@@ -2556,7 +2546,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
     }
 
     sendString("</TABLE>"TABLE_OFF"<P>\n");
-    sendString("</CENTER>\n");  
+    sendString("</CENTER>\n");
   }
 }
 
@@ -2738,7 +2728,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     memcpy(el, myGlobals.otherHostEntry, sizeof(HostTraffic));
     return(0);
   }
-    
+
   memset(el, 0, sizeof(HostTraffic));
   copySerial(&el->hostSerial, &theSerial);
 
@@ -2753,10 +2743,14 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 	    _intoa(el->hostIpAddress, buf, sizeof(buf)),
 	    sizeof(el->hostNumIpAddress));
     fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
-    
+
     if(strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
-      if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))
+      if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
+	int i;
+
+	for(i=0; i<strlen(sniffedName); i++) if(isupper(sniffedName[i])) tolower(sniffedName[i]);
 	strcpy(el->hostSymIpAddress, sniffedName);
+      }
     }
   } else {
     /* MAC */
@@ -2798,30 +2792,30 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	  if(!emptySerial(&el->contactedSentPeers.peersSerials[i])
 	     && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
-	      if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i], 
+	      if((el2 = quickHostLink(el->contactedSentPeers.peersSerials[i],
 				      myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 		  if(numEntries == 0) {
 		      printSectionTitle("Last Contacted Peers");
 		      titleSent = 1;
 		      sendString("<CENTER>\n"
 				 "<TABLE BORDER=0><TR><TD "TD_BG" VALIGN=TOP>\n");
-		      
+
 		      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
 				 "<TR "TR_ON"><TH "TH_BG">Sent To</TH>"
 				 "<TH "TH_BG">Address</TH></TR>\n");
 		  }
-		  
+
 		  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 			      "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
 			      getRowColor(), makeHostLink(el2, 0, 0, 0),
 			      el2->hostNumIpAddress) < 0)
 		      BufferTooShort();
-		  
+
 		  sendString(buf);
 		  numEntries++;
 	      }
 	  }
-      
+
       if(numEntries > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Total Contacts</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%lu</TD></TR>\n",
@@ -2839,7 +2833,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	  if((!emptySerial(&el->contactedRcvdPeers.peersSerials[i]))
 	     && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))) {
 
-	    if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i], 
+	    if((el2 = quickHostLink(el->contactedRcvdPeers.peersSerials[i],
 					myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	      if(numEntries == 0) {
 		  if(!titleSent) printSectionTitle("Last Contacted Peers");
@@ -2849,7 +2843,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	      }
 
 	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+			  "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
 			  getRowColor(), makeHostLink(el2, 0, 0, 0),
 			  el2->hostNumIpAddress) < 0)
 		BufferTooShort();
@@ -2969,19 +2963,19 @@ static void checkHostHealthness(HostTraffic *el) {
 static void printUserList(HostTraffic *el) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   UserList *list = el->protocolInfo->userList;
-  
+
   while(list != NULL) {
     if(snprintf(buf, sizeof(buf), "%s&nbsp;[", list->userName) < 0)
       BufferTooShort();
     sendString(buf);
-    
+
     if(FD_ISSET(BITFLAG_POP_USER, &(list->userFlags))) sendString("&nbsp;POP&nbsp;");
     if(FD_ISSET(BITFLAG_IMAP_USER, &(list->userFlags))) sendString("&nbsp;IMAP&nbsp;");
     if(FD_ISSET(BITFLAG_SMTP_USER, &(list->userFlags))) sendString("&nbsp;SMTP&nbsp;");
     if(FD_ISSET(BITFLAG_P2P_USER, &(list->userFlags))) sendString("&nbsp;P2P&nbsp;");
     if(FD_ISSET(BITFLAG_FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
     if(FD_ISSET(BITFLAG_MESSENGER_USER, &(list->userFlags))) sendString("&nbsp;MSG&nbsp;");
-    
+
     sendString("]<br>\n");
     list = list->next;
   }
@@ -3111,7 +3105,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	BufferTooShort();
       sendString(buf);
 
-      for(theHost=getFirstHost(actualDeviceId); 
+      for(theHost=getFirstHost(actualDeviceId);
 	  theHost != NULL; theHost = getNextHost(actualDeviceId, theHost)) {
 	if((theHost != el)
 	   && (memcmp(theHost->ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS) == 0)) {
@@ -3119,9 +3113,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		      theHost->hostNumIpAddress, theHost->hostNumIpAddress) < 0)
 	    BufferTooShort();
 	  sendString(buf);
-	}	 
+	}
       } /* for */
-      
+
       sendString("</TD></TR>");
     }
 
@@ -3371,14 +3365,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString(buf);
     }
   }
-  
+
   if((as = getHostAS(el)) != 0) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d</TD></TR>\n", getRowColor(), "Origin&nbsp;AS", as) < 0)
       BufferTooShort();
     sendString(buf);
   }
-  
+
   if(el->vlanId != -1) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d</TD></TR>\n", getRowColor(), "VLAN&nbsp;Id", el->vlanId) < 0)
@@ -3695,7 +3689,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     struct stat statbuf;
 
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-    snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s", myGlobals.rrdPath, 
+    snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s", myGlobals.rrdPath,
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
              dotToSlash(el->hostNumIpAddress));
 
@@ -3703,7 +3697,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                   "[ <A HREF=\"/plugins/rrdPlugin?action=list&key=interfaces/%s/hosts/%s&title=host %s\">"
                    "<IMG BORDER=0 SRC=/graph.gif TITLE=\"link to rrd graphs\"></A> ]</TD></TR>\n",
-		  getRowColor(), "RRD Stats", 
+		  getRowColor(), "RRD Stats",
                   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
                   dotToSlash(el->hostNumIpAddress),
 		  el->hostSymIpAddress[0] != '\0' ? el->hostSymIpAddress : el->hostNumIpAddress) < 0)
@@ -4090,7 +4084,7 @@ void printSectionTitle(char *text) {
   tmpTable = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
   memset(tmpTable, 0, maxHosts*sizeof(HostTraffic*));
 
-  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if((broadcastHost(el) == 0) /* No broadcast addresses please */
        && (multicastHost(el) == 0) /* No multicast addresses please */
@@ -4180,7 +4174,7 @@ void printSectionTitle(char *text) {
     /* ********************************** */
 
     qsort(theOSs, MAX_NUM_OS, sizeof(OsNumInfo), cmpOSFctn);
-    
+
     sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON"><TH "TH_BG">OS</TH><TH "TH_BG">Total</TH></TR>");
 
     for(i=0; i<MAX_NUM_OS; i++) {

@@ -1249,6 +1249,19 @@ static int returnHTTPPage(char* pageName,
     }
   }
 
+  if(myGlobals.hostsDisplayPolicy != showHostsMode) {
+    char tmp[8];
+
+    myGlobals.hostsDisplayPolicy = showHostsMode;
+
+    if((myGlobals.hostsDisplayPolicy < showAllHosts)
+       || (myGlobals.hostsDisplayPolicy > showOnlyRemoteHosts))
+      myGlobals.hostsDisplayPolicy = showAllHosts;
+
+    snprintf(tmp, sizeof(tmp), "%d", myGlobals.hostsDisplayPolicy);
+    storePrefsValue("globals.displayPolicy", tmp);
+  }
+
   if(pageName[0] == '\0')
     strncpy(pageName, STR_INDEX_HTML, sizeof(STR_INDEX_HTML));
 

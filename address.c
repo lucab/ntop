@@ -56,8 +56,14 @@ static void updateDeviceHostNameInfo(unsigned long numeric, char* symbolic, int 
   accessAddrResMutex("updateHostNameInfo");
 
   if(el != NULL) {    
+    int i;
+    
     if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1)) 
       symbolic[MAX_LEN_SYM_HOST_NAME-2] = '\0';
+    
+    for(i=0; i<strlen(symbolic); i++)
+      if(isupper(symbolic[i])) tolower(symbolic[i]);
+
     strcpy(el->hostSymIpAddress, symbolic);
   }
 

@@ -255,6 +255,7 @@ void handleBootp(HostTraffic *srcHost,
 
 			/* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */
 			if(len >= MAX_LEN_SYM_HOST_NAME) len = MAX_LEN_SYM_HOST_NAME-1;
+			for(i=0; i<strlen(tmpName); i++) if(isupper(tmpName[i])) tolower(tmpName[i]);
 			strncpy(realDstHost->hostSymIpAddress, tmpName, len);
 			realDstHost->hostSymIpAddress[len] = '\0';
 				/*

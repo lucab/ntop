@@ -606,6 +606,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     argv[argc++] = tempStr;
 #endif
 
+#if DEBUG
     if(shownCreate == 0) {
       char buf[LEN_GENERAL_WORK_BUFFER];
       int i;
@@ -623,6 +624,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
       traceEvent(CONST_TRACE_INFO, "RRD: rrdtool create --start now-1 file %s", buf);
     }
+#endif
 
     optind=0; /* reset gnu getopt */
     opterr=0; /* no error messages */

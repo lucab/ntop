@@ -1546,6 +1546,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 		 || (strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0)) {
 		if(strlen(sniffedName) >= (MAX_LEN_SYM_HOST_NAME-1))
 		  sniffedName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
+
+		for(i=0; i<strlen(sniffedName); i++) if(isupper(sniffedName[i])) tolower(sniffedName[i]);
 		strcpy(el->hostSymIpAddress, sniffedName);
 	      } else
 		displaySniffedName=1;

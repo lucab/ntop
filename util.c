@@ -2511,8 +2511,13 @@ void fillDomainName(HostTraffic *el) {
   accessAddrResMutex("fillDomainName");
 
   el->dotDomainName = ip2CountryCode(el->hostIpAddress.s_addr);
-  if(el->dotDomainName == NULL) el->dotDomainName = "";
+  if(el->dotDomainName == NULL) {
+    /* We are unable to associate a domain with an IP address. */
+    el->dotDomainName = "";
+  }
 
+  traceEvent(CONST_TRACE_WARNING, "ip2CountryCode(%s/%s) => %s",
+	     el->hostNumIpAddress, el->hostSymIpAddress, el->dotDomainName == NULL ? "NULL" : el->dotDomainName);
 
   if((el->hostSymIpAddress[0] == '*')
      || (el->hostNumIpAddress[0] == '\0')
@@ -2647,8 +2652,12 @@ void setNBnodeNameType(HostTraffic *theHost,
       theHost->nonIPTraffic->nbHostName = strdup(nbName);
       updateHostName(theHost);
 
-      if(theHost->hostSymIpAddress[0] == '\0')
+      if(theHost->hostSymIpAddress[0] == '\0') {
+	int i;
+
+	for(i=0; i<strlen(nbName); i++) if(isupper(nbName[i])) tolower(nbName[i]);
 	strcpy(theHost->hostSymIpAddress, nbName); /* See up (**) */
+      }
 
 #ifdef DEBUG
       printf("DEBUG: nbHostName=%s [0x%X]\n", nbName, nodeType);
@@ -3266,19 +3275,20 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
 /* ******************************************************************* */
 
 char *ip2CountryCode(u_int32_t ip) {
-  IPNode *p=myGlobals.countryFlagHead;
+  IPNode *p = myGlobals.countryFlagHead;
   int i, b;
-  char *cc="";
-
-  i=0;
-  while(p!=NULL) {
-    if(p->node.cc[0]!=0)
-      cc=p->node.cc;
-    b=(ip>>(31-i)) & 0x1;
-    p=p->b[b];
+  char *cc = "";
+  
+  i = 0;
+  while(p != NULL) {
+    if(p->node.cc[0] != 0)
+      cc = p->node.cc;
+    b = (ip>>(31-i)) & 0x1;
+    p = p->b[b];
     i++;
   }
-  return cc;
+
+  return(cc);
 }
 
 /* ******************************************************** */
