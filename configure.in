@@ -50,7 +50,7 @@ dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm vers
 dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.2.90])
-AC_PREREQ([2.53])
+AC_PREREQ([2.52])
 SCRIPTVER="v2.2.90.107-2003-07-15"
 
 dnl>
@@ -193,17 +193,15 @@ fi
 AC_MSG_CHECKING([for libtool])
 AC_MSG_RESULT([])
 
-AC_PROG_LIBTOOL
-
-dnl> dnl> Apple, just to be difficult, calls the gnu version glibtool...
-dnl> case "${target}:${CC}" in
-dnl>     *-*-darwin*:* )
-dnl>         AC_CHECK_TOOL(LIBTOOL, glibtool)
-dnl>         ;;
-dnl>     * )
-dnl>         AC_CHECK_TOOL(LIBTOOL, libtool)
-dnl>         ;;
-dnl> esac
+dnl> Apple, just to be difficult, calls the gnu version glibtool...
+case "${target}:${CC}" in
+    *-*-darwin*:* )
+        AC_CHECK_TOOL(LIBTOOL, glibtool)
+        ;;
+    * )
+        AC_CHECK_TOOL(LIBTOOL, libtool)
+        ;;
+esac
 
 dnl> Test before we use it, below
 AC_ARG_ENABLE(iknowbetter,
@@ -212,7 +210,15 @@ AC_ARG_ENABLE(iknowbetter,
               ac_willfailoverride="no")
 
 echo -n "  Checking libtool version..."
-libtoolversion=`libtool --version | grep libtool | ${ac_cv_prog_AWK} '{ print $4 }'`
+case "${target}:${CC}" in
+    *-*-darwin*:* )
+    libtoolversion=`/usr/bin/glibtool --version | grep libtool | ${ac_cv_prog_AWK} '{ print $4 }'`
+    ;;
+    * )
+    libtoolversion=`libtool --version | grep libtool | ${ac_cv_prog_AWK} '{ print $4 }'`
+    ;;
+esac
+
 echo "${libtoolversion}"
 case "${libtoolversion}" in
     *1\.[[0-2]]*)
@@ -269,9 +275,9 @@ if test "x${ac_cv_prog_ac_ct_AUTOHEADER}" = "x"; then
  mv plugins/Makefile.in plugins/Makefile.in.tmp
  cat plugins/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
  rm -f plugins/Makefile.in.tmp
- mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
- cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
- rm -f plugins/pep/Makefile.in.tmp
+dnl> mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
+dnl> cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+dnl> rm -f plugins/pep/Makefile.in.tmp
 fi
 AUTOHEADERsave=
 
@@ -287,9 +293,9 @@ if test "x${ac_cv_prog_ac_ct_ACLOCAL}" = "x"; then
  mv plugins/Makefile.in plugins/Makefile.in.tmp
  cat plugins/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
  rm -f plugins/Makefile.in.tmp
- mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
- cat plugins/pep/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
- rm -f plugins/pep/Makefile.in.tmp
+dnl> mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
+dnl> cat plugins/pep/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+dnl> rm -f plugins/pep/Makefile.in.tmp
  ACLOCAL="${SHELL} `pwd`/missing --run echo"
 fi
 ACLOCALsave=
@@ -328,9 +334,9 @@ else
     mv plugins/Makefile.in plugins/Makefile.in.tmp
     cat plugins/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
     rm -f plugins/Makefile.in.tmp
-    mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
-    cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
-    rm -f plugins/pep/Makefile.in.tmp
+dnl>    mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
+dnl>    cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+dnl>    rm -f plugins/pep/Makefile.in.tmp
 fi
 AUTOMAKEsave=
 
@@ -367,9 +373,9 @@ else
     mv plugins/Makefile.in plugins/Makefile.in.tmp
     cat plugins/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > plugins/Makefile.in
     rm -f plugins/Makefile.in.tmp
-    mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
-    cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
-    rm -f plugins/pep/Makefile.in.tmp
+dnl>    mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
+dnl>    cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
+dnl>    rm -f plugins/pep/Makefile.in.tmp
 fi
 AUTOCONFsave=
 
@@ -389,7 +395,15 @@ fi
 if test "x${ac_cv_prog_ac_ct_AUTOCONF}" != "x"; then
   autoconf --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
 fi
-libtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+case "${target}:${CC}" in
+    *-*-darwin*:* )
+    /usr/bin/glibtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+    ;;
+    * )
+    libtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+    ;;
+esac
+
 
 dnl> Make sure we have a file to compare against...
 touch autotoolversions
@@ -402,115 +416,115 @@ if test "x${ac_cv_prog_ac_ct_AUTOMAKE}" = "x" -o "x${ac_cv_prog_ac_ct_AUTOCONF}"
  rc=0
 fi
 
-if test ".${rc}" = ".1"; then
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* WARNING: Auto* tools installed on this host differ from the ones"
-    echo "*          that the ntop distribution uses:"
-    echo "*"
-    echo "* This host:"
-    cat /tmp/autotoolversions
-    echo "*"
-    echo "* ntop distribution:"
-    cat autotoolversions
-    echo "*"
-    echo "*>>> Version conflicts may cause configure/compile/link problems."
-    echo "*"
-    echo "*>>> We are going to:"
-    echo "*>>>     1. delete the existing generated files"
-    echo "*>>>     2. use the auto* tools to recreate them"
-    echo "*                (if you do not have automake and autoconf installed,"
-    echo "*                 this will fail)"
-    echo "*                (if you do not have libtool installed, it will"
-    echo "*                 not give an error message, but will fail later)"
-    echo "*>>>     3. tell you to rerun ./configure"
-    echo "*"
-    echo "*    Please, tell the ntop-dev mailing list if there are problems..."
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    echo "1. delete the existing generated files:"
-    for i in acinclude.m4 \
-             aclocal.m4 \
-             config.h.in \
-             Makefile.in \
-             configure \
-             Makefile; do
-        if test -f $i; then
-             echo "     .... $i"
-             rm -f $i
-        fi
-    done
-    echo "    done!"
-    echo
-    echo "2. use the auto* tools to recreate them:"
-    echo "    .... cat acinclude.m4.ntop libtool.m4.in > acinclude.m4"
-    cat acinclude.m4.ntop libtool.m4.in > acinclude.m4
-    rc=$?
-    if test ".${rc}" != ".0"; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* ERROR: Unable to run cat acinclude.m4.ntop libtool.m4.in > acinclude.m4"
-        echo "*"
-        echo "*    We are going to give up."
-        echo "*"
-        echo "*>>> Please correct the problem and rerun"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        if test -f /tmp/autotoolversions; then
-            rm -f /tmp/autotoolversions
-        fi
-        exit 1
-    fi
-    for i in aclocal \
-             autoheader \
-             "automake --gnu --copy --add-missing" \
-             autoconf; do
-        echo "    .... $i"
-        $i
-        rc=$?
-        if test ".${rc}" != ".0"; then
-            echo
-            echo "*******************************************************************"
-            echo "*"
-            echo "* ERROR: Unable to run $i"
-            echo "*"
-            echo "*    We are going to give up."
-            echo "*"
-            echo "*>>> Please correct the problem with the auto* tools and rerun"
-            echo "*"
-            echo "*******************************************************************"
-            echo
-            if test -f /tmp/autotoolversions; then
-                rm -f /tmp/autotoolversions
-            fi
-            exit 1
-        fi
-    done
+dnl> if test ".${rc}" = ".1"; then
+dnl>     echo
+dnl>     echo "*******************************************************************"
+dnl>     echo "*"
+dnl>     echo "* WARNING: Auto* tools installed on this host differ from the ones"
+dnl>     echo "*          that the ntop distribution uses:"
+dnl>     echo "*"
+dnl>     echo "* This host:"
+dnl>     cat /tmp/autotoolversions
+dnl>     echo "*"
+dnl>     echo "* ntop distribution:"
+dnl>     cat autotoolversions
+dnl>     echo "*"
+dnl>     echo "*>>> Version conflicts may cause configure/compile/link problems."
+dnl>     echo "*"
+dnl>     echo "*>>> We are going to:"
+dnl>     echo "*>>>     1. delete the existing generated files"
+dnl>     echo "*>>>     2. use the auto* tools to recreate them"
+dnl>     echo "*                (if you do not have automake and autoconf installed,"
+dnl>     echo "*                 this will fail)"
+dnl>     echo "*                (if you do not have libtool installed, it will"
+dnl>     echo "*                 not give an error message, but will fail later)"
+dnl>     echo "*>>>     3. tell you to rerun ./configure"
+dnl>     echo "*"
+dnl>     echo "*    Please, tell the ntop-dev mailing list if there are problems..."
+dnl>     echo "*"
+dnl>     echo "*******************************************************************"
+dnl>     echo
+dnl>     echo "1. delete the existing generated files:"
+dnl>     for i in acinclude.m4 \
+dnl>              aclocal.m4 \
+dnl>              config.h.in \
+dnl>              Makefile.in \
+dnl>              configure \
+dnl>              Makefile; do
+dnl>         if test -f $i; then
+dnl>              echo "     .... $i"
+dnl>              rm -f $i
+dnl>         fi
+dnl>     done
+dnl>     echo "    done!"
+dnl>     echo
+dnl>     echo "2. use the auto* tools to recreate them:"
+dnl>     echo "    .... cat acinclude.m4.ntop libtool.m4.in > acinclude.m4"
+dnl>     cat acinclude.m4.ntop libtool.m4.in > acinclude.m4
+dnl>     rc=$?
+dnl>     if test ".${rc}" != ".0"; then
+dnl>         echo
+dnl>         echo "*******************************************************************"
+dnl>         echo "*"
+dnl>         echo "* ERROR: Unable to run cat acinclude.m4.ntop libtool.m4.in > acinclude.m4"
+dnl>         echo "*"
+dnl>         echo "*    We are going to give up."
+dnl>         echo "*"
+dnl>     echo "*>>> Please correct the problem and rerun"
+dnl>         echo "*"
+dnl>         echo "*******************************************************************"
+dnl>         echo
+dnl>         if test -f /tmp/autotoolversions; then
+dnl>             rm -f /tmp/autotoolversions
+dnl>         fi
+dnl>         exit 1
+dnl>     fi
+dnl>     for i in aclocal \
+dnl>              autoheader \
+dnl>              "automake --gnu --copy --add-missing" \
+dnl>              autoconf; do
+dnl>         echo "    .... $i"
+dnl>         $i
+dnl>         rc=$?
+dnl>         if test ".${rc}" != ".0"; then
+dnl>             echo
+dnl>             echo "*******************************************************************"
+dnl>             echo "*"
+dnl>             echo "* ERROR: Unable to run $i"
+dnl>             echo "*"
+dnl>             echo "*    We are going to give up."
+dnl>             echo "*"
+dnl>             echo "*>>> Please correct the problem with the auto* tools and rerun"
+dnl>             echo "*"
+dnl>             echo "*******************************************************************"
+dnl>             echo
+dnl>             if test -f /tmp/autotoolversions; then
+dnl>                 rm -f /tmp/autotoolversions
+dnl>             fi
+dnl>             exit 1
+dnl>         fi
+dnl>     done
 
-    cp -f /tmp/autotoolversions autotoolversions
+dnl>     cp -f /tmp/autotoolversions autotoolversions
 
-    if test -f /tmp/autotoolversions; then
-        rm -f tmp/autotoolversions
-    fi
+dnl>     if test -f /tmp/autotoolversions; then
+dnl>         rm -f tmp/autotoolversions
+dnl>     fi
 
-    echo
-    echo "*******************************************************************"
-    echo "*                                                                 *"
-    echo "*   Now, rerun ./configure                                        *"
-    echo "*                                                                 *"
-    echo "*******************************************************************"
-    echo
-    exit 1
-else
-    if test -f /tmp/autotoolversions; then
-        rm -f /tmp/autotoolversions
-    fi
-    echo "auto* tools are OK, continuing with ./configure"
-fi
+dnl>     echo
+dnl>     echo "*******************************************************************"
+dnl>     echo "*                                                                 *"
+dnl>     echo "*   Now, rerun ./configure                                        *"
+dnl>     echo "*                                                                 *"
+dnl>     echo "*******************************************************************"
+dnl>     echo
+dnl>     exit 1
+dnl> else
+dnl>     if test -f /tmp/autotoolversions; then
+dnl>         rm -f /tmp/autotoolversions
+dnl>     fi
+dnl>     echo "auto* tools are OK, continuing with ./configure"
+dnl> fi
 
 dnl> autoheader stuff...just ignore
 AH_TEMPLATE([HAVE_INT16_T],   [Define for int16 typedef])
@@ -1314,7 +1328,15 @@ AC_TRY_COMPILE( ,
               )
 
 dnl> add pic flag in any case this makes sure all our code is relocatable
-CFLAGS="$CFLAGS "`grep pic_flag= libtool | head -n1 | sed -e 's/.*pic_flag=//' -e 's/"//g'`
+case "${target}:${CC}" in
+    *-*-darwin*:* )
+        CFLAGS="$CFLAGS "`grep pic_flag= /usr/bin/glibtool | head -n1 | sed -e 's/.*pic_flag=//' -e 's/"//g'`
+        ;;
+    * )
+        CFLAGS="$CFLAGS "`grep pic_flag= libtool | head -n1 | sed -e 's/.*pic_flag=//' -e 's/"//g'`
+        ;;
+esac
+
 
 
 
@@ -1332,7 +1354,7 @@ AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(CFG_BIG_ENDIAN, 1, [ntop built for big endian
 dnl> Presets for the make flags go here...
 CFLAGS="${CFLAGS}"
 CPPFLAGS="${CPPFLAGS}"
-LDFLAGS="${LDFLAGS}"
+LDFLAGS="${LDFLAGS} -L$MYRRD -lmyrrd"
 
 if test ".${ac_debug}" = ".yes"; then
     echo "DEBUG: CC            is '${CC}')"
@@ -1539,12 +1561,11 @@ else
 fi
 
 AC_CHECK_HEADERS(png.h)
-AC_CHECK_LIB([png], [png_read_info],,
-    [AC_CHECK_LIB([png], [png_read_info],,, [z m])])
-dnl> 2nd pass, above, is for Mandrake which doesn't automatically include -lz and -lm...
+AC_CHECK_LIB([png], [main])
+
 
 if test ".${ac_cv_header_png_h}" != ".yes" ||
-   test ".${ac_cv_lib_png_png_read_info}" != ".yes"; then
+   test ".${ac_cv_lib_png_main}" != ".yes"; then
     echo
     echo "*******************************************************************"
     echo "*"
@@ -2869,7 +2890,7 @@ AC_CONFIG_FILES([myrrd/Makefile])
 
 if test ".${ac_disable_plugins}" != ".yes"; then
     AC_CONFIG_FILES([plugins/Makefile])
-    AC_CONFIG_FILES([plugins/pep/Makefile])
+dnl>    AC_CONFIG_FILES([plugins/pep/Makefile])
 fi
 
 AC_OUTPUT

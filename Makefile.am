@@ -155,7 +155,7 @@ libntop_la_SOURCES = address.c    argv.c        dataFormat.c   \
                      traffic.c    vendor.c      version.c      \
                      ntop_darwin.c
 
-libntop_la_DEPENDENCIES = config.h
+libntop_la_DEPENDENCIES = myrrd/libmyrrd.a config.h
 libntop_la_LIBADD       = 
 libntop_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
