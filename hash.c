@@ -24,6 +24,8 @@ static float timeval_subtract (struct timeval x, struct timeval y); /* forward *
 
 /* #define HASH_DEBUG */
 
+#define DNS_DEBUG
+
 #ifdef HASH_DEBUG
 static void hashSanityCheck();
 static void hostHashSanityCheck(HostTraffic *host);
@@ -144,7 +146,7 @@ u_int hashFcHost (FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
 
   idx = (fcaddr->domain & 0xff) ^ (fcaddr->area & 0xff) ^ (fcaddr->port & 0xff) ^ vsanId;
 
-  if (actualDeviceId == -1) {
+  if(actualDeviceId == -1) {
       idx = idx % CONST_HASH_INITIAL_SIZE;
   }
   else {
@@ -169,7 +171,7 @@ u_int hashFcHost (FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
 static void freeHostSessions(HostTraffic *host, int theDevice) {
   int i;
 
-  if (host->l2Family == HOST_TRAFFIC_AF_ETH) {
+  if(host->l2Family == HOST_TRAFFIC_AF_ETH) {
       for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
           IPSession *prevSession, *nextSession, *theSession;
 
@@ -229,7 +231,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
           if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
               return;
 
-          if (host->numHostSessions == 0) return;
+          if(host->numHostSessions == 0) return;
 
 #ifdef CFG_MULTITHREADED
           accessMutex(&myGlobals.fcSessionsMutex, "freeHostSessions");
@@ -280,7 +282,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 /* **************************************** */
 
 void freeHostInfo(HostTraffic *host, int actualDeviceId) {
-  u_int i;
+  u_int i, deleteAddressFromCache = 1;
 
   if((host == NULL) || myGlobals.device[actualDeviceId].virtualDevice)
     return;
@@ -314,6 +316,28 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 	     host->ethAddressString, host->hostNumIpAddress, host->hostSymIpAddress, host->hostTrafficBucket);
 #endif
 
+  if(deleteAddressFromCache) {
+    datum key_data;
+
+    if(host->hostIpAddress.hostFamily == AF_INET) {
+      key_data.dptr = (void*)&host->hostIpAddress.Ip4Address.s_addr;
+      key_data.dsize = 4;
+    }
+#ifdef INET6
+    else if(host->hostIpAddress.hostFamily == AF_INET6) {
+      key_data.dptr = (void*)&host->hostIpAddress.Ip6Address.s6_addr;
+      key_data.dsize = 16;
+    }
+#endif
+
+    gdbm_delete(myGlobals.addressQueueFile, key_data);
+
+#ifdef DNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleting from GDBM address cache host [%s/%s]",
+	       host->hostNumIpAddress, host->hostSymIpAddress);
+#endif
+  }
+
   /* Make sure this host is not part of the ipTrafficMatrixHosts list */
   if((myGlobals.device[actualDeviceId].ipTrafficMatrix != NULL)
      && isMatrixHost(host, actualDeviceId)) {
@@ -327,7 +351,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     }
   }
 
-  if ((myGlobals.device[actualDeviceId].fcTrafficMatrix) != NULL) {
+  if((myGlobals.device[actualDeviceId].fcTrafficMatrix) != NULL) {
       int id = matrixHostHash (host, actualDeviceId, 0);
       
       myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[id] = NULL;
@@ -340,9 +364,9 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     
   freeHostSessions(host, actualDeviceId);
 
-  if (host->l2Family == HOST_TRAFFIC_AF_FC) {
+  if(host->l2Family == HOST_TRAFFIC_AF_FC) {
       for (i = 0; i < MAX_LUNS_SUPPORTED; i++) {
-          if (host->activeLuns[i] != NULL) {
+          if(host->activeLuns[i] != NULL) {
               free (host->activeLuns[i]);
           }
       }
@@ -751,7 +775,7 @@ void setHostSerial(HostTraffic *el) {
     return;
 
   if(isFcHost(el)) {
-    if (el->hostNumFcAddress[0] != '\0') {
+    if(el->hostNumFcAddress[0] != '\0') {
       el->hostSerial.serialType = SERIAL_FC;
       el->hostSerial.value.fcSerial.fcAddress.domain = el->hostFcAddress.domain;
       el->hostSerial.value.fcSerial.fcAddress.area = el->hostFcAddress.area;
@@ -763,7 +787,7 @@ void setHostSerial(HostTraffic *el) {
 		  "Address entry");
     }
   }
-  else if (el->hostNumIpAddress[0] == '\0') {
+  else if(el->hostNumIpAddress[0] == '\0') {
     el->hostSerial.serialType = SERIAL_MAC;
     memcpy(&el->hostSerial.value.ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS);
   } else {
@@ -1155,7 +1179,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     u_short numRuns=0;
     u_int hostFound = 0;
 
-    if (hostFcAddress == NULL) {
+    if(hostFcAddress == NULL) {
         traceEvent(CONST_TRACE_ERROR, "lookupFcHost: Call invoked with NULL"
                    "FC Address, vsan = %d, device = %d", vsanId,
                    actualDeviceId);
@@ -1164,7 +1188,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 
     idx = hashFcHost (hostFcAddress, vsanId, &el, actualDeviceId);
 
-    if (el != NULL) {
+    if(el != NULL) {
         return (el);
     }
     else if(idx == FLAG_NO_PEER)
@@ -1226,7 +1250,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     } else
 #endif
     {
-        if ((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) 
+        if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) 
             return(NULL);
     }
         
@@ -1253,7 +1277,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     el->hostSymFcAddress[0] = '\0';
 
     /* If there is a cache entry, use it */
-    if ((fcnsEntry = findFcHostNSCacheEntry (&el->hostFcAddress, vsanId)) != NULL) {
+    if((fcnsEntry = findFcHostNSCacheEntry (&el->hostFcAddress, vsanId)) != NULL) {
         strncpy (el->hostSymFcAddress, fcnsEntry->alias, MAX_LEN_SYM_HOST_NAME);
         memcpy (el->pWWN.str, fcnsEntry->pWWN.str, LEN_WWN_ADDRESS);
         memcpy (el->nWWN.str, fcnsEntry->nWWN.str, LEN_WWN_ADDRESS);
