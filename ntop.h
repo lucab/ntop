@@ -399,6 +399,9 @@ int getdomainname(char *name, size_t len);
 
 #endif /* HAVE_TCPD_H */
 
+#ifdef ELECTRICFENCE
+#include "efence.h"
+#endif
 
 /*
  * Packet Capture Library by Lawrence Berkeley National Laboratory - Network Research Group

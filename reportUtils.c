@@ -29,8 +29,8 @@
 /* ************************************ */
 
 void formatUsageCounter(UsageCounter usageCtr,
-			TrafficCounter topValue /* If this value != 0 then
-						   a percentage is printed */
+			TrafficCounter topValue 
+			/* If this value != 0 then a percentage is printed */
 			) {
   char buf[BUF_SIZE];
   int i, sendHeader=0;
@@ -56,7 +56,8 @@ void formatUsageCounter(UsageCounter usageCtr,
   }
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-    if(usageCtr.peersIndexes[i] != NO_PEER) {
+    if((usageCtr.peersIndexes[i] != NO_PEER) 
+       && (usageCtr.peersIndexes[i] != 0 /* Safety check: broadcast */)) {
       struct hostTraffic *el1;
 
       el1 = device[actualReportDeviceId].
