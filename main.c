@@ -495,7 +495,7 @@ static void parseOptions(int argc, char * argv []) {
 #ifdef HAVE_MYSQL
     case 'v': /* username:password:dbname:host */
       stringSanityCheck(optarg);
-      handlemySQLSupport(optarg, &enableDBsupport);
+      handlemySQLSupport(optarg, &myGlobals.enableDBsupport);
       break;
 #endif
 

@@ -2873,7 +2873,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
-		  "Rem (outside specified/local subnet)") < 0)
+		  "Remote (outside specified/local subnet)") < 0)
 	BufferOverflow();
     }
     sendString(buf);
