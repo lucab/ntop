@@ -29,7 +29,7 @@ static short domainSort = 0;
 #ifndef WIN32
 static void ignoreSignal(int signalId) {
   closeNwSocket(&myGlobals.newSock);
-  (void)setsignal(signalId, ignoreSignal);
+  (void)signal(signalId, ignoreSignal);
 }
 #endif
 

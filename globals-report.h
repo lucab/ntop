@@ -169,16 +169,6 @@ extern void printNtopConfigHInfo(int textPrintFlag);
 
 #include "gdc.h"
 #include "gdchart.h"
-
-/*
-  Fix courtesy of  
-  Michael Wescott <wescott@crosstor.com>
-*/
-#ifndef _GLOBALS_CORE_C_
-#undef clrallocate
-#undef clrshdallocate
-#endif
-
 #include "gdcpie.h"
 
 

@@ -24,9 +24,6 @@
 #ifndef WIN32
 #include <pwd.h>
 #endif
-#ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
-#include <ucd-snmp/version.h>
-#endif
 
 #if defined(USE_SSLWATCHDOG) || defined(PARM_SSLWATCHDOG)
 /* Stuff for the watchdog */
@@ -1023,14 +1020,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "ETHER_HEADER_HAS_EA",
-#ifdef ETHER_HEADER_HAS_EA
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
-
   printFeatureConfigInfo(textPrintFlag, "HAVE_ALLOCA_H",
 #ifdef HAVE_ALLOCA_H
 			 "present"
@@ -1929,18 +1918,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
               "ntop.h: #define HASH_TERMINAL_INCREASE %d", HASH_TERMINAL_INCREASE) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Then grow (linearly) by", buf);
-
-  /* *************************** *************************** */
-
-  /*
-    #ifdef HAVE_UCD_SNMP_UCD_SNMP_AGENT_INCLUDES_H
-    printFeatureConfigInfo(textPrintFlag, "<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP</A>",
-    (char*)VersionInfo);
-    #else
-    printFeatureConfigInfo(textPrintFlag, "<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP </A>",
-    "Absent");
-    #endif
-  */
 
 }
 
@@ -3077,7 +3054,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 	traceEvent(TRACE_INFO, "Started thread (%ld) for ssl watchdog",
 		   myGlobals.sslwatchdogChildThreadId);
 
-	setsignal(SIGUSR1, sslwatchdogSighandler);
+	signal(SIGUSR1, sslwatchdogSighandler);
 	sslwatchdogDebug("setsig()", SSLWATCHDOG_BOTH, "");
 
 	sslwatchdogClearLock(SSLWATCHDOG_BOTH);
@@ -3091,7 +3068,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #ifndef WIN32
   static void PIPEhandler(int sig) {
     myGlobals.numHandledSIGPIPEerrors++;
-    setsignal (SIGPIPE, PIPEhandler);
+    signal (SIGPIPE, PIPEhandler);
   }
 #endif
 
@@ -3222,7 +3199,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   void sslwatchdogSighandler (int signum)
     {
       /* If this goes off, the ssl_accept() below didn't respond */
-      setsignal(SIGUSR1, SIG_DFL);
+      signal(SIGUSR1, SIG_DFL);
       sslwatchdogDebug("->SIGUSR1", SSLWATCHDOG_PARENT, "");
       longjmp (sslwatchdogJump, 1);
     }
@@ -3419,7 +3396,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 
 	if (rc == 0) {
-          setsignal(SIGPIPE, PIPEhandler); 
+          signal(SIGPIPE, PIPEhandler); 
 #ifdef DEBUG
           traceEvent(TRACE_INFO, "DEBUG: Note: SIGPIPE handler set\n");
 #endif
@@ -3550,7 +3527,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 		    buf[k+1]='\0';
 		    traceEvent(TRACE_ERROR, "SSLWDERROR: Failing request was (translated): %s\n", buf);
                   }
-                  setsignal(SIGUSR1, sslwatchdogSighandler);
+                  signal(SIGUSR1, sslwatchdogSighandler);
                   return;
 		}
 

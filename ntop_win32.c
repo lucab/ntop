@@ -49,46 +49,6 @@ ULONG GetHostIPAddr(); /* forward declaration */
 #define NTOP_CLOSE 3
 #define NTOP_LOGOFF 4
 
-#ifdef ORIGINAL_NTOP
-
-TCHAR	       AdapterName[64];
-FRAMEETH       ethernetFrame;
-ULONG	       NameLength=64, FrameLength;
-LPADAPTER      Adapter;
-LPPACKET       Packet;
-
-/* ************************************************** */
-
-typedef PVOID NDIS_HANDLE, *PNDIS_HANDLE;
-
-/* ******************************************** */
-
-void terminateSniffer() {
-  PacketCloseAdapter(Adapter);
-}
-
-/* ********************************** */
-
-void sniffSinglePacket(void(*pbuf_process)(u_char *unused,
-					   const struct pcap_pkthdr *h,
-					   const u_char *p)) {
-  struct pcap_pkthdr hdr;
-  static int numPkts = 0;
-
-  PacketReceivePacket(Adapter, Packet, TRUE, &FrameLength);
-  hdr.caplen = (u_int32)FrameLength;
-  hdr.len    = (u_int32)FrameLength;
-
-#ifdef WIN32_DEMO
-  if(numPkts < MAX_NUM_PACKETS)
-#endif
-    pbuf_process(NULL, &hdr, (u_char*)&ethernetFrame);
-
-  numPkts++;
-}
-
-#endif /* ORIGINAL_NTOP */
-
 /* ************************************************** */
 
 short isWinNT() {

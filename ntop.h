@@ -431,13 +431,8 @@ int getdomainname(char *name, size_t len);
 #include <netinet/if_ether.h>
 #endif
 
-# if defined(ETHER_HEADER_HAS_EA)
-#  define ESRC(ep) ((ep)->ether_shost.ether_addr_octet)
-#  define EDST(ep) ((ep)->ether_dhost.ether_addr_octet)
-# else
-#  define ESRC(ep) ((ep)->ether_shost)
-#  define EDST(ep) ((ep)->ether_dhost)
-# endif
+#define ESRC(ep) ((ep)->ether_shost)
+#define EDST(ep) ((ep)->ether_dhost)
 
 #if defined(HAVE_ARPA_NAMESER_H)
 #include <arpa/nameser.h>
@@ -640,7 +635,6 @@ extern MYCODE myFacilityNames[];
 #define RETSIGTYPE void
 #endif
 
-RETSIGTYPE (*setsignal(int, RETSIGTYPE (*)(int)))(int);
 #endif
 
 #if defined(WIN32) && !defined(__GNUC__)
@@ -1580,17 +1574,6 @@ typedef struct {
   u_char    srcNw[4], srcNode[6];
   u_int16_t srcSocket;
 } IPXpacket;
-
-
-
-/*
- * SunOS 4.x, at least, doesn't have a CLOCKS_PER_SEC.
- * I got this value from Solaris--who knows.
- * Paul D. Smith <psmith@baynetworks.com>
- */
-#ifndef CLOCKS_PER_SEC
-#define CLOCKS_PER_SEC 1000000
-#endif
 
 #ifndef NTOHL
 #define NTOHL(x)    (x) = ntohl(x)

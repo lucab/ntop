@@ -860,31 +860,6 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
                rc, errno, fileName, fileLine);
   } else {
 
-#ifdef PTHREAD_MUTEX_ERRORCHECK_NP
-
-  /* *************************************************
-     There seems to be some problem with mutexes and some
-     glibc myGlobals.versions. See
-
-     http://sdb.suse.de/sdb/de/html/aj_pthread7.0.html
-
-     (in German but an english myGlobals.version is probably available on their
-     international web site). Suggested workaround is either to use
-
-     pthread_mutexattr_settype (&mutattr, PTHREAD_MUTEX_ERRORCHECK_NP);
-
-     as checked mutexes dont have the error or use a corrected
-     glibc (Suse offers a patched myGlobals.version for their system).
-
-     Andreas Pfaeller <apfaller@yahoo.com.au>
-
-     ************************************************* */
-
-  pthread_mutexattr_settype (&(mutexId->mutex),
-			     PTHREAD_MUTEX_ERRORCHECK_NP);
-
-#endif /* PTHREAD_MUTEX_ERRORCHECK_NP */
-
       mutexId->isInitialized = 1;
 
   }
@@ -1508,38 +1483,6 @@ void readLsofInfo(void) {
 #endif /* WIN32 */
 }
 
-#ifndef WIN32
-/*
- * An os independent signal() with BSD semantics, e.g. the signal
- * catcher is restored following service of the signal.
- *
- * When sigset() is available, signal() has SYSV semantics and sigset()
- * has BSD semantics and call interface. Unfortunately, Linux does not
- * have sigset() so we use the more complicated sigaction() interface
- * there.
- *
- * Did I mention that signals suck?
- */
-RETSIGTYPE (*setsignal (int sig, RETSIGTYPE (*func)(int)))(int)
-{
-#ifdef HAVE_SIGACTION
-  struct sigaction old, new;
-
-  memset(&new, 0, sizeof(new));
-  new.sa_handler = func;
-#ifdef SA_RESTART
-  new.sa_flags |= SA_RESTART;
-#endif
-  if(sigaction(sig, &new, &old) < 0)
-    return(SIG_ERR);
-  return(old.sa_handler);
-
-#else
-  return(signal(sig, func));
-#endif
-}
-#endif /* WIN32 */
-
 /* ************************************ */
 
 char* decodeNBstring(char* theString, char *theBuffer) {
@@ -1979,13 +1922,7 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
-#ifdef REALLOC_MEM
-    el = (HostTraffic*)malloc(sizeof(HostTraffic));
-    memcpy(el, data_data.dptr, sizeof(HostTraffic));
-    free(data_data.dptr);
-#else
     el = (HostTraffic*)data_data.dptr;
-#endif
 
     if(broadcastHost(el)) {
       /*

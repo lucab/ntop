@@ -861,13 +861,8 @@ static void processIpPkt(const u_char *bp,
       udpDataLength = tcpUdpLen - sizeof(struct udphdr);
       memcpy(&up, bp+hlen, sizeof(struct udphdr));
 
-#ifdef SLACKWARE
-      sport = ntohs(up.source);
-      dport = ntohs(up.dest);
-#else
       sport = ntohs(up.uh_sport);
       dport = ntohs(up.uh_dport);
-#endif
 
       if(!(off & 0x3fff)) {
 	if(((sport == 53) || (dport == 53) /* domain */)) {

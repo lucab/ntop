@@ -469,9 +469,6 @@ int initGlobalValues(void) {
 
 void initGdbm(char *directory) {
   char tmpBuf[200];
-#ifdef FALLBACK
-  int firstTime=1;
-#endif
 
   /* directory is used my intop to specify where to open the files.
      If called with NULL, use the myGlobals.dbPath value instead
@@ -529,9 +526,6 @@ void initGdbm(char *directory) {
   unlink(tmpBuf); /* Clear the cache */
   myGlobals.gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
-#ifdef FALLBACK
- RETRY_INIT_GDBM:
-#endif
   if(myGlobals.gdbm_file == NULL) {
 #if defined(WIN32) && defined(__GNUC__)
     traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
@@ -1229,7 +1223,7 @@ void parseTrafficFilter(void) {
 
 #ifndef WIN32
 static void ignoreThisSignal(int signalId) {
-  setsignal(signalId, ignoreThisSignal);
+  signal(signalId, ignoreThisSignal);
 }
 #endif
 
@@ -1242,20 +1236,20 @@ void initSignals(void) {
     Courtesy of Martin Lucina <mato@kotelna.sk>
   */
 #ifndef WIN32
-  /* setsignal(SIGCHLD, handleDiedChild); */
-  setsignal(SIGCHLD, SIG_IGN);
+  /* signal(SIGCHLD, handleDiedChild); */
+  signal(SIGCHLD, SIG_IGN);
 #endif
 
 #ifndef WIN32
   /* Setup signal handlers */
-  setsignal(SIGTERM, cleanup);
-  setsignal(SIGINT,  cleanup);
-  setsignal(SIGHUP,  handleSigHup);
-  setsignal(SIGPIPE, ignoreThisSignal);
-  setsignal(SIGABRT, ignoreThisSignal);
+  signal(SIGTERM, cleanup);
+  signal(SIGINT,  cleanup);
+  signal(SIGHUP,  handleSigHup);
+  signal(SIGPIPE, ignoreThisSignal);
+  signal(SIGABRT, ignoreThisSignal);
   if(myGlobals.debugMode) { 
     /* Activate backtrace trap on -K flag */
-    setsignal(SIGSEGV, cleanup);
+    signal(SIGSEGV, cleanup);
   }
 #endif
 }

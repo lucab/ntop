@@ -60,7 +60,7 @@ void handleSigHup(int signalId _UNUSED_) {
   traceEvent(TRACE_INFO, "========================================");
 #endif /* MULTITHREADED */
 
-  (void)setsignal(SIGHUP,  handleSigHup);
+  (void)signal(SIGHUP,  handleSigHup);
 }
 
 #endif /* WIN32 */
@@ -163,7 +163,7 @@ RETSIGTYPE handleDiedChild(int sig _UNUSED_) {
 #endif
   }
 
-  /* setsignal(SIGCHLD, handleDiedChild); */
+  /* signal(SIGCHLD, handleDiedChild); */
 }
 #endif
 
@@ -179,8 +179,8 @@ void daemonize(void) {
 
   signal(SIGHUP, SIG_IGN);
 #ifndef WIN32
-  /* setsignal(SIGCHLD, handleDiedChild); */
-     setsignal(SIGCHLD, SIG_IGN);
+  /* signal(SIGCHLD, handleDiedChild); */
+     signal(SIGCHLD, SIG_IGN);
 #endif
   signal(SIGQUIT, SIG_IGN);
 
@@ -228,27 +228,6 @@ void detachFromTerminal(void) {
   chdir("/");
   setsid();  /* detach from the terminal */
 
-#ifdef ORIGINAL_DETACH
-  if (freopen("/dev/null", "r", stdin) == NULL) {
-    traceEvent(TRACE_ERROR,
-	       "ntop: unable to replace stdin with /dev/null: %s\n",
-	       strerror(errno));
-  }
-
-  if (freopen("/dev/null", "w", stdout) == NULL) {
-    traceEvent(TRACE_ERROR,
-	       "ntop: unable to replace stdout with /dev/null: %s\n",
-	       strerror(errno));
-  }
-
-  /*
-    if (freopen("/dev/null", "w", stderr) == NULL) {
-    traceEvent(TRACE_ERROR,
-    "ntop: unable to replace stderr with /dev/null: %s\n",
-    strerror(errno));
-    }
-  */
-#else /* !ORIGINAL_DETACH */
   fclose(stdin);
   fclose(stdout);
   /* fclose(stderr); */
@@ -264,7 +243,6 @@ void detachFromTerminal(void) {
   /* setlinebuf (stdout); */
   setvbuf(stdout, (char *)NULL, _IOLBF, 0);
 
-#endif /* ORIGINAL_DETACH */
 }
 #endif /* WIN32 */
 
@@ -731,7 +709,7 @@ RETSIGTYPE cleanup(int signo) {
     char **strings;
 
     /* Don't double fault... */
-    setsignal(SIGSEGV, SIG_DFL);
+    signal(SIGSEGV, SIG_DFL);
 
     /* Grab the backtrace before we do much else... */
     size = backtrace(array, 20);
@@ -789,10 +767,6 @@ RETSIGTYPE cleanup(int signo) {
   }
 #endif /* USE_SSLWATCHDOG || PARM_SSLWATCHDOG */
 
-#ifdef FULL_MEMORY_FREE
-  cleanupAddressQueue();
-  cleanupPacketQueue();
-#endif
 #endif
 
 #else /* #ifndef WIN32 */

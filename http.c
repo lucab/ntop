@@ -1325,7 +1325,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 #endif
 	  if(myGlobals.webPort > 0) closeNwSocket(&myGlobals.sock);
 
-	  setsignal(SIGALRM, quitNow);
+	  signal(SIGALRM, quitNow);
 	  alarm(120); /* Don't freeze */
 	}
       }
