@@ -830,7 +830,7 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
   int rc, idx=0;
 
 #ifdef HAVE_OPENSSL
-  SSL* ssl = getSSLsocket(-newSock);
+  SSL* ssl = getSSLsocket(-myGlobals.newSock);
 #endif
 
   memset(buf, 0, buflen);
@@ -842,12 +842,12 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
 
   while(len > 0) {
 #ifdef HAVE_OPENSSL
-    if(newSock < 0) 
+    if(myGlobals.newSock < 0) 
       rc = SSL_read(ssl, &buf[idx], len);
     else
-      rc = recv(newSock, &buf[idx], len, 0);
+      rc = recv(myGlobals.newSock, &buf[idx], len, 0);
 #else
-    rc = recv(newSock, &buf[idx], len, 0);
+    rc = recv(myGlobals.newSock, &buf[idx], len, 0);
 #endif
     if(rc < 0)
       return (-1);
@@ -863,20 +863,20 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
     struct timeval wait_time;
 
     FD_ZERO(&mask);
-    FD_SET((unsigned int)abs(newSock), &mask);    
+    FD_SET((unsigned int)abs(myGlobals.newSock), &mask);    
   
     /* select returns immediately */
     wait_time.tv_sec = 0, wait_time.tv_usec = 0; 
-    if(select(newSock+1, &mask, 0, 0, &wait_time) == 1) {
+    if(select(myGlobals.newSock+1, &mask, 0, 0, &wait_time) == 1) {
       char aChar[8]; /* just in case */
 
 #ifdef HAVE_OPENSSL
-      if(newSock < 0) 
+      if(myGlobals.newSock < 0) 
 	rc = SSL_read(ssl, aChar, 1);
       else
-	rc = recv(newSock, aChar, 1, 0);
+	rc = recv(myGlobals.newSock, aChar, 1, 0);
 #else
-      rc = recv(newSock, aChar, 1, 0);
+      rc = recv(myGlobals.newSock, aChar, 1, 0);
 #endif
       if(rc <= 0)
 	break;

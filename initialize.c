@@ -272,7 +272,6 @@ void initCounters(int _mergeInterfaces) {
   int len, i;
 
   myGlobals.numPurgedHosts = myGlobals.numTerminatedSessions = 0;
-
   myGlobals.mergeInterfaces = _mergeInterfaces;
 
   setDomainName();
@@ -395,6 +394,38 @@ void resetStats(void) {
 /* ******************************* */
 
 int initGlobalValues(void) {
+
+  memset(&myGlobals, 0, sizeof(myGlobals));
+
+  myGlobals.enableDBsupport = 0;
+  myGlobals.enableThUpdate = 1;
+  myGlobals.enableIdleHosts = 1;
+  myGlobals.localAddresses = NULL;
+  myGlobals.protoSpecs = NULL;
+#ifndef WIN32
+  myGlobals.userId = 0;
+  myGlobals.groupId = 0;
+#endif
+  myGlobals.webAddr = NULL;
+  myGlobals.flowSpecs = NULL;
+  myGlobals.rulesFile = NULL;
+  myGlobals.sslAddr = NULL;
+
+#ifndef MICRO_NTOP  
+  myGlobals.maxNumLines = MAX_NUM_TABLE_ROWS;
+  myGlobals.sortSendMode = 0;
+  
+  /* TCP Wrappers */
+#ifdef HAVE_LIBWRAP
+  myGlobals.allow_severity = LOG_INFO;
+  myGlobals.deny_severity  = LOG_WARNING;
+#endif /* HAVE_LIBWRAP */
+  
+#endif /* MICRO_NTOP */
+  
+  myGlobals.webPort = NTOP_DEFAULT_WEB_PORT;
+  myGlobals.refreshRate = 0;
+  myGlobals.localAddrFlag = 1;
 
   switch(myGlobals.accuracyLevel) {
   case HIGH_ACCURACY_LEVEL:

@@ -599,7 +599,7 @@ int sortHostFctn(const void *_a, const void *_b) {
     return(0);
   }
 
-  switch(columnSort) {
+  switch(myGlobals.columnSort) {
   case 1:
 #ifdef MULTITHREADED
     accessMutex(&myGlobals.addressResolutionMutex, "sortHostFctn");
@@ -708,7 +708,7 @@ int cmpProcesses(const void *_a, const void *_b) {
     return(0);
   }
 
-  switch(columnSort) {
+  switch(myGlobals.columnSort) {
   case 2: /* PID */
     if((*a)->pid == (*b)->pid)
       return(0);
@@ -758,7 +758,7 @@ int cmpFctn(const void *_a, const void *_b) {
     return(0);
   }
 
-  if(columnSort == HOST_DUMMY_IDX_VALUE) {
+  if(myGlobals.columnSort == HOST_DUMMY_IDX_VALUE) {
     int rc;
 
     /* Host name */
@@ -782,7 +782,7 @@ int cmpFctn(const void *_a, const void *_b) {
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(rc);
-  } else if(columnSort == DOMAIN_DUMMY_IDX_VALUE) {
+  } else if(myGlobals.columnSort == DOMAIN_DUMMY_IDX_VALUE) {
     int rc;
 
     fillDomainName(*a); fillDomainName(*b);
@@ -809,9 +809,9 @@ int cmpFctn(const void *_a, const void *_b) {
 #endif
 
 
-  switch(reportKind) {
+  switch(myGlobals.reportKind) {
   case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
-    switch(columnSort) {
+    switch(myGlobals.columnSort) {
     case 0:
       a_ = (*a)->bytesRcvd, b_ = (*b)->bytesRcvd;
       break;
@@ -865,7 +865,7 @@ int cmpFctn(const void *_a, const void *_b) {
     }
     break;
   case 1: /* STR_SORT_DATA_RECEIVED_IP */
-    columnProtoId = columnSort - 1;
+    columnProtoId = myGlobals.columnSort - 1;
     if(columnProtoId <= myGlobals.numIpProtosToMonitor) {
       if(columnProtoId == 0) {
 #ifdef ENABLE_NAPSTER
@@ -916,7 +916,7 @@ int cmpFctn(const void *_a, const void *_b) {
     /* Npthing */
     break;
   case 5: /* STR_SORT_DATA_SENT_PROTOS */
-    switch(columnSort) {
+    switch(myGlobals.columnSort) {
     case 0:
       a_ = (*a)->bytesSent, b_ = (*b)->bytesSent;
       break;
@@ -970,7 +970,7 @@ int cmpFctn(const void *_a, const void *_b) {
     }
     break;
   case 6: /* STR_SORT_DATA_SENT_IP */
-    columnProtoId = columnSort - 1;
+    columnProtoId = myGlobals.columnSort - 1;
     if(columnProtoId <= myGlobals.numIpProtosToMonitor) {
       if(columnProtoId == 0) {
 #ifdef ENABLE_NAPSTER
@@ -1060,7 +1060,7 @@ int cmpMulticastFctn(const void *_a, const void *_b) {
     return(0);
   }
 
-  switch(columnSort) {
+  switch(myGlobals.columnSort) {
   case 2:
     if((*a)->pktMulticastSent < (*b)->pktMulticastSent)
       return(1);
@@ -1161,7 +1161,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
   TrafficCounter a_=0, b_=0;
   int rc;
 
-  switch(columnSort) {
+  switch(myGlobals.columnSort) {
   case 2: /* IP Address */
     if((*a)->hostIpAddress.s_addr > (*b)->hostIpAddress.s_addr)
       return(1);
@@ -1172,7 +1172,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
     break;
 
   case 3: /* Data Sent */
-    switch(sortFilter) {
+    switch(myGlobals.sortFilter) {
     case REMOTE_TO_LOCAL_ACCOUNTING:
       a_ = (*a)->bytesSentLoc;
       b_ = (*b)->bytesSentLoc;
@@ -1190,7 +1190,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
     break;
 
   case 4: /* Data Rcvd */
-    switch(sortFilter) {
+    switch(myGlobals.sortFilter) {
     case REMOTE_TO_LOCAL_ACCOUNTING:
       a_ = (*a)->bytesRcvdLoc;
       b_ = (*b)->bytesRcvdLoc;
@@ -1899,7 +1899,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	  if((el->contactedSentPeers.peersIndexes[i] != NO_PEER)
 	     && (el->contactedRcvdPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) {
-	      el1 = myGlobals.device[actualReportDeviceId].hash_hostTraffic[
+	      el1 = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[
 		  checkSessionIdx(el->contactedSentPeers.peersIndexes[i])];
 
 	      if(el1 != NULL) {
@@ -1928,7 +1928,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       /* ***************************************************** */
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	if(el->contactedRcvdPeers.peersIndexes[i] != NO_PEER) {
-	  el1 = myGlobals.device[actualReportDeviceId].hash_hostTraffic[
+	  el1 = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[
                        checkSessionIdx(el->contactedRcvdPeers.peersIndexes[i])];
 
 	  if(el1 != NULL) {
@@ -2077,7 +2077,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 	u_int theIdx = scanner->peers.peersIndexes[i];
 
 	if(theIdx != NO_PEER) {
-	  HostTraffic *host = myGlobals.device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)];
+	  HostTraffic *host = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)];
 
 	  if(host != NULL) {
 	    sendString("\n<li>");
@@ -2098,16 +2098,16 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 
     if(sessionIdx == 0) {
       /* Now print currently established TCP sessions (if any) */
-      for(idx=1, numSessions=0; idx<myGlobals.device[actualReportDeviceId].numTotSessions; idx++)
-	if((myGlobals.device[actualReportDeviceId].tcpSession[idx] != NULL)
-	   && ((myGlobals.device[actualReportDeviceId].tcpSession[idx]->initiatorIdx == elIdx)
-	       || (myGlobals.device[actualReportDeviceId].tcpSession[idx]->remotePeerIdx == elIdx))) {
+      for(idx=1, numSessions=0; idx<myGlobals.device[myGlobals.actualReportDeviceId].numTotSessions; idx++)
+	if((myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL)
+	   && ((myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx]->initiatorIdx == elIdx)
+	       || (myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx]->remotePeerIdx == elIdx))) {
 	  char *sport, *dport, *remotePeer;
 	  TrafficCounter dataSent, dataRcvd, retrDataSent, retrDataRcvd;
 	  TrafficCounter fragDataSent, fragDataRcvd;
 	  int retrSentPercentage, retrRcvdPercentage;
 	  char fragStrSent[64], fragStrRcvd[64], *moreSessionInfo;
-	  IPSession *session = myGlobals.device[actualReportDeviceId].tcpSession[idx];
+	  IPSession *session = myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx];
 
 	  while(session != NULL) {
 #ifndef PRINT_ALL_ACTIVE_SESSIONS
@@ -2164,8 +2164,8 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 		  BufferOverflow();
 		dport = _dport;
 	      }
-	      remotePeer = makeHostLink(myGlobals.device[actualReportDeviceId].
-					hash_hostTraffic[checkSessionIdx(myGlobals.device[actualReportDeviceId].
+	      remotePeer = makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
+					hash_hostTraffic[checkSessionIdx(myGlobals.device[myGlobals.actualReportDeviceId].
 									 tcpSession[idx]->remotePeerIdx)],
 					SHORT_FORMAT, 0, 0);
 	      dataSent     = session->bytesSent;
@@ -2192,8 +2192,8 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 		dport = _dport;
 	      }
 
-	      remotePeer = makeHostLink(myGlobals.device[actualReportDeviceId].
-					hash_hostTraffic[checkSessionIdx(myGlobals.device[actualReportDeviceId].
+	      remotePeer = makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
+					hash_hostTraffic[checkSessionIdx(myGlobals.device[myGlobals.actualReportDeviceId].
 									 tcpSession[idx]->initiatorIdx)],
 					SHORT_FORMAT, 0, 0);
 	      dataSent     = session->bytesRcvd;
@@ -2506,12 +2506,12 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	BufferOverflow();
       sendString(buf);
 
-      for(elIdx=1; elIdx<myGlobals.device[actualReportDeviceId].actualHashSize; elIdx++) {
+      for(elIdx=1; elIdx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; elIdx++) {
 	HostTraffic *theHost;
 
 	if(elIdx == myGlobals.otherHostEntryIdx) continue;
 
-	theHost = myGlobals.device[actualReportDeviceId].hash_hostTraffic[elIdx];
+	theHost = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[elIdx];
 
 	if((theHost != NULL)
 	   && (theHost != el)
@@ -3001,7 +3001,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(el->contactedRouters.peersIndexes[i] != NO_PEER) {
       int routerIdx = el->contactedRouters.peersIndexes[i];
-      HostTraffic *router = myGlobals.device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
+      HostTraffic *router = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
 
       if(router != NULL) {
 	if(!printedHeader) {
@@ -3306,38 +3306,38 @@ void printTableEntry(char *buf, int bufLen,
 
 char* buildHTMLBrowserWindowsLabel(int i, int j) {
   static char buf[BUF_SIZE];
-  int idx = i*myGlobals.device[actualReportDeviceId].numHosts + j;
+  int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts + j;
 
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
 #endif
 
-  if((myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
-     || ((myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent == 0)
-	 && (myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd == 0)))
+  if((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
+     || ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent == 0)
+	 && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd == 0)))
     buf[0]='\0';
-  else if ((myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent > 0)
-	   && (myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd == 0)) {
+  else if ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent > 0)
+	   && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd == 0)) {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s",
-		myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
-		myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
-		formatBytes(myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent, 1)) < 0)
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
+		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent, 1)) < 0)
       BufferOverflow();
-  } else if ((myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent == 0)
-	     && (myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd > 0)) {
+  } else if ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent == 0)
+	     && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd > 0)) {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s",
-		myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
-		myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
-		formatBytes(myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd, 1)) < 0)
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
+		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd, 1)) < 0)
       BufferOverflow();
   } else {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s, (%s->%s)=%s",
-		myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
-		myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
-		formatBytes(myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent, 1),
-		myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
-		myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
-		formatBytes(myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd, 1)) < 0)
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
+		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent, 1),
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
+		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
+		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd, 1)) < 0)
       BufferOverflow();
   }
 
@@ -3354,7 +3354,7 @@ int cmpEventsFctn(const void *_a, const void *_b) {
   EventMsg **a = (EventMsg**)_a;
   EventMsg **b = (EventMsg**)_b;
 
-  switch(columnSort) {
+  switch(myGlobals.columnSort) {
   case 0: /* Event Time */
     if((*a)->eventTime > (*b)->eventTime)
       return(-1);

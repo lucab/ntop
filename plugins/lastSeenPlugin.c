@@ -232,8 +232,7 @@ static void handleLsHTTPrequest(char* url) {
     }
     /* ================================================================== */
 
-
-    HostT = findHostByNumIP(intoa(tablehost[entry].HostIpAddress), actualReportDeviceId);
+    HostT = findHostByNumIP(intoa(tablehost[entry].HostIpAddress), myGlobals.actualReportDeviceId);
     if ( HostT )
       tmp = makeHostLink(HostT,LONG_FORMAT,0,0);
     else
@@ -399,7 +398,6 @@ static PluginInfo LsPluginInfo[] = {
     termLsFunct, /* TermFunc   */
     handleLsPacket, /* PluginFunc */
     handleLsHTTPrequest,
-    NULL,
     "ip" /* BPF filter: filter all the ICMP packets */
   }
 };

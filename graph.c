@@ -231,7 +231,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     accessMutex(&myGlobals.graphMutex, "pktHostTrafficDistrib");
 #endif
 
-    fd = fdopen(abs(newSock), "ab");
+    fd = fdopen(abs(myGlobals.newSock), "ab");
 
     GDCPIE_LineColor = 0x000000L;
     GDCPIE_explode   = expl;    /* default: NULL - no explosion */
@@ -315,7 +315,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     accessMutex(&myGlobals.graphMutex, "pktHostFragmentDistrib");
 #endif
 
-    fd = fdopen(abs(newSock), "ab");
+    fd = fdopen(abs(myGlobals.newSock), "ab");
 
     GDCPIE_LineColor = 0x000000L;
     GDCPIE_explode   = expl;    /* default: NULL - no explosion */
@@ -378,7 +378,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     accessMutex(&myGlobals.graphMutex, "pktHostFragmentDistrib");
 #endif
 
-    fd = fdopen(abs(newSock), "ab");
+    fd = fdopen(abs(myGlobals.newSock), "ab");
 
     GDCPIE_LineColor      = 0x000000L;
     GDCPIE_explode        = expl;      /* default: NULL - no explosion */
@@ -493,7 +493,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   accessMutex(&myGlobals.graphMutex, "pktHostTrafficDistrib");
 #endif
 
-  fd = fdopen(abs(newSock), "ab");
+  fd = fdopen(abs(myGlobals.newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -526,45 +526,45 @@ void pktSizeDistribPie(void) {
   int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
   FILE *fd;
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo64 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo64)/
-      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 64";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo128 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo128)/
-      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 128";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo256 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo256)/
-      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 256";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo512 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo512)/
-      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 512";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1024 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1024)/
-      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 1024";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1518 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1518)/
-      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 1518";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.above1518 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.above1518)/
-      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
     lbl[num++] = "> 1518";
   };
 
@@ -573,7 +573,7 @@ void pktSizeDistribPie(void) {
   accessMutex(&myGlobals.graphMutex, "pktSizeDistrib");
 #endif
 
-  fd = fdopen(abs(newSock), "ab");
+  fd = fdopen(abs(myGlobals.newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -606,51 +606,51 @@ void pktTTLDistribPie(void) {
   int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
   FILE *fd;
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo32 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo32)/
-      (float)myGlobals.device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
     lbl[num++] = "< 32";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo64 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo64)/
-      (float)myGlobals.device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
     lbl[num++] = "< 64";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo96 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo96)/
-      (float)myGlobals.device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
     lbl[num++] = "< 96";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo128 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo128)/
-      (float)myGlobals.device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
     lbl[num++] = "< 128";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo160 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo160)/
-      (float)myGlobals.device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
     lbl[num++] = "< 160";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo192 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo192)/
-      (float)myGlobals.device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
     lbl[num++] = "< 192";
   };
 
- if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo224 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo224)/
-      (float)myGlobals.device[actualReportDeviceId].ipPkts;
+ if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
     lbl[num++] = "< 224";
   };
 
-  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo255 > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo255)/
-      (float)myGlobals.device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255 > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
     lbl[num++] = "<= 255";
   };
 
@@ -658,7 +658,7 @@ void pktTTLDistribPie(void) {
   accessMutex(&myGlobals.graphMutex, "pktSizeDistrib");
 #endif
 
-  fd = fdopen(abs(newSock), "ab");
+  fd = fdopen(abs(myGlobals.newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -691,20 +691,20 @@ void ipProtoDistribPie(void) {
   int num=0, expl[] = { 0, 20, 30 };
   FILE *fd;
 
-  p[num] = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local+
-		   myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
+  p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local+
+		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
   if(p[num] > 0) {
     lbl[num++] = "Loc";
   }
 
-  p[num] = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.remote2local+
-		   myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.remote2local)/1024;
+  p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local+
+		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote2local)/1024;
   if(p[num] > 0) {
     lbl[num++] = "Rem->Loc";
   }
 
-  p[num] = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
-		   myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;
+  p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
+		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;
   if(p[num] > 0) {
     lbl[num++] = "Loc->Rem";
   }
@@ -713,7 +713,7 @@ void ipProtoDistribPie(void) {
   accessMutex(&myGlobals.graphMutex, "ipProtoDistribPie");
 #endif
 
-  fd = fdopen(abs(newSock), "ab");
+  fd = fdopen(abs(myGlobals.newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -773,7 +773,7 @@ void interfaceTrafficPie(void) {
   accessMutex(&myGlobals.graphMutex, "interfaceTrafficPie");
 #endif
 
-  fd = fdopen(abs(newSock), "ab");
+  fd = fdopen(abs(myGlobals.newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;
@@ -807,22 +807,22 @@ void pktCastDistribPie(void) {
   FILE *fd;
   TrafficCounter unicastPkts;
 
-  unicastPkts = myGlobals.device[actualReportDeviceId].ethernetPkts
-    - myGlobals.device[actualReportDeviceId].broadcastPkts
-    - myGlobals.device[actualReportDeviceId]. multicastPkts;
+  unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts
+    - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts
+    - myGlobals.device[myGlobals.actualReportDeviceId]. multicastPkts;
 
   if(unicastPkts > 0) {
-    p[num] = (float)(100*unicastPkts)/(float)myGlobals.device[actualReportDeviceId].ethernetPkts;
+    p[num] = (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
     lbl[num++] = "Unicast";
   };
 
-  if(myGlobals.device[actualReportDeviceId].broadcastPkts > 0) {
-    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].broadcastPkts)/
-      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts > 0) {
+    p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts)/
+      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts;
     lbl[num++] = "Broadcast";
   };
 
-  if(myGlobals.device[actualReportDeviceId].multicastPkts > 0) {
+  if(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts > 0) {
     int i;
 
     p[num] = 100;
@@ -838,7 +838,7 @@ void pktCastDistribPie(void) {
   accessMutex(&myGlobals.graphMutex, "pktCastDistribPie");
 #endif
 
-  fd = fdopen(abs(newSock), "ab");
+  fd = fdopen(abs(myGlobals.newSock), "ab");
 
   GDCPIE_LineColor      = 0x000000L;
   GDCPIE_explode        = expl;    /* default: NULL - no explosion */
@@ -872,12 +872,12 @@ void drawTrafficPie(void) {
   int num=0, expl[] = { 5, 5 };
   FILE *fd;
 
-  if(myGlobals.device[actualReportDeviceId].ethernetBytes == 0) return;
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes == 0) return;
 
-  ip = myGlobals.device[actualReportDeviceId].ipBytes;
-  nonIp = myGlobals.device[actualReportDeviceId].ethernetBytes-myGlobals.device[actualReportDeviceId].ipBytes;
+  ip = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
+  nonIp = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes-myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
 
-  p[0] = ip*100/myGlobals.device[actualReportDeviceId].ethernetBytes; num++;
+  p[0] = ip*100/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes; num++;
   p[1] = 100-p[0];
 
   if(p[1] > 0)
@@ -887,7 +887,7 @@ void drawTrafficPie(void) {
   accessMutex(&myGlobals.graphMutex, "drawTrafficPie");
 #endif
 
-  fd = fdopen(abs(newSock), "ab");
+  fd = fdopen(abs(myGlobals.newSock), "ab");
 
   GDCPIE_LineColor = 0x000000L;
   GDCPIE_BGColor   = 0xFFFFFFL;
@@ -928,7 +928,7 @@ void drawThptGraph(int sortedColumn) {
   accessMutex(&myGlobals.graphMutex, "drawThptGraph");
 #endif
 
-  fd = fdopen(abs(newSock), "ab");
+  fd = fdopen(abs(myGlobals.newSock), "ab");
 
   GDC_BGColor    = 0xFFFFFFL;                  /* backgound color (white) */
   GDC_LineColor  = 0x000000L;                  /* line color      (black) */
@@ -944,7 +944,7 @@ void drawThptGraph(int sortedColumn) {
       labels[i][0] = '\0';
     }
 
-    len = myGlobals.device[actualReportDeviceId].numThptSamples;
+    len = myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples;
     if(len > 60) len = 60;
     for(i=0; i<len; i++) {
       tmpTime = myGlobals.actTime-i*60;
@@ -952,7 +952,7 @@ void drawThptGraph(int sortedColumn) {
     }
 
     for(maxBytesPerSecond=0, i=0; i<len; i++) {
-      graphData[59-i] = myGlobals.device[actualReportDeviceId].last60MinutesThpt[i].trafficValue*8 /* I want bits here */;
+      graphData[59-i] = myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].trafficValue*8 /* I want bits here */;
       if(graphData[59-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[59-i];
     }
 
@@ -981,7 +981,7 @@ void drawThptGraph(int sortedColumn) {
       labels[i][0] = '\0';
     }
 
-    len = myGlobals.device[actualReportDeviceId].numThptSamples/60;
+    len = myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples/60;
     if(len > 24) len = 24;
     for(i=0; i<len; i++) {
       tmpTime = myGlobals.actTime-((i+1)*60*60);
@@ -989,7 +989,7 @@ void drawThptGraph(int sortedColumn) {
     }
 
     for(maxBytesPerSecond=0, i=0; i<len; i++) {
-      graphData[23-i] = myGlobals.device[actualReportDeviceId].last24HoursThpt[i].trafficValue*8 /* I want bits here */;
+      graphData[23-i] = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue*8 /* I want bits here */;
       if(graphData[23-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[23-i];
     }
 
@@ -1018,7 +1018,7 @@ void drawThptGraph(int sortedColumn) {
       labels[i][0] = '\0';
     }
 
-    len = myGlobals.device[actualReportDeviceId].numThptSamples/(24*60);
+    len = myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples/(24*60);
     if(len > 30) len = 30;
     for(i=0; i<len; i++) {
       tmpTime = myGlobals.actTime-((i+1)*(60*60*24));
@@ -1026,7 +1026,7 @@ void drawThptGraph(int sortedColumn) {
     }
 
     for(maxBytesPerSecond=0, i=0; i<len; i++) {
-      graphData[29-i] = myGlobals.device[actualReportDeviceId].last30daysThpt[i]*8 /* I want bits here */;
+      graphData[29-i] = myGlobals.device[myGlobals.actualReportDeviceId].last30daysThpt[i]*8 /* I want bits here */;
       if(graphData[29-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[29-i];
     }
 
@@ -1070,45 +1070,45 @@ void drawGlobalProtoDistribution(void) {
   FILE *fd;
   int idx = 0;
 
-  ip = myGlobals.device[actualReportDeviceId].ipBytes;
-  nonIp = myGlobals.device[actualReportDeviceId].ethernetBytes-myGlobals.device[actualReportDeviceId].ipBytes;
+  ip = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
+  nonIp = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes-myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
 
-  if(myGlobals.device[actualReportDeviceId].tcpBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].tcpBytes; lbl[idx] = "TCP";  idx++; }
-  if(myGlobals.device[actualReportDeviceId].udpBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].udpBytes; lbl[idx] = "UDP"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].icmpBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].icmpBytes; lbl[idx] = "ICMP"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].otherIpBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].otherIpBytes; lbl[idx] = "Other IP"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].arpRarpBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].arpRarpBytes; lbl[idx] = "(R)ARP"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].dlcBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].dlcBytes; lbl[idx] = "DLC"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].ipxBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].ipxBytes; lbl[idx] = "IPX"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].decnetBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].decnetBytes;lbl[idx] = "Decnet";  idx++; }
-  if(myGlobals.device[actualReportDeviceId].atalkBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].atalkBytes; lbl[idx] = "AppleTalk"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].ospfBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].ospfBytes; lbl[idx] = "OSPF"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].netbiosBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].netbiosBytes; lbl[idx] = "NetBios"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].igmpBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].igmpBytes; lbl[idx] = "IGMP"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].osiBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].osiBytes; lbl[idx] = "OSI"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].qnxBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].qnxBytes; lbl[idx] = "QNX"; idx++; }
-  if(myGlobals.device[actualReportDeviceId].otherBytes > 0) {
-    p[idx] = myGlobals.device[actualReportDeviceId].otherBytes; lbl[idx] = "Other"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes; lbl[idx] = "TCP";  idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].udpBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].udpBytes; lbl[idx] = "UDP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes; lbl[idx] = "ICMP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes; lbl[idx] = "Other IP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes; lbl[idx] = "(R)ARP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes; lbl[idx] = "DLC"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes; lbl[idx] = "IPX"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes;lbl[idx] = "Decnet";  idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes; lbl[idx] = "AppleTalk"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes; lbl[idx] = "OSPF"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes; lbl[idx] = "NetBios"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes; lbl[idx] = "IGMP"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].osiBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].osiBytes; lbl[idx] = "OSI"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes; lbl[idx] = "QNX"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].otherBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherBytes; lbl[idx] = "Other"; idx++; }
 
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.graphMutex, "drawGlobalProtoDistribution");
 #endif
 
-  fd = fdopen(abs(newSock), "ab");
+  fd = fdopen(abs(myGlobals.newSock), "ab");
 
   GDC_LineColor      = 0x000000L;
   GDC_BGColor        = 0xFFFFFFL;
@@ -1144,10 +1144,10 @@ void drawGlobalIpProtoDistribution(void) {
   p[myGlobals.numIpProtosToMonitor] = 0;
 
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-    p[idx]  = (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].local
-      +myGlobals.device[actualReportDeviceId].ipProtoStats[i].remote;
-     p[idx] += (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].remote2local
-      +myGlobals.device[actualReportDeviceId].ipProtoStats[i].local2remote;
+    p[idx]  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local
+      +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote;
+     p[idx] += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local
+      +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote;
     if(p[idx] > 0) {
       p[myGlobals.numIpProtosToMonitor] += p[idx];
       lbl[idx] = myGlobals.protoIPTrafficInfos[i];
@@ -1159,7 +1159,7 @@ void drawGlobalIpProtoDistribution(void) {
   accessMutex(&myGlobals.graphMutex, "drawGlobalIpProtoDistribution");
 #endif
 
-  fd = fdopen(abs(newSock), "ab");
+  fd = fdopen(abs(myGlobals.newSock), "ab");
 
   GDC_LineColor = 0x000000L;
   GDC_BGColor   = 0xFFFFFFL;

@@ -22,28 +22,3 @@
 
 #include "ntop.h"
 #include "globals-report.h"
-
-#ifndef MICRO_NTOP
-int maxNumLines = MAX_NUM_TABLE_ROWS;
-int sortSendMode = 0;
-short sortFilter;
-
-/* Threads */
-
-/* TCP Wrappers */
-#ifdef HAVE_LIBWRAP
-int allow_severity = LOG_INFO;
-int deny_severity  = LOG_WARNING;
-#endif /* HAVE_LIBWRAP */
-
-#endif /* MICRO_NTOP */
-
-int webPort = NTOP_DEFAULT_WEB_PORT;
-int refreshRate = 0;
-int localAddrFlag = 1;
-int actualReportDeviceId;
-short columnSort, reportKind, sortFilter;
-int sock, newSock;
-#ifdef HAVE_OPENSSL
-int sock_ssl;
-#endif

@@ -560,13 +560,13 @@ void switchNwInterface(int _interface) {
     if(snprintf(buf, sizeof(buf), "You're currently capturing traffic from one "
 		"interface [%s]. The interface switch feature is active only when "
 		"you active ntop with multiple interfaces (-i command line switch). "
-		"Sorry.\n", myGlobals.device[actualReportDeviceId].name) < 0)
+		"Sorry.\n", myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
       BufferOverflow();
     sendString(buf);
   } else if(mwInterface >= 0) {
-    actualReportDeviceId = (mwInterface)%myGlobals.numDevices;
+    myGlobals.actualReportDeviceId = (mwInterface)%myGlobals.numDevices;
     if(snprintf(buf, sizeof(buf), "The current interface is now [%s].\n",
-		myGlobals.device[actualReportDeviceId].name) < 0)
+		myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
       BufferOverflow();
     sendString(buf);
   } else {
@@ -574,7 +574,7 @@ void switchNwInterface(int _interface) {
 
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
-	if(actualReportDeviceId == i)
+	if(myGlobals.actualReportDeviceId == i)
 	  selected="CHECKED";
 	else
 	  selected = "";
@@ -597,7 +597,7 @@ void switchNwInterface(int _interface) {
 
 void shutdownNtop(void) {
   printHTMLheader("ntop is shutting down...", HTML_FLAG_NO_REFRESH);
-  closeNwSocket(&newSock);
+  closeNwSocket(&myGlobals.newSock);
   termAccessLog();
   cleanup(0);
 }
@@ -759,7 +759,7 @@ void printNtopConfigInfo(void) {
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Actual Hash Size</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
-	      (int)myGlobals.device[actualReportDeviceId].actualHashSize) < 0)
+	      (int)myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize) < 0)
     BufferOverflow();
   sendString(buf);
 
@@ -779,9 +779,9 @@ void printNtopConfigInfo(void) {
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Stored Hash Hosts</TH>"
 	      "<TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",
-	      (int)myGlobals.device[actualReportDeviceId].hostsno,
-	      (((int)myGlobals.device[actualReportDeviceId].hostsno*100)/
-	       (int)myGlobals.device[actualReportDeviceId].actualHashSize)) < 0)
+	      (int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno,
+	      (((int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno*100)/
+	       (int)myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) < 0)
     BufferOverflow();
   sendString(buf);
 
@@ -794,7 +794,7 @@ void printNtopConfigInfo(void) {
   if(myGlobals.enableSessionHandling) {
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># TCP Sessions</TH>"
 		"<TD "TD_BG"  align=right>%u</TD></TR>\n",
-		myGlobals.device[actualReportDeviceId].numTcpSessions) < 0)
+		myGlobals.device[myGlobals.actualReportDeviceId].numTcpSessions) < 0)
       BufferOverflow();
     sendString(buf);
 
@@ -889,7 +889,7 @@ void printNtopConfigInfo(void) {
 
 static void initializeWeb(void) {
 #ifndef MICRO_NTOP
-  columnSort = 0, sortSendMode = 0;
+  myGlobals.columnSort = 0, myGlobals.sortSendMode = 0;
 #endif
   addDefaultAdminUser();
   initAccessLog();
@@ -908,7 +908,7 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
   initReports();
   initializeWeb();
 
-  actualReportDeviceId = 0;
+  myGlobals.actualReportDeviceId = 0;
 
   if(webPort > 0) {
     sin.sin_family      = AF_INET;
@@ -929,32 +929,32 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
     }
 #endif
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if(sock < 0) {
+    myGlobals.sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(myGlobals.sock < 0) {
       traceEvent(TRACE_ERROR, "Unable to create a new socket");
       exit(-1);
     }
 
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+    setsockopt(myGlobals.sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
   } else
-    sock = 0;
+    myGlobals.sock = 0;
 
 #ifdef HAVE_OPENSSL
   if(myGlobals.sslInitialized) {
-    sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
-    if(sock_ssl < 0) {
+    myGlobals.sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
+    if(myGlobals.sock_ssl < 0) {
       traceEvent(TRACE_ERROR, "unable to create a new socket");
       exit(-1);
     }
 
-    setsockopt(sock_ssl, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+    setsockopt(myGlobals.sock_ssl, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
   }
 #endif
 
   if(webPort > 0) {
-    if(bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+    if(bind(myGlobals.sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
       traceEvent(TRACE_WARNING, "bind: port %d already in use.", webPort);
-      closeNwSocket(&sock);
+      closeNwSocket(&myGlobals.sock);
       exit(-1);
     }
   }
@@ -965,27 +965,27 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
     sin.sin_port        = (int)htons(myGlobals.sslPort);
     sin.sin_addr.s_addr = INADDR_ANY;
 
-    if(bind(sock_ssl, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+    if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
       traceEvent(TRACE_ERROR, "bind: port %d already in use.", webPort);
-      closeNwSocket(&sock_ssl);
+      closeNwSocket(&myGlobals.sock_ssl);
       exit(-1);
     }
   }
 #endif
 
-  if(webPort > 0) {
-    if(listen(sock, 2) < 0) {
+  if(myGlobals.webPort > 0) {
+    if(listen(myGlobals.sock, 2) < 0) {
       traceEvent(TRACE_WARNING, "listen error.\n");
-      closeNwSocket(&sock);
+      closeNwSocket(&myGlobals.sock);
       exit(-1);
     }
   }
 
 #ifdef HAVE_OPENSSL
   if(myGlobals.sslInitialized)
-    if(listen(sock_ssl, 2) < 0) {
+    if(listen(myGlobals.sock_ssl, 2) < 0) {
       traceEvent(TRACE_WARNING, "listen error.\n");
-      closeNwSocket(&sock_ssl);
+      closeNwSocket(&myGlobals.sock_ssl);
       exit(-1);
     }
 #endif
@@ -1023,18 +1023,18 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
   int rc;
 #endif
   fd_set mask, mask_copy;
-  int topSock = sock;
+  int topSock = myGlobals.sock;
 
   FD_ZERO(&mask);
 
-  if(webPort > 0)
-    FD_SET((unsigned int)sock, &mask);
+  if(myGlobals.webPort > 0)
+    FD_SET((unsigned int)myGlobals.sock, &mask);
 
 #ifdef HAVE_OPENSSL
   if(myGlobals.sslInitialized) {
-    FD_SET(sock_ssl, &mask);
-    if(sock_ssl > topSock)
-      topSock = sock_ssl;
+    FD_SET(myGlobals.sock_ssl, &mask);
+    if(myGlobals.sock_ssl > topSock)
+      topSock = myGlobals.sock_ssl;
   }
 #endif
 
@@ -1073,11 +1073,11 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 
   errno = 0;
 
-  if(FD_ISSET(sock, fdmask)) {
+  if(FD_ISSET(myGlobals.sock, fdmask)) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Accepting HTTP request...\n");
 #endif
-    newSock = accept(sock, (struct sockaddr*)&from, &from_len);
+    myGlobals.newSock = accept(myGlobals.sock, (struct sockaddr*)&from, &from_len);
   } else {
 #ifdef DEBUG
 #ifdef HAVE_OPENSSL
@@ -1087,26 +1087,26 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 #endif
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized)
-      newSock = accept(sock_ssl, (struct sockaddr*)&from, &from_len);
+      myGlobals.newSock = accept(myGlobals.sock_ssl, (struct sockaddr*)&from, &from_len);
 #else
     ;
 #endif
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Request accepted (sock=%d) (errno=%d)\n", newSock, errno);
+  traceEvent(TRACE_INFO, "Request accepted (sock=%d) (errno=%d)\n", myGlobals.newSock, errno);
 #endif
 
-  if(newSock > 0) {
+  if(myGlobals.newSock > 0) {
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized)
-      if(FD_ISSET(sock_ssl, fdmask)) {
-	if(accept_ssl_connection(newSock) == -1) {
+      if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
+	if(accept_ssl_connection(myGlobals.newSock) == -1) {
 	  traceEvent(TRACE_WARNING, "Unable to accept SSL connection\n");
-	  closeNwSocket(&newSock);
+	  closeNwSocket(&myGlobals.newSock);
 	  return;
 	} else {
-	  newSock = -newSock;
+	  myGlobals.newSock = -myGlobals.newSock;
 	}
       }
 #endif /* HAVE_OPENSSL */
@@ -1114,7 +1114,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 #ifdef HAVE_LIBWRAP
     {
       struct request_info req;
-      request_init(&req, RQ_DAEMON, DAEMONNAME, RQ_FILE, newSock, NULL);
+      request_init(&req, RQ_DAEMON, DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
       fromhost(&req);
       if (!hosts_access(&req)) {
 	closelog(); /* just in case */
@@ -1128,7 +1128,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
     handleHTTPrequest(from.sin_addr);
 #endif /* HAVE_LIBWRAP */
 
-    closeNwSocket(&newSock);
+    closeNwSocket(&myGlobals.newSock);
   } else {
     traceEvent(TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d)", errno);
   }

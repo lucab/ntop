@@ -22,6 +22,8 @@
 
 #define MIN_NUM_USES   1
 
+#define MAX_NUM_PURGED_HOSTS  256
+
 /* ******************************* */
 
 u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
@@ -341,6 +343,9 @@ void freeHostInstances(int actualDeviceId) {
 	freeHostInfo(actualDeviceId, myGlobals.device[actualDeviceId].hash_hostTraffic[idx],
 		     idx, actualDeviceId);
 	myGlobals.device[actualDeviceId].hash_hostTraffic[idx] = NULL;
+#ifdef HAVE_SCHED_H
+	sched_yield(); /* Allow other threads to run */
+#endif
       }
     }
   }
@@ -378,7 +383,7 @@ void purgeIdleHosts(int actDevice) {
     hosts outside of the mutex's
   */
   hashLen = myGlobals.device[actDevice].actualHashSize;
-  len = sizeof(HostTraffic*)*hashLen;
+  len = sizeof(HostTraffic*)* MAX_NUM_PURGED_HOSTS;
   theFlaggedHosts = (HostTraffic**)malloc(len);
   memset(theFlaggedHosts, 0, len);
 
@@ -395,6 +400,8 @@ void purgeIdleHosts(int actDevice) {
 	if(!myGlobals.stickyHosts) {
 	    theFlaggedHosts[maxBucket++] = myGlobals.device[actDevice].hash_hostTraffic[idx];
 	    myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
+	    if(maxBucket == (MAX_NUM_PURGED_HOSTS-1))
+	      break;
 	}
       }
 

@@ -134,7 +134,7 @@ static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
                           char *thePw, int thePwLen) {
 #ifdef HAVE_OPENSSL
-  SSL* ssl = getSSLsocket(-newSock);
+  SSL* ssl = getSSLsocket(-myGlobals.newSock);
 #endif
   char aChar[8] /* just in case */, lastChar;
   char preLastChar, lineStr[768];
@@ -151,9 +151,9 @@ static int readHTTPheader(char* theRequestedURL,
   memset(httpRequestedURL, 0, sizeof(httpRequestedURL));
 
 #ifdef HAVE_OPENSSL
-  topSock = abs(newSock);
+  topSock = abs(myGlobals.newSock);
 #else
-  topSock = newSock;
+  topSock = myGlobals.newSock;
 #endif
 
   for(;;) {
@@ -165,7 +165,7 @@ static int readHTTPheader(char* theRequestedURL,
 
     /* select returns immediately */
     wait_time.tv_sec = 10; wait_time.tv_usec = 0;
-    if(select(newSock+1, &mask, 0, 0, &wait_time) == 0) {
+    if(select(myGlobals.newSock+1, &mask, 0, 0, &wait_time) == 0) {
       errorCode = HTTP_REQUEST_TIMEOUT; /* Timeout */
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Timeout while reading from socket.\n");
@@ -174,15 +174,15 @@ static int readHTTPheader(char* theRequestedURL,
     }
 
     /* printf("About to call recv()\n"); fflush(stdout); */
-    /* printf("Rcvd %d bytes\n", recv(newSock, aChar, 1, MSG_PEEK)); fflush(stdout); */
+    /* printf("Rcvd %d bytes\n", recv(myGlobals.newSock, aChar, 1, MSG_PEEK)); fflush(stdout); */
 
 #ifdef HAVE_OPENSSL
-    if(newSock < 0)
+    if(myGlobals.newSock < 0)
       rc = SSL_read(ssl, aChar, 1);
     else
-      rc = recv(newSock, aChar, 1, 0);
+      rc = recv(myGlobals.newSock, aChar, 1, 0);
 #else
-    rc = recv(newSock, aChar, 1, 0);
+    rc = recv(myGlobals.newSock, aChar, 1, 0);
 #endif
 
     if(rc != 1) {
@@ -376,7 +376,7 @@ void sendStringLen(char *theString, unsigned int len) {
   int bytesSent, rc, retries = 0;
   static char buffer[2*BUF_SIZE];
 
-  if(newSock == DUMMY_SOCKET_VALUE)
+  if(myGlobals.newSock == DUMMY_SOCKET_VALUE)
     return;
 
   httpBytesSent += len;
@@ -411,16 +411,16 @@ void sendStringLen(char *theString, unsigned int len) {
   RESEND:
     errno=0;
 
-    if(newSock == DUMMY_SOCKET_VALUE)
+    if(myGlobals.newSock == DUMMY_SOCKET_VALUE)
       return;
 
 #ifdef HAVE_OPENSSL
-    if(newSock < 0) {
-      rc = SSL_write(getSSLsocket(-newSock), &buffer[bytesSent], len);
+    if(myGlobals.newSock < 0) {
+      rc = SSL_write(getSSLsocket(-myGlobals.newSock), &buffer[bytesSent], len);
     } else
-      rc = send(newSock, &buffer[bytesSent], (size_t)len, 0);
+      rc = send(myGlobals.newSock, &buffer[bytesSent], (size_t)len, 0);
 #else
-    rc = send(newSock, &buffer[bytesSent], (size_t)len, 0);
+    rc = send(myGlobals.newSock, &buffer[bytesSent], (size_t)len, 0);
 #endif
 
     /* traceEvent(TRACE_INFO, "rc=%d\n", rc); */
@@ -435,14 +435,14 @@ void sendStringLen(char *theString, unsigned int len) {
 	retries++;
 	goto RESEND;
       } else if(errno == EPIPE /* Broken pipe: the  client has disconnected */) {
-	closeNwSocket(&newSock);
+	closeNwSocket(&myGlobals.newSock);
 	return;
       } else if(errno == EBADF /* Bad file descriptor: a
 				   disconnected client is still sending */) {
-	closeNwSocket(&newSock);
+	closeNwSocket(&myGlobals.newSock);
 	return;
       } else {
-	closeNwSocket(&newSock);
+	closeNwSocket(&myGlobals.newSock);
 	return;
       }
     } else {
@@ -474,7 +474,8 @@ void printHTMLheader(char *title, int  headerFlags) {
   */
 
   if((headerFlags & HTML_FLAG_NO_REFRESH) == 0) {
-    if(snprintf(buf, BUF_SIZE, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", refreshRate) < 0)
+    if(snprintf(buf, BUF_SIZE, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", 
+		myGlobals.refreshRate) < 0)
       BufferOverflow();
     sendString(buf);
   }
@@ -1054,7 +1055,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     }
 
     fclose(fd);
-    /* closeNwSocket(&newSock); */
+    /* closeNwSocket(&myGlobals.newSock); */
     return (0);
   }
 
@@ -1191,9 +1192,9 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 
 	  /* Close inherited sockets */
 #ifdef HAVE_OPENSSL
-	  if(myGlobals.sslInitialized) closeNwSocket(&sock_ssl);
+	  if(myGlobals.sslInitialized) closeNwSocket(&myGlobals.sock_ssl);
 #endif
-	  if(webPort > 0) closeNwSocket(&sock);
+	  if(myGlobals.webPort > 0) closeNwSocket(&myGlobals.sock);
 
 	  setsignal(SIGALRM, quitNow);
 	  alarm(120); /* Don't freeze */
@@ -1387,7 +1388,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     } else if(strncmp(pageName, PROCESS_INFO_HTML, strlen(PROCESS_INFO_HTML)) == 0) {
       if(myGlobals.isLsofPresent) {
 	sendHTTPHeader(HTTP_TYPE_HTML, 0);
-	printProcessInfo(sortedColumn /* process PID */, actualReportDeviceId);
+	printProcessInfo(sortedColumn /* process PID */, myGlobals.actualReportDeviceId);
       } else {
 	returnHTTPpageGone();
 	printTrailer=0;
@@ -1417,7 +1418,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       printIpAccounting(LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
     } else if(strncmp(pageName, "NetNetstat.html", strlen("NetNetstat.html")) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printActiveTCPSessions(actualReportDeviceId, pageNum);
+      printActiveTCPSessions(myGlobals.actualReportDeviceId, pageNum);
     } else if(strncmp(pageName, STR_MULTICAST_STATS, strlen(STR_MULTICAST_STATS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printMulticastStats(sortedColumn, revertOrder, pageNum);
@@ -1444,7 +1445,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       printIpTrafficMatrix();
     } else if(strcmp(pageName, "localRoutersList.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printLocalRoutersList(actualReportDeviceId);
+      printLocalRoutersList(myGlobals.actualReportDeviceId);
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
@@ -1465,7 +1466,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       pktCastDistribPie();
       printTrailer=0;
     } else if(strncmp(pageName, "pktSizeDistribPie", strlen("pktSizeDistribPie")) == 0) {
-      if(myGlobals.device[actualReportDeviceId].ethernetPkts > 0) {
+      if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts > 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 	pktSizeDistribPie();
 	printTrailer=0;
@@ -1473,7 +1474,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 	printNoDataYet();
       }
     } else if(strncmp(pageName, "pktTTLDistribPie", strlen("pktTTLDistribPie")) == 0) {
-      if(myGlobals.device[actualReportDeviceId].ipPkts > 0) {
+      if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts > 0) {
 	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 	pktTTLDistribPie();
 	printTrailer=0;
@@ -1542,8 +1543,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 
       /* printf("HostName: '%s'\n", hostName); */
 
-      for(elIdx=1; elIdx<myGlobals.device[actualReportDeviceId].actualHashSize; elIdx++) {
-	el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[elIdx];
+      for(elIdx=1; elIdx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; elIdx++) {
+	el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[elIdx];
 
 	if((elIdx != myGlobals.broadcastEntryIdx)
 	   && (el != NULL)
@@ -1611,16 +1612,16 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
 	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
-	  dumpNtopHashes(NULL, actualReportDeviceId);
+	  dumpNtopHashes(NULL, myGlobals.actualReportDeviceId);
 	else
-	  dumpNtopHashes(&questionMark[1], actualReportDeviceId);
+	  dumpNtopHashes(&questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_HOSTS_INDEXES_HTML, strlen(DUMP_HOSTS_INDEXES_HTML)) == 0) {
 	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
-	  dumpNtopHashIndexes(NULL, actualReportDeviceId);
+	  dumpNtopHashIndexes(NULL, myGlobals.actualReportDeviceId);
 	else
-	  dumpNtopHashIndexes(&questionMark[1], actualReportDeviceId);
+	  dumpNtopHashIndexes(&questionMark[1], myGlobals.actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_TRAFFIC_DATA_HTML, strlen(DUMP_TRAFFIC_DATA_HTML)) == 0) {
 	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
@@ -1645,7 +1646,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 
 	strncpy(hostName, pageName, sizeof(hostName));
 	sendHTTPHeader(HTTP_TYPE_HTML, 0);
-	printAllSessionsHTML(hostName, actualReportDeviceId);
+	printAllSessionsHTML(hostName, myGlobals.actualReportDeviceId);
       }
 #endif /* !MICRO_NTOP */
       else {
@@ -1670,7 +1671,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     if(compressFile)
       compressAndSendData(&gzipBytesSent);
 #endif
-    closeNwSocket(&newSock);
+    closeNwSocket(&myGlobals.newSock);
     logHTTPaccess(200, httpRequestedAt, gzipBytesSent);
     exit(0);
   } else

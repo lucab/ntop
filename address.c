@@ -352,7 +352,7 @@ static void queueAddress(struct in_addr elem) {
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(tmpBuf)+1;
 */
-  key_data.dptr = &elem.s_addr;
+  key_data.dptr = (void*)&elem.s_addr;
   key_data.dsize = 4;
 
   data_data = gdbm_fetch(myGlobals.gdbm_file, key_data);

@@ -28,7 +28,7 @@ static short domainSort = 0;
 
 #ifndef WIN32
 static void ignoreSignal(int signalId) {
-  closeNwSocket(&newSock);
+  closeNwSocket(&myGlobals.newSock);
   (void)setsignal(signalId, ignoreSignal);
 }
 #endif
@@ -37,7 +37,7 @@ static void ignoreSignal(int signalId) {
 
 void initReports(void) {
 #ifndef MICRO_NTOP
-  columnSort = 0;
+  myGlobals.columnSort = 0;
 #endif
   addDefaultAdminUser();
 }
@@ -47,19 +47,19 @@ void initReports(void) {
 /* **************************************** */
 
 int reportValues(time_t *lastTime) {
-  if(maxNumLines <= 0)
-    maxNumLines = MAX_NUM_TABLE_ROWS;
+  if(myGlobals.maxNumLines <= 0)
+    myGlobals.maxNumLines = MAX_NUM_TABLE_ROWS;
 
-  *lastTime = time(NULL) + refreshRate;
+  *lastTime = time(NULL) + myGlobals.refreshRate;
 
   /*
     Make sure that the other flags are't set. They have
     no effect in web mode
   */
-  if(refreshRate == 0)
-    refreshRate = REFRESH_TIME;
-  else if(refreshRate < MIN_REFRESH_TIME)
-    refreshRate = MIN_REFRESH_TIME;
+  if(myGlobals.refreshRate == 0)
+    myGlobals.refreshRate = REFRESH_TIME;
+  else if(myGlobals.refreshRate < MIN_REFRESH_TIME)
+    myGlobals.refreshRate = MIN_REFRESH_TIME;
 
   return(0);
 }
@@ -70,7 +70,7 @@ void addPageIndicator(char *url, u_int pageNum,
 		      u_int numEntries, u_int linesPerPage,
 		      int revertOrder, int numCol) {  
   char buf[BUF_SIZE/2], prevBuf[BUF_SIZE/2], nextBuf[BUF_SIZE/2], shortBuf[16];
-  int numPages = (numEntries+maxNumLines-1)/maxNumLines;
+  int numPages = (numEntries+myGlobals.maxNumLines-1)/myGlobals.maxNumLines;
   int actPage  = pageNum+1;
 
   if(numPages <= 1) return;
@@ -154,16 +154,16 @@ void printTrafficStatistics() {
   } else {
     /* myGlobals.mergeInterfaces == 0 */
     if(myGlobals.rFileName == NULL) {
-      if(!myGlobals.device[actualReportDeviceId].virtualDevice) {
+      if(!myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) {
 	if(snprintf(buf, sizeof(buf), "%s [%s]",
-		    getNwInterfaceType(actualReportDeviceId),
-		    myGlobals.device[actualReportDeviceId].name) < 0)
+		    getNwInterfaceType(myGlobals.actualReportDeviceId),
+		    myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
     } else {
       if(snprintf(buf, sizeof(buf), "%s [%s]",
-		  getNwInterfaceType(actualReportDeviceId),
+		  getNwInterfaceType(myGlobals.actualReportDeviceId),
 		  PCAP_NW_INTERFACE) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
@@ -196,7 +196,7 @@ void printTrafficStatistics() {
     sendString(buf);
   }
 
-  if(myGlobals.device[actualReportDeviceId].ethernetPkts > 0) {
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts > 0) {
     TrafficCounter dummyCounter;
     sendString("<TR><TH "TH_BG">Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
 
@@ -214,7 +214,7 @@ void printTrafficStatistics() {
     }
 #endif
 
-    if(myGlobals.device[actualReportDeviceId].pcapPtr != NULL) {
+    if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
       TrafficCounter droppedByKernel;
       int i;
 
@@ -227,17 +227,17 @@ void printTrafficStatistics() {
 	  }
 	}
 
-      unicastPkts = myGlobals.device[actualReportDeviceId].ethernetPkts
-	- myGlobals.device[actualReportDeviceId].broadcastPkts
-	- myGlobals.device[actualReportDeviceId].multicastPkts;
+      unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts
+	- myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts
+	- myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts;
       /* if(unicastPkts < 0) unicastPkts = 0; */ /* It shouldn't happen */
-      if(myGlobals.device[actualReportDeviceId].ethernetPkts <= 0)
-	myGlobals.device[actualReportDeviceId].ethernetPkts = 1;
+      if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts <= 0)
+	myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts = 1;
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR %s><TH "TH_BG" align=left>Total</th>"
 		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		  getRowColor(), formatPkts(myGlobals.device[actualReportDeviceId].ethernetPkts)) < 0)
+		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       if(snprintf(buf, sizeof(buf),
@@ -250,7 +250,7 @@ void printTrafficStatistics() {
       if(snprintf(buf, sizeof(buf), "<tr %s><TH "TH_BG" align=left>"
 		  "Dropped&nbsp;by&nbsp;ntop</th>"
 		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		  getRowColor(), formatPkts(myGlobals.device[actualReportDeviceId].droppedPkts)) < 0)
+		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 #endif   
@@ -258,29 +258,29 @@ void printTrafficStatistics() {
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Unicast</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*unicastPkts)/(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
+		getRowColor(), (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
 		formatPkts(unicastPkts)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Broadcast</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].broadcastPkts)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].broadcastPkts)) < 0)
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
-    if(myGlobals.device[actualReportDeviceId].multicastPkts > 0) {
+    if(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts > 0) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Multicast</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].multicastPkts)/
-		  (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[actualReportDeviceId].multicastPkts)) < 0)
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
 
 #ifdef HAVE_GDCHART
-    if(myGlobals.device[actualReportDeviceId].ipBytes > 0)
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes > 0)
       sendString("<TR BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=pktCastDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
@@ -292,15 +292,15 @@ void printTrafficStatistics() {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Shortest</th>"
 		"<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
 		getRowColor(),
-		formatPkts((TrafficCounter)myGlobals.device[actualReportDeviceId].rcvdPktStats.shortest)) < 0)
+		formatPkts((TrafficCounter)myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.shortest)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
-    avgPktLen = (96*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo128
-		 +192*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo256
-		 +384*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo512
-		 +768*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1024
-		 +1271*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1518)/
-      (myGlobals.device[actualReportDeviceId].ethernetPkts+1);
+    avgPktLen = (96*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128
+		 +192*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256
+		 +384*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512
+		 +768*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024
+		 +1271*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518)/
+      (myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts+1);
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Average&nbsp;Size</th>"
 		"<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
 		getRowColor(), formatPkts(avgPktLen)) < 0)
@@ -308,80 +308,80 @@ void printTrafficStatistics() {
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Longest</th>"
 		"<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-		getRowColor(), formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktStats.longest)) < 0)
+		getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.longest)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>&lt;&nbsp;64&nbsp;bytes</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo64)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo64)) < 0)
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>&lt;&nbsp;128&nbsp;bytes</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo128)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo128)) < 0)
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>&lt;&nbsp;256&nbsp;bytes</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo256)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo256)) < 0)
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>&lt;&nbsp;512&nbsp;bytes</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo512)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo512)) < 0)
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>&lt;&nbsp;1024&nbsp;bytes</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1024)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1024)) < 0)
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>&lt;&nbsp;1518&nbsp;bytes</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1518)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1518)) < 0)
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>&gt;&nbsp;1518&nbsp;bytes</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.above1518)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktStats.above1518)) < 0)
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
 #ifdef HAVE_GDCHART
-    if(myGlobals.device[actualReportDeviceId].ipBytes > 0)
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes > 0)
       sendString("<TR BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=pktSizeDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Packets&nbsp;too&nbsp;long [> %d]</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), myGlobals.mtuSize[myGlobals.device[actualReportDeviceId].datalink],
-		(float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.tooLong)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktStats.tooLong)) < 0)
+		getRowColor(), myGlobals.mtuSize[myGlobals.device[myGlobals.actualReportDeviceId].datalink],
+		(float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Bad&nbsp;Packets&nbsp;(Checksum)</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.badChecksum)/
-		(float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktStats.badChecksum)) < 0)
+		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum)/
+		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
@@ -391,32 +391,32 @@ void printTrafficStatistics() {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Total</th>"
 		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
 		getRowColor(), 
-		formatBytes(myGlobals.device[actualReportDeviceId].ethernetBytes, 1),
-		formatPkts(myGlobals.device[actualReportDeviceId].ethernetPkts)) < 0)
+		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes, 1),
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>IP Traffic</th>"
 		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
-		getRowColor(), formatBytes(myGlobals.device[actualReportDeviceId].ipBytes, 1),
-		formatPkts(myGlobals.device[actualReportDeviceId].ipPkts)) < 0)
+		getRowColor(), formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes, 1),
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
-    if(myGlobals.device[actualReportDeviceId].ipBytes > 0) {
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes > 0) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Fragmented IP Traffic</th>"
 		  "<TD "TD_BG" align=right COLSPAN=2>%s [%.1f%%]</td></TR>\n",
 		  getRowColor(),
-		  formatBytes(myGlobals.device[actualReportDeviceId].fragmentedIpBytes, 1),
-		  (float)(100*myGlobals.device[actualReportDeviceId].fragmentedIpBytes)/
-		  (float)myGlobals.device[actualReportDeviceId].ipBytes) < 0)
+		  formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes, 1),
+		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
 
     /* Just in case... */
-    if(myGlobals.device[actualReportDeviceId].ethernetBytes > myGlobals.device[actualReportDeviceId].ipBytes)
-      dummyCounter = myGlobals.device[actualReportDeviceId].ethernetBytes-myGlobals.device[actualReportDeviceId].ipBytes;
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes > myGlobals.device[myGlobals.actualReportDeviceId].ipBytes)
+      dummyCounter = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes-myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
     else
       dummyCounter = 0;
 
@@ -427,25 +427,25 @@ void printTrafficStatistics() {
     sendString(buf);
 
 #ifdef HAVE_GDCHART
-    if(myGlobals.device[actualReportDeviceId].ethernetBytes > 0)
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes > 0)
       sendString("<TR BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=ipTrafficPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 
     /* ********************* */
 	
-    if(myGlobals.device[actualReportDeviceId].ipPkts > 0) {
+    if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts > 0) {
       int avgPktTTL;
 
-      avgPktTTL = (16*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo32
-		   +48*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo64
-		   +80*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo96
-		   +112*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo128
-		   +144*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo160
-		   +176*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo192
-		   +208*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo224
-		   +240*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo255)/
-	myGlobals.device[actualReportDeviceId].ipPkts;
+      avgPktTTL = (16*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32
+		   +48*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64
+		   +80*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96
+		   +112*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128
+		   +144*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160
+		   +176*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192
+		   +208*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224
+		   +240*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255)/
+	myGlobals.device[myGlobals.actualReportDeviceId].ipPkts;
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Average&nbsp;TTL</th>"
 		  "<TD "TD_BG" align=right COLSPAN=2>%d</td></TR>\n",
@@ -454,58 +454,58 @@ void printTrafficStatistics() {
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>TTL &lt; 32</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo32)/
-		  (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo32)) < 0)
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>32 &lt; TTL &lt; 64</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo64)/
-		  (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo64)) < 0)
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>64 &lt; TTL &lt; 96</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo96)/
-		  (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo96)) < 0)
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>96 &lt; TTL &lt; 128</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo128)/
-		  (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo128)) < 0)
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>128 &lt; TTL &lt; 160</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo160)/
-		  (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo160)) < 0)
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>160 &lt; TTL &lt; 192</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo192)/
-		  (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo192)) < 0)
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>192 &lt; TTL &lt; 224</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo224)/
-		  (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo224)) < 0)
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>224 &lt; TTL &lt; 256</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-		  getRowColor(), (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo255)/
-		  (float)myGlobals.device[actualReportDeviceId].ethernetPkts,
-		  formatPkts(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo255)) < 0)
+		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255)/
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts,
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
@@ -522,31 +522,31 @@ void printTrafficStatistics() {
     sendString("</TABLE></TR><TR><TH "TH_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		getRowColor(), formatThroughput(myGlobals.device[actualReportDeviceId].actualThpt),
-		myGlobals.device[actualReportDeviceId].actualPktsThpt) < 0)
+		getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt),
+		myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Last Minute</th>"
 		"<TD "TD_BG" align=right>%s</td>"
 		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		getRowColor(), formatThroughput(myGlobals.device[actualReportDeviceId].lastMinThpt),
-		myGlobals.device[actualReportDeviceId].lastMinPktsThpt) < 0)
+		getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt),
+		myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Last 5 Minutes</th>"
 		"<TD "TD_BG" align=right>%s</td>"
 		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		getRowColor(), formatThroughput(myGlobals.device[actualReportDeviceId].lastFiveMinsThpt),
-		myGlobals.device[actualReportDeviceId].lastFiveMinsPktsThpt) < 0)
+		getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt),
+		myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" align=left>Peak</th>"
 		"<TD "TD_BG" align=right>%s</td>"
 		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		getRowColor(), formatThroughput(myGlobals.device[actualReportDeviceId].peakThroughput),
-		myGlobals.device[actualReportDeviceId].peakPacketThroughput) < 0)
+		getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput),
+		myGlobals.device[myGlobals.actualReportDeviceId].peakPacketThroughput) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
@@ -554,9 +554,9 @@ void printTrafficStatistics() {
 		"<TD "TD_BG" align=right>%s</td>"
 		"<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		getRowColor(),
-		formatThroughput(myGlobals.device[actualReportDeviceId].ethernetBytes/(myGlobals.actTime-myGlobals.initialSniffTime)),
+		formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes/(myGlobals.actTime-myGlobals.initialSniffTime)),
 		/* Bug below fixed courtesy of Eddy Lai <eddy@ModernTerminals.com> */
-		((float)myGlobals.device[actualReportDeviceId].ethernetPkts/(float)(myGlobals.actTime-myGlobals.initialSniffTime))) < 0)
+		((float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts/(float)(myGlobals.actTime-myGlobals.initialSniffTime))) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
@@ -584,8 +584,8 @@ void printHostsTraffic(int reportType,
   hourId = atoi(theDate);
 
   memset(buf, 0, sizeof(buf));
-  tmpTable = (HostTraffic**)malloc(myGlobals.device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(tmpTable, 0, myGlobals.device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   switch(reportType) {
   case 0:
@@ -607,12 +607,12 @@ void printHostsTraffic(int reportType,
 
   printHeader(reportType, revertOrder, abs(sortedColumn));
 
-  for(idx=1; idx<myGlobals.device[actualReportDeviceId].actualHashSize; idx++) {
+  for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++) {
     if((idx != myGlobals.otherHostEntryIdx)
-       && ((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+       && ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && (broadcastHost(el) == 0)) {
-      if((sortSendMode && (el->bytesSent > 0))
-	 || ((!sortSendMode) && (el->bytesRcvd > 0))) {
+      if((myGlobals.sortSendMode && (el->bytesSent > 0))
+	 || ((!myGlobals.sortSendMode) && (el->bytesRcvd > 0))) {
 	if(((reportType == 1    /* STR_SORT_DATA_RECEIVED_IP */) 
 	    || (reportType == 6 /* STR_SORT_DATA_SENT_IP     */))
 	   && (el->hostNumIpAddress[0] == '\0')) continue;
@@ -628,14 +628,14 @@ void printHostsTraffic(int reportType,
       - 'recycle' (somebody would call this "code reuse") the cmpFctn function
     */
 
-    columnSort = 0;
+    myGlobals.columnSort = 0;
 
     if(sortedColumn == HOST_DUMMY_IDX_VALUE)
-      columnSort = HOST_DUMMY_IDX_VALUE; /* Host name */
+      myGlobals.columnSort = HOST_DUMMY_IDX_VALUE; /* Host name */
     else if(sortedColumn == DOMAIN_DUMMY_IDX_VALUE)
-      columnSort = DOMAIN_DUMMY_IDX_VALUE; /* domain name */
+      myGlobals.columnSort = DOMAIN_DUMMY_IDX_VALUE; /* domain name */
     else
-      columnSort = sortedColumn;
+      myGlobals.columnSort = sortedColumn;
     
     /* 
        reportType:
@@ -652,16 +652,16 @@ void printHostsTraffic(int reportType,
     */
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, ">reportType=%d/sortedColumn=%d/columnSort=%d<\n",
-	       reportType, sortedColumn, columnSort);
+    traceEvent(TRACE_INFO, ">reportType=%d/sortedColumn=%d/myGlobals.columnSort=%d<\n",
+	       reportType, sortedColumn, myGlobals.columnSort);
 #endif
 
-    reportKind = reportType;
-    if(columnSort == 0) reportKind = 0;
+    myGlobals.reportKind = reportType;
+    if(myGlobals.columnSort == 0) myGlobals.reportKind = 0;
 
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
 
-    for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
+    for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
       int i;
       char webHostName[BUF_SIZE];
 
@@ -671,8 +671,8 @@ void printHostsTraffic(int reportType,
 	el = tmpTable[idx];
 
       if(el != NULL) {
-	sentPercent = (100*(float)el->bytesSent)/myGlobals.device[actualReportDeviceId].ethernetBytes;
-	rcvdPercent = (100*(float)el->bytesRcvd)/myGlobals.device[actualReportDeviceId].ethernetBytes;
+	sentPercent = (100*(float)el->bytesSent)/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes;
+	rcvdPercent = (100*(float)el->bytesRcvd)/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes;
 
 	/* Fixed buffer overflow.
 	   Courtesy of Rainer Tammer <rainer.tammer@spg.schulergroup.com>
@@ -918,7 +918,7 @@ void printHostsTraffic(int reportType,
 	sendString("</TR>\n");
 	
 	/* Avoid huge tables */
-	if(printedEntries++ > maxNumLines)
+	if(printedEntries++ > myGlobals.maxNumLines)
 	  break;
       }
     }
@@ -928,7 +928,7 @@ void printHostsTraffic(int reportType,
   sendString("\n</TABLE>"TABLE_OFF"\n");
   sendString("</CENTER>\n");
 
-  addPageIndicator(url, pageNum, numEntries, maxNumLines, 
+  addPageIndicator(url, pageNum, numEntries, myGlobals.maxNumLines, 
 		   revertOrder, abs(sortedColumn));
 
   myGlobals.lastRefreshTime = myGlobals.actTime;
@@ -948,8 +948,8 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
-  tmpTable = (HostTraffic**)malloc(myGlobals.device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(tmpTable, 0, myGlobals.device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   /* All the ALT tags courtesy of "Burton M. Strauss III" <BStrauss3@attbi.com> */
   if(revertOrder) {
@@ -960,9 +960,9 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
     arrowGif = "&nbsp;<IMG ALT=\"Descending order, click to reverse\" SRC=arrow_down.gif BORDER=0>";
   }
 
-  for(idx=1; idx<myGlobals.device[actualReportDeviceId].actualHashSize; idx++) {
+  for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++) {
     if((idx != myGlobals.otherHostEntryIdx)
-       && ((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+       && ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && ((el->pktMulticastSent > 0) || (el->pktMulticastRcvd > 0))
        && (!broadcastHost(el))
        )
@@ -972,14 +972,14 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   printHTMLheader("Multicast Statistics", 0);
 
   if(numEntries > 0) {
-    columnSort = sortedColumn; /* Host name */
+    myGlobals.columnSort = sortedColumn; /* Host name */
 
     if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", STR_MULTICAST_STATS, sign) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", STR_MULTICAST_STATS) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-    if(abs(columnSort) == 0) {
+    if(abs(myGlobals.columnSort) == 0) {
       arrow[0] = arrowGif;
       theAnchor[0] = htmlAnchor;
     } else {
@@ -987,7 +987,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
       theAnchor[0] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 1) {
+    if(abs(myGlobals.columnSort) == 1) {
       arrow[1] = arrowGif;
       theAnchor[1] = htmlAnchor;
     } else {
@@ -995,7 +995,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
       theAnchor[1] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 2) {
+    if(abs(myGlobals.columnSort) == 2) {
       arrow[2] = arrowGif;
       theAnchor[2] = htmlAnchor;
     } else {
@@ -1003,7 +1003,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
       theAnchor[2] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 3) {
+    if(abs(myGlobals.columnSort) == 3) {
       arrow[3] = arrowGif;
       theAnchor[3] = htmlAnchor;
     } else {
@@ -1011,7 +1011,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
       theAnchor[3] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 4) {
+    if(abs(myGlobals.columnSort) == 4) {
       arrow[4] = arrowGif;
       theAnchor[4] = htmlAnchor;
     } else {
@@ -1019,7 +1019,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
       theAnchor[4] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 5) {
+    if(abs(myGlobals.columnSort) == 5) {
       arrow[5] = arrowGif;
       theAnchor[5] = htmlAnchor;
     } else {
@@ -1046,7 +1046,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpMulticastFctn);
 
-    for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
+    for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
      if(revertOrder)
 	el = tmpTable[numEntries-idx-1];
       else
@@ -1067,7 +1067,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 	sendString(buf);
 
       /* Avoid huge tables */
-      if(printedEntries++ > maxNumLines)
+      if(printedEntries++ > myGlobals.maxNumLines)
 	break;
       }
     }
@@ -1075,7 +1075,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("</CENTER>\n");
 
-    addPageIndicator(STR_MULTICAST_STATS, pageNum, numEntries, maxNumLines, 
+    addPageIndicator(STR_MULTICAST_STATS, pageNum, numEntries, myGlobals.maxNumLines, 
 		     revertOrder, abs(sortedColumn));        
   } else
     printNoDataYet();
@@ -1096,8 +1096,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
   char htmlAnchor[64], htmlAnchor1[64];
 
   memset(buf, 0, sizeof(buf));
-  tmpTable = (HostTraffic**)malloc(myGlobals.device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(tmpTable, 0, myGlobals.device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   if(revertOrder) {
     sign = "";
@@ -1107,19 +1107,19 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     arrowGif = "&nbsp;<IMG ALT=\"Descending order, click to reverse\" SRC=arrow_down.gif BORDER=0>";
   }
 
-  columnSort = sortedColumn;
+  myGlobals.columnSort = sortedColumn;
 
   printHTMLheader("Host Information", 0);
 
   /* printHeader(0, revertOrder, abs(sortedColumn)); */
 
-  for(idx=1, numEntries=0; idx<myGlobals.device[actualReportDeviceId].actualHashSize; idx++)
+  for(idx=1, numEntries=0; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++)
     if((idx != myGlobals.otherHostEntryIdx)
-       && ((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)) {
+       && ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)) {
       unsigned short actUsage;
 
       actUsage = (unsigned short)(100*((float)el->bytesSent/
-				       (float)myGlobals.device[actualReportDeviceId].ethernetBytes));
+				       (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
 
       el->actBandwidthUsage = actUsage;
       if(el->actBandwidthUsage > maxBandwidthUsage)
@@ -1136,7 +1136,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", HOSTS_INFO_HTML) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-    if(abs(columnSort) == 1) {
+    if(abs(myGlobals.columnSort) == 1) {
       arrow[1] = arrowGif;
       theAnchor[1] = htmlAnchor;
     } else {
@@ -1144,7 +1144,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       theAnchor[1] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 2) {
+    if(abs(myGlobals.columnSort) == 2) {
       arrow[2] = arrowGif;
       theAnchor[2] = htmlAnchor;
     } else {
@@ -1152,7 +1152,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       theAnchor[2] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 3) {
+    if(abs(myGlobals.columnSort) == 3) {
       arrow[3] = arrowGif;
       theAnchor[3] = htmlAnchor;
     } else {
@@ -1160,7 +1160,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       theAnchor[3] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 4) {
+    if(abs(myGlobals.columnSort) == 4) {
       arrow[4] = arrowGif;
       theAnchor[4] = htmlAnchor;
     } else {
@@ -1168,7 +1168,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       theAnchor[4] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 5) {
+    if(abs(myGlobals.columnSort) == 5) {
       arrow[5] = arrowGif;
       theAnchor[5] = htmlAnchor;
     } else {
@@ -1176,7 +1176,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       theAnchor[5] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 6) {
+    if(abs(myGlobals.columnSort) == 6) {
       arrow[6] = arrowGif;
       theAnchor[6] = htmlAnchor;
     } else {
@@ -1184,7 +1184,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       theAnchor[6] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == DOMAIN_DUMMY_IDX_VALUE) {
+    if(abs(myGlobals.columnSort) == DOMAIN_DUMMY_IDX_VALUE) {
       arrow[0] = arrowGif;
       theAnchor[0] = htmlAnchor;
     } else {
@@ -1211,7 +1211,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
-    for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
+    for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
       if(revertOrder)
 	el = tmpTable[numEntries-idx-1];
       else
@@ -1380,7 +1380,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	}
 
 	/* Avoid huge tables */
-	if(printedEntries > maxNumLines)
+	if(printedEntries > myGlobals.maxNumLines)
 	  break;
       } else {
 	traceEvent(TRACE_WARNING, "WARNING: quicksort() problem!");
@@ -1390,7 +1390,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
 
-    addPageIndicator(HOSTS_INFO_HTML, pageNum, numEntries, maxNumLines, 
+    addPageIndicator(HOSTS_INFO_HTML, pageNum, numEntries, myGlobals.maxNumLines, 
 		     revertOrder, abs(sortedColumn));   
   }
 
@@ -1405,8 +1405,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
   char buf[BUF_SIZE];
   u_short found = 0;
 
-  for(elIdx=0; elIdx<myGlobals.device[actualReportDeviceId].actualHashSize; elIdx++) {
-    el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[elIdx];
+  for(elIdx=0; elIdx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; elIdx++) {
+    el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[elIdx];
 
     if((elIdx != myGlobals.broadcastEntryIdx)
        && (elIdx != myGlobals.otherHostEntryIdx)
@@ -1477,7 +1477,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	  if(el->portsUsage[idx]->clientUsesLastPeer == NO_PEER)
 	    peerHost = NULL;
 	  else
-	    peerHost = myGlobals.device[actualReportDeviceId].
+	    peerHost = myGlobals.device[myGlobals.actualReportDeviceId].
 	      hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->clientUsesLastPeer)];
 
 	  if(peerHost == NULL) {
@@ -1500,7 +1500,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	  if(el->portsUsage[idx]->serverUsesLastPeer == NO_PEER)
 	    peerHost = NULL;
 	  else
-	    peerHost = myGlobals.device[actualReportDeviceId].
+	    peerHost = myGlobals.device[myGlobals.actualReportDeviceId].
 	      hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->serverUsesLastPeer)];
 
 	  if(peerHost == NULL) {
@@ -1544,9 +1544,9 @@ void printLocalRoutersList(int actualDeviceId) {
     return;
   }
 
-  for(idx=1; idx<myGlobals.device[actualReportDeviceId].actualHashSize; idx++) {
+  for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++) {
     if((idx != myGlobals.otherHostEntryIdx) &&
-       ((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+       ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && subnetLocalHost(el)) {
 
       for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
@@ -1576,16 +1576,16 @@ void printLocalRoutersList(int actualDeviceId) {
 	       "<TH "TH_BG">Used by</TH></TR>\n");
 
     for(i=0; i<numEntries; i++) {
-      router = myGlobals.device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(routerList[i])];
+      router = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[checkSessionIdx(routerList[i])];
       if(router != NULL) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
 		getRowColor(),
 		makeHostLink(router, SHORT_FORMAT, 0, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 
-	for(idx=1; idx<myGlobals.device[actualReportDeviceId].actualHashSize; idx++)
+	for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++)
 	  if((idx != myGlobals.otherHostEntryIdx) &&
-	     ((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+	     ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
 	     && subnetLocalHost(el)) {
 	    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
 	      if(el->contactedRouters.peersIndexes[j] == routerList[i]) {
@@ -1632,12 +1632,12 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   }
 
   totalBytesSent=0, totalBytesRcvd=0;
-  tmpTable = (HostTraffic**)malloc(myGlobals.device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(tmpTable, 0, myGlobals.device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  tmpTable = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
-  for(idx=1, numEntries=0; idx<myGlobals.device[actualReportDeviceId].actualHashSize; idx++)
+  for(idx=1, numEntries=0; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++)
     if(/* (idx != myGlobals.otherHostEntryIdx) && */
-       ((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+       ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && (broadcastHost(el) == 0) /* No broadcast addresses please */
        && (multicastHost(el) == 0) /* No multicast addresses please */
        && ((el->hostNumIpAddress[0] != '\0')
@@ -1692,8 +1692,8 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   printHTMLheader(title, 0);
 
   if(numEntries > 0) {
-    columnSort = sortedColumn;
-    sortFilter = remoteToLocal;
+    myGlobals.columnSort = sortedColumn;
+    myGlobals.sortFilter = remoteToLocal;
     quicksort(tmpTable, numEntries, sizeof(struct hostTraffic*), cmpHostsFctn);
 
     if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", str, sign) < 0)
@@ -1701,7 +1701,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", str) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-    if(abs(columnSort) == 1) {
+    if(abs(myGlobals.columnSort) == 1) {
       arrow[1] = arrowGif;
       theAnchor[1] = htmlAnchor;
     } else {
@@ -1709,7 +1709,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
       theAnchor[1] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 2)  {
+    if(abs(myGlobals.columnSort) == 2)  {
       arrow[2] = arrowGif;
       theAnchor[2] = htmlAnchor;
     } else {
@@ -1717,7 +1717,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
       theAnchor[2] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 3) {
+    if(abs(myGlobals.columnSort) == 3) {
       arrow[3] = arrowGif;
       theAnchor[3] = htmlAnchor;
     } else {
@@ -1725,7 +1725,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
       theAnchor[3] = htmlAnchor1;
     }
 
-    if(abs(columnSort) == 4) {
+    if(abs(myGlobals.columnSort) == 4) {
       arrow[4] = arrowGif;
       theAnchor[4] = htmlAnchor;
     } else {
@@ -1746,7 +1746,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
     sendString(buf);
 
-    for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
+    for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
       if(revertOrder)
 	el = tmpTable[numEntries-idx-1];
       else
@@ -1798,14 +1798,14 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 	sendString(buf);
 
 	/* Avoid huge tables */
-	if(printedEntries++ > maxNumLines)
+	if(printedEntries++ > myGlobals.maxNumLines)
 	  break;
       }
     }
 
     sendString("</TABLE>"TABLE_OFF"\n");
 
-    addPageIndicator(str, pageNum, numEntries, maxNumLines, 
+    addPageIndicator(str, pageNum, numEntries, myGlobals.maxNumLines, 
 		     revertOrder, abs(sortedColumn));   
 
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
@@ -1863,14 +1863,14 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
   */
 
   for(idx=1, numSessions=0, printedSessions=0; 
-      idx<myGlobals.device[actualReportDeviceId].numTotSessions; idx++)
+      idx<myGlobals.device[myGlobals.actualReportDeviceId].numTotSessions; idx++)
     if((idx != myGlobals.otherHostEntryIdx) 
-       && (myGlobals.device[actualReportDeviceId].tcpSession[idx] != NULL)) {
+       && (myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx] != NULL)) {
       char *sport, *dport;
       TrafficCounter dataSent, dataRcvd;
-      IPSession *session = myGlobals.device[actualReportDeviceId].tcpSession[idx];
+      IPSession *session = myGlobals.device[myGlobals.actualReportDeviceId].tcpSession[idx];
             
-      while((session != NULL) && (printedSessions < maxNumLines)) { 
+      while((session != NULL) && (printedSessions < myGlobals.maxNumLines)) { 
 #ifndef PRINT_ALL_ACTIVE_SESSIONS
 	if(session->sessionState != STATE_ACTIVE) {
 	  session = session->next;
@@ -1878,7 +1878,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 	}
 #endif
 
-	if((numSessions++) < pageNum*maxNumLines) {
+	if((numSessions++) < pageNum*myGlobals.maxNumLines) {
 	  session = session->next;
 	  continue;
 	}
@@ -1938,13 +1938,13 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 #endif
 		    "</TR>\n",
 		    getRowColor(),
-		    makeHostLink(myGlobals.device[actualReportDeviceId].
-				 hash_hostTraffic[checkSessionIdx(myGlobals.device[actualReportDeviceId].
+		    makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
+				 hash_hostTraffic[checkSessionIdx(myGlobals.device[myGlobals.actualReportDeviceId].
 								  tcpSession[idx]->initiatorIdx)],
 				 SHORT_FORMAT, 0, 0),
 		    sport,
-		    makeHostLink(myGlobals.device[actualReportDeviceId].
-				 hash_hostTraffic[checkSessionIdx(myGlobals.device[actualReportDeviceId].
+		    makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
+				 hash_hostTraffic[checkSessionIdx(myGlobals.device[myGlobals.actualReportDeviceId].
 								  tcpSession[idx]->remotePeerIdx)],
 				 SHORT_FORMAT, 0, 0),
 		    dport,
@@ -1971,8 +1971,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
     sendString("</CENTER>\n");
 
     addPageIndicator("NetNetstat.html", pageNum, 
-		     myGlobals.device[actualReportDeviceId].numTotSessions,
-		     maxNumLines, -1, 0);
+		     myGlobals.device[myGlobals.actualReportDeviceId].numTotSessions,
+		     myGlobals.maxNumLines, -1, 0);
   } else
     printFlagedWarning("<I>No Active TCP Sessions</I>");
 }
@@ -1991,22 +1991,22 @@ void printIpProtocolUsage(void) {
   memset(clientPorts, 0, sizeof(clientPorts));
   memset(serverPorts, 0, sizeof(serverPorts));
 
-  hosts = (HostTraffic**)malloc(myGlobals.device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
-  memset(hosts, 0, myGlobals.device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  hosts = (HostTraffic**)malloc(myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(hosts, 0, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   /* Further checks courtesy of Scott Renfro <scott@renfro.org> */
-  if(myGlobals.device[actualReportDeviceId].hash_hostTraffic != NULL) {
-    for(i=0; i<myGlobals.device[actualReportDeviceId].actualHashSize; i++)
-      if((myGlobals.device[actualReportDeviceId].hash_hostTraffic[i] != NULL)
-	 && subnetPseudoLocalHost(myGlobals.device[actualReportDeviceId].hash_hostTraffic[i])
-	 && (myGlobals.device[actualReportDeviceId].hash_hostTraffic[i]->hostNumIpAddress[0] != '\0')) {
-	hosts[hostsNum++] = myGlobals.device[actualReportDeviceId].hash_hostTraffic[i];
+  if(myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic != NULL) {
+    for(i=0; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++)
+      if((myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i] != NULL)
+	 && subnetPseudoLocalHost(myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i])
+	 && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]->hostNumIpAddress[0] != '\0')) {
+	hosts[hostsNum++] = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i];
 
-	if(myGlobals.device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage != NULL) {
+	if(myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]->portsUsage != NULL) {
 	  for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++) {
-	    if(myGlobals.device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j] != NULL)  {
-	      clientPorts[j] += myGlobals.device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->clientUses;
-	      serverPorts[j] += myGlobals.device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->serverUses;
+	    if(myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j] != NULL)  {
+	      clientPorts[j] += myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->clientUses;
+	      serverPorts[j] += myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->serverUses;
 	      numPorts++;
 	    }
 	  }
@@ -2176,8 +2176,8 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
     printSectionTitle("Local Traffic");
 
-    total = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local+
-		    myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
     if(total == 0)
       printNoDataYet();
     else {
@@ -2188,7 +2188,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
 
-      partialTotal = (float)myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local/1024;
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local/1024;
       percentage = ((float)(partialTotal*100))/((float)total);
       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage);
@@ -2200,7 +2200,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
                  "Percentage</TH></TR>\n");
 
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	partialTotal = (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].local/1024;
+	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local/1024;
 
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
@@ -2227,8 +2227,8 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
     /* ********************************************************** */
 
-    total = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.remote2local+
-		    myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.remote2local)/1024;
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote2local)/1024;
 
     printSectionTitle("Remote to Local Traffic");
 
@@ -2244,7 +2244,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
 
-      partialTotal = (float)myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.remote2local/1024;
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local/1024;
       percentage = ((float)(partialTotal*100))/((float)total);
       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage);
@@ -2256,7 +2256,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 		 "Percentage</TH></TR>\n");
 
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	partialTotal = (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].remote2local/1024;
+	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local/1024;
 
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
@@ -2286,8 +2286,8 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     
     printSectionTitle("Remote Traffic");
 
-    total = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.remote+
-		    myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.remote)/1024;
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote)/1024;
     if(total == 0)
       printNoDataYet();
     else {
@@ -2298,7 +2298,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
       
-      partialTotal = (float)myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.remote/1024;
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote/1024;
       percentage = ((float)(partialTotal*100))/((float)total);
       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
                                 "TCP", "UDP", total, percentage);
@@ -2311,7 +2311,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
         partialTotal =
-	  (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].remote/1024;
+	  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote/1024;
 
         if(partialTotal > 0) {
           remainingTraffic += partialTotal;
@@ -2343,8 +2343,8 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
     printSectionTitle("Local to Remote Traffic");
 
-    total = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
-		    myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;
     if(total == 0)
       printNoDataYet();
     else {
@@ -2357,7 +2357,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
 
-      partialTotal = (float)myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local2remote/1024;
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote/1024;
       percentage = ((float)(partialTotal*100))/((float)total);
       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage);
@@ -2369,7 +2369,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 		 "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
 
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	partialTotal = (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].local2remote/1024;
+	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote/1024;
 
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
@@ -2394,7 +2394,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     }
 
   } else {
-    total = (float)myGlobals.device[actualReportDeviceId].ipBytes/1024; /* total is expressed in KBytes */
+    total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes/1024; /* total is expressed in KBytes */
 
     if(total == 0)
       return;
@@ -2412,10 +2412,10 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       remainingTraffic = 0;
 
       for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	partialTotal  = (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].local
-	  +myGlobals.device[actualReportDeviceId].ipProtoStats[i].remote;
-	partialTotal += (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].remote2local
-	  +myGlobals.device[actualReportDeviceId].ipProtoStats[i].local2remote;
+	partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local
+	  +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote;
+	partialTotal += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local
+	  +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote;
 
 	if(partialTotal > 0) {
 	  partialTotal /= 1024;
@@ -2455,7 +2455,7 @@ void printProtoTraffic(void) {
   float total, perc;
   char buf[BUF_SIZE];
 
-  total = myGlobals.device[actualReportDeviceId].ethernetBytes/1024; /* total is expressed in KBytes */
+  total = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes/1024; /* total is expressed in KBytes */
 
   if(total == 0)
     return;
@@ -2465,7 +2465,7 @@ void printProtoTraffic(void) {
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR><TH "TH_BG" WIDTH=150>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
 
-  perc = 100*((float)myGlobals.device[actualReportDeviceId].ipBytes/myGlobals.device[actualReportDeviceId].ethernetBytes);
+  perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes);
   if(perc > 100) perc = 100;
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT>IP</TH>"
@@ -2473,62 +2473,62 @@ void printProtoTraffic(void) {
 	      "&nbsp;(%.1f%%)</TD><TD "TD_BG" WIDTH=250>"
 	      "<TABLE BORDER=1 WIDTH=\"100%%\">",
 	      getRowColor(),
-	      formatBytes(myGlobals.device[actualReportDeviceId].ipBytes, 1),
+	      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes, 1),
 	      perc) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   printTableEntry(buf, sizeof(buf), "TCP", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].tcpBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].tcpBytes/myGlobals.device[actualReportDeviceId].ipBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes));
   printTableEntry(buf, sizeof(buf), "UDP", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].udpBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].udpBytes/myGlobals.device[actualReportDeviceId].ipBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes));
   printTableEntry(buf, sizeof(buf), "ICMP", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].icmpBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].icmpBytes/myGlobals.device[actualReportDeviceId].ipBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes));
   printTableEntry(buf, sizeof(buf), "Other&nbsp;IP", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].otherIpBytes/1024,
-		  ((float)myGlobals.device[actualReportDeviceId].otherIpBytes/myGlobals.device[actualReportDeviceId].ipBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes/1024,
+		  ((float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes));
 
   sendString("</TABLE></TR>");
 
   printTableEntry(buf, sizeof(buf), "(R)ARP", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].arpRarpBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].arpRarpBytes/myGlobals.device[actualReportDeviceId].ipBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes));
   printTableEntry(buf, sizeof(buf), "DLC", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].dlcBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].dlcBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "IPX", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].ipxBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].ipxBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "Decnet", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].decnetBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].decnetBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "AppleTalk", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].atalkBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].atalkBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "OSPF", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].ospfBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].ospfBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "NetBios", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].netbiosBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].netbiosBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "IGMP", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].igmpBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].igmpBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "OSI", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].osiBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].osiBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "QNX", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].qnxBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].qnxBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "STP", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].stpBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].stpBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
   printTableEntry(buf, sizeof(buf), "Other", COLOR_1,
-		  (float)myGlobals.device[actualReportDeviceId].otherBytes/1024,
-		  100*((float)myGlobals.device[actualReportDeviceId].otherBytes/myGlobals.device[actualReportDeviceId].ethernetBytes));
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes));
 
 #ifdef HAVE_GDCHART
   sendString("<TR><TD "TD_BG" COLSPAN=3 ALIGN=CENTER>"
@@ -2648,7 +2648,7 @@ void printProcessInfo(int processPid, int actualDeviceId) {
       }
 
       if(snprintf(buf, sizeof(buf), "%s<BR>\n",
-		  makeHostLink(myGlobals.device[actualReportDeviceId].
+		  makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       hash_hostTraffic[checkSessionIdx(myGlobals.processes[i]->contactedIpPeersIndexes[j])],
 			       0, 0, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
@@ -2694,13 +2694,13 @@ void printLsofData(int mode) {
 #endif
 
   memcpy(processesList, myGlobals.processes, processSize);
-  columnSort = mode;
+  myGlobals.columnSort = mode;
   quicksort(processesList, myGlobals.numProcesses, sizeof(ProcessInfo*), cmpProcesses);
 
   /* Avoid huge tables */
   numProcessesToDisplay = myGlobals.numProcesses;
-  if(numProcessesToDisplay > maxNumLines)
-    numProcessesToDisplay = maxNumLines;
+  if(numProcessesToDisplay > myGlobals.maxNumLines)
+    numProcessesToDisplay = myGlobals.maxNumLines;
 
   for(i=0, numUsers=0; i<numProcessesToDisplay; i++) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"><A HREF=\""PROCESS_INFO_HTML"?%d\">%s</A></TD>"
@@ -2776,8 +2776,8 @@ void printLsofData(int mode) {
     quicksort(usersTrafficList, numUsers, sizeof(UsersTraffic**), cmpUsersTraffic);
 
     /* Avoid huge tables */
-    if(numUsers > maxNumLines)
-      numUsers = maxNumLines;
+    if(numUsers > myGlobals.maxNumLines)
+      numUsers = myGlobals.maxNumLines;
 
     printSectionTitle("Local Network Usage by User");
     sendString("<CENTER>\n");
@@ -2821,25 +2821,25 @@ void printIpTrafficMatrix(void) {
     return;
   }
 
-  activeHosts = (short*)malloc(sizeof(short)*myGlobals.device[actualReportDeviceId].numHosts);
+  activeHosts = (short*)malloc(sizeof(short)*myGlobals.device[myGlobals.actualReportDeviceId].numHosts);
 
-  for(i=1; i<myGlobals.device[actualReportDeviceId].numHosts-1; i++) {
+  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++) {
     if(i == myGlobals.otherHostEntryIdx)
       continue;
 
     activeHosts[i] = 0;
-    for(j=1; j<myGlobals.device[actualReportDeviceId].numHosts-1; j++) {
+    for(j=1; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; j++) {
       int id;
 
       if(j == myGlobals.otherHostEntryIdx)
 	continue;
 
-      id = i*myGlobals.device[actualReportDeviceId].numHosts+j;
+      id = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;
 
-      if(((myGlobals.device[actualReportDeviceId].ipTrafficMatrix[id] != NULL)
-	  && (myGlobals.device[actualReportDeviceId].ipTrafficMatrix[id]->bytesSent != 0))
-	 || ((myGlobals.device[actualReportDeviceId].ipTrafficMatrix[id] != NULL)
-	     && (myGlobals.device[actualReportDeviceId].ipTrafficMatrix[id]->bytesRcvd != 0))) {
+      if(((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id] != NULL)
+	  && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id]->bytesSent != 0))
+	 || ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id] != NULL)
+	     && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id]->bytesRcvd != 0))) {
 	activeHosts[i] = 1;
 	numEntries++;
 	break;
@@ -2854,7 +2854,7 @@ void printIpTrafficMatrix(void) {
       }
 
       if(snprintf(buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER><SMALL>%s</SMALL></TH>",
-		  getHostName(myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[i], 1)) < 0)
+		  getHostName(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i], 1)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
@@ -2867,23 +2867,23 @@ void printIpTrafficMatrix(void) {
   } else
     sendString("</TR>\n");
 
-  for(i=1; i<myGlobals.device[actualReportDeviceId].numHosts-1; i++)
-    for(j=1; j<myGlobals.device[actualReportDeviceId].numHosts-1; j++) {
-      int idx = i*myGlobals.device[actualReportDeviceId].numHosts+j;
+  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++)
+    for(j=1; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; j++) {
+      int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;
 
       if(idx == myGlobals.otherHostEntryIdx) continue;
 
-      if(((myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx] != NULL)
-	 && ((myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent != 0)
-	     || (myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd != 0)))) {
-	if(minTraffic > myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent)
-	  minTraffic = myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent;
-	if(minTraffic > myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd)
-	  minTraffic = myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd;
-	if(maxTraffic < myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent)
-	  maxTraffic = myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent;
-	if(maxTraffic < myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd)
-	  maxTraffic = myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd;
+      if(((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx] != NULL)
+	 && ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent != 0)
+	     || (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd != 0)))) {
+	if(minTraffic > myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent)
+	  minTraffic = myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent;
+	if(minTraffic > myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd)
+	  minTraffic = myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd;
+	if(maxTraffic < myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent)
+	  maxTraffic = myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent;
+	if(maxTraffic < myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd)
+	  maxTraffic = myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd;
       }
     }
 
@@ -2892,27 +2892,27 @@ void printIpTrafficMatrix(void) {
   avgTrafficHigh = 2*(maxTraffic/3);   /* 75% of max traffic */
 
 
-  for(i=1; i<myGlobals.device[actualReportDeviceId].numHosts; i++)
+  for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts; i++)
     if((i != myGlobals.otherHostEntryIdx) && (activeHosts[i] == 1)) {
       numConsecutiveEmptyCells=0;
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT><SMALL>%s</SMALL></TH>",
-		  getRowColor(), makeHostLink(myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[i],
+		  getRowColor(), makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i],
 					      SHORT_FORMAT, 1, 0)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
-      for(j=1; j<myGlobals.device[actualReportDeviceId].numHosts; j++) {
-	int idx = i*myGlobals.device[actualReportDeviceId].numHosts+j;
+      for(j=1; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts; j++) {
+	int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;
 
 	if(idx == myGlobals.otherHostEntryIdx) continue;
 
 	if((i == j) && 
-	   strcmp(myGlobals.device[actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress, 
+	   strcmp(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress, 
 		  "127.0.0.1"))
 	  numConsecutiveEmptyCells++;
 	else if(activeHosts[j] == 1) {
-	  if(myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
+	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
 	    numConsecutiveEmptyCells++;
 	  else {
 	    if(numConsecutiveEmptyCells > 0) {
@@ -2922,8 +2922,8 @@ void printIpTrafficMatrix(void) {
 	      numConsecutiveEmptyCells = 0;
 	    }
 
-	    tmpCounter = myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent+
-	      myGlobals.device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd;
+	    tmpCounter = myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent+
+	      myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd;
 	    /* Fix below courtesy of Danijel Doriae <danijel.doric@industrogradnja.tel.hr> */
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER %s>"
 			"<A HREF=# onMouseOver=\"window.status='"
@@ -2975,7 +2975,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	       "<TH "TH_BG">Top Hosts Rcvd Thpt</TH></TR>\n");
 
     for(i=0; i<60; i++) {
-      if(myGlobals.device[actualReportDeviceId].last60MinutesThpt[i].trafficValue == 0)
+      if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].trafficValue == 0)
 	break;
 
       tmpTime = myGlobals.actTime-(i*60);
@@ -2987,53 +2987,53 @@ void printThptStatsMatrix(int sortedColumn) {
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"
 		  "<TABLE BORDER=1 WIDTH=100%%>",
 		  getRowColor(), label1, label,
-		  formatThroughput(myGlobals.device[actualReportDeviceId].
+		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				   last60MinutesThpt[i].trafficValue)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       /* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */
 
-      if((myGlobals.device[actualReportDeviceId].last60MinutesThpt[i].topHostSentIdx != NO_PEER)
-	 && (myGlobals.device[actualReportDeviceId].
-	     hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+      if((myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostSentIdx != NO_PEER)
+	 && (myGlobals.device[myGlobals.actualReportDeviceId].
+	     hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 			     last60MinutesThpt[i].topHostSentIdx] != NULL)) {
 	if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    makeHostLink(myGlobals.device[actualReportDeviceId].
-				 hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+		    makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
+				 hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 						 last60MinutesThpt[i].topHostSentIdx],
 				 LONG_FORMAT, 0, 0),
-		    formatThroughput(myGlobals.device[actualReportDeviceId].
+		    formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				     last60MinutesThpt[i].topSentTraffic)) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 
 	/* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */
-	if((myGlobals.device[actualReportDeviceId].last60MinutesThpt[i].secondHostSentIdx != NO_PEER)
-	   && (myGlobals.device[actualReportDeviceId].hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+	if((myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].secondHostSentIdx != NO_PEER)
+	   && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 							    last60MinutesThpt[i].secondHostSentIdx] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(myGlobals.device[actualReportDeviceId].
-				   hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+		      makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
+				   hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 						   last60MinutesThpt[i].secondHostSentIdx],
 				   LONG_FORMAT, 0, 0),
-		      formatThroughput(myGlobals.device[actualReportDeviceId].
+		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				       last60MinutesThpt[i].secondSentTraffic)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	}
 
 	/* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */
-	if((myGlobals.device[actualReportDeviceId].last60MinutesThpt[i].thirdHostSentIdx != NO_PEER)
-	   && (myGlobals.device[actualReportDeviceId].
-	       hash_hostTraffic[myGlobals.device[actualReportDeviceId].last60MinutesThpt[i].
+	if((myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostSentIdx != NO_PEER)
+	   && (myGlobals.device[myGlobals.actualReportDeviceId].
+	       hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].
 			       thirdHostSentIdx] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(myGlobals.device[actualReportDeviceId].
-				   hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+		      makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
+				   hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 						   last60MinutesThpt[i].thirdHostSentIdx],
 				   LONG_FORMAT, 0, 0),
-		      formatThroughput(myGlobals.device[actualReportDeviceId].
+		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				       last60MinutesThpt[i].thirdSentTraffic)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
@@ -3046,43 +3046,43 @@ void printThptStatsMatrix(int sortedColumn) {
       /* *************************************** */
 
 
-      if((myGlobals.device[actualReportDeviceId].last60MinutesThpt[i].topHostRcvdIdx != NO_PEER)
-	 && (myGlobals.device[actualReportDeviceId].hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+      if((myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostRcvdIdx != NO_PEER)
+	 && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 							  last60MinutesThpt[i].topHostRcvdIdx] != NULL)) {
 	if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    makeHostLink(myGlobals.device[actualReportDeviceId].
-				 hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+		    makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
+				 hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 						 last60MinutesThpt[i].topHostRcvdIdx],
 				 LONG_FORMAT, 0, 0),
-		    formatThroughput(myGlobals.device[actualReportDeviceId].
+		    formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				     last60MinutesThpt[i].topRcvdTraffic)) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 
-	if((myGlobals.device[actualReportDeviceId].last60MinutesThpt[i].secondHostRcvdIdx != NO_PEER)
-	   && (myGlobals.device[actualReportDeviceId].
-	       hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+	if((myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].secondHostRcvdIdx != NO_PEER)
+	   && (myGlobals.device[myGlobals.actualReportDeviceId].
+	       hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].secondHostRcvdIdx] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(myGlobals.device[actualReportDeviceId].
-				   hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+		      makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
+				   hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 						   last60MinutesThpt[i].secondHostRcvdIdx],
 				   LONG_FORMAT, 0, 0),
-		      formatThroughput(myGlobals.device[actualReportDeviceId].
+		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				       last60MinutesThpt[i].secondRcvdTraffic)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 	}
 
-	if((myGlobals.device[actualReportDeviceId].last60MinutesThpt[i].thirdHostRcvdIdx != NO_PEER)
-	   && (myGlobals.device[actualReportDeviceId].hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+	if((myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostRcvdIdx != NO_PEER)
+	   && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 							    last60MinutesThpt[i].thirdHostRcvdIdx] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(myGlobals.device[actualReportDeviceId].
-				   hash_hostTraffic[myGlobals.device[actualReportDeviceId].
+		      makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
+				   hash_hostTraffic[myGlobals.device[myGlobals.actualReportDeviceId].
 						   last60MinutesThpt[i].thirdHostRcvdIdx],
 				   LONG_FORMAT, 0, 0),
-		      formatThroughput(myGlobals.device[actualReportDeviceId].
+		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				       last60MinutesThpt[i].thirdRcvdTraffic)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
@@ -3095,7 +3095,7 @@ void printThptStatsMatrix(int sortedColumn) {
     break;
   case 2:
   default:
-    if(myGlobals.device[actualReportDeviceId].numThptSamples < 60) {
+    if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 60) {
       printNoDataYet();
       return;
     } else {
@@ -3110,7 +3110,7 @@ void printThptStatsMatrix(int sortedColumn) {
 		 "</TR>\n");
 
       for(i=0; i<24; i++) {
-	if(myGlobals.device[actualReportDeviceId].last24HoursThpt[i].trafficValue == 0)
+	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue == 0)
 	  break;
 
 	tmpTime = myGlobals.actTime-(i*60*60);
@@ -3120,61 +3120,61 @@ void printThptStatsMatrix(int sortedColumn) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG" ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>",
 		    getRowColor(), label, label1,
-		    formatThroughput(myGlobals.device[actualReportDeviceId].last24HoursThpt[i].trafficValue)) < 0)
+		    formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue)) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 
-	theIndex = myGlobals.device[actualReportDeviceId].last24HoursThpt[i].topHostRcvdIdx;
-	if((theIndex != NO_PEER) && (theIndex > myGlobals.device[actualReportDeviceId].actualHashSize)) {
+	theIndex = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdIdx;
+	if((theIndex != NO_PEER) && (theIndex > myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) {
 	  traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]",
-		     theIndex, myGlobals.device[actualReportDeviceId].actualHashSize);
+		     theIndex, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize);
 	  theIndex = NO_PEER;
 	}
 
 	if((theIndex != NO_PEER)
-	   && (myGlobals.device[actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
+	   && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(myGlobals.device[actualReportDeviceId].
+		      makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 				   hash_hostTraffic[theIndex],
 				   LONG_FORMAT, 0, 0),
-		      formatThroughput(myGlobals.device[actualReportDeviceId].
+		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				       last24HoursThpt[i].topSentTraffic)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
-	  theIndex = myGlobals.device[actualReportDeviceId].last24HoursThpt[i].secondHostRcvdIdx;
-	  if((theIndex != NO_PEER) && (theIndex > myGlobals.device[actualReportDeviceId].actualHashSize)) {
+	  theIndex = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdIdx;
+	  if((theIndex != NO_PEER) && (theIndex > myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) {
 	    traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]",
-		       theIndex, myGlobals.device[actualReportDeviceId].actualHashSize);
+		       theIndex, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize);
 	    theIndex = NO_PEER;
 	  }
 
 	  if((theIndex != NO_PEER)
-	     && (myGlobals.device[actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
+	     && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(myGlobals.device[actualReportDeviceId].
+			makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 				     hash_hostTraffic[theIndex],
 				     LONG_FORMAT, 0, 0),
-			formatThroughput(myGlobals.device[actualReportDeviceId].
+			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 					 last24HoursThpt[i].secondSentTraffic)) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 
-	  theIndex = myGlobals.device[actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdIdx;
-	  if((theIndex != NO_PEER) && (theIndex > myGlobals.device[actualReportDeviceId].actualHashSize)) {
+	  theIndex = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdIdx;
+	  if((theIndex != NO_PEER) && (theIndex > myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) {
 	    traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]",
-		       theIndex, myGlobals.device[actualReportDeviceId].actualHashSize);
+		       theIndex, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize);
 	    theIndex = NO_PEER;
 	  }
 
 	  if((theIndex != NO_PEER)
-	     && (myGlobals.device[actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
+	     && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(myGlobals.device[actualReportDeviceId].
+			makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 				     hash_hostTraffic[theIndex],
 				     LONG_FORMAT, 0, 0),
-			formatThroughput(myGlobals.device[actualReportDeviceId].
+			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 					 last24HoursThpt[i].thirdSentTraffic)) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
@@ -3185,58 +3185,58 @@ void printThptStatsMatrix(int sortedColumn) {
 	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>\n");
 
 	/* *************************************** */
-	theIndex = myGlobals.device[actualReportDeviceId].last24HoursThpt[i].topHostRcvdIdx;
-	if((theIndex != NO_PEER) && (theIndex > myGlobals.device[actualReportDeviceId].actualHashSize)) {
+	theIndex = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdIdx;
+	if((theIndex != NO_PEER) && (theIndex > myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) {
 	  traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]",
-		     theIndex, myGlobals.device[actualReportDeviceId].actualHashSize);
+		     theIndex, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize);
 	  theIndex = NO_PEER;
 	}
 
 	if((theIndex != NO_PEER)
-	   && (myGlobals.device[actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
+	   && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(myGlobals.device[actualReportDeviceId].
+		      makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 				   hash_hostTraffic[theIndex],
 				   LONG_FORMAT, 0, 0),
-		      formatThroughput(myGlobals.device[actualReportDeviceId].
+		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 				       last24HoursThpt[i].topRcvdTraffic)) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
-	  theIndex = myGlobals.device[actualReportDeviceId].last24HoursThpt[i].secondHostRcvdIdx;
-	  if((theIndex != NO_PEER) && (theIndex > myGlobals.device[actualReportDeviceId].actualHashSize)) {
+	  theIndex = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdIdx;
+	  if((theIndex != NO_PEER) && (theIndex > myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) {
 	    traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]",
-		       theIndex, myGlobals.device[actualReportDeviceId].actualHashSize);
+		       theIndex, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize);
 	    theIndex = NO_PEER;
 	  }
 
 	  if((theIndex != NO_PEER)
-	     && (myGlobals.device[actualReportDeviceId].
+	     && (myGlobals.device[myGlobals.actualReportDeviceId].
 		 hash_hostTraffic[theIndex] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(myGlobals.device[actualReportDeviceId].
+			makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 				     hash_hostTraffic[theIndex],
 				     LONG_FORMAT, 0, 0),
-			formatThroughput(myGlobals.device[actualReportDeviceId].
+			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 					 last24HoursThpt[i].secondRcvdTraffic)) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 
-	  theIndex = myGlobals.device[actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdIdx;
-	  if((theIndex != NO_PEER) && (theIndex > myGlobals.device[actualReportDeviceId].actualHashSize)) {
+	  theIndex = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdIdx;
+	  if((theIndex != NO_PEER) && (theIndex > myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) {
 	    traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]",
-		       theIndex, myGlobals.device[actualReportDeviceId].actualHashSize);
+		       theIndex, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize);
 	    theIndex = NO_PEER;
 	  }
 
 	  if((theIndex != NO_PEER)
-	     && (myGlobals.device[actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
+	     && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(myGlobals.device[actualReportDeviceId].
+			makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 				     hash_hostTraffic[theIndex],
 				     LONG_FORMAT, 0, 0),
-			formatThroughput(myGlobals.device[actualReportDeviceId].
+			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
 					 last24HoursThpt[i].thirdRcvdTraffic)) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
@@ -3260,7 +3260,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   printHTMLheader("Network Load Statistics", 0);
 
-  if(myGlobals.device[actualReportDeviceId].numThptSamples == 0) {
+  if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples == 0) {
     printNoDataYet();
     return;
   }
@@ -3283,7 +3283,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
    sendString(tmpBuf);
 
-  if(myGlobals.device[actualReportDeviceId].numThptSamples > 60) {
+  if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 60) {
 #ifdef HAVE_GDCHART
     sendString("<P><A HREF=\"thptStatsMatrix.html?col=2\" BORDER=0>"
 	       "<IMG SRC=\"thptGraph"CHART_FORMAT"?col=2\"></A><BR>\n");
@@ -3300,7 +3300,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
     sendString(tmpBuf);
 
 #ifdef HAVE_GDCHART
-    if(myGlobals.device[actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
+    if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
       sendString("<P><IMG SRC=\"thptGraph"CHART_FORMAT"?col=3\"><BR>\n");
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
 	      formatTimeStamp(0, 0, 0),
@@ -3333,7 +3333,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
     return(0);
   }
 
-  switch(columnSort) {
+  switch(myGlobals.columnSort) {
   case 1:
     rc = strcasecmp(a->domainHost->dotDomainName, b->domainHost->dotDomainName);
     if(rc == 0)
@@ -3393,12 +3393,12 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   char htmlAnchor[128], htmlAnchor1[128], *sign, *arrowGif, *arrow[48], *theAnchor[48];
   TrafficCounter totBytesSent=0, totBytesRcvd=0;
 
-  len = sizeof(DomainStats)*myGlobals.device[actualReportDeviceId].actualHashSize;
+  len = sizeof(DomainStats)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
   tmpStats = (DomainStats*)malloc(len);
   memset(tmpStats, 0, len);
 
   /* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */
-  len = sizeof(DomainStats**)*myGlobals.device[actualReportDeviceId].actualHashSize;
+  len = sizeof(DomainStats**)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
   stats = (DomainStats**)malloc(len);
   memset(stats, 0, len);
 
@@ -3417,10 +3417,10 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   else
     domainSort = 0;
 
-  for(idx=1; idx<myGlobals.device[actualReportDeviceId].actualHashSize; idx++) {
+  for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++) {
     if(idx == myGlobals.otherHostEntryIdx) continue;
 
-    if((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) == NULL)
+    if((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) == NULL)
       continue;
     else
       fillDomainName(el);
@@ -3441,11 +3441,11 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
       for(keyValue=0, tmpIdx=0; el->fullDomainName[tmpIdx] != '\0'; tmpIdx++)
 	keyValue += (tmpIdx+1)*(u_short)el->fullDomainName[tmpIdx];
 
-      keyValue %= myGlobals.device[actualReportDeviceId].actualHashSize;
+      keyValue %= myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
 
       while((stats[keyValue] != NULL)
 	    && (strcasecmp(stats[keyValue]->domainHost->fullDomainName, el->fullDomainName) != 0))
-	keyValue = (keyValue+1) % myGlobals.device[actualReportDeviceId].actualHashSize;
+	keyValue = (keyValue+1) % myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
 
       if(stats[keyValue] != NULL)
 	statsEntry = stats[keyValue];
@@ -3492,7 +3492,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     return;
   }
 
-  columnSort = sortedColumn;
+  myGlobals.columnSort = sortedColumn;
 
   quicksort(tmpStats, numEntries, sizeof(DomainStats), cmpStatsFctn);
 
@@ -3516,7 +3516,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
      traceEvent(TRACE_ERROR, "Buffer overflow!");
  }
 
-  if(abs(columnSort) == 0) {
+  if(abs(myGlobals.columnSort) == 0) {
     arrow[0] = arrowGif;
     theAnchor[0] = htmlAnchor;
   } else {
@@ -3524,7 +3524,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[0] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 1) {
+  if(abs(myGlobals.columnSort) == 1) {
     arrow[1] = arrowGif;
     theAnchor[1] = htmlAnchor;
   } else {
@@ -3532,7 +3532,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[1] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 2) {
+  if(abs(myGlobals.columnSort) == 2) {
     arrow[2] = arrowGif;
     theAnchor[2] = htmlAnchor;
   } else {
@@ -3540,7 +3540,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[2] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 3) {
+  if(abs(myGlobals.columnSort) == 3) {
     arrow[3] = arrowGif;
     theAnchor[3] = htmlAnchor;
   } else {
@@ -3548,7 +3548,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[3] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 4) {
+  if(abs(myGlobals.columnSort) == 4) {
     arrow[4] = arrowGif;
     theAnchor[4] = htmlAnchor;
   } else {
@@ -3556,7 +3556,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[4] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 5) {
+  if(abs(myGlobals.columnSort) == 5) {
     arrow[5] = arrowGif;
     theAnchor[5] = htmlAnchor;
   } else {
@@ -3564,7 +3564,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[5] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 6) {
+  if(abs(myGlobals.columnSort) == 6) {
     arrow[6] = arrowGif;
     theAnchor[6] = htmlAnchor;
   } else {
@@ -3572,7 +3572,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[6] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 7) {
+  if(abs(myGlobals.columnSort) == 7) {
     arrow[7] = arrowGif;
     theAnchor[7] = htmlAnchor;
   } else {
@@ -3580,7 +3580,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[7] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 8) {
+  if(abs(myGlobals.columnSort) == 8) {
     arrow[8] = arrowGif;
     theAnchor[8] = htmlAnchor;
   } else {
@@ -3588,7 +3588,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[8] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 9) {
+  if(abs(myGlobals.columnSort) == 9) {
     arrow[9] = arrowGif;
     theAnchor[9] = htmlAnchor;
   } else {
@@ -3596,7 +3596,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[9] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 10) {
+  if(abs(myGlobals.columnSort) == 10) {
     arrow[10] = arrowGif;
     theAnchor[10] = htmlAnchor;
   } else {
@@ -3604,7 +3604,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[10] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 11) {
+  if(abs(myGlobals.columnSort) == 11) {
     arrow[11] = arrowGif;
     theAnchor[11] = htmlAnchor;
   } else {
@@ -3612,7 +3612,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[11] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 12) {
+  if(abs(myGlobals.columnSort) == 12) {
     arrow[12] = arrowGif;
     theAnchor[12] = htmlAnchor;
   } else {
@@ -3620,7 +3620,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[12] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 13) {
+  if(abs(myGlobals.columnSort) == 13) {
     arrow[13] = arrowGif;
     theAnchor[13] = htmlAnchor;
   } else {
@@ -3628,7 +3628,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[13] = htmlAnchor1;
   }
 
-  if(abs(columnSort) == 14) {
+  if(abs(myGlobals.columnSort) == 14) {
     arrow[14] = arrowGif;
     theAnchor[14] = htmlAnchor;
   } else {
@@ -3681,7 +3681,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 
   sendString(buf);
 
-  for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
+  for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
     if(revertOrder)
       statsEntry = &tmpStats[numEntries-idx-1];
     else
@@ -3745,14 +3745,14 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     sendString(buf);
 
     /* Avoid huge tables */
-    if(printedEntries++ > maxNumLines)
+    if(printedEntries++ > myGlobals.maxNumLines)
       break;
   }
 
   sendString("</TABLE>"TABLE_OFF"</HTML>\n");
   sendString("</CENTER>\n");
  
-  addPageIndicator(STR_DOMAIN_STATS, pageNum, numEntries, maxNumLines, 
+  addPageIndicator(STR_DOMAIN_STATS, pageNum, numEntries, myGlobals.maxNumLines, 
 		   revertOrder, abs(sortedColumn));   
 
  free(tmpStats); free(stats);
@@ -3894,13 +3894,13 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
   }
 
   if(theHost != NULL) {
-    columnSort = 0;
+    myGlobals.columnSort = 0;
     sign = "";
     arrowGif = "";
     strncpy(htmlAnchor, "<!", sizeof(htmlAnchor));
     strncpy(htmlAnchor1, "<!", sizeof(htmlAnchor1));
   } else {
-    columnSort = column;
+    myGlobals.columnSort = column;
 
     if(revertOrder) {
       sign = "";

@@ -45,25 +45,6 @@ extern __attribute__((dllimport)) char *optarg;
 extern char *optarg;
 #endif
 
-/*
- * local variables
- */
-static int enableDBsupport = 0;   /* Database support disabled by default */
-static int enableThUpdate  = 1;   /* Throughput Update support enabled by default */
-static int enableIdleHosts = 1;   /* Purging of idle hosts support enabled by default */
-
-static char *localAddresses = NULL;
-static char *protoSpecs = NULL;
-
-#ifndef WIN32
-static int userId=0;
-static int groupId=0;
-#endif
-
-static char *webAddr = NULL;
-static char *flowSpecs = NULL;
-static char *rulesFile = NULL;
-static char *sslAddr = NULL;
 
 static char __free__ []   =
 "  This program is free software; you can redistribute it and/or modify\n\
@@ -402,7 +383,7 @@ static void parseOptions(int argc, char * argv []) {
 
     case 'b': /* host:port */
       stringSanityCheck(optarg);
-      handleDbSupport(optarg, &enableDBsupport);
+      handleDbSupport(optarg, &myGlobals.enableDBsupport);
       break;
 
       /* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
@@ -418,7 +399,7 @@ static void parseOptions(int argc, char * argv []) {
 
 #ifndef MICRO_NTOP
     case 'e':
-      maxNumLines = atoi(optarg);
+      myGlobals.maxNumLines = atoi(optarg);
       break;
 #endif
 
@@ -462,7 +443,7 @@ static void parseOptions(int argc, char * argv []) {
 
     case 'm':
       stringSanityCheck(optarg);
-      localAddresses = strdup(optarg);
+      myGlobals.localAddresses = strdup(optarg);
       break;
 
     case 'n':
@@ -471,7 +452,7 @@ static void parseOptions(int argc, char * argv []) {
 
     case 'p':                     /* the TCP/UDP protocols being monitored */
       stringSanityCheck(optarg);
-      protoSpecs = strdup(optarg);
+      myGlobals.protoSpecs = strdup(optarg);
       break;
 
     case 'q': /* allow ntop to save suspicious packets in a file in pcap (tcpdump) format */
@@ -483,7 +464,7 @@ static void parseOptions(int argc, char * argv []) {
 	printf("FATAL ERROR: flag -r expects a numeric argument.\n");
 	exit(-1);
       }
-      refreshRate = atoi(optarg);
+      myGlobals.refreshRate = atoi(optarg);
       break;
 
     case 't':
@@ -497,7 +478,7 @@ static void parseOptions(int argc, char * argv []) {
     case 'u':
       stringSanityCheck(optarg);
       if(strOnlyDigits(optarg))
-	userId = atoi(optarg);
+	myGlobals.userId = atoi(optarg);
       else {
 	struct passwd *pw;
 	pw = getpwnam(optarg);
@@ -505,8 +486,8 @@ static void parseOptions(int argc, char * argv []) {
 	  printf("FATAL ERROR: Unknown user %s.\n", optarg);
 	  exit(-1);
 	}
-	userId = pw->pw_uid;
-	groupId = pw->pw_gid;
+	myGlobals.userId = pw->pw_uid;
+	myGlobals.groupId = pw->pw_gid;
 	endpwent();
       }
       break;
@@ -527,14 +508,14 @@ static void parseOptions(int argc, char * argv []) {
       }
 
       /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-      if((webAddr = strchr(optarg,':'))) {
+      if((myGlobals.webAddr = strchr(optarg,':'))) {
 	/* DS: Search for : to find xxx.xxx.xxx.xxx:port */
 	/* This code is to be able to bind to a particular interface */
-	*webAddr = '\0';
-	webPort = atoi(webAddr+1);
-	webAddr = optarg;
+	*myGlobals.webAddr = '\0';
+	myGlobals.webPort = atoi(myGlobals.webAddr+1);
+	myGlobals.webAddr = optarg;
       } else {
-	webPort = atoi(optarg);
+	myGlobals.webPort = atoi(optarg);
       }
       break;
 
@@ -562,7 +543,7 @@ static void parseOptions(int argc, char * argv []) {
 
     case 'F':
       stringSanityCheck(optarg);
-      flowSpecs = strdup(optarg);
+      myGlobals.flowSpecs = strdup(optarg);
       break;
 
 #ifndef WIN32
@@ -596,7 +577,7 @@ static void parseOptions(int argc, char * argv []) {
 
     case 'R':
       stringSanityCheck(optarg);
-      rulesFile = strdup(optarg);
+      myGlobals.rulesFile = strdup(optarg);
       break;
 
     case 'S':
@@ -641,10 +622,10 @@ static void parseOptions(int argc, char * argv []) {
 	lets swipe the same address binding code from -w above
 	Curtis Doty <Curtis@GreenKey.net>
       */
-      if((sslAddr = strchr(optarg,':'))) {
-	*sslAddr = '\0';
-	myGlobals.sslPort = atoi(sslAddr+1);
-	sslAddr = optarg;
+      if((myGlobals.sslAddr = strchr(optarg,':'))) {
+	*myGlobals.sslAddr = '\0';
+	myGlobals.sslPort = atoi(myGlobals.sslAddr+1);
+	myGlobals.sslAddr = optarg;
       } else {
 	myGlobals.sslPort = atoi(optarg);
       }
@@ -653,11 +634,11 @@ static void parseOptions(int argc, char * argv []) {
 #endif
 
     case '1': /* disable throughput update */
-      enableThUpdate = 0;
+      myGlobals.enableThUpdate = 0;
       break;
 
     case '2': /* disable purging of idle hosts */
-      enableIdleHosts = 0;
+      myGlobals.enableIdleHosts = 0;
       break;
 
 #ifdef HAVE_GDCHART
@@ -722,7 +703,7 @@ int main(int argc, char *argv[]) {
   /*
    * check for valid parameters
    */
-  if(webPort == 0) {
+  if(myGlobals.webPort == 0) {
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslPort == 0) {
       printf("FATAL ERROR: both -W and -w can't be set to 0.\n");
@@ -735,23 +716,20 @@ int main(int argc, char *argv[]) {
   }
 
 #ifndef WIN32
-
   /*
    * Must run as root since opening a network interface
    * in promiscuous mode is a privileged operation.
    * Verify we're running as root, unless we are reading data from a file
    */
   if(! myGlobals.rFileName && ((getuid () && geteuid ()) || setuid (0))) {
-    printf ("Sorry, %s uses network interface(s) in promiscuous mode, so it needs root permission to run.\n",
+    printf ("Sorry, %s uses network interface(s) in promiscuous mode, "
+	    "so it needs root permission to run.\n",
 	    myGlobals.program_name);
     exit (-1);
   }
-
 #endif
 
-
   printf("Wait please: ntop is coming up...\n");
-
 
   /*
    * Perform here all the initialization steps required by the ntop engine to run
@@ -827,7 +805,7 @@ int main(int argc, char *argv[]) {
   /*
    * time to initialize the libpcap
    */
-  initLibpcap(rulesFile, myGlobals.numDevices);
+  initLibpcap(myGlobals.rulesFile, myGlobals.numDevices);
 
 #ifndef MICRO_NTOP
   loadPlugins();
@@ -851,9 +829,9 @@ int main(int argc, char *argv[]) {
   /*
    * set user to be as inoffensive as possible
    */
-  if((userId != 0) || (groupId != 0)){
+  if((myGlobals.userId != 0) || (myGlobals.groupId != 0)){
     /* user id specified on commandline */
-    if((setgid(groupId) != 0) || (setuid(userId) != 0)) {
+    if((setgid(myGlobals.groupId) != 0) || (setuid(myGlobals.userId) != 0)) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Unable to change user ID.\n");
       exit(-1);
     }
@@ -865,10 +843,10 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-  if(localAddresses != NULL) {
-    handleLocalAddresses(localAddresses);
-    free(localAddresses);
-    localAddresses = NULL;
+  if(myGlobals.localAddresses != NULL) {
+    handleLocalAddresses(myGlobals.localAddresses);
+    free(myGlobals.localAddresses);
+    myGlobals.localAddresses = NULL;
   }
 
   initDeviceDatalink();
@@ -879,17 +857,17 @@ int main(int argc, char *argv[]) {
     myGlobals.currentFilterExpression = strdup(""); /* so that it isn't NULL! */
 
   /* Handle flows (if any) */
-  if(flowSpecs != NULL) {
-    if(flowSpecs[0] != '\0')
-      handleFlowsSpecs(flowSpecs);
-    free(flowSpecs);
+  if(myGlobals.flowSpecs != NULL) {
+    if(myGlobals.flowSpecs[0] != '\0')
+      handleFlowsSpecs(myGlobals.flowSpecs);
+    free(myGlobals.flowSpecs);
   }
 
   /* Patch courtesy of Burton M. Strauss III <BStrauss3@attbi.com> */
-  if(protoSpecs != NULL) {
-    if(protoSpecs[0] != '\0')
-      handleProtocols(protoSpecs);
-    free(protoSpecs);
+  if(myGlobals.protoSpecs != NULL) {
+    if(myGlobals.protoSpecs[0] != '\0')
+      handleProtocols(myGlobals.protoSpecs);
+    free(myGlobals.protoSpecs);
   }
 
   /*
@@ -907,14 +885,14 @@ int main(int argc, char *argv[]) {
   initApps();
   initSignals();
 
-  initThreads(enableThUpdate, enableIdleHosts, enableDBsupport);
+  initThreads(myGlobals.enableThUpdate, myGlobals.enableIdleHosts, myGlobals.enableDBsupport);
 
 #ifndef MICRO_NTOP
   startPlugins();
 #endif
 
   /* create the main listener */
-  initWeb(webPort, webAddr, sslAddr);
+  initWeb(myGlobals.webPort, myGlobals.webAddr, myGlobals.sslAddr);
 
   traceEvent(TRACE_INFO, "Sniffying...\n");
 

@@ -170,21 +170,21 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   float *s, *r;
   FILE *fd;
 
-  i = sizeof(float)*myGlobals.device[actualReportDeviceId].actualHashSize;
+  i = sizeof(float)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
   s = (float*)malloc(i); r = (float*)malloc(i);
   memset(s, 0, i); memset(r, 0, i);
 
-  i = sizeof(char*)*myGlobals.device[actualReportDeviceId].actualHashSize;
+  i = sizeof(char*)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
   lbls = malloc(i);
   memset(lbls, 0, i);  
 
-  i = sizeof(HostTraffic*)*myGlobals.device[actualReportDeviceId].actualHashSize;
+  i = sizeof(HostTraffic*)*myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize;
   hosts = (HostTraffic**)malloc(i);
 
-  for(i=0, num=0; i<myGlobals.device[actualReportDeviceId].actualHashSize; i++)
-    if((myGlobals.device[actualReportDeviceId].hash_hostTraffic[i] != NULL)
-       && (myGlobals.device[actualReportDeviceId].hash_hostTraffic[i]->icmpInfo != NULL)) {
-      hosts[num++] = myGlobals.device[actualReportDeviceId].hash_hostTraffic[i];
+  for(i=0, num=0; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++)
+    if((myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i] != NULL)
+       && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]->icmpInfo != NULL)) {
+      hosts[num++] = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i];
     }
 
   hostIpAddress.s_addr = 0;

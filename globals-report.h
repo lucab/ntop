@@ -54,8 +54,6 @@
 #define SD(a,b) ((b)?((float)a)/(b):0)
 
 #ifndef MICRO_NTOP
-extern int maxNumLines, sortSendMode;
-extern short columnSort, reportKind, sortFilter;
 
 /* reportUtils.c */
 extern void formatUsageCounter(UsageCounter usageCtr, TrafficCounter maxValue, int actualDeviceId);
@@ -100,8 +98,8 @@ extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 					TrafficCounter tcRcvd);
 extern char* getNbNodeType(char nodeType);
 extern void dumpNtopHashes(char*, int actualDeviceId);
-void dumpNtopHashIndexes(char* options, int actualDeviceId);
-void dumpNtopTrafficInfo(char* options);
+extern void dumpNtopHashIndexes(char* options, int actualDeviceId);
+extern void dumpNtopTrafficInfo(char* options);
 
 /* report.c */
 extern void initReports(void);
@@ -222,16 +220,8 @@ extern int out_graph(short gifwidth,
 #define CHANGE_FILTER_HTML              "changeFilter.html"
 #define FILTER_INFO_HTML                "filterInfo.html"
 
-
-
 /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
 #define RESET_STATS_HTML              "resetStats.html"
-#endif
-
-extern int webPort, refreshRate, localAddrFlag, actualReportDeviceId;
-extern int sock, newSock;
-#ifdef HAVE_OPENSSL
-extern int sock_ssl;
 #endif
 
 /* http.c */

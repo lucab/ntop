@@ -317,7 +317,7 @@ void dumpNtopHashes(char* options, int actualDeviceId) {
   initWriteArray(lang);
 
   for(idx=0; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
-    if((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL) {
+    if((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL) {
       char *hostKey;
 
       if(key[0] != '\0') {
@@ -731,7 +731,7 @@ void dumpNtopHashIndexes(char* options, int actualDeviceId) {
   initWriteArray(lang);
 
   for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
-    if(((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+    if(((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        &&(broadcastHost(el) == 0)) {
       char *hostKey;
 

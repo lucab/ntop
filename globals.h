@@ -54,8 +54,8 @@
  * used to drive the ntop's behaviour at run-time
  */
 typedef struct ntopGlobals {
-  /* general */
 
+  /* general */
   char *program_name;           /* The name the program was run with, stripped of any leading path */
   int ntop_argc;                /* # of command line arguments */
   char **ntop_argv;             /* vector of command line arguments */
@@ -279,6 +279,38 @@ typedef struct ntopGlobals {
 
 #ifdef MEMORY_DEBUG
   size_t allocatedMemory;
+#endif
+
+  /*
+   * local variables
+   */
+  int enableDBsupport;   /* Database support disabled by default             */
+  int enableThUpdate;    /* Throughput Update support enabled by default     */
+  int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
+  
+  char *localAddresses, *protoSpecs;
+  
+#ifndef WIN32
+  int userId, groupId;
+#endif
+  
+  char *webAddr, *flowSpecs, *rulesFile, *sslAddr;  
+
+#ifndef MICRO_NTOP
+  int maxNumLines, sortSendMode;
+  
+  /* TCP Wrappers */
+#ifdef HAVE_LIBWRAP
+  int allow_severity, deny_severity;
+#endif /* HAVE_LIBWRAP */
+  
+#endif /* MICRO_NTOP */  
+
+  int webPort, refreshRate, localAddrFlag, actualReportDeviceId;
+  short columnSort, reportKind, sortFilter;
+  int sock, newSock;
+#ifdef HAVE_OPENSSL
+  int sock_ssl;
 #endif
 } NtopGlobals;
 
