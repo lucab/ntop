@@ -1,0 +1,4 @@
+1	/home/daniele/rrd-alarm/tables/interfaces/ipBytes.rrd	above	1	5	now-1h	now	echo "Alarm 1"	0
+#4
+#2	ipBytes.rrd	below	100000	7	now-25d	now	echo "Alarm 2"	50
+3	ipBytes.rrd	below	100000	7	now-25d	now	echo "Alarm 3"	0

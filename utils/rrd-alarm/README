@@ -1,0 +1,12 @@
+
+About this tool
+---------------
+
+rrd_alarm is a tool that allows you to generate alarms based on some values stored into RRD files.
+
+You can use it as an ntop companion:
+- start ntop
+- configure the ntop RRD plugin so that you can generate RRD files for the hosts/interfaces you're monitoring
+- configure rrd_alarm so that you can monitor some of these RRD files and generate alarms based on thresholds
+
+
