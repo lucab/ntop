@@ -727,10 +727,10 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 
 /* ******************************* */
 
-char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName) {
+char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, int tmpStrLen) {
   /* Lengthen tmpString buffer - to handle long name given by nmap for Win2k
      Courtesy of Marcel Hauser <marcel_hauser@gmx.ch> */
-  static char tmpStr[200], *flagImg = "";
+  char *flagImg = "";
   char *theOsName;
 
   if((el == NULL) && (elOsName == NULL)) return("");
@@ -777,15 +777,15 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName) {
 
   if(!showOsName) {
     if(flagImg != NULL)
-      snprintf(tmpStr, sizeof(tmpStr), "%s", flagImg);
+      snprintf(tmpStr, tmpStrLen, "%s", flagImg);
     else
-      tmpStr[0] = "";
+      tmpStr[0] = '\0';
   } else {
     if(flagImg != NULL) {
-      if(snprintf(tmpStr, sizeof(tmpStr), "%s&nbsp;[%s]", flagImg, theOsName) < 0)
+      if(snprintf(tmpStr, tmpStrLen, "%s&nbsp;[%s]", flagImg, theOsName) < 0)
 	BufferTooShort();
     } else
-      snprintf(tmpStr, sizeof(tmpStr), "%s", theOsName);
+      snprintf(tmpStr, tmpStrLen, "%s", theOsName);
   }
 
   return(tmpStr);
@@ -2708,7 +2708,7 @@ void checkHostProvidedServices(HostTraffic *el) {
 /* ************************************ */
 
 void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
-  char buf[LEN_GENERAL_WORK_BUFFER], buf1[64], sniffedName[MAXDNAME];
+  char buf[LEN_GENERAL_WORK_BUFFER], buf1[64], sniffedName[MAXDNAME], osBuf[128];
   float percentage;
   Counter total;
   int printedHeader, i;
@@ -3042,7 +3042,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "OS&nbsp;Name",
-		  getOSFlag(el, NULL, 1),
+		  getOSFlag(el, NULL, 1, osBuf, sizeof(osBuf)),
 		  myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
 	BufferTooShort();
       sendString(buf);

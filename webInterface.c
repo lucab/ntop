@@ -275,7 +275,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag) {
   static char buf[5][2*LEN_GENERAL_WORK_BUFFER];
   char symIp[256], *tmpStr, linkName[256], flag[256], colorSpec[64];
-  char *dynIp, *p2p;
+  char *dynIp, *p2p, osBuf[128];
   char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr;
   short specialMacAddress = 0;
   static short bufIdx=0;
@@ -441,7 +441,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
 		"<A HREF=\"/%s.html\">%s</A> %s%s%s%s%s%s%s%s%s%s</TH>%s",
-		linkName, symIp, getOSFlag(el, NULL, 0), dynIp, multihomed, gwStr, dnsStr,
+		linkName, symIp, getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)), dynIp, multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr, userStr, p2p,
 		flag) < 0)
       BufferTooShort();
