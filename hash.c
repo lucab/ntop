@@ -187,7 +187,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   u_int i;
 
-  if((host == NULL) || myGlobals.device[actualDeviceId].dummyDevice)
+  if((host == NULL) || myGlobals.device[actualDeviceId].virtualDevice)
     return;
 
   /* If this is one of the special ones, let's clear the other pointer to it
