@@ -21,7 +21,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 #include "ntop.h"
 #include "globals-report.h"
 
@@ -814,7 +813,6 @@ static int parseOptions(int argc, char* argv []) {
 }
 
 /* ************************************ */
-
 #define MAX_NUM_OPTIONS 64
 
 /* That's the meat */

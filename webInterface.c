@@ -2285,22 +2285,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_ZLIB_H",
-#ifdef HAVE_ZLIB_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "CFG_USE_GRAPHICS",
-#ifdef CFG_USE_GRAPHICS
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_I18N",
 #ifdef MAKE_WITH_I18N
                          "yes"
@@ -2327,14 +2311,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG_COMPILETIME",
 #ifdef MAKE_WITH_SSLWATCHDOG_COMPILETIME
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_ZLIB",
-#ifdef MAKE_WITH_ZLIB
                          "yes"
 #else
                          "no"
@@ -3139,9 +3115,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "OpenSSL Version", (char*)SSLeay_version(0));
 #endif
 
-#ifdef MAKE_WITH_ZLIB
   printFeatureConfigInfo(textPrintFlag, "zlib version", (char*)zlibVersion());
-#endif
 
   printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    myGlobals.enablePacketDecoding == 1 ? "Enabled" : "Disabled");
   printFeatureConfigInfo(textPrintFlag, "Fragment Handling", myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");

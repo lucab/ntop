@@ -2077,7 +2077,7 @@ void traceEvent(int eventTraceLevel, char* file,
     printf("%s ", theDate);
 
     if(myGlobals.traceLevel == CONST_DETAIL_TRACE_LEVEL) {
-        printf("[MSGID%05d-%s] ", line, &mFile[beginFileIdx]);
+        printf("[%s:%d] ", &mFile[beginFileIdx], line);
     }
 
     printf("%s", eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
@@ -2104,7 +2104,7 @@ void traceEvent(int eventTraceLevel, char* file,
         printf("%s ", theDate);
 
         if(myGlobals.traceLevel == CONST_DETAIL_TRACE_LEVEL) {
-            printf("[MSGID%05d-%s] ", line, &mFile[beginFileIdx]);
+            printf("[%s:%d] ", mFile, line);
         }
 
         printf("%s", eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :

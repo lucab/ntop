@@ -239,60 +239,60 @@ static void initIPCountryTable(void) {
 
     rc = stat(tmpStr, &statBuf);
     if(rc == 0) {
-        fd = fopen(tmpStr, "r");
+      fd = fopen(tmpStr, "r");
 
-        if(fd!=NULL) {
-            char buff[256];
-            char *strtokState, *cc, *ip, *prefix;
-            int recordsRead=0;
+      if(fd!=NULL) {
+	char buff[256];
+	char *strtokState, *cc, *ip, *prefix;
+	int recordsRead=0;
 
-            traceEvent(CONST_TRACE_NOISY, "IP2CC: ...found - reading data");
+	traceEvent(CONST_TRACE_NOISY, "IP2CC: ...found - reading data");
 
-            while (fgets(buff, sizeof(buff), fd) != NULL) {
+	while (fgets(buff, sizeof(buff), fd) != NULL) {
 
-                if((cc=strtok_r(buff, ":", &strtokState))==NULL)
-                    continue;
-                if((ip=strtok_r(NULL, "/", &strtokState))==NULL)
-                    continue;
-                if((prefix=strtok_r(NULL, "\n", &strtokState))==NULL)
-                    continue;
+	  if((cc=strtok_r(buff, ":", &strtokState))==NULL)
+	    continue;
+	  if((ip=strtok_r(NULL, "/", &strtokState))==NULL)
+	    continue;
+	  if((prefix=strtok_r(NULL, "\n", &strtokState))==NULL)
+	    continue;
 
-                strtolower(cc);
+	  strtolower(cc);
         
-                addNodeInternal(xaton(ip), atoi(prefix), cc);
-                recordsRead++;
-            }
-            myGlobals.ipCountryCount += recordsRead;
+	  addNodeInternal(xaton(ip), atoi(prefix), cc);
+	  recordsRead++;
+	}
+	myGlobals.ipCountryCount += recordsRead;
 
-            if(!feof(fd)) {
-                traceEvent(CONST_TRACE_ERROR, "IP2CC: reading file '%s'", tmpStr);
-                traceEvent(CONST_TRACE_ERROR, "IP2CC: problem is %s(%d)", strerror(errno), errno);
-                traceEvent(CONST_TRACE_INFO,
-                           "IP2CC: ntop continues OK, but with %s data from file",
-                           recordsRead == 0 ? "no" : "partial");
-            }
+	if(!feof(fd)) {
+	  traceEvent(CONST_TRACE_ERROR, "IP2CC: reading file '%s'", tmpStr);
+	  traceEvent(CONST_TRACE_ERROR, "IP2CC: problem is %s(%d)", strerror(errno), errno);
+	  traceEvent(CONST_TRACE_INFO,
+		     "IP2CC: ntop continues OK, but with %s data from file",
+		     recordsRead == 0 ? "no" : "partial");
+	}
 
-            fclose(fd);
-            traceEvent(CONST_TRACE_NOISY, "IP2CC: ......%d records read", recordsRead);
-        } else 
-            traceEvent(CONST_TRACE_WARNING, "IP2CC: unable to open file at %s", tmpStr);
+	fclose(fd);
+	traceEvent(CONST_TRACE_NOISY, "IP2CC: ......%d records read", recordsRead);
+      } else 
+	traceEvent(CONST_TRACE_WARNING, "IP2CC: unable to open file at %s", tmpStr);
     } else 
-        traceEvent(CONST_TRACE_NOISY, "IP2CC: ...does not exist");
+      traceEvent(CONST_TRACE_NOISY, "IP2CC: ...does not exist");
   }
   if(myGlobals.ipCountryCount == 0) {
-      traceEvent(CONST_TRACE_WARNING, 
-                 "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data).\n");
-      traceEvent(CONST_TRACE_INFO, 
-                 "IP2CC: ntop will perform correctly but without this minor feature.\n");
+    traceEvent(CONST_TRACE_WARNING, 
+	       "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data).\n");
+    traceEvent(CONST_TRACE_INFO, 
+	       "IP2CC: ntop will perform correctly but without this minor feature.\n");
   } else 
-      traceEvent(CONST_TRACE_INFO, "IP2CC: %d records read", myGlobals.ipCountryCount);
+    traceEvent(CONST_TRACE_INFO, "IP2CC: %d records read", myGlobals.ipCountryCount);
 }
 
 /* ******************************* */
 
 /*
-   Function below courtesy of
-   Eric Dumazet <dada1@cosmosbay.com>
+  Function below courtesy of
+  Eric Dumazet <dada1@cosmosbay.com>
 */
 void resetDevice(int devIdx) {
   int len;
@@ -406,28 +406,28 @@ void initCounters(void) {
   char buf[256];
 #ifdef MAKE_WITH_I18N
   char *workLanguage;
- #ifdef HAVE_DIRENT_H
+#ifdef HAVE_DIRENT_H
   struct dirent **dirList;
   int j, iLang, nLang, found;
   DIR *testDirEnt;
   char *tmpStr;
   char* realLocale;
- #endif
+#endif
 #endif
 
   setDomainName();
 
 #ifdef MAKE_WITH_XMLDUMP
   if(gethostname(myGlobals.hostName, MAXHOSTNAMELEN) != 0)
-      strncpy(myGlobals.hostName, "127.0.0.1", MAXHOSTNAMELEN);
+    strncpy(myGlobals.hostName, "127.0.0.1", MAXHOSTNAMELEN);
   else {
-     traceEvent(CONST_TRACE_NOISY, "On this system, gethostname() returned '%s'", myGlobals.hostName);
+    traceEvent(CONST_TRACE_NOISY, "On this system, gethostname() returned '%s'", myGlobals.hostName);
 
-     if(strcmp(myGlobals.hostName, myGlobals.domainName) == 0) {
-         /* The returned hostName doesn't appear to have the domainName in it... */
-         traceEvent(CONST_TRACE_NOISY, "Appending the domain name, '%s'", myGlobals.domainName);
-         sprintf(myGlobals.hostName, "%s.%s", myGlobals.hostName, myGlobals.domainName);
-     }
+    if(strcmp(myGlobals.hostName, myGlobals.domainName) == 0) {
+      /* The returned hostName doesn't appear to have the domainName in it... */
+      traceEvent(CONST_TRACE_NOISY, "Appending the domain name, '%s'", myGlobals.domainName);
+      sprintf(myGlobals.hostName, "%s.%s", myGlobals.hostName, myGlobals.domainName);
+    }
   }
 #endif
 
@@ -502,9 +502,9 @@ void initCounters(void) {
     }
   }
   if(configFileFound == 0) {
-      traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.\n", CONST_OSFINGERPRINT_FILE);
-      traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without OS fingerprinting.\n");
-      traceEvent(CONST_TRACE_NOISY, "OSFP: If the file 'magically' appears, OS fingerprinting will automatically be enabled.\n");
+    traceEvent(CONST_TRACE_WARNING, "OSFP: Unable to open file '%s'.\n", CONST_OSFINGERPRINT_FILE);
+    traceEvent(CONST_TRACE_NOISY, "OSFP: ntop continues ok, but without OS fingerprinting.\n");
+    traceEvent(CONST_TRACE_NOISY, "OSFP: If the file 'magically' appears, OS fingerprinting will automatically be enabled.\n");
   }
 
   /* i18n */
@@ -515,18 +515,18 @@ void initCounters(void) {
   workLanguage = setlocale(LC_ALL, "");
   if(workLanguage != NULL ) {
 #ifdef I18N_DEBUG
-      traceEvent(CONST_TRACE_NOISY,
-                 "I18N: Default language (from ntop host) is '%s' (raw)\n", 
-                 workLanguage);
+    traceEvent(CONST_TRACE_NOISY,
+	       "I18N: Default language (from ntop host) is '%s' (raw)\n", 
+	       workLanguage);
 #endif
-      myGlobals.defaultLanguage = i18n_xvert_locale2common(workLanguage);
-      traceEvent(CONST_TRACE_INFO,
-                 "I18N: Default language (from ntop host) is '%s'\n", 
-                 myGlobals.defaultLanguage);
+    myGlobals.defaultLanguage = i18n_xvert_locale2common(workLanguage);
+    traceEvent(CONST_TRACE_INFO,
+	       "I18N: Default language (from ntop host) is '%s'\n", 
+	       myGlobals.defaultLanguage);
   } else {
-      traceEvent(CONST_TRACE_INFO,
-                 "I18N: Default language (from ntop host) is unspecified\n"); 
-      myGlobals.defaultLanguage = NULL;
+    traceEvent(CONST_TRACE_INFO,
+	       "I18N: Default language (from ntop host) is unspecified\n"); 
+    myGlobals.defaultLanguage = NULL;
   }
 
   /*
@@ -544,129 +544,129 @@ void initCounters(void) {
    *
    */
 
- #ifdef HAVE_DIRENT_H
+#ifdef HAVE_DIRENT_H
   nLang = scandir(locale_dir, &dirList, NULL, alphasort);
   if(nLang < 0) {
-      traceEvent(CONST_TRACE_WARNING,
-                 "I18N: Error obtaining locale list, scandir(%s,...) errno is %d\n", 
-                 locale_dir,
-                 errno);
-      traceEvent(CONST_TRACE_NOISY, "continues without multiple language support");
+    traceEvent(CONST_TRACE_WARNING,
+	       "I18N: Error obtaining locale list, scandir(%s,...) errno is %d\n", 
+	       locale_dir,
+	       errno);
+    traceEvent(CONST_TRACE_NOISY, "continues without multiple language support");
   } else {
-      traceEvent(CONST_TRACE_NOISY, "I18N: scandir(%s,...) returned %d\n", locale_dir, nLang);
-      for (iLang=0; (iLang<nLang) && (myGlobals.maxSupportedLanguages < MAX_LANGUAGES_SUPPORTED); iLang++) {
-  #ifdef I18N_DEBUG
-          traceEvent(CONST_TRACE_NOISY, "I18N_DEBUG: %2d. '%s'\n", iLang, dirList[iLang]->d_name);
-  #endif
-          if(dirList[iLang]->d_name[0] == '.') {
-              /* skip parent/self directory entries */
-              continue;
-          }
-
-          if( (dirList[iLang]->d_type == DT_DIR) ||
-               (dirList[iLang]->d_type == DT_LNK) ) {
-              tmpStr = i18n_xvert_locale2common(dirList[iLang]->d_name);
-
-              if(!strcmp(myGlobals.defaultLanguage, tmpStr)) {
-                  /* skip default language */
-              traceEvent(CONST_TRACE_NOISY,
-                         "I18N_DEBUG: Skipping default language '%s' ('%s' raw)\n",
-                         tmpStr,
-                         dirList[iLang]->d_name);
-  #ifdef I18N_DEBUG
-  #endif
-                  free(tmpStr);
-                  continue;
-              }
-
-              found=0;
-              for (i=0; (!found) && i<myGlobals.maxSupportedLanguages; i++) {
-                  if(!strcmp(tmpStr, myGlobals.supportedLanguages[i])) {
-                      traceEvent(CONST_TRACE_NOISY, 
-                                 "I18N_DEBUG: Skipping already supported language, '%s'\n",
-                                 dirList[iLang]->d_name);
-  #ifdef I18N_DEBUG
-  #endif
-                      found=1;
-                      break;
-                  }
-              }
-              if(!found) {
-                  traceEvent(CONST_TRACE_NOISY, 
-                             "I18N: Testing locale '%s' (from '%s')\n",
-                             tmpStr,
-                             dirList[iLang]->d_name);
-                  for(i=0; (!found) && (myGlobals.dataFileDirs[i] != NULL); i++) {
-
-    	              if(snprintf(buf, sizeof(buf), "%s/html_%s",
-                                   myGlobals.dataFileDirs[i],
-                                   tmpStr) < 0)
-    	                BufferTooShort();
-   #ifdef WIN32
-                      j=0;
-                      while (buf[j] != '\0') {
-                          if(buf[j] == '/') buf[j] = '\\';
-                          j++;
-                      }
-   #endif
-
-  #ifdef I18N_DEBUG
-                      traceEvent(CONST_TRACE_NOISY, 
-                                 "I18N_DEBUG: Looking for directory '%s'\n",
-                                 buf);
-  #endif
-                      testDirEnt = opendir(buf);
-                      if(testDirEnt != NULL) {
-                          closedir(testDirEnt);
-
-                          realLocale = strdup(setlocale(LC_ALL, NULL));
-                          setlocale(LC_ALL, tmpStr);
-                          myGlobals.strftimeFormat[myGlobals.maxSupportedLanguages] = nl_langinfo(D_T_FMT);
-                          setlocale(LC_ALL, realLocale);
-                          free(realLocale);
-
-                          myGlobals.supportedLanguages[myGlobals.maxSupportedLanguages++] = strdup(tmpStr);
-                          found=1;
-                          traceEvent(CONST_TRACE_INFO,
-                                     "I18N: '%s' ntop language files found, is supported.\n",
-                                     tmpStr);
-                      }
-                  }
-
-                  if(!found) {
-                      traceEvent(CONST_TRACE_NOISY,
-                                 "I18N: '%s' ntop language files not found, may not be supported.\n",
-                                 tmpStr);
-                  }
-
-                  free(tmpStr);
-
-   #ifdef I18N_DEBUG
-              } else {
-                  traceEvent(CONST_TRACE_NOISY, 
-                             "I18N_DEBUG: Skipping duplicate locale '%s'\n",
-                             dirList[iLang]->d_name);
-   #endif
-              }
-
-  #ifdef I18N_DEBUG
-          } else {
-              traceEvent(CONST_TRACE_NOISY, "I18N_DEBUG: Skipping file '%s' (type %d)\n", 
-                         dirList[iLang]->d_name,
-                         dirList[iLang]->d_type);
-  #endif
-          }
+    traceEvent(CONST_TRACE_NOISY, "I18N: scandir(%s,...) returned %d\n", locale_dir, nLang);
+    for (iLang=0; (iLang<nLang) && (myGlobals.maxSupportedLanguages < MAX_LANGUAGES_SUPPORTED); iLang++) {
+#ifdef I18N_DEBUG
+      traceEvent(CONST_TRACE_NOISY, "I18N_DEBUG: %2d. '%s'\n", iLang, dirList[iLang]->d_name);
+#endif
+      if(dirList[iLang]->d_name[0] == '.') {
+	/* skip parent/self directory entries */
+	continue;
       }
-      for (iLang=0; iLang<nLang; iLang++) {
-          free(dirList[iLang]);
+
+      if( (dirList[iLang]->d_type == DT_DIR) ||
+	  (dirList[iLang]->d_type == DT_LNK) ) {
+	tmpStr = i18n_xvert_locale2common(dirList[iLang]->d_name);
+
+	if(!strcmp(myGlobals.defaultLanguage, tmpStr)) {
+	  /* skip default language */
+	  traceEvent(CONST_TRACE_NOISY,
+		     "I18N_DEBUG: Skipping default language '%s' ('%s' raw)\n",
+		     tmpStr,
+		     dirList[iLang]->d_name);
+#ifdef I18N_DEBUG
+#endif
+	  free(tmpStr);
+	  continue;
+	}
+
+	found=0;
+	for (i=0; (!found) && i<myGlobals.maxSupportedLanguages; i++) {
+	  if(!strcmp(tmpStr, myGlobals.supportedLanguages[i])) {
+	    traceEvent(CONST_TRACE_NOISY, 
+		       "I18N_DEBUG: Skipping already supported language, '%s'\n",
+		       dirList[iLang]->d_name);
+#ifdef I18N_DEBUG
+#endif
+	    found=1;
+	    break;
+	  }
+	}
+	if(!found) {
+	  traceEvent(CONST_TRACE_NOISY, 
+		     "I18N: Testing locale '%s' (from '%s')\n",
+		     tmpStr,
+		     dirList[iLang]->d_name);
+	  for(i=0; (!found) && (myGlobals.dataFileDirs[i] != NULL); i++) {
+
+	    if(snprintf(buf, sizeof(buf), "%s/html_%s",
+			myGlobals.dataFileDirs[i],
+			tmpStr) < 0)
+	      BufferTooShort();
+#ifdef WIN32
+	    j=0;
+	    while (buf[j] != '\0') {
+	      if(buf[j] == '/') buf[j] = '\\';
+	      j++;
+	    }
+#endif
+
+#ifdef I18N_DEBUG
+	    traceEvent(CONST_TRACE_NOISY, 
+		       "I18N_DEBUG: Looking for directory '%s'\n",
+		       buf);
+#endif
+	    testDirEnt = opendir(buf);
+	    if(testDirEnt != NULL) {
+	      closedir(testDirEnt);
+
+	      realLocale = strdup(setlocale(LC_ALL, NULL));
+	      setlocale(LC_ALL, tmpStr);
+	      myGlobals.strftimeFormat[myGlobals.maxSupportedLanguages] = nl_langinfo(D_T_FMT);
+	      setlocale(LC_ALL, realLocale);
+	      free(realLocale);
+
+	      myGlobals.supportedLanguages[myGlobals.maxSupportedLanguages++] = strdup(tmpStr);
+	      found=1;
+	      traceEvent(CONST_TRACE_INFO,
+			 "I18N: '%s' ntop language files found, is supported.\n",
+			 tmpStr);
+	    }
+	  }
+
+	  if(!found) {
+	    traceEvent(CONST_TRACE_NOISY,
+		       "I18N: '%s' ntop language files not found, may not be supported.\n",
+		       tmpStr);
+	  }
+
+	  free(tmpStr);
+
+#ifdef I18N_DEBUG
+	} else {
+	  traceEvent(CONST_TRACE_NOISY, 
+		     "I18N_DEBUG: Skipping duplicate locale '%s'\n",
+		     dirList[iLang]->d_name);
+#endif
+	}
+
+#ifdef I18N_DEBUG
+      } else {
+	traceEvent(CONST_TRACE_NOISY, "I18N_DEBUG: Skipping file '%s' (type %d)\n", 
+		   dirList[iLang]->d_name,
+		   dirList[iLang]->d_type);
+#endif
       }
-      free(dirList);
+    }
+    for (iLang=0; iLang<nLang; iLang++) {
+      free(dirList[iLang]);
+    }
+    free(dirList);
   }
 
- #else
+#else
   traceEvent(CONST_TRACE_WARNING, 
              "I18N: Unable to scan locales (missing dirent.h at compile time) - ntop continues\n");
- #endif /* HAVE_DIRENT_H */
+#endif /* HAVE_DIRENT_H */
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
              "I18N: This instance of ntop supports %d additional language(s)\n",
@@ -734,33 +734,33 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory, int doUn
   */  
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/%s", 
-               directory != NULL ? directory : myGlobals.dbPath,
-               dbName) < 0)
-      BufferTooShort();
+	      directory != NULL ? directory : myGlobals.dbPath,
+	      dbName) < 0)
+    BufferTooShort();
 
   if(doUnlink == TRUE) {
-      unlink(tmpBuf); /* Delete the old one (if present) */
+    unlink(tmpBuf); /* Delete the old one (if present) */
   }
 
   traceEvent(CONST_TRACE_NOISY, "%s database '%s'",
-                                doUnlink == TRUE ? "creating" : "opening",
-                                tmpBuf);
+	     doUnlink == TRUE ? "creating" : "opening",
+	     tmpBuf);
   *database = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
   if(*database == NULL) {
-      traceEvent(CONST_TRACE_FATALERROR, "....open of %s failed: %s",
-                 tmpBuf,
+    traceEvent(CONST_TRACE_FATALERROR, "....open of %s failed: %s",
+	       tmpBuf,
 #if defined(WIN32) && defined(__GNUC__)
-                 "unknown gdbm errno"
+	       "unknown gdbm errno"
 #else
-                 gdbm_strerror(gdbm_errno)
+	       gdbm_strerror(gdbm_errno)
 #endif
-                );
+	       );
 
-      if(directory == NULL) {
-          traceEvent(CONST_TRACE_FATALERROR, "Possible solution: please use '-P <directory>'\n");
-      }
-      exit(-1);
+    if(directory == NULL) {
+      traceEvent(CONST_TRACE_FATALERROR, "Possible solution: please use '-P <directory>'\n");
+    }
+    exit(-1);
   }
 }
 
@@ -842,14 +842,14 @@ void initThreads(void) {
 #endif /* CFG_MULTITHREADED */
 
 #ifdef MAKE_WITH_SSLWATCHDOG
- #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   if(myGlobals.useSSLwatchdog == 1)
- #endif
-  {
+#endif
+    {
       traceEvent(CONST_TRACE_NOISY, "Initializing Condvar for ssl watchdog.");
       createCondvar(&myGlobals.sslwatchdogCondvar);
       myGlobals.sslwatchdogCondvar.predicate = FLAG_SSLWATCHDOG_UNINIT;
-  }
+    }
 #endif
 
 #ifdef CFG_MULTITHREADED
@@ -879,7 +879,7 @@ void initApps(void) {
 #else
     readLsofInfo();
     if(myGlobals.numProcesses == 0) {
-        traceEvent(CONST_TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?\n");
+      traceEvent(CONST_TRACE_WARNING, "LSOF: 1st run found nothing - check if lsof is suid root?\n");
     }
 #endif
   }
@@ -1109,6 +1109,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
   /* ********************************************** */
 
+#ifndef WIN32
   if(strncmp(myGlobals.device[deviceId].name, "lo", 2)) { 
     /* Do not care of virtual loopback interfaces */
     int k;
@@ -1140,6 +1141,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
       }
     }
   }
+#endif /* WIN32 */
 
   resetStats(deviceId);
   initDeviceDatalink(deviceId);
@@ -1184,51 +1186,53 @@ void initDevices(char* devices) {
   }
 
 #ifdef WIN32
-    if(pcap_findalldevs(&devpointer, ebuf) < 0) {
-      traceEvent(CONST_TRACE_FATALERROR, "FATAL ERROR: pcap_findalldevs() call failed [%s]", ebuf);
-      traceEvent(CONST_TRACE_FATALERROR, "FATAL ERROR: Have you instaled winpcap properly?");
-      exit(-1);
-    } else {
-      for (i = 0; devpointer != 0; i++) {
-	traceEvent(CONST_TRACE_NOISY, "Found interface [index=%d] '%s'", ifIdx, devpointer->name);
+  if(pcap_findalldevs(&devpointer, ebuf) < 0) {
+    traceEvent(CONST_TRACE_FATALERROR, "FATAL ERROR: pcap_findalldevs() call failed [%s]", ebuf);
+    traceEvent(CONST_TRACE_FATALERROR, "FATAL ERROR: Have you instaled winpcap properly?");
+    exit(-1);
+  } else {
+    int i;
 
-	if(tmpDev == NULL) {
-	  tmpDev = devpointer->name;
-	  tmpDescr = devpointer->description;
-	}
+    for (i = 0; devpointer != 0; i++) {
+      traceEvent(CONST_TRACE_NOISY, "Found interface [index=%d] '%s'", ifIdx, devpointer->name);
 
-	if(ifIdx < 32) {
-	  char *descr;
+      if(tmpDev == NULL) {
+	tmpDev = devpointer->name;
+	tmpDescr = devpointer->description;
+      }
 
-	  descr = devpointer->description;
-	  /* Sanitize the interface name */
-	  for(i=0; i<strlen(descr); i++)
-	    if(descr[i] == '(') {
-	      descr[i] = '\0';
-	      break;
-	    }	
-	  while(descr[strlen(descr)-1] == ' ')
-	    descr[strlen(descr)-1] = '\0';
+      if(ifIdx < 32) {
+	char *descr;
 
-	  strncpy(intNames[ifIdx], devpointer->name, MAX_IF_NAME);
-	  strncpy(intDescr[ifIdx], descr, MAX_IF_NAME);
+	descr = devpointer->description;
+	/* Sanitize the interface name */
+	for(i=0; i<strlen(descr); i++)
+	  if(descr[i] == '(') {
+	    descr[i] = '\0';
+	    break;
+	  }	
+	while(descr[strlen(descr)-1] == ' ')
+	  descr[strlen(descr)-1] = '\0';
 
-	  if(defaultIdx == -1) {
-	    if((!strstr(intNames[ifIdx], "PPP")) /* Avoid to use the PPP interface */
-	       && (!strstr(intNames[ifIdx], "ICSHARE"))  /* Avoid to use the internet sharing interface */
-	       && (!strstr(intNames[ifIdx], "NdisWan"))) { /* Avoid to use the internet sharing interface */
-	      defaultIdx = ifIdx;
-	      tmpDev = devpointer->name;
-	      tmpDescr = devpointer->description;
-	    }
+	strncpy(intNames[ifIdx], devpointer->name, MAX_IF_NAME);
+	strncpy(intDescr[ifIdx], descr, MAX_IF_NAME);
+
+	if(defaultIdx == -1) {
+	  if((!strstr(intNames[ifIdx], "PPP")) /* Avoid to use the PPP interface */
+	     && (!strstr(intNames[ifIdx], "ICSHARE"))  /* Avoid to use the internet sharing interface */
+	     && (!strstr(intNames[ifIdx], "NdisWan"))) { /* Avoid to use the internet sharing interface */
+	    defaultIdx = ifIdx;
+	    tmpDev = devpointer->name;
+	    tmpDescr = devpointer->description;
 	  }
-
-	  ifIdx++;
 	}
 
-	devpointer = devpointer->next;
-      } /* for */
-    } /* else */
+	ifIdx++;
+      }
+
+      devpointer = devpointer->next;
+    } /* for */
+  } /* else */
 #endif
 
   if(devices == NULL) {
@@ -1399,7 +1403,7 @@ void parseTrafficFilter(void) {
 	  traceEvent(CONST_TRACE_NOISY, "Setting filter to \"%s\" on device %s.",
 		     myGlobals.currentFilterExpression, myGlobals.device[i].name);
 #ifdef HAVE_PCAP_FREECODE
-          pcap_freecode(&fcode);
+	pcap_freecode(&fcode);
 #endif
       }
     }

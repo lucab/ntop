@@ -138,13 +138,10 @@ static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize)
 static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent);
 static void returnHTTPspecialStatusCode(int statusIdx);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
-
-#ifdef MAKE_WITH_ZLIB
 static char compressedFilePath[256];
 static short compressFile = 0, acceptGzEncoding;
 static FILE *compressFileFd=NULL;
 static void compressAndSendData(u_int*);
-#endif
 
 /* ************************* */
 
@@ -320,12 +317,10 @@ static int readHTTPheader(char* theRequestedURL,
 	} else if((idxChar >= 21)
 		  && (strncasecmp(lineStr, "Authorization: Basic ", 21) == 0)) {
 	  strncpy(thePw, &lineStr[21], thePwLen-1)[thePwLen-1] = '\0';
-#ifdef MAKE_WITH_ZLIB
 	} else if((idxChar >= 17)
 		  && (strncasecmp(lineStr, "Accept-Encoding: ", 17) == 0)) {
 	  if(strstr(&lineStr[17], "gzip"))
 	    acceptGzEncoding = 1;
-#endif
 #ifdef MAKE_WITH_I18N
 	} else if((idxChar >= 17)
 		  && (strncasecmp(lineStr, "Accept-Language: ", 17) == 0)) {
@@ -446,7 +441,6 @@ void sendStringLen(char *theString, unsigned int len) {
   if(len == 0)
     return; /* Nothing to send */
   else {
-#ifdef MAKE_WITH_ZLIB
     if(compressFile) {
       if(compressFileFd == NULL) {
 #ifdef WIN32
@@ -464,7 +458,6 @@ void sendStringLen(char *theString, unsigned int len) {
       }
       return;
     }
-#endif /* MAKE_WITH_ZLIB */
   }
 
   bytesSent = 0;
@@ -695,7 +688,6 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
       BufferTooShort();
    }
 
-#ifdef MAKE_WITH_ZLIB
    if(gzipBytesSent > 0)
      fprintf(myGlobals.accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %u/%u %lu\n",
 	     _intoa(*requestFrom, buf, sizeof(buf)),
@@ -708,13 +700,6 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
 	     myUser, theDate, theZone,
 	     httpRequestedURL, rc, httpBytesSent,
 	     msSpent);
-#else
-   fprintf(myGlobals.accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %d %lu\n",
-	   _intoa(*requestFrom, buf, sizeof(buf)),
-	   myUser, theDate, theZone,
-	   httpRequestedURL, rc, httpBytesSent,
-	   msSpent);
-#endif
    fflush(myGlobals.accessLogFd);
  }
 }
@@ -794,9 +779,7 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
 /* *******************************/
 
 void returnHTTPredirect(char* destination) {
-#ifdef MAKE_WITH_ZLIB
   compressFile = acceptGzEncoding = 0;
-#endif
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML,
 		 BITFLAG_HTTP_STATUS_302 | BITFLAG_HTTP_NO_CACHE_CONTROL | BITFLAG_HTTP_MORE_FIELDS);
@@ -813,9 +796,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   time_t  theTime = myGlobals.actTime - (time_t)myGlobals.thisZone;
   struct tm t;
 
-#ifdef MAKE_WITH_ZLIB
   compressFile = 0;
-#endif
 
   statusIdx = (headerFlags >> 8) & 0xff;
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))){
@@ -913,14 +894,12 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 #endif
   }
 
-#ifdef MAKE_WITH_ZLIB
   if(mimeType == MIME_TYPE_CHART_FORMAT) {
     compressFile = 0;
     if(myGlobals.newSock < 0 /* SSL */) acceptGzEncoding = 0;
   } else {
     if(acceptGzEncoding) compressFile = 1;
   }
-#endif
 
   if((headerFlags & BITFLAG_HTTP_MORE_FIELDS) == 0) {
     sendString("\r\n");
@@ -1366,9 +1345,7 @@ static int returnHTTPPage(char* pageName,
 
     sendHTTPHeader(mimeType, BITFLAG_HTTP_IS_CACHEABLE | BITFLAG_HTTP_MORE_FIELDS);
 
-#ifdef MAKE_WITH_ZLIB
     compressFile = 0; /* Don't move this */
-#endif
 
     if(myGlobals.actTime > statbuf.st_mtime) { /* just in case the system clock is wrong... */
         theTime = statbuf.st_mtime - myGlobals.thisZone;
@@ -1563,9 +1540,7 @@ static int returnHTTPPage(char* pageName,
 	if(childpid) {
 	  /* father process */
 	  myGlobals.numChildren++;
-#ifdef MAKE_WITH_ZLIB
 	  compressFile = 0;
-#endif
 	  return(0);
 	} else {
 
@@ -2136,10 +2111,8 @@ static int returnHTTPPage(char* pageName,
   if(*usedFork) {
     u_int gzipBytesSent = 0;
 
-#ifdef MAKE_WITH_ZLIB
     if(compressFile)
       compressAndSendData(&gzipBytesSent);
-#endif
     closeNwSocket(&myGlobals.newSock);
     logHTTPaccess(200, httpRequestedAt, gzipBytesSent);
     exit(0);
@@ -2249,7 +2222,6 @@ static int checkHTTPpassword(char *theRequestedURL,
 
 /* ************************* */
 
-#ifdef MAKE_WITH_ZLIB
 static void compressAndSendData(u_int *gzipBytesSent) {
   FILE *fd;
   int len;
@@ -2279,10 +2251,8 @@ static void compressAndSendData(u_int *gzipBytesSent) {
   fseek(fd, 0, SEEK_SET);
   sendString(tmpStr);
 
-#ifdef MAKE_WITH_ZLIB
   if(gzipBytesSent != NULL)
     (*gzipBytesSent) = len;
-#endif
 
   for(;;) {
     len = fread(tmpStr, sizeof(char), 255, fd);
@@ -2293,7 +2263,6 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
   unlink(compressedFilePath);
 }
-#endif /* MAKE_WITH_ZLIB */
 
 /* ************************* */
 
@@ -2356,12 +2325,9 @@ void handleHTTPrequest(struct in_addr from) {
 #endif
 
   httpBytesSent = 0;
-
-#ifdef MAKE_WITH_ZLIB
   compressFile = 0;
   compressFileFd = NULL;
   acceptGzEncoding = 0;
-#endif
 
 #ifdef MAKE_WITH_I18N
  postLen = readHTTPheader(requestedURL,
@@ -2483,12 +2449,10 @@ void handleHTTPrequest(struct in_addr from) {
 #endif
   
   if(rc == 0) {
-#if defined(MAKE_WITH_ZLIB)
     if(compressFile)
       compressAndSendData(&gzipBytesSent);
     else
       gzipBytesSent = 0;
-#endif
 
     if(!usedFork)
       logHTTPaccess(200, &httpRequestedAt, gzipBytesSent);

@@ -356,11 +356,7 @@ ntop.h
 #endif /* HAVE_OPENSSL */
 
 /* Compressed HTTP responses via zlib */
-#ifdef HAVE_ZLIB_H
 #include <zlib.h>
-#else
-#undef MAKE_WITH_ZLIB
-#endif
 
 /*
  * gdbm

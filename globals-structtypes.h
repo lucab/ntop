@@ -744,8 +744,8 @@ typedef struct ntopInterface {
   /* ************************** */
 
   u_char exportNetFlow; /* NETFLOW_EXPORT_... */
+  } NtopInterface;
 
-} NtopInterface;
 /*XMLSECTIONBEGIN xml_s_ntopinterface.inc parent input */
   /*XMLNOTE - use parent, not work, because the parent node is defined in g_intf.inc */
   /*XML s              name                 parent        "" */
@@ -1892,6 +1892,5 @@ XML*/
 #ifdef PARM_ENABLE_EXPERIMENTAL
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */
 #endif
-
 } NtopGlobals;
 
