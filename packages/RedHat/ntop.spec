@@ -17,10 +17,10 @@ Autoreqprov:  on
 Version:      %{ntopversion}
 Release:      %( ([ "%version" != "current" ]&& echo "%ntoprelease") || echo "%(date +%d%m%Y)" )
 Summary:      Web-based Network Traffic Monitor
-Source:		ntop-%{version}%([ "%version" != "current" ]&& echo "-src").tgz
+Source:              ntop-%{version}%([ "%version" != "current" ]&& echo "-src").tgz
 Source1:       ntopd
 URL:          http://www.ntop.org
-Buildroot:	%{_tmppath}/%{name}-root
+Buildroot:  %{_tmppath}/%{name}-root
 %define prefix /usr
 
 %description
@@ -39,7 +39,7 @@ if [ -n "$RPM_BUILD_ROOT" ] ; then
 fi
 %setup -c ntop-%{version}
 if [ -n "ntop-%{version}" ] ; then
-	[ "ntop-%{version}" == "ntop-current" ] && cd ntop-current
+   [ "ntop-%{version}" == "ntop-current" ] && cd ntop-current
 fi
 cd gdchart0.94c/
 rm -rf gd-1.8.3
@@ -81,8 +81,8 @@ mv $RPM_BUILD_ROOT/etc/init.d/* "$RPM_BUILD_ROOT/etc/rc.d/init.d/"
 %postun
 if [ "$1" = 0 ]
 then
-	/sbin/service ntopd stop > /dev/null 2>&1 || :
-	/sbin/chkconfig --del ntopd
+   /sbin/service ntopd stop > /dev/null 2>&1 || :
+  /sbin/chkconfig --del ntopd
 fi
 /sbin/service ntopd condrestart > /dev/null 2>&1 || :
 

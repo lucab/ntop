@@ -22,12 +22,12 @@ PPATH="/usr/bin/ntop"
 
 case "$1" in
     start)
-	echo -n "Starting service ntop"
-	daemon $PPATH  -i $NTOPD_IFACE -w $NTOPD_PORT $NTOP_FLAGS -P /var/lib/ntop
+ echo -n "Starting service ntop"
+ daemon $PPATH  -i $NTOPD_IFACE -w $NTOPD_PORT $NTOP_FLAGS -P /var/lib/ntop
         RETVAL=$?
         [ "$RETVAL" = 0 ] && touch /var/lock/subsys/$prog
         echo
-	;;
+        ;;
     stop)
         echo -n $"Stopping $prog:"
         killproc $PPATH
@@ -36,8 +36,8 @@ case "$1" in
         echo
         ;;
     restart|reload)
-	$0 stop && $0 start
-	;;
+ $0 stop && $0 start
+     ;;
     status)
         status $PPATH
         RETVAL=$?
@@ -48,10 +48,10 @@ case "$1" in
               $0  start
          fi
          ;;
-	*)
-	echo "Usage: $0 {start|stop|restart|reload|status}"
-	exit 1
-	;;
+ *)
+      echo "Usage: $0 {start|stop|restart|reload|status}"
+     exit 1
+  ;;
 esac
 exit $RETVAL
 
