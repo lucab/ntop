@@ -1284,6 +1284,25 @@ A. Yes.  Run the "census" - this will send us an email telling us what's
    Edit it to describe the problem and send it to census@ntopsupport.com
 
 
+Q. I'm seeing a lot of "changing search order for system directory" messages?
+A. It's not a problem, just confusing.  This warning, which appears if you 
+   redefine the system include directory, causes lots of confusion.  Supposedly,
+   according to this http://gcc.gnu.org/ml/gcc-bugs/2002-10/msg01080.html,
+   it wasn't fixed in gcc 3.2.0, but should be fixed in gcc 3.2.1.
+
+   According to this: http://gcc.gnu.org/onlinedocs/cpp/Invocation.html,
+   it's truly harmless on systems which already have /usr/local/include as
+   a standard system library:
+
+      -I dir 
+      Add the directory dir to the list of directories to be searched for
+      header files. See Search Path. Directories named by -I are searched
+      before the standard system include directories. If the directory dir
+      is a standard system include directory, the option is ignored to ensure
+      that the default search order for system directories and the special
+      treatment of system headers are not defeated (see System Headers) . 
+
+
 --------------------------------------------------------------------------------
 -----Other ./configure features-------------------------------------------------
 --------------------------------------------------------------------------------
