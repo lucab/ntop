@@ -980,34 +980,38 @@ static void handleBootp(HostTraffic *srcHost,
 		  traceEvent(TRACE_INFO, "Domain name: %s", &bootProto.bp_vend[idx]);
 #endif
 		  if(strcmp(realDstHost->hostSymIpAddress, realDstHost->hostNumIpAddress)) {
-		    if(strcmp(&realDstHost->hostSymIpAddress[strlen(realDstHost->hostSymIpAddress)-len],
-			      &bootProto.bp_vend[idx]) != 0) {
-		      char tmpName[2*MAX_HOST_SYM_NAME_LEN], tmpHostName[MAX_HOST_SYM_NAME_LEN];
-		      int hostLen, i;
+		    char tmpName[2*MAX_HOST_SYM_NAME_LEN],
+				 tmpHostName[MAX_HOST_SYM_NAME_LEN],
+				 tmpDomainName[MAX_HOST_SYM_NAME_LEN];
+		    int hostLen, i;
+		    
+			memset(tmpHostName, 0, sizeof(tmpHostName));
+		    strncpy(tmpHostName, realDstHost->hostSymIpAddress, sizeof(MAX_HOST_SYM_NAME_LEN));
+		    for(i=0; (tmpHostName[i] != '\0') && (tmpHostName[i] != '.'); i++)
+		      ;
 
-		      strncpy(tmpHostName, realDstHost->hostSymIpAddress, sizeof(MAX_HOST_SYM_NAME_LEN));
-		      for(i=0; (tmpHostName[i] != '\0') && (tmpHostName[i] != '.'); i++)
-			;
-
-		      tmpHostName[i] = '\0';
-		      
-		      if(snprintf(tmpName, 2*MAX_HOST_SYM_NAME_LEN, "%s.%s",
-				  tmpHostName, &bootProto.bp_vend[idx]) < 0)
+		    tmpHostName[i] = '\0';
+		    		      
+		    strcpy(tmpDomainName, &bootProto.bp_vend[idx]);
+		    
+		    if(strcmp(tmpHostName, tmpDomainName) != 0) {
+		      if(snprintf(tmpName, sizeof(tmpName), "%s.%s",
+				  tmpHostName, tmpDomainName) < 0)
 			traceEvent(TRACE_ERROR, "Buffer overflow!");
 		      else {
 			hostLen = len;
 			len = strlen(tmpName);
 			strncpy(realDstHost->hostSymIpAddress, tmpName,
 				len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
-			/*
-			  realDstHost->fullDomainName = realDstHost->dotDomainName =
-			  &realDstHost->hostSymIpAddress[hostLen];
-			*/
+				/*
+				  realDstHost->fullDomainName = realDstHost->dotDomainName =
+				  &realDstHost->hostSymIpAddress[hostLen];
+				*/
 			fillDomainName(realDstHost);
 		      }
 		    }
 		  }
-
+		  
 		  idx += len;
 		  break;
 		case 19: /* IP Forwarding */
@@ -2027,7 +2031,16 @@ static void handleSession(const struct pcap_pkthdr *h,
       device[actualDeviceId].nullPkts++;
     }
 
-    /* ****************************** */
+    /* Save session flags */
+    if(theSession->initiatorIdx == srcHostIdx) {
+      if((theSession->lastRemote2InitiatorFlags & TH_SYN)
+	 && (tp->th_flags & (TH_SYN|TH_ACK)))
+	traceEvent(TRACE_INFO, "New session TCP !!!\n");
+
+      theSession->lastInitiator2RemoteFlags = tp->th_flags;
+    } else {
+      theSession->lastRemote2InitiatorFlags = tp->th_flags;
+    }
   } else if(sessionType == IPPROTO_UDP) {
     IPSession tmpSession;
 

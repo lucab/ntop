@@ -1290,6 +1290,7 @@ typedef struct ipSession {
   TrafficCounter lastFlags;         /* flags of the last TCP packet             */
   u_int32_t lastCSAck, lastSCAck;   /* they store the last ACK ids C->S/S->C    */
   u_int32_t lastCSFin, lastSCFin;   /* they store the last FIN ids C->S/S->C    */
+  u_char lastInitiator2RemoteFlags, lastRemote2InitiatorFlags; /* TCP flags  */
   u_short sessionState;             /* actual session state                     */
   u_char  napsterSession;           /* check if this is a napster session       */
 } IPSession;
