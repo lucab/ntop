@@ -221,6 +221,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #ifdef MULTITHREADED
       releaseMutex(&graphMutex);
 #endif
+      unlink(fileName);
       return; /* TODO: this has to be handled better */
     }
 
@@ -328,6 +329,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #ifdef MULTITHREADED
     releaseMutex(&graphMutex);
 #endif    
+    unlink(fileName);
     return; /* TODO: this has to be handled better */
   }
 
