@@ -610,11 +610,13 @@ void printHostsTraffic(int reportType,
 
   for(idx=1; idx<myGlobals.device[actualReportDeviceId].actualHashSize; idx++) {
     if((idx != myGlobals.otherHostEntryIdx)
-	&& ((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+       && ((el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && (broadcastHost(el) == 0)) {
       if((sortSendMode && (el->bytesSent > 0))
 	 || ((!sortSendMode) && (el->bytesRcvd > 0))) {
-	if((reportType == 1) && (el->hostNumIpAddress[0] == '\0')) continue;
+	if(((reportType == 1    /* STR_SORT_DATA_RECEIVED_IP */) 
+	    || (reportType == 6 /* STR_SORT_DATA_SENT_IP     */))
+	   && (el->hostNumIpAddress[0] == '\0')) continue;
 	tmpTable[numEntries++]=el;
       }
     }
@@ -639,15 +641,15 @@ void printHostsTraffic(int reportType,
     /* 
        reportType:
        
-       0 STR_SORT_DATA_RECEIVED_PROTOS
-       1 STR_SORT_DATA_RECEIVED_IP
-       2 STR_SORT_DATA_RECEIVED_THPT
+        0 STR_SORT_DATA_RECEIVED_PROTOS
+        1 STR_SORT_DATA_RECEIVED_IP
+        2 STR_SORT_DATA_RECEIVED_THPT
        3 STR_SORT_DATA_RCVD_HOST_TRAFFIC
        4 STR_SORT_DATA_SENT_HOST_TRAFFIC
-       5 STR_SORT_DATA_SENT_PROTOS
-       6 STR_SORT_DATA_SENT_IP
-       7 STR_SORT_DATA_SENT_THPT
-       8 TRAFFIC_STATS_HTML
+        5 STR_SORT_DATA_SENT_PROTOS
+        6 STR_SORT_DATA_SENT_IP
+        7 STR_SORT_DATA_SENT_THPT
+        8 TRAFFIC_STATS_HTML
     */
 
 #ifdef DEBUG
@@ -678,9 +680,11 @@ void printHostsTraffic(int reportType,
 	*/
 
 	strncpy(webHostName, makeHostLink(el, LONG_FORMAT, 0, 1), sizeof(webHostName));
-
-	if(sortSendMode) {
-	  if(reportType == 0) /* Protos */ {
+	 
+	switch(reportType) {
+	case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
+	case 5: /* STR_SORT_DATA_SENT_PROTOS */
+	  {
 	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -720,7 +724,11 @@ void printHostsTraffic(int reportType,
 			) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	    sendString(buf);
-	  } else if(reportType == 1) /* IP Protos */ {
+	  }
+	  break;
+	case 1: /* STR_SORT_DATA_RECEIVED_IP */
+	case 6: /* STR_SORT_DATA_SENT_IP */
+	  {
 	    TrafficCounter totalIPTraffic=0;
 
 	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
@@ -767,7 +775,11 @@ void printHostsTraffic(int reportType,
 			formatBytes(totalIPTraffic, 1)) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
-	  } else if(reportType == 2) /* Throughtput */ {
+	  }
+	  break;
+	case 2: /* STR_SORT_DATA_RECEIVED_THPT */
+	case 7: /* STR_SORT_DATA_SENT_THPT */
+	  {
 	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -784,127 +796,22 @@ void printHostsTraffic(int reportType,
 			el->peakSentPktThpt) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
-	  } else if(reportType == 3) /* Host Traffic Stats */ {
+	  }
+	  break;
+	case 3: /* STR_SORT_DATA_RCVD_HOST_TRAFFIC */
+	case 4: /* STR_SORT_DATA_SENT_HOST_TRAFFIC */
+	case 8: /* TRAFFIC_STATS_HTML */
+	  {
 	    if(snprintf(buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	    printHostThtpShort(el, 1);
 	  }
-
-	  sendString("</TR>\n");
-	} else {
-	  if(reportType == 0) /* Protos */ {
-	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			getRowColor(), webHostName,
-			formatBytes(el->bytesRcvd, 1), rcvdPercent, myGlobals.separator,
-			formatBytes(el->tcpRcvdLoc+el->tcpRcvdFromRem, 1),
-			formatBytes(el->udpRcvdLoc+el->udpRcvdFromRem, 1),
-			formatBytes(el->icmpRcvd, 1),
-			formatBytes(el->dlcRcvd, 1),
-			formatBytes(el->ipxRcvd, 1),
-			formatBytes(el->decnetRcvd, 1),
-			formatBytes(el->arp_rarpRcvd, 1),
-			formatBytes(el->appletalkRcvd, 1)
-			) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-	    sendString(buf);
-	    if(snprintf(buf, sizeof(buf),
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			formatBytes(el->ospfRcvd, 1),
-			formatBytes(el->netbiosRcvd, 1),
-			formatBytes(el->igmpRcvd, 1),
-			formatBytes(el->osiRcvd, 1),
-			formatBytes(el->qnxRcvd, 1),
-			formatBytes(el->stpRcvd, 1),
-			formatBytes(el->otherRcvd, 1)
-			) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-	    sendString(buf);
-	  } else if(reportType == 1) /* IP Protos */ {
-	    TrafficCounter totalIPTraffic=0;
-
-	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
-			getRowColor(), webHostName,
-			formatBytes(el->bytesRcvd, 1),
-			rcvdPercent, myGlobals.separator) < 0)
-	      traceEvent(TRACE_ERROR, "Buffer overflow!");
-	    sendString(buf);
-
-#ifdef ENABLE_NAPSTER
-	    if(el->napsterStats != NULL) {
-	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(el->napsterStats->bytesRcvd, 1)) < 0)
-		traceEvent(TRACE_ERROR, "Buffer overflow!");
-	      sendString(buf);
-	    } else {
-	      sendString("<TD "TD_BG" ALIGN=RIGHT>0</TD>");
-	    }
-#endif
-
-	    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	      totalIPTraffic += el->protoIPTrafficInfos[i].rcvdLoc+
-		el->protoIPTrafficInfos[i].rcvdFromRem;
-	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(el->protoIPTrafficInfos[i].rcvdLoc+
-				      el->protoIPTrafficInfos[i].rcvdFromRem, 1)) < 0)
-		traceEvent(TRACE_ERROR, "Buffer overflow!");
-	      sendString(buf);
-	    }
-
-	    /* Rounding may cause troubles */
-	    if(el->bytesRcvd > totalIPTraffic)
-	      totalIPTraffic = (el->tcpRcvdLoc
-				+el->tcpRcvdFromRem
-				+el->udpRcvdLoc
-				+el->udpRcvdFromRem
-				+el->icmpRcvd
-				+el->ospfRcvd
-				+el->igmpRcvd)-totalIPTraffic;
-	    else
-	      totalIPTraffic = 0;
-	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			formatBytes(totalIPTraffic, 1)) < 0)
-	      traceEvent(TRACE_ERROR, "Buffer overflow!");
-	    sendString(buf);
-	  } else if(reportType == 2) /* Throughtput */ {
-	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
-			getRowColor(), webHostName,
-			formatThroughput(el->actualRcvdThpt),
-			formatThroughput(el->averageRcvdThpt),
-			formatThroughput(el->peakRcvdThpt),
-			el->actualRcvdPktThpt,
-			el->averageRcvdPktThpt,
-			el->peakRcvdPktThpt) < 0)
-	      traceEvent(TRACE_ERROR, "Buffer overflow!");
-	    sendString(buf);
-	  } else if(reportType == 3) /* Host Traffic Stats */ {
-	    if(snprintf(buf, sizeof(buf), "<TR %s>%s",
-			getRowColor(), webHostName) < 0)
-	      traceEvent(TRACE_ERROR, "Buffer overflow!");
-	    sendString(buf);
-	    printHostThtpShort(el, 0);
-	  }
-
-	  sendString("</TR>\n");
+	  break;
 	}
 
+	sendString("</TR>\n");
+	
 	/* Avoid huge tables */
 	if(printedEntries++ > maxNumLines)
 	  break;
