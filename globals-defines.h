@@ -923,7 +923,7 @@
 /*
  * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)
  */
-#define CONST_OSFINGERPRINT_FILE            "etter.passive.os.fp"
+#define CONST_OSFINGERPRINT_FILE            "etter.finger.os"
 
 /*
  * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)

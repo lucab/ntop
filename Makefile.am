@@ -63,9 +63,9 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 
 SUBDIRS = myrrd . @PLUGINS@
 
-ETTER_PASSIVE_FILE = etter.passive.os.fp
+ETTER_PASSIVE_FILE = etter.finger.os
 ETTER_PASSIVE = $(ETTER_PASSIVE_FILE).gz
-ETTER_PASSIVE_DOWNLOAD_FROM = "http://cvs.sourceforge.net/viewcvs.py/ettercap/ettercap"
+ETTER_PASSIVE_DOWNLOAD_FROM = "http://cvs.sourceforge.net/viewcvs.py/ettercap/ettercap_ng/share"
 ETTER_PASSIVE_DOWNLOAD_PARMS = "rev=HEAD"
 
 
