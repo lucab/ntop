@@ -65,9 +65,15 @@ ntop - display top network users
 
 [<B>-z</B>|<B>--disable-sessions</B>]
 
+[<B>-A</B>|<B>--set-admin-password</B>
+
+<I>password</I>]
+
 [<B>-B</B>|<B>--filter-expression</B>
 
 <I>expression</I>]
+
+[<B>-C</B>|<B>--large-network</B>]
 
 [<B>-D</B>|<B>--domain</B>
 
@@ -91,8 +97,6 @@ ntop - display top network users
 
 <I>&lt;file&gt;</I>]
 
-[<B>-S</B>|<B>--store-mode</B>
-
 <I>&lt;number&gt;</I>]
 
 [<B>-U</B>|<B>--mapper</B>
@@ -104,6 +108,8 @@ ntop - display top network users
 [<B>--throughput-bar-chart</B>]
 
 [<B>--dynamic-purge-limits</B>]
+
+[<B>--reuse-rrd-graphics</B>]
 
 <P>
 Not available on micro-ntop:
@@ -273,6 +279,13 @@ key while
 is running.
 <P>
 
+2 -o --no-mac
+Specifies the user
+<B>ntop</B>
+
+should not trust MAC addresses but just IP addresses. This option is useful whenever ntop is started on an interface where MAC addresses cannot be really trusted (e.g. port/VLAN mirror).
+<P>
+
 2 -p --protocols
 It is used to specify the TCP/UDP protocols that
 <B>ntop</B>
@@ -315,13 +328,6 @@ username or a numeric user id. The group id used will be the primary group of
 the user specified.
 <P>
 
-2 -o --no-mac
-Specifies the user
-<B>ntop</B>
-
-should not trust MAC addresses but just IP addresses. This option is useful whenever ntop is started on an interface where MAC addresses cannot be really trusted (e.g. port/VLAN mirror).
-<P>
-
 2 -w --http-server
 <B>ntop</B>
 
@@ -362,6 +368,8 @@ This flag disables TCP session tracking. Use it for better performance or when y
 
 2 -A --set-admin-password
 
+-A and --set-admin-password (without a value) will prompt the user.
+You may set a specific value using --set-admin-password=value.  The = is REQUIRED!
 <P>
 
 2 -B --filter-expression
@@ -381,6 +389,10 @@ or dst host jake.unipi.it'. See the
 <B>tcpdump</B>
 
 man page for further information about this topic.
+<P>
+
+2 -C --large-network
+This flag is a hint for ntop: as the network to analyze will be large, ntop will build a more efficient hash and save memory for some features (e.g traffic distribution during the day) that take up quite some memory.
 <P>
 
 2 -D --domain
@@ -409,12 +421,9 @@ Use this flag to simplify application debug.  It does three things:
 3. (If available - glibc/gcc) Activates an automated backtrace on application errors.
 <P>
 
--L
+2 -L --use-syslog=facility
 Use this flag for using the syslog instead of stdout. Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
-<P>
-
---use-syslog=facility
-Use this flag for using the syslog instead of stdout. The parameter value indicates the facility (e.g. daemon, security) to be used for logging.  Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
+The (optional) parameter value indicates the facility (e.g. daemon, security) to be used for logging, using --use-syslog=facility. The = is REQUIRED!
 <P>
 
 2 -M --no-interface-merge
@@ -432,10 +441,6 @@ path is a directory you have to append a / to the string for this to work fine.
 
 2 -P --db-file-path
 This allows to specify where db-files are searched or created (default &quot;.&quot;). In addition DBPATH/html is added to the searchlist for the WEB-files
-<P>
-
-2 -S --store-mode
-Use this flag for telling ntop to save information about host traffic on shutdown. Valid values are: 0 = don't store hosts, 1 = store all hosts, 2 = store only local hosts. This flag allows ntop not to loose traffic stats across multiple ntop sessions. Please note that information about TCP session is (obviously) lost.
 <P>
 
 2 -U --mapper
@@ -478,6 +483,9 @@ to 1/3 of the hash size or 512 hosts (whichever is smaller) per cycle.  This swi
 ntop to dynamically adjust the limit so that the purge takes between 0.5 and 5.0 seconds
 (but the minimum dynamic limit is 64 per cycle).  These values may be adjusted via compile
 time constants.
+<P>
+It --reuse-rrd-graphics
+Enable the reuse of rrd graphics if appropriate (no rrd updates in the interim).  The default, the flag not set, is that the graphics are recreated for each request.
 <P>
 
 --ignore-sigpipe                                    
@@ -593,6 +601,6 @@ Tool locations are current as of February 2002 - please send email to report new
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 03:06:01 GMT, November 09, 2002
+Time: 18:06:31 GMT, November 17, 2002
 </BODY>
 </HTML>

@@ -61,6 +61,7 @@ ntop \- display top network users
 .RB [ -V | --version]
 .RB [ --throughput-bar-chart ]
 .RB [ --dynamic-purge-limits ]
+.RB [ --reuse-rrd-graphics ]
 
 Not available on micro-ntop:
 
@@ -176,6 +177,11 @@ key while
 .B ntop
 is running.
 
+.It2 -o --no-mac
+Specifies the user
+.B ntop
+should not trust MAC addresses but just IP addresses. This option is useful whenever ntop is started on an interface where MAC addresses cannot be really trusted (e.g. port/VLAN mirror).
+
 .It2 -p --protocols
 It is used to specify the TCP/UDP protocols that
 .B ntop
@@ -209,11 +215,6 @@ should run as after it initializes. The value specified may be either a
 username or a numeric user id. The group id used will be the primary group of
 the user specified.
 
-.It2 -o --no-mac
-Specifies the user
-.B ntop
-should not trust MAC addresses but just IP addresses. This option is useful whenever ntop is started on an interface where MAC addresses cannot be really trusted (e.g. port/VLAN mirror).
-
 .It2 -w --http-server
 .B ntop
 sports an embedded web server so that users can attach their web browsers to the specified port and browse 
@@ -245,6 +246,8 @@ This flag disables TCP session tracking. Use it for better performance or when y
 
 .It2 -A --set-admin-password
 . This flag is used to start ntop, set the admin password and quit. It is quite useful for installers that may need to set the password for the admin user.
+-A and --set-admin-password (without a value) will prompt the user.
+You may set a specific value using --set-admin-password=value.  The = is REQUIRED!
 
 .It2 -B --filter-expression
 .B ntop
@@ -283,11 +286,9 @@ Use this flag to simplify application debug.  It does three things:
 2. Displays mutex values on the configuration (info.html) page.
 3. (If available - glibc/gcc) Activates an automated backtrace on application errors.
 
-.It -L
+.It2 -L --use-syslog=facility
 Use this flag for using the syslog instead of stdout. Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
-
-.It --use-syslog=facility
-Use this flag for using the syslog instead of stdout. The parameter value indicates the facility (e.g. daemon, security) to be used for logging.  Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
+The (optional) parameter value indicates the facility (e.g. daemon, security) to be used for logging, using --use-syslog=facility. The = is REQUIRED!
 
 .It2 -M --no-interface-merge
 Forces ntop not to merge network interfaces together. This means that ntop will collect statistics for each interface and will not merge data together.
@@ -333,6 +334,9 @@ to 1/3 of the hash size or 512 hosts (whichever is smaller) per cycle.  This swi
 ntop to dynamically adjust the limit so that the purge takes between 0.5 and 5.0 seconds
 (but the minimum dynamic limit is 64 per cycle).  These values may be adjusted via compile
 time constants.
+
+It --reuse-rrd-graphics
+Enable the reuse of rrd graphics if appropriate (no rrd updates in the interim).  The default, the flag not set, is that the graphics are recreated for each request.
 
 .It --ignore-sigpipe                                    
 Enable a handler for SIGPIPE errors. This usually happens only under debug (gdb).
