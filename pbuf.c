@@ -2435,6 +2435,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     traceEvent(TRACE_WARNING, fmt, packetDataLength,
 	       srcHost->hostSymIpAddress, sport,
 	       dstHost->hostSymIpAddress, dport);
+    if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
   }
 
   return(theSession);
@@ -3668,6 +3669,7 @@ static void processIpPkt(const u_char *bp,
       incrementUsageCounter(&dstHost->securityHostPkts.icmpFragmentRcvd, srcHostIdx);
       traceEvent(TRACE_WARNING, fmt,
 		 srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+      if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
     }
 
     /* ************************************************************* */
@@ -3754,7 +3756,6 @@ static void processIpPkt(const u_char *bp,
 	  /* Simulation of rejected TCP connection */
 	  incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnSent, dstHostIdx);
 	  incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnRcvd, srcHostIdx);
-	  if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  break;
 
 	case IPPROTO_UDP:
@@ -3763,7 +3764,6 @@ static void processIpPkt(const u_char *bp,
 		     dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
 	  incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx);
 	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx);
-	  if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
 	  break;
 	}
 
@@ -3778,6 +3778,11 @@ static void processIpPkt(const u_char *bp,
 	break;
  
       case ICMP_UNREACH_PROTOCOL: /* Protocol Unreachable */
+	traceEvent(TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
+		   "Host [%s] received a ICMP protocol Unreachable from host [%s]"
+		   " (Firewalking scan attempt?)",
+		   dstHost->hostSymIpAddress, 
+		   srcHost->hostSymIpAddress);
 	incrementUsageCounter(&srcHost->securityHostPkts.icmpProtocolUnreachSent, dstHostIdx);
 	incrementUsageCounter(&dstHost->securityHostPkts.icmpProtocolUnreachRcvd, srcHostIdx);
 	break;
@@ -3792,6 +3797,7 @@ static void processIpPkt(const u_char *bp,
 	incrementUsageCounter(&dstHost->securityHostPkts.icmpAdminProhibitedRcvd, srcHostIdx);
 	break;
       }
+      if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
     }
     break;
 

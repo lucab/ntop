@@ -1999,6 +1999,7 @@ void printHostTrafficStats(HostTraffic *el) {
 			100*((float)SD(el->otherReceived, totalReceived)));
 /*#endif */
 
+#ifdef HAVE_GDCHART
   if(((el->tcpSentLocally+el->tcpSentRemotely+
        el->udpSentLocally+el->udpSentRemotely+
        el->icmpSent+el->ospfSent+el->igmpSent+el->stpSent
@@ -2022,6 +2023,7 @@ void printHostTrafficStats(HostTraffic *el) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
+#endif
 
   if(el->napsterStats == NULL)
     a =0, b = 0;
