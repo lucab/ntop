@@ -1,0 +1,16 @@
+ntopd and ntop.spec are by Pablo Ruiz Garcia 2002 (pruiz@ip6seguridad.com).
+
+The files in rpmbuildfiles-2.0.99RC2-Strauss.tgz are those 
+used to create the RPMs (2.0.99RC2) posted at SourceForge 
+in June 2002.
+
+The files which were used to create the 2.0-1BETA packages found at 
+Red Hat Contib at Bero.Org (by hal@foobox.net) are not available in this
+directory.
+
+Nor are the files used by C C Magnus Gustavsson <http://magnus.gustavsson.se/>
+to create an interim build of the 10May2002 snapshot, also found (ntop-020510-1.src.rpm)
+at rpmfind.net available here.  
+
+If you need either of those files, you'll have to grab the rpm and extract them.
+
