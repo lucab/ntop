@@ -170,6 +170,8 @@ void loadPrefs(int argc, char* argv[]) {
   bool userSpecified = FALSE;
 #endif
 
+  memset(&buf, 0, sizeof(buf));
+
   traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
   opt_index = 0, optind = 0;
   while ((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
@@ -234,6 +236,10 @@ void loadPrefs(int argc, char* argv[]) {
   /* Read preferences and store them in memory */
   key = gdbm_firstkey(myGlobals.prefsFile);
   while (key.dptr) {
+
+    /* Handle key w/o trailing \0 so valgrind is happy */
+    zeroPadMallocString(key.dsize, key.dptr);
+
     if (fetchPrefsValue(key.dptr, buf, sizeof (buf)) == 0) {
       processNtopPref(key.dptr, buf, FALSE, &myGlobals.runningPref);
     }

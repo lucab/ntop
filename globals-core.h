@@ -888,6 +888,18 @@ int getdomainname(char *name, size_t len);
          == htonl (0xfe800000))
 #endif
 
+/* **********************************************************
+   Fixup for gdbm (which doesn't require zero termed strings
+   ********************************************************** */
+#define zeroPadMallocString(sz, ptr) { \
+    if(ptr[sz-1] != '\0') { \
+      char *_zeropadmallocstringtemp = ptr; \
+      ptr = malloc(sz + 1); \
+      strncpy(ptr, _zeropadmallocstringtemp, sz); \
+      ptr[sz] = '\0'; \
+      free(_zeropadmallocstringtemp); \
+    } \
+}
 
 /* **********************************************************
    Used in all the prints flowing from printNtopConfigInfo...
