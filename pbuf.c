@@ -3578,7 +3578,7 @@ void processPacket(u_char *_deviceId,
   FILE * fd;
   unsigned char ipxBuffer[128];
 
-#ifndef DEBUG
+#ifdef DEBUG
   static long numPkt=0; traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
 #endif
 
