@@ -3826,7 +3826,7 @@ int setSpecifiedUser() {
   }
 
   if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
-#ifdef DARWIN
+#if defined(DARWIN) || defined(FREEBSD)
     unsigned long p;
 
     /*
@@ -3841,6 +3841,9 @@ int setSpecifiedUser() {
     p += (unsigned long)rrd_create;
     p += (unsigned long)rrd_last;
     p += (unsigned long)rrd_update;
+    p += (unsigned long)rrd_test_error;
+    p += (unsigned long)rrd_get_error;
+    p += (unsigned long)rrd_clear_error;
     return(p);
 #else
     return(1);
