@@ -838,9 +838,8 @@ void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
       }
     }
 
-  if(allRight)
-    traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed",
-	       actualDeviceId, hostIdx);
+  if(!allRight)
+    traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed",  actualDeviceId, hostIdx);
 }
 
 /* ************************************ */
