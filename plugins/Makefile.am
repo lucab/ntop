@@ -87,49 +87,49 @@ libnfsPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 
 .libs/libicmpPlugin.so@SO_VERSION_PATCH@:
-	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libicmpPlugin.so@SO_VERSION_PATCH@ icmpPlugin.o
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libicmpPlugin.so@SO_VERSION_PATCH@ icmpPlugin.o
 
 icmpPlugin.so$(EXEEXT): .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libicmpPlugin.so icmpPlugin.so
 
 .libs/librrdPlugin.so@SO_VERSION_PATCH@:
-	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
 
 rrdPlugin.so$(EXEEXT): .libs/librrdPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/librrdPlugin.so rrdPlugin.so
 
 .libs/libpdaPlugin.so@SO_VERSION_PATCH@:
-	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o
 
 pdaPlugin.so$(EXEEXT): .libs/libpdaPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libpdaPlugin.so pdaPlugin.so
 
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
-	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
 
 sflowPlugin.so$(EXEEXT): .libs/libsflowPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libsflowPlugin.so sflowPlugin.so
 
 .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@:
-	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@ lastSeenPlugin.o
 
 lastSeenPlugin.so$(EXEEXT): .libs/liblastSeenPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/liblastSeenPlugin.so lastSeenPlugin.so
 
 .libs/libnfsPlugin.so@SO_VERSION_PATCH@:
-	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libnfsPlugin.so@SO_VERSION_PATCH@ nfsPlugin.o
 
 netflowPlugin.so$(EXEEXT): .libs/libnetflowPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libnetflowPlugin.so netflowPlugin.so
 
 .libs/libnetflowPlugin.so@SO_VERSION_PATCH@:
-	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libnetflowPlugin.so@SO_VERSION_PATCH@ netflowPlugin.o
+	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/libnetflowPlugin.so@SO_VERSION_PATCH@ netflowPlugin.o
 
 nfsPlugin.so$(EXEEXT): .libs/libnfsPlugin.so@SO_VERSION_PATCH@
 	@$(LN_S) .libs/libnfsPlugin.so nfsPlugin.so
 
 #.libs/librmonPlugin.so@SO_VERSION_PATCH@:
-#	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
+#	$(CC) @MAKE_SHARED_LIBRARY_PARM@ -o .libs/librmonPlugin.so@SO_VERSION_PATCH@ rmonPlugin.o
 
 #rmonPlugin.so$(EXEEXT): .libs/librmonPlugin.so@SO_VERSION_PATCH@
 #	@$(LN_S) .libs/librmonPlugin.so rmonPlugin.so
