@@ -771,7 +771,10 @@ void resetStats(int deviceId) {
   }
 
   myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
+  myGlobals.broadcastEntry->hostSerial.serialType = SERIAL_IPV4;
+  myGlobals.broadcastEntry->hostSerial.value.ipAddress.s_addr = -1;
   myGlobals.broadcastEntry->next = NULL;
+  FD_SET(FLAG_BROADCAST_HOST, &(myGlobals.broadcastEntry->flags));
 
   if(myGlobals.otherHostEntry != myGlobals.broadcastEntry) {
     myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;

@@ -2544,7 +2544,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       sendString("<TR><TH "TH_BG">");
       for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
 	printUnknownProto(el->unknownProtoSent[i]);
-      sendString("&nbsp;</TH></TR>");
+      sendString("&nbsp;</TH>");
     }
 
     if(el->unknownProtoRcvd == NULL) {
@@ -2734,7 +2734,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
 
   if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
     memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
-    return(0);
+    return(el);
   } else if(cmpSerial(&theSerial, &myGlobals.otherHostEntry->hostSerial)) {
     memcpy(el, myGlobals.otherHostEntry, sizeof(HostTraffic));
     return(0);

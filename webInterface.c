@@ -345,7 +345,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     return("&nbsp;");
 
   if((broadcastHost(el) && (el->hostIpAddress.s_addr == 0))
-     || (el == myGlobals.broadcastEntry)
+     || (cmpSerial(&el->hostSerial, &myGlobals.broadcastEntry->hostSerial))
      || ((el->hostIpAddress.s_addr == 0) && (el->ethAddressString[0] == '\0'))) {
     if(mode == FLAG_HOSTLINK_HTML_FORMAT) 
       return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");

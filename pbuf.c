@@ -182,9 +182,9 @@ static void addContactedPeers(HostTraffic *sender, HostTraffic *receiver,
     return;
   }
 
-  if((!broadcastHost(sender))
-     && (sender != myGlobals.otherHostEntry)
-     && !broadcastHost(receiver)
+  if(/* (!broadcastHost(sender)) && */
+     (sender != myGlobals.otherHostEntry)
+     /* && (!broadcastHost(receiver)) */
      && (receiver != myGlobals.otherHostEntry)) {
     sender->totContactedSentPeers += incrementUsageCounter(&sender->contactedSentPeers,
 							   receiver, actualDeviceId);
@@ -1269,7 +1269,7 @@ static void processIpPkt(const u_char *bp,
 				ntohs(ip.ip_len) - hlen, actualDeviceId);	
       }
 
-      if((sport > 0) && (dport > 0)) {
+      if((sport > 0) || (dport > 0)) {
 	u_short nonFullyRemoteSession = 1;
 
 	updateInterfacePorts(actualDeviceId, sport, dport, length);
