@@ -1151,6 +1151,7 @@
 #define CONST_LEFTMENU_NOJS_HTML            "leftmenu-nojs.html"
 #define CONST_HOSTS_LOCAL_FINGERPRINT_HTML  "localHostsFingerprint.html"
 #define CONST_HOSTS_LOCAL_CHARACT_HTML      "localHostsCharacterization.html"
+#define CONST_HOSTS_REMOTE_FINGERPRINT_HTML "remoteHostsFingerprint.html"
 #define CONST_LOCAL_ROUTERS_LIST_HTML       "localRoutersList.html"
 #define CONST_MODIFY_URL                    "modifyURL"
 #define CONST_MODIFY_USERS                  "modifyUsers"

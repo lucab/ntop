@@ -2017,6 +2017,10 @@ static int returnHTTPPage(char* pageName,
 			  strlen(CONST_HOSTS_LOCAL_FINGERPRINT_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHostsStats(FALSE);
+    } else if(strncasecmp(pageName, CONST_HOSTS_REMOTE_FINGERPRINT_HTML, 
+			  strlen(CONST_HOSTS_REMOTE_FINGERPRINT_HTML)) == 0) {
+      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      printHostsStats(TRUE);
     } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_CHARACT_HTML, 
 			  strlen(CONST_HOSTS_LOCAL_CHARACT_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);

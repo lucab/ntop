@@ -4417,6 +4417,8 @@ void printHostsCharacterization(void) {
   HostTraffic *el;
   char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], headerSent = 0;
 
+  printHTMLheader("Local Hosts Characterization", NULL, 0);
+
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if((broadcastHost(el) == 0) /* No broadcast addresses please */
@@ -4438,7 +4440,6 @@ void printHostsCharacterization(void) {
 	 || (isHostHealthy(el) != 0)
 	 ) {
 	if(!headerSent) {
-	  printHTMLheader("Hosts Characterization", NULL, 0);
 
 	  sendString("<center>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG"><TH "TH_BG">Host</TH>"
 		     "<TH>Unhealthy<br>Host</TH>"
@@ -4479,7 +4480,9 @@ void printHostsCharacterization(void) {
     }
   }
 
-  if(headerSent) {
+  if(!headerSent) {
+    printNoDataYet();
+  } else {
     sendString("<TR><TH>Total</TH>");
     if(unhealthy > 0) {
       if(snprintf(buf, sizeof(buf),
@@ -4561,7 +4564,7 @@ static printFingerprintCounts(int countScanned, int countWithoutFP, int countBro
 
   sendString("<p><hr><p>\n");
 
-  printSectionTitle("Host Fingerprint Statistics");
+  printSectionTitle("Statistics");
 
   if(snprintf(buf, sizeof(buf), 
               "<center>\n<table border=1 "TABLE_DEFAULTS">\n"
@@ -4657,7 +4660,7 @@ static printFingerprintCounts(int countScanned, int countWithoutFP, int countBro
                "of entries not in the signature file, " CONST_OSFINGERPRINT_FILE "(.gz) - "
                "and there's no way to tell."
                "\n<br>That said, if you would like to see a page with ALL host fingerprints, "
-               "local and remote, click <a href=\"" CONST_HOSTS_LOCAL_FINGERPRINT_HTML 
+               "local and remote, click <a href=\"" CONST_HOSTS_REMOTE_FINGERPRINT_HTML 
                "\" title=\"All host fingerprints page\">here</a></td></tr>\n");
 
   sendString("</table></center>\n");
@@ -4685,7 +4688,12 @@ void printHostsStats(int fingerprintRemote) {
   memset(theOSs, 0, sizeof(theOSs));
   memset(unknownFPs, 0, sizeof(unknownFPs));
 
-  printHTMLheader("Host Fingerprint: OS Summary", NULL, BITFLAG_HTML_NO_REFRESH);
+  if(fingerprintRemote == 1)
+    printHTMLheader("All Host Fingerprints (Local+Remote)", NULL, BITFLAG_HTML_NO_REFRESH);
+  else
+    printHTMLheader("Local Host Fingerprints", NULL, BITFLAG_HTML_NO_REFRESH);
+
+  printSectionTitle("OS Summary");
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
     printFlagedWarning("<I>Host statistics (OS fingerprinting) are not available for virtual interfaces</I>");
