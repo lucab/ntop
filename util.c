@@ -1043,6 +1043,7 @@ int createThread(pthread_t *threadId,
 int killThread(pthread_t *threadId) {
   int rc;
   rc = pthread_detach(*threadId);
+  traceEvent(CONST_TRACE_NOISY, "killThread(0x%x), rc = %s(%d)", threadId, strerror(rc), rc);
   myGlobals.numThreads--;
   return rc;
 }
