@@ -1483,9 +1483,8 @@ static int returnHTTPPage(char* pageName,
 #endif
     returnHTTPpageNotFound();
     printTrailer=0;
-  } 
+  } else {
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
-  else {
     int childpid;
 
     if((!myGlobals.debugMode) 
@@ -1573,6 +1572,7 @@ static int returnHTTPPage(char* pageName,
 	}
       }
     }
+#endif
 
 #if !defined(WIN32) && defined(PARM_USE_CGI)
   if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
@@ -2087,7 +2087,6 @@ static int returnHTTPPage(char* pageName,
 	errorCode = FLAG_HTTP_INVALID_PAGE;
       }
   }
-#endif
 
   if(domainNameParm != NULL)
     free(domainNameParm);
