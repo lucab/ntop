@@ -225,9 +225,9 @@ void resetDevice(int devIdx) {
   ptr = calloc(HASH_INITIAL_SIZE, sizeof(HostTraffic*));
   myGlobals.device[devIdx].hash_hostTraffic = ptr;
 
-  myGlobals.hashListSize = HASH_LIST_SIZE;
   len = sizeof(struct HashList*)*myGlobals.hashListSize;
-  /* printf("sizeof(u_int16_t)=%d /size=%u/len=%d\n", sizeof(u_int16_t), myGlobals.hashListSize, len); */
+  /* printf("sizeof(u_int16_t)=%d /size=%u/len=%d\n",
+     sizeof(u_int16_t), myGlobals.hashListSize, len); */
   myGlobals.device[devIdx].hashList = (HashList**)malloc(len);
   memset(myGlobals.device[devIdx].hashList, 0, len);
   myGlobals.device[devIdx].insertIdx = 0;
@@ -346,6 +346,7 @@ static void allocateOtherHosts() {
 void initCounters(void) {
   int len, i;
 
+  myGlobals.hashListSize = HASH_LIST_SIZE;
   myGlobals.numPurgedHosts = myGlobals.numTerminatedSessions = 0;
   myGlobals.maximumHostsToPurgePerCycle = NTOP_DEFAULT_MAXIMUM_IDLE_PURGE;
 
