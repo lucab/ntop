@@ -2989,11 +2989,12 @@ static void printHostDetailedInfo(HostTraffic *el) {
   }
 
   snprintf(buf, sizeof(buf), "<TR %s><TH ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>"
-	  "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s</TD></TR>\n",
+	  "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[%s]</TD></TR>\n",
 	   getRowColor(),
 	   "First/Last&nbsp;Seen",
            formatTime(&(el->firstSeen), 1),
-           formatTime(&(el->lastSeen), 1));
+           formatTime(&(el->lastSeen), 1),
+	   formatSeconds(el->lastSeen - el->firstSeen));
   sendString(buf);
 
   if(el->fullDomainName && (el->fullDomainName[0] != '\0')) {
@@ -5603,14 +5604,10 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
 
   memset(theMsgs, 0, sizeof(theMsgs));
 
-  printf("0) EVENT !!!! \n");
-
   if(eventFile == NULL) {
     if(theHost == NULL) printNoDataYet();
     return; /* No rules are currently active */
   }
-
-  printf("EVENT !!!!\n");
 
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "printHostEvent");
