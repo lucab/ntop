@@ -775,612 +775,10 @@ static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
 }
 #endif
 
-void printNtopConfigInfo(int textPrintFlag) {
+/* ******************************** */
+
+void printNtopConfigHInfo(int textPrintFlag) {
   char buf[BUF_SIZE];
-  int i;
-  int bufLength, bufPosition, bufUsed;
-
-#ifdef HAVE_PCAP_VERSION
-  extern char pcap_version[];
-#endif /* HAVE_PCAP_VERSION */
-
-  if (textPrintFlag != TRUE) {
-      printHTMLheader("Current ntop Configuration", 0);
-  }
-  sendString(texthtml("\n", 
-                      "<CENTER>\n<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n"
-                      "<tr><th colspan=\"2\"" TH_BG ">Basic information</tr>\n"));
-  printFeatureConfigInfo(textPrintFlag, "ntop version", version);
-  printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
-  printFeatureConfigInfo(textPrintFlag, "OS", osName);
-
-  /* *************************** */
-
-  sendString(texthtml("\n\nCommand line\n\n", 
-                      "<tr><th colspan=\"2\">Command line</tr>\n"));
-
-  sendString(texthtml("Started as....",
-                      "<TR><TH "TH_BG" ALIGN=left>Started as</TH><TD "TD_BG" ALIGN=right>"));
-  for(i=0; i<myGlobals.ntop_argc; i++) {
-    sendString(myGlobals.ntop_argv[i]);
-    sendString(texthtml("\n            ", " "));
-    /* Note above needs to be a normal space for html case so that web browser can
-       break up the lines as it needs to... */
-  }
-  sendString(texthtml("\n\nCommand line parameters are:\n\n", "</TD></TR>\n"));
-
-  printParameterConfigInfo(textPrintFlag, "-a | --access-log-path",
-                           myGlobals.accessLogPath,
-                           NTOP_DEFAULT_ACCESS_LOG_PATH);
-
-  if (myGlobals.enableDBsupport == 1) {
-      if (snprintf(buf, sizeof(buf), "%sActive - server at %s:%d",
-                   myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "",
-                   myGlobals.sqlHostName,
-                   myGlobals.sqlPortNumber) < 0)
-          BufferTooShort();
-  } else {
-      if (snprintf(buf, sizeof(buf), "%sInactive",
-                   myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "") < 0)
-          BufferTooShort();
-  }
-  printFeatureConfigInfo(textPrintFlag, "-b | --sql-host", buf);
-
-  printParameterConfigInfo(textPrintFlag, "-c | --sticky-hosts",
-                           myGlobals.stickyHosts == 1 ? "Yes" : "No",
-                           NTOP_DEFAULT_STICKY_HOSTS == 1 ? "Yes" : "No");
-
-#ifndef WIN32
-  printParameterConfigInfo(textPrintFlag, "-d | --daemon",
-                           myGlobals.daemonMode == 1 ? "Yes" : "No",
-                           strcmp(myGlobals.program_name, "ntopd") == 0 ? "Yes" : NTOP_DEFAULT_DAEMON_MODE);
-#endif
-
-#ifndef MICRO_NTOP
-  if(snprintf(buf, sizeof(buf), "%s%d",
-                                myGlobals.maxNumLines == MAX_NUM_TABLE_ROWS ? REPORT_ITS_DEFAULT : "",
-                                myGlobals.maxNumLines) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "-e | --max-table-rows", buf);
-#endif
-
-  printParameterConfigInfo(textPrintFlag, "-f | --traffic-dump-file",
-                           myGlobals.rFileName,
-                           NTOP_DEFAULT_TRAFFICDUMP_FILENAME);
-
-  printParameterConfigInfo(textPrintFlag, "-i | --interface" REPORT_ITS_EFFECTIVE,
-                           myGlobals.devices,
-                           NTOP_DEFAULT_DEVICES);
-
-  printParameterConfigInfo(textPrintFlag, "-j | --border-sniffer-mode",
-                           myGlobals.borderSnifferMode == 1 ? "Active" : "Inactive",
-                           NTOP_DEFAULT_BORDER_SNIFFER_MODE == 1 ? "Active" : "Inactive");
-
-  printParameterConfigInfo(textPrintFlag, "-k | --filter-expression-in-extra-frame",
-                           myGlobals.filterExpressionInExtraFrame == 1 ? "Yes" : "No",
-                           NTOP_DEFAULT_FILTER_IN_FRAME == 1 ? "Yes" : "No");
-
-  if (myGlobals.pcapLog == NULL) {
-      printParameterConfigInfo(textPrintFlag, "-l | --pcap-log",
-                               myGlobals.pcapLog,
-                               NTOP_DEFAULT_PCAP_LOG_FILENAME);
-  } else {
-      if (snprintf(buf, sizeof(buf), "%s/%s.&lt;device&gt;.pcap",
-                                     myGlobals.pcapLogBasePath,
-                                     myGlobals.pcapLog) < 0)
-          BufferTooShort();
-      printParameterConfigInfo(textPrintFlag, "-l | --pcap-log" REPORT_ITS_EFFECTIVE,
-                               buf,
-                               NTOP_DEFAULT_PCAP_LOG_FILENAME);
-  }
-
-  printParameterConfigInfo(textPrintFlag, "-m | --local-subnets" REPORT_ITS_EFFECTIVE,
-                           myGlobals.localAddresses,
-                           NTOP_DEFAULT_LOCAL_SUBNETS);
-
-  printParameterConfigInfo(textPrintFlag, "-n | --numeric-ip-addresses",
-                           myGlobals.numericFlag > 0 ? "Yes" : "No",
-                           NTOP_DEFAULT_NUMERIC_IP_ADDRESSES > 0 ? "Yes" : "No");
-
-  if (myGlobals.protoSpecs == NULL) {
-      printFeatureConfigInfo(textPrintFlag, "-p | --protocols", REPORT_ITS_DEFAULT "internal list");
-  } else {
-      printFeatureConfigInfo(textPrintFlag, "-p | --protocols", myGlobals.protoSpecs);
-  }
-
-  printParameterConfigInfo(textPrintFlag, "-q | --create-suspicious-packets",
-                           myGlobals.enableSuspiciousPacketDump == 1 ? "Enabled" : "Disabled",
-                           NTOP_DEFAULT_SUSPICIOUS_PKT_DUMP == 1 ? "Enabled" : "Disabled");
-
-  if(snprintf(buf, sizeof(buf), "%s%d",
-                                myGlobals.refreshRate == REFRESH_TIME ? REPORT_ITS_DEFAULT : "",
-                                myGlobals.refreshRate) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "-r | --refresh-time", buf);
-
-  printParameterConfigInfo(textPrintFlag, "-s | --no-promiscuous",
-                           myGlobals.disablePromiscuousMode == 1 ? "Yes" : "No",
-                           NTOP_DEFAULT_DISABLE_PROMISCUOUS == 1 ? "Yes" : "No");
-
-  if(snprintf(buf, sizeof(buf), "%s%d",
-                                 myGlobals.traceLevel == DEFAULT_TRACE_LEVEL ? REPORT_ITS_DEFAULT : "",
-                                 myGlobals.traceLevel) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "-t | --trace-level", buf);
-
-  if(snprintf(buf, sizeof(buf), "%s (uid=%d, gid=%d)",
-                                 myGlobals.effectiveUserName,
-                                 myGlobals.userId,
-                                 myGlobals.groupId) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "-u | --user", buf);
-
-#ifdef HAVE_MYSQL
-  if (myGlobals.enableDBsupport == 1) {
-      if (snprintf(buf, sizeof(buf), "%sActive - server %s,%sdatabase %s,%suser %s",
-                   myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "",
-                   myGlobals.mySQLhostName,
-                   (textPrintFlag == TRUE ? " " : "<br>"),
-                   myGlobals.mySQLdatabase,
-                   (textPrintFlag == TRUE ? " " : "<br>"),
-                   myGlobals.mySQLuser) < 0)
-          BufferTooShort();
-  } else {
-      if (snprintf(buf, sizeof(buf), "%sInactive",
-                   myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "") < 0)
-          BufferTooShort();
-  }
-  printFeatureConfigInfo(textPrintFlag, "-v | --mysql-host", buf);
-#endif
-
-  if (myGlobals.webPort == 0) {
-      strcpy(buf, "Inactive");
-  } else if (myGlobals.webAddr != 0) {
-      if(snprintf(buf, sizeof(buf),
-                  "%sActive, address %s, port %d",
-                  ( (myGlobals.webAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.webPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
-                  myGlobals.webAddr,
-                  myGlobals.webPort) < 0)
-          BufferTooShort();
-  } else {
-      if(snprintf(buf, sizeof(buf),
-                  "%sActive, all interfaces, port %d",
-                  ( (myGlobals.webAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.webPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
-                  myGlobals.webPort) < 0)
-          BufferTooShort();
-  }
-  printFeatureConfigInfo(textPrintFlag, "-w | --http-server", buf);
-
-  printParameterConfigInfo(textPrintFlag, "-B | --filter-expression",
-                           ((myGlobals.currentFilterExpression == NULL) ||
-                            (myGlobals.currentFilterExpression[0] == '\0')) ? "none" :
-                                     myGlobals.currentFilterExpression,
-                           NTOP_DEFAULT_FILTER_EXPRESSION == NULL ? "none" :
-                                     NTOP_DEFAULT_FILTER_EXPRESSION);
-
-  printParameterConfigInfo(textPrintFlag, "-D | --domain",
-                           ((myGlobals.domainName == NULL) ||
-                            (myGlobals.domainName[0] == '\0')) ? "none" :
-                                     myGlobals.domainName,
-                           NTOP_DEFAULT_DOMAIN_NAME == NULL ? "none" :
-                                     NTOP_DEFAULT_DOMAIN_NAME);
-
-  printParameterConfigInfo(textPrintFlag, "-E | --enable-external-tools",
-                            myGlobals.enableExternalTools == 1 ? "Yes" : "No",
-                           NTOP_DEFAULT_EXTERNAL_TOOLS_ENABLE == 1 ? "Yes" : "No");
-
-  printParameterConfigInfo(textPrintFlag, "-F | --flow-spec",
-                           myGlobals.flowSpecs == NULL ? "none" : myGlobals.flowSpecs,
-                           NTOP_DEFAULT_FLOW_SPECS == NULL ? "none" : NTOP_DEFAULT_FLOW_SPECS);
-
-  printParameterConfigInfo(textPrintFlag, "-K | --enable-debug",
-                            myGlobals.debugMode == 1 ? "Yes" : "No",
-                            NTOP_DEFAULT_DEBUG_MODE == 1 ? "Yes" : "No");
-
-#ifndef WIN32
-  if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
-      printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "No");
-  } else {
-      for (i=0; facilityNames[i].c_name != NULL; i++) {
-          if (facilityNames[i].c_val == myGlobals.useSyslog) {
-              printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", facilityNames[i].c_name);
-              break;
-          }
-      }
-      if (facilityNames[i].c_name == NULL) {
-          printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "**UNKNOWN**");
-      }
-  }
-#endif
-
-  printParameterConfigInfo(textPrintFlag, "-M | --no-interface-merge" REPORT_ITS_EFFECTIVE,
-                           myGlobals.mergeInterfaces == 1 ? "(Merging Interfaces) Yes" :
-                                                            "(parameter -M set, Interfaces separate) No",
-                           NTOP_DEFAULT_MERGE_INTERFACES == 1 ? "(Merging Interfaces) Yes" : "");
-
-  printParameterConfigInfo(textPrintFlag, "-N | --no-nmap" REPORT_ITS_EFFECTIVE,
-                           myGlobals.isNmapPresent == 1 ? "Yes (nmap will be used)" : "No (nmap will not be used)",
-                           NTOP_DEFAULT_NMAP_PRESENT == 1 ? "Yes (nmap will be used)" : "");
-
-
-  printParameterConfigInfo(textPrintFlag, "-O | --pcap-file-path",
-                           myGlobals.pcapLogBasePath,
-                           DBFILE_DIR);
-
-  printParameterConfigInfo(textPrintFlag, "-P | --db-file-path",
-                           myGlobals.dbPath,
-                           DBFILE_DIR);
-
-  if (snprintf(buf, sizeof(buf), "%s%d (%s)",
-                   myGlobals.usePersistentStorage == NTOP_DEFAULT_PERSISTENT_STORAGE ? REPORT_ITS_DEFAULT : "",
-                   myGlobals.usePersistentStorage,
-                   myGlobals.usePersistentStorage == 0 ? "none" : (myGlobals.usePersistentStorage == 1 ? "all" : "local only")) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "-S | --store-mode", buf);
-
-  printParameterConfigInfo(textPrintFlag, "-U | --mapper",
-                           myGlobals.mapperURL,
-                           NTOP_DEFAULT_MAPPER_URL);
-
-  if (myGlobals.sslInitialized == 0) {
-      strcpy(buf, "Uninitialized");
-  } else if (myGlobals.sslPort == 0) {
-      strcpy(buf, "Inactive");
-  } else if (myGlobals.sslAddr != 0) {
-      if(snprintf(buf, sizeof(buf),
-                  "%sActive, address %s, port %d",
-                  ( (myGlobals.sslAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.sslPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
-                  myGlobals.sslAddr,
-                  myGlobals.sslPort) < 0)
-          BufferTooShort();
-  } else {
-      if(snprintf(buf, sizeof(buf),
-                  "%sActive, all interfaces, port %d",
-                  ( (myGlobals.sslAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.sslPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
-                  myGlobals.sslPort) < 0)
-          BufferTooShort();
-  }
-  printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
-
-  printParameterConfigInfo(textPrintFlag, "--throughput-chart-type",
-                           myGlobals.throughput_chart_type == GDC_AREA ? "Area" : "Bar",
-                           NTOP_DEFAULT_CHART_TYPE == GDC_AREA ? "Area" : "Bar");
-
- sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
- sendString("Note: " REPORT_ITS_EFFECTIVE "   means that "
-            "this is the value after ntop has processed the parameter.");
- sendString(texthtml("\n", "<br>\n"));
- sendString(REPORT_ITS_DEFAULT "means this is the default value, usually "
-            "(but not always) set by a #define in globals.h.");
- sendString(texthtml("\n\n", "</th></tr>\n"));
-
-   /* *************************** */
-
-  sendString(texthtml("\n\nRun time/Internal\n\n", 
-                      "<tr><th colspan=\"2\"" TH_BG ">Run time/Internal</tr>\n"));
-
-  if (myGlobals.enableExternalTools) {
-    if(myGlobals.isLsofPresent) {
-      if (textPrintFlag == TRUE) {
-          printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Yes");
-      } else {
-          printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" LSOF_URL "\" title=\"" LSOF_URL_ALT "\">lsof</A>",
-                             "Yes");
-      }
-    } else {
-      if (textPrintFlag == TRUE) {
-          printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Not found on system");
-      } else {
-          printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" LSOF_URL "\" title=\"" LSOF_URL_ALT "\">lsof</A>\"",
-                             "Not found on system");
-      }
-    }
-  } else {
-      if (textPrintFlag == TRUE) {
-          printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "(no -E parameter): Disabled");
-      } else {
-          printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" LSOF_URL "\" title=\"" LSOF_URL_ALT "\">lsof</A>",
-                           "(no -E parameter): Disabled");
-      }
-  }
-
-
-  if (myGlobals.enableExternalTools) {
-    if(myGlobals.isNmapPresent) {
-      if (textPrintFlag == TRUE) {
-          printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "Yes");
-      } else {
-          printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" NMAP_URL "\" title=\"" NMAP_URL_ALT "\">nmap</A>",
-                             "Yes");
-      }
-    } else {
-      if (textPrintFlag == TRUE) {
-          printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "-N parameter OR not found on system");
-      } else {
-          printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" NMAP_URL "\" title=\"" NMAP_URL_ALT "\">nmap</A>",
-                             "-N parameter OR not found on system");
-      }
-    }
-  } else {
-      if (textPrintFlag == TRUE) {
-        printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "(no -E parameter): Disabled");
-      } else {
-        printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" NMAP_URL "\" title=\"" NMAP_URL_ALT "\">nmap</A>",
-                           "(no -E parameter): Disabled");
-      }
-  }
-
-  if(myGlobals.webPort != 0) {
-    if(myGlobals.webAddr != 0) {
-      if(snprintf(buf, sizeof(buf), "http://%s:%d", myGlobals.webAddr, myGlobals.webPort) < 0)
-        BufferTooShort();
-    } else {
-      if(snprintf(buf, sizeof(buf), "http://&lt;any&gt;:%d", myGlobals.webPort) < 0)
-        BufferTooShort();
-    }
-    printFeatureConfigInfo(textPrintFlag, "Web server URL", buf);
-  } else {
-    printFeatureConfigInfo(textPrintFlag, "Web server (http://)", "Not Active");
-  }
-
-#ifdef HAVE_OPENSSL
-  if(myGlobals.sslPort != 0) {
-    if(myGlobals.sslAddr != 0) {
-      if(snprintf(buf, sizeof(buf), "https://%s:%d", myGlobals.sslAddr, myGlobals.sslPort) < 0)
-        BufferTooShort();
-    } else {
-      if(snprintf(buf, sizeof(buf), 
-                  "https://&lt;any&gt;:%d", 
-                  myGlobals.sslPort) < 0)
-        BufferTooShort();
-    }
-    printFeatureConfigInfo(textPrintFlag, "SSL Web server URL", buf);
-  } else {
-    printFeatureConfigInfo(textPrintFlag, "SSL Web server (https://)", "Not Active");
-  }
-#endif
-
-  /* *************************** */
-
-#if defined(WIN32) && defined(__GNUC__)
-  /* on mingw, gdbm_version not exported by library */
-#else
-  printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
-#endif
-
-#ifdef HAVE_PCAP_VERSION
-  printFeatureConfigInfo(textPrintFlag, "Libpcap version", pcap_version);
-#endif /* HAVE_PCAP_VERSION */
-
-#ifdef HAVE_OPENSSL
-  printFeatureConfigInfo(textPrintFlag, "OpenSSL Version", (char*)SSLeay_version(0));
-#endif
-
-#ifdef HAVE_ZLIB
-  printFeatureConfigInfo(textPrintFlag, "zlib version", ZLIB_VERSION);
-#endif
-
-  printFeatureConfigInfo(textPrintFlag, "TCP Session Handling", myGlobals.enableSessionHandling == 1 ? "Enabled" : "Disabled");
-
-  printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    myGlobals.enablePacketDecoding == 1 ? "Enabled" : "Disabled");
-
-  printFeatureConfigInfo(textPrintFlag, "Fragment Handling", myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");
-
-  printFeatureConfigInfo(textPrintFlag, "Tracking only local hosts", myGlobals.trackOnlyLocalHosts == 1 ? "Yes" : "No");
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numIpProtosToMonitor) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "# IP Protocols Being Monitored", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numActServices) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "# Protocol slots", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numIpPortsToHandle) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "# IP Ports Being Monitored", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numIpPortMapperSlots) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "# Ports slots", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numHandledHTTPrequests) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "# Handled HTTP Requests", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.hostsCacheLen) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Host Memory Cache Size", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDevices) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Devices (Network Interfaces)", buf);
-
-  printFeatureConfigInfo(textPrintFlag, "Domain name (short)", myGlobals.shortDomainName);
-
-/* **** */
-
-#ifdef MULTITHREADED
-
-  sendString(texthtml("\n\nPacket queue\n\n", "<tr><th colspan=\"2\">Packet queue</th></tr>\n"));
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.packetQueueLen) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Queued to Process", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.maxPacketQueueLen) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum queue", buf);
-#endif
-
-/* **** */
-
-  sendString(texthtml("\n\nHost Hash counts\n\n", "<tr><th colspan=\"2\">Host Hash counts</th></tr>\n"));
-
-  if(snprintf(buf, sizeof(buf), "%d [%d %%]", (int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno,
-              (((int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno*100)/
-               (int)myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
-
-  printFeatureConfigInfo(textPrintFlag, "Purge idle hosts", 
-                          myGlobals.enableIdleHosts == 1 ? "Enabled" : "Disabled");
-
-  if(snprintf(buf, sizeof(buf), "%u", (unsigned int)myGlobals.numPurgedHosts) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Purged hosts", buf);
-
-/* **** */
-
-  if(myGlobals.enableSessionHandling) {
-      sendString(texthtml("\n\nTCP Session counts\n\n", "<tr><th colspan=\"2\">TCP Session counts</th></tr>\n"));
-      if(snprintf(buf, sizeof(buf), "%u", myGlobals.device[myGlobals.actualReportDeviceId].numTcpSessions) < 0)
-          BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
-
-      if(snprintf(buf, sizeof(buf), "%u", myGlobals.numTerminatedSessions) < 0)
-          BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Terminated", buf);
-  }
-
-/* **** */
-
-sendString(texthtml("\n\nAddress counts\n\n", "<tr><th colspan=\"2\">Address counts</th></tr>\n"));
-
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-  if(myGlobals.numericFlag == 0) {
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueueLen) < 0)
-          BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Queued", buf);
-  }
-#endif
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedWithDNSAddresses) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Resolved with DNS", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numKeptNumericAddresses) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Kept Numeric", buf);
-
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedOnCacheAddresses) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Found in Cache", buf);
-
-#if defined(MULTITHREADED)
-  if(myGlobals.numericFlag == 0) {
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.droppedAddresses) < 0)
-          BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Dropped", buf);
-  }
-#endif
-
-/* **** */
-
-sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread counts</th></tr>\n"));
-
-#if defined(MULTITHREADED)
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numThreads) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Active", buf);
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDequeueThreads) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Dequeue", buf);
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numChildren) < 0)
-      BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Children (active)", buf);
-#endif
-
-/* **** */
-
-#ifdef MEMORY_DEBUG
-  printFeatureConfigInfo(textPrintFlag, "Allocated Memory", formatBytes(myGlobals.allocatedMemory, 0));
-#endif
-
-  if(myGlobals.isLsofPresent) {
-
-      sendString(texthtml("\n\nlsof data\n\n", "<tr><th colspan=\"2\">lsof data</th></tr>\n"));
-
-      printFeatureConfigInfo(textPrintFlag, "Updating", myGlobals.updateLsof ? "Yes" : "No");
-  
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numProcesses) < 0)
-          BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "# Monitored Processes", buf);
-  }
-
-/* **** */
-
-  sendString(texthtml("Directory (search) order\n\n", "<tr><th colspan=\"2\">Directory (search) order</th></tr>\n"));
-
-  bufLength = sizeof(buf);
-  bufPosition = 0;
-  bufUsed = 0;
-
-  for(i=0; myGlobals.dataFileDirs[i] != NULL; i++) {
-      if ((bufUsed = snprintf(&buf[bufPosition],
-                              bufLength,
-                              "%s%2d. %s",
-                              i == 0 ? texthtml("\n", "") : texthtml("\n", "<br>"),
-                              i,
-                              myGlobals.dataFileDirs[i])) < 0)
-          BufferTooShort();
-      bufPosition += bufUsed;
-      bufLength   -= bufUsed;
-  }
-  printFeatureConfigInfo(textPrintFlag, "Data files", buf);
-
-  bufLength = sizeof(buf);
-  bufPosition = 0;
-  bufUsed = 0;
-
-  for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
-      if ((bufUsed = snprintf(&buf[bufPosition],
-                              bufLength,
-                              "%s%2d. %s",
-                              i == 0 ? texthtml("\n", "") : texthtml("\n", "<br>"),
-                              i,
-                              myGlobals.configFileDirs[i])) < 0)
-          BufferTooShort();
-      bufPosition += bufUsed;
-      bufLength   -= bufUsed;
-  }
-  printFeatureConfigInfo(textPrintFlag, "Config files", buf);
-
-  bufLength = sizeof(buf);
-  bufPosition = 0;
-  bufUsed = 0;
-
-  for(i=0; myGlobals.pluginDirs[i] != NULL; i++) {
-      if ((bufUsed = snprintf(&buf[bufPosition],
-                              bufLength,
-                              "%s%2d. %s",
-                              i == 0 ? texthtml("\n", "") : texthtml("\n", "<br>"),
-                              i,
-                              myGlobals.pluginDirs[i])) < 0)
-          BufferTooShort();
-      bufPosition += bufUsed;
-      bufLength   -= bufUsed;
-  }
-  printFeatureConfigInfo(textPrintFlag, "Plugins", buf);
-
-  /* *************************** *************************** */
-
-  sendString(texthtml("\n\nCompile Time: ./configure\n\n", "<tr><th colspan=\"2\"" TH_BG ">Compile Time: ./configure</tr>\n"));
-
-  printFeatureConfigInfo(textPrintFlag, "./configure parameters", configure_parameters);
-  printFeatureConfigInfo(textPrintFlag, "Built on (Host)", host_system_type);
-  printFeatureConfigInfo(textPrintFlag, "Built for (Target)", target_system_type);
-  printFeatureConfigInfo(textPrintFlag, "compiler (cflags)", compiler_cflags);
-  printFeatureConfigInfo(textPrintFlag, "include path", include_path);
-  printFeatureConfigInfo(textPrintFlag, "core libraries", core_libs);
-  printFeatureConfigInfo(textPrintFlag, "additional libraries", additional_libs);
-  printFeatureConfigInfo(textPrintFlag, "install path", install_path);
-
-  /* *************************** */
 
   sendString(texthtml("\n\nCompile Time: config.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: config.h</tr>\n"));
@@ -2236,7 +1634,629 @@ sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread count
   printFeatureConfigInfo(textPrintFlag, "<A HREF=http://net-snmp.sourceforge.net/>UCD/NET SNMP </A>",
 			 "Absent");
 #endif
-*/
+ */
+
+}
+
+/* ******************************** */
+
+void printNtopConfigInfo(int textPrintFlag) {
+  char buf[BUF_SIZE];
+  int i;
+  int bufLength, bufPosition, bufUsed;
+
+#ifdef HAVE_PCAP_VERSION
+  extern char pcap_version[];
+#endif /* HAVE_PCAP_VERSION */
+
+  if (textPrintFlag != TRUE) {
+      printHTMLheader("Current ntop Configuration", 0);
+  }
+  sendString(texthtml("\n", 
+                      "<CENTER>\n<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n"
+                      "<tr><th colspan=\"2\"" TH_BG ">Basic information</tr>\n"));
+  printFeatureConfigInfo(textPrintFlag, "ntop version", version);
+  printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
+  printFeatureConfigInfo(textPrintFlag, "OS", osName);
+
+  /* *************************** */
+
+  sendString(texthtml("\n\nCommand line\n\n", 
+                      "<tr><th colspan=\"2\">Command line</tr>\n"));
+
+  sendString(texthtml("Started as....",
+                      "<TR><TH "TH_BG" ALIGN=left>Started as</TH><TD "TD_BG" ALIGN=right>"));
+  for(i=0; i<myGlobals.ntop_argc; i++) {
+    sendString(myGlobals.ntop_argv[i]);
+    sendString(texthtml("\n            ", " "));
+    /* Note above needs to be a normal space for html case so that web browser can
+       break up the lines as it needs to... */
+  }
+  sendString(texthtml("\n\nCommand line parameters are:\n\n", "</TD></TR>\n"));
+
+  printParameterConfigInfo(textPrintFlag, "-a | --access-log-path",
+                           myGlobals.accessLogPath,
+                           NTOP_DEFAULT_ACCESS_LOG_PATH);
+
+  if (myGlobals.enableDBsupport == 1) {
+      if (snprintf(buf, sizeof(buf), "%sActive - server at %s:%d",
+                   myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "",
+                   myGlobals.sqlHostName,
+                   myGlobals.sqlPortNumber) < 0)
+          BufferTooShort();
+  } else {
+      if (snprintf(buf, sizeof(buf), "%sInactive",
+                   myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "") < 0)
+          BufferTooShort();
+  }
+  printFeatureConfigInfo(textPrintFlag, "-b | --sql-host", buf);
+
+  printParameterConfigInfo(textPrintFlag, "-c | --sticky-hosts",
+                           myGlobals.stickyHosts == 1 ? "Yes" : "No",
+                           NTOP_DEFAULT_STICKY_HOSTS == 1 ? "Yes" : "No");
+
+#ifndef WIN32
+  printParameterConfigInfo(textPrintFlag, "-d | --daemon",
+                           myGlobals.daemonMode == 1 ? "Yes" : "No",
+                           strcmp(myGlobals.program_name, "ntopd") == 0 ? "Yes" : NTOP_DEFAULT_DAEMON_MODE);
+#endif
+
+#ifndef MICRO_NTOP
+  if(snprintf(buf, sizeof(buf), "%s%d",
+                                myGlobals.maxNumLines == MAX_NUM_TABLE_ROWS ? REPORT_ITS_DEFAULT : "",
+                                myGlobals.maxNumLines) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "-e | --max-table-rows", buf);
+#endif
+
+  printParameterConfigInfo(textPrintFlag, "-f | --traffic-dump-file",
+                           myGlobals.rFileName,
+                           NTOP_DEFAULT_TRAFFICDUMP_FILENAME);
+
+  printParameterConfigInfo(textPrintFlag, "-i | --interface" REPORT_ITS_EFFECTIVE,
+                           myGlobals.devices,
+                           NTOP_DEFAULT_DEVICES);
+
+  printParameterConfigInfo(textPrintFlag, "-j | --border-sniffer-mode",
+                           myGlobals.borderSnifferMode == 1 ? "Active" : "Inactive",
+                           NTOP_DEFAULT_BORDER_SNIFFER_MODE == 1 ? "Active" : "Inactive");
+
+  printParameterConfigInfo(textPrintFlag, "-k | --filter-expression-in-extra-frame",
+                           myGlobals.filterExpressionInExtraFrame == 1 ? "Yes" : "No",
+                           NTOP_DEFAULT_FILTER_IN_FRAME == 1 ? "Yes" : "No");
+
+  if (myGlobals.pcapLog == NULL) {
+      printParameterConfigInfo(textPrintFlag, "-l | --pcap-log",
+                               myGlobals.pcapLog,
+                               NTOP_DEFAULT_PCAP_LOG_FILENAME);
+  } else {
+      if (snprintf(buf, sizeof(buf), "%s/%s.&lt;device&gt;.pcap",
+                                     myGlobals.pcapLogBasePath,
+                                     myGlobals.pcapLog) < 0)
+          BufferTooShort();
+      printParameterConfigInfo(textPrintFlag, "-l | --pcap-log" REPORT_ITS_EFFECTIVE,
+                               buf,
+                               NTOP_DEFAULT_PCAP_LOG_FILENAME);
+  }
+
+  printParameterConfigInfo(textPrintFlag, "-m | --local-subnets" REPORT_ITS_EFFECTIVE,
+                           myGlobals.localAddresses,
+                           NTOP_DEFAULT_LOCAL_SUBNETS);
+
+  printParameterConfigInfo(textPrintFlag, "-n | --numeric-ip-addresses",
+                           myGlobals.numericFlag > 0 ? "Yes" : "No",
+                           NTOP_DEFAULT_NUMERIC_IP_ADDRESSES > 0 ? "Yes" : "No");
+
+  if (myGlobals.protoSpecs == NULL) {
+      printFeatureConfigInfo(textPrintFlag, "-p | --protocols", REPORT_ITS_DEFAULT "internal list");
+  } else {
+      printFeatureConfigInfo(textPrintFlag, "-p | --protocols", myGlobals.protoSpecs);
+  }
+
+  printParameterConfigInfo(textPrintFlag, "-q | --create-suspicious-packets",
+                           myGlobals.enableSuspiciousPacketDump == 1 ? "Enabled" : "Disabled",
+                           NTOP_DEFAULT_SUSPICIOUS_PKT_DUMP == 1 ? "Enabled" : "Disabled");
+
+  if(snprintf(buf, sizeof(buf), "%s%d",
+                                myGlobals.refreshRate == REFRESH_TIME ? REPORT_ITS_DEFAULT : "",
+                                myGlobals.refreshRate) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "-r | --refresh-time", buf);
+
+  printParameterConfigInfo(textPrintFlag, "-s | --no-promiscuous",
+                           myGlobals.disablePromiscuousMode == 1 ? "Yes" : "No",
+                           NTOP_DEFAULT_DISABLE_PROMISCUOUS == 1 ? "Yes" : "No");
+
+  if(snprintf(buf, sizeof(buf), "%s%d",
+                                 myGlobals.traceLevel == DEFAULT_TRACE_LEVEL ? REPORT_ITS_DEFAULT : "",
+                                 myGlobals.traceLevel) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "-t | --trace-level", buf);
+
+  if(snprintf(buf, sizeof(buf), "%s (uid=%d, gid=%d)",
+                                 myGlobals.effectiveUserName,
+                                 myGlobals.userId,
+                                 myGlobals.groupId) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "-u | --user", buf);
+
+#ifdef HAVE_MYSQL
+  if (myGlobals.enableDBsupport == 1) {
+      if (snprintf(buf, sizeof(buf), "%sActive - server %s,%sdatabase %s,%suser %s",
+                   myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "",
+                   myGlobals.mySQLhostName,
+                   (textPrintFlag == TRUE ? " " : "<br>"),
+                   myGlobals.mySQLdatabase,
+                   (textPrintFlag == TRUE ? " " : "<br>"),
+                   myGlobals.mySQLuser) < 0)
+          BufferTooShort();
+  } else {
+      if (snprintf(buf, sizeof(buf), "%sInactive",
+                   myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "") < 0)
+          BufferTooShort();
+  }
+  printFeatureConfigInfo(textPrintFlag, "-v | --mysql-host", buf);
+#endif
+
+  if (myGlobals.webPort == 0) {
+      strcpy(buf, "Inactive");
+  } else if (myGlobals.webAddr != 0) {
+      if(snprintf(buf, sizeof(buf),
+                  "%sActive, address %s, port %d",
+                  ( (myGlobals.webAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.webPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
+                  myGlobals.webAddr,
+                  myGlobals.webPort) < 0)
+          BufferTooShort();
+  } else {
+      if(snprintf(buf, sizeof(buf),
+                  "%sActive, all interfaces, port %d",
+                  ( (myGlobals.webAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.webPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
+                  myGlobals.webPort) < 0)
+          BufferTooShort();
+  }
+  printFeatureConfigInfo(textPrintFlag, "-w | --http-server", buf);
+
+  printParameterConfigInfo(textPrintFlag, "-B | --filter-expression",
+                           ((myGlobals.currentFilterExpression == NULL) ||
+                            (myGlobals.currentFilterExpression[0] == '\0')) ? "none" :
+                                     myGlobals.currentFilterExpression,
+                           NTOP_DEFAULT_FILTER_EXPRESSION == NULL ? "none" :
+                                     NTOP_DEFAULT_FILTER_EXPRESSION);
+
+  printParameterConfigInfo(textPrintFlag, "-D | --domain",
+                           ((myGlobals.domainName == NULL) ||
+                            (myGlobals.domainName[0] == '\0')) ? "none" :
+                                     myGlobals.domainName,
+                           NTOP_DEFAULT_DOMAIN_NAME == NULL ? "none" :
+                                     NTOP_DEFAULT_DOMAIN_NAME);
+
+  printParameterConfigInfo(textPrintFlag, "-E | --enable-external-tools",
+                            myGlobals.enableExternalTools == 1 ? "Yes" : "No",
+                           NTOP_DEFAULT_EXTERNAL_TOOLS_ENABLE == 1 ? "Yes" : "No");
+
+  printParameterConfigInfo(textPrintFlag, "-F | --flow-spec",
+                           myGlobals.flowSpecs == NULL ? "none" : myGlobals.flowSpecs,
+                           NTOP_DEFAULT_FLOW_SPECS == NULL ? "none" : NTOP_DEFAULT_FLOW_SPECS);
+
+  printParameterConfigInfo(textPrintFlag, "-K | --enable-debug",
+                            myGlobals.debugMode == 1 ? "Yes" : "No",
+                            NTOP_DEFAULT_DEBUG_MODE == 1 ? "Yes" : "No");
+
+#ifndef WIN32
+  if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
+      printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "No");
+  } else {
+      for (i=0; facilityNames[i].c_name != NULL; i++) {
+          if (facilityNames[i].c_val == myGlobals.useSyslog) {
+              printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", facilityNames[i].c_name);
+              break;
+          }
+      }
+      if (facilityNames[i].c_name == NULL) {
+          printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "**UNKNOWN**");
+      }
+  }
+#endif
+
+  printParameterConfigInfo(textPrintFlag, "-M | --no-interface-merge" REPORT_ITS_EFFECTIVE,
+                           myGlobals.mergeInterfaces == 1 ? "(Merging Interfaces) Yes" :
+                                                            "(parameter -M set, Interfaces separate) No",
+                           NTOP_DEFAULT_MERGE_INTERFACES == 1 ? "(Merging Interfaces) Yes" : "");
+
+  printParameterConfigInfo(textPrintFlag, "-N | --no-nmap" REPORT_ITS_EFFECTIVE,
+                           myGlobals.isNmapPresent == 1 ? "Yes (nmap will be used)" : "No (nmap will not be used)",
+                           NTOP_DEFAULT_NMAP_PRESENT == 1 ? "Yes (nmap will be used)" : "");
+
+
+  printParameterConfigInfo(textPrintFlag, "-O | --pcap-file-path",
+                           myGlobals.pcapLogBasePath,
+                           DBFILE_DIR);
+
+  printParameterConfigInfo(textPrintFlag, "-P | --db-file-path",
+                           myGlobals.dbPath,
+                           DBFILE_DIR);
+
+  if (snprintf(buf, sizeof(buf), "%s%d (%s)",
+                   myGlobals.usePersistentStorage == NTOP_DEFAULT_PERSISTENT_STORAGE ? REPORT_ITS_DEFAULT : "",
+                   myGlobals.usePersistentStorage,
+                   myGlobals.usePersistentStorage == 0 ? "none" : (myGlobals.usePersistentStorage == 1 ? "all" : "local only")) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "-S | --store-mode", buf);
+
+  printParameterConfigInfo(textPrintFlag, "-U | --mapper",
+                           myGlobals.mapperURL,
+                           NTOP_DEFAULT_MAPPER_URL);
+
+  if (myGlobals.sslInitialized == 0) {
+      strcpy(buf, "Uninitialized");
+  } else if (myGlobals.sslPort == 0) {
+      strcpy(buf, "Inactive");
+  } else if (myGlobals.sslAddr != 0) {
+      if(snprintf(buf, sizeof(buf),
+                  "%sActive, address %s, port %d",
+                  ( (myGlobals.sslAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.sslPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
+                  myGlobals.sslAddr,
+                  myGlobals.sslPort) < 0)
+          BufferTooShort();
+  } else {
+      if(snprintf(buf, sizeof(buf),
+                  "%sActive, all interfaces, port %d",
+                  ( (myGlobals.sslAddr == NTOP_DEFAULT_WEB_ADDR) && (myGlobals.sslPort == NTOP_DEFAULT_WEB_PORT) ) ? REPORT_ITS_DEFAULT : "",
+                  myGlobals.sslPort) < 0)
+          BufferTooShort();
+  }
+  printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
+
+  printParameterConfigInfo(textPrintFlag, "--throughput-chart-type",
+                           myGlobals.throughput_chart_type == GDC_AREA ? "Area" : "Bar",
+                           NTOP_DEFAULT_CHART_TYPE == GDC_AREA ? "Area" : "Bar");
+
+ sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
+ sendString("Note: " REPORT_ITS_EFFECTIVE "   means that "
+            "this is the value after ntop has processed the parameter.");
+ sendString(texthtml("\n", "<br>\n"));
+ sendString(REPORT_ITS_DEFAULT "means this is the default value, usually "
+            "(but not always) set by a #define in globals.h.");
+ sendString(texthtml("\n\n", "</th></tr>\n"));
+
+   /* *************************** */
+
+  sendString(texthtml("\n\nRun time/Internal\n\n", 
+                      "<tr><th colspan=\"2\"" TH_BG ">Run time/Internal</tr>\n"));
+
+  if (myGlobals.enableExternalTools) {
+    if(myGlobals.isLsofPresent) {
+      if (textPrintFlag == TRUE) {
+          printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Yes");
+      } else {
+          printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" LSOF_URL "\" title=\"" LSOF_URL_ALT "\">lsof</A>",
+                             "Yes");
+      }
+    } else {
+      if (textPrintFlag == TRUE) {
+          printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Not found on system");
+      } else {
+          printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" LSOF_URL "\" title=\"" LSOF_URL_ALT "\">lsof</A>\"",
+                             "Not found on system");
+      }
+    }
+  } else {
+      if (textPrintFlag == TRUE) {
+          printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "(no -E parameter): Disabled");
+      } else {
+          printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" LSOF_URL "\" title=\"" LSOF_URL_ALT "\">lsof</A>",
+                           "(no -E parameter): Disabled");
+      }
+  }
+
+
+  if (myGlobals.enableExternalTools) {
+    if(myGlobals.isNmapPresent) {
+      if (textPrintFlag == TRUE) {
+          printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "Yes");
+      } else {
+          printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" NMAP_URL "\" title=\"" NMAP_URL_ALT "\">nmap</A>",
+                             "Yes");
+      }
+    } else {
+      if (textPrintFlag == TRUE) {
+          printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "-N parameter OR not found on system");
+      } else {
+          printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" NMAP_URL "\" title=\"" NMAP_URL_ALT "\">nmap</A>",
+                             "-N parameter OR not found on system");
+      }
+    }
+  } else {
+      if (textPrintFlag == TRUE) {
+        printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "(no -E parameter): Disabled");
+      } else {
+        printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" NMAP_URL "\" title=\"" NMAP_URL_ALT "\">nmap</A>",
+                           "(no -E parameter): Disabled");
+      }
+  }
+
+  if(myGlobals.webPort != 0) {
+    if(myGlobals.webAddr != 0) {
+      if(snprintf(buf, sizeof(buf), "http://%s:%d", myGlobals.webAddr, myGlobals.webPort) < 0)
+        BufferTooShort();
+    } else {
+      if(snprintf(buf, sizeof(buf), "http://&lt;any&gt;:%d", myGlobals.webPort) < 0)
+        BufferTooShort();
+    }
+    printFeatureConfigInfo(textPrintFlag, "Web server URL", buf);
+  } else {
+    printFeatureConfigInfo(textPrintFlag, "Web server (http://)", "Not Active");
+  }
+
+#ifdef HAVE_OPENSSL
+  if(myGlobals.sslPort != 0) {
+    if(myGlobals.sslAddr != 0) {
+      if(snprintf(buf, sizeof(buf), "https://%s:%d", myGlobals.sslAddr, myGlobals.sslPort) < 0)
+        BufferTooShort();
+    } else {
+      if(snprintf(buf, sizeof(buf), 
+                  "https://&lt;any&gt;:%d", 
+                  myGlobals.sslPort) < 0)
+        BufferTooShort();
+    }
+    printFeatureConfigInfo(textPrintFlag, "SSL Web server URL", buf);
+  } else {
+    printFeatureConfigInfo(textPrintFlag, "SSL Web server (https://)", "Not Active");
+  }
+#endif
+
+  /* *************************** */
+
+#if defined(WIN32) && defined(__GNUC__)
+  /* on mingw, gdbm_version not exported by library */
+#else
+  printFeatureConfigInfo(textPrintFlag, "GDBM version", gdbm_version);
+#endif
+
+#ifdef HAVE_PCAP_VERSION
+  printFeatureConfigInfo(textPrintFlag, "Libpcap version", pcap_version);
+#endif /* HAVE_PCAP_VERSION */
+
+#ifdef HAVE_OPENSSL
+  printFeatureConfigInfo(textPrintFlag, "OpenSSL Version", (char*)SSLeay_version(0));
+#endif
+
+#ifdef HAVE_ZLIB
+  printFeatureConfigInfo(textPrintFlag, "zlib version", ZLIB_VERSION);
+#endif
+
+  printFeatureConfigInfo(textPrintFlag, "TCP Session Handling", myGlobals.enableSessionHandling == 1 ? "Enabled" : "Disabled");
+
+  printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    myGlobals.enablePacketDecoding == 1 ? "Enabled" : "Disabled");
+
+  printFeatureConfigInfo(textPrintFlag, "Fragment Handling", myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");
+
+  printFeatureConfigInfo(textPrintFlag, "Tracking only local hosts", myGlobals.trackOnlyLocalHosts == 1 ? "Yes" : "No");
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numIpProtosToMonitor) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "# IP Protocols Being Monitored", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numActServices) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "# Protocol slots", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numIpPortsToHandle) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "# IP Ports Being Monitored", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numIpPortMapperSlots) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "# Ports slots", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numHandledHTTPrequests) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "# Handled HTTP Requests", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.hostsCacheLen) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Host Memory Cache Size", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDevices) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Devices (Network Interfaces)", buf);
+
+  printFeatureConfigInfo(textPrintFlag, "Domain name (short)", myGlobals.shortDomainName);
+
+/* **** */
+
+#ifdef MULTITHREADED
+
+  sendString(texthtml("\n\nPacket queue\n\n", "<tr><th colspan=\"2\">Packet queue</th></tr>\n"));
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.packetQueueLen) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Queued to Process", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.maxPacketQueueLen) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum queue", buf);
+#endif
+
+/* **** */
+
+  sendString(texthtml("\n\nHost Hash counts\n\n", "<tr><th colspan=\"2\">Host Hash counts</th></tr>\n"));
+
+  if(snprintf(buf, sizeof(buf), "%d [%d %%]", (int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno,
+              (((int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno*100)/
+               (int)myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
+
+  printFeatureConfigInfo(textPrintFlag, "Purge idle hosts", 
+                          myGlobals.enableIdleHosts == 1 ? "Enabled" : "Disabled");
+
+  if(snprintf(buf, sizeof(buf), "%u", (unsigned int)myGlobals.numPurgedHosts) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Purged hosts", buf);
+
+/* **** */
+
+  if(myGlobals.enableSessionHandling) {
+      sendString(texthtml("\n\nTCP Session counts\n\n", "<tr><th colspan=\"2\">TCP Session counts</th></tr>\n"));
+      if(snprintf(buf, sizeof(buf), "%u", myGlobals.device[myGlobals.actualReportDeviceId].numTcpSessions) < 0)
+          BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
+
+      if(snprintf(buf, sizeof(buf), "%u", myGlobals.numTerminatedSessions) < 0)
+          BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Terminated", buf);
+  }
+
+/* **** */
+
+sendString(texthtml("\n\nAddress counts\n\n", "<tr><th colspan=\"2\">Address counts</th></tr>\n"));
+
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+  if(myGlobals.numericFlag == 0) {
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueueLen) < 0)
+          BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Queued", buf);
+  }
+#endif
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedWithDNSAddresses) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Resolved with DNS", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numKeptNumericAddresses) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Kept Numeric", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedOnCacheAddresses) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Found in Cache", buf);
+
+#if defined(MULTITHREADED)
+  if(myGlobals.numericFlag == 0) {
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.droppedAddresses) < 0)
+          BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Dropped", buf);
+  }
+#endif
+
+/* **** */
+
+sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread counts</th></tr>\n"));
+
+#if defined(MULTITHREADED)
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numThreads) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Active", buf);
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDequeueThreads) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Dequeue", buf);
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numChildren) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Children (active)", buf);
+#endif
+
+/* **** */
+
+#ifdef MEMORY_DEBUG
+  printFeatureConfigInfo(textPrintFlag, "Allocated Memory", formatBytes(myGlobals.allocatedMemory, 0));
+#endif
+
+  if(myGlobals.isLsofPresent) {
+
+      sendString(texthtml("\n\nlsof data\n\n", "<tr><th colspan=\"2\">lsof data</th></tr>\n"));
+
+      printFeatureConfigInfo(textPrintFlag, "Updating", myGlobals.updateLsof ? "Yes" : "No");
+  
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numProcesses) < 0)
+          BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "# Monitored Processes", buf);
+  }
+
+/* **** */
+
+  sendString(texthtml("Directory (search) order\n\n", "<tr><th colspan=\"2\">Directory (search) order</th></tr>\n"));
+
+  bufLength = sizeof(buf);
+  bufPosition = 0;
+  bufUsed = 0;
+
+  for(i=0; myGlobals.dataFileDirs[i] != NULL; i++) {
+      if ((bufUsed = snprintf(&buf[bufPosition],
+                              bufLength,
+                              "%s%2d. %s",
+                              i == 0 ? texthtml("\n", "") : texthtml("\n", "<br>"),
+                              i,
+                              myGlobals.dataFileDirs[i])) < 0)
+          BufferTooShort();
+      bufPosition += bufUsed;
+      bufLength   -= bufUsed;
+  }
+  printFeatureConfigInfo(textPrintFlag, "Data files", buf);
+
+  bufLength = sizeof(buf);
+  bufPosition = 0;
+  bufUsed = 0;
+
+  for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
+      if ((bufUsed = snprintf(&buf[bufPosition],
+                              bufLength,
+                              "%s%2d. %s",
+                              i == 0 ? texthtml("\n", "") : texthtml("\n", "<br>"),
+                              i,
+                              myGlobals.configFileDirs[i])) < 0)
+          BufferTooShort();
+      bufPosition += bufUsed;
+      bufLength   -= bufUsed;
+  }
+  printFeatureConfigInfo(textPrintFlag, "Config files", buf);
+
+  bufLength = sizeof(buf);
+  bufPosition = 0;
+  bufUsed = 0;
+
+  for(i=0; myGlobals.pluginDirs[i] != NULL; i++) {
+      if ((bufUsed = snprintf(&buf[bufPosition],
+                              bufLength,
+                              "%s%2d. %s",
+                              i == 0 ? texthtml("\n", "") : texthtml("\n", "<br>"),
+                              i,
+                              myGlobals.pluginDirs[i])) < 0)
+          BufferTooShort();
+      bufPosition += bufUsed;
+      bufLength   -= bufUsed;
+  }
+  printFeatureConfigInfo(textPrintFlag, "Plugins", buf);
+
+  /* *************************** *************************** */
+
+  sendString(texthtml("\n\nCompile Time: ./configure\n\n", "<tr><th colspan=\"2\"" TH_BG ">Compile Time: ./configure</tr>\n"));
+
+  printFeatureConfigInfo(textPrintFlag, "./configure parameters", configure_parameters);
+  printFeatureConfigInfo(textPrintFlag, "Built on (Host)", host_system_type);
+  printFeatureConfigInfo(textPrintFlag, "Built for (Target)", target_system_type);
+  printFeatureConfigInfo(textPrintFlag, "compiler (cflags)", compiler_cflags);
+  printFeatureConfigInfo(textPrintFlag, "include path", include_path);
+  printFeatureConfigInfo(textPrintFlag, "core libraries", core_libs);
+  printFeatureConfigInfo(textPrintFlag, "additional libraries", additional_libs);
+  printFeatureConfigInfo(textPrintFlag, "install path", install_path);
+
+  /* *************************** */
+
+  /* At Luca's request, we generate less information for the html version...
+     so I've pushed all the config.h and #define stuff into a sub-function
+     (Burton - 05-Jun-2002)
+   */
+
+  if (textPrintFlag == TRUE) {
+      printNtopConfigHInfo(textPrintFlag);
+  }
+
+  /* *************************** */
 
   sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
 
@@ -2273,9 +2293,9 @@ sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread count
 #endif /* MULTITHREADED */
 
   if (textPrintFlag != TRUE) {
-      sendString("Click <A HREF=\"textinfo.html\" ALT=\"Text version of this page\">"
-		 "here</A> for a text version of this page, suitable for inclusion "
-                 "into a bug report!\n");
+      sendString("<p>Click <a href=\"textinfo.html\" alt=\"Text version of this page\">"
+		 "here</a> for a more extensive, text version of this page, suitable for "
+                 "inclusion into a bug report!</p>\n");
   }
 
   sendString(texthtml("\n", "</CENTER>\n"));
