@@ -2902,13 +2902,22 @@ void printNtopConfigInfo(int textPrintFlag) {
     initReports();
     initializeWeb();
 
-    if(fetchPrefsValue("actualReportDeviceId", value, sizeof(value)) == -1) {
+    if(myGlobals.mergeInterfaces) {
+      storePrefsValue("actualReportDeviceId", "0");
+      myGlobals.actualReportDeviceId = 0;
+    } else if(fetchPrefsValue("actualReportDeviceId", value, sizeof(value)) == -1) {
       storePrefsValue("actualReportDeviceId", "0");
       myGlobals.actualReportDeviceId = 0;
     } else {
       myGlobals.actualReportDeviceId = atoi(value);
-      if(myGlobals.actualReportDeviceId > myGlobals.numDevices)
-	myGlobals.actualReportDeviceId = 0; /* Default */
+      if(myGlobals.actualReportDeviceId > myGlobals.numDevices) {
+        traceEvent(TRACE_INFO, "Note: stored actualReportDeviceId(%d) > numDevices(%d). "
+                               "Probably leftover, reset.\n",
+                   myGlobals.actualReportDeviceId,
+                   myGlobals.numDevices);
+        storePrefsValue("actualReportDeviceId", "0");
+       myGlobals.actualReportDeviceId = 0; /* Default */
+      }
     }
     
     if(myGlobals.webPort > 0) {
