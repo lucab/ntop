@@ -5331,6 +5331,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
     closesocket(sock);
     return 1;
   }
+
   if(rc >= bufLen) {
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to receive entire http response (%d/%d)- skipping",
@@ -5344,6 +5345,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Received %d bytes '%s'", rc, buf);
 #endif
 
+  closesocket(sock);
   return 0;
 }
 
