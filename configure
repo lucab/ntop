@@ -1345,7 +1345,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.1.103-2003-04-23"
+SCRIPTVER="v2.2.1.104-2003-05-09"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -4188,9 +4188,12 @@ case "${target}:${CC}" in
 
     *-*-solaris2.8*:* )
         VERIFIED1="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com:Solaris 8 i86"
+        VERIFIED1="2.2:2003-04-23:Mike Tremaine <mgt@stellarcore.net>:Solaris 8 sparc"
         NOTE1="Requires various gnu tools from SunFreeware.com"
         NOTE2="--enable-i18n is disabled"
         DEFINEOS="SOLARIS";   STATUS="SUPPORTED"
+        # Added per Mike
+        LIBS='-lnsl -lsocket ${LIBS}'
       ;;
 
     *-*-solaris2.5*:* )
@@ -4213,9 +4216,10 @@ case "${target}:${CC}" in
       ;;
 
     *-*-freebsd[45]*:*gcc* )
-        VERIFIED1="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.2-RELEASE"
+        VERIFIED1="2.2:2003-04-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.3-RELEASE"
         VERIFIED2="2.1.90:2003-03-18:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE-p7"
-        VERIFIED3="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com>:5.0-RELEASE"
+        VERIFIED1="2.2:2003-04-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.8-RELEASE"
+        VERIFIED1="2.2:2003-04-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-5.0-RELEASE"
         DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
         if test ".${LOCALEDIR}" = "."; then
             LOCALEDIR="/usr/share/locale"
@@ -6251,7 +6255,7 @@ test x"$silent" = xyes && libtool_flags="$libtool_flags --silent"
 case "$host" in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6254 "configure"' > conftest.$ac_ext
+  echo '#line 6258 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
