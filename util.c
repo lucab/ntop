@@ -1341,7 +1341,7 @@ int createSem(sem_t *semId, int initialValue) {
 void waitSem(sem_t *semId) {
   int rc = sem_wait(semId);
 
-  if(rc != 0)
+  if((rc != 0) && (rc != 4 /* Interrupted system call */))
     traceEvent(CONST_TRACE_INFO, "waitSem failed [errno=%d/%s]", errno, strerror(errno));
 }
 
@@ -2252,7 +2252,6 @@ int getSniffedDNSName(char *hostNumIpAddress,
 
   name[0] = 0;
 
-#ifdef HAVE_GDBM_H
   if((hostNumIpAddress[0] != '\0') && myGlobals.dnsCacheFile) {
     datum key;
     datum data;
@@ -2268,7 +2267,7 @@ int getSniffedDNSName(char *hostNumIpAddress,
       found = 1;
     }
   }
-#endif
+
   return(found);
 }
 

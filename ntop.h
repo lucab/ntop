@@ -366,18 +366,13 @@ ntop.h
  * gdbm
  */
 #ifdef WIN32
-/* force the define for Win32 */
-#define HAVE_GDBM_H
-
 #ifndef __GNUC__
 #include <gdbmerrno.h>
 #endif
 
 #endif /* WIN32 */
 
-#ifdef HAVE_GDBM_H
 #include <gdbm.h>
-#endif
 
 #ifdef HAVE_TCPD_H 
 #include <tcpd.h>

@@ -1269,30 +1269,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_GDBM_H",
-#ifdef HAVE_GDBM_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_GDCPIE_H",
-#ifdef HAVE_GDCPIE_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_GD_H",
-#ifdef HAVE_GD_H
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "HAVE_GDOME_H",
 #ifdef HAVE_GDOME_H
                          "yes"

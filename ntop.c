@@ -967,7 +967,6 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 #endif
 
-#ifdef HAVE_GDBM_H
   gdbm_close(myGlobals.dnsCacheFile);     myGlobals.dnsCacheFile = NULL;
   gdbm_close(myGlobals.addressQueueFile); myGlobals.addressQueueFile = NULL;
   gdbm_close(myGlobals.pwFile);           myGlobals.pwFile = NULL;
@@ -981,7 +980,6 @@ RETSIGTYPE cleanup(int signo) {
   }
 #ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.gdbmMutex);
-#endif
 #endif
 
   for(i=0; i<myGlobals.numDevices; i++) {

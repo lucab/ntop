@@ -297,7 +297,7 @@ extern void pktCastDistribPie(void);
 extern void drawTrafficPie(void);
 extern void drawThptGraph(int sortedColumn);
 extern void drawGlobalProtoDistribution(void);
-extern void drawHostsDistanceGraph();
+extern int  drawHostsDistanceGraph(int);
 extern void drawGlobalIpProtoDistribution(void);
 extern void drawBar(short width, short height, FILE* filepointer,
 		    int   num_points, char  *labels[], float data[]);

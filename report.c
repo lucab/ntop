@@ -569,18 +569,9 @@ void printTrafficStatistics() {
     /* ************************ */
 
 #ifdef CFG_USE_GRAPHICS
-    if(myGlobals.enableSessionHandling
-       && (myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value +
-	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value +
-	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value +
-	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value +
-	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value +
-	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value +
-	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value +
-	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value) > 0) {
+    if(myGlobals.enableSessionHandling && drawHostsDistanceGraph(1))
       sendString("<TR><TH "TH_BG" ALIGN=LEFT>Remote Hosts Distance</TH><TD "TH_BG" ALIGN=CENTER>"
 		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
-    }
 #endif /* CFG_USE_GRAPHICS*/
 
     /* ********************* */

@@ -287,10 +287,10 @@ void drawArea(short width,
 	      float data[]) { 
   gdImagePtr im;
   int black, white, colors[64], numColors, i, maxval=0;
-  int center_x, center_y;
+  int center_x, center_y, base;
   float total, yscale, txtsz, txtht;
-  int vmargin, hmargin, base, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
-  int padding, ymax, ymin, xmax, xmin, gray;
+  float vmargin, hmargin, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
+  float padding, ymax, ymin, xmax, xmin, gray;
 
   im = gdImageCreate(width, height);
 
@@ -306,7 +306,6 @@ void drawArea(short width,
   for(i=0, total=0; i<num_points; i++) {
     total += data[i];
     if(data[i] > maxval) maxval =  data[i];
-    printf("%d) %.1f\n", i, data[i]);
   }
 
   center_x = width/2, center_y = height/2;
@@ -316,11 +315,12 @@ void drawArea(short width,
   vmargin = 20; // top (bottom) vertical margin for title (x-labels)
   hmargin = 38; // left horizontal margin for y-labels
   
-  base = floor(((width) - hmargin) / num_points); // distance between columns
+  base = (int)((width - hmargin) / num_points); // distance between columns
   
-  ysize = height - 2 * vmargin; // y-size of plot
   xsize = num_points * base; // x-size of plot
-  
+  ysize = height - 2 * vmargin; // y-size of plot
+
+  /* printf("x-size=%.1f/y-size=%.1f\n", xsize, ysize); */
   // y labels and grid lines
   ngrid = 4; // number of grid lines
   
@@ -331,8 +331,8 @@ void drawArea(short width,
     char str[16];
 
     // height of grid line in units of data
-    ydat = (int)(i * dydat); 
-    snprintf(str, sizeof(str), "%d", ydat);
+    ydat = i * dydat; 
+    snprintf(str, sizeof(str), "%.1f", ydat);
 
     // height of grid line in pixels
     ypos = vmargin + ysize - (int)(i*dypix); 
@@ -343,8 +343,7 @@ void drawArea(short width,
     xpos = hmargin - txtsz; 
     if(xpos < 1) xpos = 1;
     
-    if(maxval > 0)
-      gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), str, black); 
+    if(maxval > 0) gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), str, black); 
 
     if (!(i == 0) && !(i > ngrid)) {
       gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray); 
@@ -357,7 +356,7 @@ void drawArea(short width,
 
   if(maxval > 0) {
     for (i = 0; i<num_points; i++) {
-      gdPoint points[4];
+      gdPoint points[5];
       // vertical columns
       ymax = vmargin + ysize; 
       ymin = ymax - (int)(data[i]*yscale); 
@@ -376,10 +375,13 @@ void drawArea(short width,
 	points[3].x = xmax; points[3].y = ymin;
       }
 
-      if((points[0].x == points[1].x) && (points[0].y == points[1].y))
-      	continue;
+      points[4].x = points[0].x; points[4].y = points[0].y;
 
-      gdImageFilledPolygon(im, points, 4, colors[0]); 
+      gdImageFilledPolygon(im, points, 5, colors[0]); 
+
+      gdImageFilledRectangle(im, points[0].x-1, points[0].y-1, points[0].x+1, points[0].y+1, black); 
+      gdImageFilledRectangle(im, points[3].x-1, points[3].y-1, points[3].x+1, points[3].y+1, black); 
+      gdImageLine(im, points[0].x, points[0].y, points[3].x, points[3].y, black); 
 
       // x labels
       txtsz = gdFontSmall->w * strlen(labels[i]); 
@@ -398,26 +400,6 @@ void drawArea(short width,
   gdImagePng(im, filepointer);
   gdImageDestroy(im);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* ************************ */
 
@@ -1581,32 +1563,15 @@ void drawGlobalIpProtoDistribution(void) {
 
 /* ******************************** */
 
-void drawHostsDistanceGraph() {
+int drawHostsDistanceGraph(int checkOnly) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
-  int i, j;
+  int i, j, numPoints=0;
   char  *lbls[32], labels[32][8];
   FILE *fd;
   float graphData[60];
   int useFdOpen = 0;
 
   memset(graphData, 0, sizeof(graphData));
-
-#ifndef WIN32
-  /* Unices */
-
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
-  
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
-#else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
-#endif
-
 
   for(i=0; i<=30; i++) {
     sprintf(labels[i], "%d", i);
@@ -1624,10 +1589,31 @@ void drawHostsDistanceGraph() {
 
     if((el != NULL) && (!subnetPseudoLocalHost(el))) {
       j = guessHops(el);
-      if((j > 0) && (j <= 30))
+      if((j > 0) && (j <= 30)) {
 	graphData[j]++;
+	numPoints++;
+      }
     }
   }
+
+  if(checkOnly)
+    return(numPoints);
+
+#ifndef WIN32
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+  
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
 
   drawArea(300, 250,    /* width, height           */
 	   fd,          /* open FILE pointer       */
@@ -1639,6 +1625,8 @@ void drawHostsDistanceGraph() {
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
+
+  return(numPoints);
 }
 
 /* ************************ */

@@ -199,10 +199,6 @@
 /* Win32 - Force various things to make up for lack of ./configure process */
 #ifdef WIN32
 
- #ifndef HAVE_GDBM_H
-  #define HAVE_GDBM_H
- #endif
-
  #ifndef CFG_MULTITHREADED
   #define CFG_MULTITHREADED
  #endif

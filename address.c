@@ -462,9 +462,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
 
 static void queueAddress(struct in_addr elem) {
-#ifdef HAVE_GDBM_H
   datum key_data, data_data;
-#endif
   char tmpBuf[32];
   int rc;
 
@@ -530,9 +528,7 @@ void cleanupAddressQueue(void) {
 
 void* dequeueAddress(void* notUsed _UNUSED_) {
   struct in_addr addr;
-#ifdef HAVE_GDBM_H
   datum key_data, data_data;
-#endif
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Address resolution thread started...\n");
 

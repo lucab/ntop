@@ -1951,14 +1951,9 @@ static int returnHTTPPage(char* pageName,
     } else if(strncmp(pageName, "hostsDistanceChart",
 		      strlen("hostsDistanceChart")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-      drawHostsDistanceGraph();
+      drawHostsDistanceGraph(0);
       printTrailer=0;
-    } else if(strncmp(pageName, "hostsDistanceChart",
-                      strlen("hostsDistanceChart")) == 0) {
-      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
-      drawHostsDistanceGraph();
-      printTrailer=0;
-    } else if((strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
+    } else if((strncmp(pageName,    "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
 	      || (strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
 	      || (strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
 	      || (strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)) {
