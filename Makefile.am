@@ -76,10 +76,10 @@ DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
               specialMAC.txt.gz
 
 NTOPDATA = ntop-cert.pem \
-           p2c.opt.table \
+           p2c.opt.table.gz \
            $(ETTER_PASSIVE) \
-           oui.txt \
-           specialMAC.txt
+           oui.txt.gz \
+           specialMAC.txt.gz
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
            html/*.css html/*.dtd \
