@@ -459,7 +459,9 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
         argv[argc++] = startTime;
         argv[argc++] = "--end";
         argv[argc++] = endTime;	
+#ifdef WIN32
 	revertDoubleColumn(path);
+#endif	
         snprintf(buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
         argv[argc++] = buf;
         snprintf(buf1, sizeof(buf1), "AREA:ctr#00a000:%s", rrdTitle);
