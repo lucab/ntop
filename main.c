@@ -74,11 +74,9 @@ int main(int argc, char *argv[]) {
   int userId=0, groupId=0;
 #endif
   int op, mergeInterfaces=1;
-
   int enableDBsupport=0;
   int enableThUpdate=1;
   int enableIdleHosts=1;
-
   char *cp, *localAddresses=NULL, *webAddr=NULL, *devices, *sslAddr=NULL;
   char flowSpecs[2048], rulesFile[128], ifStr[196], *theOpts;
   time_t lastTime;
@@ -101,6 +99,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   usePersistentStorage = 0;
+  stickyHosts = 0;
 
   /* Initialization of local variables */
   isLsofPresent  = checkCommand("lsof");
@@ -138,14 +137,22 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "e:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12";
+  theOpts = "ce:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12";
 #else
-  theOpts = "Ide:f:F:hr:i:p:nNw:m:b:D:s:P:R:MS:gt:a:u:W:12";
+  theOpts = "cIde:f:F:hr:i:p:nNw:m:b:D:s:P:R:MS:gt:a:u:W:12";
 #endif
   
   while((op = getopt(argc, argv, theOpts)) != EOF)
       switch (op) {
 	/* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
+
+      case 'c': /* 
+		   Sticky hosts = hosts that are not purged
+		   when idle
+		*/
+	stickyHosts = 1;
+	break;
+
       case 'P': /* DB-Path */
 	stringSanityCheck(optarg);
 	strncpy(dbPath, optarg, sizeof(dbPath)-1)[sizeof(dbPath)-1] = '\0';

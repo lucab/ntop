@@ -905,8 +905,9 @@ void purgeIdleHosts(int ignoreIdleTime) {
 
       if(ignoreIdleTime)
 	freeEntry=1;
-      else if((device[actualDeviceId].hash_hostTraffic[idx]->lastSeen+
-	       IDLE_HOST_PURGE_TIMEOUT) < actTime)
+      else if(((device[actualDeviceId].hash_hostTraffic[idx]->lastSeen+
+		IDLE_HOST_PURGE_TIMEOUT) < actTime)
+	      && (!stickyHosts))
 	freeEntry=1;
       else
 	freeEntry=0;

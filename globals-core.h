@@ -29,6 +29,7 @@ extern char domainName[MAXHOSTNAMELEN], *shortDomainName;
 
 /* command line options */
 extern u_short traceLevel;
+extern u_char stickyHosts;
 extern char dbPath[200];
 extern char accessLogPath[200]; /* Apache-like access log */
 extern u_int maxHashSize;
