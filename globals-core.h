@@ -128,6 +128,7 @@ HostTraffic * lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 /* initialize.c */
 extern void initIPServices(void);
 extern void resetDevice(int devIdx);
+extern void createDeviceIpProtosList(int devIdx);
 extern void initCounters(void);
 extern void resetStats(int);
 extern void reinitMutexes (void);
@@ -252,6 +253,7 @@ extern void updateDevicePacketStats(u_int length, int actualDeviceId);
 extern void dumpSuspiciousPacket(int actualDeviceId);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
+extern void addNewIpProtocolToHandle(char* name, u_int16_t id, u_int16_t idAlias);
 
 /* protocols.c */
 extern void handleBootp(HostTraffic *srcHost, HostTraffic *dstHost,

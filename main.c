@@ -1091,6 +1091,7 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
 
   /* ******************************* */
+
   checkUserIdentity(userSpecified);
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Loading Plugins");
@@ -1109,6 +1110,10 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_NOISY, "Starting web server");
   initWeb();
   traceEvent(CONST_TRACE_NOISY, "Web server started... continuing with initialization");
+
+  addNewIpProtocolToHandle("IGMP", 2, 0 /* no proto */);
+  addNewIpProtocolToHandle("OSPF", 89, 0 /* no proto */);
+  addNewIpProtocolToHandle("IPSEC", 50, 51);
 
   /*
    * In multithread mode, a separate thread handles packet sniffing

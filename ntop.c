@@ -284,7 +284,7 @@ static short handleProtocol(char* protoName, char *protocol) {
 
     for(idx=lowProtoPort; idx<= highProtoPort; idx++) {
       if(servicesMapper[idx] == -1) {
-	myGlobals.numIpPortsToHandle++;
+	myGlobals.ipPortMapper.numElements++;
 
 #ifdef DEBUG
 	printf("[%d] '%s' [port=%d]\n", myGlobals.numIpProtosToMonitor, protoName, idx);
@@ -310,7 +310,7 @@ static short handleProtocol(char* protoName, char *protocol) {
 
     if(idx != -1) {
       if(servicesMapper[idx] == -1) {
-	myGlobals.numIpPortsToHandle++;
+	myGlobals.ipPortMapper.numElements++;
 
 #ifdef DEBUG
 	printf("[%d] '%s' [%s:%d]\n", myGlobals.numIpProtosToMonitor, protoName, protocol, idx);
@@ -332,8 +332,7 @@ static short handleProtocol(char* protoName, char *protocol) {
 
 /* **************************************** */
 
-static int handleProtocolList(char* protoName,
-			       char *protocolList) {
+static int handleProtocolList(char* protoName, char *protocolList) {
   char tmpStr[255];
   char* lastEntry, *protoEntry;
   int increment=0, rc=0;
@@ -367,7 +366,8 @@ static int handleProtocolList(char* protoName,
       if(myGlobals.numIpProtosToMonitor == 0)
 	  myGlobals.protoIPTrafficInfos = (char**)malloc(sizeof(char*));
       else
-	  myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos, sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
+	  myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos, 
+							  sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
       
       rc = myGlobals.numIpProtosToMonitor;
       myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
@@ -387,6 +387,30 @@ static int handleProtocolList(char* protoName,
 
 /* **************************************** */
 
+void addNewIpProtocolToHandle(char* name, 
+			      u_int16_t id, 
+			      u_int16_t idAlias) {
+  ProtocolsList *proto = myGlobals.ipProtosList;
+  int i;
+
+  while(proto != NULL) {
+    if(proto->protocolId == id) return; /* Already there */
+    proto = proto->next;
+  }
+
+  proto = malloc(sizeof(ProtocolsList));
+  proto->next = myGlobals.ipProtosList;
+  proto->protocolName = strdup(name);
+  proto->protocolId = id, proto->protocolIdAlias = idAlias;
+  myGlobals.ipProtosList = proto;
+  myGlobals.numIpProtosList++;    
+
+  for(i=0; i<myGlobals.numDevices; i++)
+    createDeviceIpProtosList(i);
+}
+
+/* **************************************** */
+
 void createPortHash(void) {
   int theSize, i;
 
@@ -395,26 +419,27 @@ void createPortHash(void) {
      the port data hence we can transform it from
      an array to a hash table.
   */
-  myGlobals.numIpPortMapperSlots = 2*myGlobals.numIpPortsToHandle;
-  theSize = sizeof(PortMapper)*2*myGlobals.numIpPortMapperSlots;
-  myGlobals.ipPortMapper = (PortMapper*)malloc(theSize);
-  for(i=0; i<myGlobals.numIpPortMapperSlots; i++) myGlobals.ipPortMapper[i].port = -1;
+  myGlobals.ipPortMapper.numSlots = 2*myGlobals.ipPortMapper.numElements;
+  theSize = sizeof(PortProtoMapper)*2*myGlobals.ipPortMapper.numSlots;
+  myGlobals.ipPortMapper.theMapper = (PortProtoMapper*)malloc(theSize);
+  for(i=0; i<myGlobals.ipPortMapper.numSlots; i++) myGlobals.ipPortMapper.theMapper[i].portProto = -1;
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "Allocating %d slots", myGlobals.numIpPortMapperSlots);
+  traceEvent(CONST_TRACE_INFO, "Allocating %d slots", myGlobals.ipPortMapper.numSlots);
 #endif
 
   for(i=0; i<MAX_IP_PORT; i++) {
     if(servicesMapper[i] != -1) {
-      int slotId = (3*i) % myGlobals.numIpPortMapperSlots;
+      int slotId = (3*i) % myGlobals.ipPortMapper.numSlots;
 
-      while(myGlobals.ipPortMapper[slotId].port != -1)
-	slotId = (slotId+1) % myGlobals.numIpPortMapperSlots;
+      while(myGlobals.ipPortMapper.theMapper[slotId].portProto != -1)
+	slotId = (slotId+1) % myGlobals.ipPortMapper.numSlots;
 
 #ifdef DEBUG
       traceEvent(CONST_TRACE_INFO, "Mapping port %d to slotId %d", i, slotId);
 #endif
-      myGlobals.ipPortMapper[slotId].port = i, myGlobals.ipPortMapper[slotId].mappedPort = servicesMapper[i];
+      myGlobals.ipPortMapper.theMapper[slotId].portProto = i;
+      myGlobals.ipPortMapper.theMapper[slotId].mappedPortProto = servicesMapper[i];
     }
   }
 
@@ -449,7 +474,8 @@ void handleProtocols(void) {
 
     if(stat(myGlobals.protoSpecs, &buf) != 0) {
       fclose(fd);
-      traceEvent(CONST_TRACE_ERROR, "PROTO_INIT: ERROR: unable to get information about file '%s'", myGlobals.protoSpecs);
+      traceEvent(CONST_TRACE_ERROR, "PROTO_INIT: ERROR: unable to get information about file '%s'", 
+		 myGlobals.protoSpecs);
       return;
     }
 
@@ -557,7 +583,7 @@ void addDefaultProtocols(void) {
   myGlobals.GnutellaIdx = handleProtocolList("Gnutella", "6346|6347|6348|");
   myGlobals.KazaaIdx = handleProtocolList("Kazaa",       "1214|");
   myGlobals.WinMXIdx = handleProtocolList("WinMX",       "6699|7730|");
-  myGlobals.DirectConnectIdx = handleProtocolList("DirectConnect",    "0|"); /* Dummy port as this is a pure P2P protocol */
+  myGlobals.DirectConnectIdx = handleProtocolList("DC++",    "0|"); /* Dummy port as this is a pure P2P protocol */
   handleProtocolList("eDonkey",    "4661-4665|");
 
   handleProtocolList("Messenger", "1863|5000|5001|5190-5193|");
@@ -569,21 +595,21 @@ int mapGlobalToLocalIdx(int port) {
   if((port < 0) || (port >= MAX_IP_PORT))
    return(-1);
   else {
-    int j, found, slotId = (3*port) % myGlobals.numIpPortMapperSlots;
+    int j, found, slotId = (3*port) % myGlobals.ipPortMapper.numSlots;
 
-    for(j=0, found=0; j<myGlobals.numIpPortMapperSlots; j++) {
-      if(myGlobals.ipPortMapper[slotId].port == -1)
+    for(j=0, found=0; j<myGlobals.ipPortMapper.numSlots; j++) {
+      if(myGlobals.ipPortMapper.theMapper[slotId].portProto == -1)
 	break;
-      else if(myGlobals.ipPortMapper[slotId].port == port) {
+      else if(myGlobals.ipPortMapper.theMapper[slotId].portProto == port) {
 	found = 1;
 	break;
       }
 
-      slotId = (slotId+1) % myGlobals.numIpPortMapperSlots;
+      slotId = (slotId+1) % myGlobals.ipPortMapper.numSlots;
     }
 
     if(found)
-      return(myGlobals.ipPortMapper[slotId].mappedPort);
+      return(myGlobals.ipPortMapper.theMapper[slotId].mappedPortProto);
     else
       return(-1);
   }
@@ -626,8 +652,8 @@ static void purgeIpPorts(int theDevice) {
 #ifdef CFG_MULTITHREADED
 
 void* scanIdleLoop(void* notUsed _UNUSED_) {
-
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) started", myGlobals.scanIdleThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) started", 
+	     myGlobals.scanIdleThreadId);
 
   for(;;) {
     int i;
@@ -651,7 +677,8 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
       }
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated", myGlobals.scanIdleThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated", 
+	     myGlobals.scanIdleThreadId);
   return(NULL); 
 }
 #endif
@@ -1050,7 +1077,7 @@ RETSIGTYPE cleanup(int signo) {
     free(myGlobals.protoIPTrafficInfos[i]);
 
   free(myGlobals.protoIPTrafficInfos);
-  free(myGlobals.ipPortMapper);
+  free(myGlobals.ipPortMapper.theMapper);
 
   if(myGlobals.currentFilterExpression != NULL)
     free(myGlobals.currentFilterExpression);

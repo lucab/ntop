@@ -305,6 +305,18 @@ static void initIPCountryTable(void) {
 
 /* ******************************* */
 
+void createDeviceIpProtosList(int devIdx) {
+  size_t len = (size_t)myGlobals.numIpProtosList*sizeof(TrafficCounter);
+
+  if(len > 0) {
+    if((myGlobals.device[devIdx].ipProtosList = (TrafficCounter*)malloc(len)) == NULL)
+      return;
+    memset(myGlobals.device[devIdx].ipProtosList, 0, len);
+  }
+}
+
+/* ******************************* */
+
 /*
   Function below courtesy of
   Eric Dumazet <dada1@cosmosbay.com>
@@ -341,9 +353,7 @@ void resetDevice(int devIdx) {
   resetTrafficCounter(&myGlobals.device[devIdx].netbiosBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].arpRarpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].atalkBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].ospfBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].egpBytes);
-  resetTrafficCounter(&myGlobals.device[devIdx].igmpBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].osiBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].ipv6Bytes);
   resetTrafficCounter(&myGlobals.device[devIdx].otherBytes);
@@ -401,6 +411,13 @@ void resetDevice(int devIdx) {
     myGlobals.device[devIdx].ipProtoStats = (SimpleProtoTrafficInfo*)malloc(len);
 
   memset(myGlobals.device[devIdx].ipProtoStats, 0, len);
+  
+  if(myGlobals.device[devIdx].ipProtosList != NULL) {
+    free(myGlobals.device[devIdx].ipProtosList); 
+    myGlobals.device[devIdx].ipProtosList = NULL;
+  }
+
+  createDeviceIpProtosList(devIdx);
 }
 
 /* ******************************************* */

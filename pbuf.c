@@ -706,13 +706,14 @@ static void processIpPkt(const u_char *bp,
   struct tcphdr tp;
   struct udphdr up;
   struct icmp icmpPkt;
-  u_int hlen, tcpDataLength, udpDataLength, off, tcpUdpLen;
+  u_int hlen, tcpDataLength, udpDataLength, off, tcpUdpLen, idx;
   char *proto;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
   u_char forceUsingIPaddress = 0;
   struct timeval tvstrct;
-  u_char *theData;
+  u_char *theData, found;
   TrafficCounter ctr;
+  ProtocolsList *protoList;
 
    /* Need to copy this over in case bp isn't properly aligned.
     * This occurs on SunOS 4.x at least.
@@ -1516,32 +1517,36 @@ static void processIpPkt(const u_char *bp,
     }
     break;
 
-  case IPPROTO_OSPF:
-    proto = "OSPF";
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ospfBytes, length);
-    incrementTrafficCounter(&srcHost->ospfSent, length);
-    incrementTrafficCounter(&dstHost->ospfRcvd, length);
-    sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
-    break;
-
-  case IPPROTO_IGMP:
-    proto = "IGMP";
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].igmpBytes, length);
-    incrementTrafficCounter(&srcHost->igmpSent, length);
-    incrementTrafficCounter(&dstHost->igmpRcvd, length);
-    sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
-    break;
-
   default:
-    proto = "IP (Other)";
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherIpBytes, length);
-    sport = dport = 0;
-    incrementTrafficCounter(&srcHost->otherSent, length);
-    incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, ip.ip_p);
-    incrementTrafficCounter(&dstHost->otherRcvd, length);
-    incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, ip.ip_p);
-    sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
-    break;
+    if(srcHost->ipProtosList != NULL) {
+      protoList = myGlobals.ipProtosList;    
+      found = 0, idx = 0;
+      
+      while(protoList != NULL) {
+	if((protoList->protocolId == ip.ip_p) 
+	   || ((protoList->protocolIdAlias != 0) && (protoList->protocolIdAlias == ip.ip_p))) {
+	  incrementTrafficCounter(&srcHost->ipProtosList[idx].sent, length),
+	    incrementTrafficCounter(&dstHost->ipProtosList[idx].rcvd, length),
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtosList[idx], length),
+	    found = 1;
+	  break;
+	}
+	
+	idx++, protoList = protoList->next;
+      }
+    }
+
+   if(!found) {
+     proto = "IP (Other)";
+     incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherIpBytes, length);
+     sport = dport = 0;
+     incrementTrafficCounter(&srcHost->otherSent, length);
+     incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, ip.ip_p);
+     incrementTrafficCounter(&dstHost->otherRcvd, length);
+     incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, ip.ip_p);
+     sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
+   }
+   break;
   }
 
 #ifdef DEBUG

@@ -34,7 +34,6 @@
 #define EADDRINUSE              WSAEADDRINUSE
 #define ENOTSOCK                WSAENOTSOCK
 #define EOPNOTSUPP              WSAEOPNOTSUPP
-
 #endif
 
 /*
@@ -64,7 +63,7 @@ typedef int NDIS_STATUS, *PNDIS_STATUS;
 extern int getopt(int num, char *const *argv, const char *opts);
 #define getopt getopt____
 
-#if defined(WIN32) && defined(__GNUC__)
+#if defined(__GNUC__)
 /* on mingw, struct timezone isn't defined so s/struct timezone/void/ - Scott Renfro <scott@renfro.org> */
 extern int gettimeofday(struct timeval*, void*);
 #else
@@ -79,8 +78,51 @@ extern void printAvailableInterfaces();
 extern char* getpass(const char *prompt);
 extern ULONG GetHostIPAddr();
 
-#define RETSIGTYPE void
+/* *************************************************************** */
 
+/*
+
+    Declaration of POSIX directory browsing functions and types for Win32.
+
+    Kevlin Henney (mailto:kevlin@acm.org), March 1997.
+
+    Copyright Kevlin Henney, 1997. All rights reserved.
+
+    Permission to use, copy, modify, and distribute this software and its
+    documentation for any purpose is hereby granted without fee, provided
+    that this copyright and permissions notice appear in all copies and
+    derivatives, and that no charge may be made for the software and its
+    documentation except to cover cost of distribution.
+    
+*/
+
+#if defined(WIN32) && defined(__GNUC__)
+ #ifndef DIRENT_INCLUDED
+  #define DIRENT_INCLUDED
+
+struct dirent
+{
+    char *d_name;
+};
+
+
+typedef struct DIR
+{
+    long                handle; /* -1 for failed rewind */
+    struct _finddata_t  info;
+    struct dirent       result; /* d_name null iff first time */
+    char                *name;  /* NTBS */
+} DIR;
+
+DIR           *opendir(const char *);
+int           closedir(DIR *);
+struct dirent *readdir(DIR *);
+void          rewinddir(DIR *);
+
+#endif
+
+
+#define RETSIGTYPE void
 
 #define	ETHERMTU	1500
 

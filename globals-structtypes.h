@@ -21,6 +21,17 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* *******************************
+
+   Some nice links:
+
+   http://www.sockets.com/protocol.htm
+   http://www.iana.org/assignments/protocol-numbers
+
+   Courtesy of Helmut Schneider <jumper99@gmx.de>
+
+******************************* */
+
 /*
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -151,10 +162,25 @@ typedef struct {
 } HEADER;
 #endif /* MAKE_NTOP_PACKETSZ_DECLARATIONS */
 
-typedef struct portMapper {
-  int port;       /* Port to map */
-  int mappedPort; /* Mapped port */
-} PortMapper;
+typedef struct portProtoMapper {
+  int portProto;       /* Port/proto to map */
+  int mappedPortProto; /* Mapped port/proto */
+} PortProtoMapper;
+
+typedef struct portProtoMapperHandler {
+  u_short numElements; /* numIpPortsToHandle */
+  int numSlots;/* numIpPortMapperSlots */
+  PortProtoMapper *theMapper;
+} PortProtoMapperHandler;
+
+typedef struct protocolsList {
+  char *protocolName;
+  u_int16_t protocolId, protocolIdAlias; /* I know it's ugly however this
+					should be enough for most of
+					the situations
+				     */
+  struct protocolsList *next;
+} ProtocolsList;
 
 #ifdef CFG_MULTITHREADED
 
@@ -451,6 +477,10 @@ typedef struct protocolInfo {
   DHCPStats        *dhcpStats;
 } ProtocolInfo;
 
+typedef struct shortProtoTrafficInfo {
+  TrafficCounter sent, rcvd;
+} ShortProtoTrafficInfo;
+
 typedef struct protoTrafficInfo {
   TrafficCounter sentLoc, sentRem;
   TrafficCounter rcvdLoc, rcvdFromRem;
@@ -521,9 +551,9 @@ typedef struct hostTraffic {
   u_short          recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];
   TrafficCounter   ipBytesSent, ipBytesRcvd;
   TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc,
-                   udpSentRem, icmpSent, ospfSent, igmpSent;
+                   udpSentRem, icmpSent;
   TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc,
-                   udpRcvdFromRem, icmpRcvd, ospfRcvd, igmpRcvd;
+                   udpRcvdFromRem, icmpRcvd;
 
   TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
                    udpFragmentsSent,  udpFragmentsRcvd,
@@ -535,6 +565,9 @@ typedef struct hostTraffic {
   /* Interesting Packets */
   SecurityHostProbes *secHostPkts;
   IcmpHostInfo       *icmpInfo;
+
+  ShortProtoTrafficInfo *ipProtosList;        /* List of myGlobals.numIpProtosList entries */
+  ProtoTrafficInfo      *protoIPTrafficInfos; /* Info about IP traffic generated/rcvd by this host */
 
   /* Non IP */
   TrafficCounter   stpSent, stpRcvd; /* Spanning Tree */
@@ -548,11 +581,9 @@ typedef struct hostTraffic {
   TrafficCounter   netbiosSent, netbiosRcvd;
   TrafficCounter   ipv6Sent, ipv6Rcvd;
   TrafficCounter   otherSent, otherRcvd; /* Other traffic we cannot classify */
-  
-  ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/rcvd by this host */
   UnknownProto     *unknownProtoSent, *unknownProtoRcvd; /* List of MAX_NUM_UNKNOWN_PROTOS elements */
 
-   Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
+  Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   UsageCounter     contactedSentPeers;   /* peers that talked with this host */
   UsageCounter     contactedRcvdPeers;   /* peers that talked with this host */
   UsageCounter     contactedRouters;     /* routers contacted by this host */
@@ -565,9 +596,9 @@ typedef struct domainStats {
   HostTraffic *domainHost; /* ptr to a host that belongs to the domain */
   TrafficCounter bytesSent, bytesRcvd;
   TrafficCounter tcpSent, udpSent;
-  TrafficCounter icmpSent, ospfSent, igmpSent;
+  TrafficCounter icmpSent;
   TrafficCounter tcpRcvd, udpRcvd;
-  TrafficCounter icmpRcvd, ospfRcvd, igmpRcvd;
+  TrafficCounter icmpRcvd;
 } DomainStats;
 
 /* *********************** */
@@ -711,13 +742,11 @@ typedef struct ntopInterface {
   TrafficCounter netbiosBytes;
   TrafficCounter arpRarpBytes;
   TrafficCounter atalkBytes;
-  TrafficCounter ospfBytes;
   TrafficCounter egpBytes;
-  TrafficCounter igmpBytes;
   TrafficCounter osiBytes;
   TrafficCounter ipv6Bytes;
   TrafficCounter otherBytes;
-
+  TrafficCounter *ipProtosList;        /* List of myGlobals.numIpProtosList entries */
   PortCounter    *ipPorts[MAX_IP_PORT];
 
   TrafficCounter lastMinEthernetBytes;
@@ -846,9 +875,7 @@ typedef struct ntopInterface {
   /*XML trafficcounter netbiosBytes         Work          "" */
   /*XML trafficcounter arpRarpBytes         Work          "" */
   /*XML trafficcounter atalkBytes           Work          "" */
-  /*XML trafficcounter ospfBytes            Work          "" */
   /*XML trafficcounter egpBytes             Work          "" */
-  /*XML trafficcounter igmpBytes            Work          "" */
   /*XML trafficcounter osiBytes             Work          "" */
   /*XML trafficcounter ipv6Bytes            Work          "" */
   /*XML trafficcounter otherBytes           Work          "" */
@@ -1342,51 +1369,6 @@ typedef struct IPNode {
   } node;
 } IPNode;
 
-
-/* *************************************************************** */
-
-/*
-
-    Declaration of POSIX directory browsing functions and types for Win32.
-
-    Kevlin Henney (mailto:kevlin@acm.org), March 1997.
-
-    Copyright Kevlin Henney, 1997. All rights reserved.
-
-    Permission to use, copy, modify, and distribute this software and its
-    documentation for any purpose is hereby granted without fee, provided
-    that this copyright and permissions notice appear in all copies and
-    derivatives, and that no charge may be made for the software and its
-    documentation except to cover cost of distribution.
-    
-*/
-
-#if defined(WIN32) && defined(__GNUC__)
- #ifndef DIRENT_INCLUDED
-  #define DIRENT_INCLUDED
-
-struct dirent
-{
-    char *d_name;
-};
-
-
-typedef struct DIR
-{
-    long                handle; /* -1 for failed rewind */
-    struct _finddata_t  info;
-    struct dirent       result; /* d_name null iff first time */
-    char                *name;  /* NTBS */
-} DIR;
-
-DIR           *opendir(const char *);
-int           closedir(DIR *);
-struct dirent *readdir(DIR *);
-void          rewinddir(DIR *);
-
- #endif
-#endif /* WIN32 */
-
 /* Flow aggregation */
 typedef enum {
   noAggregation = 0,
@@ -1811,10 +1793,12 @@ XML*/
   u_short numIpProtosToMonitor;
   char **protoIPTrafficInfos;
 
-  /* Ports */
-  u_short numIpPortsToHandle;
-  int numIpPortMapperSlots;
-  PortMapper *ipPortMapper;
+  /* Protocols */
+  u_short numIpProtosList;
+  ProtocolsList *ipProtosList;
+
+  /* IP Ports */
+  PortProtoMapperHandler ipPortMapper;
 
   /* Packet Capture */
 #if defined(CFG_MULTITHREADED)

@@ -34,6 +34,9 @@
 
 #define DARK_BG     "BGCOLOR=#DDDDDD"
 
+/* Used for HTML tables */
+#define BASE_PROTOS_IDX  30
+
 #define CHART_FORMAT ".png"
 #define MIME_TYPE_CHART_FORMAT FLAG_HTTP_TYPE_PNG
 

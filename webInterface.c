@@ -3057,13 +3057,13 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "# Protocol slots", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numIpPortsToHandle) < 0)
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipPortMapper.numElements) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "# IP Ports Being Monitored", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numIpPortMapperSlots) < 0)
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipPortMapper.numSlots) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "# Ports slots", buf);
+  printFeatureConfigInfo(textPrintFlag, "# IP Ports slots", buf);
 
   if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numHandledSIGPIPEerrors) < 0)
     BufferTooShort();

@@ -485,11 +485,16 @@ void printFooter(int reportType) {
 
 void printHeader(int reportType, int revertOrder, u_int column) {
   char buf[LEN_GENERAL_WORK_BUFFER];
-  char *sign, *arrowGif, *arrow[48], *theAnchor[48], *url=NULL;
-  int i, soFar=2;
+  char *sign, *arrowGif, *arrow[64], *theAnchor[64], *url=NULL;
+  int i, soFar=2, idx;
   char htmlAnchor[64], htmlAnchor1[64];
-
+  ProtocolsList *protoList;
   /* printf("->%d<-\n",screenNumber); */
+
+  memset(arrow, 0, sizeof(arrow));
+  memset(theAnchor, 0, sizeof(theAnchor));
+  memset(htmlAnchor, 0, sizeof(htmlAnchor));
+  memset(htmlAnchor1, 0, sizeof(htmlAnchor1));
 
   if(revertOrder) {
     sign = "";
@@ -611,20 +616,36 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	    theAnchor[6], arrow[6], theAnchor[7], arrow[7]) < 0)
       BufferTooShort();
     sendString(buf);
+
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER,
-		"<TH "TH_BG">%s9>OSPF%s</A></TH>"
 		"<TH "TH_BG">%s10>NetBios%s</A></TH>"
-		"<TH "TH_BG">%s11>IGMP%s</A></TH>"
 		"<TH "TH_BG">%s12>OSI%s</A></TH>"
 		"<TH "TH_BG">%s13>IPv6%s</A></TH>"
-		"<TH "TH_BG">%s14>STP%s</A></TH>"
-		"<TH "TH_BG">%s15>Other%s</A></TH>",
-		theAnchor[8], arrow[8],
+		"<TH "TH_BG">%s14>STP%s</A></TH>",
 		theAnchor[9], arrow[9],
-		theAnchor[10], arrow[10],
 		theAnchor[11], arrow[11],
 		theAnchor[12], arrow[12],
-		theAnchor[13], arrow[13],
+		theAnchor[13], arrow[13]) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+    protoList = myGlobals.ipProtosList, idx=0;
+    while(protoList != NULL) {
+
+      if(abs(column) == BASE_PROTOS_IDX+idx) { arrow[BASE_PROTOS_IDX+idx] = arrowGif; theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor;  }
+       else { arrow[BASE_PROTOS_IDX+idx] = "";  theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor1;  }
+       
+      if(snprintf(buf, sizeof(buf), "<TH "TH_BG">%s%d>%s%s</A></TH>",
+		  theAnchor[BASE_PROTOS_IDX+idx], BASE_PROTOS_IDX+idx, 
+		  protoList->protocolName, arrow[BASE_PROTOS_IDX+idx]) < 0)
+	BufferTooShort();
+      sendString(buf);
+      
+      idx++, protoList = protoList->next;
+    }
+
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER,
+		"<TH "TH_BG">%s15>Other%s</A></TH>",
 		theAnchor[14], arrow[14]) < 0)
       BufferTooShort();
     sendString(buf);
@@ -1097,7 +1118,6 @@ int cmpFctn(const void *_a, const void *_b) {
 	     myGlobals.sortSendMode, myGlobals.numIpProtosToMonitor);
 #endif
 
-
   switch(myGlobals.reportKind) {
   case SORT_DATA_RECEIVED_PROTOS:
     switch(myGlobals.columnSort) {
@@ -1130,14 +1150,8 @@ int cmpFctn(const void *_a, const void *_b) {
     case 8:
       a_ = (*a)->appletalkRcvd.value, b_ = (*b)->appletalkRcvd.value;
       break;
-    case 9:
-      a_ = (*a)->ospfRcvd.value, b_ = (*b)->ospfRcvd.value;
-      break;
     case 10:
       a_ = (*a)->netbiosRcvd.value, b_ = (*b)->netbiosRcvd.value;
-      break;
-    case 11:
-      a_ = (*a)->igmpRcvd.value, b_ = (*b)->igmpRcvd.value;
       break;
     case 12:
       a_ = (*a)->osiRcvd.value, b_ = (*b)->osiRcvd.value;
@@ -1150,6 +1164,13 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     case 15:
       a_ = (*a)->otherRcvd.value, b_ = (*b)->otherRcvd.value;
+      break;
+    default:
+      if((myGlobals.columnSort >= BASE_PROTOS_IDX)
+	 && (myGlobals.columnSort < (BASE_PROTOS_IDX+myGlobals.numIpProtosList))) {
+	a_ = (*a)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX].rcvd.value,
+	  b_ = (*b)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX].rcvd.value;
+      }
       break;
     }
     break;
@@ -1242,14 +1263,8 @@ int cmpFctn(const void *_a, const void *_b) {
     case 8:
       a_ = (*a)->appletalkSent.value, b_ = (*b)->appletalkSent.value;
       break;
-    case 9:
-      a_ = (*a)->ospfSent.value, b_ = (*b)->ospfSent.value;
-      break;
     case 10:
       a_ = (*a)->netbiosSent.value, b_ = (*b)->netbiosSent.value;
-      break;
-    case 11:
-      a_ = (*a)->igmpSent.value, b_ = (*b)->igmpSent.value;
       break;
     case 12:
       a_ = (*a)->osiSent.value, b_ = (*b)->osiSent.value;
@@ -1262,6 +1277,13 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     case 15:
       a_ = (*a)->otherSent.value, b_ = (*b)->otherSent.value;
+      break;
+    default:
+      if((myGlobals.columnSort >= BASE_PROTOS_IDX)
+	 && (myGlobals.columnSort < (BASE_PROTOS_IDX+myGlobals.numIpProtosList))) {
+	a_ = (*a)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX].sent.value,
+	  b_ = (*b)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX].sent.value;
+      }
       break;
     }
     break;
@@ -1358,15 +1380,9 @@ int cmpFctn(const void *_a, const void *_b) {
       a_ = (*a)->appletalkRcvd.value+(*a)->appletalkSent.value;
       b_ = (*b)->appletalkRcvd.value+(*b)->appletalkSent.value;
       break;
-    case 9:
-      a_ = (*a)->ospfRcvd.value+(*a)->ospfSent.value, b_ = (*b)->ospfRcvd.value+(*b)->ospfSent.value;
-      break;
     case 10:
       a_ = (*a)->netbiosRcvd.value+(*a)->netbiosSent.value;
       b_ = (*b)->netbiosRcvd.value+(*b)->netbiosSent.value;
-      break;
-    case 11:
-      a_ = (*a)->igmpRcvd.value+(*a)->igmpSent.value, b_ = (*b)->igmpRcvd.value+(*b)->igmpSent.value;
       break;
     case 12:
       a_ = (*a)->osiRcvd.value+(*a)->osiSent.value, b_ = (*b)->osiRcvd.value+(*b)->osiSent.value;
@@ -1379,6 +1395,15 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     case 15:
       a_ = (*a)->otherRcvd.value+(*a)->otherSent.value, b_ = (*b)->otherRcvd.value+(*b)->otherSent.value;
+      break;
+    default:
+      if((myGlobals.columnSort >= BASE_PROTOS_IDX)
+	 && (myGlobals.columnSort < (BASE_PROTOS_IDX+myGlobals.numIpProtosList))) {
+	a_ = (*a)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX].sent.value
+	  +(*a)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX].rcvd.value;
+	b_ = (*b)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX].sent.value
+	  +(*b)->ipProtosList[myGlobals.columnSort-BASE_PROTOS_IDX].rcvd.value;
+      }
       break;
     }
     break;
@@ -2204,20 +2229,30 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   Counter actTotalSent, actTotalRcvd;
   char buf[LEN_GENERAL_WORK_BUFFER];
   char linkName[LEN_GENERAL_WORK_BUFFER/2];
-  int i;
-
+  int i, idx;
+  ProtocolsList *protoList;
+    
   totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value;
-  totalSent += el->icmpSent.value+el->ospfSent.value+el->igmpSent.value+el->ipxSent.value+el->dlcSent.value+el->arp_rarpSent.value;
+  totalSent += el->icmpSent.value+el->ipxSent.value+el->dlcSent.value+el->arp_rarpSent.value;
   totalSent +=  el->decnetSent.value+el->appletalkSent.value+el->netbiosSent.value+
     el->osiSent.value+el->ipv6Sent.value+el->stpSent.value+el->otherSent.value;
 
   totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
   totalRcvd += el->udpRcvdLoc.value+el->udpRcvdFromRem.value;
-  totalRcvd += el->icmpRcvd.value+el->ospfRcvd.value+el->igmpRcvd.value;
+  totalRcvd += el->icmpRcvd.value;
   totalRcvd += el->ipxRcvd.value+el->dlcRcvd.value+el->arp_rarpRcvd.value;
   totalRcvd += el->decnetRcvd.value+el->appletalkRcvd.value;
   totalRcvd += el->osiRcvd.value+el->netbiosRcvd.value+el->ipv6Rcvd.value
     +el->stpRcvd.value+el->otherRcvd.value;
+
+  protoList = myGlobals.ipProtosList;    
+  idx = 0;
+  
+  while(protoList != NULL) {
+    totalSent += el->ipProtosList[idx].sent.value;
+    totalRcvd += el->ipProtosList[idx].rcvd.value;
+    idx++, protoList = protoList->next;
+  }
 
   actTotalSent = el->tcpSentLoc.value+el->tcpSentRem.value;
   actTotalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
@@ -2278,20 +2313,10 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->appletalkRcvd.value/1024,
 			100*((float)SD(el->appletalkRcvd.value, totalRcvd)));
 
-  printTableDoubleEntry(buf, sizeof(buf), "OSPF", CONST_COLOR_1, (float)el->ospfSent.value/1024,
-			100*((float)SD(el->ospfSent.value, totalSent)),
-			(float)el->ospfRcvd.value/1024,
-			100*((float)SD(el->ospfRcvd.value, totalRcvd)));
-
   printTableDoubleEntry(buf, sizeof(buf), "NetBios", CONST_COLOR_1, (float)el->netbiosSent.value/1024,
 			100*((float)SD(el->netbiosSent.value, totalSent)),
 			(float)el->netbiosRcvd.value/1024,
 			100*((float)SD(el->netbiosRcvd.value, totalRcvd)));
-
-  printTableDoubleEntry(buf, sizeof(buf), "IGMP", CONST_COLOR_1, (float)el->igmpSent.value/1024,
-			100*((float)SD(el->igmpSent.value, totalSent)),
-			(float)el->igmpRcvd.value/1024,
-			100*((float)SD(el->igmpRcvd.value, totalRcvd)));
 
   printTableDoubleEntry(buf, sizeof(buf), "OSI", CONST_COLOR_1, (float)el->osiSent.value/1024,
 			100*((float)SD(el->osiSent.value, totalSent)),
@@ -2308,6 +2333,20 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->stpRcvd.value/1024,
 			100*((float)SD(el->stpRcvd.value, totalRcvd)));
 
+  {
+    protoList = myGlobals.ipProtosList;    
+    idx = 0;
+    
+    while(protoList != NULL) {
+      printTableDoubleEntry(buf, sizeof(buf), protoList->protocolName, CONST_COLOR_1, 
+			    (float)el->ipProtosList[idx].sent.value/1024,
+			    100*((float)SD(el->ipProtosList[idx].sent.value, totalSent)),
+			    (float)el->ipProtosList[idx].rcvd.value/1024,
+			    100*((float)SD(el->ipProtosList[idx].rcvd.value, totalRcvd)));
+      idx++, protoList = protoList->next;
+    }
+  }
+
   printTableDoubleEntry(buf, sizeof(buf), "Other (Non IP)", CONST_COLOR_1, (float)el->otherSent.value/1024,
 			100*((float)SD(el->otherSent.value, totalSent)),
 			(float)el->otherRcvd.value/1024,
@@ -2316,18 +2355,27 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   {
     totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+
       el->udpSentLoc.value+el->udpSentRem.value+
-      el->icmpSent.value+el->ospfSent.value+el->igmpSent.value+el->stpSent.value+
+      el->icmpSent.value+el->stpSent.value+
       el->ipxSent.value+el->osiSent.value+el->dlcSent.value+
       el->arp_rarpSent.value+el->decnetSent.value+el->appletalkSent.value+
       el->netbiosSent.value+el->ipv6Sent.value+el->otherSent.value;
 
     totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+
       el->udpRcvdLoc.value+el->udpRcvdFromRem.value+
-      el->icmpRcvd.value+el->ospfRcvd.value+el->igmpRcvd.value+el->stpRcvd.value+
+      el->icmpRcvd.value+el->stpRcvd.value+
       el->ipxRcvd.value+el->osiRcvd.value+el->dlcRcvd.value+
       el->arp_rarpRcvd.value+el->decnetRcvd.value+el->appletalkRcvd.value+
       el->netbiosRcvd.value+el->ipv6Rcvd.value+el->otherRcvd.value;
 
+    protoList = myGlobals.ipProtosList;    
+    idx = 0;
+    
+    while(protoList != NULL) {
+      totalSent += el->ipProtosList[idx].sent.value;
+      totalRcvd += el->ipProtosList[idx].rcvd.value;
+      idx++, protoList = protoList->next;
+    }
+    
     if((totalSent > 0) || (totalRcvd > 0)) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
 		  getRowColor()) < 0)
@@ -3814,7 +3862,7 @@ void printTableEntry(char *buf, int bufLen,
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>50%%</TD>"
+		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>100%%</TD>"
 		"<TD ALIGN=CENTER WIDTH=200><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=200 HEIGHT=12>"
 		"</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total)) < 0)

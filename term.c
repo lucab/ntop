@@ -26,6 +26,7 @@
 
 void termIPServices(void) {
   int i;
+  ProtocolsList *proto = myGlobals.ipProtosList;
 
   for(i=0; i<myGlobals.numActServices; i++) {
     if(myGlobals.udpSvc[i] != NULL) {
@@ -43,8 +44,17 @@ void termIPServices(void) {
 
   free(myGlobals.udpSvc);
   free(myGlobals.tcpSvc);
-}
 
+  /* ****************************** */
+
+  while(proto != NULL) {
+    ProtocolsList *nextProto = proto->next;
+
+    free(proto->protocolName);
+    free(proto);
+    proto = nextProto;
+  }
+}
 
 /* ******************************* */
 
@@ -80,9 +90,9 @@ void termIPSessions(void) {
 /* ************************************************ */
 
 void termGdbm() {
-    if(myGlobals.dnsCacheFile) { gdbm_close(myGlobals.dnsCacheFile); myGlobals.dnsCacheFile = NULL; }
+    if(myGlobals.dnsCacheFile)     { gdbm_close(myGlobals.dnsCacheFile); myGlobals.dnsCacheFile = NULL;   }
     if(myGlobals.addressQueueFile) { gdbm_close(myGlobals.addressQueueFile); myGlobals.addressQueueFile = NULL; }
-    if(myGlobals.pwFile) { gdbm_close(myGlobals.pwFile); myGlobals.pwFile = NULL; }
-    if(myGlobals.prefsFile) { gdbm_close(myGlobals.prefsFile); myGlobals.prefsFile = NULL; }
-    if(myGlobals.hostsInfoFile) { gdbm_close(myGlobals.hostsInfoFile); myGlobals.hostsInfoFile = NULL; }
+    if(myGlobals.pwFile)           { gdbm_close(myGlobals.pwFile); myGlobals.pwFile = NULL;               }
+    if(myGlobals.prefsFile)        { gdbm_close(myGlobals.prefsFile); myGlobals.prefsFile = NULL;         }
+    if(myGlobals.hostsInfoFile)    { gdbm_close(myGlobals.hostsInfoFile); myGlobals.hostsInfoFile = NULL; }
 }

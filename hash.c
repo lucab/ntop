@@ -757,8 +757,8 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 	} else
 #endif
 	{
-	    if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL)
-		return(NULL);
+	  if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL)
+	    return(NULL);
 	}
 
 	memset(el, 0, sizeof(HostTraffic));
@@ -770,6 +770,10 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 	    FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
 
 	el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
+
+	len = (size_t)myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo);
+	if((el->ipProtosList = (ShortProtoTrafficInfo*)malloc(len)) == NULL) return(NULL);
+	memset(el->ipProtosList, 0, len);
 
 	len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
 	if((el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len)) == NULL) return(NULL);

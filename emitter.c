@@ -777,11 +777,6 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       if(checkFilter(filter, "udpSentRem"))
 	wrtLlongItm(fDescr, lang, "\t", "udpSentRem", el->udpSentRem, ',', numEntries);
 
-      if(checkFilter(filter, "ospfSent"))
-	wrtLlongItm(fDescr, lang, "\t", "ospfSent",        el->ospfSent, ',', numEntries);
-      if(checkFilter(filter, "igmpSent"))
-	wrtLlongItm(fDescr, lang, "\t", "igmpSent",        el->igmpSent, ',', numEntries);
-
       if(checkFilter(filter, "tcpRcvdLoc"))
 	wrtLlongItm(fDescr, lang, "\t", "tcpRcvdLoc",el->tcpRcvdLoc, ',', numEntries);
       if(checkFilter(filter, "tcpRcvdFromRem"))
@@ -790,10 +785,6 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	wrtLlongItm(fDescr, lang, "\t", "udpRcvdLoc",el->udpRcvdLoc, ',', numEntries);
       if(checkFilter(filter, "udpRcvdFromRem"))
 	wrtLlongItm(fDescr, lang, "\t", "udpRcvdFromRem",el->udpRcvdFromRem, ',', numEntries);
-      if(checkFilter(filter, "ospfRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "ospfRcvd",    el->ospfRcvd, ',', numEntries);
-      if(checkFilter(filter, "igmpRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "igmpRcvd",    el->igmpRcvd, ',', numEntries);
 
       /* ***************************** */
 
@@ -1315,12 +1306,8 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
       wrtLlongItm(fDescr, lang, "\t", "arpRarpBytes",myGlobals.device[i].arpRarpBytes, ',', numEntries);
     if(checkFilter(filter, "atalkBytes"))
       wrtLlongItm(fDescr, lang, "\t", "atalkBytes",myGlobals.device[i].atalkBytes, ',', numEntries);
-    if(checkFilter(filter, "ospfBytes"))
-      wrtLlongItm(fDescr, lang, "\t", "ospfBytes",myGlobals.device[i].ospfBytes, ',', numEntries);
     if(checkFilter(filter, "egpBytes"))
       wrtLlongItm(fDescr, lang, "\t", "egpBytes",myGlobals.device[i].egpBytes, ',', numEntries);
-    if(checkFilter(filter, "igmpBytes"))
-      wrtLlongItm(fDescr, lang, "\t", "igmpBytes",myGlobals.device[i].igmpBytes, ',', numEntries);
     if(checkFilter(filter, "osiBytes"))
       wrtLlongItm(fDescr, lang, "\t", "osiBytes",myGlobals.device[i].osiBytes, ',', numEntries);
     if(checkFilter(filter, "ipv6Bytes"))

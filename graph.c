@@ -466,22 +466,33 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   int num=0;
   FILE *fd;
   TrafficCounter totTraffic;
-  int useFdOpen = 0;
+  int useFdOpen = 0, idx = 0;
+  ProtocolsList *protoList = myGlobals.ipProtosList;
 
   if(dataSent) {
     totTraffic.value = theHost->tcpSentLoc.value+theHost->tcpSentRem.value+
       theHost->udpSentLoc.value+theHost->udpSentRem.value+
-      theHost->icmpSent.value+theHost->ospfSent.value+theHost->igmpSent.value+theHost->stpSent.value
+      theHost->icmpSent.value+theHost->stpSent.value
       +theHost->ipxSent.value+theHost->osiSent.value+theHost->dlcSent.value+
       theHost->arp_rarpSent.value+theHost->decnetSent.value+theHost->appletalkSent.value+
       theHost->netbiosSent.value+theHost->ipv6Sent.value+theHost->otherSent.value;
+
+    while(protoList != NULL) {
+      totTraffic.value += theHost->ipProtosList[idx].sent.value;
+      idx++, protoList = protoList->next;
+    }
   } else {
     totTraffic.value = theHost->tcpRcvdLoc.value+theHost->tcpRcvdFromRem.value+
       theHost->udpRcvdLoc.value+theHost->udpRcvdFromRem.value+
-      theHost->icmpRcvd.value+theHost->ospfRcvd.value+theHost->igmpRcvd.value+theHost->stpRcvd.value
+      theHost->icmpRcvd.value+theHost->stpRcvd.value
       +theHost->ipxRcvd.value+theHost->osiRcvd.value+theHost->dlcRcvd.value+
       theHost->arp_rarpRcvd.value+theHost->decnetRcvd.value+theHost->appletalkRcvd.value+
       theHost->netbiosRcvd.value+theHost->ipv6Rcvd.value+theHost->otherRcvd.value;
+
+    while(protoList != NULL) {
+      totTraffic.value += theHost->ipProtosList[idx].rcvd.value;
+      idx++, protoList = protoList->next;
+    }
   }
 
   if(totTraffic.value > 0) {
@@ -501,16 +512,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       if(theHost->icmpSent.value > 0) {
 	p[num] = (float)((100*theHost->icmpSent.value)/totTraffic.value);
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";
-      }
-
-      if(theHost->ospfSent.value > 0) {
-	p[num] = (float)((100*theHost->ospfSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSPF";
-      }
-
-      if(theHost->igmpSent.value > 0) {
-	p[num] = (float)((100*theHost->igmpSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IGMP";
       }
 
       if(theHost->stpSent.value > 0) {
@@ -580,16 +581,6 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";
       }
 
-      if(theHost->ospfRcvd.value > 0) {
-	p[num] = (float)((100*theHost->ospfRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSPF";
-      }
-
-      if(theHost->igmpRcvd.value > 0) {
-	p[num] = (float)((100*theHost->igmpRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IGMP";
-      }
-
       if(theHost->stpRcvd.value > 0) {
 	p[num] = (float)((100*theHost->stpRcvd.value)/totTraffic.value);
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
@@ -639,6 +630,23 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	p[num] = (float)((100*theHost->otherRcvd.value)/totTraffic.value);
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "Other";
       }
+    }
+
+    protoList = myGlobals.ipProtosList;  
+    while(protoList != NULL) {
+      if(dataSent) {
+	if(theHost->ipProtosList[idx].sent.value > 0) {
+	  p[num] = (float)((100*theHost->ipProtosList[idx].sent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = protoList->protocolName;
+	}
+      } else {
+	if(theHost->ipProtosList[idx].rcvd.value > 0) {
+	  p[num] = (float)((100*theHost->ipProtosList[idx].rcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = protoList->protocolName;
+	}
+      }     
+
+      idx++, protoList = protoList->next;
     }
 
     if(num == 0) {
@@ -1480,12 +1488,8 @@ void drawGlobalProtoDistribution(void) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value;lbl[idx] = "Decnet";  idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value; lbl[idx] = "AppleTalk"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes.value; lbl[idx] = "OSPF"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value; lbl[idx] = "NetBios"; idx++; }
-  if(myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes.value > 0) {
-    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes.value; lbl[idx] = "IGMP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value; lbl[idx] = "OSI"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value > 0) {
@@ -1494,6 +1498,23 @@ void drawGlobalProtoDistribution(void) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value; lbl[idx] = "STP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value; lbl[idx] = "Other"; idx++; }
+
+
+  {
+    ProtocolsList *protoList = myGlobals.ipProtosList;    
+    int idx1 = 0;
+    
+    while(protoList != NULL) {
+ 
+      if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value > 0) {
+	p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value; 
+	lbl[idx] = protoList->protocolName; idx++; 
+      }
+      
+      idx1++, protoList = protoList->next;
+    }
+  }
+
 
 #ifndef WIN32
   /* Unices */
