@@ -1027,11 +1027,11 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   +--external-packages:--------------------------------------------------------+
-  --disable-ssl               disable HTPPS support default=enabled
-  --disable-gdchart           disable use of GDChart default=enabled
-  --enable-tcpwrap            enable use of TCP Wrapper default=disabled
-  --disable-curses            disable use of curses default=enabled
-  --disable-readline          disable use of GNU readline default=enabled
+  --without-ssl               disable HTPPS support default=enabled
+  --without-gdchart           disable use of GDChart default=enabled
+  --with-tcpwrap              enable use of TCP Wrapper default=disabled
+  --without-curses            disable use of curses default=enabled
+  --without-readline          disable use of GNU readline default=enabled
   --with-pcap-root=DIR        LBNL pcap source tree located in DIR
   --with-gdbm-root=DIR        GNU gdbm source tree located in DIR
   --with-ossl-root=DIR        openSSL source tree located in DIR
@@ -10387,9 +10387,9 @@ fi
 echo
 echo "SSL?"
 if test ".${ac_disable_openssl}" = ".yes"; then
-    echo "    ...Disabled via command line option --disable-ssl"
+    echo "    ...Disabled via command line option --without-ssl"
 else
-    echo "    ...(Default) Requested if available. Disable via command line option --disable-ssl."
+    echo "    ...(Default) Requested if available. Disable via command line option --without-ssl."
     echo "  sslv3?"
     if test ".${ac_enable_sslv3}" = ".yes"; then
         echo "    ...Requested if available AT RUN TIME."
@@ -10417,9 +10417,9 @@ fi
 echo
 echo "GDChart?"
 if test ".${ac_disable_gdchart}" = ".yes"; then
-    echo "    ...Disabled via command line option --disable-gdchart"
+    echo "    ...Disabled via command line option --without-gdchart"
 else
-    echo "    ...(Default) Requested if available. Disable via command line option --disable-gdchart."
+    echo "    ...(Default) Requested if available. Disable via command line option --without-gdchart."
 fi
 
 echo
@@ -10490,16 +10490,16 @@ else
 
     echo "  curses?"
     if test ".${ac_disable_curses}" = ".yes"; then
-        echo "    ...Disabled via command line option --disable-curses."
+        echo "    ...Disabled via command line option --without-curses."
     else
-        echo "    ...(Default) Requested if available. Disable via command line option --disable-curses."
+        echo "    ...(Default) Requested if available. Disable via command line option --without-curses."
     fi
 
     echo "  GNU readline?"
-    if test ".${ac_disable_readline}" != ".yes"; then
-        echo "    ...Disabled via command line option --disable-readline."
+    if test ".${ac_without_readline}" != ".yes"; then
+        echo "    ...Disabled via command line option --without-readline."
     else
-        echo "    ...(Default) Requested if available. Disable via command line option --disable-readline."
+        echo "    ...(Default) Requested if available. Disable via command line option --without-readline."
     fi
 fi
 
@@ -28985,25 +28985,29 @@ if test ".${GDBM_ROOT}" = "."; then
 else
     echo "GNU gdbm in       : ${GDBM_ROOT}"
 fi
-if test ".${OSSL_ROOT}" = "."; then
-    echo "openSSL in        : standard system headers and libraries"
-else
-    echo "openSSL in        : ${OSSL_ROOT}"
+if test ".${ac_disable_openssl}" != ".yes"; then
+    if test ".${OSSL_ROOT}" = "."; then
+        echo "openSSL in        : standard system headers and libraries"
+    else
+        echo "openSSL in        : ${OSSL_ROOT}"
+    fi
 fi
-if test ".${GDCHART_ROOT}" = "."; then
-    echo "GDChart in        : standard system headers and libraries"
-else
-    echo "GDChart in        : ${GDCHART_ROOT}"
-fi
-if test ".${GD_ROOT}" = "."; then
-    echo "  GD in           : standard system headers and libraries"
-else
-    echo "  GD in           : ${GD_ROOT}"
-fi
-if test ".${LIBPNG_ROOT}" = "."; then
-    echo "  libpng in       : standard system headers and libraries"
-else
-    echo "  libpng in       : ${LIBPNG_ROOT}"
+if test ".${ac_disable_gdchart}" != ".yes"; then
+    if test ".${GDCHART_ROOT}" = "."; then
+        echo "GDChart in        : standard system headers and libraries"
+    else
+        echo "GDChart in        : ${GDCHART_ROOT}"
+    fi
+    if test ".${GD_ROOT}" = "."; then
+        echo "  GD in           : standard system headers and libraries"
+    else
+        echo "  GD in           : ${GD_ROOT}"
+    fi
+    if test ".${LIBPNG_ROOT}" = "."; then
+        echo "  libpng in       : standard system headers and libraries"
+    else
+        echo "  libpng in       : ${LIBPNG_ROOT}"
+    fi
 fi
 if test ".${ZLIB_ROOT}" = "."; then
     echo "zlib in           : standard system headers and libraries"
