@@ -13,6 +13,11 @@
 #
 # October 2001
 #
+# NOTE
+# The URL format changed:
+# http://146.101.249.88/p/browse.cgi?scale=500000&lon=10.40&lat=43.72&width=320&height=200
+#
+
 use LWP::Simple;
 
 if($ENV{QUERY_STRING_UNESCAPED} ne "") {
