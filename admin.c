@@ -1468,10 +1468,6 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      pref->localAddresses,
 		      "Local subnets in ntop reports (use , to separate them). Mandatory for packet capture files");
 
-    CONFIG_STR_ENTRY (DARK_BG, "Spool File Path (-Q)", NTOP_PREF_SPOOLPATH, 50,
-		      pref->spoolPath,
-		      "Location where temporary Ntop DB files are stored");
-
     CONFIG_CHKBOX_ENTRY (DARK_BG, "Sticky Hosts (-c)",
 			 NTOP_PREF_STICKY_HOSTS, pref->stickyHosts,
 			 "Don't purge idle hosts from memory");

@@ -1934,7 +1934,6 @@ typedef struct _userPref {
   bool mergeInterfaces;         /* 'M' */
   char *pcapLogBasePath;        /* 'O' */ /* Added by Ola Lundqvist <opal@debian.org>. */
   char *fcNSCacheFile;          /* 'N' */
-  char *spoolPath;              /* 'Q' */
   bool printFcOnly;             /* 'S' */
   char *mapperURL;              /* 'U' */
 
@@ -1998,6 +1997,7 @@ typedef struct ntopGlobals {
   int       userId, groupId;    /* 'u' */
 #endif
   char *dbPath;                 /* 'P' */
+  char *spoolPath;              /* 'Q' */
 
   /* Other flags (these could set via command line options one day) */
   bool enableFragmentHandling;

@@ -1112,7 +1112,7 @@ RETSIGTYPE cleanup(int signo) {
 
   free(myGlobals.runningPref.pcapLogBasePath);
   /* free(myGlobals.dbPath); -- later, need this to remove pid */
-  free(myGlobals.runningPref.spoolPath);
+  free(myGlobals.spoolPath);
   if(myGlobals.rrdPath != NULL)
     free(myGlobals.rrdPath);
 

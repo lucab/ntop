@@ -492,9 +492,9 @@ int parseOptions(int argc, char* argv[]) {
 
     case 'Q': /* Spool Path (ntop's spool directory) */
       stringSanityCheck(optarg);
-      if(myGlobals.runningPref.spoolPath != NULL)
-	free(myGlobals.runningPref.spoolPath);
-      myGlobals.runningPref.spoolPath = strdup(optarg);
+      if(myGlobals.spoolPath != NULL)
+	free(myGlobals.spoolPath);
+      myGlobals.spoolPath = strdup(optarg);
       break;
 
     case 'U': /* host:port - a good mapper is at http://jake.ntop.org/cgi-bin/mapper.pl */
@@ -708,10 +708,8 @@ int parseOptions(int argc, char* argv[]) {
    */
 
   /* If not set we set it to the same directory of dbPath */
-  if(myGlobals.runningPref.spoolPath[0] == '\0') {
-    free(myGlobals.runningPref.spoolPath);
-    myGlobals.runningPref.spoolPath = strdup(myGlobals.dbPath);
-  }
+  if(myGlobals.spoolPath == NULL)
+    myGlobals.spoolPath = strdup(myGlobals.dbPath);
 
 #ifndef WIN32
   /*
@@ -1037,8 +1035,6 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
   } else if(strcmp (key, NTOP_PREF_LOCALADDR) == 0) {
     processStrPref (NTOP_PREF_LOCALADDR, value, &pref->localAddresses,
 		    savePref);
-  } else if(strcmp (key, NTOP_PREF_SPOOLPATH) == 0) {
-    processStrPref (NTOP_PREF_SPOOLPATH, value, &pref->spoolPath, savePref);
   } else if(strcmp (key, NTOP_PREF_STICKY_HOSTS) == 0) {
     processBoolPref (NTOP_PREF_STICKY_HOSTS, TRUE, &pref->stickyHosts,
 		     savePref);
@@ -1247,7 +1243,6 @@ void initUserPrefs (UserPref *pref)
 #else
   pref->pcapLogBasePath = strdup(CFG_DBFILE_DIR);
 #endif
-  pref->spoolPath       = strdup("");              /* a NULL pointer will break the logic */
   pref->fcNSCacheFile   = DEFAULT_NTOP_FCNS_FILE;
   /* note that by default ntop will merge network interfaces */
   pref->mapperURL = DEFAULT_NTOP_MAPPER_URL;

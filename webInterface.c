@@ -5656,7 +5656,7 @@ void printNtopConfigInfo(int textPrintFlag, UserPref *pref) {
                            CFG_DBFILE_DIR);
 
   printParameterConfigInfo(textPrintFlag, "-Q | --spool-file-path",
-                           pref->spoolPath,
+                           myGlobals.spoolPath,
                            CFG_DBFILE_DIR);
 
   printParameterConfigInfo(textPrintFlag, "-U | --mapper",

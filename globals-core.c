@@ -224,7 +224,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.configFileDirs  = _configFileDirs;
   myGlobals.runningPref.pcapLogBasePath = strdup(defaultPath);     /* a NULL pointer will break the logic */
   myGlobals.dbPath          = strdup(defaultPath);     /* a NULL pointer will break the logic */
-  myGlobals.runningPref.spoolPath       = strdup("");              /* a NULL pointer will break the logic */
 
   /* NB: we can't init rrdPath here, because initGdbm hasn't been run */
 
@@ -606,7 +605,7 @@ void initNtop(char *devices) {
 
   /* ********************************** */
 
-  initGdbm(myGlobals.dbPath, myGlobals.runningPref.spoolPath, 0);
+  initGdbm(myGlobals.dbPath, myGlobals.spoolPath, 0);
 
 #ifndef WIN32
   if(myGlobals.runningPref.daemonMode) {

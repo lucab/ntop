@@ -1383,7 +1383,8 @@ static void processIpPkt(const u_char *bp,
 	   packet has not yet been rcvd */
 
 	updateInterfacePorts(actualDeviceId, sport, dport, length);
-	updateUsedPorts(srcHost, dstHost, sport, dport, tcpDataLength);
+	if(tcpDataLength > 0) /* Don't update ports for all packets */
+	  updateUsedPorts(srcHost, dstHost, sport, dport, tcpDataLength);
 
 	if(subnetPseudoLocalHost(srcHost)) {
 	  if(subnetPseudoLocalHost(dstHost)) {
@@ -1418,13 +1419,15 @@ static void processIpPkt(const u_char *bp,
 	  if(ip6)
               theSession = handleSession (h, fragmented, tp.th_win,
                                           srcHost, sport, dstHost,
-                                          dport, ntohs(ip6->ip6_plen), &tp, tcpDataLength,
+                                          dport, ntohs(ip6->ip6_plen), &tp, 
+					  tcpDataLength,
                                           theData, actualDeviceId);
 	  else
 #endif
 	    theSession = handleSession (h, (off & 0x3fff), tp.th_win,
                                         srcHost, sport, dstHost,
-                                        dport, ip_len, &tp, tcpDataLength,
+                                        dport, ip_len, &tp, 
+					tcpDataLength,
                                         theData, actualDeviceId);
 	  if(theSession == NULL)
 	    isPassiveSess = 0;
