@@ -2367,7 +2367,7 @@ A. It might, might, be possible as a soft limit - but it's got a lot of
 
 
 Q. Why does ntop drop packets?
-A. Short Answer: You need a faster processor.
+A. Short Answer: You need a faster processor.  Maybe.
 A. Long Answer:  There are four places packets drop "in" ntop.  One in
    the NIC, one in the OS kernel, one in the libpcap library and one 
    actually in ntop.
@@ -2383,11 +2383,25 @@ A. Long Answer:  There are four places packets drop "in" ntop.  One in
        and the error text can be obtained with pcap_perror() or 
        pcap_geterr()."
 
-   to get the value and reports it in report.c.
+   to get the value and reports it in report.con the Stats | Traffic
+   page, some in the configuration report (info.html) and also on
+   the problem report skeleton.
 
-   It sounds great, but the reality is that the stats provided by libpcap
+   The information on the Stats | Traffic page is simply the best available.
+   However, this data is not always easy to obtain nor interpret.
+
+   It looks great, but the reality is that the stats provided by libpcap
    aren't very good!
 
+
+Q. Not good?  Why...
+A. The network card (NIC) reads packets from the wire into a small buffer.
+   That buffer is emptied by the OS into it's own buffers which are then 
+   passed to libpcap.  libpcap filters the packets (if requested) and 
+   passes the packets to ntop.
+
+   Packets may be dropped at any or all of these stages, even on a system 
+   that does not appear to be exceptionally busy.
 
 Q. How can packets be lost in the NIC?
 A. A NIC has a small buffer - modern cards have 8K, 12K, even more buffer 
@@ -2421,7 +2435,55 @@ A. A NIC has a small buffer - modern cards have 8K, 12K, even more buffer
 
        You're toast...
 
-   Upgrade the Processor or NIC.
+   Upgrade the Processor or NIC. Maybe.
+
+Q. Can you tell if the NIC is the bottleneck?
+A. Probably not.  Different NIC cards (and NIC card drivers) record different
+   information.  Different tools present pieces and parts of it differently.
+
+   For example, a runt packet - one that is too short to really be a packet
+   is supposed to be discarded according to the tcp/ip standard.  But do you
+   count it as a packet received??
+
+   On many systems, interface level (NIC) statistics are available through 
+   the ifconfig (or similar) command.  But what is available and what they
+   mean can be different - even though they're presented in the same format.
+   Different programs can read the 'same' data and show different things.
+
+   For example - eth1 is an Intel Ethernet Pro/100, eth2 a 3c905...
+
+   # netstat -i --all
+   Kernel Interface table
+   Iface       MTU Met     RX-OK RX-ERR RX-DRP RX-OVR   TX-OK TX-ERR TX-DRP TX-OVR Flg
+   eth1       1500   0  50752227      0      0      0       0      0      0      0 BMPRU
+   eth2       1500   0 145053154      0      0      0       0      0      0      0 BMPRU
+
+   No errors - great, right?  But look at ifconfig, a few seconds earlier:
+
+   # ifconfig
+   eth1      Link encap:Ethernet  HWaddr 00:03:47:B1:62:27  
+             UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+             RX packets:50754251 errors:0 dropped:0 overruns:0 frame:3454146
+             TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+             collisions:0 txqueuelen:100 
+             RX bytes:667103055 (636.1 Mb)  TX bytes:0 (0.0 b)
+             Interrupt:9 Base address:0x1000 
+
+   eth2      Link encap:Ethernet  HWaddr 00:60:97:04:30:33  
+             UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+             RX packets:145056087 errors:0 dropped:0 overruns:0 frame:0
+             TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+             collisions:0 txqueuelen:100 
+             RX bytes:1784472399 (1701.8 Mb)  TX bytes:0 (0.0 b)
+             Interrupt:9 Base address:0xb800 
+
+   If I'm reading the code right, then the frame:nnnn count is set here:
+
+     sp->stats.rx_frame_errors += le32_to_cpu(sp->lstats->rx_align_errs);
+
+   Meaning? No clue - the writer of the driver had to sign an NDA and so
+   couldn't explain a lot of what the driver does.  Besides, that data
+   isn't available to ntop anyway.
 
 
 Q. How can packets can be lost in the kernel?
@@ -2452,7 +2514,8 @@ A. Each time that interrupt occurs, the kernel processes it by moving
    might not be the NIC's fault - and that's why a faster processor is a
    better choice than an expensive server class NIC.
 
-Q. But at least I can trust the reported counts, right?
+
+Q. But at least I can trust the libpcap reported counts, right?
 A. Nope. You need to treat the pcap reported drops with more than a few
    grains of salt.  See this thread, for example:
       http://www.tcpdump.org/lists/workers/2001/07/msg00018.html
@@ -2503,6 +2566,20 @@ A. Nope. You need to treat the pcap reported drops with more than a few
      * by libpcap, and thus not yet seen by the application.
      */
 
+   As you see from the comments in the code, the interpretation of even
+   those counts differs between operating systems and even between minor versions
+   of the same OS (e.g. Linux 2.4.8 vs. 2.4.9).  For example, some systems 
+   do not maintain a dropped count and will always report zero.  Differences
+   may also occur on the same system for different NIC drivers.  
+ 
+   If a BPF filter (-B option) is in place, the differences between OSes are
+   more significant.
+
+   etc.
+
+   Trust nobody...
+
+
 Q. ntop drops packets?
 A. Sure. ntop runs multiple threads (we call them "NPS - Network Packet Sniffer"
    or something similar), one to handle each incomming device.  These operate
@@ -2529,18 +2606,75 @@ A. Sure. ntop runs multiple threads (we call them "NPS - Network Packet Sniffer"
       # Queued Pkts to Process 0
       # Max Queued Pkts 0
 
-   But, again, the best answer for dropped packets is a faster processor...
-   (Upgrading to an expensive faster NIC with a larger buffer is rarely
-   the best "bang for the buck" - if you were running a server, then a
-   server class NIC is a good idea, but for workstations or network 
-   monitors, etc. you just need something that can keep up with the network
-   flow.)
+   But, again, the best answer for dropped packets is probably a 
+   faster processor... (Upgrading to an expensive faster NIC with a 
+   larger internal buffer is rarely the best "bang for the buck" - if 
+   you were running a server, then a server class NIC is a good idea,
+   but for workstations or network monitors, etc. you just need something 
+   that can keep up with the network flow.)
+
+
+Q. So what do you show?
+A. The kicker is that accurate counts of raw and dropped packets do not exist
+   or are not available without using low-level, system specific logic.
+
+   The counts that ARE available in a system-independent way are what is 
+   reported in the statistics on the Stats | Traffic page.
+
+
+Q. So what is reported?
+A. ntop reports the packet and dropped counts as reported by libpcap and the
+   received, dropped and processed counts it maintains internally.
+
+
+Q. So what does ntop do with what it does receive?
+A. ntop processes or queues all packets received from libpcap but may drop 
+   packets if the processing queue fills up.  Losing a few packets inside 
+   ntop due to a rare burst of traffic is just that - rare, and is not a 
+   'bug'.
+
+   If you consistently see packets dropped by ntop then you probably need
+   to use a faster processor (increasing the buffer size beyond the default
+   of 2K packets will usually not help).  
+
+Q. How do I tell?
+A. You can monitor the queue size on the 'Configuration' (info.html) page.
+
+Q. What about the other dropped items?
+A. If you consistently see packets dropped at either the interface or 
+   libpcap level, there is not much we can offer in the way of help for you.
+
+   The best suggestion is to try another NIC or a faster machine.  
+
+Q. Why?
+A. Some NICs - especially ISA ones - are just too slow at moving packets 
+   off of the card. Measurements I did on an old SMC 10BaseT card in 1993
+   showed that the best it could do - ISA bus, windows overhead, etc. all
+   rolled together was about 1.7Mbps.
+
+   Memory bus speeds (e.g. PC100 vs PC133, DDR333 vs DDR400, etc.) can also
+   affect moving packets from the NIC to main memory.
+
+Q. Won't a faster CPU help?
+A. Maybe.  Some network card drivers are processor intensive - and would
+   benefit - but others offload most of the processing to the NIC, and so a
+   faster CPU wouldn't matter.
+
+   Even a fancy (read as expensive) NIC may not work well - the drivers
+   for the NIC on one OS may take advantage of features the card provides 
+   and be 'faster', while the driver for the same NIC on another OS may 
+   not take advantage of these features and be 'slower'.
+
+   As we say, YMMV...
+
 
 Q. So?
 A. So, remember - ntop drops packets, the kernel drops packets, libpcap drops
    packets and none of 'em do it the same way.  Don't bet the farm on counting
    every packet with absolute accuracy and use ntop the way it was meant to
    be used - showing the overall usage and flows on the network.
+
+   Still it's not all gloom and doom!
 
    Even if you're only processing 90% of the traffic, since the drops are
    pretty random, it's a decent bet that if 90% of what you DO see is MP3s,
