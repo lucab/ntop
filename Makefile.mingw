@@ -1,168 +1,105 @@
-# Generated automatically from Makefile.in by configure.
 #
-#  Copyright (C) 1998-99  Luca Deri <deri@unipi.it>
-#                         Stefano Suin <stefano@unipi.it>
-#                         (Stefano contributed to version 1.0)
-#
-#		       Centro SERRA, University of Pisa
-#		       http://www-serra.unipi.it/
-#
-#
-#  Copyright (c) 1994, 1996, 1997
-# 	The Regents of the University of California.  All rights reserved.
-#
-#  Redistribution and use in source and binary forms, with or without
-#  modification, are permitted provided that: (1) source code distributions
-#  retain the above copyright notice and this paragraph in its entirety, (2)
-#  distributions including binary code include the above copyright notice and
-#  this paragraph in its entirety in the documentation or other materials
-#  provided with the distribution, and (3) all advertising materials mentioning
-#  features or use of this software display the following acknowledgement:
-#  ``This product includes software developed by the University of California,
-#  Lawrence Berkeley Laboratory and its contributors.'' Neither the name of
-#  the University nor the names of its contributors may be used to endorse
-#  or promote products derived from this software without specific prior
-#  written permission.
-#  THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
-#  WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
-#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+# ntop makefile for MingW
 #
 
-#
-# Various configurable paths (remember to edit Makefile.in, not Makefile)
-#
+USE_SSL = 1
 
-# Top level hierarchy
-prefix = /
-exec_prefix = ${prefix}
-# Pathname of directory to install the binary
-BINDEST = ${exec_prefix}/sbin
-# Pathname of directory to install the man page
-MANDEST = ${prefix}/man
-# VERSION # below is placed in version.c
-VERSION=2.1
-# osName is set in ntop_win32.c based on the OS at execution.
+VERSION = 3.0
 
 #
-# The items below will probably need adjustment.
+# Root direcories for need packages. Edit these as needed.
 #
+GDCHART_ROOT = ../../Graphics/gdchart0.94c
+GD_ROOT      = ../../Graphics/gdchart0.94c/gd-1.8.3
+PNG_ROOT     = ../../Graphics/libpng-1.24
+ZLIB_ROOT    = ../../zlib-1.2.1
+GDBM_ROOT    = ../../gdbm-1.8.0
+PCAP_ROOT    = ../libpcap
+OPENSSL_ROOT = ../OpenSSL-0.9.8
 
-#  Default assumes you've installed MinGW into c:/MinGW and
-#  unzipped WPdpack_2_3.zip into c:/MinGW preserving folder names.
+OBJ_DIR = MingW_obj
 
-INC_GDBM=-Ic:/MinGW/include
-LIB_GDBM=-Lc:/MinGW/lib
+VPATH = plugins myrrd
 
-INC_WPDPACK=-Ic:/MinGW/wpdpack/include
-LIB_WPDPACK=-Lc:/MinGW/wpdpack/lib
+CC     = gcc
+CFLAGS = -O2 -Wall -g -I. -I./myrrd -I$(PCAP_ROOT) -I$(PCAP_ROOT)/bpf/net \
+         -I$(PCAP_ROOT)/Win32/include -I$(GD_ROOT) -I$(PNG_ROOT) -I$(GDBM_ROOT) \
+         -DHAVE_FCNTL_H -DHAVE_PCAP_H -DHAVE_STDARG_H -DHAVE_PCAP_OPEN_DEAD \
+         -DHAVE_PCAP_LIB_VERSION -DHAVE_STRFTIME -DHAVE_MATH_H -DHAVE_INT8_T \
+         -DHAVE_INT16_T -DHAVE_INT32_T -DHAVE_UINT8_T -DHAVE_UINT16_T \
+         -DHAVE_UINT32_T
 
-#
-# You might need to edit these.
-#
+LDFLAGS = -s
 
-INC_GDCHART=-I../gdchart0.94c
+LIBS = $(PCAP_ROOT)/libwpcap.a      $(ZLIB_ROOT)/libz.a \
+       $(GDCHART_ROOT)/libgdchart.a $(GD_ROOT)/libgd.a \
+       $(PNG_ROOT)/lib/libpng.a     $(GDBM_ROOT)/libgdbm.a \
+       -lversion -lws2_32
 
-LDIRS = $(LIB_WPDPACK) \
-	$(LIB_GDBM) \
-	-L../gdchart0.94c \
-	-L../gdchart0.94c/zlib-1.1.4 \
-	-L../gdchart0.94c/gd-1.8.3 \
-	-L../gdchart0.94c/gd-1.8.3/libpng-1.2.4
+PROGRAM = ntop.exe
 
-#
-# You shouldn't need to edit anything below here.
-#
+SOURCE = ntop.c ntop_win32.c main.c address.c admin.c dataFormat.c emitter.c \
+         globals-core.c globals-report.c graph.c hash.c http.c initialize.c leaks.c \
+         fcUtils.c pbuf.c plugin.c protocols.c iface.c qsort.c report.c reportUtils.c \
+         sessions.c term.c traffic.c util.c vendor.c version.c webInterface.c \
+         getopt.c getopt1.c ssl.c \
+         \
+         $(addprefix plugins/, icmpPlugin.c lastSeenPlugin.c netflowPlugin.c \
+           pdaPlugin.c sflowPlugin.c rrdPlugin.c) \
+         \
+         $(addprefix myrrd/, gdlucidab10.c gdlucidab12.c gdlucidab12l2.c gdlucidab14.c \
+           gdlucidan10.c gdlucidan10l2.c gdlucidan12.c gdlucidan14.c gdpng.c gifsize.c \
+           parsetime.c pngsize.c rrd_create.c rrd_diff.c rrd_error.c rrd_fetch.c \
+           rrd_format.c rrd_graph.c rrd_last.c rrd_open.c rrd_update.c dummy.c)
 
-CC = gcc
-PROG = ntop
-CCOPT =  -O
-INCLS = -I. $(INC_GDBM) $(INC_WPDPACK) $(INC_WPDPACK)/NET $(INC_GDCHART)
-DEFS =  -DHAVE_FCNTL_H=1 -DHAVE_PCAP_H=1 -DHAVE_STDARG_H=1
+OBJECTS = $(addprefix $(OBJ_DIR)/, $(notdir $(SOURCE:.c=.o)))
 
-# Standard CFLAGS
-CFLAGS = $(CCOPT) $(DEFS) $(INCLS)
+ifeq ($(USE_SSL),1)
+  CFLAGS += -I$(OPENSSL_ROOT)/outinc -DHAVE_OPENSSL -DOPENSSL_NO_KRB5
+  LIBS   += $(OPENSSL_ROOT)/out/libeay32.dll.a $(OPENSSL_ROOT)/out/libssl32.dll.a
+endif
 
-# Standard LDFLAGS
-LDFLAGS =  $(LDIRS) 
+all: ./config.h $(OBJ_DIR) $(PROGRAM) ntop.html
+	@echo Welcome to ntop
 
-# Standard LIBS
-LIBS = -lgdbm -lwpcap -lgdchart -lgd -lpng -lz -lwsock32
+$(OBJ_DIR):
+	mkdir $(OBJ_DIR)
 
+$(PROGRAM): $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
-INSTALL = /usr/bin/install -c -o root -g wheel
-
-# Explicitly define compilation rule since SunOS 4's make doesn't like gcc.
-# Also, gcc does not remove the .o before forking 'as', which can be a
-# problem if you don't own the file but can write to the directory.
-.c.o:
-	@rm -f $@
+$(OBJ_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
+	@echo
 
-CSRC =	ntop.c ntop_win32.c main.c \
-	address.c admin.c dataFormat.c emitter.c \
-	globals-core.c globals-report.c graph.c \
-	hash.c http.c initialize.c leaks.c \
-	netflow.c pbuf.c plugin.c protocols.c \
-	qsort.c regex.c report.c reportUtils.c \
-	sessions.c term.c traffic.c \
-	util.c vendor.c webInterface.c \
-	plugins\icmpPlugin.c plugins\lastSeenPlugin.c \
-	plugins\netflowPlugin.c plugins\nfsPlugin.c \
-	plugins\pdaPlugin.c plugins\sflowPlugin.c \
-        plugins\rrdPlugin.c
+./config.h:
+	@echo '/* config.h for MingW */' > $@
+	@echo '#include <winsock2.h>' >> $@
+	@echo '#include <ws2tcpip.h>' >> $@
 
-GENSRC = version.c
-
-SRC =	$(CSRC) $(GENSRC)
-
-# We would like to say "OBJ = $(SRC:.c=.o)" but Ultrix's make cannot
-# hack the extra indirection
-OBJ =	$(CSRC:.c=.o) $(GENSRC:.c=.o) #@LIBOBJS@
-HDR =   interface.h machdep.h
-
-CLEANFILES = $(PROG) $(OBJ) $(GENSRC)
-
-all: $(PROG)
-
-$(PROG): $(OBJ)
-	@rm -f $@
-	$(CC) $(CCOPT) $(LDFLAGS) -o $@ $(OBJ) $(LIBS)
-
-version.o: version.c
 version.c:
-	@rm -f $@
-	@echo char *version = "$(VERSION)"; > $@
-	@echo char *osName  = "$(OSNAME)"; >> $@
-	@echo char *author  = "Luca Deri <deri@unipi.it>"; >> $@
-	@echo char *compiler_cflags = "$(CFLAGS)"; >> $@
-	@echo char *core_libs       = "$(LIBS)"; >> $@
-	@echo char *system_libs     = "$(LDIRS)"; >> $@
-	echo Created version.c...
-
-ntop.c: ntop.h
-pbuf.c: ntop.h
-util.c: ntop.h
-http.c: ntop.h
-report.c: ntop.h
-
-install:
-	$(INSTALL) -m 6550 $(PROG) $(DESTDIR)$(BINDEST)/$(PROG)
-
-install-man:
-	$(INSTALL) -m 444 $(PROG).8 $(DESTDIR)$(MANDEST)/man8/$(PROG).8
+	@echo Creating version.c...
+	@echo 'char *VERSION = "$(VERSION)";'   > $@
+	@echo 'char *version = "$(VERSION)";'  >> $@
+	@echo 'char *osName  = "Win32/MingW";' >> $@
+	@echo 'char *release = "(rel)";'       >> $@
+	@echo 'char *distro  = "(??)";'        >> $@
+	@echo 'char *author  = "Luca Deri <deri@unipi.it>";' >> $@
+	@echo 'char *compiler_cflags = "$(CFLAGS)";' >> $@
+	@echo 'char *core_libs       = "$(LIBS)";'   >> $@
+	@echo 'char *system_libs     = "$(LIBS)";'   >> $@
 
 clean:
-	rm -f $(CLEANFILES) 
+	rm -f $(OBJECTS)
 
-distclean:
-	rm -f $(CLEANFILES) core Makefile config.cache config.log config.status *~ #*
-
-depend:	$(GENSRC)
-	./mkdep -c $(CC) $(DEFS) $(INCLS) $(SRC)
+vclean distclean: clean
+	rm -f $(PROGRAM) version.c ./config.h .depend
 
 ntop.html: ntop.8
-	@echo " " > ntop.tmp
-	@groff -mandoc -Tascii ntop.8 >> ntop.tmp
-	@cat ntop.tmp | man2html > ntop.html
-	@rm -f ntop.tmp
+	man2html < $^ | sed -e 's/Content-type: text\/html//g' > $@
 
+depend: version.c ./config.h
+	$(CC) -MM $(CFLAGS) $(SOURCE) | \
+	sed -e 's/^\([a-zA-Z0-9_-]*\.o:\)/'$(OBJ_DIR)'\/\1/' > .depend
+
+-include .depend

@@ -1,178 +1,101 @@
-Please note that ntop appears to have stopped being compilable
-under MinGW after 2.1.3.  These instructions are retained for
-historical usage. If somebody wants to attempt to revise them
-for 2.2.1+, we would love the contribution.
+Quick build using MinGW
+-----------------------
+
+This is a quick description on how to build ntop on Win2k/XP using
+the MinGW toolchain. It is assumed you are familiar with MinGW and
+Windows programming in general. ntop requires many different libraries
+installed. This file does *not* tell you how to install those; it only
+briefly where to get them.
+
+If you're unable to build ntop from the sources, then you're probably
+better off using the Windows binary available from
+  http://sourceforge.net/project/showfiles.php?group_id=17233
 
 
+Obtaining Ntop
+--------------
+
+This was last tested against the 21-May 2004 CVS version of ntop 3.0.
+Available via these hairy commands:
+
+  cvs -d :pserver:anonymous@cvs.ntop.org:/export/home/ntop login
+  cvs -d :pserver:anonymous@cvs.ntop.org:/export/home/ntop co ntop
+  cvs -d :pserver:anonymous@cvs.ntop.org:/export/home/ntop logout
+
+use "ntop" when asked for a password.
+
+Note: the CVS-server is notoriously slow! Use the sources (ntop*.tgz)
+      at http://sourceforge.net/project/showfiles.php?group_id=17233
+      if you don't mind using "old" sources.
 
 
-This note describes how to build ntop on win2k using the MinGW
-toolchain (MinGW allows you to build native win32 binaries linked
-against the Microsoft runtime and not the cygwin runtime).
+Building Ntop
+-------------
 
-Prerequistes:
+Prerequisites:
 
-Tested notes updated for ntop version 2.0.99RC2 and for ntop cvs snapshot
-as of 15jun2002 (courtesy of Jac Engel).
+  1) WinPCAP developer's pack available from
+     http://winpcap.polito.it/
 
-(Most MinGW software is now available through SourceForge at
- http://sourceforge.net/project/showfiles.php?group_id=2435, or
- the MinGW packages repository at http://sourceforge.net/projects/mingwrep/)
+  2) GD-chart package available from
+     http://www.fred.net/brv/chart/
 
-Note that as you unzip archives, use the folder names!
-     It's suggested that everything be unzipped under a base name of C:\MinGW.
+  3) GD library (which is needed by GD-chart) is available from
+     http://www.boutell.com/gd/
 
-  1) MinGW      (available from http://www.mingw.org)
-     Tested against mingw-runtime-1.3.tar.gz
+  4) PNG library for Portable Network Graphics images. Available from
+     http://gnuwin32.sourceforge.net/packages/libpng.htm
 
-  2) GNU C compiler, gcc
-     The MinGW port, gcc-2.95.3-20011106.tar.gz was used for testing
+  5) Zlib compression library available from
+     http://www.gzip.org/zlib/
 
-  3) GNU Make   (available from http://www.mingw.org)
-     This was tested with GNU Make v3.79.1
+  6) GNU database library available from
+     http://sourceforge.net/project/showfiles.php?group_id=7382&package_id=12648
 
-  4) The following packages from the repository were used for testing,
-     honestly, I don't know which are required - I think only libcrypt,
-     and w32api, but the others may make it much easier to work under MinGW:
+  7) OpenSSL library is needed if "USE_SSL = 1" in Makefile.MingW. Available from
+     http://www.openssl.org/
 
-          binutils-2.11.90-20010915.tar.gz
-          libcrypt-2.17-20010126.zip
-          readline-4.2-20010727.zip
-          textutils-2.0-mingw32.zip
-          w32api-1.4-2.tar.gz
-
-OR:
-
-1..4) A prepackaged release of MinGW, MinGW-1.1.tar.gz (which is 
-      available from http://www.mingw.org) can also be used (it just installs
-      more "stuff", but it's an integrated set and may be less trouble.
+  8) Various tools; rm, sed, mkdir and man2html. The latter is only needed
+     to generate ntop.html.
 
 
-  5) WinPCAP developer's pack (available from
-     This was tested with Release 2.3 of WinPcap, available at 
-     http://netgroup-serv.polito.it/winpcap/install/bin/WPdpack_2_3.zip
-
-     Note: unzip (use folder names) into C:\Mingw and execute 
-           C:\Mingw\WPdpack\Drivers\WinPcap_2_3.exe
-
-  6) gdbm for win32/mingw (from http://sourceforge.net/projects/mingwrep)
-     This was tested with gdbm-1.8.0-20010430.zip
-
-     Note: unzip (use folder names) into C:\Mingw\gdbm
-
-  7) ntop  (available from http://www.ntop.org)
-     This was last tested with http://snapshot.ntop.org/tgz/ntop-02-06-13.tgz
-
-     Note: unzip (use folder names) into C:\ntop-02-06-13.
-
-  8) rm (normally part of fileutils, but seemingly not available for MinGW).
-      There is a "usable" version of rm (rm.bat) in the utils/ directory.
-      If you don't have a real version of rm, copy this file to somewhere
-      on your MinGW path.
-
-OR:
-
-  8) UnxUtils package UnxUtils.zip at:
-     http://www.wzw.tu-muenchen.de/~syring/win32/UnxUtils.html
-
-     Note: unzip only patch.exe and rm.exe to C:\mingw\bin
-            rm.exe is required as defined in ntop\makefile.mingw to make ntop.
-	    patch.exe is only required if diff files are available/required.
- 
 Steps
 
-  1) Install all prerequisites
+  1) Install and build all prerequisites.
 
-  2) Edit the ntop/Makefile.mingw and fill in the following values:
+  2) Edit ntop's Makefile.MingW and change the following root-values:
 
-     INC_GDBM        (where the gdbm header files can be found)
-     INC_WPDPACK     (where the winpcap header files can be found)
-     LIB_GDBM        (where libgdbm.a is found)
-     LIB_WPDPACK     (where libpcap.a is found)
-
-    e.g.:
-
-     INC_GDBM=-Ic:/Mingw/gdbm/include
-     INC_WPDPACK=-Ic:/Mingw/wpdpack/include
-     LIB_GDBM=-Lc:/Mingw/gdbm/lib
-     LIB_WPDPACK=-Lc:/Mingw/wpdpack/lib
+     "PCAP_ROOT"     to the base directory of WinPCAP.
+     "GDCHART_ROOT"  to the base directory of GD-chart.
+     "GD_ROOT"       to the base directory of GD library.
+     "PNG_ROOT"      to the base directory of libpng.
+     "ZLIB_ROOT"     to the base directory of Zlib.
+     "GDBM_ROOT"     to the base directory of GNU database manager.
+     "OPENSSL_ROOT"  to the base directory of OpenSSL.
 
 
-  3) Build the sub-components (starting from the ntop-current directory)
+  3) Build the make dependencies by
+     > make -f Makefile.MingW depend
 
-     3a) Build zlib
-
-         cd gdchart0.94c/zlib-1.1.4
-         make -f Makefile.mingw
-         cd ../..
-
-     3b) Build libpng
-
-         cd gdchart0.94c/gd-1.8.3/libpng-1.2.4
-         make -f scripts/makefile.mingw
-         cd ../../..
-
-     3c) Build gd
-
-         cd gdchart0.94c/gd-1.8.3
-         make -f Makefile.mingw
-         cd ../..
 
   4) Build ntop itself
+     > make -f Makefile.MingW
 
-     cd ntop
-     make -f Makefile.mingw
-
-
-  5) Install ntop and the dependent files
-
-     Create a directory e.g. C:\ntop and copy ntop.exe and the WHOLE html
-     subdirectory hierarchy into it.
-
-     Ensure that the appropriate DLL's are in your path.  For this
-     build, that includes libgdbm-2.dll and wpcap.dll.
-
-     Copy libgdbm-2.dll (exists in C:\Mingw\gdbm\bin) to C:\ntop
-
-     wpcap.dll is installed into C:\WINNT\system32 by WinPcap2_3.exe, so
-     this file is should already be available through your path.
-
-     If you have grep installed, the following commandline will tell
-     you which files need to be in either the same directory as
-     ntop.exe or in the path:
-
-         objdump -p ntop.exe |grep "DLL Name"
-
-  6) Use it
-
-     Execute ntop.exe from the install directory.  You can get command
-     line help by running ntop.exe -h and from the EXTENSIVE entries
-     about Win32 in docs/FAQ.
-
-KNOWN PROBLEMS
-==============
-
-Win9x (ME?) and gdbm
---------------------
-
-Under Win98/98SE (and probably other 9x platforms), unknown gdbm error occurs:
-
-   Wait please: ntop is coming up... 
-   18/Nov/2002 14:23:05 Initializing IP services... 
-   18/Nov/2002 14:23:05 Initializing GDBM... 
-   18/Nov/2002 14:23:05 Database './addressCache.db' open failed: unknown gdbm errno 
-   18/Nov/2002 14:23:05 Possible solution: please use '-P <directory>' 
-
-Serge traced the problem to gdbm-1.8.0-20010430.zip.
-Solution: Revert to the older version, gdbm-1.8.0-20010126.zip
-
-Releases of gdbm for MinGW are available at SourceForge,
-http://sourceforge.net/project/showfiles.php?group_id=7382
-
--- 
-November 2001 - Scott Renfro <scott@renfro.org>
-June 2002 - Burton M. Strauss III <Burton@ntopsupport.com>
-September 2002 - Burton M. Strauss III <Burton@ntopsupport.com> with help from Jac Engel.
-November 2002 - BMSIII - Win9x problem report from Serge Couture <scouture@dgeq.qc.ca>
+     If after some time you see "Welcome to ntop", it has succeeded and
+     you're ready to use it. Otherwise review the Makefile.MingW and look
+     for missing packages.
 
 
+Installing Ntop
+---------------
+
+The Makefile.MingW uses static libraries for all packages except OpenSSL.
+This increases it's size, but makes maintenance and installation easier.
+In fact, there should be no need to install ntop; simply run it from the
+base directory. Only make sure the needed OpenSSL DLLs are somewhere in
+your PATH or in ntop's directory itself.
+
+
+---
+
+Gisle Vanem <giva@bgnett.no>  May 2004
