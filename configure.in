@@ -478,9 +478,11 @@ dnl> check whether we've to define essential typedefs
 dnl> u_int32_t u_int16_t u_int8_t
 dnl> int32_t   int16_t   int8_t
 
+AC_CHECK_TYPEDEF(u_int64_t, sys/types.h)
 AC_CHECK_TYPEDEF(u_int32_t, sys/types.h)
 AC_CHECK_TYPEDEF(u_int16_t, sys/types.h)
 AC_CHECK_TYPEDEF(u_int8_t, sys/types.h)
+AC_CHECK_TYPEDEF(int64_t, sys/types.h)
 AC_CHECK_TYPEDEF(int32_t, sys/types.h)
 AC_CHECK_TYPEDEF(int16_t, sys/types.h)
 AC_CHECK_TYPEDEF(int8_t, sys/types.h)
