@@ -407,7 +407,7 @@ int signalCondvar(ConditionalVariable *condvarId) {
 
 void printAvailableInterfaces() {
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
-  int ifIdx=0, defaultIdx, i, numInterfaces = 0;
+  int ifIdx=0, defaultIdx = -1, i, numInterfaces = 0;
   char intNames[32][256];
   char *tmpDev = pcap_lookupdev(ebuf);
   
@@ -453,7 +453,7 @@ void printAvailableInterfaces() {
     unsigned short *ifName; /* UNICODE */
     char *ifDescr;
 
-    ifName = tmpDev;
+    ifName = (unsigned short*)tmpDev;
 
     while(*(ifName+ifDescrPos) || *(ifName+ifDescrPos-1))
       ifDescrPos++;
@@ -461,6 +461,8 @@ void printAvailableInterfaces() {
     ifDescr = (char*)(ifName + ifDescrPos); /* cast *after* addition */
 
     while(tmpDev[0] != '\0') {
+	  char *ifDescription, *parent;
+	  int k;
 
       for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
 	if(tmpDev[i] != 0)
@@ -468,9 +470,20 @@ void printAvailableInterfaces() {
       }
 
       tmpString[j++] = 0;
-      printf("   [index=%d] %s\n             (%s)\n", ifIdx, ifDescr, tmpString);
-      numInterfaces++;
+	  ifDescription = strdup(ifDescr);
       ifDescr += strlen(ifDescr)+1;
+			  
+			  parent = strstr(ifDescription, "(");			  
+			  if(parent != NULL) parent[0] = '\0';
+
+			  for(k=strlen(ifDescription)-1; k>1; k--)
+				  if(ifDescription[k] != ' ') break;
+				  else ifDescription[k] = '\0';
+
+
+	  printf("   [index=%d] %s\n             (%s)\n", ifIdx, ifDescription, tmpString);
+	  free(ifDescription);
+      numInterfaces++;
 		 
       tmpDev = &tmpDev[i+3];
       strcpy(intNames[ifIdx++], tmpString);
@@ -1372,7 +1385,7 @@ HANDLE  hServerStopEvent = NULL;
 
 void* invokeNtop(LPTSTR szAppParameters) {
   DWORD dwNewArgc, i;
-  LPTSTR *lpszNewArgv;
+  LPTSTR *lpszNewArgv=NULL;
   LPTSTR *lpszTmpArgv;
 
   // SetConsoleCtrlHandler(logoffHandler, TRUE);
@@ -1724,19 +1737,20 @@ void main(int argc, char **argv)
     }
     else if(!stricmp(argv[1],"/c")){
       bConsole = TRUE;
-      runService(argc,argv);
+      runService(argc, argv);
     }
     else{
       printf("\nUnrecognized option: %s\n", argv[1]);
       printf("Available options:\n");
       printf("/i [ntop options] - Install ntop as service\n");
       printf("/c                - Run ntop on a console\n");
-      printf("/r                - Deinstall the service\n\n");
-      initNtopGlobals(argc, argv); initWinsock32(); // Necessary for usage()
+      printf("/r                - Deinstall the service\n");
+      printf("/h                - Prints this help\n\n");
+      initNtopGlobals(argc, argv); 
       usage(stdout);
     }
-    exit(0);
 
+    exit(0);
   }
 
   // If main is called without any arguments, it will probably be by the

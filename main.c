@@ -166,10 +166,14 @@ static struct option const long_options[] = {
  */
 static void welcome (FILE * fp)
 {
+#ifdef WIN32
+	initWinsock32(); /* Necessary for initializing globals */
+#endif
+
   fprintf (fp, "%s v.%s %s [%s] (%s build)\n",
 	   myGlobals.program_name, version, THREAD_MODE, osName, buildDate);
 
-  fprintf (fp, "Copyright 1998-2002 by %s.\n", author);
+  fprintf (fp, "Copyright 1998-2003 by %s.\n", author);
   fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
 }
 
@@ -178,91 +182,101 @@ static void welcome (FILE * fp)
  * Wrong. Please try again accordingly to ....
  */
 void usage (FILE * fp) {
+	char *newLine = "";
+
+#ifdef WIN32
+	newLine = "\n\t";
+#endif
+
   welcome(fp);
 
   fprintf(fp, "\nUsage: %s [OPTION]\n", myGlobals.program_name);
 
-  fprintf(fp, "    [-a <path>      | --access-log-path <path>]           Path for ntop web server access log\n");
-  fprintf(fp, "    [-b             | --disable-decoders]                 Disable protocol decoders\n");
-  fprintf(fp, "    [-c             | --sticky-hosts]                     Idle hosts are not purged from hash\n");
+  fprintf(fp, "    [-a <path>      | --access-log-path <path>]           %sPath for ntop web server access log\n", newLine);
+  fprintf(fp, "    [-b             | --disable-decoders]                 %sDisable protocol decoders\n", newLine);
+  fprintf(fp, "    [-c             | --sticky-hosts]                     %sIdle hosts are not purged from hash\n", newLine);
 
 #ifndef WIN32
-  fprintf(fp, "    [-d             | --daemon]                           Run ntop in daemon mode\n");
+  fprintf(fp, "    [-d             | --daemon]                           %sRun ntop in daemon mode\n", newLine);
 #endif
 
 #ifndef MAKE_MICRO_NTOP
-  fprintf(fp, "    [-e <number>    | --max-table-rows <number>]          Maximum number of table rows to report\n");
+  fprintf(fp, "    [-e <number>    | --max-table-rows <number>]          %sMaximum number of table rows to report\n", newLine);
 #endif
 
-  fprintf(fp, "    [-f <file>      | --traffic-dump-file <file>]         Traffic dump file (see tcpdump)\n");
-  fprintf(fp, "    [-g             | --track-local-hosts]                Track only local hosts\n");
+  fprintf(fp, "    [-f <file>      | --traffic-dump-file <file>]         %sTraffic dump file (see tcpdump)\n", newLine);
+  fprintf(fp, "    [-g             | --track-local-hosts]                %sTrack only local hosts\n", newLine);
 
-  fprintf(fp, "    [-h             | --help]                             Display this help and exit\n");
+  fprintf(fp, "    [-h             | --help]                             %sDisplay this help and exit\n", newLine);
 
 #ifndef WIN32
-  fprintf(fp, "    [-i <name>      | --interface <name>]                 Interface name or names to monitor\n");
+  fprintf(fp, "    [-i <name>      | --interface <name>]                 %sInterface name or names to monitor\n", newLine);
 #else
-  fprintf(fp, "    [-i <number>    | --interface <number>]               Interface index number to monitor\n");
+  fprintf(fp, "    [-i <number>    | --interface <number>]               %sInterface index number to monitor\n", newLine);
 #endif
-  fprintf(fp, "    [-o             | --no-mac]                           ntop will trust just IP addresses (no MACs)\n");
-  fprintf(fp, "    [-k             | --filter-expression-in-extra-frame] Show kernel filter expression in extra frame\n");
-  fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  Dump packets captured to a file (debug only!)\n");
-  fprintf(fp, "    [-m <addresses> | --local-subnets <addresses>]        Local subnetwork(s) (see man page)\n");
-  fprintf(fp, "    [-n             | --numeric-ip-addresses]             Numeric IP addresses - no DNS resolution\n");
-  fprintf(fp, "    [-p <list>      | --protocols <list>]                 List of IP protocols to monitor (see man page)\n");
-  fprintf(fp, "    [-q             | --create-suspicious-packets]        Create file ntop-suspicious-pkts.XXX.pcap file\n");
-  fprintf(fp, "    [-r <number>    | --refresh-time <number>]            Refresh time in seconds, default is %d\n", DEFAULT_NTOP_AUTOREFRESH_INTERVAL);
-  fprintf(fp, "    [-s             | --no-promiscuous]                   Disable promiscuous mode\n");
-  fprintf(fp, "    [-t <number>    | --trace-level <number>]             Trace level [0-5]\n");
+  fprintf(fp, "    [-o             | --no-mac]                           %sntop will trust just IP addresses (no MACs)\n", newLine);
+  fprintf(fp, "    [-k             | --filter-expression-in-extra-frame] %sShow kernel filter expression in extra frame\n", newLine);
+  fprintf(fp, "    [-l <path>      | --pcap-log <path>]                  %sDump packets captured to a file (debug only!)\n", newLine);
+  fprintf(fp, "    [-m <addresses> | --local-subnets <addresses>]        %sLocal subnetwork(s) (see man page)\n", newLine);
+  fprintf(fp, "    [-n             | --numeric-ip-addresses]             %sNumeric IP addresses - no DNS resolution\n", newLine);
+  fprintf(fp, "    [-p <list>      | --protocols <list>]                 %sList of IP protocols to monitor (see man page)\n", newLine);
+  fprintf(fp, "    [-q             | --create-suspicious-packets]        %sCreate file ntop-suspicious-pkts.XXX.pcap file\n", newLine);
+  fprintf(fp, "    [-r <number>    | --refresh-time <number>]            %sRefresh time in seconds, default is %d\n", 
+	  newLine, DEFAULT_NTOP_AUTOREFRESH_INTERVAL);
+  fprintf(fp, "    [-s             | --no-promiscuous]                   %sDisable promiscuous mode\n", newLine);
+  fprintf(fp, "    [-t <number>    | --trace-level <number>]             %sTrace level [0-5]\n", newLine);
 
 #ifndef WIN32
-  fprintf(fp, "    [-u <user>      | --user <user>]                      Userid/name to run ntop under (see man page)\n");
+  fprintf(fp, "    [-u <user>      | --user <user>]                      %sUserid/name to run ntop under (see man page)\n", newLine);
 #endif /* WIN32 */
 
-  fprintf(fp, "    [-w <port>      | --http-server <port>]               Web server (http:) port (or address:port) to listen on\n");
-  fprintf(fp, "    [-z             | --disable-sessions]                 Disable TCP session tracking\n");
-  fprintf(fp, "    [-A                                                   Ask admin user password and exit\n");
-  fprintf(fp, "    [                 --set-admin-password=<pass>]        Set password for the admin user to <pass>\n");
-  fprintf(fp, "    [-B <filter>]   | --filter-expression                 Packet filter expression, like tcpdump\n");
-  fprintf(fp, "    [-C             | --large-network                     Ntop will be used to analyze a large network (hint)\n");
-  fprintf(fp, "    [-D <name>      | --domain <name>]                    Internet domain name\n");
+  fprintf(fp, "    [-w <port>      | --http-server <port>]               %sWeb server (http:) port (or address:port) to listen on\n", newLine);
+  fprintf(fp, "    [-z             | --disable-sessions]                 %sDisable TCP session tracking\n", newLine);
+  fprintf(fp, "    [-A                                                   %sAsk admin user password and exit\n", newLine);
+  fprintf(fp, "    [                 --set-admin-password=<pass>]        %sSet password for the admin user to <pass>\n", newLine);
+  fprintf(fp, "    [-B <filter>]   | --filter-expression                 %sPacket filter expression, like tcpdump\n", newLine);
+  fprintf(fp, "    [-C             | --large-network                     %sNtop will be used to analyze a large network (hint)\n", newLine);
+  fprintf(fp, "    [-D <name>      | --domain <name>]                    %sInternet domain name\n", newLine);
 
 #ifndef WIN32
-  fprintf(fp, "    [-E             | --enable-external-tools]            Enable lsof/nmap integration (if present)\n");
+  fprintf(fp, "    [-E             | --enable-external-tools]            %sEnable lsof/nmap integration (if present)\n", newLine);
 #endif
 
-  fprintf(fp, "    [-F <spec>      | --flow-spec <specs>]                Flow specs (see man page)\n");
+  fprintf(fp, "    [-F <spec>      | --flow-spec <specs>]                %sFlow specs (see man page)\n", newLine);
 
 #ifndef WIN32
-  fprintf(fp, "    [-K             | --enable-debug]                     Enable debug mode\n");
+  fprintf(fp, "    [-K             | --enable-debug]                     %sEnable debug mode\n", newLine);
 #ifdef MAKE_WITH_SYSLOG
-  fprintf(fp, "    [-L ]                                                 Do logging via syslog\n");
-  fprintf(fp, "    [                 --use-syslog=<facility>]            Do logging via syslog, facility - Note that the = is REQUIRED\n");
+  fprintf(fp, "    [-L ]                                                 %sDo logging via syslog\n", newLine);
+  fprintf(fp, "    [                 --use-syslog=<facility>]            %sDo logging via syslog, facility - Note that the = is REQUIRED\n", newLine);
 #endif /* MAKE_WITH_SYSLOG */
 #endif
 
-  fprintf(fp, "    [-M             | --no-interface-merge]               Don't merge network interfaces (see man page)\n");
-  fprintf(fp, "    [-N             | --no-nmap]                          Don't use nmap even if installed\n");
-  fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            Path for log files in pcap format\n");
-  fprintf(fp, "    [-P <path>      | --db-file-path <path>]              Path for ntop internal database files\n");
-  fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     URL (mapper.pl) for displaying host location\n");
-  fprintf(fp, "    [-V             | --version]                          Output version information and exit\n");
+  fprintf(fp, "    [-M             | --no-interface-merge]               %sDon't merge network interfaces (see man page)\n", newLine);
+  fprintf(fp, "    [-N             | --no-nmap]                          %sDon't use nmap even if installed\n", newLine);
+  fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            %sPath for log files in pcap format\n", newLine);
+  fprintf(fp, "    [-P <path>      | --db-file-path <path>]              %sPath for ntop internal database files\n", newLine);
+  fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", newLine);
+  fprintf(fp, "    [-V             | --version]                          %sOutput version information and exit\n", newLine);
 
 #ifdef HAVE_OPENSSL
-  fprintf(fp, "    [-W <port>      | --https-server <port>]              Web server (https:) port (or address:port) to listen on\n");
+  fprintf(fp, "    [-W <port>      | --https-server <port>]              %sWeb server (https:) port (or address:port) to listen on\n", newLine);
 #endif
 
 #ifdef HAVE_GDCHART
-  fprintf(fp, "    [--throughput-bar-chart]                              Use BAR chart for graphs\n");
+  fprintf(fp, "    [--throughput-bar-chart]                              %sUse BAR chart for graphs\n", newLine);
 #endif
 
 #ifndef MAKE_WITH_IGNORE_SIGPIPE 
-  fprintf(fp, "    [--ignore-sigpipe]                                    Ignore SIGPIPE errors\n");
+  fprintf(fp, "    [--ignore-sigpipe]                                    %sIgnore SIGPIPE errors\n", newLine);
 #endif
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  fprintf(fp, "    [--ssl-watchdog]                                      Use ssl watchdog (NS6 problem)\n");
+  fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);
 #endif
 
+#ifdef WIN32
+  printAvailableInterfaces();
+#endif
 }
 
 
@@ -270,7 +284,7 @@ void usage (FILE * fp) {
  * Parse the command line options
  */
 static int parseOptions(int argc, char* argv []) {
-  int userSpecified = 0, setAdminPw = 0, i, opt;
+  int userSpecified = 0, setAdminPw = 0, opt;
   char* theOpts;
 #ifdef WIN32
   int optind=0;
@@ -555,6 +569,8 @@ static int parseOptions(int argc, char* argv []) {
        *     --use-syslog requires a facility parameter (see /usr/include/sys/syslog.h)
        */
       if (optarg) {
+	int i;
+
 	stringSanityCheck(optarg);
 	
 	for (i=0; myFacilityNames[i].c_name != NULL; i++) {
@@ -647,7 +663,9 @@ static int parseOptions(int argc, char* argv []) {
 
 #ifndef WIN32
   /* Handle any unrecognized options, such as a nested @filename */
-  if (optind < argc) {
+  if(optind < argc) {
+    int i;
+    
       printf("FATAL ERROR: Unrecognized/unprocessed ntop options...\n     ");
       for(i=optind; i<argc; i++) {
           printf(" %s", argv[i]);

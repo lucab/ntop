@@ -1070,7 +1070,6 @@ static void receiveSflowSample(SFSample *sample)
   u_int32_t samplesInPacket;
   struct timeval now;
   u_long *datap = (u_long *)sample->rawSample;
-  int i;
 
   now.tv_sec = time(NULL);
   now.tv_usec = 0;
@@ -1631,7 +1630,7 @@ static void handlesFlowHTTPrequest(char* url) {
 
   if(snprintf(buf, sizeof(buf),
 	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Samples</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-	      formatPkts(myGlobals.numSamplesReceived)) < 0)
+	      formatPkts((Counter)myGlobals.numSamplesReceived)) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -1866,7 +1865,6 @@ static void handleSflowPacket(u_char *_deviceId,
     unsigned short eth_type;
     u_int8_t flags = 0;
     struct ip ip;
-    struct tcphdr tp;
     struct udphdr up;
 
     if(caplen >= sizeof(struct ether_header)) {
@@ -1950,7 +1948,7 @@ static void handleSflowPacket(u_char *_deviceId,
 
 #if 1
   if(myGlobals.sflowDest.sin_addr.s_addr != 0) {
-    rc = sendto(myGlobals.sflowOutSocket, &mySample, sizeof(mySample)+sampledPacketSize, 0,
+    rc = sendto(myGlobals.sflowOutSocket, (const char*)&mySample, sizeof(mySample)+sampledPacketSize, 0,
 		(struct sockaddr *)&myGlobals.sflowDest, sizeof(myGlobals.sflowDest));
 
     if(rc == 0)

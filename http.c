@@ -574,7 +574,7 @@ void printHTMLtrailer(void) {
     sendString(buf);
   }
   
-  sendString("<BR>\n&copy; 1998-2002 by <A HREF=mailto:deri@ntop.org>Luca Deri</A>\n");
+  sendString("<BR>\n&copy; 1998-2003 by <A HREF=mailto:deri@ntop.org>Luca Deri</A>\n");
   sendString("</B></FONT>\n</BODY>\n</HTML>\n");
 }
 
@@ -1490,7 +1490,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       sendString("<li><a href=ntop.html target=area ALT=\"Man Page\">Man Page</a></li>\n");
       sendString("<li><a href=Credits.html target=area ALT=\"Credits\">Credits</a></li>\n");
       sendString("</ol>\n<center>\n<b>\n\n");
-      sendString("<pre>\n</pre>&copy; 1998-2002<br>by<br>"
+      sendString("<pre>\n</pre>&copy; 1998-2003<br>by<br>"
 		 "<A HREF=\"http://luca.ntop.org/\" target=\"area\">"
 		 "Luca Deri</A></FONT><pre>\n");
       sendString("</pre>\n</b>\n</center>\n</body>\n</html>\n");

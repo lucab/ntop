@@ -1364,7 +1364,7 @@ typedef struct ntopGlobals {
   char *separator;
 
   int32_t thisZone; /* seconds offset from gmt to local time */
-  u_long numPurgedHosts, numTerminatedSessions;
+  Counter numPurgedHosts, numTerminatedSessions;
   int    maximumHostsToPurgePerCycle;
 
   /* Time */

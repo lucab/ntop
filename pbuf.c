@@ -49,7 +49,8 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
     if(router->routedTraffic != NULL) { /* malloc() didn't fail */
       incrementTrafficCounter(&router->routedTraffic->routedPkts, 1);
-      incrementTrafficCounter(&router->routedTraffic->routedBytes, h_save->len - sizeof(struct ether_header));
+      incrementTrafficCounter(&router->routedTraffic->routedBytes, 
+		  (Counter)(h_save->len - sizeof(struct ether_header)));
     }
   }
 }
@@ -58,10 +59,11 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 int handleIP(u_short port,
 	     HostTraffic *srcHost, HostTraffic *dstHost,
-	     u_int length,  u_short isPassiveSess,
+	     u_int _length,  u_short isPassiveSess,
 	     u_short p2pSessionIdx,
 	     int actualDeviceId) {
   int idx;
+  Counter length = (Counter)_length;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(CONST_TRACE_INFO, "Sanity check failed (4) [Low memory?]");

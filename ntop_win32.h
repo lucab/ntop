@@ -20,11 +20,14 @@
 
 
 #include <winsock2.h> /* winsock.h is included automatically */
+#include <direct.h>
 
 #if defined(WIN32) && defined(__GNUC__)
 /* on mingw, the definitions we need are in pcap.h - Scott Renfro <scott@renfro.org> */
 #include "pcap.h"
 #endif
+
+#define HAVE_RRD
 
 /* Courtesy of Wies-Software <wies@wiessoft.de> */
 extern char* getadminpass(const char *prompt);
@@ -52,8 +55,11 @@ extern int gettimeofday(struct timeval*, struct timezone*);
 #endif
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 
-extern void printAvailableInterfaces();
+extern int getopt_long (int argc, char *const *argv, const char *options,
+						const struct option *long_options, int *opt_index);
 
+extern void printAvailableInterfaces();
+extern char* getpass(const char *prompt);
 extern ULONG GetHostIPAddr();
 
 #define RETSIGTYPE void

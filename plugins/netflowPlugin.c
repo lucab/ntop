@@ -146,8 +146,9 @@ static void dissectFlow(char *buffer, int bufferLen) {
 #endif
 
     for(i=0; i<numFlows; i++) {
-      int actualDeviceId, len;
-      char buf[256], buf1[256], theFlags[256];
+      int actualDeviceId;
+	  Counter len;
+      char theFlags[256];
       u_int16_t srcAS, dstAS;
       struct in_addr a, b;
       u_int srcHostIdx, dstHostIdx, numPkts;
@@ -158,7 +159,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
       myGlobals.numNetFlowsRcvd++;
 
       numPkts  = ntohl(the5Record.flowRecord[i].dPkts);
-      len      = ntohl(the5Record.flowRecord[i].dOctets);
+      len      = (Counter)ntohl(the5Record.flowRecord[i].dOctets);
 
       if((numPkts == 0) || (len == 0) /* Bad flow (zero lenght) */
 	 || (numPkts > len))          /* Bad flow (more packets than bytes) */
@@ -201,7 +202,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
       myGlobals.device[actualDeviceId].ethernetPkts.value += numPkts;
       myGlobals.device[actualDeviceId].ipPkts.value       += numPkts;
-      updateDevicePacketStats(len, actualDeviceId);
+      updateDevicePacketStats((u_int)len, actualDeviceId);
 
       myGlobals.device[actualDeviceId].ethernetBytes.value += len;
       myGlobals.device[actualDeviceId].ipBytes.value       += len;
@@ -228,9 +229,9 @@ static void dissectFlow(char *buffer, int bufferLen) {
       if(dstAS != 0) dstHost->hostAS = dstAS;
 
       if((srcAS != 0) && (dstAS != 0)) {
-	allocateElementHash(actualDeviceId, 0 /* AS hash */);
-	updateElementHash(myGlobals.device[actualDeviceId].asHash, srcAS, dstAS, numPkts, len);
-      }
+		allocateElementHash(actualDeviceId, 0 /* AS hash */);
+		updateElementHash(myGlobals.device[actualDeviceId].asHash, srcAS, dstAS, numPkts, len);
+		}
 
 #ifdef DEBUG_FLOWS
       /* traceEvent(CONST_TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */

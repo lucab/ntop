@@ -2107,10 +2107,13 @@ void traceEvent(int eventTraceLevel, char* file,
         memset(buf, 0, LEN_GENERAL_WORK_BUFFER);
 
 #if defined(WIN32) || !defined(MAKE_WITH_SYSLOG)
-
         strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
         if(myGlobals.traceLevel == CONST_DETAIL_TRACE_LEVEL) {
-                printf("%s [%s:%d] ", theDate, file, line);
+			int beginFileIdx;
+
+			for(beginFileIdx=strlen(file)-1; beginFileIdx>1; beginFileIdx--)
+  				if(file[beginFileIdx-1] == '\\') break;
+			printf("%s [%s:%d] ", theDate, &file[beginFileIdx], line);
         } else {
                 printf("%s ", theDate);
         }
@@ -3083,9 +3086,9 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
   memset(value, 0, valueLen);
 
   if(data_data.dptr != NULL) {
-    if(snprintf(value, valueLen, "%s", data_data.dptr) < 0)
-      BufferTooShort();
-    if(data_data.dsize < valueLen) value[data_data.dsize] = '\0';
+	int len = min(valueLen,data_data.dsize);
+	strncpy(value, data_data.dptr, len);
+    value[len] = '\0';
     free(data_data.dptr);
     /* traceEvent(CONST_TRACE_INFO, "Read %s=%s.", key, value); */
     return(0);
@@ -3245,7 +3248,7 @@ void resetTrafficCounter(TrafficCounter *ctr) {
 
 static void updateElementHashItem(ElementHash **theHash,
 		       u_short srcId, u_short dstId,
-		       u_int32_t numPkts, u_int32_t numBytes, u_char dataSent) {
+		       Counter numPkts, Counter numBytes, u_char dataSent) {
   u_int myIdx = 0, idx = srcId % MAX_ELEMENT_HASH;
   ElementHash *hash, *prev;
 
@@ -3316,9 +3319,9 @@ void updateElementHash(ElementHash **theHash,
 		       u_int32_t numPkts, u_int32_t numBytes) {
 
   if(srcId <= dstId)
-    updateElementHashItem(theHash, srcId, dstId, numPkts, numBytes, 1);
+    updateElementHashItem(theHash, srcId, dstId, (Counter)numPkts, (Counter)numBytes, 1);
   else
-    updateElementHashItem(theHash, dstId, srcId, numPkts, numBytes, 0);
+    updateElementHashItem(theHash, dstId, srcId, (Counter)numPkts, (Counter)numBytes, 0);
 }
 
 /* ********************************** */

@@ -139,7 +139,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 #endif
   FlowFilterList *newFlow;
 
-  if(snprintf(pluginPath, sizeof(pluginPath), "%s/%s", dirName, pluginName) < 0)
+  if(snprintf(pluginPath, sizeof(pluginPath), "%s/%s", dirName != NULL ? dirName : ".", pluginName) < 0)
     BufferTooShort();
 
 #ifdef PLUGIN_DEBUG

@@ -2618,7 +2618,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 
       sendString("<TD "TD_BG"><UL>");
       for(i=0; i < MAX_NUM_CONTACTED_PEERS; i++) {
-	u_int theIdx = scanner->peers.peersIndexes[i];
+	u_int theIdx = (u_int)scanner->peers.peersIndexes[i];
 
 	if(theIdx != FLAG_NO_PEER) {
 	  HostTraffic host;

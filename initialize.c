@@ -722,7 +722,7 @@ void initDevices(char* devices) {
   NtopInterface *tmpDevice;
   char *tmpDev;
 #ifdef WIN32
-  char *ifName, intNames[32][256], intDescr[32][256];
+  char *ifName, intNames[32][256], intDescr[32][256], *tmpDescr;
   int ifIdx = 0;
   int defaultIdx = -1;
 #endif
@@ -945,7 +945,7 @@ void initDevices(char* devices) {
 
       if(strncmp(myGlobals.device[i].name, "lo", 2)) { /* Do not care of virtual loopback interfaces */
 	int k;
-	char tmpDeviceName[16];
+	char tmpDeviceName[64];
 	struct in_addr myLocalHostAddress;
 
 	if(myGlobals.numDevices < MAX_NUM_DEVICES) {

@@ -454,10 +454,10 @@ void freeHostInstances(int actualDeviceId) {
 /* Subtract the `struct timeval' values X and Y */
 
 static float timeval_subtract (struct timeval x, struct timeval y) {
-  return ((long int) x.tv_sec * 1000000 + 
+  return((float) ((long int) x.tv_sec * 1000000 + 
           (long int) x.tv_usec - 
           (long int) y.tv_sec * 1000000 - 
-          (long int) y.tv_usec) / 1000000.0;
+          (long int) y.tv_usec) / 1000000.0);
 }
 
 /* ************************************ */

@@ -181,7 +181,7 @@ void handleBootp(HostTraffic *srcHost,
 		switch(optionId) { /* RFC 2132 */
 		case 1: /* Netmask */
 		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], sizeof(hostIpAddress.s_addr));
 		  NTOHL(hostIpAddress.s_addr);
 #ifdef DHCP_DEBUG
 		  traceEvent(CONST_TRACE_INFO, "Netmask: %s", intoa(hostIpAddress));
@@ -190,7 +190,7 @@ void handleBootp(HostTraffic *srcHost,
 		  break;
 		case 3: /* Gateway */
 		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], sizeof(hostIpAddress.s_addr));
 		  NTOHL(hostIpAddress.s_addr);
 #ifdef DHCP_DEBUG
 		  traceEvent(CONST_TRACE_INFO, "Gateway: %s", _intoa(hostIpAddress, buf, sizeof(buf)));
@@ -283,7 +283,7 @@ void handleBootp(HostTraffic *srcHost,
 		  break;
 		case 28: /* Broadcast Address */
 		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], sizeof(hostIpAddress.s_addr));
 		  NTOHL(hostIpAddress.s_addr);
 #ifdef DHCP_DEBUG
 		  traceEvent(CONST_TRACE_INFO, "Broadcast Address: %s",
@@ -293,7 +293,7 @@ void handleBootp(HostTraffic *srcHost,
 		  break;
 		case 44: /* WINS server */
 		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], sizeof(hostIpAddress.s_addr));
 		  NTOHL(hostIpAddress.s_addr);
 #ifdef DHCP_DEBUG
 		  traceEvent(CONST_TRACE_INFO, "WINS server: %s",
@@ -315,7 +315,7 @@ void handleBootp(HostTraffic *srcHost,
 		case 51: /* Lease time */
 		  len = bootProto.bp_vend[idx++];
 		  if(len == 4) {
-		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
+		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], sizeof(hostIpAddress.s_addr));
 		    NTOHL(tmpUlong);
 #ifdef DHCP_DEBUG
 		    traceEvent(CONST_TRACE_INFO, "Lease time: %u", tmpUlong);
@@ -373,7 +373,7 @@ void handleBootp(HostTraffic *srcHost,
 		case 58: /* Renewal time */
 		  len = bootProto.bp_vend[idx++];
 		  if(len == 4) {
-		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
+		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], sizeof(hostIpAddress.s_addr));
 		    NTOHL(tmpUlong);
 #ifdef FLAG_DHCP_DEBUG
 		    traceEvent(CONST_TRACE_INFO, "Renewal time: %u", tmpUlong);
@@ -385,7 +385,7 @@ void handleBootp(HostTraffic *srcHost,
 		case 59: /* Rebinding time */
 		  len = bootProto.bp_vend[idx++];
 		  if(len == 4) {
-		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
+		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], sizeof(hostIpAddress.s_addr));
 		    NTOHL(tmpUlong);
 #ifdef FLAG_DHCP_DEBUG
 		    traceEvent(CONST_TRACE_INFO, "Rebinding time: %u", tmpUlong);
@@ -395,7 +395,7 @@ void handleBootp(HostTraffic *srcHost,
 		  break;
 		case 64: /* NIS+ Domain */
 		  len = bootProto.bp_vend[idx++];
-		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
+		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], sizeof(hostIpAddress.s_addr));
 		  NTOHL(hostIpAddress.s_addr);
 #ifdef FLAG_DHCP_DEBUG
 		  traceEvent(CONST_TRACE_INFO, "NIS+ domain: %s", intoa(hostIpAddress));

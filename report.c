@@ -480,7 +480,7 @@ void printTrafficStatistics() {
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value > 0) {
       int avgPktTTL;
 
-      avgPktTTL = (16*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value
+      avgPktTTL = (int)((16*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value
 		   +48*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value
 		   +80*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value
 		   +112*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value
@@ -488,7 +488,7 @@ void printTrafficStatistics() {
 		   +176*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value
 		   +208*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value
 		   +240*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value)/
-	myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
+	myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value);
 
       if(avgPktTTL > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Average&nbsp;TTL</th>"

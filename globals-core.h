@@ -313,6 +313,8 @@ extern int dotted2bits(char *mask);
 extern void handleLocalAddresses(char* addresses);
 extern unsigned short isPseudoLocalAddress(struct in_addr *addr);
 extern unsigned short _pseudoLocalAddress(struct in_addr *addr);
+extern unsigned short __pseudoLocalAddress(struct in_addr *addr,
+					    u_int32_t theNetworks[MAX_NUM_NETWORKS][3], u_short numNetworks);
 extern unsigned short isPseudoBroadcastAddress(struct in_addr *addr);
 extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);

@@ -945,60 +945,60 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	if(el->icmpInfo && checkFilter(filter, &filterPattern, "ICMP")) {
 	  initWriteKey(fDescr, lang, "\t", "ICMP", numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_ECHO",
-		      el->icmpInfo->icmpMsgSent[ICMP_ECHO].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_ECHO].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_ECHOREPLY",
-		      el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_UNREACH",
-		      el->icmpInfo->icmpMsgSent[ICMP_UNREACH].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_UNREACH].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_ROUTERADVERT",
-		      el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_TMXCEED",
-		      el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_PARAMPROB",
-		      el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_MASKREPLY",
-		      el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_MASKREQ",
-		      el->icmpInfo->icmpMsgSent[ICMP_MASKREQ].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_MASKREQ].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_INFO_REQUEST",
-		      el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_INFO_REPLY",
-		      el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_TIMESTAMP",
-		      el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_TIMESTAMPREPLY",
-		      el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","SENT_SOURCE_QUENCH",
-		      el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH].value, ' ', numEntries);
 
 	  /* *********************************************** */
 
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_ECHO",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_ECHO].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_ECHO].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_ECHOREPLY",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_UNREACH",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_ROUTERADVERT",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_TMXCEED",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_PARAMPROB",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_MASKREPLY",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_MASKREQ",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_INFO_REQUEST",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_INFO_REPLY",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_TIMESTAMP",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_TIMESTAMPREPLY",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY].value, ' ', numEntries);
 	  wrtUlongItm(fDescr, lang,"\t\t","RCVD_SOURCE_QUENCH",
-		      el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value, ' ', numEntries);
+		      (unsigned long)el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value, ' ', numEntries);
 
 	  endWriteKey(fDescr, lang,"\t", "ICMP", ',');
 	}
