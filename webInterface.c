@@ -170,20 +170,20 @@ void execCGI(char* cgiName) {
       if(!printHeader) {
 	/* printHTTPheader(); */
 	sendString("<center><H1>Available Plugins</H1>\n<p>"
-		   "<TABLE BORDER><TR>\n");
-	sendString("<TR><TH>Name</TH><TH>Description</TH>"
-		   "<TH>Version</TH>"
-		   "<TH>Author</TH>"
-		   "<TH>Active</TH>"
+		   ""TABLE_ON"<TABLE BORDER=0><TR>\n");
+	sendString("<TR><TH "TH_BG">Name</TH><TH>Description</TH>"
+		   "<TH "TH_BG">Version</TH>"
+		   "<TH "TH_BG">Author</TH>"
+		   "<TH "TH_BG">Active</TH>"
 		   "</TR>\n");
 	printHeader = 1;
       }
 
-      snprintf(tmpBuf, sizeof(tmpBuf), "<TR %s><TH ALIGN=LEFT><A HREF=/plugins/%s>%s</TH>"
-	      "<TD ALIGN=LEFT>%s</TD>"
-	      "<TD ALIGN=CENTER>%s</TD>"
-	      "<TD ALIGN=LEFT>%s</TD>"
-	      "<TD ALIGN=CENTER><A HREF="STR_SHOW_PLUGINS"?%s=%d>%s</A></TD>"
+      snprintf(tmpBuf, sizeof(tmpBuf), "<TR %s><TH "TH_BG" ALIGN=LEFT><A HREF=/plugins/%s>%s</TH>"
+	      "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
+	      "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
+	      "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
+	      "<TD "TD_BG" ALIGN=CENTER><A HREF="STR_SHOW_PLUGINS"?%s=%d>%s</A></TD>"
 	      "</TR>\n",
 	      getRowColor(),
 	      flows->pluginStatus.pluginPtr->pluginURLname,
@@ -206,7 +206,7 @@ void execCGI(char* cgiName) {
 	       "<i>No Plugins available</i></H1>"
 	      "</CENTER></FONT></CENTER><p>\n");
   } else {
-    sendString("</TABLE><p>\n");
+    sendString("</TABLE>"TABLE_OFF"<p>\n");
   }
  }
 
@@ -412,7 +412,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   if(broadcastHost(el)) {
     if(mode == LONG_FORMAT)
-      return("<TH ALIGN=LEFT>&lt;broadcast&gt;</TH>");
+      return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
     else
       return("&lt;broadcast&gt;");
   }
@@ -517,12 +517,12 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(addCountryFlag == 0)
     flag[0] = '\0';
   else {
-    snprintf(flag, sizeof(flag), "<TD ALIGN=CENTER>%s</TD>",
+    snprintf(flag, sizeof(flag), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
 	    getHostCountryIconURL(el));
   }
 
   if(mode == LONG_FORMAT)
-    snprintf(buf[bufIdx], 384, "<TH ALIGN=LEFT NOWRAP>%s<A HREF=\"/%s.html\">%s</A>%s</TH>%s",
+    snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s<A HREF=\"/%s.html\">%s</A>%s</TH>%s",
 	    blinkOn, linkName, symIp, blinkOff, flag);
   else
     snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\">%s</A>%s%s",

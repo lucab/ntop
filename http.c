@@ -826,7 +826,7 @@ static void returnHTTPPage(char* pageName, int postLen) {
     sendString("</CENTER>\n");
   } else if(strncmp(pageName, SHUTDOWN_NTOP_HTML, strlen(SHUTDOWN_NTOP_HTML)) == 0) {
     sendHTTPProtoHeader(); sendHTTPHeaderType(); printHTTPheader();
-    sendString("<CENTER><p><H1>ntop is shutting down...</H1><p>\n");
+    sendString("<CENTER><p><H1><FONT FACE=Helvetica>ntop is shutting down...</FONT></H1><p>\n");
     sendString("</CENTER>\n");
     shutdownNtop();
   } else if(strncmp(pageName, RESET_STATS_HTML, strlen(RESET_STATS_HTML)) == 0) {

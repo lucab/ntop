@@ -266,7 +266,7 @@ void interfaceTrafficPie(void) {
 /* ************************ */
 
 void pktCastDistribPie(void) {
-  char tmpStr[256], fileName[64];
+  char tmpStr[256], fileName[64] = "graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "", "", "" };
   int len, num=0, expl[] = { 0, 20, 30 };

@@ -29,6 +29,11 @@
 #include "gdcpie.h"
 #endif
 
+#define TABLE_ON  "<TABLE BGCOLOR=#999999 CELLSPACING=1 CELLPADDING=1 BORDER=0><TR><TD>"
+#define TABLE_OFF "</TD></TR></TABLE>"
+#define TH_BG     "BGCOLOR=#FFFFFF"
+#define TD_BG     "BGCOLOR=#FFFFFF"
+
 extern int maxNumLines, idleFlag, percentMode, localAddrFlag, refreshRate;
 extern int webPort, actualReportDeviceId;
 

@@ -48,18 +48,18 @@ void showUsers(void) {
     if(key_data.dptr[0] == '1') /* 1 = user */{
 
       if(numUsers == 0) {
-	sendString("<center><TABLE BORDER>\n");
-	sendString("<TR><TH>Users</TH><TH>Actions</TH></TR>\n");
+	sendString("<CENTER>"TABLE_ON"<TABLE BORDER=0>\n");
+	sendString("<TR><TH "TH_BG">Users</TH><TH "TH_BG">Actions</TH></TR>\n");
       }
 	
       if(strcmp(key_data.dptr, "1admin") == 0)
-	snprintf(buf, BUF_SIZE, "<TR><TH ALIGN=LEFT><IMG SRC=/user.gif>"
-		"&nbsp;%s</TH><TD><A HREF=/modifyUser?%s>"
+	snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
+		"&nbsp;%s</TH><TD "TD_BG"><A HREF=/modifyUser?%s>"
 		"<IMG SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 		"&nbsp;</TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr);
       else      
-	snprintf(buf, BUF_SIZE, "<TR><TH ALIGN=LEFT><IMG SRC=/user.gif>"
-		"&nbsp;%s</TH><TD><A HREF=/modifyUser?%s>"
+	snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
+		"&nbsp;%s</TH><TD "TD_BG"><A HREF=/modifyUser?%s>"
 		"<IMG SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 		"&nbsp;<A HREF=/deleteUser?%s><IMG SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
 		"</A></TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr, 
@@ -77,7 +77,7 @@ void showUsers(void) {
 #endif 
 
   if(numUsers > 0) {
-    sendString("</table>\n");
+    sendString("</TABLE>"TABLE_OFF"\n");
   }
 
   sendString("<p><H4></center>[<A HREF=addUser.html>Add User</A>]&nbsp;"
@@ -304,12 +304,12 @@ void showURLs(void) {
 
     if(key_data.dptr[0] == '2') { /* 2 = URL */
       if(numUsers == 0) {
-	sendString("<center><TABLE BORDER>\n");
-	sendString("<TR><TH>URLs</TH><TH>Actions</TH></TR>\n");
+	sendString("<CENTER>"TABLE_ON"<TABLE BORDER=0>\n");
+	sendString("<TR><TH "TH_BG">URLs</TH><TH "TH_BG">Actions</TH></TR>\n");
       }
 	
-      snprintf(buf, BUF_SIZE, "<TR><TH ALIGN=LEFT><IMG SRC=/user.gif>"
-	      "&nbsp;'%s*'</TH><TD><A HREF=/modifyURL?%s>"
+      snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
+	      "&nbsp;'%s*'</TH><TD "TD_BG"><A HREF=/modifyURL?%s>"
 	      "<IMG SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 	      "&nbsp;<A HREF=/deleteURL?%s><IMG SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
 	      "</A></TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr, 
@@ -327,7 +327,7 @@ void showURLs(void) {
 #endif 
     
   if(numUsers > 0)
-    sendString("</table>\n");
+    sendString("</TABLE>"TABLE_OFF"\n");
   
   sendString("<p><H4></center>[<A HREF=addURL.html>Add URL</A>]"
 	     "&nbsp;[<A HREF=showUsers.html>Show Users</A>]</H4>\n");  
