@@ -1098,7 +1098,7 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.broadcastEntry != NULL) free(myGlobals.broadcastEntry);
   if(myGlobals.otherHostEntry != NULL) {
     if(myGlobals.otherHostEntry->portsUsage != NULL) 
-      freePortsUsage(myGlobals.otherHostEntry->portsUsage);
+      freePortsUsage(myGlobals.otherHostEntry);
     myGlobals.otherHostEntry->portsUsage = NULL;
     free(myGlobals.otherHostEntry);
   }
