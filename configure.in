@@ -1357,16 +1357,7 @@ AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(CFG_BIG_ENDIAN, 1, [ntop built for big endian
 dnl> Presets for the make flags go here...
 CFLAGS="${CFLAGS}"
 CPPFLAGS="${CPPFLAGS}"
-case "${target}:${CC}" in
-    *-*-darwin*:* )
-        dnl> Per Luca, Mac seems to needs this, although it's strange, as 
-        dnl> libmyrrd.a doesn't yet exist at ./configure time.
-        LDFLAGS="${LDFLAGS} -L$MYRRD -lmyrrd"
-        ;;
-    * )
-        LDFLAGS="${LDFLAGS}"
-        ;;
-esac
+LDFLAGS="${LDFLAGS}"
 
 if test ".${ac_debug}" = ".yes"; then
     echo "DEBUG: CC            is '${CC}')"
