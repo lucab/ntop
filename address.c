@@ -25,6 +25,10 @@ static char hex[] = "0123456789ABCDEF";
 
 #ifdef HAVE_NETDB_H
 extern int h_errno; /* netdb.h */
+#if defined(HPUX) && !defined(NETDB_SUCCESS)
+/* Handle HP-UX 10.20 and 11's retarded netdb.h */
+#define NETDB_SUCCESS h_NETDB_SUCCESS
+#endif
 #endif
 
 /* Forward */
