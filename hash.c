@@ -463,6 +463,41 @@ void purgeIdleHosts(int actDevice) {
   hashSanityCheck();
 #endif
 
+#if 1 /* Test */
+  for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {        
+    if(el = myGlobals.device[actDevice].hash_hostTraffic[idx]) {
+#ifdef CFG_MULTITHREADED
+    accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
+#endif
+    
+    prev = el;
+    
+    while(el) {
+      if((el->refCount == 0) && (el->lastSeen < purgeTime) && (!broadcastHost(el))) {
+	theFlaggedHosts[numHosts++] = el;
+
+	next = el->next;
+
+	if(next && (el->hostTrafficBucket == next->hostTrafficBucket))
+	  prev->next = next;
+	else
+	  prev->next = NULL;
+      
+	el = next;
+      } else {
+	prev = el;
+	el = el->next;
+      }
+      
+      scannedHosts++;
+    }
+
+#ifdef CFG_MULTITHREADED
+    releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+    }
+  }
+#else
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
@@ -490,7 +525,7 @@ void purgeIdleHosts(int actDevice) {
       
       el = next;
     } else {
-      el = getNextHost(actDevice, el);
+      prev = el; el = getNextHost(actDevice, el);
     }
 
     scannedHosts++;
@@ -499,6 +534,9 @@ void purgeIdleHosts(int actDevice) {
 #ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
+
+#endif
+
 
 #ifdef HASH_DEBUG
   hashSanityCheck();
