@@ -821,7 +821,6 @@ static void handleBootp(HostTraffic *srcHost,
 	
     if(packetData != NULL) {
       char buf[32];
-      HostTraffic* hostTraffic;
 
       /*
 	This is a server BOOTP/DHCP respose 
@@ -1187,7 +1186,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 		 && (napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr)
 		 || ((napsterSvr[i].serverPort == dport)
 		     && (napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
-	      welcomeToNapster:
 		theSession->napsterSession = 1;
 		napsterSvr[i].serverPort = 0; /* Free slot */
 		numNapsterSvr--;
@@ -1442,7 +1440,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 	}
       } else if((sport == 8875 /* Napster Redirector */) && (packetDataLength > 5)) {
 	char address[64] = { 0 };
-	struct in_addr svrAddr;
 	int i;
 
 	FD_SET(HOST_SVC_NAPSTER_REDIRECTOR, &srcHost->flags);
@@ -1555,7 +1552,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 		     dstHost->hostSymIpAddress);
 	} else if((packetData[1] == 0x0) && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
 	  char tmpBuf[64], *remoteHost, *remotePort, *strtokState;
-	  int i, j;
 
 	  struct in_addr shost;
 
@@ -2278,7 +2274,7 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
 	key_data.dsize = strlen(key_data.dptr)+1;
 	data_data.dptr = hostPtr.aliases[0]; /* Let's take the first one */
 	data_data.dsize = strlen(data_data.dptr)+1;
-	if(gdbm_file == NULL) return; /* ntop is quitting... */
+	if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
 	gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
 #endif
       } else
@@ -2299,7 +2295,7 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
 #ifdef HAVE_GDBM_H
 	key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
 	key_data.dsize = strlen(key_data.dptr)+1;
-	if(gdbm_file == NULL) return; /* ntop is quitting... */
+	if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
 	gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
 #endif
       }
@@ -3296,8 +3292,6 @@ void processPacket(u_char *_deviceId,
   /* Token-Ring Strings */
   struct tokenRing_llc *trllc;
   FILE * fd;
-  char theDate[8];
-  struct tm t;
 
 #ifdef DEBUG
   static long numPkt=0; traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);

@@ -258,6 +258,7 @@ extern void initDeviceDatalink(void);
 extern void parseTrafficFilter(char *argv[], int optind);
 extern void initSignals(void);
 extern void startSniffer(void);
+extern void deviceSanityCheck(char* string);
 
 /* leaks.c */
 #ifdef MEMORY_DEBUG 
@@ -419,6 +420,7 @@ extern int deleteSem(sem_t *semId);
 #endif /* HAVE_SEMAPHORE_H */
 #endif /* MULTITHREADED */
 
+extern void stringSanityCheck(char* string);
 extern int checkCommand(char* commandName);
 extern void readLsofInfo(void);
 extern void readNepedInfo(void);

@@ -93,7 +93,7 @@ void pktSizeDistribPie(void) {
   accessMutex(&graphMutex, "pktSizeDistrib");
 #endif
 
-  pie_png(250,			/* width */
+  GDC_out_pie(250,			/* width */
 	  250,			/* height */
 	  fd,			/* open file pointer */
 	  GDC_3DPIE,		/* or GDC_2DPIE */
@@ -163,7 +163,7 @@ void ipProtoDistribPie(void) {
   GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
-  pie_png(250,			/* width */
+  GDC_out_pie(250,			/* width */
 	  250,			/* height */
 	  fd,			/* open file pointer */
 	  GDC_3DPIE,		/* or GDC_2DPIE */
@@ -234,7 +234,7 @@ void interfaceTrafficPie(void) {
   GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_RIGHT;
 
-  pie_png(250,		/* width */
+  GDC_out_pie(250,		/* width */
 	  250,		/* height */
 	  fd,		/* open file pointer */
 	  GDC_3DPIE,	/* or GDC_2DPIE */
@@ -310,7 +310,7 @@ void pktCastDistribPie(void) {
   GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
-  pie_png(250,			/* width */
+  GDC_out_pie(250,			/* width */
 	  250,			/* height */
 	  fd,			/* open file pointer */
 	  GDC_3DPIE,		/* or GDC_2DPIE */
@@ -368,7 +368,7 @@ void drawTrafficPie(void) {
   GDCPIE_explode   = expl;    /* default: NULL - no explosion */
   GDCPIE_Color     = clr;
 
-  pie_png(250,			/* width */
+  GDC_out_pie(250,			/* width */
 	  250,			/* height */
 	  fd,			/* open file pointer */
 	  GDC_3DPIE,		/* or GDC_2DPIE */

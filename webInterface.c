@@ -311,13 +311,13 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
     sin.sin_port        = (int)htons((unsigned short int)webPort);
     sin.sin_addr.s_addr = INADDR_ANY;
 
+#ifndef WIN32
     if(sslAddr) {
       if(!inet_aton(sslAddr,&sin.sin_addr))
-	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
+		traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
 		   "Not binding SSL to a particular interface!\n",  sslAddr);
     }
 
-#ifndef WIN32
     if (webAddr) {      /* Code added to be able to bind to a particular interface */
       if (!inet_aton(webAddr,&sin.sin_addr))
 	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"

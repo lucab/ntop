@@ -391,7 +391,9 @@ void initGdbm(void) {
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
+#ifdef FALLBACK
  RETRY_INIT_GDBM:
+#endif
   if(gdbm_file == NULL) {
     traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
 	       tmpBuf, gdbm_strerror(gdbm_errno));
@@ -553,13 +555,15 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
 void initApps(void) {
   if(isLsofPresent) {
 #ifdef MULTITHREADED
-    updateLsof = 1;
+#ifndef WIN32
+	updateLsof = 1;
     memset(localPorts, 0, sizeof(localPorts)); /* localPorts is used by lsof */
     /*
      * (7) - LSOF - optional
      */
     createThread(&lsofThreadId, periodicLsofLoop, NULL);
     traceEvent (TRACE_INFO, "Thread %d for  LSOF support started.\n", lsofThreadId);
+#endif /* WIN32 */
 #else
     if(isLsofPresent) readLsofInfo();
     if(isNepedPresent) readNepedInfo();
@@ -610,7 +614,6 @@ void initDevices(char* devices) {
     }
   } else {
     char *strtokState, *tmpDev;
-    int i, found;
 
     tmpDev = strtok_r(devices, ",", &strtokState);
     numDevices = 0;
