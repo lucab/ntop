@@ -3013,7 +3013,7 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
   datum key_data;
   datum data_data;
 
-  if((value == NULL) || (!myGlobals.capturePackets)) return;
+  if((value == NULL) || (!myGlobals.capturePackets)) return(-1);
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering fetchPrefValue()");
@@ -3151,6 +3151,7 @@ int guessHops(HostTraffic *el) {
 
 /* ************************************ */
 
+#ifndef WIN32
 #undef sleep
 
 int ntop_sleep(int secs) {
@@ -3158,4 +3159,7 @@ int ntop_sleep(int secs) {
   
   while((unsleptTime = sleep(unsleptTime)) > 0)
     ;
+
+  return(secs);
 }
+#endif

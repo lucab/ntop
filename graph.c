@@ -68,7 +68,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   if(dataSent) {
     totTraffic = theHost->tcpSentLoc+theHost->tcpSentRem+
@@ -307,7 +307,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   if(dataSent)
     totTraffic = theHost->tcpFragmentsSent+theHost->udpFragmentsSent+theHost->icmpFragmentsSent;
@@ -410,7 +410,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totFragmentedTraffic, totTraffic;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   if(dataSent) {
     totTraffic = theHost->ipBytesSent;
@@ -492,7 +492,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   int i, num=0, expl[MAX_NUM_PROTOS];
   FILE *fd;
   TrafficCounter traffic, totalIPTraffic, diffTraffic;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   if(theHost->protoIPTrafficInfos == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: Graph failure (5)");
@@ -599,7 +599,7 @@ void pktSizeDistribPie(void) {
   char	*lbl[] = { "", "", "", "", "", "", "" };
   int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
   FILE *fd;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64 > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64)/
@@ -698,7 +698,7 @@ void pktTTLDistribPie(void) {
   char	*lbl[] = { "", "", "", "", "", "", "" };
   int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
   FILE *fd;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32 > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32)/
@@ -802,7 +802,7 @@ void ipProtoDistribPie(void) {
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };
   int num=0, expl[] = { 0, 20, 30 };
   FILE *fd;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   p[num] = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local+
 		   myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
@@ -879,7 +879,7 @@ void interfaceTrafficPie(void) {
   struct pcap_stat stat;
   char	*lbl[MAX_NUM_DEVICES];
   int myDevices=0;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   for(i=0; i<myGlobals.numDevices; i++)
     if(!myGlobals.device[i].virtualDevice) {
@@ -953,7 +953,7 @@ void pktCastDistribPie(void) {
   char fileName[64] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "", "", "" };
-  int num=0, expl[] = { 0, 20, 30 }, useFdOpen;
+  int num=0, expl[] = { 0, 20, 30 }, useFdOpen = 0;
   FILE *fd;
   TrafficCounter unicastPkts;
 
@@ -1038,7 +1038,7 @@ void drawTrafficPie(void) {
   char	*lbl[] = { "IP", "Non IP" };
   int num=0, expl[] = { 5, 5 };
   FILE *fd;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes == 0) return;
 
@@ -1107,7 +1107,7 @@ void drawThptGraph(int sortedColumn) {
   time_t tmpTime;
   float graphData[60], maxBytesPerSecond;
   struct tm t;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   memset(graphData, 0, sizeof(graphData));
 
@@ -1272,7 +1272,7 @@ void drawGlobalProtoDistribution(void) {
   char	*lbl[16];
   FILE *fd;
   int idx = 0;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   ip = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
   nonIp = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes
@@ -1362,7 +1362,7 @@ void drawGlobalIpProtoDistribution(void) {
   float p[256];
   char *lbl[256];
   FILE *fd;
-  int useFdOpen;
+  int useFdOpen = 0;
 
   p[myGlobals.numIpProtosToMonitor] = 0;
 
@@ -1426,11 +1426,11 @@ void drawGlobalIpProtoDistribution(void) {
 
 void drawHostsDistanceGraph() {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
-  int i, j, len;
+  int i, j;
   char  *lbls[32], labels[32][8];
   FILE *fd;
   float graphData[60];
-  int useFdOpen;
+  int useFdOpen = 0;
 
   memset(graphData, 0, sizeof(graphData));
 

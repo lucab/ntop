@@ -378,8 +378,6 @@ void purgeIdleHosts(int actDevice) {
   if(myGlobals.rFileName != NULL) return;
 
   if(firstRun) {
-    int i;
-
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
   }

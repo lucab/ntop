@@ -72,8 +72,6 @@ void setNetFlowOutSocket() {
   if(myGlobals.netFlowOutSocket <= 0) {
     char value[32];
     int sockopt = 1;
-    struct hostent *hostAddr;
-    struct sockaddr_in dest;
 
     myGlobals.netFlowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
     setsockopt(myGlobals.netFlowOutSocket, SOL_SOCKET, SO_REUSEADDR,
@@ -107,7 +105,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   traceEvent(TRACE_INFO, "netflowMainLoop()");
 #endif
 
-  if(!(myGlobals.netFlowInSocket > 0)) return;
+  if(!(myGlobals.netFlowInSocket > 0)) return(NULL);
 
   traceEvent(TRACE_INFO, "Welcome to NetFlow: listening on UDP port %d...", myGlobals.netFlowInPort);
 #ifdef MULTITHREADED

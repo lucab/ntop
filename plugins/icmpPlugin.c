@@ -176,7 +176,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   char buf[1024], fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX";
   char *sign = "-";
   char *pluginName = "<A HREF=/plugins/icmpWatch";
-  u_int i, revertOrder=0, num, printedEntries;
+  u_int i, revertOrder=0, num, printedEntries, tot = 0;
   int icmpId=-1;
   HostTraffic **hosts;
   struct in_addr hostIpAddress;
@@ -220,7 +220,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
 #ifdef HAVE_GDCHART
     if(strncmp(url, "chart", strlen("chart")) == 0) {
-      u_int len, tot=0;
       unsigned long  sc[2] = { 0xf08080L, 0x4682b4L }; /* see clr[] in graph.c */
 
       GDC_BGColor   = 0xFFFFFFL;                  /* backgound color (white) */

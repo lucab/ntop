@@ -823,11 +823,10 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 /* ************************* */
 
 static int checkURLsecurity(char *url) {
-  int rc = 0, tokenCharacter, countOKextension, len, i;
-  int countSections, countOKnumeric, xvertValue;
+  int rc = 0, countOKextension, len, i;
+  int countSections, countOKnumeric;
   char *token;
   char *workURL = NULL;
-  char *strtokState;
 
   /*
     Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>

@@ -169,8 +169,6 @@ int handleIP(u_short port,
 static void addContactedPeers(HostTraffic *sender,
 			      HostTraffic *receiver,
 			      int actualDeviceId) {
-  short found;
-
   if((sender == NULL)
      || (receiver == NULL)
      || (sender->hostTrafficBucket == receiver->hostTrafficBucket)) {
@@ -426,7 +424,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
       && (!broadcastHost(dstHost)) && (!multicastHost(dstHost)))
      || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost))
 	 && (!broadcastHost(srcHost)) && (!multicastHost(srcHost)))) {
-    u_int routerIdx, j;
+    u_int routerIdx;
     HostTraffic *router;
 
     routerIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);

@@ -71,8 +71,15 @@ static u_short _headerSize[] = {
   UNKNOWN_MTU	/* BSD/OS Point-to-point Protocol */
 };
 
+#ifdef WIN32
+extern char _wdir[];
+#endif
 
-static char *_dataFileDirs[]   = { ".", DATAFILE_DIR, NULL };
+static char *_dataFileDirs[]   = { ".", 
+#ifdef WIN32
+									_wdir,
+#endif
+									DATAFILE_DIR, NULL };
 static char *_pluginDirs[]     = { "./plugins", PLUGIN_DIR, NULL };
 static char *_configFileDirs[] = { ".", CONFIGFILE_DIR, "/etc", NULL };
 

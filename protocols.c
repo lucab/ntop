@@ -54,6 +54,9 @@ void handleBootp(HostTraffic *srcHost,
 		 int actualDeviceId) {
   BootProtocol bootProto = { 0 };
   int len;
+  char savechar; /* Courtesy of  
+		    Axel Thimm <Axel.Thimm+ntop@physik.fu-berlin.de>
+		 */
 
   if((!myGlobals.enablePacketDecoding)
      || (packetData == NULL) /* packet too short ? */
@@ -209,12 +212,17 @@ void handleBootp(HostTraffic *srcHost,
 		case 12: /* Host name */
 		  len = bootProto.bp_vend[idx++];
 #ifdef DHCP_DEBUG
-		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
+		  savechar = bootProto.bp_vend[idx+len];
+		  bootProto.bp_vend[idx+len] = '\0';
+ 		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
+		  bootProto.bp_vend[idx+len] = savechar;
 #endif
 		  idx += len;
 		  break;
 		case 15: /* Domain name */
 		  len = bootProto.bp_vend[idx++];
+		  savechar = bootProto.bp_vend[idx+len];
+		  bootProto.bp_vend[idx+len] = '\0';
 #ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Domain name: %s", &bootProto.bp_vend[idx]);
 #endif
@@ -262,6 +270,7 @@ void handleBootp(HostTraffic *srcHost,
 		    }
 		  }
 
+		  bootProto.bp_vend[idx+len] = savechar;
 		  idx += len;
 		  break;
 		case 19: /* IP Forwarding */
@@ -482,6 +491,8 @@ void handleBootp(HostTraffic *srcHost,
 		switch(optionId) { /* RFC 2132 */
 		case 12: /* Host name */
 		  len = bootProto.bp_vend[idx++];
+		  savechar = bootProto.bp_vend[idx+len];
+		  bootProto.bp_vend[idx+len] = '\0';
 #ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
 #endif
@@ -494,6 +505,7 @@ void handleBootp(HostTraffic *srcHost,
 		  if(len >= MAX_HOST_SYM_NAME_LEN) len = MAX_HOST_SYM_NAME_LEN-1;
 		  strncpy(realClientHost->hostSymIpAddress, &bootProto.bp_vend[idx], len);
 		  realClientHost->hostSymIpAddress[len] = '\0';
+		  bootProto.bp_vend[idx+len] = savechar;
 		  idx += len;
 		  break;
 		case 53: /* DHCP Message Type */

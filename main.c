@@ -169,7 +169,7 @@ static void welcome (FILE * fp)
 /*
  * Wrong. Please try again accordingly to ....
  */
-static void usage (FILE * fp) {
+void usage (FILE * fp) {
   welcome(fp);
 
   fprintf(fp, "\nUsage: %s [OPTION]\n", myGlobals.program_name);
@@ -624,7 +624,11 @@ static int parseOptions(int argc, char* argv []) {
 /* ************************************ */
 
 /* That's the meat */
+#ifdef WIN32
+int ntop_main(int argc, char *argv[]) {
+#else
 int main(int argc, char *argv[]) {
+#endif
   int i, userSpecified;
   char ifStr[196] = {0};
   time_t lastTime;

@@ -219,6 +219,9 @@ extern void term_ssl_connection(int fd);
 extern void term_ssl(void);
 #endif
 
+/* main.c */
+extern void usage (FILE * fp);
+
 /* term.c */
 extern void termIPServices(void);
 extern void termIPSessions(void);
@@ -383,9 +386,7 @@ void initNtopGlobals(int argc, char * argv[]);
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
 extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, u_char allocateMemoryIfNeeded);
-#ifndef MULTITHREADED
 extern void scanTimedoutTCPSessions(int actualDeviceId);
-#endif
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);
 

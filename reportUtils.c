@@ -1657,7 +1657,6 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 /* ************************************ */
 
 void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
-  int i, a, b;
   TrafficCounter totalSent, totalRcvd;
   TrafficCounter actTotalSent, actTotalRcvd;
   char buf[BUF_SIZE];

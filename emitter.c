@@ -322,8 +322,7 @@ static int checkFilter(char* theFilter,
 
 void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64], filter[128];
-  unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE;
-  HostTraffic *el;
+  unsigned int numEntries=0, lang=DEFAULT_LANGUAGE;
   struct re_pattern_buffer filterPattern;
   unsigned char shortView = 0;
   FlowFilterList *list = myGlobals.flowsList;
