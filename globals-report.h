@@ -269,7 +269,7 @@ extern char *makeHostLink(HostTraffic *el, short mode,
 extern char *getHostName(HostTraffic *el, short cutName);
 
 /* graph.c */
-extern void sendGraphFile(char* fileName);
+extern void sendGraphFile(char* fileName, int doNotUnlink);
 extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFragmentDistrib(HostTraffic *theHost, short dataSent);

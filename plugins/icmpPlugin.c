@@ -286,7 +286,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 #endif
 
 #ifdef WIN32
-      sendGraphFile(fileName);
+      sendGraphFile(fileName, 0);
 #endif
       return;
     }

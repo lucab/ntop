@@ -2239,6 +2239,12 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.dynamicPurgeLimits == 1 ? "Yes" : "No",
                            "No");
 
+#ifdef HAVE_RRD
+  printParameterConfigInfo(textPrintFlag, "--reuse-rrd-graphics",
+                           myGlobals.reuseRRDgraphics == 1 ? "Yes" : "No",
+                           "No");
+#endif
+
   sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
   sendString("Note: " REPORT_ITS_EFFECTIVE "   means that "
 	     "this is the value after ntop has processed the parameter.");

@@ -137,6 +137,10 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   myGlobals.dynamicPurgeLimits = 0;
 
+#ifdef HAVE_RRD
+  myGlobals.reuseRRDgraphics = 0;
+#endif
+
   /* Other flags (to be set via command line options one day) */
   myGlobals.enableFragmentHandling = 1;
 
@@ -146,6 +150,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.configFileDirs  = _configFileDirs;
   myGlobals.pcapLogBasePath = strdup(DBFILE_DIR);   /* a NULL pointer will break the logic */
   myGlobals.dbPath          = strdup(DBFILE_DIR);   /* a NULL pointer will break the logic */
+
+  /* NB: we can't init rrdPath here, because initGdbm hasn't been run */
 
   /* the table of enabled NICs */
   myGlobals.numDevices = 0;

@@ -99,6 +99,8 @@
 
 #define NTOP_GDC_OUT_PIE_ERROR           "pie-error.png"
 
+#define RRD_DEFAULT_INTERVAL             300       /* rrd counter (default) interval */
+
 /*
  * Other sizes and limits...
  */
@@ -150,6 +152,11 @@
  */
 #undef  USE_COLOR      /* Define to enable alternating row colors on many tables */
 #define USE_CGI        /* Define to allow processing of CGI scripts */
+
+/*
+ * Defines for rrd Plugin
+ */
+#define RRD_EXTENSION ".rrd"
 
 /*
   On FreeBSD gethostbyaddr() sometimes loops
@@ -246,6 +253,8 @@ typedef struct ntopGlobals {
 #endif
 
   int dynamicPurgeLimits;            /* '134' */
+
+  int reuseRRDgraphics;              /* '136' */
 
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
@@ -462,6 +471,9 @@ typedef struct ntopGlobals {
   u_long numSamplesReceived, initialPool, lastSample;
   u_int32_t flowSampleSeqNo, numSamplesToGo;
   struct sockaddr_in sflowDest;
+
+  /* rrd */
+  char *rrdPath;
 
   /* http.c */
   FILE *accessLogFd;

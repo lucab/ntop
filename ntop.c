@@ -987,6 +987,8 @@ RETSIGTYPE cleanup(int signo) {
 
   free(myGlobals.pcapLogBasePath);
   free(myGlobals.dbPath);
+  if (myGlobals.rrdPath != NULL)
+      free(myGlobals.rrdPath);
 
   myGlobals.endNtop = 1;
 

@@ -174,7 +174,7 @@ void _GDC_out_pie(short width,
 
 /* ************************ */
 
-void sendGraphFile(char* fileName) {
+void sendGraphFile(char* fileName, int doNotUnlink) {
   FILE *fd;
   int len;
   char tmpStr[256];
@@ -207,7 +207,9 @@ void sendGraphFile(char* fileName) {
   } else 
     traceEvent(TRACE_WARNING, "WARNING: unable to open file %s", fileName);
 
-  unlink(fileName);
+  if (doNotUnlink == 0) {
+      unlink(fileName);
+  }
 }
 
 /* ************************ */
@@ -445,7 +447,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
     if(!useFdOpen)
-      sendGraphFile(fileName);
+      sendGraphFile(fileName, 0);
   }
 }
 
@@ -548,7 +550,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
     if(!useFdOpen)
-      sendGraphFile(fileName);
+      sendGraphFile(fileName, 0);
   }
 }
 
@@ -630,7 +632,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
     if(!useFdOpen)
-      sendGraphFile(fileName);
+      sendGraphFile(fileName, 0);
   }
 }
 
@@ -741,7 +743,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ********************************** */
@@ -840,7 +842,7 @@ void pktSizeDistribPie(void) {
 #endif
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ********************************** */
@@ -944,7 +946,7 @@ void pktTTLDistribPie(void) {
 #endif
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ************************ */
@@ -1018,7 +1020,7 @@ void ipProtoDistribPie(void) {
 #endif
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ************************ */
@@ -1099,7 +1101,7 @@ void interfaceTrafficPie(void) {
 #endif
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ************************ */
@@ -1181,7 +1183,7 @@ void pktCastDistribPie(void) {
 #endif
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ************************ */
@@ -1247,7 +1249,7 @@ void drawTrafficPie(void) {
 #endif
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ************************ */
@@ -1414,7 +1416,7 @@ void drawThptGraph(int sortedColumn) {
 #endif
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ************************ */
@@ -1505,7 +1507,7 @@ void drawGlobalProtoDistribution(void) {
 #endif
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ************************ */
@@ -1573,7 +1575,7 @@ void drawGlobalIpProtoDistribution(void) {
 #endif
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ******************************** */
@@ -1664,7 +1666,7 @@ void drawHostsDistanceGraph() {
   GDC_xtitle = GDC_ytitle     = "";
 
   if(!useFdOpen)
-    sendGraphFile(fileName);
+    sendGraphFile(fileName, 0);
 }
 
 /* ************************ */

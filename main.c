@@ -153,6 +153,10 @@ static struct option const long_options[] = {
   { "dynamic-purge-limits",             no_argument,       NULL, 134 },
   { "set-admin-password",               optional_argument, NULL, 135 },
 
+#ifdef HAVE_RRD
+  { "reuse-rrd-graphics",               no_argument,       NULL, 136 },
+#endif
+
   {NULL, 0, NULL, 0}
 };
 
@@ -601,6 +605,12 @@ static int parseOptions(int argc, char* argv []) {
         setAdminPw = 1;
       }
       break;
+
+#ifdef HAVE_RRD
+    case 136:
+      myGlobals.reuseRRDgraphics = 1;
+      break;
+#endif
 
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);

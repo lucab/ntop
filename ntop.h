@@ -133,6 +133,12 @@
  */
 /* #define PACKET_DEBUG */
 
+/* RRD_DEBUG controls debug messages in rrdPlugin.c.  Define it for some messages
+ * or set it to 1 for more, 2 for lots of detail or 3 for huge (every rrd call)
+ */
+/* #define RRD_DEBUG */
+
+ /*
 /* SEMAPHORE_DEBUG causes util.c to log information about semaphore operations.
  */
 /* #define SEMAPHORE_DEBUG */
@@ -176,6 +182,11 @@
  * lines for sessions that are not "active".
  */
 /* #define PRINT_RETRANSMISSION_DATA */
+
+/* Define SHOW_NTOP_HEARTBEAT to see minimal status messages every cycle
+ * from various timed processes
+ */
+/* #define SHOW_NTOP_HEARTBEAT */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                   includes                              */
