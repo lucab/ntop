@@ -39,6 +39,13 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
                                0xf4a460L, 0xb0c4deL, 0x90ee90L,
                                0xffd700L, 0x87ceebL, 0xdda0ddL };
 
+/* ************************ */
+
+struct bar_elements {
+  char *label;
+  float data;
+};
+
 /* ******************************************************************* */
 
 #include "gd.h"
@@ -143,6 +150,26 @@ static void drawLegend(gdImagePtr im,
   }
 }
 
+/* ************************************************ */
+
+static int cmpElementsFctn(const void *_a, const void *_b) {
+  struct bar_elements *a = (struct bar_elements *)_a;
+  struct bar_elements *b = (struct bar_elements *)_b;
+
+  if((a == NULL) && (b != NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (1)");
+    return(1);
+  } else if((a != NULL) && (b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (2)");
+    return(-1);
+  } else if((a == NULL) && (b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (3)");
+    return(0);
+  }
+
+  return((a)->data < (b)->data ? 1 : -1);
+}
+
 /* ************************ */
 
 void drawPie(short width,
@@ -150,13 +177,33 @@ void drawPie(short width,
 	     FILE* filepointer,            /* open file pointer, can be stdout */
 	     int   num_points,
 	     char  *labels[],              /* slice labels */
-	     float data[] ) {
+	     float data[],
+	     int sorted) {
   gdImagePtr im;
   int black, white, colors[64], numColors, i;
   int center_x, center_y, radius, begDeg, endDeg, x, y;
   float total;
   int displ;
   float radiant;
+  struct bar_elements *elems = NULL;
+
+  if(sorted) {
+    elems = (struct bar_elements*)malloc(sizeof(struct bar_elements)*num_points);
+
+    if(elems == NULL) return; /* Not enough memory */
+
+    for(i=0; i<num_points; i++) {
+      elems[i].label = labels[i];
+      elems[i].data = data[i];
+    }
+
+    qsort(elems, num_points, sizeof(struct bar_elements), cmpElementsFctn);
+
+    for(i=0; i<num_points; i++) {
+      labels[i] = elems[i].label;
+      data[i] = elems[i].data;
+    }
+  }
 
   im = gdImageCreate(width, height);
 
@@ -224,36 +271,12 @@ void drawPie(short width,
   drawLegend(im, width-25, height, num_points, labels, data, colors, black);
   gdImagePng(im, filepointer);
   gdImageDestroy(im);
+
+  if(sorted && elems)
+    free(elems);
 }
-
-/* ************************ */
-
-struct bar_elements {
-  char *label;
-  float data;
-};
 
 /* ************************************************ */
-
-static int cmpElementsFctn(const void *_a, const void *_b) {
-  struct bar_elements *a = (struct bar_elements *)_a;
-  struct bar_elements *b = (struct bar_elements *)_b;
-
-  if((a == NULL) && (b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (1)");
-    return(1);
-  } else if((a != NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (2)");
-    return(-1);
-  } else if((a == NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (3)");
-    return(0);
-  }
-
-  return((a)->data < (b)->data ? 1 : -1);
-}
-
-  /* ************************************************ */
 
 /* Fix for large numbers (over 4Gb) courtesy of
    Kouprie Robbert <r.kouprie@dto.tudelft.nl>
@@ -798,7 +821,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	    fd,			/* open file pointer */
 	    num,		/* number of slices */
 	    lbl,		/* slice labels */
-	    p);			/* data array */
+	    p, 0);			/* data array */
     fclose(fd);
 
     if(!useFdOpen)
@@ -882,7 +905,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 	    fd,			/* open file pointer */
 	    num,		/* number of slices */
 	    lbl,		/* slice labels */
-	    p);			/* data array */
+	    p, 1);			/* data array */
 
     fclose(fd);
 
@@ -1016,7 +1039,7 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
 	  fd,		/* open file pointer */
 	  num,		/* number of slices */
 	  lbl,		/* slice labels */
-	  p);	        /* data array */
+	  p, 0);	        /* data array */
 
   fclose(fd);
 
@@ -1079,7 +1102,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 	    fd,			/* open file pointer */
 	    num,		/* number of slices */
 	    lbl,		/* slice labels */
-	    p);			/* data array */
+	    p, 1);			/* data array */
 
     fclose(fd);
 
@@ -1167,7 +1190,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
 	  lbl,			/* slice labels */
-	  p);			/* data array */
+	  p, 1);			/* data array */
 
   fclose(fd);
 
@@ -1249,7 +1272,7 @@ void pktSizeDistribPie(void) {
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
 	  lbl,			/* slice labels */
-	  p);			/* data array */
+	  p, 0);			/* data array */
 
   fclose(fd);
 
@@ -1336,7 +1359,7 @@ void pktTTLDistribPie(void) {
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
 	  lbl,			/* slice labels */
-	  p);			/* data array */
+	  p, 0);			/* data array */
 
   fclose(fd);
 
@@ -1393,7 +1416,7 @@ void ipProtoDistribPie(void) {
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
 	  lbl,			/* slice labels */
-	  p);			/* data array */
+	  p, 1);			/* data array */
 
   fclose(fd);
 
@@ -1460,7 +1483,7 @@ void interfaceTrafficPie(void) {
 	  fd,		/* open file pointer */
 	  myDevices,	/* number of slices */
 	  lbl,		/* slice labels */
-	  p);		/* data array */
+	  p, 1);		/* data array */
   
   fclose(fd);
 
@@ -1525,7 +1548,7 @@ void pktCastDistribPie(void) {
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
 	  lbl,			/* slice labels */
-	  p);			/* data array */
+	  p, 1);			/* data array */
 
   fclose(fd);
 
@@ -1575,7 +1598,7 @@ void drawTrafficPie(void) {
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
 	  lbl,			/* slice labels */
-	  p);			/* data array */
+	  p, 1);			/* data array */
 
   fclose(fd);
 
@@ -2002,7 +2025,7 @@ void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
 	  lbl,			/* slice labels */
-	  p);			/* data array */
+	  p, 1);			/* data array */
 
   fclose(fd);
 
@@ -2095,7 +2118,7 @@ void fcPktSizeDistribPie(void) {
 	  fd,			/* open file pointer */
 	  num,			/* number of slices */
 	  lbl,			/* slice labels */
-	  p);			/* data array */
+	  p, 0);			/* data array */
 
   fclose(fd);
 
@@ -2561,7 +2584,7 @@ void drawVsanSwilsProtoDistribution(u_short vsanId) {
            fd,		/* open file pointer */
            idx,		/* number of slices */
            lbl,		/* slice labels */
-           p);		/* data array */
+           p, 1);		/* data array */
 
   fclose(fd);
 
