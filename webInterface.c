@@ -4626,10 +4626,7 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
   char value[LEN_SMALL_WORK_BUFFER];
 
 #ifdef HAVE_FILEDESCRIPTORBUG
- #define FILEDESCRIPTORBUG_COUNT 3
   int i;
-  int  tempF[FILEDESCRIPTORBUG_COUNT], tempFpid=getpid();
-  char tempFname[FILEDESCRIPTORBUG_COUNT][LEN_MEDIUM_WORK_BUFFER];
 #endif
 
   if(*port <= 0) {
@@ -4680,17 +4677,18 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
    *   - burn some file descriptors so the socket() call doesn't get a dirty one.
    *   - it's not pretty, but it works...
    */
-  {
-    traceEvent(CONST_TRACE_INFO, "FILEDESCRIPTORBUG: Work-around activated");
-    for(i=0; i<FILEDESCRIPTORBUG_COUNT; i++) {
-      tempF[i]=0;
-      memset(&tempFname[i], 0, LEN_MEDIUM_WORK_BUFFER);
 
-      if(snprintf(tempFname[i], LEN_MEDIUM_WORK_BUFFER, "/tmp/ntop-%09u-%d", tempFpid, i) < 0)
+    myGlobals.tempFpid=getpid();
+    traceEvent(CONST_TRACE_INFO, "FILEDESCRIPTORBUG: Work-around activated");
+    for(i=0; i<CONST_FILEDESCRIPTORBUG_COUNT; i++) {
+      myGlobals.tempF[i]=0;
+      memset(&myGlobals.tempFname[i], 0, LEN_MEDIUM_WORK_BUFFER);
+
+      if(snprintf(myGlobals.tempFname[i], LEN_MEDIUM_WORK_BUFFER, "/tmp/ntop-%09u-%d", myGlobals.tempFpid, i) < 0)
         BufferTooShort();
-      traceEvent(CONST_TRACE_NOISY, "FILEDESCRIPTORBUG: Creating %d, '%s'", i, tempFname[i]);
+      traceEvent(CONST_TRACE_NOISY, "FILEDESCRIPTORBUG: Creating %d, '%s'", i, myGlobals.tempFname[i]);
       errno = 0;
-      tempF[i]=open(tempFname[i], O_CREAT|O_TRUNC|O_RDWR);
+      myGlobals.tempF[i]=open(myGlobals.tempFname[i], O_CREAT|O_TRUNC|O_RDWR);
       if(errno != 0) {
         traceEvent(CONST_TRACE_ERROR,
                    "FILEDESCRIPTORBUG: Unable to create file - may cause problems later - '%s'(%d)",
@@ -4698,7 +4696,7 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
       } else {
         traceEvent(CONST_TRACE_NOISY,
                    "FILEDESCRIPTORBUG: Created file %d - '%s'(%d)",
-                   i, tempFname[i], tempF[i]);
+                   i, myGlobals.tempFname[i], myGlobals.tempF[i]);
       }
     }
 #endif /* FILEDESCRIPTORBUG */
@@ -4711,33 +4709,6 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
       exit(-1);
     }
     traceEvent(CONST_TRACE_NOISY, "WEB: Created a new%s socket (%d)", sslOrNot, *sock);
-
-#ifdef HAVE_FILEDESCRIPTORBUG
-    /* Close and delete the temporary - junk - files */
-    traceEvent(CONST_TRACE_INFO, "FILEDESCRIPTORBUG: Bug work-around cleanup");
-    for(i=FILEDESCRIPTORBUG_COUNT-1; i>=0; i--) {
-      if(tempF[i] >= 0) {
-        traceEvent(CONST_TRACE_NOISY, "FILEDESCRIPTORBUG: Removing %d, '%s'(%d)", i, tempFname[i], tempF[i]);
-        if(close(tempF[i])) {
-          traceEvent(CONST_TRACE_ERROR,
-                     "FILEDESCRIPTORBUG: Unable to close file %d - '%s'(%d)",
-                     i,
-                     strerror(errno), errno);
-        } else {
-          if(unlink(tempFname[i]))
-            traceEvent(CONST_TRACE_ERROR,
-                       "FILEDESCRIPTORBUG: Unable to delete file '%s' - '%s'(%d)",
-                       tempFname[i],
-                       strerror(errno), errno);
-          else
-            traceEvent(CONST_TRACE_NOISY,
-                       "FILEDESCRIPTORBUG: Removed file '%s'",
-                       tempFname[i]);
-        }
-      }
-    }
-  }
-#endif /* FILEDESCRIPTORBUG */
 
 #ifdef INITWEB_DEBUG
   traceEvent(CONST_TRACE_INFO, "INITWEB_DEBUG:%s setsockopt(%d, SOL_SOCKET, SO_REUSEADDR ...",

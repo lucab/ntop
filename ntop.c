@@ -791,6 +791,32 @@ RETSIGTYPE cleanup(int signo) {
  #endif /* MULTITREADED */
 #endif /* #ifndef WIN32 */
 
+#ifdef HAVE_FILEDESCRIPTORBUG
+    /* Close and delete the temporary - junk - files */
+    traceEvent(CONST_TRACE_INFO, "FILEDESCRIPTORBUG: Bug work-around cleanup");
+    for(i=CONST_FILEDESCRIPTORBUG_COUNT-1; i>=0; i--) {
+      if(myGlobals.tempF[i] >= 0) {
+        traceEvent(CONST_TRACE_NOISY, "FILEDESCRIPTORBUG: Removing %d, '%s'(%d)", i, myGlobals.tempFname[i], myGlobals.tempF[i]);
+        if(close(myGlobals.tempF[i])) {
+          traceEvent(CONST_TRACE_ERROR,
+                     "FILEDESCRIPTORBUG: Unable to close file %d - '%s'(%d)",
+                     i,
+                     strerror(errno), errno);
+        } else {
+          if(unlink(myGlobals.tempFname[i]))
+            traceEvent(CONST_TRACE_ERROR,
+                       "FILEDESCRIPTORBUG: Unable to delete file '%s' - '%s'(%d)",
+                       myGlobals.tempFname[i],
+                       strerror(errno), errno);
+          else
+            traceEvent(CONST_TRACE_NOISY,
+                       "FILEDESCRIPTORBUG: Removed file '%s'",
+                       myGlobals.tempFname[i]);
+        }
+      }
+    }
+#endif /* FILEDESCRIPTORBUG */
+
 #if 0
 #ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "CLEANUP: Waiting until threads terminate");

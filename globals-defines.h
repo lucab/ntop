@@ -964,6 +964,11 @@
 #define CONST_XMLDUMP_INTERFACES            "interfaces"
 #define CONST_XMLDUMP_TOFILE                "tofile"
 
+/*
+ * How many dummy files to create for the HAVE_FILEDESCRIPTORBUG fix
+ */
+#define CONST_FILEDESCRIPTORBUG_COUNT       3
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Static - don't change unless you REALLY, REALLY, know what you are doing.
  */
