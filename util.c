@@ -655,27 +655,26 @@ unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
  */
 int32_t gmt2local(time_t t) {
   int dt, dir;
-  struct tm *gmt, loc;
+  struct tm *gmt, loc, *myloc;
 
   if(t == 0)
     t = time(NULL);
 
   gmt = gmtime(&t);
-  localtime_r(&t, &loc);
+  myloc = localtime_r(&t, &loc);
 
-  dt = (loc.tm_hour - gmt->tm_hour)*60*60+
-    (loc.tm_min - gmt->tm_min)*60;
+  dt = (myloc->tm_hour - gmt->tm_hour)*60*60+(myloc->tm_min - gmt->tm_min)*60;
 
   /*
    * If the year or julian day is different, we span 00:00 GMT
    * and must add or subtract a day. Check the year first to
    * avoid problems when the julian day wraps.
    */
-  dir = loc.tm_year - gmt->tm_year;
+  dir = myloc->tm_year - gmt->tm_year;
   if(dir == 0)
-    dir = loc.tm_yday - gmt->tm_yday;
+    dir = myloc->tm_yday - gmt->tm_yday;
   dt += dir * 24 * 60 * 60;
-
+  
   return (dt);
 }
 
@@ -2020,7 +2019,9 @@ void traceEvent(int eventTraceLevel, char* file,
   if(eventTraceLevel <= traceLevel) {
     char theDate[32];
     time_t theTime = time(NULL);
+#ifdef HAVE_LOCALTIME_R
     struct tm t;
+#endif
 
     if(traceLevel >= DEFAULT_TRACE_LEVEL) {
       strftime(theDate, 32, "%d/%b/%Y:%H:%M:%S", localtime_r(&theTime, &t));

@@ -1129,41 +1129,42 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   memset(flaggedHosts, 0, len);
 
 #ifdef MULTITHREADED
-    accessMutex(&hostsHashMutex, "scanIdleLoop");
+  accessMutex(&hostsHashMutex, "scanIdleLoop");
 #endif
-    /* Calculates entries to free */
-    for(idx=1; idx<device[actDevice].actualHashSize; idx++)
-      if((device[actDevice].hash_hostTraffic[idx] != NULL)
-	 && (device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
-	 && (!subnetPseudoLocalHost(device[actDevice].hash_hostTraffic[idx]))) {
+  /* Calculates entries to free */
+  for(idx=1; idx<device[actDevice].actualHashSize; idx++)
+    if((device[actDevice].hash_hostTraffic[idx] != NULL)
+       && (device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
+       && (!subnetPseudoLocalHost(device[actDevice].hash_hostTraffic[idx]))) {
 	
-	if((ignoreIdleTime)
-	   || (((device[actDevice].hash_hostTraffic[idx]->lastSeen+
-		 IDLE_HOST_PURGE_TIMEOUT) < actTime) && (!stickyHosts)))
-	  flaggedHosts[idx]=1;
-      }
-    
-    /* Now free the entries */
-    for(idx=1; idx<device[actDevice].actualHashSize; idx++) {
-      if(flaggedHosts[idx] == 1) {
-	freeHostInfo(actDevice, idx, 0);
-#ifdef DEBUG
-	traceEvent(TRACE_INFO, "Host (idx=%d) purged (%d hosts purged)",
-		   idx, numFreedBuckets);
-#endif
-	numFreedBuckets++;
-      }
-
-      if(device[actDevice].hash_hostTraffic[idx] != NULL)
-	freeGlobalHostPeers(device[actDevice].hash_hostTraffic[idx], 
-			    flaggedHosts); /* Finally refresh the hash */
+      if((ignoreIdleTime)
+	 || (((device[actDevice].hash_hostTraffic[idx]->lastSeen+
+	       IDLE_HOST_PURGE_TIMEOUT) < actTime) && (!stickyHosts)))
+	flaggedHosts[idx]=1;
     }
     
+  /* Now free the entries */
+  for(idx=1; idx<device[actDevice].actualHashSize; idx++) {
+    if(flaggedHosts[idx] == 1) {
+      freeHostInfo(actDevice, idx, 0);
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "Host (idx=%d) purged (%d hosts purged)",
+		 idx, numFreedBuckets);
+#endif
+      numFreedBuckets++;
+    }
+
+    if(device[actDevice].hash_hostTraffic[idx] != NULL)
+      freeGlobalHostPeers(device[actDevice].hash_hostTraffic[idx], 
+			  flaggedHosts); /* Finally refresh the hash */
+  }
+    
 #ifdef MULTITHREADED
-    releaseMutex(&hostsHashMutex);
+  releaseMutex(&hostsHashMutex);
 #endif
 
-  traceEvent(TRACE_INFO, "Purging completed (%d sec).", (time(NULL)-startTime));
+  traceEvent(TRACE_INFO, "Purging completed (%d sec/%d hosts deleted).",
+	     (time(NULL)-startTime), numFreedBuckets);
 }
 
 /* ******************************************** */

@@ -224,9 +224,9 @@ int main(int argc, char *argv[]) {
 	break;
 
     case 'f':
-	isLsofPresent = 0; /* Don't make debugging too complex */
-	rFileName = optarg;
-	break;
+      isLsofPresent = 0; /* Don't make debugging too complex */
+      rFileName = optarg;
+      break;
 
     case 'r':
 	if(!isdigit(optarg[0])) {

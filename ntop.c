@@ -517,7 +517,9 @@ void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
   time_t nextUpdate = actTime+3600;
   int hourId, minuteId, lastUpdatedHour=-1;
   char theDate[8];
+#ifdef HAVE_LOCALTIME_R
   struct tm t;
+#endif
 
   for(;;) {
 #ifdef DEBUG
@@ -762,13 +764,13 @@ RETSIGTYPE cleanup(int signo) {
   struct pcap_stat stat;
   int i;
 
-  traceEvent(TRACE_INFO, "Cleaning up...");
-
   if(unloaded)
     return;
   else
     unloaded = 1;
 
+  traceEvent(TRACE_INFO, "Cleaning up...");
+  
   capturePackets = 0;
 
 #ifndef WIN32

@@ -752,7 +752,9 @@ void drawThptGraph(int sortedColumn) {
   time_t tmpTime;
   unsigned long  sc[2] = { 0xFF0000, 0x8080FF };
   float graphData[60], maxBytesPerSecond;
+#ifdef HAVE_LOCALTIME_R
   struct tm t;
+#endif
 
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "drawThptGraph");

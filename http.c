@@ -539,9 +539,11 @@ static void logHTTPaccess(int rc) {
  char theDate[48], myUser[64], buf[24];
  struct timeval loggingAt;
  unsigned long msSpent;
- struct tm t;
  char theZone[6];
  unsigned long gmtoffset;
+#ifdef HAVE_LOCALTIME_R
+  struct tm t;
+#endif
 
  if(accessLogFd != NULL) {
    gettimeofday(&loggingAt, NULL);
@@ -551,7 +553,8 @@ static void logHTTPaccess(int rc) {
    strftime(theDate, sizeof(theDate), "%d/%b/%Y:%H:%M:%S", localtime_r(&actTime, &t));
 
    gmtoffset =  (thisZone < 0) ? -thisZone : thisZone;
-   if(snprintf(theZone, sizeof(theZone), "%c%2.2ld%2.2ld", (thisZone < 0) ? '-' : '+', gmtoffset/3600, (gmtoffset/60)%60) < 0)
+   if(snprintf(theZone, sizeof(theZone), "%c%2.2ld%2.2ld", 
+	       (thisZone < 0) ? '-' : '+', gmtoffset/3600, (gmtoffset/60)%60) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
    if((theUser == NULL)
@@ -709,7 +712,9 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   int statusIdx;
   char tmpStr[64], theDate[48];
   time_t  theTime = actTime - (time_t)thisZone;
+#ifdef HAVE_LOCALTIME_R
   struct tm t;
+#endif
 
   statusIdx = (headerFlags >> 8) & 0xff;
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))){
@@ -815,6 +820,9 @@ static int returnHTTPPage(char* pageName, int postLen) {
 #ifdef MULTITHREADED
   u_char mutexReleased = 0;
 #endif
+#ifdef HAVE_LOCALTIME_R
+  struct tm t;
+#endif
 #ifdef WIN32
   int i;
 #endif
@@ -885,7 +893,6 @@ static int returnHTTPPage(char* pageName, int postLen) {
   if(fd != NULL) {
     char theDate[48];
     time_t theTime;
-    struct tm t;
     int len = strlen(pageName), mimeType = HTTP_TYPE_HTML;
 
     if(len > 4) {

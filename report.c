@@ -83,7 +83,9 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   u_int idx, numEntries=0;
   int printedEntries=0, hourId;
   char theDate[8];
+#ifdef HAVE_LOCALTIME_R
   struct tm t;
+#endif
   HostTraffic *el;
   HostTraffic** tmpTable;
   char buf[BUF_SIZE], buf2[BUF_SIZE];
@@ -2723,7 +2725,9 @@ void printThptStatsMatrix(int sortedColumn) {
   int i;
   char label[32], label1[32], buf[BUF_SIZE];
   time_t tmpTime;
+#ifdef HAVE_LOCALTIME_R
   struct tm t;
+#endif
 
   printHTMLheader("Network Load Statistics Matrix", 0);
 
@@ -3706,8 +3710,10 @@ void printHostHourlyTraffic(HostTraffic *el) {
   TrafficCounter tcSent, tcRcvd;
   int i, hourId;
   char theDate[8];
+#ifdef HAVE_LOCALTIME_R
   struct tm t;
-  
+#endif
+
   strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
   hourId = atoi(theDate);
 

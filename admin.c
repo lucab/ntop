@@ -228,7 +228,10 @@ void doAddUser(int len) {
     } else if(badChar) {
       err = "ERROR: the specified user name contains invalid characters.";
     } else {
-      char tmpBuf[64], cpw[14];
+      char tmpBuf[64];
+#ifndef WIN32
+      char cpw[14];
+#endif
       datum data_data, key_data;
 
       if(snprintf(tmpBuf, sizeof(tmpBuf), "1%s", user) < 0) 
@@ -728,7 +731,9 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
 
 static void addKeyIfMissing(char* key, char* value, int encryptValue) {
   datum key_data, return_data, data_data;
+#ifndef WIN32
   char cpw[14];
+#endif
 
   /* Check existence of user 'admin' */
   key_data.dptr = key;

@@ -2446,13 +2446,15 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       updateHostSessionsList(dstHostIdx, sport, srcHostIdx, &tmpSession,
 			     sessionType, CLIENT_FROM_SERVER, CLIENT_ROLE);
     } else {
+      if(isLsofPresent) {
 #ifdef MULTITHREADED
-      accessMutex(&lsofMutex, "HandleSession-1");
+	accessMutex(&lsofMutex, "HandleSession-1");
 #endif
-      updateLsof = 1; /* Force lsof update */
+	updateLsof = 1; /* Force lsof update */
 #if defined(MULTITHREADED)
-      releaseMutex(&lsofMutex);
+	releaseMutex(&lsofMutex);
 #endif
+      }
     }
 
     if(getPortByNum(dport, sessionType) != NULL) {
@@ -2462,13 +2464,15 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       updateHostSessionsList(dstHostIdx, dport, srcHostIdx, &tmpSession,
 			     sessionType, SERVER_FROM_CLIENT, SERVER_ROLE);
     } else {
+      if(isLsofPresent) {
 #if defined(MULTITHREADED)
-      accessMutex(&lsofMutex, "HandleSession-2");
+	accessMutex(&lsofMutex, "HandleSession-2");
 #endif
-      updateLsof = 1; /* Force lsof update */
+	updateLsof = 1; /* Force lsof update */
 #if defined(MULTITHREADED)
-      releaseMutex(&lsofMutex);
+	releaseMutex(&lsofMutex);
 #endif
+      }
     }
   }
 
