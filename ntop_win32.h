@@ -48,6 +48,10 @@ extern char _wdir[];
 #define CFG_DATAFILE_DIR	_wdir
 #endif
 
+#define HAVE_RRD
+#define CFG_USE_GRAPHICS
+
+
 /* ndis.h */
 typedef int NDIS_STATUS, *PNDIS_STATUS; 
 

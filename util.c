@@ -3757,6 +3757,7 @@ pcap_t *pcap_open_dead(int linktype, int snaplen)
 /* ******************************** */
 
 int setSpecifiedUser() {
+#ifndef WIN32
   int rc;
   
   /*
@@ -3790,6 +3791,9 @@ int setSpecifiedUser() {
 #endif
   } else
     return(0);
+#else
+  return(0);
+#endif
 }
 
 /* ******************************************************************* */
