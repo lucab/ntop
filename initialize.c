@@ -1003,18 +1003,21 @@ void addDevice(char* deviceName, char* deviceDescr) {
        && (!myGlobals.device[deviceId].virtualDevice)
        && (column == NULL)) {
 #ifdef WIN32
-      NetType adapter;
+      if(strncmp(myGlobals.device[deviceId].name, "rpcap:", 6) != 0) {
+	NetType adapter;
 
-      LPADAPTER a = PacketOpenAdapter((LPTSTR)myGlobals.device[deviceId].name);
+	LPADAPTER a = PacketOpenAdapter((LPTSTR)myGlobals.device[deviceId].name);
 
-	  if(a == NULL) {
-		traceEvent(CONST_TRACE_FATALERROR, "Unable to open device '%s' (invalid name?)", myGlobals.device[deviceId].name);
-		exit(-1);
-	  }
-      if(PacketGetNetType (a,&adapter)) {
-	myGlobals.device[deviceId].deviceSpeed = adapter.LinkSpeed;
-      } else
-	PacketCloseAdapter((LPTSTR)myGlobals.device[deviceId].name);
+	if(a == NULL) {
+	  traceEvent(CONST_TRACE_FATALERROR, "Unable to open device '%s' (invalid name?)",
+		     myGlobals.device[deviceId].name);
+	  exit(-1);
+	}
+	if(PacketGetNetType (a,&adapter)) {
+	  myGlobals.device[deviceId].deviceSpeed = adapter.LinkSpeed;
+	} else
+	  PacketCloseAdapter((LPTSTR)myGlobals.device[deviceId].name);
+      }
 #else
     if(setuid(0) == -1) {
       traceEvent(CONST_TRACE_FATALERROR, "Unable to become root");
