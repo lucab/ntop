@@ -436,7 +436,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     GDC_out_pie(250,			/* width */
 		250,			/* height */
 		fd,			/* open file pointer */
-		GDC_3DPIE,		/* or GDC_2DPIE */
+		GDC_2DPIE,		/* or GDC_2DPIE */
 		num,			/* number of slices */
 		lbl,			/* slice labels (unlike out_png(), can be NULL */
 		p);			/* data array */
@@ -539,7 +539,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     GDC_out_pie(250,			/* width */
 		250,			/* height */
 		fd,			/* open file pointer */
-		GDC_3DPIE,		/* or GDC_2DPIE */
+		GDC_2DPIE,		/* or GDC_2DPIE */
 		num,			/* number of slices */
 		lbl,			/* slice labels (unlike out_png(), can be NULL */
 		p);			/* data array */
@@ -621,7 +621,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     GDC_out_pie(250,			/* width */
 		250,			/* height */
 		fd,			/* open file pointer */
-		GDC_3DPIE,		/* or GDC_2DPIE */
+		GDC_2DPIE,		/* or GDC_2DPIE */
 		num,			/* number of slices */
 		lbl,			/* slice labels (unlike out_png(), can be NULL */
 		p);			/* data array */
@@ -732,7 +732,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
-	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      GDC_2DPIE,		/* or GDC_2DPIE */
 	      num,			/* number of slices */
 	      lbl,			/* slice labels (unlike out_png(), can be NULL */
 	      p);			/* data array */
@@ -831,7 +831,7 @@ void pktSizeDistribPie(void) {
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
-	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      GDC_2DPIE,		/* or GDC_2DPIE */
 	      num,			/* number of slices */
 	      lbl,			/* slice labels (unlike out_png(), can be NULL */
 	      p);			/* data array */
@@ -935,7 +935,7 @@ void pktTTLDistribPie(void) {
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
-	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      GDC_2DPIE,		/* or GDC_2DPIE */
 	      num,			/* number of slices */
 	      lbl,			/* slice labels (unlike out_png(), can be NULL */
 	      p);			/* data array */
@@ -1009,7 +1009,7 @@ void ipProtoDistribPie(void) {
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
-	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      GDC_2DPIE,		/* or GDC_2DPIE */
 	      num,			/* number of slices */
 	      lbl,			/* slice labels (unlike out_png(), can be NULL */
 	      p);			/* data array */
@@ -1090,7 +1090,7 @@ void interfaceTrafficPie(void) {
   GDC_out_pie(250,	/* width */
 	      250,		/* height */
 	      fd,		/* open file pointer */
-	      GDC_3DPIE,	/* or GDC_2DPIE */
+	      GDC_2DPIE,	/* or GDC_2DPIE */
 	      myDevices,	/* number of slices */
 	      lbl,		/* slice labels (unlike out_png(), can be NULL) */
 	      p);		/* data array */
@@ -1172,7 +1172,7 @@ void pktCastDistribPie(void) {
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
-	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      GDC_2DPIE,		/* or GDC_2DPIE */
 	      num,			/* number of slic2es */
 	      lbl,			/* slice labels (unlike out_png(), can be NULL) */
 	      p);			/* data array */
@@ -1238,7 +1238,7 @@ void drawTrafficPie(void) {
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
 	      fd,			/* open file pointer */
-	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      GDC_2DPIE,		/* or GDC_2DPIE */
 	      num,			/* number of slices */
 	      lbl,			/* slice labels (unlike out_png(), can be NULL */
 	      p);			/* data array */
@@ -1495,7 +1495,7 @@ void drawGlobalProtoDistribution(void) {
 
   out_graph(600, 250,	/* width/height */
 	    fd,	        /* open file pointer */
-	    GDC_3DBAR,	/* or GDC_2DBAR */
+	    GDC_BAR,	/* or GDC_3DBAR */
 	    idx,	/* number of slices */
 	    lbl,	/* slice labels (unlike out_png(), can be NULL */
 	    1,
@@ -1563,7 +1563,7 @@ void drawGlobalIpProtoDistribution(void) {
 
   out_graph(600, 250,		/* width/height */
 	    fd,			/* open file pointer */
-	    GDC_3DBAR,		/* or GDC_2DBAR */
+	    GDC_BAR,		/* or GDC_3DBAR */
 	    idx,		/* number of slices */
 	    lbl,		/* slice labels (unlike out_png(), can be NULL */
 	    1,
