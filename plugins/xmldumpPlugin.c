@@ -107,7 +107,13 @@ static int dumpVersioncHeader,
            dumpInvoke,
            dumpInterfaces;
 
-/* Forward */
+/* ****************************** */
+
+/* **** f o r w a r d **** */
+
+static int initXmldump(void);
+static void termXmldump(void);
+
 static int dumpXML(char * url);
 static void handleXmldumpHTTPrequest(char* url);
 
@@ -126,18 +132,6 @@ int dumpXML_writeout(void);
 RETSIGTYPE xml_sighandler(int signo);
 
 #endif
-
-static int initXmldump(void);
-static void termXmldump(void);
-
-/* ****************************** */
-
-static void emptyHTTPhandler(char* url) {
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-  printHTMLheader("XML Dump", NULL, 0);
-  printFlagedWarning("This feature is not available as ntop<br>has not been compiled with XML support.");
-  printHTMLtrailer();
-}
 
 /* ****************************** */
 
@@ -193,6 +187,16 @@ static void setPluginStatus(char * status)
            pluginInfo->pluginStatusMessage = strdup(status);
        }
    }
+
+/* ****************************** */
+
+static void emptyHTTPhandler(char* url) {
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+  printHTMLheader("XML Dump", NULL, 0);
+  printFlagedWarning("This feature is not available as ntop<br>has not been compiled with XML support.");
+  printHTMLtrailer();
+}
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -264,10 +268,6 @@ reference the new structure.
    Next time the files are rebuilt, the xml_s_xyx.inc file should be created.
 
  */
-
-/* ***************************** */
-
-static void setPluginStatus(char * status);
 
 /* ***************************** */
 
@@ -358,7 +358,10 @@ static void handleXmldumpHTTPrequest(char* url) {
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
   printHTMLheader("xmldump parameters", NULL, 0);
 
-  sendString("<CENTER>\n<HR>\n");
+  sendString("<hr>\n<center>\n"
+             "<p>This plugin is used to change ntop's xml dump parameter settings.</p>\n"
+             "<p><b>Changes take affect immediately.</b></p></center>\n"
+             "<br>\n");
 
 #ifdef MAKE_WITH_XMLDUMP
 
@@ -392,21 +395,19 @@ static void handleXmldumpHTTPrequest(char* url) {
 
   /* *************************************** */
 
-  sendString("<p>This plugin is used to change ntop's xml dump parameter settings.</p>\n"
-             "<p><b>Changes take affect immediately.</b></p>\n"
-             "<br>\n");
 
-  sendString("<table border=0 "TABLE_DEFAULTS">\n<tr><td><table border=1 "TABLE_DEFAULTS">");
-
-  sendString("<tr "TR_ON">\n"
+  sendString("<!-- Note, to overcome w3c limits on form tag placement we nest the table -->\n"
+             "<center>\n"
+             "<table border=0 "TABLE_DEFAULTS">\n<tr><td><table border=1 "TABLE_DEFAULTS">"
+             "<tr "TR_ON">\n"
                "<th "TH_BG" align=\"left\" width=\"240\">Setting</th>\n"
-               "<th "TH_BG" align=\"left\" width=\"100\">Values</th>\n"
-               "<th "TH_BG" align=\"left\">&nbsp;</th>\n</tr>\n");
+               "<th "TH_BG" align=\"left\">Action</th>\n</tr>\n");
 
   sendString("<tr "TR_ON">\n"
              "<td "TD_BG">Dump version.c header</td>\n"
-             "<td "TD_BG" align=\"left\"><form action=\"/" 
-                 CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>");
+             "<td "TD_BG" align=\"center\"><form action=\"/" 
+             CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>"
+             "<table border=\"0\"" TABLE_DEFAULTS " width=\"100%\"><tr><th align=\"left\">");
 
   if(snprintf(buf,
               sizeof(buf),
@@ -416,6 +417,7 @@ static void handleXmldumpHTTPrequest(char* url) {
               "Yes") < 0)
     BufferTooShort();
   sendString(buf);
+  sendString("</th></tr>\n<tr><th align=\"left\">");
   if(snprintf(buf,
               sizeof(buf),
               "<input TYPE=\"radio\" NAME=\"versioncheader\" VALUE=%d%s>%s<br>\n",
@@ -424,14 +426,16 @@ static void handleXmldumpHTTPrequest(char* url) {
               "No") < 0)
     BufferTooShort();
   sendString(buf);
-  sendString("</td>\n");
-  sendString("<td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+  sendString("</th></tr>\n<tr><th align=\"left\"><INPUT TYPE=submit VALUE=Set></th></tr>\n"
+             "</table></form></td></tr>\n");
 
   /* ********** */
+
   sendString("<tr "TR_ON">\n"
-             "<td "TD_BG">Dump Invoke</td>\n"
-             "<td "TD_BG" align=\"left\"><form action=\"/" 
-                 CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>");
+             "<td "TD_BG">Dump ntop invocation data</td>\n"
+             "<td "TD_BG" align=\"center\"><form action=\"/" 
+             CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>"
+             "<table border=\"0\"" TABLE_DEFAULTS " width=\"100%\"><tr><th align=\"left\">");
 
   if(snprintf(buf,
               sizeof(buf),
@@ -441,6 +445,7 @@ static void handleXmldumpHTTPrequest(char* url) {
               "Yes") < 0)
     BufferTooShort();
   sendString(buf);
+  sendString("</th></tr>\n<tr><th align=\"left\">");
   if(snprintf(buf,
               sizeof(buf),
               "<input TYPE=\"radio\" NAME=\"invoke\" VALUE=%d%s>%s<br>\n",
@@ -449,15 +454,16 @@ static void handleXmldumpHTTPrequest(char* url) {
               "No") < 0)
     BufferTooShort();
   sendString(buf);
-  sendString("</td>\n");
-  sendString("<td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+  sendString("</th></tr>\n<tr><th align=\"left\"><INPUT TYPE=submit VALUE=Set></th></tr>\n"
+             "</table></form></td></tr>\n");
 
   /* ********** */
 
   sendString("<tr "TR_ON">\n"
-             "<td "TD_BG">Dump Interfaces</td>\n"
-             "<td "TD_BG" align=\"left\"><form action=\"/" 
-                 CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>");
+             "<td "TD_BG">Dump per-interface data</td>\n"
+             "<td "TD_BG" align=\"center\"><form action=\"/" 
+             CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>"
+             "<table border=\"0\"" TABLE_DEFAULTS " width=\"100%\"><tr><th align=\"left\">");
 
   if(snprintf(buf,
               sizeof(buf),
@@ -467,6 +473,7 @@ static void handleXmldumpHTTPrequest(char* url) {
               "Yes") < 0)
     BufferTooShort();
   sendString(buf);
+  sendString("</th></tr>\n<tr><th align=\"left\">");
   if(snprintf(buf,
               sizeof(buf),
               "<input TYPE=\"radio\" NAME=\"interfaces\" VALUE=%d%s>%s<br>\n",
@@ -475,11 +482,12 @@ static void handleXmldumpHTTPrequest(char* url) {
               "No") < 0)
     BufferTooShort();
   sendString(buf);
-  sendString("</td>\n");
-  sendString("<td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n");
+  sendString("</th></tr>\n<tr><th align=\"left\"><INPUT TYPE=submit VALUE=Set></th></tr>\n"
+             "</table></form></td></tr>\n");
 
   /* ********** */
-  sendString("</table>\n");
+
+  sendString("</table>\n</td></tr></table>\n");
 
   /* *************************************** */
 
@@ -494,7 +502,7 @@ static void handleXmldumpHTTPrequest(char* url) {
 
   sendString("</CENTER>\n");
 
-  sendString("<p align=right>[ Back to <a href=\"../" CONST_PLUGINS_HEADER "\">plugins</a> ]&nbsp;</p>\n");
+  printPluginTrailer(NULL, NULL);
 
   printHTMLtrailer();
 }

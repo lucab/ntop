@@ -47,6 +47,8 @@ plugin is NOT active.  So initialize stuff in BOTH places!
 
 Aberrant RRD Behavior (http://cricket.sourceforge.net/aberrant/) 
 patch courtesy of Dominique Karg <dk@ipsoluciones.com>
+
+2.4     General cleanup
 */
 
 static const char *rrd_subdirs[] =
@@ -57,6 +59,8 @@ static const char *rrd_subdirs[] =
 
 #include "ntop.h"
 #include "globals-report.h"
+
+#include <rrd.h>
 
 static void setPluginStatus(char * status);
 #ifdef CFG_MULTITHREADED
@@ -88,7 +92,6 @@ static Counter rrdGraphicRequests=0;
 static DIR * workDir;
 static struct dirent *workDirent;
 
-
 #ifdef RRD_DEBUG
 char startTimeBuf[32], endTimeBuf[32], fileTimeBuf[32];
 #endif
@@ -104,10 +107,34 @@ void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter);
 char x2c(char *what);
 void unescape_url(char *url);
 void mkdir_p(char *path);
+static int initRRDfunct(void);
+static void termRRDfunct(void);
+static void handleRRDHTTPrequest(char* url);
+
+/* ************************************* */
+
+static PluginInfo rrdPluginInfo[] = {
+  {
+    VERSION, /* current ntop version */
+    "rrdPlugin",
+    "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
+    "This plugin also produces the graphs of rrd data, available via a "
+    "link from the various 'Info about host xxxxx' reports.",
+    "2.4", /* version */
+    "<a HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
+    "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
+    1, /* Active by default */
+    1, /* Inactive setup */
+    initRRDfunct, /* TermFunc   */
+    termRRDfunct, /* TermFunc   */
+    NULL, /* PluginFunc */
+    handleRRDHTTPrequest,
+    NULL, /* no capture */
+    NULL /* no status */
+  }
+};
 
 /* ****************************************************** */
-
-#include <rrd.h>
 
 static char **calcpr=NULL;
 
@@ -1223,12 +1250,16 @@ static void handleRRDHTTPrequest(char* url) {
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
   printHTMLheader("RRD Preferences", NULL, 0);
 
-  sendString("<CENTER><FORM ACTION=/plugins/rrdPlugin METHOD=GET>\n");
-  sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
-
-  
-  sendString("<TR><TH COLSPAN=2 ALIGN=CENTER "DARK_BG">RRD Preferences</TH></TR>");
-  sendString("<TR><TH ALIGN=LEFT "DARK_BG">Dump Interval</TH><TD>"
+  if(active == 1)
+    sendString("<p>You must restart the rrd plugin for changes here to take affect.</p>\n");
+  else 
+    sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
+ 
+  sendString("<center><form action=\"/plugins/rrdPlugin\" method=GET>\n"
+             "<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
+             "<TR><TH ALIGN=CENTER "DARK_BG">Item</TH>"
+                 "<TH ALIGN=CENTER "DARK_BG">Description and notes</TH></TR>\n"
+             "<TR><TH ALIGN=LEFT "DARK_BG">Dump Interval</TH><TD>"
 	     "<INPUT NAME=interval SIZE=5 VALUE=");
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpInterval) < 0)
     BufferTooShort();
@@ -1386,18 +1417,17 @@ static void handleRRDHTTPrequest(char* url) {
              "</ul>\n</TD></TR>\n");
 #endif
 
-  sendString("<TD COLSPAN=2 ALIGN=center><INPUT TYPE=submit VALUE=\"Save Preferences\"></td></FORM></tr>\n");
-  sendString("</TABLE>\n<p></CENTER>\n");
+  sendString("<tr><td colspan=\"2\" align=\"center\">"
+             "<input type=submit value=\"Save Preferences\"></td></tr></table>\n"
+             "</form>\n<p></center>\n");
 
-  sendString("<p><H5><A HREF=http://www.rrdtool.org/>RRDtool</A> has been created by "
-	     "<A HREF=http://ee-staff.ethz.ch/~oetiker/>Tobi Oetiker</A>.</H5>\n");
 
-  if(active == 1)
-    sendString("<p>You must restart the rrd plugin for changes here to take affect.</p>\n");
-  else 
-    sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
-  
-  sendString("<p align=right>&nbsp; [ <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">Back</a> to plugins ] </p>\n");
+  printPluginTrailer(NULL,
+                     "<a href=\"http://www.rrdtool.org/\" title=\"rrd home page\">RRDtool</a> "
+                     "was created by "
+                     "<a href=\"http://ee-staff.ethz.ch/~oetiker/\" title=\"Tobi's home page\">"
+                     "Tobi Oetiker</a>");
+ 
   printHTMLtrailer();
 }
 
@@ -2106,29 +2136,6 @@ static void termRRDfunct(void) {
 
   initialized = 0; /* Reinit on restart */
 }
-
-/* ************************************* */
-
-static PluginInfo rrdPluginInfo[] = {
-  {
-    VERSION, /* current ntop version */
-    "rrdPlugin",
-    "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
-    "This plugin also produces the graphs of rrd data, available via a "
-    "link from the various 'Info about host xxxxx' reports.",
-    "2.3", /* version */
-    "<A HREF=http://luca.ntop.org/>L.Deri</A>",
-    "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
-    1, /* Active by default */
-    1, /* Inactive setup */
-    initRRDfunct, /* TermFunc   */
-    termRRDfunct, /* TermFunc   */
-    NULL, /* PluginFunc */
-    handleRRDHTTPrequest,
-    NULL, /* no capture */
-    NULL /* no status */
-  }
-};
 
 /* ****************************** */
 

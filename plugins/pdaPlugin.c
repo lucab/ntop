@@ -23,49 +23,109 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-static int pdaColumnSort = 0;
- 
+/* ***** f o r w a r d ***** */
 
+void printPdaData(HostTraffic* tmpTable[MAX_PDA_HOST_TABLE], u_int numEntries);
+void printPdaSummaryData(void);
+static void termPdaFunct(void);
+static void handlePDArequest(char* url);
+
+/* ****************************** */
+
+static PluginInfo PDAPluginInfo[] = {
+  {
+    VERSION, /* current ntop version */
+    "PDAPlugin",
+    "This plugin produces a minimal ntop report, suitable for display on a pda",
+    "2.2",            /* version */
+    "<a href=\"mailto:&#119;&#097;&#108;&#116;&#101;&#114;&#098;&#114;&#111;&#099;&#107;&#064;&#110;&#101;&#116;&#115;&#099;&#097;&#112;&#101;&#046;&#110;&#101;&#116;\">W. Brock</A>", 
+    "PDAPlugin",      /* http://<host>:<port>/plugins/PDAPlugin */
+    0,                /* Active by default */
+    0,                /* Inactive setup */
+    NULL,             /* no special startup after init */
+    termPdaFunct,     /* TermFunc   */
+    NULL,             /* PluginFunc */
+    handlePDArequest, /* http request handler */
+    NULL,             /* BPF Filter */
+    NULL              /* no status */
+  }
+};
+
+/* ****************************** */
+/* Plugin entry fctn */
+#ifdef MAKE_STATIC_PLUGIN
+PluginInfo* wapPluginEntryFctn(void)
+#else
+  PluginInfo* PluginEntryFctn(void)
+#endif
+{
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PDA: Welcome to %s. (C) 2001-2004 by L.Deri and W.Brock",  
+	     PDAPluginInfo->pluginName);
+  
+  return(PDAPluginInfo);
+}
 
 /* ********************** */
 
 static void printHtmlNotFoundError(void) {
-
+    sendString("Unknown request");
 }
 
 /* ********************** */
 
 static void printHtmlNoDataYet(void) {
-
+  
 }
 
 /* ********************** */
 
-static int cmpPdaFctn(const void *_a, const void *_b) {
+static int cmpPdaFctnSent(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   TrafficCounter a_, b_;
 
   if((a == NULL) && (b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctn() (1)");
+    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctnSent() (1)");
     return(1);
   } else if((a != NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctn() (2)");
+    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctnSent() (2)");
     return(-1);
   } else if((a == NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctn() (3)");
+    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctnSent() (3)");
     return(0);
   }
 
-  if(pdaColumnSort == 0) {
-    /* Data Sent */
-    a_ = (*a)->bytesSent;
-    b_ = (*b)->bytesSent;
-  } else  {
-    /* Data Rcvd */
-    a_ = (*a)->bytesRcvd;
-    b_ = (*b)->bytesRcvd; 
+  /* Data Sent */
+  a_ = (*a)->bytesSent;
+  b_ = (*b)->bytesSent;
+
+  if(a_.value < b_.value)
+    return(1);
+  else if (a_.value > b_.value)
+    return(-1);
+  else
+    return(0);
+}
+
+static int cmpPdaFctnRcvd(const void *_a, const void *_b) {
+  HostTraffic **a = (HostTraffic **)_a;
+  HostTraffic **b = (HostTraffic **)_b;
+  TrafficCounter a_, b_;
+
+  if((a == NULL) && (b != NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctnRcvd() (1)");
+    return(1);
+  } else if((a != NULL) && (b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctnRcvd() (2)");
+    return(-1);
+  } else if((a == NULL) && (b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpPdaFctnRcvd() (3)");
+    return(0);
   }
+
+  /* Data Rcvd */
+  a_ = (*a)->bytesRcvd;
+  b_ = (*b)->bytesRcvd;
 
   if(a_.value < b_.value)
     return(1);
@@ -77,54 +137,23 @@ static int cmpPdaFctn(const void *_a, const void *_b) {
 
 /* ********************** */
 
-static void printHtmlIndex(void) {
+void printPdaData(HostTraffic* tmpTable[MAX_PDA_HOST_TABLE], u_int numEntries) {
+  u_int idx;
   int i;
-  char linkName[256], formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-  Counter diff;    
-  u_int idx, numEntries=0;
   HostTraffic *el;
-  HostTraffic* tmpTable[MAX_PDA_HOST_TABLE];
-  char *tmpName, buf[LEN_GENERAL_WORK_BUFFER];
-  Counter unicastPkts=0;
+  char *tmpName;
+  char hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char linkName[256];
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  char formatBuf[32];
 
-  /* #ifdef WIN32
-     deviceId = 0;
-     #else
-     deviceId = (int)_deviceId;
-     #endif
-
-     actualDeviceId = getActualInterface(deviceId); */
-  
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, BITFLAG_HTTP_NO_CACHE_CONTROL | BITFLAG_HTTP_MORE_FIELDS);
-
-  for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++)
-    if(((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL) 
-       && (!broadcastHost(el))
-       && (numEntries < MAX_PDA_HOST_TABLE))
-      tmpTable[numEntries++]=el;
-  
-  if(numEntries == 0) {
-    printHtmlNoDataYet();
-    return;
-  }
-
-  sendString("<html>\n");
-  sendString("<head>\n");
-  sendString("<title>ntop for PDAa</title>\n");
-  sendString("<meta http-equiv=REFRESH content=\"240\">\n");
-  sendString("</head>\n");
-  sendString("<body>\n");
-  sendString("            &nbsp <B>ntop for PDAs</B>\n");
-  sendString("  <BR><BR>\n");
-  sendString("  <table columns=\"1\" align=\"left\">\n");
-  sendString("  <TR><TD>\n");
-  
-  sendString("  <table columns=\"2\" align=\"left\">\n");
-  sendString("      <tr><td><b><u>Top Sending Hosts</b></u></td><td><b><u>Total</u></b></td></tr>\n");
+  sendString("  <table ");
+  sendString((myGlobals.w3c == TRUE) ? "" : "columns=\"2\" ");
+  sendString("align=\"left\">\n");
+  sendString("      <tr><td><b><u>Top Sending Hosts</u></b></td><td><b><u>Total</u></b></td></tr>\n");
   
   /* Data Sent */
-  pdaColumnSort = 0;  
-  qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpPdaFctn); 
+  qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpPdaFctnSent); 
   
   for(idx=0; idx<numEntries; idx++) {
     if(idx == 5) break;
@@ -151,16 +180,17 @@ static void printHtmlIndex(void) {
     sendString(buf);
   }
 
-  sendString("</table>\n");
-  sendString("<BR><BR>\n");
-  sendString("</TR></TD>\n");
-  sendString(" <TR><TD>\n");
-  sendString("    <table columns=\"2\" align=\"left\">\n");
+  sendString("</table>\n"
+             "<br><br>\n"
+             "</td></tr>\n"
+             " <tr><td>\n");
+  sendString("  <table ");
+  sendString((myGlobals.w3c == TRUE) ? "" : "columns=\"2\" ");
+  sendString("align=\"left\">\n");
   sendString("    <tr><td><b><u>Top Receiving Hosts</u></b></td><td><b><u>Total</u></b></td></tr>\n");
 
   /* Data Rcvd */
-  pdaColumnSort = 1;  
-  qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn); 
+  qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpPdaFctnRcvd); 
 
   for(idx=0; idx<numEntries; idx++) {
     if(idx == 5) break;
@@ -187,13 +217,22 @@ static void printHtmlIndex(void) {
   }
 
   sendString("</table>\n");
-  sendString("<BR><BR>\n");
-  /* ************************* */
+  sendString("<br><br>\n");
+}
 
-  sendString("  </TR></TD>\n");
-  sendString("  <TR><TD>\n");
-  sendString("  <table columns=\"2\" align=\"left\">\n");
-  sendString("  <tr><td><B><U>Stats</U></B></td><td><B><U>Total</U></B></td></tr>\n");
+/* ********************** */
+
+void printPdaSummaryData(void) {
+
+  char formatBuf[32];
+  Counter diff;    
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  Counter unicastPkts=0;
+
+  sendString("  <table ");
+  sendString((myGlobals.w3c == TRUE) ? "" : "columns=\"2\" ");
+  sendString("align=\"left\">\n");
+  sendString("  <tr><td><b><u>Stats</u></b></td><td><b><u>Total</u></b></td></tr>\n");
 
   /** **/
 
@@ -247,25 +286,69 @@ static void printHtmlIndex(void) {
 
   /** **/
   sendString("</table>\n");
-  sendString("</TR></TD>\n");
-  sendString("</table>\n");
+}
+/* ********************** */
 
-  /* ************************* */
+static void printHtmlIndex(void) {
+  u_int idx, numEntries=0;
+  HostTraffic *el;
+  HostTraffic* tmpTable[MAX_PDA_HOST_TABLE];
 
-  sendString("</body>\n");
-  sendString("</html>\n");
+  /* #ifdef WIN32
+     deviceId = 0;
+     #else
+     deviceId = (int)_deviceId;
+     #endif
+
+     actualDeviceId = getActualInterface(deviceId); */
+  
+  for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++)
+    if(((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL) 
+       && (!broadcastHost(el))
+       && (numEntries < MAX_PDA_HOST_TABLE))
+      tmpTable[numEntries++]=el;
+  
+  if(numEntries > 0)
+    printPdaData(tmpTable, numEntries);
+  else 
+    sendString("&nbsp;\n");
+
+  sendString("</td></tr>\n"
+             "<tr><td>\n");
+
+  printPdaSummaryData();
+
 }
 
 /* ********************** */
 
 static void printHtmlHostInfo(char *host _UNUSED_) {
-
+  sendString("Data for host ");
+  sendString(host);
+  sendString("<br>Currently this function is not available");
 }
 
 
 /* ********************** */
 
 static void handlePDArequest(char* url) {
+
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, BITFLAG_HTTP_NO_CACHE_CONTROL | BITFLAG_HTTP_MORE_FIELDS);
+  sendString((myGlobals.w3c == TRUE) ? CONST_W3C_DOCTYPE_LINE_32 "\n" : "");
+  sendString("<html>\n"
+             "<head>\n");
+  sendString((myGlobals.w3c == TRUE) ? CONST_W3C_CHARTYPE_LINE "\n" : "");
+  sendString("<meta http-equiv=REFRESH content=\"240\">\n"
+             "<title>ntop for PDAs</title>\n");
+  /* sendString("<link rel=stylesheet href=\"/stylepda.css\" type=\"text/css\">\n"); */
+  sendString("</head>\n"
+             "<body>\n"
+             "<b>ntop for PDAs</b>\n"
+             "<br><br>\n");
+  sendString("<table ");
+  sendString((myGlobals.w3c == TRUE) ? "" : "columns=\"1\" ");
+  sendString("align=\"left\">\n");
+  sendString("<tr><td>\n");
 
   if((url == NULL) 
      || (url[0] == 0) 
@@ -276,45 +359,17 @@ static void handlePDArequest(char* url) {
     printHtmlHostInfo(&url[strlen(CONST_HOST_HTML)+1]);
   else
     printHtmlNotFoundError();
+
+  sendString("</td></tr>\n"
+             "</table>\n"
+             "</body>\n"
+             "</html>\n");
 }
 
 /* ****************************** */
 
 static void termPdaFunct(void) {
-  traceEvent(CONST_TRACE_INFO, "PDA: Thanks for using PDAWatch");
+  traceEvent(CONST_TRACE_INFO, "PDA: Thanks for using ntop PDA plugin");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PDA: Done");
 }
 
-/* ****************************** */
-
-static PluginInfo PDAPluginInfo[] = {
-  {
-    VERSION, /* current ntop version */
-    "PDAPlugin",
-    "This plugin produces a minimal ntop report, suitable for display on a pda.",
-    "2.2",            /* version */
-    "<A HREF=\"mailto:&#119;&#097;&#108;&#116;&#101;&#114;&#098;&#114;&#111;&#099;&#107;&#064;&#110;&#101;&#116;&#115;&#099;&#097;&#112;&#101;&#046;&#110;&#101;&#116;\">W. Brock</A>", 
-    "PDAPlugin",      /* http://<host>:<port>/plugins/PDAPlugin */
-    0,                /* Active by default */
-    0,                /* Inactive setup */
-    NULL,             /* no special startup after init */
-    termPdaFunct,     /* TermFunc   */
-    NULL,             /* PluginFunc */
-    handlePDArequest, /* http request handler */
-    NULL,             /* BPF Filter */
-    NULL              /* no status */
-  }
-};
-
-/* Plugin entry fctn */
-#ifdef MAKE_STATIC_PLUGIN
-PluginInfo* wapPluginEntryFctn(void)
-#else
-  PluginInfo* PluginEntryFctn(void)
-#endif
-{
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PDA: Welcome to %s. (C) 2001-2002 by L.Deri and W.Brock",  
-	     PDAPluginInfo->pluginName);
-  
-  return(PDAPluginInfo);
-}

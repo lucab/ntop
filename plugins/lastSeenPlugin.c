@@ -26,6 +26,36 @@ static void NotesURL(char *addr, char *ip_addr);
 static void addNotes(char *addr, char *PostNotes);
 static void deletelastSeenURL( char *addr );
 static void setPluginStatus(char * status);
+static void termLsFunct(void);
+static void handleLsPacket(u_char *_deviceId, 
+                          const struct pcap_pkthdr *h _UNUSED_,
+                          const u_char *p);
+static void handleLsHTTPrequest(char* url);
+
+/* ******************************
+   *     Plugin data block      *
+   ****************************** */
+
+static PluginInfo LsPluginInfo[] = {
+  {
+    VERSION, /* current ntop version */
+    "LastSeenWatchPlugin",
+    "This plugin produces a report about the last time packets were seen from "
+    "each specific host.  A note card database is available for recording "
+    "additional information.",
+    "2.3", /* version */
+    "<a href=\"mailto:&#109;&#097;&#114;&#097;&#110;&#103;&#111;&#110;&#105;&#064;&#117;&#110;&#105;&#109;&#099;&#046;&#105;&#116;\" alt=\"Mail to A. Marangoni\">A.Marangoni</a>", 
+    "LastSeen", /* http://<host>:<port>/plugins/Ls */
+    0, /* Active by default */
+    0, /* Inactive setup */
+    NULL, /* no special startup after init */
+    termLsFunct, /* TermFunc   */
+    handleLsPacket, /* PluginFunc */
+    handleLsHTTPrequest,
+    "ip", /* BPF filter: filter all the ICMP packets */
+    NULL /* no status */
+  }
+};
 
 /* ****************************** */
 
@@ -126,7 +156,7 @@ static int SortLS(const void *_a, const void *_b) {
 
 /* ============================================================== */
 
-static void handleLsHTTPrequest(char* url) {
+static void processHTMLrequest(char* url) {
   char tmpStr[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   char tmpTime[LEN_TIMEFORMAT_BUFFER], postData[128];
   char *no_info = "<TH "TH_BG">-NO INFO-</TH>",*tmp, *no_note ="-";
@@ -138,35 +168,20 @@ static void handleLsHTTPrequest(char* url) {
   struct in_addr char_ip;
   int entry = 0, num_hosts;
 
-  if(disabled) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader("Status for the \"lastSeen\" Plugin", NULL, BITFLAG_HTML_NO_REFRESH);
-    printFlagedWarning("<I>This plugin is disabled.<I>");
-    sendString("<p><center>Return to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> menu</center></p>\n");
-    printHTMLtrailer();
-    return;
-  }
-
   if ( url && strncmp(url,"N",1)==0 ) {
     char_ip.s_addr = strtoul(url+1,NULL,10);
     NotesURL(url+1, intoa(char_ip));
     return;
   }
 
-  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-  printHTMLheader(NULL, NULL, 0);
-
   if ( url && strncmp(url,"P",1)==0 ) {
     entry = recv(myGlobals.newSock, &postData[0],127,0); 
     postData[entry] = '\0';
     addNotes( url+1, &postData[6]);	
     char_ip.s_addr = strtoul(url+1, NULL, 10);
-    if(snprintf(tmpStr, sizeof(tmpStr), "<I>OK! Added comments for %s.</i>\n",
+    if(snprintf(tmpStr, sizeof(tmpStr), "<p><i>OK! Added comments for %s.</i></p>\n",
 		intoa(char_ip)) < 0) BufferTooShort();
-    printSectionTitle(tmpStr);
-    sendString("<br><A HREF=/plugins/LastSeen>Reload</A>");
-    sendString("<p><center>Return to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> menu</center></p>\n");
-    printHTMLtrailer();
+    sendString(tmpStr);
     return;
   }
 
@@ -194,7 +209,6 @@ static void handleLsHTTPrequest(char* url) {
   qsort(( void *)&tablehost[0],entry,sizeof(LsHostInfo),SortLS);
   num_hosts=entry;
   entry--;
-  printSectionTitle("Last Seen Statistics");
 
   if (entry >= MAX_LASTSEEN_TABLE_SIZE - 1) {
     sendString("<P><CENTER>NOTE:&nbsp;Table size at/exceeds limit, some data may not be displayed.</CENTER></P>\n");
@@ -232,7 +246,7 @@ static void handleLsHTTPrequest(char* url) {
     localtime_r(&tablehost[entry].LastUpdated, &loctime);
     strftime(tmpTime, sizeof(tmpTime), CONST_LOCALE_TIMESPEC, &loctime);
 
-    if(snprintf(tmpStr, sizeof(tmpStr), "<TR "TR_ON" %s>%s</TH>"
+    if(snprintf(tmpStr, sizeof(tmpStr), "<TR "TR_ON" %s>%s"
 		"<TH "TH_BG" ALIGN=LEFT>&nbsp;&nbsp;%s&nbsp;&nbsp</TH>"
 		"<TH "TH_BG">&nbsp;&nbsp;%s&nbsp;&nbsp</TH><TH "TH_BG">%s</TH><TH "TH_BG">"
 		"<A HREF=\"/plugins/LastSeen?D%u\">Del</A>&nbsp;&nbsp;&nbsp;"
@@ -250,12 +264,34 @@ static void handleLsHTTPrequest(char* url) {
   }
   sendString("</TABLE></CENTER><p>\n");
   if(snprintf(tmpStr, sizeof(tmpStr), 
-	      "<CENTER><b>%u</b> host(s) collected.</CENTER><br>",
+	      "<CENTER><b>%u</b> host displayed</CENTER><br>",
 	      num_hosts) < 0) BufferTooShort();
   sendString(tmpStr);
-  sendString("<p align=right>[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]&nbsp;</p>\n");
+}
+
+/* ============================================================== */
+
+static void handleLsHTTPrequest(char* url) {
+
+  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+  printHTMLheader("Last Seen Statistics", NULL, 0);
+
+  if(disabled) {
+    printFlagedWarning("<I>This plugin is disabled.<I>");
+    if(LsPluginInfo->pluginStatusMessage != NULL) {
+      sendString("<p><i>");
+      sendString(LsPluginInfo->pluginStatusMessage);
+      sendString("</i></p>\n");
+    }
+  } else {
+    processHTMLrequest(url);
+  }
+
+  printPluginTrailer(LsPluginInfo->pluginURLname, NULL);
   printHTMLtrailer();
 }
+
+/* ============================================================== */
 
 /* Adding notes changing the key */
 
@@ -294,9 +330,7 @@ static void NotesURL(char *addr, char *ip_addr) {
   char tmp[64];
 
   if(disabled) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     printFlagedWarning("<I>This plugin is disabled.<I>");
-    printHTMLtrailer();
     return;
   }
 
@@ -306,16 +340,14 @@ static void NotesURL(char *addr, char *ip_addr) {
 
   content = gdbm_fetch(LsDB,key_data);
 
-  snprintf(tmp, sizeof(tmp), "Notes for %s", ip_addr);
-  printHTMLheader(tmp, NULL, 0);
-  
-  sendString("<FONT FACE=Helvetica><P><HR>\n");
-  sendString("<title>Manage Notes</title>\n");
-  sendString("</head><BODY COLOR=#FFFFFF><FONT FACE=Helvetica>\n");
-  if(snprintf(tmp, sizeof(tmp), "<H1><CENTER>Notes for %s</CENTER></H1><p><p><hr>\n",ip_addr) < 0) 
+  // sendString("<FONT FACE=Helvetica><P><HR>\n");
+  //sendString("<title>Manage Notes</title>\n");
+  //sendString("</head><BODY COLOR=#FFFFFF><FONT FACE=Helvetica>\n");
+
+  if(snprintf(tmp, sizeof(tmp), "<H2><CENTER>Notes for %s</CENTER></H2>\n<p><p>\n",ip_addr) < 0) 
     BufferTooShort();
   sendString(tmp);
-  if(snprintf(tmp, sizeof(tmp), "<FORM METHOD=POST ACTION=/plugins/LastSeen?P%s>\n",addr) < 0) 
+  if(snprintf(tmp, sizeof(tmp), "<FORM METHOD=POST ACTION=\"/plugins/LastSeen?P%s\">\n",addr) < 0) 
     BufferTooShort();
   sendString(tmp);
   if (content.dptr) {
@@ -328,7 +360,7 @@ static void NotesURL(char *addr, char *ip_addr) {
   }
   sendString("<p>\n");
   sendString("<input type=submit value=\"Add Notes\"><input type=reset></form>\n");
-  sendString("</FONT>\n");
+  // sendString("</FONT>\n");
 }
 
 static void deletelastSeenURL( char *addr ) {
@@ -366,30 +398,8 @@ static void termLsFunct(void) {
   traceEvent(CONST_TRACE_INFO, "LASTSEEN: Done"); fflush(stdout);
 }
 
-
 /* ====================================================================== */
 
-static PluginInfo LsPluginInfo[] = {
-  { 
-    VERSION, /* current ntop version */
-    "LastSeenWatchPlugin",
-    "This plugin produces a report about the last time packets were seen from "
-    "each specific host.  A note card database is available for recording "
-    "additional information.",
-    "2.2", /* version */
-    "<A HREF=\"mailto:&#109;&#097;&#114;&#097;&#110;&#103;&#111;&#110;&#105;&#064;&#117;&#110;&#105;&#109;&#099;&#046;&#105;&#116;\">A.Marangoni</A>", 
-    "LastSeen", /* http://<host>:<port>/plugins/Ls */
-    0, /* Active by default */
-    0, /* Inactive setup */
-    NULL, /* no special startup after init */
-    termLsFunct, /* TermFunc   */
-    handleLsPacket, /* PluginFunc */
-    handleLsHTTPrequest,
-    "ip", /* BPF filter: filter all the ICMP packets */
-    NULL /* no status */
-  }
-};
-  
 /* Plugin entry fctn */
 #ifdef MAKE_STATIC_PLUGIN
 PluginInfo* lsPluginEntryFctn(void) {
