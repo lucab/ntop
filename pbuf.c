@@ -3578,7 +3578,7 @@ void processPacket(u_char *_deviceId,
   FILE * fd;
   unsigned char ipxBuffer[128];
 
-#ifdef DEBUG
+#ifndef DEBUG
   static long numPkt=0; traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
 #endif
 
@@ -3698,10 +3698,11 @@ void processPacket(u_char *_deviceId,
       length -= NULL_HDRLEN; /* don't count nullhdr */
 
       /* All this crap is due to the old little/big endian story... */
-      if((p[0] == 0) && (p[1] == 0) && (p[2] == 8) && (p[3] == 0)) {
+      if((p[0] == 0) && (p[1] == 0) && (p[2] == 8) && (p[3] == 0))
 	eth_type = ETHERTYPE_IP;
-	ether_src = ether_dst = dummyEthAddress;
-      }
+      else if((p[0] == 0) && (p[1] == 0) && (p[2] == 0x86) && (p[3] == 0xdd))
+	eth_type = ETHERTYPE_IPv6;
+      ether_src = ether_dst = dummyEthAddress;
       break;
 
     case DLT_PPP:
@@ -3842,7 +3843,8 @@ void processPacket(u_char *_deviceId,
 	u_char sap_type;
 	struct llc llcHeader;
 
-	if((strcmp(etheraddr_string(ether_dst), "FF:FF:FF:FF:FF:FF") == 0)
+	if((ether_dst != NULL) 
+	   && (strcmp(etheraddr_string(ether_dst), "FF:FF:FF:FF:FF:FF") == 0)
 	   && (p[sizeof(struct ether_header)] == 0xff)
 	   && (p[sizeof(struct ether_header)+1] == 0xff)
 	   && (p[sizeof(struct ether_header)+4] == 0x0)) {
@@ -4105,10 +4107,19 @@ void processPacket(u_char *_deviceId,
 	if((device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU))
 	  processIpPkt(p, h, length, ether_src, ether_dst);
 	else
-	  processIpPkt(p+hlen, h, length, ether_src, ether_dst);
+	  processIpPkt(p+hlen, h, length, ether_src, ether_dst);	
       } else { /* Non IP */
 	struct ether_arp arpHdr;
 	struct in_addr addr;
+
+	if(eth_type == ETHERTYPE_IPv6) {
+	  static int firstTimeIpv6=1;
+
+	  if(firstTimeIpv6) {
+	    traceEvent(TRACE_WARNING, "IPv6 is unsupported: assuming raw."); /* To Do */
+	    firstTimeIpv6 = 0;
+	  }
+	}
 
 	if(length > hlen)
 	  length -= hlen;
