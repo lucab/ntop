@@ -2394,12 +2394,17 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	  if(el->nbHostName || el->atNetwork || el->ipxHostName) {
 	    short numAddresses = 0;
 
-	    if(el->nbDomainName) {
+	    if(el->nbHostName && el->nbDomainName) {
 	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
 		      el->nbHostName, el->nbDomainName);
 	      sendString(buf);
 	      numAddresses++;
-	    }
+		} else {
+	      snprintf(buf, sizeof(buf), "%s&nbsp;[%s]", getOSFlag("Windows", 0),
+		      el->nbHostName);
+	      sendString(buf);
+	      numAddresses++;
+		}
 
 	    if(el->atNetwork) {
 	      char *nodeName = el->atNodeName;

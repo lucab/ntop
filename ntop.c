@@ -630,7 +630,6 @@ RETSIGTYPE cleanup(int signo) {
   int i;
 
   /* traceEvent(TRACE_INFO, "Cleanup called.\n"); */
-
   if(unloaded)
     return;
   else
@@ -643,7 +642,11 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef MULTITHREADED
   /* Courtesy of Felipe Tonioli <tonioli@mtec.com.br> */
   if(signo != -1) { /* the user pressed the 'q' key */
-    killThread(&dequeueThreadId);
+	/* Send signals to threads first */
+	  
+	  
+	/* Then kill threads */  
+	killThread(&dequeueThreadId);
     killThread(&thptUpdateThreadId);
     killThread(&hostTrafficStatsThreadId);
     killThread(&scanIdleThreadId);

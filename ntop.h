@@ -1158,7 +1158,20 @@ typedef struct portUsage
 #define GATEWAY_HOST_FLAG                 6 /* indicates whether this is used as a gateway */
 #define DNS_HOST_FLAG                     7 /* indicates whether this is used as a DNS */
 #define SUBNET_PSEUDO_LOCALHOST_FLAG      8 /* indicates whether the host is local
-					       (with respect to the specified subnets) */
+                      					       (with respect to the specified subnets) */
+/* Host Type */
+#define HOST_TYPE_SERVER				  9
+#define HOST_TYPE_WORKSTATION			 10
+#define HOST_TYPE_PRINTER				 11
+/* Host provided services */
+#define HOST_SVC_SMTP					 12
+#define HOST_SVC_POP					 13
+#define HOST_SVC_IMAP					 14
+#define HOST_SVC_LDAP					 15
+#define HOST_SVC_FTP					 16
+#define HOST_SVC_HTTP					 17
+#define HOST_SVC_WINS					 18
+
 /* Macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG, &(a->flags))
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(SUBNET_LOCALHOST_FLAG, &(a->flags)))
@@ -1167,6 +1180,17 @@ typedef struct portUsage
 #define gatewayHost(a)              ((a != NULL) && FD_ISSET(GATEWAY_HOST_FLAG, &(a->flags)))
 #define dnsHost(a)                  ((a != NULL) && FD_ISSET(DNS_HOST_FLAG, &(a->flags)))
 #define subnetPseudoLocalHost(a)    ((a != NULL) && FD_ISSET(SUBNET_PSEUDO_LOCALHOST_FLAG, &(a->flags)))
+
+#define isServer(a)				    ((a != NULL) && FD_ISSET(HOST_TYPE_SERVER, &(a->flags)))
+#define isWorkstation(a)			((a != NULL) && FD_ISSET(HOST_TYPE_WORKSTATION, &(a->flags)))
+#define isPrinter(a)				((a != NULL) && FD_ISSET(HOST_TYPE_PRINTER, &(a->flags)))
+#define isSMTP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_SMTP, &(a->flags)))
+#define isPOP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_POP, &(a->flags)))
+#define isIMAP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_IMAP, &(a->flags)))
+#define isLDAP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_LDAP, &(a->flags)))
+#define isFTP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_FTP, &(a->flags)))
+#define isHTTP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_HTTP, &(a->flags)))
+#define isWINS(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_WINS, &(a->flags)))
 
 
 /* *********************** */
@@ -1231,6 +1255,7 @@ typedef struct icmpHostInfo {
 #define HASH_INITIAL_SIZE         32
 #define MAX_MULTIHOMING_ADDRESSES 16
 #define MAX_HOST_SYM_NAME_LEN     64
+
 /* Host Traffic */
 typedef struct hostTraffic
 {

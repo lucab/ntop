@@ -183,7 +183,7 @@ typedef struct _FRAMEETH
 						//      256 * Type[0] + Type[1]
 						// e non semplicemente con un cast esplicito ad 
 						// uno short, altrimenti (su una macchina INTEL) 
-						// i byte pi· e meno significativi risultano
+						// i byte pi¸ e meno significativi risultano
 						// scambiati
 
 	BYTE Dati[1500];	// Dati contenuti nel pacchetto

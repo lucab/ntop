@@ -138,7 +138,7 @@ char* getAllPortByNum(int port) {
   if(rsp != NULL)
     return(rsp);
   else {
-    portBufIdx = (portBufIdx+1)%2;
+    portBufIdx = (short)((portBufIdx+1)%2);
     snprintf(staticBuffer[portBufIdx], 16, "%d", port);
     return(staticBuffer[portBufIdx]);
   }
@@ -249,7 +249,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		 The line below isn't necessary because (**) has
 		 already set the pointer */
 	      if(isBroadcastAddress(&el->hostIpAddress))
-		FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+			FD_SET(BROADCAST_HOST_FLAG, &el->flags);
 	    }
 	  }
 	  break;
@@ -2318,27 +2318,49 @@ static void processIpPkt(const u_char *bp,
         name = ((char*)bp+hlen+22);
         nodeType = name_interpret(name,nbName);
         srcHost->nbNodeType = (char)nodeType;
+		switch(nodeType) {
+		  case 0x0:  /* Workstation */
+				FD_SET(HOST_TYPE_WORKSTATION, &srcHost->flags);
+		  case 0x20: /* Server */
+				FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+		  }
 
-        for(i=0; nbName[i] != '\0'; i++) if(nbName[i] == ' ') { nbName[i] = '\0'; break; }
-        if(srcHost->nbHostName != NULL) free(srcHost->nbHostName);
-        srcHost->nbHostName = strdup(nbName);
+        for(i=0; nbName[i] != '\0'; i++)
+			if(nbName[i] == ' ') { nbName[i] = '\0'; break; }
+        
+		if(srcHost->nbHostName == NULL)
+			srcHost->nbHostName = strdup(nbName);
 
         name = ((char*)bp+hlen+22+34);
 
-        name_interpret(name, domain);
-        for(i=0; domain[i] != '\0'; i++) if(domain[i] == ' ') { domain[i] = '\0'; break; }
+        nodeType = name_interpret(name, domain);
+        for(i=0; domain[i] != '\0'; i++)
+			if(domain[i] == ' ') { domain[i] = '\0'; break; }
 
-        if(srcHost->nbDomainName != NULL) {
-          free(srcHost->nbDomainName);
-          srcHost->nbDomainName = NULL;
-        }
+		switch(nodeType) {
+		case 0x1E: /* Domain */
+			if(srcHost->nbDomainName == NULL) {
+				if(strcmp(domain, "__MSBROWSE__") && strncmp(&domain[2], "__", 2)) {
+				  srcHost->nbDomainName = strdup(domain);
+	#ifdef DEBUG
+				  printf("[%x] %s@'%s' (len=%d)\n", nodeType, nbName, domain, strlen(domain));
+	#endif
+				}
+			}
+			break;
 
-        if(strcmp(domain, "__MSBROWSE__") && strncmp(&domain[2], "__", 2)) {
-          srcHost->nbDomainName = strdup(domain);
-#ifdef DEBUG
-          printf("[%x] %s@'%s' (len=%d)\n", nodeType, nbName, domain, strlen(domain));
-#endif
-        }
+		case 0x0:  /* Workstation */
+		case 0x20: /* Server */
+	        if(dstHost->nbHostName == NULL) dstHost->nbHostName = strdup(domain);
+			dstHost->nbNodeType = (char)nodeType;
+			switch(nodeType) {
+			case 0x0:  /* Workstation */
+				FD_SET(HOST_TYPE_WORKSTATION, &dstHost->flags);
+			case 0x20: /* Server */
+				FD_SET(HOST_TYPE_SERVER, &dstHost->flags);
+			}
+			break;
+		}
       }
     }
 
@@ -2458,7 +2480,7 @@ static void processIpPkt(const u_char *bp,
   default:
     proto = "IP (Other)";
     device[actualDeviceId].otherIpBytes += length;
-    sport = dport = -1;
+    sport = dport = 0;
     srcHost->otherSent += length;
     dstHost->otherReceived += length;
     break;

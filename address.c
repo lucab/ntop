@@ -176,7 +176,7 @@ static void resolveAddress(char* symAddr,
     strncpy(symAddr, res, MAX_HOST_SYM_NAME_LEN);
 
   for(i=0; symAddr[i] != '\0'; i++)
-    symAddr[i] = tolower(symAddr[i]);
+    symAddr[i] = (char)tolower(symAddr[i]);
 
 #ifdef MULTITHREADED
   releaseMutex(&addressResolutionMutex);
@@ -588,17 +588,12 @@ static u_char fddi_bit_swap[] = {
 
 void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc, char *fdst)
 {
-  int i;
+    int i;
 
-  if (1) {
-    for (i = 0; i < 6; ++i)
-      fdst[i] = fddi_bit_swap[fddip->dhost[i]];
-    for (i = 0; i < 6; ++i)
-      fsrc[i] = fddi_bit_swap[fddip->shost[i]];
-  } else {
-    memcpy(fdst, (char *)fddip->dhost, 6);
-    memcpy(fsrc, (char *)fddip->shost, 6);
-  }
+	for (i = 0; i < 6; ++i)
+	  fdst[i] = fddi_bit_swap[fddip->dhost[i]];
+	for (i = 0; i < 6; ++i)
+	  fsrc[i] = fddi_bit_swap[fddip->shost[i]];
 }
 
 /* *************************************
@@ -973,7 +968,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   int		len;
   int		dlen;
   char		haveAnswer;
-  short         addr_list_idx=0;
+  short     addr_list_idx=0;
   char		printedAnswers = FALSE;
   char *host_aliases[MAXALIASES];
   int   host_aliases_len[MAXALIASES];
@@ -982,7 +977,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   u_int16_t transactionId, flags;
 
   /* Never forget to copy the buffer !!!!! */
-  cp = (char*)(ipPtr+displ);
+  cp = (u_char*)(ipPtr+displ);
   memcpy(&transactionId, cp, 2); transactionId = ntohs(transactionId);
   memcpy(&flags, &cp[2], 2); flags = ntohs(flags);
 
@@ -992,8 +987,8 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 
   memcpy(&answer, ipPtr+displ, sizeof(answer));
 
-  *isRequest = !(flags & 0x8000);
-  *positiveReply = !(flags & 0x0002);
+  *isRequest = (short)!(flags & 0x8000);
+  *positiveReply = (short)!(flags & 0x0002);
 
   if (answer.qb1.rcode != NOERROR) {
     return(transactionId);
@@ -1021,7 +1016,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 
   /* Skip over question section. */
   while (qdcount-- > 0) {
-    n = _dn_skipname(cp, eom);
+    n = (short)_dn_skipname(cp, eom);
     if (n < 0)
       return(transactionId);
     cp += n + QFIXEDSZ;
@@ -1034,7 +1029,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   haveAnswer	= FALSE;
 
   while (--ancount >= 0 && cp < eom) {
-    n = dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
+    n = (short)dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
     if (n < 0)
       return(transactionId);
     cp += n;
@@ -1052,10 +1047,10 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
        */
       cp += dlen;
       if (aliasPtr >= &host_aliases[MAXALIASES-1]) {
-	continue;
+		continue;
       }
       *aliasPtr++ = (char *)bp;
-      n = strlen((char *)bp) + 1;
+      n = (short)strlen((char *)bp) + 1;
       host_aliases_len[numAliases] = n;
       numAliases++;
       bp += n;
@@ -1075,7 +1070,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
       hostPtr->addrLen = INADDRSZ;
       hostPtr->addrList[0] = theDNSaddr;
 
-      n = dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
+      n = (short)dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
       if (n < 0) {
 	cp += n;
 	continue;
@@ -1174,7 +1169,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
      *  that serve the requested domain.
      */
 
-    n = dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
+    n = (short)dn_expand_(answer.qb2, eom, cp, (char *)bp, buflen);
     if (n < 0) {
       return(transactionId);
     }

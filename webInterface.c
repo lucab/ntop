@@ -42,7 +42,7 @@ void initializeWeb(void) {
 
 /* **************************************** */
 
-void* handleWebConnections(void* notUsed) {
+void* handleWebConnections(void* notUsed _UNUSED_) {
 #ifndef MULTITHREADED
   struct timeval wait_time;
 #else

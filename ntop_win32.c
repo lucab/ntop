@@ -139,10 +139,10 @@ void initWinsock32() {
   SIZE_BUF = 5 * 1024 * 1024; /* 5MB buffer */
   version = "1.3.2";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "09/2000";
+  buildDate = "11/10/2000";
 
   if(isWinNT())
-    osName = "WinNT";
+    osName = "WinNT/2K";
   else
     osName = "Win95/98";
 

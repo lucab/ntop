@@ -44,7 +44,6 @@ void pktSizeDistribPie(void) {
   char	*lbl[] = { "", "", "", "", "", "", "" };
   int len, num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
   FILE *fd;
-  int tmpfd;
 
   fd = getNewRandomFile(fileName, NAME_MAX);
 
@@ -130,7 +129,6 @@ void ipProtoDistribPie(void) {
   int len, num=0, expl[] = { 0, 20, 30 };
   FILE *fd;
   TrafficCounter unicastPkts;
-  int tmpfd;
 
   fd = getNewRandomFile(fileName, NAME_MAX);
 
@@ -203,7 +201,7 @@ void interfaceTrafficPie(void) {
   TrafficCounter totPkts=0;
   struct pcap_stat stat;
   char	*lbl[MAX_NUM_DEVICES];
-  int myDevices=0, tmpfd;
+  int myDevices=0;
 
   fd = getNewRandomFile(fileName, NAME_MAX);
 
@@ -347,7 +345,7 @@ void drawTrafficPie(void) {
   TrafficCounter ip, nonIp;
   float p[2];
   char	*lbl[] = { "IP", "Non IP" };
-  int num=0, len, expl[] = { 5, 5 }, tmpfd;
+  int num=0, len, expl[] = { 5, 5 };
   FILE *fd;
 
   fd = getNewRandomFile(fileName, NAME_MAX);
@@ -402,7 +400,7 @@ void drawTrafficPie(void) {
 
 void drawThptGraph(int sortedColumn) {
   char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
-  int i, len, tmpfd;
+  int i, len;
   char  labels[60][32];
   char  *lbls[60];
   FILE *fd;
@@ -561,7 +559,7 @@ void drawGlobalProtoDistribution(void) {
   unsigned long sc = 0xC8C8FF;
   char	*lbl[16];
   FILE *fd;
-  int idx = 0, tmpfd;
+  int idx = 0;
 
   ip = device[actualReportDeviceId].ipBytes;
   nonIp = device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes;
@@ -642,7 +640,7 @@ void drawGlobalProtoDistribution(void) {
 
 void drawGlobalIpProtoDistribution(void) {
   char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
-  int len, i, idx=0, tmpfd;
+  int len, i, idx=0;
   float p[256];
   unsigned long sc = 0xC8C8FF;
   char	*lbl[256];
