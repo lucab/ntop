@@ -507,6 +507,8 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
   HostTraffic *el;
   struct re_pattern_buffer filterPattern;
   unsigned char shortView = 0;
+  char workSymIpAddress[MAX_HOST_SYM_NAME_LEN_HTML];
+  char * angleLocation;
 
   memset(key, 0, sizeof(key));
   memset(filter, 0, sizeof(filter));
@@ -581,10 +583,16 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
     if((idx != myGlobals.otherHostEntryIdx) &&
        ((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL))
       {
+
+        strncpy(workSymIpAddress, el->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN_HTML);
+        if ((angleLocation = strchr(workSymIpAddress, '<')) != NULL) {
+            angleLocation[0] = '\0';
+        }
+
 	if(key[0] != '\0') {
 	  if(strcmp(el->hostNumIpAddress, key)
 	     && strcmp(el->ethAddressString, key)
-	     && strcmp(el->hostSymIpAddress, key))
+	     && strcmp(workSymIpAddress, key))
 	    continue;
 	}
 
@@ -618,7 +626,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	}
 
 	if(checkFilter(filter, &filterPattern, "hostSymIpAddress"))
-	  wrtStrItm(fDescr, lang, "\t", "hostSymIpAddress", el->hostSymIpAddress, ',', numEntries);
+	  wrtStrItm(fDescr, lang, "\t", "hostSymIpAddress", workSymIpAddress, ',', numEntries);
 
 	if(!shortView) {
 	  if(checkFilter(filter, &filterPattern, "firstSeen"))
