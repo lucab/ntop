@@ -1329,7 +1329,7 @@ void drawThptGraph(int sortedColumn) {
   char  *lbls[60];
   FILE *fd;
   time_t tmpTime;
-  float graphData[60], maxBytesPerSecond;
+  float graphData[60];
   struct tm t;
   int useFdOpen = 0;
 
@@ -1365,18 +1365,8 @@ void drawThptGraph(int sortedColumn) {
       strftime(labels[i], 32, "%H:%M", localtime_r(&tmpTime, &t));
     }
 
-    for(maxBytesPerSecond=0, i=0; i<len; i++) {
+    for(i=0; i<len; i++)
       graphData[59-i] = myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].trafficValue;
-      if(graphData[59-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[59-i];
-    }
-
-    if(maxBytesPerSecond > 1048576 /* 1024*1024 */) {
-      for(i=0; i<len; i++)
-	graphData[59-i] /= 1048576;
-    } else if(maxBytesPerSecond > 1024) {
-      for(i=0; i<len; i++)
-	graphData[59-i] /= 1024;
-    }
 
     drawArea(600, 300,            /* width, height           */
 	     fd,                  /* open FILE pointer       */
@@ -1398,18 +1388,8 @@ void drawThptGraph(int sortedColumn) {
       strftime(labels[i], 32, "%b %d %H:%M", localtime_r(&tmpTime, &t));
     }
 
-    for(maxBytesPerSecond=0, i=0; i<len; i++) {
+    for(i=0; i<len; i++)
       graphData[23-i] = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue;
-      if(graphData[23-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[23-i];
-    }
-
-    if(maxBytesPerSecond > 1048576 /* 1024*1024 */) {
-      for(i=0; i<len; i++)
-	graphData[23-i] /= 1048576;
-    } else if(maxBytesPerSecond > 1024) {
-      for(i=0; i<len; i++)
-	graphData[23-i] /= 1024;
-    }
 
     drawArea(600, 300,      /* width, height           */
 	     fd,            /* open FILE pointer       */
@@ -1431,18 +1411,8 @@ void drawThptGraph(int sortedColumn) {
       strftime(labels[i], 32, "%b %d %H:%M", localtime_r(&tmpTime, &t));
     }
 
-    for(maxBytesPerSecond=0, i=0; i<len; i++) {
+    for(i=0; i<len; i++)
       graphData[29-i] = myGlobals.device[myGlobals.actualReportDeviceId].last30daysThpt[i];
-      if(graphData[29-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[29-i];
-    }
-
-    if(maxBytesPerSecond > 1048576 /* 1024*1024 */) {
-      for(i=0; i<len; i++)
-	graphData[29-i] /= 1048576;
-    } else if(maxBytesPerSecond > 1024) {
-      for(i=0; i<len; i++)
-	graphData[29-i] /= 1024;
-    }
 
     drawArea(600, 300,          /* width, height           */
 	     fd,                /* open FILE pointer       */
