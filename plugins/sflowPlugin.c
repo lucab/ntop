@@ -105,12 +105,9 @@ static u_long numSamplesReceived = 0, initialPool = 0, lastSample = 0;
 pthread_t sflowThread;
 #endif
 
-/* ****************************** */
+#define SFLOW_PORT 6343 
 
-#ifdef WIN32
-typedef _int64 u_int64_t;
-#else
-#endif /* WIN32 */
+/* ****************************** */
 
 /* define my own IP header struct - to ease portability */
 struct myiphdr
@@ -173,6 +170,16 @@ struct in6_addr
 };
 #endif /* SFT_NEED_IN6ADDR */
 
+#ifdef WIN32
+struct in6_addr {
+	union {
+		uint8_t		_S6_u8[16];	/* IPv6 address */
+		uint32_t	_S6_u32[4];	/* IPv6 address */
+		uint32_t	__S6_align;	/* Align on 32 bit boundary */
+	} _S6_un;
+};
+
+#endif
 
 enum INMAddress_type {
   INMADDRESSTYPE_IP_V4 = 1,
@@ -1521,7 +1528,7 @@ static void handlesflowHTTPrequest(char* url) {
   err = 196 * sqrt((float)(1/(float)numSamplesReceived));
 
   if(debug) {
-    traceEvent(TRACE_INFO, "[%.2f \%][Error <= %.2f\%]", percentage, err);
+    traceEvent(TRACE_INFO, "[%.2f %%][Error <= %.2f%%]", percentage, err);
   }
 
   sendString("<TABLE BORDER>\n");
@@ -1559,7 +1566,9 @@ static void* sflowMainLoop(void* notUsed _UNUSED_) {
   SFSample sample;
   struct sockaddr_in fromHost;
 
-  /* traceEvent(TRACE_INFO, "sflowMainLoop()"); */
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "sflowMainLoop()");
+#endif
 
   for(;myGlobals.capturePackets == 1;) {
     FD_ZERO(&sflowMask);
@@ -1569,6 +1578,10 @@ static void* sflowMainLoop(void* notUsed _UNUSED_) {
       len = sizeof(fromHost);
       rc = recvfrom(sflowSocket, &buffer, sizeof(buffer),
 		    0, (struct sockaddr*)&fromHost, &len);
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "select() = %d". rc);
+#endif
 
       if(rc > 0) {
 	memset(&sample, 0, sizeof(sample));
@@ -1584,12 +1597,15 @@ static void* sflowMainLoop(void* notUsed _UNUSED_) {
       }
     }
   }
+
+  return(0);
 }
 
 /* ****************************** */
 
 static void initSflowFunct(void) {
   struct sockaddr_in sin;
+  int sockopt = 1;
 
   initialized = 0;
   sflowSocket = 0, debug = 0;
@@ -1601,12 +1617,14 @@ static void initSflowFunct(void) {
     traceEvent(TRACE_INFO, "Unable to open sFlow socket");
   }
 
+  setsockopt(sflowSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+
   sin.sin_family      = AF_INET;
-  sin.sin_port        = (int)htons(6343);
+  sin.sin_port        = (int)htons(SFLOW_PORT);
   sin.sin_addr.s_addr = INADDR_ANY;
 
   if(bind(sflowSocket, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    traceEvent(TRACE_WARNING, "sFlow bind: port %d already in use.", webPort);
+    traceEvent(TRACE_WARNING, "sFlow bind: port %d already in use.", SFLOW_PORT);
     closeNwSocket(&sflowSocket);
     return;
   }
@@ -1649,7 +1667,6 @@ static PluginInfo sflowPluginInfo[] = {
     termSflowFunct, /* TermFunc   */
     NULL, /* PluginFunc */
     handlesflowHTTPrequest,
-    NULL,
     NULL /* no capture */
   }
 };
