@@ -690,6 +690,11 @@
 #define MAX_NUM_DEVICES                     32
 
 /*
+ * Maximum virtual device (e.g. eth0:n) to check
+ */
+#define MAX_NUM_DEVICES_VIRTUAL             7
+
+/*
  * Display name for netFlow/sFlow 'dummy' or virtual devices
  */
 #define NETFLOW_DEVICE_NAME                 "NetFlow-device"

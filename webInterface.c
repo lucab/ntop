@@ -1098,6 +1098,11 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Maximum # of network interface devices", buf);
 
   if(snprintf(buf, sizeof(buf),
+              "#define MAX_NUM_DEVICES_VIRTUAL %d", MAX_NUM_DEVICES_VIRTUAL) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Maximum # of virtual network interfaces (per device)", buf);
+
+  if(snprintf(buf, sizeof(buf),
               "#define MAX_SUBNET_HOSTS %d", MAX_SUBNET_HOSTS) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Maximum network size (hosts per interface)", buf);

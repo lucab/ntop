@@ -1330,7 +1330,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
     if(myGlobals.numDevices < MAX_NUM_DEVICES) {
       traceEvent(CONST_TRACE_INFO, "Checking %s for additional devices", myGlobals.device[deviceId].name);
-      for(k=0; k<8; k++) {
+      for(k=0; k<=MAX_NUM_DEVICES_VIRTUAL; k++) {
 	if(snprintf(tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", myGlobals.device[deviceId].name, k) < 0)
 	  BufferTooShort();
 
@@ -1353,6 +1353,10 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	 myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(tmpDeviceName);
 	  myGlobals.device[myGlobals.numDevices++].name = strdup(tmpDeviceName);
 	  traceEvent(CONST_TRACE_INFO, "Added virtual interface: '%s'", tmpDeviceName);
+          if(myGlobals.numDevices < MAX_NUM_DEVICES) {
+	    traceEvent(CONST_TRACE_WARNING, "Stopping scan - no room for additional (virtual) interfaces");
+	    break;
+          }
 	} else
 	  break; /* No virtual interface */
       }
