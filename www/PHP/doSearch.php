@@ -23,7 +23,7 @@ if (!$fp) {
     eval($outStr);
 }
 
-// echo count($hash);
+// echo count($$ntopHash);
 
 echo "<center>\n<table border>\n";
 echo "<tr><th BGCOLOR=white>Host</th><th BGCOLOR=white>Values</th></tr>\n";
@@ -34,7 +34,7 @@ $match3 = $val_1."$";
 
 //echo "$crit_1 - $oper_1 ->".$val_1."<-\n<br>";
 
-while(list($key, $val) = each($hash)) {
+while(list($key, $val) = each($$ntopHash)) {
 
 //echo "eregi($val[$crit_1]) = ".eregi($match1, $val[$crit_1])."<br>\n";
 

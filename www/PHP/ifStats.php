@@ -27,7 +27,7 @@ if (!$fp) {
 echo "<center>\n<table border>\n";
 echo "<tr><th BGCOLOR=white>Interface</th><th BGCOLOR=white>Values</th></tr>\n";
 
-while (list ($key, $val) = each($interfaces)) {
+while (list ($key, $val) = each($ntopHash)) {
 
 	echo "<tr><th align=center BGCOLOR=white>$key</th>\n";
 	echo "<td><table border>\n";
