@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2003 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -2249,14 +2249,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_IGNORE_SIGPIPE",
-#ifdef MAKE_WITH_IGNORE_SIGPIPE
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLV3_SUPPORT",
 #ifdef MAKE_WITH_SSLV3_SUPPORT
                          "yes"
@@ -2897,6 +2889,10 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.dbPath,
                            CFG_DBFILE_DIR);
 
+  printParameterConfigInfo(textPrintFlag, "-Q | --spool-file-path",
+                           myGlobals.spoolPath,
+                           CFG_DBFILE_DIR);
+
   printParameterConfigInfo(textPrintFlag, "-U | --mapper",
                            myGlobals.mapperURL,
                            DEFAULT_NTOP_MAPPER_URL);
@@ -2920,12 +2916,6 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
   }
   printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
-#endif
-
-#ifndef MAKE_WITH_IGNORE_SIGPIPE
-  printParameterConfigInfo(textPrintFlag, "--ignore-sigpipe",
-                           myGlobals.ignoreSIGPIPE == 1 ? "Yes" : "No",
-                           "No");
 #endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
@@ -4765,15 +4755,15 @@ RETSIGTYPE webservercleanup(int signo) {
 
 void* handleWebConnections(void* notUsed _UNUSED_) {
 #ifndef CFG_MULTITHREADED
-  struct timeval wait_time;
+    struct timeval wait_time;
 #else
-  int rc;
+    int rc;
 #endif
-  fd_set mask, mask_copy;
-  int topSock = myGlobals.sock;
+    fd_set mask, mask_copy;
+    int topSock = myGlobals.sock;
 
 #ifdef CFG_MULTITHREADED
- #ifdef MAKE_WITH_HTTPSIGTRAP
+#ifdef MAKE_WITH_HTTPSIGTRAP
     signal(SIGSEGV, webservercleanup);
     signal(SIGHUP,  webservercleanup);
     signal(SIGINT,  webservercleanup);
@@ -4788,121 +4778,119 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
     signal(SIGUSR1, webservercleanup);
     signal(SIGUSR2, webservercleanup);
     /* signal(SIGCHLD, webservercleanup); */
-  #ifdef SIGCONT
+#ifdef SIGCONT
     signal(SIGCONT, webservercleanup);
-  #endif
-  #ifdef SIGSTOP
+#endif
+#ifdef SIGSTOP
     signal(SIGSTOP, webservercleanup);
-  #endif
-  #ifdef SIGBUS
+#endif
+#ifdef SIGBUS
     signal(SIGBUS,  webservercleanup);
-  #endif
-  #ifdef SIGSYS
+#endif
+#ifdef SIGSYS
     signal(SIGSYS,  webservercleanup);
-  #endif
- #endif /* MAKE_WITH_HTTPSIGTRAP */
+#endif
+#endif /* MAKE_WITH_HTTPSIGTRAP */
 
     traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) started...", getpid());
 #endif
 
 #ifndef WIN32
 #ifdef CFG_MULTITHREADED
-  /*
-   *  The great ntop "mysterious web server death" fix... and other tales of
-   *  sorcery.
-   *
-   *PART1
-   *
-   *  The problem is that Internet Explorer (and other browsers) seem to close
-   *  the connection when they receive an unknown certificate in response to
-   *  an https:// request.  This causes a SIGPIPE and kills the web handling
-   *  thread - sometimes (for sure, the ONLY case I know of is if ntop is
-   *  run under Linux gdb connected to from a Win2K browser).
-   *
-   *  This code simply counts SIGPIPEs and ignores them. 
-   *
-   *  However, it's not that simple - under gdb under Linux (and perhaps other 
-   *  OSes), the thread mask on a child thread disables our ability to set a 
-   *  signal handler for SIGPIPE. However, gdb seems to trap the SIGPIPE and
-   *  reflect it to the code, even if the code wouldn't see it without the debug!
-   *
-   *  Hence the multi-step code.
-   *
-   *  This code SHOULD be safe.  Many other programs have had to so this.
-   *
-   *  Because I'm not sure, I've put both a compile time (--enable-ignoresigpipe)
-   *  and run-time --ignore-sigpipe option in place.
-   *
-   *  Recommended:
-   *    If you aren't seeing the "mysterious death of web server" problem:
-   *        don't worry - be happy.
-   *    If you are, try running for a while with --ignore-sigpipe
-   *        If that seems to fix it, then compile with --enable-ignoressigpipe
-   *
-   *PART2
-   *
-   *  For reasons unknown Netscape 6.2.2 (and probably others) goes into ssl_accept
-   *  and never returns.
-   *
-   *  It's been reported as a bug in Netscape 6.2.2, that has a workaround in 
-   *  openSSL 0.9.6c but I can't get it to work.
-   *
-   *  So, we create - also optional - and only if we're using ssl - a watchdog
-   *  thread.  If we've not completed the sslAccept in a few seconds, we signal
-   *  the main thread and force it to abandon the accept.
-   *
-   *  June 2002 - Burton M. Strauss III <Burton@ntopsupport.com>
-   *
-   */
+    /*
+     *  The great ntop "mysterious web server death" fix... and other tales of
+     *  sorcery.
+     *
+     *PART1
+     *
+     *  The problem is that Internet Explorer (and other browsers) seem to close
+     *  the connection when they receive an unknown certificate in response to
+     *  an https:// request.  This causes a SIGPIPE and kills the web handling
+     *  thread - sometimes (for sure, the ONLY case I know of is if ntop is
+     *  run under Linux gdb connected to from a Win2K browser).
+     *
+     *  This code simply counts SIGPIPEs and ignores them. 
+     *
+     *  However, it's not that simple - under gdb under Linux (and perhaps other 
+     *  OSes), the thread mask on a child thread disables our ability to set a 
+     *  signal handler for SIGPIPE. However, gdb seems to trap the SIGPIPE and
+     *  reflect it to the code, even if the code wouldn't see it without the debug!
+     *
+     *  Hence the multi-step code.
+     *
+     *  This code SHOULD be safe.  Many other programs have had to so this.
+     *
+     *  Because I'm not sure, I've put both a compile time (--enable-ignoresigpipe)
+     *  and run-time --ignore-sigpipe option in place.
+     *
+     *  Recommended:
+     *    If you aren't seeing the "mysterious death of web server" problem:
+     *        don't worry - be happy.
+     *    If you are, try running for a while with --ignore-sigpipe
+     *        If that seems to fix it, then compile with --enable-ignoressigpipe
+     *
+     *PART2
+     *
+     *  For reasons unknown Netscape 6.2.2 (and probably others) goes into ssl_accept
+     *  and never returns.
+     *
+     *  It's been reported as a bug in Netscape 6.2.2, that has a workaround in 
+     *  openSSL 0.9.6c but I can't get it to work.
+     *
+     *  So, we create - also optional - and only if we're using ssl - a watchdog
+     *  thread.  If we've not completed the sslAccept in a few seconds, we signal
+     *  the main thread and force it to abandon the accept.
+     *
+     *  June 2002 - Burton M. Strauss III <Burton@ntopsupport.com>
+     *
+     */
 
-#ifndef MAKE_WITH_IGNORE_SIGPIPE
-  if(myGlobals.ignoreSIGPIPE == TRUE) {
-#else
     {
-#endif /* MAKE_WITH_IGNORE_SIGPIPE */
+	sigset_t a_oset, a_nset;
+	sigset_t *oset, *nset;
 
-      sigset_t a_oset, a_nset;
-      sigset_t *oset, *nset;
+	/* First, build our mask - empty, except for "UNBLOCK" SIGPIPE... */
+	oset = &a_oset;
+	nset = &a_nset;
 
-      /* First, build our mask - empty, except for "UNBLOCK" SIGPIPE... */
-      oset = &a_oset;
-      nset = &a_nset;
+	sigemptyset(nset);
+	rc = sigemptyset(nset);
+	if(rc != 0) 
+	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigemptyset() = %d, gave %p\n", rc, nset);
 
-      sigemptyset(nset);
-      rc = sigemptyset(nset);
-      if(rc != 0) 
-	traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigemptyset() = %d, gave %p\n", rc, nset);
-      rc = sigaddset(nset, SIGPIPE);
-      if(rc != 0)
-	traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p\n", rc, nset);
+	rc = sigaddset(nset, SIGPIPE);
+	if(rc != 0)
+	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p\n", rc, nset);
 
 #ifndef DARWIN
-      rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
+	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #endif
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
-#endif
-
-#ifndef DARWIN
-      rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
-      if(rc != 0)
-	traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d\n", 
-		   nset, oset, rc);
+	traceEvent(CONST_TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d\n", 
+		   oset, rc);
 #endif
 
 #ifndef DARWIN
-      rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
-#endif
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
+	rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
+	if(rc != 0)
+	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d\n", 
+		       nset, oset, rc);
 #endif
 
-      if(rc == 0) {
-	signal(SIGPIPE, PIPEhandler); 
-#ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Note: SIGPIPE handler set\n");
+#ifndef DARWIN
+	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #endif
-      }
+#ifdef DEBUG
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d\n", 
+		   oset, rc);
+#endif
+
+	if(rc == 0) {
+	    signal(SIGPIPE, PIPEhandler); 
+#ifdef DEBUG
+	    traceEvent(CONST_TRACE_INFO, "DEBUG: Note: SIGPIPE handler set\n");
+#endif
+	}
     }
 #endif /* CFG_MULTITHREADED */
 #endif /* WIN32 */
@@ -4910,13 +4898,13 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
     FD_ZERO(&mask);
 
     if(myGlobals.webPort > 0)
-      FD_SET((unsigned int)myGlobals.sock, &mask);
+	FD_SET((unsigned int)myGlobals.sock, &mask);
 
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized) {
-      FD_SET(myGlobals.sock_ssl, &mask);
-      if(myGlobals.sock_ssl > topSock)
-	topSock = myGlobals.sock_ssl;
+	FD_SET(myGlobals.sock_ssl, &mask);
+	if(myGlobals.sock_ssl > topSock)
+	    topSock = myGlobals.sock_ssl;
     }
 #endif
 
@@ -4926,26 +4914,26 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
     /* select returns immediately */
     wait_time.tv_sec = 0, wait_time.tv_usec = 0;
     if(select(topSock+1, &mask, 0, 0, &wait_time) == 1)
-      handleSingleWebConnection(&mask);
+	handleSingleWebConnection(&mask);
 #else /* CFG_MULTITHREADED */
     while(myGlobals.capturePackets != FLAG_NTOPSTATE_TERM) {
-      sslwatchdogDebug("BEGINloop", FLAG_SSLWATCHDOG_BOTH, "");
+	sslwatchdogDebug("BEGINloop", FLAG_SSLWATCHDOG_BOTH, "");
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
 #endif
-      memcpy(&mask, &mask_copy, sizeof(fd_set));
-      rc = select(topSock+1, &mask, 0, 0, NULL /* Infinite */);
+	memcpy(&mask, &mask_copy, sizeof(fd_set));
+	rc = select(topSock+1, &mask, 0, 0, NULL /* Infinite */);
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d\n", rc);
+	traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d\n", rc);
 #endif
-      if(rc > 0) {
-	HEARTBEAT(1, "handleWebConnections()", NULL);
-	/* Now, handle the web connection ends up in SSL_Accept() */
-	sslwatchdogDebug("->hSWC()", FLAG_SSLWATCHDOG_PARENT, "");
-	handleSingleWebConnection(&mask);
-	sslwatchdogDebug("hSWC()->", FLAG_SSLWATCHDOG_PARENT, "");
-      }
-      sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
+	if(rc > 0) {
+	    HEARTBEAT(1, "handleWebConnections()", NULL);
+	    /* Now, handle the web connection ends up in SSL_Accept() */
+	    sslwatchdogDebug("->hSWC()", FLAG_SSLWATCHDOG_PARENT, "");
+	    handleSingleWebConnection(&mask);
+	    sslwatchdogDebug("hSWC()->", FLAG_SSLWATCHDOG_PARENT, "");
+	}
+	sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
     }
 
     traceEvent(CONST_TRACE_WARNING, "THREADMGMT: web connections thread (%ld) terminated...", myGlobals.handleWebConnectionsThreadId);
@@ -4955,11 +4943,11 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
     return(NULL); 
 
-  }
+}
 
-  /* ************************************* */
+/* ************************************* */
 
-  static void handleSingleWebConnection(fd_set *fdmask) {
+static void handleSingleWebConnection(fd_set *fdmask) {
     struct sockaddr_in from;
     int from_len = sizeof(from);
 
@@ -4967,19 +4955,19 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
     if(FD_ISSET(myGlobals.sock, fdmask)) {
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTP request...\n");
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTP request...\n");
 #endif
-      myGlobals.newSock = accept(myGlobals.sock, (struct sockaddr*)&from, &from_len);
+	myGlobals.newSock = accept(myGlobals.sock, (struct sockaddr*)&from, &from_len);
     } else {
 #if defined(DEBUG) && defined(HAVE_OPENSSL)
-      if(myGlobals.sslInitialized)
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTPS request...\n");
+	if(myGlobals.sslInitialized)
+	    traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTPS request...\n");
 #endif
 #ifdef HAVE_OPENSSL
-      if(myGlobals.sslInitialized)
-	myGlobals.newSock = accept(myGlobals.sock_ssl, (struct sockaddr*)&from, &from_len);
+	if(myGlobals.sslInitialized)
+	    myGlobals.newSock = accept(myGlobals.sock_ssl, (struct sockaddr*)&from, &from_len);
 #else
-      ;
+	;
 #endif
     }
 
@@ -4989,145 +4977,145 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
     if(myGlobals.newSock > 0) {
 #ifdef HAVE_OPENSSL
-      if(myGlobals.sslInitialized)
-	if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
+	if(myGlobals.sslInitialized)
+	    if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-	  if(myGlobals.useSSLwatchdog == 1)
+		if(myGlobals.useSSLwatchdog == 1)
 #endif
-	    {		
+		{		
 #ifdef MAKE_WITH_SSLWATCHDOG
-	      int rc;
+		    int rc;
 
-	      /* The watchdog ... */
-	      if(setjmp(sslwatchdogJump) != 0) {
-		int i, j, k;
-		char buf[256];
+		    /* The watchdog ... */
+		    if(setjmp(sslwatchdogJump) != 0) {
+			int i, j, k;
+			char buf[256];
 
-		sslwatchdogError("TIMEOUT", FLAG_SSLWATCHDOG_PARENT, "processing continues!");
-		myGlobals.numHTTPSrequestTimeouts++;
-		traceEvent(CONST_TRACE_ERROR, 
-			   "SSLWDERROR: Watchdog timer has expired. "
-			   "Aborting request, but ntop processing continues!\n");
-		for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
-		  if(myGlobals.ssl[i].socketId == myGlobals.newSock) {
-		    break;
-		  }
+			sslwatchdogError("TIMEOUT", FLAG_SSLWATCHDOG_PARENT, "processing continues!");
+			myGlobals.numHTTPSrequestTimeouts++;
+			traceEvent(CONST_TRACE_ERROR, 
+				   "SSLWDERROR: Watchdog timer has expired. "
+				   "Aborting request, but ntop processing continues!\n");
+			for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
+			    if(myGlobals.ssl[i].socketId == myGlobals.newSock) {
+				break;
+			    }
+			}
+			if(i<MAX_SSL_CONNECTIONS) {
+			    j=k=0;
+			    while((k<255) && (myGlobals.ssl[i].ctx->packet[j] != '\0')) {
+				if((myGlobals.ssl[i].ctx->packet[j] >= 32 /* space */) && 
+				   (myGlobals.ssl[i].ctx->packet[j] < 127)) 
+				    buf[k++]=myGlobals.ssl[i].ctx->packet[j];
+				j++;
+			    }
+			    buf[k+1]='\0';
+			    traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: Failing request was (translated): %s\n", buf);
+			}
+			signal(SIGUSR1, sslwatchdogSighandler);
+			return;
+		    }
+
+		    rc = sslwatchdogWaitFor(FLAG_SSLWATCHDOG_WAITINGREQUEST,
+					    FLAG_SSLWATCHDOG_PARENT, 
+					    0-FLAG_SSLWATCHDOG_ENTER_LOCKED);
+
+		    rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPREQUEST,
+					     FLAG_SSLWATCHDOG_PARENT,
+					     0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
+					     0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
+#endif /* MAKE_WITH_SSLWATCHDOG */
 		}
-		if(i<MAX_SSL_CONNECTIONS) {
-		  j=k=0;
-		  while((k<255) && (myGlobals.ssl[i].ctx->packet[j] != '\0')) {
-		    if((myGlobals.ssl[i].ctx->packet[j] >= 32 /* space */) && 
-		       (myGlobals.ssl[i].ctx->packet[j] < 127)) 
-		      buf[k++]=myGlobals.ssl[i].ctx->packet[j];
-		    j++;
-		  }
-		  buf[k+1]='\0';
-		  traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: Failing request was (translated): %s\n", buf);
+
+		if(accept_ssl_connection(myGlobals.newSock) == -1) {
+		    traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection\n");
+		    closeNwSocket(&myGlobals.newSock);
+		    return;
+		} else {
+		    myGlobals.newSock = -myGlobals.newSock;
 		}
-		signal(SIGUSR1, sslwatchdogSighandler);
-		return;
-	      }
 
-	      rc = sslwatchdogWaitFor(FLAG_SSLWATCHDOG_WAITINGREQUEST,
-				      FLAG_SSLWATCHDOG_PARENT, 
-				      0-FLAG_SSLWATCHDOG_ENTER_LOCKED);
-
-	      rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPREQUEST,
-				       FLAG_SSLWATCHDOG_PARENT,
-				       0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
-				       0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
+#ifdef MAKE_WITH_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+		if(myGlobals.useSSLwatchdog == 1)
+#endif
+		{
+		    int rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPCOMPLETE,
+						 FLAG_SSLWATCHDOG_PARENT,
+						 0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
+						 0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
+		    /* Wake up child */ 
+		    rc = sslwatchdogSignal(FLAG_SSLWATCHDOG_PARENT);
+		}
 #endif /* MAKE_WITH_SSLWATCHDOG */
 	    }
-
-	  if(accept_ssl_connection(myGlobals.newSock) == -1) {
-	    traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection\n");
-	    closeNwSocket(&myGlobals.newSock);
-	    return;
-	  } else {
-	    myGlobals.newSock = -myGlobals.newSock;
-	  }
-
-#ifdef MAKE_WITH_SSLWATCHDOG
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-	  if(myGlobals.useSSLwatchdog == 1)
-#endif
-	    {
-	      int rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPCOMPLETE,
-					   FLAG_SSLWATCHDOG_PARENT,
-					   0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
-					   0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
-	      /* Wake up child */ 
-	      rc = sslwatchdogSignal(FLAG_SSLWATCHDOG_PARENT);
-	    }
-#endif /* MAKE_WITH_SSLWATCHDOG */
-	}
 #endif /* HAVE_OPENSSL */
 
 #ifdef HAVE_LIBWRAP
-      {
-	struct request_info req;
-	request_init(&req, RQ_DAEMON, CONST_DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
-	fromhost(&req);
-	if(!hosts_access(&req)) {
-	  closelog(); /* just in case */
-	  openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
-	  syslog(deny_severity, "refused connect from %s", eval_client(&req));
+	{
+	    struct request_info req;
+	    request_init(&req, RQ_DAEMON, CONST_DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
+	    fromhost(&req);
+	    if(!hosts_access(&req)) {
+		closelog(); /* just in case */
+		openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
+		syslog(deny_severity, "refused connect from %s", eval_client(&req));
+	    }
+	    else
+		handleHTTPrequest(from.sin_addr);
 	}
-	else
-	  handleHTTPrequest(from.sin_addr);
-      }
 #else
-      handleHTTPrequest(from.sin_addr);
+	handleHTTPrequest(from.sin_addr);
 #endif /* HAVE_LIBWRAP */
 
-      closeNwSocket(&myGlobals.newSock);
+	closeNwSocket(&myGlobals.newSock);
     } else {
-      traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d: %s)", errno, strerror(errno));
+	traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d: %s)", errno, strerror(errno));
     }
-  }
+}
 
-  /* ******************* */
+/* ******************* */
 
-  int handlePluginHTTPRequest(char* url) {
+int handlePluginHTTPRequest(char* url) {
     FlowFilterList *flows = myGlobals.flowsList;
 
     while(flows != NULL)
-      if((flows->pluginStatus.pluginPtr != NULL)
-	 && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)
-	 && (flows->pluginStatus.pluginPtr->httpFunct != NULL)
-	 && (strncmp(flows->pluginStatus.pluginPtr->pluginURLname,
-		     url, strlen(flows->pluginStatus.pluginPtr->pluginURLname)) == 0)) {
-	char *arg;
+	if((flows->pluginStatus.pluginPtr != NULL)
+	   && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)
+	   && (flows->pluginStatus.pluginPtr->httpFunct != NULL)
+	   && (strncmp(flows->pluginStatus.pluginPtr->pluginURLname,
+		       url, strlen(flows->pluginStatus.pluginPtr->pluginURLname)) == 0)) {
+	    char *arg;
 
-	/* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-	if((!flows->pluginStatus.activePlugin) &&
-	   (!flows->pluginStatus.pluginPtr->inactiveSetup) ) {
-	  char buf[LEN_GENERAL_WORK_BUFFER], name[32];
+	    /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+	    if((!flows->pluginStatus.activePlugin) &&
+	       (!flows->pluginStatus.pluginPtr->inactiveSetup) ) {
+		char buf[LEN_GENERAL_WORK_BUFFER], name[32];
 
-	  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-	  strncpy(name, flows->pluginStatus.pluginPtr->pluginURLname, sizeof(name));
-	  name[sizeof(name)-1] = '\0'; /* just in case pluginURLname is too long... */
-	  if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))
-	    name[strlen(name)-6] = '\0';
-	  if(snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name) < 0)
-	    BufferTooShort();
-	  printHTMLheader(buf, BITFLAG_HTML_NO_REFRESH);
-	  printFlagedWarning("<I>This plugin is currently inactive.</I>");
-	  printHTMLtrailer();
-	  return(1);
-	}
+		sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+		strncpy(name, flows->pluginStatus.pluginPtr->pluginURLname, sizeof(name));
+		name[sizeof(name)-1] = '\0'; /* just in case pluginURLname is too long... */
+		if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))
+		    name[strlen(name)-6] = '\0';
+		if(snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name) < 0)
+		    BufferTooShort();
+		printHTMLheader(buf, BITFLAG_HTML_NO_REFRESH);
+		printFlagedWarning("<I>This plugin is currently inactive.</I>");
+		printHTMLtrailer();
+		return(1);
+	    }
 
-	if(strlen(url) == strlen(flows->pluginStatus.pluginPtr->pluginURLname))
-	  arg = "";
-	else
-	  arg = &url[strlen(flows->pluginStatus.pluginPtr->pluginURLname)+1];
+	    if(strlen(url) == strlen(flows->pluginStatus.pluginPtr->pluginURLname))
+		arg = "";
+	    else
+		arg = &url[strlen(flows->pluginStatus.pluginPtr->pluginURLname)+1];
 
-	/* traceEvent(CONST_TRACE_INFO, "Found %s [%s]\n",
-	   flows->pluginStatus.pluginPtr->pluginURLname, arg); */
-	flows->pluginStatus.pluginPtr->httpFunct(arg);
-	return(1);
-      } else
-	flows = flows->next;
+	    /* traceEvent(CONST_TRACE_INFO, "Found %s [%s]\n",
+	       flows->pluginStatus.pluginPtr->pluginURLname, arg); */
+	    flows->pluginStatus.pluginPtr->httpFunct(arg);
+	    return(1);
+	} else
+	    flows = flows->next;
 
     return(0); /* Plugin not found */
-  }
+}

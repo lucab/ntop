@@ -165,11 +165,14 @@ libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
                            webInterface.c  xmldump.c
 
 
-libntopreport_la_DEPENDENCIES = config.h
+libntopreport_la_DEPENDENCIES = myrrd/libmyrrd.a config.h
 libntopreport_la_LIBADD       = 
 libntopreport_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
 man_MANS = ntop.8
+
+myrrd/libmyrrd.a:
+	cd myrrd; make
 
 #
 # Special stuff for xml auto-generation of code from the "doc":

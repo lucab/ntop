@@ -783,40 +783,41 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
   */
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/%s",
-	      directory != NULL ? directory : myGlobals.dbPath,
-	      dbName) < 0)
-    BufferTooShort();
+	       directory != NULL ? directory : myGlobals.dbPath,
+	       dbName) < 0)
+     BufferTooShort();
 
-  if(doUnlink == TRUE) {
-    unlink(tmpBuf); /* Delete the old one (if present) */
-  }
+   if(doUnlink == TRUE) {
+     unlink(tmpBuf); /* Delete the old one (if present) */
+   }
 
-  if(statbuf) {
-    if(stat(tmpBuf, statbuf) == 0) {
-      /* File already exists */
-    } else {
-      memset(statbuf, 0, sizeof(struct stat));
-    }
-  }
+   if(statbuf) {
+     if(stat(tmpBuf, statbuf) == 0) {
+       /* File already exists */
+     } else {
+       memset(statbuf, 0, sizeof(struct stat));
+     }
+   }
 
-  traceEvent(CONST_TRACE_NOISY, "%s database '%s'",
-	     doUnlink == TRUE ? "creating" : "opening",
-	     tmpBuf);
-  *database = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+   traceEvent(CONST_TRACE_NOISY, "%s database '%s'",
+	      doUnlink == TRUE ? "Creating" : "Opening",
+	      tmpBuf);
+   *database = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
-  if(*database == NULL) {
-    traceEvent(CONST_TRACE_FATALERROR, "....open of %s failed: %s",
-	       tmpBuf,
+   if(*database == NULL) {
+       traceEvent(CONST_TRACE_FATALERROR, "....open of %s failed: %s",
+		  tmpBuf,
 #if defined(WIN32) && defined(__GNUC__)
-	       "unknown gdbm errno"
+		  "unknown gdbm errno"
 #else
-	       gdbm_strerror(gdbm_errno)
+		  gdbm_strerror(gdbm_errno)
 #endif
-	       );
+	   );
+       
+       if(directory == NULL) {
+	   traceEvent(CONST_TRACE_FATALERROR, "Possible solution: please use '-P <directory>'\n");
+       }
 
-    if(directory == NULL) {
-      traceEvent(CONST_TRACE_FATALERROR, "Possible solution: please use '-P <directory>'\n");
-    }
     exit(-1);
   }
 }
@@ -824,7 +825,7 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 /* ************************************************************ */
 
 #ifdef CFG_MULTITHREADED
-void ReinitMutexes (void) {
+void reinitMutexes (void) {
 
 /*
  * Although the fork()ed child gets a copy of the storage for the mutexes,
@@ -863,8 +864,7 @@ void initThreads(void) {
   int i;
 
 #ifdef CFG_MULTITHREADED
-
-  i = pthread_atfork(NULL, NULL, &ReinitMutexes);
+  i = pthread_atfork(NULL, NULL, &reinitMutexes);
   traceEvent(CONST_TRACE_INFO, "NOTE: atfork() handler registered for mutexes, rc %d", i);
 
   /*
@@ -1431,19 +1431,19 @@ void initDeviceDatalink(int deviceId) {
   switch(myGlobals.device[deviceId].name[0]) {
   case 't': /* TokenRing */
     myGlobals.device[deviceId].datalink = DLT_IEEE802;
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is \"t...\", treating as DLT_IEEE802 (TokenRing)",
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] is \"t...\", treating as DLT_IEEE802 (TokenRing)",
 	      deviceId,
 	       myGlobals.device[deviceId].name);
     break;
   case 'l': /* Loopback */
     myGlobals.device[deviceId].datalink = DLT_NULL;
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is loopback, treating as DLT_NULL",
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] is loopback, treating as DLT_NULL",
 	       deviceId,
 	       myGlobals.device[deviceId].name);
     break;
   default:
     myGlobals.device[deviceId].datalink = DLT_EN10MB; /* Ethernet */
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s), treating as DLT_EN10MB (10/100/1000 Ethernet)",
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s], treating as DLT_EN10MB (10/100/1000 Ethernet)",
 	       deviceId,
 	       myGlobals.device[deviceId].name);
   }
@@ -1451,7 +1451,7 @@ void initDeviceDatalink(int deviceId) {
 #if defined(__FreeBSD__)
   if(strncmp(myGlobals.device[deviceId].name, "tun", 3) == 0) {
     myGlobals.device[deviceId].datalink = DLT_PPP;
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is \"tun\", treating as DLT_PPP",
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] is \"tun\", treating as DLT_PPP",
 	       deviceId,
 	       myGlobals.device[deviceId].name);
   }
@@ -1459,7 +1459,7 @@ void initDeviceDatalink(int deviceId) {
   if((myGlobals.device[deviceId].name[0] == 'l') /* loopback check */
      && (myGlobals.device[deviceId].name[1] == 'o')) {
     myGlobals.device[deviceId].datalink = DLT_NULL;
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) is loopback, treating as DLT_NULL",
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] is loopback, treating as DLT_NULL",
 	       deviceId,
 	       myGlobals.device[deviceId].name);
   }
@@ -1467,7 +1467,7 @@ void initDeviceDatalink(int deviceId) {
 
   myGlobals.device[deviceId].datalink = pcap_datalink(myGlobals.device[deviceId].pcapPtr);
   if(myGlobals.device[deviceId].datalink > MAX_DLT_ARRAY) {
-    traceEvent(CONST_TRACE_WARNING, "DLT: Device %d(%s) DLT_ value, %d, exceeds highest known value",
+    traceEvent(CONST_TRACE_WARNING, "DLT: Device %d [%s] DLT_ value, %d, exceeds highest known value",
 	       deviceId,
 	       myGlobals.device[deviceId].name,
 	       myGlobals.device[deviceId].datalink);
@@ -1475,7 +1475,7 @@ void initDeviceDatalink(int deviceId) {
     traceEvent(CONST_TRACE_NOISY, "DLT: Please report this to the ntop-dev list.");
   } else {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d(%s) DLT_ is %d, assuming mtu %d, header %d",
+    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] DLT_ is %d, assuming mtu %d, header %d",
 	       deviceId,
 	       myGlobals.device[deviceId].name,
 	       myGlobals.device[deviceId].datalink,

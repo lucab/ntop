@@ -87,7 +87,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 	sendString("\n<li>");
 	sendString(makeHostLink(el, 0, 0, 0));
       } else
-	traceEvent(CONST_TRACE_WARNING, "Unable to find host serial - host skipped");
+	  traceEvent(CONST_TRACE_WARNING, "Unable to find host serial - host skipped");
     }
   }
 
@@ -2648,7 +2648,7 @@ static HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffi
   memset(el, 0, sizeof(HostTraffic));
   copySerial(&el->hostSerial, &theSerial);
 
-  if(theSerial.serialType == 2) {
+  if(theSerial.serialType == SERIAL_IPV4) {
     /* IP */
     char sniffedName[MAXDNAME];
     char buf[LEN_GENERAL_WORK_BUFFER];

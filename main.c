@@ -110,6 +110,7 @@ static struct option const long_options[] = {
 
   { "output-packet-path",               required_argument, NULL, 'O' },
   { "db-file-path",                     required_argument, NULL, 'P' },
+  { "spool-file-path",                  required_argument, NULL, 'Q' },
   { "mapper",                           required_argument, NULL, 'U' },
   { "version",                          no_argument,       0,    'V' },
 
@@ -128,9 +129,7 @@ static struct option const long_options[] = {
 #if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
   { "use-syslog",                       optional_argument, NULL, 131 },
 #endif
-#ifndef MAKE_WITH_IGNORE_SIGPIPE
-  { "ignore-sigpipe",                   no_argument,       NULL, 132 },
-#endif
+
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   { "ssl-watchdog",                     no_argument,       NULL, 133 },
 #endif
@@ -187,7 +186,7 @@ void usage (FILE * fp) {
 
   fprintf(fp, "    [-a <path>      | --access-log-path <path>]           %sPath for ntop web server access log\n", newLine);
   fprintf(fp, "    [-b             | --disable-decoders]                 %sDisable protocol decoders\n", newLine);
-  fprintf(fp, "    [-c             | --sticky-hosts]                     %sIdle hosts are not purged from hash\n", newLine);
+  fprintf(fp, "    [-c             | --sticky-hosts]                     %sIdle hosts are not purged from memory\n", newLine);
 
 #ifndef WIN32
   fprintf(fp, "    [-d             | --daemon]                           %sRun ntop in daemon mode\n", newLine);
@@ -201,7 +200,7 @@ void usage (FILE * fp) {
 #ifndef WIN32
   fprintf(fp, "    [-i <name>      | --interface <name>]                 %sInterface name or names to monitor\n", newLine);
 #else
-  fprintf(fp, "    [-i <number>    | --interface <number>]               %sInterface index number to monitor\n", newLine);
+  fprintf(fp, "    [-i <number>    | --interface <number|name>]          %sInterface index number (or name) to monitor\n", newLine);
 #endif
   fprintf(fp, "    [-o             | --no-mac]                           %sntop will trust just IP addresses (no MACs)\n", newLine);
   fprintf(fp, "    [-k             | --filter-expression-in-extra-frame] %sShow kernel filter expression in extra frame\n", newLine);
@@ -221,8 +220,8 @@ void usage (FILE * fp) {
 
   fprintf(fp, "    [-w <port>      | --http-server <port>]               %sWeb server (http:) port (or address:port) to listen on\n", newLine);
   fprintf(fp, "    [-z             | --disable-sessions]                 %sDisable TCP session tracking\n", newLine);
-  fprintf(fp, "    [-A                                                   %sAsk admin user password and exit\n", newLine);
-  fprintf(fp, "    [                 --set-admin-password=<pass>]        %sSet password for the admin user to <pass>\n", newLine);
+  fprintf(fp, "    [-A]                                                  %sAsk admin user password and exit\n", newLine);
+  fprintf(fp, "    [               | --set-admin-password=<pass>]        %sSet password for the admin user to <pass>\n", newLine);
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 %sPacket filter expression, like tcpdump\n", newLine);
   fprintf(fp, "    [-D <name>      | --domain <name>]                    %sInternet domain name\n", newLine);
 
@@ -235,25 +234,24 @@ void usage (FILE * fp) {
 #ifndef WIN32
   fprintf(fp, "    [-K             | --enable-debug]                     %sEnable debug mode\n", newLine);
 #ifdef MAKE_WITH_SYSLOG
-  fprintf(fp, "    [-L ]                                                 %sDo logging via syslog\n", newLine);
-  fprintf(fp, "    [               | --use-syslog=<facility>]            %sDo logging via syslog, facility\n"
-	      "                                                          %sNote that the '=' is REQUIRED\n", newLine, newLine);
+  fprintf(fp, "    [-L]                                                  %sDo logging via syslog\n", newLine);
+  fprintf(fp, "    [               | --use-syslog=<facility>]            %sDo logging via syslog, facility ('=' is REQUIRED)\n",
+	  newLine);
 #endif /* MAKE_WITH_SYSLOG */
 #endif
 
-  fprintf(fp, "    [-M             | --no-interface-merge]               %sDon't merge network interfaces (see man page)\n", newLine);
+  fprintf(fp, "    [-M             | --no-interface-merge]               %sDon't merge network interfaces (see man page)\n",
+	  newLine);
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            %sPath for log files in pcap format\n", newLine);
   fprintf(fp, "    [-P <path>      | --db-file-path <path>]              %sPath for ntop internal database files\n", newLine);
-  fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", newLine);
+  fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", 
+	  newLine);
   fprintf(fp, "    [-V             | --version]                          %sOutput version information and exit\n", newLine);
 
 #ifdef HAVE_OPENSSL
   fprintf(fp, "    [-W <port>      | --https-server <port>]              %sWeb server (https:) port (or address:port) to listen on\n", newLine);
 #endif
 
-#ifndef MAKE_WITH_IGNORE_SIGPIPE
-  fprintf(fp, "    [--ignore-sigpipe]                                    %sIgnore SIGPIPE errors\n", newLine);
-#endif
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);
 #endif
@@ -264,7 +262,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [--xmlfilein]    ***FUTURE***                         %sFile name to reload ntop internal data from (xml)\n", newLine);
 #endif
 
-  fprintf(fp, "    [--disable-stopcap                                    %sDisable 'STOPCAP' mode\n", newLine);
+  fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
 
 #ifdef WIN32
   printAvailableInterfaces();
@@ -325,8 +323,8 @@ static void checkUserIdentity(int userSpecified) {
  * Parse the command line options
  */
 static int parseOptions(int argc, char* argv []) {
-  int userSpecified = 0, setAdminPw = 0, opt;
-  char* theOpts;
+  int userSpecified = 0, setAdminPw = 0, opt, opt_index;
+  char *theOpts, *adminPw = NULL;
 #ifdef WIN32
   int optind=0;
 #endif
@@ -335,11 +333,11 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:BD:F:MO:P:S:U:VW:";
+  theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:BD:F:MO:P:Q:S:U:VW:";
 #elif defined(MAKE_WITH_SYSLOG)
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKLMO:P:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKLMO:P:Q:S:U:VW:";
 #else
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKMO:P:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:EF:IKMO:P:Q:S:U:VW:";
 #endif
 
   /* * * * * * * * * * */
@@ -347,7 +345,7 @@ static int parseOptions(int argc, char* argv []) {
   /*
    * Parse command line options to the application via standard system calls
    */
-  while((opt = getopt(argc, argv, theOpts)) != EOF) {
+  while((opt = getopt_long(argc, argv, theOpts, long_options, &opt_index)) != EOF) {
     /* traceEvent(CONST_TRACE_INFO, "getopt(%d/%c/%s)", opt, opt, optarg); */
     switch (opt) {
     case 'a': /* ntop access log path */
@@ -533,10 +531,16 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.pcapLogBasePath = strdup(optarg);
       break;
 
-    case 'P': /* DB-Path (ntop's spool directory) */
+    case 'P': /* DB-Path (ntop's prefs/static info directory) */
       stringSanityCheck(optarg);
       if(myGlobals.dbPath != NULL) free(myGlobals.dbPath);
       myGlobals.dbPath = strdup(optarg);
+      break;
+
+    case 'Q': /* Spool Path (ntop's spool directory) */
+      stringSanityCheck(optarg);
+      if(myGlobals.spoolPath != NULL) free(myGlobals.spoolPath);
+      myGlobals.spoolPath = strdup(optarg);
       break;
 
     case 'U': /* host:port - a good mapper is at http://jake.ntop.org/cgi-bin/mapper.pl */
@@ -617,13 +621,6 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-#ifndef MAKE_WITH_IGNORE_SIGPIPE
-    case 132:
-      /* Burton M. Strauss III - Jun 2002 */
-      myGlobals.ignoreSIGPIPE = 1;
-      break;
-#endif /* MAKE_WITH_IGNORE_SIGPIPE */
-
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
     case 133:
       /* Burton M. Strauss III - Jun 2002 */
@@ -634,15 +631,13 @@ static int parseOptions(int argc, char* argv []) {
     case 135:
       /* Dennis Schoen (dennis@cns.dnsalias.org) allow --set-admin-password=<password> */
       if (optarg) {
-        stringSanityCheck(optarg);
-        initGdbm(NULL, NULL);
-        initThreads();
-        setAdminPassword(optarg);
-        exit(0);
+        stringSanityCheck(optarg);	
+	adminPw = strdup(optarg);
       } else {
 	printf("NOTE: --set-admin-password requested, no password.  Did you forget the =?\n");
-        setAdminPw = 1;
       }
+      
+      setAdminPw = 1;      
       break;
 
     case 137:
@@ -690,10 +685,10 @@ static int parseOptions(int argc, char* argv []) {
   /* *********************** */
 
   if(setAdminPw) {
-    initGdbm(NULL, NULL);
-    initThreads();
-    setAdminPassword(NULL);
-    exit(0);
+      initGdbm(NULL, NULL, 1);
+      setAdminPassword(adminPw);
+      termGdbm();
+      exit(0);
   }
 
 #ifndef WIN32
@@ -721,6 +716,14 @@ static int parseOptions(int argc, char* argv []) {
   /*
    * check for valid parameters
    */
+
+
+  /* If not set we set it to the same directory of dbPath */
+  if(myGlobals.spoolPath[0] == '\0') {
+      free(myGlobals.spoolPath);
+      myGlobals.spoolPath = strdup(myGlobals.dbPath);
+  }
+
 #ifdef HAVE_OPENSSL
   if((myGlobals.webPort == 0) && (myGlobals.sslPort == 0)) {
       printf("WARNING: both -W and -w are set to 0. The web interface will be disabled.\n");
@@ -861,7 +864,7 @@ int main(int argc, char *argv[]) {
   struct stat fileStat;
   /* printf("HostTraffic=%d\n", sizeof(HostTraffic)); return(-1); */
 
-  printf("Wait please: ntop is coming up...\n");
+  /* printf("Wait please: ntop is coming up...\n"); */
 
 #ifdef MTRACE
   mtrace();

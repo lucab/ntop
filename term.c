@@ -76,3 +76,13 @@ void termIPSessions(void) {
       deleteFragment(myGlobals.device[j].fragmentList, j);
   }
 }
+
+/* ************************************************ */
+
+void termGdbm() {
+    if(myGlobals.dnsCacheFile) { gdbm_close(myGlobals.dnsCacheFile); myGlobals.dnsCacheFile = NULL; }
+    if(myGlobals.addressQueueFile) { gdbm_close(myGlobals.addressQueueFile); myGlobals.addressQueueFile = NULL; }
+    if(myGlobals.pwFile) { gdbm_close(myGlobals.pwFile); myGlobals.pwFile = NULL; }
+    if(myGlobals.prefsFile) { gdbm_close(myGlobals.prefsFile); myGlobals.prefsFile = NULL; }
+    if(myGlobals.hostsInfoFile) { gdbm_close(myGlobals.hostsInfoFile); myGlobals.hostsInfoFile = NULL; }
+}

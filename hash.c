@@ -502,7 +502,7 @@ void purgeIdleHosts(int actDevice) {
     theIdx = (myGlobals.actTime % hashLen) /* random start */;
     hashFull=0;
 
-    traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d(%s), up to %d of %d hosts",
+    traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d [%s], up to %d of %d hosts",
 	       actDevice, myGlobals.device[actDevice].name, len, hashLen);
 
 #ifdef HASH_DEBUG
@@ -594,7 +594,7 @@ void purgeIdleHosts(int actDevice) {
     hiresDeltaTime=timeval_subtract(hiresTimeEnd, hiresTimeStart);
 
     if(numFreedBuckets > 0)
-	traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d(%s): %d hosts deleted, elapsed time is %.6f seconds (%.6f per host)",
+	traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d [%s]: %d hosts deleted, elapsed time is %.6f seconds (%.6f per host)",
 		   actDevice,
 		   myGlobals.device[actDevice].name,
 		   numFreedBuckets,
@@ -609,10 +609,10 @@ void purgeIdleHosts(int actDevice) {
 
 void setHostSerial(HostTraffic *el) {    
     if(el->hostNumIpAddress[0] == '\0') {
-	el->hostSerial.serialType = 1; /* This is a MAC */
+	el->hostSerial.serialType = SERIAL_MAC;
 	memcpy(&el->hostSerial.value.ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS);
     } else {
-	el->hostSerial.serialType = 2; /* This is an IP */
+	el->hostSerial.serialType = SERIAL_IPV4;
 	el->hostSerial.value.ipAddress.s_addr = el->hostIpAddress.s_addr;
     }
 }

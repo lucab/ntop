@@ -121,13 +121,13 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
 
 /* ************************************ */
 
-HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
-  if(theSerial.serialType == 1) {
-      return(findHostByNumIP(theSerial.value.ipAddress, actualDeviceId));
-  } else {
-      /* MAC */
-      return(findHostByMAC(theSerial.value.ethAddress, actualDeviceId));
-  }
+HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {    
+    if(theSerial.serialType == SERIAL_IPV4) {
+	return(findHostByNumIP(theSerial.value.ipAddress, actualDeviceId));
+    } else {
+	/* MAC */
+	return(findHostByMAC(theSerial.value.ethAddress, actualDeviceId));
+    }
 }
 
 /* ************************************ */

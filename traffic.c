@@ -116,10 +116,10 @@ static void updateThptStats(int deviceToUpdate,
 
     if(emptySerial(&topHourSentSerial)) return;
     if(emptySerial(&topHourRcvdSerial)) return;
-    if(emptySerial(&secondHourSentSerial)) secondHourSentSerial.serialType = 0;
-    if(emptySerial(&thirdHourSentSerial))  thirdHourSentSerial.serialType = 0;
-    if(emptySerial(&secondHourRcvdSerial)) secondHourRcvdSerial.serialType = 0;
-    if(emptySerial(&thirdHourRcvdSerial))  thirdHourRcvdSerial.serialType = 0;
+    if(emptySerial(&secondHourSentSerial)) secondHourSentSerial.serialType = SERIAL_NONE;
+    if(emptySerial(&thirdHourSentSerial))  thirdHourSentSerial.serialType = SERIAL_NONE;
+    if(emptySerial(&secondHourRcvdSerial)) secondHourRcvdSerial.serialType = SERIAL_NONE;
+    if(emptySerial(&thirdHourRcvdSerial))  thirdHourRcvdSerial.serialType = SERIAL_NONE;
 
     for(i=0; i<60; i++) {
       average += myGlobals.device[deviceToUpdate].last60MinutesThpt[i].trafficValue;
@@ -207,10 +207,10 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   HostSerial topHourRcvdSerial, secondHourRcvdSerial, thirdHourRcvdSerial;
   short updateMinThpt, updateHourThpt;
   
-  setEmptySerial(&topSentSerial.serialType), setEmptySerial(&secondSentSerial.serialType), setEmptySerial(&thirdSentSerial.serialType);
-  setEmptySerial(&topHourSentSerial.serialType), setEmptySerial(&secondHourSentSerial.serialType), setEmptySerial(&thirdHourSentSerial.serialType);
-  setEmptySerial(&topRcvdSerial.serialType), setEmptySerial(&secondRcvdSerial.serialType), setEmptySerial(&thirdRcvdSerial.serialType);
-  setEmptySerial(&topHourRcvdSerial.serialType), setEmptySerial(&secondHourRcvdSerial.serialType), setEmptySerial(&thirdHourRcvdSerial.serialType);
+  setEmptySerial(&topSentSerial), setEmptySerial(&secondSentSerial), setEmptySerial(&thirdSentSerial);
+  setEmptySerial(&topHourSentSerial), setEmptySerial(&secondHourSentSerial), setEmptySerial(&thirdHourSentSerial);
+  setEmptySerial(&topRcvdSerial), setEmptySerial(&secondRcvdSerial), setEmptySerial(&thirdRcvdSerial);
+  setEmptySerial(&topHourRcvdSerial), setEmptySerial(&secondHourRcvdSerial), setEmptySerial(&thirdHourRcvdSerial);
 
   timeDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastThptUpdate;
 

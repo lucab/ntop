@@ -257,11 +257,6 @@ void updateUsedPorts(HostTraffic *srcHost,
 
   /* traceEvent(CONST_TRACE_INFO, "%d\n", length); */
 
-  if((srcHost == dstHost)
-     || broadcastHost(srcHost)
-     || broadcastHost(dstHost))
-    return;
-
   /* Now let's update the list of ports recently used by the hosts */
   if(sport > dport) {
     clientPort = sport, serverPort = dport;
@@ -280,6 +275,10 @@ void updateUsedPorts(HostTraffic *srcHost,
   }
 
   /* **************** */
+
+  if(/* (srcHost == dstHost) || */
+     broadcastHost(srcHost) || broadcastHost(dstHost))
+    return;
 
   if((srcHost->portsUsage == NULL) || (dstHost->portsUsage == NULL))
     return;
@@ -1969,7 +1968,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
       if(myGlobals.isLsofPresent) {
 #ifdef CFG_MULTITHREADED
-	accessMutex(&myGlobals.lsofMutex, "HandleSession-1");
+	accessMutex(&myGlobals.lsofMutex, "handleSession-1");
 #endif
 	myGlobals.updateLsof = 1; /* Force lsof update */
 #if defined(CFG_MULTITHREADED)

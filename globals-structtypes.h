@@ -93,11 +93,16 @@ typedef struct ether80211q {
 } Ether80211q;
 
 #define SIZEOF_HOSTSERIAL   8
+
+#define SERIAL_NONE         0
+#define SERIAL_MAC          1
+#define SERIAL_IPV4         2
+
 typedef struct hostSerial {
     u_char serialType; /* 0 == empty */
     union {
-	u_char          ethAddress[LEN_ETHERNET_ADDRESS]; /* hostSerial == 1 */
-	struct in_addr  ipAddress;                        /* hostSerial == 2 */
+	u_char          ethAddress[LEN_ETHERNET_ADDRESS]; /* hostSerial == SERIAL_MAC */
+	struct in_addr  ipAddress;                        /* hostSerial == SERIAL_IPV4 */
     } value;	
 } HostSerial;
 
@@ -1513,6 +1518,8 @@ XML*/
                                      /*XML s pcapLogBasePath      Options    "-O | --pcap-file-path" */
   char *dbPath;                      /* 'P' */
                                      /*XML s dbPath               Options    "-P | --db-file-path" */
+  char *spoolPath;                    /* 'Q' */
+                                     /*XML s spoolPath            Options    "-Q | --spool-file-path" */
   char *mapperURL;                   /* 'U' */
                                      /*XML s mapperURL            Options    "-U | --mapper" */
 
@@ -1521,11 +1528,6 @@ XML*/
   int sslPort;
                                      /*XML s sslAddr              Options    "-W | --https-server address" */
                                      /*XML n sslPort              Options    "-W | --https-server :port" */
-#endif
-
-#ifndef MAKE_WITH_IGNORE_SIGPIPE
-  int ignoreSIGPIPE;                 /* '132' */
-                                     /*XML b ignoreSIGPIPE        Options    "--ignore-SIGPIPE" */
 #endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
@@ -1579,7 +1581,7 @@ XML*/
 /*XMLSECTIONEND */
 
   /* Database */
-  GDBM_FILE dnsCacheFile, pwFile, eventFile, hostsInfoFile, addressQueueFile, prefsFile, macPrefixFile;
+  GDBM_FILE dnsCacheFile, pwFile, hostsInfoFile, addressQueueFile, prefsFile, macPrefixFile;
 
   /* the table of broadcast entries */
   HostTraffic *broadcastEntry;

@@ -740,6 +740,7 @@ case "${target}:${CC}" in
     *-*-linux*:*gcc* )
         VERIFIED1="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com>:RedHat AS2.1, 7.3 and 8.0"
         VERIFIED2="2.1.51:2002-10-24:Peter Sinoros-Szabo Peter <sini@cs.bme.hu>:Suse i686, 2.4.18-4GB-SMP"
+        VERIFIED2="2.2.3:2003-07-12:Luca Deri <deri@ntop.org>:Suse 8.2 i686, 2.4.20-4GB"
         DEFINEOS="LINUX";     STATUS="SUPPORTED"
       ;;
 

@@ -130,6 +130,7 @@ extern void initIPServices(void);
 extern void resetDevice(int devIdx);
 extern void initCounters(void);
 extern void resetStats(int);
+extern void reinitMutexes (void);
 extern void initThreads(void);
 extern void initApps(void);
 extern void initDevices(char* devices);
@@ -141,7 +142,7 @@ extern void deviceSanityCheck(char* string);
 extern u_int createDummyInterface(char *ifName);
 extern void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 			   int doUnlink, struct stat *statbuf);
-extern void initGdbm(char *prefDirectory, char *spoolDirectory);
+extern void initGdbm(char *prefDirectory, char *spoolDirectory, int initPrefsOnly);
 extern void addDevice(char* deviceName, char* deviceDescr);
 
 /* leaks.c */
@@ -286,6 +287,7 @@ extern void usage (FILE * fp);
 /* term.c */
 extern void termIPServices(void);
 extern void termIPSessions(void);
+extern void termGdbm(void);
 
 /* traffic.c */
 extern void updateThpt(int quickUpdate);

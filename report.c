@@ -2270,10 +2270,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     return;
   }
 
-  if(el == NULL) {
-    printNoDataYet();
-    return;
-  }
+  printHTMLheader("Active TCP Sessions", 0);
 
   /*
     Due to the way sessions are handled, sessions before those to
@@ -2281,7 +2278,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   */
 
   for(idx=1, numSessions=0, printedSessions=0; idx<MAX_TOT_NUM_SESSIONS; idx++) {
-    if(printedSessions >= el->numHostSessions) break;
+
+      if(el && (printedSessions >= el->numHostSessions)) break;
 
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "printActiveTCPSessions");
@@ -2311,9 +2309,8 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	}
 
 	if(printedSessions == 0) {
-	  printHTMLheader("Active TCP Sessions", 0);
 	  sendString("<CENTER>\n");
-	  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
+	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
 		     "<TH "TH_BG">Client</TH>"
 		     "<TH "TH_BG">Server</TH>"
 		     "<TH "TH_BG">Data&nbsp;Sent</TH>"
@@ -2404,7 +2401,6 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     printFooterHostLink();
   } else {
     if(el == NULL) {
-      printHTMLheader("Active TCP Sessions", 0);
       printFlagedWarning("<I>No Active TCP Sessions</I>");
     }
   }
@@ -4366,11 +4362,9 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 
   switch(criteria) {
     case 0: /* AS */
-      printHTMLheader("AS Information", 0);
       myGlobals.columnSort = 10;
       break;
     case 1: /* VLAN */
-      printHTMLheader("VLAN Information", 0);
       myGlobals.columnSort = 11;
       break;
   }

@@ -875,9 +875,11 @@ RETSIGTYPE cleanup(int signo) {
  #endif /* MULTITREADED */
 #endif /* #ifndef WIN32 */
 
+#if 0
 #ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "CLEANUP: Waiting until threads terminate");
   sleep(3); /* Just to wait until threads complete */
+#endif
 #endif
 
 #ifdef CFG_MULTITHREADED
@@ -942,17 +944,7 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 #endif
 
-  gdbm_close(myGlobals.dnsCacheFile);     myGlobals.dnsCacheFile = NULL;
-  gdbm_close(myGlobals.addressQueueFile); myGlobals.addressQueueFile = NULL;
-  gdbm_close(myGlobals.pwFile);           myGlobals.pwFile = NULL;
-  gdbm_close(myGlobals.prefsFile);        myGlobals.prefsFile = NULL;
-
-  /* Courtesy of Wies-Software <wies@wiessoft.de> */
-  gdbm_close(myGlobals.hostsInfoFile); myGlobals.hostsInfoFile = NULL;
-  if(myGlobals.eventFile != NULL) {
-    gdbm_close(myGlobals.eventFile);
-    myGlobals.eventFile = NULL;
-  }
+  termGdbm();
 
 #ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.gdbmMutex);
@@ -1065,6 +1057,7 @@ RETSIGTYPE cleanup(int signo) {
 
   free(myGlobals.pcapLogBasePath);
   free(myGlobals.dbPath);
+  free(myGlobals.spoolPath);
   if (myGlobals.rrdPath != NULL)
       free(myGlobals.rrdPath);
 

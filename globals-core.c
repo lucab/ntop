@@ -86,17 +86,20 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
 /* ************************************************************ */
 
 void initGdbm(char *prefDirectory,  /* Directory with persistent files */
-	      char *spoolDirectory  /* Directory with temporary files (that can be deleted when ntop is not running) */
-	      ) {
+	      char *spoolDirectory, /* Directory with temporary files (that can be deleted when ntop is not running) */
+	      int  initPrefsOnly) {
   struct stat statbuf;
 
   traceEvent(CONST_TRACE_INFO, "Initializing gdbm databases");
 
   setSpecifiedUser();
-  initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE,  NULL);
+
   initSingleGdbm(&myGlobals.prefsFile,        "prefsCache.db",   prefDirectory,  FALSE, NULL);
-  initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, TRUE,  NULL);
   initSingleGdbm(&myGlobals.pwFile,           "ntop_pw.db",      prefDirectory,  FALSE, NULL);
+
+  if(initPrefsOnly) return;
+  initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE,  NULL);
+  initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, TRUE,  NULL);
   initSingleGdbm(&myGlobals.hostsInfoFile,    "hostsInfo.db",    spoolDirectory, FALSE, NULL);
   initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
   createVendorTable(&statbuf);
@@ -191,10 +194,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.throughput_chart_type = DEFAULT_NTOP_CHART_TYPE;
 #endif
 
-#ifndef MAKE_WITH_IGNORE_SIGPIPE
-   myGlobals.ignoreSIGPIPE = 0;
-#endif
-
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
    myGlobals.useSSLwatchdog = 0;
 #endif
@@ -208,6 +207,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.configFileDirs  = _configFileDirs;
   myGlobals.pcapLogBasePath = strdup(CFG_DBFILE_DIR);   /* a NULL pointer will break the logic */
   myGlobals.dbPath          = strdup(CFG_DBFILE_DIR);   /* a NULL pointer will break the logic */
+  myGlobals.spoolPath       = strdup("");              /* a NULL pointer will break the logic */
 
   /* NB: we can't init rrdPath here, because initGdbm hasn't been run */
 
@@ -512,7 +512,7 @@ void initNtop(char *devices) {
 
   /* ********************************** */
 
-  initGdbm(myGlobals.dbPath, myGlobals.dbPath);
+  initGdbm(myGlobals.dbPath, myGlobals.spoolPath, 0);
 
 #ifndef WIN32
   if(myGlobals.daemonMode) {

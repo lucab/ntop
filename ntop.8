@@ -9,7 +9,7 @@
 .TP 1.2
 .B "\\$1 | \\$2"
 ..
-.TH NTOP 8 "April 2003 (ntop 2.2.1)"
+.TH NTOP 8 "July 2003 (ntop 2.2.3)"
 .SH NAME
 ntop \- display top network users
 .SH SYNOPSIS
@@ -53,22 +53,15 @@ ntop \- display top network users
 .RB [ -O | ----output-packet-path ]
 .RB [ -P | --db-file-path
 .IR <path> ]
+.RB [ -Q | --spool-file-path
+.IR <path> ]
 .RB [ -R | --filter-rule
 .IR <file> ]
 .IR <number> ]
 .RB [ -U | --mapper 
 .IR <URL> ]
 .RB [ -V | --version]
-.RB [ --dynamic-purge-limits ]
-.RB [ --p3p-cp ]
-.RB [ --p3p-uri ]
 .RB [ --disable-stopcap ]
-
-Not available on micro-ntop:
-
-.RB [ -e | --max-table-rows
-.IR <number> ]
-.BR
 
 Unix options:
 
@@ -87,13 +80,12 @@ Unix options:
 Win32 option:
 
 .RB [ -i | --interface
-.IR <number> ]
+.IR <number|name> ]
 
 OpenSSL options:
 
 .RB [ -W | --https-server
 .IR <port> ]
-.RB [ --use-sslwatchdog ]
 
 .SH DESCRIPTION
 .B ntop
@@ -105,10 +97,6 @@ may operate as a front-end collector (sFlow and/or netFlow plugins) or as a stan
 collector/display program. A web browser is needed to access the information captured by the 
 .B ntop
 program. 
-
-An older, and unsupported version,
-.B intop
-can be started in a terminal window.
 
 .PP
 .SH "COMMAND\-LINE OPTIONS"
@@ -191,7 +179,7 @@ By default, traffic information obtained by all the interfaces is merged togethe
 the traffic were seen by only one interface. 
 Use the -M flag to keep traffic separate by interface.
 
-Win32 note: This is the number of the interface, not it's name. 
+Win32 note: This is can be either the number of the interface or its name. 
 Run 
 .B ntop
 -h to see a list of interface name-number mappings (at the end of the help information).
@@ -212,12 +200,7 @@ Both netmasks and CIDR notation may be used, for instance "131.114.21.0/24,10.0.
 This causes
 .B ntop
 to show numeric IP addresses instead of the symbolic names. This option can useful 
-when the DNS is not present or quite slow.  Under intop, you can toggle the address format 
-(numeric vs. symbolic) by pressing the
-.B n
-key while 
-.B intop
-is running.
+when the DNS is not present or quite slow.
 
 .It2 -o --no-mac
 Specifies the user
@@ -303,7 +286,7 @@ tracings on stdout. The trace level ranges between 0 (no trace) and 5 (full debu
 The default trace value is 3. The higher is the trace level the more information are printed. 
 Trace level 1 is used to print errors only, level 2 for both warnings and errors, and so on.
 
-Trace level 4 is called 'noisy' and it is.  It also enables a MSGID-nnnnn tag on every
+Trace level 4 is called 'noisy' and it is.  It also enables a tag on every
 message, which may be useful for log watchers.
 
 .It2 -u --user
@@ -453,13 +436,19 @@ If the base path is a directory you have to append a / to the string for this to
 .It2 -P --db-file-path
 This specifies where 
 .B ntop
-db files are created.
+db and preferences files are created.
 
 Note that the default, "." may not be what you expect when running
 .B ntop
 as a daemon or Win32 service.  Setting an explicit value is 
 .B STRONGLY
 recommended. 
+
+.It2 -Q --spool-file-path
+This specifies where 
+.B ntop
+spool db files are created. If not specified is set to the same value of the
+db file path (see option above).
 
 .It2 -U --mapper
 Specifies the URL of the mapper.pl utility.
@@ -486,20 +475,6 @@ If the user specifies '-W 0', HTTPS support is disabled.  This is the default (d
 
 For more information, see the -w parameter above.
 
-.It --dynamic-purge-limits
-Enable a dynamic adjustment of the idle host purge limits.  Normally the purge is limited
-to 1/3 of the hash size or 512 hosts (whichever is smaller) per cycle.  This switch allows
-.B ntop 
-to dynamically adjust the limit so that the purge takes between 0.5 and 5.0 seconds
-(but the minimum dynamic limit is 64 per cycle).  These values may be adjusted via compile
-time constants.
-
-.It --p3p-cp
-Tells ntop what to return in the p3p header, cp="xxxx".
-
-.It --p3p-uri
-Tells ntop what to return in the p3p header, policyref="xxxx".
-
 .It --disable-stopcap
 Return 
 .B ntop 
@@ -508,28 +483,6 @@ The default of stopcap enabled makes the web interface available albeit with sta
 content until 
 .B ntop
 is shutdown.
-
-.It --ignore-sigpipe                                    
-Enable a handler for SIGPIPE errors. This usually happens only under debug (gdb).
-(also available as a ./configure option, --enable-ignoresigpipe)
-
-.It --use-sslwatchdog
-Enables a 'watchdog' for 
-.B ntop 
-webserver hangs.  These usually happen when connecting
-with Netscape 6.2.2 and some other browsers - but only via https:// urls.  
-
-The symptom is that the user gets nothing back and other users can't connect.  
-Internally, the web server hangs in SSL_accept().
-While packet processing continues, there is no way to access the 
-data through the web server or shutdown 
-.B ntop
-cleanly.  
-
-With the watchdog, a timeout occurs after 3 seconds, and processing continues 
-with a log message.
-Unfortunately, the user sees nothing - it just looks like a failed connection.
-(also available as a ./configure option, --enable-sslwatchdog)
 
 .SH "WEB VIEWS"
 While
@@ -571,55 +524,17 @@ can be built from the source if requested during ./configure, it is not
 recommended for more than trivial usage.
 .
 
-.B intop 
-requires ncrypt and readline.
-.
-
 
 Optional libraries include:
 
-The 
-.B gdchart
-library, available at http://www.fred.net/brv/chart/.  Note that 
-.B ntop distributes an enhanced version of gdchart, 0.94c, as part of the 
-.B ntop
-source tree.
-.B ntop has not be tested with the (development/beta) releases of gdchart (the 0.10 
-and 0.11 series).
-.
-
 The
 .B gd
-library, for the creation of gif files, available at http://www.boutell.com/gd/.
-The 1.8.3 version of gd is included with gdchart 0.94c in the
-.B ntop
-source tree.
-.B ntop
-has not been tested with any other version.  
-.
+library, for the creation of gif files, available at
+http://www.boutell.com/gd/. ntop supports both gd 1.X and 2.X
 
 The
 .B libpng
 library, for the creation of png files, available at http://www.libpng.org/pub/png/libpng.html.
-Note that a version of libpng, 1.2.4, is distributed with the
-.B ntop
-source tree.
-.B ntop
-will also work with the 1.0.x series, which is distributed in many Linux distribtions.
-
-.B HOWEVER
-the two series, 1.0 and 1.2, are not compatible nor interoperable.  If compiled against one
-version and executing against another,
-.B ntop
-will fail to create graphics.
-
-There is logic in the build script (gdchart0.94c/buildAll.sh) and in the program to attempt
-to catch this and rectify the problem or notify the user.
-This may not work in all cases.
-If you have a problem with graphics not being produced, check the 
-.B ntop
-log and check the installed versions of libpng.
-.
 
 (if an https:// server is desired)
 .B openSSL
@@ -628,23 +543,9 @@ from the OpenSSL project available at http://www.openssl.org.
 
 The
 .B rrdtool
-is required by the rrd plugin.  rrdtool creates 'Round-Robin databases' which are used
+is required by the rrd plugin (included in the myrrd/ directory).  rrdtool creates 'Round-Robin databases' which are used
 to hold and graph historical data.  The rrdtool home page is 
 http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
-
-.B ntop
-has been tested with rrdtool versions 1.0.38 -> 1.0.41.
-.B ntop
-has NOT been (successfully) tested with the rrdtool development versions, and there
-are significant differences between the two branches.
-
-Also, please note that there is a patched version of rrdtool 1.0.41 available in the
-.B ntop
-files area of SourceForge.  This contains a bug fix (which will be part of rrdtool 
-1.0.42 when released).  Without this fix,
-.B ntop
-may - rarely - crash during the create/update of an rrd.
-.
 
 The 
 .B sflow
@@ -653,7 +554,6 @@ Plugin is courtesy of and supported by InMon Corporation, http://www.inmon.com/s
 
 There are other optional libraries.  See the output of ./configure for a fuller listing. 
 .
-
 
 An optional tool, which
 .B ntop
@@ -671,18 +571,36 @@ Note that lsof must be configured suid root to enable it's use.
 will function quite properly without the lsof tool.
 .
 
+Tool locations are current as of July 2003 - please send email to 
+report new locations or dead links.
 
 .SH "SEE ALSO"
-.BR intop (1),
 .BR top (1),
 .BR tcpdump (8).
+.BR pcap (3).
 .
 .
-.SH AUTHOR
-Please send bug reports to the ntop mailing list <ntop@ntop.org>.
+
+.SH USER SUPPORT
+Please send bug reports to the ntop-dev <ntop-dev@ntop.org> mailing list. The
+ntop <ntop@ntop.org> mailing list is used for discussing ntop usage issues. In
+order to post messages on the lists a (free) subscription is required in order
+to limit/avoid spam. Please do NOT contact the author directly unless this is
+a personal question.
+
+Commercial support is available under request. Please see the ntop site for further info.
+
 Please send code patches to <patch@ntop.org>.
 
-ntop's author is Luca Deri who can be reached at deri@ntop.org.
+.SH AUTHOR
+ntop's author is Luca Deri (http://luca.ntop.org/) who can be reached at <deri@ntop.org>.
 
-Tool locations are current as of April 2003 - please send email to 
-report new locations or dead links.
+.SH LICENCE
+ntop is distributed under the GNU GPL licence (http://www.gnu.org/).
+
+.SH ACKNOWLEDGMENTS
+The author acknowledges the Centro Serra of the University of Pisa, Italy (http://www-serra.unipi.it/) for
+hosting the ntop sites (both web and mailing lists), and Burton Strauss
+<burton@ntopsupport.com> for his help and user assistance. Many thanks to Stefano
+Suin <stefano@ntop.org> and Rocco Carbone <rocco@ntop.org> for contributing to
+the project.
