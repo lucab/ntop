@@ -4314,7 +4314,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
 
 /* if myGlobals.domainName == NULL -> print all domains */
 void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int pageNum) {
-  u_int idx, tmpIdx, numEntries=0, printedEntries=0, len, maxHosts;
+  u_int idx, tmpIdx, numEntries=0, printedEntries=0, maxHosts;
   u_short keyValue=0, i;
   HostTraffic *el;
   char buf[LEN_GENERAL_WORK_BUFFER];
@@ -4336,16 +4336,18 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   printHTMLheader(buf, NULL, 0);
 
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
-  len = sizeof(DomainStats)*maxHosts;
-  tmpStats = (DomainStats*)mallocAndInitWithReportWarn(len, "printDomainStats");
+  tmpStats = (DomainStats*)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats), "printDomainStats");
   if(tmpStats == NULL)
       return;
 
   /* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */
-  len = sizeof(DomainStats**)*maxHosts;
-  stats = (DomainStats**)mallocAndInitWithReportWarn(len, "printDomainStats(2)");
+  stats = (DomainStats**)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats*), "printDomainStats(2)");
   if(stats == NULL)
+  {
+      /* also free the block of memory allocated a few lines up */
+      if (tmpStats != NULL) free(tmpStats);
       return;
+  }
 
   /* traceEvent(CONST_TRACE_INFO, "'%s' '%d' '%d'", domainName, sortedColumn, revertOrder); */
 
@@ -4510,6 +4512,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     } else {
       char tmpBuf[64], *hostLink;
       int blankId;
+      u_int len;
 
       accessAddrResMutex("getHostIcon");
 
