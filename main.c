@@ -915,7 +915,8 @@ static int verifyOptions (void)
     if (myGlobals.runningPref.rFileName != NULL) {
         return (FLAG_NTOPSTATE_RUN); /* Start capture immediately */
     }
-    
+
+#ifndef WIN32    
     if ((myGlobals.runningPref.disablePromiscuousMode != 1) &&
         getuid() /* We're not root */) {
         char *theRootPw, *correct, *encrypted;
@@ -973,6 +974,7 @@ static int verifyOptions (void)
         traceEvent(CONST_TRACE_WARNING,
                    "-s set so will ATTEMPT to open interface w/o promisc mode "
                    "(this will probably fail below)");
+#endif /* WIN32 */
 
     return (FLAG_NTOPSTATE_RUN);
 }
