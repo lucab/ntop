@@ -716,6 +716,8 @@ typedef struct ntopInterface {
   int tcpv;                      /* print TCP header */
 #endif
 
+  Counter droppedByKernel; /* Keep the count of dropped packets by all interfaces*/
+
   /*
    * The packets section
    */

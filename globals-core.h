@@ -64,8 +64,6 @@ extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);
 extern int copySerial(HostSerial *a, HostSerial *b);
 extern void setEmptySerial(HostSerial *a);
-extern void saveNtopPid();
-extern void removeNtopPid();
 
 /****** function declarations ***** */
 
@@ -447,7 +445,10 @@ extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);
 extern int copySerial(HostSerial *a, HostSerial *b);
 extern void setEmptySerial(HostSerial *a);
-
+#ifndef WIN32
+extern void saveNtopPid(void);
+extern void removeNtopPid(void);
+#endif
 
 #if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);

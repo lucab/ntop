@@ -3624,7 +3624,7 @@ void setEmptySerial(HostSerial *a) {
 
 #ifndef WIN32
 
-void saveNtopPid() {
+void saveNtopPid(void) {
   char pidFileName[NAME_MAX];
   FILE *fd;
 
@@ -3643,7 +3643,7 @@ void saveNtopPid() {
 
 /* ********************************** */
 
-void removeNtopPid() {
+void removeNtopPid(void) {
   char pidFileName[NAME_MAX];
 
   sprintf(pidFileName, "%s/%s", DEFAULT_NTOP_PID_DIRECTORY, DEFAULT_NTOP_PIDFILE);

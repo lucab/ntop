@@ -66,89 +66,33 @@ void handleSigHup(int signalId _UNUSED_) {
 /* *************************** */
 
 #ifdef CFG_MULTITHREADED
-#ifndef WIN32
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
-  int pcap_fd;
-  fd_set readMask;
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread running...");
 
-  pcap_fd = pcap_fileno(myGlobals.device[i].pcapPtr);
-
-  if((pcap_fd == -1) && (myGlobals.rFileName != NULL)) {
-    /*
-      This is a patch to overcome a bug of libpcap
-      while reading from a traffic file instead
-      of sniffying live from a NIC.
-    */
-    struct mypcap {
-      int fd, snapshot, linktype, tzoff, offset;
-      FILE *rfile;
-
-      /* Other fields have been skipped. Please refer
-	 to pcap-int.h for the full datatype.
-      */
-    };
-
-    pcap_fd = fileno(((struct mypcap *)(myGlobals.device[i].pcapPtr))->rfile);
-  }
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
-    FD_ZERO(&readMask);
-    FD_SET(pcap_fd, &readMask);
-
-    if(select(pcap_fd+1, &readMask, NULL, NULL, NULL) > 0) {
-      if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
-      HEARTBEAT(2, "pcapDispatch()", NULL);
-      rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
-
-      if(rc == -1) {
-	traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d(%s): '%s'",
-                   i,
-                   myGlobals.device[i].name,
-		   pcap_geterr(myGlobals.device[i].pcapPtr));
-	break;
-      } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
-	traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d [No more packets to read]", rc);
-	break; /* No more packets to read */
-      } else {
-      }
+    HEARTBEAT(2, "pcapDispatch()", NULL);
+    rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
+    
+    if(rc == -1) {
+      traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d(%s): '%s'",
+		 i,
+		 myGlobals.device[i].name,
+		 pcap_geterr(myGlobals.device[i].pcapPtr));
+      break;
+    } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
+      traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d [No more packets to read]", rc);
+      break; /* No more packets to read */
+    } else {
     }
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...");
   return(NULL); 
 }
-
-#else /* WIN32 */
-
-void* pcapDispatch(void *_i) {
-  int rc;
-  int i = (int)_i;
-
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread running...");
-
-  for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
-    rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
-    if(rc == -1) {
-      traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d(%s): '%s'",
-                 i,
-                 myGlobals.device[i].humanFriendlyName,
-		 pcap_geterr(myGlobals.device[i].pcapPtr));
-      break;
-    } /* else
-	 traceEvent(CONST_TRACE_INFO, "1) %d", numPkts++);
-      */
-    HEARTBEAT(2, "pcapDispatch()", NULL);
-  }
-
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...");
-  return(NULL); 
-
-}
-#endif /* WIN32 */
 #endif /* CFG_MULTITHREADED */
 
 /* **************************************** */

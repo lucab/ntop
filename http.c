@@ -1405,6 +1405,20 @@ static int returnHTTPPage(char* pageName,
     return(0);
   }
 
+  /* **************** */
+  
+  /* Update number of dropped packets */
+  if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr 
+     && (!myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice)) {
+    struct pcap_stat pcapStats;
+    
+    if(pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStats) >= 0) {
+      myGlobals.device[myGlobals.actualReportDeviceId].droppedByKernel += pcapStats.ps_drop;
+    }
+  }
+
+  /* **************** */
+
   if(strncmp(pageName, PLUGINS_HEADER, strlen(PLUGINS_HEADER)) == 0) {
     if(handlePluginHTTPRequest(&pageName[strlen(PLUGINS_HEADER)])) {
       return(0);

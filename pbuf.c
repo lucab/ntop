@@ -1597,7 +1597,7 @@ void queuePacket(u_char *_deviceId,
     memcpy(p1, p, DEFAULT_SNAPLEN);
     if(h->len > MAX_PACKET_LEN) {
       traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", h->len, MAX_PACKET_LEN);
-      h->len = MAX_PACKET_LEN;
+      ((struct pcap_pkthdr*)h)->len = MAX_PACKET_LEN;
     }
 
     processPacket(_deviceId, h, p1);

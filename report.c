@@ -119,7 +119,6 @@ void printTrafficStatistics(void) {
   Counter unicastPkts, avgPktLen;
   int i;
   char buf[LEN_GENERAL_WORK_BUFFER];
-  struct pcap_stat pcapStats;
   struct stat statbuf;
 
   unicastPkts = 0;
@@ -240,18 +239,6 @@ void printTrafficStatistics(void) {
       myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value = 1;
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
-      Counter droppedByKernel;
-
-      droppedByKernel = 0;
-
-      for(i=0; i<myGlobals.numDevices; i++)
-	if(myGlobals.device[i].pcapPtr
-	   && (!myGlobals.device[i].virtualDevice)) {
-	  if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0) {
-	    droppedByKernel += pcapStats.ps_drop;
-	  }
-	}
-
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON" %s><TH "TH_BG" align=left>Total</th>"
 		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
@@ -259,11 +246,13 @@ void printTrafficStatistics(void) {
 	BufferTooShort();
       sendString(buf);
 
-      if(droppedByKernel > 0) {
+      if(myGlobals.device[myGlobals.actualReportDeviceId].droppedByKernel > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
-		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		    getRowColor(), formatPkts(droppedByKernel)) < 0)
+		    "<TD "TD_BG" COLSPAN=2 align=right>%s [%.2f %%]</td></TR>\n",
+		    getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedByKernel),
+		    (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedByKernel*100)
+		    /(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0)
 	  BufferTooShort();
 	sendString(buf);
       }
