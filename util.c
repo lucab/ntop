@@ -346,7 +346,6 @@ int dotted2bits(char *mask) {
 void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3], u_short *numNetworks, 
 			char *localAddresses, int localAddressesLen) {
   char *strtokState, *address;
-  int  laBufferLength = sizeof(localAddresses);
   int  laBufferPosition = 0, laBufferUsed = 0, i;
 
   if(addresses == NULL)
@@ -465,14 +464,14 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
           d = (int) ((network >>  0) & 0xff);
 	  
           if ((laBufferUsed = snprintf(&localAddresses[laBufferPosition],
-				       laBufferLength,
+				       localAddressesLen,
 				       "%s%d.%d.%d.%d/%d",
 				       (*numNetworks) == 0 ? "" : ", ",
 				       a, b, c, d,
 				       bits)) < 0)
 	    BufferTooShort();
-          laBufferPosition += laBufferUsed;
-          laBufferLength   -= laBufferUsed;
+          laBufferPosition  += laBufferUsed;
+          localAddressesLen -= laBufferUsed;
 	  
 	  (*numNetworks)++;
 	}
