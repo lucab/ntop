@@ -448,9 +448,9 @@ ntop.h
  *
  * **************************************************************************************/
 
-#if CONST_MUTEX_FHS_GRANULARITY < 0 || CONST_MUTEX_FHS_GRANULARITY > 15
-#error CONST_MUTEX_FHS_GRANULARITY out of range 0..15!
-#endif 
+#if DEFAULT_SNAPLEN > MAX_PACKET_LEN 
+#error DEFAULT_SNAPLEN > MAX_PACKET_LEN
+#endif
 
 
 /* *************************************************************** */

@@ -806,6 +806,15 @@
 #define MAX_SESSIONS_CACHE_LEN              MAX_HOSTS_CACHE_LEN
 
 /*
+ * Maximum number of bytes to process from a packet.
+ * Should equal the value of _mtuSize[DLT_NULL], set in globals-core.h.
+ *
+ * Note that this is the SIZE of the buffer, the actual # of bytes copied is
+ * set by DEFAULT_SNAPLEN.
+ */
+#define MAX_PACKET_LEN                      8232
+
+/*
  * Maximum number of protocols for graphs - hostIPTrafficDistrib()
  *   Probably don't want to change this - they get pretty unreadable even this big.
  */

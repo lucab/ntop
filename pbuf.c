@@ -23,8 +23,6 @@
 
 #include "ntop.h"
 
-#define MAX_PACKET_LEN          8232 /* _mtuSize[DLT_NULL] */
-
 /* PPPoE - Courtesy of Andreas Pfaller Feb2003 */
 #ifdef HAVE_LINUX_IF_PPPOX_H
  #include <linux/if_pppox.h>
