@@ -2014,6 +2014,10 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
     while(scanner != NULL) {
       char *whoswho, *svc=NULL, tmpSvc[16];
 
+      if(scanner->magic != MAGIC_NUMBER) {
+	traceEvent(TRACE_ERROR, "===> Magic assertion failed (3) for host %s", el->hostNumIpAddress);
+      }
+
       if(scanner->initiator == CLIENT_ROLE)
 	whoswho= "client";
       else

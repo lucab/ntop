@@ -389,8 +389,10 @@ void sendStringLen(char *theString, unsigned int len) {
     if(compressFile) {
       int i;
 
-      if(compressFileFd == NULL)
+      if(compressFileFd == NULL) {
+	sprintf(compressedFilePath, "/tmp/gzip-%d.ntop", getpid());
 	compressFileFd = gzopen(compressedFilePath, "w+");
+      }
 
       for(i=0; i<len; i++)
 	gzputc(compressFileFd, theString[i]);
@@ -1178,8 +1180,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 	  /* father process */
 	  numChildren++;
 #ifdef MULTITHREADED
-	  if(!mutexReleased)
-	    releaseMutex(&myGlobals.hashResizeMutex);
+	  releaseMutex(&myGlobals.hashResizeMutex);
 #endif
 #ifdef HAVE_ZLIB
 	  compressFile = 0;
@@ -1447,6 +1448,9 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
+    } else if(strncmp(pageName, NW_EVENTS_HTML, strlen(NW_EVENTS_HTML)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHostEvents(NULL, sortedColumn, revertOrder);
 #ifdef HAVE_GDCHART
     } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
@@ -1494,15 +1498,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawGlobalIpProtoDistribution();
       printTrailer=0;
-#endif
-    } else if(strncmp(pageName, NW_EVENTS_HTML, strlen(NW_EVENTS_HTML)) == 0) {
-      sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostEvents(NULL, sortedColumn, revertOrder);
-
-
-
-
-#ifdef HAVE_GDCHART
   } else if((strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
 	  || (strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
 	  || (strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
@@ -1547,15 +1542,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 
       /* printf("HostName: '%s'\n", hostName); */
 
-#ifdef MULTITHREADED
-      /* It is necessary to release the mutex for avoiding a race condition */
-      releaseMutex(&myGlobals.hashResizeMutex);
-      mutexReleased = 1;
-#endif
-
-#ifdef MULTITHREADED
-      accessMutex(&myGlobals.hostsHashMutex, "hostTrafficDistrib-call");
-#endif
       for(elIdx=1; elIdx<myGlobals.device[actualReportDeviceId].actualHashSize; elIdx++) {
 	el = myGlobals.device[actualReportDeviceId].hash_hostTraffic[elIdx];
 
@@ -1590,19 +1576,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 
 	printTrailer=0;
       }
-
-#ifdef MULTITHREADED
-      releaseMutex(&myGlobals.hostsHashMutex);
-#endif
     }
-    /* Temporary here - end */
 #endif /*  HAVE_GDCHART */
-
-
-
-
-
-
     } else if(strcmp(pageName, "Credits.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printHTMLheader("Credits", HTML_FLAG_NO_REFRESH);
@@ -1684,10 +1659,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
 
 #ifdef MULTITHREADED
-  if(!mutexReleased)
     releaseMutex(&myGlobals.hashResizeMutex);
 #endif
-
 
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
   if(*usedFork) {
@@ -1921,11 +1894,6 @@ void handleHTTPrequest(struct in_addr from) {
   }
 
   myGlobals.actTime = time(NULL); /* Don't forget this */
-
-#ifdef HAVE_ZLIB
-  strcpy(compressedFilePath, "/tmp/gzip-XXXXXX");
-  tmpnam(compressedFilePath);
-#endif
 
   if((rc = returnHTTPPage(&requestedURL[1], postLen, &httpRequestedAt, &usedFork) == 0)) {
 #if defined(HAVE_ZLIB)

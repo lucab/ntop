@@ -974,7 +974,7 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
 #endif
 
   if(webPort > 0) {
-    if(listen(sock, 5) < 0) {
+    if(listen(sock, 2) < 0) {
       traceEvent(TRACE_WARNING, "listen error.\n");
       closeNwSocket(&sock);
       exit(-1);
@@ -983,7 +983,7 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
 
 #ifdef HAVE_OPENSSL
   if(myGlobals.sslInitialized)
-    if(listen(sock_ssl, 5) < 0) {
+    if(listen(sock_ssl, 2) < 0) {
       traceEvent(TRACE_WARNING, "listen error.\n");
       closeNwSocket(&sock_ssl);
       exit(-1);

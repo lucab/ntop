@@ -168,11 +168,11 @@ static void updateHostSessionsList(u_int theHostIdx,
 
   while(scanner != NULL) {
     if(scanner->magic != MAGIC_NUMBER) {
-      traceEvent(TRACE_ERROR, "===> Magic assertion failed (2)");
+      traceEvent(TRACE_ERROR, "===> Magic assertion failed (2) for host %s/%d",
+		 theHost->hostNumIpAddress, sessionType);
       scanner = NULL;
-      break;
-    } else if((scanner->port == port)
-	      && (scanner->initiator == role))
+      return;
+    } else if((scanner->port == port) && (scanner->initiator == role))
       break;
 
     scanner = (IpGlobalSession*)(scanner->next);
@@ -244,6 +244,11 @@ static void updateHostSessionsList(u_int theHostIdx,
 
 void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
   /* Session to purge */
+
+    if(sessionToPurge->magic != MAGIC_NUMBER) {
+	traceEvent(TRACE_ERROR, "===> Magic assertion failed (5)");
+	return;
+    }
 
   if((sessionToPurge->initiatorIdx < myGlobals.device[actualDeviceId].actualHashSize)
      && (sessionToPurge->remotePeerIdx < myGlobals.device[actualDeviceId].actualHashSize)) {
@@ -648,8 +653,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
 #endif /* ENABLE_NAPSTER */
 
+#ifdef MULTITHREADED
+      accessMutex(&myGlobals.hashResizeMutex, "newSession");
+#endif
       theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
       myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
+#ifdef MULTITHREADED
+      releaseMutex(&myGlobals.hashResizeMutex);
+#endif
       theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
       theSession->remotePeerIdx = checkSessionIdx(dstHostIdx);
       theSession->sport = sport;

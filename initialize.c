@@ -695,7 +695,7 @@ void initDevices(char* devices) {
 
   traceEvent(TRACE_INFO, "Initializing network devices...");
 
-  if(strcmp(devices, "none") == 0) {
+  if((devices != NULL) && (strcmp(devices, "none") == 0)) {
     /* Creating dummy device */
     mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
     tmpDevice = (NtopInterface*)malloc(mallocLen);

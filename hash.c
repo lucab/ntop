@@ -241,6 +241,10 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
       element = host->udpSessionList;
 
     while(element != NULL) {
+      if(element->magic != MAGIC_NUMBER) {
+	traceEvent(TRACE_ERROR, "===> Magic assertion failed (3) for host %s", host->hostNumIpAddress);
+      }
+
       nextElement = element->next;
       /*
 	The 'peers' field shouldn't be a problem because an idle host
@@ -250,6 +254,8 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
       element = nextElement;
     }
   }
+
+  host->tcpSessionList = host->udpSessionList = NULL;
 
   freeHostSessions(hostIdx, actualDeviceId);
 

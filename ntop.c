@@ -617,12 +617,12 @@ void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
     hourId = atoi(theDate);
     if((minuteId <= 1) && (hourId != lastUpdatedHour)) {
       lastUpdatedHour = hourId;
-      accessMutex(&myGlobals.hostsHashMutex, "updateHostTrafficStatsThptLoop");
+      accessMutex(&myGlobals.hashResizeMutex, "updateHostTrafficStatsThptLoop");
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Updating host traffic stats\n");
 #endif
       updateHostTrafficStatsThpt(hourId); /* Update Throughput */
-      releaseMutex(&myGlobals.hostsHashMutex);
+      releaseMutex(&myGlobals.hashResizeMutex);
       nextUpdate = myGlobals.actTime+3600;
     }
   }
@@ -651,11 +651,11 @@ void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
 #ifdef MULTITHREADED
-	accessMutex(&myGlobals.hostsHashMutex, "updateDbHostsTraffic");
+	accessMutex(&myGlobals.hashResizeMutex, "updateDbHostsTraffic");
 #endif /* MULTITHREADED */
 	updateDbHostsTraffic(i);
 #ifdef MULTITHREADED
-	releaseMutex(&myGlobals.hostsHashMutex);
+	releaseMutex(&myGlobals.hashResizeMutex);
 #endif /* MULTITHREADED */
       }
   }
