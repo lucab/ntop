@@ -798,7 +798,7 @@ DEFS="-DHAVE_CONFIG_H"
 DLLTOOL=
 DYN_FLAGS=
 EXEEXT=
-INCS=-I$MYRRD
+INCS=
 LIBS=
 OBJDUMP=
 OBJEXT=o
@@ -1587,8 +1587,6 @@ if test ".${ac_cv_header_png_h}" != ".yes" ||
     exit 1 
 fi
 	
-NTOP_APPENDS(, [${MYRRD}], [myrrd])
-
 if test ".${ac_debug}" = ".yes"; then
     echo "DEBUG: CC            is '${CC}')"
     echo "     CPPFLAGS        is '${CPPFLAGS}')"
@@ -2862,6 +2860,9 @@ CFG_DBFILE_DIR=`(
 )`
 AC_DEFINE_UNQUOTED(CFG_DBFILE_DIR,"$CFG_DBFILE_DIR", [Database file directory])
 echo "    Database files are in $CFG_DBFILE_DIR"
+
+dnl> Append RRD finally
+NTOP_APPENDS([${MYRRD}], [${MYRRD}], [myrrd])
 
 echo
 echo "-------------------------------------------------------------------"
