@@ -416,49 +416,13 @@ static float timeval_subtract (struct timeval x, struct timeval y) {
 
 /* ************************************ */
 
-static int cmpLastSeenFctn(const void *_a, const void *_b) {
-  HostTraffic **a = (HostTraffic **)_a;
-  HostTraffic **b = (HostTraffic **)_b;
-  Counter a_=0, b_=0, a_val, b_val;
-  float fa_=0, fb_=0;
-  short floatCompare=0, columnProtoId;
-
-  if((a == NULL) && (b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (1)");
-    return(1);
-  } else if((a != NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (2)");
-    return(-1);
-  } else if((a == NULL) && (b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (3)");
-    return(0);
-  }
-  if((*a == NULL) && (*b != NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (4)");
-    return(1);
-  } else if((*a != NULL) && (*b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (5)");
-    return(-1);
-  } else if((*a == NULL) && (*b == NULL)) {
-    traceEvent(CONST_TRACE_WARNING, "cmpLastSeenFctn() error (6)");
-    return(0);
-  }
-
-  if((*a)->lastSeen > (*b)->lastSeen)
-    return(1);
-  else
-    return(-1);
-}
-
-/* ************************************ */
-
 void purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, numHosts = 0, theIdx;
   time_t startTime = time(NULL), purgeTime;
   static time_t lastPurgeTime[MAX_NUM_DEVICES];
   static char firstRun = 1;
   HostTraffic **theFlaggedHosts = NULL;
-  u_int maxPurgeableHosts, maxHosts, scannedHosts=0;
+  u_int maxHosts, scannedHosts=0;
   float hiresDeltaTime;
   struct timeval hiresTimeStart, hiresTimeEnd;
   HostTraffic *el, *prev, *next;
@@ -476,14 +440,6 @@ void purgeIdleHosts(int actDevice) {
     return; /* Too short */
   else
     lastPurgeTime[actDevice] = startTime;
-
-  /* How many do we allow to be purged?  Well, it's 1/3 of the hash size, at least 8.
-   *
-   *  The upper limit is myGlobals.maximumHostsToPurgePerCycle, which is initialized
-   *  to a constant (512) and may -- if the --dynamic-purge-limits was specified,
-   *  be adjusted up or down below...
-   */
-  maxPurgeableHosts = max(min(myGlobals.maximumHostsToPurgePerCycle, myGlobals.device[actDevice].hostsno/3), 8);
 
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
   theFlaggedHosts = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
@@ -551,21 +507,8 @@ void purgeIdleHosts(int actDevice) {
   traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: FINISHED selection, %d [out of %d] hosts selected", 
 	     numHosts, scannedHosts);
 
-  qsort(theFlaggedHosts, numHosts, sizeof(HostTraffic*), cmpLastSeenFctn);
-
-  if(maxPurgeableHosts > numHosts) {
-    /*
-      Too many entries: let's sort them to delete the hosts that have not been active
-      for a long time
-    */
-
-    /* HERE */
-    
-    maxPurgeableHosts = numHosts;
-  }
-
   /* Now free the entries */
-  for(idx=0; idx<maxPurgeableHosts; idx++) {
+  for(idx=0; idx<numHosts; idx++) {
 #ifdef IDLE_PURGE_DEBUG
     traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Purging host %d [last seen=%d]... %s",
 	       idx, theFlaggedHosts[idx]->lastSeen, theFlaggedHosts[idx]->hostSymIpAddress);
