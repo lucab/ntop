@@ -344,10 +344,8 @@ void termLeaks(void) {
 /* ************************************ */
 
 void* ntop_malloc(unsigned int sz, char* file, int line) {
-#ifdef MEMORY_DEBUG
   traceEvent(file, line, "malloc(%d) [%s]", 
 	     sz, formatBytes(allocatedMemory, 0));
-#endif
 
   return(myMalloc(sz, line, file));
 }
@@ -355,10 +353,8 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 /* ************************************ */
 
 char* ntop_strdup(char *str, char* file, int line) {
-#ifdef MEMORY_DEBUG
   traceEvent(file, line, "strdup(%s) [%s]", str, 
 	     formatBytes(allocatedMemory, 0));
-#endif
 
   return(myStrdup(str, line, file));
 }
@@ -366,10 +362,8 @@ char* ntop_strdup(char *str, char* file, int line) {
 /* ************************************ */
 
 void ntop_free(void *ptr, char* file, int line) {
-#ifdef MEMORY_DEBUG
   traceEvent(file, line, "free(%x) [%s]", ptr, 
 	     formatBytes(allocatedMemory, 0));
-#endif
 
   return(myFree(ptr, line, file));
 }

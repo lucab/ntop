@@ -1846,7 +1846,6 @@ struct tm *localtime_r(const time_t *t, struct tm *tp) {
      have a reentrant localtime() function.
      THIS VERSION IS NOT REENTRANT!
   */
-#warning "Non-reentrant localtime() used!"
   *tp=*localtime(t);
   return tp;
 }

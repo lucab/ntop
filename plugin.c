@@ -22,8 +22,10 @@
 
 #include "ntop.h"
 
-#if defined(WIN32) || defined(HPUX) || defined(AIX)
+#if defined(WIN32)
 #define STATIC_PLUGIN /* This needs to be fixed */
+#else
+#define RMON_SUPPORT
 #endif
 
 #ifdef STATIC_PLUGIN
@@ -32,7 +34,9 @@ extern PluginInfo* arpPluginEntryFctn(void);
 extern PluginInfo* nfsPluginEntryFctn(void);
 extern PluginInfo* wapPluginEntryFctn(void);
 extern PluginInfo* remIntPluginEntryFctn(void);
-extern PluginInfo* rmonPluginEntryFctn(void);
+#ifdef RMON_SUPPORT
+extern PluginInfo* PluginEntryFctn(void);
+#endif
 #endif
 
 #ifndef RTLD_NOW 
@@ -158,7 +162,7 @@ int handlePluginHTTPRequest(char* url) {
 
 /* ******************* */
 
-#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H))
+#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32)
 static void loadPlugin(char* dirName, char* pluginName) {
   char pluginPath[256];
   char tmpBuf[BUF_SIZE];
@@ -252,15 +256,16 @@ static void loadPlugin(char* dirName, char* pluginName) {
     pluginInfo = nfsPluginEntryFctn();
   else if(strcmp(pluginName, "wapPlugin") == 0)
     pluginInfo = wapPluginEntryFctn();
+#ifdef RMON_SUPPORT
   else if(strcmp(pluginName, "ntopRmon") == 0)
     pluginInfo = rmonPluginEntryFctn();
+#endif
   else if(strcmp(pluginName, "remoteInterface") == 0)
     pluginInfo = remIntPluginEntryFctn();  
   else
     pluginInfo = NULL;
 
 #endif /* STATIC_PLUGIN */
-
 
   if(pluginInfo == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: %s call of plugin '%s' failed.\n",
@@ -331,10 +336,6 @@ void loadPlugins(void) {
   struct dirent* dp;
   int idx;
   DIR* directoryPointer=NULL;
-#else
-  char tmpStr[512], _tmpnam[255];
-  FILE *fd;
-  int rc;
 #endif
   
   traceEvent(TRACE_INFO, "Loading plugins (if any)...\n");
@@ -375,7 +376,9 @@ void loadPlugins(void) {
   loadPlugin(NULL, "nfsPlugin");
   loadPlugin(NULL, "wapPlugin");
   loadPlugin(NULL, "remoteInterface");
+#ifdef RMON_SUPPORT
   loadPlugin(NULL, "rmonPlugin");
+#endif
 #endif /* STATIC_PLUGIN */
 }
 

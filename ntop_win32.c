@@ -32,6 +32,8 @@
 extern char* intoa(struct in_addr addr);
 
 extern char domainName[];
+char *buildDate;
+
 /*
 extern char* device; 
 extern int datalink;
@@ -133,12 +135,11 @@ void initWinsock32() {
    traceEvent(TRACE_ERROR, "FATAL ERROR: unable to initialise Winsock 2.x.\n");
     exit(-1);
   }
-#ifdef WIN32
-  SIZE_BUF = 5 * 1024 * 1024; /* 5MB buffer */
-#endif
 
+  SIZE_BUF = 5 * 1024 * 1024; /* 5MB buffer */
   version = "1.3.2";
   author  = "Luca Deri <deri@ntop.org>";
+  buildDate = "09/2000";
 
   if(isWinNT())
     osName = "WinNT";
@@ -289,7 +290,6 @@ int _accessMutex(pthread_mutex_t *mutexId, char* where,
 
 int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
 		 char* fileName, int fileLine) {
-  DWORD rc;
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
 	     mutexId, where, fileName, fileLine);
@@ -587,5 +587,23 @@ int gettimeofday(struct timeval *tv, struct timezone *notUsed) {
 
 	tv->tv_sec = time(NULL);
     tv->tv_usec = 0;
+	return(0);
+}
+
+/* ****************************************************** */
+
+int snprintf(char *str, size_t n, const char *fmt, ...) {
+	printf("MISSING snprintf IMPLEMENTATION.\n");
+	return(0);
+}
+
+int fchmod(char *str) {
+	printf("MISSING fchmod IMPLEMENTATION.\n");
+	return(0);
+}
+
+
+int mkstemp(char *str) {
+	printf("MISSING mkstemp IMPLEMENTATION.\n");
 	return(0);
 }

@@ -44,6 +44,8 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+extern char *optarg;
+
 
 #if defined(NEED_INET_ATON)
 /*
@@ -175,12 +177,12 @@ int main(int argc, char *argv[]) {
 	strncpy(domainName, optarg, sizeof(domainName)-1)[sizeof(domainName)-1] = '\0';
 	break;
 
-      case 'f':
+    case 'f':
 	isLsofPresent = 0; /* Don't make debugging too complex */
 	rFileName = optarg;
 	break;
 
-      case 'r':
+    case 'r':
 	if(!isdigit(optarg[0])) {
 	  traceEvent(TRACE_ERROR, 
 		     "FATAL ERROR: flag -r expects a numeric argument.\n");

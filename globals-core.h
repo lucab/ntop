@@ -38,7 +38,7 @@ extern char *rFileName;
 extern int numericFlag, logTimeout, daemonMode, mergeInterfaces;
  
 /* Search Paths */
-extern const char *dataFileDirs[], *pluginDirs[], *configFileDirs[];
+extern char *dataFileDirs[], *pluginDirs[], *configFileDirs[];
 
 /* Debug */
 extern size_t allocatedMemory;
@@ -262,10 +262,10 @@ extern void startSniffer(void);
 #define malloc(a) ntop_malloc((unsigned int)a, __FILE__, __LINE__)
 #define strdup(a) ntop_strdup((char*)a, __FILE__, __LINE__)
 #define free(a)   ntop_free((void*)a, __FILE__, __LINE__)
-#endif
 extern void* ntop_malloc(unsigned int sz, char* file, int line);
 extern char* ntop_strdup(char *str, char* file, int line);
 extern void  ntop_free(void *ptr, char* file, int line);
+#endif
 
 /* logger.c */
 extern void initLogger(void);
@@ -451,7 +451,6 @@ extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
 extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
 extern void createVendorTable(void);
 
-#ifdef AIX
+#if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
 #endif
-

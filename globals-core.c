@@ -37,9 +37,9 @@ short usePersistentStorage, grabSessionInformation;
 int numericFlag, logTimeout, daemonMode, mergeInterfaces;
 
 /* Search paths */
-const char *dataFileDirs[]   = {".", DATAFILE_DIR, NULL};
-const char *pluginDirs[]     = {"./plugins", PLUGIN_DIR, NULL};
-const char *configFileDirs[] = {".", CONFIGFILE_DIR, "/etc", NULL};
+char *dataFileDirs[]   = { ".", DATAFILE_DIR, NULL };
+char *pluginDirs[]     = { "./plugins", PLUGIN_DIR, NULL };
+char *configFileDirs[] = { ".", CONFIGFILE_DIR, "/etc", NULL };
 
 /* Debug */
 extern size_t allocatedMemory;

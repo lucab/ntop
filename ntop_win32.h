@@ -32,6 +32,10 @@
 
 #define sleep(a /* sec */) Sleep(1000*a /* ms */)
 
+#define DATAFILE_DIR	NULL
+#define PLUGIN_DIR		NULL
+#define CONFIGFILE_DIR	NULL
+#define DBFILE_DIR      "."
 
 /* ndis.h */
 typedef int NDIS_STATUS, *PNDIS_STATUS; 
@@ -455,5 +459,8 @@ typedef struct conditionalVariable {
 
 // Max number of packets handled by the public version
 #define MAX_NUM_PACKETS   1000
+
+extern short isWinNT();
+extern int SIZE_BUF;
 
 /* #define WIN32_DEMO */
