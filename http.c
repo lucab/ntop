@@ -1794,7 +1794,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	    pageName[i] = ':';
 
 	strncpy(hostName, pageName, sizeof(hostName));
-	sendHTTPHeader(HTTP_TYPE_HTML, 0);
 	printAllSessionsHTML(hostName, myGlobals.actualReportDeviceId);
       }
 #endif /* !MICRO_NTOP */

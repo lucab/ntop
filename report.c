@@ -1496,7 +1496,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
   if((el == NULL) || (!found)) {
     returnHTTPpageNotFound();
     return;
-  }
+  } else
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
 
   /* ************************************ */
 
