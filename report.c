@@ -1712,6 +1712,15 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
 
     totalBytes = totalBytesSent+totalBytesReceived;
 
+    /* In this case the total traffic is just half and
+       the following statement holds:
+       totalBytesSent == totalBytesReceived 
+       
+       Courtesy of Jac Engel <jacengel@home.nl>
+    */
+    if(remoteToLocal == LOCAL_TO_LOCAL_ACCOUNTING)
+      totalBytes /= 2;
+
     if(snprintf(buf, sizeof(buf), "<TR>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"

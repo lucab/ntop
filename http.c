@@ -1115,21 +1115,26 @@ static int returnHTTPPage(char* pageName, int postLen) {
   } else if(strncmp(pageName, HOSTS_INFO_HTML, strlen(HOSTS_INFO_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printHostsInfo(sortedColumn, revertOrder);
-  }
-  else if(isLsofPresent
-	  && (strncmp(pageName, PROCESS_INFO_HTML, strlen(PROCESS_INFO_HTML)) == 0)) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printProcessInfo(sortedColumn /* process PID */);
-  } else if(isLsofPresent
-	    && (strncmp(pageName, STR_LSOF_DATA, strlen(STR_LSOF_DATA)) == 0)) {
-    sendHTTPHeader(HTTP_TYPE_HTML, 0);
-    printLsofData(sortedColumn);
-  }
-  else if(strcmp(pageName, "NetFlows.html") == 0) {
+  } else if(strncmp(pageName, PROCESS_INFO_HTML, strlen(PROCESS_INFO_HTML)) == 0) {
+    if(isLsofPresent) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printProcessInfo(sortedColumn /* process PID */);
+    } else {
+      returnHTTPpageNotFound();
+      printTrailer=0;
+    }
+  } else if(strncmp(pageName, STR_LSOF_DATA, strlen(STR_LSOF_DATA)) == 0) {
+    if(isLsofPresent) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printLsofData(sortedColumn);
+    } else {
+      returnHTTPpageNotFound();
+      printTrailer=0;
+    }
+  } else if(strcmp(pageName, "NetFlows.html") == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     listNetFlows();
-  }
-  else if(strncmp(pageName, IP_R_2_L_HTML, strlen(IP_R_2_L_HTML)) == 0) {
+  } else if(strncmp(pageName, IP_R_2_L_HTML, strlen(IP_R_2_L_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     if(sortedColumn == 0) { sortedColumn = 1; }
     printIpAccounting(REMOTE_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder);

@@ -94,8 +94,9 @@ static VendorInfo specialMacInfo[] = {
   { 0x0, NULL }
 };
 
-/* http://www.isi.edu/in-notes/iana/assignments/novell-sap-numbers */
+/* http://www.iana.org/assignments/novell-sap-numbers */
 static VendorInfo ipxSAP[] = {
+  { 0x0000,	"Unknown" },
   { 0x0001,	"User" },
   { 0x0002,	"User Group" },
   { 0x0003,	"Print Queue" },
