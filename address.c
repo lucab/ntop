@@ -440,8 +440,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 
   if(data_data.dptr != NULL) {
       addressQueueLen--;
-
-      addr.s_addr = (unsigned long)atoll(data_data.dptr);
+      addr.s_addr = strtoul(data_data.dptr, (char**)NULL, 10);
 
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Dequeued address... [%u][key=%s] (#addr=%d)\n",
