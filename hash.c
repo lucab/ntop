@@ -192,6 +192,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   } else
     purgeIdleHosts(0, actualDeviceId); /* Delete only idle hosts */
 #else
+
   if(newSize > maxHashSize) /* Hard Limit */ {
     if(!printedHashWarning) {
       traceEvent(TRACE_WARNING, "Unable to extend the hash: hard limit (%d) reached",
@@ -200,6 +201,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
     }
     return;
   }
+
   printedHashWarning = 0;
   accessMutex(&hostsHashMutex, "resizeHostHash(processPacket)");
   accessMutex(&hashResizeMutex, "resizeHostHash");
@@ -508,8 +510,9 @@ static int _checkIndex(u_char *flaggedHosts, u_int flaggedHostsLen, u_int idx,
 
 /* **************************************** */
 
-static void _checkUsageCounter(u_char *flaggedHosts, u_int flaggedHostsLen, UsageCounter *counter,
-			       char *fileName, int fileLine) {
+static void _checkUsageCounter(u_char *flaggedHosts, u_int flaggedHostsLen, 
+			      UsageCounter *counter,
+			      char *fileName, int fileLine) {
   int i;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
@@ -519,68 +522,68 @@ static void _checkUsageCounter(u_char *flaggedHosts, u_int flaggedHostsLen, Usag
   }
 }
 
-#define checkUsageCounter(a) _checkUsageCounter(flaggedHosts, flaggedHostsLen, a, __FILE__, __LINE__)
-
+#define checkUsageCounter(a, b, c) _checkUsageCounter(a, b, c, __FILE__, __LINE__)
 
 /* **************************************** */
 
-static void freeGlobalHostPeers(HostTraffic *el,
-				u_char *flaggedHosts, u_int flaggedHostsLen) {
+static void removeGlobalHostPeers(HostTraffic *el,
+				  u_char *flaggedHosts, 
+				  u_int flaggedHostsLen) {
   int j;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Entering freeGlobalHostPeers(0x%X)", el);
+  traceEvent(TRACE_INFO, "Entering removeGlobalHostPeers(0x%X)", el);
 #endif
 
   if(el->tcpSessionList != NULL)
     purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, &el->tcpSessionList);
 
-  checkUsageCounter(&el->contactedSentPeers);
-  checkUsageCounter(&el->contactedRcvdPeers);
+  checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedSentPeers);
+  checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRcvdPeers);
 
   if(el->securityHostPkts != NULL) {
-    checkUsageCounter(&el->securityHostPkts->synPktsSent);
-    checkUsageCounter(&el->securityHostPkts->rstPktsSent);
-    checkUsageCounter(&el->securityHostPkts->rstAckPktsSent);
-    checkUsageCounter(&el->securityHostPkts->synFinPktsSent);
-    checkUsageCounter(&el->securityHostPkts->finPushUrgPktsSent);
-    checkUsageCounter(&el->securityHostPkts->nullPktsSent);
-    checkUsageCounter(&el->securityHostPkts->ackScanSent);
-    checkUsageCounter(&el->securityHostPkts->xmasScanSent);
-    checkUsageCounter(&el->securityHostPkts->finScanSent);
-    checkUsageCounter(&el->securityHostPkts->nullScanSent);
-    checkUsageCounter(&el->securityHostPkts->rejectedTCPConnSent);
-    checkUsageCounter(&el->securityHostPkts->establishedTCPConnSent);
-    checkUsageCounter(&el->securityHostPkts->udpToClosedPortSent);
-    checkUsageCounter(&el->securityHostPkts->udpToDiagnosticPortSent);
-    checkUsageCounter(&el->securityHostPkts->tcpToDiagnosticPortSent);
-    checkUsageCounter(&el->securityHostPkts->tinyFragmentSent);
-    checkUsageCounter(&el->securityHostPkts->icmpFragmentSent);
-    checkUsageCounter(&el->securityHostPkts->overlappingFragmentSent);
-    checkUsageCounter(&el->securityHostPkts->closedEmptyTCPConnSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstAckPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synFinPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->finPushUrgPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->nullPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->ackScanSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->xmasScanSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->finScanSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->nullScanSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rejectedTCPConnSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->establishedTCPConnSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->udpToClosedPortSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->udpToDiagnosticPortSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->tcpToDiagnosticPortSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->tinyFragmentSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpFragmentSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->overlappingFragmentSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->closedEmptyTCPConnSent);
 
-    checkUsageCounter(&el->securityHostPkts->synPktsRcvd);
-    checkUsageCounter(&el->securityHostPkts->rstAckPktsRcvd);
-    checkUsageCounter(&el->securityHostPkts->rstPktsRcvd);
-    checkUsageCounter(&el->securityHostPkts->synFinPktsRcvd);
-    checkUsageCounter(&el->securityHostPkts->finPushUrgPktsRcvd);
-    checkUsageCounter(&el->securityHostPkts->nullPktsRcvd);
-    checkUsageCounter(&el->securityHostPkts->ackScanRcvd);
-    checkUsageCounter(&el->securityHostPkts->xmasScanRcvd);
-    checkUsageCounter(&el->securityHostPkts->finScanRcvd);
-    checkUsageCounter(&el->securityHostPkts->nullScanRcvd);
-    checkUsageCounter(&el->securityHostPkts->rejectedTCPConnRcvd);
-    checkUsageCounter(&el->securityHostPkts->establishedTCPConnRcvd);
-    checkUsageCounter(&el->securityHostPkts->udpToClosedPortRcvd);
-    checkUsageCounter(&el->securityHostPkts->udpToDiagnosticPortRcvd);
-    checkUsageCounter(&el->securityHostPkts->tcpToDiagnosticPortRcvd);
-    checkUsageCounter(&el->securityHostPkts->tinyFragmentRcvd);
-    checkUsageCounter(&el->securityHostPkts->icmpFragmentRcvd);
-    checkUsageCounter(&el->securityHostPkts->overlappingFragmentRcvd);
-    checkUsageCounter(&el->securityHostPkts->closedEmptyTCPConnRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstAckPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synFinPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->finPushUrgPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->nullPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->ackScanRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->xmasScanRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->finScanRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->nullScanRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rejectedTCPConnRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->establishedTCPConnRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->udpToClosedPortRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->udpToDiagnosticPortRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->tcpToDiagnosticPortRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->tinyFragmentRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpFragmentRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->overlappingFragmentRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->closedEmptyTCPConnRcvd);
   }
 
-  checkUsageCounter(&el->contactedRouters);
+  checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRouters);
 
     for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++)
       if(el->portsUsage[j] != NULL) {
@@ -592,7 +595,7 @@ static void freeGlobalHostPeers(HostTraffic *el,
       }
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Leaving freeGlobalHostPeers()");
+    traceEvent(TRACE_INFO, "Leaving removeGlobalHostPeers()");
 #endif
 }
 
@@ -648,7 +651,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
   if(host->securityHostPkts != NULL) {
     free(host->securityHostPkts);
-    host->securityHostPkts = NULL; /* needed by freeGlobalHostPeers() */
+    host->securityHostPkts = NULL; /* just to be safe... */
   }
 
   if(host->osName != NULL)
@@ -710,13 +713,22 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
   if(refreshHash) {
     u_char *myflaggedHosts;
-    int len;
+    int len, idx;
     
     len = sizeof(u_char)*device[theDevice].actualHashSize;
-    myflaggedHosts = (u_char*)calloc(device[theDevice].actualHashSize, sizeof(u_char));
-
+    myflaggedHosts = (u_char*)malloc(len);
+    memset(myflaggedHosts, 0, len);
     myflaggedHosts[hostIdx] = 1; /* Set the entry to free */
-    freeGlobalHostPeers(host, myflaggedHosts, len);
+
+    for(idx=1; idx<device[theDevice].actualHashSize; idx++) {
+      if((idx != hostIdx) /* Don't remove the instance we're freeing */
+	 && (device[theDevice].hash_hostTraffic[idx] != NULL)) {
+	removeGlobalHostPeers(device[theDevice].hash_hostTraffic[idx],
+			      myflaggedHosts, len); /* Finally refresh the hash */
+      }
+    }
+    
+    removeGlobalHostPeers(host, myflaggedHosts, len);
     free(myflaggedHosts);
   }
 
@@ -885,11 +897,14 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 		 idx, numFreedBuckets);
 #endif
       numFreedBuckets++;
+    } else if(device[actDevice].hash_hostTraffic[idx] != NULL) {
+      /* 
+	 This entry is not removed but we need to remove
+	 all the references to the freed instances
+      */
+      removeGlobalHostPeers(device[actDevice].hash_hostTraffic[idx],
+			    theFlaggedHosts, len); /* Finally refresh the hash */
     }
-
-    if(device[actDevice].hash_hostTraffic[idx] != NULL)
-      freeGlobalHostPeers(device[actDevice].hash_hostTraffic[idx],
-			  theFlaggedHosts, len); /* Finally refresh the hash */
   }
 
 #ifdef MULTITHREADED

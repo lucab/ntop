@@ -829,7 +829,7 @@ void initDevices(char* devices) {
 /* ******************************* */
 
 static void initRules(char *rulesFile) {
-  if((rulesFile[0] != NULL) && (rulesFile[0] != '\0')) {
+  if((rulesFile != NULL) && (rulesFile[0] != '\0')) {
     char tmpBuf[200];
 
     traceEvent(TRACE_INFO, "Parsing ntop rules...");
