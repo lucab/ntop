@@ -843,71 +843,90 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 		 idx, el->hostTrafficBucket, actualDeviceId);
     }
 
-    if(vlanId == el->vlanId) {
-      if(useIPAddressForSearching == 0) {
-	/* compare with the ethernet-address then the IP address */
-	if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
-	  if((hostIpAddress != NULL) &&
-	     (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
-	    if((!isMultihomed) && checkForMultihoming) {
-	      /* This is a local address hence this is a potential multihomed host. */
+    if(useIPAddressForSearching == 0) {
+      /* compare with the ethernet-address then the IP address */
+      if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
+	if((hostIpAddress != NULL) &&
+	   (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
+	  if((!isMultihomed) && checkForMultihoming) {
+	    /* This is a local address hence this is a potential multihomed host. */
 
-	      if(!(addrnull(&el->hostIpAddress))
-		 && (addrcmp(&el->hostIpAddress,hostIpAddress) != 0)) {
-		isMultihomed = 1;
-		FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
-	      } else {
-		updateIPinfo = 1;
-	      }
-	    }
-	    hostFound = 1;
-	    break;
-	  } else if(hostIpAddress == NULL){  /* Only Mac Addresses */
-	    hostFound = 1;
-	    break;
-	  } else { /* MAC match found and we have the IP - need to update... */
-	    updateIPinfo = 1;
-	    hostFound = 1;
-	    break;
-	  }
-	} else if((hostIpAddress != NULL)
-		  && (addrcmp(&el->hostIpAddress, hostIpAddress) == 0)) {
-	  /* Spoofing or duplicated MAC address:
-	     two hosts with the same IP address and different MAC
-	     addresses
-	  */
-
-	  if(!hasDuplicatedMac(el)) {
-	    FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
-
-	    if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-	      char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
-
-	      traceEvent(CONST_TRACE_WARNING,
-			 "Two MAC addresses found for the same IP address "
-			 "%s: [%s/%s] (spoofing detected?)",
-			 el->hostNumIpAddress,
-			 etheraddr_string(ether_addr, etherbuf), el->ethAddressString);
-	      dumpSuspiciousPacket(actualDeviceId);
+	    if(!(addrnull(&el->hostIpAddress)) &&
+		(addrcmp(&el->hostIpAddress,hostIpAddress) != 0)) {
+	      isMultihomed = 1;
+	      FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
+	    } else {
+	      updateIPinfo = 1;
 	    }
 	  }
-
-	  setSpoofingFlag = 1;
+	  hostFound = 1;
+	  break;
+	} else if(hostIpAddress == NULL){  /* Only Mac Addresses */
+	  hostFound = 1;
+	  break;
+	} else { /* MAC match found and we have the IP - need to update... */
+	  updateIPinfo = 1;
 	  hostFound = 1;
 	  break;
 	}
-      } else {
-	/* -o | --no-mac (or NetFlow, which doesn't have MACs) - compare with only the IP address */
-	if(addrcmp(&el->hostIpAddress, hostIpAddress) == 0) {
-	  hostFound = 1;
-	  break;
+      } else if((hostIpAddress != NULL) &&
+		(addrcmp(&el->hostIpAddress, hostIpAddress) == 0)) {
+	/* Spoofing or duplicated MAC address:
+	   two hosts with the same IP address and different MAC
+	   addresses
+	*/
+
+	if(!hasDuplicatedMac(el)) {
+	  FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
+
+	  if(myGlobals.runningPref.enableSuspiciousPacketDump) {
+	    char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
+	    traceEvent(CONST_TRACE_WARNING,
+		       "Two MAC addresses found for the same IP address "
+		       "%s: [%s/%s] (spoofing detected?)",
+		       el->hostNumIpAddress,
+		       etheraddr_string(ether_addr, etherbuf), el->ethAddressString);
+	    dumpSuspiciousPacket(actualDeviceId);
+	  }
 	}
+
+	setSpoofingFlag = 1;
+	hostFound = 1;
+	break;
+      }
+    } else {
+      /* -o | --no-mac (or NetFlow, which doesn't have MACs) - compare with only the IP address */
+      if(addrcmp(&el->hostIpAddress, hostIpAddress) == 0) {
+        hostFound = 1;
+        break;
       }
     }
 
     el = el->next;
     numRuns++;
   } /* while */
+
+  if((hostFound == 1) && (vlanId > 0) && (vlanId != el->vlanId) && (!isMultivlaned(el))) {
+    FD_SET(FLAG_HOST_TYPE_MULTIVLANED, &el->flags);
+    if(myGlobals.multipleVLANedHostCount == 0) {
+      traceEvent(CONST_TRACE_ERROR, "mVLAN: Host (identical IP/MAC) found on multiple VLANs");
+      traceEvent(CONST_TRACE_INFO,  "mVLAN: ntop continues but will consolidate and thus probably overcount this traffic");
+      traceEvent(CONST_TRACE_NOISY, "mVLAN: Up to %d examples will be printed", MAX_MULTIPLE_VLAN_WARNINGS);
+    }
+    if(++myGlobals.multipleVLANedHostCount < MAX_MULTIPLE_VLAN_WARNINGS)
+      traceEvent(CONST_TRACE_NOISY, "mVLAN: Device %d Host %s (%02x:%02x:%02x:%02x:%02x:%02x) VLANs %d and %d",
+                 actualDeviceId,
+                 addrtostr(hostIpAddress),
+                 ether_addr[0],
+                 ether_addr[1],
+                 ether_addr[2],
+                 ether_addr[3],
+                 ether_addr[4],
+                 ether_addr[5],
+                 min(vlanId, el->vlanId),
+                 max(vlanId, el->vlanId));
+  }
 
   if(numRuns > myGlobals.device[actualDeviceId].hashListMaxLookups)
     myGlobals.device[actualDeviceId].hashListMaxLookups = numRuns ;

@@ -3371,6 +3371,39 @@ A. Sadly, probably useless.  Why?  Too much information isn't available:
     compile (and our ./configure and all the tool versions) matching so that the offsets mean something
     are pretty small.
 
+
+Q. What do these log messages mean?
+
+     **ERROR** mVLAN: Host (identical IP/MAC) found on multiple VLANs
+     mVLAN: ntop continues but will consolidate and thus probably overcount this traffic
+     mVLAN: Up to 10 examples will be printed
+     mVLAN: Host 192.168.aaa.bbb (00:12:17:xx:yy:zz) VLANs 3 and 4
+
+A. Once again, they mean what they say.  ntop found something pretty weird.  It found packets
+   for the same 'host' (that is the same IP and MAC address) on two different VLANs.  In this
+   case, IP 192.168.aaa.bbb, MAC 00:12:17:xx:yy:zz on VLAN 3 and VLAN 4.
+
+   It's not WRONG, but it's definitely odd.  If we see a packet twice, we count it twice, so -
+   via this message - we're warning you that we might be double counting some traffic.  We warn
+   you ONCE per host (per ntop run) and for only up to 10 hosts, so as not to innundate you with
+   meaningless warnings.
+
+   On the about page is a count (if you've even seen this junk), in the "Host/Session counts - global"
+   section.  If it's just a couple, ignore it.
+ 
+   If you see a lot of this stuff, you may want to rethink your ntop sensor placement or at least
+   understand what you are doing.  On my home LAN, I use a 802.1q VLAN trunk to move traffic between
+   two switches and have a passive tap on the trunk. Traffic to/from the firewall moves over this trunk,
+   so I see the same packet on the YELLOW(DMZ) VLAN and the GREEN(TRUSTED) VLAN all the time.
+ 
+   Why even bother trapping and warning?  Well, there is one bad thing from ntop's perspective with 
+   duplicated hosts, which would occur if we didn't trap this, and that is that you would also
+   see a lot of RRD errors when ntop tries to update the same host twice:
+ 
+   **WARNING** RRD: rrd_update(/usr/.../ipBytesSent.rrd) error: illegal attempt to update using time 
+                    1109523297 when last update time is 1109523297 (minimum one second step)
+
+
 --------------------------------------------------------------------------------
 -----Running - Web Server-------------------------------------------------------
 --------------------------------------------------------------------------------

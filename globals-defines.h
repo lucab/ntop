@@ -1007,11 +1007,11 @@
  */
 #define DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN 10
 
-#define MIN_WEBSERVER_REQUEST_QUEUE_LEN     2
 /*
  * Be aware that some OSes have limits on how large this can be and
  * will silently ignore larger values...
  */
+#define MIN_WEBSERVER_REQUEST_QUEUE_LEN     2
 #define MAX_WEBSERVER_REQUEST_QUEUE_LEN     20
 
 /*
@@ -1022,6 +1022,11 @@
 #define CONST_INFOHTML_COL3_WIDTH   175
 #define CONST_INFOHTML_COL23_WIDTH  350  /* columns 2 + 3 */
 #define CONST_INFOHTML_WIDTH        600  /* columns 1 + 2 + 3 */
+
+/*
+ * How many pathological cases (same IP/MAC different VLANs) to warn about
+ */
+#define MAX_MULTIPLE_VLAN_WARNINGS         10
 
 /*
  * FibreChannel/SCSI constants
@@ -1548,6 +1553,7 @@
 #define CONST_IMG_DHCP_CLIENT          "<img src=\"/bulb.gif\" border=\"0\" alt=\"DHCP Client\" title=\"DHCP Client\">"
 #define CONST_IMG_DHCP_SERVER          "<img src=\"/antenna.gif\" border=\"0\" alt=\"DHCP Server\" title=\"DHCP Server\">"
 #define CONST_IMG_MULTIHOMED           "<img src=\"/multihomed.gif\" border=\"0\" alt=\"Multihomed\" title=\"Multihomed\">"
+#define CONST_IMG_MULTIVLANED          "<img src=\"/multivlaned.gif\"\" border=\"0\" alt=\"Multivlaned\" title=\"Multivlaned\">"
 #define CONST_IMG_BRIDGE               "<img src=\"/bridge.gif\" border=\"0\" alt=\"Bridge\" title=\"Bridge\">"
 #define CONST_IMG_ROUTER               "<img src=\"/router.gif\" border=\"0\" alt=\"Router\" title=\"Router\">"
 #define CONST_IMG_DNS_SERVER           "<img src=\"/dns.gif\" border=\"0\" alt=\"DNS\" title=\"DNS\">"
@@ -1692,6 +1698,7 @@
 #define FLAG_HOST_TYPE_MASTER_BROWSER       25
 #define FLAG_HOST_TYPE_MULTIHOMED           26
 #define FLAG_HOST_TYPE_SVC_NTP_SERVER       27
+#define FLAG_HOST_TYPE_MULTIVLANED          28
 
 /* Flags for possible error codes */
 #define FLAG_HOST_WRONG_NETMASK             65

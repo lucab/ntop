@@ -3390,7 +3390,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   float percentage;
   Counter total;
   int printedHeader, i;
-  char *dynIp, *multihomed;
+  char *dynIp, *multihomed, *multivlaned;
   u_short as=0;
   HostTraffic *theHost, tmpEl;
   char formatBuf[32], formatBuf1[32], formatBuf2[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
@@ -3452,12 +3452,17 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     else
       multihomed = "";
 
+    if(isMultivlaned(el) && (!broadcastHost(el)))
+      multivlaned = "&nbsp;-&nbsp;multivlaned&nbsp;" CONST_IMG_MULTIVLANED;
+    else
+      multivlaned = "";
+
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s%s]",
+		"<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s%s%s]",
 		getRowColor(),
 		"IP&nbsp;Address",
 		el->hostNumIpAddress,
-		countryIcon, hostType, dynIp, multihomed);
+		countryIcon, hostType, dynIp, multihomed, multivlaned);
     sendString(buf);
 
     sendString("</TD></TR>\n");

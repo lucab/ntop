@@ -2346,7 +2346,7 @@ typedef struct ntopGlobals {
   FcNameServerCacheEntry **fcnsCacheHash;
   u_int32_t fcMatrixHashCollisions, fcMatrixHashUnresCollisions;
 
-  int warnedAboutPathologicalVLANS;
+  int multipleVLANedHostCount;
 
 #ifdef PARM_ENABLE_EXPERIMENTAL
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */

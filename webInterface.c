@@ -326,7 +326,7 @@ char* makeHostLink(HostTraffic *el, short mode,
                    char *buf, int bufLen) {
   char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8];
   char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64];
-  char *dhcpBootpStr, *p2pStr, *multihomedStr, *gwStr, *brStr, *dnsStr, *printStr,
+  char *dhcpBootpStr, *p2pStr, *multihomedStr, *multivlanedStr, *gwStr, *brStr, *dnsStr, *printStr,
        *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr;
   short usedEthAddress=0;
   int i;
@@ -518,7 +518,7 @@ char* makeHostLink(HostTraffic *el, short mode,
    *     linkName - what do we link to
    *     usedEthAddress - meaning it's a MAC address, show the NIC icon
    *     symIp - what do we call it
-   *     dhcpBootpStr, multihomedStr, gwStr, brStr, dnsStr, printStr,
+   *     dhcpBootpStr, multihomedStr, multivlanedStr, gwStr, brStr, dnsStr, printStr,
    *       smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr -- these are all the addons
    */
 
@@ -547,6 +547,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(isMultihomed(el))     multihomedStr = "&nbsp;" CONST_IMG_MULTIHOMED ; else multihomedStr = "";
+  if(isMultivlaned(el))     multivlanedStr = "&nbsp;" CONST_IMG_MULTIVLANED ; else multivlanedStr = "";
   if(isBridgeHost(el))     brStr = "&nbsp;" CONST_IMG_BRIDGE ; else brStr = "";
   if(gatewayHost(el))      gwStr = "&nbsp;" CONST_IMG_ROUTER ; else gwStr = "";
   if(nameServerHost(el))   dnsStr = "&nbsp;" CONST_IMG_DNS_SERVER ; else dnsStr = "";
@@ -626,27 +627,27 @@ char* makeHostLink(HostTraffic *el, short mode,
     usedEthAddress = 1;
   }
 
+  vlanStr[0] = '\0';
   if(el->vlanId > 0) {
-    char tmp[256], tmpBuf[64];
-
-    safe_snprintf(__FILE__, __LINE__, vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
-    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%s (vlan %s)", symIp, vlan2name(el->vlanId, tmpBuf, sizeof(tmpBuf)));
-    safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "%s", tmp);
-  } else {
-    vlanStr[0] = '\0';
+    if(!isMultivlaned(el)) {
+      char tmp[256], tmpBuf[64];
+      safe_snprintf(__FILE__, __LINE__, vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
+      safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%s (vlan %s)", symIp, vlan2name(el->vlanId, tmpBuf, sizeof(tmpBuf)));
+      safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "%s", tmp);
+    }
   }
 
   /* Make the hostlink */
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<th "TH_BG" align=\"left\" nowrap width=\"250\">\n"
 		"<a href=\"/%s%s.html\" %s%s%s>%s%s</a>\n"
-                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>%s\n",
+                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>%s\n",
                 linkName, vlanStr,
                 titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
                 symIp,
 		noteBuf,
 		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)),
-                dhcpBootpStr, multihomedStr,
+                dhcpBootpStr, multihomedStr, multivlanedStr,
 		usedEthAddress ? CONST_IMG_NIC_CARD : "",
 		gwStr, brStr, dnsStr,
                 printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag);
@@ -654,13 +655,13 @@ char* makeHostLink(HostTraffic *el, short mode,
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "/%s%s.html", linkName, vlanStr);
   } else {
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<a href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
-                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+                "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
                 linkName, vlanStr,
 		makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
                 titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
                 symIp,
 		noteBuf,
-		dhcpBootpStr, multihomedStr,
+		dhcpBootpStr, multihomedStr, multivlanedStr,
 		usedEthAddress ? CONST_IMG_NIC_CARD : "",
 		gwStr, brStr, dnsStr,
 		printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag);
@@ -5237,6 +5238,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "MAX_PASSIVE_FTP_SESSION_TRACKER", "undefined");
 #endif
 
+#ifdef MAX_MULTIPLE_VLAN_WARNINGS
+  printFeatureConfigNum(textPrintFlag, "MAX_MULTIPLE_VLAN_WARNINGS", MAX_MULTIPLE_VLAN_WARNINGS);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_MULTIPLE_VLAN_WARNINGS", "undefined");
+#endif
+
 #ifdef MAX_PDA_HOST_TABLE
   printFeatureConfigNum(textPrintFlag, "MAX_PDA_HOST_TABLE", MAX_PDA_HOST_TABLE);
 #else
@@ -7192,6 +7199,11 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
     printFeatureConfigInfo(textPrintFlag, "MAX_HOSTS_PURGE_PER_CYCLE", buf);
   }
 #endif
+
+  if(myGlobals.multipleVLANedHostCount > 0) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.multipleVLANedHostCount);
+    printFeatureConfigInfo(textPrintFlag, "Multi-VLANed Hosts", buf);
+  }
 
   if(pref->enableSessionHandling) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
