@@ -8200,13 +8200,25 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #else
     *sock = socket(AF_INET, SOCK_STREAM, 0);
 #endif
+ /* socket 0 should be legal everywhere, but it's late in the release cycle to be making this type of change.
+  *   So - FOR NOW - special case this here and below.  Post 3.1, test this and make it general!
+  * -----Burton
+  */
+ #if defined(__FreeBSD__)
+    if((*sock < 0) || (errno != 0) ) {
+ #else
     if((*sock <= 0) || (errno != 0) ) {
+ #endif
       {
 #if defined(INET6) && !defined(WIN32)
 	errno = 0;
 	/* It might be that IPv6 is not supported by the running system */
 	*sock = socket(AF_INET, SOCK_STREAM, 0);
+ #if defined(__FreeBSD__)
+	if((*sock < 0) || (errno != 0))
+ #else
 	if((*sock <= 0) || (errno != 0))
+ #endif
 #endif
 	  {
 	    traceEvent(CONST_TRACE_FATALERROR, "INITWEB: Unable to create a new%s socket - returned %d, error is '%s'(%d)",
@@ -8902,7 +8914,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 #endif
   }
 
-  if(myGlobals.newSock > 0) {
+  if(myGlobals.newSock >= 0) {
 #if defined(INET6) && !defined(WIN32)
     if(from.sa_family == AF_INET) {
       addrput(AF_INET, &remote_ipaddr, &(((struct sockaddr_in *)&from)->sin_addr));
@@ -8917,7 +8929,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
     traceEvent(CONST_TRACE_INFO, "Request accepted (sock=%d) (errno=%d)", myGlobals.newSock, errno);
 #endif
 
-    if(myGlobals.newSock > 0) {
+    if(myGlobals.newSock >= 0) {
 #ifdef HAVE_OPENSSL
 	if(myGlobals.sslInitialized)
 	    if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
