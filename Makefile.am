@@ -147,6 +147,9 @@ man_MANS = ntop.8
 
 .PHONY: snapshot
 
+acinclude.m4:
+	touch acinclude.m4
+
 #ntopd: ntop
 #	@ln -sf ntop ntopd
 #	@-(cd .libs && ln -sf ntop ntopd)
