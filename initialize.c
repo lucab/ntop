@@ -964,16 +964,22 @@ void initLibpcap(void) {
 	if(myGlobals.pcapLog != NULL) {
 	  if(strlen(myGlobals.pcapLog) > 64)
 	    myGlobals.pcapLog[64] = '\0';
-
+#ifdef WIN32
+	  sprintf(myName, "%s/%s.pcap", 
+		  myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+		  myGlobals.pcapLog);
+#else
 	  sprintf(myName, "%s/%s.%s.pcap", 
 		  myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 		  myGlobals.pcapLog, myGlobals.device[i].name);
+#endif
 	  myGlobals.device[i].pcapDumper = pcap_dump_open(myGlobals.device[i].pcapPtr, myName);
 
 	  if(myGlobals.device[i].pcapDumper == NULL) {
 	    traceEvent(TRACE_INFO, ebuf);
 	    exit(-1);
-	  }
+	  } else
+		traceEvent(TRACE_INFO, "Saving packets into file %s", myName);	
 	}
 
 	if(myGlobals.enableSuspiciousPacketDump) {
