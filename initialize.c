@@ -213,13 +213,14 @@ void initIPServices(void) {
 /* ******************************* */
 
 static void initIPCountryTable(void) {
-  int idx;
+  int idx, rc;
+  struct stat statBuf;
   
-  traceEvent(CONST_TRACE_INFO, "IP2CC: Looking for IP address <-> Country code mapping file\n");
+  traceEvent(CONST_TRACE_INFO, "IP2CC: Looking for IP address <-> Country code mapping file");
 
   myGlobals.ipCountryCount = 0;
   if((myGlobals.countryFlagHead=malloc(sizeof(IPNode))) == NULL) {
-    traceEvent(CONST_TRACE_FATALERROR, "IP2CC: Unable to allocate table memory. Quitting...\n");
+    traceEvent(CONST_TRACE_FATALERROR, "IP2CC: Unable to allocate table memory. Quitting...");
     exit(1);
   }
   myGlobals.ipCountryMem += sizeof(IPNode);
@@ -234,48 +235,57 @@ static void initIPCountryTable(void) {
     FILE *fd;
 
     snprintf(tmpStr, sizeof(tmpStr), "%s/p2c.opt.table", myGlobals.configFileDirs[idx]);
-    fd = fopen(tmpStr, "r");
+    traceEvent(CONST_TRACE_NOISY, "IP2CC: ...looking for file %s", tmpStr);
 
-    if (fd!=NULL) {
-      traceEvent(CONST_TRACE_NOISY, "IP2CC: ...found at %s.\n", tmpStr);
-      while (!feof(fd)) {
-        char buff[256];
-        char *strtokState, *cc, *ip, *prefix;
+    rc = stat(tmpStr, &statBuf);
+    if (rc == 0) {
+        fd = fopen(tmpStr, "r");
 
-        if (fgets(buff, sizeof(buff), fd)==NULL) {
-          if (errno != 0) {
-              traceEvent(CONST_TRACE_ERROR, "IP2CC: reading file '%s'", tmpStr);
-              traceEvent(CONST_TRACE_ERROR, "IP2CC: problem is %s(%d)", strerror(errno), errno);
-              traceEvent(CONST_TRACE_INFO, "IP2CC: ntop continues OK, but with partial or no file");
-              break;
-          }
-          continue;
-        }
+        if (fd!=NULL) {
+            char buff[256];
+            char *strtokState, *cc, *ip, *prefix;
+            int recordsRead=0;
 
-        if ((cc=strtok_r(buff, ":", &strtokState))==NULL)
-          continue;
-        if ((ip=strtok_r(NULL, "/", &strtokState))==NULL)
-          continue;
-        if ((prefix=strtok_r(NULL, "\n", &strtokState))==NULL)
-          continue;
+            traceEvent(CONST_TRACE_NOISY, "IP2CC: ...found - reading data");
 
-        strtolower(cc);
+            while (fgets(buff, sizeof(buff), fd) != NULL) {
+
+                if ((cc=strtok_r(buff, ":", &strtokState))==NULL)
+                    continue;
+                if ((ip=strtok_r(NULL, "/", &strtokState))==NULL)
+                    continue;
+                if ((prefix=strtok_r(NULL, "\n", &strtokState))==NULL)
+                    continue;
+
+                strtolower(cc);
         
-        addNodeInternal(xaton(ip), atoi(prefix), cc);
-        myGlobals.ipCountryCount++;
-      }
+                addNodeInternal(xaton(ip), atoi(prefix), cc);
+                recordsRead++;
+            }
+            myGlobals.ipCountryCount += recordsRead;
 
-      fclose(fd);
-      traceEvent(CONST_TRACE_INFO, "IP2CC: ......%d records read.\n", myGlobals.ipCountryCount);
+            if (!feof(fd)) {
+                traceEvent(CONST_TRACE_ERROR, "IP2CC: reading file '%s'", tmpStr);
+                traceEvent(CONST_TRACE_ERROR, "IP2CC: problem is %s(%d)", strerror(errno), errno);
+                traceEvent(CONST_TRACE_INFO,
+                           "IP2CC: ntop continues OK, but with %s data from file",
+                           recordsRead == 0 ? "no" : "partial");
+            }
+
+            fclose(fd);
+            traceEvent(CONST_TRACE_NOISY, "IP2CC: ......%d records read", recordsRead);
+        } else 
+            traceEvent(CONST_TRACE_WARNING, "IP2CC: unable to open file at %s", tmpStr);
     } else 
-      traceEvent(CONST_TRACE_NOISY, "IP2CC: ...not found at %s.\n", tmpStr);
+        traceEvent(CONST_TRACE_NOISY, "IP2CC: ...does not exist");
   }
   if (myGlobals.ipCountryCount == 0) {
       traceEvent(CONST_TRACE_WARNING, 
                  "IP2CC: Unable to read IP address <-> Country code mapping file (non-existant or no data).\n");
       traceEvent(CONST_TRACE_INFO, 
                  "IP2CC: ntop will perform correctly but without this minor feature.\n");
-  }
+  } else 
+      traceEvent(CONST_TRACE_INFO, "IP2CC: %d records read", myGlobals.ipCountryCount);
 }
 
 /* ******************************* */
