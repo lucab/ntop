@@ -860,7 +860,7 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 	buf[MAX_LEN_SYM_HOST_NAME-1] = '\0';
 	strncpy(el->hostSymIpAddress, buf, MAX_LEN_SYM_HOST_NAME-1);
       } else
-	strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
+	snprintf(el->hostSymIpAddress, sizeof(el->hostSymIpAddress), "%s", el->hostNumIpAddress);
     }
 
 #ifdef HASH_DEBUG
