@@ -149,7 +149,7 @@ libntop_la_SOURCES = address.c    argv.c        dataFormat.c   \
                      getopt.c     getopt1.c     globals-core.c \
                      hash.c       initialize.c  leaks.c        \
                      netflow.c    ntop.c        pbuf.c         \
-                     plugin.c     protocols.c   qsort.c        \
+                     plugin.c     protocols.c   \
                      sessions.c   term.c        util.c         \
                      traffic.c    vendor.c      version.c      \
                      ntop_darwin.c

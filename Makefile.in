@@ -248,7 +248,7 @@ libntop_la_SOURCES = address.c    argv.c        dataFormat.c   \
                      getopt.c     getopt1.c     globals-core.c \
                      hash.c       initialize.c  leaks.c        \
                      netflow.c    ntop.c        pbuf.c         \
-                     plugin.c     protocols.c   qsort.c        \
+                     plugin.c     protocols.c   \
                      sessions.c   term.c        util.c         \
                      traffic.c    vendor.c      version.c      \
                      ntop_darwin.c
@@ -279,9 +279,8 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 
 am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo getopt.lo \
 	getopt1.lo globals-core.lo hash.lo initialize.lo leaks.lo \
-	netflow.lo ntop.lo pbuf.lo plugin.lo protocols.lo qsort.lo \
-	sessions.lo term.lo util.lo traffic.lo vendor.lo version.lo \
-	ntop_darwin.lo
+	netflow.lo ntop.lo pbuf.lo plugin.lo protocols.lo sessions.lo \
+	term.lo util.lo traffic.lo vendor.lo version.lo ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
 	http.lo netflow.lo report.lo reportUtils.lo ssl.lo \
@@ -324,8 +323,8 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/ntop-main.Po ./$(DEPDIR)/ntop.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/ntop_darwin.Plo ./$(DEPDIR)/pbuf.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/pdaPlugin.Po ./$(DEPDIR)/plugin.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/protocols.Plo ./$(DEPDIR)/qsort.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/report.Plo ./$(DEPDIR)/reportUtils.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/protocols.Plo ./$(DEPDIR)/report.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/reportUtils.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/rrdPlugin.Po ./$(DEPDIR)/sessions.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/sflowPlugin.Po ./$(DEPDIR)/ssl.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/term.Plo ./$(DEPDIR)/traffic.Plo \
@@ -538,7 +537,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdaPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/plugin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocols.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/qsort.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/report.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reportUtils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rrdPlugin.Po@am__quote@
