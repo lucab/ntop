@@ -297,7 +297,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   sendString("<CENTER>\n");
   sendString("<TABLE BORDER>\n");
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG">%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd]</TH>"
-	      "<TH "TH_BG">%s?%s2>Bytes Sen</A></TH>"
+	      "<TH "TH_BG">%s?%s2>Bytes Sent</A></TH>"
 	      "<TH "TH_BG">%s?%s3>Bytes Rcvd</A></TH>"
 	      "<TH "TH_BG">%s?%s4>Echo Req.</A></TH>"
 	      "<TH "TH_BG">%s?%s14>Echo Reply</A></TH>"
