@@ -990,26 +990,27 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    user = strtok_r(row, "_", &strtokState1);
 	    file = strtok_r(NULL, "\"", &strtokState);
 
-	    for(i=0; file[i] != '\0'; i++) {
-	      if(file[i] == '\\') begin = i;
-	    }
+	    if((user != NULL) && (file != NULL)) {
+	      for(i=0; file[i] != '\0'; i++) {
+		if(file[i] == '\\') begin = i;
+	      }
 
-	    begin++;
+	      begin++;
 	    
-	    file = &file[begin];
+	      file = &file[begin];
 
-	    if(strlen(file) > 64) file[strlen(file)-64] = '\0';
+	      if(strlen(file) > 64) file[strlen(file)-64] = '\0';
 
 #ifdef P2P_DEBUG
-	    traceEvent(TRACE_INFO, "WinMX: %s->%s [%s][%s]\n",
-		       srcHost->hostNumIpAddress,
-		       dstHost->hostNumIpAddress,
-		       user, file);
+	      traceEvent(TRACE_INFO, "WinMX: %s->%s [%s][%s]\n",
+			 srcHost->hostNumIpAddress,
+			 dstHost->hostNumIpAddress,
+			 user, file);
 #endif
-	    updateFileList(file, srcHost);
-	    updateHostUsers(user, P2P_USER, srcHost);
+	      updateFileList(file, srcHost);
+	      updateHostUsers(user, P2P_USER, srcHost);
 
-	    /* printf("==>\n\n%s\n\n", rcStr); */
+	    }
 	  }
 
 	  free(rcStr);
