@@ -3372,7 +3372,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
 void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
-  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], 
+  char buf[1500], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], 
     hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
   int numSessions, printedSessions;
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], 
