@@ -71,7 +71,6 @@ getopt_long (argc, argv, options, long_options, opt_index)
      const struct option *long_options;
      int *opt_index;
 {
-  traceEvent(CONST_TRACE_NOISY, "NOTE: In private version of getopt_long");
   return _getopt_internal (argc, argv, options, long_options, opt_index, 0);
 }
 
