@@ -166,7 +166,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
     traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Loading plugin '%s'...\n", pluginPath);
+  traceEvent(TRACE_INFO, "Loading plugin '%s'...", pluginPath);
 #endif
 
 #ifndef STATIC_PLUGIN

@@ -136,9 +136,9 @@ void initWinsock32() {
   }
 
   SIZE_BUF = 5 * 1024 * 1024; /* 5MB buffer */
-  version = "2.0 alpha";
+  version = "2.0 beta";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "29/1/2001";
+  buildDate = "26/06/2001";
 
   if(isWinNT())
     osName = "WinNT/2K";

@@ -82,7 +82,8 @@ int main(int argc, char *argv[]) {
   time_t lastTime;
 
   printf("Wait please: ntop is coming up...\n");
-  
+  initLogger();
+
 #ifndef WIN32
   if (freopen("/dev/null", "w", stderr) == NULL) {
     traceEvent(TRACE_WARNING, 
@@ -137,6 +138,8 @@ int main(int argc, char *argv[]) {
   }
 
   initIPServices();
+
+  traceEvent(TRACE_INFO, "Parsing command line options...");
 
 #ifdef WIN32
   theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12l:q";
@@ -488,7 +491,6 @@ int main(int argc, char *argv[]) {
 
   initCounters(mergeInterfaces);
   initApps();
-  initLogger();
   initSignals();
 
   initThreads(enableThUpdate, enableIdleHosts, enableDBsupport);

@@ -49,6 +49,8 @@ void initIPServices(void) {
   FILE* fd;
   int idx, i;
 
+  traceEvent(TRACE_INFO, "Initializing IP services...");
+
   memset(device, 0, sizeof(device));
 
   memset(protoIPTrafficInfos, 0, sizeof(protoIPTrafficInfos));
@@ -355,6 +357,7 @@ int initGlobalValues(void) {
 #endif
 
 #ifdef HAVE_OPENSSL
+  traceEvent(TRACE_INFO, "Initializing SSL...");
   init_ssl();
 #endif
 
@@ -384,6 +387,8 @@ void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
 void initGdbm(void) {
   char tmpBuf[200];
   int firstTime=1;
+
+  traceEvent(TRACE_INFO, "Initializing GDBM...");
 
 #ifdef HAVE_GDBM_H
   /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
@@ -579,6 +584,8 @@ void initDevices(char* devices) {
   char ebuf[PCAP_ERRBUF_SIZE];
   int i, j;
 
+  traceEvent(TRACE_INFO, "Initializing network devices...");
+
   memset(device, 0, sizeof(device));
 
   /* Determine the device name if not specified */
@@ -586,6 +593,22 @@ void initDevices(char* devices) {
 
   if (devices == NULL) {
     char *tmpDev = pcap_lookupdev(ebuf);
+    char *ifName = tmpDev;
+
+#ifdef WIN32
+	if(!isWinNT()) {
+    for(i=0;; i++) {
+		if(tmpDev[i] == 0) {
+		  if(ifName[0] == '\0') 
+			break;
+		  else {
+			traceEvent(TRACE_INFO, "Found interface '%s'", ifName);
+			ifName = &tmpDev[i+1]; 
+		  }
+		}
+	}
+	}
+#endif
 
     if(tmpDev == NULL) {
       traceEvent(TRACE_INFO, "Unable to locate default interface (%s)\n", ebuf);
