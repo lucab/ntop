@@ -30,6 +30,10 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 			    short* useIPAddressForSearching) {
   u_int idx = 0;
 
+  
+  if(borderSnifferMode) /* MAC addresses don't make sense here */
+    (*useIPAddressForSearching) = 1;
+
   if(((*useIPAddressForSearching) == 1) 
      || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
     if(accuracyLevel <= MEDIUM_ACCURACY_LEVEL) 

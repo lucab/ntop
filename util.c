@@ -325,6 +325,9 @@ unsigned short isMulticastAddress(struct in_addr *addr) {
 unsigned short isLocalAddress(struct in_addr *addr) {
   int i;
 
+  if(borderSnifferMode) 
+    return(0); /* This is obviously remote */
+
   for(i=0; i<numDevices; i++)
     if((addr->s_addr & device[i].netmask.s_addr) == device[i].network.s_addr) {
 #ifdef DEBUG
@@ -606,6 +609,9 @@ void handleLocalAddresses(char* addresses) {
    as specified using the 'm' flag */
 unsigned short isPseudoLocalAddress(struct in_addr *addr) {
   int i;
+
+  if(borderSnifferMode) 
+    return(0); /* This is obviously remote */
 
   i = isLocalAddress(addr);
 

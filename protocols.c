@@ -59,7 +59,8 @@ void handleBootp(HostTraffic *srcHost,
   int len;
 
   if((accuracyLevel < HIGH_ACCURACY_LEVEL)
-     || (packetData == NULL) /* packet too short ? */)
+     || (packetData == NULL) /* packet too short ? */
+     || (borderSnifferMode))
     return;
 
   switch(sport) {

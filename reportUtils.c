@@ -2821,7 +2821,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     if(isMultihomed(el) && (!broadcastHost(el))) {
       u_int elIdx;
 
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT><OL>",
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>&nbsp;<OL>",
 		  getRowColor(), "Multihomed Addresses") < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);

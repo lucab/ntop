@@ -2784,8 +2784,9 @@ static void processIpPkt(const u_char *bp,
 
   NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
-  /* Sanity check: check for wrong netmask */
-  if(isBroadcastAddress(&ip.ip_dst) && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
+  if((!borderSnifferMode) 
+     && isBroadcastAddress(&ip.ip_dst) 
+     && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
     /* forceUsingIPaddress = 1; */
 
     srcHostIdx = getHostInfo(NULL, ether_src, 0, 0);
@@ -2859,7 +2860,7 @@ static void processIpPkt(const u_char *bp,
     if((ip.ip_ttl > dstHost->maxTTL)) dstHost->maxTTL = ip.ip_ttl;
   }
 
-  checkNetworkRouter(srcHost, dstHost, ether_dst);
+  if(!borderSnifferMode) checkNetworkRouter(srcHost, dstHost, ether_dst);
   updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)h->len);
   updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length);
 
@@ -4045,8 +4046,9 @@ void processPacket(u_char *_deviceId,
     fflush (fd);
 #endif
 
-    if((device[deviceId].datalink != DLT_PPP) && (device[deviceId].datalink != DLT_RAW)) {
-      if(eth_type == 0x8137) {
+    if((device[deviceId].datalink != DLT_PPP) 
+       && (device[deviceId].datalink != DLT_RAW)) {
+      if((!borderSnifferMode) && (eth_type == 0x8137)) {
 	/* IPX */
 	IPXpacket ipxPkt;
 
@@ -4149,7 +4151,8 @@ void processPacket(u_char *_deviceId,
 
 	  srcHost->ipxSent += length, dstHost->ipxReceived += length;
 	  device[actualDeviceId].ipxBytes += length;
-	} else {
+	} else if(!borderSnifferMode) {
+	    /* MAC addresses are meaningful here */
 	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0);
 	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0);
 
@@ -4406,7 +4409,8 @@ void processPacket(u_char *_deviceId,
 	  processIpPkt(p, h, length, ether_src, ether_dst);
 	else
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst);
-      } else { /* Non IP */
+      } else  /* Non IP */ if(!borderSnifferMode) {
+	    /* MAC addresses are meaningful here */
 	struct ether_arp arpHdr;
 	struct in_addr addr;
 
@@ -4451,7 +4455,7 @@ void processPacket(u_char *_deviceId,
 	  memcpy(&arpHdr, p+hlen, sizeof(arpHdr));
 	  if(EXTRACT_16BITS(&arpHdr.arp_pro) == ETHERTYPE_IP) {
 	    int arpOp = EXTRACT_16BITS(&arpHdr.arp_op);
-
+	    
 	    switch(arpOp) {
 	    case ARPOP_REPLY: /* ARP REPLY */
 	      memcpy(&addr.s_addr, arpHdr.arp_tpa, sizeof(addr.s_addr));
