@@ -1086,7 +1086,11 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
     return(transactionId);
   }
 
-  eom = (u_char *)(&answer+length);
+  /*
+    Don't change it to eom = (u_char *)(&answer+length);
+    unless you want to core dump !
+  */
+  eom = (u_char *)(ipPtr+length);    
 
   qdcount = (int)ntohs((unsigned short int)answer.qb1.qdcount);
   ancount = (int)ntohs((unsigned short int)answer.qb1.ancount);
