@@ -186,6 +186,7 @@ void loadPrefs(int argc, char* argv[]) {
 #ifndef WIN32
     case 'u':
       stringSanityCheck(optarg);
+      if(myGlobals.effectiveUserName != NULL) free(myGlobals.effectiveUserName);
       myGlobals.effectiveUserName = strdup(optarg);
       if(strOnlyDigits(optarg))
 	myGlobals.userId = atoi(optarg);
@@ -386,6 +387,7 @@ int parseOptions(int argc, char* argv[]) {
 #ifndef WIN32
     case 'u':
       stringSanityCheck(optarg);
+      if(myGlobals.effectiveUserName != NULL) free(myGlobals.effectiveUserName);
       myGlobals.effectiveUserName = strdup(optarg);
       if(strOnlyDigits(optarg))
 	myGlobals.userId = atoi(optarg);
