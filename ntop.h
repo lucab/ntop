@@ -746,6 +746,7 @@ typedef struct {
   time_t lastpkt;                /* time last packet was captured */
 
   pcap_t *pcapPtr;               /* LBNL pcap handler */
+  pcap_dumper_t *pcapDumper;     /* LBNL pcap dumper  */
   char virtualDevice;            /* set to 1 for virtual devices (e.g. eth0:1) */
   int snaplen;                   /* maximum # of bytes to capture foreach pkt */
                                  /* read timeout in milliseconds */

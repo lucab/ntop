@@ -34,7 +34,7 @@ extern char dbPath[200];
 extern char accessLogPath[200]; /* Apache-like access log */
 extern u_int maxHashSize;
 extern short usePersistentStorage, grabSessionInformation;
-extern char *rFileName;
+extern char *rFileName, *pcapLog;
 extern int numericFlag, logTimeout, daemonMode, mergeInterfaces;
  
 /* Search Paths */

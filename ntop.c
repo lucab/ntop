@@ -781,9 +781,12 @@ RETSIGTYPE cleanup(int signo) {
   termLogger();
   (void)fflush(stdout);
 
+   if(device[actualDeviceId].pcapDumper != NULL) 
+     pcap_dump_close(device[actualDeviceId].pcapDumper);
+
   termIPServices();
   termIPSessions();
-
+  
 #ifndef WIN32
   endservent();
 #endif

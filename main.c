@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
   maxHashSize = MAX_HASH_SIZE;
   traceLevel = DEFAULT_TRACE_LEVEL;
   domainName[0] = '\0';
-
+  pcapLog = NULL;
   actTime = time(NULL);
   strncpy(dbPath, DBFILE_DIR, sizeof(dbPath));
 
@@ -137,9 +137,9 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "ce:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12";
+  theOpts = "ce:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12l:";
 #else
-  theOpts = "cIde:f:F:hr:i:p:nNw:m:b:D:s:P:R:MS:gt:a:u:W:12";
+  theOpts = "cIde:f:F:hr:i:p:nNw:m:b:D:s:P:R:MS:gt:a:u:W:12l:";
 #endif
   
   while((op = getopt(argc, argv, theOpts)) != EOF)
@@ -189,6 +189,11 @@ int main(int argc, char *argv[]) {
 	enableIdleHosts=0;
 	break;
 
+      case 'l':
+	stringSanityCheck(optarg);
+	pcapLog = optarg;
+	break;
+	
       case 'b': /* host:port */
 	stringSanityCheck(optarg);
 	handleDbSupport(optarg, &enableDBsupport);
@@ -321,7 +326,8 @@ int main(int argc, char *argv[]) {
 	usePersistentStorage = atoi(optarg);
 	if((usePersistentStorage > 2)
 	   || (usePersistentStorage < 0)){
-	  traceEvent(TRACE_ERROR, "FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
+	  traceEvent(TRACE_ERROR, 
+		     "FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
 	  exit(-1);
 	}
 	break;

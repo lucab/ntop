@@ -31,10 +31,11 @@ char domainName[MAXHOSTNAMELEN], *shortDomainName;
 /* command line options */
 u_short traceLevel;
 u_char stickyHosts;
-char dbPath[200], accessLogPath[200], *rFileName;
+char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;
 u_int maxHashSize;
 short usePersistentStorage, grabSessionInformation;
 int numericFlag, logTimeout, daemonMode, mergeInterfaces;
+
 
 /* Search paths */
 char *dataFileDirs[]   = { ".", DATAFILE_DIR, NULL };

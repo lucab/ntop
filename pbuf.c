@@ -40,15 +40,16 @@
   * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
   */
 
- /*
- #define DNS_SNIFF_DEBUG
- #define DNS_DEBUG
- #define GDBM_DEBUG
- #define FREE_HOST_INFO
- #define PURGE_DEBUG
- #define PACKET_DEBUG
- #define FARGMENT_DEBUG
- */
+
+/*
+  #define DNS_SNIFF_DEBUG
+  #define DNS_DEBUG
+  #define GDBM_DEBUG
+  #define FREE_HOST_INFO
+  #define PURGE_DEBUG
+  #define PACKET_DEBUG
+  #define FARGMENT_DEBUG
+*/
 
  #define SESSION_PATCH /* Experimental (L.Deri) */
 
@@ -3319,8 +3320,6 @@ static void processIpPkt(const u_char *bp,
 
     memcpy(&up, bp+hlen, sizeof(struct udphdr));
 
-    /* print TCP packet useful for debugging */
-
 #ifdef SLACKWARE
     sport = ntohs(up.source);
     dport = ntohs(up.dest);
@@ -3334,20 +3333,13 @@ static void processIpPkt(const u_char *bp,
         short isRequest, positiveReply;
         u_int16_t transactionId;
 
-#ifdef DNS_SNIFF_DEBUG
-	traceEvent(TRACE_INFO, "%s->%s [request: %d][positive reply: %d]\n",
-		   srcHost->hostSymIpAddress,
-		   dstHost->hostSymIpAddress,
-		   isRequest, positiveReply);
-#endif
-
 	/* The DNS chain will be checked here */
 	transactionId = processDNSPacket(bp, udpDataLength, hlen, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
-	traceEvent(TRACE_INFO, "%s->%s [request: %d][positive reply: %d]\n",
-		   srcHost->hostSymIpAddress,
-		   dstHost->hostSymIpAddress,
+	traceEvent(TRACE_INFO, "%s:%d->%s:d [request: %d][positive reply: %d]\n",
+		   srcHost->hostSymIpAddress, sport,
+		   dstHost->hostSymIpAddress, dport,
 		   isRequest, positiveReply);
 #endif
 
@@ -3994,6 +3986,8 @@ void processPacket(u_char *_deviceId,
 
   actualDeviceId = getActualInterface();
 
+  if(device[actualDeviceId].pcapDumper != NULL) 
+    pcap_dump((u_char*)device[actualDeviceId].pcapDumper, h, p);
 
   if(length > mtuSize[device[deviceId].datalink]) {
     /* Sanity check */

@@ -749,6 +749,17 @@ void initLibpcap(char* rulesFile, int numDevices) {
 	  traceEvent(TRACE_INFO, ebuf);
 	  exit(-1);
 	}
+
+	
+	if(pcapLog != NULL) {
+	  device[i].pcapDumper = pcap_dump_open(device[i].pcapPtr, pcapLog);
+
+	  if(device[i].pcapDumper == NULL) {
+	    traceEvent(TRACE_INFO, ebuf);
+	    exit(-1);
+	  }
+	}
+	
       } else {
 	column[0] = 0;
 	device[i].virtualDevice = 1;

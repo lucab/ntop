@@ -42,6 +42,8 @@ ntop \- display top network users
 .IR "trace level" ]
 .RB [ -u
 .IR "user name" ]
+.RB [ -l
+.IR "dump file name" ]
 .RB [ -F 
 .IR "flow filter expression" ]
 .RB [ "filter expression" ]
@@ -173,6 +175,9 @@ Specifies the user
 should run as after it initializes. The value specified may be either a
 username or a numeric user id. The group id used will be the primary group of
 the user specified.
+
+t -l
+Dumps the network traffic captured by ntop in a file in pcap format (useful for debug).
 
 .It -t
 This flag specifies the level of
