@@ -159,7 +159,10 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   short numCmp = 0;
   struct ipGlobalSession *scanner=NULL;
 
-  if(hashAction == EXTEND_HASH)
+  if(!capturePackets)
+    return;
+
+ if(hashAction == EXTEND_HASH)
     multiplier = HASH_EXTEND_RATIO;
   else
     multiplier = HASH_RESIZE_RATIO;

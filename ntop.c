@@ -817,35 +817,26 @@ RETSIGTYPE cleanup(int signo) {
   capturePackets = 0;
 
 #ifndef WIN32
-
-  /* traceEvent(TRACE_INFO, "==> capturePackets: %d\n", capturePackets); */
-
 #ifdef MULTITHREADED
-  /* Courtesy of Felipe Tonioli <tonioli@mtec.com.br> */
-  if(signo != -1) { /* the user pressed the 'q' key */
-    /* Send signals to threads first */
-
-    /* Then kill threads */
-    killThread(&dequeueThreadId);
-    killThread(&thptUpdateThreadId);
-    killThread(&hostTrafficStatsThreadId);
-    killThread(&scanIdleThreadId);
-    killThread(&scanIdleSessionsThreadId);
-
-    if(enableDBsupport)
-      killThread(&dbUpdateThreadId);
-
-    if(isLsofPresent)
-      killThread(&lsofThreadId);
-
+  killThread(&dequeueThreadId);
+  killThread(&thptUpdateThreadId);
+  killThread(&hostTrafficStatsThreadId);
+  killThread(&scanIdleThreadId);
+  killThread(&scanIdleSessionsThreadId);
+  
+  if(enableDBsupport)
+    killThread(&dbUpdateThreadId);
+  
+  if(isLsofPresent)
+    killThread(&lsofThreadId);
+  
 #ifdef ASYNC_ADDRESS_RESOLUTION
-    if(numericFlag == 0)
-      killThread(&dequeueAddressThreadId);
+  if(numericFlag == 0)
+    killThread(&dequeueAddressThreadId);
 #endif
-
-    killThread(&handleWebConnectionsThreadId);
-  }
-
+  
+  killThread(&handleWebConnectionsThreadId);
+  
 #ifdef FULL_MEMORY_FREE
   cleanupAddressQueue();
   cleanupPacketQueue();
@@ -853,6 +844,11 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
 #endif /* #ifndef WIN32 */
+
+#ifdef MULTITHREADED
+  traceEvent(TRACE_INFO, "Waiting until threads terminate...\n");
+  sleep(3); /* Just to wait until threads complete */
+#endif
 
 /* #ifdef FULL_MEMORY_FREE */
   freeHostInstances();
@@ -921,13 +917,13 @@ RETSIGTYPE cleanup(int signo) {
 
     if(!device[i].virtualDevice) {
       if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
-	printf("%s packets received by filter on %s\n",
-	       formatPkts((TrafficCounter)stat.ps_recv), device[i].name);
-	printf("%s packets dropped by kernel\n",
-	       formatPkts((TrafficCounter)(stat.ps_drop)));
+	traceEvent(TRACE_INFO, "%s packets received by filter on %s\n",
+		   formatPkts((TrafficCounter)stat.ps_recv), device[i].name);
+	traceEvent(TRACE_INFO, "%s packets dropped by kernel\n",
+		   formatPkts((TrafficCounter)(stat.ps_drop)));
 #ifdef MULTITHREADED
-	printf("%s packets dropped by ntop\n",
-	       formatPkts(device[i].droppedPackets));
+	traceEvent(TRACE_INFO, "%s packets dropped by ntop\n",
+		   formatPkts(device[i].droppedPackets));
 #endif
       }
     }
@@ -972,7 +968,6 @@ RETSIGTYPE cleanup(int signo) {
       free(device[i].pcapPtr);
   }
 
-
   free(device);
 
   if(numProcesses > 0)
@@ -995,10 +990,6 @@ RETSIGTYPE cleanup(int signo) {
   traceEvent(TRACE_INFO, "===================================\n");
   termLeaks();
   traceEvent(TRACE_INFO, "===================================\n");
-#endif
-#ifdef MULTITHREADED
-  traceEvent(TRACE_INFO, "Waiting until threads terminate...\n");
-  sleep(3); /* Just to wait until threads complete */
 #endif
   exit(0);
 }
