@@ -1684,6 +1684,7 @@ typedef struct pluginInfo {
   char *pluginAuthor;
   char *pluginURLname;      /* Set it to NULL if the plugin doesn't speak HTTP */
   char activeByDefault;     /* Set it to 1 if this plugin is active by default */
+  char inactiveSetup;       /* Set it to 1 if this plugin can be called inactive for setup */
   VoidFunc startFunc, termFunc;
   PluginFunc pluginFunc;    /* Initialize here all the plugin structs... */
   PluginHTTPFunc httpFunct; /* Set it to NULL if the plugin doesn't speak HTTP */

@@ -280,7 +280,8 @@ void showPluginsList(char* pluginName) {
 		  "<TD "TD_BG" ALIGN=CENTER><A HREF="STR_SHOW_PLUGINS"?%s=%d>%s</A></TD>"
 		  "</TR>\n",
 		  getRowColor(),
-		  flows->pluginStatus.activePlugin ? tmpBuf1 : flows->pluginStatus.pluginPtr->pluginURLname,
+		  (flows->pluginStatus.activePlugin || 
+	           flows->pluginStatus.pluginPtr->inactiveSetup) ? tmpBuf1 : flows->pluginStatus.pluginPtr->pluginURLname,
 		  flows->pluginStatus.pluginPtr->pluginDescr,
 		  flows->pluginStatus.pluginPtr->pluginVersion,
 		  flows->pluginStatus.pluginPtr->pluginAuthor,
@@ -3644,7 +3645,8 @@ void printNtopConfigInfo(int textPrintFlag) {
 	  char *arg;
 
 	  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-	  if(!flows->pluginStatus.activePlugin) {
+	  if((!flows->pluginStatus.activePlugin) &&
+	     (!flows->pluginStatus.pluginPtr->inactiveSetup) ) {
 	    char buf[BUF_SIZE], name[32];
 
 	    sendHTTPHeader(HTTP_TYPE_HTML, 0);
