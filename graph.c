@@ -269,8 +269,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
 		   "", "", "", "", "", "", "", "", "", "" };
-  int i, len, num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 
-			     45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+  int i, len, num=0, expl[20];
   FILE *fd;
   TrafficCounter traffic, totalIPTraffic;
 
@@ -322,6 +321,16 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	
       if(traffic > 0) {
 	p[num] = (float)((100*traffic)/totalIPTraffic);
+	
+        if(num==0)
+          expl[num]=10;
+        else
+          expl[num]=expl[num-1];
+	if (p[num]<5.0)
+	  expl[num]+=9;
+	else if (p[num]>10.0)
+	  expl[num]=10;
+       
 	lbl[num++] = protoIPTrafficInfos[i];
       } 	
  
