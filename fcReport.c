@@ -1549,6 +1549,13 @@ void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId)
     if((el->pktSent.value != 0) || (el->pktRcvd.value != 0)) {
         int ok =0;
 
+        /* Also allocate space for FC info structure */
+        tmpEl.fcCounters = NULL;
+        if(allocFcScsiCounters(&tmpEl) == NULL) return;
+        tmpEl.l2Family = FLAG_HOST_TRAFFIC_AF_FC;
+        tmpEl.fcCounters->devType = SCSI_DEV_UNINIT;
+        tmpEl.magic = CONST_MAGIC_NUMBER;
+      
         for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	  if(((!emptySerial(&el->contactedSentPeers.peersSerials[i])
 	       && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial)))
@@ -1636,10 +1643,15 @@ void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId)
             sendString("</TD></TR></TABLE>"TABLE_OFF"<P>\n");
             sendString("</CENTER>\n");
         } /* ok */
+
+        if (tmpEl.fcCounters != NULL) {
+            free (tmpEl.fcCounters);
+        }
     }
     else {
         traceEvent (CONST_TRACE_ALWAYSDISPLAY, "printFcHostContactedPeers: else part\n");
     }
+    
 }
 
 /* ************************************ */
