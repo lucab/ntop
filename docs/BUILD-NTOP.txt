@@ -10,10 +10,10 @@ Quick Instructions
 2. Build chart libraries
    - cd gdchart0.94c/
    - ./configure
-   - cd gd-1.8.3/libpng-1.0.8
+   - cd gd-1.8.3/libpng-1.2.1
    - cp scripts/makefile.[make your choice] Makefile
    - make
-   - cd ../../zlib-1.1.3/
+   - cd ../../zlib-1.1.4/
    - ./configure
    - make
    - cd ..
@@ -34,3 +34,4 @@ Quick Instructions
 
 ---------------------------------------
 Luca Deri <deri@ntop.org> - January 2001
+Updated zlib and libpng - June 2002
