@@ -598,7 +598,6 @@ void initThreads(void) {
 #endif
 
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
-  createMutex(&myGlobals.hashResizeMutex);  /* data to synchronize thread access to host hash table */
   createMutex(&myGlobals.graphMutex);       /* data to synchronize thread access to graph generation */
   createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */
 

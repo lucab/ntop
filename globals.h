@@ -313,7 +313,6 @@ typedef struct ntopGlobals {
   unsigned short numDequeueThreads;
 
   PthreadMutex gdbmMutex;
-  PthreadMutex hashResizeMutex;
   PthreadMutex graphMutex;
   PthreadMutex tcpSessionsMutex;
 

@@ -50,7 +50,6 @@ void handleSigHup(int signalId _UNUSED_) {
 
    if(myGlobals.numericFlag == 0)
      printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
-   printMutexInfo(&myGlobals.hashResizeMutex, "myGlobals.hashResizeMutex");
 
   if(myGlobals.isLsofPresent)
      printMutexInfo(&myGlobals.lsofMutex, "myGlobals.lsofMutex");
@@ -806,7 +805,6 @@ RETSIGTYPE cleanup(int signo) {
   sleep(3); /* Just to wait until threads complete */
 #endif
 
-/* #ifdef FULL_MEMORY_FREE */
   for(i=0; i<myGlobals.numDevices; i++) {
     freeHostInstances(i);
 
@@ -814,9 +812,13 @@ RETSIGTYPE cleanup(int signo) {
       freeHostInfo(i, myGlobals.broadcastEntry, i);
     if(myGlobals.otherHostEntry != NULL)
       freeHostInfo(i, myGlobals.otherHostEntry, i);
-  }
 
-/* #endif */
+    while(myGlobals.device[i].fragmentList != NULL) {
+      IpFragment *fragment = myGlobals.device[i].fragmentList->next;
+      free(myGlobals.device[i].fragmentList);
+      myGlobals.device[i].fragmentList = fragment;
+    }
+  }
 
   for(i=0; i<myGlobals.hostsCacheLen; i++)
     free(myGlobals.hostsCache[i]);
@@ -840,7 +842,6 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef MULTITHREADED
   deleteMutex(&myGlobals.packetQueueMutex);
   if(myGlobals.numericFlag == 0) deleteMutex(&myGlobals.addressResolutionMutex);
-  deleteMutex(&myGlobals.hashResizeMutex);
   deleteMutex(&myGlobals.hostsHashMutex);
   deleteMutex(&myGlobals.graphMutex);
 

@@ -2025,6 +2025,10 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.trackOnlyLocalHosts == 1 ? "Track local hosts only" : "Track all hosts",
                            NTOP_DEFAULT_TRAFFICDUMP_FILENAME);
 
+  printParameterConfigInfo(textPrintFlag, "-o | --no-mac",
+                           myGlobals.dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
+                           myGlobals.dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses");
+
   printParameterConfigInfo(textPrintFlag, "-i | --interface" REPORT_ITS_EFFECTIVE,
                            myGlobals.devices,
                            NTOP_DEFAULT_DEVICES);
@@ -2836,7 +2840,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 	if(myGlobals.numericFlag == 0) 
 	  printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 #endif
-	printMutexStatus(textPrintFlag, &myGlobals.hashResizeMutex, "hashResizeMutex");
+
 #ifndef WIN32
 	if(myGlobals.isLsofPresent)
 	  printMutexStatus(textPrintFlag, &myGlobals.lsofMutex, "lsofMutex");

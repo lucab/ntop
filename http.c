@@ -1192,10 +1192,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     helps because at least a partial respose
     has been send back to the user in the meantime
   */
-#ifdef MULTITHREADED
-  accessMutex(&myGlobals.hashResizeMutex, "returnHTTPpage");
-#endif
-
 #ifndef MICRO_NTOP
   if(strncmp(pageName, SHUTDOWN_NTOP_HTML, strlen(SHUTDOWN_NTOP_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
@@ -1309,10 +1305,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	if(childpid) {
 	  /* father process */
 	  myGlobals.numChildren++;
-#ifdef MULTITHREADED
-	  releaseMutex(&myGlobals.hashResizeMutex);
-#endif
-
 #ifdef HAVE_ZLIB
 	  compressFile = 0;
 #endif
@@ -1818,10 +1810,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     free(domainNameParm);
 
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
-
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.hashResizeMutex);
-#endif
 
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
   if(*usedFork) {

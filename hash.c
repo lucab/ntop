@@ -94,7 +94,13 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 }
 
 /* ************************************ */
+/*
+  Description:
+  This function is called when a host is freed. Therefore
+  it is necessary to free all the (eventual) sessions of 
+  such host.  
 
+*/
 static void freeHostSessions(u_int hostIdx, int theDevice) {
   int i;
 
@@ -112,12 +118,11 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
       if((theSession->initiatorIdx == hostIdx) || (theSession->remotePeerIdx == hostIdx)) {
 	if(myGlobals.device[theDevice].tcpSession[i] == theSession) {
-	  myGlobals.device[theDevice].tcpSession[i] = theSession->next;
+	  myGlobals.device[theDevice].tcpSession[i] = nextSession;
 	  prevSession = myGlobals.device[theDevice].tcpSession[i];
-	} else {
+	} else
 	  prevSession->next = nextSession;
-	}
-
+	
 	freeSession(theSession, theDevice, 0 /* don't allocate */);
 	theSession = prevSession;
       } else {

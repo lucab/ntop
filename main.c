@@ -692,7 +692,7 @@ static int parseOptions(int argc, char* argv []) {
       break;
 
     default:
-      printf("FATAL ERROR: unknown ntop option, '%s'\n", argv[optind-1]);
+      printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);
 #ifdef DEBUG
       if(opt != '?')
 	printf("             getopt return value is '%c', %d\n", opt, opt);

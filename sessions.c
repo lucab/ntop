@@ -399,6 +399,13 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
 
 /* ************************************ */
 
+/*
+  Description:
+  This function is called periodically to free
+  those sessions that have been inactive for
+  too long.
+*/
+
 void scanTimedoutTCPSessions(int actualDeviceId) {
   u_int idx, freeSessionCount =0;
 
@@ -409,53 +416,50 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 #endif
 
   for(idx=0; idx<myGlobals.device[actualDeviceId].numTotSessions; idx++) {
-    IPSession *nextSession, *prevSession, *thisSession;
+    IPSession *nextSession, *prevSession, *theSession;
 
-    thisSession = myGlobals.device[actualDeviceId].tcpSession[idx];
-    prevSession = thisSession;
+    prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
 #ifdef MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
 #endif
 
-    while(thisSession != NULL) {
-      if(thisSession->magic != MAGIC_NUMBER) {
-	thisSession = NULL;
+    while(theSession != NULL) {
+      if(theSession->magic != MAGIC_NUMBER) {
+	theSession = NULL;
 	myGlobals.device[actualDeviceId].numTcpSessions--;
 	traceEvent(TRACE_ERROR, "===> Magic assertion failed!");
 	continue;
       }
 
-      nextSession = thisSession->next;
+      nextSession = theSession->next;
 
-      if(((thisSession->sessionState == STATE_TIMEOUT)
-	  && ((thisSession->lastSeen+TWO_MSL_TIMEOUT) < myGlobals.actTime))
+      if(((theSession->sessionState == STATE_TIMEOUT)
+	  && ((theSession->lastSeen+TWO_MSL_TIMEOUT) < myGlobals.actTime))
 	 || /* The branch below allows to flush sessions which have not been
 	       terminated properly (we've received just one FIN (not two). It might be
 	       that we've lost some packets (hopefully not). */
-	 ((thisSession->sessionState >= STATE_FIN1_ACK0)
-	  && ((thisSession->lastSeen+DOUBLE_TWO_MSL_TIMEOUT) < myGlobals.actTime))
+	 ((theSession->sessionState >= STATE_FIN1_ACK0)
+	  && ((theSession->lastSeen+DOUBLE_TWO_MSL_TIMEOUT) < myGlobals.actTime))
 	 /* The line below allows to avoid keeping very old sessions that
 	    might be still open, but that are probably closed and we've
 	    lost some packets */
-	 || ((thisSession->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)
-	 || ((thisSession->lastSeen+IDLE_SESSION_TIMEOUT) < myGlobals.actTime)
+	 || ((theSession->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)
+	 || ((theSession->lastSeen+IDLE_SESSION_TIMEOUT) < myGlobals.actTime)
 	 ) {
-	if((prevSession != NULL) && (prevSession != thisSession))
-	  prevSession->next = nextSession;
-	else {
+
+	if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
 	  myGlobals.device[actualDeviceId].tcpSession[idx] = nextSession;
 	  prevSession = myGlobals.device[actualDeviceId].tcpSession[idx];
-	}
-
+	} else
+	  prevSession->next = nextSession;
+	
 	freeSessionCount++;
-	freeSession(thisSession, actualDeviceId, 1);
-      }
-
-      thisSession = nextSession;
-
-      if(thisSession && (thisSession->next == thisSession)) {
-	traceEvent(TRACE_WARNING, "Internal Error (3)");
+	freeSession(theSession, actualDeviceId, 1);
+	theSession = prevSession;
+      } else /* This session will NOT be freed */ {
+	prevSession = theSession;
+	theSession = nextSession;
       }
     } /* while */
 #ifdef MULTITHREADED
@@ -545,7 +549,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     IPSession *prevSession;
 
 #ifdef MULTITHREADED
-    accessMutex(&myGlobals.tcpSessionsMutex, "purgeIdleHosts");
+    accessMutex(&myGlobals.tcpSessionsMutex, "handleSession");
 #endif
 
     prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
@@ -578,15 +582,15 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
 	    myGlobals.device[actualDeviceId].tcpSession[idx] = nextSession;
-	  } else {
+	    prevSession = myGlobals.device[actualDeviceId].tcpSession[idx];
+	  } else
 	    prevSession->next = nextSession;
-	  }
 
 	  freeSession(theSession, actualDeviceId, 1);
-	  theSession = nextSession;
+	  theSession = prevSession;
 	} else {
 	  prevSession = theSession;
-	  theSession = theSession->next;
+	  theSession  = theSession->next;
 	}
       }
     }
@@ -630,7 +634,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
 
       theSession->magic = MAGIC_NUMBER;
-      myGlobals.device[actualDeviceId].numTcpSessions++;
 
       theSession->initiatorRealIp.s_addr = srcHost->hostIpAddress.s_addr;
       theSession->remotePeerRealIp.s_addr = dstHost->hostIpAddress.s_addr;
@@ -643,13 +646,15 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 
 #ifdef MULTITHREADED
-      accessMutex(&myGlobals.hashResizeMutex, "newSession");
+      accessMutex(&myGlobals.tcpSessionsMutex, "newSession");
 #endif
+      myGlobals.device[actualDeviceId].numTcpSessions++;
       theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
       myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
 #ifdef MULTITHREADED
-      releaseMutex(&myGlobals.hashResizeMutex);
+      releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
+
       theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
       theSession->remotePeerIdx = checkSessionIdx(dstHostIdx);
       theSession->sport = sport;
@@ -1802,9 +1807,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     if(theSession->sessionState == STATE_TIMEOUT) {
       if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
 	myGlobals.device[actualDeviceId].tcpSession[idx] = theSession->next;
-      } else {
+      } else
 	prevSession->next = theSession->next;
-      }
 
       freeSession(theSession, actualDeviceId, 1);
 #ifdef MULTITHREADED
