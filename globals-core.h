@@ -242,7 +242,9 @@ extern void* cleanupExpiredHostEntriesLoop(void*);
  
 /* pbuf.c */
 extern void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
-			      TrafficCounter length, int actualDeviceId);
+			      TrafficCounter length,
+			      Counter pktCount,
+			      int actualDeviceId);
 extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr, 
 			 u_char checkForMultihoming,
 			 u_char forceUsingIPaddress, int actualDeviceId);

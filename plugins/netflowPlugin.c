@@ -354,8 +354,9 @@ static void dissectFlow(char *buffer, int bufferLen) {
       if((srcHost == NULL) ||(dstHost == NULL)) continue;
 
       srcHost->lastSeen = dstHost->lastSeen = myGlobals.actTime;
-      srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value     += numPkts;
-      srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;
+      /* Commented out ... already done in updatePacketCount()                         */
+      /* srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value     += numPkts; */
+      /* srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;     */
       srcHost->ipBytesSent.value += len,     dstHost->ipBytesRcvd.value += len;
 
       srcAS = ntohs(the5Record.flowRecord[i].src_as), dstAS = ntohs(the5Record.flowRecord[i].dst_as);
@@ -383,7 +384,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
       ctr.value = len;
       updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
-      updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
+      updatePacketCount(srcHost, dstHost, ctr, numPkts, actualDeviceId);
 
       if(subnetPseudoLocalHost(srcHost)) {
 	if(subnetPseudoLocalHost(dstHost)) {

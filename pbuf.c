@@ -468,7 +468,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 /* ************************************ */
 
 void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
-		       TrafficCounter length, int actualDeviceId) {
+		       TrafficCounter length, Counter numPkts, int actualDeviceId) {
   unsigned short hourId;
   struct tm t, *thisTime;
 
@@ -485,8 +485,8 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   thisTime = localtime_r(&myGlobals.actTime, &t);
   hourId = thisTime->tm_hour % 24 /* just in case... */;;
 
-  incrementTrafficCounter(&srcHost->pktSent, 1);
-  incrementTrafficCounter(&srcHost->pktSentSession, 1);
+  incrementTrafficCounter(&srcHost->pktSent, numPkts);
+  incrementTrafficCounter(&srcHost->pktSentSession, numPkts);
 
   if(!myGlobals.largeNetwork) {
     if(srcHost->trafficDistribution == NULL) srcHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
@@ -496,19 +496,19 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   }
 
   if(broadcastHost(dstHost)) {
-    incrementTrafficCounter(&srcHost->pktBroadcastSent, 1);
+    incrementTrafficCounter(&srcHost->pktBroadcastSent, numPkts);
     incrementTrafficCounter(&srcHost->bytesBroadcastSent, length.value);
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].broadcastPkts, 1);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].broadcastPkts, numPkts);
   } else if(isMulticastAddress(&(dstHost->hostIpAddress))) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "%s->%s\n",
 	       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
 #endif
-    incrementTrafficCounter(&srcHost->pktMulticastSent, 1);
+    incrementTrafficCounter(&srcHost->pktMulticastSent, numPkts);
     incrementTrafficCounter(&srcHost->bytesMulticastSent, length.value);
-    incrementTrafficCounter(&dstHost->pktMulticastRcvd, 1);
+    incrementTrafficCounter(&dstHost->pktMulticastRcvd, numPkts);
     incrementTrafficCounter(&dstHost->bytesMulticastRcvd, length.value);
-    incrementTrafficCounter(&myGlobals.device[actualDeviceId].multicastPkts, 1);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].multicastPkts, numPkts);
   }
 
   incrementTrafficCounter(&srcHost->bytesSent, length.value);
@@ -516,8 +516,8 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   if(dstHost != NULL) {
       incrementTrafficCounter(&dstHost->bytesRcvd, length.value);
       incrementTrafficCounter(&dstHost->bytesRcvdSession, length.value);
-      incrementTrafficCounter(&dstHost->pktRcvd, 1);
-      incrementTrafficCounter(&dstHost->pktRcvdSession, 1);
+      incrementTrafficCounter(&dstHost->pktRcvd, numPkts);
+      incrementTrafficCounter(&dstHost->pktRcvdSession, numPkts);
   }
 
   if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
@@ -781,7 +781,7 @@ static void processIpPkt(const u_char *bp,
   }
 
   ctr.value = h->len;
-  updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
+  updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
 
   if((!myGlobals.dontTrustMACaddr) && (!myGlobals.device[actualDeviceId].dummyDevice)) {
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
@@ -2128,7 +2128,7 @@ void processPacket(u_char *_deviceId,
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 
 	  ctr.value = length;
-	  updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
+	  updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
 	}
       } else if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type < ETHERMTU)) {
 	TrafficCounter ctr;
@@ -2156,7 +2156,7 @@ void processPacket(u_char *_deviceId,
 	incrementTrafficCounter(&dstHost->otherRcvd, length);
 	ctr.value = length;
 
-	updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
+	updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
       } else if((myGlobals.device[deviceId].datalink != DLT_IEEE802)
 		&& (eth_type <= ETHERMTU) && (length > 3)) {
 	/* The code below has been taken from tcpdump */
@@ -2461,7 +2461,7 @@ void processPacket(u_char *_deviceId,
 	    }
 
 	    ctr.value = length;
-	    updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
+	    updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
 	  }
 	}
       } else if(eth_type == ETHERTYPE_IP) {
@@ -2573,7 +2573,7 @@ void processPacket(u_char *_deviceId,
 	}
 
 	ctr.value = length;
-	updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
+	updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
       }
     }
   }
