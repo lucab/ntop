@@ -54,7 +54,7 @@ AC_INIT([ntop],[2.2.91])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.90.108-2003-08-07"
+SCRIPTVER="v2.2.91.109-2003-08-14"
 
 dnl>
 dnl> generate the config header
@@ -876,6 +876,9 @@ dnl> and add libraries (location) -L and (names) -l to LDFLAGS.
 dnl> Skipping cases is, I guess, ok, but always remember that you might have
 dnl> been grabbed by an earlier target.
 
+DISTRO=""
+RELEASE=""
+
 case "${target}:${CC}" in
     *-*-mingw32*:gcc* )
         DEFINEOS="MINGW";     STATUS="SUPPORTED";
@@ -902,101 +905,15 @@ case "${target}:${CC}" in
         DEFINEOS="LINUX";     STATUS="SUPPORTED"
 
         DISTRO=`utils/linuxrelease --distro`
-        LINUXRELEASE=`utils/linuxrelease --release`
+        RELEASE=`utils/linuxrelease --release`
 
-        NOTE1="Specific release is ${DISTRO} Linux ${LINUXRELEASE}"
-
-        case "${DISTRO}" in
-            redhat)
-              case "${LINUXRELEASE}" in
-                [[89]].0)
-                    echo
-                    echo "*******************************************************************"
-                    echo "*"
-                    echo "* WARNING:    Under RedHat Linux 9.0 (and 8.0 with updated glibc"
-                    echo "*             rpms), there have been reported problems due to"
-                    echo "*             the inclusion of NPTL (new POSIX Thread Library)"
-                    echo "*             including mysterious crashes, broken debug, etc."
-                    echo "*"
-                    echo "*>>> Continuing, but well, y'all been warned..."
-                    echo "*"
-                    echo "*???     1. ntop 2.2.3 (cvs versions after xx-Jul-2003) have all"
-                    echo "*???        the known fixes."
-                    echo "*???  or 2. Before both ./configure AND make, set the following flag:"
-                    echo "*???        export LD_ASSUME_KERNEL=2.4.1"
-                    echo "*???        (This forces the use of the old linuxthreads library)"
-                    echo "*"
-                    echo "*******************************************************************"
-                    echo
-                    HAS_WARNING="yes"
-                  ;;
-              esac
-              ;;
-            mandrake)
-                echo "Setting Mandrake specific flag values"
-                LDFLAGS="${LDFLAGS} -L/usr/X11R6/lib"
-                CPPFLAGS="${CPPFLAGS} -lz -lm"
-                if ! test -f /usr/X11R6/lib/libXpm.so; then
-                    echo
-                    echo "*******************************************************************"
-                    echo "*"
-                    echo "*             -lXpm not found, because the libXpm.so file does not"
-                    echo "*             exist."
-                    echo "*"
-                    echo "*>>> Continuing, but subsequent make may fail"
-                    echo "*"
-                    echo "*???     1. As root, create the link:"
-                    echo "*???        ln -s /usr/X11R6/lib/libXpm.so.4 /usr/X11R6/lib/libXpm.so"
-                    echo "*"
-                    echo "*******************************************************************"
-                    echo
-                    HAS_WARNING="yes"
-                fi
-              ;;
-            suse)
-                echo "Setting SuSE specific flag values"
-                LDFLAGS="${LDFLAGS} -L/usr/X11R6/lib"
-                if ! test -f /usr/X11R6/lib/libXpm.so; then
-                    echo
-                    echo "*******************************************************************"
-                    echo "*"
-                    echo "*             -lXpm not found, because the libXpm.so file does not"
-                    echo "*             exist."
-                    echo "*"
-                    echo "*>>> Continuing, but subsequent make may fail"
-                    echo "*"
-                    echo "*???     1. As root, create the link:"
-                    echo "*???        ln -s /usr/X11R6/lib/libXpm.so.4 /usr/X11R6/lib/libXpm.so"
-                    echo "*"
-                    echo "*******************************************************************"
-                    echo
-                    HAS_WARNING="yes"
-                fi
-                if ! test -f /usr/X11R6/lib/libX11.so; then
-                    echo
-                    echo "*******************************************************************"
-                    echo "*"
-                    echo "*             -lX11 not found, because the libX11.so file does not"
-                    echo "*             exist."
-                    echo "*"
-                    echo "*>>> Continuing, but subsequent make may fail"
-                    echo "*"
-                    echo "*???     1. As root, create the link:"
-                    echo "*???        ln -s /usr/X11R6/lib/libX11.so.6.2 /usr/X11R6/lib/libX11.so"
-                    echo "*"
-                    echo "*******************************************************************"
-                    echo
-                    HAS_WARNING="yes"
-                fi
-              ;;
-            *)
-              ;;
-        esac
+        NOTE1="Specific release is ${DISTRO} Linux ${RELEASE}"
       ;;
 
     *-*-solaris2.9*:* )
         NOTE1="Supported: Solaris 8 for both sparc and i86"
         DEFINEOS="SOLARIS";   STATUS="UNTESTED"
+        RELEASE="9"
       ;;
 
     *-*-solaris2.8*:* )
@@ -1005,9 +922,7 @@ case "${target}:${CC}" in
         NOTE1="Requires various gnu tools from SunFreeware.com"
         NOTE2="--enable-i18n is disabled"
         DEFINEOS="SOLARIS";   STATUS="SUPPORTED"
-
-        # Added per Mike
-        LDFLAGS="-L/usr/local/lib -lnsl -lsocket -liconv ${LDFLAGS}"
+        RELEASE="8"
       ;;
 
     *-*-solaris2.5*:* )
@@ -1031,15 +946,6 @@ case "${target}:${CC}" in
         NOTE1="'Darwin 5.5' is the kernel of the os known as MAC OS X 10.1"
         NOTE2="'Darwin 6.1' is the kernel of the os known as MAC OS X 10.2 (Jaguar)"
         DEFINEOS="DARWIN";    STATUS="SUPPORTED"
-
-        CFLAGS="-no-cpp-precomp $CFLAGS"
-
-        case "${target}" in
-            *-*-darwin5.5* )
-                DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
-              ;;
-        esac
-
       ;;
 
     *-*-freebsd[[45]]*:*gcc* )
@@ -1049,9 +955,6 @@ case "${target}:${CC}" in
         VERIFIED4="2.2:2003-04-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-5.0-RELEASE"
         VERIFIED5="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:FreeBSD-5.1-RELEASE"
         DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
-        if test ".${LOCALEDIR}" = "."; then
-            LOCALEDIR="/usr/share/locale"
-        fi
       ;;
 
     *-*-freebsd*:* )
@@ -1151,6 +1054,46 @@ dnl> Leave this: it causes showoses to print it's footer
 dnl> showoses TERMS
 
 CPPFLAGS="${CPPFLAGS} -D${DEFINEOS}"
+
+if test -d ./configureextra; then
+
+    dnl> If there is a os/distro/release specific file (additional settings),
+    dnl> run it. Go from least specific to most specific, running ANY that match.
+    dnl> E.g. 'solaris 8' will match solaris 1st then solaris8.
+
+    echo ""
+    echo "Testing for special configuration options for ${DEFINEOS} ${DISTRO} ${RELEASE}"
+   
+    if test -f ./configureextra/${DEFINEOS}; then
+        echo ""
+        echo "    Executing configureextra/${DEFINEOS}"
+        . ./configureextra/${DEFINEOS}
+        echo ""
+    fi
+    if test ".${DISTRO}" != "."; then
+        if test -f ./configureextra/${DEFINEOS}${DISTRO}; then
+            echo ""
+            echo "    Executing configureextra/${DEFINEOS}${DISTRO}"
+            . ./configureextra/${DEFINEOS}${DISTRO}
+            echo ""
+        fi
+        if test ".${RELEASE}" != "." &&
+           test -f ./configureextra/${DEFINEOS}${DISTRO}${RELEASE}; then
+            echo ""
+            echo "    Executing configureextra/${DEFINEOS}${DISTRO}${RELEASE}"
+            . ./configureextra/${DEFINEOS}${DISTRO}${RELEASE}
+            echo ""
+        fi
+    else
+        if test ".${RELEASE}" != "." &&
+           test -f ./configureextra/${DEFINEOS}${RELEASE}; then
+            echo ""
+            echo "    Executing configureextra/${DEFINEOS}${RELEASE}"
+            . ./configureextra/${DEFINEOS}${RELEASE}
+            echo ""
+        fi
+    fi
+fi
 
 echo
 echo "*******************************************************************"
@@ -2914,7 +2857,7 @@ echo
 echo $PACKAGE_VERSION $NTOP_VERSION_EXTRA  | sed -e 's/.*/char * version   = "&";/' > version.c
 osName=`./config.guess`
 if test "x${DEFINEOS}" = "xLINUX"; then 
-    osName="${osName} (${DISTRO} Linux ${LINUXRELEASE})"
+    osName="${osName} (${DISTRO} Linux ${RELEASE})"
 fi
 echo "${osName}" | sed -e 's/.*/char * osName    = "&";/' >> version.c
 echo "char * author    = \"Luca Deri <deri@ntop.org>\";" >> version.c
