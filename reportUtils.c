@@ -380,7 +380,7 @@ void printFooterHostLink(void) {
 
     sendString("<TABLE BORDER=\"0\">"
                  "<TR>"
-                   "<TD COLSPAN=5 align=\"center\">The host link color indicates how recently the host was last seen</TD>"
+                   "<TD COLSPAN=5 align=\"center\">The host link color indicates how recently the host was first seen</TD>"
                  "</TR>"
                  "<TR>"
                    "<TD>&nbsp;&nbsp;<A href=# class=\"age0min\">0 to 5 minutes</A>&nbsp;&nbsp;</TD>"
