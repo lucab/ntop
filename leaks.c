@@ -50,7 +50,7 @@ void* myMalloc(size_t theSize, int theLine, char* theFile) {
   
   tmpBlock->blockSize = theSize;
   tmpBlock->memoryLocation = malloc(theSize);
-  memset(tmpBlock->memoryLocation, 0xff, theSize); /* Fill it with garbage */
+  memset(tmpBlock->memoryLocation, 0xee, theSize); /* Fill it with garbage */
   tmpBlock->alreadyTraced = 0;
 
   allocatedMemory += theSize;
@@ -390,7 +390,7 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   }
 
   thePtr = malloc(sz);
-  memset(thePtr, 0xff, sz); /* Fill it with garbage */
+  memset(thePtr, 0xee, sz); /* Fill it with garbage */
   return(thePtr);
 }
 
