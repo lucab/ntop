@@ -232,7 +232,9 @@ typedef char int8_t;
 
 #ifdef WIN32
 #include "ntop_win32.h"
+#ifndef HAVE_GDBM_H
 #define HAVE_GDBM_H
+#endif
 #define strncasecmp(a, b, c) strnicmp(a, b, c)
 #endif
 

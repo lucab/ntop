@@ -26,15 +26,23 @@
 #include "pcap.h"
 #endif
 
+#ifndef HAVE_GDBM_H
 #define HAVE_GDBM_H
+#endif
+#ifndef HAVE_GDCHART
 #define HAVE_GDCHART
+#endif
+#ifndef MULTITHREADED
 #define MULTITHREADED
+#endif
+#ifndef ASYNC_ADDRESS_RESOLUTION
 #define ASYNC_ADDRESS_RESOLUTION
+#endif
 
 #define STATIC_PLUGIN
 
 /* Courtesy of Wies-Software <wies@wiessoft.de> */
-extern char* getpass(const char *prompt);
+extern char* getadminpass(const char *prompt);
 extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 
 #define NTOP_LITTLE_ENDIAN  1
@@ -42,10 +50,18 @@ extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 
 extern char _wdir[];
 
+#ifndef DATAFILE_DIR
 #define DATAFILE_DIR	_wdir
+#endif
+#ifndef PLUGIN_DIR
 #define PLUGIN_DIR		"."
+#endif
+#ifndef CONFIGFILE_DIR
 #define CONFIGFILE_DIR	"."
+#endif
+#ifndef DBFILE_DIR
 #define DBFILE_DIR      "."
+#endif
 
 /* ndis.h */
 typedef int NDIS_STATUS, *PNDIS_STATUS; 

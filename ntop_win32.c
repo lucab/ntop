@@ -710,7 +710,7 @@ unsigned long waitForNextEvent(unsigned long ulDelay /* ms */) {
 #define DEF_INPMODE  (ENABLE_LINE_INPUT|ENABLE_ECHO_INPUT|ENABLE_PROCESSED_INPUT)
 #define HID_INPMODE  (ENABLE_LINE_INPUT|ENABLE_PROCESSED_INPUT)
 
-char* getpass(const char *prompt) {
+char* getadminpass(const char *prompt) {
   static char pwd_buf[128];
   size_t i;
   DWORD br;
