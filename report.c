@@ -1295,7 +1295,7 @@ void printAllSessionsHTML(char* host) {
       HostTraffic *peerHost;
 
       if(i == 0) {
-	printSectionTitle("IP&nbsp;Service/Port&nbsp;Usage\n");
+	printSectionTitle("TCP/UDP&nbsp;Service/Port&nbsp;Usage\n");
 	sendString("<CENTER>\n");
 	sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
 		   "<TH "TH_BG">IP&nbsp;Service</TH>"
@@ -1894,7 +1894,7 @@ void printIpProtocolUsage(void) {
   u_int i, j, idx1, hostsNum=0, numPorts=0;
   char buf[BUF_SIZE];
 
-  printHTMLheader("IP Protocol Subnet Usage", 0);
+  printHTMLheader("TCP/UDP Protocol Subnet Usage", 0);
 
   memset(clientPorts, 0, sizeof(clientPorts));
   memset(serverPorts, 0, sizeof(serverPorts));
@@ -2079,9 +2079,9 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       printNoDataYet();
     else {
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
-                 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
-                 "Percentage</TH></TR>\n");
+		 "Percentage</TH></TR>\n");
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
 
@@ -2089,6 +2089,12 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       percentage = ((float)(partialTotal*100))/((float)total);
       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage);
+
+      sendString("</TABLE>"TABLE_OFF"\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+                  "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+                 "Percentage</TH></TR>\n");
 
       for(i=0; i<numIpProtosToMonitor; i++) {
 	partialTotal = (float)device[actualReportDeviceId].ipProtoStats[i].local/1024;
@@ -2140,6 +2146,12 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage);
 
+      sendString("</TABLE>"TABLE_OFF);
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "Percentage</TH></TR>\n");
+
       for(i=0; i<numIpProtosToMonitor; i++) {
 	partialTotal = (float)device[actualReportDeviceId].ipProtoStats[i].remote2local/1024;
 
@@ -2188,6 +2200,12 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage);
 
+      sendString("</TABLE>"TABLE_OFF);
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH>"
+		 "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
+
       for(i=0; i<numIpProtosToMonitor; i++) {
 	partialTotal = (float)device[actualReportDeviceId].ipProtoStats[i].local2remote/1024;
 
@@ -2206,7 +2224,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       if(remainingTraffic > 0) {
 	percentage = ((float)(remainingTraffic*100))/((float)total);
-	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Prot.",
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;IP-based&nbsp;Prot.",
 			COLOR_1, remainingTraffic, percentage);
       }
       sendString("</TABLE>"TABLE_OFF"<P>\n");
@@ -2219,11 +2237,11 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     if(total == 0)
       return;
     else {
-      printSectionTitle("Global IP Protocol Distribution");
+      printSectionTitle("Global TCP/UDP Protocol Distribution");
       
       sendString("<CENTER>\n");
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR><TH "TH_BG" WIDTH=150>"
-		 "IP&nbsp;Protocol</TH>"
+		 "TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
 		 "Percentage</TH></TR>\n");
 
