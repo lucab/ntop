@@ -452,6 +452,7 @@ extern const char *gdbm_strerror (int);
 
 #define DUMMY_SOCKET_VALUE -999
 #define MULTIPLY_FACTORY   0.75
+#define AVERAGE_BUCKET_FILL   5
 
 /* ********************************************* */
 
@@ -1444,6 +1445,7 @@ typedef struct ipSession {
   u_char  napsterSession;           /* checked if this is a Napster session     */
 #endif
   u_char  passiveFtpSession;        /* checked if this is a passive FTP session */
+  struct ipSession *next;
 } IPSession;
 
 #define MAX_NUM_TABLE_ROWS      128

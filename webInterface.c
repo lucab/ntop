@@ -218,6 +218,9 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(snprintf(buf[bufIdx], BUF_SIZE, fmt, el->hostSymIpAddress) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.addressResolutionMutex);
+#endif
     return(buf[bufIdx]);
   }
 

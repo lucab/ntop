@@ -856,7 +856,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
     if(myGlobals.actTime > (*lastTime)) {
       if(myGlobals.nextSessionTimeoutScan < myGlobals.actTime) {
 	/* It's time to check for timeout sessions */
-	scanTimedoutTCPSessions();
+	scanTimedoutTCPSessions(0);
 	myGlobals.nextSessionTimeoutScan = myGlobals.actTime+SESSION_SCAN_DELAY;
       }
 

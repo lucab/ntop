@@ -202,6 +202,7 @@ extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr,
 			 u_char checkForMultihoming,
 			 u_char forceUsingIPaddress, int actualDeviceId);
 extern char *getNamedPort(int port);
+extern void freeSession(IPSession *sessionToPurge, int actualDeviceId);
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);

@@ -270,7 +270,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       myGlobals.device[actualDeviceId].hostsno++;
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Adding idx=%d on myGlobals.device=%d [actualHashSize=%d]\n",
+      traceEvent(TRACE_INFO, "Adding idx=%d on device=%d [actualHashSize=%d]\n",
 		 firstEmptySlot, actualDeviceId, myGlobals.device[actualDeviceId].actualHashSize);
 #endif
 
@@ -568,21 +568,21 @@ static void updateHostSessionsList(u_int theHostIdx,
 
     if((initiator == SERVER_TO_CLIENT)
        || (initiator == CLIENT_TO_SERVER)) {
-      scanner->bytesSent               += theSession->bytesSent;
+      scanner->bytesSent           += theSession->bytesSent;
       scanner->bytesRcvd           += theSession->bytesRcvd;
-      scanner->bytesFragmentedSent     += theSession->bytesFragmentedSent;
+      scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
       scanner->bytesFragmentedRcvd += theSession->bytesFragmentedRcvd;
     } else {
-      scanner->bytesSent               += theSession->bytesRcvd;
+      scanner->bytesSent           += theSession->bytesRcvd;
       scanner->bytesRcvd           += theSession->bytesSent;
-      scanner->bytesFragmentedSent     += theSession->bytesFragmentedRcvd;
+      scanner->bytesFragmentedSent += theSession->bytesFragmentedRcvd;
       scanner->bytesFragmentedRcvd += theSession->bytesFragmentedSent;
     }
     break;
   case IPPROTO_UDP:
-    scanner->bytesSent               += theSession->bytesSent;
+    scanner->bytesSent           += theSession->bytesSent;
     scanner->bytesRcvd           += theSession->bytesRcvd;
-    scanner->bytesFragmentedSent     += theSession->bytesFragmentedSent;
+    scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
     scanner->bytesFragmentedRcvd += theSession->bytesFragmentedRcvd;
     break;
   }
@@ -599,6 +599,89 @@ void allocateSecurityHostPkts(HostTraffic *srcHost) {
 
 /* ************************************ */
 
+void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
+  /* Session to purge */
+  if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
+    if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
+      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
+			     sessionToPurge->remotePeerIdx, sessionToPurge,
+			     IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE, actualDeviceId);
+      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->sport,
+			     sessionToPurge->initiatorIdx, sessionToPurge,
+			     IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE, actualDeviceId);
+    }
+  } else { /* Client->Server */
+    if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
+      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
+			     sessionToPurge->initiatorIdx, sessionToPurge,
+			     IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE, actualDeviceId);
+      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->dport,
+			     sessionToPurge->remotePeerIdx, sessionToPurge,
+			     IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE, actualDeviceId);
+    }
+  }
+
+  if(((sessionToPurge->bytesProtoSent == 0)
+      || (sessionToPurge->bytesProtoRcvd == 0))
+     && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
+     /* "Valid" TCP session used to skip faked sessions (e.g. portscans
+	with one faked packet + 1 response [RST usually]) */
+     ) {
+    HostTraffic *theHost, *theRemHost;
+    char *fmt = "WARNING: detected TCP connection with no data exchanged "
+      "[%s:%d] -> [%s:%d] (pktSent=%d/pktRcvd=%d) (network mapping attempt?)";
+
+    theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
+    theRemHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
+
+    if((theHost != NULL) && (theRemHost != NULL)) {
+
+      allocateSecurityHostPkts(theHost);
+      incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent,
+			    sessionToPurge->remotePeerIdx, actualDeviceId);
+      allocateSecurityHostPkts(theRemHost);
+      incrementUsageCounter(&theRemHost->secHostPkts->closedEmptyTCPConnRcvd,
+			    sessionToPurge->initiatorIdx, actualDeviceId);
+
+      if(myGlobals.enableSuspiciousPacketDump)
+	traceEvent(TRACE_WARNING, fmt,
+		   theHost->hostSymIpAddress, sessionToPurge->sport,
+		   theRemHost->hostSymIpAddress, sessionToPurge->dport,
+		   sessionToPurge->pktSent, sessionToPurge->pktRcvd);
+    }
+  }
+
+
+  /*
+   * Having updated the session information, 'theSession'
+   * can now be purged.
+   */
+  sessionToPurge->magic = 0;
+  if(myGlobals.enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge, actualDeviceId);
+  notifyTCPSession(sessionToPurge, actualDeviceId);
+#ifdef HAVE_MYSQL
+  mySQLnotifyTCPSession(sessionToPurge, actualDeviceId);
+#endif
+  myGlobals.numTerminatedSessions++;
+
+  myGlobals.device[actualDeviceId].numTcpSessions--;
+
+#ifdef DEBUG
+  {
+    char buf[32], buf1[32];
+
+    traceEvent(TRACE_INFO, "Session terminated: %s:%d<->%s:%d (# sessions = %d)",
+	       _intoa(sessionToPurge->initiatorRealIp, buf, sizeof(buf)), sessionToPurge->sport,
+	       _intoa(sessionToPurge->remotePeerRealIp, buf1, sizeof(buf1)), sessionToPurge->dport,
+	       myGlobals.device[actualDeviceId].numTcpSessions);
+  }
+#endif
+
+  free(sessionToPurge); /* No inner pointers to free */
+}
+
+/* ************************************ */
+
 void scanTimedoutTCPSessions(int actualDeviceId) {
   u_int idx, i;
 
@@ -606,103 +689,63 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions\n");
 #endif
 
-  for(i=0; i<myGlobals.numDevices; i++) {
-    for(idx=0; idx<myGlobals.device[i].numTotSessions; idx++) {
-      if(myGlobals.device[i].tcpSession[idx] != NULL) {
+  for(idx=0; idx<myGlobals.device[actualDeviceId].numTotSessions; idx++) {
+    IPSession *nextSession, *prevSession, *thisSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
-	if(myGlobals.device[i].tcpSession[idx]->magic != MAGIC_NUMBER) {
-	  myGlobals.device[i].tcpSession[idx] = NULL;
-	  myGlobals.device[i].numTcpSessions--;
-	  traceEvent(TRACE_ERROR, "===> Magic assertion failed!");
-	  continue;
-	}
-
-	if(((myGlobals.device[i].tcpSession[idx]->sessionState == STATE_TIMEOUT)
-	    && ((myGlobals.device[i].tcpSession[idx]->lastSeen+TWO_MSL_TIMEOUT) < myGlobals.actTime))
-	   || /* The branch below allows to flush sessions which have not been
-		 terminated properly (we've received just one FIN (not two). It might be
-		 that we've lost some packets (hopefully not). */
-	   ((myGlobals.device[i].tcpSession[idx]->sessionState >= STATE_FIN1_ACK0)
-	    && ((myGlobals.device[i].tcpSession[idx]->lastSeen+DOUBLE_TWO_MSL_TIMEOUT) < myGlobals.actTime))
-	   /* The line below allows to avoid keeping very old sessions that
-	      might be still open, but that are probably closed and we've
-	      lost some packets */
-	   || ((myGlobals.device[i].tcpSession[idx]->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)
-	   || ((myGlobals.device[i].tcpSession[idx]->lastSeen+IDLE_SESSION_TIMEOUT) < myGlobals.actTime)
-	   ) {
-	  IPSession *sessionToPurge = myGlobals.device[i].tcpSession[idx];
-
-	  myGlobals.device[i].tcpSession[idx] = NULL;
-	  myGlobals.device[i].numTcpSessions--;
-
-	  /* Session to purge */
-	  if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
-	    if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
-	      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
-				     sessionToPurge->remotePeerIdx, sessionToPurge,
-				     IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE, actualDeviceId);
-	      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->sport,
-				     sessionToPurge->initiatorIdx, sessionToPurge,
-				     IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE, actualDeviceId);
-	    }
-	  } else { /* Client->Server */
-	    if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
-	      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
-				     sessionToPurge->initiatorIdx, sessionToPurge,
-				     IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE, actualDeviceId);
-	      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->dport,
-				     sessionToPurge->remotePeerIdx, sessionToPurge,
-				     IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE, actualDeviceId);
-	    }
-	  }
-
-	  if(((sessionToPurge->bytesProtoSent == 0)
-	      || (sessionToPurge->bytesProtoRcvd == 0))
-	     && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
-	     /* "Valid" TCP session used to skip faked sessions (e.g. portscans
-		with one faked packet + 1 response [RST usually]) */
-	     ) {
-	    HostTraffic *theHost, *theRemHost;
-	    char *fmt = "WARNING: detected TCP connection with no data exchanged "
-	      "[%s:%d] -> [%s:%d] (pktSent=%d/pktRcvd=%d) (network mapping attempt?)";
-
-	    theHost = myGlobals.device[i].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
-	    theRemHost = myGlobals.device[i].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
-
-	    if((theHost != NULL) && (theRemHost != NULL)) {
-
-	      allocateSecurityHostPkts(theHost);
-	      incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent,
-				    sessionToPurge->remotePeerIdx, i);
-	      allocateSecurityHostPkts(theRemHost);
-	      incrementUsageCounter(&theRemHost->secHostPkts->closedEmptyTCPConnRcvd,
-				    sessionToPurge->initiatorIdx, i);
-
-	      if(myGlobals.enableSuspiciousPacketDump)
-		traceEvent(TRACE_WARNING, fmt,
-			   theHost->hostSymIpAddress, sessionToPurge->sport,
-			   theRemHost->hostSymIpAddress, sessionToPurge->dport,
-			   sessionToPurge->pktSent, sessionToPurge->pktRcvd);
-	    }
-	  }
-
-
-	  /*
-	   * Having updated the session information, 'theSession'
-	   * can now be purged.
-	   */
-	  sessionToPurge->magic = 0;
-	  if(myGlobals.enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge, actualDeviceId);
-	  notifyTCPSession(sessionToPurge, actualDeviceId);
-#ifdef HAVE_MYSQL
-	  mySQLnotifyTCPSession(sessionToPurge, actualDeviceId);
-#endif
-	  myGlobals.numTerminatedSessions++;
-	  free(sessionToPurge); /* No inner pointers to free */
-	}
+    prevSession = thisSession;
+      
+    while(thisSession != NULL) {
+      if(thisSession->magic != MAGIC_NUMBER) {
+	thisSession = NULL;
+	myGlobals.device[actualDeviceId].numTcpSessions--;
+	traceEvent(TRACE_ERROR, "===> Magic assertion failed!");
+	continue;
       }
-    } /* end for */
-  }
+	
+      nextSession = thisSession->next;
+	
+      if(((thisSession->sessionState == STATE_TIMEOUT)
+	  && ((thisSession->lastSeen+TWO_MSL_TIMEOUT) < myGlobals.actTime))
+	 || /* The branch below allows to flush sessions which have not been
+	       terminated properly (we've received just one FIN (not two). It might be
+	       that we've lost some packets (hopefully not). */
+	 ((thisSession->sessionState >= STATE_FIN1_ACK0)
+	  && ((thisSession->lastSeen+DOUBLE_TWO_MSL_TIMEOUT) < myGlobals.actTime))
+	 /* The line below allows to avoid keeping very old sessions that
+	    might be still open, but that are probably closed and we've
+	    lost some packets */
+	 || ((thisSession->lastSeen+IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)
+	 || ((thisSession->lastSeen+IDLE_SESSION_TIMEOUT) < myGlobals.actTime)
+	 ) {
+	if((prevSession != NULL) && (prevSession != thisSession))
+	  prevSession->next = nextSession;
+	else
+	  myGlobals.device[actualDeviceId].tcpSession[idx] = NULL;
+
+	if(myGlobals.device[actualDeviceId].tcpSession[idx] == thisSession) {
+#ifdef DEBUG
+	  traceEvent(TRACE_WARNING, "Found problem on idx %d", idx);
+#endif
+	  myGlobals.device[actualDeviceId].tcpSession[idx] = thisSession->next;
+
+	  if(myGlobals.device[actualDeviceId].tcpSession[idx] == myGlobals.device[actualDeviceId].tcpSession[idx]->next) {
+	    myGlobals.device[actualDeviceId].tcpSession[idx]->next = NULL;
+#ifdef DEBUG
+	    traceEvent(TRACE_WARNING, "Patched problem on idx %d", idx);
+#endif
+	  }
+	}
+
+	freeSession(thisSession, actualDeviceId);
+      }
+      thisSession = nextSession;
+
+      if(thisSession && (thisSession->next == thisSession)) {
+	traceEvent(TRACE_WARNING, "Internal Error (3)");
+      }
+
+    } /* while */
+  } /* end for */
 }
 
 /* ************************************ */
@@ -831,11 +874,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 				u_int packetDataLength,
 				u_char* packetData,
 				int actualDeviceId) {
-  u_int idx, initialIdx, i;
+  u_int idx, i;
   IPSession *theSession = NULL;
   short flowDirection = CLIENT_TO_SERVER;
   char addedNewEntry = 0;
-  u_short sessionType, check, found;
+  u_short sessionType, check, found=0;
 #ifdef ENABLE_NAPSTER
   u_short napsterDownload = 0;
 #endif
@@ -884,10 +927,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
    * Patch on the line below courtesy of
    * Paul Chapman <pchapman@fury.bio.dfo.ca>
    */
-  initialIdx = idx = (u_int)((srcHost->hostIpAddress.s_addr+
-			      dstHost->hostIpAddress.s_addr+
-			      sport+dport) % myGlobals.device[actualDeviceId].numTotSessions);
-
+  idx = (u_int)((srcHost->hostIpAddress.s_addr+
+		 dstHost->hostIpAddress.s_addr+
+		 sport+dport) % myGlobals.device[actualDeviceId].numTotSessions);
+  
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "%s:%d->%s:%d %d->",
 	     srcHost->hostSymIpAddress, sport,
@@ -896,160 +939,109 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
  RESCAN_LIST:
   if(sessionType == IPPROTO_TCP) {
-    for(i=0, found=0; i<myGlobals.device[actualDeviceId].numTotSessions; i++) {
-      theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
+    IPSession *prevSession;
 
-      if(theSession != NULL) {
-	if((theSession->initiatorIdx == srcHostIdx)
-	   && (theSession->remotePeerIdx == dstHostIdx)
-	   && (theSession->sport == sport)
-	   && (theSession->dport == dport)) {
-	  found = 1;
-	  flowDirection = CLIENT_TO_SERVER;
-	  break;
-	} else if((theSession->initiatorIdx == dstHostIdx)
-		  && (theSession->remotePeerIdx == srcHostIdx)
-		  && (theSession->sport == dport)
-		  && (theSession->dport == sport)) {
-	  found = 1;
-	  flowDirection = SERVER_TO_CLIENT;
-	  break;
-	}
+    prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
+
+    while(theSession != NULL) {
+
+      if(theSession && (theSession->next == theSession)) {
+	traceEvent(TRACE_WARNING, "Internal Error (4) (idx=%d)", idx);
+      }      
+
+      if((theSession->initiatorIdx == srcHostIdx)
+	 && (theSession->remotePeerIdx == dstHostIdx)
+	 && (theSession->sport == sport)
+	 && (theSession->dport == dport)) {
+	found = 1;
+	flowDirection = CLIENT_TO_SERVER;
+	break;
+      } else if((theSession->initiatorIdx == dstHostIdx)
+		&& (theSession->remotePeerIdx == srcHostIdx)
+		&& (theSession->sport == dport)
+		&& (theSession->dport == sport)) {
+	found = 1;
+	flowDirection = SERVER_TO_CLIENT;
+	break;
       } else {
-	/* ************************
-
-	   -- 2 --
-
-	   This code needs to be optimised. In fact everytime a
-	   new host is added to the hash, the whole hash has to
-	   be scan. This shouldn't happen with hashes. Unfortunately
-	   due to the way ntop works, a entry can appear and
-	   disappear several times from the hash, hence its position
-	   in the hash might change.
-
-	   See also -- 1 --.
-
-	   Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
-
-	   ************************ */
-
-	if(firstEmptySlot == NO_PEER)
-	  firstEmptySlot = idx;
+	prevSession = theSession;
+	theSession = theSession->next;
       }
-
-      idx = ((idx+1) % myGlobals.device[actualDeviceId].numTotSessions);
     }
 
-    /*
-      traceEvent(TRACE_INFO, "Search for session: %d (%d <-> %d)",
-      found, sport, dport);
-    */
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Search for session: %d (%d <-> %d)",
+	       found, sport, dport);
+#endif
 
     if(!found) {
-      if(firstEmptySlot != NO_PEER) {
-	/* New Session */
+      /* New Session */
 #ifdef DEBUG
-	printf(" NEW ");
+      printf(" NEW ");
 #endif
-	/* MULTIPLY_FACTORY courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-	if(myGlobals.device[actualDeviceId].numTcpSessions >
-	   (myGlobals.device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
-	  /* If possible this table will be enlarged */
 
-	  if(extendTcpSessionsHash(actualDeviceId) == 0) {
-	    /* The table has been extended successfully */
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "TCP hash [act size: %d][max size: %d]",
+		 myGlobals.device[actualDeviceId].numTcpSessions,
+		 (myGlobals.device[actualDeviceId].numTotSessions*AVERAGE_BUCKET_FILL));
+#endif
 
-	    /* A goto il necessary as when the hash is extended all
-	       the pointers changed hence some references (eg. sessions[])
-	       are no longer valid) */
-	    goto RESCAN_LIST;
-	  }
+      /* MULTIPLY_FACTORY courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+      if(myGlobals.device[actualDeviceId].numTcpSessions >
+	 (myGlobals.device[actualDeviceId].numTotSessions*AVERAGE_BUCKET_FILL)) {
+	/* If possible this table will be enlarged */
+
+	if(extendTcpSessionsHash(actualDeviceId) == 0) {
+	  /* The table has been extended successfully */
+
+	  /* A goto il necessary as when the hash is extended all
+	     the pointers changed hence some references (eg. sessions[])
+	     are no longer valid) */
+	  goto RESCAN_LIST;
+	}
+      }
+
+      if(myGlobals.device[actualDeviceId].numTcpSessions >
+	 (myGlobals.device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
+	return(NULL); /* No space left */
+      } else {
+	/* There's enough space left in the hashtable */
+	theSession = (IPSession*)malloc(sizeof(IPSession));
+	memset(theSession, 0, sizeof(IPSession));
+	addedNewEntry = 1;
+
+	if(tp->th_flags == TH_SYN) {
+	  theSession->nwLatency.tv_sec = h->ts.tv_sec;
+	  theSession->nwLatency.tv_usec = h->ts.tv_usec;
+	  theSession->sessionState = STATE_SYN;
 	}
 
-	if(myGlobals.device[actualDeviceId].numTcpSessions >
-	   (myGlobals.device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
-	  return(NULL); /* No space left */
-	} else {
-	  /* There's enough space left in the hashtable */
-	  theSession = (IPSession*)malloc(sizeof(IPSession));
-	  memset(theSession, 0, sizeof(IPSession));
-	  addedNewEntry = 1;
-
-	  if(tp->th_flags == TH_SYN) {
-	    theSession->nwLatency.tv_sec = h->ts.tv_sec;
-	    theSession->nwLatency.tv_usec = h->ts.tv_usec;
-	    theSession->sessionState = STATE_SYN;
-	  }
-
-	  theSession->magic = MAGIC_NUMBER;
-	  myGlobals.device[actualDeviceId].numTcpSessions++;
+	theSession->magic = MAGIC_NUMBER;
+	myGlobals.device[actualDeviceId].numTcpSessions++;
 
 #ifdef TRACE_TRAFFIC_INFO
-	  traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
-		     dstHost->hostSymIpAddress, dport,
-		     srcHost->hostSymIpAddress, sport,
-		     myGlobals.device[actualDeviceId].numTcpSessions);
+	traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
+		   dstHost->hostNumIpAddress, dport,
+		   srcHost->hostNumIpAddress, sport,
+		   myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
 #ifdef ENABLE_NAPSTER
-	  /* Let's check whether this is a Napster session */
-	  if(numNapsterSvr > 0) {
-	    for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
-	      if(((myGlobals.napsterSvr[i].serverPort == sport)
-		  && (myGlobals.napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr))
-		 || ((myGlobals.napsterSvr[i].serverPort == dport)
-		     && (myGlobals.napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
-		theSession->napsterSession = 1;
-		myGlobals.napsterSvr[i].serverPort = 0; /* Free slot */
-		numNapsterSvr--;
-		FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
-		FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
-
-#ifdef TRACE_TRAFFIC_INFO
-		traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
-			   srcHost->hostSymIpAddress,
-			   dstHost->hostSymIpAddress);
-#endif
-
-		if(srcHost->napsterStats == NULL) {
-		  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-		  memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
-		}
-
-		if(dstHost->napsterStats == NULL) {
-		  dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-		  memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
-		}
-
-		srcHost->napsterStats->numDownloadsRequested++,
-		  dstHost->napsterStats->numDownloadsServed++;
-	      }
-	    }
-	  }
-
-	  if(!theSession->napsterSession)  {
-	    /* This session has not been recognized as a Napster
-	       session. It might be that ntop has been started
-	       after the session started, or that ntop has
-	       lost a few packets. Let's do a final check...
-	    */
-#define NAPSTER_DOMAIN "napster.com"
-
-	    if(
-	       (((strlen(srcHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
-		 && (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-
-						      strlen(NAPSTER_DOMAIN)],
-			    NAPSTER_DOMAIN) == 0) && (sport == 8888)))
-	       ||
-	       (((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
-		 && (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-
-						      strlen(NAPSTER_DOMAIN)],
-			    NAPSTER_DOMAIN) == 0)) && (dport == 8888))) {
-
+	/* Let's check whether this is a Napster session */
+	if(numNapsterSvr > 0) {
+	  for(i=0; i<MAX_NUM_NAPSTER_SERVER; i++) {
+	    if(((myGlobals.napsterSvr[i].serverPort == sport)
+		&& (myGlobals.napsterSvr[i].serverAddress.s_addr == srcHost->hostIpAddress.s_addr))
+	       || ((myGlobals.napsterSvr[i].serverPort == dport)
+		   && (myGlobals.napsterSvr[i].serverAddress.s_addr == dstHost->hostIpAddress.s_addr))) {
 	      theSession->napsterSession = 1;
+	      myGlobals.napsterSvr[i].serverPort = 0; /* Free slot */
+	      numNapsterSvr--;
+	      FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
+	      FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
 
 #ifdef TRACE_TRAFFIC_INFO
-	      traceEvent(TRACE_INFO, "NAPSTER new session: %s <->%s\n",
+	      traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
 			 srcHost->hostSymIpAddress,
 			 dstHost->hostSymIpAddress);
 #endif
@@ -1064,34 +1056,92 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
 	      }
 
-	      if(sport == 8888) {
-		FD_SET(HOST_SVC_NAPSTER_SERVER, &srcHost->flags);
-		FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
-		srcHost->napsterStats->numConnectionsServed++,
-		  dstHost->napsterStats->numConnectionsRequested++;
-	      } else {
-		FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
-		FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
-		srcHost->napsterStats->numConnectionsRequested++,
-		  dstHost->napsterStats->numConnectionsServed++;
-	      }
+	      srcHost->napsterStats->numDownloadsRequested++,
+		dstHost->napsterStats->numDownloadsServed++;
 	    }
 	  }
-#endif /* ENABLE_NAPSTER */
 	}
 
-	myGlobals.device[actualDeviceId].tcpSession[firstEmptySlot] = theSession;
-	theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
-	theSession->remotePeerIdx = checkSessionIdx(dstHostIdx);
-	theSession->sport = sport;
-	theSession->dport = dport;
-	theSession->passiveFtpSession = isPassiveSession(dstHost->hostIpAddress.s_addr, dport);
-	theSession->firstSeen = myGlobals.actTime;
-	flowDirection = CLIENT_TO_SERVER;
+	if(!theSession->napsterSession)  {
+	  /* This session has not been recognized as a Napster
+	     session. It might be that ntop has been started
+	     after the session started, or that ntop has
+	     lost a few packets. Let's do a final check...
+	  */
+#define NAPSTER_DOMAIN "napster.com"
+
+	  if(
+	     (((strlen(srcHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
+	       && (strcmp(&srcHost->hostSymIpAddress[strlen(srcHost->hostSymIpAddress)-
+						    strlen(NAPSTER_DOMAIN)],
+			  NAPSTER_DOMAIN) == 0) && (sport == 8888)))
+	     ||
+	     (((strlen(dstHost->hostSymIpAddress) > strlen(NAPSTER_DOMAIN))
+	       && (strcmp(&dstHost->hostSymIpAddress[strlen(dstHost->hostSymIpAddress)-
+						    strlen(NAPSTER_DOMAIN)],
+			  NAPSTER_DOMAIN) == 0)) && (dport == 8888))) {
+
+	    theSession->napsterSession = 1;
+
+#ifdef TRACE_TRAFFIC_INFO
+	    traceEvent(TRACE_INFO, "NAPSTER new session: %s <->%s\n",
+		       srcHost->hostSymIpAddress,
+		       dstHost->hostSymIpAddress);
+#endif
+
+	    if(srcHost->napsterStats == NULL) {
+	      srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+	      memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
+	    }
+
+	    if(dstHost->napsterStats == NULL) {
+	      dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+	      memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
+	    }
+
+	    if(sport == 8888) {
+	      FD_SET(HOST_SVC_NAPSTER_SERVER, &srcHost->flags);
+	      FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
+	      srcHost->napsterStats->numConnectionsServed++,
+		dstHost->napsterStats->numConnectionsRequested++;
+	    } else {
+	      FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
+	      FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
+	      srcHost->napsterStats->numConnectionsRequested++,
+		dstHost->napsterStats->numConnectionsServed++;
+	    }
+	  }
+	}
+#endif /* ENABLE_NAPSTER */
+      }
+
+      theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
+      myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
+      theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
+      theSession->remotePeerIdx = checkSessionIdx(dstHostIdx);
+      theSession->sport = sport;
+      theSession->dport = dport;
+      theSession->passiveFtpSession = isPassiveSession(dstHost->hostIpAddress.s_addr, dport);
+      theSession->firstSeen = myGlobals.actTime;
+      flowDirection = CLIENT_TO_SERVER;
 
 #ifdef DEBUG
-	printSession(theSession, sessionType, 0);
+      printSession(theSession, sessionType, 0);
 #endif
+    } else {
+      /* Existing session */
+
+      if(theSession != myGlobals.device[actualDeviceId].tcpSession[idx]) {
+	/* Move the session at the beginning of the list */
+	prevSession->next = theSession->next;
+	theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
+	myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
+
+	/*
+	traceEvent(TRACE_INFO, "Swapped session: %s:%d->%s:%d",
+		   srcHost->hostNumIpAddress, sport,
+		   dstHost->hostNumIpAddress, dport);
+	*/
       }
     }
 
@@ -1102,11 +1152,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     /* ***************************************** */
 
-      if(packetDataLength >= sizeof(rcStr))
-	len = sizeof(rcStr);
-      else
-	len = packetDataLength;
-     
+    if(packetDataLength >= sizeof(rcStr))
+      len = sizeof(rcStr);
+    else
+      len = packetDataLength;
+
+    if(myGlobals.enablePacketDecoding) {
       if((sport == 80 /* HTTP */) 
 	 && (theSession->bytesProtoRcvd == 0)
 	 && (packetDataLength > 0)) {
@@ -1375,29 +1426,33 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	srcHost->napsterStats->numConnectionsServed++,
 	  dstHost->napsterStats->numConnectionsRequested++;
 #endif /* NASPTER */
-      } else if((theSession->sessionState == STATE_ACTIVE)
-		&& ((theSession->nwLatency.tv_sec != 0)
-		    || (theSession->nwLatency.tv_usec != 0))
-		/* This session started *after* ntop started (i.e. ntop
-		   didn't miss the beginning of the session). If the session
-		   started *before* ntop started up then nothing can be said
-		   about the protocol.
-		*/
-		) {
-	if(packetDataLength >= sizeof(rcStr))
-	  len = sizeof(rcStr)-1;
-	else
-	  len = packetDataLength;
+      }
+    }
 
-	/*
-	  This is a brand new session: let's check whether this is
-	  not a faked session (i.e. a known protocol is running at
-	  an unknown port)
-	*/
-	if((theSession->bytesProtoSent == 0) && (len > 0)) {
-	  memset(rcStr, 0, sizeof(rcStr));
-	  strncpy(rcStr, packetData, len);
+    if((theSession->sessionState == STATE_ACTIVE)
+       && ((theSession->nwLatency.tv_sec != 0)
+	   || (theSession->nwLatency.tv_usec != 0))
+       /* This session started *after* ntop started (i.e. ntop
+	  didn't miss the beginning of the session). If the session
+	  started *before* ntop started up then nothing can be said
+	  about the protocol.
+       */
+       ) {
+      if(packetDataLength >= sizeof(rcStr))
+	len = sizeof(rcStr)-1;
+      else
+	len = packetDataLength;
 
+      /*
+	This is a brand new session: let's check whether this is
+	not a faked session (i.e. a known protocol is running at
+	an unknown port)
+      */
+      if((theSession->bytesProtoSent == 0) && (len > 0)) {
+	memset(rcStr, 0, sizeof(rcStr));
+	strncpy(rcStr, packetData, len);
+
+	if(myGlobals.enablePacketDecoding) {
 	  if((dport != 80)
 	     && (dport != 3000  /* ntop  */)
 	     && (dport != 3128  /* squid */)
@@ -1447,19 +1502,16 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	      dumpSuspiciousPacket(actualDeviceId);
 	    }
 	  }
-	} else if((theSession->bytesProtoRcvd == 0) && (len > 0)) {
-	  /* Uncomment when necessary
-	     memset(rcStr, 0, sizeof(rcStr));
-	     strncpy(rcStr, packetData, len);
-	  */
 	}
       }
+    }
 
-      if(packetDataLength >= sizeof(rcStr))
-	len = sizeof(rcStr)-1;
-      else
-	len = packetDataLength;
-
+    if(packetDataLength >= sizeof(rcStr))
+      len = sizeof(rcStr)-1;
+    else
+      len = packetDataLength;
+    
+    if(myGlobals.enablePacketDecoding) {
       if(len > 0) {
 	if(sport == 21) {
 	  FD_SET(HOST_SVC_FTP, &srcHost->flags);
@@ -1483,6 +1535,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 	    addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
 	  }
+	}
       } /* len > 0 */
     }
 
@@ -1507,7 +1560,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == STATE_SYN))  {
       theSession->sessionState = STATE_SYN_ACK;
     } else if((tp->th_flags == TH_ACK) && (theSession->sessionState == STATE_SYN_ACK)) {
-
       if(h->ts.tv_sec >= theSession->nwLatency.tv_sec) {
 	theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
@@ -1581,94 +1633,96 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     }
 
 #ifdef ENABLE_NAPSTER
-    /* Let's decode some Napster packets */
-    if((!theSession->napsterSession)
-       && (packetData != NULL)
-       && (packetDataLength == 1)
-       && (theSession->bytesProtoRcvd == 0) /* This condition will not hold if you
-					       move this line of code down this
-					       function */
-       ) {
-      /*
-	If this is a Napster Download then it should
-	look like "0x31 GET username song ...."
-      */
+    if(myGlobals.enablePacketDecoding) {
+      /* Let's decode some Napster packets */
+      if((!theSession->napsterSession)
+	 && (packetData != NULL)
+	 && (packetDataLength == 1)
+	 && (theSession->bytesProtoRcvd == 0) /* This condition will not hold if you
+						 move this line of code down this
+						 function */
+	 ) {
+	/*
+	  If this is a Napster Download then it should
+	  look like "0x31 GET username song ...."
+	*/
 
-      if(packetData[0] == 0x31) {
-	theSession->napsterSession = 1;
-	napsterDownload = 1;
+	if(packetData[0] == 0x31) {
+	  theSession->napsterSession = 1;
+	  napsterDownload = 1;
+	}
+
+	/*
+	  traceEvent(TRACE_INFO, "Session check: %s:%d->%s:%d [%x]\n",
+	  srcHost->hostSymIpAddress, sport,
+	  dstHost->hostSymIpAddress, dport, packetData[0]);
+	*/
       }
 
-      /*
-	traceEvent(TRACE_INFO, "Session check: %s:%d->%s:%d [%x]\n",
-	srcHost->hostSymIpAddress, sport,
-	dstHost->hostSymIpAddress, dport, packetData[0]);
-      */
-    }
+      if(theSession->napsterSession && (packetDataLength > 0) ) {
+	if(srcHost->napsterStats == NULL) {
+	  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+	  memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
+	}
 
-    if(theSession->napsterSession && (packetDataLength > 0) ) {
-      if(srcHost->napsterStats == NULL) {
-	srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-	memset(srcHost->napsterStats, 0, sizeof(NapsterStats));
-      }
+	if(dstHost->napsterStats == NULL) {
+	  dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
+	  memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
+	}
 
-      if(dstHost->napsterStats == NULL) {
-	dstHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
-	memset(dstHost->napsterStats, 0, sizeof(NapsterStats));
-      }
+	srcHost->napsterStats->bytesSent += packetDataLength,
+	  dstHost->napsterStats->bytesRcvd += packetDataLength;
 
-      srcHost->napsterStats->bytesSent += packetDataLength,
-	dstHost->napsterStats->bytesRcvd += packetDataLength;
-
-      if(napsterDownload) {
-	FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
-	FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
+	if(napsterDownload) {
+	  FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
+	  FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
 
 #ifdef TRACE_TRAFFIC_INFO
-	traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
-		   dstHost->hostSymIpAddress,
-		   srcHost->hostSymIpAddress);
+	  traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
+		     dstHost->hostSymIpAddress,
+		     srcHost->hostSymIpAddress);
 #endif
-	dstHost->napsterStats->numDownloadsRequested++,
-	  srcHost->napsterStats->numDownloadsServed++;
-      } else if((packetData != NULL) && (packetDataLength > 4)) {
-	if((packetData[1] == 0x0) && (packetData[2] == 0xC8) && (packetData[3] == 0x00)) {
-	  srcHost->napsterStats->numSearchSent++, dstHost->napsterStats->numSearchRcvd++;
+	  dstHost->napsterStats->numDownloadsRequested++,
+	    srcHost->napsterStats->numDownloadsServed++;
+	} else if((packetData != NULL) && (packetDataLength > 4)) {
+	  if((packetData[1] == 0x0) && (packetData[2] == 0xC8) && (packetData[3] == 0x00)) {
+	    srcHost->napsterStats->numSearchSent++, dstHost->napsterStats->numSearchRcvd++;
 
 #ifdef TRACE_TRAFFIC_INFO
-	  traceEvent(TRACE_INFO, "NAPSTER search: %s->%s\n",
-		     srcHost->hostSymIpAddress,
-		     dstHost->hostSymIpAddress);
+	    traceEvent(TRACE_INFO, "NAPSTER search: %s->%s\n",
+		       srcHost->hostSymIpAddress,
+		       dstHost->hostSymIpAddress);
 #endif
-	} else if((packetData[1] == 0x0)
-		  && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
-	  char tmpBuf[64], *remoteHost, *remotePort, *strtokState;
+	  } else if((packetData[1] == 0x0)
+		    && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
+	    char tmpBuf[64], *remoteHost, *remotePort, *strtokState;
 
-	  struct in_addr shost;
+	    struct in_addr shost;
 
-	  srcHost->napsterStats->numDownloadsRequested++,
-	    dstHost->napsterStats->numDownloadsServed++;
+	    srcHost->napsterStats->numDownloadsRequested++,
+	      dstHost->napsterStats->numDownloadsServed++;
 
-	  /*
-	    LEN 00 CC 00 <remote user name>
-	    <remote user IP> <remote user port> <payload>
-	  */
+	    /*
+	      LEN 00 CC 00 <remote user name>
+	      <remote user IP> <remote user port> <payload>
+	    */
 
-	  memcpy(tmpBuf, &packetData[4], (packetDataLength<64) ? packetDataLength : 63);
-	  strtok_r(tmpBuf, " ", &strtokState); /* remote user */
-	  if((remoteHost = strtok_r(NULL, " ", &strtokState)) != NULL) {
-	    if((remotePort = strtok_r(NULL, " ", &strtokState)) != NULL) {
+	    memcpy(tmpBuf, &packetData[4], (packetDataLength<64) ? packetDataLength : 63);
+	    strtok_r(tmpBuf, " ", &strtokState); /* remote user */
+	    if((remoteHost = strtok_r(NULL, " ", &strtokState)) != NULL) {
+	      if((remotePort = strtok_r(NULL, " ", &strtokState)) != NULL) {
 
-	      myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverPort = atoi(remotePort);
-	      if(myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverPort != 0) {
-		myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverAddress.s_addr = inet_addr(remoteHost);
-		myGlobals.napsterSvrInsertIdx = (myGlobals.napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
-		numNapsterSvr++;
-		shost.s_addr = inet_addr(remoteHost);
+		myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverPort = atoi(remotePort);
+		if(myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverPort != 0) {
+		  myGlobals.napsterSvr[myGlobals.napsterSvrInsertIdx].serverAddress.s_addr = inet_addr(remoteHost);
+		  myGlobals.napsterSvrInsertIdx = (myGlobals.napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
+		  numNapsterSvr++;
+		  shost.s_addr = inet_addr(remoteHost);
 #ifdef TRACE_TRAFFIC_INFO
-		traceEvent(TRACE_INFO, "NAPSTER: %s requested download from %s:%s",
-			   srcHost->hostSymIpAddress, remoteHost, remotePort);
+		  traceEvent(TRACE_INFO, "NAPSTER: %s requested download from %s:%s",
+			     srcHost->hostSymIpAddress, remoteHost, remotePort);
 #endif
+		}
 	      }
 	    }
 	  }
@@ -1676,7 +1730,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
     }
 #endif
-
+       
     /*
      *
      * In this case the session is over hence the list of
@@ -1685,8 +1739,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
      */
     if(tp->th_flags & TH_FIN) {
       u_int32_t fin = ntohl(tp->th_seq)+packetDataLength;
-
-      /* theSession->sessionState = STATE_TIMEOUT; */
 
       if(sport < dport) /* Server->Client */
 	check = (fin != theSession->lastSCFin);
@@ -1813,11 +1865,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
        || (tp->th_flags & TH_RST)) /* abortive release */ {
       if(theSession->sessionState == STATE_SYN_ACK) {
 	/*
-	   Rcvd RST packet before to complete the 3-way handshake.
-	   Note that the message is emitted only of the reset is received
-	   while in STATE_SYN_ACK. In fact if it has been received in
-	   STATE_SYN this message has not to be emitted because this is
-	   a rejected session.
+	  Rcvd RST packet before to complete the 3-way handshake.
+	  Note that the message is emitted only of the reset is received
+	  while in STATE_SYN_ACK. In fact if it has been received in
+	  STATE_SYN this message has not to be emitted because this is
+	  a rejected session.
 	*/
 	if(myGlobals.enableSuspiciousPacketDump) {
 	  traceEvent(TRACE_WARNING, "WARNING: TCP session [%s:%d]<->[%s:%d] reset by %s "
@@ -1829,7 +1881,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	}
       }
 
-      theSession->sessionState = STATE_TIMEOUT;
+      theSession->sessionState = STATE_TIMEOUT;      
       updateUsedPorts(srcHost, srcHostIdx, dstHost, dstHostIdx, sport, dport,
 		      (u_int)(theSession->bytesSent+theSession->bytesRcvd));
     }
@@ -1884,103 +1936,103 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     /* **************************** */
 
-    /*
-      For more info about checks below see
-      http://www.synnergy.net/Archives/Papers/dethy/host-detection.txt
+    if(myGlobals.enableSuspiciousPacketDump) {
+      /*
+	For more info about checks below see
+	http://www.synnergy.net/Archives/Papers/dethy/host-detection.txt
     */
-    if((srcHostIdx == dstHostIdx)
-       /* && (sport == dport)  */ /* Caveat: what about Win NT 3.51 ? */
-       && (tp->th_flags == TH_SYN)) {
-      if(myGlobals.enableSuspiciousPacketDump) {
+      if((srcHostIdx == dstHostIdx)
+	 /* && (sport == dport)  */ /* Caveat: what about Win NT 3.51 ? */
+	 && (tp->th_flags == TH_SYN)) {      
 	traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket(actualDeviceId);
+	dumpSuspiciousPacket(actualDeviceId);      
       }
-    }
 
-    if(tp->th_flags == (TH_RST|TH_ACK)) {
-      if((((theSession->initiatorIdx == srcHostIdx)
-	   && (theSession->lastRem2InitiatorFlags[0] == TH_SYN))
-	  || ((theSession->initiatorIdx == dstHostIdx)
-	      && (theSession->lastInitiator2RemFlags[0] == TH_SYN)))
-	 ) {
-	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&dstHost->secHostPkts->rejectedTCPConnSent, srcHostIdx, actualDeviceId);
-	incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnRcvd, dstHostIdx, actualDeviceId);
+      if(tp->th_flags == (TH_RST|TH_ACK)) {
+	if((((theSession->initiatorIdx == srcHostIdx)
+	     && (theSession->lastRem2InitiatorFlags[0] == TH_SYN))
+	    || ((theSession->initiatorIdx == dstHostIdx)
+		&& (theSession->lastInitiator2RemFlags[0] == TH_SYN)))
+	   ) {
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&dstHost->secHostPkts->rejectedTCPConnSent, srcHostIdx, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnRcvd, dstHostIdx, actualDeviceId);
 
-	if(myGlobals.enableSuspiciousPacketDump) {
-	  traceEvent(TRACE_INFO, "Host %s rejected TCP session from %s [%s:%d]<->[%s:%d] (port closed?)",
-		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress,
-		     dstHost->hostSymIpAddress, dport,
-		     srcHost->hostSymIpAddress, sport);
-	  dumpSuspiciousPacket(actualDeviceId);
-	}
-      } else if(((theSession->initiatorIdx == srcHostIdx)
-		 && (theSession->lastRem2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
-		|| ((theSession->initiatorIdx == dstHostIdx)
-		    && (theSession->lastInitiator2RemFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))) {
-	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&dstHost->secHostPkts->xmasScanSent, srcHostIdx, actualDeviceId);
-	incrementUsageCounter(&srcHost->secHostPkts->xmasScanRcvd, dstHostIdx, actualDeviceId);
+	  if(myGlobals.enableSuspiciousPacketDump) {
+	    traceEvent(TRACE_INFO, "Host %s rejected TCP session from %s [%s:%d]<->[%s:%d] (port closed?)",
+		       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress,
+		       dstHost->hostSymIpAddress, dport,
+		       srcHost->hostSymIpAddress, sport);
+	    dumpSuspiciousPacket(actualDeviceId);
+	  }
+	} else if(((theSession->initiatorIdx == srcHostIdx)
+		   && (theSession->lastRem2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
+		  || ((theSession->initiatorIdx == dstHostIdx)
+		      && (theSession->lastInitiator2RemFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))) {
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&dstHost->secHostPkts->xmasScanSent, srcHostIdx, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->xmasScanRcvd, dstHostIdx, actualDeviceId);
 
-	if(myGlobals.enableSuspiciousPacketDump) {
-	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
-		     dstHost->hostSymIpAddress, dport,
-		     srcHost->hostSymIpAddress, sport);
-	  dumpSuspiciousPacket(actualDeviceId);
-	}
-      } else if(((theSession->initiatorIdx == srcHostIdx)
-		 && ((theSession->lastRem2InitiatorFlags[0] & TH_FIN) == TH_FIN))
-		|| ((theSession->initiatorIdx == dstHostIdx)
-		    && ((theSession->lastInitiator2RemFlags[0] & TH_FIN) == TH_FIN))) {
-	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&dstHost->secHostPkts->finScanSent, srcHostIdx, actualDeviceId);
-	incrementUsageCounter(&srcHost->secHostPkts->finScanRcvd, dstHostIdx, actualDeviceId);
+	  if(myGlobals.enableSuspiciousPacketDump) {
+	    traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
+		       dstHost->hostSymIpAddress, dport,
+		       srcHost->hostSymIpAddress, sport);
+	    dumpSuspiciousPacket(actualDeviceId);
+	  }
+	} else if(((theSession->initiatorIdx == srcHostIdx)
+		   && ((theSession->lastRem2InitiatorFlags[0] & TH_FIN) == TH_FIN))
+		  || ((theSession->initiatorIdx == dstHostIdx)
+		      && ((theSession->lastInitiator2RemFlags[0] & TH_FIN) == TH_FIN))) {
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&dstHost->secHostPkts->finScanSent, srcHostIdx, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->finScanRcvd, dstHostIdx, actualDeviceId);
 
-	if(myGlobals.enableSuspiciousPacketDump) {
-	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
-		     dstHost->hostSymIpAddress, dport,
-		     srcHost->hostSymIpAddress, sport);
-	  dumpSuspiciousPacket(actualDeviceId);
-	}
-      } else if(((theSession->initiatorIdx == srcHostIdx)
-		 && (theSession->lastRem2InitiatorFlags[0] == 0)
-		 && (theSession->bytesRcvd > 0))
-		|| ((theSession->initiatorIdx == dstHostIdx)
-		    && ((theSession->lastInitiator2RemFlags[0] == 0))
-		    && (theSession->bytesSent > 0))) {
-	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->secHostPkts->nullScanRcvd, dstHostIdx, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->nullScanSent, srcHostIdx, actualDeviceId);
+	  if(myGlobals.enableSuspiciousPacketDump) {
+	    traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
+		       dstHost->hostSymIpAddress, dport,
+		       srcHost->hostSymIpAddress, sport);
+	    dumpSuspiciousPacket(actualDeviceId);
+	  }
+	} else if(((theSession->initiatorIdx == srcHostIdx)
+		   && (theSession->lastRem2InitiatorFlags[0] == 0)
+		   && (theSession->bytesRcvd > 0))
+		  || ((theSession->initiatorIdx == dstHostIdx)
+		      && ((theSession->lastInitiator2RemFlags[0] == 0))
+		      && (theSession->bytesSent > 0))) {
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&srcHost->secHostPkts->nullScanRcvd, dstHostIdx, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->nullScanSent, srcHostIdx, actualDeviceId);
 
-	if(myGlobals.enableSuspiciousPacketDump) {
-	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
-		     dstHost->hostSymIpAddress, dport,
-		     srcHost->hostSymIpAddress, sport);
-	  dumpSuspiciousPacket(actualDeviceId);
+	  if(myGlobals.enableSuspiciousPacketDump) {
+	    traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
+		       dstHost->hostSymIpAddress, dport,
+		       srcHost->hostSymIpAddress, sport);
+	    dumpSuspiciousPacket(actualDeviceId);
+	  }
 	}
       }
-    }
 
-    /* **************************** */
+      /* **************************** */
 
     /* Save session flags */
-    if(theSession->initiatorIdx == srcHostIdx) {
-      int i;
+      if(theSession->initiatorIdx == srcHostIdx) {
+	int i;
 
-      for(i=0; i<MAX_NUM_STORED_FLAGS-1; i++)
-	theSession->lastInitiator2RemFlags[i+1] =
-	  theSession->lastInitiator2RemFlags[i];
+	for(i=0; i<MAX_NUM_STORED_FLAGS-1; i++)
+	  theSession->lastInitiator2RemFlags[i+1] =
+	    theSession->lastInitiator2RemFlags[i];
 
-      theSession->lastInitiator2RemFlags[0] = tp->th_flags;
-    } else {
-      int i;
+	theSession->lastInitiator2RemFlags[0] = tp->th_flags;
+      } else {
+	int i;
 
-      for(i=0; i<MAX_NUM_STORED_FLAGS-1; i++)
-	theSession->lastRem2InitiatorFlags[i+1] =
-	  theSession->lastRem2InitiatorFlags[i];
+	for(i=0; i<MAX_NUM_STORED_FLAGS-1; i++)
+	  theSession->lastRem2InitiatorFlags[i+1] =
+	    theSession->lastRem2InitiatorFlags[i];
 
-      theSession->lastRem2InitiatorFlags[0] = tp->th_flags;
+	theSession->lastRem2InitiatorFlags[0] = tp->th_flags;
+      }
     }
 
     if(flowDirection == CLIENT_TO_SERVER) {
@@ -1993,6 +2045,30 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->bytesRcvd  += length;
       theSession->pktRcvd++;
       if(fragmentedData) theSession->bytesFragmentedRcvd += packetDataLength;
+    }
+
+    /* Immediately free the session */
+    if(theSession->sessionState == STATE_TIMEOUT) {
+      if((prevSession != NULL) && (prevSession != theSession)) {	
+	prevSession->next = theSession->next;
+      } else
+	myGlobals.device[actualDeviceId].tcpSession[idx] = NULL;
+
+      if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
+#ifdef DEBUG
+	traceEvent(TRACE_WARNING, "Found problem on idx %d", idx);
+#endif
+	myGlobals.device[actualDeviceId].tcpSession[idx] = theSession->next;
+	if(myGlobals.device[actualDeviceId].tcpSession[idx] == myGlobals.device[actualDeviceId].tcpSession[idx]->next) {
+	  myGlobals.device[actualDeviceId].tcpSession[idx]->next = NULL;
+#ifdef DEBUG
+	  traceEvent(TRACE_WARNING, "Patched problem on idx %d", idx);
+#endif
+	}
+      }
+
+      freeSession(theSession, actualDeviceId);
+      return(NULL);
     }
   } else if(sessionType == IPPROTO_UDP) {
     IPSession tmpSession;
@@ -3026,7 +3102,7 @@ static void processIpPkt(const u_char *bp,
       
       if((sport > 0) && (dport > 0)) {
 	IPSession *theSession;
-	u_short isPassiveSession;
+	u_short isPassiveSession = 0, nonFullyRemoteSession = 1;
 
 	/* It might be that tcpDataLength is 0 when
 	   the rcvd packet is fragmented and the main
@@ -3052,17 +3128,20 @@ static void processIpPkt(const u_char *bp,
 	    srcHost->tcpSentRem += length;
 	    dstHost->tcpRcvdFromRem += length;
 	    myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote += length;
+	    nonFullyRemoteSession = 0;
 	  }
 	}
 
-	theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
-				      srcHostIdx, sport, dstHostIdx,
-				      dport, length, &tp, tcpDataLength,
-				      theData, actualDeviceId);
-	if(theSession == NULL)
-	  isPassiveSession = 0;
-	else
-	  isPassiveSession = theSession->passiveFtpSession;
+	if(nonFullyRemoteSession) {
+	  theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
+					srcHostIdx, sport, dstHostIdx,
+					dport, length, &tp, tcpDataLength,
+					theData, actualDeviceId);
+	  if(theSession == NULL)
+	    isPassiveSession = 0;
+	  else
+	    isPassiveSession = theSession->passiveFtpSession;
+	}
 
 	/* choose most likely port for protocol traffic accounting
 	 * by trying lower number port first. This is based
@@ -3262,6 +3341,8 @@ static void processIpPkt(const u_char *bp,
       }      
 
       if((sport > 0) && (dport > 0)) {
+	u_short nonFullyRemoteSession = 1;
+
 	/* It might be that udpBytes is 0 when
 	   the rcvd packet is fragmented and the main
 	   packet has not yet been rcvd */
@@ -3286,6 +3367,7 @@ static void processIpPkt(const u_char *bp,
 	    srcHost->udpSentRem += length;
 	    dstHost->udpRcvdFromRem += length;
 	    myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote += length;
+	    nonFullyRemoteSession = 0;
 	  }
 	}
   
@@ -3302,11 +3384,13 @@ static void processIpPkt(const u_char *bp,
 	    handleIP(dport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId);
         }
 
-	handleUDPSession(h, (off & 0x3fff),
-			 srcHostIdx, sport, dstHostIdx,
-			 dport, udpDataLength,
-			 (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
-	sendUDPflow(srcHost, dstHost, sport, dport, length);
+	if(nonFullyRemoteSession)
+	  handleUDPSession(h, (off & 0x3fff),
+			   srcHostIdx, sport, dstHostIdx,
+			   dport, udpDataLength,
+			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
+	
+	if(myGlobals.enableNetFlowSupport) sendUDPflow(srcHost, dstHost, sport, dport, length);	
       }
     }
     break;
@@ -3860,6 +3944,15 @@ void processPacket(u_char *_deviceId,
       static long numPkt=0;
 
       traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
+
+      /* 
+      if(numPkt=100000) {
+	int i;
+
+	for(i=0; i<myGlobals.numDevices; i++)
+	  freeHostInstances(i);
+      }
+      */
   }
 #endif
 

@@ -90,8 +90,8 @@ void addPageIndicator(char *url, u_int pageNum,
   
   if(actPage < numPages) {
     if(snprintf(nextBuf, sizeof(nextBuf), 
-		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 ALIGN=vmiddle></A> "
-		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 ALIGN=vmiddle></A>", 
+		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 ALIGN=vmiddle></A> "
+		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 ALIGN=vmiddle></A>", 
 		url, pageNum+1, shortBuf, 
 		url, numPages-1, shortBuf) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");    
@@ -1944,94 +1944,101 @@ void printActiveTCPSessions(int actualDeviceId) {
   }
 
   for(idx=1, numSessions=0; idx<myGlobals.device[actualReportDeviceId].numTotSessions; idx++)
-    if((idx != myGlobals.otherHostEntryIdx) && (myGlobals.device[actualReportDeviceId].tcpSession[idx] != NULL)
-#ifndef PRINT_ALL_ACTIVE_SESSIONS
-       && (myGlobals.device[actualReportDeviceId].tcpSession[idx]->sessionState == STATE_ACTIVE)
-#endif
-       ) {
-
+    if((idx != myGlobals.otherHostEntryIdx) 
+       && (myGlobals.device[actualReportDeviceId].tcpSession[idx] != NULL)) {
       char *sport, *dport;
       TrafficCounter dataSent, dataRcvd;
-
-      if(numSessions == 0) {
-	sendString("<CENTER>\n");
-	sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
-		   "<TH "TH_BG">Client</TH>"
-		   "<TH "TH_BG">Server</TH>"
-		   "<TH "TH_BG">Data&nbsp;Sent</TH>"
-		   "<TH "TH_BG">Data&nbsp;Rcvd</TH>"
-		   "<TH "TH_BG">Active&nbsp;Since</TH>"
-		   "<TH "TH_BG">Last&nbsp;Seen</TH>"
-		   "<TH "TH_BG">Duration</TH>"
-		   "<TH "TH_BG">Latency</TH>"
-#ifdef PRINT_ALL_ACTIVE_SESSIONS
-		   "<TH "TH_BG">State</TH>"
+      IPSession *session = myGlobals.device[actualReportDeviceId].tcpSession[idx];
+      
+      while(session != NULL) { 
+#ifndef PRINT_ALL_ACTIVE_SESSIONS
+	if(session->sessionState != STATE_ACTIVE) {
+	  session = session->next;
+	  continue;
+	}
 #endif
-		   "</TR>\n");
-      }
 
-      sport = getPortByNum(myGlobals.device[actualReportDeviceId].tcpSession[idx]->sport, IPPROTO_TCP);
-      dport = getPortByNum(myGlobals.device[actualReportDeviceId].tcpSession[idx]->dport, IPPROTO_TCP);
-      dataSent = myGlobals.device[actualReportDeviceId].tcpSession[idx]->bytesSent;
-      dataRcvd = myGlobals.device[actualReportDeviceId].tcpSession[idx]->bytesRcvd;
-
-      if(sport == NULL) {
-	static char _sport[8];
-	if(snprintf(_sport, 8, "%d", myGlobals.device[actualReportDeviceId].tcpSession[idx]->sport) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sport = _sport;
-      }
-
-      if(dport == NULL) {
-	static char _dport[8];
-	if(snprintf(_dport, 8, "%d", myGlobals.device[actualReportDeviceId].tcpSession[idx]->dport) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	dport = _dport;
-      }
-
-      /* Sanity check */
-      if((myGlobals.actTime < myGlobals.device[actualReportDeviceId].tcpSession[idx]->firstSeen)
-	 || (myGlobals.device[actualReportDeviceId].tcpSession[idx]->firstSeen == 0))
-	myGlobals.device[actualReportDeviceId].tcpSession[idx]->firstSeen = myGlobals.actTime;
-
-      if(snprintf(buf, sizeof(buf), "<TR %s>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s:%s</TD>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s:%s</TD>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+	if(numSessions == 0) {
+	  sendString("<CENTER>\n");
+	  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+		     "<TH "TH_BG">Client</TH>"
+		     "<TH "TH_BG">Server</TH>"
+		     "<TH "TH_BG">Data&nbsp;Sent</TH>"
+		     "<TH "TH_BG">Data&nbsp;Rcvd</TH>"
+		     "<TH "TH_BG">Active&nbsp;Since</TH>"
+		     "<TH "TH_BG">Last&nbsp;Seen</TH>"
+		     "<TH "TH_BG">Duration</TH>"
+		     "<TH "TH_BG">Latency</TH>"
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
-		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
+		     "<TH "TH_BG">State</TH>"
 #endif
-		  "</TR>\n",
-		  getRowColor(),
-		  makeHostLink(myGlobals.device[actualReportDeviceId].
-			       hash_hostTraffic[checkSessionIdx(myGlobals.device[actualReportDeviceId].
-								tcpSession[idx]->initiatorIdx)],
-			       SHORT_FORMAT, 0, 0),
-		  sport,
-		  makeHostLink(myGlobals.device[actualReportDeviceId].
-			       hash_hostTraffic[checkSessionIdx(myGlobals.device[actualReportDeviceId].
-								tcpSession[idx]->remotePeerIdx)],
-			       SHORT_FORMAT, 0, 0),
-		  dport,
-		  formatBytes(dataSent, 1),
-		  formatBytes(dataRcvd, 1),
-		  formatTime(&(myGlobals.device[actualReportDeviceId].tcpSession[idx]->firstSeen), 1),
-		  formatTime(&(myGlobals.device[actualReportDeviceId].tcpSession[idx]->lastSeen), 1),
-		  formatSeconds(myGlobals.actTime-myGlobals.device[actualReportDeviceId].tcpSession[idx]->firstSeen),
-		  formatLatency(myGlobals.device[actualReportDeviceId].tcpSession[idx]->nwLatency,
-				myGlobals.device[actualReportDeviceId].tcpSession[idx]->sessionState)
-#ifdef PRINT_ALL_ACTIVE_SESSIONS
-		  , getSessionState(myGlobals.device[actualReportDeviceId].tcpSession[idx])
-#endif
-		  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		     "</TR>\n");
+	}
 
-      sendString(buf);
-      numSessions++;
+	sport = getPortByNum(session->sport, IPPROTO_TCP);
+	dport = getPortByNum(session->dport, IPPROTO_TCP);
+	dataSent = session->bytesSent;
+	dataRcvd = session->bytesRcvd;
+
+	if(sport == NULL) {
+	  static char _sport[8];
+	  if(snprintf(_sport, 8, "%d", session->sport) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sport = _sport;
+	}
+
+	if(dport == NULL) {
+	  static char _dport[8];
+	  if(snprintf(_dport, 8, "%d", session->dport) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  dport = _dport;
+	}
+
+	/* Sanity check */
+	if((myGlobals.actTime < session->firstSeen)
+	   || (session->firstSeen == 0))
+	  session->firstSeen = myGlobals.actTime;
+
+	if(snprintf(buf, sizeof(buf), "<TR %s>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s:%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s:%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+#ifdef PRINT_ALL_ACTIVE_SESSIONS
+		    "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
+#endif
+		    "</TR>\n",
+		    getRowColor(),
+		    makeHostLink(myGlobals.device[actualReportDeviceId].
+				 hash_hostTraffic[checkSessionIdx(myGlobals.device[actualReportDeviceId].
+								  tcpSession[idx]->initiatorIdx)],
+				 SHORT_FORMAT, 0, 0),
+		    sport,
+		    makeHostLink(myGlobals.device[actualReportDeviceId].
+				 hash_hostTraffic[checkSessionIdx(myGlobals.device[actualReportDeviceId].
+								  tcpSession[idx]->remotePeerIdx)],
+				 SHORT_FORMAT, 0, 0),
+		    dport,
+		    formatBytes(dataSent, 1),
+		    formatBytes(dataRcvd, 1),
+		    formatTime(&(session->firstSeen), 1),
+		    formatTime(&(session->lastSeen), 1),
+		    formatSeconds(myGlobals.actTime-session->firstSeen),
+		    formatLatency(session->nwLatency,
+				  session->sessionState)
+#ifdef PRINT_ALL_ACTIVE_SESSIONS
+		    , getSessionState(session)
+#endif
+		    ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+	sendString(buf);
+	numSessions++;
+	session = session->next;
+      }
     }
 
   if(numSessions > 0) {

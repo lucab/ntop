@@ -432,6 +432,8 @@ int initGlobalValues(void) {
     myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
 #endif
     myGlobals.trackOnlyLocalHosts = 1;
+
+    myGlobals.enableSessionHandling = 1; /* ==> Luca's test <== */
   } else {
 #ifdef MULTITHREADED
     myGlobals.numDequeueThreads = 1;

@@ -492,24 +492,27 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
   }
 
   for(j=0; j<myGlobals.device[deviceToExtend].numTotSessions; j++) {
-    if(myGlobals.device[deviceToExtend].tcpSession[j] != NULL) {
-      myGlobals.device[deviceToExtend].tcpSession[j]->initiatorIdx  =
-	mapIdx(myGlobals.device[deviceToExtend].tcpSession[j]->initiatorIdx);
-      myGlobals.device[deviceToExtend].tcpSession[j]->remotePeerIdx =
-	mapIdx(myGlobals.device[deviceToExtend].tcpSession[j]->remotePeerIdx);
+    IPSession *prevSession, *nextSession, *theSession = myGlobals.device[deviceToExtend].tcpSession[j];
+    
+    prevSession = theSession;
 
-      if((myGlobals.device[deviceToExtend].tcpSession[j]->initiatorIdx == NO_PEER)
-	 || (myGlobals.device[deviceToExtend].tcpSession[j]->remotePeerIdx == NO_PEER)) {
-	/* Session to purge */
-	notifyTCPSession(myGlobals.device[deviceToExtend].tcpSession[j], actualDeviceId);
-#ifdef HAVE_MYSQL
-	mySQLnotifyTCPSession(myGlobals.device[deviceToExtend].tcpSession[j], actualDeviceId);
-#endif
-	free(myGlobals.device[deviceToExtend].tcpSession[j]); /* No inner pointers to free */
-	myGlobals.device[deviceToExtend].numTcpSessions--;
-	myGlobals.device[deviceToExtend].tcpSession[j] = NULL;
+    while(theSession != NULL) {
+      nextSession = theSession->next;
+      theSession->initiatorIdx  = mapIdx(theSession->initiatorIdx);
+      theSession->remotePeerIdx = mapIdx(theSession->remotePeerIdx);
+
+      if((theSession->initiatorIdx == NO_PEER) || (theSession->remotePeerIdx == NO_PEER)) {
+	prevSession->next = nextSession;
+	freeSession(theSession, actualDeviceId);
+      } else
+	prevSession = prevSession->next;
+
+      theSession = nextSession;
+
+      if(theSession && (theSession->next == theSession)) {
+	traceEvent(TRACE_WARNING, "Internal Error (2)");
       }
-    }
+    } /* while */     
   }
 
   free(mappings);
@@ -550,14 +553,25 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
   int i;
 
   for(i=0; i<myGlobals.device[theDevice].numTotSessions; i++) {
-    if((myGlobals.device[theDevice].tcpSession[i] != NULL)
-       && ((myGlobals.device[theDevice].tcpSession[i]->initiatorIdx == hostIdx)
-	   || (myGlobals.device[theDevice].tcpSession[i]->remotePeerIdx == hostIdx))) {
+    IPSession *prevSession, *nextSession, *theSession = myGlobals.device[theDevice].tcpSession[i];
+    
+    prevSession = theSession;
+    
+    while(theSession != NULL) {
+      nextSession = theSession->next;
 
-      free(myGlobals.device[theDevice].tcpSession[i]);
-      myGlobals.device[theDevice].tcpSession[i] = NULL;
-      myGlobals.device[theDevice].numTcpSessions--;
-    }
+      if((theSession->initiatorIdx == hostIdx) || (theSession->remotePeerIdx == hostIdx)) {	
+        prevSession->next = nextSession;
+        freeSession(theSession, theDevice);
+      } else
+	prevSession = prevSession->next;
+
+      theSession = nextSession;
+
+      if(theSession && (theSession->next == theSession)) {
+	traceEvent(TRACE_WARNING, "Internal Error (1)");
+      }
+    } /* while */
   }
 }
 
@@ -569,7 +583,7 @@ static int _checkIndex(u_int *flaggedHosts, u_int flaggedHostsLen, u_int idx,
     return(0);
   } else if(idx > flaggedHostsLen) {
     traceEvent(TRACE_WARNING, "WARNING: index %u out of range 0-%u [%s:%d]",
-	       idx, flaggedHostsLen, fileName, fileLine);
+	     idx, flaggedHostsLen, fileName, fileLine);
     return(0);
   } else
     return(flaggedHosts[idx]);
@@ -753,8 +767,7 @@ static void removeGlobalHostPeers(HostTraffic *el,
 
 /* **************************************** */
 
-void freeHostInfo(int theDevice, u_int hostIdx,
-		  u_short refreshHash, int actualDeviceId) {
+void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash, int actualDeviceId) {
   u_int j, i;
   HostTraffic *host;
   IpGlobalSession *nextElement, *element;
@@ -770,8 +783,6 @@ void freeHostInfo(int theDevice, u_int hostIdx,
 #endif
 
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-  /* FIXME (DL): checkSessionIdx() acts on actualDeviceId instead of theDevice */
-
   updateHostTraffic(host);
 #ifdef HAVE_MYSQL
   mySQLupdateHostTraffic(host);
@@ -910,7 +921,7 @@ void freeHostInfo(int theDevice, u_int hostIdx,
     }
   }
 
-  freeHostSessions(hostIdx, theDevice);
+  freeHostSessions(hostIdx, actualDeviceId);
 
   /* ************************************* */
 
@@ -982,8 +993,7 @@ void freeHostInstances(int actualDeviceId) {
   else
     max = myGlobals.numDevices;
 
-  traceEvent(TRACE_INFO, "Freeing hash host instances... (%d myGlobals.device(s) to save)\n", 
-	     max);
+  traceEvent(TRACE_INFO, "Freeing hash host instances... (%d device(s) to save)\n", max);
 
   for(i=0; i<max; i++) {
     actualDeviceId = i;
@@ -1098,24 +1108,26 @@ int extendTcpSessionsHash(int actualDeviceId) {
 
     newLen = myGlobals.device[actualDeviceId].numTotSessions*extensionFactor;
     for(i=0; i<myGlobals.device[actualDeviceId].numTotSessions; i++) {
-      if(tmpSession[i] != NULL) {
+      IPSession *nextSession, *thisSession = tmpSession[i];
+
+      while(thisSession != NULL) {
 	idx = (u_int)((tmpSession[i]->initiatorRealIp.s_addr+
 		       tmpSession[i]->remotePeerRealIp.s_addr+
 		       tmpSession[i]->sport+
 		       tmpSession[i]->dport) % newLen);
 
-	while(myGlobals.device[actualDeviceId].tcpSession[idx] != NULL)
-	  idx = (idx+1) % newLen;
-
-	myGlobals.device[actualDeviceId].tcpSession[idx] = tmpSession[i];
-      }
+	nextSession = thisSession->next;
+	thisSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
+	myGlobals.device[actualDeviceId].tcpSession[idx] = thisSession;
+	thisSession = nextSession;
+      } /* while */
     }
     free(tmpSession);
 
     myGlobals.device[actualDeviceId].numTotSessions *= extensionFactor;
 
     displayError = 1;
-    traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d][myGlobals.deviceId=%d]",
+    traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d][deviceId=%d]",
 	       myGlobals.device[actualDeviceId].numTotSessions, actualDeviceId);
     return(0);
   } else {
