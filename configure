@@ -5256,6 +5256,17 @@ EOF
 
 
 
+RUN_DIR=$localstatedir/ntop
+RUN_DIR=`(
+    test "x$prefix" = xNONE && prefix=$ac_default_prefix
+    eval echo "$RUN_DIR"
+)`
+cat >> confdefs.h <<EOF
+#define RUN_DIR "$RUN_DIR"
+EOF
+
+
+
 PLUGIN_DIR=$libdir/ntop/plugins
 PLUGIN_DIR=`(
   test "x$prefix" = xNONE && prefix=$ac_default_prefix
@@ -5463,6 +5474,7 @@ s%@PLUGINS@%$PLUGINS%g
 s%@INTOP@%$INTOP%g
 s%@DATAFILE_DIR@%$DATAFILE_DIR%g
 s%@CONFIGFILE_DIR@%$CONFIGFILE_DIR%g
+s%@RUN_DIR@%$RUN_DIR%g
 s%@PLUGIN_DIR@%$PLUGIN_DIR%g
 s%@DBFILE_DIR@%$DBFILE_DIR%g
 

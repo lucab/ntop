@@ -461,6 +461,10 @@ int main(int argc, char *argv[]) {
     localAddresses = NULL;
   }
 
+#ifndef WIN32
+  writePidFile(RUN_DIR);
+#endif
+
   initDeviceDatalink();
   parseTrafficFilter(argv, optind);
 
@@ -498,7 +502,10 @@ int main(int argc, char *argv[]) {
 #ifndef WIN32
   pause();
 #endif
-  while(!endNtop) sleep(1);
+
+  /* Wait until threads terminate */
+  while(!endNtop)
+    sleep(1);
 
   return(0);
 }

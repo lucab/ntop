@@ -1055,6 +1055,14 @@ CONFIGFILE_DIR=`(
 AC_DEFINE_UNQUOTED(CONFIGFILE_DIR,"$CONFIGFILE_DIR", [Configuration file directory])
 AC_SUBST(CONFIGFILE_DIR)
 
+RUN_DIR=$localstatedir/ntop
+RUN_DIR=`(
+    test "x$prefix" = xNONE && prefix=$ac_default_prefix
+    eval echo "$RUN_DIR"
+)`
+AC_DEFINE_UNQUOTED(RUN_DIR,"$RUN_DIR", [Run files directory])
+AC_SUBST(RUN_DIR)
+
 PLUGIN_DIR=$libdir/ntop/plugins
 PLUGIN_DIR=`(
   test "x$prefix" = xNONE && prefix=$ac_default_prefix

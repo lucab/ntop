@@ -397,6 +397,8 @@ extern int32_t gmt2local(time_t t);
 extern void handleFlowsSpecs(char* flows);
 extern int getLocalHostAddress(struct in_addr *hostAddress, char* device);
 extern void fillDomainName(HostTraffic *el);
+extern void writePidFile(char *path);
+
 #ifdef MULTITHREADED
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
                         char* userParm);

@@ -264,6 +264,9 @@
 /* Configuration file directory */
 #undef CONFIGFILE_DIR
 
+/* Run files directory */
+#undef RUN_DIR
+
 /* Plugin installation directory */
 #undef PLUGIN_DIR
 
