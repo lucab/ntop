@@ -645,15 +645,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		 myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
-#ifdef MULTITHREADED
-      accessMutex(&myGlobals.tcpSessionsMutex, "newSession");
-#endif
       myGlobals.device[actualDeviceId].numTcpSessions++;
       theSession->next = myGlobals.device[actualDeviceId].tcpSession[idx];
       myGlobals.device[actualDeviceId].tcpSession[idx] = theSession;
-#ifdef MULTITHREADED
-      releaseMutex(&myGlobals.tcpSessionsMutex);
-#endif
 
       theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
       theSession->remotePeerIdx = checkSessionIdx(dstHostIdx);
