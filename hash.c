@@ -544,10 +544,10 @@ void purgeIdleHosts(int actDevice) {
       if((!hashFull) 
 	 && (el->refCount == 0) 
 	 && (el->lastSeen < purgeTime)) {
-
 	if((!myGlobals.stickyHosts)
 	   || (el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
-	   || (!subnetPseudoLocalHost(el))) {
+	   || (!subnetPseudoLocalHost(el))      /* Purge remote hosts only */
+	   ) {
 	  theFlaggedHosts[maxBucket++] = el;
 
 	  if(el->hostTrafficBucket != theIdx) {

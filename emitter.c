@@ -518,6 +518,20 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 
 /* ********************************** */
 
+static void decrementRefCount(HostTraffic *el) {
+  if(el->refCount == 0) return;
+
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
+#endif
+  el->refCount--;
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+}
+
+/* ********************************** */
+
 void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64], filter[128], *hostKey = NULL;
   unsigned int idx, numEntries=0, lang=DEFAULT_FLAG_LANGUAGE, j, localView=0;
@@ -621,19 +635,23 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       if(key[0] != '\0') {
 	if(strcmp(el->hostNumIpAddress, key)
 	   && strcmp(el->ethAddressString, key)
-	   && strcmp(workSymIpAddress, key))
+	   && strcmp(workSymIpAddress, key)) {
+	  decrementRefCount(el);
 	  continue;
+	}
       }
 
       if(el->hostNumIpAddress[0] != '\0') {
 	hostKey = el->hostNumIpAddress;
 	if(localView) {
 	  if(((!subnetPseudoLocalHost(el))
-	      && (!multicastHost(el))))
+	      && (!multicastHost(el)))) {
+	    decrementRefCount(el);
 	    continue;
+	  }
 	}
       } else {
-	if(localView) continue;
+	if(localView) { decrementRefCount(el); continue; }
 	hostKey = el->ethAddressString;
       }
 
@@ -1146,13 +1164,7 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 
       if((lang == FLAG_NO_LANGUAGE) && (numEntries == 1)) goto REPEAT_HOSTS;
 
-#ifdef CFG_MULTITHREADED
-      accessMutex(&myGlobals.hostsHashMutex, "dumpNtopHashes");
-#endif
-      el->refCount--;
-#ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.hostsHashMutex);
-#endif
+      decrementRefCount(el);
     }
   }
 

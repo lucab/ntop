@@ -2413,8 +2413,6 @@ void processPacket(u_char *_deviceId,
 	updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
       }
     }
-
-    if(srcHost != NULL) srcHost->refCount--; if(dstHost != NULL) dstHost->refCount--;
   }
 
   if(myGlobals.flowsList != NULL) /* Handle flows last */
