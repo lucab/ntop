@@ -1092,33 +1092,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   argv[argc++] = path;
 
   if((!createdCounter) && (numRuns == 1)) {
-    /* This is the first rrd update hence in order to avoid
-       wrong traffic peaks we set the value for the counter on the previous
-       interval to unknown
-
-       # From: Alex van den Bogaerdt <alex@ergens.op.HET.NET>
-       # Date: Fri, 12 Jul 2002 01:32:45 +0200 (CEST)
-       # Subject: Re: [rrd-users] Re: To DERIVE or not to DERIVE
-
-       [...]
-
-       Oops.  OK, so the counter is unknown.  Indeed one needs to discard
-       the first interval between reboot time and poll time in that case.
-
-       [...]
-
-       But this would also make the next interval unknown.  My suggestion:
-       insert an unknown at that time minus one second, enter the fetched
-       value at that time.
-
-       cheers,
-       --
-       __________________________________________________________________
-       / alex@slot.hollandcasino.nl                  alex@ergens.op.het.net \
-
-    */
-
-    safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:u", rrdTime-10); /* u = undefined */
+    return;
   } else {
     safe_snprintf(__FILE__, __LINE__, cmd, sizeof(cmd), "%u:%u", rrdTime, (unsigned long)value);
   }
