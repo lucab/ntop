@@ -108,6 +108,7 @@ LIBREADLINE = @LIBREADLINE@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
+MORELIBS = @MORELIBS@
 NM = @NM@
 NTOP_RELEASE = @NTOP_RELEASE@
 NTOP_VERSION_INFO = @NTOP_VERSION_INFO@
@@ -128,7 +129,7 @@ DEFS = @DEFS@
 INCS = @INCS@
 
 INCLUDES = -I. $(INCS)
-LIBS = @LIBS@
+LIBS = @LIBS@ @MORELIBS@
 CCLD = @CCLD@
 
 DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.db ntops ntopd ntop-config
@@ -589,7 +590,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \

@@ -985,6 +985,7 @@ AC_SUBST(SNMPLIBS)
 
 AC_SUBST(INCS)
 AC_SUBST(LIBS)
+AC_SUBST(MORELIBS)
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(CCLD)
@@ -1066,7 +1067,7 @@ This is your $PACKAGE $VERSION configuration:
 Host System Type  : ${host}
 Compiler          : ${CC} ${CFLAGS} ${DEFS}
 Include path      : ${INCS}
-Libraries         : ${LDFLAGS} ${LIBS}
+Libraries         : ${LDFLAGS} ${LIBS} ${MORELIBS}
 LBL pcap in       : ${PCAP_ROOT}
 GNU gdbm in       : ${GDBM_ROOT}
 MultiThread mode  : ${multithread_mode}

@@ -4824,6 +4824,7 @@ echo
 
 
 
+
 DATAFILE_DIR=$datadir/ntop
 DATAFILE_DIR=`(
     test "x$prefix" = xNONE && prefix=$ac_default_prefix
@@ -5055,6 +5056,7 @@ s%@LIBCURSES@%$LIBCURSES%g
 s%@LIBREADLINE@%$LIBREADLINE%g
 s%@SNMPLIBS@%$SNMPLIBS%g
 s%@INCS@%$INCS%g
+s%@MORELIBS@%$MORELIBS%g
 s%@CCLD@%$CCLD%g
 s%@PLUGINS@%$PLUGINS%g
 s%@INTOP@%$INTOP%g
@@ -5310,7 +5312,7 @@ This is your $PACKAGE $VERSION configuration:
 Host System Type  : ${host}
 Compiler          : ${CC} ${CFLAGS} ${DEFS}
 Include path      : ${INCS}
-Libraries         : ${LDFLAGS} ${LIBS}
+Libraries         : ${LDFLAGS} ${LIBS} ${MORELIBS}
 LBL pcap in       : ${PCAP_ROOT}
 GNU gdbm in       : ${GDBM_ROOT}
 MultiThread mode  : ${multithread_mode}

@@ -36,7 +36,7 @@ DEFS      = @DEFS@
 INCS      = @INCS@
 
 INCLUDES  = -I. $(INCS)
-LIBS      = @LIBS@
+LIBS      = @LIBS@ @MORELIBS@
 CCLD      = @CCLD@
 
 
