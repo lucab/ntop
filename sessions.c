@@ -2224,7 +2224,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
         } else
             prevSession->next = theSession->next;
 
-#if 1
+#if DELAY_SESSION_PURGE
         theSession->sessionState = FLAG_STATE_END; /* Session freed by scanTimedoutTCPSessions */
 #else
         freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);

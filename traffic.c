@@ -292,13 +292,8 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "updateDeviceStats() called.");
 #endif
-
-  if (myGlobals.runningPref.rFileName != NULL) {
-      totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
-  }
-  else {
-      totalTime = myGlobals.actTime;
-  }
+  
+  totalTime = myGlobals.actTime-myGlobals.initialSniffTime;
 
   if((timeHourDiff = myGlobals.actTime-myGlobals.
       device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
@@ -307,9 +302,8 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   }
 
   for(el=getFirstHost(deviceToUpdate); el != NULL; el = getNextHost(deviceToUpdate, el)) {
-    if(!isFcHost (el) && broadcastHost(el)) {
+    if(!isFcHost (el) && broadcastHost(el))
       continue;
-    }
 
     el->actualRcvdThpt       = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value)/timeDiff;
     if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;

@@ -49,8 +49,7 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
     return(FLAG_NO_PEER);
   }
 
-  if(((*useIPAddressForSearching) == 1)
-     || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
+  if(((*useIPAddressForSearching) == 1) || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
     if(myGlobals.runningPref.trackOnlyLocalHosts
        && (!isLocalAddress(hostIpAddress, actualDeviceId))
        && (!_pseudoLocalAddress(hostIpAddress))) {
@@ -59,7 +58,8 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
     } else {
       /* idx = hostIpAddress->s_addr; */
       if(hostIpAddress->hostFamily == AF_INET)
-	idx = (hostIpAddress->Ip4Address.s_addr & 0xffff) ^ ((hostIpAddress->Ip4Address.s_addr >> 15) & 0xffff);
+	idx = (hostIpAddress->Ip4Address.s_addr & 0xffff)
+	  ^ ((hostIpAddress->Ip4Address.s_addr >> 15) & 0xffff);
 #ifdef INET6
       else if(hostIpAddress->hostFamily == AF_INET6)
 	idx = in6_hash(&hostIpAddress->Ip6Address);
@@ -103,11 +103,11 @@ u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
   }
 
   idx = idx % myGlobals.device[actualDeviceId].actualHashSize;
-  
+
   /* Skip reserved entries */
   if((idx == BROADCAST_HOSTS_ENTRY) || (idx == OTHER_HOSTS_ENTRY))
     idx = FIRST_HOSTS_ENTRY;
-  
+
   return(idx);
 }
 
@@ -156,110 +156,114 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
   int i;
 
   if(host->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) {
-      for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
-          IPSession *prevSession, *nextSession, *theSession;
+    for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
+      IPSession *prevSession, *nextSession, *theSession;
 
-    if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
-      return;
+      if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
+	return;
 
-    if(host->numHostSessions == 0) return;
+      if(host->numHostSessions == 0) return;
 
 #ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
+      accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
 #endif
 
-    prevSession = theSession = myGlobals.device[theDevice].tcpSession[i];
+      prevSession = theSession = myGlobals.device[theDevice].tcpSession[i];
 
-    while(theSession != NULL) {
-      nextSession = theSession->next;
+      while(theSession != NULL) {
+	nextSession = theSession->next;
 
-      if(host->numHostSessions == 0) break;
+	if(host->numHostSessions == 0) break;
 
-      if((theSession->initiator == host) || (theSession->remotePeer == host)) {
-	if(myGlobals.device[theDevice].tcpSession[i] == theSession) {
-	  myGlobals.device[theDevice].tcpSession[i] = nextSession;
-	  prevSession = myGlobals.device[theDevice].tcpSession[i];
-	} else
-	  prevSession->next = nextSession;
+	if((theSession->initiator == host) || (theSession->remotePeer == host)) {
+	  if(myGlobals.device[theDevice].tcpSession[i] == theSession) {
+	    myGlobals.device[theDevice].tcpSession[i] = nextSession;
+	    prevSession = myGlobals.device[theDevice].tcpSession[i];
+	  } else
+	    prevSession->next = nextSession;
 
-	freeSession(theSession, theDevice, 0 /* don't allocate */,
-		    0 /* locked by the purge thread */);
-	theSession = prevSession;
-      } else {
-	prevSession = theSession;
-	theSession = nextSession;
-      }
+	  freeSession(theSession, theDevice, 0 /* don't allocate */,
+		      0 /* locked by the purge thread */);
+	  theSession = prevSession;
+	} else {
+	  prevSession = theSession;
+	  theSession = nextSession;
+	}
 
-      if(theSession && (theSession->next == theSession)) {
-	traceEvent(CONST_TRACE_WARNING, "Internal Error (1)");
-      }
-    } /* while */
+	if(theSession && (theSession->next == theSession)) {
+	  traceEvent(CONST_TRACE_WARNING, "Internal Error (1)");
+	}
+      } /* while */
 
 #ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.tcpSessionsMutex);
+      releaseMutex(&myGlobals.tcpSessionsMutex);
 #ifdef MAKE_WITH_SCHED_YIELD
-    sched_yield(); /* Allow other threads to run */
+      sched_yield(); /* Allow other threads to run */
 #endif
 #endif
-  } /* for */
-      
-      if(host->numHostSessions > 0) {
-	traceEvent(CONST_TRACE_ERROR, "====> Host %s/%s has %d sessions still to be purged",
-		   host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
-      }
+    } /* for */
+
+#ifndef DELAY_SESSION_PURGE
+    if(host->numHostSessions > 0) {
+      traceEvent(CONST_TRACE_ERROR, "====> Host %s/%s has %d sessions still to be purged",
+		 host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
+    }
+#endif
   }
   else {
     for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
-          FCSession *prevSession, *nextSession, *theSession;
-	  
-          if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
-              return;
+      FCSession *prevSession, *nextSession, *theSession;
 
-          if(host->numHostSessions == 0) return;
+      if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN /* i.e. active, not cleanup */ )
+	return;
+
+      if(host->numHostSessions == 0) return;
 
 #ifdef CFG_MULTITHREADED
-          accessMutex(&myGlobals.fcSessionsMutex, "freeHostSessions");
+      accessMutex(&myGlobals.fcSessionsMutex, "freeHostSessions");
 #endif
 
-          prevSession = theSession = myGlobals.device[theDevice].fcSession[i];
+      prevSession = theSession = myGlobals.device[theDevice].fcSession[i];
 
-          while(theSession != NULL) {
-              nextSession = theSession->next;
+      while(theSession != NULL) {
+	nextSession = theSession->next;
 
-              if(host->numHostSessions == 0) break;
+	if(host->numHostSessions == 0) break;
 
-              if((theSession->initiator == host) || (theSession->remotePeer == host)) {
-                  if(myGlobals.device[theDevice].fcSession[i] == theSession) {
-                      myGlobals.device[theDevice].fcSession[i] = nextSession;
-                      prevSession = myGlobals.device[theDevice].fcSession[i];
-                  } else
-                      prevSession->next = nextSession;
+	if((theSession->initiator == host) || (theSession->remotePeer == host)) {
+	  if(myGlobals.device[theDevice].fcSession[i] == theSession) {
+	    myGlobals.device[theDevice].fcSession[i] = nextSession;
+	    prevSession = myGlobals.device[theDevice].fcSession[i];
+	  } else
+	    prevSession->next = nextSession;
 
-                  freeFcSession(theSession, theDevice, 0 /* don't allocate */,
-                                0 /* locked by the purge thread */);
-                  theSession = prevSession;
-              } else {
-                  prevSession = theSession;
-                  theSession = nextSession;
-              }
+	  freeFcSession(theSession, theDevice, 0 /* don't allocate */,
+			0 /* locked by the purge thread */);
+	  theSession = prevSession;
+	} else {
+	  prevSession = theSession;
+	  theSession = nextSession;
+	}
 
-              if(theSession && (theSession->next == theSession)) {
-                  traceEvent(CONST_TRACE_WARNING, "Internal Error (1)");
-              }
-          } /* while */
+	if(theSession && (theSession->next == theSession)) {
+	  traceEvent(CONST_TRACE_WARNING, "Internal Error (1)");
+	}
+      } /* while */
 
 #ifdef CFG_MULTITHREADED
-          releaseMutex(&myGlobals.fcSessionsMutex);
+      releaseMutex(&myGlobals.fcSessionsMutex);
 #ifdef MAKE_WITH_SCHED_YIELD
-          sched_yield(); /* Allow other threads to run */
+      sched_yield(); /* Allow other threads to run */
 #endif
 #endif
-      } /* for */
+    } /* for */
 
-      if(host->numHostSessions > 0) {
-          traceEvent(CONST_TRACE_ERROR, "====> Host %s/%s has %d sessions still to be purged",
-                     host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
-      }
+#ifndef DELAY_SESSION_PURGE
+    if(host->numHostSessions > 0) {
+      traceEvent(CONST_TRACE_ERROR, "====> Host %s/%s has %d sessions still to be purged",
+		 host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
+    }
+#endif
   }
 }
 
@@ -318,7 +322,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
     if(key_data.dsize) {
       gdbm_delete(myGlobals.addressQueueFile, key_data);
-      
+
 #ifdef DNS_DEBUG
       traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleting from GDBM address cache host [%s/%s]",
 		 host->hostNumIpAddress, host->hostResolvedName);
@@ -344,15 +348,15 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   if(myGlobals.device[actualDeviceId].fcTrafficMatrix != NULL) {
       int id = matrixHostHash (host, actualDeviceId, 0);
-      
+
       myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[id] = NULL;
-      
+
       for(i=0; i<myGlobals.device[actualDeviceId].numHosts-1; i++) {
           myGlobals.device[actualDeviceId].fcTrafficMatrix[id*myGlobals.device[actualDeviceId].numHosts+i] = NULL;
           myGlobals.device[actualDeviceId].fcTrafficMatrix[i*myGlobals.device[actualDeviceId].numHosts+id] = NULL;
       }
   }
-    
+
   freeHostSessions(host, actualDeviceId);
 
   if(host->fcCounters != NULL) {
@@ -371,17 +375,17 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   if(host->protoIPTrafficInfos != NULL) {
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
-      if(host->protoIPTrafficInfos[i] != NULL) 
+      if(host->protoIPTrafficInfos[i] != NULL)
 	free(host->protoIPTrafficInfos[i]);
-    
+
     free(host->protoIPTrafficInfos);
   }
 
   if(host->ipProtosList != NULL) {
     for(i=0; i<myGlobals.numIpProtosList; i++)
-      if(host->ipProtosList[i] != NULL) 
+      if(host->ipProtosList[i] != NULL)
 	free(host->ipProtosList[i]);
-    
+
     free(host->ipProtosList);
   }
 
@@ -460,7 +464,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
       while(list != NULL) {
 	FileList *next = list->next;
-        if(list->fileName != NULL) 
+        if(list->fileName != NULL)
           free(list->fileName);
 	free(list);
 	list = next;
@@ -513,7 +517,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
       char xbuf[1024];
       int ii;
       memset(xbuf, 0, sizeof(xbuf));
-      safe_snprintf(__FILE__, __LINE__, xbuf, sizeof(xbuf), 
+      safe_snprintf(__FILE__, __LINE__, xbuf, sizeof(xbuf),
                   "TEMP: free of host (0x%08x) magic(%u) not cleared:", host, host->magic);
       ii=strlen(xbuf);
       if(host->dnsDomainValue != NULL)
@@ -556,7 +560,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
       /* No room left: it's time to free the bucket */
       memset(host, 0, sizeof(HostTraffic)); /* Debug code */
-      free(host);      
+      free(host);
    }
 
   myGlobals.numPurgedHosts++;
@@ -654,7 +658,7 @@ void purgeIdleHosts(int actDevice) {
   memset(theFlaggedHosts, 0, maxHosts*sizeof(HostTraffic*));
 
   /* Time used to decide whether a host need to be purged */
-  noSessionPurgeTime   = startTime-PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES; 
+  noSessionPurgeTime   = startTime-PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES;
   withSessionPurgeTime = startTime-PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES;
 
 #ifdef IDLE_PURGE_DEBUG
@@ -692,7 +696,7 @@ void purgeIdleHosts(int actDevice) {
       prev = NULL;
 
       while(el) {
-	if((el->refCount == 0) 
+	if((el->refCount == 0)
 	   && (   ((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
 	       || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
 	   && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
@@ -779,7 +783,7 @@ void purgeIdleHosts(int actDevice) {
   hiresDeltaTime = timeval_subtract(hiresTimeEnd, hiresTimeStart);
 
   if(numFreedBuckets > 0)
-    traceEvent(CONST_TRACE_NOISY, 
+    traceEvent(CONST_TRACE_NOISY,
 	       "IDLE_PURGE: Device %d [%s]: %d hosts deleted, elapsed time is %.6f seconds (%.6f per host)",
 	       actDevice,
 	       myGlobals.device[actDevice].name,
@@ -851,7 +855,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
     return(NULL);
   }
 
-#ifdef DEBUG 
+#ifdef DEBUG
   traceEvent(CONST_TRACE_NOISY, "DEBUG: lookupHost(%s, %s, m=%u, f=%u, dev=%d, vlan=%d)",
              addrtostr(hostIpAddress),
              etheraddr_string(ether_addr, buf),
@@ -894,7 +898,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
       if(useIPAddressForSearching == 0) {
 	/* compare with the ethernet-address then the IP address */
 	if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
-	  if((hostIpAddress != NULL) && 
+	  if((hostIpAddress != NULL) &&
 	     (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
 	    if((!isMultihomed) && checkForMultihoming) {
 	      /* This is a local address hence this is a potential multihomed host. */
@@ -908,7 +912,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 	      }
 	    }
 	    hostFound = 1;
-	    break;	
+	    break;
 	  } else if(hostIpAddress == NULL){  /* Only Mac Addresses */
 	    hostFound = 1;
 	    break;
@@ -969,7 +973,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
               _addrtostr(hostIpAddress, buf, sizeof(buf)),
               sizeof(el->hostNumIpAddress));
       setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
-  
+
       if(myGlobals.runningPref.numericFlag == 0)
         ipaddr2str(el->hostIpAddress, 1);
 
@@ -986,10 +990,10 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 
       if(!messageShown) {
 	messageShown = 1;
-	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)", 
+	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)",
 		   myGlobals.runningPref.maxNumHashEntries);
       }
-      
+
       return(NULL);
     }
 
@@ -1022,7 +1026,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
     len = (size_t)myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**);
     if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) return(NULL);
     memset(el->ipProtosList, 0, len);
-    
+
     len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**);
     if((el->protoIPTrafficInfos = (ProtoTrafficInfo**)malloc(len)) == NULL) return(NULL);
     memset(el->protoIPTrafficInfos, 0, len);
@@ -1067,11 +1071,11 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 	  else if(hostIpAddress->hostFamily == AF_INET6)
 	    memcpy(el->ethAddress, &hostIpAddress->Ip6Address.s6_addr[8], 4);
 #endif
-	  
+
 	  FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
-	  
+
 	  if(isPrivateAddress(hostIpAddress)) FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
-	  
+
 	  if(!isBroadcastAddress(hostIpAddress)) {
 	    if(isPseudoLocalAddress(hostIpAddress, actualDeviceId))
 	      FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
@@ -1089,7 +1093,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 	  The trick below allows me not to duplicate the
 	  "<broadcast>" string in the code
 	*/
-	
+
 	if(hostIpAddress != NULL) {
 	  if(hostIpAddress->hostFamily == AF_INET)
 	    el->hostIp4Address.s_addr = INADDR_BROADCAST;
@@ -1248,19 +1252,19 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 
 
     hostFound = 0;  /* This is the same type as the one of HashList */
-    
+
     while(el != NULL) {
         if(el->magic != CONST_MAGIC_NUMBER) {
             traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
                        CONST_MAGIC_NUMBER, el->magic);
         }
-      
+
         if(el->hostTrafficBucket != idx) {
             traceEvent(CONST_TRACE_WARNING, "Error: wrong bucketIdx %s/%s (expected=%d/real=%d)",
                        el->ethAddressString, el->hostNumIpAddress,
                        idx, el->hostTrafficBucket);
         }
-      
+
         if ((el->fcCounters != NULL) &&
             (memcmp ((u_int8_t *)&(el->fcCounters->hostFcAddress), hostFcAddress, LEN_FC_ADDRESS) == 0)) {
             hostFound = 1;
@@ -1270,26 +1274,26 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
         el = el->next;
         numRuns++;
     }
-        
+
   if(numRuns > myGlobals.device[actualDeviceId].hashListMaxLookups) {
       myGlobals.device[actualDeviceId].hashListMaxLookups = numRuns ;
   }
 
   if(!hostFound) {
       /* New host entry */
-      
+
     if(myGlobals.device[actualDeviceId].hostsno >= myGlobals.runningPref.maxNumHashEntries) {
       static char messageShown = 0;
 
       if(!messageShown) {
 	messageShown = 1;
-	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)", 
+	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)",
 		   myGlobals.runningPref.maxNumHashEntries);
       }
-      
+
       return(NULL);
     }
-    
+
 #if RECYCLE_MEMORY
     if(myGlobals.hostsCacheLen > 0) {
       el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];
@@ -1301,21 +1305,21 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     } else
 #endif
     {
-      if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) 
+      if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL)
 	return(NULL);
     }
-        
+
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
 
     resetHostsVariables(el);
-        
+
     if(allocFcScsiCounters(el) == NULL) return(NULL);
     el->l2Family = FLAG_HOST_TRAFFIC_AF_FC;
     el->fcCounters->devType = SCSI_DEV_UNINIT;
     el->magic = CONST_MAGIC_NUMBER;
     el->hostTrafficBucket = idx;
-      
+
     el->next = myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket];
     myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket] = el;  /* Insert a new entry */
     myGlobals.device[actualDeviceId].hostsno++;
@@ -1334,14 +1338,14 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 	setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS);
       else
 	setResolvedName(el, fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
-      
+
         memcpy (el->fcCounters->pWWN.str, fcnsEntry->pWWN.str, LEN_WWN_ADDRESS);
         memcpy (el->fcCounters->nWWN.str, fcnsEntry->nWWN.str, LEN_WWN_ADDRESS);
     }
     else {
         setResolvedName(el, el->fcCounters->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FCID);
     }
-    
+
 #ifdef HASH_DEBUG
     traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]",
                el->ethAddressString, el->hostNumIpAddress, list->idx, actualDeviceId,
@@ -1349,7 +1353,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
 #endif
     setHostSerial(el);
   }
-  
+
   if(el != NULL) {
       el->lastSeen = myGlobals.actTime;
   }
@@ -1357,7 +1361,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
   if(el == NULL)
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "getHostInfo(idx=%d)(ptr=%p)",
 	       idx, (void*)myGlobals.device[actualDeviceId].hash_hostTraffic[idx]);
-  
+
 #ifdef HASH_DEBUG
   hashSanityCheck();
 #endif
