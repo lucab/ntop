@@ -1709,7 +1709,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       sendString("<A HREF=\"mailto:stefano@ntop.org\">Stefano Suin</A> has contributed with ");
       sendString("some code fragments to the version 1.0 of <b>ntop</b>\n");
       sendString(". In addition, many other people downloaded this program, tested it,\n");
-      sendString("joined the <A HREF=http://mailserver.unipi.it/lists/ntop/archive/>ntop mailing list</A>,\n");
+      sendString("joined the <A HREF=http://listmanager.unipi.it/mailman/listinfo/ntop>ntop</A>\n");
+      sendString("and <A HREF=http://listmanager.unipi.it/mailman/listinfo/ntop-dev>ntop-dev</A> mailing lists,\n");
       sendString("reported problems, changed it and improved significantly. This is because\n");
       sendString("they have realised that <b>ntop</b> doesn't belong uniquely to its author, but\n");
       sendString("to the whole Internet community. Their names are throught "
