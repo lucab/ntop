@@ -246,11 +246,9 @@ static void handleArpWatchHTTPrequest(char* url) {
       arpColumnSort = atoi(url);
   }
   
-  sendHTTPProtoHeader(); sendHTTPHeaderType(); printHTTPheader();
-
-  sendString("<HTML><BODY BGCOLOR=#FFFFFF><FONT FACE=Helvetica>"
-	     "<CENTER><H1>Welcome to arpWatch</H1>\n<p>"
-	     "<TABLE BORDER><TR>");
+  sendHTTPHeader(HTTP_TYPE_HTML, 0);  
+  printHTMLheader("Welcome to arpWatch", 0);
+  sendString("<CENTER>\n<P>\n<TABLE BORDER><TR>");
 
   if(snprintf(tmpStr, sizeof(tmpStr), "<TH>%s?%s1>Host</A></TH>"
 	 "<TH>%s?%s2>IP&nbsp;Address</A></TH>"
@@ -353,8 +351,9 @@ static void handleArpWatchHTTPrequest(char* url) {
   }
 
 
-  sendString("</TABLE></CENTER><p>\n");
-  printHTTPtrailer();
+  sendString("</TABLE>\n<P>\n");
+  sendString("</CENTER>\n");
+  printHTMLtrailer();
 }
 
 /* ****************************** */

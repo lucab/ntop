@@ -170,9 +170,10 @@ void execCGI(char* cgiName) {
 
       if(!printHeader) {
 	/* printHTTPheader(); */
-	sendString("<center><H1>Available Plugins</H1>\n<p>"
-		   ""TABLE_ON"<TABLE BORDER=1><TR>\n");
-	sendString("<TR><TH "TH_BG">Name</TH><TH>Description</TH>"
+	printHTMLheader("Available Plugins", 0);
+ 	sendString("<CENTER>\n"
+		   ""TABLE_ON"<TABLE BORDER=1><TR>\n"
+		   "<TR><TH "TH_BG">Name</TH><TH>Description</TH>"
 		   "<TH "TH_BG">Version</TH>"
 		   "<TH "TH_BG">Author</TH>"
 		   "<TH "TH_BG">Active</TH>"
@@ -204,11 +205,10 @@ void execCGI(char* cgiName) {
   }
 
   if(!printHeader) {
-   sendString("<HTML><BODY BACKGROUND=/white_bg.gif BGCOLOR=#FFFFFF><P><CENTER><H1>"
-	       "<i>No Plugins available</i></H1>"
-	      "</CENTER></FONT></CENTER><p>\n");
+    printHTMLheader("No Plugins available", 0);
   } else {
     sendString("</TABLE>"TABLE_OFF"<p>\n");
+    sendString("</CENTER>\n");
   }
  }
 
@@ -300,10 +300,6 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
   struct sockaddr_in sin;
 
   actualReportDeviceId = 0;
-
-#ifdef DEBUG
-  numChildren = 0;
-#endif
 
   if(webPort > 0) {
     sin.sin_family      = AF_INET;
@@ -730,9 +726,8 @@ void switchNwInterface(int _interface) {
   int i, mwInterface=_interface-1;
   char buf[BUF_SIZE], *selected;
 
-  sendString("<html>\n<body BACKGROUND=/white_bg.gif bgcolor=#FFFFFF><CENTER>"
-	     "<FONT FACE=Helvetica><H1>Network Interface Switch"
-	     "</H1></center><hr><p><b>");
+  printHTMLheader("Network Interface Switch", HTML_FLAG_NO_REFRESH); 
+  sendString("<HR>\n<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
 
   if(mergeInterfaces) {
     if(snprintf(buf, sizeof(buf), "You can switch among different inferfaces if the -M "
@@ -770,9 +765,11 @@ void switchNwInterface(int _interface) {
 
 
       sendString("<p><INPUT TYPE=submit>&nbsp;<INPUT TYPE=reset>\n</FORM>\n");
+      sendString("<B>");
     }
 
-    sendString("</font><p>\n");
+  sendString("</B>");
+  sendString("</font><p>\n");
 }
 
 /* **************************************** */
@@ -844,13 +841,13 @@ void usage(void) {
 /* **************************************** */
 
 void shutdownNtop(void) {
-  cleanup(0);
+  printHTMLheader("ntop is shutting down...", HTML_FLAG_NO_REFRESH);
+  closeNwSocket(&newSock);
 
   termAccessLog();
   termReports();
+  cleanup(0);
 }
-
-/* **************************************** */
 
 /* ******************************** */
 
@@ -867,9 +864,8 @@ static void printFeatureConfigInfo(char* feature, char* status) {
 void printNtopConfigInfo(void) {
   char buf[BUF_SIZE];
 
-
-  sendString("<CENTER><H1>Current ntop Configuration</H1>\n");
-
+  printHTMLheader("Current ntop Configuration", 0);
+  sendString("<CENTER>\n");
   sendString("<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n");
 
   printFeatureConfigInfo("OS", osName);
@@ -1013,5 +1009,51 @@ void printNtopConfigInfo(void) {
 #endif
 
   sendString("</TABLE>"TABLE_OFF"\n");
+  sendString("</CENTER>\n");
+}
+
+/* ******************* */
+
+int handlePluginHTTPRequest(char* url) {
+  FlowFilterList *flows = flowsList;
+
+  while(flows != NULL)
+    if((flows->pluginStatus.pluginPtr != NULL)
+       && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)
+       && (flows->pluginStatus.pluginPtr->httpFunct != NULL)
+       && (strncmp(flows->pluginStatus.pluginPtr->pluginURLname,
+		   url, strlen(flows->pluginStatus.pluginPtr->pluginURLname)) == 0)) {
+      char *arg;
+
+      /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+      if(!flows->pluginStatus.activePlugin) {
+ 	char buf[BUF_SIZE], name[32];
+ 
+ 	sendHTTPHeader(HTTP_TYPE_HTML, 0);
+ 	strncpy(name, flows->pluginStatus.pluginPtr->pluginURLname, sizeof(name));
+ 	name[sizeof(name)-1] = '\0'; /* just in case pluginURLname is too long... */
+	if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))
+ 	  name[strlen(name)-6] = '\0';
+ 	if(snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name) < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+ 	printHTMLheader(buf, HTML_FLAG_NO_REFRESH);
+ 	printFlagedWarning("<I>This plugin is currently inactive.</I>");
+ 	printHTMLtrailer();
+ 	return(1);
+      }
+ 
+      if(strlen(url) == strlen(flows->pluginStatus.pluginPtr->pluginURLname))
+	arg = "";
+      else
+	arg = &url[strlen(flows->pluginStatus.pluginPtr->pluginURLname)+1];
+
+      /* traceEvent(TRACE_INFO, "Found %s [%s]\n", 
+	 flows->pluginStatus.pluginPtr->pluginURLname, arg); */
+      flows->pluginStatus.pluginPtr->httpFunct(arg);
+      return(1);
+    } else
+      flows = flows->next;
+
+  return(0); /* Plugin not found */
 }
 

@@ -116,6 +116,14 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
   sortSendMode = signumber_ignored;
 
+   if(sortSendMode == 0)
+     snprintf(buf, sizeof(buf), "Network Traffic: Data Received");
+   else if (sortSendMode == 1)
+     snprintf(buf, sizeof(buf), "Network Traffic: Data Sent");
+   else if (sortSendMode == 2)
+     snprintf(buf, sizeof(buf), "Global Traffic Statistics");
+   printHTMLheader(buf, 0);
+
   if(signumber_ignored == 2)
     goto PRINT_TOTALS;
 
@@ -473,6 +481,9 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   } else
     idx = 0;
 
+  sendString("\n</TABLE>"TABLE_OFF"\n");
+  sendString("</CENTER>\n");
+  
  PRINT_TOTALS:
   if(signumber_ignored == 2) {
     TrafficCounter unicastPkts=0, avgPktLen;
@@ -480,15 +491,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
     if(reportType == 0) {
       int i;
 
-      /*
-      sendString("<CENTER><P><H1>Global Traffic Statistics"
-		 "</H1><P>\n"TABLE_ON"<TABLE BORDER=1>\n");
-      */
-
-
-      sendString("<CENTER><P><H1>Global Traffic Statistics"
-		 "</H1><P>\n"		 
-		 ""TABLE_ON"<TABLE BORDER=1>\n");
+      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
 
       sendString("<TR><TH "TH_BG">Nw&nbsp;Interface&nbsp;Type</TH>"
 		 "<TD "TD_BG"  ALIGN=RIGHT>");
@@ -778,10 +781,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
       sendString("</TABLE></TR></TABLE></CENTER>\n");
     }
-  } else {
-    /* if(reportType == 0) */
-    sendString("\n</TABLE>"TABLE_OFF"<P>\n");
-  }
+  } 
 
   lastRefreshTime = actTime;
   free(tmpTable);
@@ -824,11 +824,10 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
        && ((el->pktMulticastSent > 0) || (el->pktMulticastRcvd > 0))
        && (!broadcastHost(el))
        )
-      tmpTable[numEntries++]=el;
+      tmpTable[numEntries++] = el;
   }
 
-  printHTTPheader();
-  sendString("<CENTER><P><H1>Multicast Statistics</H1><P>\n");
+  printHTMLheader("Multicast Statistics", 0);
 
   if(numEntries > 0) {
     columnSort = sortedColumn; /* Host name */
@@ -886,6 +885,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
       theAnchor[5] = htmlAnchor1;
     }
 
+    sendString("<CENTER>\n");
     if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s0>Host%s</A></TH>\n"
 	    "<TH "TH_BG">%s1>Domain%s</A></TH>"
 	    "<TH "TH_BG">%s2>Pkts Sent%s</A></TH>"
@@ -931,6 +931,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
     }
 
     sendString("</TABLE>"TABLE_OFF"\n");
+    sendString("</CENTER>\n");
   } else
     printNoDataYet();
 
@@ -963,7 +964,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 
   columnSort = sortedColumn;
 
-  sortSendMode = 2; /* This is used by print header */
+  printHTMLheader("Host Information", 0);
 
   printHeader(0, revertOrder, abs(sortedColumn));
 
@@ -1044,6 +1045,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
       theAnchor[0] = htmlAnchor1;
     }
 
+    sendString("<CENTER>\n");
     if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1>\n<TR>"
 		"<TH "TH_BG">%s1>Host%s</A></TH>"
 		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
@@ -1180,6 +1182,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
     }
 
     sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
   }
   free(tmpTable);
 }
@@ -1203,10 +1206,10 @@ void printAllSessionsHTML(char* host) {
   }
 
   if(el == NULL) {
-    if(snprintf(buf, sizeof(buf), "<CENTER><P><H1>Unable to generate "
-	    "requested page [%s]</H1></CENTER>\n", host) < 0) 
+    if(snprintf(buf, sizeof(buf), 
+		"Unable to generate requested page [%s]\n", host) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+    printHTMLheader(buf, 0);
     return;
   }
 
@@ -1228,8 +1231,8 @@ void printAllSessionsHTML(char* host) {
       HostTraffic *peerHost;
 
       if(i == 0) {
-	sendString("<P><H1>IP&nbsp;"
-		   "Service/Port&nbsp;Usage</H1><P>\n");
+	printSectionTitle("IP&nbsp;Service/Port&nbsp;Usage\n");
+	sendString("<CENTER>\n");
 	sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>"
 		   "<TH "TH_BG">IP&nbsp;Service</TH>"
 		   "<TH "TH_BG">Port</TH>"
@@ -1295,8 +1298,10 @@ void printAllSessionsHTML(char* host) {
     }
   }
 
-  if(i > 0)
-    sendString("</TABLE>"TABLE_OFF"</P>\n");
+  if(i > 0){
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+  }
 
   printHostSessions(el, elIdx);
 }
@@ -1308,6 +1313,8 @@ void printLocalRoutersList(void) {
   HostTraffic *el, *router;
   u_int idx, i, j, numEntries=0;
   u_int routerList[MAX_NUM_ROUTERS];
+
+  printHTMLheader("Local Subnet Routers", 0);
 
   for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
     if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
@@ -1333,12 +1340,11 @@ void printLocalRoutersList(void) {
     }
   }
 
-  sendString("<CENTER><P><H1>Local Subnet Routers</H1><p>\n");
-
   if(numEntries == 0) {
     printNoDataYet();
     return;
   } else {
+    sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">Router Name</TH>"
 	       "<TH "TH_BG">Used by</TH></TR>\n");
 
@@ -1367,7 +1373,8 @@ void printLocalRoutersList(void) {
       }
     }
 
-    sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
+    sendString("</TABLE>"TABLE_OFF"\n");
+    sendString("</CENTER>\n");
   }
 
 }
@@ -1379,6 +1386,8 @@ void printSession(IPSession *theSession, u_short sessionType,
 		  u_short sessionCounter)
 {
   char *_sport, *_dport, *_sessionType, *direction;
+
+  if(logd == NULL) return;
 
   _sport = getPortByNum(theSession->sport, sessionType);
   _dport = getPortByNum(theSession->dport, sessionType);
@@ -1485,7 +1494,7 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
   u_int idx, numEntries;
   int printedEntries=0;
   HostTraffic *el, **tmpTable;
-  char buf[BUF_SIZE], *str=NULL, *sign;
+  char buf[BUF_SIZE], *str=NULL, *sign, *title=NULL;
   TrafficCounter totalBytesSent, totalBytesReceived, totalBytes, a=0, b=0;
   float sentpct, rcvdpct;
   time_t timeDiff = time(NULL)-initialSniffTime;
@@ -1541,22 +1550,27 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
       }
     }
 
+  switch(remoteToLocal) {
+  case REMOTE_TO_LOCAL_ACCOUNTING:
+    str = IP_R_2_L_HTML;
+    title = "Remote to Local IP Traffic";
+    break;
+  case LOCAL_TO_REMOTE_ACCOUNTING:
+    str = IP_L_2_R_HTML;
+    title = "Local to Remote IP Traffic";
+    break;
+  case LOCAL_TO_LOCAL_ACCOUNTING:
+    str = IP_L_2_L_HTML;
+    title = "Local IP Traffic";
+    break;
+  }
+  
+  printHTMLheader(title, 0);
+    
   if(numEntries > 0) {
     columnSort = sortedColumn;
     sortFilter = remoteToLocal;
     quicksort(tmpTable, numEntries, sizeof(struct hostTraffic*), cmpHostsFctn);
-
-    switch(remoteToLocal) {
-    case REMOTE_TO_LOCAL_ACCOUNTING:
-      str = IP_R_2_L_HTML;
-      break;
-    case LOCAL_TO_REMOTE_ACCOUNTING:
-      str = IP_L_2_R_HTML;
-      break;
-    case LOCAL_TO_LOCAL_ACCOUNTING:
-      str = IP_L_2_L_HTML;
-      break;
-    }
 
     if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", str, sign) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -1595,6 +1609,7 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
       theAnchor[4] = htmlAnchor1;
     }
 
+    sendString("<CENTER>\n");
     if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR><TH "TH_BG">"
 	    "%s1>Host%s</A></TH>"
 	    "<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
@@ -1684,6 +1699,7 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
 
     sendString(buf);
     sendString("</TABLE>"TABLE_OFF"\n");
+    sendString("</CENTER>\n");
   } else
     printNoDataYet();
 
@@ -1697,6 +1713,8 @@ void printActiveTCPSessions(void) {
   char buf[BUF_SIZE];
   int numSessions;
 
+  printHTMLheader("Active TCP Sessions", 0);
+
   for(idx=1, numSessions=0; idx<HASHNAMESIZE; idx++)
     if((tcpSession[idx] != NULL)
 #ifndef PRINT_ALL_ACTIVE_SESSIONS
@@ -1708,6 +1726,7 @@ void printActiveTCPSessions(void) {
       TrafficCounter dataSent, dataReceived;
 
       if(numSessions == 0) {
+	sendString("<CENTER>\n");
 	sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
 		   "<TH "TH_BG">Client</TH>"
 		   "<TH "TH_BG">Server</TH>"
@@ -1781,10 +1800,11 @@ void printActiveTCPSessions(void) {
       numSessions++;
     }
 
-  if(numSessions > 0)
+  if(numSessions > 0) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
-  else
-    sendString("<P><IMG SRC=/warning.gif><p><i>No Active TCP Sessions</i>\n");
+    sendString("</CENTER>\n");
+  } else
+    printFlagedWarning("<I>No Active TCP Sessions</I>");
 }
 
 
@@ -1795,6 +1815,8 @@ void printIpProtocolUsage(void) {
   u_short clientPorts[TOP_ASSIGNED_IP_PORTS], serverPorts[TOP_ASSIGNED_IP_PORTS];
   u_int i, j, idx1, hostsNum=0, numPorts=0;
   char buf[BUF_SIZE];
+
+  printHTMLheader("IP Protocol Subnet Usage", 0);
 
   memset(clientPorts, 0, sizeof(clientPorts));
   memset(serverPorts, 0, sizeof(serverPorts));
@@ -1821,6 +1843,7 @@ void printIpProtocolUsage(void) {
 
   /* Hosts are now in a contiguous structure (hosts[])... */
 
+  sendString("<CENTER>\n");
   sendString(""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" COLSPAN=2>Service</TH>"
 	     "<TH "TH_BG">Clients</TH><TH "TH_BG">Servers</TH>\n");
 
@@ -1863,6 +1886,7 @@ void printIpProtocolUsage(void) {
     } /* for */
 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
+  sendString("</CENTER>\n");
 }
 
 
@@ -1955,20 +1979,20 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     sign = "-";
 
  if(mode == SHORT_FORMAT) {
-    sendString("<CENTER><P><H1>IP Protocol Distribution"
-	       "</H1><br>\n");
+   printSectionTitle("IP Protocol Distribution");
 
 #ifdef HAVE_GDCHART
-    sendString("<IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p></CENTER>\n");
+    sendString("<IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p>\n</CENTER>\n");
 #endif
 
-    sendString("<CENTER><P><H1>Local Traffic</H1><P>\n");
+    printSectionTitle("Local Traffic");
 
     total = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.local+
 		    device[actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
     if(total == 0)
       printNoDataYet();
     else {
+      sendString("<CENTER>\n");
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR><TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
       if(total == 0) total = 1; /* Avoids divisions by zero */
@@ -2002,6 +2026,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       }
 
       sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
     }
 
     /* ********************************************************** */
@@ -2009,13 +2034,16 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     total = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.remote2local+
 		    device[actualReportDeviceId].udpGlobalTrafficStats.remote2local)/1024;
 
-    sendString("<H1>Remote to Local Traffic</H1><P>\n");
+    printSectionTitle("Remote to Local Traffic");
 
     if(total == 0)
       printNoDataYet();
     else {
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR><TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "Percentage</TH></TR>\n");
 
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
@@ -2047,19 +2075,23 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 			COLOR_1, remainingTraffic, percentage);
       }
       sendString("</TABLE>"TABLE_OFF"\n<P>\n");
+      sendString("</CENTER>\n");
     }
 
     /* ********************************************************** */
 
-    sendString("<H1>Local to Remote Traffic</H1><P>\n");
+    printSectionTitle("Local to Remote Traffic");
 
     total = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
 		    device[actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;
     if(total == 0)
       printNoDataYet();
     else {
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR><TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH>"
+		 "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
 
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
@@ -2091,19 +2123,19 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 			COLOR_1, remainingTraffic, percentage);
       }
       sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
     }
 
   } else {
     total = (float)device[actualReportDeviceId].ipBytes/1024; /* total is expressed in KBytes */
 
-    sendString("<CENTER><P><H1>"
-	       "Global IP Protocol Distribution"
-	       "</H1><P>\n");
+    printSectionTitle("Global IP Protocol Distribution");
 
     if(total == 0)
       printNoDataYet();
     else {
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR><TH "TH_BG" WIDTH=150>"
+       sendString("<CENTER>\n");
+       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR><TH "TH_BG" WIDTH=150>"
 		 "IP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
 		 "Percentage</TH></TR>\n");
@@ -2139,9 +2171,9 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 		 "<IMG SRC=drawGlobalIpProtoDistribution"CHART_FORMAT"></TD></TR>\n");
 #endif
       sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
     }
   }
- sendString("</CENTER>");
 }
 
 /* ************************ */
@@ -2157,7 +2189,8 @@ void printProtoTraffic(void) {
     return;
   }
 
-  sendString("<CENTER><P><H1>Global Protocol Distribution</H1><P>\n");
+  printSectionTitle("Global Protocol Distribution");
+  sendString("<CENTER>\n");
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR><TH "TH_BG" WIDTH=150>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
   if(snprintf(buf, sizeof(buf), "<TH "TH_BG" WIDTH=150 ALIGN=LEFT>IP</TH><TD "TD_BG"  WIDTH=100 ALIGN=RIGHT>%s"
@@ -2239,24 +2272,21 @@ void printProcessInfo(int processPid) {
        && (processes[i]->pid == processPid))
       break;
 
-  printHTTPheader();
-
   if(processes[i]->pid != processPid) {
-    if(snprintf(buf, sizeof(buf), "<H1><CENTER>Unable to find process PID %d"
-		"<CENTER></H1><P>\n", processPid) < 0) 
+    if(snprintf(buf, sizeof(buf), "Unable to find process PID %d", processPid) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+    printHTMLheader(buf, 0);
 #ifdef MULTITHREADED
     releaseMutex(&lsofMutex);
 #endif
     return;
   }
 
-  if(snprintf(buf, sizeof(buf), "<H1><CENTER>Info about process %s"
-	      "<CENTER></H1><P>\n", processes[i]->command) < 0) 
+  if(snprintf(buf, sizeof(buf), "Info about process %s", processes[i]->command) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
+  printHTMLheader(buf, 0);
 
+  sendString("<CENTER>\n");
   sendString(""TABLE_ON"<TABLE BORDER=1>");
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>User&nbsp;Name</TH>", getRowColor()) < 0) 
@@ -2300,7 +2330,8 @@ void printProcessInfo(int processPid) {
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
   if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</T></TR>\n",
-	      formatBytes(processes[i]->bytesReceived, 1)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      formatBytes(processes[i]->bytesReceived, 1)) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Open&nbsp;TCP&nbsp;Ports"
@@ -2359,13 +2390,10 @@ void printLsofData(int mode) {
   ProcessInfo *processesList[MAX_NUM_PROCESSES];
   UsersTraffic usersTraffic[256], *usersTrafficList[256];
 
-  printHTTPheader();
-
   /* ************************ */
 
-  sendString("<H1><CENTER>Local Network Usage by Process"
-	     "</H1><P>\n");
-
+  printHTMLheader("Local Network Usage by Process", 0);
+  sendString("<CENTER>\n");
   if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1><TR>"
 	      "<TH "TH_BG"><A HREF=\"%s?1\">Process</A></TH>"
 	      "<TH "TH_BG"><A HREF=\"%s?2\">PID</A></TH>"
@@ -2424,13 +2452,14 @@ void printLsofData(int mode) {
   }
 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
-
+  sendString("</CENTER>\n");
+  
   /* ************************ */
-
-  sendString("\n<P><H1>Local Network Usage by Port"
-	     "</H1><P>\n");
-
-  sendString(""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">Port</TH><TH "TH_BG">Processes</TH></TR>\n");
+  
+  printSectionTitle("Local Network Usage by Port");
+  sendString("<CENTER>\n");
+  sendString(""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">Port</TH>"
+	     "<TH "TH_BG">Processes</TH></TR>\n");
 
   for(i=0; i<TOP_IP_PORT; i++)
     if(localPorts[i] != NULL) {
@@ -2453,7 +2482,8 @@ void printLsofData(int mode) {
       sendString("</TR>");
   }
 
-  sendString("</TABLE>"TABLE_OFF"<P></CENTER>\n\n");
+  sendString("</TABLE>"TABLE_OFF"<P>\n");
+  sendString("</CENTER>\n");
 
   /* ******************************* */
 
@@ -2464,9 +2494,8 @@ void printLsofData(int mode) {
     if(numUsers > maxNumLines)
       numUsers = maxNumLines;
 
-    sendString("<H1><CENTER>Local Network Usage by User"
-
-	       "<CENTER></H1><P>\n");
+    printSectionTitle("Local Network Usage by User");
+    sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">User</TH>"
 	       "<TH "TH_BG">Traffic&nbsp;in/out</TH></TR>\n");
 
@@ -2498,6 +2527,8 @@ void printIpTrafficMatrix(void) {
   TrafficCounter minTraffic=(TrafficCounter)LONG_MAX, maxTraffic=0, avgTraffic;
   TrafficCounter avgTrafficLow, avgTrafficHigh, tmpCounter;
 
+  printHTMLheader("IP Subnet Traffic Matrix", 0);
+
   for(i=1; i<255; i++) {
     activeHosts[i] = 0;
     for(j=1; j<255; j++) {
@@ -2510,9 +2541,11 @@ void printIpTrafficMatrix(void) {
     }
 
     if(activeHosts[i] == 1) {
-      if(numEntries == 1)
+      if(numEntries == 1) {
+	sendString("<CENTER>\n");
 	sendString(""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" ALIGN=LEFT><SMALL>&nbsp;F&nbsp;"
 		   "&nbsp;&nbsp;To<br>&nbsp;r<br>&nbsp;o<br>&nbsp;m</SMALL></TH>\n");
+      }
 
       if(snprintf(buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER><SMALL>%s</SMALL></TH>",
 		  getHostName(ipTrafficMatrixHosts[i], 1)) < 0) 
@@ -2571,7 +2604,8 @@ void printIpTrafficMatrix(void) {
 
 	    tmpCounter = ipTrafficMatrix[i][j].bytesSent+ipTrafficMatrix[i][j].bytesReceived;
 	    /* Fix below courtesy of Danijel Doriae <danijel.doric@industrogradnja.tel.hr> */
-	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=CENTER %s><A HREF=# onMouseOver=\"window.status='"
+	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=CENTER %s>"
+			"<A HREF=# onMouseOver=\"window.status='"
 			"%s';return true\" onMouseOut="
 			"\"window.status='';return true\"><SMALL>%s</SMALL></A></TH>\n",
 			calculateCellColor(tmpCounter, avgTrafficLow, avgTrafficHigh),
@@ -2594,6 +2628,7 @@ void printIpTrafficMatrix(void) {
     }
 
   sendString("</TABLE>"TABLE_OFF"\n<P>\n");
+  sendString("</CENTER>\n");
 }
 
 /* ************************ */
@@ -2604,11 +2639,11 @@ void printThptStatsMatrix(int sortedColumn) {
   time_t tmpTime;
   struct tm t;
 
-  printHTTPheader();
-  sendString("<CENTER><P><H1>Throughput Statistics Matrix</H1><P>\n");
+  printHTMLheader("Throughput Statistics Matrix", 0);
 
   switch(sortedColumn) {
   case 1:
+    sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>"
 	       "<TH "TH_BG">Sampling Period</TH>"
 	       "<TH "TH_BG">Average Thpt</TH>"
@@ -2623,10 +2658,13 @@ void printThptStatsMatrix(int sortedColumn) {
       strftime(label, 32, "%H:%M", localtime_r(&tmpTime, &t));
       tmpTime = actTime-((i+1)*60);
       strftime(label1, 32, "%H:%M", localtime_r(&tmpTime, &t));
-      if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG"  ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG"  ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>",
+      if(snprintf(buf, sizeof(buf), "<TR %s><TD "TD_BG" ALIGN=CENTER>"
+		  "<B>%s&nbsp;-&nbsp;%s</B></TH>"
+		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"
+		  "<TABLE BORDER=1 WIDTH=100%%>",
 		  getRowColor(), label1, label,
-		  formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].trafficValue/ratio)) < 0) 
+		  formatThroughput(device[actualReportDeviceId].
+				   last60MinutesThpt[i].trafficValue/ratio)) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
 	 sendString(buf);
 
@@ -2638,7 +2676,8 @@ void printThptStatsMatrix(int sortedColumn) {
 			     hash_hostTraffic[device[actualReportDeviceId].
 					     last60MinutesThpt[i].topHostSentIdx],
 			     LONG_FORMAT, 0, 0),
-		    formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].topSentTraffic/ratio)) < 0)
+		    formatThroughput(device[actualReportDeviceId].
+				     last60MinutesThpt[i].topSentTraffic/ratio)) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 
@@ -2725,6 +2764,7 @@ void printThptStatsMatrix(int sortedColumn) {
       printNoDataYet();
       return;
     } else {
+      sendString("<CENTER>\n");
       sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>"
 		 "<TH "TH_BG">Sampling Period</TH>"
 		 "<TH "TH_BG">Average Thpt</TH>"
@@ -2787,7 +2827,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	  }
 	}
 
-	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG"  ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>\n");
+	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>\n");
 
 	/* *************************************** */
 
@@ -2831,6 +2871,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	  }
 
 	  sendString("</TABLE>"TABLE_OFF"</TD></TR>\n");
+	  sendString("<CENTER>\n");
 	}
       }
     }
@@ -2845,13 +2886,14 @@ void printThptStatsMatrix(int sortedColumn) {
 void printThptStats(int sortedColumn _UNUSED_) {
   char tmpBuf[128];
 
-  printHTTPheader();
-  sendString("<CENTER><P><H1>Throughput Statistics</H1><P>\n");
+  printHTMLheader("Throughput Statistics", 0);
 
   if(device[actualReportDeviceId].numThptSamples == 0) {
     printNoDataYet();
     return;
   }
+
+  sendString("<CENTER>\n");
 
 #ifdef HAVE_GDCHART
    sendString("<A HREF=\"thptStatsMatrix.html?1\" BORDER=0>"
@@ -2863,8 +2905,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
    sendString("<A HREF=\"thptStatsMatrix.html?1\" BORDER=0>");
    if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4></A><BR>",
 	   formatTimeStamp(0, 0, 0),
-	   formatTimeStamp(0, 0, 60)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-
+	   formatTimeStamp(0, 0, 60)) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
 #endif
 
    sendString(tmpBuf);
@@ -3053,7 +3095,12 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
     statsEntry->igmpRcvd  += el->igmpReceived;
   } /* for(;;) */
 
-  printHTTPheader();
+  if((domainName == NULL) || (numEntries == 0)) {
+    snprintf(buf, sizeof(buf), "Internet Domain Stats");
+  } else {
+    snprintf(buf, sizeof(buf), "Stats for Domain %s", domainName);
+  }
+  printHTMLheader(buf, 0);
 
   if(numEntries == 0) {
     sendString("<CENTER><P><H1>Internet Domain Stats</H1><P>\n");
@@ -3073,22 +3120,18 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
     totBytesRcvd = 1;
 
   if(domainName == NULL) {
-    sendString("<CENTER><P><H1>Internet Domain Stats</H1><P>\n");
     if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_DOMAIN_STATS, sign) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_DOMAIN_STATS) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
  } else {
-   if(snprintf(buf, sizeof(buf), "<CENTER><P><H1>Stats for "
-	    "Domain %s</H1><P>\n", domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-    if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html?%s", 
-		DOMAIN_INFO_HTML, domainName, sign) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s_%s.html?", 
-		DOMAIN_INFO_HTML, domainName) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-  }
+   if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s_%s.html?%s", 
+	       DOMAIN_INFO_HTML, domainName, sign) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s_%s.html?", 
+	       DOMAIN_INFO_HTML, domainName) < 0)
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+ }
 
   if(abs(columnSort) == 0) {
     arrow[0] = arrowGif;
@@ -3211,6 +3254,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   }
 
   /* Split below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+  sendString("<CENTER>\n");
   if(snprintf(buf, sizeof(buf),
           ""TABLE_ON"<TABLE BORDER=1><TR>"
           "<TH "TH_BG">%s0>Name%s</A></TH>"
@@ -3319,7 +3363,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   }
 
   sendString("</TABLE>"TABLE_OFF"</HTML>\n");
-
+  sendString("</CENTER>\n");
   free(tmpStats);
 }
 
@@ -3345,9 +3389,7 @@ void printLogHeader(void) {
 /* ************************* */
 
 void printNoDataYet(void) {
-  sendString("<CENTER><P><i>"
-	     "<IMG SRC=/warning.gif><p>No Data To Display (yet)"
-	     "</i></CENTER>\n");
+  printFlagedWarning("<I>No Data To Display (yet)</I>");
 }
 
 /* ************************* */
@@ -3357,16 +3399,17 @@ void listNetFlows(void) {
   int numEntries=0;
   FlowFilterList *list = flowsList;
 
-  printHTTPheader();
+  printHTMLheader(NULL, 0);
 
   if(list != NULL) {
     while(list != NULL) {
       if(list->pluginStatus.activePlugin) {
 	if(numEntries == 0) {
-	  sendString("<CENTER><P><H1>Network Flows</H1><P>"
-		     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">Flow Name</TH>"
-		     "<TH "TH_BG">Packets</TH><TH "TH_BG">Traffic</TH></TR>");
-	}
+	  printSectionTitle("Network Flows");
+ 	  sendString("<CENTER>\n");
+	  sendString(""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">Flow Name</TH>"
+  		     "<TH "TH_BG">Packets</TH><TH "TH_BG">Traffic</TH></TR>");
+  	}
 
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s"
 		"</TD><TD "TD_BG"  ALIGN=RIGHT>%s</TD></TR>\n",
@@ -3381,7 +3424,9 @@ void listNetFlows(void) {
     }
 
     if(numEntries > 0)
-      sendString("</TABLE>"TABLE_OFF"</CENTER>");
+      sendString("</TABLE>"TABLE_OFF"\n");
+    
+    sendString("</CENTER>\n");
   }
 
   if(numEntries == 0) {
@@ -3402,7 +3447,7 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
   char buf[BUF_SIZE], *arrowGif, *sign;
   char htmlAnchor[64], htmlAnchor1[64];
 
-  if(theHost == NULL) printHTTPheader();
+  if(theHost == NULL) printHTMLheader(NULL, 0);
 
   if(eventFile == NULL) {
     if(theHost == NULL) printNoDataYet();
@@ -3565,97 +3610,6 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
 }
 
 
-/* ************************ */
-
-void fillDomainName(HostTraffic *el) {
-  u_int i;
-
-  if(theDomainHasBeenComputed(el)
-     || (el->hostSymIpAddress == NULL))
-    return;
-
-#ifdef MULTITHREADED
-  accessMutex(&addressResolutionMutex, "fillDomainName");
-#endif
-
-  if((el->hostSymIpAddress[0] == '*')
-     || (el->hostNumIpAddress[0] == '\0')
-     || (isdigit(el->hostSymIpAddress[strlen(el->hostSymIpAddress)-1]) &&
-	 isdigit(el->hostSymIpAddress[0]))) {
-    /* NOTE: theDomainHasBeenComputed(el) = 0 */
-    el->fullDomainName = el->dotDomainName = "";
-#ifdef MULTITHREADED
-    releaseMutex(&addressResolutionMutex);
-#endif
-    return;
-  }
-
-  FD_SET(THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG, &el->flags);
-  el->fullDomainName = el->dotDomainName = ""; /* Reset values... */
-
-  i = strlen(el->hostSymIpAddress)-1;
-
-  while(i > 0)
-    if(el->hostSymIpAddress[i] == '.')
-      break;
-    else
-      i--;
-
-  if((i > 0)
-     && strcmp(el->hostSymIpAddress, el->hostNumIpAddress)
-     && (strlen(el->hostSymIpAddress) > (i+1)))
-    el->dotDomainName = &el->hostSymIpAddress[i+1];
-  else {
-    /* Let's use the local domain name */
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "'%s' [%s/%s]\n",
-	   el->hostSymIpAddress, domainName, shortDomainName);
-#endif
-    if((domainName[0] != '\0')
-       && (strcmp(el->hostSymIpAddress, el->hostNumIpAddress))) {
-      int len  = strlen(el->hostSymIpAddress);
-      int len1 = strlen(domainName);
-
-      /* traceEvent(TRACE_INFO, "%s [%s]\n",
-	 el->hostSymIpAddress, &el->hostSymIpAddress[len-len1]); */
-
-      if((len > len1)
-	 && (strcmp(&el->hostSymIpAddress[len-len1-1], domainName) == 0))
-	el->hostSymIpAddress[len-len1-1] = '\0';
-
-      el->fullDomainName = domainName;
-      el->dotDomainName = shortDomainName;
-    } else {
-      el->fullDomainName = el->dotDomainName = "";
-    }
-
-#ifdef MULTITHREADED
-    releaseMutex(&addressResolutionMutex);
-#endif
-    return;
-  }
-
-  for(i=0; el->hostSymIpAddress[i] != '\0'; i++)
-    el->hostSymIpAddress[i] = tolower(el->hostSymIpAddress[i]);
-
-  i = 0;
-  while(el->hostSymIpAddress[i] != '\0')
-    if(el->hostSymIpAddress[i] == '.')
-      break;
-    else
-      i++;
-
-  if((el->hostSymIpAddress[i] == '.')
-	 && (strlen(el->hostSymIpAddress) > (i+1)))
-    el->fullDomainName = &el->hostSymIpAddress[i+1];
-
-  /* traceEvent(TRACE_INFO, "'%s'\n", el->domainName); */
-
-#ifdef MULTITHREADED
-    releaseMutex(&addressResolutionMutex);
-#endif
-}
-
 /* *********************************** */
 
 void printHostHourlyTraffic(HostTraffic *el) {
@@ -3667,7 +3621,9 @@ void printHostHourlyTraffic(HostTraffic *el) {
   strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
   hourId = atoi(theDate);
 
-  sendString("<P><H1>Host Traffic Stats</H1><P>\n"TABLE_ON"<TABLE BORDER=1>\n<TR>");
+  printSectionTitle("Host Traffic Stats");
+  sendString("<CENTER>\n");
+  sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>");
   sendString("<TH "TH_BG">Time</TH>");
   sendString("<TH "TH_BG">Tot. Traffic Sent</TH>");
   sendString("<TH "TH_BG">% Traffic Sent</TH>");
@@ -3729,5 +3685,6 @@ void printHostHourlyTraffic(HostTraffic *el) {
   printHostHourlyTrafficEntry(el, 23, tcSent, tcRcvd);
 
   sendString("</TABLE>"TABLE_OFF"\n");
+  sendString("</CENTER>\n");
 }
 

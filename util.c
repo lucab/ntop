@@ -498,7 +498,8 @@ void handleLocalAddresses(char* addresses) {
       networkMask = ~networkMask;
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO "Nw=%08X - Mask: %08X [%08X]\n", network, networkMask, (network & networkMask));
+      traceEvent(TRACE_INFO "Nw=%08X - Mask: %08X [%08X]\n", 
+		 network, networkMask, (network & networkMask));
 #endif
       if((networkMask >= 0xFFFFFF00) /* Courtesy of Roy-Magne Mo <romo@interpost.no> */
 	 && ((network & networkMask) != network))  {
@@ -1365,11 +1366,11 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
     sockFd = fileno(fd);
 
   if(additionalInfo != NULL) additionalInfo[0]='\0';
-  wait_time.tv_sec = PIPE_READ_TIMEOUT, wait_time.tv_usec = 0;
 
   while(1) {
     FD_ZERO(&mask);
     FD_SET(sockFd, &mask);
+    wait_time.tv_sec = PIPE_READ_TIMEOUT, wait_time.tv_usec = 0;
 
     if(select(sockFd+1, &mask, 0, 0, &wait_time) == 0) {
       break; /* Timeout */
@@ -1378,6 +1379,10 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
     if((operatingSystem = fgets(line, sizeof(line)-1, fd)) == NULL)
       break;
 
+    len = strlen(operatingSystem);
+    if ((operatingSystem[len-1] == '\n') || (operatingSystem[len-1] == '\r'))
+      operatingSystem[len-1] = '\0';	/* strip NL or CR from end-of-line */
+ 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "'%s'\n", line);
 #endif
@@ -1432,11 +1437,22 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
     strncpy(staticOsName, operatingSystem, len-1);
   }
 
+   memset(staticOsName, 0, sizeof(staticOsName));
+   if(found) {
+     len = strlen(operatingSystem);
+     strncpy(staticOsName, operatingSystem, len);
+     staticOsName[sizeof(staticOsName)-1] = '\0';
+#ifdef DEBUG
+     traceEvent(TRACE_INFO, "OS is: '%s'\n", operatingSystem);
+#endif
+   }
+ 
   /* Read remaining data (if any) */
   while(1) {
     FD_ZERO(&mask);
     FD_SET(sockFd, &mask);
-
+    wait_time.tv_sec = PIPE_READ_TIMEOUT; wait_time.tv_usec = 0;
+    
     if(select(sockFd+1, &mask, 0, 0, &wait_time) == 0) {
       break; /* Timeout */
     }
@@ -1510,6 +1526,7 @@ char* savestr(const char *str)
 
 int name_interpret(char *in, char *out) {
   int ret, len = (*in++) / 2;
+  char *b=out;
 
   *out=0;
 
@@ -1526,9 +1543,13 @@ int name_interpret(char *in, char *out) {
     in += 2;
     out++;
   }
+  ret = *(--out);
   *out = 0;
-  ret = out[-1];
 
+  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+  /* Trim trailing whitespace from the returned string */
+  for(out--; out>=b && *out==' '; out--) *out = '\0';
+  
   return(ret);
 }
 
@@ -2071,3 +2092,95 @@ int snprintf(char *string, size_t maxlen, const char *format, ...) {
   return ret;
 }
 #endif
+
+/* ************************ */
+
+void fillDomainName(HostTraffic *el) {
+  u_int i;
+
+  if(theDomainHasBeenComputed(el)
+     || (el->hostSymIpAddress == NULL))
+    return;
+
+#ifdef MULTITHREADED
+  accessMutex(&addressResolutionMutex, "fillDomainName");
+#endif
+
+  if((el->hostSymIpAddress[0] == '*')
+     || (el->hostNumIpAddress[0] == '\0')
+     || (isdigit(el->hostSymIpAddress[strlen(el->hostSymIpAddress)-1]) &&
+	 isdigit(el->hostSymIpAddress[0]))) {
+    /* NOTE: theDomainHasBeenComputed(el) = 0 */
+    el->fullDomainName = el->dotDomainName = "";
+#ifdef MULTITHREADED
+    releaseMutex(&addressResolutionMutex);
+#endif
+    return;
+  }
+
+  FD_SET(THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG, &el->flags);
+  el->fullDomainName = el->dotDomainName = ""; /* Reset values... */
+
+  i = strlen(el->hostSymIpAddress)-1;
+
+  while(i > 0)
+    if(el->hostSymIpAddress[i] == '.')
+      break;
+    else
+      i--;
+
+  if((i > 0)
+     && strcmp(el->hostSymIpAddress, el->hostNumIpAddress)
+     && (strlen(el->hostSymIpAddress) > (i+1)))
+    el->dotDomainName = &el->hostSymIpAddress[i+1];
+  else {
+    /* Let's use the local domain name */
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "'%s' [%s/%s]\n",
+	   el->hostSymIpAddress, domainName, shortDomainName);
+#endif
+    if((domainName[0] != '\0')
+       && (strcmp(el->hostSymIpAddress, el->hostNumIpAddress))) {
+      int len  = strlen(el->hostSymIpAddress);
+      int len1 = strlen(domainName);
+
+      /* traceEvent(TRACE_INFO, "%s [%s]\n",
+	 el->hostSymIpAddress, &el->hostSymIpAddress[len-len1]); */
+
+      if((len > len1)
+	 && (strcmp(&el->hostSymIpAddress[len-len1-1], domainName) == 0))
+	el->hostSymIpAddress[len-len1-1] = '\0';
+
+      el->fullDomainName = domainName;
+      el->dotDomainName = shortDomainName;
+    } else {
+      el->fullDomainName = el->dotDomainName = "";
+    }
+
+#ifdef MULTITHREADED
+    releaseMutex(&addressResolutionMutex);
+#endif
+    return;
+  }
+
+  for(i=0; el->hostSymIpAddress[i] != '\0'; i++)
+    el->hostSymIpAddress[i] = tolower(el->hostSymIpAddress[i]);
+
+  i = 0;
+  while(el->hostSymIpAddress[i] != '\0')
+    if(el->hostSymIpAddress[i] == '.')
+      break;
+    else
+      i++;
+
+  if((el->hostSymIpAddress[i] == '.')
+	 && (strlen(el->hostSymIpAddress) > (i+1)))
+    el->fullDomainName = &el->hostSymIpAddress[i+1];
+
+  /* traceEvent(TRACE_INFO, "'%s'\n", el->domainName); */
+
+#ifdef MULTITHREADED
+    releaseMutex(&addressResolutionMutex);
+#endif
+}
+

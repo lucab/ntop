@@ -71,14 +71,9 @@ static void startRmonPlugin(void) {
 /* ****************************** */
   
 static void handleRmonHTTPrequest(char* url _UNUSED_) {
-  sendHTTPProtoHeader();
-  sendHTTPHeaderType();
-  printHTTPheader();
-
-  sendString("<CENTER><FONT FACE=Helvetica><H1>"
-	     "ntop RMON Interface"
-	     "</H1><p></CENTER>\n");
-  printHTTPtrailer();
+  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+  printHTMLheader("ntop RMON Interface", 0);
+  printHTMLtrailer();
 }
 
 /* ****************************** */
@@ -140,16 +135,10 @@ PluginInfo* rmonPluginEntryFctn(void) {
 /* ****************************** */
 
 static void handleRmonHTTPrequest(char* url) {
-  sendHTTPProtoHeader();
-  sendHTTPHeaderType();
-  printHTTPheader();
-
-  sendString("<CENTER><FONT FACE=Helvetica><H1>"
-	     "ntop RMON Interface"
-	     "</H1><p><FONT COLOR=#FF0000>\n"
-	     "<IMG SRC=/warning.gif><p>This plugin is disabled as UCD-SNMP is missing"
-	     "</FONT></CENTER>\n");
-  printHTTPtrailer();
+  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+  printHTMLheader("ntop RMON Interface", 0);
+  printFlagedWarning("<I>This plugin is disabled as UCD-SNMP is missing</I>");
+  printHTMLtrailer();
 }
 
 /* ****************************** */

@@ -239,10 +239,13 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		break;
 	      } else if(el->hostIpAddresses[i].s_addr == hostIpAddress->s_addr)
 		break;
-	      else {
+	      /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+	      /*
+		else {
 		el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
 		break;
-	      }
+		}
+	      */
 	    }
 
 	    if(el->hostNumIpAddress[0] == '\0') {
@@ -407,7 +410,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	} else {
 	  /* el->hostNumIpAddress == "" */
 	  if(symEthName[0] != '\0') {
-	    char buf[255];
+	    char buf[MAX_HOST_SYM_NAME_LEN];
 
 	    if(snprintf(buf, sizeof(buf), "%s [MAC]", symEthName) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -438,19 +441,19 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	time_t lastSeenCandidate=0;
 	HostTraffic* hostToFree;
 
-	for(i=0; i<device[actualDeviceId].actualHashSize; i++)
+	for(i=1; i<device[actualDeviceId].actualHashSize; i++)
 	  if(device[actualDeviceId].hash_hostTraffic[i] != NULL) {
 	    if((candidate == 0)
-	       || (device[actualDeviceId].hash_hostTraffic[idx]->lastSeen
+	       || (device[actualDeviceId].hash_hostTraffic[i]->lastSeen
 		   < lastSeenCandidate)) {
 	      candidate = i;
-	      if((device[actualDeviceId].hash_hostTraffic[idx]->lastSeen
+	      if((device[actualDeviceId].hash_hostTraffic[i]->lastSeen
 		  +IDLE_HOST_PURGE_TIMEOUT)
 		 > actTime)
 		break;
 	      else
 		lastSeenCandidate = device[actualDeviceId].
-		  hash_hostTraffic[idx]->lastSeen;
+		  hash_hostTraffic[i]->lastSeen;
 	    }
 	  }
 
@@ -594,7 +597,7 @@ static void updateHostSessionsList(u_int theHostIdx,
 
   /* Patch below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
   if(i>=MAX_NUM_SESSION_PEERS)
-    i = scanner->lastPeer;
+    i = scanner->lastPeer; /* (*) */
 
   if((i<MAX_NUM_SESSION_PEERS)
      && (((scanner->peersIdx[i] != NO_PEER)
@@ -604,7 +607,7 @@ static void updateHostSessionsList(u_int theHostIdx,
 		     device[actualDeviceId].
 		     hash_hostTraffic[checkSessionIdx(remotePeerIdx)]->hostNumIpAddress)))
 	 || (scanner->peersIdx[i] == NO_PEER))) {
-    scanner->peersIdx[scanner->lastPeer] = remotePeerIdx;
+    scanner->peersIdx[scanner->lastPeer] = remotePeerIdx; /* Note i == scanner->lastPeer (*) */
     scanner->lastPeer = (scanner->lastPeer+1) % MAX_NUM_SESSION_PEERS;
   }
 
@@ -1280,13 +1283,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 
   if(broadcastHost(srcHost) || broadcastHost(dstHost)) /* (**) */
     return;
-
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "%8x/%8x %8x\n",
-	     srcHost->hostIpAddress.s_addr,
-	     dstHost->hostIpAddress.s_addr,
-	     localHostAddress.s_addr);
-#endif
 
   if(tp == NULL)
     sessionType = IPPROTO_UDP;
@@ -2940,7 +2936,6 @@ static void processIpPkt(const u_char *bp,
 #endif
 
 	/* The DNS chain will be checked here */
-	FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
 	transactionId = processDNSPacket(bp, udpDataLength, hlen, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
@@ -2991,13 +2986,13 @@ static void processIpPkt(const u_char *bp,
 
             if(microSecTimeDiff > 0) {
               if(subnetLocalHost(dstHost)) {
-                if((srcHost->dnsStats->fastestMicrosecLocalReqMade == 0)
+                if((srcHost->dnsStats->fastestMicrosecLocalReqServed == 0)
                    || (microSecTimeDiff < srcHost->dnsStats->fastestMicrosecLocalReqServed))
                   srcHost->dnsStats->fastestMicrosecLocalReqServed = microSecTimeDiff;
                 if(microSecTimeDiff > srcHost->dnsStats->slowestMicrosecLocalReqServed)
                   srcHost->dnsStats->slowestMicrosecLocalReqServed = microSecTimeDiff;
               } else {
-                if((srcHost->dnsStats->fastestMicrosecRemoteReqMade == 0)
+                if((srcHost->dnsStats->fastestMicrosecRemoteReqServed == 0)
                    || (microSecTimeDiff < srcHost->dnsStats->fastestMicrosecRemoteReqServed))
                   srcHost->dnsStats->fastestMicrosecRemoteReqServed = microSecTimeDiff;
                 if(microSecTimeDiff > srcHost->dnsStats->slowestMicrosecRemoteReqServed)
@@ -3025,6 +3020,9 @@ static void processIpPkt(const u_char *bp,
             }
           }
 
+	  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+	  FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
+
           if(positiveReply) {
             srcHost->dnsStats->numPositiveReplSent++;
             dstHost->dnsStats->numPositiveReplRcvd++;
@@ -3038,26 +3036,43 @@ static void processIpPkt(const u_char *bp,
                     || (srcHost->nbDomainName == NULL))) {
         char *name, nbName[64], domain[64];
         int nodeType, i;
+	char *data = (char*)bp + (hlen + sizeof(struct udphdr));
+	u_char *p;
+	int offset;
 
-        name = ((char*)bp+hlen+22);
-        nodeType = name_interpret(name,nbName);
+        name = data + 14;
+ 	p = (u_char*)name;
+         if ((*p & 0xC0) == 0xC0) {
+           name = data + (p[1] + 255 * (p[0] & ~0xC0));
+ 	  offset = 2;
+ 	} else {
+ 	  while (*p) p += (*p)+1;
+ 	  offset = ((char*)p - (char*)data) + 1;
+ 	}
+         nodeType = name_interpret(name, nbName);
+
         srcHost->nbNodeType = (char)nodeType;
-	switch(nodeType) {
-	case 0x0:  /* Workstation */
-	  FD_SET(HOST_TYPE_WORKSTATION, &srcHost->flags);
-	case 0x20: /* Server */
-	  FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
-	}
+	/* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+  	switch(nodeType) {
+  	case 0x0:  /* Workstation */
+  	case 0x20: /* Server */
+           srcHost->nbNodeType = (char)nodeType;
+ 	  if(srcHost->nbHostName == NULL)
+ 	    srcHost->nbHostName = strdup(nbName);
+ 	  switch(nodeType) {
+ 	  case 0x0:  /* Workstation */
+ 	    FD_SET(HOST_TYPE_WORKSTATION, &srcHost->flags);
+ 	  case 0x20: /* Server */
+	    FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+ 	  }
+  	}
+  
+ 	name = data + offset;
+ 	p = (u_char*)name;
+         if ((*p & 0xC0) == 0xC0)
+           name = ((char*)bp+hlen+8 + (p[1] + 255 * (p[0] & ~0xC0)));
+          nodeType = name_interpret(name, domain);
 
-        for(i=0; nbName[i] != '\0'; i++)
-	  if(nbName[i] == ' ') { nbName[i] = '\0'; break; }
-
-	if(srcHost->nbHostName == NULL)
-	  srcHost->nbHostName = strdup(nbName);
-
-        name = ((char*)bp+hlen+22+34);
-
-        nodeType = name_interpret(name, domain);
         for(i=0; domain[i] != '\0'; i++)
 	  if(domain[i] == ' ') { domain[i] = '\0'; break; }
 
@@ -3072,7 +3087,7 @@ static void processIpPkt(const u_char *bp,
 	    }
 	  }
 	  break;
-
+#if 0   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
 	case 0x0:  /* Workstation */
 	case 0x20: /* Server */
 	  if(dstHost->nbHostName == NULL) dstHost->nbHostName = strdup(domain);
@@ -3084,6 +3099,7 @@ static void processIpPkt(const u_char *bp,
 	    FD_SET(HOST_TYPE_SERVER, &dstHost->flags);
 	  }
 	  break;
+#endif
 	}
       }
     }
@@ -3209,10 +3225,12 @@ static void processIpPkt(const u_char *bp,
   }
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "IP=%d TCP=%d UDP=%d ICMP=%d (len=%d)\n",
-	     (int)ipBytes, (int)tcpBytes, (int)udpBytes,
-	     (int)icmpBytes, length);
+	     (int)device[actualDeviceId].ipBytes, 
+	     (int)device[actualDeviceId].tcpBytes, 
+	     (int)device[actualDeviceId].udpBytes,
+	     (int)device[actualDeviceId].icmpBytes, length);
 #endif
-
+  
   /* Unlock the instance */
   srcHost->instanceInUse--, dstHost->instanceInUse--;
 }

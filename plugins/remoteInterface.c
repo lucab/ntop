@@ -333,17 +333,12 @@ void* remIntLoop(void* notUsed _UNUSED_) {
 /* ****************************** */
   
 static void handleRemIntHTTPrequest(char* url _UNUSED_) {
-  sendHTTPProtoHeader();
-  sendHTTPHeaderType();
-  printHTTPheader();
-
-  sendString("<CENTER><FONT FACE=Helvetica><H1>"
-	     "ntop Remote Interface"
-	     "</H1><p></CENTER>\n");
-  printHTTPtrailer();
+  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+  printHTMLheader("ntop Remote Interface", 0);
+  printHTMLtrailer();
 }
 
- /* ****************************** */
+/* ****************************** */
  
 static void startRemIntFunct(void) {
 #ifdef MULTITHREADED

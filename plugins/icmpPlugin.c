@@ -792,7 +792,7 @@ static void printIcmpHostPkts(struct in_addr hostIpAddress,
     printIcmpPkt(&icmpHostsList[num]);
 
   sendString("</TABLE></CENTER>\n");
-  printHTTPtrailer();
+  printHTMLtrailer();
 }
 
 /* ******************************* */
@@ -891,8 +891,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
       fclose(fd);
 
-      sendHTTPProtoHeader();
-      sendGIFHeaderType();
+      endHTTPHeader(HTTP_TYPE_GIF, 0);
 
       fd = fopen(fileName, "rb");
       for(;;) {
@@ -920,13 +919,12 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     icmpId = atoi(strtok_r(NULL, "&", &strtokState));
   }
 
-  sendHTTPProtoHeader(); sendHTTPHeaderType(); printHTTPheader();
-
-  sendString("<CENTER><FONT FACE=Helvetica><H1>ICMP Statistics</H1><p>\n");
+  sendHTTPHeader(HTTP_TYPE_HTML, 0);  
+  printHTMLheader("ICMP Statistics", 0);
 
   if(num == 0) {
     printNoDataYet();
-    printHTTPtrailer();
+    printHTMLtrailer();
     return;
   }
 
@@ -940,6 +938,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     return;
   }
 
+  sendString("<CENTER>\n");
   sendString("<TABLE BORDER>\n");
   if(snprintf(buf, sizeof(buf), "<TR><TH>%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd]</TH>"
 	 "<TH>%s?%s2>Echo Req.</A></TH>"
@@ -1204,10 +1203,12 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
   sendString("<p></CENTER>\n");
 
-  printHTTPtrailer();
+  printHTMLtrailer();
 
-  free(s); free(r); 
-  free(lbls); free(hosts); 
+  free(s);
+  free(r); 
+  free(lbls);
+  free(hosts); 
 }
 
 /* ****************************** */

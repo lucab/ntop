@@ -80,9 +80,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 		 ETHERNET_ADDRESS_LEN) == 0) {
     idx = broadcastEntryIdx;
     (*useIPAddressForSearching) = 0;
-  } else if ((hostIpAddress == NULL)
-	     /* || (hostIpAddress->s_addr == 0x0) */
-	     || isLocalAddress(hostIpAddress)) {
+  } else if(hostIpAddress == NULL) {
     memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
   } else if ((hostIpAddress->s_addr == 0x0)
@@ -93,6 +91,9 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   } else if(isBroadcastAddress(hostIpAddress)) {
     idx = broadcastEntryIdx;
     (*useIPAddressForSearching) = 1;
+  } else if (isLocalAddress(hostIpAddress)) {
+    memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));
+    (*useIPAddressForSearching) = 0;
   } else {
     idx = 0;
     memcpy(&idx, &hostIpAddress->s_addr, 4);
@@ -157,7 +158,9 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 
   newSize = (int)(device[deviceToExtend].actualHashSize*multiplier);
   newSize = newSize - (newSize % 2); /* I want an even hash size */
-
+  
+  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+  /* FIXME (DL): purgeIdleHosts() acts on actualDeviceId instead of deviceToExtend */
   if(newSize > maxHashSize) /* Hard Limit */ {
     purgeIdleHosts(1);
     return;
@@ -523,6 +526,9 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 
   if(host == NULL)
     return;
+
+  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+  /* FIXME (DL): checkSessionIdx() acts on actualDeviceId instead of theDevice */
 
   updateHostTraffic(host);
 

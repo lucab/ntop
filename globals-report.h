@@ -83,6 +83,8 @@ extern void printTableEntryPercentage(char *buf, int bufLen,
 				      char *label, char* label_1,
 				      char* label_2, float total,
 				      float percentage);
+extern void printSectionTitle(char *text);
+extern void printFlagedWarning(char *text);
 extern void printHeader(int reportType, int revertOrder, u_int column);
 extern char* getOSFlag(char* osName, int showOsName);
 extern int sortHostFctn(const void *_a, const void *_b);
@@ -153,7 +155,7 @@ extern void listNetFlows(void);
 extern void printHostEvents(HostTraffic *theHost, int column, int revertOrder);
 extern void fillDomainName(HostTraffic *el);
 extern void printNtopConfigInfo(void);
-extern void updateHostThpt(HostTraffic *el, int hourId);
+extern void updateHostThpt(HostTraffic *el, int hourId, int fullUpdate);
 
 /* webInterface.c */
 extern void initializeWeb(void);
@@ -176,6 +178,9 @@ extern void switchNwInterface(int _interface);
 extern void usage(void);
 extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
+
+/* http.c */
+extern void sendHTTPHeader(int mimeType, int headerFlags);
 
 #ifdef HAVE_GDCHART
 
@@ -201,9 +206,9 @@ extern void printHostHourlyTraffic(HostTraffic *el);
 extern char GDC_yaxis;
 extern char* GDC_ylabel_fmt;
 
-extern int out_graph(short pngwidth,
-		     short pngheight,
-		     FILE  *png_fptr,
+extern int out_graph(short gifwidth,
+		     short gifheight,
+		     FILE  *gif_fptr,
 		     GDC_CHART_T type,
 		     int  num_points,
 		     char *xlbl[],

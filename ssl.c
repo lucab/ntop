@@ -149,24 +149,30 @@ static int init_ssl_connection(SSL *con)
   }
 
 #ifdef DEBUG
-  peer=SSL_get_peer_certificate(con);
-  if (peer != NULL) {
-    traceEvent(TRACE_INFO, "Client certificate\n");
-    X509_NAME_oneline(X509_get_subject_name(peer),buf,BUFSIZ);
-    traceEvent(TRACE_INFO, "subject=%s\n",buf);
-    X509_NAME_oneline(X509_get_issuer_name(peer),buf,BUFSIZ);
-    traceEvent(TRACE_INFO, "issuer=%s\n",buf);
-    X509_free(peer);
-  }
+  {
+    /* the following declarations are needed to put debug mode to work */
+    X509 *peer;
+    char *str, buf[BUFSIZ];
+    peer=SSL_get_peer_certificate(con);
 
-  if (SSL_get_shared_ciphers(con,buf,BUFSIZ) != NULL)
-    traceEvent(TRACE_INFO, "Shared ciphers:%s\n",buf);
-  str=SSL_CIPHER_get_name(SSL_get_current_cipher(con));
-  traceEvent(TRACE_INFO, "CIPHER is %s\n",(str != NULL)?str:"(NONE)");
-  if (con->hit) traceEvent(TRACE_INFO, "Reused session-id\n");
-  if (SSL_ctrl(con,SSL_CTRL_GET_FLAGS,0,NULL) &
-      TLS1_FLAGS_TLS_PADDING_BUG)
-    traceEvent(TRACE_WARNING, "Peer has incorrect TLSv1 block padding\n");
+    if(peer != NULL) {
+      traceEvent(TRACE_INFO, "Client certificate\n");
+      X509_NAME_oneline(X509_get_subject_name(peer),buf,BUFSIZ);
+      traceEvent(TRACE_INFO, "subject=%s\n",buf);
+      X509_NAME_oneline(X509_get_issuer_name(peer),buf,BUFSIZ);
+      traceEvent(TRACE_INFO, "issuer=%s\n",buf);
+      X509_free(peer);
+    }
+
+    if (SSL_get_shared_ciphers(con,buf,BUFSIZ) != NULL)
+      traceEvent(TRACE_INFO, "Shared ciphers:%s\n",buf);
+    str=SSL_CIPHER_get_name(SSL_get_current_cipher(con));
+    traceEvent(TRACE_INFO, "CIPHER is %s\n",(str != NULL)?str:"(NONE)");
+    if (con->hit) traceEvent(TRACE_INFO, "Reused session-id\n");
+    if (SSL_ctrl(con,SSL_CTRL_GET_FLAGS,0,NULL) &
+	TLS1_FLAGS_TLS_PADDING_BUG)
+      traceEvent(TRACE_WARNING, "Peer has incorrect TLSv1 block padding\n");
+  }
 #endif
 
   return(1);

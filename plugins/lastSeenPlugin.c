@@ -132,10 +132,11 @@ static void handleLsHTTPrequest(char* url) {
   struct in_addr char_ip;
   int entry = 0, num_hosts;
 
-  if (disabled) {
-    sendHTTPProtoHeader(); sendHTTPHeaderType(); printHTTPheader();
-    sendString("<P><CENTER><H1><i>Plugin Disabled</i></H1></CENTER></FONT>\n");
-    printHTTPtrailer();
+  if(disabled) {
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    printHTMLheader("Status for the \"lastSeen\" Plugin", HTML_FLAG_NO_REFRESH);
+    printFlagedWarning("<I>This plugin is disabled.<I>");
+    printHTMLtrailer();
     return;
   }
 
@@ -145,18 +146,19 @@ static void handleLsHTTPrequest(char* url) {
     return;
   }
 
-  sendHTTPProtoHeader(); sendHTTPHeaderType(); printHTTPheader();
+  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+  printHTMLheader(NULL, 0);
 
   if ( url && strncmp(url,"P",1)==0 ) {
     entry = recv(newSock, &postData[0],127,0); 
     postData[entry] = '\0';
     addNotes( url+1, &postData[6]);	
-    char_ip.s_addr = strtoul(url+1,NULL,10);
-    if(snprintf(tmpStr, sizeof(tmpStr), "<P><CENTER><H1><i>OK! Added comments for %s.</i>"
-	    "</H1></CENTER></FONT>\n",intoa(char_ip)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(tmpStr);
+    char_ip.s_addr = strtoul(url+1, NULL, 10);
+    if(snprintf(tmpStr, sizeof(tmpStr), "<I>OK! Added comments for %s.</i>\n",
+		intoa(char_ip)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+    printSectionTitle(tmpStr);
     sendString("<br><A HREF=/plugins/LastSeen>Reload</A>");
-    printHTTPtrailer();
+    printHTMLtrailer();
     return;
   }
 
@@ -201,7 +203,7 @@ static void handleLsHTTPrequest(char* url) {
   quicksort(( void *)&tablehost[0],entry,sizeof(LsHostInfo),SortLS);
   num_hosts=entry;
   entry--;
-  sendString("<CENTER><FONT FACE=Helvetica><H1>Last Seen Statistics</H1></CENTER><p>\n");
+  printSectionTitle("Last Seen Statistics");
   sendString("<CENTER><TABLE BORDER>\n");
   sendString("<TR><TH>Host</TH><TH>Address</TH><TH>LastSeen</TH><TH>Comments</TH><TH>Options</TH></TR>\n");
   while ( entry >= 0 ) {
@@ -260,7 +262,7 @@ static void handleLsHTTPrequest(char* url) {
 	   "<hr><CENTER><b>%u</b> host(s) collected.</CENTER><br>",
 	   num_hosts) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(tmpStr);
-  printHTTPtrailer();
+  printHTMLtrailer();
 }
 
 /* Adding notes changing the key */
@@ -315,7 +317,10 @@ static void NotesURL(char *addr, char *ip_addr) {
   releaseMutex(&gdbmMutex);
 #endif 
 
-  printHTTPheader();
+  snprintf(tmp, sizeof(tmp), "Notes for %s", ip_addr);
+  printHTMLheader(tmp, 0);
+  
+  sendString("<FONT FACE=Helvetica><P><HR>\n");
   sendString("<title>Manage Notes</title>\n");
   sendString("</head><BODY COLOR=#FFFFFF><FONT FACE=Helvetica>\n");
   if(snprintf(tmp, sizeof(tmp), "<H1><CENTER>Notes for %s</CENTER></H1><p><p><hr>\n",ip_addr) < 0) 
@@ -334,6 +339,7 @@ static void NotesURL(char *addr, char *ip_addr) {
   }
   sendString("<p>\n");
   sendString("<input type=submit value=\"Add Notes\"><input type=reset></form>\n");
+  sendString("</FONT>\n");
 }
 
 static void deletelastSeenURL( char *addr ) {

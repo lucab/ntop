@@ -34,7 +34,7 @@ extern PluginInfo* nfsPluginEntryFctn(void);
 extern PluginInfo* wapPluginEntryFctn(void);
 extern PluginInfo* remIntPluginEntryFctn(void);
 #ifdef RMON_SUPPORT
-extern PluginInfo* PluginEntryFctn(void);
+extern PluginInfo* rmonPluginEntryFctn(void);
 #endif
 #endif
 
@@ -134,35 +134,6 @@ void notifyPluginsHashResize(int oldSize, int newSize, int* mappings) {
       flows->pluginStatus.pluginPtr->resizeFunct(oldSize, newSize, mappings);
     else
       flows = flows->next;
-}
-
-/* ******************* */
-
-int handlePluginHTTPRequest(char* url) {
-  FlowFilterList *flows = flowsList;
-
-  while(flows != NULL)
-    if((flows->pluginStatus.pluginPtr != NULL)
-       && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)
-       && (flows->pluginStatus.activePlugin)
-       && (flows->pluginStatus.pluginPtr->httpFunct != NULL)
-       && (strncmp(flows->pluginStatus.pluginPtr->pluginURLname,
-		   url, strlen(flows->pluginStatus.pluginPtr->pluginURLname)) == 0)) {
-      char *arg;
-
-      if(strlen(url) == strlen(flows->pluginStatus.pluginPtr->pluginURLname))
-	arg = "";
-      else
-	arg = &url[strlen(flows->pluginStatus.pluginPtr->pluginURLname)+1];
-
-      /* traceEvent(TRACE_INFO, "Found %s [%s]\n", 
-	 flows->pluginStatus.pluginPtr->pluginURLname, arg); */
-      flows->pluginStatus.pluginPtr->httpFunct(arg);
-      return(1);
-    } else
-      flows = flows->next;
-
-  return(0); /* Plugin not found */
 }
 
 /* ******************* */
@@ -297,6 +268,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 	newFlow->fcode[i].bf_insns = NULL;
     } else {
       strncpy(tmpBuf, pluginInfo->bpfFilter, sizeof(tmpBuf));
+      tmpBuf[sizeof(tmpBuf)-1] = '\0'; /* just in case bpfFilter is too long... */
 
       for(i=0; i<numDevices; i++) {
 #ifdef DEBUG

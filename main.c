@@ -414,7 +414,7 @@ int main(int argc, char *argv[]) {
 	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", device[i].name) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
-      strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-strlen(ifStr)-1] = '\0';
+      strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
     }
 
   traceEvent(TRACE_INFO, "Listening on [%s]", ifStr);

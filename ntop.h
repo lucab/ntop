@@ -437,8 +437,29 @@ extern const char *gdbm_strerror (int);
 
 #define DUMMY_SOCKET_VALUE -999
 
-#define INVALID_HTTP_REQUEST -2
+/*
+  Code below courtesy of 
+  Roberto F. De Luca <deluca@tandar.cnea.gov.ar>
+*/
 
+#define HTTP_TYPE_NONE	0
+#define HTTP_TYPE_HTML	1
+#define HTTP_TYPE_GIF	2
+#define HTTP_TYPE_JPEG	3
+#define HTTP_TYPE_PNG	4
+#define HTTP_TYPE_CSS	5
+ 
+#define HTTP_FLAG_IS_CACHEABLE		(1<<0)
+#define HTTP_FLAG_NO_CACHE_CONTROL	(1<<1)
+#define HTTP_FLAG_KEEP_OPEN		(1<<2)
+#define HTTP_FLAG_NEED_AUTHENTICATION	(1<<3)
+#define HTTP_FLAG_MORE_FIELDS		(1<<4)
+ 
+#define HTML_FLAG_NO_REFRESH		(1<<0)
+#define HTML_FLAG_NO_STYLESHEET		(1<<1)
+#define HTML_FLAG_NO_BODY		(1<<2)
+#define HTML_FLAG_NO_HEADING		(1<<3)
+  
 #define ALARM_TIME                3
 #define MIN_ALARM_TIME            1
 #define THROUGHPUT_REFRESH_TIME   30

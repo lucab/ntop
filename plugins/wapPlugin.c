@@ -26,12 +26,7 @@ static int wapColumnSort = 0;
 /* ****************************** */
 
 void printWMLheader(void)  {
-  char tmpStr[64];
-
-  sendString("HTTP/1.0 200 OK\n");
-  if(snprintf(tmpStr, 64, "Server: ntop/%s (%s)\n", version, osName) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(tmpStr);
+  sendHTTPHeader(HTTP_TYPE_NONE, HTTP_FLAG_NO_CACHE_CONTROL | HTTP_FLAG_MORE_FIELDS);
   sendString("Content-Type: text/vnd.wap.wml;charset=UTF-8\n\n"); 
 }
 
