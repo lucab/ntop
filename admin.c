@@ -979,6 +979,7 @@ void addDefaultAdminUser(void) {
   addKeyIfMissing("2shut",       "users=1admin", 0, 0, NULL);
   addKeyIfMissing("2resetStats", "users=1admin", 0, 0, NULL);
   addKeyIfMissing("2chang",      "users=1admin", 0, 0, NULL);
+  addKeyIfMissing("2configNtop", "users=1admin", 0, 0, NULL);
   addKeyIfMissing("2privacyFlag","users=1admin", 0, 0, NULL);
 }
 
@@ -1321,14 +1322,13 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 {
     char buf[1024];
     char theLink[32];
-
     
     safe_snprintf (__FILE__, __LINE__, theLink, sizeof(theLink),
                    "/configNtop.html?&showD=");
 
     switch (configScr) {
     case showPrefBasicPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
                       "[ <B>Basic Preferences</B> ]&nbsp;"
                       "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
                       "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
@@ -1339,7 +1339,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
         break;
 
     case showPrefDisplayPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
                       "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
                       "[ <B>Display Preferences</B> ]&nbsp;"
                       "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
@@ -1349,7 +1349,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
                       theLink, theLink, theLink, theLink, theLink, theLink);
         break;
     case showPrefIPPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
                       "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
                       "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
                       "[ <B>IP Preferences</B> ]&nbsp;"
@@ -1359,7 +1359,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
                       theLink, theLink, theLink, theLink, theLink, theLink);
         break;
     case showPrefFCPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
                       "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
                       "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
                       "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
@@ -1369,7 +1369,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
                       theLink, theLink, theLink, theLink, theLink, theLink);
         break;
     case showPrefAdvPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
                       "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
                       "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
                       "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
@@ -1379,7 +1379,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
                       theLink, theLink, theLink, theLink, theLink, theLink);
         break;
     case showPrefDbgPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
                       "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
                       "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
                       "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
@@ -1389,7 +1389,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
                       theLink, theLink, theLink, theLink, theLink, theLink);
         break;
     case showPrefPluginPref:
-        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=CENTER>"
                       "[ <A HREF=%s1>Basic Preferences</A> ]&nbsp;"
                       "[ <A HREF=%s2>Display Preferences</A> ]&nbsp;"
                       "[ <A HREF=%s3>IP Preferences</A> ]&nbsp;"
@@ -1478,6 +1478,8 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
      */
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("Configure NTOP", NULL, 0);
+
+    sendString ("<CENTER>\n");
 
     printNtopConfigHeader (url, configScr);
 
@@ -1729,16 +1731,16 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
     sendString ("</TABLE>");
     /* Save Preferences */
     if (configScr == showPrefDisplayPref) {
-        sendString("<tr><td colspan=\"2\" align=\"center\">"
-                   "<input type=submit name=SP value=\"Save&nbsp;Preferences\">"
-                   "<input type=submit name=AP value=\"Apply&nbsp;Preferences\">"
+        sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<p>"
+                   "<input type=submit name=SP value=\"Save&nbsp;Preferences\">&nbsp;"
+                   "<input type=submit name=AP value=\"Apply&nbsp;Preferences\">&nbsp;"
                    "<input type=submit name=RD value=\"Restore&nbsp;Defaults\">"
                    "</td></tr></table>\n"
                    "</form>\n<p></center>\n");
     }
     else {
-        sendString("<tr><td colspan=\"2\" align=\"center\">"
-                   "<input type=submit name=SP value=\"Save&nbsp;Preferences\">"
+        sendString("<tr><td colspan=\"2\" align=\"center\">&nbsp;<p>"
+                   "<input type=submit name=SP value=\"Save&nbsp;Preferences\">&nbsp;"
                    "<input type=submit name=RD value=\"Restore&nbsp;Defaults\">"
                    "</td></tr></table>\n"
                    "</form>\n<p></center>\n");

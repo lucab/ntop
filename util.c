@@ -4021,6 +4021,7 @@ void loadPrefs (int argc, char *argv[])
 #ifndef WIN32
         { "user",                             required_argument, NULL, 'u' },
 #endif
+	{ "trace-level",                      required_argument, NULL, 't' },
     };
     
     /* Retrieve the name of the global database file from the command line, if
@@ -4028,9 +4029,9 @@ void loadPrefs (int argc, char *argv[])
      * preferences file and so must be read first.
      */
 #ifndef WIN32    
-    theOpts = "hu:P:";
+    theOpts = "hu:P:t:";
 #else
-    theOpts = "hP:";
+    theOpts = "hP:t:";
 #endif    
   
     traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
@@ -4064,6 +4065,13 @@ void loadPrefs (int argc, char *argv[])
             break;
 #endif /* WIN32 */
 
+	case 't':
+	  /* Trace Level Initialization */
+	  myGlobals.runningPref.traceLevel = min(max(1, atoi(optarg)),
+						 CONST_VERY_DETAIL_TRACE_LEVEL);
+	  /* DETAILED is NOISY + FileLine stamp, unless already set */
+	  break;
+	  
         case 'P':
             stringSanityCheck(optarg);
             if(myGlobals.dbPath != NULL)

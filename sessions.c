@@ -2276,6 +2276,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 #ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
+
+    return(theSession);
 }
 
 /* ************************************ */
