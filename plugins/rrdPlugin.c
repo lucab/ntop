@@ -1688,8 +1688,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	      if(myGlobals.device[k].ipTrafficMatrix == NULL)
 		continue;
-	      if(myGlobals.device[k].ipTrafficMatrix == NULL)
-		continue;
 	      if(myGlobals.device[k].ipTrafficMatrix[idx] == NULL)
 		continue;
 
