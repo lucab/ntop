@@ -514,9 +514,10 @@ dnl>
 dnl> check for `sin' in -lm (MANDATORY)
 dnl>
 if test ".$ac_disable_gdchart" = ".no"; then
+AC_CHECK_LIB(c, sin,  AC_MSG_CHECKING([The standard C library includes the math lib]),
   AC_CHECK_LIB(m, sin, MORELIBS="$MORELIBS -lm", [
 echo "ERROR: You need libm to build ntop with GDChart support. Verify that you have libm.a or libm.so installed.";
-             AC_MSG_ERROR([Fatal: libm not found.])], $MORELIBS)
+             AC_MSG_ERROR([Fatal: libm not found.])], $MORELIBS))
 fi
 
 
