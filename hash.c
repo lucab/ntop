@@ -741,7 +741,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
   if(refreshHash) {
     u_int *myflaggedHosts;
-    int len, idx;
+    unsigned int len, idx;
 
     len = sizeof(u_int)*device[theDevice].actualHashSize;
     myflaggedHosts = (u_int*)malloc(len);
@@ -752,7 +752,8 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
       if((idx != hostIdx) /* Don't remove the instance we're freeing */
 	 && (device[theDevice].hash_hostTraffic[idx] != NULL)) {
 	removeGlobalHostPeers(device[theDevice].hash_hostTraffic[idx],
-			      myflaggedHosts, len); /* Finally refresh the hash */
+			      myflaggedHosts, 
+			      device[theDevice].actualHashSize); /* Finally refresh the hash */
       }
     }
 
@@ -935,7 +936,8 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 	 all the references to the freed instances
       */
       removeGlobalHostPeers(device[actDevice].hash_hostTraffic[idx],
-			    theFlaggedHosts, len); /* Finally refresh the hash */
+			    theFlaggedHosts, 
+			    device[actDevice].actualHashSize); /* Finally refresh the hash */
     }
   }
 
