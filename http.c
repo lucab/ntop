@@ -889,7 +889,7 @@ void returnHTTPredirect(char* destination) {
 
 void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable) {
   int statusIdx;
-  char tmpStr[64], theDate[48];
+  char tmpStr[256], theDate[48];
   time_t  theTime = myGlobals.actTime - (time_t)myGlobals.thisZone;
   struct tm t;
 
