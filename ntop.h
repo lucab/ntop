@@ -428,7 +428,7 @@ int getdomainname(char *name, size_t len);
 #endif
 
 /*
- * Packet Capture Library by Lawrence Berkeley National Laboratory 
+ * Packet Capture Library by Lawrence Berkeley National Laboratory
  * Network Research Group
  */
 #include "pcap.h"
@@ -723,7 +723,7 @@ struct hostTraffic; /* IP Session global information */
 
 /*
 typedef struct thptEntry {
-  u_char 
+  u_char
 } HostSerial;
 */
 
