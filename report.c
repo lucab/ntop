@@ -2675,6 +2675,9 @@ static int cmpPortsFctn(const void *_a, const void *_b) {
     a = *((PortCounter**)_a);
     b = *((PortCounter**)_b);
 
+    if((a == NULL) || (b == NULL))
+       return(0);
+
     if((a->sent+a->rcvd) > (b->sent+b->rcvd))
       return(-1);
     else
