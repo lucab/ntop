@@ -304,10 +304,20 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 	  printf("[idx=%3d][j=%3d] %x\n", i, j, theHost->portsUsage[i]);
 	}
 #endif
-	theHost->portsUsage[i]->clientUsesLastPeer = mapIdx(theHost->portsUsage[i]->clientUsesLastPeer);
+
+	if(theHost->portsUsage[i]->clientUsesLastPeer != NO_PEER)
+	  theHost->portsUsage[i]->clientUsesLastPeer = mapIdx(theHost->portsUsage[i]->clientUsesLastPeer);
 	if(theHost->portsUsage[i]->clientUsesLastPeer == NO_PEER) theHost->portsUsage[i]->clientUses = 0;
-	theHost->portsUsage[i]->serverUsesLastPeer = mapIdx(theHost->portsUsage[i]->serverUsesLastPeer);
+
+	if(theHost->portsUsage[i]->serverUsesLastPeer != NO_PEER)
+	  theHost->portsUsage[i]->serverUsesLastPeer = mapIdx(theHost->portsUsage[i]->serverUsesLastPeer);
 	if(theHost->portsUsage[i]->serverUsesLastPeer == NO_PEER) theHost->portsUsage[i]->serverUses = 0;
+
+	if((theHost->portsUsage[i]->clientUsesLastPeer == NO_PEER)
+	   && (theHost->portsUsage[i]->serverUsesLastPeer == NO_PEER)) {
+	  free(theHost->portsUsage[i]);
+	  theHost->portsUsage[i] = NULL;
+	}
       }
 
       for(i=0; i<2; i++) {
