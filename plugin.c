@@ -141,7 +141,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
   shl_t pluginPtr;
 #else
 #ifndef WIN32
-  void *pluginPtr;
+  void *pluginPtr = NULL;
 #endif
 #endif
 #ifndef WIN32
@@ -296,7 +296,10 @@ static void loadPlugin(char* dirName, char* pluginName) {
 	}
     }
 
-    newFlow->pluginStatus.pluginPtr  = pluginInfo;
+#ifndef WIN32
+    newFlow->pluginStatus.pluginMemoryPtr = pluginPtr;
+#endif
+    newFlow->pluginStatus.pluginPtr       = pluginInfo;
 
     if(snprintf(key, sizeof(key), "pluginStatus.%s", pluginInfo->pluginName) < 0)
       BufferTooShort();
@@ -385,7 +388,7 @@ void unloadPlugins(void) {
   traceEvent(TRACE_INFO, "Unloading plugins (if any)...\n");
 
   while(flows != NULL) {
-    if(flows->pluginStatus.pluginPtr != NULL) {
+    if(flows->pluginStatus.pluginMemoryPtr != NULL) {
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Unloading plugin '%s'...\n",
 		 flows->pluginStatus.pluginPtr->pluginName);
@@ -395,20 +398,22 @@ void unloadPlugins(void) {
 	flows->pluginStatus.pluginPtr->termFunc();
 
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
-      shl_unload((shl_t)flows->pluginStatus.pluginPtr);
+      shl_unload((shl_t)flows->pluginStatus.pluginMemoryPtr);
 #else
 #ifdef WIN32
-      FreeLibrary((HANDLE)flows->pluginStatus.pluginPtr);
+      FreeLibrary((HANDLE)flows->pluginStatus.pluginMemoryPtr);
 #else
 #ifdef AIX
-      unload(flows->pluginStatus.pluginPtr);
+      unload(flows->pluginStatus.pluginMemoryPtr);
 #else
-      dlclose(flows->pluginStatus.pluginPtr);
+      dlclose(flows->pluginStatus.pluginMemoryPtr);
 #endif /* AIX */
 #endif /* WIN32 */
 #endif /* HPUX */
-      flows->pluginStatus.pluginPtr = NULL;
+      flows->pluginStatus.pluginPtr       = NULL;
+      flows->pluginStatus.pluginMemoryPtr = NULL;
     }
+
     flows = flows->next;
   }
 }

@@ -502,7 +502,8 @@ static void processIpPkt(const u_char *bp,
 			 u_int length,
 			 u_char *ether_src,
 			 u_char *ether_dst,
-			 int actualDeviceId) {
+			 int actualDeviceId,
+			 int vlanId) {
   u_short sport, dport;
   struct ip ip;
   struct tcphdr tp;
@@ -523,6 +524,12 @@ static void processIpPkt(const u_char *bp,
    */
   memcpy(&ip, bp, sizeof(struct ip));
   hlen = (u_int)ip.ip_hl * 4;
+
+  if(vlanId != -1) {
+    allocateElementHash(actualDeviceId, 1 /* VLAN hash */);
+    updateElementHash(myGlobals.device[actualDeviceId].vlanHash, 
+		      vlanId, vlanId,  1 /* 1 packet */, length);
+  }
 
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipPkts, 1);
 
@@ -575,6 +582,7 @@ static void processIpPkt(const u_char *bp,
     srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
     srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
     if(srcHost != NULL) {
+      if(vlanId != -1) srcHost->vlanId = vlanId;
       if(myGlobals.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
 	/* Dump the first packet only */
 
@@ -615,6 +623,8 @@ static void processIpPkt(const u_char *bp,
     traceEvent(TRACE_INFO, "Sanity check failed (2) [Low memory?]");
     return;
   }
+
+  if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 #ifdef DEBUG
   if(myGlobals.rFileName != NULL) {
@@ -1711,7 +1721,7 @@ void processPacket(u_char *_deviceId,
 
 	    if(EXTRACT_16BITS(&llc.ethertype[0]) == ETHERTYPE_IP) {
 	      /* encapsulated IP packet */
-	      processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId);
+	      processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	      /*
 		Patch below courtesy of
 		Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>
@@ -1754,7 +1764,7 @@ void processPacket(u_char *_deviceId,
     case DLT_RAW: /* RAW IP (no ethernet header) */
       length -= headerDisplacement; /* don't count PPP header */
       ether_src = ether_dst = NULL;
-      processIpPkt(p+headerDisplacement, h, length, NULL, NULL, actualDeviceId);
+      processIpPkt(p+headerDisplacement, h, length, NULL, NULL, actualDeviceId, vlanId);
       break;
 
       /* PPPoE patch courtesy of Stefano Picerno <stefanopp@libero.it> */
@@ -1764,7 +1774,7 @@ void processPacket(u_char *_deviceId,
       length = h->len;
       length -= SLL_HDR_LEN;
       ether_src = ether_dst = NULL;
-      processIpPkt(p+ SLL_HDR_LEN , h, length, ether_src, ether_dst, actualDeviceId);
+      processIpPkt(p+ SLL_HDR_LEN , h, length, ether_src, ether_dst, actualDeviceId, vlanId);
       break;
 #endif
 
@@ -1861,6 +1871,8 @@ void processPacket(u_char *_deviceId,
 	  return;
 	}
 
+	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
+
 	memcpy((char *)&ipxPkt, (char *)p+sizeof(struct ether_header), sizeof(IPXpacket));
 
 	if(ntohs(ipxPkt.dstSocket) == 0x0452) {
@@ -1899,6 +1911,7 @@ void processPacket(u_char *_deviceId,
 	  return;
 	}
 
+	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 	incrementTrafficCounter(&srcHost->otherSent, length);
 	incrementTrafficCounter(&dstHost->otherRcvd, length);
 	ctr.value = length;
@@ -1934,6 +1947,7 @@ void processPacket(u_char *_deviceId,
 	    return;
 	  }
 
+	  if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 	  incrementTrafficCounter(&srcHost->ipxSent, length), incrementTrafficCounter(&dstHost->ipxRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	} else if(!myGlobals.dontTrustMACaddr) {
@@ -1952,6 +1966,7 @@ void processPacket(u_char *_deviceId,
 	      return;
 	    }
 
+	    if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 	    p1 = (u_char*)(p+hlen);
 
 	    /* Watch out for possible alignment problems */
@@ -2203,9 +2218,9 @@ void processPacket(u_char *_deviceId,
 	}
       } else if(eth_type == ETHERTYPE_IP) {
 	if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU))
-	  processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId);
+	  processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	else
-	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId);
+	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
       } else  /* Non IP */ if(!myGlobals.dontTrustMACaddr) {
 	/* MAC addresses are meaningful here */
 	struct ether_arp arpHdr;
@@ -2241,6 +2256,8 @@ void processPacket(u_char *_deviceId,
 	  traceEvent(TRACE_INFO, "Sanity check failed (12) [Low memory?]");
 	  return;
 	}
+
+	if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 	switch(eth_type) {
 	case ETHERTYPE_ARP: /* ARP - Address resolution Protocol */

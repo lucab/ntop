@@ -4047,7 +4047,7 @@ void printASList(unsigned int deviceId) {
     return;
   }
 
-  dumpElementHash(myGlobals.device[deviceId].asHash, "AS");
+  dumpElementHash(myGlobals.device[deviceId].asHash, "AS", 1);
 }
 
 /* ******************************* */
@@ -4064,5 +4064,5 @@ void printVLANList(unsigned int deviceId) {
     return;
   }
 
-  dumpElementHash(myGlobals.device[deviceId].vlanHash, "VLAN");
+  dumpElementHash(myGlobals.device[deviceId].vlanHash, "VLAN", 0);
 }

@@ -1897,6 +1897,7 @@ void resetHostsVariables(HostTraffic* el) {
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
 
+  el->vlanId = -1;
   el->hostAS = 0;
   el->fullDomainName = NULL;
   el->dotDomainName = NULL;

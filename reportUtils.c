@@ -2941,6 +2941,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
   }
 
+  if(el->vlanId != -1) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		"%d</TD></TR>\n", getRowColor(), "VLAN&nbsp;Id", el->vlanId) < 0)
+      BufferTooShort();
+      sendString(buf);    
+  }
+
   if((el->nbHostName != NULL) && (el->nbDomainName != NULL)) {
     if(el->nbAccountName) {
       if(el->nbDomainName != NULL) {
@@ -3652,7 +3659,7 @@ static char* formatElementData(ElementHash *hash, u_char dataSent, char *buf, in
 
 /* ******************************** */
 
-void dumpElementHash(ElementHash **theHash, char* label) {
+void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraffic) {
   u_char entries[MAX_ENTRY];
   ElementHash *hashList[MAX_ENTRY];
   char buf[BUF_SIZE], buf1[96];
@@ -3699,6 +3706,7 @@ void dumpElementHash(ElementHash **theHash, char* label) {
 
   sendString("<CENTER><TABLE BORDER>\n<TR><TH>");
   sendString(label);
+
   sendString("</TH><TH>Data Sent</TH><TH>Data Rcvd</TH><TH>Peers</TH></TR>\n");
 
   /* ****************** */
@@ -3743,33 +3751,37 @@ void dumpElementHash(ElementHash **theHash, char* label) {
 
       for(j=0; j<MAX_ENTRY; j++) {
 	if(hashList[j] != NULL) {
-	  sendString("<A HREF=# onMouseOver=\"window.status='");
 
-	  if(hashList[j]->bytesSent.value > 0) {
-	    if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
-			i, hashList[j]->id, formatBytes(hashList[j]->bytesSent.value, 1),
-			formatPkts(hashList[j]->pktsSent.value)) < 0)
+	  if(dumpLoopbackTraffic 
+	     || ((dumpLoopbackTraffic == 0) && (i != hashList[j]->id))) {
+	    sendString("<A HREF=# onMouseOver=\"window.status='");
+
+	    if(hashList[j]->bytesSent.value > 0) {
+	      if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
+			  i, hashList[j]->id, formatBytes(hashList[j]->bytesSent.value, 1),
+			  formatPkts(hashList[j]->pktsSent.value)) < 0)
+		BufferTooShort();
+	      sendString(buf);
+	    }
+
+	    if(hashList[j]->bytesRcvd.value > 0) {
+	      if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
+			  hashList[j]->id, i, formatBytes(hashList[j]->bytesRcvd.value, 1), 
+			  formatPkts(hashList[j]->pktsRcvd.value)) < 0)
+		BufferTooShort();
+	      sendString(buf);
+	    }
+
+	    if(snprintf(buf, sizeof(buf), 
+			"';return true\" onMouseOut=\"window.status='';return true\">%d</A>\n",
+			hashList[j]->id) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
-
-	  if(hashList[j]->bytesRcvd.value > 0) {
-	    if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
-			hashList[j]->id, i, formatBytes(hashList[j]->bytesRcvd.value, 1), 
-			formatPkts(hashList[j]->pktsRcvd.value)) < 0)
-	      BufferTooShort();
-	    sendString(buf);
-	  }
-
-	  if(snprintf(buf, sizeof(buf), 
-		      "';return true\" onMouseOut=\"window.status='';return true\">%d</A>\n",
-		      hashList[j]->id) < 0)
-	    BufferTooShort();
-	  sendString(buf);
 	}
       }
 
-      sendString("</TR>\n");
+      sendString("&nbsp;</TR>\n");
     }
   }
 

@@ -1707,7 +1707,8 @@ typedef struct pluginInfo {
 
 typedef struct pluginStatus {
   PluginInfo *pluginPtr;
-  char activePlugin;
+  void       *pluginMemoryPtr; /* ptr returned by dlopen() */
+  char        activePlugin;
 } PluginStatus;
 
 #define PLUGIN_EXTENSION                  ".so"
@@ -2018,6 +2019,7 @@ typedef struct hostTraffic {
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
   struct in_addr   hostIpAddress;
+  short            vlanId;           /* VLAN Id (-1 if not set) */
   u_int16_t        hostAS;           /* AS to which the host belongs to */
   time_t           firstSeen;
   time_t           lastSeen;     /* time when this host has sent/rcvd some data  */
