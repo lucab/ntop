@@ -100,8 +100,8 @@ ntop_SOURCES   = main.c
 ntops_SOURCES  = $(ntop_SOURCES)
 ntopd_SOURCES  = $(ntop_SOURCES)
 
-ntop_DEPENDENCIES = libntop.la libntopreport.la
-ntop_LDADD        = libntop.la libntopreport.la
+ntop_DEPENDENCIES = libntopreport.la libntop.la
+ntop_LDADD        = libntopreport.la libntop.la
 ntop_LDFLAGS      =
 
 ntops_DEPENDENCIES = libntopreport.la libntop.la
@@ -110,9 +110,10 @@ ntops_LDFLAGS      = -static
 
 noinst_HEADERS     = globals-core.h globals-report.h graph.h ntop.h regex.h rules.h
 
-# the Archive
+# all the Archives
 lib_LTLIBRARIES    = libntop.la libntopreport.la
 
+# core Archive, or the 'engine'
 libntop_la_SOURCES = address.c       dataFormat.c  event.c      \
                      globals-core.c  hash.c        initialize.c \
                      leaks.c         logger.c      ntop.c       \
@@ -126,7 +127,7 @@ libntop_la_DEPENDENCIES = config.h
 libntop_la_LIBADD       = $(CORELIBS)
 libntop_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
 
-# the Archive
+# Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = admin.c \
                            globals-report.c \
                            graph.c \
