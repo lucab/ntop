@@ -12,19 +12,18 @@
 <META name="description" content="ntop (http://www.ntop.org) status for a network.">
 <META name="author" content="ntop">
 <META name="generator" content="ntop v3.0"><LINK rel="stylesheet" type="text/css" href="style.css">
-<TITLE>About sorting of 'hosts'</TITLE>
+<TITLE>About sorting of 'host' and 'domain'</TITLE>
 </HEAD>
 <BODY background="white_bg.gif" bgcolor="#FFFFFF" link="blue" vlink="blue">
 <P>&nbsp;</P>
 <CENTER>
-<H2><FONT face="Helvetica, Arial, Sans Serif">About sorting of 'hosts'</FONT></H2>
+<H2><FONT face="Helvetica, Arial, Sans Serif">About sorting of 'host' and 'domain'</FONT></H2>
 </CENTER>
 <CENTER>
 	<TABLE border="1" cellspacing="0" cellpadding="2">
 		<TR bgcolor="#E7E9F2">
 			<TH>Host&nbsp;
-                         <IMG src="/arrow_down.gif" border="0" alt="Descending order">&nbsp;&nbsp;
-                         <SUP>about sorting this column</SUP>
+                         <IMG src="/arrow_down.gif" border="0" alt="Descending order">
 			</TH>
 			<TH>	Domain
 			</TH>
@@ -130,5 +129,15 @@ by hovering the mouse over the link.</p>
 to a final decision about the 'name'. These items are sorted last, based on the underlying 
 fields <B>ntop</B> maintains about each host. This can look 'odd' - wait a minute or so and 
 resort - things should clear up.</p>
+<p>&nbsp;</p>
+<p>A similar situation applies to sorting the 'Domain' column.  This column is sorted
+in alphabetic sequence of the two character ISO 3166 code (US for United States, CA for
+Canada, DE for Germany, etc.), followed by entries using the RFC 1918 addresses 
+(10.0.0.0/8, 176.16.0.0/16 and 192.168.0.0/16).  Domains which are equal are sorted by the
+host value as a fall-back, to which the above caveats apply.</p>
+<p>The domain column too is not immediately set, and so the domain column sort may be 
+'odd' in appearance.  You have seen this effect if you have noticed that it may take
+a while for the flags to appear in the column.  The fall-back for the domain column
+is the 'host' column, so this may not help until the data stablizes.</p>
 </BODY>
 </HTML>
