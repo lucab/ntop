@@ -179,6 +179,8 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 /* ********************************* */
 
 static void purgeHost(int actualDeviceId, HostTraffic *el) {
+  /* This function seems not to be needed. CHECK - LDE !!!!!!!!!!!!!!!!!!!!*/
+#if 0
   u_short allRight = 0;
 
   if(myGlobals.device[actualDeviceId].dummyDevice) return;
@@ -227,6 +229,7 @@ static void purgeHost(int actualDeviceId, HostTraffic *el) {
   else
     traceEvent(CONST_TRACE_ERROR, "purgeHost(%d,0x%X,%d) failed [host found]",
 	       actualDeviceId, el, el->hostTrafficBucket);
+#endif
 }
 
 /* **************************************** */
