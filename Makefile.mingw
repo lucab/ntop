@@ -92,7 +92,9 @@ CSRC =	ntop.c pbuf.c util.c http.c vendor.c report.c qsort.c \
 	reportUtils.c traffic.c plugin.c webInterface.c term.c \
 	netflow.c sql.c rules.c plugins/icmpPlugin.c \
 	plugins/lastSeenPlugin.c plugins/nfsPlugin.c \
-	plugins/rmonPlugin.c plugins/wapPlugin.c regex.c
+	plugins/rmonPlugin.c plugins/wapPlugin.c regex.c \
+	protocols.c
+
 GENSRC = version.c
 
 SRC =	$(CSRC) $(GENSRC)
