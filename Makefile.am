@@ -47,7 +47,7 @@ DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.d
 CLEANFILES     = $(DISTCLEANFILES)
 
 # A list of all the files in the current directory which can be regenerated
-MAINTAINERCLEANFILES = COPYING INSTALL Makefile.in aclocal.m4 config.guess \
+MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
                        config.h.in config.sub configure install-sh \
                        ltconfig ltmain.sh missing mkinstalldirs \
                        ntop-config stamp-h.in
@@ -56,8 +56,8 @@ MAINTAINERCLEANFILES = COPYING INSTALL Makefile.in aclocal.m4 config.guess \
 SUBDIRS = . @PLUGINS@ @INTOP@ @REMOTEINTERFACE@
 
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FAQ FILES HACKING \
-              INSTALL KNOWN_BUGS MANIFESTO NEWS PORTING README \
-              README.Suse SUPPORT_NTOP.txt \
+              KNOWN_BUGS MANIFESTO NEWS PORTING  \
+              SUPPORT_NTOP.txt \
               THANKS THREADS-FAQ TODO \
               ntop.8 ntop.txt ntop.html \
               ntop-cert.pem ntop-rules.8 rules.sample
@@ -282,7 +282,7 @@ make-suse: ntop # ntop.html # man2html not exists? FIXME
 	ln -s ../ntopdb /var/tmp/ntop/sbin/init.d/rc3.d/S21ntopdb
 	ln -s ../ntopdb /var/tmp/ntop/sbin/init.d/rc3.d/K09ntopdb
 	cp services /var/tmp/ntop/usr/share/ntop/services
-	cp -pr CHANGES COPYING FAQ FILES INSTALL README TO_DO VERSION README.Suse /usr/src/packages/BUILD
+	cp -pr CHANGES COPYING FAQ FILES TO_DO VERSION /usr/src/packages/BUILD
 	chown root:root /usr/src/packages/BUILD/*
 	chown -R root:root /var/tmp/ntop
 	chmod gou+x /var/tmp/ntop/usr/sbin/ntop

@@ -149,15 +149,13 @@ static void updateThptStats(int deviceToUpdate,
 /* ******************************* */
 
 static void updateDeviceThpt(int deviceToUpdate) {
-  time_t timeDiff, timeHourDiff=0, totalTime;
+  time_t timeDiff, timeMinDiff, timeHourDiff=0, totalTime;
   u_int idx;
   HostTraffic *el;
 
   timeDiff = actTime-device[deviceToUpdate].lastThptUpdate;
 
-  /* traceEvent(TRACE_INFO, "%u %u %u\n", timeDiff, throughput, ethernetBytes); */
-
-  if(timeDiff > 5 /* secs */) {
+  if(timeDiff > 10 /* secs */) {
     u_int topSentIdx=NO_PEER, secondSentIdx=NO_PEER, thirdSentIdx=NO_PEER;
     u_int topHourSentIdx=NO_PEER, secondHourSentIdx=NO_PEER, thirdHourSentIdx=NO_PEER;
     u_int topRcvdIdx=NO_PEER, secondRcvdIdx=NO_PEER, thirdRcvdIdx=NO_PEER;
@@ -169,7 +167,7 @@ static void updateDeviceThpt(int deviceToUpdate) {
     updateHourThpt = 0;
     updateMinThpt = 0;
 
-    if((timeDiff = actTime-device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
+    if((timeMinDiff = actTime-device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
       updateMinThpt = 1;
       device[deviceToUpdate].lastMinThptUpdate = actTime;
       if((timeHourDiff = actTime-device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
@@ -328,6 +326,8 @@ static void updateDeviceThpt(int deviceToUpdate) {
     device[deviceToUpdate].packetThroughput = device[deviceToUpdate].ethernetPkts-
       device[deviceToUpdate].lastNumEthernetPkts;
     device[deviceToUpdate].lastNumEthernetPkts = device[deviceToUpdate].ethernetPkts;
+
+    /* timeDiff++; */
     device[deviceToUpdate].actualThpt = ((float)device[deviceToUpdate].throughput/(float)timeDiff)*8;
     device[deviceToUpdate].actualPktsThpt = (float)device[deviceToUpdate].packetThroughput/(float)timeDiff;
 
@@ -343,19 +343,19 @@ static void updateDeviceThpt(int deviceToUpdate) {
     if(updateMinThpt) {
       device[deviceToUpdate].lastMinEthernetBytes = device[deviceToUpdate].ethernetBytes-
 	device[deviceToUpdate].lastMinEthernetBytes;
-      device[deviceToUpdate].lastMinThpt = ((float)(device[deviceToUpdate].lastMinEthernetBytes)/(float)timeDiff)*8;
+      device[deviceToUpdate].lastMinThpt = ((float)(device[deviceToUpdate].lastMinEthernetBytes)/(float)timeMinDiff)*8;
       device[deviceToUpdate].lastMinEthernetBytes = device[deviceToUpdate].ethernetBytes;
       /* ******************* */
       device[deviceToUpdate].lastMinEthernetPkts = device[deviceToUpdate].ethernetPkts-
 	device[deviceToUpdate].lastMinEthernetPkts;
-      device[deviceToUpdate].lastMinPktsThpt = (float)device[deviceToUpdate].lastMinEthernetPkts/(float)timeDiff;
+      device[deviceToUpdate].lastMinPktsThpt = (float)device[deviceToUpdate].lastMinEthernetPkts/(float)timeMinDiff;
       device[deviceToUpdate].lastMinEthernetPkts = device[deviceToUpdate].ethernetPkts;
       device[deviceToUpdate].lastMinThptUpdate = actTime;
     }
 
-    if((timeDiff = actTime-device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
+    if((timeMinDiff = actTime-device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
       device[deviceToUpdate].lastFiveMinsEthernetBytes = device[deviceToUpdate].ethernetBytes - device[deviceToUpdate].lastFiveMinsEthernetBytes;
-      device[deviceToUpdate].lastFiveMinsThptUpdate = timeDiff;
+      device[deviceToUpdate].lastFiveMinsThptUpdate = timeMinDiff;
       device[deviceToUpdate].lastFiveMinsThpt = ((float)device[deviceToUpdate].lastFiveMinsEthernetBytes/(float)device[deviceToUpdate].lastFiveMinsThptUpdate)*8;
       device[deviceToUpdate].lastFiveMinsEthernetBytes = device[deviceToUpdate].ethernetBytes;
       /* ******************* */

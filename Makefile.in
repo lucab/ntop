@@ -138,12 +138,12 @@ DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db icmpWatch.d
 CLEANFILES = $(DISTCLEANFILES)
 
 # A list of all the files in the current directory which can be regenerated
-MAINTAINERCLEANFILES = COPYING INSTALL Makefile.in aclocal.m4 config.guess                        config.h.in config.sub configure install-sh                        ltconfig ltmain.sh missing mkinstalldirs                        ntop-config stamp-h.in
+MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess                        config.h.in config.sub configure install-sh                        ltconfig ltmain.sh missing mkinstalldirs                        ntop-config stamp-h.in
 
 
 SUBDIRS = . @PLUGINS@ @INTOP@ @REMOTEINTERFACE@
 
-DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FAQ FILES HACKING               INSTALL KNOWN_BUGS MANIFESTO NEWS PORTING README               README.Suse SUPPORT_NTOP.txt               THANKS THREADS-FAQ TODO               ntop.8 ntop.txt ntop.html               ntop-cert.pem ntop-rules.8 rules.sample
+DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FAQ FILES HACKING               KNOWN_BUGS MANIFESTO NEWS PORTING                SUPPORT_NTOP.txt               THANKS THREADS-FAQ TODO               ntop.8 ntop.txt ntop.html               ntop-cert.pem ntop-rules.8 rules.sample
 
 
 NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.css html/statsicons            html/statsicons/flags html/statsicons/os            html/statsicons/flags/*.gif html/statsicons/os/*.gif
@@ -156,8 +156,9 @@ PLUGINSFILES = `cat plugins/FILES`
 REMOTEAPIFILES = `cat remoteInterfaceAPI/FILES`
 INTOPFILES = `cat intop/FILES`
 DATABASEFILES = `cat database/FILES`
+DOCSFILES = `cat docs/FILES`
 
-THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) 		       $(INTOPFILES) $(DATABASEFILES)
+THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) 		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES)
 
 
 #
@@ -881,7 +882,7 @@ make-suse: ntop # ntop.html # man2html not exists? FIXME
 	ln -s ../ntopdb /var/tmp/ntop/sbin/init.d/rc3.d/S21ntopdb
 	ln -s ../ntopdb /var/tmp/ntop/sbin/init.d/rc3.d/K09ntopdb
 	cp services /var/tmp/ntop/usr/share/ntop/services
-	cp -pr CHANGES COPYING FAQ FILES INSTALL README TO_DO VERSION README.Suse /usr/src/packages/BUILD
+	cp -pr CHANGES COPYING FAQ FILES TO_DO VERSION /usr/src/packages/BUILD
 	chown root:root /usr/src/packages/BUILD/*
 	chown -R root:root /var/tmp/ntop
 	chmod gou+x /var/tmp/ntop/usr/sbin/ntop
