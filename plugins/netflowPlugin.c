@@ -64,7 +64,7 @@ static PluginInfo netflowPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate NetFlow support.<br>"
     "<b>ntop</b> can both collect and receive "
     "<A HREF=http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm>NetFlow</A> "
-    "V1/V5/V7/V9 and IPIFX data.<br>"
+    "V1/V5/V7/V9 and <A HREF=http://ipfix.doit.wisc.edu/>IPFIX</A> data.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
     "reports - <em>Remember to switch the reporting NIC via Admin | Switch NIC</em>.",
     "3.99", /* version */
