@@ -62,9 +62,7 @@ void emitEvent(FilterRule *rule,
   char ruleTime[32], msg[MAX_EVENT_MSG_SIZE], tmpStr[48];
   datum key_data, data_data;
   EventMsg theMsg;
-#ifdef HAVE_LOCALTIME_R
   struct tm t;
-#endif
 
   if(eventFile == NULL) return;
 

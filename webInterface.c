@@ -1045,6 +1045,7 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-g <client:port (Cisco NetFlow client)>]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-U <mapper.pl URL> | \"\" for not displaying host location ]");
   traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");
 }
 

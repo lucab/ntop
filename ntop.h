@@ -100,10 +100,6 @@ typedef char int8_t;
 int getdomainname(char *name, size_t len);
 #endif
 
-#ifndef HAVE_LOCALTIME_R
-#define localtime_r(a, b) localtime(a)
-#endif
-
 #include <string.h>
 #include <time.h>
 #include <signal.h>

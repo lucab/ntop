@@ -33,6 +33,7 @@ char domainName[MAXHOSTNAMELEN], *shortDomainName;
 u_short traceLevel;
 u_char stickyHosts, enableSuspiciousPacketDump;
 char dbPath[200], accessLogPath[200], *rFileName, *pcapLog;
+char mapperURL[256];     /* URL of the mapper CGI */
 u_int maxHashSize;
 u_int enableNetFlowSupport;
 short usePersistentStorage;

@@ -541,9 +541,7 @@ static void logHTTPaccess(int rc) {
  unsigned long msSpent;
  char theZone[6];
  unsigned long gmtoffset;
-#ifdef HAVE_LOCALTIME_R
   struct tm t;
-#endif
 
  if(accessLogFd != NULL) {
    gettimeofday(&loggingAt, NULL);
@@ -712,9 +710,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   int statusIdx;
   char tmpStr[64], theDate[48];
   time_t  theTime = actTime - (time_t)thisZone;
-#ifdef HAVE_LOCALTIME_R
   struct tm t;
-#endif
 
   statusIdx = (headerFlags >> 8) & 0xff;
   if((statusIdx < 0) || (statusIdx > sizeof(HTTPstatus)/sizeof(HTTPstatus[0]))){
@@ -820,9 +816,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
 #ifdef MULTITHREADED
   u_char mutexReleased = 0;
 #endif
-#ifdef HAVE_LOCALTIME_R
   struct tm t;
-#endif
 #ifdef WIN32
   int i;
 #endif

@@ -127,6 +127,7 @@ void* pcapDispatch(void *_i) {
 
     if(select(pcap_fd+1, &readMask, NULL, NULL, &timeout) > 0) {
       /* printf("dispatch device %s\n", device[i].name);*/
+      if(!capturePackets) return;
       rc = pcap_dispatch(device[i].pcapPtr, 1, processPacket, (u_char*) _i);
 
       if(rc == -1) {
@@ -517,9 +518,7 @@ void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
   time_t nextUpdate = actTime+3600;
   int hourId, minuteId, lastUpdatedHour=-1;
   char theDate[8];
-#ifdef HAVE_LOCALTIME_R
   struct tm t;
-#endif
 
   for(;;) {
 #ifdef DEBUG

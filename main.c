@@ -122,6 +122,7 @@ int main(int argc, char *argv[]) {
   maxHashSize = MAX_HASH_SIZE;
   traceLevel = DEFAULT_TRACE_LEVEL;
   domainName[0] = '\0';
+  strcpy(mapperURL, "http://jake.ntop.org/cgi-bin/mapper.pl");
   pcapLog = NULL;
   actTime = time(NULL);
   strncpy(dbPath, DBFILE_DIR, sizeof(dbPath));
@@ -140,9 +141,9 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:q";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:";
 #else
-  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:q";
+  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:";
 #endif
 
   while((op = getopt(argc, argv, theOpts)) != EOF) {
@@ -378,6 +379,14 @@ int main(int argc, char *argv[]) {
         }
         break;
 #endif /* WIN32 */
+
+      case 'U': /* host:port */
+	if(strlen(optarg) >= (sizeof(mapperURL)-1)) {
+	  strncpy(mapperURL, optarg, sizeof(mapperURL)-2);
+	  mapperURL[sizeof(mapperURL)-1] = '\0';
+	} else
+	  strcpy(mapperURL, optarg);
+	break;
 
       default:
 	usage();

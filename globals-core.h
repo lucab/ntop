@@ -31,6 +31,7 @@ extern u_short traceLevel;
 extern u_char stickyHosts, enableSuspiciousPacketDump;
 extern char dbPath[200];
 extern char accessLogPath[200]; /* Apache-like access log */
+extern char mapperURL[256];     /* URL of the mapper CGI */
 extern u_int maxHashSize;
 extern u_int enableNetFlowSupport;
 extern short usePersistentStorage, grabSessionInformation;
@@ -461,7 +462,7 @@ extern void traceEvent(int eventTraceLevel, char* file,
      extern char *_strncpy(char *dest, const char *src, size_t n);
 #ifndef HAVE_LOCALTIME_R
 extern struct tm *localtime_r(const time_t *t, struct tm *tp);
- #endif
+#endif
 #ifndef HAVE_STRTOK_R
 extern char *strtok_r(char *s, const char *delim, char **save_ptr);
 #endif

@@ -659,9 +659,7 @@ unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
 int32_t gmt2local(time_t t) {
   int dt, dir;
   struct tm *gmt, *myloc;
-#ifdef HAVE_LOCALTIME_R
-    struct tm loc;
-#endif
+  struct tm loc;
 
   if(t == 0)
     t = time(NULL);
@@ -1781,9 +1779,7 @@ char* formatTime(time_t *theTime, short encodeString) {
   static char outStr[2][TIME_LEN];
   static short timeBufIdx=0;
   struct tm *locTime;
-#ifdef HAVE_LOCALTIME_R
-    struct tm myLocTime;
-#endif
+  struct tm myLocTime;
 
   locTime = localtime_r(theTime, &myLocTime);
 
@@ -2107,9 +2103,7 @@ void traceEvent(int eventTraceLevel, char* file,
   if(eventTraceLevel <= traceLevel) {
     char theDate[32];
     time_t theTime = time(NULL);
-#ifdef HAVE_LOCALTIME_R
     struct tm t;
-#endif
 
     if(traceLevel >= DEFAULT_TRACE_LEVEL) {
       strftime(theDate, 32, "%d/%b/%Y:%H:%M:%S", localtime_r(&theTime, &t));
@@ -2820,3 +2814,34 @@ char* mapIcmpType(int icmpType) {
     return(icmpString);
   }
 }
+
+/* ******************************** */
+
+#ifndef HAVE_LOCALTIME_R
+
+#ifdef MULTITHREADED
+static PthreadMutex localtimeMutex;
+#endif
+
+struct tm *localtime_r(const time_t *t, struct tm *tp) {
+  struct tm *theTime;
+
+#if defined(MULTITHREADED)
+  accessMutex(&localtimeMutex, "localtime_r");
+#endif
+
+  theTime = localtime(t);
+
+  if(theTime != NULL) 
+    memcpy(tp, theTime, sizeof(struct tm));
+  else
+    memset(tp, 0, sizeof(struct tm)); /* What shall I do ? */
+
+#if defined(MULTITHREADED)
+  releaseMutex(&localtimeMutex);
+#endif
+
+  return(tp);
+}
+#endif
+
