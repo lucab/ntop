@@ -69,76 +69,72 @@ static int sortICMPhosts(const void *_a, const void *_b) {
 
   switch(icmpColumnSort) {
   case 2:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHO] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHO];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHO] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHO];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
-    break;
-
-  case 12: /* Echo Reply */
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
+    n1 = (*a)->icmpSent, n2 = (*b)->icmpSent;
     break;
 
   case 3:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_UNREACH] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_UNREACH];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_UNREACH] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_UNREACH];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
+    n1 = (*a)->icmpRcvd, n2 = (*b)->icmpRcvd;
     break;
 
   case 4:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_REDIRECT] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_REDIRECT] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHO] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHO];
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHO] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHO];
     break;
 
   case 5:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_UNREACH] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_UNREACH];
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_UNREACH] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_UNREACH];
     break;
 
   case 6:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_TIMXCEED] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_TIMXCEED] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_REDIRECT] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT];
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_REDIRECT] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT];
     break;
 
   case 7:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_PARAMPROB] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_PARAMPROB] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT];
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT];
     break;
 
   case 8:
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_TIMXCEED] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED];
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_TIMXCEED] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED];
+    break;
+
+  case 9:
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_PARAMPROB] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB];
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_PARAMPROB] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB];
+    break;
+
+  case 10:
     n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_MASKREQ] + (*a)->icmpInfo->icmpMsgSent[ICMP_MASKREPLY] +
       (*a)->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ]+ (*a)->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY];
     n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_MASKREQ] + (*b)->icmpInfo->icmpMsgSent[ICMP_MASKREPLY] +
       (*b)->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ]+ (*b)->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
     break;
 
-
-  case 9:
+  case 11:
     n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH];
     n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
     break;
 
-  case 10:
+  case 12:
     n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP] + (*a)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY] +
       (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP]+ (*a)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY];
     n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP] + (*b)->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY] +
       (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP]+ (*b)->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
     break;
 
-  case 11:
+  case 13:
     n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST] + (*a)->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY] +
       (*a)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST]+ (*a)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY];
     n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST] + (*b)->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY] +
       (*b)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST]+ (*b)->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY];
-    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
+    break;
+
+  case 14: /* Echo Reply */
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY];
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY];
     break;
 
   default:
@@ -154,6 +150,10 @@ static int sortICMPhosts(const void *_a, const void *_b) {
     return(rc);
     break;
   }
+
+  /* traceEvent(TRACE_INFO, "%d <-> %d", n1, n2); */
+ 
+  if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
 }
 
  /* ******************************* */
@@ -176,7 +176,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   char buf[1024], fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX";
   char *sign = "-";
   char *pluginName = "<A HREF=/plugins/icmpWatch";
-  u_int i, revertOrder=0, num;
+  u_int i, revertOrder=0, num, printedEntries;
   int icmpId=-1;
   HostTraffic **hosts;
   struct in_addr hostIpAddress;
@@ -216,11 +216,10 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     } else
       icmpColumnSort = atoi(url);
   } else /* host=3240847503&icmp=3 */ {
-    char *tmpStr;
+    char *tmpStr;    
 
 #ifdef HAVE_GDCHART
     if(strncmp(url, "chart", strlen("chart")) == 0) {
-      char tmpStr[256];
       u_int len, tot=0;
       unsigned long  sc[2] = { 0xf08080L, 0x4682b4L }; /* see clr[] in graph.c */
 
@@ -228,6 +227,11 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       GDC_LineColor = 0x000000L;                  /* line color      (black) */
       GDC_SetColor  = &(sc[0]);                   /* assign set colors */
       GDC_ytitle = "Packets";
+
+      /* Avoid to draw too many entries */
+      if(num > myGlobals.maxNumLines) num = myGlobals.maxNumLines;
+
+      quicksort(hosts, num, sizeof(HostTraffic **), sortICMPhosts);
 
       for(i=0; i<num; i++) {
 	if(hosts[i] != NULL) {
@@ -251,7 +255,17 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
       /* traceEvent(TRACE_INFO, "file=%s\n", fileName); */
 
-      fd = getNewRandomFile(fileName, NAME_MAX);
+      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+
+#ifdef MULTITHREADED
+      accessMutex(&myGlobals.graphMutex, "icmpPlugin");
+#endif
+
+#ifndef WIN32
+      fd = fdopen(abs(myGlobals.newSock), "ab");
+#else
+      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
 
       GDC_title = "ICMP Host Traffic";
       /* The line below causes a crash on Solaris/SPARC (who knows why) */
@@ -267,19 +281,13 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
       fclose(fd);
 
-      sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+#ifdef MULTITHREADED
+      releaseMutex(&myGlobals.graphMutex);
+#endif
 
-      fd = fopen(fileName, "rb");
-      for(;;) {
-	len = fread(tmpStr, sizeof(char), 255, fd);
-	if(len <= 0) break;
-	sendStringLen(tmpStr, len);
-      }
-
-      fclose(fd);
-
-      unlink(fileName);
-
+#ifdef WIN32
+      sendGraphFile(fileName);
+#endif
       return;
     }
 #endif
@@ -294,6 +302,8 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     strtok_r(NULL, "=", &strtokState);
     icmpId = atoi(strtok_r(NULL, "&", &strtokState));
   }
+
+  /* traceEvent(TRACE_INFO, "-> %s%d", sign, icmpColumnSort); */
 
   sendHTTPHeader(HTTP_TYPE_HTML, 0);  
   printHTMLheader("ICMP Statistics", 0);
@@ -312,18 +322,22 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   sendString("<CENTER>\n");
   sendString("<TABLE BORDER>\n");
   if(snprintf(buf, sizeof(buf), "<TR><TH>%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd]</TH>"
-	      "<TH>%s?%s2>Echo Req.</A></TH>"
-	      "<TH>%s?%s12>Echo Reply</A></TH>"
-	      "<TH>%s?%s3>Unreach</A></TH>"
-	      "<TH>%s?%s4>Redirect</A></TH>"
-	      "<TH>%s?%s5>Router<br>Advert.</A></TH>"
-	      "<TH>%s?%s6>Time<br>Exceeded</A></TH>"
-	      "<TH>%s?%s7>Param.<br>Problem</A></TH>"
-	      "<TH>%s?%s8>Network<br>Mask</A></TH>"
-	      "<TH>%s?%s9>Source<br>Quench</A></TH>"
-	      "<TH>%s?%s10>Timestamp</A></TH>"
-	      "<TH>%s?%s11>Info</A></TH>"
+	      "<TH>%s?%s2>Bytes Sent</A></TH>"
+	      "<TH>%s?%s3>Bytes Rcvd</A></TH>"
+	      "<TH>%s?%s4>Echo Req.</A></TH>"
+	      "<TH>%s?%s14>Echo Reply</A></TH>"
+	      "<TH>%s?%s5>Unreach</A></TH>"
+	      "<TH>%s?%s6>Redirect</A></TH>"
+	      "<TH>%s?%s7>Router<br>Advert.</A></TH>"
+	      "<TH>%s?%s8>Time<br>Exceeded</A></TH>"
+	      "<TH>%s?%s9>Param.<br>Problem</A></TH>"
+	      "<TH>%s?%s10>Network<br>Mask</A></TH>"
+	      "<TH>%s?%s11>Source<br>Quench</A></TH>"
+	      "<TH>%s?%s12>Timestamp</A></TH>"
+	      "<TH>%s?%s13>Info</A></TH>"
 	      "</TR>\n",
+	      pluginName, sign,
+	      pluginName, sign,
 	      pluginName, sign,
 	      pluginName, sign,
 	      pluginName, sign,
@@ -341,7 +355,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
   quicksort(hosts, num, sizeof(HostTraffic **), sortICMPhosts);
 
-  for(i=0; i<num; i++)
+  for(i=0, printedEntries=0; i<num; i++)
     if(hosts[i] != NULL) {
       unsigned long tot;
       int idx;
@@ -357,10 +371,19 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	BufferOverflow();
       sendString(buf);
 
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s</TD>", 
+		  formatBytes(hosts[idx]->icmpSent, 1)) < 0)
+	BufferOverflow();
+      sendString(buf);
+      
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s</TD>", 
+		  formatBytes(hosts[idx]->icmpRcvd, 1)) < 0)
+	BufferOverflow();
+      sendString(buf);
 
       formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHO]),
 		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHO]));
- 
+
       formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY]),
 		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY]));
 
@@ -394,18 +417,18 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 				      +hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY]));
       
       sendString("</TR>\n");
+
+      /* Avoid huge tables */
+      if(printedEntries++ > myGlobals.maxNumLines)
+	break;
     }
 
-  sendString("</TABLE>\n");
-
-  sendString("<p></CENTER>\n");
+  sendString("</TABLE>\n<p></CENTER>\n");
 
   printHTMLtrailer();
 
-  free(s);
-  free(r); 
-  free(lbls);
-  free(hosts); 
+  free(s);    free(r); 
+  free(lbls); free(hosts); 
 }
 
 /* ****************************** */
