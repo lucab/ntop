@@ -834,11 +834,6 @@ RETSIGTYPE cleanup(int signo) {
   for(i=0; i<myGlobals.numDevices; i++) {
     freeHostInstances(i);
 
-    if(myGlobals.broadcastEntry != NULL)
-      freeHostInfo(myGlobals.broadcastEntry, i);
-    if(myGlobals.otherHostEntry != NULL)
-      freeHostInfo(myGlobals.otherHostEntry, i);
-
     while(myGlobals.device[i].fragmentList != NULL) {
       IpFragment *fragment = myGlobals.device[i].fragmentList->next;
       free(myGlobals.device[i].fragmentList);
@@ -937,8 +932,6 @@ RETSIGTYPE cleanup(int signo) {
       for(port=0; port<MAX_IP_PORT; port++)
 	if(myGlobals.device[i].ipPorts[port] != NULL) 
 	  free(myGlobals.device[i].ipPorts[port]);
-
-      free(myGlobals.device[i].ipPorts);
     }
     
 
@@ -1006,7 +999,6 @@ RETSIGTYPE cleanup(int signo) {
 
   /* One day we should free myGlobals.countryFlagHead */
 
-  
   free(myGlobals.pcapLogBasePath);
   /* free(myGlobals.dbPath); -- later, need this to remove pid */
   free(myGlobals.spoolPath);

@@ -710,7 +710,7 @@ static void processIpPkt(const u_char *bp,
   HostTraffic *srcHost=NULL, *dstHost=NULL;
   u_char forceUsingIPaddress = 0;
   struct timeval tvstrct;
-  u_char *theData, found;
+  u_char *theData, found = 0;
   TrafficCounter ctr;
   ProtocolsList *protoList;
 
@@ -1520,7 +1520,7 @@ static void processIpPkt(const u_char *bp,
   default:
     if(srcHost->ipProtosList != NULL) {
       protoList = myGlobals.ipProtosList;    
-      found = 0, idx = 0;
+      idx = 0;
       
       while(protoList != NULL) {
 	if((protoList->protocolId == ip.ip_p) 
