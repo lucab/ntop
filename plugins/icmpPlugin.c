@@ -34,26 +34,17 @@ struct tok {
 static struct tok unreach2str[] = {
   { ICMP_UNREACH_NET,		"net %s unreachable" },
   { ICMP_UNREACH_HOST,		"host %s unreachable" },
-  { ICMP_UNREACH_SRCFAIL,
-    "%s unreachable - source route failed" },
+  { ICMP_UNREACH_SRCFAIL,       "%s unreachable - source route failed" },
   { ICMP_UNREACH_NET_UNKNOWN,	"net %s unreachable - unknown" },
   { ICMP_UNREACH_HOST_UNKNOWN,	"host %s unreachable - unknown" },
-  { ICMP_UNREACH_ISOLATED,
-    "%s unreachable - source host isolated" },
-  { ICMP_UNREACH_NET_PROHIB,
-    "net %s unreachable - admin prohibited" },
-  { ICMP_UNREACH_HOST_PROHIB,
-    "host %s unreachable - admin prohibited" },
-  { ICMP_UNREACH_TOSNET,
-    "net %s unreachable - tos prohibited" },
-  { ICMP_UNREACH_TOSHOST,
-    "host %s unreachable - tos prohibited" },
-  { ICMP_UNREACH_FILTER_PROHIB,
-    "host %s unreachable - admin prohibited filter" },
-  { ICMP_UNREACH_HOST_PRECEDENCE,
-    "host %s unreachable - host precedence violation" },
-  { ICMP_UNREACH_PRECEDENCE_CUTOFF,
-    "host %s unreachable - precedence cutoff" },
+  { ICMP_UNREACH_ISOLATED,      "%s unreachable - source host isolated" },
+  { ICMP_UNREACH_NET_PROHIB,    "net %s unreachable - admin prohibited" },
+  { ICMP_UNREACH_HOST_PROHIB,   "host %s unreachable - admin prohibited" },
+  { ICMP_UNREACH_TOSNET,        "net %s unreachable - tos prohibited" },
+  { ICMP_UNREACH_TOSHOST,       "host %s unreachable - tos prohibited" },
+  { ICMP_UNREACH_FILTER_PROHIB, "host %s unreachable - admin prohibited filter" },
+  { ICMP_UNREACH_HOST_PRECEDENCE, "host %s unreachable - host precedence violation" },
+  { ICMP_UNREACH_PRECEDENCE_CUTOFF, "host %s unreachable - precedence cutoff" },
   { 0,				NULL }
 };
 
@@ -61,7 +52,7 @@ static struct tok unreach2str[] = {
 static struct tok type2str[] = {
   { ICMP_REDIRECT_NET,		"redirect %s to net %s" },
   { ICMP_REDIRECT_HOST,		"redirect %s to host %s" },
-  { ICMP_REDIRECT_TOSNET,		"redirect-tos %s to net %s" },
+  { ICMP_REDIRECT_TOSNET,	"redirect-tos %s to net %s" },
   { ICMP_REDIRECT_TOSHOST,	"redirect-tos %s to net %s" },
   { 0,				NULL }
 };
