@@ -20,45 +20,15 @@ Quick Instructions
          - gdbm, gdbm-devel
          - libpcap (http://www.tcpdump.org)
 
-      To build gdchart requires:
 
-         - binutils (ar and ranlib)
-
-      Also, one additional package, which used only for intop:
-
-         - ncurses
-
-
-2. Build chart libraries
-
-   - cd gdchart0.94c/
-   - ./configure
-   - cd gd-1.8.3/libpng-1.2.4
-   - cp scripts/makefile.[make your choice] Makefile
-   - make
-   - cd ../../zlib-1.1.4/
-   - ./configure
-   - make
-   - cd ..
-   - make
-
-   If you're using a gcc-powered system you can type
-   - cd gdchart0.94c/
-   - ./buildAll.sh
-
-   Note: It MAY be necessary for some of these packages on some systems
-         to do a "make install".  If you get error messages concerning 
-         missing libraries at run time, then try doing the make install 
-         from the appropriate subdirectory.
-
-3. Build ntop
+2. Build ntop
 
    - cd ntop
    - ./configure
    - make
    - make install
 
-3.1 Build a static ntop
+2.1 Build a static ntop
 
     Sometimes you want to build ntop statically so that both shared libraries
     and plugins are included in the main program. In order to do that you need
@@ -71,7 +41,7 @@ Quick Instructions
     The final binary is called sntop (static ntop).
 
 
-4. Run ntop (See 1STRUN.txt)
+3. Run ntop (See 1STRUN.txt)
 
    - /usr/local/bin/ntop -A -u userid -P directory
 

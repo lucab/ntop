@@ -89,8 +89,6 @@ Steps
      LIB_GDBM=-Lc:/Mingw/gdbm/lib
      LIB_WPDPACK=-Lc:/Mingw/wpdpack/lib
 
-     If you're using a separate gdchart, gd, libpng, or libz, you'll
-     also need to change the include and library paths for these as well.
 
   3) Build the sub-components (starting from the ntop-current directory)
 
@@ -111,12 +109,6 @@ Steps
          cd gdchart0.94c/gd-1.8.3
          make -f Makefile.mingw
          cd ../..
-
-     3d) Build gdchart
-
-         cd gdchart0.94c
-         make -f Makefile.mingw
-	 cd ..
 
   4) Build ntop itself
 

@@ -108,21 +108,6 @@ A. First, check the output from ./configure for an error message - sometimes
      *
      *******************************************************************
 
-   or
-
-     *******************************************************************
-     *
-     * ERROR:  1. We were unable to find the header gdchart.h in the
-     *            standard location or the alternate location you
-     *            specified by --with-gdchart-root.
-     *
-     *>>> ./configure continues, charts will not be available.
-     *
-     *???     1. Rerun ./configure with a corrected --with-gdchart-root
-     *???  or 2. Install gdchart and rerun ./configure
-     *
-     *******************************************************************
-
    READ THEM!
 
    Hint: It may sometimes be that you're missing the header files (often those 
@@ -195,7 +180,6 @@ A: ./configure --help shows a bunch of configuration options available to you:
 
   +--external-packages:--------------------------------------------------------+
   --without-ssl               disable HTPPS support [default=enabled]
-  --without-gdchart           disable use of GDChart [default=enabled]
   --with-tcpwrap              enable use of TCP Wrapper [default=disabled]
   --without-curses            disable use of curses [intop, default=enabled]
   --without-readline          disable use of GNU readline [intop, default=enabled]
@@ -213,9 +197,6 @@ A: ./configure --help shows a bunch of configuration options available to you:
   --with-zlib-root=DIR        zlib located in DIR
   --with-zlib-lib=DIR          or libz located in DIR
   --with-zlib-include=DIR      or zlib.h located in DIR
-  --with-gdchart-root=DIR     GDChart located in DIR
-  --with-gdchart-lib=DIR       or libgdchart located in DIR
-  --with-gdchart-include=DIR   or .h located in DIR
   --with-gd-root=DIR          gd located in DIR
   --with-gd-lib=DIR            or libgd located in DIR
   --with-gd-include=DIR        or gd.h located in DIR
@@ -262,9 +243,6 @@ Q. Which packages/libraries do I need to compile ntop:
 	 (Note some packages will have additional packages as pre-requisites)
 	 
      Building libpcap requires: bison/flex  
-
-     Building gdchart uses ar and ranlib from binutils (available precompiled or from
-         http://www.gnu.org/directory/binutils.html)
 
 (Updated for the new scripts, 30Oct2002)
 (Updated for binutils, 13Dec2002)
@@ -397,27 +375,6 @@ A. This is an autoconf problem.  It should be fixed in the new scripts (30Oct200
 
     4) The new ./configure scripts - call it versions after Nov2002 - fix this.
 (Updated 2003-Jan-20)
-
-Q. Why do we have static linked libraries in buildAll.sh?
-A. I (Burton) don't know the history, but I have some guesses...  First the facts...
-
-   gdchart0.94c wasn't regularly released - it's a special release for ntop -
-   check the home page and there isn't a mention of c!
-
-   libpng-1.0.8 has different calling parameters vs. 1.2.x and DOES NOT
-   implement the typical backwards compatible entry points.  So if you compile
-   with one and .so to the other, it breaks...  nice, huh?
-
-   zlib?  Probably wouldn't have been an issue, but - as everyone else got
-   bitten by - it had been so stable for so long, that nobody even thought
-   about it...
-
-   My guess is that it simply became easier for Luca - static linking kills 
-   off a whole raft of problem reports.  But that's only a guess - I wasn't
-   involved with ntop back then...
-
-   Could it be fixed/changed??  Sure.  Volunteers are welcome.
-
 
 Q. What is "obsolete/"
 A. Obsolete code is code that is no longer being maintained nor part of ntop, but
@@ -2477,37 +2434,6 @@ A. This is an automake problem.  First off, the Makefile was patched long prior 
 
           ./autogen.sh -1 
  
-
-Q. Why do I have to "make install" when building libpng??
-A. You don't. 
-
-      IF you use the buildAll.sh script in gdchart0.94c 
-   or IF you don't try to be (too) clever while manually 
-         building the libpng library. 
-
-   The difference between makefile.gcc and makefile.linux in the scripts directory of 
-   libpng-1.2.4 is that makefile.gcc builds a static library, while makefile.linux 
-   builds both the static (.a) and shared (.so) libraries. 
-
-   Most people doing a manual build of the tools see ".linux" and use it, vs. the 
-   more generic sounding ".gcc", but ntop expects the ".gcc" build.
-
-   The problem is that ldd (the loader) prefers the .so (shared) version and if it
-   finds it, it will link to it, even if a .a version exists.  So if you make the
-   static .a, but have the .so, that (.so) is what ntop will use.
-
-   For your own personal use, it shouldn't matter - there is NOTHING wrong with the
-   shared libraries, as long as the same version of the .so libraries for libpng are 
-   installed on BOTH the build and execution machine(s). 
-
-   This could happen either via a distribution supplied package (but if the package 
-   was for version 1.0.x this WILL cause version problems).
-   
-   Or, you can install the .so library by typing "make install" the 1st time you 
-   build libpng. 
-
-   Best suggestion is to use buildAll.sh! 
-   (Updated 22Aug2002 - BMS - libpng-1.2.4)
 
 Q. What about Slackware
 A. Lorenzo had "Installation Notes For Slackware 8.0" available at 
