@@ -1068,7 +1068,7 @@ typedef struct _SFConfig {
   int spoofSource;
   u_int16_t ipid;
   struct mySendPacket sendPkt;
-  u_int packetLen;
+  u_int32_t packetLen;
 #endif
 
 } SFConfig;
@@ -1079,80 +1079,80 @@ static SFConfig sfConfig;
 typedef struct _SFSample {
   struct in_addr sourceIP;
   SFLAddress agent_addr;
-  u_int agentSubId;
+  u_int32_t agentSubId;
 
   /* the raw pdu */
   u_char *rawSample;
-  u_int rawSampleLen;
+  u_int32_t rawSampleLen;
   u_char *endp;
 
   /* decode cursor */
-  u_long *datap;
+  u_int32_t *datap;
 
-  u_int datagramVersion;
-  u_int sampleType;
-  u_int ds_class;
-  u_int ds_index;
+  u_int32_t datagramVersion;
+  u_int32_t sampleType;
+  u_int32_t ds_class;
+  u_int32_t ds_index;
 
   /* interface info */
-  u_long ifIndex;
-  u_long networkType;
+  u_int32_t ifIndex;
+  u_int32_t networkType;
   u_int64_t ifSpeed;
-  u_long ifDirection;
-  u_long ifStatus;
+  u_int32_t ifDirection;
+  u_int32_t ifStatus;
 
   /* sample stream info */
-  u_long sysUpTime;
-  u_long sequenceNo;
-  u_long sampledPacketSize;
-  u_long samplesGenerated;
-  u_long meanSkipCount;
-  u_long samplePool;
-  u_long dropEvents;
+  u_int32_t sysUpTime;
+  u_int32_t sequenceNo;
+  u_int32_t sampledPacketSize;
+  u_int32_t samplesGenerated;
+  u_int32_t meanSkipCount;
+  u_int32_t samplePool;
+  u_int32_t dropEvents;
 
   /* the sampled header */
-  u_long packet_data_tag;
-  u_long headerProtocol;
+  u_int32_t packet_data_tag;
+  u_int32_t headerProtocol;
   u_char *header;
   int headerLen;
-  u_long stripped;
+  u_int32_t stripped;
 
   /* header decode */
   int gotIPV4;
   int offsetToIPV4;
   struct in_addr dcd_srcIP;
   struct in_addr dcd_dstIP;
-  u_int dcd_ipProtocol;
-  u_int dcd_ipTos;
-  u_int dcd_ipTTL;
-  u_int dcd_sport;
-  u_int dcd_dport;
-  u_int dcd_tcpFlags;
-  u_int ip_fragmentOffset;
-  u_int udp_pduLen;
+  u_int32_t dcd_ipProtocol;
+  u_int32_t dcd_ipTos;
+  u_int32_t dcd_ipTTL;
+  u_int32_t dcd_sport;
+  u_int32_t dcd_dport;
+  u_int32_t dcd_tcpFlags;
+  u_int32_t ip_fragmentOffset;
+  u_int32_t udp_pduLen;
 
   /* ports */
-  u_long inputPortFormat;
-  u_long outputPortFormat;
-  u_long inputPort;
-  u_long outputPort;
+  u_int32_t inputPortFormat;
+  u_int32_t outputPortFormat;
+  u_int32_t inputPort;
+  u_int32_t outputPort;
 
   /* ethernet */
-  u_int eth_type;
-  u_int eth_len;
+  u_int32_t eth_type;
+  u_int32_t eth_len;
   u_char eth_src[8];
   u_char eth_dst[8];
 
   /* vlan */
-  u_long in_vlan;
-  u_long in_priority;
-  u_long internalPriority;
-  u_long out_vlan;
-  u_long out_priority;
+  u_int32_t in_vlan;
+  u_int32_t in_priority;
+  u_int32_t internalPriority;
+  u_int32_t out_vlan;
+  u_int32_t out_priority;
 
   /* extended data fields */
-  u_long num_extended;
-  u_long extended_data_tag;
+  u_int32_t num_extended;
+  u_int32_t extended_data_tag;
 #define SASAMPLE_EXTENDED_DATA_SWITCH 1
 #define SASAMPLE_EXTENDED_DATA_ROUTER 4
 #define SASAMPLE_EXTENDED_DATA_GATEWAY 8
@@ -1168,42 +1168,42 @@ typedef struct _SFSample {
 
   /* IP forwarding info */
   SFLAddress nextHop;
-  u_long srcMask;
-  u_long dstMask;
+  u_int32_t srcMask;
+  u_int32_t dstMask;
 
   /* BGP info */
   SFLAddress bgp_nextHop;
-  u_long my_as;
-  u_long src_as;
-  u_long src_peer_as;
-  u_long dst_as_path_len;
-  u_long *dst_as_path;
+  u_int32_t my_as;
+  u_int32_t src_as;
+  u_int32_t src_peer_as;
+  u_int32_t dst_as_path_len;
+  u_int32_t *dst_as_path;
   /* note: version 4 dst as path segments just get printed, not stored here, however
    * the dst_peer and dst_as are filled in, since those are used for netflow encoding
    */
-  u_long dst_peer_as;
-  u_long dst_as;
+  u_int32_t dst_peer_as;
+  u_int32_t dst_as;
 
-  u_long communities_len;
-  u_long *communities;
-  u_long localpref;
+  u_int32_t communities_len;
+  u_int32_t *communities;
+  u_int32_t localpref;
 
   /* user id */
 #define SA_MAX_EXTENDED_USER_LEN 200
-  u_int src_user_charset;
-  u_int src_user_len;
+  u_int32_t src_user_charset;
+  u_int32_t src_user_len;
   char src_user[SA_MAX_EXTENDED_USER_LEN+1];
-  u_int dst_user_charset;
-  u_int dst_user_len;
+  u_int32_t dst_user_charset;
+  u_int32_t dst_user_len;
   char dst_user[SA_MAX_EXTENDED_USER_LEN+1];
 
   /* url */
 #define SA_MAX_EXTENDED_URL_LEN 200
 #define SA_MAX_EXTENDED_HOST_LEN 200
-  u_int url_direction;
-  u_int url_len;
+  u_int32_t url_direction;
+  u_int32_t url_len;
   char url[SA_MAX_EXTENDED_URL_LEN+1];
-  u_int host_len;
+  u_int32_t host_len;
   char host[SA_MAX_EXTENDED_HOST_LEN+1];
 
   /* mpls */
@@ -1214,8 +1214,8 @@ typedef struct _SFSample {
   SFLAddress nat_dst;
 
   /* counter blocks */
-  u_long statsSamplingInterval;
-  u_long counterBlockVersion;
+  u_int32_t statsSamplingInterval;
+  u_int32_t counterBlockVersion;
 } SFSample;
 
 /* ********************************* */
@@ -1227,8 +1227,8 @@ typedef struct _SFSample {
 /* Forward */
 static int setsFlowInSocket(int);
 static void setPluginStatus(char * status);
-static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
-		       u_int dstAddr, u_short dport, Counter len, int deviceId);
+static void ignoreFlow(u_short* theNextFlowIgnored, u_int32_t srcAddr, u_short sport,
+		       u_int32_t dstAddr, u_short dport, Counter len, int deviceId);
 static int initsFlowFunct(void);
 static void termsFlowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void termsFlowDevice(int deviceId);
@@ -1379,8 +1379,8 @@ static void updateSflowInterfaceCounters(int deviceId, IfCounters *ifName) {
 
 /* *************************** */
 
-static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
-		       u_int dstAddr, u_short dport,
+static void ignoreFlow(u_short* theNextFlowIgnored, u_int32_t srcAddr, u_short sport,
+		       u_int32_t dstAddr, u_short dport,
 		       Counter len, int deviceId) {
   u_short lastFlowIgnored;
 
@@ -1474,7 +1474,7 @@ static void handleSflowSample(SFSample *sample, int deviceId) {
 /* Forward */
 void SFABORT(SFSample *s, int r);
 int printHex(const u_char *a, int len, u_char *buf, int bufLen, int marker, int bytesPerOutputLine);
-char *IP_to_a(u_long ipaddr, char *buf);
+char *IP_to_a(u_int32_t ipaddr, char *buf);
 
 #define SF_ABORT_EOS 1
 #define SF_ABORT_DECODE_ERROR 2
@@ -1523,7 +1523,7 @@ int printHex(const u_char *a, int len, u_char *buf, int bufLen, int marker, int 
   -----------------___________________________------------------
 */
 
-char *IP_to_a(u_long ipaddr, char *buf)
+char *IP_to_a(u_int32_t ipaddr, char *buf)
 {
   u_char *ip = (u_char *)&ipaddr;
   sprintf(buf, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
@@ -1542,7 +1542,7 @@ static void receiveError(SFSample *sample, char *errm, int hexdump)
   u_char scratch[6000];
   char *msg = "";
   char *hex = "";
-  u_long markOffset = (u_char *)sample->datap - sample->rawSample;
+  u_int32_t markOffset = (u_char *)sample->datap - sample->rawSample;
   if(errm) msg = errm;
   if(hexdump) {
     printHex(sample->rawSample, sample->rawSampleLen, scratch, 6000, markOffset, 16);
@@ -1952,7 +1952,7 @@ static void readExtendedGateway_v2(SFSample *sample, int deviceId)
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_peer_as %lu\n", sample->dst_peer_as);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as_path_len %lu\n", sample->dst_as_path_len);
   if(sample->dst_as_path_len > 0) {
-    u_int i = 0;
+    u_int32_t i = 0;
     for(; i < sample->dst_as_path_len; i++) {
       if(i == 0) if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "dst_as_path ");
       else if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "-");
@@ -2458,7 +2458,7 @@ static void readFlowSample_v2v4(SFSample *sample, int deviceId)
 
   sample->extended_data_tag = 0;
   {
-    u_int x;
+    u_int32_t x;
     sample->num_extended = getData32(sample, deviceId);
     for(x = 0; x < sample->num_extended; x++) {
       u_int32_t extended_tag;
@@ -3068,7 +3068,7 @@ static void* sflowMainLoop(void* _deviceId) {
 	sample.rawSample = buffer;
 	sample.rawSampleLen = rc;
 	sample.sourceIP = fromHost.sin_addr;
-	sample.datap = (u_long *)sample.rawSample;
+	sample.datap = (u_int32_t *)sample.rawSample;
 	sample.endp = (u_char *)sample.rawSample + sample.rawSampleLen;
 
 	dissectFlow(&sample, deviceId);
@@ -3541,7 +3541,7 @@ static void printsFlowConfiguration(int deviceId) {
 
 static void printsFlowStatisticsRcvd(int deviceId) {
   char buf[512], buf1[32], buf2[32], formatBuf[32], formatBuf2[32];
-  u_int i, totFlows;
+  u_int32_t i, totFlows;
 
   sendString("<tr " TR_ON ">\n"
              "<th colspan=\"2\" "DARK_BG">Received Flows</th>\n"
@@ -4370,7 +4370,7 @@ static void handlesFlowHTTPrequest(char* _url) {
 			ifType(ifName->ifType)); sendString(buf);
 
 	  if(ifName->ifSpeed >= 10000000) {
-	    u_int speed = ifName->ifSpeed / 1000000;
+	    u_int32_t speed = ifName->ifSpeed / 1000000;
 	    
 	    if(speed < 1000)
 	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u&nbsp;Mbit</td>",
@@ -4567,8 +4567,8 @@ static void handlesFlowPacket(u_char *_deviceId,
   if(myGlobals.runningPref.rFileName != NULL) {
     /* ntop is reading packets from a file */
     struct ether_header ehdr;
-    u_int caplen = h->caplen;
-    u_int length = h->len;
+    u_int32_t caplen = h->caplen;
+    u_int32_t length = h->len;
     unsigned short eth_type;
     u_int8_t flags = 0;
     struct ip ip;
@@ -4585,7 +4585,7 @@ static void handlesFlowPacket(u_char *_deviceId,
       eth_type = ntohs(ehdr.ether_type);
 
       if(eth_type == ETHERTYPE_IP) {
-	u_int plen, hlen;
+	u_int32_t plen, hlen;
 	u_short sport, dport;
 
 #ifdef DEBUG_FLOWS
@@ -4594,7 +4594,7 @@ static void handlesFlowPacket(u_char *_deviceId,
 #endif
 
 	memcpy(&ip, p+sizeof(struct ether_header), sizeof(struct ip));
-	hlen =(u_int)ip.ip_hl * 4;
+	hlen =(u_int32_t)ip.ip_hl * 4;
 	NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
 	plen = length-sizeof(struct ether_header);
@@ -4623,7 +4623,7 @@ static void handlesFlowPacket(u_char *_deviceId,
 	    sample.rawSample = rawSample;
 	    sample.rawSampleLen = rawSampleLen;
 	    sample.sourceIP = ip.ip_src;
-	    sample.datap = (u_long *)sample.rawSample;
+	    sample.datap = (u_int32_t *)sample.rawSample;
 	    sample.endp = (u_char *)sample.rawSample + sample.rawSampleLen;
 
 	    dissectFlow(&sample, deviceId);
