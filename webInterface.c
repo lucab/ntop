@@ -203,7 +203,6 @@ void showPluginsList(char* pluginName) {
       }
 
       if(!printHeader) {
-	/* printHTTPheader(); */
 	printHTMLheader("Available Plugins", 0);
  	sendString("<CENTER>\n"
 		   ""TABLE_ON"<TABLE BORDER=1><TR>\n"

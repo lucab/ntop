@@ -485,35 +485,6 @@ void updateThpt(void) {
 
 /* ******************************* */
 
-static void updateHostThpt(HostTraffic *el, int hourId) {
-
-  if(broadcastHost(el))
-    return;
-  
-  el->lastCounterBytesSent = el->bytesSent;
-  el->lastCounterBytesRcvd = el->bytesRcvd;
-
-  if(hourId == 0) {
-    el->lastDayBytesSent = el->bytesSent;
-      el->lastDayBytesRcvd = el->bytesRcvd;
-  }
-}
-
-/* ******************************* */
-
-void updateHostsDeviceThpt(int deviceToUpdate, int hourId) {
-  u_int idx;
-  HostTraffic *el;
-  
-  for(idx=1; idx<myGlobals.device[deviceToUpdate].actualHashSize; idx++) {
-    if((el = myGlobals.device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
-      updateHostThpt(el, hourId);
-    }
-  }
-}
-
-/* ******************************* */
-
 void updateTrafficMatrix(HostTraffic *srcHost,
 			 HostTraffic *dstHost,
 			 TrafficCounter length, 

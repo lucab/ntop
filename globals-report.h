@@ -140,7 +140,6 @@ extern void printNotAvailable(void);
 extern void listNetFlows(void);
 extern void fillDomainName(HostTraffic *el);
 extern void printNtopConfigInfo(int textPrintFlag);
-extern void updateHostThpt(HostTraffic *el, int hourId, int fullUpdate);
 
 /* webInterface.c */
 extern int execCGI(char* cgiName);

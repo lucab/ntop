@@ -52,43 +52,6 @@ static void dumpHash(); /* Forward */
 
 /* ******************************* */
 
-u_int findHostInfo(struct in_addr *hostIpAddress, int actualDeviceId) {
-  u_int i;
-
-  for(i=0; i<myGlobals.device[actualDeviceId].actualHashSize; i++)
-    if(myGlobals.device[actualDeviceId].hash_hostTraffic[i] != NULL)
-      if(myGlobals.device[actualDeviceId].hash_hostTraffic[i]->hostIpAddress.s_addr
-	 == hostIpAddress->s_addr)
-	return i;
-
-  return(NO_PEER);
-}
-
-/* ************************************ */
-
-char* getNamedPort(int port) {
-  static char outStr[2][8];
-  static short portBufIdx=0;
-  char* svcName;
-
-  portBufIdx = (portBufIdx+1)%2;
-
-  svcName = getPortByNum(port, IPPROTO_TCP);
-  if(svcName == NULL)
-    svcName = getPortByNum(port, IPPROTO_UDP);
-
-  if(svcName == NULL) {
-    if(snprintf(outStr[portBufIdx], 8, "%d", port) < 0)
-      BufferTooShort();
-  } else {
-    strncpy(outStr[portBufIdx], svcName, 8);
-  }
-
-  return(outStr[portBufIdx]);
-}
-
-/* ************************************ */
-
 void allocateSecurityHostPkts(HostTraffic *srcHost) {
   if(srcHost->secHostPkts == NULL) {
     srcHost->secHostPkts = (SecurityHostProbes*)malloc(sizeof(SecurityHostProbes));

@@ -92,7 +92,6 @@ extern void purgeIdleHosts(int devId);
 /* http.c */
 extern void sendStringLen(char *theString, unsigned int len);
 extern void sendString(char *theString);
-extern void printHTTPheader(void);
 extern void printHTTPtrailer(void);
 extern void initAccessLog(void);
 extern void termAccessLog(void);
@@ -170,11 +169,9 @@ extern void* cleanupExpiredHostEntriesLoop(void*);
  
 /* pbuf.c */
 extern u_int findHostIdxByNumIP(struct in_addr hostIpAddress, int actualDeviceId);
-extern u_int findHostInfo(struct in_addr *hostIpAddress, int actualDeviceId);
 extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr, 
 			 u_char checkForMultihoming,
 			 u_char forceUsingIPaddress, int actualDeviceId);
-extern char *getNamedPort(int port);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
 extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h,
@@ -238,7 +235,6 @@ extern void termIPSessions(void);
 /* traffic.c */
 extern void updateThpt(void);
 extern void updateHostsDeviceThpt(int deviceToUpdate, int hourId);
-extern void updateDeviceThpt(int deviceToUpdate);
 extern void updateTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
                                 TrafficCounter length, int actualDeviceId);
 extern void updateDbHostsTraffic(int deviceToUpdate);
