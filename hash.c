@@ -1308,14 +1308,14 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
 
+    resetHostsVariables(el);
+        
     if(allocFcScsiCounters(el) == NULL) return;
     el->l2Family = FLAG_HOST_TRAFFIC_AF_FC;
     el->fcCounters->devType = SCSI_DEV_UNINIT;
     el->magic = CONST_MAGIC_NUMBER;
     el->hostTrafficBucket = idx;
       
-    resetHostsVariables(el);
-        
     el->next = myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket];
     myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket] = el;  /* Insert a new entry */
     myGlobals.device[actualDeviceId].hostsno++;
