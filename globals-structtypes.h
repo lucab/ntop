@@ -779,12 +779,11 @@ typedef struct hostTraffic {
   HostAddr         hostIpAddress;
   short            vlanId;           /* VLAN Id (-1 if not set) */
   u_int16_t        hostAS;           /* AS to which the host belongs to */
-  time_t           firstSeen;
-  time_t           lastSeen;     /* time when this host has sent/rcvd some data  */
+  time_t           firstSeen, lastSeen; /* time when this host has sent/rcvd some data  */
   u_char           ethAddress[LEN_ETHERNET_ADDRESS];
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
-  char             hostNumIpAddress[47], *dnsDomainValue, *dnsTLDValue;
+  char             hostNumIpAddress[20] /* xxx.xxx.xxx.xxx */, *dnsDomainValue, *dnsTLDValue;
   char             *ip2ccValue, hostResolvedName[MAX_LEN_SYM_HOST_NAME], *fingerprint;
   short            hostResolvedNameType;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
@@ -824,13 +823,12 @@ typedef struct hostTraffic {
   int              otherIpPortsRcvd[MAX_NUM_RECENT_PORTS], otherIpPortsSent[MAX_NUM_RECENT_PORTS];
   TrafficCounter   ipBytesSent, ipBytesRcvd, ipv6Sent, ipv6Rcvd;
   TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc, udpSentRem, icmpSent,icmp6Sent;
-  TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc, udpRcvdFromRem, icmpRcvd,
-                   icmp6Rcvd;
+  TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc, udpRcvdFromRem, icmpRcvd, icmp6Rcvd;
  
   TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
-    udpFragmentsSent,  udpFragmentsRcvd,
+    udpFragmentsSent, udpFragmentsRcvd,
     icmpFragmentsSent, icmpFragmentsRcvd,
-    icmp6FragmentsSent,icmp6FragmentsRcvd;
+    icmp6FragmentsSent, icmp6FragmentsRcvd;
 
   /* Protocol decoders */
   ProtocolInfo     *protocolInfo;

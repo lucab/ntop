@@ -24,6 +24,8 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+/* #define URL_DEBUG */
+
 /* Private structure definitions */
 
 struct _HTTPstatus {
@@ -786,30 +788,42 @@ static void returnHTTPbadRequest(void) {
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_400, NULL);
 }
 
+/* ************************* */
+
 static void returnHTTPaccessDenied(void) {
   myGlobals.numUnsuccessfulDenied[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_401 | BITFLAG_HTTP_NEED_AUTHENTICATION, NULL);
 }
+
+/* ************************* */
 
 static void returnHTTPaccessForbidden(void) {
   myGlobals.numUnsuccessfulForbidden[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_403, NULL);
 }
 
+/* ************************* */
+
 void returnHTTPpageNotFound(char* additionalText) {
   myGlobals.numUnsuccessfulNotfound[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_404, additionalText);
 }
+
+/* ************************* */
 
 static void returnHTTPrequestTimedOut(void) {
   myGlobals.numUnsuccessfulTimeout[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_408, NULL);
 }
 
+/* ************************* */
+
 static void returnHTTPnotImplemented(void) {
   myGlobals.numUnsuccessfulInvalidmethod[myGlobals.newSock > 0]++;
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_501, NULL);
 }
+
+/* ************************* */
 
 static void returnHTTPversionNotSupported(void) {
   myGlobals.numUnsuccessfulInvalidversion[myGlobals.newSock > 0]++;
@@ -1490,7 +1504,7 @@ static int returnHTTPPage(char* pageName,
   struct stat statbuf;
   FILE *fd = NULL;
   char tmpStr[512], *domainNameParm = NULL, *minus;
-  int revertOrder=0, vlanId=-1;
+  int revertOrder=0, vlanId=0;
   struct tm t;
   HostsDisplayPolicy showHostsMode = myGlobals.hostsDisplayPolicy;
   LocalityDisplayPolicy showLocalityMode = myGlobals.localityDisplayPolicy;
@@ -1536,6 +1550,8 @@ static int returnHTTPPage(char* pageName,
 	vsanNr = atoi(&tkn[5]);
       } else if(strncmp(tkn, "unit=", 5) == 0) {
 	showBytes = atoi(&tkn[5]);
+      } else if(strncmp(tkn, "vlan=", 5) == 0) {
+	vlanId = atoi(&tkn[5]);
       } else if(strncmp(tkn, "showH=", 6) == 0) {
 	showHostsMode = atoi(&tkn[6]);
 	if((showHostsMode < showAllHosts) || (showHostsMode > showOnlyRemoteHosts))
@@ -1667,7 +1683,7 @@ static int returnHTTPPage(char* pageName,
       }
 
 #ifdef MAKE_WITH_I18N
-    }
+b    }
 #endif
   }
 
@@ -1769,7 +1785,7 @@ static int returnHTTPPage(char* pageName,
     changeFilter();
   } else if(strncasecmp(pageName, CONST_DO_CHANGE_FILTER, strlen(CONST_DO_CHANGE_FILTER)) == 0) {
     printTrailer=0;
-    if(doChangeFilter(postLen)==0) /*resetStats()*/;
+    if(doChangeFilter(postLen)==0) /* resetStats() */;
   } else if(strncasecmp(pageName, CONST_FILTER_INFO_HTML, strlen(CONST_FILTER_INFO_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
@@ -2000,7 +2016,7 @@ static int returnHTTPPage(char* pageName,
 	printThptStatsMatrix(sortedColumn);
       } else if(strncasecmp(pageName, CONST_HOSTS_INFO_HTML, strlen(CONST_HOSTS_INFO_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes);
+	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vlanId);
       } else if(strncasecmp(pageName, CONST_FC_HOSTS_INFO_HTML,
 			    strlen(CONST_FC_HOSTS_INFO_HTML)) == 0) {
         printFcHostsInfo(sortedColumn, revertOrder, pageNum);
@@ -2020,17 +2036,17 @@ static int returnHTTPPage(char* pageName,
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHostsTraffic(SORT_DATA_PROTOS, sortedColumn, revertOrder, 
 			  pageNum, CONST_SORT_DATA_PROTOS_HTML,
-			  showHostsMode, showLocalityMode);
+			  showHostsMode, showLocalityMode, vlanId);
       } else if(strncasecmp(pageName, CONST_SORT_DATA_IP_HTML, strlen(CONST_SORT_DATA_IP_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHostsTraffic(SORT_DATA_IP, sortedColumn, revertOrder, 
-			  pageNum, CONST_SORT_DATA_IP_HTML, showHostsMode, showLocalityMode);
+			  pageNum, CONST_SORT_DATA_IP_HTML, showHostsMode, showLocalityMode, vlanId);
       } else if(strncasecmp(pageName, CONST_SORT_DATA_THPT_HTML, strlen(CONST_SORT_DATA_THPT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
 	printHostsTraffic(SORT_DATA_THPT, sortedColumn, revertOrder, 
 			  pageNum, CONST_SORT_DATA_THPT_HTML,
-			  showHostsMode, showLocalityMode);
+			  showHostsMode, showLocalityMode, vlanId);
       } else if(strncasecmp(pageName, CONST_FC_THPT_HTML,
 			    strlen(CONST_FC_THPT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2043,7 +2059,7 @@ static int returnHTTPPage(char* pageName,
 	if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
 	printHostsTraffic(SORT_DATA_HOST_TRAFFIC, sortedColumn, revertOrder, 
 			  pageNum, CONST_SORT_DATA_HOST_TRAFFIC_HTML,
-			  showHostsMode, showLocalityMode);
+			  showHostsMode, showLocalityMode, vlanId);
       } else if(strncasecmp(pageName, CONST_FC_ACTIVITY_HTML,
 			    strlen(CONST_FC_ACTIVITY_HTML)) == 0) {
         sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2256,7 +2272,10 @@ static int returnHTTPPage(char* pageName,
 	}
 
         urlFixupFromRFC1945Inplace(hostName);
-        /* printf("HostName: '%s'\r\n", hostName); */
+
+#ifdef URL_DEBUG
+        traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName); 
+#endif
         
         for(el=getFirstHost(myGlobals.actualReportDeviceId); 
             el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
@@ -2269,9 +2288,9 @@ static int returnHTTPPage(char* pageName,
 	      break;
 	    }
           } else {
-	      if((el->fcCounters->hostNumFcAddress != NULL) &&
-		 strcmp(el->fcCounters->hostNumFcAddress, hostName) == 0)
-                  break;
+	    if((el->fcCounters->hostNumFcAddress != NULL) &&
+	       strcmp(el->fcCounters->hostNumFcAddress, hostName) == 0)
+	      break;
           }
         }
 	
@@ -2307,8 +2326,11 @@ static int returnHTTPPage(char* pageName,
 	}
 
         urlFixupFromRFC1945Inplace(hostName);
-        /* printf("HostName: '%s'\r\n", hostName); */
-        
+
+#ifdef URL_DEBUG
+        traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName); 
+#endif
+
         for(el=getFirstHost(myGlobals.actualReportDeviceId); 
             el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
 	  if(!isFcHost(el)) {
@@ -2393,6 +2415,10 @@ static int returnHTTPPage(char* pageName,
 	  }
 
 	  urlFixupFromRFC1945Inplace(hostName);
+
+#ifdef URL_DEBUG
+        traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName); 
+#endif
 
 	  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
 	      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {

@@ -553,9 +553,9 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 #endif
 
     strncpy(workSymIpAddress, el->hostResolvedName, MAX_LEN_SYM_HOST_NAME_HTML);
-    if ((angleLocation = strchr(workSymIpAddress, '<')) != NULL) {
-      angleLocation[0] = '\0';
-    }
+
+    if((angleLocation = strchr(workSymIpAddress, '<')) != NULL)
+      angleLocation[0] = '\0';   
 
     if(key[0] != '\0') {
       if(strcmp(el->hostNumIpAddress, key)

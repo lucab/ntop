@@ -73,7 +73,8 @@ extern void printHostsCharacterization(void);
 extern void printFlagedWarning(char *text);
 extern void printHeader(int reportType, int revertOrder, u_int column, 
                         HostsDisplayPolicy showHostsMode,
-                        LocalityDisplayPolicy showLocalityMode);
+                        LocalityDisplayPolicy showLocalityMode,
+			char *vlanList, u_short vlanId);
 extern void printFcHeader(int reportType, int revertOrder, u_int column, u_int hour, char *url);
 extern void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                                int column, int hostInfoPage);
@@ -176,11 +177,9 @@ extern void addPageIndicator(char *url, u_int beginIdx,
 			     int revertOrder, int numCol);
 extern void printTrafficStatistics(int revertOrder);
 extern int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocalityMode);
-extern void printHostsTraffic(int reportType,
-			      int sortedColumn, int revertOrder,
-			      int pageNum, char* url, 
-                              HostsDisplayPolicy showHostsMode,
-                              LocalityDisplayPolicy showLocalityMode);
+extern void printHostsTraffic(int reportType, int sortedColumn, int revertOrder,
+			      int pageNum, char* url, HostsDisplayPolicy showHostsMode,
+                              LocalityDisplayPolicy showLocalityMode, int vlanId);
 extern void printFcHostsTraffic(int reportType,
 			      int sortedColumn, int revertOrder,
 			      int pageNum, char* url,
@@ -188,7 +187,7 @@ extern void printFcHostsTraffic(int reportType,
 extern void printMulticastStats(int sortedColumn /* ignored so far */,
                                 int revertOrder, int pageNum);
 extern void printVSANList(unsigned int deviceId);
-extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes);
+extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vlanId);
 extern void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum);
 extern void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
                                   int revertOrder, int pageNum, char *url,

@@ -64,7 +64,7 @@ static PluginInfo netflowPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate NetFlow support.<br>"
     "<b>ntop</b> can both collect and receive "
     "<A HREF=http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm>NetFlow</A> "
-    "V1/V5/V7/V9 data.<br>"
+    "V1/V5/V7/V9 and IPIFX data.<br>"
     "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
     "reports - <em>Remember to switch the reporting NIC via Admin | Switch NIC</em>.",
     "3.99", /* version */
@@ -800,11 +800,18 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
   char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
 #endif
 
+#ifdef DEBUG_FLOWS
+  if(0)
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: dissectFlow(len=%d, device=%d)", 
+	       bufferLen, deviceId);
+#endif
+
   memcpy(&the5Record, buffer, bufferLen > sizeof(the5Record) ? sizeof(the5Record): bufferLen);
   flowVersion = ntohs(the5Record.flowHeader.version);
 
 #ifdef DEBUG_FLOWS
-  traceEvent(CONST_TRACE_INFO, "NETFLOW: +++++++ version=%d",  flowVersion);
+  if(0)
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: +++++++ version=%d",  flowVersion);
 #endif
 
   /*
@@ -835,7 +842,8 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     }
 
 #ifdef DEBUG_FLOWS
-    traceEvent(CONST_TRACE_INFO, "NETFLOW: +++++++ flows=%d",  numFlows);
+    if(0)
+      traceEvent(CONST_TRACE_INFO, "NETFLOW: +++++++ flows=%d",  numFlows);
 #endif
 
     the5Record.flowHeader.version = htons(5);
@@ -911,7 +919,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
       if(buffer[displ] == 0) {
 	/* Template */
 #ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
+	if(0) traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
 #endif
 
 	myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9TemplRcvd++;
@@ -929,8 +937,9 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	  template.flowsetLen = ntohs(template.flowsetLen);
 
 #ifdef DEBUG_FLOWS
-	  traceEvent(CONST_TRACE_INFO, "Template [id=%d] fields: %d",
-		     template.templateId, template.fieldCount);
+	  if(0) 
+	    traceEvent(CONST_TRACE_INFO, "Template [id=%d] fields: %d",
+		       template.templateId, template.fieldCount);
 #endif
 
 	  /* Check the template before to handle it */
@@ -940,8 +949,9 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
 	    len += htons(set->flowsetLen);
 #ifdef DEBUG_FLOWS
-	    traceEvent(CONST_TRACE_INFO, "[%d] fieldLen=%d/len=%d",
-		       1+fieldId, htons(set->flowsetLen), len);
+	    if(0) 
+	      traceEvent(CONST_TRACE_INFO, "[%d] fieldLen=%d/len=%d",
+			 1+fieldId, htons(set->flowsetLen), len);
 #endif
 	  }
 
@@ -960,13 +970,15 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 
 	    if(found) {
 #ifdef DEBUG_FLOWS
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]", template.templateId);
+	      if(0) 
+		traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]", template.templateId);
 #endif
 
 	      free(cursor->fields);
 	    } else {
 #ifdef DEBUG_FLOWS
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]", template.templateId);
+	      if(0) 
+		traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]", template.templateId);
 #endif
 
 	      cursor = (FlowSetV9*)malloc(sizeof(FlowSetV9));
@@ -990,7 +1002,8 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	}
       } else {
 #ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
+	if(0) 
+	  traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
 #endif
 	foundRecord = 1;
       }
@@ -1024,15 +1037,16 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	    record.dst_as = 0;
 
 #ifdef DEBUG_FLOWS
-	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d", fs.templateId);
+	    if(0) 
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d", fs.templateId);
 #endif
-
 	    displ += sizeof(V9FlowSet);
 
 	    while(displ < fs.flowsetLen) {
 #ifdef DEBUG_FLOWS
-	      traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow pdu [displ=%d][template=%d]",
-			 displ, fs.templateId);
+	      if(0) 
+		traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow pdu [displ=%d][template=%d]",
+			   displ, fs.templateId);
 #endif
 
 	      for(fieldId=0; fieldId<cursor->templateInfo.fieldCount; fieldId++) {
@@ -1099,7 +1113,8 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	    }
 	  } else {
 #ifdef DEBUG_FLOWS
-	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d", fs.templateId);
+	    if(0) 
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d", fs.templateId);
 #endif
 	    myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd++;
 	  }
@@ -1115,7 +1130,8 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     if(numFlows > CONST_V5FLOWS_PER_PAK) numFlows = CONST_V5FLOWS_PER_PAK;
 
 #ifdef DEBUG_FLOWS
-    traceEvent(CONST_TRACE_INFO, "dissectFlow(%d flows)", numFlows);
+    if(0) 
+      traceEvent(CONST_TRACE_INFO, "dissectFlow(%d flows)", numFlows);
 #endif
 
 #ifdef CFG_MULTITHREADED
@@ -1292,8 +1308,9 @@ static void* netflowMainLoop(void* _deviceId) {
 #endif
 
 #ifdef DEBUG_FLOWS
-      traceEvent(CONST_TRACE_INFO, "NETFLOW_DEBUG: Received NetFlow packet(len=%d)(deviceId=%d)",
-		 rc,  deviceId);
+      if(0) 
+	traceEvent(CONST_TRACE_INFO, "NETFLOW_DEBUG: Received NetFlow packet(len=%d)(deviceId=%d)",
+		   rc,  deviceId);
 #endif
 
       if(rc > 0) {
@@ -1393,17 +1410,6 @@ static void initNetFlowDevice(int deviceId) {
   } else
     myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList = strdup(value);
 
-  if(fetchPrefsValue(nfValue(deviceId, "netFlowAggregation", 1), value, sizeof(value)) == -1)
-    storePrefsValue(nfValue(deviceId, "netFlowAggregation", 1), "0" /* noAggregation */);
-  else
-    myGlobals.device[deviceId].netflowGlobals->netFlowAggregation = atoi(value);
-
-  if(fetchPrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1), value, sizeof(value)) == -1) {
-    storePrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1), "0" /* no */);
-    myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = 0;
-  } else
-    myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = atoi(value);
-
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "initNetFlowDevice");
 #endif
@@ -1433,13 +1439,26 @@ static void initNetFlowDevice(int deviceId) {
   handleWhiteBlackListAddresses((char*)&value, myGlobals.device[deviceId].netflowGlobals->blackNetworks,
                                 &myGlobals.device[deviceId].netflowGlobals->numBlackNets, (char*)&workList,
                                 sizeof(workList));
-  if(myGlobals.device[deviceId].netflowGlobals->netFlowBlackList != NULL) free(myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
+  if(myGlobals.device[deviceId].netflowGlobals->netFlowBlackList != NULL) 
+    free(myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
+
   myGlobals.device[deviceId].netflowGlobals->netFlowBlackList = strdup(workList);
 #ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex);
 #endif
   traceEvent(CONST_TRACE_INFO, "NETFLOW: Black list initialized to '%s'",
 	     myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
+
+  if(fetchPrefsValue(nfValue(deviceId, "netFlowAggregation", 1), value, sizeof(value)) == -1)
+    storePrefsValue(nfValue(deviceId, "netFlowAggregation", 1), "0" /* noAggregation */);
+  else
+    myGlobals.device[deviceId].netflowGlobals->netFlowAggregation = atoi(value);
+
+  if(fetchPrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1), value, sizeof(value)) == -1) {
+    storePrefsValue(nfValue(deviceId, "netFlowAssumeFTP", 1), "0" /* no */);
+    myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = 0;
+  } else
+    myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP = atoi(value);
 
 #ifdef HAVE_FILEDESCRIPTORBUG
   wasteFileDescriptors(deviceId);
@@ -2845,8 +2864,11 @@ static void handleNetFlowPacket(u_char *_deviceId,
     u_int8_t flags = 0;
     struct ip ip;
 
+    deviceId = 1; /* Dummy value */
+
 #ifdef DEBUG_FLOWS
-    traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d]", caplen, length);
+    if(0) 
+      traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d]", caplen, length);
 #endif
 
     if(caplen >= sizeof(struct ether_header)) {
@@ -2858,7 +2880,8 @@ static void handleNetFlowPacket(u_char *_deviceId,
 	u_short sport, dport;
 
 #ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect");
+	if(0) 
+	  traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect");
 #endif
 
 	memcpy(&ip, p+sizeof(struct ether_header), sizeof(struct ip));
@@ -2868,8 +2891,9 @@ static void handleNetFlowPacket(u_char *_deviceId,
 	plen = length-sizeof(struct ether_header);
 
 #ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect [sender=%s][proto=%d][len=%d][hlen=%d]",
-		   intoa(ip.ip_src), ip.ip_p, plen, hlen);
+	if(0)
+	  traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect [deviceId=%d][sender=%s][proto=%d][len=%d][hlen=%d]",
+		     deviceId, intoa(ip.ip_src), ip.ip_p, plen, hlen);
 #endif
 
 	if(ip.ip_p == IPPROTO_UDP) {
@@ -2878,7 +2902,9 @@ static void handleNetFlowPacket(u_char *_deviceId,
 	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 
 #ifdef DEBUG_FLOWS
-	    traceEvent(CONST_TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src));
+	    if(0)
+	      traceEvent(CONST_TRACE_INFO, "Rcvd from from %s [netflowGlobals=%x]", intoa(ip.ip_src),
+			 myGlobals.device[deviceId].netflowGlobals);
 #endif
 
 	    myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd++;
@@ -2887,7 +2913,8 @@ static void handleNetFlowPacket(u_char *_deviceId,
 	}
       } else {
 #ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, "Rcvd non-IP [0x%04X] packet to dissect", eth_type);
+	if(0) 
+	  traceEvent(CONST_TRACE_INFO, "Rcvd non-IP [0x%04X] packet to dissect", eth_type);
 #endif
       }
     }

@@ -403,11 +403,12 @@ void printFooter(int reportType) {
 
 void printHeader(int reportType, int revertOrder, u_int column,
 		 HostsDisplayPolicy showHostsMode,
-		 LocalityDisplayPolicy showLocalityMode) {
+		 LocalityDisplayPolicy showLocalityMode, 
+		 char *vlanList, u_short vlanId) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char *sign, *arrowGif, *arrow[128], *theAnchor[128], *url=NULL;
-  int i, soFar=2, idx, j, hourId;
-  char htmlAnchor[128], htmlAnchor1[128], theLink[128];
+  int i, soFar=2, idx, j, hourId, useVlans = 0;
+  char htmlAnchor[128], htmlAnchor1[128], theLink[128], theVlanLink[128];
   ProtocolsList *protoList;
   char theDate[8];
   struct tm t;
@@ -415,6 +416,12 @@ void printHeader(int reportType, int revertOrder, u_int column,
                       "7<BR>AM", "8<BR>AM", "9<BR>AM", "10<BR>AM", "11<BR>AM", "12<BR>PM", "1<BR>PM",
                       "2<BR>PM", "3<BR>PM", "4<BR>PM", "5<BR>PM", "6<BR>PM", "7<BR>PM", "8<BR>PM",
                       "9<BR>PM", "10<BR>PM", "11<BR>PM"};
+
+  for(i=0; i<MAX_VLAN; i++)
+    if(vlanList[i] == 1) {
+      useVlans = 1;
+      break;
+    }
 
   /* printf("->%d<-\n",showHostsMode); */
 
@@ -451,53 +458,83 @@ void printHeader(int reportType, int revertOrder, u_int column,
               "<A HREF=\"/%s?showH=%d&amp;showL=%d&amp;col=",
               url, showHostsMode, showLocalityMode);
 
-  if(abs(column) == FLAG_HOST_DUMMY_IDX) {
-    arrow[0] = arrowGif; theAnchor[0] = htmlAnchor;
-  } else {
-    arrow[0] = ""; theAnchor[0] = htmlAnchor1;
-  }
+  if(abs(column) == FLAG_HOST_DUMMY_IDX)
+    arrow[0] = arrowGif, theAnchor[0] = htmlAnchor;
+    else
+    arrow[0] = "", theAnchor[0] = htmlAnchor1;  
 
-  if(abs(column) == FLAG_DOMAIN_DUMMY_IDX) {
-    arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;
-  } else {
-    arrow[1] = "";  theAnchor[1] = htmlAnchor1;
-  }
+  if(abs(column) == FLAG_DOMAIN_DUMMY_IDX)
+    arrow[1] = arrowGif, theAnchor[1] = htmlAnchor;
+  else
+    arrow[1] = "",  theAnchor[1] = htmlAnchor1;
+  
+  if(abs(column) == 0)
+    arrow[2] = arrowGif, theAnchor[2] = htmlAnchor;
+  else 
+    arrow[2] = "", theAnchor[2] = htmlAnchor1;
 
-  if(abs(column) == 0) {
-    arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;
-  } else {
-    arrow[2] = ""; theAnchor[2] = htmlAnchor1;
-  }
+  if((vlanId > 0) && (vlanId < MAX_VLAN))
+    safe_snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&amp;vlan=%d&amp;showL=%d&amp;showH=", url,
+		  revertOrder ? "-" : "", column, vlanId, showLocalityMode);
+  else
+    safe_snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&amp;showL=%d&amp;showH=", url,
+		  revertOrder ? "-" : "", column, showLocalityMode);
 
-  safe_snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&amp;showL=%d&amp;showH=", url,
-	   revertOrder ? "-" : "", column, showLocalityMode);
+  safe_snprintf(theVlanLink, sizeof(theVlanLink), "/%s?col=%s%d&amp;showL=%d&amp;showH=%d", url,
+	   revertOrder ? "-" : "", column, showLocalityMode, showHostsMode);
 
   sendString("<CENTER><TABLE WIDTH=100%% BORDER=0 "TABLE_DEFAULTS"><TR><TD ALIGN=LEFT>");
-
+  
   switch(showHostsMode) {
   case showOnlyLocalHosts:
     safe_snprintf(buf, sizeof(buf), 
               "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
               "[<B> Local Only </B>]&nbsp;"
-              "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;</TD>",
+              "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;",
               theLink, theLink);
     break;
   case showOnlyRemoteHosts:
     safe_snprintf(buf, sizeof(buf), 
 	     "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
 	     "[ <A HREF=\"%s1\">Local Only</A> ]&nbsp;"
-	     "[<B> Remote Only </B>]&nbsp;</TD>",
+	     "[<B> Remote Only </B>]&nbsp;",
 	     theLink, theLink);
     break;
   default:
     safe_snprintf(buf, sizeof(buf), 
 	     "<b>Hosts:</b> [<B> All </B>]&nbsp;"
 	     "[ <A HREF=\"%s1\">Local Only</A> ]&nbsp;"
-	     "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;</TD>",
+	     "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;",
 	     theLink, theLink);
     break;
   }
+
   sendString(buf);
+
+  if(useVlans) {
+    u_char found = 0;
+
+    sendString("<p><b>VLAN</b>: ");
+
+    for(i=0; i<MAX_VLAN; i++)
+      if(vlanList[i] == 1) {
+	if(i == vlanId)
+	  safe_snprintf(buf, sizeof(buf), "[ <b>%d</b> ] ", i), found = 1;
+	else
+	  safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"%s&vlan=%d\">%d</A> ] ", theVlanLink, i, i);
+	
+	sendString(buf);
+      }
+
+    if(!found)
+      safe_snprintf(buf, sizeof(buf), "[ <b>All</b> ] ");
+    else
+      safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"%s\">All</A> ] ", theVlanLink);
+
+    sendString(buf);
+  }
+
+  sendString("</TD>");
 
   if(reportType != TRAFFIC_STATS) {
     switch(showLocalityMode) {
@@ -526,6 +563,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   	     url, revertOrder ? "-" : "", column, showHostsMode);
       break;
     }
+
     sendString(buf);
     sendString("</TD></TR></TABLE></CENTER><p>");
   }
@@ -3768,16 +3806,17 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString(buf);
 
     if(el->pktMulticastSent.value > 0) {
-      safe_snprintf(buf, sizeof(buf), "Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;-",
+      safe_snprintf(buf, sizeof(buf), "Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;",
 		  formatBytes(el->bytesMulticastSent.value, 1, formatBuf, sizeof(formatBuf)),
 		  formatPkts(el->pktMulticastSent.value, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
     }
 
-    if(el->pktMulticastRcvd.value > 0) {
-      safe_snprintf(buf, sizeof(buf), "Rcvd&nbsp;%s/%s&nbsp;Pkts",
-		  formatBytes(el->bytesMulticastRcvd.value, 1, formatBuf, sizeof(formatBuf)),
-		  formatPkts(el->pktMulticastRcvd.value, formatBuf1, sizeof(formatBuf1)));
+    if(el->pktMulticastRcvd.value > 0) {      
+      safe_snprintf(buf, sizeof(buf), "%sRcvd&nbsp;%s/%s&nbsp;Pkts",
+		    (el->pktMulticastSent.value > 0) ? " - " : "",
+		    formatBytes(el->bytesMulticastRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+		    formatPkts(el->pktMulticastRcvd.value, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
     }
 

@@ -3517,6 +3517,8 @@ int _incrementUsageCounter(UsageCounter *counter,
 
 /* ******************************** */
 
+/* #define DEBUG */
+
 int fetchPrefsValue(char *key, char *value, int valueLen) {
   datum key_data;
   datum data_data;
@@ -3547,7 +3549,9 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
     strncpy(value, data_data.dptr, len);
     value[len] = '\0';
     free(data_data.dptr);
-    /* traceEvent(CONST_TRACE_INFO, "Read %s=%s.", key, value); */
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "Read %s=%s.", key, value); 
+#endif
     return(0);
   } else
     return(-1);
@@ -3583,9 +3587,13 @@ void storePrefsValue(char *key, char *value) {
   if(gdbm_store(myGlobals.prefsFile, key_data, data_data, GDBM_REPLACE) != 0)
     traceEvent(CONST_TRACE_ERROR, "While adding %s=%s.", key, value);
   else {
-    /* traceEvent(CONST_TRACE_INFO, "Storing %s=%s.", key, value); */
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "Storing %s=%s.", key, value); 
+#endif
   }
 }
+
+/* #undef DEBUG */
 
 /* ******************************** */
 

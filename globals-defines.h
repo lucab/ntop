@@ -1528,7 +1528,7 @@
 #define CONST_IMG_FIBRECHANNEL_SWITCH  "<img src=\"/switch.gif\" border=\"0\" alt=\"FibreChannel Switch\">"
 #define CONST_IMG_DHCP_CLIENT          "<img src=\"/bulb.gif\" border=\"0\" alt=\"DHCP Client\">"
 #define CONST_IMG_DHCP_SERVER          "<img src=\"/antenna.gif\" border=\"0\" alt=\"DHCP Server\">"
-#define CONST_IMG_MULTIHOMED           "<img src=\"/multihomed.gif\"\" border=\"0\" alt=\"Multihomed\">"
+#define CONST_IMG_MULTIHOMED           "<img src=\"/multihomed.gif\" border=\"0\" alt=\"Multihomed\">"
 #define CONST_IMG_BRIDGE               "<img src=\"/bridge.gif\" border=\"0\" alt=\"Bridge\">"
 #define CONST_IMG_ROUTER               "<img src=\"/router.gif\" border=\"0\" alt=\"Router\">"
 #define CONST_IMG_DNS_SERVER           "<img src=\"/dns.gif\" border=\"0\" alt=\"DNS\">"
@@ -1593,7 +1593,7 @@
 #define FLAG_SYSLOG_NONE                    -1
 
 
-
+#define MAX_VLAN 4096
 
 /*
  * Define for address resolution missing on Win32

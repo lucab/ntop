@@ -863,6 +863,7 @@ void printTrafficStatistics(int revertOrder) {
     }
 
     sendString("</TABLE>"TABLE_OFF"</TR>");
+
     /* ************************ */
 
 #ifndef EMBEDDED
@@ -1018,7 +1019,8 @@ void printHostsTraffic(int reportTypeReq,
 		       int pageNum,
 		       char* url,
                        HostsDisplayPolicy showHostsMode,
-                       LocalityDisplayPolicy showLocalityMode) {
+                       LocalityDisplayPolicy showLocalityMode,
+		       int vlanId) {
   u_int idx, idx1, numEntries=0;
   int printedEntries=0, hourId, maxHosts;
   char theDate[8];
@@ -1034,8 +1036,13 @@ void printHostsTraffic(int reportTypeReq,
     formatBuf4[32], formatBuf5[32], formatBuf6[32], formatBuf7[32],
     formatBuf8[32], formatBuf9[32];
   int reportType;
+  u_char vlanList[MAX_VLAN];
 
-  reportType=combineReportTypeLocality(reportTypeReq, showLocalityMode);
+  vlanId = abs(vlanId);
+
+  /* traceEvent(CONST_TRACE_INFO, "VLAN: %d", vlanId); */
+
+  reportType = combineReportTypeLocality(reportTypeReq, showLocalityMode);
 
   memset(buf, 0, sizeof(buf));
   switch(reportType) {
@@ -1088,8 +1095,15 @@ void printHostsTraffic(int reportTypeReq,
       break;
   }
 
+  memset(vlanList, 0, sizeof(vlanList));
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el))
+    if(el->vlanId < MAX_VLAN) vlanList[el->vlanId] = 1;
+
   printHTMLheader(buf, NULL, 0);
-  printHeader(reportTypeReq, revertOrder, abs(sortedColumn), showHostsMode, showLocalityMode);
+
+  printHeader(reportTypeReq, revertOrder, abs(sortedColumn), showHostsMode, 
+	      showLocalityMode, vlanList, vlanId);
 
   strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
@@ -1106,7 +1120,9 @@ void printHostsTraffic(int reportTypeReq,
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(!isFcHost (el) && (broadcastHost(el) == 0)) {
       u_char addHost;
-      
+
+      if((vlanId > 0) && (el->vlanId != vlanId)) continue;
+
       if(((showLocalityMode == showOnlySent) && (el->bytesSent.value > 0))
 	 || ((showLocalityMode == showOnlyReceived) && (el->bytesRcvd.value > 0))
 	 || ((showLocalityMode == showSentReceived) && (el->bytesSent.value + el->bytesRcvd.value > 0))) {
@@ -1263,10 +1279,10 @@ void printHostsTraffic(int reportTypeReq,
 	  break;
 	}
 
-	/* Fixed buffer overflow.
-	   Courtesy of Rainer Tammer <rainer.tammer@spg.schulergroup.com>
+	/*
+	  Fixed buffer overflow.
+	  Courtesy of Rainer Tammer <rainer.tammer@spg.schulergroup.com>
 	*/
-
 	strncpy(webHostName, makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, 
 					  hostLinkBuf, sizeof(hostLinkBuf)),
 		sizeof(webHostName));
@@ -1758,7 +1774,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
 /* ******************************* */
 
-void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes) {
+void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes, int vlanId) {
   u_int idx, numEntries=0, maxHosts;
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
@@ -1767,6 +1783,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[11], *theAnchor[11], osBuf[128];
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  u_char vlanList[MAX_VLAN], foundVlan = 0, vlanStr[16];
+
+  memset(vlanList, 0, sizeof(vlanList));
+  vlanId = abs(vlanId);
 
   printHTMLheader("Host Information", NULL, 0);
   
@@ -1777,13 +1797,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
   if(tmpTable == NULL)
       return;
 
-  if(revertOrder) {
-    sign = "";
-    arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
-  } else {
-    sign = "-";
-    arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
-  }
+  if(revertOrder)
+    sign = "", arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
+  else
+    sign = "-", arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
 
   myGlobals.columnSort = sortedColumn;
 
@@ -1792,6 +1809,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     unsigned short actUsage, actUsageS, actUsageR;
 
     if(isFcHost (el) || broadcastHost(el)) continue;
+
+    if((el->vlanId > 0) && (el->vlanId < MAX_VLAN)) { vlanList[el->vlanId] = 1, foundVlan = 1; }
+
+    if((vlanId > 0) && (el->vlanId != vlanId)) continue;
 
     if(showBytes) {
       actUsage  = (unsigned short)(0.5+100.0*(((float)el->bytesSent.value+(float)el->bytesRcvd.value)/
@@ -1831,39 +1852,63 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
     safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=\"/%s?col=", CONST_HOSTS_INFO_HTML);
 
     for(i=1; i<=10; i++) {
-      if(abs(myGlobals.columnSort) == i) {
-	arrow[i] = arrowGif;
-	theAnchor[i] = htmlAnchor;
-      } else {
-	arrow[i] = "";
-	theAnchor[i] = htmlAnchor1;
-      }
+      if(abs(myGlobals.columnSort) == i)
+	arrow[i] = arrowGif, theAnchor[i] = htmlAnchor;
+      else
+	arrow[i] = "", theAnchor[i] = htmlAnchor1;
     }
 
-    if(abs(myGlobals.columnSort) == FLAG_DOMAIN_DUMMY_IDX) {
-      arrow[0] = arrowGif;
-      theAnchor[0] = htmlAnchor;
-    } else {
-      arrow[0] = "";
-      theAnchor[0] = htmlAnchor1;
-    }
+    if(abs(myGlobals.columnSort) == FLAG_DOMAIN_DUMMY_IDX)
+      arrow[0] = arrowGif, theAnchor[0] = htmlAnchor;
+    else
+      arrow[0] = "", theAnchor[0] = htmlAnchor1;
 
     sendString("<P ALIGN=LEFT>");
 
-    if(showBytes) {
-      safe_snprintf(buf, sizeof(buf), 
-		  "<b>Traffic Unit:</b> [ <B>Bytes</B> ]&nbsp;"
-		  "[ <A HREF=\"/%s?col=%d&unit=0\">Packets</A> ]&nbsp;</TD>",
-		  CONST_HOSTS_INFO_HTML, myGlobals.columnSort);
-    } else {
-      safe_snprintf(buf, sizeof(buf), 
-		  "<b>Traffic Unit:</b> [ <A HREF=\"/%s?col=%d&unit=1\">Bytes</A> ]&nbsp;"
-		  "[ <B>Packets</B> ]&nbsp;</TD>", 
-		  CONST_HOSTS_INFO_HTML, myGlobals.columnSort);
-    }
-    sendString(buf);
 
+    if(vlanId > 0)
+      safe_snprintf(vlanStr, sizeof(vlanStr), "&vlan=%d", vlanId);
+    else
+      vlanStr[0] = '\0';
+
+    if(showBytes)
+      safe_snprintf(buf, sizeof(buf), 
+		    "<b>Traffic Unit:</b> [ <B>Bytes</B> ]&nbsp;"
+		    "[ <A HREF=\"/%s?col=%d&unit=0%s\">Packets</A> ]&nbsp;</TD>",
+		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr);
+    else
+      safe_snprintf(buf, sizeof(buf), 
+		    "<b>Traffic Unit:</b> [ <A HREF=\"/%s?col=%d&unit=1%s\">Bytes</A> ]&nbsp;"
+		    "[ <B>Packets</B> ]&nbsp;</TD>", 
+		    CONST_HOSTS_INFO_HTML, myGlobals.columnSort, vlanStr);
+
+    sendString(buf);
     sendString("</P>\n");
+
+    if(foundVlan) {
+      u_char found = 0;
+
+      sendString("<p><b>VLAN</b>: ");
+
+      for(i=0; i<MAX_VLAN; i++)
+	if(vlanList[i] == 1) {
+	  if(i == vlanId)
+	    safe_snprintf(buf, sizeof(buf), "[ <b>%d</b> ] ", i), found = 1;
+	  else
+	    safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d&vlan=%d\">%d</A> ] ",
+			  CONST_HOSTS_INFO_HTML, showBytes, i, i);
+	
+	  sendString(buf);
+	}
+
+      if(!found)
+	safe_snprintf(buf, sizeof(buf), "[ <b>All</b> ] ");
+      else
+	safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d\">All</A> ] ", 
+		      CONST_HOSTS_INFO_HTML, showBytes);
+
+      sendString(buf);
+    }
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       safe_snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
