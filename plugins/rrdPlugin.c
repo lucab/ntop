@@ -2965,7 +2965,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateGauge(rrdPath,   "activeHostSendersNum",  numActiveSenders(devIdx));
 	updateCounter(rrdPath, "ipBytes",       myGlobals.device[devIdx].ipBytes.value);
 
-	updateCounter(rrdPath, "ipLocalBytes",  myGlobals.device[devIdx].tcpGlobalTrafficStats.local.value +
+	updateCounter(rrdPath, "ipLocalToLocalBytes",  myGlobals.device[devIdx].tcpGlobalTrafficStats.local.value +
 						myGlobals.device[devIdx].udpGlobalTrafficStats.local.value +
 						myGlobals.device[devIdx].icmpGlobalTrafficStats.local.value );
 	updateCounter(rrdPath, "ipLocalToRemoteBytes",    myGlobals.device[devIdx].tcpGlobalTrafficStats.local2remote.value +
@@ -2974,6 +2974,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateCounter(rrdPath, "ipRemoteToLocalBytes", myGlobals.device[devIdx].tcpGlobalTrafficStats.remote2local.value +
 						myGlobals.device[devIdx].udpGlobalTrafficStats.remote2local.value +
 						myGlobals.device[devIdx].icmpGlobalTrafficStats.remote2local.value );
+	updateCounter(rrdPath, "ipRemoteToRemoteBytes", myGlobals.device[devIdx].tcpGlobalTrafficStats.remote.value +
+						myGlobals.device[devIdx].udpGlobalTrafficStats.remote.value +
+						myGlobals.device[devIdx].icmpGlobalTrafficStats.remote.value );
 
 	if(myGlobals.device[devIdx].netflowGlobals != NULL) {
 	  updateCounter(rrdPath, "NF_numFlowPkts", myGlobals.device[devIdx].netflowGlobals->numNetFlowsPktsRcvd);
