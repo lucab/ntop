@@ -2804,7 +2804,7 @@ void printHostDetailedInfo(HostTraffic *el) {
       dynIp = "";
 
     if(isMultihomed(el) && (!broadcastHost(el)))
-      multihomed = "&nbsp;-&nbsp;multihomed&nbsp;<IMG ALT=\"Multihomed Host SRC=/multihomed.gif BORDER=0>";
+      multihomed = "&nbsp;-&nbsp;multihomed&nbsp;<IMG ALT=\"Multihomed Host\" SRC=/multihomed.gif BORDER=0>";
     else
       multihomed = "";
 
