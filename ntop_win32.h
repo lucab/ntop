@@ -97,8 +97,7 @@ extern ULONG GetHostIPAddr();
 */
 
 #if defined(WIN32) && defined(__GNUC__)
- #ifndef DIRENT_INCLUDED
-  #define DIRENT_INCLUDED
+#define DIRENT_INCLUDED
 
 struct dirent
 {
@@ -154,7 +153,7 @@ struct	ether_header {
   u_short	ether_type;
 };
 
-#define	ETHERTYPE_PUP		0x0200	/* PUP protocol */
+#define	ETHeRTYPE_PUP		0x0200	/* PUP protocol */
 #define	ETHERTYPE_IP		0x0800	/* IP protocol */
 #define ETHERTYPE_ARP		0x0806	/* Addr. resolution protocol */
 #define ETHERTYPE_REVARP	0x8035	/* reverse Addr. resolution protocol */
