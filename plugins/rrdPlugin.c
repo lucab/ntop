@@ -45,7 +45,7 @@ if the plugin is active, the other is through the http function if the
 plugin is NOT active.  So initialize stuff in BOTH places!
 
 
-Aberrant RRD Behavior (http://cricket.sourceforge.net/aberrant/) 
+Aberrant RRD Behavior (http://cricket.sourceforge.net/aberrant/)
 patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 
 2.4     General cleanup
@@ -87,8 +87,8 @@ char startTimeBuf[32], endTimeBuf[32], fileTimeBuf[32];
 /* forward */
 int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average);
-void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
-		  char *startTime, char* endTime, char* rrdPrefix);
+void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *startTime, char* endTime, char* rrdPrefix);
+void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 void updateCounter(char *hostPath, char *key, Counter value);
 void updateGauge(char *hostPath, char *key, Counter value);
 void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter);
@@ -108,7 +108,7 @@ static PluginInfo rrdPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
     "This plugin also produces the graphs of rrd data, available via a "
     "link from the various 'Info about host xxxxx' reports.",
-    "2.4", /* version */
+    "2.5", /* version */
     "<a HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
     1, /* Active by default */
@@ -243,7 +243,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   if(rc == -1) {
 #if RRD_DEBUG >= 3
     int x;
-    
+
     for (x = 0; x < argc; x++)
       traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
 #endif
@@ -276,7 +276,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   char path[512], url[256], formatBuf[32];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
-  int numEntries = 0;
+  int numEntries = 0, i, min, max;
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
@@ -333,7 +333,23 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   sendString("</p>\n<p>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
-  sendString("<TR><TH "DARK_BG">Graph</TH><TH "DARK_BG">Total</TH></TR>\n");
+  sendString("<TR><TH "DARK_BG" COLSPAN=2>Traffic Summary</TH></TR>\n");
+  
+  if(strncmp(rrdTitle, "interface", strlen("interface")) == 0) {
+    min = 0, max = 4;
+  } else {
+    min = 5, max = 6;
+  }
+   
+  for(i=min; i<=max; i++) {
+    sendString("<TR><TD COLSPAN=2 ALIGN=CENTER>");
+    if(snprintf(path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
+		i, rrdPath, startTime, endTime) < 0)
+      BufferTooShort();
+    sendString(path);
+  }
+
+  sendString("<TR><TH "DARK_BG">Traffic Counter Detail</TH><TH "DARK_BG">Total</TH></TR>\n");
 
   while((dp = readdir(directoryPointer)) != NULL) {
     char *rsrcName;
@@ -468,9 +484,9 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     argv[argc++] = "--font";
  #ifdef CONST_RRD_DEFAULT_FONT_PATH
     argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" \
-                   CONST_RRD_DEFAULT_FONT_PATH CONST_RRD_DEFAULT_FONT_NAME; 
+                   CONST_RRD_DEFAULT_FONT_PATH CONST_RRD_DEFAULT_FONT_NAME;
  #else
-    argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" CONST_RRD_DEFAULT_FONT_NAME; 
+    argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" CONST_RRD_DEFAULT_FONT_NAME;
  #endif
 #endif
 #ifdef WIN32
@@ -524,7 +540,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
       for (x = 0; x < argc; x++)
 	traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
 #endif
-      
+
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader("RRD Graph", NULL, 0);
       if(snprintf(path, sizeof(path),
@@ -537,13 +553,176 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
 #ifdef CFG_MULTITHREADED
     releaseMutex(&rrdMutex);
-#endif    
+#endif
   } else {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("RRD Graph", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD file)</I>");
   }
+}
+
+/* ******************************************* */
+
+#define MAX_NUM_ENTRIES   32
+#define MAX_BUF_LEN       96
+
+void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
+  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
+  char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], fname[384], *label;
+  char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
+  int argc = 0, rc, x, y, i, entryId=0;
+  DIR* directoryPointer;
+
+  switch(graphId) {
+  case 0: rrds = (char**)rrd_summary_packets; label = "Packets/sec"; break;
+  case 1: rrds = (char**)rrd_summary_packet_sizes; label = "Packets/sec"; break;
+  case 2: rrds = (char**)rrd_summary_proto_bytes; label = "Bytes/sec"; break;
+  case 3: rrds = (char**)rrd_summary_ipproto_bytes; label = "Bytes/sec"; break;
+  case 4:
+    if(snprintf(path, sizeof(path), "%s/%s", myGlobals.rrdPath, rrdPath) < 0) BufferTooShort();
+
+#ifdef WIN32
+    revertSlash(path, 0);
+#endif
+
+    directoryPointer = opendir(path);
+
+    if(directoryPointer == NULL)
+      rrds = NULL;
+    else {
+      struct dirent* dp;
+
+      i = 0;
+
+      while((dp = readdir(directoryPointer)) != NULL) {
+	int len = strlen(dp->d_name);
+
+	if(dp->d_name[0] == '.') continue;
+	else if(len < 7 /* IP_ + .rrd */ ) continue;
+	else if(strncmp(dp->d_name, "IP_", 3)) continue;
+
+	len -= 4; if(len > MAX_BUF_LEN) len = MAX_BUF_LEN-1;
+	dp->d_name[len] = '\0';
+	snprintf(ipRRDs[i], MAX_BUF_LEN, "%s", dp->d_name);
+	myRRDs[i] = ipRRDs[i];
+	i++; if(i >= MAX_NUM_ENTRIES) break;
+      }
+
+      myRRDs[i] = NULL;
+      rrds = (char**)myRRDs;
+      closedir(directoryPointer);
+    }
+    break;
+  case 5: rrds = (char**)rrd_summary_host_sentRcvd_packets; label = "Packets/sec"; break;
+  case 6: rrds = (char**)rrd_summary_host_sentRcvd_bytes; label = "Bytes/sec"; break;
+  }
+
+  /* startTime[4] skips the 'now-' */
+  if(snprintf(fname, sizeof(fname), "%s/%s/%s-%s%d%s",
+	      myGlobals.rrdPath, rrd_subdirs[0], 
+	      startTime, rrdPrefix, graphId,
+	      CHART_FORMAT) < 0)
+    BufferTooShort();
+
+#ifdef WIN32
+  revertSlash(fname, 0);
+#endif
+
+  if(rrds == NULL) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printHTMLheader("RRD Graph Summary", NULL, 0);
+    printFlagedWarning("<I>Error while building graph of the requested file "
+		       "(unknown RRD files)</I>");
+    return;
+  }
+
+  rrdGraphicRequests++;
+  argv[argc++] = "rrd_graph";
+  argv[argc++] = fname;
+  argv[argc++] = "--lazy";
+  argv[argc++] = "--imgformat";
+  argv[argc++] = "PNG";
+  argv[argc++] = "--vertical-label";
+  argv[argc++] = label;
+  argv[argc++] = "--start";
+  argv[argc++] = startTime;
+  argv[argc++] = "--end";
+  argv[argc++] = endTime;
+#ifdef CONST_RRD_DEFAULT_FONT_NAME
+  argv[argc++] = "--font";
+#ifdef CONST_RRD_DEFAULT_FONT_PATH
+  argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" \
+    CONST_RRD_DEFAULT_FONT_PATH CONST_RRD_DEFAULT_FONT_NAME;
+#else
+  argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" CONST_RRD_DEFAULT_FONT_NAME;
+#endif
+#endif
+#ifdef WIN32
+  revertDoubleColumn(path);
+#endif
+
+  for(i=0, entryId=0; rrds[i] != NULL; i++) {
+    struct stat statbuf;
+
+    if(snprintf(path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrds[i]) < 0) BufferTooShort();
+
+#ifdef WIN32
+    revertSlash(path, 0);
+#endif
+
+    if(stat(path, &statbuf) == 0) {
+      if(snprintf(buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path) < 0) BufferTooShort(); argv[argc++] = buf[entryId];
+      if(snprintf(buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
+		  entryId, rrd_colors[entryId], rrds[i]) < 0) BufferTooShort(); argv[argc++] = buf1[entryId];
+      entryId++;
+    }
+
+    if(entryId >= MAX_NUM_ENTRIES) break;
+  }
+
+#if 0
+  printf("\n");
+  for(i=0; i<argc; i++)
+    printf("RRD_DEBUG: [%d][%s]\n", i, argv[i]);
+  printf("\n");
+#endif
+
+#ifdef CFG_MULTITHREADED
+  accessMutex(&rrdMutex, "rrd_graph");
+#endif
+  optind=0; /* reset gnu getopt */
+  opterr=0; /* no error messages */
+
+  fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+  rrd_clear_error();
+  rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+
+  calfree();
+
+  if(rc == 0) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0, 1);
+    sendGraphFile(fname, 0);
+    unlink(fname);
+  } else {
+#if RRD_DEBUG >= 3
+    for (x = 0; x < argc; x++)
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+#endif
+
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printHTMLheader("RRD Graph Summary", NULL, 0);
+    if(snprintf(path, sizeof(path),
+		"<I>Error while building graph of the requested file. %s</I>",
+		rrd_get_error()) < 0)
+      BufferTooShort();
+    printFlagedWarning(path);
+    rrd_clear_error();
+  }
+
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&rrdMutex);
+#endif
 }
 
 /* ******************************* */
@@ -683,11 +862,11 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     if(rrd_test_error()) {
 #if RRD_DEBUG >= 3
       int x;
-      
+
       for (x = 0; x < argc; x++)
 	traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
 #endif
-      
+
       traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s", path, rrd_get_error());
       rrd_clear_error();
       numRRDerrors++;
@@ -1030,7 +1209,8 @@ static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
     rrdKey[64], rrdName[64], rrdTitle[64], startTime[32], endTime[32], rrdPrefix[32];
   u_char action = FLAG_RRD_ACTION_NONE;
-  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpMatrix, _dumpDetail, _dumpInterval, _dumpHours, _dumpDays, _dumpMonths;
+  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces, 
+    _dumpMatrix, _dumpDetail, _dumpInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
   char * _hostsFilter;
 #ifndef WIN32
   int _dumpPermissions;
@@ -1076,6 +1256,7 @@ static void handleRRDHTTPrequest(char* url) {
 
 	if(strcmp(key, "action") == 0) {
 	  if(strcmp(value, "graph") == 0)     action = FLAG_RRD_ACTION_GRAPH;
+	  else if(strcmp(value, "graphSummary") == 0) action = FLAG_RRD_ACTION_GRAPH_SUMMARY;
 	  else if(strcmp(value, "list") == 0) action = FLAG_RRD_ACTION_LIST;
 	} else if(strcmp(key, "key") == 0) {
 	  int len = strlen(value), i;
@@ -1096,6 +1277,8 @@ static void handleRRDHTTPrequest(char* url) {
           } else {
 	    rrdPrefix[0] = '\0';
           }
+	} else if(strcmp(key, "graphId") == 0) {
+	  graphId = atoi(value);
 	} else if(strcmp(key, "name") == 0) {
 	  int len = strlen(value), i;
 
@@ -1250,6 +1433,9 @@ static void handleRRDHTTPrequest(char* url) {
   if(action == FLAG_RRD_ACTION_GRAPH) {
     graphCounter(rrdKey, rrdName, rrdTitle, startTime, endTime, rrdPrefix);
     return;
+  } else if(action == FLAG_RRD_ACTION_GRAPH_SUMMARY) {
+    graphSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
+    return;
   } else if(action == FLAG_RRD_ACTION_LIST) {
     listResource(rrdKey, rrdTitle, startTime, endTime);
     return;
@@ -1260,9 +1446,9 @@ static void handleRRDHTTPrequest(char* url) {
 
   if(active == 1)
     sendString("<p>You must restart the rrd plugin for changes here to take affect.</p>\n");
-  else 
+  else
     sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
- 
+
   sendString("<center><form action=\"/plugins/rrdPlugin\" method=GET>\n"
              "<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
              "<TR><TH ALIGN=CENTER "DARK_BG">Item</TH>"
@@ -1435,7 +1621,7 @@ static void handleRRDHTTPrequest(char* url) {
                      "was created by "
                      "<a href=\"http://ee-staff.ethz.ch/~oetiker/\" title=\"Tobi's home page\">"
                      "Tobi Oetiker</a>");
- 
+
   printHTMLtrailer();
 }
 
@@ -1751,9 +1937,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
                   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
                   continue;
-                } 
+                }
 
-		if((!myGlobals.dontTrustMACaddr) 
+		if((!myGlobals.dontTrustMACaddr)
 		   && subnetPseudoLocalHost(el)
 		   && (el->ethAddressString[0] != '\0')) /*
 							   NOTE:
@@ -1780,9 +1966,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		       adjHostName) < 0)
                 BufferTooShort();
 	      mkdir_p(rrdPath);
-	      
+
 #if RRD_DEBUG >= 2
-	      traceEvent(CONST_TRACE_INFO, "RRD: Updating %s [%s/%s]", 
+	      traceEvent(CONST_TRACE_INFO, "RRD: Updating %s [%s/%s]",
 			 hostKey, el->hostNumIpAddress, el->ethAddressString);
 #endif
 
@@ -1856,7 +2042,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		  if(snprintf(buf, sizeof(buf), "%sRcvd", protoList->protocolName) < 0) BufferTooShort();
 		  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx].rcvd);
 		  idx++, protoList = protoList->next;
-		}		
+		}
 	      }
 
 	      if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
@@ -1977,7 +2163,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	  protoList = myGlobals.ipProtosList, idx=0;
 	  while(protoList != NULL) {
-	    updateCounter(rrdPath, protoList->protocolName, myGlobals.device[devIdx].ipProtosList[idx].value);	    
+	    updateCounter(rrdPath, protoList->protocolName, myGlobals.device[devIdx].ipProtosList[idx].value);
 	    idx++, protoList = protoList->next;
 	  }
 	}
@@ -2097,7 +2283,7 @@ static int initRRDfunct(void) {
     BufferTooShort();
   if(_mkdir(dname) == -1) {
     if(errno != EEXIST) {
-      traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)", 
+      traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)",
 		 errno, dname);
       setPluginStatus("Disabled - unable to create rrd base directory.");
       /* Return w/o creating the rrd thread ... disabled */
@@ -2155,7 +2341,7 @@ static void termRRDfunct(void) {
     rc = killThread(&rrdThread);
     if (rc == 0)
       traceEvent(CONST_TRACE_INFO, "RRD: killThread() succeeded");
-    else 
+    else
       traceEvent(CONST_TRACE_ERROR, "RRD: killThread() failed, rc %s(%d)", strerror(rc), rc);
   }
 #endif
