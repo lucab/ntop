@@ -974,13 +974,14 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 
   printHTMLheader("Host Information", 0);
 
-  printHeader(0, revertOrder, abs(sortedColumn));
+  /* printHeader(0, revertOrder, abs(sortedColumn)); */
 
   for(idx=1, numEntries=0; idx<device[actualDeviceId].actualHashSize; idx++)
     if((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL) {
       unsigned short actUsage;
 
-      actUsage = (unsigned short)(100*((float)el->bytesSent/(float)device[actualReportDeviceId].ethernetBytes));
+      actUsage = (unsigned short)(100*((float)el->bytesSent/
+				       (float)device[actualReportDeviceId].ethernetBytes));
 
       el->actBandwidthUsage = actUsage;
       if(el->actBandwidthUsage > maxBandwidthUsage)
@@ -1053,7 +1054,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
       theAnchor[0] = htmlAnchor1;
     }
 
-    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1>\n<TR>"
+    if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR>"
 		"<TH "TH_BG">%s1>Host%s</A></TH>"
 		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
 		"</TH><TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
@@ -1096,11 +1097,11 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	    tmpName3 = separator;
 
 	  if(snprintf(buf, sizeof(buf), "<TR %s>"
-		   "%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		   "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
-		   getRowColor(),
-		   makeHostLink(el, LONG_FORMAT, 0, 1),
-		   tmpName1, tmpName3) < 0) 
+		      "%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+		      getRowColor(),
+		      makeHostLink(el, LONG_FORMAT, 0, 1),
+		      tmpName1, tmpName3) < 0) 
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
