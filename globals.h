@@ -80,7 +80,7 @@ typedef struct ntopGlobals {
 
 #ifndef WIN32
   u_short debugMode;                 /* 'K' */
-  u_short useSyslog;                 /* 'L' */
+  int useSyslog;                     /* 'L' */
 #endif
 
   int mergeInterfaces;               /* 'M' */

@@ -34,10 +34,6 @@
 #include "ntop.h"
 #include <stdarg.h>
 
-#ifndef WIN32
-#include <syslog.h>
-#endif
-
 /* #define MEMORY_DEBUG  */
 
 #define MAX_DEVICE_NAME_LEN   64
@@ -2099,14 +2095,14 @@ void traceEvent(int eventTraceLevel, char* file,
     struct tm t;
 
 #ifndef WIN32
-      if(myGlobals.useSyslog)
-	openlog("ntop", LOG_PID, LOG_DAEMON);
+      if(myGlobals.useSyslog != -1)
+	openlog("ntop", LOG_PID, myGlobals.useSyslog);
 #endif
 
 #ifdef WIN32
 	  if(1)
 #else
-	  if(!myGlobals.useSyslog)
+	  if(myGlobals.useSyslog == -1)
 #endif
 	    {
 	      strftime(theDate, 32, "%d/%b/%Y %H:%M:%S", localtime_r(&theTime, &t));
@@ -2129,7 +2125,7 @@ void traceEvent(int eventTraceLevel, char* file,
 #ifdef WIN32
 	  if(1)
 #else
-      if(!myGlobals.useSyslog)
+      if(myGlobals.useSyslog == -1)
 #endif
 	{
 	printf("%s", buf);
@@ -2166,7 +2162,7 @@ void traceEvent(int eventTraceLevel, char* file,
     }
 
 #ifndef WIN32
-  if(myGlobals.useSyslog)
+  if(myGlobals.useSyslog != -1)
     closelog();
 #endif
 }

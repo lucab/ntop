@@ -407,21 +407,18 @@ int getdomainname(char *name, size_t len);
 
 
 /*
- * Libwrap support
- * courtesy of Georg Schwarz <schwarz@itp4.physik.TU-Berlin.DE>
+ * Burton Strauss - BStrauss@acm.org - removed HAVE_TCPD_H test so that constants are available
  */
-#if defined(HAVE_TCPD_H)
 
 #include <tcpd.h>
 #include <syslog.h>
-# ifndef SYSLOG_FACILITY
-#  define SYSLOG_FACILITY LOG_DAEMON   /* default value, if not specified otherwise */
+
+# ifndef DEFAULT_SYSLOG_FACILITY
+#  define DEFAULT_SYSLOG_FACILITY LOG_DAEMON   /* default value, if not specified otherwise */
 # endif
 # ifndef DAEMONNAME
 #  define DAEMONNAME      "ntop"       /* for /etc/hosts.allow, /etc/hosts.deny */
 # endif
-
-#endif /* HAVE_TCPD_H */
 
 #ifdef ELECTRICFENCE
 #include "efence.h"

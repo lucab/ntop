@@ -17,6 +17,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+/*
+ * Define so that syslog.h creates the name structures...
+ */
+#define SYSLOG_NAMES
+
 #define USE_CGI
 
 #include "ntop.h"
@@ -739,6 +745,18 @@ void printNtopConfigInfo(void) {
 
   /* *************************** */
 
+  if (myGlobals.useSyslog != -1) {
+      int i;
+      for (i=0; facilitynames[i].c_name != NULL; i++) {
+          if (facilitynames[i].c_val == myGlobals.useSyslog) {
+              printFeatureConfigInfo("System logging to", facilitynames[i].c_name);
+              break;
+          }
+      }
+  }
+
+  /* *************************** */
+
 #ifdef HAVE_PCAP_VERSION
   printFeatureConfigInfo("Libpcap version", pcap_version);
 #endif /* HAVE_PCAP_VERSION */
@@ -1203,7 +1221,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
       fromhost(&req);
       if(!hosts_access(&req)) {
 	closelog(); /* just in case */
-	openlog(DAEMONNAME,LOG_PID,SYSLOG_FACILITY);
+	openlog(DAEMONNAME,LOG_PID,myGlobals.useSyslog);
 	syslog(deny_severity, "refused connect from %s", eval_client(&req));
       }
       else

@@ -201,7 +201,13 @@ void detachFromTerminal(void) {
 #endif
 
 #ifndef WIN32
-  myGlobals.useSyslog = 1; /* Log in the syslog */
+  /* Child processes must log to syslog.
+   * If no facility was set through -L | --use-syslog=facility
+   * then force the default
+   */
+  if (myGlobals.useSyslog == -1) {
+      myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
+  }
 #endif
 
   chdir("/");

@@ -21,6 +21,11 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/*
+ * Define so that syslog.h creates the name structures...
+ */
+#define SYSLOG_NAMES
+
 #include "ntop.h"
 #include "globals-report.h"
 
@@ -118,7 +123,6 @@ static struct option const long_options[] = {
 
 #ifndef WIN32
   { "debug",                            no_argument,       NULL, 'K' },
-  { "use-syslog",                       no_argument,       NULL, 'L' },
 #endif
 
   { "no-interface-merge",               no_argument,       NULL, 'M' },
@@ -146,6 +150,9 @@ static struct option const long_options[] = {
    */
 #ifdef HAVE_GDCHART
   { "throughput-bar-chart",             no_argument,       NULL, 129 },
+#endif
+#ifndef WIN32
+  { "use-syslog",                       optional_argument, NULL, 131 },
 #endif
 
   {NULL, 0, NULL, 0}
@@ -233,7 +240,8 @@ void usage (FILE * fp) {
 
 #ifndef WIN32
   fprintf(fp, "    [-K             | --enable-debug]                     Enable debug mode\n");
-  fprintf(fp, "    [-L             | --enable-syslog]                    Enable logging via syslog\n");
+  fprintf(fp, "    [-L ]                                                 Do logging via syslog\n");
+  fprintf(fp, "    [                 --use-syslog=<facility>]            Do logging via syslog, facility - Note that the = is REQUIRED\n");
 #endif
 
   fprintf(fp, "    [-M             | --no-interface-merge]               Don't merge network interfaces (see man page)\n");
@@ -529,7 +537,7 @@ static int parseOptions(int argc, char* argv []) {
       break;
 
     case 'L':
-      myGlobals.useSyslog = 1;
+      myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
       break;
 #endif
 
@@ -609,6 +617,48 @@ static int parseOptions(int argc, char* argv []) {
 #ifdef HAVE_GDCHART
     case 129:
       myGlobals.throughput_chart_type = GDC_BAR;
+      break;
+#endif
+
+#ifndef WIN32
+    case 131:
+      /*
+       * Burton Strauss (BStrauss@acm.org) allow --use-syslog <facility>
+       *
+       *   Note that the = is REQUIRED for optional-argument to work...  
+       *        If you don't have it, getopt invokes this case with optind=nil
+       *        and throws away the argument.
+       *         (While it's visable in the next entry of argv[], that's just to complex to code
+       *          for all the possible cases).
+       *
+       *   Also, if theOpts uses L: then there MUST be an argument. (L:: is an extension)
+       *
+       *   Accordingly the case 'L'/131 was split and:
+       *     -L sets myGlobals.useSyslog to the default facility (DEFAULT_SYSLOG_FACILITY in ntop.h)
+       *     --use-syslog requires a facility parameter (see /usr/include/sys/syslog.h)
+       */
+      if (optarg) {
+          int i;
+
+          stringSanityCheck(optarg);
+
+          for (i=0; facilitynames[i].c_name != NULL; i++) {
+              if (strcmp(optarg, facilitynames[i].c_name) == 0) {
+                  break;
+              }
+          }
+
+          if (facilitynames[i].c_name == NULL) {
+              printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
+                     optarg);
+              myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
+          } else {
+              myGlobals.useSyslog = facilitynames[i].c_val;
+          }
+      } else {
+          printf("NOTE: --use-syslog with no facility, using default value\n");
+          myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
+      }
       break;
 #endif
 

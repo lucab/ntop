@@ -73,7 +73,9 @@ Unix options:
 .IR <user> ]
 .RB [ -E | --enable-external-tools ]
 .RB [ -K | --enable-debug ]
-.RB [ -L | --enable-syslog ]
+.RB [ -L ]
+.RB [ -use-syslog
+.IR <facility> ]
 
 Win32 option:
 
@@ -264,8 +266,11 @@ and added to the LucaHosts flow, whereas all the packet routed by the gateway ga
 .It2 -K --enable-debug
 Use this flag to simplify application debug (eg. fork() is not used etc.)
 
-.It2 -L --enable-syslog
+.It -L
 Use this flag for using the syslog instead of stdout. Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
+
+.It --use-syslog=facility
+Use this flag for using the syslog instead of stdout. The parameter value indicates the facility (e.g. daemon, security) to be used for logging.  Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
 
 .It2 -M --no-interface-merge
 Forces ntop not to merge network interfaces together. This means that ntop will collect statistics for each interface and will not merge data together.

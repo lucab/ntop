@@ -32,7 +32,7 @@ SYNOPSIS
 
        [-d|--daemon]  [-i|--interface  <name>] [-u|--user <user>]
        [-E|--enable-external-tools]           [-K|--enable-debug]
-       [-L|--enable-syslog]
+       [-L] [--use-syslog=<facility>]
 
        Win32 option:
 

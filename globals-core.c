@@ -132,7 +132,7 @@ void initNtopGlobals(int argc, char * argv[]) {
 
 #ifndef WIN32
   myGlobals.debugMode = 0;
-  myGlobals.useSyslog = 0;
+  myGlobals.useSyslog = -1;
 #endif
 
   myGlobals.mergeInterfaces = 1;     /* by default ntop will merge network interfaces */
