@@ -413,7 +413,13 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
 #endif
 
   thePtr = malloc(sz);
-  memset(thePtr, 0xee, sz); /* Fill it with garbage */
+  
+  if(thePtr == NULL) {
+    traceEvent(TRACE_ERROR, "ERROR: malloc(%x) @ %s:%d returned NULL [no more memory?]",
+	       sz, file, line);
+  } else
+    memset(thePtr, 0xee, sz); /* Fill it with garbage */
+
   return(thePtr);
 }
 
@@ -432,6 +438,13 @@ void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {
 #endif
   
   thePtr = calloc(c, sz);
+
+  if(thePtr == NULL) {
+    traceEvent(TRACE_ERROR, 
+	       "ERROR: calloc(%x) @ %s:%d returned NULL [no more memory?]",
+	       sz, file, line);
+  }
+  
   return(thePtr);
 }
 
@@ -450,6 +463,13 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
 #endif
   
   thePtr = realloc(ptr, sz);
+
+  if(thePtr == NULL) {
+    traceEvent(TRACE_ERROR, 
+	       "ERROR: realloc(%x) @ %s:%d returned NULL [no more memory?]",
+	       sz, file, line);
+  }
+
   return(thePtr);
 }
 
