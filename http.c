@@ -1600,6 +1600,14 @@ static int returnHTTPPage(char* pageName,
     printTrailer=0;
     printMutexStatusReport(0);
 #endif
+  } else if(strncmp(pageName, CONST_PRIVACYCLEAR_HTML, strlen(CONST_PRIVACYCLEAR_HTML)) == 0) {
+    storePrefsValue("globals.displayPrivacyNotice", "0");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PRIVACY: Flag cleared, notice will display next run");
+    returnHTTPredirect(CONST_PRIVACYNOTICE_HTML);
+  } else if(strncmp(pageName, CONST_PRIVACYFORCE_HTML, strlen(CONST_PRIVACYFORCE_HTML)) == 0) {
+    storePrefsValue("globals.displayPrivacyNotice", "2");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PRIVACY: Flag forced, notice will display each run");
+    returnHTTPredirect(CONST_PRIVACYNOTICE_HTML);
   } else {
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
@@ -1802,12 +1810,14 @@ static int returnHTTPPage(char* pageName,
                  "ALT=\"Admin URLs\">Admin URLs</a></li>\n");
 
       if(!myGlobals.mergeInterfaces)
-	sendString("<li><a href=" CONST_SWITCH_NIC_HTML" target=area "
+	sendString("<li><a href=" CONST_SWITCH_NIC_HTML " target=area "
                    "ALT=\"Switch NICs\">Switch NICs</a></li>\n");
 
-      sendString("<li><a href=" CONST_SHUTDOWN_NTOP_HTML" target=area "
+      sendString("<li><a href=\"" CONST_SHUTDOWN_NTOP_HTML "\" target=area "
                  "ALT=\"Shutdown ntop\">Shutdown ntop</a></li>\n");
-      sendString("<li><a href=" CONST_MAN_NTOP_HTML " target=area "
+      sendString("<li><a href=\"" CONST_PRIVACYNOTICE_HTML "\" target=area "
+                 "ALT=\"Privacy Notice\">Privacy Notice</a></li>\n");
+      sendString("<li><a href=\"" CONST_MAN_NTOP_HTML "\" target=area "
                  "ALT=\"Man Page\">Man Page</a></li>\n");
       sendString("<li><a href=\"" CONST_CREDITS_HTML "\" target=area "
                  "ALT=\"Credits\">Credits</a></li>\n");
@@ -1859,7 +1869,9 @@ static int returnHTTPPage(char* pageName,
       sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
       sendString("to the enclosed licence (see COPYING).<p>Problems, bugs, questions, ");
       sendString("desirable enhancements, source code contributions, etc., should be sent to the ");
-      sendString("<A HREF=mailto:ntop@ntop.org> mailing list</A>.\n</font>");
+      sendString("<A HREF=mailto:ntop@ntop.org> mailing list</A>.\n");
+      sendString("<br>For information on <b>ntop</b> and information privacy, see ");
+      sendString("<A HREF=\"" CONST_PRIVACYNOTICE_HTML "\">this</A> page.\n</font>");
     } else if(strncmp(pageName, CONST_SORT_DATA_RECEIVED_PROTOS_HTML,
 		      strlen(CONST_SORT_DATA_RECEIVED_PROTOS_HTML)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);

@@ -1008,5 +1008,6 @@ void addDefaultAdminUser(void) {
   addKeyIfMissing("2shut",       "users=1admin", 0, 0, NULL);
   addKeyIfMissing("2resetStats", "users=1admin", 0, 0, NULL);
   addKeyIfMissing("2chang",      "users=1admin", 0, 0, NULL);
+  addKeyIfMissing("2privacyFlag","users=1admin", 0, 0, NULL);
 }
 

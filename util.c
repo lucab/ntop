@@ -4774,8 +4774,22 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
 void displayPrivacyNotice(void) {
   char value[8];
 
+  /* globals.displayPrivacyNotice:
+   *
+   * 0 (or not present) means display one-time
+   * 1                  means already displayed
+   * 2                  means display every time
+   */
   if(fetchPrefsValue("globals.displayPrivacyNotice", value, sizeof(value)) == -1) {
+    value[0]='0';
+    value[1]='\0';
+  }
+traceEvent(CONST_TRACE_INFO, "TEMP: globals.displayPrivacyNotice '%s'", value);
+  switch (value[0]) {
+  case '0':
     storePrefsValue("globals.displayPrivacyNotice", "1");
+    /* NO BREAK HERE... fall into next case so we do the one-time display */
+  case '2':
     traceEvent(CONST_TRACE_ALWAYSDISPLAY,
 	       "CHKVER: **********************PRIVACY**NOTICE**********************");
     traceEvent(CONST_TRACE_ALWAYSDISPLAY,
