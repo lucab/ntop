@@ -4111,7 +4111,7 @@ void printSectionTitle(char *text) {
 void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 
-  if(mutexId->lockLine == 0) /* Mutex never used */
+  if(mutexId->numLocks == 0) /* Mutex never used */
     return;
   if(textPrintFlag == TRUE) {
     if(mutexId->lockAttemptLine > 0) {
@@ -4129,7 +4129,8 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
                     "     unlocked: %u times, last was %s:%d(%d)\n"
                     "     longest: %d sec from %s:%d\n",
                     mutexId->numReleases, mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
-                    mutexId->maxLockedDuration, mutexId->maxLockedDurationUnlockFile, mutexId->maxLockedDurationUnlockLine) < 0)
+                    mutexId->maxLockedDuration, mutexId->maxLockedDurationUnlockFile,
+		    mutexId->maxLockedDurationUnlockLine) < 0)
           BufferTooShort();
     } else {
         if(snprintf(buf, sizeof(buf),
@@ -4155,7 +4156,7 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
-                    "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"LEFT\">%u</TD>"
+                    "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%u</TD>"
                     "<TD ALIGN=\"RIGHT\">%d sec [%s:%d]</TD></TR>",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
@@ -4173,7 +4174,7 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
                     "<TD ALIGN=\"RIGHT\">&nbsp;</TD>"
                     "<TD ALIGN=\"RIGHT\">%s:%d(%d)</TD>"
-                    "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"LEFT\">%u</TD>"
+                    "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%u</TD>"
                     "<TD ALIGN=\"RIGHT\">%d sec [%s:%d]</TD></TR>",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
