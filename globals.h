@@ -97,6 +97,7 @@
 #define MAX_NUM_BAD_IP_ADDRESSES         3
 #define NTOP_DEFAULT_BAD_ACCESS_TIMEOUT  5*60  /* 5 minutes */
 
+#define NTOP_GDC_OUT_PIE_ERROR           "pie-error.png"
 
 /*
  * Other sizes and limits...

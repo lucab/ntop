@@ -39,6 +39,99 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 
 /* ************************ */
 
+void _GDC_out_pie(short width,
+                  short height,
+                  FILE* filepointer,            /* open file pointer, can be stdout */
+                  GDCPIE_TYPE pietype,
+                  int   num_points,
+                  char  *labels[],              /* slice labels */
+                  float data[] ) {
+
+  int status;
+  pid_t wait_result, fork_result;
+  FILE *fd;
+  int idx, i, found, len;
+  struct stat statbuf;
+  char tmpStr[512];
+
+  fork_result = fork();
+
+  if (fork_result == (pid_t) -1) {
+    traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(001) - fork failed!");
+    return;
+  }
+  if (fork_result == (pid_t) 0) {
+
+    traceEvent(TRACE_INFO, "INFO: GDC_out_pie - in child, calling\n");
+    GDC_out_pie(width,
+                height,
+                filepointer,
+                pietype,
+                num_points,
+                labels,
+                data);
+    traceEvent(TRACE_INFO, "INFO: GDC_out_pie - in child, returned\n");
+    return;
+  }
+
+  /* parent */
+  wait_result = wait(&status);
+  if (wait_result == (pid_t) -1) {
+      traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(002) - wait failed/interrupted");
+  } else if (wait_result != fork_result) {
+      traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(003) - unexpected child termination");
+  } else if (status) {
+       traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(004) - child abnormal termination");
+  } else {
+       traceEvent(TRACE_INFO, "INFO: GDC_out_pie - in parent, ran OK\n");
+       return;
+  }
+
+  /* Some kind of failure -- send PIE-ERROR.png */
+
+  /* Search in the local directory first... */
+  found=0;
+  for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
+
+      if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s",
+                  myGlobals.dataFileDirs[idx], NTOP_GDC_OUT_PIE_ERROR) < 0)
+          BufferTooShort();
+  
+#ifdef WIN32
+      i=0;
+      while(tmpStr[i] != '\0') {
+          if(tmpStr[i] == '/') tmpStr[i] = '\\';
+          i++;
+      }
+#endif
+  
+      if(stat(tmpStr, &statbuf) == 0) {
+          if((fd = fopen(tmpStr, "rb")) != NULL) {
+              found = 1;
+              break;
+          }
+      }
+  }
+  
+  if(fd != NULL) {
+      for(;;) {
+          len = fread(tmpStr, sizeof(char), sizeof(tmpStr), fd);
+          if(len <= 0) break;
+              sendStringLen(tmpStr, len);
+      }
+
+      fclose(fd);
+  } else {
+      traceEvent(TRACE_ERROR, "ERROR: GDC_out_pie(005) - unable to find %s\n", 
+                              NTOP_GDC_OUT_PIE_ERROR);
+  }
+  return;
+}
+
+#define GDC_out_pie(w, h, file, type, slices, labels, data) _GDC_out_pie(w, h, file, type, slices, labels, data)
+
+/* ************************ */
+
 void sendGraphFile(char* fileName) {
   FILE *fd;
   int len;
