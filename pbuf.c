@@ -2978,18 +2978,6 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
   strftime(theDate, 8, "%H", localtime_r(&actTime, &t));
   hourId = atoi(theDate);
 
-  if(length > mtuSize[device[deviceId].datalink]) {
-    /* Sanity check */
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Wrong packet length (%lu on %s (deviceId=%d) [too long1]!\n",
-              (unsigned long)length,
-              device[actualDeviceId].name, deviceId);
-#endif
-    /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-    length = mtuSize[device[deviceId].datalink];
-    device[actualDeviceId].rcvdPktStats.tooLong++;
-  }
-
   srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
   dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
@@ -3079,7 +3067,7 @@ static void processIpPkt(const u_char *bp,
   struct tcphdr tp;
   struct udphdr up;
   struct icmp icmpPkt;
-  u_int hlen, tcpDataLength, udpDataLength, off;
+  u_int hlen, tcpDataLength, udpDataLength, off, tcpUdpLen;
   char *proto;
   u_int srcHostIdx, dstHostIdx;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
@@ -3225,16 +3213,16 @@ static void processIpPkt(const u_char *bp,
 
   off = ntohs(ip.ip_off);
 
+  tcpUdpLen = ntohs(ip.ip_len) - hlen;
+
   switch(ip.ip_p) {
   case IPPROTO_TCP:
     proto = "TCP";
-    device[actualDeviceId].tcpBytes += length;
     memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
-    tcpDataLength = ntohs(ip.ip_len) - hlen - (tp.th_off * 4);
-    if(tcpDataLength > mtuSize[device[deviceId].datalink]) {
-      traceEvent(TRACE_WARNING, "TCP packet data len (%ud) is too long. Dropped.", tcpDataLength);
-      return;
-    }
+    tcpDataLength = tcpUdpLen - (tp.th_off * 4);
+
+    device[actualDeviceId].tcpBytes += tcpUdpLen;
+
     sport = ntohs(tp.th_sport);
     dport = ntohs(tp.th_dport);
 
@@ -3325,8 +3313,10 @@ static void processIpPkt(const u_char *bp,
 
   case IPPROTO_UDP:
     proto = "UDP";
-    udpDataLength = ntohs(ip.ip_len) - hlen - sizeof(struct udphdr);
-    device[actualDeviceId].udpBytes += udpDataLength;
+    udpDataLength = tcpUdpLen - sizeof(struct udphdr);
+ 
+    device[actualDeviceId].udpBytes += tcpUdpLen;
+
     memcpy(&up, bp+hlen, sizeof(struct udphdr));
 
     /* print TCP packet useful for debugging */
@@ -4003,6 +3993,19 @@ void processPacket(u_char *_deviceId,
 #endif
 
   actualDeviceId = getActualInterface();
+
+
+  if(length > mtuSize[device[deviceId].datalink]) {
+    /* Sanity check */
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Wrong packet length (%lu on %s (deviceId=%d) [too long]!\n",
+	       (unsigned long)length,
+	       device[actualDeviceId].name, deviceId);
+#endif
+    /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+    length = mtuSize[device[deviceId].datalink];
+    device[actualDeviceId].rcvdPktStats.tooLong++;
+  }
 
   if(device[actualDeviceId].hostsno > device[actualDeviceId].topHashThreshold)
     resizeHostHash(actualDeviceId, 1.5F); /* Extend table */
