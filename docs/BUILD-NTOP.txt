@@ -19,6 +19,10 @@ Quick Instructions
    - cd ..
    - make
 
+   If you're using a gcc-powered system you can type
+   - cd gdchart0.94c/
+   - ./buildAll.sh
+
 3. Build ntop
    - cd ntop
    - ./configure
