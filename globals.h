@@ -74,7 +74,6 @@ typedef struct ntopGlobals {
   u_char enableSuspiciousPacketDump; /* 'q' */
   u_int maxHashSize;                 /* 's' */
   u_short traceLevel;                /* 't' */
-  u_short accuracyLevel;             /* 'A' */
   char *currentFilterExpression;     /* 'B' */
   char domainName[MAXHOSTNAMELEN];   /* 'D' */
   int isLsofPresent;                 /* 'E' */

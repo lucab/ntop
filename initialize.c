@@ -395,7 +395,9 @@ void resetStats(void) {
 /* ******************************* */
 
 int initGlobalValues(void) {
-  switch(myGlobals.accuracyLevel) {
+  int myAccuracy = HIGH_ACCURACY_LEVEL;
+
+  switch(myAccuracy) {
   case HIGH_ACCURACY_LEVEL:
     myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 1;
     myGlobals.trackOnlyLocalHosts = 0;
