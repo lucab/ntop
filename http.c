@@ -1517,7 +1517,7 @@ static int returnHTTPPage(char* pageName,
 #if !defined(WIN32) && defined(PARM_USE_CGI)
   int rc;
 #endif
-  int i;
+  int i, showBytes = 1;
 
 #ifdef MAKE_WITH_I18N
   int lang;
@@ -1552,6 +1552,8 @@ static int returnHTTPPage(char* pageName,
 	portNr = atoi(&tkn[5]);
       } else if(strncmp(tkn, "vsan=", 5) == 0) {
 	vsanNr = atoi(&tkn[5]);
+      } else if(strncmp(tkn, "unit=", 5) == 0) {
+	showBytes = atoi(&tkn[5]);
       } else if(strncmp(tkn, "showH=", 6) == 0) {
 	showHostsMode = atoi(&tkn[6]);
 	if((showHostsMode < showAllHosts) || (showHostsMode > showOnlyRemoteHosts))
@@ -2023,7 +2025,7 @@ static int returnHTTPPage(char* pageName,
 	printThptStatsMatrix(sortedColumn);
       } else if(strncasecmp(pageName, CONST_HOSTS_INFO_HTML, strlen(CONST_HOSTS_INFO_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printHostsInfo(sortedColumn, revertOrder, pageNum);
+	printHostsInfo(sortedColumn, revertOrder, pageNum, showBytes);
       } else if(strncasecmp(pageName, CONST_FC_HOSTS_INFO_HTML,
 			    strlen(CONST_FC_HOSTS_INFO_HTML)) == 0) {
         printFcHostsInfo(sortedColumn, revertOrder, pageNum);

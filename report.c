@@ -1833,7 +1833,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
 /* ******************************* */
 
-void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
+void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes) {
   u_int idx, numEntries=0, maxHosts;
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
@@ -1868,12 +1868,21 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
     if(isFcHost (el) || broadcastHost(el)) continue;
 
-    actUsage  = (unsigned short)(0.5+100.0*(((float)el->bytesSent.value+(float)el->bytesRcvd.value)/
-				     (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
-    actUsageS = (unsigned short)(0.5+100.0*((float)el->bytesSent.value/
-				     (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
-    actUsageR = (unsigned short)(0.5+100.0*((float)el->bytesRcvd.value/
-				     (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+    if(showBytes) {
+      actUsage  = (unsigned short)(0.5+100.0*(((float)el->bytesSent.value+(float)el->bytesRcvd.value)/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+      actUsageS = (unsigned short)(0.5+100.0*((float)el->bytesSent.value/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+      actUsageR = (unsigned short)(0.5+100.0*((float)el->bytesRcvd.value/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+    } else {
+      actUsage  = (unsigned short)(0.5+100.0*(((float)el->pktSent.value+(float)el->pktRcvd.value)/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
+      actUsageS = (unsigned short)(0.5+100.0*((float)el->pktSent.value/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
+      actUsageR = (unsigned short)(0.5+100.0*((float)el->pktRcvd.value/
+					      (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value));
+    }
 
     el->actBandwidthUsage = actUsage;
     if(el->actBandwidthUsage > maxBandwidthUsage)
@@ -1915,6 +1924,25 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       arrow[0] = "";
       theAnchor[0] = htmlAnchor1;
     }
+
+    sendString("<P ALIGN=LEFT>");
+
+    if(showBytes) {
+      if(snprintf(buf, sizeof(buf), 
+		  "<b>Traffic Unit:</b> [ <B>Bytes</B> ]&nbsp;"
+		  "[ <A HREF=\"/%s?col=%d&unit=0\">Packets</A> ]&nbsp;</TD>",
+		  CONST_HOSTS_INFO_HTML, myGlobals.columnSort) < 0)
+	BufferTooShort();
+    } else {
+      if(snprintf(buf, sizeof(buf), 
+		  "<b>Traffic Unit:</b> [ <A HREF=\"/%s?col=%d&unit=1\">Bytes</A> ]&nbsp;"
+		  "[ <B>Packets</B> ]&nbsp;</TD>", 
+		  CONST_HOSTS_INFO_HTML, myGlobals.columnSort) < 0)
+	BufferTooShort();
+    }
+    sendString(buf);
+
+    sendString("</P>\n");
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
@@ -2772,7 +2800,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 	arrow[i] = "", theAnchor[i] = htmlAnchor1;
 
     sendString("<CENTER>\n");
-    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n"
+    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%%\">\n"
 		"<TR "TR_ON" "DARK_BG"><TH "TH_BG">"
 		"%s1>Host%s</A></TH>"
 		"<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
@@ -3566,7 +3594,6 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	  for(i=0; i<idx; i++) {
 	    if(ipPorts[i] != NULL) {
 	      char portBuf[32];
-	      int portBufLen;
 	      char *symPort = getAllPortByNum(ipPorts[i]->port, portBuf, sizeof(portBuf));
 
 	      if(symPort == NULL) symPort = "";
@@ -5906,11 +5933,11 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
                 if (snprintf(buf, sizeof (buf),
-                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
-                             "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s1>VSAN%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s2>Initiator%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s3>Target%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG" rowspan=\"2\">LUN</TH>"
+                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\"><TR "TR_ON">"
+                             "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s1>VSAN%s</A></TH>"
+                             "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s2>Initiator%s</A></TH>"
+                             "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s3>Target%s</A></TH>"
+                             "<TH "TH_BG" "DARK_BG" ROWSPAN=2>LUN</TH>"
                              "<TH "TH_BG" "DARK_BG" COLSPAN=2>Total&nbsp;Bytes</TH>"
                              "<TH "TH_BG" "DARK_BG" COLSPAN=3>Data&nbsp;Bytes</TH>"
                              "<TH "TH_BG" "DARK_BG" COLSPAN=2>Rd&nbsp;Size(Blks)</TH>"
@@ -6268,17 +6295,17 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
                 sendString("<CENTER>\n");
 
                 if (snprintf(buf, sizeof (buf),
-                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
-                             "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s1>VSAN%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s2>Initiator%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s3>Target%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG" rowspan=\"2\">LUN</TH>"
+                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\"><TR "TR_ON">"
+                             "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s1>VSAN%s</A></TH>"
+                             "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s2>Initiator%s</A></TH>"
+                             "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s3>Target%s</A></TH>"
+                             "<TH "TH_BG" "DARK_BG" ROWSPAN=2>LUN</TH>"
                              "<TH "TH_BG" "DARK_BG" COLSPAN=2>Cmd-Status&nbsp;RTT</TH>"
                              "<TH "TH_BG" "DARK_BG" COLSPAN=2>Cmd-XFR_RDY&nbsp;RTT</TH>"
                              "<TH "TH_BG" "DARK_BG" COLSPAN=2>Cmd-Data&nbsp;RTT(Rd)</TH>"
                              "<TH "TH_BG" "DARK_BG" COLSPAN=2>Cmd-Data&nbsp;RTT(Wr)</TH>"
-                             "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s26>Active&nbsp;Since%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s27>Last&nbsp;Seen%s</A></TH>"
+                             "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s26>Active&nbsp;Since%s</A></TH>"
+                             "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s27>Last&nbsp;Seen%s</A></TH>"
                              "</TR>\n",
                              theAnchor[1], arrow[1],
                              theAnchor[2], arrow[2],
@@ -6560,7 +6587,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
       if(printedSessions == 0) {
 	sendString("<CENTER>\n");
 	if (snprintf(buf, sizeof (buf),
-		     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
+		     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\"><TR "TR_ON">"
 		     "<TH "TH_BG" "DARK_BG">%s1>VSAN%s</A></TH>"
 		     "<TH "TH_BG" "DARK_BG">%s2>Initiator%s</A></TH>"
 		     "<TH "TH_BG" "DARK_BG">%s3>Target%s</A></TH>"
@@ -6812,7 +6839,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
                 if (snprintf(buf, sizeof (buf),
-                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
+                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\"><TR "TR_ON">"
                              "<TH "TH_BG" "DARK_BG">%s1>VSAN%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG">%s2>Initiator%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG">%s3>Target%s</A></TH>"
@@ -7026,10 +7053,10 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
                 if (snprintf (buf, sizeof (buf),
-                              ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
-                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s1>VSAN%s</A></TH>\n"
-                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s2>Sender%s</A></TH>\n"
-                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s3>Receiver%s</A></TH>\n"
+                              ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\"><TR "TR_ON">"
+                              "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s1>VSAN%s</A></TH>\n"
+                              "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s2>Sender%s</A></TH>\n"
+                              "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s3>Receiver%s</A></TH>\n"
                               "<TH "TH_BG" "DARK_BG" COLSPAN=2>Total</TH>\n"
                               "<TH "TH_BG" "DARK_BG" COLSPAN=2>SCSI</TH>\n"
                               "<TH "TH_BG" "DARK_BG" COLSPAN=2>ELS</TH>\n"
@@ -7037,8 +7064,8 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
                               "<TH "TH_BG" "DARK_BG" COLSPAN=2>IP/FC</TH>\n"
                               "<TH "TH_BG" "DARK_BG" COLSPAN=2>SWILS</TH>\n"
                               "<TH "TH_BG" "DARK_BG" COLSPAN=2>Others</TH>\n"
-                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s18>Active&nbsp;Since%s</A></TH>\n"
-                              "<TH "TH_BG" "DARK_BG" rowspan=\"2\">%s19>Last&nbsp;Seen%s</A></TH>"
+                              "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s18>Active&nbsp;Since%s</A></TH>\n"
+                              "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s19>Last&nbsp;Seen%s</A></TH>"
                               "</TR>\n",
                               theAnchor[1], arrow[1],
                               theAnchor[2], arrow[2],

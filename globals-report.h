@@ -188,7 +188,7 @@ extern void printFcHostsTraffic(int reportType,
 extern void printMulticastStats(int sortedColumn /* ignored so far */,
                                 int revertOrder, int pageNum);
 extern void printVSANList(unsigned int deviceId);
-extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum);
+extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBytes);
 extern void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum);
 extern void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
                                   int revertOrder, int pageNum, char *url,
