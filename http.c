@@ -1331,7 +1331,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	}
       }
     }
-#endif
 
 #if !defined(WIN32) && defined(USE_CGI)
   if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
@@ -1345,6 +1344,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     }
   } else
 #endif
+
+#endif /* !MICRO_NTOP */
 
   if(strcmp(pageName, STR_INDEX_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);

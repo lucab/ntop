@@ -783,7 +783,11 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
+#ifndef MICRO_NTOP
   printf("Wait please: ntop is coming up...\n");
+#else
+  printf("Wait please: ntop (micro) is coming up...\n");
+#endif
 
   /*
    * Perform here all the initialization steps required by the ntop engine to run
