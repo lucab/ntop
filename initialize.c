@@ -704,7 +704,6 @@ void initDevices(char* devices) {
   int i, j, mallocLen;
   NtopInterface *tmpDevice;
   char *tmpDev;
-
 #ifdef WIN32
   char *ifName, intNames[32][256];
   int ifIdx = 0;
@@ -807,7 +806,7 @@ void initDevices(char* devices) {
     myGlobals.device[0].name = strdup(tmpDev);
     myGlobals.numDevices = 1;
   } else {
-#ifdef WIN32
+#if 0 /* WIN32 */
     u_int selectedDevice = atoi(myGlobals.devices);
 
     if(selectedDevice < ifIdx) {
@@ -816,17 +815,15 @@ void initDevices(char* devices) {
       traceEvent(TRACE_INFO, "Index out of range [0..%d]", ifIdx);
       exit(-1);
     }
-#else
+#endif
     char *strtokState;
 
     tmpDev = strtok_r(myDevices, ",", &strtokState);
-#endif
     myGlobals.numDevices = 0;
 
     while(tmpDev != NULL) {
 #ifndef WIN32
       char *nwInterface;
-
       deviceSanityCheck(tmpDev); /* These checks do not apply to Win32 */
 
       if((nwInterface = strchr(tmpDev, ':')) != NULL) {
@@ -846,6 +843,14 @@ void initDevices(char* devices) {
  	  continue;
  	}
       }
+#else /* WIN32 */
+    if(atoi(tmpDev) < ifIdx) {
+      tmpDev = intNames[atoi(tmpDev)];
+    } else {
+      traceEvent(TRACE_INFO, "Interface index '%d' is out of range [0..%d]", atoi(tmpDev), ifIdx);
+      exit(-1);
+    }
+
 #endif
 
       mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
@@ -854,19 +859,13 @@ void initDevices(char* devices) {
 
       /* Fix courtesy of Marius <marius@tbs.co.za> */
       if(myGlobals.numDevices > 0) {
-	memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*myGlobals.numDevices);
-	free(myGlobals.device);
+		memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*myGlobals.numDevices);
+		free(myGlobals.device);
       }
 
       myGlobals.device = tmpDevice;
-
       myGlobals.device[myGlobals.numDevices++].name = strdup(tmpDev);
-
-#ifndef WIN32
       tmpDev = strtok_r(NULL, ",", &strtokState);
-#else
-      break;
-#endif
 
 #ifndef MULTITHREADED
       if(tmpDev != NULL) {
