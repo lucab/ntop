@@ -625,7 +625,7 @@ static u_char TTL_PREDICTOR(u_char x)		/* coded by awgn <awgn@antifork.org> */
 
 static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
-			 const u_int length,
+			 u_int length,
 			 u_char *ether_src,
 			 u_char *ether_dst,
 			 int actualDeviceId,
