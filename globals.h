@@ -133,32 +133,6 @@
 /* #define USE_HOST */
 
 /*
- * Controlling switches...
- */
-#undef  USE_COLOR      /* Define to enable alternating row colors on many tables */
-#define USE_CGI        /* Define to allow processing of CGI scripts */
-
-/*
-  On FreeBSD gethostbyaddr() sometimes loops
-  and uses all the available memory. Hence this
-  patch is needed.
- */
-#if defined(__FreeBSD__)
-#define USE_HOST
-#endif
-
-/*
-  On some Linux versions gethostbyaddr() is bugged and
-  it tends to exaust all available file descriptors. If
-  you want to check this try "lsof -i |grep ntop". If this
-  is the case please do  '#define USE_HOST' (see below)
-  in order to overcome this flaw.
-
-*/
-/* #define USE_HOST */
-
-
-/*
  * used to drive the ntop's behaviour at run-time
  */
 typedef struct ntopGlobals {
