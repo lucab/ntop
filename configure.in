@@ -367,7 +367,7 @@ dnl>        LDFLAGS="-bI:/lib/pse.exp $LDFLAGS"
         CFLAGS="-no-cpp-precomp -DDARWIN $CFLAGS"
 	DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
 	MORESOURCES=" ntop_darwin.c"
-	MOREOBJECTS=" ntop_darwin.o"
+	MOREOBJECTS=" ntop_darwin.lo"
         ;;
 
 dnl>    *-sun-solaris2*:cc )
