@@ -3629,17 +3629,36 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* **** */
 
+  sendString(texthtml("\n\nPackets\n\n", "<tr><th colspan=2 "DARK_BG">Packets</th></tr>\n"));
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPackets) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Received", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPacketsProcessed) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Processed immediately", buf);
+
 #ifdef CFG_MULTITHREADED
 
-  sendString(texthtml("\n\nPacket queue\n\n", "<tr><th colspan=2 "DARK_BG">Packet queue</th></tr>\n"));
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPacketsQueued) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Queued", buf);
+
+  if(myGlobals.receivedPacketsLostQ > 0) {
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPacketsLostQ) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Lost in ntop queue", buf);
+  }
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.packetQueueLen) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Queued to Process", buf);
+  printFeatureConfigInfo(textPrintFlag, "Current queue", buf);
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.maxPacketQueueLen) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Maximum queue", buf);
+
 #endif
 
   /* **** */
@@ -4512,10 +4531,32 @@ void printNtopProblemReport(void) {
   sendString("Hardware:  CPU:           _____ (i86, SPARC, etc.)\n");
   sendString("           # Processors:  _____\n");
   sendString("           Memory:        _____ MB\n");
-  sendString("Network:\n");
+
+  sendString("\nPackets\n");
+  snprintf(buf, sizeof(buf), "Received:  %10u\n", myGlobals.receivedPackets);
+  sendString(buf);
+  snprintf(buf, sizeof(buf), "Processed: %10u (immediately)\n", myGlobals.receivedPacketsProcessed);
+  sendString(buf);
+
+#ifdef CFG_MULTITHREADED
+  snprintf(buf, sizeof(buf), "Queued:    %10u\n", myGlobals.receivedPacketsQueued);
+  sendString(buf);
+  snprintf(buf, sizeof(buf), "Lost:      %10u (queue full)\n", myGlobals.receivedPacketsLostQ);
+  sendString(buf);
+  snprintf(buf, sizeof(buf), "Queue:     Current: %u Maximum: %u\n",
+           myGlobals.packetQueueLen,
+           myGlobals.maxPacketQueueLen);
+  sendString(buf);
+#endif
+
+  sendString("\nNetwork:\n");
 
   if(myGlobals.mergeInterfaces == 1) {
     sendString("Merged packet counts:\n");
+    if(myGlobals.device[0].receivedPkts.value > 0) {
+      snprintf(buf, sizeof(buf), "     Received:  %10u\n", myGlobals.device[0].receivedPkts.value);
+      sendString(buf);
+    }
     if(myGlobals.device[0].droppedPkts.value > 0) {
       snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[0].droppedPkts.value);
       sendString(buf);
@@ -4569,46 +4610,48 @@ void printNtopProblemReport(void) {
       sendString("\n");
     }
 
-    if(myGlobals.mergeInterfaces == 0) {
-      if(myGlobals.device[i].droppedPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[i].droppedPkts.value);
-	sendString(buf);
-      }
-
-      if(myGlobals.device[i].ethernetPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[i].ethernetPkts.value);
-	sendString(buf);
-      }
-      if(myGlobals.device[i].broadcastPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[i].broadcastPkts.value);
-	sendString(buf);
-      }
-      if(myGlobals.device[i].multicastPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[i].multicastPkts.value);
-	sendString(buf);
-      }
-      if(myGlobals.device[i].ipPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[i].ipPkts.value);
-	sendString(buf);
-      }
-
-    }
-
 /* pcap_stats gets weirded out under some circumstances under WIN32 - skip this */
 #ifndef WIN32 
     if((myGlobals.device[i].pcapPtr != NULL) && 
        (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0)) {
-      snprintf(buf, sizeof(buf), "          pcap stats: Received %u Dropped %u", 
-                                 pcapStats.ps_recv,
-                                 pcapStats.ps_drop);
+      snprintf(buf, sizeof(buf), "     Received (pcap):%10u\n", pcapStats.ps_recv);
       sendString(buf);
       if (pcapStats.ps_ifdrop > 0) {
-        snprintf(buf, sizeof(buf), ", ifDropped %u", pcapStats.ps_ifdrop);
+        snprintf(buf, sizeof(buf), "     Dropped (NIC):  %10u\n", pcapStats.ps_ifdrop);
         sendString(buf);
       }
-      sendString("\n");
+      snprintf(buf, sizeof(buf), "     Dropped (pcap): %10u\n", pcapStats.ps_drop);
+      sendString(buf);
     }
 #endif
+
+    if(myGlobals.mergeInterfaces == 0) {
+      if(myGlobals.device[i].receivedPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     Received:       %10u\n", myGlobals.device[i].receivedPkts.value);
+	sendString(buf);
+      }
+      if(myGlobals.device[i].droppedPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     Dropped (ntop): %10u\n", myGlobals.device[i].droppedPkts.value);
+	sendString(buf);
+      }
+      if(myGlobals.device[i].ethernetPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     Ethernet:       %10u\n", myGlobals.device[i].ethernetPkts.value);
+	sendString(buf);
+      }
+      if(myGlobals.device[i].broadcastPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     Broadcast:      %10u\n", myGlobals.device[i].broadcastPkts.value);
+	sendString(buf);
+      }
+      if(myGlobals.device[i].multicastPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     Multicast:      %10u\n", myGlobals.device[i].multicastPkts.value);
+	sendString(buf);
+      }
+      if(myGlobals.device[i].ipPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     IP:             %10u\n", myGlobals.device[i].ipPkts.value);
+	sendString(buf);
+      }
+
+    }
 
     sendString("          Mfg: ____________________  Model: ____________________\n");
     sendString("          NIC Speed: 10/100/1000/Other  Bus: PCI ISA USB Firewire Other\n");

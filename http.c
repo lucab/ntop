@@ -1427,22 +1427,6 @@ static int returnHTTPPage(char* pageName,
 
   /* **************** */
   
-  /* Update number of dropped packets */
-  if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr 
-     && (!myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice)) {
-    struct pcap_stat pcapStats;
-    
-    if(pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStats) >= 0) {
-#ifdef WIN32
-      myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value =  pcapStats.ps_drop;
-#else
-      incrementTrafficCounter(&myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts, pcapStats.ps_drop);
-#endif
-    }
-  }
-
-  /* **************** */
-
   if(strncmp(pageName, PLUGINS_HEADER, strlen(PLUGINS_HEADER)) == 0) {
     if(handlePluginHTTPRequest(&pageName[strlen(PLUGINS_HEADER)])) {
       return(0);

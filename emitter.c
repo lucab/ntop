@@ -1268,6 +1268,8 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	wrtLlongItm(fDescr, lang, "\t", "droppedPkts",myGlobals.device[i].droppedPkts, ',', numEntries);
     }
 
+    if(checkFilter(filter, "receivedPkts"))
+      wrtLlongItm(fDescr, lang, "\t", "receivedPkts",myGlobals.device[i].receivedPkts, ',', numEntries);
     if(checkFilter(filter, "ethernetPkts"))
       wrtLlongItm(fDescr, lang, "\t", "ethernetPkts",myGlobals.device[i].ethernetPkts, ',', numEntries);
     if(checkFilter(filter, "broadcastPkts"))

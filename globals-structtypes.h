@@ -722,6 +722,7 @@ typedef struct ntopInterface {
   /*
    * The packets section
    */
+  TrafficCounter receivedPkts;   /* # of pkts recevied by the application */
   TrafficCounter droppedPkts;    /* # of pkts dropped by the application */
   TrafficCounter ethernetPkts;   /* # of Ethernet pkts captured by the application */
   TrafficCounter broadcastPkts;  /* # of broadcast pkts captured by the application */
@@ -850,6 +851,7 @@ typedef struct ntopInterface {
 /*XML n              tcpv                 Work          "" */
 
 /*XML e              packetStats          parent:Work   "" */
+/*XML trafficcounter receivedPkts         Work          "" */
 /*XML trafficcounter droppedPkts          Work          "" */
 /*XML trafficcounter ethernetPkts         Work          "" */
 /*XML trafficcounter broadcastPkts        Work          "" */
@@ -1825,6 +1827,7 @@ typedef struct ntopGlobals {
 #if defined(CFG_MULTITHREADED)
   PacketInformation packetQueue[CONST_PACKET_QUEUE_LENGTH+1];
   u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
+  Counter receivedPackets, receivedPacketsProcessed, receivedPacketsQueued, receivedPacketsLostQ;
 #endif
 
   TransactionTime transTimeHash[CONST_NUM_TRANSACTION_ENTRIES];

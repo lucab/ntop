@@ -181,6 +181,7 @@ void printTrafficStatistics(void) {
   int i;
   char buf[LEN_GENERAL_WORK_BUFFER];
   struct stat statbuf;
+  struct pcap_stat pcapStat;
 
   unicastPkts = 0;
   printHTMLheader("Global Traffic Statistics", 0);
@@ -284,15 +285,24 @@ void printTrafficStatistics(void) {
     sendString(buf);
   }
 
-  if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
-    Counter dummyCounter;
-    sendString("<TR><TH "TH_BG" align=left>Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
-
 #ifndef EMBEDDED
-    if(myGlobals.numRealDevices > 1)
-      sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3>"
+  if(myGlobals.numRealDevices > 1)
+    sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=interfaceTrafficPie"CHART_FORMAT"></TD></TR>\n");
 #endif
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value > 0) {
+    Counter dummyCounter;
+
+    sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
+    if(snprintf(buf, sizeof(buf),
+                "For device: '%s' (current reporting device)",
+                myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
+      BufferTooShort();
+    printHTMLheader(buf, 0);
+    sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 WIDTH=100%>\n");
+
+    sendString("<TR><TH "TH_BG" align=left>Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
 
     unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
       - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value
@@ -302,24 +312,79 @@ void printTrafficStatistics(void) {
       myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value = 1;
 
     if(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr != NULL) {
-      if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON" %s><TH "TH_BG" align=left>Total</th>"
-		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value)) < 0)
-	BufferTooShort();
-      sendString(buf);
+      if (pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStat) >= 0) {
+        if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Received&nbsp;(libpcap)</th>"
+		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		    getRowColor(),
+                    formatPkts((Counter)pcapStat.ps_recv)) < 0)
+          BufferTooShort();
+        sendString(buf);
+        if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Less:&nbsp;Dropped&nbsp;(libpcap)</th>"
+		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		    getRowColor(),
+                    formatPkts((Counter)pcapStat.ps_drop)) < 0)
+          BufferTooShort();
+        sendString(buf);
+        if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Gives:&nbsp;Given&nbsp;to&nbsp;ntop</th>"
+		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		    getRowColor(),
+                    formatPkts((Counter)(pcapStat.ps_recv-pcapStat.ps_drop))) < 0)
+          BufferTooShort();
+        sendString(buf);
+      }
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value > 0) {
-	if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
-		    "<TD "TD_BG" COLSPAN=2 align=right>%s [%.2f %%]</td></TR>\n",
-		    getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value),
-		    (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
-		    /(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0)
-	  BufferTooShort();
-	sendString(buf);
+
+      if((pcapStat.ps_recv-pcapStat.ps_drop) != 
+         myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value) {
+        if(snprintf(buf, sizeof(buf),
+                    "<TR "TR_ON" %s><TD "TH_BG" align=\"center\" COLSPAN=\"3\">Note:&nbsp;"
+                    "A small difference between the count above and the one below is nothing "
+                    "to worry about.<br>"
+                    "It's due to either packets processed in the small interval between the two "
+                    "lines being printed or<br>(more likely) due to the limitations of the way "
+                    "that libpcap counts packets."
+                    "</TD></TR>\n",
+                  getRowColor()) < 0)
+          BufferTooShort();
+        sendString(buf);
       }
     }
+
+    if(snprintf(buf, sizeof(buf),
+		  "<TR "TR_ON" %s><TH "TH_BG" align=left>Total&nbsp;Received&nbsp;by&nbsp;ntop</th>"
+		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Less:&nbsp;Dropped&nbsp;by&nbsp;ntop</th>"
+                    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
+
+		    getRowColor(),
+		    (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
+		    /(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value,
+                    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+    if(snprintf(buf, sizeof(buf),
+                  "<TR "TR_ON" %s><TH "TH_BG" align=left>Gives:&nbsp;processed&nbsp;by&nbsp;ntop</th>"
+                  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+                  getRowColor(), 
+                  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value
+                           - myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf),
+		  "<TR "TR_ON" %s><TH "TH_BG" align=left><i>(should equal)</i>&nbsp;Total&nbsp;packets</th>"
+		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value)) < 0)
+      BufferTooShort();
+    sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Unicast</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
@@ -335,15 +400,13 @@ void printTrafficStatistics(void) {
       BufferTooShort();
     sendString(buf);
 
-    if(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value > 0) {
-      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Multicast</th>"
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Multicast</th>"
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
 		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)) < 0)
-	BufferTooShort();
-      sendString(buf);
-    }
+      BufferTooShort();
+    sendString(buf);
 
 #ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)

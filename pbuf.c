@@ -1598,6 +1598,7 @@ void queuePacket(u_char *_deviceId,
 		 const struct pcap_pkthdr *h,
 		 const u_char *p) {
   int len;
+  int deviceId;
 
   /* ***************************
      - If the queue is full then wait until a slot is freed
@@ -1606,10 +1607,10 @@ void queuePacket(u_char *_deviceId,
      until a slot is freed
      **************************** */
 
-#ifdef WIN32_DEMO
-  static int numQueuedPackets=0;
+  myGlobals.receivedPackets++;
 
-  if(numQueuedPackets++ >= MAX_NUM_PACKETS)
+#ifdef WIN32_DEMO
+  if(myGlobals.receivedPackets >= MAX_NUM_PACKETS)
     return;
 #endif
 
@@ -1619,9 +1620,19 @@ void queuePacket(u_char *_deviceId,
   traceEvent(CONST_TRACE_INFO, "Got packet from %s (%d)", myGlobals.device[*_deviceId].name, *_deviceId);
 #endif
 
+#ifdef WIN32
+  deviceId = 0;
+#else
+  deviceId = (int)_deviceId;
+#endif
+
+  incrementTrafficCounter(&myGlobals.device[getActualInterface(deviceId)].receivedPkts, 1);
+
   if(tryLockMutex(&myGlobals.packetProcessMutex, "queuePacket") == 0) {
     /* Locked so we can process the packet now */
     u_char p1[MAX_PACKET_LEN];
+
+    myGlobals.receivedPacketsProcessed++;
 
     len = h->caplen;
     if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
@@ -1642,17 +1653,12 @@ void queuePacket(u_char *_deviceId,
   */
 
   if(myGlobals.packetQueueLen >= CONST_PACKET_QUEUE_LENGTH) {
-    int deviceId;
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]",
 	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
-#ifdef WIN32
-    deviceId = 0;
-#else
-    deviceId = (int)_deviceId;
-#endif
+    myGlobals.receivedPacketsLostQ++;
 
     incrementTrafficCounter(&myGlobals.device[getActualInterface(deviceId)].droppedPkts, 1);
 
@@ -1667,6 +1673,7 @@ void queuePacket(u_char *_deviceId,
     traceEvent(CONST_TRACE_INFO, "About to queue packet... ");
 #endif
     accessMutex(&myGlobals.packetQueueMutex, "queuePacket");
+    myGlobals.receivedPacketsQueued++;
     memcpy(&myGlobals.packetQueue[myGlobals.packetQueueHead].h, h, sizeof(struct pcap_pkthdr));
     memset(myGlobals.packetQueue[myGlobals.packetQueueHead].p, 0, sizeof(myGlobals.packetQueue[myGlobals.packetQueueHead].p));
     /* Just to be safe */

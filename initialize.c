@@ -339,6 +339,7 @@ void resetDevice(int devIdx) {
    
   memset(myGlobals.device[devIdx].hash_hostTraffic, 0, len); 
 
+  resetTrafficCounter(&myGlobals.device[devIdx].receivedPkts);
   resetTrafficCounter(&myGlobals.device[devIdx].droppedPkts);
   resetTrafficCounter(&myGlobals.device[devIdx].ethernetPkts);
   resetTrafficCounter(&myGlobals.device[devIdx].broadcastPkts);
