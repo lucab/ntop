@@ -3677,9 +3677,9 @@ static void processIpPkt(const u_char *bp,
 	    }
 	  
 	    if(displ < udpDataLen)
-	      notEnoughData = 1;
-	    else 
 	      offset = ((char*)p - (char*)data) + 1;
+	    else
+	      notEnoughData = 1;
 	  }
 
 	  if(!notEnoughData) {
