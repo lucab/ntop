@@ -956,7 +956,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	   (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
 	  /* If possible this table will be enlarged */
 
-	  if(extendTcpSessionsHash() == 0) {
+	  if(extendTcpSessionsHash(actualDeviceId) == 0) {
 	    /* The table has been extended successfully */
 
 	    /* A goto il necessary as when the hash is extended all
