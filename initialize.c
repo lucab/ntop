@@ -25,9 +25,6 @@
 #include "ntop.h"
 
 
-static u_char threadsInitialized = 0;
-
-
 /*
  * calculate the domain name for this host
  */
@@ -355,7 +352,7 @@ void resetStats(void) {
   traceEvent(TRACE_INFO, "Resetting traffic statistics...");
 
 #ifdef MULTITHREADED
-  if(threadsInitialized)
+  if(myGlobals.hostsHashMutexInitialized != 0)
     accessMutex(&myGlobals.hostsHashMutex, "resetStats");
 #endif
 
@@ -392,7 +389,7 @@ void resetStats(void) {
   }
 
 #ifdef MULTITHREADED
-  if(threadsInitialized)
+  if(myGlobals.hostsHashMutexInitialized != 0)
     releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 }
@@ -652,7 +649,7 @@ void initThreads(void) {
 
 #endif /* MULTITHREADED */
 
-  threadsInitialized = 1;
+  myGlobals.hostsHashMutexInitialized = 1;
 }
 
 

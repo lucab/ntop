@@ -273,6 +273,7 @@ typedef struct ntopGlobals {
    * HTS - Host Traffic Statistics
    */
   PthreadMutex hostsHashMutex;
+  u_char hostsHashMutexInitialized;
 
   /*
    * SIH - Scan Idle Hosts - optional

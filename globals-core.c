@@ -193,6 +193,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* administrative */
   myGlobals.shortDomainName = NULL;
 
+  myGlobals.hostsHashMutexInitialized = 0;
+
 #ifdef MULTITHREADED
   myGlobals.numThreads = 0;            /* # of running threads */
 
