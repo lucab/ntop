@@ -1561,6 +1561,10 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
   TrafficCounter totalSent, totalRcvd;
   char buf[BUF_SIZE];
+#ifdef HAVE_GDCHART
+  char linkName[BUF_SIZE/2];
+  int i;
+#endif
 
   totalSent = el->tcpFragmentsSent + el->udpFragmentsSent + el->icmpFragmentsSent;
   totalRcvd = el->tcpFragmentsRcvd + el->udpFragmentsRcvd + el->icmpFragmentsRcvd;
@@ -1599,10 +1603,20 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 	BufferTooShort();
       sendString(buf);
 
+      if(el->hostNumIpAddress[0] != '\0') {
+        strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
+      } else {
+        strncpy(linkName, el->ethAddressString, sizeof(linkName));
+        for(i=0; linkName[i] != '\0'; i++)
+          if(linkName[i] == ':')
+            linkName[i] = '_';  /* to avoid escaping chars */
+      }
+
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"?1></TD>",
-		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Fragment Distribution for %s\"></TD>",
+		    linkName, 
+                   el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -1611,8 +1625,9 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
       if(totalRcvd > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"></TD>",
-		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT" ALT=\"Received Fragment Distribution for %s\"></TD>",
+		    linkName, 
+                   el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -1631,8 +1646,9 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT"?1></TD>",
-		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent IP Fragment Distribution for %s\"></TD>",
+		    linkName, 
+                   el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -1641,8 +1657,9 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
       if(totalRcvd > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT"></TD>",
-		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT" ALT=\"Received IP Fragment Distribution for %s\"></TD>",
+		    linkName, 
+                   el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -1664,6 +1681,10 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   TrafficCounter totalSent, totalRcvd;
   TrafficCounter actTotalSent, actTotalRcvd;
   char buf[BUF_SIZE];
+#ifdef HAVE_GDCHART
+  char linkName[BUF_SIZE/2];
+  int i;
+#endif
 
   totalSent = el->tcpSentLoc+el->tcpSentRem+el->udpSentLoc+el->udpSentRem;
   totalSent += el->icmpSent+el->ospfSent+el->igmpSent+el->ipxSent+el->dlcSent+el->arp_rarpSent;
@@ -1796,10 +1817,20 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	BufferTooShort();
       sendString(buf);
 
+      if(el->hostNumIpAddress[0] != '\0') {
+        strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
+      } else {
+        strncpy(linkName, el->ethAddressString, sizeof(linkName));
+        for(i=0; linkName[i] != '\0'; i++)
+          if(linkName[i] == ':')
+            linkName[i] = '_';  /* to avoid escaping chars */
+      }
+
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=\"/hostTrafficDistrib-%s"CHART_FORMAT"?1\"></TD>",
-		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Traffic Distribution for %s\"></TD>",
+                    linkName, 
+                    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -1808,8 +1839,9 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       if(totalRcvd > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=\"/hostTrafficDistrib-%s"CHART_FORMAT"\"></TD>",
-		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s\"></TD>",
+		    linkName, 
+                   el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -1827,8 +1859,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
 	if((el->tcpSentLoc+el->tcpSentRem+el->udpSentLoc+el->udpSentRem) > 0) {
 	  if(snprintf(buf, sizeof(buf),
-		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=\"/hostIPTrafficDistrib-%s"CHART_FORMAT"?1\"></TD>",
-		      el->hostNumIpAddress) < 0)
+		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent IP Traffic Distribution for %s\"></TD>",
+		      el->hostNumIpAddress, el->hostNumIpAddress) < 0)
 	    BufferTooShort();
 	  sendString(buf);
 	} else
@@ -1836,8 +1868,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
 	if((el->tcpRcvdLoc+el->tcpRcvdFromRem+el->udpRcvdLoc+el->udpRcvdFromRem) > 0) {
 	  if(snprintf(buf, sizeof(buf),
-		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=\"/hostIPTrafficDistrib-%s"CHART_FORMAT"\"></TD></TR>",
-		      el->hostNumIpAddress) < 0)
+		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT" ALT=\"Received IP Traffic Distribution for %s\"></TD></TR>",
+		      el->hostNumIpAddress, el->hostNumIpAddress) < 0)
 	    BufferTooShort();
 	  sendString(buf);
 	} else
