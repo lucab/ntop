@@ -1055,7 +1055,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
   char myName[80], *column = NULL;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
-  ebuf[0] = '\0';
+  
+  ebuf[0] = '\0', myName[0] = '\0';
   
   if(deviceName == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Attempt to add a NULL device");
@@ -1117,6 +1118,14 @@ void addDevice(char* deviceName, char* deviceDescr) {
        && (column == NULL)) {
 #ifdef WIN32
       if(strncmp(myGlobals.device[deviceId].name, "rpcap:", 6) != 0) {
+
+	/* 
+	   The code below has been disabled because it seems
+	   that with some network adapters, although there are no
+	   errors at all, the stack memory is corrupted and this
+	   will cause troubles later on
+	*/
+#if 0
 	NetType adapter;
 
 	LPADAPTER a = PacketOpenAdapter((LPTSTR)myGlobals.device[deviceId].name);
@@ -1130,6 +1139,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	  myGlobals.device[deviceId].deviceSpeed = adapter.LinkSpeed;
 	} else
 	  PacketCloseAdapter((LPTSTR)myGlobals.device[deviceId].name);
+#endif
       }
 #else
     if(setuid(0) == -1) {
@@ -1156,25 +1166,16 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	traceEvent(CONST_TRACE_FATALERROR, "pcap_open_live(): '%s'", ebuf);
 	if(myGlobals.runningPref.disablePromiscuousMode == 1)
 	  traceEvent(CONST_TRACE_INFO,
-		     "Sorry, but on this system, even with -s, it appears that ntop must be started as root");
-	traceEvent(CONST_TRACE_INFO, "Please correct the problem or select a different interface using the -i flag");
+		     "Sorry, but on this system, even with -s, it appears "
+		     "that ntop must be started as root");
+	traceEvent(CONST_TRACE_INFO, "Please correct the problem or select "
+		   "a different interface using the -i flag");
 	return;
       }
 
       if(myGlobals.runningPref.pcapLog != NULL) {
 	if(strlen(myGlobals.runningPref.pcapLog) > 64)
 	  myGlobals.runningPref.pcapLog[64] = '\0';
-//#ifdef WIN32
-//        safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%c%s.%s.pcap",
-//                myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-//                CONST_PATH_SEP, myGlobals.pcapLog,
-//                myGlobals.device[deviceId].humanFriendlyName);
-//#else
-//        safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%c%s.%s.pcap",
-//                myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-//                CONST_PATH_SEP, myGlobals.pcapLog,
-//                myGlobals.device[deviceId].name);
-//#endif
         safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%c%s.%s.pcap",
                 myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
                 CONST_PATH_SEP, myGlobals.runningPref.pcapLog,
@@ -1192,17 +1193,6 @@ void addDevice(char* deviceName, char* deviceDescr) {
       }
 
     if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-//#ifdef WIN32
-//	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
-//		myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-//		CONST_PATH_SEP,
-//		myGlobals.device[deviceId].humanFriendlyName);
-//#else
-//	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
-//		myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-//		CONST_PATH_SEP,
-//		myGlobals.device[deviceId].name);
-//#endif
         safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
                 myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
                 CONST_PATH_SEP,
@@ -1220,17 +1210,6 @@ void addDevice(char* deviceName, char* deviceDescr) {
       }
 
       if(myGlobals.runningPref.enableOtherPacketDump) {
-//#ifdef WIN32
-//	safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
-//		myGlobals.runningPref.pcapLogBasePath,
-//		CONST_PATH_SEP,
-//		myGlobals.device[deviceId].humanFriendlyName);
-//#else
-//        safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
-//                myGlobals.runningPref.pcapLogBasePath,
-//                CONST_PATH_SEP,
-//                myGlobals.device[deviceId].name);
-//#endif
         safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-other-pkts.%s.pcap",
                 myGlobals.runningPref.pcapLogBasePath,
                 CONST_PATH_SEP,
@@ -1459,7 +1438,7 @@ void initDevices(char* devices) {
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
   char myName[80];
 
-  ebuf[0] = '\0';
+  ebuf[0] = '\0', myName[0] = '\0';
 
   traceEvent(CONST_TRACE_NOISY, "Initializing network devices");
 
@@ -1478,17 +1457,6 @@ void initDevices(char* devices) {
     initDeviceDatalink(0);
 
     if(myGlobals.runningPref.enableSuspiciousPacketDump) {
-//#ifdef WIN32
-//      safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
-//	      myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-//	      CONST_PATH_SEP,
-//	      myGlobals.device[0].humanFriendlyName);
-//#else
-//      safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
-//              myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-//              CONST_PATH_SEP,
-//              myGlobals.device[0].name);
-//#endif
       safe_snprintf(__FILE__, __LINE__, myName, sizeof(myName), "%s%cntop-suspicious-pkts.%s.pcap",
               myGlobals.runningPref.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
               CONST_PATH_SEP,
@@ -1782,7 +1750,6 @@ void parseTrafficFilter(void) {
   } else
     myGlobals.runningPref.currentFilterExpression = strdup("");	/* so that it isn't NULL! */
 }
-
 
 /* *************************** */
 

@@ -6782,7 +6782,7 @@ int printNtopLogReport(int printAsText) {
 
 #ifdef CFG_MULTITHREADED
 #ifdef WIN32
-	WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
+    WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
 #else
     pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
 #endif
@@ -6801,7 +6801,7 @@ int printNtopLogReport(int printAsText) {
 
 #ifdef CFG_MULTITHREADED
 #ifdef WIN32
-	ReleaseMutex(myGlobals.logViewMutex.mutex);
+    ReleaseMutex(myGlobals.logViewMutex.mutex);
 #else
     pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
 #endif

@@ -2620,10 +2620,13 @@ void traceEvent(int eventTraceLevel, char* file,
         (myGlobals.logView != NULL)) {
 
 #ifdef CFG_MULTITHREADED
-#ifndef WIN32
-      if(myGlobals.logViewMutex.isInitialized)
+      if(myGlobals.logViewMutex.isInitialized) {
+#ifdef WIN32
+	WaitForSingleObject(myGlobals.logViewMutex.mutex, INFINITE);
+#else
 	pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
 #endif
+      }
 #endif
 
       if (myGlobals.logView[myGlobals.logViewNext] != NULL)
@@ -2634,12 +2637,14 @@ void traceEvent(int eventTraceLevel, char* file,
       myGlobals.logViewNext = (myGlobals.logViewNext + 1) % CONST_LOG_VIEW_BUFFER_SIZE;
 
 #ifdef CFG_MULTITHREADED
-#ifndef WIN32
-      if(myGlobals.logViewMutex.isInitialized)
+      if(myGlobals.logViewMutex.isInitialized) {
+#ifdef WIN32
+	ReleaseMutex(myGlobals.logViewMutex.mutex);
+#else
 	pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
 #endif
+      }
 #endif
-
     }
 
     /* If ntop is a Win32 service, we're done - we don't (yet) write to the
@@ -5204,6 +5209,8 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size) {
   struct { int base, len; } best, cur;
   u_int words[NS_IN6ADDRSZ / NS_INT16SZ];
   int i;
+
+  memset(tmp, 0, sizeof(tmp));
 
   /*
    * Preprocess:

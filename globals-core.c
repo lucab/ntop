@@ -347,8 +347,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   createMutex(&myGlobals.logViewMutex);     /* synchronize logView buffer */
 #endif
   myGlobals.logViewNext = 0;
-  myGlobals.logView = calloc(sizeof(char*),
-                             CONST_LOG_VIEW_BUFFER_SIZE);
+  myGlobals.logView = (char**)calloc(sizeof(char*),
+				     CONST_LOG_VIEW_BUFFER_SIZE);
 
   traceEvent(CONST_TRACE_INFO, "Initializing semaphores, mutexes and threads");
 

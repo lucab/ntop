@@ -74,7 +74,7 @@ void* pcapDispatch(void *_i) {
 	     myGlobals.device[i].humanFriendlyName);
 
   /* Reset stats before to start */
-  if (myGlobals.runningPref.rFileName == NULL) {
+  if(myGlobals.runningPref.rFileName == NULL) {
     pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats);
   }
 
@@ -448,7 +448,7 @@ void handleProtocols(void) {
     for (;;) {
       bufferCurrent = fgets(bufferCurrent, buf.st_size, fd);
       /* On EOF, we're finished */
-      if (bufferCurrent == NULL) {
+      if(bufferCurrent == NULL) {
 	break;
       }
 
@@ -459,7 +459,7 @@ void handleProtocols(void) {
 
       /* Strip out any comments */
       bufferWork = strchr(bufferCurrent, '#');
-      if (bufferWork != NULL) {
+      if(bufferWork != NULL) {
 	bufferWork[0] = '\n';
 	bufferWork[1] = '\0';
       }
@@ -625,7 +625,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     HEARTBEAT(0, "scanIdleLoop(), sleep(60)...woke", NULL);
-    if (myGlobals.runningPref.rFileName == NULL)
+    if(myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
 
     for(i=0; i<myGlobals.numDevices; i++)
@@ -674,7 +674,7 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     HEARTBEAT(0, "scanFingerprintLoop(), sleep()...woke", NULL);
-    if (myGlobals.runningPref.rFileName == NULL)
+    if(myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
 #ifdef FINGERPRINT_DEBUG
     traceEvent(CONST_TRACE_NOISY, "FINGERPRINT_DEBUG: starting cycle %d", ++countCycle);
@@ -772,7 +772,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
 	 Let's purge one of the devices...
       */
       loopItem++;
-      if (loopItem >= myGlobals.numDevices) {
+      if(loopItem >= myGlobals.numDevices) {
 	loopItem = 0;
       }
 
@@ -800,7 +800,7 @@ RETSIGTYPE cleanup(int signo) {
   }
 
 #ifdef HAVE_BACKTRACE
-  if (signo == SIGSEGV) {
+  if(signo == SIGSEGV) {
     void *array[20];
     size_t size;
     char **strings;
@@ -815,7 +815,7 @@ RETSIGTYPE cleanup(int signo) {
     traceEvent(CONST_TRACE_ERROR, "BACKTRACE: *****ntop error: Signal(%d)", signo);
 
     traceEvent(CONST_TRACE_ERROR, "BACKTRACE:     backtrace is:");
-    if (size < 2) {
+    if(size < 2) {
       traceEvent(CONST_TRACE_ERROR, "BACKTRACE:         **unavailable!");
     } else {
       /* Ignore the 0th entry, that's our cleanup() */
@@ -854,11 +854,11 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG
-  if (myGlobals.sslwatchdogChildThreadId != 0) {
+  if(myGlobals.sslwatchdogChildThreadId != 0) {
     killThread(&myGlobals.sslwatchdogChildThreadId);
   }
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if (myGlobals.runningPref.useSSLwatchdog == 1)
+  if(myGlobals.runningPref.useSSLwatchdog == 1)
 #endif
     {
       deleteCondvar(&myGlobals.sslwatchdogCondvar);
@@ -974,7 +974,7 @@ RETSIGTYPE cleanup(int signo) {
     traceEvent(CONST_TRACE_INFO, "CLEANUP: Freeing device %s (idx=%d)", myGlobals.device[i].name, i);
 
     if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
-      if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
+      if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
 	traceEvent(CONST_TRACE_INFO, "STATS: %s packets received by filter on %s",
 		   formatPkts((Counter)pcapStat.ps_recv, buf, sizeof(buf)), myGlobals.device[i].name);
 
@@ -1061,7 +1061,7 @@ RETSIGTYPE cleanup(int signo) {
 
   }
   
-  if (myGlobals.device)
+  if(myGlobals.device)
       free(myGlobals.device);
 
   if(myGlobals.broadcastEntry != NULL) free(myGlobals.broadcastEntry);
@@ -1082,9 +1082,9 @@ RETSIGTYPE cleanup(int signo) {
   /* DO NOT DO deleteMutex(&myGlobals.logViewMutex); - need it for the last traceEvent()s */
 #endif
 
-  if (myGlobals.logView != NULL) {
+  if(myGlobals.logView != NULL) {
     for(i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++)
-      if (myGlobals.logView[i] != NULL) 
+      if(myGlobals.logView[i] != NULL) 
 	free(myGlobals.logView[i]);
     free(myGlobals.logView);
   }
@@ -1114,10 +1114,10 @@ RETSIGTYPE cleanup(int signo) {
   free(myGlobals.runningPref.pcapLogBasePath);
   /* free(myGlobals.dbPath); -- later, need this to remove pid */
   free(myGlobals.runningPref.spoolPath);
-  if (myGlobals.rrdPath != NULL)
+  if(myGlobals.rrdPath != NULL)
     free(myGlobals.rrdPath);
 
-  if (myGlobals.gdVersionGuessValue != NULL)
+  if(myGlobals.gdVersionGuessValue != NULL)
     free(myGlobals.gdVersionGuessValue);
 
   myGlobals.endNtop = 2;
