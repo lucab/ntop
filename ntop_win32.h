@@ -81,6 +81,7 @@ extern char* getpass(const char *prompt);
 extern ULONG GetHostIPAddr();
 
 #define MAKE_WITH_ZLIB
+#define HAVE_DIRENT_H
 
 #define INET6
 #define in6_addr in_addr6

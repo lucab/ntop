@@ -2927,15 +2927,15 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], 
     formatBuf4[32], formatBuf5[32], formatBuf6[32];
 
-  printHTMLheader("Active TCP Sessions", NULL, 0);
-
   if(!myGlobals.enableSessionHandling) {
+    printHTMLheader("Active TCP Sessions", NULL, 0);
     printNotAvailable("-z or --disable-sessions");
     return;
   }
 
   if((myGlobals.device[actualDeviceId].tcpSession == NULL) ||
      (myGlobals.device[actualDeviceId].numTcpSessions == 0)) {
+    printHTMLheader("Active TCP Sessions", NULL, 0);
      printNoDataYet();
      return;
   }
@@ -2977,6 +2977,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	}
 
 	if(printedSessions == 0) {
+	  printHTMLheader("Active TCP Sessions", NULL, 0);
 	  sendString("<CENTER>\n");
 	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		     "<TH "TH_BG">Client</TH>"
@@ -3095,7 +3096,8 @@ void printIpProtocolUsage(void) {
   memset(clientPorts, 0, sizeof(clientPorts));
   memset(serverPorts, 0, sizeof(serverPorts));
 
-  hosts = (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*), 
+  hosts = (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].
+						     hostsno*sizeof(HostTraffic*), 
 						     "printIpProtocolUsage");
   if(hosts == NULL)
       return;

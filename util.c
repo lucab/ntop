@@ -3923,7 +3923,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 #endif
 
   while(1) {
-    char *line, lineKey[8];
+    char line[384], lineKey[8];
     char *b, *d, *ptr;
     datum key_data;
     datum data_data;
@@ -3933,38 +3933,42 @@ void setHostFingerprint(HostTraffic *srcHost) {
     key_data.dptr = lineKey; key_data.dsize = strlen(key_data.dptr);
 
     data_data = gdbm_fetch(myGlobals.fingerprintFile, key_data);
-    if(data_data.dptr != NULL) {
 
-      line = data_data.dptr, strtokState = NULL;
-      ptr = strtok_r(line, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
-      if(strcmp(ptr, WIN)) { free(data_data.dptr); continue; }
-      b = strtok_r(NULL, ":", &strtokState); if(b == NULL) { free(data_data.dptr); continue; }
+    if(data_data.dptr != NULL) {
+      if(data_data.dsize > sizeof(line)) data_data.dsize = sizeof(line);
+      strncpy(line, data_data.dptr, data_data.dsize); line[data_data.dsize] = '\0';
+      free(data_data.dptr);
+      strtokState = NULL;
+
+      ptr = strtok_r(line, ":", &strtokState); if(ptr == NULL) continue;
+      if(strcmp(ptr, WIN)) continue;
+      b = strtok_r(NULL, ":", &strtokState); if(b == NULL) continue;
       if(strcmp(MSS, "_MSS") != 0) {
 	if(strcmp(b, "_MSS") != 0) {
-	  if(strcmp(b, MSS)) { free(data_data.dptr); continue; }
+	  if(strcmp(b, MSS)) continue;
 	}
       }
 
-      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
-      if(strcmp(ptr, ttl)) { free(data_data.dptr); continue; }
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+      if(strcmp(ptr, ttl)) continue;
 
-      d = strtok_r(NULL, ":", &strtokState); if(d == NULL) { free(data_data.dptr); continue; }
+      d = strtok_r(NULL, ":", &strtokState); if(d == NULL) continue;
       if(strcmp(WSS, "WS") != 0) {
 	if(strcmp(d, "WS") != 0) {
-	  if(strcmp(d, WSS)) { free(data_data.dptr); continue; }
+	  if(strcmp(d, WSS)) continue;
 	}
       }
 
-      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
-      if(atoi(ptr) != S) { free(data_data.dptr); continue; }
-      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
-      if(atoi(ptr) != N) { free(data_data.dptr); continue; }
-      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
-      if(atoi(ptr) != D) { free(data_data.dptr); continue; }
-      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
-      if(atoi(ptr) != T) { free(data_data.dptr); continue; }
-      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) { free(data_data.dptr); continue; }
-      if(strcmp(ptr, flags)) { free(data_data.dptr); continue; }
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+      if(atoi(ptr) != S) continue;
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+      if(atoi(ptr) != N) continue;
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+      if(atoi(ptr) != D) continue;
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+      if(atoi(ptr) != T) continue;
+      ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
+      if(strcmp(ptr, flags)) continue;
 
       /* NOTE
 	 strlen(srcHost->fingerprint) is 29 as the fingerprint length is so
@@ -3975,8 +3979,6 @@ void setHostFingerprint(HostTraffic *srcHost) {
       srcHost->fingerprint = strdup(&line[28]);
 
       done = 1;
-
-      free(data_data.dptr);
       break;
     } else
       break; /* No more signatures */

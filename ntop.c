@@ -70,7 +70,8 @@ void* pcapDispatch(void *_i) {
   int i = (int)_i;
   struct pcap_stat pcapStats;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread running...");
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap (%s) dispatch thread running...", 
+	     myGlobals.device[i].humanFriendlyName);
 
   /* Reset stats before to start */
   if (myGlobals.rFileName == NULL) {
@@ -86,12 +87,13 @@ void* pcapDispatch(void *_i) {
       if(myGlobals.device[i].name != NULL) /* This is not a shutdown */
 	traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d(%s): '%s'",
 		   i,
-		   myGlobals.device[i].name,
+		   myGlobals.device[i].humanFriendlyName,
 		   pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
     } else if(rc == 0) {
       if(myGlobals.rFileName != NULL) {
-	traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d [No more packets to read]", rc);
+	traceEvent(CONST_TRACE_INFO, "pcap_dispatch (%s) returned %d [No more packets to read]", 
+		   myGlobals.device[i].humanFriendlyName, rc);
 	break; /* No more packets to read */
       } 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
