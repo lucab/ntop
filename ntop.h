@@ -1896,7 +1896,7 @@ typedef struct logMessage {
 #define V5FLOWS_PER_PAK		30
 
 struct flow_ver5_hdr {
-  u_int16_t version;         /* Current myGlobals.version=5*/
+  u_int16_t version;         /* Current version=5*/
   u_int16_t count;           /* The number of records in PDU. */
   u_int32_t sysUptime;       /* Current time in msecs since router booted */
   u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
