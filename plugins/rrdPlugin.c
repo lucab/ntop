@@ -20,7 +20,7 @@
 
 /* This plugin works only with threads */
 
-#define RRD_DEBUG  8
+/* #define RRD_DEBUG  8 */
 
 /*
 
@@ -108,14 +108,14 @@ void mkdir_p(char *path);
 static char **calcpr=NULL;
 
 static void calfree (void) {
-  if (calcpr) {
+  if(calcpr) {
     long i;
     for(i=0;calcpr[i];i++){
-      if (calcpr[i]){
+      if(calcpr[i]){
 	free(calcpr[i]);
       }
     }
-    if (calcpr) {
+    if(calcpr) {
       free(calcpr);
     }
   }
@@ -169,7 +169,7 @@ void revertDoubleColumn(char *str) {
 void mkdir_p(char *path) {
   int i, rc;
 
-  if (path == NULL) {
+  if(path == NULL) {
     traceEvent(CONST_TRACE_NOISY, "RRD: mkdir(null) skipped");
     return;
   }
@@ -186,7 +186,7 @@ void mkdir_p(char *path) {
       traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
 #endif
       rc = _mkdir(path);
-      if ((rc != 0) && (errno != EEXIST) )
+      if((rc != 0) && (errno != EEXIST) )
 	traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
 		   path,
 		   errno,
@@ -198,7 +198,7 @@ void mkdir_p(char *path) {
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
 #endif
   _mkdir(path);
-  if ((rc != 0) && (errno != EEXIST) )
+  if((rc != 0) && (errno != EEXIST) )
     traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
 	       path,
 	       errno,
@@ -240,15 +240,6 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   argv[argc++] = "--end";
   argv[argc++] = endTime;
 
-#if RRD_DEBUG >= 3
-  {
-    int x;
-
-    for (x = 0; x < argc; x++)
-      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
-  }
-#endif
-
   optind=0; /* reset gnu getopt */
   opterr=0; /* no error messages */
 
@@ -257,14 +248,24 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
 #endif
 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+
+  rrd_clear_error();
   rc = rrd_fetch(argc, argv, &start, &end, &step, &ds_cnt, &ds_namv, &data);
 
 #ifdef CFG_MULTITHREADED
   releaseMutex(&rrdMutex);
 #endif
 
-  if(rc == -1)
+  if(rc == -1) {
+#if RRD_DEBUG >= 3
+    int x;
+    
+    for (x = 0; x < argc; x++)
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+#endif
+
     return(-1);
+  }
 
   datai  = data, _total = 0;
 
@@ -479,11 +480,6 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     argv[argc++] = "LINE2:lower#ff0000:Lower";
 #endif
 
-#if RRD_DEBUG >= 3
-    for (x = 0; x < argc; x++)
-      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
-#endif
-
     optind=0; /* reset gnu getopt */
     opterr=0; /* no error messages */
 
@@ -492,6 +488,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 #endif
 
     fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+    rrd_clear_error();
     rc = rrd_graph(argc, argv, &calcpr, &x, &y);
 
     calfree();
@@ -501,6 +498,11 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
       sendGraphFile(fname, 0);
       unlink(fname);
     } else {
+#if RRD_DEBUG >= 3
+      for (x = 0; x < argc; x++)
+	traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+#endif
+      
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("RRD Graph", 0);
       snprintf(path, sizeof(path), "<I>Error while building graph of the requested file. %s</I>",
@@ -587,14 +589,14 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     snprintf(maxStr, sizeof(maxStr), "RRA:MAX:%.1f:1:%d", 0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
     argv[argc++] = maxStr;
 
-    if (dumpDays > 0) {
+    if(dumpDays > 0) {
       snprintf(daysStr, sizeof(daysStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpDays * 24);
       argv[argc++] = daysStr;
     }
 
     /* Compute the rollup - how many dumpInterval seconds interval are in a day */
     value1 = (24*60*60 + dumpInterval - 1) / dumpInterval;
-    if (dumpMonths > 0) {
+    if(dumpMonths > 0) {
       snprintf(monthsStr, sizeof(monthsStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpMonths * 30);
       argv[argc++] = monthsStr;
     }
@@ -604,7 +606,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     argv[argc++] = tempStr;
 #endif
 
-    if (shownCreate == 0) {
+    if(shownCreate == 0) {
       char buf[LEN_GENERAL_WORK_BUFFER];
       int i;
 
@@ -629,21 +631,19 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     accessMutex(&rrdMutex, "rrd_create");
 #endif
 
-#if RRD_DEBUG >= 3
-  {
-    int x;
-
-    for (x = 0; x < argc; x++)
-      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
-  }
-#endif
-
     fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+    rrd_clear_error();
     rc = rrd_create(argc, argv);
 
-    if (rrd_test_error()) {
-      traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s",
-		 path, rrd_get_error());
+    if(rrd_test_error()) {
+#if RRD_DEBUG >= 3
+      int x;
+      
+      for (x = 0; x < argc; x++)
+	traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+#endif
+      
+      traceEvent(CONST_TRACE_WARNING, "RRD: rrd_create(%s) error: %s", path, rrd_get_error());
       rrd_clear_error();
       numRRDerrors++;
     }
@@ -669,6 +669,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 #endif
 
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+  rrd_clear_error();
   if(rrd_last(argc, argv) >= rrdTime) {
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: WARNING rrd_update not performed (RRD already updated)");
   }
@@ -723,33 +724,28 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   accessMutex(&rrdMutex, "rrd_update");
 #endif
 
-#if RRD_DEBUG >= 3
-  {
-    int x;
-
-    for (x = 0; x < argc; x++)
-      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
-  }
-#endif
-
   fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+  rrd_clear_error();
   rc = rrd_update(argc, argv);
 
   numTotalRRDs++;
 
-  if (rrd_test_error()) {
+  if(rrd_test_error()) {
     int x;
     char *rrdError;
 
+    for (x = 0; x < argc; x++)
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+
     numRRDerrors++;
     rrdError = rrd_get_error();
-    if (rrdError != NULL) {
+    if(rrdError != NULL) {
       traceEvent(CONST_TRACE_WARNING, "RRD: rrd_update(%s) error: %s", path, rrdError);
       traceEvent(CONST_TRACE_NOISY, "RRD: call stack (counter created: %d):", createdCounter);
       for (x = 0; x < argc; x++)
 	traceEvent(CONST_TRACE_NOISY, "RRD:   argv[%d]: %s", x, argv[x]);
 
-      if (!strcmp(rrdError, "error: illegal attempt to update using time")) {
+      if(!strcmp(rrdError, "error: illegal attempt to update using time")) {
 	char errTimeBuf1[32], errTimeBuf2[32], errTimeBuf3[32];
 	time_t rrdLast;
 	struct tm workT;
@@ -770,7 +766,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 		   errTimeBuf2,
 		   rrdLast,
 		   rrdLast == -1 ? "rrdlast ERROR" : errTimeBuf3);
-      } else if (strstr(rrdError, "is not an RRD file")) {
+      } else if(strstr(rrdError, "is not an RRD file")) {
 	unlink(path);
       }
 
@@ -958,7 +954,7 @@ static void handleRRDHTTPrequest(char* url) {
   int _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpMatrix, _dumpDetail, _dumpInterval, _dumpHours, _dumpDays, _dumpMonths;
   char * _hostsFilter;
 
-  if (initialized == 0)
+  if(initialized == 0)
     commonRRDinit();
 
   /* Initial values - remember, for checkboxes these need to be OFF (there's no html UNCHECKED option) */
@@ -1009,7 +1005,7 @@ static void handleRRDHTTPrequest(char* url) {
 	      BufferTooShort();
 	    plen=strlen(rrdPrefix);
 	    for (ii=0; ii<plen; ii++)
-	      if ( (rrdPrefix[ii] == '.') || (rrdPrefix[ii] == '/') )
+	      if( (rrdPrefix[ii] == '.') || (rrdPrefix[ii] == '/') )
 		rrdPrefix[ii]='_';
           } else {
 	    rrdPrefix[0] = '\0';
@@ -1042,16 +1038,16 @@ static void handleRRDHTTPrequest(char* url) {
 	  strncpy(endTime, value, len); endTime[len] = '\0';
 	} else if(strcmp(key, "interval") == 0) {
 	  _dumpInterval = atoi(value);
-          if (_dumpInterval < 1) _dumpInterval = 1 /* Min 1 second */;
+          if(_dumpInterval < 1) _dumpInterval = 1 /* Min 1 second */;
 	} else if(strcmp(key, "days") == 0) {
 	  _dumpDays = atoi(value);
-          if (_dumpDays < 0) _dumpDays = 0 /* Min none */;
+          if(_dumpDays < 0) _dumpDays = 0 /* Min none */;
 	} else if(strcmp(key, "hours") == 0) {
 	  _dumpHours = atoi(value);
-          if (_dumpHours < 0) _dumpHours = 0 /* Min none */;
+          if(_dumpHours < 0) _dumpHours = 0 /* Min none */;
 	} else if(strcmp(key, "months") == 0) {
 	  _dumpMonths = atoi(value);
-          if (_dumpMonths < 0) _dumpMonths = 0 /* Min none */;
+          if(_dumpMonths < 0) _dumpMonths = 0 /* Min none */;
 	} else if(strcmp(key, "hostsFilter") == 0) {
 	  _hostsFilter = strdup(value);
 	} else if(strcmp(key, "rrdPath") == 0) {
@@ -1100,7 +1096,7 @@ static void handleRRDHTTPrequest(char* url) {
       snprintf(buf, sizeof(buf), "%d", dumpMatrix);     storePrefsValue("rrd.dataDumpMatrix", buf);
       snprintf(buf, sizeof(buf), "%d", dumpDetail);     storePrefsValue("rrd.dataDumpDetail", buf);
       if(hostsFilter != NULL) free(hostsFilter);
-      if (_hostsFilter == NULL) {
+      if(_hostsFilter == NULL) {
 	hostsFilter  = strdup("");
       } else {
 	hostsFilter = _hostsFilter;
@@ -1111,7 +1107,7 @@ static void handleRRDHTTPrequest(char* url) {
     }
   }
 
-  if (_hostsFilter != NULL) free(_hostsFilter);
+  if(_hostsFilter != NULL) free(_hostsFilter);
 
   /* traceEvent(CONST_TRACE_INFO, "RRD: action=%d", action); */
 
@@ -1216,7 +1212,7 @@ static void handleRRDHTTPrequest(char* url) {
   sendString(myGlobals.rrdPath);
   sendString("\">");
   sendString("<br>NOTE: The rrd files will be in a subdirectory structure, e.g.\n");
-  if (snprintf(buf, sizeof(buf),
+  if(snprintf(buf, sizeof(buf),
 #ifdef WIN32
 	       "%s\\interfaces\\interface-name\\12\\239\\98\\199\\xxxxx.rrd ",
 #else
@@ -1250,7 +1246,7 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<p><H5><A HREF=http://www.rrdtool.org/>RRDtool</A> has been created by "
 	     "<A HREF=http://ee-staff.ethz.ch/~oetiker/>Tobi Oetiker</A>.</H5>\n");
 
-  if (active == 1)
+  if(active == 1)
     sendString("<p>You must restart the rrd plugin for changes here to take affect.</p>\n");
   else 
     sendString("<p>Changes here will take effect when the plugin is started.</p>\n");
@@ -1309,7 +1305,7 @@ RETSIGTYPE rrdcleanup(int signo) {
   strings = (char**)backtrace_symbols(array, size);
 
   traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:     backtrace is:");
-  if (size < 2) {
+  if(size < 2) {
     traceEvent(CONST_TRACE_FATALERROR, "RRD: BACKTRACE:         **unavailable!");
   } else {
     /* Ignore the 0th entry, that's our cleanup() */
@@ -1372,7 +1368,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 #endif
 #endif /* MAKE_WITH_RRDSIGTRAP */
 
-  if (initialized == 0)
+  if(initialized == 0)
     commonRRDinit();
 
   /* Initialize the "end" of the dummy interval just far enough back in time
@@ -1565,7 +1561,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      }
 	    }
 
-	    if (adjHostName != NULL)
+	    if(adjHostName != NULL)
               free(adjHostName);
 
 #ifdef CFG_MULTITHREADED
@@ -1719,7 +1715,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
      * is the 1st pass.  We just updated our data to save the counts, now
      * we kill the thread...
      */
-    if (myGlobals.capturePackets == FLAG_NTOPSTATE_STOPCAP) {
+    if(myGlobals.capturePackets == FLAG_NTOPSTATE_STOPCAP) {
       traceEvent(CONST_TRACE_WARNING, "RRD: STOPCAP, ending rrd thread");
       break;
     }
@@ -1755,8 +1751,8 @@ static int initRRDfunct(void) {
 #endif
 
   snprintf(dname, sizeof(dname), "%s", myGlobals.rrdPath);
-  if (_mkdir(dname) == -1) {
-    if (errno != EEXIST) {
+  if(_mkdir(dname) == -1) {
+    if(errno != EEXIST) {
       traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)", errno, dname);
       setPluginStatus("Disabled - unable to create rrd base directory.");
       /* Return w/o creating the rrd thread ... disabled */
@@ -1769,8 +1765,8 @@ static int initRRDfunct(void) {
   for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
 
     snprintf(dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
-    if (_mkdir(dname) == -1) {
-      if (errno != EEXIST) {
+    if(_mkdir(dname) == -1) {
+      if(errno != EEXIST) {
 	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);
         setPluginStatus("Disabled - unable to create rrd subdirectory.");
 	/* Return w/o creating the rrd thread ... disabled */
@@ -1846,11 +1842,10 @@ PluginInfo* rrdPluginEntryFctn(void)
 }
 
 /* This must be here so it can access the struct PluginInfo, above */
-static void setPluginStatus(char * status)
-{
-  if (rrdPluginInfo->pluginStatusMessage != NULL)
+static void setPluginStatus(char * status) {
+  if(rrdPluginInfo->pluginStatusMessage != NULL)
     free(rrdPluginInfo->pluginStatusMessage);
-  if (status == NULL) {
+  if(status == NULL) {
     rrdPluginInfo->pluginStatusMessage = NULL;
   } else {
     rrdPluginInfo->pluginStatusMessage = strdup(status);
