@@ -727,10 +727,10 @@ static void decodeLinkLayer(SFSample *sample)
 
   if(sample->headerLen < NFT_ETHHDR_SIZ) return; /* not enough for an Ethernet header */
 
-  if(debug) printf("dstMAC %02x%02x%02x%02x%02x%02x\n", 
+  if(debug) printf("dstMAC %02x%02x%02x%02x%02x%02x\n",
 		   ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
   ptr += 6;
-  if(debug) printf("srcMAC %02x%02x%02x%02x%02x%02x\n", 
+  if(debug) printf("srcMAC %02x%02x%02x%02x%02x%02x\n",
 		   ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5]);
   ptr += 6;
   type_len = (ptr[0] << 8) + ptr[1];
@@ -816,9 +816,9 @@ static void decodeIPV4(SFSample *sample)
   if(sample->offsetToIPV4 > 0) {
     char buf[51];
     u_char *ptr = sample->header + sample->offsetToIPV4;
-    /* Create a local copy of the IP header (cannot overlay 
+    /* Create a local copy of the IP header (cannot overlay
        structure in case it is not quad-aligned...some
-       platforms would core-dump if we tried that).  It's 
+       platforms would core-dump if we tried that).  It's
        OK coz this probably performs just as well anyway. */
     struct myiphdr ip;
     memcpy(&ip, ptr, sizeof(ip));
@@ -907,7 +907,7 @@ static void writePcapHeader() {
 */
 
 static void writePcapPacket(SFSample *sample) {
-  struct pcap_pkthdr hdr;  
+  struct pcap_pkthdr hdr;
 
   hdr.ts.tv_sec = time(NULL);
   hdr.ts.tv_usec = 0;
@@ -1035,7 +1035,7 @@ static u_long *readExtendedUser(SFSample *sample, u_long *datap, u_char *endPtr)
   GETDATA32(sample->dst_user_len, datap);
   if(sample->dst_user_len) {
     if(sample->dst_user_len > SA_MAX_EXTENDED_USER_LEN) {
-      receiveError(sample, "extended_data: sample->dst_user_len > MAX\n", 
+      receiveError(sample, "extended_data: sample->dst_user_len > MAX\n",
 		   YES, (u_char *)datap);
       return NULL;
     }
@@ -1267,7 +1267,7 @@ static void receiveSFlowSample(SFSample *sample)
 	      }
 	    }
 	  }
-	  
+
 	  writePcapPacket(sample);
 	}
 	break;
@@ -1291,7 +1291,7 @@ static void receiveSFlowSample(SFSample *sample)
 	  case INMCOUNTERSVERSION_WAN:
 	    {
 	      u_int64_t cntr64;
-	      /* the first part of the generic counters block is really just 
+	      /* the first part of the generic counters block is really just
 		 more info about the interface. */
 	      GETDATA32(sample->ifIndex, datap);
 	      GETDATA32(sample->networkType, datap);
@@ -1489,11 +1489,11 @@ static void receiveSFlowSample(SFSample *sample)
 	break;
       }
       /*
-	report the size in bytes that this flowSample or 
+	report the size in bytes that this flowSample or
 	counterSample took up in the datagram
       */
       if(debug) printf("%s %d\n",
-		       (sample->sampleType == FLOWSAMPLE ? 
+		       (sample->sampleType == FLOWSAMPLE ?
 			"flowSampleSize" : "countersSampleSize"),
 		       (u_char *)datap - startOfSample);
     }
@@ -1506,47 +1506,48 @@ static void handlesflowHTTPrequest(char* url) {
   char buf[1024];
   float percentage, err;
 
-  sendHTTPHeader(HTTP_TYPE_HTML, 0);  
+  sendHTTPHeader(HTTP_TYPE_HTML, 0);
   printHTMLheader("sFlow Statistics", 0);
-  
+
   sendString("<CENTER>\n<HR>\n");
-  
+
   if((!initialized)|| (numSamplesReceived == 0)) {
     printNoDataYet();
+    printHTMLtrailer();
     return;
-  } 
+  }
 
   percentage = (lastSample-initialPool)/numSamplesReceived;
   err = 196 * sqrt((float)(1/(float)numSamplesReceived));
 
   if(debug) {
-    traceEvent(TRACE_INFO, "[%.2f \%][Error <= %.2f\%]", percentage, err);  
+    traceEvent(TRACE_INFO, "[%.2f \%][Error <= %.2f\%]", percentage, err);
   }
-  
+
   sendString("<TABLE BORDER>\n");
 
-  if(snprintf(buf, sizeof(buf), 
-	      "<TR><TH ALIGN=LEFT># Samples</TH><TD ALIGN=RIGHT>%u</TD></TR>\n", 
+  if(snprintf(buf, sizeof(buf),
+	      "<TR><TH ALIGN=LEFT># Samples</TH><TD ALIGN=RIGHT>%u</TD></TR>\n",
 	      numSamplesReceived) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-    
-  if(snprintf(buf, sizeof(buf), 
-	      "<TR><TH ALIGN=LEFT>Data Scale</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n", 
-	      percentage) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
-    
-  if(snprintf(buf, sizeof(buf), 
-	      "<TR><TH ALIGN=LEFT>Estimated Error</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n", 
-	      err) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
-    
-  sendString("</TABLE>\n"); 
-  sendString("<p></CENTER>\n");  
 
-  printHTMLtrailer();  
+  if(snprintf(buf, sizeof(buf),
+	      "<TR><TH ALIGN=LEFT>Data Scale</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n",
+	      percentage) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf),
+	      "<TR><TH ALIGN=LEFT>Estimated Error</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n",
+	      err) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+
+  sendString("</TABLE>\n");
+  sendString("<p></CENTER>\n");
+
+  printHTMLtrailer();
 }
 
 /* ****************************** */
@@ -1566,7 +1567,7 @@ static void* sflowMainLoop(void* notUsed _UNUSED_) {
 
     if(select(sflowSocket+1, &sflowMask, NULL, NULL, NULL) > 0) {
       len = sizeof(fromHost);
-      rc = recvfrom(sflowSocket, &buffer, sizeof(buffer),  
+      rc = recvfrom(sflowSocket, &buffer, sizeof(buffer),
 		    0, (struct sockaddr*)&fromHost, &len);
 
       if(rc > 0) {
@@ -1589,7 +1590,7 @@ static void* sflowMainLoop(void* notUsed _UNUSED_) {
 
 static void initSflowFunct(void) {
   struct sockaddr_in sin;
-  
+
   initialized = 0;
   sflowSocket = 0, debug = 0;
   numSamplesReceived = 0, initialPool = 0, lastSample = 0;
@@ -1616,7 +1617,7 @@ static void initSflowFunct(void) {
 #endif
 
   /* http://www.inmon.com/ */
-    traceEvent(TRACE_INFO, "Welcome to sFlow: listening on UDP port 6343..."); 
+    traceEvent(TRACE_INFO, "Welcome to sFlow: listening on UDP port 6343...");
     fflush(stdout);
 }
 
@@ -1631,7 +1632,7 @@ static void termSflowFunct(void) {
     closeNwSocket(&sflowSocket);
 
   traceEvent(TRACE_INFO, "Thanks for using sFlow");
-  traceEvent(TRACE_INFO, "Done.\n"); 
+  traceEvent(TRACE_INFO, "Done.\n");
   fflush(stdout);
 }
 
@@ -1661,7 +1662,7 @@ PluginInfo* sflowPluginEntryFctn(void) {
 #else
   PluginInfo* PluginEntryFctn(void) {
 #endif
-    traceEvent(TRACE_INFO, "Welcome to %s. (C) 2002 by Luca Deri.\n", 
+    traceEvent(TRACE_INFO, "Welcome to %s. (C) 2002 by Luca Deri.\n",
 	       sflowPluginInfo->pluginName);
 
     return(sflowPluginInfo);
