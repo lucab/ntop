@@ -2001,6 +2001,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 		   "<TH "TH_BG">Active&nbsp;Since</TH>"
 		   "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		   "<TH "TH_BG">Duration</TH>"
+		   "<TH "TH_BG">Latency</TH>"
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 		   "<TH "TH_BG">State</TH>"
 #endif
@@ -2096,13 +2097,13 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 #ifdef PRINT_RETRANSMISSION_DATA
 	      "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
 #endif
-	       , getRowColor(),
+		  , getRowColor(),
 		  sport, napsterSession,
 		  remotePeer, dport,
-	       formatBytes(dataSent, 1), fragStrSent,
+		  formatBytes(dataSent, 1), fragStrSent,
 #ifdef PRINT_RETRANSMISSION_DATA
-	       formatBytes(retrDataSent, 1),
-	       retrSentPercentage,
+		  formatBytes(retrDataSent, 1),
+		  retrSentPercentage,
 #endif
 	       formatBytes(dataReceived, 1), fragStrRcvd
 #ifdef PRINT_RETRANSMISSION_DATA
@@ -2114,23 +2115,25 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-	      "<TD "TD_BG"  ALIGN=CENTER NOWRAP>%d:%d</TD>"
-	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG"  ALIGN=CENTER NOWRAP>%d:%d</TD>"
+		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG"  ALIGN=RIGHT>%d ms</TD>"
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
-	      "<TD "TD_BG"  ALIGN=CENTER>%s</TD>"
+		  "<TD "TD_BG"  ALIGN=CENTER>%s</TD>"
 #endif
-	      "</TR>\n",
-	       tcpSession[idx]->minWindow, tcpSession[idx]->maxWindow,
-	       formatTime(&(tcpSession[idx]->firstSeen), 1),
-	       formatTime(&(tcpSession[idx]->lastSeen), 1),
-	       formatSeconds(actTime-tcpSession[idx]->firstSeen)
+		  "</TR>\n",
+		  tcpSession[idx]->minWindow, tcpSession[idx]->maxWindow,
+		  formatTime(&(tcpSession[idx]->firstSeen), 1),
+		  formatTime(&(tcpSession[idx]->lastSeen), 1),
+		  formatSeconds(actTime-tcpSession[idx]->firstSeen),
+		  (tcpSession[idx]->nwLatency.tv_sec*1000+tcpSession[idx]->nwLatency.tv_usec/1000)
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
-	       , getSessionState(tcpSession[idx])
+		  , getSessionState(tcpSession[idx])
 #endif
-	       ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-
+		  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+      
       sendString(buf);
 
       numSessions++;

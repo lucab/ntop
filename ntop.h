@@ -1273,6 +1273,7 @@ typedef struct ipSession {
   TrafficCounter bytesFragmentedSent;     /* IP Fragments */
   TrafficCounter bytesFragmentedReceived; /* IP Fragments */
   u_int minWindow, maxWindow;       /* TCP window size */
+  struct timeval nwLatency;         /* Network Latency */
   u_short numFin;                   /* # FIN pkts received                      */
   u_short numFinAcked;              /* # ACK pkts received                      */
   tcp_seq lastAckIdI2R;             /* ID of the last ACK received              */
@@ -1638,14 +1639,17 @@ struct pbuf {
 /* TCP Session State Transition */
 
 #define STATE_BEGIN                  0
-#define STATE_ACTIVE       STATE_BEGIN
-#define STATE_FIN1_ACK0              1
-#define STATE_FIN1_ACK1              2
-#define STATE_FIN2_ACK0              3
-#define STATE_FIN2_ACK1              4
-#define STATE_FIN2_ACK2              5
-#define STATE_TIMEOUT                6
-#define STATE_END                    7
+#define STATE_SYN          STATE_BEGIN
+#define STATE_SYN_ACK                1
+#define STATE_ACK                    2
+#define STATE_ACTIVE         STATE_ACK
+#define STATE_FIN1_ACK0              3
+#define STATE_FIN1_ACK1              4
+#define STATE_FIN2_ACK0              5
+#define STATE_FIN2_ACK1              6
+#define STATE_FIN2_ACK2              7
+#define STATE_TIMEOUT                8
+#define STATE_END                    9
 
 /* **************************** */
 

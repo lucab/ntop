@@ -1755,6 +1755,7 @@ void printActiveTCPSessions(void) {
 		   "<TH "TH_BG">Active&nbsp;Since</TH>"
 		   "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		   "<TH "TH_BG">Duration</TH>"
+		   "<TH "TH_BG">Latency</TH>"
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 		   "<TH "TH_BG">State</TH>"
 #endif
@@ -1793,28 +1794,30 @@ void printActiveTCPSessions(void) {
 	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 	      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+	      "<TD "TD_BG" ALIGN=RIGHT>%d ms</TD>"
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
-	      "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
+		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
 #endif
-	      "</TR>\n",
-	      getRowColor(),
-	      makeHostLink(device[actualReportDeviceId].
-			   hash_hostTraffic[checkSessionIdx(tcpSession[idx]->initiatorIdx)], 
-			   SHORT_FORMAT, 0, 0),
-	      sport,
-	      makeHostLink(device[actualReportDeviceId].
-			   hash_hostTraffic[checkSessionIdx(tcpSession[idx]->remotePeerIdx)], 
-			   SHORT_FORMAT, 0, 0),
-	      dport,
-	      formatBytes(dataSent, 1),
-	      formatBytes(dataReceived, 1),
-	      formatTime(&(tcpSession[idx]->firstSeen), 1),
-	      formatTime(&(tcpSession[idx]->lastSeen), 1),
-	      formatSeconds(actTime-tcpSession[idx]->firstSeen)
+		  "</TR>\n",
+		  getRowColor(),
+		  makeHostLink(device[actualReportDeviceId].
+			       hash_hostTraffic[checkSessionIdx(tcpSession[idx]->initiatorIdx)], 
+			       SHORT_FORMAT, 0, 0),
+		  sport,
+		  makeHostLink(device[actualReportDeviceId].
+			       hash_hostTraffic[checkSessionIdx(tcpSession[idx]->remotePeerIdx)], 
+			       SHORT_FORMAT, 0, 0),
+		  dport,
+		  formatBytes(dataSent, 1),
+		  formatBytes(dataReceived, 1),
+		  formatTime(&(tcpSession[idx]->firstSeen), 1),
+		  formatTime(&(tcpSession[idx]->lastSeen), 1),
+		  formatSeconds(actTime-tcpSession[idx]->firstSeen),
+		  (tcpSession[idx]->nwLatency.tv_sec*1000+tcpSession[idx]->nwLatency.tv_usec/1000)
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
-	      , getSessionState(tcpSession[idx])
+		  , getSessionState(tcpSession[idx])
 #endif
-	      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
       sendString(buf);
       numSessions++;
