@@ -8,7 +8,14 @@ BEGIN {
     print "<meta http-equiv=\"Window-target\" content=\"_top\">"
     print "<meta name=\"description\" content=\"ntop (http://www.ntop.org) FAQ file.\">"
     print "<meta name=\"author\" content=\"ntop\">"
-    print "<meta name=\"generator\" content=\"ntop v2.1\">"
+
+    while (getline < "version.c" > 0) {
+        if($3 == "version") {
+            gsub(/["; ]/, "", $5) 
+            print "<meta name=\"generator\" content=\"ntop " $5 "\">"
+        }
+    }
+
     print "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\">"
     print "	<title>ntop FAQ</title>"
     print "</head>"
