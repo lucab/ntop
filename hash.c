@@ -808,7 +808,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
       /* compare with the ethernet-address */
       if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
 	if((hostIpAddress != NULL) && 
-	   (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)){
+	   (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
 	  if((!isMultihomed) && checkForMultihoming) {
 	    /* This is a local address hence this is a potential multihomed host. */
 
@@ -868,7 +868,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	break;
       }
     } else {
-      if(addrcmp(&el->hostIpAddress,hostIpAddress) == 0) {
+      if(addrcmp(&el->hostIpAddress, hostIpAddress) == 0) {
 	hostFound = 1;
 	break;
       }
@@ -962,22 +962,25 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	/* This is packet that's being routed or belonging to a
 	   remote network that uses the same physical wire (or forged)*/
 	memcpy(el->lastEthAddress, ether_addr, LEN_ETHERNET_ADDRESS);
-	if(hostIpAddress->hostFamily == AF_INET)
-	  memcpy(el->ethAddress, &hostIpAddress->Ip4Address.s_addr, 4); /* Dummy/unique eth address */
+
+	if(hostIpAddress != NULL) {
+	  if(hostIpAddress->hostFamily == AF_INET)
+	    memcpy(el->ethAddress, &hostIpAddress->Ip4Address.s_addr, 4); /* Dummy/unique eth address */
 #ifdef INET6
-	else if(hostIpAddress->hostFamily == AF_INET6)
-	  memcpy(el->ethAddress, &hostIpAddress->Ip6Address.s6_addr[8], 4);
+	  else if(hostIpAddress->hostFamily == AF_INET6)
+	    memcpy(el->ethAddress, &hostIpAddress->Ip6Address.s6_addr[8], 4);
 #endif
-
-	FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
-
-	if(isPrivateAddress(hostIpAddress)) FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
-
-	if(!isBroadcastAddress(hostIpAddress)) {
-	  if(isPseudoLocalAddress(hostIpAddress, actualDeviceId))
-	    FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
-	  else
-	    FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
+	  
+	  FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
+	  
+	  if(isPrivateAddress(hostIpAddress)) FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
+	  
+	  if(!isBroadcastAddress(hostIpAddress)) {
+	    if(isPseudoLocalAddress(hostIpAddress, actualDeviceId))
+	      FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
+	    else
+	      FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
+	  }
 	}
       } else {
 	FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
@@ -989,12 +992,15 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 	  The trick below allows me not to duplicate the
 	  "<broadcast>" string in the code
 	*/
-	if(hostIpAddress->hostFamily == AF_INET)
-	  el->hostIp4Address.s_addr = INADDR_BROADCAST;
+	
+	if(hostIpAddress != NULL) {
+	  if(hostIpAddress->hostFamily == AF_INET)
+	    el->hostIp4Address.s_addr = INADDR_BROADCAST;
 #ifdef INET6
-	else if(hostIpAddress->hostFamily == AF_INET6)
-	  el->hostIp6Address = _in6addr_linklocal_allnodes;
+	  else if(hostIpAddress->hostFamily == AF_INET6)
+	    el->hostIp6Address = _in6addr_linklocal_allnodes;
 #endif
+	}
 
 	FD_SET(FLAG_BROADCAST_HOST, &el->flags);
 	if(isMulticastAddress(&el->hostIpAddress))
