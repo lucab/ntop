@@ -28,12 +28,7 @@
 #include "leaks.h"
 #endif
 
-/* Windows lacks vsnprintf - so fake it */
-#if defined(WIN32)
- #define vsnprintf(a, b, c, ...)    vsprintf(a, c, ...)
-#endif
-
-#ifdef DARWINS
+#ifdef DARWIN
 extern void* perl_alloc();
 extern void* perl_parse();
 extern void* perl_get_hv();
