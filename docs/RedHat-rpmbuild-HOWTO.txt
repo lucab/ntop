@@ -1,0 +1,516 @@
+Making and testing RedHat rpms for ntop
+Burton M. Strauss III <Burton@ntopsupport.com>
+June 2002
+
+===============================================
+==== W a r n i n g ============================
+===============================================
+
+First off, this is information on how I personally create
+rpms for ntop.  It's actually quite simple, but some of
+the details will refer to how-tos for other programs.
+
+Most of this was done by trial and error - there may be
+a better way.  But it works good enough for the purpose.
+
+However, I don't always know what I did or how I got it
+to work.  If you have questions about rpm or user mode 
+linux, don't ask on the ntop lists, ask the rpm or uml 
+people!
+
+Also - one real warning... 
+
+     REMEMBER WHICH MACHINE YOU ARE ON when issuing commands!
+
+   It's likely that the rpm won't build right on the underlying
+   (real) computer - I once spent three hours trying to (re)install
+   things and fixing things because I was trying to build on
+   tigger, not ur-tigger!
+
+   ALSO:
+
+       DO NOT SHUTDOWN THE REAL MACHINE THINKING IT IS THE UML MACHINE!
+
+   It causes BAD things like file system corruption to the uml machines!
+
+
+        Trust me on both of these...
+
+
+===============================================
+==== E n v i r o n m e n t ====================
+===============================================
+
+I use a PIII-800 w/ 128 MB of RAM, named "tigger", which is 
+running RedHat 7.2 updated to be reasonably current with 
+various packages.  tigger is also my ntop development machine.
+All of which is irrelevant for the purposes of creating rpms!
+
+Building rpms works best if you are running as root.  And on
+a system without complications (other services running, etc).
+Accordingly, I've used User Mode Linux (uml), which is 
+available at
+
+     http://user-mode-linux.sourceforge.net/
+
+On tigger, I created two uml machines, called ur-tigger and
+ur-tigger2.  Both are RedHat 7.2 machines - just follow the 
+uml instructions.  You may find it easier to use the prebuilt
+pristine filesystems available at that site.  I did.
+
+I found that I had trouble with the rpm database, and I rebuilt
+it using this procedure:
+
+http://hermes.afaa.asso.fr/users/pascal/linux/rpm-rebuilddb
+
+But you should be able to download a working, pristine version
+and not have the problem.
+
+I then stripped them down so that ur-tigger is really just
+a development machine - no extra services (it runs ssh and
+the development tools).  And ur-tigger2 is a basic user
+machine, such as one might install ntop on.
+
+Using uml and only 128MB of ram, but with a PIII-800, it's not 
+fast, but it's certainly good enough.  I start ur-tigger,
+create the rpm, move it to shared storage, shut down ur-tigger,
+start ur-tigger2, install the rpm and still have 30-45 minutes
+of test time left out of an hour.
+
+Since the machine is somewhat underpowered, you will see
+serious performance hits on your session on the real machine
+while the uml machines are up.  If you really have to do this,
+I *guess* (but haven't tried it) that you could nice the uml
+machine - at the expense of performance there.
+
+For both uml machines, I created startup files (I put these in
+/etc/init.d for no good reason, since the uml machines are
+run under my personal id, not root).  I've listed one of 
+them at the bottom.  The only thing unusual is this line:
+
+args="con1=tty:/dev/tty4
+
+Which puts the uml (ur-tigger) console on tty4 of tigger's 
+console.
+
+I strongly suggest you don't try and do this with a COW
+file.  The two machines are pretty different.  While the 
+file sizes LOOK scary, they're really sparse, and quite small:
+
+[bstrauss@tigger ur-tigger]$ ls -ls
+     4 -r-xr-xr-x    1 bstrauss bstrauss     3191 May 12 18:23 control
+   268 -rwxrwxr-x    1 bstrauss bstrauss   266876 Apr 28 10:04 initrd-um
+     4 drwxrwxr-x    2 bstrauss bstrauss     4096 Apr 28 09:51 mnt
+617580 -rwxrwxr-x    1 bstrauss bstrauss 1073741824 Jun 19 10:16 rootfs
+ 12252 -rwxrwxr-x    1 bstrauss bstrauss 134217728 Jun 18 17:27 swapfs
+^^^^^^actual                   effective ^^^^^^^^^^
+
+So that you can easily exchange files between the two
+uml machines, follow this to setup host file access:
+
+     http://user-mode-linux.sourceforge.net/hostfs.html
+
+(If you're using a machine that is this tight on memory, 
+running two umls simultaneously isn't advised).
+
+===============================================
+==== C r e a t i n g ==========================
+===============================================
+
+ur-tigger is used to create the rpms.
+
+You'll need to have available all the tools you need to
+compile and run ntop - via trial and error, I developed the
+following list (it's in the ntop.spec file):
+
+BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, 
+             autoconf, automake, openssl, openssl-devel, 
+             gdbm, gdbm-devel, libpcap, MySQL-shared
+
+Login to the real machine as you.
+
+Startup the uml machine. Running the /etc/init.d/ur-tigger start
+command will seize your session, so I usually connect via ssh 
+from my workstation which is a separate (Windows) machine and
+just leave the session up.  But I could just as easily define
+two uml consoles and use them.
+
+Login to the uml machine as root.
+
+Under /usr/src, create the following structure (this is standard):
+
+./redhat
+./redhat/BUILD
+./redhat/RPMS
+./redhat/RPMS/athlon
+./redhat/RPMS/i386
+./redhat/RPMS/i486
+./redhat/RPMS/i586
+./redhat/RPMS/i686
+./redhat/RPMS/noarch
+./redhat/SOURCES
+./redhat/SPECS
+./redhat/SRPMS
+
+Put the ntop source into ./redhat/SOURCES, along with any
+other files you need:
+
+-rw-r--r--    1 root     root          225 Jun  4 13:10 force-i386.patch
+-rw-rw-r--    1 ntop     ntop      1828895 Jun  4 10:28 ntop-2.0.99-rc2.tgz
+-rw-r--r--    1 root     root         3602 May 14 14:04 ntop-config.in
+-rw-r--r--    1 root     root         1246 May 14 14:03 ntop.init
+-rw-r--r--    1 root     root          159 Nov 23  2001 ntop.logrotate
+-rw-r--r--    1 root     root         3267 Jun 18 18:12 ntop.spec
+
+Also put the ntop.spec file into ./redhat/SPECS
+
+The spec file is the key to the build process:
+
+Summary: ntop shows the network usage
+Name: ntop
+Version: 2.0.99RC2
+Release:  20020604
+Source: http://luca.ntop.org/ntop-2.0.99-rc2.tgz
+Source1: ntop.init
+Source2: ntop.logrotate
+Patch1: force-i386.patch
+Copyright: GPL
+Group: Applications/System
+BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, autoconf, automake, openssl, openssl-devel, gdbm, gdbm-devel, libpcap, MySQL-shared
+Requires: glibc, openssl, gdbm, ncurses, libpcap
+Buildroot: %{_tmppath}/%{name}-root
+Prereq: /sbin/chkconfig, /sbin/ldconfig
+
+%description
+ntop is a network and traffic analyzer that provides a wealth of information on
+various networking hosts and protocols. ntop is primarily accessed via a built-in 
+web interface. Optionally, data may be stored into a database for analysis or 
+extracted from the web server in formats suitable for manipulation in perl or php.
+
+Note that the command line version, intop, is largely unsupported.
+
+See docs/1STRUN.txt for the 1st time startup procedure!
+
+This is RELEASE CANDIDATE 2 for ntop 2.1, built from the source posted by Luca Deri
+on 04Jun2002, with a patch (hopefully) for the libpng issue.
+%prep
+%setup -q -c ${NAME}${VERSION}
+%patch 1 -P
+
+%build
+unset RPM_OPT_FLAGS
+%undefine optflags 
+# ntop craps out here with gcc2.96-98 and full optimization!
+# First, build static libraries - use the new buildAll script
+cd RC2/gdchart0.94c
+./buildAll.sh
+cd ../ntop
+# Now, configure and build ntop
+%configure --enable-optimize  --bindir=%{_sbindir} 
+make
+
+%install
+cd RC2/ntop
+mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d \
+         $RPM_BUILD_ROOT/%{_sbindir} \
+         $RPM_BUILD_ROOT/etc/logrotate.d 
+
+make install DESTDIR=$RPM_BUILD_ROOT
+
+install -c -m0755 %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/ntop
+install -c -m0644 %{SOURCE2} $RPM_BUILD_ROOT/etc/logrotate.d/ntop
+
+%post
+/sbin/chkconfig --add  ntop
+/sbin/ldconfig
+/sbin/service ntop condrestart > /dev/null 2>&1
+
+
+%preun
+if [ "$1" = "0" ]; then
+        /sbin/service ntop stop > /dev/null 2>&1
+        /sbin/chkconfig --del ntop
+fi
+
+%postun
+if [ "$1" -ge "1" ]; then
+        /sbin/service ntop condrestart > /dev/null 2>&1
+fi
+/sbin/ldconfig
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root)
+%doc ntop/AUTHORS
+%doc ntop/CONTENTS
+%doc ntop/MANIFESTO
+%doc ntop/COPYING
+%doc ntop/ChangeLog
+%doc ntop/docs/FAQ
+%doc ntop/docs/HACKING
+%doc ntop/docs/KNOWN_BUGS
+%doc ntop/docs/TODO
+%doc ntop/docs/1STRUN.txt
+%doc ntop/NEWS
+%doc ntop/PORTING
+%doc ntop/README
+%doc ntop/SUPPORT_NTOP.txt
+%doc ntop/THANKS
+%config %{_sysconfdir}/rc.d/init.d/ntop
+%config %{_sysconfdir}/logrotate.d/ntop
+%{_sbindir}/ntop
+%{_sbindir}/ntop-cert.pem
+%{_sbindir}/intop
+%{_datadir}/%{name}
+%{_mandir}/man1/intop.1.gz
+%{_mandir}/man8/ntop.8.gz
+
+%{_libdir}/ntop
+%{_libdir}/plugins
+%{_libdir}/libntop*
+%{_libdir}/libicmpPlugin*
+
+%changelog
+* Tue Jun 04 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- Updated to RC2
+
+* Fri May 17 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- Updated to RC1
+
+* Mon May 13 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- Updated for 2.0.99 - beta - from 13May2002 snapshot
+
+* Fri Nov 23 2001 Hal Burgiss <hal@foobox.net>
+- Updated for 2.0 beta.
+
+* Thu Oct 11 2001 Hal Burgiss <hal@foobox.net>
+- Updated for 2.0 pre-release snapshots. Many changes.
+
+
+It's documented in many places, it's a standard rpm file.  You can see
+where I stole it from (Thanks Hal), all I did was fixup a few things.
+
+Remember to update the key values each time:
+
+Version: 2.0.99RC2
+Release:  20020604
+Source: http://luca.ntop.org/ntop-2.0.99-rc2.tgz
+
+and the changelog.
+
+Luca's .tgz source files don't always follow the same structure,
+so you may have to change the cd commands, cd RC2/gdchart0.94c
+and cd RC2/ntop (in %build and %install respectively).
+
+The one patch forces an i386 build for maximum compatibility 
+(that's also why I build for MySQL):
+
+--- RC2/gdchart0.94c/buildAll.sh        Tue Apr 16 18:05:18 2002
++++ RC2/gdchart0.94c/buildAll.sh        Mon May 13 13:09:31 2002
+@@ -1,6 +1,6 @@
+ #!/bin/sh
+ 
+-./configure
++./configure i386-redhat-linux
+ cd zlib-1.1.4/
+ ./configure
+ make 
+
+(You may also have to adjust the directory structure on the
+--- and +++ lines).
+
+To actually do the build, cd to the SPECS directory and run
+
+rpm -ba ntop.spec
+
+When things finish, there should be a pair of .rpm files, the
+binary one in ./redhat/RPMS/i386 and the source in ./redhat/SRPMS
+Copy or move them to the host (real) machine.
+
+If you have errors, it's usually missing tools or the directory
+structure.  Best bet is to take the name of the failing file and
+look at it (they are all standard shell scripts created by rpm
+and in /var/tmp)
+
+Shutdown the uml machine (as root, type shutdown -h now)
+
+===============================================
+==== T e s t i n g ============================
+===============================================
+
+ur-tigger2 is used to test the rpms.
+
+You'll need to have available all the tools you need to run 
+ntop - via trial and error, I developed the following list
+(it's in the ntop.spec file):
+
+Requires: glibc, openssl, gdbm, ncurses, libpcap
+
+                                ^^^^^^^ intop only
+
+Login to the real machine as you.
+
+Startup the uml machine. Same warning as above about
+seizing your session.
+
+Login to the uml machine as root.
+
+To test the rpm, all you do is uninstall the old one
+
+rpm -e ntop
+
+and install the new one
+
+rpm -i ntop-xxxx.i386.rpm
+
+Then fire up ntop (remember docs/1STRUN.txt) and let it run
+as your test.
+
+============================================================
+
+===============================================
+==== /etc/init.d/ur-tigger - startup file======
+===============================================
+#!/bin/sh
+# $Id$
+
+###
+###  Various settings
+###
+name="ur-tigger"
+dirname=/home/ntop/uml/$name
+mc=$name
+mcp=$HOME/.uml/$name/pid
+memsize="64m"
+fs=" ubd0=rootfs root=/dev/ubd/0"
+swap="ubd7=swapfs"
+args="con1=tty:/dev/tty4"
+net="eth0=tuntap,,,"
+hostiface="eth0"
+
+###
+### Change to the base directory
+###
+cd $dirname
+
+###
+### Look for uml binary
+###
+
+PATH=.:$PATH
+
+if [ -x $name ]
+then
+    linux=$name
+else
+    linux=linux
+fi
+
+###
+### figure out host ip address
+###
+PATH=/sbin:/usr/sbin:$PATH
+ip=`LANG="C" LC_ALL="C" ifconfig $hostiface | grep 'inet addr:' | sed 's/.*inet addr:\([0-9.]*\).*/\1/'`
+net="$net$ip"
+
+###
+### look for initial ramdisk
+###
+
+initrd=""
+if [ -f initrd-um ] ; then initrd="initrd=initrd-um" ; fi
+
+###
+### Process command
+###
+case $1 in
+    start)
+        shift
+        exec $linux $initrd umid="$name" $fs $swap mem=$memsize $net $args "$@"
+        ;;
+    stop)
+        uml_mconsole "$mc" halt
+        exit
+        ;;
+    kill)
+        if [ -f $mcp ]
+        then
+            echo "Killing pid `cat $mcp`"
+            kill -9 "`cat $mcp`"
+        else
+            echo "Instance $name doesn't appear to be running"
+        fi
+        exit 
+        ;;
+    console|mconsole)
+        exec uml_mconsole $mc
+        ;;
+    cad|ctrl-alt-delete)
+        exec uml_mconsole $mc cad
+        ;;
+    reboot)
+        uml_mconsole $mc reboot
+        exit 
+        ;;
+    install)  # undocumented option used to install stuff originally
+        shift
+        rm -f installfs/success
+        $linux rw umid="$name" $fs mem=64m ubd7=installfs $net root=/dev/ubd/7 init=/uml_stage2install.py $args "$@"
+        if [ -f installfs/success ]
+        then
+            exitcode=0
+            echo "Install succeeded"
+        else
+            echo "Install failed"
+            exitcode=1
+        fi
+        rm -f installfs/opts.py 2>/dev/null # contains root password
+        if [ -f installfs/initrd-um ]
+        then
+            cp installfs/initrd-um .
+        fi
+        find installfs -type d -print | xargs chmod 777 2>/dev/null
+        rm -rf installfs 2>/dev/null
+        exit $exitcode
+        ;;
+    mount)
+                mount rootfs mnt/ -o loop
+
+        exit
+        ;;
+    umount)
+                cd ~
+                umount mnt/
+
+        exit
+        ;;
+    status)
+        pid=`cat $mc/pid`
+        echo "pid is $pid"
+        ps -ef | grep $pid
+        uml_mconsole $mc/mconsole version
+        exit
+        ;;
+    df|du)
+        ls -lhs
+        exit
+        ;;
+    *)
+        echo "`basename $0` (start|stop|console|reboot|status|kill|mount|umount)" 
+        echo "start      starts new session"
+        echo "stop       stops current session (hard halt) - safer to use"
+        echo "           init 0 inside session"
+        echo "reboot     reboots current session (hard reboot) - safer to use"
+        echo "           init 6 inside session"
+        echo "cad        sends ctrl-alt-delete"
+        echo "console    starts mconsole"
+        echo "status     current status"
+        echo "kill       kill -9 the uml session"
+        echo "mount      mounts filesystems as loopback on mnt,  you must be root"
+        echo "umount     unmounts the above"
+        echo "du         shows actual disk space usage"
+        exit 1
+esac
+
