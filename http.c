@@ -513,6 +513,9 @@ void printHTMLheader(char *title, int  headerFlags) {
   if((headerFlags & HTML_FLAG_NO_STYLESHEET) == 0) {
     sendString("<LINK REL=stylesheet HREF=/style.css type=\"text/css\">\n");
   }
+  
+  sendString("<SCRIPT SRC=/functions.js TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
+
   sendString("</HEAD>\n");
   if((headerFlags & HTML_FLAG_NO_BODY) == 0) {
     sendString("<BODY BACKGROUND=/white_bg.gif BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
@@ -812,6 +815,9 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
     case HTTP_TYPE_ICO:
       sendString("Content-Type: application/octet-stream\n");
       break;
+    case HTTP_TYPE_JS:
+      sendString("Content-Type: text/javascript\n");
+      break;
     case HTTP_TYPE_NONE:
       break;
 #ifdef DEBUG
@@ -879,6 +885,7 @@ static int checkURLsecurity(char *url) {
     return(2);
   }
 
+ HANDLE_URL:
    workURL = strdup(url);
  
    /* Strip off parameters */
@@ -893,11 +900,28 @@ static int checkURLsecurity(char *url) {
 
   /* a % - Unicode?  We kill this off 1st because some of the gcc functions interpret unicode "for" us */
 
-  if(strstr(workURL, "%") > 0) {
+  if(((token = strstr(workURL, "%")) > 0) && (strncmp(token, "%3A" /* : */, 3))) {
       traceEvent(TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request\n");
       /* Explicitly, we're updating the real URL, not the copy, so it's not used anywhere in ntop */
       url[0] = '\0'; 
       return(1);
+  }
+
+  if(token != NULL) {
+    /* The original URL contains %3A that need to be replaced with : */
+    int i, begin;
+    
+    for(i=0, begin=0; i<strlen(url); i++) {
+      if((url[i] == '%') && (url[i+1] == '3') && (url[i+2] == 'A')) {
+	url[begin++] = '_';
+	i += 2;
+      } else 
+	url[begin++] = url[i];
+    }
+
+    url[begin] = '\0';
+    free(workURL);
+    goto HANDLE_URL;
   }
 
   /* a double slash? */
@@ -963,6 +987,7 @@ static int checkURLsecurity(char *url) {
 	   (strcmp(&workURL[i], "png")  == 0) ||
 	   (strcmp(&workURL[i], "gif")  == 0) ||
 	   (strcmp(&workURL[i], "ico")  == 0) ||
+	   (strcmp(&workURL[i], "js")   == 0) || /* Javascript */
 	   (strcmp(&workURL[i], "pl")   == 0) || /* used for Perl CGI's */
 	   (strcmp(&workURL[i], "css")  == 0)))) {
     traceEvent(TRACE_ERROR,
@@ -1114,6 +1139,8 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
         mimeType = HTTP_TYPE_CSS;
       else if(strcmp(&pageName[len-4], ".ico") == 0)
         mimeType = HTTP_TYPE_ICO;
+      else if(strcmp(&pageName[len-4], ".js") == 0)
+        mimeType = HTTP_TYPE_JS;
     }
 
     sendHTTPHeader(mimeType, HTTP_FLAG_IS_CACHEABLE | HTTP_FLAG_MORE_FIELDS);

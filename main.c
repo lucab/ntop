@@ -21,7 +21,6 @@
  * Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define SYSLOG_NAMES /* So that we have facilitynames */
 
 #include "ntop.h"
 #include "globals-report.h"
@@ -665,18 +664,18 @@ static int parseOptions(int argc, char* argv []) {
 	
 	stringSanityCheck(optarg);
 	
-	for (i=0; facilitynames[i].c_name != NULL; i++) {
-	  if (strcmp(optarg, facilitynames[i].c_name) == 0) {
+	for (i=0; myFacilityNames[i].c_name != NULL; i++) {
+	  if (strcmp(optarg, myFacilityNames[i].c_name) == 0) {
 	    break;
 	  }
 	}
 	
-	if (facilitynames[i].c_name == NULL) {
+	if (myFacilityNames[i].c_name == NULL) {
 	  printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
 		 optarg);
 	  myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
 	} else {
-	  myGlobals.useSyslog = facilitynames[i].c_val;
+	  myGlobals.useSyslog = myFacilityNames[i].c_val;
 	}
       } else {
 	printf("NOTE: --use-syslog with no facility, using default value\n");

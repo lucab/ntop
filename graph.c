@@ -1305,6 +1305,8 @@ void drawGlobalProtoDistribution(void) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].osiBytes; lbl[idx] = "OSI"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].qnxBytes; lbl[idx] = "QNX"; idx++; }
+  if(myGlobals.device[myGlobals.actualReportDeviceId].stpBytes > 0) {
+    p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].stpBytes; lbl[idx] = "STP"; idx++; }
   if(myGlobals.device[myGlobals.actualReportDeviceId].otherBytes > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherBytes; lbl[idx] = "Other"; idx++; }
 

@@ -1546,10 +1546,10 @@ static void handlesFlowHTTPrequest(char* url) {
   /* *************************************** */
 
   sendString("<TABLE BORDER>");
-  sendString("<TR><TH>Flow Direction</TH><TH COLSPAN=2>Description</TH></TR>\n");
-  sendString("<TR><TH>Incoming</TH><TD><FORM ACTION=/plugins/sFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG">Flow Direction</TH><TH "TH_BG" COLSPAN=2>Description</TH></TR>\n");
+  sendString("<TR "TR_ON"><TH "TH_BG">Incoming</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
 	     "Local UDP Port</td> "
-	     "<td><INPUT NAME=port SIZE=5 VALUE=");
+	     "<td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.sflowInPort) < 0)
     BufferTooShort();
@@ -1560,16 +1560,16 @@ static void handlesFlowHTTPrequest(char* url) {
 
   /* *************************************** */
 
-  sendString("<TR><TH>Outgoing</TH><TD><FORM ACTION=/plugins/sFlow METHOD=GET>"
+  sendString("<TR "TR_ON"><TH "TH_BG">Outgoing</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
 	     "Remote Collector IP Address</td> "
-	     "<td><INPUT NAME=collectorIP SIZE=15 VALUE=");
+	     "<td "TD_BG"><INPUT NAME=collectorIP SIZE=15 VALUE=");
 
   theDest.s_addr = ntohl(myGlobals.sflowDest.sin_addr.s_addr);
   sendString(_intoa(theDest, buf, sizeof(buf)));
 
   sendString(">:6343 <INPUT TYPE=submit VALUE=Set><br>"
 	     "[default sampling rate is "INM_DEFAULT_SAMPLING_RATE" packets]</td></tr>\n");
-  sendString("<TR><TH>&nbsp;</TH><TD align=center COLSPAN=2>"
+  sendString("<TR "TR_ON"><TH "TH_BG">&nbsp;</TH><TD "TD_BG" align=center COLSPAN=2>"
 	     "NOTE: Use 0 to disable export/collection</TD></TR>\n");
   sendString("</table></CENTER><p>\n");
 
@@ -1593,19 +1593,19 @@ static void handlesFlowHTTPrequest(char* url) {
   sendString("<CENTER>\n<TABLE BORDER>\n");
 
   if(snprintf(buf, sizeof(buf),
-	      "<TR><TH ALIGN=LEFT>Samples Num.</TH><TD ALIGN=RIGHT>%s</TD></TR>\n",
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Samples Num.</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 	      formatPkts(myGlobals.numSamplesReceived)) < 0)
     BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),
-	      "<TR><TH ALIGN=LEFT>Data Scale</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n",
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Data Scale</TH><TD "TD_BG" ALIGN=RIGHT>%.2f %%</TD></TR>\n",
 	      percentage) < 0)
     BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),
-	      "<TR><TH ALIGN=LEFT>Estimated Error</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n",
+	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Estimated Error</TH><TD "TD_BG" ALIGN=RIGHT>%.2f %%</TD></TR>\n",
 	      err) < 0)
     BufferTooShort();
   sendString(buf);

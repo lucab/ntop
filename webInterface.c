@@ -18,8 +18,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#define SYSLOG_NAMES /* So that we have facilitynames */
-
 #include "ntop.h"
 #include "globals-report.h"
 
@@ -219,7 +217,7 @@ int execCGI(char* cgiName) {
 void showPluginsList(char* pluginName) {
   FlowFilterList *flows = myGlobals.flowsList;
   short printHeader = 0;
-  char tmpBuf[BUF_SIZE], *thePlugin;
+  char tmpBuf[BUF_SIZE], *thePlugin, tmpBuf1[BUF_SIZE];
   int newPluginStatus = 0;
 
   if(pluginName[0] != '\0') {
@@ -266,7 +264,7 @@ void showPluginsList(char* pluginName) {
 	printHTMLheader("Available Plugins", 0);
  	sendString("<CENTER>\n"
 		   ""TABLE_ON"<TABLE BORDER=1><TR>\n"
-		   "<TR><TH "TH_BG">Name</TH><TH>Description</TH>"
+		   "<TR><TH "TH_BG">Name</TH><TH "TH_BG">Description</TH>"
 		   "<TH "TH_BG">Version</TH>"
 		   "<TH "TH_BG">Author</TH>"
 		   "<TH "TH_BG">Active</TH>"
@@ -274,15 +272,18 @@ void showPluginsList(char* pluginName) {
 	printHeader = 1;
       }
 
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TR %s><TH "TH_BG" ALIGN=LEFT><A HREF=/plugins/%s>%s</TH>"
+      if(snprintf(tmpBuf1, sizeof(tmpBuf1), "<A HREF=/plugins/%s>%s</A>",
+		  flows->pluginStatus.pluginPtr->pluginURLname, flows->pluginStatus.pluginPtr->pluginURLname) < 0)
+	  BufferTooShort();
+
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
 		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>"
 		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
 		  "<TD "TD_BG" ALIGN=CENTER><A HREF="STR_SHOW_PLUGINS"?%s=%d>%s</A></TD>"
 		  "</TR>\n",
 		  getRowColor(),
-		  flows->pluginStatus.pluginPtr->pluginURLname,
-		  flows->pluginStatus.pluginPtr->pluginURLname,
+		  flows->pluginStatus.activePlugin ? tmpBuf1 : flows->pluginStatus.pluginPtr->pluginURLname,
 		  flows->pluginStatus.pluginPtr->pluginDescr,
 		  flows->pluginStatus.pluginPtr->pluginVersion,
 		  flows->pluginStatus.pluginPtr->pluginAuthor,
@@ -2173,13 +2174,13 @@ void printNtopConfigInfo(int textPrintFlag) {
   if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
     printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "No");
   } else {
-    for (i=0; facilitynames[i].c_name != NULL; i++) {
-      if (facilitynames[i].c_val == myGlobals.useSyslog) {
-	printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", facilitynames[i].c_name);
+    for (i=0; myFacilityNames[i].c_name != NULL; i++) {
+      if (myFacilityNames[i].c_val == myGlobals.useSyslog) {
+	printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", myFacilityNames[i].c_name);
 	break;
       }
     }
-    if (facilitynames[i].c_name == NULL) {
+    if (myFacilityNames[i].c_name == NULL) {
       printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "**UNKNOWN**");
     }
   }

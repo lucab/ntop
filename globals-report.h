@@ -30,13 +30,15 @@
 #ifdef HTML_EXPERIMENTAL
 #define TABLE_ON  "<TABLE BGCOLOR=#999999 CELLSPACING=1 CELLPADDING=1 BORDER=0><TR><TD>"
 #define TABLE_OFF "</TD></TR></TABLE>"
-#define TH_BG     "BGCOLOR=#FFFFFF"
-#define TD_BG     "BGCOLOR=#FFFFFF"
+#define TH_BG     "BGCOLOR=#DDDDDD"
+#define TD_BG     "BGCOLOR=#DDDDDD"o
+#define TR_ON     "onmouseover=\"setPointer(this, '#CCFFCC', '#DDDDDD')\" onmouseout=\"setPointer(this, '#DDDDDD', '#DDDDDD')\""
 #else
 #define TABLE_ON  ""
 #define TABLE_OFF ""
 #define TH_BG     ""
 #define TD_BG     ""
+#define TR_ON     ""
 #endif
 
 #ifdef WIN32

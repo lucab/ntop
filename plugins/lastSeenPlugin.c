@@ -122,7 +122,7 @@ static int SortLS(const void *_a, const void *_b) {
 static void handleLsHTTPrequest(char* url) {
   char tmpStr[BUF_SIZE];
   char tmpTime[25], postData[128];
-  char *no_info = "<TH>-NO INFO-</TH>",*tmp, *no_note ="-";
+  char *no_info = "<TH "TH_BG">-NO INFO-</TH>",*tmp, *no_note ="-";
   datum ret_data,key_data, content;
   LsHostInfo tablehost[MY_NETWORK*256];
   LsHostNote HostN;
@@ -204,7 +204,7 @@ static void handleLsHTTPrequest(char* url) {
   entry--;
   printSectionTitle("Last Seen Statistics");
   sendString("<CENTER><TABLE BORDER>\n");
-  sendString("<TR><TH>Host</TH><TH>Address</TH><TH>LastSeen</TH><TH>Comments</TH><TH>Options</TH></TR>\n");
+  sendString("<TR "TR_ON"><TH "TH_BG">Host</TH><TH "TH_BG">Address</TH><TH "TH_BG">LastSeen</TH><TH "TH_BG">Comments</TH><TH "TH_BG">Options</TH></TR>\n");
   while ( entry >= 0 ) {
 
     /* Getting notes from the DN */
@@ -239,9 +239,9 @@ static void handleLsHTTPrequest(char* url) {
     localtime_r(&tablehost[entry].LastUpdated, &loctime);
     strftime(tmpTime,25,"%d-%m-%Y&nbsp;%H:%M", &loctime);
 
-    if(snprintf(tmpStr, sizeof(tmpStr), "<TR %s>%s</TH>"
-	    "<TH ALIGN=LEFT>&nbsp;&nbsp;%s&nbsp;&nbsp</TH>"
-	    "<TH>&nbsp;&nbsp;%s&nbsp;&nbsp</TH><TH>%s</TH><TH>"
+    if(snprintf(tmpStr, sizeof(tmpStr), "<TR "TR_ON" %s>%s</TH>"
+	    "<TH "TH_BG" ALIGN=LEFT>&nbsp;&nbsp;%s&nbsp;&nbsp</TH>"
+	    "<TH "TH_BG">&nbsp;&nbsp;%s&nbsp;&nbsp</TH><TH "TH_BG">%s</TH><TH "TH_BG">"
 	    "<A HREF=\"/plugins/LastSeen?D%u\">Del</A>&nbsp;&nbsp;&nbsp;"
 	    "<A HREF=\"/plugins/LastSeen?N%u\">Notes</A></TH></TR>\n",
 	    getRowColor(),

@@ -305,3 +305,37 @@ void initNtopGlobals(int argc, char * argv[]) {
 
 /* ****************************** */
 
+#ifdef USE_SYSLOG
+/*
+ * Create the table data.  If we have the headers, we use the values, which
+ * is ripped from Linux's /usr/include/sys/syslog.h. If not, it's a table
+ * with just a null entry.
+ *
+ * NOTE: if various systems add facilities we want to support, or change
+ * the values, this has to be updated to be sensitive to the target system,
+ * compiler, etc.
+ */
+
+MYCODE myFacilityNames[] =
+  {
+    { "auth", LOG_AUTH },
+    { "cron", LOG_CRON },
+    { "daemon", LOG_DAEMON },
+    { "kern", LOG_KERN },
+    { "lpr", LOG_LPR },
+    { "mail", LOG_MAIL },
+    { "news", LOG_NEWS },
+    { "syslog", LOG_SYSLOG },
+    { "user", LOG_USER },
+    { "uucp", LOG_UUCP },
+    { "local0", LOG_LOCAL0 },
+    { "local1", LOG_LOCAL1 },
+    { "local2", LOG_LOCAL2 },
+    { "local3", LOG_LOCAL3 },
+    { "local4", LOG_LOCAL4 },
+    { "local5", LOG_LOCAL5 },
+    { "local6", LOG_LOCAL6 },
+    { "local7", LOG_LOCAL7 },
+    { NULL, -1 }                     /* Sentinal entry */
+  };
+#endif

@@ -163,8 +163,8 @@ static void formatSentRcvd(TrafficCounter sent, TrafficCounter rcvd) {
   char buf[128];
   
   if (sent + rcvd == 0) {
-    strcpy(buf, "<TD ALIGN=center>&nbsp;</TD>");
-  } else if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
+    strcpy(buf, "<TD "TD_BG" ALIGN=center>&nbsp;</TD>");
+  } else if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s/%s</TD>",
 		     formatPkts(sent), formatPkts(rcvd)) < 0)
     BufferTooShort();
   sendString(buf);
@@ -313,27 +313,29 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     return;
   }
 
+#if 0 /* Not quite useful */
 #ifdef HAVE_GDCHART
   if(hostIpAddress.s_addr == 0)
     sendString("<BR><CENTER><IMG SRC=\"/plugins/icmpWatch?chart\"></CENTER><P>\n");
 #endif
+#endif
 
   sendString("<CENTER>\n");
   sendString("<TABLE BORDER>\n");
-  if(snprintf(buf, sizeof(buf), "<TR><TH>%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd]</TH>"
-	      "<TH>%s?%s2>Bytes Sent</A></TH>"
-	      "<TH>%s?%s3>Bytes Rcvd</A></TH>"
-	      "<TH>%s?%s4>Echo Req.</A></TH>"
-	      "<TH>%s?%s14>Echo Reply</A></TH>"
-	      "<TH>%s?%s5>Unreach</A></TH>"
-	      "<TH>%s?%s6>Redirect</A></TH>"
-	      "<TH>%s?%s7>Router<br>Advert.</A></TH>"
-	      "<TH>%s?%s8>Time<br>Exceeded</A></TH>"
-	      "<TH>%s?%s9>Param.<br>Problem</A></TH>"
-	      "<TH>%s?%s10>Network<br>Mask</A></TH>"
-	      "<TH>%s?%s11>Source<br>Quench</A></TH>"
-	      "<TH>%s?%s12>Timestamp</A></TH>"
-	      "<TH>%s?%s13>Info</A></TH>"
+  if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG">%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd]</TH>"
+	      "<TH "TH_BG">%s?%s2>Bytes Sent</A></TH>"
+	      "<TH "TH_BG">%s?%s3>Bytes Rcvd</A></TH>"
+	      "<TH "TH_BG">%s?%s4>Echo Req.</A></TH>"
+	      "<TH "TH_BG">%s?%s14>Echo Reply</A></TH>"
+	      "<TH "TH_BG">%s?%s5>Unreach</A></TH>"
+	      "<TH "TH_BG">%s?%s6>Redirect</A></TH>"
+	      "<TH "TH_BG">%s?%s7>Router<br>Advert.</A></TH>"
+	      "<TH "TH_BG">%s?%s8>Time<br>Exceeded</A></TH>"
+	      "<TH "TH_BG">%s?%s9>Param.<br>Problem</A></TH>"
+	      "<TH "TH_BG">%s?%s10>Network<br>Mask</A></TH>"
+	      "<TH "TH_BG">%s?%s11>Source<br>Quench</A></TH>"
+	      "<TH "TH_BG">%s?%s12>Timestamp</A></TH>"
+	      "<TH "TH_BG">%s?%s13>Info</A></TH>"
 	      "</TR>\n",
 	      pluginName, sign,
 	      pluginName, sign,
@@ -363,18 +365,18 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       else
 	idx = i;
 
-      if(snprintf(buf, sizeof(buf), "<TR %s> %s",
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s> %s",
 		  getRowColor(),
 		  makeHostLink(hosts[idx], LONG_FORMAT, 0, 0)) < 0) 
 	BufferTooShort();
       sendString(buf);
 
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s</TD>", 
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>", 
 		  formatBytes(hosts[idx]->icmpSent, 1)) < 0)
 	BufferTooShort();
       sendString(buf);
       
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s</TD>", 
+      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>", 
 		  formatBytes(hosts[idx]->icmpRcvd, 1)) < 0)
 	BufferTooShort();
       sendString(buf);
