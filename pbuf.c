@@ -2747,15 +2747,18 @@ void processPacket(u_char *_deviceId,
 		}
 
 		if(srcHost->nonIPTraffic->ipxHostName == NULL) {
+		  int begin = 1;
+
 		  for(i=1; i<strlen(serverName); i++)
 		    if((serverName[i] == '_') && (serverName[i-1] == '_')) {
 		      serverName[i-1] = '\0'; /* Avoid weird names */
 		      break;
 		    }
 
+		  if(serverName[0] == '\0') begin = 1; else begin = 0;
 		  if(strlen(serverName) >= (MAX_LEN_SYM_HOST_NAME-1))
 		    serverName[MAX_LEN_SYM_HOST_NAME-2] = '\0';
-		  srcHost->nonIPTraffic->ipxHostName = strdup(serverName);
+		  srcHost->nonIPTraffic->ipxHostName = strdup(&serverName[begin]);
 		  for(i=0; srcHost->nonIPTraffic->ipxHostName[i] != '\0'; i++)
 		    srcHost->nonIPTraffic->ipxHostName[i] = tolower(srcHost->nonIPTraffic->ipxHostName[i]);
 

@@ -3423,8 +3423,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     vendorName = getVendorInfo(el->ethAddress, 1);
     if(vendorName[0] != '\0') {
-      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		  "%s%s</TD></TR>\n",
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT NOWRAP>%s%s</TD></TR>\n",
 		  getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
 		  vendorName,
 		  myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)

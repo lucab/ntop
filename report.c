@@ -1837,7 +1837,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	printBar(buf, sizeof(buf), el->actBandwidthUsage, maxBandwidthUsage, 3);
 
 	if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
-	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>", tmpName2) < 0)
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", tmpName2) < 0)
 	    BufferTooShort();
 	  sendString(buf);
 	}
@@ -3258,7 +3258,7 @@ void printProtoTraffic(void) {
   printTableEntry(buf, sizeof(buf), "ICMPv6", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/
-		     myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
   {
     ProtocolsList *protoList = myGlobals.ipProtosList;
     int idx = 0;
