@@ -34,19 +34,19 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   u_int idx = 0;
 
   if(myGlobals.borderSnifferMode)  /* MAC addresses don't make sense here */
-      (*useIPAddressForSearching) = 1;
+    (*useIPAddressForSearching) = 1;
 
   if(((*useIPAddressForSearching) == 1)
      || ((ether_addr == NULL)
 	 && (hostIpAddress != NULL))) {
-      if(myGlobals.trackOnlyLocalHosts
-	 && (!isLocalAddress(hostIpAddress))
-	 && (!_pseudoLocalAddress(hostIpAddress)))
-	idx = myGlobals.otherHostEntryIdx;
-      else
-	  memcpy(&idx, &hostIpAddress->s_addr, 4);
+    if(myGlobals.trackOnlyLocalHosts
+       && (!isLocalAddress(hostIpAddress))
+       && (!_pseudoLocalAddress(hostIpAddress)))
+      idx = myGlobals.otherHostEntryIdx;
+    else
+      memcpy(&idx, &hostIpAddress->s_addr, 4);
 
-      (*useIPAddressForSearching) = 1;
+    (*useIPAddressForSearching) = 1;
   } else if(memcmp(ether_addr, /* 0 doesn't matter */
 		   myGlobals.device[0].hash_hostTraffic[myGlobals.broadcastEntryIdx]->ethAddress,
 		   ETHERNET_ADDRESS_LEN) == 0) {
@@ -112,15 +112,15 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
       nextSession = theSession->next;
 
       if((theSession->initiatorIdx == hostIdx) || (theSession->remotePeerIdx == hostIdx)) {
-       if(myGlobals.device[theDevice].tcpSession[i] == theSession) {
-	 myGlobals.device[theDevice].tcpSession[i] = theSession->next;
-	 prevSession = myGlobals.device[theDevice].tcpSession[i];
-       } else {
-	 prevSession->next = nextSession;
-       }
+	if(myGlobals.device[theDevice].tcpSession[i] == theSession) {
+	  myGlobals.device[theDevice].tcpSession[i] = theSession->next;
+	  prevSession = myGlobals.device[theDevice].tcpSession[i];
+	} else {
+	  prevSession->next = nextSession;
+	}
 
-       freeSession(theSession, theDevice, 0 /* don't allocate */);
-       theSession = prevSession;
+	freeSession(theSession, theDevice, 0 /* don't allocate */);
+	theSession = prevSession;
       } else {
 	prevSession = theSession;
 	theSession = nextSession;
@@ -142,7 +142,7 @@ static void purgeHostIdx(int actualDeviceId, HostTraffic *el) {
     traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx() failed [NULL pointer]");
     return;
   }
-  
+
   if(el->hostTrafficBucket < myGlobals.device[actualDeviceId].actualHashSize) {
     HashList *list, *prevList;
 
@@ -174,7 +174,7 @@ static void purgeHostIdx(int actualDeviceId, HostTraffic *el) {
     traceEvent(TRACE_ERROR, "ERROR: %d is out of range [0..%d]",  el->hostTrafficBucket,
 	       myGlobals.device[actualDeviceId].actualHashSize-1);
   }
-  
+
   if((!allRight) && (el->hostTrafficBucket != myGlobals.broadcastEntryIdx))
     traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed [host not found]",
 	       actualDeviceId, el->hostTrafficBucket);
@@ -392,7 +392,7 @@ void purgeIdleHosts(int actDevice) {
     firstRun = 0;
     for(i=0; i<MAX_NUM_DEVICES; i++) lastPurgeTime[i] = startTime;
     len = sizeof(HostTraffic*)* MAX_NUM_PURGED_HOSTS;
-    theFlaggedHosts = (HostTraffic**)malloc(len);    
+    theFlaggedHosts = (HostTraffic**)malloc(len);
   }
 
   updateDeviceThpt(actDevice);
@@ -434,7 +434,7 @@ void purgeIdleHosts(int actDevice) {
 #endif
 	  theFlaggedHosts[maxBucket++] = el;
 
-	  if(el->hostTrafficBucket != theIdx) 
+	  if(el->hostTrafficBucket != theIdx)
 	    traceEvent(TRACE_ERROR, "ERROR: Index mismatch (hostTrafficBucket=%d/theIdx=%d)",
 		       el->hostTrafficBucket, theIdx);
 
@@ -448,7 +448,7 @@ void purgeIdleHosts(int actDevice) {
 	  }
 	}
       }
-      
+
       /* If (*) the entry might be NULL */
       if(myGlobals.device[actDevice].hash_hostTraffic[theIdx] != NULL)
 	myGlobals.device[actDevice].hash_hostTraffic[theIdx]->numUses = 0;
@@ -675,7 +675,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       myGlobals.device[actualDeviceId].hashList[idx] = list;
 
       hostFound = 0;
-      for(currentIdx=0, 
+      for(currentIdx=0,
 	    /* NOTE: we need % below because insertIdx may be beyond the list end */
 	    i = (myGlobals.device[actualDeviceId].insertIdx % myGlobals.device[actualDeviceId].actualHashSize);
 	  currentIdx<myGlobals.device[actualDeviceId].actualHashSize; currentIdx++) {

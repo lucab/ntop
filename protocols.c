@@ -50,7 +50,7 @@ void handleBootp(HostTraffic *srcHost,
 		 u_short sport,
 		 u_short dport,
 		 u_int packetDataLength,
-		 u_char* packetData, 
+		 u_char* packetData,
 		 int actualDeviceId) {
   BootProtocol bootProto = { 0 };
   int len;
@@ -119,7 +119,7 @@ void handleBootp(HostTraffic *srcHost,
 	    */
 	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr), actualDeviceId);
 	    if(realDstHost == NULL) {
-	      u_int hostIdx = getHostInfo(/* &bootProto.bp_yiaddr */ NULL, 
+	      u_int hostIdx = getHostInfo(/* &bootProto.bp_yiaddr */ NULL,
 					  bootProto.bp_chaddr, 0, 0, actualDeviceId);
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
@@ -229,7 +229,7 @@ void handleBootp(HostTraffic *srcHost,
 		    for(i=0; i<strlen(tmpHostName); i++)
 		      if(tmpHostName[i] == '.')
 			break;
-		    
+
 		    tmpHostName[i] = '\0';
 
 		    /* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */
@@ -249,7 +249,7 @@ void handleBootp(HostTraffic *srcHost,
 			  len--;
 			}
 
-			/* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */			
+			/* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */
 			if(len >= MAX_HOST_SYM_NAME_LEN) len = MAX_HOST_SYM_NAME_LEN-1;
 			strncpy(realDstHost->hostSymIpAddress, tmpName, len);
 			realDstHost->hostSymIpAddress[len] = '\0';
@@ -455,7 +455,7 @@ void handleBootp(HostTraffic *srcHost,
 	    */
 	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr), actualDeviceId);
 	    if(realClientHost == NULL) {
-	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, 
+	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL,
 					  bootProto.bp_chaddr, 0, 0, actualDeviceId);
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
@@ -553,9 +553,9 @@ void handleBootp(HostTraffic *srcHost,
 
 /* ************************************ */
 
-u_int16_t processDNSPacket(const u_char *packetData, 
-			   u_int length, 
-			   short *isRequest, 
+u_int16_t processDNSPacket(const u_char *packetData,
+			   u_int length,
+			   short *isRequest,
 			   short *positiveReply) {
   DNSHostInfo hostPtr;
   struct in_addr hostIpAddress;
@@ -593,7 +593,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
 
   queryNameLength = strlen(hostPtr.queryName);
   strtolower(hostPtr.queryName);
-  
+
   if((queryNameLength > 5)
      && (strncmp(&hostPtr.queryName[queryNameLength-5], ".arpa", 5) == 0))
     return(transactionId);
@@ -689,7 +689,7 @@ void handleNetbios(HostTraffic *srcHost,
 	traceEvent(TRACE_INFO, "Found: %s", nbName);
 #endif
 
-	switch(nodeType) {	  
+	switch(nodeType) {
 	case 0x1B: /* Domain Master Browser */
 	case 0x1C: /* Domain Controller */
 	case 0x1D: /* Local Master Browser */
