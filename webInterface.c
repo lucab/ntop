@@ -4288,7 +4288,7 @@ int printNtopLogReport(int printAsText) {
     int i, j, lines = 0;
     char buf[LEN_GENERAL_WORK_BUFFER];
 
-    if (myGlobals.logView == NULL) return;
+    if(myGlobals.logView == NULL) return(0);
 
     if(!printAsText) {
       printHTMLheader("ntop Log", BITFLAG_HTTP_NO_CACHE_CONTROL);
@@ -4627,7 +4627,9 @@ void printNtopProblemReport(void) {
 void initSocket(int isSSL, int *port, int *sock, char *addr) {
   int sockopt = 1, rc;
   struct sockaddr_in sockIn;
+#ifdef INITWEB_DEBUG
   char value[LEN_SMALL_WORK_BUFFER];
+#endif
 
 #ifdef HAVE_FILEDESCRIPTORBUG
   int i;
@@ -4639,9 +4641,7 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
   }
 
   traceEvent(CONST_TRACE_NOISY, "Initializing%s socket, port %d, address %s",
-             sslOrNot,
-             *port,
-             addr == NULL ? "(any)" : addr);
+             sslOrNot, *port, addr == NULL ? "(any)" : addr);
 
   memset(&sockIn, 0, sizeof(sockIn));
   sockIn.sin_family = AF_INET;

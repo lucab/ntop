@@ -224,8 +224,9 @@ int createThread(pthread_t *threadId,
 
 /* ************************************ */
 
-void killThread(pthread_t *threadId) {
+int killThread(pthread_t *threadId) {
   CloseHandle((HANDLE)*threadId);
+  return(0);
 }
 
 /* ************************************ */

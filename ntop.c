@@ -1021,7 +1021,9 @@ RETSIGTYPE cleanup(int signo) {
     free(myGlobals.currentFilterExpression);
 
   if(myGlobals.localAddresses != NULL) free(myGlobals.localAddresses);
+#ifndef WIN32
   if(myGlobals.effectiveUserName != NULL) free(myGlobals.effectiveUserName);
+#endif
   if(myGlobals.devices != NULL) free(myGlobals.devices);
 
   /* One day we should free myGlobals.countryFlagHead */

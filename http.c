@@ -1212,10 +1212,12 @@ static int returnHTTPPage(char* pageName,
   FILE *fd = NULL;
   char tmpStr[512];
   char *domainNameParm = NULL;
-  int revertOrder=0, rc;
+  int revertOrder=0;
   struct tm t;
   HostsDisplayPolicy showHostsMode = myGlobals.hostsDisplayPolicy;
-
+#if !defined(WIN32) && defined(PARM_USE_CGI)
+  int rc;
+#endif
 #ifdef WIN32
   int i;
 #endif
