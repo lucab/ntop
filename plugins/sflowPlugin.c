@@ -107,7 +107,7 @@ pthread_t sFlowThread;
 static int threadActive;
 #endif
 
-static void initSflowInSocket(); /* forward */
+static void initSflowInSocket(void); /* forward */
 static void setPluginStatus(char * status); /* forward */
 
 /* ****************************** */
@@ -1554,7 +1554,7 @@ static void receiveSflowSample(SFSample *sample)
 
 /* ****************************** */
 
-void freeSflowMatrixMemory() {
+static void freeSflowMatrixMemory(void) {
   /*
     NOTE: we need to lock something here (TBD)
   */
@@ -1872,7 +1872,7 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 
 /* ****************************** */
 
-static void initSflowInSocket() {
+static void initSflowInSocket(void) {
   struct sockaddr_in sockIn;
   int sockopt = 1;
 
