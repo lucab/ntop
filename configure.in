@@ -472,16 +472,16 @@ echo
 AC_HEADER_STDC
 dnl> AC_HEADER_TIME
 
-AC_DEFINE(DEBUG, 0, [dummy])
-AC_DEFINE(HAVE_INT16_T, 0, [dummy])
-AC_DEFINE(HAVE_INT32_T, 0, [dummy])
-AC_DEFINE(HAVE_INT64_T, 0, [dummy])
-AC_DEFINE(HAVE_INT8_T, 0, [dummy])
-AC_DEFINE(HAVE_UINT64_T, 0, [dummy])
-AC_DEFINE(HAVE_U_INT16_T, 0, [dummy])
-AC_DEFINE(HAVE_U_INT32_T, 0, [dummy])
-AC_DEFINE(HAVE_U_INT64_T, 0, [dummy])
-AC_DEFINE(HAVE_U_INT8_T, 0, [dummy])
+dnl> AC_DEFINE(DEBUG, 0, [dummy])
+dnl> AC_DEFINE(HAVE_INT16_T, 0, [dummy])
+dnl> AC_DEFINE(HAVE_INT32_T, 0, [dummy])
+dnl> AC_DEFINE(HAVE_INT64_T, 0, [dummy])
+dnl> AC_DEFINE(HAVE_INT8_T, 0, [dummy])
+dnl> AC_DEFINE(HAVE_UINT64_T, 0, [dummy])
+dnl> AC_DEFINE(HAVE_U_INT16_T, 0, [dummy])
+dnl> AC_DEFINE(HAVE_U_INT32_T, 0, [dummy])
+dnl> AC_DEFINE(HAVE_U_INT64_T, 0, [dummy])
+dnl> AC_DEFINE(HAVE_U_INT8_T, 0, [dummy])
 
 
 dnl> MANDATORY general purpose headers
