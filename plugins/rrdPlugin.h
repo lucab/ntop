@@ -93,13 +93,13 @@ static const char *rrd_subdirs[] = {
 };
 
 static const char *rrd_colors[] = {
+  "#EE0000",
+  "#00DD00",
   "#1E90FF",
   "#FFFF00",
-  "#FF0000",
   "#0000FF",
   "#00FFFF",
   "#FF00FF",
-  "#00FF00",
   "#aa00aa",
   "#00aa00",
   "#550055",

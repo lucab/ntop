@@ -92,7 +92,7 @@ char startTimeBuf[32], endTimeBuf[32], fileTimeBuf[32];
 int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average);
 void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *startTime, char* endTime, char* rrdPrefix);
-void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
+void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 void updateCounter(char *hostPath, char *key, Counter value);
 void updateGauge(char *hostPath, char *key, Counter value);
@@ -348,7 +348,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
 
   if(strstr(rrdPath, "/sFlow/") == NULL) {
-    sendString("<TR><TH "DARK_BG" COLSPAN=2>Traffic Summary</TH></TR>\n");
+    sendString("<TR><TH "DARK_BG" COLSPAN=1>Traffic Summary</TH></TR>\n");
 
     if(strncmp(rrdTitle, "interface", strlen("interface")) == 0) {
       min = 0, max = 4;
@@ -359,7 +359,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
     for(i=min; i<=max; i++) {
       sendString("<TR><TD COLSPAN=1 ALIGN=CENTER>");
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary"
-		    "&graphId=%d&key=%s/&start=%s&end=%s\"></TD><TD>&nbsp;</TD></TR>\n",
+		    "&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
 		    i, rrdPath, startTime, endTime);
       sendString(buf);
     }
@@ -399,7 +399,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
     }
   }
 
-  sendString("<TR><TH "DARK_BG">Traffic Counter Detail</TH><TH "DARK_BG">Total</TH></TR>\n");
+  /* sendString("<TR><TH "DARK_BG">Traffic Counter Detail</TH><TH "DARK_BG">Total</TH></TR>\n"); */
 
   directoryPointer = opendir(path);
 
@@ -434,38 +434,27 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
     rc = sumCounter(rrdPath, dp->d_name, startTime, endTime, &total, &average);
 
-    if(isGauge
-       || ((rc >= 0) && (total > 0))) {
+    if(isGauge || ((rc >= 0) && (total > 0))) {
       rsrcName[0] = '\0';
       rsrcName = dp->d_name;
 
-      sendString("<TR><TD>\n");
+      /* if(strcmp(rsrcName, "pktSent") || strcmp(rsrcName, "pktRcvd")) continue; */
 
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?"
-		    "action=graph&key=%s/&name=%s&title=%s&start=%s&end=%s\"><P>\n",
-		    rrdPath, rsrcName, rsrcName, startTime, endTime);
-      sendString(path);
+      if(strncmp(rsrcName, "IP_", 3)
+	 || strncmp(rsrcName, "tcp", 3)
+	 || strncmp(rsrcName, "udp", 3)
+	 ) {
+	if(strstr(rsrcName, "Sent")) {
+	  sendString("<TR><TD>\n");
 
-      sendString("</TD><TD ALIGN=RIGHT>\n");
+	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?"
+			"action=graphSummary&graphId=99&key=%s/&name=%s&title=%s&start=%s&end=%s\"><P>\n",
+			rrdPath, rsrcName, rsrcName, startTime, endTime);
+	  sendString(path);
 
-      /* printf("rsrcName: %s\n", rsrcName); */
-
-      if(isGauge) {
-	sendString("&nbsp;");
-      } else {
-	if((strncmp(rsrcName, "pkt", 3) == 0)
-	   || ((strlen(rsrcName) > 4) && (strcmp(&rsrcName[strlen(rsrcName)-4], "Pkts") == 0))) {
-	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s Pkt</TD>",
-                      formatPkts(total, formatBuf, sizeof(formatBuf)));
-	} else {
-	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s",
-                      formatBytes(total, 1, formatBuf, sizeof(formatBuf)));
+	  sendString("</TD></TR>\n");
 	}
-	sendString(path);
-      }
-
-      sendString("</TD></TR>\n");
-      numEntries++;
+      } 
     }
   } /* while */
 
@@ -476,9 +465,11 @@ static void listResource(char *rrdPath, char *rrdTitle,
   }
 
   sendString("</CENTER>");
-  sendString("<br><b>NOTE: total and average values are NOT absolute but "
-	     "calculated on the specified time interval.</b>\n");
-
+  
+  /*
+    sendString("<br><b>NOTE: total and average values are NOT absolute but "
+    "calculated on the specified time interval.</b>\n");
+  */
   printHTMLtrailer();
 }
 
@@ -539,12 +530,12 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     argv[argc++] = endTime;
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
     argv[argc++] = "--font";
- #ifdef CONST_RRD_DEFAULT_FONT_PATH
+#ifdef CONST_RRD_DEFAULT_FONT_PATH
     argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" \
-                   CONST_RRD_DEFAULT_FONT_PATH CONST_RRD_DEFAULT_FONT_NAME;
- #else
+      CONST_RRD_DEFAULT_FONT_PATH CONST_RRD_DEFAULT_FONT_NAME;
+#else
     argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" CONST_RRD_DEFAULT_FONT_NAME;
- #endif
+#endif
 #endif
 #ifdef WIN32
     revertDoubleColumn(path);
@@ -774,10 +765,9 @@ static char* spacer(char* _str, char *tmpStr) {
   int len = strlen(_str), i;
   char *str, *token;
 
-  if((len > 3) && (strncmp(_str, "IP_", 3) == 0)) {
-    str = &_str[3];
-    len -= 3;
-  } else
+  if((len > 3) && (strncmp(_str, "IP_", 3) == 0))
+    str = &_str[3], len -= 3;
+  else
     str = _str;
 
   if(((token = strstr(str, "Bytes")) != NULL)
@@ -785,30 +775,28 @@ static char* spacer(char* _str, char *tmpStr) {
      || ((token = strstr(str, "Num")) != NULL)
      ) {
     /* traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: '%s'", token);  */
-    len -= strlen(token)-1;
+    len -= strlen(token);
   }
 
   if(len > 15) len = 15;
-  snprintf(tmpStr, len, "% -15s", str);
-  for(i=len-1; i<15; i++) tmpStr[i] = ' ';
-  tmpStr[15] = '\0';
-
-  /* traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: '%s' [len=%d]", tmpStr, len); */
+  snprintf(tmpStr, len+1, "%s", str);
+  for(i=len; i<15; i++) tmpStr[i] = ' ';
+  tmpStr[16] = '\0';
 
   return(tmpStr);
 }
 
 /* ******************************* */
 
-void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
+void graphSummary(char *rrdPath, char *rrdName, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], tmpStr[32];
   char buf1[MAX_NUM_ENTRIES][2*MAX_BUF_LEN], fname[384], *label;
   char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
   int argc = 0, rc, x, y, i, entryId=0;
   DIR* directoryPointer;
+  char *rrd_custom[3], file_a[32], file_b[32];
 
   path[0] = '\0', label = "";
-
 
   switch(graphId) {
   case 0: rrds = (char**)rrd_summary_packets; label = "Packets/sec"; break;
@@ -853,6 +841,57 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
     break;
   case 5: rrds = (char**)rrd_summary_host_sentRcvd_packets; label = "Packets/sec"; break;
   case 6: rrds = (char**)rrd_summary_host_sentRcvd_bytes; label = "Bytes/sec"; break;
+
+  case 99:
+    /* rrdName format can be IP_<proto><Rcvd|Sent><Bytes|Pkts> */
+    {
+      char *sent  = strstr(rrdName, "Sent");
+      char *rcvd  = strstr(rrdName, "Rcvd");
+      char *bytes = strstr(rrdName, "Bytes");
+      char *pkts  = strstr(rrdName, "Pkts");
+      char *rem   = strstr(rrdName, "Rem");
+      char *loc   = strstr(rrdName, "Loc");
+      char *peers = strstr(rrdName, "Peers");
+
+      if(sent || rcvd) {
+	char *trailer_a, *trailer_b;
+
+	if(sent) sent[0]  = '\0'; else rcvd[0] = '\0';
+
+	if(bytes || pkts || rem || loc) {
+	  trailer_a = (bytes || pkts) ? (bytes ? bytes : pkts) : (rem ? rem : loc);
+	  trailer_b = (bytes || pkts) ? (bytes ? bytes : pkts) : (rem ? rem : loc);
+
+	  if(bytes && strstr(rrdName, "Bytes")) trailer_a = trailer_b = "";
+	  if(pkts && strstr(rrdName, "Pkts")) trailer_a = trailer_b = "";
+	} else
+	  trailer_a = trailer_b = "";
+
+	if(peers == NULL) peers = "";
+
+	if(strstr(rrdName, "bytes") && (rem || loc)) {
+	  
+	  snprintf(file_a, sizeof(file_a), "%s%sLoc", rrdName, sent ? "Sent" : "Rcvd");
+	  snprintf(file_b, sizeof(file_b), "%s%sRem", rrdName, sent ? "Sent" : "Rcvd");
+	} else {
+	  snprintf(file_a, sizeof(file_a), "%sSent%s%s", rrdName, trailer_a, peers);
+	  snprintf(file_b, sizeof(file_b), "%sRcvd%s%s", rrdName, trailer_b, peers);
+	}
+
+	rrd_custom[0] = file_a;
+	rrd_custom[1] = file_b;
+	rrd_custom[2] = NULL;
+	rrds = (char**)rrd_custom;
+
+	if(pkts) label = "Packets/sec"; else label = "Bytes/sec"; 
+	/* traceEvent(CONST_TRACE_INFO, "RRD: [%s][%s]", file_a, file_b); */
+      } else {
+	/* traceEvent(CONST_TRACE_INFO, "RRD: Not found [%s]", rrdName); */
+	return; /* Error */
+      }
+    }
+
+    break;
   }
 
   /* startTime[4] skips the 'now-' */
@@ -948,7 +987,6 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
   rrd_clear_error();
   addRrdDelay();
   rc = rrd_graph(argc, argv, &calcpr, &x, &y);
-
   calfree();
 
   if(rc == 0) {
@@ -1680,7 +1718,7 @@ static void handleRRDHTTPrequest(char* url) {
     graphCounter(rrdKey, rrdName, rrdTitle, startTime, endTime, rrdPrefix);
     return;
   } else if(action == FLAG_RRD_ACTION_GRAPH_SUMMARY) {
-    graphSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
+    graphSummary(rrdKey, rrdName, graphId, startTime, endTime, rrdPrefix);
     return;
   } else if(action == FLAG_RRD_ACTION_NF_SUMMARY) {
     netflowSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
