@@ -28,7 +28,7 @@ static short domainSort = 0;
 /* *************************** */
 
 #ifndef WIN32
-void ignoreSignal(int signalId) {
+static void ignoreSignal(int signalId) {
   closeNwSocket(&newSock);
   (void)setsignal(signalId, ignoreSignal);
 }

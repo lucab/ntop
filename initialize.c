@@ -218,8 +218,6 @@ void initCounters(int _mergeInterfaces) {
 
   mergeInterfaces = _mergeInterfaces;
 
-  /* (void)setsignal(SIGWINCH, windowSizeChanged);  */
-
 #ifndef WIN32
   /*
    * The name of the local domain is now calculated properly
@@ -319,6 +317,7 @@ void initCounters(int _mergeInterfaces) {
 	  sizeof(broadcastEntry.hostNumIpAddress));
   strncpy(broadcastEntry.hostSymIpAddress, broadcastEntry.hostNumIpAddress,
 	  sizeof(broadcastEntry.hostSymIpAddress));
+  strcpy(broadcastEntry.ethAddressString, "FF:FF:FF:FF:FF:FF");
   FD_SET(SUBNET_LOCALHOST_FLAG, &broadcastEntry.flags);
   FD_SET(BROADCAST_HOST_FLAG, &broadcastEntry.flags);
   FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &broadcastEntry.flags);
@@ -1098,6 +1097,15 @@ void parseTrafficFilter(char *argv[], int optind) {
   }
 }
 
+/* *************************** */
+
+#ifndef WIN32
+static void ignoreThisSignal(int signalId) {
+  setsignal(signalId, ignoreThisSignal);
+}
+#endif
+
+
 /* ******************************* */
 
 void initSignals(void) {
@@ -1120,14 +1128,16 @@ void initSignals(void) {
 
 #ifndef WIN32
   /* Setup signal handlers */
-  (void)setsignal(SIGTERM, cleanup);
-  (void)setsignal(SIGINT,  cleanup);
-  (void)setsignal(SIGHUP,  handleSigHup);
+  setsignal(SIGTERM, cleanup);
+  setsignal(SIGINT,  cleanup);
+  setsignal(SIGHUP,  handleSigHup);
+  setsignal(SIGPIPE, ignoreThisSignal);
+  setsignal(SIGABRT, ignoreThisSignal);
 
   /* Cooperate with nohup(1) */
   /*
     if ((oldhandler = setsignal(SIGHUP, cleanup)) != SIG_DFL)
-    (void)setsignal(SIGHUP, oldhandler);
+    setsignal(SIGHUP, oldhandler);
   */
 #endif
 }

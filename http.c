@@ -190,7 +190,6 @@ static int readHTTPheader(char* theRequestedURL,
       traceEvent(TRACE_INFO, "Rcvd non expected char '%c' [%d/0x%x]\n", aChar[0], aChar[0], aChar[0]);
 #endif
     } else {
-
       if(aChar[0] == '\r') {
 	/* <CR> is ignored as recommended in section 19.3 of RFC 2068 */
 	continue;

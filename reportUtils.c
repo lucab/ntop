@@ -2634,10 +2634,15 @@ void printHostDetailedInfo(HostTraffic *el) {
 	    el->ethAddressString) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(buf, sizeof(buf), "Info about host"
-		" <A HREF=http://%s/>%s %s</A>\n",
-		el->hostNumIpAddress, el->hostSymIpAddress, buf1) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(el->hostNumIpAddress[0] == '\0') {
+    if(snprintf(buf, sizeof(buf), "Info about host %s", el->hostSymIpAddress) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");    
+    } else {
+      if(snprintf(buf, sizeof(buf), "Info about host"
+		  " <A HREF=http://%s/>%s %s</A>\n",
+		  el->hostNumIpAddress, el->hostSymIpAddress, buf1) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+    }
   }
 
 #ifdef MULTITHREADED
