@@ -59,7 +59,7 @@ void handleBootp(HostTraffic *srcHost,
   BootProtocol bootProto = { 0 };
   int len;
 
-  if(enablePacketDecoding
+  if((!enablePacketDecoding)
      || (packetData == NULL) /* packet too short ? */
      || (borderSnifferMode))
     return;
@@ -562,7 +562,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
   u_int16_t transactionId = 0;
   int i;
 
-  if(enablePacketDecoding
+  if((!enablePacketDecoding)
      ||(packetData == NULL) /* packet too short ? */)
     return(transactionId);
 
@@ -666,7 +666,7 @@ void handleNapster(HostTraffic *srcHost,
   u_short napsterDownload = 0;
 #endif
 
-  if(enablePacketDecoding
+  if((!enablePacketDecoding)
      || (packetData == NULL) /* packet too short ? */)
     return(NULL);
 
@@ -916,7 +916,7 @@ void handleNetbios(HostTraffic *srcHost,
   u_char *p;
   int offset=0, displ, notEnoughData = 0;
 
-  if(enablePacketDecoding
+  if((!enablePacketDecoding)
      || (!((srcHost->nbHostName == NULL) || (srcHost->nbDomainName == NULL))))
     return; /* Already set */
 

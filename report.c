@@ -2804,7 +2804,7 @@ void printIpTrafficMatrix(void) {
 
 
   for(i=1; i<device[actualReportDeviceId].numHosts; i++)
-    if((i == otherHostEntryIdx) && (activeHosts[i] == 1)) {
+    if((i != otherHostEntryIdx) && (activeHosts[i] == 1)) {
       numConsecutiveEmptyCells=0;
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT><SMALL>%s</SMALL></TH>",
