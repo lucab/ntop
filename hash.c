@@ -426,7 +426,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   if(host->routedTraffic != NULL) free(host->routedTraffic);
 
-  freePortsUsage(host->portsUsage);
+  freePortsUsage(host->portsUsage); host->portsUsage = NULL;
 
   if(myGlobals.runningPref.enablePacketDecoding && (host->protocolInfo != NULL)) {
     if(host->protocolInfo->httpVirtualHosts != NULL) {

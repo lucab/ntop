@@ -206,9 +206,10 @@ void printTableDoubleEntry(char *buf, int bufLen,
 void printTableEntryPercentage(char *buf, int bufLen,
 			       char *label, char* label_1,
 			       char* label_2, float total,
-			       float percentage) {
+			       float percentage,
+			       u_int showFlows, Counter flows) {
   int int_perc;
-  char formatBuf[32];
+  char formatBuf[32], flowBuf[64];
 
   if(percentage < 0.5)
     int_perc = 0;
@@ -217,98 +218,104 @@ void printTableEntryPercentage(char *buf, int bufLen,
   else
     int_perc = (int) (percentage + 0.5);
 
+  if(showFlows == 0)
+    flowBuf[0] = '\0';
+  else
+    safe_snprintf(__FILE__, __LINE__, flowBuf, sizeof(flowBuf), 
+		  "</TD><TD "TD_BG" ALIGN=RIGHT>%u", flows);
+
   switch(int_perc) {
   case 0:
     if(total == -1) {
       safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		  "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
-		  "<TR>"
-		  "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 0&nbsp;%%</TD>"
-		  "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
-		  "<TD ALIGN=CENTER WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
-		  "</TR></TABLE></TD>"
-		  "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
-		  getRowColor(), label,
-		  CONST_COLOR_1, label_1,
-		  CONST_COLOR_2,
-		  CONST_COLOR_2, label_2);
+		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+		    "<TR>"
+		    "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 0&nbsp;%%</TD>"
+		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
+		    "<TD ALIGN=CENTER WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+		    "</TR></TABLE></TD>"
+		    "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
+		    getRowColor(), label, flowBuf,
+		    CONST_COLOR_1, label_1,
+		    CONST_COLOR_2,
+		    CONST_COLOR_2, label_2);
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		  "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
-		  "<TR>"
-		  "<TD ALIGN=LEFT WIDTH=\"10%%\"  BGCOLOR=\"%s\">%s 0&nbsp;%%</TD>"
-		  "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
-		  "<TD ALIGN=CENTER WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
-		  "</TR></TABLE></TD>"
-		  "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
-		  getRowColor(), label,
-		  formatKBytes(total, formatBuf, sizeof(formatBuf)),
-		  CONST_COLOR_1, label_1,
-		  CONST_COLOR_2,
-		  CONST_COLOR_1, label_2);
+		    "<TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
+		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+		    "<TR>"
+		    "<TD ALIGN=LEFT WIDTH=\"10%%\"  BGCOLOR=\"%s\">%s 0&nbsp;%%</TD>"
+		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
+		    "<TD ALIGN=CENTER WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+		    "</TR></TABLE></TD>"
+		    "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
+		    getRowColor(), label,
+		    formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf,
+		    CONST_COLOR_1, label_1,
+		    CONST_COLOR_2,
+		    CONST_COLOR_1, label_2);
     }
     break;
   case 100:
     if(total == -1) {
       safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-             "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
-             "<TR>"
-             "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD>"
-             "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
-             "<TD ALIGN=CENTER WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
-             "</TR></TABLE></TD>"
-             "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 0&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
-             getRowColor(), label,
-             CONST_COLOR_1, label_1,
-             CONST_COLOR_1,
-             CONST_COLOR_2, label_2);
+		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+		    "<TR>"
+		    "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD>"
+		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
+		    "<TD ALIGN=CENTER WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+		    "</TR></TABLE></TD>"
+		    "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 0&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
+		    getRowColor(), label,
+		    CONST_COLOR_1, label_1,
+		    CONST_COLOR_1,
+		    CONST_COLOR_2, label_2);
     } else {
       safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		  "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
-		  "<TR>"
-		  "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD>"
-		  "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
-		  "<TD ALIGN=CENTER WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
-		  "</TR></TABLE></TD>"
-		  "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 0&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
-		  getRowColor(), label,
-		  formatKBytes(total, formatBuf, sizeof(formatBuf)),
-		  CONST_COLOR_1, label_1, CONST_COLOR_1,
-		  CONST_COLOR_2, label_2);
+		    "<TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
+		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+		    "<TR>"
+		    "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD>"
+		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
+		    "<TD ALIGN=CENTER WIDTH=\"100%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+		    "</TR></TABLE></TD>"
+		    "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 0&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
+		    getRowColor(), label,
+		    formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf,
+		    CONST_COLOR_1, label_1, CONST_COLOR_1,
+		    CONST_COLOR_2, label_2);
     }
     break;
   default:
     if(total == -1) {
       safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-             "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
-             "<TR>"
-             "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD>"
-             "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
-             "<TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
-             "<TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
-             "</TR></TABLE></TD>"
-             "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
-             getRowColor(), label,
-             CONST_COLOR_1, label_1, percentage,
-             int_perc, CONST_COLOR_1,
-             (100-int_perc), CONST_COLOR_2,
-             CONST_COLOR_2, label_2, (100-percentage));
+		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+		    "<TR>"
+		    "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD>"
+		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
+		    "<TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+		    "<TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+		    "</TR></TABLE></TD>"
+		    "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
+		    getRowColor(), label,
+		    CONST_COLOR_1, label_1, percentage,
+		    int_perc, CONST_COLOR_1,
+		    (100-int_perc), CONST_COLOR_2,
+		    CONST_COLOR_2, label_2, (100-percentage));
     } else {
-      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		  "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
-		  "<TR><TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD>"
-		  "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
-		  "<TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
-		  "<TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
-		  "</TR></TABLE></TD>"
-		  "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
-		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)),
-		  CONST_COLOR_1, label_1, percentage,
-		  int_perc, CONST_COLOR_1,
-		  (100-int_perc), CONST_COLOR_2,
-		  CONST_COLOR_2, label_2, (100-percentage));
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>%s %s</TD>"
+		    "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+		    "<TR><TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%% %s</TD>"
+		    "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
+		    "<TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+		    "<TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">&nbsp;</TD>"
+		    "</TR></TABLE></TD>"
+		    "<TD ALIGN=RIGHT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD></TR></TABLE></TD></TR>\n",
+		    getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf,
+		    CONST_COLOR_1, label_1, percentage,
+		    int_perc, CONST_COLOR_1,
+		    (100-int_perc), CONST_COLOR_2,
+		    CONST_COLOR_2, label_2, (100-percentage));
     }
   }
 
@@ -3904,12 +3911,12 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(el->hostNumIpAddress[0] != '\0') {
     printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Sent&nbsp;Stats",
-			      "Local", "Rem", -1, percentage);
+			      "Local", "Rem", -1, percentage, 0, 0);
 
     if(el->bytesSent.value > 0) {
       percentage = (((float)el->ipBytesSent.value*100)/el->bytesSent.value);
       printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Sent",
-				"IP", "Non-IP", -1, percentage);
+				"IP", "Non-IP", -1, percentage, 0, 0);
     }
   }
 
@@ -3930,26 +3937,26 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     if(el->hostNumIpAddress[0] != '\0')
       printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Rcvd&nbsp;Stats",
-				"Local", "Rem", -1, percentage);
+				"Local", "Rem", -1, percentage, 0, 0);
 
   if(el->bytesRcvd.value > 0) {
     percentage = (((float)el->ipBytesRcvd.value*100)/el->bytesRcvd.value);
     printTableEntryPercentage(buf, sizeof(buf), "IP&nbsp;vs.&nbsp;Non-IP&nbsp;Rcvd",
-			      "IP", "Non-IP", -1, percentage);
+			      "IP", "Non-IP", -1, percentage, 0, 0);
   }
 
   total = el->pktSent.value+el->pktRcvd.value;
   if(total > 0) {
     percentage = ((float)el->pktSent.value*100)/((float)total);
     printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vs.&nbsp;Rcvd&nbsp;Pkts",
-			      "Sent", "Rcvd", -1, percentage);
+			      "Sent", "Rcvd", -1, percentage, 0, 0);
   }
 
   total = el->bytesSent.value+el->bytesRcvd.value;
   if(total > 0) {
     percentage = ((float)el->bytesSent.value*100)/((float)total);
     printTableEntryPercentage(buf, sizeof(buf), "Sent&nbsp;vs.&nbsp;Rcvd&nbsp;Data",
-			      "Sent", "Rcvd", -1, percentage);
+			      "Sent", "Rcvd", -1, percentage, 0, 0);
   }
 
   /* ******************** */
@@ -4227,9 +4234,10 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
 
 void printTableEntry(char *buf, int bufLen,
 		     char *label, char* color,
-		     float total, float percentage) {
+		     float total, float percentage,
+		     u_int showFlows, Counter flows) {
   int int_perc;
-  char formatBuf[32];
+  char formatBuf[32], flowBuf[64];
 
   if(total == 0) return;
 
@@ -4244,32 +4252,39 @@ void printTableEntry(char *buf, int bufLen,
     percentage = 100;
   }
 
+  if(!showFlows)
+    flowBuf[0] = '\0';
+  else
+    safe_snprintf(__FILE__, __LINE__, flowBuf, sizeof(flowBuf), 
+		  "</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%u", flows);
+
   switch(int_perc) {
   case 0:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>0%%</TD>"
-		"<TD "TD_BG" WIDTH=200>&nbsp;</TD></TR>\n",
-		getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)));
+		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>0%%</TD>"
+		  "<TD "TD_BG" WIDTH=200>&nbsp;</TD></TR>\n",
+		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf);
     break;
   case 100:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>100%%</TD>"
-		"<TD ALIGN=CENTER WIDTH=200><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=200 HEIGHT=12>"
-		"</TD></TR>\n",
-		getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)));
+		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>100%%</TD>"
+		  "<TD ALIGN=CENTER WIDTH=200><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=200 HEIGHT=12>"
+		  "</TD></TR>\n",
+		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), flowBuf);
     break;
   default:
     safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%d%%</TD>"
-		"<TD "TD_BG" WIDTH=200><TABLE BORDER=0 "TABLE_DEFAULTS" CELLPADDING=0 CELLSPACING=0 WIDTH=200>"
-		"<TR "TR_ON"><TD><IMG ALIGN=MIDDLE ALT=\"%d%%\" SRC=\"/gauge.jpg\" WIDTH=\"%d\" HEIGHT=12>"
-		"</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
-		"<P>&nbsp;</TD></TR></TABLE>"TABLE_OFF"</TD></TR>\n",
-		getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), int_perc,
-		int_perc, (200*int_perc)/100,
-		(200*(100-int_perc))/100, getActualRowColor());
+		  "<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s %s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%d%%</TD>"
+		  "<TD "TD_BG" WIDTH=200><TABLE BORDER=0 "TABLE_DEFAULTS" CELLPADDING=0 CELLSPACING=0 WIDTH=200>"
+		  "<TR "TR_ON"><TD><IMG ALIGN=MIDDLE ALT=\"%d%%\" SRC=\"/gauge.jpg\" WIDTH=\"%d\" HEIGHT=12>"
+		  "</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
+		  "<P>&nbsp;</TD></TR></TABLE>"TABLE_OFF"</TD></TR>\n",
+		  getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)), 
+		  flowBuf, int_perc,
+		  int_perc, (200*int_perc)/100,
+		  (200*(100-int_perc))/100, getActualRowColor());
   }
-
+  
   sendString(buf);
 }
 

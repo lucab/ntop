@@ -72,7 +72,8 @@ extern void printTableDoubleEntry(char *buf, int bufLen,
 extern void printTableEntryPercentage(char *buf, int bufLen,
 				      char *label, char* label_1,
 				      char* label_2, float total,
-				      float percentage);
+				      float percentage,
+				      u_int showFlows, Counter flows);
 extern void printPageTitle(char *text);
 extern void printSectionTitle(char *text);
 extern void printHostsCharacterization(void);
@@ -129,7 +130,8 @@ extern void printHostUsedServices(HostTraffic *el, int actualDeviceId);
 extern void printHostIcmpStats(HostTraffic *el);
 extern void printTableEntry(char *buf, int bufLen,
 			    char *label, char* color,
-			    float total, float percentage);
+			    float total, float percentage,
+			    u_int showFlows, Counter flows);
 extern char* buildHTMLBrowserWindowsLabel(int i, int j, u_short forIpTraffic);
 extern int cmpEventsFctn(const void *_a, const void *_b);
 extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,

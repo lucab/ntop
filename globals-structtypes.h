@@ -615,6 +615,7 @@ typedef struct shortProtoTrafficInfo {
 typedef struct protoTrafficInfo {
   TrafficCounter sentLoc, sentRem;
   TrafficCounter rcvdLoc, rcvdFromRem;
+  TrafficCounter totalFlows;
 } ProtoTrafficInfo;
 
 #define MAX_NUM_NON_IP_PROTO_TRAFFIC_INFO   8

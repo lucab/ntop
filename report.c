@@ -3730,382 +3730,395 @@ static int cmpPortsFctn(const void *_a, const void *_b) {
 
 /* ********************************** */
 
-void printIpProtocolDistribution(int mode, int revertOrder, int printGraph)
-{
-    int i;
-    char buf[2*LEN_GENERAL_WORK_BUFFER], *sign;
-    float total, partialTotal, remainingTraffic;
-    float percentage;
-    char formatBuf[32], formatBuf1[32], formatBuf2[32];
+void printIpProtocolDistribution(int mode, int revertOrder, int printGraph) {
+  int i;
+  char buf[2*LEN_GENERAL_WORK_BUFFER], *sign;
+  float total, partialTotal, remainingTraffic;
+  float percentage;
+  char formatBuf[32], formatBuf1[32], formatBuf2[32];
 
-    if(revertOrder)
-        sign = "";
-    else
-        sign = "-";
+  if(revertOrder)
+    sign = "";
+  else
+    sign = "-";
 
-    if(mode == FLAG_HOSTLINK_TEXT_FORMAT) {
-        printSectionTitle("IP Protocol Distribution");
-
-#ifndef EMBEDDED
-        sendString("<CENTER><IMG SRC=\"" CONST_PIE_IPPROTO_RL_DIST CHART_FORMAT "\" "
-                   "alt=\"ipProtocol distribution chart\"><p>\n</CENTER>\n");
-#endif
-
-        printSectionTitle("Local Traffic");
-
-        total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local.value+
-                        myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local.value)/1024;
-        if(total == 0)
-            printNoDataYet();
-        else {
-            sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-                       "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-                       "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
-                       "Percentage</TH></TR>\n");
-            if(total == 0) total = 1; /* Avoids divisions by zero */
-            remainingTraffic = 0;
-
-            partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local.value/1024;
-            percentage = ((float)(partialTotal*100))/((float)total);
-            printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
-                                      "TCP", "UDP", total, percentage);
-
-            sendString("</TABLE>"TABLE_OFF"<P>\n");
-            sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-                       "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-                       "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
-                       "Percentage</TH></TR>\n");
-
-            for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-                partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value/1024;
-
-                if(partialTotal > 0) {
-                    remainingTraffic += partialTotal;
-                    percentage = ((float)(partialTotal*100))/((float)total);
-                    printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
-                                    CONST_COLOR_1, partialTotal, percentage);
-                }
-            }
-
-            if(total > remainingTraffic)
-                remainingTraffic = total - remainingTraffic;
-            else
-                remainingTraffic = 0;
-
-            if(remainingTraffic > 0) {
-                percentage = ((float)(remainingTraffic*100))/((float)total);
-                printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
-                                CONST_COLOR_1, remainingTraffic, percentage);
-            }
-
-            sendString("</TABLE>"TABLE_OFF"<P>\n");
-            sendString("</CENTER>\n");
-        }
-
-        /* ********************************************************** */
-
-        total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local.value+
-                        myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote2local.value)/1024;
-
-        printSectionTitle("Remote to Local Traffic");
-
-        if(total == 0)
-            printNoDataYet();
-        else {
-            sendString("<CENTER>\n");
-            sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-                       "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-                       "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
-                       "Percentage</TH></TR>\n");
-
-            if(total == 0) total = 1; /* Avoids divisions by zero */
-            remainingTraffic = 0;
-
-            partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local.value/1024;
-            percentage = ((float)(partialTotal*100))/((float)total);
-            printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
-                                      "TCP", "UDP", total, percentage);
-
-            sendString("</TABLE>"TABLE_OFF);
-            sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-                       "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-                       "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
-                       "Percentage</TH></TR>\n");
-
-            for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-                partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value/1024;
-
-                if(partialTotal > 0) {
-                    remainingTraffic += partialTotal;
-                    percentage = ((float)(partialTotal*100))/((float)total);
-                    printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
-                                    CONST_COLOR_1, partialTotal, percentage);
-                }
-            }
-
-            if(total > remainingTraffic)
-                remainingTraffic = total - remainingTraffic;
-            else
-                remainingTraffic = 0;
-
-            if(remainingTraffic > 0) {
-                percentage = ((float)(remainingTraffic*100))/((float)total);
-                printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
-                                CONST_COLOR_1, remainingTraffic, percentage);
-            }
-            sendString("</TABLE>"TABLE_OFF"\n<P>\n");
-            sendString("</CENTER>\n");
-        }
-
-        /* ********************************************************** */
-
-        /* Courtesy of "Burton M. Strauss III" <BStrauss3@attbi.com> */
-
-        printSectionTitle("Remote Traffic");
-
-        total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote.value+
-                        myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote.value)/1024;
-        if(total == 0)
-            printNoDataYet();
-        else {
-            sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-                       "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-                       "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
-                       "Percentage</TH></TR>\n");
-            if(total == 0) total = 1; /* Avoids divisions by zero */
-            remainingTraffic = 0;
-
-            partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote.value/1024;
-            percentage = ((float)(partialTotal*100))/((float)total);
-            printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
-                                      "TCP", "UDP", total, percentage);
-
-            sendString("</TABLE>"TABLE_OFF"\n");
-            sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-                       "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-                       "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
-                       "Percentage</TH></TR>\n");
-
-            for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-                partialTotal =
-                    (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value/1024;
-
-                if(partialTotal > 0) {
-                    remainingTraffic += partialTotal;
-                    percentage = ((float)(partialTotal*100))/((float)total);
-                    printTableEntry(buf, sizeof(buf),
-                                    myGlobals.protoIPTrafficInfos[i],
-                                    CONST_COLOR_1, partialTotal, percentage);
-                }
-            }
-
-            if(total > remainingTraffic)
-                remainingTraffic = total - remainingTraffic;
-            else
-                remainingTraffic = 0;
-
-            if(remainingTraffic > 0) {
-                percentage = ((float)(remainingTraffic*100))/((float)total);
-                printTableEntry(buf, sizeof(buf),
-                                "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
-                                CONST_COLOR_1, remainingTraffic, percentage);
-            }
-
-            sendString("</TABLE>"TABLE_OFF"<P>\n");
-            sendString("</CENTER>\n");
-        }
-
-        /* ********************************************************** */
-
-        printSectionTitle("Local to Remote Traffic");
-
-        total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote.value+
-                        myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local2remote.value)/1024;
-        if(total == 0)
-            printNoDataYet();
-        else {
-            sendString("<CENTER>\n");
-            sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-                       "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-                       "<TH "TH_BG" WIDTH=100>Data</TH>"
-                       "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
-
-            if(total == 0) total = 1; /* Avoids divisions by zero */
-            remainingTraffic = 0;
-
-            partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote.value/1024;
-            percentage = ((float)(partialTotal*100))/((float)total);
-            printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
-                                      "TCP", "UDP", total, percentage);
-
-            sendString("</TABLE>"TABLE_OFF);
-            sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
-                       "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
-                       "<TH "TH_BG" WIDTH=100>Data</TH>"
-                       "<TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
-
-            for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-                partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value/1024;
-
-                if(partialTotal > 0) {
-                    remainingTraffic += partialTotal;
-                    percentage = ((float)(partialTotal*100))/((float)total);
-                    printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
-                                    CONST_COLOR_1, partialTotal, percentage);
-                }
-            }
-
-            if(total > remainingTraffic)
-                remainingTraffic = total - remainingTraffic;
-            else
-                remainingTraffic = 0;
-
-            if(remainingTraffic > 0) {
-                percentage = ((float)(remainingTraffic*100))/((float)total);
-                printTableEntry(buf, sizeof(buf), "Other&nbsp;IP-based&nbsp;Protocols",
-                                CONST_COLOR_1, remainingTraffic, percentage);
-            }
-            sendString("</TABLE>"TABLE_OFF"<P>\n");
-            sendString("</CENTER>\n");
-        }
-    } else {
-        total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
-
-        {
-            ProtocolsList *protoList = myGlobals.ipProtosList;
-            int idx1 = 0;
-
-            while(protoList != NULL) {
-                if(total > (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value)
-                    total -= (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
-                else
-                    total = 0;
-
-                idx1++, protoList = protoList->next;
-            }
-        }
-
-        if(total == 0)
-            return;
-        else {
-            int numProtosFound = 0;
-
-            printSectionTitle("Global TCP/UDP Protocol Distribution");
-
-            sendString("<CENTER>\n");
-            sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>"
-                       "TCP/UDP&nbsp;Protocol</TH>"
-                       "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
-                       "Percentage</TH></TR>\n");
-
-            remainingTraffic = 0;
-
-            for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-                partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value
-                    +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value;
-                partialTotal += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
-                    +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
-
-                if(partialTotal > 0) {
-                    remainingTraffic += partialTotal;
-                    percentage = ((float)(partialTotal*100))/((float)total);
-                    numProtosFound++;
-                    printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
-                                    CONST_COLOR_1, partialTotal/1024, percentage);
-                }
-            }
-
-            if(total > remainingTraffic)
-                remainingTraffic = total - remainingTraffic;
-            else
-                remainingTraffic = 0;
-
-            if(remainingTraffic > 0) {
-                percentage = ((float)(remainingTraffic*100))/((float)total);
-                printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
-                                CONST_COLOR_1, remainingTraffic/1024, percentage);
-            }
+  if(mode == FLAG_HOSTLINK_TEXT_FORMAT) {
+    printSectionTitle("IP Protocol Distribution");
 
 #ifndef EMBEDDED
-            if ((numProtosFound > 0) && printGraph) {
-                sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
-                           "<IMG SRC=\"" CONST_BAR_IPPROTO_DIST CHART_FORMAT "\" "
-                           "alt=\"Global ipProtocol distribution chart\"></TD></TR>\n");
-            }
+    sendString("<CENTER><IMG SRC=\"" CONST_PIE_IPPROTO_RL_DIST CHART_FORMAT "\" "
+	       "alt=\"ipProtocol distribution chart\"><p>\n</CENTER>\n");
 #endif
-            sendString("</TABLE>"TABLE_OFF"<P>\n");
 
-            /* *********************** */
+    printSectionTitle("Local Traffic");
 
-            if ((remainingTraffic > 0) && printGraph) {
-                PortCounter **ipPorts;
-                int idx = 0;
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local.value+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local.value)/1024;
+    if(total == 0)
+      printNoDataYet();
+    else {
+      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "Percentage</TH></TR>\n");
+      if(total == 0) total = 1; /* Avoids divisions by zero */
+      remainingTraffic = 0;
 
-                ipPorts = (PortCounter**)calloc(MAX_IP_PORT, sizeof(PortCounter*));
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local.value/1024;
+      percentage = ((float)(partialTotal*100))/((float)total);
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+				"TCP", "UDP", total, percentage, 0, 0);
 
-                for(i=0; i<MAX_IP_PORT; i++) {
-                    if(myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i] != NULL) {
-                        ipPorts[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i];
-                        idx++;
-                    }
-                }
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
+		 "Percentage</TH></TR>\n");
 
-                if(idx > 0) {
-                    printSectionTitle("TCP/UDP Traffic Port Distribution:<br>Last Minute View");
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value/1024;
 
-                    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-                               "<TH "TH_BG" colspan=2>TCP/UDP Port</TH>"
-                               "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
+	if(partialTotal > 0) {
+	  remainingTraffic += partialTotal;
+	  percentage = ((float)(partialTotal*100))/((float)total);
+	  printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
+			  CONST_COLOR_1, partialTotal, percentage, 0, 0);
+	}
+      }
 
-                    qsort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
+      if(total > remainingTraffic)
+	remainingTraffic = total - remainingTraffic;
+      else
+	remainingTraffic = 0;
 
-                    if(idx > 32) idx = 32; /* Limit to 32 entries max */
-
-                    for(i=0; i<idx; i++) {
-                        if(ipPorts[i] != NULL) {
-                            char portBuf[32];
-                            char *symPort = getAllPortByNum(ipPorts[i]->port, portBuf, sizeof(portBuf));
-
-                            if(symPort == NULL) symPort = "";
-
-                            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
-                                          "<TH "TH_BG" ALIGN=LEFT><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>"
-                                          "</th><td align=right>%d</td>"
-                                          "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                                          "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                                          "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                                          "</TR>\n",
-                                          getRowColor(),
-                                          ipPorts[i]->port, symPort, ipPorts[i]->port,
-                                          formatBytes(ipPorts[i]->sent+ipPorts[i]->rcvd, 1, formatBuf, sizeof(formatBuf)),
-                                          formatBytes(ipPorts[i]->sent, 1, formatBuf1, sizeof(formatBuf1)),
-                                          formatBytes(ipPorts[i]->rcvd, 1, formatBuf2, sizeof(formatBuf2))
-                                );
-                            sendString(buf);
-                        }
-                    } /* for */
-
-                    sendString("<tr><td align=left "DARK_BG" colspan=5>Notes:<ul>"
-                               "<li>sum(total traffic per port) = 2*(total IP traffic)"
-                               "<br>because the traffic per port is counted twice (sent and received)"
-                               "<li>This report includes broadcast packets</ul></td></tr>\n");
-                }
-                free(ipPorts);
-                sendString("</TABLE>"TABLE_OFF"<P></center>\n");
-                if (idx >= 32)
-                    sendString("<p>This extract is just a sample of the packets ntop has seen.</p>");
-            } else {
-                sendString("<p>Note:This report includes broadcast packets</p>\n");
-                sendString("</CENTER>\n");
-            }
-        }
+      if(remainingTraffic > 0) {
+	percentage = ((float)(remainingTraffic*100))/((float)total);
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
+			CONST_COLOR_1, remainingTraffic, percentage, 0, 0);
+      }
+	    
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
     }
+
+    /* ********************************************************** */
+
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local.value+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote2local.value)/1024;
+
+    printSectionTitle("Remote to Local Traffic");
+
+    if(total == 0)
+      printNoDataYet();
+    else {
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "Percentage</TH></TR>\n");
+
+      if(total == 0) total = 1; /* Avoids divisions by zero */
+      remainingTraffic = 0;
+
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote2local.value/1024;
+      percentage = ((float)(partialTotal*100))/((float)total);
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+				"TCP", "UDP", total, percentage, 0, 0);
+
+      sendString("</TABLE>"TABLE_OFF);
+      sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
+		 "Percentage</TH></TR>\n");
+
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value/1024;
+
+	if(partialTotal > 0) {
+	  remainingTraffic += partialTotal;
+	  percentage = ((float)(partialTotal*100))/((float)total);
+	  printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
+			  CONST_COLOR_1, partialTotal, percentage, 0, 0);
+	}
+      }
+
+      if(total > remainingTraffic)
+	remainingTraffic = total - remainingTraffic;
+      else
+	remainingTraffic = 0;
+
+      if(remainingTraffic > 0) {
+	percentage = ((float)(remainingTraffic*100))/((float)total);
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
+			CONST_COLOR_1, remainingTraffic, percentage, 0, 0);
+      }
+      sendString("</TABLE>"TABLE_OFF"\n<P>\n");
+      sendString("</CENTER>\n");
+    }
+
+    /* ********************************************************** */
+
+    /* Courtesy of "Burton M. Strauss III" <BStrauss3@attbi.com> */
+
+    printSectionTitle("Remote Traffic");
+
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote.value+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.remote.value)/1024;
+    if(total == 0)
+      printNoDataYet();
+    else {
+      sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "Percentage</TH></TR>\n");
+      if(total == 0) total = 1; /* Avoids divisions by zero */
+      remainingTraffic = 0;
+
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.remote.value/1024;
+      percentage = ((float)(partialTotal*100))/((float)total);
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+				"TCP", "UDP", total, percentage, 0, 0);
+
+      sendString("</TABLE>"TABLE_OFF"\n");
+      sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
+		 "Percentage</TH></TR>\n");
+
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	partialTotal =
+	  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value/1024;
+
+	if(partialTotal > 0) {
+	  remainingTraffic += partialTotal;
+	  percentage = ((float)(partialTotal*100))/((float)total);
+	  printTableEntry(buf, sizeof(buf),
+			  myGlobals.protoIPTrafficInfos[i],
+			  CONST_COLOR_1, partialTotal, percentage, 0, 0);
+	}
+      }
+
+      if(total > remainingTraffic)
+	remainingTraffic = total - remainingTraffic;
+      else
+	remainingTraffic = 0;
+
+      if(remainingTraffic > 0) {
+	percentage = ((float)(remainingTraffic*100))/((float)total);
+	printTableEntry(buf, sizeof(buf),
+			"Other&nbsp;TCP/UDP-based&nbsp;Protocols",
+			CONST_COLOR_1, remainingTraffic, percentage, 0, 0);
+      }
+
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
+    }
+
+    /* ********************************************************** */
+
+    printSectionTitle("Local to Remote Traffic");
+
+    total = (float)(myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote.value+
+		    myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.local2remote.value)/1024;
+    if(total == 0)
+      printNoDataYet();
+    else {
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH>"
+		 "<TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
+
+      if(total == 0) total = 1; /* Avoids divisions by zero */
+      remainingTraffic = 0;
+
+      partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.local2remote.value/1024;
+      percentage = ((float)(partialTotal*100))/((float)total);
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
+				"TCP", "UDP", total, percentage, 0, 0);
+
+      sendString("</TABLE>"TABLE_OFF);
+      sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=150>TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH>"
+		 "<TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
+
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	partialTotal = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value/1024;
+
+	if(partialTotal > 0) {
+	  remainingTraffic += partialTotal;
+	  percentage = ((float)(partialTotal*100))/((float)total);
+	  printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
+			  CONST_COLOR_1, partialTotal, percentage, 0, 0);
+	}
+      }
+
+      if(total > remainingTraffic)
+	remainingTraffic = total - remainingTraffic;
+      else
+	remainingTraffic = 0;
+
+      if(remainingTraffic > 0) {
+	percentage = ((float)(remainingTraffic*100))/((float)total);
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;IP-based&nbsp;Protocols",
+			CONST_COLOR_1, remainingTraffic, percentage, 0, 0);
+      }
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
+    }
+  } else {
+    total = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
+
+    {
+      ProtocolsList *protoList = myGlobals.ipProtosList;
+      int idx1 = 0;
+
+      while(protoList != NULL) {
+	if(total > (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value)
+	  total -= (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
+	else
+	  total = 0;
+
+	idx1++, protoList = protoList->next;
+      }
+    }
+
+    if(total == 0)
+      return;
+    else {
+      int numProtosFound = 0;
+      float remainingFlows = 0;
+
+      printSectionTitle("Global TCP/UDP Protocol Distribution");
+
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\"><TR "TR_ON" "DARK_BG"><TH "TH_BG" WIDTH=150>"
+		 "TCP/UDP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG">Flows</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
+		 "Percentage</TH></TR>\n");
+
+      remainingTraffic = 0;
+
+      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	partialTotal  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value
+	  +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value;
+	partialTotal += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
+	  +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
+	remainingFlows += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].totalFlows.value;
+
+	if(partialTotal > 0) {
+	  remainingTraffic += partialTotal;
+	  percentage = ((float)(partialTotal*100))/((float)total);
+	  numProtosFound++;
+	  printTableEntry(buf, sizeof(buf), myGlobals.protoIPTrafficInfos[i],
+			  CONST_COLOR_1, partialTotal/1024, percentage,
+			  1, myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].totalFlows.value);
+	}
+      }
+
+      if(total > remainingTraffic)
+	remainingTraffic = total - remainingTraffic;
+      else
+	remainingTraffic = 0;
+
+      if(remainingTraffic > 0) {
+ 	float totFlows = (float)myGlobals.device[myGlobals.actualReportDeviceId].udpGlobalTrafficStats.totalFlows.value +
+	  (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpGlobalTrafficStats.totalFlows.value;
+	      
+	if(remainingFlows > totFlows)
+	  remainingFlows = 0;
+	else
+	  remainingFlows = totFlows - remainingFlows;	      
+
+	percentage = ((float)(remainingTraffic*100))/((float)total);
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Protocols",
+			CONST_COLOR_1, remainingTraffic/1024, percentage,
+			1, remainingFlows);
+      }
+
+#ifndef EMBEDDED
+      if ((numProtosFound > 0) && printGraph) {
+	sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=5 ALIGN=CENTER BGCOLOR=white>"
+		   "<IMG SRC=\"" CONST_BAR_IPPROTO_DIST CHART_FORMAT "\" "
+		   "alt=\"Global ipProtocol distribution chart\"></TD></TR>\n");
+      }
+#endif
+      sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=5 ALIGN=LEFT "DARK_BG">"
+		 "What is a flow?<br><ul><li>TCP: a flows is a TCP connection"
+		 "<li>UDP: a flow is a packet</ul>"
+		 "</TD></TR>\n");
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+
+      /* *********************** */
+
+      if ((remainingTraffic > 0) && printGraph) {
+	PortCounter **ipPorts;
+	int idx = 0;
+
+	ipPorts = (PortCounter**)calloc(MAX_IP_PORT, sizeof(PortCounter*));
+
+	for(i=0; i<MAX_IP_PORT; i++) {
+	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i] != NULL) {
+	    ipPorts[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i];
+	    idx++;
+	  }
+	}
+
+	if(idx > 0) {
+	  printSectionTitle("TCP/UDP Traffic Port Distribution:<br>Last Minute View");
+
+	  sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+		     "<TH "TH_BG" colspan=2>TCP/UDP Port</TH>"
+		     "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
+
+	  qsort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
+
+	  if(idx > 32) idx = 32; /* Limit to 32 entries max */
+
+	  for(i=0; i<idx; i++) {
+	    if(ipPorts[i] != NULL) {
+	      char portBuf[32];
+	      char *symPort = getAllPortByNum(ipPorts[i]->port, portBuf, sizeof(portBuf));
+
+	      if(symPort == NULL) symPort = "";
+
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
+			    "<TH "TH_BG" ALIGN=LEFT><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>"
+			    "</th><td align=right>%d</td>"
+			    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			    "</TR>\n",
+			    getRowColor(),
+			    ipPorts[i]->port, symPort, ipPorts[i]->port,
+			    formatBytes(ipPorts[i]->sent+ipPorts[i]->rcvd, 1, formatBuf, sizeof(formatBuf)),
+			    formatBytes(ipPorts[i]->sent, 1, formatBuf1, sizeof(formatBuf1)),
+			    formatBytes(ipPorts[i]->rcvd, 1, formatBuf2, sizeof(formatBuf2)));
+	      sendString(buf);
+	    }
+	  } /* for */
+
+	  sendString("<tr><td align=left "DARK_BG" colspan=5>Notes:<ul>"
+		     "<li>sum(total traffic per port) = 2*(total IP traffic)"
+		     "<br>because the traffic per port is counted twice (sent and received)"
+		     "<li>This report includes broadcast packets</ul></td></tr>\n");
+	}
+	free(ipPorts);
+	sendString("</TABLE>"TABLE_OFF"<P></center>\n");
+	if (idx >= 32)
+	  sendString("<p>This extract is just a sample of the packets ntop has seen.</p>");
+      } else {
+	sendString("<p>Note: This report includes broadcast packets.</p>\n");
+	sendString("</CENTER>\n");
+      }
+    }
+  }
 }
 
 /* ************************ */
 
-void printProtoTraffic(int printGraph)
-{
+void printProtoTraffic(int printGraph) {
   float total, perc;
   char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32];
 
@@ -4124,32 +4137,32 @@ void printProtoTraffic(int printGraph)
   if(perc > 100) perc = 100;
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT "DARK_BG">IP</TH>"
-	      "<TD "TD_BG" WIDTH=50 ALIGN=RIGHT>%s"
-	      "</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
-	      "<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\">",
-	      getRowColor(),
-	      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1,
-			  formatBuf, sizeof(formatBuf)),
-	      perc);
+		"<TD "TD_BG" WIDTH=50 ALIGN=RIGHT>%s"
+		"</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
+		"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\">",
+		getRowColor(),
+		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1,
+			    formatBuf, sizeof(formatBuf)),
+		perc);
   sendString(buf);
 
   printTableEntry(buf, sizeof(buf), "TCP", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "UDP", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "ICMP", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
-
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "ICMPv6", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0);
+
   {
     ProtocolsList *protoList = myGlobals.ipProtosList;
     int idx = 0;
@@ -4158,7 +4171,7 @@ void printProtoTraffic(int printGraph)
       printTableEntry(buf, sizeof(buf), protoList->protocolName, CONST_COLOR_1,
 		      (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/1024,
 		      100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx].value/
-			   myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+			   myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0);
       idx++, protoList = protoList->next;
     }
   }
@@ -4166,57 +4179,56 @@ void printProtoTraffic(int printGraph)
   printTableEntry(buf, sizeof(buf), "Other&nbsp;IP", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/1024,
 		  ((float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/
-		   myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+		   myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0);
 
   sendString("</TABLE>"TABLE_OFF"</TR>");
 
   printTableEntry(buf, sizeof(buf), "(R)ARP", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "DLC", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "IPX", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "Decnet", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "AppleTalk", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "NetBios", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "OSI", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "IPv6", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "STP", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
-
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0);
   printTableEntry(buf, sizeof(buf), "Other", CONST_COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/
-		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value), 0, 0);
 
 #ifndef EMBEDDED
   if (printGraph) {
-      sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
-                 "<IMG SRC=\"" CONST_BAR_ALLPROTO_DIST CHART_FORMAT "\" "
-                 "alt=\"global protocol distribution chart\"></TD></TR>\n");
+    sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER BGCOLOR=white>"
+	       "<IMG SRC=\"" CONST_BAR_ALLPROTO_DIST CHART_FORMAT "\" "
+	       "alt=\"global protocol distribution chart\"></TD></TR>\n");
   }
 #endif
 

@@ -216,6 +216,9 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	  }
 
 	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentLoc, length);
+
+	  if(newSession)
+	    incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->totalFlows, 1);
 	}
 
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
@@ -223,7 +226,11 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
 	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
+
 	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdLoc, length);
+
+	  if(newSession)
+	    incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->totalFlows, 1);
 	}
 
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local, length);
@@ -233,7 +240,11 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
 	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
+
 	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentRem, length);
+
+	  if(newSession)
+	    incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->totalFlows, 1);
 	}
 
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) {
@@ -242,7 +253,11 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
 	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdLoc, length);
+
+	  if(newSession)
+	    incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->totalFlows, 1);
 	}
+
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtoStats[idx].local2remote, length);
       }
     } else {
@@ -253,6 +268,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
 	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
+
+	  if(newSession)
+	    incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+
 	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentLoc, length);
 	}
 
@@ -261,6 +280,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
 	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
+
+	  if(newSession)
+	    incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+
 	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdFromRem, length);
 	}
 
@@ -271,6 +294,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    srcHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
 	    if(srcHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
+
+	  if(newSession)
+	    incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+
 	  incrementTrafficCounter(&srcHost->protoIPTrafficInfos[idx]->sentRem, length);
 	}
 
@@ -279,6 +306,10 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	    dstHost->protoIPTrafficInfos[idx] = calloc(sizeof(ProtoTrafficInfo), 1);
 	    if(dstHost->protoIPTrafficInfos[idx] == NULL) return(-1);
 	  }
+
+	  if(newSession)
+	    incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->totalFlows, 1);
+
 	  incrementTrafficCounter(&dstHost->protoIPTrafficInfos[idx]->rcvdFromRem, length);
 	}
 
@@ -1309,77 +1340,76 @@ static void processIpPkt(const u_char *bp,
 	u_char *tcp_opt = (u_char *)(tcp + 1);
         u_char *tcp_data = (u_char *)((int)tcp + tp.th_off * 4);
 
-	if(tcp->th_flags & TH_SYN)   /* only SYN or SYN-2ACK packets */
-	  {
-	    if(tcpUdpLen > 0) {
+	if(tcp->th_flags & TH_SYN) {   /* only SYN or SYN-2ACK packets */	  
+	  if(tcpUdpLen > 0) {
 #ifdef INET6
-	      if(ip6) {
-		if(!fragmented) D = 1;
-	      } else
+	    if(ip6) {
+	      if(!fragmented) D = 1;
+	    } else
 #endif
-		if(ntohs(ip.ip_off) & IP_DF) D = 1;   /* don't fragment bit is set */
+	      if(ntohs(ip.ip_off) & IP_DF) D = 1;   /* don't fragment bit is set */
 
-	      WIN = ntohs(tcp->th_win);  /* TCP window size */
+	    WIN = ntohs(tcp->th_win);  /* TCP window size */
 
-	      if(tcp_data != tcp_opt) { /* there are some tcp_option to be parsed */		
-		  u_char *opt_ptr = tcp_opt;
+	    if(tcp_data != tcp_opt) { /* there are some tcp_option to be parsed */		
+	      u_char *opt_ptr = tcp_opt;
 
-		  while(opt_ptr < tcp_data) {
-		      switch(*opt_ptr) {
-			case TCPOPT_EOL:        /* end option: exit */
-			  opt_ptr = tcp_data;
-			  break;
-			case TCPOPT_NOP:
-			  N = 1;
-			  opt_ptr++;
-			  break;
-			case TCPOPT_SACKOK:
-			  S = 1;
-			  opt_ptr += 2;
-			  break;
-			case TCPOPT_MAXSEG:
-			  opt_ptr += 2;
-			  MSS = ntohs(ptohs(opt_ptr));
-			  opt_ptr += 2;
-			  break;
-			case TCPOPT_WSCALE:
-			  opt_ptr += 2;
-			  WS = *opt_ptr;
-			  opt_ptr++;
-			  break;
-			case TCPOPT_TIMESTAMP:
-			  T = 1;
-			  opt_ptr++;
-			  opt_ptr += (*opt_ptr - 1);
-			  break;
-			default:
-			  opt_ptr++;
-			  if(*opt_ptr > 0)
-			    opt_ptr += (*opt_ptr - 1);
-			  break;
-			}
-		    }
+	      while(opt_ptr < tcp_data) {
+		switch(*opt_ptr) {
+		case TCPOPT_EOL:        /* end option: exit */
+		  opt_ptr = tcp_data;
+		  break;
+		case TCPOPT_NOP:
+		  N = 1;
+		  opt_ptr++;
+		  break;
+		case TCPOPT_SACKOK:
+		  S = 1;
+		  opt_ptr += 2;
+		  break;
+		case TCPOPT_MAXSEG:
+		  opt_ptr += 2;
+		  MSS = ntohs(ptohs(opt_ptr));
+		  opt_ptr += 2;
+		  break;
+		case TCPOPT_WSCALE:
+		  opt_ptr += 2;
+		  WS = *opt_ptr;
+		  opt_ptr++;
+		  break;
+		case TCPOPT_TIMESTAMP:
+		  T = 1;
+		  opt_ptr++;
+		  opt_ptr += (*opt_ptr - 1);
+		  break;
+		default:
+		  opt_ptr++;
+		  if(*opt_ptr > 0)
+		    opt_ptr += (*opt_ptr - 1);
+		  break;
 		}
+	      }
+	    }
 
-	      if(WS == -1) { safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "WS"); }
-	      else { safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "%02d", WS); }
+	    if(WS == -1) { safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "WS"); }
+	    else { safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "%02d", WS); }
 
-	      if(MSS == -1) { safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "_MSS"); }
-	      else { safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "%04X", MSS); }
+	    if(MSS == -1) { safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "_MSS"); }
+	    else { safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "%04X", MSS); }
 
-	      safe_snprintf(__FILE__, __LINE__, fingerprint, sizeof(fingerprint),
-		       "%04X:%s:%02X:%s:%d:%d:%d:%d:%c:%02X",
-		       WIN, _MSS, ttl = TTL_PREDICTOR(ip.ip_ttl), WSS , S, N, D, T,
-		       (tcp->th_flags & TH_ACK) ? 'A' : 'S', tcpUdpLen);
+	    safe_snprintf(__FILE__, __LINE__, fingerprint, sizeof(fingerprint),
+			  "%04X:%s:%02X:%s:%d:%d:%d:%d:%c:%02X",
+			  WIN, _MSS, ttl = TTL_PREDICTOR(ip.ip_ttl), WSS , S, N, D, T,
+			  (tcp->th_flags & TH_ACK) ? 'A' : 'S', tcpUdpLen);
 
 #if 0
-	      traceEvent(CONST_TRACE_INFO, "[%s][%s]", srcHost->hostNumIpAddress, fingerprint);
+	    traceEvent(CONST_TRACE_INFO, "[%s][%s]", srcHost->hostNumIpAddress, fingerprint);
 #endif
-	      accessAddrResMutex("processIpPkt");
-	      srcHost->fingerprint = strdup(fingerprint);
-	      releaseAddrResMutex();
-	    }
+	    accessAddrResMutex("processIpPkt");
+	    srcHost->fingerprint = strdup(fingerprint);
+	    releaseAddrResMutex();
 	  }
+	}
       }
 
       if((sport > 0) || (dport > 0)) {
@@ -1447,10 +1477,10 @@ static void processIpPkt(const u_char *bp,
 
 	if((myGlobals.runningPref.enableOtherPacketDump) &&
 	   ((sportIdx == -1) && (dportIdx == -1))) {
-	    /*
-	       Both source & destination port are unknown. The packet will be counted to
-	       "Other TCP/UDP prot." : We dump the packet if requested
-	    */
+	  /*
+	    Both source & destination port are unknown. The packet will be counted to
+	    "Other TCP/UDP prot." : We dump the packet if requested
+	  */
 	  dumpOtherPacket(actualDeviceId);
 	}
 	
@@ -1479,8 +1509,8 @@ static void processIpPkt(const u_char *bp,
 		     theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession);
 	} else {
 	  /*
-	     traceEvent(CONST_TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d",
-	     sport, sportIdx, dport, dportIdx); */
+	    traceEvent(CONST_TRACE_INFO, "[2] sportIdx(%d)=%d - dportIdx(%d)=%d",
+	    sport, sportIdx, dport, dportIdx); */
 
 	  if(handleIP(sport, srcHost, dstHost, length, isPassiveSess,
 		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId, newSession) == -1)
@@ -1495,11 +1525,11 @@ static void processIpPkt(const u_char *bp,
     else
 #endif
       break;
-
-
+    
   case IPPROTO_UDP:
     proto = "UDP";
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, length);
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.totalFlows, 1);  
 
     if(tcpUdpLen < sizeof(struct udphdr)) {
       if(myGlobals.runningPref.enableSuspiciousPacketDump) {
@@ -1521,8 +1551,6 @@ static void processIpPkt(const u_char *bp,
       dport = ntohs(up.uh_dport);
 
       if(!(fragmented)) {
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.totalFlows, 1);  
-
 	/* Not fragmented */
 	if(((sport == 53) || (dport == 53) /* domain */)) {
 	  short isRequest = 0, positiveReply = 0;

@@ -2276,7 +2276,8 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 
   (*newSession) = 0; /* Default */
 
-  if((!myGlobals.runningPref.enableSessionHandling) || (myGlobals.device[actualDeviceId].tcpSession == NULL))
+  if((!myGlobals.runningPref.enableSessionHandling) 
+     || (myGlobals.device[actualDeviceId].tcpSession == NULL))
     return(NULL);
 
   if((srcHost == NULL) || (dstHost == NULL)) {
