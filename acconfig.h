@@ -39,6 +39,9 @@
 /* Define if you want a debugging version. */
 #undef DEBUG
 
+/* Define if you have gethostbyaddr_r */
+#undef HAVE_GETHOSTBYADDR_R
+
 /* Define if you OS lacks the getdomainname(2) function. */
 #undef NEED_GETDOMAINNAME
 

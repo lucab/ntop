@@ -510,7 +510,9 @@ AC_CHECK_FUNCS(localtime_r)
 AC_CHECK_FUNCS(ctime_r)
 AC_CHECK_FUNCS(snprintf)
 AC_CHECK_FUNCS(getipnodebyaddr)
-AC_CHECK_LIB(nsl, gethostbyaddr_r)
+AC_CHECK_FUNCS(gethostbyaddr_r)
+AC_CHECK_LIB(c, gethostbyaddr_r, AC_DEFINE(HAVE_GETHOSTBYADDR_R), 
+AC_CHECK_LIB(nsl, gethostbyaddr_r, AC_DEFINE(HAVE_GETHOSTBYADDR_R)) )
 
 dnl> Check for additional functions
 AC_CHECK_FUNCS(strsep)
