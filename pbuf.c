@@ -1561,6 +1561,14 @@ static void processIpPkt(const u_char *bp,
 	    /* no packet decoding (let's speculate a bit) */
 	    FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
 	  }
+	} else if(sport == 123) /* NTP */ {
+	  if(myGlobals.enablePacketDecoding) {
+	    char *ntpPktPtr = (char*)bp+hlen+sizeof(struct udphdr);
+	    u_char ntpRole = ntpPktPtr[0] & 0x07;
+
+	    if(ntpRole ==  4 /* NTP Server */)
+	      FD_SET(FLAG_HOST_TYPE_SVC_NTP_SERVER, &srcHost->flags);
+	  }
 	} else {
 	  if(myGlobals.enablePacketDecoding)
 	    handleNetbios(srcHost, dstHost, sport, dport,

@@ -320,7 +320,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   if(snprintf(path, sizeof(path), "Info about %s", rrdTitle) < 0)
     BufferTooShort();
 
-  printHTMLheader(path, 0);
+  printHTMLheader(path, NULL, 0);
   sendString("<CENTER>\n<p ALIGN=right>\n");
 
   snprintf(url, sizeof(url), "/plugins/rrdPlugin?action=list&key=%s&title=%s&end=now", rrdPath, rrdTitle);
@@ -507,7 +507,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 #endif
       
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHTMLheader("RRD Graph", 0);
+      printHTMLheader("RRD Graph", NULL, 0);
       snprintf(path, sizeof(path), "<I>Error while building graph of the requested file. %s</I>",
 	       rrd_get_error());
       printFlagedWarning(path);
@@ -519,7 +519,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 #endif    
   } else {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader("RRD Graph", 0);
+    printHTMLheader("RRD Graph", NULL, 0);
     printFlagedWarning("<I>Error while building graph of the requested file "
 		       "(unknown RRD file)</I>");
   }
@@ -1198,7 +1198,7 @@ static void handleRRDHTTPrequest(char* url) {
   }
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-  printHTMLheader("RRD Preferences", 0);
+  printHTMLheader("RRD Preferences", NULL, 0);
 
   sendString("<CENTER><FORM ACTION=/plugins/rrdPlugin METHOD=GET>\n");
   sendString("<TABLE BORDER>\n");

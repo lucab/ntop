@@ -149,7 +149,7 @@ extern void sendHTTPHeaderType(void);
 extern void sendGIFHeaderType(void);
 extern void sendHTTPProtoHeader(void);
 extern void handleHTTPrequest(HostAddr from);
-extern void printHTMLheader(char *title, int  headerFlags);
+extern void printHTMLheader(char *title, char *htmlTitle, int headerFlags);
 #ifdef HAVE_OPENSSL
 extern char* printSSLError(int errorId);
 #endif /* HAVE_OPENSSL */

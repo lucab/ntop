@@ -1289,7 +1289,7 @@ static void handleNetflowHTTPrequest(char* url) {
   struct in_addr theDest;
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-  printHTMLheader("NetFlow Statistics", 0);
+  printHTMLheader("NetFlow Statistics", NULL, 0);
 
   sendString("<CENTER>\n<HR>\n");
 
@@ -1598,7 +1598,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   if((myGlobals.numNetFlowsPktsRcvd > 0) ||(myGlobals.numNetFlowsPktsSent > 0)) {
     sendString("<hr>\n");
-    printHTMLheader("Flow Statistics", 0);
+    printHTMLheader("Flow Statistics", NULL, 0);
     sendString("<TABLE BORDER>\n");
 
     if(myGlobals.numNetFlowsPktsRcvd > 0) {

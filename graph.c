@@ -803,76 +803,76 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
       case 0:
 	lbl[num++] = "12PM-1AM";
 	break;
-	  case 1:
-	  lbl[num++] = "1-2AM";
+      case 1:
+	lbl[num++] = "1-2AM";
 	break;
-	  case 2:
-	  lbl[num++] = "2-3AM";
+      case 2:
+	lbl[num++] = "2-3AM";
 	break;
-	  case 3:
-	  lbl[num++] = "3-4AM";
+      case 3:
+	lbl[num++] = "3-4AM";
 	break;
-	  case 4:
-	  lbl[num++] = "4-5AM";
+      case 4:
+	lbl[num++] = "4-5AM";
 	break;
-	  case 5:
-	  lbl[num++] = "5-6AM";
+      case 5:
+	lbl[num++] = "5-6AM";
 	break;
-	  case 6:
-	  lbl[num++] = "6-7AM";
+      case 6:
+	lbl[num++] = "6-7AM";
 	break;
-	  case 7:
-	  lbl[num++] = "7-8AM";
+      case 7:
+	lbl[num++] = "7-8AM";
 	break;
-	  case 8:
-	  lbl[num++] = "8-9AM";
+      case 8:
+	lbl[num++] = "8-9AM";
 	break;
-	  case 9:
-	  lbl[num++] = "9-10AM";
+      case 9:
+	lbl[num++] = "9-10AM";
 	break;
-	  case 10:
-	  lbl[num++] = "10-11AM";
+      case 10:
+	lbl[num++] = "10-11AM";
 	break;
-	  case 11:
-	  lbl[num++] = "11-12AM";
+      case 11:
+	lbl[num++] = "11-12AM";
 	break;
-	  case 12:
-	  lbl[num++] = "12AM-1PM";
+      case 12:
+	lbl[num++] = "12AM-1PM";
 	break;
-	  case 13:
-	  lbl[num++] = "1-2PM";
+      case 13:
+	lbl[num++] = "1-2PM";
 	break;
-	  case 14:
-	  lbl[num++] = "2-3PM";
+      case 14:
+	lbl[num++] = "2-3PM";
 	break;
-	  case 15:
-	  lbl[num++] = "3-4PM";
+      case 15:
+	lbl[num++] = "3-4PM";
 	break;
-	  case 16:
-	  lbl[num++] = "4-5PM";
+      case 16:
+	lbl[num++] = "4-5PM";
 	break;
-	  case 17:
-	  lbl[num++] = "5-6PM";
+      case 17:
+	lbl[num++] = "5-6PM";
 	break;
-	  case 18:
-	  lbl[num++] = "6-7PM";
+      case 18:
+	lbl[num++] = "6-7PM";
 	break;
-	  case 19:
-	  lbl[num++] = "7-8PM";
+      case 19:
+	lbl[num++] = "7-8PM";
 	break;
-	  case 20:
-	  lbl[num++] = "8-9PM";
+      case 20:
+	lbl[num++] = "8-9PM";
 	break;
-	  case 21:
-	  lbl[num++] = "9-10PM";
+      case 21:
+	lbl[num++] = "9-10PM";
 	break;
-	  case 22:
-	  lbl[num++] = "10-11PM";
+      case 22:
+	lbl[num++] = "10-11PM";
 	break;
-	  case 23:
-	  lbl[num++] = "11-Midnight";
+      case 23:
+	lbl[num++] = "11-12PM";
 	break;
-	  }
+      }
     }
   }
 

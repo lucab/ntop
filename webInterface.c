@@ -210,7 +210,7 @@ void showPluginsList(char* pluginName) {
       }
 
       if(!doPrintHeader) {
-	printHTMLheader("Available Plugins", 0);
+	printHTMLheader("Available Plugins", NULL, 0);
  	sendString("<CENTER>\n"
 		   ""TABLE_ON"<TABLE BORDER=1><TR>\n"
 		   "<TR><TH "TH_BG">View</TH><TH "TH_BG">Configure</TH><TH "TH_BG">Description</TH>"
@@ -286,7 +286,7 @@ void showPluginsList(char* pluginName) {
   }
 
   if(!doPrintHeader) {
-    printHTMLheader("No Plugins available", 0);
+    printHTMLheader("No Plugins available", NULL, 0);
   } else {
     sendString("</TABLE>"TABLE_OFF"<p>\n");
     sendString("</CENTER>\n");
@@ -339,7 +339,7 @@ char* makeHostLink(HostTraffic *el, short mode,
                    char *buf, int bufLen) {
   char symIp[256], *tmpStr, linkName[256], flag[256], colorSpec[64];
   char *dynIp, *p2p, osBuf[128];
-  char *multihomed, *gwStr, *brStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr;
+  char *multihomed, *gwStr, *brStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr, *httpStr, *ntpStr;
   short specialMacAddress = 0;
   short usedEthAddress=0;
   int i;
@@ -460,8 +460,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(addCountryFlag == 0)
     flag[0] = '\0';
   else {
-    if(snprintf(flag, sizeof(flag), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
-		getHostCountryIconURL(el)) < 0)
+    if(snprintf(flag, sizeof(flag), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", getHostCountryIconURL(el)) < 0)
       BufferTooShort();
   }
 
@@ -480,9 +479,11 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(nameServerHost(el))   dnsStr = "&nbsp;<IMG ALT=\"DNS\" SRC=\"/dns.gif\" BORDER=0>"; else dnsStr = "";
   if(isPrinter(el))        printStr = "&nbsp;<IMG ALT=Printer SRC=\"/printer.gif\" BORDER=0>"; else printStr = "";
   if(isSMTPhost(el))       smtpStr = "&nbsp;<IMG ALT=\"Mail (SMTP)\" SRC=\"/mail.gif\" BORDER=0>"; else smtpStr = "";
+  if(isHTTPhost(el))       httpStr = "&nbsp;<IMG ALT=\"HTTP Server&nbsp;<IMG ALT=\"HTTP Server\" SRC=\"/web.gif\" BORDER=0>"; else httpStr = "";
+  if(isNtpServer(el))      ntpStr = "&nbsp;<IMG ALT=\"NTP Server&nbsp;<IMG ALT=\"NTP Server\" SRC=\"/clock.gif\" BORDER=0>"; else ntpStr = "";
   if(el->protocolInfo != NULL) {
     if(el->protocolInfo->userList != NULL) userStr = "&nbsp;<IMG ALT=Users SRC=\"/users.gif\" BORDER=0>"; else userStr = "";
-    if(el->protocolInfo->fileList != NULL) p2p = "&nbsp;<IMG ALT=P2P SRC=\"/p2p.gif\" BORDER=0>"; else p2p = "";
+    if(isP2P(el)) p2p = "&nbsp;<IMG ALT=P2P SRC=\"/p2p.gif\" BORDER=0>"; else p2p = "";
   } else {
     userStr = "";
     p2p = "";
@@ -493,10 +494,10 @@ char* makeHostLink(HostTraffic *el, short mode,
     healthStr = "";
     break;
   case 1: /* Warning */
-    healthStr = "<IMG ALT=\"Medium Risk\" SRC=\"/Risk_medium.gif\" BORDER=0>";
+    healthStr = " <IMG ALT=\"Medium Risk\" SRC=\"/Risk_medium.gif\" BORDER=0>";
     break;
   case 2: /* Error */
-    healthStr = "<IMG ALT=\"High Risk\" SRC=\"/Risk_high.gif\" BORDER=0>";
+    healthStr = " <IMG ALT=\"High Risk\" SRC=\"/Risk_high.gif\" BORDER=0>";
     break;
   }
 
@@ -510,19 +511,20 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     if(snprintf(buf, bufLen, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
-		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s%s%s</TH>%s",
+		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s%s%s%s%s</TH>%s",
 		linkName, "", symIp, 
 		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)), dynIp, multihomed, 
 		usedEthAddress ? "<IMG SRC=/card.gif BORDER=0>" : "", 
-		gwStr, brStr, dnsStr, printStr, smtpStr, healthStr, userStr, p2p, flag) < 0)
+		gwStr, brStr, dnsStr, printStr, smtpStr, httpStr,
+		ntpStr, healthStr, userStr, p2p, flag) < 0)
       BufferTooShort();
   } else {
     if(snprintf(buf, bufLen, "<A HREF=\"/%s.html\" %s NOWRAP>%s</A>"
-		"%s%s%s%s%s%s%s%s%s%s%s",
+		"%s%s%s%s%s%s%s%s%s%s%s%s%s",
 		linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), symIp, 
 		multihomed, 
 		usedEthAddress ? "<IMG SRC=/card.gif BORDER=0>" : "", gwStr, dnsStr,
-		printStr, smtpStr, healthStr, userStr, p2p,
+		printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2p,
 		dynIp, flag) < 0)
       BufferTooShort();    
   }
@@ -716,7 +718,7 @@ void switchNwInterface(int _interface) {
   int i, mwInterface=_interface-1;
   char buf[LEN_GENERAL_WORK_BUFFER], *selected;
 
-  printHTMLheader("Network Interface Switch", BITFLAG_HTML_NO_REFRESH);
+  printHTMLheader("Network Interface Switch", NULL, BITFLAG_HTML_NO_REFRESH);
   sendString("<HR>\n");
 
   if(snprintf(buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\">Note that "
@@ -782,7 +784,7 @@ void switchNwInterface(int _interface) {
 /* **************************************** */
 
 void shutdownNtop(void) {
-  printHTMLheader("ntop is shutting down...", BITFLAG_HTML_NO_REFRESH);
+  printHTMLheader("ntop is shutting down...", NULL, BITFLAG_HTML_NO_REFRESH);
   closeNwSocket(&myGlobals.newSock);
   termAccessLog();
 
@@ -3085,9 +3087,9 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 
   if(textPrintFlag)
-      sendString("ntop Configuration\n\n");
+    sendString("ntop Configuration\n\n");
   else
-      printHTMLheader("ntop Configuration", 0);
+    printHTMLheader("ntop Configuration", NULL, 0);
 
   printHostColorCode(textPrintFlag, 1);
   sendString(texthtml("\n", 
@@ -3546,11 +3548,9 @@ void printNtopConfigInfo(int textPrintFlag) {
     }
 #endif
 
-#ifndef WIN32
   if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.webServerRequestQueueLength) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "WebServer Request Queue", buf);
-#endif
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDevices) < 0)
     BufferTooShort();
@@ -3862,19 +3862,18 @@ void printNtopConfigInfo(int textPrintFlag) {
     printFeatureConfigInfo(textPrintFlag, "Max host lookup", buf);
 
     if(myGlobals.enableSessionHandling) {
-
       if(snprintf(buf, sizeof(buf), "%s",
-	formatBytes(myGlobals.device[i].numTcpSessions, 0, buf2, sizeof(buf2))) < 0)
+		  formatBytes(sizeof(IPSession), 0, buf2, sizeof(buf2))) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Session Bucket Size", buf);
     
       if(snprintf(buf, sizeof(buf), "%s",
-	formatPkts(myGlobals.device[i].numTcpSessions, buf2, sizeof(buf2))) < 0)
+		  formatPkts(myGlobals.device[i].numTcpSessions, buf2, sizeof(buf2))) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
-    
+      
       if(snprintf(buf, sizeof(buf), "%s", 
-		formatPkts(myGlobals.device[i].maxNumTcpSessions, buf2, sizeof(buf2))) < 0)
+		  formatPkts(myGlobals.device[i].maxNumTcpSessions, buf2, sizeof(buf2))) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
     }
@@ -4433,7 +4432,7 @@ int printNtopLogReport(int printAsText) {
     if(myGlobals.logView == NULL) return(0);
 
     if(!printAsText) {
-      printHTMLheader("ntop Log", BITFLAG_HTTP_NO_CACHE_CONTROL);
+      printHTMLheader("ntop Log", NULL, BITFLAG_HTTP_NO_CACHE_CONTROL);
       sendString("<HR>");
       if(snprintf(buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\"><center>"
                 "This is a rolling display of upto the last %d ntop log messages "
@@ -5769,7 +5768,7 @@ int handlePluginHTTPRequest(char* url) {
 		    name[strlen(name)-6] = '\0';
 		if(snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name) < 0)
 		    BufferTooShort();
-		printHTMLheader(buf, BITFLAG_HTML_NO_REFRESH);
+		printHTMLheader(buf, NULL, BITFLAG_HTML_NO_REFRESH);
 		printFlagedWarning("<I>This plugin is currently inactive.</I>");
 		printHTMLtrailer();
 		return(1);

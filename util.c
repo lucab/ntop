@@ -417,23 +417,24 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
   struct iface_handler        *ih;
   struct iface_if             *ii;
   struct iface_addr           *ia;
-  NtopIfaceAddr               *tmp;
+  NtopIfaceAddr               *tmp = NULL;
   int count, addr_pos;
 
-  if (! (ih = iface_new()))
+  if(!(ih = iface_new()))
     goto oops;
-  for (ii = iface_getif_first(ih) ; ii ; ii = iface_getif_next(ii))
-    if (!strcmp(ii->name,device))
-      if (iface_if_getinfo(ii) & IFACE_INFO_UP){
+
+  for(ii = iface_getif_first(ih) ; ii ; ii = iface_getif_next(ii))
+    if(!strcmp(ii->name,device))
+      if(iface_if_getinfo(ii) & IFACE_INFO_UP) {
 	/* Allocate memory for IPv6 addresses*/
 	count = iface_if_addrcount(ii, AF_INET6);
 	addrs = (NtopIfaceAddr *)calloc(count, sizeof(NtopIfaceAddr));
 	addr_pos = 0;
-	for (ia = iface_getaddr_first(ii, AF_INET6) ; ia ;
-	     ia = iface_getaddr_next(ia, AF_INET6)) {
+	for(ia = iface_getaddr_first(ii, AF_INET6) ; ia ;
+	    ia = iface_getaddr_next(ia, AF_INET6)) {
 	  struct iface_addr_inet6 i6;
 	  iface_addr_getinfo(ia, &i6);
-	  if (in6_isglobal(&i6.addr)&& (addr_pos < count) ) {
+	  if(in6_isglobal(&i6.addr)&& (addr_pos < count)) {
 	    tmp = &addrs[addr_pos];
 	    tmp->family = AF_INET6;
 	    memcpy(&tmp->af.inet6.ifAddr, &i6.addr,sizeof(struct in6_addr));
@@ -443,7 +444,8 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
 	  }
 	}
       }
-  tmp->next = NULL;
+
+  if(tmp != NULL) tmp->next = NULL;
   iface_destroy(ih);
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Local address is: %s\n", intop(hostAddress));
@@ -3292,10 +3294,7 @@ void resetSecurityHostTraffic(HostTraffic *el) {
   resetUsageCounter(&el->secHostPkts->synFinPktsSent);
   resetUsageCounter(&el->secHostPkts->finPushUrgPktsSent);
   resetUsageCounter(&el->secHostPkts->nullPktsSent);
-  resetUsageCounter(&el->secHostPkts->ackScanSent);
-  resetUsageCounter(&el->secHostPkts->xmasScanSent);
-  resetUsageCounter(&el->secHostPkts->finScanSent);
-  resetUsageCounter(&el->secHostPkts->nullScanSent);
+  resetUsageCounter(&el->secHostPkts->ackXmasFinSynNullScanSent);
   resetUsageCounter(&el->secHostPkts->rejectedTCPConnSent);
   resetUsageCounter(&el->secHostPkts->establishedTCPConnSent);
   resetUsageCounter(&el->secHostPkts->terminatedTCPConnServer);
@@ -3323,10 +3322,7 @@ void resetSecurityHostTraffic(HostTraffic *el) {
   resetUsageCounter(&el->secHostPkts->synFinPktsRcvd);
   resetUsageCounter(&el->secHostPkts->finPushUrgPktsRcvd);
   resetUsageCounter(&el->secHostPkts->nullPktsRcvd);
-  resetUsageCounter(&el->secHostPkts->ackScanRcvd);
-  resetUsageCounter(&el->secHostPkts->xmasScanRcvd);
-  resetUsageCounter(&el->secHostPkts->finScanRcvd);
-  resetUsageCounter(&el->secHostPkts->nullScanRcvd);
+  resetUsageCounter(&el->secHostPkts->ackXmasFinSynNullScanRcvd);
   resetUsageCounter(&el->secHostPkts->rejectedTCPConnRcvd);
   resetUsageCounter(&el->secHostPkts->establishedTCPConnRcvd);
   resetUsageCounter(&el->secHostPkts->udpToClosedPortRcvd);
@@ -4627,6 +4623,9 @@ u_int numActiveNxPorts (u_int deviceId) {
   return(numSenders);
 }
 
+/* *************************************** */
+
+#if 0 /* Not used */
 HostTraffic* findHostByFcAddr(FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId) {
   HostTraffic *el;
   u_int idx = hashFcHost(fcAddr, vsanId, &el, actualDeviceId);
@@ -4645,9 +4644,11 @@ HostTraffic* findHostByFcAddr(FcAddress *fcAddr, u_short vsanId, u_int actualDev
 
   return(NULL);
 }
+#endif
 
-FcNameServerCacheEntry *findFcHostNSCacheEntry (FcAddress *fcAddr, u_short vsanId)
-{
+/* *************************************** */
+
+FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId) {
     FcNameServerCacheEntry *entry = NULL;
     HostTraffic *el = NULL;
     u_int hashIdx = hashFcHost(fcAddr, vsanId, &el, -1);

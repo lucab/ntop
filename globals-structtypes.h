@@ -437,10 +437,7 @@ typedef struct securityHostProbes {
     synFinPktsSent, finPushUrgPktsSent, nullPktsSent;
   UsageCounter synPktsRcvd, rstPktsRcvd, rstAckPktsRcvd,
     synFinPktsRcvd, finPushUrgPktsRcvd, nullPktsRcvd;
-  UsageCounter ackScanSent, ackScanRcvd;
-  UsageCounter xmasScanSent, xmasScanRcvd;
-  UsageCounter finScanSent, finScanRcvd;
-  UsageCounter nullScanSent, nullScanRcvd;
+  UsageCounter ackXmasFinSynNullScanSent, ackXmasFinSynNullScanRcvd;
   UsageCounter rejectedTCPConnSent, rejectedTCPConnRcvd;
   UsageCounter establishedTCPConnSent, establishedTCPConnRcvd;
   UsageCounter terminatedTCPConnServer, terminatedTCPConnClient;
@@ -467,11 +464,7 @@ typedef struct securityDeviceProbes {
   TrafficCounter rejectedTCPConn;
   TrafficCounter establishedTCPConn;
   TrafficCounter terminatedTCPConn;
-
-  TrafficCounter ackScan;
-  TrafficCounter xmasScan;
-  TrafficCounter finScan;
-  TrafficCounter nullScan;
+  TrafficCounter ackXmasFinSynNullScan;
   /* ********* */
   TrafficCounter udpToClosedPort;
   TrafficCounter udpToDiagnosticPort, tcpToDiagnosticPort;

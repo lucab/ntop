@@ -983,25 +983,10 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	wrtLlongItm(fDescr, lang,"\t\t","nullPktsRcvd",
 		    el->secHostPkts->nullPktsRcvd.value, ',', numEntries);
 
-	wrtLlongItm(fDescr, lang,"\t\t","ackScanSent",
-		    el->secHostPkts->ackScanSent.value, ',', numEntries);
-	wrtLlongItm(fDescr, lang,"\t\t","ackScanRcvd",
-		    el->secHostPkts->ackScanRcvd.value, ',', numEntries);
-
-	wrtLlongItm(fDescr, lang,"\t\t","xmasScanSent",
-		    el->secHostPkts->xmasScanSent.value, ',', numEntries);
-	wrtLlongItm(fDescr, lang,"\t\t","xmasScanRcvd",
-		    el->secHostPkts->xmasScanRcvd.value, ',', numEntries);
-
-	wrtLlongItm(fDescr, lang,"\t\t","finScanSent",
-		    el->secHostPkts->finScanSent.value, ',', numEntries);
-	wrtLlongItm(fDescr, lang,"\t\t","finScanRcvd",
-		    el->secHostPkts->finScanRcvd.value, ',', numEntries);
-
-	wrtLlongItm(fDescr, lang,"\t\t","nullScanSent",
-		    el->secHostPkts->nullScanSent.value, ',', numEntries);
-	wrtLlongItm(fDescr, lang,"\t\t","nullScanRcvd",
-		    el->secHostPkts->nullScanRcvd.value, ',', numEntries);
+	wrtLlongItm(fDescr, lang,"\t\t","ackXmasFinSynNullScanSent",
+		    el->secHostPkts->ackXmasFinSynNullScanSent.value, ',', numEntries);
+	wrtLlongItm(fDescr, lang,"\t\t","ackXmasFinSynNullScanRcvd",
+		    el->secHostPkts->ackXmasFinSynNullScanRcvd.value, ',', numEntries);
 
 	wrtLlongItm(fDescr, lang,"\t\t","rejectedTCPConnSent",
 		    el->secHostPkts->rejectedTCPConnSent.value, ',', numEntries);
@@ -1461,10 +1446,7 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	wrtLlongItm(fDescr, lang, "\t", "synFinPkts", myGlobals.device[i].securityPkts.synFinPkts, ',', numEntries);
 	wrtLlongItm(fDescr, lang, "\t", "finPushUrgPkts", myGlobals.device[i].securityPkts.finPushUrgPkts, ',', numEntries);
 	wrtLlongItm(fDescr, lang, "\t", "nullPkts", myGlobals.device[i].securityPkts.nullPkts, ',', numEntries);
-	wrtLlongItm(fDescr, lang, "\t", "ackScan", myGlobals.device[i].securityPkts.ackScan, ',', numEntries);
-	wrtLlongItm(fDescr, lang, "\t", "xmasScan", myGlobals.device[i].securityPkts.xmasScan, ',', numEntries);
-	wrtLlongItm(fDescr, lang, "\t", "finScan", myGlobals.device[i].securityPkts.finScan, ',', numEntries);
-	wrtLlongItm(fDescr, lang, "\t", "nullScan", myGlobals.device[i].securityPkts.nullScan, ',', numEntries);
+	wrtLlongItm(fDescr, lang, "\t", "ackXmasFinSynNullScan", myGlobals.device[i].securityPkts.ackXmasFinSynNullScan, ',', numEntries);
 	wrtLlongItm(fDescr, lang, "\t", "rejectedTCPConn", myGlobals.device[i].securityPkts.rejectedTCPConn, ',', numEntries);
 	wrtLlongItm(fDescr, lang, "\t", "establishedTCPConn", myGlobals.device[i].securityPkts.establishedTCPConn, ',', numEntries);
 	wrtLlongItm(fDescr, lang, "\t", "terminatedTCPConn", myGlobals.device[i].securityPkts.terminatedTCPConn, ',', numEntries);

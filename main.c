@@ -153,9 +153,6 @@ static struct option const long_options[] = {
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
 
-#ifndef WIN32
-  { "webserver-queue",                  required_argument, NULL, 146 },
-#endif
   { "fc-only",                          no_argument,       NULL, 147 },
   { "no-fc",                            no_argument,       0, 148 },
   { "no-invalid-lun",                   no_argument,       0, 149 },
@@ -289,20 +286,16 @@ void usage (FILE * fp) {
 
   fprintf(fp, "    [--log-extra <level>]                                 %sAdd extra information to log messages\n", newLine);
 
-  fprintf(fp, "    [--disable-instantsessionpurge                        %sDisable instant FIN session purge\n", newLine);
+  fprintf(fp, "    [--disable-instantsessionpurge]                       %sDisable instant FIN session purge\n", newLine);
 
-  fprintf(fp, "    [--disable-mutexextrainfo                             %sDisable extra mutex info\n", newLine);
+  fprintf(fp, "    [--disable-mutexextrainfo]                            %sDisable extra mutex info\n", newLine);
 
-#ifdef WIN32
-  fprintf(fp, "    [--webserver-queue                                    %sSet size of listen() queue\n", newLine);
-#endif
-  
   fprintf(fp, "    [--fc-only]                                           %sDisplay only Fibre Channel statistics\n", 
 	  newLine);
   fprintf(fp, "    [--no-fc]                                             %sDisable processing & Display of Fibre Channel\n", newLine);
   fprintf(fp, "    [--no-invalid-lun]                                    %sDon't display Invalid LUN information\n", newLine);
 
-  fprintf(fp, "    [--no-check-version                                   %sSkip ntop version check\n", newLine);
+  fprintf(fp, "    [--no-check-version]                                  %sSkip ntop version check\n", newLine);
 
 #ifdef WIN32
   printAvailableInterfaces();
@@ -751,13 +744,6 @@ static int parseOptions(int argc, char* argv []) {
     case 145: /* disable-mutexextrainfo */
       myGlobals.disableMutexExtraInfo = TRUE;
       break;
-
-#ifndef WIN32
-    case 146: /* webserver-queue */
-      myGlobals.webServerRequestQueueLength =
-          min(max(MIN_WEBSERVER_REQUEST_QUEUE_LEN, atoi(optarg)), MAX_WEBSERVER_REQUEST_QUEUE_LEN);
-      break;
-#endif
 
     case 147:
       myGlobals.printFcOnly = TRUE;

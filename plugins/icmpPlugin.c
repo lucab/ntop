@@ -288,7 +288,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   /* traceEvent(CONST_TRACE_INFO, "-> %s%d", sign, icmpColumnSort); */
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);  
-  printHTMLheader("ICMP Statistics", 0);
+  printHTMLheader("ICMP Statistics", NULL, 0);
 
   if(num == 0) {
     printNoDataYet();

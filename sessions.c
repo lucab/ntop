@@ -163,6 +163,12 @@ static void updateFileList(char *fileName, u_char upDownloadMode, HostTraffic *t
 /* ************************************ */
 
 static void updateHostUsers(char *userName, int userType, HostTraffic *theHost) {
+  int i;
+
+  if(userName[0] == '\0') return;
+
+  /* Convert to lowercase */
+  for(i=strlen(userName)-1; i>=0; i--) userName[i] = tolower(userName[i]);
 
   if(isSMTPhost(theHost)) {
     /*
@@ -777,9 +783,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       len = packetDataLength;
 
     if(myGlobals.enablePacketDecoding) {
-
-      if(sport == 80) 	FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &srcHost->flags);
-      if(dport == 80) 	FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &dstHost->flags);
+      if(packetDataLength > 0) {
+	if(sport == 80) FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &srcHost->flags);
+	if(dport == 80) FD_SET(FLAG_HOST_TYPE_SVC_HTTP, &dstHost->flags);
+      }
 
       if((sport == 80 /* HTTP */)
 	 && (theSession->bytesProtoRcvd.value == 0)
@@ -955,9 +962,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 
 		  if(srcHost->fingerprint == NULL) {
-		    char buffer[64];
+		    char buffer[64], *delimiter;
 
 		    snprintf(buffer, sizeof(buffer), ":%s", os);
+		    
+		    if((delimiter = strchr(buffer, ';')) != NULL) delimiter[0] = '\0';
+		    if((delimiter = strchr(buffer, '(')) != NULL) delimiter[0] = '\0';
+		    if((delimiter = strchr(buffer, ')')) != NULL) delimiter[0] = '\0';
+
 		    accessAddrResMutex("makeHostLink");
 		    srcHost->fingerprint = strdup(buffer);
 		    releaseAddrResMutex();
@@ -1843,9 +1855,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	     && (theSession->lastInitiator2RemFlags[0] == TH_ACK)
 	     && (theSession->bytesRcvd.value == 0))) {
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	incrementUsageCounter(&srcHost->secHostPkts->ackScanRcvd, dstHost, actualDeviceId);
-	incrementUsageCounter(&dstHost->secHostPkts->ackScanSent, srcHost, actualDeviceId);
-	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.ackScan, 1);
+	incrementUsageCounter(&srcHost->secHostPkts->ackXmasFinSynNullScanRcvd, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->ackXmasFinSynNullScanSent, srcHost, actualDeviceId);
+	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.ackXmasFinSynNullScan, 1);
 
 	if(myGlobals.enableSuspiciousPacketDump) {
 	  traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed ACK scan of host [%s:%d]",
@@ -1919,9 +1931,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  || ((theSession->initiator == dstHost)
 		      && (theSession->lastInitiator2RemFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))) {
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&dstHost->secHostPkts->xmasScanSent, srcHost, actualDeviceId);
-	  incrementUsageCounter(&srcHost->secHostPkts->xmasScanRcvd, dstHost, actualDeviceId);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.xmasScan, 1);
+	  incrementUsageCounter(&dstHost->secHostPkts->ackXmasFinSynNullScanSent, srcHost, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->ackXmasFinSynNullScanRcvd, dstHost, actualDeviceId);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.ackXmasFinSynNullScan, 1);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed XMAS scan of host [%s:%d]",
@@ -1934,9 +1946,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  || ((theSession->initiator == dstHost)
 		      && ((theSession->lastInitiator2RemFlags[0] & TH_FIN) == TH_FIN))) {
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&dstHost->secHostPkts->finScanSent, srcHost, actualDeviceId);
-	  incrementUsageCounter(&srcHost->secHostPkts->finScanRcvd, dstHost, actualDeviceId);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.finScan, 1);
+	  incrementUsageCounter(&dstHost->secHostPkts->ackXmasFinSynNullScanSent, srcHost, actualDeviceId);
+	  incrementUsageCounter(&srcHost->secHostPkts->ackXmasFinSynNullScanRcvd, dstHost, actualDeviceId);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.ackXmasFinSynNullScan, 1);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed FIN scan of host [%s:%d]",
@@ -1951,9 +1963,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		      && ((theSession->lastInitiator2RemFlags[0] == 0))
 		      && (theSession->bytesSent.value > 0))) {
 	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
-	  incrementUsageCounter(&srcHost->secHostPkts->nullScanRcvd, dstHost, actualDeviceId);
-	  incrementUsageCounter(&dstHost->secHostPkts->nullScanSent, srcHost, actualDeviceId);
-	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.finScan, 1);
+	  incrementUsageCounter(&srcHost->secHostPkts->ackXmasFinSynNullScanRcvd, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->ackXmasFinSynNullScanSent, srcHost, actualDeviceId);
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.ackXmasFinSynNullScan, 1);
 
 	  if(myGlobals.enableSuspiciousPacketDump) {
 	    traceEvent(CONST_TRACE_WARNING, "Host [%s:%d] performed NULL scan of host [%s:%d]",

@@ -545,7 +545,7 @@ void initCounters(void) {
   myGlobals.hostsCacheReused = 0;
 #ifdef PARM_USE_SESSIONS_CACHE
   myGlobals.sessionsCacheLen = 0;
-  myGlobals.sessionsCacheLenMax = 0;
+b  myGlobals.sessionsCacheLenMax = 0;
   myGlobals.sessionsCacheReused = 0;
 #endif
 
@@ -561,7 +561,7 @@ void initCounters(void) {
 
     traceEvent(CONST_TRACE_NOISY, "OSFP: Checking '%s'", buf);
     fd = gzopen(buf, "r");
-
+    
     if(fd) {
       traceEvent(CONST_TRACE_NOISY, "OSFP: ...found!");
       configFileFound = 1;

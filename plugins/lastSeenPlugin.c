@@ -140,7 +140,7 @@ static void handleLsHTTPrequest(char* url) {
 
   if(disabled) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader("Status for the \"lastSeen\" Plugin", BITFLAG_HTML_NO_REFRESH);
+    printHTMLheader("Status for the \"lastSeen\" Plugin", NULL, BITFLAG_HTML_NO_REFRESH);
     printFlagedWarning("<I>This plugin is disabled.<I>");
     sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
     printHTMLtrailer();
@@ -154,7 +154,7 @@ static void handleLsHTTPrequest(char* url) {
   }
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-  printHTMLheader(NULL, 0);
+  printHTMLheader(NULL, NULL, 0);
 
   if ( url && strncmp(url,"P",1)==0 ) {
     entry = recv(myGlobals.newSock, &postData[0],127,0); 
@@ -307,7 +307,7 @@ static void NotesURL(char *addr, char *ip_addr) {
   content = gdbm_fetch(LsDB,key_data);
 
   snprintf(tmp, sizeof(tmp), "Notes for %s", ip_addr);
-  printHTMLheader(tmp, 0);
+  printHTMLheader(tmp, NULL, 0);
   
   sendString("<FONT FACE=Helvetica><P><HR>\n");
   sendString("<title>Manage Notes</title>\n");

@@ -184,7 +184,7 @@ void printTrafficStatistics(void) {
   struct pcap_stat pcapStat;
 
   unicastPkts = 0;
-  printHTMLheader("Global Traffic Statistics", 0);
+  printHTMLheader("Global Traffic Statistics", NULL, 0);
 
   sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
 
@@ -269,10 +269,21 @@ void printTrafficStatistics(void) {
       BufferTooShort();
     sendString(buf);
 
-    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", myGlobals.rFileName) < 0)
-      BufferTooShort();
-    sendString(buf);
+    sendString("<TD "TD_BG" ALIGN=CENTER>");
 
+    if(strlen(myGlobals.rFileName) < 64)
+      sendString(myGlobals.rFileName);
+    else {
+      for(i=strlen(myGlobals.rFileName); i>0; i--)
+	if((myGlobals.rFileName[i] == '/')
+	   || (myGlobals.rFileName[i] == '\\'))
+	  break;
+
+      snprintf(buf, sizeof(buf), "...%s", &myGlobals.rFileName[i]);
+      sendString(buf);
+    }
+
+    sendString("</TD>");
     sendString("<TD "TD_BG">&nbsp;</TD>");
     sendString("<TD "TD_BG">&nbsp;</TD>");
     sendString("<TD "TD_BG">&nbsp;</TD>");
@@ -331,7 +342,7 @@ void printTrafficStatistics(void) {
                 "For device: '%s' (current reporting device)",
                 myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
       BufferTooShort();
-    printHTMLheader(buf, 0);
+    printHTMLheader(buf, NULL, 0);
     sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
 
     sendString("<TR><TH "TH_BG" align=left>Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
@@ -846,8 +857,7 @@ void printHostsTraffic(int reportType,
     break;
   }
 
-  printHTMLheader(buf, 0);
-
+  printHTMLheader(buf, NULL, 0);
   printHeader(reportType, revertOrder, abs(sortedColumn), showHostsMode);
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
@@ -1431,7 +1441,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
       break;
   }
 
-  printHTMLheader("Multicast Statistics", 0);
+  printHTMLheader("Multicast Statistics", NULL, 0);
 
   if(numEntries > 0) {
     myGlobals.columnSort = sortedColumn; /* Host name */
@@ -1576,7 +1586,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
   myGlobals.columnSort = sortedColumn;
 
-  printHTMLheader("Host Information", 0);
+  printHTMLheader("Host Information", NULL, 0);
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
@@ -2198,7 +2208,7 @@ void printLocalRoutersList(int actualDeviceId) {
   HostSerial routerList[MAX_NUM_ROUTERS];
   char formatBuf[32];
 
-  printHTMLheader("Local Subnet Routers", 0);
+  printHTMLheader("Local Subnet Routers", NULL, 0);
 
   if(myGlobals.dontTrustMACaddr) {
     printNotAvailable("-o or --no-mac");
@@ -2370,7 +2380,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     break;
   }
 
-  printHTMLheader(title, 0);
+  printHTMLheader(title, NULL, 0);
 
   if(numEntries > 0) {
     myGlobals.columnSort = sortedColumn;
@@ -2585,7 +2595,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 	}
 
 	if(printedSessions == 0) {
-	  printHTMLheader("Active TCP Sessions", 0);
+	  printHTMLheader("Active TCP Sessions", NULL, 0);
 
 	  sendString("<CENTER>\n");
 	  sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
@@ -2685,7 +2695,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     printFooterHostLink();
   } else {
     if(el == NULL) {
-      printHTMLheader("Active TCP Sessions", 0);
+      printHTMLheader("Active TCP Sessions", NULL, 0);
       printFlagedWarning("<I>No Active TCP Sessions</I>");
     }
   }
@@ -2701,7 +2711,7 @@ void printIpProtocolUsage(void) {
   char buf[LEN_GENERAL_WORK_BUFFER], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   int portBufLen;
   
-  printHTMLheader("TCP/UDP Protocol Subnet Usage", 0);
+  printHTMLheader("TCP/UDP Protocol Subnet Usage", NULL, 0);
 
   memset(clientPorts, 0, sizeof(clientPorts));
   memset(serverPorts, 0, sizeof(serverPorts));
@@ -3385,7 +3395,7 @@ void printIpTrafficMatrix(void) {
   Counter minTraffic=(Counter)LONG_MAX, maxTraffic=0, avgTraffic;
   Counter avgTrafficLow, avgTrafficHigh, tmpCounter;
 
-  printHTMLheader("IP Subnet Traffic Matrix", 0);
+  printHTMLheader("IP Subnet Traffic Matrix", NULL, 0);
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix == NULL) {
     printFlagedWarning("<I>Traffic matrix is not available for the selected network interface</I>");
@@ -3530,7 +3540,7 @@ void printThptStatsMatrix(int sortedColumn) {
   struct tm t;
   HostTraffic *el;
 
-  printHTMLheader("Network Load Statistics Matrix", 0);
+  printHTMLheader("Network Load Statistics Matrix", NULL, 0);
 
   switch(sortedColumn) {
   case 1:
@@ -3815,7 +3825,7 @@ void printThptStatsMatrix(int sortedColumn) {
 void printThptStats(int sortedColumn _UNUSED_) {
   char tmpBuf[128], formatBuf[32], formatBuf1[32];
 
-  printHTMLheader("Network Load Statistics", 0);
+  printHTMLheader("Network Load Statistics", NULL, 0);
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
     printFlagedWarning("<I>Network load statistics are not available for virtual interfaces</I>");
@@ -4032,7 +4042,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   } else {
     snprintf(buf, sizeof(buf), "Stats for Domain %s", domainName);
   }
-  printHTMLheader(buf, 0);
+  printHTMLheader(buf, NULL, 0);
 
   if(numEntries == 0) {
     printNoDataYet();
@@ -4333,7 +4343,7 @@ void listNetFlows(void) {
   FlowFilterList *list = myGlobals.flowsList;
   char formatBuf[32], formatBuf1[32];
 
-  printHTMLheader(NULL, 0);
+  printHTMLheader(NULL, NULL, 0);
 
   if(list != NULL) {
     while(list != NULL) {
@@ -4398,53 +4408,53 @@ void printHostHourlyTraffic(HostTraffic *el) {
     tcRcvd += el->trafficDistribution->last24HoursBytesRcvd[i].value;
   }
 
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>Midnight - 1AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>12 PM - 1 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 0, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>1AM - 2AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>1 - 2 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 1, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>2AM - 3AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>2 - 3 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 2, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>3AM - 4AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>3 - 4 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 3, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>4AM - 5AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>4 - 5 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 4, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>5AM - 6AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>5 - 6 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 5, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>6AM - 7AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>6 - 7 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 6, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>7AM - 8AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>7 - 8 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 7, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>8AM - 9AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>8 - 9 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 8, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>9AM - 10AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>9 - 10 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 9, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>10AM - 11AM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>10 - 11 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 10, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>11AM - Noon</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>11 - 12 AM</TH>\n");
   printHostHourlyTrafficEntry(el, 11, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>Noon - 1PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>12 AM - 1 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 12, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>1PM - 2PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>1 - 2 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 13, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>2PM - 3PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>2 - 3 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 14, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>3PM - 4PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>3 - 4 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 15, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>4PM - 5PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>4 - 5 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 16, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>5PM - 6PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>5 - 6 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 17, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>6PM - 7PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>6 - 7 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 18, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>7PM - 8PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>7 - 8 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 19, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>8PM - 9PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>8 - 9 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 20, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>9PM - 10PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>9 - 10 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 21, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>10PM - 11PM</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>10 - 11 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 22, tcSent, tcRcvd);
-  sendString("<TR><TH "TH_BG" ALIGN=LEFT>11PM - Midnight</TH>\n");
+  sendString("<TR><TH "TH_BG" ALIGN=LEFT>11 - 12 PM</TH>\n");
   printHostHourlyTrafficEntry(el, 23, tcSent, tcRcvd);
 
   sendString("<TR><TH "TH_BG">Total</TH>\n");
@@ -4588,7 +4598,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 /* ************************** */
 
 void printASList(unsigned int deviceId) {
-  printHTMLheader("Autonomous Systems Traffic Statistics", 0);
+  printHTMLheader("Autonomous Systems Traffic Statistics", NULL, 0);
 
   if(deviceId > myGlobals.numDevices) {
     printFlagedWarning("<I>Invalid device specified</I>");
@@ -4601,7 +4611,7 @@ void printASList(unsigned int deviceId) {
 /* ******************************* */
 
 void printVLANList(unsigned int deviceId) {
-  printHTMLheader("VLAN Traffic Statistics", 0);
+  printHTMLheader("VLAN Traffic Statistics", NULL, 0);
 
   if(deviceId > myGlobals.numDevices) {
     printFlagedWarning("<I>Invalid device specified</I>");
@@ -4649,7 +4659,7 @@ void showPortTraffic(u_short portNr) {
       BufferTooShort();
   }
 
-  printHTMLheader(buf, 0);
+  printHTMLheader(buf, NULL, 0);
   sendString("<CENTER>\n");
 
   for(el=getFirstHost(myGlobals.actualReportDeviceId);

@@ -550,7 +550,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
     arrow[2] = ""; theAnchor[2] = htmlAnchor1;
   }
 
-  snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&showH=", url, 
+  snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&showH=", url,
 	   revertOrder ? "-" : "", column);
 
   switch(showHostsMode) {
@@ -616,7 +616,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 		"<TH "TH_BG">%s8>(R)ARP%s</A></TH><TH "TH_BG">%s9>AppleTalk%s</A></TH>",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
 		theAnchor[2], arrow[2], theAnchor[3], arrow[3],
-		theAnchor[4], arrow[4],	
+		theAnchor[4], arrow[4],
 		theAnchor[5], arrow[5], theAnchor[6], arrow[6],
 		theAnchor[7], arrow[7], theAnchor[8], arrow[8]) < 0)
       BufferTooShort();
@@ -800,11 +800,10 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, i
     if(el->fingerprint == NULL)   return("");
     if(el->fingerprint[0] != ':') setHostFingerprint(el);
     if(el->fingerprint[0] != ':') return("");
-
     theOsName = &el->fingerprint[1];
   }
-  if(theOsName[0] == '\0')
-    return("");
+
+  if(theOsName[0] == '\0') return("");
 
   flagImg = NULL;
 
@@ -1274,7 +1273,7 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     case 4:
       a_ = (*a)->icmp6Sent.value, b_ = (*b)->icmp6Sent.value;
-      break; 
+      break;
     case 5:
       a_ = (*a)->dlcSent.value, b_ = (*b)->dlcSent.value;
       break;
@@ -1392,7 +1391,7 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     case 4:
       a_ = (*a)->icmp6Rcvd.value+(*a)->icmp6Sent.value, b_ = (*b)->icmp6Rcvd.value+(*b)->icmp6Sent.value;
-      break;  
+      break;
     case 5:
       a_ = (*a)->dlcRcvd.value+(*a)->dlcSent.value, b_ = (*b)->dlcRcvd.value+(*b)->dlcSent.value;
       break;
@@ -1881,11 +1880,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
     /* *********************** */
 
-    if(((el->secHostPkts->ackScanSent.value.value+el->secHostPkts->ackScanRcvd.value.value
-	 +el->secHostPkts->xmasScanSent.value.value+el->secHostPkts->xmasScanRcvd.value.value
-	 +el->secHostPkts->finScanSent.value.value+el->secHostPkts->finScanRcvd.value.value
-	 +el->secHostPkts->synFinPktsSent.value.value+el->secHostPkts->synFinPktsRcvd.value.value
-	 +el->secHostPkts->nullScanSent.value.value+el->secHostPkts->nullScanRcvd.value.value
+    if(((el->secHostPkts->ackXmasFinSynNullScanSent.value.value+el->secHostPkts->ackXmasFinSynNullScanRcvd.value.value
 	 +el->secHostPkts->udpToClosedPortSent.value.value
 	 +el->secHostPkts->udpToClosedPortRcvd.value.value
 	 +el->secHostPkts->udpToDiagnosticPortSent.value.value
@@ -1900,6 +1895,14 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	 +el->secHostPkts->overlappingFragmentRcvd.value.value
 	 +el->secHostPkts->closedEmptyTCPConnSent.value.value
 	 +el->secHostPkts->closedEmptyTCPConnRcvd.value.value
+	 +el->secHostPkts->icmpPortUnreachSent.value.value
+	 +el->secHostPkts->icmpPortUnreachRcvd.value.value
+	 +el->secHostPkts->icmpHostNetUnreachSent.value.value
+	 +el->secHostPkts->icmpHostNetUnreachRcvd.value.value
+	 +el->secHostPkts->icmpProtocolUnreachSent.value.value
+	 +el->secHostPkts->icmpProtocolUnreachRcvd.value.value
+	 +el->secHostPkts->icmpAdminProhibitedSent.value.value
+	 +el->secHostPkts->icmpAdminProhibitedRcvd.value.value
 	 +el->secHostPkts->malformedPktsSent.value.value
 	 +el->secHostPkts->malformedPktsRcvd.value.value
 	 ) > 0)) {
@@ -1912,41 +1915,13 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd&nbsp;from</TH>"
 		 "</TR>\n");
 
-      if((el->secHostPkts->ackScanSent.value.value+el->secHostPkts->ackScanRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ACK Scan</TH>",
+      if((el->secHostPkts->ackXmasFinSynNullScanSent.value.value+el->secHostPkts->ackXmasFinSynNullScanRcvd.value.value) > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ACK/XMAS/SYN/FIN/NULL Scan</TH>",
 		    getRowColor()) < 0)
 	  BufferTooShort();
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->ackScanSent, 0, actualDeviceId);
-	formatUsageCounter(el->secHostPkts->ackScanRcvd, 0, actualDeviceId);
-	sendString("</TR>\n");
-      }
-
-      if((el->secHostPkts->xmasScanSent.value.value+el->secHostPkts->xmasScanRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>XMAS Scan</TH>",
-		    getRowColor()) < 0)
-	  BufferTooShort();
-	sendString(buf);
-	formatUsageCounter(el->secHostPkts->xmasScanSent, 0, actualDeviceId);
-	formatUsageCounter(el->secHostPkts->xmasScanRcvd, 0, actualDeviceId);
-	sendString("</TR>\n");
-      }
-
-      if((el->secHostPkts->finScanSent.value.value+el->secHostPkts->finScanRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>FIN Scan</TH>",
-		    getRowColor()) < 0) BufferTooShort();
-	sendString(buf);
-	formatUsageCounter(el->secHostPkts->finScanSent, 0, actualDeviceId);
-	formatUsageCounter(el->secHostPkts->finScanRcvd, 0, actualDeviceId);
-	sendString("</TR>\n");
-      }
-
-      if((el->secHostPkts->nullScanSent.value.value+el->secHostPkts->nullScanRcvd.value.value) > 0) {
-	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>NULL Scan</TH>",
-		    getRowColor()) < 0) BufferTooShort();
-	sendString(buf);
-	formatUsageCounter(el->secHostPkts->nullScanSent, 0, actualDeviceId);
-	formatUsageCounter(el->secHostPkts->nullScanRcvd, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->ackXmasFinSynNullScanSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->ackXmasFinSynNullScanRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -2019,6 +1994,52 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 	formatUsageCounter(el->secHostPkts->closedEmptyTCPConnRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
+
+
+      if((el->secHostPkts->icmpPortUnreachSent.value.value+
+	  el->secHostPkts->icmpPortUnreachRcvd.value.value) > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ICMP Port Unreachable</TH>",
+		    getRowColor()) < 0) BufferTooShort();
+	sendString(buf);
+	formatUsageCounter(el->secHostPkts->icmpPortUnreachSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->icmpPortUnreachRcvd, 0, actualDeviceId);
+	sendString("</TR>\n");
+      }
+
+      if((el->secHostPkts->icmpHostNetUnreachSent.value.value+
+	  el->secHostPkts->icmpHostNetUnreachRcvd.value.value) > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ICMP Net Unreachable</TH>",
+		    getRowColor()) < 0) BufferTooShort();
+	sendString(buf);
+	formatUsageCounter(el->secHostPkts->icmpHostNetUnreachSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->icmpHostNetUnreachRcvd, 0, actualDeviceId);
+	sendString("</TR>\n");
+      }
+
+      if((el->secHostPkts->icmpProtocolUnreachSent.value.value+
+	  el->secHostPkts->icmpProtocolUnreachRcvd.value.value) > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ICMP Protocol Unreachable</TH>",
+		    getRowColor()) < 0) BufferTooShort();
+	sendString(buf);
+	formatUsageCounter(el->secHostPkts->icmpProtocolUnreachSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->icmpProtocolUnreachRcvd, 0, actualDeviceId);
+	sendString("</TR>\n");
+      }
+
+      if((el->secHostPkts->icmpAdminProhibitedSent.value.value+
+	  el->secHostPkts->icmpAdminProhibitedRcvd.value.value) > 0) {
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>ICMP Administratively Prohibited</TH>",
+		    getRowColor()) < 0) BufferTooShort();
+	sendString(buf);
+	formatUsageCounter(el->secHostPkts->icmpAdminProhibitedSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->icmpAdminProhibitedRcvd, 0, actualDeviceId);
+	sendString("</TR>\n");
+      }
+
+
+
+
+
 
       if((el->secHostPkts->malformedPktsSent.value.value+
 	  el->secHostPkts->malformedPktsRcvd.value.value) > 0) {
@@ -2131,7 +2152,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       for(i=0; linkName[i] != '\0'; i++)
           if(linkName[i] == ':')
             linkName[i] = '_';  /* to avoid escaping chars */
-      
+
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Fragment Distribution for %s\"></TD>",
@@ -2429,7 +2450,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       for(i=0; linkName[i] != '\0'; i++)
 	if(linkName[i] == ':')
             linkName[i] = '_';  /* to avoid escaping chars */
-      
+
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2>"
@@ -2558,7 +2579,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 #ifdef INET6
 void printIcmpv6Stats(HostTraffic *el) {
   char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], formatBuf1[32];
-  
+
   sendString("<CENTER>\n<H1>ICMPv6 Traffic</H1><p>\n");
   sendString("<TABLE BORDER>\n");
   sendString("<TR "TR_ON"><th>Type</th>"
@@ -2573,7 +2594,7 @@ void printIcmpv6Stats(HostTraffic *el) {
       BufferTooShort();
     sendString(buf);
   }
-  
+
   if(el->icmpInfo->icmpMsgSent[ICMP6_ECHO_REPLY].value+el->icmpInfo->icmpMsgRcvd[ICMP6_ECHO_REPLY].value > 0) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Reply</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
@@ -2600,7 +2621,7 @@ void printIcmpv6Stats(HostTraffic *el) {
       BufferTooShort();
     sendString(buf);
   }
-  
+
   if(el->icmpInfo->icmpMsgSent[ND_ROUTER_ADVERT].value+el->icmpInfo->icmpMsgRcvd[ND_ROUTER_ADVERT].value > 0) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router Advertisement</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
@@ -2622,7 +2643,7 @@ void printIcmpv6Stats(HostTraffic *el) {
   if(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_SOLICIT].value+el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_SOLICIT].value > 0) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Neighbor solicitation</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-                formatPkts(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_SOLICIT].value, formatBuf, sizeof(formatBuf)),  
+                formatPkts(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_SOLICIT].value, formatBuf, sizeof(formatBuf)),
                 formatPkts(el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_SOLICIT].value, formatBuf1, sizeof(formatBuf1))) < 0)
       BufferTooShort();
     sendString(buf);
@@ -2631,7 +2652,7 @@ void printIcmpv6Stats(HostTraffic *el) {
   if(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_ADVERT].value+el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_ADVERT].value > 0) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Neighbor advertisment</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-                formatPkts(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_ADVERT].value, formatBuf, sizeof(formatBuf)),  
+                formatPkts(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_ADVERT].value, formatBuf, sizeof(formatBuf)),
                 formatPkts(el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_ADVERT].value, formatBuf1, sizeof(formatBuf1))) < 0)
       BufferTooShort();
     sendString(buf);
@@ -2687,7 +2708,7 @@ void printIcmpv4Stats(HostTraffic *el) {
       BufferTooShort();
     sendString(buf);
   }
-  
+
    if(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value+el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value > 0) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router Advertisement</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
@@ -2770,7 +2791,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   /************ ICMPv6 info*********************/
-  
+
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
 }
 
@@ -3033,18 +3054,38 @@ u_short isHostHealthy(HostTraffic *el) {
 
   if((el->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD)
      || (el->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD)) {
-    /* Mail/DNS server usually contact several hosts */
-    if(!(isSMTPhost(el) || nameServerHost(el))) {
+    /* Mail/DNS/HTTP server usually contact several hosts */
+    if(!(isSMTPhost(el) || nameServerHost(el) || isHTTPhost(el))) {
       if(riskFactor < 1) riskFactor = 1;
     }
   }
-     
+
   if(hasDuplicatedMac(el)) {
     if(riskFactor < 2) riskFactor = 2;
   }
 
   if(hasSentIpDataOnZeroPort(el)) {
     if(riskFactor < 2) riskFactor = 2;
+  }
+
+  if((el->secHostPkts != NULL)
+     && ((el->secHostPkts->nullPktsSent.value.value > 0)
+	 || (el->secHostPkts->synFinPktsSent.value.value > 0)
+	 || (el->secHostPkts->rstPktsRcvd.value.value > 0)
+	 || (el->secHostPkts->ackXmasFinSynNullScanSent.value.value > 0)
+	 || (el->secHostPkts->rejectedTCPConnRcvd.value.value > 0)
+	 || (el->secHostPkts->udpToClosedPortRcvd.value.value > 0)
+	 || (el->secHostPkts->udpToDiagnosticPortSent.value.value > 0)
+	 || (el->secHostPkts->tinyFragmentSent.value.value > 0)
+	 || (el->secHostPkts->icmpFragmentSent.value.value > 0)
+	 || (el->secHostPkts->overlappingFragmentSent.value.value > 0)
+	 || (el->secHostPkts->closedEmptyTCPConnSent.value.value > 0)
+	 || (el->secHostPkts->icmpPortUnreachRcvd.value.value > 0)
+	 || (el->secHostPkts->icmpHostNetUnreachRcvd.value.value > 0)
+	 || (el->secHostPkts->icmpProtocolUnreachRcvd.value.value > 0)
+	 || (el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0)
+	 || (el->secHostPkts->malformedPktsRcvd.value.value > 0))) {
+    if(riskFactor < 1) riskFactor = 1;
   }
 
   return(riskFactor);
@@ -3058,9 +3099,24 @@ static void checkHostHealthness(HostTraffic *el) {
   if(hasWrongNetmask(el)
      || hasDuplicatedMac(el)
      || hasSentIpDataOnZeroPort(el)
-     || (el->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD)
-     || (el->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD)
-     ) {
+     || (el->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD) || (el->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD)
+     || ((el->secHostPkts != NULL)
+	 && ((el->secHostPkts->nullPktsSent.value.value > 0)
+	     || (el->secHostPkts->synFinPktsSent.value.value > 0)
+	     || (el->secHostPkts->rstPktsRcvd.value.value > 0)
+	     || (el->secHostPkts->ackXmasFinSynNullScanSent.value.value > 0)
+	     || (el->secHostPkts->rejectedTCPConnRcvd.value.value > 0)
+	     || (el->secHostPkts->udpToClosedPortRcvd.value.value > 0)
+	     || (el->secHostPkts->udpToDiagnosticPortSent.value.value > 0)
+	     || (el->secHostPkts->tinyFragmentSent.value.value > 0)
+	     || (el->secHostPkts->icmpFragmentSent.value.value > 0)
+	     || (el->secHostPkts->overlappingFragmentSent.value.value > 0)
+	     || (el->secHostPkts->closedEmptyTCPConnSent.value.value > 0)
+	     || (el->secHostPkts->icmpPortUnreachRcvd.value.value > 0)
+	     || (el->secHostPkts->icmpHostNetUnreachRcvd.value.value > 0)
+	     || (el->secHostPkts->icmpProtocolUnreachRcvd.value.value > 0)
+	     || (el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0)
+	     || (el->secHostPkts->malformedPktsRcvd.value.value > 0)))) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s "
 		"<IMG ALT=\"High Risk\" SRC=/Risk_high.gif> "
 		"<IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif> "
@@ -3087,6 +3143,27 @@ static void checkHostHealthness(HostTraffic *el) {
 		 "Suspicious activities: too many host contacts</A>\n");
     }
 
+    if((el->secHostPkts != NULL)
+       && ((el->secHostPkts->nullPktsSent.value.value > 0)
+	   || (el->secHostPkts->synFinPktsSent.value.value > 0)
+	   || (el->secHostPkts->rstPktsRcvd.value.value > 0)
+	   || (el->secHostPkts->ackXmasFinSynNullScanSent.value.value > 0)
+	   || (el->secHostPkts->rejectedTCPConnRcvd.value.value > 0)
+	   || (el->secHostPkts->udpToClosedPortRcvd.value.value > 0)
+	   || (el->secHostPkts->udpToDiagnosticPortSent.value.value > 0)
+	   || (el->secHostPkts->tinyFragmentSent.value.value > 0)
+	   || (el->secHostPkts->icmpFragmentSent.value.value > 0)
+	   || (el->secHostPkts->overlappingFragmentSent.value.value > 0)
+	   || (el->secHostPkts->closedEmptyTCPConnSent.value.value > 0)
+	   || (el->secHostPkts->icmpPortUnreachRcvd.value.value > 0)
+	   || (el->secHostPkts->icmpHostNetUnreachRcvd.value.value > 0)
+	   || (el->secHostPkts->icmpProtocolUnreachRcvd.value.value > 0)
+	   || (el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0)
+	   || (el->secHostPkts->malformedPktsRcvd.value.value > 0))) {
+      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/help.html#5>"
+		 "Unexpected packets (e.g. traffic to closed port or connection reset)</A>\n");
+    }
+
     sendString("</OL></TD></TR>\n");
   }
 }
@@ -3096,8 +3173,12 @@ static void checkHostHealthness(HostTraffic *el) {
 static void printUserList(HostTraffic *el) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   UserList *list = el->protocolInfo->userList;
+  int num = 0;
 
   while(list != NULL) {
+
+    if(num > 0) sendString("<br>");
+
     if(snprintf(buf, sizeof(buf), "%s&nbsp;[", list->userName) < 0)
       BufferTooShort();
     sendString(buf);
@@ -3109,8 +3190,9 @@ static void printUserList(HostTraffic *el) {
     if(FD_ISSET(BITFLAG_FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
     if(FD_ISSET(BITFLAG_MESSENGER_USER, &(list->userFlags))) sendString("&nbsp;MSG&nbsp;");
 
-    sendString("]<br>\n");
+    sendString("]\n");
     list = list->next;
+    num++;
   }
 }
 
@@ -3124,7 +3206,7 @@ void checkHostProvidedServices(HostTraffic *el) {
      || isMasterBrowser(el)
      || isPrinter(el)
      || isBridgeHost(el)
-     || nameServerHost(el)
+     || nameServerHost(el) || isNtpServer(el)
      || gatewayHost(el)
      || isSMTPhost(el) || isIMAPhost(el) || isPOPhost(el)
      || isDirectoryHost(el)
@@ -3144,6 +3226,7 @@ void checkHostProvidedServices(HostTraffic *el) {
     if(isBridgeHost(el))       sendString("Layer-2 Switch/Bridge <IMG ALT=Bridge SRC=\"/bridge.gif\" BORDER=0><BR>\n");
 
     if(nameServerHost(el))     sendString("&nbsp;<IMG ALT=\"DNS Server\" SRC=\"/dns.gif\" BORDER=0>&nbsp;Name Server<BR>\n");
+    if(isNtpServer(el))        sendString("&nbsp;<IMG ALT=\"NTP Server\" SRC=\"/clock.gif\" BORDER=0>&nbsp;NTP Server<BR>\n");
     if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG ALT=Router SRC=\"/router.gif\" BORDER=0>&nbsp;<BR>\n");
     if(isSMTPhost(el))         sendString("SMTP Server&nbsp;<IMG ALT=\"Mail Server (SMTP)\"  SRC=\"/mail.gif\" BORDER=0>&nbsp;<BR>\n");
     if(isPOPhost(el))          sendString("POP Server<BR>\n");
@@ -3163,7 +3246,7 @@ void checkHostProvidedServices(HostTraffic *el) {
 /* ************************************ */
 
 void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
-  char buf[LEN_GENERAL_WORK_BUFFER], buf1[64], sniffedName[MAXDNAME], osBuf[128];
+  char buf[LEN_GENERAL_WORK_BUFFER], buf1[64], buf2[128], sniffedName[MAXDNAME], osBuf[128];
   float percentage;
   Counter total;
   int printedHeader, i;
@@ -3184,25 +3267,31 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if(snprintf(buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
                 "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n",
-                el->hostSymIpAddress, 
+                el->hostSymIpAddress,
 		el->hostSymIpAddress, buf1) < 0)
       BufferTooShort();
+
+    snprintf(buf2, sizeof(buf2), "Info about %s", el->hostSymIpAddress);
   } else if(el->hostNumIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
                 "TITLE=\"Link to web server on host, if available\">%s %s</A>\n",
                 el->hostIpAddress.hostFamily == AF_INET6 ? "[" : "",
-		el->hostNumIpAddress, 
+		el->hostNumIpAddress,
                 el->hostIpAddress.hostFamily == AF_INET6 ? "]" : "",
 		el->hostNumIpAddress, buf1) < 0)
       BufferTooShort();
+
+    snprintf(buf2, sizeof(buf2), "Info about %s", el->hostNumIpAddress);
   } else {
-    if(snprintf(buf, sizeof(buf), "Info about %s",	el->ethAddressString) < 0)
+    if(snprintf(buf, sizeof(buf), "Info about %s", el->ethAddressString) < 0)
       BufferTooShort();
+
+    snprintf(buf2, sizeof(buf2), "Info about %s", el->ethAddressString);
   }
 
   releaseAddrResMutex();
-  printHTMLheader(buf, 0);
+  printHTMLheader(buf2, buf, 0);
   sendString("<CENTER>\n<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=80%%>\n");
 
   if(el->hostNumIpAddress[0] != '\0') {
@@ -3644,7 +3733,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	      getRowColor(), "Total&nbsp;Data&nbsp;Sent",
-	      formatBytes(el->bytesSent.value, 1, formatBuf, sizeof(formatBuf)), 
+	      formatBytes(el->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
 	      formatPkts(el->pktSent.value, formatBuf1, sizeof(formatBuf1)),
 	      formatPkts(el->pktDuplicatedAckSent.value, formatBuf2, sizeof(formatBuf2)),
 	      (int)(((float)el->pktDuplicatedAckSent.value*100)/(float)(el->pktSent.value+1))
@@ -3768,7 +3857,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	  if(printedHeader > 1) sendString("<BR>");
 
 	  if(snprintf(buf, sizeof(buf), "%s\n",
-		      makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, 
+		      makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
 				   hostLinkBuf, sizeof(hostLinkBuf))) < 0)
 	    BufferTooShort();
 	  sendString(buf);
@@ -3789,8 +3878,6 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   /* **************************** */
 
   if((el->protocolInfo) && (el->protocolInfo->userList != NULL)) {
-
-
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
 		"Known&nbsp;Users&nbsp;<IMG ALT=Users SRC=/users.gif BORDER=0></TH><TD "TD_BG" ALIGN=RIGHT>\n",
 		getRowColor()) < 0)
@@ -3834,7 +3921,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     else
       key = el->hostNumIpAddress;
 
-    
+
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
     snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
 	     myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
@@ -3867,7 +3954,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
   char buf[LEN_GENERAL_WORK_BUFFER];
   Counter tot, tot1;
   float f1, f2, f3, f4;
-  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], formatBuf4[32], 
+  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], formatBuf4[32],
     formatBuf5[32], formatBuf6[32], formatBuf7[32];
 
   if(ss != NULL) {
@@ -4214,9 +4301,99 @@ void printSectionTitle(char *text) {
 
 /* ******************************** */
 
+static void printLocalHostsCharacterization(void) {
+  u_int a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0, i=0, unhealthy=0, totHosts=0;
+  HostTraffic *el;
+  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], headerSent = 0;
+
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    if((broadcastHost(el) == 0) /* No broadcast addresses please */
+       && (multicastHost(el) == 0) /* No multicast addresses please */
+       && subnetPseudoLocalHost(el)) {
+      totHosts++;
+
+      if(isPrinter(el)
+	 || isBridgeHost(el)
+	 || nameServerHost(el) || isNtpServer(el)
+	 || gatewayHost(el)
+	 || isSMTPhost(el) || isIMAPhost(el) || isPOPhost(el)
+	 || isDirectoryHost(el)
+	 || isFTPhost(el)
+	 || isHTTPhost(el)
+	 || isWINShost(el)
+	 || isDHCPClient(el) || isDHCPServer(el)
+	 || isP2P(el)
+	 || (isHostHealthy(el) != 0)
+	 ) {
+	if(!headerSent) {
+	  sendString("<p><hr><p>\n<CENTER>\n");
+	  printHTMLheader("Hosts Characterization", NULL, 0);
+
+	  sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON"><TH "TH_BG">Host</TH>"
+		     "<TH>Unhealthy<br>Host</TH>"
+		     "<TH>L2 Switch<br>Bridge</TH>"
+		     "<TH>Gateway</TH>"
+		     "<TH>Printer</TH>"
+		     "<TH>NTP/DNS<br>Server</TH>"
+		     "<TH>SMTP/POP/IMAP<br>Server</TH>"
+		     "<TH>Directory/FTP/HTTP<br>Server</TH>"
+		     "<TH>DHCP/WINS<br>Server</TH>"
+		     "<TH>DHCP<br>Client</TH>"
+		     "<TH>P2P</TH>"
+		     "</TR>\n"
+		     );
+	  headerSent = 1;
+	}
+
+	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH ALIGN=LEFT>%s</TH>",
+		    getRowColor(),
+		    makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
+				 hostLinkBuf, sizeof(hostLinkBuf))) < 0)
+	  BufferTooShort();
+	sendString(buf);
+
+	if(isHostHealthy(el) != 0) { sendString("<TD ALIGN=CENTER>X</TD>"); unhealthy++; } else sendString("<TD>&nbsp;</TD>");
+	if(isBridgeHost(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); a++; } else sendString("<TD>&nbsp;</TD>");
+	if(gatewayHost(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); b++; } else sendString("<TD>&nbsp;</TD>");
+	if(isPrinter(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); c++; } else sendString("<TD>&nbsp;</TD>");
+	if(nameServerHost(el) || isNtpServer(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); d++; } else sendString("<TD>&nbsp;</TD>");
+	if(isSMTPhost(el) || isIMAPhost(el) || isPOPhost(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); e++; } else sendString("<TD>&nbsp;</TD>");
+	if(isDirectoryHost(el) || isFTPhost(el) || isHTTPhost(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); f++; } else sendString("<TD>&nbsp;</TD>");
+	if(isDHCPServer(el) || isWINShost(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); g++; } else sendString("<TD>&nbsp;</TD>");
+	if(isDHCPClient(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); h++; } else sendString("<TD>&nbsp;</TD>");
+	if(isP2P(el)) { sendString("<TD ALIGN=CENTER>X</TD>"); i++; } else sendString("<TD>&nbsp;</TD>");
+
+	sendString("</TR>\n");
+      }
+    }
+  }
+
+  if(headerSent) {
+    sendString("<TR><TH>Total</TH>");
+    if(unhealthy > 0) {
+      snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d [%.1f %%]</TD>", unhealthy, (float)(unhealthy*100)/(float)totHosts);
+      sendString(buf);
+    } else
+      sendString("<TD>&nbsp;</TD>");
+    if(a > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", a); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
+    if(b > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", b); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
+    if(c > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", c); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
+    if(d > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", d); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
+    if(e > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", e); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
+    if(f > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", f); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
+    if(g > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", g); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
+    if(h > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", h); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
+    if(i > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", i); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
+    sendString("</TABLE></CENTER>\n");
+  }
+}
+
+/* ******************************** */
+
 #define MAX_NUM_OS           256
 
- void printLocalHostsStats(void) {
+void printLocalHostsStats(void) {
   u_int idx, numEntries=0, maxHosts;
   HostTraffic *el, **tmpTable;
   OsNumInfo theOSs[MAX_NUM_OS];
@@ -4225,10 +4402,11 @@ void printSectionTitle(char *text) {
 
   memset(theOSs, 0, sizeof(theOSs));
 
-  printHTMLheader("Local Hosts Statistics", BITFLAG_HTML_NO_REFRESH);
+  printHTMLheader("OS Summary", NULL, BITFLAG_HTML_NO_REFRESH);
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
     printFlagedWarning("<I>Local host statistics (OS fingerprinting) are not available for virtual interfaces</I>");
+    printLocalHostsCharacterization();
     return;
   }
 
@@ -4241,8 +4419,8 @@ void printSectionTitle(char *text) {
     if((broadcastHost(el) == 0) /* No broadcast addresses please */
        && (multicastHost(el) == 0) /* No multicast addresses please */
        && (((el->hostNumIpAddress[0] != '\0') && (!addrnull(&el->hostIpAddress)) /* This host speaks IP */
-	    && subnetPseudoLocalHost(el)) 
-	   || ((el->fingerprint != NULL) && (el->fingerprint[0] == ':'))) /* This host does not speak IP but its 
+	    && subnetPseudoLocalHost(el))
+	   || ((el->fingerprint != NULL) && (el->fingerprint[0] == ':'))) /* This host does not speak IP but its
 									     fingerprint has been computed */
        ) {
 
@@ -4312,9 +4490,13 @@ void printSectionTitle(char *text) {
 		sendString("<TD ALIGN=LEFT>");
 		printUserList(el);
 		sendString("<br>\n</TD>");
-
-	      } else
-		sendString("<TD ALIGN=CENTER>X</TD>");
+	      } else {
+		if((el->nonIPTraffic != NULL) && (el->nonIPTraffic->nbDomainName != NULL)) {
+		  snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>[ %s ]</TD>", el->nonIPTraffic->nbDomainName);
+		  sendString(buf);
+		} else
+		  sendString("<TD ALIGN=CENTER>X</TD>");
+	      }
 	    } else
 	      sendString("<TD>&nbsp;</TD>");
 	  }
@@ -4345,6 +4527,8 @@ void printSectionTitle(char *text) {
     printNoDataYet();
 
   free(tmpTable);
+
+  printLocalHostsCharacterization();
 }
 
 /* ******************************************************** */

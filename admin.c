@@ -35,7 +35,7 @@ void showUsers(void) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   datum key_data, return_data;
 
-  printHTMLheader("Registered ntop Users", BITFLAG_HTML_NO_REFRESH);
+  printHTMLheader("Registered ntop Users", NULL, BITFLAG_HTML_NO_REFRESH);
   sendString("<P><HR><P>\n");
 
   return_data = gdbm_firstkey(myGlobals.pwFile);
@@ -113,7 +113,7 @@ void clearUserUrlList(void) {
 void addUser(char* user) {
   char tmpStr[128];
 
-  printHTMLheader("Manage ntop Users", BITFLAG_HTML_NO_REFRESH);
+  printHTMLheader("Manage ntop Users", NULL, BITFLAG_HTML_NO_REFRESH);
   sendString("<P><HR><P>\n");
 
   if((user != NULL) && ((strlen(user) < 2) || (user[0] != '1'))) {
@@ -165,7 +165,7 @@ void deleteUser(char* user) {
     return;
   } else if((strlen(user) < 2) || (user[0] != '1')) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader("Delete ntop User", BITFLAG_HTML_NO_REFRESH);
+    printHTMLheader("Delete ntop User", NULL, BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning("<I>The specified username is invalid.</I>");
   } else {
@@ -183,7 +183,7 @@ void deleteUser(char* user) {
 
     if(rc != 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHTMLheader("Delete ntop User", BITFLAG_HTML_NO_REFRESH);
+      printHTMLheader("Delete ntop User", NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<P><HR><P>\n");
       printFlagedWarning("<B>ERROR:</B> <I>unable to delete specified user.</I>");
     } else {
@@ -276,7 +276,7 @@ void doAddUser(int len) {
 
   if(err != NULL) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader("ntop user add", BITFLAG_HTML_NO_REFRESH);
+    printHTMLheader("ntop user add", NULL, BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning(err);
     sendMenuFooter(1, 2);
@@ -294,7 +294,7 @@ void showURLs(void) {
   char buf[LEN_GENERAL_WORK_BUFFER], ebuf[128];
   datum key_data, return_data;
 
-  printHTMLheader("Restricted ntop URLs", BITFLAG_HTML_NO_REFRESH);
+  printHTMLheader("Restricted ntop URLs", NULL, BITFLAG_HTML_NO_REFRESH);
   sendString("<P><HR><P>\n");
 
   return_data = gdbm_firstkey(myGlobals.pwFile);
@@ -340,7 +340,7 @@ void addURL(char* url) {
   char *aubuf=NULL, *authorisedUser[20];
   char tmpStr[128];
 
-  printHTMLheader("Manage ntop URLs", BITFLAG_HTML_NO_REFRESH);
+  printHTMLheader("Manage ntop URLs", NULL, BITFLAG_HTML_NO_REFRESH);
   sendString("<P><HR><P>\n");
 
   if((url != NULL) && ((strlen(url) < 1) || (url[0] != '2'))) {
@@ -457,7 +457,7 @@ void deleteURL(char* url) {
     return;
   } else if((strlen(url) < 1) || (url[0] != '2')) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader("Delete ntop URL", BITFLAG_HTML_NO_REFRESH);
+    printHTMLheader("Delete ntop URL", NULL, BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning("<I>The specified URL is invalid.</I>");
   } else {
@@ -475,7 +475,7 @@ void deleteURL(char* url) {
 
     if(rc != 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHTMLheader("Delete ntop URL", BITFLAG_HTML_NO_REFRESH);
+      printHTMLheader("Delete ntop URL", NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<P><HR><P>\n");
       printFlagedWarning("<B>ERROR:</B> <I>unable to delete specified URL.</I>");
     } else {
@@ -566,7 +566,7 @@ void doAddURL(int len) {
 
   if(err != NULL) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader("ntop URL add", BITFLAG_HTML_NO_REFRESH);
+    printHTMLheader("ntop URL add", NULL, BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR><P>\n");
     printFlagedWarning(err);
     sendMenuFooter(3, 0);
@@ -658,7 +658,7 @@ int doChangeFilter(int len) {
     sendString("BACKGROUND=/white_bg.gif BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
     printSectionTitle("Change kernel (libpcap) filter expression");
   } else {
-    printHTMLheader("changing kernel (libpcap) filter expression", BITFLAG_HTML_NO_REFRESH);
+    printHTMLheader("changing kernel (libpcap) filter expression", NULL, BITFLAG_HTML_NO_REFRESH);
     sendString("<P><HR></P>\n<P><CENTER>");
   }
 
@@ -721,7 +721,7 @@ int doChangeFilter(int len) {
 void changeFilter(void) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 
-  printHTMLheader("Change kernel (libpcap) filter expression", BITFLAG_HTML_NO_REFRESH);
+  printHTMLheader("Change kernel (libpcap) filter expression", NULL, BITFLAG_HTML_NO_REFRESH);
   sendString("<BR><HR><P>\n");
   sendString("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=5>\n<TR>\n");
   sendString("<TH "TH_BG" ALIGN=center>Old Filter Expression:&nbsp;</TH><TD ALIGN=left>");

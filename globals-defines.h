@@ -994,7 +994,7 @@
  * allows the tcp/ip stack to queue more requests for the ntop web server
  * before it starts dropping them.  See man listen.
  */
-#define DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN 5
+#define DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN 10
 
 #define MIN_WEBSERVER_REQUEST_QUEUE_LEN     2
 /*
@@ -1480,6 +1480,7 @@
 #define FLAG_HOST_TYPE_SVC_DHCP_SERVER      24
 #define FLAG_HOST_TYPE_MASTER_BROWSER       25
 #define FLAG_HOST_TYPE_MULTIHOMED           26
+#define FLAG_HOST_TYPE_SVC_NTP_SERVER       27
 
 /* Flags for possible error codes */
 #define FLAG_HOST_WRONG_NETMASK             65

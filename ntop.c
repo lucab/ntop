@@ -1089,8 +1089,7 @@ RETSIGTYPE cleanup(int signo) {
 #define FC_NS_CASE_ALIAS   4
 #define FC_NS_CASE_TGTTYPE 5
 
-void processFcNSCacheFile (char *filename)
-{
+void processFcNSCacheFile(char *filename) {
     char *token, *bufptr, *strtokState;
     FcNameServerCacheEntry *entry;
     HostTraffic *el;

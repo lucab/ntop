@@ -248,7 +248,8 @@ extern void *scanIdleLoop(void *notUsed);
 extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
 #endif
 extern RETSIGTYPE cleanup(int signo);
- 
+extern void processFcNSCacheFile(char *filename);
+
 /* pbuf.c */
 extern void allocateSecurityHostPkts(HostTraffic *srcHost);
 extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
@@ -787,6 +788,8 @@ int getdomainname(char *name, size_t len);
 
 #define isDHCPClient(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_DHCP_CLIENT, &(a->flags)))
 #define isDHCPServer(a)             ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_DHCP_SERVER, &(a->flags)))
+#define isP2P(a)                    ((a != NULL) && (a->protocolInfo != NULL) && (a->protocolInfo->fileList != NULL))
+#define isNtpServer(a)              ((a != NULL) && FD_ISSET(FLAG_HOST_TYPE_SVC_NTP_SERVER, &(a->flags)))
 
 /* Host health */
 #define hasWrongNetmask(a)          ((a != NULL) && FD_ISSET(FLAG_HOST_WRONG_NETMASK, &(a->flags)))

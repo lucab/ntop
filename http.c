@@ -515,8 +515,10 @@ void sendString(char *theString) {
 
 /* ************************* */
 
-void printHTMLheader(char *title, int  headerFlags) {
-  char buf[LEN_GENERAL_WORK_BUFFER];
+void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
+  char buf[LEN_GENERAL_WORK_BUFFER], *theTitle;
+
+  if(htmlTitle != NULL) theTitle = htmlTitle; else theTitle = title;
 
   sendString("<HTML>\n<HEAD>\n");
 
@@ -531,6 +533,7 @@ void printHTMLheader(char *title, int  headerFlags) {
       BufferTooShort();
     sendString(buf);
   }
+
   sendString("<META HTTP-EQUIV=Pragma CONTENT=no-cache>\n");
   sendString("<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>\n");
   if((headerFlags & BITFLAG_HTML_NO_STYLESHEET) == 0) {
@@ -542,8 +545,8 @@ void printHTMLheader(char *title, int  headerFlags) {
   sendString("</HEAD>\n");
   if((headerFlags & BITFLAG_HTML_NO_BODY) == 0) {
     sendString("<BODY BACKGROUND=/white_bg.gif BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
-    if((title != NULL) && ((headerFlags & BITFLAG_HTML_NO_HEADING) == 0))
-      printSectionTitle(title);
+    if((theTitle != NULL) && ((headerFlags & BITFLAG_HTML_NO_HEADING) == 0))
+      printSectionTitle(theTitle);
   }
 }
 
@@ -756,7 +759,7 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, statusFlag);
   if(snprintf(buf, sizeof(buf), "Error %d", HTTPstatus[statusIdx].statusCode) < 0)
       BufferTooShort();
-  printHTMLheader(buf, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_HEADING);
+  printHTMLheader(buf, NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_HEADING);
 
   if(snprintf(buf, sizeof(buf),
 	   "<H1>Error %d</H1>\n%s\n",
@@ -1458,12 +1461,12 @@ static int returnHTTPPage(char* pageName,
     if(doChangeFilter(postLen)==0) /*resetStats()*/;
   } else if(strncmp(pageName, FILTER_INFO_HTML, strlen(FILTER_INFO_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader(NULL, BITFLAG_HTML_NO_REFRESH);
+    printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
     /* printHTMLtrailer is called afterwards and inserts the relevant info */
   } else if(strncmp(pageName, RESET_STATS_HTML, strlen(RESET_STATS_HTML)) == 0) {
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-    printHTMLheader("Statistics reset requested...", BITFLAG_HTML_NO_REFRESH);
+    printHTMLheader("Statistics reset requested...", NULL, BITFLAG_HTML_NO_REFRESH);
     myGlobals.resetHashNow = 1; /* resetStats(); */
     sendString("<P>NOTE: Statistics will be reset at the next safe point, which "
                   "is at the end of processing for the current/next packet and "
@@ -1652,7 +1655,7 @@ static int returnHTTPPage(char* pageName,
 
   if(strcmp(pageName, STR_INDEX_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHTMLheader("Welcome to ntop!", BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
+      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
       sendString("<frameset cols=160,* framespacing=0 border=0 frameborder=0>\n");
       sendString("    <frame src=leftmenu.html name=Menu marginwidth=0 marginheight=0>\n");
       sendString("    <frame src=home.html name=area marginwidth=5 marginheight=0>\n");
@@ -1666,7 +1669,7 @@ static int returnHTTPPage(char* pageName,
     } else if((strcmp(pageName, "leftmenu.html") == 0)
 	      || (strcmp(pageName, "leftmenu-nojs.html") == 0)) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHTMLheader(NULL, BITFLAG_HTML_NO_REFRESH);
+      printHTMLheader(NULL, NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<center>\n<pre>\n\n</pre>\n\n");
       sendString("<FONT FACE=Helvetica SIZE=+2>Welcome<br>to<br>\n");
       sendString("ntop!</FONT>\n<pre>\n</pre>\n");
@@ -1779,7 +1782,7 @@ static int returnHTTPPage(char* pageName,
       }
     } else if(strcmp(pageName, "home.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHTMLheader("Welcome to ntop!", BITFLAG_HTML_NO_REFRESH);
+      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<FONT FACE=Helvetica>\n<HR>\n");
       sendString("<b>ntop</b> shows the current network usage. It displays a list of hosts that are\n");
       sendString("currently using the network and reports information concerning the IP\n");
@@ -1904,7 +1907,7 @@ static int returnHTTPPage(char* pageName,
       printIpProtocolDistribution(FLAG_HOSTLINK_HTML_FORMAT, revertOrder);
     } else if(strcmp(pageName, "ipProtoDistrib.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHTMLheader(NULL, 0);
+      printHTMLheader(NULL, NULL, 0);
       printIpProtocolDistribution(FLAG_HOSTLINK_TEXT_FORMAT, revertOrder);
     } else if(strcmp(pageName, "ipTrafficMatrix.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
@@ -2061,7 +2064,7 @@ static int returnHTTPPage(char* pageName,
 #endif /* EMBEDDED */
     } else if(strcmp(pageName, "Credits.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printHTMLheader("Credits", BITFLAG_HTML_NO_REFRESH);
+      printHTMLheader("Credits", NULL, BITFLAG_HTML_NO_REFRESH);
       sendString("<FONT FACE=Helvetica>\n");
       sendString("<p><hr><br><b>ntop</b> has been created by\n");
       sendString("<A HREF=\"http://luca.ntop.org/\">Luca Deri</A> while studying how to model\n");

@@ -1637,7 +1637,7 @@ static void handlesFlowHTTPrequest(char* url) {
   int i;
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-  printHTMLheader("sFlow Statistics", 0);
+  printHTMLheader("sFlow Statistics", NULL, 0);
 
   sendString("<CENTER>\n<HR>\n");
 
