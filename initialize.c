@@ -1549,26 +1549,28 @@ void initDeviceDatalink(int deviceId) {
     traceEvent(CONST_TRACE_NOISY, "DLT: Processing continues OK");
     traceEvent(CONST_TRACE_NOISY, "DLT: Please report this to the ntop-dev list.");
   } else {
-#ifdef DEBUG
     traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] DLT_ is %d, assuming mtu %d, header %d",
 	       deviceId,
 	       myGlobals.device[deviceId].name,
 	       myGlobals.device[deviceId].datalink,
 	       myGlobals.mtuSize[myGlobals.device[deviceId].datalink],
 	       myGlobals.headerSize[myGlobals.device[deviceId].datalink]);
-#endif
 
     if((myGlobals.mtuSize[myGlobals.device[deviceId].datalink] == 0) ||
        (myGlobals.mtuSize[myGlobals.device[deviceId].datalink] == CONST_UNKNOWN_MTU) ) {
-      traceEvent(CONST_TRACE_WARNING, "DLT: MTU value for DLT_  %d, is zero or unknown",
-		 myGlobals.device[deviceId].datalink);
+      traceEvent(CONST_TRACE_WARNING, "DLT: Device %d [%s] MTU value is %s",
+                 deviceId,
+                 myGlobals.device[deviceId].name,
+                 myGlobals.mtuSize[myGlobals.device[deviceId].datalink] == CONST_UNKNOWN_MTU ?
+                    "unknown" : "zero");
       traceEvent(CONST_TRACE_NOISY, "DLT: Processing continues OK");
       traceEvent(CONST_TRACE_NOISY, "DLT: Please report your MTU values (e.g. ifconfig) to the ntop-dev list");
     }
 
     if(myGlobals.headerSize[myGlobals.device[deviceId].datalink] == 0) {
-      traceEvent(CONST_TRACE_ERROR, "DLT: Header value for DLT_  %d, is zero",
-		 myGlobals.device[deviceId].datalink);
+      traceEvent(CONST_TRACE_ERROR, "DLT: Device %d [%s] Header value for DLT_  is zero",
+                 deviceId,
+                 myGlobals.device[deviceId].name);
       traceEvent(CONST_TRACE_NOISY, "DLT: Processing continues OK - don't use the nfs plugin");
       traceEvent(CONST_TRACE_NOISY, "DLT: Please report this to the ntop-dev list");
     }
