@@ -90,7 +90,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   } else if(isBroadcastAddress(hostIpAddress)) {
     idx = broadcastEntryIdx;
     (*useIPAddressForSearching) = 1;
-  } else if (isLocalAddress(hostIpAddress)) {
+  } else if(isPseudoLocalAddress(hostIpAddress)) {
     memcpy(&idx, &ether_addr[ETHERNET_ADDRESS_LEN-sizeof(u_int)], sizeof(u_int));
     (*useIPAddressForSearching) = 0;
   } else {

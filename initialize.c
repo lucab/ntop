@@ -928,6 +928,11 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
 #define MAX_SUBNET_HOSTS 1024
 
+      if(device[i].netmask.s_addr == 0) {
+	/* In this case we are using a dump file */
+	device[i].netmask.s_addr = 0xFFFFFF00; /* dummy */	
+      }
+
       device[i].numHosts = 0xFFFFFFFF - device[i].netmask.s_addr + 1;
       if(device[i].numHosts > MAX_SUBNET_HOSTS) {
 	device[i].numHosts = MAX_SUBNET_HOSTS;	

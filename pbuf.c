@@ -92,8 +92,8 @@ static const u_char *p_save;
 
  /* ******************************* */
 
- u_int getHostInfo(struct in_addr *hostIpAddress,
-		   u_char *ether_addr) {
+u_int getHostInfo(struct in_addr *hostIpAddress,
+		  u_char *ether_addr, u_char checkForMultihoming) {
    u_int idx, i;
 #ifndef MULTITHREADED
    u_int run=0;
@@ -104,8 +104,7 @@ static const u_char *p_save;
    short useIPAddressForSearching;
    char* symEthName = NULL, *ethAddr;
 
-   idx = computeInitialHashIdx(hostIpAddress,
-			       ether_addr, &useIPAddressForSearching);
+   idx = computeInitialHashIdx(hostIpAddress, ether_addr, &useIPAddressForSearching);
    idx = (u_int)((idx*3) % device[actualDeviceId].actualHashSize);
 
    /*
@@ -132,20 +131,29 @@ static const u_char *p_save;
 	   if(hostIpAddress != NULL) {
 	     int i;
 
-	     for(i=0; i<MAX_MULTIHOMING_ADDRESSES; i++) {
-	       if(el->hostIpAddresses[i].s_addr == 0x0) {
-		 el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
-		 break;
-	       } else if(el->hostIpAddresses[i].s_addr == hostIpAddress->s_addr)
-		 break;
-	       /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+	     if(checkForMultihoming) {
 	       /*
-		 else {
+		 This is a local address hence this is 
+		 a potential multihomed host.
 
-		 el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
-		 break;
-		 }
+
+		 NOTE:
+		 This further check has been added as some Windows variants 
+		 (e.g. WinME) has problems with broacast addresses of subnets 
+		 larger than C-class networks: in this case the host sends the 
+		 broadcast packet to the router that then routes the packet. This is
+		 obviously an implementation bug.
 	       */
+	       
+	       for(i=0; i<MAX_MULTIHOMING_ADDRESSES; i++) {
+		 if(el->hostIpAddresses[i].s_addr == 0x0) {
+		   el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
+		   break;
+		 } else if(el->hostIpAddresses[i].s_addr == hostIpAddress->s_addr)
+		   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+		   /* el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;     */
+		   break;
+	       }
 	     }
 
 	     if(el->hostNumIpAddress[0] == '\0') {
@@ -268,7 +276,7 @@ static const u_char *p_save;
 
 	 if((hostIpAddress == NULL)
 	    || ((hostIpAddress != NULL)
-		&& isLocalAddress(hostIpAddress)
+		&& isPseudoLocalAddress(hostIpAddress)
 		&& (!isBroadcastAddress(hostIpAddress)))) {
 	   /* This is a local address and then the
 	      ethernet address does make sense */
@@ -399,7 +407,7 @@ static const u_char *p_save;
 
    if(el != NULL) {
      el->lastSeen = actTime;
-
+     
  #ifdef DEBUG
    traceEvent(TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
 	      idx, actualDeviceId,
@@ -824,7 +832,7 @@ void scanTimedoutTCPSessions(void) {
 	     */
 	     realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
 	     if(realDstHost == NULL) {
-	       u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr);
+	       u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr, 0);
  #ifdef DHCP_DEBUG
 	       traceEvent(TRACE_INFO, "=>> %d", hostIdx);
  #endif
@@ -1153,7 +1161,7 @@ void scanTimedoutTCPSessions(void) {
 	    */
 	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
 	    if(realClientHost == NULL) {
-	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr);
+	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr, 0);
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
 #endif
@@ -3085,7 +3093,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
     u_int routerIdx, j;
     HostTraffic *router;
 
-    routerIdx = getHostInfo(NULL, ether_dst);
+    routerIdx = getHostInfo(NULL, ether_dst, 0);
 
     router = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
 
@@ -3128,7 +3136,7 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
   HostTraffic *srcHost, *dstHost;
   unsigned short hourId;
   char theDate[8];
-  struct tm t;
+  struct tm t, *thisTime;
 
   if(/* (srcHostIdx == dstHostIdx) || */
      (srcHostIdx == broadcastEntryIdx)
@@ -3136,8 +3144,8 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
      || (dstHostIdx == NO_PEER))
     return; /* It looks there's something wrong here */
 
-  strftime(theDate, 8, "%H", localtime_r(&actTime, &t));
-  hourId = atoi(theDate);
+  thisTime = localtime_r(&actTime, &t);
+  hourId = thisTime->tm_hour % 24 /* just in case... */;;
 
   srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
   dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
@@ -3268,13 +3276,22 @@ static void processIpPkt(const u_char *bp,
     ether_dst = etherAddrDst;
   }
 
-  NTOHL(ip.ip_src.s_addr);
-  srcHostIdx = getHostInfo(&ip.ip_src, ether_src);
-  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-
+  /*
+    IMPORTANT:
+    do NOT change the order of the lines below (see isBroadcastAddress call)
+  */
   NTOHL(ip.ip_dst.s_addr);
-  dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst);
+  dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst, 1);
   dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+
+  NTOHL(ip.ip_src.s_addr);
+  srcHostIdx = getHostInfo(&ip.ip_src, ether_src, 
+			   /* 
+			      Don't check for multihoming when
+			      the destination address is a broadcast address
+			   */
+			   (!isBroadcastAddress(&dstHost->hostIpAddress)));
+  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 
   if(srcHost == NULL) {
     /* Sanity check */
@@ -4438,7 +4455,7 @@ void processPacket(u_char *_deviceId,
 	/* IPX */
 	IPXpacket ipxPkt;
 
-	srcHostIdx = getHostInfo(NULL, ether_src);
+	srcHostIdx = getHostInfo(NULL, ether_src, 0);
 	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
@@ -4449,7 +4466,7 @@ void processPacket(u_char *_deviceId,
 	  srcHost->instanceInUse++;
 	}
 
-	dstHostIdx = getHostInfo(NULL, ether_dst);
+	dstHostIdx = getHostInfo(NULL, ether_dst, 0);
 	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
@@ -4475,7 +4492,7 @@ void processPacket(u_char *_deviceId,
       } else if((device[deviceId].datalink == DLT_IEEE802) && (eth_type < ETHERMTU)) {
 	trp = (struct tokenRing_header*)orig_p;
 	ether_src = (u_char*)trp->trn_shost, ether_dst = (u_char*)trp->trn_dhost;
-	srcHostIdx = getHostInfo(NULL, ether_src);
+	srcHostIdx = getHostInfo(NULL, ether_src, 0);
 	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
@@ -4486,7 +4503,7 @@ void processPacket(u_char *_deviceId,
 	  srcHost->instanceInUse++;
 	}
 
-	dstHostIdx = getHostInfo(NULL, ether_dst);
+	dstHostIdx = getHostInfo(NULL, ether_dst, 0);
 	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
@@ -4513,7 +4530,7 @@ void processPacket(u_char *_deviceId,
 	   && (p[sizeof(struct ether_header)+4] == 0x0)) {
 	  /* IPX */
 
-	  srcHostIdx = getHostInfo(NULL, ether_src);
+	  srcHostIdx = getHostInfo(NULL, ether_src, 0);
 	  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	  if(srcHost == NULL) {
 	    /* Sanity check */
@@ -4524,7 +4541,7 @@ void processPacket(u_char *_deviceId,
 	    srcHost->instanceInUse++;
 	  }
 
-	  dstHostIdx = getHostInfo(NULL, ether_dst);
+	  dstHostIdx = getHostInfo(NULL, ether_dst, 0);
 	  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	  if(dstHost == NULL) {
 	    /* Sanity check */
@@ -4538,8 +4555,8 @@ void processPacket(u_char *_deviceId,
 	  srcHost->ipxSent += length, dstHost->ipxReceived += length;
 	  device[actualDeviceId].ipxBytes += length;
 	} else {
-	  srcHostIdx = getHostInfo(NULL, ether_src);
-	  dstHostIdx = getHostInfo(NULL, ether_dst);
+	  srcHostIdx = getHostInfo(NULL, ether_src, 0);
+	  dstHostIdx = getHostInfo(NULL, ether_dst, 0);
 	  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
@@ -4801,7 +4818,7 @@ void processPacket(u_char *_deviceId,
 	else
 	  length = 0;
 
-	srcHostIdx = getHostInfo(NULL, ether_src);
+	srcHostIdx = getHostInfo(NULL, ether_src, 0);
 	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
@@ -4812,7 +4829,7 @@ void processPacket(u_char *_deviceId,
 	  srcHost->instanceInUse++;
 	}
 
-	dstHostIdx = getHostInfo(NULL, ether_dst);
+	dstHostIdx = getHostInfo(NULL, ether_dst, 0);
 	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
@@ -4833,11 +4850,11 @@ void processPacket(u_char *_deviceId,
 	    case ARPOP_REPLY: /* ARP REPLY */
 	      memcpy(&addr.s_addr, arpHdr.arp_tpa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      dstHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_tha);
+	      dstHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_tha, 0);
 	      dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha);
+	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0);
 	      srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	      if(srcHost != NULL) srcHost->arpReplyPktsSent++;
 	      if(dstHost != NULL) dstHost->arpReplyPktsRcvd++;
@@ -4845,7 +4862,7 @@ void processPacket(u_char *_deviceId,
 	    case ARPOP_REQUEST: /* ARP request */
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha);
+	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0);
 	      srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	      if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) srcHost->arpReqPktsSent++;
 	    }

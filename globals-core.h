@@ -304,7 +304,8 @@ extern RETSIGTYPE cleanup(int signo);
 extern u_int _checkSessionIdx(u_int idx, char* file, int line);
 extern u_int findHostIdxByNumIP(struct in_addr hostIpAddress);
 extern u_int findHostInfo(struct in_addr *hostIpAddress);
-extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr);
+extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr, 
+			 u_char checkForMultihoming);
 extern char *getNamedPort(int port);
 extern void scanTimedoutTCPSessions(void);
 extern void deleteFragment(IpFragment *fragment);

@@ -328,7 +328,7 @@ unsigned short isLocalAddress(struct in_addr *addr) {
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "%s is %s\n", intoa(*addr),
-	     isPseudoLocalAddress (addr) ? "pseudolocal" : "remote");
+	     isLocalAddress (addr) ? "pseudolocal" : "remote");
 #endif
   /* Broadcast is considered a local address */
   return(isBroadcastAddress(addr));
@@ -453,7 +453,7 @@ int dotted2bits(char *mask) {
 	  traceEvent(TRACE_ERROR, "dotted2bits (%15s) = %d\n", mask, bits);
 #endif
 	  /* In this case we are in a bits (not dotted quad) notation */
-	  return(fields[0]);
+	  return(bits /* fields[0] - L.Deri 08/2001 */);
 
 	default:
 	  bits += field_bits;
@@ -494,18 +494,16 @@ void handleLocalAddresses(char* addresses) {
 	continue;
       }
 
-      if(bits == INVALIDNETMASK)
-	{
-	  /* malformed netmask specification */
-          traceEvent(TRACE_ERROR, "The specified netmask %s is not valid. Skipping it..\n",
-		     mask);
-	  address = strtok_r(NULL, ",", &strtokState);
-	  continue;
-	}
+      if(bits == INVALIDNETMASK) {
+	/* malformed netmask specification */
+	traceEvent(TRACE_ERROR, 
+		   "The specified netmask %s is not valid. Skipping it..\n",
+		   mask);
+	address = strtok_r(NULL, ",", &strtokState);
+	continue;
+      }
 
-      network = ((a & 0xff) << 24) + ((b & 0xff) << 16)
-	+ ((c & 0xff) << 8) + (d & 0xff);
-
+      network     = ((a & 0xff) << 24) + ((b & 0xff) << 16) + ((c & 0xff) << 8) + (d & 0xff);
       networkMask = 0xffffffff >> bits;
       networkMask = ~networkMask;
 
@@ -513,6 +511,7 @@ void handleLocalAddresses(char* addresses) {
       traceEvent(TRACE_INFO, "Nw=%08X - Mask: %08X [%08X]\n",
 		 network, networkMask, (network & networkMask));
 #endif
+
       if((networkMask >= 0xFFFFFF00) /* Courtesy of Roy-Magne Mo <romo@interpost.no> */
 	 && ((network & networkMask) != network))  {
 	/* malformed network specification */
@@ -564,7 +563,6 @@ void handleLocalAddresses(char* addresses) {
 	    found = 1;
 	  }
 
-
 	if(found == 0) {
 	  networks[numLocalNets][NETWORK]   = network;
 	  networks[numLocalNets][NETMASK]   = networkMask;
@@ -586,36 +584,41 @@ void handleLocalAddresses(char* addresses) {
 unsigned short isPseudoLocalAddress(struct in_addr *addr) {
   int i;
 
-  for(i=0; i<numDevices; i++) {
-    if((addr->s_addr & device[i].netmask.s_addr) == device[i].network.s_addr) {
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "%s comparing [0x%08x/0x%08x][0x%08x/0x%08x]\n",
-		 intoa(*addr),
-		 addr->s_addr, device[i].network.s_addr,
-		 (addr->s_addr & device[i].netmask.s_addr),
-		 device[i].network.s_addr);
-#endif
-      return 1;
-    }
-  }
+  i = isLocalAddress(addr);
 
+  if(i == 1)
+    return 1; /* This is a real local address */
+  
   for(i=0; i<numLocalNets; i++) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "%s comparing [0x%08x/0x%08x]\n",
-	       intoa(*addr),
-	       (addr->s_addr & networks[i][NETMASK]),
-	       networks[i][NETWORK]);
+    char buf[32], buf1[32], buf2[32];
+    struct in_addr addr1, addr2;
+
+    addr1.s_addr = networks[i][NETWORK];
+    addr2.s_addr = networks[i][NETMASK];
+
+    traceEvent(TRACE_INFO, "%s comparing [%s/%s]\n",
+	       _intoa(*addr, buf, sizeof(buf)),
+	       _intoa(addr1, buf1, sizeof(buf1)),
+	       _intoa(addr2, buf2, sizeof(buf2)));
 #endif
     if((addr->s_addr & networks[i][NETMASK]) == networks[i][NETWORK]) {
 #ifdef DEBUG
       traceEvent(TRACE_WARNING, "%s is pseudolocal\n", intoa(*addr));
 #endif
       return 1;
+    } else {
+#ifdef DEBUG
+      traceEvent(TRACE_WARNING, "%s is NOT pseudolocal\n", intoa(*addr));
+#endif
     }
   }
 
-  /* Broadcast is considered a local address */
-  return(isBroadcastAddress(addr));
+  /* 
+     We don't check for broadcast as this check has been
+     performed already by isLocalAddress() just called 
+  */
+  return(0);
 }
 
 /* ********************************* */

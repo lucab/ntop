@@ -113,7 +113,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
       if(theHost->dlcSent > 0) {
 	p[num] = (float)((100*theHost->dlcSent)/totTraffic);
-	lbl[num++] = "IPX";
+	lbl[num++] = "DLC";
       }
 
       if(theHost->osiSent > 0) {
