@@ -1160,7 +1160,7 @@ typedef struct serviceEntry {
 
 typedef struct portCounter {
   u_short port;
-  Counter value;
+  Counter sent, rcvd;
 } PortCounter;
 
 /* ************************************* */

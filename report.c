@@ -1391,26 +1391,43 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       theAnchor[0] = htmlAnchor1;
     }
 
-    if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
-		"<TH "TH_BG">%s1>Host%s</A></TH>"
-		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
-		"</TH><TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
-		"<TH "TH_BG">%s3>MAC&nbsp;Address%s</A></TH>"
-		"<TH "TH_BG">%s6>Other&nbsp;Name(s)%s</A></TH>"
-		"<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
-		"<TH "TH_BG">%s5>Nw&nbsp;Board&nbsp;Vendor%s</A></TH>"
-		"<TH "TH_BG">%s7>Hops&nbsp;Distance%s</A></TH>"
-		"</TR>\n",
-		theAnchor[1], arrow[1],
-		theAnchor[0], arrow[0],
-		theAnchor[2], arrow[2],
-		theAnchor[3], arrow[3],
-		theAnchor[6], arrow[6],
-		theAnchor[4], arrow[4],
-		theAnchor[5], arrow[5],
-		theAnchor[7], arrow[7]
-		) < 0)
-      BufferTooShort();
+    if(!myGlobals.dontTrustMACaddr) {
+      if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
+		  "<TH "TH_BG">%s1>Host%s</A></TH>"
+		  "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
+		  "</TH><TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
+		  "<TH "TH_BG">%s3>MAC&nbsp;Address%s</A></TH>"
+		  "<TH "TH_BG">%s6>Other&nbsp;Name(s)%s</A></TH>"
+		  "<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
+		  "<TH "TH_BG">%s5>Nw&nbsp;Board&nbsp;Vendor%s</A></TH>"
+		  "<TH "TH_BG">%s7>Hops&nbsp;Distance%s</A></TH>"
+		  "</TR>\n",
+		  theAnchor[1], arrow[1],
+		  theAnchor[0], arrow[0],
+		  theAnchor[2], arrow[2],
+		  theAnchor[3], arrow[3],
+		  theAnchor[6], arrow[6],
+		  theAnchor[4], arrow[4],
+		  theAnchor[5], arrow[5],
+		  theAnchor[7], arrow[7]) < 0)
+	BufferTooShort();
+    } else {
+      if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
+		  "<TH "TH_BG">%s1>Host%s</A></TH>"
+		  "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
+		  "</TH><TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
+		  "<TH "TH_BG">%s6>Other&nbsp;Name(s)%s</A></TH>"
+		  "<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
+		  "<TH "TH_BG">%s7>Hops&nbsp;Distance%s</A></TH>"
+		  "</TR>\n",
+		  theAnchor[1], arrow[1],
+		  theAnchor[0], arrow[0],
+		  theAnchor[2], arrow[2],
+		  theAnchor[6], arrow[6],
+		  theAnchor[4], arrow[4],
+		  theAnchor[7], arrow[7]) < 0)
+	BufferTooShort();
+    }
     sendString(buf);
 
     for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
@@ -1428,14 +1445,19 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	  if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
 	    tmpName1 = myGlobals.separator;
 
-	  tmpName2 = getVendorInfo(el->ethAddress, 1);
-	  if(tmpName2[0] == '\0')
+	  if(!myGlobals.dontTrustMACaddr) {
+	    tmpName2 = getVendorInfo(el->ethAddress, 1);
+	    if(tmpName2[0] == '\0')
+	      tmpName2 = myGlobals.separator;
+	    	    
+	    tmpName3 = el->ethAddressString;
+	    if((tmpName3[0] == '\0')
+	       || (strcmp(tmpName3, "00:00:00:00:00:00") == 0))
+	      tmpName3 = myGlobals.separator;
+	  } else {
 	    tmpName2 = myGlobals.separator;
-
-	  tmpName3 = el->ethAddressString;
-	  if((tmpName3[0] == '\0')
-	     || (strcmp(tmpName3, "00:00:00:00:00:00") == 0))
 	    tmpName3 = myGlobals.separator;
+	  }
 
 	  if((el->hostIpAddress.s_addr != 0)
 	     && (getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))) {
@@ -1456,13 +1478,22 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	    }
 	  }
 
-	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
-		      "%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      getRowColor(),
-		      makeHostLink(el, LONG_FORMAT, 0, 1),
-		      tmpName1, tmpName3) < 0)
-	    BufferTooShort();
+	  if(!myGlobals.dontTrustMACaddr) {
+	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+			"%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			getRowColor(),
+			makeHostLink(el, LONG_FORMAT, 0, 1),
+			tmpName1, tmpName3) < 0)
+	      BufferTooShort();
+	  } else {
+	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+			"%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			getRowColor(),
+			makeHostLink(el, LONG_FORMAT, 0, 1),
+			tmpName1) < 0)
+	      BufferTooShort();
+	  }
 	  sendString(buf);
 
 	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
@@ -1475,7 +1506,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	      if((el->nonIPTraffic->nbAccountName != NULL) && ((el->nonIPTraffic->nbAccountName[0] != '0'))) {
 		if((el->nonIPTraffic->nbDomainName != NULL) && (el->nonIPTraffic->nbDomainName[0] != '0')) {
 		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag("Windows", 0),
-			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName) < 0)
+			      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName, 
+			      el->nonIPTraffic->nbDomainName) < 0)
 		 BufferTooShort();
 		} else {
 		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag("Windows", 0),
@@ -1578,9 +1610,12 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
 	  sendString("&nbsp;</TD>");
 	  printBar(buf, sizeof(buf), el->actBandwidthUsage, maxBandwidthUsage, 3);
-	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>", tmpName2) < 0)
-	    BufferTooShort();
-	  sendString(buf);
+
+	  if(!myGlobals.dontTrustMACaddr) {
+	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>", tmpName2) < 0)
+	      BufferTooShort();
+	    sendString(buf);
+	  }
 
 	  {
 	    char shortBuf[8];
@@ -2464,15 +2499,16 @@ static void printShortTableEntry(char *buf, int bufLen,
 
 /* ******************************* */
 
-int cmpPortsFctn(const void *_a, const void *_b) {
-  if((_a == NULL) || (_b == NULL)) return(0);
+static int cmpPortsFctn(const void *_a, const void *_b) {
+  if((_a == NULL) || (_b == NULL)) 
+    return(0);
   else {
     PortCounter *a, *b;
 
     a = *((PortCounter**)_a);
     b = *((PortCounter**)_b);
 
-    if(a->value > b->value)
+    if((a->sent+a->rcvd) > (b->sent+b->rcvd))
       return(-1);
     else
       return(1);
@@ -2779,8 +2815,8 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	printSectionTitle("TCP/UDP Traffic Port Distribution");
 	
 	sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
-		   "<TH "TH_BG" WIDTH=150 COLSPAN=2>TCP/UDP&nbsp;Port</TH>"
-		   "<TH "TH_BG" WIDTH=100>Data</TH></TR>");
+		   "<TH "TH_BG" COLSPAN=2>TCP/UDP&nbsp;Port</TH>"
+		   "<TH "TH_BG">Total</TH><TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>");
 
 	ipPorts = (PortCounter**)calloc(TOP_IP_PORT, sizeof(PortCounter*));
 	for(i=0; i<TOP_IP_PORT; i++) {
@@ -2802,10 +2838,15 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</td>"
 			"<TH "TH_BG" ALIGN=RIGHT>%d</TH>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"</TR>\n",
 			getRowColor(), symPort, 
 			ipPorts[i]->port, 
-			formatBytes(ipPorts[i]->value, 1)) < 0) BufferTooShort();
+			formatBytes(ipPorts[i]->sent+ipPorts[i]->rcvd, 1),
+			formatBytes(ipPorts[i]->sent, 1),
+			formatBytes(ipPorts[i]->rcvd, 1)
+			) < 0) BufferTooShort();
 	    sendString(buf);
 	  }
 	} /* for */

@@ -510,22 +510,25 @@ static void updateDevicePacketTTLStats(u_int ttl, int actualDeviceId) {
 
 static updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length) {
 
-  if((sport > TOP_IP_PORT) || (dport > TOP_IP_PORT)) return;
+  if((sport >= TOP_IP_PORT) || (dport >= TOP_IP_PORT)) 
+    return;
 
   if(myGlobals.device[actualDeviceId].ipPorts[sport] == NULL) {
     myGlobals.device[actualDeviceId].ipPorts[sport] = (PortCounter*)malloc(sizeof(PortCounter));
     myGlobals.device[actualDeviceId].ipPorts[sport]->port = sport;
-    myGlobals.device[actualDeviceId].ipPorts[sport]->value = 0;
+    myGlobals.device[actualDeviceId].ipPorts[sport]->sent = 0;
+    myGlobals.device[actualDeviceId].ipPorts[sport]->rcvd = 0;
   }
 
   if(myGlobals.device[actualDeviceId].ipPorts[dport] == NULL) {
     myGlobals.device[actualDeviceId].ipPorts[dport] = (PortCounter*)malloc(sizeof(PortCounter));
     myGlobals.device[actualDeviceId].ipPorts[dport]->port = dport;
-    myGlobals.device[actualDeviceId].ipPorts[dport]->value = 0;
+    myGlobals.device[actualDeviceId].ipPorts[dport]->sent = 0;
+    myGlobals.device[actualDeviceId].ipPorts[dport]->rcvd = 0;
   }
 
-  myGlobals.device[actualDeviceId].ipPorts[sport]->value += length;
-  myGlobals.device[actualDeviceId].ipPorts[dport]->value += length;
+  myGlobals.device[actualDeviceId].ipPorts[sport]->sent += length;
+  myGlobals.device[actualDeviceId].ipPorts[dport]->rcvd += length;
 }
 
 /* ************************************ */
@@ -815,6 +818,7 @@ static void processIpPkt(const u_char *bp,
 	   packet has not yet been rcvd */
 
 	updateInterfacePorts(actualDeviceId, sport, dport, length);
+	updateUsedPorts(srcHost, dstHost, sport, dport, tcpDataLength);
 
 	if(subnetPseudoLocalHost(srcHost)) {
 	  if(subnetPseudoLocalHost(dstHost)) {
@@ -849,8 +853,6 @@ static void processIpPkt(const u_char *bp,
 	    isPassiveSess = 0;
 	  else
 	    isPassiveSess = theSession->passiveFtpSession;
-	} else {
-	  updateUsedPorts(srcHost, dstHost, sport, dport, tcpDataLength);
 	}
 
 	/* choose most likely port for protocol traffic accounting
@@ -899,6 +901,7 @@ static void processIpPkt(const u_char *bp,
       dport = ntohs(up.uh_dport);
 
       updateInterfacePorts(actualDeviceId, sport, dport, udpDataLength);
+      updateUsedPorts(srcHost, dstHost, sport, dport, udpDataLength);
 
       if(!(off & 0x3fff)) {
 	if(((sport == 53) || (dport == 53) /* domain */)) {
@@ -1082,9 +1085,6 @@ static void processIpPkt(const u_char *bp,
 			   srcHostIdx, sport, dstHostIdx,
 			   dport, udpDataLength,
 			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
-	else
-	  updateUsedPorts(srcHost, dstHost, sport, dport, udpDataLength);
-
 	sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip.ip_len), actualDeviceId);
       }
     }
