@@ -43,22 +43,22 @@ INCLUDES = -I.. @INCS@
 # The meat for ntop
 #
 noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so \
-                  netflowPlugin.so  nfsPlugin.so  \
-#		  rrdPlugin.so \
-		  sflowPlugin.so \
+                  netflowPlugin.so nfsPlugin.so  \
+		  sflowPlugin.so
+#		  rrdPlugin.so
 #		  rmonPlugin.so wapPlugin.so
 
 lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
                   libnetflowPlugin.la  libnfsPlugin.la  \
-#		  librrdPlugin.la \
-		  libsflowPlugin.la \
+		  libsflowPlugin.la
+#		  librrdPlugin.la
 #		  librmonPlugin.la libwapPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
-librrdPlugin_la_SOURCES = rrdPlugin.c
-librrdPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+#librrdPlugin_la_SOURCES = rrdPlugin.c
+#librrdPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
@@ -91,11 +91,11 @@ libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 icmpPlugin.so: .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
 
-.libs/librrdPlugin.so@SO_VERSION_PATCH@:
-	cc -bundle -flat_namespace -undefined suppress -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
+#.libs/librrdPlugin.so@SO_VERSION_PATCH@:
+#	cc -bundle -flat_namespace -undefined suppress -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
 
-rrdPlugin.so: .libs/librrdPlugin.so@SO_VERSION_PATCH@
-	@ln -s .libs/librrdPlugin.so rrdPlugin.so
+#rrdPlugin.so: .libs/librrdPlugin.so@SO_VERSION_PATCH@
+#	@ln -s .libs/librrdPlugin.so rrdPlugin.so
 
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
 	cc -bundle -flat_namespace -undefined suppress -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
