@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # ntop ./configure census
-#   Burton - 2002/10/21
+#   Burton - 2003/04/14
 censusfile="\$\$census\$\$"
 
 # This script collects info about the environment and sends it to me...
@@ -10,27 +10,83 @@ if test -f $censusfile; then
     rm -f $censusfile
 fi
 
+configguess=`./config.guess`
+configguessstrip=`./config.guess | awk '{ split(\$0, f, "-"); print f[1] "-" f[3] (f[4] != "" ? "-" f[4] : "") }'`
+
+version=`grep version version.c | head -n1 | awk '{ gsub(/[;"]/, "", $5); print $5 }'`
+
+if test -f config.h; then
+  threadconfig=`grep '#define *CFG_MULTITHREADED' config.h | awk '{ print $1 }'`
+  if test ".${threadconfig}" = "./*"; then
+      threading="ST"
+  elif test ".${threadconfig}" = ".#undef"; then
+      threading="ST?"
+  else
+      threading="MT"
+  fi
+else
+  threading="unknown"
+fi
+case `uname` in
+  Linux) 
+    if test -f /etc/redhat-release; then
+      #Red Hat Linux release 8.0 (Psyche)
+      #Red Hat Linux release 7.3 (Valhalla)
+      #Red Hat Linux Advanced Server release 2.1AS (Pensacola)
+      rh=`cat /etc/redhat-release | awk ' { print \$1\$2 " " \$(NF-1) }'`
+      k=`uname -r`
+      os="${rh} ${k}"
+    else
+      os="??? linux"
+    fi
+    ;;
+
+  *BSD)
+    r=`uname -r`
+    o=`uname`
+    os="${o} ${r}"
+    ;;
+
+  *)
+    os="unknown"
+    ;;
+esac
+
+gcc=`gcc --version | head -n1`
+gccstrip=`gcc --version  | head -n1 | awk '{ gsub(/ [\(\[][^\(\)\[\]]*[\]\)]/, ""); gsub(/^ *gcc */, ""); print \$0}'`
+
 touch $censusfile
 echo "ntop ./configure census report" >>$censusfile
 echo "==============================" >>$censusfile
 echo ""                               >>$censusfile
-echo "uname -a (blinded): "           >>$censusfile
+
+echo "${configguessstrip} | ${version} | ${threading} | ${os} | ${gccstrip} " >>$censusfile
 echo ""                               >>$censusfile
-uname -a | sed 's/\.[[:alnum:]]*\.[[:alnum:]]*[[:space:]]/\.suppressed /g' >> $censusfile
 echo ""                               >>$censusfile
-echo -n "autoconf --version : "       >>$censusfile
-autoconf --version | head -n1         >>$censusfile
+
+echo "uname"                          >>$censusfile
+for i in o r p i m v; do
+    echo "    ${i} = " `uname -${i} 2>/dev/null`  >>$censusfile
+done
 echo ""                               >>$censusfile
-echo -n "automake --version : "       >>$censusfile
-automake --version | head -n1         >>$censusfile
+
+echo "config.guess  : ${configguess}" >>$censusfile
 echo ""                               >>$censusfile
-echo -n "libtool --version  : "       >>$censusfile
-libtool --version | head -n1          >>$censusfile
+echo -n "gcc --version : ${gcc}"      >>$censusfile
 echo ""                               >>$censusfile
 echo -n "make --version     : "       >>$censusfile
-make --version | head -n1             >>$censusfile
+make --version | head -n1 2> /dev/null >>$censusfile
 echo -n "gmake --version    : "       >>$censusfile
-gmake --version | head -n1            >>$censusfile
+gmake --version 2> /dev/null | head -n1 >>$censusfile
+echo ""                               >>$censusfile
+echo -n "autoconf --version : "       >>$censusfile
+autoconf --version 2> /dev/null | head -n1 >>$censusfile
+echo ""                               >>$censusfile
+echo -n "automake --version : "       >>$censusfile
+automake --version 2> /dev/null | head -n1 >>$censusfile
+echo ""                               >>$censusfile
+echo -n "libtool --version  : "       >>$censusfile
+libtool --version 2> /dev/null | head -n1  >>$censusfile
 echo ""                               >>$censusfile
 
 if test -f version.c; then
@@ -43,7 +99,7 @@ fi
 echo ""
 echo ""
 
-if ".$1" = ".fail"; then
+if test ".$1" = ".fail"; then
     echo " The census information is in $censusfile."
     echo ""
     echo " Please update it with information about the problem(s) you are having"
@@ -59,6 +115,7 @@ else
     cat $censusfile
     echo ""
     echo " As the ntop ./configure census report."
+    echo " The census information is in $censusfile."
     echo ""
     echo " Abort in the next 10 seconds if you don't want it sent..."
     echo ""
