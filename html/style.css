@@ -8,23 +8,15 @@ th
 {font-family: Helvetica, Arial, sans-serif;
 font-size: 10pt;
 font-weight: bold;
-background-color: #FFFFFF
+background-color: #DDDDDD;
+white-space: nowrap;
 }
 
-tbody
-{}
-
-table
-{
-border: thin;
-spacing: 1;
-background-color: #A1A1A1;
-}
+table { border: thin; spacing: 1; }
 
 td
 {font-family: Helvetica, Arial, sans-serif;
 font-size: 10pt;
-background-color: #FFFFFF
 }
 
 address
@@ -34,9 +26,6 @@ font-size: 8pt}
 h5
 {font-family: Helvetica, Arial, sans-serif;
 font-size: 8pt}
-
-table
-{}
 
 form
 {font-family: Helvetica, Arial, sans-serif;
