@@ -893,13 +893,17 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 	}
       }
-      
-      for(j=0; j<device[i].numHosts*device[i].numHosts; j++) 
-	if(device[i].ipTrafficMatrix[j] != NULL)
-	  free(device[i].ipTrafficMatrix[j]);
 
-      free(device[i].ipTrafficMatrix);
-      free(device[i].ipTrafficMatrixHosts);
+      if(device[i].ipTrafficMatrix != NULL) {
+	for(j=0; j<device[i].numHosts*device[i].numHosts; j++) 
+	  if(device[i].ipTrafficMatrix[j] != NULL)
+	    free(device[i].ipTrafficMatrix[j]);
+	
+	free(device[i].ipTrafficMatrix);
+      }
+      
+      if(device[i].ipTrafficMatrixHosts != NULL) 
+	free(device[i].ipTrafficMatrixHosts);
     }
 
   free(device);

@@ -76,8 +76,6 @@ static u_short numLocalNets=0, passiveSessionsLen;
 /* [0]=network, [1]=mask, [2]=broadcast */
 static u_int32_t networks[MAX_NUM_NETWORKS][3];
 
-void resetHostTraffic(HostTraffic *el); /* Forward */
-
 /*
  * secure popen by Thomas Biege <thomas@suse.de>
  *
@@ -1881,9 +1879,9 @@ static void resetHostsVariables(HostTraffic* el) {
 #endif
   el->dhcpStats = NULL;
 
-  resetHostTraffic(&el->contactedSentPeers);
-  resetHostTraffic(&el->contactedRcvdPeers);
-  resetHostTraffic(&el->contactedRouters);
+  resetUsageCounter(&el->contactedSentPeers);
+  resetUsageCounter(&el->contactedRcvdPeers);
+  resetUsageCounter(&el->contactedRouters);
 }
 
 /* ************************************ */
@@ -2702,8 +2700,8 @@ void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
 
 void resetUsageCounter(UsageCounter *counter) {
   int i;
-  
-  counter->value = 0;
+
+  memset(counter, 0, sizeof(UsageCounter));
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
     counter->peersIndexes[i] = NO_PEER;
@@ -2717,63 +2715,59 @@ void resetUsageCounter(UsageCounter *counter) {
   instances.
 */
 
-void resetHostTraffic(HostTraffic *el) {
+void resetSecurityHostTraffic(HostTraffic *el) {
 
-  FD_ZERO(&(el->flags));
-
-  resetUsageCounter(&el->contactedSentPeers);
-
-  resetUsageCounter(&el->securityHostPkts.synPktsSent);
-  resetUsageCounter(&el->securityHostPkts.rstPktsSent);
-  resetUsageCounter(&el->securityHostPkts.rstAckPktsSent);
-  resetUsageCounter(&el->securityHostPkts.synFinPktsSent);
-  resetUsageCounter(&el->securityHostPkts.finPushUrgPktsSent);
-  resetUsageCounter(&el->securityHostPkts.nullPktsSent);
-  resetUsageCounter(&el->securityHostPkts.ackScanSent);
-  resetUsageCounter(&el->securityHostPkts.xmasScanSent);
-  resetUsageCounter(&el->securityHostPkts.finScanSent);
-  resetUsageCounter(&el->securityHostPkts.nullScanSent);
-  resetUsageCounter(&el->securityHostPkts.rejectedTCPConnSent);
-  resetUsageCounter(&el->securityHostPkts.establishedTCPConnSent);
-  resetUsageCounter(&el->securityHostPkts.udpToClosedPortSent);
-  resetUsageCounter(&el->securityHostPkts.udpToDiagnosticPortSent);
-  resetUsageCounter(&el->securityHostPkts.tcpToDiagnosticPortSent);
-  resetUsageCounter(&el->securityHostPkts.tinyFragmentSent);
-  resetUsageCounter(&el->securityHostPkts.icmpFragmentSent);
-  resetUsageCounter(&el->securityHostPkts.overlappingFragmentSent);
-  resetUsageCounter(&el->securityHostPkts.closedEmptyTCPConnSent);
-  resetUsageCounter(&el->securityHostPkts.icmpPortUnreachSent);
-  resetUsageCounter(&el->securityHostPkts.icmpHostNetUnreachSent);
-  resetUsageCounter(&el->securityHostPkts.icmpProtocolUnreachSent);
-  resetUsageCounter(&el->securityHostPkts.icmpAdminProhibitedSent);
+  if(el->securityHostPkts == NULL) return;
+  
+  resetUsageCounter(&el->securityHostPkts->synPktsSent);
+  resetUsageCounter(&el->securityHostPkts->rstPktsSent);
+  resetUsageCounter(&el->securityHostPkts->rstAckPktsSent);
+  resetUsageCounter(&el->securityHostPkts->synFinPktsSent);
+  resetUsageCounter(&el->securityHostPkts->finPushUrgPktsSent);
+  resetUsageCounter(&el->securityHostPkts->nullPktsSent);
+  resetUsageCounter(&el->securityHostPkts->ackScanSent);
+  resetUsageCounter(&el->securityHostPkts->xmasScanSent);
+  resetUsageCounter(&el->securityHostPkts->finScanSent);
+  resetUsageCounter(&el->securityHostPkts->nullScanSent);
+  resetUsageCounter(&el->securityHostPkts->rejectedTCPConnSent);
+  resetUsageCounter(&el->securityHostPkts->establishedTCPConnSent);
+  resetUsageCounter(&el->securityHostPkts->udpToClosedPortSent);
+  resetUsageCounter(&el->securityHostPkts->udpToDiagnosticPortSent);
+  resetUsageCounter(&el->securityHostPkts->tcpToDiagnosticPortSent);
+  resetUsageCounter(&el->securityHostPkts->tinyFragmentSent);
+  resetUsageCounter(&el->securityHostPkts->icmpFragmentSent);
+  resetUsageCounter(&el->securityHostPkts->overlappingFragmentSent);
+  resetUsageCounter(&el->securityHostPkts->closedEmptyTCPConnSent);
+  resetUsageCounter(&el->securityHostPkts->icmpPortUnreachSent);
+  resetUsageCounter(&el->securityHostPkts->icmpHostNetUnreachSent);
+  resetUsageCounter(&el->securityHostPkts->icmpProtocolUnreachSent);
+  resetUsageCounter(&el->securityHostPkts->icmpAdminProhibitedSent);
 
   /* ************* */
 
   resetUsageCounter(&el->contactedRcvdPeers);
 
-  resetUsageCounter(&el->securityHostPkts.synPktsRcvd);
-  resetUsageCounter(&el->securityHostPkts.rstPktsRcvd);
-  resetUsageCounter(&el->securityHostPkts.rstAckPktsRcvd);
-  resetUsageCounter(&el->securityHostPkts.synFinPktsRcvd);
-  resetUsageCounter(&el->securityHostPkts.finPushUrgPktsRcvd);
-  resetUsageCounter(&el->securityHostPkts.nullPktsRcvd);
-  resetUsageCounter(&el->securityHostPkts.ackScanRcvd);
-  resetUsageCounter(&el->securityHostPkts.xmasScanRcvd);
-  resetUsageCounter(&el->securityHostPkts.finScanRcvd);
-  resetUsageCounter(&el->securityHostPkts.nullScanRcvd);
-  resetUsageCounter(&el->securityHostPkts.rejectedTCPConnRcvd);
-  resetUsageCounter(&el->securityHostPkts.establishedTCPConnRcvd);
-  resetUsageCounter(&el->securityHostPkts.udpToClosedPortRcvd);
-  resetUsageCounter(&el->securityHostPkts.udpToDiagnosticPortRcvd);
-  resetUsageCounter(&el->securityHostPkts.tcpToDiagnosticPortRcvd);
-  resetUsageCounter(&el->securityHostPkts.tinyFragmentRcvd);
-  resetUsageCounter(&el->securityHostPkts.icmpFragmentRcvd);
-  resetUsageCounter(&el->securityHostPkts.overlappingFragmentRcvd);
-  resetUsageCounter(&el->securityHostPkts.closedEmptyTCPConnRcvd);
-  resetUsageCounter(&el->securityHostPkts.icmpPortUnreachRcvd);
-  resetUsageCounter(&el->securityHostPkts.icmpHostNetUnreachRcvd);
-  resetUsageCounter(&el->securityHostPkts.icmpProtocolUnreachRcvd);
-  resetUsageCounter(&el->securityHostPkts.icmpAdminProhibitedRcvd);
-
-  resetUsageCounter(&el->contactedRouters); 
+  resetUsageCounter(&el->securityHostPkts->synPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts->rstPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts->rstAckPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts->synFinPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts->finPushUrgPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts->nullPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts->ackScanRcvd);
+  resetUsageCounter(&el->securityHostPkts->xmasScanRcvd);
+  resetUsageCounter(&el->securityHostPkts->finScanRcvd);
+  resetUsageCounter(&el->securityHostPkts->nullScanRcvd);
+  resetUsageCounter(&el->securityHostPkts->rejectedTCPConnRcvd);
+  resetUsageCounter(&el->securityHostPkts->establishedTCPConnRcvd);
+  resetUsageCounter(&el->securityHostPkts->udpToClosedPortRcvd);
+  resetUsageCounter(&el->securityHostPkts->udpToDiagnosticPortRcvd);
+  resetUsageCounter(&el->securityHostPkts->tcpToDiagnosticPortRcvd);
+  resetUsageCounter(&el->securityHostPkts->tinyFragmentRcvd);
+  resetUsageCounter(&el->securityHostPkts->icmpFragmentRcvd);
+  resetUsageCounter(&el->securityHostPkts->overlappingFragmentRcvd);
+  resetUsageCounter(&el->securityHostPkts->closedEmptyTCPConnRcvd);
+  resetUsageCounter(&el->securityHostPkts->icmpPortUnreachRcvd);
+  resetUsageCounter(&el->securityHostPkts->icmpHostNetUnreachRcvd);
+  resetUsageCounter(&el->securityHostPkts->icmpProtocolUnreachRcvd);
+  resetUsageCounter(&el->securityHostPkts->icmpAdminProhibitedRcvd);
 }

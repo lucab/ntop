@@ -22,7 +22,7 @@ static MemoryBlock *theRoot = NULL;
 static char tmpStr[255];
 
 #ifdef MULTITHREADED
-static pthread_mutex_t leaksMutex;
+static PthreadMutex leaksMutex;
 #endif
 
 unsigned int PrintMemoryBlocks(); /* Forward declaration */
@@ -187,6 +187,7 @@ char* myStrdup(char* theStr, int theLine, char* theFile) {
   
   theOut = (char*)myMalloc((len+1), theLine, theFile);
   strncpy(theOut, theStr, len);
+  theOut[len] = '\0';
 
   return(theOut);
 }
@@ -346,8 +347,11 @@ void termLeaks(void) {
 /* ************************************ */
 
 void* ntop_malloc(unsigned int sz, char* file, int line) {
-  traceEvent(file, line, "malloc(%d) [%s]", 
-	     sz, formatBytes(allocatedMemory, 0));
+
+#ifdef DEBUG
+  traceEvent(TRACE_WARNING, "malloc(%d) [%s] @ %s:%d", 
+	     sz, formatBytes(allocatedMemory, 0), file, line);
+#endif
 
   return(myMalloc(sz, line, file));
 }
@@ -355,18 +359,20 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 /* ************************************ */
 
 char* ntop_strdup(char *str, char* file, int line) {
-  traceEvent(file, line, "strdup(%s) [%s]", str, 
-	     formatBytes(allocatedMemory, 0));
-
+#ifdef DEBUG
+  traceEvent(TRACE_WARNING, "strdup(%s) [%s] @ %s:%d", str, 
+	     formatBytes(allocatedMemory, 0), file, line);
+#endif
   return(myStrdup(str, line, file));
 }
 
 /* ************************************ */
 
 void ntop_free(void *ptr, char* file, int line) {
-  traceEvent(file, line, "free(%x) [%s]", ptr, 
-	     formatBytes(allocatedMemory, 0));
-
+#ifdef DEBUG
+  traceEvent(TRACE_WARNING, "free(%x) [%s] @ %s:%d", ptr, 
+	     formatBytes(allocatedMemory, 0), file, line);
+#endif
   return(myFree(ptr, line, file));
 }
 

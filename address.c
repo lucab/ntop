@@ -584,6 +584,7 @@ void ipaddr2str(HostTraffic *instance,
 #endif
     updateHostNameInfo(hostIpAddress.s_addr, data_data.dptr);
     strncpy(outBuf, data_data.dptr, outBufLen);
+    outBuf[outBufLen] = '\0';
     free(data_data.dptr);
     return;
   } else {

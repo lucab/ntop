@@ -29,7 +29,7 @@ static u_char printedHashWarning = 0;
 
 /* ************************************ */
 
-static void purgeIdleHostSessions(u_char *flaggedHosts,
+static void purgeIdleHostSessions(u_char *flaggedHosts, u_int flaggedHostsLen,
                                   IpGlobalSession **sessionScanner) {
   u_int i, peerFound;
   u_int *scanner;
@@ -39,10 +39,14 @@ static void purgeIdleHostSessions(u_char *flaggedHosts,
   while(theScanner != NULL) {
     scanner = theScanner->peersIdx;
     for(i=0, peerFound=0; i<MAX_NUM_SESSION_PEERS; i++) {
-      if(flaggedHosts[scanner[i]])
-	scanner[i] = NO_PEER;
-      if(scanner[i] != NO_PEER)
-	peerFound++;
+      if(scanner[i] > flaggedHostsLen) {
+	traceEvent(TRACE_INFO, "WARNING: Index %u out of range [0..%d]", scanner[i], flaggedHostsLen);
+      } else {
+	if(flaggedHosts[scanner[i]])
+	  scanner[i] = NO_PEER;
+	if(scanner[i] != NO_PEER)
+	  peerFound++;
+      }
     }
 
     if(peerFound == 0) {
@@ -261,46 +265,47 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
       /* ********************************* */
 
       mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->contactedSentPeers);
-
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synPktsSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstPktsSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstAckPktsSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synFinPktsSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finPushUrgPktsSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullPktsSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.ackScanSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.xmasScanSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finScanSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullScanSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rejectedTCPConnSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.establishedTCPConnSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.udpToClosedPortSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.udpToDiagnosticPortSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.tcpToDiagnosticPortSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.tinyFragmentSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.icmpFragmentSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.overlappingFragmentSent);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.closedEmptyTCPConnSent);
-
       mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->contactedRcvdPeers);
 
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstAckPktsRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synFinPktsRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finPushUrgPktsRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullPktsRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.ackScanRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.xmasScanRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finScanRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullScanRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rejectedTCPConnRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.establishedTCPConnRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.udpToClosedPortRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.udpToDiagnosticPortRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.tcpToDiagnosticPortRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.tinyFragmentRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.icmpFragmentRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.overlappingFragmentRcvd);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.closedEmptyTCPConnRcvd);
+      if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts != NULL) {
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->synPktsSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->rstPktsSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->rstAckPktsSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->synFinPktsSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->finPushUrgPktsSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->nullPktsSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->ackScanSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->xmasScanSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->finScanSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->nullScanSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->rejectedTCPConnSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->establishedTCPConnSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->udpToClosedPortSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->udpToDiagnosticPortSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->tcpToDiagnosticPortSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->tinyFragmentSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->icmpFragmentSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->overlappingFragmentSent);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->closedEmptyTCPConnSent);
+
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->rstAckPktsRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->synFinPktsRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->finPushUrgPktsRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->nullPktsRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->ackScanRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->xmasScanRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->finScanRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->nullScanRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->rejectedTCPConnRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->establishedTCPConnRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->udpToClosedPortRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->udpToDiagnosticPortRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->tcpToDiagnosticPortRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->tinyFragmentRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->icmpFragmentRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->overlappingFragmentRcvd);
+	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->closedEmptyTCPConnRcvd);
+      }
 
       for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++) {
 	if(device[deviceToExtend].hash_hostTraffic[j]->portsUsage[i] == NULL)
@@ -499,9 +504,23 @@ static int _checkIndex(u_char *flaggedHosts, u_int flaggedHostsLen, u_int idx,
     return(flaggedHosts[idx]);
 }
 
+#define checkIndex(a) _checkIndex(flaggedHosts, flaggedHostsLen, a, __FILE__, __LINE__)
+
 /* **************************************** */
 
-#define checkIndex(a, b, c) _checkIndex(a, b, c, __FILE__, __LINE__)
+static void _checkUsageCounter(u_char *flaggedHosts, u_int flaggedHostsLen, UsageCounter *counter,
+			       char *fileName, int fileLine) {
+  int i;
+
+  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+    if(_checkIndex(flaggedHosts, flaggedHostsLen, counter->peersIndexes[i], 
+		  fileName, fileLine))
+      counter->peersIndexes[i] = NO_PEER;
+  }
+}
+
+#define checkUsageCounter(a) _checkUsageCounter(flaggedHosts, flaggedHostsLen, a, __FILE__, __LINE__)
+
 
 /* **************************************** */
 
@@ -514,126 +533,59 @@ static void freeGlobalHostPeers(HostTraffic *el,
 #endif
 
   if(el->tcpSessionList != NULL)
-    purgeIdleHostSessions(flaggedHosts, &el->tcpSessionList);
+    purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, &el->tcpSessionList);
 
-  for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->contactedSentPeers.peersIndexes[j]))
-      el->contactedSentPeers.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->contactedRcvdPeers.peersIndexes[j]))
-      el->contactedRcvdPeers.peersIndexes[j] = NO_PEER;
+  checkUsageCounter(&el->contactedSentPeers);
+  checkUsageCounter(&el->contactedRcvdPeers);
+
+  if(el->securityHostPkts != NULL) {
+    checkUsageCounter(&el->securityHostPkts->synPktsSent);
+    checkUsageCounter(&el->securityHostPkts->rstPktsSent);
+    checkUsageCounter(&el->securityHostPkts->rstAckPktsSent);
+    checkUsageCounter(&el->securityHostPkts->synFinPktsSent);
+    checkUsageCounter(&el->securityHostPkts->finPushUrgPktsSent);
+    checkUsageCounter(&el->securityHostPkts->nullPktsSent);
+    checkUsageCounter(&el->securityHostPkts->ackScanSent);
+    checkUsageCounter(&el->securityHostPkts->xmasScanSent);
+    checkUsageCounter(&el->securityHostPkts->finScanSent);
+    checkUsageCounter(&el->securityHostPkts->nullScanSent);
+    checkUsageCounter(&el->securityHostPkts->rejectedTCPConnSent);
+    checkUsageCounter(&el->securityHostPkts->establishedTCPConnSent);
+    checkUsageCounter(&el->securityHostPkts->udpToClosedPortSent);
+    checkUsageCounter(&el->securityHostPkts->udpToDiagnosticPortSent);
+    checkUsageCounter(&el->securityHostPkts->tcpToDiagnosticPortSent);
+    checkUsageCounter(&el->securityHostPkts->tinyFragmentSent);
+    checkUsageCounter(&el->securityHostPkts->icmpFragmentSent);
+    checkUsageCounter(&el->securityHostPkts->overlappingFragmentSent);
+    checkUsageCounter(&el->securityHostPkts->closedEmptyTCPConnSent);
+
+    checkUsageCounter(&el->securityHostPkts->synPktsRcvd);
+    checkUsageCounter(&el->securityHostPkts->rstAckPktsRcvd);
+    checkUsageCounter(&el->securityHostPkts->rstPktsRcvd);
+    checkUsageCounter(&el->securityHostPkts->synFinPktsRcvd);
+    checkUsageCounter(&el->securityHostPkts->finPushUrgPktsRcvd);
+    checkUsageCounter(&el->securityHostPkts->nullPktsRcvd);
+    checkUsageCounter(&el->securityHostPkts->ackScanRcvd);
+    checkUsageCounter(&el->securityHostPkts->xmasScanRcvd);
+    checkUsageCounter(&el->securityHostPkts->finScanRcvd);
+    checkUsageCounter(&el->securityHostPkts->nullScanRcvd);
+    checkUsageCounter(&el->securityHostPkts->rejectedTCPConnRcvd);
+    checkUsageCounter(&el->securityHostPkts->establishedTCPConnRcvd);
+    checkUsageCounter(&el->securityHostPkts->udpToClosedPortRcvd);
+    checkUsageCounter(&el->securityHostPkts->udpToDiagnosticPortRcvd);
+    checkUsageCounter(&el->securityHostPkts->tcpToDiagnosticPortRcvd);
+    checkUsageCounter(&el->securityHostPkts->tinyFragmentRcvd);
+    checkUsageCounter(&el->securityHostPkts->icmpFragmentRcvd);
+    checkUsageCounter(&el->securityHostPkts->overlappingFragmentRcvd);
+    checkUsageCounter(&el->securityHostPkts->closedEmptyTCPConnRcvd);
   }
 
-  for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.synPktsSent.peersIndexes[j]))
-      el->securityHostPkts.synPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.rstAckPktsSent.peersIndexes[j]))
-      el->securityHostPkts.rstAckPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.rstPktsSent.peersIndexes[j]))
-      el->securityHostPkts.rstPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.synFinPktsSent.peersIndexes[j]))
-      el->securityHostPkts.synFinPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j]))
-      el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.nullPktsSent.peersIndexes[j]))
-      el->securityHostPkts.nullPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.synPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.synPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.rstPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.rstPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.synFinPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.synFinPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.nullPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.nullPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.synPktsSent.peersIndexes[j]))
-      el->securityHostPkts.synPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.rstPktsSent.peersIndexes[j]))
-      el->securityHostPkts.rstPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.rstAckPktsSent.peersIndexes[j]))
-      el->securityHostPkts.rstAckPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.synFinPktsSent.peersIndexes[j]))
-      el->securityHostPkts.synFinPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j]))
-      el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.nullPktsSent.peersIndexes[j]))
-      el->securityHostPkts.nullPktsSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.ackScanSent.peersIndexes[j]))
-      el->securityHostPkts.ackScanSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.xmasScanSent.peersIndexes[j]))
-      el->securityHostPkts.xmasScanSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.finScanSent.peersIndexes[j]))
-      el->securityHostPkts.finScanSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.nullScanSent.peersIndexes[j]))
-      el->securityHostPkts.nullScanSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.rejectedTCPConnSent.peersIndexes[j]))
-      el->securityHostPkts.rejectedTCPConnSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.establishedTCPConnSent.peersIndexes[j]))
-      el->securityHostPkts.establishedTCPConnSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.udpToClosedPortSent.peersIndexes[j]))
-      el->securityHostPkts.udpToClosedPortSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.synPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.synPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.rstPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.rstPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.synFinPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.synFinPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.nullPktsRcvd.peersIndexes[j]))
-      el->securityHostPkts.nullPktsRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.ackScanRcvd.peersIndexes[j]))
-      el->securityHostPkts.ackScanRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.xmasScanRcvd.peersIndexes[j]))
-      el->securityHostPkts.xmasScanRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.finScanRcvd.peersIndexes[j]))
-      el->securityHostPkts.finScanRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.nullScanRcvd.peersIndexes[j]))
-      el->securityHostPkts.nullScanRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[j]))
-      el->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.establishedTCPConnRcvd.peersIndexes[j]))
-      el->securityHostPkts.establishedTCPConnRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.udpToClosedPortRcvd.peersIndexes[j]))
-      el->securityHostPkts.udpToClosedPortRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.udpToDiagnosticPortSent.peersIndexes[j]))
-      el->securityHostPkts.udpToDiagnosticPortSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.udpToDiagnosticPortRcvd.peersIndexes[j]))
-      el->securityHostPkts.udpToDiagnosticPortRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.tcpToDiagnosticPortSent.peersIndexes[j]))
-      el->securityHostPkts.tcpToDiagnosticPortSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.tcpToDiagnosticPortRcvd.peersIndexes[j]))
-      el->securityHostPkts.tcpToDiagnosticPortRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.tinyFragmentSent.peersIndexes[j]))
-      el->securityHostPkts.tinyFragmentSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.tinyFragmentRcvd.peersIndexes[j]))
-      el->securityHostPkts.tinyFragmentRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.icmpFragmentSent.peersIndexes[j]))
-      el->securityHostPkts.icmpFragmentSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.icmpFragmentRcvd.peersIndexes[j]))
-      el->securityHostPkts.icmpFragmentRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.overlappingFragmentSent.peersIndexes[j]))
-      el->securityHostPkts.overlappingFragmentSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.overlappingFragmentRcvd.peersIndexes[j]))
-      el->securityHostPkts.overlappingFragmentRcvd.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.closedEmptyTCPConnSent.peersIndexes[j]))
-      el->securityHostPkts.closedEmptyTCPConnSent.peersIndexes[j] = NO_PEER;
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->securityHostPkts.closedEmptyTCPConnRcvd.peersIndexes[j]))
-      el->securityHostPkts.closedEmptyTCPConnRcvd.peersIndexes[j] = NO_PEER;
-  }
-
-  for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-    if(checkIndex(flaggedHosts, flaggedHostsLen, el->contactedRouters.peersIndexes[j]))
-      el->contactedRouters.peersIndexes[j] = NO_PEER;
+  checkUsageCounter(&el->contactedRouters);
 
     for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++)
       if(el->portsUsage[j] != NULL) {
-	if((checkIndex(flaggedHosts, flaggedHostsLen, el->portsUsage[j]->clientUsesLastPeer))
-	   || (checkIndex(flaggedHosts, flaggedHostsLen, el->portsUsage[j]->serverUsesLastPeer))) {
+	if((checkIndex(el->portsUsage[j]->clientUsesLastPeer))
+	   || (checkIndex(el->portsUsage[j]->serverUsesLastPeer))) {
 	  free(el->portsUsage[j]);
 	  el->portsUsage[j] = NULL;
 	}
@@ -654,6 +606,12 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
   if(host == NULL)
     return;
+
+  /*
+    if(strcmp(host->hostSymIpAddress, "jabber-priv") == 0) {
+    printf("Hello\n");
+    }
+  */
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)",
@@ -687,6 +645,11 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
       free(host->atNodeType[i]);
   if(host->atNodeName != NULL)          free(host->atNodeName);
   if(host->ipxHostName != NULL)         free(host->ipxHostName);
+
+  if(host->securityHostPkts != NULL) {
+    free(host->securityHostPkts);
+    host->securityHostPkts = NULL; /* needed by freeGlobalHostPeers() */
+  }
 
   if(host->osName != NULL)
     free(host->osName);
@@ -747,10 +710,11 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
   if(refreshHash) {
     u_char *myflaggedHosts;
-    int len = sizeof(u_char)*device[theDevice].actualHashSize;
+    int len;
+    
+    len = sizeof(u_char)*device[theDevice].actualHashSize;
+    myflaggedHosts = (u_char*)calloc(device[theDevice].actualHashSize, sizeof(u_char));
 
-    myflaggedHosts = (char*)malloc(len);
-    memset(myflaggedHosts, 0, len);
     myflaggedHosts[hostIdx] = 1; /* Set the entry to free */
     freeGlobalHostPeers(host, myflaggedHosts, len);
     free(myflaggedHosts);

@@ -706,17 +706,6 @@ typedef struct simpleProtoTrafficInfo {
 
 /* *********************** */
 
-typedef struct securityProbes {
-  TrafficCounter synPkts, rstPkts, rstAckPkts, synFinPkts, finPushUrgPkts, nullPkts;
-  TrafficCounter ackScanSent,             ackScanRcvd;
-  TrafficCounter xmasScanSent,            xmasScanRcvd;
-  TrafficCounter finScanSent,             finScanRcvd;
-  TrafficCounter nullScanSent,            nullScanRcvd;
-  TrafficCounter udpToClosedPortSent,     udpToClosedPortRcvd;
-} SecurityProbes;
-
-/* *********************** */
-
 typedef struct usageCounter {
   TrafficCounter value;
   u_int peersIndexes[MAX_NUM_CONTACTED_PEERS];
@@ -917,7 +906,6 @@ typedef struct {
   SimpleProtoTrafficInfo tcpGlobalTrafficStats, udpGlobalTrafficStats, icmpGlobalTrafficStats;
   SimpleProtoTrafficInfo *ipProtoStats;
   
-  SecurityProbes securityPkts;
   TrafficCounter numEstablishedTCPConnections; /* = # really established connections */
 
 #ifdef MULTITHREADED
@@ -1682,7 +1670,7 @@ typedef struct hostTraffic {
                  udpReceivedFromRemote, icmpReceived, ospfReceived, igmpReceived;
 
   /* Interesting Packets */  
-  SecurityHostProbes securityHostPkts;  
+  SecurityHostProbes *securityHostPkts;  
 
   /* non IP */
   IcmpHostInfo    *icmpInfo;

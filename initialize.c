@@ -751,8 +751,6 @@ void initDevices(char* devices) {
       mallocLen = sizeof(ntopInterface_t)*(numDevices+1);
       tmpDevice = (ntopInterface_t*)malloc(mallocLen);
       memset(tmpDevice, 0, mallocLen);
-      memcpy(tmpDevice, device, sizeof(ntopInterface_t)*numDevices);
-      free(device);
       device = tmpDevice;
  
       device[numDevices++].name = strdup(tmpDev);
