@@ -1,0 +1,29 @@
+How to Build the ntop/RMON plugin
+---------------------------------
+
+0) Please do NOT use a precompiled UCD package unless
+   you know what you're doing.
+
+1) Fetch UCD-SNMP [See http://net-snmp.sourceforge.net/developer.html]
+
+2) Compile the stuff as specified as follows:
+   [see also http://net-snmp.sourceforge.net/tutorial/toolkit/demon/]
+   - ./configure --with-mib-modules="agentx"
+   - make
+   - make install
+
+3) Once you this stuff ready you can build the ntop/RMON
+   plugins.  
+
+4) Now start ntop. 
+
+5) The ntop/RMON plugin listens on port 161 (the default SNMP
+   port). If you want to test the agent you can use the 'tkMib'
+   tool that comes with UCD-SNMP 
+   [see http://net-snmp.sourceforge.net/tkmib.jpg]. 
+
+   NOTE: If you use tkMib do not forget to do "setenv MIBS ALL" 
+   (csh shells), otherwise you won't see the RMON MIB.
+
+---------------------------------------
+Luca Deri <deri@ntop.org> - August 2000
