@@ -205,7 +205,7 @@ ntop.txt: ntop.8
 	@echo "-----------------------------------------------"
 	@echo "Converting $< to ASCII format  .... Please wait"
 	@echo ""
-	@groff -mandoc -Tascii $< | sed 's/_//g' | sed 's/[ -~]//g' > ntop.txt
+	@groff -mandoc -Tascii $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -~]//g' > ntop.txt
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"
 	@echo ""
@@ -220,7 +220,7 @@ ntop.html: ntop.8
 	@echo "-----------------------------------------------"
 	@echo "Converting $< to HTML format  .... Please wait"
 	@echo ""
-	@groff -mandoc -Thtml $< | sed 's/_//g' | sed 's/[ -~]//g' > html/ntop.html
+	@groff -mandoc -Thtml $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -~]//g' > html/ntop.html
 	@cp -f html/ntop.html ntop.html
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"
@@ -235,7 +235,7 @@ faq.html: docs/FAQ
 	@echo "-----------------------------------------------"
 	@echo "Converting $< to HTML format  .... Please wait"
 	@echo ""
-	@@AWK@ -f utils/faqtohtml.awk $< | sed 's/_//g' | sed 's/[ -~]//g' > html/faq.html
+	@@AWK@ -f utils/faqtohtml.awk $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -~]//g' > html/faq.html
 	@cp -f html/faq.html faq.html
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"
