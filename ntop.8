@@ -55,6 +55,7 @@ ntop \- display top network users
 .RB [ -F 
 .IR "flow filter expression" ]
 .RB [ -k ]
+.RB [ -K ]
 .RB [ "filter expression" ]
 .SH DESCRIPTION
 .B ntop
@@ -226,6 +227,9 @@ and added to the LucaHosts flow, whereas all the packet routed by the gateway ga
 
 .It -k
 When this flag is used, the current filter expression is printed in an extra frame and thus always visible.
+
+.It -K
+Use this flag for easying application debug (eg. fork() is not used etc.)
 
 .It "filter expression"
 .B ntop

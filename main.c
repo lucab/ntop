@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
   tcpChain = NULL, udpChain = NULL, icmpChain = NULL;
   devices = NULL;
 
-  daemonMode = 0, pflag = 0, numericFlag=0;
+  daemonMode = pflag = numericFlag = debugMode = 0;
   refreshRate = 0;
   rFileName = NULL;
   maxHashSize = MAX_HASH_SIZE;
@@ -151,88 +151,88 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:k";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:kK";
 #else
-  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:k";
+  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kK";
 #endif
 
   while((op = getopt(argc, argv, theOpts)) != EOF) {
-      switch (op) {
-	/* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
+    switch (op) {
+      /* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
 
-      case 'c': /* Sticky hosts = hosts that are not purged
-		   when idle */
-	stickyHosts = 1;
-	break;
+    case 'c': /* Sticky hosts = hosts that are not purged
+		 when idle */
+      stickyHosts = 1;
+      break;
 
-      case 'P': /* DB-Path */
-	stringSanityCheck(optarg);
-	strncpy(dbPath, optarg, sizeof(dbPath)-1)[sizeof(dbPath)-1] = '\0';
-	break;
+    case 'P': /* DB-Path */
+      stringSanityCheck(optarg);
+      strncpy(dbPath, optarg, sizeof(dbPath)-1)[sizeof(dbPath)-1] = '\0';
+      break;
 
-      case 'a': /* ntop access log path */
-	stringSanityCheck(optarg);
-	strncpy(accessLogPath, optarg,
-		sizeof(accessLogPath)-1)[sizeof(accessLogPath)-1] = '\0';
-	break;
+    case 'a': /* ntop access log path */
+      stringSanityCheck(optarg);
+      strncpy(accessLogPath, optarg,
+	      sizeof(accessLogPath)-1)[sizeof(accessLogPath)-1] = '\0';
+      break;
 
 #ifndef WIN32
-      case 'd':
-	daemonMode=1;
-	break;
+    case 'd':
+      daemonMode=1;
+      break;
 
-      case 'I': /* Interactive mode */
-	printf("intop provides you curses support. "
-	       "ntop -I is no longer used.\n");
-	return(-1);
+    case 'I': /* Interactive mode */
+      printf("intop provides you curses support. "
+	     "ntop -I is no longer used.\n");
+      return(-1);
 #endif
 
-      case 'q': /* allow ntop to save suspicious packets
-		   in a file in pcap (tcpdump) format */
-	enableSuspiciousPacketDump=1;
-	break;
+    case 'q': /* allow ntop to save suspicious packets
+		 in a file in pcap (tcpdump) format */
+      enableSuspiciousPacketDump=1;
+      break;
 
-      case '1': /* disable throughput update */
-	enableThUpdate=0;
-	break;
+    case '1': /* disable throughput update */
+      enableThUpdate=0;
+      break;
 
-      case '2': /* disable purgin of idle hosts */
-	enableIdleHosts=0;
-	break;
+    case '2': /* disable purgin of idle hosts */
+      enableIdleHosts=0;
+      break;
 
-      case 'l':
-	stringSanityCheck(optarg);
-	pcapLog = optarg;
-	break;
+    case 'l':
+      stringSanityCheck(optarg);
+      pcapLog = optarg;
+      break;
 
-      case 'b': /* host:port */
-	stringSanityCheck(optarg);
-	handleDbSupport(optarg, &enableDBsupport);
-	break;
+    case 'b': /* host:port */
+      stringSanityCheck(optarg);
+      handleDbSupport(optarg, &enableDBsupport);
+      break;
 
-      case 'g': /* host:port */
-	stringSanityCheck(optarg);
-	handleNetFlowSupport(optarg);
-	break;
+    case 'g': /* host:port */
+      stringSanityCheck(optarg);
+      handleNetFlowSupport(optarg);
+      break;
 
 #ifdef HAVE_MYSQL
-      case 'v': /* username:password:dbname:host */
-	stringSanityCheck(optarg);
-	handlemySQLSupport(optarg, &enableDBsupport);
-        break;
+    case 'v': /* username:password:dbname:host */
+      stringSanityCheck(optarg);
+      handlemySQLSupport(optarg, &enableDBsupport);
+      break;
 #endif
 
-      case 'D': /* domain */
-	stringSanityCheck(optarg);
-	strncpy(domainName, optarg,
-		sizeof(domainName)-1)[sizeof(domainName)-1] = '\0';
-	break;
-
+    case 'D': /* domain */
+      stringSanityCheck(optarg);
+      strncpy(domainName, optarg,
+	      sizeof(domainName)-1)[sizeof(domainName)-1] = '\0';
+      break;
+	
     case 'f':
       isLsofPresent = 0; /* Don't make debugging too complex */
       rFileName = optarg;
       break;
-
+	
     case 'r':
       if(!isdigit(optarg[0])) {
 	printf("FATAL ERROR: flag -r expects a numeric argument.\n");
@@ -242,165 +242,170 @@ int main(int argc, char *argv[]) {
       break;
 
 #ifndef MICRO_NTOP
-      case 'e':
-	maxNumLines = atoi(optarg);
-	break;
+    case 'e':
+      maxNumLines = atoi(optarg);
+      break;
 #endif
 
-      case 'E':
-	isLsofPresent  = checkCommand("lsof");
-	isNmapPresent  = checkCommand("nmap");
-	break;
+    case 'E':
+      isLsofPresent  = checkCommand("lsof");
+      isNmapPresent  = checkCommand("nmap");
+      break;
 
-      case 's':
-	maxHashSize = atoi(optarg);
-	if(maxHashSize < 64) {
-	  maxHashSize = 64;
-	  traceEvent(TRACE_INFO, "Max hash size set to 64 (minimum hash size)");
-	}
-	break;
+    case 's':
+      maxHashSize = atoi(optarg);
+      if(maxHashSize < 64) {
+	maxHashSize = 64;
+	traceEvent(TRACE_INFO, "Max hash size set to 64 (minimum hash size)");
+      }
+      break;
 
-      case 'i':
-	stringSanityCheck(optarg);
-	devices = optarg;
-	break;
+    case 'i':
+      stringSanityCheck(optarg);
+      devices = optarg;
+      break;
 
-      case 'p':
-	stringSanityCheck(optarg);
-	handleProtocols(optarg);
-	break;
+    case 'p':
+      stringSanityCheck(optarg);
+      handleProtocols(optarg);
+      break;
 
-      case 'F':
-	stringSanityCheck(optarg);
-	strncpy(flowSpecs, optarg,
-		sizeof(flowSpecs)-1)[sizeof(flowSpecs)-1] = '\0';
-	break;
+    case 'F':
+      stringSanityCheck(optarg);
+      strncpy(flowSpecs, optarg,
+	      sizeof(flowSpecs)-1)[sizeof(flowSpecs)-1] = '\0';
+      break;
 
-      case 'm':
-	stringSanityCheck(optarg);
-	localAddresses = strdup(optarg);
-	break;
+    case 'm':
+      stringSanityCheck(optarg);
+      localAddresses = strdup(optarg);
+      break;
 
-      case 'n':
-	numericFlag++;
-	break;
+    case 'n':
+      numericFlag++;
+      break;
 
-      case 'N':
-	isNmapPresent = 0;
-	break;
+    case 'N':
+      isNmapPresent = 0;
+      break;
 
-      case 'w':
-	stringSanityCheck(optarg);
-	if(!isdigit(optarg[0])) {
-	  printf("FATAL ERROR: flag -w expects a numeric argument.\n");
-	  exit(-1);
-	}
+    case 'w':
+      stringSanityCheck(optarg);
+      if(!isdigit(optarg[0])) {
+	printf("FATAL ERROR: flag -w expects a numeric argument.\n");
+	exit(-1);
+      }
 
-	/* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-	if ((webAddr = strchr(optarg,':'))) {
-	  /* DS: Search for : to find xxx.xxx.xxx.xxx:port */
-	  /* This code is to be able to bind to a particular interface */
-	  *webAddr = '\0';
-	  webPort = atoi(webAddr+1);
-	  webAddr = optarg;
-	} else {
-	  webPort = atoi(optarg);
-	}
-	break;
+      /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
+      if ((webAddr = strchr(optarg,':'))) {
+	/* DS: Search for : to find xxx.xxx.xxx.xxx:port */
+	/* This code is to be able to bind to a particular interface */
+	*webAddr = '\0';
+	webPort = atoi(webAddr+1);
+	webAddr = optarg;
+      } else {
+	webPort = atoi(optarg);
+      }
+      break;
 
 #ifdef HAVE_OPENSSL
-      case 'W':
-	stringSanityCheck(optarg);
-	if(!isdigit(optarg[0])) {
-	  printf("FATAL ERROR: flag -W expects a numeric argument.\n");
-	  exit(-1);
-	}
+    case 'W':
+      stringSanityCheck(optarg);
+      if(!isdigit(optarg[0])) {
+	printf("FATAL ERROR: flag -W expects a numeric argument.\n");
+	exit(-1);
+      }
 
-	/*
-	   lets swipe the same address binding code from -w above
-	   Curtis Doty <Curtis@GreenKey.net>
-	*/
-	if((sslAddr = strchr(optarg,':'))) {
-	  *sslAddr = '\0';
-	  sslPort = atoi(sslAddr+1);
-	  sslAddr = optarg;
-	} else {
-	  sslPort = atoi(optarg);
-       }
+      /*
+	lets swipe the same address binding code from -w above
+	Curtis Doty <Curtis@GreenKey.net>
+      */
+      if((sslAddr = strchr(optarg,':'))) {
+	*sslAddr = '\0';
+	sslPort = atoi(sslAddr+1);
+	sslAddr = optarg;
+      } else {
+	sslPort = atoi(optarg);
+      }
 
-	break;
+      break;
 #endif
 
-      case 'R':
-	stringSanityCheck(optarg);
-	strncpy(rulesFile, optarg,
-		sizeof(rulesFile)-1)[sizeof(rulesFile)-1] = '\0';
-	break;
+    case 'R':
+      stringSanityCheck(optarg);
+      strncpy(rulesFile, optarg,
+	      sizeof(rulesFile)-1)[sizeof(rulesFile)-1] = '\0';
+      break;
 
-      case 'M':
-	mergeInterfaces = 0;
-	break;
+    case 'M':
+      mergeInterfaces = 0;
+      break;
 
-      case 'S':
-	/*
-	   Persitent storage only for 'local' machines
-	   Courtesy of Joel Crisp <jcrisp@dyn21-126.trilogy.com>
+    case 'S':
+      /*
+	Persitent storage only for 'local' machines
+	Courtesy of Joel Crisp <jcrisp@dyn21-126.trilogy.com>
 
-	   0 = no storage
-	   1 = store all hosts
-	   2 = store only local hosts
-	*/
-	usePersistentStorage = atoi(optarg);
-	if((usePersistentStorage > 2)
-	   || (usePersistentStorage < 0)){
-	  printf("FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
-	  exit(-1);
-	}
-	break;
+	0 = no storage
+	1 = store all hosts
+	2 = store only local hosts
+      */
+      usePersistentStorage = atoi(optarg);
+      if((usePersistentStorage > 2)
+	 || (usePersistentStorage < 0)){
+	printf("FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
+	exit(-1);
+      }
+      break;
 
-      case 't':
-	/* Trace Level Initialization */
-	traceLevel = atoi(optarg);
-	if(traceLevel > DETAIL_TRACE_LEVEL)
-	  traceLevel = DETAIL_TRACE_LEVEL;
-	break;
+    case 't':
+      /* Trace Level Initialization */
+      traceLevel = atoi(optarg);
+      if(traceLevel > DETAIL_TRACE_LEVEL)
+	traceLevel = DETAIL_TRACE_LEVEL;
+      break;
 
 #ifndef WIN32
-      case 'u':
-	stringSanityCheck(optarg);
-        if(strOnlyDigits(optarg))
-         userId = atoi(optarg);
-        else {
-          struct passwd *pw;
-          pw = getpwnam(optarg);
-          if(pw == NULL) {
-            printf("FATAL ERROR: Unkown user %s.\n", optarg);
-            exit(-1);
-          }
-          userId = pw->pw_uid;
-          groupId = pw->pw_gid;
-          endpwent();
-        }
-        break;
+    case 'u':
+      stringSanityCheck(optarg);
+      if(strOnlyDigits(optarg))
+	userId = atoi(optarg);
+      else {
+	struct passwd *pw;
+	pw = getpwnam(optarg);
+	if(pw == NULL) {
+	  printf("FATAL ERROR: Unkown user %s.\n", optarg);
+	  exit(-1);
+	}
+	userId = pw->pw_uid;
+	groupId = pw->pw_gid;
+	endpwent();
+      }
+      break;
 #endif /* WIN32 */
 
-      case 'U': /* host:port */
-	if(strlen(optarg) >= (sizeof(mapperURL)-1)) {
-	  strncpy(mapperURL, optarg, sizeof(mapperURL)-2);
-	  mapperURL[sizeof(mapperURL)-1] = '\0';
-	} else
-	  strcpy(mapperURL, optarg);
-	break;
+    case 'U': /* host:port */
+      if(strlen(optarg) >= (sizeof(mapperURL)-1)) {
+	strncpy(mapperURL, optarg, sizeof(mapperURL)-2);
+	mapperURL[sizeof(mapperURL)-1] = '\0';
+      } else
+	strcpy(mapperURL, optarg);
+      break;
+	
+    case 'k':
+      /* update info of used kernel filter expression in extra frame */
+      filterExpressionInExtraFrame=1;
+      break;
+	
+    case 'K':
+      debugMode = 1;
+      break;
 
-      case 'k': /* update info of used kernel filter expression in extra frame */
-        filterExpressionInExtraFrame=1;
-	break;
-
-      default:
-	usage();
-	exit(-1);
-	/* NOTREACHED */
-      }
+    default:
+      usage();
+      exit(-1);
+      /* NOTREACHED */
+    }
   }  
 
   snprintf(accessLogPath, sizeof(accessLogPath), "%s/%s",

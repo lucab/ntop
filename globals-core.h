@@ -27,7 +27,7 @@ extern char *program_name;
 extern char domainName[MAXHOSTNAMELEN], *shortDomainName;
 
 /* command line options */
-extern u_short traceLevel;
+extern u_short traceLevel, debugMode;
 extern u_char stickyHosts, enableSuspiciousPacketDump;
 extern char dbPath[200];
 extern char accessLogPath[200]; /* Apache-like access log */

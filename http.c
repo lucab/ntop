@@ -22,7 +22,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-/* #define FORK_CHILD_PROCESS */
+#define FORK_CHILD_PROCESS
 
 struct _HTTPstatus {
     int statusCode;
@@ -513,16 +513,16 @@ void printHTMLtrailer(void) {
 
   len=strlen(buf);
   if (*currentFilterExpression!='\0') {
-    if(snprintf(&buf[len], BUF_SIZE-len, 
+    if(snprintf(&buf[len], BUF_SIZE-len,
 		"with kernel (libpcap) filtering expression </B>\"%s\"<B>\n",
-		currentFilterExpression) < 0) 
+		currentFilterExpression) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(&buf[len], BUF_SIZE-len, 
+    if(snprintf(&buf[len], BUF_SIZE-len,
 		"without a kernel (libpcap) filtering expression\n") < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
-  }  
-  
+  }
+
   sendString(buf);
 
   sendString("<BR>\n&copy; 1998-2001 by <A HREF=mailto:deri@ntop.org>L. Deri</A>\n");
@@ -564,7 +564,7 @@ static void logHTTPaccess(int rc) {
    strftime(theDate, sizeof(theDate), "%d/%b/%Y:%H:%M:%S", localtime_r(&actTime, &t));
 
    gmtoffset =  (thisZone < 0) ? -thisZone : thisZone;
-   if(snprintf(theZone, sizeof(theZone), "%c%2.2ld%2.2ld", 
+   if(snprintf(theZone, sizeof(theZone), "%c%2.2ld%2.2ld",
 	       (thisZone < 0) ? '-' : '+', gmtoffset/3600, (gmtoffset/60)%60) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
@@ -791,7 +791,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
       break;
 #ifdef DEBUG
     default:
-      traceEvent(TRACE_INFO, 
+      traceEvent(TRACE_INFO,
 		 "INTERNAL ERROR: invalid MIME type code requested (%d)\n", mimeType);
 #endif
   }
@@ -1022,7 +1022,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       deleteURL(&questionMark[1]);
   } else if(strcmp(pageName, "doAddURL") == 0) {
     printTrailer=0;
-    doAddURL(postLen /* \r\n */);    
+    doAddURL(postLen /* \r\n */);
   } else if(strncmp(pageName, STR_SHOW_PLUGINS, strlen(STR_SHOW_PLUGINS)) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     if(questionMark == NULL)
@@ -1033,43 +1033,45 @@ static int returnHTTPPage(char* pageName, int postLen) {
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
 
+    if(!debugMode) {
 #ifdef __OpenBSD__
-    handleDiedChild(0); /* 
-			   Workaround because on this platform
-			   signal handling is broken as the system
-			   creates zombies although we decided to
-			   ignore SIGCHLD
-			*/
+      handleDiedChild(0); /*
+			     Workaround because on this platform
+			     signal handling is broken as the system
+			     creates zombies although we decided to
+			     ignore SIGCHLD
+			  */
 #endif
 
-    /* The URLs below are "read-only" hence I can fork a copy of ntop  */ 
+      /* The URLs below are "read-only" hence I can fork a copy of ntop  */
 
-    if((childpid = fork()) < 0)
-      traceEvent(TRACE_ERROR, "An error occurred while forking ntop (errno=%d)...\n", errno);
-    else {
-      if(childpid) {
-	/* father process */
-	numChildren++;
+      if((childpid = fork()) < 0)
+	traceEvent(TRACE_ERROR, "An error occurred while forking ntop (errno=%d)...\n", errno);
+      else {
+	if(childpid) {
+	  /* father process */
+	  numChildren++;
 #ifdef MULTITHREADED
-	if(!mutexReleased)
-	  releaseMutex(&hashResizeMutex);
+	  if(!mutexReleased)
+	    releaseMutex(&hashResizeMutex);
 #endif
-	return(0);
-      } else {
-	usedFork = 1;
-	detachFromTerminal();
+	  return(0);
+	} else {
+	  usedFork = 1;
+	  detachFromTerminal();
 
-	/* Close inherited sockets */
+	  /* Close inherited sockets */
 #ifdef HAVE_OPENSSL
-	if(sslInitialized) closeNwSocket(&sock_ssl);  
+	  if(sslInitialized) closeNwSocket(&sock_ssl);
 #endif
-	if(webPort > 0) closeNwSocket(&sock);
+	  if(webPort > 0) closeNwSocket(&sock);
 
-	setsignal(SIGALRM, quitNow);
-	alarm(120); /* Don't freeze */
+	  setsignal(SIGALRM, quitNow);
+	  alarm(120); /* Don't freeze */
+	}
       }
     }
-#endif    
+#endif
 
     if(strcmp(pageName, STR_INDEX_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
@@ -1687,7 +1689,7 @@ static int checkHTTPpassword(char *theRequestedURL,
 
     free(return_data.dptr);
   }
-  
+
   key_data.dptr = users;
   key_data.dsize = strlen(users)+1;
   return_data = gdbm_fetch(pwFile, key_data);
