@@ -803,7 +803,7 @@ ntop.txt: ntop.8
 	@echo "-----------------------------------------------"
 	@echo "Converting $< to ASCII format  .... Please wait"
 	@echo ""
-	@groff -mandoc -Tascii $< | sed 's/_//g' | sed 's/[ -~]//g' > html/ntop.txt
+	@groff -mandoc -Tascii $< | sed 's/_//g' | sed 's/[ -~]//g' > ntop.txt
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"
 	@echo ""
@@ -818,6 +818,7 @@ ntop.html: ntop.8
 	@echo "Converting $< to HTML format  .... Please wait"
 	@echo ""
 	@man2html < ntop.8 > html/ntop.html
+	@cp -f html/ntop.html ntop.html
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"
 	@echo ""
