@@ -1813,6 +1813,9 @@ typedef struct portUsage {
 #define P2P_USER            4
 #define FTP_USER            5
 
+#define P2P_UPLOAD_MODE     1
+#define P2P_DOWNLOAD_MODE   2
+
 /* *********************** */
 
 /* Appletalk Datagram Delivery Protocol */
@@ -1948,6 +1951,7 @@ typedef struct userList {
 
 typedef struct fileList {
   char *fileName;
+  fd_set fileFlags;
   struct fileList *next;
 } FileList;
 

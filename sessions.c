@@ -131,7 +131,7 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
 
 /* ************************************ */
 
-static void updateFileList(char *fileName, HostTraffic *theRemHost) {
+static void updateFileList(char *fileName, u_char upDownloadMode, HostTraffic *theRemHost) {
 
   if(fileName != NULL) {
     FileList *list = theRemHost->fileList, *lastPtr = NULL;
@@ -144,6 +144,7 @@ static void updateFileList(char *fileName, HostTraffic *theRemHost) {
 
     while(list != NULL) {
       if(strcmp(list->fileName, fileName) == 0) {
+	FD_SET(upDownloadMode, &list->fileFlags);
 	return;
       } else {
 	lastPtr = list;
@@ -155,12 +156,14 @@ static void updateFileList(char *fileName, HostTraffic *theRemHost) {
     if(list == NULL) {
       list = (FileList*)malloc(sizeof(FileList));
       list->fileName = strdup(fileName);
+      FD_ZERO(&list->fileFlags);
+      FD_SET(upDownloadMode, &list->fileFlags);
       list->next = NULL;
+      
       if(numEntries >= MAX_NUM_LIST_ENTRIES) {
 	FileList *ptr = theRemHost->fileList->next;
 
 	lastPtr->next = list; /* Append */
-
 	/* Free the first entry */
 	free(theRemHost->fileList->fileName);
 	free(theRemHost->fileList);
@@ -888,7 +891,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  rcStr[packetDataLength] = '\0';
 
 	  if(strncmp(rcStr, "GET ", 4) == 0) {
-
 	    row = strtok_r(rcStr, "\n", &strtokState);
 
 	    while(row != NULL) {
@@ -902,18 +904,19 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		    for(i=0; file[i] != '\0'; i++) {
 		      if(file[i] == '/') begin = i;
 		    }
-		    
+
 		    begin++;
-		    
+
 		    unescape(tmpStr, sizeof(tmpStr), &file[begin]);
-		    
+
 #ifdef P2P_DEBUG
 		    traceEvent(TRACE_INFO, "Kazaa: %s->%s [%s]\n",
 			       srcHost->hostNumIpAddress,
 			       dstHost->hostNumIpAddress,
 			       tmpStr);
 #endif
-		    updateFileList(tmpStr, srcHost);
+		    updateFileList(tmpStr, P2P_DOWNLOAD_MODE, srcHost);
+		    updateFileList(tmpStr, P2P_UPLOAD_MODE, dstHost);
 		  }
 		}
 	      } else if(strncmp(row, "X-Kazaa-Username", 15) == 0) {
@@ -935,6 +938,38 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	    /* printf("==>\n\n%s\n\n", rcStr); */
 	  }
+	  free(rcStr);
+	} else if((theSession->bytesProtoSent > 0) 
+		  || (theSession->bytesProtoSent < 32)) {
+	  char *rcStr;
+	  char *strtokState, *row;
+
+	  rcStr = (char*)malloc(packetDataLength+1);
+	  strncpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength] = '\0';
+
+	  if(strncmp(rcStr, "HTTP", 4) == 0) {
+	    row = strtok_r(rcStr, "\n", &strtokState);
+
+	    while(row != NULL) {
+	      char *str = "X-KazaaTag: 4=";
+
+
+	      if(strncmp(row, str, strlen(str)) == 0) {
+		char *file = &row[strlen(str)];
+
+		file[strlen(file)-1] = '\0';
+#ifdef P2P_DEBUG
+		traceEvent(TRACE_INFO, "Uploading '%s'", file);
+#endif
+		updateFileList(file, P2P_UPLOAD_MODE, srcHost);
+		updateFileList(file, P2P_DOWNLOAD_MODE, dstHost);
+		break;
+	      }
+	      row = strtok_r(NULL, "\n", &strtokState);
+	    }
+	  }
+
 	  free(rcStr);
 	}
       } else if(((dport == 6346) || (dport == 6347) || (dport == 6348)) /* Gnutella */
@@ -970,14 +1005,13 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 			 dstHost->hostNumIpAddress,
 			 tmpStr);
 #endif
-	      updateFileList(tmpStr, srcHost);
-
-	    /* printf("==>\n\n%s\n\n", rcStr); */
+	      updateFileList(tmpStr, P2P_DOWNLOAD_MODE, srcHost);
+	      updateFileList(tmpStr, P2P_UPLOAD_MODE, dstHost);
 	  }
 	  free(rcStr);
 	}
       } else if((dport == 6699) /* WinMX */ && (packetDataLength > 0)) {
-	if((theSession->bytesProtoSent == 3 /* GET */) 
+	if((theSession->bytesProtoSent == 3 /* GET */)
 	   && (theSession->bytesProtoRcvd == 1 /* 1 */)) {
 	  char *rcStr, *user, *strtokState, *strtokState1, *row, *file;
 	  int i, begin=0;
@@ -998,7 +1032,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	      }
 
 	      begin++;
-	    
+
 	      file = &file[begin];
 
 	      if(strlen(file) > 64) file[strlen(file)-64] = '\0';
@@ -1009,7 +1043,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 			 dstHost->hostNumIpAddress,
 			 user, file);
 #endif
-	      updateFileList(file, srcHost);
+	      updateFileList(file, P2P_DOWNLOAD_MODE, srcHost);
+	      updateFileList(file, P2P_UPLOAD_MODE,   dstHost);
 	      updateHostUsers(user, P2P_USER, srcHost);
 
 	    }

@@ -3246,25 +3246,22 @@ void unescape(char *dest, int destLen, char *url) {
   unsigned int val;
   char hex[3] = {0};
  
- 
   len = strlen(url);
   at = 0;
   memset(dest, 0, destLen);
-  for (i = 0; i < len && at < destLen; i++)
-    {
-      if (url[i] == '%' && i+2 < len)
-	{
-	  val = 0;
-	  hex[0] = url[i+1];
-	  hex[1] = url[i+2];
-	  hex[2] = 0;
-	  sscanf(hex, "%02x", &val);
-	  i += 2;
+  for (i = 0; i < len && at < destLen; i++) {
+    if (url[i] == '%' && i+2 < len) {
+      val = 0;
+      hex[0] = url[i+1];
+      hex[1] = url[i+2];
+      hex[2] = 0;
+      sscanf(hex, "%02x", &val);
+      i += 2;
  
-	  dest[at++] = val & 0xFF;
-	}
-      else
-	dest[at++] = url[i];
-    }
- 
+      dest[at++] = val & 0xFF;
+    } else if(url[i] == '+') {
+      dest[at++] = ' ';
+    } else
+      dest[at++] = url[i];
+  }  
 }

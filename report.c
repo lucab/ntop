@@ -1639,18 +1639,22 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
     sendString("<CENTER>\n");
     sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
-	       "<TH "TH_BG">File Name</TH></TR>\n");
+	       "<TH "TH_BG" NOWRAP>File Name</TH></TR>\n");
     sendString("<TR><TD ALIGN=left><ol>\n");
 
     while(list != NULL) {
-      if(snprintf(buf, sizeof(buf), "<li>%s\n", list->fileName) < 0)
+      if(snprintf(buf, sizeof(buf), "<li>%s&nbsp", 
+		  list->fileName) < 0)
 	BufferTooShort();
       sendString(buf);
+
+      if(FD_ISSET(P2P_UPLOAD_MODE, &list->fileFlags))   sendString("<IMG SRC=/upload.gif ALT=Upload VALIGN=MIDDLE>&nbsp;");
+      if(FD_ISSET(P2P_DOWNLOAD_MODE, &list->fileFlags)) sendString("<IMG SRC=/download.gif ALT=Download VALIGN=MIDDLE>&nbsp;");
 
       list = list->next;
     }
 
-    sendString("</ol></TD></TR></TABLE></CENTER>\n");
+    sendString("\n</ol></TD></TR></TABLE></CENTER>\n");
   }
 
   /* *************************************************** */
