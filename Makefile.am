@@ -171,7 +171,7 @@ ntop.html: ntop.8
 	@echo "-----------------------------------------------"
 	@echo "Converting $< to HTML format  .... Please wait"
 	@echo ""
-	@man2html < ntop.8 > html/ntop.html
+	@groff -mandoc -Thtml $< | sed 's/_//g' | sed 's/[ -~]//g' > html/ntop.html
 	@cp -f html/ntop.html ntop.html
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"
