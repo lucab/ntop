@@ -5525,9 +5525,9 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 
   if(myGlobals.newSock > 0) {
 #if defined(INET6) && !defined(WIN32)
-    if(from.sa_family == AF_INET)
+    if(from.sa_family == AF_INET) {
       addrput(AF_INET, &remote_ipaddr, &(((struct sockaddr_in *)&from)->sin_addr));
-    else if(from.sa_family == AF_INET6)
+    } else if(from.sa_family == AF_INET6)
       addrput(AF_INET6, &remote_ipaddr, &(((struct sockaddr_in6 *)&from)->sin6_addr));
 #else
     addrput(AF_INET, &remote_ipaddr, &(((struct sockaddr_in *)&from)->sin_addr));
@@ -5626,8 +5626,7 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 	    }
 	    else
 
-	      handleHTTPrequest(remote_ipaddr);
-	    
+	      handleHTTPrequest(remote_ipaddr);	    
 	}
 #else
 	handleHTTPrequest(remote_ipaddr);

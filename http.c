@@ -2408,12 +2408,15 @@ void handleHTTPrequest(HostAddr from) {
 
   gettimeofday(&httpRequestedAt, NULL);
 
-  requestFrom = &from;
+  if(from.hostFamily == AF_INET)
+    from.Ip4Address.s_addr = ntohl(from.Ip4Address.s_addr);
 
+  requestFrom = &from;
+  
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
    /* Note if the size of the table is zero, we simply nullify all of this
-      code (why bother wasting the work effort
-          Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
+      code (why bother wasting the work effort)
+      Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
     */
 
   for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
