@@ -900,6 +900,10 @@ static void handleBootp(HostTraffic *srcHost,
 		ipaddr2str(realDstHost->hostIpAddress, realDstHost->hostSymIpAddress, 
 			   MAX_HOST_SYM_NAME_LEN);
 		realDstHost->fullDomainName = realDstHost->dotDomainName = "";
+		if(isBroadcastAddress(&realDstHost->hostIpAddress))
+		  FD_SET(BROADCAST_HOST_FLAG, &realDstHost->flags);
+		else
+		  FD_CLR(BROADCAST_HOST_FLAG, &realDstHost->flags);
 	      }
 	    
 	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
