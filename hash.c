@@ -37,7 +37,9 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   if(((*useIPAddressForSearching) == 1)     
      || ((ether_addr == NULL) 
 	 && (hostIpAddress != NULL))) {
-      if(myGlobals.trackOnlyLocalHosts && (!_pseudoLocalAddress(hostIpAddress)))
+      if(myGlobals.trackOnlyLocalHosts 
+	 && (!isLocalAddress(hostIpAddress))
+	 && (!_pseudoLocalAddress(hostIpAddress)))
 	idx = myGlobals.otherHostEntryIdx;
       else 
 	  memcpy(&idx, &hostIpAddress->s_addr, 4);

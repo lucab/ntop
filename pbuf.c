@@ -53,6 +53,8 @@
 
 #define SESSION_PATCH /* Experimental (L.Deri) */
 
+#define TRACE_TRAFFIC_INFO
+
 /* #define PRINT_UNKNOWN_PACKETS */
 /* #define MAPPING_DEBUG */
 
@@ -666,7 +668,7 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
 
   myGlobals.device[actualDeviceId].numTcpSessions--;
 
-#ifdef DEBUG
+#ifdef TRACE_TRAFFIC_INFO
   {
     char buf[32], buf1[32];
 
@@ -1033,6 +1035,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	theSession->magic = MAGIC_NUMBER;
 	myGlobals.device[actualDeviceId].numTcpSessions++;
+
+	theSession->initiatorRealIp.s_addr = srcHost->hostIpAddress.s_addr;
+	theSession->remotePeerRealIp.s_addr = dstHost->hostIpAddress.s_addr;
 
 #ifdef TRACE_TRAFFIC_INFO
 	traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
@@ -3061,7 +3066,7 @@ static void processIpPkt(const u_char *bp,
       memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
 
       /* Sanity check */
-      if(tcpUdpLen > (tp.th_off * 4)) {
+      if(tcpUdpLen >= (tp.th_off * 4)) {
 	tcpDataLength = tcpUdpLen - (tp.th_off * 4);
 	theData = (u_char*)(bp+hlen+(tp.th_off * 4));
       } else {

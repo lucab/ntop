@@ -527,7 +527,7 @@ void printHTMLtrailer(void) {
   if(*myGlobals.currentFilterExpression!='\0') {
     if(snprintf(&buf[len], BUF_SIZE-len,
 		"with kernel (libpcap) filtering expression </B>\"%s\"<B>\n",
-		*myGlobals.currentFilterExpression) < 0)
+		myGlobals.currentFilterExpression) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
     if(snprintf(&buf[len], BUF_SIZE-len,

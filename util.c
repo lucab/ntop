@@ -326,9 +326,6 @@ unsigned short isMulticastAddress(struct in_addr *addr) {
 
 unsigned short isLocalAddress(struct in_addr *addr) {
   int i;
-
-  if(myGlobals.trackOnlyLocalHosts) 
-      return(0);
   
   for(i=0; i<myGlobals.numDevices; i++)
     if((addr->s_addr & myGlobals.device[i].netmask.s_addr) == myGlobals.device[i].network.s_addr) {
@@ -338,6 +335,9 @@ unsigned short isLocalAddress(struct in_addr *addr) {
       return 1;
     }
 
+  if(myGlobals.trackOnlyLocalHosts) 
+    return(0);
+  
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "%s is %s\n", intoa(*addr),
 	     isLocalAddress (addr) ? "pseudolocal" : "remote");
