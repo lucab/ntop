@@ -524,6 +524,8 @@ unsigned short _pseudoLocalAddress(struct in_addr *addr) {
 
 /* ********************************* */
 
+/* #define ADDRESS_DEBUG */
+
 /* This function returns true when a host is considered local
    as specified using the 'm' flag */
 unsigned short isPseudoLocalAddress(struct in_addr *addr) {

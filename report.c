@@ -419,7 +419,7 @@ void printTrafficStatistics() {
 
     sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Total</th>"
-		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts.value]</td></TR>\n",
+		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
 		getRowColor(),
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value, 1),
 		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value)) < 0)
@@ -427,7 +427,7 @@ void printTrafficStatistics() {
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>IP Traffic</th>"
-		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts.value]</td></TR>\n",
+		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
 		getRowColor(), formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1),
 		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value)) < 0)
       BufferTooShort();
@@ -562,8 +562,17 @@ void printTrafficStatistics() {
     /* ************************ */
 
 #ifdef HAVE_GDCHART
-    sendString("<TR><TH "TH_BG">Remote Hosts Distance</TH><TD "TH_BG">"
-	       "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
+    if((myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value +
+	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value +
+	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value +
+	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value +
+	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value +
+	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value +
+	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value +
+	myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value) > 0) {
+      sendString("<TR><TH "TH_BG">Remote Hosts Distance</TH><TD "TH_BG">"
+		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
+    }
 #endif /* HAVE_GDCHART */
 
     /* ********************* */

@@ -28,7 +28,7 @@ static pthread_t netFlowThread;
 static int threadActive;
 #endif
 
-/* #define DEBUG_FLOWS */
+/* #define DEBUG_FLOWS  */
 
 static ProbeInfo probeList[MAX_NUM_PROBES];
 
@@ -118,6 +118,7 @@ static void dissectFlow(NetFlow5Record *theRecord) {
       u_int srcHostIdx, dstHostIdx, numPkts;
       HostTraffic *srcHost=NULL, *dstHost=NULL;
       u_short sport, dport;
+      TrafficCounter ctr;
 
       myGlobals.numNetFlowsRcvd++;
 
@@ -208,6 +209,28 @@ static void dissectFlow(NetFlow5Record *theRecord) {
 	}
       }
 
+      ctr.value = len;
+      updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
+
+      if(subnetPseudoLocalHost(srcHost)) {
+	if(subnetPseudoLocalHost(dstHost)) {
+	  incrementTrafficCounter(&srcHost->bytesSentLoc, len);
+	  incrementTrafficCounter(&dstHost->bytesRcvdLoc, len);
+	} else {
+	  incrementTrafficCounter(&srcHost->bytesSentRem, len);
+	  incrementTrafficCounter(&dstHost->bytesRcvdLoc, len);
+	}
+      } else {
+	/* srcHost is remote */
+	if(subnetPseudoLocalHost(dstHost)) {
+	  incrementTrafficCounter(&srcHost->bytesSentLoc, len);
+	  incrementTrafficCounter(&dstHost->bytesRcvdFromRem, len);
+	} else {
+	  incrementTrafficCounter(&srcHost->bytesSentRem, len);
+	  incrementTrafficCounter(&dstHost->bytesRcvdFromRem, len);
+	}
+      }
+
       switch(theRecord->flowRecord[i].prot) {
       case 1: /* ICMP */
 	myGlobals.device[actualDeviceId].icmpBytes.value += len;
@@ -235,7 +258,30 @@ static void dissectFlow(NetFlow5Record *theRecord) {
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
 	updateUsedPorts(srcHost, dstHost, sport, dport, len);
 
+	if(subnetPseudoLocalHost(srcHost)) {
+	  if(subnetPseudoLocalHost(dstHost)) {
+	    incrementTrafficCounter(&srcHost->tcpSentLoc, len);
+	    incrementTrafficCounter(&dstHost->tcpRcvdLoc, len);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local, len);
+	  } else {
+	    incrementTrafficCounter(&srcHost->tcpSentRem, len);
+	    incrementTrafficCounter(&dstHost->tcpRcvdLoc, len);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.local2remote, len);
+	  }
+	} else {
+	  /* srcHost is remote */
+	  if(subnetPseudoLocalHost(dstHost)) {
+	    incrementTrafficCounter(&srcHost->tcpSentLoc, len);
+	    incrementTrafficCounter(&dstHost->tcpRcvdFromRem, len);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote2local, len);
+	  } else {
+	    incrementTrafficCounter(&srcHost->tcpSentRem, len);
+	    incrementTrafficCounter(&dstHost->tcpRcvdFromRem, len);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote, len);
+	  }
+	}
 	break;
+
       case 17: /* UDP */
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
 	if(subnetPseudoLocalHost(dstHost))
@@ -247,6 +293,29 @@ static void dissectFlow(NetFlow5Record *theRecord) {
 	  incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
 	else
 	  incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
+
+	if(subnetPseudoLocalHost(srcHost)) {
+	  if(subnetPseudoLocalHost(dstHost)) {
+	    incrementTrafficCounter(&srcHost->udpSentLoc, len);
+	    incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local, len);
+	  } else {
+	    incrementTrafficCounter(&srcHost->udpSentRem, len);
+	    incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.local2remote, len);
+	  }
+	} else {
+	  /* srcHost is remote */
+	  if(subnetPseudoLocalHost(dstHost)) {
+	    incrementTrafficCounter(&srcHost->udpSentLoc, len);
+	    incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote2local, len);
+	  } else {
+	    incrementTrafficCounter(&srcHost->udpSentRem, len);
+	    incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
+	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote, len);
+	  }
+	}
 	break;
       }
 

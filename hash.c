@@ -99,7 +99,6 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
   This function is called when a host is freed. Therefore
   it is necessary to free all the (eventual) sessions of 
   such host.  
-
 */
 static void freeHostSessions(u_int hostIdx, int theDevice) {
   int i;
@@ -545,6 +544,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   u_int hostFound = 0;
   HashList *list = NULL;
 
+  /* traceEvent(TRACE_INFO, "getHostInfo(%s)", _intoa(*hostIpAddress, buf, sizeof(buf))); */
+
+
   if((hostIpAddress == NULL) && (ether_addr == NULL)) {
     traceEvent(TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
     return(NO_PEER);
@@ -811,6 +813,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(BROADCAST_HOST_FLAG, &el->flags);
 	if(isMulticastAddress(&el->hostIpAddress)) FD_SET(MULTICAST_HOST_FLAG, &el->flags);
 	if(isPrivateAddress(hostIpAddress))        FD_SET(PRIVATE_IP_ADDRESS,  &el->flags);
+	if((ether_addr == NULL) && (isPseudoLocalAddress(hostIpAddress)))
+	  FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
 
 	/* Trick to fill up the address cache */
 	if(myGlobals.numericFlag == 0)

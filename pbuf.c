@@ -407,8 +407,8 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 
 /* ************************************ */
 
-static void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
-                              TrafficCounter length, int actualDeviceId) {
+void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
+		       TrafficCounter length, int actualDeviceId) {
   unsigned short hourId;
   struct tm t, *thisTime;
 
