@@ -1175,7 +1175,10 @@ int processNtopConfigData (char *buf, int savePref)
     tmpPrefs.debugMode = tmpPrefs.daemonMode = tmpPrefs.w3c = 0;
     tmpPrefs.noInvalidLunDisplay = tmpPrefs.filterExpressionInExtraFrame = 0;
     tmpPrefs.numericFlag = tmpPrefs.mergeInterfaces = 0;
-    tmpPrefs.setNonBlocking = tmpPrefs.dontTrustMACaddr = 0;
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
+    tmpPrefs.setNonBlocking = 0;
+#endif
+    tmpPrefs.dontTrustMACaddr = 0;
     tmpPrefs.enableOtherPacketDump = tmpPrefs.enableSuspiciousPacketDump = 0;
     tmpPrefs.enableSessionHandling = 0;
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
@@ -1429,12 +1432,35 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 
 /* ***************************************************** */
 
+#ifdef WIN32
+char * rindex(const char *p, int ch); /* Prototype */
+
+char * rindex(const char *p, int ch) {
+  union {
+    const char *cp;
+    char *p;
+  } u;
+  char *save;
+  
+  u.cp = p;
+  for (save = NULL;; ++u.p) {
+    if (*u.p == ch)
+      save = u.p;
+    if (*u.p == '\0')
+      return(save);
+  }
+  /* NOTREACHED */
+}
+#endif
+
+/* ***************************************************** */
+
 void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 {
     char buf[1024], hostStr[MAXHOSTNAMELEN+16];
     bool action = FALSE, startCap = FALSE;
     int len;
-    UserPref defaults, *pref = &myGlobals.savedPref;
+    UserPref defaults, *pref;
 
     /*
      * Configuration is dealt with via POST method. So read the data first.
