@@ -314,6 +314,13 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
 
   purgeHostIdx(theDevice, host);
 
+  /* If this is one of the special ones, let's clear the other pointer to it
+   * to prevent a free of freed memory error later.
+   */
+  if (host == myGlobals.otherHostEntry)
+      myGlobals.otherHostEntry = NULL;
+  if (host == myGlobals.broadcastEntry)
+      myGlobals.broadcastEntry = NULL;
   /*
     Do not free the host pointer but add it to
     a list of 'ready to use' pointers.

@@ -865,7 +865,8 @@ RETSIGTYPE cleanup(int signo) {
   for(i=0; i<myGlobals.numDevices; i++) {
     freeHostInstances(i);
 
-    freeHostInfo(i, myGlobals.broadcastEntry, i);
+    if(myGlobals.broadcastEntry != NULL)
+      freeHostInfo(i, myGlobals.broadcastEntry, i);
     if(myGlobals.otherHostEntry != NULL)
       freeHostInfo(i, myGlobals.otherHostEntry, i);
   }
