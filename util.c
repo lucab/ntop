@@ -1316,7 +1316,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
   return(NULL);
 #else
   FILE *fd;
-  char line[512], *operatingSystem=NULL;
+  char line[384], *operatingSystem=NULL;
   static char staticOsName[96];
   int len, found=0, grabData=0, sockFd;
   fd_set mask;
@@ -1337,9 +1337,6 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 
   fd = sec_popen(line, "r");
   
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "%s\n", line);
-#endif
 #define OS_GUESS   "Remote operating system guess: "
 #define OS_GUESS_1 "Remote OS guesses: "
 #define OS_GUESS_2 "OS: "
@@ -1363,6 +1360,10 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 
     if((operatingSystem = fgets(line, sizeof(line)-1, fd)) == NULL)
       break;
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "'%s'\n", line);
+#endif
 
     if(strncmp(operatingSystem, OS_GUESS, strlen(OS_GUESS)) == 0) {
       operatingSystem = &operatingSystem[strlen(OS_GUESS)];
@@ -1404,21 +1405,6 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
     }
   }
 
-  /* Read remaining data (if any) */
-  while(1) {
-    FD_ZERO(&mask);
-    FD_SET(sockFd, &mask);
-
-    if(select(sockFd+1, &mask, 0, 0, &wait_time) == 0) {
-      break; /* Timeout */
-    }
-
-    if(fgets(line, 383, fd) == NULL)
-      break;
-    else printf("Garbage: '%s'\n",  line); 
-  }
-  pclose(fd);
-
   memset(staticOsName, 0, sizeof(staticOsName));
 
   if(found) {
@@ -1428,6 +1414,23 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
     len = strlen(operatingSystem);
     strncpy(staticOsName, operatingSystem, len-1);
   }
+
+  /* Read remaining data (if any) */
+  while(1) {
+    FD_ZERO(&mask);
+    FD_SET(sockFd, &mask);
+
+    if(select(sockFd+1, &mask, 0, 0, &wait_time) == 0) {
+      break; /* Timeout */
+    }
+
+    if(fgets(line, sizeof(line)-1, fd) == NULL)
+      break;
+#ifdef DEBUG
+    else printf("Garbage: '%s'\n",  line); 
+#endif
+  }
+  pclose(fd);
 
   return(staticOsName);
 #endif /* WIN32 */
