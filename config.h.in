@@ -111,9 +111,6 @@
 /* Define to 1 if you have the `fork' function. */
 #undef HAVE_FORK
 
-/* Enable GD */
-#undef HAVE_GD
-
 /* Show we found -lgdbm and set LIBS */
 #undef HAVE_GDBM
 
@@ -132,7 +129,7 @@
 /* Define to 1 if you have the <gdome.h> header file. */
 #undef HAVE_GDOME_H
 
-/* Show we found gd.h and set INCS */
+/* Define to 1 if you have the <gd.h> header file. */
 #undef HAVE_GD_H
 
 /* Define to 1 if you have the `gethostbyaddr' function. */
@@ -370,10 +367,7 @@
 /* Show we found pem.h and set INCS */
 #undef HAVE_PEM_H
 
-/* Enable libpng */
-#undef HAVE_PNG
-
-/* Show we found png.h and set INCS */
+/* Define to 1 if you have the <png.h> header file. */
 #undef HAVE_PNG_H
 
 /* Define to 1 if you have the <pthread.h> header file. */
@@ -603,10 +597,10 @@
 /* Define to 1 if you have the <xmlversion.h> header file. */
 #undef HAVE_XMLVERSION_H
 
-/* Enable compression - zlib */
+/* Enable zLib */
 #undef HAVE_ZLIB
 
-/* Show we found zlib.h and set INCS */
+/* Define to 1 if you have the <zlib.h> header file. */
 #undef HAVE_ZLIB_H
 
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
@@ -642,9 +636,6 @@
 
 /* XML Dump is available */
 #undef MAKE_WITH_XMLDUMP
-
-/* zlib is available */
-#undef MAKE_WITH_ZLIB
 
 /* Name of package */
 #undef PACKAGE
@@ -691,6 +682,9 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Define for XML */
+#undef XMLDUMP
 
 /* Define to 1 if type `char' is unsigned and you are not using gcc.  */
 #ifndef __CHAR_UNSIGNED__

@@ -22854,20 +22854,43 @@ echo "${ECHO_T}error, headers not found under ${OSSL_ROOT}" >&6
     fi
 fi
 
+if test ".${ac_disable_gdchart}" = ".no"; then
 
 LIBS="${LIBS} -L${GDCHART_DIRECTORY} -lgdchart -L${GD_DIRECTORY} -lgd -L${LIBPNG_DIRECTORY} -lpng -L${ZLIB_DIRECTORY} -lz"
 INCS="${INCS} -I${GDCHART_DIRECTORY} -I${GD_DIRECTORY} -I${LIBPNG_DIRECTORY} -I${ZLIB_DIRECTORY}"
 
-if test ! -d ../${GDCHART_DIRECTORY}; then
+if test ! -d ${GDCHART_DIRECTORY}; then
     echo
     echo "*******************************************************************"
     echo "*"
-    echo "* FATAL ERROR"
+    echo "* ERROR"
     echo "* Unable to locate the directory ../${GDCHART_DIRECTORY}"
+    echo "* Building without charts :-("
     echo "*"
     echo "*******************************************************************"
     echo
+    else
 
+cat >>confdefs.h <<_ACEOF
+#define HAVE_GDCHART 1
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_GDCHART_H 1
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_ZLIB 1
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define MAKE_WITH_GDCHART 1
+_ACEOF
+
+    fi
 fi
 
 

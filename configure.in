@@ -2174,20 +2174,27 @@ dnl> last test line and the various actions if true...
 fi
 
 dnl> GDChart:
+if test ".${ac_disable_gdchart}" = ".no"; then
 
 LIBS="${LIBS} -L${GDCHART_DIRECTORY} -lgdchart -L${GD_DIRECTORY} -lgd -L${LIBPNG_DIRECTORY} -lpng -L${ZLIB_DIRECTORY} -lz"
 INCS="${INCS} -I${GDCHART_DIRECTORY} -I${GD_DIRECTORY} -I${LIBPNG_DIRECTORY} -I${ZLIB_DIRECTORY}"	
 
-if test ! -d ../${GDCHART_DIRECTORY}; then
+if test ! -d ${GDCHART_DIRECTORY}; then
     echo
     echo "*******************************************************************"
     echo "*" 
-    echo "* FATAL ERROR" 
+    echo "* ERROR" 
     echo "* Unable to locate the directory ../${GDCHART_DIRECTORY}" 
+    echo "* Building without charts :-(" 
     echo "*" 
     echo "*******************************************************************"
     echo
-
+    else
+           AC_DEFINE_UNQUOTED([HAVE_GDCHART], 1,    [Enable GDChart])
+           AC_DEFINE_UNQUOTED(HAVE_GDCHART_H, 1,    [Show we found gdchart.h and set INCS])
+	   AC_DEFINE_UNQUOTED(HAVE_ZLIB, 1,         [Enable zLib])
+	   AC_DEFINE_UNQUOTED(MAKE_WITH_GDCHART, 1, [GDChart is available])
+    fi
 fi
 
 
