@@ -58,7 +58,7 @@ static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
 
 void allocateSecurityHostPkts(HostTraffic *srcHost) {
   if(srcHost->secHostPkts == NULL) {
-    if ( (srcHost->secHostPkts = (SecurityHostProbes*)malloc(sizeof(SecurityHostProbes))) == NULL) return;
+    if((srcHost->secHostPkts = (SecurityHostProbes*)malloc(sizeof(SecurityHostProbes))) == NULL) return;
     resetSecurityHostTraffic(srcHost);
   }
 }

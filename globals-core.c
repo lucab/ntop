@@ -314,7 +314,6 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   myGlobals.protoIPTrafficInfos = NULL;
   myGlobals.numIpProtosToMonitor = 0;
-  myGlobals.ipProtosList = NULL;
   myGlobals.ipPortMapper.numElements = 0;
   myGlobals.ipPortMapper.theMapper = NULL;
   myGlobals.ipPortMapper.numSlots = 0;

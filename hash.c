@@ -214,6 +214,11 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   /* ********** */
 
+#if 0
+  traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleting a hash_hostTraffic entry [%s/%s/%s][idx=%d]",
+	     host->ethAddressString, host->hostNumIpAddress, host->hostSymIpAddress, host->hostTrafficBucket);
+#endif
+
   /* Make sure this host is not part of the ipTrafficMatrixHosts list */
   if((myGlobals.device[actualDeviceId].ipTrafficMatrix != NULL)
      && isMatrixHost(host, actualDeviceId)) {
@@ -230,11 +235,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   freeHostSessions(host, actualDeviceId);
 
   myGlobals.device[actualDeviceId].hostsno--;
-
-#if 0
-  traceEvent(CONST_TRACE_INFO, "HOST_FREE_DEBUG: Deleted a hash_hostTraffic entry [%s/%s/%s]",
-	     host->ethAddressString, host->hostNumIpAddress, host->hostSymIpAddress);
-#endif
 
   if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
   if(host->unknownProtoSent   != NULL)  free(host->unknownProtoSent);
@@ -446,7 +446,7 @@ void purgeIdleHosts(int actDevice) {
   theFlaggedHosts = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
   memset(theFlaggedHosts, 0, maxHosts*sizeof(HostTraffic*));
 
-  purgeTime = startTime-PARM_HOST_PURGE_MINIMUM_IDLE; /* Time used to decide whether a host need to be purged */
+  purgeTime = startTime-30 /*PARM_HOST_PURGE_MINIMUM_IDLE <<== */; /* Time used to decide whether a host need to be purged */
 
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
@@ -464,14 +464,13 @@ void purgeIdleHosts(int actDevice) {
   hashSanityCheck();
 #endif
 
-#if 1 /* Test */
   for(idx=0; idx<myGlobals.device[actDevice].actualHashSize; idx++) {        
     if(el = myGlobals.device[actDevice].hash_hostTraffic[idx]) {
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
     
-    prev = el;
+    prev = NULL;
     
     while(el) {
       if((el->refCount == 0) && (el->lastSeen < purgeTime) && (!broadcastHost(el))) {
@@ -479,11 +478,11 @@ void purgeIdleHosts(int actDevice) {
 
 	next = el->next;
 
-	if(next && (el->hostTrafficBucket == next->hostTrafficBucket))
-	  prev->next = next;
+	if(prev != NULL)
+	  prev->next = next;      
 	else
-	  prev->next = NULL;
-      
+	  myGlobals.device[actDevice].hash_hostTraffic[idx] = next;
+
 	el = next;
       } else {
 	prev = el;
@@ -498,46 +497,6 @@ void purgeIdleHosts(int actDevice) {
 #endif
     }
   }
-#else
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
-#endif
-
-  for(el = getFirstHost(actDevice); el != NULL;) {
-    if(el == myGlobals.device[actDevice].hash_hostTraffic[el->hostTrafficBucket])
-      prev = NULL;
-
-    if((el->refCount == 0) && (el->lastSeen < purgeTime) && (!broadcastHost(el))) {
-      theFlaggedHosts[numHosts++] = el;
-      
-      next = getNextHost(actDevice, el);
-
-      if(prev == NULL) {	
-	if(next && (el->hostTrafficBucket == next->hostTrafficBucket))
-	  myGlobals.device[actDevice].hash_hostTraffic[el->hostTrafficBucket] = next;
-	else
-	  myGlobals.device[actDevice].hash_hostTraffic[el->hostTrafficBucket] = NULL;
-      } else {
-	if(next && (el->hostTrafficBucket == next->hostTrafficBucket))
-	  prev->next = next;
-	else
-	  prev->next = NULL;
-      }
-      
-      el = next;
-    } else {
-      prev = el; el = getNextHost(actDevice, el);
-    }
-
-    scannedHosts++;
-  }
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
-
-#endif
-
 
 #ifdef HASH_DEBUG
   hashSanityCheck();
