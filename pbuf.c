@@ -237,7 +237,7 @@ static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
 			      HostTraffic *receiver, HostAddr *dstAddr,
 			      int actualDeviceId) {
   if((sender == NULL) || (receiver == NULL) || (sender == receiver)) {
-    if ((sender != NULL) && (sender->l2Family == HOST_TRAFFIC_AF_FC) &&
+    if ((sender != NULL) && (sender->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
 	(strncasecmp (sender->hostNumFcAddress, FC_FAB_CTLR_ADDR,
 		      strlen (FC_FAB_CTLR_ADDR)) == 0)) {
       /* This is normal. Return without warning */
@@ -570,7 +570,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
            * addresses and so we must track this as an exception to the case of
            * S_ID == D_ID.
            */
-          if (srcHost->l2Family == HOST_TRAFFIC_AF_FC) {
+          if (srcHost->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
               if (strncasecmp (srcHost->hostNumFcAddress, FC_FAB_CTLR_ADDR,
                                strlen (FC_FAB_CTLR_ADDR)) != 0) {
                   return;

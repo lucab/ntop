@@ -1785,6 +1785,12 @@
 #define FLAG_NETFLOW_EXPORT_ENABLED         2
 
 /*
+ * Settings for Address Family
+ */
+#define FLAG_HOST_TRAFFIC_AF_ETH            0
+#define FLAG_HOST_TRAFFIC_AF_FC             1
+
+/*
  * SSLWATCHDOG stuff
  */
 #ifdef MAKE_WITH_SSLWATCHDOG

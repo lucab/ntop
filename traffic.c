@@ -543,7 +543,7 @@ unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
   char tmpBuf[80], *str;
   int c;
 
-    if (host->l2Family == HOST_TRAFFIC_AF_ETH) {
+    if (host->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) {
         if (host->hostIpAddress.hostFamily == AF_INET)
             hash = host->hostIp4Address.s_addr;
 #ifdef INET6

@@ -756,7 +756,7 @@ int getdomainname(char *name, size_t len);
 
 /* Bit test macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &(a->flags))
-#define isFcHost(a)                 (a->l2Family == HOST_TRAFFIC_AF_FC)
+#define isFcHost(a)                 (a->l2Family == FLAG_HOST_TRAFFIC_AF_FC)
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(FLAG_SUBNET_LOCALHOST, &(a->flags)))
 #define privateIPAddress(a)         ((a != NULL) && FD_ISSET(FLAG_PRIVATE_IP_ADDRESS, &(a->flags)))
 #define broadcastHost(a)            ((a != NULL) && (!isFcHost (a)) && ((cmpSerial(&a->hostSerial, &myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))) || ((a->hostIp4Address.s_addr == 0) && (a->ethAddressString[0] == '\0'))))

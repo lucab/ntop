@@ -548,7 +548,7 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
   accessAddrResMutex("getHostName");
   tmpStr = el->hostSymIpAddress;
 
-  if (el->l2Family == HOST_TRAFFIC_AF_FC) {
+  if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
       if (el->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
           if (el->hostSymFcAddress[0] != '\0') {
               strncpy (buf, el->hostSymFcAddress, MAX_LEN_SYM_HOST_NAME);

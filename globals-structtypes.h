@@ -702,8 +702,6 @@ typedef struct fcNameServerCache {
 #define hostIp4Address hostIpAddress.Ip4Address
 #define hostIp6Address hostIpAddress.Ip6Address
 
-#define HOST_TRAFFIC_AF_ETH 0
-#define HOST_TRAFFIC_AF_FC  1
 
 /* Host Traffic */
 typedef struct hostTraffic {

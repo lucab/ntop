@@ -171,7 +171,7 @@ u_int hashFcHost (FcAddress *fcaddr, u_short vsanId, HostTraffic **el,
 static void freeHostSessions(HostTraffic *host, int theDevice) {
   int i;
 
-  if(host->l2Family == HOST_TRAFFIC_AF_ETH) {
+  if(host->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) {
       for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
           IPSession *prevSession, *nextSession, *theSession;
 
@@ -368,7 +368,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     
   freeHostSessions(host, actualDeviceId);
 
-  if(host->l2Family == HOST_TRAFFIC_AF_FC) {
+  if(host->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
       for (i = 0; i < MAX_LUNS_SUPPORTED; i++) {
           if(host->activeLuns[i] != NULL) {
               free (host->activeLuns[i]);
@@ -680,11 +680,11 @@ void purgeIdleHosts(int actDevice) {
 	       || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
 	   && (!broadcastHost(el))
 	   && ((!myGlobals.stickyHosts)
-	       || ((el->l2Family == HOST_TRAFFIC_AF_ETH) &&
+	       || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
                    ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
                     || (!subnetPseudoLocalHost(el))))      /* Purge remote
                                                             * hosts only */
-               || ((el->l2Family == HOST_TRAFFIC_AF_FC) &&
+               || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
                    (el->hostNumFcAddress[0] == '\0')))
             ) {
 	  /* Host selected for deletion */
@@ -1260,7 +1260,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
         
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
-    el->l2Family = HOST_TRAFFIC_AF_FC;
+    el->l2Family = FLAG_HOST_TRAFFIC_AF_FC;
     el->devType = SCSI_DEV_UNINIT;
     el->magic = CONST_MAGIC_NUMBER;
     el->hostTrafficBucket = idx;
