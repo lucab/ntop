@@ -167,7 +167,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
 #ifdef MULTITHREADED
     if (myGlobals.capturePackets == 1 /* i.e. active, not cleanup */ ) {
-        if ((i+1) & MUTEX_FHS_MASK == 0) {
+        if (((i+1) & MUTEX_FHS_MASK) == 0) {
            releaseMutex(&myGlobals.tcpSessionsMutex);
 #ifdef HAVE_SCHED_H
            sched_yield(); /* Allow other threads to run */
@@ -179,7 +179,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
 #ifdef MULTITHREADED
   /* Final free (unless we end on the count...) */
-  if (i & MUTEX_FHS_MASK != 0) {
+  if ( ((i & MUTEX_FHS_MASK) != 0) || (myGlobals.tcpSessionsMutex.isLocked) ) {
       releaseMutex(&myGlobals.tcpSessionsMutex);
   }
 #endif
@@ -321,7 +321,15 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     host->tcpSessionList = host->udpSessionList = NULL;
 
 
+    HEARTBEAT(1, "freeHostInfo() calling freeHostSessions(), mutex: [%s %s:%d]",   
+                 myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
+                 myGlobals.tcpSessionsMutex.lockFile,
+                 myGlobals.tcpSessionsMutex.lockLine);
     freeHostSessions(host->hostTrafficBucket, actualDeviceId);
+    HEARTBEAT(1, "freeHostInfo() returned from freeHostSessions(), mutex: [%s %s:%d]",   
+                 myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
+                 myGlobals.tcpSessionsMutex.lockFile,
+                 myGlobals.tcpSessionsMutex.lockLine);
   }
 
   if(myGlobals.enablePacketDecoding && (host->protocolInfo != NULL)) {
@@ -442,7 +450,15 @@ void freeHostInstances(int actualDeviceId) {
     for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
       if(myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL) {
 	num++;
+        HEARTBEAT(1, "freeHostInstances() calling freeHostInfo(), mutex: [%s %s:%d]",   
+                     myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
+                     myGlobals.tcpSessionsMutex.lockFile,
+                     myGlobals.tcpSessionsMutex.lockLine);
 	freeHostInfo(actualDeviceId, myGlobals.device[actualDeviceId].hash_hostTraffic[idx], actualDeviceId);
+        HEARTBEAT(1, "freeHostInstances() returned from freeHostInfo(), mutex: [%s %s:%d]",   
+                     myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
+                     myGlobals.tcpSessionsMutex.lockFile,
+                     myGlobals.tcpSessionsMutex.lockLine);
 	myGlobals.device[actualDeviceId].hash_hostTraffic[idx] = NULL;
 #ifdef HAVE_SCHED_H
 	sched_yield(); /* Allow other threads to run */
@@ -595,7 +611,15 @@ void purgeIdleHosts(int actDevice) {
 	                   idx, theFlaggedHosts[idx]->hostSymIpAddress);
 #endif
 
+    HEARTBEAT(1, "purgeIdleHosts() calling freeHostInfo(), mutex: [%s %s:%d]",   
+                 myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
+                 myGlobals.tcpSessionsMutex.lockFile,
+                 myGlobals.tcpSessionsMutex.lockLine);
     freeHostInfo(actDevice, theFlaggedHosts[idx], actDevice);
+    HEARTBEAT(1, "purgeIdleHosts() returning freeHostInfo(), mutex: [%s %s:%d]",   
+                 myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
+                 myGlobals.tcpSessionsMutex.lockFile,
+                 myGlobals.tcpSessionsMutex.lockLine);
     numFreedBuckets++;
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads to run */
