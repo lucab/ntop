@@ -12,7 +12,8 @@
 
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-# auto makefile for the ntop's plugins.
+# auto makefile for the ntop plugins.
+# (this file is processed with 'automake' to produce Makefile.in)
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # Luca Deri     <deri@ntop.org>
@@ -95,7 +96,6 @@ CFLAGS = @CFLAGS@
 CONFIGFILE_DIR = @CONFIGFILE_DIR@
 CORELIBS = @CORELIBS@
 CPP = @CPP@
-CXX = @CXX@
 DATAFILE_DIR = @DATAFILE_DIR@
 DBFILE_DIR = @DBFILE_DIR@
 DLLTOOL = @DLLTOOL@
@@ -118,7 +118,7 @@ PACKAGE = @PACKAGE@
 PLUGINS = @PLUGINS@
 PLUGIN_DIR = @PLUGIN_DIR@
 RANLIB = @RANLIB@
-REMOTEINTERFACE = @REMOTEINTERFACE@
+RUN_DIR = @RUN_DIR@
 SNMPLIBS = @SNMPLIBS@
 VERSION = @VERSION@
 
@@ -140,14 +140,11 @@ INCLUDES = -I.. @INCS@
 #
 # The meat for ntop
 #
-noinst_PROGRAMS = arpPlugin.so icmpPlugin.so lastSeenPlugin.so                   nfsPlugin.so remoteInterface.so 		  rmonPlugin.so wapPlugin.so
+noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so                   nfsPlugin.so 		  rmonPlugin.so wapPlugin.so
 
 
-lib_LTLIBRARIES = libarpPlugin.la libicmpPlugin.la liblastSeenPlugin.la                   libnfsPlugin.la libremoteInterface.la 		  librmonPlugin.la libwapPlugin.la
+lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la                   libnfsPlugin.la 		  librmonPlugin.la libwapPlugin.la
 
-
-libarpPlugin_la_SOURCES = arpPlugin.c
-libarpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
@@ -161,9 +158,6 @@ libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
 librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@
 
-libremoteInterface_la_SOURCES = remoteInterface.c remoteInterface.h
-libremoteInterface_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
-
 libwapPlugin_la_SOURCES = wapPlugin.c
 libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -174,27 +168,18 @@ LTLIBRARIES =  $(lib_LTLIBRARIES)
 
 DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
-libarpPlugin_la_LIBADD = 
-libarpPlugin_la_OBJECTS =  arpPlugin.lo
 libicmpPlugin_la_LIBADD = 
 libicmpPlugin_la_OBJECTS =  icmpPlugin.lo
 liblastSeenPlugin_la_LIBADD = 
 liblastSeenPlugin_la_OBJECTS =  lastSeenPlugin.lo
 libnfsPlugin_la_LIBADD = 
 libnfsPlugin_la_OBJECTS =  nfsPlugin.lo
-libremoteInterface_la_LIBADD = 
-libremoteInterface_la_OBJECTS =  remoteInterface.lo
 librmonPlugin_la_LIBADD = 
 librmonPlugin_la_OBJECTS =  rmonPlugin.lo
 libwapPlugin_la_LIBADD = 
 libwapPlugin_la_OBJECTS =  wapPlugin.lo
 PROGRAMS =  $(noinst_PROGRAMS)
 
-arpPlugin_so_SOURCES = arpPlugin.so.c
-arpPlugin_so_OBJECTS =  arpPlugin.so.o
-arpPlugin_so_LDADD = $(LDADD)
-arpPlugin_so_DEPENDENCIES = 
-arpPlugin_so_LDFLAGS = 
 icmpPlugin_so_SOURCES = icmpPlugin.so.c
 icmpPlugin_so_OBJECTS =  icmpPlugin.so.o
 icmpPlugin_so_LDADD = $(LDADD)
@@ -210,11 +195,6 @@ nfsPlugin_so_OBJECTS =  nfsPlugin.so.o
 nfsPlugin_so_LDADD = $(LDADD)
 nfsPlugin_so_DEPENDENCIES = 
 nfsPlugin_so_LDFLAGS = 
-remoteInterface_so_SOURCES = remoteInterface.so.c
-remoteInterface_so_OBJECTS =  remoteInterface.so.o
-remoteInterface_so_LDADD = $(LDADD)
-remoteInterface_so_DEPENDENCIES = 
-remoteInterface_so_LDFLAGS = 
 rmonPlugin_so_SOURCES = rmonPlugin.so.c
 rmonPlugin_so_OBJECTS =  rmonPlugin.so.o
 rmonPlugin_so_LDADD = $(LDADD)
@@ -234,13 +214,12 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP_ENV = --best
-DEP_FILES =  .deps/arpPlugin.P .deps/arpPlugin.so.P .deps/icmpPlugin.P \
-.deps/icmpPlugin.so.P .deps/lastSeenPlugin.P .deps/lastSeenPlugin.so.P \
-.deps/nfsPlugin.P .deps/nfsPlugin.so.P .deps/remoteInterface.P \
-.deps/remoteInterface.so.P .deps/rmonPlugin.P .deps/rmonPlugin.so.P \
+DEP_FILES =  .deps/icmpPlugin.P .deps/icmpPlugin.so.P \
+.deps/lastSeenPlugin.P .deps/lastSeenPlugin.so.P .deps/nfsPlugin.P \
+.deps/nfsPlugin.so.P .deps/rmonPlugin.P .deps/rmonPlugin.so.P \
 .deps/wapPlugin.P .deps/wapPlugin.so.P
-SOURCES = $(libarpPlugin_la_SOURCES) $(libicmpPlugin_la_SOURCES) $(liblastSeenPlugin_la_SOURCES) $(libnfsPlugin_la_SOURCES) $(libremoteInterface_la_SOURCES) $(librmonPlugin_la_SOURCES) $(libwapPlugin_la_SOURCES) arpPlugin.so.c icmpPlugin.so.c lastSeenPlugin.so.c nfsPlugin.so.c remoteInterface.so.c rmonPlugin.so.c wapPlugin.so.c
-OBJECTS = $(libarpPlugin_la_OBJECTS) $(libicmpPlugin_la_OBJECTS) $(liblastSeenPlugin_la_OBJECTS) $(libnfsPlugin_la_OBJECTS) $(libremoteInterface_la_OBJECTS) $(librmonPlugin_la_OBJECTS) $(libwapPlugin_la_OBJECTS) arpPlugin.so.o icmpPlugin.so.o lastSeenPlugin.so.o nfsPlugin.so.o remoteInterface.so.o rmonPlugin.so.o wapPlugin.so.o
+SOURCES = $(libicmpPlugin_la_SOURCES) $(liblastSeenPlugin_la_SOURCES) $(libnfsPlugin_la_SOURCES) $(librmonPlugin_la_SOURCES) $(libwapPlugin_la_SOURCES) icmpPlugin.so.c lastSeenPlugin.so.c nfsPlugin.so.c rmonPlugin.so.c wapPlugin.so.c
+OBJECTS = $(libicmpPlugin_la_OBJECTS) $(liblastSeenPlugin_la_OBJECTS) $(libnfsPlugin_la_OBJECTS) $(librmonPlugin_la_OBJECTS) $(libwapPlugin_la_OBJECTS) icmpPlugin.so.o lastSeenPlugin.so.o nfsPlugin.so.o rmonPlugin.so.o wapPlugin.so.o
 
 all: all-redirect
 .SUFFIXES:
@@ -310,9 +289,6 @@ distclean-libtool:
 
 maintainer-clean-libtool:
 
-libarpPlugin.la: $(libarpPlugin_la_OBJECTS) $(libarpPlugin_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libarpPlugin_la_LDFLAGS) $(libarpPlugin_la_OBJECTS) $(libarpPlugin_la_LIBADD) $(LIBS)
-
 libicmpPlugin.la: $(libicmpPlugin_la_OBJECTS) $(libicmpPlugin_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libicmpPlugin_la_LDFLAGS) $(libicmpPlugin_la_OBJECTS) $(libicmpPlugin_la_LIBADD) $(LIBS)
 
@@ -321,9 +297,6 @@ liblastSeenPlugin.la: $(liblastSeenPlugin_la_OBJECTS) $(liblastSeenPlugin_la_DEP
 
 libnfsPlugin.la: $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(libnfsPlugin_la_LDFLAGS) $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_LIBADD) $(LIBS)
-
-libremoteInterface.la: $(libremoteInterface_la_OBJECTS) $(libremoteInterface_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libremoteInterface_la_LDFLAGS) $(libremoteInterface_la_OBJECTS) $(libremoteInterface_la_LIBADD) $(LIBS)
 
 librmonPlugin.la: $(librmonPlugin_la_OBJECTS) $(librmonPlugin_la_DEPENDENCIES)
 	$(LINK) -rpath $(libdir) $(librmonPlugin_la_LDFLAGS) $(librmonPlugin_la_OBJECTS) $(librmonPlugin_la_LIBADD) $(LIBS)
@@ -587,9 +560,6 @@ maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 # by default ntop looks for plugins in the plugins/ subdirectory
 #
 
-arpPlugin.so: .libs/libarpPlugin.so
-	@ln -s .libs/libarpPlugin.so arpPlugin.so
-
 icmpPlugin.so: .libs/libicmpPlugin.so
 	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
 
@@ -598,9 +568,6 @@ lastSeenPlugin.so: .libs/liblastSeenPlugin.so
 
 nfsPlugin.so: .libs/libnfsPlugin.so
 	@ln -s .libs/libnfsPlugin.so nfsPlugin.so
-
-remoteInterface.so: .libs/libremoteInterface.so
-	@ln -s .libs/libremoteInterface.so remoteInterface.so
 
 rmonPlugin.so: .libs/librmonPlugin.so
 	@ln -s .libs/librmonPlugin.so rmonPlugin.so

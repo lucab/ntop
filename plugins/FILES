@@ -1,7 +1,6 @@
 plugins
 plugins/Makefile.am
 plugins/Makefile.in
-plugins/arpPlugin.c
 plugins/icmpPlugin.c
 plugins/lastSeenPlugin.c
 plugins/nfsPlugin.c

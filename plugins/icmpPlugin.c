@@ -929,7 +929,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
 #ifdef HAVE_GDCHART
   if(hostIpAddress.s_addr == 0)
-    sendString("<br><IMG SRC=/plugins/icmpWatch?chart><p>\n");
+    sendString("<BR><CENTER><IMG SRC=\"/plugins/icmpWatch?chart\"></CENTER><P>\n");
 #endif
 
   if(icmpId != -1) {

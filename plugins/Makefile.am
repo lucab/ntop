@@ -1,7 +1,7 @@
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-# auto makefile for the ntop's plugins.
-## (this file is processed with 'automake' to produce Makefile.in)
+# auto makefile for the ntop plugins.
+# (this file is processed with 'automake' to produce Makefile.in)
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # Luca Deri     <deri@ntop.org>
@@ -42,16 +42,13 @@ INCLUDES = -I.. @INCS@
 #
 # The meat for ntop
 #
-noinst_PROGRAMS = arpPlugin.so icmpPlugin.so lastSeenPlugin.so \
+noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so \
                   nfsPlugin.so \
 		  rmonPlugin.so wapPlugin.so
 
-lib_LTLIBRARIES = libarpPlugin.la libicmpPlugin.la liblastSeenPlugin.la \
+lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
                   libnfsPlugin.la \
 		  librmonPlugin.la libwapPlugin.la
-
-libarpPlugin_la_SOURCES = arpPlugin.c
-libarpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
@@ -73,9 +70,6 @@ libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@
 # Dependencies to allow ntop loading plugins on-place
 # by default ntop looks for plugins in the plugins/ subdirectory
 #
-
-arpPlugin.so: .libs/libarpPlugin.so
-	@ln -s .libs/libarpPlugin.so arpPlugin.so
 
 icmpPlugin.so: .libs/libicmpPlugin.so
 	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
