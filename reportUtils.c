@@ -4493,8 +4493,6 @@ static void printLocalHostsCharacterization(void) {
 
 /* ******************************** */
 
-#define MAX_NUM_OS           256
-
 void printLocalHostsStats(void) {
   u_int idx, numEntries=0, maxHosts;
   HostTraffic *el, **tmpTable;

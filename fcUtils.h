@@ -177,16 +177,6 @@
 #define FC_SWILS_UFC            0x26
 #define FC_SWILS_ESC            0x30
 
-#define MAX_FC_DOMAINS          240
-
-#define DEFAULT_VSAN            1
-#define MAX_USER_VSAN           1001
-#define MAX_VSANS_GRAPHED       10
-#define MAX_VSANS               4095
-
-#define MAX_FC_PROTOCOL_NAME    12
-#define MAX_FC_PROTOCOLS        6
-
 #define FC_HDR_SIZE             24
 
 /* SW_RSCN fields */
@@ -195,9 +185,6 @@
 
 #define FC_SW_RSCN_PORT_ONLINE   0x10
 #define FC_SW_RSCN_PORT_OFFLINE  0x20
-
-/* FC Alias Size */
-#define FC_ALIAS_SIZE            64
 
 #define CMP_FC_PORT(a,b) \
         if ((a->hostFcAddress.domain == 0xFF) ||                                        \

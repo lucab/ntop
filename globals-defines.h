@@ -659,6 +659,23 @@
 #define CONST_COLOR_1                       "#CCCCFF"
 #define CONST_COLOR_2                       "#FFCCCC"
 
+/*
+ * This is the minimum percentage of a slice in many of the pie graphs
+ * Anything smaller is just dropped.  If you don't like your pies, change it.
+ *  0.1 % is 1 part in 1000.  0.5 or 1.0 might be better choices.
+ */
+#define MIN_SLICE_PERCENTAGE               0.1
+
+/*
+ * This is the size if the box to draw the legends in
+ */
+#define CONST_LEGEND_BOX_SIZE               7
+
+/*
+ * Max number of OS entries in the report
+ */
+#define MAX_NUM_OS                         256
+
 #ifdef MEMORY_DEBUG
 #define MAX_PER_DEVICE_HASH_LIST           256
 #else
@@ -1024,6 +1041,39 @@
  * How many dummy files to create for the HAVE_FILEDESCRIPTORBUG fix
  */
 #define CONST_FILEDESCRIPTORBUG_COUNT       3
+
+/*
+ * FibreChannel/SCSI constants
+ */
+
+/*
+ * This is the maximum number of FibreChannel domains to report on at once.
+ */
+#define MAX_FC_DOMAINS                      240
+
+/*
+ * This is the maximum number of FibreChannel domains to graph at once.
+ */
+#define MAX_VSANS_GRAPHED       10
+
+/*
+ * This is the default Vsan # to use if there isn't a specific value.
+ * AFAIK, this constant sets something in myGlobals but that isn't used
+ * at present.  1 is a common value for switches and such.
+ */
+#define DEFAULT_VSAN                        1
+
+/*
+ * VSANs below this are visible in many ntop reports, values above this
+ * are not.  I think it's a Cisco ism, so if you have other equipment and
+ * are missing data, try changing this.
+ */
+#define MAX_USER_VSAN           1001
+
+/*
+ * Theoretical maximum number of VSANs
+ */
+#define MAX_VSANS               4095
 
 /*
  * These are the constants used by the ntop web server to match requests and
@@ -1746,6 +1796,16 @@
  #define FLAG_SSLWATCHDOG_RETURN_LOCKED     1
  #define FLAG_SSLWATCHDOG_ENTER_LOCKED      2
 #endif
+
+/*
+ * FibreChannel
+ */
+#define FLAG_FC_NS_CASE_VSAN                0
+#define FLAG_FC_NS_CASE_FCID                1
+#define FLAG_FC_NS_CASE_PWWN                2
+#define FLAG_FC_NS_CASE_NWWN                3
+#define FLAG_FC_NS_CASE_ALIAS               4
+#define FLAG_FC_NS_CASE_TGTTYPE             5
 
 /*
  * emitter.c language flags

@@ -100,9 +100,6 @@ char* gdVersionGuess(void) {
 
 /* ************************************************** */
 
-#define MIN_SLICE_PERCENTAGE 0.1 /* % */
-#define BOX_SIZE               7
-
 static void drawLegend(gdImagePtr im,
 		       short width,
 		       short height,
@@ -126,13 +123,15 @@ static void drawLegend(gdImagePtr im,
 #endif
 
   for(i=0; i<num_points; i++) {
-    gdImageFilledRectangle(im, edge_x, edge_y, edge_x+BOX_SIZE, edge_y+BOX_SIZE, colors[i]);
-    gdImageRectangle(im, edge_x-1, edge_y-1, edge_x+BOX_SIZE+1, edge_y+BOX_SIZE+1, labelColor);
+    gdImageFilledRectangle(im, edge_x, edge_y, edge_x+CONST_LEGEND_BOX_SIZE, 
+                           edge_y+CONST_LEGEND_BOX_SIZE, colors[i]);
+    gdImageRectangle(im, edge_x-1, edge_y-1, edge_x+CONST_LEGEND_BOX_SIZE+1,
+                     edge_y+CONST_LEGEND_BOX_SIZE+1, labelColor);
 #ifdef SHOW_PERCENTAGE
     snprintf(str, sizeof(str), "%s(%.1f%%)", labels[i], (data[i]*100)/total);
-    gdImageString(im, gdFontSmall, edge_x+BOX_SIZE+5, edge_y-5, str, labelColor);
+    gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-5, str, labelColor);
 #else
-    gdImageString(im, gdFontSmall, edge_x+BOX_SIZE+5, edge_y-3, labels[i], labelColor);
+    gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-3, labels[i], labelColor);
 #endif
     edge_y += gdFontSmall->h*1.5;
   }

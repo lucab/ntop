@@ -927,8 +927,6 @@ static int parseOptions(int argc, char* argv []) {
 
 /* ************************************ */
 
-#define MAX_NUM_OPTIONS 64
-
 /* That's the meat */
 #ifdef WIN32
 int ntop_main(int argc, char *argv[]) {

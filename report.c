@@ -1790,15 +1790,13 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
 /* ******************************* */
 
-#define NUM_ANCHORS 10
-
 void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
   u_int idx, numEntries=0, maxHosts;
   int printedEntries=0;
   unsigned short maxBandwidthUsage=1 /* avoid divisions by zero */;
   HostTraffic *el;
   HostTraffic** tmpTable;
-  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[NUM_ANCHORS+1], *theAnchor[NUM_ANCHORS+1], osBuf[128];
+  char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[11], *theAnchor[11], osBuf[128];
   char htmlAnchor[64], htmlAnchor1[64];
   char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
 
@@ -1857,7 +1855,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=\"/%s?col=", CONST_HOSTS_INFO_HTML) < 0)
       BufferTooShort();
 
-    for(i=1; i<=NUM_ANCHORS; i++) {
+    for(i=1; i<=10; i++) {
       if(abs(myGlobals.columnSort) == i) {
 	arrow[i] = arrowGif;
 	theAnchor[i] = htmlAnchor;

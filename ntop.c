@@ -1092,13 +1092,6 @@ RETSIGTYPE cleanup(int signo) {
 
 /* **************************************** */
 
-#define FC_NS_CASE_VSAN    0
-#define FC_NS_CASE_FCID    1
-#define FC_NS_CASE_PWWN    2
-#define FC_NS_CASE_NWWN    3
-#define FC_NS_CASE_ALIAS   4
-#define FC_NS_CASE_TGTTYPE 5
-
 void processFcNSCacheFile(char *filename) {
     char *token, *bufptr, *strtokState;
     FcNameServerCacheEntry *entry;
@@ -1106,7 +1099,7 @@ void processFcNSCacheFile(char *filename) {
     FcAddress fcid;
     u_int32_t vsanId, domain, area, port, tgtType, i, j;
     wwn_t pWWN, nWWN;
-    char alias[FC_ALIAS_SIZE];
+    char alias[MAX_LEN_SYM_HOST_NAME];
     FILE *fd;
     int id, hashIdx = 0, entryFound, hex;
     char buffer[256];
@@ -1155,7 +1148,7 @@ void processFcNSCacheFile(char *filename) {
         while (token != NULL) {
             if (token[0]  != '\0') {
                 switch (id) {
-                case FC_NS_CASE_VSAN:
+                case FLAG_FC_NS_CASE_VSAN:
                     if (isxdigit (*token)) {
                         sscanf (token, "%d", &vsanId);
                     }
@@ -1165,7 +1158,7 @@ void processFcNSCacheFile(char *filename) {
                         continue;
                     }
                     break;
-                case FC_NS_CASE_FCID:
+                case FLAG_FC_NS_CASE_FCID:
                     if (isxdigit (*token)) {
                         if (sscanf (token, "%02hx.%02hx.%02hx", &domain, &area, &port) == 3) {
                             fcid.domain = domain;
@@ -1184,24 +1177,24 @@ void processFcNSCacheFile(char *filename) {
                         continue;
                     }
                     break;
-                case FC_NS_CASE_PWWN:
+                case FLAG_FC_NS_CASE_PWWN:
                     for (i = 0, j = 0; i < LEN_WWN_ADDRESS; i++) {
                         sscanf (&token[j], "%02x:", &hex);
                         pWWN.str[i] = (char)hex;
                         j += 3;
                     }
                     break;
-                case FC_NS_CASE_NWWN:
+                case FLAG_FC_NS_CASE_NWWN:
                     for (i = 0, j = 0; i < LEN_WWN_ADDRESS; i++) {
                         sscanf (&token[j], "%02x:", &hex);
                         nWWN.str[i] = (char)hex;
                         j += 3;
                     }
                     break;
-                case FC_NS_CASE_ALIAS:
+                case FLAG_FC_NS_CASE_ALIAS:
                     sscanf (token, "%63s", alias);
                     break;
-                case FC_NS_CASE_TGTTYPE:
+                case FLAG_FC_NS_CASE_TGTTYPE:
                     if (isxdigit (*token)) {
                         sscanf (token, "%d", &tgtType);
                     }
@@ -1221,7 +1214,7 @@ void processFcNSCacheFile(char *filename) {
         }
 
         /* Validate inputs */
-        if (id < FC_NS_CASE_NWWN) {
+        if (id < FLAG_FC_NS_CASE_NWWN) {
             continue;
         }
 
