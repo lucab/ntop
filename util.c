@@ -287,11 +287,15 @@ unsigned short isBroadcastAddress(struct in_addr *addr) {
     for(i=0; i<numDevices; i++)
       if(device[i].netmask.s_addr == 0xFFFFFFFF) /* PPP */
 	return 0;
-      else if(((addr->s_addr | device[i].netmask.s_addr) == 0xFFFFFFFF)
+      else if(((addr->s_addr | device[i].netmask.s_addr) ==  addr->s_addr)
 	      || ((addr->s_addr & 0x000000FF) == 0x000000FF)
 	      || ((addr->s_addr & 0x000000FF) == 0x00000000) /* Network address */
-	      )
+	      ) {
+#ifdef DEBUG
+	traceEvent(TRACE_INFO, "%s is a broadcast address", intoa(*addr));
+#endif
 	return 1;
+      }
 
     return(isPseudoBroadcastAddress(addr));
   }
@@ -332,6 +336,21 @@ unsigned short isLocalAddress(struct in_addr *addr) {
 #endif
   /* Broadcast is considered a local address */
   return(isBroadcastAddress(addr));
+}
+
+/* ********************************* */
+
+unsigned short isPrivateAddress(struct in_addr *addr) {
+
+  /* See http://www.isi.edu/in-notes/rfc1918.txt */
+
+  if(((addr->s_addr & 0xFF000000) == 0x0A000000) /* 10/24      */
+     || ((addr->s_addr & 0xFFFF0000) == 0x7F160000) /* 172.22/16  */
+     || ((addr->s_addr & 0xFFFF0000) == 0xC0A80000) /* 192.168/16 */
+     )
+    return(1);
+  else
+    return(0);
 }
 
 /* **********************************************
@@ -2205,34 +2224,45 @@ char *strtok_r(char *s, const char *delim, char **save_ptr) {
 
 int getSniffedDNSName(char *hostNumIpAddress, 
 		      char *name, int maxNameLen) {
-  int found=0;
+  int found = 0;
   
-  name[0]=0;
+  name[0] = 0;
+
 #ifdef HAVE_GDBM_H
-  if(hostNumIpAddress[0] != '\0' && gdbm_file) {
+  if((hostNumIpAddress[0] != '\0') && gdbm_file) {
     datum key;
     datum data;
 
-    key.dptr=hostNumIpAddress;
-    key.dsize=strlen(key.dptr)+1;
+    key.dptr = hostNumIpAddress;
+    key.dsize = strlen(key.dptr)+1;
 
 #ifdef MULTITHREADED
     accessMutex(&gdbmMutex, "getSniffedDNSName");
 #endif
-    data=gdbm_fetch(gdbm_file, key);
+    data = gdbm_fetch(gdbm_file, key);
 #ifdef MULTITHREADED
     releaseMutex(&gdbmMutex);
 #endif
 
     if(data.dptr) {
+      int i;
+      
       strncpy(name, data.dptr, maxNameLen-1);
-      name[maxNameLen-1]=0;
+      name[maxNameLen-1] = 0;
+
+      if((maxNameLen > 5) &&
+	 (strcmp(&name[strlen(name)-5], ".arpa") == 0))
+	return(0); /* Do not return XXXX.in-addr.arpa */
+
+      for(i=0; i<maxNameLen; i++)
+	name[i] = tolower(name[i]);
+
       free(data.dptr);
-      found=1;
+      found = 1;
     }
   }
 #endif
-  return found;
+  return(found);
 }
  
 /* *************************************** */
@@ -2248,7 +2278,7 @@ int strOnlyDigits(const char *s) {
     s++;
   }
 
-  return 1;
+  return(1);
 }
 
 /* ****************************************************** */

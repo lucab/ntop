@@ -49,7 +49,7 @@ static u_char threadsInitialized = 0;
 
 void initIPServices(void) {
   FILE* fd;
-  int idx, i, numSlots, len;
+  int idx, numSlots, len;
 
   traceEvent(TRACE_INFO, "Initializing IP services...");
 
@@ -619,7 +619,8 @@ void initDevices(char* devices) {
   char *tmpDev;
 #ifdef WIN32
   char *ifName, intNames[32][256];
-  int ifIdx = 0, defaultIdx = -1;
+  int ifIdx = 0;
+  int defaultIdx = -1;
 #endif
 
   traceEvent(TRACE_INFO, "Initializing network devices...");
@@ -643,7 +644,8 @@ void initDevices(char* devices) {
   ifName = tmpDev;
 
   if(!isWinNT()) {
-    for(i=0;; i++) {
+	 
+	 for(i=0;; i++) {
       if(tmpDev[i] == 0) {
 	if(ifName[0] == '\0')
 	  break;
@@ -672,18 +674,20 @@ void initDevices(char* devices) {
     static char tmpString[128];
     int i, j;
 
-    while(tmpDev[0] != '\0') {
-      for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
-	if(tmpDev[i] != 0)
-	  tmpString[j++] = tmpDev[i];
-      }
+      while(tmpDev[0] != '\0') {
+		for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
+		 if(tmpDev[i] != 0)
+		  tmpString[j++] = tmpDev[i];
+		 }
 
       tmpString[j++] = 0;
       traceEvent(TRACE_INFO, "Found interface [index=%d] '%s'", ifIdx, tmpString);
       tmpDev = &tmpDev[i+3];
       strcpy(intNames[ifIdx++], tmpString);
-    }
-
+	  defaultIdx = 0;
+	}
+	  if(defaultIdx != -1)
+		tmpDev = intNames[defaultIdx]; /* Default */
   }
 #endif
 

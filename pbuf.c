@@ -284,6 +284,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
 	  FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
 
+	  if(isPrivateAddress(hostIpAddress)) FD_SET(PRIVATE_IP_ADDRESS, &el->flags);
+
 	  if(!isBroadcastAddress(hostIpAddress)) {
 	    if(isPseudoLocalAddress(hostIpAddress))
 	      FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
@@ -314,10 +316,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  strncpy(el->hostNumIpAddress,
 		  _intoa(*hostIpAddress, buf, sizeof(buf)),
 		  sizeof(el->hostNumIpAddress));
-	  if(isBroadcastAddress(&el->hostIpAddress))
-	    FD_SET(BROADCAST_HOST_FLAG, &el->flags);
-	  if(isMulticastAddress(&el->hostIpAddress))
-	    FD_SET(MULTICAST_HOST_FLAG, &el->flags);
+	  if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(BROADCAST_HOST_FLAG, &el->flags);
+	  if(isMulticastAddress(&el->hostIpAddress)) FD_SET(MULTICAST_HOST_FLAG, &el->flags);
+	  if(isPrivateAddress(hostIpAddress))        FD_SET(PRIVATE_IP_ADDRESS,  &el->flags);
 
 	  /* Trick to fill up the address cache */
 	  if(numericFlag == 0)
@@ -3047,10 +3048,8 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
 				  isRequest, positiveReply);
 
   if((hostPtr.queryType == T_A)
-     && hostPtr.queryName[0]
-     && hostPtr.addrList[0]) {
-    int i;
-
+     && (hostPtr.queryName[0] != '\0')
+     && (hostPtr.addrList[0] != '\0')) {
 #ifdef DNS_SNIFF_DEBUG
     traceEvent(TRACE_INFO, "DNS %s for %s type %d\n", *isRequest ? "request" : "reply",
 	       hostPtr.queryName, hostPtr.queryType);
@@ -3064,29 +3063,61 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
       }
   }
 
+  i = strlen(hostPtr.queryName);
+  if((i > 5)
+     && (strncmp(&hostPtr.queryName[i-5], ".arpa", 5) == 0))
+    return(transactionId);
+  
 #ifdef HAVE_GDBM_H
   data_data.dptr = hostPtr.queryName;
   data_data.dsize = strlen(data_data.dptr)+1;
+  for(i=0; i<strlen(hostPtr.queryName); i++)
+    hostPtr.queryName[i] = tolower(hostPtr.queryName[i]);
 #endif
 
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "processDNSPacket");
 #endif
 
-  for(i=0; i<MAXADDRS; i++)
+  for(i=0; i<MAXADDRS; i++) {
     if(hostPtr.addrList[i] != 0) {
       hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
-#ifdef DNS_SNIFF_DEBUG
-      traceEvent(TRACE_INFO, "%s <->%s\n",
-		 hostPtr.queryName, intoa(hostIpAddress));
-#endif
 #ifdef HAVE_GDBM_H
       key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
       key_data.dsize = strlen(key_data.dptr)+1;
       if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
-      gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
+
+      data_data = gdbm_fetch(gdbm_file, key_data);
+      if(data_data.dptr == NULL) {
+#ifdef DNS_SNIFF_DEBUG
+	traceEvent(TRACE_INFO, "%s <-> %s",
+		   hostPtr.queryName, intoa(hostIpAddress));
+#endif
+	gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
+
+	/* Update host */
+	for(i=1; i<device[deviceId].actualHashSize; i++) {
+	  if(device[deviceId].hash_hostTraffic[i] != NULL) {
+	    if(device[deviceId].hash_hostTraffic[i]->hostIpAddress.s_addr == hostIpAddress.s_addr) {
+	      if(device[deviceId].hash_hostTraffic[i]->hostSymIpAddress[0] == '\0') {
+		/* Not yet set */
+		if(strlen(hostPtr.queryName) >= MAX_HOST_SYM_NAME_LEN)
+		  hostPtr.queryName[MAX_HOST_SYM_NAME_LEN-1] = '\0';
+		strcpy(device[deviceId].hash_hostTraffic[i]->hostSymIpAddress, hostPtr.queryName);
+#ifdef DNS_SNIFF_DEBUG
+		traceEvent(TRACE_INFO, "Setting %s = %s",
+			   device[deviceId].hash_hostTraffic[i]->hostNumIpAddress, hostPtr.queryName);
+#endif
+	      }
+	      break;
+	    }
+	  }
+	}
+      } else
+	free(data_data.dptr);
 #endif
     }
+  }
 
 #ifdef MULTITHREADED
   releaseMutex(&gdbmMutex);
@@ -3122,7 +3153,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 
     for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
       if(srcHost->contactedRouters.peersIndexes[j] == routerIdx)
-	return;
+	break;
       else if(srcHost->contactedRouters.peersIndexes[j] == NO_PEER) {
 	srcHost->contactedRouters.peersIndexes[j] = routerIdx;
 	break;

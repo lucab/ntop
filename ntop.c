@@ -397,8 +397,10 @@ void createPortHash() {
   theSize = sizeof(PortMapper)*2*numIpPortMapperSlots;
   ipPortMapper = (PortMapper*)malloc(theSize);
   for(i=0; i<numIpPortMapperSlots; i++) ipPortMapper[i].port = -1;
-  
+
+#ifdef DEBUG  
   traceEvent(TRACE_INFO, "Allocating %d slots", numIpPortMapperSlots);
+#endif
 
   for(i=0; i<TOP_IP_PORT; i++) {
     if(servicesMapper[i] != -1) {

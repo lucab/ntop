@@ -482,11 +482,6 @@ char* _intoa(struct in_addr addr, char* buf, u_short bufLen) {
   /* Convert the string to lowercase */
   retStr = (char*)(cp+1);
 
-  /*
-    for(n=0; retStr[n] != '\0'; n++)
-    retStr[n] = tolower(retStr[n]);
-  */
-
   return(retStr);
 }
 
@@ -500,10 +495,7 @@ char* intoa(struct in_addr addr) {
 
 /* ******************************* */
 
-/*
-  This function automatically updated the
-  instance name
-*/
+/* This function automatically updated the instance name */
 
 void ipaddr2str(struct in_addr hostIpAddress) {
   unsigned int addr = hostIpAddress.s_addr;
@@ -538,13 +530,13 @@ void ipaddr2str(struct in_addr hostIpAddress) {
 
   if(data_data.dptr != NULL) {
 #ifdef GDBM_DEBUG
-    traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]\n", data_data.dptr, tmpBuf);
+    traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]", data_data.dptr, tmpBuf);
 #endif
     updateHostNameInfo(hostIpAddress.s_addr, data_data.dptr);
     free(data_data.dptr);
   } else {
 #ifdef GDBM_DEBUG
-    traceEvent(TRACE_INFO, "Unable to retrieve %s\n", tmpBuf);
+    traceEvent(TRACE_INFO, "Unable to retrieve %s", tmpBuf);
 #endif
 
 #ifndef MULTITHREADED

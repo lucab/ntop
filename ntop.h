@@ -1435,6 +1435,7 @@ typedef struct portUsage {
 } PortUsage;
 
 #define THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG 1
+#define PRIVATE_IP_ADDRESS                2 /* indicates whether the IP address is private (192.168..) */
 #define SUBNET_LOCALHOST_FLAG             3 /* indicates whether the host is either local or remote */
 #define BROADCAST_HOST_FLAG               4 /* indicates whether this is a broadcast address */
 #define MULTICAST_HOST_FLAG               5 /* indicates whether this is a multicast address */
@@ -1477,6 +1478,7 @@ typedef struct portUsage {
 /* Macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG, &(a->flags))
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(SUBNET_LOCALHOST_FLAG, &(a->flags)))
+#define privateIPAddress(a)         ((a != NULL) && FD_ISSET(PRIVATE_IP_ADDRESS, &(a->flags)))
 #define broadcastHost(a)            ((a != NULL) && FD_ISSET(BROADCAST_HOST_FLAG, &(a->flags)))
 #define multicastHost(a)            ((a != NULL) && FD_ISSET(MULTICAST_HOST_FLAG, &(a->flags)))
 #define gatewayHost(a)              ((a != NULL) && FD_ISSET(GATEWAY_HOST_FLAG, &(a->flags)))

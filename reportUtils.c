@@ -2324,7 +2324,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       sendString(buf);
       numSessions++;
 
-      sendString("<TD "TD_BG"><UL>");
+      sendString("<TD "TD_BG"><UL>&nbsp;");
       for(i=0; i < MAX_NUM_CONTACTED_PEERS; i++) {
 	u_int theIdx = scanner->peers.peersIndexes[i];
 
@@ -3227,6 +3227,7 @@ void printHostDetailedInfo(HostTraffic *el) {
   if((el->hostNumIpAddress[0] != '\0')
      && (!subnetPseudoLocalHost(el))
      && (!multicastHost(el))
+     && (!privateIPAddress(el))
      && (mapperURL[0] > 0)) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
 		"<IMG SRC=\"%s?host=%s\" WIDTH=320 HEIGHT=200></TD></TR>\n",

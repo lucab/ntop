@@ -1109,6 +1109,25 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	     || (strcmp(tmpName3, "00:00:00:00:00:00") == 0))
 	    tmpName3 = separator;
 
+	  if((el->hostIpAddress.s_addr != 0)
+	     && (getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))) {
+#ifdef DEBUG
+	    traceEvent(TRACE_INFO, "%s <=> %s [%s/%s]", 
+		       el->hostNumIpAddress, sniffedName,
+		       el->hostSymIpAddress, el->hostNumIpAddress);
+#endif
+
+            if((el->hostSymIpAddress[0] == '\0') || strcmp(sniffedName, el->hostSymIpAddress)) {
+	      if((el->hostSymIpAddress[0] == '\0') 
+		 || (strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0)) {
+		if(strlen(sniffedName) >= MAX_HOST_SYM_NAME_LEN)
+		  sniffedName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
+		strcpy(el->hostSymIpAddress, sniffedName);
+	      } else
+		displaySniffedName=1;
+	    }
+	  }
+
 	  if(snprintf(buf, sizeof(buf), "<TR %s>"
 		      "%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
@@ -1119,12 +1138,6 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	  sendString(buf);
 
 	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
-
-	  if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) 
-            if((el->hostSymIpAddress[0] == '\0')
-	       || strcmp(sniffedName, el->hostSymIpAddress)) 
-              displaySniffedName=1;
-
 
 	  if(el->nbHostName || el->atNetwork || el->ipxHostName || displaySniffedName) {
 	    short numAddresses = 0;
@@ -2804,56 +2817,56 @@ void printThptStatsMatrix(int sortedColumn) {
 		  formatThroughput(device[actualReportDeviceId].
 				   last60MinutesThpt[i].trafficValue)) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
-	 sendString(buf);
-
-	/* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */	
-
-	 if((device[actualReportDeviceId].last60MinutesThpt[i].topHostSentIdx != NO_PEER)
-	    && (device[actualReportDeviceId].
-		hash_hostTraffic[device[actualReportDeviceId].
-				last60MinutesThpt[i].topHostSentIdx] != NULL)) {
-      if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		  makeHostLink(device[actualReportDeviceId].
-			       hash_hostTraffic[device[actualReportDeviceId].
-					       last60MinutesThpt[i].topHostSentIdx],
-			       LONG_FORMAT, 0, 0),
-		  formatThroughput(device[actualReportDeviceId].
-				   last60MinutesThpt[i].topSentTraffic)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
-      
-	/* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */	
-      if((device[actualReportDeviceId].last60MinutesThpt[i].secondHostSentIdx != NO_PEER)
-	 && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
-							  last60MinutesThpt[i].secondHostSentIdx] != NULL)) {
-	if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    makeHostLink(device[actualReportDeviceId].
-				   hash_hostTraffic[device[actualReportDeviceId].
-						   last60MinutesThpt[i].secondHostSentIdx],
-				   LONG_FORMAT, 0, 0),
-		    formatThroughput(device[actualReportDeviceId].
-				     last60MinutesThpt[i].secondSentTraffic)) < 0) 
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      }
-      
-      /* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */
-      if((device[actualReportDeviceId].last60MinutesThpt[i].thirdHostSentIdx != NO_PEER) 
+
+      /* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */	
+
+      if((device[actualReportDeviceId].last60MinutesThpt[i].topHostSentIdx != NO_PEER)
 	 && (device[actualReportDeviceId].
-	     hash_hostTraffic[device[actualReportDeviceId].last60MinutesThpt[i].
-			     thirdHostSentIdx] != NULL)) {
+	     hash_hostTraffic[device[actualReportDeviceId].
+			     last60MinutesThpt[i].topHostSentIdx] != NULL)) {
 	if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		    makeHostLink(device[actualReportDeviceId].
 				 hash_hostTraffic[device[actualReportDeviceId].
-						 last60MinutesThpt[i].thirdHostSentIdx],
+						 last60MinutesThpt[i].topHostSentIdx],
 				 LONG_FORMAT, 0, 0),
 		    formatThroughput(device[actualReportDeviceId].
-				     last60MinutesThpt[i].thirdSentTraffic)) < 0)
+				     last60MinutesThpt[i].topSentTraffic)) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
+      
+	/* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */	
+	if((device[actualReportDeviceId].last60MinutesThpt[i].secondHostSentIdx != NO_PEER)
+	   && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
+							    last60MinutesThpt[i].secondHostSentIdx] != NULL)) {
+	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		      makeHostLink(device[actualReportDeviceId].
+				   hash_hostTraffic[device[actualReportDeviceId].
+						   last60MinutesThpt[i].secondHostSentIdx],
+				   LONG_FORMAT, 0, 0),
+		      formatThroughput(device[actualReportDeviceId].
+				       last60MinutesThpt[i].secondSentTraffic)) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
 	}
-	 } else
-	   sendString("&nbsp;");
+      
+	/* Fix below courtesy of Francis Pintos <francis@arhl.com.hk> */
+	if((device[actualReportDeviceId].last60MinutesThpt[i].thirdHostSentIdx != NO_PEER) 
+	   && (device[actualReportDeviceId].
+	       hash_hostTraffic[device[actualReportDeviceId].last60MinutesThpt[i].
+			       thirdHostSentIdx] != NULL)) {
+	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		      makeHostLink(device[actualReportDeviceId].
+				   hash_hostTraffic[device[actualReportDeviceId].
+						   last60MinutesThpt[i].thirdHostSentIdx],
+				   LONG_FORMAT, 0, 0),
+		      formatThroughput(device[actualReportDeviceId].
+				       last60MinutesThpt[i].thirdSentTraffic)) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
+	}
+      } else
+	sendString("&nbsp;");
 	 
       sendString("</TABLE></TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%%>\n");
 
@@ -2871,7 +2884,7 @@ void printThptStatsMatrix(int sortedColumn) {
 		    formatThroughput(device[actualReportDeviceId].
 				     last60MinutesThpt[i].topRcvdTraffic)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	   sendString(buf);
+	sendString(buf);
 
 	if((device[actualReportDeviceId].last60MinutesThpt[i].secondHostRcvdIdx != NO_PEER)
 	   && (device[actualReportDeviceId].
@@ -2885,7 +2898,7 @@ void printThptStatsMatrix(int sortedColumn) {
 		      formatThroughput(device[actualReportDeviceId].
 				       last60MinutesThpt[i].secondRcvdTraffic)) < 0) 
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	     sendString(buf);
+	  sendString(buf);
 	}
 
 	if((device[actualReportDeviceId].last60MinutesThpt[i].thirdHostRcvdIdx != NO_PEER)
@@ -2913,6 +2926,8 @@ void printThptStatsMatrix(int sortedColumn) {
       printNoDataYet();
       return;
     } else {
+      u_int theIndex;
+      
       sendString("<CENTER>\n");
       sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>"
 		 "<TH "TH_BG">Sampling Period</TH>"
@@ -2936,43 +2951,58 @@ void printThptStatsMatrix(int sortedColumn) {
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
 	
-	 if((device[actualReportDeviceId].last24HoursThpt[i].topHostRcvdIdx != NO_PEER)
-	    && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
-							     last24HoursThpt[i].topHostSentIdx] != NULL)) {
+	theIndex = device[actualReportDeviceId].last24HoursThpt[i].topHostRcvdIdx;
+	if((theIndex != NO_PEER) && (theIndex > device[actualReportDeviceId].actualHashSize)) {
+	  traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]", 
+		     theIndex, device[actualReportDeviceId].actualHashSize);
+	  theIndex = NO_PEER;
+	}
+
+	if((theIndex != NO_PEER)
+	   && (device[actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		      makeHostLink(device[actualReportDeviceId].
-				   hash_hostTraffic[device[actualReportDeviceId].
-						   last24HoursThpt[i].topHostSentIdx],
+				   hash_hostTraffic[theIndex],
 				   LONG_FORMAT, 0, 0),
 		      formatThroughput(device[actualReportDeviceId].
 				       last24HoursThpt[i].topSentTraffic)) < 0) 
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
-	  if((device[actualReportDeviceId].last24HoursThpt[i].secondHostRcvdIdx != NO_PEER)
-	     && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
-							      last24HoursThpt[i].secondHostSentIdx] != NULL)) {
+	  theIndex = device[actualReportDeviceId].last24HoursThpt[i].secondHostRcvdIdx;
+	  if((theIndex != NO_PEER) && (theIndex > device[actualReportDeviceId].actualHashSize)) {
+	    traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]", 
+		       theIndex, device[actualReportDeviceId].actualHashSize);
+	    theIndex = NO_PEER;
+	  }
+
+	  if((theIndex != NO_PEER)
+	     && (device[actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    makeHostLink(device[actualReportDeviceId].
-				 hash_hostTraffic[device[actualReportDeviceId].
-						 last24HoursThpt[i].secondHostSentIdx],
-				 LONG_FORMAT, 0, 0),
-		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].secondSentTraffic)) < 0) 
+			makeHostLink(device[actualReportDeviceId].
+				     hash_hostTraffic[theIndex],
+				     LONG_FORMAT, 0, 0),
+			formatThroughput(device[actualReportDeviceId].
+					 last24HoursThpt[i].secondSentTraffic)) < 0) 
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
-	  
-	  if((device[actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdIdx != NO_PEER)
-	     && (device[actualReportDeviceId].
-		 hash_hostTraffic[device[actualReportDeviceId].last24HoursThpt[i].thirdHostSentIdx] != NULL)) {
+
+	  theIndex = device[actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdIdx;
+	  if((theIndex != NO_PEER) && (theIndex > device[actualReportDeviceId].actualHashSize)) {
+	    traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]", 
+		       theIndex, device[actualReportDeviceId].actualHashSize);
+	    theIndex = NO_PEER;
+	  }
+
+	  if((theIndex != NO_PEER)
+	     && (device[actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    makeHostLink(device[actualReportDeviceId].
-				 hash_hostTraffic[device[actualReportDeviceId].
-						 last24HoursThpt[i].thirdHostSentIdx],
-				 LONG_FORMAT, 0, 0),
-		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].thirdSentTraffic)) < 0) 
+			makeHostLink(device[actualReportDeviceId].
+				     hash_hostTraffic[theIndex],
+				     LONG_FORMAT, 0, 0),
+			formatThroughput(device[actualReportDeviceId].
+					 last24HoursThpt[i].thirdSentTraffic)) < 0) 
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
@@ -2982,45 +3012,59 @@ void printThptStatsMatrix(int sortedColumn) {
 	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>\n");
 
 	/* *************************************** */
+	theIndex = device[actualReportDeviceId].last24HoursThpt[i].topHostRcvdIdx;
+	if((theIndex != NO_PEER) && (theIndex > device[actualReportDeviceId].actualHashSize)) {
+	  traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]", 
+		     theIndex, device[actualReportDeviceId].actualHashSize);
+	  theIndex = NO_PEER;
+	}
 
-	if((device[actualReportDeviceId].last24HoursThpt[i].topHostRcvdIdx != NO_PEER)
-	    && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
-							last24HoursThpt[i].topHostRcvdIdx] != NULL)) {
+	if((theIndex != NO_PEER)
+	   && (device[actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
 	  if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		  makeHostLink(device[actualReportDeviceId].
-			       hash_hostTraffic[device[actualReportDeviceId].
-					       last24HoursThpt[i].topHostRcvdIdx],
-			       LONG_FORMAT, 0, 0),
-		  formatThroughput(device[actualReportDeviceId].
-				   last24HoursThpt[i].topRcvdTraffic)) < 0) 
+		      makeHostLink(device[actualReportDeviceId].
+				   hash_hostTraffic[theIndex],
+				   LONG_FORMAT, 0, 0),
+		      formatThroughput(device[actualReportDeviceId].
+				       last24HoursThpt[i].topRcvdTraffic)) < 0) 
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
-	  if((device[actualReportDeviceId].last24HoursThpt[i].secondHostRcvdIdx != NO_PEER)
+	  theIndex = device[actualReportDeviceId].last24HoursThpt[i].secondHostRcvdIdx;
+	  if((theIndex != NO_PEER) && (theIndex > device[actualReportDeviceId].actualHashSize)) {
+	    traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]", 
+		       theIndex, device[actualReportDeviceId].actualHashSize);
+	    theIndex = NO_PEER;
+	  }
+
+	  if((theIndex != NO_PEER)
 	     && (device[actualReportDeviceId].
-		 hash_hostTraffic[device[actualReportDeviceId].
-				 last24HoursThpt[i].secondHostRcvdIdx] != NULL)) {
+		 hash_hostTraffic[theIndex] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    makeHostLink(device[actualReportDeviceId].
-				 hash_hostTraffic[device[actualReportDeviceId].
-						 last24HoursThpt[i].secondHostRcvdIdx],
-				 LONG_FORMAT, 0, 0),
-		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].secondRcvdTraffic)) < 0) 
+			makeHostLink(device[actualReportDeviceId].
+				     hash_hostTraffic[theIndex],
+				     LONG_FORMAT, 0, 0),
+			formatThroughput(device[actualReportDeviceId].
+					 last24HoursThpt[i].secondRcvdTraffic)) < 0) 
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
+	  
+	  theIndex = device[actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdIdx;
+	  if((theIndex != NO_PEER) && (theIndex > device[actualReportDeviceId].actualHashSize)) {
+	    traceEvent(TRACE_ERROR, "Index %u out of range [0..%u]", 
+		       theIndex, device[actualReportDeviceId].actualHashSize);
+	    theIndex = NO_PEER;
+	  }
 
-	  if((device[actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdIdx != NO_PEER)
-	     && (device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].
-							      last24HoursThpt[i].thirdHostRcvdIdx] != NULL)) {
+	  if((theIndex != NO_PEER)
+	     && (device[actualReportDeviceId].hash_hostTraffic[theIndex] != NULL)) {
 	    if(snprintf(buf, sizeof(buf), "<TR>%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    makeHostLink(device[actualReportDeviceId].
-				 hash_hostTraffic[device[actualReportDeviceId].
-						 last24HoursThpt[i].thirdHostRcvdIdx],
-				 LONG_FORMAT, 0, 0),
-		    formatThroughput(device[actualReportDeviceId].
-				     last24HoursThpt[i].thirdRcvdTraffic)) < 0) 
+			makeHostLink(device[actualReportDeviceId].
+				     hash_hostTraffic[theIndex],
+				     LONG_FORMAT, 0, 0),
+			formatThroughput(device[actualReportDeviceId].
+					 last24HoursThpt[i].thirdRcvdTraffic)) < 0) 
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }

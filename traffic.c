@@ -40,7 +40,7 @@ static void updateThptStats(int deviceToUpdate,
 	 thirdHourSentIdx);
 #endif
 
-  /* We're never check enough... */
+  /* We never check enough... */
   if(topSentIdx == NO_PEER) 
     return;
 
@@ -200,27 +200,27 @@ static void updateDeviceThpt(int deviceToUpdate) {
 	if(broadcastHost(el))
 	  continue;
 
-	el->actualRcvdThpt    = (float)(el->bytesReceived-el->lastBytesReceived)/timeDiff;
-	if(el->peakRcvdThpt   < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
-	if(el->peakSentThpt   < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
-	el->actualSentThpt    = (float)(el->bytesSent-el->lastBytesSent)/timeDiff;
-	el->lastBytesSent     = el->bytesSent;
-	el->lastBytesReceived = el->bytesReceived;
+	el->actualRcvdThpt       = (float)(el->bytesReceived-el->lastBytesReceived)/timeDiff;
+	if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
+	if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
+	el->actualSentThpt       = (float)(el->bytesSent-el->lastBytesSent)/timeDiff;
+	el->lastBytesSent        = el->bytesSent;
+	el->lastBytesReceived    = el->bytesReceived;
 
 	/* ******************************** */
 
-	el->actualRcvdPktThpt  = (float)(el->pktReceived-el->lastPktReceived)/timeDiff;
-	if(el->peakRcvdPktThpt < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
-	if(el->peakSentPktThpt < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
-	el->actualSentPktThpt  = (float)(el->pktSent-el->lastPktSent)/timeDiff;
-	el->lastPktSent        = el->pktSent;
-	el->lastPktReceived    = el->pktReceived;
+	el->actualRcvdPktThpt    = (float)(el->pktReceived-el->lastPktReceived)/timeDiff;
+	if(el->peakRcvdPktThpt   < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
+	if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
+	el->actualSentPktThpt    = (float)(el->pktSent-el->lastPktSent)/timeDiff;
+	el->lastPktSent          = el->pktSent;
+	el->lastPktReceived      = el->pktReceived;
 
 	/* ******************************** */
 
 	if(updateMinThpt) {
-	  el->averageRcvdThpt = ((float)el->bytesReceived)/totalTime;
-	  el->averageSentThpt = ((float)el->bytesSent)/totalTime;
+	  el->averageRcvdThpt    = ((float)el->bytesReceived)/totalTime;
+	  el->averageSentThpt    = ((float)el->bytesSent)/totalTime;
 	  el->averageRcvdPktThpt = ((float)el->pktReceived)/totalTime;
 	  el->averageSentPktThpt = ((float)el->pktSent)/totalTime;
 
@@ -399,7 +399,7 @@ static void updateDeviceThpt(int deviceToUpdate) {
     }
 
     if((updateMinThpt || updateHourThpt) 
-       && ((topSentIdx    != NO_PEER) 
+       && ((topSentIdx        != NO_PEER) 
 	   || (topHourSentIdx != NO_PEER)
 	   || (topRcvdIdx     != NO_PEER)
 	   || (topHourRcvdIdx != NO_PEER)))

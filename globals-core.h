@@ -390,6 +390,7 @@ extern FILE *sec_popen(char *cmd, const char *type);
 extern HostTraffic* findHostByNumIP(char* numIPaddr);
 extern HostTraffic* findHostByMAC(char* macAddr);
 extern char* copy_argv(register char **argv);
+extern unsigned short isPrivateAddress(struct in_addr *addr);
 extern unsigned short isBroadcastAddress(struct in_addr *addr);
 extern unsigned short isMulticastAddress(struct in_addr *addr);
 extern unsigned short isLocalAddress(struct in_addr *addr);

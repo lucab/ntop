@@ -22,7 +22,9 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+#ifdef TEST
 #define FORK_CHILD_PROCESS
+#endif
 
 struct _HTTPstatus {
     int statusCode;
@@ -812,6 +814,12 @@ static int checkURLsecurity(char *url) {
 
 /* ************************* */
 
+static RETSIGTYPE quitNow(int signo _UNUSED_) {
+  exit(0);
+}
+
+/* **************************************** */
+
 static int returnHTTPPage(char* pageName, int postLen) {
   char *questionMark = strchr(pageName, '?');
   int sortedColumn, printTrailer=1, idx, usedFork = 0;
@@ -1018,6 +1026,8 @@ static int returnHTTPPage(char* pageName, int postLen) {
       } else {
 	usedFork = 1;
 	detachFromTerminal();
+	alarm(120); /* Don't freeze */
+	setsignal(SIGALRM, quitNow);
       }
     }
 #endif    
