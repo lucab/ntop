@@ -2613,17 +2613,22 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
    * send 404 if we cannot generate the requested page
    */
   if((el == NULL) || (!found)) {
-    char errorAdditionalText[512];
+    char errorAdditionalText[512], whois[256];
+
+    safe_snprintf(__FILE__, __LINE__, whois, sizeof(whois), 
+		  "[ <A HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]</TD></TR>\n",
+		  host);
+
     safe_snprintf(__FILE__, __LINE__, errorAdditionalText, sizeof(errorAdditionalText),
                 "<p align=\"center\"><img alt=\"Warning\" src=\"/warning.gif\"></p>\n"
                 "<p align=\"center\"><font color=\"#FF0000\" size=\"+1\">"
-                "<b>ntop</b> does not currently have any information about host %s.</font></p>"
+                "<b>ntop</b> does not currently have any information about host %s %s.</font></p>"
                 "<p>&nbsp;</p>"
                 "<p>This is most likely because the host information has been "
                 "purged as inactive.  You may wish to consider the -c | --sticky-hosts "
                 "option, although that option may substantially increase memory "
                 "requirements.</p>\n",
-                host);
+		  host, whois);
     returnHTTPpageNotFound(errorAdditionalText);
     return;
   } else
