@@ -1834,6 +1834,104 @@ A. The problem is that ntop's web server is single threaded until we determine t
                   - old: browser says "setting up secure connection" and never continues, but
                            ntop webserver is ok.
 
+
+Q. What's up with P3P?
+A. P3P is a W3C recommendation - http://www.w3.org/TR/P3P/ - for specifying how an application
+   (typically a web site) handles personally identifiably information.  What information the
+   site collects and what it does with the information.
+
+   p3p is pretty complex!  There are basically two ways to enable an application for p3p.  
+   One is to add another HTTP header, P3P:.  The second is to support a well-known file 
+   location, /w3c/p3p.xml (like robots.txt).
+
+   Browser support is pretty spotty, as is web site adoption. 
+
+   Some 3rd party browsers have some support...  up to CrazyBrowser which claims "full support",
+   whatever that means...
+
+Q. So why put P3P into ntop?
+A. It's comming.  P3P is gradually making it's way into the top web sites -- right now (Dec2002),
+   for example dell.com supports it and yahoo.com doesn't.
+
+Q. Ok, but what's that got to do with ntop?
+A. Since ntop collects personally identifiable data in it's access log (-a option) and it's 
+   various reports and makes those available to pretty much anyone in the default configuration,
+   it's probably not a bad idea to OFFER some support.  Especially if you're running ntop at
+   a site that has started to support P3P, if you don't have a mechanism for your own policies
+   you'll have to adhere to corporate ones.  And that could require massive changes to ntop.
+
+Q. IE6?
+A. Since ntop doesn't send the P3P: header, IE6 ignores ntop wrt p3p.  Besides, IE6 uses p3p 
+   to block 3rd party cookies.  If you want to see the p3p stuff, it's view | privacy report 
+   in the menus.  If the site's policies don't match your settings, there will be a red "do 
+   not enter" icon in the third box on the bottom right of the IE6 window - double click on 
+   it to see the report.
+   See http://support.microsoft.com/default.aspx?scid=KB;en-us;q293513
+
+Q. Mozilla
+A. Unknown if it's enabled by default.  Mozilla had support, ripped it out in Feb 2002 and 
+   put a new version back in.
+
+Q. Other browsers
+A. See their home pages or search the web.  One that I know that claims "full support" 
+   (whatever that means) is at http://www.crazybrowser.com/
+
+Q. Privacy Bird?
+A. A browser-addon, AT&T's privacy bird (http://www.privacybird.com/), that I'm playing with 
+   is a lot more aggressive in supporting p3p.  If Privacy bird doesn't see the P3P: header,
+   it then requests the "well known" file, /w3c/p3p.xml file and gets nailed by ntop as a 
+   hostile application, since we don't have support for returning .xml files (yet).
+
+Q. So when & how does ntop support p3p?
+A. A patch in the cvs on 4Dec2002 (snapshots 5Dec2002 or later) adds minimal support for 
+   p3p -- specifically:
+
+      1) ntop will respond to queries for /w3c/p3p.xml and ntop.p3p -- returning the 
+         ntop.p3p file, IF ONE EXISTS.  
+
+         If the file does not exist, a 404 error is generated (vs. pre 4Dec2002 behavior 
+         of adding the address to the myGlobals.weDontWantToTalkWithYou list).
+
+      2) New parameters, --p3p-cp and --p3p-uri allow you to return the P3P: header with 
+         either or both of the parameters (cp="" or policyref="") set.
+
+         ntop doesn't validate the text in any way other than the usual stringSanityCheck().
+
+   This allows me to run the Privacy Bird and still talk to ntop.  I'll admit that option #2 
+   is speculative, since I really don't have much of a way to test it.
+
+Q. But there isn't a sample .p3p file provided.
+A. Right.
+
+   Please note that there is no sample file provided.  This is not an oversight.
+
+   After careful consideration, I am not providing one.  The reason is that a .p3p file is 
+   intended to be a legal contract between your site and your users.  While I could provide 
+   a default file that has the right tags - as I understand p3p - for the data ntop collects
+   and stores, I don't want the responsibility and/or liability.
+
+   If anyone wants this "sample p3p file", I will make it available for a fee, provided
+   your organization - through an appropriate officer, in writting:
+
+      1) Acknowleges that Luca Deri, Burton Strauss and other developers of ntop have no 
+         liability for any use(s) you make of the sample p3p file or anything you derive
+         from it.
+
+      2) You will defend us - at your expense - from any lawsuit, arbitration proceeding,
+         etc. filed in conjunction with your use of the sample p3p file. 
+
+      3) You will pay any judgements, legal expenses, etc. related to any lawsuit, 
+         arbitration proceeding, etc. in conjunction with your use of the sample p3p file.
+
+   Since your legal department would be nuts to agree to that I doubt it will come up.
+
+Q. So How do I create a .p3p file?
+A. There are tools available to create p3p policy files - search the web for 'p3p editor'.
+   One that I've used is a zero cost albeit beta tool, p3peditor from IBM 
+   (http://www.alphaworks.ibm.com/tech/p3peditor).
+
+(P3P stuff added 4Dec2002, Burton Strauss)
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
