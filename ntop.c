@@ -513,12 +513,13 @@ int mapGlobalToLocalIdx(int port) {
     int j, found, slotId = (3*port) % numIpPortMapperSlots;
     
     for(j=0, found=0; j<numIpPortMapperSlots; j++) {
-      if((ipPortMapper[slotId].port == -1)
-	 || (ipPortMapper[slotId].port == port)) {
+      if(ipPortMapper[slotId].port == -1)
+	break;
+      else if(ipPortMapper[slotId].port == port) {
 	found = 1;
 	break;
       }
-
+      
       slotId = (slotId+1) % numIpPortMapperSlots;
     }
     
