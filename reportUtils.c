@@ -958,6 +958,30 @@ int sortHostFctn(const void *_a, const void *_b) {
     else
       return(0);
     break;
+  case FLAG_DOMAIN_DUMMY_IDX:
+    rc=0;
+    if(((*a)->dotDomainName != NULL) && ((*b)->dotDomainName != NULL)) {
+      if(strcasecmp((*a)->dotDomainName, "loc") != 0) {
+        nameA = (*a)->dotDomainName;
+      } else {
+        nameA = "zzz";
+      }
+      if(strcasecmp((*b)->dotDomainName, "loc") != 0) {
+        nameB = (*b)->dotDomainName;
+      } else {
+        nameB = "zzz";
+      }
+      rc = strcasecmp(nameA, nameB);
+    } else if((*a)->dotDomainName != NULL) {
+      rc=1;
+    } else if((*b)->dotDomainName != NULL) {
+      rc=-1;
+    }
+    if(rc==0) {
+      rc=cmpFctnResolvedName(a, b);
+    }
+    return(rc);
+    break;
   case 4:
   default:
     if((*a)->actBandwidthUsage < (*b)->actBandwidthUsage)

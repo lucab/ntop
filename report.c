@@ -37,7 +37,8 @@ static void ignoreSignal(int signalId) {
 
 void printBandwidthFooter(void) {
     sendString("<p><b>NOTE</b>:<ul>"
-	       "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> for more information about host sorting."
+	       "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> "
+               "for more information about host and domain sorting."
 	       "<li>Bandwidth values are the percentage of the total bytes that "
                "<b>ntop</b> has seen on the interface.  Hover the mouse to see the actual "
                "value (rounded to the nearest full percentage point).  <i>The total of the "
@@ -1739,7 +1740,8 @@ void printHostsTraffic(int reportTypeReq,
 		   revertOrder, abs(sortedColumn));
 
   sendString("<p><b>NOTE</b>:<ul>"
-	     "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> for more information about host sorting."
+	     "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> "
+             "for more information about host and domain sorting."
 	     "</ul><p>\n");
   
   myGlobals.lastRefreshTime = myGlobals.actTime;
