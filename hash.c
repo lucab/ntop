@@ -104,40 +104,41 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 #define MUTEX_FHS_MASK         (max(0, min(65535, (1 << MUTEX_FHS_GRANULARITY) - 1)))
 
 static void freeHostSessions(u_int hostIdx, int theDevice) {
-  int i, rc, eCount=0;
+  int i, rc, eCount=0, mutexLocked = 0; 
 
   for(i=0; i<myGlobals.device[theDevice].numTotSessions; i++) {
     IPSession *prevSession, *nextSession, *theSession;
 
 #ifdef MULTITHREADED
-    if (myGlobals.capturePackets == 1 /* i.e. active, not cleanup */ ) {
-        if ((i & MUTEX_FHS_MASK) == 0) {
-            if ( (rc = accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions")) != 0) {
-                if (++eCount < 10) 
-                    traceEvent(TRACE_ERROR, 
-                               "FREE_HOST_SESSIONS: DANGER: Mutex BUSY. i=%d mask=%x. "
-                               "unlocked: %u times, last was %s:%d "
-                               "locked: %u times, last was %s:%d.\n",
-                               i,
-                               MUTEX_FHS_MASK,
-                               myGlobals.tcpSessionsMutex.numReleases,
-                               myGlobals.tcpSessionsMutex.unlockFile, myGlobals.tcpSessionsMutex.unlockLine,
-                               myGlobals.tcpSessionsMutex.numLocks,
-                               myGlobals.tcpSessionsMutex.lockFile, myGlobals.tcpSessionsMutex.lockLine);
-            }
-        } else if (!myGlobals.tcpSessionsMutex.isLocked) {
-            if (++eCount < 10) 
-                traceEvent(TRACE_ERROR, 
-                           "FREE_HOST_SESSIONS: DANGER: Mutex UNLOCKED. i=%d mask=%x. "
-                           "unlocked: %u times, last was %s:%d "
-                           "locked: %u times, last was %s:%d.\n",
-                           i,
-                           MUTEX_FHS_MASK,
-                           myGlobals.tcpSessionsMutex.numReleases,
-                           myGlobals.tcpSessionsMutex.unlockFile, myGlobals.tcpSessionsMutex.unlockLine,
-                           myGlobals.tcpSessionsMutex.numLocks,
-                           myGlobals.tcpSessionsMutex.lockFile, myGlobals.tcpSessionsMutex.lockLine);
-        }
+    if(myGlobals.capturePackets == 1 /* i.e. active, not cleanup */ ) {
+      if((i & MUTEX_FHS_MASK) == 0) {
+	if((rc = accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions")) != 0 /* something went wrong */) {
+	  if(++eCount < 10) 
+	    traceEvent(TRACE_ERROR, 
+		       "FREE_HOST_SESSIONS: DANGER: Mutex BUSY. i=%d mask=%x. "
+		       "unlocked: %u times, last was %s:%d "
+		       "locked: %u times, last was %s:%d.\n",
+		       i,
+		       MUTEX_FHS_MASK,
+		       myGlobals.tcpSessionsMutex.numReleases,
+		       myGlobals.tcpSessionsMutex.unlockFile, myGlobals.tcpSessionsMutex.unlockLine,
+		       myGlobals.tcpSessionsMutex.numLocks,
+		       myGlobals.tcpSessionsMutex.lockFile, myGlobals.tcpSessionsMutex.lockLine);
+	} else
+	  mutexLocked = 1;
+      } else if (!myGlobals.tcpSessionsMutex.isLocked) {
+	if (++eCount < 10) 
+	  traceEvent(TRACE_ERROR, 
+		     "FREE_HOST_SESSIONS: DANGER: Mutex UNLOCKED. i=%d mask=%x. "
+		     "unlocked: %u times, last was %s:%d "
+		     "locked: %u times, last was %s:%d.\n",
+		     i,
+		     MUTEX_FHS_MASK,
+		     myGlobals.tcpSessionsMutex.numReleases,
+		     myGlobals.tcpSessionsMutex.unlockFile, myGlobals.tcpSessionsMutex.unlockLine,
+		     myGlobals.tcpSessionsMutex.numLocks,
+		     myGlobals.tcpSessionsMutex.lockFile, myGlobals.tcpSessionsMutex.lockLine);
+      }
     }
 #endif
 
@@ -167,23 +168,22 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
 #ifdef MULTITHREADED
     if (myGlobals.capturePackets == 1 /* i.e. active, not cleanup */ ) {
-        if (((i+1) & MUTEX_FHS_MASK) == 0) {
-           releaseMutex(&myGlobals.tcpSessionsMutex);
+      if (((i+1) & MUTEX_FHS_MASK) == 0) {
+	releaseMutex(&myGlobals.tcpSessionsMutex);
+	mutexLocked = 0;
 #ifdef HAVE_SCHED_H
-           sched_yield(); /* Allow other threads to run */
+	sched_yield(); /* Allow other threads to run */
 #endif
-        }
+      }
     }
 #endif
   }
 
 #ifdef MULTITHREADED
   /* Final free (unless we end on the count...) */
-  if ( ((i & MUTEX_FHS_MASK) != 0) || (myGlobals.tcpSessionsMutex.isLocked) ) {
-      releaseMutex(&myGlobals.tcpSessionsMutex);
-  }
+  if(mutexLocked)
+    releaseMutex(&myGlobals.tcpSessionsMutex);
 #endif
-
 }
 
 /* ********************************* */
@@ -451,14 +451,14 @@ void freeHostInstances(int actualDeviceId) {
       if(myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL) {
 	num++;
         HEARTBEAT(1, "freeHostInstances() calling freeHostInfo(), mutex: [%s %s:%d]",   
-                     myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
-                     myGlobals.tcpSessionsMutex.lockFile,
-                     myGlobals.tcpSessionsMutex.lockLine);
+		  myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
+		  myGlobals.tcpSessionsMutex.lockFile,
+		  myGlobals.tcpSessionsMutex.lockLine);
 	freeHostInfo(actualDeviceId, myGlobals.device[actualDeviceId].hash_hostTraffic[idx], actualDeviceId);
         HEARTBEAT(1, "freeHostInstances() returned from freeHostInfo(), mutex: [%s %s:%d]",   
-                     myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
-                     myGlobals.tcpSessionsMutex.lockFile,
-                     myGlobals.tcpSessionsMutex.lockLine);
+		  myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
+		  myGlobals.tcpSessionsMutex.lockFile,
+		  myGlobals.tcpSessionsMutex.lockLine);
 	myGlobals.device[actualDeviceId].hash_hostTraffic[idx] = NULL;
 #ifdef HAVE_SCHED_H
 	sched_yield(); /* Allow other threads to run */
