@@ -21,7 +21,7 @@
 
 <hr>
 <!-- Creator     : groff version 1.18 -->
-<!-- CreationDate: Sat Aug 16 18:31:59 2003 -->
+<!-- CreationDate: Tue Aug 26 17:48:29 2003 -->
 <a name="NAME"></a>
 <h2>NAME</h2>
 <!-- INDENTATION -->
@@ -73,7 +73,8 @@
 <i>&lt;URL&gt;</i>] [<b>-V</b>|<b>--version]</b>
 [<b>--disable-stopcap</b>] [<b>--log-extra</b>
 <i>&lt;number&gt;</i>]
-[<b>--disable-instantsessionpurge</b>]</p>
+[<b>--disable-instantsessionpurge</b>]
+[<b>--disable-schedyield</b>]</p>
 <!-- INDENTATION -->
 <p>Unix options:</p>
 <!-- INDENTATION -->
@@ -1064,6 +1065,29 @@ for completed sessions. It is NOT the default because a busy
 web server may have 100s or 1000s of completed sessions and
 this would significantly increase the amount of memory
 <b>ntop</b> uses.</p>
+</td>
+</table>
+<!-- INDENTATION -->
+<p><table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="10%"></td>
+<td width="89%">
+<p><b>--disable-schedyield</b></p></td>
+</table></p>
+<!-- INDENTATION -->
+<table width="100%" border=0 rules="none" frame="void"
+       cols="2" cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="13%"></td>
+<td width="86%">
+<p><b>ntop</b> uses sched_yield() calls for better
+interactive performance. Under some situations, primarily
+under RedHat Linux 8, this can deadlock, causing the
+<b>ntop</b> web server to stop responding, although
+<b>ntop</b> appears to still be operational according to the
+ps command. Use this switch to disable these calls, IF you
+are seeing deadlocks.</p>
 </td>
 </table>
 <a name="WEB VIEWS"></a>
