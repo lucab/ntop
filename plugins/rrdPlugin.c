@@ -32,7 +32,7 @@ Plugin History
 1.0.3
 2.0     Rolled major version due to new interface parameter.
 2.1     Added tests/creates for rrd and subdirectories, fixed timer,
---reuse-rrd-graphics etc.
+        --reuse-rrd-graphics etc.
 2.1.1   Fixed hosts / interface bug (Luca)
 2.1.2   Added status message
 2.2     Version roll (preparatory) for ntop 2.2
@@ -124,7 +124,6 @@ static void calfree (void) {
     }
   }
 }
-
 
 /* ******************************************* */
 
@@ -861,10 +860,6 @@ void setGlobalPermissions(int permissionsFlag) {
 static void commonRRDinit(void) {
   char value[1024];
 
-#ifdef CFG_MULTITHREADED
-  createMutex(&rrdMutex);
-#endif
-
   shownCreate=0;
 
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
@@ -1585,6 +1580,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		       myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
 		       adjHostName);
 	      mkdir_p(rrdPath);
+	      
+#if RRD_DEBUG >= 2
+	      traceEvent(CONST_TRACE_INFO, "RRD: Updating %s", hostKey);
+#endif
 
 	      updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
 	      updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
@@ -1864,6 +1863,11 @@ static int initRRDfunct(void) {
   int i;
 
   traceEvent(CONST_TRACE_INFO, "RRD: Welcome to the RRD plugin");
+
+#ifdef CFG_MULTITHREADED
+  createMutex(&rrdMutex);
+#endif
+
   setPluginStatus(NULL);
 
   if(myGlobals.rrdPath == NULL)

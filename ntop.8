@@ -38,6 +38,8 @@ ntop \- display top network users
 .RB [ -s | --no-promiscuous ]
 .RB [ -t | --trace-level 
 .IR <number> ]
+.RB [ -x
+.IR <max_num_hash_entries> ]
 .RB [ -w | --http-server
 .IR <port> ]
 .RB [ -z | --disable-sessions ]
@@ -61,6 +63,8 @@ ntop \- display top network users
 .RB [ -U | --mapper 
 .IR <URL> ]
 .RB [ -V | --version]
+.RB [ -X
+.IR <max_num_TCP_sessions> ]
 .RB [ --disable-stopcap ]
 .RB [ --log-extra
 .IR <number> ]
@@ -570,6 +574,11 @@ to prevent this by accident, the only way to run
 .B ntop
 as root is to explicitly specify -u root.
 .B Don't do it.
+
+.It -x
+.It -X 
+.B ntop
+creates a new hash/list entry for each new host/TCP session seen. In case of DOS (Denial Of Service) an attacker can easily exhaust all the host available memory because ntop is creating entries for dummy hosts. In order to avoid this you can set an upper limit in order to limit the memory ntop can use.
 
 .It2 -w --http-server
 .It2 -W --https-server

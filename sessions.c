@@ -648,6 +648,18 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       printf("DEBUG: NEW ");
 #endif
 
+      if(myGlobals.device[actualDeviceId].numTcpSessions >= myGlobals.maxNumSessions) {
+	static char messageShown = 0;
+	
+	if(!messageShown) {
+	  messageShown = 1;
+	  traceEvent(CONST_TRACE_INFO, "WARNING: Max num TCP sessions (%u) reached (see -X)\n", 
+		     myGlobals.maxNumSessions);
+	}
+	
+	return(NULL);
+      }
+      
 #ifdef DEBUG
       traceEvent(CONST_TRACE_INFO, "DEBUG: TCP hash [act size: %d]",
 		 myGlobals.device[actualDeviceId].numTcpSessions);

@@ -53,6 +53,7 @@
 static const struct pcap_pkthdr *h_save;
 static const u_char *p_save;
 static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
+static u_char lowMemoryMsgShown = 0;
 
 /* ******************************* */
 
@@ -91,7 +92,8 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
   Counter length = (Counter)_length;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
-    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (4) [Low memory?]");
+    if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (4) [Low memory?]");
+    lowMemoryMsgShown = 1;
     return(-1);
   }
 
@@ -432,6 +434,8 @@ static void checkNetworkRouter(HostTraffic *srcHost,
      || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost))
 	 && (!broadcastHost(srcHost)) && (!multicastHost(srcHost)))) {
     HostTraffic *router = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
+
+    if(router == NULL) return;
 
     if(((router->hostNumIpAddress[0] != '\0')
 	&& (broadcastHost(router)
@@ -817,6 +821,13 @@ static void processIpPkt(const u_char *bp,
      do NOT change the order of the lines below (see isBroadcastAddress call)
    */
    dstHost = lookupHost(&ip.ip_dst, ether_dst, 1, 0, actualDeviceId);
+   if(dstHost == NULL) {
+     /* Sanity check */
+     if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (2) [Low memory?]");
+     lowMemoryMsgShown = 1;
+     return;
+   }
+   
    srcHost = lookupHost(&ip.ip_src, ether_src,
 			 /*
 			   Don't check for multihoming when
@@ -827,18 +838,13 @@ static void processIpPkt(const u_char *bp,
 
    if(srcHost == NULL) {
      /* Sanity check */
-     traceEvent(CONST_TRACE_ERROR, "Sanity check failed (1) [Low memory?]");
+     if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (1) [Low memory?]");
+     lowMemoryMsgShown = 1;
      return; /* It might be that there's not enough memory that that
 		dstHost = lookupHost(&ip.ip_dst, ether_dst) caused
 		srcHost to be freed */
    }
    
-  if(dstHost == NULL) {
-    /* Sanity check */
-    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (2) [Low memory?]");
-    return;
-  }
-
   if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 #ifdef DEBUG
@@ -2163,14 +2169,22 @@ void processPacket(u_char *_deviceId,
 	srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (5) [Low memory?]");
+	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (5) [Low memory?]");
+#ifdef CFG_MULTITHREADED
+	  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+	  lowMemoryMsgShown = 1;
 	  return;
 	}
 
 	dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (6) [Low memory?]");
+	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (6) [Low memory?]");
+#ifdef CFG_MULTITHREADED
+	  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+	  lowMemoryMsgShown = 1;
 	  return;
 	}
 
@@ -2201,14 +2215,22 @@ void processPacket(u_char *_deviceId,
 	srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (7) [Low memory?]");
+	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (7) [Low memory?]");
+#ifdef CFG_MULTITHREADED
+	  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+	  lowMemoryMsgShown = 1;
 	  return;
 	}
 
 	dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (8) [Low memory?]");
+	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (8) [Low memory?]");
+#ifdef CFG_MULTITHREADED
+	  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+	  lowMemoryMsgShown = 1;
 	  return;
 	}
 
@@ -2240,14 +2262,22 @@ void processPacket(u_char *_deviceId,
 	  srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
 	  if(srcHost == NULL) {
 	    /* Sanity check */
-	    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (9) [Low memory?]");
+	    if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (9) [Low memory?]");
+#ifdef CFG_MULTITHREADED
+	    releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+	    lowMemoryMsgShown = 1;
 	    return;
 	  }
 
 	  dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
 	  if(dstHost == NULL) {
 	    /* Sanity check */
-	    traceEvent(CONST_TRACE_ERROR, "Sanity check failed (10) [Low memory?]");
+	    if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (10) [Low memory?]");
+#ifdef CFG_MULTITHREADED
+	    releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+	    lowMemoryMsgShown = 1;
 	    return;
 	  }
 
@@ -2568,14 +2598,22 @@ void processPacket(u_char *_deviceId,
 	srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (11) [Low memory?]");
+	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (11) [Low memory?]");
+#ifdef CFG_MULTITHREADED
+	  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+	  lowMemoryMsgShown = 1;
 	  return;
 	}
 
 	dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
-	  traceEvent(CONST_TRACE_ERROR, "Sanity check failed (12) [Low memory?]");
+	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (12) [Low memory?]");
+#ifdef CFG_MULTITHREADED
+	  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+	  lowMemoryMsgShown = 1;
 	  return;
 	}
 

@@ -796,7 +796,7 @@ typedef struct ntopInterface {
 #endif
 
   u_int  hostsno;        /* # of valid entries in the following table */
-  u_int  actualHashSize, hashThreshold, topHashThreshold;
+  u_int  actualHashSize;
   struct hostTraffic **hash_hostTraffic;
 
   u_short hashListMaxLookups;
@@ -1494,6 +1494,11 @@ typedef struct ntopGlobals {
                                      /*XML b disablePromiscuousMode Options  "-s | --no-promiscuous" */
   short traceLevel;                  /* 't' */
                                      /*XML n traceLevel           Options    "-t | --trace-level" */
+
+  u_int maxNumHashEntries;           /* 'x' */
+                                     /*XML n maxNumHashEntries           Options    "-x  <max num hash entries>" */
+  u_int maxNumSessions;              /* 'X' */
+                                     /*XML n maxNumSessions           Options    "-X  <max num TCP sessions>" */
 #ifndef WIN32
   char * effectiveUserName;
   int userId, groupId;               /* 'u' */

@@ -215,6 +215,8 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-u <user>      | --user <user>]                      %sUserid/name to run ntop under (see man page)\n", newLine);
 #endif /* WIN32 */
 
+  fprintf(fp, "    [-x <max num hash entries> ]                          %sMax num. hash entries ntop can handle (default %u)\n", 
+	  newLine, myGlobals.maxNumHashEntries);
   fprintf(fp, "    [-w <port>      | --http-server <port>]               %sWeb server (http:) port (or address:port) to listen on\n", newLine);
   fprintf(fp, "    [-z             | --disable-sessions]                 %sDisable TCP session tracking\n", newLine);
   fprintf(fp, "    [-A]                                                  %sAsk admin user password and exit\n", newLine);
@@ -240,6 +242,8 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", 
 	  newLine);
   fprintf(fp, "    [-V             | --version]                          %sOutput version information and exit\n", newLine);
+  fprintf(fp, "    [-X <max num TCP sessions> ]                          %sMax num. TCP sessions ntop can handle (default %u)\n", 
+	  newLine, myGlobals.maxNumSessions);
 
 #ifdef HAVE_OPENSSL
   fprintf(fp, "    [-W <port>      | --https-server <port>]              %sWeb server (https:) port (or address:port) to listen on\n", newLine);
@@ -336,11 +340,11 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:zAB:BD:F:MO:P:Q:S:U:VW:";
+  theOpts = "a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:BD:F:MO:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:F:IKLMO:P:Q:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKLMO:P:Q:S:U:VX:W:";
 #else
-  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:zAB:D:F:IKMO:P:Q:S:U:VW:";
+  theOpts = "a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKMO:P:Q:S:U:VX:W:";
 #endif
 
   /* * * * * * * * * * */
@@ -489,9 +493,13 @@ static int parseOptions(int argc, char* argv []) {
 	myGlobals.webPort = atoi(optarg);
       break;
 
+    case 'x':
+      myGlobals.maxNumHashEntries = atoi(optarg);
+      break;
+
     case 'z':
-       myGlobals.enableSessionHandling = 0;
-       break;
+      myGlobals.enableSessionHandling = 0;
+      break;
 
      case 'A':
        setAdminPw = 1;
@@ -558,6 +566,10 @@ static int parseOptions(int argc, char* argv []) {
       fprintf(stdout, "%s\n\n", __notice__);
       fprintf(stdout, "%s\n\n", __see__);
       exit(0);
+
+    case 'X':
+      myGlobals.maxNumSessions = atoi(optarg);
+      break;
 
 #ifdef HAVE_OPENSSL
     case 'W':
@@ -901,7 +913,7 @@ int main(int argc, char *argv[]) {
   readBuffer = (char*)malloc(LEN_FGETS_BUFFER) /* big just to be safe */;
   memset(readBuffer, 0, LEN_FGETS_BUFFER);
 
-  if (snprintf(cmdLineBuffer, LEN_CMDLINE_BUFFER, "%s ", argv[0]) < 0)
+  if(snprintf(cmdLineBuffer, LEN_CMDLINE_BUFFER, "%s ", argv[0]) < 0)
       BufferTooShort();
 
   /* Now we process the parameter list, looking for a @filename
@@ -912,8 +924,8 @@ int main(int argc, char *argv[]) {
    *     --filter-expression=host a.b.c.d
    *   This causes --filter-expression "host" and a bogus "a.b.c.d"
    */
-  for (i=1; i<argc; i++) {
-    if (argv[i][0] != '@') {
+  for(i=1; i<argc; i++) {
+    if(argv[i][0] != '@') {
 #ifdef PARAM_DEBUG
       printf("PARAM_DEBUG: Parameter %3d is '%s'\n", i, argv[i]);
 #endif

@@ -700,6 +700,18 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
     /* New host entry */
     int len;
 
+    if(myGlobals.device[actualDeviceId].hostsno >= myGlobals.maxNumHashEntries) {
+      static char messageShown = 0;
+
+      if(!messageShown) {
+	messageShown = 1;
+	traceEvent(CONST_TRACE_INFO, "WARNING: Max num hash entries (%u) reached (see -x)\n", 
+		   myGlobals.maxNumHashEntries);
+      }
+      
+      return(NULL);
+    }
+
 #if RECYCLE_MEMORY
     if(myGlobals.hostsCacheLen > 0) {
       el = myGlobals.hostsCache[--myGlobals.hostsCacheLen];

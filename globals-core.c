@@ -159,7 +159,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   if (strcmp(myGlobals.program_name, "ntopd") == 0) {
     myGlobals.daemonMode = 1;
   }
-
+  
   myGlobals.rFileName = DEFAULT_NTOP_TRAFFICDUMP_FILENAME;
   myGlobals.devices = DEFAULT_NTOP_DEVICES;
   myGlobals.dontTrustMACaddr = DEFAULT_NTOP_DONT_TRUST_MAC_ADDR;
@@ -176,7 +176,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.currentFilterExpression = DEFAULT_NTOP_FILTER_EXPRESSION;
   strncpy((char *) &myGlobals.domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(myGlobals.domainName));
   myGlobals.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
-
+  myGlobals.maxNumHashEntries = myGlobals.maxNumSessions = (u_int)-1;
+  
 #ifndef WIN32
   myGlobals.debugMode = DEFAULT_NTOP_DEBUG_MODE;
   myGlobals.useSyslog = DEFAULT_NTOP_SYSLOG;
