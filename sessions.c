@@ -437,7 +437,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   u_char rcStr[256];
   int len = 0;
 
-  if(!myGlobals.enableSessionHandling)
+  if((!myGlobals.enableSessionHandling) || (myGlobals.device[actualDeviceId].numTotSessions == 0))
     return(NULL);
 
   srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];

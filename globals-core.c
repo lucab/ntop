@@ -114,8 +114,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.numericFlag = 0;
   myGlobals.enableSuspiciousPacketDump = 0;
   myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
-  myGlobals.accuracyLevel = HIGH_ACCURACY_LEVEL;
-  myGlobals.currentFilterExpression = NULL;
+    myGlobals.currentFilterExpression = NULL;
   myGlobals.domainName[0] = '\0';
   myGlobals.isLsofPresent = 0;
 

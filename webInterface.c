@@ -734,9 +734,9 @@ void printNtopConfigInfo(void) {
 #endif
 
   if(myGlobals.isLsofPresent)
-    printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support", "Yes");
+    printFeatureConfigInfo("<A HREF=http://freshmeat.net/projects/lsof/>lsof</A> Support", "Yes");
   else
-    printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support",
+    printFeatureConfigInfo("<A HREF=http://freshmeat.net/projects/lsof/>lsof</A> Support",
 			   "No (Either disabled [Use -E option] or missing)");
 
   printFeatureConfigInfo("TCP Session Handling", myGlobals.enableSessionHandling == 1 ? "Enabled" : "Disabled");
