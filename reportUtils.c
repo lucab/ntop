@@ -2607,7 +2607,7 @@ void printHostDetailedInfo(HostTraffic *el) {
 	  break;
       }
 
-      if(snprintf(buf, sizeof(buf), "</ol>%s&nbsp;[%s - multihomed]",
+      if(snprintf(buf, sizeof(buf), "</ol>%s&nbsp;[%s - multihomed&nbsp;<IMG SRC=multihomed.gif BORDER=0>]",
 		  countryIcon, hostType) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
@@ -3045,7 +3045,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     sendString(buf);
 
     if(nameServerHost(el))     sendString("Name Server<br>");
-    if(gatewayHost(el))        sendString("Gateway<br>");
+    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG SRC=router.gif BORDER=0><br>");
     if(isSMTPhost(el))         sendString("SMTP Server<br>");
     if(isPOPhost(el))          sendString("POP Server<br>");
     if(isIMAPhost(el))         sendString("IMAP Server<br>");
@@ -3077,7 +3077,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     if(isServer(el))              sendString("Server<br>");
     if(isMasterBrowser(el))       sendString("Master Browser<br>");
     if(isWorkstation(el))         sendString("Workstation<br>");
-    if(isPrinter(el))             sendString("Printer<br>");
+    if(isPrinter(el))             sendString("Printer&nbsp;<IMG SRC=printer.gif BORDER=0><br>");
     if(isBridgeHost(el))          sendString("Bridge<br>");
     if(isNapsterRedirector(el))   sendString("Napster Redirector<br>");
     if(isNapsterServer(el))       sendString("Napster Server<br>");

@@ -432,6 +432,7 @@ void initGdbm(void) {
   /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
+
   gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
 #ifdef FALLBACK
@@ -441,20 +442,8 @@ void initGdbm(void) {
     traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n",
 	       tmpBuf, gdbm_strerror(gdbm_errno));
 
-#ifdef FALLBACK
-    if(firstTime) {
-      firstTime = 0;
-      strcpy(dbPath, "/tmp");
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
-      traceEvent(TRACE_ERROR, "Fallback solution: reverting to /tmp for the database directory\n");
-      goto RETRY_INIT_GDBM;
-    } else
-#else
-      traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
-#endif
-      exit(-1);
+    traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
+    exit(-1);
   } else {
     /* Let's remove from the database entries that were not
        yet resolved in (i.e. those such as "*132.23.45.2*")

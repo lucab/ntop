@@ -316,6 +316,9 @@ static void resolveAddress(char* symAddr,
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving resolveAddress()");
 #endif
+#ifdef MULTITHREADED
+    releaseMutex(&gdbmMutex);
+#endif
     return; /* ntop is quitting... */
   }
   if(gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
@@ -581,6 +584,7 @@ void ipaddr2str(HostTraffic *instance,
 #endif
     updateHostNameInfo(hostIpAddress.s_addr, data_data.dptr);
     strncpy(outBuf, data_data.dptr, outBufLen);
+    free(data_data.dptr);
     return;
   } else {
 #ifdef GDBM_DEBUG

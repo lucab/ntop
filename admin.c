@@ -54,7 +54,6 @@ void showUsers(void) {
     key_data = return_data;
 
     if(key_data.dptr[0] == '1') /* 1 = user */{
-
       if(numUsers == 0) {
 	sendString("<CENTER>\n"
 		   ""TABLE_ON"<TABLE BORDER=1>\n");
@@ -286,7 +285,7 @@ void showURLs(void) {
   sendString("<P><HR><P>\n");
 
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "showURLs");
+  accessMutex(&gdbmMutex, "showURLs");
 #endif 
   return_data = gdbm_firstkey (pwFile);
 
@@ -295,7 +294,6 @@ void showURLs(void) {
     key_data = return_data;
 
     if(key_data.dptr[0] == '2') { /* 2 = URL */
-
       if(numUsers == 0) {
 	sendString("<CENTER>\n"
 		   ""TABLE_ON"<TABLE BORDER=1 CELLSPACING=0 CELLPADDING=5>\n");
@@ -381,7 +379,7 @@ void addURL(char* url) {
       if(return_data.dptr != NULL) {
 	char *strtokState, *item;
 
-	aubuf = return_data.dptr;
+	aubuf = return_data.dptr; /* freed later (**) */
 	item = strtok_r(aubuf, "&", &strtokState);
 	for(i=0; (item != NULL) && (i < sizeof(authorisedUser)-1); i++) {
 	  authorisedUser[i] = &item[sizeof("users=")-1];
@@ -418,7 +416,7 @@ void addURL(char* url) {
     }
 
     if(aubuf != NULL)
-      free(aubuf);
+      free(aubuf); /* (**) */
 
 #ifdef MULTITHREADED
     releaseMutex(&gdbmMutex);
@@ -738,7 +736,14 @@ static void addKeyIfMissing(char* key, char* value, int encryptValue) {
   /* Check existence of user 'admin' */
   key_data.dptr = key;
   key_data.dsize = strlen(key_data.dptr)+1;
+
+#ifdef MULTITHREADED
+  accessMutex(&gdbmMutex, "addKeyIfMissing");
+#endif 
   return_data = gdbm_fetch(pwFile, key_data);
+#ifdef MULTITHREADED
+  releaseMutex(&gdbmMutex);
+#endif
 
   if(return_data.dptr == NULL) {
     /* If not existing, the add user 'admin', pw 'admin' */
@@ -758,8 +763,14 @@ static void addKeyIfMissing(char* key, char* value, int encryptValue) {
 #endif
     
     data_data.dsize = strlen(data_data.dptr)+1;
+#ifdef MULTITHREADED
+    accessMutex(&gdbmMutex, "showUsers");
+#endif 
     gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE);
-  }  else
+#ifdef MULTITHREADED
+    releaseMutex(&gdbmMutex);
+#endif
+  } else
     free(return_data.dptr);
 }
 

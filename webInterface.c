@@ -320,10 +320,10 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(isDHCPClient(el)) dynIp = "&nbsp;(dyn)"; else dynIp = "";
-  if(el->hostIpAddresses[1].s_addr != 0x0) multihomed = "(M.homed)"; else multihomed = "";
-  if(gatewayHost(el)) gwStr = "(Gw)"; else gwStr = "";
+  if(el->hostIpAddresses[1].s_addr != 0x0) multihomed = "<IMG SRC=multihomed.gif BORDER=0>"; else multihomed = "";
+  if(gatewayHost(el)) gwStr = "<IMG SRC=router.gif BORDER=0>"; else gwStr = "";
   if(nameServerHost(el)) dnsStr = "(DNS)"; else dnsStr = "";
-  if(isPrinter(el)) printStr = "(Print)"; else printStr = "";
+  if(isPrinter(el)) printStr = "<IMG SRC=printer.gif BORDER=0>"; else printStr = "";
   
   if(mode == LONG_FORMAT) {
     if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"

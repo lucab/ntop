@@ -857,12 +857,18 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
 #ifdef HAVE_GDBM_H
+#ifdef MULTITHREADED
+    accessMutex(&gdbmMutex, "cleanup");
+#endif 
   gdbm_close(gdbm_file); gdbm_file = NULL;
-  gdbm_close(pwFile); pwFile = NULL;
+  gdbm_close(pwFile);    pwFile = NULL;
   if(eventFile != NULL) {
     gdbm_close(eventFile);
     eventFile = NULL;
   }
+#ifdef MULTITHREADED
+  releaseMutex(&gdbmMutex);
+#endif
 
 #ifdef MULTITHREADED
   deleteMutex(&gdbmMutex);

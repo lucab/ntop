@@ -42,7 +42,13 @@ void initLogger(void) {
 void termLogger(void) {
 #ifdef HAVE_GDBM_H
   if(logDB != NULL) {
+#ifdef MULTITHREADED
+    accessMutex(&gdbmMutex, "termLogger");
+#endif 
     gdbm_close(logDB);
+#ifdef MULTITHREADED
+  releaseMutex(&gdbmMutex);
+#endif
     logDB = NULL;
   }
 #endif

@@ -1573,20 +1573,22 @@ static int checkHTTPpassword(char *theRequestedURL,
   if(snprintf(users, BUF_SIZE, "1%s", user) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
-  if(strstr(return_data.dptr, users) == NULL) {
+  if (return_data.dptr != NULL) {
+    if(strstr(return_data.dptr, users) == NULL) {
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+      releaseMutex(&gdbmMutex);
 #endif
-    if (return_data.dptr != NULL) free(return_data.dptr);
-    return 0; /* The specified user is not among those who are
-		 allowed to access the URL */
-  }
-  if (return_data.dptr != NULL) free(return_data.dptr);
+      if (return_data.dptr != NULL) free(return_data.dptr);
+      return 0; /* The specified user is not among those who are
+		   allowed to access the URL */
+    }
 
+    free(return_data.dptr);
+  }
+  
   key_data.dptr = users;
   key_data.dsize = strlen(users)+1;
   return_data = gdbm_fetch(pwFile, key_data);
-
 
   if (return_data.dptr != NULL) {
 #ifdef WIN32

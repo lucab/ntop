@@ -1748,6 +1748,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  free(rcStr);
 	}
+      } else if(((dport == 515 /* printer */) || (sport == 515))
+		&& (theSession->sessionState == STATE_ACTIVE)) {
+	if(sport == 515)
+	  FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
+	else
+	  FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
       } else if((sport == 8875 /* Napster Redirector */)
 		&& (packetDataLength > 5)) {
 	char address[64] = { 0 };
@@ -4909,7 +4915,13 @@ void updateOSName(HostTraffic *el) {
     accessMutex(&gdbmMutex, "updateOSName");
 #endif
 
-    if(gdbm_file == NULL) return; /* ntop is quitting... */
+    if(gdbm_file == NULL) {
+#ifdef MULTITHREADED
+      releaseMutex(&gdbmMutex);
+#endif
+      return; /* ntop is quitting... */
+    }
+
     data_data = gdbm_fetch(gdbm_file, key_data);
 
 #ifdef MULTITHREADED
@@ -4947,6 +4959,10 @@ void updateOSName(HostTraffic *el) {
       data_data.dsize = strlen(el->osName)+1;
 
       if(gdbm_file == NULL) return; /* ntop is quitting... */
+
+#ifdef MULTITHREADED
+      accessMutex(&gdbmMutex, "updateOSName");
+#endif 
       if(gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
 	printf("Error while adding osName for '%s'\n.\n", el->hostNumIpAddress);
       else {
@@ -4954,6 +4970,11 @@ void updateOSName(HostTraffic *el) {
 	printf("Added data: %s [%s]\n", tmpBuf, el->osName);
 #endif
       }
+
+#ifdef MULTITHREADED
+  releaseMutex(&gdbmMutex);
+#endif
+
 #endif /* HAVE_GDBM_H */
     }
   }
