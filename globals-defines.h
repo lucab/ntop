@@ -1006,8 +1006,9 @@
 #define LEN_FGETS_BUFFER                    512
 #define LEN_DATAFORMAT_BUFFER               24
 #define LEN_TIME_STAMP_BUFFER               2
+#define LEN_CHECKVERSION_BUFFER             4096
 #define LEN_GENERAL_WORK_BUFFER             1024
-#define LEN_MEDIUM_WORK_BUFFER              64
+#define LEN_MEDIUM_WORK_BUFFER              128
 #define LEN_SMALL_WORK_BUFFER               24 /* nnn.nnn.nnn.nnn\n */
 
 /*

@@ -4272,7 +4272,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "GNU C (gcc) version", buf);
 
-#ifdef HAVE_SYS_UTSNAME_H
+#if defined(HAVE_SYS_UTSNAME_H) && defined(HAVE_UNAME)
   if (uname(&unameData) == 0) {
     if(snprintf(buf, sizeof(buf), "sysname(%s) release(%s) version(%s) machine(%s)",
                          unameData.sysname,
@@ -4462,7 +4462,7 @@ int printNtopLogReport(int printAsText) {
 /* *************************** */
 
 void printNtopProblemReport(void) {
-  char buf[LEN_TIMEFORMAT_BUFFER];
+  char buf[LEN_MEDIUM_WORK_BUFFER];
 #ifdef PROBLEMREPORTID_DEBUG
   char buf2[256];
 #endif
@@ -4470,6 +4470,10 @@ void printNtopProblemReport(void) {
   time_t t;
   unsigned int v, scramble, raw;
   int i, j;
+
+#ifdef HAVE_SYS_UTSNAME_H
+  struct utsname unameData;
+#endif
 
 #ifndef WIN32
   struct pcap_stat pcapStats;
@@ -4624,7 +4628,23 @@ void printNtopProblemReport(void) {
   sendString("\n\n");
   sendString("----------------------------------------------------------------------------\n");
   sendString("Summary\n\n\n\n\n\n");
+#if defined(HAVE_SYS_UTSNAME_H) && defined(HAVE_UNAME)
+  if (uname(&unameData) == 0) {
+    if(snprintf(buf, sizeof(buf), "sysname(%s) release(%s) version(%s) machine(%s)",
+                         unameData.sysname,
+                         unameData.release,
+                         unameData.version,
+                         unameData.machine) < 0)
+      BufferTooShort();
+    sendString("OS(uname): ");
+    sendString(buf);
+    sendString("\n\n");
+  } else {
+#endif
   sendString("OS: __________  version: __________\n\n");
+#if defined(HAVE_SYS_UTSNAME_H) && defined(HAVE_UNAME)
+  }
+#endif
   sendString("ntop from: ______________________________ (rpm, source, ports, etc.)\n\n");
   sendString("Hardware:  CPU:           _____ (i86, SPARC, etc.)\n");
   sendString("           # Processors:  _____\n");
