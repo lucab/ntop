@@ -1815,12 +1815,29 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       sendString("</TD></TR>");
 
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>"
-		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1></TD>"
-		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"></TD></TR>",
-		getRowColor(), el->hostNumIpAddress, el->hostNumIpAddress) < 0)
-      BufferTooShort();
-    sendString(buf);
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>", getRowColor()) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      if((el->tcpSentLoc+el->tcpSentRem+el->udpSentLoc+el->udpSentRem) > 0) {
+	if(snprintf(buf, sizeof(buf), 
+		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1></TD>",
+		    el->hostNumIpAddress) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      } else
+	sendString("<TD>&nbsp;</TD>");
+
+      if((el->tcpRcvdLoc+el->tcpRcvdFromRem+el->udpRcvdLoc+el->udpRcvdFromRem) > 0) {
+	if(snprintf(buf, sizeof(buf), 
+		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"></TD></TR>",
+		    el->hostNumIpAddress) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      } else
+	sendString("<TD>&nbsp;</TD>");
+
+      sendString("</TR>");
     }
   }
 #endif

@@ -854,6 +854,8 @@ static void processIpPkt(const u_char *bp,
 	    isPassiveSession = 0;
 	  else
 	    isPassiveSession = theSession->passiveFtpSession;
+	} else {
+	  updateUsedPorts(srcHost, dstHost, sport, dport, tcpDataLength);
 	}
 
 	/* choose most likely port for protocol traffic accounting
@@ -1080,12 +1082,14 @@ static void processIpPkt(const u_char *bp,
 	    handleIP(dport, srcHost, dstHost, length, 0, actualDeviceId);
         }
 
-	if(nonFullyRemoteSession)
+	if((!myGlobals.borderSnifferMode) && nonFullyRemoteSession) 
 	  handleUDPSession(h, (off & 0x3fff),
 			   srcHostIdx, sport, dstHostIdx,
 			   dport, udpDataLength,
 			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
-	
+	else
+	  updateUsedPorts(srcHost, dstHost, sport, dport, length);
+
 	sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip.ip_len), actualDeviceId);	
       }
     }

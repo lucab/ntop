@@ -1424,7 +1424,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
   i = 0;
 
   if(el->portsUsage != NULL) {
-    for(idx=1; idx<1024; idx++) {
+    for(idx=1; idx<TOP_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
       if(el->portsUsage[idx] != NULL) {
 	char *svc = getAllPortByNum(idx);
 	char webHostName[256];

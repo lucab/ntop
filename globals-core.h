@@ -387,8 +387,7 @@ extern void freeSession(IPSession *sessionToPurge, int actualDeviceId);
 #ifndef MULTITHREADED
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 #endif
-extern void updateUsedPorts(HostTraffic *srcHost, u_int srcHostIdx,
-			    HostTraffic *dstHost, u_int dstHostIdx,
+extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);
 
 extern IPSession* handleTCPSession(const struct pcap_pkthdr *h,

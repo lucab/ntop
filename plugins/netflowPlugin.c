@@ -229,8 +229,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 		incrementUsageCounter(&dstHost->secHostPkts->terminatedTCPConnRcvd, srcHostIdx, actualDeviceId);
 	      */
 	      myGlobals.device[actualDeviceId].numEstablishedTCPConnections++;
-	      updateUsedPorts(srcHost, srcHostIdx, dstHost, dstHostIdx, sport, dport,
-			      len);
+	      updateUsedPorts(srcHost, dstHost, sport, dport, len);
       
 	      break;
 	    case 17: /* UDP */
@@ -309,7 +308,8 @@ static void initNetFlowFunct(void) {
     }
 
 #ifdef MULTITHREADED
-  if((myGlobals.netFlowInPort != 0) && (!threadActive)) {
+  if((myGlobals.netFlowInPort != 0) 
+     && (!threadActive)) {
     /* This plugin works only with threads */
     createThread(&netFlowThread, netflowMainLoop, NULL);
   }

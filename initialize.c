@@ -324,6 +324,8 @@ void initCounters() {
     strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
     myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx+1;
     myGlobals.otherHostEntry->hostSerial = myGlobals.otherHostEntryIdx;
+    myGlobals.otherHostEntry->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), 
+							       TOP_ASSIGNED_IP_PORTS);
   } else {
     /* We let ntop think that otherHostEntryIdx does not exist */
     myGlobals.otherHostEntry = NULL;
