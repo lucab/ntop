@@ -369,8 +369,8 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
     char buf[32], buf1[32];
 
     traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: Session terminated: %s:%d<->%s:%d (lastSeend=%d) (# sessions = %d)",
-	       _intoa(sessionToPurge->initiatorRealIp, buf, sizeof(buf)), sessionToPurge->sport,
-	       _intoa(sessionToPurge->remotePeerRealIp, buf1, sizeof(buf1)), sessionToPurge->dport,
+	       _addrtostr(&sessionToPurge->initiatorRealIp, buf, sizeof(buf)), sessionToPurge->sport,
+	       _addrtostr(&sessionToPurge->remotePeerRealIp, buf1, sizeof(buf1)), sessionToPurge->dport,
 	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numTcpSessions);
   }
 #endif
@@ -554,14 +554,18 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     sessionType = IPPROTO_TCP;
   }
 
-  idx= computeIdx(&srcHost->hostIpAddress,&dstHost->hostIpAddress, sport, dport);
+  idx = computeIdx(&srcHost->hostIpAddress,&dstHost->hostIpAddress, sport, dport);
    
   idx %= MAX_TOT_NUM_SESSIONS;
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d->%s:%d %d->",
-	     srcHost->hostSymIpAddress, sport,
-	     dstHost->hostSymIpAddress, dport, idx);
+#ifdef SESSION_TRACE_DEBUG
+  {
+    char buf[32], buf1[32];
+
+    traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [idx=%d]",
+	       _addrtostr(&srcHost->hostIpAddress, buf, sizeof(buf)), sport,
+	       _addrtostr(&dstHost->hostIpAddress, buf1, sizeof(buf1)), dport, idx);
+  }
 #endif
 
   if(sessionType == IPPROTO_TCP) {

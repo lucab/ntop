@@ -206,19 +206,14 @@ unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int d
      * Patch on the line below courtesy of
      * Paul Chapman <pchapman@fury.bio.dfo.ca>
      */
-    idx = (u_int)(((dstAddr->Ip4Address.s_addr) & 0xffff) ^
-		  ((dstAddr->Ip4Address.s_addr >> 15) & 0xffff) ^
-		  ((srcAddr->Ip4Address.s_addr << 1) & 0xffff) ^
-		  ((srcAddr->Ip4Address.s_addr >> 16 ) & 0xffff) ^
-		  (dport << 1) ^ (sport));
+    idx = (u_int)(dstAddr->Ip4Address.s_addr+srcAddr->Ip4Address.s_addr+sport+dport) ;
     break;
 #ifdef INET6
   case AF_INET6:
-    idx = (u_int)(((dstAddr->Ip6Address.s6_addr[0]) & 0xffff) ^
-		  ((dstAddr->Ip6Address.s6_addr[0] >> 15) & 0xffff) ^
-		  ((srcAddr->Ip6Address.s6_addr[0] << 1) & 0xffff) ^
-		  ((srcAddr->Ip6Address.s6_addr[0] >> 16 ) & 0xffff) ^
-		  (dport << 1) ^ (sport));
+    idx = (u_int)(dstAddr->Ip6Address.s6_addr[0] +
+		  dstAddr->Ip6Address.s6_addr[0] +
+		  srcAddr->Ip6Address.s6_addr[0] +
+		  srcAddr->Ip6Address.s6_addr[0] + sport +! dport);
     break;
 #endif
   }
