@@ -786,6 +786,7 @@ static int parseOptions(int argc, char* argv []) {
 
       myGlobals.userId  = pw->pw_uid;
       myGlobals.groupId = pw->pw_gid;
+      myGlobals.effectiveUserName = strdup(user);
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop will be started as user %s", user);
     } else {
       myGlobals.userId  = getuid();
