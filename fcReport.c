@@ -56,20 +56,20 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
 
     if (!cutName) {
         if (strncmp (el->fcCounters->hostNumFcAddress, "ff.ff.fd", strlen ("ff.ff.fd")) == 0) {
-            tmpStr = "Fabric Controller";
+            tmpStr = "Fabric<br>Controller";
             noLink = TRUE;
         }
         else if (strncmp (el->fcCounters->hostNumFcAddress, "ff.fc", strlen ("ff.fc")) == 0) {
-            safe_snprintf(tmpbuf, 64, "Domain Controller for %s", &el->fcCounters->hostNumFcAddress[6]);
+            safe_snprintf(tmpbuf, 64, "Domain Controller<br>for %s", &el->fcCounters->hostNumFcAddress[6]);
             tmpStr = tmpbuf;
             noLink = TRUE;
         }
         else if (strncmp (el->fcCounters->hostNumFcAddress, "ff.ff.fe", sizeof ("ff.ff.fe")) == 0) {
-            tmpStr = "F_Port Server";
+            tmpStr = "F_Port<br>Server";
             noLink = TRUE;
         }
         else if (strncmp (el->fcCounters->hostNumFcAddress, "ff.ff.fc", sizeof ("ff.ff.fc")) == 0) {
-            tmpStr = "Directory Server";
+            tmpStr = "Directory<br>Server";
             noLink = TRUE;
         }
         else if (strncmp (el->fcCounters->hostNumFcAddress, "00.00.00", strlen ("00.00.00")) == 0) {
@@ -78,26 +78,13 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
         }
         else {
             /* Introduce maybe a picture or string based on HBA's vendor */
-            if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC) &&
-               (el->hostResolvedName[0] != '\0')) {
-                tmpStr = el->hostResolvedName;
-            }
-            else if (el->fcCounters->pWWN.str[0] != '\0') {
-                if (!compactWWN) {
-                    strncpy (tmpbuf, fcwwn_to_str (el->fcCounters->pWWN.str),
-                             LEN_WWN_ADDRESS_DISPLAY);
-                }
-                else {
-                    safe_snprintf(tmpbuf, sizeof(tmpbuf),
-                                 "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
-                                 el->fcCounters->pWWN.str[0], el->fcCounters->pWWN.str[1], el->fcCounters->pWWN.str[2],
-                                 el->fcCounters->pWWN.str[3], el->fcCounters->pWWN.str[4], el->fcCounters->pWWN.str[5],
-                                 el->fcCounters->pWWN.str[6], el->fcCounters->pWWN.str[7]);
-                }
+            if (el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
+                safe_snprintf (tmpbuf, sizeof (tmpbuf), "%.12s<br>%.12s",
+                               el->hostResolvedName, &el->hostResolvedName[12]);
                 tmpStr = tmpbuf;
             }
             else {
-                tmpStr = el->fcCounters->hostNumFcAddress;
+                tmpStr = el->hostResolvedName;
             }
             
             if (strncmp (el->fcCounters->hostNumFcAddress, "ff", 2) == 0)
@@ -108,36 +95,21 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
     }
     else {
         if (el->fcCounters->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
-            if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC) &&
-               (el->hostResolvedName[0] != '\0')) {
-                tmpStr = el->hostResolvedName;
-            }
-            else if (el->fcCounters->pWWN.str[0] != '\0') {
-                if (!compactWWN) {
-                    strncpy (tmpbuf, fcwwn_to_str (el->fcCounters->pWWN.str),
-                             LEN_WWN_ADDRESS_DISPLAY);
-                }
-                else {
-                    safe_snprintf(tmpbuf, sizeof(tmpbuf),
-                                 "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
-                                 el->fcCounters->pWWN.str[0], el->fcCounters->pWWN.str[1], el->fcCounters->pWWN.str[2],
-                                 el->fcCounters->pWWN.str[3], el->fcCounters->pWWN.str[4], el->fcCounters->pWWN.str[5],
-                                 el->fcCounters->pWWN.str[6], el->fcCounters->pWWN.str[7]);
-                }
+            if (el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
+                safe_snprintf (tmpbuf, sizeof (tmpbuf), "%.12s<br>%.12s",
+                               el->hostResolvedName, &el->hostResolvedName[12]);
                 tmpStr = tmpbuf;
             }
             else {
-                tmpStr = el->fcCounters->hostNumFcAddress;
+                tmpStr = el->hostResolvedName;
             }
         }
         else {
             tmpStr = el->fcCounters->hostNumFcAddress;
+            noLink = TRUE;
         }
 
         linkStr = el->fcCounters->hostNumFcAddress;
-
-        if (strncmp (el->fcCounters->hostNumFcAddress, "ff", 2) == 0)
-            noLink = TRUE;
     }
 
     if (el->fcCounters->hostFcAddress.domain && (el->fcCounters->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN)) {
@@ -184,8 +156,8 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
     if (mode == FLAG_HOSTLINK_HTML_FORMAT) {
         if (noLink) {
             safe_snprintf(buf, buflen,
-                        "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s&nbsp;" CONST_IMG_FIBRECHANNEL_SWITCH "</TH>",
-                        tmpStr);
+                        "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s-%d&nbsp;</TH>",
+                          tmpStr, el->fcCounters->vsanId);
         }
         else {
             safe_snprintf(buf, buflen, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
@@ -197,7 +169,7 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
     }
     else if (mode == FLAG_HOSTLINK_TEXT_FORMAT) {
         if (noLink) {
-            safe_snprintf(buf, buflen, "%s", tmpStr);
+            safe_snprintf(buf, buflen, "%s-%d", tmpStr, el->fcCounters->vsanId);
         }
         else {
             safe_snprintf(buf, buflen, 
@@ -210,7 +182,7 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
         }
     }
     else {
-        safe_snprintf(buf, buflen, "%s", tmpStr);
+        safe_snprintf(buf, buflen, "%s-%d", tmpStr, el->fcCounters->vsanId);
     }
 
     releaseAddrResMutex ();
@@ -1636,9 +1608,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
 
     buf1[0]=0;
 
-    safe_snprintf(buf, sizeof(buf), "Info about %s\n",
-                  makeFcHostLink (el, FLAG_HOSTLINK_TEXT_NO_LINK_FORMAT, 1,
-                                  0, hostLinkBuf, sizeof (hostLinkBuf)));
+    safe_snprintf(buf, sizeof(buf), "Info about %s\n", el->hostResolvedName);
 
     releaseAddrResMutex();
     printHTMLheader(buf, 0, 0);

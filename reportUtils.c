@@ -2805,6 +2805,7 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
   int type;
   FcNameServerCacheEntry *fcnsEntry;
   FcScsiCounters *tmp;
+  HostTraffic *srcEl;
 
   if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
     memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
@@ -2849,17 +2850,30 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
             LEN_FC_ADDRESS);
     safe_snprintf (el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress), "%02x.%02x.%02x", el->fcCounters->hostFcAddress.domain,
              el->fcCounters->hostFcAddress.area, el->fcCounters->hostFcAddress.port);
-    setResolvedName(el, el->fcCounters->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FC);
-    
-    /* TODO ? FC_NUM???? */
+    setResolvedName(el, el->fcCounters->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FCID);
+
     el->fcCounters->vsanId = theSerial.value.fcSerial.vsanId;
+    el->l2Family = FLAG_HOST_TRAFFIC_AF_FC;
+    el->fcCounters->devType = SCSI_DEV_UNINIT;
+    el->magic = CONST_MAGIC_NUMBER;
     
-    fcnsEntry = findFcHostNSCacheEntry (&el->fcCounters->hostFcAddress, el->fcCounters->vsanId);
-    if (fcnsEntry != NULL) {
-        setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC);
-        memcpy ((u_int8_t *)el->fcCounters->pWWN.str, (u_int8_t *)fcnsEntry->pWWN.str,
-                LEN_WWN_ADDRESS);
-    }    
+    if ((srcEl = findHostBySerial (theSerial, deviceId)) != NULL) {
+        strcpy (el->hostResolvedName, srcEl->hostResolvedName);
+        el->hostResolvedNameType = srcEl->hostResolvedNameType;
+    }
+    else {
+        fcnsEntry = findFcHostNSCacheEntry (&el->fcCounters->hostFcAddress, el->fcCounters->vsanId);
+        if (fcnsEntry != NULL) {
+            if (fcnsEntry->alias != NULL) {
+                setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS);
+            }
+            else {
+                setResolvedName(el, fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
+            }
+            memcpy ((u_int8_t *)el->fcCounters->pWWN.str, (u_int8_t *)fcnsEntry->pWWN.str,
+                    LEN_WWN_ADDRESS);
+        }
+    }
   } else {
     /* MAC */
     char *ethAddr;
@@ -4924,7 +4938,7 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
 		"<TH "TH_BG" ROWSPAN=\"2\" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>",
 		theAnchor[1], arrow[1], theAnchor[0], arrow[0]);
     sendString(buf);
-    updateThpt(1);
+    updateThpt(0);
     if(abs(column) == 1) { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
     else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
     if(abs(column) == 2) { arrow[1] = arrowGif; theAnchor[1] = htmlAnchor; }

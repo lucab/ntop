@@ -338,6 +338,10 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(el == NULL)
     return("&nbsp;");
 
+  if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
+      return makeFcHostLink (el, mode, cutName, TRUE, buf, bufLen);
+  }
+
   memset(&symIp, 0, sizeof(symIp));
   memset(&linkName, 0, sizeof(linkName));
   memset(&flag, 0, sizeof(flag));
@@ -463,7 +467,9 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(myGlobals.debugMode == 1) 
 #endif
       switch (el->hostResolvedNameType) {
-        case FLAG_HOST_SYM_ADDR_TYPE_FC:
+        case FLAG_HOST_SYM_ADDR_TYPE_FCID:
+        case FLAG_HOST_SYM_ADDR_TYPE_FC_WWN:
+        case FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS:  
           strncat(noteBuf, " [FibreChannel]", (sizeof(noteBuf) - strlen(noteBuf) - 1));
           break;
         case FLAG_HOST_SYM_ADDR_TYPE_MAC:
@@ -674,27 +680,7 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
   tmpStr = el->hostResolvedName;
 
   if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
-    if (el->fcCounters->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
-          if (el->hostResolvedName[0] != '\0') {
-              setResolvedName(el, buf, FLAG_HOST_SYM_ADDR_TYPE_FC);
-          }
-          else if (el->fcCounters->pWWN.str[0] != 0) {
-              safe_snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
-                        el->fcCounters->pWWN.str[0], el->fcCounters->pWWN.str[1], el->fcCounters->pWWN.str[2], el->fcCounters->pWWN.str[3],
-                        el->fcCounters->pWWN.str[4], el->fcCounters->pWWN.str[5], el->fcCounters->pWWN.str[6], el->fcCounters->pWWN.str[7]);
-          }
-          else if (el->fcCounters->hostNumFcAddress[0] != '\0') {
-              strncpy (buf, el->fcCounters->hostNumFcAddress, LEN_FC_ADDRESS_DISPLAY);
-          }
-          else {
-              strcpy (buf, "");
-          }
-      }
-      else {
-          if (el->fcCounters->hostNumFcAddress[0] != '\0') {
-              strncpy (buf, el->fcCounters->hostNumFcAddress, LEN_FC_ADDRESS_DISPLAY);
-          }
-      }
+      strncpy (buf, el->hostResolvedName, 80);
   }
   else {
       if(broadcastHost(el)) {

@@ -58,6 +58,9 @@ int fillFcHostInfo (const u_char *bp, HostTraffic *srcHost)
   memcpy (srcHost->fcCounters->pWWN.str, &bp[20], LEN_WWN_ADDRESS);
   memcpy (srcHost->fcCounters->nWWN.str, &bp[28], LEN_WWN_ADDRESS);
 
+  setResolvedName (srcHost, srcHost->fcCounters->pWWN.str,
+                   FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
+
   return (0);
 }
 

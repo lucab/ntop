@@ -159,6 +159,7 @@ HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualD
 /* ************************************ */
 
 HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
+  if (emptySerial (&theSerial)) return (NULL);
   if(theSerial.serialType == SERIAL_IPV4 || theSerial.serialType == SERIAL_IPV6) {
     return(findHostByNumIP(theSerial.value.ipSerial.ipAddress,
 			   theSerial.value.ipSerial.vlanId,
@@ -4762,8 +4763,12 @@ HostTraffic* findHostByFcAddress (FcAddress *fcAddr, u_short vsanId, u_int actua
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
-    if((el->fcCounters->hostFcAddress.domain != 0) && (!memcmp(&el->fcCounters->hostFcAddress, &fcAddr, LEN_FC_ADDRESS)))
-      return(el);
+      if (el->fcCounters != NULL) {
+          if ((el->fcCounters->hostFcAddress.domain != 0) &&
+              (!memcmp(&el->fcCounters->hostFcAddress, fcAddr, LEN_FC_ADDRESS)) &&
+              (el->fcCounters->vsanId == vsanId))
+              return(el);
+      }
   }
 
   return(NULL);
@@ -5789,7 +5794,14 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
                  file, line);
 #endif
 
-    strncpy(el->hostResolvedName, updateValue, MAX_LEN_SYM_HOST_NAME-1);
+    if (updateType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
+        safe_snprintf(el->hostResolvedName, sizeof(el->hostResolvedName),
+                      fcwwn_to_str (updateValue));
+        el->hostResolvedName[LEN_WWN_ADDRESS_DISPLAY] = '\0';
+    }
+    else {
+        strncpy(el->hostResolvedName, updateValue, MAX_LEN_SYM_HOST_NAME-1);
+    }
     // el->hostResolvedName[MAX_LEN_SYM_HOST_NAME-1] = '\0';
     for(i=0; el->hostResolvedName[i] != '\0'; i++)
       el->hostResolvedName[i] = tolower(el->hostResolvedName[i]);
@@ -5972,8 +5984,10 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
                 strncpy(debugCmpFctn, "2A1-MAC", sizeof(debugCmpFctn));
 #endif
               }
-          } else if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC) &&
-                    ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FAKE)) {
+          } else if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FCID)
+                    && ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC_WWN)
+                    && ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS)
+                    && ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FAKE)) {
             /* For most of the rest of the tests, we just compare the names we
              * have - since they're always the same type, a strncasecmp test
              * IS meaningful.
@@ -5984,7 +5998,9 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 #ifdef CMPFCTN_DEBUG
             strncpy(debugCmpFctn, "2A1-!FC!FAKE", sizeof(debugCmpFctn));
 #endif
-          } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC) {
+          } else if ((((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FCID)
+                      || ((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN)
+                      || ((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS))) {
             name1 = (*a)->hostResolvedName;
             name2 = (*b)->hostResolvedName;
             rc = strcasecmp(name1, name2);

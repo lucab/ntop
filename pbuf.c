@@ -2427,6 +2427,7 @@ void processPacket(u_char *_deviceId,
   struct tokenRing_llc *trllc;
   unsigned char ipxBuffer[128];
   int deviceId, actualDeviceId, vlanId=-1;
+  static time_t lastUpdateThptTime = 0;
 #ifdef LINUX
   AnyHeader *anyHeader;
 #endif
@@ -2526,6 +2527,8 @@ void processPacket(u_char *_deviceId,
 
   if (!myGlobals.initialSniffTime && (myGlobals.rFileName != NULL)) {
       myGlobals.initialSniffTime = h->ts.tv_sec;
+      myGlobals.device[deviceId].lastThptUpdate = myGlobals.device[deviceId].lastMinThptUpdate =
+          myGlobals.device[deviceId].lastHourThptUpdate = myGlobals.device[deviceId].lastFiveMinsThptUpdate = myGlobals.initialSniffTime;
   }
 
   memcpy(&myGlobals.lastPktTime, &h->ts, sizeof(myGlobals.lastPktTime));
@@ -3317,6 +3320,13 @@ void processPacket(u_char *_deviceId,
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
 
+  if (myGlobals.rFileName != NULL) {
+      if (myGlobals.actTime > (lastUpdateThptTime + PARM_THROUGHPUT_REFRESH_INTERVAL)) {
+          updateThpt (1);
+          lastUpdateThptTime = myGlobals.actTime;
+      }
+  }
+
   if(myGlobals.resetHashNow == 1) {
     int i;
 
@@ -3482,9 +3492,6 @@ static void processFcPkt(const u_char *bp,
         traceEvent(CONST_TRACE_ERROR, "Sanity check failed (2) [Low memory?]");
         return;
     }
-
-    if(allocFcScsiCounters(srcHost) == NULL) return;
-    if(allocFcScsiCounters(dstHost) == NULL) return;
 
     if (strncasecmp (dstHost->fcCounters->hostNumFcAddress, FC_BROADCAST_ADDR,
                      strlen (FC_BROADCAST_ADDR)) == 0) {

@@ -372,8 +372,10 @@ void resetDevice(int devIdx) {
   myGlobals.device[devIdx].last30daysThptIdx = 0;
   myGlobals.device[devIdx].hostsno = 0;
 
-  myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
-    myGlobals.device[devIdx].lastHourThptUpdate = myGlobals.device[devIdx].lastFiveMinsThptUpdate = time(NULL);
+  if (myGlobals.rFileName == NULL) {
+      myGlobals.device[devIdx].lastThptUpdate = myGlobals.device[devIdx].lastMinThptUpdate =
+          myGlobals.device[devIdx].lastHourThptUpdate = myGlobals.device[devIdx].lastFiveMinsThptUpdate = time(NULL);
+  }
   resetTrafficCounter(&myGlobals.device[devIdx].lastMinEthernetBytes);
   resetTrafficCounter(&myGlobals.device[devIdx].lastFiveMinsEthernetBytes);
   memset(&myGlobals.device[devIdx].tcpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));

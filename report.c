@@ -3775,8 +3775,16 @@ void printThptStatsMatrix(int sortedColumn) {
   time_t tmpTime;
   struct tm t;
   HostTraffic *el;
+  FcScsiCounters *fcCntrs;
+  HostTraffic tmpEl;
 
   printHTMLheader("Network Load Statistics Matrix", NULL, 0);
+
+  memset (&tmpEl, 0, sizeof (HostTraffic));
+  if(allocFcScsiCounters(&tmpEl) == NULL) {
+      traceEvent (CONST_TRACE_WARNING, "Unable to allocate memory for FC counters\n");
+      return;
+  }
 
   switch(sortedColumn) {
   case 1:
@@ -3791,9 +3799,20 @@ void printThptStatsMatrix(int sortedColumn) {
       if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].trafficValue == 0)
 	break;
 
-      tmpTime = myGlobals.actTime-(i*60);
+      if (myGlobals.rFileName != NULL) {
+          tmpTime = myGlobals.lastPktTime.tv_sec-(i*60);
+      }
+      else {
+          tmpTime = myGlobals.actTime-(i*60);
+      }
       strftime(label, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
-      tmpTime = myGlobals.actTime-((i+1)*60);
+
+      if (myGlobals.rFileName != NULL) {
+          tmpTime = myGlobals.lastPktTime.tv_sec -((i+1)*60);
+      }
+      else {
+          tmpTime = myGlobals.actTime-((i+1)*60);
+      }
       strftime(label1, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
       safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=CENTER>"
 		  "<B>%s&nbsp;-&nbsp;%s</B></TH>"
@@ -3810,7 +3829,7 @@ void printThptStatsMatrix(int sortedColumn) {
       /* ************************* */
 
       if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostSentSerial)) {
-	HostTraffic tmpEl;
+
 
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].topHostSentSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -3824,7 +3843,6 @@ void printThptStatsMatrix(int sortedColumn) {
       }
 
       if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].secondHostSentSerial)) {
-	HostTraffic tmpEl;
 
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].secondHostSentSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -3838,7 +3856,6 @@ void printThptStatsMatrix(int sortedColumn) {
       }
 
       if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostSentSerial)) {
-	HostTraffic tmpEl;
 
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].thirdHostSentSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -3860,7 +3877,6 @@ void printThptStatsMatrix(int sortedColumn) {
       /* ************************* */
 
       if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostRcvdSerial)) {
-	HostTraffic tmpEl;
 
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].topHostRcvdSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -3874,7 +3890,6 @@ void printThptStatsMatrix(int sortedColumn) {
       }
 
       if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].secondHostRcvdSerial)) {
-	HostTraffic tmpEl;
 
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].secondHostRcvdSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -3888,7 +3903,6 @@ void printThptStatsMatrix(int sortedColumn) {
       }
 
       if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].thirdHostRcvdSerial)) {
-	HostTraffic tmpEl;
 
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].thirdHostRcvdSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -3911,6 +3925,7 @@ void printThptStatsMatrix(int sortedColumn) {
   default:
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples < 60) {
       printNoDataYet();
+      free (tmpEl.fcCounters);
       return;
     } else {
       sendString("<CENTER>\n");
@@ -3923,11 +3938,23 @@ void printThptStatsMatrix(int sortedColumn) {
 	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue == 0)
 	  break;
 
-	tmpTime = myGlobals.actTime-(i*60*60);
+        if (myGlobals.rFileName != NULL) {
+            tmpTime = myGlobals.lastPktTime.tv_sec-(i*60*60);
+        }
+        else {
+            tmpTime = myGlobals.actTime-(i*60*60);
+        }
 	strftime(label, sizeof(label), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
-	tmpTime = myGlobals.actTime-((i+1)*60*60);
+
+        if (myGlobals.rFileName != NULL) {
+            tmpTime = myGlobals.lastPktTime.tv_sec-((i+1)*60*60);
+        }
+        else {
+            tmpTime = myGlobals.actTime-((i+1)*60*60);
+        }
 	strftime(label1, sizeof(label1), CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TD "TD_BG" ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
+
+            safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TD "TD_BG" ALIGN=CENTER><B>%s&nbsp;-&nbsp;%s</B></TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT "DARK_BG">"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">",
 		    getRowColor(), label, label1,
 		    formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
@@ -3938,7 +3965,6 @@ void printThptStatsMatrix(int sortedColumn) {
 	/* ************************* */
 
 	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostSentSerial)) {
-	  HostTraffic tmpEl;
 
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostSentSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -3952,7 +3978,6 @@ void printThptStatsMatrix(int sortedColumn) {
 	}
 
 	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostSentSerial)) {
-	  HostTraffic tmpEl;
 
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostSentSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -3966,7 +3991,6 @@ void printThptStatsMatrix(int sortedColumn) {
 	}
 
 	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostSentSerial)) {
-	  HostTraffic tmpEl;
 
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostSentSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -3987,7 +4011,6 @@ void printThptStatsMatrix(int sortedColumn) {
 	/* ************************* */
 
 	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdSerial)) {
-	  HostTraffic tmpEl;
 
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -4001,7 +4024,6 @@ void printThptStatsMatrix(int sortedColumn) {
 	}
 
 	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdSerial)) {
-	  HostTraffic tmpEl;
 
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -4015,7 +4037,6 @@ void printThptStatsMatrix(int sortedColumn) {
 	}
 
 	if(!emptySerial(&myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdSerial)) {
-	  HostTraffic tmpEl;
 
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
@@ -4038,6 +4059,7 @@ void printThptStatsMatrix(int sortedColumn) {
   }
 
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
+  free (tmpEl.fcCounters);
 }
 
 /* ************************ */

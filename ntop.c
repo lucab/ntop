@@ -625,7 +625,8 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     HEARTBEAT(0, "scanIdleLoop(), sleep(60)...woke", NULL);
-    myGlobals.actTime = time(NULL);
+    if (myGlobals.rFileName == NULL)
+        myGlobals.actTime = time(NULL);
 
     for(i=0; i<myGlobals.numDevices; i++)
       if(!myGlobals.device[i].virtualDevice) {
@@ -673,7 +674,8 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     HEARTBEAT(0, "scanFingerprintLoop(), sleep()...woke", NULL);
-    myGlobals.actTime = time(NULL);
+    if (myGlobals.rFileName == NULL)
+        myGlobals.actTime = time(NULL);
 #ifdef FINGERPRINT_DEBUG
     traceEvent(CONST_TRACE_NOISY, "FINGERPRINT_DEBUG: starting cycle %d", ++countCycle);
 #endif

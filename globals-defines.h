@@ -1779,7 +1779,9 @@
  */
 #define FLAG_HOST_SYM_ADDR_TYPE_FAKE        -9
 #define FLAG_HOST_SYM_ADDR_TYPE_NONE        0
-#define FLAG_HOST_SYM_ADDR_TYPE_FC          5
+#define FLAG_HOST_SYM_ADDR_TYPE_FCID        5
+#define FLAG_HOST_SYM_ADDR_TYPE_FC_WWN      6
+#define FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS    7
 #define FLAG_HOST_SYM_ADDR_TYPE_MAC         9
 #define FLAG_HOST_SYM_ADDR_TYPE_IPX         17
 #define FLAG_HOST_SYM_ADDR_TYPE_IP          19
