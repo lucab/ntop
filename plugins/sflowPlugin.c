@@ -3287,20 +3287,25 @@ static void printsFlowDeviceConfiguration(void) {
 
     dev = strtok_r(value, ",", &strtokState);
     while(dev != NULL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s.%s\n",
-		  dev, i == 0 ? "CHECKED" : "", SFLOW_DEVICE_NAME, dev);
-      sendString(buf);
+      int id = mapsFlowDeviceToNtopDevice(atoi(dev));
+      
+      if(id == -1)
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s.%s\n",
+		      dev, i == 0 ? "CHECKED" : "", SFLOW_DEVICE_NAME, dev);
+      else
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s\n",
+		      dev, i == 0 ? "CHECKED" : "", myGlobals.device[id].humanFriendlyName);
+      	sendString(buf);
 
       if(pluginActive) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=/plugins/%s?device=-%s>Delete</A> ]",
-		    sflowPluginInfo->pluginURLname, dev);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/plugins/%s?device=-%s\" "
+		      "onClick=\"return confirmDelete()\">Delete</A> ]",
+		      sflowPluginInfo->pluginURLname, dev);
 	sendString(buf);
       }
 
       sendString("<br>\n");
-
-      i++;
-      dev = strtok_r(NULL, ",", &strtokState);
+      i++; dev = strtok_r(NULL, ",", &strtokState);
     }
 
     if(pluginActive)
@@ -3332,13 +3337,33 @@ static void printsFlowConfiguration(int deviceId) {
   sendString("<center><table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n");
   sendString("<tr><th colspan=\"4\" "DARK_BG">Incoming Flows</th></tr>\n");
 
-  sendString("<tr><th colspan=2 "DARK_BG">sFlow Device</th><td align=right colspan=2>");
+  sendString("<tr><th colspan=2 "DARK_BG">sFlow Device</th>");
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s.%d [ <A HREF=\"/plugins/%s\"/>List</A> ]",
-	      SFLOW_DEVICE_NAME, myGlobals.device[deviceId].sflowGlobals->sflowDeviceId,
+
+
+
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(sflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n<p>");
+  
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+		myGlobals.device[deviceId].sflowGlobals->sflowDeviceId);
+  sendString(buf);
+  
+  sendString("<input name=\"name\" size=\"24\" value=\"");
+  sendString(myGlobals.device[deviceId].humanFriendlyName);
+  sendString("\"> <input type=\"submit\" value=\"Set Interface Name\">");
+
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), " [ <A HREF=\"/plugins/%s\"/>List sFlow Interfaces</A> ]</p>\n</form>",
 	      sflowPluginInfo->pluginName);
   sendString(buf);
   sendString("</td></tr>\n");
+
+
+
+
+
+
 
   sendString("<tr><th rowspan=\"2\" "DARK_BG">Flow<br>Collection</th>\n");
 
@@ -3821,7 +3846,7 @@ static void printsFlowStatisticsRcvd(int deviceId) {
 
 static int createsFlowDevice(int sflowDeviceId) {
   int deviceId;
-  char buf[32];
+  char buf[32], value[128];
 
   traceEvent(CONST_TRACE_INFO, "SFLOW: createsFlowDevice(%d)", sflowDeviceId);
 
@@ -3842,6 +3867,11 @@ static int createsFlowDevice(int sflowDeviceId) {
     myGlobals.device[deviceId].activeDevice = 1;
     myGlobals.device[deviceId].sflowGlobals->sflowDeviceId = sflowDeviceId;
     initsFlowDevice(deviceId);
+
+    if(fetchPrefsValue(sfValue(deviceId, "humanFriendlyName", 1), value, sizeof(value)) != -1) {
+      free(myGlobals.device[deviceId].humanFriendlyName);
+      myGlobals.device[deviceId].humanFriendlyName = strdup(value);
+    }
 
     traceEvent(CONST_TRACE_INFO, "SFLOW: createsFlowDevice created device %d",
 	     deviceId);
@@ -4103,6 +4133,10 @@ static void handlesFlowHTTPrequest(char* _url) {
 	      setsFlowInSocket(deviceId);
 	    }
 	  }
+	} else if(strcmp(device, "name") == 0) {
+	  free(myGlobals.device[deviceId].humanFriendlyName);
+	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
+	  storePrefsValue(sfValue(deviceId, "humanFriendlyName", 1), value);
 	} else if(strcmp(device, "debug") == 0) {
 	  if(deviceId > 0) {
 	    myGlobals.device[deviceId].sflowGlobals->sflowDebug = atoi(value);
@@ -4221,8 +4255,9 @@ static void handlesFlowHTTPrequest(char* _url) {
       return;
     }
 
-    if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "SFLOW: Attempting to delete [deviceId=%d][sFlow device=%d]",
-	       deviceId, readDeviceId);
+    if(SFLOW_DEBUG(deviceId)) 
+      traceEvent(CONST_TRACE_INFO, "SFLOW: Attempting to delete [deviceId=%d][sFlow device=%d]",
+		 deviceId, readDeviceId);
 
     if(fetchPrefsValue(sfValue(deviceId, "knownDevices", 0), value, sizeof(value)) != -1) {
       char *strtokState, *dev, value1[128];

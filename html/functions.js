@@ -91,3 +91,15 @@ function popUp(url) {
 		sealWin=window.open(url,"win",'toolbar=no,width=570,height=200');
 		sealWin.focus();
 }
+
+function confirmDelete() {
+   return confirm("Are you sure you want to delete this interface ?");
+}
+
+function confirmReset() {
+   return confirm("Are you sure you want to reset all statistics ?");
+}
+
+function confirmShutdown() {
+   return confirm("Are you sure you want to shutdown NTOP?");
+}

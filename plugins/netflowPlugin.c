@@ -1488,20 +1488,26 @@ static void printNetFlowDeviceConfiguration(void) {
 
     dev = strtok_r(value, ",", &strtokState);
     while(dev != NULL) {
-      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s.%s\n",
-		  dev, i == 0 ? "CHECKED" : "", NETFLOW_DEVICE_NAME, dev);
+      int id = mapNetFlowDeviceToNtopDevice(atoi(dev));
+	   
+      if(id == -1)
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s.%s\n",
+		      dev, i == 0 ? "CHECKED" : "", NETFLOW_DEVICE_NAME, dev);
+      else
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s\n",
+		      dev, i == 0 ? "CHECKED" : "", myGlobals.device[id].humanFriendlyName);
+
       sendString(buf);
 
       if(pluginActive) {
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=/plugins/%s?device=-%s>Delete</A> ]",
-		    netflowPluginInfo->pluginURLname, dev);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/plugins/%s?device=-%s\" "
+		      "onClick=\"return confirmDelete()\">Delete</A> ]",
+		      netflowPluginInfo->pluginURLname, dev);
 	sendString(buf);
       }
 
       sendString("<br>\n");
-
-      i++;
-      dev = strtok_r(NULL, ",", &strtokState);
+      i++; dev = strtok_r(NULL, ",", &strtokState);
     }
 
     if(pluginActive)
@@ -1533,10 +1539,21 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString("<center><table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n");
   sendString("<tr><th colspan=\"4\" "DARK_BG">Incoming Flows</th></tr>\n");
 
-  sendString("<tr><th colspan=2 "DARK_BG">NetFlow Device</th><td align=right colspan=2>");
+  sendString("<tr><th colspan=2 "DARK_BG">NetFlow Device</th>");
+ 
+  sendString("<td "TD_BG"><form action=\"/" CONST_PLUGINS_HEADER);
+  sendString(netflowPluginInfo->pluginURLname);
+  sendString("\" method=GET>\n<p>");
+  
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
+  sendString(buf);
+  
+  sendString("<input name=\"name\" size=\"24\" value=\"");
+  sendString(myGlobals.device[deviceId].humanFriendlyName);
+  sendString("\"> <input type=\"submit\" value=\"Set Interface Name\">");
 
-  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s.%d [ <A HREF=\"/plugins/%s\"/>List</A> ]",
-	      NETFLOW_DEVICE_NAME, myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId,
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), " [ <A HREF=\"/plugins/%s\"/>List NetFlow Interfaces</A> ]</p>\n</form>",
 	      netflowPluginInfo->pluginName);
   sendString(buf);
   sendString("</td></tr>\n");
@@ -2315,7 +2332,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 
 static int createNetFlowDevice(int netFlowDeviceId) {
   int deviceId;
-  char buf[32];
+  char buf[32], value[128];
 
   traceEvent(CONST_TRACE_INFO, "NETFLOW: createNetFlowDevice(%d)", netFlowDeviceId);
 
@@ -2337,6 +2354,12 @@ static int createNetFlowDevice(int netFlowDeviceId) {
     myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId = netFlowDeviceId;
     initNetFlowDevice(deviceId);
     setNetFlowInterfaceMatrix(deviceId);
+
+    if(fetchPrefsValue(nfValue(deviceId, "humanFriendlyName", 1),
+		       value, sizeof(value)) != -1) {
+      free(myGlobals.device[deviceId].humanFriendlyName);
+      myGlobals.device[deviceId].humanFriendlyName = strdup(value);
+    }
 
     traceEvent(CONST_TRACE_INFO, "NETFLOW: createNetFlowDevice created device %d",
 	     deviceId);
@@ -2418,6 +2441,10 @@ static void handleNetflowHTTPrequest(char* _url) {
 	      setNetFlowInSocket(deviceId);
 	    }
 	  }
+	} else if(strcmp(device, "name") == 0) {
+	  free(myGlobals.device[deviceId].humanFriendlyName);
+	  myGlobals.device[deviceId].humanFriendlyName = strdup(value);
+	  storePrefsValue(nfValue(deviceId, "humanFriendlyName", 1), value);
 	} else if(strcmp(device, "debug") == 0) {
 	  if(deviceId > 0) {
 	    myGlobals.device[deviceId].netflowGlobals->netFlowDebug = atoi(value);
