@@ -1360,14 +1360,16 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	     (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
 	    /* If possible this table will be enlarged */
 
-	    extendTcpSessionsHash();
+	    if(extendTcpSessionsHash() == 0) {
+	      /* The table has been extended successfully */
 
-	    /* A goto il necessary as when the hash is extended all the pointers changed hence
-	       some references (eg. sessions[]) are no longer valid) */
-
-	    goto RESCAN_LIST;
+	      /* A goto il necessary as when the hash is extended all 
+		 the pointers changed hence some references (eg. sessions[])
+		 are no longer valid) */	      
+	      goto RESCAN_LIST;
+	    }
 	  }
-
+	  
 	  if(device[actualDeviceId].numTcpSessions >
 	     (device[actualDeviceId].numTotSessions*MULTIPLY_FACTORY)) {
 	    /* The hash table is getting large: let's replace the oldest session

@@ -1162,10 +1162,10 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 
 /* ******************************************** */
 
-void extendTcpSessionsHash() {
+int extendTcpSessionsHash() {
   const short extensionFactor = 2;
 
-  if((device[actualDeviceId].numTotSessions*extensionFactor) < MAX_HASH_SIZE) {
+  if((device[actualDeviceId].numTotSessions*extensionFactor) <= MAX_HASH_SIZE) {
     /* Fine we can enlarge the table now */
     IPSession** tmpSession;
     int i, newLen, idx;
@@ -1196,5 +1196,7 @@ void extendTcpSessionsHash() {
 
     traceEvent(TRACE_INFO, "Extending TCP hash [new size: %d]",
 	       device[actualDeviceId].numTotSessions);
-  }
+    return(0);
+  } else
+    return(-1);
 }
