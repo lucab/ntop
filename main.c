@@ -976,29 +976,39 @@ int main(int argc, char *argv[]) {
 #endif
       readBufferWork = strchr(argv[i], '=');
       if (readBufferWork != NULL) {
+          /* NOTE: This code was already safe, in that it checked the length
+           * before doing the s t r c a t and used our BufferTooShort() macro
+           * to provide meaningful feedback.
+           *
+           * However, some individuals just do greps and report anything they
+           * find as a 'security problem' without looking at the code.
+           *
+           * Changing to strncat avoids the FUD and is a belt & suspenders
+           * type preventative measure.  (BMSIII - 2004-02)
+           */
 	if (strlen(cmdLineBuffer) + strlen(argv[i]) + 5 >= LEN_CMDLINE_BUFFER) {
 	  BufferTooShort();
 	} else {
 	  readBufferWork[0] = '\0';
-	  strcat(cmdLineBuffer, argv[i]);
-	  strcat(cmdLineBuffer, "=\"");
-	  strcat(cmdLineBuffer, &readBufferWork[1]);
-	  strcat(cmdLineBuffer, "\" ");
+	  strncat(cmdLineBuffer, argv[i], (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	  strncat(cmdLineBuffer, "=\"", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	  strncat(cmdLineBuffer, &readBufferWork[1], (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	  strncat(cmdLineBuffer, "\" ", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
 	}
       } else {
 	readBufferWork = strchr(argv[i], ' ');
 	if (readBufferWork != NULL) {
 	  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 4 < LEN_CMDLINE_BUFFER) {
-	    strcat(cmdLineBuffer, "\"");
-	    strcat(cmdLineBuffer, argv[i]);
-	    strcat(cmdLineBuffer, "\" ");
+	    strncat(cmdLineBuffer, "\"", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	    strncat(cmdLineBuffer, argv[i], (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	    strncat(cmdLineBuffer, "\" ", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
 	  } else {
 	    BufferTooShort();
 	  }
 	} else {
 	  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 2 < LEN_CMDLINE_BUFFER) {
-	    strcat(cmdLineBuffer, argv[i]);
-	    strcat(cmdLineBuffer, " ");
+	    strncat(cmdLineBuffer, argv[i], (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	    strncat(cmdLineBuffer, " ", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
 	  } else {
 	    BufferTooShort();
 	  }
@@ -1068,8 +1078,8 @@ int main(int argc, char *argv[]) {
 	printf("PARAM_DEBUG:      -> '%s'\n", readBuffer);
 #endif
 	if (strlen(cmdLineBuffer) + strlen(readBuffer) + 2 < LEN_CMDLINE_BUFFER) {
-	  strcat(cmdLineBuffer, " ");
-	  strcat(cmdLineBuffer, readBuffer);
+	  strncat(cmdLineBuffer, " ", (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
+	  strncat(cmdLineBuffer, readBuffer, (sizeof(cmdLineBuffer) - strlen(cmdLineBuffer) - 1));
 	} else {
 	  BufferTooShort();
 	}

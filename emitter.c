@@ -233,7 +233,8 @@ static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
 static void wrtIntItm(FILE *fDescr, int lang, char *indent, char *name,
 		      int value, char last, int numEntriesSent) {
   char buf[80];
-  sprintf(buf,"%d",value);
+  if(snprintf(buf, sizeof(buf), "%d",value) < 0)
+    BufferTooShort();
   wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
 }
 
@@ -242,7 +243,8 @@ static void wrtIntItm(FILE *fDescr, int lang, char *indent, char *name,
 static void wrtIntStrItm(FILE *fDescr, int lang, char *indent,int name,
 			 char *value, char useless, int numEntriesSent) {
   char buf[80];
-  sprintf(buf,"%d",name);
+  if(snprintf(buf, sizeof(buf), "%d",name) < 0)
+    BufferTooShort();
   wrtStrItm(fDescr, lang, indent, buf, value, ',', numEntriesSent);
 }
 
@@ -251,7 +253,8 @@ static void wrtIntStrItm(FILE *fDescr, int lang, char *indent,int name,
 static void wrtUintItm(FILE *fDescr, int lang, char *indent, char *name,
 		       unsigned int value, char useless, int numEntriesSent) {
   char buf[80];
-  sprintf(buf,"%d",value);
+  if(snprintf(buf, sizeof(buf), "%d",value) < 0)
+    BufferTooShort();
   wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
@@ -260,7 +263,8 @@ static void wrtUintItm(FILE *fDescr, int lang, char *indent, char *name,
 static void wrtUcharItm(FILE *fDescr, int lang, char *indent, char *name,
 			u_char value, char useless, int numEntriesSent) {
   char buf[80];
-  sprintf(buf,"%d",value);
+  if(snprintf(buf, sizeof(buf), "%d",value) < 0)
+    BufferTooShort();
   wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
@@ -269,7 +273,8 @@ static void wrtUcharItm(FILE *fDescr, int lang, char *indent, char *name,
 static void wrtFloatItm(FILE *fDescr, int lang, char *indent, char *name,
 			float value, char last, int numEntriesSent) {
   char buf[80];
-  sprintf(buf,"%0.2f",value);
+  if(snprintf(buf, sizeof(buf), "%0.2f",value) < 0)
+    BufferTooShort();
   wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
 }
 
@@ -278,7 +283,8 @@ static void wrtFloatItm(FILE *fDescr, int lang, char *indent, char *name,
 static void wrtIntFloatItm(FILE *fDescr, int lang, char *indent, int name,
 			   float value, char last, int numEntriesSent) {
   char buf[80];
-  sprintf(buf,"%d", name);
+  if(snprintf(buf, sizeof(buf), "%d", name) < 0)
+    BufferTooShort();
   wrtFloatItm(fDescr, lang, indent, (lang == FLAG_XML_LANGUAGE) ? "number" : buf,
 	      value, last, numEntriesSent);
 }
@@ -289,7 +295,8 @@ static void wrtUlongItm(FILE *fDescr, int lang, char *indent, char *name,
 			unsigned long value, char useless, int numEntriesSent) {
   char buf[80];
 
-  sprintf(buf,"%lu",value);
+  if(snprintf(buf, sizeof(buf), "%lu",value) < 0)
+    BufferTooShort();
   wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
@@ -299,7 +306,8 @@ static void wrtLlongItm(FILE *fDescr, int lang, char* indent, char* name,
 			TrafficCounter value, char last, int numEntriesSent) {
   char buf[80];
 
-  sprintf(buf, "%lu", (long unsigned int)value.value);
+  if(snprintf(buf, sizeof(buf),  "%lu", (long unsigned int)value.value) < 0)
+    BufferTooShort();
   wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
 }
 
@@ -308,7 +316,8 @@ static void wrtLlongItm(FILE *fDescr, int lang, char* indent, char* name,
 static void wrtTime_tItm(FILE *fDescr, int lang, char *indent, char *name,
 			 time_t value, char useless, int numEntriesSent) {
   char buf[80];
-  sprintf(buf,"%ld",value);
+  if(snprintf(buf, sizeof(buf), "%ld",value) < 0)
+    BufferTooShort();
   wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
@@ -317,7 +326,8 @@ static void wrtTime_tItm(FILE *fDescr, int lang, char *indent, char *name,
 static void wrtUshortItm(FILE *fDescr, int lang, char *indent, char *name,
 			 u_short value, char useless, int numEntriesSent) {
   char buf[80];
-  sprintf(buf,"%d",value);
+  if(snprintf(buf, sizeof(buf), "%d",value) < 0)
+    BufferTooShort();
   wrtStrItm(fDescr, lang, indent, name, buf, ',', numEntriesSent);
 }
 
@@ -1222,16 +1232,19 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
       if(checkFilter(filter, "fqdn"))
 	wrtStrItm(fDescr, lang, "\t", "fqdn", myGlobals.device[i].fqdn, ',', numEntries);
 
-      snprintf(localbuf, sizeof(localbuf), "%s",
-	       _intoa(myGlobals.device[i].network, intoabuf, sizeof(intoabuf)));
+      if(snprintf(localbuf, sizeof(localbuf), "%s",
+	       _intoa(myGlobals.device[i].network, intoabuf, sizeof(intoabuf))) < 0)
+        BufferTooShort();
       if(checkFilter(filter, "network"))
 	wrtStrItm(fDescr, lang, "\t", "network", localbuf, ',', numEntries);
-      snprintf(localbuf, sizeof(localbuf), "%s",
-	       _intoa(myGlobals.device[i].netmask, intoabuf, sizeof(intoabuf)));
+      if(snprintf(localbuf, sizeof(localbuf), "%s",
+	       _intoa(myGlobals.device[i].netmask, intoabuf, sizeof(intoabuf))) < 0)
+        BufferTooShort();
       if(checkFilter(filter, "netmask"))
 	wrtStrItm(fDescr, lang, "\t", "netmask", localbuf, ',', numEntries);
-      snprintf(localbuf, sizeof(localbuf), "%s",
-	       _intoa(myGlobals.device[i].ifAddr, intoabuf, sizeof(intoabuf)));
+      if(snprintf(localbuf, sizeof(localbuf), "%s",
+	       _intoa(myGlobals.device[i].ifAddr, intoabuf, sizeof(intoabuf))) < 0)
+        BufferTooShort();
       if(checkFilter(filter, "ifAddr"))
 	wrtStrItm(fDescr, lang, "\t", "ifAddr", localbuf, ',', numEntries);
 

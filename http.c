@@ -1577,7 +1577,8 @@ static int returnHTTPPage(char* pageName,
        || (myGlobals.hostsDisplayPolicy > showOnlyRemoteHosts))
       myGlobals.hostsDisplayPolicy = showAllHosts;
 
-    snprintf(tmp, sizeof(tmp), "%d", myGlobals.hostsDisplayPolicy);
+    if(snprintf(tmp, sizeof(tmp), "%d", myGlobals.hostsDisplayPolicy) < 0)
+      BufferTooShort();
     storePrefsValue("globals.displayPolicy", tmp);
   }
 
@@ -1590,7 +1591,8 @@ static int returnHTTPPage(char* pageName,
        || (myGlobals.localityDisplayPolicy > showOnlyReceived))
       myGlobals.localityDisplayPolicy = showSentReceived;
 
-    snprintf(tmp, sizeof(tmp), "%d", myGlobals.localityDisplayPolicy);
+    if(snprintf(tmp, sizeof(tmp), "%d", myGlobals.localityDisplayPolicy) < 0)
+      BufferTooShort();
     storePrefsValue("globals.displayPolicy", tmp);
   }
 

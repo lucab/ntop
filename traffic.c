@@ -557,14 +557,16 @@ unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
             hash ^= host->hostFcAddress.domain;
             hash ^= host->hostFcAddress.area;
             hash ^= host->hostFcAddress.port;
-            snprintf (tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x.%x", host->vsanId, 
+            if(snprintf (tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x.%x", host->vsanId, 
                       host->hostFcAddress.domain, host->hostFcAddress.area,
-                      host->hostFcAddress.port, hash);
+                      host->hostFcAddress.port, hash) < 0)
+              BufferTooShort();
         }
         else {
-            snprintf (tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x",
+            if(snprintf (tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x",
                       host->hostFcAddress.domain, host->hostFcAddress.area,
-                      host->hostFcAddress.port, host);
+                      host->hostFcAddress.port, host) < 0)
+              BufferTooShort();
         }
         str = tmpBuf;
 

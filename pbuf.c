@@ -368,12 +368,13 @@ static void checkFragmentOverlap(HostTraffic *srcHost,
        && fragment->lastOffset < fragmentOffset+dataLength)) {
     if(myGlobals.enableSuspiciousPacketDump) {
       char buf[LEN_GENERAL_WORK_BUFFER];
-      snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Detected overlapping packet fragment [%s->%s]: "
+      if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Detected overlapping packet fragment [%s->%s]: "
                "fragment id=%d, actual offset=%d, previous offset=%d\n",
                fragment->src->hostResolvedName,
                fragment->dest->hostResolvedName,
                fragment->fragmentId, fragmentOffset,
-               fragment->lastOffset);
+               fragment->lastOffset) < 0)
+        BufferTooShort();
 
       dumpSuspiciousPacket(actualDeviceId);
     }
@@ -1278,15 +1279,18 @@ static void processIpPkt(const u_char *bp,
 		}
 
 	      if(WS == -1) sprintf(WSS, "WS");
-	      else snprintf(WSS, sizeof(WSS), "%02d", WS);
+	      else if(snprintf(WSS, sizeof(WSS), "%02d", WS) < 0)
+                BufferTooShort();
 
 	      if(MSS == -1) sprintf(_MSS, "_MSS");
-	      else snprintf(_MSS, sizeof(_MSS), "%04X", MSS);
+	      else if(snprintf(_MSS, sizeof(_MSS), "%04X", MSS) < 0)
+                BufferTooShort();
 
-	      snprintf(fingerprint, sizeof(fingerprint),
+	      if(snprintf(fingerprint, sizeof(fingerprint),
 		       "%04X:%s:%02X:%s:%d:%d:%d:%d:%c:%02X",
 		       WIN, _MSS, ttl = TTL_PREDICTOR(ip.ip_ttl), WSS , S, N, D, T,
-		       (tcp->th_flags & TH_ACK) ? 'A' : 'S', tcpUdpLen);
+		       (tcp->th_flags & TH_ACK) ? 'A' : 'S', tcpUdpLen) < 0)
+                BufferTooShort();
 
 #if 0
 	      traceEvent(CONST_TRACE_INFO, "[%s][%s]", srcHost->hostNumIpAddress, fingerprint);

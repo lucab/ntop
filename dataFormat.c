@@ -233,8 +233,9 @@ char* formatLatency(struct timeval tv, u_short sessionState, char* outStr, int o
     */
     return("&nbsp;");
   } else {
-    snprintf(outStr, outStrLen, "%.1f&nbsp;ms",
-	    (float)(tv.tv_sec*1000+(float)tv.tv_usec/1000));
+    if(snprintf(outStr, outStrLen, "%.1f&nbsp;ms",
+	    (float)(tv.tv_sec*1000+(float)tv.tv_usec/1000)) < 0)
+      BufferTooShort();
     return(outStr);
   }
 }

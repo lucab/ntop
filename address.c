@@ -516,7 +516,8 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   }
 #endif
 
-  sprintf(tmpBuf, "%s", addrtostr(&elem));
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", addrtostr(&elem)) < 0)
+    BufferTooShort();
   data_data.dptr = tmpBuf;
   data_data.dsize = strlen(tmpBuf)+1;
 

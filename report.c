@@ -295,7 +295,8 @@ void printTrafficStatistics(int revertOrder) {
 	   || (myGlobals.rFileName[i] == '\\'))
 	  break;
 
-      snprintf(buf, sizeof(buf), "...%s", &myGlobals.rFileName[i]);
+      if(snprintf(buf, sizeof(buf), "...%s", &myGlobals.rFileName[i]) < 0)
+        BufferTooShort();
       sendString(buf);
     }
 
@@ -1015,9 +1016,10 @@ void printTrafficStatistics(int revertOrder) {
 #ifndef EMBEDDED
   /* RRD */
   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-  snprintf(buf, sizeof(buf), "%s/interfaces/%s", 
+  if(snprintf(buf, sizeof(buf), "%s/interfaces/%s", 
 	   myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
+	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
+    BufferTooShort();
   
   if((i = stat(buf, &statbuf)) == 0) {
     if(snprintf(buf, sizeof(buf),
@@ -1131,49 +1133,54 @@ void printHostsTraffic(int reportTypeReq,
   case SORT_DATA_RCVD_HOST_TRAFFIC:
   case SORT_DATA_SENT_HOST_TRAFFIC:
   case SORT_DATA_HOST_TRAFFIC:
-    snprintf(buf, sizeof(buf), "Network Activity: ");
+    if(snprintf(buf, sizeof(buf), "Network Activity: ") < 0)
+      BufferTooShort();
     break;
   case SORT_DATA_RECEIVED_PROTOS:
   case SORT_DATA_SENT_PROTOS:
   case SORT_DATA_PROTOS:
-    snprintf(buf, sizeof(buf), "Network Traffic [All Protocols]: ");
+    if(snprintf(buf, sizeof(buf), "Network Traffic [All Protocols]: ") < 0)
+      BufferTooShort();
     break;
   case SORT_DATA_RECEIVED_IP:
   case SORT_DATA_SENT_IP:
   case SORT_DATA_IP:
-    snprintf(buf, sizeof(buf), "Network Traffic [TCP/IP]: ");
+    if(snprintf(buf, sizeof(buf), "Network Traffic [TCP/IP]: ") < 0)
+      BufferTooShort();
     break;
   case SORT_DATA_RECEIVED_THPT:
   case SORT_DATA_SENT_THPT:
   case SORT_DATA_THPT:
-    snprintf(buf, sizeof(buf), "Network Throughput: ");
+    if(snprintf(buf, sizeof(buf), "Network Throughput: ") < 0)
+      BufferTooShort();
     break;
   default:
-    snprintf(buf, sizeof(buf), "?: ");
+    if(snprintf(buf, sizeof(buf), "?: ") < 0)
+      BufferTooShort();
     break;
   }
 
   switch(showHostsMode) {
     case showAllHosts:
-      strcat(buf, "All Hosts");
+      strncat(buf, "All Hosts", (sizeof(buf) - strlen(buf) - 1));
       break;
     case showOnlyLocalHosts:
-      strcat(buf, "Local Hosts");
+      strncat(buf, "Local Hosts", (sizeof(buf) - strlen(buf) - 1));
       break;
     case showOnlyRemoteHosts:
-      strcat(buf, "Remote Hosts");
+      strncat(buf, "Remote Hosts", (sizeof(buf) - strlen(buf) - 1));
       break;
   }
 
   switch(showLocalityMode) {
     case showSentReceived:
-      strcat(buf, " - Data Sent+Received");
+      strncat(buf, " - Data Sent+Received", (sizeof(buf) - strlen(buf) - 1));
       break;
     case showOnlySent:
-      strcat(buf, " - Data Sent");
+      strncat(buf, " - Data Sent", (sizeof(buf) - strlen(buf) - 1));
       break;
     case showOnlyReceived:
-      strcat(buf, " - Data Received");
+      strncat(buf, " - Data Received", (sizeof(buf) - strlen(buf) - 1));
       break;
   }
 
@@ -2102,7 +2109,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
 	  if (displaySniffedName) {
 	    if(numAddresses > 0) sendString("/");
-	    snprintf(buf, sizeof(buf), "%s", sniffedName);
+	    if(snprintf(buf, sizeof(buf), "%s", sniffedName) < 0)
+              BufferTooShort();
 	    sendString(buf);
 	    numAddresses++;
 	  }
@@ -4289,9 +4297,11 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
 
   if(domainName == NULL) {
-    snprintf(buf, sizeof(buf), "Statistics for all Domains");
+    if(snprintf(buf, sizeof(buf), "Statistics for all Domains") < 0)
+      BufferTooShort();
   } else {
-    snprintf(buf, sizeof(buf), "Statistics for hosts in Domain <i>%s</i>", domainName);
+    if(snprintf(buf, sizeof(buf), "Statistics for hosts in Domain <i>%s</i>", domainName) < 0)
+      BufferTooShort();
   }
   printHTMLheader(buf, NULL, 0);
 
@@ -4546,9 +4556,10 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     struct stat statbufDomain;
 
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-    snprintf(buf, sizeof(buf), "%s/interfaces/%s/domains/%s", 
+    if(snprintf(buf, sizeof(buf), "%s/interfaces/%s/domains/%s", 
 	   myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
-	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,domainName);
+	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,domainName) < 0)
+      BufferTooShort();
   
     if((i = stat(buf, &statbufDomain)) == 0) {
       if(snprintf(buf, sizeof(buf), 
@@ -4701,7 +4712,8 @@ void printHostHourlyTraffic(HostTraffic *el) {
       targetStr = el->hostNumFcAddress;
   }
   else {
-      snprintf(macAddr, sizeof(macAddr), "%s", el->ethAddressString);
+      if(snprintf(macAddr, sizeof(macAddr), "%s", el->ethAddressString) < 0)
+        BufferTooShort();
       targetStr = el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress;
   }
 
@@ -5022,29 +5034,33 @@ void printFcHostsTraffic(int reportType,
     memset(buf, 0, sizeof(buf));
     switch(reportType) {
       case SORT_FC_ACTIVITY:
-        snprintf(buf, sizeof(buf), "FibreChannel Activity");
+        if(snprintf(buf, sizeof(buf), "FibreChannel Activity") < 0)
+          BufferTooShort();
         break;
       case SORT_FC_DATA:
-        snprintf(buf, sizeof(buf), "FibreChannel Traffic: ");
+        if(snprintf(buf, sizeof(buf), "FibreChannel Traffic: ") < 0)
+          BufferTooShort();
         break;
       case SORT_FC_THPT:
-        snprintf(buf, sizeof(buf), "FibreChannel Throughput: ");
+        if(snprintf(buf, sizeof(buf), "FibreChannel Throughput: ") < 0)
+          BufferTooShort();
         break;
       default:
-        snprintf(buf, sizeof(buf), "?? %d : ", reportType);
+        if(snprintf(buf, sizeof(buf), "?? %d : ", reportType) < 0)
+          BufferTooShort();
         break;
     }
 
     if(reportType != SORT_FC_ACTIVITY) {
       switch(showLocalityMode) {
         case showSentReceived:
-          strcat(buf, "Data Sent+Received");
+          strncat(buf, "Data Sent+Received", sizeof(buf) - strlen(buf) - 1);
           break;
         case showOnlySent:
-          strcat(buf, "Data Sent");
+          strncat(buf, "Data Sent", sizeof(buf) - strlen(buf) - 1);
           break;
         case showOnlyReceived:
-          strcat(buf, "Data Received");
+          strncat(buf, "Data Received", sizeof(buf) - strlen(buf) - 1);
           break;
       }
     }
@@ -5086,28 +5102,31 @@ void printFcHostsTraffic(int reportType,
     if(reportType != SORT_FC_ACTIVITY) {
       switch(showLocalityMode) {
         case showSentReceived:
-          snprintf(buf, sizeof(buf), "<p align=\"right\">"
+          if(snprintf(buf, sizeof(buf), "<p align=\"right\">"
       	     "[<b> All </b>]&nbsp;"
       	     "[ <a href=\"%s?col=%s%d&showL=1\">Sent Only</a> ]&nbsp;"
       	     "[ <a href=\"%s?col=%s%d&showL=2\">Received Only</a> ]&nbsp;</p>",
       	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode,
-      	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode);
+      	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode) < 0)
+            BufferTooShort();
           break;
         case showOnlySent:
-          snprintf(buf, sizeof(buf), "<p align=\"right\">"
+          if(snprintf(buf, sizeof(buf), "<p align=\"right\">"
       	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
       	     "[<b> Sent Only </b>]&nbsp;"
       	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;</p>",
       	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode,
-      	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode);
+      	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode) < 0)
+            BufferTooShort();
           break;
         default:
-          snprintf(buf, sizeof(buf), "<p align=\"right\">"
+          if(snprintf(buf, sizeof(buf), "<p align=\"right\">"
       	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
       	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
       	     "[<b> Received Only </b>]&nbsp;</p>",
       	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode,
-      	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode);
+      	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode) < 0)
+            BufferTooShort();
           break;
       }
       sendString(buf);
@@ -7319,10 +7338,12 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
   /* Print a matrix, using just what the row/column header says: From -> To */
   /* This is different from IP which prints a total */
   if (vsanId) {
-      snprintf (buf, sizeof(buf), "FibreChannel Traffic Matrix For VSAN %d", vsanId);
+      if(snprintf (buf, sizeof(buf), "FibreChannel Traffic Matrix For VSAN %d", vsanId) < 0)
+        BufferTooShort();
   }
   else {
-      snprintf (buf, sizeof(buf), "FibreChannel Traffic Matrix For VSAN");
+      if(snprintf (buf, sizeof(buf), "FibreChannel Traffic Matrix For VSAN") < 0)
+        BufferTooShort();
   }
   
   printHTMLheader(buf, 0);
@@ -7536,8 +7557,9 @@ void drawVsanStatsGraph (unsigned int deviceId)
 
     for (i = numVsans-1, j = 0; i >= 0; i--, j++) {
         if (tmpTable[i] != NULL) {
-            snprintf (vsanLabel, sizeof (vsanLabel), "%s",
-                      makeVsanLink (tmpTable[i]->vsanId, 0, vsanBuf, sizeof (vsanBuf)));
+            if(snprintf (vsanLabel, sizeof (vsanLabel), "%s",
+                      makeVsanLink (tmpTable[i]->vsanId, 0, vsanBuf, sizeof (vsanBuf))) < 0)
+              BufferTooShort();
             printTableEntry (buf, sizeof (buf), vsanLabel, CONST_COLOR_1,
                              (float) tmpTable[i]->totBytes.value/1024,
                              100*((float)SD(tmpTable[i]->totBytes.value,

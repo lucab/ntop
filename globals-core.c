@@ -501,8 +501,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   memset(startedAs, 0, (size_t) bufLen);
   for (i=0; i<argc; i++) {
     if (argv[i] != NULL) {
-      strcat(startedAs, argv[i]);
-      strcat(startedAs, " ");
+      strncat(startedAs, argv[i], (sizeof(startedAs) - strlen(startedAs) - 1));
+      strncat(startedAs, " ", (sizeof(startedAs) - strlen(startedAs) - 1));
     }
   }
 

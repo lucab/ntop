@@ -83,7 +83,8 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lock
 
   if(traceAllocs) traceEvent(CONST_TRACE_INFO, "malloc(%d):%s  [tot=%u]", ptrLen, tmpStr, myGlobals.allocatedMemory);
 
-  snprintf(tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr);
+  if(snprintf(tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr) < 0)
+    BufferTooShort();
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
 #if defined(CFG_MULTITHREADED)
@@ -322,7 +323,8 @@ void myAddLeak(void* thePtr, int theLine, char* theFile) {
   tmpBlock->memoryLocation = thePtr;
   if(snprintf(tmpStr, sizeof(tmpStr), "file %s, line %d.", theFile, theLine) < 0)
     BufferTooShort();
-  snprintf(tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr);
+  if(snprintf(tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr) < 0)
+    BufferTooShort();
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
 }

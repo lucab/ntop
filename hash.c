@@ -505,25 +505,44 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
       char xbuf[1024];
       int ii;
       memset(xbuf, 0, sizeof(xbuf));
-      snprintf(xbuf, sizeof(xbuf), "TEMP: free of host (0x%08x) magic(%u) not cleared:", host, host->magic);
+      if(snprintf(xbuf, sizeof(xbuf), 
+                  "TEMP: free of host (0x%08x) magic(%u) not cleared:", host, host->magic) < 0)
+        BufferTooShort();
       ii=strlen(xbuf);
-      if(host->fullDomainName != NULL) strcat(xbuf, " fullDomainName");
-      if(host->dotDomainName != NULL) strcat(xbuf, " dotDomainName");
-      if(host->fingerprint != NULL) strcat(xbuf, " fingerprint");
-      if(host->nonIPTraffic != NULL) strcat(xbuf, " nonIPTraffic");
-      if(host->nonIpProtoTrafficInfos != NULL) strcat(xbuf, " nonIpProtoTrafficInfos");
-      if(host->trafficDistribution != NULL) strcat(xbuf, " trafficDistribution");
-      if(host->routedTraffic != NULL) strcat(xbuf, " routedTraffic");
-      if(host->portsUsage != NULL) strcat(xbuf, " portsUsage");
-      if(host->protocolInfo != NULL) strcat(xbuf, " protocolInfo");
-      if(host->secHostPkts != NULL) strcat(xbuf, " secHostPkts");
-      if(host->icmpInfo != NULL) strcat(xbuf, " icmpInfo");
-      if(host->ipProtosList != NULL) strcat(xbuf, " ipProtosList");
-      if(host->protoIPTrafficInfos != NULL) strcat(xbuf, " protoIPTrafficInfos");
-      if(host->unknownProtoSent != NULL) strcat(xbuf, " unknownProtoSent");
-      if(host->unknownProtoRcvd != NULL) strcat(xbuf, " unknownProtoRcvd");
-      if(host->next != NULL) strcat(xbuf, " next");
-      if(strlen(xbuf) != ii) traceEvent(CONST_TRACE_INFO, xbuf);
+      if(host->fullDomainName != NULL)
+        strncat(xbuf, " fullDomainName", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->dotDomainName != NULL)
+        strncat(xbuf, " dotDomainName", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->fingerprint != NULL)
+        strncat(xbuf, " fingerprint", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->nonIPTraffic != NULL)
+        strncat(xbuf, " nonIPTraffic", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->nonIpProtoTrafficInfos != NULL)
+        strncat(xbuf, " nonIpProtoTrafficInfos", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->trafficDistribution != NULL)
+        strncat(xbuf, " trafficDistribution", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->routedTraffic != NULL)
+        strncat(xbuf, " routedTraffic", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->portsUsage != NULL)
+        strncat(xbuf, " portsUsage", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->protocolInfo != NULL)
+        strncat(xbuf, " protocolInfo", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->secHostPkts != NULL)
+        strncat(xbuf, " secHostPkts", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->icmpInfo != NULL)
+        strncat(xbuf, " icmpInfo", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->ipProtosList != NULL)
+        strncat(xbuf, " ipProtosList", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->protoIPTrafficInfos != NULL)
+        strncat(xbuf, " protoIPTrafficInfos", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->unknownProtoSent != NULL)
+        strncat(xbuf, " unknownProtoSent", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->unknownProtoRcvd != NULL)
+        strncat(xbuf, " unknownProtoRcvd", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(host->next != NULL)
+        strncat(xbuf, " next", (sizeof(xbuf) - strlen(xbuf) - 1));
+      if(strlen(xbuf) != ii)
+        traceEvent(CONST_TRACE_INFO, xbuf);
 #endif
 
       /* No room left: it's time to free the bucket */

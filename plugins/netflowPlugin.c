@@ -527,11 +527,16 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
   if(myGlobals.netFlowDebug) {
     theFlags[0] = '\0';
 
-    if(record->tcp_flags & TH_SYN)  strcat(theFlags, "SYN ");
-    if(record->tcp_flags & TH_FIN)  strcat(theFlags, "FIN ");
-    if(record->tcp_flags & TH_RST)  strcat(theFlags, "RST ");
-    if(record->tcp_flags & TH_ACK)  strcat(theFlags, "ACK ");
-    if(record->tcp_flags & TH_PUSH) strcat(theFlags, "PUSH");
+    if(record->tcp_flags & TH_SYN)
+      strncat(theFlags, "SYN ", (sizeof(theFlags) - strlen(theFlags) - 1));
+    if(record->tcp_flags & TH_FIN)
+      strncat(theFlags, "FIN ", (sizeof(theFlags) - strlen(theFlags) - 1));
+    if(record->tcp_flags & TH_RST)
+      strncat(theFlags, "RST ", (sizeof(theFlags) - strlen(theFlags) - 1));
+    if(record->tcp_flags & TH_ACK)
+      strncat(theFlags, "ACK ", (sizeof(theFlags) - strlen(theFlags) - 1));
+    if(record->tcp_flags & TH_PUSH)
+      strncat(theFlags, "PUSH", (sizeof(theFlags) - strlen(theFlags) - 1));
 
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "%2d) %s:%d <-> %s:%d pkt=%u/len=%u sAS=%d/dAS=%d flags=[%s](proto=%d)",
@@ -2395,19 +2400,24 @@ static void printNetFlowStatisticsRcvd(void) {
     if ((flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] != 0) ) {
       if(flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1) {
-        snprintf(buf1, sizeof(buf1), "(%d) ", flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
+        if(snprintf(buf1, sizeof(buf1), "(%d) ", flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]) < 0)
+          BufferTooShort();
       } else {
-        snprintf(buf1, sizeof(buf1), "&nbsp;");
+        if(snprintf(buf1, sizeof(buf1), "&nbsp;") < 0)
+          BufferTooShort();
       }
       if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) {
-        snprintf(buf2, sizeof(buf2), "%.1fGB",
-                 (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0));
+        if(snprintf(buf2, sizeof(buf2), "%.1fGB",
+                 (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0)) < 0)
+          BufferTooShort();
       } else if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) {
-        snprintf(buf2, sizeof(buf2), "%.1fMB",
-                (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0));
+        if(snprintf(buf2, sizeof(buf2), "%.1fMB",
+                (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0)) < 0)
+          BufferTooShort();
       } else {
-        snprintf(buf2, sizeof(buf2), "%u",
-                 flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]);
+        if(snprintf(buf2, sizeof(buf2), "%u",
+                 flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]) < 0)
+          BufferTooShort();
       }
       if(snprintf(buf, sizeof(buf),
                   "<tr><td align=\"right\">%d.%d.%d.%d:%d</td>"

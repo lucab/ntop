@@ -309,26 +309,30 @@ static int initXmldump(void) {
     if(strcmp(hostName, myGlobals.domainName) == 0) {
       /* The returned hostName doesn't appear to have the domainName in it... */
       traceEvent(CONST_TRACE_NOISY, "Appending the domain name, '%s'", myGlobals.domainName);
-      snprintf(hostName, sizeof(hostName), "%s.%s", hostName, myGlobals.domainName);
+      if(snprintf(hostName, sizeof(hostName), "%s.%s", hostName, myGlobals.domainName) < 0)
+        BufferTooShort();
     }
   }
 
   if(fetchPrefsValue("xmldump.versioncheader", value, sizeof(value)) == -1) {
-    snprintf(value, sizeof(value), "%d", TRUE);
+    if(snprintf(value, sizeof(value), "%d", TRUE) < 0)
+      BufferTooShort();
     storePrefsValue("xmldump.versioncheader", value);
     dumpVersioncHeader = TRUE;
   } else {
     dumpVersioncHeader = atoi(value);
   }
   if(fetchPrefsValue("xmldump.invoke", value, sizeof(value)) == -1) {
-    snprintf(value, sizeof(value), "%d", TRUE);
+    if(snprintf(value, sizeof(value), "%d", TRUE) < 0)
+      BufferTooShort();
     storePrefsValue("xmldump.invoke", value);
     dumpInvoke = TRUE;
   } else {
     dumpInvoke = atoi(value);
   }
   if(fetchPrefsValue("xmldump.interfaces", value, sizeof(value)) == -1) {
-    snprintf(value, sizeof(value), "%d", TRUE);
+    if(snprintf(value, sizeof(value), "%d", TRUE) < 0)
+      BufferTooShort();
     storePrefsValue("xmldump.interfaces", value);
     dumpInterfaces = TRUE;
   } else {
@@ -394,15 +398,18 @@ static void handleXmldumpHTTPrequest(char* url) {
       if(value && key) {
         if(strcmp(key, "versioncheader") == 0) {
           dumpVersioncHeader = atoi(value);
-          snprintf(buf, sizeof(buf), "%d", dumpVersioncHeader);
+          if(snprintf(buf, sizeof(buf), "%d", dumpVersioncHeader) < 0)
+            BufferTooShort();
           storePrefsValue("xmldump.versioncheader", buf);
         } else if(strcmp(key, "invoke") == 0) {
           dumpInvoke = atoi(value);
-          snprintf(buf, sizeof(buf), "%d", dumpInvoke);
+          if(snprintf(buf, sizeof(buf), "%d", dumpInvoke) < 0)
+            BufferTooShort();
           storePrefsValue("xmldump.invoke", buf);
         } else if(strcmp(key, "interfaces") == 0) {
           dumpInterfaces = atoi(value);
-          snprintf(buf, sizeof(buf), "%d", dumpInterfaces);
+          if(snprintf(buf, sizeof(buf), "%d", dumpInterfaces) < 0)
+            BufferTooShort();
           storePrefsValue("xmldump.interfaces", buf);
         }
       }
@@ -1914,7 +1921,8 @@ static int dumpXML(char * url) {
 
     rc = sigaction(SIGSEGV, &xml_new_act, &xml_old_act);
 #ifdef DEBUG
-    snprintf(buf, sizeof(buf), "OTHER(%d)", rc);
+    if(snprintf(buf, sizeof(buf), "OTHER(%d)", rc) < 0)
+      BufferTooShort();
     traceEvent(CONST_TRACE_INFO, "DEBUG: set - sigaction(SIGSEGV,,) rc = %s",
             (rc == 0      ? "OK"     :
             (rc == EINVAL ? "EINVAL" :
@@ -2032,7 +2040,8 @@ static int dumpXML(char * url) {
 
     rc = sigaction(SIGSEGV, &xml_old_act, NULL);
 #ifdef DEBUG
-    snprintf(buf, sizeof(buf), "OTHER(%d)", rc);
+    if(snprintf(buf, sizeof(buf), "OTHER(%d)", rc) < 0)
+      BufferTooShort();
     traceEvent(CONST_TRACE_INFO, "DEBUG: Restore - sigaction(SIGSEGV,,) rc = %s, SIGSEGV count %d",
             (rc == 0      ? "OK"     :
             (rc == EINVAL ? "EINVAL" :

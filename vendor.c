@@ -514,17 +514,17 @@ void createVendorTable(struct stat *dbStat) {
 	      data_data.dsize = sizeof(macInfoEntry);
 	      tmpMACkey[0]='\0';
 	      strncat(tmpMACkey, tmpMAC, 2);
-	      strcat(tmpMACkey, ":");
+	      strncat(tmpMACkey, ":", (sizeof(tmpMACkey) - strlen(tmpMACkey) - 1));
 	      strncat(tmpMACkey, tmpMAC+2, 2);
-	      strcat(tmpMACkey, ":");
+	      strncat(tmpMACkey, ":", (sizeof(tmpMACkey) - strlen(tmpMACkey) - 1));
 	      strncat(tmpMACkey, tmpMAC+4, 2);
 	      if(strcmp(tmpTag2, "48)") == 0) {
 		/* special 48 - full tag */
-		strcat(tmpMACkey, ":");
+		strncat(tmpMACkey, ":", (sizeof(tmpMACkey) - strlen(tmpMACkey) - 1));
 		strncat(tmpMACkey, tmpMAC+6, 2);
-		strcat(tmpMACkey, ":");
+		strncat(tmpMACkey, ":", (sizeof(tmpMACkey) - strlen(tmpMACkey) - 1));
 		strncat(tmpMACkey, tmpMAC+8, 2);
-		strcat(tmpMACkey, ":");
+		strncat(tmpMACkey, ":", (sizeof(tmpMACkey) - strlen(tmpMACkey) - 1));
 		strncat(tmpMACkey, tmpMAC+10, 2);
 	      }
 	      key_data.dptr = tmpMACkey;

@@ -326,7 +326,8 @@ static char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
   else
     age = 0;
   
-  snprintf(buf, bufSize, "class=\"age%dmin\"", age);
+  if(snprintf(buf, bufSize, "class=\"age%dmin\"", age) < 0)
+    BufferTooShort();
   
   return(buf);
 }
@@ -438,13 +439,16 @@ char* makeHostLink(HostTraffic *el, short mode,
     } else if(el->nonIPTraffic) {    
       if(el->nonIPTraffic->nbHostName != NULL) {
         strncpy(symIp, el->nonIPTraffic->nbHostName, sizeof(symIp));
-        snprintf(noteBuf, sizeof(noteBuf), " [NetBIOS]%s", noteBuf);
+        if(snprintf(noteBuf, sizeof(noteBuf), " [NetBIOS]%s", noteBuf) < 0)
+          BufferTooShort();
       } else if(el->nonIPTraffic->ipxHostName != NULL) {
         strncpy(symIp, el->nonIPTraffic->ipxHostName, sizeof(symIp));
-        snprintf(noteBuf, sizeof(noteBuf), " [IPX]%s", noteBuf);
+        if(snprintf(noteBuf, sizeof(noteBuf), " [IPX]%s", noteBuf) < 0)
+          BufferTooShort();
       } else if(el->nonIPTraffic->atNodeName != NULL) {
         strncpy(symIp, el->nonIPTraffic->atNodeName, sizeof(symIp));
-        snprintf(noteBuf, sizeof(noteBuf), " [Appletalk]%s", noteBuf);
+        if(snprintf(noteBuf, sizeof(noteBuf), " [Appletalk]%s", noteBuf) < 0)
+          BufferTooShort();
       }
     } else {
       releaseAddrResMutex();
@@ -473,8 +477,9 @@ char* makeHostLink(HostTraffic *el, short mode,
        (el->ethAddressString[0] != '\0')) {
       /* MAC address, one which has already been fixed up with the vendor string -
          set the alt tag */
-      snprintf(titleBuf, sizeof(titleBuf), "%s Actual MAC address is %s",
-               titleBuf, el->ethAddressString);
+      if(snprintf(titleBuf, sizeof(titleBuf), "%s Actual MAC address is %s",
+               titleBuf, el->ethAddressString) < 0)
+        BufferTooShort();
       /* Un 'fix' the linkName so it goes back to the native page */
       strncpy(linkName, el->ethAddressString, sizeof(linkName));
     }
@@ -499,7 +504,8 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(symIp[strlen(symIp)-1] == ']') /* "... [MAC]" */ {
     usedEthAddress = 1;
     strncpy(symIp, el->ethAddressString, sizeof(symIp));
-    snprintf(noteBuf, sizeof(noteBuf), "%s<!-- [MAC] -->", noteBuf);
+    if(snprintf(noteBuf, sizeof(noteBuf), "%s<!-- [MAC] -->", noteBuf) < 0)
+      BufferTooShort();
   }
 
   /* Do we add a 2nd column for the flag??? */
@@ -582,9 +588,13 @@ char* makeHostLink(HostTraffic *el, short mode,
 
     vendorInfo = getVendorInfo(el->ethAddress, 0);
     if(vendorInfo[0] != '\0') {
-      snprintf(symIp, sizeof(symIp), "%s%s", vendorInfo, &el->ethAddressString[8]);
-      snprintf(titleBuf, sizeof(titleBuf), "%s Actual MAC address is %s",
-               titleBuf, el->ethAddressString);
+      if(snprintf(symIp, sizeof(symIp), "%s%s", vendorInfo, &el->ethAddressString[8]) < 0)
+        BufferTooShort();
+      if(snprintf(titleBuf, sizeof(titleBuf),
+                  "%s Actual MAC address is %s",
+                  titleBuf,
+                  el->ethAddressString) < 0)
+        BufferTooShort();
     }
   }    
 
@@ -592,7 +602,8 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(symIp[2] == ':') {
     char *symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));  
     if((symEthName != NULL) && (symEthName[0] != '\0'))
-      snprintf(symIp, sizeof(symIp), "%s%s", symEthName, &el->ethAddressString[8]);
+      if(snprintf(symIp, sizeof(symIp), "%s%s", symEthName, &el->ethAddressString[8]) < 0)
+        BufferTooShort();
     usedEthAddress = 1;
   }
 
@@ -645,9 +656,10 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
               setResolvedName(el, buf, FLAG_HOST_SYM_ADDR_TYPE_FC);
           }
           else if (el->pWWN.str[0] != 0) {
-              snprintf (buf, sizeof(buf), "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
+              if(snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
                         el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2], el->pWWN.str[3],
-                        el->pWWN.str[4], el->pWWN.str[5], el->pWWN.str[6], el->pWWN.str[7]);
+                        el->pWWN.str[4], el->pWWN.str[5], el->pWWN.str[6], el->pWWN.str[7]) < 0)
+                BufferTooShort();
           }
           else if (el->hostNumFcAddress[0] != '\0') {
               strncpy (buf, el->hostNumFcAddress, LEN_FC_ADDRESS_DISPLAY);
@@ -852,7 +864,8 @@ void switchNwInterface(int _interface) {
       BufferTooShort();
     sendString(buf);
     
-    snprintf(value, sizeof(value), "%d", myGlobals.actualReportDeviceId);
+    if(snprintf(value, sizeof(value), "%d", myGlobals.actualReportDeviceId) < 0)
+      BufferTooShort();
     storePrefsValue("actualReportDeviceId", value);
   } else {
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=" CONST_SWITCH_NIC_HTML ">\n");
@@ -896,7 +909,8 @@ static void printFeatureConfigNum(int textPrintFlag, char* feature, int value) {
   sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
   sendString(feature);
   sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
-  snprintf(tmpBuf, sizeof(tmpBuf), "%d", value);
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%d", value) < 0)
+    BufferTooShort();
   sendString(tmpBuf);
   sendString(texthtml("\n", "</TD></TR>\n"));
 }
@@ -7057,15 +7071,19 @@ void printNtopProblemReport(void) {
   v = 0;
 
 #ifdef PROBLEMREPORTID_DEBUG
-  snprintf(buf2, sizeof(buf2), "%-12s %48s %8s %8s\n", "Item", "Raw value", "Hex", "v value");
+  if(snprintf(buf2, sizeof(buf2),
+              "%-12s %48s %8s %8s\n",
+              "Item", "Raw value", "Hex", "v value") < 0)
+    BufferTooShort();
   sendString(buf2);
 #endif
 
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
   v += myGlobals.heartbeatCounter /* If we have it */ ;
 #ifdef PROBLEMREPORTID_DEBUG
-  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat", 
-	   myGlobals.heartbeatCounter, myGlobals.heartbeatCounter, v);
+  if(snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat", 
+	      myGlobals.heartbeatCounter, myGlobals.heartbeatCounter, v) < 0)
+    BufferTooShort();
   sendString(buf2);
 #endif
 #endif
@@ -7074,15 +7092,17 @@ void printNtopProblemReport(void) {
 #ifdef PROBLEMREPORTID_DEBUG
   strftime(buf, sizeof(buf)-1, CONST_LOCALE_TIMESPEC, gmtime(&t));
   buf[sizeof(buf)-1] = '\0';
-  snprintf(buf2, sizeof(buf2), "%-12s %48s %08x %08x\n", "Date/Time", buf, t, v);
+  if(snprintf(buf2, sizeof(buf2), "%-12s %48s %08x %08x\n", "Date/Time", buf, t, v) < 0)
+    BufferTooShort();
   sendString(buf2);
 #endif
 
   v += myGlobals.actTime - myGlobals.initialSniffTime;
 #ifdef PROBLEMREPORTID_DEBUG
-  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Elapsed",
+  if(snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Elapsed",
 	   (myGlobals.actTime - myGlobals.initialSniffTime), 
-	   (myGlobals.actTime - myGlobals.initialSniffTime), v);
+	   (myGlobals.actTime - myGlobals.initialSniffTime), v) < 0)
+    BufferTooShort();
   sendString(buf2);
 #endif
 
@@ -7091,7 +7111,8 @@ void printNtopProblemReport(void) {
     raw += (unsigned int) (myGlobals.device[i].ethernetBytes.value);
 
 #ifdef PROBLEMREPORTID_DEBUG
-  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x\n", "Bytes", raw, raw);
+  if(snprintf(buf2, sizeof(buf2), "%-12s %48u %08x\n", "Bytes", raw, raw) < 0)
+    BufferTooShort();
   sendString(buf2);
 #endif
   /* Scramble the nibbles so we have some data high and some low. 
@@ -7106,8 +7127,9 @@ void printNtopProblemReport(void) {
     (raw & 0x0000000f) << 24;
   v ^= scramble;
 #ifdef PROBLEMREPORTID_DEBUG
-  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)", 
-	   scramble, scramble, v);
+  if(snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)", 
+	   scramble, scramble, v) < 0)
+    BufferTooShort();
   sendString(buf2);
 #endif
 
@@ -7118,7 +7140,8 @@ void printNtopProblemReport(void) {
     v = v / (sizeof(xvert) - 1);
     buf[i] = xvert[j];   
 #ifdef PROBLEMREPORTID_DEBUG
-    snprintf(buf2, sizeof(buf2), "(%2d", j);
+    if(snprintf(buf2, sizeof(buf2), "(%2d", j) < 0)
+      BufferTooShort();
     sendString(buf2);
 #endif
     i++;
@@ -7155,19 +7178,27 @@ void printNtopProblemReport(void) {
   sendString("           Memory:        _____ MB\n");
 
   sendString("\nPackets\n");
-  snprintf(buf, sizeof(buf), "Received:  %10u\n", myGlobals.receivedPackets);
+  if(snprintf(buf, sizeof(buf), "Received:  %10u\n", myGlobals.receivedPackets) < 0)
+    BufferTooShort();
   sendString(buf);
-  snprintf(buf, sizeof(buf), "Processed: %10u (immediately)\n", myGlobals.receivedPacketsProcessed);
+  if(snprintf(buf, sizeof(buf), "Processed: %10u (immediately)\n",
+              myGlobals.receivedPacketsProcessed) < 0)
+    BufferTooShort();
   sendString(buf);
 
 #ifdef CFG_MULTITHREADED
-  snprintf(buf, sizeof(buf), "Queued:    %10u\n", myGlobals.receivedPacketsQueued);
+  if(snprintf(buf, sizeof(buf), "Queued:    %10u\n",
+              myGlobals.receivedPacketsQueued) < 0)
+    BufferTooShort();
   sendString(buf);
-  snprintf(buf, sizeof(buf), "Lost:      %10u (queue full)\n", myGlobals.receivedPacketsLostQ);
+  if(snprintf(buf, sizeof(buf), "Lost:      %10u (queue full)\n",
+              myGlobals.receivedPacketsLostQ) < 0)
+    BufferTooShort();
   sendString(buf);
-  snprintf(buf, sizeof(buf), "Queue:     Current: %u Maximum: %u\n",
-           myGlobals.packetQueueLen,
-           myGlobals.maxPacketQueueLen);
+  if(snprintf(buf, sizeof(buf), "Queue:     Current: %u Maximum: %u\n",
+              myGlobals.packetQueueLen,
+              myGlobals.maxPacketQueueLen) < 0)
+    BufferTooShort();
   sendString(buf);
 #endif
 
@@ -7176,34 +7207,47 @@ void printNtopProblemReport(void) {
   if(myGlobals.mergeInterfaces == 1) {
     sendString("Merged packet counts:\n");
     if(myGlobals.device[0].receivedPkts.value > 0) {
-      snprintf(buf, sizeof(buf), "     Received:  %10u\n", myGlobals.device[0].receivedPkts.value);
+      if(snprintf(buf, sizeof(buf), "     Received:  %10u\n",
+                  myGlobals.device[0].receivedPkts.value) < 0)
+        BufferTooShort();
       sendString(buf);
     }
     if(myGlobals.device[0].droppedPkts.value > 0) {
-      snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[0].droppedPkts.value);
+      if(snprintf(buf, sizeof(buf), "     Dropped:   %10u\n",
+                  myGlobals.device[0].droppedPkts.value) < 0)
+        BufferTooShort();
       sendString(buf);
     }
     if(myGlobals.device[0].ethernetPkts.value > 0) {
-      snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[0].ethernetPkts.value);
+      if(snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n",
+                  myGlobals.device[0].ethernetPkts.value) < 0)
+        BufferTooShort();
       sendString(buf);
     }
     if(myGlobals.device[0].broadcastPkts.value > 0) {
-      snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[0].broadcastPkts.value);
+      if(snprintf(buf, sizeof(buf), "     Broadcast: %10u\n",
+                  myGlobals.device[0].broadcastPkts.value) < 0)
+        BufferTooShort();
       sendString(buf);
     }
     if(myGlobals.device[0].multicastPkts.value > 0) {
-      snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[0].multicastPkts.value);
+      if(snprintf(buf, sizeof(buf), "     Multicast: %10u\n",
+                  myGlobals.device[0].multicastPkts.value) < 0)
+        BufferTooShort();
       sendString(buf);
     }
     if(myGlobals.device[0].ipPkts.value > 0) {
-      snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[0].ipPkts.value);
+      if(snprintf(buf, sizeof(buf), "     IP:        %10u\n",
+                  myGlobals.device[0].ipPkts.value) < 0)
+        BufferTooShort();
       sendString(buf);
     }
     sendString("\n");
   }
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    snprintf(buf, sizeof(buf), "     Network Interface %2d ", i);
+    if(snprintf(buf, sizeof(buf), "     Network Interface %2d ", i) < 0)
+      BufferTooShort();
     sendString(buf);
     if(myGlobals.device[0].dummyDevice)
       sendString(" (dummy)");
@@ -7236,40 +7280,55 @@ void printNtopProblemReport(void) {
 #ifndef WIN32 
     if((myGlobals.device[i].pcapPtr != NULL) && 
        (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0)) {
-      snprintf(buf, sizeof(buf), "     Received (pcap):%10u\n", pcapStats.ps_recv);
+      if(snprintf(buf, sizeof(buf), "     Received (pcap):%10u\n", pcapStats.ps_recv) < 0)
+        BufferTooShort();
       sendString(buf);
       if(pcapStats.ps_ifdrop > 0) {
-        snprintf(buf, sizeof(buf), "     Dropped (NIC):  %10u\n", pcapStats.ps_ifdrop);
+        if(snprintf(buf, sizeof(buf), "     Dropped (NIC):  %10u\n", pcapStats.ps_ifdrop) < 0)
+          BufferTooShort();
         sendString(buf);
       }
-      snprintf(buf, sizeof(buf), "     Dropped (pcap): %10u\n", pcapStats.ps_drop);
+      if(snprintf(buf, sizeof(buf), "     Dropped (pcap): %10u\n", pcapStats.ps_drop) < 0)
+        BufferTooShort();
       sendString(buf);
     }
 #endif
 
     if(myGlobals.mergeInterfaces == 0) {
       if(myGlobals.device[i].receivedPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     Received:       %10u\n", myGlobals.device[i].receivedPkts.value);
+	if(snprintf(buf, sizeof(buf), "     Received:       %10u\n",
+                     myGlobals.device[i].receivedPkts.value) < 0)
+          BufferTooShort();
 	sendString(buf);
       }
       if(myGlobals.device[i].droppedPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     Dropped (ntop): %10u\n", myGlobals.device[i].droppedPkts.value);
+	if(snprintf(buf, sizeof(buf), "     Dropped (ntop): %10u\n",
+                     myGlobals.device[i].droppedPkts.value) < 0)
+          BufferTooShort();
 	sendString(buf);
       }
       if(myGlobals.device[i].ethernetPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     Ethernet:       %10u\n", myGlobals.device[i].ethernetPkts.value);
+	if(snprintf(buf, sizeof(buf), "     Ethernet:       %10u\n",
+                     myGlobals.device[i].ethernetPkts.value) < 0)
+          BufferTooShort();
 	sendString(buf);
       }
       if(myGlobals.device[i].broadcastPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     Broadcast:      %10u\n", myGlobals.device[i].broadcastPkts.value);
+	if(snprintf(buf, sizeof(buf), "     Broadcast:      %10u\n",
+                     myGlobals.device[i].broadcastPkts.value) < 0)
+          BufferTooShort();
 	sendString(buf);
       }
       if(myGlobals.device[i].multicastPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     Multicast:      %10u\n", myGlobals.device[i].multicastPkts.value);
+	if(snprintf(buf, sizeof(buf), "     Multicast:      %10u\n",
+                     myGlobals.device[i].multicastPkts.value) < 0)
+          BufferTooShort();
 	sendString(buf);
       }
       if(myGlobals.device[i].ipPkts.value > 0) {
-	snprintf(buf, sizeof(buf), "     IP:             %10u\n", myGlobals.device[i].ipPkts.value);
+	if(snprintf(buf, sizeof(buf), "     IP:             %10u\n",
+                    myGlobals.device[i].ipPkts.value) < 0)
+          BufferTooShort();
 	sendString(buf);
       }
 
@@ -7330,7 +7389,8 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   hints.ai_family = ipv4or6;
   hints.ai_flags = AI_PASSIVE;
   hints.ai_socktype = SOCK_STREAM;
-  snprintf(strport,sizeof(strport),"%d",*port);
+  if(snprintf(strport,sizeof(strport),"%d",*port) < 0)
+    BufferTooShort();
   if((rc = getaddrinfo(addr,strport,&hints,&aitop)) !=0) {
     traceEvent(CONST_TRACE_ERROR, "INITWEB: getaddrinfo() error %s(%d)", gai_strerror(rc), rc);
     traceEvent(CONST_TRACE_ERROR, "INITWEB: Unable to convert address '%s' - "
@@ -8306,7 +8366,8 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
             noLink = TRUE;
         }
         else if (strncmp (el->hostNumFcAddress, "ff.fc", strlen ("ff.fc")) == 0) {
-            snprintf (tmpbuf, 64, "Domain Controller for %s", &el->hostNumFcAddress[6]);
+            if(snprintf (tmpbuf, 64, "Domain Controller for %s", &el->hostNumFcAddress[6]) < 0)
+              BufferTooShort();
             tmpStr = tmpbuf;
             noLink = TRUE;
         }
@@ -8334,9 +8395,12 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
                              LEN_WWN_ADDRESS_DISPLAY);
                 }
                 else {
-                    snprintf (tmpbuf, sizeof(tmpbuf), "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
-                              el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2], el->pWWN.str[3],
-                              el->pWWN.str[4], el->pWWN.str[5], el->pWWN.str[6], el->pWWN.str[7]);
+                    if(snprintf (tmpbuf, sizeof(tmpbuf),
+                                 "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
+                                 el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2],
+                                 el->pWWN.str[3], el->pWWN.str[4], el->pWWN.str[5],
+                                 el->pWWN.str[6], el->pWWN.str[7]) < 0)
+                      BufferTooShort();
                 }
                 tmpStr = tmpbuf;
             }
@@ -8362,9 +8426,12 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
                              LEN_WWN_ADDRESS_DISPLAY);
                 }
                 else {
-                    snprintf (tmpbuf, sizeof(tmpbuf), "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
-                              el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2], el->pWWN.str[3],
-                              el->pWWN.str[4], el->pWWN.str[5], el->pWWN.str[6], el->pWWN.str[7]);
+                    if(snprintf (tmpbuf, sizeof(tmpbuf),
+                                 "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
+                                 el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2],
+                                 el->pWWN.str[3], el->pWWN.str[4], el->pWWN.str[5],
+                                 el->pWWN.str[6], el->pWWN.str[7]) < 0)
+                      BufferTooShort();
                 }
                 tmpStr = tmpbuf;
             }

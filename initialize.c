@@ -1393,8 +1393,11 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].name != NULL) {
-      if(i>0) strcat(workDevices, ", ");
-      strcat(workDevices, myGlobals.device[i].name);
+      if(i>0) 
+        strncat(workDevices, ", ", (sizeof(workDevices) - strlen(workDevices) - 1));
+      strncat(workDevices,
+              myGlobals.device[i].name,
+              (sizeof(workDevices) - strlen(workDevices) - 1));
     }
   }
   

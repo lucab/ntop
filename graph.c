@@ -131,7 +131,8 @@ static void drawLegend(gdImagePtr im,
     gdImageRectangle(im, edge_x-1, edge_y-1, edge_x+CONST_LEGEND_BOX_SIZE+1,
                      edge_y+CONST_LEGEND_BOX_SIZE+1, labelColor);
 #ifdef SHOW_PERCENTAGE
-    snprintf(str, sizeof(str), "%s(%.1f%%)", labels[i], (data[i]*100)/total);
+    if(snprintf(str, sizeof(str), "%s(%.1f%%)", labels[i], (data[i]*100)/total) < 0)
+      BufferTooShort();
     gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-5, str, labelColor);
 #else
     gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-3, labels[i], labelColor);
@@ -398,7 +399,8 @@ void drawArea(short width,
   for (i = 0; i <= (ngrid + 1); i++) {
     // height of grid line in units of data
     ydat = i * dydat;
-    snprintf(str, sizeof(str), "%.1f", ydat);
+    if(snprintf(str, sizeof(str), "%.1f", ydat) < 0)
+      BufferTooShort();
 
     // height of grid line in pixels
     ypos = vmargin/2 + ysize - (int)(i*dypix);
@@ -462,7 +464,8 @@ void drawArea(short width,
       gdImageLine(im, points[0].x, points[0].y, points[3].x, points[3].y, black);
 
       if((i % 2) == 0) {
-	snprintf(str, sizeof(str), "%5s",labels[i]);
+	if(snprintf(str, sizeof(str), "%5s",labels[i]) < 0)
+          BufferTooShort();
 	gdImageStringUp(im, gdFontSmall, points[0].x-gdFontSmall->w, height-2, str, black);
       }
 
@@ -1799,7 +1802,8 @@ int drawHostsDistanceGraph(int checkOnly) {
   memset(graphData, 0, sizeof(graphData));
 
   for(i=0; i<=30; i++) {
-    sprintf(labels[i], "%d", i);
+    if(snprintf(labels[i], sizeof(labels[i]), "%d", i) < 0)
+      BufferTooShort();
     lbls[i] = labels[i];
     graphData[i] = 0;
   }

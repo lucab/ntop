@@ -2517,7 +2517,8 @@ void traceEvent(int eventTraceLevel, char* file,
 #endif
       }
       if(myGlobals.logExtra == CONST_EXTRA_TRACE_FILELINE)
-        snprintf(bufMsgID, sizeof(bufMsgID), "[%s:%d]", &mFile[beginFileIdx], line);
+        if(snprintf(bufMsgID, sizeof(bufMsgID), "[%s:%d]", &mFile[beginFileIdx], line) < 0)
+          BufferTooShort();
       else {
         unsigned int messageid = 0;
         int i;
@@ -2527,7 +2528,8 @@ void traceEvent(int eventTraceLevel, char* file,
         }
         /* 1st chars of file name for uniqueness */
         messageid += (file[0]-32) * 256 + file[1]-32;
-        snprintf(bufMsgID, sizeof(bufMsgID), " [MSGID%07d]", (messageid & 0x8fffff));
+        if(snprintf(bufMsgID, sizeof(bufMsgID), " [MSGID%07d]", (messageid & 0x8fffff)) < 0)
+          BufferTooShort();
       }
       free(mFile);
     }
@@ -2542,14 +2544,15 @@ void traceEvent(int eventTraceLevel, char* file,
     /* Second we prepare the complete log message into buf
      */
     memset(buf, 0, sizeof(buf));
-    snprintf(buf, sizeof(buf), "%s %s %s%s%s",
+    if(snprintf(buf, sizeof(buf), "%s %s %s%s%s",
 	     bufTime,
              myGlobals.logExtra == CONST_EXTRA_TRACE_FILELINE ? bufMsgID : "",
 	     eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
 	     eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
 	     eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
 	     bufMsg,
-             myGlobals.logExtra == CONST_EXTRA_TRACE_MSGID ? bufMsgID : "");
+             myGlobals.logExtra == CONST_EXTRA_TRACE_MSGID ? bufMsgID : "") < 0)
+      BufferTooShort();
 
     /* Finished preparing message fields */
 
@@ -3867,7 +3870,8 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
   accessAddrResMutex("makeHostLink");
 
-  snprintf(fingerprint, sizeof(fingerprint)-1, "%s", srcHost->fingerprint);
+  if(snprintf(fingerprint, sizeof(fingerprint)-1, "%s", srcHost->fingerprint) < 0)
+    BufferTooShort();
   strtokState = NULL;
   WIN = strtok_r(fingerprint, ":", &strtokState); if(!WIN) goto unknownFingerprint;
   MSS = strtok_r(NULL, ":", &strtokState);     if(!MSS)    goto unknownFingerprint;
@@ -4952,9 +4956,9 @@ void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen,
 
   work=strdup(input);
 
-  strncat(userAgent, " ", (userAgentLen - strlen(userAgent)));
-  strncat(userAgent, title, (userAgentLen - strlen(userAgent)));
-  strncat(userAgent, "(", (userAgentLen - strlen(userAgent)));
+  strncat(userAgent, " ", (userAgentLen - strlen(userAgent) - 1));
+  strncat(userAgent, title, (userAgentLen - strlen(userAgent) - 1));
+  strncat(userAgent, "(", (userAgentLen - strlen(userAgent) - 1));
 
   token = strtok(work, " \t\n");
   while (token != NULL) {
@@ -4989,13 +4993,13 @@ void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen,
        (strncmp(token, "sysconfdir", strlen("sysconfdir")) != 0) &&
        (strncmp(token, "norecursion", strlen("norecursion")) != 0)) {
       if(++tCount > 1)
-	strncat(userAgent, "; ", (userAgentLen - strlen(userAgent)));
-      strncat(userAgent, token, (userAgentLen - strlen(userAgent)));
+	strncat(userAgent, "; ", (userAgentLen - strlen(userAgent) - 1));
+      strncat(userAgent, token, (userAgentLen - strlen(userAgent) - 1));
     }
 
     token = strtok(NULL, " \t\n");
   }
-  strncat(userAgent, ")", (userAgentLen - strlen(userAgent)));
+  strncat(userAgent, ")", (userAgentLen - strlen(userAgent) - 1));
 
   free(work);
 }
@@ -5023,10 +5027,10 @@ void extractAndAppend(char *userAgent, int userAgentLen,
   }
   work[j]='\0';
 
-  strncat(userAgent, " ", (userAgentLen - strlen(userAgent)));
-  strncat(userAgent, title, (userAgentLen - strlen(userAgent)));
-  strncat(userAgent, "/", (userAgentLen - strlen(userAgent)));
-  strncat(userAgent, work, (userAgentLen - strlen(userAgent)));
+  strncat(userAgent, " ", (userAgentLen - strlen(userAgent) - 1));
+  strncat(userAgent, title, (userAgentLen - strlen(userAgent) - 1));
+  strncat(userAgent, "/", (userAgentLen - strlen(userAgent) - 1));
+  strncat(userAgent, work, (userAgentLen - strlen(userAgent) - 1));
 
   free(work);
   return;
@@ -5098,23 +5102,23 @@ int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int buf
     space[0]='+';
   }
 
-  strncat(userAgent, " host/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-  strncat(userAgent, osName, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  strncat(userAgent, " host/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
+  strncat(userAgent, osName, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
 
   if((distro != NULL) && (strcmp(distro, "") != 0)) {
-    strncat(userAgent, " distro/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-    strncat(userAgent, distro, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    strncat(userAgent, " distro/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
+    strncat(userAgent, distro, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
   }
 
   if((release != NULL) && (strcmp(release, "") != 0) && (strcmp(release, "unknown") != 0)) {
-    strncat(userAgent, " release/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-    strncat(userAgent, release, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    strncat(userAgent, " release/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
+    strncat(userAgent, release, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
   }
 
 #ifdef HAVE_SYS_UTSNAME_H
   if (uname(&unameData) == 0) {
-    strncat(userAgent, " kernrlse/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-    strncat(userAgent, unameData.release, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    strncat(userAgent, " kernrlse/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
+    strncat(userAgent, unameData.release, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
   }
 #endif
 
@@ -5128,7 +5132,7 @@ int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int buf
 #else
 #define GCC_VERSION __GNUC__.__GNUC_MINOR__
 #endif
-  strncat(userAgent, " GCC/" xstr(GCC_VERSION) , (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  strncat(userAgent, " GCC/" xstr(GCC_VERSION) , (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
 
 #undef str
 #undef xstr
@@ -5160,28 +5164,28 @@ int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int buf
   extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "zlib", (char*)zlibVersion());
 
   /* Special case for webPort+sslPort... */
-  strncat(userAgent, " access/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  strncat(userAgent, " access/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
 #ifdef HAVE_OPENSSL
   if (myGlobals.sslPort != 0) {
     if(myGlobals.webPort != 0)
-      strncat(userAgent, "both", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+      strncat(userAgent, "both", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
     else
-      strncat(userAgent, "https", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+      strncat(userAgent, "https", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
   } else
 #endif
     if(myGlobals.webPort != 0)
-      strncat(userAgent, "http", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+      strncat(userAgent, "http", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
     else
-      strncat(userAgent, "none", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+      strncat(userAgent, "none", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
 
   /* Special case for interfaces */
-  strncat(userAgent, " interfaces(", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  strncat(userAgent, " interfaces(", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
   if(myGlobals.devices != NULL) {
-    strncat(userAgent, myGlobals.devices, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    strncat(userAgent, myGlobals.devices, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
   } else {
-    strncat(userAgent, "null", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    strncat(userAgent, "null", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
   }
-  strncat(userAgent, ")", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  strncat(userAgent, ")", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent) - 1));
 
   if(snprintf(buf, bufLen, "GET /%s HTTP/1.0\r\n"
 	      "Host: %s\r\n"
@@ -5567,7 +5571,10 @@ FILE* checkForInputFile(char* logTag,
 
 #ifdef MAKE_WITH_ZLIB
       *compressedFormat = 1;
-      snprintf(tmpFile, sizeof(tmpFile), "%s%c%s.gz", myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName);
+      if(snprintf(tmpFile, sizeof(tmpFile),
+                  "%s%c%s.gz",
+                  myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName) < 0)
+        BufferTooShort();
       if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
       fd = gzopen(tmpFile, "r");
       /* Note, if this code is inactive, fd is NULL from above, avoids fancy ifdefs */
@@ -5575,7 +5582,10 @@ FILE* checkForInputFile(char* logTag,
 
       if(fd == NULL) {
 	*compressedFormat = 0;
-	snprintf(tmpFile, sizeof(tmpFile), "%s%c%s", myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName);
+	if(snprintf(tmpFile, sizeof(tmpFile),
+                    "%s%c%s",
+                    myGlobals.configFileDirs[idx], CONST_PATH_SEP, fileName) < 0)
+          BufferTooShort();
         if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
 	fd = fopen(tmpFile, "r");
       }

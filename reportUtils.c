@@ -486,33 +486,36 @@ void printHeader(int reportType, int revertOrder, u_int column,
     arrow[2] = ""; theAnchor[2] = htmlAnchor1;
   }
 
-  snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&amp;showL=%d&amp;showH=", url,
-	   revertOrder ? "-" : "", column, showLocalityMode);
+  if(snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&amp;showL=%d&amp;showH=", url,
+	   revertOrder ? "-" : "", column, showLocalityMode) < 0)
+    BufferTooShort();
 
   sendString("<CENTER><TABLE WIDTH=100%% BORDER=0 "TABLE_DEFAULTS"><TR><TD ALIGN=LEFT>");
 
   switch(showHostsMode) {
   case showOnlyLocalHosts:
-    snprintf(buf, sizeof(buf), 
-    "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
-    "[<B> Local Only </B>]&nbsp;"
-    "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;</TD>",
-    theLink, theLink);
-
+    if(snprintf(buf, sizeof(buf), 
+              "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
+              "[<B> Local Only </B>]&nbsp;"
+              "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;</TD>",
+              theLink, theLink) < 0)
+      BufferTooShort();
     break;
   case showOnlyRemoteHosts:
-    snprintf(buf, sizeof(buf), 
+    if(snprintf(buf, sizeof(buf), 
 	     "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
 	     "[ <A HREF=\"%s1\">Local Only</A> ]&nbsp;"
 	     "[<B> Remote Only </B>]&nbsp;</TD>",
-	     theLink, theLink);
+	     theLink, theLink) < 0)
+      BufferTooShort();
     break;
   default:
-    snprintf(buf, sizeof(buf), 
+    if(snprintf(buf, sizeof(buf), 
 	     "<b>Hosts:</b> [<B> All </B>]&nbsp;"
 	     "[ <A HREF=\"%s1\">Local Only</A> ]&nbsp;"
 	     "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;</TD>",
-	     theLink, theLink);
+	     theLink, theLink) < 0)
+      BufferTooShort();
     break;
   }
   sendString(buf);
@@ -520,28 +523,31 @@ void printHeader(int reportType, int revertOrder, u_int column,
   if(reportType != TRAFFIC_STATS) {
     switch(showLocalityMode) {
     case showSentReceived:
-      snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
   	     "<b>Data:</b> [<b> All </b>]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;",
   	     url, revertOrder ? "-" : "", column, showHostsMode,
-  	     url, revertOrder ? "-" : "", column, showHostsMode);
+  	     url, revertOrder ? "-" : "", column, showHostsMode) < 0)
+        BufferTooShort();
       break;
     case showOnlySent:
-      snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
   	     "<b>Data:</b> [ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
   	     "[<b> Sent Only </b>]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;",
   	     url, revertOrder ? "-" : "", column, showHostsMode,
-  	     url, revertOrder ? "-" : "", column, showHostsMode);
+  	     url, revertOrder ? "-" : "", column, showHostsMode) < 0)
+        BufferTooShort();
       break;
     default:
-      snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
   	     "<b>Data:</b> [ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
   	     "[<b> Received Only </b>]&nbsp;",
   	     url, revertOrder ? "-" : "", column, showHostsMode,
-  	     url, revertOrder ? "-" : "", column, showHostsMode);
+  	     url, revertOrder ? "-" : "", column, showHostsMode) < 0)
+        BufferTooShort();
       break;
     }
     sendString(buf);
@@ -786,15 +792,18 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, i
 
   if(!showOsName) {
     if(flagImg != NULL)
-      snprintf(tmpStr, tmpStrLen, "%s", flagImg);
+      if(snprintf(tmpStr, tmpStrLen, "%s", flagImg) < 0)
+        BufferTooShort();
     else
       tmpStr[0] = '\0';
   } else {
     if(flagImg != NULL) {
       if(snprintf(tmpStr, tmpStrLen, "%s&nbsp;[%s]", flagImg, theOsName) < 0)
 	BufferTooShort();
-    } else
-      snprintf(tmpStr, tmpStrLen, "%s", theOsName);
+    } else {
+      if(snprintf(tmpStr, tmpStrLen, "%s", theOsName) < 0)
+        BufferTooShort();
+    }
   }
 
   return(tmpStr);
@@ -2189,35 +2198,119 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
 static char* sap2name(u_int16_t proto, char *sap, int sap_len) {
   switch(proto) {
-  case SAP_NULL:           snprintf(sap, sap_len, "NULL LSAP"); break;
-  case SAP_LLC_SLMGMT:     snprintf(sap, sap_len, "LLC Sub-Layer Management"); break;
-  case SAP_SNA_PATHCTRL:   snprintf(sap, sap_len, "SNA Path Control"); break;
-  case SAP_IP:             snprintf(sap, sap_len, "TCP/IP"); break;
-  case SAP_SNA1:           snprintf(sap, sap_len, "SNA"); break;
-  case SAP_SNA2:           snprintf(sap, sap_len, "SNA"); break;
-  case SAP_PROWAY_NM_INIT: snprintf(sap, sap_len, "PROWAY (IEC955) Network Management and Initialization"); break;
-  case SAP_TI:             snprintf(sap, sap_len, "Texas Instruments"); break;
-  case SAP_BPDU:           snprintf(sap, sap_len, "Spanning Tree BPDU"); break;
-  case SAP_RS511:          snprintf(sap, sap_len, "EIA RS-511 Manufacturing Message Service"); break;
-  case SAP_X25:            snprintf(sap, sap_len, "ISO 8208 (X.25 over 802.2)"); break;
-  case 0x7F:               snprintf(sap, sap_len, "ISO 802.2"); break;
-  case SAP_XNS:            snprintf(sap, sap_len, "XNS"); break;
-  case SAP_BACNET:         snprintf(sap, sap_len, "BACnet"); break;
-  case SAP_NESTAR:         snprintf(sap, sap_len, "Nestar"); break;
-  case SAP_PROWAY_ASLM:    snprintf(sap, sap_len, "PROWAY (IEC955) Active Station List Maintenance"); break;
-  case SAP_ARP:            snprintf(sap, sap_len, "ARP"); break;
-  case SAP_SNAP:           snprintf(sap, sap_len, "SNAP"); break;
+  case SAP_NULL:
+    if(snprintf(sap, sap_len, "NULL LSAP") < 0)
+      BufferTooShort();
+    break;
+  case SAP_LLC_SLMGMT:
+    if(snprintf(sap, sap_len, "LLC Sub-Layer Management") < 0)
+      BufferTooShort();
+    break;
+  case SAP_SNA_PATHCTRL:
+    if(snprintf(sap, sap_len, "SNA Path Control") < 0)
+      BufferTooShort();
+    break;
+  case SAP_IP:
+    if(snprintf(sap, sap_len, "TCP/IP") < 0)
+      BufferTooShort();
+    break;
+  case SAP_SNA1:
+    if(snprintf(sap, sap_len, "SNA") < 0)
+      BufferTooShort();
+    break;
+  case SAP_SNA2:
+    if(snprintf(sap, sap_len, "SNA") < 0)
+      BufferTooShort();
+    break;
+  case SAP_PROWAY_NM_INIT:
+    if(snprintf(sap, sap_len, "PROWAY (IEC955) Network Management and Initialization") < 0)
+      BufferTooShort();
+    break;
+  case SAP_TI:
+    if(snprintf(sap, sap_len, "Texas Instruments") < 0)
+      BufferTooShort();
+    break;
+  case SAP_BPDU:
+    if(snprintf(sap, sap_len, "Spanning Tree BPDU") < 0)
+      BufferTooShort();
+    break;
+  case SAP_RS511:
+    if(snprintf(sap, sap_len, "EIA RS-511 Manufacturing Message Service") < 0)
+      BufferTooShort();
+    break;
+  case SAP_X25:
+    if(snprintf(sap, sap_len, "ISO 8208 (X.25 over 802.2)") < 0)
+      BufferTooShort();
+    break;
+  case 0x7F:
+    if(snprintf(sap, sap_len, "ISO 802.2") < 0)
+      BufferTooShort();
+    break;
+  case SAP_XNS:
+    if(snprintf(sap, sap_len, "XNS") < 0)
+      BufferTooShort();
+    break;
+  case SAP_BACNET:
+    if(snprintf(sap, sap_len, "BACnet") < 0)
+      BufferTooShort();
+    break;
+  case SAP_NESTAR:
+    if(snprintf(sap, sap_len, "Nestar") < 0)
+      BufferTooShort();
+    break;
+  case SAP_PROWAY_ASLM:
+    if(snprintf(sap, sap_len, "PROWAY (IEC955) Active Station List Maintenance") < 0)
+      BufferTooShort();
+    break;
+  case SAP_ARP:
+    if(snprintf(sap, sap_len, "ARP") < 0)
+      BufferTooShort();
+    break;
+  case SAP_SNAP:
+    if(snprintf(sap, sap_len, "SNAP") < 0)
+      BufferTooShort();
+    break;
   case SAP_VINES1:
-  case SAP_VINES2:         snprintf(sap, sap_len, "Banyan Vines"); break;
-  case SAP_NETWARE:        snprintf(sap, sap_len, "NetWare"); break;
-  case SAP_NETBIOS:        snprintf(sap, sap_len, "NetBIOS"); break;
-  case SAP_IBMNM:          snprintf(sap, sap_len, "IBM Net Management"); break;
-  case SAP_HPEXT:          snprintf(sap, sap_len, "HP Extended LLC"); break;
-  case SAP_UB:             snprintf(sap, sap_len, "Ungermann-Bass"); break;
-  case SAP_RPL:            snprintf(sap, sap_len, "Remote Program Load"); break;
-  case SAP_OSINL:          snprintf(sap, sap_len, "ISO Network Layer"); break;
-  case SAP_GLOBAL:         snprintf(sap, sap_len, "Global LSAP"); break;
-  default:                 snprintf(sap, sap_len, "0x%X", proto); break;
+  case SAP_VINES2:
+    if(snprintf(sap, sap_len, "Banyan Vines") < 0)
+      BufferTooShort();
+    break;
+  case SAP_NETWARE:
+    if(snprintf(sap, sap_len, "NetWare") < 0)
+      BufferTooShort();
+    break;
+  case SAP_NETBIOS:
+    if(snprintf(sap, sap_len, "NetBIOS") < 0)
+      BufferTooShort();
+    break;
+  case SAP_IBMNM:
+    if(snprintf(sap, sap_len, "IBM Net Management") < 0)
+      BufferTooShort();
+    break;
+  case SAP_HPEXT:
+    if(snprintf(sap, sap_len, "HP Extended LLC") < 0)
+      BufferTooShort();
+    break;
+  case SAP_UB:
+    if(snprintf(sap, sap_len, "Ungermann-Bass") < 0)
+      BufferTooShort();
+    break;
+  case SAP_RPL:
+    if(snprintf(sap, sap_len, "Remote Program Load") < 0)
+      BufferTooShort();
+    break;
+  case SAP_OSINL:
+    if(snprintf(sap, sap_len, "ISO Network Layer") < 0)
+      BufferTooShort();
+    break;
+  case SAP_GLOBAL:
+    if(snprintf(sap, sap_len, "Global LSAP") < 0)
+      BufferTooShort();
+    break;
+  default:
+    if(snprintf(sap, sap_len, "0x%X", proto) < 0)
+      BufferTooShort();
+    break;
   }
 
   return(sap);
@@ -2230,14 +2323,17 @@ static void printUnknownProto(UnknownProto proto) {
 
   switch(proto.protoType) {
   case 1:
-    snprintf(buf, sizeof(buf), "<li>Ethernet Type: 0x%04X\n", proto.proto.ethType);
+    if(snprintf(buf, sizeof(buf), "<li>Ethernet Type: 0x%04X\n", proto.proto.ethType) < 0)
+      BufferTooShort();
     break;
   case 2:
-    snprintf(buf, sizeof(buf), "<li>SAP: DSAP=0x%02X/SSAP=0x%02X\n",
-	     proto.proto.sapType.dsap, proto.proto.sapType.ssap);
-     break;
+    if(snprintf(buf, sizeof(buf), "<li>SAP: DSAP=0x%02X/SSAP=0x%02X\n",
+	     proto.proto.sapType.dsap, proto.proto.sapType.ssap) < 0)
+      BufferTooShort();
+    break;
   case 3:
-    snprintf(buf, sizeof(buf), "<li>IP Protocol: 0x%d\n", proto.proto.ipType);
+    if(snprintf(buf, sizeof(buf), "<li>IP Protocol: 0x%d\n", proto.proto.ipType) < 0)
+      BufferTooShort();
     break;
   default:
     return;
@@ -3269,7 +3365,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   buf1[0]=0;
   if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
     if(el->hostResolvedName[0] == '\0' || strcmp(sniffedName, el->hostResolvedName))
-      snprintf(buf1, sizeof(buf1), " (%s)", sniffedName);
+      if(snprintf(buf1, sizeof(buf1), " (%s)", sniffedName) < 0)
+        BufferTooShort();
   }
 
   if((el->hostResolvedName[0] != '\0') && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
@@ -3280,7 +3377,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		el->hostResolvedName, buf1) < 0)
       BufferTooShort();
 
-    snprintf(buf2, sizeof(buf2), "Info about %s", el->hostResolvedName);
+    if(snprintf(buf2, sizeof(buf2), "Info about %s", el->hostResolvedName) < 0)
+      BufferTooShort();
   } else if(el->hostNumIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
@@ -3291,12 +3389,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		el->hostNumIpAddress, buf1) < 0)
       BufferTooShort();
 
-    snprintf(buf2, sizeof(buf2), "Info about %s", el->hostNumIpAddress);
+    if(snprintf(buf2, sizeof(buf2), "Info about %s", el->hostNumIpAddress) < 0)
+      BufferTooShort();
   } else {
     if(snprintf(buf, sizeof(buf), "Info about %s", el->ethAddressString) < 0)
       BufferTooShort();
 
-    snprintf(buf2, sizeof(buf2), "Info about %s", el->ethAddressString);
+    if(snprintf(buf2, sizeof(buf2), "Info about %s", el->ethAddressString) < 0)
+      BufferTooShort();
   }
 
   releaseAddrResMutex();
@@ -3925,10 +4025,11 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       key = el->hostNumIpAddress;
 
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-    snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
+    if(snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
 	     myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-	     dotToSlash(key));
+	     dotToSlash(key)) < 0)
+      BufferTooShort();
 
     if(stat(buf, &statbuf) == 0) {
       if(snprintf(buf, sizeof(buf),
@@ -4272,11 +4373,12 @@ char* getNbNodeType(char nodeType) {
 void printFlagedWarning(char *text) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 
-  snprintf(buf, LEN_GENERAL_WORK_BUFFER,
+  if(snprintf(buf, LEN_GENERAL_WORK_BUFFER,
  	   "<center>\n"
  	   "<p><img alt=\"Warning\" src=\"/warning.gif\"></p>\n"
  	   "<p><font color=\"#FF0000\" size=\"+1\">%s</font></p>\n"
- 	   "</center>\n", text);
+ 	   "</center>\n", text) < 0)
+    BufferTooShort();
   sendString(buf);
 }
 
@@ -4387,19 +4489,68 @@ static void printHostsCharacterization(void) {
   if(headerSent) {
     sendString("<TR><TH>Total</TH>");
     if(unhealthy > 0) {
-      snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d [%.1f %%]</TD>", unhealthy, (float)(unhealthy*100)/(float)totHosts);
+      if(snprintf(buf, sizeof(buf),
+                  "<TD ALIGN=CENTER>%d [%.1f %%]</TD>",
+                  unhealthy, (float)(unhealthy*100)/(float)totHosts) < 0)
+        BufferTooShort();
       sendString(buf);
     } else
       sendString("<TD>&nbsp;</TD>");
-    if(a > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", a); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
-    if(b > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", b); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
-    if(c > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", c); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
-    if(d > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", d); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
-    if(e > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", e); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
-    if(f > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", f); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
-    if(g > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", g); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
-    if(h > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", h); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
-    if(i > 0) { snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", i); sendString(buf); } else sendString("<TD>&nbsp;</TD>");
+
+    if(a > 0) {
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", a) < 0)
+        BufferTooShort();
+      sendString(buf);
+    } else
+      sendString("<TD>&nbsp;</TD>");
+    if(b > 0) {
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", b) < 0)
+        BufferTooShort();
+      sendString(buf);
+    } else
+      sendString("<TD>&nbsp;</TD>");
+    if(c > 0) {
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", c) < 0)
+        BufferTooShort();
+      sendString(buf);
+    } else
+      sendString("<TD>&nbsp;</TD>");
+    if(d > 0) {
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", d) < 0)
+        BufferTooShort();
+      sendString(buf);
+    } else
+      sendString("<TD>&nbsp;</TD>");
+    if(e > 0) {
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", e) < 0)
+        BufferTooShort();
+      sendString(buf);
+    } else
+      sendString("<TD>&nbsp;</TD>");
+    if(f > 0) {
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", f) < 0)
+        BufferTooShort();
+      sendString(buf);
+    } else
+      sendString("<TD>&nbsp;</TD>");
+    if(g > 0) {
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", g) < 0)
+        BufferTooShort();
+      sendString(buf);
+    } else
+      sendString("<TD>&nbsp;</TD>");
+    if(h > 0) {
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", h) < 0)
+        BufferTooShort();
+      sendString(buf);
+    } else
+      sendString("<TD>&nbsp;</TD>");
+    if(i > 0) {
+      if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", i) < 0)
+        BufferTooShort();
+      sendString(buf);
+    } else
+      sendString("<TD>&nbsp;</TD>");
     sendString("</TABLE></CENTER>\n");
   }
 }
@@ -4588,8 +4739,8 @@ void printHostsStats(int fingerprintRemote) {
           if(strlen(unknownFPs) + strlen(el->fingerprint) > (sizeof(unknownFPs) - 5)) {
             unknownFPsEtc=1;
           } else {
-            strcat(unknownFPs, ", ");
-            strcat(unknownFPs, el->fingerprint);
+            strncat(unknownFPs, ", ", (sizeof(unknownFPs) - strlen(unknownFPs) - 1));
+            strncat(unknownFPs, el->fingerprint, (sizeof(unknownFPs) - strlen(unknownFPs) - 1));
           }
       }
       continue;
@@ -4690,7 +4841,10 @@ void printHostsStats(int fingerprintRemote) {
 		sendString("<br>\n</TD>");
 	      } else {
 		if((el->nonIPTraffic != NULL) && (el->nonIPTraffic->nbDomainName != NULL)) {
-		  snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>[ %s ]</TD>", el->nonIPTraffic->nbDomainName);
+		  if(snprintf(buf, sizeof(buf),
+                              "<TD ALIGN=CENTER>[ %s ]</TD>",
+                              el->nonIPTraffic->nbDomainName) < 0)
+                    BufferTooShort();
 		  sendString(buf);
 		} else
 		  sendString("<TD ALIGN=CENTER>X</TD>");
@@ -4715,8 +4869,11 @@ void printHostsStats(int fingerprintRemote) {
 
   for(i=0; i<MAX_NUM_OS; i++) {
      if(theOSs[i].name != NULL) {
-	snprintf(buf, sizeof(buf), "<tr><th align=\"left\">%s</th><td aling=\"right\">%d</td></tr>\n", 
-		 theOSs[i].name, theOSs[i].num);
+	if(snprintf(buf, sizeof(buf),
+                    "<tr><th align=\"left\">%s</th>\n"
+                    "<td align=\"right\">%d</td></tr>\n", 
+                    theOSs[i].name, theOSs[i].num) < 0)
+          BufferTooShort();
 	sendString(buf);
 	free(theOSs[i].name);
       }
@@ -4997,7 +5154,10 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
     sendString(buf);
     break;
   default:
-    snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<CENTER><p>ERROR: reportType=%d</p>\n", reportType);
+    if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, 
+                "<CENTER><p>ERROR: reportType=%d</p>\n",
+                reportType) < 0)
+      BufferTooShort();
     sendString(buf);
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>"
@@ -5021,14 +5181,18 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   int soFar=2;
   char theLink[256];
 
-  snprintf(theLink, sizeof(theLink), "/%s.html?col=%s%d&showF=", url, 
-	   revertOrder ? "-" : "", column);
+  if(snprintf(theLink, sizeof(theLink),
+              "/%s.html?col=%s%d&showF=",
+              url, 
+              revertOrder ? "-" : "",
+              column) < 0)
+    BufferTooShort();
 
   switch(hostInfoPage) {
   case showHostLunStats:
       if ((el->devType != SCSI_DEV_INITIATOR) &&
           (el->devType != SCSI_DEV_UNINIT)) {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[<B>LUN Statistics</B> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -5037,13 +5201,14 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       break;
   case showHostLunGraphs:
       if ((el->devType != SCSI_DEV_INITIATOR) &&
           (el->devType != SCSI_DEV_UNINIT)) {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <B>LUN Graphs</B> ]&nbsp;"
@@ -5052,13 +5217,14 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       break;
   case showHostScsiSessionBytes:
       if ((el->devType != SCSI_DEV_INITIATOR) &&
           (el->devType != SCSI_DEV_UNINIT)) {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -5067,23 +5233,25 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       else {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <B>SCSI Session(Bytes)</B> ]&nbsp;"
                    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       break;
   case showHostScsiSessionTimes:
       if ((el->devType != SCSI_DEV_INITIATOR) &&
           (el->devType != SCSI_DEV_UNINIT)) {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A>]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -5092,23 +5260,25 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       else {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A>]&nbsp;"
                    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
                    "[ <B>SCSI Session(Times)</B> ]&nbsp;"
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       break;
   case showHostScsiSessionStatus:
       if ((el->devType != SCSI_DEV_INITIATOR) &&
           (el->devType != SCSI_DEV_UNINIT)) {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -5117,23 +5287,25 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    "[ <B>SCSI Session(Status)</B> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       else {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
                    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
                    "[ <B>SCSI Session(Status)</B> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       break;
   case showHostScsiSessionTMInfo:
       if ((el->devType != SCSI_DEV_INITIATOR) &&
           (el->devType != SCSI_DEV_UNINIT)) {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -5142,23 +5314,25 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <B>SCSI Session(Task Mgmt)</B> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       else {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
                    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <B>SCSI Session(Task Mgmt)</B> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       break;
   case showHostFcSessions:
       if ((el->devType != SCSI_DEV_INITIATOR) &&
           (el->devType != SCSI_DEV_UNINIT)) {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -5167,24 +5341,26 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <B>FC Sessions</B> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       else {
-          snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
                    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <B>FC Sessions</B> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       break;
   case showHostMainPage:
   default:
       if ((el->devType != SCSI_DEV_INITIATOR) &&
           (el->devType != SCSI_DEV_UNINIT)) {
-          snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
                    "[<B>Main&nbsp;Page</B> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -5193,17 +5369,19 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       else {
-          snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+          if(snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
                    "[<B>Main&nbsp;Page</B> ]&nbsp;"
                    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
                    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
                    "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
                    "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
                    "[ <A HREF=%s7>FC Sessions</A> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink);
+                   theLink, theLink, theLink, theLink, theLink) < 0)
+            BufferTooShort();
       }
       break;
   }

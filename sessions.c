@@ -964,7 +964,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  if(srcHost->fingerprint == NULL) {
 		    char buffer[64], *delimiter;
 
-		    snprintf(buffer, sizeof(buffer), ":%s", os);
+		    if(snprintf(buffer, sizeof(buffer), ":%s", os) < 0)
+                      BufferTooShort();
 		    
 		    if((delimiter = strchr(buffer, ';')) != NULL) delimiter[0] = '\0';
 		    if((delimiter = strchr(buffer, '(')) != NULL) delimiter[0] = '\0';

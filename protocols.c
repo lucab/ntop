@@ -634,7 +634,8 @@ u_int16_t processDNSPacket(const u_char *packetData,
              min(MAX_LEN_SYM_HOST_NAME-1, strlen(hostPtr.queryName)));
       storedAddress.symAddressType=FLAG_HOST_SYM_ADDR_TYPE_NAME;
 
-      snprintf(tmpBuf, sizeof(tmpBuf), "%u", ntohl(hostPtr.addrList[i]));
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", ntohl(hostPtr.addrList[i])) < 0)
+         BufferTooShort();
       key_data.dptr = (void*)&tmpBuf;
       key_data.dsize = strlen(key_data.dptr)+1;
       data_data.dptr = (void*)&storedAddress;
@@ -882,7 +883,8 @@ void handleNetbios(HostTraffic *srcHost,
 	  if(srcHost->fingerprint == NULL) {
 	    char buffer[64];
 
-	    snprintf(buffer, sizeof(buffer), ":%s", &data[45]);
+	    if(snprintf(buffer, sizeof(buffer), ":%s", &data[45]) < 0)
+              BufferTooShort();
 	    accessAddrResMutex("makeHostLink");
 	    srcHost->fingerprint = strdup(buffer);
 	    releaseAddrResMutex();
@@ -916,7 +918,8 @@ void handleNetbios(HostTraffic *srcHost,
 	  if(srcHost->fingerprint == NULL) {
 	    char buffer[64];
 
-	    snprintf(buffer, sizeof(buffer), ":%s", &data[i]);
+	    if(snprintf(buffer, sizeof(buffer), ":%s", &data[i]) < 0)
+              BufferTooShort();
 	    accessAddrResMutex("makeHostLink");
 	    srcHost->fingerprint = strdup(buffer);
 	    releaseAddrResMutex();

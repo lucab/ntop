@@ -257,8 +257,9 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   rrd_value_t   *data,*datai, _total, _val;
   char          **ds_namv;
 
-  snprintf(path, sizeof(path), "%s/%s/%s",
-	   myGlobals.rrdPath, rrdPath, rrdFilePath);
+  if(snprintf(path, sizeof(path), "%s/%s/%s",
+	   myGlobals.rrdPath, rrdPath, rrdFilePath) < 0)
+    BufferTooShort();
 
 #ifdef WIN32
   revertSlash(path, 0);
@@ -328,7 +329,8 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
-  snprintf(path, sizeof(path), "%s/%s", myGlobals.rrdPath, rrdPath);
+  if(snprintf(path, sizeof(path), "%s/%s", myGlobals.rrdPath, rrdPath) < 0)
+    BufferTooShort();
 
 #ifdef WIN32
   revertSlash(path, 0);
@@ -338,7 +340,8 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   if(directoryPointer == NULL) {
     char buf[256];
-    snprintf(buf, sizeof(buf), "<I>Unable to read directory %s</I>", path);
+    if(snprintf(buf, sizeof(buf), "<I>Unable to read directory %s</I>", path) < 0)
+      BufferTooShort();
     printFlagedWarning(buf);
     printHTMLtrailer();
     return;
@@ -350,15 +353,32 @@ static void listResource(char *rrdPath, char *rrdTitle,
   printHTMLheader(path, NULL, 0);
   sendString("<CENTER>\n<p ALIGN=right>\n");
 
-  snprintf(url, sizeof(url), "/plugins/rrdPlugin?action=list&key=%s&title=%s&end=now", rrdPath, rrdTitle);
+  if(snprintf(url, sizeof(url),
+              "/plugins/rrdPlugin?action=list&key=%s&title=%s&end=now",
+              rrdPath, rrdTitle) < 0)
+      BufferTooShort();
 
-  snprintf(path, sizeof(path), "<b>View:</b> [ <A HREF=\"%s&start=now-1y\">year</A> ]", url);  sendString(path);
-  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1m\">month</A> ]", url);  sendString(path);
-  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1w\">week</A> ]", url);  sendString(path);
-  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1d\">day</A> ]", url);  sendString(path);
-  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-12h\">last 12h</A> ]\n", url);  sendString(path);
-  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-6h\">last 6h</A> ]\n", url);  sendString(path);
-  snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1h\">last hour</A> ]&nbsp;\n", url);  sendString(path);
+  if(snprintf(path, sizeof(path), "<b>View:</b> [ <A HREF=\"%s&start=now-1y\">year</A> ]", url) < 0)
+      BufferTooShort();
+    sendString(path);
+  if(snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1m\">month</A> ]", url) < 0)
+      BufferTooShort();
+    sendString(path);
+  if(snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1w\">week</A> ]", url) < 0)
+      BufferTooShort();
+    sendString(path);
+  if(snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1d\">day</A> ]", url) < 0)
+      BufferTooShort();
+    sendString(path);
+  if(snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-12h\">last 12h</A> ]\n", url) < 0)
+      BufferTooShort();
+    sendString(path);
+  if(snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-6h\">last 6h</A> ]\n", url) < 0)
+      BufferTooShort();
+    sendString(path);
+  if(snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1h\">last hour</A> ]&nbsp;\n", url) < 0)
+      BufferTooShort();
+    sendString(path);
 
   sendString("</p>\n<p>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
@@ -394,8 +414,9 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
       sendString("<TR><TD>\n");
 
-      snprintf(path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?action=graph&key=%s/&name=%s&title=%s&start=%s&end=%s\"><P>\n",
-	       rrdPath, rsrcName, rsrcName, startTime, endTime);
+      if(snprintf(path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?action=graph&key=%s/&name=%s&title=%s&start=%s&end=%s\"><P>\n",
+	       rrdPath, rsrcName, rsrcName, startTime, endTime) < 0)
+        BufferTooShort();
       sendString(path);
 
       sendString("</TD><TD ALIGN=RIGHT>\n");
@@ -407,9 +428,13 @@ static void listResource(char *rrdPath, char *rrdTitle,
       } else {
 	if((strncmp(rsrcName, "pkt", 3) == 0)
 	   || ((strlen(rsrcName) > 4) && (strcmp(&rsrcName[strlen(rsrcName)-4], "Pkts") == 0))) {
-	  snprintf(path, sizeof(path), "%s Pkt</TD>", formatPkts(total, formatBuf, sizeof(formatBuf)));
+	  if(snprintf(path, sizeof(path), "%s Pkt</TD>",
+                      formatPkts(total, formatBuf, sizeof(formatBuf))) < 0)
+            BufferTooShort();
 	} else {
-	  snprintf(path, sizeof(path), "%s", formatBytes(total, 1, formatBuf, sizeof(formatBuf)));
+	  if(snprintf(path, sizeof(path), "%s",
+                      formatBytes(total, 1, formatBuf, sizeof(formatBuf))) < 0)
+            BufferTooShort();
 	}
 	sendString(path);
       }
@@ -456,12 +481,14 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
   struct stat statbuf;
   int argc = 0, rc, x, y;
 
-  snprintf(path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
+  if(snprintf(path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName) < 0)
+    BufferTooShort();
 
   /* startTime[4] skips the 'now-' */
-  snprintf(fname, sizeof(fname), "%s/%s/%s-%s%s%s",
+  if(snprintf(fname, sizeof(fname), "%s/%s/%s-%s%s%s",
 	   myGlobals.rrdPath, rrd_subdirs[0], startTime, rrdPrefix, rrdName,
-	   CHART_FORMAT);
+	   CHART_FORMAT) < 0)
+    BufferTooShort();
 
 #ifdef WIN32
   revertSlash(path, 0);
@@ -498,20 +525,25 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 #ifdef WIN32
     revertDoubleColumn(path);
 #endif
-    snprintf(buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path);
+    if(snprintf(buf, sizeof(buf), "DEF:ctr=%s:counter:AVERAGE", path) < 0)
+      BufferTooShort();
     argv[argc++] = buf;
-    snprintf(buf1, sizeof(buf1), "AREA:ctr#00a000:%s", rrdTitle);
+    if(snprintf(buf1, sizeof(buf1), "AREA:ctr#00a000:%s", rrdTitle) < 0)
+      BufferTooShort();
     argv[argc++] = buf1;
     argv[argc++] = "GPRINT:ctr:MIN:Min\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:MAX:Max\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:AVERAGE:Avg\\: %3.1lf%s";
     argv[argc++] = "GPRINT:ctr:LAST:Current\\: %3.1lf%s";
 #ifdef HAVE_RRD_ABERRANT_BEHAVIOR
-    snprintf(buf2,sizeof(buf2), "DEF:pred=%s:counter:HWPREDICT", path);
+    if(snprintf(buf2, sizeof(buf2), "DEF:pred=%s:counter:HWPREDICT", path) < 0)
+      BufferTooShort();
     argv[argc++] = buf2;
-    snprintf(buf3,sizeof(buf3), "DEF:dev=%s:counter:DEVPREDICT", path);
+    if(snprintf(buf3, sizeof(buf3), "DEF:dev=%s:counter:DEVPREDICT", path) < 0)
+      BufferTooShort();
     argv[argc++] = buf3;
-    snprintf(buf4,sizeof(buf4), "DEF:fail=%s:counter:FAILURES", path);
+    if(snprintf(buf4, sizeof(buf4), "DEF:fail=%s:counter:FAILURES", path) < 0)
+      BufferTooShort();
     argv[argc++] = buf4;
     argv[argc++] = "TICK:fail#ffffa0:1.0:Anomalia";
     argv[argc++] = "CDEF:upper=pred,dev,2,*,+";
@@ -544,8 +576,10 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
       
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader("RRD Graph", NULL, 0);
-      snprintf(path, sizeof(path), "<I>Error while building graph of the requested file. %s</I>",
-	       rrd_get_error());
+      if(snprintf(path, sizeof(path),
+                  "<I>Error while building graph of the requested file. %s</I>",
+	          rrd_get_error()) < 0)
+        BufferTooShort();
       printFlagedWarning(path);
       rrd_clear_error();
     }
@@ -570,7 +604,8 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
   if(value == 0) return;
 
-  snprintf(path, sizeof(path), "%s%s.rrd", hostPath, key);
+  if(snprintf(path, sizeof(path), "%s%s.rrd", hostPath, key) < 0)
+    BufferTooShort();
 
   /* Avoid path problems */
   for(i=strlen(hostPath); i<strlen(path); i++)
@@ -601,19 +636,23 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     argv[argc++] = "rrd_create";
     argv[argc++] = path;
     argv[argc++] = "--start";
-    snprintf(startStr, sizeof(startStr), "%u",
-	     rrdTime-1 /* -1 avoids subsequent rrd_update call problems */);
+    if(snprintf(startStr, sizeof(startStr), "%u",
+	     rrdTime-1 /* -1 avoids subsequent rrd_update call problems */) < 0)
+      BufferTooShort();
     argv[argc++] = startStr;
 
     argv[argc++] = "--step";
-    snprintf(stepStr, sizeof(stepStr), "%u", dumpInterval);
+    if(snprintf(stepStr, sizeof(stepStr), "%u", dumpInterval) < 0)
+      BufferTooShort();
     argv[argc++] = stepStr;
 
     if(isCounter) {
-      snprintf(counterStr, sizeof(counterStr), "DS:counter:COUNTER:%d:0:%u", step, topValue);
+      if(snprintf(counterStr, sizeof(counterStr), "DS:counter:COUNTER:%d:0:%u", step, topValue) < 0)
+        BufferTooShort();
     } else {
       /* Unlimited */
-      snprintf(counterStr, sizeof(counterStr), "DS:counter:GAUGE:%d:0:U", step);
+      if(snprintf(counterStr, sizeof(counterStr), "DS:counter:GAUGE:%d:0:U", step) < 0)
+        BufferTooShort();
     }
     argv[argc++] = counterStr;
 
@@ -623,29 +662,39 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     value1 = (60*60 + dumpInterval - 1) / dumpInterval;
     /* value2 is the # of value1 (hours) for dumpHours hours */
     value2 = value1 * dumpHours;
-    snprintf(intervalStr, sizeof(intervalStr), "RRA:AVERAGE:%.1f:1:%d", 0.5, value2);
+    if(snprintf(intervalStr, sizeof(intervalStr), "RRA:AVERAGE:%.1f:1:%d", 0.5, value2) < 0)
+      BufferTooShort();
     argv[argc++] = intervalStr;
 
     /* Store the MIN/MAX 5m value for a # of hours */
-    snprintf(minStr, sizeof(minStr), "RRA:MIN:%.1f:1:%d", 0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
+    if(snprintf(minStr, sizeof(minStr), "RRA:MIN:%.1f:1:%d",
+                0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS) < 0)
+      BufferTooShort();
     argv[argc++] = minStr;
-    snprintf(maxStr, sizeof(maxStr), "RRA:MAX:%.1f:1:%d", 0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS);
+    if(snprintf(maxStr, sizeof(maxStr), "RRA:MAX:%.1f:1:%d",
+               0.5, dumpHours > 0 ? dumpHours : DEFAULT_RRD_HOURS) < 0)
+      BufferTooShort();
     argv[argc++] = maxStr;
 
     if(dumpDays > 0) {
-      snprintf(daysStr, sizeof(daysStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpDays * 24);
+      if(snprintf(daysStr, sizeof(daysStr), "RRA:AVERAGE:%.1f:%d:%d",
+                  0.5, value1, dumpDays * 24) < 0)
+        BufferTooShort();
       argv[argc++] = daysStr;
     }
 
     /* Compute the rollup - how many dumpInterval seconds interval are in a day */
     value1 = (24*60*60 + dumpInterval - 1) / dumpInterval;
     if(dumpMonths > 0) {
-      snprintf(monthsStr, sizeof(monthsStr), "RRA:AVERAGE:%.1f:%d:%d", 0.5, value1, dumpMonths * 30);
+      if(snprintf(monthsStr, sizeof(monthsStr), "RRA:AVERAGE:%.1f:%d:%d",
+                  0.5, value1, dumpMonths * 30) < 0)
+        BufferTooShort();
       argv[argc++] = monthsStr;
     }
 
 #ifdef HAVE_RRD_ABERRANT_BEHAVIOR
-    snprintf(tempStr, sizeof(tempStr), "RRA:HWPREDICT:1440:0.1:0.0035:20");
+    if(snprintf(tempStr, sizeof(tempStr), "RRA:HWPREDICT:1440:0.1:0.0035:20") < 0)
+      BufferTooShort();
     argv[argc++] = tempStr;
 #endif
 
@@ -658,11 +707,12 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
       memset(buf, 0, sizeof(buf));
 
-      snprintf(buf, sizeof(buf), "%s", argv[4]);
+      if(snprintf(buf, sizeof(buf), "%s", argv[4]) < 0)
+        BufferTooShort();
 
       for (i=5; i<argc; i++) {
-	strcat(buf, " ");
-	strcat(buf, argv[i]);
+	strncat(buf, " ", (sizeof(buf) - strlen(buf) - 1));
+	strncat(buf, argv[i], (sizeof(buf) - strlen(buf) - 1));
       }
 
       traceEvent(CONST_TRACE_INFO, "RRD: rrdtool create --start now-1 file %s", buf);
@@ -756,9 +806,11 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
     */
 
-    snprintf(cmd, sizeof(cmd), "%u:u", rrdTime-10); /* u = undefined */
+    if(snprintf(cmd, sizeof(cmd), "%u:u", rrdTime-10) < 0) /* u = undefined */
+      BufferTooShort();
   } else {
-    snprintf(cmd, sizeof(cmd), "%u:%u", rrdTime, (unsigned long)value);
+    if(snprintf(cmd, sizeof(cmd), "%u:%u", rrdTime, (unsigned long)value) < 0)
+      BufferTooShort();
   }
 
   argv[argc++] = cmd;
@@ -901,7 +953,8 @@ static void commonRRDinit(void) {
   shownCreate=0;
 
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
-    snprintf(value, sizeof(value), "%d", DEFAULT_RRD_INTERVAL);
+    if(snprintf(value, sizeof(value), "%d", DEFAULT_RRD_INTERVAL) < 0)
+      BufferTooShort();
     storePrefsValue("rrd.dataDumpInterval", value);
     dumpInterval = DEFAULT_RRD_INTERVAL;
   } else {
@@ -909,7 +962,8 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dataDumpHours", value, sizeof(value)) == -1) {
-    snprintf(value, sizeof(value), "%d", DEFAULT_RRD_HOURS);
+    if(snprintf(value, sizeof(value), "%d", DEFAULT_RRD_HOURS) < 0)
+      BufferTooShort();
     storePrefsValue("rrd.dataDumpHours", value);
     dumpHours = DEFAULT_RRD_HOURS;
   } else {
@@ -917,7 +971,8 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dataDumpDays", value, sizeof(value)) == -1) {
-    snprintf(value, sizeof(value), "%d", DEFAULT_RRD_DAYS);
+    if(snprintf(value, sizeof(value), "%d", DEFAULT_RRD_DAYS) < 0)
+      BufferTooShort();
     storePrefsValue("rrd.dataDumpDays", value);
     dumpDays = DEFAULT_RRD_DAYS;
   } else {
@@ -925,7 +980,8 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dataDumpMonths", value, sizeof(value)) == -1) {
-    snprintf(value, sizeof(value), "%d", DEFAULT_RRD_MONTHS);
+    if(snprintf(value, sizeof(value), "%d", DEFAULT_RRD_MONTHS) < 0)
+      BufferTooShort();
     storePrefsValue("rrd.dataDumpMonths", value);
     dumpMonths = DEFAULT_RRD_MONTHS;
   } else {
@@ -976,7 +1032,8 @@ static void commonRRDinit(void) {
   }
 
   if(fetchPrefsValue("rrd.dataDumpDetail", value, sizeof(value)) == -1) {
-    snprintf(value, sizeof(value), "%d", CONST_RRD_DETAIL_DEFAULT);
+    if(snprintf(value, sizeof(value), "%d", CONST_RRD_DETAIL_DEFAULT) < 0)
+      BufferTooShort();
     storePrefsValue("rrd.dataDumpDetail", value);
     dumpDetail = CONST_RRD_DETAIL_DEFAULT;
   } else {
@@ -989,7 +1046,8 @@ static void commonRRDinit(void) {
 
     if(myGlobals.rrdPath) free(myGlobals.rrdPath);
     myGlobals.rrdPath = (char*)malloc(len);
-    snprintf(myGlobals.rrdPath, len, "%s%s", myGlobals.dbPath, thePath);
+    if(snprintf(myGlobals.rrdPath, len, "%s%s", myGlobals.dbPath, thePath) < 0)
+      BufferTooShort();
     storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
   } else {
     int vlen = strlen(value)+1;
@@ -1000,7 +1058,8 @@ static void commonRRDinit(void) {
 
 #ifndef WIN32
   if(fetchPrefsValue("rrd.permissions", value, sizeof(value)) == -1) {
-    snprintf(value, sizeof(value), "%d", DEFAULT_RRD_PERMISSIONS);
+    if(snprintf(value, sizeof(value), "%d", DEFAULT_RRD_PERMISSIONS) < 0)
+      BufferTooShort();
     storePrefsValue("rrd.permissions", value);
     dumpPermissions = DEFAULT_RRD_PERMISSIONS;
   } else {
@@ -1203,16 +1262,37 @@ static void handleRRDHTTPrequest(char* url) {
       dumpPermissions = _dumpPermissions;
       setGlobalPermissions(_dumpPermissions);
 #endif
-      snprintf(buf, sizeof(buf), "%d", dumpInterval);   storePrefsValue("rrd.dataDumpInterval", buf);
-      snprintf(buf, sizeof(buf), "%d", dumpHours);      storePrefsValue("rrd.dataDumpHours", buf);
-      snprintf(buf, sizeof(buf), "%d", dumpDays);       storePrefsValue("rrd.dataDumpDays", buf);
-      snprintf(buf, sizeof(buf), "%d", dumpMonths);     storePrefsValue("rrd.dataDumpMonths", buf);
-      snprintf(buf, sizeof(buf), "%d", dumpDomains);    storePrefsValue("rrd.dataDumpDomains", buf);
-      snprintf(buf, sizeof(buf), "%d", dumpFlows);      storePrefsValue("rrd.dataDumpFlows", buf);
-      snprintf(buf, sizeof(buf), "%d", dumpHosts);      storePrefsValue("rrd.dataDumpHosts", buf);
-      snprintf(buf, sizeof(buf), "%d", dumpInterfaces); storePrefsValue("rrd.dataDumpInterfaces", buf);
-      snprintf(buf, sizeof(buf), "%d", dumpMatrix);     storePrefsValue("rrd.dataDumpMatrix", buf);
-      snprintf(buf, sizeof(buf), "%d", dumpDetail);     storePrefsValue("rrd.dataDumpDetail", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpInterval) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.dataDumpInterval", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpHours) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.dataDumpHours", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpDays) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.dataDumpDays", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpMonths) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.dataDumpMonths", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpDomains) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.dataDumpDomains", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpFlows) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.dataDumpFlows", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpHosts) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.dataDumpHosts", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpInterfaces) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.dataDumpInterfaces", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpMatrix) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.dataDumpMatrix", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpDetail) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.dataDumpDetail", buf);
+
       if(hostsFilter != NULL) free(hostsFilter);
       if(_hostsFilter == NULL) {
 	hostsFilter  = strdup("");
@@ -1222,7 +1302,9 @@ static void handleRRDHTTPrequest(char* url) {
       }
       storePrefsValue("rrd.hostsFilter", hostsFilter);
 #ifndef WIN32
-      snprintf(buf, sizeof(buf), "%d", dumpPermissions);storePrefsValue("rrd.permissions", buf);
+      if(snprintf(buf, sizeof(buf), "%d", dumpPermissions) < 0)
+        BufferTooShort();
+      storePrefsValue("rrd.permissions", buf);
       umask(myGlobals.rrdUmask);
 #ifdef RRD_DEBUG
       traceEvent(CONST_TRACE_INFO, "RRD: Mask for new directories set to %04o",
@@ -1592,7 +1674,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     /* ****************************************************** */
 
     numLocalNets = 0;
-    snprintf(rrdPath, sizeof(rrdPath), "%s", hostsFilter); /* It avoids strtok to blanks into hostsFilter */
+    /* Avoids strtok to blanks into hostsFilter */
+    if(snprintf(rrdPath, sizeof(rrdPath), "%s", hostsFilter) < 0)
+      BufferTooShort();
     handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value), CONST_HANDLEADDRESSLISTS_RRD);
 
     /* ****************************************************** */
@@ -1685,9 +1769,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	for (idx=0; idx < numEntries; idx++) {
 	    statsEntry = &tmpStats[idx];
 
-	    snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/domains/%s/",
+	    if(snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/domains/%s/",
 		myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
-		statsEntry->domainHost->fullDomainName);
+		statsEntry->domainHost->fullDomainName) < 0)
+              BufferTooShort();
 	    mkdir_p(rrdPath);
 
 #if RRD_DEBUG >= 2
@@ -1757,9 +1842,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	      adjHostName = dotToSlash(hostKey);
 
-	      snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
+	      if(snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/",
 		       myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
-		       adjHostName);
+		       adjHostName) < 0)
+                BufferTooShort();
 	      mkdir_p(rrdPath);
 	      
 #if RRD_DEBUG >= 2
@@ -1848,19 +1934,24 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Updating host %s", hostKey);
 #endif
 
-		  snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/IP_",
+		  if(snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/hosts/%s/IP_",
 			   myGlobals.rrdPath,
 			   myGlobals.device[devIdx].humanFriendlyName,
 			   adjHostName
-			   );
+			   ) < 0)
+                    BufferTooShort();
 
 		  for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 		    char key[128];
-		    snprintf(key, sizeof(key), "%sSentBytes", myGlobals.protoIPTrafficInfos[j]);
+		    if(snprintf(key, sizeof(key), "%sSentBytes",
+                                myGlobals.protoIPTrafficInfos[j]) < 0)
+                      BufferTooShort();
 		    updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].sentLoc.value+
 				  el->protoIPTrafficInfos[j].sentRem.value);
 
-		    snprintf(key, sizeof(key), "%sRcvdBytes", myGlobals.protoIPTrafficInfos[j]);
+		    if(snprintf(key, sizeof(key), "%sRcvdBytes",
+                                myGlobals.protoIPTrafficInfos[j]) < 0)
+                      BufferTooShort();
 		    updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].rcvdLoc.value+
 				  el->protoIPTrafficInfos[j].rcvdFromRem.value);
 		  }
@@ -1890,7 +1981,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
       while(list != NULL) {
 	if(list->pluginStatus.activePlugin) {
-	  snprintf(rrdPath, sizeof(rrdPath), "%s/flows/%s/", myGlobals.rrdPath, list->flowName);
+	  if(snprintf(rrdPath, sizeof(rrdPath), "%s/flows/%s/",
+                      myGlobals.rrdPath, list->flowName) < 0)
+            BufferTooShort();
 	  mkdir_p(rrdPath);
 
 	  updateCounter(rrdPath, "packets", list->packets.value);
@@ -1908,8 +2001,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if(myGlobals.device[devIdx].virtualDevice) continue;
 
-	snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", myGlobals.rrdPath,
-		 myGlobals.device[devIdx].humanFriendlyName);
+	if(snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", myGlobals.rrdPath,
+                    myGlobals.device[devIdx].humanFriendlyName) < 0)
+            BufferTooShort();
 	mkdir_p(rrdPath);
 
 	updateCounter(rrdPath, "ethernetPkts",  myGlobals.device[devIdx].ethernetPkts.value);
@@ -1956,7 +2050,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if(dumpDetail == FLAG_RRD_DETAIL_HIGH) {
 	  if(myGlobals.device[devIdx].ipProtoStats != NULL) {
-	    snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/IP_", myGlobals.rrdPath,  myGlobals.device[devIdx].humanFriendlyName);
+	    if(snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/IP_",
+                       myGlobals.rrdPath,  myGlobals.device[devIdx].humanFriendlyName) < 0)
+              BufferTooShort();
 
 	    for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
 	      TrafficCounter ctr;
@@ -1968,7 +2064,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		myGlobals.device[devIdx].ipProtoStats[j].remote2local.value+
 		myGlobals.device[devIdx].ipProtoStats[j].remote.value;
 
-	      snprintf(tmpStr, sizeof(tmpStr), "%sBytes", myGlobals.protoIPTrafficInfos[j]);
+	      if(snprintf(tmpStr, sizeof(tmpStr), "%sBytes", myGlobals.protoIPTrafficInfos[j]) < 0)
+                BufferTooShort();
 	      updateCounter(rrdPath, tmpStr, ctr.value);
 	    }
 	  }
@@ -1994,10 +2091,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	      if(myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value > 0) {
 
-		snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/matrix/%s/%s/", myGlobals.rrdPath,
+		if(snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/matrix/%s/%s/",
+                         myGlobals.rrdPath,
 			 myGlobals.device[k].humanFriendlyName,
 			 myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
-			 myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
+			 myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress) < 0)
+                  BufferTooShort();
 		mkdir_p(rrdPath);
 
 		updateCounter(rrdPath, "pkts",
@@ -2060,7 +2159,8 @@ static int initRRDfunct(void) {
   return(-1);
 #endif
 
-  snprintf(dname, sizeof(dname), "%s", myGlobals.rrdPath);
+  if(snprintf(dname, sizeof(dname), "%s", myGlobals.rrdPath) < 0)
+    BufferTooShort();
   if(_mkdir(dname) == -1) {
     if(errno != EEXIST) {
       traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create base directory (err %d, %s)", 
@@ -2075,7 +2175,8 @@ static int initRRDfunct(void) {
 
   for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
 
-    snprintf(dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
+    if(snprintf(dname, sizeof(dname), "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]) < 0)
+      BufferTooShort();
     if(_mkdir(dname) == -1) {
       if(errno != EEXIST) {
 	traceEvent(CONST_TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)", errno, dname);
