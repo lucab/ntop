@@ -781,19 +781,19 @@ static void handleMsnMsgrSession (const struct pcap_pkthdr *h,
   rcStr[packetDataLength] = '\0';
 
   if((dport == IP_TCP_PORT_MSMSGR) && (strncmp((char*)rcStr, "USR 6 TWN I ", 12) == 0)) {
-    row = strtok(&rcStr[12], "\n\r");
+    row = strtok((char*)&rcStr[12], "\n\r");
     if(strstr(row, "@")) {
       /* traceEvent(CONST_TRACE_INFO, "User='%s'@[%s/%s]", row, srcHost->hostResolvedName, srcHost->hostNumIpAddress); */
       updateHostUsers(row, BITFLAG_MESSENGER_USER, srcHost);
     }
-  } else if((dport == IP_TCP_PORT_MSMSGR) && (strncmp(rcStr, "ANS 1 ", 6) == 0)) {
-    row = strtok(&rcStr[6], " \n\r");
+  } else if((dport == IP_TCP_PORT_MSMSGR) && (strncmp((char*)rcStr, "ANS 1 ", 6) == 0)) {
+    row = strtok((char*)&rcStr[6], " \n\r");
     if(strstr(row, "@")) {
       /* traceEvent(CONST_TRACE_INFO, "User='%s'@[%s/%s]", row, srcHost->hostResolvedName, srcHost->hostNumIpAddress); */
       updateHostUsers(row, BITFLAG_MESSENGER_USER, srcHost);
     }
-  } else if((dport == IP_TCP_PORT_MSMSGR) && (strncmp(rcStr, "MSG ", 4) == 0)) {
-    row = strtok(&rcStr[4], " ");
+  } else if((dport == IP_TCP_PORT_MSMSGR) && (strncmp((char*)rcStr, "MSG ", 4) == 0)) {
+    row = strtok((char*)&rcStr[4], " ");
     if(strstr(row, "@")) {
       /* traceEvent(CONST_TRACE_INFO, "User='%s' [%s]@[%s->%s]", row, rcStr, srcHost->hostResolvedName, dstHost->hostResolvedName); */
       updateHostUsers(row, BITFLAG_MESSENGER_USER, srcHost);
@@ -824,7 +824,7 @@ static void handleWinMxSession (const struct pcap_pkthdr *h,
 
     theSession->isP2P = FLAG_P2P_WINMX;
 
-    if ((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
+    if ((rcStr = (u_char*)malloc(packetDataLength+1)) == NULL) {
       traceEvent (CONST_TRACE_WARNING, "handleWinMxSession: Unable to "
 		  "allocate memory, WINMX Session handling incomplete\n");
       return;
@@ -832,7 +832,7 @@ static void handleWinMxSession (const struct pcap_pkthdr *h,
     memcpy(rcStr, packetData, packetDataLength);
     rcStr[packetDataLength] = '\0';
 
-    row = strtok_r(rcStr, "\"", &strtokState);
+    row = strtok_r((char*)rcStr, "\"", &strtokState);
 
     if(row != NULL) {
       user = strtok_r(row, "_", &strtokState1);
@@ -889,7 +889,7 @@ static void handleGnutellaSession (const struct pcap_pkthdr *h,
     char *strtokState, *row;
     char *theStr = "GET /get/";
 
-    if ((rcStr = (char*)malloc(packetDataLength+1)) == NULL) {
+    if ((rcStr = (u_char*)malloc(packetDataLength+1)) == NULL) {
       traceEvent (CONST_TRACE_WARNING, "handleGnutellaSession: Unable to "
 		  "allocate memory, Gnutella Session handling incomplete\n");
       return;
@@ -897,11 +897,11 @@ static void handleGnutellaSession (const struct pcap_pkthdr *h,
     memcpy(rcStr, packetData, packetDataLength);
     rcStr[packetDataLength] = '\0';
 
-    if(strncmp(rcStr, theStr, strlen(theStr)) == 0) {
+    if(strncmp((char*)rcStr, theStr, strlen(theStr)) == 0) {
       char *file;
       int i, begin=0;
 
-      row = strtok_r(rcStr, "\n", &strtokState);
+      row = strtok_r((char*)rcStr, "\n", &strtokState);
       file = &row[strlen(theStr)+1];
       if(strlen(file) > 10) file[strlen(file)-10] = '\0';
 
@@ -911,7 +911,7 @@ static void handleGnutellaSession (const struct pcap_pkthdr *h,
 
       begin++;
 
-      unescape(tmpStr, sizeof(tmpStr), &file[begin]);
+      unescape((char*)tmpStr, sizeof(tmpStr), &file[begin]);
 
 #ifdef P2P_DEBUG
       traceEvent(CONST_TRACE_INFO, "Gnutella: %s->%s [%s]",
@@ -919,8 +919,8 @@ static void handleGnutellaSession (const struct pcap_pkthdr *h,
 		 dstHost->hostNumIpAddress,
 		 tmpStr);
 #endif
-      updateFileList(tmpStr, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
-      updateFileList(tmpStr, BITFLAG_P2P_UPLOAD_MODE, dstHost);
+      updateFileList((char*)tmpStr, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
+      updateFileList((char*)tmpStr, BITFLAG_P2P_UPLOAD_MODE, dstHost);
       theSession->isP2P = FLAG_P2P_GNUTELLA;
     }
     free(rcStr);
@@ -1605,7 +1605,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   char addedNewEntry = 0;
   u_short check, found=0;
   HostTraffic *hostToUpdate = NULL;
-  char *rcStr, tmpStr[256];
+  u_char *rcStr, tmpStr[256];
   int len = 0;
 
 #ifdef CFG_MULTITHREADED
@@ -1809,33 +1809,33 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
       if((!theSession->isP2P)
 	 && (packetDataLength > 0)
 	 && ((theSession->bytesProtoSent.value > 0) && (theSession->bytesProtoSent.value < 1400))) {
-	rcStr = (char*)malloc(len+1);
+	rcStr = (u_char*)malloc(len+1);
 	memcpy(rcStr, packetData, len);
 	rcStr[len-1] = '\0';
 
 	/* See dcplusplus.sourceforge.net */
 	if(portRange(sport, dport, 411, 412)
-	   || (!strncmp(rcStr, "$Connect", 8))
-	   || (!strncmp(rcStr, "$Direction", 10))
-	   || (!strncmp(rcStr, "$Hello", 6))
-	   || (!strncmp(rcStr, "$Key", 4))
-	   || (!strncmp(rcStr, "$Lock", 5))
-	   || (!strncmp(rcStr, "$MyInfo", 7))
-	   || (!strncmp(rcStr, "$Pin", 4))
-	   || (!strncmp(rcStr, "$Quit", 5))
-	   || (!strncmp(rcStr, "$Send", 5))
-	   || (!strncmp(rcStr, "$SR", 3))
-	   || (!strncmp(rcStr, "$Search", 7))) {
+	   || (!strncmp((char*)rcStr, "$Connect", 8))
+	   || (!strncmp((char*)rcStr, "$Direction", 10))
+	   || (!strncmp((char*)rcStr, "$Hello", 6))
+	   || (!strncmp((char*)rcStr, "$Key", 4))
+	   || (!strncmp((char*)rcStr, "$Lock", 5))
+	   || (!strncmp((char*)rcStr, "$MyInfo", 7))
+	   || (!strncmp((char*)rcStr, "$Pin", 4))
+	   || (!strncmp((char*)rcStr, "$Quit", 5))
+	   || (!strncmp((char*)rcStr, "$Send", 5))
+	   || (!strncmp((char*)rcStr, "$SR", 3))
+	   || (!strncmp((char*)rcStr, "$Search", 7))) {
 	  theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
-	} else if(!strncmp(rcStr, "$MyNick", 7)) {
+	} else if(!strncmp((char*)rcStr, "$MyNick", 7)) {
 	  theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
-	  updateHostUsers(strtok(&rcStr[8], "|"), BITFLAG_P2P_USER, srcHost);
+	  updateHostUsers(strtok((char*)&rcStr[8], "|"), BITFLAG_P2P_USER, srcHost);
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
-	} else if(!strncmp(rcStr, "$Get", 4)) {
-	  char *file = strtok(&rcStr[5], "$");
+	} else if(!strncmp((char*)rcStr, "$Get", 4)) {
+	  char *file = strtok((char*)&rcStr[5], "$");
 	  theSession->isP2P = FLAG_P2P_DIRECTCONNECT;
 	  updateFileList(file, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	  updateFileList(file, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
@@ -1845,28 +1845,28 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	} else if(portRange(sport, dport, 6881, 6889)
-		  || (!strncmp(rcStr, "GET /announce?info_hash", 23))
-		  || (!strncmp(rcStr, "GET /torrents/", 14))
-		  || (!strncmp(rcStr, "GET TrackPak", 12))
-		  || (!strncmp(rcStr, "0x13BitTorrent", 14))) {
+		  || (!strncmp((char*)rcStr, "GET /announce?info_hash", 23))
+		  || (!strncmp((char*)rcStr, "GET /torrents/", 14))
+		  || (!strncmp((char*)rcStr, "GET TrackPak", 12))
+		  || (!strncmp((char*)rcStr, "0x13BitTorrent", 14))) {
 	  theSession->isP2P = FLAG_P2P_BITTORRENT;
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
 	} else if(portRange(sport, dport, 6346, 6347)
-		  || (!strncmp(rcStr,    "GNUTELLA", 8))
-		  || (!strncmp(rcStr, "GIV", 3))
-		  || (!strncmp(rcStr, "GET /uri-res/", 13))) {
+		  || (!strncmp((char*)rcStr,    "GNUTELLA", 8))
+		  || (!strncmp((char*)rcStr, "GIV", 3))
+		  || (!strncmp((char*)rcStr, "GET /uri-res/", 13))) {
 	  theSession->isP2P = FLAG_P2P_GNUTELLA;
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
-	} else if((!strncmp(rcStr,   "GET hash:", 9))
-		  || (!strncmp(rcStr, "PUSH", 4))
-		  || (!strncmp(rcStr, "GET /uri-res/", 12))) {
+	} else if((!strncmp((char*)rcStr,   "GET hash:", 9))
+		  || (!strncmp((char*)rcStr, "PUSH", 4))
+		  || (!strncmp((char*)rcStr, "GET /uri-res/", 12))) {
 	  /* Ares */
 	  theSession->isP2P = FLAG_P2P_OTHER_PROTOCOL;
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_UPLOAD_MODE,   dstHost);
-	} else if((!strncmp(rcStr,    "GET /$$$$$$$$$/", 15))) {
+	} else if((!strncmp((char*)rcStr,    "GET /$$$$$$$$$/", 15))) {
 	  /* EarthStation5 */
 	  theSession->isP2P = FLAG_P2P_OTHER_PROTOCOL;
 	  updateFileList(UNKNOWN_P2P_FILE, BITFLAG_P2P_DOWNLOAD_MODE, srcHost);
@@ -1950,16 +1950,16 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 
 	131.114.21.11:40012 (40012 = 156 * 256 + 95)
       */
-      if((strncmp(tmpStr, "227", 3) == 0)
-	 || (strncmp(tmpStr, "PORT", 4) == 0)) {
+      if((strncmp((char*)tmpStr, "227", 3) == 0)
+	 || (strncmp((char*)tmpStr, "PORT", 4) == 0)) {
 	int a, b, c, d, e, f;
 
-	if(strncmp(tmpStr, "PORT", 4) == 0) {
-	  sscanf(&tmpStr[5], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
+	if(strncmp((char*)tmpStr, "PORT", 4) == 0) {
+	  sscanf((char*)&tmpStr[5], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
 	} else {
-	  sscanf(&tmpStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
+	  sscanf((char*)&tmpStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
 	}
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%d.%d.%d.%d", a, b, c, d);
+	safe_snprintf(__FILE__, __LINE__, (char*)tmpStr, sizeof(tmpStr), "%d.%d.%d.%d", a, b, c, d);
 
 #ifdef FTP_DEBUG
 	traceEvent(CONST_TRACE_INFO, "FTP_DEBUG: (%d) [%d.%d.%d.%d:%d]",
@@ -2937,13 +2937,13 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 	}
 
 	if (length >= 24+8) {
-	  strncpy (srcHost->fcCounters->vendorId, &bp[8], 8);
+	  strncpy((char*)srcHost->fcCounters->vendorId, (char*)&bp[8], 8);
 	}
 	if (length >= 24+8+16) {
-	  strncpy (srcHost->fcCounters->productId, &bp[16], 16);
+	  strncpy((char*)srcHost->fcCounters->productId, (char*)&bp[16], 16);
 	}
 	if (length >= 24+8+16+4) {
-	  strncpy (srcHost->fcCounters->productRev, &bp[32], 4);
+	  strncpy((char*)srcHost->fcCounters->productRev, (char*)&bp[32], 4);
 	}
       }
       break;

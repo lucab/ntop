@@ -52,7 +52,10 @@ struct bar_elements {
 #include "gdfontl.h"
 #include "gdfonts.h"
 #include "gdfontmb.h"
+
+#ifndef M_PI
 #define M_PI	3.14159265358979323846
+#endif
 
 #include <stdio.h>
 
@@ -142,9 +145,9 @@ static void drawLegend(gdImagePtr im,
                      edge_y+CONST_LEGEND_BOX_SIZE+1, labelColor);
 #ifdef SHOW_PERCENTAGE
     safe_snprintf(__FILE__, __LINE__, str, sizeof(str), "%s(%.1f%%)", labels[i], (data[i]*100)/total);
-    gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-5, str, labelColor);
+    gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-5, (unsigned char*)str, labelColor);
 #else
-    gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-3, labels[i], labelColor);
+    gdImageString(im, gdFontSmall, edge_x+CONST_LEGEND_BOX_SIZE+5, edge_y-3, (unsigned char*)labels[i], labelColor);
 #endif
     edge_y += gdFontSmall->h*1.5;
   }
@@ -361,7 +364,7 @@ void drawBar(short width,
     xpos = hmargin - 10 - txtsz;
     if(xpos < 1) xpos = 1;
 
-    gdImageString(im, gdFontSmall, xpos, ypos - (int)(txtht/2), theStr, black);
+    gdImageString(im, gdFontSmall, xpos, ypos - (int)(txtht/2), (unsigned char*)theStr, black);
 
     if (!(i == 0) && !(i > ngrid)) {
       gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray);
@@ -477,7 +480,7 @@ void drawArea(short width, short height,
       if(!formatYlabels) {
 	txtsz = gdFontSmall->w*strlen(str); 
 	xpos = hmargin - txtsz; if(xpos < 1) xpos = 1;
-	gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), str, black);
+	gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), (unsigned char*)str, black);
       } else {
 	char buf[32];
 	char *theStr = formatThroughput(i * dydat, 0, buf, sizeof(buf));
@@ -486,7 +489,7 @@ void drawArea(short width, short height,
 
 	txtsz = gdFontSmall->w*strlen(theStr);
 	xpos = hmargin - txtsz; if(xpos < 1) xpos = 1;
-	gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), theStr, black);	
+	gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), (unsigned char*)theStr, black);	
       }
     }
 
@@ -532,7 +535,7 @@ void drawArea(short width, short height,
 
       if((i % 2) == 0) {
 	safe_snprintf(__FILE__, __LINE__, str, sizeof(str), "%5s", labels[i]);
-	gdImageStringUp(im, gdFontSmall, points[0].x-gdFontSmall->w, height-2, str, black);
+	gdImageStringUp(im, gdFontSmall, points[0].x-gdFontSmall->w, height-2, (unsigned char*)str, black);
       }
 
       // x labels
@@ -549,10 +552,10 @@ void drawArea(short width, short height,
 
   if(xtitle)
     gdImageString(im, gdFontSmall, (width/2)-(strlen(xtitle)*gdFontSmall->w)/2,
-		  height-gdFontSmall->h-2, xtitle, black);
+		  height-gdFontSmall->h-2, (unsigned char*)xtitle, black);
 
   if(ytitle)
-    gdImageString(im, gdFontSmall, 5, 2, ytitle, black);
+    gdImageString(im, gdFontSmall, 5, 2, (unsigned char*)ytitle, black);
 
   gdImagePng(im, filepointer);
   gdImageDestroy(im);

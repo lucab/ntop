@@ -2991,14 +2991,14 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     } else {
         fcnsEntry = findFcHostNSCacheEntry (&el->fcCounters->hostFcAddress, el->fcCounters->vsanId);
         if (fcnsEntry != NULL) {
-            if (fcnsEntry->alias != NULL) {
-                setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS);
-            }
-            else {
-                setResolvedName(el, fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
-            }
-            memcpy ((u_int8_t *)el->fcCounters->pWWN.str, (u_int8_t *)fcnsEntry->pWWN.str,
-                    LEN_WWN_ADDRESS);
+	  if (fcnsEntry->alias != NULL) {
+	    setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC_ALIAS);
+	  }
+	  else {
+	    setResolvedName(el, (char*)fcnsEntry->pWWN.str, FLAG_HOST_SYM_ADDR_TYPE_FC_WWN);
+	  }
+	  memcpy((u_int8_t *)el->fcCounters->pWWN.str, (u_int8_t *)fcnsEntry->pWWN.str,
+		  LEN_WWN_ADDRESS);
         }
     }
   } else {

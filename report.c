@@ -1441,7 +1441,7 @@ void printHostsTraffic(int reportTypeReq,
   printHTMLheader(buf, NULL, 0);
 
   printHeader(reportTypeReq, revertOrder, abs(sortedColumn), showHostsMode,
-	          showLocalityMode, vlanList, vlanId);
+	      showLocalityMode, (char*)vlanList, vlanId);
 
   strftime(theDate, 8, CONST_TOD_HOUR_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
@@ -2380,7 +2380,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 
 
     if(vlanId > 0)
-      safe_snprintf(__FILE__, __LINE__, vlanStr, sizeof(vlanStr), "&vlan=%d", vlanId);
+      safe_snprintf(__FILE__, __LINE__, (char*)vlanStr, sizeof(vlanStr), "&vlan=%d", vlanId);
     else
       vlanStr[0] = '\0';
 
@@ -2406,10 +2406,12 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
       for(i=0; i<MAX_VLAN; i++)
 	if(vlanList[i] == 1) {
 	  if(i == vlanId)
-	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%s</b> ] ", vlan2name(i, tmpBuf, sizeof(tmpBuf))), found = 1;
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%s</b> ] ", 
+			  vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf))), found = 1;
 	  else
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"/%s?unit=%d&vlan=%d\">%s</A> ] ",
-			  CONST_HOSTS_INFO_HTML, showBytes, i, vlan2name(i, tmpBuf, sizeof(tmpBuf)));
+			  CONST_HOSTS_INFO_HTML, showBytes, i, 
+			  vlan2name(i, (char*)tmpBuf, sizeof(tmpBuf)));
 
 	  sendString(buf);
 	}
@@ -4813,7 +4815,7 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
 	  handleAddressLists(val, localNetworks[totNumClusters], &numLocalNetworks[totNumClusters],
 			     localAddresses, sizeof(localAddresses),
 			     CONST_HANDLEADDRESSLISTS_CLUSTERS);
-	  clusterNames[totNumClusters] = strdup(&key.dptr[CLUSTER_HEADER_LEN]);
+	  clusterNames[totNumClusters] = (u_char*)strdup((char*)&key.dptr[CLUSTER_HEADER_LEN]);
 	  totNumClusters++;
 	}
 
@@ -4833,7 +4835,7 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
 	handleAddressLists(clusterAddresses, localNetworks[totNumClusters], &numLocalNetworks[totNumClusters],
 			   localAddresses, sizeof(localAddresses),
 			   CONST_HANDLEADDRESSLISTS_CLUSTERS);
-	clusterNames[totNumClusters] = strdup(&domainName[CLUSTER_HEADER_LEN]);
+	clusterNames[totNumClusters] = (u_char*)strdup((char*)&domainName[CLUSTER_HEADER_LEN]);
 	totNumClusters++;
       }
 
@@ -4932,7 +4934,7 @@ void printDomainStats(char* domainName, int clusterMode, int sortedColumn, int r
 	memset(statsEntry, 0, sizeof(DomainStats));
 
 	if(clusterMode)
-	  statsEntry->clusterName = clusterNames[keyValue];
+	  statsEntry->clusterName = (char*)clusterNames[keyValue];
 	else
 	  statsEntry->domainHost = el;
 	stats[keyValue] = statsEntry;

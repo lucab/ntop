@@ -1524,7 +1524,7 @@ static void receiveError(SFSample *sample, char *errm, int hexdump)
   if(errm) msg = errm;
   if(hexdump) {
     printHex(sample->rawSample, sample->rawSampleLen, scratch, 6000, markOffset, 16);
-    hex = scratch;
+    hex = (char*)scratch;
   }
   fprintf(stderr, "%s (source IP = %s) %s\n", msg, IP_to_a(sample->sourceIP.s_addr, ipbuf), hex);
 
@@ -2254,7 +2254,7 @@ static void readFlowSample_header(SFSample *sample, int deviceId)
   skipBytes(sample, sample->headerLen, deviceId);
   {
     char scratch[2000];
-    printHex(sample->header, sample->headerLen, scratch, 2000, 0, 2000);
+    printHex(sample->header, sample->headerLen, (u_char*)scratch, 2000, 0, 2000);
     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "headerBytes %s\n", scratch);
   }
 
@@ -2309,9 +2309,9 @@ static void readFlowSample_ethernet(SFSample *sample, int deviceId)
   sample->eth_type = getData32(sample, deviceId);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_type %lu\n", sample->eth_type);
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_len %lu\n", sample->eth_len);
-  p = sample->eth_src;
+  p = (char*)sample->eth_src;
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_src %02x%02x%02x%02x%02x%02x\n", p[0], p[1], p[2], p[3], p[4], p[5]);
-  p = sample->eth_dst;
+  p = (char*)sample->eth_dst;
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ethernet_dst %02x%02x%02x%02x%02x%02x\n", p[0], p[1], p[2], p[3], p[4], p[5]);
 }
 
@@ -2744,7 +2744,7 @@ static void readCountersSample(SFSample *sample, int expanded, int deviceId)
   char *sampleStart;
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleType COUNTERSSAMPLE\n");
   sampleLength = getData32(sample, deviceId);
-  sampleStart = (u_char *)sample->datap;
+  sampleStart = (char *)sample->datap;
   sample->samplesGenerated = getData32(sample, deviceId);
 
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleSequenceNo %lu\n", sample->samplesGenerated);
@@ -2769,7 +2769,7 @@ static void readCountersSample(SFSample *sample, int expanded, int deviceId)
       tag = getData32(sample, deviceId);
       if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "counterBlock_tag %s\n", printTag(tag, buf, 50, deviceId));
       length = getData32(sample, deviceId);
-      start = (u_char *)sample->datap;
+      start = (char *)sample->datap;
 
       switch(tag) {
       case SFLCOUNTERS_GENERIC: readCounters_generic(sample, deviceId); break;
@@ -2779,10 +2779,12 @@ static void readCountersSample(SFSample *sample, int expanded, int deviceId)
       case SFLCOUNTERS_VLAN: readCounters_vlan(sample, deviceId); break;
       default: skipTLVRecord(sample, tag, "counters_sample_element", deviceId); break;
       }
-      lengthCheck(sample, "counters_sample_element", start, length);
+      
+      lengthCheck(sample, "counters_sample_element", (u_char*)start, length);
     }
   }
-  lengthCheck(sample, "counters_sample", sampleStart, sampleLength);
+  
+  lengthCheck(sample, "counters_sample", (u_char*)sampleStart, sampleLength);
 }
 
 /*_________________---------------------------__________________
@@ -3014,7 +3016,7 @@ static void* sflowMainLoop(void* _deviceId) {
       if(FD_ISSET(myGlobals.device[deviceId].sflowGlobals->sflowInSocket, &sflowMask)){
 	len = sizeof(fromHost);
 	rc = recvfrom(myGlobals.device[deviceId].sflowGlobals->sflowInSocket,(char*)&buffer, sizeof(buffer),
-		      0,(struct sockaddr*)&fromHost, &len);
+		      0,(struct sockaddr*)&fromHost, (socklen_t*)&len);
       }
 
 #ifdef DEBUG_FLOWS

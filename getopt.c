@@ -27,6 +27,8 @@
 # define _NO_PROTO
 #endif
 
+#ifndef TIGER
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -1065,3 +1067,4 @@ main (argc, argv)
 
 #endif /* TEST */
 
+#endif /* TIGER */

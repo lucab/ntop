@@ -1288,8 +1288,9 @@ static void* netflowMainLoop(void* _deviceId) {
     if((rc = select(maxSock+1, &netflowMask, NULL, NULL, NULL)) > 0) {
       if(FD_ISSET(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, &netflowMask)){
 	len = sizeof(fromHost);
-	rc = recvfrom(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket,(char*)&buffer, sizeof(buffer),
-		      0,(struct sockaddr*)&fromHost, &len);
+	rc = recvfrom(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket,
+		      (char*)&buffer, sizeof(buffer),
+		      0, (struct sockaddr*)&fromHost, (socklen_t*)&len);
       }
 #ifdef HAVE_SCTP
       else {
@@ -1335,7 +1336,7 @@ static void* netflowMainLoop(void* _deviceId) {
 	  }
 	}
 
-	dissectFlow(buffer, rc, deviceId);
+	dissectFlow((char*)buffer, rc, deviceId);
       }
     } else {
       if((rc < 0) && (!myGlobals.endNtop) && (errno != EINTR /* Interrupted system call */)) {

@@ -1467,8 +1467,9 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
       char *a, *b, *c, *d, dnsBuf[48], *strtokState;
       unsigned long theDNSaddr;
 
-      len = strlen(bp); if(len >= (sizeof(dnsBuf)-1)) len = sizeof(dnsBuf)-2;
-      xstrncpy(dnsBuf, bp, len);
+      len = strlen((char*)bp); 
+      if(len >= (sizeof(dnsBuf)-1)) len = sizeof(dnsBuf)-2;
+      xstrncpy(dnsBuf, (char*)bp, len);
 
       d = strtok_r(dnsBuf, ".", &strtokState);
       c = strtok_r(NULL, ".", &strtokState);

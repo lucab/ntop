@@ -22,6 +22,9 @@
 #include <config.h>
 #endif
 
+
+#ifndef TIGER
+
 #include "getopt.h"
 
 #if !defined __STDC__ || !__STDC__
@@ -186,3 +189,5 @@ main (argc, argv)
 }
 
 #endif /* TEST */
+
+#endif /* TIGER */

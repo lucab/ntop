@@ -2633,7 +2633,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showBy
     sendString("<P ALIGN=LEFT>");
 
     if(vsanId > 0)
-      safe_snprintf(__FILE__, __LINE__, vsanStr, sizeof(vsanStr), "&VSAN=%d", vsanId);
+      safe_snprintf(__FILE__, __LINE__, (char*)vsanStr, sizeof(vsanStr), "&VSAN=%d", vsanId);
     else
       vsanStr[0] = '\0';
 

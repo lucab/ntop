@@ -8941,7 +8941,8 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTP request...");
 #endif
-	myGlobals.newSock = accept(myGlobals.sock, (struct sockaddr*)&from, &from_len);
+    myGlobals.newSock = accept(myGlobals.sock, (struct sockaddr*)&from,
+			       (socklen_t*)&from_len);
   } else {
 #if defined(DEBUG) && defined(HAVE_OPENSSL)
     if(myGlobals.sslInitialized)
@@ -8949,7 +8950,8 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 #endif
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslInitialized)
-	    myGlobals.newSock = accept(myGlobals.sock_ssl, (struct sockaddr*)&from, &from_len);
+      myGlobals.newSock = accept(myGlobals.sock_ssl, (struct sockaddr*)&from, 
+				 (socklen_t*)&from_len);
 #else
     ;
 #endif
