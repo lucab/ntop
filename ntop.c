@@ -293,8 +293,10 @@ static short handleProtocol(char* protoName, char *protocol) {
 #endif
 	servicesMapper[idx] = myGlobals.numIpProtosToMonitor;
       } else if(printWarnings)
-	printf("WARNING: IP port %d (%s) has been discarded (multiple instances).\n",
-	       idx, protoName);
+	traceEvent(CONST_TRACE_WARNING, 
+                   "INIT: IP port %d (%s) has been discarded (multiple instances)",
+                   idx,
+                   protoName);
     }
 
     return(idx);
@@ -317,14 +319,14 @@ static short handleProtocol(char* protoName, char *protocol) {
 #endif
 	servicesMapper[idx] = myGlobals.numIpProtosToMonitor;
       } else if(printWarnings)
-	traceEvent(CONST_TRACE_WARNING, "INIT: WARNING: protocol '%s' has been discarded (multiple instances)",
+	traceEvent(CONST_TRACE_WARNING, "INIT: Protocol '%s' has been discarded (multiple instances)",
 	       protocol);
       return(idx);
     }
   }
 
   if(printWarnings)
-    traceEvent(CONST_TRACE_WARNING, "INIT: WARNING: unknown protocol '%s' - it has been ignored",
+    traceEvent(CONST_TRACE_WARNING, "INIT: Unknown protocol '%s' - it has been ignored",
 	       protocol);
 
   return(-1);
