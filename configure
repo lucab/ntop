@@ -5234,6 +5234,17 @@ echo "configure:5225: checking for OpenSSL Library by Open SLL Project (optional
 EOF
 
          echo "$ac_t""found in $OSSL_ROOT" 1>&6
+    elif test -d $OSSL_ROOT &&
+       test -r $OSSL_ROOT/libssl.a &&
+       test -r $OSSL_ROOT/include/openssl/ssl.h; then
+         OSSL_ROOT=`cd ${OSSL_ROOT} && pwd`
+         MORELIBS="${MORELIBS} -L$OSSL_ROOT/crypto -lssl"
+         INCS="${INCS} -I$OSSL_ROOT/include"
+         cat >> confdefs.h <<\EOF
+#define HAVE_OPENSSL 1
+EOF
+
+         echo "$ac_t""found in $OSSL_ROOT" 1>&6
     else
       echo "$ac_t""not found in ${OSSL_ROOT}" 1>&6
       echo "configure: warning:  The Open SSL Library development tree seems corrupted or incomplete!" 1>&2
@@ -5313,7 +5324,7 @@ else
 fi
 
 echo $ac_n "checking for register_mib in -lucdagent""... $ac_c" 1>&6
-echo "configure:5317: checking for register_mib in -lucdagent" >&5
+echo "configure:5328: checking for register_mib in -lucdagent" >&5
 ac_lib_var=`echo ucdagent'_'register_mib | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -5321,7 +5332,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lucdagent -lsnmp -lucdagent -lucdmibs $LIBS $MORELIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 5325 "configure"
+#line 5336 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -5332,7 +5343,7 @@ int main() {
 register_mib()
 ; return 0; }
 EOF
-if { (eval echo configure:5336: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5347: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else

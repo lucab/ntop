@@ -957,6 +957,14 @@ if test ".$ac_disable_openssl" = ".no"; then
          INCS="${INCS} -I$OSSL_ROOT"
          AC_DEFINE(HAVE_OPENSSL)
          AC_MSG_RESULT([found in $OSSL_ROOT])
+    elif test -d $OSSL_ROOT &&
+       test -r $OSSL_ROOT/libssl.a &&
+       test -r $OSSL_ROOT/include/openssl/ssl.h; then
+         OSSL_ROOT=`cd ${OSSL_ROOT} && pwd`
+         MORELIBS="${MORELIBS} -L$OSSL_ROOT/crypto -lssl"
+         INCS="${INCS} -I$OSSL_ROOT/include"
+         AC_DEFINE(HAVE_OPENSSL)
+         AC_MSG_RESULT([found in $OSSL_ROOT])
     else
       AC_MSG_RESULT([not found in ${OSSL_ROOT}])
       AC_MSG_WARN([ The Open SSL Library development tree seems corrupted or incomplete!])
