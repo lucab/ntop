@@ -5200,7 +5200,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size) {
    * Keep this in mind if you think this function should have been coded
    * to use pointer overlays.  All the world's not a VAX.
    */
-  char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], *tp;
+  char tmp[64], *tp;
   struct { int base, len; } best, cur;
   u_int words[NS_IN6ADDRSZ / NS_INT16SZ];
   int i;
@@ -5241,6 +5241,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size) {
    * Format the result.
    */
   tp = tmp;
+
   for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
     /* Are we inside the best run of 0x00's? */
     if (best.base != -1 && i >= best.base &&
@@ -5262,6 +5263,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size) {
     }
     tp += safe_snprintf(__FILE__, __LINE__, tp, sizeof(tp), "%x", words[i]);
   }
+
   /* Was it a trailing run of 0x00's? */
   if (best.base != -1 && (best.base + best.len) ==
       (NS_IN6ADDRSZ / NS_INT16SZ))
