@@ -3827,9 +3827,6 @@ void processPacket(u_char *_deviceId,
 
   h_save = h, p_save = p;
 
-  if(length > caplen)
-    length = caplen; /* Partial capture */
-
 #ifdef DEBUG
   if(rFileName != NULL) {
     traceEvent(TRACE_INFO, ".");
