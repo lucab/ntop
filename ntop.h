@@ -405,14 +405,15 @@ int getdomainname(char *name, size_t len);
 #include "regex.h"
 #include "rules.h"
 
-
-
 #ifndef WIN32
 #define closesocket(a) close(a)
-RETSIGTYPE (*setsignal(int, RETSIGTYPE (*)(int)))(int);
+
+#ifndef RETSIGTYPE
+#define RETSIGTYPE void
 #endif
 
-
+RETSIGTYPE (*setsignal(int, RETSIGTYPE (*)(int)))(int);
+#endif
 
 #if defined(WIN32)
 /*#include "ntop_win32.h"*/
@@ -436,6 +437,102 @@ extern const char *gdbm_strerror (int);
 #define DEFAULT_COUNT    500
 
 #define DUMMY_SOCKET_VALUE -999
+
+/* ********************************************* */
+
+#ifndef PACKETSZ /* Missing declarations */
+
+/*
+ * Define constants based on rfc883
+ */
+#define PACKETSZ	512		/* maximum packet size */
+#define MAXDNAME	256		/* maximum domain name */
+#define MAXCDNAME	255		/* maximum compressed domain name */
+#define MAXLABEL	63		/* maximum length of domain label */
+#define	HFIXEDSZ	12		/* #/bytes of fixed data in header */
+#define QFIXEDSZ	4		/* #/bytes of fixed data in query */
+#define RRFIXEDSZ	10		/* #/bytes of fixed data in r record */
+#define	INT32SZ		4		/* for systems without 32-bit ints */
+#define	INT16SZ		2		/* for systems without 16-bit ints */
+#define	INADDRSZ	4		/* for sizeof(struct inaddr) != 4 */
+
+/*
+ * Type values for resources and queries
+ */
+#define T_A		1		/* host address */
+#define T_NS		2		/* authoritative server */
+#define T_MD		3		/* mail destination */
+#define T_MF		4		/* mail forwarder */
+#define T_CNAME		5		/* canonical name */
+#define T_SOA		6		/* start of authority zone */
+#define T_MB		7		/* mailbox domain name */
+#define T_MG		8		/* mail group member */
+#define T_MR		9		/* mail rename name */
+#define T_NULL		10		/* null resource record */
+#define T_WKS		11		/* well known service */
+#define T_PTR		12		/* domain name pointer */
+#define T_HINFO		13		/* host information */
+#define T_MINFO		14		/* mailbox information */
+#define T_MX		15		/* mail routing information */
+#define T_TXT		16		/* text strings */
+#define	T_RP		17		/* responsible person */
+#define T_AFSDB		18		/* AFS cell database */
+#define T_X25		19		/* X_25 calling address */
+#define T_ISDN		20		/* ISDN calling address */
+#define T_RT		21		/* router */
+#define T_NSAP		22		/* NSAP address */
+#define T_NSAP_PTR	23		/* reverse NSAP lookup (deprecated) */
+#define	T_SIG		24		/* security signature */
+#define	T_KEY		25		/* security key */
+#define	T_PX		26		/* X.400 mail mapping */
+#define	T_GPOS		27		/* geographical position (withdrawn) */
+#define	T_AAAA		28		/* IP6 Address */
+#define	T_LOC		29		/* Location Information */
+	/* non standard */
+#define T_UINFO		100		/* user (finger) information */
+#define T_UID		101		/* user ID */
+#define T_GID		102		/* group ID */
+#define T_UNSPEC	103		/* Unspecified format (binary data) */
+	/* Query type values which do not appear in resource records */
+#define T_AXFR		252		/* transfer zone of authority */
+#define T_MAILB		253		/* transfer mailbox records */
+#define T_MAILA		254		/* transfer mail agent records */
+#define T_ANY		255		/* wildcard match */
+
+/*
+ * Values for class field
+ */
+
+#define C_IN		1		/* the arpa internet */
+#define C_CHAOS		3		/* for chaos net (MIT) */
+#define C_HS		4		/* for Hesiod name server (MIT) (XXX) */
+	/* Query class values which do not appear in resource records */
+#define C_ANY		255		/* wildcard match */
+
+#ifndef EMSGSIZE
+#define EMSGSIZE    97 /* Inappropriate message buffer length */
+#endif /* EMSGSIZE */
+
+typedef struct {
+	unsigned	id :16;		/* query identification number */
+			/* fields in third byte */
+	unsigned	rd :1;		/* recursion desired */
+	unsigned	tc :1;		/* truncated message */
+	unsigned	aa :1;		/* authoritive answer */
+	unsigned	opcode :4;	/* purpose of message */
+	unsigned	qr :1;		/* response flag */
+			/* fields in fourth byte */
+	unsigned	rcode :4;	/* response code */
+	unsigned	unused :3;	/* unused bits (MBZ as of 4.9.3a3) */
+	unsigned	ra :1;		/* recursion available */
+			/* remaining bytes */
+	unsigned	qdcount :16;	/* number of question entries */
+	unsigned	ancount :16;	/* number of answer entries */
+	unsigned	nscount :16;	/* number of authority entries */
+	unsigned	arcount :16;	/* number of resource entries */
+} HEADER;
+#endif /* PACKETSZ */
+
 
 /*
   Code below courtesy of 
