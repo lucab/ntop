@@ -41,7 +41,7 @@ char *pluginDirs[]     = { "./plugins", PLUGIN_DIR, NULL };
 char *configFileDirs[] = { ".", CONFIGFILE_DIR, "/etc", NULL };
 
 /* Debug */
-extern size_t allocatedMemory;
+size_t allocatedMemory;
 
 /* SSL */
 #ifdef HAVE_OPENSSL
