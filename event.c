@@ -236,11 +236,11 @@ void fireEvent(FilterRule *rule,
 	  && (queuedPacketRules[i]->sport == sport)
 	  && (queuedPacketRules[i]->dport == dport))) {
 	/* Rules match */
-#ifdef DEBUG
+
 #ifdef MULTITHREADED
 	accessMutex(&addressResolutionMutex, "fireEvent");
 #endif
-	printf("Rules matched %s %s/%s->%s/%s (len %d)\n",
+	traceEvent(TRACE_INFO, "Rules matched %s %s/%s->%s/%s (len %d)\n",
 	       ruleToClear->ruleLabel,
 	       srcHost->hostSymIpAddress, getAllPortByNum(sport),
 	       dstHost->hostSymIpAddress, getAllPortByNum(dport),
@@ -248,8 +248,7 @@ void fireEvent(FilterRule *rule,
 #ifdef MULTITHREADED
 	releaseMutex(&addressResolutionMutex);
 #endif
-	printf("Packet rule [%s] free (2)\n", rule->ruleLabel);
-#endif
+	/* printf("Packet rule [%s] free (2)\n", rule->ruleLabel); */
 
 	  if(ruleToClear->rearmTime == 0) {
 	    free(queuedPacketRules[i]);
@@ -262,7 +261,6 @@ void fireEvent(FilterRule *rule,
 	    return;
       }
     }
-
     return;
   }
 
