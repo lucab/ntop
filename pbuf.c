@@ -1748,6 +1748,8 @@ static void handleSession(const struct pcap_pkthdr *h,
       } else 
 	theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
 
+      theSession->nwLatency.tv_sec /= 2;
+      theSession->nwLatency.tv_usec /= 2;
       theSession->sessionState = STATE_ACTIVE;
     } else if((addedNewEntry == 0) 
 	      && ((theSession->sessionState == STATE_SYN)
