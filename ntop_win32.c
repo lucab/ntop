@@ -1,8 +1,8 @@
 /*
- *  Copyright (C) 1998-99 Luca Deri <deri@ntop.org>
- *                        Portions by Stefano Suin <stefano@ntop.org>
+ *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
+ *                          Portions by Stefano Suin <stefano@ntop.org>
  *
- *  			  http://www.ntop.org/
+ *  			    http://www.ntop.org/
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -135,9 +135,9 @@ void initWinsock32() {
     exit(-1);
   }
 
-  version = "pre-2.0";
+  version = "2.0";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "23/11/2001";
+  buildDate = "27/12/2001";
 
   if(isWinNT())
     osName = "WinNT/2K/XP";
@@ -673,25 +673,25 @@ int ffs (int i)
 /* on mingw, struct timezone isn't defined so s/struct timezone/void/ - Scott Renfro <scott@renfro.org> */
 int gettimeofday(struct timeval *tv, void *notUsed) {
 #else
-int gettimeofday(struct timeval *tv, struct timezone *notUsed) {
+  int gettimeofday(struct timeval *tv, struct timezone *notUsed) {
 #endif
-  tv->tv_sec = time(NULL);
-  tv->tv_usec = 0;
-  return(0);
-}
-
-/* ****************************************************** */
-
-/* Courtesy of Wies-Software <wies@wiessoft.de> */
-unsigned long waitForNextEvent(unsigned long ulDelay /* ms */) {
-  unsigned long ulSlice = 1000L; // 1 Second
-
-  while (capturePackets && (ulDelay > 0L)) {
-    if (ulDelay < ulSlice)
-      ulSlice = ulDelay;
-    Sleep(ulSlice);
-    ulDelay -= ulSlice;
+    tv->tv_sec = time(NULL);
+    tv->tv_usec = 0;
+    return(0);
   }
 
-  return ulDelay;
-}
+  /* ****************************************************** */
+
+/* Courtesy of Wies-Software <wies@wiessoft.de> */
+  unsigned long waitForNextEvent(unsigned long ulDelay /* ms */) {
+    unsigned long ulSlice = 1000L; // 1 Second
+
+    while (capturePackets && (ulDelay > 0L)) {
+      if (ulDelay < ulSlice)
+	ulSlice = ulDelay;
+      Sleep(ulSlice);
+      ulDelay -= ulSlice;
+    }
+
+    return ulDelay;
+  }

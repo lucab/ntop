@@ -1052,10 +1052,12 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 
   free(theFlaggedHosts);
 
+#ifdef DEBUG
   if(numFreedBuckets > 0) {
     traceEvent(TRACE_INFO, "Purging completed in %d sec [%d hosts deleted]",
 	       (int)(time(NULL)-startTime), numFreedBuckets);
   }
+#endif
 }
 
 /* ******************************************** */
