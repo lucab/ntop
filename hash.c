@@ -511,7 +511,12 @@ void purgeIdleHosts(int actDevice) {
 	if(numHosts >= (maxHosts-1)) break;
       } /* while */
 
-      if(numHosts >= (maxHosts-1)) break;
+      if(numHosts >= (maxHosts-1)) {
+#ifdef CFG_MULTITHREADED
+        releaseMutex(&myGlobals.hostsHashMutex);
+#endif
+        break;
+      }
     }
 #ifdef CFG_MULTITHREADED
     releaseMutex(&myGlobals.hostsHashMutex);
