@@ -55,41 +55,16 @@ static PortUsage* allocatePortUsage(void) {
 
 /* ************************************ */
 
-static void updatePortList(HostTraffic *theHost,
-			   u_short clientPort, u_short serverPort) {
-  u_short i, found;
-
+void updatePortList(HostTraffic *theHost, u_short clientPort, u_short serverPort) {
   if(theHost == NULL) return;
 
-  if(clientPort > 0) {
-    for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
-      if(theHost->recentlyUsedClientPorts[i] == clientPort) {
-	found = 1;
-	break;
-      }
-
-    if(!found) {
-      for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
-	theHost->recentlyUsedClientPorts[i] =  theHost->recentlyUsedClientPorts[i+1];
-      theHost->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] = clientPort;
-    }
-  }
+  if(clientPort > 0)
+    addPortToList(theHost->recentlyUsedClientPorts, clientPort);
 
   /* ********************************* */
 
-  if(serverPort > 0) {
-    for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
-      if(theHost->recentlyUsedServerPorts[i] == serverPort) {
-	found = 1;
-	break;
-      }
-
-    if(!found) {
-      for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
-	theHost->recentlyUsedServerPorts[i] =  theHost->recentlyUsedServerPorts[i+1];
-      theHost->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] = serverPort;
-    }
-  }
+  if(serverPort > 0)
+    addPortToList(theHost->recentlyUsedServerPorts, serverPort);
 }
 
 /* ************************************ */
@@ -254,19 +229,29 @@ void updateUsedPorts(HostTraffic *srcHost,
 		     u_short dport,
 		     u_int length) {
   u_short clientPort, serverPort;
+  int sport_idx = mapGlobalToLocalIdx(sport);
+  int dport_idx = mapGlobalToLocalIdx(dport);
 
   /* traceEvent(CONST_TRACE_INFO, "%d", length); */
+
+
+
 
   /* Now let's update the list of ports recently used by the hosts */
   if(sport > dport) {
     clientPort = sport, serverPort = dport;
 
+    if(sport_idx == -1) addPortToList(srcHost->otherIpPortsSent, sport);
+    if(dport_idx == -1) addPortToList(dstHost->otherIpPortsRcvd, dport);
+
     if(srcHost != myGlobals.otherHostEntry)
-      updatePortList(srcHost, clientPort, 0);
+      updatePortList(srcHost, clientPort, 0);    
     if(dstHost != myGlobals.otherHostEntry)
       updatePortList(dstHost, 0, serverPort);
   } else {
     clientPort = dport, serverPort = sport;
+
+
 
     if(srcHost != myGlobals.otherHostEntry)
       updatePortList(srcHost, 0, serverPort);
@@ -1784,9 +1769,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       if(myGlobals.disableInstantSessionPurge != TRUE)
         theSession->sessionState = FLAG_STATE_TIMEOUT;
 
-      updateUsedPorts(srcHost, dstHost, sport, dport,
-		      (u_int)(theSession->bytesSent.value+theSession->bytesRcvd.value));
-
       if(sport == 80)
 	updateHTTPVirtualHosts(theSession->virtualPeerName, srcHost,
 			       theSession->bytesSent, theSession->bytesRcvd);
@@ -1993,7 +1975,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     IPSession tmpSession;
 
     memset(&tmpSession, 0, sizeof(IPSession));
-    updateUsedPorts(srcHost, dstHost, sport, dport, length);
     tmpSession.lastSeen = myGlobals.actTime;
     tmpSession.initiator = srcHost, tmpSession.remotePeer = dstHost;
     tmpSession.bytesSent.value = length, tmpSession.bytesRcvd.value = 0;

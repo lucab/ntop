@@ -1877,9 +1877,55 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
   }
+  
+  /* *********************************
+     ********************************* */
+ 
+  if((el->otherIpPortsRcvd[MAX_NUM_RECENT_PORTS-1] > 0) || (el->otherIpPortsSent[MAX_NUM_RECENT_PORTS-1] > 0)) {
+    /* We have something to show */
+    int numPrinted;
 
-  if((el->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] > 0)
-     || (el->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] > 0)) {
+    printSectionTitle("TCP/UDP - Traffic on Other Ports\n");
+    sendString("<CENTER>\n");
+    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
+	       "<TH "TH_BG">Client Port</TH><TH "TH_BG">Server Port</TH>"
+	       "</TR>\n");
+
+    sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=LEFT><UL>");
+
+    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
+      if(el->otherIpPortsSent[idx] > 0) {
+	if(snprintf(buf, sizeof(buf), "<LI><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
+		    el->otherIpPortsSent[idx],
+		    getAllPortByNum(el->otherIpPortsSent[idx])) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	numPrinted++;
+      }
+    }
+
+    if(numPrinted == 0) sendString("&nbsp;");
+    sendString("</UL></TD><TD "TD_BG" ALIGN=LEFT><UL>");
+
+    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
+      if(el->otherIpPortsRcvd[idx] > 0) {
+	if(snprintf(buf, sizeof(buf), "<li><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
+		    el->otherIpPortsRcvd[idx],
+		    getAllPortByNum(el->otherIpPortsRcvd[idx])) < 0)
+	  BufferTooShort();
+	sendString(buf);
+	numPrinted++;
+      }
+    }
+
+    if(numPrinted == 0) sendString("&nbsp;");
+    sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
+  }
+
+  /* *********************************
+     ********************************* */
+
+  if((el->recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS-1] > 0) || (el->recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS-1] > 0)) {
     /* We have something to show */
     int numPrinted;
 
@@ -1920,7 +1966,6 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
     if(numPrinted == 0) sendString("&nbsp;");
     sendString("</UL></TR></TABLE>"TABLE_OFF"</CENTER>");
   }
-
 
   /* *************************************************** */
 

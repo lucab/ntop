@@ -84,8 +84,7 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 /* ************************************ */
 
-int handleIP(u_short port,
-	     HostTraffic *srcHost, HostTraffic *dstHost,
+int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 	     const u_int _length,  u_short isPassiveSess,
 	     u_short p2pSessionIdx, int actualDeviceId) {
   int idx;
@@ -122,9 +121,9 @@ int handleIP(u_short port,
       idx = mapGlobalToLocalIdx(port);
   }
 
-  if(idx == -1)
+  if(idx == -1) {
     return(-1); /* Unable to locate requested index */
-  else if(idx >= myGlobals.numIpProtosToMonitor) {
+  } else if(idx >= myGlobals.numIpProtosToMonitor) {
     traceEvent(CONST_TRACE_ERROR, "Discarding idx=%d for port=%d", idx, port);
     return(-1);
   }
@@ -701,7 +700,7 @@ static void processIpPkt(const u_char *bp,
 			 u_char *ether_dst,
 			 int actualDeviceId,
 			 int vlanId) {
-  u_short sport, dport;
+  u_short sport=0, dport=0;
   struct ip ip;
   struct tcphdr tp;
   struct udphdr up;
@@ -1077,7 +1076,7 @@ static void processIpPkt(const u_char *bp,
 	  else
 	    isPassiveSess = theSession->passiveFtpSession;
 	}
-
+	
 	/* choose most likely port for protocol traffic accounting
 	 * by trying lower number port first. This is based
 	 * on the assumption that lower port numbers are more likely
@@ -1097,7 +1096,7 @@ static void processIpPkt(const u_char *bp,
 	   && ((!((sportIdx != -1) && (dportIdx == -1)))
 	       || ((sportIdx == -1) && (dportIdx != -1)))) {
 	  /* traceEvent(CONST_TRACE_INFO, "[1] sportIdx(%d)=%d - dportIdx(%d)=%d", sport, sportIdx, dport, dportIdx); */
-
+	  
 	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess,
 		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId) == -1)
 	    handleIP(sport, srcHost, dstHost, length, isPassiveSess,
@@ -1308,7 +1307,7 @@ static void processIpPkt(const u_char *bp,
 	   classify the traffic that way.
 	   (BMS 12-2001)
 	*/
-        if (dport < sport) {
+        if(dport < sport) {
 	  if(handleIP(dport, srcHost, dstHost, length, 0, 0, actualDeviceId) == -1)
 	    handleIP(sport, srcHost, dstHost, length, 0, 0, actualDeviceId);
         } else {

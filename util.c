@@ -109,7 +109,7 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
     return(NULL);
   else
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
-  
+
   for(; el != NULL; el = el->next) {
     if((el->hostNumIpAddress != NULL) && (el->hostIpAddress.s_addr == hostIpAddress.s_addr))
       return(el);
@@ -121,10 +121,10 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
       probably a local host has been searched using an IP
       address (we should have used a MAC)
     */
-    
+
     for(idx=0; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
       el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
-      
+
       for(; el != NULL; el = el->next) {
 	if((el->hostNumIpAddress != NULL) && (el->hostIpAddress.s_addr == hostIpAddress.s_addr))
 	  return(el);
@@ -135,8 +135,8 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
 #ifdef DEBUG
   {
     char buf[48];
-    
-    traceEvent(CONST_TRACE_NOISY, "==>>> Unable to locate host %s", 
+
+    traceEvent(CONST_TRACE_NOISY, "==>>> Unable to locate host %s",
 	       _intoa(hostIpAddress, buf, sizeof(buf)));
   }
 #endif
@@ -146,7 +146,7 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
 
 /* ************************************ */
 
-HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {    
+HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
     if(theSerial.serialType == SERIAL_IPV4) {
 	return(findHostByNumIP(theSerial.value.ipAddress, actualDeviceId));
     } else {
@@ -168,12 +168,12 @@ HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId) {
     return(NULL);
   else
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
-  
+
   for(; el != NULL; el = el->next) {
     if((el->ethAddress[0] != '\0') && (!strncmp(el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)))
       return(el);
   }
-  
+
   return(NULL);
 }
 
@@ -1117,8 +1117,8 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
   }
 
 #ifdef SEMAPHORE_DEBUG
-  /* Do not move this code below - 
-   * we want to keep the unprotected field updates 
+  /* Do not move this code below -
+   * we want to keep the unprotected field updates
    * as close to the trylock as possible!
    */
   traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: accessMutex() called '%s' [0x%X@%s:%d]",
@@ -1196,8 +1196,8 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   }
 
 #ifdef SEMAPHORE_DEBUG
-  /* Do not move this code below - 
-   * we want to keep the unprotected field updates 
+  /* Do not move this code below -
+   * we want to keep the unprotected field updates
    * as close to the trylock as possible!
    */
   traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: tryLockMutex() call '%s' called [0x%X@%s:%d]",
@@ -1206,15 +1206,15 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 
   myPid = getpid();
   if(mutexId->isLocked) {
-    if((strcmp(fileName, mutexId->lockFile) == 0) 
-       && (fileLine == mutexId->lockLine) 
+    if((strcmp(fileName, mutexId->lockFile) == 0)
+       && (fileLine == mutexId->lockLine)
        && (myPid == mutexId->lockPid)) {
       traceEvent(CONST_TRACE_WARNING,
 		 "tryLockMutex() called '%s' with a self-LOCKED mutex [0x%X@%s:%d]",
 		 where, (void*)&(mutexId->mutex), fileName, fileLine);
     }
   }
-  
+
   strcpy(mutexId->lockAttemptFile, fileName);
   mutexId->lockAttemptLine=fileLine;
   mutexId->lockAttemptPid=myPid;
@@ -1246,12 +1246,12 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
     mutexId->isLocked = 1;
     mutexId->lockTime = time(NULL);
     mutexId->lockPid=myPid;
-  
+
     if(fileName != NULL) {
       strcpy(mutexId->lockFile, fileName);
       mutexId->lockLine = fileLine;
     }
-      
+
     if(where != NULL) strcpy(mutexId->where, where);
   }
 
@@ -1374,7 +1374,7 @@ int _releaseMutex(PthreadMutex *mutexId,
   pthread_mutex_unlock(&stateChangeMutex);
 
 #ifdef SEMAPHORE_DEBUG
-  if (rc != 0) 
+  if (rc != 0)
     traceEvent(CONST_TRACE_WARNING, "SEMAPHORE_DEBUG: releaseMutex() failed (rc=%d) [0x%X@%s:%d]",
                (void*)&(mutexId->mutex), rc, fileName, fileLine);
   else
@@ -1942,7 +1942,7 @@ void traceEvent(int eventTraceLevel, char* file,
      */
     memset(buf, 0, sizeof(buf));
     snprintf(buf, sizeof(buf), "%s %s %s%s%s",
-	     bufTime, 
+	     bufTime,
              myGlobals.logExtra == CONST_EXTRA_TRACE_FILELINE ? bufMsgID : "",
 	     eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
 	     eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
@@ -1955,7 +1955,7 @@ void traceEvent(int eventTraceLevel, char* file,
     /* So, (INFO & above only) - post it to logView buffer. */
     if ((eventTraceLevel <= CONST_INFO_TRACE_LEVEL) &&
         (myGlobals.logView != NULL)) {
-      
+
 #ifdef CFG_MULTITHREADED
 #ifndef WIN32
       if(myGlobals.logViewMutex.isInitialized)
@@ -3066,7 +3066,7 @@ char *ip2CountryCode(u_int32_t ip) {
   IPNode *p = myGlobals.countryFlagHead;
   int i, b;
   char *cc = "";
-  
+
   i = 0;
   while(p != NULL) {
     if(p->node.cc[0] != 0)
@@ -3659,6 +3659,23 @@ void setEmptySerial(HostSerial *a) {
 
 /* ********************************* */
 
+void addPortToList(u_short *thePorts /* 0...MAX_NUM_RECENT_PORTS */, u_short port) {
+  u_short i, found;
+
+  for(i = 0, found = 0; i<MAX_NUM_RECENT_PORTS; i++)
+    if(thePorts[i] == port) {
+      found = 1;
+      break;
+    }
+
+  if(!found) {
+    for(i = 0; i<(MAX_NUM_RECENT_PORTS-1); i++)
+      thePorts[i] =  thePorts[i+1];
+
+    thePorts[MAX_NUM_RECENT_PORTS-1] = port;
+  }
+}
+
 /* ************************************ */
 
 #ifndef WIN32
@@ -3670,7 +3687,7 @@ void saveNtopPid(void) {
   myGlobals.basentoppid = getpid();
   sprintf(pidFileName, "%s/%s", DEFAULT_NTOP_PID_DIRECTORY, DEFAULT_NTOP_PIDFILE);
   fd = fopen(pidFileName, "wb");
-  
+
   if(fd == NULL) {
     traceEvent(CONST_TRACE_WARNING, "INIT: Unable to create pid file (%s)", pidFileName);
   } else {

@@ -438,9 +438,9 @@ static void dissectFlow(char *buffer, int bufferLen) {
                   /* If the user wants (via a run-time parm), as a last resort
                    * we assume it's ftp-data traffic
                    */
-                  handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
-                  flowAssumedFtpData++;
-                  flowAssumedFtpDataBytes += len; 
+		handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
+		flowAssumedFtpData++;
+		flowAssumedFtpDataBytes += len; 
               } else {
                   flowIgnoredHighPort++;
                   flowIgnoredHighPortBytes += len;
@@ -473,9 +473,9 @@ static void dissectFlow(char *buffer, int bufferLen) {
                   /* If the user wants (via a run-time parm), as a last resort
                    * we assume it's ftp-data traffic
                    */
-                  handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
-                  flowAssumedFtpData++;
-                  flowAssumedFtpDataBytes += len;    
+		handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
+		flowAssumedFtpData++;
+		flowAssumedFtpDataBytes += len;    
               } else {
                   flowIgnoredHighPort++;
                   flowIgnoredHighPortBytes += len;

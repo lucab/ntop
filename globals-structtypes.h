@@ -558,11 +558,10 @@ typedef struct hostTraffic {
   /* IP */
   PortUsage        **portsUsage; /* 0...MAX_ASSIGNED_IP_PORTS */
   u_short          recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];
+  u_short          otherIpPortsRcvd[MAX_NUM_RECENT_PORTS], otherIpPortsSent[MAX_NUM_RECENT_PORTS];
   TrafficCounter   ipBytesSent, ipBytesRcvd;
-  TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc,
-    udpSentRem, icmpSent;
-  TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc,
-    udpRcvdFromRem, icmpRcvd;
+  TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc, udpSentRem, icmpSent;
+  TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc, udpRcvdFromRem, icmpRcvd;
 
   TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
     udpFragmentsSent,  udpFragmentsRcvd,
