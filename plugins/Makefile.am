@@ -55,28 +55,28 @@ lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
 #		  librmonPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
-libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
-librrdPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@ $(RRDLIB)
+librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@ $(RRDLIB)
 
 libpdaPlugin_la_SOURCES = pdaPlugin.c
-libpdaPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 libsflowPlugin_la_SOURCES = sflowPlugin.c
-libsflowPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 liblastSeenPlugin_la_SOURCES = lastSeenPlugin.c
-liblastSeenPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+liblastSeenPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 libnetflowPlugin_la_SOURCES = netflowPlugin.c
-libnetflowPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+libnetflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 libnfsPlugin_la_SOURCES = nfsPlugin.c
-libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+libnfsPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 #librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
-#librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+#librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 
 #
@@ -142,3 +142,5 @@ install-data-local:
 	@for file in $(lib_LTLIBRARIES); do \
              rm -f $(DESTDIR)$(libdir)/$$file; \
          done
+
+.NOTPARALLEL:

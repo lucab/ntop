@@ -85,12 +85,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_alias = @build_alias@
-build_triplet = @build@
 host_alias = @host_alias@
 host_triplet = @host@
-target_alias = @target_alias@
-target_triplet = @target@
 
 EXEEXT = @EXEEXT@
 OBJEXT = @OBJEXT@
@@ -100,12 +96,12 @@ AS = @AS@
 AWK = @AWK@
 CC = @CC@
 CCLD = @CCLD@
-CFLAGS = @CFLAGS@
 CONFIGFILE_DIR = @CONFIGFILE_DIR@
-CORELIBS = @CORELIBS@
 CPP = @CPP@
+CXX = @CXX@
 DATAFILE_DIR = @DATAFILE_DIR@
 DBFILE_DIR = @DBFILE_DIR@
+DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DYN_FLAGS = @DYN_FLAGS@
@@ -113,17 +109,13 @@ ECHO = @ECHO@
 INCS = @INCS@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTOP = @INTOP@
-LDFLAGS = @LDFLAGS@
 LIBCURSES = @LIBCURSES@
 LIBREADLINE = @LIBREADLINE@
-LIBS = @LIBS@
+LIBTERMCAP = @LIBTERMCAP@
 LIBTOOL = @LIBTOOL@
+LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
-MORELIBS = @MORELIBS@
-MOREOBJECTS = @MOREOBJECTS@
-MORESOURCES = @MORESOURCES@
-NTOP_RELEASE = @NTOP_RELEASE@
-NTOP_VERSION_INFO = @NTOP_VERSION_INFO@
+NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
 PLUGINS = @PLUGINS@
@@ -131,7 +123,7 @@ PLUGIN_DIR = @PLUGIN_DIR@
 RANLIB = @RANLIB@
 RRDLIB = @RRDLIB@
 RUN_DIR = @RUN_DIR@
-SNMPLIBS = @SNMPLIBS@
+SCRIPTVER = @SCRIPTVER@
 SO_VERSION_PATCH = @SO_VERSION_PATCH@
 STRIP = @STRIP@
 VERSION = @VERSION@
@@ -172,25 +164,25 @@ lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
 
 #		  librmonPlugin.la
 libicmpPlugin_la_SOURCES = icmpPlugin.c
-libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
-librrdPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@ $(RRDLIB)
+librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@ $(RRDLIB)
 
 libpdaPlugin_la_SOURCES = pdaPlugin.c
-libpdaPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 libsflowPlugin_la_SOURCES = sflowPlugin.c
-libsflowPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+libsflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 liblastSeenPlugin_la_SOURCES = lastSeenPlugin.c
-liblastSeenPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+liblastSeenPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 libnetflowPlugin_la_SOURCES = netflowPlugin.c
-libnetflowPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+libnetflowPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 libnfsPlugin_la_SOURCES = nfsPlugin.c
-libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+libnfsPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 subdir = plugins
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
@@ -259,10 +251,10 @@ sflowPlugin_so_OBJECTS = sflowPlugin.so.$(OBJEXT)
 sflowPlugin_so_LDADD = $(LDADD)
 sflowPlugin_so_DEPENDENCIES =
 sflowPlugin_so_LDFLAGS =
-
-DEFS = @DEFS@
 DEFAULT_INCLUDES =  -I. -I$(srcdir) -I$(top_builddir)
 CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/icmpPlugin.Plo \
@@ -285,6 +277,7 @@ LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
 	$(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+CFLAGS = @CFLAGS@
 DIST_SOURCES = $(libicmpPlugin_la_SOURCES) \
 	$(liblastSeenPlugin_la_SOURCES) $(libnetflowPlugin_la_SOURCES) \
 	$(libnfsPlugin_la_SOURCES) $(libpdaPlugin_la_SOURCES) \
@@ -640,7 +633,7 @@ uninstall-info: uninstall-info-recursive
 
 
 #librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
-#librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+#librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 #
 # Dependencies to allow ntop loading plugins on-place
@@ -704,6 +697,8 @@ install-data-local:
 	@for file in $(lib_LTLIBRARIES); do \
              rm -f $(DESTDIR)$(libdir)/$$file; \
          done
+
+.NOTPARALLEL:
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
