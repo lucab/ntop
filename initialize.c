@@ -1229,9 +1229,10 @@ void initSignals(void) {
   setsignal(SIGHUP,  handleSigHup);
   setsignal(SIGPIPE, ignoreThisSignal);
   setsignal(SIGABRT, ignoreThisSignal);
-#ifdef DEBUG
-  setsignal(SIGSEGV, cleanup);
-#endif
+  if(myGlobals.debugMode) { 
+    /* Activate backtrace trap on -K flag */
+    setsignal(SIGSEGV, cleanup);
+  }
 #endif
 }
 
