@@ -1158,6 +1158,15 @@ typedef struct serviceEntry {
   char* name;
 } ServiceEntry;
 
+typedef struct portCounter {
+  u_short port;
+  Counter value;
+} PortCounter;
+
+/* ************************************* */
+
+#define TOP_IP_PORT           65534 /* IP ports range from 0 to 65535 */
+#define TOP_ASSIGNED_IP_PORTS  1024
 
 /* ************************************* */
 
@@ -1236,6 +1245,9 @@ typedef struct ntopInterface {
   TrafficCounter osiBytes;
   TrafficCounter ipv6Bytes;
   TrafficCounter otherBytes;
+
+  PortCounter    *ipPorts[TOP_IP_PORT];
+
   TrafficCounter lastMinEthernetBytes;
   TrafficCounter lastFiveMinsEthernetBytes;
 
@@ -1319,9 +1331,6 @@ typedef struct processInfoList {
 } ProcessInfoList;
 
 #define MAX_NUM_PROCESSES          1024
-
-#define TOP_IP_PORT           65534 /* IP ports range from 0 to 65535 */
-#define TOP_ASSIGNED_IP_PORTS  1024
 
 typedef union {
   HEADER qb1;

@@ -3630,8 +3630,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   /* RRD */
   if(el->hostNumIpAddress[0] != '\0') {
     struct stat statbuf;
-    
-    snprintf(buf, sizeof(buf), "%s/rrd/hosts/%s/", myGlobals.dbPath, el->hostNumIpAddress);
+
+    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+    snprintf(buf, sizeof(buf), "%s/rrd/hosts/%s", myGlobals.dbPath, el->hostNumIpAddress);
     
     if(stat(buf, &statbuf) == 0) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
@@ -3839,29 +3840,29 @@ void printTableEntry(char *buf, int bufLen,
   switch(int_perc) {
   case 0:
     if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
-		"<TD "TD_BG" WIDTH=250>&nbsp;</TD></TR>\n",
+		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>0%%</TD>"
+		"<TD "TD_BG" WIDTH=200>&nbsp;</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total)) < 0)
       BufferTooShort();
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
-		"<TD ALIGN=CENTER WIDTH=250><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12>"
+		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>50%%</TD>"
+		"<TD ALIGN=CENTER WIDTH=200><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=200 HEIGHT=12>"
 		"</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total)) < 0)
       BufferTooShort();
     break;
   default:
     if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
-		"<TD "TD_BG" WIDTH=250><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"250\">"
+		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%d%%</TD>"
+		"<TD "TD_BG" WIDTH=200><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=200>"
 		"<TR "TR_ON"><TD><IMG ALIGN=MIDDLE ALT=\"%d%%\" SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
 		"</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
 		"<P>&nbsp;</TD></TR></TABLE>"TABLE_OFF"</TD></TR>\n",
-		getRowColor(), label, formatKBytes(total),
-		int_perc, (250*int_perc)/100,
-		(250*(100-int_perc))/100, getActualRowColor()) < 0)
+		getRowColor(), label, formatKBytes(total), int_perc,
+		int_perc, (200*int_perc)/100,
+		(200*(100-int_perc))/100, getActualRowColor()) < 0)
       BufferTooShort();
   }
 

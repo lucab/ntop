@@ -631,8 +631,9 @@ void printTrafficStatistics() {
   
   sendString("</TABLE>"TABLE_OFF"</TR>\n");
 
-  /* RRD */
-  snprintf(buf, sizeof(buf), "%s/rrd/interfaces/%s/", myGlobals.dbPath, 
+  /* RRD */ 
+  /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+ snprintf(buf, sizeof(buf), "%s/rrd/interfaces/%s", myGlobals.dbPath, 
 	   myGlobals.device[myGlobals.actualReportDeviceId].name);
 
   if((i = stat(buf, &statbuf)) == 0) {
@@ -2444,22 +2445,39 @@ static void printShortTableEntry(char *buf, int bufLen,
   case 0:
     if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"</TR>\n",
-		getRowColor(), label, formatKBytes.value(total)) < 0) BufferTooShort();
+		getRowColor(), label, formatKBytes(total)) < 0) BufferTooShort();
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"</TR>\n",
-		getRowColor(), label, formatKBytes.value(total)) < 0) BufferTooShort();
+		getRowColor(), label, formatKBytes(total)) < 0) BufferTooShort();
     break;
   default:
     if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"</TR>\n",
-		getRowColor(), label, formatKBytes.value(total)) < 0) BufferTooShort();
+		getRowColor(), label, formatKBytes(total)) < 0) BufferTooShort();
   }
 
   sendString(buf);
 }
 #endif
+
+/* ******************************* */
+
+int cmpPortsFctn(const void *_a, const void *_b) {
+  if((_a == NULL) || (_b == NULL)) return(0);
+  else {
+    PortCounter *a, *b;
+
+    a = *((PortCounter**)_a);
+    b = *((PortCounter**)_b);
+
+    if(a->value > b->value)
+      return(-1);
+    else
+      return(1);
+  }
+}
 
 /* ********************************** */
 
@@ -2490,7 +2508,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     else {
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
 		 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "<TH "TH_BG" WIDTH=100 COLSPAN=2>Data</TH><TH "TH_BG" WIDTH=250>"
 		 "Percentage</TH></TR>\n");
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
@@ -2713,7 +2731,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       sendString("<CENTER>\n");
       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR "TR_ON"><TH "TH_BG" WIDTH=150>"
 		 "TCP/UDP&nbsp;Protocol</TH>"
-		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+		 "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
 		 "Percentage</TH></TR>\n");
 
       remainingTraffic = 0;
@@ -2747,10 +2765,56 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
 #ifdef HAVE_GDCHART
       if(numProtosFound > 0)
-	sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=3 ALIGN=CENTER>"
+	sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER>"
 		   "<IMG SRC=drawGlobalIpProtoDistribution"CHART_FORMAT"></TD></TR>\n");
 #endif
       sendString("</TABLE>"TABLE_OFF"<P>\n");
+
+      /* *********************** */
+
+      if(remainingTraffic > 0) {
+	PortCounter **ipPorts;
+	int idx = 0;
+	
+	printSectionTitle("TCP/UDP Traffic Port Distribution");
+	
+	sendString(""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
+		   "<TH "TH_BG" WIDTH=150 COLSPAN=2>TCP/UDP&nbsp;Port</TH>"
+		   "<TH "TH_BG" WIDTH=100>Data</TH></TR>");
+
+	ipPorts = (PortCounter**)calloc(TOP_IP_PORT, sizeof(PortCounter*));
+	for(i=0; i<TOP_IP_PORT; i++) {
+	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i] != NULL) {
+	    ipPorts[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i];
+	    idx++;
+	  }
+	}
+	quicksort(ipPorts, idx, sizeof(PortCounter**), cmpPortsFctn);
+
+	if(idx > 32) idx = 32; /* Limit to 32 entries max */
+
+	for(i=0; i<idx; i++) {
+	  if(ipPorts[i] != NULL) {
+	    char *symPort = getAllPortByNum(ipPorts[i]->port);
+
+	    if(symPort == NULL) symPort = "";
+
+	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</td>"
+			"<TH "TH_BG" ALIGN=RIGHT>%d</TH>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"</TR>\n",
+			getRowColor(), symPort, 
+			ipPorts[i]->port, 
+			formatBytes(ipPorts[i]->value, 1)) < 0) BufferTooShort();
+	    sendString(buf);
+	  }
+	} /* for */
+
+	free(ipPorts);
+	sendString("</TABLE>"TABLE_OFF"<P>\n");	
+      }
+
+      /* ********************** */
       sendString("</CENTER>\n");
     }
   }
@@ -2770,14 +2834,14 @@ void printProtoTraffic(void) {
   printSectionTitle("Global Protocol Distribution");
   sendString("<CENTER>\n");
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON"><TH "TH_BG" WIDTH=150>Protocol</TH>"
-	     "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
+	     "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>Percentage</TH></TR>\n");
 
   perc = 100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value);
   if(perc > 100) perc = 100;
 
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT>IP</TH>"
-	      "<TD "TD_BG" WIDTH=100 ALIGN=RIGHT>%s"
-	      "&nbsp;(%.1f%%)</TD><TD "TD_BG" WIDTH=250>"
+	      "<TD "TD_BG" WIDTH=50 ALIGN=RIGHT>%s"
+	      "</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
 	      "<TABLE BORDER=1 WIDTH=\"100%\">",
 	      getRowColor(),
 	      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1),
@@ -2787,58 +2851,74 @@ void printProtoTraffic(void) {
 
   printTableEntry(buf, sizeof(buf), "TCP", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].tcpBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
   printTableEntry(buf, sizeof(buf), "UDP", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].udpBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
   printTableEntry(buf, sizeof(buf), "ICMP", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
   printTableEntry(buf, sizeof(buf), "Other&nbsp;IP", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/1024,
-		  ((float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+		  ((float)myGlobals.device[myGlobals.actualReportDeviceId].otherIpBytes.value/
+		   myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
 
   sendString("</TABLE>"TABLE_OFF"</TR>");
 
   printTableEntry(buf, sizeof(buf), "(R)ARP", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].arpRarpBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
   printTableEntry(buf, sizeof(buf), "DLC", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].dlcBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "IPX", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipxBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "Decnet", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].decnetBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "AppleTalk", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].atalkBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "OSPF", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ospfBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "NetBios", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].netbiosBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "IGMP", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].igmpBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "OSI", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].osiBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "IPv6", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "STP", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].stpBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
   printTableEntry(buf, sizeof(buf), "Other", COLOR_1,
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/1024,
-		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/
+		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
 
 #ifdef HAVE_GDCHART
-  sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=3 ALIGN=CENTER>"
+  sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER>"
 	     "<IMG SRC=drawGlobalProtoDistribution"CHART_FORMAT"></TD></TR>\n");
 #endif
 
