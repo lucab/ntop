@@ -31,7 +31,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#ifdef HAVE_LIBRRD
+#if defined(HAVE_LIBRRD) || defined(HAVE_RRD_H)
 
 static unsigned short initialized = 0, dumpInterval;
 static char *hostsFilter;
@@ -227,7 +227,8 @@ static void handleRRDHTTPrequest(char* url) {
 
     sendString("\" SIZE=80><br>A list of networks [e.g. 172.22.0.0/255.255.0.0,192.168.5.0/255.255.255.0]<br>"
 	               "separated by commas to which hosts that will be<br>"
-	               "saved must belong to.</TD></tr>\n");
+	               "saved must belong to. An empty list means that all the hosts will "
+	       "be stored on disk</TD></tr>\n");
   }
 
   sendString("<TR><TH>RRD Files Path</TH><TD>");
@@ -558,7 +559,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     numTotalRRDs += numRRDs;
 
-    traceEvent(TRACE_INFO, "%d RRDs updated (%d total updates)", numTotalRRDs-numRRDs, numTotalRRDs);
+    traceEvent(TRACE_INFO, "%lu RRDs updated (%lu total updates)", 
+	       (unsigned long)(numTotalRRDs-numRRDs), (unsigned long)numTotalRRDs);
   }
 
 #ifdef DEBUG
