@@ -143,10 +143,10 @@ void printTrafficStatistics() {
 		    ) < 0)
 	  BufferTooShort();
 	sendString(buf);
-	
+
 	if(haveTrafficHistory()) {
 	  if(!myGlobals.device[i].virtualDevice) {
-	    if(snprintf(buf, sizeof(buf), 
+	    if(snprintf(buf, sizeof(buf),
 		      "  [ <A HREF=\"/ntop-bin/netTraf.pl?interface=%s\">History</A> ]\n",
 			myGlobals.device[i].name) < 0)
 	      BufferTooShort();
@@ -225,7 +225,7 @@ void printTrafficStatistics() {
     unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts
       - myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts
       - myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts;
-    
+
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts <= 0)
       myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts = 1;
 
@@ -589,7 +589,7 @@ void printTrafficStatistics() {
 		((float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts/(float)(myGlobals.actTime-myGlobals.initialSniffTime))) < 0)
       BufferTooShort();
     sendString(buf);
-    
+
   }
 
   sendString("</TABLE></TR></TABLE></CENTER>\n");
@@ -1339,15 +1339,15 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
 	  {
 	    char shortBuf[8];
-	    
+
 	    if(!subnetPseudoLocalHost(el)) {
 	      i = guessHops(el);
 	    } else
 	      i = 0;
-	    
+
 	    sprintf(shortBuf, "%d", i % 256);
-	    
-	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>&nbsp;%s</TD>", 
+
+	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>&nbsp;%s</TD>",
 			(i == 0) ? "" : shortBuf) < 0)
 	      BufferTooShort();
 	    sendString(buf);
@@ -1532,9 +1532,9 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
     sendString("<TR><TD ALIGN=LEFT><UL>");
 
-    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {      
+    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->recentlyUsedClientPorts[idx] > 0) {
-	if(snprintf(buf, sizeof(buf), "<li>%s\n", 
+	if(snprintf(buf, sizeof(buf), "<li>%s\n",
 		    getAllPortByNum(el->recentlyUsedClientPorts[idx])) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -1544,17 +1544,17 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
     if(numPrinted == 0) sendString("&nbsp;");
     sendString("</UL></TD><TD ALIGN=LEFT><UL>");
-    
-    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {      
+
+    for(idx=0, numPrinted=0; idx<MAX_NUM_RECENT_PORTS; idx++) {
       if(el->recentlyUsedServerPorts[idx] > 0) {
-	if(snprintf(buf, sizeof(buf), "<li>%s\n", 
+	if(snprintf(buf, sizeof(buf), "<li>%s\n",
 		    getAllPortByNum(el->recentlyUsedServerPorts[idx])) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	numPrinted++;
       }
     }
- 
+
     if(numPrinted == 0) sendString("&nbsp;");
     sendString("</UL></TR></TABLE></CENTER>");
   }
@@ -3027,7 +3027,7 @@ void printThptStatsMatrix(int sortedColumn) {
       sendString(buf);
 
       dataSent = 0;
-      
+
       /* ************************* */
 
       if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostSentSerial != NO_PEER) {
@@ -3067,11 +3067,11 @@ void printThptStatsMatrix(int sortedColumn) {
       }
 
       /* ************************* */
-      
-      if(!dataSent) sendString("&nbsp;");      
+
+      if(!dataSent) sendString("&nbsp;");
       sendString("</TABLE></TD><TD "TD_BG" ALIGN=LEFT><TABLE BORDER=1 WIDTH=100%>\n");
       dataSent = 0;
-      
+
       /* ************************* */
 
       if(myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].topHostRcvdSerial != NO_PEER) {
@@ -3111,7 +3111,7 @@ void printThptStatsMatrix(int sortedColumn) {
       }
 
       /* ************************* */
-      
+
       if(!dataSent) sendString("&nbsp;");
       sendString("</TABLE></TD></TR>\n");
     }
@@ -3187,7 +3187,7 @@ void printThptStatsMatrix(int sortedColumn) {
 
 	sendString("&nbsp;");
 	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>\n");
-      
+
 	/* ************************* */
 
 	if(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdSerial != NO_PEER) {
@@ -3790,7 +3790,7 @@ void listNetFlows(void) {
 		      formatPkts(list->packets),
 		      formatBytes(list->bytes, 1)) < 0) BufferTooShort();
 	}
-	
+
 	sendString(buf);
 
 	numEntries++;
@@ -3902,11 +3902,11 @@ int haveTrafficHistory() {
     if(snprintf(tmpStr, sizeof(tmpStr), "%s/data",
 		myGlobals.dataFileDirs[idx]) < 0)
       BufferTooShort();
- 
+
     if(stat(tmpStr, &statbuf) == 0) {
       return(1);
       break;
-    }      
+    }
   }
 
   return(0);
