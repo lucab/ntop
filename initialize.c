@@ -707,9 +707,9 @@ void initDevices(char* devices) {
   char ebuf[PCAP_ERRBUF_SIZE], *myDevices;
   int i, j, mallocLen;
   NtopInterface *tmpDevice;
-  char *tmpDev;
+  char *tmpDev, *tmpDescr;
 #ifdef WIN32
-  char *ifName, intNames[32][256];
+  char *ifName, intNames[32][256], intDescr[32][256];
   int ifIdx = 0;
   int defaultIdx = -1;
 #endif
@@ -756,10 +756,11 @@ void initDevices(char* devices) {
 
 	  if(ifIdx < 32) {
 	    strcpy(intNames[ifIdx], ifName);
+		strcpy(intDescr[ifIdx], ifName);
 	    if(defaultIdx == -1) {
 	      if(strncmp(intNames[ifIdx], "PPP", 3) /* Avoid to use the PPP interface */
 		 && strncmp(intNames[ifIdx], "ICSHARE", 6)) { /* Avoid to use the internet sharing interface */
-		defaultIdx = ifIdx;
+			defaultIdx = ifIdx;
 	      }
 	    }
 	  }
@@ -770,31 +771,47 @@ void initDevices(char* devices) {
       }
     }
 
-    tmpDev = intNames[defaultIdx];
+    tmpDev   = intNames[defaultIdx];
+	tmpDescr = intDescr[defaultIdx];
   } else {
     /* WinNT/2K */
     static char tmpString[128];
-    int i, j;
+    int i, j,ifDescrPos = 0;
+    unsigned short *ifName; /* UNICODE */
+    char *ifDescr;
+
+    ifName = (unsigned short *)tmpDev;
+
+    while(*(ifName+ifDescrPos) || *(ifName+ifDescrPos-1))
+      ifDescrPos++;
+    ifDescrPos++;	/* Step over the extra '\0' */
+    ifDescr = (char*)(ifName + ifDescrPos); /* cast *after* addition */
 
     while(tmpDev[0] != '\0') {
+
       for(j=0, i=0; !((tmpDev[i] == 0) && (tmpDev[i+1] == 0)); i++) {
 	if(tmpDev[i] != 0)
 	  tmpString[j++] = tmpDev[i];
       }
 
       tmpString[j++] = 0;
-      traceEvent(TRACE_INFO, "Found interface [index=%d] '%s'", ifIdx, tmpString);
+      ifDescr += strlen(ifDescr)+1;
+		 
       tmpDev = &tmpDev[i+3];
+      tmpDescr = ifDescr;
+
+      strcpy(intDescr[ifIdx], ifDescr);
       strcpy(intNames[ifIdx++], tmpString);
       defaultIdx = 0;
     }
-    if(defaultIdx != -1)
-      tmpDev = intNames[defaultIdx]; /* Default */
+    if(defaultIdx != -1) {
+      tmpDev   = intNames[defaultIdx]; /* Default */
+	  tmpDescr = intDescr[defaultIdx];
+	}
   }
 #endif
 
   if (myDevices == NULL) {
-
     /* No default device selected */
 
 #ifndef WIN32
@@ -809,6 +826,8 @@ void initDevices(char* devices) {
     myGlobals.device = (NtopInterface*)calloc(1, sizeof(NtopInterface));
 #ifndef WIN32
     myGlobals.device[0].humanFriendlyName = strdup(tmpDev);
+#else
+    myGlobals.device[0].humanFriendlyName = strdup(tmpDescr);
 #endif
     myGlobals.device[0].name = strdup(tmpDev);
     myGlobals.numDevices = 1;
@@ -852,7 +871,8 @@ void initDevices(char* devices) {
       }
 #else /* WIN32 */
     if(atoi(tmpDev) < ifIdx) {
-      tmpDev = intNames[atoi(tmpDev)];
+	  tmpDescr = intDescr[atoi(tmpDev)];
+      tmpDev   = intNames[atoi(tmpDev)];
     } else {
       traceEvent(TRACE_INFO, "Interface index '%d' is out of range [0..%d]", atoi(tmpDev), ifIdx);
       exit(-1);
@@ -873,6 +893,8 @@ void initDevices(char* devices) {
       myGlobals.device = tmpDevice;
 #ifndef WIN32
       myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(tmpDev);
+#else
+      myGlobals.device[myGlobals.numDevices].humanFriendlyName = strdup(tmpDescr);
 #endif
       myGlobals.device[myGlobals.numDevices++].name = strdup(tmpDev);
       tmpDev = strtok_r(NULL, ",", &strtokState);

@@ -861,8 +861,10 @@ int main(int argc, char *argv[]) {
 #endif
 
   myGlobals.startedAs = startedAs;
+
   free(cmdLineBuffer);
   free(readBuffer);
+
 
   /*
    * Parse command line options to the application via standard system calls
