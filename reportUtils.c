@@ -3405,7 +3405,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       multihomed = "";
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s%s%s]",
+		"<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s%s]",
 		getRowColor(),
 		"IP&nbsp;Address",
 		el->hostNumIpAddress,
