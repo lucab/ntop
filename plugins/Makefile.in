@@ -64,10 +64,10 @@ pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 
-ACLOCAL = /bin/sh /home/deri/network/ntop/missing --run echo
-AUTOCONF = /bin/sh /home/deri/network/ntop/missing --run echo
-AUTOMAKE = /bin/sh /home/deri/network/ntop/missing --run echo
-AUTOHEADER = /bin/sh /home/deri/network/ntop/missing --run echo
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
 
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
