@@ -2145,16 +2145,16 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 	u_int theIdx = scanner->peers.peersIndexes[i];
 
 	if(theIdx != NO_PEER) {
-	  HostTraffic *host = myGlobals.device[myGlobals.actualReportDeviceId].
-	    hash_hostTraffic[checkSessionIdx(theIdx)];
-
-	  if(host != NULL) {
+	  HostTraffic host;
+	  
+	  if(retrieveHost(theIdx, &host) == 0) {
 	    sendString("\n<li>");
-	    sendString(makeHostLink(host, 0, 0, 0));
+	    sendString(makeHostLink(&host, 0, 0, 0));
 	  }
 	}
+	
       }
-
+      
       sendString("</UL></TD></TR>\n");
 
       scanner = (IpGlobalSession*)(scanner->next);
@@ -3046,23 +3046,27 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(el->contactedRouters.peersIndexes[i] != NO_PEER) {
       int routerIdx = el->contactedRouters.peersIndexes[i];
-      HostTraffic *router = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
 
-      if(router != NULL) {
-	if(!printedHeader) {
-	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
-		      "Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG" ALIGN=RIGHT>\n",
-		      getRowColor()) < 0)
+      if(routerIdx != NO_PEER) {
+	HostTraffic router;
+
+	if(retrieveHost(routerIdx, &router) == 0) {
+	  if(!printedHeader) {
+	    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
+			"Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG" ALIGN=RIGHT>\n",
+			getRowColor()) < 0)
+	      BufferTooShort();
+	    sendString(buf);
+	  }
+	  printedHeader++;
+
+	  if(printedHeader > 1) sendString("<BR>");
+
+	  if(snprintf(buf, sizeof(buf), "%s\n", 
+		      makeHostLink(&router, SHORT_FORMAT, 0, 0)) < 0)
 	    BufferTooShort();
 	  sendString(buf);
 	}
-	printedHeader++;
-
-	if(printedHeader > 1) sendString("<BR>");
-
-	if(snprintf(buf, sizeof(buf), "%s\n", makeHostLink(router, SHORT_FORMAT, 0, 0)) < 0)
-	  BufferTooShort();
-	sendString(buf);
       }
     }
   }

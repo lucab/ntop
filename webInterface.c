@@ -68,6 +68,7 @@ int execCGI(char* cgiName) {
   struct passwd * newUser = NULL;
   FILE *fd;
   int num, i;
+  struct timeval wait_time;
 
   if(!(newUser = getpwnam(userName))) {
     traceEvent(TRACE_WARNING, "WARNING: unable to find user %s\n", userName);
@@ -101,19 +102,40 @@ int execCGI(char* cgiName) {
     traceEvent(TRACE_WARNING, "WARNING: unable to exec %s\n", cgiName);
     return(-1);
   } else {
-    while(!feof(fd)) {
-      num = fread(line, 1, 383, fd);
-      if(num > 0)
-	sendStringLen(line, num);
+    fd_set mask;
+    int allRight = 1;
+    int fno = fileno(fd);
+    
+    for(;;) {
+
+      FD_ZERO(&mask);
+      FD_SET((unsigned int)fno, &mask);
+
+      wait_time.tv_sec = 120; wait_time.tv_usec = 0;
+      if(select(fno+1, &mask, 0, 0, &wait_time) > 0) {      
+	if(!feof(fd)) {
+	  num = fread(line, 1, 383, fd);
+	  if(num > 0)
+	    sendStringLen(line, num);
+	} else
+	  break;	
+      } else {
+	allRight = 0;
+	break;
+      }
     }
+
     pclose(fd);
-  }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "CGI execution completed.");
+    if(allRight)
+      traceEvent(TRACE_INFO, "CGI execution completed.");
+    else
+      traceEvent(TRACE_INFO, "CGI execution encountered some problems.");
 #endif
-
-  return(0);
+    
+    return(0);
+  }
 }
 #endif
 
@@ -1057,9 +1079,10 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
   FD_ZERO(&mask);
 
+#ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "Started thread (%ld) for web server.\n",
              myGlobals.handleWebConnectionsThreadId);
-
+#endif
 
   if(myGlobals.webPort > 0)
     FD_SET((unsigned int)myGlobals.sock, &mask);

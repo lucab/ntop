@@ -325,10 +325,11 @@ void freeHostInstances(int actualDeviceId) {
 /* #define DEBUG */
 
 void purgeIdleHosts(int actDevice) {
-  u_int idx, numFreedBuckets=0, len, hashLen, maxBucket = 0, theIdx, hashFull = 0;
+  u_int idx, numFreedBuckets=0, len, maxBucket = 0, theIdx, hashFull = 0;
   time_t startTime = time(NULL);
   static time_t lastPurgeTime = 0;
-  HostTraffic **theFlaggedHosts;
+  static HostTraffic **theFlaggedHosts = NULL;
+  static u_int hashLen = 0;
 
   if(startTime < (lastPurgeTime+(SESSION_SCAN_DELAY/2)))
     return; /* Too short */
@@ -350,18 +351,20 @@ void purgeIdleHosts(int actDevice) {
     hashLen is necessary as the hash size can change while purging
     hosts outside of the mutex's
   */
-  hashLen = myGlobals.device[actDevice].actualHashSize;
-  len = sizeof(HostTraffic*)* MAX_NUM_PURGED_HOSTS;
-  theFlaggedHosts = (HostTraffic**)malloc(len);
+  if(hashLen != myGlobals.device[actDevice].actualHashSize) {
+    hashLen = myGlobals.device[actDevice].actualHashSize;
+    len = sizeof(HostTraffic*)* MAX_NUM_PURGED_HOSTS;
+    if(theFlaggedHosts != NULL) free(theFlaggedHosts); /* free old list */
+    theFlaggedHosts = (HostTraffic**)malloc(len);
+  }
   memset(theFlaggedHosts, 0, len);
 
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
   /* Calculates entries to free */
-  for(theIdx = (myGlobals.actTime % hashLen),
-	hashFull = 0,
-	idx=1; idx<hashLen; idx++) {
+  for(theIdx = (myGlobals.actTime % hashLen) /* random start */,
+	hashFull = 0, idx=1; idx<hashLen; idx++) {
     HostTraffic *el;
 
     if((theIdx == myGlobals.broadcastEntryIdx) || (theIdx == myGlobals.otherHostEntryIdx)) {
@@ -370,8 +373,7 @@ void purgeIdleHosts(int actDevice) {
     }
 
     if((el = myGlobals.device[actDevice].hash_hostTraffic[theIdx]) != NULL) {
-      if((!hashFull)
-	 && (el->numUses < MIN_NUM_USES)) {
+      if((!hashFull) && (el->numUses < MIN_NUM_USES)) {
 
 	if((!myGlobals.stickyHosts)
 	   || (myGlobals.borderSnifferMode)
@@ -411,7 +413,10 @@ void purgeIdleHosts(int actDevice) {
 #endif
   }
 
-  free(theFlaggedHosts);
+  /*
+    This statement is not called as it is left for the next run
+    free(theFlaggedHosts);
+  */
 
 #ifndef DEBUG
   if(numFreedBuckets > 0) {

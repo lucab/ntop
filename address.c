@@ -615,7 +615,7 @@ void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
     updateHostNameInfo(hostIpAddress.s_addr, buf, actualDeviceId);
   } else {
 #ifndef MULTITHREADED
-    resolveAddress(&hostIpAddress, 0);
+    resolveAddress(&hostIpAddress, 0, actualDeviceId);
 #else
     queueAddress(hostIpAddress);
 #endif

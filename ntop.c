@@ -96,11 +96,10 @@ void* pcapDispatch(void *_i) {
   for(;myGlobals.capturePackets == 1;) {
     FD_ZERO(&readMask);
     FD_SET(pcap_fd, &readMask);
+    
+    /* timeout.tv_sec  = 5, timeout.tv_usec = 0; */
 
-    timeout.tv_sec  = 5 /* seconds */;
-    timeout.tv_usec = 0;
-
-    if(select(pcap_fd+1, &readMask, NULL, NULL, &timeout) > 0) {
+    if(select(pcap_fd+1, &readMask, NULL, NULL, NULL /* &timeout */ ) > 0) {
       /* printf("dispatch myGlobals.device %s\n", myGlobals.device[i].name);*/
       if(!myGlobals.capturePackets) return(NULL);
       rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, processPacket, (u_char*)_i);
@@ -133,7 +132,9 @@ void* pcapDispatch(void *_i) {
       traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
 		 pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
-    } /* elsetraceEvent(TRACE_INFO, "1) %d\n", numPkts++); */
+    } /* else
+	 traceEvent(TRACE_INFO, "1) %d\n", numPkts++); 
+      */
   }
 
   return(NULL);
@@ -687,6 +688,8 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 #else
 	sleep(1); /* leave some time to others */
 #endif
+	if(myGlobals.enableSessionHandling)
+	  scanTimedoutTCPSessions(i);
       }
   }
 
@@ -796,8 +799,6 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
 	myGlobals.nextSessionTimeoutScan = myGlobals.actTime+SESSION_SCAN_DELAY;
       }
 
-      if(myGlobals.handleRules)
-	scanAllTcpExpiredRules();
       updateThpt(); /* Update Throughput */
       (*lastTime) = myGlobals.actTime + THROUGHPUT_REFRESH_TIME;
       justRefreshed=1;

@@ -110,8 +110,10 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   if(!(myGlobals.netFlowInSocket > 0)) return;
 
   
-  traceEvent(TRACE_INFO, "Welcome to netFlow: listening on UDP port %d...", myGlobals.netFlowInPort);
-  traceEvent(TRACE_INFO, "Started thread (%ld) for netFlow.\n", netFlowThread);
+  traceEvent(TRACE_INFO, "Welcome to NetFlow: listening on UDP port %d...", myGlobals.netFlowInPort);
+#ifdef MULTITHREADED
+ traceEvent(TRACE_INFO, "Started thread (%ld) for netFlow.\n", netFlowThread);
+#endif
   
   for(;myGlobals.capturePackets == 1;) {
     FD_ZERO(&netflowMask);
@@ -259,7 +261,9 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
     }
   }
 
+#ifdef MULTITHREADED
   threadActive = 0;
+#endif
   return(0);
 }
 
@@ -269,7 +273,10 @@ static void initNetFlowFunct(void) {
   int i;
   char key[32], value[32];
 
+#ifdef MULTITHREADED
   threadActive = 0;
+#endif
+
   if(fetchPrefsValue("netFlow.netFlowInPort", value, sizeof(value)) == -1)
     storePrefsValue("netFlow.netFlowInPort", "0");
   else

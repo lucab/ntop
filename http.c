@@ -1295,23 +1295,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 #endif
     returnHTTPpageNotFound();
     printTrailer=0;
-#ifndef WIN32
-  } else if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
-    int rc;
-      
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.hashResizeMutex);
-#endif
-
-      sendString("HTTP/1.0 200 OK\n");
-      rc = execCGI(&pageName[strlen(CGI_HEADER)]);
-
-      if(rc != 0) {
-	returnHTTPpageNotFound();
-      }
-
-      return(0);
-#endif
   } else {
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
@@ -1357,7 +1340,20 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     }
 #endif
 
-    if(strcmp(pageName, STR_INDEX_HTML) == 0) {
+#ifndef WIN32
+  if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
+    int rc;
+      
+    sendString("HTTP/1.0 200 OK\n");
+    rc = execCGI(&pageName[strlen(CGI_HEADER)]);
+    
+    if(rc != 0) {
+      returnHTTPpageNotFound();
+    }    
+  } else 
+#endif
+
+  if(strcmp(pageName, STR_INDEX_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_BODY);
       sendString("<frameset cols=160,* framespacing=0 border=0 frameborder=0>\n");

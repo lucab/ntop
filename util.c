@@ -2968,7 +2968,7 @@ void _incrementUsageCounter(UsageCounter *counter,
 
   if(peerIdx >= myGlobals.device[actualDeviceId].actualHashSize) {
     traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d",
-	       peerIdx, myGlobals.device[actualDeviceId].actualHashSize, file, line);
+	       peerIdx, myGlobals.device[actualDeviceId].actualHashSize-1, file, line);
     return;
   } 
 
@@ -3001,6 +3001,7 @@ void _incrementUsageCounter(UsageCounter *counter,
     for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
       counter->peersIndexes[i] = counter->peersIndexes[i+1];
 
+    /* Add host serial and not it's index */
     counter->peersIndexes[MAX_NUM_CONTACTED_PEERS-1] = theHost->hostSerial;
   }
 }

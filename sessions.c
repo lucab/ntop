@@ -328,10 +328,10 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
   {
     char buf[32], buf1[32];
 
-    traceEvent(TRACE_INFO, "Session terminated: %s:%d<->%s:%d (# sessions = %d)",
+    traceEvent(TRACE_INFO, "Session terminated: %s:%d<->%s:%d (lastSeend=%d) (# sessions = %d)",
 	       _intoa(sessionToPurge->initiatorRealIp, buf, sizeof(buf)), sessionToPurge->sport,
 	       _intoa(sessionToPurge->remotePeerRealIp, buf1, sizeof(buf1)), sessionToPurge->dport,
-	       myGlobals.device[actualDeviceId].numTcpSessions);
+	       sessionToPurge->lastSeen,  myGlobals.device[actualDeviceId].numTcpSessions);
   }
 #endif
 
@@ -340,17 +340,19 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
 
 /* ************************************ */
 
-#ifndef MULTITHREADED
 void scanTimedoutTCPSessions(int actualDeviceId) {
-  u_int idx, i;
+  u_int idx, i, freeSessionCount =0;
 
+  if(!myGlobals.enableSessionHandling) return;
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions\n");
+  traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions (device=%d, sessions=%d)\n",
+	     actualDeviceId, myGlobals.device[actualDeviceId].numTotSessions);
 #endif
 
   for(idx=0; idx<myGlobals.device[actualDeviceId].numTotSessions; idx++) {
-    IPSession *nextSession, *prevSession, *thisSession = myGlobals.device[actualDeviceId].tcpSession[idx];
+    IPSession *nextSession, *prevSession, *thisSession;
 
+    thisSession = myGlobals.device[actualDeviceId].tcpSession[idx];
     prevSession = thisSession;
       
     while(thisSession != NULL) {
@@ -389,13 +391,14 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 
 	  if(myGlobals.device[actualDeviceId].tcpSession[idx] == 
 	     myGlobals.device[actualDeviceId].tcpSession[idx]->next) {
-	    myGlobals.device[actualDeviceId].tcpSession[idx]->next = NULL;
 #ifdef DEBUG
 	    traceEvent(TRACE_WARNING, "Patched problem on idx %d", idx);
 #endif
+	    myGlobals.device[actualDeviceId].tcpSession[idx]->next = NULL;
 	  }
 	}
 
+	freeSessionCount++; 
 	freeSession(thisSession, actualDeviceId);
       }
 
@@ -406,8 +409,11 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
       }
     } /* while */
   } /* end for */
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "scanTimedoutTCPSessions: freed %u sessions\n", freeSessionCount);
+#endif
 }
-#endif /* MULTITHREADED */
 
 /* ************************************ */
 

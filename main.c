@@ -852,7 +852,7 @@ int main(int argc, char *argv[]) {
    * In multithread mode, a separate thread handles packet sniffing
    */
 #ifndef MULTITHREADED
-  packetCaptureLoop(&lastTime, refreshRate);
+  packetCaptureLoop(&lastTime, myGlobals.refreshRate);
 #else
   startSniffer();
 #endif

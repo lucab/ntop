@@ -1456,7 +1456,7 @@ typedef struct ipSession {
   time_t lastSeen;                  /* time when the session has been closed    */
   u_long pktSent, pktRcvd;
   TrafficCounter bytesSent;         /* # bytes sent (initiator -> peer) [IP]    */
-  TrafficCounter bytesRcvd;     /* # bytes rcvd (peer -> initiator)[IP] */
+  TrafficCounter bytesRcvd;         /* # bytes rcvd (peer -> initiator)[IP] */
   TrafficCounter bytesProtoSent;    /* # bytes sent (Protocol [e.g. HTTP])      */
   TrafficCounter bytesProtoRcvd;    /* # bytes rcvd (Protocol [e.g. HTTP])      */
   TrafficCounter bytesFragmentedSent;     /* IP Fragments                       */

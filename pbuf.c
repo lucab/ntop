@@ -204,7 +204,8 @@ static void addContactedPeers(HostTraffic *sender,   u_int senderIdx,
   if(senderIdx == receiverIdx)
     return;
 
-  if((senderIdx != myGlobals.broadcastEntryIdx) && (senderIdx != myGlobals.otherHostEntryIdx)) {
+  if((senderIdx != myGlobals.broadcastEntryIdx)
+     && (senderIdx != myGlobals.otherHostEntryIdx)) {
     if(sender != NULL) {
       incrementUsageCounter(&sender->contactedSentPeers, receiverIdx, actualDeviceId);
     }
@@ -212,7 +213,8 @@ static void addContactedPeers(HostTraffic *sender,   u_int senderIdx,
 
   /* ******************************* */
 
-  if((receiverIdx != myGlobals.broadcastEntryIdx) && (receiverIdx != myGlobals.otherHostEntryIdx)) {
+  if((receiverIdx != myGlobals.broadcastEntryIdx) 
+     && (receiverIdx != myGlobals.otherHostEntryIdx)) {
     if(receiver != NULL) {
       incrementUsageCounter(&receiver->contactedRcvdPeers, senderIdx, actualDeviceId);
     }
@@ -474,14 +476,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
        )
       return;
 
-    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
-      if(srcHost->contactedRouters.peersIndexes[j] == routerIdx)
-	break;
-      else if(srcHost->contactedRouters.peersIndexes[j] == NO_PEER) {
-	srcHost->contactedRouters.peersIndexes[j] = routerIdx;
-	break;
-      }
-    }
+    incrementUsageCounter(&srcHost->contactedRouters, routerIdx, actualDeviceId);
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [idx=%d/%s/%s/%s]",
@@ -891,7 +886,7 @@ static void processIpPkt(const u_char *bp,
 	if((!myGlobals.borderSnifferMode) || nonFullyRemoteSession) {
 	  theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
 					srcHostIdx, sport, dstHostIdx,
-					dport, length, &tp, tcpDataLength,
+					dport, ntohs(ip.ip_len), &tp, tcpDataLength,
 					theData, actualDeviceId);
 	  if(theSession == NULL)
 	    isPassiveSession = 0;
