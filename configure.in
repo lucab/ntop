@@ -252,6 +252,11 @@ AC_ARG_ENABLE(ignoresigpipe,
               ac_enable_ignoresigpipe="yes",
               ac_enable_ignoresigpipe="no")
 
+AC_ARG_ENABLE(i18n,
+              [  --enable-i18n               Enable (limited) internationalization [default=disabled]],
+              ac_enable_i18n="yes",
+              ac_enable_i18n="no")
+
 dnl>
 dnl> Define the "WITH"s for package root directories ... deal with these later...
 dnl>
@@ -295,6 +300,11 @@ AC_ARG_WITH(  rrd-root,
               [  --with-rrd-root=DIR         RRD located in DIR],
               RRD_ROOT="$withval",
               RRD_ROOT=)
+
+AC_ARG_WITH(  localedir,
+              [  --with-localedir=DIR        LOCALE files located in DIR (i18n)],
+              LOCALEDIR="$withval",
+              LOCALEDIR=)
 
 AC_ARG_ENABLE(showoses,
               [  --enable-showoses           display OS Support information.],
@@ -600,10 +610,14 @@ case "${target}:${CC}" in
         CFLAGS="-no-cpp-precomp $CFLAGS"
       ;;
 
-    *-*-freebsd4*:*gcc* )
+    *-*-freebsd[[45]]*:*gcc* )
         VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.2-RELEASE"
         VERIFIED2="2.1.51:2002-10-25:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE"
+        VERIFIED2="2.1.55:2003-01-19:Burton Strauss <burton@ntopsupport.com>:5.0-RELEASE"
         DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
+        if test ".${LOCALEDIR}" = "."; then
+            LOCALEDIR="/usr/share/locale"
+        fi
       ;;
 
     *-*-freebsd*:* )
@@ -679,6 +693,11 @@ case "${target}:${CC}" in
         DEFINEOS="";          STATUS="UNKNOWN"
       ;;
 esac
+
+dnl> Last chance default (if there is an os-specific value, set it above)
+if test ".${LOCALEDIR}" = "."; then
+    LOCALEDIR="/usr/lib/locale"
+fi
 
 CFLAGS="-D${DEFINEOS} ${CFLAGS}"
 
@@ -1024,6 +1043,15 @@ else
 fi
 
 echo
+echo "Internationalization (i18n)?"
+if test ".$ac_enable_i18n" = ".yes"; then
+    echo "    ...Requested via command line option --enable-i18n."
+    AC_DEFINE_UNQUOTED(MAKE_WITH_I18N, 1, [Define for internationalization])
+else
+    echo "    ...(Default) Disabled. Request via command line option --enable-i18n"
+fi
+
+echo
 echo "Testing for headers..."
 echo
 echo "  Note: We do ALL the tests here, then trap problems below!"
@@ -1060,6 +1088,9 @@ AC_CHECK_HEADERS([pcap.h])
 
 dnl> Security related
 AC_CHECK_HEADERS([crypt.h pwd.h security/pam_appl.h shadow.h])
+
+dnl> i18n
+AC_CHECK_HEADERS([locale.h langinfo.h])
 
 ## Other
 AC_CHECK_HEADERS([dirent.h])
@@ -3302,6 +3333,8 @@ echo ${CC} ${CFLAGS} ${DEFS} | sed -e 's/.*/char * compiler_cflags   = "&";/' >>
 echo ${INCS} | sed -e 's/.*/char * include_path    = "&";/' >> version.c
 echo ${LDFLAGS} ${LIBS} | sed -e 's/.*/char * system_libs    = "&";/' >> version.c
 echo ${prefix} | sed -e 's/.*/char * install_path   = "&";/' >> version.c
+echo "/*i18n*/" >>version.c
+echo ${LOCALEDIR} | sed -e 's/.*/char * locale_dir   = "&";/' >> version.c
 
 echo
 echo "-------------------------------------------------------------------"

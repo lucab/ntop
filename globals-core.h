@@ -47,6 +47,9 @@ extern char *version, *osName, *author, *buildDate,
             *compiler_cflags,
             *include_path,
             *system_libs,
+#ifdef MAKE_WITH_I18N
+            *locale_dir,
+#endif
             *install_path;
 
 /* util.c */
@@ -445,7 +448,12 @@ extern void freeargv(char **argv);
 #if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
 #endif
- 
+
+#ifdef MAKE_WITH_I18N
+char *i18n_xvert_locale2common(const char *input);
+char *i18n_xvert_acceptlanguage2common(const char *input);
+#endif /* MAKE_WITH_I18N */ 
+
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);
 extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);

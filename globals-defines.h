@@ -297,6 +297,15 @@
 #undef MAKE_WITH_SEMAPHORES
 #endif
 
+/*
+ * Do we have the stuff we need for i18n?
+ */
+#ifdef MAKE_WITH_I18N
+ #if !defined(HAVE_LOCALE_H) || !defined(HAVE_LANGINFO_H)
+  #undef MAKE_WITH_I18N
+ #endif
+#endif
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* D E B U G  items                                                                */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -387,9 +396,13 @@
 /* #define IDLE_PURGE_DEBUG */
 
 /* HTTP_DEBUG logs the http sessions.  It logs HTTP/1... from source port 80
- * and anything to destination port 80.
+ * and anything to destination port 80.  Also http headers, etc.
  */
 /* #define HTTP_DEBUG */
+
+/* I18N_DEBUG logs the activities in and around internationalization (i18n).
+ */
+/* #define I18N_DEBUG */
 
 /* LSOF_DEBUG logs information about ntop's use of lsof
  */
@@ -935,6 +948,12 @@
  */
 #define MAX_LEN_SYM_HOST_NAME               64
 #define MAX_LEN_SYM_HOST_NAME_HTML          256
+
+/*
+ * i18n - maximum number of languages we'll support... and permit per request...
+ */
+#define MAX_LANGUAGES_REQUESTED             4
+#define MAX_LANGUAGES_SUPPORTED             8
 
 /*
  * Maximum number of node types (Appletalk, IPX) to record - see struct NonIPTraffic{}

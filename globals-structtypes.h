@@ -1472,5 +1472,13 @@ typedef struct ntopGlobals {
       specialHashLoadCollisions,
       ipxsapHashLoadCollisions;
 
+  /* i18n */
+#ifdef MAKE_WITH_I18N
+  char *defaultLanguage;
+  int  maxSupportedLanguages;
+  char *supportedLanguages[MAX_LANGUAGES_SUPPORTED];
+  char *strftimeFormat[MAX_LANGUAGES_SUPPORTED];
+#endif
+
 } NtopGlobals;
 

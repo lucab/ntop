@@ -347,6 +347,17 @@ static void allocateOtherHosts() {
 
 void initCounters(void) {
   int len, i;
+#ifdef MAKE_WITH_I18N
+  char *workLanguage;
+ #ifdef HAVE_DIRENT_H
+  struct dirent **dirList;
+  int j, iLang, nLang, found;
+  DIR *testDirEnt;
+  char buf[256];
+  char *tmpStr;
+  char* realLocale;
+ #endif
+#endif
 
   myGlobals.hashListSize = MAX_PER_DEVICE_HASH_LIST;
   myGlobals.numPurgedHosts = myGlobals.numTerminatedSessions = 0;
@@ -421,6 +432,175 @@ void initCounters(void) {
   myGlobals.sessionsCacheLenMax = 0;
   myGlobals.sessionsCacheReused = 0;
 #endif
+
+  /* i18n */
+#ifdef MAKE_WITH_I18N
+  /*
+   *  Obtain - from the os - the default locale.
+   */
+  workLanguage = setlocale(LC_ALL, "");
+  if (workLanguage != NULL ) {
+#ifdef I18N_DEBUG
+      traceEvent(CONST_TRACE_INFO,
+                 "I18N: Default language (from ntop host) is '%s' (raw)\n", 
+                 workLanguage);
+#endif
+      myGlobals.defaultLanguage = i18n_xvert_locale2common(workLanguage);
+      traceEvent(CONST_TRACE_INFO,
+                 "I18N: Default language (from ntop host) is '%s'\n", 
+                 myGlobals.defaultLanguage);
+  } else {
+      traceEvent(CONST_TRACE_INFO,
+                 "I18N: Default language (from ntop host) is unspecified\n"); 
+      myGlobals.defaultLanguage = NULL;
+  }
+  /*
+   *  We initialize the array, myGlobals.supportedLanguages[] as follows...
+   *    We scan the directory entries in LOCALDIR, fix 'em up and then
+   *    see if the ntop html directory /html_cc[_XX]) exists?
+   *
+   *  Those that do, up to the limit, are loaded in the list...
+   *
+   *  We do not load an empty or artificial en - the logic in http.c will
+   *  present the default page (in .../html) if no language specific one is found.
+   *
+   *  We strip because we're not ready to support multiple char sets.  We're pretty
+   *  much just UTF-8
+   *
+   */
+
+ #ifdef HAVE_DIRENT_H
+  nLang = scandir(locale_dir, &dirList, NULL, alphasort);
+  if (nLang < 0)
+      traceEvent(CONST_TRACE_ERROR,
+                 "I18N: Error obtaining locale list, scandir(%s,...) errno is %d\n", 
+                 locale_dir,
+                 errno);
+  else {
+  #ifdef I18N_DEBUG
+      traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: scandir(%s,...) returned %d\n", locale_dir, nLang);
+  #endif
+      for (iLang=0; (iLang<nLang) && (myGlobals.maxSupportedLanguages < MAX_LANGUAGES_SUPPORTED); iLang++) {
+  #ifdef I18N_DEBUG
+          traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: %2d. '%s'\n", iLang, dirList[iLang]->d_name);
+  #endif
+          if (dirList[iLang]->d_name[0] == '.') {
+              /* skip parent/self directory entries */
+              continue;
+          }
+
+          if ( (dirList[iLang]->d_type == DT_DIR) ||
+               (dirList[iLang]->d_type == DT_LNK) ) {
+              tmpStr = i18n_xvert_locale2common(dirList[iLang]->d_name);
+
+              if (!strcmp(myGlobals.defaultLanguage, tmpStr)) {
+                  /* skip default language */
+  #ifdef I18N_DEBUG
+              traceEvent(CONST_TRACE_INFO,
+                         "I18N_DEBUG: Skipping default language '%s' ('%s' raw)\n",
+                         tmpStr,
+                         dirList[iLang]->d_name);
+  #endif
+                  continue;
+              }
+
+              found=0;
+              for (i=0; (!found) && i<myGlobals.maxSupportedLanguages; i++) {
+                  if (!strcmp(tmpStr, myGlobals.supportedLanguages[i])) {
+  #ifdef I18N_DEBUG
+                      traceEvent(CONST_TRACE_INFO, 
+                                 "I18N_DEBUG: Skipping already supported language, '%s'\n",
+                                 dirList[iLang]->d_name);
+  #endif
+                      found=1;
+                      break;
+                  }
+              }
+              if (!found) {
+                  traceEvent(CONST_TRACE_INFO, 
+                             "I18N: Testing locale '%s' (from '%s')\n",
+                             tmpStr,
+                             dirList[iLang]->d_name);
+                  for(i=0; (!found) && (myGlobals.dataFileDirs[i] != NULL); i++) {
+
+    	              if (snprintf(buf, sizeof(buf), "%s/html_%s",
+                                   myGlobals.dataFileDirs[i],
+                                   tmpStr) < 0)
+    	                BufferTooShort();
+   #ifdef WIN32
+                      j=0;
+                      while (buf[j] != '\0') {
+                          if (buf[j] == '/') buf[j] = '\\';
+                          j++;
+                      }
+   #endif
+
+  #ifdef I18N_DEBUG
+                      traceEvent(CONST_TRACE_INFO, 
+                                 "I18N_DEBUG: Looking for directory '%s'\n",
+                                 buf);
+  #endif
+                      testDirEnt = opendir(buf);
+                      if (testDirEnt != NULL) {
+                          closedir(testDirEnt);
+
+                          realLocale = strdup(setlocale(LC_ALL, NULL));
+                          setlocale(LC_ALL, tmpStr);
+                          myGlobals.strftimeFormat[myGlobals.maxSupportedLanguages] = nl_langinfo(D_T_FMT);
+                          setlocale(LC_ALL, realLocale);
+                          free(realLocale);
+
+                          myGlobals.supportedLanguages[myGlobals.maxSupportedLanguages++] = strdup(tmpStr);
+                          found=1;
+                          traceEvent(CONST_TRACE_INFO,
+                                     "I18N: '%s' ntop language files found, is supported.\n",
+                                     tmpStr);
+                      }
+                  }
+
+                  if (!found) {
+                      traceEvent(CONST_TRACE_WARNING,
+                                 "I18N: '%s' ntop language files not found, is not supported.\n",
+                                 tmpStr);
+                  }
+
+                  free(tmpStr);
+
+   #ifdef I18N_DEBUG
+              } else {
+                  traceEvent(CONST_TRACE_INFO, 
+                             "I18N_DEBUG: Skipping duplicate locale '%s'\n",
+                             dirList[iLang]->d_name);
+   #endif
+              }
+
+  #ifdef I18N_DEBUG
+          } else {
+              traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Skipping file '%s' (type %d)\n", 
+                         dirList[iLang]->d_name,
+                         dirList[iLang]->d_type);
+  #endif
+          }
+      }
+      for (iLang=0; iLang<nLang; iLang++) {
+          free(dirList[iLang]);
+      }
+      free(dirList);
+  }
+
+ #else
+  traceEvent(CONST_TRACE_ERROR, 
+             "I18N: Unable to scan locales (missing dirent.h at compile time) - ntop continues\n");
+ #endif /* HAVE_DIRENT_H */
+
+  traceEvent(CONST_TRACE_INFO, 
+             "I18N: This instance of ntop supports %d additional language(s)\n",
+             myGlobals.maxSupportedLanguages);
+#else
+  traceEvent(CONST_TRACE_INFO, 
+             "I18N: This instance of ntop does not support multiple languages\n");
+#endif /* MAKE_WITH_I18N */
+
 }
 
 

@@ -102,12 +102,41 @@ static struct in_addr *requestFrom;
 /* ************************* */
 
 /* Forward */
-static int readHTTPheader(char* theRequestedURL, int theRequestedURLLen, char *thePw, int thePwLen, char *theAgent, int theAgentLen);
+#ifdef MAKE_WITH_I18N
+static int readHTTPheader(char* theRequestedURL,
+                          int theRequestedURLLen,
+                          char *thePw,
+                          int thePwLen,
+                          char *theAgent,
+                          int theAgentLen,
+                          char *theLanguage,
+                          int theLanguageLen);
+static int returnHTTPPage(char* pageName,
+                          int postLen,
+                          struct in_addr *from,
+			  struct timeval *httpRequestedAt,
+                          int *usedFork,
+                          char *agent,
+                          char *requestedLanguage[],
+                          int numLang);
+#else
+static int readHTTPheader(char* theRequestedURL,
+                          int theRequestedURLLen,
+                          char *thePw,
+                          int thePwLen,
+                          char *theAgent,
+                          int theAgentLen);
+static int returnHTTPPage(char* pageName,
+                          int postLen,
+                          struct in_addr *from,
+			  struct timeval *httpRequestedAt,
+                          int *usedFork,
+                          char *agent);
+#endif
+
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
 static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent);
 static void returnHTTPspecialStatusCode(int statusIdx);
-static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
-			  struct timeval *httpRequestedAt, int *usedFork, char *agent);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 
 #ifdef HAVE_ZLIB
@@ -137,10 +166,19 @@ char* printSSLError(int errorId) {
 
 /* ************************* */
 
+#ifdef MAKE_WITH_I18N
+static int readHTTPheader(char* theRequestedURL,
+                          int theRequestedURLLen,
+                          char *thePw, int thePwLen,
+                          char *theAgent, int theAgentLen,
+                          char *theLanguage, int theLanguageLen) {
+#else
 static int readHTTPheader(char* theRequestedURL,
                           int theRequestedURLLen,
                           char *thePw, int thePwLen,
                           char *theAgent, int theAgentLen) {
+#endif
+
 #ifdef HAVE_OPENSSL
   SSL* ssl = getSSLsocket(-myGlobals.newSock);
 #endif
@@ -287,6 +325,11 @@ static int readHTTPheader(char* theRequestedURL,
 		  && (strncasecmp(lineStr, "Accept-Encoding: ", 17) == 0)) {
 	  if(strstr(&lineStr[17], "gzip"))
 	    acceptGzEncoding = 1;
+#endif
+#ifdef MAKE_WITH_I18N
+	} else if((idxChar >= 17)
+		  && (strncasecmp(lineStr, "Accept-Language: ", 17) == 0)) {
+	  strncpy(theLanguage, &lineStr[17], theLanguageLen-1)[theLanguageLen-1] = '\0';
 #endif
 	} else if((idxChar >= 16)
 		  && (strncasecmp(lineStr, "Content-Length: ", 16) == 0)) {
@@ -617,6 +660,7 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
    else
      msSpent = 0;
 
+   /* Use en standard for this per RFC */
    strftime(theDate, sizeof(theDate), "%d/%b/%Y:%H:%M:%S", localtime_r(&myGlobals.actTime, &t));
 
    gmtoffset =  (myGlobals.thisZone < 0) ? -myGlobals.thisZone : myGlobals.thisZone;
@@ -784,6 +828,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
        sendString("\r\n");
   }
 
+  /* Use en standard for this per RFC */
   strftime(theDate, sizeof(theDate)-1, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
   theDate[sizeof(theDate)-1] = '\0';
   if(snprintf(tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate) < 0)
@@ -1047,8 +1092,24 @@ static RETSIGTYPE quitNow(int signo _UNUSED_) {
 
 /* **************************************** */
 
-static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
-			  struct timeval *httpRequestedAt, int *usedFork, char *agent) {
+#ifdef MAKE_WITH_I18N
+static int returnHTTPPage(char* pageName,
+                          int postLen,
+                          struct in_addr *from,
+			  struct timeval *httpRequestedAt,
+                          int *usedFork,
+                          char *agent,
+                          char *requestedLanguage[],
+                          int numLang) {
+#else
+static int returnHTTPPage(char* pageName,
+                          int postLen,
+                          struct in_addr *from,
+			  struct timeval *httpRequestedAt,
+                          int *usedFork,
+                          char *agent) {
+#endif
+
   char *questionMark;
   int sortedColumn = 0, printTrailer=1, idx;
   int errorCode=0, pageNum = 0, found=0, portNr=0;
@@ -1060,6 +1121,10 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
   struct tm t;
 #ifdef WIN32
   int i;
+#endif
+
+#ifdef MAKE_WITH_I18N
+  int lang;
 #endif
 
   *usedFork = 0;
@@ -1119,13 +1184,53 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
   if (strncmp(pageName, STR_W3C_P3P_XML, strlen(STR_W3C_P3P_XML)) == 0)
     strncpy(pageName, STR_NTOP_P3P, sizeof(STR_NTOP_P3P));
 
-  /* Search in the local directory first... */
-  for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
-    if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s",
-		myGlobals.dataFileDirs[idx], pageName) < 0)
-      BufferTooShort();
-	
-      /* traceEvent(CONST_TRACE_ERROR, "Searching '%s'\n", tmpStr); */
+  /*
+   * Search for an .html file (ahead of the internally generated text)
+   *
+   *   We execute the following tests for the file
+   *    0..n. look for a -<language> version based on the Accept-Language: value(s) from the user
+   *    n+1.  look for a -<language> version based on the host's default setlocale() value
+   *    n+2.  look for a default english version (no - tag)
+   *
+   *   For each directory in the list.
+   *
+   */
+
+#ifdef MAKE_WITH_I18N
+  for(lang=0; (!found) && lang < numLang + 2; lang++) {
+#endif
+    for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
+#ifdef MAKE_WITH_I18N
+      if (lang == numLang) {
+          if (myGlobals.defaultLanguage == NULL) {
+            continue;
+          }
+          if(snprintf(tmpStr, sizeof(tmpStr), 
+                      "%s/html_%s/%s",
+                      myGlobals.dataFileDirs[idx],
+                      myGlobals.defaultLanguage,
+                      pageName) < 0)
+            BufferTooShort();
+      } else if (lang == numLang+1) {
+#endif
+        if(snprintf(tmpStr, sizeof(tmpStr), 
+                   "%s/html/%s",
+                    myGlobals.dataFileDirs[idx],
+                    pageName) < 0)
+          BufferTooShort();
+#ifdef MAKE_WITH_I18N
+      } else {
+          if (requestedLanguage[lang] == NULL) {
+            continue;
+          }
+          if(snprintf(tmpStr, sizeof(tmpStr), 
+                      "%s/html_%s/%s",
+                      myGlobals.dataFileDirs[idx],
+                      requestedLanguage[lang],
+                      pageName) < 0)
+            BufferTooShort();
+      }
+#endif
 	
 #ifdef WIN32
       i=0;
@@ -1133,6 +1238,10 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	if(tmpStr[i] == '/') tmpStr[i] = '\\';
 	i++;
       }
+#endif
+
+#if defined(HTTP_DEBUG) || defined(I18N_DEBUG)
+      traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: Testing for page %s at %s\n", pageName, tmpStr);
 #endif
 	
       if(stat(tmpStr, &statbuf) == 0) {
@@ -1143,7 +1252,11 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 
 	traceEvent(CONST_TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
       }
+
+#ifdef MAKE_WITH_I18N
     }
+#endif
+  }
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: tmpStr=%s - fd=0x%x\n", tmpStr, fd);
@@ -1180,6 +1293,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 
     if(myGlobals.actTime > statbuf.st_mtime) { /* just in case the system clock is wrong... */
         theTime = statbuf.st_mtime - myGlobals.thisZone;
+        /* Use en standard for this per RFC */
         strftime(theDate, sizeof(theDate)-1, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
         theDate[sizeof(theDate)-1] = '\0';
         if(snprintf(tmpStr, sizeof(tmpStr), "Last-Modified: %s\r\n", theDate) < 0)
@@ -2069,9 +2183,17 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 void handleHTTPrequest(struct in_addr from) {
   int skipLeading, postLen, usedFork = 0;
   char requestedURL[MAX_LEN_URL], pw[64], agent[256];
+
   int rc, i;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
+
+#ifdef MAKE_WITH_I18N
+  char workLanguage[256];
+  int numLang = 0;
+  char *requestedLanguage[MAX_LANGUAGES_REQUESTED];
+  char *workSemi;
+#endif
 
   myGlobals.numHandledHTTPrequests++;
 
@@ -2107,6 +2229,10 @@ void handleHTTPrequest(struct in_addr from) {
   memset(pw, 0, sizeof(pw));
   memset(agent, 0, sizeof(agent));
 
+#ifdef MAKE_WITH_I18N
+  memset(requestedLanguage, 0, sizeof(requestedLanguage));
+#endif
+
   httpBytesSent = 0;
 
 #ifdef HAVE_ZLIB
@@ -2115,11 +2241,32 @@ void handleHTTPrequest(struct in_addr from) {
   acceptGzEncoding = 0;
 #endif
 
- postLen = readHTTPheader(requestedURL, sizeof(requestedURL), pw, sizeof(pw), agent, sizeof(agent));
+#ifdef MAKE_WITH_I18N
+ postLen = readHTTPheader(requestedURL,
+                          sizeof(requestedURL),
+                          pw,
+                          sizeof(pw),
+                          agent,
+                          sizeof(agent),
+                          workLanguage,
+                          sizeof(workLanguage));
+#else
+ postLen = readHTTPheader(requestedURL,
+                          sizeof(requestedURL),
+                          pw,
+                          sizeof(pw),
+                          agent,
+                          sizeof(agent));
+#endif
 
-#ifdef DEBUG
- traceEvent(CONST_TRACE_INFO, "DEBUG: Requested URL = '%s', length = %d\n", requestedURL, postLen);
- traceEvent(CONST_TRACE_INFO, "DEBUG: User-Agent = '%s'\n", agent);
+#if defined(HTTP_DEBUG) || defined(I18N_DEBUG)
+ traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: Requested URL = '%s', length = %d\n", requestedURL, postLen);
+ traceEvent(CONST_TRACE_INFO, "HTTP/I18N_DEBUG: User-Agent = '%s'\n", agent);
+
+ #ifdef MAKE_WITH_I18N
+  traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Accept-Language = '%s'\n", workLanguage);
+ #endif
+
 #endif
 
   if(postLen >= -1) {
@@ -2155,6 +2302,31 @@ void handleHTTPrequest(struct in_addr from) {
 
   myGlobals.actTime = time(NULL); /* Don't forget this */
 
+/*
+ *  Process Accept-Language  - load requestedLanguage[] from workLanguage
+ */
+#ifdef MAKE_WITH_I18N
+  if (workLanguage != NULL) {
+    char *tmpStr, *strtokState;
+    tmpStr = strtok_r(workLanguage, ",", &strtokState);
+    while(tmpStr != NULL) {
+        /* Skip leading blanks */
+        while (tmpStr[0] == ' ') tmpStr++;
+        /* Stop at the ; */
+        workSemi = strchr(tmpStr, ';');
+        if(workSemi != NULL) {
+            workSemi[0] = '\0';
+        }
+        requestedLanguage[numLang++] = i18n_xvert_acceptlanguage2common(tmpStr);
+        if (numLang > MAX_LANGUAGES_REQUESTED) {
+            tmpStr = NULL;
+        } else {
+            tmpStr = strtok_r(NULL, ",", &strtokState);
+        }
+    }
+  }
+#endif
+
   skipLeading = 0;
   while (requestedURL[skipLeading] == '/') {
     skipLeading++;
@@ -2163,9 +2335,26 @@ void handleHTTPrequest(struct in_addr from) {
   if(requestedURL[0] == '\0')
     returnHTTPpageNotFound(0);
 
+#ifdef MAKE_WITH_I18N
+
+ #ifdef I18N_DEBUG
+  for (i=0; i<numLang; i++) {
+      traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Requested Language [%d] = '%s'\n",
+                 i,
+                 requestedLanguage[i]);
+  }
+ #endif
+
   rc = returnHTTPPage(&requestedURL[1], postLen,
 		      &from, &httpRequestedAt, &usedFork,
-                      agent) ;
+                      agent,
+                      requestedLanguage,
+                      numLang);
+#else
+  rc = returnHTTPPage(&requestedURL[1], postLen,
+		      &from, &httpRequestedAt, &usedFork,
+                      agent);
+#endif
   
   if(rc == 0) {
 #if defined(HAVE_ZLIB)

@@ -418,7 +418,13 @@ ntop.h
  #include "ntop_win32.h"
 #endif
 
-
+/*
+ * i18n
+ */
+#ifdef MAKE_WITH_I18N
+ #include <locale.h>
+ #include <langinfo.h>
+#endif
 
 /* Now the external functions, using the above... */
 #include "globals-core.h"

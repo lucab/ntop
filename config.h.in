@@ -183,6 +183,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the <langinfo.h> header file. */
+#undef HAVE_LANGINFO_H
+
 /* Define to 1 if you have the `c' library (-lc). */
 #undef HAVE_LIBC
 
@@ -248,6 +251,9 @@
 
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
+
+/* Define to 1 if you have the <locale.h> header file. */
+#undef HAVE_LOCALE_H
 
 /* Define to 1 if you have the `localtime_r' function. */
 #undef HAVE_LOCALTIME_R
@@ -570,6 +576,9 @@
 
 /* Define to build micro ntop */
 #undef MAKE_MICRO_NTOP
+
+/* Define for internationalization */
+#undef MAKE_WITH_I18N
 
 /* Define for IGNORE of SIGPIPE */
 #undef MAKE_WITH_IGNORE_SIGPIPE

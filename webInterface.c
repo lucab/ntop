@@ -1907,7 +1907,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
 /* ******************************** */
 
 void printNtopConfigInfo(int textPrintFlag) {
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], buf2[LEN_GENERAL_WORK_BUFFER];
   int i;
   int bufLength, bufPosition, bufUsed;
 
@@ -2669,7 +2669,71 @@ void printNtopConfigInfo(int textPrintFlag) {
              ) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "GNU C (gcc) version", buf);
+
+  sendString(texthtml("\n\nInternationalization (i18n)\n\n", "<tr><th colspan=\"2\"" TH_BG ">Internationalization (i18n)</tr>\n"));
+
+  printFeatureConfigInfo(textPrintFlag, "i18n enabled",
+#ifdef MAKE_WITH_I18N
+                         "Yes"
+#else
+                         "No"
 #endif
+  );
+
+#ifdef MAKE_WITH_I18N
+
+  if (textPrintFlag == TRUE) {
+    printFeatureConfigInfo(textPrintFlag, "HAVE_LOCALE_H",
+ #ifdef HAVE_LOCALE_H
+                           "present"
+ #else
+                           "absent"
+ #endif
+                           );
+
+    printFeatureConfigInfo(textPrintFlag, "HAVE_LANGINFO_H",
+ #ifdef HAVE_LANGINFO_H
+                           "present"
+ #else
+                           "absent"
+ #endif
+                           );
+
+    printFeatureConfigInfo(textPrintFlag, "Locale directory (version.c)", locale_dir);
+  }
+
+  if (textPrintFlag == TRUE) {
+    if (snprintf(buf, sizeof(buf),
+                 "globals-defines.h: #define MAX_LANGUAGES_REQUESTED %d",
+                 MAX_LANGUAGES_REQUESTED) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Languages - per request (Accept-Language:)", buf);
+    if (snprintf(buf, sizeof(buf),
+                 "globals-defines.h: #define MAX_LANGUAGES_SUPPORTED %d",
+                 MAX_LANGUAGES_SUPPORTED) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Languages supported - maximum", buf);
+  }
+
+  if (snprintf(buf, sizeof(buf), "%d", myGlobals.maxSupportedLanguages + 1) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Languages supported - actual ", buf);
+
+  printFeatureConfigInfo(textPrintFlag, "Default language", myGlobals.defaultLanguage);
+
+  for (i=0; i< myGlobals.maxSupportedLanguages; i++) {
+    if (snprintf(buf, sizeof(buf), "Additional language %d", i+1) < 0)
+        BufferTooShort();
+    if (snprintf(buf2, sizeof(buf2), "'%s', time format '%s'", 
+                 myGlobals.supportedLanguages[i],
+                 myGlobals.strftimeFormat[i]) < 0)
+        BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, buf, buf2);
+  }
+
+#endif
+
+#endif /* MICRO_NTOP */
 
   /* *************************** */
 
