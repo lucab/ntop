@@ -317,17 +317,6 @@ void printTrafficStatistics(void) {
 	  BufferTooShort();
 	sendString(buf);
       }
-
-#ifdef CFG_MULTITHREADED
-      if(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value > 0) {
-	if(snprintf(buf, sizeof(buf), "<tr "TR_ON" %s><TH "TH_BG" align=left>"
-		    "Dropped&nbsp;by&nbsp;ntop</th>"
-		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		    getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value)) < 0)
-	  BufferTooShort();
-	sendString(buf);
-      }
-#endif
     }
 
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Unicast</th>"
