@@ -499,3 +499,4 @@ extern void termNetFlowExporter();
 extern void sendICMPflow(HostTraffic *srcHost, HostTraffic *dstHost, u_int length);
 extern void sendUDPflow(HostTraffic *srcHost, HostTraffic *dstHost, 
 			u_int sport, u_int dport, u_int length);
+extern void sendTCPSessionFlow(IPSession *theSession);
