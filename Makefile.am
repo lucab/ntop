@@ -55,10 +55,10 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 
 SUBDIRS = . @PLUGINS@ @INTOP@ @REMOTEINTERFACE@
 
-DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FAQ FILES HACKING \
-              KNOWN_BUGS MANIFESTO NEWS PORTING  \
+DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog FILES \
+              MANIFESTO NEWS PORTING  \
               SUPPORT_NTOP.txt \
-              THANKS THREADS-FAQ TODO \
+              THANKS \
               ntop.8 ntop.txt ntop.html \
               ntop-cert.pem ntop-rules.8 rules.sample
 
@@ -131,7 +131,7 @@ libntop_la_LIBADD       = $(CORELIBS)
 libntop_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
 
 # Archive for http representation, or the 'viewer'
-libntopreport_la_SOURCES = admin.c \
+libntopreport_la_SOURCES = admin.c emitter.c \
                            globals-report.c \
                            graph.c \
                            http.c  \
