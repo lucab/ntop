@@ -50,23 +50,23 @@ static void updateThptStats(int deviceToUpdate,
 #endif
 
   /* We never check enough... */
-  if(topSentSerial == FLAG_NO_PEER) 
+  if(emptySerial(&topSentSerial)) 
     return;
 
-  if(topRcvdSerial == FLAG_NO_PEER) 
+  if(emptySerial(&topRcvdSerial))
     return;
 
-  if(secondSentSerial == FLAG_NO_PEER) 
-    secondSentSerial = 0;
+  if(emptySerial(&secondSentSerial))
+      setEmptySerial(&secondSentSerial);
 
-  if(thirdSentSerial == FLAG_NO_PEER)
-    thirdSentSerial = 0;
+  if(emptySerial(&thirdSentSerial))
+      setEmptySerial(&thirdSentSerial);
 
-  if(secondRcvdSerial == FLAG_NO_PEER)
-    secondRcvdSerial = 0;
+  if(emptySerial(&secondRcvdSerial))
+      setEmptySerial(&secondRcvdSerial);
 
-  if(thirdRcvdSerial == FLAG_NO_PEER)
-    thirdRcvdSerial = 0;
+  if(emptySerial(&thirdRcvdSerial))
+      setEmptySerial(&thirdRcvdSerial);
 
   for(i=58; i>=0; i--)
     memcpy(&myGlobals.device[deviceToUpdate].last60MinutesThpt[i+1],
@@ -110,16 +110,16 @@ static void updateThptStats(int deviceToUpdate,
 
   myGlobals.device[deviceToUpdate].last60MinutesThptIdx = (myGlobals.device[deviceToUpdate].last60MinutesThptIdx+1) % 60;
 
-  if(topHourSentSerial != FLAG_NO_PEER) { 
+  if(!emptySerial(&topHourSentSerial)) { 
     /* It wrapped -> 1 hour is over */
     float average=0;
 
-    if(topHourSentSerial == FLAG_NO_PEER) return;
-    if(topHourRcvdSerial == FLAG_NO_PEER) return;
-    if(secondHourSentSerial == FLAG_NO_PEER) secondHourSentSerial = 0;
-    if(thirdHourSentSerial == FLAG_NO_PEER)  thirdHourSentSerial = 0;
-    if(secondHourRcvdSerial == FLAG_NO_PEER) secondHourRcvdSerial = 0;
-    if(thirdHourRcvdSerial == FLAG_NO_PEER)  thirdHourRcvdSerial = 0;
+    if(emptySerial(&topHourSentSerial)) return;
+    if(emptySerial(&topHourRcvdSerial)) return;
+    if(emptySerial(&secondHourSentSerial)) secondHourSentSerial.serialType = 0;
+    if(emptySerial(&thirdHourSentSerial))  thirdHourSentSerial.serialType = 0;
+    if(emptySerial(&secondHourRcvdSerial)) secondHourRcvdSerial.serialType = 0;
+    if(emptySerial(&thirdHourRcvdSerial))  thirdHourRcvdSerial.serialType = 0;
 
     for(i=0; i<60; i++) {
       average += myGlobals.device[deviceToUpdate].last60MinutesThpt[i].trafficValue;
@@ -201,12 +201,16 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   u_int idx;
   HostTraffic *el, *topHost;
   float topThpt;
-  HostSerial topSentSerial=FLAG_NO_PEER, secondSentSerial=FLAG_NO_PEER, thirdSentSerial=FLAG_NO_PEER;
-  HostSerial topHourSentSerial=FLAG_NO_PEER, secondHourSentSerial=FLAG_NO_PEER, thirdHourSentSerial=FLAG_NO_PEER;
-  HostSerial topRcvdSerial=FLAG_NO_PEER, secondRcvdSerial=FLAG_NO_PEER, thirdRcvdSerial=FLAG_NO_PEER;
-  HostSerial topHourRcvdSerial=FLAG_NO_PEER, secondHourRcvdSerial=FLAG_NO_PEER, thirdHourRcvdSerial=FLAG_NO_PEER;
+  HostSerial topSentSerial, secondSentSerial, thirdSentSerial;
+  HostSerial topHourSentSerial, secondHourSentSerial, thirdHourSentSerial;
+  HostSerial topRcvdSerial, secondRcvdSerial, thirdRcvdSerial;
+  HostSerial topHourRcvdSerial, secondHourRcvdSerial, thirdHourRcvdSerial;
   short updateMinThpt, updateHourThpt;
-
+  
+  setEmptySerial(&topSentSerial.serialType), setEmptySerial(&secondSentSerial.serialType), setEmptySerial(&thirdSentSerial.serialType);
+  setEmptySerial(&topHourSentSerial.serialType), setEmptySerial(&secondHourSentSerial.serialType), setEmptySerial(&thirdHourSentSerial.serialType);
+  setEmptySerial(&topRcvdSerial.serialType), setEmptySerial(&secondRcvdSerial.serialType), setEmptySerial(&thirdRcvdSerial.serialType);
+  setEmptySerial(&topHourRcvdSerial.serialType), setEmptySerial(&secondHourRcvdSerial.serialType), setEmptySerial(&thirdHourRcvdSerial.serialType);
 
   timeDiff = myGlobals.actTime-myGlobals.device[deviceToUpdate].lastThptUpdate;
 
@@ -333,7 +337,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
       el->averageTPktThpt    = ((float)el->pktRcvdSession.value+
 				(float)el->pktSentSession.value)/totalTime;
 
-      if(topSentSerial == FLAG_NO_PEER) {
+      if(emptySerial(&topSentSerial)) {
 	if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
 	  topSentSerial = el->hostSerial;
       } else {
@@ -345,7 +349,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 	    topSentSerial = el->hostSerial;
 	  }
 	} else {
-	  if(secondSentSerial == FLAG_NO_PEER) {
+	    if(emptySerial(&secondSentSerial)) {
 	    if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
 	      secondSentSerial = el->hostSerial;
 	  } else {
@@ -357,7 +361,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 		secondSentSerial = el->hostSerial;
 	      }
 	    } else {
-	      if(thirdSentSerial == FLAG_NO_PEER) {
+		if(emptySerial(&thirdSentSerial)) {
 		if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) {
 		  thirdSentSerial = el->hostSerial;
 		}
@@ -375,7 +379,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 	}
       }
 
-      if(topRcvdSerial == FLAG_NO_PEER) {
+      if(emptySerial(&topRcvdSerial)) {
 	if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry)) 
 	  topRcvdSerial = el->hostSerial;
       } else {
@@ -387,7 +391,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 	    topRcvdSerial = el->hostSerial;
 	  }
 	} else {
-	  if(secondRcvdSerial == FLAG_NO_PEER) {
+	    if(emptySerial(&secondRcvdSerial)) {
 	    if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
 	      secondRcvdSerial = el->hostSerial;
 	  } else {
@@ -399,7 +403,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 		secondRcvdSerial = el->hostSerial;
 	      }
 	    } else {
-	      if(thirdRcvdSerial == FLAG_NO_PEER) {
+		if(emptySerial(&thirdRcvdSerial)) {
 		if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
 		  thirdRcvdSerial = el->hostSerial;
 	      } else {
@@ -421,7 +425,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 	el->lastHourBytesRcvd = el->bytesRcvd;
 	el->lastHourBytesSent = el->bytesSent;
 
-	if(topHourSentSerial == FLAG_NO_PEER) {
+	if(emptySerial(&topHourSentSerial)) {
 	  topHourSentSerial = el->hostSerial;
 	} else {
 	  topHost = findHostBySerial(topHourSentSerial, deviceToUpdate); 
@@ -430,7 +434,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 	    secondHourSentSerial = topHourSentSerial;
 	    topHourSentSerial = el->hostSerial;
 	  } else {
-	    if(secondHourSentSerial == FLAG_NO_PEER) {
+	      if(emptySerial(&secondHourSentSerial)) {
 	      secondHourSentSerial = el->hostSerial;
 	    } else {
 	      topHost = findHostBySerial(secondHourSentSerial, deviceToUpdate); 
@@ -439,7 +443,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 		thirdHourSentSerial = secondHourSentSerial;
 		secondHourSentSerial = el->hostSerial;
 	      } else {
-		if(thirdHourSentSerial == FLAG_NO_PEER) {
+		  if(emptySerial(&thirdHourSentSerial)) {
 		  thirdHourSentSerial = el->hostSerial;
 		} else {
 		  topHost = findHostBySerial(thirdHourSentSerial, deviceToUpdate); 
@@ -454,7 +458,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 	  }
 	}
 
-	if(topHourRcvdSerial == FLAG_NO_PEER) {
+	if(emptySerial(&topHourRcvdSerial)) {
 	  topHourRcvdSerial = el->hostSerial;
 	} else {
 	  topHost = findHostBySerial(topHourRcvdSerial, deviceToUpdate); 
@@ -464,7 +468,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 	    secondHourRcvdSerial = topHourRcvdSerial;
 	    topHourRcvdSerial = el->hostSerial;
 	  } else {
-	    if(secondHourRcvdSerial == FLAG_NO_PEER) {
+	      if(emptySerial(&secondHourRcvdSerial)) {
 	      secondHourRcvdSerial = el->hostSerial;
 	    } else {
 	      topHost = findHostBySerial(secondHourRcvdSerial, deviceToUpdate); 
@@ -474,7 +478,7 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
 		thirdHourRcvdSerial = secondHourRcvdSerial;
 		secondHourRcvdSerial = el->hostSerial;
 	      } else {
-		if(thirdHourRcvdSerial == FLAG_NO_PEER) {
+		  if(emptySerial(&thirdHourRcvdSerial)) {
 		  thirdHourRcvdSerial = el->hostSerial;
 		} else {
 		  topHost = findHostBySerial(thirdHourRcvdSerial, deviceToUpdate); 
@@ -493,10 +497,10 @@ void updateDeviceThpt(int deviceToUpdate, int quickUpdate) {
   }
 
   if((updateMinThpt || updateHourThpt) 
-     && ((topSentSerial        != FLAG_NO_PEER) 
-	 || (topHourSentSerial != FLAG_NO_PEER)
-	 || (topRcvdSerial     != FLAG_NO_PEER)
-	 || (topHourRcvdSerial != FLAG_NO_PEER)))
+     && ((!emptySerial(&topSentSerial))
+	 || (!emptySerial(&topHourSentSerial))
+	 || (!emptySerial(&topRcvdSerial))
+	 || (!emptySerial(&topHourRcvdSerial))))
     updateThptStats(deviceToUpdate,
 		    topSentSerial, secondSentSerial, thirdSentSerial,
 		    topHourSentSerial, secondHourSentSerial, thirdHourSentSerial,
