@@ -39,15 +39,28 @@ exec_prefix = ${prefix}
 BINDEST = ${exec_prefix}/sbin
 # Pathname of directory to install the man page
 MANDEST = ${prefix}/man
+# VERSION # below is placed in version.c
 VERSION=2.0.99RC2+
-OSNAME=Windows-MinGW
+# osName is set in ntop_win32.c based on the OS at execution.
 
-INC_GDBM=-Ic:/scott/include
-INC_WPDPACK=-Ic:/scott/src/wpdpack/include
+#
+# The items below will probably need adjustment.
+#
+
+#  Default assumes you've installed MinGW into c:/MinGW and
+#  unzipped WPdpack_2_3.zip into c:/MinGW preserving folder names.
+
+INC_GDBM=-Ic:/MinGW/include
+LIB_GDBM=-Lc:/MinGW/lib
+
+INC_WPDPACK=-Ic:/MinGW/wpdpack/include
+LIB_WPDPACK=-Lc:/MinGW/wpdpack/lib
+
+#
+# You might need to edit these.
+#
+
 INC_GDCHART=-I../gdchart0.94c
-
-LIB_GDBM=-Lc:/scott/lib
-LIB_WPDPACK=-Lc:/scott/src/wpdpack/lib
 
 LDIRS = $(LIB_WPDPACK) \
 	$(LIB_GDBM) \
