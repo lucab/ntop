@@ -1996,7 +1996,7 @@ void printNtopConfigInfo(int textPrintFlag) {
                            NTOP_DEFAULT_ACCESS_LOG_PATH);
 
   printParameterConfigInfo(textPrintFlag, "-b | --disable-decoders",
-                           myGlobals.enablePacketDecoding == 1 ? "Yes" : "No",
+                           myGlobals.enablePacketDecoding == 1 ? "No" : "Yes",
                            "No");
 
   printParameterConfigInfo(textPrintFlag, "-c | --sticky-hosts",
