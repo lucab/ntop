@@ -38,7 +38,7 @@ static unsigned long clr[] = { 0x0000FF, 0x00FF00, 0xFF0000,
 /* ************************ */
 
 void pktSizeDistribPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[7];
   char	*lbl[] = { "", "", "", "", "", "", "" };
   int len, num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
@@ -130,7 +130,7 @@ void pktSizeDistribPie(void) {
 /* ************************ */
 
 void ipProtoDistribPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };
   int len, num=0, expl[] = { 0, 20, 30 };
@@ -201,7 +201,7 @@ void ipProtoDistribPie(void) {
 /* ************************ */
 
 void interfaceTrafficPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[MAX_NUM_DEVICES];
   int i, len, expl[MAX_NUM_DEVICES];
   FILE *fd;
@@ -273,7 +273,7 @@ void interfaceTrafficPie(void) {
 /* ************************ */
 
 void pktCastDistribPie(void) {
-  char tmpStr[256], fileName[64] = "graph-XXXXXX";
+  char tmpStr[256], fileName[64] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "", "", "" };
   int len, num=0, expl[] = { 0, 20, 30 };
@@ -349,7 +349,7 @@ void pktCastDistribPie(void) {
 /* ************************ */
 
 void drawTrafficPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   TrafficCounter ip, nonIp;
   float p[2];
   char	*lbl[] = { "IP", "Non IP" };
@@ -407,7 +407,7 @@ void drawTrafficPie(void) {
 /* ************************ */
 
 void drawThptGraph(int sortedColumn) {
-  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   int i, len;
   char  labels[60][32];
   char  *lbls[60];
@@ -570,7 +570,7 @@ void drawThptGraph(int sortedColumn) {
 /* ************************ */
 
 void drawGlobalProtoDistribution(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   TrafficCounter ip, nonIp;
   int len, totLen;
   float p[256]; /* Fix courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
@@ -657,7 +657,7 @@ void drawGlobalProtoDistribution(void) {
 /* ************************ */
 
 void drawGlobalIpProtoDistribution(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "graph-XXXXXX";
+  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   int len, i, idx=0;
   float p[256];
   unsigned long sc = 0xC8C8FF;

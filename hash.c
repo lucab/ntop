@@ -775,7 +775,7 @@ void purgeIdleHosts(int ignoreIdleTime) {
   for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++)
     if((device[actualDeviceId].hash_hostTraffic[idx] != NULL)
        && (device[actualDeviceId].hash_hostTraffic[idx]->instanceInUse == 0)
-       && (!subnetLocalHost(device[actualDeviceId].hash_hostTraffic[idx]))) {
+       && (!subnetPseudoLocalHost(device[actualDeviceId].hash_hostTraffic[idx]))) {
 
       if(ignoreIdleTime)
 	freeEntry=1;

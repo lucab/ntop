@@ -798,7 +798,7 @@ static void printIcmpHostPkts(struct in_addr hostIpAddress,
 /* ******************************* */
 
 static void handleIcmpWatchHTTPrequest(char* url) {
-  char buf[1024], anchor[256], fileName[NAME_MAX] = "ntop-icmpPlugin-XXXXXX";
+  char buf[1024], anchor[256], fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX";
   char *sign = "-";
   char *pluginName = "<A HREF=/plugins/icmpWatch";
   u_int i, revertOrder=0, num;
