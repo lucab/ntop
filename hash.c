@@ -771,7 +771,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	if(symEthName[0] != '\0') {
 	  char buf[MAX_HOST_SYM_NAME_LEN_HTML];
 
-	  if(snprintf(buf, sizeof(buf), "%s <IMG SRC=\"/card.gif\" ALT=\"Network Interface Card (NIC)\"  BORDER=0>", symEthName) < 0)
+	  if(snprintf(buf, sizeof(buf), "%s <IMG SRC=\"/card.gif\" ALT=\"NIC\"  BORDER=0>", symEthName) < 0)
 	    BufferTooShort();
 
 	  buf[MAX_HOST_SYM_NAME_LEN-1] = '\0';

@@ -2266,9 +2266,15 @@ void processPacket(u_char *_deviceId,
   if((!myGlobals.borderSnifferMode)
      && (myGlobals.flowsList != NULL) /* Handle flows last */)
     flowsProcess(h, p, deviceId);
-
+  
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
+
+  if(myGlobals.resetHashNow == 1) {
+    traceEvent(TRACE_INFO, "Resetting stats");
+    resetStats();
+    myGlobals.resetHashNow = 0;
+  }
 }
 

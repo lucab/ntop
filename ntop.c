@@ -98,7 +98,7 @@ void* pcapDispatch(void *_i) {
   for(;myGlobals.capturePackets == 1;) {
     FD_ZERO(&readMask);
     FD_SET(pcap_fd, &readMask);
-    
+
     /* timeout.tv_sec  = 5, timeout.tv_usec = 0; */
 
     if(select(pcap_fd+1, &readMask, NULL, NULL, NULL /* &timeout */ ) > 0) {
@@ -135,7 +135,7 @@ void* pcapDispatch(void *_i) {
 		 pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
     } /* else
-	 traceEvent(TRACE_INFO, "1) %d\n", numPkts++); 
+	 traceEvent(TRACE_INFO, "1) %d\n", numPkts++);
       */
   }
 
@@ -415,7 +415,7 @@ void handleProtocols() {
      Also, ignore standard Linux comments...
   */
 
-  if((!myGlobals.protoSpecs) 
+  if((!myGlobals.protoSpecs)
       || (!myGlobals.protoSpecs[0]))
     return;
 
@@ -723,7 +723,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
 
     if(myGlobals.actTime > (*lastTime)) {
         /* So, the clock has ticked... approximately 30 seconds (depends on traffic, the select
-           above could delay 5s 
+           above could delay 5s
 
            Let's purge one of the devices...
          */
@@ -748,7 +748,7 @@ RETSIGTYPE cleanup(int signo) {
   static int unloaded = 0, msgSent = 0;
   struct pcap_stat stat;
   int i;
-  
+
   if(!msgSent) {
     traceEvent(TRACE_INFO, "ntop caught signal %d", signo);
     msgSent = 1;
@@ -769,7 +769,7 @@ RETSIGTYPE cleanup(int signo) {
     strings = (char**)backtrace_symbols(array, size);
 
     traceEvent(TRACE_ERROR, "\n\n\n*****ntop error: Signal(%d)\n", signo);
-    
+
     traceEvent(TRACE_ERROR, "\n     backtrace is:\n");
     if (size < 2) {
       traceEvent(TRACE_ERROR, "         **unavailable!\n");
@@ -778,7 +778,7 @@ RETSIGTYPE cleanup(int signo) {
       for (i=1; i<size; i++) {
 	traceEvent(TRACE_ERROR, "          %2d. %s\n", i, strings[i]);
       }
-    }    
+    }
   }
 #endif /* HAVE_BACKTRACE */
 
@@ -866,15 +866,15 @@ RETSIGTYPE cleanup(int signo) {
     freeHostInstances(i);
 
     freeHostInfo(i, myGlobals.broadcastEntry, i);
-    if(myGlobals.otherHostEntry != NULL) 
-      freeHostInfo(i, myGlobals.otherHostEntry, i);  
+    if(myGlobals.otherHostEntry != NULL)
+      freeHostInfo(i, myGlobals.otherHostEntry, i);
   }
 
 /* #endif */
 
   for(i=0; i<myGlobals.hostsCacheLen; i++)
     free(myGlobals.hostsCache[i]);
-  myGlobals.hostsCacheLen = 0;  
+  myGlobals.hostsCacheLen = 0;
 
 #ifndef MICRO_NTOP
   unloadPlugins();
@@ -920,7 +920,7 @@ RETSIGTYPE cleanup(int signo) {
   gdbm_close(myGlobals.addressCache); myGlobals.addressCache = NULL;
   gdbm_close(myGlobals.pwFile);       myGlobals.pwFile = NULL;
   gdbm_close(myGlobals.prefsFile);    myGlobals.prefsFile = NULL;
-  
+
   /* Courtesy of Wies-Software <wies@wiessoft.de> */
   gdbm_close(myGlobals.hostsInfoFile); myGlobals.hostsInfoFile = NULL;
   if(myGlobals.eventFile != NULL) {
@@ -986,13 +986,14 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].pcapErrDumper != NULL)
       pcap_dump_close(myGlobals.device[i].pcapErrDumper);
 
-    /*
-       Wies-Software <wies@wiessoft.de> on 06/11/2001 says:
-       myGlobals.device[i].pcapPtr seems to be already freed. further tests needed!
-    */
     if(myGlobals.device[i].pcapPtr != NULL) {
       pcap_close(myGlobals.device[i].pcapPtr);
-      free(myGlobals.device[i].pcapPtr);
+      /*
+	Do not call free(myGlobals.device[i].pcapPtr)
+	as the pointer has been freed already by
+	pcap_close
+      */
+      myGlobals.device[i].pcapPtr = NULL;
     }
 
     free(myGlobals.device[i].hashList);

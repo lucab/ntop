@@ -476,7 +476,7 @@ typedef struct ntopGlobals {
   IPSession   *sessionsCache[MAX_SESSIONS_CACHE_LEN];
   u_short      sessionsCacheLen;
 
-
+  u_char      resetHashNow; /* used for hash reset */
 } NtopGlobals;
 
 

@@ -1182,7 +1182,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printHTMLheader("All statistics are now reset", HTML_FLAG_NO_REFRESH);
-    resetStats();
+    myGlobals.resetHashNow = 1; /* resetStats(); */
   } else if(strncmp(pageName, SWITCH_NIC_HTML, strlen(SWITCH_NIC_HTML)) == 0) {
     char *equal = strchr(pageName, '=');
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
