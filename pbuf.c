@@ -280,7 +280,7 @@ static const u_char *p_save;
        /* ************************
 
 	  -- 1 --
-	  
+
 	  This code needs to be optimised. In fact everytime a
 	  new host is added to the hash, the whole hash has to
 	  be scan. This shouldn't happen with hashes. Unfortunately
@@ -289,7 +289,7 @@ static const u_char *p_save;
 	  in the hash might change.
 
   	  See also -- 2 --.
-	  
+
 	  Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
 
 	************************ */
@@ -386,7 +386,7 @@ static const u_char *p_save;
 	 } else if(hostIpAddress != NULL) {
 	   /* This is packet that's being routed or belonging to a
 	      remote network that uses the same physical wire (or forged)*/
-	   
+
 	   memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
 
 	   memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
@@ -621,7 +621,7 @@ static const u_char *p_save;
  #endif
 
    for(i=0, found = -1; i<MAX_NUM_SESSION_PEERS; i++)
-     if((scanner->peersIdx[i] == NO_PEER) 
+     if((scanner->peersIdx[i] == NO_PEER)
 	|| (scanner->peersIdx[i] == remotePeerIdx)) {
        found = i;
        break;
@@ -633,14 +633,14 @@ static const u_char *p_save;
 
    scanner->peersIdx[scanner->lastPeer] = remotePeerIdx; /* Note found == scanner->lastPeer (*) */
    scanner->lastPeer = (scanner->lastPeer+1) % MAX_NUM_SESSION_PEERS;
-   
+
    switch(sessionType) {
    case IPPROTO_TCP:
      /*
        The "IP Session History" table in the individual host
        statistic page showed swapped values for the "Bytes sent"
        and "Bytes rcvd" columns if the client opened the
-       connection. For Server initiated connections like
+       connection. For server initiated connections like
        standard (not passive) ftp-data it was OK.
 
        Andreas Pfaller <a.pfaller@pop.gun.de>
@@ -1315,19 +1315,19 @@ void scanTimedoutTCPSessions(void) {
 
 /* ************************************ */
 
-static void handleSession(const struct pcap_pkthdr *h,
-			  IPSession *sessions[],
-			  u_short *numSessions,
-			  u_short fragmentedData,
-			  u_int tcpWin,
-			  u_int srcHostIdx,
-			  u_short sport,
-			  u_int dstHostIdx,
-			  u_short dport,
-			  u_int length,
-			  struct tcphdr *tp,
-			  u_int packetDataLength,
-			  u_char* packetData) {
+static IPSession* handleSession(const struct pcap_pkthdr *h,
+				IPSession *sessions[],
+				u_short *numSessions,
+				u_short fragmentedData,
+				u_int tcpWin,
+				u_int srcHostIdx,
+				u_short sport,
+				u_int dstHostIdx,
+				u_short dport,
+				u_int length,
+				struct tcphdr *tp,
+				u_int packetDataLength,
+				u_char* packetData) {
   u_int idx, initialIdx, i;
   IPSession *theSession = NULL;
   short flowDirection;
@@ -1338,10 +1338,12 @@ static void handleSession(const struct pcap_pkthdr *h,
   HostTraffic *dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
   struct timeval tvstrct;
   u_int firstEmptySlot = NO_PEER;
+  char rcStr[64];
+  int len;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(TRACE_INFO, "Sanity check failed (3) [Low memory?]");
-    return;
+    return(theSession);
   }
 
   /*
@@ -1353,7 +1355,7 @@ static void handleSession(const struct pcap_pkthdr *h,
     handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData);
 
   if(broadcastHost(srcHost) || broadcastHost(dstHost)) /* (**) */
-    return;
+    return(theSession);
 
   if(tp == NULL)
     sessionType = IPPROTO_UDP;
@@ -1399,22 +1401,22 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  flowDirection = SERVER_TO_CLIENT;
 	  break;
 	}
-      } else { 
+      } else {
 	/* ************************
 
 	   -- 2 --
-	   
+
 	   This code needs to be optimised. In fact everytime a
 	   new host is added to the hash, the whole hash has to
 	   be scan. This shouldn't happen with hashes. Unfortunately
 	   due to the way ntop works, a entry can appear and
 	   disappear several times from the hash, hence its position
 	   in the hash might change.
-	   
+
 	   See also -- 1 --.
-	   
+
 	   Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
-	   
+
 	************************ */
 
 	if(firstEmptySlot == NO_PEER)
@@ -1558,11 +1560,11 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  }
 
 	  sessions[firstEmptySlot] = theSession;
-
 	  theSession->initiatorIdx = checkSessionIdx(srcHostIdx);
 	  theSession->remotePeerIdx = checkSessionIdx(dstHostIdx);
 	  theSession->sport = sport;
 	  theSession->dport = dport;
+	  theSession->passiveFtpSession = isPassiveSession(dstHost->hostIpAddress.s_addr, dport);
 	  theSession->firstSeen = actTime;
 	  flowDirection = CLIENT_TO_SERVER;
 
@@ -1595,6 +1597,11 @@ static void handleSession(const struct pcap_pkthdr *h,
 	printf("\n");
       }
 #endif
+
+      if(packetDataLength >= 63)
+	len = 63;
+      else
+	len = packetDataLength;
 
       if((sport == 80 /* HTTP */) && (theSession->bytesProtoRcvd == 0)) {
 	char rcStr[18];
@@ -1835,20 +1842,11 @@ static void handleSession(const struct pcap_pkthdr *h,
 		   about the protocol.
 		*/
 		) {
-	char rcStr[64];
-	int len;
-
 	/*
 	  This is a brand new session: let's check whether this is
 	  not a faked session (i.e. a known protocol is running at
 	  an unknown port)
 	*/
-
-	if(packetDataLength >= 63)
-	  len = 63;
-	else
-	  len = packetDataLength;
-
 	if(theSession->bytesProtoSent == 0) {
 	  memset(rcStr, 0, sizeof(rcStr));
 	  strncpy(rcStr, packetData, len);
@@ -1862,14 +1860,13 @@ static void handleSession(const struct pcap_pkthdr *h,
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);
-	  else if((sport != 21) && (sport != 25)
-		  && isInitialFtpData(rcStr))
+	  else if((sport != 21) && (sport != 25) && isInitialFtpData(rcStr))
 	    traceEvent(TRACE_WARNING, "WARNING: FTP/SMTP detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	  else if(((sport == 21) || (sport == 25) )&& (!isInitialFtpData(rcStr)))
+	  else if(((sport == 21) || (sport == 25)) && (!isInitialFtpData(rcStr)))
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP/SMTP) detected (trojan?) "
 		       "at port %d %s:%d -> %s:%d [%s]\n", sport,
 		       dstHost->hostSymIpAddress, dport,
@@ -1894,9 +1891,37 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  */
 	}
       }
+
+      if(sport == 21) {
+	memset(rcStr, 0, sizeof(rcStr));
+	strncpy(rcStr, packetData, len);
+	/*
+	  227 Entering Passive Mode (131,114,21,11,156,95)
+	  131.114.21.11:40012 (40012 = 156 * 256 + 95)
+	*/
+	if(strncmp(rcStr, "227", 3) == 0) {
+	  struct in_addr inAddr;
+	  int a, b, c, d, e, f;
+
+	  sscanf(&rcStr[27], "%d,%d,%d,%d,%d,%d",
+		 &a, &b, &c, &d, &e, &f);
+	  sprintf(rcStr, "%d.%d.%d.%d", a, b, c, d);
+	  
+#ifdef DEBUG
+	  traceEvent(TRACE_INFO, "FTP: (%d) [%d.%d.%d.%d:%d]", 
+	                           inet_addr(rcStr), a, b, c, d, (e*256+f));
+#endif
+	  addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
+	} else
+	  traceEvent(TRACE_INFO, "??: %s", rcStr);	
+      } 
     }
 
     /* ***************************************** */
+
+    if(theSession->passiveFtpSession) {
+    
+    }
 
     if((theSession->minWindow > tcpWin) || (theSession->minWindow == 0))
       theSession->minWindow = tcpWin;
@@ -2246,9 +2271,9 @@ static void handleSession(const struct pcap_pkthdr *h,
 		 srcHost->hostSymIpAddress, sport);
     }
 
-    if(((theSession->initiatorIdx == srcHostIdx) 
+    if(((theSession->initiatorIdx == srcHostIdx)
 	&& (theSession->lastRemote2InitiatorFlags[0] == TH_SYN))
-       || ((theSession->initiatorIdx == dstHostIdx) 
+       || ((theSession->initiatorIdx == dstHostIdx)
 	   && (theSession->lastInitiator2RemoteFlags[0] == TH_SYN))
        && (tp->th_flags == (TH_SYN|TH_ACK)))  {
       traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
@@ -2384,6 +2409,8 @@ static void handleSession(const struct pcap_pkthdr *h,
 #endif
     }
   }
+
+  return(theSession);
 }
 
 /* ************************************ */
@@ -2451,17 +2478,19 @@ static void handleLsof(u_int srcHostIdx,
 
 /* *********************************** */
 
-static void handleTCPSession(const struct pcap_pkthdr *h,
-			     u_short fragmentedData,
-			     u_int tcpWin,
-			     u_int srcHostIdx,
-			     u_short sport,
-			     u_int dstHostIdx,
-			     u_short dport,
-			     u_int length,
-			     struct tcphdr *tp,
-			     u_int tcpDataLength,
-			     u_char* packetData) {
+static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
+				   u_short fragmentedData,
+				   u_int tcpWin,
+				   u_int srcHostIdx,
+				   u_short sport,
+				   u_int dstHostIdx,
+				   u_short dport,
+				   u_int length,
+				   struct tcphdr *tp,
+				   u_int tcpDataLength,
+				   u_char* packetData) {
+  IPSession* theSession = NULL;
+  
   if(
 #ifdef SESSION_PATCH
      1
@@ -2474,36 +2503,41 @@ static void handleTCPSession(const struct pcap_pkthdr *h,
        open. That's why we don't count this as a session in this
        case.
     */
-    handleSession(h, device[actualDeviceId].tcpSession,
-		  &device[actualDeviceId].numTcpSessions, fragmentedData, tcpWin,
-		  srcHostIdx, sport,
-		  dstHostIdx, dport,
-		  length, tp, 
-		  tcpDataLength, packetData);
+    theSession = handleSession(h, device[actualDeviceId].tcpSession,
+			       &device[actualDeviceId].numTcpSessions, 
+			       fragmentedData, tcpWin,
+			       srcHostIdx, sport,
+			       dstHostIdx, dport,
+			       length, tp,
+			       tcpDataLength, packetData);
   }
 
   if(isLsofPresent)
     handleLsof(srcHostIdx, sport, dstHostIdx, dport, length);
+
+  return(theSession);
 }
 
 /* ************************************ */
 
-static void handleUDPSession(const struct pcap_pkthdr *h,
-			     u_short fragmentedData,
-			     u_int srcHostIdx,
-			     u_short sport,
-			     u_int dstHostIdx,
-			     u_short dport,
-			     u_int length,
-			     u_char* packetData) {
-  handleSession(h, NULL,
-		NULL, fragmentedData, 0,
-		srcHostIdx, sport,
-		dstHostIdx, dport, length,
-		NULL, length, packetData);
-
+static IPSession* handleUDPSession(const struct pcap_pkthdr *h,
+				   u_short fragmentedData,
+				   u_int srcHostIdx,
+				   u_short sport,
+				   u_int dstHostIdx,
+				   u_short dport,
+				   u_int length,
+				   u_char* packetData) {
+  IPSession* theSession = handleSession(h, NULL,
+					NULL, fragmentedData, 0,
+					srcHostIdx, sport,
+					dstHostIdx, dport, length,
+					NULL, length, packetData);
+  
   if(isLsofPresent)
     handleLsof(srcHostIdx, sport, dstHostIdx, dport, length);
+
+  return(theSession);
 }
 
 /* ************************************ */
@@ -2511,9 +2545,16 @@ static void handleUDPSession(const struct pcap_pkthdr *h,
 static int handleIP(u_short port,
 		    u_int srcHostIdx,
 		    u_int dstHostIdx,
-		    u_int length) {
-  int idx = mapGlobalToLocalIdx(port);
+		    u_int length,
+		    u_short isPassiveSession) {
+  int idx;
   HostTraffic *srcHost, *dstHost;
+
+  if(isPassiveSession) {
+    /* Emulate non passive session */
+    idx = mapGlobalToLocalIdx(20 /* ftp-data */);
+  } else
+    idx = mapGlobalToLocalIdx(port);
 
   if(idx == -1)
     return(-1); /* Unable to locate requested index */
@@ -2697,7 +2738,7 @@ void deleteFragment(IpFragment *fragment) {
     device[actualDeviceId].fragmentList = fragment->next;
   else
     fragment->prev->next = fragment->next;
-  
+
   free(fragment);
 }
 
@@ -3056,7 +3097,7 @@ void updateHostName(HostTraffic *el) {
       */
       memset(el->hostSymIpAddress, 0, sizeof(el->hostSymIpAddress));
       strcpy(el->hostSymIpAddress, el->nbHostName);
-      
+
     } else if(el->ipxHostName != NULL)
       strcpy(el->hostSymIpAddress, el->ipxHostName);
     else if(el->atNodeName != NULL)
@@ -3166,10 +3207,10 @@ static void processIpPkt(const u_char *bp,
   if(rFileName != NULL) {
     static int numPkt=1;
 
-    traceEvent(TRACE_INFO, "%d) %s->%s",
+    traceEvent(TRACE_INFO, "%d) %s -> %s",
 	       numPkt++,
 	       srcHost->hostNumIpAddress,
-	       srcHost->hostNumIpAddress);
+	       dstHost->hostNumIpAddress);
     fflush(stdout);
   }
 
@@ -3262,6 +3303,9 @@ static void processIpPkt(const u_char *bp,
 			      ntohs(ip.ip_len) - hlen);
 
     if((sport > 0) && (dport > 0)) {
+      IPSession *theSession;
+      u_short isPassiveSession;
+
       /* It might be that tcpDataLength is 0 when
 	 the received packet is fragmented and the main
 	 packet has not yet been received */
@@ -3289,6 +3333,15 @@ static void processIpPkt(const u_char *bp,
 	}
       }
 
+      theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
+				    srcHostIdx, sport, dstHostIdx,
+				    dport, length, &tp, tcpDataLength,
+				    (u_char*)(bp+hlen+(tp.th_off * 4)));
+      if(theSession == NULL)
+	isPassiveSession = 0;
+      else
+	isPassiveSession = theSession->passiveFtpSession;
+
       /* choose most likely port for protocol traffic accounting
        * by trying lower number port first. This is based
        * on the assumption that lower port numbers are more likely
@@ -3301,18 +3354,13 @@ static void processIpPkt(const u_char *bp,
        *
        * Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>
        */
-      if (dport < sport) {
-	if(handleIP(dport, srcHostIdx, dstHostIdx, length) == -1)
-	  handleIP(sport, srcHostIdx, dstHostIdx, length);
+      if(dport < sport) {
+	if(handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession) == -1)
+	  handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession);
       } else {
-	if(handleIP(sport, srcHostIdx, dstHostIdx, length) == -1)
-	  handleIP(dport, srcHostIdx, dstHostIdx, length);
+	if(handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession) == -1)
+	  handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession);
       }
-
-      handleTCPSession(h, (off & 0x3fff), tp.th_win,
-		       srcHostIdx, sport, dstHostIdx,
-		       dport, length, &tp, tcpDataLength,
-		       (u_char*)(bp+hlen+(tp.th_off * 4)));
 
       if(grabSessionInformation) {
 	grabSession(srcHost, sport, dstHost, dport,
@@ -3324,7 +3372,7 @@ static void processIpPkt(const u_char *bp,
   case IPPROTO_UDP:
     proto = "UDP";
     udpDataLength = tcpUdpLen - sizeof(struct udphdr);
- 
+
     device[actualDeviceId].udpBytes += tcpUdpLen;
 
     memcpy(&up, bp+hlen, sizeof(struct udphdr));
@@ -3496,9 +3544,9 @@ static void processIpPkt(const u_char *bp,
 	      if(srcHost->nbDescr != NULL)
 		free(srcHost->nbDescr);
 
-	      if(tmpBuffer[17] == 0x0F) 
+	      if(tmpBuffer[17] == 0x0F)
 		FD_SET(HOST_TYPE_MASTER_BROWSER, &srcHost->flags);
-	      
+
 	      srcHost->nbDescr = strdup(&tmpBuffer[49]);
 #ifdef DEBUG
 	      traceEvent(TRACE_INFO, "Computer Info: '%s'", srcHost->nbDescr);
@@ -3584,8 +3632,8 @@ static void processIpPkt(const u_char *bp,
 	}
       }
 
-      if(handleIP(dport, srcHostIdx, dstHostIdx, length) == -1)
-	handleIP(sport, srcHostIdx, dstHostIdx, length);
+      if(handleIP(dport, srcHostIdx, dstHostIdx, length, 0) == -1)
+	handleIP(sport, srcHostIdx, dstHostIdx, length, 0);
 
       handleUDPSession(h, (off & 0x3fff),
 		       srcHostIdx, sport, dstHostIdx,
@@ -3971,7 +4019,7 @@ static void updateDevicePacketStats(u_int length) {
 /* ***************************************************** */
 
 void dumpSuspiciousPacket() {
-  if(device[actualDeviceId].pcapErrDumper != NULL) 
+  if(device[actualDeviceId].pcapErrDumper != NULL)
     pcap_dump((u_char*)device[actualDeviceId].pcapErrDumper, h_save, p_save);
 }
 
@@ -4032,7 +4080,7 @@ void processPacket(u_char *_deviceId,
 
   updateDevicePacketStats(length);
 
-  if(device[actualDeviceId].pcapDumper != NULL) 
+  if(device[actualDeviceId].pcapDumper != NULL)
     pcap_dump((u_char*)device[actualDeviceId].pcapDumper, h, p);
 
   if(length > mtuSize[device[deviceId].datalink]) {
@@ -4064,11 +4112,11 @@ void processPacket(u_char *_deviceId,
 
   hlen = (device[deviceId].datalink == DLT_NULL) ? NULL_HDRLEN : sizeof(struct ether_header);
 
-  /* 
-     printf ("Datalink=%d, (hlen=%d)(caplen=%d)\n", 
+  /*
+     printf ("Datalink=%d, (hlen=%d)(caplen=%d)\n",
      device[deviceId].datalink, hlen, caplen);
   */
-  
+
   /*
    * Let's check whether it's time to free up
    * some space before to continue....
@@ -4146,7 +4194,7 @@ void processPacket(u_char *_deviceId,
       */
 
       length -= NULL_HDRLEN; /* don't count nullhdr */
-      
+
       /* All this crap is due to the old little/big endian story... */
       if((p[0] == 0) && (p[1] == 0) && (p[2] == 8) && (p[3] == 0))
 	eth_type = ETHERTYPE_IP;
@@ -4586,7 +4634,7 @@ void processPacket(u_char *_deviceId,
 	     to getHostInfo won't purge it */
 	  srcHost->instanceInUse++;
 	}
-	
+
 	dstHostIdx = getHostInfo(NULL, ether_dst);
 	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
@@ -4597,13 +4645,13 @@ void processPacket(u_char *_deviceId,
 	     to getHostInfo won't purge it */
 	  dstHost->instanceInUse++;
 	}
-	
+
 	switch(eth_type) {
 	case ETHERTYPE_ARP: /* ARP - Address resolution Protocol */
 	  memcpy(&arpHdr, p+hlen, sizeof(arpHdr));
 	  if(EXTRACT_16BITS(&arpHdr.arp_pro) == ETHERTYPE_IP) {
 	    int arpOp = EXTRACT_16BITS(&arpHdr.arp_op);
-	    
+
 	    switch(arpOp) {
 	    case ARPOP_REPLY: /* ARP REPLY */
 	      memcpy(&addr.s_addr, arpHdr.arp_tpa, sizeof(addr.s_addr));

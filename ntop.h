@@ -1345,6 +1345,11 @@ typedef struct flowFilterList {
 #define MAGIC_NUMBER                1968 /* Magic year actually */
 #define MAX_NUM_STORED_FLAGS           4
 
+typedef struct sessionInfo {
+  struct in_addr sessionHost;
+  u_short sessionPort;
+} SessionInfo;
+
 /* IP Session Information */
 typedef struct ipSession {
   u_short magic;
@@ -1379,7 +1384,8 @@ typedef struct ipSession {
   u_char lastInitiator2RemoteFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
   u_char lastRemote2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
   u_short sessionState;             /* actual session state                     */
-  u_char  napsterSession;           /* check if this is a napster session       */
+  u_char  napsterSession;           /* checked if this is a Napster session     */
+  u_char  passiveFtpSession;        /* checked if this is a passive FTP session */
 } IPSession;
 
 

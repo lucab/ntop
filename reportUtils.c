@@ -2151,7 +2151,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       TrafficCounter dataSent, dataReceived, retrDataSent, retrDataRcvd;
       TrafficCounter fragDataSent, fragDataRcvd;
       int retrSentPercentage, retrRcvdPercentage;
-      char fragStrSent[64], fragStrRcvd[64], *napsterSession;
+      char fragStrSent[64], fragStrRcvd[64], *moreSessionInfo;
 
       if(device[actualReportDeviceId].
 	 tcpSession[idx]->remotePeerIdx == NO_PEER) /* This should not happen */
@@ -2261,9 +2261,14 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       }
 
       if(device[actualReportDeviceId].tcpSession[idx]->napsterSession)
-	napsterSession = "&nbsp;[Napster]";
+	moreSessionInfo = "&nbsp;[Napster]";
       else
-	napsterSession = "";
+	moreSessionInfo = "";
+
+      if(device[actualReportDeviceId].tcpSession[idx]->passiveFtpSession)
+	moreSessionInfo = "&nbsp;[FTP]";
+      else
+	moreSessionInfo = "";
 
       if(snprintf(buf, sizeof(buf), "<TR %s>"
 		  "<TD "TD_BG"  ALIGN=RIGHT>%s%s</TD>"
@@ -2277,7 +2282,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 		  "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
 #endif
 		  , getRowColor(),
-		  sport, napsterSession,
+		  sport, moreSessionInfo,
 		  remotePeer, dport,
 		  formatBytes(dataSent, 1), fragStrSent,
 #ifdef PRINT_RETRANSMISSION_DATA

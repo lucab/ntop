@@ -120,6 +120,8 @@ void initIPServices(void) {
   addPortHashEntry(udpSvc, 650, "bwnfs");
   addPortHashEntry(udpSvc, 2049,"nfsd");
   addPortHashEntry(udpSvc, 1110,"nfsd-status");
+
+  initPassiveSessions();
 }
 /* ******************************* */
 

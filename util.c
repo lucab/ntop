@@ -65,7 +65,9 @@
 #define BROADCAST              2
 #define INVALIDNETMASK        -1
 
+#define MAX_NUM_SESSION_INFO  64
 
+static SessionInfo passiveSessions[MAX_NUM_SESSION_INFO];
 static u_short numLocalNets=0;
 
 /* [0]=network, [1]=mask, [2]=broadcast */
@@ -2189,3 +2191,63 @@ void setNBnodeNameType(HostTraffic *theHost,
   }
 }
 
+/* ******************************************* */
+
+/* #define DEBUG  */
+
+void addPassiveSessionInfo(u_long theHost, u_short thePort) {
+  int i;
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Adding %ld:%d", theHost, thePort);
+#endif
+
+  for(i=0; i<MAX_NUM_SESSION_INFO; i++) {
+    if(passiveSessions[i].sessionPort == 0) {
+      passiveSessions[i].sessionHost.s_addr = theHost,
+	passiveSessions[i].sessionPort = thePort;
+      break;
+    }
+  }
+
+  if(i == MAX_NUM_SESSION_INFO) {
+    /* Slot Not found */
+    traceEvent(TRACE_INFO, "Info: passiveSessions[] is full");
+    for(i=1; i<MAX_NUM_SESSION_INFO; i++) {
+      passiveSessions[i-1].sessionHost = passiveSessions[i].sessionHost,
+	passiveSessions[i-1].sessionPort = passiveSessions[i].sessionPort;
+    }
+    passiveSessions[MAX_NUM_SESSION_INFO-1].sessionHost.s_addr = theHost,
+      passiveSessions[MAX_NUM_SESSION_INFO-1].sessionPort = thePort;
+  }
+}
+
+/* ******************************************* */
+
+int isPassiveSession(u_long theHost, u_short thePort) {
+  int i;
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Searching for %ld:%d", theHost, thePort);
+#endif
+
+  for(i=0; i<MAX_NUM_SESSION_INFO; i++) {
+    if((passiveSessions[i].sessionHost.s_addr == theHost)
+       && (passiveSessions[i].sessionPort == thePort)) {
+      passiveSessions[i].sessionHost.s_addr = 0,
+	passiveSessions[i].sessionPort = 0;
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "Found passive FTP session");
+#endif
+      return(1);
+    }
+  }
+
+  return(0);
+}
+
+/* ******************************************* */
+
+void initPassiveSessions() {
+  memset(passiveSessions, 0, sizeof(passiveSessions));
+}

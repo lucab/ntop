@@ -457,6 +457,9 @@ extern struct tm *localtime_r(const time_t *t, struct tm *tp);
 extern char *strtok_r(char *s, const char *delim, char **save_ptr);
 #endif
 extern int strOnlyDigits(const char *s);
+extern void addPassiveSessionInfo(u_long theHost, u_short thePort);
+extern int isPassiveSession(u_long theHost, u_short thePort);
+extern void initPassiveSessions();
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);
