@@ -596,18 +596,18 @@ void initDevices(char* devices) {
     char *ifName = tmpDev;
 
 #ifdef WIN32
-	if(!isWinNT()) {
-    for(i=0;; i++) {
-		if(tmpDev[i] == 0) {
-		  if(ifName[0] == '\0') 
-			break;
-		  else {
-			traceEvent(TRACE_INFO, "Found interface '%s'", ifName);
-			ifName = &tmpDev[i+1]; 
-		  }
-		}
+    if(!isWinNT()) {
+      for(i=0;; i++) {
+	if(tmpDev[i] == 0) {
+	  if(ifName[0] == '\0') 
+	    break;
+	  else {
+	    traceEvent(TRACE_INFO, "Found interface '%s'", ifName);
+	    ifName = &tmpDev[i+1]; 
+	  }
 	}
-	}
+      }
+    }
 #endif
 
     if(tmpDev == NULL) {

@@ -104,6 +104,9 @@ void dumpNtopHashes(char* options) {
 
       /* ************************ */
 
+      if(snprintf(buf, sizeof(buf), "\t'%s' => %d,\n", "index", idx) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");  sendString(buf);
+
       if(el->hostNumIpAddress[0] != '\0') {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => '%s',\n", "hostNumIpAddress",
 		    el->hostNumIpAddress)
@@ -1176,6 +1179,71 @@ void dumpNtopHashes(char* options) {
     sendString("}\n\n");
   else
     sendString(")\n\n");
+
+  sendString(");\n");
+}
+
+/* ********************************** */
+
+void dumpNtopHashIndexes(char* options) {
+  char buf[256];
+  int idx, numEntries=0, languageType=DEFAULT_LANGUAGE, j;
+  HostTraffic *el;
+
+  if(options != NULL) {
+    /* language=[perl|php] */
+    char *tmpStr, *strtokState;
+    
+    tmpStr = strtok_r(options, "&", &strtokState);
+
+    while(tmpStr != NULL) {
+      int i=0;
+
+      while((tmpStr[i] != '\0') && (tmpStr[i] != '='))
+	i++;
+
+      if(tmpStr[i] == '=') {
+	tmpStr[i] = 0;
+	
+	if(strcmp(tmpStr, "language") == 0) {
+	  if(strcmp(&tmpStr[i+1], "perl") == 0)
+	    languageType = PERL_LANGUAGE;
+	  else
+	    languageType = DEFAULT_LANGUAGE;
+	}
+      }
+
+      tmpStr = strtok_r(NULL, "&", &strtokState);
+    }
+  }
+    
+  if(languageType == PERL_LANGUAGE)
+    sendString("%hash = (\n");
+  else
+    sendString("$hash = array(\n");
+
+  for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
+    if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
+       && (broadcastHost(el) == 0)) {
+      char *hostKey;
+      
+      if(numEntries > 0)
+	sendString(",\n");
+      else
+	sendString("\n");
+
+      if(el->hostNumIpAddress[0] != '\0')
+	hostKey = el->hostNumIpAddress;
+      else
+	hostKey = el->ethAddressString;
+      
+      if(snprintf(buf, sizeof(buf), "'%d' => '%s'", idx, hostKey) < 0) 
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+      numEntries++;
+    }
+  }
 
   sendString(");\n");
 }

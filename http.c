@@ -1429,6 +1429,13 @@ static int returnHTTPPage(char* pageName, int postLen) {
     else
       dumpNtopHashes(&questionMark[1]);
     printTrailer = 0;
+  } else if(strncmp(pageName, DUMP_HOSTS_INDEXES_HTML, strlen(DUMP_HOSTS_INDEXES_HTML)) == 0) {
+    sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+    if((questionMark == NULL) || (questionMark[0] == '\0'))
+      dumpNtopHashIndexes(NULL);
+    else
+      dumpNtopHashIndexes(&questionMark[1]);
+    printTrailer = 0;
   } else if(strncmp(pageName, DUMP_TRAFFIC_DATA_HTML, strlen(DUMP_TRAFFIC_DATA_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_TEXT, 0);
     if((questionMark == NULL) || (questionMark[0] == '\0'))

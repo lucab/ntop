@@ -114,6 +114,8 @@ extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 					TrafficCounter tcRcvd);
 extern char* getNbNodeType(char nodeType);
 extern void dumpNtopHashes(char*);
+void dumpNtopHashIndexes(char* options);
+void dumpNtopTrafficInfo(char* options);
 
 /* report.c */
 extern void initReports(void);
@@ -249,6 +251,7 @@ extern void sendHTTPHeader(int mimeType, int headerFlags);
 #define PLUGINS_HEADER                  "plugins/"
 #define DUMP_DATA_HTML                  "dumpData.html"
 #define DUMP_TRAFFIC_DATA_HTML          "dumpTrafficData.html"
+#define DUMP_HOSTS_INDEXES_HTML         "dumpDataIndexes.html"
 
 /* webInterface.c */
 extern void *handleWebConnections(void* notUsed);
