@@ -7,3 +7,4 @@ www/PHP/ifStats.php
 www/PHP/doSearch.php
 www/Perl/
 www/Perl/remoteClient.pl
+www/Perl/dumpFlat.pl
