@@ -67,8 +67,7 @@ static void purgeIdleHostSessions(u_int hostIdx,
 
 u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 			    u_char *ether_addr,
-			    short* useIPAddressForSearching)
-{
+			    short* useIPAddressForSearching) {
   u_int idx;
 
   if((ether_addr == NULL) && (hostIpAddress != NULL)) {

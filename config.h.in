@@ -63,6 +63,9 @@
 /* Define if you have the ctime_r function.  */
 #undef HAVE_CTIME_R
 
+/* Define if you have the getipnodebyaddr function.  */
+#undef HAVE_GETIPNODEBYADDR
+
 /* Define if you have the localtime_r function.  */
 #undef HAVE_LOCALTIME_R
 

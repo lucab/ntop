@@ -389,7 +389,8 @@ if test ".$ac_disable_curses" = ".no"; then
       echo "checking for curses.h... yes"
       AC_DEFINE(HAVE_CURSES_H)
     else
-      AC_MSG_WARN([It looks that you don't have ncurses.h/curses.h installed. Some ntop's features will be disabled.])
+      AC_MSG_WARN([It looks that you don't have (n)curses.h installed hence intop will *not* be built.])
+     ac_disable_intop=yes
     fi
   fi
 fi
@@ -467,6 +468,7 @@ AC_CHECK_FUNCS(strtok_r)
 AC_CHECK_FUNCS(localtime_r)
 AC_CHECK_FUNCS(ctime_r)
 AC_CHECK_FUNCS(snprintf)
+AC_CHECK_FUNCS(getipnodebyaddr)
 
 dnl> Check for additional functions
 AC_CHECK_FUNCS(strsep)
@@ -547,12 +549,13 @@ dnl> if the user decided to compile without curses support.
 dnl>
 LIBCURSES=
 if test ".$ac_disable_curses" = ".no"; then
-  AC_CHECK_LIB(ncurses, initscr, LIBCURSES="-lncurses")
+  AC_CHECK_LIB(ncurses, initscr, LIBCURSES="-lncurses", ac_disable_intop=yes)
   if test ".`echo $LIBCURSES | grep curses`" = .; then
-      AC_CHECK_LIB(curses, initscr, LIBCURSES="-lcurses")
+      AC_CHECK_LIB(curses, initscr, LIBCURSES="-lcurses", ac_disable_intop=yes)
   fi
 else
   AC_MSG_WARN([Curses support disabled via command line option!])
+ ac_disable_intop=yes
 fi
 
 
@@ -1033,8 +1036,12 @@ AC_SUBST(CORELIBS)
 AC_SUBST(MORELIBS)
 AC_SUBST(SNMPLIBS)
 
-AC_SUBST(PLUGINS)
+if test ".$ac_disable_intop" = ".yes"; then
+INTOP=
+fi
+
 AC_SUBST(INTOP)
+AC_SUBST(PLUGINS)
 
 dnl>
 dnl> ntops directories
@@ -1086,7 +1093,6 @@ AC_DEFINE_UNQUOTED(RETSIGTYPE, void)
 
 AC_OUTPUT([
 Makefile
-intop/Makefile
 plugins/Makefile
 plugins/pep/Makefile
 ntop-config
@@ -1096,6 +1102,10 @@ case "$CONFIG_FILES" in
     chmod +x ntop-config
     ;;
 esac])
+
+if test ".$ac_disable_intop" = ".no"; then
+AC_OUTPUT([intop/Makefile])
+fi
 
 dnl>
 dnl> versioning
@@ -1122,16 +1132,19 @@ GNU gdbm in       : ${GDBM_ROOT}
 MultiThread mode  : ${multithread_mode}
 Install path      : ${prefix}
 
-Now type 'make' or 'gmake' (GNU make) on *BSD and Solaris systems to build $PACKAGE $VERSION
+Now type 'make' or 'gmake' (GNU make) on *BSD and Solaris
+systems to build $PACKAGE $VERSION.
 "
 
 echo
 echo
-echo "-------------------------------------------------"
+echo "================================================="
+echo
 echo "If you like ntop, please do not forget to support"
 echo "its development. See SUPPORT_NTOP.txt for more"
 echo "information. Thanks for supporting ntop!"
-echo "-------------------------------------------------"
+echo
+echo "================================================="
 echo
 
 

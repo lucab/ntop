@@ -267,7 +267,8 @@ static void updateDeviceThpt(int deviceToUpdate) {
 		  if(thirdRcvdIdx == NO_PEER)
 		    thirdRcvdIdx = idx;
 		  else {
-		    if(el->actualRcvdThpt > device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt) {
+		    if(el->actualRcvdThpt > device[deviceToUpdate].
+		       hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt) {
 		      thirdRcvdIdx = idx;
 		    }
 		  }
@@ -285,21 +286,24 @@ static void updateDeviceThpt(int deviceToUpdate) {
 	    if(topHourSentIdx == NO_PEER) {
 	      topHourSentIdx = idx;
 	    } else {
-	      if(el->lastHourSentThpt > device[deviceToUpdate].hash_hostTraffic[topHourSentIdx]->lastHourSentThpt) {
+	      if(el->lastHourSentThpt > device[deviceToUpdate].
+		 hash_hostTraffic[topHourSentIdx]->lastHourSentThpt) {
 		secondHourSentIdx = topHourSentIdx;
 		topHourSentIdx = idx;
 	      } else {
 		if(secondHourSentIdx == NO_PEER)
 		  secondHourSentIdx = idx;
 		else {
-		  if(el->lastHourSentThpt > device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt) {
+		  if(el->lastHourSentThpt > device[deviceToUpdate].
+		     hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt) {
 		    thirdHourSentIdx = secondHourSentIdx;
 		    secondHourSentIdx = idx;
 		  } else {
 		    if(thirdHourSentIdx == NO_PEER)
 		      thirdHourSentIdx = idx;
 		    else {
-		      if(el->lastHourSentThpt > device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt) {
+		      if(el->lastHourSentThpt > device[deviceToUpdate].
+			 hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt) {
 			thirdHourSentIdx = idx;
 		      }
 		    }
@@ -311,21 +315,24 @@ static void updateDeviceThpt(int deviceToUpdate) {
 	    if(topHourRcvdIdx == NO_PEER) {
 	      topHourRcvdIdx = idx;
 	    } else {
-	      if(el->lastHourRcvdThpt > device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt) {
+	      if(el->lastHourRcvdThpt > device[deviceToUpdate].
+		 hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt) {
 		secondHourRcvdIdx = topHourRcvdIdx;
 		topHourRcvdIdx = idx;
 	      } else {
 		if(secondHourRcvdIdx == NO_PEER)
 		  secondHourRcvdIdx = idx;
 		else {
-		  if(el->lastHourRcvdThpt > device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt) {
+		  if(el->lastHourRcvdThpt > device[deviceToUpdate].
+		     hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt) {
 		    thirdHourRcvdIdx = secondHourRcvdIdx;
 		    secondHourRcvdIdx = idx;
 		  } else {
 		    if(thirdHourRcvdIdx == NO_PEER)
 		      thirdHourRcvdIdx = idx;
 		    else {
-		      if(el->lastHourRcvdThpt > device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt) {
+		      if(el->lastHourRcvdThpt > device[deviceToUpdate].
+			 hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt) {
 			thirdHourRcvdIdx = idx;
 		      }
 		    }

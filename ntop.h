@@ -1558,11 +1558,11 @@ typedef struct icmpHostInfo {
 typedef struct hostTraffic {
   struct in_addr hostIpAddress;
   time_t         firstSeen;
-  time_t         lastSeen;     /* time when this host has
-				  sent/received some data  */
+  time_t         lastSeen; /* time when this host has sent/received some data  */
   time_t         nextDBupdate; /* next time when the DB entry
 				  for this host will be updated */
   u_char         ethAddress[ETHERNET_ADDRESS_LEN];
+  u_char         lastEthAddress[ETHERNET_ADDRESS_LEN]; /* used for remote addresses */
   u_char         instanceInUse; /* If so, this instance cannot be purged */
   char           ethAddressString[18];
   char           hostNumIpAddress[17], *fullDomainName;
@@ -1618,6 +1618,7 @@ typedef struct hostTraffic {
   TrafficCounter  osiSent, osiReceived;
   TrafficCounter  dlcSent, dlcReceived;
   TrafficCounter  arp_rarpSent, arp_rarpReceived;
+  TrafficCounter  arpReqPktsSent, arpReplyPktsSent, arpReplyPktsRcvd;
   TrafficCounter  decnetSent, decnetReceived;
   TrafficCounter  appletalkSent, appletalkReceived;
   TrafficCounter  netbiosSent, netbiosReceived;

@@ -498,7 +498,7 @@ void handleLocalAddresses(char* addresses) {
       networkMask = ~networkMask;
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO "Nw=%08X - Mask: %08X [%08X]\n",
+      traceEvent(TRACE_INFO, "Nw=%08X - Mask: %08X [%08X]\n",
 		 network, networkMask, (network & networkMask));
 #endif
       if((networkMask >= 0xFFFFFF00) /* Courtesy of Roy-Magne Mo <romo@interpost.no> */

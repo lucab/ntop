@@ -54,7 +54,7 @@ struct _HTTPstatus HTTPstatus[] = {
     { 401, "Unauthorized", "Unauthorized to access the document." },
     { 402, "Payment Required", NULL },
     { 403, "Forbidden", "Server refused to fulfill your request." },
-    { 404, "Not Found", "The server cannot found the requested page." },
+    { 404, "Not Found", "The server cannot found the page requested." },
     { 405, "Method Not Allowed", NULL },
     { 406, "Not Acceptable", NULL },
     { 407, "Proxy Authentication Required", NULL },

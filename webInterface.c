@@ -940,7 +940,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 #else
   while(capturePackets) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Select(ing)....\n");
+    traceEvent(TRACE_INFO, "Select(ing) %d....", topSock);
 #endif
     memcpy(&mask, &mask_copy, sizeof(fd_set));
     rc = select(topSock+1, &mask, 0, 0, NULL /* Infinite */);
@@ -950,17 +950,20 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
     if(rc > 0)
       handleSingleWebConnection(&mask);
   }
+
+  traceEvent(TRACE_INFO, "Terminating Web connections...");
 #endif
 
-return(NULL); /* NOTREACHED */
+  return(NULL);
 }
-
 
 /* ************************************* */
  
 void handleSingleWebConnection(fd_set *fdmask) {
    struct sockaddr_in from;
    int from_len = sizeof(from);
+
+   errno = 0;
 
   if(FD_ISSET(sock, fdmask)) {
 #ifdef DEBUG
@@ -969,8 +972,10 @@ void handleSingleWebConnection(fd_set *fdmask) {
     newSock = accept(sock, (struct sockaddr*)&from, &from_len);
   } else {
 #ifdef DEBUG
+#ifdef HAVE_OPENSSL
     if(sslInitialized)
       traceEvent(TRACE_INFO, "Accepting HTTPS request...\n");
+#endif
 #endif
 #ifdef HAVE_OPENSSL
     if(sslInitialized)
@@ -981,7 +986,7 @@ void handleSingleWebConnection(fd_set *fdmask) {
   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Request accepted (sock=%d)\n", newSock);
+  traceEvent(TRACE_INFO, "Request accepted (sock=%d) (errno=%d)\n", newSock, errno);
 #endif
 
   if(newSock > 0) {
@@ -1015,6 +1020,8 @@ void handleSingleWebConnection(fd_set *fdmask) {
 #endif /* HAVE_LIBWRAP */
 
     closeNwSocket(&newSock);
+  } else {
+    traceEvent(TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d)", errno);
   }
 }
 

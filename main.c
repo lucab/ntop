@@ -80,6 +80,8 @@ int main(int argc, char *argv[]) {
   char *cp, *localAddresses=NULL, *webAddr=NULL, *devices, *sslAddr=NULL;
   char flowSpecs[2048], rulesFile[128], ifStr[196], *theOpts;
   time_t lastTime;
+
+  printf("Wait please: ntop is coming up...\n");
   
 #ifndef WIN32
   if (freopen("/dev/null", "w", stderr) == NULL) {
@@ -456,7 +458,7 @@ int main(int argc, char *argv[]) {
   
   if((geteuid() == 0) || (getegid() == 0)) {
     traceEvent(TRACE_INFO, "WARNING: For security reasons it is STRONGLY recommended to");
-    traceEvent(TRACE_INFO, "         run ntop as unprivileged user by using the -u option!");
+    traceEvent(TRACE_INFO, "WARNING: run ntop as unprivileged user by using the -u option!");
   }
 #endif
 

@@ -404,7 +404,7 @@ void unloadPlugins(void) {
 void startPlugins(void) {
   FlowFilterList *flows = flowsList;
 
-  traceEvent(TRACE_INFO, "Starting plugin threads (if any)...\n");
+  traceEvent(TRACE_INFO, "Initialising plugins (if any)...\n");
 
   while(flows != NULL) {
     if(flows->pluginStatus.pluginPtr != NULL) {

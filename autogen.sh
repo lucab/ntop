@@ -282,7 +282,7 @@ if test ".$disable_configure" = ".no"; then
 #
     echo "Now, just type 'make' or 'gmake' (on *BSD systems) to compile $PACKAGE"
     echo ""
-    echo "Have fun! Luca && Rocco"
+    echo "Have fun now!"
     echo ""
 
 #

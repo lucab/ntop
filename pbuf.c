@@ -197,8 +197,7 @@
  /* ******************************* */
 
  u_int getHostInfo(struct in_addr *hostIpAddress,
-		   u_char *ether_addr)
- {
+		   u_char *ether_addr) {
    u_int idx, i, run=0;
    HostTraffic *el=NULL;
    u_int firstEmptySlot = NO_PEER;
@@ -378,7 +377,11 @@
 	   FD_SET(SUBNET_LOCALHOST_FLAG, &el->flags);
 	   FD_SET(SUBNET_PSEUDO_LOCALHOST_FLAG, &el->flags);
 	 } else if(hostIpAddress != NULL) {
-	   /* This is packet that's being routed */
+	   /* This is packet that's being routed or belonging to a
+	      remote network that uses the same physical wire (or forged)*/
+	   
+	   memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+
 	   memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
 	   FD_CLR(SUBNET_LOCALHOST_FLAG, &el->flags);
 
@@ -2333,7 +2336,7 @@ static void handleSession(const struct pcap_pkthdr *h,
       updateHostSessionsList(dstHostIdx, sport, srcHostIdx, &tmpSession,
 			     sessionType, CLIENT_FROM_SERVER, CLIENT_ROLE);
     } else {
-#if defined(MULTITHREADED)
+#ifdef MULTITHREADED
       accessMutex(&lsofMutex, "HandleSession-1");
 #endif
       updateLsof = 1; /* Force lsof update */
@@ -3012,21 +3015,6 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
 
   dstHost->pktReceived++;
 
-  if(length < 64) device[actualDeviceId].rcvdPktStats.upTo64++;
-  else if(length < 128) device[actualDeviceId].rcvdPktStats.upTo128++;
-  else if(length < 256) device[actualDeviceId].rcvdPktStats.upTo256++;
-  else if(length < 512) device[actualDeviceId].rcvdPktStats.upTo512++;
-  else if(length < 1024) device[actualDeviceId].rcvdPktStats.upTo1024++;
-  else if(length < 1518) device[actualDeviceId].rcvdPktStats.upTo1518++;
-  else device[actualDeviceId].rcvdPktStats.above1518++;
-
-  if((device[actualDeviceId].rcvdPktStats.shortest == 0)
-     || (device[actualDeviceId].rcvdPktStats.shortest > length))
-    device[actualDeviceId].rcvdPktStats.shortest = length;
-
-  if(device[actualDeviceId].rcvdPktStats.longest < length)
-    device[actualDeviceId].rcvdPktStats.longest = length;
-
   if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
     addContactedPeers(srcHostIdx, dstHostIdx);
 }
@@ -3154,9 +3142,6 @@ static void processIpPkt(const u_char *bp,
 
   if(rFileName != NULL) {
     static int numPkt=1;
-
-    if(numPkt == 123)
-      printf("Hello\n");
 
     traceEvent(TRACE_INFO, "%d) %s->%s",
 	       numPkt++,
@@ -3936,6 +3921,25 @@ static char* timestamp(const struct timeval* t, int fmt) {
 }
 #endif
 
+/* ************************************ */
+
+static void updateDevicePacketStats(TrafficCounter length) {
+  if(length < 64) device[actualDeviceId].rcvdPktStats.upTo64++;
+  else if(length < 128) device[actualDeviceId].rcvdPktStats.upTo128++;
+  else if(length < 256) device[actualDeviceId].rcvdPktStats.upTo256++;
+  else if(length < 512) device[actualDeviceId].rcvdPktStats.upTo512++;
+  else if(length < 1024) device[actualDeviceId].rcvdPktStats.upTo1024++;
+  else if(length < 1518) device[actualDeviceId].rcvdPktStats.upTo1518++;
+  else device[actualDeviceId].rcvdPktStats.above1518++;
+
+  if((device[actualDeviceId].rcvdPktStats.shortest == 0)
+     || (device[actualDeviceId].rcvdPktStats.shortest > length))
+    device[actualDeviceId].rcvdPktStats.shortest = length;
+
+  if(device[actualDeviceId].rcvdPktStats.longest < length)
+    device[actualDeviceId].rcvdPktStats.longest = length;
+}
+
 /* ***************************************************** */
 
 /*
@@ -3963,10 +3967,12 @@ void processPacket(u_char *_deviceId,
   unsigned char ipxBuffer[128];
 
 #ifdef DEBUG
-  static long numPkt=0; traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
+  static long numPkt=0;
+  traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
 #endif
 
-  if(!capturePackets) return;
+  if(!capturePackets)
+    return;
 
   if(rFileName != NULL) {
     traceEvent(TRACE_INFO, ".");
@@ -3986,6 +3992,8 @@ void processPacket(u_char *_deviceId,
 #endif
 
   actualDeviceId = getActualInterface();
+
+  updateDevicePacketStats(length);
 
   if(device[actualDeviceId].pcapDumper != NULL) 
     pcap_dump((u_char*)device[actualDeviceId].pcapDumper, h, p);
@@ -4530,50 +4538,55 @@ void processPacket(u_char *_deviceId,
 	else
 	  length = 0;
 
-	if((eth_type == ETHERTYPE_ARP) || (eth_type == ETHERTYPE_REVARP)) {
-	  srcHost = dstHost = NULL;
-	  srcHostIdx = dstHostIdx = NO_PEER;
+	srcHostIdx = getHostInfo(NULL, ether_src);
+	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	if(srcHost == NULL) {
+	  /* Sanity check */
+	  traceEvent(TRACE_INFO, "Sanity check failed (11) [Low memory?]");
 	} else {
-	  srcHostIdx = getHostInfo(NULL, ether_src);
-	  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-	  if(srcHost == NULL) {
-	    /* Sanity check */
-	    traceEvent(TRACE_INFO, "Sanity check failed (11) [Low memory?]");
-	  } else {
-	    /* Lock the instance so that the next call
-	       to getHostInfo won't purge it */
-	    srcHost->instanceInUse++;
-	  }
-
-	  dstHostIdx = getHostInfo(NULL, ether_dst);
-	  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
-	  if(dstHost == NULL) {
-	    /* Sanity check */
-	    traceEvent(TRACE_INFO, "Sanity check failed (12) [Low memory?]");
-	  } else {
-	    /* Lock the instance so that the next call
-	       to getHostInfo won't purge it */
-	    dstHost->instanceInUse++;
-	  }
+	  /* Lock the instance so that the next call
+	     to getHostInfo won't purge it */
+	  srcHost->instanceInUse++;
 	}
-
+	
+	dstHostIdx = getHostInfo(NULL, ether_dst);
+	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+	if(dstHost == NULL) {
+	  /* Sanity check */
+	  traceEvent(TRACE_INFO, "Sanity check failed (12) [Low memory?]");
+	} else {
+	  /* Lock the instance so that the next call
+	     to getHostInfo won't purge it */
+	  dstHost->instanceInUse++;
+	}
+	
 	switch(eth_type) {
 	case ETHERTYPE_ARP: /* ARP - Address resolution Protocol */
 	  memcpy(&arpHdr, p+hlen, sizeof(arpHdr));
-	  if (EXTRACT_16BITS(&arpHdr.arp_pro) == ETHERTYPE_IP)
-	    switch (EXTRACT_16BITS(&arpHdr.arp_op)) {
+	  if(EXTRACT_16BITS(&arpHdr.arp_pro) == ETHERTYPE_IP) {
+	    int arpOp = EXTRACT_16BITS(&arpHdr.arp_op);
+	    
+	    switch(arpOp) {
 	    case ARPOP_REPLY: /* ARP REPLY */
 	      memcpy(&addr.s_addr, arpHdr.arp_tpa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      dstHostIdx = getHostInfo(&addr, arpHdr.arp_tha);
+	      dstHostIdx = getHostInfo(&addr, &arpHdr.arp_tha);
 	      dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
+	      addr.s_addr = ntohl(addr.s_addr);
+	      srcHostIdx = getHostInfo(&addr, &arpHdr.arp_sha);
+	      srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	      if(srcHost != NULL) srcHost->arpReplyPktsSent++;
+	      if(dstHost != NULL) dstHost->arpReplyPktsRcvd++;
 	      /* DO NOT ADD A break ABOVE ! */
 	    case ARPOP_REQUEST: /* ARP request */
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHostIdx = getHostInfo(&addr, arpHdr.arp_sha);
+	      srcHostIdx = getHostInfo(&addr, &arpHdr.arp_sha);
 	      srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	      if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) srcHost->arpReqPktsSent++;
 	    }
+	  }
 	  /* DO NOT ADD A break ABOVE ! */
 	case ETHERTYPE_REVARP: /* Reverse ARP */
 	  if(srcHost != NULL) srcHost->arp_rarpSent += length;

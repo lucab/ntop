@@ -1576,10 +1576,13 @@ void printPacketStats(HostTraffic *el) {
 
   /* *********************** */
 
-  if(((el->securityHostPkts.rejectedTCPConnSent.value+el->securityHostPkts.rejectedTCPConnRcvd.value
-       +el->securityHostPkts.establishedTCPConnSent.value+el->securityHostPkts.establishedTCPConnRcvd.value
-       +el->securityHostPkts.synPktsSent.value+el->securityHostPkts.synPktsRcvd.value) > 0)) {
-
+  if(((el->securityHostPkts.rejectedTCPConnSent.value+
+       el->securityHostPkts.rejectedTCPConnRcvd.value+
+       el->securityHostPkts.establishedTCPConnSent.value+
+       el->securityHostPkts.establishedTCPConnRcvd.value+
+       el->securityHostPkts.synPktsSent.value+
+       el->securityHostPkts.synPktsRcvd.value) > 0)) {
+    
     if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
 
     sendString("<CENTER>\n"
@@ -1754,6 +1757,43 @@ void printPacketStats(HostTraffic *el) {
 
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     sendString("</CENTER>\n");
+  }
+  
+  
+  if(el->arpReqPktsSent+el->arpReplyPktsSent+el->arpReplyPktsRcvd > 0) {
+    if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
+
+    sendString("<CENTER>\n"
+	       ""TABLE_ON"<TABLE BORDER=1 WIDTH=100%><TR>"
+	       "<TH "TH_BG">ARP</TH>"
+	       "<TH "TH_BG">Packet</TH>"
+	       "</TR>\n");
+    
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Request Sent</TH>"
+		"<TD "TH_BG" ALIGN=RIGHT>%s</TD></TR>",
+		getRowColor(), 
+		formatPkts(el->arpReqPktsSent)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Reply Rcvd</TH>"
+		"<TD "TH_BG" ALIGN=RIGHT>%s (%.1f %%)</TD></TR>",
+		getRowColor(), 
+		formatPkts(el->arpReplyPktsRcvd),
+		((el->arpReqPktsSent > 0) ?
+		(float)((el->arpReplyPktsRcvd*100)/(float)el->arpReqPktsSent) : 0)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Reply Sent</TH>"
+		"<TD "TH_BG" ALIGN=RIGHT>%s</TD></TR>",
+		getRowColor(), 
+		formatPkts(el->arpReplyPktsSent)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");    
   }
 
   if(headerSent) { sendString("</TD></TR></TABLE></center>"); }
@@ -2361,7 +2401,7 @@ void printHostDetailedInfo(HostTraffic *el) {
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG"  ALIGN=RIGHT><ol>",
-	      getRowColor(), "IP&nbsp;Address") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      getRowColor(), "IP Address") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
       for(i=0; i<MAX_MULTIHOMING_ADDRESSES; i++) {
@@ -2506,10 +2546,8 @@ void printHostDetailedInfo(HostTraffic *el) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
-
     sendString("</TABLE></TD></TR>\n");
   }
-
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>"
@@ -2553,6 +2591,24 @@ void printHostDetailedInfo(HostTraffic *el) {
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
+  }
+
+  if(((el->lastEthAddress[0] != 0) 
+      || (el->lastEthAddress[1] != 0)
+      || (el->lastEthAddress[2] != 0)
+      || (el->lastEthAddress[3] != 0)
+      || (el->lastEthAddress[4] != 0)
+      || (el->lastEthAddress[5] != 0) /* The address isn't empty */)
+     && (memcmp(el->lastEthAddress, el->ethAddress, ETHERNET_ADDRESS_LEN) != 0)) {
+    /* Different MAC addresses */
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+		"%s%s</TD></TR>\n",
+		getRowColor(), "Last MAC Address",
+		etheraddr_string(el->lastEthAddress),
+		separator /* it avoids empty cells not to be rendered */) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);    
   }
 
   if(el->hostNumIpAddress[0] != '\0') {

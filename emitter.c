@@ -648,6 +648,27 @@ void dumpNtopHashes(char* options) {
 	sendString(buf);
       }
 
+      if(el->arpReqPktsSent > 0) {
+	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
+		    "arpReqPktsSent", el->arpReqPktsSent)
+	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      }
+
+      if(el->arpReplyPktsSent > 0) {
+	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
+		    "arpReplyPktsSent", el->arpReplyPktsSent)
+	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      }
+
+      if(el->arpReplyPktsRcvd > 0) {
+	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
+		    "arpReplyPktsRcvd", el->arpReplyPktsRcvd)
+	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      }
+
       if(el->decnetSent > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
 		    "decnetSent", el->decnetSent)
@@ -1002,6 +1023,13 @@ void dumpNtopHashes(char* options) {
       }
 
     /* ********************************* */
+
+  if(((el->securityHostPkts.rejectedTCPConnSent.value+
+       el->securityHostPkts.rejectedTCPConnRcvd.value
+       +el->securityHostPkts.establishedTCPConnSent.value+
+       el->securityHostPkts.establishedTCPConnRcvd.value
+       +el->securityHostPkts.synPktsSent.value+
+       el->securityHostPkts.synPktsRcvd.value) > 0)) {
     
     if(languageType == PERL_LANGUAGE) {
       if(snprintf(buf, sizeof(buf), "\t'%s' => {\n", "securityPkts") < 0)
@@ -1187,6 +1215,7 @@ void dumpNtopHashes(char* options) {
       sendString("\t},\n\n");
     else
       sendString("\t),\n\n");
+  }
 
     /* ***************************** */
 

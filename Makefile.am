@@ -43,8 +43,8 @@ CORELIBS  = @CORELIBS@
 MORELIBS  = @MORELIBS@
 
 
-DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db arpWatch.db \
-		 icmpWatch.db ntops ntopd ntop-config
+DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db \
+		 icmpWatch.db ntops ntopd ntop-config *~ *.log
 CLEANFILES     = $(DISTCLEANFILES)
 
 # A list of all the files in the current directory which can be regenerated

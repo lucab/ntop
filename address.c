@@ -21,7 +21,7 @@
 
 #include "ntop.h"
 
-/* #define DEBUG  */
+/* #define DEBUG */
 
 /* #define GDBM_DEBUG */
 
@@ -50,14 +50,19 @@ static int _ns_name_unpack(const u_char *msg,
   On FreeBSD gethostbyaddr() sometimes loops
   and uses all the available memory. Hence this
   patch is needed.
+
+  On some Linux versions gethostbyaddr() is bugged and
+  it tends to exaust all available file descriptors. If
+  you want to check this try "lsof -i |grep ntop". If this
+  is the case please do  '#define USE_HOST' (see below)
+  in order to overcome this flaw.
+
 */
 #if defined(__FreeBSD__)
 #define USE_HOST
 #endif
 
-#ifdef USE_HOST
-
-#endif /* USE_HOST */
+/* #define USE_HOST */
 
 /* ************************************ */
 
@@ -80,7 +85,7 @@ static void resolveAddress(char* symAddr,
   addr = hostAddr->s_addr;
 
 #ifdef HAVE_GDBM_H
-  if(snprintf(keyBuf, sizeof(keyBuf), "%u", addr) < 0) 
+  if(snprintf(keyBuf, sizeof(keyBuf), "%u", addr) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   key_data.dptr = keyBuf;
   key_data.dsize = strlen(keyBuf)+1;
@@ -141,7 +146,10 @@ static void resolveAddress(char* symAddr,
 
   if((!keepAddressNumeric) && capturePackets) {
     struct in_addr theAddr;
-
+#ifdef HAVE_GETIPNODEBYADDR
+    int error_num;
+#endif
+    
 #ifdef DNS_DEBUG
     traceEvent(TRACE_INFO, "Resolving %s...", intoa(*hostAddr));
 #endif
@@ -160,7 +168,7 @@ static void resolveAddress(char* symAddr,
       char buffer[64];
       struct in_addr myAddr;
       int i;
-      
+
       myAddr.s_addr = hostAddr->s_addr;
       if(snprintf(buffer, sizeof(buffer), "/usr/bin/host %s", intoa(myAddr)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -183,7 +191,7 @@ static void resolveAddress(char* symAddr,
       for(i=strlen(tmpBuf); i>0; i--)
 	if(tmpBuf[i] == ' ')
 	  break;
-      
+
       if(tmpBuf[i] == ' ') {
 	res = &tmpBuf[i+1];
 	numResolvedWithDNSAddresses++;
@@ -197,7 +205,16 @@ static void resolveAddress(char* symAddr,
 #endif
     }
 #else /* USE_HOST */
-    hp = (struct hostent*)gethostbyaddr((char*)&theAddr, 4, AF_INET);
+
+#ifdef HAVE_GETIPNODEBYADDR
+    hp  = getipnodebyaddr((const void*)&theAddr,
+			  sizeof(struct in_addr), AF_INET,
+			  &error_num);
+#else /* default */
+    hp = (struct hostent*)gethostbyaddr((char*)&theAddr, 
+					sizeof(struct in_addr), 
+					AF_INET);
+#endif
 
 #ifdef MULTITHREADED
     /* releaseMutex(&addressResolutionMutex); */
@@ -243,6 +260,10 @@ static void resolveAddress(char* symAddr,
     res = _intoa(*hostAddr, tmpBuf, sizeof(tmpBuf));
   }
 
+#ifdef HAVE_GETIPNODEBYADDR
+  if(hp != NULL)
+    freehostent(hp);
+#endif
 
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "resolveAddress-3");
@@ -504,7 +525,7 @@ char* intoa(struct in_addr addr) {
 /* ******************************* */
 
 void ipaddr2str(HostTraffic *instance,
-		struct in_addr hostIpAddress, 
+		struct in_addr hostIpAddress,
 		char* outBuf, int outBufLen) {
   unsigned int addr = hostIpAddress.s_addr;
   char buf[32];
@@ -577,7 +598,7 @@ void ipaddr2str(HostTraffic *instance,
       if(snprintf(p->name, outBufLen, "*%s*",
 		  _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      
+
       queueAddress(p, outBufLen);
       return;
     }

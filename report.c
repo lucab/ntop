@@ -484,32 +484,37 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	  if(i > 0) sendString("<br>");
 
 	  if(rFileName == NULL) {
-	    if(snprintf(buf2, sizeof(buf2), "%s [%s]",
-			getNwInterfaceType(i),
-			device[i].name) < 0) 
-	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	    if(!device[i].virtualDevice) {
+	      if(snprintf(buf2, sizeof(buf2), "%s [%s]",
+			  getNwInterfaceType(i),
+			  device[i].name) < 0) 
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      sendString(buf2);
+	    }
 	  } else {
 	    if(snprintf(buf2, sizeof(buf2), "%s [%s]",
 			getNwInterfaceType(i),
 			PCAP_NW_INTERFACE) < 0) 
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	    sendString(buf2);
 	  }
-	  sendString(buf2);
 	}
       } else {
 	if(rFileName == NULL) {
-	  if(snprintf(buf2, sizeof(buf2), "%s [%s]",
-		      getNwInterfaceType(actualReportDeviceId),
-		      device[actualReportDeviceId].name) < 0) 
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  if(!device[i].virtualDevice) {
+	    if(snprintf(buf2, sizeof(buf2), "%s [%s]",
+			getNwInterfaceType(actualReportDeviceId),
+			device[actualReportDeviceId].name) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	    sendString(buf2);
+	  }
 	} else {
 	  if(snprintf(buf2, sizeof(buf2), "%s [%s]",
 		      getNwInterfaceType(actualReportDeviceId),
 		      PCAP_NW_INTERFACE) < 0)
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf2);
 	}
-
-	sendString(buf2);
       }
 
       sendString("</TD></TR>\n");
@@ -1227,7 +1232,7 @@ void printAllSessionsHTML(char* host) {
 
   if(el == NULL) {
     if(snprintf(buf, sizeof(buf), 
-		"Unable to generate requested page [%s]\n", host) < 0) 
+		"Unable to generate the page requested [%s]\n", host) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     printHTMLheader(buf, 0);
     return;
@@ -2162,13 +2167,13 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
   } else {
     total = (float)device[actualReportDeviceId].ipBytes/1024; /* total is expressed in KBytes */
 
-    printSectionTitle("Global IP Protocol Distribution");
-
     if(total == 0)
-      printNoDataYet();
+      return;
     else {
-       sendString("<CENTER>\n");
-       sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR><TH "TH_BG" WIDTH=150>"
+      printSectionTitle("Global IP Protocol Distribution");
+      
+      sendString("<CENTER>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR><TH "TH_BG" WIDTH=150>"
 		 "IP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
 		 "Percentage</TH></TR>\n");
@@ -2219,10 +2224,8 @@ void printProtoTraffic(void) {
 
   total = device[actualReportDeviceId].ethernetBytes/1024; /* total is expressed in KBytes */
 
-  if(total == 0) {
-    printNoDataYet();
+  if(total == 0)
     return;
-  }
 
   printSectionTitle("Global Protocol Distribution");
   sendString("<CENTER>\n");

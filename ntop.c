@@ -541,10 +541,8 @@ void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
 
     if(!capturePackets) break;
 
-    /* accessMutex(&hostsHashMutex); */
     /* CHECK ME: Parmeter to updateDbHostsTraffic */ 
     updateDbHostsTraffic(0);
-    /* releaseMutex(&hostsHashMutex); */
   }
   return(NULL);
 
@@ -569,7 +567,6 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 #ifdef MULTITHREADED
       releaseMutex(&hostsHashMutex);
 #endif
-
       sleep(1); /* Give some time to others... */
 
 #ifdef MULTITHREADED
