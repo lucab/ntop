@@ -271,6 +271,8 @@ libclean:
 
 install: install-recursive
 
+	@mkdir -p $(CFG_DBFILE_DIR)
+
 	@echo ""
 	@echo "------------------------------------------------------------"
 	@echo ""
@@ -349,7 +351,6 @@ install: install-recursive
 	  rm -f $(DESTDIR)/$(datadir)/ntop/warnuser; \
 	fi
 
-	@utils/checkrrdmodel.sh $(DESTDIR)/$(datadir)
 
 install-data-as:
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR);
