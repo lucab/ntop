@@ -50,6 +50,8 @@ ntop \- display top network users
 .IR "user name" ]
 .RB [ -l
 .IR "dump file name" ]
+.RB [ -U
+.IR "mapper.pl URL" ]
 .RB [ -F 
 .IR "flow filter expression" ]
 .RB [ "filter expression" ]
@@ -200,6 +202,9 @@ the user specified.
 
 .It -l
 Dumps the network traffic captured by ntop in a file in pcap format (useful for debug).
+
+.It -U
+It specifies the UTR of the mapper.pl utility (it's part of the ntop distribution [see www/Perl/mapper.pl] for displaying host location.
 
 .It -t
 This flag specifies the level of
