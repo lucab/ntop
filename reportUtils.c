@@ -365,19 +365,16 @@ void printFooter(int reportType) {
     case SORT_DATA_RCVD_HOST_TRAFFIC:
     case SORT_DATA_SENT_HOST_TRAFFIC:
     case SORT_DATA_HOST_TRAFFIC:      
-        if (snprintf(buf, sizeof(buf), "<BR><TABLE BORDER=\"0\"><TR><TH>Color code:&nbsp;&nbsp;&nbsp;</TH>"
-                   "<TD "TD_BG">&nbsp;&nbsp;0%%&nbsp;&nbsp;</TD>"
-                   "<TD "PCTG_LOW_COLOR">&nbsp;&nbsp;&gt;0%% to %d%%&nbsp;&nbsp;</TD>"
-                   "<TD "PCTG_MID_COLOR">&nbsp;&nbsp;&gt;%d%% to %d%%&nbsp;&nbsp;</TD>"
-                   "<TD "PCTG_HIGH_COLOR">&nbsp;&nbsp;&gt;%d%% to 100%%&nbsp;&nbsp;</TD>"
-                   "<TD>&nbsp;The percentage value is - for a given host - the traffic for that host"
-                   " during that hour divided by the total traffic for that host for the last 24 hours.</TD>"
-                   "</TR></TABLE>\n",
-                   PCTG_LOW,
-                   PCTG_LOW,
-                   PCTG_MID,
-                   PCTG_MID) < 0)
-            BufferTooShort();
+        if (snprintf(buf, sizeof(buf), "<BR><b>Color Code</b><TABLE><TR>"
+		     "<TD ALIGN=CENTER NOWRAP "TD_BG" WIDTH=100> 0%% </TD>"
+		     "<TD ALIGN=CENTER NOWRAP "PCTG_LOW_COLOR" WIDTH=100> 0%% to %d%% </TD>"
+		     "<TD ALIGN=CENTER NOWRAP "PCTG_MID_COLOR" WIDTH=100> %d%% to %d%% </TD>"
+		     "<TD ALIGN=CENTER NOWRAP "PCTG_HIGH_COLOR" WIDTH=100> &gt;%d%% to 100%% </TD></TR>"
+		     "<TR><TD COLSPAN=4>The percentage value is - for a given host - the traffic for that host"
+		     " during that hour divided by the total traffic for that host for the last 24 hours.</TD>"
+		     "</TR></TABLE>\n",
+		     PCTG_LOW, PCTG_LOW, PCTG_MID, PCTG_MID) < 0)
+	  BufferTooShort();
         sendString(buf);
         break;
     case SORT_DATA_RECEIVED_THPT:
@@ -629,8 +626,8 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     if(abs(column) == 6) { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor; }
     else { arrow[5] = "";  theAnchor[5] = htmlAnchor1;}
 
-    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\">Throughput (bits per second)</TH>"
-	    "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\">Packet Throughput</TH>"
+    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\">Data</TH>"
+	    "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\">Packets</TH>"
             "</TR><TR "TR_ON">") < 0)
       BufferTooShort();
     sendString(buf);
