@@ -2091,7 +2091,9 @@ static void handleNetFlowPacket(u_char *_deviceId,
 /* ****************************** */
 
 static PluginInfo netflowPluginInfo[] = {
-  { "NetFlow",
+  { 
+    VERSION, /* current ntop version */
+    "NetFlow",
     "This plugin is used to setup, activate and deactivate ntop's NetFlow support.<br>"
     "ntop can both collect and receive NetFlow V5/V7/V9 data. Received NetFlow data is "
     "reported as a separate 'NIC' in the regular ntop reports.",

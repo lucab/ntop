@@ -445,10 +445,16 @@ char* makeHostLink(HostTraffic *el, short mode,
       } else {
 	vendorInfo = getVendorInfo(el->ethAddress, 0);
 	if(vendorInfo[0] != '\0') {
-	  sprintf(symIp, "%s%s", vendorInfo, &linkName[8]);
+	  snprintf(symIp, sizeof(symIp), "%s%s", vendorInfo, &linkName[8]);
 	}
       }
     }    
+
+    /* Ethernet address is used */
+    if(symIp[2] == ':') {
+      char *symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));  
+      snprintf(symIp, sizeof(symIp), "%s%s", symEthName, &el->ethAddressString[8]);
+    }
   }
 
   if(addCountryFlag == 0)

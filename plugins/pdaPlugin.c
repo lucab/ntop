@@ -288,7 +288,9 @@ static void termPdaFunct(void) {
 /* ****************************** */
 
 static PluginInfo PDAPluginInfo[] = {
-  { "PDAPlugin",
+  {
+    VERSION, /* current ntop version */
+    "PDAPlugin",
     "This plugin produces a minimal ntop report, suitable for display on a pda.",
     "2.2",            /* version */
     "<A HREF=mailto:walterbrock@netscape.net>W. Brock</A>", 

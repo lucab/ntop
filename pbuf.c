@@ -2831,6 +2831,17 @@ void processPacket(u_char *_deviceId,
 	    sap_type = llcHeader.ssap & ~CONST_LLC_GSAP;
 	    llcsap_string(sap_type);
 
+	    if((sap_type == 0xAA /* SNAP */)
+	       && (llcHeader.ctl.snap_ether.snap_orgcode[0] == 0x0)
+	       && (llcHeader.ctl.snap_ether.snap_orgcode[1] == 0x0)
+	       && (llcHeader.ctl.snap_ether.snap_orgcode[2] == 0xc) /* 0x00000C = Cisco */
+	       && (llcHeader.ctl.snap_ether.snap_ethertype[0] == 0x20)
+	       && (llcHeader.ctl.snap_ether.snap_ethertype[1] == 0x00) /* 0x2000 Cisco Discovery Protocol */
+	       ) { 	      
+	      if(srcHost->fingerprint == NULL) 
+		srcHost->fingerprint = strdup(":Cisco");
+	    }
+
 	    if(sap_type != 0x42 /* !STP */) {
 	      addNonIpTrafficInfo(srcHost, sap_type, length, 0 /* sent */);
 	      addNonIpTrafficInfo(dstHost, sap_type, length, 1 /* rcvd */);

@@ -1962,7 +1962,9 @@ static void termRRDfunct(void) {
 /* ************************************* */
 
 static PluginInfo rrdPluginInfo[] = {
-  { "rrdPlugin",
+  {
+    VERSION, /* current ntop version */
+    "rrdPlugin",
     "This plugin is used to setup, activate and deactivate ntop's rrd support.<br>"
     "This plugin also produces the graphs of rrd data, available via a "
     "link from the various 'Info about host xxxxx' reports.",

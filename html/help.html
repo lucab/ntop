@@ -11,11 +11,12 @@
 <meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
 <meta name="description" content="ntop (http://www.ntop.org) status for a network.">
 <meta name="author" content="ntop">
-<meta name="generator" content="ntop v2.2">
-<link rel="stylesheet" type="text/css" href="style.css">
-<title>ntop help information</title>
+<meta name="generator" content="ntop">
+<link rel="stylesheet" type="text/css" href="/style.css">
 </head>
-<body>
+<title>ntop help information</title>
+
+<body background=white_bg.gif>
 
 <h1><a href="http://www.ntop.org/" target="_top"><img border="0" src="ntop.gif" width="59" height="49" alt="ntop logo"></a>
 ntop Error Codes</h1>
@@ -33,7 +34,8 @@ indicate that:
 
 <li>it is a bridge.</li>
 </ul>
-</li>
+Note that these warnings can be produced in case a mirrored traffic source is used and the -o flag has <b>not</b> been used.
+</li><p>
 
 <li><a name="#2"><b>Duplicated MAC found for this IP address</b></a><br>
 ntop will report this problem for those hosts that for a single MAC address
@@ -46,8 +48,17 @@ sport several IP addresses. This could indicate that:
 that routes them to destination. This is quite common on networks where the
 netmask has changed and some of the hosts still use the old netmask.</li>
 </ul>
+Note that these warnings can be produced in case a mirrored traffic source is used and the -o flag has <b>not</b> been used.
+</li><p>
 
-</li>
+<li><a name="#3"><b>Traffic on suspicious IP ports</b></a><br>
+ntop will report this problem for those hosts that produced traffic on ports where we should see no traffic (e.g. port zero).<p>
+
+<li><a name="#4"><b>Suspicious activities: too many host contacts</b></a><br>
+Usually a host contacts a limited number of hosts in a short amount of time. Some hosts (e.g. DNS/SMTP servers) can violate this rule but still behave normally. Other hosts that contact too many different hosts may be either attacked or infected by a virus that attempts to spread around. In this case you should carefully analyze the host in order to see whether this could really be an issue. Note that hosts with P2P applications, often contact several hosts, so this situation does not necessarely indicate a problem.<p>
+
+
+
 </ol>
 <hr />
 </body>

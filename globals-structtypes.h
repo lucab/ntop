@@ -1455,6 +1455,7 @@ typedef void(*PluginSessionFunc)(IPSession *sessionToPurge, int actualDeviceId);
 
 typedef struct pluginInfo {
   /* Plugin Info */
+  char *pluginNtopVersion;  /* Version of ntop for which the plugin was compiled */
   char *pluginName;         /* Short plugin name (e.g. icmpPlugin) */
   char *pluginDescr;        /* Long plugin description */
   char *pluginVersion;

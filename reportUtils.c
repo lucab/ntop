@@ -44,6 +44,7 @@ static OsInfo osInfos[] = {
   { "Berkeley",     "<IMG ALT=\"OS: BSD Unix\" ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>"},
   { "HP-UX",        "<IMG ALT=\"OS: HP-UX\" ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>" },
   { "AIX",          "<IMG ALT=\"OS: AIX\" ALIGN=MIDDLE SRC=/statsicons/os/aix.gif>" },
+  { "Cisco",        "<IMG ALT=\"OS: Cisco\" ALIGN=MIDDLE SRC=/statsicons/os/cisco.gif>" },
   NULL
 };
 
@@ -2909,7 +2910,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
 		      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
 				 "<TR "TR_ON"><TH "TH_BG">Sent To</TH>"
-				 "<TH "TH_BG">Address</TH></TR>\n");
+				 "<TH "TH_BG">IP Address</TH></TR>\n");
 		  }
 
 		  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -2946,7 +2947,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 		  if(!titleSent) printSectionTitle("Last Contacted Peers");
 		sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>"
 			   "<TR "TR_ON"><TH "TH_BG">Received From</TH>"
-			   "<TH "TH_BG">Address</TH></TR>\n");
+			   "<TH "TH_BG">IP Address</TH></TR>\n");
 	      }
 
 	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -3030,6 +3031,14 @@ u_short isHostHealthy(HostTraffic *el) {
     if(riskFactor < 1) riskFactor = 1;
   }
 
+  if((el->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD)
+     || (el->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD)) {
+    /* Mail/DNS server usually contact several hosts */
+    if(!(isSMTPhost(el) || nameServerHost(el))) {
+      if(riskFactor < 1) riskFactor = 1;
+    }
+  }
+     
   if(hasDuplicatedMac(el)) {
     if(riskFactor < 2) riskFactor = 2;
   }
@@ -3049,6 +3058,8 @@ static void checkHostHealthness(HostTraffic *el) {
   if(hasWrongNetmask(el)
      || hasDuplicatedMac(el)
      || hasSentIpDataOnZeroPort(el)
+     || (el->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD)
+     || (el->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD)
      ) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s "
 		"<IMG ALT=\"High Risk\" SRC=/Risk_high.gif> "
@@ -3067,8 +3078,14 @@ static void checkHostHealthness(HostTraffic *el) {
 		 "Duplicated MAC found for this IP address (spoofing?)</A>\n");
 
     if(hasSentIpDataOnZeroPort(el))
-      sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/help.html#2>"
+      sendString("<LI><IMG ALT=\"High Risk\" SRC=/Risk_high.gif><A HREF=/help.html#3>"
 		 "Traffic on suspicious IP ports</A>\n");
+
+    if((el->totContactedSentPeers > CONTACTED_PEERS_THRESHOLD)
+       || (el->totContactedRcvdPeers > CONTACTED_PEERS_THRESHOLD)) {
+      sendString("<LI><IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif><A HREF=/help.html#4>"
+		 "Suspicious activities: too many host contacts</A>\n");
+    }
 
     sendString("</OL></TD></TR>\n");
   }
@@ -3114,7 +3131,7 @@ void checkHostProvidedServices(HostTraffic *el) {
      || isFTPhost(el)
      || isHTTPhost(el)
      || isWINShost(el)
-     || isDHCPClient(el)        || isDHCPServer(el)
+     || isDHCPClient(el) || isDHCPServer(el)
      ) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>", getRowColor(), "Host Type") < 0) BufferTooShort();
@@ -3136,8 +3153,9 @@ void checkHostProvidedServices(HostTraffic *el) {
     if(isHTTPhost(el))         sendString("HTTP Server&nbsp;<IMG ALT=\"HTTP Server\" SRC=\"/web.gif\" BORDER=0><BR>\n");
     if(isWINShost(el))         sendString("WINS Server<BR>\n");
 
-    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client&nbsp;<IMG ALT=\"DHCP Client\" SRC=\"/bulb.gif\" BORDER=0><BR>\n");
-    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=\"/antenna.gif\" BORDER=0>&nbsp;<BR>\n");
+    if(isDHCPClient(el))       sendString("BOOTP/DHCP Client&nbsp;<IMG ALT=\"DHCP Client\" SRC=\"/bulb.gif\" BORDER=0><BR>\n");
+    if(isDHCPServer(el))       sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=\"/antenna.gif\" BORDER=0>&nbsp;<BR>\n");
+
     sendString("</TD></TR>");
   }
 }
@@ -4222,9 +4240,11 @@ void printSectionTitle(char *text) {
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if((broadcastHost(el) == 0) /* No broadcast addresses please */
        && (multicastHost(el) == 0) /* No multicast addresses please */
-       && ((el->hostNumIpAddress[0] != '\0') && (!addrnull(&el->hostIpAddress))
-	   /* This host speaks IP */)
-       && subnetPseudoLocalHost(el)) {
+       && (((el->hostNumIpAddress[0] != '\0') && (!addrnull(&el->hostIpAddress)) /* This host speaks IP */
+	    && subnetPseudoLocalHost(el)) 
+	   || ((el->fingerprint != NULL) && (el->fingerprint[0] == ':'))) /* This host does not speak IP but its 
+									     fingerprint has been computed */
+       ) {
 
       if(el->fingerprint == NULL)   { continue; }
       if(el->fingerprint[0] != ':') setHostFingerprint(el);

@@ -219,6 +219,15 @@ static void loadPlugin(char* dirName, char* pluginName) {
     return;
   }
 
+  if((pluginInfo->pluginNtopVersion == NULL)
+     || strcmp(pluginInfo->pluginNtopVersion, VERSION)) {
+    traceEvent(CONST_TRACE_WARNING, "Plugin '%s' discarded: compiled for a different ntop version", pluginName);
+    traceEvent(CONST_TRACE_WARNING, "Expected ntop version '%s', actual plugin ntop version '%s'.",
+	       pluginInfo->pluginNtopVersion == NULL ? "??" : pluginInfo->pluginNtopVersion,
+	       VERSION);
+    return;
+  }
+
   newFlow = (FlowFilterList*)calloc(1, sizeof(FlowFilterList));
   
   if(newFlow == NULL) {

@@ -2199,7 +2199,9 @@ static void termsFlowFunct(void) {
 /* ****************************** */
 
 static PluginInfo sFlowPluginInfo[] = {
-  { "sFlowPlugin",
+  { 
+    VERSION, /* current ntop version */
+    "sFlowPlugin",
     "This plugin is used to setup, activate and deactivate ntop's sFlow support.<br>"
       "ntop can both collect and receive sFlow data. Received sFlow data is "
       "reported as a separate 'NIC' in the regular ntop reports.",

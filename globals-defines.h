@@ -145,6 +145,11 @@
  */
 
 /*
+ *  Max number of hosts a 'non server' host should contact
+ */
+#define CONTACTED_PEERS_THRESHOLD 1024
+
+/*
  *  How long between runs of the idle host purge?
  */
 #define PARM_HOST_PURGE_INTERVAL            2*60

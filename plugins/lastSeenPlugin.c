@@ -370,7 +370,9 @@ static void termLsFunct(void) {
 /* ====================================================================== */
 
 static PluginInfo LsPluginInfo[] = {
-  { "LastSeenWatchPlugin",
+  { 
+    VERSION, /* current ntop version */
+    "LastSeenWatchPlugin",
     "This plugin produces a report about the last time packets were seen from "
     "each specific host.  A note card database is available for recording "
     "additional information.",

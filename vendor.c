@@ -290,12 +290,20 @@ static char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
 #endif
 
       data_data = gdbm_fetch(myGlobals.macPrefixFile, key_data);
+      
+      if(data_data.dptr == NULL) {
+	/* Maybe this is just the initial MAC (e.g 00:11:22) */
+	if(key_data.dsize > 8) {
+	  key_data.dptr[8] = '\0';
+	  key_data.dsize   = 9;
+	}
+      }
 
-      if( (data_data.dptr != NULL) && ( ((MACInfo*)data_data.dptr)->isSpecial = 's') ) {
-          strncpy(tmpBuf, ((MACInfo*)data_data.dptr)->vendorName, sizeof(tmpBuf));
-          free(data_data.dptr);
-          myGlobals.numVendorLookupFound48bit++;
-          return(tmpBuf);
+      if((data_data.dptr != NULL) && (((MACInfo*)data_data.dptr)->isSpecial = 's')) {
+	strncpy(tmpBuf, ((MACInfo*)data_data.dptr)->vendorName, sizeof(tmpBuf));
+	free(data_data.dptr);
+	myGlobals.numVendorLookupFound48bit++;
+	return(tmpBuf);
       }
   }
 
