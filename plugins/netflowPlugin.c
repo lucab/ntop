@@ -2427,10 +2427,12 @@ static void handleNetflowHTTPrequest(char* _url) {
 	    return;
 	  }
 	} else if(strcmp(device, "port") == 0) {
-	  if(deviceId > 0) {
-	    myGlobals.device[deviceId].netflowGlobals->netFlowInPort = atoi(value);
-	    storePrefsValue(nfValue(deviceId, "netFlowInPort", 1), value);
-	    setNetFlowInSocket(deviceId);
+	  if(myGlobals.device[deviceId].netflowGlobals->netFlowInPort != atoi(value)) {
+	    if(deviceId > 0) {
+	      myGlobals.device[deviceId].netflowGlobals->netFlowInPort = atoi(value);
+	      storePrefsValue(nfValue(deviceId, "netFlowInPort", 1), value);
+	      setNetFlowInSocket(deviceId);
+	    }
 	  }
 	} else if(strcmp(device, "debug") == 0) {
 	  if(deviceId > 0) {
@@ -2453,8 +2455,8 @@ static void handleNetflowHTTPrequest(char* _url) {
 	  if(deviceId > 0) {
 	    if(sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d",
 		      &a, &b, &c, &d, &a1, &b1, &c1, &d1) == 8) {
-	      myGlobals.device[deviceId].netflowGlobals->netFlowIfAddress.s_addr =(a << 24) +(b << 16) +(c << 8) + d;
-	      myGlobals.device[deviceId].netflowGlobals->netFlowIfMask.s_addr    =(a1 << 24) +(b1 << 16) +(c1 << 8) + d1;
+	      myGlobals.device[deviceId].netflowGlobals->netFlowIfAddress.s_addr = (a << 24) +(b << 16) +(c << 8) + d;
+	      myGlobals.device[deviceId].netflowGlobals->netFlowIfMask.s_addr    = (a1 << 24) +(b1 << 16) +(c1 << 8) + d1;
 	      storePrefsValue(nfValue(deviceId, "ifNetMask", 1), value);
 	      freeNetFlowMatrixMemory(deviceId);
 	      setNetFlowInterfaceMatrix(deviceId);
