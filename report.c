@@ -2866,9 +2866,6 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
 	ipPorts = (PortCounter**)calloc(MAX_IP_PORT, sizeof(PortCounter*));
 
-#ifdef CFG_MULTITHREADED
-	accessMutex(&myGlobals.gdbmMutex, "purgeIpPorts");
-#endif
 	for(i=0; i<MAX_IP_PORT; i++) {
 	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i] != NULL) {
 	    ipPorts[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipPorts[i];
@@ -2910,10 +2907,6 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	  } /* for */
 
 	}
-
-#ifdef CFG_MULTITHREADED
-	releaseMutex(&myGlobals.gdbmMutex);
-#endif
 	free(ipPorts);
 	sendString("<tr><td align=left colspan=5>Notes:<ul>"
 		   "<li>sum(total traffic per port) = 2*(total IP traffic)"

@@ -1865,15 +1865,6 @@ void processPacket(u_char *_deviceId,
       cleanup(2);
     } else
       numPkt++;
-
-    /*
-      if(numPkt=100000) {
-      int i;
-
-      for(i=0; i<myGlobals.numDevices; i++)
-      freeHostInstances(i);
-      }
-    */
   }
 #endif
 

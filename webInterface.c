@@ -3782,7 +3782,8 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 #ifndef WIN32
   sendString(texthtml("\n\nCompile Time: ./configure\n\n", "<tr><th colspan=2 "DARK_BG"" TH_BG ">Compile Time: ./configure</tr>\n"));
-  printFeatureConfigInfo(textPrintFlag, "./configure parameters", configure_parameters);
+  printFeatureConfigInfo(textPrintFlag, "./configure parameters", 
+			 configure_parameters[0] == '\0' ? "&nbsp;" : configure_parameters);
   printFeatureConfigInfo(textPrintFlag, "Built on (Host)", host_system_type);
   printFeatureConfigInfo(textPrintFlag, "Built for(Target)", target_system_type);
   printFeatureConfigInfo(textPrintFlag, "compiler (cflags)", compiler_cflags);
@@ -3925,6 +3926,8 @@ void printNtopConfigInfo(int textPrintFlag) {
 
       printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
       printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
+      printMutexStatus(textPrintFlag, &myGlobals.purgeMutex, "purgeMutex");
+
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
       if(myGlobals.numericFlag == 0) 
 	printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");

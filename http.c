@@ -2400,8 +2400,11 @@ void handleHTTPrequest(struct in_addr from) {
   if(requestedURL[0] == '\0')
     returnHTTPpageNotFound(0);
 
-#ifdef MAKE_WITH_I18N
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
+#endif
 
+#ifdef MAKE_WITH_I18N
  #ifdef I18N_DEBUG
   for (i=0; i<numLang; i++) {
       traceEvent(CONST_TRACE_INFO, "I18N_DEBUG: Requested Language [%d] = '%s'\n",
@@ -2415,15 +2418,20 @@ void handleHTTPrequest(struct in_addr from) {
                       agent,
                       requestedLanguage,
                       numLang);
+
   for (i=numLang-1; i>=0; i--) {
       free(requestedLanguage[i]);
   }
 
 #else
-  rc = returnHTTPPage(&requestedURL[1], postLen,
-		      &from, &httpRequestedAt, &usedFork,
-                      agent);
+  rc =  returnHTTPPage(&requestedURL[1], postLen,
+		       &from, &httpRequestedAt, &usedFork, agent);
 #endif
+
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.purgeMutex);
+#endif
+
   
   if(rc == 0) {
     if(compressFile)

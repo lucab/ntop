@@ -1625,6 +1625,10 @@ XML*/
     pthread_t dequeueThreadId;
 
     /*
+     * HTS - Hash Purge
+     */
+    PthreadMutex purgeMutex;
+    /*
      * HTS - Host Traffic Statistics
      */
     PthreadMutex hostsHashMutex;

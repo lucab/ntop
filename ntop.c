@@ -608,7 +608,7 @@ static void purgeIpPorts(int theDevice) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].numHosts == 0) return;
 
   if(firstRun) {
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+    traceEvent(CONST_TRACE_INFO, 
                "PORT_PURGE: purgeIpPorts firstRun (mutex every %d times through the loop)\n",
                CONST_MUTEX_PHP_MASK+1);
     firstRun = 0;
@@ -1004,8 +1004,10 @@ RETSIGTYPE cleanup(int signo) {
     gdbm_close(myGlobals.eventFile);
     myGlobals.eventFile = NULL;
   }
+
 #ifdef CFG_MULTITHREADED
   deleteMutex(&myGlobals.gdbmMutex);
+  deleteMutex(&myGlobals.purgeMutex);
 #endif
 
   for(i=0; i<myGlobals.numDevices; i++) {

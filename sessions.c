@@ -112,7 +112,7 @@ static void updateHTTPVirtualHosts(char *virtualHostName,
 
     while(list != NULL) {
       if(strcmp(list->virtualHostName, virtualHostName) == 0) {
-	incrementTrafficCounter(&list->bytesSent, bytesSent.value), 
+	incrementTrafficCounter(&list->bytesSent, bytesSent.value),
 	  incrementTrafficCounter(&list->bytesRcvd, bytesRcvd.value);
 	break;
       } else {
@@ -600,18 +600,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	   || ((theSession->lastSeen+PARM_SESSION_PURGE_MINIMUM_IDLE) < myGlobals.actTime)
 	   /* Purge sessions that are not yet active and that have not completed
 	      the 3-way handshave within 1 minute */
-	   || ((theSession->sessionState < FLAG_STATE_ACTIVE) && ((theSession->lastSeen+60) < myGlobals.actTime))
-
-
+	   || ((theSession->sessionState < FLAG_STATE_ACTIVE) 
+	       && ((theSession->lastSeen+60) < myGlobals.actTime))
 	   /* Purge active sessions where one of the two peers has not sent any data
 	      (it might be that ntop has created the session bucket because it has
 	      thought that the session was already started) since 120 seconds */
 	   || ((theSession->sessionState >= FLAG_STATE_ACTIVE)
 	       && ((theSession->bytesSent.value == 0) || (theSession->bytesRcvd.value == 0))
-	       && ((theSession->lastSeen+120) < myGlobals.actTime))
-
-
-	   ) {
+	       && ((theSession->lastSeen+120) < myGlobals.actTime))) {
 	  IPSession *nextSession = theSession->next;
 
 	  if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
@@ -630,7 +626,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     } /* while */
 
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Search for session: %d (%d <-> %d)", found, sport, dport);
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Search for session: %d (%d <-> %d)", 
+	       found, sport, dport);
 #endif
 
     if(!found) {
@@ -644,7 +641,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		 myGlobals.device[actualDeviceId].numTcpSessions);
 #endif
 
-      /* We don't check for space here as the datastructure allows
+      /* 
+	 We don't check for space here as the datastructure allows
 	 ntop to store sessions as needed
       */
 #ifdef PARM_USE_SESSIONS_CACHE

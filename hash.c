@@ -21,8 +21,10 @@
 #include "ntop.h"
 
 static float timeval_subtract (struct timeval x, struct timeval y); /* forward */
+#ifdef HASH_DEBUG
 static void hashSanityCheck();
 static void hostHashSanityCheck(HostTraffic *host);
+#endif
 
 /* ******************************* */
 
@@ -320,6 +322,10 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     Memory Recycle
   */
 
+#ifdef HASH_DEBUG
+  hostHashSanityCheck(host);
+#endif
+
 #if RECYCLE_MEMORY
   if(myGlobals.hostsCacheLen < (MAX_HOSTS_CACHE_LEN-1)) {
     myGlobals.hostsCache[myGlobals.hostsCacheLen++] = host;
@@ -337,12 +343,14 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Leaving freeHostInfo()");
 #endif
-
-  hostHashSanityCheck(host); /* REMOVE */
 }
 
 /* ************************************ */
 
+/* 
+   This function is called before the final
+   cleanup when ntop shutsdown
+*/
 void freeHostInstances(int actualDeviceId) {
   u_int idx, i, max, num=0;
 
@@ -360,7 +368,9 @@ void freeHostInstances(int actualDeviceId) {
     }
     actualDeviceId = i;
 
-    hashSanityCheck(); /* REMOVE */
+#ifdef HASH_DEBUG
+    hashSanityCheck();
+#endif
 
     for(idx=FIRST_HOSTS_ENTRY; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
       HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
@@ -377,7 +387,9 @@ void freeHostInstances(int actualDeviceId) {
       myGlobals.device[actualDeviceId].hash_hostTraffic[idx] = NULL;
     } /* for */
 
-    hashSanityCheck(); /* REMOVE */
+#ifdef HASH_DEBUG
+    hashSanityCheck();
+#endif
   }
 
   traceEvent(CONST_TRACE_INFO, "FREE_HOST: End, freed %d", num);
@@ -410,8 +422,9 @@ void purgeIdleHosts(int actDevice) {
   if(myGlobals.rFileName != NULL) return;
 
   if(firstRun) {
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "IDLE_PURGE: purgeIdleHosts firstRun (mutex every %d times through the loop)\n",
-                           CONST_MUTEX_FHS_MASK+1);
+    traceEvent(CONST_TRACE_INFO,
+	       "IDLE_PURGE: purgeIdleHosts firstRun (mutex every %d times through the loop)\n",
+	       CONST_MUTEX_FHS_MASK+1);
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
   }
@@ -437,6 +450,10 @@ void purgeIdleHosts(int actDevice) {
   purgeTime = startTime-PARM_HOST_PURGE_INTERVAL; /* Time used to decide whether a host need to be purged */
 
 #ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
+#endif
+
+#ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
 #endif
   purgeOldFragmentEntries(actDevice); /* let's do this too */
@@ -452,7 +469,9 @@ void purgeIdleHosts(int actDevice) {
   traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d(%s), up to %d of %d hosts",
              actDevice, myGlobals.device[actDevice].name, len, hashLen);
 
-  hashSanityCheck(); /* REMOVE */
+#ifdef HASH_DEBUG
+  hashSanityCheck();
+#endif
 
   for (idx=0; idx<hashLen; idx++) {
     HostTraffic *el, *prev;
@@ -506,7 +525,9 @@ void purgeIdleHosts(int actDevice) {
     theIdx = (theIdx+1) % hashLen;
   }
 
-  hashSanityCheck(); /* REMOVE */
+#ifdef HASH_DEBUG
+  hashSanityCheck();
+#endif
 
   traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: FINISHED selection, %d hosts selected", maxBucket);
 
@@ -598,6 +619,10 @@ void purgeIdleHosts(int actDevice) {
 #endif
       }
   }
+
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.purgeMutex);
+#endif
 }
 
 /* **************************************************** */
@@ -626,7 +651,9 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
     return(NULL);
   }
 
-  hashSanityCheck(); /* REMOVE */
+#ifdef HASH_DEBUG
+  hashSanityCheck();
+#endif
 
   idx = hash(hostIpAddress, ether_addr,
 	     &useIPAddressForSearching, &el, actualDeviceId);
@@ -940,7 +967,9 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
   if(el == NULL)
     traceEvent(CONST_TRACE_INFO, "lookupHost(idx=%d) is NULL", idx);
 
-  hashSanityCheck(); /* REMOVE */
+#ifdef HASH_DEBUG
+  hashSanityCheck();
+#endif
 
   return(el);
 }
@@ -1044,15 +1073,6 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
 /* ************************************ */
 
 #ifdef HASH_DEBUG
-/* Debug only */
-static void dumpHash() {
-  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
-      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
-    traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: (%3d) %s / %s",
-	       i, el->ethAddressString, el->hostNumIpAddress);
-  }
-}
-#endif /* DEBUG */
 
 static void dumpHash() {
   int i=0;
@@ -1105,5 +1125,13 @@ static void hostHashSanityCheck(HostTraffic *host) {
   }
 }
 
-
+/* Debug only */
+static void dumpHash() {
+  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
+    traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: (%3d) %s / %s",
+	       i, el->ethAddressString, el->hostNumIpAddress);
+  }
+}
+#endif /* HASH_DEBUG */
 

@@ -3457,6 +3457,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
   char fingerprint[32];
   char *strtokState;
   
+  return; /* REMOVE */
   if((srcHost->fingerprint == NULL)       /* No fingerprint yet    */
      || (srcHost->fingerprint[0] == ':')  /* OS already calculated */
      || (strlen(srcHost->fingerprint) < 28))
@@ -3563,14 +3564,14 @@ int ntop_gdbm_delete(GDBM_FILE g, datum d) {
 
 #ifdef CFG_MULTITHREADED
     if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_delete");
+      accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_delete");
 #endif
 
   rc = gdbm_delete(g, d);
   
 #ifdef CFG_MULTITHREADED
    if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
- releaseMutex(&myGlobals.gdbmMutex);
+     releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
   return(rc);

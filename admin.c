@@ -577,10 +577,6 @@ int doChangeFilter(int len) {
   if(err==NULL) {
     traceEvent(CONST_TRACE_INFO, "Changing the kernel (libpcap) filter...");
 
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.gdbmMutex, "changeFilter");
-#endif
-
     for(i=0; i<myGlobals.numDevices; i++) {
       if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice) && (err==NULL)) {
 	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
@@ -604,10 +600,6 @@ int doChangeFilter(int len) {
 	}
       }
     }
-
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
   }
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
 

@@ -849,6 +849,7 @@ void initThreads(void) {
   createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
   createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
+  createMutex(&myGlobals.purgeMutex);       /* synchronize purging */
 
   /*
    * Create the thread (1) - NPA - Network Packet Analyzer (main thread)
