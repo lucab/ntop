@@ -919,10 +919,11 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 
   if((!broadcastHost(host))
      && ((usePersistentStorage == 1)
-	 || subnetPseudoLocalHost(host) /* <==== 
-					   Courtesy of  
-					   Joel Crisp <jcrisp@dyn21-126.trilogy.com>
-					*/
+	 || subnetPseudoLocalHost(host) 
+	 /* 
+	    Courtesy of  
+	    Joel Crisp <jcrisp@dyn21-126.trilogy.com>
+	 */
 	 ))
     storeHostTrafficInstance(host);
 

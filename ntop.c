@@ -769,20 +769,21 @@ RETSIGTYPE cleanup(int signo) {
 
 #endif /* #ifndef WIN32 */
 
-#ifdef FULL_MEMORY_FREE
+/* #ifdef FULL_MEMORY_FREE */
   freeHostInstances();
-#endif
+/* #endif */
+
 #ifndef MICRO_NTOP
   unloadPlugins();
 #endif
   termLogger();
   (void)fflush(stdout);
 
-   if(device[actualDeviceId].pcapDumper != NULL) 
-     pcap_dump_close(device[actualDeviceId].pcapDumper);
-
-   if(device[actualDeviceId].pcapErrDumper != NULL) 
-     pcap_dump_close(device[actualDeviceId].pcapErrDumper);
+  if(device[actualDeviceId].pcapDumper != NULL) 
+    pcap_dump_close(device[actualDeviceId].pcapDumper);
+  
+  if(device[actualDeviceId].pcapErrDumper != NULL) 
+    pcap_dump_close(device[actualDeviceId].pcapErrDumper);
 
   termIPServices();
   termIPSessions();

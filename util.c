@@ -43,8 +43,8 @@
 #define _UTIL_C_
 
 /*
-  #define DEBUG
   #define STORAGE_DEBUG
+  #define DEBUG
 */
 
 #include "ntop.h"
@@ -1563,6 +1563,31 @@ void storeHostTrafficInstance(HostTraffic *el) {
 
 /* ************************************ */
 
+static resetHostsVariables(HostTraffic* el) {
+  el->fullDomainName = NULL;
+  el->dotDomainName = NULL;
+  el->hostSymIpAddress[0] = '\0';
+  el->osName = NULL;
+  el->nbHostName = NULL;
+  el->nbDomainName = NULL;
+  el->atNodeName = NULL;
+  memset(el->atNodeType, 0, sizeof(el->atNodeType));
+  el->ipxHostName = NULL;
+  el->numIpxNodeTypes = 0;
+  memset(el->portsUsage, 0, sizeof(el->portsUsage));
+  el->protoIPTrafficInfos = NULL;
+  el->tcpSessionList = NULL;
+  el->udpSessionList = NULL;
+  el->nextDBupdate = 0;
+  el->icmpInfo = NULL;
+  el->dnsStats = NULL;
+  el->httpStats = NULL;
+  el->napsterStats = NULL;
+  el->dhcpStats = NULL;
+}
+
+/* ************************************ */
+
 HostTraffic* resurrectHostTrafficInstance(char *key) {
 #ifdef HAVE_GDBM_H
   datum key_data;
@@ -1604,26 +1629,6 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
 #else
     el = (HostTraffic*)data_data.dptr;
 #endif
-    el->fullDomainName = NULL;
-    el->dotDomainName = NULL;
-    el->hostSymIpAddress[0] = '\0';
-    el->osName = NULL;
-    el->nbHostName = NULL;
-    el->nbDomainName = NULL;
-    el->atNodeName = NULL;
-    memset(el->atNodeType, 0, sizeof(el->atNodeType));
-    el->ipxHostName = NULL;
-    el->numIpxNodeTypes = 0;
-    memset(el->portsUsage, 0, sizeof(el->portsUsage));
-    el->protoIPTrafficInfos = NULL;
-    el->tcpSessionList = NULL;
-    el->udpSessionList = NULL;
-    el->nextDBupdate = 0;
-    el->icmpInfo = NULL;
-    el->dnsStats = NULL;
-    el->httpStats = NULL;
-    el->napsterStats = NULL;
-    el->dhcpStats = NULL;
 
     if(broadcastHost(el)) {
       /*
@@ -1632,7 +1637,8 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
       */
       free(el);
       return(NULL);
-    }
+    } else
+      resetHostsVariables(el);
 
 #ifdef STORAGE_DEBUG
     traceEvent(TRACE_INFO, "\nResurrected instance: '%s/%s'\n",
