@@ -25,7 +25,7 @@
 #include <pwd.h>
 #endif
 
-#if defined(HAVE_MALLOC_H) && defined(__GNUC__)
+#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
  #include <malloc.h>
  #ifdef HAVE_SYS_RESOURCE_H
   #include <sys/resource.h>
@@ -2455,7 +2455,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "Domain name (short)", myGlobals.shortDomainName);
 
-#if defined(HAVE_MALLOC_H) && defined(__GNUC__)
+#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
   {
     struct mallinfo memStats;
  #ifdef HAVE_SYS_RESOURCE_H

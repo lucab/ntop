@@ -1343,6 +1343,22 @@ AC_CHECK_FUNCS([strtok_r])
 dnl> Following used by regex.c only
 AC_CHECK_FUNCS([bzero])
 
+dnl> Check if malloc.h has mallinfo...
+AC_MSG_CHECKING([for mallinfo in malloc.h])
+AC_LANG_CONFTEST(
+[AC_LANG_PROGRAM([[#include <malloc.h>]],
+                 [[struct mallinfo memStats = mallinfo();]])])
+gcc conftest.c > /dev/null 2> /dev/null
+rc=$?
+if test ".${rc}" = ".0"; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE_UNQUOTED(HAVE_MALLINFO_MALLOC_H,
+                           1,
+                           [malloc.h has mallinfo])
+else
+    AC_MSG_RESULT(no)
+fi
+
 echo
 echo "-------------------------------------------------------------------"
 echo "-------------------------------------------------------------------"

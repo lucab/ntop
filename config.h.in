@@ -280,6 +280,12 @@
    double. */
 #undef HAVE_LONG_DOUBLE
 
+/* malloc.h has mallinfo */
+#undef HAVE_MALLINFO_MALLOC_H
+
+/* Define to 1 if you have the <malloc.h> header file. */
+#undef HAVE_MALLOC_H
+
 /* Define to 1 if you have the `memchr' function. */
 #undef HAVE_MEMCHR
 
@@ -501,6 +507,9 @@
 /* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
    */
 #undef HAVE_SYS_NDIR_H
+
+/* Define to 1 if you have the <sys/resource.h> header file. */
+#undef HAVE_SYS_RESOURCE_H
 
 /* Define to 1 if you have the <sys/sched.h> header file. */
 #undef HAVE_SYS_SCHED_H
