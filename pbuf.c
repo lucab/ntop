@@ -469,8 +469,10 @@ static void resetHourTraffic(u_short hourId) {
     HostTraffic *el;
 
     for(el=getFirstHost(i); el != NULL; el = getNextHost(i, el)) {
-      resetTrafficCounter(&el->trafficDistribution->last24HoursBytesSent[hourId]);
-      resetTrafficCounter(&el->trafficDistribution->last24HoursBytesRcvd[hourId]);
+      if(el->trafficDistribution != NULL) {
+	resetTrafficCounter(&el->trafficDistribution->last24HoursBytesSent[hourId]);
+	resetTrafficCounter(&el->trafficDistribution->last24HoursBytesRcvd[hourId]);
+      }
     }
   }
 }
@@ -1898,8 +1900,8 @@ void processPacket(u_char *_deviceId,
   AnyHeader *anyHeader;
 #endif
 
-#ifdef MEMORY_DEBUG
-  {
+#ifndef MEMORY_DEBUG
+  if(0) {
     static long numPkt=0;
 
     /* traceEvent(CONST_TRACE_INFO, "%ld (%ld)", numPkt, length); */
@@ -1908,6 +1910,15 @@ void processPacket(u_char *_deviceId,
       cleanup(2);
     } else
       numPkt++;
+  } else {
+    static time_t start=0;
+
+    if(start == 0)
+      start = time(NULL)+1*60; /* 15 minutes */
+    else {
+      if(time(NULL) > start)
+	cleanup(2);
+    }
   }
 #endif
 
