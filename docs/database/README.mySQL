@@ -1,0 +1,44 @@
+How to use ntop with mySQL
+--------------------------
+
+1) install and run mySQL
+2) run: mysqladmin create NTOP
+3) run: mysql NTOP < database/mySQLdefs.txt
+4) run: perl database/mySQLserver.pl &
+5) run: ntop -w 3000 -i eth0 -b localhost:4000
+
+
+
+If you are working with mySQL, you should try the MySQL-Explorer (W95/NT) you can download from ftp://accordata.net/pub.
+
+Hint:
+- "database" is a subdir of the ntop-source
+- If the database is on an different machine than ntop, run the perl-script on the machine where mySQL is executed
+- If you get an error like /tmp/mysql.sock not found, edit the perl-script (more inside)
+
+---
+Ralf.Amandi<Ralf.Amandi@accordata.net>, February 2000
+
+============================================================
+
+I've right now downloaded the MySQL Explorer. I'm starting to use
+MySQL and I'm curious to use your good software. As I've seen that
+it needs an auto-extracting setup I've created it to give you
+a little contribution.
+In attachment there is the Inno Setup Project file used to build
+the setup file. You can download Inno Setup Pro 1.09a from
+       <http://pakawatk.hypermart.net/>
+if you would (as I think) build the auto-extracting file by yourself.
+It's a great tool and it's free!
+
+To build on your own the setup you have to put all the files into the
+directory C:\tmp\mysqlexplorer , create there a directory called
+"Setup", put into C:\tmp\mysqlexplorer\ the project file here in
+attachment and click over that. It will invoke Inno Setup Pro
+1.09a. Then you'll have to click on the button "Save&Compile". Into
+C:\tmp\mysqlexplorer\Setup it will create the auto-extracting file.
+
+If you would like to have more information please contact me.
+
+---
+Antonio 'marty' Maiorca <marty@tai.it>
