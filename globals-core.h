@@ -340,7 +340,7 @@ extern void fillDomainName(HostTraffic *el);
 #ifdef CFG_MULTITHREADED
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
                         char* userParm);
-extern void killThread(pthread_t *threadId);
+extern int killThread(pthread_t *threadId);
 extern int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
 extern int _accessMutex(PthreadMutex *mutexId, char* where,
                         char* fileName, int fileLine);

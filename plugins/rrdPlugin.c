@@ -1913,7 +1913,27 @@ static int initRRDfunct(void) {
 
 static void termRRDfunct(void) {
 #ifdef CFG_MULTITHREADED
-  if(active) killThread(&rrdThread);
+  int count=0, rc;
+
+  /* Hold until rrd is finished or 15s elapsed... */
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Locking mutex (may block for a little while)");
+
+  while ((count++ < 5) && (tryLockMutex(&rrdMutex, "Termination") != 0)) {
+      sleep(3);
+  }
+  if(rrdMutex.isLocked) {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Locked mutex, continuing shutdown");
+  } else {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Unable to lock mutex, continuing shutdown anyway");
+  }
+
+  if(active) {
+    rc = killThread(&rrdThread);
+    if (rc == 0)
+      traceEvent(CONST_TRACE_INFO, "RRD: killThread() succeeded");
+    else 
+      traceEvent(CONST_TRACE_ERROR, "RRD: killThread() failed, rc %s(%d)", strerror(rc), rc);
+  }
 #endif
 
 #ifdef CFG_MULTITHREADED

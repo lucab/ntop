@@ -1028,9 +1028,11 @@ int createThread(pthread_t *threadId,
 
 /* ************************************ */
 
-void killThread(pthread_t *threadId) {
-  pthread_detach(*threadId);
+int killThread(pthread_t *threadId) {
+  int rc;
+  rc = pthread_detach(*threadId);
   myGlobals.numThreads--;
+  return rc;
 }
 
 /* ************************************ */
