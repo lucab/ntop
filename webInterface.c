@@ -216,7 +216,7 @@ void showPluginsList(char* pluginName) {
 		   "<TR><TH "TH_BG">View</TH><TH "TH_BG">Configure</TH><TH "TH_BG">Description</TH>"
 		   "<TH "TH_BG">Version</TH>"
 		   "<TH "TH_BG">Author</TH>"
-		   "<TH "TH_BG">Active</TH>"
+		   "<TH "TH_BG">Active<br><i>(click to change)</i></TH>"
 		   "</TR>\n");
 	doPrintHeader = 1;
       }
