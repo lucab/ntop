@@ -49,6 +49,11 @@ static pthread_mutex_t stateChangeMutex;
 static SessionInfo *passiveSessions;
 static u_short passiveSessionsLen;
 
+static char *versionSite[]   = { 
+  CONST_VERSIONCHECK_SITE,
+  CONST_VERSIONCHECK_BACKUP_SITE,
+  NULL };
+
 /* ************************************ */
 
 static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
@@ -5050,6 +5055,7 @@ void extractAndAppend(char *userAgent, int userAgentLen,
 /* ********************************** */
 
 /* ===== ===== retrieve url ===== ===== */
+
 int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int bufLen) {
   struct hostent *hptr;
   char *userAgent, *space;
@@ -5450,34 +5456,36 @@ void* checkVersion(void* notUsed _UNUSED_) {
   /* The work buffer is a big boy so we can eat the entire XML file all at once
    * and avoid making this logic any more complex!
    */
-  char buf[LEN_CHECKVERSION_BUFFER], *site;
-  int rc=0;
+  char buf[LEN_CHECKVERSION_BUFFER];
+  int rc=0, idx = 0;  
 
   displayPrivacyNotice();
 
   if(myGlobals.skipVersionCheck == TRUE)
     return(NULL);
 
-  site = CONST_VERSIONCHECK_SITE;
-
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-	     "CHKVER: Checking current ntop version at %s/%s", site, CONST_VERSIONCHECK_DOCUMENT);
+  for(idx = 0; versionSite[idx] != NULL; idx++) {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: Checking current ntop version at %s/%s", versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
   
 #ifdef CHKVER_DEBUG
-  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", site, CONST_VERSIONCHECK_DOCUMENT);
+    traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
 #endif
 
-  memset(buf, 0, sizeof(buf));
+    memset(buf, 0, sizeof(buf));
   
-  rc = retrieveVersionFile(site, CONST_VERSIONCHECK_DOCUMENT, buf, sizeof(buf));
-
-  if (rc == 0) {
-    rc = processVersionFile(buf, min(sizeof(buf), strlen(buf)));
+    rc = retrieveVersionFile(versionSite[idx], CONST_VERSIONCHECK_DOCUMENT, buf, sizeof(buf));
+    
+    if(rc == 0) break;
   }
 
   if (rc == 0) {
-    traceEvent(CONST_TRACE_INFO,
-	       "CHKVER: This version of ntop is %s", reportNtopVersionCheck());
+    rc = processVersionFile(buf, min(sizeof(buf), strlen(buf)));
+    
+    if (rc == 0) {
+      traceEvent(CONST_TRACE_INFO,
+		 "CHKVER: This version of ntop is %s", reportNtopVersionCheck());
+    }
   }
 
   if(myGlobals.checkVersionStatus != FLAG_CHECKVERSION_NEWDEVELOPMENT)
