@@ -2352,7 +2352,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 
 #ifdef HAVE_ZLIB
-  printFeatureConfigInfo(textPrintFlag, "zlib version", ZLIB_VERSION);
+  printFeatureConfigInfo(textPrintFlag, "zlib version", zlibVersion());
 #endif
 
   printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    myGlobals.enablePacketDecoding == 1 ? "Enabled" : "Disabled");

@@ -397,8 +397,10 @@ int getdomainname(char *name, size_t len);
 #endif /* HAVE_OPENSSL */
 
 /* Compressed HTTP responses via zlib */
-#ifdef HAVE_ZLIB
+#ifdef HAVE_ZLIB_H
 #include <zlib.h>
+#else
+#undef HAVE_ZLIB
 #endif
 
 /*
