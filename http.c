@@ -1647,8 +1647,10 @@ static int generateNewInternalPages(char* pageName) {
 		 "<meta name=\"ROBOTS\" content=\"NOINDEX,NOFOLLOW\">\n"
 		 "<meta name=\"description\" content=\"ntop (http://www.ntop.org) status for a network.\">\n"
 		 "<meta name=\"author\" content=\"ntop\">\n"
-		 "<meta name=\"generator\" content=\"ntop v3.0\">\n"
-		 "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\">\n"
+                 "<meta name=\"generator\" content=\"ntop v");
+      sendString(version);
+      sendString("\"\n"
+                 "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\">\n"
 		 "<title>ntop frameset inner index</title>\n"
 		 "</head>\n"
 		 "<frameset rows=\"40,1*\" framespacing=\"0\" border=\"0\" frameborder=\"0\" title=\"ntop contents area\">\n"
