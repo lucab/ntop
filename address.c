@@ -55,7 +55,7 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
       accessAddrResMutex("updateHostNameInfo");
       
       if(el != NULL) {    
-	int i;
+	unsigned short i;
 	
 	if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1)) 
 	  symbolic[MAX_LEN_SYM_HOST_NAME-2] = '\0';
@@ -321,6 +321,9 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
     if (
 #ifdef HAVE_NETDB_H
 	(h_errno == NETDB_SUCCESS) &&
+#endif
+#ifdef WIN32
+	(WSAGetLastError() == 0 /* OK */) &&
 #endif
 	(hp != NULL) && 
         (hp->h_name != NULL) &&
