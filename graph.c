@@ -51,7 +51,6 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 #define MIN_SLICE_PERCENTAGE 0.1 /* % */
 #define BOX_SIZE               7
 
-/* #define GD_2 */
 
 
 static void drawLegend(gdImagePtr im,
@@ -130,7 +129,7 @@ void drawPie(short width,
     else
       endDeg = 360;
 
-#ifdef GD_2
+#if GD2_VERS == 2 /* GD 2.x detected */
     gdImageFilledArc(im, center_x, center_y, 2*radius, 2*radius,
 		     begDeg+270, endDeg+270, colors[i], gdArc);
 #else

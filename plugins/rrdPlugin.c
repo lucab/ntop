@@ -78,10 +78,10 @@ static Counter rrdGraphicRequests=0, rrdGraphicReuse=0;
 
 static DIR * workDir;
 static struct dirent *workDirent;
+struct tm workT;
 
 #ifdef RRD_DEBUG
 char startTimeBuf[32], endTimeBuf[32], fileTimeBuf[32];
-struct tm workT;
 #endif
 
 /* forward */

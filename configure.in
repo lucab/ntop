@@ -652,13 +652,14 @@ if test ".${ac_debug}" = ".yes"; then
 fi
 
 # Set constants and defaults
+MYRRD=`pwd`/myrrd
 AS=
 CCLD=
 DEFS="-DHAVE_CONFIG_H"
 DLLTOOL=
 DYN_FLAGS=
 EXEEXT=
-INCS=-I./myrrd
+INCS=-I$MYRRD
 NTCSH=
 OBJDUMP=
 OBJEXT=o
@@ -1502,11 +1503,6 @@ if test ".${ZLIB_LIB}" != "." ||
         NTOP_APPEND_INCS([${ZLIB_INCLUDE}])
     fi
 fi
-
-              
-AC_DEFINE_UNQUOTED(CFG_USE_GRAPHICS, 1, [ntop built with graphics support (provided by RRD)])
-AC_DEFINE_UNQUOTED(HAVE_RRD, 1, [ntop is built with RRD support (myrrd/)])
-NTOP_APPEND_LIBS([./myrrd], [myrrd])
 
 if test ".${LOCALEDIR}" != "." &&
    test ! -d ${LOCALEDIR}; then
@@ -2617,6 +2613,10 @@ dnl>
 dnl> Temporary
 dnl>
 AC_DEFINE_UNQUOTED(RETSIGTYPE, void, [temporary definition])
+AC_DEFINE_UNQUOTED(CFG_USE_GRAPHICS, 1, [ntop built with graphics support (provided by RRD)])
+AC_DEFINE_UNQUOTED(HAVE_RRD, 1, [ntop is built with RRD support (myrrd/)])
+NTOP_APPEND_LIBS([$MYRRD], [myrrd])
+
 
 dnl> Restore version without INCS stuff
 CC="${CCSAVE}"

@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os AWK AUTOHEADER ACLOCAL AUTOMAKE AUTOCONF INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM SET_MAKE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE CXX CXXFLAGS ac_ct_CXX CXXDEPMODE CPP LN_S RANLIB ac_ct_RANLIB LD NM LIBTOOL EGREP ALLOCA LIBOBJS AS CCLD XMLDUMP CFG_CONFIGFILE_DIR CFG_DATAFILE_DIR CFG_DBFILE_DIR DLLTOOL DYN_FLAGS INCS NTCSH LIBCURSES LIBREADLINE LIBTERMCAP LIBTOOL_DEPS NTOP_VERSION_EXTRA OBJDUMP CFG_PLUGIN_DIR PLUGINS RRDLIB CFG_RUN_DIR SCRIPTVER SO_VERSION_PATCH LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os AWK AUTOHEADER ACLOCAL AUTOMAKE AUTOCONF INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM SET_MAKE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE CXX CXXFLAGS ac_ct_CXX CXXDEPMODE CPP LN_S RANLIB ac_ct_RANLIB LD NM LIBTOOL EGREP ALLOCA LIBOBJS AS CCLD XMLDUMP CFG_CONFIGFILE_DIR CFG_DATAFILE_DIR CFG_DBFILE_DIR DLLTOOL DYN_FLAGS INCS NTCSH LIBTOOL_DEPS NTOP_VERSION_EXTRA OBJDUMP CFG_PLUGIN_DIR PLUGINS CFG_RUN_DIR SCRIPTVER SO_VERSION_PATCH LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -861,19 +861,15 @@ Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   +--ntop-specific:------------------------------------------------------------+
-  --enable-configuredebug     display debug information during ./configure
   --disable-mt                disable multithread support [default=enabled]
   --enable-sslv3              enable ssl v3 support [default=disabled]
   --enable-sslwatchdog        enable Watchdog for ssl hangups [default=disabled]
   --disable-plugins           disable compilation of plugins [default=enabled]
   --enable-static-plugins     Enable static linked plugins sntop, default=dynamic]
-  --enable-micro-ntop         compile a slim version of ntop [default=disabled]
   --enable-ntcsh              enable ntcsh command line version [default=enabled]
   --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]
   --enable-i18n               Enable (limited) internationalization [default=disabled]
   --enable-xmldump            Enable xml-based data dump [default=disabled]
-  --enable-largerrdpop        Enable large rrd population [default=disabled]
-  --enable-netflowassumeftpdata  Enable assumption that unknown ports for netflow data are ftp-data [default=disabled]
   --enable-showoses           display OS Support information.
   --enable-iknowbetter        Override WILLFAIL
   +----------------------------------------------------------------------------+
@@ -890,10 +886,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   +--external-packages:--------------------------------------------------------+
   --without-ssl               disable HTPPS support [default=enabled]
-  --without-gdchart           disable use of GDChart [default=enabled]
   --with-tcpwrap              enable use of TCP Wrapper [default=disabled]
-  --without-curses            disable use of curses [ntcsh, default=enabled]
-  --without-readline          disable use of GNU readline [ntcsh, default=enabled]
   +-External-source-locations:-------------------------------------------------+
   --with-pcap-root=DIR        LBNL pcap located in DIR
   --with-pcap-lib=DIR          or libpcap located in DIR
@@ -907,18 +900,9 @@ Optional Packages:
   --with-zlib-root=DIR        zlib located in DIR
   --with-zlib-lib=DIR          or libz located in DIR
   --with-zlib-include=DIR      or zlib.h located in DIR
-  --with-gdchart-root=DIR     GDChart located in DIR
-  --with-gdchart-lib=DIR       or libgdchart located in DIR
-  --with-gdchart-include=DIR   or .h located in DIR
-  --with-gd-root=DIR          gd located in DIR
-  --with-gd-lib=DIR            or libgd located in DIR
-  --with-gd-include=DIR        or gd.h located in DIR
   --with-libpng-root=DIR      libpng located in DIR
   --with-libpng-lib=DIR         or libpng located in DIR
   --with-libpng-include=DIR     or png.h located in DIR
-  --with-rrd-root=DIR         rrdtool located in DIR
-  --with-rrd-lib=DIR           or librrd located in DIR
-  --with-rrd-include=DIR       or rrd.h located in DIR
   --with-localedir=DIR        LOCALE files located in DIR (i18n)
   --with-xml2-root=DIR        xml2 located in DIR
   --with-xml2-lib=DIR           or libxml2 located in DIR
@@ -1376,19 +1360,6 @@ HAS_WARNING=
 
 NTOP_VERSION_EXTRA=""
 
-GDCHART_DIRECTORY="gdchart0.94c"
-GD_DIRECTORY="gd-1.8.3"
-LIBPNG_DIRECTORY="libpng-1.2.4"
-ZLIB_DIRECTORY="zlib-1.1.4"
-
-LIBPNG_DIRECTORY=`(cd ../${GDCHART_DIRECTORY}/${GD_DIRECTORY}/${LIBPNG_DIRECTORY} && pwd)`
-GD_DIRECTORY=`(cd ../${GDCHART_DIRECTORY}/${GD_DIRECTORY} && pwd)`
-ZLIB_DIRECTORY=`(cd ../${GDCHART_DIRECTORY}/${ZLIB_DIRECTORY} && pwd)`
-GDCHART_DIRECTORY=`(cd ../${GDCHART_DIRECTORY} && pwd)`
-
-saveGDCHART_DIRECTORY="${GDCHART_DIRECTORY}"
-saveGD_DIRECTORY="${GD_DIRECTORY}"
-saveLIBPNG_DIRECTORY="${LIBPNG_DIRECTORY}"
 
 echo
 echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
@@ -2439,19 +2410,6 @@ if test "${with_void+set}" = set; then
 
 fi;
 
-# Check whether --enable-configuredebug or --disable-configuredebug was given.
-if test "${enable_configuredebug+set}" = set; then
-  enableval="$enable_configuredebug"
-  ac_debug="yes"
-              echo "DEBUG: Enabled"
-              echo "    PNG:  ${LIBPNG_DIRECTORY}"
-              echo "    GD:   ${GD_DIRECTORY}"
-              echo "    ZLIB: ${ZLIB_DIRECTORY}"
-              echo " GDCHART: ${GDCHART_DIRECTORY}"
-else
-  ac_debug="no"
-fi;
-
 # Check whether --enable-mt or --disable-mt was given.
 if test "${enable_mt+set}" = set; then
   enableval="$enable_mt"
@@ -2486,15 +2444,6 @@ else
 fi;
 
 
-# Check whether --with-gdchart or --without-gdchart was given.
-if test "${with_gdchart+set}" = set; then
-  withval="$with_gdchart"
-  ac_disable_gdchart="yes"
-else
-  ac_disable_gdchart="no"
-fi;
-
-
 # Check whether --with-tcpwrap or --without-tcpwrap was given.
 if test "${with_tcpwrap+set}" = set; then
   withval="$with_tcpwrap"
@@ -2519,38 +2468,12 @@ else
   ac_enable_static_plugins="no"
 fi;
 
-# Check whether --enable-micro-ntop or --disable-micro-ntop was given.
-if test "${enable_micro_ntop+set}" = set; then
-  enableval="$enable_micro_ntop"
-  ac_micro_ntop="yes"
-else
-  ac_micro_ntop="no"
-fi;
-
 # Check whether --enable-ntcsh or --disable-ntcsh was given.
 if test "${enable_ntcsh+set}" = set; then
   enableval="$enable_ntcsh"
   ac_disable_ntcsh="yes"
 else
   ac_disable_ntcsh="no"
-fi;
-
-
-# Check whether --with-curses or --without-curses was given.
-if test "${with_curses+set}" = set; then
-  withval="$with_curses"
-  ac_disable_curses="yes"
-else
-  ac_disable_curses="no"
-fi;
-
-
-# Check whether --with-readline or --without-readline was given.
-if test "${with_readline+set}" = set; then
-  withval="$with_readline"
-  ac_disable_readline="yes"
-else
-  ac_disable_readline="no"
 fi;
 
 # Check whether --enable-ignoresigpipe or --disable-ignoresigpipe was given.
@@ -2575,22 +2498,6 @@ if test "${enable_xmldump+set}" = set; then
   ac_enable_xmldump="yes"
 else
   ac_enable_xmldump="no"
-fi;
-
-# Check whether --enable-largerrdpop or --disable-largerrdpop was given.
-if test "${enable_largerrdpop+set}" = set; then
-  enableval="$enable_largerrdpop"
-  ac_enable_largerrdpop="yes"
-else
-  ac_enable_largerrdpop="no"
-fi;
-
-# Check whether --enable-netflowassumeftpdata or --disable-netflowassumeftpdata was given.
-if test "${enable_netflowassumeftpdata+set}" = set; then
-  enableval="$enable_netflowassumeftpdata"
-  ac_enable_netflowassumeftpdata="yes"
-else
-  ac_enable_netflowassumeftpdata="no"
 fi;
 
 
@@ -2699,52 +2606,6 @@ else
 fi;
 
 
-# Check whether --with-gdchart-root or --without-gdchart-root was given.
-if test "${with_gdchart_root+set}" = set; then
-  withval="$with_gdchart_root"
-  GDCHART_DIRECTORY="$withval"
-fi;
-
-# Check whether --with-gdchart-lib or --without-gdchart-lib was given.
-if test "${with_gdchart_lib+set}" = set; then
-  withval="$with_gdchart_lib"
-  GDCHART_LIB="$withval"
-else
-  GDCHART_LIB=
-fi;
-
-# Check whether --with-gdchart-include or --without-gdchart-include was given.
-if test "${with_gdchart_include+set}" = set; then
-  withval="$with_gdchart_include"
-  GDCHART_INCLUDE="$withval"
-else
-  GDCHART_INCLUDE=
-fi;
-
-
-# Check whether --with-gd-root or --without-gd-root was given.
-if test "${with_gd_root+set}" = set; then
-  withval="$with_gd_root"
-  GD_DIRECTORY="$withval"
-fi;
-
-# Check whether --with-gd-lib or --without-gd-lib was given.
-if test "${with_gd_lib+set}" = set; then
-  withval="$with_gd_lib"
-  GD_LIB="$withval"
-else
-  GD_LIB=
-fi;
-
-# Check whether --with-gd-include or --without-gd-include was given.
-if test "${with_gd_include+set}" = set; then
-  withval="$with_gd_include"
-  GD_INCLUDE="$withval"
-else
-  GD_INCLUDE=
-fi;
-
-
 # Check whether --with-libpng-root or --without-libpng-root was given.
 if test "${with_libpng_root+set}" = set; then
   withval="$with_libpng_root"
@@ -2765,31 +2626,6 @@ if test "${with_libpng_include+set}" = set; then
   LIBPNG_INCLUDE="$withval"
 else
   LIBPNG_INCLUDE=
-fi;
-
-
-# Check whether --with-rrd-root or --without-rrd-root was given.
-if test "${with_rrd_root+set}" = set; then
-  withval="$with_rrd_root"
-  RRD_DIRECTORY="$withval"
-else
-  RRD_DIRECTORY=
-fi;
-
-# Check whether --with-rrd-lib or --without-rrd-lib was given.
-if test "${with_rrd_lib+set}" = set; then
-  withval="$with_rrd_lib"
-  RRD_LIB="$withval"
-else
-  RRD_LIB=
-fi;
-
-# Check whether --with-rrd-include or --without-rrd-include was given.
-if test "${with_rrd_include+set}" = set; then
-  withval="$with_rrd_include"
-  RRD_INCLUDE="$withval"
-else
-  RRD_INCLUDE=
 fi;
 
 
@@ -3006,56 +2842,6 @@ if test ".${ac_debug}" = ".yes"; then
 fi
 # Finished expansion of NTOP_SET_LIBINC()
 
-# Expansion of NTOP_SET_LIBINC(ZLIB)
-if test ".${ac_debug}" = ".yes"; then
-    echo "    ZLIB: ${ZLIB_DIRECTORY}, ${ZLIB_LIB}, ${ZLIB_INCLUDE}"
-fi
-if test ".${ZLIB_DIRECTORY}" != "."; then
-    if test ".${ZLIB_LIB}" = "."; then
-        if test -d ${ZLIB_DIRECTORY}/lib; then
-            ZLIB_LIB="${ZLIB_DIRECTORY}/lib"
-        else
-            ZLIB_LIB="${ZLIB_DIRECTORY}"
-        fi
-    fi
-    if test ".${ZLIB_INCLUDE}" = "."; then
-        if test -d ${ZLIB_DIRECTORY}/include; then
-            ZLIB_INCLUDE="${ZLIB_DIRECTORY}/include"
-        else
-            ZLIB_INCLUDE="${ZLIB_DIRECTORY}"
-        fi
-    fi
-fi
-if test ".${ac_debug}" = ".yes"; then
-    echo "->  ZLIB: ${ZLIB_DIRECTORY}, ${ZLIB_LIB}, ${ZLIB_INCLUDE}"
-fi
-# Finished expansion of NTOP_SET_LIBINC()
-
-# Expansion of NTOP_SET_LIBINC(GDCHART)
-if test ".${ac_debug}" = ".yes"; then
-    echo "    GDCHART: ${GDCHART_DIRECTORY}, ${GDCHART_LIB}, ${GDCHART_INCLUDE}"
-fi
-if test ".${GDCHART_DIRECTORY}" != "."; then
-    if test ".${GDCHART_LIB}" = "."; then
-        if test -d ${GDCHART_DIRECTORY}/lib; then
-            GDCHART_LIB="${GDCHART_DIRECTORY}/lib"
-        else
-            GDCHART_LIB="${GDCHART_DIRECTORY}"
-        fi
-    fi
-    if test ".${GDCHART_INCLUDE}" = "."; then
-        if test -d ${GDCHART_DIRECTORY}/include; then
-            GDCHART_INCLUDE="${GDCHART_DIRECTORY}/include"
-        else
-            GDCHART_INCLUDE="${GDCHART_DIRECTORY}"
-        fi
-    fi
-fi
-if test ".${ac_debug}" = ".yes"; then
-    echo "->  GDCHART: ${GDCHART_DIRECTORY}, ${GDCHART_LIB}, ${GDCHART_INCLUDE}"
-fi
-# Finished expansion of NTOP_SET_LIBINC()
-
 # Expansion of NTOP_SET_LIBINC(GD)
 if test ".${ac_debug}" = ".yes"; then
     echo "    GD: ${GD_DIRECTORY}, ${GD_LIB}, ${GD_INCLUDE}"
@@ -3081,6 +2867,31 @@ if test ".${ac_debug}" = ".yes"; then
 fi
 # Finished expansion of NTOP_SET_LIBINC()
 
+# Expansion of NTOP_SET_LIBINC(ZLIB)
+if test ".${ac_debug}" = ".yes"; then
+    echo "    ZLIB: ${ZLIB_DIRECTORY}, ${ZLIB_LIB}, ${ZLIB_INCLUDE}"
+fi
+if test ".${ZLIB_DIRECTORY}" != "."; then
+    if test ".${ZLIB_LIB}" = "."; then
+        if test -d ${ZLIB_DIRECTORY}/lib; then
+            ZLIB_LIB="${ZLIB_DIRECTORY}/lib"
+        else
+            ZLIB_LIB="${ZLIB_DIRECTORY}"
+        fi
+    fi
+    if test ".${ZLIB_INCLUDE}" = "."; then
+        if test -d ${ZLIB_DIRECTORY}/include; then
+            ZLIB_INCLUDE="${ZLIB_DIRECTORY}/include"
+        else
+            ZLIB_INCLUDE="${ZLIB_DIRECTORY}"
+        fi
+    fi
+fi
+if test ".${ac_debug}" = ".yes"; then
+    echo "->  ZLIB: ${ZLIB_DIRECTORY}, ${ZLIB_LIB}, ${ZLIB_INCLUDE}"
+fi
+# Finished expansion of NTOP_SET_LIBINC()
+
 # Expansion of NTOP_SET_LIBINC(LIBPNG)
 if test ".${ac_debug}" = ".yes"; then
     echo "    LIBPNG: ${LIBPNG_DIRECTORY}, ${LIBPNG_LIB}, ${LIBPNG_INCLUDE}"
@@ -3103,31 +2914,6 @@ if test ".${LIBPNG_DIRECTORY}" != "."; then
 fi
 if test ".${ac_debug}" = ".yes"; then
     echo "->  LIBPNG: ${LIBPNG_DIRECTORY}, ${LIBPNG_LIB}, ${LIBPNG_INCLUDE}"
-fi
-# Finished expansion of NTOP_SET_LIBINC()
-
-# Expansion of NTOP_SET_LIBINC(RRD)
-if test ".${ac_debug}" = ".yes"; then
-    echo "    RRD: ${RRD_DIRECTORY}, ${RRD_LIB}, ${RRD_INCLUDE}"
-fi
-if test ".${RRD_DIRECTORY}" != "."; then
-    if test ".${RRD_LIB}" = "."; then
-        if test -d ${RRD_DIRECTORY}/lib; then
-            RRD_LIB="${RRD_DIRECTORY}/lib"
-        else
-            RRD_LIB="${RRD_DIRECTORY}"
-        fi
-    fi
-    if test ".${RRD_INCLUDE}" = "."; then
-        if test -d ${RRD_DIRECTORY}/include; then
-            RRD_INCLUDE="${RRD_DIRECTORY}/include"
-        else
-            RRD_INCLUDE="${RRD_DIRECTORY}"
-        fi
-    fi
-fi
-if test ".${ac_debug}" = ".yes"; then
-    echo "->  RRD: ${RRD_DIRECTORY}, ${RRD_LIB}, ${RRD_INCLUDE}"
 fi
 # Finished expansion of NTOP_SET_LIBINC()
 
@@ -3213,20 +2999,17 @@ if test ".${ac_debug}" = ".yes"; then
 fi
 
 # Set constants and defaults
+MYRRD=`pwd`/myrrd
 AS=
 CCLD=
 DEFS="-DHAVE_CONFIG_H"
 DLLTOOL=
 DYN_FLAGS=
 EXEEXT=
-INCS=
+INCS=-I$MYRRD
 NTCSH=
-LIBCURSES=
-LIBREADLINE=1
-LIBTERMCAP=
 OBJDUMP=
 OBJEXT=o
-RRDLIB=
 SO_VERSION_PATCH=
 
 
@@ -6468,7 +6251,7 @@ test x"$silent" = xyes && libtool_flags="$libtool_flags --silent"
 case "$host" in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6471 "configure"' > conftest.$ac_ext
+  echo '#line 6254 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7608,62 +7391,6 @@ _ACEOF
 fi
 
 echo
-echo "GDChart?"
-if test ".${ac_disable_gdchart}" = ".yes"; then
-    echo "    ...Disabled via ./configure command line option --without-gdchart"
-
-    if test ".${saveGDCHART_DIRECTORY}" = ".${GDCHART_DIRECTORY}" &&
-       test ".${saveGD_DIRECTORY}" = ".${GD_DIRECTORY}" &&
-       test ".${saveLIBPNG_DIRECTORY}" = ".${LIBPNG_DIRECTORY}"; then
-        echo
-    elif test ".${GDCHART_DIRECTORY}" != "." ||
-       test ".${GDCHART_LIB}" != "." ||
-       test ".${GDCHART_INCLUDE}" != "." ||
-       test ".${GD_DIRECTORY}" != "." ||
-       test ".${GD_LIB}" != "." ||
-       test ".${GD_INCLUDE}" != "." ||
-       test ".${LIBPNG_DIRECTORY}" != "." ||
-       test ".${LIBPNG_LIB}" != "." ||
-       test ".${LIBPNG_INCLUDE}" != "."; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:    You disabled GDChart but explicitly or implicitly specified"
-        echo "*             the conflicting options:"
-        echo "*                --with-gdchart-root=${GDCHART_DIRECTORY}"
-        echo "*                --with-gdchart-lib=${GDCHART_LIB}"
-        echo "*                --with-gdchart-include=${GDCHART_INCLUDE}"
-        echo "*                --with-gd-root=${GD_DIRECTORY}"
-        echo "*                --with-gd-lib=${GD_LIB}"
-        echo "*                --with-gd-include=${GD_INCLUDE}"
-        echo "*                --with-libpng-root=${LIBPNG_DIRECTORY}"
-        echo "*                --with-libpng-lib=${LIBPNG_LIB}"
-        echo "*                --with-libpng-include=${LIBPNG_INCLUDE}"
-        echo "*"
-        echo "*>>> Ignoring the option(s)"
-        echo "*"
-        echo "*???     1. Remove the --without-gdchart option"
-        echo "*??? or  2. Remove the conflicting --with-xxxxx-xxxxx options"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        HAS_WARNING="yes"
-    fi
-    GDCHART_DIRECTORY=
-    GDCHART_LIB=
-    GDCHART_INCLUDE=
-    GD_DIRECTORY=
-    GD_LIB=
-    GD_INCLUDE=
-    LIBPNG_DIRECTORY=
-    LIBPNG_LIB=
-    LIBPNG_INCLUDE=
-
-else
-    echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-gdchart."
-fi
-
-echo
 echo "TCP Wrappers?"
 if test ".${ac_enable_tcpwrap}" = ".yes"; then
     echo "    ...Requested via ./configure command line option --enable-tcpwrap"
@@ -7707,19 +7434,6 @@ _ACEOF
     fi
 else
     echo "    ...(Default) Disabled. Request via ./configure command line option --enable-static-plugin."
-fi
-
-echo
-echo "Micro ntop?"
-if test ".${ac_micro_ntop}" = ".yes"; then
-    echo "    ...Requested via ./configure command line option --enable-micro-ntop."
-
-cat >>confdefs.h <<_ACEOF
-#define MAKE_MICRO_NTOP 1
-_ACEOF
-
-else
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-micro-ntop."
 fi
 
 echo
@@ -7889,33 +7603,6 @@ else
         GLIB_INCLUDE=
         HAS_WARNING="yes"
     fi
-fi
-
-
-echo
-echo "Large RRD population?"
-if test ".${ac_enable_largerrdpop}" = ".yes"; then
-    echo "    ...Requested."
-
-cat >>confdefs.h <<_ACEOF
-#define MAKE_WITH_LARGERRDPOP 1
-_ACEOF
-
-else
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-largerrdpop."
-fi
-
-echo
-echo "Assume netFlow data with unknown port >1023 is ftp-data?"
-if test ".${ac_enable_netflowassumeftpdata}" = ".yes"; then
-    echo "    ...Requested."
-
-cat >>confdefs.h <<_ACEOF
-#define MAKE_WITH_FTPDATA_ASSUMED 1
-_ACEOF
-
-else
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-netflow-assume-ftpdata."
 fi
 
 
@@ -8168,223 +7855,6 @@ if test ".${ZLIB_LIB}" != "." ||
         rc=`(echo $INCS | grep '${ZLIB_INCLUDE}' > /dev/null 2> /dev/null; echo $?)`
         if [ $rc -eq 1 ]; then
             INCS="$INCS -I${ZLIB_INCLUDE}"
-        fi
-    fi
-# Finished expansion of NTOP_APPEND_INCS()
-
-    fi
-fi
-
-if test ".${ac_disable_gdchart}" != ".yes"; then
-    if test ! -d ${GDCHART_LIB} ||
-       test ! -d ${GDCHART_INCLUDE} ||
-       test ! -d ${GD_LIB} ||
-       test ! -d ${GD_INCLUDE} ||
-       test ! -d ${LIBPNG_LIB} ||
-       test ! -d ${LIBPNG_INCLUDE}; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:    You specified or implied non-existent directories"
-        echo "*             for GDChart:"
-        echo "*               --with-gdchart-root=${GDCHART_DIRECTORY}"
-        echo "*               --with-gdchart-lib=${GDCHART_LIB}"
-        echo "*               --with-gdchart-include=${GDCHART_INCLUDE}"
-        echo "*               --with-gd-root=${GD_DIRECTORY}"
-        echo "*               --with-gd-lib=${GD_LIB}"
-        echo "*               --with-gd-include=${GD_INCLUDE}"
-        echo "*               --with-libpng-root=${LIBPNG_DIRECTORY}"
-        echo "*               --with-libpng-lib=${LIBPNG_LIB}"
-        echo "*               --with-libpng-include=${LIBPNG_INCLUDE}"
-        echo "*"
-        echo "*>>> Continuing without the --with-xxxxx-xxxxx values"
-        echo "*"
-        echo "*        ./configure should complete 'successfully'"
-        echo "*"
-        echo "*        ntop may find GDChart installed in a standard location."
-        echo "*"
-        echo "*        If not found, ntop will disable code dependent upon GDChart"
-        echo "*        meaning no graphics on web pages."
-        echo "*"
-        echo "*    Read the remaining messages carefully!"
-        echo "*"
-        echo "*???     1. Download the GDChart portion of the ntop source tree,"
-        echo "*???        build GDChart and rerun ./configure"
-        echo "*??? or  2. Correct the --with-xxxxx-xxxxx values and rerun"
-        echo "*???        ./configure"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        GDCHART_DIRECTORY=
-        GDCHART_LIB=
-        GDCHART_INCLUDE=
-        GD_DIRECTORY=
-        GD_LIB=
-        GD_INCLUDE=
-        LIBPNG_DIRECTORY=
-        LIBPNG_LIB=
-        LIBPNG_INCLUDE=
-        ac_disable_gdchart="yes"
-        HAS_WARNING="yes"
-    else
-        # Expansion of NTOP_APPEND_LIBS(${GDCHART_LIB}, gdchart)
-    if test ".${GDCHART_LIB}" != "."; then
-        rc=`(echo $LIBS | grep '${GDCHART_LIB} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            case "${DEFINEOS}" in
-              DARWIN )
-                LIBS="$LIBS -L${GDCHART_LIB} -L${GDCHART_LIB}/lib"
-                ;;
-              * )
-                LIBS="$LIBS -L${GDCHART_LIB}"
-                ;;
-            esac
-        fi
-        if test ".gdchart" != "."; then
-            rc=`(echo $LIBS | grep '\-lgdchart ' > /dev/null 2> /dev/null; echo $?)`
-            if [ $rc -eq 1 ]; then
-                LIBS="$LIBS -lgdchart"
-            fi
-        fi
-    fi
-# Finished expansion of NTOP_APPEND_LIBS()
-
-        # Expansion of NTOP_APPEND_LIBS(${GD_LIB}, gd)
-    if test ".${GD_LIB}" != "."; then
-        rc=`(echo $LIBS | grep '${GD_LIB} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            case "${DEFINEOS}" in
-              DARWIN )
-                LIBS="$LIBS -L${GD_LIB} -L${GD_LIB}/lib"
-                ;;
-              * )
-                LIBS="$LIBS -L${GD_LIB}"
-                ;;
-            esac
-        fi
-        if test ".gd" != "."; then
-            rc=`(echo $LIBS | grep '\-lgd ' > /dev/null 2> /dev/null; echo $?)`
-            if [ $rc -eq 1 ]; then
-                LIBS="$LIBS -lgd"
-            fi
-        fi
-    fi
-# Finished expansion of NTOP_APPEND_LIBS()
-
-        # Expansion of NTOP_APPEND_LIBS(${LIBPNG_LIB}, png)
-    if test ".${LIBPNG_LIB}" != "."; then
-        rc=`(echo $LIBS | grep '${LIBPNG_LIB} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            case "${DEFINEOS}" in
-              DARWIN )
-                LIBS="$LIBS -L${LIBPNG_LIB} -L${LIBPNG_LIB}/lib"
-                ;;
-              * )
-                LIBS="$LIBS -L${LIBPNG_LIB}"
-                ;;
-            esac
-        fi
-        if test ".png" != "."; then
-            rc=`(echo $LIBS | grep '\-lpng ' > /dev/null 2> /dev/null; echo $?)`
-            if [ $rc -eq 1 ]; then
-                LIBS="$LIBS -lpng"
-            fi
-        fi
-    fi
-# Finished expansion of NTOP_APPEND_LIBS()
-
-        # Expansion of NTOP_APPEND_INCS(${GDCHART_INCLUDE})
-    if test ".${GDCHART_INCLUDE}" != "."; then
-        rc=`(echo $INCS | grep '${GDCHART_INCLUDE}' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            INCS="$INCS -I${GDCHART_INCLUDE}"
-        fi
-    fi
-# Finished expansion of NTOP_APPEND_INCS()
-
-        # Expansion of NTOP_APPEND_INCS(${GD_INCLUDE})
-    if test ".${GD_INCLUDE}" != "."; then
-        rc=`(echo $INCS | grep '${GD_INCLUDE}' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            INCS="$INCS -I${GD_INCLUDE}"
-        fi
-    fi
-# Finished expansion of NTOP_APPEND_INCS()
-
-        # Expansion of NTOP_APPEND_INCS(${LIBPNG_INCLUDE})
-    if test ".${LIBPNG_INCLUDE}" != "."; then
-        rc=`(echo $INCS | grep '${LIBPNG_INCLUDE}' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            INCS="$INCS -I${LIBPNG_INCLUDE}"
-        fi
-    fi
-# Finished expansion of NTOP_APPEND_INCS()
-
-    fi
-fi
-
-if test ".${RRD_LIB}" != "." ||
-   test ".${RRD_INCLUDE}" != "."; then
-   if test ! -d ${RRD_LIB} ||
-      test ! -d ${RRD_INCLUDE}; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:    You specified or implied non-existent directories"
-        echo "*             for rrdtool:"
-        echo "*              --with-rrd-root=${RRD_DIRECTORY}"
-        echo "*              --with-rrd-lib=${RRD_LIB}"
-        echo "*              --with-rrd-include=${RRD_INCLUDE}"
-        echo "*"
-        echo "*>>> Continuing without the --with-rrd-xxxxx values"
-        echo "*"
-        echo "*        ./configure should complete 'successfully'"
-        echo "*"
-        echo "*        ntop may find rrdtool installed in a standard location."
-        echo "*"
-        echo "*        If not found, ntop will disable code dependent upon rrdtool"
-        echo "*        meaning no persistent storage of data."
-        echo "*"
-        echo "*    Read the remaining messages carefully!"
-        echo "*"
-        echo "*???     1. Install the rrdtool package and rerun ./configure"
-        echo "*??? or  3. Correct the --with-rrd-xxxxx values and rerun"
-        echo "*???        ./configure"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        RRD_DIRECTORY=
-        RRD_LIB=
-        RRD_INCLUDE=
-        HAS_WARNING="yes"
-    else
-        # Expansion of NTOP_APPEND_LIBS(${RRD_LIB}, rrd)
-    if test ".${RRD_LIB}" != "."; then
-        rc=`(echo $LIBS | grep '${RRD_LIB} ' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            case "${DEFINEOS}" in
-              DARWIN )
-                LIBS="$LIBS -L${RRD_LIB} -L${RRD_LIB}/lib"
-                ;;
-              * )
-                LIBS="$LIBS -L${RRD_LIB}"
-                ;;
-            esac
-        fi
-        if test ".rrd" != "."; then
-            rc=`(echo $LIBS | grep '\-lrrd ' > /dev/null 2> /dev/null; echo $?)`
-            if [ $rc -eq 1 ]; then
-                LIBS="$LIBS -lrrd"
-            fi
-        fi
-    fi
-# Finished expansion of NTOP_APPEND_LIBS()
-
-        # Expansion of NTOP_APPEND_INCS(${RRD_INCLUDE})
-    if test ".${RRD_INCLUDE}" != "."; then
-        rc=`(echo $INCS | grep '${RRD_INCLUDE}' > /dev/null 2> /dev/null; echo $?)`
-        if [ $rc -eq 1 ]; then
-            INCS="$INCS -I${RRD_INCLUDE}"
         fi
     fi
 # Finished expansion of NTOP_APPEND_INCS()
@@ -15152,297 +14622,7 @@ done
 
 
 
-
-
-
-
-for ac_header in gdchart.h gdcpie.h gdc.h gd.h png.h
-do
-as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
-if eval "test \"\${$as_ac_Header+set}\" = set"; then
-  echo "$as_me:$LINENO: checking for $ac_header" >&5
-echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
-if eval "test \"\${$as_ac_Header+set}\" = set"; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-fi
-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
-else
-  # Is the header compilable?
-echo "$as_me:$LINENO: checking $ac_header usability" >&5
-echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-$ac_includes_default
-#include <$ac_header>
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_header_compiler=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_header_compiler=no
-fi
-rm -f conftest.$ac_objext conftest.$ac_ext
-echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
-echo "${ECHO_T}$ac_header_compiler" >&6
-
-# Is the header present?
-echo "$as_me:$LINENO: checking $ac_header presence" >&5
-echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <$ac_header>
-_ACEOF
-if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
-  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } >/dev/null; then
-  if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-  else
-    ac_cpp_err=
-  fi
-else
-  ac_cpp_err=yes
-fi
-if test -z "$ac_cpp_err"; then
-  ac_header_preproc=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-  ac_header_preproc=no
-fi
-rm -f conftest.err conftest.$ac_ext
-echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
-echo "${ECHO_T}$ac_header_preproc" >&6
-
-# So?  What about this header?
-case $ac_header_compiler:$ac_header_preproc in
-  yes:no )
-    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
-echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
-    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
-echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
-    (
-      cat <<\_ASBOX
-## ------------------------------------ ##
-## Report this to bug-autoconf@gnu.org. ##
-## ------------------------------------ ##
-_ASBOX
-    ) |
-      sed "s/^/$as_me: WARNING:     /" >&2
-    ;;
-  no:yes )
-    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
-echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
-    { echo "$as_me:$LINENO: WARNING: $ac_header: check for missing prerequisite headers?" >&5
-echo "$as_me: WARNING: $ac_header: check for missing prerequisite headers?" >&2;}
-    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
-echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
-    (
-      cat <<\_ASBOX
-## ------------------------------------ ##
-## Report this to bug-autoconf@gnu.org. ##
-## ------------------------------------ ##
-_ASBOX
-    ) |
-      sed "s/^/$as_me: WARNING:     /" >&2
-    ;;
-esac
-echo "$as_me:$LINENO: checking for $ac_header" >&5
-echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
-if eval "test \"\${$as_ac_Header+set}\" = set"; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  eval "$as_ac_Header=$ac_header_preproc"
-fi
-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
-
-fi
-if test `eval echo '${'$as_ac_Header'}'` = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
-_ACEOF
-
-fi
-
-done
-
-
-
 for ac_header in tcpd.h
-do
-as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
-if eval "test \"\${$as_ac_Header+set}\" = set"; then
-  echo "$as_me:$LINENO: checking for $ac_header" >&5
-echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
-if eval "test \"\${$as_ac_Header+set}\" = set"; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-fi
-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
-else
-  # Is the header compilable?
-echo "$as_me:$LINENO: checking $ac_header usability" >&5
-echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-$ac_includes_default
-#include <$ac_header>
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_header_compiler=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_header_compiler=no
-fi
-rm -f conftest.$ac_objext conftest.$ac_ext
-echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
-echo "${ECHO_T}$ac_header_compiler" >&6
-
-# Is the header present?
-echo "$as_me:$LINENO: checking $ac_header presence" >&5
-echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <$ac_header>
-_ACEOF
-if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
-  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } >/dev/null; then
-  if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-  else
-    ac_cpp_err=
-  fi
-else
-  ac_cpp_err=yes
-fi
-if test -z "$ac_cpp_err"; then
-  ac_header_preproc=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-  ac_header_preproc=no
-fi
-rm -f conftest.err conftest.$ac_ext
-echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
-echo "${ECHO_T}$ac_header_preproc" >&6
-
-# So?  What about this header?
-case $ac_header_compiler:$ac_header_preproc in
-  yes:no )
-    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
-echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
-    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
-echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
-    (
-      cat <<\_ASBOX
-## ------------------------------------ ##
-## Report this to bug-autoconf@gnu.org. ##
-## ------------------------------------ ##
-_ASBOX
-    ) |
-      sed "s/^/$as_me: WARNING:     /" >&2
-    ;;
-  no:yes )
-    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
-echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
-    { echo "$as_me:$LINENO: WARNING: $ac_header: check for missing prerequisite headers?" >&5
-echo "$as_me: WARNING: $ac_header: check for missing prerequisite headers?" >&2;}
-    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
-echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;}
-    (
-      cat <<\_ASBOX
-## ------------------------------------ ##
-## Report this to bug-autoconf@gnu.org. ##
-## ------------------------------------ ##
-_ASBOX
-    ) |
-      sed "s/^/$as_me: WARNING:     /" >&2
-    ;;
-esac
-echo "$as_me:$LINENO: checking for $ac_header" >&5
-echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
-if eval "test \"\${$as_ac_Header+set}\" = set"; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  eval "$as_ac_Header=$ac_header_preproc"
-fi
-echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
-
-fi
-if test `eval echo '${'$as_ac_Header'}'` = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
-_ACEOF
-
-fi
-
-done
-
-
-
-for ac_header in rrd.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then
@@ -18596,67 +17776,6 @@ _ACEOF
 
 fi
 
-
-
-echo "$as_me:$LINENO: checking for rrd_create in -lrrd" >&5
-echo $ECHO_N "checking for rrd_create in -lrrd... $ECHO_C" >&6
-if test "${ac_cv_lib_rrd_rrd_create+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lrrd  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char rrd_create ();
-int
-main ()
-{
-rrd_create ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_rrd_rrd_create=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_rrd_rrd_create=no
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_rrd_rrd_create" >&5
-echo "${ECHO_T}$ac_cv_lib_rrd_rrd_create" >&6
-if test $ac_cv_lib_rrd_rrd_create = yes; then
-
-    RRDLIB="-lrrd"
-
-fi
 
 
 
@@ -23091,10 +22210,6 @@ echo "${ECHO_T}no" >&6
 esac
 
 echo
-echo "-------------------------------------------------------------------"
-echo "-------------------------------------------------------------------"
-echo "-------------------------------------------------------------------"
-echo
 echo " Platform specific:"
 echo "     Tests for libraries, headers, etc."
 echo "     and flags / #define items"
@@ -23660,15 +22775,9 @@ fi
 esac
 
 echo
-echo "-------------------------------------------------------------------"
-echo "-------------------------------------------------------------------"
-echo "-------------------------------------------------------------------"
-echo
 echo "Now, let's check for problems with what we've found..."
 echo
-echo "-------------------------------------------------------------------"
-echo
-echo "   **Testing Required libraries and headers**"
+echo "   Testing Required libraries and headers**"
 echo
 echo "$as_me:$LINENO: checking for required C headers" >&5
 echo $ECHO_N "checking for required C headers... $ECHO_C" >&6
@@ -24055,98 +23164,6 @@ echo "$as_me: WARNING: error" >&2;}
     HAS_WARNING="yes"
 fi
 
-if test ".${ac_disable_gdchart}" = ".no"; then
-    echo "$as_me:$LINENO: checking for gdchart" >&5
-echo $ECHO_N "checking for gdchart... $ECHO_C" >&6
-    if test ".${ac_cv_header_gdc_h}" = ".yes"          &&
-       test ".${ac_cv_header_gd_h}" = ".yes"           &&
-       test ".${ac_cv_lib_gd_gdImageDestroy}" = ".yes" &&
-       test ".${ac_cv_header_png_h}" = ".yes"          &&
-       test ".${ac_cv_lib_png_png_read_info}" = ".yes" &&
-       (test ".${ac_cv_lib_c_ceil}" = ".yes" ||
-        test ".${ac_cv_lib_m_ceil}" = ".yes")          &&
-       (test ".${ac_cv_lib_c_sin}" = ".yes" ||
-        test ".${ac_cv_lib_m_sin}" = ".yes"); then
-        echo "$as_me:$LINENO: result: ok" >&5
-echo "${ECHO_T}ok" >&6
-
-cat >>confdefs.h <<_ACEOF
-#define MAKE_WITH_GDCHART 1
-_ACEOF
-
-    else
-        { echo "$as_me:$LINENO: WARNING: error" >&5
-echo "$as_me: WARNING: error" >&2;}
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:  One or more items required for gdchart are missing:"
-        echo "*           (yes means it was found, no means it was not found"
-        echo "*            nothing means it was not tested)"
-        echo "*"
-        echo "*                  gdc.h...${ac_cv_header_gdc_h}"
-        echo "*                  gd.h...${ac_cv_header_gd_h}"
-        echo "*                  libgd.so or libgd.a...${ac_cv_lib_gd_gdImageDestroy}"
-        echo "*                  png.h...${ac_cv_header_png_h}"
-        echo "*                  libpng.so or libpng.a...${ac_cv_lib_png_png_read_info}"
-        echo "*                  ceil function in libc.so...${ac_cv_lib_c_ceil} or libm.so...${ac_cv_lib_m_ceil}"
-        echo "*                  sin function in libc.so...${ac_cv_lib_c_sin} or libm.so...${ac_cv_lib_m_sin}"
-        echo "*"
-        echo "*>>>    ntop will be built without gdchart"
-        echo "*"
-        echo "*???     1. Install the necessary headers and libraries."
-        echo "*???    and rerun ./configure"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        HAS_WARNING="yes"
-    fi
-fi
-
-echo "$as_me:$LINENO: checking for rrd" >&5
-echo $ECHO_N "checking for rrd... $ECHO_C" >&6
-if test ".${ac_cv_header_rrd_h}"        = ".yes" &&
-   test ".${ac_cv_lib_rrd_rrd_create}"   = ".yes"; then
-    echo "$as_me:$LINENO: result: ok" >&5
-echo "${ECHO_T}ok" >&6
-
-cat >>confdefs.h <<_ACEOF
-#define HAVE_RRD 1
-_ACEOF
-
-else
-    { echo "$as_me:$LINENO: WARNING: error" >&5
-echo "$as_me: WARNING: error" >&2;}
-    echo
-    echo "*******************************************************************"
-    echo "*"
-    echo "* WARNING:  One or more items required for rrd are missing:"
-    echo "*           (yes means it was found, no means it was not found)"
-    echo "*"
-    echo "*                  rrd.h...${ac_cv_header_rrd_h}"
-    echo "*                  librrd.so or librrd.a...${ac_cv_lib_rrd_rrdcreate}"
-    echo "*"
-    echo "*>>>    ntop will be built without rrd"
-    echo "*"
-    echo "*???     1. Install the necessary headers and libraries."
-    echo "*???    and rerun ./configure"
-    echo "*"
-    echo "*******************************************************************"
-    echo
-    HAS_WARNING="yes"
-    if test ".${ac_enable_largerrdpop}" = ".yes"; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:  --enable-largerrdpop was requested but unable"
-        echo "*           to build rrd"
-        echo "*"
-        echo "*>>>    Ignoring option"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-    fi
-fi
 
 if test ".${ac_enable_xmldump}" = ".yes"; then
     echo "$as_me:$LINENO: checking for xmldump" >&5
@@ -24658,11 +23675,6 @@ fi
 fi
 
 echo
-echo "-------------------------------------------------------------------"
-echo "-------------------------------------------------------------------"
-echo "-------------------------------------------------------------------"
-
-echo
 echo "Miscelaneous settings..."
 echo
 
@@ -24936,6 +23948,39 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+cat >>confdefs.h <<_ACEOF
+#define CFG_USE_GRAPHICS 1
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_RRD 1
+_ACEOF
+
+# Expansion of NTOP_APPEND_LIBS($MYRRD, myrrd)
+    if test ".$MYRRD" != "."; then
+        rc=`(echo $LIBS | grep '$MYRRD ' > /dev/null 2> /dev/null; echo $?)`
+        if [ $rc -eq 1 ]; then
+            case "${DEFINEOS}" in
+              DARWIN )
+                LIBS="$LIBS -L$MYRRD -L$MYRRD/lib"
+                ;;
+              * )
+                LIBS="$LIBS -L$MYRRD"
+                ;;
+            esac
+        fi
+        if test ".myrrd" != "."; then
+            rc=`(echo $LIBS | grep '\-lmyrrd ' > /dev/null 2> /dev/null; echo $?)`
+            if [ $rc -eq 1 ]; then
+                LIBS="$LIBS -lmyrrd"
+            fi
+        fi
+    fi
+# Finished expansion of NTOP_APPEND_LIBS()
+
+
+
 CC="${CCSAVE}"
 CPP="${CPPSAVE}"
 CXX="${CXXSAVE}"
@@ -24993,10 +24038,6 @@ echo
 
 
 
-
-
-
-
           ac_config_files="$ac_config_files Makefile"
 
 
@@ -25007,8 +24048,6 @@ fi
 
 if test ".${ac_disable_plugins}" != ".yes"; then
               ac_config_files="$ac_config_files plugins/Makefile"
-
-              ac_config_files="$ac_config_files plugins/pep/Makefile"
 
 fi
 
@@ -25556,7 +24595,6 @@ do
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "ntcsh/Makefile" ) CONFIG_FILES="$CONFIG_FILES ntcsh/Makefile" ;;
   "plugins/Makefile" ) CONFIG_FILES="$CONFIG_FILES plugins/Makefile" ;;
-  "plugins/pep/Makefile" ) CONFIG_FILES="$CONFIG_FILES plugins/pep/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   "config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
@@ -25711,15 +24749,11 @@ s,@DLLTOOL@,$DLLTOOL,;t t
 s,@DYN_FLAGS@,$DYN_FLAGS,;t t
 s,@INCS@,$INCS,;t t
 s,@NTCSH@,$NTCSH,;t t
-s,@LIBCURSES@,$LIBCURSES,;t t
-s,@LIBREADLINE@,$LIBREADLINE,;t t
-s,@LIBTERMCAP@,$LIBTERMCAP,;t t
 s,@LIBTOOL_DEPS@,$LIBTOOL_DEPS,;t t
 s,@NTOP_VERSION_EXTRA@,$NTOP_VERSION_EXTRA,;t t
 s,@OBJDUMP@,$OBJDUMP,;t t
 s,@CFG_PLUGIN_DIR@,$CFG_PLUGIN_DIR,;t t
 s,@PLUGINS@,$PLUGINS,;t t
-s,@RRDLIB@,$RRDLIB,;t t
 s,@CFG_RUN_DIR@,$CFG_RUN_DIR,;t t
 s,@SCRIPTVER@,$SCRIPTVER,;t t
 s,@SO_VERSION_PATCH@,$SO_VERSION_PATCH,;t t
@@ -26427,61 +25461,6 @@ if test ".${ZLIB_INCLUDE}" = "."; then
     echo "zlib     .h           : standard system headers"
 else
     echo "zlib     .h           : ${ZLIB_INCLUDE}"
-fi
-# Finished expansion of NTOP_RPT_LOC()
-
-
-if test ".${ac_disable_gdchart}" != ".yes"; then
-    # Expansion of NTOP_RPT_LOC(GDChart  ${GDCHART_LIB} ${GDCHART_INCLUDE})
-if test ".${GDCHART_LIB}" = "."; then
-    echo "GDChart  library      : standard system libraries"
-else
-    echo "GDChart  library      : ${GDCHART_LIB}"
-fi
-if test ".${GDCHART_INCLUDE}" = "."; then
-    echo "GDChart  .h           : standard system headers"
-else
-    echo "GDChart  .h           : ${GDCHART_INCLUDE}"
-fi
-# Finished expansion of NTOP_RPT_LOC()
-
-    # Expansion of NTOP_RPT_LOC(gd       ${GD_LIB} ${GD_INCLUDE})
-if test ".${GD_LIB}" = "."; then
-    echo "gd       library      : standard system libraries"
-else
-    echo "gd       library      : ${GD_LIB}"
-fi
-if test ".${GD_INCLUDE}" = "."; then
-    echo "gd       .h           : standard system headers"
-else
-    echo "gd       .h           : ${GD_INCLUDE}"
-fi
-# Finished expansion of NTOP_RPT_LOC()
-
-    # Expansion of NTOP_RPT_LOC(libpng   ${LIBPNG_LIB} ${LIBPNG_INCLUDE})
-if test ".${LIBPNG_LIB}" = "."; then
-    echo "libpng   library      : standard system libraries"
-else
-    echo "libpng   library      : ${LIBPNG_LIB}"
-fi
-if test ".${LIBPNG_INCLUDE}" = "."; then
-    echo "libpng   .h           : standard system headers"
-else
-    echo "libpng   .h           : ${LIBPNG_INCLUDE}"
-fi
-# Finished expansion of NTOP_RPT_LOC()
-
-fi
-# Expansion of NTOP_RPT_LOC(RRDtool  ${RRD_LIB} ${RRD_INCLUDE})
-if test ".${RRD_LIB}" = "."; then
-    echo "RRDtool  library      : standard system libraries"
-else
-    echo "RRDtool  library      : ${RRD_LIB}"
-fi
-if test ".${RRD_INCLUDE}" = "."; then
-    echo "RRDtool  .h           : standard system headers"
-else
-    echo "RRDtool  .h           : ${RRD_INCLUDE}"
 fi
 # Finished expansion of NTOP_RPT_LOC()
 
