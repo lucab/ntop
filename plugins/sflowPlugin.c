@@ -1360,20 +1360,20 @@ static int setsFlowInSocket(int deviceId) {
 
 /* *************************** */
 
-static void updateSflowInterfaceCounters(int deviceId, IfCounters *interface) {
-  if(interface == NULL) return;
+static void updateSflowInterfaceCounters(int deviceId, IfCounters *ifName) {
+  if(ifName == NULL) return;
 
-  if(interface->ifIndex > MAX_NUM_SFLOW_INTERFACES) {
-    traceEvent(CONST_TRACE_WARNING, "SFLOW: ifIndex=%d is too large (increase MAX_NUM_SFLOW_INTERFACE)", interface->ifIndex);
+  if(ifName->ifIndex > MAX_NUM_SFLOW_INTERFACES) {
+    traceEvent(CONST_TRACE_WARNING, "SFLOW: ifIndex=%d is too large (increase MAX_NUM_SFLOW_INTERFACE)", ifName->ifIndex);
   } else {
-    if(myGlobals.device[deviceId].sflowGlobals->ifCounters[interface->ifIndex] == NULL) {
-      myGlobals.device[deviceId].sflowGlobals->ifCounters[interface->ifIndex] = (IfCounters*)malloc(sizeof(IfCounters));
-      if(myGlobals.device[deviceId].sflowGlobals->ifCounters[interface->ifIndex] == NULL)
+    if(myGlobals.device[deviceId].sflowGlobals->ifCounters[ifName->ifIndex] == NULL) {
+      myGlobals.device[deviceId].sflowGlobals->ifCounters[ifName->ifIndex] = (IfCounters*)malloc(sizeof(IfCounters));
+      if(myGlobals.device[deviceId].sflowGlobals->ifCounters[ifName->ifIndex] == NULL)
 	return; /* Not enough memory */
     }
 
-    memcpy(myGlobals.device[deviceId].sflowGlobals->ifCounters[interface->ifIndex],
-	   interface, sizeof(IfCounters));
+    memcpy(myGlobals.device[deviceId].sflowGlobals->ifCounters[ifName->ifIndex],
+	   ifName, sizeof(IfCounters));
   }
 }
 
@@ -2579,7 +2579,7 @@ static void readFlowSample(SFSample *sample, int expanded, int deviceId)
 
 static void readCounters_generic(SFSample *sample, int deviceId)
 {
-  IfCounters interface;
+  IfCounters ifName;
 
   /* the first part of the generic counters block is really just more info about the interface. */
   sample->ifIndex = getData32(sample, deviceId);      if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifIndex %lu\n", sample->ifIndex);
@@ -2588,29 +2588,29 @@ static void readCounters_generic(SFSample *sample, int deviceId)
   sample->ifDirection = getData32(sample, deviceId);  if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifDirection %lu\n", sample->ifDirection);
   sample->ifStatus = getData32(sample, deviceId);     if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "ifStatus %lu\n", sample->ifStatus);
 
-  interface.ifIndex = sample->ifIndex;
-  interface.ifType = sample->networkType;
-  interface.ifSpeed = sample->ifSpeed;
-  interface.ifDirection = sample->ifDirection;
-  interface.ifStatus = sample->ifStatus;
+  ifName.ifIndex = sample->ifIndex;
+  ifName.ifType = sample->networkType;
+  ifName.ifSpeed = sample->ifSpeed;
+  ifName.ifDirection = sample->ifDirection;
+  ifName.ifStatus = sample->ifStatus;
 
   /* the generic counters always come first */
-  interface.ifInOctets = sf_log_next64(sample, "ifInOctets", deviceId);
-  interface.ifInUcastPkts = sf_log_next32(sample, "ifInUcastPkts", deviceId);
-  interface.ifInMulticastPkts = sf_log_next32(sample, "ifInMulticastPkts", deviceId);
-  interface.ifInBroadcastPkts = sf_log_next32(sample, "ifInBroadcastPkts", deviceId);
-  interface.ifInDiscards = sf_log_next32(sample, "ifInDiscards", deviceId);
-  interface.ifInErrors = sf_log_next32(sample, "ifInErrors", deviceId);
-  interface.ifInUnknownProtos = sf_log_next32(sample, "ifInUnknownProtos", deviceId);
-  interface.ifOutOctets = sf_log_next64(sample, "ifOutOctets", deviceId);
-  interface.ifOutUcastPkts = sf_log_next32(sample, "ifOutUcastPkts", deviceId);
-  interface.ifOutMulticastPkts = sf_log_next32(sample, "ifOutMulticastPkts", deviceId);
-  interface.ifOutBroadcastPkts = sf_log_next32(sample, "ifOutBroadcastPkts", deviceId);
-  interface.ifOutDiscards = sf_log_next32(sample, "ifOutDiscards", deviceId);
-  interface.ifOutErrors = sf_log_next32(sample, "ifOutErrors", deviceId);
-  interface.ifPromiscuousMode = sf_log_next32(sample, "ifPromiscuousMode", deviceId);
+  ifName.ifInOctets = sf_log_next64(sample, "ifInOctets", deviceId);
+  ifName.ifInUcastPkts = sf_log_next32(sample, "ifInUcastPkts", deviceId);
+  ifName.ifInMulticastPkts = sf_log_next32(sample, "ifInMulticastPkts", deviceId);
+  ifName.ifInBroadcastPkts = sf_log_next32(sample, "ifInBroadcastPkts", deviceId);
+  ifName.ifInDiscards = sf_log_next32(sample, "ifInDiscards", deviceId);
+  ifName.ifInErrors = sf_log_next32(sample, "ifInErrors", deviceId);
+  ifName.ifInUnknownProtos = sf_log_next32(sample, "ifInUnknownProtos", deviceId);
+  ifName.ifOutOctets = sf_log_next64(sample, "ifOutOctets", deviceId);
+  ifName.ifOutUcastPkts = sf_log_next32(sample, "ifOutUcastPkts", deviceId);
+  ifName.ifOutMulticastPkts = sf_log_next32(sample, "ifOutMulticastPkts", deviceId);
+  ifName.ifOutBroadcastPkts = sf_log_next32(sample, "ifOutBroadcastPkts", deviceId);
+  ifName.ifOutDiscards = sf_log_next32(sample, "ifOutDiscards", deviceId);
+  ifName.ifOutErrors = sf_log_next32(sample, "ifOutErrors", deviceId);
+  ifName.ifPromiscuousMode = sf_log_next32(sample, "ifPromiscuousMode", deviceId);
 
-  updateSflowInterfaceCounters(deviceId, &interface);
+  updateSflowInterfaceCounters(deviceId, &ifName);
 }
 
 /*_________________---------------------------__________________
@@ -4316,10 +4316,10 @@ static void handlesFlowHTTPrequest(char* _url) {
        ****************************** */
 
       for(i=0; i<MAX_NUM_SFLOW_INTERFACES; i++) {
-	IfCounters *interface = myGlobals.device[deviceId].sflowGlobals->ifCounters[i];
+	IfCounters *ifName = myGlobals.device[deviceId].sflowGlobals->ifCounters[i];
 	char buf[512], formatBuf[256], formatBuf1[256];
 
-	if(interface != NULL) {
+	if(ifName != NULL) {
 	  if(!headerSent) {
 	    printSectionTitle("sFlow Interface Statistics");
 	    sendString("<center><table border=\"1\" "TABLE_DEFAULTS">\n");
@@ -4330,12 +4330,12 @@ static void handlesFlowHTTPrequest(char* _url) {
 	  }
 
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<tr><th>%u</th>",
-			interface->ifIndex); sendString(buf);
+			ifName->ifIndex); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
-			ifType(interface->ifType)); sendString(buf);
+			ifType(ifName->ifType)); sendString(buf);
 
-	  if(interface->ifSpeed >= 10000000) {
-	    u_int speed = interface->ifSpeed / 1000000;
+	  if(ifName->ifSpeed >= 10000000) {
+	    u_int speed = ifName->ifSpeed / 1000000;
 	    
 	    if(speed < 1000)
 	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u&nbsp;Mbit</td>",
@@ -4347,41 +4347,41 @@ static void handlesFlowHTTPrequest(char* _url) {
 	    sendString(buf);
 	  } else {
 	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u</td>",
-			  interface->ifSpeed);
+			  ifName->ifSpeed);
 	    sendString(buf);
 	  }
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
-			ifDirection(interface->ifDirection)); sendString(buf);
+			ifDirection(ifName->ifDirection)); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
-			ifStatus(interface->ifStatus)); sendString(buf);
+			ifStatus(ifName->ifStatus)); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u</td>",
-			interface->ifPromiscuousMode); sendString(buf);
+			ifName->ifPromiscuousMode); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatBytes(interface->ifInOctets, 1, formatBuf, sizeof(formatBuf)),
-			formatBytes(interface->ifOutOctets, 1, formatBuf1, sizeof(formatBuf1))); sendString(buf);
+			formatBytes(ifName->ifInOctets, 1, formatBuf, sizeof(formatBuf)),
+			formatBytes(ifName->ifOutOctets, 1, formatBuf1, sizeof(formatBuf1))); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatPkts(interface->ifInUcastPkts, formatBuf, sizeof(formatBuf)),
-			formatPkts(interface->ifOutUcastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
+			formatPkts(ifName->ifInUcastPkts, formatBuf, sizeof(formatBuf)),
+			formatPkts(ifName->ifOutUcastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatPkts(interface->ifInMulticastPkts, formatBuf, sizeof(formatBuf)),
-			formatPkts(interface->ifOutMulticastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
+			formatPkts(ifName->ifInMulticastPkts, formatBuf, sizeof(formatBuf)),
+			formatPkts(ifName->ifOutMulticastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatPkts(interface->ifInBroadcastPkts, formatBuf, sizeof(formatBuf)),
-			formatPkts(interface->ifOutBroadcastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
+			formatPkts(ifName->ifInBroadcastPkts, formatBuf, sizeof(formatBuf)),
+			formatPkts(ifName->ifOutBroadcastPkts, formatBuf1, sizeof(formatBuf1))); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatPkts(interface->ifInDiscards, formatBuf, sizeof(formatBuf)),
-			formatPkts(interface->ifOutDiscards, formatBuf1, sizeof(formatBuf1))); sendString(buf);
+			formatPkts(ifName->ifInDiscards, formatBuf, sizeof(formatBuf)),
+			formatPkts(ifName->ifOutDiscards, formatBuf1, sizeof(formatBuf1))); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s<br>%s</td>",
-			formatPkts(interface->ifInErrors, formatBuf, sizeof(formatBuf)),
-			formatPkts(interface->ifOutErrors, formatBuf, sizeof(formatBuf1))); sendString(buf);
+			formatPkts(ifName->ifInErrors, formatBuf, sizeof(formatBuf)),
+			formatPkts(ifName->ifOutErrors, formatBuf, sizeof(formatBuf1))); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
-			formatPkts(interface->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); sendString(buf);
+			formatPkts(ifName->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); sendString(buf);
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center><A HREF=\"/plugins/rrdPlugin?action=list&key="
 			"interfaces/%s/sFlow/%d&title=Interface%%20Id%%20%d\">"
 			"<IMG SRC=/graph.gif BORDER=0></A></td></tr>",
 			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 			i, i,
-			formatPkts(interface->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); 
+			formatPkts(ifName->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); 
 	  sendString(buf);
 	}
       }

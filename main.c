@@ -1241,13 +1241,11 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if ((ifStr == NULL) || (ifStr[0] == '\0')) {
+  if((ifStr == NULL) || (ifStr[0] == '\0')) {
     traceEvent(CONST_TRACE_FATALERROR, "No interface has been selected. Capture not started...");
     createDummyInterface("none");
-  } else {
+  } else
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
-  }
-
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Loading Plugins");
   loadPlugins();

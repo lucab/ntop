@@ -154,8 +154,8 @@ lib_LTLIBRARIES    = libntop.la libntopreport.la
 libntop_la_SOURCES = address.c    argv.c        dataFormat.c   fcUtils.c \
                      getopt.c     getopt1.c     globals-core.c \
                      hash.c       iface.c       initialize.c  leaks.c        \
-                     ntop.c        pbuf.c         \
-                     plugin.c     protocols.c   \
+                     ntop.c       pbuf.c         \
+                     plugin.c     prefs.c       protocols.c   \
                      sessions.c   term.c        util.c         \
                      traffic.c    vendor.c      version.c      \
                      ntop_darwin.c

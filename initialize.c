@@ -1422,20 +1422,19 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
 /* ******************************* */
 
+#define MAX_IF_NAME    256
+
 /*
  * If device is NULL, this function adds the default interface
  * if device is "none" it adds a dummy interface
  */
 void initDevices(char* devices) {
   char *tmpDev=NULL, *tmpDescr=NULL;
-#ifdef WIN32
-#define MAX_IF_NAME    256
   pcap_if_t *devpointer;
   char intNames[32][MAX_IF_NAME], intDescr[32][MAX_IF_NAME];
   int ifIdx = 0;
   int defaultIdx = -1;
-#endif
-  int found=0, intfc;
+  int found = 0, intfc;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
   char myName[80];
 
@@ -1480,10 +1479,8 @@ void initDevices(char* devices) {
     myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
 
     return;
-
   }
 
-#ifdef WIN32
   if(pcap_findalldevs(&devpointer, ebuf) < 0) {
     traceEvent(CONST_TRACE_ERROR, "pcap_findalldevs() call failed [%s]", ebuf);
     traceEvent(CONST_TRACE_ERROR, "Have you instaled winpcap properly?");
@@ -1491,7 +1488,7 @@ void initDevices(char* devices) {
   } else {
     int i;
 
-    for (i = 0; devpointer != 0; i++) {
+    for(i = 0; devpointer != 0; i++) {
       traceEvent(CONST_TRACE_NOISY, "Found interface [index=%d] '%s'", ifIdx, devpointer->name);
 
       if(tmpDev == NULL) {
@@ -1503,17 +1500,23 @@ void initDevices(char* devices) {
 	char *descr;
 
 	descr = devpointer->description;
-	/* Sanitize the interface name */
-	for(i=0; i<strlen(descr); i++)
-	  if(descr[i] == '(') {
-	    descr[i] = '\0';
-	    break;
-	  }
-	while(descr[strlen(descr)-1] == ' ')
-	  descr[strlen(descr)-1] = '\0';
+
+	if(descr != NULL) {
+	  /* Sanitize the interface name */
+	  for(i=0; i<strlen(descr); i++)
+	    if(descr[i] == '(') {
+	      descr[i] = '\0';
+	      break;
+	    }
+
+	  while(descr[strlen(descr)-1] == ' ')
+	    descr[strlen(descr)-1] = '\0';
+	  
+	  safe_snprintf(__FILE__, __LINE__, intDescr[ifIdx], MAX_IF_NAME, "%s_%d", descr, ifIdx);
+	} else 
+	  safe_snprintf(__FILE__, __LINE__, intDescr[ifIdx], MAX_IF_NAME, "%s", devpointer->name);
 
 	strncpy(intNames[ifIdx], devpointer->name, MAX_IF_NAME);
-	safe_snprintf(__FILE__, __LINE__, intDescr[ifIdx], MAX_IF_NAME, "%s_%d", descr, ifIdx);
 
 	if(defaultIdx == -1) {
 	  if((!strstr(intNames[ifIdx], "PPP")) /* Avoid to use the PPP interface */
@@ -1529,9 +1532,10 @@ void initDevices(char* devices) {
       }
 
       devpointer = devpointer->next;
-    } /* for */
-  } /* else */
-#endif
+    }
+  }
+
+  pcap_freealldevs(devpointer);
 
   if(devices != NULL) {
     /* User has specified devices in the parameter list */
@@ -1616,6 +1620,12 @@ void initDevices(char* devices) {
     } /* while */
 
     free(workDevices);
+  } else if(defaultIdx != -1) {
+    /* Default interface found */
+    traceEvent(CONST_TRACE_INFO, "No default device configured. Using %s", intNames[defaultIdx]);
+    processStrPref(NTOP_PREF_DEVICES, intNames[defaultIdx], &myGlobals.runningPref.devices, TRUE);
+    processStrPref(NTOP_PREF_DEVICES, intNames[defaultIdx], &myGlobals.savedPref.devices, TRUE);
+    addDevice(intNames[defaultIdx], intDescr[defaultIdx]);
   }
 }
 

@@ -1883,6 +1883,7 @@ RETSIGTYPE rrdcleanup(int signo) {
 /* ****************************** */
 
 static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
+  char value[512 /* leave it big for hosts filter */];
   u_int32_t networks[32][3];
   u_short numLocalNets;
   int idx;
@@ -1901,6 +1902,15 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
 #endif
+
+  /* ********************************************* */
+  
+  numLocalNets = 0;
+  /* Avoids strtok to blanks into hostsFilter */
+  safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s", hostsFilter);
+  handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value), CONST_HANDLEADDRESSLISTS_RRD);
+
+  /* ********************************************* */
 
   if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
     if(el->hostNumIpAddress[0] != '\0') {
@@ -2560,9 +2570,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if(myGlobals.device[devIdx].sflowGlobals) {
 	  for(i=0; i<MAX_NUM_SFLOW_INTERFACES; i++) {
-	    IfCounters *interface = myGlobals.device[devIdx].sflowGlobals->ifCounters[i];
+	    IfCounters *ifName = myGlobals.device[devIdx].sflowGlobals->ifCounters[i];
 
-	    if(interface != NULL) {
+	    if(ifName != NULL) {
 	      char buf[128], formatBuf[256], formatBuf1[256];
 	      char rrdIfPath[512];
 
@@ -2571,19 +2581,19 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			    myGlobals.device[devIdx].humanFriendlyName, i);
 	      mkdir_p(rrdIfPath);
 
-	      updateCounter(rrdIfPath, "ifInOctets", interface->ifInOctets);
-	      updateCounter(rrdIfPath, "ifInUcastPkts", interface->ifInUcastPkts);
-	      updateCounter(rrdIfPath, "ifInMulticastPkts", interface->ifInMulticastPkts);
-	      updateCounter(rrdIfPath, "ifInBroadcastPkts", interface->ifInBroadcastPkts);
-	      updateCounter(rrdIfPath, "ifInDiscards", interface->ifInDiscards);
-	      updateCounter(rrdIfPath, "ifInErrors", interface->ifInErrors);
-	      updateCounter(rrdIfPath, "ifInUnknownProtos", interface->ifInUnknownProtos);
-	      updateCounter(rrdIfPath, "ifOutOctets", interface->ifOutOctets);
-	      updateCounter(rrdIfPath, "ifOutUcastPkts", interface->ifOutUcastPkts);
-	      updateCounter(rrdIfPath, "ifOutMulticastPkts", interface->ifOutMulticastPkts);
-	      updateCounter(rrdIfPath, "ifOutBroadcastPkts", interface->ifOutBroadcastPkts);
-	      updateCounter(rrdIfPath, "ifOutDiscards", interface->ifOutDiscards);
-	      updateCounter(rrdIfPath, "ifOutErrors", interface->ifOutErrors);
+	      updateCounter(rrdIfPath, "ifInOctets", ifName->ifInOctets);
+	      updateCounter(rrdIfPath, "ifInUcastPkts", ifName->ifInUcastPkts);
+	      updateCounter(rrdIfPath, "ifInMulticastPkts", ifName->ifInMulticastPkts);
+	      updateCounter(rrdIfPath, "ifInBroadcastPkts", ifName->ifInBroadcastPkts);
+	      updateCounter(rrdIfPath, "ifInDiscards", ifName->ifInDiscards);
+	      updateCounter(rrdIfPath, "ifInErrors", ifName->ifInErrors);
+	      updateCounter(rrdIfPath, "ifInUnknownProtos", ifName->ifInUnknownProtos);
+	      updateCounter(rrdIfPath, "ifOutOctets", ifName->ifOutOctets);
+	      updateCounter(rrdIfPath, "ifOutUcastPkts", ifName->ifOutUcastPkts);
+	      updateCounter(rrdIfPath, "ifOutMulticastPkts", ifName->ifOutMulticastPkts);
+	      updateCounter(rrdIfPath, "ifOutBroadcastPkts", ifName->ifOutBroadcastPkts);
+	      updateCounter(rrdIfPath, "ifOutDiscards", ifName->ifOutDiscards);
+	      updateCounter(rrdIfPath, "ifOutErrors", ifName->ifOutErrors);
 	    }
 	  }
 	}
@@ -2608,11 +2618,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	      if(myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value > 0) {
 
-		safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/matrix/%s/%s/",
-                         myGlobals.rrdPath,
-			 myGlobals.device[k].humanFriendlyName,
-			 myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
-			 myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
+		safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath),
+			      "%s/interfaces/%s/matrix/%s/%s/",
+			      myGlobals.rrdPath,
+			      myGlobals.device[k].humanFriendlyName,
+			      myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
+			      myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
 		mkdir_p(rrdPath);
 
 		updateCounter(rrdPath, "pkts",

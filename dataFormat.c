@@ -268,7 +268,7 @@ char* formatPkts(Counter pktNr, char* outStr, int outStrLen) {
     c = ((unsigned long)pktNr)%1000;
     safe_snprintf(__FILE__, __LINE__, outStr, outStrLen, "%lu,%03lu,%03lu", a, b, c); 
   } else {
-    unsigned long a, b, c, d;
+    unsigned long a, b, c;
     unsigned long e, f;
 
     e = pktNr/1000000000;
