@@ -1186,19 +1186,21 @@ void handleHTTPrequest(struct in_addr from) {
 #ifdef DEBUG
   fprintf(stdout, "URL = '%s'\n", requestedURL); 
 #endif
-
+  
   actTime = time(NULL); /* Don't forget this */
 
-  if((requestedURL[0] == '\0')
-     || (requestedURL[0] == '/')
-     || (strncmp(requestedURL, "/index.html", strlen("/index.html")) == 0)
-     || (strncmp(requestedURL, "/leftmenu.html", strlen("/leftmenu.html")) == 0)
-     || (strncmp(requestedURL, "/home.html", strlen("/home.html")) == 0)) {
-    requestedURL[strlen(requestedURL)-9] = '\0';
+  /*
+    Fix courtesy of  
+    Michael Wescott <wescott@crosstor.com>
+  */
+  if((requestedURL[0] == '\0') || (requestedURL[0] == '/')) {
+    int len = strlen(requestedURL);
+
+    if(len >= 9) requestedURL[len-9] = '\0';
     returnHTTPPage(&requestedURL[1], postLen);
   } else {
     char buf[64];
-
+    
     sendString("HTTP/1.0 200 OK\n");
     snprintf(buf, sizeof(buf), "Server: ntop/%s (%s)\n", version, osName);
     sendString(buf);

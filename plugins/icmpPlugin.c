@@ -22,26 +22,6 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#ifdef HAVE_GDCHART
-
-#include "gdc.h"
-#include "gdchart.h"
-#include "gdcpie.h"
-
-
-extern char GDC_yaxis;
-extern char* GDC_ylabel_fmt;
-
-extern int out_graph(short gifwidth,
-		     short gifheight,
-		     FILE  *gif_fptr,
-		     GDC_CHART_T type,
-		     int  num_points,
-		     char *xlbl[],
-		     int  num_sets,
-		     ... );
-#endif
-
 typedef struct icmpData {
   struct icmp icmpPkt;
   char dummy_data[16];

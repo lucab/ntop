@@ -4,8 +4,8 @@
 #ifndef _LEAKS_H_
 #define _LEAKS_H_
 
-extern void initLeaks();
-extern void termLeaks();
+extern void initLeaks(void);
+extern void termLeaks(void);
 
 extern void* myMalloc(size_t, int, char*);
 extern void* myCalloc(size_t, size_t, int, char*);
@@ -15,8 +15,8 @@ extern char* myStrdup(char*, int, char*);
 extern void  myRemoveXMPLeak(void*, int, char*);
 extern void  myAddXMPLeak(void*, int, char*);
 
-extern unsigned int PrintMemoryBlocks();
-extern void ResetLeaks();
+extern unsigned int PrintMemoryBlocks(void);
+extern void ResetLeaks(void);
 
 /*
 #define malloc(a)     myMalloc((size_t)(a), __LINE__, __FILE__)

@@ -20,7 +20,10 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+#define _GLOBALS_REPORT_C_
+
 #include "ntop.h"
+#include "globals-report.h"
 
 int maxNumLines = MAX_NUM_TABLE_ROWS;
 int idleFlag, percentMode, localAddrFlag, refreshRate;

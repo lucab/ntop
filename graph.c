@@ -30,27 +30,10 @@
 
 #ifdef HAVE_GDCHART
 
-#include "gdc.h"
-#include "gdchart.h"
-#include "gdcpie.h"
-
-
-
 static unsigned long clr[] = { 0x0000FF, 0x00FF00, 0xFF0000,
 			       0xFF4040L, 0x80FF80L, 0x8080FFL,
 			       0xFF80FFL, 0xFFFF80L, 0x80FFFFL,
 			       0x0080FFL };
-
-extern int out_graph(short gifwidth,
-		     short gifheight,
-		     FILE  *gif_fptr,
-		     GDC_CHART_T type,
-		     int  num_points,
-		     char *xlbl[],
-		     int  num_sets,
-		     ... );
-
-
 
 /* ************************ */
 
