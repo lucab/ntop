@@ -501,7 +501,7 @@ unsigned short __pseudoLocalAddress(struct in_addr *addr,
     int i;
 
   for(i=0; i<numLocalNets; i++) {
-#ifdef DEBUG
+#ifdef ADDRESS_DEBUG
     char buf[32], buf1[32], buf2[32];
     struct in_addr addr1, addr2;
 
@@ -576,7 +576,7 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr) {
 unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
   int i;
 
-#ifdef DEBUG
+#ifdef ADDRESS_DEBUG
   traceEvent(TRACE_WARNING, "DEBUG: Checking %8X (pseudo broadcast)\n", addr->s_addr);
 #endif
 
