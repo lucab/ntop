@@ -537,7 +537,8 @@ void updateThpt(int fullUpdate) {
 
 /* Check if a host can be potentially added the host matrix */
 int isMatrixHost(HostTraffic *host, int actualDeviceId) {
-  if((deviceLocalAddress(&host->hostIpAddress, actualDeviceId) || multicastHost(host))
+  if((host->hostIpAddress.hostFamily == AF_INET) /* Only IPv4 addresses are used in the matrix */
+     && (deviceLocalAddress(&host->hostIpAddress, actualDeviceId) || multicastHost(host))
      && (!broadcastHost(host)))
     return(1);
   else
