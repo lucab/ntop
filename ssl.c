@@ -62,7 +62,7 @@ int init_ssl(void) {
   myGlobals.sslInitialized = 0;
 
   if(myGlobals.sslPort == 0) {
-    printf("SSL is present but https is disabled: use -W <https port> for enabling it\n");
+    traceEvent(CONST_TRACE_INFO, "SSL is present but https is disabled: use -W <https port> for enabling it\n");
     return(0); /* The user decided NOT to use SSL */
   }
 
