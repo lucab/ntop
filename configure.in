@@ -847,7 +847,6 @@ dnl> order as follow
 dnl> 1. user defined libpcap development tree
 dnl> 2. standard installation in /usr/lib and /usr/include respectively
 dnl> 3. default package installation in /usr/local/lib and /usr/local/include respectively
-dnl> 4. libpcap-0.4 development tree under the same ntop's root directory or in a subdir
 
 AC_MSG_CHECKING([for LBL Packet Capture Library (required package)])
 
@@ -906,36 +905,6 @@ elif test -d ../libpcap-0.4 &&
      test -r ../libpcap-0.4/libpcap.a &&
      test -r ../libpcap-0.4/pcap.h; then
        PCAP_ROOT=`cd ../libpcap-0.4 && pwd`
-       CORELIBS="${CORELIBS} -L$PCAP_ROOT -lpcap"
-       INCS="${INCS} -I$PCAP_ROOT"
-       AC_MSG_RESULT([found in $PCAP_ROOT])
-dnl>
-dnl> on place source tree under the same ntop's root
-dnl>
-elif test -d ../libpcap-0.4a6 &&
-     test -r ../libpcap-0.4a6/libpcap.a &&
-     test -r ../libpcap-0.4a6/pcap.h; then
-       PCAP_ROOT=`cd ../libpcap-0.4a6 && pwd`
-       CORELIBS="${CORELIBS} -L$PCAP_ROOT -lpcap"
-       INCS="${INCS} -I$PCAP_ROOT"
-       AC_MSG_RESULT([found in $PCAP_ROOT])
-dnl>
-dnl> on place source tree as ntop subdir
-dnl>
-elif test -d libpcap-0.4 &&
-     test -r libpcap-0.4/libpcap.a &&
-     test -r libpcap-0.4/pcap.h; then
-       PCAP_ROOT=`cd libpcap-0.4 && pwd`
-       CORELIBS="${CORELIBS} -L$PCAP_ROOT -lpcap"
-       INCS="${INCS} -I$PCAP_ROOT"
-       AC_MSG_RESULT([found in $PCAP_ROOT])
-dnl>
-dnl> on place source tree as ntop subdir
-dnl>
-elif test -d libpcap-0.4a6 &&
-     test -r libpcap-0.4a6/libpcap.a &&
-     test -r libpcap-0.4a6/pcap.h; then
-       PCAP_ROOT=`cd libpcap-0.4a6 && pwd`
        CORELIBS="${CORELIBS} -L$PCAP_ROOT -lpcap"
        INCS="${INCS} -I$PCAP_ROOT"
        AC_MSG_RESULT([found in $PCAP_ROOT])
