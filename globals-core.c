@@ -56,17 +56,17 @@ static u_short _headerSize[MAX_DLT_ARRAY];
 extern char _wdir[];
 #endif
 
-static char *_dataFileDirs[]   = { ".", 
+static char *_dataFileDirs[]   = { ".",
 #ifdef WIN32
 									_wdir,
 #endif
 									CFG_DATAFILE_DIR, NULL };
 static char *_pluginDirs[]     = { "./plugins", CFG_PLUGIN_DIR, NULL };
-static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR, 
+static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
 #ifdef WIN32
 				   _wdir,
 #else
-				   "/etc", 
+				   "/etc",
 #endif
 				   NULL };
 
@@ -92,6 +92,7 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
 
   traceEvent(CONST_TRACE_INFO, "Initializing gdbm databases");
 
+  setSpecifiedUser();
   initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE,  NULL);
   initSingleGdbm(&myGlobals.prefsFile,        "prefsCache.db",   prefDirectory,  FALSE, NULL);
   initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, TRUE,  NULL);
@@ -115,7 +116,7 @@ void allocateOtherHosts() {
   strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
   myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx+1;
   myGlobals.otherHostEntry->hostSerial = myGlobals.otherHostEntryIdx;
-  myGlobals.otherHostEntry->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), 
+  myGlobals.otherHostEntry->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*),
 							     MAX_ASSIGNED_IP_PORTS);
 }
 
@@ -354,12 +355,12 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.dummyEthAddress[0] = '\0';
 
       /*
-       *  Setup the mtu and header size tables. 
+       *  Setup the mtu and header size tables.
        *
-       *  We set only the ones we specifically know... anything else will 
+       *  We set only the ones we specifically know... anything else will
        *  get mtu=CONST_UNKNOWN_MTU, header=0
        *
-       *     If mtuSize is wrong, the only problem will be 1) erroneous-/mis-classification 
+       *     If mtuSize is wrong, the only problem will be 1) erroneous-/mis-classification
        *     of packets as "too long", 2) the suspicious packet file, if one, may have
        *     extra or missing entries, and 3) an erroneous line in the report.
        *
@@ -444,8 +445,8 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   myGlobals.enableIdleHosts = 1;
 
-  myGlobals.netFlowInSocket = -1;  
-  myGlobals.netFlowOutSocket = -1;  
+  myGlobals.netFlowInSocket = -1;
+  myGlobals.netFlowOutSocket = -1;
   myGlobals.globalFlowSequence = myGlobals.globalFlowPktCount = 0;
 
 #ifdef CFG_MULTITHREADED
@@ -482,24 +483,24 @@ void initNtopGlobals(int argc, char * argv[]) {
   allocateOtherHosts();
 
   /* ********************************** */
-  
+
   bufLen = 0;
   for (i=0; i<argc; i++) {
     bufLen += (2 + strlen(argv[i]));
   }
-  
+
   startedAs = (char*)malloc(bufLen);
-  memset(startedAs, 0, (size_t) bufLen); 
+  memset(startedAs, 0, (size_t) bufLen);
   for (i=0; i<argc; i++) {
     if (argv[i] != NULL) {
       strcat(startedAs, argv[i]);
       strcat(startedAs, " ");
     }
   }
-    
-  myGlobals.startedAs = startedAs;  
+
+  myGlobals.startedAs = startedAs;
 }
- 
+
 /* ********************************* */
 
 void initNtop(char *devices) {
@@ -515,7 +516,7 @@ void initNtop(char *devices) {
 
   if(myGlobals.enableSessionHandling)
     initPassiveSessions();
-  
+
   /* ********************************** */
 
   /*
@@ -527,7 +528,7 @@ void initNtop(char *devices) {
 #ifdef HAVE_OPENSSL
   init_ssl();
 #endif
-  
+
   /* ********************************** */
 
   initGdbm(myGlobals.dbPath, myGlobals.dbPath);

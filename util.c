@@ -3762,3 +3762,23 @@ pcap_t *pcap_open_dead(int linktype, int snaplen)
   return p;
 }
 #endif
+
+/* ******************************** */
+
+int setSpecifiedUser() {
+  int rc;
+
+  /*
+   * set user to be as inoffensive as possible
+   */
+  /* user id specified on commandline */
+  if((setgid(myGlobals.groupId) != 0) || (setuid(myGlobals.userId) != 0)) {
+    traceEvent(CONST_TRACE_FATALERROR, "Unable to change user ID");
+    exit(-1);
+  }
+
+  if((myGlobals.userId != 0) || (myGlobals.groupId != 0))
+    return(1);
+  else
+    return(0);
+}

@@ -60,6 +60,7 @@ extern int optind;
 extern int opterr;
 extern int optopt;
 #endif /* HAVE_GETOPT_H */
+extern int setSpecifiedUser();
 
 /****** function declarations ***** */
 

@@ -1620,6 +1620,7 @@ AC_CHECK_HEADERS([sys/ioctl.h sys/socket.h sys/time.h sys/types.h])
 
 # Optional - have workaround...
 AC_CHECK_HEADERS([setjmp.h])
+AC_CHECK_HEADERS([shadow.h])
 
 # Network
 AC_CHECK_HEADERS([netdb.h])

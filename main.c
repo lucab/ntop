@@ -210,7 +210,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-n             | --numeric-ip-addresses]             %sNumeric IP addresses - no DNS resolution\n", newLine);
   fprintf(fp, "    [-p <list>      | --protocols <list>]                 %sList of IP protocols to monitor (see man page)\n", newLine);
   fprintf(fp, "    [-q             | --create-suspicious-packets]        %sCreate file ntop-suspicious-pkts.XXX.pcap file\n", newLine);
-  fprintf(fp, "    [-r <number>    | --refresh-time <number>]            %sRefresh time in seconds, default is %d\n", 
+  fprintf(fp, "    [-r <number>    | --refresh-time <number>]            %sRefresh time in seconds, default is %d\n",
 	  newLine, DEFAULT_NTOP_AUTOREFRESH_INTERVAL);
   fprintf(fp, "    [-s             | --no-promiscuous]                   %sDisable promiscuous mode\n", newLine);
   fprintf(fp, "    [-t <number>    | --trace-level <number>]             %sTrace level [0-5]\n", newLine);
@@ -252,7 +252,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-W <port>      | --https-server <port>]              %sWeb server (https:) port (or address:port) to listen on\n", newLine);
 #endif
 
-#ifndef MAKE_WITH_IGNORE_SIGPIPE 
+#ifndef MAKE_WITH_IGNORE_SIGPIPE
   fprintf(fp, "    [--ignore-sigpipe]                                    %sIgnore SIGPIPE errors\n", newLine);
 #endif
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
@@ -284,7 +284,7 @@ static void checkUserIdentity(int userSpecified) {
 #ifndef WIN32
   if((getuid() != geteuid()) || (getgid() != getegid())) {
     /* setuid binary, drop privileges */
-    if(setgid(getgid())!=0 || setuid(getuid())!=0) {
+    if((setgid(getgid()) != 0) || (setuid(getuid()) != 0)) {
       traceEvent(CONST_TRACE_FATALERROR, "Unable to drop privileges");
       exit(-1);
     }
@@ -293,38 +293,15 @@ static void checkUserIdentity(int userSpecified) {
   /*
    * set user to be as inoffensive as possible
    */
-  if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
-    /* user id specified on commandline */
-    if((setgid(myGlobals.groupId) != 0) || (setuid(myGlobals.userId) != 0)) {
-      traceEvent(CONST_TRACE_FATALERROR, "Unable to change user ID");
-      exit(-1);
-    }
-      
-  } else {
-    struct passwd *pw;
-    char *user;
-    
-    /*
-      The user has not specified the uid using the -u flag.
-      We try to locate a user with no privileges
-    */
+  if(!setSpecifiedUser()) {
 
-    if(!userSpecified) {
-      pw = getpwnam(user = "nobody");
-      if(pw == NULL) pw = getpwnam(user = "anonymous");
-      myGlobals.userId = pw->pw_uid;
-      myGlobals.groupId = pw->pw_gid;      
-    }
-
-    if(userSpecified || (pw != NULL)) {
+    if(userSpecified) {
       /* User located */
-
       if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
 	if((setgid(myGlobals.groupId) != 0) || (setuid(myGlobals.userId) != 0)) {
-	  traceEvent(CONST_TRACE_FATALERROR, "Unable to change user to %s", user);
+	  traceEvent(CONST_TRACE_FATALERROR, "Unable to change user");
 	  exit(-1);
-	} else
-	  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop started as user %s", user);
+	}
       }
     } else {
       if((geteuid() == 0) || (getegid() == 0)) {
@@ -603,7 +580,7 @@ static int parseOptions(int argc, char* argv []) {
       /*
        * Burton Strauss (BStrauss@acm.org) allow --use-syslog <facility>
        *
-       *   Note that the = is REQUIRED for optional-argument to work...  
+       *   Note that the = is REQUIRED for optional-argument to work...
        *        If you don't have it, getopt invokes this case with optind=nil
        *        and throws away the argument.
        *         (While it's visable in the next entry of argv[], that's just to complex to code
@@ -619,13 +596,13 @@ static int parseOptions(int argc, char* argv []) {
 	int i;
 
 	stringSanityCheck(optarg);
-	
+
 	for (i=0; myFacilityNames[i].c_name != NULL; i++) {
 	  if (strcmp(optarg, myFacilityNames[i].c_name) == 0) {
 	    break;
 	  }
 	}
-	
+
 	if (myFacilityNames[i].c_name == NULL) {
 	  printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
 		 optarg);
@@ -640,14 +617,14 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-#ifndef MAKE_WITH_IGNORE_SIGPIPE 
+#ifndef MAKE_WITH_IGNORE_SIGPIPE
     case 132:
       /* Burton M. Strauss III - Jun 2002 */
       myGlobals.ignoreSIGPIPE = 1;
       break;
 #endif /* MAKE_WITH_IGNORE_SIGPIPE */
 
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME 
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
     case 133:
       /* Burton M. Strauss III - Jun 2002 */
       myGlobals.useSSLwatchdog = 1;
@@ -727,7 +704,7 @@ static int parseOptions(int argc, char* argv []) {
   /* Handle any unrecognized options, such as a nested @filename */
   if(optind < argc) {
     int i;
-    
+
       printf("FATAL ERROR: Unrecognized/unprocessed ntop options...\n     ");
       for(i=optind; i<argc; i++) {
           printf(" %s", argv[i]);
@@ -744,15 +721,15 @@ static int parseOptions(int argc, char* argv []) {
   /*  Note that for these critical messages we use both
    *  printf() and traceEvent() - gotta get the message out
    */
-  
+
   /*
    * check for valid parameters
    */
 #ifdef HAVE_OPENSSL
-  if ( (myGlobals.webPort == 0) && (myGlobals.sslPort == 0) ) {
+  if((myGlobals.webPort == 0) && (myGlobals.sslPort == 0)) {
       printf("WARNING: both -W and -w are set to 0. The web interface will be disabled.\n");
 #else
-  if (myGlobals.webPort == 0) {
+  if(myGlobals.webPort == 0) {
       printf("WARNING: -w is set to 0. The web interface will be disabled.\n");
 #endif
 
@@ -766,20 +743,82 @@ static int parseOptions(int argc, char* argv []) {
 
 #ifndef WIN32
   /*
+    The user has not specified the uid using the -u flag.
+    We try to locate a user with no privileges
+  */
+
+  if(!userSpecified) {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "getuid(): %d", getuid());
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "geteuid(): %d", geteuid());
+    if(getuid() == 0) {
+      /* We're root */
+      char *user;
+
+      struct passwd *pw = getpwnam(user = "nobody");
+      if(pw == NULL) pw = getpwnam(user = "anonymous");
+
+      myGlobals.userId  = pw->pw_uid;
+      myGlobals.groupId = pw->pw_gid;
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop will be started as user %s", user);
+    } else {
+      myGlobals.userId  = getuid();
+      myGlobals.groupId = getgid();
+    }
+  }
+
+  /*
    * Must start run as root since opening a network interface
    * in promiscuous mode is a privileged operation.
    * Verify we're running as root, unless we are reading data from a file
    */
-  if(! myGlobals.rFileName &&
-     myGlobals.disablePromiscuousMode != 1 &&
-     ((getuid () && geteuid ()) || setuid (0))) {
-    printf ("Sorry, %s uses network interface(s) in promiscuous mode, "
-	    "so it needs root permission to run.\n",
-	    myGlobals.program_name);
-    traceEvent(CONST_TRACE_FATALERROR, "Not started as root, required for pcap_open_live()");
-    exit (-1);
+
+  if((!myGlobals.rFileName) &&  (myGlobals.disablePromiscuousMode != 1)
+     && getuid() /* We're not root */) {
+    char *theRootPw, *correct, *encrypted;
+    struct passwd *pw = getpwuid(0);
+
+    myGlobals.userId  = getuid();
+    myGlobals.groupId = getgid();
+
+    if(strcmp(pw->pw_passwd, "x") == 0) {
+#ifdef HAVE_SHADOW_H
+      /* Use shadow passwords */
+      struct spwd *spw;
+
+      if(setuid(0) || setuid(0)) {
+	traceEvent(CONST_TRACE_ERROR, "Sorry I'm unable to become root. Please check whether this application");
+	traceEvent(CONST_TRACE_ERROR, "has the sticky bit set and the owner is root:root. Otherwise");
+	traceEvent(CONST_TRACE_ERROR, "please run ntop as root.");
+	exit(-1);
+      }
+
+      spw = getspnam("root");
+      if(spw == NULL) {
+	traceEvent(CONST_TRACE_INFO, "Unable to read shadow passwords");
+	exit(-1);
+      } else
+	correct = spw->sp_pwdp;
+#else
+      traceEvent(CONST_TRACE_ERROR, "Sorry: I cannot change user as your system uses and unsupported password storage mechanism.");
+      traceEvent(CONST_TRACE_ERROR, "Please restart ntop with root capabilities");
+      exit(-1);
+#endif
+    } else
+      correct = pw->pw_passwd;
+
+    theRootPw = getpass("Please enter the root password: ");
+    encrypted = crypt(theRootPw, correct);
+
+    if(strcmp(encrypted, correct) == 0) {
+      /* traceEvent(CONST_TRACE_INFO, "Root pw is OK"); */
+    } else {
+      traceEvent(CONST_TRACE_ERROR, "The specified root password is not correct.");
+      traceEvent(CONST_TRACE_ERROR, "Sorry, %s uses network interface(s) in promiscuous mode, "
+	     "so it needs root permission to run.\n", myGlobals.program_name);
+      exit(-1);
+    }
   } else if (myGlobals.disablePromiscuousMode == 1)
-    traceEvent(CONST_TRACE_WARNING, 
+    traceEvent(CONST_TRACE_WARNING,
                "-s set so will ATTEMPT to open interface w/o promisc mode "
                "(this will probably fail below)");
 #endif
@@ -825,7 +864,7 @@ int main(int argc, char *argv[]) {
 
   printf("Wait please: ntop is coming up...\n");
 
-#ifdef MTRACE  
+#ifdef MTRACE
   mtrace();
 #endif
 
@@ -834,7 +873,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   /* *********************** */
-  
+
   cmdLineBuffer = (char*)malloc(LEN_CMDLINE_BUFFER) /* big just to be safe */;
   memset(cmdLineBuffer, 0, LEN_CMDLINE_BUFFER);
 
@@ -844,10 +883,10 @@ int main(int argc, char *argv[]) {
   if (snprintf(cmdLineBuffer, LEN_CMDLINE_BUFFER, "%s ", argv[0]) < 0)
       BufferTooShort();
 
-  /* Now we process the parameter list, looking for a @filename 
+  /* Now we process the parameter list, looking for a @filename
    *   We have to special case a few things --- since the OS processing removes "s
    *     --filter-expression "host a.b.c.d" becomes
-   *     --filter-expression host a.b.c.d 
+   *     --filter-expression host a.b.c.d
    *     --filter-expression="host a.b.c.d" becomes
    *     --filter-expression=host a.b.c.d
    *   This causes --filter-expression "host" and a bogus "a.b.c.d"
@@ -906,7 +945,7 @@ int main(int argc, char *argv[]) {
 #ifdef PARAM_DEBUG
       printf("PARAM_DEBUG: File size %d\n", fileStat.st_size);
 #endif
-	  
+
       fd = fopen(&argv[i][1], "rb");
       if (fd == NULL) {
 	printf("ERROR: Unable to open parameter file '%s' (%d)...\n", &argv[i][1], errno);
@@ -924,15 +963,15 @@ int main(int argc, char *argv[]) {
 #ifdef PARAM_DEBUG
 	printf("PARAM_DEBUG: fgets() '%s'\n", readBufferWork);
 #endif
-      
+
 	/* Strip out any comments */
 	readBufferWork = strchr(readBuffer, '#');
 	if (readBufferWork != NULL) {
 	  readBufferWork[0] = ' ';
 	  readBufferWork[1] = '\0';
 	}
-            
-	/* Replace the \n by a space, so at the end the buffer will 
+
+	/* Replace the \n by a space, so at the end the buffer will
 	 * look indistinguishable...
 	 */
 	readBufferWork = strchr(readBuffer, '\n');
@@ -940,13 +979,13 @@ int main(int argc, char *argv[]) {
 	  readBufferWork[0] = ' ';
 	  readBufferWork[1] = '\0';
 	}
-      
+
 	readBufferWork = strchr(readBuffer, '@');
 	if(readBufferWork != NULL) {
 	  printf("FATAL ERROR: @command in file ... nesting is not permitted!\n\n");
 	  exit(-1);
 	}
-      
+
 #ifdef PARAM_DEBUG
 	printf("PARAM_DEBUG:      -> '%s'\n", readBuffer);
 #endif
@@ -957,9 +996,9 @@ int main(int argc, char *argv[]) {
 	  BufferTooShort();
 	}
       }
-      
+
       fclose(fd);
-      
+
     }
   }
 
@@ -1021,10 +1060,10 @@ int main(int argc, char *argv[]) {
     strncpy(ifStr, CONST_PCAP_NW_INTERFACE_FILE, sizeof(ifStr));
   else {
     ifStr[0] = '\0';
-    
+
     for (i=0; i<myGlobals.numDevices; i++) {
       char tmpBuf[64];
-      
+
       if(i>0) {
 	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
 	  BufferTooShort();
@@ -1032,11 +1071,11 @@ int main(int argc, char *argv[]) {
 	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
 	  BufferTooShort();
       }
-      
+
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
     }
   }
-  
+
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
 
   /* ******************************* */
@@ -1067,9 +1106,9 @@ int main(int argc, char *argv[]) {
 
 #ifndef WIN32
   while(1) {
-    pause(); 
+    pause();
   }
-#else  
+#else
   while(!myGlobals.endNtop) {
     HEARTBEAT(0, "main(), sleep(3000)...", NULL);
     sleep(10);
