@@ -1431,7 +1431,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
  */
 void initDevices(char* devices) {
   char *tmpDev=NULL, *tmpDescr=NULL;
-  pcap_if_t *devpointer;
+  pcap_if_t *devpointer, *devpointer_original;
   char intNames[32][MAX_IF_NAME], intDescr[32][MAX_IF_NAME];
   int ifIdx = 0;
   int defaultIdx = -1;
@@ -1482,13 +1482,15 @@ void initDevices(char* devices) {
     return;
   }
 
+  memset(&devpointer, 0, sizeof(pcap_if_t));
   if(pcap_findalldevs(&devpointer, ebuf) < 0) {
     traceEvent(CONST_TRACE_ERROR, "pcap_findalldevs() call failed [%s]", ebuf);
-    traceEvent(CONST_TRACE_ERROR, "Have you instaled winpcap properly?");
+    traceEvent(CONST_TRACE_ERROR, "Have you instaled libpcap/winpcap properly?");
     return;
   } else {
     int i;
 
+    devpointer_original = devpointer;
     for(i = 0; devpointer != 0; i++) {
       traceEvent(CONST_TRACE_NOISY, "Found interface [index=%d] '%s'", ifIdx, devpointer->name);
 
@@ -1536,7 +1538,7 @@ void initDevices(char* devices) {
     }
   }
 
-  pcap_freealldevs(devpointer);
+  pcap_freealldevs(devpointer_original);
 
   if(devices != NULL) {
     /* User has specified devices in the parameter list */
