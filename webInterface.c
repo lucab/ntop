@@ -2282,7 +2282,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       }
     } else {
       if (textPrintFlag == TRUE) {
-	printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Not found on system");
+	printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Not found on system OR unable to run suid root");
       } else {
 	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" LSOF_URL "\" title=\"" LSOF_URL_ALT "\">lsof</A>\"",
 			       "Not found on system");
@@ -2307,7 +2307,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       }
     } else {
       if (textPrintFlag == TRUE) {
-	printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "-N parameter OR not found on system");
+	printFeatureConfigInfo(textPrintFlag, "External tool: nmap", "-N parameter OR not found on system OR unable to run suid root");
       } else {
 	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" NMAP_URL "\" title=\"" NMAP_URL_ALT "\">nmap</A>",
 			       "-N parameter OR not found on system");

@@ -1222,19 +1222,81 @@ int checkCommand(char* commandName) {
 #ifdef WIN32
   return(0);
 #else
+  char buf[256], *workBuf;
+  struct stat statBuf;
+  int rc, ecode=0;
   FILE* fd = popen(commandName, "r");
 
-  if(fd == NULL)
+  if(fd == NULL) {
+    traceEvent(TRACE_ERROR, 
+               "External tool test failed(code=%d1%d). Disabling %s function (popen failed).\n",
+               rc,
+               errno,
+               commandName);
     return 0;
-  else {
-    int rc = fgetc(fd);
-    pclose(fd);
-
-    if(rc == EOF)
-      return(0);
-    else
-      return(1);
   }
+
+  rc = fgetc(fd);
+  pclose(fd);
+
+  if(rc == EOF) {
+    traceEvent(TRACE_ERROR, 
+               "External tool test failed(code=%d20). Disabling %s function (tool won't run).\n",
+               rc,
+               commandName);
+    return(0);
+  }
+
+  /* ok, it can be run ... is it suid? */
+  if (snprintf(buf,
+               sizeof(buf), 
+               "which %s 2>/dev/null",
+               commandName) < 0) {
+      BufferTooShort();
+      return(0);
+  }
+  rc=0;
+  fd = popen(buf, "r");
+  if (errno == 0) {
+      workBuf = fgets(buf, sizeof(buf), fd);
+      pclose(fd);
+      if(workBuf != NULL) {
+          workBuf = strchr(buf, '\n');
+          if(workBuf != NULL) workBuf[0] = '\0';
+          rc = stat(buf, &statBuf);
+          if (rc == 0) {
+              if ((statBuf.st_mode & (S_IROTH | S_IXOTH) ) == (S_IROTH | S_IXOTH) ) {
+                  if ((statBuf.st_mode & (S_ISUID | S_ISGID) ) != 0) {
+                      traceEvent(TRACE_ERROR, 
+                                 "External tool %s is suid root. FYI: This is good for ntop, but could be dangerous for the system!\n",
+                                 commandName);
+                      return(1);
+                  } else {
+                    ecode=7;
+                  }
+              } else {
+                  ecode=6;
+              }
+          } else {
+              ecode=5;
+          }
+      } else {
+          ecode=4;
+      }
+  } else {
+      pclose(fd);
+      ecode=3;
+  }
+  /* test failed ... */
+  traceEvent(TRACE_ERROR, 
+             "External tool test failed(code=%d%d%d). Disabling %s function%s.\n",
+             rc,
+             ecode,
+             errno,
+             commandName,
+             ecode == 7 ? " (tool exists but is not suid root)" : "");
+  return(0);
+
 #endif
 }
 
