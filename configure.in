@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.97])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.97.003-2003-12-10"
+SCRIPTVER="v2.2.97.004-2003-12-22"
 
 dnl>
 dnl> generate the config header
@@ -2022,7 +2022,12 @@ AC_CHECK_HEADERS([netinet/udp.h], [], [], [
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif])
-AC_CHECK_HEADERS([sys/sysctl.h net/if_dl.h net/route.h])
+AC_CHECK_HEADERS([sys/sysctl.h net/if_dl.h])
+AC_CHECK_HEADERS([net/route.h], [], [], [
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif])
+
 dnl>  Note - if ethertype is missing, ntop.h has the critical #defines extracted...
 AC_CHECK_HEADERS([ethertype.h])
 AC_CHECK_HEADERS([net/ppp_defs.h])
@@ -2056,6 +2061,7 @@ AC_CHECK_HEADERS([if.h])
 AC_CHECK_HEADERS([inttypes.h])
 AC_CHECK_HEADERS([memory.h])
 AC_CHECK_HEADERS([sys/ldr.h])
+AC_CHECK_HEADERS([sys/param.h])
 AC_CHECK_HEADERS([sys/select.h])
 AC_CHECK_HEADERS([sys/sockio.h])
 AC_CHECK_HEADERS([sys/stat.h])
