@@ -271,7 +271,7 @@ libclean:
 
 install: install-recursive
 
-	@mkdir -p $(CFG_DBFILE_DIR)
+	@mkdir -p $(DESTDIR)/$(CFG_DBFILE_DIR)
 
 	@echo ""
 	@echo "------------------------------------------------------------"
