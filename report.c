@@ -3217,7 +3217,7 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
 #ifdef MULTITHREADED
       releaseMutex(&addressResolutionMutex);
 #endif
-}
+    }
 
     return(rc);
   }
@@ -3275,7 +3275,10 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
     if((el->fullDomainName == NULL)
        || (el->fullDomainName[0] == '\0')
        || (el->dotDomainName == NULL)
-       || (el->dotDomainName == '\0'))
+       || (el->hostSymIpAddress[0] == '\0')
+       || (el->dotDomainName == '\0')
+       || broadcastHost(el)
+       )
       continue;
     else if((domainName != NULL)
 	    && (strcmp(el->fullDomainName, domainName) != 0))

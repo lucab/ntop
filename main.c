@@ -462,7 +462,7 @@ int main(int argc, char *argv[]) {
   traceEvent(TRACE_INFO, "Listening on [%s]", ifStr);
   traceEvent(TRACE_INFO, "Copyright 1998-2001 by %s\n", author);
   traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
-  traceEvent(TRACE_INFO, "Initialising...\n");
+  traceEvent(TRACE_INFO, "Initializing...\n");
 
   initLibpcap(rulesFile, numDevices);
 #ifndef MICRO_NTOP

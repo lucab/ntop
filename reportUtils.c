@@ -2739,7 +2739,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     else
       dynIp = "";
 
-    if(isMultihomed(el))
+    if(isMultihomed(el) && (!broadcastHost(el)))
       multihomed = "&nbsp;-&nbsp;multihomed&nbsp;<IMG SRC=/multihomed.gif BORDER=0>";
     else
       multihomed = "";
@@ -2755,7 +2755,7 @@ void printHostDetailedInfo(HostTraffic *el) {
 
     sendString("</TD></TR>\n");
 
-    if(isMultihomed(el)) {
+    if(isMultihomed(el) && (!broadcastHost(el))) {
       u_int elIdx;
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT><OL>",
