@@ -425,7 +425,7 @@ extern int getopt_long_only ();
     #define HEARTBEAT(a, b, ...)     _HEARTBEAT(a, __FILE__, __LINE__, b, __VA_ARGS__)
     extern void _HEARTBEAT(int beatLevel, char* file, int line, char * format, ...);
 #else
-    #define HEARTBEAT(a, b, ...)     {}
+#define HEARTBEAT	
 #endif
  
 /* vendor.c */

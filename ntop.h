@@ -266,6 +266,7 @@ typedef char int8_t;
 #define HAVE_GDBM_H
 #endif
 #define strncasecmp(a, b, c) strnicmp(a, b, c)
+#define pid_t unsigned int
 #endif
 
 #if defined(linux) || defined(__linux__)
