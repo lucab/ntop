@@ -932,10 +932,21 @@ static void addKeyIfMissing(char* key, char* value,
 
   if((return_data.dptr == NULL) || (existingOK != 0)) {
     char *thePw, pw1[16], pw2[16];
-
     /* If not existing, then add user 'admin' and ask for password  */
 
     if(userQuestion != NULL) {
+      if (myGlobals.daemonMode) {
+	/*
+	 * We need a password for the admin user, but the user requested
+	 * daemon mode.  stdin is already detached; getpass() would fail.
+	 *
+	 * Courtesy of Ambrose Li <a.c.li@ieee.org>
+	 *
+	 */
+	traceEvent(TRACE_ERROR, "No password for admin user. Please re-run ntop in non-daemon mode first.\n");
+	exit(1);
+      }
+
       memset(pw1, 0, sizeof(pw1)); memset(pw2, 0, sizeof(pw2));
 
       while(pw1[0] == '\0') {
