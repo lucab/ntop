@@ -2167,7 +2167,6 @@ void traceEvent(int eventTraceLevel, char* file,
       } 
 #ifndef WIN32
       else {
-#if 0 
 	switch(traceLevel) {
 	case 0:
 	  syslog(LOG_ERR, buf);
@@ -2182,9 +2181,6 @@ void traceEvent(int eventTraceLevel, char* file,
 	  syslog(LOG_INFO, buf);
 	  break;
 	}
-#else
-	syslog(LOG_ERR, buf);
-#endif
       }
 #endif
 
