@@ -400,11 +400,12 @@ static int parseOptions(int argc, char* argv []) {
   int opt_index;
   char *adminPw = NULL;
 #ifdef WIN32
-  int optind=0;
+  int optind;
 #endif
 
   /* * * * * * * * * * */
-  
+
+  optind = 0; /* required to reparse command line after loadPrefs() */
   for(opt_index=0; opt_index<argc; opt_index++)
     traceEvent(CONST_TRACE_NOISY, "PARAM_DEBUG: argv[%d]: %s", opt_index, argv[opt_index]);
 
