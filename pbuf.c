@@ -139,8 +139,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	/* compare with the ethernet-address */
 	if (memcmp(el->ethAddress, ether_addr, ETHERNET_ADDRESS_LEN) == 0) {
 	  if(hostIpAddress != NULL) {
-	    int i;
-
 	    if((!isMultihomed) && checkForMultihoming) {
 	      /*
 		This is a local address hence this is

@@ -386,7 +386,7 @@ static void handleProtocolList(char* protoName,
 /* **************************************** */
 
 void createPortHash() {
-  int *tmpIpMapper, theSize, i;
+  int theSize, i;
 
   /* 
      At this point in time servicesMapper contains all
@@ -398,13 +398,18 @@ void createPortHash() {
   ipPortMapper = (PortMapper*)malloc(theSize);
   for(i=0; i<numIpPortMapperSlots; i++) ipPortMapper[i].port = -1;
   
+  traceEvent(TRACE_INFO, "Allocating %d slots", numIpPortMapperSlots);
+
   for(i=0; i<TOP_IP_PORT; i++) {
     if(servicesMapper[i] != -1) {
       int slotId = (3*i) % numIpPortMapperSlots;
 
       while(ipPortMapper[slotId].port != -1)	
 	slotId = (slotId+1) % numIpPortMapperSlots;
-      
+
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "Mapping port %d to slotId %d", i, slotId);
+#endif
       ipPortMapper[slotId].port = i, ipPortMapper[slotId].mappedPort = servicesMapper[i];
     }
   }
@@ -505,19 +510,22 @@ int mapGlobalToLocalIdx(int port) {
   if((port < 0) || (port >= TOP_IP_PORT))
    return(-1);
   else {
-    int slotId = (3*port) % numIpPortMapperSlots;
+    int j, found, slotId = (3*port) % numIpPortMapperSlots;
     
-    while(ipPortMapper[slotId].port == -1)
-      slotId = (slotId+1) % numIpPortMapperSlots;
+    for(j=0, found=0; j<numIpPortMapperSlots; j++) {
+      if((ipPortMapper[slotId].port == -1)
+	 || (ipPortMapper[slotId].port == port)) {
+	found = 1;
+	break;
+      }
 
-    if(ipPortMapper[slotId].port == port) {      
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "IP port %d -> %d\n",
-		 port, ipPortMapper[slotId].mappedPort);
-#endif
+      slotId = (slotId+1) % numIpPortMapperSlots;
+    }
+    
+    if(found)
       return(ipPortMapper[slotId].mappedPort);
-    } else 
-      return(-1);   
+    else
+      return(-1);
   }
 }
 

@@ -997,7 +997,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
     printTrailer=0;
     doAddURL(postLen /* \r\n */);    
   } else {
-#ifdef FORK_CHILD_PROCESS
+#if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
 
     /* The URLs below are "read-only" hence I can fork a copy of ntop  */ 
@@ -1020,8 +1020,8 @@ static int returnHTTPPage(char* pageName, int postLen) {
 	detachFromTerminal();
       }
     }
-#endif
-    
+#endif    
+
     if(strcmp(pageName, STR_INDEX_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_BODY);
@@ -1515,7 +1515,8 @@ static int returnHTTPPage(char* pageName, int postLen) {
     releaseMutex(&hashResizeMutex);
 #endif
 
-#ifdef FORK_CHILD_PROCESS
+
+#if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
   if(usedFork) {
     exit(0);
   }  
