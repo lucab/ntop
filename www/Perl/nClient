@@ -1,0 +1,350 @@
+#!/usr/bin/perl
+#
+# Copyright (C) 2001 Luca Deri <deri@ntop.org>
+#
+#   	        http://www.ntop.org/
+#
+#
+# LWP module can be downloaded from www.cpan.org
+#
+use LWP::Simple;
+
+# $debug = 1;
+
+$ntopUser    = "";
+$ntopHost    = "";
+$ntopPort    = "";
+$passwdFile  = "";
+$homeNtopURL = "";
+
+$passwdFile = $ENV{HOME}."/.ntopasswd";
+
+
+##############################
+
+if($debug) {
+    for($i=0; $i<10; $i++) {
+	if($ARGV[$i] ne "") {
+	    print $i."\t".$ARGV[$i]."\n";
+	} else {
+	    last;
+	}
+    }
+}
+
+###############################
+
+if($ARGV[0]    =~ /attach/)    { attach();    }
+elsif($ARGV[0] =~ /lsdev/)     { lsdev();     }
+elsif($ARGV[0] =~ /devinfo/)   { devinfo();   }
+elsif($ARGV[0] =~ /lshost/)    { lshost();    }
+elsif($ARGV[0] =~ /hostinfo/)  { hostinfo();  }
+elsif($ARGV[0] =~ /arp/)       { arp();       }
+elsif($ARGV[0] =~ /nbt/)       { nbt();       }
+else                           { usage();     }
+
+
+##############################
+
+sub attach {
+# attach  [user:pw@]host:port
+
+    if($ENV{NTOP_ROOT} eq "") {
+	print "ERROR: NTOP_ROOT is empty. Set it to user\@ntopHost:ntopPort\n\n";
+	usage();
+    }
+
+    if($ENV{NTOP_ROOT} =~ /(\S*)@(\S*):(\d*)/) {
+	$ntopUser = $1;
+	$ntopHost = $2;
+	$ntopPort = $3;
+
+	if($debug) {
+	    print "user: $ntopUser\n";
+	    print "host: $ntopHost\n";
+	    print "port: $ntopPort\n";
+	}
+
+	if(($1 eq "") || ($2 eq "") ||  ($3 eq "")) {
+	    print "ERROR: NTOP_ROOT is not properly defined. Set it to user\@ntopHost:ntopPort\n\n";
+	    usage();
+	}
+
+	print "Password: ";
+	$ntopPwd = <STDIN>; chop($ntopPwd);
+
+	if($debug) { print "Password: '".$ntopPwd."'\n"; }
+
+	$URL = "http://$ntopUser:$ntopPwd\@".$ntopHost.":".$ntopPort."/";
+
+	if($debug) { print "URL: '".$URL."'\n"; }
+
+	$content = get($URL);
+
+	if($content eq "") {
+	    print "ERROR: unable to connect to ntop. Please check host:port/user/pw\n";
+	    exit(-1);
+	} else {
+	    print "User $ntopUser successfully connected to $ntopHost:$ntopPort\n";
+	}
+
+	umask((umask() & 077) | 077); # -rw-------
+
+	if(open(OUT, "> ".$passwdFile)) {
+	    print OUT "http://$ntopUser:$ntopPwd\@".$ntopHost.":".$ntopPort."/\n";
+	    close(OUT);
+	} else {
+	    print "ERROR: unable to create/update file $passwdFile\n";
+	    exit(-1);
+	}
+    } else {
+	usage();
+    }
+}
+
+##############################
+
+sub lsdev {
+    getNtopHomeURL();
+
+    $content = get($homeNtopURL."dumpTrafficData.html?language=perl&filter=ifAddr");
+
+    if($debug) { print "Received: $content\n"; }
+
+    if($content eq "") {
+	print "ERROR: unable to talk with ntop.\n";
+	exit(-1);
+    } else {
+	%hash = eval($content);
+
+	while (($key, $value) = each %hash) {
+	    print $key."\n";
+	}
+    }
+}
+
+##############################
+
+sub unbundle {
+    my(%elems) = @_;
+    my(@unbundled) = ();
+    my($index)= 0;
+    while (($key, $value) = each %elems) {
+	if($value =~ /^HASH/) {
+	     while (($key1, $value1) = each %$value) {
+		 if($value1 =~ /^HASH/) {
+		     while (($key2, $value2) = each %$value1) {
+			 $unbundled[$index][0] = $key.":".$key.":".$key2;
+			 $unbundled[$index][1] = $value2;	
+			 $index++;
+		     }
+		 } else {
+		     $unbundled[$index][0] = $key.":".$key1;
+		     $unbundled[$index][1] = $value1;
+		     $index++;
+		 }
+	     }
+	} else {
+	    $unbundled[$index][0] = $key;
+	    $unbundled[$index][1]= $value;
+	    $index++;
+	}
+    }
+
+    return(@unbundled);
+}
+
+##############################
+
+sub devinfo {
+    if($ARGV[1] eq "") { usage(); }
+
+    getNtopHomeURL();
+
+    $content = get($homeNtopURL."dumpTrafficData.html?language=perl&key=$ARGV[1]");
+
+    if($debug) { print "Received: $content\n"; }
+
+    if($content eq "") {
+	print "ERROR: unable to talk with ntop.\n";
+	exit(-1);
+    } else {
+	%hash = eval($content);
+
+	if(!$hash{$ARGV[1]}) {
+	    print "ERROR: unknown device $ARGV[1].\n";
+	    exit(-1);
+	}
+
+	$elems = $hash{$ARGV[1]};
+	%elems = %$elems;
+	@allelems = unbundle(%elems);
+
+	foreach $i (0 .. $#allelems) {
+	    printf("%-30s\t%s\n", $allelems[$i][0], $allelems[$i][1]);
+	}
+    }
+}
+
+##############################
+
+sub lshost {
+    getNtopHomeURL();
+
+    $content = get($homeNtopURL."dumpData.html?language=perl&filter=ethAddressString");
+
+    if($debug) { print "Received: $content\n"; }
+
+    if($content eq "") {
+	print "ERROR: unable to talk with ntop.\n";
+	exit(-1);
+    } else {
+	%hash = eval($content);
+
+	while (($key, $value) = each %hash) {
+	    print $key."\n";
+	}
+    }
+}
+
+##############################
+
+sub hostinfo {
+    if($ARGV[1] eq "") { usage(); }
+
+    getNtopHomeURL();
+
+    $content = get($homeNtopURL."dumpData.html?language=perl&key=$ARGV[1]");
+
+    if($debug) { print "Received: $content\n"; }
+
+    if($content eq "") {
+	print "ERROR: unable to talk with ntop.\n";
+	exit(-1);
+    } else {
+	%hash = eval($content);
+
+	if(!$hash{$ARGV[1]}) {
+	    print "ERROR: unknown device $ARGV[1].\n";
+	    exit(-1);
+	}
+
+	$elems = $hash{$ARGV[1]};
+	%elems = %$elems;
+	@allelems = unbundle(%elems);
+
+	foreach $i (0 .. $#allelems) {
+	    printf("%-30s\t%s\n", $allelems[$i][0], $allelems[$i][1]);
+	}
+    }
+}
+
+##############################
+
+sub arp {
+    getNtopHomeURL();
+
+    $content = get($homeNtopURL."dumpData.html?language=perl&filter=ethAddressString");
+
+    if($debug) { print "Received: $content\n"; }
+
+    if($content eq "") {
+	print "ERROR: unable to talk with ntop.\n";
+	exit(-1);
+    } else {
+	%hash = eval($content);
+
+	while (($key, $dummy) = each %hash) {
+	    my($macAddress) = $hash{$key}{ethAddressString};
+
+	    if(($key ne "")
+	       && ($macAddress ne "")
+	       && (!($key =~ /:/))) {
+		printf("%-20s\t%-20s\n", $key, $macAddress);
+	    }
+	}
+    }
+
+}
+
+
+##############################
+
+sub nbt {
+    getNtopHomeURL();
+
+    $content = get($homeNtopURL."dumpData.html?language=perl&filter=nbHostName");
+
+    if($debug) { print "Received: $content\n"; }
+
+    if($content eq "") {
+	print "ERROR: unable to talk with ntop.\n";
+	exit(-1);
+    } else {
+	%hash = eval($content);
+
+	while (($key, $dummy) = each %hash) {
+	    my($nbHostName) = $hash{$key}{nbHostName};
+
+	    if(($key ne "") && ($nbHostName ne "")) {
+		printf("%-20s\t%-20s\n", $key, $nbHostName);
+	    }
+	}
+    }
+}
+
+
+##############################
+
+sub getNtopHomeURL {
+    if(open(IN, $passwdFile)) {
+	$homeNtopURL = <IN>;
+	chop($homeNtopURL);
+	close(IN);
+	if($homeNtopURL eq "") {
+	    print "ERROR: problems while reading $passwdFile. Did you attach to a running ntop?\n";
+	    exit(-1);
+	}
+    } else {
+	print "ERROR: unable to read file $passwdFile. Did you attach to a running ntop?\n";
+	exit(-1);
+    }
+}
+
+
+##############################
+
+sub usage {
+
+print "
+    nClient <command> [ <parameters> ]
+
+    Available commands:
+       attach            attach to a running ntop
+       lsdev             show ntop available network devices
+       devinfo <device>  show info about the specified device
+       lshost <host>     show ntop's known host
+       hostinfo          show info about the specified host
+       arp               show ntop's ARP table
+       nbt               show ntop's NetBIOS hosts
+
+
+    How to use nClient:
+    1) start a copy of ntop at ntopHost:ntopPort
+    2) Set the environment variable NTOP_ROOT to
+       user\@ntopHost:ntopPort
+       
+       For instance (on tcsh):
+       setenv NTOP_ROOT luca\@dummy.ntop.org:3000
+    3) nClient attach
+    4) nClient <insert your command here>
+    5) Have fun!
+
+    ======================================
+
+    (C) 2001 - Luca Deri <deri\@ntop.org>\n";
+
+    exit(0);
+}
+
+
