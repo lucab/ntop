@@ -40,7 +40,7 @@ BINDEST = ${exec_prefix}/sbin
 # Pathname of directory to install the man page
 MANDEST = ${prefix}/man
 # VERSION # below is placed in version.c
-VERSION=2.0.99RC2+
+VERSION=2.0.99RC3
 # osName is set in ntop_win32.c based on the OS at execution.
 
 #
