@@ -1979,7 +1979,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
    printSectionTitle("IP Protocol Distribution");
 
 #ifdef HAVE_GDCHART
-    sendString("<IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p>\n</CENTER>\n");
+   sendString("<CENTER><IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p>\n</CENTER>\n");
 #endif
 
     printSectionTitle("Local Traffic");
@@ -1989,9 +1989,10 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     if(total == 0)
       printNoDataYet();
     else {
-      sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR><TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
-		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+                 "<TH "TH_BG" WIDTH=150>IP&nbsp;Protocol</TH>"
+		 "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>"
+                 "Percentage</TH></TR>\n");
       if(total == 0) total = 1; /* Avoids divisions by zero */
       remainingTraffic = 0;
 
