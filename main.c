@@ -105,6 +105,7 @@ void usage(FILE * fp) {
   fprintf(fp, "    [               | --set-admin-password=<pass>]        %sSet password for the admin user to <pass>\n", newLine);
   fprintf(fp, "    [               | --w3c]                              %sAdd extra headers to make better html\n", newLine);
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 %sPacket filter expression, like tcpdump\n", newLine);
+  fprintf(fp, "    [-C <rate>]     | --sampling-rate                     %sPacket capture sampling rate [default: 1 (no sampling)]\n", newLine);
   fprintf(fp, "    [-D <name>      | --domain <name>]                    %sInternet domain name\n", newLine);
 
   fprintf(fp, "    [-F <spec>      | --flow-spec <specs>]                %sFlow specs (see man page)\n", newLine);

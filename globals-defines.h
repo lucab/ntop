@@ -1944,6 +1944,7 @@
 #define DEFAULT_NTOP_ENABLE_SESSIONHANDLE   1         /* -z */
 
 #define DEFAULT_NTOP_FILTER_EXPRESSION      NULL      /* -B */
+#define DEFAULT_NTOP_SAMPLING               1         /* -C (1 = no sampling) */
 
 #define DEFAULT_NTOP_DOMAIN_NAME            ""        /* -D */
                                    /* Note: don't use null, as this isn't a char*, its a char[] */
@@ -2669,6 +2670,7 @@ struct ip6_hdr
 #define NTOP_PREF_DEVICES          "ntop.devices"
 #define NTOP_PREF_CAPFILE          "ntop.rFileName"
 #define NTOP_PREF_FILTER           "ntop.currentFilterExpression"
+#define NTOP_PREF_SAMPLING         "ntop.sampleRate"
 #define NTOP_PREF_WEBPORT          "ntop.webPort"
 #define NTOP_PREF_SSLPORT          "ntop.sslPort"
 #define NTOP_PREF_EN_SESSION       "ntop.enableSessionHandling"

@@ -988,19 +988,19 @@ void addDefaultAdminUser(void) {
 #define NTOP_SAVE_PREFS     "SP"
 #define NTOP_RESTORE_DEF    "RD"
 #define CONFIG_STR_ENTRY(bg,title,name,size,configvalue,descr) \
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s</td><td><INPUT NAME=%s SIZE=%d VALUE=%s><BR>%s</td></TR>", bg, title, name, size, (configvalue != NULL) ? configvalue : "", descr); \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s</td><td><INPUT NAME=%s SIZE=%d VALUE=%s><BR>%s</td></TR>\n", bg, title, name, size, (configvalue != NULL) ? configvalue : "", descr); \
         sendString (buf);
 
 #define CONFIG_FILE_ENTRY(bg,title,name,size,value,descr) \
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT NAME=%s SIZE=%d VALUE=%s TYPE=FILE><BR>%s</TD></TR>", bg, title, name, size, (value != NULL) ? value : "(null)", descr); \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT NAME=%s SIZE=%d VALUE=%s TYPE=FILE><BR>%s</TD></TR>\n", bg, title, name, size, (value != NULL) ? value : "(null)", descr); \
         sendString (buf);
 
 #define CONFIG_INT_ENTRY(bg,title,name,size,value,descr) \
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT NAME=%s SIZE=%d VALUE=%d><BR>%s</TD></TR>", bg, title, name, size, value, descr); \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT NAME=%s SIZE=%d VALUE=%d><BR>%s</TD></TR>\n", bg, title, name, size, value, descr); \
         sendString (buf);
 
 #define CONFIG_CHKBOX_ENTRY(bg,title,name,value,descr) \
-        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT TYPE=checkbox NAME=%s VALUE=%d %s><BR>%s</TD></TR>", bg, title, name, value, value ? "CHECKED" : "", descr); \
+        safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf), "<tr><td align=left %s>%s<td><INPUT TYPE=checkbox NAME=%s VALUE=%d %s><BR>%s</TD></TR>\n", bg, title, name, value, value ? "CHECKED" : "", descr); \
         sendString (buf);
 
 
@@ -1275,7 +1275,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
                    "<FORM ACTION = %s%d method=POST>"
                    " <TABLE BORDER=1 "TABLE_DEFAULTS">\n"
                    "<TR><TH ALIGN=CENTER "DARK_BG">Preference</TH>"
-                   "<TH ALIGN=CENTER "DARK_BG">Configured Value</TH></TR>",
+                   "<TH ALIGN=CENTER "DARK_BG">Configured Value</TH></TR>\n",
                    theLink, configScr);
     sendString (buf);
 }
@@ -1421,6 +1421,9 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      NTOP_PREF_FILTER,
 		      50, pref->currentFilterExpression,
 		      "Restrict the traffic seen by ntop. BPF syntax.");
+
+    CONFIG_INT_ENTRY (DARK_BG, "Packet sampling rate (-C)", NTOP_PREF_SAMPLING,
+		      50, pref->samplingRate, "Sampling rate [1 = no sampling]");
 
     if (pref->webAddr == NULL) {
       safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),

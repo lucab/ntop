@@ -56,11 +56,11 @@ static char __see__ []    =
    * ('P' option) and so these are processed separately.
    */
 #ifdef WIN32
-static char*  short_options = "4:6:a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:BD:F:MN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "4:6:a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:C:D:F:MN:O:P:Q:S:U:VX:W:";
 #elif defined(MAKE_WITH_SYSLOG)
-static char*  short_options = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKLMN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKLMN:O:P:Q:S:U:VX:W:";
 #else
-static char*  short_options = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKMN:O:P:Q:S:U:VX:W:";
+static char*  short_options = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:C:D:F:IKMN:O:P:Q:S:U:VX:W:";
 #endif
 
 static struct option const long_options[] = {
@@ -99,6 +99,7 @@ static struct option const long_options[] = {
   { "http-server",                      required_argument, NULL, 'w' },
   { "disable-sessions",                 no_argument,       NULL, 'z' },
   { "filter-expression",                required_argument, NULL, 'B' },
+  { "sampling-rate",                    required_argument, NULL, 'C' },
   { "domain",                           required_argument, NULL, 'D' },
 
   { "flow-spec",                        required_argument, NULL, 'F' },
@@ -434,6 +435,11 @@ int parseOptions(int argc, char* argv[]) {
     case 'B':
       stringSanityCheck(optarg);
       myGlobals.runningPref.currentFilterExpression = strdup(optarg);
+      break;
+
+    case 'C': /* Sampling rate */
+      stringSanityCheck(optarg);
+      myGlobals.runningPref.samplingRate = (u_short)atoi(optarg);
       break;
 
     case 'D': /* domain */
@@ -953,8 +959,11 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
     }
     processStrPref (NTOP_PREF_CAPFILE, value, &pref->rFileName, savePref);
   } else if(strcmp (key, NTOP_PREF_FILTER) == 0) {
-    processStrPref (NTOP_PREF_FILTER, value,
-		    &pref->currentFilterExpression, savePref);
+    processStrPref (NTOP_PREF_FILTER, value, &pref->currentFilterExpression, savePref);
+  } else if(strcmp (key, NTOP_PREF_SAMPLING) == 0) {
+    int sampleRate;
+    processIntPref (NTOP_PREF_SAMPLING, value, &sampleRate, savePref);
+    pref->samplingRate = (u_short)sampleRate;
   } else if(strcmp (key, NTOP_PREF_WEBPORT) == 0) {
     if (value != NULL) {
       stringSanityCheck(value);
@@ -973,7 +982,8 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref) {
 	*pref->webAddr = '\0';
 	pref->webPort = atoi(pref->webAddr+1);
 	pref->webAddr = strdup (value);
-      } else {
+      }
+      else {
 	processIntPref (NTOP_PREF_WEBPORT, value, &pref->webPort, savePref);
       }
     }
@@ -1221,6 +1231,7 @@ void initUserPrefs (UserPref *pref)
   pref->webAddr = DEFAULT_NTOP_WEB_ADDR;
   pref->webPort = DEFAULT_NTOP_WEB_PORT;
   pref->ipv4or6 = DEFAULT_NTOP_FAMILY;
+  pref->samplingRate =  myGlobals.savedPref.samplingRate;
   pref->enableSessionHandling  = DEFAULT_NTOP_ENABLE_SESSIONHANDLE;
   pref->currentFilterExpression = DEFAULT_NTOP_FILTER_EXPRESSION;
   strncpy((char *) &pref->domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(pref->domainName));

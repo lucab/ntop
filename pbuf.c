@@ -2169,8 +2169,7 @@ static void processIpPkt(const u_char *bp,
 void queuePacket(u_char *_deviceId,
 		 const struct pcap_pkthdr *h,
 		 const u_char *p) {
-  int len;
-  int deviceId;
+  int len, deviceId, actDeviceId;
 
   /* ***************************
      - If the queue is full then wait until a slot is freed
@@ -2197,8 +2196,16 @@ void queuePacket(u_char *_deviceId,
 #endif
 
   deviceId = (int)_deviceId;
-
-  incrementTrafficCounter(&myGlobals.device[getActualInterface(deviceId)].receivedPkts, 1);
+  actDeviceId = getActualInterface(deviceId);
+  incrementTrafficCounter(&myGlobals.device[actDeviceId].receivedPkts, 1);
+  
+  if(myGlobals.device[actDeviceId].samplingRate > 1) {
+    if(myGlobals.device[actDeviceId].droppedSamples < myGlobals.device[actDeviceId].samplingRate) {
+      myGlobals.device[actDeviceId].droppedSamples++;      
+      return; /* Not enough samples received */
+    } else 
+      myGlobals.device[actDeviceId].droppedSamples = 0;
+  }
 
   if(tryLockMutex(&myGlobals.packetProcessMutex, "queuePacket") == 0) {
     /* Locked so we can process the packet now */

@@ -1088,7 +1088,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     deviceId = myGlobals.numDevices;
     myGlobals.device[deviceId].humanFriendlyName = strdup(deviceDescr);
     myGlobals.device[deviceId].name = strdup(deviceName);
-    myGlobals.device[deviceId].samplingRate =  1; /* no sampling */
+    myGlobals.device[deviceId].samplingRate =  myGlobals.runningPref.samplingRate;
     myGlobals.numDevices++;
 
     if(myGlobals.numDevices >= MAX_NUM_DEVICES) {
@@ -1863,6 +1863,7 @@ u_int createDummyInterface(char *ifName) {
   myGlobals.device[deviceId].dummyDevice   = 1; /* This is basically a fake device */
   myGlobals.device[deviceId].virtualDevice = 0;
   myGlobals.device[deviceId].activeDevice  = 0;
+  myGlobals.device[deviceId].samplingRate =  myGlobals.runningPref.samplingRate;
 
   if(myGlobals.otherHostEntry != NULL) {
     myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;

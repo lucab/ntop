@@ -1359,6 +1359,7 @@ typedef struct ntopInterface {
                                  /* read timeout in milliseconds */
   int datalink;                  /* data-link encapsulation type (see DLT_* in net/bph.h) */
   u_short samplingRate;          /* default = 1 */
+  u_short droppedSamples;        /* Number of packets dropped due to sampling, since the last processed pkt */
   u_short mtuSize,               /* MTU and header, derived from DLT and table in globals-core.c */
           headerSize;
 
@@ -1921,6 +1922,7 @@ typedef struct _userPref {
   bool      enableSessionHandling; /* 'z' */
 
   char *currentFilterExpression;/* 'B' */
+  u_short samplingRate;         /* 'C' */
   char domainName[MAXHOSTNAMELEN]; /* 'D' */
   char *flowSpecs;              /* 'F' */
 
