@@ -47,7 +47,7 @@ DISTCLEANFILES = *.db ntops ntopd ntop-config #* *~ *.log
 CLEANFILES     = $(DISTCLEANFILES)
 
 # A list of all the files in the current directory which can be regenerated
-MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
+MAINTAINERCLEANFILES = COPYING Makefile.in config.guess \
                        config.h.in config.sub configure install-sh \
                        ltconfig ltmain.sh missing mkinstalldirs \
                        ntop-config stamp-h.in
@@ -66,7 +66,6 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
            html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
 EXTRA_DIST = Makefile.am Makefile.in \
-             acconfig.h acinclude.m4 acinclude.m4.in \
              autogen.sh config.guess config.h.in config.sub \
              configure configure.in \
              install-sh libtool ltconfig ltmain.sh \
