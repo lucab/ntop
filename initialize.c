@@ -1529,24 +1529,7 @@ void initDevices(char* devices) {
   } /* else */
 #endif
 
-  if(devices == NULL) {
-    /* Searching the default device */
-#ifdef WIN32
-    (void)pcap_lookupdev(ebuf); /* Needed on Winpcap 3.1 */
-#else
-    tmpDev = pcap_lookupdev(ebuf);
-
-    if(tmpDev == NULL) {
-      traceEvent(CONST_TRACE_ERROR, "Unable to locate default interface (%s)", ebuf);
-      return;
-    }
-
-    tmpDescr = tmpDev;    
-    traceEvent(CONST_TRACE_NOISY, "Default device is '%s'", tmpDescr);
-#endif
-
-    addDevice(tmpDev, tmpDescr);
-  } else {
+  if(devices != NULL) {
     /* User has specified devices in the parameter list */
     char *workDevices = strdup(devices), *strtokState;
     int warnedVirtual = 0;

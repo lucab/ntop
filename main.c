@@ -50,6 +50,21 @@ static char __see__ []    =
   Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.";
 
 
+  /*
+   * Please keep the array sorted;
+   * However, locating the preferences file and userID are done only via the
+   * command line and processing of the configured preference (via the web) is
+   * dependent on the values of user ('u') and location of the preference file
+   * ('P' option) and so these are processed separately.
+   */
+#ifdef WIN32
+static char*  short_options = "4:6:a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:BD:F:MN:O:P:Q:S:U:VX:W:";
+#elif defined(MAKE_WITH_SYSLOG)
+static char*  short_options = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKLMN:O:P:Q:S:U:VX:W:";
+#else
+static char*  short_options = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKMN:O:P:Q:S:U:VX:W:";
+#endif
+
 static struct option const long_options[] = {
   { "ipv4",                             no_argument,       NULL, '4' },
   { "ipv6",                             no_argument,       NULL, '6' },
@@ -150,6 +165,9 @@ static struct option const long_options[] = {
   {NULL, 0, NULL, 0}
 };
 
+/* Forward */
+static void loadPrefs(int argc, char* argv []);
+
 /*
  * Hello World! This is ntop speaking...
  */
@@ -167,16 +185,24 @@ static void welcome (FILE * fp)
  * Wrong. Please try again accordingly to ....
  */
 void usage(FILE * fp) {
-	char *newLine = "";
-
+  char *newLine = "";
+  
 #ifdef WIN32
-	newLine = "\n\t";
+  newLine = "\n\t";
 #endif
 
   welcome(fp);
 
   fprintf(fp, "\nUsage: %s [OPTION]\n", myGlobals.program_name);
 
+  fprintf(fp, "    [-h             | --help]                             %sDisplay this help and exit\n", newLine);
+#ifndef WIN32
+  fprintf(fp, "    [-u <user>      | --user <user>]                      %sUserid/name to run ntop under (see man page)\n", newLine);
+#endif /* WIN32 */
+  fprintf(fp, "    [-t <number>    | --trace-level <number>]             %sTrace level [0-6]\n", newLine);
+  fprintf(fp, "    [-P <path>      | --db-file-path <path>]              %sPath for ntop internal database files\n", newLine);
+
+#if 0
   fprintf(fp, "    [-4             | --ipv4]                             %sUse IPv4 connections\n",newLine);
   fprintf(fp, "    [-6             | --ipv6]                             %sUse IPv6 connections\n",newLine);
   fprintf(fp, "    [-a <file>      | --access-log-file <file>]           %sFile for ntop web server access log\n", newLine);
@@ -190,7 +216,6 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-f <file>      | --traffic-dump-file <file>]         %sTraffic dump file (see tcpdump)\n", newLine);
   fprintf(fp, "    [-g             | --track-local-hosts]                %sTrack only local hosts\n", newLine);
 
-  fprintf(fp, "    [-h             | --help]                             %sDisplay this help and exit\n", newLine);
 
 #ifndef WIN32
   fprintf(fp, "    [-i <name>      | --interface <name>]                 %sInterface name or names to monitor\n", newLine);
@@ -208,11 +233,7 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-r <number>    | --refresh-time <number>]            %sRefresh time in seconds, default is %d\n",
 	  newLine, DEFAULT_NTOP_AUTOREFRESH_INTERVAL);
   fprintf(fp, "    [-s             | --no-promiscuous]                   %sDisable promiscuous mode\n", newLine);
-  fprintf(fp, "    [-t <number>    | --trace-level <number>]             %sTrace level [0-5]\n", newLine);
 
-#ifndef WIN32
-  fprintf(fp, "    [-u <user>      | --user <user>]                      %sUserid/name to run ntop under (see man page)\n", newLine);
-#endif /* WIN32 */
 
   fprintf(fp, "    [-x <max num hash entries> ]                          %sMax num. hash entries ntop can handle (default %u)\n", 
 	  newLine, myGlobals.runningPref.maxNumHashEntries);
@@ -239,7 +260,6 @@ void usage(FILE * fp) {
 	  newLine);
   fprintf(fp, "    [-N             | --wwn-map]                          %sMap file providing map of WWN to FCID/VSAN\n", newLine);
   fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            %sPath for log files in pcap format\n", newLine);
-  fprintf(fp, "    [-P <path>      | --db-file-path <path>]              %sPath for ntop internal database files\n", newLine);
   fprintf(fp, "    [-U <URL>       | --mapper <URL>]                     %sURL (mapper.pl) for displaying host location\n", 
 	  newLine);
   fprintf(fp, "    [-V             | --version]                          %sOutput version information and exit\n", newLine);
@@ -270,10 +290,104 @@ void usage(FILE * fp) {
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);
 #endif
+#endif /* #if 0 */
 
+ fprintf(fp, "\n"
+	 "NOTE\n"
+	 "You can configure further ntop options via the web\n"
+	 "interface [Menu Admin -> Config]\n\n");
+  
 #ifdef WIN32
   printAvailableInterfaces();
 #endif
+}
+
+/* ******************************** */
+
+static void loadPrefs(int argc, char* argv []) {
+  datum key, nextkey;
+  char buf[1024];
+  int opt_index, opt;
+  char *adminPw = NULL;
+#ifdef WIN32
+  int optind=0;
+#else
+  bool userSpecified = FALSE;
+#endif
+  
+  traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
+  while ((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering loadPrefs()");
+#endif
+    switch (opt) {
+    case 'h':                                /* help */
+      usage(stdout);
+      exit(0);
+
+#ifndef WIN32
+    case 'u':
+      stringSanityCheck(optarg);
+      myGlobals.effectiveUserName = strdup(optarg);
+      if(strOnlyDigits(optarg))
+	myGlobals.userId = atoi(optarg);
+      else {
+	struct passwd *pw;
+	pw = getpwnam(optarg);
+	if(pw == NULL) {
+	  printf("FATAL ERROR: Unknown user %s.\n", optarg);
+	  exit(-1);
+	}
+	myGlobals.userId = pw->pw_uid;
+	myGlobals.groupId = pw->pw_gid;
+	endpwent();
+      }
+      userSpecified = TRUE;
+      break;
+#endif /* WIN32 */
+
+    case 't':
+      /* Trace Level Initialization */
+      myGlobals.runningPref.traceLevel = min(max(1, atoi(optarg)),
+					     CONST_VERY_DETAIL_TRACE_LEVEL);
+      /* DETAILED is NOISY + FileLine stamp, unless already set */
+      break;
+	  
+    case 'P':
+      stringSanityCheck(optarg);
+      if(myGlobals.dbPath != NULL)
+	free(myGlobals.dbPath);
+
+      myGlobals.dbPath = strdup(optarg);
+      break;
+    }
+  }
+
+  /* ******************************* */
+
+  /* open/create all the databases */
+  initGdbm(NULL, NULL, 1);
+    
+  if(myGlobals.prefsFile == NULL) {
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: No preferences file to read from()");
+#endif
+    return;
+  }
+
+  /* Read preferences and store them in memory */
+  key = gdbm_firstkey (myGlobals.prefsFile);
+  while (key.dptr) {
+    if (fetchPrefsValue (key.dptr, buf, sizeof (buf)) == 0) {
+      processNtopPref (key.dptr, buf, FALSE, &myGlobals.runningPref);
+    }
+      
+    nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
+    free (key.dptr);
+    key = nextkey;
+  }
+
+  myGlobals.savedPref = myGlobals.runningPref;
 }
 
 /* ***************************************************** */
@@ -284,24 +398,9 @@ void usage(FILE * fp) {
 static int parseOptions(int argc, char* argv []) {
   int setAdminPw = 0, opt, userSpecified = 0;
   int opt_index;
-  char *theOpts, *adminPw = NULL;
+  char *adminPw = NULL;
 #ifdef WIN32
   int optind=0;
-#endif
-
-  /*
-   * Please keep the array sorted;
-   * However, locating the preferences file and userID are done only via the
-   * command line and processing of the configured preference (via the web) is
-   * dependent on the values of user ('u') and location of the preference file
-   * ('P' option) and so these are processed separately.
-   */
-#ifdef WIN32
-  theOpts = "4:6:a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:BD:F:MN:O:P:Q:S:U:VX:W:";
-#elif defined(MAKE_WITH_SYSLOG)
-  theOpts = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKLMN:O:P:Q:S:U:VX:W:";
-#else
-  theOpts = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKMN:O:P:Q:S:U:VX:W:";
 #endif
 
   /* * * * * * * * * * */
@@ -313,7 +412,7 @@ static int parseOptions(int argc, char* argv []) {
    * Parse command line options to the application via standard system calls
    */
   traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
-  while((opt = getopt_long(argc, argv, theOpts, long_options, &opt_index)) != EOF) {
+  while((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
 #ifdef PARAM_DEBUG
     traceEvent(CONST_TRACE_INFO, "PARAM_DEBUG: getopt(%d/%c/%s)", opt, opt, optarg);
 #endif
@@ -584,7 +683,7 @@ static int parseOptions(int argc, char* argv []) {
        *         (While it's visable in the next entry of argv[], that's just to complex to code
        *          for all the possible cases).
        *
-       *   Also, if theOpts uses L: then there MUST be an argument. (L:: is an extension)
+       *   Also, if short_options uses L: then there MUST be an argument. (L:: is an extension)
        *
        *   Accordingly the case 'L'/131 was split and:
        *     -L sets myGlobals.useSyslog to the default facility (DEFAULT_SYSLOG_FACILITY in ntop.h)
@@ -1072,14 +1171,17 @@ int main(int argc, char *argv[]) {
 
   /* Above here, the -L value wasn't set, so we use printf(). */
   /* Below here, we use our traceEvent() function to print or log as requested. */
-  
+
+ 
   /*
    * Parse command line options to the application via standard system calls
    * Command-line options take precedence over saved preferences. 
    */
 #ifndef WIN32
+  loadPrefs(effective_argc, effective_argv);
   userSpecified = parseOptions(effective_argc, effective_argv);
 #else
+  loadPrefs(argc, argv);
   userSpecified = parseOptions(argc, argv);
 #endif
 
@@ -1132,9 +1234,9 @@ int main(int argc, char *argv[]) {
 
   if ((ifStr == NULL) || (ifStr[0] == '\0')) {
     traceEvent(CONST_TRACE_FATALERROR, "No interface has been selected. Capture not started...");
-  }
-  else {
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
+    createDummyInterface("none");
+  } else {
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
   }
 
   /* ******************************* */

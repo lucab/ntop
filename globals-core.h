@@ -519,7 +519,6 @@ extern char *xstrncpy(char *dest, const char *src, size_t n);
 extern int fetchPrefsValue(char *key, char *value, int valueLen);
 extern void storePrefsValue(char *key, char *value);
 extern void delPrefsValue(char *key);
-extern int loadPrefs (int argc, char *argv[]);
 extern int guessHops(HostTraffic *el);
 extern unsigned int ntop_sleep(unsigned int secs);
 extern void unescape(char *dest, int destLen, char *url);

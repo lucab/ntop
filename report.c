@@ -600,7 +600,7 @@ void printTrafficStatistics(int revertOrder) {
 	sendString(buf);
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", 
-		    myGlobals.device[i].name);
+		      myGlobals.device[i].name);
 	sendString(buf);
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s%s</TD>",

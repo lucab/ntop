@@ -131,11 +131,11 @@ void addUser(char* user) {
     printFlagedWarning("<I>The specified username is invalid.</I>");
   } else {
     sendString("<CENTER>\n");
-    
+
     sendString("<script Language=\"JavaScript\">\nfunction CheckForm(theForm) {\nif (theForm.pw.value != theForm.pw1.value) {\n    alert(\"Passwords do not match. Please try again.\");\n    theForm.pw1.focus();\n    return(false);\n  }\n  return (true);\n}\n</script>\n");
-    
+
     sendString("<FORM METHOD=POST ACTION=/doAddUser onsubmit=\"return CheckForm(this)\">\n");
-    
+
     sendString("<TABLE BORDER=0 "TABLE_DEFAULTS">\n");
     sendString("<TR>\n<TH ALIGN=right>User:&nbsp;</TH><TD ALIGN=left>");
     if(user != NULL) {
@@ -185,7 +185,7 @@ void deleteUser(char* user) {
     key_data.dsize = strlen(user)+1;
 
     /* Delete a URL - clear the list */
-    clearUserUrlList();  
+    clearUserUrlList();
 
     rc = gdbm_delete(myGlobals.pwFile, key_data);
 
@@ -281,7 +281,7 @@ void doAddUser(int len) {
 	err = "FATAL ERROR: unable to add the new user.";
 
       /* Added user, clear the list */
-      clearUserUrlList();  
+      clearUserUrlList();
 
 #ifdef HAVE_CRYPTGETFORMAT
       /* If we have the routine, store the crypt type too */
@@ -492,7 +492,7 @@ void deleteURL(char* url) {
     key_data.dsize = strlen(url)+1;
 
     /* Delete URL, clear the list */
-    clearUserUrlList();  
+    clearUserUrlList();
 
     rc = gdbm_delete(myGlobals.pwFile, key_data);
 
@@ -560,7 +560,8 @@ void doAddURL(int len) {
   }
 
 #if 0
-  printf("URL: '%s' - users: '%s'\n", url?url:"(not given)", strlen(authorizedUsers)>0?authorizedUsers:"(not given)");
+  printf("URL: '%s' - users: '%s'\n", url ? url : "(not given)", 
+	 strlen(authorizedUsers) > 0 ? authorizedUsers : "(not given)");
   fflush(stdout);
 #endif
 
@@ -582,7 +583,7 @@ void doAddURL(int len) {
       err = "FATAL ERROR: unable to add the new URL.";
 
     /* Added url, clear the list */
-    clearUserUrlList();  
+    clearUserUrlList();
   }
 
   if(err != NULL) {
@@ -849,7 +850,7 @@ static void decodeWebFormURL(char *buf) {
   Fixes below courtesy of
   C C Magnus Gustavsson <magnus@gustavsson.se>
 */
-static void addKeyIfMissing(char* key, char* value, 
+static void addKeyIfMissing(char* key, char* value,
 			    int encryptValue, int existingOK,
 			    char *userQuestion) {
   datum key_data, return_data, data_data;
@@ -933,8 +934,8 @@ static void addKeyIfMissing(char* key, char* value,
     gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE);
 
     /* Added user, clear the list */
-    clearUserUrlList();  
- 
+    clearUserUrlList();
+
     /* print notice to the user */
     if(memcmp(key,"1admin",6) == 0)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Admin user password has been set");
@@ -988,7 +989,7 @@ void addDefaultAdminUser(void) {
 /*
  * Initialize all preferences to their default values
  */
-void initUserPrefs (UserPref *pref) 
+void initUserPrefs (UserPref *pref)
 {
   pref->accessLogFile = DEFAULT_NTOP_ACCESS_LOG_FILE;
   pref->enablePacketDecoding   = DEFAULT_NTOP_PACKET_DECODING;
@@ -1021,17 +1022,17 @@ void initUserPrefs (UserPref *pref)
   pref->useSyslog = DEFAULT_NTOP_SYSLOG;
 #endif
   pref->mergeInterfaces = DEFAULT_NTOP_MERGE_INTERFACES;
-#ifdef WIN32  
+#ifdef WIN32
   pref->pcapLogBasePath = strdup(_wdir);     /* a NULL pointer will
                                                         * break the logic */
 #else
   pref->pcapLogBasePath = strdup(CFG_DBFILE_DIR);
-#endif  
+#endif
   pref->spoolPath       = strdup("");              /* a NULL pointer will break the logic */
   pref->fcNSCacheFile   = DEFAULT_NTOP_FCNS_FILE;
   /* note that by default ntop will merge network interfaces */
   pref->mapperURL = DEFAULT_NTOP_MAPPER_URL;
-#ifdef HAVE_OPENSSL  
+#ifdef HAVE_OPENSSL
   pref->sslAddr = DEFAULT_NTOP_WEB_ADDR;
   pref->sslPort = DEFAULT_NTOP_WEB_PORT;
 #endif
@@ -1039,15 +1040,15 @@ void initUserPrefs (UserPref *pref)
    pref->useSSLwatchdog = 0;
 #endif
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)   
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
    pref->disableSchedYield = DEFAULT_NTOP_SCHED_YIELD;
 #endif
-   
+
    pref->w3c = DEFAULT_NTOP_W3C;
    pref->P3Pcp = DEFAULT_NTOP_P3PCP;
    pref->P3Puri = DEFAULT_NTOP_P3PURI;
 
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)   
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
    pref->setNonBlocking = DEFAULT_NTOP_SETNONBLOCK;
 #endif
    pref->disableStopcap = DEFAULT_NTOP_DISABLE_STOPCAP;
@@ -1095,15 +1096,15 @@ void copyUserPrefs (UserPref *from, UserPref *to)
         to->useSyslog = from->useSyslog;
 #endif
         to->mergeInterfaces = from->mergeInterfaces;
-#ifdef WIN32  
+#ifdef WIN32
         to->pcapLogBasePath = from->pcapLogBasePath;
 #else
         to->pcapLogBasePath = from->pcapLogBasePath;
-#endif  
+#endif
         to->spoolPath = from->spoolPath;
         to->fcNSCacheFile = from->fcNSCacheFile;
         to->mapperURL = from->mapperURL;
-#ifdef HAVE_OPENSSL  
+#ifdef HAVE_OPENSSL
         to->sslAddr = from->sslAddr;
         to->sslPort = from->sslPort;
 #endif
@@ -1111,15 +1112,15 @@ void copyUserPrefs (UserPref *from, UserPref *to)
         to->useSSLwatchdog = from->useSSLwatchdog;
 #endif
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)   
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
         to->disableSchedYield = from->disableSchedYield;
 #endif
-   
+
         to->w3c = from->w3c;
         to->P3Pcp = from->P3Pcp;
         to->P3Puri = from->P3Puri;
 
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)   
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
         to->setNonBlocking = from->setNonBlocking;
 #endif
         to->disableStopcap = from->disableStopcap;
@@ -1158,8 +1159,8 @@ int processNtopConfigData (char *buf, int savePref)
     char *strtokState, *mainState, *token, *button;
     int startCap = FALSE, action;
     UserPref tmpPrefs, *pref = &myGlobals.savedPref;
-    char tmp[3] = "0";
-        
+    char tmp[3] = "0", *devices = NULL, foundDevices = 0;
+
     token = strtok_r(buf, "&", &mainState);
     tmpPrefs = myGlobals.savedPref;
 
@@ -1183,25 +1184,39 @@ int processNtopConfigData (char *buf, int savePref)
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
     tmpPrefs.disableSchedYield = 0;
-#endif    
-    
+#endif
+
+    devices = tmpPrefs.devices;
+    tmpPrefs.devices = NULL;
+
     while(token != NULL) {
         char *key, *value;
-                        
+
         key = strtok_r(token, "=", &strtokState);
         if(key != NULL) value = strtok_r(NULL, "=", &strtokState); else value = NULL;
-                        
+
         /* traceEvent(CONST_TRACE_INFO, "RRD: key(%s)=%s", key, value);  */
-                        
+
         if(key) {
             action = processNtopPref (key, value, savePref, &tmpPrefs);
 
             if (action) {
                 startCap = TRUE;
             }
+
+	    if((!strcmp(key, NTOP_PREF_DEVICES)) || (!strcmp(key, "BASIC_PREFS")))
+	      foundDevices = 1;
         }
         token = strtok_r(NULL, "&", &mainState);
     }
+
+    if((tmpPrefs.devices == NULL) && (!foundDevices))
+      tmpPrefs.devices = devices;
+    else {
+      if(devices != NULL) free(devices);      
+    }
+
+    if(tmpPrefs.devices == NULL) delPrefsValue(NTOP_PREF_DEVICES);
 
     /* Now we need to delete all the preferences that were unchecked.
      * Radio box & checkbox preferences that were set in a previous instance
@@ -1213,7 +1228,7 @@ int processNtopConfigData (char *buf, int savePref)
         !tmpPrefs.enableSessionHandling) {
         /* default for enableSessionHandling is TRUE */
         processNtopPref (NTOP_PREF_EN_SESSION, FALSE, savePref, &tmpPrefs);
-        
+
     }
 
     if (myGlobals.savedPref.enablePacketDecoding &&
@@ -1267,12 +1282,12 @@ int processNtopConfigData (char *buf, int savePref)
         processNtopPref (NTOP_PREF_NO_ISESS_PURGE, FALSE, savePref, &tmpPrefs);
     }
 
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)    
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
     if (myGlobals.savedPref.setNonBlocking && !tmpPrefs.setNonBlocking) {
         processNtopPref (NTOP_PREF_NOBLOCK, FALSE, savePref, &tmpPrefs);
     }
 #endif
-    
+
     if (myGlobals.savedPref.disableStopcap && !tmpPrefs.disableStopcap) {
         processNtopPref (NTOP_PREF_NO_STOPCAP, FALSE, savePref, &tmpPrefs);
     }
@@ -1281,18 +1296,18 @@ int processNtopConfigData (char *buf, int savePref)
         processNtopPref (NTOP_PREF_NO_TRUST_MAC, FALSE, savePref, &tmpPrefs);
     }
 
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME    
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
     if (myGlobals.savedPref.useSSLwatchdog && !tmpPrefs.useSSLwatchdog) {
         processNtopPref (NTOP_PREF_USE_SSLWATCH, FALSE, savePref, &tmpPrefs);
     }
 #endif
 
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)    
+#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
     if (myGlobals.savedPref.disableSchedYield && !tmpPrefs.disableSchedYield) {
         processNtopPref (NTOP_PREF_NO_SCHEDYLD, FALSE, savePref, &tmpPrefs);
     }
 #endif
-    
+
     if (myGlobals.savedPref.debugMode && !tmpPrefs.debugMode) {
         processNtopPref (NTOP_PREF_DBG_MODE, FALSE, savePref, &tmpPrefs);
     }
@@ -1314,7 +1329,7 @@ int processNtopConfigData (char *buf, int savePref)
 
     /* Copy over the preferences now */
     myGlobals.savedPref = tmpPrefs;
-    
+
     return (startCap);
 }
 
@@ -1322,7 +1337,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
 {
     char buf[1024];
     char theLink[32];
-    
+
     safe_snprintf (__FILE__, __LINE__, theLink, sizeof(theLink),
                    "/configNtop.html?&showD=");
 
@@ -1402,7 +1417,7 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
     }
 
     sendString (buf);
-    
+
     safe_snprintf (__FILE__, __LINE__, buf, sizeof (buf),
                    "<FORM ACTION = %s%d method=POST>"
                    " <TABLE BORDER=1 "TABLE_DEFAULTS">\n"
@@ -1419,8 +1434,8 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
     char buf[1024], hostStr[MAXHOSTNAMELEN+16];
     bool action = FALSE, startCap = FALSE;
     int len;
-    UserPref defaults, *pref = &myGlobals.savedPref; 
-    
+    UserPref defaults, *pref = &myGlobals.savedPref;
+
     /*
      * Configuration is dealt with via POST method. So read the data first.
      */
@@ -1432,19 +1447,21 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
         }
         else {
             /* =============================================
-             * Parse input URI & store specified preferences 
+             * Parse input URI & store specified preferences
              * =============================================
              */
             char *token;
             int savePref = FALSE, restoreDef = FALSE;
 
             /* =============================================
-             * Parse input URI & store specified preferences 
+             * Parse input URI & store specified preferences
              * =============================================
              */
-            
+
             if((buf != NULL) && (buf [0] != '\0')) {
                 unescape_url(buf);
+
+		/* traceEvent (CONST_TRACE_INFO, "BUF='%s'\n", buf); */
 
                /* locate the last parameter which tells us which button got pressed */
                 if ((token = rindex (buf, '&')) != NULL) {
@@ -1473,7 +1490,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
             }
         }
     }
-    
+
     /* =========================================
      * Display preferences page & current values
      * =========================================
@@ -1487,15 +1504,43 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 
     switch (configScr) {
     case showPrefBasicPref:
-        CONFIG_STR_ENTRY (DARK_BG, "Capture Interface (-i)", NTOP_PREF_DEVICES, 50,
-                          pref->devices,
-                          "List of comma separated interface names");
-        
+      {
+	pcap_if_t *devpointer;
+	int i, rc;
+	char ebuf[CONST_SIZE_PCAP_ERR_BUF];
+
+	sendString("<TR><INPUT TYPE=HIDDEN NAME=BASIC_PREFS VALUE=1><TD ALIGN=LEFT "DARK_BG">Capture Interfaces (-i)</TD><TD>\n");
+	if(((rc = pcap_findalldevs(&devpointer, ebuf)) >= 0) && (devpointer != NULL)) {
+
+	  for (i = 0; devpointer != 0; i++) {
+	    if(strcmp(devpointer->name, "any")) {
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+			    "<INPUT TYPE=checkbox NAME=\"%s\" VALUE=\"%s\" %s>%s (%s)<br>\n",
+			    NTOP_PREF_DEVICES, devpointer->name, 
+			    (pref->devices && strstr(pref->devices, devpointer->name)) ? "CHECKED" : "", 
+			    devpointer->name,
+			    devpointer->description ? devpointer->description : devpointer->name);
+	      sendString(buf);
+	    }
+	  
+	    devpointer = devpointer->next;
+	  }
+
+	  pcap_freealldevs(devpointer);
+	} else {
+	  /*
+	    traceEvent(CONST_TRACE_INFO, "pcap_findalldevs failed [rc=%d][%s]\n", 
+	    rc, ebuf);
+	  */
+	}
+	sendString("</TD></TR>");
+      }
+
         CONFIG_STR_ENTRY (DARK_BG, "Capture File Path (-f)", NTOP_PREF_CAPFILE, 50,
                           pref->rFileName,
                           "Capture file to read from (takes precedence over "
                           "interface specification)");
-    
+
         CONFIG_STR_ENTRY (DARK_BG, "Capture Filter Expression (-B)",
                           NTOP_PREF_FILTER,
                           50, pref->currentFilterExpression,
@@ -1512,7 +1557,7 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
         CONFIG_STR_ENTRY (DARK_BG, "HTTP Server (-w)", NTOP_PREF_WEBPORT,
                           50, hostStr,
                           "HTTP Server [Address:]Port of ntop's web interface");
-        
+
 #ifdef HAVE_OPENSSL
         if (pref->sslAddr == NULL) {
             safe_snprintf (__FILE__, __LINE__, hostStr, sizeof (hostStr),
@@ -1525,43 +1570,43 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
         CONFIG_STR_ENTRY (DARK_BG, "HTTPS Server (-W)", NTOP_PREF_SSLPORT, 50,
                           hostStr, "HTTPS Server [Address:]Port of ntop's web "
                           "interface");
-#endif        
-        
+#endif
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Enable Session Handling (-z)",
                              NTOP_PREF_EN_SESSION,
                              pref->enableSessionHandling, "");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Enable Protocol Decoders (-b)",
                              NTOP_PREF_EN_PROTO_DECODE,
                              pref->enablePacketDecoding, "");
-        
+
         CONFIG_STR_ENTRY (DARK_BG, "Flow Spec (-F)", NTOP_PREF_FLOWSPECS, 50,
                           pref->flowSpecs,
                           "Flow is a stream of captured packets that match a specified rule");
-        
+
         CONFIG_STR_ENTRY (DARK_BG, "Local Subnet Address (-m)",
                           NTOP_PREF_LOCALADDR, 15,
                           pref->localAddresses,
                           "Local subnets in ntop reports. Mandatory for packet capture files");
-        
+
         CONFIG_STR_ENTRY (DARK_BG, "Spool File Path (-Q)", NTOP_PREF_SPOOLPATH, 50,
                           pref->spoolPath,
                           "Location where temporary Ntop DB files are stored");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Sticky Hosts (-c)",
                              NTOP_PREF_STICKY_HOSTS, pref->stickyHosts,
                              "Don't purge idle hosts from memory");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Track Local Hosts (-g)",
                              NTOP_PREF_TRACK_LOCAL,
                              pref->trackOnlyLocalHosts,
                              "Capture data only about local hosts");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Disable Promiscuous Mode (-s)",
                              NTOP_PREF_NO_PROMISC,
                              pref->disablePromiscuousMode,
                              "Don't set the interface(s) into promiscuous mode");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Run as daemon (-d)", NTOP_PREF_DAEMON,
                              pref->daemonMode, "Run Ntop as a daemon");
         break;
@@ -1571,42 +1616,43 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
                           5, pref->refreshRate,
                           "Delay (in secs) between automatic screen updates for "
                           "supported HTML pages");
-        
+
         CONFIG_INT_ENTRY (DARK_BG, "Max Table Rows (-e)", NTOP_PREF_MAXLINES, 5,
                           pref->maxNumLines,
                           "Max number of lines that ntop will display on each "
                           " generated HTML page");
-        
+
         sendString("<TR><TD ALIGN=LEFT "DARK_BG">Show Menus For</TD><TD>");
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                       "<INPUT TYPE=radio NAME=%s  VALUE=%d %s>IP\n",
                       NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_IPONLY,
                       (pref->printIpOnly) ? "CHECKED" : "");
         sendString(buf);
-        
+
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                       "<INPUT TYPE=radio NAME=%s VALUE=%d %s>FC\n",
                       NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_FCONLY,
                       (pref->printFcOnly) ? "CHECKED" : "");
         sendString(buf);
-        
+
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                       "<INPUT TYPE=radio NAME=%s VALUE=%d %s>Both\n",
                       NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_BOTH,
                       (!pref->printIpOnly && !pref->printFcOnly) ? "CHECKED" : "");
         sendString(buf);
+	sendString("</TD></TR>");
 
         CONFIG_CHKBOX_ENTRY (DARK_BG, "No Info On Invalid LUNs",
                              NTOP_PREF_NO_INVLUN,
                              pref->noInvalidLunDisplay,
                              "Don't display info about non-existent LUNs");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Show Filter In Separate Frame (-k)",
-                             NTOP_PREF_FILTER_EXTRA_FRM, 
+                             NTOP_PREF_FILTER_EXTRA_FRM,
                              pref->filterExpressionInExtraFrame,
                              "Filter expression is in a separate frame and so "
                              "always visible");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Use W3C", NTOP_PREF_W3C,
                              pref->w3c,
                              "Generate 'BETTER' (but not perfect) w3c "
@@ -1620,13 +1666,13 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
                       NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET,
                       (pref->ipv4or6 == AF_INET) ? "CHECKED" : "");
         sendString(buf);
-        
+
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                       "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v6\n",
                       NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET6,
                       (pref->ipv4or6 == AF_INET6) ? "CHECKED" : "");
         sendString(buf);
-        
+
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                       "<INPUT TYPE=radio NAME=%s VALUE=%d %s>Both\n",
                       NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_BOTH,
@@ -1637,11 +1683,11 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
                           NTOP_PREF_DOMAINNAME, 10, pref->domainName,
                           "Only if ntop is having difficulty determining it "
                           "from the interface or in case of capture files");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "No DNS (-n)", NTOP_PREF_NUMERIC_IP,
                              pref->numericFlag, "Skip DNS resolution, showing "
                              "only numeric IP addresses");
-        
+
         CONFIG_STR_ENTRY (DARK_BG, "TCP/UDP Protocols To Monitor (-p)",
                           NTOP_PREF_PROTOSPECS, 50, pref->protoSpecs,
                           "format is &lt;label&gt;=&lt;protocol list&gt; [, &lt;"
@@ -1650,11 +1696,11 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
         CONFIG_STR_ENTRY (DARK_BG, "P3P-CP", NTOP_PREF_P3PCP, 50,
                           pref->P3Pcp,
                           "Return value for p3p compact policy header");
-        
+
         CONFIG_STR_ENTRY (DARK_BG, "P3P-URI", NTOP_PREF_P3PURI, 50,
                           pref->P3Puri,
                           "Return value for p3p policyref header");
-        
+
         CONFIG_STR_ENTRY (DARK_BG, "Host Mapper URL (-U)", NTOP_PREF_MAPPERURL,
                           50, pref->mapperURL,
                           "URL of the mapper.pl utility, for looking up geographical "
@@ -1672,17 +1718,17 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
                           pref->maxNumHashEntries,
                           "Limit number of hash entries created for sessions and"
                           " hosts to limit memory used by ntop");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Don't Merge Interfaces (-M)",
                              NTOP_PREF_MERGEIF, pref->mergeInterfaces,
                              "Don't merge data from all interfaces");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "No Instant Session Purge",
                              NTOP_PREF_NO_ISESS_PURGE,
                              pref->disableInstantSessionPurge,
                              "Makes ntop respect the timeouts for completed "
                              "sessions");
-        
+
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Set Pcap to Nonblocking",
                              NTOP_PREF_NOBLOCK, pref->setNonBlocking,
@@ -1702,13 +1748,13 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
         CONFIG_STR_ENTRY (DARK_BG, "Pcap Log Base Path (-O)",
                           NTOP_PREF_PCAP_LOGBASE, 50, pref->pcapLogBasePath,
                           "Directory where packet dump files are created");
-        
+
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Use SSL Watchdog",
                              NTOP_PREF_USE_SSLWATCH, pref->useSSLwatchdog,
                              "");
 #endif
-    
+
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Disable SchedYield",
                              NTOP_PREF_NO_SCHEDYLD, pref->disableSchedYield,
@@ -1720,21 +1766,21 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Run in debug mode (-K)",
                              NTOP_PREF_DBG_MODE, pref->debugMode,
                              "Simplifies debugging Ntop");
-        
+
         CONFIG_INT_ENTRY (DARK_BG, "Trace Level (-t)", NTOP_PREF_TRACE_LVL, 5,
                           pref->traceLevel,
                           "Level of detailed messages ntop will display");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Save Other Packets (-j)",
                              NTOP_PREF_DUMP_OTHER, pref->enableOtherPacketDump,
                              "Useful for understanding packets unclassified by "
                              "Ntop");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Save Suspicious Packets (-q)",
                              NTOP_PREF_DUMP_SUSP,
                              pref->enableSuspiciousPacketDump,
                              "Create a dump file (pcap) of suspicious packets");
-        
+
         CONFIG_STR_ENTRY (DARK_BG, "Log HTTP Requests (-a)",
                           NTOP_PREF_ACCESS_LOG, 50, pref->accessLogFile,
                           "Request HTTP logging and specify the location of the "
@@ -1744,13 +1790,13 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
         CONFIG_INT_ENTRY (DARK_BG, "Use Syslog (-L)", NTOP_PREF_USE_SYSLOG, 5,
                           pref->useSyslog,
                           "Send log messages to the system log instead of stdout");
-#endif    
+#endif
 
         CONFIG_STR_ENTRY (DARK_BG, "Write captured frames to (-l)",
                           NTOP_PREF_PCAP_LOG, 50, pref->pcapLog,
                           "Causes a dump file to be created of the captured by "
                           "ntop in libpcap format");
-        
+
         CONFIG_CHKBOX_ENTRY (DARK_BG, "Disable Extra Mutex Info",
                              NTOP_PREF_NO_MUTEX_EXTRA,
                              pref->disableMutexExtraInfo,
@@ -1779,6 +1825,6 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 
     sendString ("<P Align=CENTER><FONT COLOR = \"FF00FF\">Settings take effect at next startup</FONT></CENTER><P>");
     sendString ("<P Align=CENTER><FONT COLOR = \"FF00FF\">See <a href = \"info.html\">Show Configuration</A> for runtime values</FONT></CENTER><P>");
-    
+
     printHTMLtrailer();
 }

@@ -2356,15 +2356,19 @@ b    }
     printTrafficSummary(revertOrder);
   } else if(strncasecmp(pageName, CONST_TRAFFIC_STATS_HTML,
 			strlen(CONST_TRAFFIC_STATS_HTML)) == 0) {
-      if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) {
-          safe_snprintf (__FILE__, __LINE__, tmpStr, sizeof (tmpStr),
-                         "<I><a href=%s>Configure Ntop</a> first. No packet "
-                         "captures analyzed</I>", CONST_CONFIG_NTOP_HTML);
-          printFlagedWarning (tmpStr);
-          return (0);
-      }
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+
+    if((myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) 
+       || ((myGlobals.numDevices == 1) && (!strcmp(myGlobals.device[0].name, "none")))) {
+      printHTMLheader("Configure ntop", NULL, BITFLAG_HTML_NO_REFRESH);
       
-      sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      safe_snprintf (__FILE__, __LINE__, tmpStr, sizeof (tmpStr),
+		     "No interface has been configured. Please <a href=%s>configure ntop</a> first.",
+		     CONST_CONFIG_NTOP_HTML);
+      printFlagedWarning (tmpStr);
+      return (0);
+    }
+     
       /*
         It needs to go here otherwise when we update the pcap dropped packets
         this value is updated only in the child process and not

@@ -3706,6 +3706,18 @@ static void processStrPref (char *key, char *value, char **globalVar,
     }
     else {
         if (savePref) {
+
+	  if((strcmp(key, NTOP_PREF_DEVICES) == 0) 
+	     && (*globalVar && (*globalVar[0] != '\0'))) {	    
+	    /* Values can be concatenated */
+	    char tmpValue[256];
+
+	    safe_snprintf(__FILE__, __LINE__, tmpValue, sizeof(tmpValue), "%s,%s", *globalVar, value);
+	    storePrefsValue (key, tmpValue);
+	    free(*globalVar);
+	    *globalVar = strdup (tmpValue);
+	    return;
+	  } else
             storePrefsValue (key, value);
         }
 
@@ -3770,7 +3782,9 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
             (strcmp (pref->devices, value))) {
             startCap = TRUE;
         }
-        processStrPref (NTOP_PREF_DEVICES, value, &pref->devices, savePref);
+
+	if((pref->devices == NULL) || (strstr(pref->devices, value) == NULL))
+	  processStrPref (NTOP_PREF_DEVICES, value, &pref->devices, savePref);
     }
     else if (strcmp (key, NTOP_PREF_CAPFILE) == 0) {
         if (((value != NULL) &&
@@ -4051,108 +4065,6 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
     }
 
     return (startCap);
-}
-
-/* ******************************** */
-
-int loadPrefs (int argc, char *argv[])
-{
-    datum key, nextkey;
-    char buf[1024];
-    int opt_index, opt;
-    char *theOpts, *adminPw = NULL;
-    int userSpecified = 0;
-#ifdef WIN32
-    int optind=0;
-#endif
-    
-    struct option const long_options[] = {
-      { "db-file-path",                     required_argument, NULL, 'P' },
-      { "help",                             no_argument,       NULL, 'h' },
-
-      { "http-server",                      required_argument, NULL, 'w' },
-#ifdef HAVE_OPENSSL
-      { "https-server",                     required_argument, NULL, 'W' },
-#endif
-
-#ifndef WIN32
-      { "user",                             required_argument, NULL, 'u' },
-#endif
-      { "trace-level",                      required_argument, NULL, 't' },
-    };
-    
-    /* Retrieve the name of the global database file from the command line, if
-     * specified. This is a key option that changes where we search for the
-     * preferences file and so must be read first.
-     */
-#ifndef WIN32    
-    theOpts = "hu:P:t:";
-#else
-    theOpts = "hP:t:";
-#endif    
-  
-    traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
-    while ((opt = getopt_long(argc, argv, theOpts, long_options, &opt_index)) != EOF) {
-#ifdef DEBUG
-        traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering loadPrefs()");
-#endif
-        switch (opt) {
-        case 'h':                                /* help */
-            usage(stdout);
-            exit(0);
-
-
-	case 't':
-	  /* Trace Level Initialization */
-	  myGlobals.runningPref.traceLevel = min(max(1, atoi(optarg)),
-						 CONST_VERY_DETAIL_TRACE_LEVEL);
-	  /* DETAILED is NOISY + FileLine stamp, unless already set */
-	  break;
-	  
-    case 'w':
-      stringSanityCheck(optarg);
-      if(!isdigit(optarg[0])) {
-	printf("FATAL ERROR: flag -w expects a numeric argument.\n");
-	exit(-1);
-      }
-
-      /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-      if((myGlobals.runningPref.webAddr = strchr(optarg,':'))) {
-	/* DS: Search for : to find xxx.xxx.xxx.xxx:port */
-	/* This code is to be able to bind to a particular interface */
-	*myGlobals.runningPref.webAddr = '\0';
-	myGlobals.runningPref.webPort = atoi(myGlobals.runningPref.webAddr+1);
-	myGlobals.runningPref.webAddr = optarg;
-      } else
-	myGlobals.runningPref.webPort = atoi(optarg);
-      break;
-
-
-#ifdef HAVE_OPENSSL
-    case 'W':
-      stringSanityCheck(optarg);
-      if(!isdigit(optarg[0])) {
-	printf("FATAL ERROR: flag -W expects a numeric argument.\n");
-	exit(-1);
-      }
-
-      /*
-	lets swipe the same address binding code from -w above
-	Curtis Doty <Curtis@GreenKey.net>
-      */
-      if((myGlobals.runningPref.sslAddr = strchr(optarg,':'))) {
-	*myGlobals.runningPref.sslAddr = '\0';
-	myGlobals.runningPref.sslPort = atoi(myGlobals.runningPref.sslAddr+1);
-	myGlobals.runningPref.sslAddr = optarg;
-      } else {
-	myGlobals.runningPref.sslPort = atoi(optarg);
-      }
-
-      break;
-#endif
-        }
-    }
-    
 }
 
 /* ******************************** */

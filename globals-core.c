@@ -98,8 +98,12 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
 
   traceEvent(CONST_TRACE_INFO, "Initializing gdbm databases");
 
-  initSingleGdbm(&myGlobals.prefsFile,        "prefsCache.db",   prefDirectory,  FALSE, NULL);
-  initSingleGdbm(&myGlobals.pwFile,           "ntop_pw.db",      prefDirectory,  FALSE, NULL);    
+  if(initPrefsOnly) {
+    initSingleGdbm(&myGlobals.prefsFile,        "prefsCache.db",   prefDirectory,  FALSE, NULL);
+    initSingleGdbm(&myGlobals.pwFile,           "ntop_pw.db",      prefDirectory,  FALSE, NULL);    
+    return;
+  }
+
   initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE,  NULL);
   initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, -1,    NULL);
   initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
@@ -350,7 +354,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.logView = (char**)calloc(sizeof(char*),
 				     CONST_LOG_VIEW_BUFFER_SIZE);
 
-  traceEvent(CONST_TRACE_INFO, "Initializing semaphores, mutexes and threads");
+  /* traceEvent(CONST_TRACE_INFO, "Initializing semaphores, mutexes and threads"); */
 
   /* ============================================================
    * Create semaphores and mutexes associated with packet capture
@@ -359,7 +363,7 @@ void initNtopGlobals(int argc, char * argv[]) {
 #ifdef CFG_MULTITHREADED
 #ifdef HAVE_PTHREAD_ATFORK
   i = pthread_atfork(NULL, NULL, &reinitMutexes);
-  traceEvent(CONST_TRACE_INFO, "NOTE: atfork() handler registered for mutexes, rc %d", i);
+  /* traceEvent(CONST_TRACE_INFO, "NOTE: atfork() handler registered for mutexes, rc %d", i); */
 #endif
 
   /*
