@@ -405,7 +405,7 @@ static void handleNetflowHTTPrequest(char* url) {
 		  myGlobals.device[i].exportNetFlow == NETFLOW_EXPORT_ENABLED ? "No" : "Yes",
 		  myGlobals.device[i].exportNetFlow == NETFLOW_EXPORT_ENABLED ? "Yes" : "No"
 		  ) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
     }
   }

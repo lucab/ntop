@@ -86,7 +86,7 @@ static void resolveAddress(struct in_addr *hostAddr,
   addr = hostAddr->s_addr;
 
   if(snprintf(keyBuf, sizeof(keyBuf), "%u", addr) < 0)
-    BufferOverflow();
+    BufferTooShort();
   key_data.dptr = keyBuf;
   key_data.dsize = strlen(keyBuf)+1;
 
@@ -172,7 +172,7 @@ static void resolveAddress(struct in_addr *hostAddr,
       if(snprintf(buffer, sizeof(buffer),
 		  "/usr/bin/host %s",
 		  intoa(myAddr)) < 0)
-	BufferOverflow();
+	BufferTooShort();
 
       fd = popen(buffer, "r");
 
@@ -553,7 +553,7 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
   }
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(key_data.dptr)+1;
@@ -580,7 +580,7 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
 #endif
 
     if(snprintf(buffer, MAX_HOST_SYM_NAME_LEN, "%s", retrievedAddress->symAddress) < 0)
-      BufferOverflow();
+      BufferTooShort();
     
     free(data_data.dptr);
   } else {

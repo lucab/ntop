@@ -39,7 +39,7 @@ void formatUsageCounter(UsageCounter usageCtr,
     /* No percentage is printed */
     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 		formatPkts(usageCtr.value)) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   } else {
     float pctg;
@@ -50,7 +50,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 
     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;[%.0f&nbsp;%%]</TD>",
 		formatPkts(usageCtr.value), pctg) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   }
 
@@ -101,14 +101,14 @@ void printTableDoubleEntry(char *buf, int bufLen,
            "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
            "<TD WIDTH=100 "TD_BG">&nbsp;</TD>\n",
            getRowColor(), label, formatKBytes(totalS)) < 0)
-      BufferOverflow();
+      BufferTooShort();
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
            "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
            "<TD WIDTH=100><IMG ALT=\"100%\"ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=100 HEIGHT=12></TD>\n",
            getRowColor(), label, formatKBytes(totalS)) < 0)
-      BufferOverflow();
+      BufferTooShort();
     break;
   default:
     if(snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -119,7 +119,7 @@ void printTableDoubleEntry(char *buf, int bufLen,
 	     "<P>&nbsp;</TD></TR></TABLE></TD>\n",
 	     getRowColor(), label, formatKBytes(totalS),
 	     int_perc, (100*int_perc)/100, (100*(100-int_perc))/100) < 0)
-      BufferOverflow();
+      BufferTooShort();
   }
 
   sendString(buf);
@@ -144,12 +144,12 @@ void printTableDoubleEntry(char *buf, int bufLen,
     if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD WIDTH=100 "TD_BG">&nbsp;</TD></TR>\n",
 		formatKBytes(totalR)) < 0)
-      BufferOverflow();
+      BufferTooShort();
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD WIDTH=100><IMG ALIGN=MIDDLE ALT=\"100\" SRC=/gauge.jpg WIDTH=\"100\" HEIGHT=12></TD></TR>\n",
-		formatKBytes(totalR)) < 0) BufferOverflow();
+		formatKBytes(totalR)) < 0) BufferTooShort();
     break;
   default:
     if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -159,7 +159,7 @@ void printTableDoubleEntry(char *buf, int bufLen,
 		"<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
 		formatKBytes(totalR),
 		int_perc, (100*int_perc)/100, (100*(100-int_perc))/100) < 0)
-      BufferOverflow();
+      BufferTooShort();
   }
 
   sendString(buf);
@@ -185,12 +185,12 @@ void printTableEntryPercentage(char *buf, int bufLen,
       if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
 		  getRowColor(), label, COLOR_2, label_2) < 0)
-	BufferOverflow();
+	BufferTooShort();
     } else {
       if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
 		  getRowColor(), label, formatKBytes(total), COLOR_2, label_2) < 0)
-	BufferOverflow();
+	BufferTooShort();
     }
     break;
   case 100:
@@ -198,12 +198,12 @@ void printTableEntryPercentage(char *buf, int bufLen,
       if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
 		  getRowColor(), label, COLOR_1, label_1) < 0)
-	BufferOverflow();
+	BufferTooShort();
     } else {
       if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		  "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
 		  getRowColor(), label, formatKBytes(total), COLOR_1, label_1) < 0)
-	BufferOverflow();
+	BufferTooShort();
     }
     break;
   default:
@@ -216,7 +216,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
              getRowColor(), label,
              int_perc, COLOR_1,
              label_1, percentage, (100-int_perc), COLOR_2,
-             label_2, (100-percentage)) < 0) BufferOverflow();
+             label_2, (100-percentage)) < 0) BufferTooShort();
     } else {
       if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
              "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
@@ -226,7 +226,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
              getRowColor(), label, formatKBytes(total),
              int_perc, COLOR_1,
              label_1, percentage, (100-int_perc), COLOR_2,
-		  label_2, (100-percentage)) < 0) BufferOverflow();
+		  label_2, (100-percentage)) < 0) BufferTooShort();
     }
   }
 
@@ -266,9 +266,9 @@ void printHeader(int reportType, int revertOrder, u_int column) {
   }
 
   if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
-    BufferOverflow();
+    BufferTooShort();
   if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",  url) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
   if(abs(column) == HOST_DUMMY_IDX_VALUE) {
     arrow[0] = arrowGif; theAnchor[0] = htmlAnchor;
@@ -298,7 +298,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 		"<TH "TH_BG" COLSPAN=2>%s0>Data%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
 		theAnchor[2], arrow[2]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
 
     if(abs(column) == 1)
@@ -356,7 +356,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	    theAnchor[2], arrow[2], theAnchor[3], arrow[3],
 	    theAnchor[4], arrow[4], theAnchor[5], arrow[5],
 	    theAnchor[6], arrow[6], theAnchor[7], arrow[7]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
     if(snprintf(buf, BUF_SIZE,
 		"<TH "TH_BG">%s9>OSPF%s</A></TH>"
@@ -373,7 +373,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 		theAnchor[12], arrow[12],
 		theAnchor[13], arrow[13],
 		theAnchor[14], arrow[14]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
     break;
 
@@ -386,7 +386,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 		"<TH "TH_BG" COLSPAN=2>%s0>Data%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
 		theAnchor[2], arrow[2]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
     if(abs(column) == 1) {
 	arrow[0] = arrowGif;
@@ -406,7 +406,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
       }
       if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>%s%s</A></TH>",
 	      theAnchor[0], i+2, myGlobals.protoIPTrafficInfos[i], arrow[0]) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
       soFar++;
     }
@@ -418,7 +418,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     }
     if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>Other&nbsp;IP%s</A></TH>",
 	     theAnchor[0], i+2, arrow[0]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
     break;
 
@@ -429,7 +429,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
 		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
     sendString("<TH "TH_BG">0<br>AM</TH><TH "TH_BG">1<br>AM</TH>"
 	       "<TH "TH_BG">2<br>AM</TH><TH "TH_BG">3<br>AM</TH>"
@@ -448,7 +448,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
 		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
     updateThpt();
     if(abs(column) == 1) { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
@@ -471,7 +471,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	     "<TH "TH_BG">%s6>Peak Pkt Thpt%s</A></TH>",
 	    theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2],
 	    theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
     break;
   case 8: /* TRAFFIC_STATS_HTML */
@@ -480,7 +480,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
 		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
     break;
   }
@@ -528,7 +528,7 @@ char* getOSFlag(char* osName, int showOsName) {
   } else {
     if(flagImg != NULL) {
       if(snprintf(tmpStr, sizeof(tmpStr), "%s&nbsp;[%s]", flagImg, osName) < 0)
-	BufferOverflow();
+	BufferTooShort();
     } else
       strncpy(tmpStr, osName, sizeof(tmpStr));
   }
@@ -590,7 +590,7 @@ int sortHostFctn(const void *_a, const void *_b) {
       nameA = (*a)->atNodeName;
     else if((*a)->atNetwork != 0) {
       if(snprintf(nameA_str, sizeof(nameA_str), "%d.%d", (*a)->atNetwork, (*a)->atNode) < 0)
-	BufferOverflow();
+	BufferTooShort();
       nameA = nameA_str;
     } else if((*a)->ipxHostName != NULL)
       nameA = (*a)->ipxHostName;
@@ -603,7 +603,7 @@ int sortHostFctn(const void *_a, const void *_b) {
       nameB = (*b)->atNodeName;
     else if((*a)->atNetwork != 0) {
       if(snprintf(nameB_str, sizeof(nameB_str), "%d.%d", (*b)->atNetwork, (*b)->atNode) < 0)
-	BufferOverflow();
+	BufferTooShort();
       nameB = nameB_str;
     } else if((*b)->ipxHostName != NULL)
       nameB = (*b)->ipxHostName;
@@ -1126,7 +1126,7 @@ void printHostThtpShort(HostTraffic *el, short dataSent) {
       pctg = 0;
 
     if(snprintf(buf, sizeof(buf), "<TD ALIGN=RIGHT %s>&nbsp;</TD>",
-		getBgPctgColor(pctg)) < 0) BufferOverflow();
+		getBgPctgColor(pctg)) < 0) BufferTooShort();
     sendString(buf);
   }
 }
@@ -1296,7 +1296,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->synPktsSent.value+el->secHostPkts->synPktsRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>SYN</TH>",
 		    getRowColor()) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->synPktsSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->synPktsRcvd, 0, actualDeviceId);
@@ -1306,7 +1306,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->rstAckPktsSent.value+el->secHostPkts->rstAckPktsRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>RST|ACK</TH>",
 		    getRowColor()) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->rstAckPktsSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->rstAckPktsRcvd, 0, actualDeviceId);
@@ -1315,7 +1315,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->rstPktsSent.value+el->secHostPkts->rstPktsRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>RST</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->rstPktsSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->rstPktsRcvd, 0, actualDeviceId);
@@ -1324,7 +1324,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->synFinPktsSent.value+el->secHostPkts->synFinPktsRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>SYN|FIN</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->synFinPktsSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->synFinPktsRcvd, 0, actualDeviceId);
@@ -1333,7 +1333,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->finPushUrgPktsSent.value+el->secHostPkts->finPushUrgPktsRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>FIN|PUSH|URG</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->finPushUrgPktsSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->finPushUrgPktsRcvd, 0, actualDeviceId);
@@ -1387,7 +1387,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->ackScanSent.value+el->secHostPkts->ackScanRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>ACK Scan</TH>",
 		    getRowColor()) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->ackScanSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->ackScanRcvd, 0, actualDeviceId);
@@ -1397,7 +1397,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->xmasScanSent.value+el->secHostPkts->xmasScanRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>XMAS Scan</TH>",
 		    getRowColor()) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->xmasScanSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->xmasScanRcvd, 0, actualDeviceId);
@@ -1406,7 +1406,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->finScanSent.value+el->secHostPkts->finScanRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>FIN Scan</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->finScanSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->finScanRcvd, 0, actualDeviceId);
@@ -1415,7 +1415,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->nullScanSent.value+el->secHostPkts->nullScanRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>NULL Scan</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->nullScanSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->nullScanRcvd, 0, actualDeviceId);
@@ -1425,7 +1425,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->udpToClosedPortSent.value+
 	  el->secHostPkts->udpToClosedPortRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>UDP Pkt to Closed Port</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->udpToClosedPortSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->udpToClosedPortRcvd, 0, actualDeviceId);
@@ -1435,7 +1435,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->udpToDiagnosticPortSent.value+
 	  el->secHostPkts->udpToDiagnosticPortRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>UDP Pkt Disgnostic Port</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->udpToDiagnosticPortSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->udpToDiagnosticPortRcvd, 0, actualDeviceId);
@@ -1445,7 +1445,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->tcpToDiagnosticPortSent.value+
 	  el->secHostPkts->tcpToDiagnosticPortRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>TCP Pkt Disgnostic Port</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->tcpToDiagnosticPortSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->tcpToDiagnosticPortRcvd, 0, actualDeviceId);
@@ -1455,7 +1455,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->tinyFragmentSent.value+
 	  el->secHostPkts->tinyFragmentRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Tiny Fragments</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->tinyFragmentSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->tinyFragmentRcvd, 0, actualDeviceId);
@@ -1465,7 +1465,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->icmpFragmentSent.value+
 	  el->secHostPkts->icmpFragmentRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>ICMP Fragments</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpFragmentSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->icmpFragmentRcvd, 0, actualDeviceId);
@@ -1475,7 +1475,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->overlappingFragmentSent.value+
 	  el->secHostPkts->overlappingFragmentRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Overlapping Fragments</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->overlappingFragmentSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->overlappingFragmentRcvd, 0, actualDeviceId);
@@ -1485,7 +1485,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->closedEmptyTCPConnSent.value+
 	  el->secHostPkts->closedEmptyTCPConnRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Closed Empty TCP Conn.</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->closedEmptyTCPConnSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->closedEmptyTCPConnRcvd, 0, actualDeviceId);
@@ -1495,7 +1495,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if((el->secHostPkts->malformedPktsSent.value+
 	  el->secHostPkts->malformedPktsRcvd.value) > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Malformed Pkts</TH>",
-		    getRowColor()) < 0) BufferOverflow();
+		    getRowColor()) < 0) BufferTooShort();
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->malformedPktsSent, 0, actualDeviceId);
 	formatUsageCounter(el->secHostPkts->malformedPktsRcvd, 0, actualDeviceId);
@@ -1524,7 +1524,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		"<TD "TH_BG" ALIGN=RIGHT>%s</TD></TR>",
 		getRowColor(),
 		formatPkts(el->arpReqPktsSent)) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Reply Rcvd</TH>"
@@ -1533,14 +1533,14 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		formatPkts(el->arpReplyPktsRcvd),
 		((el->arpReqPktsSent > 0) ?
 		(float)((el->arpReplyPktsRcvd*100)/(float)el->arpReqPktsSent) : 0)) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Reply Sent</TH>"
 		"<TD "TH_BG" ALIGN=RIGHT>%s</TD></TR>",
 		getRowColor(),
 		formatPkts(el->arpReplyPktsSent)) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
 
     sendString("</TABLE>"TABLE_OFF"<P>\n");
@@ -1590,14 +1590,14 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf),
 		  "<TR %s><TH "TH_BG" ALIGN=LEFT>Fragment Distribution</TH>",
 		  getRowColor()) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"?1></TD>",
 		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
       } else {
 	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
@@ -1607,7 +1607,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"></TD>",
 		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
       } else {
 	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
@@ -1620,14 +1620,14 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf),
 		  "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Fragment Distribution</TH>",
 		  getRowColor()) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT"?1></TD>",
 		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
       } else {
 	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
@@ -1637,7 +1637,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT"></TD>",
 		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
       } else {
 	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
@@ -1788,14 +1788,14 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
     if((totalSent > 0) || (totalRcvd > 0)) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
 		  getRowColor()) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1></TD>",
 		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
       } else {
 	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
@@ -1805,7 +1805,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"></TD>",
 		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
       } else {
 	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
@@ -1836,7 +1836,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 		getRowColor(),
 		el->hostNumIpAddress,
 		el->hostNumIpAddress) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   }
 #endif
@@ -1861,79 +1861,79 @@ void printHostIcmpStats(HostTraffic *el) {
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Echo Request</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHO]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHO])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
      
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Echo Reply</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Unreach</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_UNREACH]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Redirect</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_REDIRECT]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Router Advertisement</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Time Exceeded</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Parameter Problem</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Network Mask Request</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREQ]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Network Mask Reply</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Source Quench</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Timestamp</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP]),
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Info Request</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Info Reply</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
 	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY]), 
 	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY])) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   sendString("</TABLE></CENTER>\n");
@@ -1979,7 +1979,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 			  "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
 			  getRowColor(), makeHostLink(&el2, 0, 0, 0),
 			  el2.hostNumIpAddress) < 0)
-		BufferOverflow();
+		BufferTooShort();
 
 	      sendString(buf);
 	      numEntries++;
@@ -2009,7 +2009,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 			  "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
 			  getRowColor(), makeHostLink(&el2, 0, 0, 0),
 			  el2.hostNumIpAddress) < 0)
-		BufferOverflow();
+		BufferTooShort();
 
 	      sendString(buf);
 	      numEntries++;
@@ -2105,7 +2105,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 
       if(svc == NULL) {
 	if(snprintf(tmpSvc, sizeof(tmpSvc), "%d", (int)(scanner->port)) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	svc = tmpSvc;
       }
 
@@ -2120,7 +2120,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 		    "<TH "TH_BG">Last&nbsp;Seen</TH>"
 		    "<TH "TH_BG">First&nbsp;Seen</TH>"
 		    "<TH "TH_BG">Peers</TH></TR>\n",
-		    sessionType) < 0) BufferOverflow();
+		    sessionType) < 0) BufferTooShort();
 	sendString(buf);
       }
 
@@ -2136,7 +2136,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 		  formatBytes(scanner->bytesRcvd, 1),
 		  formatTime(&(scanner->lastSeen), 1),
 		  formatTime(&(scanner->firstSeen), 1)
-		  ) < 0) BufferOverflow();
+		  ) < 0) BufferTooShort();
       sendString(buf);
       numSessions++;
 
@@ -2223,14 +2223,14 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 	      if(sport == NULL) {
 		if(snprintf(_sport, sizeof(_sport), "%d",
 			    session->sport) < 0)
-		  BufferOverflow();
+		  BufferTooShort();
 		sport = _sport;
 	      }
 
 	      if(dport == NULL) {
 		if(snprintf(_dport, sizeof(_dport), "%d",
 			    session->dport) < 0)
-		  BufferOverflow();
+		  BufferTooShort();
 		dport = _dport;
 	      }
 	      remotePeer = makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
@@ -2250,14 +2250,14 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 	      if(sport == NULL) {
 		if(snprintf(_sport, sizeof(_sport), "%d",
 			    session->dport) < 0)
-		  BufferOverflow();
+		  BufferTooShort();
 		sport = _sport;
 	      }
 
 	      if(dport == NULL) {
 		if(snprintf(_dport, sizeof(_dport), "%d",
 			    session->sport) < 0)
-		  BufferOverflow();
+		  BufferTooShort();
 		dport = _dport;
 	      }
 
@@ -2286,14 +2286,14 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 	    else {
 	      if(snprintf(fragStrSent, sizeof(fragStrSent), "(%.1f fragmented)",
 			  (int)((float)(fragDataSent*100))/((float)(dataSent+1))) < 0)
-		BufferOverflow();
+		BufferTooShort();
 	    }
 	    if(fragDataRcvd == 0)
 	      fragStrRcvd[0] = '\0';
 	    else {
 	      if(snprintf(fragStrRcvd, sizeof(fragStrRcvd), "(%.1f fragmented)",
 			  (int)((float)(fragDataRcvd*100))/((float)(dataRcvd+1))) < 0)
-		BufferOverflow();
+		BufferTooShort();
 	    }
 
 	    moreSessionInfo = "";
@@ -2327,7 +2327,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 			, formatBytes(retrDataRcvd, 1),
 			retrRcvdPercentage
 #endif
-			) < 0) BufferOverflow();
+			) < 0) BufferTooShort();
 
 	    sendString(buf);
 
@@ -2351,7 +2351,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
 #ifdef PRINT_ALL_ACTIVE_SESSIONS
 			, getSessionState(session)
 #endif
-			) < 0) BufferOverflow();
+			) < 0) BufferTooShort();
 
 	    sendString(buf);
 
@@ -2404,7 +2404,7 @@ static void checkHostHealthness(HostTraffic *el) {
 		"<IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif> "
 		"<IMG  ALT=\"Low Risk\" SRC=/Risk_low.gif>"
 		"</TH><TD "TD_BG" ALIGN=RIGHT NOWRAP><OL>", getRowColor(),
-		"Network Healthness") < 0) BufferOverflow();
+		"Network Healthness") < 0) BufferTooShort();
     sendString(buf);
 
     if(hasWrongNetmask(el))
@@ -2440,7 +2440,7 @@ void checkHostProvidedServices(HostTraffic *el) {
      ) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>", getRowColor(),
-		"Host Type") < 0) BufferOverflow();
+		"Host Type") < 0) BufferTooShort();
     sendString(buf);
 
     if(isServer(el))           sendString("Server<br>");
@@ -2487,14 +2487,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(el->hostSymIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about host"
 		" <A HREF=http://%s/>%s %s</A>\n", el->hostNumIpAddress, el->hostSymIpAddress, buf1) < 0)
-      BufferOverflow();
+      BufferTooShort();
   } else if(el->hostNumIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about host"
 		" <A HREF=http://%s/>%s %s</A>\n", el->hostNumIpAddress, el->hostNumIpAddress, buf1) < 0)
-      BufferOverflow();
+      BufferTooShort();
   } else {
     if(snprintf(buf, sizeof(buf), "Info about host %s",	el->ethAddressString) < 0)
-      BufferOverflow();
+      BufferTooShort();
   }
 
 #ifdef MULTITHREADED
@@ -2545,7 +2545,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		"IP&nbsp;Address",
 		el->hostNumIpAddress,
 		countryIcon, hostType, dynIp, multihomed) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
 
     sendString("</TD></TR>\n");
@@ -2555,7 +2555,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>&nbsp;<OL>",
 		  getRowColor(), "Multihomed Addresses") < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       for(elIdx=1; elIdx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; elIdx++) {
@@ -2570,7 +2570,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	   && (memcmp(theHost->ethAddress, el->ethAddress, ETHERNET_ADDRESS_LEN) == 0)) {
 	  if(snprintf(buf, sizeof(buf), "<LI><A HREF=/%s.html>%s</A>",
 		      theHost->hostNumIpAddress, theHost->hostNumIpAddress) < 0)
-	    BufferOverflow();
+	    BufferTooShort();
 	  sendString(buf);
 	}
       }
@@ -2581,7 +2581,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if(el->dhcpStats != NULL) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>",
 		  getRowColor(), "DHCP Information") < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       sendString("<TD "TD_BG"><TABLE BORDER WIDTH=100%>\n");
@@ -2589,41 +2589,41 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "DHCP Server",
 		  _intoa(el->dhcpStats->dhcpServerIpAddress, buf1, sizeof(buf1))) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "Previous IP Address",
 		  _intoa(el->dhcpStats->previousIpAddress, buf1, sizeof(buf1))) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "Address Assigned on",
 		  formatTime(&(el->dhcpStats->assignTime), 1)) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "To be Renewed Before",
 		  formatTime(&(el->dhcpStats->renewalTime), 1)) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "Lease Ends on",
 		  formatTime(&(el->dhcpStats->leaseTime), 1)) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>DHCP Packets</TH>"
 		  "<TH "TH_BG" ALIGN=CENTER>Sent</TH><TH "TH_BG" ALIGN=RIGHT>Rcvd</TH></TR>\n",
 		  getRowColor()) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -2631,7 +2631,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "DHCP Discover",
 		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG]),
 		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_DISCOVER_MSG])) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -2639,7 +2639,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "DHCP Offer",
 		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_OFFER_MSG]),
 		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_OFFER_MSG])) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -2647,7 +2647,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "DHCP Request",
 		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_REQUEST_MSG]),
 		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_REQUEST_MSG])) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -2655,7 +2655,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "DHCP Decline",
 		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_DECLINE_MSG]),
 		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_DECLINE_MSG])) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -2663,7 +2663,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "DHCP Ack",
 		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_ACK_MSG]),
 		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_ACK_MSG])) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -2671,7 +2671,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "DHCP Nack",
 		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_NACK_MSG]),
 		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_NACK_MSG])) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
@@ -2679,7 +2679,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "DHCP Release",
 		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_RELEASE_MSG]),
 		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_RELEASE_MSG])) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
 
@@ -2688,7 +2688,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "DHCP Inform",
 		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_INFORM_MSG]),
 		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_INFORM_MSG])) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
 
@@ -2697,7 +2697,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "DHCP Unknown Msg",
 		  formatPkts(el->dhcpStats->dhcpMsgSent[DHCP_UNKNOWN_MSG]),
 		  formatPkts(el->dhcpStats->dhcpMsgRcvd[DHCP_UNKNOWN_MSG])) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       sendString("</TABLE></TD></TR>\n");
@@ -2712,14 +2712,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	      formatTime(&(el->firstSeen), 1),
 	      formatTime(&(el->lastSeen), 1),
 	      formatSeconds(el->lastSeen - el->firstSeen)) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(el->fullDomainName && (el->fullDomainName[0] != '\0')) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s</TD></TR>\n",
 		getRowColor(),
-		"Domain", el->fullDomainName) < 0) BufferOverflow();
+		"Domain", el->fullDomainName) < 0) BufferTooShort();
     sendString(buf);
   }
 
@@ -2743,7 +2743,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "Main Host MAC Address",
 		  symLink, symMacAddr,
 		  myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
     } else {
@@ -2752,7 +2752,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "MAC&nbsp;Address <IMG ALT=\"Network Interface Card (NIC)\" SRC=/card.gif BORDER=0>",
 		  el->ethAddressString,
 		  myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
     }
 
@@ -2763,7 +2763,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
 		  vendorName,
 		  myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
     }
   }
@@ -2787,7 +2787,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     if(!myGlobals.borderSnifferMode) {
       if(snprintf(shortBuf, sizeof(shortBuf), "<A HREF=%s.html>%s</A>", symLink, symMacAddr) < 0)
-	BufferOverflow();
+	BufferTooShort();
     } else {
       strcpy(shortBuf, symMacAddr);
     }
@@ -2799,7 +2799,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		"Last MAC Address/Router <IMG ALT=\"Network Interface Card (NIC)/Router\" SRC=/card.gif BORDER=0>",
 		shortBuf,
 		myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   }
 
@@ -2812,7 +2812,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "OS&nbsp;Name",
 		  getOSFlag(el->osName, 1),
 		  myGlobals.separator /* it avoids empty cells not to be rendered */) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
     }
   }
@@ -2826,7 +2826,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		    el->nbAccountName, el->nbHostName, el->nbDomainName,
 		    getNbNodeType(el->nbNodeType),
 		    el->nbDescr ? el->nbDescr : "") < 0)
-	  BufferOverflow();
+	  BufferTooShort();
       } else {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		    "%s@%s (%s) %s</TD></TR>\n",
@@ -2834,7 +2834,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		    el->nbAccountName, el->nbHostName,
 		    getNbNodeType(el->nbNodeType),
 		    el->nbDescr ? el->nbDescr : "") < 0)
-	  BufferOverflow();
+	  BufferTooShort();
       }
     } else {
       if(el->nbDomainName != NULL) {
@@ -2844,7 +2844,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		    el->nbHostName, el->nbDomainName,
 		    getNbNodeType(el->nbNodeType),
 		    el->nbDescr ? el->nbDescr : "") < 0)
-	  BufferOverflow();
+	  BufferTooShort();
       } else {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		    "%s (%s) %s</TD></TR>\n",
@@ -2852,7 +2852,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		    el->nbHostName,
 		    getNbNodeType(el->nbNodeType),
 		    el->nbDescr ? el->nbDescr : "") < 0)
-	  BufferOverflow();
+	  BufferTooShort();
       }
     }
 
@@ -2863,7 +2863,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		getRowColor(), "NetBios&nbsp;Name",
 		el->nbHostName, getNbNodeType(el->nbNodeType),
 		el->nbDescr ? el->nbDescr : "") < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   }
 
@@ -2875,7 +2875,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s&nbsp;\n",
 		getRowColor(), "AppleTalk&nbsp;Name",
-		nodeName) < 0) BufferOverflow();
+		nodeName) < 0) BufferTooShort();
     sendString(buf);
 
     if(el->atNodeType[0] != NULL) {
@@ -2895,7 +2895,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     if(snprintf(buf, sizeof(buf), "[%d.%d]</TD></TR>\n",
 		el->atNetwork, el->atNode) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   }
 
@@ -2906,7 +2906,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		"<TD "TD_BG" ALIGN=RIGHT>"
 		"%s&nbsp;[", getRowColor(), "IPX&nbsp;Name",
 		el->ipxHostName) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
 
     for(i=0; i<el->numIpxNodeTypes; i++) {
@@ -2923,13 +2923,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
 		  "Local (inside specified/local subnet)") < 0)
-	BufferOverflow();
+	BufferTooShort();
     } else {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
 		  "Remote (outside specified/local subnet)") < 0)
-	BufferOverflow();
+	BufferTooShort();
     }
     sendString(buf);
   }
@@ -2938,7 +2938,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d:%d&nbsp;[~%d&nbsp;hop(s)]</TD></TR>\n",
 		getRowColor(), "IP&nbsp;TTL&nbsp;(Time to Live)",
-		el->minTTL, el->maxTTL, guessHops(el)) < 0) BufferOverflow();
+		el->minTTL, el->maxTTL, guessHops(el)) < 0) BufferTooShort();
     sendString(buf);
   }
 
@@ -2948,13 +2948,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	      formatBytes(el->bytesSent, 1), formatPkts(el->pktSent),
 	      formatPkts(el->pktDuplicatedAckSent),
 	      (int)(((float)el->pktDuplicatedAckSent*100)/(float)(el->pktSent+1))
-	      ) < 0) BufferOverflow();
+	      ) < 0) BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s Pkts</TD></TR>\n",
 	      getRowColor(), "Broadcast&nbsp;Pkts&nbsp;Sent",
-	      formatPkts(el->pktBroadcastSent)) < 0) BufferOverflow();
+	      formatPkts(el->pktBroadcastSent)) < 0) BufferTooShort();
   sendString(buf);
 
   if(!myGlobals.borderSnifferMode) {
@@ -2964,7 +2964,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(), "Routed Traffic",
 		  formatBytes(el->routedTraffic->routedBytes, 1),
 		  formatPkts(el->routedTraffic->routedPkts)) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
     }
   }
@@ -2978,7 +2978,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		formatPkts(el->pktMulticastSent),
 		formatBytes(el->bytesMulticastRcvd, 1),
 		formatPkts(el->pktMulticastRcvd)
-		) < 0) BufferOverflow();
+		) < 0) BufferTooShort();
     sendString(buf);
   }
 
@@ -3006,7 +3006,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	      formatBytes(el->bytesRcvd, 1), formatPkts(el->pktRcvd),
 	      formatPkts(el->pktDuplicatedAckRcvd),
 	      (int)((float)(el->pktDuplicatedAckRcvd*100)/(float)(el->pktRcvd+1))) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(!myGlobals.borderSnifferMode) {
@@ -3053,7 +3053,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
 		      "Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG" ALIGN=RIGHT>\n",
 		      getRowColor()) < 0)
-	    BufferOverflow();
+	    BufferTooShort();
 	  sendString(buf);
 	}
 	printedHeader++;
@@ -3061,7 +3061,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	if(printedHeader > 1) sendString("<BR>");
 
 	if(snprintf(buf, sizeof(buf), "%s\n", makeHostLink(router, SHORT_FORMAT, 0, 0)) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	sendString(buf);
       }
     }
@@ -3085,7 +3085,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"[ <A HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]</TD></TR>\n",
 		getRowColor(), "Further Host Information", el->hostNumIpAddress) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
 
     if(myGlobals.mapperURL) {
@@ -3094,20 +3094,20 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  getRowColor(),
 		  "Host Physical Location",
 		  myGlobals.mapperURL, el->hostNumIpAddress) < 0)
-      BufferOverflow();
+      BufferTooShort();
       sendString(buf);
     }
   }
 
-#ifdef TRAFFIC_HISTORY
+  if(haveTrafficHistory()) {
     if(el->hostNumIpAddress[0] != '\0') {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "[ <A HREF=\"/ntop-bin/netTraf.pl?host=%s\">History</A> ]</TD></TR>\n",
 		  getRowColor(), "Traffic Information", el->hostNumIpAddress) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
     }
-#endif /* TRAFFIC_HISTORY */
+  }
 
   checkHostHealthness(el);
 
@@ -3159,7 +3159,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
 		formatMicroSeconds(ss->slowestMicrosecLocalReqMade),
 		formatMicroSeconds(ss->fastestMicrosecRemReqMade),
 		formatMicroSeconds(ss->slowestMicrosecRemReqMade)
-		) < 0) BufferOverflow();
+		) < 0) BufferTooShort();
 	sendString(buf);
       }
     } else {
@@ -3197,7 +3197,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
 		formatMicroSeconds(ss->slowestMicrosecLocalReqServed),
 		formatMicroSeconds(ss->fastestMicrosecRemReqServed),
 		formatMicroSeconds(ss->slowestMicrosecRemReqServed)
-		) < 0) BufferOverflow();
+		) < 0) BufferTooShort();
 	sendString(buf);
       }
     }
@@ -3297,7 +3297,7 @@ void printTableEntry(char *buf, int bufLen,
 		"<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
 		"<TD "TD_BG" WIDTH=250>&nbsp;</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total)) < 0)
-      BufferOverflow();
+      BufferTooShort();
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
@@ -3305,7 +3305,7 @@ void printTableEntry(char *buf, int bufLen,
 		"<TD ALIGN=CENTER WIDTH=250><IMG ALT=\"100%\" ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12>"
 		"</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total)) < 0)
-      BufferOverflow();
+      BufferTooShort();
     break;
   default:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
@@ -3317,7 +3317,7 @@ void printTableEntry(char *buf, int bufLen,
 		getRowColor(), label, formatKBytes(total),
 		int_perc, (250*int_perc)/100,
 		(250*(100-int_perc))/100, getActualRowColor()) < 0)
-      BufferOverflow();
+      BufferTooShort();
   }
 
   sendString(buf);
@@ -3343,14 +3343,14 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent, 1)) < 0)
-      BufferOverflow();
+      BufferTooShort();
   } else if ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent == 0)
 	     && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd > 0)) {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s",
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd, 1)) < 0)
-      BufferOverflow();
+      BufferTooShort();
   } else {
     if(snprintf(buf, sizeof(buf), "(%s->%s)=%s, (%s->%s)=%s",
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
@@ -3359,7 +3359,7 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostSymIpAddress,
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostSymIpAddress,
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd, 1)) < 0)
-      BufferOverflow();
+      BufferTooShort();
   }
 
 #ifdef MULTITHREADED
@@ -3379,7 +3379,7 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 
   if(snprintf(buf, BUF_SIZE, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 	   formatBytes(el->last24HoursBytesSent[i], 0)) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   if(tcSent > 0)
     pctg = (float)(el->last24HoursBytesSent[i]*100)/(float)tcSent;
@@ -3387,11 +3387,11 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
     pctg = 0;
   if(snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT %s>%.1f %%</TD>",
 	   getBgPctgColor(pctg), pctg) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   if(snprintf(buf, BUF_SIZE, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 	   formatBytes(el->last24HoursBytesRcvd[i], 0)) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
   if(tcRcvd > 0)
     pctg = (float)(el->last24HoursBytesRcvd[i]*100)/(float)tcRcvd;
@@ -3400,7 +3400,7 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 
   if(snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT %s>%.1f %%</TD></TR>",
 	   getBgPctgColor(pctg), pctg) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 }
 

@@ -61,7 +61,7 @@ void showUsers(void) {
 		    "&nbsp;%s</TH><TD "TD_BG"><A HREF=/modifyUser?%s>"
 		    "<IMG ALT=\"Modify User\" SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 		    "&nbsp;</TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr) < 0)
-	 BufferOverflow();
+	 BufferTooShort();
       } else{
 	encodeWebFormURL(key_data.dptr, ebuf, sizeof(ebuf));
 	if(snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
@@ -69,7 +69,7 @@ void showUsers(void) {
 		"<IMG ALT=\"Modify User\" SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 		"&nbsp;<A HREF=/deleteUser?%s><IMG ALT=\"Delete User\" SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
 		"</A></TD></TR></TH></TR>\n", &key_data.dptr[1], ebuf, ebuf) < 0)
-	 BufferOverflow();
+	 BufferTooShort();
       }
       sendString(buf);
       numUsers++;
@@ -114,7 +114,7 @@ void addUser(char* user) {
       if(snprintf(tmpStr, sizeof(tmpStr),
 		  "<INPUT TYPE=hidden NAME=user SIZE=20 VALUE=\"%s\"><B>%s</B>\n",
 		  &user[1], &user[1]) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(tmpStr);
     } else
       sendString("<INPUT TYPE=text NAME=user SIZE=20>\n");
@@ -129,7 +129,7 @@ void addUser(char* user) {
     if(snprintf(tmpStr, sizeof(tmpStr),
 		"<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset>\n",
 		(user != NULL) ? "Modify User" : "Add User") < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(tmpStr);
 
     sendString("</FORM>\n");
@@ -236,7 +236,7 @@ void doAddUser(int len) {
       datum data_data, key_data;
 
       if(snprintf(tmpBuf, sizeof(tmpBuf), "1%s", user) < 0)
-	 BufferOverflow();
+	 BufferTooShort();
       key_data.dptr = tmpBuf;
       key_data.dsize = strlen(tmpBuf)+1;
 #ifdef WIN32
@@ -309,7 +309,7 @@ void showURLs(void) {
 	      "<IMG ALT=\"Modify User\" SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 	      "&nbsp;<A HREF=/deleteURL?%s><IMG ALT=\"Delete User\" SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
 	      "</A></TD></TR></TH></TR>\n", &key_data.dptr[1], ebuf, ebuf) < 0)
-	 BufferOverflow();
+	 BufferTooShort();
       sendString(buf);
       numUsers++;
     }
@@ -360,7 +360,7 @@ void addURL(char* url) {
 	       "<INPUT TYPE=hidden NAME=url SIZE=20 VALUE=\"%s\">"
 	       "<B>%s</B>&nbsp;<B>*</B>  [Initial URL string]",
 	       &url[1], &url[1]) < 0)
-	 BufferOverflow();
+	 BufferTooShort();
       sendString(tmpStr);
     } else {
       sendString("<INPUT TYPE=text NAME=url SIZE=20>&nbsp;*");
@@ -410,7 +410,7 @@ void addURL(char* url) {
         if(snprintf(tmpStr, sizeof(tmpStr),
 	         "<OPTION VALUE=%s %s>%s",
 	         key_data.dptr, found ? "SELECTED" : "", &key_data.dptr[1]) < 0)
-	 BufferOverflow();
+	 BufferTooShort();
         sendString(tmpStr);
       }
 
@@ -438,7 +438,7 @@ void addURL(char* url) {
     if(snprintf(tmpStr, sizeof(tmpStr),
 	     "<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset>\n",
 	     (url != NULL) ? "Modify URL" : "Add URL") < 0)
-	 BufferOverflow();
+	 BufferTooShort();
     sendString(tmpStr);
 
     sendString("</FORM>\n");
@@ -513,7 +513,7 @@ void doAddURL(int len) {
 	decodeWebFormURL(users);
 	if(snprintf(&authorizedUsers[alen], sizeof(authorizedUsers)-alen,
 		    "%susers=%s", (alen>0) ? "&" : "", users) < 0)
-	 BufferOverflow();
+	 BufferTooShort();
 	alen = strlen(authorizedUsers);
 	users = NULL;
       }
@@ -554,7 +554,7 @@ void doAddURL(int len) {
     datum data_data, key_data;
 
     if(snprintf(tmpBuf, sizeof(tmpBuf), "2%s", url) < 0)
-     BufferOverflow();
+     BufferTooShort();
     key_data.dptr = tmpBuf;
     key_data.dsize = strlen(tmpBuf)+1;
     data_data.dptr = authorizedUsers;
@@ -683,7 +683,7 @@ int doChangeFilter(int len) {
       if(snprintf(buf, sizeof(buf),
 		  "<B>Filter changed to <I>%s</I>.</B></FONT>\n",
 		 myGlobals.currentFilterExpression) < 0)
-      BufferOverflow();
+      BufferTooShort();
       sendString(buf);
     } else sendString("<B>Kernel (libpcap) filtering disabled.</B></FONT>\n");
 
@@ -737,7 +737,7 @@ void changeFilter(void) {
   sendString("<TH "TH_BG" ALIGN=center>Old Filter Expression:&nbsp;</TH><TD ALIGN=left>");
   if(snprintf(buf, sizeof(buf), "<B>%s",
 	     myGlobals.currentFilterExpression) < 0)
-   BufferOverflow();
+   BufferTooShort();
   sendString(buf);
   if(*myGlobals.currentFilterExpression == '\0') sendString("&lt;No filter defined&gt;");
   sendString("</B><BR>\n</TD>\n</TR>\n");
@@ -783,7 +783,7 @@ static void sendMenuFooter(int itm1Idx, int itm2Idx) {
 	     "[<A HREF=/%s.html>%s</A>]&nbsp;[<A HREF=/%s.html>%s</A>]\n",
 	     menuItem[itm1Idx].anchor, menuItem[itm1Idx].text,
 	     menuItem[itm2Idx].anchor, menuItem[itm2Idx].text) < 0)
-	 BufferOverflow();
+	 BufferTooShort();
   sendString(buf);
   sendString("</FONT></H4>\n");
   sendString("</CENTER>\n");

@@ -166,7 +166,7 @@ static void formatSentRcvd(TrafficCounter sent, TrafficCounter rcvd) {
     strcpy(buf, "<TD ALIGN=center>&nbsp;</TD>");
   } else if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
 		     formatPkts(sent), formatPkts(rcvd)) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 }
 
@@ -350,7 +350,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	      pluginName, sign,
 	      pluginName, sign,
 	      pluginName, sign) < 0) 
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   quicksort(hosts, num, sizeof(HostTraffic **), sortICMPhosts);
@@ -368,17 +368,17 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       if(snprintf(buf, sizeof(buf), "<TR %s> %s",
 		  getRowColor(),
 		  makeHostLink(hosts[idx], LONG_FORMAT, 0, 0)) < 0) 
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s</TD>", 
 		  formatBytes(hosts[idx]->icmpSent, 1)) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
       
       if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s</TD>", 
 		  formatBytes(hosts[idx]->icmpRcvd, 1)) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 
       formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHO]),

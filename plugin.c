@@ -73,35 +73,35 @@ static char* dlerror() {
 	break;
       case 2:
 	if(snprintf(tmpStr, sizeof(tmpStr), "Can't load library [%s]", errName) < 0) 
-	  BufferOverflow();
+	  BufferTooShort();
 	break;
       case 3:
 	if(snprintf(tmpStr, sizeof(tmpStr), "Can't find symbol in library [%s]", errName) < 0) 
-	  BufferOverflow();
+	  BufferTooShort();
 	break;
       case 4:
 	return("Rld data offset or symbol index out of range or bad relocation type");
 	break;
       case 5:
 	if(snprintf(tmpStr, sizeof(tmpStr), "File not valid, executable xcoff [%s]", errName) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	return(tmpStr);
 	break;
       case 6:
 	if(snprintf(tmpStr, sizeof(tmpStr), "The errno associated with the failure if not ENOEXEC,"
 		" it indicates the underlying error, such as no memory [%s][errno=%d]", 
-		errName, errno) < 0) BufferOverflow();
+		errName, errno) < 0) BufferTooShort();
 	return(tmpStr);
 	break;
       case 7:
 	if(snprintf(tmpStr, sizeof(tmpStr), 
 		    "Member requested from a file which is not an archive or does not"
-		    "contain the member [%s]", errName) < 0) BufferOverflow();
+		    "contain the member [%s]", errName) < 0) BufferTooShort();
 	return(tmpStr);
 	break;
       case 8:
 	if(snprintf(tmpStr, sizeof(tmpStr), "Symbol type mismatch [%s]", errName) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
 	return(tmpStr);
 	break;
       case 9:
@@ -115,7 +115,7 @@ static char* dlerror() {
 	break;
       default:
 	if(snprintf(tmpStr, sizeof(tmpStr), "Unknown error [%d]", errCode) < 0) 
-	  BufferOverflow();
+	  BufferTooShort();
 	return(tmpStr);
       }
     }
@@ -152,7 +152,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
   FlowFilterList *newFlow;
 
   if(snprintf(pluginPath, sizeof(pluginPath), "%s/%s", dirName, pluginName) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Loading plugin '%s'...", pluginPath);
@@ -326,7 +326,7 @@ void loadPlugins(void) {
 #ifndef STATIC_PLUGIN
   for(idx=0; myGlobals.pluginDirs[idx] != NULL; idx++) {
     if(snprintf(dirPath, sizeof(dirPath), "%s", myGlobals.pluginDirs[idx]) < 0) 
-      BufferOverflow();
+      BufferTooShort();
 
     directoryPointer = opendir(dirPath);
 

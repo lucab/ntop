@@ -20,12 +20,8 @@
 
 #include "ntop.h"
 
-/* Good
-#define MIN_NUM_USES   3
+#define MIN_NUM_USES            1
 #define MAX_NUM_PURGED_HOSTS  512
-*/
-#define MIN_NUM_USES             1
-#define MAX_NUM_PURGED_HOSTS  1024
 
 /* ******************************* */
 
@@ -755,7 +751,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		char buf[MAX_HOST_SYM_NAME_LEN];
 
 		if(snprintf(buf, sizeof(buf), "%s <IMG SRC=/card.gif BORDER=0>", symEthName) < 0)
-		  BufferOverflow();
+		  BufferTooShort();
 		else
 		  strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
 	      } else

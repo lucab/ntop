@@ -2102,8 +2102,8 @@ typedef struct pppTunnelHeader {
 #include "globals.h"
 #include "globals-core.h"
 
-#ifndef BufferOverflow
-#define BufferOverflow()  traceEvent(TRACE_ERROR, "Buffer overflow! at %s(%d)", __FILE__, __LINE__)
+#ifndef BufferTooShort
+#define BufferTooShort()  traceEvent(TRACE_ERROR, "Buffer too short @ %s:%d", __FILE__, __LINE__)
 #endif
 
 

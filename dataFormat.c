@@ -32,7 +32,7 @@ char* formatKBytes(float numKBytes) {
 
   if(numKBytes < 1024) {
     if(snprintf(outStr[bufIdx], 32, "%.1f%sKB", numKBytes, myGlobals.separator) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else {
     float tmpKBytes = numKBytes/1024;
 
@@ -44,10 +44,10 @@ char* formatKBytes(float numKBytes) {
 
       if(tmpGBytes < 1024) {
 	if(snprintf(outStr[bufIdx], 32, "%.1f%sGB", tmpGBytes, myGlobals.separator)  < 0) 
-	 BufferOverflow();
+	 BufferTooShort();
       } else {
 	if(snprintf(outStr[bufIdx], 32, "%.1f%sTB", ((float)(tmpGBytes)/1024), myGlobals.separator) < 0) 
-	 BufferOverflow();
+	 BufferTooShort();
       }
     }
   }
@@ -74,11 +74,11 @@ char* formatBytes(TrafficCounter numBytes, short encodeString) {
     return("&nbsp;");
   } else if(numBytes < 1024) {
     if(snprintf(outStr[bufIdx], 32, "%lu", (unsigned long)numBytes) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else if (numBytes < 1048576) {
     if(snprintf(outStr[bufIdx], 32, "%.1f%sKB",
 		((float)(numBytes)/1024), locSeparator) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else {
     float tmpMBytes = ((float)numBytes)/1048576;
 
@@ -91,11 +91,11 @@ char* formatBytes(TrafficCounter numBytes, short encodeString) {
 
       if(tmpMBytes < 1024) {
 	if(snprintf(outStr[bufIdx], 32, "%.1f%sGB", tmpMBytes, locSeparator) < 0) 
-	 BufferOverflow();
+	 BufferTooShort();
       } else {
 	if(snprintf(outStr[bufIdx], 32, "%.1f%sTB",
 		((float)(tmpMBytes)/1024), locSeparator) < 0)
-	 BufferOverflow();
+	 BufferTooShort();
       }
     }
   }
@@ -131,16 +131,16 @@ char* formatSeconds(unsigned long sec) {
 
   if(days > 0) {
     if(snprintf(outStr[bufIdx], 32, "%u day(s) %u:%02u:%02lu", days, hour, min, sec) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else if(hour > 0) {
     if(snprintf(outStr[bufIdx], 32, "%u:%02u:%02lu", hour, min, sec)  < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else if(min > 0) {
     if(snprintf(outStr[bufIdx], 32, "%u:%02lu", min, sec) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else {
     if(snprintf(outStr[bufIdx], 32, "%lu sec", sec) < 0)
-     BufferOverflow();
+     BufferTooShort();
   }
 
   return(outStr[bufIdx]);
@@ -157,10 +157,10 @@ char* formatMicroSeconds(unsigned long microsec) {
 
   if(f < 1000) {
     if(snprintf(outStr[bufIdx], 32, "%.1f ms", f) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else {
     if(snprintf(outStr[bufIdx], 32, "%.1f sec", (f/1000))  < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } 
   return(outStr[bufIdx]);
 }
@@ -183,13 +183,13 @@ char* formatThroughput(float numBytes /* <=== Bytes/second */) {
   
   if (numBits < divider) {
     if(snprintf(outStr[bufIdx], 32, "%.1f%sbps", numBits, myGlobals.separator) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else if (numBits < (divider*divider)) {
     if(snprintf(outStr[bufIdx], 32, "%.1f%sKbps", ((float)(numBits)/divider), myGlobals.separator) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else {
     if(snprintf(outStr[bufIdx], 32, "%.1f%sMbps", ((float)(numBits)/1048576), myGlobals.separator) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   }
 
 #ifdef DEBUG
@@ -258,19 +258,19 @@ char* formatPkts(TrafficCounter pktNr) {
 
   if(pktNr < 1000) {
     if(snprintf(staticBuffer[bufIdx], 32, "%lu", (unsigned long)pktNr) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else if(pktNr < 1000000) {
     if(snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu",
 	    (unsigned long)(pktNr/1000),
 	    ((unsigned long)pktNr)%1000) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else if(pktNr < 1000000000) {
     unsigned long a, b, c;
     a = (unsigned long)(pktNr/1000000);
     b = (unsigned long)((pktNr-a*1000000)/1000);
     c = ((unsigned long)pktNr)%1000;
     if(snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu,%03lu", a, b, c) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   } else {
     unsigned long a, b, c, a1, a2;
     a = (unsigned long)(pktNr/1000000);
@@ -279,7 +279,7 @@ char* formatPkts(TrafficCounter pktNr) {
     b = (unsigned long)((pktNr-a*1000000)/1000);
     c = ((unsigned long)pktNr)%1000;
     if(snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu,%03lu,%03lu", a1, a2, b, c) < 0) 
-     BufferOverflow();
+     BufferTooShort();
   }
 
   return(staticBuffer[bufIdx]);

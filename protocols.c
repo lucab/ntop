@@ -237,7 +237,7 @@ void handleBootp(HostTraffic *srcHost,
 		    if(strcmp(tmpHostName, tmpDomainName) != 0) {
 		      if(snprintf(tmpName, sizeof(tmpName), "%s.%s",
 				  tmpHostName, tmpDomainName) < 0)
-			BufferOverflow();
+			BufferTooShort();
 		      else {
 			hostLen = len;
 			len = strlen(tmpName);

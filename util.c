@@ -1502,7 +1502,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 
   /* 548 is the AFP (Apple Filing Protocol) */
  if(snprintf(line, sizeof(line), "nmap -p 23,21,80,138,139,548 -O %s", ipAddr) < 0)
-   BufferOverflow();
+   BufferTooShort();
 
  fd = popen(line, "r");
 
@@ -2712,7 +2712,7 @@ char* getAllPortByNum(int port) {
   else {
     portBufIdx = (short)((portBufIdx+1)%2);
     if(snprintf(staticBuffer[portBufIdx], 16, "%d", port) < 0)
-      BufferOverflow();
+      BufferTooShort();
     return(staticBuffer[portBufIdx]);
   }
 }
@@ -2880,7 +2880,7 @@ void updateOSName(HostTraffic *el) {
 #endif
 
     if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
-      BufferOverflow();
+      BufferTooShort();
     key_data.dptr = tmpBuf;
     key_data.dsize = strlen(tmpBuf)+1;
 
@@ -2923,7 +2923,7 @@ void updateOSName(HostTraffic *el) {
 #endif
 
       if(snprintf(tmpBuf, sizeof(tmpBuf), "@%s", el->hostNumIpAddress) < 0)
-	BufferOverflow();
+	BufferTooShort();
       key_data.dptr = tmpBuf;
       key_data.dsize = strlen(tmpBuf)+1;
       data_data.dptr = el->osName;
@@ -3044,7 +3044,7 @@ int fetchPrefsValue(char *key, char *value, int valueLen) {
   
   if(data_data.dptr != NULL) {
     if(snprintf(value, valueLen, "%s", data_data.dptr) < 0)
-      BufferOverflow();
+      BufferTooShort();
     if(data_data.dsize < valueLen) value[data_data.dsize] = '\0';
     free(data_data.dptr);
     /* traceEvent(TRACE_INFO, "Read %s=%s.", key, value); */

@@ -79,7 +79,7 @@ char* getNamedPort(int port) {
 
   if(svcName == NULL) {
     if(snprintf(outStr[portBufIdx], 8, "%d", port) < 0)
-      BufferOverflow();
+      BufferTooShort();
   } else {
     strncpy(outStr[portBufIdx], svcName, 8);
   }
@@ -1593,13 +1593,13 @@ static char* timestamp(const struct timeval* t, int fmt) {
        */
       if(snprintf(buf, 16, "%10ld ms",
 		  delta_time_in_milliseconds(&current_pkt, &last_pkt)) < 0)
-	BufferOverflow();
+	BufferTooShort();
       break;
 
     case ABS_FMT:
       if(snprintf(buf, 16, "%02d:%02d:%02d.%06d",
 		  tm->tm_hour, tm->tm_min, tm->tm_sec, (int)t->tv_usec) < 0)
-	BufferOverflow();
+	BufferTooShort();
       break;
 
     case RELATIVE_FMT:
@@ -1609,7 +1609,7 @@ static char* timestamp(const struct timeval* t, int fmt) {
        */
       if(snprintf(buf, 16, "%10ld ms",
 		  delta_time_in_milliseconds(&current_pkt, &first_pkt)) < 0)
-	BufferOverflow();
+	BufferTooShort();
       break;
     }
 

@@ -740,10 +740,10 @@ int main(int argc, char *argv[]) {
 
       if(i>0) {
 	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
-	  BufferOverflow();
+	  BufferTooShort();
       } else {
 	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
       }
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
     }

@@ -125,7 +125,7 @@ void initIPServices(void) {
     char tmpStr[64];
 
     if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     fd = fopen(tmpStr, "r");
 
     if(fd != NULL) {
@@ -156,7 +156,7 @@ void initIPServices(void) {
     char tmpStr[64];
 
     if(snprintf(tmpStr, sizeof(tmpStr), "%s/services", myGlobals.configFileDirs[idx]) < 0)
-      BufferOverflow();
+      BufferTooShort();
     fd = fopen(tmpStr, "r");
 
     if(fd != NULL) {
@@ -461,7 +461,7 @@ void initGdbm() {
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", myGlobals.dbPath) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
   unlink(tmpBuf); /* Delete the old one (if present) */
   myGlobals.addressCache = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
@@ -482,7 +482,7 @@ void initGdbm() {
   /* ************************************************ */
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/serialCache.db", myGlobals.dbPath) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
   unlink(tmpBuf); /* Delete the old one (if present) */
   myGlobals.serialCache = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
@@ -501,7 +501,7 @@ void initGdbm() {
   /* ************************************************ */
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/prefsCache.db", myGlobals.dbPath) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
   myGlobals.prefsFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
@@ -520,7 +520,7 @@ void initGdbm() {
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", myGlobals.dbPath) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
   myGlobals.gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
@@ -538,7 +538,7 @@ void initGdbm() {
     exit(-1);
   } else {
     if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", myGlobals.dbPath) < 0)
-      BufferOverflow();
+      BufferTooShort();
     myGlobals.pwFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
     if(myGlobals.pwFile == NULL) {
@@ -547,7 +547,7 @@ void initGdbm() {
     }
 
     if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", myGlobals.dbPath) < 0)
-      BufferOverflow();
+      BufferTooShort();
     myGlobals.hostsInfoFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
     if(myGlobals.hostsInfoFile == NULL) {
@@ -914,7 +914,7 @@ void initDevices(char* devices) {
 	if(myGlobals.numDevices < MAX_NUM_DEVICES) {
 	  for(k=0; k<8; k++) {
 	    if(snprintf(tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", myGlobals.device[i].name, k) < 0)
-	      BufferOverflow();
+	      BufferTooShort();
 	    if(getLocalHostAddress(&myLocalHostAddress, tmpDeviceName) == 0) {
 	      /* The virtual interface exists */
 

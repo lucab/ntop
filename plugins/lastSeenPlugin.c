@@ -77,7 +77,7 @@ static void handleLsPacket(u_char *_deviceId _UNUSED_,
   HostI.LastUpdated = myGlobals.actTime;
 
   if(snprintf(tmpStr, sizeof(tmpStr), "%u", (unsigned) ip.ip_src.s_addr) < 0)
-    BufferOverflow();
+    BufferTooShort();
   key_data.dptr = tmpStr; key_data.dsize = strlen(key_data.dptr)+1;
   data_data.dptr = (char *)&HostI;
   data_data.dsize = sizeof(HostI)+1;
@@ -154,7 +154,7 @@ static void handleLsHTTPrequest(char* url) {
     addNotes( url+1, &postData[6]);	
     char_ip.s_addr = strtoul(url+1, NULL, 10);
     if(snprintf(tmpStr, sizeof(tmpStr), "<I>OK! Added comments for %s.</i>\n",
-		intoa(char_ip)) < 0) BufferOverflow();
+		intoa(char_ip)) < 0) BufferTooShort();
     printSectionTitle(tmpStr);
     sendString("<br><A HREF=/plugins/LastSeen>Reload</A>");
     printHTMLtrailer();
@@ -211,7 +211,7 @@ static void handleLsHTTPrequest(char* url) {
 
     if(snprintf(tmpStr, sizeof(tmpStr), "N_%u", 
 		(unsigned)tablehost[entry].HostIpAddress.s_addr) < 0) 
-      BufferOverflow();
+      BufferTooShort();
 
     key_data.dptr = tmpStr;
     key_data.dsize = strlen(key_data.dptr)+1;
@@ -251,14 +251,14 @@ static void handleLsHTTPrequest(char* url) {
 	    HostN.note,
 	    (unsigned) tablehost[entry].HostIpAddress.s_addr,
 	    (unsigned) tablehost[entry].HostIpAddress.s_addr) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(tmpStr);
     entry--;
   }
   sendString("</TABLE></CENTER><p>\n");
   if(snprintf(tmpStr, sizeof(tmpStr), 
 	   "<hr><CENTER><b>%u</b> host(s) collected.</CENTER><br>",
-	   num_hosts) < 0) BufferOverflow();
+	   num_hosts) < 0) BufferTooShort();
   sendString(tmpStr);
   printHTMLtrailer();
 }
@@ -277,7 +277,7 @@ static void addNotes(char *addr, char *PostNotes) {
 
   strncpy(HostN.note,PostNotes, sizeof(HostN.note));
 
-  if(snprintf(tmpStr, sizeof(tmpStr), "N_%s",addr) < 0) BufferOverflow();
+  if(snprintf(tmpStr, sizeof(tmpStr), "N_%s",addr) < 0) BufferTooShort();
 
   key_data.dptr = tmpStr;
   key_data.dsize = strlen(key_data.dptr)+1;
@@ -303,7 +303,7 @@ static void NotesURL(char *addr, char *ip_addr) {
   char tmpStr[32];
   char tmp[64];
 
-  if(snprintf(tmpStr, sizeof(tmpStr), "N_%s",addr) < 0) BufferOverflow();
+  if(snprintf(tmpStr, sizeof(tmpStr), "N_%s",addr) < 0) BufferTooShort();
   key_data.dptr = tmpStr;
   key_data.dsize = strlen(key_data.dptr)+1;
 
@@ -322,14 +322,14 @@ static void NotesURL(char *addr, char *ip_addr) {
   sendString("<title>Manage Notes</title>\n");
   sendString("</head><BODY COLOR=#FFFFFF><FONT FACE=Helvetica>\n");
   if(snprintf(tmp, sizeof(tmp), "<H1><CENTER>Notes for %s</CENTER></H1><p><p><hr>\n",ip_addr) < 0) 
-    BufferOverflow();
+    BufferTooShort();
   sendString(tmp);
   if(snprintf(tmp, sizeof(tmp), "<FORM METHOD=POST ACTION=/plugins/LastSeen?P%s>\n",addr) < 0) 
-    BufferOverflow();
+    BufferTooShort();
   sendString(tmp);
   if (content.dptr) {
     if(snprintf(tmp, sizeof(tmp), "<INPUT TYPE=text NAME=Notes SIZE=49 VALUE=\"%s\">\n",
-		content.dptr) < 0) BufferOverflow();
+		content.dptr) < 0) BufferTooShort();
     sendString(tmp);
     free(content.dptr);
   } else {
@@ -345,7 +345,7 @@ static void deletelastSeenURL( char *addr ) {
   char tmpStr[32];
 
   if(snprintf(tmpStr, sizeof(tmpStr), "N_%s",addr) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
   key_data.dptr = addr;
   key_data.dsize = strlen(key_data.dptr)+1;
@@ -413,7 +413,7 @@ PluginInfo* PluginEntryFctn(void) {
   
   /* Fix courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/LsWatch.db", myGlobals.dbPath) < 0) 
-    BufferOverflow();
+    BufferTooShort();
   LsDB = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
   if(LsDB == NULL) {

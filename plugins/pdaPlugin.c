@@ -154,7 +154,7 @@ static void printHtmlIndex(void) {
 		"<td>%s</td></tr>\n",
 		linkName, tmpName,      
 		formatBytes(el->bytesSent, 1)) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferTooShort();
     sendString(buf);
   }
 
@@ -189,7 +189,7 @@ static void printHtmlIndex(void) {
 		"<td>%s</td></tr>\n",
 		linkName, tmpName,  
 		formatBytes(el->bytesRcvd, 1)) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferTooShort();
     sendString(buf);
   }
 
@@ -207,7 +207,7 @@ static void printHtmlIndex(void) {
   if(snprintf(buf, sizeof(buf),"<tr><td>Sampling Time</td>"
 	      "<td>%s</td></tr>\n",
 	      formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime)) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferTooShort();
   sendString(buf);
 
   /** **/
@@ -224,21 +224,21 @@ static void printHtmlIndex(void) {
     
   if(snprintf(buf, sizeof(buf),"<tr><td>Total</td><td>%s</td></tr>\n",
 	      formatPkts(myGlobals.device[actualDeviceId].ethernetPkts)) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),"<tr><td>Unicast</td>"
 	      "<td>%s [%.1f%%]</td></tr>\n", 
 	      formatPkts(unicastPkts),
 	      (float)(100*unicastPkts)/(float)myGlobals.device[actualDeviceId].ethernetPkts) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferTooShort();
   sendString(buf);
   if(snprintf(buf, sizeof(buf),"<tr><td>Broadcast</td>"
 	      "<td>%s [%.1f%%]</td></tr>\n", 
 	      formatPkts(myGlobals.device[actualDeviceId].broadcastPkts),
 	      (float)(100*myGlobals.device[actualDeviceId].broadcastPkts)
 	      /(float)myGlobals.device[actualDeviceId].ethernetPkts) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
+    BufferTooShort();
   sendString(buf);
 
   if(myGlobals.device[actualDeviceId].multicastPkts > 0) {
@@ -247,7 +247,7 @@ static void printHtmlIndex(void) {
 		formatPkts(myGlobals.device[actualDeviceId].multicastPkts),
 		(float)(100*myGlobals.device[actualDeviceId].multicastPkts)
 		/(float)myGlobals.device[actualDeviceId].ethernetPkts) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+      BufferTooShort();
     sendString(buf);
   }
 

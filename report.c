@@ -80,7 +80,7 @@ void addPageIndicator(char *url, u_int pageNum,
   else {
     if(snprintf(shortBuf, sizeof(shortBuf),
 		"%s%d", revertOrder == 1 ? "-" : "", numCol) < 0)
-      BufferOverflow();
+      BufferTooShort();
   }
 
   if(pageNum >= 1) {
@@ -88,7 +88,7 @@ void addPageIndicator(char *url, u_int pageNum,
 		"<A HREF=\"%s?page=0&col=%s\"><IMG SRC=/fback.gif BORDER=0 ALIGN=vmiddle ALT=\"Back to first page\"></A> "
 		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/back.gif BORDER=0 ALIGN=vmiddle ALT=\"Prior page\"></A>",
 		url, shortBuf, url, pageNum-1, shortBuf) < 0)
-      BufferOverflow();
+      BufferTooShort();
   } else
     prevBuf[0] = '\0';
 
@@ -98,7 +98,7 @@ void addPageIndicator(char *url, u_int pageNum,
 		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 ALIGN=vmiddle ALT=\"Forward to last page\"></A>",
 		url, pageNum+1, shortBuf,
 		url, numPages-1, shortBuf) < 0)
-      BufferOverflow();
+      BufferTooShort();
   }  else
     nextBuf[0] = '\0';
 
@@ -143,16 +143,16 @@ void printTrafficStatistics() {
 		    ) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-
-#ifdef TRAFFIC_HISTORY
-	if(!myGlobals.device[i].virtualDevice) {
-	  if(snprintf(buf, sizeof(buf), 
+	
+	if(haveTrafficHistory()) {
+	  if(!myGlobals.device[i].virtualDevice) {
+	    if(snprintf(buf, sizeof(buf), 
 		      "  [ <A HREF=\"/ntop-bin/netTraf.pl?interface=%s\">History</A> ]\n",
-		      myGlobals.device[i].name) < 0)
-	    BufferOverflow();
-	  sendString(buf);
+			myGlobals.device[i].name) < 0)
+	      BufferTooShort();
+	    sendString(buf);
+	  }
 	}
-#endif /* TRAFFIC_HISTORY */      
       } else {
 	if(snprintf(buf, sizeof(buf), "%s [%s]",
 		    getNwInterfaceType(i), PCAP_NW_INTERFACE) < 0)
@@ -173,7 +173,7 @@ void printTrafficStatistics() {
 #ifdef TRAFFIC_HISTORY
       if(snprintf(buf, sizeof(buf), " <A HREF=\"/ntop-bin/netTraf.pl?interface=%s\">History</A>\n",
 		  myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(buf);
 #endif /* TRAFFIC_HISTORY */
   }
@@ -3819,3 +3819,25 @@ void printHostHourlyTraffic(HostTraffic *el) {
 }
 
 #endif /* MICRO_NTOP */
+
+/* ************************** */
+
+int haveTrafficHistory() {
+  int idx, found;
+  struct stat statbuf;
+
+  for(idx=0, found = 0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
+    char tmpStr[384];
+
+    if(snprintf(tmpStr, sizeof(tmpStr), "%s/data",
+		myGlobals.dataFileDirs[idx]) < 0)
+      BufferTooShort();
+ 
+    if(stat(tmpStr, &statbuf) == 0) {
+      return(1);
+      break;
+    }      
+  }
+
+  return(0);
+}

@@ -81,7 +81,7 @@ int execCGI(char* cgiName) {
     if(cgiName[i] == '?') {
       cgiName[i] = '\0';
       if(snprintf(buf, sizeof(buf), "QUERY_STRING=%s", &cgiName[i+1]) < 0)
-	BufferOverflow();
+	BufferTooShort();
       putenv(buf);
       num = 1;
       break;
@@ -91,7 +91,7 @@ int execCGI(char* cgiName) {
   if(num == 0) putenv("QUERY_STRING=");
 
   if(snprintf(line, sizeof(line), "%s/cgi/%s", getenv("PWD"), cgiName) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Executing CGI '%s'", line);
@@ -186,7 +186,7 @@ void showPluginsList(char* pluginName) {
 		  flows->pluginStatus.activePlugin ? 0: 1,
 		  flows->pluginStatus.activePlugin ?
 		  "Yes" : "<FONT COLOR=#FF0000>No</FONT>")  < 0)
-	BufferOverflow();
+	BufferTooShort();
       sendString(tmpBuf);
     }
 
@@ -259,7 +259,7 @@ char* makeHostLink(HostTraffic *el, short mode,
       fmt = "%s";
 
     if(snprintf(buf[bufIdx], BUF_SIZE, fmt, el->hostSymIpAddress) < 0)
-      BufferOverflow();
+      BufferTooShort();
 
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.addressResolutionMutex);
@@ -354,7 +354,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   else {
     if(snprintf(flag, sizeof(flag), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
 		getHostCountryIconURL(el)) < 0)
-      BufferOverflow();
+      BufferTooShort();
   }
 
   if(isDHCPClient(el))
@@ -392,7 +392,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr,
 		blinkOff, flag) < 0)
-      BufferOverflow();
+      BufferTooShort();
   } else {
     if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s</A>"
 		"%s%s%s%s%s%s%s%s%s",
@@ -400,7 +400,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr,
 		dynIp, blinkOff, flag) < 0)
-      BufferOverflow();
+      BufferTooShort();
   }
 
   return(buf[bufIdx]);
@@ -482,12 +482,12 @@ char* getCountryIconURL(char* domainName) {
 
     if(snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif",
 		domainName) < 0)
-      BufferOverflow();
+      BufferTooShort();
 
     if(stat(path, &buf) != 0) {
       if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
 		  DATAFILE_DIR, domainName) < 0)
-	BufferOverflow();
+	BufferTooShort();
 
       if(stat(path, &buf) != 0)
 	return("&nbsp;");
@@ -495,7 +495,7 @@ char* getCountryIconURL(char* domainName) {
 
     if(snprintf(flagBuf, sizeof(flagBuf),
 		"<IMG ALT=\"Flag for domain %s\" ALIGN=MIDDLE SRC=\"/statsicons/flags/%s.gif\" BORDER=0>",
-		domainName, domainName) < 0) BufferOverflow();
+		domainName, domainName) < 0) BufferTooShort();
 
     return(flagBuf);
   }
@@ -511,7 +511,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
   if(snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
 	      DATAFILE_DIR, el->fullDomainName) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
   if(stat(path, &buf) == 0)
     ret = getCountryIconURL(el->fullDomainName);
@@ -570,25 +570,25 @@ void switchNwInterface(int _interface) {
   if(myGlobals.mergeInterfaces) {
     if(snprintf(buf, sizeof(buf), "You can't switch among different inferfaces unless the -M "
 		"command line switch is used. Sorry.\n") < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   } else if((mwInterface != -1) &&
 	    ((mwInterface >= myGlobals.numDevices) || myGlobals.device[mwInterface].virtualDevice)) {
     if(snprintf(buf, sizeof(buf), "Invalid interface selected. Sorry.\n") < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   } else if(myGlobals.numDevices == 1) {
     if(snprintf(buf, sizeof(buf), "You're currently capturing traffic from one "
 		"interface [%s]. The interface switch feature is active only when "
 		"you active ntop with multiple interfaces (-i command line switch). "
 		"Sorry.\n", myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   } else if(mwInterface >= 0) {
     myGlobals.actualReportDeviceId = (mwInterface)%myGlobals.numDevices;
     if(snprintf(buf, sizeof(buf), "The current interface is now [%s].\n",
 		myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   } else {
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION="SWITCH_NIC_HTML">\n");
@@ -601,7 +601,7 @@ void switchNwInterface(int _interface) {
 	  selected = "";
 
 	if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
-		    i+1, selected, myGlobals.device[i].name) < 0) BufferOverflow();
+		    i+1, selected, myGlobals.device[i].name) < 0) BufferTooShort();
 
 	sendString(buf);
       }
@@ -656,7 +656,7 @@ static void printMutexStatus(PthreadMutex *mutexId, char *mutexName) {
 	      mutexId->maxLockedDuration,
 	      mutexId->maxLockedDurationUnlockFile,
 	      mutexId->maxLockedDurationUnlockLine) < 0)
-    BufferOverflow();
+    BufferTooShort();
 
   sendString(buf);
 }
@@ -762,7 +762,7 @@ void printNtopConfigInfo(void) {
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># IP Protocols Being Monitored</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.numIpProtosToMonitor) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   printFeatureConfigInfo("Fragment Handling", myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");
@@ -775,31 +775,31 @@ void printNtopConfigInfo(void) {
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Handled HTTP Requests</TH>"
 	      "<TD "TD_BG"  align=right>%lu</TD></TR>\n", myGlobals.numHandledHTTPrequests) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Actual Hash Size</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
 	      (int)myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Host Memory Cache Size</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.hostsCacheLen) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
 #ifdef MULTITHREADED
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Pkts to Process</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n",
 	      myGlobals.packetQueueLen) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Max Queued Pkts</TH>"
 	      "<TD "TD_BG"  align=right>%u</TD></TR>\n",
 	      myGlobals.maxPacketQueueLen) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 #endif
 
@@ -808,26 +808,26 @@ void printNtopConfigInfo(void) {
 	      (int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno,
 	      (((int)myGlobals.device[myGlobals.actualReportDeviceId].hostsno*100)/
 	       (int)myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize)) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Purged Hash Hosts</TH>"
 	      "<TD "TD_BG"  align=right>%u</TD></TR>\n",
 	      (unsigned int)myGlobals.numPurgedHosts) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(myGlobals.enableSessionHandling) {
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># TCP Sessions</TH>"
 		"<TD "TD_BG"  align=right>%u</TD></TR>\n",
 		myGlobals.device[myGlobals.actualReportDeviceId].numTcpSessions) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Terminated TCP Sessions</TH>"
 		"<TD "TD_BG"  align=right>%u</TD></TR>\n",
 		(unsigned int)myGlobals.numTerminatedSessions) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   }
 
@@ -835,7 +835,7 @@ void printNtopConfigInfo(void) {
   if(myGlobals.numericFlag == 0) {
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Addresses</TH>"
 		"<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.addressQueueLen) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   }
 #endif
@@ -844,24 +844,24 @@ void printNtopConfigInfo(void) {
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Resolved with DNS</TH>"
 	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", myGlobals.numResolvedWithDNSAddresses) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Kept Numeric</TH>"
 	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", myGlobals.numKeptNumericAddresses) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Found in Cache</TH>"
 	      "<TD "TD_BG"  align=right>%ld</TD></TR>\n", myGlobals.numResolvedOnCacheAddresses) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 
 #if defined(MULTITHREADED)
   if(myGlobals.numericFlag == 0) {
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Dropped Addresses</TH>"
 		"<TD "TD_BG"  align=right>%ld</TD></TR>\n", (long int)myGlobals.droppedAddresses) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   }
 #endif
@@ -869,7 +869,7 @@ void printNtopConfigInfo(void) {
 #if defined(MULTITHREADED)
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Active Threads</TH>"
 	      "<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.numThreads) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 #endif
 
@@ -877,14 +877,14 @@ void printNtopConfigInfo(void) {
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Allocated Memory</TH>"
 	      "<TD "TD_BG"  align=right>%s</TD></TR>\n",
 	      formatBytes(allocatedMemory, 0)) < 0)
-    BufferOverflow();
+    BufferTooShort();
   sendString(buf);
 #endif
 
   if(myGlobals.isLsofPresent) {
     if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Monitored Processes</TH>"
 		"<TD "TD_BG"  align=right>%d</TD></TR>\n", myGlobals.numProcesses) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendString(buf);
   }
 
@@ -1191,7 +1191,7 @@ int handlePluginHTTPRequest(char* url) {
 	if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))
  	  name[strlen(name)-6] = '\0';
  	if(snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name) < 0)
-	  BufferOverflow();
+	  BufferTooShort();
  	printHTMLheader(buf, HTML_FLAG_NO_REFRESH);
  	printFlagedWarning("<I>This plugin is currently inactive.</I>");
  	printHTMLtrailer();

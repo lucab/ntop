@@ -114,23 +114,23 @@ void initWriteKey(FILE *fDescr, int lang, char *indent,
   switch(lang) {
   case PERL_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s'%s' => {\n",indent, keyName) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
   case PHP_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s'%s' => array(\n",indent, keyName) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
   case XML_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s<%s>\n", indent, keyName) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
   case NO_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s|", 
 		numEntriesSent == 0 ? "key" : keyName) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
   }
@@ -151,17 +151,17 @@ void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, char last)
   switch(lang) {
   case PERL_LANGUAGE:
     if(snprintf(buf, sizeof(buf),"%s}%c\n",indent,last) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
   case PHP_LANGUAGE:
     if(snprintf(buf, sizeof(buf),"%s)%c\n",indent,last) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
   case XML_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s</%s>\n",indent, keyName) < 0)
-      BufferOverflow();
+      BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
   case NO_LANGUAGE:
@@ -187,22 +187,22 @@ void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
     */
     if((value != NULL) && (value[0] != '\0'))  {
       if(snprintf(buf, sizeof(buf), "%s'%s' => '%s'%c\n", indent,name,value,last) < 0)
-	BufferOverflow();  sendEmitterString(fDescr, buf);
+	BufferTooShort();  sendEmitterString(fDescr, buf);
     }
     break ;
   case XML_LANGUAGE:
     if((value != NULL) && (value[0] != '\0'))  {
       if(snprintf(buf, sizeof(buf), "%s<%s>%s</%s>\n", indent, name, value, name) < 0)
-	BufferOverflow();  sendEmitterString(fDescr, buf);
+	BufferTooShort();  sendEmitterString(fDescr, buf);
     }
     break ;
   case NO_LANGUAGE:
     if(value != NULL) {
       if(snprintf(buf, sizeof(buf), "%s|", numEntriesSent == 0 ? name : value) < 0)
-	BufferOverflow();  sendEmitterString(fDescr, buf);
+	BufferTooShort();  sendEmitterString(fDescr, buf);
     } else {
       if(snprintf(buf, sizeof(buf), "%s|", numEntriesSent == 0 ? name : "") < 0)
-	BufferOverflow();  sendEmitterString(fDescr, buf);
+	BufferTooShort();  sendEmitterString(fDescr, buf);
     }
     break ;
   }

@@ -105,6 +105,7 @@ extern void dumpNtopTrafficInfo(FILE*, char* options);
 /* report.c */
 extern void initReports(void);
 extern int reportValues(time_t *lastTime);
+extern int haveTrafficHistory();
 extern void printHostsTraffic(int reportType,
 			      int sortedColumn, int revertOrder,
 			      int pageNum, char* url);
