@@ -299,10 +299,6 @@ void initCounters(int _mergeInterfaces) {
   for(len=0; len<ETHERNET_ADDRESS_LEN; len++)
     dummyEthAddress[len] = len;
 
-#ifndef HAVE_GDBM_H
-  memset(hnametable, 0, sizeof(hnametable));
-#endif
-
   for(i=0; i<numDevices; i++) {
     device[i].numTotSessions = 32; /* Initial value */
     len = sizeof(IPSession*)*device[i].numTotSessions;
@@ -538,8 +534,8 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
    * (1) - NPA - Network Packet Analyzer (main thread)
    */
   createThread(&dequeueThreadId, dequeuePacket, NULL);
-  traceEvent (TRACE_INFO, "Started thread (%ld) for network packet analyser.\n",
-	      dequeueThreadId);
+  traceEvent(TRACE_INFO, "Started thread (%ld) for network packet analyser.\n",
+	     dequeueThreadId);
 
   /*
    * (2) - HTS - Host Traffic Statistics

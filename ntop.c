@@ -902,9 +902,29 @@ RETSIGTYPE cleanup(int signo) {
 	free(device[i].ipTrafficMatrix);
       }
       
+      if(device[i].ipTrafficMatrix != NULL) 
+	free(device[i].ipTrafficMatrix);
+
+      for(j=0; j<device[i].numHosts; j++) {
+	if(device[i].ipTrafficMatrixHosts[j] != NULL) 
+	  free(device[i].ipTrafficMatrixHosts[j]);
+      }
+
       if(device[i].ipTrafficMatrixHosts != NULL) 
 	free(device[i].ipTrafficMatrixHosts);
+
+      if(device[i].ipProtoStats != NULL)
+	free(device[i].ipProtoStats);
+      
+      if(device[i].hash_hostTraffic != NULL)
+	free(device[i].hash_hostTraffic);
+      
+      if(device[i].tcpSession != NULL)
+	free(device[i].tcpSession);
+
+      free(device[i].name);
     }
+
 
   free(device);
 

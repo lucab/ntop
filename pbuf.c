@@ -161,8 +161,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		      sizeof(el->hostNumIpAddress));
 
 	      if(numericFlag == 0)
-		ipaddr2str(el, el->hostIpAddress, el->hostSymIpAddress,
-			   MAX_HOST_SYM_NAME_LEN);
+		ipaddr2str(el->hostIpAddress);
 
 	      /* else el->hostSymIpAddress = el->hostNumIpAddress;
 		 The line below isn't necessary because (**) has
@@ -318,8 +317,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 	  /* Trick to fill up the address cache */
 	  if(numericFlag == 0)
-	    ipaddr2str(el, el->hostIpAddress,
-		       el->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN);
+	    ipaddr2str(el->hostIpAddress);
 	  else
 	    strncpy(el->hostSymIpAddress,
 		    el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
@@ -703,6 +701,10 @@ void scanTimedoutTCPSessions(void) {
 static PortUsage* allocatePortUsage(void) {
   PortUsage *ptr;
 
+#ifdef DEBUG
+  printf("allocatePortUsage() called\n");
+#endif
+
   ptr = (PortUsage*)calloc(1, sizeof(PortUsage));
   ptr->clientUsesLastPeer = NO_PEER, ptr->serverUsesLastPeer = NO_PEER;
 
@@ -873,8 +875,7 @@ static void handleBootp(HostTraffic *srcHost,
 		strncpy(realDstHost->hostNumIpAddress,
 			_intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
-		ipaddr2str(realDstHost, realDstHost->hostIpAddress, realDstHost->hostSymIpAddress,
-			   MAX_HOST_SYM_NAME_LEN);
+		ipaddr2str(realDstHost->hostIpAddress);
 		realDstHost->fullDomainName = realDstHost->dotDomainName = "";
 		if(isBroadcastAddress(&realDstHost->hostIpAddress))
 		  FD_SET(BROADCAST_HOST_FLAG, &realDstHost->flags);
