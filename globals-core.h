@@ -461,6 +461,7 @@ extern int strOnlyDigits(const char *s);
 extern void addPassiveSessionInfo(u_long theHost, u_short thePort);
 extern int isPassiveSession(u_long theHost, u_short thePort);
 extern void initPassiveSessions();
+extern void termPassiveSessions();
 extern int getPortByName(ServiceEntry **theSvc, char* portName);
 extern char *getPortByNumber(ServiceEntry **theSvc, int port);
 extern char *getPortByNum(int port, int type);

@@ -65,10 +65,13 @@
 #define BROADCAST              2
 #define INVALIDNETMASK        -1
 
-#define MAX_NUM_SESSION_INFO  64
+#define NUM_SESSION_INFO                     128
+#define MAX_NUM_SESSION_INFO  2*NUM_SESSION_INFO  /* Not yet used */
 
-static SessionInfo passiveSessions[MAX_NUM_SESSION_INFO];
-static u_short numLocalNets=0;
+#define PASSIVE_SESSION_PURGE_TIMEOUT    60 /* seconds */
+
+static SessionInfo *passiveSessions;
+static u_short numLocalNets=0, passiveSessionsLen;
 
 /* [0]=network, [1]=mask, [2]=broadcast */
 static u_int32_t networks[MAX_NUM_NETWORKS][3];
@@ -849,7 +852,7 @@ void killThread(pthread_t *threadId) {
 
 /* ************************************ */
 
-int createMutex(PthreadMutex *mutexId) {  
+int createMutex(PthreadMutex *mutexId) {
   int rc;
 
   memset(mutexId, 0, sizeof(PthreadMutex));
@@ -923,7 +926,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 int _tryLockMutex(PthreadMutex *mutexId, char* where,
 		  char* fileName, int fileLine) {
   int rc;
-  
+
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
 	     mutexId, where, fileName, fileLine);
@@ -934,7 +937,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 
      0:    lock succesful
      EBUSY (mutex already locked)
-  */  
+  */
   rc = pthread_mutex_trylock(&(mutexId->mutex));
 
   if(rc != 0)
@@ -957,7 +960,7 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 
 int _isMutexLocked(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
-  
+
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Checking whether 0x%X is locked [%s:%d]\n",
 	     &(mutexId->mutex), fileName, fileLine);
@@ -984,7 +987,7 @@ int _isMutexLocked(PthreadMutex *mutexId, char* fileName, int fileLine) {
 int _releaseMutex(PthreadMutex *mutexId,
 		  char* fileName, int fileLine) {
   int rc;
-  
+
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n",
 	     &(mutexId->mutex), fileName, fileLine);
@@ -997,17 +1000,17 @@ int _releaseMutex(PthreadMutex *mutexId,
   else {
     time_t lockDuration = time(NULL) - mutexId->lockTime;
 
-    if((mutexId->maxLockedDuration < lockDuration) 
+    if((mutexId->maxLockedDuration < lockDuration)
        || (mutexId->maxLockedDurationUnlockLine == 0 /* Never set */)) {
       mutexId->maxLockedDuration = lockDuration;
-      
+
       if(fileName != NULL) {
 	strcpy(mutexId->maxLockedDurationUnlockFile, fileName);
 	mutexId->maxLockedDurationUnlockLine = fileLine;
-      }      
-      
+      }
+
       traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
-		 &(mutexId->mutex), fileName, fileLine, 
+		 &(mutexId->mutex), fileName, fileLine,
 		 mutexId->maxLockedDuration);
    }
 
@@ -1180,12 +1183,12 @@ void readLsofInfo(void) {
   }
 
   fdFileno = fileno(fd);
-  wait_time.tv_sec = 30, wait_time.tv_usec = 0; 
+  wait_time.tv_sec = 30, wait_time.tv_usec = 0;
   while(1) {
     FD_ZERO(&mask);
-    FD_SET(fdFileno, &mask);    
+    FD_SET(fdFileno, &mask);
 
-    if((i = select(fdFileno+1, &mask, 0, 0, &wait_time)) == 1) {  
+    if((i = select(fdFileno+1, &mask, 0, 0, &wait_time)) == 1) {
       if(fgets(line, 383, fd) != NULL) {
 	fprintf(fd1, "%s", line);
       } else
@@ -1198,7 +1201,7 @@ void readLsofInfo(void) {
       return;
     }
   } /* while */
-  
+
   pclose(fd);
   fclose(fd1);
 
@@ -1473,7 +1476,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 	strcat(additionalInfo, operatingSystem);
 	strcat(additionalInfo, "<BR>\n");
       }
-      
+
       /*traceEvent(TRACE_INFO, "> %s\n", operatingSystem); */
     }
   }
@@ -2339,28 +2342,33 @@ void setNBnodeNameType(HostTraffic *theHost,
 
 void addPassiveSessionInfo(u_long theHost, u_short thePort) {
   int i;
+  time_t timeoutTime = actTime - PASSIVE_SESSION_PURGE_TIMEOUT;
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Adding %ld:%d", theHost, thePort);
 #endif
 
-  for(i=0; i<MAX_NUM_SESSION_INFO; i++) {
-    if(passiveSessions[i].sessionPort == 0) {
+  for(i=0; i<passiveSessionsLen; i++) {
+    if((passiveSessions[i].sessionPort == 0)
+       || (passiveSessions[i].creationTime < timeoutTime)) {
       passiveSessions[i].sessionHost.s_addr = theHost,
-	passiveSessions[i].sessionPort = thePort;
+	passiveSessions[i].sessionPort = thePort,
+	passiveSessions[i].creationTime = actTime;
       break;
     }
   }
 
-  if(i == MAX_NUM_SESSION_INFO) {
+  if(i == passiveSessionsLen) {
     /* Slot Not found */
-    traceEvent(TRACE_INFO, "Info: passiveSessions[] is full");
-    for(i=1; i<MAX_NUM_SESSION_INFO; i++) {
+    traceEvent(TRACE_INFO, "Info: passiveSessions[size=%d] is full", passiveSessionsLen);
+
+    /* Shift table entries */
+    for(i=1; i<passiveSessionsLen; i++) {
       passiveSessions[i-1].sessionHost = passiveSessions[i].sessionHost,
 	passiveSessions[i-1].sessionPort = passiveSessions[i].sessionPort;
     }
-    passiveSessions[MAX_NUM_SESSION_INFO-1].sessionHost.s_addr = theHost,
-      passiveSessions[MAX_NUM_SESSION_INFO-1].sessionPort = thePort;
+    passiveSessions[passiveSessionsLen-1].sessionHost.s_addr = theHost,
+      passiveSessions[passiveSessionsLen-1].sessionPort = thePort;
   }
 }
 
@@ -2370,14 +2378,16 @@ int isPassiveSession(u_long theHost, u_short thePort) {
   int i;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Searching for %ld:%d", theHost, thePort);
+  traceEvent(TRACE_INFO, "Searching for %ld:%d",
+	     theHost, thePort);
 #endif
 
-  for(i=0; i<MAX_NUM_SESSION_INFO; i++) {
+  for(i=0; i<passiveSessionsLen; i++) {
     if((passiveSessions[i].sessionHost.s_addr == theHost)
        && (passiveSessions[i].sessionPort == thePort)) {
       passiveSessions[i].sessionHost.s_addr = 0,
-	passiveSessions[i].sessionPort = 0;
+	passiveSessions[i].sessionPort = 0,
+	passiveSessions[i].creationTime = 0;
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Found passive FTP session");
 #endif
@@ -2391,7 +2401,18 @@ int isPassiveSession(u_long theHost, u_short thePort) {
 /* ******************************************* */
 
 void initPassiveSessions() {
-  memset(passiveSessions, 0, sizeof(passiveSessions));
+  int len;
+
+  len = sizeof(SessionInfo)*NUM_SESSION_INFO;
+  passiveSessions = (SessionInfo*)malloc(len);
+  memset(passiveSessions, 0, len);
+  passiveSessionsLen = NUM_SESSION_INFO;
+}
+
+/* ******************************* */
+
+void termPassiveSessions() {
+  free(passiveSessions);
 }
 
 /* ******************************* */

@@ -1387,6 +1387,7 @@ typedef struct flowFilterList {
 typedef struct sessionInfo {
   struct in_addr sessionHost;
   u_short sessionPort;
+  time_t  creationTime;
 } SessionInfo;
 
 /* IP Session Information */

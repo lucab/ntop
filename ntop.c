@@ -847,7 +847,8 @@ RETSIGTYPE cleanup(int signo) {
   termIPServices();
   termIPSessions();
   termNetFlowExporter();
-
+  termPassiveSessions();
+  
 #ifndef WIN32
   endservent();
 #endif

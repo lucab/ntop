@@ -672,7 +672,7 @@ void scanTimedoutTCPSessions(void) {
 		if(enableSuspiciousPacketDump)
 		  traceEvent(TRACE_WARNING, fmt,
 			     theHost->hostSymIpAddress, sessionToPurge->sport,
-			     theRemHost->hostSymIpAddress, sessionToPurge->dport);		
+			     theRemHost->hostSymIpAddress, sessionToPurge->dport);
 	      }
 	    }
 
@@ -1438,9 +1438,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
 		  FD_SET(HOST_SVC_NAPSTER_SERVER, &dstHost->flags);
 
+#ifdef TRACE_TRAFFIC_INFO
 		  traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
 			     srcHost->hostSymIpAddress,
 			     dstHost->hostSymIpAddress);
+#endif
 
 		  if(srcHost->napsterStats == NULL) {
 		    srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
@@ -1479,9 +1481,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 		theSession->napsterSession = 1;
 
+#ifdef TRACE_TRAFFIC_INFO
 		traceEvent(TRACE_INFO, "NAPSTER new session: %s <->%s\n",
 			   srcHost->hostSymIpAddress,
 			   dstHost->hostSymIpAddress);
+#endif
 
 		if(srcHost->napsterStats == NULL) {
 		  srcHost->napsterStats = (NapsterStats*)malloc(sizeof(NapsterStats));
@@ -1759,10 +1763,13 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	strncpy(address, packetData, len);
 	address[len-2] = 0;
+
+#ifdef TRACE_TRAFFIC_INFO
 	traceEvent(TRACE_INFO, "NAPSTER: %s->%s [%s][len=%d]\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress,
 		     address, packetDataLength);
+#endif
 
 	for(i=1; i<len-2; i++)
 	  if(address[i] == ':') {
@@ -1889,7 +1896,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 #ifdef DEBUG
 	  traceEvent(TRACE_INFO, "FTP: (%d) [%d.%d.%d.%d:%d]",
-	                           inet_addr(rcStr), a, b, c, d, (e*256+f));
+		     inet_addr(rcStr), a, b, c, d, (e*256+f));
 #endif
 	  addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
 	}
@@ -1932,7 +1939,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
 	      printf("OS: %s\n", &rcStr[i]);
 #endif
-	      if(srcHost->osName == NULL) srcHost->osName = strdup(&rcStr[i]);
+	      if(srcHost->osName == NULL)
+		srcHost->osName = strdup(&rcStr[i]);
 	    }
 	  }
       }
@@ -2050,18 +2058,22 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	FD_SET(HOST_SVC_NAPSTER_CLIENT, &srcHost->flags);
 	FD_SET(HOST_SVC_NAPSTER_CLIENT, &dstHost->flags);
 
+#ifdef TRACE_TRAFFIC_INFO
 	traceEvent(TRACE_INFO, "NAPSTER new download session: %s->%s\n",
 		   dstHost->hostSymIpAddress,
 		   srcHost->hostSymIpAddress);
+#endif
 	dstHost->napsterStats->numDownloadsRequested++,
 	  srcHost->napsterStats->numDownloadsServed++;
       } else if((packetData != NULL) && (packetDataLength > 4)) {
 	if((packetData[1] == 0x0) && (packetData[2] == 0xC8) && (packetData[3] == 0x00)) {
 	  srcHost->napsterStats->numSearchSent++, dstHost->napsterStats->numSearchRcvd++;
 
+#ifdef TRACE_TRAFFIC_INFO
 	  traceEvent(TRACE_INFO, "NAPSTER search: %s->%s\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress);
+#endif
 	} else if((packetData[1] == 0x0) && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
 	  char tmpBuf[64], *remoteHost, *remotePort, *strtokState;
 
@@ -2086,8 +2098,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		napsterSvrInsertIdx = (napsterSvrInsertIdx+1) % MAX_NUM_NAPSTER_SERVER;
 		numNapsterSvr++;
 		shost.s_addr = inet_addr(remoteHost);
+#ifdef TRACE_TRAFFIC_INFO
 		traceEvent(TRACE_INFO, "NAPSTER: %s requested download from %s:%s",
 			   srcHost->hostSymIpAddress, remoteHost, remotePort);
+#endif
 	      }
 	    }
 	  }
