@@ -7,54 +7,66 @@
 
 # This is the debhelper compatability version to use.
 export DH_COMPAT=2
-GDCHART=gdchart0.94c
-NTOP=ntop
 
-configure: configure-stamp-gdchart configure-stamp-ntop
-configure-stamp-gdchart:
+# where to build the package
+MIRROR   = switch.dl.sourceforge.net
+NTOPSRC  = ntop-3.0pre1.tgz
+builddir = packages/debian.official/BUILD
+srcdir   = $(shell dirname $(builddir))
+
+
+configure: $(builddir)/configure-stamp-ntop
+
+$(builddir)/configure-stamp-ntop:
+
+	# check if the source distribution tarball is there. Download if not.
+	@if [ ! -f $(srcdir)/$(NTOPSRC) ]; then \
+           (cd $(srcdir) && wget http://$(MIRROR)/sourceforge/ntop/$(NTOPSRC)); \
+           (cd $(srcdir) && tar xvfz $(NTOPSRC)); \
+         fi
+
+	# Link the 'build' directory with a well-known name.
+	@if [ ! -f $(builddir) ]; then \
+           (cd $(srcdir) && ln -s `echo $(NTOPSRC) | sed -e 's/.tgz//'` `basename $(builddir)`); \
+         fi
+
+	# Linking the 'debian' direcory.
+	# debhelper requires the 'debian' directory under the sources to successful work.
+	@if [ ! -f debian ]; then \
+          ln -s packages/debian.official debian; \
+         fi
+
 	dh_testdir
-	cd $(GDCHART) && ./configure
-
-	touch configure-stamp-gdchart
-
-configure-stamp-ntop:
-	dh_testdir
-	cd $(NTOP) && ./configure --prefix=/usr --libdir=/usr/lib/ntop \
+	cd $(builddir) && ./configure --prefix=/usr --libdir=/usr/lib/ntop \
 		--sysconfdir=/etc --localstatedir=/var/lib --bindir=/usr/sbin \
 		--mandir=/usr/share/man --enable-tcpwrap \
 		--with-zlib-lib=/usr/lib --with-zlib-include=/usr/include \
 		--with-libpng-lib=/usr/lib --with-libpng-include=/usr/include
-#		--with-gd-lib=/usr/lib --with-gd-include=/usr/include \
+#		--with-gd-lib=/usr/lib --with-gd-include=/usr/include
 
-	touch configure-stamp-ntop
+	touch $(builddir)/configure-stamp-ntop
 
-build: configure-stamp-gdchart build-stamp-gdchart configure-stamp-ntop build-stamp-ntop
-build-stamp-gdchart:
+build: $(builddir)/configure-stamp-ntop $(builddir)/build-stamp-ntop
+
+$(builddir)/build-stamp-ntop:
 	dh_testdir
 
-	cd $(GDCHART) && $(MAKE)
+	cd $(builddir) && $(MAKE)
 
-	touch build-stamp-gdchart
-
-
-build-stamp-ntop:
-	dh_testdir
-
-	cd $(NTOP) && $(MAKE)
-
-	touch build-stamp-ntop
+	touch $(builddir)/build-stamp-ntop
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp* configure-stamp*
+	rm -f $(builddir)/build-stamp* $(builddir)/configure-stamp*
 
 	# Add here commands to clean up after the build process.
-	-$(MAKE) -C $(NTOP) distclean
-	-$(MAKE) -C $(GDCHART) distclean
+	-$(MAKE) -C $(builddir) distclean
 
-	-rm $(NTOP)/config.status $(NTOP)/config.cache $(NTOP)/config.log
+	-rm $(builddir)/config.status $(builddir)/config.cache $(builddir)/config.log
 	-find . -type d -name ".deps" | xargs rm -Rf
+	# remove the 'debian' link at the top level
+	-rm -f debian
 
 	dh_clean
 
@@ -64,22 +76,23 @@ install: build
 	dh_clean -k
 	dh_installdirs
 
-	cd $(NTOP) && $(MAKE) install DESTDIR=$(CURDIR)/debian/ntop
+	cd $(builddir) && $(MAKE) install install-data-as DESTDIR=$(CURDIR)/debian/ntop
 
-	cp debian/protocol.list $(CURDIR)/debian/ntop/etc/ntop
+	cp $(srcdir)/protocol.list $(CURDIR)/debian/ntop/etc/ntop
+	gunzip $(CURDIR)/debian/ntop/etc/ntop/*.gz
 
 	# Added things for logcheck ignoring.
-	cp debian/logcheck $(CURDIR)/debian/ntop/etc/logcheck/ignore.d.server/ntop
-	cp debian/logcheck $(CURDIR)/debian/ntop/etc/logcheck/ignore.d.workstation/ntop
-	cp debian/logcheck.paranoid $(CURDIR)/debian/ntop/etc/logcheck/ignore.d.paranoid/ntop
+	cp $(srcdir)/logcheck $(CURDIR)/debian/ntop/etc/logcheck/ignore.d.server/ntop
+	cp $(srcdir)/logcheck $(CURDIR)/debian/ntop/etc/logcheck/ignore.d.workstation/ntop
+	cp $(srcdir)/logcheck.paranoid $(CURDIR)/debian/ntop/etc/logcheck/ignore.d.paranoid/ntop
 	# Added logrotate file.
-	cp debian/logrotate $(CURDIR)/debian/ntop/etc/logrotate.d/ntop
+	cp $(srcdir)/logrotate $(CURDIR)/debian/ntop/etc/logrotate.d/ntop
 
-	cp $(NTOP)/ChangeLog $(CURDIR)/debian/ntop/usr/share/doc/ntop/changelog
+	cp $(builddir)/ChangeLog $(CURDIR)/debian/ntop/usr/share/doc/ntop/changelog
 
 # docs for dh_installdirs
-DOCS=$(NTOP)/docs/FAQ $(NTOP)/docs/HACKING $(NTOP)/docs/KNOWN_BUGS \
-	$(NTOP)/docs/README $(NTOP)/docs/TODO
+DOCS=$(builddir)/docs/FAQ $(builddir)/docs/HACKING $(builddir)/docs/KNOWN_BUGS \
+	$(builddir)/docs/README $(builddir)/docs/TODO
 
 # Build architecture-dependent files here.
 binary-arch: build install

@@ -1,3 +1,11 @@
+ntop (3.0pre1-1) unstable; urgency=low
+
+  * New upstream version.
+  * AS-list.txt added to the configuration files.
+  * adapted to build ntop package under directory packages/debian.official
+
+ -- Rocco Carbone <rocco@ntop.org>  Sun, 29 Feb 2004 13:09:54 +0100
+
 ntop (1:2.2c-1) unstable; urgency=low
 
   * New upstream version, closes: #214910.

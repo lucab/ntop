@@ -4,6 +4,7 @@
 /etc/logcheck/ignore.d.workstation/ntop
 /etc/logcheck/ignore.d.paranoid/ntop
 /etc/logrotate.d/ntop
+/etc/ntop/AS-list.txt
 /etc/ntop/etter.passive.os.fp
 /etc/ntop/p2c.opt.table
 /etc/ntop/oui.txt
