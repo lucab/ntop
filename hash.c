@@ -831,10 +831,11 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
     return(NULL);
   }
 
-#ifdef DEBUG_CMPFCTN
-traceEvent(CONST_TRACE_INFO, "DEBUG_CMPFCTN: lookupHost(%s, %s, m%u, f%u, dev%d)", addrtostr(hostIpAddress),
-        etheraddr_string(ether_addr, buf),
-        checkForMultihoming, forceUsingIPaddress, actualDeviceId);
+#ifdef DEBUG 
+  traceEvent(CONST_TRACE_NOISY, "CMPFCTN_DEBUG: lookupHost(%s, %s, m%u, f%u, dev%d)",
+             addrtostr(hostIpAddress),
+             etheraddr_string(ether_addr, buf),
+             checkForMultihoming, forceUsingIPaddress, actualDeviceId);
 #endif
 
 #ifdef HASH_DEBUG

@@ -5679,18 +5679,19 @@ void urlFixupToRFC1945Inplace(char* url) {
 
 void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char* file, int line) {
 
-#ifdef DEBUG_CMPFCTN
-  traceEvent(CONST_TRACE_INFO, "DEBUG_CMPFCTN: setResolvedName(0x%08x) %d %s -> %d %s - %s(%d)", 
-             el,
-             el->hostResolvedNameType,
-             el->hostResolvedName,
-             updateType,
-             updateValue,
-             file, line);
-#endif
-
   /* Only update if this is a MORE important type */
   if(updateType > el->hostResolvedNameType) {
+
+#ifdef CMPFCTN_DEBUG
+    traceEvent(CONST_TRACE_INFO, "CMPFCTN_DEBUG: setResolvedName(0x%08x) %d %s -> %d %s - %s(%d)", 
+               el,
+               el->hostResolvedNameType,
+               el->hostResolvedName,
+               updateType,
+               updateValue,
+               file, line);
+#endif
+
     strncpy(el->hostResolvedName, updateValue, MAX_LEN_SYM_HOST_NAME-1);
     el->hostResolvedNameType = updateType;
   }
@@ -5778,6 +5779,10 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
     HostTraffic **b = (HostTraffic **)_b;
     int rc;
     char *name1, *name2;
+#ifdef CMPFCTN_DEBUG
+    char debugCmpFctn[128];
+    memset(debugCmpFctn, 0, sizeof(debugCmpFctn));
+#endif
 
     /* 1, 1A */
     if((a == NULL) && (b == NULL)) {
@@ -5803,8 +5808,8 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
        ((*b)->hostResolvedName != NULL) &&
        ((*b)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
 
-#ifdef DEBUG_CMPFCTN
-      traceEvent(CONST_TRACE_INFO, "DEBUG_CMPFCTN: cmpFctn(0x%08x, 0x%08x): %d %s vs %d %s",
+#ifdef CMPFCTN_DEBUG
+      traceEvent(CONST_TRACE_INFO, "CMPFCTN_DEBUG: cmpFctn(0x%08x, 0x%08x): %d %s vs %d %s",
                  (*a),
                  (*b),
                  (*a)->hostResolvedNameType,
@@ -5827,8 +5832,14 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
               name1 = (*a)->hostResolvedName;
               name2 = (*b)->hostResolvedName;
               rc = strcasecmp(name1, name2);
+#ifdef CMPFCTN_DEBUG
+              strncpy(debugCmpFctn, "2A1-NAME", sizeof(debugCmpFctn));
+#endif
           } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_IP) {
               rc = addrcmp(&((*a)->hostIpAddress), &((*b)->hostIpAddress));
+#ifdef CMPFCTN_DEBUG
+              strncpy(debugCmpFctn, "2A1-IP", sizeof(debugCmpFctn));
+#endif
           } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_MAC) {
               /*
                * Remember - the MAC value in hostResolvedName, is proabably the 
@@ -5843,12 +5854,22 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
               if(((name1[2] == ':') && (name2[2] != ':')) ||
                  ((name1[2] != ':') && (name2[2] == ':'))) {
                 /* One : one recognized */
-                if(name1[2] == ':')
+                if(name1[2] == ':') {
                   rc=1; /* name1 (unrecognized) > name2 (recognized) */
-                else
+#ifdef CMPFCTN_DEBUG
+                  strncpy(debugCmpFctn, "2A1-MAC-1:", sizeof(debugCmpFctn));
+#endif
+                } else {
                   rc=-1;  /* name1 (recognized) > name2 (unrecognized) */
+#ifdef CMPFCTN_DEBUG
+                  strncpy(debugCmpFctn, "2A1-MAC-2:", sizeof(debugCmpFctn));
+#endif
+                }
               } else {
                 rc = strcasecmp(name1, name2);
+#ifdef CMPFCTN_DEBUG
+                strncpy(debugCmpFctn, "2A1-MAC", sizeof(debugCmpFctn));
+#endif
               }
           } else if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC) &&
                     ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FAKE)) {
@@ -5859,32 +5880,50 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
             name1 = (*a)->hostResolvedName;
             name2 = (*b)->hostResolvedName;
             rc = strcasecmp(name1, name2);
+#ifdef CMPFCTN_DEBUG
+            strncpy(debugCmpFctn, "2A1-!FC!FAKE", sizeof(debugCmpFctn));
+#endif
           } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC) {
             name1 = (*a)->hostResolvedName;
             name2 = (*b)->hostResolvedName;
             rc = strcasecmp(name1, name2);
+#ifdef CMPFCTN_DEBUG
+            strncpy(debugCmpFctn, "2A1-FC", sizeof(debugCmpFctn));
+#endif
           } else { /* FAKE */
             name1 = (*a)->hostResolvedName;
             name2 = (*b)->hostResolvedName;
             rc = strcasecmp(name1, name2);
+#ifdef CMPFCTN_DEBUG
+            strncpy(debugCmpFctn, "2A1-FAKE", sizeof(debugCmpFctn));
+#endif
           }
       } else {
           /* 2A2 - unequal types, so just compare the Type field */
-          if((*a)->hostResolvedNameType < (*b)->hostResolvedNameType)
+          if((*a)->hostResolvedNameType > (*b)->hostResolvedNameType)
             rc = -1;
           else
             rc = 1;
+#ifdef CMPFCTN_DEBUG
+          strncpy(debugCmpFctn, "2A2!=", sizeof(debugCmpFctn));
+#endif
       }
     } else {
       /* If only one is not NULL/NONE, so let's do 3A */
       if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
          ((*b)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
         /* a not NULL so return a<b */
-        rc = -1;
+        rc = -1; 
+#ifdef CMPFCTN_DEBUG
+        strncpy(debugCmpFctn, "3A-a!", sizeof(debugCmpFctn));
+#endif
       } else if(((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
                 ((*b)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
         /* b not NULL so return a>b */
         rc = 1;
+#ifdef CMPFCTN_DEBUG
+        strncpy(debugCmpFctn, "3A-b!", sizeof(debugCmpFctn));
+#endif
       } else {
         /* 3B - hostResolvedName not set - graceful fallback using the raw fields! */
         char nullEthAddress[LEN_ETHERNET_ADDRESS];
@@ -5894,11 +5933,17 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
         if(!addrnull(&(*a)->hostIpAddress) && 
            !addrnull(&(*b)->hostIpAddress)) {
           rc = addrcmp(&((*a)->hostIpAddress), &((*b)->hostIpAddress));
+#ifdef CMPFCTN_DEBUG
+          strncpy(debugCmpFctn, "3B-IP", sizeof(debugCmpFctn));
+#endif
 
         } else if((memcmp((*a)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0) && 
                   (memcmp((*b)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0)) {
           /* We have a non zero MAC - compare it */
           rc = memcmp(((*a)->ethAddress), ((*b)->ethAddress), LEN_ETHERNET_ADDRESS);
+#ifdef CMPFCTN_DEBUG
+          strncpy(debugCmpFctn, "3B-MAC", sizeof(debugCmpFctn));
+#endif
 //TODO FC??
         } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic != NULL)) {
           /* Neither a nor b are null, so we can compare the fields in nonIPTraffic... 
@@ -5906,28 +5951,53 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
           if(((*a)->nonIPTraffic->nbHostName != NULL) &&
              ((*b)->nonIPTraffic->nbHostName != NULL)) {
             rc=strcasecmp((*a)->nonIPTraffic->nbHostName, (*b)->nonIPTraffic->nbHostName);
+#ifdef CMPFCTN_DEBUG
+            strncpy(debugCmpFctn, "3B-NB", sizeof(debugCmpFctn));
+#endif
           } else if(((*a)->nonIPTraffic->ipxHostName != NULL) &&
              ((*b)->nonIPTraffic->ipxHostName != NULL)) {
             rc=strcasecmp((*a)->nonIPTraffic->ipxHostName, (*b)->nonIPTraffic->ipxHostName);
+#ifdef CMPFCTN_DEBUG
+            strncpy(debugCmpFctn, "3B-IPX", sizeof(debugCmpFctn));
+#endif
           } else if(((*a)->nonIPTraffic->atNodeName != NULL) &&
              ((*b)->nonIPTraffic->atNodeName != NULL)) {
             rc=strcasecmp((*a)->nonIPTraffic->atNodeName, (*b)->nonIPTraffic->atNodeName);
+#ifdef CMPFCTN_DEBUG
+            strncpy(debugCmpFctn, "3B-ATALK", sizeof(debugCmpFctn));
+#endif
           } else {
             rc=0;  /* can't tell 'em apart... trouble */
+#ifdef CMPFCTN_DEBUG
+            strncpy(debugCmpFctn, "3B-0", sizeof(debugCmpFctn));
+#endif
           }
         } else if(((*a)->nonIPTraffic == NULL) && ((*b)->nonIPTraffic != NULL)) {
           /* a null, b not so return a>b */
           rc=1;
+#ifdef CMPFCTN_DEBUG
+          strncpy(debugCmpFctn, "3B-b!", sizeof(debugCmpFctn));
+#endif
         } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic == NULL)) {
           /* b null, a not so return a>b */
-          rc=1;
+          rc=1; 
+#ifdef CMPFCTN_DEBUG
+          strncpy(debugCmpFctn, "3B-a!", sizeof(debugCmpFctn));
+#endif
         } else {
           rc=0; /* nothing we can compare */
+#ifdef CMPFCTN_DEBUG
+          strncpy(debugCmpFctn, "3B-null", sizeof(debugCmpFctn));
+#endif
         }
       }
     }
 
     releaseAddrResMutex();
+
+#ifdef CMPFCTN_DEBUG
+    traceEvent(CONST_TRACE_INFO, "CMPFCTN_DEBUG: cmpFctn(): %s rc=%d", debugCmpFctn, rc);
+#endif
 
     return(rc); 
 }

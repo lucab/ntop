@@ -419,10 +419,20 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(el->hostNumIpAddress[0] != '\0') {
       /* We have the IP, so the DNS is probably still getting the entry name */
       strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
+#ifdef CMPFCTN_DEBUG
+      if(snprintf(noteBuf, sizeof(noteBuf), "%s<!-- NONE:NumIpAddr(%s) -->",
+                  noteBuf, el->hostNumIpAddress) < 0)
+        BufferTooShort();
+#endif
     } else if(el->ethAddressString[0] != '\0') {
       /* Use the MAC address */
       strncpy(symIp, el->ethAddressString, sizeof(symIp));
       usedEthAddress = 1;
+#ifdef CMPFCTN_DEBUG
+      if(snprintf(noteBuf, sizeof(noteBuf), "%s<!-- NONE:MAC(%s) -->",
+                  noteBuf, el->ethAddressString) < 0)
+        BufferTooShort();
+#endif
     } else if(el->hostNumFcAddress[0] != '\0') {
       strncpy(symIp, el->hostNumFcAddress, sizeof(symIp));
     } else if(el->nonIPTraffic) {    
@@ -448,9 +458,10 @@ char* makeHostLink(HostTraffic *el, short mode,
     /* Got it? Use it! */
     strncpy(symIp, el->hostResolvedName, sizeof(symIp));
     strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
-#ifdef DEBUG_CMPFCTN
-    snprintf(noteBuf, sizeof(noteBuf), "%s<!-- NONE:hRN(%d) -->",
-             noteBuf, el->hostResolvedNameType);
+#ifdef CMPFCTN_DEBUG
+    if(snprintf(noteBuf, sizeof(noteBuf), "%s<!-- NONE:hRN(%d) -->",
+             noteBuf, el->hostResolvedNameType) < 0)
+      BufferTooShort();
 #endif
 
     if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME) &&

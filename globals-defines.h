@@ -383,6 +383,10 @@
  */
 /* #define CHKVER_DEBUG */
 
+/* CMPFCTN_DEBUG logs info about the hostResolvedName compare function.
+ */
+/* #define CMPFCTN_DEBUG */
+
 /* DNS_DEBUG logs the activites in address.c related to Name resolution.
  */
 /* #define DNS_DEBUG */
