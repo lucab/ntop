@@ -3045,7 +3045,7 @@ void printHostDetailedInfo(HostTraffic *el) {
     sendString(buf);
 
     if(nameServerHost(el))     sendString("Name Server<br>");
-    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG SRC=router.gif BORDER=0><br>");
+    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG SRC=router.gif BORDER=0>&nbsp;<br>");
     if(isSMTPhost(el))         sendString("SMTP Server<br>");
     if(isPOPhost(el))          sendString("POP Server<br>");
     if(isIMAPhost(el))         sendString("IMAP Server<br>");

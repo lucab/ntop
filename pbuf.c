@@ -4407,6 +4407,13 @@ void processPacket(u_char *_deviceId,
 
     default:
       eth_type = ntohs(ehdr.ether_type);
+      /* 
+	 NOTE:	 
+	 eth_type is a 32 bit integer (eg. 0x0800). If the first
+	 byte is NOT null (08 in the example below) then this is
+	 a Ethernet II frame, otherwise is a IEEE 802.3 Ethernet
+	 frame.
+      */
       ether_src = ESRC(&ehdr), ether_dst = EDST(&ehdr);
     } /* switch(device[deviceId].datalink) */
 
@@ -4668,7 +4675,7 @@ void processPacket(u_char *_deviceId,
 	    srcHost->dlcSent += length;
 	    dstHost->dlcReceived += length; FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
 	    device[actualDeviceId].dlcBytes += length;
-	  } else if (sap_type == 0xAA) {
+	  } else if (sap_type == 0xAA /* SNAP */) {
 	    u_int16_t snapType;
 
 	    p1 = (u_char*)(p1+sizeof(llcHeader));
@@ -4734,6 +4741,18 @@ void processPacket(u_char *_deviceId,
 	      dstHost->appletalkReceived += length;
 	      device[actualDeviceId].atalkBytes += length;
 	    } else {
+	      if((llcHeader.ctl.snap_ether.snap_orgcode[0] == 0x0)
+		 && (llcHeader.ctl.snap_ether.snap_orgcode[1] == 0x0)
+		 && (llcHeader.ctl.snap_ether.snap_orgcode[2] == 0x0C) /* Cisco */) {
+		/* NOTE:
+		   If llcHeader.ctl.snap_ether.snap_ethertype[0] == 0x20
+		      && llcHeader.ctl.snap_ether.snap_ethertype[1] == 0x0
+		   this is Cisco Discovery Protocol
+		*/
+
+		FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
+	      }
+
 	      srcHost->otherSent += length;
 	      dstHost->otherReceived += length;
 	      device[actualDeviceId].otherBytes += length;

@@ -486,13 +486,16 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	  if(i > 0) sendString("<br>");
 
 	  if(rFileName == NULL) {
-	    if(!device[i].virtualDevice) {
-	      if(snprintf(buf2, sizeof(buf2), "%s [%s]",
-			  getNwInterfaceType(i),
-			  device[i].name) < 0) 
-		traceEvent(TRACE_ERROR, "Buffer overflow!");
-	      sendString(buf2);
-	    }
+	    char buf[32], buf1[32];
+
+	    if(snprintf(buf2, sizeof(buf2), "%s (%s%s) [%s/%s]",
+			device[i].name, getNwInterfaceType(i), 
+			device[i].virtualDevice ? " virtual" : "",
+			_intoa(device[i].network, buf, sizeof(buf1)),
+			_intoa(device[i].netmask, buf1, sizeof(buf1))
+			) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	    sendString(buf2);
 	  } else {
 	    if(snprintf(buf2, sizeof(buf2), "%s [%s]",
 			getNwInterfaceType(i),
@@ -624,7 +627,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       }
 
 #ifdef HAVE_GDCHART
-      sendString("<TR><TH "TH_BG" ALIGN=CENTER COLSPAN=3>"
+      sendString("<TR><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=pktCastDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
 

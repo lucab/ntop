@@ -843,6 +843,9 @@ void initWeb(int webPort, char* webAddr, char* sslAddr) {
   int sockopt = 1;
   struct sockaddr_in sin;
 
+  initReports();
+  initializeWeb();
+
   actualReportDeviceId = 0;
 
   if(webPort > 0) {

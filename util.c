@@ -331,7 +331,7 @@ unsigned short isLocalAddress(struct in_addr *addr) {
 	     isPseudoLocalAddress (addr) ? "pseudolocal" : "remote");
 #endif
   /* Broadcast is considered a local address */
-  return (isBroadcastAddress(addr));
+  return(isBroadcastAddress(addr));
 }
 
 /* **********************************************
@@ -368,7 +368,7 @@ static int int2bits(int number) {
 #ifdef DEBUG
       traceEvent(TRACE_ERROR, "int2bits (%3d) = %d\n", number, INVALIDNETMASK);
 #endif
-      return (INVALIDNETMASK);
+      return(INVALIDNETMASK);
     }
   else
     {
@@ -383,14 +383,14 @@ static int int2bits(int number) {
 #ifdef DEBUG
 	  traceEvent(TRACE_ERROR, "int2bits (%3d) = %d\n", number, INVALIDNETMASK);
 #endif
-	  return (INVALIDNETMASK);
+	  return(INVALIDNETMASK);
 	}
       else
 	{
 #ifdef DEBUG
 	  traceEvent(TRACE_ERROR, "int2bits (%3d) = %d\n", number, bits);
 #endif
-	  return (bits);
+	  return(bits);
 	}
     }
 }
@@ -435,7 +435,7 @@ int dotted2bits(char *mask) {
 #ifdef DEBUG
       traceEvent(TRACE_ERROR, "dotted2bits (%s) = %d\n", mask, fields[0]);
 #endif
-      return (fields[0]);
+      return(fields[0]);
     }
   for (i=0; i < fields_num; i++)
     {
@@ -444,7 +444,7 @@ int dotted2bits(char *mask) {
       switch (field_bits)
 	{
 	case INVALIDNETMASK:
-	  return (INVALIDNETMASK);
+	  return(INVALIDNETMASK);
 
 	case 0:
 	  /* whenever a 0 bits field is reached there are no more */
@@ -453,7 +453,7 @@ int dotted2bits(char *mask) {
 	  traceEvent(TRACE_ERROR, "dotted2bits (%15s) = %d\n", mask, bits);
 #endif
 	  /* In this case we are in a bits (not dotted quad) notation */
-	  return (fields[0]);
+	  return(fields[0]);
 
 	default:
 	  bits += field_bits;
@@ -462,7 +462,7 @@ int dotted2bits(char *mask) {
 #ifdef DEBUG
   traceEvent(TRACE_ERROR, "dotted2bits (%15s) = %d\n", mask, bits);
 #endif
-  return (bits);
+  return(bits);
 }
 
 /* ********************************* */
@@ -675,7 +675,7 @@ int32_t gmt2local(time_t t) {
     dir = myloc->tm_yday - gmt->tm_yday;
   dt += dir * 24 * 60 * 60;
   
-  return (dt);
+  return(dt);
 }
 
 /* ********************************* */
@@ -1479,8 +1479,8 @@ RETSIGTYPE (*setsignal (int sig, RETSIGTYPE (*func)(int)))(int)
   new.sa_flags |= SA_RESTART;
 #endif
   if(sigaction(sig, &new, &old) < 0)
-    return (SIG_ERR);
-  return (old.sa_handler);
+    return(SIG_ERR);
+  return(old.sa_handler);
 
 #else
   return(signal(sig, func));
@@ -1696,7 +1696,7 @@ char* savestr(const char *str)
   p = strptr;
   strptr += size;
   strsize -= size;
-  return (p);
+  return(p);
 }
 
 
@@ -1964,7 +1964,7 @@ u_short in_cksum(const u_short *addr, int len, u_short csum) {
   sum = (sum >> 16) + (sum & 0xffff);	/* add hi 16 to low 16 */
   sum += (sum >> 16);			/* add carry */
   answer = ~sum;			/* truncate to 16 bits */
-  return (answer);
+  return(answer);
 }
 
 /* ****************** */
@@ -2008,13 +2008,13 @@ long delta_time (struct timeval * now,
   delta_seconds      = now -> tv_sec  - before -> tv_sec;
   delta_microseconds = now -> tv_usec - before -> tv_usec;
 
-  if(delta_microseconds < 0)
-    { /* manually carry a one from the seconds field */
-      delta_microseconds += 1000000;  /* 1e6 */
-      -- delta_seconds;
-    }
+  if(delta_microseconds < 0) { 
+    /* manually carry a one from the seconds field */
+    delta_microseconds += 1000000;  /* 1e6 */
+    -- delta_seconds;
+  }
 
-  return ((delta_seconds * 1000000) + delta_microseconds);
+  return((delta_seconds * 1000000) + delta_microseconds);
 }
 
 /* ****************** */

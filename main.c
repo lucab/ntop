@@ -417,8 +417,7 @@ int main(int argc, char *argv[]) {
 #endif /* MICRO_NTOP */
   postCommandLineArgumentsInitialization(&lastTime);
   initGdbm();
-  initializeWeb();
-  initReports();
+
   initDevices(devices);
 
   traceEvent(TRACE_INFO, "ntop v.%s %s [%s] (%s build)",

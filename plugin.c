@@ -29,7 +29,6 @@
 
 #ifdef STATIC_PLUGIN
 extern PluginInfo* icmpPluginEntryFctn(void);
-extern PluginInfo* arpPluginEntryFctn(void);
 extern PluginInfo* nfsPluginEntryFctn(void);
 extern PluginInfo* wapPluginEntryFctn(void);
 #ifdef RMON_SUPPORT
@@ -228,8 +227,6 @@ static void loadPlugin(char* dirName, char* pluginName) {
 
   if(strcmp(pluginName, "icmpPlugin") == 0)
     pluginInfo = icmpPluginEntryFctn();
-  else if(strcmp(pluginName, "arpPlugin") == 0)
-    pluginInfo = arpPluginEntryFctn();
   else if(strcmp(pluginName, "nfsPlugin") == 0)
     pluginInfo = nfsPluginEntryFctn();
   else if(strcmp(pluginName, "wapPlugin") == 0)
@@ -352,7 +349,6 @@ void loadPlugins(void) {
   closedir(directoryPointer);
 #else /* STATIC_PLUGIN */
   loadPlugin(NULL, "icmpPlugin");
-  loadPlugin(NULL, "arpPlugin");
   loadPlugin(NULL, "nfsPlugin");
   loadPlugin(NULL, "wapPlugin");
 #ifdef RMON_SUPPORT

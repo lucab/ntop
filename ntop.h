@@ -1350,7 +1350,7 @@ typedef void(*PluginHTTPFunc)(char* url);
 
 typedef struct pluginInfo {
   /* Plugin Info */
-  char *pluginName;         /* Short plugin name (e.g. arpPlugin) */
+  char *pluginName;         /* Short plugin name (e.g. icmpPlugin) */
   char *pluginDescr;        /* Long plugin description */
   char *pluginVersion;
   char *pluginAuthor;
