@@ -181,7 +181,7 @@ void updateDeviceThpt(int deviceToUpdate) {
     u_int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
     short updateMinThpt, updateHourThpt;
 
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "updateDeviceStats() called.");
 #endif
     
@@ -461,7 +461,7 @@ void updateDeviceThpt(int deviceToUpdate) {
     myGlobals.device[deviceToUpdate].lastThptUpdate = myGlobals.actTime;
   }
 
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "updateDeviceStats() completed.");
 #endif
 }

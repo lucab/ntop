@@ -36,6 +36,10 @@ extern char* etheraddr_string(const u_char *ep);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
                                char *fdst);
+extern int handleIP(u_short port,
+		    HostTraffic *srcHost, HostTraffic *dstHost,
+		    u_int length,  u_short isPassiveSession,
+		    int actualDeviceId);
 extern u_int16_t handleDNSpacket(const u_char *ipPtr, 
                                  DNSHostInfo *hostPtr, short length,
                                  short *isRequest, short *positiveReply);

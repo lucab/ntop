@@ -3,7 +3,6 @@
  *                          http://www.ntop.org
  *
  * Copyright (C) 2002   Luca Deri <deri@ntop.org>
- *                      Rocco Carbone <rocco@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  *

@@ -109,7 +109,6 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 
   if(!(myGlobals.netFlowInSocket > 0)) return;
 
-  
   traceEvent(TRACE_INFO, "Welcome to NetFlow: listening on UDP port %d...", myGlobals.netFlowInPort);
 #ifdef MULTITHREADED
  traceEvent(TRACE_INFO, "Started thread (%ld) for netFlow.\n", netFlowThread);
@@ -181,7 +180,6 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 #ifdef MULTITHREADED
 	    /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
 #endif
-
 	    dstHostIdx = getHostInfo(&b, NULL, 0, 1, myGlobals.netFlowDeviceId);
 	    dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	    /* traceEvent(TRACE_INFO, "dstHostIdx: %d", dstHostIdx); */
@@ -198,11 +196,11 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 
 	    if((sport != 0) && (dport != 0)) {
 	      if(dport < sport) {
-		if(handleIP(dport, srcHostIdx, dstHostIdx, len, 0, actualDeviceId) == -1)
-		  handleIP(sport, srcHostIdx, dstHostIdx, len, 0, actualDeviceId);
+		if(handleIP(dport, srcHost, dstHost, len, 0, actualDeviceId) == -1)
+		  handleIP(sport, srcHost, dstHost, len, 0, actualDeviceId);
 	      } else {
-		if(handleIP(sport, srcHostIdx, dstHostIdx, len, 0, actualDeviceId) == -1)
-		  handleIP(dport, srcHostIdx, dstHostIdx, len, 0, actualDeviceId);
+		if(handleIP(sport, srcHost, dstHost, len, 0, actualDeviceId) == -1)
+		  handleIP(dport, srcHost, dstHost, len, 0, actualDeviceId);
 	      }
 	    }
 

@@ -486,7 +486,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	p[num] = (float)((100*traffic)/totalIPTraffic);
 	diffTraffic += traffic;
 
-        if(num==0)
+        if(num == 0)
           expl[num]=10;
         else
           expl[num]=expl[num-1];
@@ -500,16 +500,17 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   }
 
   if(num == 0) {
-    traceEvent(TRACE_WARNING, "WARNING: Graph failure (4)");
-    return; /* TODO: this has to be handled better */
-  }
-
-  if(diffTraffic < totalIPTraffic) {
-    diffTraffic = totalIPTraffic - diffTraffic;
-    p[num] = (float)((100*diffTraffic)/totalIPTraffic);
-    expl[num]=expl[num-1];
-    if(p[num]<5.0) expl[num]+=9; else if (p[num]>10.0) expl[num]=10;
+    p[num] = 1;
+    expl[num] = 10;
     lbl[num++] = "Other";
+  } else {
+    if(diffTraffic < totalIPTraffic) {
+      diffTraffic = totalIPTraffic - diffTraffic;
+      p[num] = (float)((100*diffTraffic)/totalIPTraffic);
+      expl[num]=expl[num-1];
+      if(p[num]<5.0) expl[num]+=9; else if (p[num]>10.0) expl[num]=10;
+      lbl[num++] = "Other";
+    }
   }
 
 #ifdef MULTITHREADED

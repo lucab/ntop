@@ -1813,33 +1813,15 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
       }
 
-
       sendString("</TD></TR>");
-    }
-  }
-#endif
 
-  a = b = 0;
-
-  for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-    a += el->protoIPTrafficInfos[i].sentLoc+
-      el->protoIPTrafficInfos[i].sentRem;
-    b += el->protoIPTrafficInfos[i].rcvdLoc+
-      el->protoIPTrafficInfos[i].rcvdFromRem;
-  }
-
-#ifdef HAVE_GDCHART
-  if((a > 0) && (b > 0)) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>"
-		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1>"
-		"</TD>"
-		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT">"
-		"</TD></TR>",
-		getRowColor(),
-		el->hostNumIpAddress,
-		el->hostNumIpAddress) < 0)
+		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1></TD>"
+		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"></TD></TR>",
+		getRowColor(), el->hostNumIpAddress, el->hostNumIpAddress) < 0)
       BufferTooShort();
     sendString(buf);
+    }
   }
 #endif
 

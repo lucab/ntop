@@ -334,7 +334,7 @@ void purgeIdleHosts(int actDevice) {
   if(myGlobals.rFileName != NULL) return;
 
 #ifndef DEBUG
-  traceEvent(TRACE_INFO, "Purging Idle Hosts... (actDevice=%d)", actDevice);
+  traceEvent(TRACE_INFO, "Purging Idle Hosts... [actDevice=%d]", actDevice);
 #endif
 
   if(firstRun) {
@@ -744,8 +744,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	      if(myGlobals.numericFlag == 0)
 		ipaddr2str(el->hostIpAddress, actualDeviceId);
 	      else
-		strncpy(el->hostSymIpAddress,
-			el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
+		strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
 	    } else {
 	      /* el->hostNumIpAddress == "" */
 	      if(symEthName[0] != '\0') {
@@ -756,8 +755,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		else
 		  strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
 	      } else
-		strncpy(el->hostSymIpAddress,
-			el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
+		strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
 	    }
 
 #ifdef HASH_DEBUG
@@ -838,7 +836,8 @@ void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
       }
 
       if(!allRight)
-	traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed",  actualDeviceId, hostIdx);
+	traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed [host not found]",
+		   actualDeviceId, hostIdx);
     }
 }
 

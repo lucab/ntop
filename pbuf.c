@@ -116,7 +116,7 @@ static void updateRoutedTraffic(HostTraffic *router) {
 
 /* ************************************ */
 
-static int handleIP(u_short port,
+int handleIP(u_short port,
 	     HostTraffic *srcHost, HostTraffic *dstHost,
 	     u_int length,  u_short isPassiveSession,
 	     int actualDeviceId) {
@@ -126,13 +126,6 @@ static int handleIP(u_short port,
     traceEvent(TRACE_INFO, "Sanity check failed (4) [Low memory?]");
     return(-1);
   }
-
-  if((srcHost->hashListBucket == myGlobals.broadcastEntryIdx)
-     || (srcHost->hashListBucket == myGlobals.otherHostEntryIdx)
-     || (dstHost->hashListBucket == myGlobals.broadcastEntryIdx)
-     || (dstHost->hashListBucket == myGlobals.otherHostEntryIdx)
-     )
-    return;
 
   if(isPassiveSession) {
     /* Emulate non passive session */
@@ -145,24 +138,24 @@ static int handleIP(u_short port,
 
   if(idx != NO_PEER) {
     if(subnetPseudoLocalHost(srcHost)) {
-      if(subnetPseudoLocalHost(dstHost)) {
-	if(!broadcastHost(srcHost)) srcHost->protoIPTrafficInfos[idx].sentLoc += length;
-	if(!broadcastHost(dstHost)) dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
+      if(subnetPseudoLocalHost(dstHost)) {	
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) srcHost->protoIPTrafficInfos[idx].sentLoc += length;
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
 	myGlobals.device[actualDeviceId].ipProtoStats[idx].local += length;
       } else {
-	if(!broadcastHost(srcHost)) srcHost->protoIPTrafficInfos[idx].sentRem += length;
-	if(!broadcastHost(dstHost)) dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) srcHost->protoIPTrafficInfos[idx].sentRem += length;
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
 	myGlobals.device[actualDeviceId].ipProtoStats[idx].local2remote += length;
       }
     } else {
       /* srcHost is remote */
       if(subnetPseudoLocalHost(dstHost)) {
-	if(!broadcastHost(srcHost))  srcHost->protoIPTrafficInfos[idx].sentLoc += length;
-	if(!broadcastHost(dstHost))  dstHost->protoIPTrafficInfos[idx].rcvdFromRem += length;
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) srcHost->protoIPTrafficInfos[idx].sentLoc += length;
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) dstHost->protoIPTrafficInfos[idx].rcvdFromRem += length;
 	myGlobals.device[actualDeviceId].ipProtoStats[idx].remote2local += length;
       } else {
-	if(!broadcastHost(srcHost)) srcHost->protoIPTrafficInfos[idx].sentRem += length;
-	if(!broadcastHost(dstHost)) dstHost->protoIPTrafficInfos[idx].rcvdFromRem += length;
+	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) srcHost->protoIPTrafficInfos[idx].sentRem += length;
+	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) dstHost->protoIPTrafficInfos[idx].rcvdFromRem += length;
 	myGlobals.device[actualDeviceId].ipProtoStats[idx].remote += length;
       }
     }
