@@ -178,6 +178,20 @@ ntop.h
 #include <dlfcn.h>
 #endif
 
+/* 
+   Additions below courtesy of 
+   Abdelkader Lahmadi <Abdelkader.Lahmadi@loria.fr> 
+*/
+#ifdef HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h>
+#endif
+#ifdef HAVE_NET_IF_DL_H
+#include <net/if_dl.h>
+#endif
+#ifdef HAVE_NET_ROUTE_H
+#include <net/route.h>
+#endif
+
 /*
    Courtesy of
    Brent L. Bates <blbates@vigyan.com>

@@ -31,8 +31,7 @@ static PthreadMutex whiteblackListMutex;
 
 #ifdef HAVE_FILEDESCRIPTORBUG
 static int tempNFFilesCreated=0;
-static int  tempNFF[CONST_FILEDESCRIPTORBUG_COUNT],
-  tempNFFpid;
+static int  tempNFF[CONST_FILEDESCRIPTORBUG_COUNT], tempNFFpid;
 static char tempNFFname[CONST_FILEDESCRIPTORBUG_COUNT][LEN_MEDIUM_WORK_BUFFER];
 #endif
 
@@ -155,10 +154,11 @@ static void freeNetFlowMatrixMemory() {
     int j;
 
     /* Courtesy of Wies-Software <wies@wiessoft.de> */
-    for(j=0; j<(myGlobals.device[myGlobals.netFlowDeviceId].numHosts*myGlobals.device[myGlobals.netFlowDeviceId].numHosts); j++)
+    for(j=0; j<(myGlobals.device[myGlobals.netFlowDeviceId].numHosts * 
+		myGlobals.device[myGlobals.netFlowDeviceId].numHosts); j++)
       if(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix[j] != NULL)
 	free(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix[j]);
-
+    
     free(myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix);
   }
 
@@ -169,11 +169,15 @@ static void freeNetFlowMatrixMemory() {
 /* ************************************************** */
 
 static void setNetFlowInterfaceMatrix() {
-  if((!myGlobals.device[myGlobals.netFlowDeviceId].activeDevice) ||(myGlobals.netFlowDeviceId == -1)) return;
+  if((!myGlobals.device[myGlobals.netFlowDeviceId].activeDevice)
+     || (myGlobals.netFlowDeviceId == -1)) 
+    return;
 
   myGlobals.device[myGlobals.netFlowDeviceId].numHosts       = 0xFFFFFFFF - myGlobals.netFlowIfMask.s_addr+1;
+  myGlobals.device[myGlobals.netFlowDeviceId].ifAddr.s_addr  = myGlobals.netFlowIfAddress.s_addr;
   myGlobals.device[myGlobals.netFlowDeviceId].network.s_addr = myGlobals.netFlowIfAddress.s_addr;
   myGlobals.device[myGlobals.netFlowDeviceId].netmask.s_addr = myGlobals.netFlowIfMask.s_addr;
+
   if(myGlobals.device[myGlobals.netFlowDeviceId].numHosts > MAX_SUBNET_HOSTS) {
     myGlobals.device[myGlobals.netFlowDeviceId].numHosts = MAX_SUBNET_HOSTS;
     traceEvent(CONST_TRACE_WARNING, "NETFLOW: Truncated network size(device %s) to %d hosts(real netmask %s).",
@@ -181,11 +185,13 @@ static void setNetFlowInterfaceMatrix() {
 	       intoa(myGlobals.device[myGlobals.netFlowDeviceId].netmask));
   }
 
-  myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix =(TrafficEntry**)calloc(myGlobals.device[myGlobals.netFlowDeviceId].numHosts*
-										      myGlobals.device[myGlobals.netFlowDeviceId].numHosts,
-										      sizeof(TrafficEntry*));
-  myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrixHosts =(struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-												 myGlobals.device[myGlobals.netFlowDeviceId].numHosts);
+  myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrix =
+    (TrafficEntry**)calloc(myGlobals.device[myGlobals.netFlowDeviceId].numHosts*
+			   myGlobals.device[myGlobals.netFlowDeviceId].numHosts,
+			   sizeof(TrafficEntry*));
+  myGlobals.device[myGlobals.netFlowDeviceId].ipTrafficMatrixHosts =
+    (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
+				 myGlobals.device[myGlobals.netFlowDeviceId].numHosts);
 }
 
 /* ************************************** */
@@ -247,12 +253,11 @@ static int setNetFlowInSocket() {
                    NETFLOW_DEVICE_NAME " reusing existing device, %d",
                    myGlobals.netFlowDeviceId);
       }
-    } else {
+    } else
       myGlobals.netFlowDeviceId = createDummyInterface(NETFLOW_DEVICE_NAME);
-    }
-
-    setNetFlowInterfaceMatrix();
+    
     myGlobals.device[myGlobals.netFlowDeviceId].activeDevice = 1;
+    setNetFlowInterfaceMatrix();
   }
 
   myGlobals.mergeInterfaces = 0; /* Use different devices */
@@ -1422,7 +1427,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Virtual NetFlow Interface<br>Network Address</TH><TD "TD_BG"><FORM ACTION=/plugins/NetFlow METHOD=GET>"
 	     "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
-
+  
   if(snprintf(buf, sizeof(buf), "%s/%s",
 	      _intoa(myGlobals.netFlowIfAddress, buf1, sizeof(buf1)),
 	      _intoa(myGlobals.netFlowIfMask, buf2, sizeof(buf2))) < 0)
@@ -1580,7 +1585,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	     "probe, you better give "
 	     "<b><A HREF=\"http://www.ntop.org/nProbe.html\">nProbe</A></b> a try.</p>"
 	     "<p>If you are looking for a cheap, dedicated hardware NetFlow probe you "
-	     "should look into <b><A HREF=\"http://www.ntop.org/nBox.html\">nBox</A></b> "
+	     "should look into <b><A HREF=\"http://www.ntop.org/nBox86/\">nBox<sup>86</sup></A></b> "
 	     "<IMG SRC=/nboxLogo.gif>"
 	     "</td></tr>\n");
   sendString("</table><p>\n");

@@ -24,6 +24,8 @@
 #include "ntop.h"
 #include <stdarg.h>
 
+/* #define ADDRESS_DEBUG */
+
 #ifdef MEMORY_DEBUG
 #include "leaks.h"
 #endif
@@ -358,6 +360,8 @@ unsigned short addrnull(HostAddr *addr) {
   case AF_INET6:
     return (addr->Ip6Address.s6_addr[0] == 0x0);
 #endif
+  default:
+    return(1);
   }    
 }
 
@@ -618,7 +622,7 @@ unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId) {
     return(0);
   }
 
-#if DEBUG
+#ifdef ADDRESS_DEBUG
   traceEvent(CONST_TRACE_INFO, "Address: %s", intoa(*addr));
   traceEvent(CONST_TRACE_INFO, "Network: %s", intoa(myGlobals.device[deviceId].network));
   traceEvent(CONST_TRACE_INFO, "NetMask: %s", intoa(myGlobals.device[deviceId].netmask));
@@ -702,10 +706,10 @@ unsigned short isMulticastAddress(HostAddr *addr){
 unsigned short isLocalAddress(HostAddr *addr, u_int deviceId) {
   switch(addr->hostFamily){
   case AF_INET:
-    return (in_isLocalAddress(&addr->Ip4Address,deviceId));
+    return (in_isLocalAddress(&addr->Ip4Address, deviceId));
 #ifdef INET6
   case AF_INET6:
-    return (in6_isLocalAddress(&addr->Ip6Address,deviceId));
+    return (in6_isLocalAddress(&addr->Ip6Address, deviceId));
 #endif
   }
 }
@@ -1198,7 +1202,8 @@ unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId) {
   */
 
 #ifdef ADDRESS_DEBUG
-  traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s is remote", intoa(*addr));
+  traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s [deviceId=%d] is remote", 
+	     intoa(*addr), deviceId);
 #endif
 
   return(0);
@@ -1225,8 +1230,7 @@ unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr) {
     }
 #ifdef ADDRESS_DEBUG
     else
-      traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %8X/%8X is NOT pseudo broadcast",
-		 addr->s_addr, networks[i][CONST_BROADCAST_ENTRY]);
+      traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %8X is NOT pseudo broadcast", addr->s_addr);
 #endif
   }
 
@@ -3007,8 +3011,8 @@ void trimString(char* str) {
 
 /* ****************************** */
 
-void setNBnodeNameType(HostTraffic *theHost,
-		       char nodeType, char* nbName) {
+void setNBnodeNameType(HostTraffic *theHost, char nodeType,
+		       char isQuery, char* nbName) {
   trimString(nbName);
 
   if((nbName == NULL) || (strlen(nbName) == 0))
@@ -3026,25 +3030,28 @@ void setNBnodeNameType(HostTraffic *theHost,
 
   switch(nodeType) {
   case 0x0:  /* Workstation */
-  case 0x20: /* Server */
-    if(theHost->nonIPTraffic->nbHostName == NULL) {
-      theHost->nonIPTraffic->nbHostName = strdup(nbName);
-      updateHostName(theHost);
+  case 0x20: /* Server/Messenger/Main name */
+    if(!isQuery) {
+      if(theHost->nonIPTraffic->nbHostName == NULL) {
+	theHost->nonIPTraffic->nbHostName = strdup(nbName);
+	updateHostName(theHost);
 
-      if(theHost->hostSymIpAddress[0] == '\0') {
-	int i;
+	if(theHost->hostSymIpAddress[0] == '\0') {
+	  int i;
 
-	for(i=0; i<strlen(nbName); i++) if(isupper(nbName[i])) tolower(nbName[i]);
-	strcpy(theHost->hostSymIpAddress, nbName); /* See up (**) */
-      }
+	  for(i=0; i<strlen(nbName); i++) if(isupper(nbName[i])) tolower(nbName[i]);
+	  strcpy(theHost->hostSymIpAddress, nbName); /* See up (**) */
+	}
 
 #ifdef DEBUG
-      printf("DEBUG: nbHostName=%s [0x%X]\n", nbName, nodeType);
+	printf("DEBUG: nbHostName=%s [0x%X]\n", nbName, nodeType);
 #endif
+      }
     }
     break;
   case 0x1C: /* Domain Controller */
   case 0x1E: /* Domain */
+  case 0x1B: /* Domain */
   case 0x1D: /* Workgroup (I think) */
     if(theHost->nonIPTraffic->nbDomainName == NULL) {
       if(strcmp(nbName, "__MSBROWSE__") && strncmp(&nbName[2], "__", 2)) {
@@ -3054,13 +3061,15 @@ void setNBnodeNameType(HostTraffic *theHost,
     }
   }
 
-  switch(nodeType) {
-  case 0x0:  /* Workstation */
-    FD_SET(FLAG_HOST_TYPE_WORKSTATION, &theHost->flags);
-  case 0x20: /* Server */
-    FD_SET(FLAG_HOST_TYPE_SERVER, &theHost->flags);
-  case 0x1B: /* Master Browser */
-    FD_SET(FLAG_HOST_TYPE_MASTER_BROWSER, &theHost->flags);
+  if(!isQuery) {
+    switch(nodeType) {
+    case 0x0:  /* Workstation */
+      FD_SET(FLAG_HOST_TYPE_WORKSTATION, &theHost->flags);
+    case 0x20: /* Server */
+      FD_SET(FLAG_HOST_TYPE_SERVER, &theHost->flags);
+    case 0x1B: /* Master Browser */
+      FD_SET(FLAG_HOST_TYPE_MASTER_BROWSER, &theHost->flags);
+    }
   }
 }
 

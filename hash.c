@@ -588,7 +588,6 @@ void purgeIdleHosts(int actDevice) {
   }
 
   free(theFlaggedHosts);
-
 #ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.purgeMutex);
 #endif
@@ -600,7 +599,8 @@ void purgeIdleHosts(int actDevice) {
   hiresDeltaTime=timeval_subtract(hiresTimeEnd, hiresTimeStart);
 
   if(numFreedBuckets > 0)
-    traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d [%s]: %d hosts deleted, elapsed time is %.6f seconds (%.6f per host)",
+    traceEvent(CONST_TRACE_NOISY, 
+	       "IDLE_PURGE: Device %d [%s]: %d hosts deleted, elapsed time is %.6f seconds (%.6f per host)",
 	       actDevice,
 	       myGlobals.device[actDevice].name,
 	       numFreedBuckets,

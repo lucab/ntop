@@ -676,19 +676,19 @@ void handleNetbios(HostTraffic *srcHost,
   u_char *p;
   int offset=0, displ, notEnoughData = 0;
 
-  if((!myGlobals.enablePacketDecoding)
-     || (srcHost->nonIPTraffic == NULL)
-     || (!((srcHost->nonIPTraffic->nbHostName == NULL) || (srcHost->nonIPTraffic->nbDomainName == NULL))))
-    return; /* Already set */
-
-  if(packetData == NULL) /* packet too short ? */
+  if((!myGlobals.enablePacketDecoding) || (srcHost->nonIPTraffic != NULL) /* Already set */
+     || (packetData == NULL)) /* packet too short ? */
     return;
-
+  
   udpDataLen = length - (hlen + sizeof(struct udphdr));
-
-  if(dport == 137 /*  NETBIOS */) {
+  
+  if(dport == 137 /*  NetBIOS */) {
     if(udpDataLen > 32) {
       /* 32 bytes or less is not enough */
+      u_int8_t opcode;
+
+      opcode = (tmpdata[2] >> 3) & 0x0F;
+
       data = (char*)malloc(udpDataLen);
       memcpy(data, tmpdata, udpDataLen);
 
@@ -717,26 +717,38 @@ void handleNetbios(HostTraffic *srcHost,
 	  notEnoughData = 1;
       }
 
-      if(!notEnoughData) {
+      if(!notEnoughData) {      
+	u_int8_t doDecode = 0;
 	nodeType = name_interpret(name, nbName, udpDataLen-displ);
 
+	switch(opcode) {
+	case 0: /* Query */
+	  switch(nodeType) {
+	  case 0x1C: /* Domain Controller */
+	  case 0x1E: /* Domain */
+	  case 0x1B: /* Domain */
+	  case 0x1D: /* Workgroup (I think) */
+	    doDecode = 1;
+	    break;
+	  }
+	  break;
+	case 5: /* Registration */
+	case 6: /* Release      */
+	  doDecode = 1;
+	  break;
+	}
+	
 #ifdef DEBUG
 	traceEvent(CONST_TRACE_INFO, "Found: %s", nbName);
 #endif
 
-	switch(nodeType) {
-	case 0x1B: /* Domain Master Browser */
-	case 0x1C: /* Domain Controller */
-	case 0x1D: /* Local Master Browser */
-	  /* Set the domain/workgroup only when needed */
-	  setNBnodeNameType(srcHost, (char)nodeType, nbName);
-	  break;
-	}
+	/* Set the domain/workgroup only when needed */
+	setNBnodeNameType(srcHost, (char)nodeType, opcode == 0 ? 1 : 0, nbName);
       }
 
-      free(data);
+      free(data);      
     }
-  } else if(dport == 138 /*  NETBIOS */) {
+  } else if(dport == 138 /*  NetBIOS */) {
     if(udpDataLen > 32) {
       /* 32 bytes or less is not enough */
       data = (char*)malloc(udpDataLen);
@@ -771,7 +783,7 @@ void handleNetbios(HostTraffic *srcHost,
 	nodeType = name_interpret(name, nbName, udpDataLen-displ);
 
 	if(nodeType != -1) {
-	  setNBnodeNameType(srcHost, (char)nodeType, nbName);
+	  setNBnodeNameType(srcHost, (char)nodeType, 0, nbName);
 
 	  displ += offset; /* see ** */
 
@@ -794,7 +806,7 @@ void handleNetbios(HostTraffic *srcHost,
 		for(i=0; domain[i] != '\0'; i++)
 		  if(domain[i] == ' ') { domain[i] = '\0'; break; }
 
-		setNBnodeNameType(dstHost, (char)nodeType, domain);
+		setNBnodeNameType(dstHost, (char)nodeType, 0, domain);
 
 		if(udpDataLen > 200) {
 		  char *tmpBuffer = &data[151];

@@ -1970,15 +1970,16 @@ static int returnHTTPPage(char* pageName,
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawGlobalIpProtoDistribution();
       printTrailer=0;
-    } else if(strncmp(pageName, "hostsDistanceChart",
-		      strlen("hostsDistanceChart")) == 0) {
+    } else if(strncmp(pageName, "hostsDistanceChart", strlen("hostsDistanceChart")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawHostsDistanceGraph(0);
       printTrailer=0;
     } else if((strncmp(pageName,    "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0)
 	      || (strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
 	      || (strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
-	      || (strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)) {
+	      || (strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)
+	      || (strncmp(pageName, "hostTimeTrafficDistribution", strlen("hostTimeTrafficDistribution")) == 0)
+	      ) {
       char hostName[47], *theHost;
 
     if(strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0) {
@@ -1990,8 +1991,11 @@ static int returnHTTPPage(char* pageName,
     } else if(strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0) {
       idx = 2;
       theHost = &pageName[strlen("hostTotalFragmentDistrib")+1];
-    } else {
+    } else if(strncmp(pageName, "hostTimeTrafficDistribution", strlen("hostTimeTrafficDistribution")) == 0) {
       idx = 3;
+      theHost = &pageName[strlen("hostTimeTrafficDistribution")+1];
+    } else {
+      idx = 4;
       theHost = &pageName[strlen("hostIPTrafficDistrib")+1];
     }
     
@@ -2044,6 +2048,9 @@ static int returnHTTPPage(char* pageName,
 	  hostTotalFragmentDistrib(el, sortedColumn);
 	  break;
 	case 3:
+	  hostTimeTrafficDistribution(el, sortedColumn);
+	  break;
+	case 4:
 	  hostIPTrafficDistrib(el, sortedColumn);
 	  break;
 	}

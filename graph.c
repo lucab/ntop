@@ -113,6 +113,7 @@ void drawPie(short width,
   }
 
   /* ******************************* */
+
   for(i=0, total=0; i<num_points; i++)
     total += data[i];
 
@@ -126,6 +127,12 @@ void drawPie(short width,
   y = center_y+(radius)*sin(radiant);
   gdImageLine(im, center_x, center_y, x,y, black);
 
+  /* Safety check */
+  if(num_points == 0) {
+    num_points = 1;
+    data[0] = 1;
+  }
+
   for(i=0; i<num_points; i++) {
     displ = (360*data[i])/total;
 
@@ -133,9 +140,9 @@ void drawPie(short width,
       endDeg = begDeg+displ;
     else
       endDeg = 360;
-
-#if GD2_VERS == 2 /* GD 2.x detected */
-    gdImageFilledArc(im, center_x, center_y, 2*radius, 2*radius,
+   
+#if GD2_VERS == 2 /* GD 2.x detected */    
+    gdImageFilledArc(im, center_x, center_y, 2*radius, 2*radius,		     
 		     begDeg+270, endDeg+270, colors[i], gdArc);
 #else
     radiant = begDeg-90; radiant /= 360; radiant *= 2*M_PI;
@@ -768,6 +775,139 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     if(!useFdOpen)
       sendGraphFile(fileName, 0);
   }
+}
+
+/* ************************ */
+
+void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  float p[24];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "",
+		   "", "", "", "", "", "", "", "", "",
+		   "", "", "", "", "", "", "", "", "", "" };
+  int num=0, i;
+  FILE *fd;
+  int useFdOpen = 0;
+
+  for(i=0; i<24; i++) {
+    TrafficCounter traf;
+
+    if(dataSent)
+      traf.value = theHost->trafficDistribution->last24HoursBytesSent[i].value;
+    else
+      traf.value = theHost->trafficDistribution->last24HoursBytesRcvd[i].value;
+
+    if(traf.value > 0) {
+      p[num] = traf.value;
+      switch(i) {
+      case 0:
+	lbl[num++] = "Midnight - 1AM";
+	break;
+	  case 1:
+	  lbl[num++] = "1AM - 2AM";
+	break;
+	  case 2:
+	  lbl[num++] = "2AM - 3AM";
+	break;
+	  case 3:
+	  lbl[num++] = "3AM - 4AM";
+	break;
+	  case 4:
+	  lbl[num++] = "4AM - 5AM";
+	break;
+	  case 5:
+	  lbl[num++] = "5AM - 6AM";
+	break;
+	  case 6:
+	  lbl[num++] = "6AM - 7AM";
+	break;
+	  case 7:
+	  lbl[num++] = "7AM - 8AM";
+	break;
+	  case 8:
+	  lbl[num++] = "8AM - 9AM";
+	break;
+	  case 9:
+	  lbl[num++] = "9AM - 10AM";
+	break;
+	  case 10:
+	  lbl[num++] = "10AM - 11AM";
+	break;
+	  case 11:
+	  lbl[num++] = "11AM - Noon";
+	break;
+	  case 12:
+	  lbl[num++] = "Noon - 1PM";
+	break;
+	  case 13:
+	  lbl[num++] = "1PM - 2PM";
+	break;
+	  case 14:
+	  lbl[num++] = "2PM - 3PM";
+	break;
+	  case 15:
+	  lbl[num++] = "3PM - 4PM";
+	break;
+	  case 16:
+	  lbl[num++] = "4PM - 5PM";
+	break;
+	  case 17:
+	  lbl[num++] = "5PM - 6PM";
+	break;
+	  case 18:
+	  lbl[num++] = "6PM - 7PM";
+	break;
+	  case 19:
+	  lbl[num++] = "7PM - 8PM";
+	break;
+	  case 20:
+	  lbl[num++] = "8PM - 9PM";
+	break;
+	  case 21:
+	  lbl[num++] = "9PM - 10PM";
+	break;
+	  case 22:
+	  lbl[num++] = "10PM - 11PM";
+	break;
+	  case 23:
+	  lbl[num++] = "11PM - Midnight";
+	break;
+	  }
+    }
+  }
+
+  if(num == 0) {
+    traceEvent(CONST_TRACE_WARNING, "Graph failure (2)");
+    return; /* TODO: this has to be handled better */
+  }
+  
+#ifndef WIN32
+  /* Unices */
+
+  if(myGlobals.newSock < 0)
+    useFdOpen = 0;
+  else
+    useFdOpen = 1;
+
+  if(useFdOpen)
+    fd = fdopen(abs(myGlobals.newSock), "ab");
+  else
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#else
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#endif
+
+  if(num == 1) p[0] = 100; /* just to be safe */
+  drawPie(300, 250,
+	  fd,		/* open file pointer */
+	  num,		/* number of slices */
+	  lbl,		/* slice labels */
+	  p);	        /* data array */
+
+  fclose(fd);
+
+  if(!useFdOpen)
+    sendGraphFile(fileName, 0);
 }
 
 /* ************************ */

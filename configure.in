@@ -2022,6 +2022,7 @@ AC_CHECK_HEADERS([netinet/udp.h], [], [], [
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif])
+AC_CHECK_HEADERS([sys/sysctl.h net/if_dl.h net/route.h])
 dnl>  Note - if ethertype is missing, ntop.h has the critical #defines extracted...
 AC_CHECK_HEADERS([ethertype.h])
 AC_CHECK_HEADERS([net/ppp_defs.h])

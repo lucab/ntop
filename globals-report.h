@@ -281,6 +281,7 @@ extern void sendGraphFile(char* fileName, int doNotUnlink);
 extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFragmentDistrib(HostTraffic *theHost, short dataSent);
+extern void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent);
 extern void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent);
 extern void pktSizeDistribPie(void);
 extern void pktTTLDistribPie(void);

@@ -72,8 +72,9 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
 				   "/etc",
 #endif
 				   NULL };
-#ifndef FREEBSD
-const struct in6_addr in6addr_linklocal_allnodes=IN6ADDR_LINKLOCAL_ALLNODES_INIT;
+
+#if !defined(FREEBSD) && !defined(DARWIN)
+const struct in6_addr in6addr_linklocal_allnodes = IN6ADDR_LINKLOCAL_ALLNODES_INIT;
 #endif
 
 /*

@@ -204,13 +204,15 @@ void printTrafficStatistics(void) {
       if(myGlobals.device[i].activeDevice) {
 	char buf1[128];
 	NtopIfaceAddr *ifaddr;
-
+	
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
-		    myGlobals.device[i].humanFriendlyName) < 0)
+		    myGlobals.device[i].humanFriendlyName[0] != '\0'
+		    ? myGlobals.device[i].humanFriendlyName : "&nbsp;") < 0)
 	  BufferTooShort();
 	sendString(buf);
 
-	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", myGlobals.device[i].name) < 0)
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>", 
+		    myGlobals.device[i].name) < 0)
 	  BufferTooShort();
 	sendString(buf);
 
@@ -241,22 +243,29 @@ void printTrafficStatistics(void) {
 		    _intoa(myGlobals.device[i].ifAddr, buf1, sizeof(buf1))) < 0)
 	  BufferTooShort();
 	sendString(buf);
+
 #ifdef INET6
-	sendString("<TD ALIGN=RIGHT><OL>");
-	for (ifaddr = myGlobals.device[myGlobals.actualReportDeviceId].v6Addrs; 
-	     ifaddr != NULL; ifaddr = ifaddr->next){
-	  if(snprintf(buf, sizeof(buf), "<LI>%s/%d",
-		      _intop(&ifaddr->af.inet6.ifAddr,buf1,sizeof(buf1)), ifaddr->af.inet6.prefixlen) < 0)
-	    BufferTooShort();
-	  sendString(buf);
-	}
-	sendString("&nbsp;</TD>");
+	sendString("<TD ALIGN=LEFT>");
+	if(myGlobals.device[i].v6Addrs > 0) {
+	  for(ifaddr = myGlobals.device[i].v6Addrs; 
+	      ifaddr != NULL; ifaddr = ifaddr->next) {
+	    if(snprintf(buf, sizeof(buf), "%s/%d<br>",
+			_intop(&ifaddr->af.inet6.ifAddr, buf1, sizeof(buf1)),
+			ifaddr->af.inet6.prefixlen) < 0)
+	      BufferTooShort();
+	    sendString(buf);
+	  }
+	} else
+	  sendString("&nbsp;");
+
+	sendString("</TD>");
 #endif
 	sendString("</TR>\n");
       }
     }
   } else {
-    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG">&nbsp;</TD>", CONST_PCAP_NW_INTERFACE_FILE) < 0)
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG">&nbsp;</TD>", 
+		CONST_PCAP_NW_INTERFACE_FILE) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -267,7 +276,11 @@ void printTrafficStatistics(void) {
     sendString("<TD "TD_BG">&nbsp;</TD>");
     sendString("<TD "TD_BG">&nbsp;</TD>");
     sendString("<TD "TD_BG">&nbsp;</TD>");
-    sendString("<TD "TD_BG">&nbsp;</TD></TR>\n");
+    sendString("<TD "TD_BG">&nbsp;</TD>");
+#ifdef INET6
+    sendString("<TD "TD_BG">&nbsp;</TD>");
+#endif
+    sendString("</TR>\n");
   }
 
   sendString("</TABLE>"TABLE_OFF);
@@ -1959,7 +1972,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	if(i == 0) {
 	  printSectionTitle("TCP/UDP&nbsp;Service/Port&nbsp;Usage\n");
 	  sendString("<CENTER>\n");
-	  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>\n<TR "TR_ON">"
+	  sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON">"
 		     "<TH "TH_BG">IP&nbsp;Service</TH>"
 		     "<TH "TH_BG">Port</TH>"
 		     "<TH "TH_BG">#&nbsp;Client&nbsp;Sess.</TH>"
@@ -2645,6 +2658,7 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     printFooterHostLink();
   } else {
     if(el == NULL) {
+      printHTMLheader("Active TCP Sessions", 0);
       printFlagedWarning("<I>No Active TCP Sessions</I>");
     }
   }
@@ -3107,7 +3121,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
       printSectionTitle("Global TCP/UDP Protocol Distribution");
 
       sendString("<CENTER>\n");
-      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR "TR_ON"><TH "TH_BG" WIDTH=150>"
+      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=80%%><TR "TR_ON"><TH "TH_BG" WIDTH=150>"
 		 "TCP/UDP&nbsp;Protocol</TH>"
 		 "<TH "TH_BG" WIDTH=50>Data</TH><TH "TH_BG" WIDTH=250 COLSPAN=2>"
 		 "Percentage</TH></TR>\n");
@@ -4308,6 +4322,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
   int i, hourId;
   char theDate[8];
   struct tm t;
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
   if(el->trafficDistribution == NULL) return;
 
@@ -4316,7 +4331,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   printSectionTitle("Host Traffic Stats");
   sendString("<CENTER>\n");
-  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>");
+  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=80%%>\n<TR>");
   sendString("<TH "TH_BG">Time</TH>");
   sendString("<TH "TH_BG">Tot. Traffic Sent</TH>");
   sendString("<TH "TH_BG">% Traffic Sent</TH>");
@@ -4324,8 +4339,8 @@ void printHostHourlyTraffic(HostTraffic *el) {
   sendString("<TH "TH_BG">% Traffic Rcvd</TH></TR>");
 
   for(i=0, tcSent=0, tcRcvd=0; i<24; i++) {
-    tcSent += el->trafficDistribution ->last24HoursBytesSent[i].value;
-    tcRcvd += el->trafficDistribution ->last24HoursBytesRcvd[i].value;
+    tcSent += el->trafficDistribution->last24HoursBytesSent[i].value;
+    tcRcvd += el->trafficDistribution->last24HoursBytesRcvd[i].value;
   }
 
   sendString("<TR><TH "TH_BG" ALIGN=LEFT>Midnight - 1AM</TH>\n");
@@ -4376,6 +4391,26 @@ void printHostHourlyTraffic(HostTraffic *el) {
   printHostHourlyTrafficEntry(el, 22, tcSent, tcRcvd);
   sendString("<TR><TH "TH_BG" ALIGN=LEFT>11PM - Midnight</TH>\n");
   printHostHourlyTrafficEntry(el, 23, tcSent, tcRcvd);
+
+  sendString("<TR><TH "TH_BG">Total</TH>\n");
+  
+  if(tcSent > 0) {
+    if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG"><IMG SRC=\"/hostTimeTrafficDistribution-%s"CHART_FORMAT"?1\"</TD>\n",
+                el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+      BufferTooShort();
+    sendString(buf);   
+  } else
+    sendString("<TD COLSPAN=2 "TD_BG">&nbsp;</TD>\n");
+
+  if(tcRcvd > 0) {
+    if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG"><IMG SRC=\"/hostTimeTrafficDistribution-%s"CHART_FORMAT"\"</TD>\n",
+                el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+      BufferTooShort();
+    sendString(buf);   
+  } else
+    sendString("<TD COLSPAN=2 "TD_BG">&nbsp;</TD>\n");
+
+  sendString("</TR>\n");
 
   sendString("</TABLE>"TABLE_OFF"\n</CENTER>\n");
 }

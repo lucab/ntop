@@ -2297,7 +2297,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   printSectionTitle("Protocol Distribution");
 
   sendString("<CENTER>\n"
-	     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
+	     ""TABLE_ON"<TABLE BORDER=1 WIDTH=80%%><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
 	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Rcvd</TH></TR>\n");
 
@@ -3158,14 +3158,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if((el->hostSymIpAddress[0] != '\0') && (strcmp(el->hostSymIpAddress, el->hostNumIpAddress))) {
-    if(snprintf(buf, sizeof(buf), "Info about host"
+    if(snprintf(buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
                 "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n",
                 el->hostSymIpAddress, 
 		el->hostSymIpAddress, buf1) < 0)
       BufferTooShort();
   } else if(el->hostNumIpAddress[0] != '\0') {
-    if(snprintf(buf, sizeof(buf), "Info about host"
+    if(snprintf(buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
                 "TITLE=\"Link to web server on host, if available\">%s %s</A>\n",
                 el->hostIpAddress.hostFamily == AF_INET6 ? "[" : "",
@@ -3174,14 +3174,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		el->hostNumIpAddress, buf1) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(buf, sizeof(buf), "Info about host %s",	el->ethAddressString) < 0)
+    if(snprintf(buf, sizeof(buf), "Info about %s",	el->ethAddressString) < 0)
       BufferTooShort();
   }
 
   releaseAddrResMutex();
   printHTMLheader(buf, 0);
-  sendString("<CENTER>\n");
-  sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n");
+  sendString("<CENTER>\n<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=80%%>\n");
 
   if(el->hostNumIpAddress[0] != '\0') {
     char *countryIcon, *hostType;
@@ -3339,7 +3338,6 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	BufferTooShort();
       sendString(buf);
 
-
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Inform",
@@ -3496,7 +3494,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if(el->nonIPTraffic) {
-    if((el->nonIPTraffic->nbHostName != NULL) && (el->nonIPTraffic->nbDomainName != NULL)) {
+    if((el->nonIPTraffic->nbHostName != NULL) || (el->nonIPTraffic->nbDomainName != NULL)) {
       if(el->nonIPTraffic->nbAccountName) {
 	if(el->nonIPTraffic->nbDomainName != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
@@ -3520,7 +3518,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		      "%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
 		      getRowColor(), "NetBios&nbsp;Name",
-		      el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName,
+		      el->nonIPTraffic->nbHostName != NULL ? el->nonIPTraffic->nbHostName : "",
+		      el->nonIPTraffic->nbDomainName,
 		      getNbNodeType(el->nonIPTraffic->nbNodeType),
 		      el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "") < 0)
 	    BufferTooShort();

@@ -407,7 +407,7 @@ extern int decrementSem(sem_t *semId);
 extern int deleteSem(sem_t *semId);
 #endif /* HAVE_SEMAPHORE_H */
 #endif /* CFG_MULTITHREADED */
-extern void setNBnodeNameType(HostTraffic *theHost, char nodeType, char* nbName);
+extern void setNBnodeNameType(HostTraffic *theHost, char nodeType, char isQuery, char* nbName);
 extern void trimString(char*);
 extern FILE* getNewRandomFile(char* fileName, int len);
 extern void stringSanityCheck(char* string);
