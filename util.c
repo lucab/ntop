@@ -2231,7 +2231,7 @@ int name_interpret(char *in, char *out, int numBytes) {
   char *b;
 
   if(numBytes <= 0) {
-    traceEvent(CONST_TRACE_WARNING, "name_interpret error (numBytes=%d)", numBytes);
+    /* traceEvent(CONST_TRACE_WARNING, "name_interpret error (numBytes=%d)", numBytes); */
     return(-1);
   }
 
@@ -2240,7 +2240,7 @@ int name_interpret(char *in, char *out, int numBytes) {
   *out=0;
 
   if(len > 30 || len < 1) {
-    traceEvent(CONST_TRACE_WARNING, "name_interpret error (numBytes=%d)", numBytes);
+    /* traceEvent(CONST_TRACE_WARNING, "name_interpret error (numBytes=%d)", numBytes); */
     return(-1);
   }
 
