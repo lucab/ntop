@@ -36,18 +36,18 @@ static void ignoreSignal(int signalId) {
 /* ******************************* */
 
 void printBandwidthFooter(void) {
-    sendString("<p><b>NOTE</b>:<ul>"
+    sendString("<p><b>NOTE</b>:</p>\n<ul>"
 	       "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> "
-               "for more information about host and domain sorting."
+               "for more information about host and domain sorting.</li>\n"
 	       "<li>Bandwidth values are the percentage of the total bytes that "
                "<b>ntop</b> has seen on the interface.  Hover the mouse to see the actual "
                "value (rounded to the nearest full percentage point).  <i>The total of the "
                "values will NOT be 100% as local traffic will be counted TWICE (once as "
-               "sent and again as received).</i>\n"
+               "sent and again as received).</i></li>\n"
                "<li>The SENT bandwidth is shown as "
                "<img align=\"absmiddle\" src=\"/gaugeS.jpg\" alt=\"Sent\" WIDTH=\"25\" HEIGHT=\"12\">"
                " and the RECEIVED bandwidth is shown as "
-               "<img align=\"absmiddle\" src=\"/gaugeR.jpg\" alt=\"Received\" WIDTH=\"25\" HEIGHT=\"12\">"
+               "<img align=\"absmiddle\" src=\"/gaugeR.jpg\" alt=\"Received\" WIDTH=\"25\" HEIGHT=\"12\"></li>\n"
                "</ul></p>");
 }
 
@@ -1739,9 +1739,9 @@ void printHostsTraffic(int reportTypeReq,
   addPageIndicator(url, pageNum, numEntries, myGlobals.maxNumLines,
 		   revertOrder, abs(sortedColumn));
 
-  sendString("<p><b>NOTE</b>:<ul>"
+  sendString("<p><b>NOTE</b>:</p>\n<ul>"
 	     "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> "
-             "for more information about host and domain sorting."
+             "for more information about host and domain sorting.</li>\n"
 	     "</ul><p>\n");
   
   myGlobals.lastRefreshTime = myGlobals.actTime;
@@ -2223,7 +2223,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	sendString(buf);
 #endif
 
-	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</A></TD>",
+	if(snprintf(buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
 		    formatSeconds(el->lastSeen - el->firstSeen, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -2233,7 +2233,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
         } else {
           if(snprintf(buf, sizeof(buf),
                       "<TD "TD_BG" ALIGN=RIGHT NOWRAP>"
-                        "<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" alt=\"Lookup ASN (offsite)\">%d</a>"
+                        "<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" title=\"Lookup ASN (offsite)\">%d</a>"
                       "</TD>",
                       el->hostAS, el->hostAS) < 0)
             BufferTooShort();
@@ -4859,7 +4859,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
           lastId = el->hostAS;
 	  if(snprintf(buf, sizeof(buf),
                       "<TH "TH_BG" ALIGN=RIGHT "DARK_BG">"
-                      "<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" alt=\"Lookup ASN (offsite)\">%d</a>"
+                      "<a href=\"" DEFAULT_AS_LOOKUP_URL "%d\" title=\"Lookup ASN (offsite)\">%d</a>"
 		      "</TH>\n",
                       el->hostAS, el->hostAS) < 0)
 	    BufferTooShort();
