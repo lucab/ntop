@@ -320,7 +320,7 @@ static void resolveAddress(struct in_addr *hostAddr,
     traceEvent(TRACE_INFO, "Added data: '%s' [%s]\n", symAddr, keyBuf);
 #endif
   }
-  
+
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
@@ -406,82 +406,61 @@ void cleanupAddressQueue(void) {
 
 void* dequeueAddress(void* notUsed _UNUSED_) {
   struct in_addr addr;
-  u_char firstRun = 1;
 #ifdef HAVE_GDBM_H
   datum key_data, data_data;
 #endif
 
-  key_data.dptr = NULL;
-
   while(myGlobals.capturePackets) {
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Waiting for address...\n");
+    traceEvent(TRACE_INFO, "Waiting for address to resolve...\n");
 #endif
 
-    while((myGlobals.addressQueueLen == 0)
-	  && (myGlobals.capturePackets) /* Courtesy of Wies-Software <wies@wiessoft.de> */
-	  ) {
 #ifdef USE_SEMAPHORES
-      waitSem(&myGlobals.queueAddressSem);
+    waitSem(&myGlobals.queueAddressSem);
 #else
-      waitCondvar(&myGlobals.queueAddressCondvar);
+    waitCondvar(&myGlobals.queueAddressCondvar);
 #endif
-      key_data.dptr = data_data.dptr = NULL;
-      firstRun = 1;
-    }
 
-    if(!myGlobals.capturePackets) break;
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Address resolution started...\n");
+#endif
 
 #ifdef MULTITHREADED
     accessMutex(&myGlobals.gdbmMutex, "queueAddress");
 #endif
-
-    key_data = data_data;
-
-    if(firstRun || (key_data.dptr == NULL)) {
-      data_data = gdbm_firstkey(myGlobals.addressCache);
-      firstRun = 0;
-    } else {
-      data_data = gdbm_nextkey(myGlobals.addressCache, key_data);
-      if(key_data.dptr != NULL) free(key_data.dptr);
-    }
-
-#ifdef DNS_DEBUG
-    if ((data_data.dptr == NULL) && (myGlobals.addressQueueLen > 0)) {
-      traceEvent(TRACE_INFO, 
-		 "firstkey/nextkey for returned null, but address queue length is %d\n",
-		 myGlobals.addressQueueLen);
-    }
+    data_data = gdbm_firstkey(myGlobals.addressCache);
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
-    if(data_data.dptr != NULL) {
-      myGlobals.addressQueueLen--;
+    while(data_data.dptr != NULL) {
+      if(!myGlobals.capturePackets) return(NULL);
 
-      /* addr.s_addr = (unsigned long)atol(data_data.dptr); */
+      key_data = data_data;
       memcpy(&addr.s_addr, data_data.dptr, 4);
 
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Dequeued address... [%u][key=%s] (#addr=%d)\n",
-		 addr.s_addr,
-		 key_data.dptr == NULL ? "<>" : key_data.dptr,
+		 addr.s_addr, key_data.dptr == NULL ? "<>" : key_data.dptr,
 		 myGlobals.addressQueueLen);
 #endif
 
-      gdbm_delete(myGlobals.addressCache, data_data);
-      free(data_data.dptr);
-    } else
-      addr.s_addr = 0x0;
-    
-#ifdef MULTITHREADED
-    releaseMutex(&myGlobals.gdbmMutex);
-#endif
-    
-    if(addr.s_addr != 0x0) {
       resolveAddress(&addr, 0, 0 /* use default device */);
-      
+
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Resolved address %u\n", addr.s_addr);
 #endif
+
+#ifdef MULTITHREADED
+      accessMutex(&myGlobals.gdbmMutex, "queueAddress");
+#endif
+      myGlobals.addressQueueLen--;
+      gdbm_delete(myGlobals.addressCache, data_data);
+      data_data = gdbm_nextkey(myGlobals.addressCache, key_data);
+#ifdef MULTITHREADED
+      releaseMutex(&myGlobals.gdbmMutex);
+#endif
+      free(key_data.dptr);
     }
   } /* endless loop */
 
@@ -581,7 +560,7 @@ void fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer) {
 
     if(snprintf(buffer, MAX_HOST_SYM_NAME_LEN, "%s", retrievedAddress->symAddress) < 0)
       BufferTooShort();
-    
+
     free(data_data.dptr);
   } else {
 #ifdef GDBM_DEBUG
