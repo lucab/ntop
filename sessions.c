@@ -436,7 +436,12 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
   u_int _idx, freeSessionCount =0;
   static u_int idx = 0;
     
-  if(!myGlobals.enableSessionHandling) return;
+  /* Patch below courtesy of "Kouprie, Robbert" <R.Kouprie@DTO.TUDelft.NL> */
+     if((!myGlobals.enableSessionHandling) 
+	|| (myGlobals.device[actualDeviceId].tcpSession == NULL)
+	|| (myGlobals.device[actualDeviceId].numTcpSessions == 0))
+     return;
+
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: Called scanTimedoutTCPSessions (device=%d, sessions=%d)\n",
 	     actualDeviceId, myGlobals.device[actualDeviceId].numTcpSessions);

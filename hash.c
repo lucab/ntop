@@ -212,14 +212,15 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     /* ********** */
 
     /* Make sure this host is not part of the ipTrafficMatrixHosts list */
-    if(isMatrixHost(host, actualDeviceId)) {
+    if((myGlobals.device[actualDeviceId].ipTrafficMatrix != NULL)
+       && isMatrixHost(host, actualDeviceId)) {
 	int id = matrixHostHash(host, actualDeviceId);
 
 	myGlobals.device[actualDeviceId].ipTrafficMatrixHosts[id] = NULL;
 
-	for(i=0; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts-1; i++) {
-	    myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[id*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+i] = NULL;
-	    myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+id] = NULL;
+	for(i=0; i<myGlobals.device[actualDeviceId].numHosts-1; i++) {
+	    myGlobals.device[actualDeviceId].ipTrafficMatrix[id*myGlobals.device[actualDeviceId].numHosts+i] = NULL;
+	    myGlobals.device[actualDeviceId].ipTrafficMatrix[i*myGlobals.device[actualDeviceId].numHosts+id] = NULL;
 	}
     }
 
