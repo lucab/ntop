@@ -878,14 +878,13 @@ static void handleBootp(HostTraffic *srcHost,
 
 	    if(realDstHost != NULL) {
 	      if(realDstHost->dhcpStats == NULL) {
-			realDstHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
-			memset(realDstHost->dhcpStats, 0, sizeof(DHCPStats));
+		realDstHost->dhcpStats = (DHCPStats*)malloc(sizeof(DHCPStats));
+		memset(realDstHost->dhcpStats, 0, sizeof(DHCPStats));
 	      }
-
+	      
 	      FD_SET(HOST_SVC_DHCP_CLIENT, &realDstHost->flags);
 	      realDstHost->dhcpStats->assignTime = actTime;
 	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
-	      realDstHost->dhcpStats->renewalTime = actTime;
 	      realDstHost->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
 
 	      if(realDstHost->hostIpAddress.s_addr != bootProto.bp_yiaddr.s_addr) {
@@ -926,7 +925,7 @@ static void handleBootp(HostTraffic *srcHost,
 		  /* *************** */
 
 		  hostIdx = findHostIdxByNumIP(hostIpAddress);
-  	      if(hostIdx != NO_PEER) {
+		  if(hostIdx != NO_PEER) {
 			  for(j=0; j<MAX_NUM_HOST_ROUTERS; j++) {
 				if(realDstHost->contactedRouters[j] == hostIdx)
 				  return;
@@ -975,12 +974,12 @@ static void handleBootp(HostTraffic *srcHost,
 			     intoa(hostIpAddress));
 		  idx += len;
 		  /* *************** */
-
+		  
 		  hostIdx = findHostIdxByNumIP(hostIpAddress);
 		  if(hostIdx != NO_PEER){
-			  trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
-			  if(trafficHost != NULL)
-				FD_SET(HOST_SVC_WINS, &trafficHost->flags);
+		    trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
+		    if(trafficHost != NULL)
+		      FD_SET(HOST_SVC_WINS, &trafficHost->flags);
 		  }
 
 		  /* *************** */
@@ -992,7 +991,7 @@ static void handleBootp(HostTraffic *srcHost,
 		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
 		    NTOHL(tmpUlong);
 		    traceEvent(TRACE_INFO, "Lease time: %u", tmpUlong);
-		    realDstHost->dhcpStats->leaseTime = tmpUlong;
+		    realDstHost->dhcpStats->leaseTime = actTime+tmpUlong;
 		  }
 		  idx += len;
 		  break;
@@ -1002,7 +1001,7 @@ static void handleBootp(HostTraffic *srcHost,
 		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
 		    NTOHL(tmpUlong);
 		    traceEvent(TRACE_INFO, "Renewal time: %u", tmpUlong);
-		    realDstHost->dhcpStats->renewalTime = tmpUlong;
+		    realDstHost->dhcpStats->renewalTime = actTime+tmpUlong;
 		  }
 		  idx += len;
 		  break;
@@ -3306,8 +3305,12 @@ void processPacket(u_char *_deviceId,
     traceEvent(TRACE_INFO, ".");
     fflush(stdout);
   }
-
-  actTime = time(NULL);
+  
+  /* This allows me to fetch the time from
+     the captured packet instead of calling 
+     time(NULL).
+  */
+  actTime = h->ts.tv_sec; 
 
 #ifdef WIN32
   deviceId = 0;

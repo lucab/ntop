@@ -2093,7 +2093,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 /* ************************************ */
 
 void printHostDetailedInfo(HostTraffic *el) {
-  char buf[BUF_SIZE];
+  char buf[BUF_SIZE], buf1[64];
   float percentage;
   int printedHeader, i;
 
@@ -2191,9 +2191,56 @@ void printHostDetailedInfo(HostTraffic *el) {
       /* Promiscuous mode */
       sendString("&nbsp;<BLINK><B><FONT COLOR=#FF0000>[Promiscuous Mode Host]</FONT>"
 		 "</B></BLINK>");
-      sendString("</TD></TR>\n");
     }
+    
+    sendString("</TD></TR>\n");    
   }
+
+  if(el->dhcpStats != NULL) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>",
+		getRowColor(), "DHCP Information") < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    sendString("<TD "TD_BG"><TABLE BORDER WIDTH=100%%>\n");
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		"<TD ALIGN=RIGHT>%s</TD></TR>\n", getRowColor(), "DHCP Server", 
+		_intoa(el->dhcpStats->dhcpServerIpAddress, buf1, sizeof(buf1))) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		"<TD ALIGN=RIGHT>%s</TD></TR>\n", getRowColor(), "Previous IP Address", 
+		_intoa(el->dhcpStats->previousIpAddress, buf1, sizeof(buf1))) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		"<TD ALIGN=RIGHT>%s</TD></TR>\n",
+		getRowColor(), "Address Assigned on", 
+		formatTime(&(el->dhcpStats->assignTime), 1)) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		"<TD ALIGN=RIGHT>%s</TD></TR>\n", 
+		getRowColor(), "To be Renewed Before", 
+		formatTime(&(el->dhcpStats->renewalTime), 1)) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		"<TD ALIGN=RIGHT>%s</TD></TR>\n", 
+		getRowColor(), "Lease Ends on", 
+		formatTime(&(el->dhcpStats->leaseTime), 1)) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+
+    sendString("</TABLE></TD></TR>\n");
+  }
+
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 	      "<TD "TD_BG"  ALIGN=RIGHT>"
