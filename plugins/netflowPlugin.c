@@ -264,6 +264,7 @@ typedef struct flowTypes {
 static pthread_t netFlowThread;
 static int threadActive;
 static PthreadMutex whiteblackListMutex;
+static void* netflowMainLoop(void* notUsed _UNUSED_);
 #endif
 
 #ifdef HAVE_FILEDESCRIPTORBUG
@@ -486,7 +487,7 @@ static int setNetFlowInSocket() {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Collector terminated");
     closeNwSocket(&myGlobals.netFlowInSocket);
   }
-
+  
   if(myGlobals.netFlowInPort > 0) {
     errno = 0;
     myGlobals.netFlowInSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -551,6 +552,13 @@ static int setNetFlowInSocket() {
 	     myGlobals.netFlowDeviceId);
   */
   myGlobals.mergeInterfaces = 0; /* Use different devices */
+
+#ifdef CFG_MULTITHREADED
+  if((myGlobals.netFlowInPort != 0) && (!threadActive)) {
+    /* This plugin works only with threads */
+    createThread(&netFlowThread, netflowMainLoop, NULL);
+  }
+#endif
 
   return(0);
 }
@@ -1547,7 +1555,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   int rc, len;
   u_char buffer[2048];
   struct sockaddr_in fromHost;
-
+  
   if(!(myGlobals.netFlowInSocket > 0)) return(NULL);
 
 #ifdef MAKE_WITH_NETFLOWSIGTRAP
@@ -1760,12 +1768,6 @@ static int initNetFlowFunct(void) {
   setEmptySerial(&dummyHost->hostSerial);
   dummyHost->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
 
-#ifdef CFG_MULTITHREADED
-  if((myGlobals.netFlowInPort != 0) &&(!threadActive)) {
-    /* This plugin works only with threads */
-    createThread(&netFlowThread, netflowMainLoop, NULL);
-  }
-#endif
   return(0);
 }
 

@@ -2106,6 +2106,17 @@ void queuePacket(u_char *_deviceId,
       ((struct pcap_pkthdr*)h)->len = MAX_PACKET_LEN-1;
     }
 
+    if(len >= MAX_PACKET_LEN) {
+      bpf_u_int32 *caplen = (bpf_u_int32*)&(h->caplen);
+
+      len = MAX_PACKET_LEN-1;
+      /* 
+	 Trick needed to avoid compilation errors
+	 as caplen is defined as 'const'
+      */
+      (*caplen) = len;
+    }
+
     memcpy(p1, p, len);
 
     processPacket(_deviceId, h, p1);

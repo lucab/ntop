@@ -346,14 +346,10 @@ void drawBar(short width,
 
 /* ************************** */
 
-void drawArea(short width,
-	      short height,
-	      FILE* filepointer,            /* open file pointer, can be stdout */
-	      int   num_points,
-	      char  *labels[],              /* slice labels */
-	      float data[],
-	      char *xtitle,
-	      char *ytitle,
+void drawArea(short width, short height,
+	      FILE* filepointer, int num_points,
+	      char* labels[], float data[],
+	      char* xtitle, char* ytitle,
 	      u_short formatYlabels) {
   gdImagePtr im;
   int black, white, colors[64], numColors, i;
@@ -375,6 +371,7 @@ void drawArea(short width,
   }
 
   /* ******************************* */
+
   for(i=0, total=0; i<num_points; i++) {
     total += data[i];
     if(data[i] > maxval) maxval =  data[i];
@@ -467,8 +464,7 @@ void drawArea(short width,
       gdImageLine(im, points[0].x, points[0].y, points[3].x, points[3].y, black);
 
       if((i % 2) == 0) {
-	if(snprintf(str, sizeof(str), "%5s",labels[i]) < 0)
-          BufferTooShort();
+	if(snprintf(str, sizeof(str), "%5s", labels[i]) < 0) BufferTooShort();
 	gdImageStringUp(im, gdFontSmall, points[0].x-gdFontSmall->w, height-2, str, black);
       }
 
@@ -1586,7 +1582,7 @@ void drawThptGraph(int sortedColumn) {
     if(len > 24) len = 24;
     for(i=0; i<len; i++) {
       tmpTime = myGlobals.actTime-((i+1)*60*60);
-      strftime(labels[i], 32, CONST_THPTLABEL_TIMESPEC, localtime_r(&tmpTime, &t));
+      strftime(labels[i], 32, CONST_TOD_NOSEC_TIMESPEC, localtime_r(&tmpTime, &t));
     }
 
     for(i=0; i<len; i++)
@@ -1609,7 +1605,7 @@ void drawThptGraph(int sortedColumn) {
     if(len > 30) len = 30;
     for(i=0; i<len; i++) {
       tmpTime = myGlobals.actTime-((i+1)*(60*60*24));
-      strftime(labels[i], 32, CONST_THPTLABEL_TIMESPEC, localtime_r(&tmpTime, &t));
+      strftime(labels[i], 32, "%d/%m", localtime_r(&tmpTime, &t));
     }
 
     for(i=0; i<len; i++)

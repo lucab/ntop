@@ -1542,7 +1542,7 @@
 #define CONST_TOD_HOUR_TIMESPEC             "%H"
 #define CONST_RFC1945_TIMESPEC              "%a, %d %b %Y %H:%M:%S GMT"
 #define CONST_APACHELOG_TIMESPEC            "%d/%b/%Y:%H:%M:%S"
-#define CONST_THPTLABEL_TIMESPEC            "%b %d %H:%M"
+#define CONST_THPTLABEL_TIMESPEC            "%d/%m"
 
 /*
  * html img tags for various devices
