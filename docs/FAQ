@@ -53,6 +53,29 @@ A. No & Yes...
    ntop also supports netFlow (Cisco) and sFlow, which allow external monitors 
    to send information to an ntop instance.
 
+Q. Why isn't there (any)(more)(better) documentation.
+A. (A personal peeve from Burton...)
+
+   I get real tired of people complaining that there isn't any documentation
+   and then being unwilling to contribute even the simplest stuff.  I've said
+   I'll edit and assemble whatever people send me... and since I started working
+   with ntop in November 2001, I've received maybe two pages of stuff.
+
+   I'm trying to get people - who aren't coders - to contribute to ntop the project.
+   The contribution that ANYONE can make is "documentation".  A task-specific
+   HOWTO... some sample screen shots... An FAQ entry...
+
+   I've tried being nice.
+   I've tried asking.
+   I've tried shaming people into it.  
+
+   What have I gotten?    Zip.
+
+   Nasty is all that's left...  This is your fair warning.  If you show up on 
+   the ntop mailing lists and complain about documentation, you will get blasted.
+
+   -----Burton
+
 
 Compiling
 ---------
@@ -1200,6 +1223,29 @@ A. Surprisingly, it means EXACTLY what it says.  Treat traffic on the listed sub
    You can always use a packet sniffer, such as tcpdump to scan the traffic on the wire 
    and see what's really there...                          (Added, 08Aug2002, BMS)
 
+Q. And internally?
+A. ntop is designed as a hybrid packet analyzer, not a pure Ethernet analyzer
+   (layer 2) nor a pure TCP/IP analyzer (layer 3).  Most of ntop's displayed
+   counts are at the TCP/IP level, and that's what confuses people.  Internally, 
+   ntop works both at the level of the Ethernet frame and the TCP/IP packet.
+
+   A single MAC address can be associated with multiple TCP/IP addresses.  The MAC
+   address -- unless something is horribly wrong on the network or with the hardware
+   or somebody is deliberately spoofing it -- is guaranteed to be unique and refers
+   to a physical host or network interface.  For many reports, ntop displays the 
+   information using the MAC address to separate physical devices.  Other data is 
+   accumulated and displayed at the TCP/IP (level 3) layer.
+
+   -m relates to the traffic you see on the wire at the TCP/IP level.
+   -m tells ntop something it can't determine by itself.  And that is to treat
+   that range of addresses EXACTLY like it was local.
+
+   For example, on my Cable Modem, I see broadcasts for a number of subnets
+   that AT&T has assigned to this area (I don't see the traffic, but you get
+   the picture) in an overlay structure (two or more networks on the
+   same wire, but with separate address spaces)          .   (Added, 20Sep2002, BMS)
+
+
 Q. I am using a /16 (/25 or whatever) mask and I get this message:
       Truncated network size to 1024 hosts (real netmask 255.255.255.0)
 A. Yes.  ntop limits each network to 1024 hosts (a /24). If you need more, alter the
@@ -1223,6 +1269,9 @@ A. IP Packets have a source address & port and a destination address & port...
    hosts.  It's a NETWORK analyzer, not an application level one.  Which is not 
    to say you couldn't create a plugin that did the layer 4 analysis...  but 
    ntop doesn't.
+
+   (20Sep2002, BMS) Support for virtual hosts is under development and the initial
+   support is in 2.1.50.
 
 
 Q. tcpwrappers does't work
