@@ -96,6 +96,7 @@ void updateCounter(char *hostPath, char *key, Counter value) {
   opterr=0; /* no error messages */
   rc = rrd_update(argc, argv);
 
+  numTotalRRDs++;
 #ifdef DEBUG
   if(rc != 0)
     traceEvent(TRACE_WARNING, "rrd_update(%s, %s, %u)=%d", hostPath, key, value, rc);
@@ -307,7 +308,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
   for(;myGlobals.capturePackets == 1;) {
     char *hostKey, rrdPath[512], filePath[512];
-    int i, j, numRRDs = 0;
+    int i, j, numRRDs = numTotalRRDs;
     char fileName[NAME_MAX], cmdName[NAME_MAX], tmpStr[16];
     FILE *fd;
 #if 0 && defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
@@ -324,7 +325,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     /* ****************************************************** */
 
     numLocalNets = 0;
-    strcpy(rrdPath, hostsFilter); /* It avoids strtok to blanks into hostsFilter);
+    strcpy(rrdPath, hostsFilter); /* It avoids strtok to blanks into hostsFilter */
     handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value));
 
     /* ****************************************************** */
@@ -335,14 +336,19 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	if((el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]) == NULL) continue;
 	/* if(((!subnetPseudoLocalHost(el)) && (!multicastHost(el))))                              continue; */
-	if((numLocalNets > 0)
-	   && (!__pseudoLocalAddress(el->hostIpAddress, networks, numLocalNets))) continue;
 
 	if(el->bytesSent.value > 0) {
-	  if(el->hostNumIpAddress[0] != '\0')
+	  if(el->hostNumIpAddress[0] != '\0') {
 	    hostKey = el->hostNumIpAddress;
-	  else
-	    hostKey = el->ethAddressString;
+
+	    if((numLocalNets > 0)
+	       && (!__pseudoLocalAddress(&el->hostIpAddress, networks, numLocalNets))) continue;
+	    
+	  } else {
+	    /* hostKey = el->ethAddressString; */
+	    /* For the time being do not save IP-less hosts */
+	    continue;
+	  }
 
 	  sprintf(rrdPath, "%s/rrd/hosts/%s/", myGlobals.dbPath, hostKey);
 	  sprintf(filePath, "mkdir -p %s", rrdPath);
@@ -428,8 +434,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 			    el->protoIPTrafficInfos[j].rcvdFromRem.value);
 	    }
 	  }
-
-	  numRRDs++;
 	}
       }
     }
@@ -447,7 +451,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	  updateCounter(rrdPath, "packets", list->packets.value);
 	  updateCounter(rrdPath, "bytes",   list->bytes.value);
-	  numRRDs++;
 	}
 
 	list = list->next;
@@ -512,48 +515,49 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    updateCounter(rrdPath, myGlobals.protoIPTrafficInfos[j], ctr.value);
 	  }
 	}
-	numRRDs++;
       }
     }
 
     /* ************************** */
 
     if(dumpMatrix) {
-      for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].numHosts; i++)
-	if(i != myGlobals.otherHostEntryIdx) {
-	  for(j=1; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts; j++) {
-	    if(i != j) {
-	      int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts+j;
+      int k;
+      
+      for(k=0; k<myGlobals.numDevices; k++)
+	for(i=1; i<myGlobals.device[k].numHosts; i++)
+	  if(i != myGlobals.otherHostEntryIdx) {
+	    for(j=1; j<myGlobals.device[k].numHosts; j++) {
+	      if(i != j) {
+		int idx = i*myGlobals.device[k].numHosts+j;
 
-	      if(idx == myGlobals.otherHostEntryIdx) continue;
+		if(idx == myGlobals.otherHostEntryIdx) continue;
 
-	      if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx] == NULL)
-		continue;
+		if(myGlobals.device[k].ipTrafficMatrix[idx] == NULL)
+		  continue;
 
-	      if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value > 0) {
+		if(myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value > 0) {
 
-		sprintf(rrdPath, "%s/rrd/matrix/%s/%s/", myGlobals.dbPath,
-			myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress,
-			myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostNumIpAddress);
+		  sprintf(rrdPath, "%s/rrd/matrix/%s/%s/", myGlobals.dbPath,
+			  myGlobals.device[k].ipTrafficMatrixHosts[i]->hostNumIpAddress,
+			  myGlobals.device[k].ipTrafficMatrixHosts[j]->hostNumIpAddress);
 
-		sprintf(filePath, "mkdir -p %s", rrdPath);
-		system(filePath);
+		  sprintf(filePath, "mkdir -p %s", rrdPath);
+		  system(filePath);
 
-		updateCounter(rrdPath, "pkts",
-			      myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->pktsSent.value);
+		  updateCounter(rrdPath, "pkts",
+				myGlobals.device[k].ipTrafficMatrix[idx]->pktsSent.value);
 
-		updateCounter(rrdPath, "bytes",
-			      myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value);
-		numRRDs++;
+		  updateCounter(rrdPath, "bytes",
+				myGlobals.device[k].ipTrafficMatrix[idx]->bytesSent.value);		  
+		}
 	      }
 	    }
 	  }
-	}
     }
 
     numTotalRRDs += numRRDs;
 
-    traceEvent(TRACE_INFO, "%d RRD elements updated (%d total updates)", numRRDs, numTotalRRDs);
+    traceEvent(TRACE_INFO, "%d RRDs updated (%d total updates)", numTotalRRDs-numRRDs, numTotalRRDs);
   }
 
 #ifdef DEBUG
