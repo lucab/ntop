@@ -729,13 +729,15 @@ void resetStats(int deviceId) {
 #endif
 
   for(j=FIRST_HOSTS_ENTRY; j<myGlobals.device[deviceId].actualHashSize; j++) {
-    HostTraffic *el = myGlobals.device[deviceId].hash_hostTraffic[j];
+    HostTraffic *el = myGlobals.device[deviceId].hash_hostTraffic[j], *elNext;
     
     while(el != NULL) {
-      if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))
-	freeHostInfo(el, deviceId);      
+      elNext = el->next;
       
-      el = el->next;
+      if((el != myGlobals.broadcastEntry) && (el != myGlobals.otherHostEntry))        
+	freeHostInfo(el, deviceId);            
+
+      el = elNext;
     }
     
     myGlobals.device[deviceId].hash_hostTraffic[j] = NULL;
