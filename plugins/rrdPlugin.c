@@ -839,7 +839,7 @@ void unescape_url(char *url) {
 /* ******************************* */
 
 #ifndef WIN32
-void setGlobalPermissions(int permissionsFlag) {
+static void setGlobalPermissions(int permissionsFlag) {
   switch (permissionsFlag) {
     case CONST_RRD_PERMISSIONS_GROUP:
       myGlobals.rrdDirectoryPermissions = CONST_RRD_D_PERMISSIONS_GROUP;
