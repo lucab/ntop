@@ -99,7 +99,7 @@
 
 /* Forward */
 static int initXmldump(void);
-static void termXmldump(void);
+static void termXmldump(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void emptyHTTPhandler(char* url);
 
 
@@ -344,7 +344,7 @@ static int initXmldump(void) {
 
 /* ****************************** */
 
-static void termXmldump(void) {
+static void termXmldump(u_char termNtop /* 0=term plugin, 1=term ntop */) {
 
 #ifdef MAKE_WITH_XMLDUMP
 

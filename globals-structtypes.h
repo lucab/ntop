@@ -1573,7 +1573,7 @@ struct enamemem {
 
 /* **************** Plugin **************** */
 
-typedef void(*VoidFunct)(void);
+typedef void(*VoidFunct)(u_char /* 0=term plugin, 1=term ntop */);
 typedef int(*IntFunct)(void);
 typedef void(*PluginFunct)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
 typedef void(*PluginHTTPFunct)(char* url);

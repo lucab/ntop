@@ -191,7 +191,7 @@ void showPluginsList(char* pluginName) {
 
 	if(newPluginStatus == 0 /* disabled */) {
 	  if(flows->pluginStatus.pluginPtr->termFunct != NULL)
-	    flows->pluginStatus.pluginPtr->termFunct();
+	    flows->pluginStatus.pluginPtr->termFunct(0 /* term plugin */);
 	} else {
 	  if(flows->pluginStatus.pluginPtr->startFunct != NULL)
 	    rc = flows->pluginStatus.pluginPtr->startFunct();

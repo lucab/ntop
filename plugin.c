@@ -353,7 +353,7 @@ void unloadPlugins(void) {
 #endif
       if((flows->pluginStatus.pluginPtr->termFunct != NULL)
 	 && (flows->pluginStatus.activePlugin))
-	flows->pluginStatus.pluginPtr->termFunct();
+	flows->pluginStatus.pluginPtr->termFunct(1 /* term ntop */);
 
 #ifndef MAKE_STATIC_PLUGIN
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */

@@ -26,7 +26,7 @@ static void NotesURL(char *addr, char *ip_addr);
 static void addNotes(char *addr, char *PostNotes);
 static void deletelastSeenURL( char *addr );
 static void setPluginStatus(char * status);
-static void termLsFunct(void);
+static void termLsFunct(u_char);
 static void handleLsPacket(u_char *_deviceId, 
                           const struct pcap_pkthdr *h _UNUSED_,
                           const u_char *p);
@@ -380,7 +380,7 @@ static void deletelastSeenURL( char *addr ) {
   gdbm_delete(LsDB,key_data);  /* Notes */
 }
 
-static void termLsFunct(void) {
+static void termLsFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   traceEvent(CONST_TRACE_INFO, "LASTSEEN: Thanks for using LsWatch"); fflush(stdout);
     
   if(LsDB != NULL) {

@@ -48,7 +48,7 @@ struct id_rdiscovery {
 
 /* F o r w a r d */
 
-static void termIcmpFunct(void);
+static void termIcmpFunct(u_char);
 static void handleIcmpWatchHTTPrequest(char* url);
 static void printICMPdata(int icmpColumnSort, u_int revertOrder, u_int num, HostTraffic **hosts);
 
@@ -775,7 +775,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
 /* ****************************** */
 
-static void termIcmpFunct(void) {
+static void termIcmpFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   traceEvent(CONST_TRACE_INFO, "ICMP: Thanks for using icmpWatch"); fflush(stdout);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ICMP: Done"); fflush(stdout);
 }

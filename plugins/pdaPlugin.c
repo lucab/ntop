@@ -27,7 +27,7 @@
 
 void printPdaData(HostTraffic* tmpTable[MAX_PDA_HOST_TABLE], u_int numEntries);
 void printPdaSummaryData(void);
-static void termPdaFunct(void);
+static void termPdaFunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void handlePDArequest(char* url);
 
 /* ****************************** */
@@ -356,7 +356,7 @@ static void handlePDArequest(char* url) {
 
 /* ****************************** */
 
-static void termPdaFunct(void) {
+static void termPdaFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   traceEvent(CONST_TRACE_INFO, "PDA: Thanks for using ntop PDA plugin");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PDA: Done");
 }

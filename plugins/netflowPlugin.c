@@ -39,7 +39,7 @@ static void setPluginStatus(char * status);
 static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
 		       u_int dstAddr, u_short dport, Counter len, int deviceId);
 static int initNetFlowFunct(void);
-static void termNetflowFunct(void);
+static void termNetflowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void termNetflowDevice(int deviceId);
 static void initNetFlowDevice(int deviceId);
 #ifdef DEBUG_FLOWS
@@ -2821,7 +2821,7 @@ static void termNetflowDevice(int deviceId) {
 
 /* **************************************** */
 
-static void termNetflowFunct(void) {
+static void termNetflowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   char value[128];
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Terminating NetFlow");
