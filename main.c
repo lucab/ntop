@@ -708,11 +708,12 @@ int main(int argc, char *argv[]) {
      }
   }
 
+  /* Thanks to Tim Gardner <timg@tpi.com> for pointing out the erroneous use of sizeof() */
   cmdLineBuffer = (char*)malloc(LINE_BUFFERS_LENGTH) /* big just to be safe */;
-  memset(cmdLineBuffer, 0, sizeof(cmdLineBuffer)); 
+  memset(cmdLineBuffer, 0, LINE_BUFFERS_LENGTH);
 
   readBuffer = (char*)malloc(READ_BUFFERS_LENGTH) /* big just to be safe */;
-  memset(readBuffer, 0, sizeof(readBuffer)); 
+  memset(readBuffer, 0, READ_BUFFERS_LENGTH);
 
   if (snprintf(cmdLineBuffer, LINE_BUFFERS_LENGTH, "%s ", argv[0]) < 0)
       BufferTooShort();
