@@ -11,6 +11,11 @@ After the 1st run, ntop will operate without this intervention, unless the
 password database ntop_pw.db can not be found, which is treated as a 1st time 
 run.
 
+Remember - you must create a user for ntop to run.  This userid should have
+only minimal privledges, but it needs to be able to read/write in the
+directory where the ntop databases are stored.  ntop is customary, but it
+can be anything - it's shown as "<ntopuserid>" below.
+
 
 The (recommended) minimal command line is:
 
