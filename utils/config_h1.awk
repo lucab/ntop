@@ -76,8 +76,6 @@ $2 == "PACKAGE" { next }
 
   i++
 
-print "i. " i ", " $i
-
   if ($i == "") {
       tag = "*"
   } else if ($i == "*/") {
