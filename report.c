@@ -5683,25 +5683,25 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
   sendString(buf);
 
   for(i=0; i<numEntries; i++) {
-    char *elem;
+    char *elem, *strtokState;
 
     if(i > MAX_NUM_EVENTS_TO_DISPLAY)
       break;
 
     if(revertOrder)
-      elem = strtok(theMsgTable[numEntries-i-1]->message, " ");
+      elem = strtok_r(theMsgTable[numEntries-i-1]->message, " ", &strtokState);
     else
-      elem = strtok(theMsgTable[i]->message, " ");
+      elem = strtok_r(theMsgTable[i]->message, " ", &strtokState);
 
     snprintf(tmpBuf, sizeof(tmpBuf), "<TR %s><TD>", getRowColor());
     sendString(tmpBuf);
     sendString(elem); /* 2000-03-07 */
     sendString(" ");
-    elem = strtok(NULL, " ");
+    elem = strtok_r(NULL, " ", &strtokState);
     sendString(elem);  /* 12:12:53 */
 
     sendString("</TD><TD ALIGN=CENTER>");
-    elem = strtok(NULL, " ");
+    elem = strtok_r(NULL, " ", &strtokState);
 
     if(strcmp(elem, "ALARM") == 0) {
       sendString("<FONT COLOR=#FF0000>");
@@ -5711,7 +5711,7 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
       sendString(elem); /* INFO,.... */
 
     sendString("</TD><TD ALIGN=CENTER>");
-    elem = strtok(NULL, " ");
+    elem = strtok_r(NULL, " ", &strtokState);
     sendString(elem);  /* stealth-scan */
 
     sendString("</TD><TD NOWRAP>");

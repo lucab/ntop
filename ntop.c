@@ -191,11 +191,11 @@ void detachFromTerminal() {
 /* **************************************** */
 
 void handleProtocols(char *protos) {
-  char *proto, *buffer=NULL;
+  char *proto, *buffer=NULL, *strtokState;
   FILE *fd = fopen(protos, "rb");
 
   if(fd == NULL)
-    proto = strtok(protos, ",");
+    proto = strtok_r(protos, ",", &strtokState);
   else {
     struct stat buf;
     int len, i;
@@ -219,7 +219,7 @@ void handleProtocols(char *protos) {
     if(buffer[strlen(buffer)-1] == '\n')
       buffer[strlen(buffer)-1] = 0;
 
-    proto = strtok(buffer, ",");
+    proto = strtok_r(buffer, ",", &strtokState);
   }
 
   while(proto != NULL) {
@@ -247,7 +247,7 @@ void handleProtocols(char *protos) {
       handleProtocolList(proto, tmpStr);
 
     }
-    proto = strtok(NULL, ",");
+    proto = strtok_r(NULL, ",", &strtokState);
   }
 
   if(buffer !=NULL)

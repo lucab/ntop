@@ -101,7 +101,7 @@ int deny_severity = LOG_WARNING;
 
 /* GDBM */
 #ifdef HAVE_GDBM_H
-GDBM_FILE gdbm_file, pwFile, eventFile;
+GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile;
 #ifdef MULTITHREADED
 pthread_mutex_t gdbmMutex;
 #endif

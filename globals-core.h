@@ -86,7 +86,7 @@ extern int deny_severity;
 #endif /* HAVE_LIBWRAP */
 
 #ifdef HAVE_GDBM_H
-extern GDBM_FILE gdbm_file, pwFile, eventFile;
+extern GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile;
 
 #ifdef MULTITHREADED
 extern pthread_mutex_t gdbmMutex;

@@ -42,7 +42,7 @@ FilterRule* parseFilterRule(u_short ruleType,
 			    char* line, 
 			    u_short lineNum) {
   FilterRule *rule;
-  char *token;
+  char *token, *strtokState;
   int i;
 
 #ifdef DEBUG
@@ -52,10 +52,10 @@ FilterRule* parseFilterRule(u_short ruleType,
   rule = (FilterRule*)malloc(sizeof(FilterRule));
   memset(rule, 0, sizeof(FilterRule));
 
-  token = strtok(line, " "); /* token = 'tcp/udp' */
+  token = strtok_r(line, " ", &strtokState); /* token = 'tcp/udp' */
 
   /* label */
-  token = strtok(NULL, " ");
+  token = strtok_r(NULL, " ", &strtokState);
   if(token == NULL) {
     traceEvent(TRACE_INFO, "Skipping line %d (missing label)\n", lineNum);
     freeFilterRule(rule);
@@ -64,7 +64,7 @@ FilterRule* parseFilterRule(u_short ruleType,
     rule->ruleLabel = strdup(token);
 
   /* shost/sport */
-  token = strtok(NULL, " ");
+  token = strtok_r(NULL, " ", &strtokState);
   if(token == NULL) {
     traceEvent(TRACE_INFO, "Skipping line %d (missing shost/sport)\n", lineNum);
     freeFilterRule(rule);
@@ -72,7 +72,7 @@ FilterRule* parseFilterRule(u_short ruleType,
   } else {
     if(!strcmp(token, "revert")) {
       rule->revert = 1;
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (missing shost/sport)\n", lineNum);
 	freeFilterRule(rule);
@@ -126,7 +126,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (unknown sport)\n", lineNum);
   }
 
   /* dhost/dport */
-  token = strtok(NULL, " ");
+  token = strtok_r(NULL, " ", &strtokState);
   if(token == NULL) {
     traceEvent(TRACE_INFO, "Skipping line %d (missing dhost/dport)\n", lineNum);
     freeFilterRule(rule);
@@ -177,9 +177,9 @@ traceEvent(TRACE_INFO, "Skipping line %d (unknown dport)\n", lineNum);
     }
   }
 
-  while((token = strtok(NULL, " "))) {
+  while((token = strtok_r(NULL, " ", &strtokState))) {
     if(!strcmp(token, "flags")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
 
       if(ruleType == UDP_RULE) {
 traceEvent(TRACE_INFO, "Skipping line %d (flags cannot be specified for UDP)\n", lineNum);
@@ -212,7 +212,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid flags specification)\n", lineN
 	  traceEvent(TRACE_INFO, "Ignored flag '%c' on line %d (valid flags: S,P,F,A,R)\n", token[i], lineNum);
 	}       
     } else if(!strcmp(token, "clears")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid rule to clear specified)\n", lineNum);
@@ -243,7 +243,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid rule to clear specified)\n", l
 	} 
       }
     } else if(!strcmp(token, "rearm")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid rearm specified)\n", lineNum);
@@ -252,7 +252,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid rearm specified)\n", lineNum);
       } else
 	rule->rearmTime = atoi(token);
     } else if(!strcmp(token, "unit")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid unit specified)\n", lineNum);
@@ -265,7 +265,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (unit can be specified only comparisons
       else
 	rule->unitValue = atoi(token);
     } else if(!strcmp(token, "contains")) {
-      char *matchString = strtok(NULL, "\""); /* Begin */
+      char *matchString = strtok_r(NULL, "\"", &strtokState); /* Begin */
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid packet content specified)\n", lineNum);
@@ -273,7 +273,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid packet content specified)\n", 
 	return(NULL);
       }
 
-      token = strtok(NULL, "\""); /* End */
+      token = strtok_r(NULL, "\"", &strtokState); /* End */
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid packet content specified)\n", lineNum);
@@ -310,7 +310,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid packet content specified)\n", 
       if(!strcmp(token, "pktcount")) rule->pktComparisonType = PACKET_FRAGMENT_COUNT;
       else rule->pktComparisonType = PACKET_FRAGMENT_SIZE;
 
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid packet comparison specified)\n", lineNum);
 	freeFilterRule(rule);
@@ -332,7 +332,7 @@ traceEvent(TRACE_INFO, "Ignored packet comparison criteria on line %d (valid cri
 	rule->pktComparisonOperator = COMPARISON_NONE;
       }
 
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid comparison value)\n", lineNum);
@@ -341,7 +341,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid comparison value)\n", lineNum)
       }
       rule->pktComparisonValue = atoi(token);
     } else if(!strcmp(token, "type")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid type specified)\n", lineNum);
@@ -352,7 +352,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid type specified)\n", lineNum);
       if(!strcmp(token, "fragment")) rule->dataType = DATA_FRAGMENT;
       else rule->dataType = DATA_PACKET; /* default */
     } else if(!strcmp(token, "action")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid action specified)\n", lineNum);
@@ -363,7 +363,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid action specified)\n", lineNum)
       if(!strcmp(token, "mark")) rule->actionType = ACTION_MARK;
       else rule->actionType = ACTION_ALARM;
     } else if(!strcmp(token, "expires")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid expires value specified)\n", lineNum);
@@ -416,7 +416,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (all specified without rule to clear)\n
 
 FilterRule* parseFilterICMPRule(char* line, u_short lineNum) {
   FilterRule *rule;
-  char *token;
+  char *token, *strtokState;
   int i;
 
 #ifdef DEBUG
@@ -426,10 +426,10 @@ FilterRule* parseFilterICMPRule(char* line, u_short lineNum) {
   rule = (FilterRule*)malloc(sizeof(FilterRule));
   memset(rule, 0, sizeof(FilterRule));
 
-  token = strtok(line, " "); /* token = 'tcp/udp' */
+  token = strtok_r(line, " ", &strtokState); /* token = 'tcp/udp' */
 
   /* label */
-  token = strtok(NULL, " ");
+  token = strtok_r(NULL, " ", &strtokState);
   if(token == NULL) {
     traceEvent(TRACE_INFO, "Skipping line %d (missing label)\n", lineNum);
     freeFilterRule(rule);
@@ -438,7 +438,7 @@ FilterRule* parseFilterICMPRule(char* line, u_short lineNum) {
     rule->ruleLabel = strdup(token);
 
   /* ICMP type */
-  token = strtok(NULL, " ");
+  token = strtok_r(NULL, " ", &strtokState);
   if(token == NULL) {
     traceEvent(TRACE_INFO, "Skipping line %d (missing label)\n", lineNum);
     freeFilterRule(rule);
@@ -466,7 +466,7 @@ FilterRule* parseFilterICMPRule(char* line, u_short lineNum) {
   }
 
   /* shost/dhost */
-  token = strtok(NULL, " ");
+  token = strtok_r(NULL, " ", &strtokState);
   if(token == NULL) {
     traceEvent(TRACE_INFO, "Skipping line %d (missing shost/dhost)\n", lineNum);
     freeFilterRule(rule);
@@ -513,9 +513,9 @@ FilterRule* parseFilterICMPRule(char* line, u_short lineNum) {
     }
   }
 
-  while((token = strtok(NULL, " ")) != NULL) {
+  while((token = strtok_r(NULL, " ", &strtokState)) != NULL) {
     if(!strcmp(token, "clears")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid rule to clear specified)\n", lineNum);
@@ -542,7 +542,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid rule to clear specified)\n", l
 	} 
       }
     } else if(!strcmp(token, "rearm")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid rearm specified)\n", lineNum);
@@ -551,7 +551,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid rearm specified)\n", lineNum);
       } else
 	rule->rearmTime = atoi(token);
     } else if(!strcmp(token, "unit")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid unit specified)\n", lineNum);
@@ -564,7 +564,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (unit can be specified only comparisons
       else
 	rule->unitValue = atoi(token);
     } else if(!strcmp(token, "contains")) {
-      char *matchString = strtok(NULL, "\""); /* Begin */
+      char *matchString = strtok_r(NULL, "\"", &strtokState); /* Begin */
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid packet content specified)\n", lineNum);
@@ -572,7 +572,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid packet content specified)\n", 
 	return(NULL);
       }
 
-      token = strtok(NULL, "\""); /* End */
+      token = strtok_r(NULL, "\"", &strtokState); /* End */
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid packet content specified)\n", lineNum);
@@ -609,7 +609,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid packet content specified)\n", 
       if(!strcmp(token, "pktcount")) rule->pktComparisonType = PACKET_FRAGMENT_COUNT;
       else rule->pktComparisonType = PACKET_FRAGMENT_SIZE;
 
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid packet comparison specified)\n", lineNum);
 	freeFilterRule(rule);
@@ -631,7 +631,7 @@ traceEvent(TRACE_INFO, "Ignored packet comparison criteria on line %d (valid cri
 	rule->pktComparisonOperator = COMPARISON_NONE;
       }
 
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid comparison value)\n", lineNum);
@@ -640,7 +640,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid comparison value)\n", lineNum)
       }
       rule->pktComparisonValue = atoi(token);
     } else if(!strcmp(token, "type")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid type specified)\n", lineNum);
@@ -651,7 +651,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid type specified)\n", lineNum);
       if(!strcmp(token, "fragment")) rule->dataType = DATA_FRAGMENT;
       else rule->dataType = DATA_PACKET; /* default */
     } else if(!strcmp(token, "action")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid action specified)\n", lineNum);
@@ -662,7 +662,7 @@ traceEvent(TRACE_INFO, "Skipping line %d (invalid action specified)\n", lineNum)
       if(!strcmp(token, "mark")) rule->actionType = ACTION_MARK;
       else rule->actionType = ACTION_ALARM;
     } else if(!strcmp(token, "expires")) {
-      token = strtok(NULL, " ");
+      token = strtok_r(NULL, " ", &strtokState);
       
       if(token == NULL) {
 traceEvent(TRACE_INFO, "Skipping line %d (invalid expires value specified)\n", lineNum);

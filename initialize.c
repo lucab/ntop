@@ -391,7 +391,8 @@ void initGdbm() {
   char tmpBuf[200];
 
 #ifdef HAVE_GDBM_H
-  snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop.db", dbPath);
+  /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
+  snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", dbPath);
   gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
   if(gdbm_file == NULL) {
@@ -425,6 +426,14 @@ void initGdbm() {
     pwFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
     if(pwFile == NULL) {
+      traceEvent(TRACE_ERROR, "FATAL ERROR: Database '%s' cannot be opened.", tmpBuf);
+      exit(-1);
+    }
+    
+    snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", dbPath);
+    hostsInfoFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+    
+    if(hostsInfoFile == NULL) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Database '%s' cannot be opened.", tmpBuf);
       exit(-1);
     }
@@ -541,7 +550,7 @@ void initDevices(char* devices) {
       numDevices=1;
     }
   } else {
-    char *tmpDev = strtok(devices, ",");
+    char *strtokState, *tmpDev = strtok_r(devices, ",", &strtokState);
     numDevices = 0;
 
     while(tmpDev != NULL) {
@@ -560,14 +569,14 @@ void initDevices(char* devices) {
 	  }
 
 	if(found) {
-	  tmpDev = strtok(NULL, ",");
+	  tmpDev = strtok_r(NULL, ",", &strtokState);
 	  continue;
 	}
       }
 
       device[numDevices++].name = strdup(tmpDev);
 
-      tmpDev = strtok(NULL, ",");
+      tmpDev = strtok_r(NULL, ",", &strtokState);
 #ifndef MULTITHREADED
       if(tmpDev != NULL) {
 	traceEvent(TRACE_WARNING, "WARNING: ntop can handle multiple interfaces only\n"

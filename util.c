@@ -84,8 +84,7 @@ FILE *sec_popen(char *cmd, const char *type) {
   int pfd[2];
   FILE *pfile;
   int rpipe = 0, wpipe = 0, i;
-  char **argv, *ptr, *cmdcpy=NULL;
-
+  char **argv, *ptr, *cmdcpy=NULL, *strtokState;
   if(cmd == NULL || cmd == "")
     return(NULL);
 
@@ -96,7 +95,7 @@ FILE *sec_popen(char *cmd, const char *type) {
     return(NULL);
   
   argv = NULL;
-  if((ptr = strtok(cmdcpy, __SEC_POPEN_TOKEN)) == NULL) {
+  if((ptr = strtok_r(cmdcpy, __SEC_POPEN_TOKEN, &strtokState)) == NULL) {
     free(cmdcpy);
     return(NULL);
   }
@@ -114,7 +113,7 @@ FILE *sec_popen(char *cmd, const char *type) {
 
     strcpy(argv[i], ptr);
 
-    if((ptr = strtok(NULL, __SEC_POPEN_TOKEN)) == NULL) {
+    if((ptr = strtok_r(NULL, __SEC_POPEN_TOKEN, &strtokState)) == NULL) {
       if((argv = (char **) realloc(argv, (i+2) * sizeof(char*))) == NULL) {
 	free(cmdcpy);
 	return(NULL);
@@ -445,7 +444,7 @@ int dotted2bits (char * mask)
 /* ********************************* */
 /* Example: "131.114.0.0/16,193.43.104.0/255.255.255.0" */
 void handleLocalAddresses(char* addresses) {
-  char *address = strtok(addresses, ",");
+  char *strtokState, *address = strtok_r(addresses, ",", &strtokState);
   int i;
 
   while(address != NULL) {
@@ -464,7 +463,7 @@ void handleLocalAddresses(char* addresses) {
       if(sscanf(address, "%d.%d.%d.%d", &a, &b, &c, &d) != 4) {
 	  printf ("Unknown network '%s' .. skipping. Check network numbers.\n",
 		  address);
-	  address = strtok(NULL, ",");
+	  address = strtok_r(NULL, ",", &strtokState);
 	  continue;
       }
 
@@ -473,7 +472,7 @@ void handleLocalAddresses(char* addresses) {
 	  /* malformed netmask specification */
           printf ("The specified netmask %s is not valid. Skipping it..\n",
 		  mask);
-	  address = strtok(NULL, ",");
+	  address = strtok_r(NULL, ",", &strtokState);
 	  continue;
 	}
 
@@ -547,7 +546,7 @@ void handleLocalAddresses(char* addresses) {
 	printf("Unable to handle network (too many entries!).\n");
     }
 
-    address = strtok(NULL, ",");
+    address = strtok_r(NULL, ",", &strtokState);
   }
 }
 
@@ -675,10 +674,10 @@ int32_t gmt2local(time_t t)
 /* Example: "flow1='host jake',flow2='dst host born2run'" */
 void handleFlowsSpecs(char* flows) {
   FILE *fd = fopen(flows, "rb");
-  char *flow, *buffer=NULL;
+  char *flow, *buffer=NULL, *strtokState;;
 
   if(fd == NULL)
-    flow = strtok(flows, ",");
+    flow = strtok_r(flows, ",", &strtokState);
   else {
     struct stat buf;
     int len, i;
@@ -702,7 +701,7 @@ void handleFlowsSpecs(char* flows) {
     if(buffer[strlen(buffer)-1] == '\n')
       buffer[strlen(buffer)-1] = 0;
 
-    flow = strtok(buffer, ",");
+    flow = strtok_r(buffer, ",", &strtokState);
   }
 
   while(flow != NULL) {
@@ -766,7 +765,7 @@ void handleFlowsSpecs(char* flows) {
       }
     }
 
-    flow = strtok(NULL, ",");
+    flow = strtok_r(NULL, ",", &strtokState);
   }
 
   if(buffer != NULL)
@@ -850,6 +849,25 @@ void killThread(pthread_t *threadId) {
 
 int createMutex(pthread_mutex_t *mutexId) {
   int rc = pthread_mutex_init(mutexId, NULL);
+
+  /* ************************************************* 
+     There seems to be some problem with mutexes and some
+     glibc versions. See
+     
+     http://sdb.suse.de/sdb/de/html/aj_pthread7.0.html
+     
+     (in German but an english version is probably available on their
+     international web site). Suggested workaround is either to use
+     
+     pthread_mutexattr_settype (&mutattr, PTHREAD_MUTEX_ERRORCHECK_NP);
+     
+     as checked mutexes dont have the error or use a corrected
+     glibc (Suse offers a patched version for their system).
+     
+     Andreas Pfaeller <a.pfaller@pop.gun.de>
+
+     ************************************************* */
+  pthread_mutexattr_settype (mutexId, PTHREAD_MUTEX_ERRORCHECK_NP);
   return(rc);
 }
 
@@ -1068,7 +1086,7 @@ void readLsofInfo() {
   while(fgets(line, 383, fd) != NULL) {
     int pid, i;
     char command[32], user[32], *portNr;
-    char *trailer, *thePort;
+    char *trailer, *thePort, *strtokState;
 
     /*traceEvent(TRACE_INFO, "%s\n", line); */
 
@@ -1089,12 +1107,12 @@ void readLsofInfo() {
     else
       trailer = &line[i+2];
 
-    portNr = (char*)strtok(trailer, ":");
+    portNr = (char*)strtok_r(trailer, ":", &strtokState);
 
     if(portNr[0] == '*')
       portNr = &portNr[2];
     else
-      portNr = (char*)strtok(NULL, "-");
+     portNr = (char*)strtok_r(NULL, "-", &strtokState);
 
     if((portNr == NULL) || (portNr[0] == '*'))
       continue;
@@ -1107,10 +1125,10 @@ void readLsofInfo() {
       }
     }
 
-    thePort = strtok(portNr, " ");
+    thePort = strtok_r(portNr, " ", &strtokState);
 
     for(j=0; portNr[j] != '\0'; j++)
-      if(!isalnum(portNr[j])) {
+      if(!isalnum(portNr[j]) && portNr[j]!='-') {
 	portNr[j] = '\0';
 	break;
       }
@@ -1233,13 +1251,13 @@ void readNepedInfo() {
 
   while(fgets(line, 383, fd) != NULL)
     {
-      char *index, *host = &line[8];
+      char *index, *host = &line[8], *strtokState;
       int idx; /*Courtesy of Peter F. Handel <phandel@cise.ufl.edu> */
 
-      strtok(host, ".");
-      strtok(NULL, ".");
-      strtok(NULL, ".");
-      index = strtok(NULL, ".");
+      strtok_r(host, ".", &strtokState);
+      strtok_r(NULL, ".", &strtokState);
+      strtok_r(NULL, ".", &strtokState);
+      index = strtok_r(NULL, ".", &strtokState);
 
       if(index == NULL) continue;
       idx = atoi(index);
@@ -1557,7 +1575,7 @@ void storeHostTrafficInstance(HostTraffic *el) {
     accessMutex(&gdbmMutex, "storeHostTrafficInstance");
 #endif
 
-  if(gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE) == 0) {
+    if(gdbm_store(hostsInfoFile, key_data, data_data, GDBM_REPLACE) == 0) {
 #ifdef STORAGE_DEBUG
    traceEvent(TRACE_INFO, "Stored instance: '%s'\n", key);
 #endif
@@ -1586,7 +1604,7 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "resurrectHostTrafficInstance");
 #endif
-  data_data = gdbm_fetch(gdbm_file, key_data);
+  data_data = gdbm_fetch(hostsInfoFile, key_data);
 
   if(data_data.dptr != NULL) {
     HostTraffic *el;
@@ -1596,8 +1614,8 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
      traceEvent(TRACE_INFO, "Wrong size for '%s'[size=%d, expected=%d]. Deleted.\n",
 	     key, data_data.dsize, sizeof(HostTraffic));
 #endif
-      gdbm_delete(gdbm_file, key_data);
-
+     gdbm_delete(hostsInfoFile, key_data);
+     free(data_data.dptr);
 #ifdef MULTITHREADED
       releaseMutex(&gdbmMutex);
 #endif
@@ -1805,6 +1823,8 @@ void traceEvent(int eventTraceLevel, char* file,
   }
 }
 
+/* ******************************************** */
+
 char *_strncpy(char *dest, const char *src, size_t n) {
   int len = strlen(src);
 
@@ -1817,6 +1837,57 @@ char *_strncpy(char *dest, const char *src, size_t n) {
 }
 
 
+/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+#ifndef HAVE_STRTOK_R
+/* Reentrant string tokenizer.  Generic version.
+
+   Slightly modified from: glibc 2.1.3
+
+   Copyright (C) 1991, 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
+   This file is part of the GNU C Library.
+
+   The GNU C Library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public License as
+   published by the Free Software Foundation; either version 2 of the
+   License, or (at your option) any later version.
+
+   The GNU C Library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Library General Public License for more details.
+
+   You should have received a copy of the GNU Library General Public
+   License along with the GNU C Library; see the file COPYING.LIB.  If not,
+   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.  */
+
+char *strtok_r(char *s, const char *delim, char **save_ptr) {
+  char *token;
+
+  if (s == NULL)
+    s = *save_ptr;
+
+  /* Scan leading delimiters.  */
+  s += strspn (s, delim);
+  if (*s == '\0')
+    return NULL;
+
+  /* Find the end of the token.  */
+  token = s;
+  s = strpbrk (token, delim);
+  if (s == NULL)
+    /* This token finishes the string.  */
+    *save_ptr = "";
+  else {
+    /* Terminate the token and make *SAVE_PTR point past it.  */
+    *s = '\0';
+    *save_ptr = s + 1;
+  }
+
+  return token;
+}
+#endif
+ 
 /* ********************************** */
 
 /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */

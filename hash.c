@@ -611,8 +611,8 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
       }
 
       for(j=0; j<MAX_NUM_HOST_ROUTERS; j++)
-	if(device[theDevice].hash_hostTraffic[idx]->contactedRouters[j] == hostIdx)
-	  device[theDevice].hash_hostTraffic[idx]->contactedRouters[j] = NO_PEER;
+	if(el->contactedRouters[j] == hostIdx)
+	  el->contactedRouters[j] = NO_PEER;
 
       for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++)
 	if(el->portsUsage[j] != NULL) {
