@@ -112,11 +112,11 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 #ifdef MULTITHREADED
     if(myGlobals.capturePackets == 1 /* i.e. active, not cleanup */ ) {
       if((i & MUTEX_FHS_MASK) == 0) {
-	if(accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions") == 0)
-	  mutexLocked = 1;
+	accessMutex(&myGlobals.tcpSessionsMutex, "freeHostSessions");
+	mutexLocked = 1;
       }
     } else
-      break;
+      return;
 #endif
 
     prevSession = theSession = myGlobals.device[theDevice].tcpSession[i];

@@ -929,13 +929,13 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 #endif
   myPid=getpid();
   if(mutexId->isLocked) {
-      if ( (strcmp(fileName, mutexId->lockFile) == 0) && 
-           (fileLine == mutexId->lockLine) &&
-           (myPid == mutexId->lockPid) ) {
-          traceEvent(TRACE_WARNING,
-	             "WARNING: accessMutex() call with a self-LOCKED mutex [from %d at %s:%d %s]\n",
-                     myPid, fileName, fileLine, where);
-      }
+    if((fileLine == mutexId->lockLine)       
+       && (strcmp(fileName, mutexId->lockFile) == 0)
+       && (myPid == mutexId->lockPid)) {
+      traceEvent(TRACE_WARNING,
+		 "WARNING: accessMutex() call with a self-LOCKED mutex [from %d at %s:%d %s]\n",
+		 myPid, fileName, fileLine, where);
+    }
   }
 
   strcpy(mutexId->lockAttemptFile, fileName);
@@ -961,13 +961,13 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
     mutexId->numLocks++;
     pthread_mutex_lock(&stateChangeMutex);
     mutexId->isLocked = 1;
-    pthread_mutex_unlock(&stateChangeMutex);
     mutexId->lockTime = time(NULL);
-    mutexId->lockPid=myPid;
+    mutexId->lockPid  = myPid;
     if(fileName != NULL) {
       strcpy(mutexId->lockFile, fileName);
       mutexId->lockLine = fileLine;
     }
+    pthread_mutex_unlock(&stateChangeMutex);
     if(where != NULL) {
       strcpy(mutexId->where, where);
     }
@@ -1158,6 +1158,7 @@ int _releaseMutex(PthreadMutex *mutexId,
     /* traceEvent(TRACE_ERROR, "UNLOCKED 0x%X", &(mutexId->mutex));  */
     pthread_mutex_lock(&stateChangeMutex);
     mutexId->isLocked = 0;
+    mutexId->lockLine = 0;
     pthread_mutex_unlock(&stateChangeMutex);
     mutexId->numReleases++;
     mutexId->unlockPid=getpid();
