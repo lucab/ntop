@@ -542,7 +542,7 @@ void switchNwInterface(int _interface) {
   sendString("<HR>\n<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
 
   if(mergeInterfaces) {
-    if(snprintf(buf, sizeof(buf), "You can switch among different inferfaces if the -M "
+    if(snprintf(buf, sizeof(buf), "You can't switch among different inferfaces if the -M "
 		"command line switch is not used. Sorry.\n") < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
@@ -1045,6 +1045,7 @@ void usage(void) {
   traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
   traceEvent(TRACE_INFO, "    %s\n",   "[-U <mapper.pl URL> | \"\" for not displaying host location ]");
+  traceEvent(TRACE_INFO, "    %s\n",   "[-k <show kernel filter expression in extra frame>]");
   traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");
 }
 

@@ -511,6 +511,18 @@ void printHTMLtrailer(void) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
+  len=strlen(buf);
+  if (*currentFilterExpression!='\0') {
+    if(snprintf(&buf[len], BUF_SIZE-len, 
+		"with kernel (libpcap) filtering expression </B>\"%s\"<B>\n",
+		currentFilterExpression) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  } else {
+    if(snprintf(&buf[len], BUF_SIZE-len, 
+		"without a kernel (libpcap) filtering expression\n") < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+  }  
+  
   sendString(buf);
 
   sendString("<BR>\n&copy; 1998-2001 by <A HREF=mailto:deri@ntop.org>L. Deri</A>\n");
@@ -972,6 +984,16 @@ static int returnHTTPPage(char* pageName, int postLen) {
   if(strncmp(pageName, SHUTDOWN_NTOP_HTML, strlen(SHUTDOWN_NTOP_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     shutdownNtop();
+  } else if(strncmp(pageName, CHANGE_FILTER_HTML, strlen(CHANGE_FILTER_HTML)) == 0) {
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    changeFilter();
+  } else if(strncmp(pageName, "doChangeFilter", strlen("doChangeFilter")) == 0) {
+    printTrailer=0;
+    if (doChangeFilter(postLen)==0) /*resetStats()*/;
+  } else if(strncmp(pageName, FILTER_INFO_HTML, strlen(FILTER_INFO_HTML)) == 0) {
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    printHTMLheader(NULL, HTML_FLAG_NO_REFRESH);
+    /* printHTMLtrailer is called afterwards and inserts the relevant info */
   } else if(strncmp(pageName, RESET_STATS_HTML, strlen(RESET_STATS_HTML)) == 0) {
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
@@ -1070,7 +1092,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       sendString("<FONT FACE=Helvetica SIZE=+2>Welcome<br>to<br>\n");
       sendString("ntop!</FONT>\n<pre>\n</pre>\n");
       sendString("<p></center><p>\n<FONT FACE=Helvetica SIZE=-1><b>\n<ol>\n");
-      sendString("<li><a href=home.html target=area>What's ntop?</a></li>\n");
+      sendString("<li><a href=home_.html target=area>What's ntop?</a></li>\n");
       sendString("<li>Data Rcvd<ul>");
       sendString("<li><a href="STR_SORT_DATA_RECEIVED_PROTOS" target=area "
 		 "ALT=\"Data Received (all protocols)\">All Protoc.</a></li>\n");
@@ -1153,6 +1175,28 @@ static int returnHTTPPage(char* pageName, int postLen) {
 	switchNwInterface(0);
       else
 	switchNwInterface(atoi(&equal[1]));
+    } else if(strcmp(pageName, "home_.html") == 0) {
+      if (filterExpressionInExtraFrame){
+	sendHTTPHeader(HTTP_TYPE_HTML, 0);
+        sendString("<html>\n  <frameset rows=\"*,90\" framespacing=\"0\" ");
+        sendString("border=\"0\" frameborder=\"0\">\n");
+        sendString("    <frame src=\"home.html\" marginwidth=\"2\" ");
+        sendString("marginheight=\"2\" name=\"area\">\n");
+        sendString("    <frame src=\""FILTER_INFO_HTML"\" marginwidth=\"0\" ");
+        sendString("marginheight=\"0\" name=\"filterinfo\">\n");
+        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
+        sendString("  </frameset>\n</html>\n");
+        printTrailer=0;
+      } else {	/* frame so that "area" is defined */
+	sendHTTPHeader(HTTP_TYPE_HTML, 0);
+        sendString("<html>\n  <frameset rows=\"100%,*\" framespacing=\"0\" ");
+        sendString("border=\"0\" frameborder=\"0\">\n");
+        sendString("    <frame src=\"home.html\" marginwidth=\"0\" ");
+        sendString("marginheight=\"0\" name=\"area\">\n");
+        sendString("    <noframes>\n	 <body></body>\n    </noframes>\n");
+        sendString("  </frameset>\n</html>\n");
+        printTrailer=0;
+      }
     } else if(strcmp(pageName, "home.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH);

@@ -48,7 +48,7 @@ extern size_t allocatedMemory;
 extern time_t nextLogTime;
 
 /* Flags */
-extern int isLsofPresent, isNepedPresent, isNmapPresent;
+extern int isLsofPresent, isNepedPresent, isNmapPresent, filterExpressionInExtraFrame;
 extern short capturePackets, endNtop;
  
  
@@ -150,6 +150,7 @@ extern TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
 extern u_int broadcastEntryIdx;
 extern u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
 extern u_short mtuSize[], headerSize[];
+extern char *currentFilterExpression;
 
 /* function declaration ***************************************************** */
 
@@ -179,6 +180,8 @@ extern void showURLs(void);
 extern void addURL(char* url);
 extern void deleteURL(char* user);
 extern void doAddURL(int _len);
+extern int doChangeFilter(int len);
+extern void changeFilter(void);
 extern void addDefaultAdminUser(void);
 
 /* dataFormat.c */

@@ -231,6 +231,8 @@ extern int out_graph(short gifwidth,
 #define STR_SORT_DATA_RCVD_HOST_TRAFFIC "dataRcvdHostTraffic.html"
 #define STR_SORT_DATA_SENT_HOST_TRAFFIC "dataSentHostTraffic.html"
 #define SWITCH_NIC_HTML                 "switch.html"
+#define CHANGE_FILTER_HTML              "changeFilter.html"
+#define FILTER_INFO_HTML                "filterInfo.html"
 
 
 

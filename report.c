@@ -533,6 +533,15 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf2);
 
+      if((currentFilterExpression != NULL)
+	 && (currentFilterExpression[0] != '\0')) {
+	if(snprintf(buf2, sizeof(buf2), "<TR><TH "TH_BG">Traffic Filter</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    currentFilterExpression) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf2);
+      }
+
       sendString("<TR><TH "TH_BG">Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
 
 #ifdef HAVE_GDCHART

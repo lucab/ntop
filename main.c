@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
   enableNetFlowSupport = 0;
 
   /* Initialization of local variables */
-  isLsofPresent  = isNmapPresent  = 0;
+  isLsofPresent = isNmapPresent = filterExpressionInExtraFrame = 0;
 
   rulesFile[0] = '\0';
   flowSpecs[0] = '\0';
@@ -151,9 +151,9 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:k";
 #else
-  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:";
+  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:k";
 #endif
 
   while((op = getopt(argc, argv, theOpts)) != EOF) {
@@ -390,6 +390,10 @@ int main(int argc, char *argv[]) {
 	  mapperURL[sizeof(mapperURL)-1] = '\0';
 	} else
 	  strcpy(mapperURL, optarg);
+	break;
+
+      case 'k': /* update info of used kernel filter expression in extra frame */
+        filterExpressionInExtraFrame=1;
 	break;
 
       default:

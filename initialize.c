@@ -1059,27 +1059,27 @@ void initDeviceDatalink(void) {
 void parseTrafficFilter(char *argv[], int optind) {
   /* Construct, compile and set filter */
   if(optind > 0) {
-    char *expression;
-
-    expression = copy_argv(argv + optind);
-    if(expression != NULL) {
+    currentFilterExpression = copy_argv(argv + optind);
+    if(currentFilterExpression != NULL) {
       int i;
       struct bpf_program fcode;
 
       for(i=0; i<numDevices; i++) {
 	if(!device[i].virtualDevice) {
-	  if((pcap_compile(device[i].pcapPtr, &fcode, expression, 1,
+	  if((pcap_compile(device[i].pcapPtr, &fcode, currentFilterExpression, 1,
 			   device[i].netmask.s_addr) < 0)
 	     || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
 	    traceEvent(TRACE_ERROR,
-		       "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
-		       expression, pcap_geterr(device[i].pcapPtr), device[i].name);
+		   "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
+		   currentFilterExpression,
+		   pcap_geterr(device[i].pcapPtr), device[i].name);
 	    exit(-1);
 	  } else
-	    traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", expression, device[i].name);
+	    traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", currentFilterExpression, device[i].name);
 	}
       }
-    }
+    } else
+    currentFilterExpression = strdup("");	/* so that it isn't NULL! */
   }
 }
 

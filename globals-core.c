@@ -57,7 +57,7 @@ int sslInitialized, sslPort;
 time_t nextLogTime;
 
 /* Flags */
-int isLsofPresent, isNmapPresent;
+int isLsofPresent, isNmapPresent, filterExpressionInExtraFrame;
 short capturePackets;
 short endNtop;
 
@@ -194,3 +194,5 @@ u_short headerSize[] = {
 #ifdef ENABLE_NAPSTER
 NapsterServer napsterSvr[MAX_NUM_NAPSTER_SERVER];
 #endif
+
+char *currentFilterExpression;

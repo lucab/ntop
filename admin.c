@@ -584,6 +584,161 @@ void doAddURL(int len) {
 
 /* *******************************/
 
+/* Courtesy of Michael Weidel <m.weidel@gmx.de> */
+
+int doChangeFilter(int len) {
+  int i,idx,badChar=0;
+  struct bpf_program fcode;
+  char *currentFilterExpressionSav;
+  char buf[BUF_SIZE],postData[256],*key,*err=NULL;
+
+  currentFilterExpressionSav=strdup(currentFilterExpression);  /* Backup */
+
+  if((idx = readHTTPpostData(len, postData, sizeof(postData))) < 0)
+    return 1;
+
+  for(i=0,key=postData; i<=idx; i++) {
+    if(postData[i] == '&') {
+      postData[i] = '\0';
+      key = &postData[i+1];
+    } else if((key != NULL) && (postData[i] == '=')) {
+      postData[i] = '\0';
+      if(strcmp(key, "filter") == 0) {
+       currentFilterExpression = strdup(&postData[i+1]);
+      }
+      key = NULL;
+    }
+  }
+  if(key == NULL) {
+    decodeWebFormURL(currentFilterExpression);
+    for(i=0; i<strlen(currentFilterExpression); i++) {
+      if(!(isalpha(currentFilterExpression[i]) || 
+	   isdigit(currentFilterExpression[i]) || 
+	  (strchr("/-+*_.!&|><=\\\":[]() ", currentFilterExpression[i]) != NULL))) {
+       badChar = 1;	       /* Perhaps we don't have to use this check? */
+       break;
+      }
+    }
+  } else err = "ERROR: The HTTP Post Data was invalid.";
+  if(badChar)
+    err = "ERROR: the specified filter expression contains invalid characters.";
+  if(err==NULL) {
+    traceEvent(TRACE_INFO, "Changing the kernel (libpcap) filter...");
+    
+#ifdef MULTITHREADED
+    accessMutex(&gdbmMutex, "changeFilter");
+#endif
+
+    for(i=0; i<numDevices; i++) {
+      if((!device[i].virtualDevice)&&(err==NULL)) {
+	if((pcap_compile(device[i].pcapPtr, &fcode, currentFilterExpression, 1,
+			device[i].netmask.s_addr) < 0)
+	   || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
+	  traceEvent(TRACE_ERROR,
+		    "ERROR: wrong filter '%s' (%s) on interface %s.\nUsing old filter.\n",
+		    currentFilterExpression, pcap_geterr(device[i].pcapPtr), device[i].name);
+	  err="The syntax of the defined filter is wrong.";
+	} else{
+	 if(*currentFilterExpression!='\0'){
+	   traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", 
+		      currentFilterExpression, device[i].name);
+	 }else{
+	   traceEvent(TRACE_INFO, "Set no kernel (libpcap) filtering on device %s.",
+		      device[i].name);
+	 }
+	}
+      }
+    }
+
+#ifdef MULTITHREADED
+    releaseMutex(&gdbmMutex);
+#endif
+  }
+  sendHTTPHeader(HTTP_TYPE_HTML, 0);
+
+  if(filterExpressionInExtraFrame) {
+    printHTMLheader("", 0);
+  } else {
+    printHTMLheader("changing kernel (libpcap) filter expression", HTML_FLAG_NO_REFRESH);
+    sendString("<P><HR></P>\n<P><CENTER>");
+  }
+
+  if(err == NULL) {
+    if(*currentFilterExpression != '\0'){
+      if(snprintf(buf, sizeof(buf), "<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1>"
+		  "<B>Filter changed to <I>%s</I>.</B></FONT>\n", 
+		 currentFilterExpression) < 0)
+       traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+    }else sendString("<B>Kernel (libpcap) filtering disabled.</B>\n");
+    if(filterExpressionInExtraFrame) sendString("</BODY>\n</HTML>\n");
+    else{
+      sendString("</CENTER></P>\n");
+      /*sendString("<P><CENTER>The statistics are also reset.</CENTER></P>\n");*/
+      printHTMLtrailer();
+    }
+
+    if(currentFilterExpressionSav!=NULL) free(currentFilterExpressionSav);
+    return 0; /* -> Statistics are reset (if uncommented) */
+  } else {
+    if(currentFilterExpression!=NULL) free(currentFilterExpression);
+    currentFilterExpression=currentFilterExpressionSav;
+    for(i=0; i<numDevices; i++) {      /* restore old filter expression */
+      if((!device[i].virtualDevice)&&(err==NULL)) {
+	if((pcap_compile(device[i].pcapPtr, &fcode, currentFilterExpression, 1,
+			device[i].netmask.s_addr) < 0)
+	   || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
+	  traceEvent(TRACE_ERROR,
+		    "ERROR: wrong filter '%s' (%s) on interface %s.\nUsing old filter.\n",
+		    currentFilterExpression, pcap_geterr(device[i].pcapPtr), device[i].name);
+	}
+      }
+    }
+    printFlagedWarning(err);
+    if(filterExpressionInExtraFrame) sendString("</BODY>\n</HTML>\n");
+    else printHTMLtrailer();
+    return 2;
+  }
+}
+
+/* ******************************* */
+
+/* Courtesy of Michael Weidel <m.weidel@gmx.de> */
+
+void changeFilter(void) {
+  char buf[BUF_SIZE];
+  
+  printHTMLheader("Change kernel (libpcap) filter expression", HTML_FLAG_NO_REFRESH);
+  sendString("<BR><HR><P>\n");
+  sendString("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=5>\n<TR>\n");
+  sendString("<TH ALIGN=center>old filter expression:&nbsp;</TH><TD ALIGN=left>");
+  if(snprintf(buf, sizeof(buf), "<B>%s",
+	     currentFilterExpression) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
+  if(*currentFilterExpression=='\0') sendString("&lt;No filter defined&gt;");
+  sendString("</B><BR>\n</TD>\n</TR>\n");
+  
+  sendString("<FORM METHOD=POST ACTION=/doChangeFilter");
+  if(filterExpressionInExtraFrame) sendString(" target=\"filterinfo\"");
+  sendString(">\n<TR>\n<TH ALIGN=center>new filter expression:&nbsp;</TH>");
+  sendString("<TD ALIGN=left><INPUT TYPE=text NAME=filter SIZE=40>\n");
+  sendString("</TD>\n</TR>\n</TABLE>\n<CENTER>");
+  sendString("<INPUT TYPE=submit VALUE=\"Change Filter\">&nbsp;&nbsp;&nbsp;");
+  sendString("<INPUT TYPE=reset></FORM>");
+  
+  sendString("</CENTER></P><P></B>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
+  sendString("You can use all filter expressions libpcap can handle, \n");
+  sendString("like the ones you pass to tcpdump.<BR>\n");
+  sendString("If \"new filter expression\" is left empty, no filtering is performed.<BR>\n");
+  sendString("If you want the statistics to be reset, you have to do that manually ");
+  sendString("with <A HREF=\"resetStats.html\">\"Reset Stats\"</A>. \n");
+  sendString("Be careful: That can take quite a long time!");
+  sendString("<BR><B></FONT>\n");
+}
+
+/* *******************************/
+
 struct _menuData {
   char	*text, *anchor;
 };
@@ -614,6 +769,7 @@ static void sendMenuFooter(int itm1Idx, int itm2Idx) {
 }
 
 /* *******************************/
+
 static void encodeWebFormURL(char *in, char *buf, int buflen) {
   int i, j, c, d;
 
@@ -621,7 +777,7 @@ static void encodeWebFormURL(char *in, char *buf, int buflen) {
     c = (unsigned int)in[i];
     if(isalpha(c) || isdigit(c)) {
       buf[j++] = (char)c;
-    } else if (c == ' ') {
+    } else if(c == ' ') {
       buf[j++] = '+';
     } else {
       buf[j++] = '%';
@@ -635,6 +791,7 @@ static void encodeWebFormURL(char *in, char *buf, int buflen) {
 }
 
 /* *******************************/
+
 static void decodeWebFormURL(char *buf) {
   int i, j;
 
@@ -652,6 +809,7 @@ static void decodeWebFormURL(char *buf) {
 }
 
 /* *******************************/
+
 static int readHTTPpostData(int len, char *buf, int buflen) {
   int rc, idx=0;
 
@@ -784,7 +942,8 @@ void addDefaultAdminUser(void) {
   addKeyIfMissing("2showU",      "users=1admin", 0);
   addKeyIfMissing("2modifyU",    "users=1admin", 0);
   addKeyIfMissing("2deleteU",    "users=1admin", 0);
-  addKeyIfMissing("2shutdown",   "users=1admin", 0);
+  addKeyIfMissing("2shut",       "users=1admin", 0);
   addKeyIfMissing("2resetStats", "users=1admin", 0);
+  addKeyIfMissing("2chang",      "users=1admin", 0);
 }
 
