@@ -58,6 +58,8 @@ static int readHTTPheader(char* theRequestedURL,
   for(;;) {
     int goodCharType;
 
+    if(newSock == DUMMY_SOCKET_VALUE) return;
+
     FD_ZERO(&mask);
     FD_SET((unsigned int)topSock, &mask);
 

@@ -21,6 +21,10 @@
 
 #include "ntop.h"
 
+/* #define DEBUG  */
+
+/* #define GDBM_DEBUG */
+
 /* Global */
 static char hex[] = "0123456789ABCDEF";
 
@@ -51,24 +55,34 @@ struct in_addr theAddrToResolve;
 struct hostent *resolvedAddress = NULL;
 pthread_t resolveAddressNowId;
 pthread_mutex_t mutexVariable;
+int threadCreated=0;
 pthread_cond_t condVariable;
 
 void* resolveAddressNow(void* notUsed _UNUSED_) {
   h_errno = 0;
 
-  accessMutex(&mutexVariable, "resolveAddressNow");
-
+  for(;;) {
+    accessMutex(&mutexVariable, "resolveAddressNow");
+    
+    if(theAddrToResolve.s_addr != 0) { 
 #ifdef DNS_DEBUG
-  traceEvent(TRACE_INFO, "Starting DNS Resolution of %s", intoa(theAddrToResolve));
+      traceEvent(TRACE_INFO, "Starting DNS Resolution of %s", 
+		 intoa(theAddrToResolve));
 #endif
-
-  resolvedAddress = (struct hostent*)gethostbyaddr((char*)&theAddrToResolve, 4, AF_INET);
-
+      
+      resolvedAddress = (struct hostent*)gethostbyaddr((char*)&theAddrToResolve,
+						       4, AF_INET);
+      
 #ifdef DNS_DEBUG
-  traceEvent(TRACE_INFO, "Address resolved (resolvedAddress=%x)(errno=%d)\n",
-	     resolvedAddress, h_errno);
+      traceEvent(TRACE_INFO, "Address resolved (resolvedAddress=%x)(errno=%d)\n",
+		 resolvedAddress, h_errno);
 #endif
-  releaseMutex(&mutexVariable);
+      
+      theAddrToResolve.s_addr = 0;
+    }
+    releaseMutex(&mutexVariable);
+    sleep(2);
+  }
 }
 
 
@@ -89,10 +103,14 @@ static void resolveAddress(char* symAddr,
   datum data_data;
 #endif
 
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Entering resolveAddress()");
+#endif
   addr = hostAddr->s_addr;
 
 #ifdef HAVE_GDBM_H
-  if(snprintf(keyBuf, sizeof(keyBuf), "%u", addr) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+  if(snprintf(keyBuf, sizeof(keyBuf), "%u", addr) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
   key_data.dptr = keyBuf;
   key_data.dsize = strlen(keyBuf)+1;
 
@@ -100,7 +118,12 @@ static void resolveAddress(char* symAddr,
   accessMutex(&gdbmMutex, "resolveAddress");
 #endif
 
-  if(gdbm_file == NULL) return; /* ntop is quitting... */
+  if(gdbm_file == NULL) {
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Leaving resolveAddress()");
+#endif
+    return; /* ntop is quitting... */
+  }
   data_data = gdbm_fetch(gdbm_file, key_data);
 
 #ifdef MULTITHREADED
@@ -110,7 +133,8 @@ static void resolveAddress(char* symAddr,
   /* First check whether the address we search for is cached... */
   if(data_data.dptr != NULL) {
 #ifdef GDBM_DEBUG
-    traceEvent(TRACE_INFO, "Fetched data (2): '%s' [%s]\n", data_data.dptr, tmpBuf);
+    traceEvent(TRACE_INFO, "Fetched data (2): '%s' [%s]\n",
+	       data_data.dptr, keyBuf);
 #endif
 
 #ifdef MULTITHREADED
@@ -133,10 +157,13 @@ static void resolveAddress(char* symAddr,
     updateHostNameInfo(addr, data_data.dptr);
     free(data_data.dptr);
     numResolvedOnCacheAddresses++;
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Leaving resolveAddress()");
+#endif
     return;
   } else {
 #ifdef GDBM_DEBUG
-   traceEvent(TRACE_ERROR, "Unable to retrieve %s\n", tmpBuf);
+    traceEvent(TRACE_ERROR, "Unable to retrieve %s\n", keyBuf);
 #endif
   }
 #endif
@@ -160,22 +187,28 @@ static void resolveAddress(char* symAddr,
     {
       int i, addrResolved=0;
 
-      createMutex(&mutexVariable);
-
       theAddrToResolve.s_addr = theAddr.s_addr;
+      
+      if(threadCreated == 0) 
+	createMutex(&mutexVariable);
+      else
+	releaseMutex(&mutexVariable);
+      
+      if(threadCreated == 0) {
+	createThread(&resolveAddressNowId, resolveAddressNow, NULL);
+	threadCreated = 1; 
+	sleep(2); /* I need to sleep to make sure the thread locked
+		     the semaphore. I cannot lock the mutex before
+		     creating the thread, because in this case the
+		     unlock to the mutex won't work (a mutex cannot
+		     be locked by thread A and unlocked by a different
+		     thread */
+      }
 
-      createThread(&resolveAddressNowId, resolveAddressNow, NULL);
-      sleep(2); /* I need to sleep to make sure the thread locked
-		   the semaphore. I cannot lock the mutex before
-		   creating the thread, because in this case the
-		   unlock to the mutex won't work (a mutex cannot
-		   be locked by thread A and unlocked by a different
-		   thread */
-
-      for(i=0; i<10; i++) {
+      for(i=0; (addrResolved == 0) && (i<5); i++) {
 	if(tryLockMutex(&mutexVariable, "resolveAddressNow") == EBUSY) {
 #ifdef DNS_DEBUG
-	  traceEvent(TRACE_INFO, "Waiting");
+	  traceEvent(TRACE_INFO, "Waiting (%d)", i);
 #endif
 	} else {
 	  /* NS completed */
@@ -186,23 +219,26 @@ static void resolveAddress(char* symAddr,
 	  break;
 	}
 
-	sleep(1);
+	sleep(2);
       }
 
       if(addrResolved == 0) {
 #ifdef DNS_DEBUG
 	traceEvent(TRACE_INFO, "===>>>>> DNS Timeout\n");
 #endif
+	killThread(&resolveAddressNowId);
+	threadCreated = 0;
+	deleteMutex(&mutexVariable);
+	resolveAddressNowId= NULL;
 	hp = NULL;
       } else {
+	accessMutex(&mutexVariable, "Now");
 	hp = resolvedAddress;
 #ifdef DNS_DEBUG
 	traceEvent(TRACE_INFO, "DNS Resolution OK (hp=%x)", hp);
 #endif
       }
-
-      killThread(&resolveAddressNowId);
-      deleteMutex(&mutexVariable);
+            
     }
 #else /* DNS_ASYNC */
     hp = (struct hostent*)gethostbyaddr((char*)&theAddr, 4, AF_INET);
@@ -271,7 +307,6 @@ static void resolveAddress(char* symAddr,
   releaseMutex(&addressResolutionMutex);
 #endif
 
-#ifdef HAVE_GDBM_H
   /* key_data has been set already */
   data_data.dptr = symAddr;
   data_data.dsize = strlen(symAddr)+1;
@@ -282,12 +317,17 @@ static void resolveAddress(char* symAddr,
   accessMutex(&gdbmMutex, "resolveAddress-4");
 #endif
 
-  if(gdbm_file == NULL) return; /* ntop is quitting... */
+  if(gdbm_file == NULL) {
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Leaving resolveAddress()");
+#endif
+    return; /* ntop is quitting... */
+  }
   if(gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
    traceEvent(TRACE_ERROR, "Error while adding '%s'\n.\n", symAddr);
   else {
 #ifdef GDBM_DEBUG
-   traceEvent(TRACE_INFO, "Added data: '%s' [%s]\n", symAddr, tmpBuf);
+    traceEvent(TRACE_INFO, "Added data: '%s' [%s]\n", symAddr, keyBuf);
 #endif
   }
 
@@ -295,7 +335,9 @@ static void resolveAddress(char* symAddr,
   releaseMutex(&gdbmMutex);
 #endif
 
-#endif /* HAVE_GDBM_H */
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Leaving Resolveaddress()");
+#endif
 }
 
 /* *************************** */
@@ -381,6 +423,7 @@ void cleanupAddressQueue(void) {
 
 void* dequeueAddress(void* notUsed _UNUSED_) {
   struct hnamemem *elem;
+
 
   while(capturePackets) {
 #ifdef DEBUG
@@ -516,88 +559,76 @@ void ipaddr2str(struct in_addr hostIpAddress, char* outBuf, int outBufLen) {
     strncpy(outBuf, _intoa(hostIpAddress, buf, sizeof(buf)), outBufLen);
   }
 
-  for(;;) {
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    key_data.dptr = tmpBuf;
-    key_data.dsize = strlen(key_data.dptr)+1;
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  key_data.dptr = tmpBuf;
+  key_data.dsize = strlen(key_data.dptr)+1;
 
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "ipaddr2str");
+  accessMutex(&gdbmMutex, "ipaddr2str");
 #endif
 
-    if(gdbm_file == NULL) return; /* ntop is quitting... */
-    data_data = gdbm_fetch(gdbm_file, key_data);
+  if(gdbm_file == NULL) return; /* ntop is quitting... */
+  data_data = gdbm_fetch(gdbm_file, key_data);
 
 #ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
+  releaseMutex(&gdbmMutex);
 #endif
 
-    if(data_data.dptr != NULL) {
+  if(data_data.dptr != NULL) {
 #ifdef GDBM_DEBUG
-     traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]\n", data_data.dptr, tmpBuf);
+    traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]\n", data_data.dptr, tmpBuf);
 #endif
-      updateHostNameInfo(hostIpAddress.s_addr, data_data.dptr);
-      strncpy(outBuf, data_data.dptr, outBufLen);
-      return;
-    } else {
+    updateHostNameInfo(hostIpAddress.s_addr, data_data.dptr);
+    strncpy(outBuf, data_data.dptr, outBufLen);
+    return;
+  } else {
 #ifdef GDBM_DEBUG
-     traceEvent(TRACE_INFO, "Unable to retrieve %s\n", tmpBuf);
+    traceEvent(TRACE_INFO, "Unable to retrieve %s\n", tmpBuf);
 #endif
-      p = NULL;
-    }
+    p = NULL;
+  }
 
-    if(p == NULL) {
-      /* New entry */
+  if(p == NULL) {
+    /* New entry */
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-      char *pName;  /* p may be freed after queueAddress, just before returning,
-		       this stores the return value (Courtesy of Andreas Pfaller) */
+    char *pName;  /* p may be freed after queueAddress, just before returning,
+		     this stores the return value (Courtesy of Andreas Pfaller) */
 #endif
-      p = (struct hnamemem*)malloc(sizeof(struct hnamemem));
-      memset(p, 0, sizeof(struct hnamemem));
-#ifndef HAVE_GDBM_H
-      hnametable[idx] = p;
-#endif
-      p->addr.s_addr = addr;
+    p = (struct hnamemem*)malloc(sizeof(struct hnamemem));
+    memset(p, 0, sizeof(struct hnamemem));
+    p->addr.s_addr = addr;
 
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
-      p->name = outBuf;
-      memset(p->name, 0, MAX_HOST_SYM_NAME_LEN);
-      pName = p->name;
+    p->name = outBuf;
+    memset(p->name, 0, MAX_HOST_SYM_NAME_LEN);
+    pName = p->name;
 #ifdef WIN32
-      /*
-	 Under WIN32 local addresses are resolved immediately
-	 because this is much more efficient under this OS
-      */
-      if(isLocalAddress(&hostIpAddress))
-	resolveAddress(p->name, &hostIpAddress, 0);
-      else {
-	if(snprintf(p->name, outBufLen, "*%s*",
-		 _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	queueAddress(p, outBufLen);
-        return;
-      }
-#else
+    /*
+      Under WIN32 local addresses are resolved immediately
+      because this is much more efficient under this OS
+    */
+    if(isLocalAddress(&hostIpAddress))
+      resolveAddress(p->name, &hostIpAddress, 0);
+    else {
       if(snprintf(p->name, outBufLen, "*%s*",
-	      _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
+		  _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       queueAddress(p, outBufLen);
       return;
+    }
+#else
+    if(snprintf(p->name, outBufLen, "*%s*",
+		_intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    queueAddress(p, outBufLen);
+    return;
 #endif /* WIN32 */
 
 #else /* defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION) */
-      p->name = outBuf;
-      memset(p->name, 0, MAX_HOST_SYM_NAME_LEN);
-      resolveAddress(p->name, &hostIpAddress, 0 /* Symbolic address */);
-#endif
-      break;
-    }
-
-#ifndef HAVE_GDBM_H
-    idx = (idx+1)%device[actualDeviceId].actualHashSize;
-#else
-    break;
+    p->name = outBuf;
+    memset(p->name, 0, MAX_HOST_SYM_NAME_LEN);
+    resolveAddress(p->name, &hostIpAddress, 0 /* Symbolic address */);
 #endif
   }
 }
