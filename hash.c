@@ -167,7 +167,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
 #ifdef MULTITHREADED
     if (myGlobals.capturePackets == 1 /* i.e. active, not cleanup */ ) {
-        if (i & MUTEX_FHS_MASK == 0) {
+        if ((i+1) & MUTEX_FHS_MASK == 0) {
            releaseMutex(&myGlobals.tcpSessionsMutex);
 #ifdef HAVE_SCHED_H
            sched_yield(); /* Allow other threads to run */
