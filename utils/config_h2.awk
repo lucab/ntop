@@ -46,11 +46,7 @@ BEGIN {
         print "  printFeatureConfigInfo(textPrintFlag, \"" $1 "\", \"undefined\");"
         print "#endif"
     } else if ($2 == "NULL") {
-        print "#if " $1 " == NULL"
         print "  printFeatureConfigInfo(textPrintFlag, \"" $1 "\", \"(null)\");"
-        print "#else"
-        print "  printFeatureConfigInfo(textPrintFlag, \"" $1 "\", " $2 ");"
-        print "#endif"
     } else {
         print "#ifdef " $1
         print "  printFeatureConfigInfo(textPrintFlag, \"" $1 "\", " $2 ");"
