@@ -177,187 +177,51 @@ void updateUsedPorts(HostTraffic *srcHost,
 
 /* ************************************ */
 
-static void updateHostSessionsList(u_int theHostIdx,
-				   u_short port,
-				   u_int remotePeerIdx,
-				   IPSession *theSession,
-				   u_short sessionType,
-				   u_char initiator,
-				   int role, int actualDeviceId) {
-  /* This is a known port hence we're interested in */
-  IpGlobalSession *scanner=NULL;
-  HostTraffic *theHost, *theRemHost;
-
-  if((theHostIdx == myGlobals.broadcastEntryIdx)
-     || (theHostIdx == myGlobals.otherHostEntryIdx)
-     || (remotePeerIdx == myGlobals.broadcastEntryIdx)
-     || (remotePeerIdx == NO_PEER)
-     || (theHostIdx == NO_PEER)
-     || ((theRemHost = myGlobals.device[actualDeviceId].
-	  hash_hostTraffic[checkSessionIdx(remotePeerIdx)]) == NULL)
-     )
-    return;
-
-  theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(theHostIdx)];
-
-  if((theHost == NULL) /* Probably the host has been deleted */
-     || broadcastHost(theHost)) /* We could't care less of junk traffic */
-    return;
-
-  switch(sessionType) {
-  case IPPROTO_TCP: /* 6 */
-    scanner = theHost->tcpSessionList;
-    break;
-  case IPPROTO_UDP: /* 17 */
-    scanner = theHost->udpSessionList;
-    break;
-  }
-
-  while(scanner != NULL) {
-    if(scanner->magic != MAGIC_NUMBER) {
-      traceEvent(TRACE_ERROR, "===> Magic assertion failed (2) for host %s/%d",
-		 theHost->hostNumIpAddress, sessionType);
-      scanner = NULL;
-      return;
-    } else if((scanner->port == port) && (scanner->initiator == role))
-      break;
-
-    scanner = (IpGlobalSession*)(scanner->next);
-  }
-
-  if(scanner == NULL) {
-    scanner = (IpGlobalSession*)malloc(sizeof(IpGlobalSession));
-    memset(scanner, 0, sizeof(IpGlobalSession));
-    scanner->magic = MAGIC_NUMBER;
-    scanner->port = port;
-    scanner->initiator = role;
-    scanner->firstSeen = myGlobals.actTime;
-
-    resetUsageCounter(&scanner->peers);
-
-    /* Add the session to the session list */
-    switch(sessionType) {
-    case IPPROTO_TCP:
-      scanner->next = theHost->tcpSessionList;
-      theHost->tcpSessionList = scanner; /* list head */
-      break;
-    case IPPROTO_UDP:
-      scanner->next = theHost->udpSessionList;
-      theHost->udpSessionList = scanner; /* list head */
-      break;
-    }
-  }
-
-  scanner->lastSeen = myGlobals.actTime;
-  scanner->sessionCounter++;
-
-  incrementUsageCounter(&scanner->peers, remotePeerIdx, actualDeviceId);
-
-  switch(sessionType) {
-  case IPPROTO_TCP:
-    /*
-      The "IP Session History" table in the individual host
-      statistic page shown swapped values for the "Bytes sent"
-      and "Bytes rcvd" columns if the client opened the
-      connection. For server initiated connections like
-      standard (not passive) ftp-data it was OK.
-
-      Andreas Pfaller <apfaller@yahoo.com.au>
-    */
-
-    if((initiator == SERVER_TO_CLIENT)
-       || (initiator == CLIENT_TO_SERVER)) {
-      scanner->bytesSent           += theSession->bytesSent;
-      scanner->bytesRcvd           += theSession->bytesRcvd;
-      scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
-      scanner->bytesFragmentedRcvd += theSession->bytesFragmentedRcvd;
-    } else {
-      scanner->bytesSent           += theSession->bytesRcvd;
-      scanner->bytesRcvd           += theSession->bytesSent;
-      scanner->bytesFragmentedSent += theSession->bytesFragmentedRcvd;
-      scanner->bytesFragmentedRcvd += theSession->bytesFragmentedSent;
-    }
-    break;
-  case IPPROTO_UDP:
-    scanner->bytesSent           += theSession->bytesSent;
-    scanner->bytesRcvd           += theSession->bytesRcvd;
-    scanner->bytesFragmentedSent += theSession->bytesFragmentedSent;
-    scanner->bytesFragmentedRcvd += theSession->bytesFragmentedRcvd;
-    break;
-  }
-}
-
-/* ************************************ */
-
-void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
+void freeSession(IPSession *sessionToPurge, int actualDeviceId, 
+		 u_char allocateMemoryIfNeeded) {
   /* Session to purge */
 
-    if(sessionToPurge->magic != MAGIC_NUMBER) {
-	traceEvent(TRACE_ERROR, "===> Magic assertion failed (5)");
-	return;
-    }
+  if(sessionToPurge->magic != MAGIC_NUMBER) {
+    traceEvent(TRACE_ERROR, "===> Magic assertion failed (5)");
+    return;
+  }
 
-  if((sessionToPurge->initiatorIdx < myGlobals.device[actualDeviceId].actualHashSize)
-     && (sessionToPurge->remotePeerIdx < myGlobals.device[actualDeviceId].actualHashSize)) {
-    /* The session seems to be formally ok */
+  if(((sessionToPurge->bytesProtoSent == 0)
+      || (sessionToPurge->bytesProtoRcvd == 0))
+     && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
+     /* "Valid" TCP session used to skip faked sessions (e.g. portscans
+	with one faked packet + 1 response [RST usually]) */
+     ) {
+    HostTraffic *theHost, *theRemHost;
+    char *fmt = "WARNING: detected TCP connection with no data exchanged "
+      "[%s:%d] -> [%s:%d] (pktSent=%d/pktRcvd=%d) (network mapping attempt?)";
 
-    if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
-      if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
-	updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
-			       sessionToPurge->remotePeerIdx, sessionToPurge,
-			       IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE, actualDeviceId);
-	updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->sport,
-			       sessionToPurge->initiatorIdx, sessionToPurge,
-			       IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE, actualDeviceId);
-      }
-    } else { /* Client->Server */
-      if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
-	updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
-			       sessionToPurge->initiatorIdx, sessionToPurge,
-			       IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE, actualDeviceId);
-	updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->dport,
-			       sessionToPurge->remotePeerIdx, sessionToPurge,
-			       IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE, actualDeviceId);
-      }
-    }
+    theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
+    theRemHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
 
-    if(((sessionToPurge->bytesProtoSent == 0)
-	|| (sessionToPurge->bytesProtoRcvd == 0))
-       && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
-       /* "Valid" TCP session used to skip faked sessions (e.g. portscans
-	  with one faked packet + 1 response [RST usually]) */
-       ) {
-      HostTraffic *theHost, *theRemHost;
-      char *fmt = "WARNING: detected TCP connection with no data exchanged "
-	"[%s:%d] -> [%s:%d] (pktSent=%d/pktRcvd=%d) (network mapping attempt?)";
+    if((theHost != NULL) && (theRemHost != NULL) && allocateMemoryIfNeeded) {
+      allocateSecurityHostPkts(theHost);
+      incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent,
+			    sessionToPurge->remotePeerIdx, actualDeviceId);
+      incrementUsageCounter(&theHost->secHostPkts->terminatedTCPConnServer,
+			    sessionToPurge->remotePeerIdx, actualDeviceId);
 
-      theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
-      theRemHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
-
-      if((theHost != NULL) && (theRemHost != NULL)) {
-	allocateSecurityHostPkts(theHost);
-	incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent,
-			      sessionToPurge->remotePeerIdx, actualDeviceId);
-	incrementUsageCounter(&theHost->secHostPkts->terminatedTCPConnServer,
-			      sessionToPurge->remotePeerIdx, actualDeviceId);
-
-	allocateSecurityHostPkts(theRemHost);
-	incrementUsageCounter(&theRemHost->secHostPkts->closedEmptyTCPConnRcvd,
-			      sessionToPurge->initiatorIdx, actualDeviceId);
-	incrementUsageCounter(&theRemHost->secHostPkts->terminatedTCPConnClient,
-			      sessionToPurge->initiatorIdx, actualDeviceId);
+      allocateSecurityHostPkts(theRemHost);
+      incrementUsageCounter(&theRemHost->secHostPkts->closedEmptyTCPConnRcvd,
+			    sessionToPurge->initiatorIdx, actualDeviceId);
+      incrementUsageCounter(&theRemHost->secHostPkts->terminatedTCPConnClient,
+			    sessionToPurge->initiatorIdx, actualDeviceId);
 	
 
-	if(myGlobals.enableSuspiciousPacketDump)
-	  traceEvent(TRACE_WARNING, fmt,
-		     theHost->hostSymIpAddress, sessionToPurge->sport,
-		     theRemHost->hostSymIpAddress, sessionToPurge->dport,
-		     sessionToPurge->pktSent, sessionToPurge->pktRcvd);
-      }
+      if(myGlobals.enableSuspiciousPacketDump)
+	traceEvent(TRACE_WARNING, fmt,
+		   theHost->hostSymIpAddress, sessionToPurge->sport,
+		   theRemHost->hostSymIpAddress, sessionToPurge->dport,
+		   sessionToPurge->pktSent, sessionToPurge->pktRcvd);
     }
-
-    handlePluginSessionTermination(sessionToPurge, actualDeviceId);
   }
+
+  handlePluginSessionTermination(sessionToPurge, actualDeviceId);
   
   /*
    * Having updated the session information, 'theSession'
@@ -443,7 +307,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
 	}
 
 	freeSessionCount++; 
-	freeSession(thisSession, actualDeviceId);
+	freeSession(thisSession, actualDeviceId, 1);
       }
 
       thisSession = nextSession;
@@ -569,7 +433,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    prevSession->next = nextSession;
 	  }
 	  
-	  freeSession(theSession, actualDeviceId);
+	  freeSession(theSession, actualDeviceId, 1);
 	  theSession = nextSession;
 	} else {
 	  prevSession = theSession;
@@ -1457,7 +1321,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	prevSession->next = theSession->next;
       }
 
-      freeSession(theSession, actualDeviceId);
+      freeSession(theSession, actualDeviceId, 1);
       return(NULL);
     }
   } else if(sessionType == IPPROTO_UDP) {
@@ -1474,13 +1338,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     tmpSession.sport = sport, tmpSession.dport = dport;
     if(fragmentedData) tmpSession.bytesFragmentedSent += packetDataLength;
 
-    if(getPortByNum(sport, sessionType) != NULL) {
-      updateHostSessionsList(srcHostIdx, sport, dstHostIdx, &tmpSession,
-			     sessionType, SERVER_TO_CLIENT, SERVER_ROLE, actualDeviceId);
-      tmpSession.bytesSent = 0, tmpSession.bytesRcvd = (TrafficCounter)length;
-      updateHostSessionsList(dstHostIdx, sport, srcHostIdx, &tmpSession,
-			     sessionType, CLIENT_FROM_SERVER, CLIENT_ROLE, actualDeviceId);
-    } else {
       if(myGlobals.isLsofPresent) {
 #ifdef MULTITHREADED
 	accessMutex(&myGlobals.lsofMutex, "HandleSession-1");
@@ -1489,25 +1346,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #if defined(MULTITHREADED)
 	releaseMutex(&myGlobals.lsofMutex);
 #endif
-      }
-    }
-
-    if(getPortByNum(dport, sessionType) != NULL) {
-      updateHostSessionsList(srcHostIdx, dport, dstHostIdx, &tmpSession,
-			     sessionType, CLIENT_TO_SERVER, CLIENT_ROLE, actualDeviceId);
-      tmpSession.bytesSent = 0, tmpSession.bytesRcvd = (TrafficCounter)length;
-      updateHostSessionsList(dstHostIdx, dport, srcHostIdx, &tmpSession,
-			     sessionType, SERVER_FROM_CLIENT, SERVER_ROLE, actualDeviceId);
-    } else {
-      if(myGlobals.isLsofPresent) {
-#if defined(MULTITHREADED)
-	accessMutex(&myGlobals.lsofMutex, "HandleSession-2");
-#endif
-	myGlobals.updateLsof = 1; /* Force lsof update */
-#if defined(MULTITHREADED)
-	releaseMutex(&myGlobals.lsofMutex);
-#endif
-      }
     }
   }
 

@@ -102,11 +102,11 @@ static void updateRoutedTraffic(HostTraffic *router) {
   if(router != NULL) {
     if(router->routedTraffic == NULL) {
       int mallocLen = sizeof(RoutingCounter);
-      
-	router->routedTraffic = (RoutingCounter*)malloc(mallocLen);
-	memset(router->routedTraffic, 0, mallocLen);
+
+      router->routedTraffic = (RoutingCounter*)malloc(mallocLen);
+      memset(router->routedTraffic, 0, mallocLen);
     }
-    
+
     if(router->routedTraffic != NULL) { /* malloc() didn't fail */
       router->routedTraffic->routedPkts++;
       router->routedTraffic->routedBytes += h_save->len - sizeof(struct ether_header);
@@ -138,7 +138,7 @@ int handleIP(u_short port,
 
   if(idx != NO_PEER) {
     if(subnetPseudoLocalHost(srcHost)) {
-      if(subnetPseudoLocalHost(dstHost)) {	
+      if(subnetPseudoLocalHost(dstHost)) {
 	if((!broadcastHost(srcHost)) && (srcHost->protoIPTrafficInfos != NULL)) srcHost->protoIPTrafficInfos[idx].sentLoc += length;
 	if((!broadcastHost(dstHost)) && (dstHost->protoIPTrafficInfos != NULL)) dstHost->protoIPTrafficInfos[idx].rcvdLoc += length;
 	myGlobals.device[actualDeviceId].ipProtoStats[idx].local += length;
@@ -166,12 +166,12 @@ int handleIP(u_short port,
 
 /* ************************************ */
 
-static void addContactedPeers(HostTraffic *sender, 
-			      HostTraffic *receiver, 
+static void addContactedPeers(HostTraffic *sender,
+			      HostTraffic *receiver,
 			      int actualDeviceId) {
   short found;
 
-  if((sender == NULL) 
+  if((sender == NULL)
      || (receiver == NULL)
      || (sender->hostTrafficBucket == receiver->hostTrafficBucket)) {
     traceEvent(TRACE_ERROR, "Sanity check failed @ addContactedPeers");
@@ -245,7 +245,7 @@ static void dumpFragmentData(IpFragment *fragment) {
 
 static IpFragment *searchFragment(HostTraffic *srcHost,
 				  HostTraffic *dstHost,
-				  u_int fragmentId, 
+				  u_int fragmentId,
 				  int actualDeviceId) {
   IpFragment *fragment = myGlobals.device[actualDeviceId].fragmentList;
 
@@ -277,7 +277,7 @@ static void checkFragmentOverlap(u_int srcHostIdx,
                                  u_int dstHostIdx,
                                  IpFragment *fragment,
                                  u_int fragmentOffset,
-                                 u_int dataLength, 
+                                 u_int dataLength,
 				 int actualDeviceId) {
   if (fragment->fragmentOrder == UNKNOWN_FRAGMENT_ORDER) {
     if(fragment->lastOffset > fragmentOffset)
@@ -306,7 +306,7 @@ static void checkFragmentOverlap(u_int srcHostIdx,
     allocateSecurityHostPkts(fragment->src); allocateSecurityHostPkts(fragment->dest);
     incrementUsageCounter(&fragment->src->secHostPkts->overlappingFragmentSent,
 			  dstHostIdx, actualDeviceId);
-    incrementUsageCounter(&fragment->dest->secHostPkts->overlappingFragmentRcvd, 
+    incrementUsageCounter(&fragment->dest->secHostPkts->overlappingFragmentRcvd,
 			  srcHostIdx, actualDeviceId);
   }
 }
@@ -322,7 +322,7 @@ static u_int handleFragment(HostTraffic *srcHost,
                             u_int fragmentId,
                             u_int off,
                             u_int packetLength,
-                            u_int dataLength, 
+                            u_int dataLength,
 			    int actualDeviceId) {
   IpFragment *fragment;
   u_int fragmentOffset, length;
@@ -349,7 +349,7 @@ static u_int handleFragment(HostTraffic *srcHost,
     fragment->prev = NULL;
     myGlobals.device[actualDeviceId].fragmentList = fragment;
   } else
-    checkFragmentOverlap(srcHostIdx, dstHostIdx, fragment, 
+    checkFragmentOverlap(srcHostIdx, dstHostIdx, fragment,
 			 fragmentOffset, dataLength, actualDeviceId);
 
   fragment->lastOffset = fragmentOffset;
@@ -422,21 +422,21 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 			       HostTraffic *dstHost,
 			       u_char *ether_dst, int actualDeviceId) {
 
-  if((subnetLocalHost(srcHost) && (!subnetLocalHost(dstHost)) 
+  if((subnetLocalHost(srcHost) && (!subnetLocalHost(dstHost))
       && (!broadcastHost(dstHost)) && (!multicastHost(dstHost)))
-     || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost)) 
+     || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost))
 	 && (!broadcastHost(srcHost)) && (!multicastHost(srcHost)))) {
     u_int routerIdx, j;
     HostTraffic *router;
 
     routerIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
-    
+
     router = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
-    
+
     if(((router->hostNumIpAddress[0] != '\0')
-       && (broadcastHost(router)
-	   || multicastHost(router)
-	   || (!subnetLocalHost(router)) /* No IP: is this a special Multicast address ? */))
+	&& (broadcastHost(router)
+	    || multicastHost(router)
+	    || (!subnetLocalHost(router)) /* No IP: is this a special Multicast address ? */))
        || (router->hostIpAddress.s_addr == dstHost->hostIpAddress.s_addr)
        || (memcmp(router->ethAddress, dstHost->ethAddress, ETHERNET_ADDRESS_LEN) == 0)
        )
@@ -446,8 +446,8 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [idx=%d/%s/%s/%s]",
-	       srcHost->ethAddressString, srcHost->hostNumIpAddress, srcHost->hostSymIpAddress, 
-	       dstHost->ethAddressString, dstHost->hostNumIpAddress, dstHost->hostSymIpAddress, 
+	       srcHost->ethAddressString, srcHost->hostNumIpAddress, srcHost->hostSymIpAddress,
+	       dstHost->ethAddressString, dstHost->hostNumIpAddress, dstHost->hostSymIpAddress,
 	       routerIdx,
 	       router->ethAddressString,
 	       router->hostNumIpAddress,
@@ -462,7 +462,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 /* ************************************ */
 
 static void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
-                              TrafficCounter length, int actualDeviceId) {  
+                              TrafficCounter length, int actualDeviceId) {
   unsigned short hourId;
   struct tm t, *thisTime;
 
@@ -470,7 +470,7 @@ static void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
     traceEvent(TRACE_ERROR, "NULL host detected");
     return;
   }
-  
+
   if((srcHost == dstHost)
      || ((srcHost->hostTrafficBucket == myGlobals.otherHostEntryIdx)
 	 && (dstHost->hostTrafficBucket == myGlobals.otherHostEntryIdx)))
@@ -554,7 +554,7 @@ static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
 			 u_int length,
 			 u_char *ether_src,
-			 u_char *ether_dst, 
+			 u_char *ether_dst,
 			 int actualDeviceId) {
   u_short sport, dport;
   struct ip ip;
@@ -584,11 +584,11 @@ static void processIpPkt(const u_char *bp,
     return;
   }
 
-  /* 
-     Fix below courtesy of  
+  /*
+     Fix below courtesy of
      Christian Hammers <ch@westend.com>
   */
-  myGlobals.device[actualDeviceId].ipBytes += ntohs(ip.ip_len); 
+  myGlobals.device[actualDeviceId].ipBytes += ntohs(ip.ip_len);
 
   if(ip.ip_p == GRE_PROTOCOL_TYPE) {
     /*
@@ -627,8 +627,8 @@ static void processIpPkt(const u_char *bp,
 
   NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
-  if((!myGlobals.borderSnifferMode) 
-     && isBroadcastAddress(&ip.ip_dst) 
+  if((!myGlobals.borderSnifferMode)
+     && isBroadcastAddress(&ip.ip_dst)
      && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
     /* forceUsingIPaddress = 1; */
 
@@ -687,14 +687,14 @@ static void processIpPkt(const u_char *bp,
     fflush(stdout);
   }
 #endif
-  
+
   updateDevicePacketTTLStats(ip.ip_ttl, actualDeviceId);
 
   if(ip.ip_ttl != 255) {
     /*
       TTL can be calculated only when the packet
       is originated by the sender
-     */
+    */
     if((srcHost->minTTL == 0) || (ip.ip_ttl < srcHost->minTTL)) srcHost->minTTL = ip.ip_ttl;
     if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
   }
@@ -745,14 +745,14 @@ static void processIpPkt(const u_char *bp,
   off = ntohs(ip.ip_off);
 
   if (off & 0x3fff) {
-    /* 
-       This is a fragment: fragment handling is handled by handleFragment()
-       called below.
+    /*
+      This is a fragment: fragment handling is handled by handleFragment()
+      called below.
 
-       Courtesy of Andreas Pfaller
-     */
+      Courtesy of Andreas Pfaller
+    */
     myGlobals.device[actualDeviceId].fragmentedIpBytes += length;
-    
+
     switch(ip.ip_p) {
     case IPPROTO_TCP:
       srcHost->tcpFragmentsSent += length, dstHost->tcpFragmentsRcvd += length;
@@ -765,7 +765,7 @@ static void processIpPkt(const u_char *bp,
       break;
     }
   }
-  
+
   tcpUdpLen = ntohs(ip.ip_len) - hlen;
 
   switch(ip.ip_p) {
@@ -801,8 +801,8 @@ static void processIpPkt(const u_char *bp,
 
       /*
 	Don't move this code on top as it is supposed to stay here
-	as it modifies sport/sport 
-	
+	as it modifies sport/sport
+
 	Courtesy of Andreas Pfaller
       */
       if(off & 0x3fff) {
@@ -810,9 +810,9 @@ static void processIpPkt(const u_char *bp,
 	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
 				&sport, &dport,
 				ntohs(ip.ip_id), off, length,
-				ntohs(ip.ip_len) - hlen, actualDeviceId);       
+				ntohs(ip.ip_len) - hlen, actualDeviceId);
       }
-      
+
       if((sport > 0) && (dport > 0)) {
 	IPSession *theSession;
 	u_short isPassiveSession = 0, nonFullyRemoteSession = 1;
@@ -913,10 +913,10 @@ static void processIpPkt(const u_char *bp,
 	  short isRequest = 0, positiveReply = 0;
 	  u_int16_t transactionId = 0;
 
-	  if(myGlobals.enablePacketDecoding 
+	  if(myGlobals.enablePacketDecoding
 	     && (bp != NULL) /* packet long enough */) {
 	    /* The DNS chain will be checked here */
-	    transactionId = processDNSPacket(bp+hlen+sizeof(struct udphdr), 
+	    transactionId = processDNSPacket(bp+hlen+sizeof(struct udphdr),
 					     udpDataLength, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
@@ -954,7 +954,7 @@ static void processIpPkt(const u_char *bp,
 	    } else {
 	      time_t microSecTimeDiff;
 
-	    /* to be 64bit-safe we have to copy the elements */
+	      /* to be 64bit-safe we have to copy the elements */
 	      tvstrct.tv_sec = h->ts.tv_sec;
 	      tvstrct.tv_usec = h->ts.tv_usec;
 	      microSecTimeDiff = getTimeMapping(transactionId, tvstrct);
@@ -1015,9 +1015,9 @@ static void processIpPkt(const u_char *bp,
 	  } else {
 	    /* no packet decoding (let's speculate a bit) */
 	    FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
-	  } 
+	  }
 	} else {
-	  if(myGlobals.enablePacketDecoding) 
+	  if(myGlobals.enablePacketDecoding)
 	    handleNetbios(srcHost, dstHost, sport, dport,
 			  udpDataLength, bp,
 			  length, hlen);
@@ -1026,8 +1026,8 @@ static void processIpPkt(const u_char *bp,
 
       /*
 	Don't move this code on top as it is supposed to stay here
-	as it modifies sport/sport 
-	
+	as it modifies sport/sport
+
 	Courtesy of Andreas Pfaller
       */
       if(off & 0x3fff) {
@@ -1035,8 +1035,8 @@ static void processIpPkt(const u_char *bp,
 	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
 				&sport, &dport,
 				ntohs(ip.ip_id), off, length,
-				ntohs(ip.ip_len) - hlen, actualDeviceId);       
-      }      
+				ntohs(ip.ip_len) - hlen, actualDeviceId);
+      }
 
       if((sport > 0) && (dport > 0)) {
 	u_short nonFullyRemoteSession = 1;
@@ -1068,8 +1068,8 @@ static void processIpPkt(const u_char *bp,
 	    nonFullyRemoteSession = 0;
 	  }
 	}
-  
-        /* Handle UDP traffic like TCP, above - 
+
+        /* Handle UDP traffic like TCP, above -
 	   That is: if we know about the lower# port, even if it's the destination,
 	   classify the traffic that way.
 	   (BMS 12-2001)
@@ -1082,7 +1082,7 @@ static void processIpPkt(const u_char *bp,
 	    handleIP(dport, srcHost, dstHost, length, 0, actualDeviceId);
         }
 
-	if((!myGlobals.borderSnifferMode) && nonFullyRemoteSession) 
+	if((!myGlobals.borderSnifferMode) && nonFullyRemoteSession)
 	  handleUDPSession(h, (off & 0x3fff),
 			   srcHostIdx, sport, dstHostIdx,
 			   dport, udpDataLength,
@@ -1090,7 +1090,7 @@ static void processIpPkt(const u_char *bp,
 	else
 	  updateUsedPorts(srcHost, dstHost, sport, dport, udpDataLength);
 
-	sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip.ip_len), actualDeviceId);	
+	sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip.ip_len), actualDeviceId);
       }
     }
     break;
@@ -1203,7 +1203,7 @@ static void processIpPkt(const u_char *bp,
 	  myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote += length;
 
       if(myGlobals.enableSuspiciousPacketDump
-	 && (icmpPkt.icmp_type == ICMP_ECHO) 
+	 && (icmpPkt.icmp_type == ICMP_ECHO)
 	 && (broadcastHost(dstHost) || multicastHost(dstHost))) {
 	traceEvent(TRACE_WARNING, "Smurf packet detected for host [%s->%s]",
 		   srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
@@ -1275,7 +1275,7 @@ static void processIpPkt(const u_char *bp,
 	}
 	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
       }
-      
+
       sendICMPflow(srcHost, dstHost, ntohs(ip.ip_len), actualDeviceId);
     }
     break;
@@ -1323,9 +1323,9 @@ void queuePacket(u_char * _deviceId,
 		 const u_char *p) {
   int len;
 
-  /* ***************************     
+  /* ***************************
      - If the queue is full then wait until a slot is freed
-     
+
      - If the queue is getting full then periodically wait
      until a slot is freed
      **************************** */
@@ -1346,18 +1346,18 @@ void queuePacket(u_char * _deviceId,
   if(myGlobals.packetQueueLen >= PACKET_QUEUE_LENGTH) {
     int deviceId;
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]\n",
-		 myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
+    traceEvent(TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]\n",
+	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
-    
+
 #ifdef WIN32
     deviceId = 0;
 #else
     deviceId = (int)_deviceId;
 #endif
-    
+
     myGlobals.device[getActualInterface(deviceId)].droppedPkts++;
-    
+
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads (dequeue) to run */
 #endif
@@ -1415,7 +1415,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Waiting for packet...\n");
 #endif
-    
+
     while((myGlobals.packetQueueLen == 0)
 	  && (myGlobals.capturePackets) /* Courtesy of Wies-Software <wies@wiessoft.de> */) {
 #ifdef USE_SEMAPHORES
@@ -1424,7 +1424,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
       waitCondvar(&myGlobals.queueCondvar);
 #endif
     }
-    
+
     if(!myGlobals.capturePackets) break;
 
 #ifdef DEBUG
@@ -1633,24 +1633,24 @@ void processPacket(u_char *_deviceId,
 
 #ifdef MEMORY_DEBUG
   {
-      static long numPkt=0;
+    static long numPkt=0;
 
-      /* traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt, length); */
+    /* traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt, length); */
 
-      if(numPkt == 10000) {
-	cleanup(2);
-      } else
-	numPkt++;
+    if(numPkt == 100000) {
+      cleanup(2);
+    } else
+      numPkt++;
 
 
-      /* 
+    /*
       if(numPkt=100000) {
-	int i;
+      int i;
 
-	for(i=0; i<myGlobals.numDevices; i++)
-	  freeHostInstances(i);
+      for(i=0; i<myGlobals.numDevices; i++)
+      freeHostInstances(i);
       }
-      */
+    */
   }
 #endif
 
@@ -1666,10 +1666,10 @@ void processPacket(u_char *_deviceId,
   }
 #endif
 
-  /* 
-     This allows me to fetch the time from
-     the captured packet instead of calling
-     time(NULL).
+  /*
+    This allows me to fetch the time from
+    the captured packet instead of calling
+    time(NULL).
   */
   myGlobals.actTime = h->ts.tv_sec;
 
@@ -1696,8 +1696,8 @@ void processPacket(u_char *_deviceId,
   if(length > myGlobals.mtuSize[myGlobals.device[deviceId].datalink]) {
     /* Sanity check */
     if(myGlobals.enableSuspiciousPacketDump) {
-      traceEvent(TRACE_INFO, "Packet # %u too long (len = %u)!\n", 
-		 (unsigned int)myGlobals.device[deviceId].ethernetPkts, 
+      traceEvent(TRACE_INFO, "Packet # %u too long (len = %u)!\n",
+		 (unsigned int)myGlobals.device[deviceId].ethernetPkts,
 		 (unsigned int)length);
       dumpSuspiciousPacket(actualDeviceId);
     }
@@ -1757,7 +1757,7 @@ void processPacket(u_char *_deviceId,
 	*/
 	memcpy((char *)&llc, (char *)p, min(caplen, sizeof(llc)));
 	if(llc.ssap == LLCSAP_SNAP && llc.dsap == LLCSAP_SNAP
-	    && llc.llcui == LLC_UI) {
+	   && llc.llcui == LLC_UI) {
 	  if(caplen >= sizeof(llc)) {
 	    caplen -= sizeof(llc);
 	    length -= sizeof(llc);
@@ -1868,7 +1868,7 @@ void processPacket(u_char *_deviceId,
     fflush (fd);
 #endif
 
-    if((myGlobals.device[deviceId].datalink != DLT_PPP) 
+    if((myGlobals.device[deviceId].datalink != DLT_PPP)
        && (myGlobals.device[deviceId].datalink != DLT_RAW)) {
       if((!myGlobals.borderSnifferMode) && (eth_type == 0x8137)) {
 	/* IPX */
@@ -1958,265 +1958,265 @@ void processPacket(u_char *_deviceId,
 	  srcHost->ipxSent += length, dstHost->ipxRcvd += length;
 	  myGlobals.device[actualDeviceId].ipxBytes += length;
 	} else if(!myGlobals.borderSnifferMode) {
-	    /* MAC addresses are meaningful here */
+	  /* MAC addresses are meaningful here */
 	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 
 	  if((srcHostIdx != NO_PEER) && (dstHostIdx != NO_PEER)) {
-	  srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-	  dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+	    srcHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+	    dstHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
-	  if((srcHost == NULL) || (dstHost == NULL)) {
-	    traceEvent(TRACE_INFO, "Sanity check failed (13) [Low memory?]");
-	    return;
-	  }
-	  
-	  p1 = (u_char*)(p+hlen);
-
-	  /* Watch out for possible alignment problems */
-	  memcpy(&llcHeader, (char*)p1, min(length, sizeof(llcHeader)));
-
-	  sap_type = llcHeader.ssap & ~LLC_GSAP;
-	  llcsap_string(sap_type);
-
-	  if(sap_type == 0x42) {
-	    /* Spanning Tree */
-	    srcHost->stpSent += length, dstHost->stpRcvd += length;
-	    myGlobals.device[actualDeviceId].stpBytes += length;
-	  } else if(myGlobals.enablePacketDecoding && (sap_type == 0xE0)) {
-	    /* NetWare */
-	    if(!(llcHeader.ssap == LLCSAP_GLOBAL && llcHeader.dsap == LLCSAP_GLOBAL)) {
-	      p1 += 3; /* LLC Header (short myGlobals.version) */
+	    if((srcHost == NULL) || (dstHost == NULL)) {
+	      traceEvent(TRACE_INFO, "Sanity check failed (13) [Low memory?]");
+	      return;
 	    }
 
-	  handleIPX:
-	    /* IPX packet beginning */
-	    if(length > 128)
-	      memcpy(ipxBuffer, p1, 128);
-	    else
-	      memcpy(ipxBuffer, p1, length);
-	    if((ipxBuffer[16] == 0x04)    /* SAP (Service Advertising Protocol) (byte 0) */
-	       && (ipxBuffer[17] == 0x52) /* SAP (Service Advertising Protocol) (byte 1) */
-	       && (ipxBuffer[30] == 0x0)  /* SAP Response (byte 0) */
-	       && (ipxBuffer[31] == 0x02) /* SAP Response (byte 1) */) {
-	      u_int16_t serverType;
-	      char serverName[56];
-	      int i, found;
+	    p1 = (u_char*)(p+hlen);
 
-	      memcpy(&serverType, &ipxBuffer[32], 2);
+	    /* Watch out for possible alignment problems */
+	    memcpy(&llcHeader, (char*)p1, min(length, sizeof(llcHeader)));
 
-	      serverType = ntohs(serverType);
+	    sap_type = llcHeader.ssap & ~LLC_GSAP;
+	    llcsap_string(sap_type);
 
-	      memcpy(serverName, &ipxBuffer[34], 56); serverName[56] = '\0';
-	      for(i=0; i<56; i++)
-		if(serverName[i] == '!') {
-		  serverName[i] = '\0';
-		  break;
-		}
-
-	      for(i=0, found=0; i<srcHost->numIpxNodeTypes; i++)
-		if(srcHost->ipxNodeType[i] == serverType) {
-		  found = 1;
-		  break;
-		}
-
-	      if((!found) && (srcHost->numIpxNodeTypes < MAX_NODE_TYPES)) {
-		srcHost->ipxNodeType[srcHost->numIpxNodeTypes] = serverType;
-		srcHost->numIpxNodeTypes++;
-
-		switch(serverType) {
-		case 0x0007: /* Print server */
-		case 0x0003: /* Print Queue */
-		case 0x8002: /* Intel NetPort Print Server */
-		case 0x030c: /* HP LaserJet / Quick Silver */
-		  FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
-		  break;
-
-		case 0x0027: /* TCP/IP gateway */
-		case 0x0021: /* NAS SNA gateway */
-		case 0x055d: /* Attachmate SNA gateway */
-		  FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
-		  /* ==> updateRoutedTraffic(srcHost);
-		     is not needed as there are no routed packets */
-		  break;
-
-		case 0x0004: /* File server */
-		case 0x0005: /* Job server */
-		case 0x0008: /* Archive server */
-		case 0x0009: /* Archive server */
-		case 0x002e: /* Archive Server Dynamic SAP */
-		case 0x0098: /* NetWare access server */
-		case 0x009a: /* Named Pipes server */
-		case 0x0111: /* Test server */
-		case 0x03e1: /* UnixWare Application Server */
-		case 0x0810: /* ELAN License Server Demo */
-		  FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
-		  break;
-
-		case 0x0278: /* NetWare Directory server */
-		  FD_SET(HOST_SVC_DIRECTORY, &srcHost->flags);
-		  break;
-
-		case 0x0024: /* Rem bridge */
-		case 0x0026: /* Bridge server */
-		  FD_SET(HOST_SVC_BRIDGE, &srcHost->flags);
-		  break;
-
-		case 0x0640: /* NT Server-RPC/GW for NW/Win95 User Level Sec */
-		case 0x064e: /* NT Server-IIS */
-		  FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
-		  break;
-
-		case 0x0133: /* NetWare Name Service */
-		  FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
-		  break;
-		}
+	    if(sap_type == 0x42) {
+	      /* Spanning Tree */
+	      srcHost->stpSent += length, dstHost->stpRcvd += length;
+	      myGlobals.device[actualDeviceId].stpBytes += length;
+	    } else if(myGlobals.enablePacketDecoding && (sap_type == 0xE0)) {
+	      /* NetWare */
+	      if(!(llcHeader.ssap == LLCSAP_GLOBAL && llcHeader.dsap == LLCSAP_GLOBAL)) {
+		p1 += 3; /* LLC Header (short myGlobals.version) */
 	      }
 
-	      if(srcHost->ipxHostName == NULL) {
-		int i;
+	    handleIPX:
+	      /* IPX packet beginning */
+	      if(length > 128)
+		memcpy(ipxBuffer, p1, 128);
+	      else
+		memcpy(ipxBuffer, p1, length);
+	      if((ipxBuffer[16] == 0x04)    /* SAP (Service Advertising Protocol) (byte 0) */
+		 && (ipxBuffer[17] == 0x52) /* SAP (Service Advertising Protocol) (byte 1) */
+		 && (ipxBuffer[30] == 0x0)  /* SAP Response (byte 0) */
+		 && (ipxBuffer[31] == 0x02) /* SAP Response (byte 1) */) {
+		u_int16_t serverType;
+		char serverName[56];
+		int i, found;
 
-		for(i=1; i<strlen(serverName); i++)
-		  if((serverName[i] == '_') && (serverName[i-1] == '_')) {
-		    serverName[i-1] = '\0'; /* Avoid weird names */
+		memcpy(&serverType, &ipxBuffer[32], 2);
+
+		serverType = ntohs(serverType);
+
+		memcpy(serverName, &ipxBuffer[34], 56); serverName[56] = '\0';
+		for(i=0; i<56; i++)
+		  if(serverName[i] == '!') {
+		    serverName[i] = '\0';
 		    break;
 		  }
 
-		if(strlen(serverName) >= (MAX_HOST_SYM_NAME_LEN-1)) 
-		  serverName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
-		srcHost->ipxHostName = strdup(serverName);
-		for(i=0; srcHost->ipxHostName[i] != '\0'; i++)
-		  srcHost->ipxHostName[i] = tolower(srcHost->ipxHostName[i]);
+		for(i=0, found=0; i<srcHost->numIpxNodeTypes; i++)
+		  if(srcHost->ipxNodeType[i] == serverType) {
+		    found = 1;
+		    break;
+		  }
 
-		updateHostName(srcHost);
-	      }
-#ifdef DEBUG
-	      traceEvent(TRACE_INFO, "%s [%s][%x]\n", serverName,
-			 getSAPInfo(serverType, 0), serverType);
-#endif
-	    }
+		if((!found) && (srcHost->numIpxNodeTypes < MAX_NODE_TYPES)) {
+		  srcHost->ipxNodeType[srcHost->numIpxNodeTypes] = serverType;
+		  srcHost->numIpxNodeTypes++;
 
-	    srcHost->ipxSent += length, dstHost->ipxRcvd += length;
-	    myGlobals.device[actualDeviceId].ipxBytes += length;
-	  } else if((llcHeader.ssap == LLCSAP_NETBIOS)
-		    && (llcHeader.dsap == LLCSAP_NETBIOS)) {
-	    /* Netbios */
-	    srcHost->netbiosSent += length;
-	    dstHost->netbiosRcvd += length;
-	    myGlobals.device[actualDeviceId].netbiosBytes += length;
-	  } else if((sap_type == 0xF0) 
-		    || (sap_type == 0xB4)
-		    || (sap_type == 0xC4)
-		    || (sap_type == 0xF8)) {
-	    /* DLC (protocol used for printers) */
-	    srcHost->dlcSent += length;
-	    dstHost->dlcRcvd += length; 
-	    FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
-	    myGlobals.device[actualDeviceId].dlcBytes += length;
-	  } else if(sap_type == 0xAA /* SNAP */) {
-	    u_int16_t snapType;
+		  switch(serverType) {
+		  case 0x0007: /* Print server */
+		  case 0x0003: /* Print Queue */
+		  case 0x8002: /* Intel NetPort Print Server */
+		  case 0x030c: /* HP LaserJet / Quick Silver */
+		    FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
+		    break;
 
-	    p1 = (u_char*)(p1+sizeof(llcHeader));
-	    memcpy(&snapType, p1, sizeof(snapType));
+		  case 0x0027: /* TCP/IP gateway */
+		  case 0x0021: /* NAS SNA gateway */
+		  case 0x055d: /* Attachmate SNA gateway */
+		    FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
+		    /* ==> updateRoutedTraffic(srcHost);
+		       is not needed as there are no routed packets */
+		    break;
 
-	    snapType = ntohs(snapType);
-	    /*
-	      See section
-	      "ETHERNET NUMBERS OF INTEREST" in RFC 1060
+		  case 0x0004: /* File server */
+		  case 0x0005: /* Job server */
+		  case 0x0008: /* Archive server */
+		  case 0x0009: /* Archive server */
+		  case 0x002e: /* Archive Server Dynamic SAP */
+		  case 0x0098: /* NetWare access server */
+		  case 0x009a: /* Named Pipes server */
+		  case 0x0111: /* Test server */
+		  case 0x03e1: /* UnixWare Application Server */
+		  case 0x0810: /* ELAN License Server Demo */
+		    FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+		    break;
 
-	      http://www.faqs.org/rfcs/rfc1060.html
-	    */
-	    if(myGlobals.enablePacketDecoding
-	       && ((snapType == 0x809B) || (snapType == 0x80F3))) {
-	      /* Appletalk */
-	      AtDDPheader ddpHeader;
+		  case 0x0278: /* NetWare Directory server */
+		    FD_SET(HOST_SVC_DIRECTORY, &srcHost->flags);
+		    break;
 
-	      memcpy(&ddpHeader, (char*)p1, sizeof(AtDDPheader));
+		  case 0x0024: /* Rem bridge */
+		  case 0x0026: /* Bridge server */
+		    FD_SET(HOST_SVC_BRIDGE, &srcHost->flags);
+		    break;
 
-	      srcHost->atNetwork = ntohs(ddpHeader.srcNet), srcHost->atNode = ddpHeader.srcNode;
-	      dstHost->atNetwork = ntohs(ddpHeader.dstNet), dstHost->atNode = ddpHeader.dstNode;
+		  case 0x0640: /* NT Server-RPC/GW for NW/Win95 User Level Sec */
+		  case 0x064e: /* NT Server-IIS */
+		    FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+		    break;
 
-	      if(ddpHeader.ddpType == 2) {
-		/* Appletalk NBP (Name Binding Protocol) */
-		AtNBPheader nbpHeader;
-		int numTuples, i;
-
-		p1 = (u_char*)(p1+13);
-		memcpy(&nbpHeader, (char*)p1, sizeof(AtNBPheader));
-		numTuples = nbpHeader.function & 0x0F;
-
-		if((nbpHeader.function == 0x21) && (numTuples == 1)) {
-		  char nodeName[256];
-		  int displ;
-
-		  p1 = (u_char*)(p1+2);
-
-		  if(p1[6] == '=')
-		    displ = 2;
-		  else
-		    displ = 0;
-
-		  memcpy(nodeName, &p1[6+displ], p1[5+displ]);
-		  nodeName[p1[5+displ]] = '\0';
-
-		  if(strlen(nodeName) >= (MAX_HOST_SYM_NAME_LEN-1)) 
-		    nodeName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
-		  srcHost->atNodeName = strdup(nodeName);
-		  updateHostName(srcHost);
-
-		  memcpy(nodeName, &p1[7+p1[5+displ]+displ], p1[6+p1[5+displ]+displ]);
-		  nodeName[p1[6+p1[5+displ]]] = '\0';
-
-		  for(i=0; i<MAX_NODE_TYPES; i++)
-		    if((srcHost->atNodeType[i] == NULL)
-		       || (strcmp(srcHost->atNodeType[i], nodeName) == 0))
-		      break;
-
-		  if(srcHost->atNodeType[i] == NULL)
-		    srcHost->atNodeType[i] = strdup(nodeName);
+		  case 0x0133: /* NetWare Name Service */
+		    FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
+		    break;
+		  }
 		}
+
+		if(srcHost->ipxHostName == NULL) {
+		  int i;
+
+		  for(i=1; i<strlen(serverName); i++)
+		    if((serverName[i] == '_') && (serverName[i-1] == '_')) {
+		      serverName[i-1] = '\0'; /* Avoid weird names */
+		      break;
+		    }
+
+		  if(strlen(serverName) >= (MAX_HOST_SYM_NAME_LEN-1))
+		    serverName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
+		  srcHost->ipxHostName = strdup(serverName);
+		  for(i=0; srcHost->ipxHostName[i] != '\0'; i++)
+		    srcHost->ipxHostName[i] = tolower(srcHost->ipxHostName[i]);
+
+		  updateHostName(srcHost);
+		}
+#ifdef DEBUG
+		traceEvent(TRACE_INFO, "%s [%s][%x]\n", serverName,
+			   getSAPInfo(serverType, 0), serverType);
+#endif
 	      }
 
-	      srcHost->appletalkSent += length;
-	      dstHost->appletalkRcvd += length;
-	      myGlobals.device[actualDeviceId].atalkBytes += length;
+	      srcHost->ipxSent += length, dstHost->ipxRcvd += length;
+	      myGlobals.device[actualDeviceId].ipxBytes += length;
+	    } else if((llcHeader.ssap == LLCSAP_NETBIOS)
+		      && (llcHeader.dsap == LLCSAP_NETBIOS)) {
+	      /* Netbios */
+	      srcHost->netbiosSent += length;
+	      dstHost->netbiosRcvd += length;
+	      myGlobals.device[actualDeviceId].netbiosBytes += length;
+	    } else if((sap_type == 0xF0)
+		      || (sap_type == 0xB4)
+		      || (sap_type == 0xC4)
+		      || (sap_type == 0xF8)) {
+	      /* DLC (protocol used for printers) */
+	      srcHost->dlcSent += length;
+	      dstHost->dlcRcvd += length;
+	      FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
+	      myGlobals.device[actualDeviceId].dlcBytes += length;
+	    } else if(sap_type == 0xAA /* SNAP */) {
+	      u_int16_t snapType;
+
+	      p1 = (u_char*)(p1+sizeof(llcHeader));
+	      memcpy(&snapType, p1, sizeof(snapType));
+
+	      snapType = ntohs(snapType);
+	      /*
+		See section
+		"ETHERNET NUMBERS OF INTEREST" in RFC 1060
+
+		http://www.faqs.org/rfcs/rfc1060.html
+	      */
+	      if(myGlobals.enablePacketDecoding
+		 && ((snapType == 0x809B) || (snapType == 0x80F3))) {
+		/* Appletalk */
+		AtDDPheader ddpHeader;
+
+		memcpy(&ddpHeader, (char*)p1, sizeof(AtDDPheader));
+
+		srcHost->atNetwork = ntohs(ddpHeader.srcNet), srcHost->atNode = ddpHeader.srcNode;
+		dstHost->atNetwork = ntohs(ddpHeader.dstNet), dstHost->atNode = ddpHeader.dstNode;
+
+		if(ddpHeader.ddpType == 2) {
+		  /* Appletalk NBP (Name Binding Protocol) */
+		  AtNBPheader nbpHeader;
+		  int numTuples, i;
+
+		  p1 = (u_char*)(p1+13);
+		  memcpy(&nbpHeader, (char*)p1, sizeof(AtNBPheader));
+		  numTuples = nbpHeader.function & 0x0F;
+
+		  if((nbpHeader.function == 0x21) && (numTuples == 1)) {
+		    char nodeName[256];
+		    int displ;
+
+		    p1 = (u_char*)(p1+2);
+
+		    if(p1[6] == '=')
+		      displ = 2;
+		    else
+		      displ = 0;
+
+		    memcpy(nodeName, &p1[6+displ], p1[5+displ]);
+		    nodeName[p1[5+displ]] = '\0';
+
+		    if(strlen(nodeName) >= (MAX_HOST_SYM_NAME_LEN-1))
+		      nodeName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
+		    srcHost->atNodeName = strdup(nodeName);
+		    updateHostName(srcHost);
+
+		    memcpy(nodeName, &p1[7+p1[5+displ]+displ], p1[6+p1[5+displ]+displ]);
+		    nodeName[p1[6+p1[5+displ]]] = '\0';
+
+		    for(i=0; i<MAX_NODE_TYPES; i++)
+		      if((srcHost->atNodeType[i] == NULL)
+			 || (strcmp(srcHost->atNodeType[i], nodeName) == 0))
+			break;
+
+		    if(srcHost->atNodeType[i] == NULL)
+		      srcHost->atNodeType[i] = strdup(nodeName);
+		  }
+		}
+
+		srcHost->appletalkSent += length;
+		dstHost->appletalkRcvd += length;
+		myGlobals.device[actualDeviceId].atalkBytes += length;
+	      } else {
+		if((llcHeader.ctl.snap_ether.snap_orgcode[0] == 0x0)
+		   && (llcHeader.ctl.snap_ether.snap_orgcode[1] == 0x0)
+		   && (llcHeader.ctl.snap_ether.snap_orgcode[2] == 0x0C) /* Cisco */) {
+		  /* NOTE:
+		     If llcHeader.ctl.snap_ether.snap_ethertype[0] == 0x20
+		     && llcHeader.ctl.snap_ether.snap_ethertype[1] == 0x0
+		     this is Cisco Discovery Protocol
+		  */
+
+		  FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
+		}
+
+		srcHost->otherSent += length;
+		dstHost->otherRcvd += length;
+		myGlobals.device[actualDeviceId].otherBytes += length;
+	      }
+	    } else if(myGlobals.enablePacketDecoding
+		      && ((sap_type == 0x06)
+			  || (sap_type == 0xFE)
+			  || (sap_type == 0xFC))) {  /* OSI */
+	      srcHost->osiSent += length;
+	      dstHost->osiRcvd += length;
+	      myGlobals.device[actualDeviceId].osiBytes += length;
 	    } else {
-	      if((llcHeader.ctl.snap_ether.snap_orgcode[0] == 0x0)
-		 && (llcHeader.ctl.snap_ether.snap_orgcode[1] == 0x0)
-		 && (llcHeader.ctl.snap_ether.snap_orgcode[2] == 0x0C) /* Cisco */) {
-		/* NOTE:
-		   If llcHeader.ctl.snap_ether.snap_ethertype[0] == 0x20
-		   && llcHeader.ctl.snap_ether.snap_ethertype[1] == 0x0
-		   this is Cisco Discovery Protocol
-		*/
-
-		FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
-	      }
-
+	      /* Unknown Protocol */
+#ifdef PRINT_UNKNOWN_PACKETS
+	      traceEvent(TRACE_INFO, "[%u] [%x] %s %s > %s\n", (u_short)sap_type,(u_short)sap_type,
+			 etheraddr_string(ether_src),
+			 llcsap_string(llcHeader.ssap & ~LLC_GSAP),
+			 etheraddr_string(ether_dst));
+#endif
 	      srcHost->otherSent += length;
 	      dstHost->otherRcvd += length;
 	      myGlobals.device[actualDeviceId].otherBytes += length;
 	    }
-	  } else if(myGlobals.enablePacketDecoding
-		    && ((sap_type == 0x06)
-			|| (sap_type == 0xFE)
-			|| (sap_type == 0xFC))) {  /* OSI */
-	    srcHost->osiSent += length;
-	    dstHost->osiRcvd += length;
-	    myGlobals.device[actualDeviceId].osiBytes += length;
-	  } else {
-	    /* Unknown Protocol */
-#ifdef PRINT_UNKNOWN_PACKETS
-	    traceEvent(TRACE_INFO, "[%u] [%x] %s %s > %s\n", (u_short)sap_type,(u_short)sap_type,
-		       etheraddr_string(ether_src),
-		       llcsap_string(llcHeader.ssap & ~LLC_GSAP),
-		       etheraddr_string(ether_dst));
-#endif
-	    srcHost->otherSent += length;
-	    dstHost->otherRcvd += length;
-	    myGlobals.device[actualDeviceId].otherBytes += length;
-	  }
-	  updatePacketCount(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
+	    updatePacketCount(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
 	  }
 	}
       } else if(eth_type == ETHERTYPE_IP) {
@@ -2225,7 +2225,7 @@ void processPacket(u_char *_deviceId,
 	else
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId);
       } else  /* Non IP */ if(!myGlobals.borderSnifferMode) {
-	    /* MAC addresses are meaningful here */
+	/* MAC addresses are meaningful here */
 	struct ether_arp arpHdr;
 	struct in_addr addr;
 
@@ -2264,7 +2264,7 @@ void processPacket(u_char *_deviceId,
 	  memcpy(&arpHdr, p+hlen, sizeof(arpHdr));
 	  if(EXTRACT_16BITS(&arpHdr.arp_pro) == ETHERTYPE_IP) {
 	    int arpOp = EXTRACT_16BITS(&arpHdr.arp_op);
-	    
+
 	    switch(arpOp) {
 	    case ARPOP_REPLY: /* ARP REPLY */
 	      memcpy(&addr.s_addr, arpHdr.arp_tpa, sizeof(addr.s_addr));
@@ -2326,7 +2326,7 @@ void processPacket(u_char *_deviceId,
     }
   }
 
-  if((!myGlobals.borderSnifferMode) 
+  if((!myGlobals.borderSnifferMode)
      && (myGlobals.flowsList != NULL) /* Handle flows last */)
     flowsProcess(h, p, deviceId);
 
@@ -2341,12 +2341,12 @@ void processPacket(u_char *_deviceId,
 /* Debug only */
 static void dumpHash() {
   int i;
-  
+
   for(i=1; i<myGlobals.device[0].actualHashSize; i++) {
     HostTraffic *el = myGlobals.device[0].hash_hostTraffic[i];
-  
+
     if(el != NULL) {
-      traceEvent(TRACE_INFO, "(%3d) %s / %s", 
+      traceEvent(TRACE_INFO, "(%3d) %s / %s",
 		 i,
 		 el->ethAddressString,
 		 el->hostNumIpAddress);

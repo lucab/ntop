@@ -3775,11 +3775,22 @@ void listNetFlows(void) {
   		     "<TH "TH_BG">Packets</TH><TH "TH_BG">Traffic</TH></TR>");
   	}
 
-	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s"
-		"</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		getRowColor(), list->flowName,
-		formatPkts(list->packets),
-		formatBytes(list->bytes, 1)) < 0) BufferTooShort();
+	if(haveTrafficHistory()) {
+	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
+		      "<A HREF=\"/ntop-bin/flowTraf.pl?name=%s\">%s</A></TH><TD "TD_BG" ALIGN=RIGHT>%s"
+		      "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		      getRowColor(), list->flowName, list->flowName,
+		      formatPkts(list->packets),
+		      formatBytes(list->bytes, 1)) < 0) BufferTooShort();
+
+	} else {
+	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s"
+		      "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		      getRowColor(), list->flowName,
+		      formatPkts(list->packets),
+		      formatBytes(list->bytes, 1)) < 0) BufferTooShort();
+	}
+	
 	sendString(buf);
 
 	numEntries++;

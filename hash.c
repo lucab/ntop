@@ -117,8 +117,8 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 	 prevSession->next = nextSession;
        }
 
-        freeSession(theSession, theDevice);
-	theSession = prevSession;
+       freeSession(theSession, theDevice, 0 /* don't allocate */);
+       theSession = prevSession;
       } else {
 	prevSession = theSession;
 	theSession = nextSession;
@@ -836,7 +836,7 @@ void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
 		   myGlobals.device[actualDeviceId].actualHashSize-1);
       }
 
-      if(!allRight)
+      if((!allRight) && (hostIdx != myGlobals.broadcastEntryIdx))
 	traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed [host not found]",
 		   actualDeviceId, hostIdx);
     }

@@ -383,7 +383,7 @@ void initNtopGlobals(int argc, char * argv[]);
 /* sessions.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
-extern void freeSession(IPSession *sessionToPurge, int actualDeviceId);
+extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, u_char allocateMemoryIfNeeded);
 #ifndef MULTITHREADED
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 #endif
