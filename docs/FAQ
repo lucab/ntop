@@ -1311,7 +1311,29 @@ A. Yes.  ntop limits each network to 1024 hosts (a /24). If you need more, alter
    from growing to absurd levels on people with "class A" (/8) interfaces (e.g. 10. or
    Cable Modems, etc.).
 
- 
+
+Q. How does ntop purge idle hosts?
+A. ntop tracks the last timestamp of a packet on a per-host and per-session
+   basis.  After a period of time - configured through a #define in ntop.h -
+   with no packets received, the host is eligible for purge.  Purge starts
+   in a random place in the list and selects the eligibles up to a per-cycle
+   limit (512 hosts or 1/3 of the hash size). 
+
+Q. What does --dynamic-purge-limits do?
+A. It helps ntop performance in idle host purge for LARGE hash sizes.  During
+   purge, the CPU usage may reach 100%.  As long as we're not losing packets, 
+   the time it takes to purge is really irrelevant  unless the purge holds 
+   the mutexes for such a long time that ntop locks up.
+
+   Up to a point, the trade-off is memory used (to hold "old" host data) vs.
+   how much time it requires to purge (how aggressive the purge is).
+
+   --dynamic-purge-limits dynamically scales the maximum # to purge to keep
+   the purge time limited in a way that reflects the environment (elapsed time)
+   not just a fixed #.
+   (Added 14Nov2002, BMS)
+
+
 Q. ntop doesn't understand virtual hosts.
 A. IP Packets have a source address & port and a destination address & port... 
    you MUST get your head out of the application layers and revert to that simple 
@@ -1495,8 +1517,10 @@ Q. Can I use ntop from php/perl?
 A. Yes you can. Please see the www directory under the ntop sourcetree.  
 
 Q. How do I save data between runs?
-Q. What is the -S option?
-A. The -S option is the --store-mode option, or the "Persistent storage mode"
+A. Use rrd.
+
+Q. What was the -S option?
+A. The -S option was the --store-mode option, or the "Persistent storage mode"
    Ntop's internal structures are basically an array of devices (network interfaces), 
    which contains an array of hosts (specific machines seen on the device. 
 
@@ -1523,6 +1547,21 @@ A. The -S option is the --store-mode option, or the "Persistent storage mode"
    Also, ntop stores the information during 1) reset and 2) shutdown. So if ntop crashes,
    the persistent data will be lost.  
 
+   This option was removed from ntop in the 2.1.52 development version.
+   (Updated 14Nov2002i, BMS)
+
+Q: I've enabled the rrd plugin and there's no data ... there are messages in the log:
+
+        RRD call stack:
+        argv[0]: rrd_update
+        argv[1]: /usr/share/ntop/rrd/matrix/12.239.98.199/12.239.181.175/pkts.rrd
+        argv[2]: 1037289548:1
+        rrd_create(...) error: creating '...': No such file or directory 
+        rrd_update(...) error: opening '...': No such file or directory 
+
+A: Create the rrd directory and make sure that the -u userid has read/write access to
+   it (typically /usr/share/ntop/rrd)
+   (Added 14Nov2002, BMS)
 
 Q: intop doesn't....
 A: Understand that intop hasn't been supported since v1.3.  Only the very
@@ -2398,6 +2437,96 @@ A. First off, you need to be or have the support of
    URL is long, do a Google search for "site:elronsoftware.com wi6038").
 
 
+Q: How can I use Apache (with it's security, etc.) to serve up ntop pages?
+A: (Toby Johnson [public@tobiasly.com], Sun 10Nov2002)
+
+   A while back, I had written about the possibility of configuring ntop to use
+   only relative URL's, in order to facilitate proxying ntop's web interface
+   through Apache. I have decided it's easier to simply use Apache's ability to
+   rewrite ntop's URL's when necessary. So, based on my experience, here is a
+   mini-HOWTO on how to proxy ntop through Apache.
+
+   ------
+
+   Proxying ntop's web interface through a secure Apache virtual host is a
+   convenient way to make use of any existing security measures you may already
+   have. In my case, I wanted to be able to access ntop from anywhere outside
+   my LAN, but opening another port on my server for ntop's dedicated web
+   server wasn't an option.
+   
+   I already had a password-protected, secure web server that I use for admin
+   purposes -- I'll call it https://admin.tobiasly.com. I wanted ntop's web
+   interface to appear as a subdirectory under this host:
+   https://admin.tobiasly.com/ntop/ .
+   
+   Here's how to configure such a setup. Change the server names and ports to
+   match your own. I'm assuming that you already have a working, secure Apache
+   virtual host (using HTTPS).
+   
+   First, pick a port for ntop's HTTP server. I'll use 15123. You won't need
+   ntop's built-in HTTPS server, since you're proxying its content through a
+   pre-existing Apache HTTPS server. Configure ntop to start with the correct
+   HTTP port, and with HTTPS disabled. Something like "ntop -d -w 15123 -W 0".
+   (See the ntop man page for more startup options.)
+   
+   Now, you need to tell Apache that anything under the /ntop/ URL should be
+   proxied to the ntop web server. In my case, the Apache server is running on
+   the same machine as ntop, so it's just a proxy to a different port on
+   localhost. In your Apache secure host configuration, add a line like this:
+   
+      ProxyPass /ntop/ http://localhost:15123/
+   
+   Now, whenever Apache receives a request for something like
+   "https://secure.tobiasly.com/ntop/home.html", it will proxy this request to
+   the location "http://localhost:15123/home.html". Ntop will take it from
+   there, generate the web content, and pass the result back to Apache. Then
+   Apache passes that result back to the original client.
+   
+   It's important to note that you don't need to open port 15123 to the
+   outside, since the connection actually goes through your existing Apache
+   port, and then is transparently proxied by Apache on the server itself. Of
+   course, you don't even have to run ntop on the same machine; as long as the
+   Apache server can connect to ntop's port, it'll work.
+   
+   This is not the same as URL redirection. As far as your web browser knows,
+   everything is going through https://secure.tobiasly.com/ntop/. The Apache
+   server does all the proxy work behind the scenes, and simply serves up the
+   results to the requesting client. And since the "outward-facing" server is
+   Apache instead of ntop, you'll be using your existing Apache secure server
+   certificate, instead of ntop's ntop-cert.pem.
+   
+   Everything appears to work OK at first, but we quickly run into a problem:
+   some of the URL's that ntop generates are absolute. For example, to draw bar
+   graphs, ntop's web pages will request the image "/gauge.jpg". This would
+   translate into "https://secure.tobiasly.com/gauge.jpg". Also, host info
+   pages are absolute. If I click on the host "10.1.2.3", it tries to take me
+   to the page "https://secure.tobiasly.com/10.1.2.3.html".
+   
+   This is a big problem, because unless the URL is underneath the /ntop/
+   directory, Apache doesn't know that it needs to proxy the request to ntop,
+   and you get broken links. Luckily, Apache has the Rewrite module that lets
+   us fool with requested URL's. In order to get the required URL's rewritten,
+   add the following to your Apache secure virtual host configuration:
+   
+      RewriteEngine On
+      RewriteCond %{HTTP_REFERER} tobiasly.com/ntop
+      RewriteCond %{REQUEST_URI} !^/ntop
+      RewriteRule ^/(.*)$ http://secure.tobiasly.com/ntop/$1 [L,P]
+
+   In English, this basically says "If I get a URL request that comes from a
+   page that has tobiasly.com/ntop in it, and that request doesn't begin with
+   /ntop, rewrute the URL to begin with http://secure.tobiasly.com/ntop/, and
+   pass this rewritten URL to the Proxy engine." At this point, the Proxy
+   engine will see that it is getting a URL that begins with /ntop/, and
+   correctly pass it to the ntop web server. Rewriting the request to begin
+   with HTTP instead of HTTPS may seem incorrect, but since that URL will be
+   handed directly to the Proxy engine, it can't be HTTPS or ntop's web server
+   will not recognize it.
+   
+   Now, you should be able to simply connect to
+   https://secure.tobiasly.com/ntop/ , and you're ready to go!
+
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -2407,125 +2536,268 @@ Section 3
 HowTo Ask For Help (ntop mailing lists)
 =======================================
 
-Please understand that the mailing list is a community support effort. Despite any 
-individual's frequent postings, nobody is "responsible" for answering your question. 
-It's all on a "best efforts" basis. This is equally true of the FAQs posted at 
-http://snapshot.ntop.org. Our responses may be incomplete, in-accurate, even dead 
-wrong. Caveat Emptor! The only "guarantee" is that free support will be worth what
-you've paid for it. 
+HOWTO ask for help on the ntop or ntop-dev mailing lists:
 
-Use ntop for problems running ntop.
-Use ntop-dev for problems with the code.
+WHERE TO POST
+=============
 
-A response from an @ntop.org user is somebody affiliated with the project. Most of 
-the people responding on ntop or ntop-dev are not formally affiliated with the project. 
-We answer questions to the best of our ability, find problems, create and test patches 
-and send them in to patches@ntop.org for inclusion. 
+ntop is for user questions - "How to I install", "data isn't being recorded", etc.
 
-Please direct all original postings and subsequent replies to the list, not to someone 
-privately. Most of us will reply solely to the mailing list, unless you specifically 
-request otherwise. If you do request otherwise, the individual you sent it to may 
-choose not to respond. Our posting here is NOT a public invitation to invade our e-mail 
-boxes for your free private support. 
+ntop-dev is for code and development questions.  The ntop-dev list goes to fewer
+people, those who have self-selected themselves to be interested in ntop at the 
+code level.
 
-You MUST use meaningful message subjects - one's that would have helped YOU find the 
-prior discussion of this or a similar problem in the archives. Titles such as "urgent" 
-or "ntop problem" will often not get a response - it may be urgent to you but... 
+If a discussion gets too technical, you may be asked to "move it to ntop-dev".  
+Please honor that request (even if you have to subscribe for a while - ntop-dev 
+is fairly low traffic).
 
-Understand that we can't see your machine (and wouldn't want the responsibility of
-sshing into somebody else's box as root). The only information we have is what you 
-post and the responses to our questions. 
-
-Also, understand that ntop is under rapid development. The only way to fix your problem 
-may be a source patch, which you will have to apply, compile and install. If you aren't 
-capable of doing that, then ... 
-
-If you want better than "best-efforts" support, contact the individual you desire support 
-from off-list to make financial arrangements. Please understand that people are doing 
-development in areas that are of personal interest to them, to improve ntop. If you want 
-to discuss payment for support or a specific change that is of interest to you, feel free 
-to email the individual off-list - some of us are computer consultants and can be bought, 
-with the understanding that the work product is offered back to the community in the 
-spirit of the open source movement and the strictures of the GPL. 
-
-***Do not worry about posting TOO much information - we're pretty good at filtering out 
-the noise, especially if you organize your information the way we request it, below*** 
+There used to be mailing lists and trackers at SourceForge, which were rarely 
+looked at and have been discontinued. Use the ntop and ntop-dev lists (go to 
+http://www.ntop.org to signup for them).
 
 
-BEFORE POSTING: 
+OFFICIAL vs UNOFFICIAL
+======================
 
-1. Please review back message traffic from the mailing lists. 
-Your specific problem HAS been discussed recently. 
+A response from Luca Deri should be considered official.  He is the author of 
+ntop and controls the project and it's destiny.
 
-2. Please review the ntop community FAQs at http://snapshot.ntop.org. 
+***Please understand that the mailing lists are a community support effort***
 
-POSTING: 
+Besides Luca Deri, a number of people answer questions to the best of our ability.
+None of the rest of the people who may respond to your question on ntop or 
+ntop-dev are able to respond "officially".
 
-In general, please give us more information (see the specifics we request, below)... 
+Likewise, this HOWTO is unofficial.
 
-1. A brief summary of the problem. 
+Everyone is welcome to help with the evolution of ntop - that is to find 
+problems, create and test patches and send them in to patches@ntop.org for 
+inclusion.  There are a small number of people with write access to the cvs, 
+but anything we commit is subject to being ripped out by Luca for any reason... 
+or no reason at all...
 
-2. Operations 
-The EXACT command line you use to invoke ntop. 
-If it's in a script, cut & paste it and 
-resolve all the variables! 
 
-Error Messages: Cut & paste the exact text. 
-If it's in the log, give us 15 or 20 lines before. 
+QUESTION FORMATS
+================
 
-If the problem is a segmentation fault, include the backtrace (available under gcc 
-compiled version if you use the -K flag.)
+ONE QUESTION per message, and you MUST use meaningful message subjects - one's 
+that would have helped YOU find the prior discussion of this or a similar 
+problem in the archives.  Titles such as "urgent" or "ntop problem" will often 
+not get a response - it may be urgent to you but it's probably not an issue 
+for others.
 
-The exact URL you used from the browser. 
+Beyond that, don't worry -- it's about information, not format.
 
-3. Software 
-NTop version, source and any applied patches 
 
-If you've compiled from the source, say so! 
+RESPONSES
+=========
 
-If you're using a package (such as an .rpm), where did you get it from and what 
-is the EXACT name, version information and date? (for example, post the output 
-from rpm -q ntop -i) 
+Despite any individual's frequent postings, nobody is "responsible" for 
+answering your question. It's all on a "best efforts" basis. This is equally 
+true of the FAQs posted at http://snapshot.ntop.org. Our responses may be 
+incomplete, inaccurate, even dead wrong. Caveat Emptor! The only "guarantee" 
+is that free support will be worth what you've paid for it.
 
-OS vendor & version 
+Just because you post a question does NOT mean that you are OWED an answer.
 
-gcc version (e.g. gcc --version) 
+If nobody answers, then maybe it's because:
 
-glibc version 
+   * Nobody knows.
+   * People are busy.
+   * You've asked the same question multiple times and it's already been
+     answered.
+   * You have been asked for additional information and are unable/unwilling 
+     to supply it.
 
-Any major upgrades (kernel, networking, etc.) 
+or, well, any one of a dozen other reasons.
 
-What else is running 
+Asking the same question multiple times - or asking it again because you don't 
+like the answer you received - is a slap in the face of the person who took the 
+time to answer you in the first place and will more than likely not get a 
+different response.  If you're not sure that your message posted, check the 
+archives to see if your message is there -- please don't just keep reposting it.
 
-4. Hardware 
-Type & # of processors 
+Please direct all original postings and subsequent replies to the list, not to 
+someone privately.  Most of us will reply solely to the mailing list, unless 
+you specifically request otherwise.  If you do request otherwise, the individual 
+you sent it to may choose not to respond.  Our posting here is NOT a public 
+invitation to invade our e-mail boxes for your free private support.  
 
-Amount of memory 
 
-# network interfaces and types (vendor, bus, etc.) 
+THE BACK AND FORTH PROCESS
+==========================
 
-5. Network 
-Roughly where are the interface(s) you're monitoring (Public Internet, Private LAN,
-what?) 
+"Why don't you just fix my problem instead of asking for more information?"
 
-What's the bandwidth (e.g. 10 Mbps University internet, 1.5 Mbps T1, Cable Modem 
-capped at 1.5Mbps, 56K dialup) 
+Understand that we can't see your machine (and wouldn't want the 
+responsibility of sshing into somebody else's box as root).  The only information 
+we have is what you post and the responses to our questions.  Few failures in 
+ntop are related to the core processing routines - so if you're having a problem,
+it's most likely because of some combination of your network and your ntop 
+configuration.  It may be unique to you -- and only with YOUR help can it be
+resolved.
 
-How many machines (traffic sources/destinations) and users 
+
+WHAT IS SUPPORTED?
+==================
+
+At the time of this writing the stable version is 2.1.3 and the cvs version is 
+2.1.52.  Releases are hosted at SourceForge.
+
+What support is available is for the development version ("the cvs").  All 
+support is in the form of fixing things in the cvs, however we also attempt to
+support the current "stable" release (2.1.3).
+
+Older versions are not supported -- especially 1.3 and the 2.0.99 series of 
+2.1 release candidates.  If you have a problem with them, please obtain the 
+current cvs version and see if it's still a problem.  Unlike certain much larger
+projects, we don't fix things in older versions - there simply aren't enough
+resources available.
+
+intop is not supported.  Although the code is part of the current version, 
+it's maintained on a "just enough to compile and start" basis.  The next time 
+it won't compile, it will be moved to obsolete (unless somebody volunteers to 
+become it's maintainer).
+
+Please understand that the only way to fix your problem may be a source patch, 
+which you will have to apply, compile, install and test against the cvs version 
+prior to it's inclusion in the cvs.
+
+If you aren't capable of or willing to do these steps -- for whatever reason -- 
+then you should not be compiling from the cvs.
+
+
+CVS
+===
+
+The cvs is at http://cvs.ntop.org, userid is anonymous, password ntop.
+
+The cvs is a DEVELOPMENT version.  The code in the cvs is subject to rapid change.
+At any point in time, it may not compile.  It may not compile with certain options
+or on some platforms. s'be'it -- it's a DEVELOPMENT version.
+
+
+2.1.3
+=====
+
+The actual flow of ntop development was 2.1 -> 2.1.1 -> 2.1.2 -> 2.1.50 -> 2.1.51...
+
+Version 2.1.3 was provided by Dennis Schoen [ds@teuto.net] as part of the Debian 
+project.  Dennis (manually) maintains a bitkeeper tree, based on 2.1.2 with various
+patches which - in HIS opinion - were important enough to be back ported.  Releases
+in this tree are identified as 2.1.2-n.  Dennis reports you can obtain his current
+version via:
+
+bk clone bk://ntop.teuto.net:ntop-debian ntop-stable
+
+Version 2.1.3 is an export from Dennis' tree with the version number changed and 
+is equivalent to 2.1.2-1.  Dennis' graciously provided the extract and we accepted
+with thanks!
+
+
+FEE-BASED SUPPORT
+=================
+
+If you want better than "best-efforts" support, contact the individual you desire
+support from off-list to make financial arrangements.  Please understand that people
+are doing development in areas that are of personal interest to them, to improve ntop.
+If you want to discuss payment for support or a specific change that is of interest
+to you, feel free to email the individual off-list - some of us are computer
+consultants and can be bought, with the understanding that the work product is 
+offered back to the community in the spirit of the open source movement and the 
+strictures of the GPL.
+
+
+SO WHAT INFORMATION SHOULD I POST?
+==================================
+
+BEFORE POSTING:
+
+1. Please review the output from ./configure.
+
+    We all have the bad habit of skipping over this, but there are often warnings
+    which explain why things don't work.  ntop tries to build itself by turning
+    off features where the required libraries and/or headers aren't available.
+    The minimum required set is just that - minimal.  This is often the source
+    of "feature x or switch y doesn't work" reports.
+
+2. Please review the docs/FAQ file and also the ntop community FAQs at
+   http://snapshot.ntop.org.
+
+3. Please review back message traffic from the mailing lists.
+
+     Yes, we know that there isn't a search function at ntop.org.  Did you know
+     that the lists are spidered every couple of months or so and can be searched
+     through Google??  For example, "site:lists.ntop.org rpm" will find mail list
+     messages with the word "rpm" in them.
+
+
+POSTING:
+
+Do not worry about posting TOO much information - we're pretty good at filtering
+out the noise, especially if you organize your information this way:
+
+1. A brief summary of the problem.
+
+2. Operations
+     The EXACT command line you use to invoke ntop.  
+          If it's in a script, cut & paste it and 
+          resolve all the variables!
+
+     Error Messages:  Cut & paste the exact text.
+          If it's in the log, give us 15 or 20 lines before.
+
+     The exact URL you used from the browser.
+
+3.  Software
+     ntop version, source and any applied patches
+
+            If you've compiled from the source, say so!
+
+            If you're using a package (such as an .rpm), where 
+                did you get it from and what is the EXACT name,
+                version information and date? (for example, post
+                the output from rpm -q ntop -i)
+
+     OS vendor & version
+
+     gcc version (e.g. gcc --version)
+       (For ./configure problems, the versions for autoconf, automake and libtool too)
+
+     glibc version
+
+     Any major upgrades (kernel, networking, etc.)
+
+     What else is running
+
+4. Hardware
+     Type & # of processors
+
+     Amount of memory
+
+     # network interfaces and types (vendor, bus, etc.)
+
+5.  Network
+     Roughly where are the interface(s) you're monitoring 
+          (Public Internet, Private LAN, what?)
+
+     What's the bandwidth (e.g. 10 Mbps University internet, 
+           1.5 Mbps T1, Cable Modem capped at 1.5Mbps, 56K dialup)
+
+     How many machines (traffic sources/destinations) and users
 
 (If you're uncomfortable giving specifics, then leave it generic, but the information 
-is necessary to allow efficient use of the community's time helping YOU with YOUR problem) 
+is necessary to allow efficient use of the community's time helping YOU with YOUR problem)
 
-6. Configuration
-If you're having problems with ./configure, post the relevant portions of config.log too.
-Look for anything named like the library or header file that's giving you fits (e.g. for pcap.h,
-look for pcap_h stuff)
 
-AFTER POSTING: 
+AFTER POSTING:
 
 Please let us know if our help fixed the problem, didn't solve it or enabled you to 
-solve it yourself and what the result was. The historical record of the ntop and 
-ntop-dev archives is the complete chain from problem to resolution. 
+solve it yourself and what the result was.  The historical record of the ntop and 
+ntop-dev archives is the complete chain from problem to resolution.
+
+(Originally posted on 07Jan2002 to ntop and ntop-dev, updated.  This is version 13Nov2002)
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
