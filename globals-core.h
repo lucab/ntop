@@ -175,7 +175,7 @@ extern datum          ntop_gdbm_nextkey(GDBM_FILE g, datum d, char* theFile, int
 extern datum          ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine);
 #else /* MEMORY_DEBUG */
 extern int   ntop_gdbm_delete(GDBM_FILE g, datum d);
-extern datum ntop_gdbm_firstkey(GDBM_FILE g);;
+extern datum ntop_gdbm_firstkey(GDBM_FILE g);
 extern datum ntop_gdbm_nextkey(GDBM_FILE g, datum d);
 extern datum ntop_gdbm_fetch(GDBM_FILE g, datum d);
 extern int   ntop_gdbm_store(GDBM_FILE g, datum d, datum v, int r);
