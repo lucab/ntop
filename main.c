@@ -251,6 +251,8 @@ void usage (FILE * fp) {
 
   fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
 
+  fprintf(fp, "    [--log-extra <level>]                                 %sAdd extra information to log messages\n", newLine);
+
 #ifdef WIN32
   printAvailableInterfaces();
 #endif
