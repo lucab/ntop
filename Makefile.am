@@ -227,6 +227,10 @@ ntop.html: ntop.8
 	@echo "-----------------------------------------------"
 	@echo "Converting $< to HTML format  .... Please wait"
 	@echo ""
+	@echo "   Oh, yeah..."
+	@echo "       If we hang here, then you are probably "
+	@echo "       running make not GNU make (gmake)"
+	@echo ""
 	@groff -mandoc -Thtml $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -~]//g' > html/ntop.html
 	@cp -f html/ntop.html ntop.html
 	@echo "$@ done !"
@@ -241,6 +245,10 @@ faq.html: docs/FAQ
 	@echo ""
 	@echo "-----------------------------------------------"
 	@echo "Converting $< to HTML format  .... Please wait"
+	@echo ""
+	@echo "   Oh, yeah..."
+	@echo "       If we hang here, then you are probably "
+	@echo "       running make not GNU make (gmake)"
 	@echo ""
 	@@AWK@ -f utils/faqtohtml.awk $< | LANG=C sed 's/_^H//g' | LANG=C sed 's/^H[ -~]//g' > html/faq.html
 	@cp -f html/faq.html faq.html
