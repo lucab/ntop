@@ -2592,6 +2592,13 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "additional libraries", additional_libs);
   printFeatureConfigInfo(textPrintFlag, "install path", install_path);
 #endif
+#if defined(__GNUC__)
+  if(snprintf(buf, sizeof(buf), "%s (%d.%d.%d)",
+	      __VERSION__, 
+              __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "GNU C (gcc) version", buf);
+#endif
 
   /* *************************** */
 
@@ -2846,6 +2853,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 	printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex, "hostsHashMutex");
 	printMutexStatus(textPrintFlag, &myGlobals.graphMutex, "graphMutex");
+	printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
 #ifdef MEMORY_DEBUG
 	printMutexStatus(textPrintFlag, &myGlobals.leaksMutex, "leaksMutex");
 #endif
