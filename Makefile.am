@@ -274,6 +274,23 @@ install: install-recursive
 	  echo ""; \
 	  rm -f $(DESTDIR)/$(datadir)/ntop/warnuser; \
 	fi
+	@if ! test -f $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/AS-list.txt.gz; then \
+	  echo ""; \
+	  echo ""; \
+	  echo "NOTE: ntop can show traffic by AS (Autonomous System) Number"; \
+	  echo ""; \
+	  echo "      Because this feature consumes a number of MB of memory,"; \
+	  echo "      the datafile is not installed by default."; \
+	  echo ""; \
+	  echo "      Which - if there is no file - from this or a previous"; \
+	  echo "      install, effectively disables the ASN feature."; \
+	  echo ""; \
+	  echo "      To install the AS data, type:"; \
+	  echo ""; \
+	  echo "# make install-data-as"; \
+	  echo ""; \
+	  echo ""; \
+	fi
 
 install-data-local:
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
