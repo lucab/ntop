@@ -202,6 +202,11 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   accessMutex(&hashResizeMutex, "resizeHostHash");
 #endif
 
+  /*
+    Hash shrinking problem detection
+    courtesy of Wies-Software <wies@wiessoft.de>
+  */
+
   if(device[deviceToExtend].actualHashSize < newSize) {
     traceEvent(TRACE_INFO, "Extending hash: [old=%d, new=%d]\n",
 	       device[deviceToExtend].actualHashSize, newSize);
@@ -288,6 +293,8 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 	mapUsageCounter(&theHost->securityHostPkts->overlappingFragmentSent);
 	mapUsageCounter(&theHost->securityHostPkts->closedEmptyTCPConnSent);
 
+	mapUsageCounter(&theHost->securityHostPkts->synPktsRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->rstPktsRcvd);
 	mapUsageCounter(&theHost->securityHostPkts->rstAckPktsRcvd);
 	mapUsageCounter(&theHost->securityHostPkts->synFinPktsRcvd);
 	mapUsageCounter(&theHost->securityHostPkts->finPushUrgPktsRcvd);
@@ -607,8 +614,8 @@ static void removeGlobalHostPeers(HostTraffic *el,
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->closedEmptyTCPConnSent);
 
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstAckPktsRcvd);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstAckPktsRcvd);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synFinPktsRcvd);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->finPushUrgPktsRcvd);
     checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->nullPktsRcvd);
@@ -864,7 +871,8 @@ void freeHostInstances(void) {
   else
     max = numDevices;
 
-  traceEvent(TRACE_INFO, "Freeing hash host instances... (%d device(s) to save)\n", max);
+  traceEvent(TRACE_INFO, "Freeing hash host instances... (%d device(s) to save)\n", 
+	     max);
 
   for(i=0; i<max; i++) {
     actualDeviceId = i;
