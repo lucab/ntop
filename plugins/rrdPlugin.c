@@ -814,7 +814,7 @@ void unescape_url(char *url) {
 /* ******************************* */
 
 static void commonRRDinit(void) {
-  char value[64];
+  char value[1024];
 
 #ifdef CFG_MULTITHREADED
   createMutex(&rrdMutex);
