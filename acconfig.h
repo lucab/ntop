@@ -94,6 +94,9 @@
 /* Define if you have the gdchart library from Bruce Verderaime [http://www.fred.net/brv/chart/]. */
 #undef HAVE_GDCHART
 
+/* Define if you have the zlib */
+#undef HAVE_ZLIB
+
 /* Ntop directories */
 #undef PLUGIN_DIR
 #undef DATAFILE_DIR

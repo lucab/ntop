@@ -33,7 +33,7 @@ echo "Copyright (c) 1998-2002 Luca Deri <deri@ntop.org>"
 echo
 
 
-ac_disable_mysql=no
+ac_disable_mysql=yes
 
 ac_disable_multithread=no
 ac_disable_async_resolution=no
@@ -255,7 +255,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-mt            disable multithread support also if available [default=no]"
 ac_help="$ac_help
-  --disable-mysql            disable MySQL support also if available [default=no]"
+  --disable-mysql            disable MySQL support also if available [default=yes]"
 ac_help="$ac_help
   --disable-ssl           disable HTPPS support also if OpenSSL is available [default=no]"
 ac_help="$ac_help
@@ -5150,10 +5150,53 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
+echo $ac_n "checking for gzopen in -lz""... $ac_c" 1>&6
+echo "configure:5155: checking for gzopen in -lz" >&5
+ac_lib_var=`echo z'_'gzopen | sed 'y%./+-%__p_%'`
+if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  ac_save_LIBS="$LIBS"
+LIBS="-lz  $LIBS"
+cat > conftest.$ac_ext <<EOF
+#line 5163 "configure"
+#include "confdefs.h"
+/* Override any gcc2 internal prototype to avoid an error.  */
+/* We use char because int might match the return type of a gcc2
+    builtin and then its argument prototype would still apply.  */
+char gzopen();
+
+int main() {
+gzopen()
+; return 0; }
+EOF
+if { (eval echo configure:5174: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=yes"
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_lib_$ac_lib_var=no"
+fi
+rm -f conftest*
+LIBS="$ac_save_LIBS"
+
+fi
+if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  cat >> confdefs.h <<\EOF
+#define HAVE_ZLIB 1
+EOF
+
+else
+  echo "$ac_t""no" 1>&6
+fi
+
 
 if test ".$ac_disable_gdchart" = ".no"; then
   echo $ac_n "checking for GDchart (optional package)""... $ac_c" 1>&6
-echo "configure:5157: checking for GDchart (optional package)" >&5
+echo "configure:5200: checking for GDchart (optional package)" >&5
 
   if test ".${GDCHART_ROOT}" != .; then
     if test -d $GDCHART_ROOT &&
@@ -5167,6 +5210,10 @@ echo "configure:5157: checking for GDchart (optional package)" >&5
          INCS="${INCS} -I$GDCHART_ROOT"
          cat >> confdefs.h <<\EOF
 #define HAVE_GDCHART 1
+EOF
+
+	 cat >> confdefs.h <<\EOF
+#define HAVE_ZLIB 1
 EOF
 
          echo "$ac_t""found in $GDCHART_ROOT" 1>&6
@@ -5208,7 +5255,7 @@ fi
 
 if test ".$ac_disable_openssl" = ".no"; then
   echo $ac_n "checking for OpenSSL Library by Open SLL Project (optional package)""... $ac_c" 1>&6
-echo "configure:5212: checking for OpenSSL Library by Open SLL Project (optional package)" >&5
+echo "configure:5259: checking for OpenSSL Library by Open SLL Project (optional package)" >&5
   if test ".${OSSL_ROOT}" != .; then
     if test -d $OSSL_ROOT &&
        test -r $OSSL_ROOT/libssl.a &&

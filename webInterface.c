@@ -666,6 +666,12 @@ void printNtopConfigInfo(void) {
   printFeatureConfigInfo("Multithreaded", "No");
 #endif
 
+#ifdef HAVE_ZLIB
+  printFeatureConfigInfo("HTTP gzip compression", "Yes");
+#else
+  printFeatureConfigInfo("HTTP gzip compression", "No");
+#endif
+
 #ifdef HAVE_GDCHART
   printFeatureConfigInfo("<A HREF=http://www.fred.net/brv/chart/>GD Chart</A>", "Present");
   printFeatureConfigInfo("Chart Format", CHART_FORMAT);

@@ -70,8 +70,8 @@ dnl> variables for autoconf
 dnl>
 
 dnl>
-dnl> By default ntop is compiled with MySQL support (if any)
-ac_disable_mysql=no
+dnl> By default ntop is NOT compiled with MySQL support (if any)
+ac_disable_mysql=yes
 
 dnl>
 dnl> By default ntop is compiled in multithread mode using
@@ -274,7 +274,7 @@ AC_ARG_ENABLE(mt, [  --disable-mt            disable multithread support also if
 dnl>
 dnl> Give the user an option to compile without MySQL support
 dnl>
-AC_ARG_ENABLE(mysql, [  --disable-mysql            disable MySQL support also if available [default=no]], ac_disable_mysql="yes", ac_disable_mysql="no")
+AC_ARG_ENABLE(mysql, [  --disable-mysql            disable MySQL support also if available [default=yes]], ac_disable_mysql="yes", ac_disable_mysql="no")
 
 dnl>
 dnl> Give the user an option to compile without the HTTPS support provided by OpenSSL.
@@ -861,6 +861,7 @@ echo "Step 7. Looking for optional GPLed libraries...."
 echo
 
 AC_CHECK_LIB(c, re_search, AC_DEFINE(HAVE_REGEX))
+AC_CHECK_LIB(z, gzopen, AC_DEFINE(HAVE_ZLIB))
 
 dnl>
 dnl> check for `gdchart' library by Bruce Verderaime [http://www.fred.net/brv/chart/]
@@ -884,6 +885,7 @@ dnl>
          MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.0.8 -lpng -L$GDCHART_ROOT/zlib-1.1.3 -lz"
          INCS="${INCS} -I$GDCHART_ROOT"
          AC_DEFINE(HAVE_GDCHART)
+	 AC_DEFINE(HAVE_ZLIB)
          AC_MSG_RESULT([found in $GDCHART_ROOT])
     else
       AC_MSG_RESULT([not found in ${GDCHART_ROOT}])

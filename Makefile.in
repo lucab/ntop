@@ -406,6 +406,10 @@ ntops: $(ntops_OBJECTS) $(ntops_DEPENDENCIES)
 	@rm -f ntops
 	$(LINK) $(ntops_LDFLAGS) $(ntops_OBJECTS) $(ntops_LDADD) $(LIBS)
 
+ntopd: $(ntopd_OBJECTS) $(ntopd_DEPENDENCIES)
+	@rm -f ntopd
+	$(LINK) $(ntopd_LDFLAGS) $(ntopd_OBJECTS) $(ntopd_LDADD) $(LIBS)
+
 ntop: $(ntop_OBJECTS) $(ntop_DEPENDENCIES)
 	@rm -f ntop
 	$(LINK) $(ntop_LDFLAGS) $(ntop_OBJECTS) $(ntop_LDADD) $(LIBS)
@@ -794,9 +798,9 @@ maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 .PHONY: snapshot
 
-ntopd: ntop
-	@ln -sf ntop ntopd
-	@-(cd .libs && ln -sf ntop ntopd)
+#ntopd: ntop
+#	@ln -sf ntop ntopd
+#	@-(cd .libs && ln -sf ntop ntopd)
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # Distribution
