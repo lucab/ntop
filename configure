@@ -309,7 +309,7 @@ ac_includes_default="\
 #endif"
 
 ac_default_prefix=${NTOPDIR:-/usr/local}
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os AWK AUTOHEADER ACLOCAL AUTOMAKE AUTOCONF INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM SET_MAKE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE CPP EGREP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE LN_S RANLIB ac_ct_RANLIB LD NM LIBTOOL ALLOCA LIBOBJS AS CCLD XMLDUMP CFG_CONFIGFILE_DIR CFG_DATAFILE_DIR CFG_DBFILE_DIR DLLTOOL DYN_FLAGS INCS NTCSH LIBTOOL_DEPS NTOP_VERSION_EXTRA OBJDUMP CFG_PLUGIN_DIR PLUGINS CFG_RUN_DIR SCRIPTVER SO_VERSION_PATCH LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os AWK AUTOHEADER ACLOCAL AUTOMAKE AUTOCONF INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA PACKAGE VERSION MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM SET_MAKE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE CPP EGREP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE LN_S RANLIB ac_ct_RANLIB LD NM LIBTOOL ALLOCA LIBOBJS AS CCLD XMLDUMP CFG_CONFIGFILE_DIR CFG_DATAFILE_DIR CFG_DBFILE_DIR DLLTOOL DYN_FLAGS INCS LIBTOOL_DEPS NTOP_VERSION_EXTRA OBJDUMP CFG_PLUGIN_DIR PLUGINS CFG_RUN_DIR SCRIPTVER SO_VERSION_PATCH LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -866,7 +866,6 @@ Optional Features:
   --enable-sslwatchdog        enable Watchdog for ssl hangups [default=disabled]
   --disable-plugins           disable compilation of plugins [default=enabled]
   --enable-static-plugins     Enable static linked plugins sntop, default=dynamic]
-  --enable-ntcsh              enable ntcsh command line version [default=enabled]
   --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]
   --enable-i18n               Enable (limited) internationalization [default=disabled]
   --enable-xmldump            Enable xml-based data dump [default=disabled]
@@ -1619,10 +1618,7 @@ if test "x${ac_cv_prog_AUTOHEADER}" = "x"; then
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
- mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
- cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
- rm -f ntcsh/Makefile.in.tmp
-fi
+ fi
 
 echo "  Checking for aclocal ..."
 # Extract the first word of "aclocal", so it can be a program name with args.
@@ -1675,9 +1671,6 @@ if test "x${ac_cv_prog_ACLOCAL}" = "x"; then
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
- mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
- cat ntcsh/Makefile.in.tmp | sed -e "s|@ACLOCAL@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
- rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for automake ..."
@@ -1769,9 +1762,6 @@ else
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
- mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
- cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
- rm -f ntcsh/Makefile.in.tmp
 fi
 
 echo "  Checking for autoconf ..."
@@ -1860,9 +1850,6 @@ else
  mv plugins/pep/Makefile.in plugins/pep/Makefile.in.tmp
  cat plugins/pep/Makefile.in.tmp | sed -e "s|@AUTOHEADER@|${SHELL} `pwd`/missing --run echo|" > plugins/pep/Makefile.in
  rm -f plugins/pep/Makefile.in.tmp
- mv ntcsh/Makefile.in ntcsh/Makefile.in.tmp
- cat ntcsh/Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > ntcsh/Makefile.in
- rm -f ntcsh/Makefile.in.tmp
 fi
 
 if test -f /tmp/autotoolversions; then
@@ -2496,13 +2483,6 @@ else
   ac_enable_static_plugins="no"
 fi;
 
-# Check whether --enable-ntcsh or --disable-ntcsh was given.
-if test "${enable_ntcsh+set}" = set; then
-  enableval="$enable_ntcsh"
-  ac_disable_ntcsh="yes"
-else
-  ac_disable_ntcsh="no"
-fi;
 
 # Check whether --enable-ignoresigpipe or --disable-ignoresigpipe was given.
 if test "${enable_ignoresigpipe+set}" = set; then
@@ -2994,7 +2974,6 @@ DYN_FLAGS=
 EXEEXT=
 INCS=-I$MYRRD
 LIBS=
-NTCSH=
 OBJDUMP=
 OBJEXT=o
 SO_VERSION_PATCH=
@@ -7655,7 +7634,7 @@ test x"$silent" = xyes && libtool_flags="$libtool_flags --silent"
 case "$host" in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7658 "configure"' > conftest.$ac_ext
+  echo '#line 7637 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8598,75 +8577,6 @@ _ACEOF
     fi
 else
     echo "    ...(Default) Disabled. Request via ./configure command line option --enable-static-plugin."
-fi
-
-echo
-echo "ntcsh?"
-if test ".${ac_enable_ntcsh}" != ".yes"; then
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-ntcsh."
-    if test ".${ac_disable_curses}" = ".yes" ||
-       test ".${ac_disable_readline}" = ".yes"; then
-        echo
-        echo "*******************************************************************"
-        echo "*"
-        echo "* WARNING:    You did not enable ntcsh but specified ntcsh options"
-        if test ".${ac_disable_curses}" = ".yes"; then
-            echo "*                --without-curses"
-        fi
-        if test ".${ac_disable_readline}" = ".yes"; then
-            echo "*                --without-readline"
-        fi
-        echo "*"
-        echo "*>>> Ignoring the options"
-        echo "*"
-        echo "*???     1. Add the --enable-ntcsh option"
-        echo "*??? or  2. Remove the conflicting --without-xxxxx option(s)"
-        echo "*"
-        echo "*******************************************************************"
-        echo
-        ac_disable_curses="no"
-        ac_disable_readline="no"
-        HAS_WARNING="yes"
-    fi
-else
-    echo "    ...Requested via ./configure command line option --enable-ntcsh."
-    echo
-    echo "*******************************************************************"
-    echo "*******************************************************************"
-    echo "*******************************************************************"
-    echo "*"
-    echo "* WARNING:  ntcsh is UNSUPPORTED."
-    echo "*"
-    echo "*        We make the bare minimum of source changes so that ntcsh"
-    echo "*        compiles and starts up, and even that is subject to"
-    echo "*        change."
-    echo "*"
-    echo "*        If it works FOR YOU, great."
-    echo "*"
-    echo "*        If it doesn't work FOR YOU, don't bother asking about"
-    echo "*        support."
-    echo "*"
-    echo "*???     1. Use the web interface"
-    echo "*"
-    echo "*******************************************************************"
-    echo "*******************************************************************"
-    echo "*******************************************************************"
-    echo
-    HAS_WARNING="yes"
-
-    echo "  curses?"
-    if test ".${ac_disable_curses}" = ".yes"; then
-        echo "    ...Disabled via ./configure command line option --without-curses."
-    else
-        echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-curses."
-    fi
-
-    echo "  GNU readline?"
-    if test ".${ac_disable_readline}" = ".yes"; then
-        echo "    ...Disabled via ./configure command line option --without-readline."
-    else
-        echo "    ...(Default) Requested if available. Disable via ./configure command line option --without-readline."
-    fi
 fi
 
 echo
@@ -23786,371 +23696,6 @@ echo "$as_me: WARNING: error" >&2;}
     fi
 fi
 
-if test ".${ac_enable_ntcsh}" = ".yes"; then
-    echo "$as_me:$LINENO: checking ntcsh libraries" >&5
-echo $ECHO_N "checking ntcsh libraries... $ECHO_C" >&6
-    echo "$as_me:$LINENO: result: " >&5
-echo "${ECHO_T}" >&6
-    if test ".${ac_disable_curses}" = ".yes"; then
-        echo "$as_me:$LINENO: checking for initscr in -lncurses" >&5
-echo $ECHO_N "checking for initscr in -lncurses... $ECHO_C" >&6
-if test "${ac_cv_lib_ncurses_initscr+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lncurses  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char initscr ();
-int
-main ()
-{
-initscr ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_ncurses_initscr=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_ncurses_initscr=no
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_ncurses_initscr" >&5
-echo "${ECHO_T}$ac_cv_lib_ncurses_initscr" >&6
-if test $ac_cv_lib_ncurses_initscr = yes; then
-  echo "$as_me:$LINENO: checking for ncurses" >&5
-echo $ECHO_N "checking for ncurses... $ECHO_C" >&6
-            echo "$as_me:$LINENO: result: ok" >&5
-echo "${ECHO_T}ok" >&6
-            LIBCURSES="-lncurses"
-else
-  echo "$as_me:$LINENO: checking for ncurses" >&5
-echo $ECHO_N "checking for ncurses... $ECHO_C" >&6
-            { echo "$as_me:$LINENO: WARNING: disabled - missing ncurses.h." >&5
-echo "$as_me: WARNING: disabled - missing ncurses.h." >&2;}
-            ac_enable_ntcsh="no"
-
-fi
-
-    else
-        echo "$as_me:$LINENO: checking for initscr in -lncurses" >&5
-echo $ECHO_N "checking for initscr in -lncurses... $ECHO_C" >&6
-if test "${ac_cv_lib_ncurses_initscr+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lncurses  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char initscr ();
-int
-main ()
-{
-initscr ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_ncurses_initscr=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_ncurses_initscr=no
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_ncurses_initscr" >&5
-echo "${ECHO_T}$ac_cv_lib_ncurses_initscr" >&6
-if test $ac_cv_lib_ncurses_initscr = yes; then
-  echo "$as_me:$LINENO: checking for ncurses" >&5
-echo $ECHO_N "checking for ncurses... $ECHO_C" >&6
-                     echo "$as_me:$LINENO: result: ok" >&5
-echo "${ECHO_T}ok" >&6
-                     LIBCURSES="-lncurses"
-else
-  echo "$as_me:$LINENO: checking for ncurses" >&5
-echo $ECHO_N "checking for ncurses... $ECHO_C" >&6
-                     { echo "$as_me:$LINENO: WARNING: missing" >&5
-echo "$as_me: WARNING: missing" >&2;}
-                     echo "$as_me:$LINENO: checking for initscr in -lcurses" >&5
-echo $ECHO_N "checking for initscr in -lcurses... $ECHO_C" >&6
-if test "${ac_cv_lib_curses_initscr+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcurses  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char initscr ();
-int
-main ()
-{
-initscr ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_curses_initscr=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_curses_initscr=no
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_curses_initscr" >&5
-echo "${ECHO_T}$ac_cv_lib_curses_initscr" >&6
-if test $ac_cv_lib_curses_initscr = yes; then
-  echo "$as_me:$LINENO: checking for curses" >&5
-echo $ECHO_N "checking for curses... $ECHO_C" >&6
-                                   echo "$as_me:$LINENO: result: ok" >&5
-echo "${ECHO_T}ok" >&6
-                                   LIBCURSES="-lcurses"
-else
-  echo "$as_me:$LINENO: checking for curses" >&5
-echo $ECHO_N "checking for curses... $ECHO_C" >&6
-                                   { echo "$as_me:$LINENO: WARNING: disabled - missing (n)curses.h." >&5
-echo "$as_me: WARNING: disabled - missing (n)curses.h." >&2;}
-                                   ac_enable_ntcsh="no"
-fi
-
-
-fi
-
-    fi
-
-    if test ".${ac_enable_ntcsh}" = ".yes"; then
-
-        echo "$as_me:$LINENO: checking for ntcsh" >&5
-echo $ECHO_N "checking for ntcsh... $ECHO_C" >&6
-        echo "$as_me:$LINENO: result: ok" >&5
-echo "${ECHO_T}ok" >&6
-        NTCSH=ntcsh
-
-        if test ".${ac_disable_readline}" != ".yes"; then
-            READLIBS="${LIBCURSES}"
-            case "${LIBCURSES}" in
-                *termcap*|*curses* )
-                    ;;
-                * )
-                    echo "$as_me:$LINENO: checking for tgetent in -ltermcap" >&5
-echo $ECHO_N "checking for tgetent in -ltermcap... $ECHO_C" >&6
-if test "${ac_cv_lib_termcap_tgetent+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ltermcap  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char tgetent ();
-int
-main ()
-{
-tgetent ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_termcap_tgetent=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_termcap_tgetent=no
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_termcap_tgetent" >&5
-echo "${ECHO_T}$ac_cv_lib_termcap_tgetent" >&6
-if test $ac_cv_lib_termcap_tgetent = yes; then
-
-                        LIBTERMCAP="-ltermcap"
-                        READLIBS="${READLIBS} ${LIBTERMCAP}"
-                        echo "$as_me:$LINENO: result:          ...using ${READLIBS}" >&5
-echo "${ECHO_T}         ...using ${READLIBS}" >&6
-
-fi
-
-                    ;;
-             esac
-
-             echo "$as_me:$LINENO: checking for readline in -lreadline" >&5
-echo $ECHO_N "checking for readline in -lreadline... $ECHO_C" >&6
-if test "${ac_cv_lib_readline_readline+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lreadline ${READLIBS} $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char readline ();
-int
-main ()
-{
-readline ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_readline_readline=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_readline_readline=no
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_readline_readline" >&5
-echo "${ECHO_T}$ac_cv_lib_readline_readline" >&6
-if test $ac_cv_lib_readline_readline = yes; then
-
-                 LIBREADLINE="-lreadline ${LIBTERMCAP}"
-
-cat >>confdefs.h <<_ACEOF
-#define HAVE_READLINE 1
-_ACEOF
-
-                        echo "$as_me:$LINENO: result:          ...using ${LIBREADLINE}" >&5
-echo "${ECHO_T}         ...using ${LIBREADLINE}" >&6
-
-fi
-
-        fi
-    fi
-fi
-
 echo
 echo "Miscelaneous settings..."
 echo
@@ -24510,10 +24055,6 @@ echo
           ac_config_files="$ac_config_files myrrd/Makefile"
 
 
-if test ".${ac_enable_ntcsh}" = ".yes"; then
-              ac_config_files="$ac_config_files ntcsh/Makefile"
-
-fi
 
 if test ".${ac_disable_plugins}" != ".yes"; then
               ac_config_files="$ac_config_files plugins/Makefile"
@@ -25065,7 +24606,6 @@ do
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "myrrd/Makefile" ) CONFIG_FILES="$CONFIG_FILES myrrd/Makefile" ;;
-  "ntcsh/Makefile" ) CONFIG_FILES="$CONFIG_FILES ntcsh/Makefile" ;;
   "plugins/Makefile" ) CONFIG_FILES="$CONFIG_FILES plugins/Makefile" ;;
   "plugins/pep/Makefile" ) CONFIG_FILES="$CONFIG_FILES plugins/pep/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
@@ -25221,7 +24761,6 @@ s,@CFG_DBFILE_DIR@,$CFG_DBFILE_DIR,;t t
 s,@DLLTOOL@,$DLLTOOL,;t t
 s,@DYN_FLAGS@,$DYN_FLAGS,;t t
 s,@INCS@,$INCS,;t t
-s,@NTCSH@,$NTCSH,;t t
 s,@LIBTOOL_DEPS@,$LIBTOOL_DEPS,;t t
 s,@NTOP_VERSION_EXTRA@,$NTOP_VERSION_EXTRA,;t t
 s,@OBJDUMP@,$OBJDUMP,;t t
