@@ -744,7 +744,7 @@ static int initNetFlowFunct(void) {
     strncpy(dummyHost->hostSymIpAddress, "white/black list dummy",
             sizeof(dummyHost->hostSymIpAddress));
     strcpy(dummyHost->ethAddressString, "00:00:00:00:00:00");
-    setEmpty(&dummyHost->hostSerial);
+    setEmptySerial(&dummyHost->hostSerial);
     dummyHost->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
 
 #ifdef CFG_MULTITHREADED
