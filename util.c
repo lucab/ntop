@@ -1081,9 +1081,12 @@ void readLsofInfo(void) {
   char line[384];
   FILE *fd;
   int i, j, found, portNumber, idx, processesIdx;
+  unsigned int fdFileno;
   ProcessInfoList *listElement;
   ProcessInfo *tmpProcesses[MAX_NUM_PROCESSES];
-
+  fd_set mask;
+  struct timeval wait_time;
+  
 #ifdef MULTITHREADED
   accessMutex(&lsofMutex, "readLsofInfo");
 #endif
@@ -1115,99 +1118,119 @@ void readLsofInfo(void) {
     return;
   }
 
-  fgets(line, 383, fd); /* Ignore 1st line */
+  fdFileno = fileno(fd);
+  FD_ZERO(&mask);
+  FD_SET(fdFileno, &mask);    
+  wait_time.tv_sec = 30, wait_time.tv_usec = 0; 
+  if(select(fdFileno+1, &mask, 0, 0, &wait_time) == 1) {
+    fgets(line, 383, fd); /* Ignore 1st line */
+  } else {
+    traceEvent(TRACE_WARNING, "WARNING: lsof() timeout (1)");
+    pclose(fd);
+    return;
+  }
 
-  while(fgets(line, 383, fd) != NULL) {
-    int pid, i;
-    char command[32], user[32], *portNr;
-    char *trailer, *thePort, *strtokState;
+  while(1) {
+    FD_ZERO(&mask);
+    FD_SET(fdFileno, &mask);    
 
-    /*traceEvent(TRACE_INFO, "%s\n", line); */
+    if(select(fdFileno+1, &mask, 0, 0, &wait_time) == 1) {  
+      if(fgets(line, 383, fd) != NULL) {
+	int pid, i;
+	char command[32], user[32], *portNr;
+	char *trailer, *thePort, *strtokState;
 
-    /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-    if(3 != sscanf(line, "%31[^ \t] %d %31[^ \t]", command, &pid, user))
-      continue;
+	/*traceEvent(TRACE_INFO, "%s\n", line); */
 
-    if(strcmp(command, "lsof") == 0)
-      continue;
+	/* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+	if(3 != sscanf(line, "%31[^ \t] %d %31[^ \t]", command, &pid, user))
+	  continue;
 
-    /* Either UDP or TCP */
-    for(i=10; (line[i] != '\0'); i++)
-      if((line[i] == 'P') && (line[i+1] == ' '))
-	break;
+	if(strcmp(command, "lsof") == 0)
+	  continue;
 
-    if(line[i] == '\0')
-      continue;
-    else
-      trailer = &line[i+2];
+	/* Either UDP or TCP */
+	for(i=10; (line[i] != '\0'); i++)
+	  if((line[i] == 'P') && (line[i+1] == ' '))
+	    break;
 
-    portNr = (char*)strtok_r(trailer, ":", &strtokState);
+	if(line[i] == '\0')
+	  continue;
+	else
+	  trailer = &line[i+2];
 
-    if(portNr[0] == '*')
-      portNr = &portNr[2];
-    else
-      portNr = (char*)strtok_r(NULL, "-", &strtokState);
+	portNr = (char*)strtok_r(trailer, ":", &strtokState);
 
-    if((portNr == NULL) || (portNr[0] == '*'))
-      continue;
+	if(portNr[0] == '*')
+	  portNr = &portNr[2];
+	else
+	  portNr = (char*)strtok_r(NULL, "-", &strtokState);
 
-    for(i=0, found = 0; i<numProcesses; i++) {
-      if(processes[i]->pid == pid) {
-	found = 1;
-	processes[i]->marker = 1;
-	break;
+	if((portNr == NULL) || (portNr[0] == '*'))
+	  continue;
+
+	for(i=0, found = 0; i<numProcesses; i++) {
+	  if(processes[i]->pid == pid) {
+	    found = 1;
+	    processes[i]->marker = 1;
+	    break;
+	  }
+	}
+
+	thePort = strtok_r(portNr, " ", &strtokState);
+
+	for(j=0; portNr[j] != '\0'; j++)
+	  if(!isalnum(portNr[j]) && portNr[j]!='-') {
+	    portNr[j] = '\0';
+	    break;
+	  }
+
+	if(isdigit(portNr[0])) {
+	  portNumber = atoi(thePort);
+	} else {
+	  portNumber = getAllPortByName(thePort);
+	}
+
+#ifdef DEBUG
+	traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n", command, user, thePort, portNr, portNumber);
+#endif
+
+	if(portNumber == -1)
+	  continue;
+
+	if(!found) {
+	  int floater;
+#ifdef DEBUG
+	  traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", numProcesses, command, user, portNr, portNumber);
+#endif
+	  processes[numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
+	  processes[numProcesses]->command             = strdup(command);
+	  processes[numProcesses]->user                = strdup(user);
+	  processes[numProcesses]->pid                 = pid;
+	  processes[numProcesses]->firstSeen           = actTime;
+	  processes[numProcesses]->lastSeen            = actTime;
+	  processes[numProcesses]->marker              = 1;
+	  processes[numProcesses]->bytesSent           = 0;
+	  processes[numProcesses]->bytesReceived       = 0;
+	  processes[numProcesses]->contactedIpPeersIdx = 0;
+
+	  for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
+	    processes[i]->contactedIpPeersIndexes[floater] = NO_PEER;
+
+	  idx = numProcesses;
+	  numProcesses++;
+	} else
+	  idx = i;
+
+	listElement = (ProcessInfoList*)malloc(sizeof(ProcessInfoList));
+	listElement->element = processes[idx];
+	listElement->next = localPorts[portNumber];
+	localPorts[portNumber] = listElement;
       }
-    }
-
-    thePort = strtok_r(portNr, " ", &strtokState);
-
-    for(j=0; portNr[j] != '\0'; j++)
-      if(!isalnum(portNr[j]) && portNr[j]!='-') {
-	portNr[j] = '\0';
-	break;
-      }
-
-    if(isdigit(portNr[0])) {
-      portNumber = atoi(thePort);
     } else {
-      portNumber = getAllPortByName(thePort);
+      traceEvent(TRACE_WARNING, "WARNING: lsof() timeout (2)");
+      break;
     }
-
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "%s - %s - %s (%s/%d)\n", command, user, thePort, portNr, portNumber);
-#endif
-
-    if(portNumber == -1)
-      continue;
-
-    if(!found) {
-      int floater;
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "%3d) %s %s %s/%d\n", numProcesses, command, user, portNr, portNumber);
-#endif
-      processes[numProcesses] = (ProcessInfo*)malloc(sizeof(ProcessInfo));
-      processes[numProcesses]->command             = strdup(command);
-      processes[numProcesses]->user                = strdup(user);
-      processes[numProcesses]->pid                 = pid;
-      processes[numProcesses]->firstSeen           = actTime;
-      processes[numProcesses]->lastSeen            = actTime;
-      processes[numProcesses]->marker              = 1;
-      processes[numProcesses]->bytesSent           = 0;
-      processes[numProcesses]->bytesReceived       = 0;
-      processes[numProcesses]->contactedIpPeersIdx = 0;
-
-      for(floater=0; floater<MAX_NUM_CONTACTED_PEERS; floater++)
-	processes[i]->contactedIpPeersIndexes[floater] = NO_PEER;
-
-      idx = numProcesses;
-      numProcesses++;
-    } else
-      idx = i;
-
-    listElement = (ProcessInfoList*)malloc(sizeof(ProcessInfoList));
-    listElement->element = processes[idx];
-    listElement->next = localPorts[portNumber];
-    localPorts[portNumber] = listElement;
   }
 
   pclose(fd);

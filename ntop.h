@@ -1759,7 +1759,7 @@ struct pbuf {
 /* **************************** */
 
 /* Timedout sessions are scanned each SESSION_SCAN_DELAY seconds */
-#define SESSION_SCAN_DELAY        30     /* 30 secs   */
+#define SESSION_SCAN_DELAY        60     /* 60 secs */
 
 /* This is the 2MSL timeout as defined in the TCP standard (RFC 761) */
 #define TWO_MSL_TIMEOUT          120     /* 2 minutes */
