@@ -1075,7 +1075,10 @@ void initWeb() {
 
 #ifdef MULTITHREADED
   createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
+  traceEvent(TRACE_INFO, "Started thread (%ld) for web server.\n",
+             myGlobals.handleWebConnectionsThreadId);
 #endif
+
 }
 
 /* **************************************** */
@@ -1093,11 +1096,6 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
   int topSock = myGlobals.sock;
 
   FD_ZERO(&mask);
-
-#ifdef MULTITHREADED
-  traceEvent(TRACE_INFO, "Started thread (%ld) for web server.\n",
-             myGlobals.handleWebConnectionsThreadId);
-#endif
 
   if(myGlobals.webPort > 0)
     FD_SET((unsigned int)myGlobals.sock, &mask);
