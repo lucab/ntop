@@ -2335,10 +2335,13 @@ static PluginInfo netflowPluginInfo[] = {
     VERSION, /* current ntop version */
     "NetFlow",
     "This plugin is used to setup, activate and deactivate nFlow/NetFlow support.<br>"
-    "ntop can both collect and receive <A HREF=http://www.nflow.org/>nFlow</A> and NetFlow V5/V7/V9 data. Received flow data is "
-    "reported as a separate 'NIC' in the regular ntop reports.",
+    "<b>ntop</b> can both collect and receive "
+    "<A HREF=\"http://www.nflow.org/\" alt=\"link to nflow.org\">nFlow</A> and NetFlow "
+    "V5/V7/V9 data (search at www.cisco.com for more info about NetFlow).<br>"
+    "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
+    "reports - <em>Remember to switch the reporting NIC via Admin | Switch NIC</em>.",
     "3.1", /* version */
-    "<A HREF=http://luca.ntop.org/>L.Deri</A>",
+    "<A HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
     1, /* Inactive setup */

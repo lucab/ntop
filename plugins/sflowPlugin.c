@@ -2203,10 +2203,13 @@ static PluginInfo sFlowPluginInfo[] = {
     VERSION, /* current ntop version */
     "sFlowPlugin",
     "This plugin is used to setup, activate and deactivate ntop's sFlow support.<br>"
-      "ntop can both collect and receive sFlow data. Received sFlow data is "
-      "reported as a separate 'NIC' in the regular ntop reports.",
+    "<b>ntop</b> can both collect and receive sFlow data. For more information about "
+    "sFlow, search for RFC 3176, 'InMon Corporation's sFlow: A Method for Monitoring "
+    "Traffic in Switched and Routed Networks'.<br>"
+    "<i>Received flow data is reported as a separate 'NIC' in the regular <b>ntop</b> "
+    "reports - <em>Remember to switch the reporting NIC via Admin | Switch NIC</em>.",
     "2.2", /* version */
-    "<A HREF=http://luca.ntop.org/>L.Deri</A>",
+    "<A HREF=\"http://luca.ntop.org/\" alt=\"Luca's home page\">L.Deri</A>",
     "sFlow", /* http://<host>:<port>/plugins/sFlowWatch */
     0, /* Active by default */
     1, /* Inactive setup */
