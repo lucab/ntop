@@ -431,3 +431,13 @@ census-ok:
 	@echo "Processing ntop census... please wait..."
 	@./utils/census.sh "OK"
 
+# Create ntop's package for Debian GNU/Linux using Official scripts
+# Please keep silent the building process.
+QUIET  = 1> /dev/null 2>&1
+deb-official:
+	@echo "Making Debian package using scripts in packages/debian.official/. Please be patient..."
+	@fakeroot make -f packages/debian.official/rules binary $(QUIET)
+	@rm -f packages/debian.official/files packages/debian.official/ntop.substvars
+	@version=`head -1 packages/debian.official/changelog | cut -d " " -f 2 | sed -e 's|(||' | sed -e 's|)||'` && mv ../ntop_$$version_*.deb packages/debian.official/
+	@rm -rf packages/debian.official/ntop
+	@echo "Your Debian package is under packages/debian.official/"
