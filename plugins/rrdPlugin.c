@@ -262,7 +262,11 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     argv[argc++] = fname;
     argv[argc++] = "--lazy";
     argv[argc++] = "--imgformat";
+#ifdef WIN32
+    argv[argc++] = "GIF";
+#else
     argv[argc++] = "PNG";
+#endif
     argv[argc++] = "--start";
     argv[argc++] = startTime;
     argv[argc++] = "--end";
