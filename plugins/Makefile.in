@@ -144,15 +144,14 @@ INCLUDES = -I.. @INCS@
 #
 # The meat for ntop
 #
-noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so                   netflowPlugin.so  nfsPlugin.so  rrdPlugin.so sflowPlugin.so
+noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so                   netflowPlugin.so  nfsPlugin.so  		  sflowPlugin.so lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la                   libnetflowPlugin.la  libnfsPlugin.la  		  libsflowPlugin.la libicmpPlugin_la_SOURCES = icmpPlugin.c
 
+#		  rrdPlugin.so \
 #		  rmonPlugin.so wapPlugin.so
 
-lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la                   libnetflowPlugin.la  libnfsPlugin.la  librrdPlugin.la libsflowPlugin.la
-
+#		  librrdPlugin.la \
 #		  librmonPlugin.la libwapPlugin.la
 
-libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
@@ -172,25 +171,11 @@ libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = ../config.h
 CONFIG_CLEAN_FILES = 
-LTLIBRARIES =  $(lib_LTLIBRARIES)
+PROGRAMS =  $(noinst_PROGRAMS)
 
 
 DEFS = @DEFS@ -I. -I$(srcdir) -I..
 CPPFLAGS = @CPPFLAGS@
-libicmpPlugin_la_LIBADD = 
-libicmpPlugin_la_OBJECTS =  icmpPlugin.lo
-liblastSeenPlugin_la_LIBADD = 
-liblastSeenPlugin_la_OBJECTS =  lastSeenPlugin.lo
-libnetflowPlugin_la_LIBADD = 
-libnetflowPlugin_la_OBJECTS =  netflowPlugin.lo
-libnfsPlugin_la_LIBADD = 
-libnfsPlugin_la_OBJECTS =  nfsPlugin.lo
-librrdPlugin_la_LIBADD = 
-librrdPlugin_la_OBJECTS =  rrdPlugin.lo
-libsflowPlugin_la_LIBADD = 
-libsflowPlugin_la_OBJECTS =  sflowPlugin.lo
-PROGRAMS =  $(noinst_PROGRAMS)
-
 icmpPlugin_so_SOURCES = icmpPlugin.so.c
 icmpPlugin_so_OBJECTS =  icmpPlugin.so.o
 icmpPlugin_so_LDADD = $(LDADD)
@@ -211,16 +196,47 @@ nfsPlugin_so_OBJECTS =  nfsPlugin.so.o
 nfsPlugin_so_LDADD = $(LDADD)
 nfsPlugin_so_DEPENDENCIES = 
 nfsPlugin_so_LDFLAGS = 
-rrdPlugin_so_SOURCES = rrdPlugin.so.c
-rrdPlugin_so_OBJECTS =  rrdPlugin.so.o
-rrdPlugin_so_LDADD = $(LDADD)
-rrdPlugin_so_DEPENDENCIES = 
-rrdPlugin_so_LDFLAGS = 
 sflowPlugin_so_SOURCES = sflowPlugin.so.c
 sflowPlugin_so_OBJECTS =  sflowPlugin.so.o
 sflowPlugin_so_LDADD = $(LDADD)
 sflowPlugin_so_DEPENDENCIES = 
 sflowPlugin_so_LDFLAGS = 
+lib_LTLIBRARIES_SOURCES = lib_LTLIBRARIES.c
+lib_LTLIBRARIES_OBJECTS =  lib_LTLIBRARIES.o
+lib_LTLIBRARIES_LDADD = $(LDADD)
+lib_LTLIBRARIES_DEPENDENCIES = 
+lib_LTLIBRARIES_LDFLAGS = 
+__SOURCES = =.c
+__OBJECTS =  =.o
+__LDADD = $(LDADD)
+__DEPENDENCIES = 
+__LDFLAGS = 
+libicmpPlugin_la_SOURCES = libicmpPlugin.la.c
+libicmpPlugin_la_OBJECTS =  libicmpPlugin.la.lo
+libicmpPlugin_la_LDADD = $(LDADD)
+libicmpPlugin_la_DEPENDENCIES = 
+liblastSeenPlugin_la_OBJECTS =  lastSeenPlugin.lo
+liblastSeenPlugin_la_LDADD = $(LDADD)
+liblastSeenPlugin_la_DEPENDENCIES = 
+libnetflowPlugin_la_OBJECTS =  netflowPlugin.lo
+libnetflowPlugin_la_LDADD = $(LDADD)
+libnetflowPlugin_la_DEPENDENCIES = 
+libnfsPlugin_la_OBJECTS =  nfsPlugin.lo
+libnfsPlugin_la_LDADD = $(LDADD)
+libnfsPlugin_la_DEPENDENCIES = 
+libsflowPlugin_la_OBJECTS =  sflowPlugin.lo
+libsflowPlugin_la_LDADD = $(LDADD)
+libsflowPlugin_la_DEPENDENCIES = 
+libicmpPlugin_la_SOURCES_SOURCES = libicmpPlugin_la_SOURCES.c
+libicmpPlugin_la_SOURCES_OBJECTS =  libicmpPlugin_la_SOURCES.o
+libicmpPlugin_la_SOURCES_LDADD = $(LDADD)
+libicmpPlugin_la_SOURCES_DEPENDENCIES = 
+libicmpPlugin_la_SOURCES_LDFLAGS = 
+icmpPlugin_c_SOURCES = icmpPlugin.c.c
+icmpPlugin_c_OBJECTS =  icmpPlugin.c.o
+icmpPlugin_c_LDADD = $(LDADD)
+icmpPlugin_c_DEPENDENCIES = 
+icmpPlugin_c_LDFLAGS = 
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
@@ -230,13 +246,14 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = tar
 GZIP_ENV = --best
-DEP_FILES =  .deps/icmpPlugin.P .deps/icmpPlugin.so.P \
-.deps/lastSeenPlugin.P .deps/lastSeenPlugin.so.P .deps/netflowPlugin.P \
+DEP_FILES =  .deps/=.P .deps/icmpPlugin.c.P .deps/icmpPlugin.so.P \
+.deps/lastSeenPlugin.P .deps/lastSeenPlugin.so.P \
+.deps/lib_LTLIBRARIES.P .deps/libicmpPlugin.la.P \
+.deps/libicmpPlugin_la_SOURCES.P .deps/netflowPlugin.P \
 .deps/netflowPlugin.so.P .deps/nfsPlugin.P .deps/nfsPlugin.so.P \
-.deps/rrdPlugin.P .deps/rrdPlugin.so.P .deps/sflowPlugin.P \
-.deps/sflowPlugin.so.P
-SOURCES = $(libicmpPlugin_la_SOURCES) $(liblastSeenPlugin_la_SOURCES) $(libnetflowPlugin_la_SOURCES) $(libnfsPlugin_la_SOURCES) $(librrdPlugin_la_SOURCES) $(libsflowPlugin_la_SOURCES) icmpPlugin.so.c lastSeenPlugin.so.c netflowPlugin.so.c nfsPlugin.so.c rrdPlugin.so.c sflowPlugin.so.c
-OBJECTS = $(libicmpPlugin_la_OBJECTS) $(liblastSeenPlugin_la_OBJECTS) $(libnetflowPlugin_la_OBJECTS) $(libnfsPlugin_la_OBJECTS) $(librrdPlugin_la_OBJECTS) $(libsflowPlugin_la_OBJECTS) icmpPlugin.so.o lastSeenPlugin.so.o netflowPlugin.so.o nfsPlugin.so.o rrdPlugin.so.o sflowPlugin.so.o
+.deps/sflowPlugin.P .deps/sflowPlugin.so.P
+SOURCES = icmpPlugin.so.c lastSeenPlugin.so.c netflowPlugin.so.c nfsPlugin.so.c sflowPlugin.so.c lib_LTLIBRARIES.c =.c libicmpPlugin.la.c $(liblastSeenPlugin_la_SOURCES) $(libnetflowPlugin_la_SOURCES) $(libnfsPlugin_la_SOURCES) $(libsflowPlugin_la_SOURCES) libicmpPlugin_la_SOURCES.c icmpPlugin.c.c
+OBJECTS = icmpPlugin.so.o lastSeenPlugin.so.o netflowPlugin.so.o nfsPlugin.so.o sflowPlugin.so.o lib_LTLIBRARIES.o =.o libicmpPlugin.la.lo $(liblastSeenPlugin_la_OBJECTS) $(libnetflowPlugin_la_OBJECTS) $(libnfsPlugin_la_OBJECTS) $(libsflowPlugin_la_OBJECTS) libicmpPlugin_la_SOURCES.o icmpPlugin.c.o
 
 all: all-redirect
 .SUFFIXES:
@@ -249,30 +266,14 @@ Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
 
-mostlyclean-libLTLIBRARIES:
+mostlyclean-noinstPROGRAMS:
 
-clean-libLTLIBRARIES:
-	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
 
-distclean-libLTLIBRARIES:
+distclean-noinstPROGRAMS:
 
-maintainer-clean-libLTLIBRARIES:
-
-install-libLTLIBRARIES: $(lib_LTLIBRARIES)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(libdir)
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    echo "$(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p"; \
-	    $(LIBTOOL)  --mode=install $(INSTALL) $$p $(DESTDIR)$(libdir)/$$p; \
-	  else :; fi; \
-	done
-
-uninstall-libLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  $(LIBTOOL)  --mode=uninstall rm -f $(DESTDIR)$(libdir)/$$p; \
-	done
+maintainer-clean-noinstPROGRAMS:
 
 .s.o:
 	$(COMPILE) -c $<
@@ -306,32 +307,41 @@ distclean-libtool:
 
 maintainer-clean-libtool:
 
+lib_LTLIBRARIES: $(lib_LTLIBRARIES_OBJECTS) $(lib_LTLIBRARIES_DEPENDENCIES)
+	@rm -f lib_LTLIBRARIES
+	$(LINK) $(lib_LTLIBRARIES_LDFLAGS) $(lib_LTLIBRARIES_OBJECTS) $(lib_LTLIBRARIES_LDADD) $(LIBS)
+
+=: $(__OBJECTS) $(__DEPENDENCIES)
+	@rm -f =
+	$(LINK) $(__LDFLAGS) $(__OBJECTS) $(__LDADD) $(LIBS)
+
 libicmpPlugin.la: $(libicmpPlugin_la_OBJECTS) $(libicmpPlugin_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libicmpPlugin_la_LDFLAGS) $(libicmpPlugin_la_OBJECTS) $(libicmpPlugin_la_LIBADD) $(LIBS)
+	@rm -f libicmpPlugin.la
+	$(LINK) $(libicmpPlugin_la_LDFLAGS) $(libicmpPlugin_la_OBJECTS) $(libicmpPlugin_la_LDADD) $(LIBS)
 
 liblastSeenPlugin.la: $(liblastSeenPlugin_la_OBJECTS) $(liblastSeenPlugin_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(liblastSeenPlugin_la_LDFLAGS) $(liblastSeenPlugin_la_OBJECTS) $(liblastSeenPlugin_la_LIBADD) $(LIBS)
+	@rm -f liblastSeenPlugin.la
+	$(LINK) $(liblastSeenPlugin_la_LDFLAGS) $(liblastSeenPlugin_la_OBJECTS) $(liblastSeenPlugin_la_LDADD) $(LIBS)
 
 libnetflowPlugin.la: $(libnetflowPlugin_la_OBJECTS) $(libnetflowPlugin_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libnetflowPlugin_la_LDFLAGS) $(libnetflowPlugin_la_OBJECTS) $(libnetflowPlugin_la_LIBADD) $(LIBS)
+	@rm -f libnetflowPlugin.la
+	$(LINK) $(libnetflowPlugin_la_LDFLAGS) $(libnetflowPlugin_la_OBJECTS) $(libnetflowPlugin_la_LDADD) $(LIBS)
 
 libnfsPlugin.la: $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libnfsPlugin_la_LDFLAGS) $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_LIBADD) $(LIBS)
-
-librrdPlugin.la: $(librrdPlugin_la_OBJECTS) $(librrdPlugin_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(librrdPlugin_la_LDFLAGS) $(librrdPlugin_la_OBJECTS) $(librrdPlugin_la_LIBADD) $(LIBS)
+	@rm -f libnfsPlugin.la
+	$(LINK) $(libnfsPlugin_la_LDFLAGS) $(libnfsPlugin_la_OBJECTS) $(libnfsPlugin_la_LDADD) $(LIBS)
 
 libsflowPlugin.la: $(libsflowPlugin_la_OBJECTS) $(libsflowPlugin_la_DEPENDENCIES)
-	$(LINK) -rpath $(libdir) $(libsflowPlugin_la_LDFLAGS) $(libsflowPlugin_la_OBJECTS) $(libsflowPlugin_la_LIBADD) $(LIBS)
+	@rm -f libsflowPlugin.la
+	$(LINK) $(libsflowPlugin_la_LDFLAGS) $(libsflowPlugin_la_OBJECTS) $(libsflowPlugin_la_LDADD) $(LIBS)
 
-mostlyclean-noinstPROGRAMS:
+=: $(__OBJECTS) $(__DEPENDENCIES)
+	@rm -f =
+	$(LINK) $(__LDFLAGS) $(__OBJECTS) $(__LDADD) $(LIBS)
 
-clean-noinstPROGRAMS:
-	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
-
-distclean-noinstPROGRAMS:
-
-maintainer-clean-noinstPROGRAMS:
+icmpPlugin.c: $(icmpPlugin_c_OBJECTS) $(icmpPlugin_c_DEPENDENCIES)
+	@rm -f icmpPlugin.c
+	$(LINK) $(icmpPlugin_c_LDFLAGS) $(icmpPlugin_c_OBJECTS) $(icmpPlugin_c_LDADD) $(LIBS)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -492,7 +502,7 @@ check-am: all-am
 check: check-recursive
 installcheck-am:
 installcheck: installcheck-recursive
-install-exec-am: install-libLTLIBRARIES
+install-exec-am:
 install-exec: install-exec-recursive
 
 install-data-am: install-data-local
@@ -501,15 +511,14 @@ install-data: install-data-recursive
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-recursive
-uninstall-am: uninstall-libLTLIBRARIES
+uninstall-am:
 uninstall: uninstall-recursive
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS)
+all-am: Makefile $(PROGRAMS)
 all-redirect: all-recursive
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs)  $(DESTDIR)$(libdir)
 
 
 mostlyclean-generic:
@@ -522,44 +531,38 @@ distclean-generic:
 	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
 
 maintainer-clean-generic:
-mostlyclean-am:  mostlyclean-libLTLIBRARIES mostlyclean-compile \
-		mostlyclean-libtool mostlyclean-noinstPROGRAMS \
-		mostlyclean-tags mostlyclean-depend mostlyclean-generic
+mostlyclean-am:  mostlyclean-noinstPROGRAMS mostlyclean-compile \
+		mostlyclean-libtool mostlyclean-tags mostlyclean-depend \
+		mostlyclean-generic
 
 mostlyclean: mostlyclean-recursive
 
-clean-am:  clean-libLTLIBRARIES clean-compile clean-libtool \
-		clean-noinstPROGRAMS clean-tags clean-depend \
-		clean-generic mostlyclean-am
+clean-am:  clean-noinstPROGRAMS clean-compile clean-libtool clean-tags \
+		clean-depend clean-generic mostlyclean-am
 
 clean: clean-recursive
 
-distclean-am:  distclean-libLTLIBRARIES distclean-compile \
-		distclean-libtool distclean-noinstPROGRAMS \
-		distclean-tags distclean-depend distclean-generic \
-		clean-am
+distclean-am:  distclean-noinstPROGRAMS distclean-compile \
+		distclean-libtool distclean-tags distclean-depend \
+		distclean-generic clean-am
 	-rm -f libtool
 
 distclean: distclean-recursive
 
-maintainer-clean-am:  maintainer-clean-libLTLIBRARIES \
+maintainer-clean-am:  maintainer-clean-noinstPROGRAMS \
 		maintainer-clean-compile maintainer-clean-libtool \
-		maintainer-clean-noinstPROGRAMS maintainer-clean-tags \
-		maintainer-clean-depend maintainer-clean-generic \
-		distclean-am
+		maintainer-clean-tags maintainer-clean-depend \
+		maintainer-clean-generic distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
 maintainer-clean: maintainer-clean-recursive
 
-.PHONY: mostlyclean-libLTLIBRARIES distclean-libLTLIBRARIES \
-clean-libLTLIBRARIES maintainer-clean-libLTLIBRARIES \
-uninstall-libLTLIBRARIES install-libLTLIBRARIES mostlyclean-compile \
-distclean-compile clean-compile maintainer-clean-compile \
-mostlyclean-libtool distclean-libtool clean-libtool \
-maintainer-clean-libtool mostlyclean-noinstPROGRAMS \
-distclean-noinstPROGRAMS clean-noinstPROGRAMS \
-maintainer-clean-noinstPROGRAMS install-data-recursive \
+.PHONY: mostlyclean-noinstPROGRAMS distclean-noinstPROGRAMS \
+clean-noinstPROGRAMS maintainer-clean-noinstPROGRAMS \
+mostlyclean-compile distclean-compile clean-compile \
+maintainer-clean-compile mostlyclean-libtool distclean-libtool \
+clean-libtool maintainer-clean-libtool install-data-recursive \
 uninstall-data-recursive install-exec-recursive \
 uninstall-exec-recursive installdirs-recursive uninstalldirs-recursive \
 all-recursive check-recursive installcheck-recursive info-recursive \

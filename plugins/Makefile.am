@@ -43,11 +43,15 @@ INCLUDES = -I.. @INCS@
 # The meat for ntop
 #
 noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so \
-                  netflowPlugin.so  nfsPlugin.so  rrdPlugin.so sflowPlugin.so
+                  netflowPlugin.so  nfsPlugin.so  \
+#		  rrdPlugin.so \
+		  sflowPlugin.so \
 #		  rmonPlugin.so wapPlugin.so
 
 lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
-                  libnetflowPlugin.la  libnfsPlugin.la  librrdPlugin.la libsflowPlugin.la
+                  libnetflowPlugin.la  libnfsPlugin.la  \
+#		  librrdPlugin.la \
+		  libsflowPlugin.la \
 #		  librmonPlugin.la libwapPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
