@@ -7,5 +7,5 @@ if test ".${LOCALEDIR}" = "."; then
     LOCALEDIR="/usr/share/locale"
 fi
 
-FORCE_RUNTIME_PARM="--set-pcap-nonblocking"
+FORCE_RUNTIME_PARM=""
 
