@@ -114,3 +114,4 @@ typedef struct eventMsg {
   char           message[MAX_EVENT_MSG_SIZE];
 } EventMsg;
 
+/* ******************** */

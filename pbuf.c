@@ -40,7 +40,6 @@
   * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
   */
 
-
 /*
   #define DNS_SNIFF_DEBUG
   #define DNS_DEBUG
@@ -4182,10 +4181,10 @@ void processPacket(u_char *_deviceId,
   }
 
   if(device[actualDeviceId].hostsno > device[actualDeviceId].topHashThreshold)
-    resizeHostHash(actualDeviceId, 1.5F); /* Extend table */
+    resizeHostHash(actualDeviceId, EXTEND_HASH); /* Extend table */
   else if((device[actualDeviceId].actualHashSize != HASH_INITIAL_SIZE)
 	  && (device[actualDeviceId].hostsno < (device[actualDeviceId].topHashThreshold/2)))
-    resizeHostHash(actualDeviceId, 0.7F); /* Shrink table */
+    resizeHostHash(actualDeviceId, RESIZE_HASH); /* Shrink table */
 
 #ifdef MULTITHREADED
   accessMutex(&hostsHashMutex, "processPacket");

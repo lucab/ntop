@@ -1204,6 +1204,8 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	/* Avoid huge tables */
 	if(printedEntries++ > maxNumLines)
 	  break;	
+      } else {
+	traceEvent(TRACE_WARNING, "WARNING: quicksort() problem!");
       }
     }
 

@@ -55,6 +55,28 @@ static int enableDBsupport=0;
 void handleSigHup(int signalId _UNUSED_) {
   traceEvent(TRACE_INFO, "Caught sighup: statistics have been reset.\n");
   resetStats();
+
+  /* ************************************** */
+
+#ifdef MULTITHREADED
+  traceEvent(TRACE_INFO, "========================================");
+  traceEvent(TRACE_INFO, "gdbmMutex is %s", isMutexLocked(&gdbmMutex) ? "*locked*" : "unlocked");
+  traceEvent(TRACE_INFO, "packetQueueMutex is %s", isMutexLocked(&packetQueueMutex) ? "*locked*" : "unlocked");
+  traceEvent(TRACE_INFO, "addressResolutionMutex is %s", isMutexLocked(&addressResolutionMutex) ? "*locked*" : "unlocked");
+  traceEvent(TRACE_INFO, "hashResizeMutex is %s", isMutexLocked(&hashResizeMutex) ? "*locked*" : "unlocked");
+  if(isLsofPresent)
+    traceEvent(TRACE_INFO, "lsofMutex is %s", isMutexLocked(&lsofMutex) ? "*locked*" : "unlocked");
+  traceEvent(TRACE_INFO, "hostsHashMutex is %s", isMutexLocked(&hostsHashMutex) ? "*locked*" : "unlocked");
+  traceEvent(TRACE_INFO, "graphMutex is %s", isMutexLocked(&graphMutex) ? "*locked*" : "unlocked");
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  if(numericFlag == 0)
+    traceEvent(TRACE_INFO, "addressQueueMutex is %s", isMutexLocked(&addressQueueMutex) ? "*locked*" : "unlocked");
+#endif
+  traceEvent(TRACE_INFO, "========================================");
+#endif /* MULTITHREADED */
+
+  /* ************************************** */
+
   (void)setsignal(SIGHUP,  handleSigHup);
 }
 
@@ -71,21 +93,21 @@ void* pcapDispatch(void *_i) {
   fd_set readMask;
   struct timeval timeout;
 
-  if((pcap_fd == -1) && (rFileName != NULL)) { 
+  if((pcap_fd == -1) && (rFileName != NULL)) {
     /*
-      This is a patch to overcome a bug of libpcap 
-      while reading from a traffic file instead 
+      This is a patch to overcome a bug of libpcap
+      while reading from a traffic file instead
       of sniffying live from a NIC.
     */
     struct mypcap {
-      int fd, snapshot, linktype, tzoff, offset;      
+      int fd, snapshot, linktype, tzoff, offset;
       FILE *rfile;
-      
+
       /* Other fields have been skipped. Please refer
 	 to pcap-int.h for the full datatype.
       */
     };
-    
+
     pcap_fd = fileno(((struct mypcap *)(device[i].pcapPtr))->rfile);
   }
 
@@ -273,7 +295,7 @@ static short handleProtocol(char* protoName, char *protocol) {
 
     return(1);
   }
- 
+
   for(i=1; i<numActServices; i++) {
     idx = -1;
 
@@ -306,7 +328,7 @@ static short handleProtocol(char* protoName, char *protocol) {
 
 /* **************************************** */
 
-static void handleProtocolList(char* protoName, 
+static void handleProtocolList(char* protoName,
 			       char *protocolList) {
   char tmpStr[255];
   char* lastEntry, *protoEntry;
@@ -430,7 +452,7 @@ void addDefaultProtocols(void) {
   handleProtocolList("NFS", "mount|pcnfs|bwnfs|nfsd|nfsd-status|");
   handleProtocolList("X11", "6000-6010|");
   /* 22 == ssh (just to make sure the port is defined) */
-  handleProtocolList("SSH", "22|"); 
+  handleProtocolList("SSH", "22|");
 }
 
 /* **************************************** */
@@ -496,7 +518,7 @@ void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
 #endif
 
     if(!capturePackets) break; /* Before */
-    
+
     sleep(60);
 
     if(!capturePackets) break; /* After */
@@ -506,9 +528,9 @@ void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
 #endif
 
     actTime = time(NULL);
-    strftime(theDate, 8, "%M", localtime_r(&actTime, &t)); 
+    strftime(theDate, 8, "%M", localtime_r(&actTime, &t));
     minuteId = atoi(theDate);
-    strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
+    strftime(theDate, 8, "%H", localtime_r(&actTime, &t));
     hourId = atoi(theDate);
     if((minuteId <= 1) && (hourId != lastUpdatedHour)) {
       lastUpdatedHour = hourId;
@@ -521,7 +543,7 @@ void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
       nextUpdate = actTime+3600;
     }
   }
-  
+
   return(NULL);
 }
 #endif
@@ -534,7 +556,7 @@ void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
 
   for(;;) {
     int i;
-    
+
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Sleeping for %d seconds\n", updateTime);
 #endif
@@ -543,7 +565,7 @@ void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
 
     if(!capturePackets) break;
 
-    for(i=0; i<numDevices; i++) 
+    for(i=0; i<numDevices; i++)
       if(!device[i].virtualDevice) {
 #ifdef MULTITHREADED
 	accessMutex(&hostsHashMutex, "updateDbHostsTraffic");
@@ -640,22 +662,22 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
   int numPkts=0, pcap_fd = pcap_fileno(device[0].pcapPtr);
   fd_set readMask;
   struct timeval timeout;
-  
-  if((pcap_fd == -1) && (rFileName != NULL)) { 
+
+  if((pcap_fd == -1) && (rFileName != NULL)) {
     /*
-      This is a patch to overcome a bug of libpcap 
-      while reading from a traffic file instead 
+      This is a patch to overcome a bug of libpcap
+      while reading from a traffic file instead
       of sniffying live from a NIC.
     */
     struct mypcap {
-      int fd, snapshot, linktype, tzoff, offset;      
+      int fd, snapshot, linktype, tzoff, offset;
       FILE *rfile;
-      
+
       /* Other fields have been skipped. Please refer
 	 to pcap-int.h for the full datatype.
       */
     };
-    
+
     pcap_fd = fileno(((struct mypcap *)(device[0].pcapPtr))->rfile);
   }
 
@@ -731,8 +753,8 @@ RETSIGTYPE cleanup(int signo) {
   /* Courtesy of Felipe Tonioli <tonioli@mtec.com.br> */
   if(signo != -1) { /* the user pressed the 'q' key */
     /* Send signals to threads first */
-	  	  
-    /* Then kill threads */  
+
+    /* Then kill threads */
     killThread(&dequeueThreadId);
     killThread(&thptUpdateThreadId);
     killThread(&hostTrafficStatsThreadId);
@@ -789,15 +811,15 @@ RETSIGTYPE cleanup(int signo) {
   termLogger();
   (void)fflush(stdout);
 
-  if(device[actualDeviceId].pcapDumper != NULL) 
+  if(device[actualDeviceId].pcapDumper != NULL)
     pcap_dump_close(device[actualDeviceId].pcapDumper);
-  
-  if(device[actualDeviceId].pcapErrDumper != NULL) 
+
+  if(device[actualDeviceId].pcapErrDumper != NULL)
     pcap_dump_close(device[actualDeviceId].pcapErrDumper);
 
   termIPServices();
   termIPSessions();
-  
+
 #ifndef WIN32
   endservent();
 #endif
@@ -816,7 +838,7 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
   if(rFileName == NULL)
-    for(i=0; i<numDevices; i++) 
+    for(i=0; i<numDevices; i++)
       if(!device[i].virtualDevice) {
 	if (pcap_stats(device[i].pcapPtr, &stat) < 0) {
 	  /*traceEvent(TRACE_INFO, "\n\npcap_stats: %s\n",

@@ -149,12 +149,18 @@ static int _mapIdx(u_int* mappings, u_int idx,
 
 /* ******************************* */
 
-void resizeHostHash(int deviceToExtend, float multiplier) {
+void resizeHostHash(int deviceToExtend, short hashAction) {
   u_int idx, *mappings;
+  float multiplier;
   u_int i, j, newSize, lastHashSize;
   struct hostTraffic **hash_hostTraffic;
   short numCmp;
   struct ipGlobalSession *scanner=NULL;
+
+  if(hashAction == EXTEND_HASH)
+    multiplier = HASH_EXTEND_RATIO;
+  else
+    multiplier = HASH_RESIZE_RATIO;
 
   newSize = (int)(device[deviceToExtend].actualHashSize*multiplier);
   newSize = newSize - (newSize % 2); /* I want an even hash size */
@@ -168,7 +174,7 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
     purgeIdleHosts(0); /* Delete only idle hosts */
 
 #if defined(MULTITHREADED)
-  if(device[actualDeviceId].hostsno < (device[deviceToExtend].actualHashSize*0.85)) {
+  if(device[actualDeviceId].hostsno < (device[deviceToExtend].actualHashSize*HASH_EXTEND_THRESHOLD)) {
     if(tryLockMutex(&hostsHashMutex, "resizeHostHash(processPacket)") != 0) {
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "The table is already locked: let's try later");
@@ -232,9 +238,9 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
   device[deviceToExtend].hash_hostTraffic = hash_hostTraffic;
   device[deviceToExtend].actualHashSize = newSize;
   device[deviceToExtend].hashThreshold =
-    (unsigned int)(device[deviceToExtend].actualHashSize*0.5);
+    (unsigned int)(device[deviceToExtend].actualHashSize/2);
   device[deviceToExtend].topHashThreshold =
-    (unsigned int)(device[deviceToExtend].actualHashSize*0.75);
+    (unsigned int)(device[deviceToExtend].actualHashSize*HASH_EXTEND_THRESHOLD);
 
   for(j=1; j<newSize; j++)
     if(device[deviceToExtend].hash_hostTraffic[j] != NULL) {

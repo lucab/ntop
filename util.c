@@ -916,6 +916,33 @@ int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
 
 /* ************************************ */
 
+int _isMutexLocked(pthread_mutex_t *mutexId, char* fileName, int fileLine) {
+  int rc;
+  
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Checking whether 0x%X is locked [%s:%d]\n",
+	     mutexId, fileName, fileLine);
+  fflush(stdout);
+#endif
+
+  rc = pthread_mutex_trylock(mutexId);
+
+  /*
+     Return code:
+
+     0:    lock succesful
+     EBUSY (mutex already locked)
+  */
+
+  if(rc == 0) {
+    pthread_mutex_unlock(mutexId);
+    return(0);
+  } else
+    return(1);
+}
+
+/* ************************************ */
+
 int _releaseMutex(pthread_mutex_t *mutexId,
 		  char* fileName, int fileLine) {
 #ifdef DEBUG

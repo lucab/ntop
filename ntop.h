@@ -771,6 +771,13 @@ typedef struct ipFragment {
 */
 #define SERVICE_HASH_SIZE     50000
 
+#define EXTEND_HASH             1
+#define RESIZE_HASH             2
+#define HASH_EXTEND_RATIO      1.50  /* 150 % */
+#define HASH_RESIZE_RATIO      0.75  /*  75 % */
+#define HASH_EXTEND_THRESHOLD  0.85  /*  85 % */
+
+
 /* Forward */
 struct ipSession;
 struct hostTraffic;
