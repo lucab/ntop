@@ -986,10 +986,11 @@ static void handleBootp(HostTraffic *srcHost,
 		    int hostLen, i;
 		    
 			memset(tmpHostName, 0, sizeof(tmpHostName));
-		    strncpy(tmpHostName, realDstHost->hostSymIpAddress, sizeof(MAX_HOST_SYM_NAME_LEN));
-		    for(i=0; (tmpHostName[i] != '\0') && (tmpHostName[i] != '.'); i++)
-		      ;
-
+		    strncpy(tmpHostName, realDstHost->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN);
+		    for(i=0; i<strlen(tmpHostName); i++)
+		      if(tmpHostName[i] == '.')
+			break;
+		    
 		    tmpHostName[i] = '\0';
 		    		      
 		    strcpy(tmpDomainName, &bootProto.bp_vend[idx]);
