@@ -3360,6 +3360,9 @@ void printNtopConfigInfo(int textPrintFlag) {
     if(snprintf(buf2, sizeof(buf2), "<tr><th colspan=\"2\">Host/Session counts - Device %d (%s)</th></tr>\n", i, myGlobals.device[i].name) < 0)
       BufferTooShort();
     sendString(texthtml(buf, buf2));
+
+    printFeatureConfigInfo(textPrintFlag, "Hash Bucket Size", formatBytes(sizeof(HostTraffic), 0));
+
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
@@ -3375,6 +3378,8 @@ void printNtopConfigInfo(int textPrintFlag) {
     printFeatureConfigInfo(textPrintFlag, "Max host lookup", buf);
 
     if(myGlobals.enableSessionHandling) {
+      printFeatureConfigInfo(textPrintFlag, "Session Bucket Size", formatBytes(sizeof(IPSession), 0));
+
       if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[i].numTcpSessions)) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
@@ -3695,8 +3700,8 @@ void printNtopConfigInfo(int textPrintFlag) {
 	}
       }
     }
-    if(countBadGuys > 0) {
-  
+
+    if(countBadGuys > 0) {  
       sendString(texthtml("\n", "</table></td>\n"));
 
       if(snprintf(buf, sizeof(buf), "%d", PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < 0)
@@ -3709,6 +3714,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   }
 #endif
+
   /* **** */
 
 #ifdef MEMORY_DEBUG
@@ -4278,6 +4284,7 @@ void initWeb() {
 	     );
 
   if(myGlobals.webPort > 0) {
+    memset(&sockIn, 0, sizeof(sockIn));
     sockIn.sin_family = AF_INET;
     sockIn.sin_port   = (int)htons((unsigned short int)myGlobals.webPort);
 #ifndef WIN32
@@ -4332,6 +4339,7 @@ void initWeb() {
 
 #ifdef HAVE_OPENSSL
   if(myGlobals.sslInitialized) {
+    memset(&sockIn, 0, sizeof(sockIn));
     sockIn.sin_family = AF_INET;
     sockIn.sin_port   = (int)htons(myGlobals.sslPort);
 #ifndef WIN32
