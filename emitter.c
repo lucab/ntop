@@ -24,18 +24,19 @@
 #define PERL_LANGUAGE       1
 #define PHP_LANGUAGE        2
 #define XML_LANGUAGE        3
-#define NO_LANGUAGE         4
-#define NB_LANGUAGES        4
+#define PYTHON_LANGUAGE     4
+#define NO_LANGUAGE         5
+#define NB_LANGUAGES        NO_LANGUAGE
 #define DEFAULT_LANGUAGE    NO_LANGUAGE
 
-
+/* Python support courtesy of Nicola Larosa <n.larosa@araknos.it> */
 /*
   This file has been significantly reworked
   by Philippe Bereski <Philippe.Bereski@ms.alcatel.fr>
 
   Many thanks Philippe!
 */
-char *languages[] = { "", "perl", "php", "xml", "no" };
+char *languages[] = { "", "perl", "php", "xml", "python", "no" };
 
 /* *************************** */
 
@@ -62,6 +63,9 @@ static void initWriteArray(FILE *fDescr, int lang) {
   case PHP_LANGUAGE:
     sendEmitterString(fDescr, "$ntopHash = array(\n");
     break ;
+  case PYTHON_LANGUAGE:
+    sendEmitterString(fDescr, "ntopDict = {\n");
+    break ;
   case XML_LANGUAGE:
     sendEmitterString(fDescr, "<rpc-reply xmlns:ntop=\"http://www.ntop.org/ntop.dtd\">"
 		      "\n<ntop-traffic-information>\n");
@@ -79,6 +83,9 @@ static void endWriteArray(FILE *fDescr, int lang) {
   case PHP_LANGUAGE:
     sendEmitterString(fDescr, ");\n");
     break ;
+  case PYTHON_LANGUAGE:
+    sendEmitterString(fDescr, "}\n");
+    break;
   case XML_LANGUAGE:
     sendEmitterString(fDescr, "</ntop-traffic-information>\n</rpc-reply>\n");
     break ;
@@ -120,6 +127,11 @@ static void initWriteKey(FILE *fDescr, int lang, char *indent,
     break ;
   case PHP_LANGUAGE:
     if(snprintf(buf, sizeof(buf), "%s'%s' => array(\n",indent, keyName) < 0)
+      BufferTooShort();
+    sendEmitterString(fDescr, buf);
+    break ;
+  case PYTHON_LANGUAGE:
+    if(snprintf(buf, sizeof(buf), "%s'%s': {\n",indent, keyName) < 0)
       BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
@@ -166,6 +178,11 @@ static void endWriteKey(FILE *fDescr, int lang, char *indent, char *keyName, cha
       BufferTooShort();
     sendEmitterString(fDescr, buf);
     break ;
+  case PYTHON_LANGUAGE:
+    if(snprintf(buf, sizeof(buf),"%s}%c\n",indent,last) < 0)
+      BufferTooShort();
+    sendEmitterString(fDescr, buf);
+    break ;
   case NO_LANGUAGE:
     if(strcmp(indent, "") == 0) sendEmitterString(fDescr, "\n");
     break ;
@@ -200,6 +217,13 @@ static void wrtStrItm(FILE *fDescr, int lang, char *indent, char *name,
 	  BufferTooShort();  sendEmitterString(fDescr, buf);
       }
     break ;
+  case PYTHON_LANGUAGE:
+    if((value != NULL) && (value[0] != '\0'))
+      {
+	if(snprintf(buf, sizeof(buf), "%s'%s': '%s'%c\n", indent,name,value,last) < 0)
+ 	  BufferTooShort();  sendEmitterString(fDescr, buf);
+       }
+     break ;
   case NO_LANGUAGE:
     if(value != NULL) {
       if(snprintf(buf, sizeof(buf), "%s|", numEntriesSent == 0 ? name : value) < 0)
