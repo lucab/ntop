@@ -149,8 +149,30 @@ Steps
      line help by running ntop.exe -h and from the EXTENSIVE entries
      about Win32 in docs/FAQ.
 
+KNOWN PROBLEMS
+==============
+
+Win9x (ME?) and gdbm
+--------------------
+
+Under Win98/98SE (and probably other 9x platforms), unknown gdbm error occurs:
+
+   Wait please: ntop is coming up... 
+   18/Nov/2002 14:23:05 Initializing IP services... 
+   18/Nov/2002 14:23:05 Initializing GDBM... 
+   18/Nov/2002 14:23:05 Database './addressCache.db' open failed: unknown gdbm errno 
+   18/Nov/2002 14:23:05 Possible solution: please use '-P <directory>' 
+
+Serge traced the problem to gdbm-1.8.0-20010430.zip.
+Solution: Revert to the older version, gdbm-1.8.0-20010126.zip
+
+Releases of gdbm for MinGW are available at SourceForge,
+http://sourceforge.net/project/showfiles.php?group_id=7382
+
 -- 
 November 2001 - Scott Renfro <scott@renfro.org>
 June 2002 - Burton M. Strauss III <Burton@ntopsupport.com>
 September 2002 - Burton M. Strauss III <Burton@ntopsupport.com> with help from Jac Engel.
+November 2002 - BMSIII - Win9x problem report from Serge Couture <scouture@dgeq.qc.ca>
+
 
