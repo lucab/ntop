@@ -20,10 +20,14 @@ the active hosts.
 URL (2) will define the %interfaces array that contains information about 
 the active network interfaces.
 
-Example:
+NOTE
+To both URL's it's possible to add key=<value> for returning data that's related only to the specified key. For instance http://<ntop host>:<ntop port>/dumpTrafficData.html?language=perl&key=eth0 returns information related to the eth0 interface only.
+
+Example
 In former ntop versions, users could use the -l flag to periodically
 generate a file that contains traffic statistics information. This
 functionality has been replaced using this new API.
+
 
 ---------------
 Luca Deri <deri@ntop.org> - January 2001
