@@ -1394,7 +1394,7 @@ void readLsofInfo(void) {
 	swapProcesses = (ProcessInfo**)malloc((numProcesses+1)*sizeof(ProcessInfo*));
 	if(numProcesses > 0)
 	  memcpy(swapProcesses, processes, numProcesses*sizeof(ProcessInfo*));
-	free(processes);
+	if(processes != NULL) free(processes);
 	processes = swapProcesses;
 
 #ifdef DEBUG
