@@ -396,7 +396,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   accessAddrResMutex("makeHostLink");
 
   if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)
-     || (el->hostResolvedName[0] != '\0') /* Safety check */
+     || (el->hostResolvedName[0] == '\0') /* Safety check */
      ) {
     /* It's not officially known, so let's do what we can
      */
