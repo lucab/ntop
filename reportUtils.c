@@ -560,9 +560,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_PROTOS:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A>"
-                CONST_ABOUT_SORTING_THIS_COL
-                "</TH>\n"
+		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
 		"<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
@@ -630,9 +628,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_IP:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A>"
-                CONST_ABOUT_SORTING_THIS_COL
-                "</TH>\n"
+		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
 		"<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
@@ -678,9 +674,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_HOST_TRAFFIC:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A>"
-                CONST_ABOUT_SORTING_THIS_COL
-                "</TH>"
+		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
       BufferTooShort();
@@ -704,9 +698,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_THPT:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A>"
-                CONST_ABOUT_SORTING_THIS_COL
-                "</TH>"
+		"<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
 		"<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
       BufferTooShort();
@@ -744,9 +736,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case TRAFFIC_STATS:
     sendString("<CENTER>\n");
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
-		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A>"
-                CONST_ABOUT_SORTING_THIS_COL
-                "</TH>"
+		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
       BufferTooShort();
@@ -4034,11 +4024,11 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if(stat(buf, &statbuf) == 0) {
       if(snprintf(buf, sizeof(buf),
                   "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
-                  "<TD "TD_BG" ALIGN=\"center\">"
-                  "<a href=\"/" CONST_PLUGINS_HEADER 
-                      "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
+                  "<TD "TD_BG" ALIGN=\"right\">"
+                  "[ <a href=\"/" CONST_PLUGINS_HEADER 
+		  "rrdPlugin?action=list&amp;key=interfaces/%s/hosts/%s&amp;title=host%%20%s\">"
                   "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
-                      " alt=\"view rrd graphs of historical data for this host\"></a>"
+		  " alt=\"view rrd graphs of historical data for this host\"></a> ]"
                   "</TD></TR>\n",
 		  getRowColor(),
                   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,

@@ -1828,8 +1828,16 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
                   continue;
                 } 
 
-		if((!myGlobals.dontTrustMACaddr) && subnetPseudoLocalHost(el))
-		  hostKey = el->ethAddressString;
+		if((!myGlobals.dontTrustMACaddr) 
+		   && subnetPseudoLocalHost(el)
+		   && (el->ethAddressString[0] != '\0')) /*
+							   NOTE:
+							   MAC address is empty even
+							   for local hosts if this host has
+							   been learnt on a virtual interface
+							   such as the NetFlow interface
+							 */
+		    hostKey = el->ethAddressString;
 	      } else {
 		/* For the time being do not save IP-less hosts */
 		el = el->next;
@@ -1849,7 +1857,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      mkdir_p(rrdPath);
 	      
 #if RRD_DEBUG >= 2
-	      traceEvent(CONST_TRACE_INFO, "RRD: Updating %s", hostKey);
+	      traceEvent(CONST_TRACE_INFO, "RRD: Updating %s [%s/%s]", 
+			 hostKey, el->hostNumIpAddress, el->ethAddressString);
 #endif
 
 	      updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);

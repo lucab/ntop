@@ -523,9 +523,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 
   sendString("<CENTER>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON" "DARK_BG">"
-              "<TH "TH_BG" rowspan=\"2\" valign=\"bottom\">%s?%s%d>Host %s</A>"
-              CONST_ABOUT_SORTING_THIS_COL
-              "</TH>\n"
+              "<TH "TH_BG" rowspan=\"2\" valign=\"bottom\">%s?%s%d>Host %s</A></TH>\n"
 	      "<TH "TH_BG" colspan=\"2\">Bytes</TH>\n"
               "<TH "TH_BG" colspan=\"11\">Sent/Recived by ICMP Type</TH>\n"
 	      "</TR>\n",
@@ -637,6 +635,9 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 
   sendString("</TABLE>\n<p></CENTER>\n");
 
+  sendString("<p><b>NOTE</b>:<ul>"
+	     "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> for more information about host sorting."
+	     "</ul><p>\n");
 }
 
 /* ******************************* */

@@ -1822,12 +1822,6 @@
 #define FLAG_HOST_SYM_ADDR_TYPE_NAME        7
 
 /*
- * The header line
- */
-#define CONST_ABOUT_SORTING_THIS_COL       "&nbsp;&nbsp;<sup>" \
-      "<a href=\"" CONST_HOST_SORT_NOTE_HTML "\">about sorting this column</a></sup>"
-
-/*
  * SSLWATCHDOG stuff
  */
 #ifdef MAKE_WITH_SSLWATCHDOG

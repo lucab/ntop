@@ -36,16 +36,18 @@ static void ignoreSignal(int signalId) {
 /* ******************************* */
 
 void printBandwidthFooter(void) {
-    sendString("<p><b>NOTE</b>: Bandwidth values are the percentage of the total bytes that "
+    sendString("<p><b>NOTE</b>:<ul>"
+	       "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> for more information about host sorting."
+	       "<li>Bandwidth values are the percentage of the total bytes that "
                "<b>ntop</b> has seen on the interface.  Hover the mouse to see the actual "
                "value (rounded to the nearest full percentage point).  <i>The total of the "
                "values will NOT be 100% as local traffic will be counted TWICE (once as "
-               "sent and again as received).</i><p>\n"
-               "<p>The SENT bandwidth is shown as "
+               "sent and again as received).</i>\n"
+               "<li>The SENT bandwidth is shown as "
                "<img align=\"absmiddle\" src=\"/gaugeS.jpg\" alt=\"Sent\" WIDTH=\"25\" HEIGHT=\"12\">"
                " and the RECEIVED bandwidth is shown as "
                "<img align=\"absmiddle\" src=\"/gaugeR.jpg\" alt=\"Received\" WIDTH=\"25\" HEIGHT=\"12\">"
-               "</p>");
+               "</ul></p>");
 }
 
 /* ******************************* */
@@ -1006,9 +1008,9 @@ void printTrafficStatistics(int revertOrder) {
 		   (float)(myGlobals.actTime-myGlobals.initialSniffTime+1))) < 0)
 	BufferTooShort();
       sendString(buf);
-    }
 
-    sendString("</TABLE>"TABLE_OFF"</TR>\n");
+      sendString("</TABLE>"TABLE_OFF"</TR>\n");
+    }
   }
 
   /* ********************* */
@@ -1024,11 +1026,11 @@ void printTrafficStatistics(int revertOrder) {
   if((i = stat(buf, &statbuf)) == 0) {
     if(snprintf(buf, sizeof(buf),
                 "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
-                "<TD "TD_BG" align=\"center\">"
-		"<a href=\"/" CONST_PLUGINS_HEADER
+                "<TD "TD_BG" align=\"right\">"
+		"[ <a href=\"/" CONST_PLUGINS_HEADER
                     "rrdPlugin?action=list&amp;key=interfaces/%s&amp;title=interface%%20%s\">"
                 "<img valign=\"top\" border=\"0\" src=\"/graph.gif\""
-                    " alt=\"View rrd charts of historical data for this interface\"></a>"
+                    " alt=\"View rrd charts of historical data for this interface\"></a> ]"
                 "</TD></TR>\n",
 		getRowColor(), myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName) < 0)
@@ -1736,6 +1738,10 @@ void printHostsTraffic(int reportTypeReq,
   addPageIndicator(url, pageNum, numEntries, myGlobals.maxNumLines,
 		   revertOrder, abs(sortedColumn));
 
+  sendString("<p><b>NOTE</b>:<ul>"
+	     "<li>Click <a href=\"" CONST_HOST_SORT_NOTE_HTML "\">here</a> for more information about host sorting."
+	     "</ul><p>\n");
+  
   myGlobals.lastRefreshTime = myGlobals.actTime;
   free(tmpTable);
 }
@@ -1940,9 +1946,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG">%s1\">Host%s</A>"
-                  CONST_ABOUT_SORTING_THIS_COL
-                  "</TH>\n"
+		  "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
 		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
 		  "<TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
 		  "<TH "TH_BG">%s3\">MAC&nbsp;Address%s</A></TH>\n"
@@ -1969,13 +1973,11 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	BufferTooShort();
     } else {
       if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON" "DARK_BG">"
-		  "<TH "TH_BG">%s1>Host%s</A>"
-                  CONST_ABOUT_SORTING_THIS_COL
-                  "</TH>\n"
+		  "<TH "TH_BG">%s1\">Host%s</A></TH>\n"
 		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n"
 		  "</TH><TH "TH_BG">%s2\">IP&nbsp;Address%s</A></TH>\n"
 		  "<TH "TH_BG">%s6\">Other&nbsp;Name(s)%s</A></TH>\n"
-		  "<TH "TH_BG">%s4\">Bandwidth%s:</A></TH>\n"
+		  "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
 		  "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
 		  "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
 		  "<TH "TH_BG">%s9\">Age%s</A></TH>\n"
@@ -2785,9 +2787,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     sendString("<CENTER>\n");
     if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"80%\">\n"
 		"<TR "TR_ON" "DARK_BG"><TH "TH_BG">"
-		"%s1>Host%s</A>"
-                CONST_ABOUT_SORTING_THIS_COL
-                "</TH>"
+		"%s1>Host%s</A></TH>"
 		"<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
 		"<TH "TH_BG" COLSPAN=2>%s3>Data&nbsp;Sent%s</A></TH>"
 		"<TH "TH_BG" COLSPAN=2>%s4>Data&nbsp;Rcvd%s</A></TH></TR>\n",
@@ -4428,7 +4428,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
       arrow[i] = "", theAnchor[i] = htmlAnchor1;
   
   /* Split below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
-  sendString("<CENTER>\n" TABLE_ON "<TABLE BORDER=1>");
+  sendString("<CENTER>\n" TABLE_ON "<TABLE BORDER=1 "TABLE_DEFAULTS">");
   if(snprintf(buf, sizeof(buf),
               "<TR "TR_ON" "DARK_BG">"
               "<TH "TH_BG" rowspan=\"3\">%s0>Name%s</A></TH>"
@@ -4568,9 +4568,9 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
                   "<td valign=\"middle\" align=\"right\">Show domain-wide traffic charts:</td>\n"
                   "<td align=\"right\">"
                   "&nbsp;&nbsp;"
-                  "<a href=\"/" CONST_PLUGINS_HEADER
+                  "[ <a href=\"/" CONST_PLUGINS_HEADER
                       "rrdPlugin?action=list&key=interfaces/%s/domains/%s&title=Domain%%20%s\">"
-                  "<img border=\"0\" src=\"/graph.gif\" alt=\"Domain-wide Historical Data\"></a>"
+                  "<img border=\"0\" src=\"/graph.gif\" alt=\"Domain-wide Historical Data\"></a> ]"
                   "&nbsp;&nbsp;"
                   "</td>\n"
                   "</tr></table>\n</center>\n"
@@ -5408,7 +5408,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
     myGlobals.columnSort = sortedColumn;
 
     numEntries = 0;
-    /* printHeader(0, revertOrder, abs(sortedColumn)); */
+
     for(el=getFirstHost(myGlobals.actualReportDeviceId);
         el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
         unsigned short actUsage;
@@ -5465,9 +5465,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
     if (snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                  "<TH "TH_BG" "DARK_BG">%s3>VSAN%s</A></TH>"
-                 "<TH "TH_BG" "DARK_BG">%s1>FC_Port%s</A>"
-                 CONST_ABOUT_SORTING_THIS_COL
-                 "</TH>"
+                 "<TH "TH_BG" "DARK_BG">%s1>FC_Port%s</A></TH>"
                  "</TH><TH "TH_BG" "DARK_BG">%s2>FC&nbsp;Address%s</A></TH>\n"
                  "<TH "TH_BG" "DARK_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
                  "<TH "TH_BG" "DARK_BG">Nw&nbsp;Board&nbsp;Vendor</TH>"
@@ -5641,9 +5639,7 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
     sendString("<CENTER>\n");
     if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                 "<TH "TH_BG" "DARK_BG">%s5\">VSAN%s</a></TH>"
-                "<TH "TH_BG" "DARK_BG">%s1\">FC_Port%s</a>"
-                CONST_ABOUT_SORTING_THIS_COL
-                "</TH>"
+                "<TH "TH_BG" "DARK_BG">%s1\">FC_Port%s</a></TH>"
                 "<TH "TH_BG" "DARK_BG">%s2\">FC_ID%s</a></TH>\n"
                 "<TH "TH_BG" COLSPAN=2 "DARK_BG">%s3\">Bytes&nbsp;Sent%s</a></TH>"
                 "<TH "TH_BG" COLSPAN=2 "DARK_BG">%s4\">Bytes&nbsp;Rcvd%s</a></TH></TR>\n",

@@ -34,7 +34,10 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
                                0xf4a460L, 0xb0c4deL, 0x90ee90L,
                                0xffd700L, 0x87ceebL, 0xdda0ddL,
                                0x7fffd4L, 0xffb6c1L, 0x708090L,
-                               0x6495edL, 0xdeb887L, 0x6b8e23L};
+                               0x6495edL, 0xdeb887L, 0x6b8e23L,
+			       0xf08080L, 0x4682b4L, 0x66cdaaL,
+                               0xf4a460L, 0xb0c4deL, 0x90ee90L,
+                               0xffd700L, 0x87ceebL, 0xdda0ddL };
 
 /* ******************************************************************* */
 

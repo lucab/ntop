@@ -395,7 +395,9 @@ char* makeHostLink(HostTraffic *el, short mode,
  
   accessAddrResMutex("makeHostLink");
 
-  if(el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE) {
+  if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)
+     || (el->hostResolvedName[0] != '\0') /* Safety check */
+     ) {
     /* It's not officially known, so let's do what we can
      */
     if(addrnull(&el->hostIpAddress) && (el->ethAddressString[0] == '\0')) {
@@ -457,7 +459,6 @@ char* makeHostLink(HostTraffic *el, short mode,
       else
         return("&lt;unknown&gt;");
     }
-
   } else {
     /* Got it? Use it! */
     strncpy(symIp, el->hostResolvedName, sizeof(symIp));
@@ -575,6 +576,10 @@ char* makeHostLink(HostTraffic *el, short mode,
    * symIP - before the remaining 'fixups' as the linkname */
   if(linkName[0] == '\0') {
     strncpy(linkName, symIp, sizeof(linkName));
+  }
+
+  if(linkName[0] == '\0') {
+    traceEvent(CONST_TRACE_INFO, "Empty link!!");
   }
 
   /* Fixup ethernet addresses for RFC1945 compliance (: is bad, _ is good) */

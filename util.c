@@ -5689,6 +5689,8 @@ void urlFixupToRFC1945Inplace(char* url) {
 
 void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char* file, int line) {
 
+  if(updateValue[0] == '\0') return;
+
   /* Only update if this is a MORE important type */
   if(updateType > el->hostResolvedNameType) {
 
