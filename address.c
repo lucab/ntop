@@ -482,9 +482,9 @@ static void queueAddress(HostAddr elem, int forceResolution) {
 
     if(!shownMsg) {
       shownMsg = 1;
-      traceEvent(CONST_TRACE_WARNING, "Address resolution queue is full [%u of %u slots]", 
-		 myGlobals.addressQueuedCurrent, MAX_NUM_QUEUED_ADDRESSES);
-      traceEvent(CONST_TRACE_INFO, "Addresses in excess won't be resolved");      
+      traceEvent(CONST_TRACE_WARNING, "Address resolution queue is full [%u slots]", 
+		 MAX_NUM_QUEUED_ADDRESSES);
+      traceEvent(CONST_TRACE_INFO, "Addresses in excess won't be resolved - ntop continues");
     }
     return;
   }
