@@ -723,7 +723,7 @@ static int handleV5Flow(time_t recordActTime,
 
     tp.th_sport = htons(sport), tp.th_dport = htons(dport);
     tp.th_flags = record->tcp_flags;
-    session = handleTCPSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, &tp, 0, NULL, actualDeviceId);
+    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, &tp, 0, NULL, actualDeviceId);
     break;
 
   case 17: /* UDP */
@@ -757,7 +757,7 @@ static int handleV5Flow(time_t recordActTime,
       }
     }
 
-    session = handleTCPSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, NULL, 0, NULL, actualDeviceId);
+    session = handleSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, NULL, 0, NULL, actualDeviceId);
     break;
 
   default:

@@ -636,19 +636,14 @@ extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
 			    u_short sport, u_short dport, u_int length);
 extern void updatePortList(HostTraffic *theHost, int clientPort, int serverPort);
-extern IPSession* handleTCPSession(const struct pcap_pkthdr *h,
-				   u_short fragmentedData, u_int tcpWin,
-				   HostTraffic *srcHost, u_short sport,
-				   HostTraffic *dstHost, u_short dport,
-				   u_int length, struct tcphdr *tp,
-				   u_int tcpDataLength, u_char* packetData, 
-				   int actualDeviceId);
+extern IPSession* handleSession(const struct pcap_pkthdr *h,
+                                u_short fragmentedData, u_int tcpWin,
+                                HostTraffic *srcHost, u_short sport,
+                                HostTraffic *dstHost, u_short dport,
+                                u_int length, struct tcphdr *tp,
+                                u_int tcpDataLength, u_char* packetData, 
+                                int actualDeviceId);
 
-extern IPSession* handleUDPSession(const struct pcap_pkthdr *h,
-				   u_short fragmentedData, HostTraffic *srcHost,
-				   u_short sport, HostTraffic *dstHost,
-				   u_short dport, u_int length,
-				   u_char* packetData, int actualDeviceId);
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
 
 extern FCSession* handleFcSession (const struct pcap_pkthdr *h,

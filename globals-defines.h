@@ -2620,3 +2620,27 @@ struct ip6_hdr
 #define	SAP_RPL			0xFC
 #define	SAP_OSINL		0xFE
 #define	SAP_GLOBAL		0xFF
+
+/* TCP/UDP Port Numbers; generic TCP/UDP Ports are defined as IP_L4_* */ 
+#define IP_L4_PORT_ECHO            7
+#define IP_L4_PORT_DISCARD         9
+#define IP_L4_PORT_DAYTIME         13
+#define IP_L4_PORT_CHARGEN         19
+#define IP_TCP_PORT_FTP            21
+#define IP_TCP_PORT_SSH            22
+#define IP_TCP_PORT_SMTP           25
+#define IP_TCP_PORT_HTTP           80
+#define IP_TCP_PORT_POP2           109
+#define IP_TCP_PORT_POP3           110
+#define IP_TCP_PORT_IMAP           143
+#define IP_TCP_PORT_HTTPS          443
+#define IP_TCP_PORT_PRINTER        515
+#define IP_TCP_PORT_KAZAA          1214
+#define IP_TCP_PORT_MSMSGR         1863
+#define IP_TCP_PORT_NTOP           3000
+#define IP_TCP_PORT_SQUID          3128
+#define IP_TCP_PORT_GNUTELLA1      6346
+#define IP_TCP_PORT_GNUTELLA2      6347
+#define IP_TCP_PORT_GNUTELLA3      6348
+#define IP_TCP_PORT_WINMX          6699
+#define IP_TCP_PORT_JETDIRECT      9100

@@ -1345,16 +1345,16 @@ static void processIpPkt(const u_char *bp,
 	if(nonFullyRemoteSession) {
 #ifdef INET6
 	  if(ip6)
-	    theSession = handleTCPSession(h, fragmented, tp.th_win,
-					  srcHost, sport, dstHost,
-					  dport, ntohs(ip6->ip6_plen), &tp, tcpDataLength,
-					  theData, actualDeviceId);
+              theSession = handleSession (h, fragmented, tp.th_win,
+                                          srcHost, sport, dstHost,
+                                          dport, ntohs(ip6->ip6_plen), &tp, tcpDataLength,
+                                          theData, actualDeviceId);
 	  else
 #endif
-	    theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
-					  srcHost, sport, dstHost,
-					  dport, ip_len, &tp, tcpDataLength,
-					  theData, actualDeviceId);
+	    theSession = handleSession (h, (off & 0x3fff), tp.th_win,
+                                        srcHost, sport, dstHost,
+                                        dport, ip_len, &tp, tcpDataLength,
+                                        theData, actualDeviceId);
 	  if(theSession == NULL)
 	    isPassiveSess = 0;
 	  else
@@ -1637,9 +1637,22 @@ static void processIpPkt(const u_char *bp,
         }
 
 	if(nonFullyRemoteSession)
-	  handleUDPSession(h, fragmented,
-			   srcHost, sport, dstHost, dport, udpDataLength,
-			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
+            /* There is no session structure returned for UDP sessions */ 
+#ifdef INET6
+	  if(ip6)
+              handleSession (h, fragmented, 0,
+                             srcHost, sport, dstHost,
+                             dport, ntohs(ip6->ip6_plen), NULL,
+                             udpDataLength,
+                             (u_char*)(bp+hlen+sizeof(struct udphdr)),
+                             actualDeviceId);
+	  else
+#endif
+              handleSession (h, (off & 0x3fff), 0,
+                             srcHost, sport, dstHost,
+                             dport, ip_len, NULL, udpDataLength,
+                             (u_char*)(bp+hlen+sizeof(struct udphdr)),
+                             actualDeviceId);
       }
     }
 #ifdef INET6
