@@ -4729,11 +4729,13 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
    * n.ml  -> nmm000l00 (where a=1, b=2, etc.)
    */
   unsigned int f, n=0, m=0, x=0, y=0, c=0, prerc=0;
-  unsigned char l=0;
+  unsigned char l[4];
 
   if (versionString == NULL) {
     return 999999999;
   }
+
+  memset(&l, 0, sizeof(l));
 
   f = sscanf(versionString, "%u.%upre%u", &n, &m, &x);
   if(f>=3) {
@@ -4743,12 +4745,12 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
     if(f>=3) {
       prerc=1;
     } else {
-      f = sscanf(versionString, "%u.%u%[a-z].%u", &n, &m, &l, &x);
+      f = sscanf(versionString, "%u.%u%1[a-z].%u", &n, &m, &l, &x);
       if(f>=3) {
-	if(l>0)
-	  l = tolower(l) - 'a' + 1;
+	if(l[0]>0)
+	  l[0] = tolower(l[0]) - 'a' + 1;
       } else {
-	l = 0;
+        memset(&l, 0, sizeof(l));
 	f = sscanf(versionString, "%u.%u.%u", &n, &m, &x);
 	if (f<=0) {
 	  return 999999999;
@@ -4762,9 +4764,9 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
   }
 #ifdef CHKVER_DEBUG
   traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: %s is n%u m%u y%u l%u x%u prerc%u f=%u",
-	     versionString, n, m, y, l, x, prerc, f);
+	     versionString, n, m, y, l[0], x, prerc, f);
 #endif
-  return n*100000000 + m*1000000 + y*1000 + l*100 + x - 1000*prerc;
+  return n*100000000 + m*1000000 + y*1000 + l[0]*100 + x - 1000*prerc;
 }
 
 /* ********************************** */
@@ -4813,29 +4815,44 @@ void displayPrivacyNotice(void) {
 	       "CHKVER: *                                                         *");
     traceEvent(CONST_TRACE_ALWAYSDISPLAY,
 	       "CHKVER: **********************PRIVACY**NOTICE**********************");
-
-#ifdef CHKVER_DEBUG
-    // This is here so it's only executed ONCE...
-#define cNV2N(a, b) traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: cNV2N %-10s -> %10u expected %10u", a, convertNtopVersionToNumber(a), b)
-    cNV2N("1.3",    103000000);
-    cNV2N("2.1",    201000000);
-    cNV2N("2.1.1",  201000001);
-    cNV2N("2.1.2",  201000002);
-    cNV2N("2.1.3",  201000003);
-    cNV2N("2.1.50", 201050000);
-    cNV2N("2.1.90", 201090000);
-    cNV2N("2.2",    202000000);
-    cNV2N("2.2a",   202000100);
-    cNV2N("2.2b",   202000200);
-    cNV2N("2.2c",   202000300);
-    cNV2N("2.2.50", 202050000);
-    cNV2N("2.2.90", 202090000);
-    cNV2N("3.0pre1",299998001);
-    cNV2N("3.0rc1", 299999001);
-    cNV2N("3.0rc2", 299999002);
-    cNV2N("3.0",    300000000);
-#endif    
   }
+
+#if (0)
+    // Enable this only if you suspect the conversion is hosed, to collect
+    // information for the ntop-dev mailing list.
+    // Normally you would enable this, run ntop, collect the values and
+    // then shut ntop down.
+#define cNV2N(a, b) \
+{ \
+  unsigned int vv; \
+  vv = convertNtopVersionToNumber(a); \
+  if (vv != b) \
+    traceEvent(CONST_TRACE_INFO, "CHKVER_TEST: cNV2N %-10s -> %10u expected %10u", a, vv, b); \
+  else \
+    traceEvent(CONST_TRACE_INFO, "CHKVER_TEST: cNV2N %-10s -> %10u OK", a, vv); \
+}
+
+    cNV2N("1.3",     103000000);
+    cNV2N("2.1",     201000000);
+    cNV2N("2.1.1",   201000001);
+    cNV2N("2.1.2",   201000002);
+    cNV2N("2.1.3",   201000003);
+    cNV2N("2.1.50",  201050000);
+    cNV2N("2.1.90",  201090000);
+    cNV2N("2.2",     202000000);
+    cNV2N("2.2a",    202000100);
+    cNV2N("2.2b",    202000200);
+    cNV2N("2.2c",    202000300);
+    cNV2N("2.2c.1",  202000301);
+    cNV2N("2.2.50",  202050000);
+    cNV2N("2.2.90",  202090000);
+    cNV2N("3.0pre1", 299998001);
+    cNV2N("3.0pre10",299998010);
+    cNV2N("3.0rc1",  299999001);
+    cNV2N("3.0rc2",  299999002);
+    cNV2N("3.0rc14", 299999014);
+    cNV2N("3.0",     300000000);
+#endif    
 }
 
 /* ********************************** */
