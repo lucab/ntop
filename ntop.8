@@ -1,11 +1,11 @@
-.\" This file Copyright 1998-2000 Luca Deri <deri@ntop.org>
+.\" This file Copyright 1998-2001 Luca Deri <deri@ntop.org>
 .\"
 .
 .de It
 .TP 1.2
 .B "\\$1 "
 ..
-.TH NTOP 8 "July 2001"
+.TH NTOP 8 "December 2001"
 .SH NAME
 ntop \- display top network users
 .SH SYNOPSIS
@@ -54,6 +54,7 @@ ntop \- display top network users
 .IR "mapper.pl URL" ]
 .RB [ -F 
 .IR "flow filter expression" ]
+.RB [ -k ]
 .RB [ "filter expression" ]
 .SH DESCRIPTION
 .B ntop
@@ -223,7 +224,8 @@ For instance suppose to define two flows with the following expression "LucaHost
 .B ntop
 and added to the LucaHosts flow, whereas all the packet routed by the gateway gateway.unipi.it are added to the GatewayRoutedPkts flow. If the flows list is very long you may store in a file (for instance flows.list) the list of flows and specify the file name instead of the flows list (in above example you will invoke 'ntop -F flows.list').
 
-
+.It -k
+When this flag is used, the current filter expression is printed in an extra frame and thus always visible.
 
 .It "filter expression"
 .B ntop
@@ -261,4 +263,5 @@ libpcap for Win32 that can be downloaded from http://www.netgroup.polito.it/WinP
 .
 .
 .SH AUTHOR
-Please send bug reports to the ntop mailing list <ntop@ntop.org>. ntop's author is Luca Deri <deri@ntop.org>.
+Please send bug reports to the ntop mailing list <ntop@ntop.org>.
+ntop's author is Luca Deri and it can be reached at deri@ntop.org.
