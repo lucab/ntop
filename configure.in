@@ -853,8 +853,7 @@ AC_HAVE_HEADERS(gdbm.h)
 
 if test "$ac_cv_header_gdbm_h" = no ; then
      if test -f "/usr/local/include/gdbm.h"; then
-         GDBM_ROOT="/usr/local"
-         CORELIBS="${CORELIBS} -lgdbm"
+         INCS="${INCS} -I/usr/loca//include"
          AC_DEFINE(HAVE_GDBM_H)
   else
     AC_MSG_RESULT([             *** FATAL ERROR ***             ])
