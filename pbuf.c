@@ -670,7 +670,7 @@ void scanTimedoutTCPSessions(void) {
   traceEvent(TRACE_INFO, "Called scanTimedoutTCPSessions\n");
 #endif
 
-  for(idx=0; idx<HASHNAMESIZE; idx++) {
+  for(idx=0; idx<numTotSessions; idx++) {
     if(tcpSession[idx] != NULL) {
 
       if(tcpSession[idx]->magic != MAGIC_NUMBER) {
@@ -1361,13 +1361,15 @@ static void handleSession(const struct pcap_pkthdr *h,
    */
   initialIdx = idx = (u_int)((srcHost->hostIpAddress.s_addr+
 			      dstHost->hostIpAddress.s_addr+
-			      sport+dport) % HASHNAMESIZE);
+			      sport+dport) % numTotSessions);
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "%s:%d->%s:%d %d->",
 	     srcHost->hostSymIpAddress, sport,
 	     dstHost->hostSymIpAddress, dport, idx);
 #endif
+
+
 
   if(sessionType == IPPROTO_TCP) {
     for(;;) {
@@ -1392,26 +1394,38 @@ static void handleSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
 	printf(" NEW ");
 #endif
+	if((*numSessions) > (numTotSessions*0.75)) {
+	  /* If possible this table will be enlarged */
+	  
+	  if((numTotSessions*2) < MAX_HASH_SIZE) {
+	    /* Fine we can enlarge the table now */
+	    IPSession** tmpSession;
+	    int len;
 
-#ifdef TESTLUCA
-	if(tp->th_flags & TH_FIN) {
-	  /* We've received a FIN for a session that
-	     we've not seen (ntop started when the session completed).
-	  */
-#ifdef DEBUG
-	  traceEvent(TRACE_INFO, "Received FIN %u for unknown session\n",
-		     ntohl(tp->th_seq)+packetDataLength);
-#endif
-	  return; /* Nothing else to do */
+	    len = sizeof(IPSession*)*numTotSessions;
+
+	    tmpSession = tcpSession;
+	    tcpSession = (IPSession**)malloc(2*len);
+	    memset(tcpSession, len, len);
+	    memcpy(tcpSession, tmpSession, len);
+	    free(tmpSession);
+
+	    tmpSession = udpSession;
+	    udpSession = (IPSession**)malloc(2*len);
+	    memset(udpSession, len, len);
+	    memcpy(udpSession, tmpSession, len);
+	    free(tmpSession);
+
+	    numTotSessions *= 2;
+	  }
 	}
-#endif
 
-	if((*numSessions) > (HASHNAMESIZE/2)) {
+	if((*numSessions) > (numTotSessions*0.75)) {
 	  /* The hash table is getting large: let's replace the oldest session
 	     with this one we're allocating */
 	  u_int usedIdx=0;
 
-	  for(idx=0; idx<HASHNAMESIZE; idx++) {
+	  for(idx=0; idx<numTotSessions; idx++) {
 	    if(sessions[idx] != NULL) {
 	      if(theSession == NULL) {
 		theSession = sessions[idx];
@@ -1438,48 +1452,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 	    theSession->nwLatency.tv_usec = h->ts.tv_usec;
 	    theSession->sessionState = STATE_SYN;
 	  }
-
-#if 0
-	  else if(tp->th_flags == TH_FIN) {
-	    theSession->sessionState = STATE_TIMEOUT;
-	  } else {
-	    /*
-	      It might be that this session was
-	      already active when ntop started up
-	    */
-	    theSession->sessionState = STATE_ACTIVE;
-
-	    /*
-	      ntop has no way to know who started the connection
-	       as the connection already started. Hence we use this simple
-	       heuristic algorithm:
-	       if(sport < dport) {
-  	         sport = server;
-                 srchost = server host;
-               }
-	    */
-	    if(sport > dport) {
-	      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent,
-				    dstHostIdx);
-	      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, 
-				    srcHostIdx);
-	      /* This simulates a connection establishment */
-	      incrementUsageCounter(&srcHost->securityHostPkts.synPktsSent, dstHostIdx);
-	      incrementUsageCounter(&dstHost->securityHostPkts.synPktsRcvd, srcHostIdx);
-	    } else {
-	      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnRcvd,
-				    dstHostIdx);
-	      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnSent, 
-				    srcHostIdx);
-	      /* This simulates a connection establishment */
-	      incrementUsageCounter(&dstHost->securityHostPkts.synPktsSent, srcHostIdx);
-	      incrementUsageCounter(&srcHost->securityHostPkts.synPktsRcvd, dstHostIdx);
-	    }
-
-	    device[actualDeviceId].numEstablishedTCPConnections++;
-	    theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
-	  }
-#endif
 
 	  theSession->magic = MAGIC_NUMBER;
 	  (*numSessions)++;
@@ -1568,7 +1540,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	}
 
 	while(sessions[initialIdx] != NULL)
-	  initialIdx = ((initialIdx+1) % HASHNAMESIZE);
+	  initialIdx = ((initialIdx+1) % numTotSessions);
 
 	sessions[initialIdx] = theSession;
 
@@ -1585,7 +1557,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	break;
       }
 
-      idx = ((idx+1) % HASHNAMESIZE);
+      idx = ((idx+1) % numTotSessions);
     }
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "->%d\n", idx);
@@ -1737,19 +1709,24 @@ static void handleSession(const struct pcap_pkthdr *h,
 	}
       } else if((sport == 8875 /* Napster Redirector */) && (packetDataLength > 5)) {
 	char address[64] = { 0 };
-	int i;
+	int i, len;
 
 	FD_SET(HOST_SVC_NAPSTER_REDIRECTOR, &srcHost->flags);
 	FD_SET(HOST_SVC_NAPSTER_CLIENT,     &dstHost->flags);
 
-	strncpy(address, packetData, packetDataLength);
-	address[packetDataLength-2] = 0;
+	if(packetDataLength >= 63) 
+	  len = 63;
+	else
+	  len = packetDataLength;
+
+	strncpy(address, packetData, len);
+	address[len-2] = 0;
 	traceEvent(TRACE_INFO, "NAPSTER: %s->%s [%s][len=%d]\n",
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress,
 		     address, packetDataLength);
 
-	for(i=1; i<packetDataLength-2; i++)
+	for(i=1; i<len-2; i++)
 	  if(address[i] == ':') {
 	    address[i] = '\0';
 	    break;
@@ -1780,15 +1757,22 @@ static void handleSession(const struct pcap_pkthdr *h,
 		*/
 		) {
 	char rcStr[64];
-	
+	int len;
+
 	/*
 	  This is a brand new session: let's check whether this is
 	  not a faked session (i.e. a known protocol is running at 
 	  an unknown port)
 	*/
+
+	if(packetDataLength >= 63) 
+	  len = 63;
+	else
+	  len = packetDataLength;
+
 	if(theSession->bytesProtoSent == 0) { 
 	  memset(rcStr, 0, sizeof(rcStr));
-	  strncpy(rcStr, packetData, packetDataLength > 63 ? 63 : packetDataLength);
+	  strncpy(rcStr, packetData, len);
 	
 	  if((dport != 80) 
 	     && (dport != 3000  /* ntop  */) 
@@ -1799,15 +1783,15 @@ static void handleSession(const struct pcap_pkthdr *h,
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);  
-	  else if((sport != 21) && isInitialFtpData(rcStr))
-	    traceEvent(TRACE_WARNING, "WARNING: FTP detected at wrong port (trojan?) "
+	  else if((sport != 21) && (sport != 25) && isInitialFtpData(rcStr))
+	    traceEvent(TRACE_WARNING, "WARNING: FTP/SMTP detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);  
-	  else if((sport == 21) && (!isInitialFtpData(rcStr)))
-	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP) detected (trojan?) "
-		       "at port 21 %s:%d -> %s:%d [%s]\n",
+	  else if(((sport == 21) || (sport == 25) )&& (!isInitialFtpData(rcStr)))
+	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP/SMTP) detected (trojan?) "
+		       "at port %d %s:%d -> %s:%d [%s]\n", sport,
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);  
@@ -1826,7 +1810,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	} else if(theSession->bytesProtoRcvd == 0) {
 	  /* Uncomment when necessary
 	    memset(rcStr, 0, sizeof(rcStr));
-	    strncpy(rcStr, packetData, packetDataLength > 63 ? 63 : packetDataLength);
+	    strncpy(rcStr, packetData, len);
 	  */
 	}
       }
@@ -2185,9 +2169,10 @@ static void handleSession(const struct pcap_pkthdr *h,
     if(((theSession->initiatorIdx == srcHostIdx) && (theSession->lastRemote2InitiatorFlags[0] == TH_SYN))
        || ((theSession->initiatorIdx == dstHostIdx) && (theSession->lastInitiator2RemoteFlags[0] == TH_SYN))
        && (tp->th_flags == (TH_SYN|TH_ACK)))  {
-      traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d]",
+      traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
 		 dstHost->hostSymIpAddress, dport,
-		 srcHost->hostSymIpAddress, sport);
+		 srcHost->hostSymIpAddress, sport,
+		 numTcpSessions);
     }
     
     if(tp->th_flags == (TH_RST|TH_ACK)) {
@@ -3179,6 +3164,10 @@ static void processIpPkt(const u_char *bp,
     device[actualDeviceId].tcpBytes += length;
     memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
     tcpDataLength = ntohs(ip.ip_len) - hlen - (tp.th_off * 4);
+    if(tcpDataLength > mtuSize[device[deviceId].datalink]) {
+      traceEvent(TRACE_WARNING, "TCP packet data len (%ud) is too long. Dropped.", tcpDataLength);
+      return;
+    }
     sport = ntohs(tp.th_sport);
     dport = ntohs(tp.th_dport);
 

@@ -2118,7 +2118,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 
 
   /* Now print currently established TCP sessions (if any) */
-  for(idx=1, numSessions=0; idx<HASHNAMESIZE; idx++)
+  for(idx=1, numSessions=0; idx<numTotSessions; idx++)
     if((tcpSession[idx] != NULL)
        && ((tcpSession[idx]->initiatorIdx == elIdx)
 	   || (tcpSession[idx]->remotePeerIdx == elIdx))

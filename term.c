@@ -47,7 +47,7 @@ void termIPServices(void) {
 void termIPSessions(void) {
   int i;
 
-  for(i=0; i<HASHNAMESIZE; i++) {
+  for(i=0; i<numTotSessions; i++) {
     if(tcpSession[i] != NULL) 
       free(tcpSession[i]);    
 

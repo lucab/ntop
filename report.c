@@ -1728,7 +1728,7 @@ void printActiveTCPSessions(void) {
 
   printHTMLheader("Active TCP Sessions", 0);
 
-  for(idx=1, numSessions=0; idx<HASHNAMESIZE; idx++)
+  for(idx=1, numSessions=0; idx<numTotSessions; idx++)
     if((tcpSession[idx] != NULL)
 #ifndef PRINT_ALL_ACTIVE_SESSIONS
        && (tcpSession[idx]->sessionState == STATE_ACTIVE)
@@ -1828,7 +1828,7 @@ void printActiveTCPSessions(void) {
 /* ********************************** */
 
 void printIpProtocolUsage(void) {
-  HostTraffic *hosts[HASHNAMESIZE];
+  HostTraffic **hosts;
   u_short clientPorts[TOP_ASSIGNED_IP_PORTS], serverPorts[TOP_ASSIGNED_IP_PORTS];
   u_int i, j, idx1, hostsNum=0, numPorts=0;
   char buf[BUF_SIZE];
@@ -1837,6 +1837,9 @@ void printIpProtocolUsage(void) {
 
   memset(clientPorts, 0, sizeof(clientPorts));
   memset(serverPorts, 0, sizeof(serverPorts));
+
+  hosts = (HostTraffic**)malloc(device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
+  memset(hosts, 0, device[actualDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   for(i=0; i<device[actualDeviceId].actualHashSize; i++)
     if((device[actualReportDeviceId].hash_hostTraffic[i] != NULL)
@@ -1855,6 +1858,7 @@ void printIpProtocolUsage(void) {
 
   if(numPorts == 0) {
     printNoDataYet();
+    free(hosts);
     return;
   }
 
@@ -1904,6 +1908,7 @@ void printIpProtocolUsage(void) {
 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");
+  free(hosts);
 }
 
 

@@ -573,7 +573,7 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
   releaseMutex(&lsofMutex);
 #endif
 
-  for(j=0; j<HASHNAMESIZE; j++) {
+  for(j=0; j<numTotSessions; j++) {
     if(tcpSession[j] != NULL) {
       tcpSession[j]->initiatorIdx  = mapIdx(tcpSession[j]->initiatorIdx);
       tcpSession[j]->remotePeerIdx = mapIdx(tcpSession[j]->remotePeerIdx);
