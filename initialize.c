@@ -750,6 +750,13 @@ void initDevices(char* devices) {
       mallocLen = sizeof(ntopInterface_t)*(numDevices+1);
       tmpDevice = (ntopInterface_t*)malloc(mallocLen);
       memset(tmpDevice, 0, mallocLen);
+      
+	/* Fix courtesy of Marius <marius@tbs.co.za> */
+      if(numDevices > 0) {
+	memcpy(tmpDevice, device, sizeof(ntopInterface_t)*numDevices);
+	free(device);
+      }
+
       device = tmpDevice;
  
       device[numDevices++].name = strdup(tmpDev);
@@ -787,7 +794,7 @@ void initDevices(char* devices) {
     for(i=0, j=numDevices; i<j; i++) {
       getLocalHostAddress(&device[i].ifAddr, device[i].name);
 
-      if(strncmp(device[i].name, "lo", 3)) { /* Do not care of virtual loopback interfaces */
+      if(strncmp(device[i].name, "lo", 2)) { /* Do not care of virtual loopback interfaces */
 	int k;
 	char tmpDeviceName[16];
 	struct in_addr myLocalHostAddress;
