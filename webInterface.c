@@ -738,63 +738,64 @@ char* getHostCountryIconURL(HostTraffic *el) {
   fillDomainName(el);
 
   if((el->ip2ccValue != NULL) && (strcasecmp(el->ip2ccValue, "loc") == 0)) {
-    return("Local<!-- RFC1918 -->");
-  }
+    safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
+		  "<img align=\"middle\" src=\"/statsicons/flags/local.gif\" border=\"0\">");
+  } else {
+    /* Try all the possible combos of name and path */
+    rc = -1; /* Start bad */
 
-  /* Try all the possible combos of name and path */
-  rc = -1; /* Start bad */
-
-  if(el->ip2ccValue != NULL) {
-    if(rc != 0) {
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
-                  el->ip2ccValue);
-      rc = stat(path, &buf);
-    }
-    if(rc != 0) {
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-                  CFG_DATAFILE_DIR, el->ip2ccValue);
-      rc = stat(path, &buf);
-    }
-    if(rc == 0) {
-      img = el->ip2ccValue;
-      source = "(from p2c file)";
-    }
-  }
-
-  if(rc != 0) {
-    if(el->dnsTLDValue != NULL) {
-      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
-                  el->dnsTLDValue);
-      rc = stat(path, &buf);
-
+    if(el->ip2ccValue != NULL) {
       if(rc != 0) {
-        safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
-                    CFG_DATAFILE_DIR, el->dnsTLDValue);
-        rc = stat(path, &buf);
+	safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
+		      el->ip2ccValue);
+	rc = stat(path, &buf);
+      }
+      if(rc != 0) {
+	safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
+		      CFG_DATAFILE_DIR, el->ip2ccValue);
+	rc = stat(path, &buf);
       }
       if(rc == 0) {
-        img = el->dnsTLDValue;
-        if(strlen(img) == 2)
-          source = "(Guessing from ccTLD)";
-        else
-          source = "(Guessing from gTLD)";
+	img = el->ip2ccValue;
+	source = "(from p2c file)";
       }
     }
-  }
 
-  if(rc != 0) {
-    /* Nothing worked... */
-    safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf), "&nbsp;<!-- No flag for %s or %s -->",
-                el->ip2ccValue != NULL  ? el->ip2ccValue  : "null",
-                el->dnsTLDValue != NULL ? el->dnsTLDValue : "null");
-  } else {
-    safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
-                "<img alt=\"Flag for %s code %s %s\" align=\"middle\" "
-                "src=\"/statsicons/flags/%s.gif\" border=\"0\">",
-                strlen(img) == 2 ? "ISO 3166" : "gTLD",
-                img,
-                source,
-                img);
+    if(rc != 0) {
+      if(el->dnsTLDValue != NULL) {
+	safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
+		      el->dnsTLDValue);
+	rc = stat(path, &buf);
+
+	if(rc != 0) {
+	  safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
+			CFG_DATAFILE_DIR, el->dnsTLDValue);
+	  rc = stat(path, &buf);
+	}
+	if(rc == 0) {
+	  img = el->dnsTLDValue;
+	  if(strlen(img) == 2)
+	    source = "(Guessing from ccTLD)";
+	  else
+	    source = "(Guessing from gTLD)";
+	}
+      }
+    }
+
+    if(rc != 0) {
+      /* Nothing worked... */
+      safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf), "&nbsp;<!-- No flag for %s or %s -->",
+		    el->ip2ccValue != NULL  ? el->ip2ccValue  : "null",
+		    el->dnsTLDValue != NULL ? el->dnsTLDValue : "null");
+    } else {
+      safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
+		    "<img alt=\"Flag for %s code %s %s\" align=\"middle\" "
+		    "src=\"/statsicons/flags/%s.gif\" border=\"0\">",
+		    strlen(img) == 2 ? "ISO 3166" : "gTLD",
+		    img,
+		    source,
+		    img);
+    }
   }
 
   return(flagBuf);
