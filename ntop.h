@@ -1969,6 +1969,7 @@ typedef struct storedAddress {
 typedef struct hostTraffic {
   u_short          hostTrafficBucket /* Index in the **hash_hostTraffic list */;
   u_short          hashListBucket    /* Index in the **hashList         list */;
+  u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
   struct in_addr   hostIpAddress;
   time_t           firstSeen;
@@ -2040,9 +2041,9 @@ typedef struct hostTraffic {
 
   /* Interesting Packets */
   SecurityHostProbes *secHostPkts;
+  IcmpHostInfo       *icmpInfo;
 
-  /* non IP */
-  IcmpHostInfo     *icmpInfo;
+  /* Non IP */
   TrafficCounter   stpSent, stpRcvd; /* Spanning Tree */
   TrafficCounter   ipxSent, ipxRcvd;
   TrafficCounter   osiSent, osiRcvd;
@@ -2054,19 +2055,19 @@ typedef struct hostTraffic {
   TrafficCounter   netbiosSent, netbiosRcvd;
   TrafficCounter   qnxSent, qnxRcvd;
   TrafficCounter   otherSent, otherRcvd;
+  
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/rcvd by this host */
-  IpGlobalSession  *tcpSessionList,
-                   *udpSessionList; /* list of sessions initiated/rcvd by this host */
-  UsageCounter     contactedSentPeers; /* peers that talked with this host */
-  UsageCounter     contactedRcvdPeers; /* peers that talked with this host */
-  UsageCounter     contactedRouters; /* routers contacted by this host */
+  IpGlobalSession  *tcpSessionList, *udpSessionList; /* list of sessions initiated/rcvd by this host */
+  UsageCounter     contactedSentPeers;   /* peers that talked with this host */
+  UsageCounter     contactedRcvdPeers;   /* peers that talked with this host */
+  UsageCounter     contactedRouters;     /* routers contacted by this host */
   ServiceStats     *dnsStats, *httpStats;
   DHCPStats        *dhcpStats;
 
   /* *************** IMPORTANT ***************
 
      If you add a pointer to this struct please
-     go to resurrectHostTrafficInstance() and
+     go to resetHostsVariables() and
      add a NULL to each pointer you added in the
      newly resurrected.
 

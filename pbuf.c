@@ -1588,7 +1588,6 @@ void processPacket(u_char *_deviceId,
     } else
       numPkt++;
 
-
     /*
       if(numPkt=100000) {
       int i;
@@ -2308,6 +2307,8 @@ void processPacket(u_char *_deviceId,
 	updatePacketCount(srcHost, dstHost, ctr, actualDeviceId);
       }
     }
+
+    if(srcHost != NULL) srcHost->refCount--; if(dstHost != NULL) dstHost->refCount--;
   }
 
   if((!myGlobals.borderSnifferMode)

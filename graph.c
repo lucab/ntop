@@ -876,7 +876,7 @@ void interfaceTrafficPie(void) {
   int i, explodePieces[MAX_NUM_DEVICES];
   FILE *fd;
   TrafficCounter totPkts;
-  struct pcap_stat stat;
+  struct pcap_stat pcapStat;
   char	*lbl[MAX_NUM_DEVICES];
   int myDevices=0;
   int useFdOpen = 0;
@@ -885,9 +885,9 @@ void interfaceTrafficPie(void) {
 
   for(i=0; i<myGlobals.numDevices; i++)
     if(!myGlobals.device[i].virtualDevice) {
-      if (pcap_stats(myGlobals.device[i].pcapPtr, &stat) >= 0) {
-	p[i] = (float)stat.ps_recv;
-	totPkts.value += stat.ps_recv;
+      if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
+	p[i] = (float)pcapStat.ps_recv;
+	totPkts.value += pcapStat.ps_recv;
       }
       explodePieces[i] = 10*i;
     }

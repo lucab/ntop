@@ -448,15 +448,17 @@ void purgeIdleHosts(int actDevice) {
       continue;
     }
 
+#ifdef MULTITHREADED
+    accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
+#endif
     if((el = myGlobals.device[actDevice].hash_hostTraffic[theIdx]) != NULL) {
-      if((!hashFull) && (el->lastSeen < purgeTime)) {
+      if((!hashFull) 
+	 && (el->refCount == 0) 
+	 && (el->lastSeen < purgeTime)) {
 
 	if((!myGlobals.stickyHosts)
 	   || (myGlobals.borderSnifferMode)
 	   || (!subnetPseudoLocalHost(el))) {
-#ifdef MULTITHREADED
-	  accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
-#endif
 	  theFlaggedHosts[maxBucket++] = el;
 
 	  if(el->hostTrafficBucket != theIdx) {
@@ -466,9 +468,6 @@ void purgeIdleHosts(int actDevice) {
 	  }
 
 	  myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
-#ifdef MULTITHREADED
-	  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
 	  if(maxBucket >= (len-1)) {
 	    hashFull = 1;
 	    continue;
@@ -476,6 +475,10 @@ void purgeIdleHosts(int actDevice) {
 	}
       }
     }
+
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.hostsHashMutex);
+#endif
 
     theIdx = (theIdx+1) % hashLen;
   }
