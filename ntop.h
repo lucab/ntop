@@ -977,12 +977,14 @@ typedef struct trafficCounter {
 
    ***************************** */
 
-typedef struct elementList {
+#define ELEMENT_HASH_LEN 4096
+
+typedef struct elementHash {
   u_short id;
-  TrafficCounter bytes, pkts;
-  struct elementList *down;
-  struct elementList *next;
-} ElementList;
+  TrafficCounter bytesSent, pktsSent;
+  TrafficCounter bytesRcvd, pktsRcvd;  
+  struct elementHash *next;
+} ElementHash;
 
 
 #define PCAP_NW_INTERFACE         "pcap file"
@@ -1262,7 +1264,7 @@ typedef struct ntopInterface {
   u_int16_t  insertIdx;
   HashList** hashList;
 
-  ElementList *asList;
+  ElementHash **asHash; /* Autonomous System */
 
   /* ************************** */
 

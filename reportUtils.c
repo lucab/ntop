@@ -3093,7 +3093,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       BufferTooShort();
     sendString(buf);
   }
-  
+
 
   if((el->pktMulticastSent.value > 0) || (el->pktMulticastRcvd.value > 0)) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>",
@@ -3153,7 +3153,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     percentage = 0;
   else
     percentage = 100 - (((float)el->bytesRcvdFromRem.value*100)/el->bytesRcvd.value);
-  
+
     if(el->hostNumIpAddress[0] != '\0')
       printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Rcvd&nbsp;Stats",
 				"Local", "Rem", -1, percentage);
@@ -3299,7 +3299,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
       tot = ss->numLocalReqSent.value+ss->numRemReqSent.value;
 
       if(tot == 0)
-	f1 = f2 = 0; 
+	f1 = f2 = 0;
       else {
 	f1 = (ss->numLocalReqSent.value*100)/tot;
 	f2 = (ss->numRemReqSent.value*100)/tot;
@@ -3625,3 +3625,150 @@ void printSectionTitle(char *text) {
   sendString(buf);
 }
 
+/* ******************************** */
+
+#define MAX_ENTRY     (u_short)-1
+
+static char* formatElementData(ElementHash *hash, u_char dataSent, char *buf, int bufLen) {
+  
+  if((dataSent && (hash->bytesSent.value == 0)) 
+     || ((!dataSent) && (hash->bytesRcvd.value == 0)))
+    return("&nbsp;");
+
+  if(dataSent) {
+    if(snprintf(buf, bufLen, "%s/%s Pkts",
+		formatBytes(hash->bytesSent.value, 1),
+		formatPkts(hash->pktsSent.value)) < 0)
+      BufferTooShort();    
+  } else {
+    if(snprintf(buf, bufLen, "%s/%s Pkts",
+		formatBytes(hash->bytesRcvd.value, 1),
+		formatPkts(hash->pktsRcvd.value)) < 0)
+      BufferTooShort();    
+  }
+
+  return(buf);
+}
+
+/* ******************************** */
+
+void dumpElementHash(ElementHash **theHash) {
+  u_char entries[MAX_ENTRY];
+  ElementHash *hashList[MAX_ENTRY];
+  char buf[BUF_SIZE], buf1[96];
+  ElementHash *hash, hashListEntry;
+  int i, j;
+
+  if(theHash == NULL) return;
+
+  /* *********** */
+
+#ifdef DEBUG
+    for(i=0; i<ELEMENT_HASH_LEN; i++)
+      if(theHash[i] != NULL) {
+	printf("[%d] ", theHash[i]->id);
+	hash = theHash[i]->next;
+
+	while(hash != NULL) {
+	  printf("%d ", hash->id);
+	  hash = hash->next;
+	}
+	
+	printf("\n");
+      }
+#endif
+
+  /* *********** */
+
+  memset(entries, 0, sizeof(entries));
+
+  for(i=0; i<ELEMENT_HASH_LEN; i++) {
+    if((theHash[i] != NULL) && (theHash[i]->id < MAX_ENTRY)) {
+      entries[theHash[i]->id] = 1;
+
+      hash = theHash[i];
+      while(hash != NULL) {
+	if(hash->id < MAX_ENTRY) {
+	  entries[hash->id] = 1;
+	}
+
+	hash = hash->next;	
+      }
+    }
+  }
+
+  sendString("<TABLE BORDER>\n"
+	     "<TR><TH>AS</TH><TH>Data Sent</TH><TH>Data Rcvd</TH><TH>Peers</TH></TR>\n");
+
+  /* ****************** */
+
+  for(i=0; i<MAX_ENTRY; i++) {
+    if(entries[i] == 1) {            
+      memset(hashList, 0, sizeof(hashList));
+      memset(&hashListEntry, 0, sizeof(ElementHash));
+
+      for(j=0; j<ELEMENT_HASH_LEN; j++) {
+	if(theHash[j] != NULL) {
+	  hash = theHash[j]->next;
+	 
+	  while(hash != NULL) {
+	    if(hash->id < MAX_ENTRY) {
+	      if(hash->id == i) {
+		incrementTrafficCounter(&hashListEntry.bytesSent, hash->bytesSent.value);
+		incrementTrafficCounter(&hashListEntry.pktsSent,  hash->pktsSent.value); 
+		incrementTrafficCounter(&hashListEntry.bytesRcvd, hash->bytesRcvd.value);
+		incrementTrafficCounter(&hashListEntry.pktsRcvd,  hash->pktsRcvd.value); 		
+		hashList[theHash[j]->id] = theHash[j];
+	      } else if(theHash[j]->id == i) {
+		incrementTrafficCounter(&hashListEntry.bytesSent, theHash[j]->bytesSent.value);
+		incrementTrafficCounter(&hashListEntry.pktsSent,  theHash[j]->pktsSent.value); 
+		incrementTrafficCounter(&hashListEntry.bytesRcvd, theHash[j]->bytesRcvd.value);
+		incrementTrafficCounter(&hashListEntry.pktsRcvd,  theHash[j]->pktsRcvd.value); 		
+		hashList[theHash[j]->id] = hash;
+	      }
+	    }
+	   
+	    hash = hash->next;
+	  }
+	}     
+      }
+
+      if(snprintf(buf, sizeof(buf), "<TR><TH>%d</TH>"
+		  "<TD>%s</TD><TD>%s</TD><TD>", i,
+		  formatElementData(&hashListEntry, 1, buf1, sizeof(buf1)),
+		  formatElementData(&hashListEntry, 0, buf1, sizeof(buf1))) < 0)		  
+	BufferTooShort();
+      sendString(buf);
+
+      for(j=0; j<MAX_ENTRY; j++) {
+	if(hashList[j] != NULL) {
+	  sendString("<A HREF=# onMouseOver=\"window.status='");
+
+	  if(hashList[j]->bytesSent.value > 0) {
+	    if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
+			i, hashList[j]->id, formatBytes(hashList[j]->bytesSent.value, 1), formatPkts(hashList[j]->pktsSent.value)) < 0)
+	      BufferTooShort();
+	    sendString(buf);
+	  }
+
+	  if(hashList[j]->bytesRcvd.value > 0) {
+	    if(snprintf(buf, sizeof(buf), "[(%d->%d)=%s/%s Pkts]",
+			hashList[j]->id, i, formatBytes(hashList[j]->bytesRcvd.value, 1), formatPkts(hashList[j]->pktsRcvd.value)) < 0)
+	      BufferTooShort();
+	    sendString(buf);
+	  }
+
+	  if(snprintf(buf, sizeof(buf), 
+		      "';return true\" onMouseOut=\"window.status='';return true\">%d</A>\n",
+		      hashList[j]->id) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+	}
+      }
+
+      sendString("</TR>\n");
+    }
+  }
+
+  sendString("</TR>\n</TABLE>\n");
+}

@@ -863,7 +863,7 @@ int main(int argc, char *argv[]) {
   /*
    * set user to be as inoffensive as possible
    */
-  if((myGlobals.userId != 0) || (myGlobals.groupId != 0)){
+  if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
     /* user id specified on commandline */
     if((setgid(myGlobals.groupId) != 0) || (setuid(myGlobals.userId) != 0)) {
       traceEvent(TRACE_ERROR, "FATAL ERROR: Unable to change user ID.\n");

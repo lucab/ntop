@@ -104,6 +104,7 @@ extern void dumpNtopHashIndexes(FILE*, char* options, int actualDeviceId);
 extern void dumpNtopTrafficInfo(FILE*, char* options);
 extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId);
 extern void checkHostProvidedServices(HostTraffic *el);
+extern void dumpElementHash(ElementHash **theHash);
 
 /* report.c */
 extern void initReports(void);

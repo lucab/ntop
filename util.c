@@ -3283,133 +3283,77 @@ void resetTrafficCounter(TrafficCounter *ctr) {
 
 /* ******************************** */
 
-static void updateElementListItem(ElementList *theList, u_short dstId,
-			   u_int32_t numPkts, u_int32_t numBytes) {
-  ElementList *list = theList;
+static void updateElementHashItem(ElementHash **theHash,
+		       u_short srcId, u_short dstId,
+		       u_int32_t numPkts, u_int32_t numBytes, u_char dataSent) {
+  u_int myIdx = 0, idx = srcId % ELEMENT_HASH_LEN;
+  ElementHash *hash, *prev;
 
-  while(list != NULL) {
-    if(list->id == dstId) {
+  while(1) {
+    if((theHash[idx] == NULL) || (theHash[idx]->id == srcId))
       break;
-    } else
-      list = list->next;
+    
+    idx = (idx+1) % ELEMENT_HASH_LEN;
+    if(++myIdx == ELEMENT_HASH_LEN) {
+      traceEvent(TRACE_WARNING, "updateElementHash(): hash full!");
+      return;
+    }
   }
 
-  if(list == NULL) {
-    list = (ElementList*)malloc(sizeof(ElementList));
-    memset(list, 0, sizeof(ElementList));
-    list->id = dstId;
-    list->down = theList->next;
-    theList->next = list;
+  if(theHash[idx] == NULL) {
+    theHash[idx] = (ElementHash*)calloc(1, sizeof(ElementHash));
+    theHash[idx]->id = srcId;
   }
 
-  incrementTrafficCounter(&list->bytes, numBytes),
-    incrementTrafficCounter(&list->pkts, numPkts);
+  /* ************************** */
+
+  hash = theHash[idx]->next, prev = theHash[idx];
+
+  while(hash != NULL) {
+    /* Keep the list sorted */
+    if(hash->id >= dstId) {      
+      break;
+    } else {
+      prev = hash;
+      hash = hash->next;
+    }
+  }
+
+  if((hash == NULL) || (hash->id != dstId)) {
+    ElementHash *bucket = (ElementHash*)calloc(1, sizeof(ElementHash));
+    bucket->id = dstId;
+
+    if(hash == NULL) {
+      bucket->next = prev->next;
+    } else {
+      bucket->next = hash;
+    }
+
+    prev->next = bucket;
+    hash = bucket; 
+  }
+
+  if(dataSent) {
+    incrementTrafficCounter(&theHash[idx]->bytesSent, numBytes);
+    incrementTrafficCounter(&theHash[idx]->pktsSent,  numPkts);
+    incrementTrafficCounter(&hash->bytesSent, numBytes);
+    incrementTrafficCounter(&hash->pktsSent,  numPkts); 
+  } else {
+    incrementTrafficCounter(&theHash[idx]->bytesRcvd, numBytes);
+    incrementTrafficCounter(&theHash[idx]->pktsRcvd,  numPkts);
+    incrementTrafficCounter(&hash->bytesRcvd, numBytes);
+    incrementTrafficCounter(&hash->pktsRcvd,  numPkts); 
+  }
 }
 
-/* ******************************** */
+/* ********************************** */
 
-void updateElementList(ElementList *theList,
+void updateElementHash(ElementHash **theHash,
 		       u_short srcId, u_short dstId,
 		       u_int32_t numPkts, u_int32_t numBytes) {
-  ElementList *list = theList;
 
-  while(list != NULL) {
-    if(list->id == srcId) {
-      updateElementListItem(list, dstId, numPkts, numBytes);
-      return;
-    } else
-      list = list->down;
-  }
-
-  if(list == NULL) {
-    list = (ElementList*)malloc(sizeof(ElementList));
-    memset(list, 0, sizeof(ElementList));
-    list->id = srcId;
-    list->down = theList->down;
-    theList->down = list;
-    updateElementListItem(list, dstId, numPkts, numBytes);
-  }
-
-}
-
-/* ******************************** */
-
-#define MAX_ENTRY     (u_short)-1
-
-void dumpElementList(ElementList *theList) {
-  u_char entries[MAX_ENTRY];
-  char buf[BUF_SIZE];
-  ElementList *list = theList;
-  int i, j;
-
-  memset(entries, 0, sizeof(char));
-
-  while(list != NULL) {
-    if(list->id < MAX_ENTRY)
-      entries[list->id] = 1;
-
-    list = list->down;
-  }
-
-  sendString("<TABLE BORDER>\n<TR>\n");
-  for(i=0; i<MAX_ENTRY; i++) {
-    if(entries[i] == 1) {
-      if(snprintf(buf, sizeof(buf), "<TH>%d</TH>", i) < 0)
-	BufferTooShort();
-      sendString(buf);
-    }
-  }
-  sendString("</TR>\n");
-
-  /* ****************** */
-
-  for(i=0; i<MAX_ENTRY; i++) {
-    if(entries[i] == 1) {
-      list = theList;
-      
-      while(list != NULL) {
-	if(list->id == i) 
-	  break;
-	else
-	  list = list->down;
-      }
-      
-      if(list == NULL) continue;
-
-      if(snprintf(buf, sizeof(buf), "<TR><TH>%d</TH>", list->id) < 0)
-	BufferTooShort();
-      sendString(buf);
-
-      for(j=0; j<MAX_ENTRY; j++) {
-	if(entries[j] == 1) {
-	  if(j == list->id)
-	    sendString("<TD>&nbsp;</TD>\n");
-	  else {
-	    ElementList *subList = list;
-	    u_char found = 0;
-
-	    while(subList != NULL) {
-	      if(subList->id == j) {
-		if(snprintf(buf, sizeof(buf), "<TD>%s/%s</TD>",
-			    formatPkts(subList->pkts.value),
-			    formatBytes(subList->bytes.value, 1)) < 0)
-		  BufferTooShort();
-		sendString(buf);
-		found = 1;
-		break;
-	      } else
-		subList = subList->next;
-	    }
-
-	    if(!found)
-	      sendString("<TD>&nbsp;</TD>\n");
-	  }
-	}
-      }
-
-      sendString("</TR>\n");
-    }
-  }
-
-  sendString("</TR>\n</TABLE>\n");
+  if(srcId < dstId) 
+    updateElementHashItem(theHash, srcId, dstId, numPkts, numBytes, 1);
+  else
+    updateElementHashItem(theHash, dstId, srcId, numPkts, numBytes, 0);
 }
