@@ -398,6 +398,9 @@ void purgeIdleHosts(int actDevice) {
 
     freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
     numFreedBuckets++;
+#ifdef HAVE_SCHED_H
+    sched_yield(); /* Allow other threads to run */
+#endif
   }
 
   free(theFlaggedHosts);

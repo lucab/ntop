@@ -431,7 +431,7 @@ static PluginInfo netflowPluginInfo[] = {
     "1.0", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
-    0, /* Active */
+    1, /* Active */
     initNetFlowFunct, /* InitFunc   */
     NULL, /* TermFunc   */
     NULL, /* PluginFunc */
