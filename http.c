@@ -1299,7 +1299,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       /* printf("HostName: '%s'\n", hostName); */
 
 #ifdef MULTITHREADED
-	accessMutex(&hostsHashMutex, "hostIPTrafficDistrib-call");
+      accessMutex(&hostsHashMutex, "hostIPTrafficDistrib-call");
 #endif
       for(elIdx=1; elIdx<device[actualReportDeviceId].actualHashSize; elIdx++) {
 	el = device[actualReportDeviceId].hash_hostTraffic[elIdx];
@@ -1323,7 +1323,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       }
 
 #ifdef MULTITHREADED
-	releaseMutex(&hostsHashMutex);
+      releaseMutex(&hostsHashMutex);
 #endif
     }
   } else if(strncmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {

@@ -483,7 +483,7 @@ void* updateThptLoop(void* notUsed _UNUSED_) {
     /* Don't update Thpt if the traffic is high */
     /* if(packetQueueLen < (PACKET_QUEUE_LENGTH/3)) */ {
       actTime = time(NULL);
-      accessMutex(&hostsHashMutex,"updateThptLoop");
+      accessMutex(&hostsHashMutex, "updateThptLoop");
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Updating throughput\n");
 #endif
@@ -588,7 +588,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
       int i;
       
 #ifdef MULTITHREADED
-      accessMutex(&hostsHashMutex, "scanIdleLoop");
+      accessMutex(&hostsHashMutex, "scanIdleLoop-1");
 #endif
       scanTimedoutTCPSessions();
 #ifdef MULTITHREADED
@@ -597,7 +597,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
       sleep(1); /* Give some time to others... */
 
 #ifdef MULTITHREADED
-      accessMutex(&hostsHashMutex, "scanIdleLoop");
+      accessMutex(&hostsHashMutex, "scanIdleLoop-2");
 #endif
       purgeOldFragmentEntries();
 #ifdef MULTITHREADED
@@ -605,7 +605,6 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 #endif
 
       sleep(1); /* Give some time to others... */
-
 
       for(i=0; i<numDevices; i++)
 	if(!device[i].virtualDevice) {

@@ -1092,6 +1092,7 @@ void freeHostInstances(void) {
 
 void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   u_int idx, numFreedBuckets=0, freeEntry=0;
+  time_t startTime = time(NULL);
 
   traceEvent(TRACE_INFO, "Purging Idle Hosts...");
 
@@ -1106,7 +1107,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 #ifdef MULTITHREADED
   accessMutex(&hostsHashMutex, "scanIdleLoop");
 #endif
-      
+  
   for(idx=1; idx<device[actDevice].actualHashSize; idx++) {
     if((device[actDevice].hash_hostTraffic[idx] != NULL)
        && (device[actDevice].hash_hostTraffic[idx]->instanceInUse == 0)
@@ -1137,7 +1138,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   releaseMutex(&hostsHashMutex);
 #endif
 
-  traceEvent(TRACE_INFO, "Purging completed.");
+  traceEvent(TRACE_INFO, "Purging completed (%d sec).", (time(NULL)-startTime));
 }
 
 /* ******************************************** */

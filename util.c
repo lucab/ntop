@@ -894,7 +894,7 @@ int _accessMutex(pthread_mutex_t *mutexId, char* where,
   rc = pthread_mutex_lock(mutexId);
 
   if(rc != 0)
-    traceEvent(TRACE_ERROR, "ERROR: lolock failed 0x%X [%s:%d] (rc=%d)\n",
+    traceEvent(TRACE_ERROR, "ERROR: lock failed 0x%X [%s:%d] (rc=%d)\n",
 	       mutexId, fileName, fileLine, rc);
   
 #ifdef SEMAPHORE_DEBUG
@@ -908,6 +908,8 @@ int _accessMutex(pthread_mutex_t *mutexId, char* where,
 
 int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
 		  char* fileName, int fileLine) {
+  int rc;
+  
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
 	     mutexId, where, fileName, fileLine);
@@ -918,9 +920,14 @@ int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
 
      0:    lock succesful
      EBUSY (mutex already locked)
-  */
+  */  
+  rc = pthread_mutex_trylock(mutexId);
 
-  return(pthread_mutex_trylock(mutexId));
+  if(rc != 0)
+    traceEvent(TRACE_ERROR, "ERROR: tryLockMutex failed 0x%X [%s:%d] (rc=%d)\n",
+	       mutexId, fileName, fileLine, rc);
+     
+   return(rc);
 }
 
 /* ************************************ */
@@ -1107,6 +1114,7 @@ void readLsofInfo(void) {
   struct timeval wait_time;
   char fileName[NAME_MAX] = "/tmp/lsof-XXXXXX";
   FILE *fd1;
+  time_t startTime = time(NULL);
 
   fd1 = getNewRandomFile(fileName, NAME_MAX);
 
@@ -1292,6 +1300,8 @@ void readLsofInfo(void) {
 #ifdef MULTITHREADED
   releaseMutex(&lsofMutex);
 #endif
+
+  traceEvent(TRACE_INFO, "readLsofInfo completed (%d sec).", (time(NULL)-startTime));
 #endif /* WIN32 */
 }
 
