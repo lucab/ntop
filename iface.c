@@ -304,6 +304,9 @@ static int iface_getflags(struct iface_if *ii) {
     ii->info |= IFACE_INFO_MULTICAST;
   if (lifreq.ifr_flags & IFF_PROMISC) /* receive all packets  */
     ii->info |= IFACE_INFO_PROMISC;
+
+  close(sock);
+
   return 1;
 }
 
