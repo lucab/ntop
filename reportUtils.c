@@ -7187,3 +7187,25 @@ void printVsanProtocolStats (FcFabricElementHash *hash, int actualDeviceId)
 
 /* ************************************ */
 
+void printPluginTrailer(char *left, char *middle) {
+  sendString("<br>\n<hr>\n<br>\n<table border=\"0\" width=\"100%\"><tr><td>");
+
+  if(left != NULL) {
+    sendString("[ <a href=\"../" CONST_PLUGINS_HEADER);
+    sendString(left);
+    sendString("\">Refresh this data</a> ]");
+  }
+  sendString("&nbsp;");  /* So there's at least something in to cell */
+
+  sendString("</td>\n<td width=\"50%\" align=\"center\">");
+
+  sendString("&nbsp;");
+  if(middle != NULL) 
+    sendString(middle);
+  sendString("&nbsp;");
+
+  sendString("</td>\n<td align=\"right\">"
+             "&nbsp;[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]"
+             "</td></tr></table>\n<br>\n");
+}
+

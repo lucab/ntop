@@ -33,7 +33,7 @@
 #define TD_BG     ""
 #define TR_ON     ""
 #define TABLE_DEFAULTS " CELLSPACING=0 CELLPADDING=2"
-#define DARK_BG   "BGCOLOR=#E7E9F2" /* If you change it change it into the stylesheet too */
+#define DARK_BG   "BGCOLOR=\"#E7E9F2\"" /* If you change it change it into the stylesheet too */
 #endif
 
 
@@ -141,6 +141,8 @@ extern void dumpFcFabricElementHash (FcFabricElementHash **theHash, char* label,
 #ifdef CFG_MULTITHREADED
 extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName);
 #endif
+
+extern void printPluginTrailer(char *left, char *middle);
 
 /* http.c */
 extern void printHTMLtrailer(void);

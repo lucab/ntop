@@ -865,3 +865,8 @@ int getdomainname(char *name, size_t len);
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
 #define sched_yield() ntop_sched_yield(__FILE__, __LINE__)
 #endif
+
+/* Stringification */
+#define xstr(s) str(s)
+#define str(s) #s
+

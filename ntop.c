@@ -101,8 +101,6 @@ void* pcapDispatch(void *_i) {
             sleepAmount.tv_sec = 0; sleepAmount.tv_nsec = CONST_PCAPNONBLOCKING_SLEEP_TIME;
             rc = nanosleep(&sleepAmount, NULL);
             myGlobals.setNonBlockingSleepCount++;
-         } else {
-           traceEvent(CONST_TRACE_NOISY, "TEMP: select() rc 0, not NonBlocking!");
          }
 #endif
     } 

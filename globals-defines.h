@@ -1321,6 +1321,7 @@
  *   like the UTF-8 and meta tags...
  */
 #define CONST_W3C_DOCTYPE_LINE              "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">"
+#define CONST_W3C_DOCTYPE_LINE_32           "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">"
 #define CONST_W3C_CHARTYPE_LINE             "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=ISO-8859-1\">"
 // Alternate version:
 //#define CONST_W3C_CHARTYPE_LINE           "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">"
