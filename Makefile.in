@@ -155,8 +155,10 @@ EXTRA_DIST = Makefile.am Makefile.in              acconfig.h acinclude.m4 acincl
 PLUGINSFILES = `cat plugins/FILES`
 REMOTEAPIFILES = `cat remoteInterfaceAPI/FILES`
 INTOPFILES = `cat intop/FILES`
+DATABASEFILES = `cat database/FILES`
 
-THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) $(INTOPFILES)
+THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) 		       $(INTOPFILES) $(DATABASEFILES)
+
 
 #
 # This Makefile is responsible for creating:
@@ -200,7 +202,7 @@ libntop_la_LIBADD = $(CORELIBS)
 libntop_la_LDFLAGS = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
 
 # Archive for http representation, or the 'viewer'
-libntopreport_la_SOURCES = admin.c                            globals-report.c                            graph.c                            http.c                             report.c                            webInterface.c
+libntopreport_la_SOURCES = admin.c                            globals-report.c                            graph.c                            http.c                             report.c                            reportUtils.c                            webInterface.c
 
 
 libntopreport_la_DEPENDENCIES = config.h
@@ -220,7 +222,7 @@ hash.lo initialize.lo leaks.lo logger.lo ntop.lo pbuf.lo plugin.lo \
 qsort.lo regex.lo rules.lo sql.lo ssl.lo term.lo traffic.lo util.lo \
 vendor.lo version.lo
 libntopreport_la_OBJECTS =  admin.lo globals-report.lo graph.lo http.lo \
-report.lo webInterface.lo
+report.lo reportUtils.lo webInterface.lo
 PROGRAMS =  $(bin_PROGRAMS)
 
 ntops_OBJECTS =  main.o
@@ -250,9 +252,9 @@ DEP_FILES =  .deps/address.P .deps/admin.P .deps/dataFormat.P \
 .deps/event.P .deps/globals-core.P .deps/globals-report.P .deps/graph.P \
 .deps/hash.P .deps/http.P .deps/initialize.P .deps/leaks.P \
 .deps/logger.P .deps/main.P .deps/ntop.P .deps/pbuf.P .deps/plugin.P \
-.deps/qsort.P .deps/regex.P .deps/report.P .deps/rules.P .deps/sql.P \
-.deps/ssl.P .deps/term.P .deps/traffic.P .deps/util.P .deps/vendor.P \
-.deps/version.P .deps/webInterface.P
+.deps/qsort.P .deps/regex.P .deps/report.P .deps/reportUtils.P \
+.deps/rules.P .deps/sql.P .deps/ssl.P .deps/term.P .deps/traffic.P \
+.deps/util.P .deps/vendor.P .deps/version.P .deps/webInterface.P
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntops_SOURCES) $(ntopd_SOURCES) $(ntop_SOURCES)
 OBJECTS = $(libntop_la_OBJECTS) $(libntopreport_la_OBJECTS) $(ntops_OBJECTS) $(ntopd_OBJECTS) $(ntop_OBJECTS)
 
