@@ -610,6 +610,7 @@ void printHostsTraffic(int reportType,
   HostTraffic** tmpTable;
   char buf[BUF_SIZE];
   float sentPercent, rcvdPercent;
+  TrafficCounter totIpBytesSent, totIpBytesRcvd;
 
   strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
@@ -692,6 +693,28 @@ void printHostsTraffic(int reportType,
 
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
 
+    switch(reportType) {
+    case 1: /* STR_SORT_DATA_RECEIVED_IP */
+    case 6: /* STR_SORT_DATA_SENT_IP */
+      totIpBytesSent = totIpBytesRcvd = 0;
+
+      for(idx=0; idx<numEntries; idx++) {
+	if(tmpTable[idx] != NULL) {
+	  totIpBytesSent += tmpTable[idx]->ipBytesSent;
+	  totIpBytesRcvd += tmpTable[idx]->ipBytesRcvd;
+	}
+      }
+
+      /* Avoid core dumps */
+      if(totIpBytesSent == 0) totIpBytesSent = 1;
+      if(totIpBytesRcvd == 0) totIpBytesRcvd = 1;
+      break;
+    }
+
+    traceEvent(TRACE_INFO, "totIpBytesSent=%u, totIpBytesRcvd=%u", 
+	       totIpBytesSent, totIpBytesRcvd);
+
+
     for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
       int i;
       char webHostName[BUF_SIZE];
@@ -710,8 +733,8 @@ void printHostsTraffic(int reportType,
 	  break;
 	case 1: /* STR_SORT_DATA_RECEIVED_IP */
         case 6: /* STR_SORT_DATA_SENT_IP */
-	  sentPercent = (100*(float)el->ipBytesSent)/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
-	  rcvdPercent = (100*(float)el->ipBytesRcvd)/myGlobals.device[myGlobals.actualReportDeviceId].ipBytes;
+	  sentPercent = (100*(float)el->ipBytesSent)/totIpBytesSent;
+	  rcvdPercent = (100*(float)el->ipBytesRcvd)/totIpBytesRcvd;
 	  break;
 	case 2: /* STR_SORT_DATA_RECEIVED_THPT */
 	case 3: /* STR_SORT_DATA_RCVD_HOST_TRAFFIC */
