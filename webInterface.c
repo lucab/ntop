@@ -20,6 +20,9 @@
 
 #include "ntop.h"
 #include "globals-report.h"
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif
 
 #ifndef WIN32
 #include <pwd.h>
@@ -6859,22 +6862,6 @@ if(myGlobals.gdVersionGuessValue != NULL)
 #ifdef MAKE_WITH_I18N
 
   if(textPrintFlag == TRUE) {
-    printFeatureConfigInfo(textPrintFlag, "HAVE_LOCALE_H",
-#ifdef HAVE_LOCALE_H
-                           "present"
-#else
-                           "absent"
-#endif
-                           );
-
-    printFeatureConfigInfo(textPrintFlag, "HAVE_LANGINFO_H",
-#ifdef HAVE_LANGINFO_H
-                           "present"
-#else
-                           "absent"
-#endif
-                           );
-
     printFeatureConfigInfo(textPrintFlag, "Locale directory (version.c)", locale_dir);
   }
 
@@ -6907,7 +6894,27 @@ if(myGlobals.gdVersionGuessValue != NULL)
     printFeatureConfigInfo(textPrintFlag, buf, buf2);
   }
 
-#endif
+#endif /* I18N */
+
+#ifdef HAVE_LOCALE_H
+  if(textPrintFlag == TRUE) {
+    struct lconv* localeInfo;
+
+    printFeatureConfigInfo(textPrintFlag, "Locale", setlocale(LC_ALL, NULL));
+
+    localeInfo = localeconv();
+    if (localeInfo != NULL) {
+      if(snprintf(buf, sizeof(buf), "1%s000%s00", 
+                  localeInfo->thousands_sep,
+                  localeInfo->decimal_point) < 0)
+        BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Numeric format", buf);
+    } else {
+      printFeatureConfigInfo(textPrintFlag, "Numeric format", "localeconv() returned null");
+    }
+  }
+
+#endif /* LOCALE */
 
 #endif /* MICRO_NTOP */
 
