@@ -594,13 +594,13 @@ case "${target}:${CC}" in
 
     *-*-hpux11*:gcc* )
         DEFINEOS="HPUX";      STATUS="SUPPORTED"
-        CFLAGS="-DHPUX ${CFLAGS}"
+        CFLAGS="${CFLAGS}"
       ;;
 
     *-*-hpux10*:gcc* )
         NOTE1="Single Threaded only."
         DEFINEOS="HPUX"
-        CFLAGS="-DHPUX ${CFLAGS}"
+        CFLAGS="${CFLAGS}"
         if test ".${ac_disable_multithread}" = ".yes"; then
             STATUS="UNTESTED"
         else
@@ -637,6 +637,8 @@ case "${target}:${CC}" in
         DEFINEOS="";          STATUS="UNKNOWN"
       ;;
 esac
+
+CFLAGS="-D${DEFINEOS} ${CFLAGS}"
 
 dnl> Leave this: it causes showoses to print it's footer
 dnl> showoses TERMS
