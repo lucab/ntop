@@ -1,0 +1,29 @@
+This directory contains some examples that allow you to 
+extract data out of ntop. If you want you can build ntop
+as "configure --enable-micro-ntop" if you don't want to 
+include the full web interface that's not necessary for
+the enclosed code.
+
+Regardless of the used programming language (currently
+PHP and Perl are supported) your application can access
+two URLs
+
+(1) dumpData.html
+http://<ntop host>:<ntop port>/dumpData.html?language=<perl|php>
+
+(2) dumpTrafficData.html
+http://<ntop host>:<ntop port>/dumpTrafficData.html?language=<perl|php>
+
+URL (1) will define the %hash array that contains information about 
+the active hosts.
+
+URL (2) will define the %interfaces array that contains information about 
+the active network interfaces.
+
+Example:
+In former ntop versions, users could use the -l flag to periodically
+generate a file that contains traffic statistics information. This
+functionality has been replaced using this new API.
+
+---------------
+Luca Deri <deri@ntop.org> - January 2001

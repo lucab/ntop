@@ -1,0 +1,63 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV=Pragma CONTENT=no-cache>
+<META HTTP-EQUIV=Cache-Control CONTENT=no-cache>
+</HEAD>
+<BODY BACKGROUND=/white_bg.gif BGCOLOR="#FFFFFF" LINK=blue VLINK=blue>
+<CENTER>
+<FONT FACE="Helvetica, Arial">
+<H1>Search Active Hosts</H1><P>
+
+<FORM NAME=search ACTION=doSearch.php METHOD=GET>
+<TABLE BORDER=1>
+<tr><TH>Ntop Host:Port</TH><td><INPUT TYPE=TEXT NAME=host VALUE=localhost>:<INPUT TYPE=TEXT NAME=port VALUE=3000 SIZE=6></td></tr>
+
+<tr><TH>
+<SELECT NAME=crit_1>
+<OPTION VALUE=hostNumIpAddress>Numeric IP Address</OPTION>
+<OPTION VALUE=hostSymIpAddress>Symbolic IP Address</OPTION>
+<OPTION VALUE=ethAddressString>Ethernet Address</OPTION>
+<OPTION VALUE=nbHostName>NetBIOS Host Name</OPTION>
+<OPTION VALUE=nbDomainName>NetBIOS WorkGroup</OPTION>
+<OPTION VALUE=pktSent>Packets Sent</OPTION>
+<OPTION VALUE=pktReceived>Packets Received</OPTION>
+<OPTION VALUE=bytesSent>Bytes Sent</OPTION>
+<OPTION VALUE=bytesReceived>Bytes Received</OPTION>
+</select>
+</th><td>
+<SELECT NAME=oper_1>
+<OPTION VALUE=lt>&lt;</OPTION>
+<OPTION VALUE=gt>&gt;</OPTION>
+<OPTION VALUE=eq>=</OPTION>
+<OPTION VALUE=startsWith>Starts With</OPTION>
+<OPTION VALUE=contains>Contains</OPTION>
+<OPTION VALUE=doesntContain>Doesn't Contain</OPTION>
+<OPTION VALUE=endsWith>Ends With</OPTION>
+</SELECT>
+<INPUT TYPE=TEXT NAME=val_1>
+</td></tr>
+
+<tr><th COLSPAN=2><INPUT TYPE=submit value=Search> <INPUT TYPE=reset></TH></TR>
+</TABLE>
+</FORM>
+
+<hr>
+
+<H1>Show Interface Stats</H1><P>
+
+<FORM NAME=search ACTION=ifStats.php METHOD=GET>
+<TABLE BORDER=1>
+<tr><TH>Ntop Host:Port</TH><td><INPUT TYPE=TEXT NAME=host VALUE=localhost>:<INPUT TYPE=TEXT NAME=port VALUE=3000 SIZE=6></td></tr>
+
+<tr><th COLSPAN=2><INPUT TYPE=submit value=Search> <INPUT TYPE=reset></TH></TR>
+</TABLE>
+</FORM>
+
+
+</CENTER>
+</B>
+<hr>
+<H5 ALIGN=right>&copy; 2001 by <A HREF=mailto:deri@ntop.org>Luca Deri</A></H5>
+</FONT>
+</BODY>
+</HTML>
