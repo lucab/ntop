@@ -385,7 +385,9 @@ static int handleV5Flow(time_t recordActTime,
   myGlobals.device[actualDeviceId].receivedPkts.value += numPkts;
   myGlobals.device[actualDeviceId].ethernetPkts.value += numPkts;
   myGlobals.device[actualDeviceId].ipPkts.value       += numPkts;
-  updateDevicePacketStats((u_int)len, actualDeviceId);
+
+  /* Average number of packets */
+  updateDevicePacketStats((u_int)(len/numPkts), actualDeviceId);
 
   myGlobals.device[actualDeviceId].ethernetBytes.value += len;
   myGlobals.device[actualDeviceId].ipBytes.value       += len;
