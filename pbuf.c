@@ -2308,8 +2308,8 @@ void processPacket(u_char *_deviceId,
   if(myGlobals.device[actualDeviceId].pcapDumper != NULL)
     pcap_dump((u_char*)myGlobals.device[actualDeviceId].pcapDumper, h, p);
 
-  if((myGlobals.device[deviceId].datalink < MAX_DLT_ARRAY)
-     && (length > myGlobals.mtuSize[myGlobals.device[deviceId].datalink]) ) {
+  if((myGlobals.device[deviceId].mtuSize != CONST_UNKNOWN_MTU) &&
+     (length > myGlobals.device[deviceId].mtuSize) ) {
     /* Sanity check */
     if(myGlobals.enableSuspiciousPacketDump) {
       traceEvent(CONST_TRACE_WARNING, "Packet # %u too long (len = %u)!",
@@ -2319,7 +2319,7 @@ void processPacket(u_char *_deviceId,
     }
 
     /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
-    length = myGlobals.mtuSize[myGlobals.device[deviceId].datalink];
+    length = myGlobals.device[deviceId].mtuSize;
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.tooLong, 1);
   }
 
@@ -2331,11 +2331,18 @@ void processPacket(u_char *_deviceId,
   traceEvent(CONST_TRACE_INFO, "actualDeviceId = %d", actualDeviceId);
 #endif
 
+  /* Note: The code below starts by assuming that if we haven't captured at
+   * least an Ethernet frame header's worth of bytes we drop the packet.
+   * This might be a bad assumption - why aren't we using the DLT_ derived fields?
+   * e.g.: hlen = myGlobals.device[deviceId].headerSize;
+   * Also, we probably should account for these runt packets - both count the
+   * # of packets and the associated # of bytes.
+   */
+
   hlen = (myGlobals.device[deviceId].datalink == DLT_NULL) ? CONST_NULL_HDRLEN : sizeof(struct ether_header);
 
   memcpy(&myGlobals.lastPktTime, &h->ts, sizeof(myGlobals.lastPktTime));
 
-  /* ethernet assumed */
   if(caplen >= hlen) {
     HostTraffic *srcHost=NULL, *dstHost=NULL;
 
@@ -3026,6 +3033,8 @@ void processPacket(u_char *_deviceId,
 	updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
       }
     }
+  } else {
+    /*  count runts somehow? */
   }
 
   if(myGlobals.flowsList != NULL) /* Handle flows last */

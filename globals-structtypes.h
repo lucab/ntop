@@ -764,6 +764,9 @@ typedef struct ntopInterface {
                                  /* read timeout in milliseconds */
   int datalink;                  /* data-link encapsulation type (see DLT_* in net/bph.h) */
 
+  u_short mtuSize,               /* MTU and header, derived from DLT and table in globals-core.c */
+          headerSize;
+
   char *filter;                  /* user defined filter expression (if any) */
 
   int fd;                        /* unique identifier (Unix file descriptor) */

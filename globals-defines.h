@@ -896,9 +896,10 @@
 
 /*
  * Used during initialization and the mtu and header size tables in globals-core.c,
- * if we don't know.  This is a guess based on "normal" tcp/ip links.
+ * if we don't know the real value.  This is a flag value so we don't do processing
+ * based on an unknown value.
  */
-#define CONST_UNKNOWN_MTU                   1500
+#define CONST_UNKNOWN_MTU                   65355
 
 /*
  * Maximum age of the dnsCache.db file before it will be recreated upon ntop

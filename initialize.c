@@ -1544,7 +1544,7 @@ void initDeviceDatalink(int deviceId) {
 
   /* get datalink type */
 #ifdef AIX
-  /* This is a bug of libpcap on AIX */
+  /* This is a bug of libpcap on AIX - so we totally ignore libpcap */
   switch(myGlobals.device[deviceId].name[0]) {
   case 't': /* TokenRing */
     myGlobals.device[deviceId].datalink = DLT_IEEE802;
@@ -1564,59 +1564,64 @@ void initDeviceDatalink(int deviceId) {
 	       deviceId,
 	       myGlobals.device[deviceId].name);
   }
-#endif
-#if defined(__FreeBSD__)
+#else
+  /* Other OSes have SOME issues, but if we don't recognize the special device,
+   * use libpcap */
+ #if defined(__FreeBSD__)
   if(strncmp(myGlobals.device[deviceId].name, "tun", 3) == 0) {
     myGlobals.device[deviceId].datalink = DLT_PPP;
     traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] is \"tun\", treating as DLT_PPP",
 	       deviceId,
 	       myGlobals.device[deviceId].name);
-  }
-#else /* Not FreeBSD */
+  } else
+ #else /* Not AIX or FreeBSD */
   if((myGlobals.device[deviceId].name[0] == 'l') /* loopback check */
      && (myGlobals.device[deviceId].name[1] == 'o')) {
     myGlobals.device[deviceId].datalink = DLT_NULL;
     traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] is loopback, treating as DLT_NULL",
 	       deviceId,
 	       myGlobals.device[deviceId].name);
-  }
-#endif /* FreeBSD */
+  } else
+ #endif
 
-  myGlobals.device[deviceId].datalink = pcap_datalink(myGlobals.device[deviceId].pcapPtr);
+    myGlobals.device[deviceId].datalink = pcap_datalink(myGlobals.device[deviceId].pcapPtr);
+
+#endif
+
   if(myGlobals.device[deviceId].datalink > MAX_DLT_ARRAY) {
-    traceEvent(CONST_TRACE_WARNING, "DLT: Device %d [%s] DLT_ value, %d, exceeds highest known value",
-	       deviceId,
-	       myGlobals.device[deviceId].name,
-	       myGlobals.device[deviceId].datalink);
-    traceEvent(CONST_TRACE_NOISY, "DLT: Processing continues OK");
-    traceEvent(CONST_TRACE_NOISY, "DLT: Please report this to the ntop-dev list.");
+    traceEvent(CONST_TRACE_WARNING,
+               "DLT: Device %d [%s] DLT_ value, %d, exceeds highest known value(%d)",
+               deviceId,
+               myGlobals.device[deviceId].name,
+               myGlobals.device[deviceId].datalink,
+               MAX_DLT_ARRAY);
+    traceEvent(CONST_TRACE_WARNING, "DLT: Please report above message to the ntop-dev list.");
+    traceEvent(CONST_TRACE_WARNING, "DLT: Processing continues OK");
+    myGlobals.device[deviceId].mtuSize    = CONST_UNKNOWN_MTU;
+    myGlobals.device[deviceId].headerSize = 0;
   } else {
-    traceEvent(CONST_TRACE_NOISY, "DLT: Device %d [%s] DLT_ is %d, assuming mtu %d, header %d",
+    myGlobals.device[deviceId].mtuSize    = myGlobals.mtuSize[myGlobals.device[deviceId].datalink];
+    myGlobals.device[deviceId].headerSize = myGlobals.headerSize[myGlobals.device[deviceId].datalink];
+
+    if((myGlobals.device[deviceId].mtuSize == 0) ||
+       (myGlobals.device[deviceId].mtuSize == CONST_UNKNOWN_MTU) ) {
+      traceEvent(CONST_TRACE_WARNING, "DLT: Device %d [%s] MTU value unknown",
+                 deviceId,
+                 myGlobals.device[deviceId].name);
+      if(myGlobals.device[deviceId].datalink != DLT_RAW) 
+        traceEvent(CONST_TRACE_NOISY, "DLT: Please report your DLT and MTU values (e.g. ifconfig) to the ntop-dev list");
+      traceEvent(CONST_TRACE_WARNING, "DLT: Processing continues OK");
+    }
+  }
+
+  traceEvent(CONST_TRACE_INFO, "DLT: Device %d [%s] is %d, mtu %d, header %d",
 	       deviceId,
 	       myGlobals.device[deviceId].name,
 	       myGlobals.device[deviceId].datalink,
-	       myGlobals.mtuSize[myGlobals.device[deviceId].datalink],
-	       myGlobals.headerSize[myGlobals.device[deviceId].datalink]);
+	       myGlobals.device[deviceId].mtuSize,
+	       myGlobals.device[deviceId].headerSize);
 
-    if((myGlobals.mtuSize[myGlobals.device[deviceId].datalink] == 0) ||
-       (myGlobals.mtuSize[myGlobals.device[deviceId].datalink] == CONST_UNKNOWN_MTU) ) {
-      traceEvent(CONST_TRACE_WARNING, "DLT: Device %d [%s] MTU value is %s",
-                 deviceId,
-                 myGlobals.device[deviceId].name,
-                 myGlobals.mtuSize[myGlobals.device[deviceId].datalink] == CONST_UNKNOWN_MTU ?
-                    "unknown" : "zero");
-      traceEvent(CONST_TRACE_NOISY, "DLT: Processing continues OK");
-      traceEvent(CONST_TRACE_NOISY, "DLT: Please report your MTU values (e.g. ifconfig) to the ntop-dev list");
-    }
-
-    if(myGlobals.headerSize[myGlobals.device[deviceId].datalink] == 0) {
-      traceEvent(CONST_TRACE_ERROR, "DLT: Device %d [%s] Header value for DLT_  is zero",
-                 deviceId,
-                 myGlobals.device[deviceId].name);
-      traceEvent(CONST_TRACE_NOISY, "DLT: Processing continues OK - don't use the nfs plugin");
-      traceEvent(CONST_TRACE_NOISY, "DLT: Please report this to the ntop-dev list");
-    }
-  }
+// create-suspicious-packets",        no_argument,       NULL, 'q'
 }
 
 /* ******************************* */
