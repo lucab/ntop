@@ -59,7 +59,7 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
                        stamp-h.in
 
 
-SUBDIRS = myrrd . @PLUGINS@ @NTCSH@
+SUBDIRS = myrrd . @PLUGINS@
 
 ETTER_PASSIVE = etter.passive.os.fp.gz
 
