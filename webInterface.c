@@ -2633,8 +2633,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   int i;
   int bufLength, bufPosition, bufUsed;
 
-  printHTMLheader("ntop Configuration", 0);
-
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
   struct mallinfo memStats;
   int totalHostsMonitored = 0;
@@ -2643,6 +2641,8 @@ void printNtopConfigInfo(int textPrintFlag) {
   struct rlimit rlim;
 #endif
 #endif
+
+  printHTMLheader("ntop Configuration", 0);
 
   printHostColorCode(textPrintFlag, 1);
   sendString(texthtml("\n", 
