@@ -73,7 +73,8 @@ static int _ns_name_unpack(const u_char *msg,
 
 static void resolveAddress(char* symAddr,
 			   struct in_addr *hostAddr,
-			   short keepAddressNumeric) {
+			   short keepAddressNumeric,
+			   struct hnamemem *hm) {
   int addr, i;
   struct hostent *hp = NULL;
   char* res;
@@ -299,7 +300,13 @@ static void resolveAddress(char* symAddr,
     symAddr[MAX_HOST_SYM_NAME_LEN-3] = '.';
   } else {
     /* printf("==> (%x) (%s)(len=%d)\n", symAddr, res, strlen(res)); */
-    strcpy(symAddr, res);
+    if(hm != NULL) {
+      if(hm->name == NULL)
+	traceEvent(TRACE_INFO, "WARNING: NULL instance found !");
+      else
+	strcpy(symAddr, res);
+
+    }
   }
 
   for(i=0; symAddr[i] != '\0'; i++)
@@ -447,7 +454,7 @@ void cleanAddressQueueId(u_long queueId) {
     }
   }
 
-#ifdef DEBUG
+#ifndef DEBUG
   traceEvent(TRACE_INFO, "WARNING: address %u NOT found on queue (lastAddressSlotIdResolved=%u)...",
 	     queueId, lastAddressSlotIdResolved);
 #endif
@@ -518,9 +525,9 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
      */
      if((addressQueueLen > (ADDRESS_QUEUE_LENGTH/2))
 	&& (!isLocalAddress(&elem->addr)))
-       resolveAddress(elem->name, &elem->addr, 1); /* Keep address numeric */
+       resolveAddress(elem->name, &elem->addr, 1, elem); /* Keep address numeric */
      else
-       resolveAddress(elem->name, &elem->addr, 0);
+       resolveAddress(elem->name, &elem->addr, 0, elem);
      
      lastAddressSlotIdResolved = elem->slotQueueId;
      if(elem->instance) elem->instance->instanceInUse--;
@@ -680,7 +687,7 @@ void ipaddr2str(HostTraffic *instance,
       because this is much more efficient under this OS
     */
     if(isLocalAddress(&hostIpAddress))
-      resolveAddress(p->name, &hostIpAddress, 0);
+      resolveAddress(p->name, &hostIpAddress, 0, NULL);
     else {
       if(snprintf(p->name, outBufLen, "*%s*",
 		  _intoa(hostIpAddress, tmpBuf, sizeof(tmpBuf))) < 0)
@@ -700,7 +707,7 @@ void ipaddr2str(HostTraffic *instance,
 #else /* defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION) */
     p->name = outBuf;
     memset(p->name, 0, MAX_HOST_SYM_NAME_LEN);
-    resolveAddress(p->name, &hostIpAddress, 0 /* Symbolic address */);
+    resolveAddress(p->name, &hostIpAddress, 0 /* Symbolic address */, NULL);
 #endif
   }
 }

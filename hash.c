@@ -620,6 +620,9 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 	     hostIdx, host->hostSymIpAddress);
 #endif
 
+  if(host->addressQueueId != 0)
+    cleanAddressQueueId(host->addressQueueId); /* Cleanup address queue... */
+
   if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
   if(host->nbHostName != NULL)          free(host->nbHostName);
   if(host->nbAccountName != NULL)       free(host->nbAccountName);
@@ -707,7 +710,8 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
       if((idx != hostIdx) /* Don't remove the instance we're freeing */
 	 && (device[theDevice].hash_hostTraffic[idx] != NULL)) {
 	removeGlobalHostPeers(device[theDevice].hash_hostTraffic[idx],
-			      myflaggedHosts, len); /* Finally refresh the hash */
+			      myflaggedHosts, 
+			      device[theDevice].actualHashSize); /* Finally refresh the hash */
       }
     }
     
@@ -901,7 +905,8 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 	 all the references to the freed instances
       */
       removeGlobalHostPeers(device[actDevice].hash_hostTraffic[idx],
-			    theFlaggedHosts, len); /* Finally refresh the hash */
+			    theFlaggedHosts, 
+			    device[actDevice].actualHashSize); /* Finally refresh the hash */
     }
   }
 
