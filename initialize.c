@@ -894,6 +894,7 @@ void reinitMutexes (void) {
   createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */
   createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
   createMutex(&myGlobals.packetQueueMutex);
+  createMutex(&myGlobals.packetProcessMutex);
   createMutex(&myGlobals.hostsHashMutex);
 
  #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
@@ -951,6 +952,7 @@ void initThreads(void) {
   /*
    * Create the thread (1) - NPA - Network Packet Analyzer (main thread)
    */
+  createMutex(&myGlobals.packetProcessMutex);
   createMutex(&myGlobals.packetQueueMutex);
   createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for network packet analyser",

@@ -23,12 +23,12 @@
 
 /* *******************************
 
-   Some nice links:
+Some nice links:
 
-   http://www.sockets.com/protocol.htm
-   http://www.iana.org/assignments/protocol-numbers
+http://www.sockets.com/protocol.htm
+http://www.iana.org/assignments/protocol-numbers
 
-   Courtesy of Helmut Schneider <jumper99@gmx.de>
+Courtesy of Helmut Schneider <jumper99@gmx.de>
 
 ******************************* */
 
@@ -48,14 +48,14 @@
  */
 #ifdef WIN32
 #ifndef __GNUC__
-  typedef unsigned char  u_char;
-  typedef unsigned short u_short;
-  typedef unsigned int   u_int;
-  typedef unsigned long  u_long;
+typedef unsigned char  u_char;
+typedef unsigned short u_short;
+typedef unsigned int   u_int;
+typedef unsigned long  u_long;
 #endif
- typedef u_char  uint8_t;
- typedef u_short uint16_t;
- typedef u_int   uint32_t;
+typedef u_char  uint8_t;
+typedef u_short uint16_t;
+typedef u_int   uint32_t;
 #endif /* WIN32 */
 
 #if !defined(HAVE_U_INT64_T)
@@ -110,18 +110,18 @@ typedef struct ether80211q {
 #define SERIAL_IPV4         2
 
 typedef struct hostSerial {
-    u_char serialType; /* 0 == empty */
-    union {
-	u_char          ethAddress[LEN_ETHERNET_ADDRESS]; /* hostSerial == SERIAL_MAC */
-	struct in_addr  ipAddress;                        /* hostSerial == SERIAL_IPV4 */
-    } value;	
+  u_char serialType; /* 0 == empty */
+  union {
+    u_char          ethAddress[LEN_ETHERNET_ADDRESS]; /* hostSerial == SERIAL_MAC */
+    struct in_addr  ipAddress;                        /* hostSerial == SERIAL_IPV4 */
+  } value;	
 } HostSerial;
 
 #ifdef WIN32
- #define pid_t unsigned int
- #ifndef RETSIGTYPE
-  #define RETSIGTYPE void
- #endif
+#define pid_t unsigned int
+#ifndef RETSIGTYPE
+#define RETSIGTYPE void
+#endif
 #endif
 
 #ifdef MAKE_WITH_SYSLOG
@@ -129,8 +129,8 @@ typedef struct hostSerial {
  * manually
  */
 typedef struct my_code {
-        char    *c_name;
-        int     c_val;
+  char    *c_name;
+  int     c_val;
 } MYCODE;
 #endif
 
@@ -176,9 +176,9 @@ typedef struct portProtoMapperHandler {
 typedef struct protocolsList {
   char *protocolName;
   u_int16_t protocolId, protocolIdAlias; /* I know it's ugly however this
-					should be enough for most of
-					the situations
-				     */
+					    should be enough for most of
+					    the situations
+					 */
   struct protocolsList *next;
 } ProtocolsList;
 
@@ -194,13 +194,13 @@ typedef struct conditionalVariable {
 
 #else
 
- #define pthread_t              HANDLE
- #define pthread_mutex_t        HANDLE
- #define pthread_cond_t         HANDLE
+#define pthread_t              HANDLE
+#define pthread_mutex_t        HANDLE
+#define pthread_cond_t         HANDLE
 
 typedef struct conditionalVariable {
-        HANDLE condVar;
-        CRITICAL_SECTION criticalSection;
+  HANDLE condVar;
+  CRITICAL_SECTION criticalSection;
 } ConditionalVariable;
 
 #endif /* WIN32 */
@@ -260,7 +260,7 @@ typedef struct trafficCounter {
 typedef struct thptEntry {
   float trafficValue;
   /* ****** */
-    HostSerial topHostSentSerial, secondHostSentSerial, thirdHostSentSerial;
+  HostSerial topHostSentSerial, secondHostSentSerial, thirdHostSentSerial;
   TrafficCounter topSentTraffic, secondSentTraffic, thirdSentTraffic;
   /* ****** */
   HostSerial topHostRcvdSerial, secondHostRcvdSerial, thirdHostRcvdSerial;
@@ -290,22 +290,22 @@ typedef struct simpleProtoTrafficInfo {
   TrafficCounter lastLocal, lastLocal2remote, lastRem, lastRem2local;
 } SimpleProtoTrafficInfo;
 /*XMLSECTIONBEGIN xml_s_simpleprototrafficinfo.inc parent input */
-  /*XML e      SimpleProtoTrafficInfo         parent:Work            "" */
-  /*XML trafficcounter local                          Work                   "" */
-  /*XML trafficcounter local2remote                   Work                   "" */
-  /*XML trafficcounter remote                         Work                   "" */
-  /*XML trafficcounter remote2local                   Work                   "" */
-  /*XML trafficcounter lastLocal                      Work                   "" */
-  /*XML trafficcounter lastLocal2remote               Work                   "" */
-  /*XML trafficcounter lastRem                        Work                   "" */
-  /*XML trafficcounter lastRem2local                  Work                   "" */
+/*XML e      SimpleProtoTrafficInfo         parent:Work            "" */
+/*XML trafficcounter local                          Work                   "" */
+/*XML trafficcounter local2remote                   Work                   "" */
+/*XML trafficcounter remote                         Work                   "" */
+/*XML trafficcounter remote2local                   Work                   "" */
+/*XML trafficcounter lastLocal                      Work                   "" */
+/*XML trafficcounter lastLocal2remote               Work                   "" */
+/*XML trafficcounter lastRem                        Work                   "" */
+/*XML trafficcounter lastRem2local                  Work                   "" */
 /*XMLSECTIONEND */
 
 /* *********************** */
 
 typedef struct usageCounter {
-    TrafficCounter value;
-    HostSerial peersSerials[MAX_NUM_CONTACTED_PEERS]; /* host serial */
+  TrafficCounter value;
+  HostSerial peersSerials[MAX_NUM_CONTACTED_PEERS]; /* host serial */
 } UsageCounter;
 
 /* *********************** */
@@ -319,9 +319,9 @@ typedef struct routingCounter {
 /* NOTE: anything added here must be also added in the SecurityDeviceProbes structure */
 typedef struct securityHostProbes {
   UsageCounter synPktsSent, rstPktsSent, rstAckPktsSent,
-               synFinPktsSent, finPushUrgPktsSent, nullPktsSent;
+    synFinPktsSent, finPushUrgPktsSent, nullPktsSent;
   UsageCounter synPktsRcvd, rstPktsRcvd, rstAckPktsRcvd,
-               synFinPktsRcvd, finPushUrgPktsRcvd, nullPktsRcvd;
+    synFinPktsRcvd, finPushUrgPktsRcvd, nullPktsRcvd;
   UsageCounter ackScanSent, ackScanRcvd;
   UsageCounter xmasScanSent, xmasScanRcvd;
   UsageCounter finScanSent, finScanRcvd;
@@ -333,7 +333,7 @@ typedef struct securityHostProbes {
   UsageCounter udpToClosedPortSent, udpToClosedPortRcvd;
 
   UsageCounter udpToDiagnosticPortSent, udpToDiagnosticPortRcvd,
-                 tcpToDiagnosticPortSent, tcpToDiagnosticPortRcvd;
+    tcpToDiagnosticPortSent, tcpToDiagnosticPortRcvd;
   UsageCounter tinyFragmentSent,        tinyFragmentRcvd;
   UsageCounter icmpFragmentSent,        icmpFragmentRcvd;
   UsageCounter overlappingFragmentSent, overlappingFragmentRcvd;
@@ -347,28 +347,28 @@ typedef struct securityHostProbes {
 
 /* NOTE: anything added here must be also added in the SecurityHostProbes structure */
 typedef struct securityDeviceProbes {
-    TrafficCounter synPkts, rstPkts, rstAckPkts,
-	synFinPkts, finPushUrgPkts, nullPkts;
-    TrafficCounter rejectedTCPConn;
-    TrafficCounter establishedTCPConn;
-    TrafficCounter terminatedTCPConn;
+  TrafficCounter synPkts, rstPkts, rstAckPkts,
+    synFinPkts, finPushUrgPkts, nullPkts;
+  TrafficCounter rejectedTCPConn;
+  TrafficCounter establishedTCPConn;
+  TrafficCounter terminatedTCPConn;
 
-    TrafficCounter ackScan;
-    TrafficCounter xmasScan;
-    TrafficCounter finScan;
-    TrafficCounter nullScan;
-    /* ********* */
-    TrafficCounter udpToClosedPort;
-    TrafficCounter udpToDiagnosticPort, tcpToDiagnosticPort;
-    TrafficCounter tinyFragment;
-    TrafficCounter icmpFragment;
-    TrafficCounter overlappingFragment;
-    TrafficCounter closedEmptyTCPConn;
-    TrafficCounter malformedPkts;
-    TrafficCounter icmpPortUnreach;
-    TrafficCounter icmpHostNetUnreach;
-    TrafficCounter icmpProtocolUnreach;
-    TrafficCounter icmpAdminProhibited;
+  TrafficCounter ackScan;
+  TrafficCounter xmasScan;
+  TrafficCounter finScan;
+  TrafficCounter nullScan;
+  /* ********* */
+  TrafficCounter udpToClosedPort;
+  TrafficCounter udpToDiagnosticPort, tcpToDiagnosticPort;
+  TrafficCounter tinyFragment;
+  TrafficCounter icmpFragment;
+  TrafficCounter overlappingFragment;
+  TrafficCounter closedEmptyTCPConn;
+  TrafficCounter malformedPkts;
+  TrafficCounter icmpPortUnreach;
+  TrafficCounter icmpHostNetUnreach;
+  TrafficCounter icmpProtocolUnreach;
+  TrafficCounter icmpAdminProhibited;
 } SecurityDeviceProbes;
 
 typedef struct nonIPTraffic {
@@ -391,9 +391,9 @@ typedef struct trafficDistribution {
 } TrafficDistribution; 
 
 typedef struct portUsage {
-    u_short        clientUses, serverUses;
-    HostSerial     clientUsesLastPeer, serverUsesLastPeer;
-    TrafficCounter clientTraffic, serverTraffic;
+  u_short        clientUses, serverUses;
+  HostSerial     clientUsesLastPeer, serverUsesLastPeer;
+  TrafficCounter clientTraffic, serverTraffic;
 } PortUsage;
 
 typedef struct virtualHostList {
@@ -523,21 +523,21 @@ typedef struct hostTraffic {
 
   fd_set           flags;
   TrafficCounter   pktSent, pktRcvd, pktSentSession, pktRcvdSession,
-                   pktDuplicatedAckSent, pktDuplicatedAckRcvd;
+    pktDuplicatedAckSent, pktDuplicatedAckRcvd;
   TrafficCounter   lastPktSent, lastPktRcvd;
   TrafficCounter   pktBroadcastSent, bytesBroadcastSent;
   TrafficCounter   pktMulticastSent, bytesMulticastSent,
-                   pktMulticastRcvd, bytesMulticastRcvd;
+    pktMulticastRcvd, bytesMulticastRcvd;
   TrafficCounter   lastBytesSent, lastHourBytesSent,
-                   bytesSent, bytesSentLoc, bytesSentRem, bytesSentSession;
+    bytesSent, bytesSentLoc, bytesSentRem, bytesSentSession;
   TrafficCounter   lastBytesRcvd, lastHourBytesRcvd, bytesRcvd,
-                   bytesRcvdLoc, bytesRcvdFromRem, bytesRcvdSession;
+    bytesRcvdLoc, bytesRcvdFromRem, bytesRcvdSession;
   float            actualRcvdThpt, lastHourRcvdThpt, averageRcvdThpt, peakRcvdThpt,
-                   actualSentThpt, lastHourSentThpt, averageSentThpt, peakSentThpt,
-                   actualTThpt, averageTThpt, peakTThpt;
+    actualSentThpt, lastHourSentThpt, averageSentThpt, peakSentThpt,
+    actualTThpt, averageTThpt, peakTThpt;
   float            actualRcvdPktThpt, averageRcvdPktThpt, peakRcvdPktThpt,
-                   actualSentPktThpt, averageSentPktThpt, peakSentPktThpt,
-                   actualTPktThpt, averageTPktThpt, peakTPktThpt;
+    actualSentPktThpt, averageSentPktThpt, peakSentPktThpt,
+    actualTPktThpt, averageTPktThpt, peakTPktThpt;
   unsigned short   actBandwidthUsage;
   TrafficDistribution *trafficDistribution;
   u_int32_t        numHostSessions;
@@ -551,13 +551,13 @@ typedef struct hostTraffic {
   u_short          recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];
   TrafficCounter   ipBytesSent, ipBytesRcvd;
   TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc,
-                   udpSentRem, icmpSent;
+    udpSentRem, icmpSent;
   TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc,
-                   udpRcvdFromRem, icmpRcvd;
+    udpRcvdFromRem, icmpRcvd;
 
   TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
-                   udpFragmentsSent,  udpFragmentsRcvd,
-                   icmpFragmentsSent, icmpFragmentsRcvd;
+    udpFragmentsSent,  udpFragmentsRcvd,
+    icmpFragmentsSent, icmpFragmentsRcvd;
 
   /* Protocol decoders */
   ProtocolInfo     *protocolInfo;
@@ -810,183 +810,183 @@ typedef struct ntopInterface {
   /* ************************** */
 
   u_char exportNetFlow; /* NETFLOW_EXPORT_... */
-  } NtopInterface;
+} NtopInterface;
 
 /*XMLSECTIONBEGIN xml_s_ntopinterface.inc parent input */
-  /*XMLNOTE - use parent, not work, because the parent node is defined in g_intf.inc */
-  /*XML s              name                 parent        "" */
-  /*XML s              humanFriendlyName    parent        "" */
-  /*XML h              flags                parent        "status of the interface" */
-  /*XML h              addr                 parent        "" */
-  /*XML s              ipdot                parent        "" */
-  /*XML s              fqdn                 parent        "" */
+/*XMLNOTE - use parent, not work, because the parent node is defined in g_intf.inc */
+/*XML s              name                 parent        "" */
+/*XML s              humanFriendlyName    parent        "" */
+/*XML h              flags                parent        "status of the interface" */
+/*XML h              addr                 parent        "" */
+/*XML s              ipdot                parent        "" */
+/*XML s              fqdn                 parent        "" */
 
-  /*XML in_addr        network              parent        "" */
-  /*XML in_addr        netmask              parent        "" */
-  /*XML n:u            numHosts             parent        "" */
-  /*XML in_addr        ifAddr               parent        "" */
-  /*XML time_t         started              parent        "" */
-  /*XML time_t         firstpkt             parent        "" */
-  /*XML time_t         lastpkt              parent        "" */
+/*XML in_addr        network              parent        "" */
+/*XML in_addr        netmask              parent        "" */
+/*XML n:u            numHosts             parent        "" */
+/*XML in_addr        ifAddr               parent        "" */
+/*XML time_t         started              parent        "" */
+/*XML time_t         firstpkt             parent        "" */
+/*XML time_t         lastpkt              parent        "" */
 
-  /*XMLNOTE TODO pcap_t *pcapPtr; */
-  /*XMLNOTE TODO pcap_dumper_t *pcapDumper; */
-  /*XMLNOTE TODO pcap_dumper_t *pcapErrDumper */
+/*XMLNOTE TODO pcap_t *pcapPtr; */
+/*XMLNOTE TODO pcap_dumper_t *pcapDumper; */
+/*XMLNOTE TODO pcap_dumper_t *pcapErrDumper */
 
-  /*XML b              virtualDevice        parent        "" */
-  /*XML b              dummyDevice          parent        "" */
-  /*XML n              snaplen              parent        "" */
-  /*XML h              datalink             parent        "" */
-  /*XML s              filter               parent        "" */
-  /*XML n              fd                   parent        "" */
+/*XML b              virtualDevice        parent        "" */
+/*XML b              dummyDevice          parent        "" */
+/*XML n              snaplen              parent        "" */
+/*XML h              datalink             parent        "" */
+/*XML s              filter               parent        "" */
+/*XML n              fd                   parent        "" */
 
-  /*XML e              intopPrintFlags      parent:Work   "" */
-  /*XML n              hashing              Work          "" */
-  /*XML n              ethv                 Work          "" */
-  /*XML n              ipv                  Work          "" */
-  /*XML n              tcpv                 Work          "" */
+/*XML e              intopPrintFlags      parent:Work   "" */
+/*XML n              hashing              Work          "" */
+/*XML n              ethv                 Work          "" */
+/*XML n              ipv                  Work          "" */
+/*XML n              tcpv                 Work          "" */
 
-  /*XML e              packetStats          parent:Work   "" */
-  /*XML trafficcounter droppedPkts          Work          "" */
-  /*XML trafficcounter ethernetPkts         Work          "" */
-  /*XML trafficcounter broadcastPkts        Work          "" */
-  /*XML trafficcounter multicastPkts        Work          "" */
-  /*XML trafficcounter ipPkts               Work          "" */
-  /*XML trafficcounter lastMinEthernetPkts  Work          "" */
-  /*XML trafficcounter lastFiveMinsEthernetPkts  Work     "" */
-  /*XML trafficcounter lastNumEthernetPkts  Work          "" */
-  /*XML trafficcounter lastEthernetPkts     Work          "" */
-  /*XML trafficcounter lastTotalPkts        Work          "" */
-  /*XML trafficcounter lastBroadcastPkts    Work          "" */
-  /*XML trafficcounter lastMulticastPkts    Work          "" */
+/*XML e              packetStats          parent:Work   "" */
+/*XML trafficcounter droppedPkts          Work          "" */
+/*XML trafficcounter ethernetPkts         Work          "" */
+/*XML trafficcounter broadcastPkts        Work          "" */
+/*XML trafficcounter multicastPkts        Work          "" */
+/*XML trafficcounter ipPkts               Work          "" */
+/*XML trafficcounter lastMinEthernetPkts  Work          "" */
+/*XML trafficcounter lastFiveMinsEthernetPkts  Work     "" */
+/*XML trafficcounter lastNumEthernetPkts  Work          "" */
+/*XML trafficcounter lastEthernetPkts     Work          "" */
+/*XML trafficcounter lastTotalPkts        Work          "" */
+/*XML trafficcounter lastBroadcastPkts    Work          "" */
+/*XML trafficcounter lastMulticastPkts    Work          "" */
 
-  /*XML e              byteStats            parent:Work   "" */
-  /*XML trafficcounter ethernetBytes        Work          "" */
-  /*XML trafficcounter ipBytes              Work          "" */
-  /*XML trafficcounter fragmentedIpBytes    Work          "" */
-  /*XML trafficcounter tcpBytes             Work          "" */
-  /*XML trafficcounter udpBytes             Work          "" */
-  /*XML trafficcounter otherIpBytes         Work          "" */
-  /*XML trafficcounter icmpBytes            Work          "" */
-  /*XML trafficcounter dlcBytes             Work          "" */
-  /*XML trafficcounter ipxBytes             Work          "" */
-  /*XML trafficcounter stpBytes             Work          "" */
-  /*XML trafficcounter decnetBytes          Work          "" */
-  /*XML trafficcounter netbiosBytes         Work          "" */
-  /*XML trafficcounter arpRarpBytes         Work          "" */
-  /*XML trafficcounter atalkBytes           Work          "" */
-  /*XML trafficcounter egpBytes             Work          "" */
-  /*XML trafficcounter osiBytes             Work          "" */
-  /*XML trafficcounter ipv6Bytes            Work          "" */
-  /*XML trafficcounter otherBytes           Work          "" */
-  /*XML trafficcounter lastMinEthernetBytes Work          "" */
-  /*XML trafficcounter lastFiveMinsEthernetBytes Work     "" */
-  /*XML trafficcounter lastEthernetBytes    Work          "" */
-  /*XML trafficcounter lastIpBytes          Work          "" */
-  /*XML trafficcounter lastNonIpBytes       Work          "" */
+/*XML e              byteStats            parent:Work   "" */
+/*XML trafficcounter ethernetBytes        Work          "" */
+/*XML trafficcounter ipBytes              Work          "" */
+/*XML trafficcounter fragmentedIpBytes    Work          "" */
+/*XML trafficcounter tcpBytes             Work          "" */
+/*XML trafficcounter udpBytes             Work          "" */
+/*XML trafficcounter otherIpBytes         Work          "" */
+/*XML trafficcounter icmpBytes            Work          "" */
+/*XML trafficcounter dlcBytes             Work          "" */
+/*XML trafficcounter ipxBytes             Work          "" */
+/*XML trafficcounter stpBytes             Work          "" */
+/*XML trafficcounter decnetBytes          Work          "" */
+/*XML trafficcounter netbiosBytes         Work          "" */
+/*XML trafficcounter arpRarpBytes         Work          "" */
+/*XML trafficcounter atalkBytes           Work          "" */
+/*XML trafficcounter egpBytes             Work          "" */
+/*XML trafficcounter osiBytes             Work          "" */
+/*XML trafficcounter ipv6Bytes            Work          "" */
+/*XML trafficcounter otherBytes           Work          "" */
+/*XML trafficcounter lastMinEthernetBytes Work          "" */
+/*XML trafficcounter lastFiveMinsEthernetBytes Work     "" */
+/*XML trafficcounter lastEthernetBytes    Work          "" */
+/*XML trafficcounter lastIpBytes          Work          "" */
+/*XML trafficcounter lastNonIpBytes       Work          "" */
 
-  /*XMLNOTE TODO PortCounter    *ipPorts[MAX_IP_PORT]; */
+/*XMLNOTE TODO PortCounter    *ipPorts[MAX_IP_PORT]; */
 
-  /*XML &packetstats   rcvdPktStats         parent        "" */
-  /*XML &ttlstats      rcvdPktTTLStats      parent        "" */
+/*XML &packetstats   rcvdPktStats         parent        "" */
+/*XML &ttlstats      rcvdPktTTLStats      parent        "" */
 
-  /*XML e              throughputStats      parent:Work   "" */
-  /*XML n:f            peakThroughput       Work          "" */
-  /*XML n:f            actualThpt           Work          "" */
-  /*XML n:f            lastMinThpt          Work          "" */
-  /*XML n:f            lastFiveMinsThpt     Work          "" */
-  /*XML n:f            peakPacketThroughput Work          "" */
-  /*XML n:f            actualPktsThpt       Work          "" */
-  /*XML n:f            lastMinPktsThpt      Work          "" */
-  /*XML n:f            lastFiveMinsPktsThpt Work          "" */
-  /*XML time_t         lastThptUpdate       Work          "" */
-  /*XML time_t         lastMinThptUpdate    Work          "" */
-  /*XML time_t         lastHourThptUpdate   Work          "" */
-  /*XML time_t         lastFiveMinsThptUpdate Work        "" */
-  /*XML n:f            throughput           Work          "" */
-  /*XML n:f            packetThroughput     Work          "" */
-  /*XML n:u            numThptSamples       Work          "" */
-  /*XML e              last60MinutesThpt    Work:Work2    "" */
-  /*XML n:u            last60MinutesThptIdx Work2         "" */
-  /*XMLFOR indexT 0 59 <= */
-    /*XML *              indexT               Work2:Work3   "" 
-        if (snprintf(buf, sizeof(buf), "%d", indexT) < 0) BufferTooShort();
-        elWork3 = newxml_simplestring(elWork2,
-                                "index",
-                                buf,
-                                "");
-XML*/
-    /*XMLIF input->last60MinutesThpt[indexT].trafficValue != 0.0 */
-      /*XML &thptentry     last60MinutesThpt[indexT] Work3         "" */
-    /*XMLFI */
-  /*XMLROF*/
-  /*XML e              last24HoursThpt      Work:Work2    "" */
-  /*XML n:u            last24HoursThptIdx   Work2         "" */
-  /*XMLFOR indexT 0 23 <= */
-    /*XML *              indexT               Work2:Work3   "" 
-        if (snprintf(buf, sizeof(buf), "%d", indexT) < 0) BufferTooShort();
-        elWork3 = newxml_simplestring(elWork2,
-                                "index",
-                                buf,
-                                "");
-XML*/
-    /*XMLIF input->last24HoursThpt[indexT].trafficValue != 0.0 */
-      /*XML &thptentry     last24HoursThpt[indexT] Work3         "" */
-    /*XMLFI */
-  /*XMLROF*/
-  /*XML e              last30daysThpr       Work:Work2    "" */
-  /*XML n:u            last30daysThptIdx    Work2         "" */
-  /*XMLFOR indexT 0 29 <= */
-    /*XMLIF input->last30daysThpt[indexT] != 0.0 */
-      /*XML *              indexT               Work2         "" 
-        if (snprintf(buf, sizeof(buf), "%d", indexT) < 0) BufferTooShort();
-        if (snprintf(buf2, sizeof(buf2), "%f", input->last30daysThpt[indexT]) < 0) BufferTooShort();
-        newxml_simplestring(elWork2,
-                            "index",
-                            buf,
-                            "");
-XML*/
-    /*XMLFI*/
-  /*XMLROF*/
+/*XML e              throughputStats      parent:Work   "" */
+/*XML n:f            peakThroughput       Work          "" */
+/*XML n:f            actualThpt           Work          "" */
+/*XML n:f            lastMinThpt          Work          "" */
+/*XML n:f            lastFiveMinsThpt     Work          "" */
+/*XML n:f            peakPacketThroughput Work          "" */
+/*XML n:f            actualPktsThpt       Work          "" */
+/*XML n:f            lastMinPktsThpt      Work          "" */
+/*XML n:f            lastFiveMinsPktsThpt Work          "" */
+/*XML time_t         lastThptUpdate       Work          "" */
+/*XML time_t         lastMinThptUpdate    Work          "" */
+/*XML time_t         lastHourThptUpdate   Work          "" */
+/*XML time_t         lastFiveMinsThptUpdate Work        "" */
+/*XML n:f            throughput           Work          "" */
+/*XML n:f            packetThroughput     Work          "" */
+/*XML n:u            numThptSamples       Work          "" */
+/*XML e              last60MinutesThpt    Work:Work2    "" */
+/*XML n:u            last60MinutesThptIdx Work2         "" */
+/*XMLFOR indexT 0 59 <= */
+/*XML *              indexT               Work2:Work3   "" 
+  if (snprintf(buf, sizeof(buf), "%d", indexT) < 0) BufferTooShort();
+  elWork3 = newxml_simplestring(elWork2,
+  "index",
+  buf,
+  "");
+  XML*/
+/*XMLIF input->last60MinutesThpt[indexT].trafficValue != 0.0 */
+/*XML &thptentry     last60MinutesThpt[indexT] Work3         "" */
+/*XMLFI */
+/*XMLROF*/
+/*XML e              last24HoursThpt      Work:Work2    "" */
+/*XML n:u            last24HoursThptIdx   Work2         "" */
+/*XMLFOR indexT 0 23 <= */
+/*XML *              indexT               Work2:Work3   "" 
+  if (snprintf(buf, sizeof(buf), "%d", indexT) < 0) BufferTooShort();
+  elWork3 = newxml_simplestring(elWork2,
+  "index",
+  buf,
+  "");
+  XML*/
+/*XMLIF input->last24HoursThpt[indexT].trafficValue != 0.0 */
+/*XML &thptentry     last24HoursThpt[indexT] Work3         "" */
+/*XMLFI */
+/*XMLROF*/
+/*XML e              last30daysThpr       Work:Work2    "" */
+/*XML n:u            last30daysThptIdx    Work2         "" */
+/*XMLFOR indexT 0 29 <= */
+/*XMLIF input->last30daysThpt[indexT] != 0.0 */
+/*XML *              indexT               Work2         "" 
+  if (snprintf(buf, sizeof(buf), "%d", indexT) < 0) BufferTooShort();
+  if (snprintf(buf2, sizeof(buf2), "%f", input->last30daysThpt[indexT]) < 0) BufferTooShort();
+  newxml_simplestring(elWork2,
+  "index",
+  buf,
+  "");
+  XML*/
+/*XMLFI*/
+/*XMLROF*/
 
-  /*XML e              protocolStats        parent:Work   "" */
-  /*XML e              tcp                  Work:Work2    "" */
-  /*XML &simpleprototrafficinfo tcpGlobalTrafficStats  Work2 "" */
-  /*XML e              udp                  Work:Work2    "" */
-  /*XML &simpleprototrafficinfo udpGlobalTrafficStats  Work2 "" */
-  /*XML e              icmp                 Work:Work2    "" */
-  /*XML &simpleprototrafficinfo icmpGlobalTrafficStats Work2 "" */
-  /*XMLFOR iProtoIndex 0 myGlobals.numIpProtosToMonitor */
-      /*XMLPREFIX myGlobals */
-      /*XML s                      protoIPTrafficInfos[iProtoIndex]!ipprotocol Work:Work2 "" */
-      /*XMLPREFIX input */
-      /*XML &simpleprototrafficinfo ipProtoStats[iProtoIndex] Work2 "" */
-  /*XMLROF */
+/*XML e              protocolStats        parent:Work   "" */
+/*XML e              tcp                  Work:Work2    "" */
+/*XML &simpleprototrafficinfo tcpGlobalTrafficStats  Work2 "" */
+/*XML e              udp                  Work:Work2    "" */
+/*XML &simpleprototrafficinfo udpGlobalTrafficStats  Work2 "" */
+/*XML e              icmp                 Work:Work2    "" */
+/*XML &simpleprototrafficinfo icmpGlobalTrafficStats Work2 "" */
+/*XMLFOR iProtoIndex 0 myGlobals.numIpProtosToMonitor */
+/*XMLPREFIX myGlobals */
+/*XML s                      protoIPTrafficInfos[iProtoIndex]!ipprotocol Work:Work2 "" */
+/*XMLPREFIX input */
+/*XML &simpleprototrafficinfo ipProtoStats[iProtoIndex] Work2 "" */
+/*XMLROF */
 
-  /*XML trafficcounter numEstablishedTCPConnections parent "" */
+/*XML trafficcounter numEstablishedTCPConnections parent "" */
 
-  /*XML n:u            hostsno              parent        "" */
-  /*XML n:u            actualHashSize       parent        "" */
-  /*XML n:u            hashThreshold        parent        "" */
-  /*XML n:u            topHashThreshold     parent        "" */
+/*XML n:u            hostsno              parent        "" */
+/*XML n:u            actualHashSize       parent        "" */
+/*XML n:u            hashThreshold        parent        "" */
+/*XML n:u            topHashThreshold     parent        "" */
 
-  /*XMLNOTE Special handling for the big sub-structures */
-  /*XMLNOTE ipSession ... */
-  /*XMLNOTE ipTrafficMatrix ... */
-  /*XMLNOTE ipTrafficMatrixHosts ... */
+/*XMLNOTE Special handling for the big sub-structures */
+/*XMLNOTE ipSession ... */
+/*XMLNOTE ipTrafficMatrix ... */
+/*XMLNOTE ipTrafficMatrixHosts ... */
 
-  /*XML b              exportNetFlow        parent        "" */
+/*XML b              exportNetFlow        parent        "" */
 /*XMLSECTIONEND */
 
 typedef struct processInfo {
-    char marker; /* internal use only */
-    char *command, *user;
-    time_t firstSeen, lastSeen;
-    int pid;
-    TrafficCounter bytesSent, bytesRcvd;
-    /* peers that talked with this process */
-    HostSerial contactedIpPeersSerials[MAX_NUM_CONTACTED_PEERS];
-    u_int contactedIpPeersIdx;
+  char marker; /* internal use only */
+  char *command, *user;
+  time_t firstSeen, lastSeen;
+  int pid;
+  TrafficCounter bytesSent, bytesRcvd;
+  /* peers that talked with this process */
+  HostSerial contactedIpPeersSerials[MAX_NUM_CONTACTED_PEERS];
+  u_int contactedIpPeersIdx;
 } ProcessInfo;
 
 typedef struct processInfoList {
@@ -1011,12 +1011,12 @@ typedef struct {
 
 /* ******************************
 
-   NOTE:
+NOTE:
 
-   Most of the code below has been
-   borrowed from tcpdump.
+Most of the code below has been
+borrowed from tcpdump.
 
-   ****************************** */
+****************************** */
 
 /* RFC 951 */
 typedef struct bootProtocol {
@@ -1209,29 +1209,29 @@ struct flow_ver5_hdr {
   u_int8_t  engine_id;       /* Slot number of the flow switching engine */
 };
 
- struct flow_ver5_rec {
-   u_int32_t srcaddr;    /* Source IP Address */
-   u_int32_t dstaddr;    /* Destination IP Address */
-   u_int32_t nexthop;    /* Next hop router's IP Address */
-   u_int16_t input;      /* Input interface index */
-   u_int16_t output;     /* Output interface index */
-   u_int32_t dPkts;      /* Packets sent in Duration (milliseconds between 1st
+struct flow_ver5_rec {
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t dPkts;      /* Packets sent in Duration (milliseconds between 1st
 			   & last packet in this flow)*/
-   u_int32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st
+  u_int32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st
 			   & last packet in  this flow)*/
-   u_int32_t First;      /* SysUptime at start of flow */
-   u_int32_t Last;       /* and of last packet of the flow */
-   u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-   u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-   u_int8_t pad1;        /* pad to word boundary */
-   u_int8_t tcp_flags;   /* Cumulative OR of tcp flags */
-   u_int8_t prot;        /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-   u_int8_t tos;         /* IP Type-of-Service */
-   u_int16_t dst_as;     /* dst peer/origin Autonomous System */
-   u_int16_t src_as;     /* source peer/origin Autonomous System */
-   u_int8_t dst_mask;    /* destination route's mask bits */
-   u_int8_t src_mask;    /* source route's mask bits */
-   u_int16_t pad2;       /* pad to word boundary */
+  u_int32_t First;      /* SysUptime at start of flow */
+  u_int32_t Last;       /* and of last packet of the flow */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int8_t pad1;        /* pad to word boundary */
+  u_int8_t tcp_flags;   /* Cumulative OR of tcp flags */
+  u_int8_t prot;        /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t tos;         /* IP Type-of-Service */
+  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+  u_int16_t src_as;     /* source peer/origin Autonomous System */
+  u_int8_t dst_mask;    /* destination route's mask bits */
+  u_int8_t src_mask;    /* source route's mask bits */
+  u_int16_t pad2;       /* pad to word boundary */
 };
 
 typedef struct single_flow_ver5_rec {
@@ -1249,28 +1249,28 @@ struct flow_ver7_hdr {
   u_int32_t reserved;
 };
 
- struct flow_ver7_rec {
-   u_int32_t srcaddr;    /* Source IP Address */
-   u_int32_t dstaddr;    /* Destination IP Address */
-   u_int32_t nexthop;    /* Next hop router's IP Address */
-   u_int16_t input;      /* Input interface index */
-   u_int16_t output;     /* Output interface index */
-   u_int32_t dPkts;      /* Packets sent in Duration */
-   u_int32_t dOctets;    /* Octets sent in Duration */
-   u_int32_t First;      /* SysUptime at start of flow */
-   u_int32_t Last;       /* and of last packet of the flow */
-   u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-   u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-   u_int8_t flags;       /* Shortcut mode(dest only,src only,full flows*/
-   u_int8_t tcp_flags;   /* Cumulative OR of tcp flags */
-   u_int8_t prot;        /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-   u_int8_t tos;         /* IP Type-of-Service */
-   u_int16_t dst_as;     /* dst peer/origin Autonomous System */
-   u_int16_t src_as;     /* source peer/origin Autonomous System */
-   u_int8_t dst_mask;    /* destination route's mask bits */
-   u_int8_t src_mask;    /* source route's mask bits */
-   u_int16_t pad2;       /* pad to word boundary */
-   u_int32_t router_sc;  /* Router which is shortcut by switch */
+struct flow_ver7_rec {
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t dPkts;      /* Packets sent in Duration */
+  u_int32_t dOctets;    /* Octets sent in Duration */
+  u_int32_t First;      /* SysUptime at start of flow */
+  u_int32_t Last;       /* and of last packet of the flow */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int8_t flags;       /* Shortcut mode(dest only,src only,full flows*/
+  u_int8_t tcp_flags;   /* Cumulative OR of tcp flags */
+  u_int8_t prot;        /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t tos;         /* IP Type-of-Service */
+  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+  u_int16_t src_as;     /* source peer/origin Autonomous System */
+  u_int8_t dst_mask;    /* destination route's mask bits */
+  u_int8_t src_mask;    /* source route's mask bits */
+  u_int16_t pad2;       /* pad to word boundary */
+  u_int32_t router_sc;  /* Router which is shortcut by switch */
 };
 
 typedef struct single_flow_ver7_rec {
@@ -1394,18 +1394,18 @@ typedef enum {
 
 typedef struct ntopGlobals {
 
-    /*XMLNOTE
-     *
-     *  Technically, this is all one structure - literally EVERYTHING is in myGlobals, 
-     *  so we can't really just dump it as one structure - it's huge, unwieldy, etc.
-     *
-     *  So we impose an arbitrary organization, grouping the sections into things 
-     *  to request by switches on the dump.xml URL.  We do this based on the comments
-     *  which split up the sections.
-     *
-     */
+  /*XMLNOTE
+   *
+   *  Technically, this is all one structure - literally EVERYTHING is in myGlobals, 
+   *  so we can't really just dump it as one structure - it's huge, unwieldy, etc.
+   *
+   *  So we impose an arbitrary organization, grouping the sections into things 
+   *  to request by switches on the dump.xml URL.  We do this based on the comments
+   *  which split up the sections.
+   *
+   */
 
-/*XMLSECTIONBEGIN xml_g_invoke.inc root myGlobals */
+  /*XMLSECTIONBEGIN xml_g_invoke.inc root myGlobals */
   /*XML e Invoke               root:Invoke      "" */
   /*XML e ExecutionEnvironment Invoke:Execenv   "" */
   /*XML e paths                Invoke:Paths     "" */
@@ -1423,7 +1423,7 @@ typedef struct ntopGlobals {
 
 #ifdef MAKE_WITH_XMLDUMP
   char hostName[MAXHOSTNAMELEN];
-                           /*XMLNOTE skip - it's in the header */
+  /*XMLNOTE skip - it's in the header */
 #endif
 
   char *startedAs;         /* ACTUAL starting line, not the resolved one */
@@ -1434,22 +1434,22 @@ typedef struct ntopGlobals {
   char **ntop_argv;        /* vector of command line arguments */
                            /*XML e ntop_argv            Execenv:Arg      "" */
                            /*XML * ntop_argc            Arg              ""
-                           for (i=0; i<myGlobals.ntop_argc; i++) {
+			     for (i=0; i<myGlobals.ntop_argc; i++) {
                              if (snprintf(buf, sizeof(buf), "%d", i) < 0)
-                               BufferTooShort();
+			     BufferTooShort();
                              newxml(GDOME_ELEMENT_NODE, elArg, "parameter",
-                                                               "index", buf,
-                                                               "value", myGlobals.ntop_argv[i]);
-                           }
-XML*/
+			     "index", buf,
+			     "value", myGlobals.ntop_argv[i]);
+			     }
+			     XML*/
 
   /* search paths - set in globals-core.c from CFG_ constants set in ./configure */
   char **dataFileDirs;
-                           /*XMLNOTE TODO dataFileDirs */
+  /*XMLNOTE TODO dataFileDirs */
   char **pluginDirs;
-                           /*XMLNOTE TODO pluginDirs */
+  /*XMLNOTE TODO pluginDirs */
   char **configFileDirs;
-                           /*XMLNOTE TODO configFileDirs */
+  /*XMLNOTE TODO configFileDirs */
 
   /* Command line parameters - please keep these in order.  Only the actual
    * parameter set in the switch in main.c should be here.  Group other fields
@@ -1495,20 +1495,20 @@ XML*/
   char * effectiveUserName;
   int userId, groupId;               /* 'u' */
                                      /*XML * effectiveUserName    Options    ""
-                                     if (snprintf(buf, sizeof(buf), "(uid=%d, gid=%d)",
-                                                  myGlobals.userId,
-                                                  myGlobals.groupId) < 0)
+				       if (snprintf(buf, sizeof(buf), "(uid=%d, gid=%d)",
+				       myGlobals.userId,
+				       myGlobals.groupId) < 0)
                                        BufferTooShort();
-                                     newxml(GDOME_ELEMENT_NODE, elOptions, "effectiveUserName",
-                                                                "value", myGlobals.effectiveUserName,
-                                                                "EffectiveId", buf,
-                                                                "description", "-u | --user");
-XML*/
+				       newxml(GDOME_ELEMENT_NODE, elOptions, "effectiveUserName",
+				       "value", myGlobals.effectiveUserName,
+				       "EffectiveId", buf,
+				       "description", "-u | --user");
+				       XML*/
 #endif
   char *webAddr;                     /* 'w' */
   int webPort;
-                                     /*XML s webAddr              Options    "-w | --http-server address"  */
-                                     /*XML n webPort              Options    "-w | --http-server :port" */
+  /*XML s webAddr              Options    "-w | --http-server address"  */
+  /*XML n webPort              Options    "-w | --http-server :port" */
   u_char enableSessionHandling;      /* 'z' */
                                      /*XML b enableSessionHandling Options   "-z | --disable-sessions" */
 
@@ -1529,19 +1529,19 @@ XML*/
   int mergeInterfaces;               /* 'M' */
                                      /*XML b mergeInterfaces      Options    "-M | --no-interface-merge" */
   char *pcapLogBasePath;             /* 'O' */ /* Added by Ola Lundqvist <opal@debian.org>. */
-                                     /*XML s pcapLogBasePath      Options    "-O | --pcap-file-path" */
+  /*XML s pcapLogBasePath      Options    "-O | --pcap-file-path" */
   char *dbPath;                      /* 'P' */
                                      /*XML s dbPath               Options    "-P | --db-file-path" */
   char *spoolPath;                    /* 'Q' */
-                                     /*XML s spoolPath            Options    "-Q | --spool-file-path" */
+  /*XML s spoolPath            Options    "-Q | --spool-file-path" */
   char *mapperURL;                   /* 'U' */
                                      /*XML s mapperURL            Options    "-U | --mapper" */
 
 #ifdef HAVE_OPENSSL
   char *sslAddr;                     /* 'W' */
   int sslPort;
-                                     /*XML s sslAddr              Options    "-W | --https-server address" */
-                                     /*XML n sslPort              Options    "-W | --https-server :port" */
+  /*XML s sslAddr              Options    "-W | --https-server address" */
+  /*XML n sslPort              Options    "-W | --https-server :port" */
 #endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
@@ -1574,7 +1574,7 @@ XML*/
 
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
-                                     /*XML b enableFragmentHandling Options  "" */
+  /*XML b enableFragmentHandling Options  "" */
   /*XMLSECTIONEND */
 
   HostsDisplayPolicy hostsDisplayPolicy;
@@ -1586,21 +1586,21 @@ XML*/
 
   u_short numDevices;                    /* total network interfaces */
   u_short numRealDevices;                /* # of network interfaces enabled for sniffing */
-                                     /*XML n numDevices           Interfaces "" */
+  /*XML n numDevices           Interfaces "" */
   NtopInterface *device;   /* pointer to the table of Network interfaces */
-    /*XMLFOR i 0 myGlobals.numDevices */
-      /*XML *   device          Interfaces            ""
-        if (snprintf(buf, sizeof(buf), "%d", i) < 0)
-            BufferTooShort();
-        elWork = newxml(GDOME_ELEMENT_NODE,
-                        elInterfaces,
-                        "device",
-                        "index", buf, 
-                        "description", "");
-XML*/
-      /*XML &ntopinterface device[i] Work "" */
-    /*XMLROF */
-/*XMLSECTIONEND */
+  /*XMLFOR i 0 myGlobals.numDevices */
+  /*XML *   device          Interfaces            ""
+    if (snprintf(buf, sizeof(buf), "%d", i) < 0)
+    BufferTooShort();
+    elWork = newxml(GDOME_ELEMENT_NODE,
+    elInterfaces,
+    "device",
+    "index", buf, 
+    "description", "");
+    XML*/
+  /*XML &ntopinterface device[i] Work "" */
+  /*XMLROF */
+  /*XMLSECTIONEND */
 
   /* Database */
   GDBM_FILE dnsCacheFile, pwFile, addressQueueFile, prefsFile, macPrefixFile;
@@ -1619,76 +1619,78 @@ XML*/
 
   /* Multi-thread related */
 #ifdef CFG_MULTITHREADED
-/*XMLSECTIONBEGIN xml_g_multithread.inc root myGlobals */
+  /*XMLSECTIONBEGIN xml_g_multithread.inc root myGlobals */
   /*XML e             ThreadInfo                root:multithread "" */
 
-    unsigned short numThreads;       /* # of running threads */
-                                     /*XML n:u numThreads         multithread "" */
-
+  unsigned short numThreads;       /* # of running threads */
+  /*XML n:u numThreads         multithread "" */
+  
   /*XMLNOTE - skip semaphores and condvar */
- #ifdef MAKE_WITH_SEMAPHORES
-    sem_t queueSem;
+#ifdef MAKE_WITH_SEMAPHORES
+  sem_t queueSem;
 
-  #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-    sem_t queueAddressSem;
-  #endif /* MAKE_ASYNC_ADDRESS_RESOLUTION */
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+  sem_t queueAddressSem;
+#endif /* MAKE_ASYNC_ADDRESS_RESOLUTION */
 
- #else /* ! MAKE_WITH_SEMAPHORES */
+#else /* ! MAKE_WITH_SEMAPHORES */
 
-    ConditionalVariable queueCondvar;
+  ConditionalVariable queueCondvar;
 
-  #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-    ConditionalVariable queueAddressCondvar;
-  #endif /* MAKE_WITH_SEMAPHORES */
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+  ConditionalVariable queueAddressCondvar;
+#endif /* MAKE_WITH_SEMAPHORES */
 
- #endif /* ! MAKE_WITH_SEMAPHORES */
+#endif /* ! MAKE_WITH_SEMAPHORES */
 
-    /*
-     * NPA - Network Packet Analyzer (main thread)
-     */
-    PthreadMutex packetQueueMutex;
-                                     /*XMLNOTE &pthreadmutex packetQueueMutex mutexes "" */
-    pthread_t dequeueThreadId;
+  /*
+   * NPA - Network Packet Analyzer (main thread)
+   */
+  PthreadMutex packetQueueMutex;
+  /*XMLNOTE &pthreadmutex packetQueueMutex mutexes "" */
+  PthreadMutex packetProcessMutex;
+  /*XMLNOTE &pthreadmutex packetProcessMutex mutexes "" */
+  pthread_t dequeueThreadId;
 
-    /*
-     * HTS - Hash Purge
-     */
-    PthreadMutex purgeMutex;
-    /*
-     * HTS - Host Traffic Statistics
-     */
-    PthreadMutex hostsHashMutex;
-                                     /*XMLNOTE &pthreadmutex hostsHashMutex   mutexes  "" */
+  /*
+   * HTS - Hash Purge
+   */
+  PthreadMutex purgeMutex;
+  /*
+   * HTS - Host Traffic Statistics
+   */
+  PthreadMutex hostsHashMutex;
+  /*XMLNOTE &pthreadmutex hostsHashMutex   mutexes  "" */
 
-    /*
-     * SIH - Scan Idle Hosts - optional
-     */
-    pthread_t scanIdleThreadId;
+  /*
+   * SIH - Scan Idle Hosts - optional
+   */
+  pthread_t scanIdleThreadId;
 
-    /*
-     * DNSAR - DNS Address Resolution - optional
-     */
-    unsigned short numDequeueThreads;
-                                     /*XML n:u numDequeueThreads multithread "" */
- #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-    PthreadMutex addressResolutionMutex;
-                                     /*XMLNOTE &pthreadmutex addressResolutionMutex mutexes "" */
-    pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_THREADS];
- #endif
+  /*
+   * DNSAR - DNS Address Resolution - optional
+   */
+  unsigned short numDequeueThreads;
+  /*XML n:u numDequeueThreads multithread "" */
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+  PthreadMutex addressResolutionMutex;
+  /*XMLNOTE &pthreadmutex addressResolutionMutex mutexes "" */
+  pthread_t dequeueAddressThreadId[MAX_NUM_DEQUEUE_THREADS];
+#endif
 
-    /*
-     * Control mutexes
-     */
-    PthreadMutex gdbmMutex;
-                                     /*XMLNOTE &pthreadmutex gdbmMutex mutexes "" */
-    PthreadMutex tcpSessionsMutex;
-                                     /*XMLNOTE &pthreadmutex tcpSessionsMutex mutexes"" */
-    PthreadMutex purgePortsMutex;
-                                     /*XMLNOTE &pthreadmutex purgePortsMutex mutexes "" */
+  /*
+   * Control mutexes
+   */
+  PthreadMutex gdbmMutex;
+  /*XMLNOTE &pthreadmutex gdbmMutex mutexes "" */
+  PthreadMutex tcpSessionsMutex;
+  /*XMLNOTE &pthreadmutex tcpSessionsMutex mutexes"" */
+  PthreadMutex purgePortsMutex;
+  /*XMLNOTE &pthreadmutex purgePortsMutex mutexes "" */
 
-    pthread_t handleWebConnectionsThreadId;
+  pthread_t handleWebConnectionsThreadId;
 
-/*XMLSECTIONEND */
+  /*XMLSECTIONEND */
 #endif /* CFG_MULTITHREADED */
 
   /* SSL support */
@@ -1721,10 +1723,10 @@ XML*/
 
   /* Address Resolution */
   u_long dnsSniffCount,
-         dnsSniffRequestCount,
-         dnsSniffFailedCount,
-         dnsSniffARPACount,
-         dnsSniffStoredInCache;
+    dnsSniffRequestCount,
+    dnsSniffFailedCount,
+    dnsSniffARPACount,
+    dnsSniffStoredInCache;
 
 #if defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
   u_long addressQueuedCount;
@@ -1751,26 +1753,26 @@ XML*/
    *       {numResolvedFromHostAddresses} - /etc/hosts file (if we use it)
    */
   u_long numipaddr2strCalls,
-         numFetchAddressFromCacheCalls,
-         numFetchAddressFromCacheCallsOK,
-         numFetchAddressFromCacheCallsFAIL,
-         numFetchAddressFromCacheCallsSTALE,
-         numResolveAddressCalls,
-         numResolveNoCacheDB,
-         numResolveCacheDBLookups,
-         numResolvedFromCache,
+    numFetchAddressFromCacheCalls,
+    numFetchAddressFromCacheCallsOK,
+    numFetchAddressFromCacheCallsFAIL,
+    numFetchAddressFromCacheCallsSTALE,
+    numResolveAddressCalls,
+    numResolveNoCacheDB,
+    numResolveCacheDBLookups,
+    numResolvedFromCache,
 #ifdef PARM_USE_HOST
-         numResolvedFromHostAddresses,
+    numResolvedFromHostAddresses,
 #endif
-         dnsCacheStoredLookup,
-         numAttemptingResolutionWithDNS,
-         numResolvedWithDNSAddresses, 
-         numDNSErrorHostNotFound,
-         numDNSErrorNoData,
-         numDNSErrorNoRecovery,
-         numDNSErrorTryAgain,
-         numDNSErrorOther,
-         numKeptNumericAddresses;
+    dnsCacheStoredLookup,
+    numAttemptingResolutionWithDNS,
+    numResolvedWithDNSAddresses, 
+    numDNSErrorHostNotFound,
+    numDNSErrorNoData,
+    numDNSErrorNoRecovery,
+    numDNSErrorTryAgain,
+    numDNSErrorOther,
+    numKeptNumericAddresses;
 
   /* Misc */
   char *separator;         /* html separator */
@@ -1851,9 +1853,9 @@ XML*/
   u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsRcvd, numNetFlowsProcessed;
   u_long numBadNetFlowsVersionsRcvd, numBadFlowPkts, numBadFlowBytes, numBadFlowReality;
   u_long numSrcNetFlowsEntryFailedBlackList, numSrcNetFlowsEntryFailedWhiteList,
-         numSrcNetFlowsEntryAccepted,
-         numDstNetFlowsEntryFailedBlackList, numDstNetFlowsEntryFailedWhiteList,
-         numDstNetFlowsEntryAccepted;
+    numSrcNetFlowsEntryAccepted,
+    numDstNetFlowsEntryFailedBlackList, numDstNetFlowsEntryFailedWhiteList,
+    numDstNetFlowsEntryAccepted;
 
   /* sFlow */
   int sflowOutSocket, sflowInSocket, sflowDeviceId;
@@ -1897,14 +1899,14 @@ XML*/
 
   /* Vendor lookup file */
   int numVendorLookupRead,
-      numVendorLookupAdded,
-      numVendorLookupAddedSpecial,
-      numVendorLookupCalls,
-      numVendorLookupSpecialCalls,
-      numVendorLookupFound48bit,
-      numVendorLookupFound24bit,
-      numVendorLookupFoundMulticast,
-      numVendorLookupFoundLAA;
+    numVendorLookupAdded,
+    numVendorLookupAddedSpecial,
+    numVendorLookupCalls,
+    numVendorLookupSpecialCalls,
+    numVendorLookupFound48bit,
+    numVendorLookupFound24bit,
+    numVendorLookupFoundMulticast,
+    numVendorLookupFoundLAA;
 
   /* i18n */
 #ifdef MAKE_WITH_I18N
@@ -1914,7 +1916,7 @@ XML*/
   char *strftimeFormat[MAX_LANGUAGES_SUPPORTED];
 #endif
 
- /* Country flags */
+  /* Country flags */
   IPNode *countryFlagHead;
   int  ipCountryMem, ipCountryCount;
 

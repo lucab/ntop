@@ -2533,7 +2533,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       sendString("<TR><TH "TH_BG">");
       for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
 	printUnknownProto(el->unknownProtoSent[i]);
-      sendString("</TH></TR>");
+      sendString("&nbsp;</TH></TR>");
     }
 
     if(el->unknownProtoRcvd == NULL) {
@@ -2542,7 +2542,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       sendString("<TH "TH_BG">");
       for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
 	printUnknownProto(el->unknownProtoRcvd[i]);
-      sendString("</TH></TR>");
+      sendString("&nbsp;</TH></TR>");
     }
 
     sendString("</TABLE>"TABLE_OFF"<P>\n");

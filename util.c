@@ -1180,17 +1180,17 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 	     mutexId, where, fileName, fileLine);
 #endif
 
-  myPid=getpid();
+  myPid = getpid();
   if(mutexId->isLocked) {
-    if ( (strcmp(fileName, mutexId->lockFile) == 0) &&
-	 (fileLine == mutexId->lockLine) &&
-	 (myPid == mutexId->lockPid) ) {
+    if((strcmp(fileName, mutexId->lockFile) == 0) 
+       && (fileLine == mutexId->lockLine) 
+       && (myPid == mutexId->lockPid)) {
       traceEvent(CONST_TRACE_WARNING,
 		 "WARNING: tryLockMutex() call with a self-LOCKED mutex [from %d at %s:%d %s]",
 		 myPid, fileName, fileLine, where);
     }
   }
-
+  
   strcpy(mutexId->lockAttemptFile, fileName);
   mutexId->lockAttemptLine=fileLine;
   mutexId->lockAttemptPid=myPid;
@@ -1207,28 +1207,26 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
   mutexId->lockAttemptLine=0;
   mutexId->lockAttemptPid=(pid_t) 0;
 
-  if(rc != 0)
+#ifdef SEMAPHORE_DEBUG
+  if(rc != 0) 
     traceEvent(CONST_TRACE_ERROR, "tryLockMutex failed 0x%X [%s:%d] (rc=%d)",
 	       (void*)&(mutexId->mutex), fileName, fileLine, rc);
-  else {
-
-#ifdef SEMAPHORE_DEBUG
+  else
     traceEvent(CONST_TRACE_INFO, "Locked 0x%X @ %s [%s:%d]",
                &(mutexId->mutex), where, fileName, fileLine);
 #endif
 
-    mutexId->numLocks++;
-    mutexId->isLocked = 1;
-    mutexId->lockTime = time(NULL);
-    mutexId->lockPid=myPid;
-    if(fileName != NULL) {
-      strcpy(mutexId->lockFile, fileName);
-      mutexId->lockLine = fileLine;
-    }
-    if(where != NULL) {
-      strcpy(mutexId->where, where);
-    }
+  mutexId->numLocks++;
+  mutexId->isLocked = 1;
+  mutexId->lockTime = time(NULL);
+  mutexId->lockPid=myPid;
+
+  if(fileName != NULL) {
+    strcpy(mutexId->lockFile, fileName);
+    mutexId->lockLine = fileLine;
   }
+    
+  if(where != NULL) strcpy(mutexId->where, where);
 
   pthread_mutex_unlock(&stateChangeMutex);
   return(rc);

@@ -46,6 +46,7 @@ void handleSigHup(int signalId _UNUSED_) {
 #ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "========================================");
    printMutexInfo(&myGlobals.gdbmMutex, "myGlobals.gdbmMutex");
+   printMutexInfo(&myGlobals.packetProcessMutex, "myGlobals.packetProcessMutex");
    printMutexInfo(&myGlobals.packetQueueMutex, "myGlobals.packetQueueMutex");
 
 #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
@@ -890,6 +891,7 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
 #ifdef CFG_MULTITHREADED
+  deleteMutex(&myGlobals.packetProcessMutex);
   deleteMutex(&myGlobals.packetQueueMutex);
 #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0)

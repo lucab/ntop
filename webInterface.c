@@ -3883,6 +3883,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 			  "<TH>Max Lock</TH></TR>"));
 
       printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
+      printMutexStatus(textPrintFlag, &myGlobals.packetProcessMutex, "packetProcessMutex");
       printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
       printMutexStatus(textPrintFlag, &myGlobals.purgeMutex, "purgeMutex");
 
