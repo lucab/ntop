@@ -181,7 +181,7 @@ void unloadPlugins(void) {
 
 char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag) {
-  static char buf[5][384];
+  static char buf[5][BUF_SIZE];
   char symIp[256], *tmpStr, linkName[256], flag[128];
   char *blinkOn, *blinkOff, *dynIp;
   char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr = "";
@@ -341,14 +341,14 @@ char* makeHostLink(HostTraffic *el, short mode,
   }  
  
   if(mode == LONG_FORMAT) {
-    if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
+    if(snprintf(buf[bufIdx], BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
 		"<A HREF=\"/%s.html\">%s%s %s%s%s%s%s%s</A>%s</TH>%s",
 		blinkOn, linkName, symIp, dynIp, 
 		multihomed, gwStr, dnsStr, printStr, smtpStr, healthStr,
 		blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\" NOWRAP>%s%s %s%s%s%s%s%s</A>%s%s",
+    if(snprintf(buf[bufIdx], BUF_SIZE, "%s<A HREF=\"/%s.html\" NOWRAP>%s%s %s%s%s%s%s%s</A>%s%s",
 		blinkOn, linkName, symIp, 
 		multihomed, gwStr, dnsStr, printStr, smtpStr, healthStr,
 		dynIp, blinkOff, flag) < 0) 
@@ -854,7 +854,7 @@ void printNtopConfigInfo(void) {
 
 /* ******************************* */
 
-void initializeWeb(void) {
+static void initializeWeb(void) {
 #ifndef MICRO_NTOP
   columnSort = 0, sortSendMode = 0;
 #endif

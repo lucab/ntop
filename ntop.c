@@ -856,8 +856,30 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 #endif
 
-#endif /* #ifndef WIN32 */
+#else /* #ifndef WIN32 */
 
+  /*
+    TW 06.11.2001 
+    Wies-Software <wies@wiessoft.de>
+    
+    #else clause added to force dequeue threads to terminate
+    USE_SEMAPHORES is *NOT* tested!!!
+  */
+#ifdef MULTITHREADED
+#ifdef USE_SEMAPHORES
+  incrementSem(&queueSem);
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  incrementSem(&queueAddressSem);
+#endif
+#else
+  signalCondvar(&queueCondvar);
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  signalCondvar(&queueAddressCondvar);
+#endif
+#endif
+#endif /* MULTITREADED */
+#endif /* #ifndef WIN32 */
+  
 #ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "Waiting until threads terminate...\n");
   sleep(3); /* Just to wait until threads complete */
@@ -898,7 +920,6 @@ RETSIGTYPE cleanup(int signo) {
 #else
   deleteCondvar(&queueCondvar);
 #ifdef ASYNC_ADDRESS_RESOLUTION
-  signalCondvar(&queueAddressCondvar);
   deleteCondvar(&queueAddressCondvar);
 #endif
 #endif
@@ -908,8 +929,10 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "cleanup");
 #endif 
-  gdbm_close(gdbm_file); gdbm_file = NULL;
-  gdbm_close(pwFile);    pwFile = NULL;
+  gdbm_close(gdbm_file);     gdbm_file = NULL;
+  gdbm_close(pwFile);        pwFile = NULL;
+  /* Courtesy of Wies-Software <wies@wiessoft.de> */
+  gdbm_close(hostsInfoFile); hostsInfoFile = NULL; 
   if(eventFile != NULL) {
     gdbm_close(eventFile);
     eventFile = NULL;

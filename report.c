@@ -206,7 +206,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
     for(idx=0; idx<numEntries; idx++) {
       int i;
       TrafficCounter a, b, c, d, e;
-      char webHostName[256];
+      char webHostName[BUF_SIZE];
 
       if(revertOrder)
 	el = tmpTable[numEntries-idx-1];
