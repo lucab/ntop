@@ -700,7 +700,8 @@ static void processIpPkt(const u_char *bp,
   if((!myGlobals.borderSnifferMode) && (!myGlobals.device[actualDeviceId].dummyDevice))
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
   updatePacketCount(srcHost, dstHost, (TrafficCounter)h->len, actualDeviceId);
-  if(!myGlobals.device[actualDeviceId].dummyDevice)
+
+  if((!myGlobals.borderSnifferMode) && (!myGlobals.device[actualDeviceId].dummyDevice))
     updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
 
   srcHost->ipBytesSent += length, dstHost->ipBytesRcvd += length;
@@ -803,7 +804,7 @@ static void processIpPkt(const u_char *bp,
 
 	Courtesy of Andreas Pfaller
       */
-      if(off & 0x3fff) {
+      if(myGlobals.enableFragmentHandling && (off & 0x3fff)) {
 	/* Handle fragmented packets */
 	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
 				&sport, &dport,
@@ -1028,7 +1029,7 @@ static void processIpPkt(const u_char *bp,
 
 	Courtesy of Andreas Pfaller
       */
-      if(off & 0x3fff) {
+      if(myGlobals.enableFragmentHandling && (off & 0x3fff)) {
 	/* Handle fragmented packets */
 	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
 				&sport, &dport,

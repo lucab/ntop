@@ -279,3 +279,43 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.netFlowOutSocket = -1;  
   myGlobals.globalFlowSequence = myGlobals.globalFlowPktCount = 0;
 }
+
+/* ****************************** */
+
+#ifdef USE_SYSLOG
+_CODE facilityNames[] =
+  {
+    { "auth", LOG_AUTH },
+#if 0
+    { "authpriv", LOG_AUTHPRIV },
+#endif
+    { "cron", LOG_CRON },
+    { "daemon", LOG_DAEMON },
+#if 0
+    { "ftp", LOG_FTP },
+#endif
+    { "kern", LOG_KERN },
+    { "lpr", LOG_LPR },
+    { "mail", LOG_MAIL },
+#if 0
+    { "mark", INTERNAL_MARK },          /* INTERNAL */
+#endif
+    { "news", LOG_NEWS },
+#if 0
+    { "security", LOG_AUTH },           /* DEPRECATED */
+#endif
+    { "syslog", LOG_SYSLOG },
+    { "user", LOG_USER },
+    { "uucp", LOG_UUCP },
+    { "local0", LOG_LOCAL0 },
+    { "local1", LOG_LOCAL1 },
+    { "local2", LOG_LOCAL2 },
+    { "local3", LOG_LOCAL3 },
+    { "local4", LOG_LOCAL4 },
+    { "local5", LOG_LOCAL5 },
+    { "local6", LOG_LOCAL6 },
+    { "local7", LOG_LOCAL7 },
+    { NULL, -1 }
+  };
+#endif
+

@@ -24,8 +24,6 @@
 /*
  * Define so that syslog.h creates the name structures...
  */
-#define SYSLOG_NAMES
-
 #include "ntop.h"
 #include "globals-report.h"
 
@@ -638,34 +636,32 @@ static int parseOptions(int argc, char* argv []) {
        *     --use-syslog requires a facility parameter (see /usr/include/sys/syslog.h)
        */
       if (optarg) {
-          int i;
-
-          stringSanityCheck(optarg);
-
-/* TEMP: Comment this out until we can figure out what the Solaris equivalent is */
-/*  BMS - 21May2002 */
-#if 0
-          for (i=0; facilitynames[i].c_name != NULL; i++) {
-	    if (strcmp(optarg, facilitynames[i].c_name) == 0) {
-	      break;
-	    }
-          }
+	int i;
+	
+	stringSanityCheck(optarg);
+	
+	/* TEMP: Comment this out until we can figure out what the Solaris equivalent is */
+	/*  BMS - 21May2002 */
+	
+	for (i=0; facilityNames[i].c_name != NULL; i++) {
+	  if (strcmp(optarg, facilityNames[i].c_name) == 0) {
+	    break;
+	  }
+	}
+	
+	if (facilityNames[i].c_name == NULL) {
+	  printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
+		 optarg);
 	  
-          if (facilitynames[i].c_name == NULL) {
-	    printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
-		   optarg);
-#endif
-/* TEMP: Just set the default value */
-            printf("NOTE: --use-syslog currently does not support facility option, using default value\n");
-	    myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
-#if 0
-          } else {
-	    myGlobals.useSyslog = facilitynames[i].c_val;
-          }
-#endif
+	  /* TEMP: Just set the default value */
+	  printf("NOTE: --use-syslog currently does not support facility option, using default value\n");
+	  myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
+	} else {
+	  myGlobals.useSyslog = facilityNames[i].c_val;
+	}
       } else {
-          printf("NOTE: --use-syslog with no facility, using default value\n");
-          myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
+	printf("NOTE: --use-syslog with no facility, using default value\n");
+	myGlobals.useSyslog = DEFAULT_SYSLOG_FACILITY;
       }
       break;
 #endif

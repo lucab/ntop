@@ -1415,7 +1415,7 @@ void cleanupHostEntries() {
 
   sleep(ADDRESS_PURGE_TIMEOUT);
 
-#ifndef DEBUG
+#ifdef DEBUG
   traceEvent(TRACE_INFO, "Entering cleanupHostEntries()");
 #endif
 

@@ -617,10 +617,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
       resetHostsVariables(el);
 
-#if 0
-      el->hostSerial = myGlobals.serialCounter++;
-#endif
-
       if(isMultihomed)
 	FD_SET(HOST_MULTIHOMED, &el->flags);
 

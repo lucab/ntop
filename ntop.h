@@ -426,16 +426,29 @@ int getdomainname(char *name, size_t len);
 #include <tcpd.h>
 #endif
 
+#undef USE_SYSLOG
+
 #ifdef HAVE_SYS_SYSLOG_H
+#define USE_SYSLOG
 #include <sys/syslog.h>
 #else
 #ifdef HAVE_SYSLOG_H
+#define USE_SYSLOG
 #include <syslog.h>
 #endif
 #endif
 
+#ifdef USE_SYSLOG
+typedef struct _code {
+        char    *c_name;
+        int     c_val;
+} _CODE;
+
+extern _CODE facilityNames[];
+
 #ifndef DEFAULT_SYSLOG_FACILITY
 #define DEFAULT_SYSLOG_FACILITY LOG_DAEMON   /* default value, if not specified otherwise */
+#endif
 #endif
 
 #ifndef DAEMONNAME
