@@ -74,7 +74,10 @@ if($content eq "") {
 	}
     }
     
-    $URL1 = "http://146.101.249.88/M4/gif.cgi?scale=500000&lon=".$elem{LONG}."&lat=".$elem{LAT}."&width=320&height=200";
+# $URL1 = "http://146.101.249.88/M4/gif.cgi?scale=500000&lon=".$elem{LONG}."&lat=".$elem{LAT}."&width=320&height=200";
+
+# Fix courtesy of <ansa@hars.it>
+$URL1 = "http://www.multimap.com/map/gif.cgi?scale=500000&db=ap&overviewmap=ap&lon=".$elem{LONG}."&lat=".$elem{LAT}."&width=320&height=200";
 
 
     if(!$debug) { $content1 = get($URL1); }
