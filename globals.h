@@ -194,6 +194,10 @@ typedef struct ntopGlobals {
   int refreshRate;                   /* 'r' */
   u_char disablePromiscuousMode;     /* 's' */
   u_short traceLevel;                /* 't' */
+#ifndef WIN32
+  int userId, groupId;               /* 'u' */
+  char * effectiveUserName;
+#endif
   char *webAddr;                     /* 'w' */
   int webPort;
   u_char enableSessionHandling;      /* 'z' */
@@ -415,11 +419,6 @@ typedef struct ntopGlobals {
    * local variables
    */
   int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
-  
-#ifndef WIN32
-  int userId, groupId;
-  char * effectiveUserName;
-#endif
   
 #ifndef MICRO_NTOP
   int sortSendMode;
