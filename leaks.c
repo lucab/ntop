@@ -376,4 +376,18 @@ void ntop_free(void *ptr, char* file, int line) {
   return(myFree(ptr, line, file));
 }
 
+#else /* MEMORY_DEBUG */
+
+#undef free /* just to be safe */
+void ntop_safefree(void **ptr, char* file, int line) {
+
+  if((ptr == NULL) || (*ptr == NULL)) {
+    traceEvent(TRACE_WARNING, "free of NULL pointer @ %s:%d", 
+	       file, line);
+  } else {
+    free(*ptr);
+    *ptr = NULL;
+  }
+}
+
 #endif /* MEMORY_DEBUG */
