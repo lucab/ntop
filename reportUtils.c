@@ -2474,8 +2474,8 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
       if(numEntries > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Total Contacts</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%d</TD></TR>\n",
-		    getRowColor(), el->totContactedSentPeers) < 0)
+		    "<TD "TD_BG" ALIGN=RIGHT>%lu</TD></TR>\n",
+		    getRowColor(), (unsigned long)el->totContactedSentPeers) < 0)
 	  BufferTooShort();	
        sendString(buf);
 
@@ -2511,8 +2511,8 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
       if(numEntries > 0) {
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Total Contacts</TH>"
-		    "<TD "TD_BG" ALIGN=RIGHT>%d</TD></TR>\n",
-		    getRowColor(), el->totContactedRcvdPeers) < 0)
+		    "<TD "TD_BG" ALIGN=RIGHT>%lu</TD></TR>\n",
+		    getRowColor(), (unsigned long)el->totContactedRcvdPeers) < 0)
 	  BufferTooShort();	
 	sendString(buf);
 	
