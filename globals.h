@@ -91,6 +91,7 @@
 #define NOW ((time_t) time ((time_t *) 0))
 
 #define MAX_NUM_BAD_IP_ADDRESSES         3
+#define NTOP_DEFAULT_BAD_ACCESS_TIMEOUT  5*60  /* 5 minutes */
 
 #define NTOP_DEFAULT_DONT_TRUST_MAC_ADDR 0
 
@@ -202,7 +203,9 @@ typedef struct ntopGlobals {
 
   /* Administrative */
   char *shortDomainName;
+#if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
   BadGuysAddr weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES];
+#endif
 
 #ifdef MULTITHREADED
   unsigned short numThreads;           /* # of running threads */

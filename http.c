@@ -1987,13 +1987,19 @@ void handleHTTPrequest(struct in_addr from) {
   requestFrom = &from;
   NTOHL(requestFrom->s_addr);
 
+#if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
+   /* Note if the size of the table is zero, we simply nullify all of this
+      code (why bother wasting the work effort
+          Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
+    */
+
   for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
     if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr == from.s_addr) {
       myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.actTime;
       traceEvent(TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
 		 _intoa(from, requestedURL, sizeof(requestedURL)));
       return;
-    } else if((myGlobals.weDontWantToTalkWithYou[i].lastBadAccess+300 /* 5 minutes */) < myGlobals.actTime) {
+    } else if((myGlobals.weDontWantToTalkWithYou[i].lastBadAccess+ NTOP_DEFAULT_BAD_ACCESS_TIMEOUT) < myGlobals.actTime) {
       /*
 	We 'forget' the address of this nasty guy after 5 minutes
 	since its last bad access as we hope that he will be nicer
@@ -2002,6 +2008,7 @@ void handleHTTPrequest(struct in_addr from) {
       memset(&myGlobals.weDontWantToTalkWithYou[i], 0, sizeof(BadGuysAddr));
     }
   }
+#endif
 
   memset(requestedURL, 0, sizeof(requestedURL));
   memset(pw, 0, sizeof(pw));
@@ -2075,6 +2082,13 @@ void handleHTTPrequest(struct in_addr from) {
     if(!usedFork)
       logHTTPaccess(200, &httpRequestedAt, gzipBytesSent);
   } else if(rc == HTTP_FORBIDDEN_PAGE) {
+
+#if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
+   /* Note if the size of the table is zero, we simply nullify all of this
+      code (why bother wasting the work effort
+          Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
+    */
+
     int found = 0;
     
     /* 
@@ -2097,6 +2111,7 @@ void handleHTTPrequest(struct in_addr from) {
       myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr.s_addr = from.s_addr;
       myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].lastBadAccess = myGlobals.actTime;
     }
+#endif
 
     returnHTTPaccessForbidden(0);
   } else if(rc == HTTP_INVALID_PAGE) {

@@ -2183,6 +2183,12 @@ sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread count
   printFeatureConfigInfo(textPrintFlag, "Bad IP Address table size", buf);
 
   if(snprintf(buf, sizeof(buf), 
+              "ntop.h: #define NTOP_DEFAULT_BAD_ACCESS_TIMEOUT %d", 
+              NTOP_DEFAULT_BAD_ACCESS_TIMEOUT) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Bad IP Address timeout (seconds)", buf);
+
+  if(snprintf(buf, sizeof(buf), 
               "ntop.h: #define MAX_HOSTS_CACHE_LEN %d", MAX_HOSTS_CACHE_LEN) < 0)
       BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Hosts Cache table size", buf);
