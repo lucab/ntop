@@ -1647,6 +1647,7 @@ IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId) {
 #ifdef SESSION_PLUGIN
   FlowFilterList *flows = myGlobals.flowsList;
+
   while(flows != NULL) {
     if((flows->pluginStatus.pluginPtr != NULL)
        && (flows->pluginStatus.pluginPtr->sessionFunct != NULL)

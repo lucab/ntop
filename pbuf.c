@@ -614,8 +614,6 @@ static void processIpPkt(const u_char *bp,
   struct timeval tvstrct;
   u_char *theData;
 
-  myGlobals.device[actualDeviceId].ipBytes += length; myGlobals.device[actualDeviceId].ipPkts++;
-
   /* Need to copy this over in case bp isn't properly aligned.
    * This occurs on SunOS 4.x at least.
    * Paul D. Smith <psmith@baynetworks.com>
@@ -623,9 +621,18 @@ static void processIpPkt(const u_char *bp,
   memcpy(&ip, bp, sizeof(struct ip));
   hlen = (u_int)ip.ip_hl * 4;
 
+  myGlobals.device[actualDeviceId].ipPkts++;
+
   if((bp != NULL) && (in_cksum((const u_short *)bp, hlen, 0) != 0)) {
     myGlobals.device[actualDeviceId].rcvdPktStats.badChecksum++;
+    return;
   }
+
+  /* 
+     Fix below courtesy of  
+     Christian Hammers <ch@westend.com>
+  */
+  myGlobals.device[actualDeviceId].ipBytes += ntohs(ip.ip_len); 
 
   if(ip.ip_p == GRE_PROTOCOL_TYPE) {
     /*
@@ -1123,7 +1130,7 @@ static void processIpPkt(const u_char *bp,
 			   dport, udpDataLength,
 			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
 	
-	sendUDPflow(srcHost, dstHost, sport, dport, length, actualDeviceId);	
+	sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip.ip_len), actualDeviceId);	
       }
     }
     break;
@@ -1309,7 +1316,7 @@ static void processIpPkt(const u_char *bp,
 	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
       }
       
-      sendICMPflow(srcHost, dstHost, length, actualDeviceId);
+      sendICMPflow(srcHost, dstHost, ntohs(ip.ip_len), actualDeviceId);
     }
     break;
 
@@ -1318,7 +1325,7 @@ static void processIpPkt(const u_char *bp,
     myGlobals.device[actualDeviceId].ospfBytes += length;
     srcHost->ospfSent += length;
     dstHost->ospfRcvd += length;
-    sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
+    sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
     break;
 
   case IPPROTO_IGMP:
@@ -1326,7 +1333,7 @@ static void processIpPkt(const u_char *bp,
     myGlobals.device[actualDeviceId].igmpBytes += length;
     srcHost->igmpSent += length;
     dstHost->igmpRcvd += length;
-    sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
+    sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
     break;
 
   default:
@@ -1335,7 +1342,7 @@ static void processIpPkt(const u_char *bp,
     sport = dport = 0;
     srcHost->otherSent += length;
     dstHost->otherRcvd += length;
-    sendOTHERflow(srcHost, dstHost, ip.ip_p, length, actualDeviceId);
+    sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
     break;
   }
 
