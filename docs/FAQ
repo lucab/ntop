@@ -1198,6 +1198,32 @@ A. If you are only interested in saving your netflow data in MySQL, use the scri
    (Added, 28Nov2002, from a suggestion by Lubo Kovac, Luboslav.Kovac@dbv-winterthur.de)
 
 
+Q: How does ntop use lsof?
+A: ntop uses lsof to show open files on the ntop host (the IP Traffic | Local usage).
+   It does this by executing:
+
+       lsof -i -n -w
+
+   Note that running lsof requires root privledges, but ntop has shed root before
+   we ever get to lsof.  Accordingly you must set lsof suid root.
+
+   BEFORE YOU DO THAT: You had better understand the security implications!
+       Search the web and check with the lsof people.
+(Added 03Feb2003, Burton)
+
+Q: How does ntop use nmap?
+A: ntop uses nmap to do OS fingerprinting.  What it's doing is this:
+
+       nmap -p 23,21,80,138,139,548 -O <address>
+
+   Note that running nmap requires root privledges, but ntop has shed root before
+   we ever get to nmap.  Accordingly you must set nmap suid root.
+
+   BEFORE YOU DO THAT: You had better understand the security implications!
+       Search the web and check with the nmap people.
+(Added nmap 03Feb2003, Burton)
+
+
 Q. What does the message "URL security(1): ERROR: Found percent in URL...DANGER...
    rejecting request" mean?						 
 A. It means that ntop received a request with a percent sign (%) in it, often used 
