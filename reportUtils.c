@@ -526,7 +526,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_HOST_TRAFFIC:      url = STR_SORT_DATA_HOST_TRAFFIC;      break;
   }
 
-  if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s&showH=%d", url, sign, showHostsMode) < 0)
+  if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?showH=%d&col=%s", url, showHostsMode, sign) < 0)
     BufferTooShort();
   if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?showH=%d&col=", url, showHostsMode) < 0)
     BufferTooShort();
@@ -555,23 +555,23 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case showOnlyLocalHosts:
     snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
 	     "[ <A HREF=%s0>All</A> ]&nbsp;"
-	     "<B>[ <A HREF=%s1>Local Only</A> ]</B>&nbsp;"
+	     "[<B> Local Only </B>]&nbsp;"
 	     "[ <A HREF=%s2>Remote Only</A> ]&nbsp;</p>",
-	     theLink, theLink, theLink);
+	     theLink, theLink);
     break;
   case showOnlyRemoteHosts:
     snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
 	     "[ <A HREF=%s0>All</A> ]&nbsp;"
 	     "[ <A HREF=%s1>Local Only</A> ]&nbsp;"
-	     "<B>[ <A HREF=%s2>Remote Only</A> ]</B>&nbsp;</p>",
-	     theLink, theLink, theLink);
+	     "[<B> Remote Only </B>]&nbsp;</p>",
+	     theLink, theLink);
     break;
   default:
     snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
-	     "<B>[ <A HREF=%s0>All</A> ]</B>&nbsp;"
+	     "[<B> All </B>]&nbsp;"
 	     "[ <A HREF=%s1>Local Only</A> ]&nbsp;"
 	     "[ <A HREF=%s2>Remote Only</A> ]&nbsp;</p>",
-	     theLink, theLink, theLink);
+	     theLink, theLink);
     break;
   }
   sendString(buf);
