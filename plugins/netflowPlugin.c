@@ -299,6 +299,7 @@ static int handleV5Flow(time_t recordActTime,
     return(0);
   }
 
+  myGlobals.actTime = time(NULL);
   recordActTime   = ntohl(recordActTime);
   recordSysUpTime = ntohl(recordSysUpTime);
   
@@ -308,8 +309,8 @@ static int handleV5Flow(time_t recordActTime,
   lastSeen  = (ntohl(record->Last)/1000) + initTime;
 
   /* Sanity check */
-  if(firstSeen > lastSeen)
-    firstSeen = lastSeen;
+  if(firstSeen > lastSeen) firstSeen = lastSeen;
+  if(lastSeen > myGlobals.actTime) lastSeen = myGlobals.actTime;
 
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsProcessed++;
 
