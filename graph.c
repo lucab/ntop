@@ -251,8 +251,14 @@ void drawBar(short width,
   for (i = 0; i<num_points; i++) { 
     // vertical columns
     ymax = vmargin + ysize; 
-    ymin = ymax - (int)(data[i]*yscale); 
-    if(ymin < vmargin) ymin = vmargin;
+
+    if(ymax > (int)(data[i]*yscale)) {
+      ymin = ymax - (int)(data[i]*yscale); 
+      if(ymin < vmargin) ymin = vmargin;
+    }
+    else
+      ymin = vmargin;
+
     xmax = hmargin + (i+1)*base - padding; 
     xmin = hmargin + i*base + padding; 
 
@@ -826,7 +832,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   float p[MAX_NUM_PROTOS];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
-  int i, num=0, explodePieces[MAX_NUM_PROTOS];
+  int i, num=0;
   FILE *fd;
   TrafficCounter traffic, totalIPTraffic, diffTraffic;
   int useFdOpen = 0;
@@ -854,13 +860,6 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
       if(traffic.value > 0) {
 	p[num] = (float)((100*traffic.value)/totalIPTraffic.value);
 	diffTraffic.value += traffic.value;
-
-        if(num == 0)
-          explodePieces[num]=10;
-        else
-          explodePieces[num]=explodePieces[num-1];
-	if (p[num]<5.0) explodePieces[num]+=9; else if (p[num]>10.0) explodePieces[num]=10;
-
 	lbl[num++] = myGlobals.protoIPTrafficInfos[i];
       }
 
@@ -870,14 +869,11 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
   if(num == 0) {
     p[num] = 1;
-    explodePieces[num] = 10;
     lbl[num++] = "Other";
   } else {
     if(diffTraffic.value < totalIPTraffic.value) {
       diffTraffic.value = totalIPTraffic.value - diffTraffic.value;
       p[num] = (float)((100*diffTraffic.value)/totalIPTraffic.value);
-      explodePieces[num]=explodePieces[num-1];
-      if(p[num]<5.0) explodePieces[num]+=9; else if (p[num]>10.0) explodePieces[num]=10;
       lbl[num++] = "Other";
     }
   }
@@ -1144,7 +1140,7 @@ void ipProtoDistribPie(void) {
 void interfaceTrafficPie(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[MAX_NUM_DEVICES];
-  int i, explodePieces[MAX_NUM_DEVICES];
+  int i;
   FILE *fd;
   TrafficCounter totPkts;
   struct pcap_stat pcapStat;
@@ -1160,7 +1156,6 @@ void interfaceTrafficPie(void) {
 	p[i] = (float)pcapStat.ps_recv;
 	totPkts.value += pcapStat.ps_recv;
       }
-      explodePieces[i] = 10*i;
     }
 
   if(totPkts.value == 0)
