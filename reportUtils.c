@@ -89,6 +89,8 @@ void printTableDoubleEntry(char *buf, int bufLen,
   } else if(percentageS > 99.5) {
     int_perc = 100;
     percentageS = 100;
+  } else {
+    int_perc = (int) percentageS + 0.5;
   }
 
   switch(int_perc) {
@@ -130,6 +132,8 @@ void printTableDoubleEntry(char *buf, int bufLen,
   } else if(percentageR > 99.5) {
     int_perc = 100;
     percentageR = 100;
+  } else {
+    int_perc = (int) percentageR + 0.5;
   }
 
   switch(int_perc) {
