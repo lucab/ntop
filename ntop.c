@@ -48,8 +48,10 @@ void handleSigHup(int signalId _UNUSED_) {
    printMutexInfo(&myGlobals.gdbmMutex, "myGlobals.gdbmMutex");
    printMutexInfo(&myGlobals.packetQueueMutex, "myGlobals.packetQueueMutex");
 
+#ifdef ASYNC_ADDRESS_RESOLUTION
    if(myGlobals.numericFlag == 0)
      printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
+#endif
 
   if(myGlobals.isLsofPresent)
      printMutexInfo(&myGlobals.lsofMutex, "myGlobals.lsofMutex");
@@ -858,7 +860,10 @@ RETSIGTYPE cleanup(int signo) {
 
 #ifdef MULTITHREADED
   deleteMutex(&myGlobals.packetQueueMutex);
-  if(myGlobals.numericFlag == 0) deleteMutex(&myGlobals.addressResolutionMutex);
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  if(myGlobals.numericFlag == 0)
+    deleteMutex(&myGlobals.addressResolutionMutex);
+#endif
   deleteMutex(&myGlobals.hostsHashMutex);
   deleteMutex(&myGlobals.graphMutex);
 

@@ -171,7 +171,6 @@ void initNtopGlobals(int argc, char * argv[]) {
 #ifdef ASYNC_ADDRESS_RESOLUTION
   for (i = 0; i < MAX_NUM_DEQUEUE_THREADS; i ++)
     myGlobals.dequeueAddressThreadId[i] = (pthread_t)-1;
-  myGlobals.droppedAddresses.value = 0;
 #endif
 
 #endif /* MULTITHREADED */

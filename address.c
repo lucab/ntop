@@ -59,7 +59,7 @@ void updateHostNameInfo(unsigned long numeric,
 
   /* Search the instance and update its name */
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) 
     accessMutex(&myGlobals.addressResolutionMutex, "updateHostNameInfo");
 #endif
@@ -75,7 +75,7 @@ void updateHostNameInfo(unsigned long numeric,
     }
   }
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) 
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -402,6 +402,7 @@ static void queueAddress(struct in_addr elem) {
 
   if (rc == 0) {
       myGlobals.addressQueueLen++;
+      myGlobals.addressQueueCount++;
       if (myGlobals.addressQueueLen > myGlobals.maxAddressQueueLen)
 	myGlobals.maxAddressQueueLen = myGlobals.addressQueueLen;
 
@@ -632,10 +633,10 @@ void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
   if(buf[0] != '\0') {
     updateHostNameInfo(hostIpAddress.s_addr, buf, actualDeviceId);
   } else {
-#ifndef MULTITHREADED
-    resolveAddress(&hostIpAddress, 0, actualDeviceId);
-#else
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     queueAddress(hostIpAddress);
+#else
+    resolveAddress(&hostIpAddress, 0, actualDeviceId);
 #endif
   }
 }

@@ -3595,11 +3595,11 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
       */
       return(strcasecmp(a->domainHost->fullDomainName, b->domainHost->fullDomainName));
     } else {
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
       if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
 #endif
       rc = strcasecmp(a->domainHost->hostSymIpAddress, b->domainHost->hostSymIpAddress);
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
       if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     }
@@ -3930,7 +3930,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
       char tmpBuf[64], *hostLink;
       int blankId;
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
       if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "getHostIcon");
 #endif
 
@@ -3939,7 +3939,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 
       strncpy(tmpBuf, statsEntry->domainHost->hostSymIpAddress, sizeof(tmpBuf));
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
       if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 

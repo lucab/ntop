@@ -350,7 +350,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   bufIdx = (bufIdx+1)%5;
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) 
     accessMutex(&myGlobals.addressResolutionMutex, "makeHostLink");
 #endif
@@ -367,7 +367,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(snprintf(buf[bufIdx], BUF_SIZE, fmt, el->hostSymIpAddress) < 0)
       BufferTooShort();
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0) 
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -404,7 +404,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     usedEthAddress = 1;
   }
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) 
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -524,7 +524,7 @@ char* getHostName(HostTraffic *el, short cutName) {
 
   bufIdx = (bufIdx+1)%5;
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) 
     accessMutex(&myGlobals.addressResolutionMutex, "getHostName");
 #endif
@@ -554,7 +554,7 @@ char* getHostName(HostTraffic *el, short cutName) {
   } else
     strncpy(buf[bufIdx], el->ethAddressString, 80);
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) 
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -2467,7 +2467,13 @@ void printNtopConfigInfo(int textPrintFlag) {
   if(myGlobals.numericFlag == 0) {
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueueLen) < 0)
       BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Queued", buf);
+    printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.maxAddressQueueLen) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Maximum Queued", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueueCount) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Total Queued", buf);
   }
 #endif
 
@@ -2483,13 +2489,9 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Found in Cache", buf);
 
-#if defined(MULTITHREADED)
-  if(myGlobals.numericFlag == 0) {
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.droppedAddresses) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Dropped", buf);
-  }
-#endif
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffedCount) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "DNS responses sniffed", buf);
 
   /* **** */
 
@@ -2849,7 +2851,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 	printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
 	printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
-#ifdef ASYNC_ADDRESS_RESOLUTION
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
 	if(myGlobals.numericFlag == 0) 
 	  printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 #endif

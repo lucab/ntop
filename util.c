@@ -2484,7 +2484,7 @@ void fillDomainName(HostTraffic *el) {
      || (el->hostSymIpAddress == NULL))
     return;
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0)
     accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
 #endif
@@ -2495,7 +2495,7 @@ void fillDomainName(HostTraffic *el) {
 	 isdigit(el->hostSymIpAddress[0]))) {
     /* NOTE: theDomainHasBeenComputed(el) = 0 */
     el->fullDomainName = el->dotDomainName = "";
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -2541,7 +2541,7 @@ void fillDomainName(HostTraffic *el) {
       el->fullDomainName = el->dotDomainName = "";
     }
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -2564,7 +2564,7 @@ void fillDomainName(HostTraffic *el) {
 
   /* traceEvent(TRACE_INFO, "'%s'\n", el->domainName); */
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0)
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif

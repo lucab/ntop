@@ -730,13 +730,13 @@ int sortHostFctn(const void *_a, const void *_b) {
 
   switch(myGlobals.columnSort) {
   case 1:
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0)
       accessMutex(&myGlobals.addressResolutionMutex, "sortHostFctn");
 #endif
     rc = strcasecmp((*a)->hostSymIpAddress[0] != '\0' ? (*a)->hostSymIpAddress : (*a)->ethAddressString,
 		    (*b)->hostSymIpAddress[0] != '\0' ? (*b)->hostSymIpAddress : (*b)->ethAddressString);
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -904,7 +904,7 @@ int cmpFctn(const void *_a, const void *_b) {
     int rc;
 
     /* Host name */
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0)
       accessMutex(&myGlobals.addressResolutionMutex, "cmpFctn");
 #endif
@@ -919,7 +919,7 @@ int cmpFctn(const void *_a, const void *_b) {
     } else
       rc = strcasecmp((*a)->ethAddressString, (*b)->ethAddressString);
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -1389,14 +1389,14 @@ int cmpMulticastFctn(const void *_a, const void *_b) {
     break; /* NOTREACHED */
 
   default:
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0)
       accessMutex(&myGlobals.addressResolutionMutex, "cmpMulticastFctn");
 #endif
 
     rc = strcmp((*a)->hostSymIpAddress, /* Host name */
 		(*b)->hostSymIpAddress);
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -1521,7 +1521,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
     break;
 
   default: /* Host Name */
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "cmpHostsFctn");
 #endif
 
@@ -1545,7 +1545,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 	name_b = (*b)->ethAddressString;
     }
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
@@ -2914,7 +2914,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   int printedHeader, i;
   char *dynIp, *multihomed;
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "printAllSessionsHTML");
 #endif
 
@@ -2941,7 +2941,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       BufferTooShort();
   }
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 
@@ -2952,18 +2952,18 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(el->hostNumIpAddress[0] != '\0') {
     char *countryIcon, *hostType;
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
     if(myGlobals.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex, "printAllSessions-2");
 #endif
 
     /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
     if(strcmp(el->hostNumIpAddress, el->hostSymIpAddress) != 0) {
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
       if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
       countryIcon = getHostCountryIconURL(el);
     } else {
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
       if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
       countryIcon = "";
@@ -3833,7 +3833,7 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
   static char buf[BUF_SIZE];
   int idx = i*myGlobals.device[myGlobals.actualReportDeviceId].numHosts + j;
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0)
     accessMutex(&myGlobals.addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
 #endif
@@ -3871,7 +3871,7 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
       BufferTooShort();
   }
 
-#ifdef MULTITHREADED
+#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
   if(myGlobals.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 

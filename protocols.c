@@ -627,6 +627,7 @@ u_int16_t processDNSPacket(const u_char *packetData,
       accessMutex(&myGlobals.gdbmMutex, "processDNSPacket");
 #endif
       gdbm_store(myGlobals.gdbm_file, key_data, data_data, GDBM_REPLACE);
+      myGlobals.dnsSniffedCount++;
 #ifdef MULTITHREADED
       releaseMutex(&myGlobals.gdbmMutex);
 #endif

@@ -332,9 +332,6 @@ typedef struct ntopGlobals {
 
   pthread_t handleWebConnectionsThreadId;
 
-#ifdef ASYNC_ADDRESS_RESOLUTION
-  TrafficCounter droppedAddresses;
-#endif
 #endif /* MULTITHREADED */
 
   /* SSL support */
@@ -366,7 +363,9 @@ typedef struct ntopGlobals {
   FlowFilterList *flowsList;
 
   /* Address Resolution */
+  u_long dnsSniffedCount;
 #if defined(ASYNC_ADDRESS_RESOLUTION)
+  u_long addressQueueCount;
   u_int addressQueueLen, maxAddressQueueLen;
 #endif
 
