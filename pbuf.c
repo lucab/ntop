@@ -426,6 +426,7 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   hourId = thisTime->tm_hour % 24 /* just in case... */;;
 
   incrementTrafficCounter(&srcHost->pktSent, 1);
+  incrementTrafficCounter(&srcHost->pktSentSession, 1);
 
   incrementTrafficCounter(&srcHost->last24HoursBytesSent[hourId], length.value);
   incrementTrafficCounter(&dstHost->last24HoursBytesRcvd[hourId], length.value);
@@ -447,9 +448,13 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   }
 
   incrementTrafficCounter(&srcHost->bytesSent, length.value);
-  if(dstHost != NULL) incrementTrafficCounter(&dstHost->bytesRcvd, length.value);
-
-  incrementTrafficCounter(&dstHost->pktRcvd, 1);
+  incrementTrafficCounter(&srcHost->bytesSentSession, length.value);
+  if(dstHost != NULL) {
+      incrementTrafficCounter(&dstHost->bytesRcvd, length.value);
+      incrementTrafficCounter(&dstHost->bytesRcvdSession, length.value);
+      incrementTrafficCounter(&dstHost->pktRcvd, 1);
+      incrementTrafficCounter(&dstHost->pktRcvdSession, 1);
+  }
 
   if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
     addContactedPeers(srcHost, dstHost, actualDeviceId);

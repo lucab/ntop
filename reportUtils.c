@@ -279,6 +279,51 @@ void printTableEntryPercentage(char *buf, int bufLen,
 
 /* ******************************* */
 
+void printFooter(int reportType) {
+  char buf[BUF_SIZE];
+
+  sendString("<CENTER>\n");
+
+  switch(reportType) {
+    case SORT_DATA_RECEIVED_PROTOS:
+    case SORT_DATA_RECEIVED_IP:
+    case SORT_DATA_SENT_PROTOS:
+    case SORT_DATA_SENT_IP:
+    case SORT_DATA_PROTOS:
+    case SORT_DATA_IP:
+    case TRAFFIC_STATS:
+        break;
+
+    case SORT_DATA_RCVD_HOST_TRAFFIC:
+    case SORT_DATA_SENT_HOST_TRAFFIC:
+    case SORT_DATA_HOST_TRAFFIC:      
+        if (snprintf(buf, sizeof(buf), "<BR><TABLE BORDER=\"0\"><TR><TH>Color code:&nbsp;&nbsp;&nbsp;</TH>"
+                   "<TD "TD_BG">&nbsp;&nbsp;0%%&nbsp;&nbsp;</TD>"
+                   "<TD "PCTG_LOW_COLOR">&nbsp;&nbsp;&gt;0%% to %d%%&nbsp;&nbsp;</TD>"
+                   "<TD "PCTG_MID_COLOR">&nbsp;&nbsp;&gt;%d%% to %d%%&nbsp;&nbsp;</TD>"
+                   "<TD "PCTG_HIGH_COLOR">&nbsp;&nbsp;&gt;%d%% to 100%%&nbsp;&nbsp;</TD>"
+                   "<TD>&nbsp;The percentage value is - for a given host - the traffic for that host"
+                   " during that hour divided by the total traffic for that host for the last 24 hours.</TD>"
+                   "</TR></TABLE>\n",
+                   PCTG_LOW,
+                   PCTG_LOW,
+                   PCTG_MID,
+                   PCTG_MID) < 0)
+            BufferTooShort();
+        sendString(buf);
+        break;
+    case SORT_DATA_RECEIVED_THPT:
+    case SORT_DATA_SENT_THPT:
+    case SORT_DATA_THPT:
+        sendString("<P>Peak values are the maximum value for any 10 second interval.<br>Average values are recomputed each 60 seconds, using values accumulated since this run of ntop was started.</P>\n");
+        sendString("<P>Note: Both values are reset each time ntop is restarted.</P>\n");
+        break;
+  }
+  sendString("</CENTER>\n");
+}
+
+/* ******************************* */
+
 void printHeader(int reportType, int revertOrder, u_int column) {
   char buf[BUF_SIZE];
   char *sign, *arrowGif, *arrow[48], *theAnchor[48], *url=NULL;
@@ -298,15 +343,19 @@ void printHeader(int reportType, int revertOrder, u_int column) {
   memset(buf, 0, sizeof(buf));
 
   switch(reportType) {
-  case 0: url = STR_SORT_DATA_RECEIVED_PROTOS; break;
-  case 1: url = STR_SORT_DATA_RECEIVED_IP; break;
-  case 2: url = STR_SORT_DATA_RECEIVED_THPT; break;
-  case 3: url = STR_SORT_DATA_RCVD_HOST_TRAFFIC; break;
-  case 4: url = STR_SORT_DATA_SENT_HOST_TRAFFIC; break;
-  case 5: url = STR_SORT_DATA_SENT_PROTOS; break;
-  case 6: url = STR_SORT_DATA_SENT_IP; break;
-  case 7: url = STR_SORT_DATA_SENT_THPT; break;
-  case 8: url = TRAFFIC_STATS_HTML; break;
+  case SORT_DATA_RECEIVED_PROTOS:   url = STR_SORT_DATA_RECEIVED_PROTOS;   break;
+  case SORT_DATA_RECEIVED_IP:       url = STR_SORT_DATA_RECEIVED_IP;       break;
+  case SORT_DATA_RECEIVED_THPT:     url = STR_SORT_DATA_RECEIVED_THPT;     break;
+  case SORT_DATA_RCVD_HOST_TRAFFIC: url = STR_SORT_DATA_RCVD_HOST_TRAFFIC; break;
+  case SORT_DATA_SENT_HOST_TRAFFIC: url = STR_SORT_DATA_SENT_HOST_TRAFFIC; break;
+  case SORT_DATA_SENT_PROTOS:       url = STR_SORT_DATA_SENT_PROTOS;       break;
+  case SORT_DATA_SENT_IP:           url = STR_SORT_DATA_SENT_IP;           break;
+  case SORT_DATA_SENT_THPT:         url = STR_SORT_DATA_SENT_THPT;         break;
+  case TRAFFIC_STATS:               url = TRAFFIC_STATS_HTML;              break;
+  case SORT_DATA_PROTOS:            url = STR_SORT_DATA_PROTOS;            break;
+  case SORT_DATA_IP:                url = STR_SORT_DATA_IP;                break;
+  case SORT_DATA_THPT:              url = STR_SORT_DATA_THPT;              break;
+  case SORT_DATA_HOST_TRAFFIC:      url = STR_SORT_DATA_HOST_TRAFFIC;      break;
   }
 
   if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
@@ -333,8 +382,9 @@ void printHeader(int reportType, int revertOrder, u_int column) {
   }
 
   switch(reportType) {
-  case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
-  case 5: /* STR_SORT_DATA_SENT_PROTOS */
+  case SORT_DATA_RECEIVED_PROTOS:
+  case SORT_DATA_SENT_PROTOS:
+  case SORT_DATA_PROTOS:
     sendString("<CENTER>\n");
     if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
 		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
@@ -421,8 +471,9 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     sendString(buf);
     break;
 
-  case 1: /* STR_SORT_DATA_RECEIVED_IP */
-  case 6: /* STR_SORT_DATA_SENT_IP */
+  case SORT_DATA_RECEIVED_IP:
+  case SORT_DATA_SENT_IP:
+  case SORT_DATA_IP:
     sendString("<CENTER>\n");
     if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
 		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
@@ -466,8 +517,9 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     sendString(buf);
     break;
 
-  case 3: /* STR_SORT_DATA_RCVD_HOST_TRAFFIC */
-  case 4: /* STR_SORT_DATA_SENT_HOST_TRAFFIC */
+  case SORT_DATA_RCVD_HOST_TRAFFIC:
+  case SORT_DATA_SENT_HOST_TRAFFIC:
+  case SORT_DATA_HOST_TRAFFIC:
     sendString("<CENTER>\n");
     if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR >"
 		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
@@ -485,12 +537,13 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	       "<TH "TH_BG">7<BR>PM</TH><TH "TH_BG">8<BR>PM</TH><TH "TH_BG">9<BR>PM</TH>"
 	       "<TH "TH_BG">10<BR>PM</TH><TH "TH_BG">11<BR>PM</TH>\n");
     break;
-  case 2: /* STR_SORT_DATA_RECEIVED_THPT */
-  case 7: /* STR_SORT_DATA_SENT_THPT */
+  case SORT_DATA_RECEIVED_THPT:
+  case SORT_DATA_SENT_THPT:
+  case SORT_DATA_THPT:
     sendString("<CENTER>\n");
     if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
-		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
-		"<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
+		"<TH "TH_BG" ROWSPAN=\"2\">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
+		"<TH "TH_BG" ROWSPAN=\"2\">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]) < 0)
       BufferTooShort();
     sendString(buf);
@@ -508,17 +561,22 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     if(abs(column) == 6) { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor; }
     else { arrow[5] = "";  theAnchor[5] = htmlAnchor1;}
 
-    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s1>Actual Thpt%s</A></TH>"
-	     "<TH "TH_BG">%s2>Avg Thpt%s</A></TH>"
-	     "<TH "TH_BG">%s3>Peak Thpt%s</A></TH>"
-	    "<TH "TH_BG">%s4>Actual Pkt Thpt%s</A></TH><TH "TH_BG">%s5>Avg Pkt Thpt%s</A></TH>"
-	     "<TH "TH_BG">%s6>Peak Pkt Thpt%s</A></TH>",
+    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\">Throughput (bits per second)</TH>"
+	    "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\">Packet Throughput</TH>"
+            "</TR><TR "TR_ON">") < 0)
+      BufferTooShort();
+    sendString(buf);
+    if(snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s1>Current%s</A></TH>"
+	     "<TH "TH_BG">%s2>Avg%s</A></TH>"
+	     "<TH "TH_BG">%s3>Peak%s</A></TH>"
+	    "<TH "TH_BG">%s4>Current%s</A></TH><TH "TH_BG">%s5>Avg%s</A></TH>"
+	     "<TH "TH_BG">%s6>Peak%s</A></TH>",
 	    theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2],
 	    theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]) < 0)
       BufferTooShort();
     sendString(buf);
     break;
-  case 8: /* TRAFFIC_STATS_HTML */
+  case TRAFFIC_STATS:
     sendString("<CENTER>\n");
     if(snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR "TR_ON">"
 		"<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
@@ -825,7 +883,7 @@ int cmpFctn(const void *_a, const void *_b) {
 
 
   switch(myGlobals.reportKind) {
-  case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
+  case SORT_DATA_RECEIVED_PROTOS:
     switch(myGlobals.columnSort) {
     case 0:
       a_ = (*a)->bytesRcvd.value, b_ = (*b)->bytesRcvd.value;
@@ -879,7 +937,7 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     }
     break;
-  case 1: /* STR_SORT_DATA_RECEIVED_IP */
+  case SORT_DATA_RECEIVED_IP:
     columnProtoId = myGlobals.columnSort - 1;
     if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
       if(columnProtoId <= 0) {
@@ -910,7 +968,7 @@ int cmpFctn(const void *_a, const void *_b) {
       }
     }
     break;
-  case 2: /* STR_SORT_DATA_RECEIVED_THPT */
+  case SORT_DATA_RECEIVED_THPT:
     switch(myGlobals.columnSort) {
     case 1:
       fa_ = (*a)->actualRcvdThpt, fb_ = (*b)->actualRcvdThpt, floatCompare = 1;
@@ -932,11 +990,12 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     }
     break;
-  case 3: /* STR_SORT_DATA_RCVD_HOST_TRAFFIC */
-  case 4: /* STR_SORT_DATA_SENT_HOST_TRAFFIC */
-    /* Npthing */
+  case SORT_DATA_RCVD_HOST_TRAFFIC:
+  case SORT_DATA_SENT_HOST_TRAFFIC:
+  case SORT_DATA_HOST_TRAFFIC:
+    /* Nothing */
     break;
-  case 5: /* STR_SORT_DATA_SENT_PROTOS */
+  case SORT_DATA_SENT_PROTOS:
     switch(myGlobals.columnSort) {
     case 0:
       a_ = (*a)->bytesSent.value, b_ = (*b)->bytesSent.value;
@@ -990,7 +1049,7 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     }
     break;
-  case 6: /* STR_SORT_DATA_SENT_IP */
+  case SORT_DATA_SENT_IP:
     columnProtoId = myGlobals.columnSort - 1;
     if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
       if(columnProtoId <= 0) {
@@ -1021,7 +1080,7 @@ int cmpFctn(const void *_a, const void *_b) {
       }
     }
     break;
-  case 7: /* STR_SORT_DATA_SENT_THPT */
+  case SORT_DATA_SENT_THPT:
     switch(myGlobals.columnSort) {
     case 1:
       fa_ = (*a)->actualSentThpt, fb_ = (*b)->actualSentThpt, floatCompare = 1;
@@ -1043,8 +1102,143 @@ int cmpFctn(const void *_a, const void *_b) {
       break;
     }
     break;
-  case 8: /* TRAFFIC_STATS_HTML */
+  case TRAFFIC_STATS:
     /* Nothing */
+    break;
+  case SORT_DATA_PROTOS:
+    switch(myGlobals.columnSort) {
+    case 0:
+      a_ = (*a)->bytesRcvd.value+(*a)->bytesSent.value, b_ = (*b)->bytesRcvd.value+(*b)->bytesSent.value;
+      break;
+    case 1:
+      a_ = (*a)->tcpRcvdLoc.value + (*a)->tcpRcvdFromRem.value +
+           (*a)->tcpSentLoc.value + (*a)->tcpSentRem.value;
+      b_ = (*b)->tcpRcvdLoc.value + (*b)->tcpRcvdFromRem.value +
+           (*b)->tcpSentLoc.value + (*b)->tcpSentRem.value;
+      break;
+    case 2:
+      a_ = (*a)->udpRcvdLoc.value + (*a)->udpRcvdFromRem.value +
+           (*a)->udpSentLoc.value + (*a)->udpSentRem.value;
+      b_ = (*b)->udpRcvdLoc.value + (*b)->udpRcvdFromRem.value +
+           (*b)->udpSentLoc.value + (*b)->udpSentRem.value;
+      break;
+    case 3:
+      a_ = (*a)->icmpRcvd.value+(*a)->icmpSent.value, b_ = (*b)->icmpRcvd.value+(*b)->icmpSent.value;
+      break;
+    case 4:
+      a_ = (*a)->dlcRcvd.value+(*a)->dlcSent.value, b_ = (*b)->dlcRcvd.value+(*b)->dlcSent.value;
+      break;
+    case 5:
+      a_ = (*a)->ipxRcvd.value+(*a)->ipxSent.value, b_ = (*b)->ipxRcvd.value+(*b)->ipxSent.value;
+      break;
+    case 6:
+      a_ = (*a)->decnetRcvd.value+(*a)->decnetSent.value, b_ = (*b)->decnetRcvd.value+(*b)->decnetSent.value;
+      break;
+    case 7:
+      a_ = (*a)->arp_rarpRcvd.value+(*a)->arp_rarpSent.value;
+      b_ = (*b)->arp_rarpRcvd.value+(*b)->arp_rarpSent.value;
+      break;
+    case 8:
+      a_ = (*a)->appletalkRcvd.value+(*a)->appletalkSent.value;
+      b_ = (*b)->appletalkRcvd.value+(*b)->appletalkSent.value;
+      break;
+    case 9:
+      a_ = (*a)->ospfRcvd.value+(*a)->ospfSent.value, b_ = (*b)->ospfRcvd.value+(*b)->ospfSent.value;
+      break;
+    case 10:
+      a_ = (*a)->netbiosRcvd.value+(*a)->netbiosSent.value;
+      b_ = (*b)->netbiosRcvd.value+(*b)->netbiosSent.value;
+      break;
+    case 11:
+      a_ = (*a)->igmpRcvd.value+(*a)->igmpSent.value, b_ = (*b)->igmpRcvd.value+(*b)->igmpSent.value;
+      break;
+    case 12:
+      a_ = (*a)->osiRcvd.value+(*a)->osiSent.value, b_ = (*b)->osiRcvd.value+(*b)->osiSent.value;
+      break;
+    case 13:
+      a_ = (*a)->qnxRcvd.value+(*a)->qnxSent.value, b_ = (*b)->qnxRcvd.value+(*b)->qnxSent.value;
+      break;
+    case 14:
+      a_ = (*a)->stpRcvd.value+(*a)->stpSent.value, b_ = (*b)->stpRcvd.value+(*b)->stpSent.value;
+      break;
+    case 15:
+      a_ = (*a)->otherRcvd.value+(*a)->otherSent.value, b_ = (*b)->otherRcvd.value+(*b)->otherSent.value;
+      break;
+    }
+    break;
+  case SORT_DATA_IP:
+    columnProtoId = myGlobals.columnSort - 1;
+    if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
+      if(columnProtoId <= 0) {
+        a_ = b_ = 0;
+      } else {
+        a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc.value+
+          (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem.value+
+          (*a)->protoIPTrafficInfos[columnProtoId-1].sentLoc.value+
+          (*a)->protoIPTrafficInfos[columnProtoId-1].sentRem.value;
+        b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc.value+
+          (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem.value+
+          (*b)->protoIPTrafficInfos[columnProtoId-1].sentLoc.value+
+          (*b)->protoIPTrafficInfos[columnProtoId-1].sentRem.value;
+      }
+    } else {
+      a_ = (*a)->ipBytesRcvd.value+(*a)->ipBytesSent.value;
+      b_ = (*b)->ipBytesRcvd.value+(*b)->ipBytesSent.value;
+
+      if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
+        /* other IP */
+        int i;
+
+        for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+          a_val = ((*a)->protoIPTrafficInfos[i].rcvdLoc.value
+                   +(*a)->protoIPTrafficInfos[i].rcvdFromRem.value
+                   +(*a)->protoIPTrafficInfos[i].sentLoc.value
+                   +(*a)->protoIPTrafficInfos[i].sentRem.value);
+          b_val = ((*b)->protoIPTrafficInfos[i].rcvdLoc.value
+                   +(*b)->protoIPTrafficInfos[i].rcvdFromRem.value
+                   +(*b)->protoIPTrafficInfos[i].sentLoc.value
+                   +(*b)->protoIPTrafficInfos[i].sentRem.value);
+
+          /* Better be safe... */
+          if(a_ > a_val) a_ -= a_val; else a_ = 0;
+          if(b_ > b_val) b_ -= b_val; else b_ = 0;
+        }
+      }
+    }
+    break;
+  case SORT_DATA_THPT:
+    switch(myGlobals.columnSort) {
+    case 1:
+      fa_ = (*a)->actualTThpt;
+      fb_ = (*b)->actualTThpt;
+      floatCompare = 1;
+      break;
+    case 2:
+      fa_ = (*a)->averageTThpt;
+      fb_ = (*b)->averageTThpt;
+      floatCompare = 1;
+      break;
+    case 3:
+      fa_ = (*a)->peakTThpt;
+      fb_ = (*b)->peakTThpt;
+      floatCompare = 1;
+      break;
+    case 4:
+      fa_ = (*a)->actualTPktThpt;
+      fb_ = (*b)->actualTPktThpt;
+      floatCompare = 1;
+      break;
+    case 5:
+      fa_ = (*a)->averageTPktThpt;
+      fb_ = (*b)->averageTPktThpt;
+      floatCompare = 1;
+      break;
+    case 6:
+      fa_ = (*a)->peakTPktThpt;
+      fb_ = (*b)->peakTPktThpt;
+      floatCompare = 1;
+      break;
+    }
     break;
   }
 
@@ -1146,38 +1340,55 @@ int cmpMulticastFctn(const void *_a, const void *_b) {
 static char* getBgPctgColor(float pctg) {
   if(pctg == 0)
     return(TD_BG);
-  else if(pctg <= 25)           /* < 25%       */
-    return("BGCOLOR=#C6EEF7");  /* 25% <=> 75% */
-  else if(pctg <= 75)
-    return("BGCOLOR=#C6EFC8");  /* > 75%       */
-  else
-    return("BGCOLOR=#FF3118");
+  else if(pctg <= PCTG_LOW)     /* < 25%       */
+    return(PCTG_LOW_COLOR);
+  else if(pctg <= PCTG_MID)     /* 25% <=> 75% */
+    return(PCTG_MID_COLOR);
+  else                          /* > 75%       */
+    return(PCTG_HIGH_COLOR);
 }
 
 /* ******************************* */
 
-void printHostThtpShort(HostTraffic *el, short dataSent) {
+void printHostThtpShort(HostTraffic *el, int reportType) {
   int i;
   Counter tc;
   char buf[64];
 
   for(i=0, tc=0; i<24; i++) {
-    if(dataSent)
-      tc += el->last24HoursBytesSent[i].value;
-    else
-      tc += el->last24HoursBytesRcvd[i].value;
+    switch(reportType) {
+        case SORT_DATA_RCVD_HOST_TRAFFIC:
+            tc += el->last24HoursBytesRcvd[i].value;
+            break;
+        case SORT_DATA_SENT_HOST_TRAFFIC:
+            tc += el->last24HoursBytesSent[i].value;
+            break;
+        case SORT_DATA_HOST_TRAFFIC:
+        case TRAFFIC_STATS:
+            tc += el->last24HoursBytesRcvd[i].value +
+                  el->last24HoursBytesSent[i].value;
+            break;
+    }
   }
 
   for(i=0; i<24; i++) {
     float pctg;
 
     if(tc > 0) {
-      if(dataSent)
-	pctg = (float)(el->last24HoursBytesSent[i].value*100)/(float)tc;
-      else
-	pctg = (float)(el->last24HoursBytesRcvd[i].value*100)/(float)tc;
-    } else
-      pctg = 0;
+        switch(reportType) {
+            case SORT_DATA_RCVD_HOST_TRAFFIC:
+	        pctg = (float)(el->last24HoursBytesRcvd[i].value*100)/(float)tc;
+                break;
+            case SORT_DATA_SENT_HOST_TRAFFIC:
+	        pctg = (float)(el->last24HoursBytesSent[i].value*100)/(float)tc;
+                break;
+            case SORT_DATA_HOST_TRAFFIC:
+            case TRAFFIC_STATS:
+	        pctg = ( (float)(el->last24HoursBytesRcvd[i].value*100) +
+	                 (float)(el->last24HoursBytesSent[i].value*100) ) / (float)tc;
+                break;
+        }
+    }
 
     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT %s>&nbsp;</TD>",
 		getBgPctgColor(pctg)) < 0) BufferTooShort();

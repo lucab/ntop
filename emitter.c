@@ -765,6 +765,14 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  wrtFloatItm(fDescr, lang, "\t", "averageSentThpt", el->averageSentThpt, ',', numEntries);
 	if(checkFilter(filter, &filterPattern, "peakSentThpt"))
 	  wrtFloatItm(fDescr, lang, "\t", "peakSentThpt",    el->peakSentThpt, ',', numEntries);
+
+        if(checkFilter(filter, &filterPattern, "actualTThpt"))
+          wrtFloatItm(fDescr, lang, "\t", "actualTThpt",  el->actualTThpt, ',', numEntries);
+        if(checkFilter(filter, &filterPattern, "averageTThpt"))
+          wrtFloatItm(fDescr, lang, "\t", "averageTThpt", el->averageTThpt, ',', numEntries);
+        if(checkFilter(filter, &filterPattern, "peakTThpt"))
+          wrtFloatItm(fDescr, lang, "\t", "peakTThpt",    el->peakTThpt, ',', numEntries);
+
 	if(checkFilter(filter, &filterPattern, "actualRcvdPktThpt"))
 	  wrtFloatItm(fDescr, lang, "\t", "actualRcvdPktThpt", el->actualRcvdPktThpt, ',', numEntries);
 	if(checkFilter(filter, &filterPattern, "averageRcvdPktThpt"))
@@ -775,6 +783,16 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	  wrtFloatItm(fDescr, lang, "\t", "actualSentPktThpt", el->actualSentPktThpt, ',', numEntries);
 	if(checkFilter(filter, &filterPattern, "averageSentPktThpt"))
 	  wrtFloatItm(fDescr, lang, "\t", "averageSentPktThpt", el->averageSentPktThpt, ',', numEntries);
+	if(checkFilter(filter, &filterPattern, "peakSentPktThpt"))
+	  wrtFloatItm(fDescr, lang, "\t", "peakSentPktThpt", el->peakSentPktThpt, ',', numEntries);
+
+        if(checkFilter(filter, &filterPattern, "actualTPktThpt"))
+          wrtFloatItm(fDescr, lang, "\t", "actualTPktThpt", el->actualTPktThpt, ',', numEntries);
+        if(checkFilter(filter, &filterPattern, "averageTPktThpt"))
+          wrtFloatItm(fDescr, lang, "\t", "averageTPktThpt",el->averageTPktThpt, ',', numEntries);
+        if(checkFilter(filter, &filterPattern, "peakTPktThpt"))
+          wrtFloatItm(fDescr, lang, "\t", "peakTPktThpt", el->peakTPktThpt, ',', numEntries);
+
       }
 
       if(checkFilter(filter, &filterPattern, "ipBytesSent"))

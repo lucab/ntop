@@ -865,6 +865,13 @@ typedef struct portMapper {
 #define REFRESH_TIME              120
 #define MIN_REFRESH_TIME          15
 
+/* for getBgPctgColor() in reportUtils.c */
+
+#define PCTG_LOW         25           /* % */
+#define PCTG_LOW_COLOR   "BGCOLOR=#C6EEF7"
+#define PCTG_MID         75           /* % */
+#define PCTG_MID_COLOR   "BGCOLOR=#C6EFC8"
+#define PCTG_HIGH_COLOR  "BGCOLOR=#FF3118"
 
 #if defined(MULTITHREADED)
 # ifndef WIN32
@@ -2004,20 +2011,22 @@ typedef struct hostTraffic {
   u_short          numIpxNodeTypes, ipxNodeType[MAX_NODE_TYPES];
 
   fd_set           flags;
-  TrafficCounter   pktSent, pktRcvd,
+  TrafficCounter   pktSent, pktRcvd, pktSentSession, pktRcvdSession,
                    pktDuplicatedAckSent, pktDuplicatedAckRcvd;
   TrafficCounter   lastPktSent, lastPktRcvd;
   TrafficCounter   pktBroadcastSent, bytesBroadcastSent;
   TrafficCounter   pktMulticastSent, bytesMulticastSent,
                    pktMulticastRcvd, bytesMulticastRcvd;
   TrafficCounter   lastBytesSent, lastHourBytesSent,
-                   bytesSent, bytesSentLoc, bytesSentRem;
+                   bytesSent, bytesSentLoc, bytesSentRem, bytesSentSession;
   TrafficCounter   lastBytesRcvd, lastHourBytesRcvd, bytesRcvd,
-                   bytesRcvdLoc, bytesRcvdFromRem;
+                   bytesRcvdLoc, bytesRcvdFromRem, bytesRcvdSession;
   float            actualRcvdThpt, lastHourRcvdThpt, averageRcvdThpt, peakRcvdThpt,
-                   actualSentThpt, lastHourSentThpt, averageSentThpt, peakSentThpt;
+                   actualSentThpt, lastHourSentThpt, averageSentThpt, peakSentThpt,
+                   actualTThpt, averageTThpt, peakTThpt;
   float            actualRcvdPktThpt, averageRcvdPktThpt, peakRcvdPktThpt,
-                   actualSentPktThpt, averageSentPktThpt, peakSentPktThpt;
+                   actualSentPktThpt, averageSentPktThpt, peakSentPktThpt,
+                   actualTPktThpt, averageTPktThpt, peakTPktThpt;
   unsigned short   actBandwidthUsage;
   TrafficCounter   lastCounterBytesSent, last24HoursBytesSent[25], lastDayBytesSent,
                    lastCounterBytesRcvd, last24HoursBytesRcvd[25], lastDayBytesRcvd;

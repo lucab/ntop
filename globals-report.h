@@ -70,13 +70,14 @@ extern void printTableEntryPercentage(char *buf, int bufLen,
 extern void printSectionTitle(char *text);
 extern void printFlagedWarning(char *text);
 extern void printHeader(int reportType, int revertOrder, u_int column);
+extern void printFooter(int reportType);
 extern char* getOSFlag(char* theOsName, int showOsName);
 extern int sortHostFctn(const void *_a, const void *_b);
 extern int cmpUsersTraffic(const void *_a, const void *_b);
 extern int cmpProcesses(const void *_a, const void *_b);
 extern int cmpFctn(const void *_a, const void *_b);
 extern int cmpMulticastFctn(const void *_a, const void *_b);
-extern void printHostThtpShort(HostTraffic *el, short dataSent);
+extern void printHostThtpShort(HostTraffic *el, int reportType);
 extern int cmpHostsFctn(const void *_a, const void *_b);
 extern void printPacketStats(HostTraffic *el, int actualDeviceId);
 extern void printHostTrafficStats(HostTraffic *el, int actualDeviceId);
@@ -145,10 +146,7 @@ extern void fillDomainName(HostTraffic *el);
 extern void printNtopConfigInfo(int textPrintFlag);
 extern void printTrafficStatistics();
 extern void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId);
-extern int haveTrafficHistory();
 extern void printTrafficStatistics();
-extern int haveTrafficHistory();
-extern int haveTrafficHistory();
 extern void printASList(unsigned int deviceId);
 
 /* webInterface.c */
@@ -164,7 +162,6 @@ extern void switchNwInterface(int _interface);
 extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printNtopConfigHInfo(int textPrintFlag);
-extern void initWeb();
 
 #ifdef HAVE_GDCHART
 
@@ -202,12 +199,33 @@ extern int out_graph(short gifwidth,
 
 /* **************************** */
 
+#define TRAFFIC_STATS                   0
+#define SORT_DATA_RECEIVED_PROTOS       1
+#define SORT_DATA_RECEIVED_IP           2
+#define SORT_DATA_RECEIVED_THPT         3
+#define SORT_DATA_RCVD_HOST_TRAFFIC     4
+#define SORT_DATA_SENT_PROTOS           5
+#define SORT_DATA_SENT_IP               6
+#define SORT_DATA_SENT_THPT             7
+#define SORT_DATA_SENT_HOST_TRAFFIC     8
+#define SORT_DATA_PROTOS                9
+#define SORT_DATA_IP                    10
+#define SORT_DATA_THPT                  11
+#define SORT_DATA_HOST_TRAFFIC          12
+
 #define STR_SORT_DATA_RECEIVED_PROTOS   "sortDataReceivedProtos.html"
 #define STR_SORT_DATA_RECEIVED_IP       "sortDataReceivedIP.html"
 #define STR_SORT_DATA_RECEIVED_THPT     "sortDataReceivedThpt.html"
+#define STR_SORT_DATA_RCVD_HOST_TRAFFIC "dataRcvdHostTraffic.html"
 #define STR_SORT_DATA_SENT_PROTOS       "sortDataSentProtos.html"
 #define STR_SORT_DATA_SENT_IP           "sortDataSentIP.html"
 #define STR_SORT_DATA_SENT_THPT         "sortDataSentThpt.html"
+#define STR_SORT_DATA_SENT_HOST_TRAFFIC "dataSentHostTraffic.html"
+#define STR_SORT_DATA_PROTOS            "sortDataProtos.html"
+#define STR_SORT_DATA_IP                "sortDataIP.html"
+#define STR_SORT_DATA_THPT              "sortDataThpt.html"
+#define STR_SORT_DATA_HOST_TRAFFIC      "dataHostTraffic.html"
+
 #define STR_SORT_DATA_THPT_STATS        "thptStats.html"
 #define STR_THPT_STATS_MATRIX           "thptStatsMatrix.html"
 #define STR_DOMAIN_STATS                "domainTrafficStats.html"
@@ -226,8 +244,6 @@ extern int out_graph(short gifwidth,
 #define TEXT_INFO_NTOP_HTML             "textinfo.html"
 #define TRAFFIC_STATS_HTML              "trafficStats.html"
 #define NW_EVENTS_HTML                  "networkEvents.html"
-#define STR_SORT_DATA_RCVD_HOST_TRAFFIC "dataRcvdHostTraffic.html"
-#define STR_SORT_DATA_SENT_HOST_TRAFFIC "dataSentHostTraffic.html"
 #define SWITCH_NIC_HTML                 "switch.html"
 #define CHANGE_FILTER_HTML              "changeFilter.html"
 #define FILTER_INFO_HTML                "filterInfo.html"

@@ -209,6 +209,9 @@ void updateDeviceThpt(int deviceToUpdate) {
 	if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
 	el->actualSentThpt       = (float)(el->bytesSent.value-el->lastBytesSent.value)/timeDiff;
 	if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
+	el->actualTThpt          = (float)(el->bytesRcvd.value-el->lastBytesRcvd.value +
+                                           el->bytesSent.value-el->lastBytesSent.value)/timeDiff;
+	if(el->peakTThpt         < el->actualTThpt) el->peakTThpt = el->actualTThpt;
 	el->lastBytesSent        = el->bytesSent;
 	el->lastBytesRcvd        = el->bytesRcvd;
 
@@ -218,16 +221,23 @@ void updateDeviceThpt(int deviceToUpdate) {
 	if(el->peakRcvdPktThpt   < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
 	el->actualSentPktThpt    = (float)(el->pktSent.value-el->lastPktSent.value)/timeDiff;
 	if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
+	el->actualTPktThpt       = (float)(el->pktRcvd.value-el->lastPktRcvd.value+
+                                           el->pktSent.value-el->lastPktSent.value)/timeDiff;
+	if(el->peakTPktThpt      < el->actualTPktThpt) el->peakTPktThpt = el->actualTPktThpt;
 	el->lastPktSent          = el->pktSent;
 	el->lastPktRcvd          = el->pktRcvd;
 
 	/* ******************************** */
 
 	if(updateMinThpt) {
-	  el->averageRcvdThpt    = ((float)el->bytesRcvd.value)/totalTime;
-	  el->averageSentThpt    = ((float)el->bytesSent.value)/totalTime;
-	  el->averageRcvdPktThpt = ((float)el->pktRcvd.value)/totalTime;
-	  el->averageSentPktThpt = ((float)el->pktSent.value)/totalTime;
+	  el->averageRcvdThpt    = ((float)el->bytesRcvdSession.value)/totalTime;
+	  el->averageSentThpt    = ((float)el->bytesSentSession.value)/totalTime;
+	  el->averageTThpt       = ((float)el->bytesRcvdSession.value+
+                                    (float)el->bytesSentSession.value)/totalTime;
+	  el->averageRcvdPktThpt = ((float)el->pktRcvdSession.value)/totalTime;
+	  el->averageSentPktThpt = ((float)el->pktSentSession.value)/totalTime;
+	  el->averageTPktThpt    = ((float)el->pktRcvdSession.value+
+                                    (float)el->pktSentSession.value)/totalTime;
 
 	  if((topSentIdx == NO_PEER) 
 	     || (myGlobals.device[deviceToUpdate].hash_hostTraffic[topSentIdx] == NULL)) {

@@ -1379,6 +1379,16 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       sendString("<li><a href="STR_SORT_DATA_SENT_HOST_TRAFFIC" target=area "
 		 "ALT=\"Data Sent Host Traffic\">Traffic</a></li></ul></li>\n");
 
+      sendString("<li>Total Data<ul>");
+      sendString("<li><a href="STR_SORT_DATA_PROTOS" target=area "
+		 "ALT=\"Data (all protocols)\">All Protoc.</a></li>\n");
+      sendString("<li><a href="STR_SORT_DATA_IP" target=area "
+		 "ALT=\"IP Data\">IP</a></li>\n");
+      sendString("<li><a href="STR_SORT_DATA_THPT" target=area "
+		 "ALT=\"Data Throughput\">Thpt</a></li></ul></li>\n");
+      sendString("<li><a href="STR_SORT_DATA_HOST_TRAFFIC" target=area "
+		 "ALT=\"Data Host Traffic\">Traffic</a></li></ul></li>\n");
+
       sendString("<li><a href="STR_MULTICAST_STATS" target=area ALT=\"Multicast Stats\">"
 		 "Multicast Stats</a></li>\n");
       sendString("<li><a href=trafficStats.html target=area ALT=\"Traffic Statistics\">"
@@ -1478,10 +1488,10 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_PROTOS,
 		      strlen(STR_SORT_DATA_RECEIVED_PROTOS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostsTraffic(0, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_PROTOS);
+      printHostsTraffic(SORT_DATA_RECEIVED_PROTOS, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_PROTOS);
     } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_IP, strlen(STR_SORT_DATA_RECEIVED_IP)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostsTraffic(1, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_IP);
+      printHostsTraffic(SORT_DATA_RECEIVED_IP, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_IP);
     } else if(strncmp(pageName, STR_SORT_DATA_THPT_STATS, strlen(STR_SORT_DATA_THPT_STATS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printThptStats(sortedColumn);
@@ -1491,28 +1501,42 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     } else if(strncmp(pageName, STR_SORT_DATA_RECEIVED_THPT, strlen(STR_SORT_DATA_RECEIVED_THPT)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-      printHostsTraffic(2, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_THPT);
+      printHostsTraffic(SORT_DATA_RECEIVED_THPT, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RECEIVED_THPT);
     } else if(strncmp(pageName, STR_SORT_DATA_RCVD_HOST_TRAFFIC, strlen(STR_SORT_DATA_RCVD_HOST_TRAFFIC)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-      printHostsTraffic(3, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RCVD_HOST_TRAFFIC);
+      printHostsTraffic(SORT_DATA_RCVD_HOST_TRAFFIC, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_RCVD_HOST_TRAFFIC);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_HOST_TRAFFIC, strlen(STR_SORT_DATA_SENT_HOST_TRAFFIC)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-      printHostsTraffic(4, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_HOST_TRAFFIC);
+      printHostsTraffic(SORT_DATA_SENT_HOST_TRAFFIC, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_HOST_TRAFFIC);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_PROTOS, strlen(STR_SORT_DATA_SENT_PROTOS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostsTraffic(5, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_PROTOS);
+      printHostsTraffic(SORT_DATA_SENT_PROTOS, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_PROTOS);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_IP, strlen(STR_SORT_DATA_SENT_IP)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printHostsTraffic(6, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_IP);
+      printHostsTraffic(SORT_DATA_SENT_IP, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_IP);
     } else if(strncmp(pageName, STR_SORT_DATA_SENT_THPT, strlen(STR_SORT_DATA_SENT_THPT)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
-      printHostsTraffic(7, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_THPT);
+      printHostsTraffic(SORT_DATA_SENT_THPT, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_SENT_THPT);
     } else if(strncmp(pageName, HOSTS_INFO_HTML, strlen(HOSTS_INFO_HTML)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printHostsInfo(sortedColumn, revertOrder, pageNum);
+    } else if(strncmp(pageName, STR_SORT_DATA_PROTOS, strlen(STR_SORT_DATA_PROTOS)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHostsTraffic(SORT_DATA_PROTOS, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_PROTOS);
+    } else if(strncmp(pageName, STR_SORT_DATA_IP, strlen(STR_SORT_DATA_IP)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      printHostsTraffic(SORT_DATA_IP, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_IP);
+    } else if(strncmp(pageName, STR_SORT_DATA_THPT, strlen(STR_SORT_DATA_THPT)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      printHostsTraffic(SORT_DATA_THPT, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_THPT);
+    } else if(strncmp(pageName, STR_SORT_DATA_HOST_TRAFFIC, strlen(STR_SORT_DATA_HOST_TRAFFIC)) == 0) {
+      sendHTTPHeader(HTTP_TYPE_HTML, 0);
+      if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+      printHostsTraffic(SORT_DATA_HOST_TRAFFIC, sortedColumn, revertOrder, pageNum, STR_SORT_DATA_HOST_TRAFFIC);
     } else if(strncmp(pageName, PROCESS_INFO_HTML, strlen(PROCESS_INFO_HTML)) == 0) {
       if(myGlobals.isLsofPresent) {
 	sendHTTPHeader(HTTP_TYPE_HTML, 0);

@@ -639,9 +639,9 @@ void printHostsTraffic(int reportType,
   HostTraffic *el;
   HostTraffic** tmpTable;
   char buf[BUF_SIZE];
-  float sentPercent=0, rcvdPercent=0;
-  Counter totIpBytesSent=0, totIpBytesRcvd=0;
-  Counter totEthBytesSent=0, totEthBytesRcvd=0;
+  float sentPercent=0, rcvdPercent=0, totPercent=0;
+  Counter totIpBytesSent=0, totIpBytesRcvd=0, totIpBytes=0;
+  Counter totEthBytesSent=0, totEthBytesRcvd=0, totEthBytes=0;
 
   strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
@@ -651,17 +651,23 @@ void printHostsTraffic(int reportType,
   memset(tmpTable, 0, myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
   switch(reportType) {
-  case 0:
-  case 1:
-  case 2:
-  case 3:
+  case SORT_DATA_RECEIVED_PROTOS:
+  case SORT_DATA_RECEIVED_IP:
+  case SORT_DATA_RECEIVED_THPT:
+  case SORT_DATA_RCVD_HOST_TRAFFIC:
     snprintf(buf, sizeof(buf), "Network Traffic: Data Received");
     break;
-  case 4:
-  case 5:
-  case 6:
-  case 7:
+  case SORT_DATA_SENT_PROTOS:
+  case SORT_DATA_SENT_IP:
+  case SORT_DATA_SENT_THPT:
+  case SORT_DATA_SENT_HOST_TRAFFIC:
     snprintf(buf, sizeof(buf), "Network Traffic: Data Sent");
+    break;
+  case SORT_DATA_PROTOS:
+  case SORT_DATA_IP:
+  case SORT_DATA_THPT:
+  case SORT_DATA_HOST_TRAFFIC:
+    snprintf(buf, sizeof(buf), "Network Traffic: Total Data (Sent+Received)");
     break;
   }
 
@@ -674,8 +680,9 @@ void printHostsTraffic(int reportType,
        && (broadcastHost(el) == 0)) {
       if((myGlobals.sortSendMode && (el->bytesSent.value > 0))
 	 || ((!myGlobals.sortSendMode) && (el->bytesRcvd.value > 0))) {
-	if(((reportType == 1    /* STR_SORT_DATA_RECEIVED_IP */)
-	    || (reportType == 6 /* STR_SORT_DATA_SENT_IP     */))
+	if(((reportType == SORT_DATA_RECEIVED_IP)
+	    || (reportType == SORT_DATA_SENT_IP)
+	    || (reportType == SORT_DATA_IP))
 	   && (el->hostNumIpAddress[0] == '\0')) continue;
 	tmpTable[numEntries++]=el;
       }
@@ -698,20 +705,6 @@ void printHostsTraffic(int reportType,
     else
       myGlobals.columnSort = sortedColumn;
 
-    /*
-       reportType:
-
-        0 STR_SORT_DATA_RECEIVED_PROTOS
-        1 STR_SORT_DATA_RECEIVED_IP
-        2 STR_SORT_DATA_RECEIVED_THPT
-	3 STR_SORT_DATA_RCVD_HOST_TRAFFIC
-	4 STR_SORT_DATA_SENT_HOST_TRAFFIC
-        5 STR_SORT_DATA_SENT_PROTOS
-        6 STR_SORT_DATA_SENT_IP
-        7 STR_SORT_DATA_SENT_THPT
-        8 TRAFFIC_STATS_HTML
-    */
-
 #ifdef DEBUG
     traceEvent(TRACE_INFO, ">reportType=%d/sortedColumn=%d/myGlobals.columnSort=%d<\n",
 	       reportType, sortedColumn, myGlobals.columnSort);
@@ -723,41 +716,67 @@ void printHostsTraffic(int reportType,
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
 
     switch(reportType) {
-    case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
-    case 5: /* STR_SORT_DATA_SENT_PROTOS */
+    case SORT_DATA_RECEIVED_PROTOS:
+    case SORT_DATA_SENT_PROTOS:
       totEthBytesSent = totEthBytesRcvd = 0;
 
       for(idx=0; idx<numEntries; idx++) {
-	if(tmpTable[idx] != NULL) {
-	  totEthBytesSent += tmpTable[idx]->bytesSent.value;
-	  totEthBytesRcvd += tmpTable[idx]->bytesRcvd.value;
-	}
+        if(tmpTable[idx] != NULL) {
+          totEthBytesSent += tmpTable[idx]->bytesSent.value;
+          totEthBytesRcvd += tmpTable[idx]->bytesRcvd.value;
+        }
       }
 
       /* Avoid core dumps */
       if(totEthBytesSent == 0) totEthBytesSent = 1;
       if(totEthBytesRcvd == 0) totEthBytesRcvd = 1;
       break;
-    case 1: /* STR_SORT_DATA_RECEIVED_IP */
-    case 6: /* STR_SORT_DATA_SENT_IP */
+    case SORT_DATA_PROTOS:
+      totEthBytes = 0;
+
+      for(idx=0; idx<numEntries; idx++) {
+        if(tmpTable[idx] != NULL) {
+          totEthBytes += tmpTable[idx]->bytesSent.value +
+                         tmpTable[idx]->bytesRcvd.value;
+        }
+      }
+
+      /* Avoid core dumps */
+      if(totEthBytes == 0) totEthBytes = 1;
+      break;
+    case SORT_DATA_RECEIVED_IP:
+    case SORT_DATA_SENT_IP:
       totIpBytesSent = totIpBytesRcvd = 0;
 
       for(idx=0; idx<numEntries; idx++) {
-	if(tmpTable[idx] != NULL) {
-	  totIpBytesSent += tmpTable[idx]->ipBytesSent.value;
-	  totIpBytesRcvd += tmpTable[idx]->ipBytesRcvd.value;
-	}
+        if(tmpTable[idx] != NULL) {
+          totIpBytesSent += tmpTable[idx]->ipBytesSent.value;
+          totIpBytesRcvd += tmpTable[idx]->ipBytesRcvd.value;
+        }
       }
 
       /* Avoid core dumps */
       if(totIpBytesSent == 0) totIpBytesSent = 1;
       if(totIpBytesRcvd == 0) totIpBytesRcvd = 1;
       break;
+    case SORT_DATA_IP:
+      totIpBytes = 0;
+
+      for(idx=0; idx<numEntries; idx++) {
+        if(tmpTable[idx] != NULL) {
+          totIpBytes += tmpTable[idx]->ipBytesSent.value +
+                        tmpTable[idx]->ipBytesRcvd.value;
+        }
+      }
+
+      /* Avoid core dumps */
+      if(totIpBytes == 0) totIpBytes = 1;
+      break;
     }
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "totIpBytesSent=%u, totIpBytesRcvd=%u", 
-	       totIpBytesSent, totIpBytesRcvd);
+    traceEvent(TRACE_INFO, "totIpBytesSent=%u, totIpBytesRcvd=%u totIpBytes=%u", 
+	       totIpBytesSent, totIpBytesRcvd, totIpBytes);
 #endif
 
     for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
@@ -771,21 +790,29 @@ void printHostsTraffic(int reportType,
 
       if(el != NULL) {
 	switch(reportType) {
-        case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
-        case 5: /* STR_SORT_DATA_SENT_PROTOS */
+        case SORT_DATA_RECEIVED_PROTOS:
+        case SORT_DATA_SENT_PROTOS:
 	  sentPercent = (100*(float)el->bytesSent.value)/totEthBytesSent;
 	  rcvdPercent = (100*(float)el->bytesRcvd.value)/totEthBytesRcvd;
 	  break;
-	case 1: /* STR_SORT_DATA_RECEIVED_IP */
-        case 6: /* STR_SORT_DATA_SENT_IP */
+        case SORT_DATA_PROTOS:
+	  totPercent = (100*(float) (el->bytesSent.value + el->bytesRcvd.value) )/totEthBytes;
+	  break;
+	case SORT_DATA_RECEIVED_IP:
+        case SORT_DATA_SENT_IP:
 	  sentPercent = (100*(float)el->ipBytesSent.value)/totIpBytesSent;
 	  rcvdPercent = (100*(float)el->ipBytesRcvd.value)/totIpBytesRcvd;
 	  break;
-	case 2: /* STR_SORT_DATA_RECEIVED_THPT */
-	case 3: /* STR_SORT_DATA_RCVD_HOST_TRAFFIC */
-	case 4: /* STR_SORT_DATA_SENT_HOST_TRAFFIC */
-        case 7: /* STR_SORT_DATA_SENT_THPT */
-        case 8: /* TRAFFIC_STATS_HTML */
+        case SORT_DATA_IP:
+	  totPercent = (100*(float) (el->ipBytesSent.value + el->ipBytesRcvd.value) )/totIpBytes;
+	  break;
+	case SORT_DATA_RECEIVED_THPT:
+	case SORT_DATA_RCVD_HOST_TRAFFIC:
+	case SORT_DATA_SENT_HOST_TRAFFIC:
+        case SORT_DATA_SENT_THPT:
+        case TRAFFIC_STATS:
+	case SORT_DATA_HOST_TRAFFIC:
+        case SORT_DATA_THPT:
 	  sentPercent = rcvdPercent = 0;
 	  break;
 	}
@@ -797,7 +824,7 @@ void printHostsTraffic(int reportType,
 	strncpy(webHostName, makeHostLink(el, LONG_FORMAT, 0, 1), sizeof(webHostName));
 
 	switch(reportType) {
-	case 0: /* STR_SORT_DATA_RECEIVED_PROTOS */
+	case SORT_DATA_RECEIVED_PROTOS:
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -839,7 +866,7 @@ void printHostsTraffic(int reportType,
 
 	  sendString(buf);
 	  break;
-	case 5: /* STR_SORT_DATA_SENT_PROTOS */
+	case SORT_DATA_SENT_PROTOS:
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -880,7 +907,51 @@ void printHostsTraffic(int reportType,
 
 	  sendString(buf);
 	  break;
-	case 1: /* STR_SORT_DATA_RECEIVED_IP */
+        case SORT_DATA_PROTOS:
+          if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+                      getRowColor(), webHostName,
+                      formatBytes(el->bytesSent.value+el->bytesRcvd.value, 1), 
+                                  totPercent, myGlobals.separator,
+                      formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value+
+                                  el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1),
+                      formatBytes(el->udpSentLoc.value+el->udpSentRem.value+
+                                  el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1),
+                      formatBytes(el->icmpSent.value+el->icmpRcvd.value, 1),
+                      formatBytes(el->dlcSent.value+el->dlcRcvd.value, 1),
+                      formatBytes(el->ipxSent.value+el->ipxRcvd.value, 1),
+                      formatBytes(el->decnetSent.value+el->decnetRcvd.value, 1),
+                      formatBytes(el->arp_rarpSent.value+el->arp_rarpRcvd.value, 1),
+                      formatBytes(el->appletalkSent.value+el->appletalkRcvd.value, 1)
+                      ) < 0) BufferTooShort();
+
+          sendString(buf);
+
+          if(snprintf(buf, sizeof(buf),
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+                      formatBytes(el->ospfSent.value+el->ospfRcvd.value, 1),
+                      formatBytes(el->netbiosSent.value+el->netbiosRcvd.value, 1),
+                      formatBytes(el->igmpSent.value+el->igmpRcvd.value, 1),
+                      formatBytes(el->osiSent.value+el->osiRcvd.value, 1),
+                      formatBytes(el->qnxSent.value+el->qnxRcvd.value, 1),
+                      formatBytes(el->stpSent.value+el->stpRcvd.value, 1),
+                      formatBytes(el->otherSent.value+el->otherRcvd.value, 1)
+                      ) < 0) BufferTooShort();
+
+          sendString(buf);
+          break;
+	case SORT_DATA_RECEIVED_IP:
 	  {
 	    Counter totalIPTraffic=0;
 
@@ -912,7 +983,7 @@ void printHostsTraffic(int reportType,
 	    sendString(buf);
 	  }
 	  break;
-	case 6: /* STR_SORT_DATA_SENT_IP */
+	case SORT_DATA_SENT_IP:
 	  {
 	    Counter totalIPTraffic=0;
 
@@ -944,7 +1015,44 @@ void printHostsTraffic(int reportType,
 	    sendString(buf);
 	  }
 	  break;
-	case 2: /* STR_SORT_DATA_RECEIVED_THPT */
+        case SORT_DATA_IP:
+          {
+            Counter totalIPTraffic=0;
+
+            if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+                        "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
+                        getRowColor(), webHostName,
+                        formatBytes(el->ipBytesSent.value+el->ipBytesRcvd.value, 1), 
+                                    totPercent, myGlobals.separator) < 0)
+              BufferTooShort();
+            sendString(buf);
+
+            for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+              totalIPTraffic += el->protoIPTrafficInfos[i].sentLoc.value+
+                                el->protoIPTrafficInfos[i].rcvdLoc.value+
+                                el->protoIPTrafficInfos[i].sentRem.value+
+                                el->protoIPTrafficInfos[i].rcvdFromRem.value;
+              if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+                          formatBytes(el->protoIPTrafficInfos[i].sentLoc.value+
+                                      el->protoIPTrafficInfos[i].rcvdLoc.value+
+                                      el->protoIPTrafficInfos[i].sentRem.value+
+                                      el->protoIPTrafficInfos[i].rcvdFromRem.value, 1)) < 0)
+                BufferTooShort();
+              sendString(buf);
+            }
+
+            /* Rounding may cause troubles */
+            if(el->ipBytesSent.value+el->ipBytesRcvd.value > totalIPTraffic)
+              totalIPTraffic = el->ipBytesSent.value + el->ipBytesRcvd.value - totalIPTraffic;
+            else
+              totalIPTraffic = 0;
+            if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+                        formatBytes(totalIPTraffic, 1)) < 0)
+              BufferTooShort();
+            sendString(buf);
+          }
+          break;
+	case SORT_DATA_RECEIVED_THPT:
 	  {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -964,36 +1072,57 @@ void printHostsTraffic(int reportType,
 	    sendString(buf);
 	  }
 	  break;
-	case 7: /* STR_SORT_DATA_SENT_THPT */
-	  {
-	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
-			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
-			getRowColor(), webHostName,
-			formatThroughput(el->actualSentThpt),
-			formatThroughput(el->averageSentThpt),
-			formatThroughput(el->peakSentThpt),
-			el->actualSentPktThpt,
-			el->averageSentPktThpt,
-			el->peakSentPktThpt) < 0)
-	      BufferTooShort();
-	    sendString(buf);
-	  }
-	  break;
-	case 3: /* STR_SORT_DATA_RCVD_HOST_TRAFFIC */
-	case 4: /* STR_SORT_DATA_SENT_HOST_TRAFFIC */
-	case 8: /* TRAFFIC_STATS_HTML */
-	  {
-	    if(snprintf(buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName) < 0)
-	      BufferTooShort();
-	    sendString(buf);
-	    printHostThtpShort(el, 1);
-	  }
-	  break;
+        case SORT_DATA_SENT_THPT:
+          {
+            if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+                        "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                        "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                        "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                        "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
+                        "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
+                        "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
+                        getRowColor(), webHostName,
+                        formatThroughput(el->actualSentThpt),
+                        formatThroughput(el->averageSentThpt),
+                        formatThroughput(el->peakSentThpt),
+                        el->actualSentPktThpt,
+                        el->averageSentPktThpt,
+                        el->peakSentPktThpt) < 0)
+              BufferTooShort();
+            sendString(buf);
+          }
+          break;
+        case SORT_DATA_THPT:
+          {
+            if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
+                        "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                        "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                        "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                        "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
+                        "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
+                        "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
+                        getRowColor(), webHostName,
+                        formatThroughput(el->actualTThpt),
+                        formatThroughput(el->averageTThpt),
+                        formatThroughput(el->peakTThpt),
+                        el->actualTPktThpt,
+                        el->averageTPktThpt,
+                        el->peakTPktThpt) < 0)
+              BufferTooShort();
+            sendString(buf);
+          }
+          break;
+	case SORT_DATA_RCVD_HOST_TRAFFIC:
+	case SORT_DATA_SENT_HOST_TRAFFIC:
+	case SORT_DATA_HOST_TRAFFIC:
+	case TRAFFIC_STATS:
+          {
+            if(snprintf(buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName) < 0)
+              BufferTooShort();
+            sendString(buf);
+            printHostThtpShort(el, reportType);
+          }
+          break;
 	}
 
 	sendString("</TR>\n");
@@ -1008,6 +1137,8 @@ void printHostsTraffic(int reportType,
 
   sendString("\n</TABLE>"TABLE_OFF"\n");
   sendString("</CENTER>\n");
+
+  printFooter(reportType);
 
   addPageIndicator(url, pageNum, numEntries, myGlobals.maxNumLines,
 		   revertOrder, abs(sortedColumn));
