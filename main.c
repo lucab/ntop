@@ -1242,17 +1242,22 @@ int main(int argc, char *argv[]) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
   }
 
-  /* ******************************* */
-  
-  checkUserIdentity(userSpecified);
-
-/* ******************************* */
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Loading Plugins");
   loadPlugins();
   traceEvent(CONST_TRACE_NOISY, "Starting Plugins");
   startPlugins();
   traceEvent(CONST_TRACE_NOISY, "Plugins started... continuing with initialization");
+
+  /* ******************************* */
+  
+  checkUserIdentity(userSpecified);
+
+#ifndef WIN32
+  saveNtopPid();
+#endif
+
+  /* ******************************* */
 
   initSignals();
 

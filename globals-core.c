@@ -651,10 +651,6 @@ void initNtop(char *devices) {
   resetLeaks();
 #endif
 
-#ifndef WIN32
-  saveNtopPid();
-#endif
-
   addNewIpProtocolToHandle("IGMP", 2, 0 /* no proto */);
   addNewIpProtocolToHandle("OSPF", 89, 0 /* no proto */);
   addNewIpProtocolToHandle("IPSEC", 50, 51);
