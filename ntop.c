@@ -1044,7 +1044,8 @@ RETSIGTYPE cleanup(int signo) {
       myGlobals.device[i].pcapPtr = NULL;
     }
 
-    free(myGlobals.device[i].hashList);
+    if(myGlobals.device[i].hashList)
+      free(myGlobals.device[i].hashList);
   }
   
   free(myGlobals.device);

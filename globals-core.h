@@ -65,6 +65,7 @@ extern int optopt;
 
 /* globals-core.c */
 void initNtopGlobals(int argc, char * argv[]);
+void initNtop(char *devices);
 
 /* address.c */
 extern int printable(int ch);
@@ -123,19 +124,20 @@ extern void purgeIdleHosts(int devId);
 extern void initIPServices(void);
 extern void resetDevice(int devIdx);
 extern void initCounters(void);
-extern void resetStats(void);
-extern int initGlobalValues(void);
-extern void initGdbm(char *directory);
+extern void resetStats(int);
 extern void initThreads(void);
 extern void initApps(void);
 extern void initDevices(char* devices);
-extern void initLibpcap(void);
-extern void initDeviceDatalink(void);
+extern void initDeviceDatalink(int);
 extern void parseTrafficFilter(void);
 extern void initSignals(void);
 extern void startSniffer(void);
 extern void deviceSanityCheck(char* string);
 extern u_int createDummyInterface(char *ifName);
+extern void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory, int doUnlink);
+extern void allocateOtherHosts();
+extern void initGdbm(char *prefDirectory, char *spoolDirectory);
+extern void addDevice(char* deviceName, char* deviceDescr);
 
 /* leaks.c */
 extern void initLeaks(void);

@@ -1344,7 +1344,7 @@ void waitSem(sem_t *semId) {
   int rc = sem_wait(semId);
 
   if(rc != 0)
-    traceEvent(CONST_TRACE_INFO, "waitSem failed [errno=%d]", errno);
+    traceEvent(CONST_TRACE_INFO, "waitSem failed [errno=%d/%s]", errno, strerror(errno));
 }
 
 /* ************************************ */
@@ -1872,9 +1872,9 @@ char* formatTime(time_t *theTime, short encodeString) {
 /* ************************************ */
 
 int getActualInterface(u_int deviceId) {
-  if(myGlobals.mergeInterfaces)
-    return(0);
-  else
+  if(myGlobals.mergeInterfaces) {
+    return(myGlobals.device[0].dummyDevice == 0 ? 0 : deviceId);
+  } else
     return(deviceId);
 }
 
@@ -4243,7 +4243,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
 
   accessAddrResMutex("makeHostLink");
 
-  snprintf(fingerprint, sizeof(fingerprint), "%s", srcHost->fingerprint);
+  snprintf(fingerprint, sizeof(fingerprint)-1, "%s", srcHost->fingerprint);
   strtokState = NULL;
   WIN = strtok_r(fingerprint, ":", &strtokState);
   MSS = strtok_r(NULL, ":", &strtokState);
@@ -4304,8 +4304,9 @@ void setHostFingerprint(HostTraffic *srcHost) {
 	   strlen(srcHost->fingerprint) is 29 as the fingerprint length is so
 	   Example: 0212:_MSS:80:WS:0:1:0:0:A:LT
 	*/
-
-	snprintf(srcHost->fingerprint, strlen(srcHost->fingerprint)-1, "%s", &line[28]);
+	
+	free(srcHost->fingerprint);
+	srcHost->fingerprint = strdup(&line[28]);
 	/* traceEvent(CONST_TRACE_INFO, "[%s] -> [%s]\n", srcHost->hostNumIpAddress, srcHost->fingerprint);*/
 	done = 1;
       }

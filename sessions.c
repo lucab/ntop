@@ -894,18 +894,14 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  printf("DEBUG: OS='%s'\n", os);
 #endif
 
-#ifdef CFG_MULTITHREADED
 		  accessAddrResMutex("makeHostLink");
-#endif
 		  if(srcHost->fingerprint == NULL) {
 		    char buffer[64];
 
 		    snprintf(buffer, sizeof(buffer), ":%s", os);
 		    srcHost->fingerprint = strdup(buffer);
 		  }
-#ifdef CFG_MULTITHREADED
 		  releaseAddrResMutex();
-#endif
 		}
 		break;
 	      }	else if(strncmp(row, "Host:", 5) == 0) {

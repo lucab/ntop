@@ -403,6 +403,10 @@ ntop.h
 #include "getopt.h"
 #endif
 
+#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+ #include <malloc.h>
+#endif
+
 /* **************************************************************************************
  *
  *  Used for debug

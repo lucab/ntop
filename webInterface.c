@@ -4356,10 +4356,8 @@ void initWeb() {
 
     if(myGlobals.mergeInterfaces) {
       storePrefsValue("actualReportDeviceId", "0");
-      myGlobals.actualReportDeviceId = 0;
     } else if(fetchPrefsValue("actualReportDeviceId", value, sizeof(value)) == -1) {
       storePrefsValue("actualReportDeviceId", "0");
-      myGlobals.actualReportDeviceId = 0;
     } else {
       myGlobals.actualReportDeviceId = atoi(value);
       if(myGlobals.actualReportDeviceId >= myGlobals.numDevices) {
@@ -4368,7 +4366,6 @@ void initWeb() {
                    myGlobals.actualReportDeviceId,
                    myGlobals.numDevices);
         storePrefsValue("actualReportDeviceId", "0");
-       myGlobals.actualReportDeviceId = 0; /* Default */
       }
     }
     

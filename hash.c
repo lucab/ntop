@@ -45,7 +45,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 
     (*useIPAddressForSearching) = 1;
   } else if(memcmp(ether_addr, /* 0 doesn't matter */
-		   myGlobals.device[0].hash_hostTraffic[myGlobals.broadcastEntryIdx]->ethAddress,
+		   myGlobals.device[actualDeviceId].hash_hostTraffic[myGlobals.broadcastEntryIdx]->ethAddress,
 		   LEN_ETHERNET_ADDRESS) == 0) {
     idx = myGlobals.broadcastEntryIdx;
     (*useIPAddressForSearching) = 0;
@@ -169,6 +169,8 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 static void purgeHostIdx(int actualDeviceId, HostTraffic *el) {
   u_short allRight = 0;
 
+  if(myGlobals.device[actualDeviceId].dummyDevice) return;
+
   if(el == NULL) {
     traceEvent(CONST_TRACE_ERROR, "purgeHostIdx() failed [NULL pointer]");
     return;
@@ -217,7 +219,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   u_int j, i;
   IpGlobalSession *nextElement, *element;
 
-  if(host == NULL)
+  if((host == NULL) || myGlobals.device[actualDeviceId].dummyDevice)
     return;
 
 #ifdef DEBUG
@@ -390,6 +392,10 @@ void freeHostInstances(int actualDeviceId) {
   traceEvent(CONST_TRACE_INFO, "FREE_HOST: Start, %d device(s)", max);
 
   for(i=0; i<max; i++) {
+    if(myGlobals.device[i].dummyDevice) {
+      i++;
+      if(i >= myGlobals.numDevices) break;
+    }
     actualDeviceId = i;
     for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
       if(myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL) {

@@ -2585,8 +2585,10 @@ void processPacket(u_char *_deviceId,
 #endif
 
   if(myGlobals.resetHashNow == 1) {
+    int i;
+
     traceEvent(CONST_TRACE_INFO, "Resetting stats");
-    resetStats();
+    for(i=0; i<myGlobals.numDevices; i++) resetStats(i);
     myGlobals.resetHashNow = 0;
   }
 }

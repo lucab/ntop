@@ -23,6 +23,7 @@
 
 
 #include "ntop.h"
+#include "globals-core.h"
 #include "globals-report.h"
 
 NtopGlobals myGlobals;
@@ -82,13 +83,49 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
 #endif /* HAVE_LIBWRAP */
 
 
+/* ************************************************************ */
+
+void initGdbm(char *prefDirectory,  /* Directory with persistent files */
+	      char *spoolDirectory  /* Directory with temporary files (that can be deleted when ntop is not running) */
+	      ) {
+  traceEvent(CONST_TRACE_INFO, "Initializing gdbm databases");
+
+  initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE);
+  initSingleGdbm(&myGlobals.prefsFile,        "prefsCache.db",   prefDirectory, FALSE);
+  initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, TRUE);
+  initSingleGdbm(&myGlobals.pwFile,           "ntop_pw.db",      prefDirectory, FALSE);
+  initSingleGdbm(&myGlobals.hostsInfoFile,    "hostsInfo.db",    spoolDirectory, FALSE);
+  initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, TRUE);
+}
+
+/* ******************************* */
+
+void allocateOtherHosts() {
+  myGlobals.otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
+  memset(myGlobals.otherHostEntry, 0, sizeof(HostTraffic));
+
+  myGlobals.otherHostEntry->hostIpAddress.s_addr = 0x00112233;
+  strncpy(myGlobals.otherHostEntry->hostNumIpAddress, "&nbsp;",
+	  sizeof(myGlobals.otherHostEntry->hostNumIpAddress));
+  strncpy(myGlobals.otherHostEntry->hostSymIpAddress, "Remaining Host(s)",
+	  sizeof(myGlobals.otherHostEntry->hostSymIpAddress));
+  strcpy(myGlobals.otherHostEntry->ethAddressString, "00:00:00:00:00:00");
+  myGlobals.otherHostEntryIdx = myGlobals.broadcastEntryIdx+1;
+  myGlobals.otherHostEntry->hostSerial = myGlobals.otherHostEntryIdx;
+  myGlobals.otherHostEntry->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), 
+							     MAX_ASSIGNED_IP_PORTS);
+}
+
 /* ************************************ */
 
 /*
  * Initialize all global run-time parameters to default (reasonable!!!) values
  */
 void initNtopGlobals(int argc, char * argv[]) {
-  int i;
+  int i, bufLen;
+  char *startedAs;
+
+  memset(&myGlobals, 0, sizeof(myGlobals));
 
   /*
    * Notice the program name
@@ -411,6 +448,171 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.netFlowInSocket = -1;  
   myGlobals.netFlowOutSocket = -1;  
   myGlobals.globalFlowSequence = myGlobals.globalFlowPktCount = 0;
+
+#ifdef CFG_MULTITHREADED
+  myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
+#endif
+
+  /* ********************************** */
+
+  myGlobals.hashListSize = MAX_PER_DEVICE_HASH_LIST;
+  myGlobals.numPurgedHosts = myGlobals.numTerminatedSessions = 0;
+  myGlobals.maximumHostsToPurgePerCycle = DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE;
+
+  myGlobals.broadcastEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
+  memset(myGlobals.broadcastEntry, 0, sizeof(HostTraffic));
+  resetHostsVariables(myGlobals.broadcastEntry);
+
+  /* Set address to FF:FF:FF:FF:FF:FF */
+  for(i=0; i<LEN_ETHERNET_ADDRESS; i++)
+    myGlobals.broadcastEntry->ethAddress[i] = 0xFF;
+
+  myGlobals.broadcastEntry->hostIpAddress.s_addr = 0xFFFFFFFF;
+  strncpy(myGlobals.broadcastEntry->hostNumIpAddress, "broadcast",
+	  sizeof(myGlobals.broadcastEntry->hostNumIpAddress));
+  strncpy(myGlobals.broadcastEntry->hostSymIpAddress, myGlobals.broadcastEntry->hostNumIpAddress,
+	  sizeof(myGlobals.broadcastEntry->hostSymIpAddress));
+  strcpy(myGlobals.broadcastEntry->ethAddressString, "FF:FF:FF:FF:FF:FF");
+  FD_SET(FLAG_SUBNET_LOCALHOST, &myGlobals.broadcastEntry->flags);
+  FD_SET(FLAG_BROADCAST_HOST, &myGlobals.broadcastEntry->flags);
+  FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &myGlobals.broadcastEntry->flags);
+  myGlobals.broadcastEntry->hostSerial = 0;
+
+  myGlobals.broadcastEntryIdx = 0;
+
+  allocateOtherHosts();
+
+  /* ********************************** */
+  
+  bufLen = 0;
+  for (i=0; i<argc; i++) {
+    bufLen += (2 + strlen(argv[i]));
+  }
+  
+  startedAs = (char*)malloc(bufLen);
+  memset(startedAs, 0, (size_t) bufLen); 
+  for (i=0; i<argc; i++) {
+    if (argv[i] != NULL) {
+      strcat(startedAs, argv[i]);
+      strcat(startedAs, " ");
+    }
+  }
+    
+  myGlobals.startedAs = startedAs;  
+}
+ 
+/* ********************************* */
+
+void initNtop(char *devices) {
+
+  handleProtocols();
+  if(myGlobals.numIpProtosToMonitor == 0)
+    addDefaultProtocols();
+
+  /*
+   * initialize memory and data
+   */
+  initDevices(devices);
+
+  if(myGlobals.enableSessionHandling)
+    initPassiveSessions();
+  
+  /* ********************************** */
+
+  /*
+   * Initialize memory and data for the protocols being monitored trying to access
+   *
+   */
+
+  initIPServices();
+#ifdef HAVE_OPENSSL
+  init_ssl();
+#endif
+  
+  /* ********************************** */
+
+  initGdbm(NULL, NULL);
+
+#ifndef WIN32
+  if(myGlobals.daemonMode) {
+    daemonize();
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Now running as a daemon");
+  }
+#endif
+
+#ifdef MAKE_WITH_XMLDUMP
+  if (myGlobals.xmlFileOut) {
+    traceEvent(CONST_TRACE_NOISY, "XMLDUMP: Removing old xml output file, %s\n", myGlobals.xmlFileOut);
+    /* Delete the old one (if present) */
+    rc = unlink(myGlobals.xmlFileOut);
+    if ( (rc != 0) && (errno != ENOENT) ) {
+      traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml output file, %s, failed, errno=%d\n",
+		 myGlobals.xmlFileOut, errno);
+    }
+  }
+  if (myGlobals.xmlFileSnap) {
+    traceEvent(CONST_TRACE_NOISY, "XMLDUMP: Removing old xml snapshot file, %s\n", myGlobals.xmlFileSnap);
+    /* Delete the old one (if present) */
+    rc = unlink(myGlobals.xmlFileSnap);
+    if ( (rc != 0) && (errno != ENOENT) ) {
+      traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml snapshot file, %s, failed, errno=%d\n",
+		 myGlobals.xmlFileSnap, errno);
+    }
+  }
+#endif
+
+#ifdef WIN32
+  initWinsock32();
+#endif
+
+  /* Handle local addresses (if any) */
+  handleLocalAddresses(myGlobals.localAddresses);
+
+  if(myGlobals.currentFilterExpression != NULL)
+    parseTrafficFilter();
+  else
+    myGlobals.currentFilterExpression = strdup(""); /* so that it isn't NULL! */
+
+  /* Handle flows (if any) */
+  handleFlowsSpecs();
+
+  createPortHash();
+  initCounters();
+  initApps();
+  initThreads();
+
+#ifndef MAKE_MICRO_NTOP
+  traceEvent(CONST_TRACE_NOISY, "Starting Plugins");
+  startPlugins();
+  traceEvent(CONST_TRACE_NOISY, "Plugins started... continuing with initialization");
+#endif
+
+#if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
+  {
+    struct mallinfo memStats;
+
+    memStats = mallinfo();
+    myGlobals.baseMemoryUsage = memStats.arena + memStats.hblkhd;
+
+    traceEvent(CONST_TRACE_NOISY, "MEMORY: Base memory load is %.2fMB (%d+%d)",
+	       xvertDOT00MB(myGlobals.baseMemoryUsage),
+	       memStats.arena,
+	       memStats.hblkhd);
+  }
+#endif
+  traceEvent(CONST_TRACE_NOISY, "MEMORY: Base interface structure (no hashes loaded) is %.2fMB each",
+	     xvertDOT00MB(sizeof(NtopInterface)));
+  traceEvent(CONST_TRACE_NOISY, "MEMORY:     or %.2fMB for %d interfaces",
+	     xvertDOT00MB(myGlobals.numDevices*sizeof(NtopInterface)),
+	     myGlobals.numDevices);
+  traceEvent(CONST_TRACE_NOISY, "MEMORY: ipTraffixMatrix structure (no TrafficEntry loaded) is %.2fMB",
+	     xvertDOT00MB(myGlobals.ipTrafficMatrixMemoryUsage));
+
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Sniffying...");
+
+#ifdef MEMORY_DEBUG
+  resetLeaks();
+#endif
 }
 
 /* ****************************** */

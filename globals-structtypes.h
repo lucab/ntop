@@ -1548,7 +1548,8 @@ XML*/
 /*XMLSECTIONBEGIN xml_g_intf.inc root myGlobals */
   /*XML e Interfaces           root:Interfaces  "" */
 
-  int numDevices;                    /* # of Network interfaces enabled for sniffing */
+  u_short numDevices;                    /* total network interfaces */
+  u_short numRealDevices;                /* # of network interfaces enabled for sniffing */
                                      /*XML n numDevices           Interfaces "" */
   u_int16_t hashListSize;  /* set from MAX_PER_DEVICE_HASH_LIST
                               Please don't change the type */

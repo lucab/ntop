@@ -232,17 +232,9 @@ void printTrafficStatistics() {
     sendString("<TR><TH "TH_BG" align=left>Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
 
 #ifdef MAKE_WITH_GDCHART
-    if(myGlobals.mergeInterfaces && (myGlobals.numDevices > 1)) {
-      int numRealDevices=0;
-
-      for(i=0; i<myGlobals.numDevices; i++)
-	if(!myGlobals.device[i].virtualDevice)
-	  numRealDevices++;
-
-      if(numRealDevices > 1)
-	sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3>"
-		   "<IMG SRC=interfaceTrafficPie"CHART_FORMAT"></TD></TR>\n");
-    }
+    if(myGlobals.numRealDevices > 1)
+      sendString("<TR "TR_ON"><TD "TD_BG" ALIGN=CENTER COLSPAN=3>"
+		 "<IMG SRC=interfaceTrafficPie"CHART_FORMAT"></TD></TR>\n");
 #endif
 
     unicastPkts = myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value
