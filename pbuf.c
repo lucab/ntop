@@ -242,6 +242,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	      /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
 	      /*
 		else {
+
 		el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
 		break;
 		}
@@ -2661,13 +2662,37 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
 
 /* ************************************ */
 
+static void updateHostName(HostTraffic *el) {  
+  if((el->hostNumIpAddress[0] == '\0')
+     || (el->hostSymIpAddress == NULL)
+     || strcmp(el->hostSymIpAddress, 
+	       el->hostNumIpAddress) == 0) {	
+    int i;
+
+    if(el->nbHostName != NULL) {
+      /*
+	Use NetBIOS name (when available) if the 
+	IP address has not been resolved.
+      */
+      strcpy(el->hostSymIpAddress, el->nbHostName);
+    } else if(el->ipxHostName != NULL) 
+      strcpy(el->hostSymIpAddress, el->ipxHostName);
+    else if(el->atNodeName != NULL) 
+      strcpy(el->hostSymIpAddress, el->atNodeName);
+    
+    if(el->hostSymIpAddress != NULL) 
+      for(i=0; el->hostSymIpAddress[i] != '\0'; i++)
+	el->hostSymIpAddress[i] = (char)tolower(el->hostSymIpAddress[i]);
+  }  
+}
+
+/* ************************************ */
 
 static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
 			 u_int length,
 			 u_char *ether_src,
-			 u_char *ether_dst)
-{
+			 u_char *ether_dst) {
   u_short sport, dport;
   struct ip ip;
   struct tcphdr tp;
@@ -3059,6 +3084,7 @@ static void processIpPkt(const u_char *bp,
            srcHost->nbNodeType = (char)nodeType;
  	  if(srcHost->nbHostName == NULL)
  	    srcHost->nbHostName = strdup(nbName);
+	  updateHostName(srcHost);
  	  switch(nodeType) {
  	  case 0x0:  /* Workstation */
  	    FD_SET(HOST_TYPE_WORKSTATION, &srcHost->flags);
@@ -3091,6 +3117,7 @@ static void processIpPkt(const u_char *bp,
 	case 0x0:  /* Workstation */
 	case 0x20: /* Server */
 	  if(dstHost->nbHostName == NULL) dstHost->nbHostName = strdup(domain);
+	  updateHostName(dstHost);
 	  dstHost->nbNodeType = (char)nodeType;
 	  switch(nodeType) {
 	  case 0x0:  /* Workstation */
@@ -3834,6 +3861,7 @@ void processPacket(u_char *_deviceId,
 
 	    if(srcHost->ipxHostName == NULL) {
 	      srcHost->ipxHostName = strdup(serverName);
+	      updateHostName(srcHost);
 	    }
 #ifdef DEBUG
 	    traceEvent(TRACE_INFO, "%s [%s][%x]\n", serverName,
@@ -3883,6 +3911,7 @@ void processPacket(u_char *_deviceId,
 	      nodeName[p1[5]] = '\0';
 
 	      srcHost->atNodeName = strdup(nodeName);
+	      updateHostName(srcHost);
 
 	      memcpy(nodeName, &p1[7+p1[5]], p1[6+p1[5]]);
 	      nodeName[p1[6+p1[5]]] = '\0';

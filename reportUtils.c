@@ -2453,8 +2453,7 @@ void printHostDetailedInfo(HostTraffic *el) {
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 		"<TD "TD_BG"  ALIGN=RIGHT>"
-	     "%s&nbsp;[",
-	     getRowColor(), "IPX&nbsp;Name",
+	     "%s&nbsp;[", getRowColor(), "IPX&nbsp;Name",
 	     el->ipxHostName) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);

@@ -466,20 +466,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 	      break;
 	    }
 	}
-      }
-      
-      if(usedEthAddress || strcmp(symIp, el->hostNumIpAddress) == 0) {	
-	if(el->nbHostName != NULL) {
-	  /*
-	    Use NetBIOS name (when available) if the 
-	    IP address has not been resolved.
-	  */
-	  strcpy(symIp, el->nbHostName);
-	} else if(el->ipxHostName != NULL) 
-	  strcpy(symIp, el->ipxHostName);
-	else if(el->atNodeName != NULL) 
-	  strcpy(symIp, el->atNodeName);
-      }
+      }      
     } else {
       strncpy(symIp, el->ethAddressString, sizeof(symIp));
       usedEthAddress = 1;
