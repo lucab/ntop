@@ -1229,7 +1229,8 @@ void readLsofInfo(void) {
 	listElement->element = processes[idx];
 	listElement->next = localPorts[portNumber];
 	localPorts[portNumber] = listElement;
-      }
+      } else 
+	break;
     } else {
       traceEvent(TRACE_WARNING, "WARNING: lsof() timeout (2)");
       break;
