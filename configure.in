@@ -132,15 +132,6 @@ dnl> Option to show where we're testing for gdchart
 ac_enable_showgdcharttests=no
 
 dnl>
-dnl> Option to enable rrdtool support
-ac_enable_rrd=no
-
-dnl>
-dnl> *** ToBeRocked ***
-dnl> user customizable section
-dnl>
-
-dnl>
 dnl> By default only enable SSLv2.  This allows for v3.
 dnl> The choice to enable this feature is left to the user.
 ac_enable_sslv3=no
@@ -226,8 +217,8 @@ AC_PROG_INSTALL
 dnl>
 dnl> you can also check for debugging and optimization
 dnl>
-AC_CHECK_DEBUGGING
-AC_CHECK_OPTIMIZE
+dnl>AC_CHECK_DEBUGGING
+dnl>AC_CHECK_OPTIMIZE
 
 dnl>
 dnl> set reasonable defaults here
@@ -378,11 +369,6 @@ dnl> Give the user an option to show the gdchart tests...
 dnl>
 AC_ARG_ENABLE(showgdcharttests, [  --enable-showgdcharttests show tests for gdchart libraries [default=disabled]], ac_enable_showgdcharttests="yes")
 
-dnl>
-dnl> Give the user an option for rrd support...
-dnl>
-AC_ARG_ENABLE(rrd, [  --enable-rrd Enable rrdtool support [default=disabled]], ac_enable_rrd="yes")
-
 AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
 
 dnl>
@@ -471,21 +457,6 @@ echo
 
 AC_HEADER_STDC
 dnl> AC_HEADER_TIME
-
-dnl> This needs to be fixed but I don't know how (L.Deri - 07/10/2002)
-if test $ac_dummyvariable = yes ; then
-AC_DEFINE_UNQUOTED(DEBUG, 0, [dummy])
-AC_DEFINE_UNQUOTED(HAVE_INT16_T, 0, [dummy])
-AC_DEFINE_UNQUOTED(HAVE_INT32_T, 0, [dummy])
-AC_DEFINE_UNQUOTED(HAVE_INT64_T, 0, [dummy])
-AC_DEFINE_UNQUOTED(HAVE_INT8_T, 0, [dummy])
-AC_DEFINE_UNQUOTED(HAVE_UINT64_T, 0, [dummy])
-AC_DEFINE_UNQUOTED(HAVE_U_INT16_T, 0, [dummy])
-AC_DEFINE_UNQUOTED(HAVE_U_INT32_T, 0, [dummy])
-AC_DEFINE_UNQUOTED(HAVE_U_INT64_T, 0, [dummy])
-AC_DEFINE_UNQUOTED(HAVE_U_INT8_T, 0, [dummy])
-fi
-
 
 dnl> MANDATORY general purpose headers
 AC_HAVE_HEADERS(pwd.h stdio.h errno.h stdlib.h unistd.h string.h signal.h fcntl.h dnl
@@ -623,16 +594,14 @@ dnl>
 dnl> check whether we've to define essential typedefs
 dnl> u_int32_t u_int16_t u_int8_t
 dnl> int32_t   int16_t   int8_t
-
-AC_CHECK_TYPEDEF(u_int64_t, sys/types.h)
-AC_CHECK_TYPEDEF(uint64_t, sys/types.h)
-AC_CHECK_TYPEDEF(u_int32_t, sys/types.h)
-AC_CHECK_TYPEDEF(u_int16_t, sys/types.h)
-AC_CHECK_TYPEDEF(u_int8_t, sys/types.h)
-AC_CHECK_TYPEDEF(int64_t, sys/types.h)
-AC_CHECK_TYPEDEF(int32_t, sys/types.h)
-AC_CHECK_TYPEDEF(int16_t, sys/types.h)
-AC_CHECK_TYPEDEF(int8_t, sys/types.h)
+AC_CHECK_TYPE(u_int8_t,  AC_DEFINE_UNQUOTED(HAVE_INT8_T,   1, [dummy]))
+AC_CHECK_TYPE(uint8_t,   AC_DEFINE_UNQUOTED(HAVE_UINT8_T,  1, [dummy]))
+AC_CHECK_TYPE(u_int16_t, AC_DEFINE_UNQUOTED(HAVE_INT16_T,  1, [dummy]))
+AC_CHECK_TYPE(uint16_t,  AC_DEFINE_UNQUOTED(HAVE_UINT16_T, 1, [dummy]))
+AC_CHECK_TYPE(u_int32_t, AC_DEFINE_UNQUOTED(HAVE_INT32_T,  1, [dummy]))
+AC_CHECK_TYPE(uint32_t,  AC_DEFINE_UNQUOTED(HAVE_UINT32_T, 1, [dummy]))
+AC_CHECK_TYPE(u_int64_t, AC_DEFINE_UNQUOTED(HAVE_INT64_T,  1, [dummy]))
+AC_CHECK_TYPE(uint64_t,  AC_DEFINE_UNQUOTED(HAVE_UINT64_T, 1, [dummy]))
 
 dnl>
 dnl> check for reentrant library routines
@@ -684,12 +653,6 @@ dnl>
 if test ".$ac_disable_gdchart" = ".no"; then
   AC_CHECK_LIB(c, sin, ,  [AC_CHECK_LIB(m, sin,  , AC_MSG_ERROR([Fatal: sin() not found.]), $MORELIBS)], $MORELIBS)
   AC_CHECK_LIB(c, ceil, , [AC_CHECK_LIB(m, ceil, , AC_MSG_ERROR([Fatal: ceil() not found.]), $MORELIBS)], $MORELIBS)
-fi
-
-dnl> Check for rrdtool [http://www.rrdtool.org/] - Experimental
-if test ".$ac_enable_rrd" = ".yes"; then
-AC_CHECK_HEADERS(rrd.h)
-AC_CHECK_LIB(rrd, rrd_create, , ac_enable_rrd=no)
 fi
 
 dnl>
@@ -824,8 +787,8 @@ dnl>
   else
      AC_CHECK_LIB(c_r, pthread_create)
      if test ".`echo $LIBS | grep c_r`" != .; then
-     AC_DEFINE(MULTITHREADED, NULL)
-     AC_DEFINE(ASYNC_ADDRESS_RESOLUTION, NULL)
+     AC_DEFINE(MULTITHREADED,  1, [Enable/disable multithread support])
+     AC_DEFINE(ASYNC_ADDRESS_RESOLUTION, 1, [Enable/disable address resolution])
     else
      multithread_mode=no
     fi
@@ -1064,6 +1027,16 @@ dnl>
 echo
 echo "Step 7. Looking for optional GPLed libraries...."
 echo
+
+
+AC_CHECK_LIB(rrd, rrd_create, AC_DEFINE_UNQUOTED(HAVE_LIBRRD, 1, [Define if you have the RRDtool library]))
+if test "$ac_cv_lib_rrd_rrd_create" = "yes"; then
+   AC_CHECK_HEADERS(rrd.h)
+   RRDLIB="-lrrd"
+else
+AC_MSG_RESULT([ NOTE: librrd has not been found: the rrdPlugin will not be built])
+AC_MSG_RESULT([       You can download RRDtool from http://www.rrdtool.org/])
+fi
 
 AC_CHECK_LIB(c, re_search, AC_DEFINE_UNQUOTED(HAVE_REGEX, 1, [Define if you have the regex lib defined inside libc]))
 AC_CHECK_LIB(z, gzopen, AC_DEFINE_UNQUOTED(HAVE_ZLIB, 1, [Define if you have the zlib]))
@@ -1531,6 +1504,7 @@ AC_SUBST(SNMPLIBS)
 
 AC_SUBST(MORESOURCES)
 AC_SUBST(MORELIBS)
+AC_SUBST(RRDLIB)
 
 if test ".$ac_disable_intop" = ".yes"; then
 INTOP=

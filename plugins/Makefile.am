@@ -26,7 +26,7 @@
 
 SUBDIRS = . #pep
 
-DIST_COMMON = Makefile.am Makefile.in
+PLUGIN_DIST_COMMON = Makefile.am Makefile.in
 CLEANFILES  =
 EXTRA_DIST  =
 
@@ -45,22 +45,20 @@ INCLUDES = -I.. @INCS@
 noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so \
                   netflowPlugin.so nfsPlugin.so  \
                   pdaPlugin.so  \
-		  sflowPlugin.so
-#		  rrdPlugin.so
-#		  rmonPlugin.so wapPlugin.so
+		  sflowPlugin.so rrdPlugin.so
+#		  rmonPlugin.so
 
 lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
                   libnetflowPlugin.la  libnfsPlugin.la  \
                   libpdaPlugin.la  \
-		  libsflowPlugin.la
-#		  librrdPlugin.la
-#		  librmonPlugin.la libwapPlugin.la
+		  libsflowPlugin.la librrdPlugin.la
+#		  librmonPlugin.la
 
 libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
-#librrdPlugin_la_SOURCES = rrdPlugin.c
-#librrdPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+librrdPlugin_la_SOURCES = rrdPlugin.c
+librrdPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@ $(RRDLIB)
 
 libpdaPlugin_la_SOURCES = pdaPlugin.c
 libpdaPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
@@ -80,9 +78,6 @@ libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 #librmonPlugin_la_SOURCES = rmonPlugin.c rmon.h
 #librmonPlugin_la_LDFLAGS = @SNMPLIBS@ -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
-#libwapPlugin_la_SOURCES = wapPlugin.c
-#libwapPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
-
 
 #
 # Dependencies to allow ntop loading plugins on-place
@@ -96,11 +91,11 @@ libnfsPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 icmpPlugin.so: .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 	@ln -s .libs/libicmpPlugin.so icmpPlugin.so
 
-#.libs/librrdPlugin.so@SO_VERSION_PATCH@:
-#	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
+.libs/librrdPlugin.so@SO_VERSION_PATCH@:
+	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/librrdPlugin.so@SO_VERSION_PATCH@ rrdPlugin.o
 
-#rrdPlugin.so: .libs/librrdPlugin.so@SO_VERSION_PATCH@
-#	@ln -s .libs/librrdPlugin.so rrdPlugin.so
+rrdPlugin.so: .libs/librrdPlugin.so@SO_VERSION_PATCH@
+	@ln -s .libs/librrdPlugin.so rrdPlugin.so
 
 .libs/libpdaPlugin.so@SO_VERSION_PATCH@:
 	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o
@@ -137,12 +132,6 @@ nfsPlugin.so: .libs/libnfsPlugin.so@SO_VERSION_PATCH@
 
 #rmonPlugin.so: .libs/librmonPlugin.so@SO_VERSION_PATCH@
 #	@ln -s .libs/librmonPlugin.so rmonPlugin.so
-
-#.libs/libwapPlugin.so@SO_VERSION_PATCH@:
-#	$(CC) -bundle -flat_namespace -undefined suppress -o .libs/libwapPlugin.so@SO_VERSION_PATCH@ wapPlugin.o
-
-#wapPlugin.so: .libs/libwapPlugin.so@SO_VERSION_PATCH@
-#	@ln -s .libs/libwapPlugin.so wapPlugin.so
 
 install-data-local:
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)$(plugindir);
