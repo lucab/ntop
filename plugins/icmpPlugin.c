@@ -294,10 +294,14 @@ static int sortICMPhosts(const void *_a, const void *_b) {
 
   switch(icmpColumnSort) {
   case 2:
-    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHO] + (*a)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] +
-      (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHO]+(*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY];
-    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHO] + (*b)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] +
-      (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHO]+ (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY];
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHO] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHO];
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHO] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHO];
+    if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
+    break;
+
+  case 12: /* Echo Reply */
+    n1 = (*a)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] + (*a)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY];
+    n2 = (*b)->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY] + (*b)->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY];
     if(n1 > n2) return(1); else if(n1 < n2) return(-1); else return(0);
     break;
 
@@ -939,7 +943,8 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
   sendString("<TABLE BORDER>\n");
   snprintf(buf, sizeof(buf), "<TR><TH>%s?%s1>Host</A><br>[Pkt&nbsp;Sent/Rcvd]</TH>"
-	 "<TH>%s?%s2>Echo</A></TH>"
+	 "<TH>%s?%s2>Echo Req.</A></TH>"
+	 "<TH>%s?%s12>Echo Reply</A></TH>"
 	 "<TH>%s?%s3>Unreach</A></TH>"
 	 "<TH>%s?%s4>Redirect</A></TH>"
 	 "<TH>%s?%s5>Router<br>Advert.</A></TH>"
@@ -950,6 +955,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	 "<TH>%s?%s10>Timestamp</A></TH>"
 	 "<TH>%s?%s11>Info</A></TH>"
 	 "</TR>\n",
+	  pluginName, sign,
 	  pluginName, sign,
 	  pluginName, sign,
 	  pluginName, sign,
@@ -982,11 +988,14 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	      makeHostLink(hosts[idx], LONG_FORMAT, 0, 0));
       sendString(buf);
 
-      snprintf(buf, sizeof(buf), "<TD ALIGN=right>%s/%s</TD>",
-	      formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHO]+
-			 hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY])),
-	      formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHO]+
-					  hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY])));
+      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
+	       formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHO])),
+	       formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHO])));
+      sendString(buf);
+
+      snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
+	       formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY])),
+	       formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY])));
       sendString(buf);
 
 

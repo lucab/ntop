@@ -396,7 +396,8 @@ void initGdbm() {
   gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
   if(gdbm_file == NULL) {
-    traceEvent(TRACE_ERROR, "Database open failed: %s\n", gdbm_strerror(gdbm_errno));
+    traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n", 
+	       tmpBuf, gdbm_strerror(gdbm_errno));
     exit(-1);
   } else {
     /* Let's remove from the database entries that were not
@@ -633,7 +634,9 @@ void initDevices(char* devices) {
 void initRules(char *rulesFile) {
   if(rulesFile[0] != '\0') {
     char tmpBuf[200];
-    
+
+    traceEvent(TRACE_INFO, "Parsing ntop rules...");
+
     handleRules = 1;
     parseRules(rulesFile);
 
