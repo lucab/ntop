@@ -4660,8 +4660,21 @@ void printLocalHostsStats(void) {
       if(theOSs[i].name == NULL)
 	break;
       else {
-	snprintf(buf, sizeof(buf), "<TH>%s</TH>", theOSs[i].name);
-	sendString(buf);
+        char *strtokState, *os, *word;
+        int sentBR=0;
+
+	sendString("<TH>");
+        os = strdup(theOSs[i].name);
+
+        word = strtok_r(os, " ", &strtokState);
+        while(word != NULL) {
+          if((sentBR++) > 0) sendString("<br>\n");
+          sendString(word);
+          word = strtok_r(NULL, " ", &strtokState);
+        }
+
+        free(os);
+	sendString("</TH>");
       }
   }
 
