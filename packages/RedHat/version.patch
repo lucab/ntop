@@ -1,25 +1,22 @@
 --- ntop/configure.in.orig	Tue Jul  9 18:49:48 2002
 +++ ntop/configure.in	Tue Jul  9 18:50:04 2002
-@@ -57,7 +57,7 @@
- umask 002
- AM_CONFIG_HEADER(config.h)
+@@ -61,7 +61,7 @@
+ HAS_ERROR=
+ HAS_WARNING=
  
--NTOP_VERSION_EXTRA=""
-+NTOP_VERSION_EXTRA="SourceForge rpm"
+-NTOP_VERSION_EXTRA=" SourceForge .tgz"
++NTOP_VERSION_EXTRA="SourceForge RPM"
  
- GDCHART_DIRECTORY="gdchart0.94c"
- GD_DIRECTORY="gd-1.8.3"
---- gdchart0.94c/buildAll.sh	Wed Oct 30 15:42:56 2002
-+++ gdchart0.94c/buildAll.sh	Thu Dec  5 10:15:12 2002
-@@ -36,9 +36,9 @@
- fi
+ echo
+ echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
+--- ntop/configure.orig	Mon Apr 14 17:54:20 2003
++++ ntop/configure	Mon Apr 14 17:54:35 2003
+@@ -1352,7 +1352,7 @@
+ HAS_ERROR=
+ HAS_WARNING=
  
- echo ""
--echo "Configuring gdchart..."
-+echo "Configuring gdchart (i386)..."
- echo ""
--./configure
-+./configure i386-pc-linux-gnu
+-NTOP_VERSION_EXTRA=" SourceForge .tgz"
++NTOP_VERSION_EXTRA="SourceForge RPM"
  
- echo ""
- echo "Configuring and making zlib..."
+ echo
+ echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"

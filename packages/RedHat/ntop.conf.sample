@@ -89,17 +89,17 @@
 
 ################################ WHAT TO MONITOR ###############################
 
-## -i | --interfaces tells ntop which network interfaces (NICs) to monitor.
+## -i | --interface tells ntop which network interfaces (NICs) to monitor.
 ##  DEFAULT: The 1st ethernet device, e.g. eth0, i.e. this line:
---interfaces eth0
+--interface eth0
 
 ## To monitor both eth0 and eth2 but not eth1:
-#? --interfaces eth0,eth2
+#? --interface eth0,eth2
 
 ## To monitor NO ethernet interfaces (for example a system collecting data
 ## only from netFlow probes):
 
-#? --interfaces none
+#? --interface none
 
 ##-----------------------------------------------------------------------------#
 
@@ -186,22 +186,10 @@
 #--trace-level 2 # WARNING and above only
 #--trace-level 3 # INFO, WARNING and ERRORs - the default
 #--trace-level 4 # NOISY - everything
-#--trace-level 5 # NOISY + --log-extra 1
+#--trace-level 6 # NOISY + MSGID
+#--trace-level 7 # NOISY + MSGID + file/line
 
 --trace-level 3 # Which is the default
-
-##-----------------------------------------------------------------------------#
-
-## --log-extra -- controls the addition of extra information to the log
-## messages.  Choices are:
-
-#--log-extra 1 # add [file:line] to the beginning of each message -
-##               useful for debugging.
-#--log-extra 2 # add a [MSGIDnnnnnnn] to the end of each message -
-##               useful for automated log monitoring packages.  The
-##               MSGID values should be stable across ntop releases.
-
-#? --log-extra 2
 
 ##-----------------------------------------------------------------------------#
 

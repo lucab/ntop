@@ -2,9 +2,9 @@
 
 Summary: ntop shows the network usage
 Name: ntop
-Version: 3.0pre2
+Version: 3.0rc1
 Release: 0
-Source: ntop-3.0pre2.tgz
+Source: ntop-3.0rc1.tgz
 Source1: ntop.init
 Source2: ntop.logrotate
 Source3: ntop.conf.sample
@@ -28,14 +28,22 @@ extracted from the web server in formats suitable for manipulation in perl or ph
 
 See 1STRUN.txt for the 1st time startup procedure!  See FAQ for answers to questions.
 
-ntop 3.0pre2 is a TEST release, from the ntop cvs tree at cvs.ntop.org.
+ntop 3.0rc1 is a TEST release, from the ntop cvs tree at cvs.ntop.org.
 Our intention is to release this or something much like it as ntop 3.0
 in a short period of time.
 
-The major change from 3.0pre1 is in the sorting of the 'hosts' column.  PLEASE TEST!
+There are no major changes 3.0pre2... minor stuff:
 
-At this time, docs/FAQ has been extensively re-written, but ChangeLog and
-PORTING have not.
+  * A few minor tweaks of things found by Valgrind
+  * Luca's changes on how ntop reports dropped packets
+  * Minor mods to the m4 macros so that the newest auto* tools don't choke
+  * force_runtime added to version.c from configureextra
+  * optional remote fingerprint page restored
+  * make listlibclean and libclean options
+  * Capture length problem, and Solaris 9's hate for ehdr.ether_dhost were fixed
+  * Locale info added to info.html and textinfo.html
+
+docs/FAQ has been extensively re-written!
 
 For those upgrading from 2.2, note:
 
@@ -76,7 +84,7 @@ Please send problem reports (using the automatically generated form if at all po
 unset RPM_OPT_FLAGS
 %undefine optflags 
 # Adjust the .tgz format to what we expect for build...
-mv ntop-3.0pre2 ntop
+mv ntop-3.0rc1 ntop
 # Patches
 patch -p0 < ../../SOURCES/version.patch
 #patch -p0 < ../../SOURCES/makefile_am.patch
@@ -216,6 +224,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/lib*Plugin*
 
 %changelog
+* Thu Mar 18 2004 Burton M. Strauss III <burton@ntopsupport.com>
+- v3.0rc1 - TEST release for 3.0
+
 * Mon Mar 03 2004 Burton M. Strauss III <burton@ntopsupport.com>
 - v3.0pre2 - TEST release for 3.0
 

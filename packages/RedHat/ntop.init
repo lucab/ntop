@@ -244,6 +244,10 @@ END { gsub(/ *$/, "", eff); f=0; \
 
 . /tmp/${name}initparms
 
+if [ -f /tmp/${name}initparms ]; then
+    rm -f /tmp/${name}initparms
+fi
+
 if [ "${debug}" = "y" ]; then 
   echo "DEBUG: ntopxxxxx settings:"
   set | grep ^ntop
@@ -572,7 +576,15 @@ valgrind () {
   echo $"Stopping..."
   stop
   echo $"Running under valgrind, parameters are $@"
-  prog="${valgrind} --verbose --logfile=/tmp/valgrind.log --leak-check=yes ${prog}"
+  valgrind="${valgrind} --verbose"
+  valgrind="${valgrind} --suppressions=/usr/share/ntop/valgrind.supp"
+  valgrind="${valgrind} --logfile=/tmp/valgrind.log"
+  valgrind="${valgrind} --leak-check=yes"
+  valgrind="${valgrind} --trace-children=yes"
+  valgrind="${valgrind} --num-callers=6"
+  valgrind="${valgrind} --gen-suppressions=yes"
+
+  prog="${valgrind} ${prog}"
 
   start_checks
   show_extra
@@ -589,6 +601,7 @@ valgrind () {
   if [ "${debug}" = "y" ]; then echo "DEBUG: cmd post-strip '${cmd}'"; fi
 
   show_starting
+  echo "${cmd}"
 
   ${cmd}
 }

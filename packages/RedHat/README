@@ -5,26 +5,10 @@ posted at SourceForge.
 
 
 
-For reference the rpms are normally built on ur-tigger, which is
-a RedHat 7.3+ uml (User Mode Linux) virtual machine running on 
-the RedHat 8 machine tigger.
+For reference the rpms are normally built on tigger, which is
+a RedHat 9 machine, using the buildmeister userid.
 
-ur-tigger is more properly considered a hybrid 7.3/8 as it
-has been updated with numerous packages from RedHat 8
-including:
+tigger is kept pretty much upto date on various packages.
 
-autoconf-2.53-8
-automake-1.6.3-1
-glibc-2.3.2-4.80
-glibc-common-2.3.2-4.80
-glibc-devel-2.3.2-4.80
-glibc-kernheaders-2.4-7.16
-libtool-1.4.2-7
-libtool-libs-1.4.2-7
-
-(and their associated and required packages)
-
-Plus RedHat updates to zlib, openssl, et al.
-
------Burton (April 2003)
+-----Burton (March 2004)
 
