@@ -2,81 +2,81 @@ NTOP(8)                                                                NTOP(8)
 
 
 
-[1mNAME[0m
+NNAAMMEE
        ntop - display top network users
 
-[1mSYNOPSIS[0m
-       [1mntop  [22m[[1m@filename[22m] [[1m-a[22m|[1m--access-log-path [4m[22m<path>[24m] [[1m-b[22m|[1m--disable-decoders[22m]
-       [[1m-c[22m|[1m--sticky-hosts] [22m[[1m-f[22m|[1m--traffic-dump-file  [4m[22mfile>[24m]  [[1m-g[22m|[1m--track-local-[0m
-       [1mhosts[22m] [[1m-h[22m|[1m--help[22m] [[1m-j[22m|[1m--create-other-packets[22m] [[1m-k[22m|[1m--filter-expression-[0m
-       [1min-extra-frame[22m] [[1m-l[22m|[1m--pcap-log [4m[22m<path>[24m] [[1m-m[22m|[1m--local-subnets [4m[22m<addresses>[24m]
-       [[1m-n[22m|[1m--numeric-ip-addresses[22m]   [[1m-o[22m|[1m--no-mac[22m]   [[1m-p[22m|[1m--protocols   [4m[22m<list>[24m]
-       [[1m-q[22m|[1m--create-suspicious-packets[22m] [[1m-r[22m|[1m--refresh-time [4m[22m<number>[24m] [[1m-s[22m|[1m--no-[0m
-       [1mpromiscuous[22m]  [[1m-t[22m|[1m--trace-level  [4m[22m<number>[24m]  [[1m-x [4m[22m<max_num_hash_entries>[24m]
-       [[1m-w[22m|[1m--http-server [4m[22m<port>[24m] [[1m-z[22m|[1m--disable-sessions[22m] [[1m-A[22m|[1m--set-admin-pass-[0m
-       [1mword  [4m[22mpassword[24m]  [[1m-B[22m|[1m--filter-expression  [4m[22mexpression[24m] [[1m-C [4m[22m<config[24mmode>[4m][0m
-       [[1m-D[22m|[1m--domain [4m[22m<name>[24m] [[1m-F[22m|[1m--flow-spec [4m[22m<specs>[24m] [[1m-M[22m|[1m--no-interface-merge[22m]
-       [[1m-O[22m|[1m----output-packet-path[22m]   [[1m-P[22m|[1m--db-file-path  [4m[22m<path>[24m]  [[1m-Q[22m|[1m--spool-[0m
-       [1mfile-path  [4m[22m<path>[24m]  [[1m-R[22m|[1m--filter-rule  [4m[22m<file>[24m]  [4m<number>[24m]  [[1m-U[22m|[1m--mapper[0m
-       [4m<URL>[24m]  [[1m-V[22m|[1m--version]  [22m[[1m-X [4m[22m<max_num_TCP_sessions>[24m] [[1m--disable-stopcap[22m]
-       [[1m--log-extra  [4m[22m<number>[24m]   [[1m--disable-instantsessionpurge[22m]   [[1m--disable-[0m
-       [1mschedyield[22m] [[1m--disable-mutexextrainfo[22m]
+SSYYNNOOPPSSIISS
+       nnttoopp  [@@ffiilleennaammee] [--aa|----aacccceessss--lloogg--ppaatthh _<_p_a_t_h_>] [--bb|----ddiissaabbllee--ddeeccooddeerrss]
+       [--cc|----ssttiicckkyy--hhoossttss]] [--ff|----ttrraaffffiicc--dduummpp--ffiillee  _f_i_l_e_>]  [--gg|----ttrraacckk--llooccaall--
+       hhoossttss] [--hh|----hheellpp] [--jj|----ccrreeaattee--ootthheerr--ppaacckkeettss] [--kk|----ffiilltteerr--eexxpprreessssiioonn--
+       iinn--eexxttrraa--ffrraammee] [--ll|----ppccaapp--lloogg _<_p_a_t_h_>] [--mm|----llooccaall--ssuubbnneettss _<_a_d_d_r_e_s_s_e_s_>]
+       [--nn|----nnuummeerriicc--iipp--aaddddrreesssseess]   [--oo|----nnoo--mmaacc]   [--pp|----pprroottooccoollss   _<_l_i_s_t_>]
+       [--qq|----ccrreeaattee--ssuussppiicciioouuss--ppaacckkeettss] [--rr|----rreeffrreesshh--ttiimmee _<_n_u_m_b_e_r_>] [--ss|----nnoo--
+       pprroommiissccuuoouuss]  [--tt|----ttrraaccee--lleevveell  _<_n_u_m_b_e_r_>]  [--xx _<_m_a_x___n_u_m___h_a_s_h___e_n_t_r_i_e_s_>]
+       [--ww|----hhttttpp--sseerrvveerr _<_p_o_r_t_>] [--zz|----ddiissaabbllee--sseessssiioonnss] [--AA|----sseett--aaddmmiinn--ppaassss--
+       wwoorrdd  _p_a_s_s_w_o_r_d]  [--BB|----ffiilltteerr--eexxpprreessssiioonn  _e_x_p_r_e_s_s_i_o_n] [--CC _<_c_o_n_f_i_gmode>_]
+       [--DD|----ddoommaaiinn _<_n_a_m_e_>] [--FF|----ffllooww--ssppeecc _<_s_p_e_c_s_>] [--MM|----nnoo--iinntteerrffaaccee--mmeerrggee]
+       [--OO|--------oouuttppuutt--ppaacckkeett--ppaatthh]   [--PP|----ddbb--ffiillee--ppaatthh  _<_p_a_t_h_>]  [--QQ|----ssppooooll--
+       ffiillee--ppaatthh  _<_p_a_t_h_>]  [--RR|----ffiilltteerr--rruullee  _<_f_i_l_e_>]  _<_n_u_m_b_e_r_>]  [--UU|----mmaappppeerr
+       _<_U_R_L_>]  [--VV|----vveerrssiioonn]]  [--XX _<_m_a_x___n_u_m___T_C_P___s_e_s_s_i_o_n_s_>] [----ddiissaabbllee--ssttooppccaapp]
+       [----lloogg--eexxttrraa  _<_n_u_m_b_e_r_>]   [----ddiissaabbllee--iinnssttaannttsseessssiioonnppuurrggee]   [----ddiissaabbllee--
+       sscchheeddyyiieelldd] [----ddiissaabbllee--mmuutteexxeexxttrraaiinnffoo] [----sskkiipp--vveerrssiioonn--cchheecckk]
 
        Unix options:
 
-       [[1m-d[22m|[1m--daemon[22m]  [[1m-i[22m|[1m--interface [4m[22m<name>[24m] [[1m-u[22m|[1m--user [4m[22m<user>[24m] [[1m-K[22m|[1m--enable-[0m
-       [1mdebug[22m] [[1m-L[22m] [[1m-use-syslog= [4m[22m<facility>[24m] [[1m--webserver-queue [4m[22m<number>[24m]
+       [--dd|----ddaaeemmoonn]  [--ii|----iinntteerrffaaccee _<_n_a_m_e_>] [--uu|----uusseerr _<_u_s_e_r_>] [--KK|----eennaabbllee--
+       ddeebbuugg] [--LL] [--uussee--ssyysslloogg== _<_f_a_c_i_l_i_t_y_>] [----wweebbsseerrvveerr--qquueeuuee _<_n_u_m_b_e_r_>]
 
        Windows option:
 
-       [[1m-i[22m|[1m--interface [4m[22m<number|name>[24m]
+       [--ii|----iinntteerrffaaccee _<_n_u_m_b_e_r_|_n_a_m_e_>]
 
        OpenSSL options:
 
-       [[1m-W[22m|[1m--https-server [4m[22m<port>[24m]
+       [--WW|----hhttttppss--sseerrvveerr _<_p_o_r_t_>]
 
 
-[1mDESCRIPTION[0m
-       [1mntop [22mshows the current network usage. It displays a list of hosts  that
+DDEESSCCRRIIPPTTIIOONN
+       nnttoopp shows the current network usage. It displays a list of hosts  that
        are  currently using the network and reports information concerning the
-       (IP and non-IP) traffic generated by each host.  [1mntop [22mmay operate as  a
+       (IP and non-IP) traffic generated by each host.  nnttoopp may operate as  a
        front-end  collector (sFlow and/or netFlow plugins) or as a stand-alone
        collector/display program. A web browser is needed to access the infor-
-       mation captured by the [1mntop [22mprogram.
+       mation captured by the nnttoopp program.
 
-       [1mntop  [22mis a hybrid layer 2 / layer 3 network monitor, that is by default
+       nnttoopp  is a hybrid layer 2 / layer 3 network monitor, that is by default
        it uses the layer 2 Media Access Control (MAC) addresses AND the  layer
-       3 tcp/ip addresses.  [1mntop [22mis capable of associating the two, so that ip
+       3 tcp/ip addresses.  nnttoopp is capable of associating the two, so that ip
        and non-ip traffic (e.g. arp, rarp) are combined for a complete picture
        of network activity.
 
 
 
-[1mCOMMAND-LINE OPTIONS[0m
-       [1m@filename[0m
-        The  text  of  [1mfilename  [22mis  copied - ignoring line breaks and comment
-        lines (anything following a #) - into the command line.  [1mntop  [22mbehaves
+CCOOMMMMAANNDD--LLIINNEE OOPPTTIIOONNSS
+       @@ffiilleennaammee
+        The  text  of  ffiilleennaammee  is  copied - ignoring line breaks and comment
+        lines (anything following a #) - into the command line.  nnttoopp  behaves
         as  if  all  of the text had simply been typed directly on the command
         line.  For example, if the command line is "-t 3 @d -u ntop" and  file
         d contains just the line '-d', then the effective command line is -t 3
         -d -u ntop.  Multiple @s are permitted. Nested @s  (an  @  inside  the
         file) are not permitted.
 
-        Remember,  most  [1mntop  [22moptions  are "sticky", that is they just set an
-        internal flag. Invoking them  multiple  times  doesn't  change  [1mntop's[0m
+        Remember,  most  nnttoopp  options  are "sticky", that is they just set an
+        internal flag. Invoking them  multiple  times  doesn't  change  nnttoopp''ss
         behavior.  However,  options  that set a value, such as --trace-level,
         will use the LAST value given: --trace-level 2  --trace-level  3  will
         run as --trace-level 3.
 
 
-       [1m-a | --access-log-path[0m
-        By default [1mntop [22mdoes not maintain a log of HTTP requests to the inter-
+       --aa || ----aacccceessss--lloogg--ppaatthh
+        By default nnttoopp does not maintain a log of HTTP requests to the inter-
         nal web server.  Use this parameter to request logging and to  specify
         the location of the file where these HTTP requests are logged.
 
         Each  log  entry is in Apache-like style.  The only difference between
-        Apache and [1mntop [22mlogs is that an additional column has been added which
-        has  the time (in milliseconds) that [1mntop [22mneeded to serve the request.
+        Apache and nnttoopp logs is that an additional column has been added which
+        has  the time (in milliseconds) that nnttoopp needed to serve the request.
         Log entries look like this:
 
         192.168.1.1 - - [04/Sep/2003:20:38:55 -0500] - "GET / HTTP/1.1" 200 1489 4
@@ -91,7 +91,7 @@ NTOP(8)                                                                NTOP(8)
         plete file name of the access log.
 
 
-       [1m-b | --disable-decoders[0m
+       --bb || ----ddiissaabbllee--ddeeccooddeerrss
         This parameter disables protocol decoders.
 
         Protocol decoders examine and collect information about layer 2 proto-
@@ -102,17 +102,17 @@ NTOP(8)                                                                NTOP(8)
         from the capability to count raw information (packets  and  bytes)  by
         protocol specified by the -p | --protocols parameter, below.
 
-        Decoding protocols is a significant consumer of resources. If the [1mntop[0m
+        Decoding protocols is a significant consumer of resources. If the nnttoopp
         host is underpowered or monitoring a very busy network, you  may  wish
         to  disable  protocol  decoding  via  this  parameter.  It may also be
-        appropriate to use this parameter if you believe that [1mntop  [22mhas  prob-
+        appropriate to use this parameter if you believe that nnttoopp  has  prob-
         lems handling some protocols that occur on your network.
 
         Even  if  decoding  is  disabled, ftp-data traffic is still decoded to
         look for passive ftp port commands.
 
 
-       [1m-c | --sticky-hosts[0m
+       --cc || ----ssttiicckkyy--hhoossttss
         Use this parameter to prevent idle hosts from being purged  from  mem-
         ory.
 
@@ -122,10 +122,10 @@ NTOP(8)                                                                NTOP(8)
         PARM_HOST_PURGE_MINIMUM_IDLE in globals-defines.h.
 
         If you use this option, all hosts - active and idle - are retained  in
-        memory for the duration of the [1mntop [22mrun.
+        memory for the duration of the nnttoopp run.
 
         P2P  users,  port  scans,  popular web servers and other activity will
-        cause [1mntop [22mto record data about a large number of hosts.  On an active
+        cause nnttoopp to record data about a large number of hosts.  On an active
         network, this will consume a significant - and always growing - amount
         of memory.  It is  strongly  recommended  that  you  use  a  filtering
         expression  to  limit  the hosts which are stored if you use --sticky-
@@ -133,46 +133,46 @@ NTOP(8)                                                                NTOP(8)
 
         The idle purge is a statistical one - a random selection of the eligi-
         ble  hosts will be purged during each cycle.  Thus it is possible on a
-        busy system for an idle host to remain in the [1mntop [22mtables  and  appear
+        busy system for an idle host to remain in the nnttoopp tables  and  appear
         'active' for some considerable time after it is truly idle.
 
 
-       [1m-d | --daemon[0m
+       --dd || ----ddaaeemmoonn
         This  parameter causes ntop to become a daemon, i.e. a task which runs
         in the background without connection to a specific terminal.   To  use
-        [1mntop [22mother than as a casual monitoring tool, you probably will want to
+        nnttoopp other than as a casual monitoring tool, you probably will want to
         use this option.
 
-        [1mWARNING: [22mIf you are running as a daemon, the messages from  [1mntop  [22mwill
+        WWAARRNNIINNGG:: If you are running as a daemon, the messages from  nnttoopp  will
         be  'printed'  on to stdout and thus dropped.  You probably don't want
         to do this.  So remember to also use the -L or --use-syslog options to
         save the messages into the system log.
 
 
-       [1m-e | --max-table-rows[0m
-        This  defines  the  maximum  number of lines that [1mntop [22mwill display on
+       --ee || ----mmaaxx--ttaabbllee--rroowwss
+        This  defines  the  maximum  number of lines that nnttoopp will display on
         each generated HTML page. If there are more lines to be displayed than
         this  setting permits, only part of the data will be displayed.  There
         will be page forward/back arrows placed at the bottom of the page  for
         navigation between pages.
 
 
-       [1m-f | --traffic-dump-file[0m
-        By  default, [1mntop [22mcaptures traffic from network interface cards (NICs)
-        or from netFlow/sFlow probes.  However, [1mntop [22mcan also read data from a
-        file  - typically a tcpdump capture or the output from one of the [1mntop[0m
+       --ff || ----ttrraaffffiicc--dduummpp--ffiillee
+        By  default, nnttoopp captures traffic from network interface cards (NICs)
+        or from netFlow/sFlow probes.  However, nnttoopp can also read data from a
+        file  - typically a tcpdump capture or the output from one of the nnttoopp
         packet capture options.
 
-        if you specify -f, [1mntop [22mwill not capture any traffic from NICs  during
+        if you specify -f, nnttoopp will not capture any traffic from NICs  during
         or after the file has been read.  netFlow/sFlow capture - if enabled -
         would still be active.
 
         This option is mostly used for debug purposes.
 
 
-       [1m-g | --track-local-hosts[0m
-        By default, [1mntop [22mtracks all hosts that it sees from  packets  captured
-        on  the various NICs.  Use this parameter to tell [1mntop [22mto capture data
+       --gg || ----ttrraacckk--llooccaall--hhoossttss
+        By default, nnttoopp tracks all hosts that it sees from  packets  captured
+        on  the various NICs.  Use this parameter to tell nnttoopp to capture data
         only about  local  hosts.   Local  hosts  are  defined  based  on  the
         addresses  of  the NICs and those networks identified as local via the
         -m | --local-subnets parameter.
@@ -182,12 +182,12 @@ NTOP(8)                                                                NTOP(8)
         remote hosts is not desired/required to be tracked.
 
 
-       [1m-h | --help[0m
-        Print help information for [1mntop, [22mincluding usage and parameters.
+       --hh || ----hheellpp
+        Print help information for nnttoopp,, including usage and parameters.
 
 
-       [1m-i | --interface[0m
-        Specifies the network interface or interfaces to be used by  [1mntop  [22mfor
+       --ii || ----iinntteerrffaaccee
+        Specifies the network interface or interfaces to be used by  nnttoopp  for
         network monitoring.
 
         If  multiple  interfaces  are  used (this feature is available only if
@@ -205,43 +205,43 @@ NTOP(8)                                                                NTOP(8)
 
         Under Windows, the parameter value is either the number of the  inter-
         face  or  its name, e.g.  {6252C14C-44C9-49D9-BF59-B2DC18C7B811}.  Run
-        [1mntop [22m-h to see a list of interface name-number mappings (at the end of
+        nnttoopp -h to see a list of interface name-number mappings (at the end of
         the help information).
 
 
-       [1m-j | --create-other-packets[0m
-        This  parameter  causes [1mntop [22mto create a dump file of the 'other' net-
+       --jj || ----ccrreeaattee--ootthheerr--ppaacckkeettss
+        This  parameter  causes nnttoopp to create a dump file of the 'other' net-
         work traffic captured.  One file is created for each network interface
         where <path>/ntop-other-pkts.<device>.pcap, where <path> is defined by
         the -O | --output-packet-path parameter.   This  file  is  useful  for
         understanding these unclassifed packets.
 
 
-       [1m-k | --filter-expression-in-extra-frame[0m
+       --kk || ----ffiilltteerr--eexxpprreessssiioonn--iinn--eexxttrraa--ffrraammee
         When  this  parameter  is  used, the current filter expression is dis-
         played in an extra frame and thus is always visible.  This extra frame
-        contains  other  information, including the report creation date, [1mntop[0m
+        contains  other  information, including the report creation date, nnttoopp
         version information and the active interfaces.
 
 
-       [1m-l | --pcap-log[0m
+       --ll || ----ppccaapp--lloogg
         This parameter causes a dump file to be created of the network traffic
-        captured  by  [1mntop  [22min tcpdump (pcap) format.  This file is useful for
-        debug, and may be read back into [1mntop [22mby the -f |  --traffic-dump-file
+        captured  by  nnttoopp  in tcpdump (pcap) format.  This file is useful for
+        debug, and may be read back into nnttoopp by the -f |  --traffic-dump-file
         parameter.   The dump is made after processing any filter expression (
         never even sees filtered packets).
 
-        The output file will  be  named  [4m<path>/<log>.<device>.pcap[24m  (Windows:
-        [4m<path>/<log>.pcap[24m  ),  where  <path>  is defined by the -O | --output-
+        The output file will  be  named  _<_p_a_t_h_>_/_<_l_o_g_>_._<_d_e_v_i_c_e_>_._p_c_a_p  (Windows:
+        _<_p_a_t_h_>_/_<_l_o_g_>_._p_c_a_p  ),  where  <path>  is defined by the -O | --output-
         packet-path parameter and <log> is defined by  this  -l  |  --pcap-log
         parameter.
 
 
-       [1m-m | --local-subnets[0m
-        [1mntop  [22mdetermines  the ip addresses and netmasks for each active inter-
+       --mm || ----llooccaall--ssuubbnneettss
+        nnttoopp  determines  the ip addresses and netmasks for each active inter-
         face.  Any traffic on those networks is considered local.  This param-
         eter  allows  the  user  to define additional networks and subnetworks
-        whose traffic is also considered local  in  [1mntop  [22mreports.  All  other
+        whose traffic is also considered local  in  nnttoopp  reports.  All  other
         hosts are considered remote.
 
         Commas  separate multiple network values.  Both netmask and CIDR nota-
@@ -253,38 +253,38 @@ NTOP(8)                                                                NTOP(8)
         value  as a NIC's local address, a harmless warning message is issued.
 
 
-       [1m-n | --numeric-ip-addresses[0m
-        By default, [1mntop [22mresolves IP addresses using a combination  of  active
+       --nn || ----nnuummeerriicc--iipp--aaddddrreesssseess
+        By default, nnttoopp resolves IP addresses using a combination  of  active
         (explicit)   DNS  queries  and  passive  sniffing.   Sniffing  of  DNS
-        responses occurs when [1mntop [22mreceives a network  packet  containing  the
-        response  to some other user's DNS query.  [1mntop [22mcaptures this informa-
-        tion and enters it into [1mntop's [22mDNS cache, in  expectation  of  shortly
-        seeing  traffic  addressed  to  that host. This way [1mntop [22msignificantly
+        responses occurs when nnttoopp receives a network  packet  containing  the
+        response  to some other user's DNS query.  nnttoopp captures this informa-
+        tion and enters it into nnttoopp''ss DNS cache, in  expectation  of  shortly
+        seeing  traffic  addressed  to  that host. This way nnttoopp significantly
         reduces the number of DNS queries it makes.
 
-        This parameter causes  [1mntop  [22mto  skip  DNS  resolution,  showing  only
+        This parameter causes  nnttoopp  to  skip  DNS  resolution,  showing  only
         numeric  IP  addresses instead of the symbolic names.  This option can
         useful when the DNS is not present or quite slow.
 
 
-       [1m-o | --no-mac[0m
-        [1mntop [22mis a hybrid layer 2/3 network monitor.  That is, it uses both the
+       --oo || ----nnoo--mmaacc
+        nnttoopp is a hybrid layer 2/3 network monitor.  That is, it uses both the
         lower  level, physical device address - the MAC (Media Access Control)
         address - and the higher level, logical, tcp/ip address (the  familiar
-        www.ntop.org  or  131.114.21.9 address).  This allows [1mntop [22mto link the
+        www.ntop.org  or  131.114.21.9 address).  This allows nnttoopp to link the
         logical addresses to a physical machine with multiple addresses  (This
         occurs  with  virtual  hosts  or  additional addresses assigned to the
         interface, etc.)  to present consolidated reporting.
 
-        This parameter specifies that [1mntop [22mshould not trust the MAC  addresses
+        This parameter specifies that nnttoopp should not trust the MAC  addresses
         but just use the IP addresses.
 
         Normally,  since  the  MAC  address  must be globally unique, the dual
-        nature of [1mntop [22mis a benefit and provides far better information  about
+        nature of nnttoopp is a benefit and provides far better information  about
         the network than is available via a pure layer 2 or pure layer 3 moni-
         tor.
 
-        Under certain circumstances - whenever [1mntop [22mis started on an interface
+        Under certain circumstances - whenever nnttoopp is started on an interface
         where  MAC  addresses  cannot be really trusted - you may require this
         option.
 
@@ -300,8 +300,8 @@ NTOP(8)                                                                NTOP(8)
         nor displayed.
 
 
-       [1m-p | --protocols[0m
-        This parameter is used to specify the TCP/UDP protocols that [1mntop [22mwill
+       --pp || ----pprroottooccoollss
+        This parameter is used to specify the TCP/UDP protocols that nnttoopp will
         monitor.  The  format  is <label>=<protocol list> [, <label>=<protocol
         list>], where label is used to  symbolically  identify  the  <protocol
         list>. The format of <protocol list> is <protocol>[|<protocol>], where
@@ -320,7 +320,7 @@ NTOP(8)                                                                NTOP(8)
 
         If  the  <protocol  list> is very long you may store it in a file (for
         instance protocol.list).  To do so, specify the file name  instead  of
-        the <protocol list> on the command line.  e.g.  [1mntop -p protocol.list[0m
+        the <protocol list> on the command line.  e.g.  nnttoopp --pp pprroottooccooll..lliisstt
 
         If the -p parameter is omitted the following default value is used:
 
@@ -360,8 +360,8 @@ NTOP(8)                                                                NTOP(8)
         ing for.
 
 
-       [1m-q | --create-suspicious-packets[0m
-        This parameter tells [1mntop [22mto create a dump file of suspicious packets.
+       --qq || ----ccrreeaattee--ssuussppiicciioouuss--ppaacckkeettss
+        This parameter tells nnttoopp to create a dump file of suspicious packets.
 
         There  are  many,  many,  things  that cause a packet to be labeled as
         'suspicious', including:
@@ -391,47 +391,47 @@ NTOP(8)                                                                NTOP(8)
         where <path> is defined by the -O | --output-packet-path parameter.
 
 
-       [1m-r | --refresh-time[0m
+       --rr || ----rreeffrreesshh--ttiimmee
         Specifies  the delay (in seconds) between automatic screen updates for
         those generated HTML pages which support them.  This parameter  allows
         you  to  leave  your browser window open and have it always displaying
-        nearly real-time data from [1mntop.[0m
+        nearly real-time data from nnttoopp..
 
         The default is 3 seconds.  Please note that if the delay is very short
-        (1  second for instance), [1mntop [22mmight not be able to process all of the
+        (1  second for instance), nnttoopp might not be able to process all of the
         network traffic.
 
 
-       [1m-s | --no-promiscuous[0m
+       --ss || ----nnoo--pprroommiissccuuoouuss
         Use this parameter to  prevent  from  setting  the  interface(s)  into
         promiscuous mode.
 
         An  interface  in  promiscuous  mode  will accept ALL Ethernet frames,
         regardless of whether they directed (addressed) to the  specific  net-
         work  interface  (NIC)  or not.  This is an essential part of enabling
-        [1mntop [22mto monitor an entire network.  (Without  promiscuous  mode,  [1mntop[0m
+        nnttoopp to monitor an entire network.  (Without  promiscuous  mode,  nnttoopp
         will  only see traffic directed to the specific host it is running on,
         plus broadcast traffic such as the arp and dhcp protocols.
 
         Even if you use this parameter, the interface could well be in promis-
         cuous mode if another application enabled it.
 
-        [1mntop  [22mpasses  this  setting on to libpcap, the packet capture library.
+        nnttoopp  passes  this  setting on to libpcap, the packet capture library.
         On many systems, a non-promiscuous open of the network interface  will
         fail, since the libpcap function on most systems require it to capture
-        raw packets ( [1mntop [22mcaptures raw packets so that we may view  and  ana-
+        raw packets ( nnttoopp captures raw packets so that we may view  and  ana-
         lyze the layer 2 - MAC - information).
 
-        Thus on most systems, [1mntop [22mmust probably still be started as root, and
+        Thus on most systems, nnttoopp must probably still be started as root, and
         this option is largely ornamental.   If  it  fails,  you  will  see  a
         ***FATALERROR***  message  referring  to  pcap_open_live() and then an
         information message, "Sorry, but on this  system,  even  with  -s,  it
         appears that ntop must be started as root".
 
 
-       [1m-t | --trace-level[0m
+       --tt || ----ttrraaccee--lleevveell
         This  parameter specifies the 'information' level of messages that you
-        wish [1mntop [22mto display (on stdout or to the log).  The higher the  trace
+        wish nnttoopp to display (on stdout or to the log).  The higher the  trace
         level  number the more information that is displayed.  The trace level
         ranges between 0 (no trace) and 5 (full debug tracings).
 
@@ -443,22 +443,22 @@ NTOP(8)                                                                NTOP(8)
         level 3 displays error, warning and informational messages.
 
         Trace  level  4 is called 'noisy' and it is - generating many messages
-        about the internal functioning of [1mntop.  [22mTrace level 5 is 'noisy' plus
+        about the internal functioning of nnttoopp..  Trace level 5 is 'noisy' plus
         --log-extra  1,  i.e.  all  possible  messages,  with  a file:line tag
         prepended to every message.
 
 
-       [1m-u | --user[0m
-        Specifies the user [1mntop [22mshould run as after it initializes.
+       --uu || ----uusseerr
+        Specifies the user nnttoopp should run as after it initializes.
 
-        [1mntop [22mmust normally be started as root so that it has sufficient privi-
+        nnttoopp must normally be started as root so that it has sufficient privi-
         leges  to  open  the  network  interfaces  in  promiscuous mode and to
         receive raw frames.  See  the  discussion  of  -s  |  --no-promiscuous
-        above, if you wish to try starting [1mntop [22mas a non-root user.
+        above, if you wish to try starting nnttoopp as a non-root user.
 
-        Shortly  after  starting  up,  [1mntop [22mbecomes the user you specify here,
+        Shortly  after  starting  up,  nnttoopp becomes the user you specify here,
         which normally has substantially reduced privileges, such as no  login
-        shell.   This  is  the  userid  which  owns [1mntop's [22mdatabase and output
+        shell.   This  is  the  userid  which  owns nnttoopp''ss database and output
         files.
 
         The value specified may be either a username or  a  numeric  user  id.
@@ -469,31 +469,31 @@ NTOP(8)                                                                NTOP(8)
 
         NOTE: This should not be root unless you really understand  the  secu-
         rity  risks. In order to prevent this by accident, the only way to run
-        [1mntop [22mas root is to explicitly specify -u root.  [1mDon't do it.[0m
+        nnttoopp as root is to explicitly specify -u root.  DDoonn''tt ddoo iitt..
 
 
-       [1m-x[0m
+       --xx
 
-       [1m-X[0m
-        [1mntop [22mcreates a new hash/list entry for each new host/TCP session seen.
+       --XX
+        nnttoopp creates a new hash/list entry for each new host/TCP session seen.
         In  case of DOS (Denial Of Service) an attacker can easily exhaust all
         the host available memory because ntop is creating entries  for  dummy
         hosts.  In  order to avoid this you can set an upper limit in order to
         limit the memory ntop can use.
 
 
-       [1m-w | --http-server[0m
+       --ww || ----hhttttpp--sseerrvveerr
 
-       [1m-W | --https-server[0m
-        [1mntop [22moffers an embedded web server to present the information that has
+       --WW || ----hhttttppss--sseerrvveerr
+        nnttoopp offers an embedded web server to present the information that has
         been  so  painstakingly  gathered.   An  external  HTTP  server is NOT
-        required NOR supported.  The [1mntop [22mweb  server  is  embedded  into  the
+        required NOR supported.  The nnttoopp web  server  is  embedded  into  the
         application.   These  parameters  specify the port (and optionally the
-        address (i.e. interface)) of the [1mntop [22mweb server.
+        address (i.e. interface)) of the nnttoopp web server.
 
         For example, if started with -w 3000 (the default port),  the  URL  to
-        access [1mntop [22mis http://hostname:3000/.  If started with a full specifi-
-        cation,  e.g.  -w  192.168.1.1:3000,  [1mntop  [22mlistens   on   only   that
+        access nnttoopp is http://hostname:3000/.  If started with a full specifi-
+        cation,  e.g.  -w  192.168.1.1:3000,  nnttoopp  listens   on   only   that
         address/port combination.
 
         If  -w  is set to 0 the web server will not listen for http:// connec-
@@ -504,20 +504,20 @@ NTOP(8)                                                                NTOP(8)
 
         Some examples:
 
-        [1mntop  -w 3000 -W 0 [22m(this is the default setting) HTTP requests on port
+        nnttoopp  --ww 33000000 --WW 00 (this is the default setting) HTTP requests on port
         3000 and no HTTPS.
 
-        [1mntop -w 80 -W 443 [22mBoth HTTP and HTTPS have been enabled on their  most
+        nnttoopp --ww 8800 --WW 444433 Both HTTP and HTTPS have been enabled on their  most
         common ports.
 
-        [1mntop -w 0 -W 443 [22mHTTP disabled, HTTPS enabled on the common port.
+        nnttoopp --ww 00 --WW 444433 HTTP disabled, HTTPS enabled on the common port.
 
-        Certain sensitive, configuration pages of the [1mntop [22mweb server are pro-
+        Certain sensitive, configuration pages of the nnttoopp web server are pro-
         tected by a userid/password.   By  default,  these  are  the  user/URL
         administration,  filter,  shutdown  and  reset stats are password pro-
         tected
-         and are accessible initially only to user [1madmin [22mwith a  password  set
-        during the first run of [1mntop.[0m
+         and are accessible initially only to user aaddmmiinn with a  password  set
+        during the first run of nnttoopp..
 
         Users  can  modify/add/delete  users/URLs  using ntop itself - see the
         Admin tab.
@@ -525,19 +525,19 @@ NTOP(8)                                                                NTOP(8)
         The passwords, userids and URLs to protect with passwords  are  stored
         in  a database file.  Passwords are stored in an encrypted form in the
         database for further security.  Best practices call for securing  that
-        database so that only the [1mntop [22muser can read it.
+        database so that only the nnttoopp user can read it.
 
-        There  is  a  discussion  in  docs/FAQ about further securing the [1mntop[0m
+        There  is  a  discussion  in  docs/FAQ about further securing the nnttoopp
         environment.
 
 
-       [1m-z | --disable-sessions[0m
+       --zz || ----ddiissaabbllee--sseessssiioonnss
         This parameter disables TCP session tracking.  Use it for better  per-
         formance or when you don't really need/care to track sessions.
 
 
-       [1m-A | --set-admin-password[0m
-        This  parameter  is  used  to  start [1mntop [22m, set the admin password and
+       --AA || ----sseett--aaddmmiinn--ppaasssswwoorrdd
+        This  parameter  is  used  to  start nnttoopp , set the admin password and
         quit. It is quite useful for installers that need to automatically set
         the password for the admin user.
 
@@ -545,41 +545,41 @@ NTOP(8)                                                                NTOP(8)
         the password.
 
         You may also use this parameter to set a specific value  using  --set-
-        admin-password=value.   [1mThe = is REQUIRED and no spaces are permitted![0m
+        admin-password=value.   TThhee == iiss RREEQQUUIIRREEDD aanndd nnoo ssppaacceess aarree ppeerrmmiitttteedd!!
 
-        If you attempt to run [1mntop [22mas a daemon without setting a  password,  a
-        FATAL ERROR message is generated and [1mntop [22mstops.
+        If you attempt to run nnttoopp as a daemon without setting a  password,  a
+        FATAL ERROR message is generated and nnttoopp stops.
 
 
-       [1m-B | --filter-expression[0m
-        Filters  allows  the user to restrict the traffic seen by [1mntop [22mon just
+       --BB || ----ffiilltteerr--eexxpprreessssiioonn
+        Filters  allows  the user to restrict the traffic seen by nnttoopp on just
         about any imaginable item.
 
         The filter expression is set at run time by this parameter, but it may
-        be  changed during the [1mntop [22mrun on the Admin | Change Filter web page.
+        be  changed during the nnttoopp run on the Admin | Change Filter web page.
 
-        The basic format is [1m-B filter [22m, where the quotes are [1mREQUIRED[0m
+        The basic format is --BB ffiilltteerr , where the quotes are RREEQQUUIIRREEDD
 
         The syntax of the filter expression uses the same BPF (Berkeley Packet
         Filter) expressions used by other packages such as tcpdump
 
         For  instance,  suppose  you are interested only in the traffic gener-
-        ated/received by the host jake.unipi.it.  [1mntop  [22mcan  then  be  started
+        ated/received by the host jake.unipi.it.  nnttoopp  can  then  be  started
         with the following filter:
 
-        [1mntop -B src host jake.unipi.it or dst host jake.unipi.it[0m
+        nnttoopp --BB ssrrcc hhoosstt jjaakkee..uunniippii..iitt oorr ddsstt hhoosstt jjaakkee..uunniippii..iitt
 
         or in shorthand:
 
-        [1mntop -B host jake.unipi.it or host jake.unipi.it[0m
+        nnttoopp --BB hhoosstt jjaakkee..uunniippii..iitt oorr hhoosstt jjaakkee..uunniippii..iitt
 
-        See  the 'expression' section of the [1mtcpdump [22mman page - usually avail-
+        See  the 'expression' section of the ttccppdduummpp man page - usually avail-
         able at http://www.tcpdump.org/tcpdump_man.html - for further informa-
         tion and the best quick guide to BPF filters currently available.
 
 
 
-       [1m-C |[0m
+       --CC ||
         This  instruments ntop to be used in two configurations: host and net-
         work mode. In  host  mode  (default)  ntop  works  as  usual:  the  IP
         addresses  received  are  those  of  real  hosts.  In host mode the IP
@@ -594,19 +594,19 @@ NTOP(8)                                                                NTOP(8)
 
 
 
-       [1m-D | --domain[0m
+       --DD || ----ddoommaaiinn
         This  identifies  the  local  domain suffix, e.g. ntop.org.  It may be
-        necessary, if [1mntop [22mis having difficulty determining it from the inter-
+        necessary, if nnttoopp is having difficulty determining it from the inter-
         face.
 
 
-       [1m-F | --flow-spec[0m
+       --FF || ----ffllooww--ssppeecc
         It  is used to specify network flows similar to more powerful applica-
         tions such as NeTraMet.  A flow is a stream of captured  packets  that
         match a specified rule. The format is
 
-        [1m<flow-label>='<matching  expression>'[,<flow-label>='<matching expres-[0m
-        [1msion>'][0m
+        <<ffllooww--llaabbeell>>==''<<mmaattcchhiinngg  eexxpprreessssiioonn>>''[[,,<<ffllooww--llaabbeell>>==''<<mmaattcchhiinngg eexxpprreess--
+        ssiioonn>>'']]
 
         , where the label is used to symbolically identify the flow  specified
         by  the  expression.   The  expression  format  is  specified  in  the
@@ -614,12 +614,12 @@ NTOP(8)                                                                NTOP(8)
         ing  flows  can  be  accessed following the HTML link named 'List Net-
         Flows'.
 
-        For instance define two flows  with  the  following  expression  [1mLuca-[0m
-        [1mHosts='host  jake.unipi.it  or host pisanino.unipi.it',GatewayRoutedP-[0m
-        [1mkts='gateway gateway.unipi.it' .[0m
+        For instance define two flows  with  the  following  expression  LLuuccaa--
+        HHoossttss==''hhoosstt  jjaakkee..uunniippii..iitt  oorr hhoosstt ppiissaanniinnoo..uunniippii..iitt'',,GGaatteewwaayyRRoouutteeddPP--
+        kkttss==''ggaatteewwaayy ggaatteewwaayy..uunniippii..iitt'' ..
 
         All   the   traffic   sent/received   by   hosts   jake.unipi.it    or
-        pisanino.unipi.it  is  collected  by  [1mntop  [22mand added to the LucaHosts
+        pisanino.unipi.it  is  collected  by  nnttoopp  and added to the LucaHosts
         flow, whereas all the packet routed by  the  gateway  gateway.unipi.it
         are  added  to  the  GatewayRoutedPkts flow. If the flows list is very
         long you may store in a file (for instance flows.list) and specify the
@@ -630,14 +630,14 @@ NTOP(8)                                                                NTOP(8)
         required.
 
 
-       [1m-K | --enable-debug[0m
+       --KK || ----eennaabbllee--ddeebbuugg
         Use  this  parameter  to  simplify  application  debug.  It does three
         things: 1. Does not fork() on the "read only" html pages.  2. Displays
         mutex  values on the configuration (info.html) page.  3. (If available
         - glibc/gcc) Activates an automated backtrace on application errors.
 
 
-       [1m-L | --use-syslog=facility[0m
+       --LL || ----uussee--ssyysslloogg==ffaacciilliittyy
         Use this parameter to send log messages to the system log  instead  of
         stdout.
 
@@ -646,10 +646,10 @@ NTOP(8)                                                                NTOP(8)
         globals-defines.h.
 
         The  complex  form, --use-syslog=facility will set the log facility to
-        whatever value (e.g. local3, security) you specify.  [1mThe = is REQUIRED[0m
-        [1mand no spaces are allowed![0m
+        whatever value (e.g. local3, security) you specify.  TThhee == iiss RREEQQUUIIRREEDD
+        aanndd nnoo ssppaacceess aarree aalllloowweedd!!
 
-        This  setting  applies  both  to  [1mntop  [22mand  to any child fork()ed for
+        This  setting  applies  both  to  nnttoopp  and  to any child fork()ed for
         reporting.  If this parameter is not  specified,  any  fork()ed  child
         will  use  the  default value and will log it's messages to the system
         log (this occurs because the fork()ed child must give up  it's  access
@@ -660,8 +660,8 @@ NTOP(8)                                                                NTOP(8)
         Names.
 
 
-       [1m-M | --no-interface-merge[0m
-        By  default, [1mntop [22mmerges the data collected from all of the interfaces
+       --MM || ----nnoo--iinntteerrffaaccee--mmeerrggee
+        By  default, nnttoopp merges the data collected from all of the interfaces
         (NICs) it is monitoring into a single set of counters.
 
         If you have a simple network, say a small LAN with a connection to the
@@ -670,19 +670,19 @@ NTOP(8)                                                                NTOP(8)
         desirable.   You  may  also  have other reasons for wishing to monitor
         each interface separately, for example DMZ vs. LAN traffic.
 
-        This option instructs [1mntop [22mnot to merge network  interfaces  together.
-        This  means  that  [1mntop [22mwill collect statistics for each interface and
+        This option instructs nnttoopp not to merge network  interfaces  together.
+        This  means  that  nnttoopp will collect statistics for each interface and
         report them separately.
 
-        Only ONE interface may be reported on at a time  -  use  the  [1mAdmin  |[0m
-        [1mSwitch  NIC  [22moption  on  the  web  server to select which interface to
+        Only ONE interface may be reported on at a time  -  use  the  AAddmmiinn  ||
+        SSwwiittcchh  NNIICC  option  on  the  web  server to select which interface to
         report upon.
 
         Note that activating either the  netFlow  and/or  sFlow  plugins  will
         force the setting of -M.  Once enabled, you cannot go back.
 
 
-       [1m-O | --output-packet-path[0m
+       --OO || ----oouuttppuutt--ppaacckkeett--ppaatthh
         This   parameter  defines  the  base  path  for  the  ntop-suspicious-
         pkts.XXX.pcap and normal packet dump files.
 
@@ -691,18 +691,18 @@ NTOP(8)                                                                NTOP(8)
         --localstatedir= parameter.  If --localstatedir is not  specified,  it
         defaults to the --prefix value plus /var (e.g. /usr/local/var).
 
-        Be  aware  that this may not be what you expect when running [1mntop [22mas a
+        Be  aware  that this may not be what you expect when running nnttoopp as a
         daemon or Windows service. Setting an explicit and absolute path value
-        is [1mSTRONGLY [22mrecommended if you use this facility.
+        is SSTTRROONNGGLLYY recommended if you use this facility.
 
 
-       [1m-P | --db-file-path[0m
+       --PP || ----ddbb--ffiillee--ppaatthh
 
-       [1m-Q | --spool-file-path[0m
-        These parameters specify where [1mntop [22mstores database files.
+       --QQ || ----ssppooooll--ffiillee--ppaatthh
+        These parameters specify where nnttoopp stores database files.
 
         There  are  two  types,  'temporary'  - that is ones which need not be
-        retained from [1mntop [22mrun to [1mntop [22mrun, and  'permanent',  which  must  be
+        retained from nnttoopp run to nnttoopp run, and  'permanent',  which  must  be
         retained (or recreated).
 
         The 'permanent' databases are the preferences, "prefsCache.db" and the
@@ -721,7 +721,7 @@ NTOP(8)                                                                NTOP(8)
         databases.
 
         The directories named must allow read/write and file creation  by  the
-        [1mntop  [22muser.  For security, nobody else should have even read access to
+        nnttoopp  user.  For security, nobody else should have even read access to
         these files.
 
         Note that the default value is the config.h parameter  CFG_DBFILE_DIR.
@@ -729,45 +729,45 @@ NTOP(8)                                                                NTOP(8)
         If --localstatedir is not specified, it defaults to the --prefix value
         plus /var (e.g. /usr/local/var).
 
-        This  may not be what you expect when running [1mntop [22mas a daemon or Win-
+        This  may not be what you expect when running nnttoopp as a daemon or Win-
         dows service.
 
-        Note that on versions of [1mntop [22mprior to 2.3, these parameters defaulted
+        Note that on versions of nnttoopp prior to 2.3, these parameters defaulted
         to "." (the current working directory, e.g.  the value returned by the
-        pwd command) and caused havoc as it was different when  [1mntop  [22mwas  run
+        pwd command) and caused havoc as it was different when  nnttoopp  was  run
         from  the  command line, vs. run via cron, vs. run from an initializa-
         tion script.
 
-        Setting an explicit and absolute path value is [1mSTRONGLY [22mrecommended.
+        Setting an explicit and absolute path value is SSTTRROONNGGLLYY recommended.
 
 
-       [1m-U | --mapper[0m
+       --UU || ----mmaappppeerr
         Specifies the URL of the mapper.pl utility.
 
-        If provided, [1mntop [22mcreates a clickable hyperlink  on  the  'Info  about
+        If provided, nnttoopp creates a clickable hyperlink  on  the  'Info  about
         host  xxxxxx'  page to this URL by appending ?host=xxxxx.  Any type of
         host lookup could be performed, but this is  intended  to  lookup  the
         geographical location of the host.
 
         A cgi-based mapper interface to http://www.multimap.com is part of the
-        [1mntop [22mdistribution [see www/Perl/mapper.pl]).
+        nnttoopp distribution [see www/Perl/mapper.pl]).
 
 
-       [1m-V | --version[0m
-        Prints [1mntop [22mversion information and then exits.
+       --VV || ----vveerrssiioonn
+        Prints nnttoopp version information and then exits.
 
 
-       [1m-W | --https-server[0m
+       --WW || ----hhttttppss--sseerrvveerr
         (See the joint documentation with the -w parameter, above)
 
 
-       [1m--disable-stopcap[0m
-        Return [1mntop [22mto the old (v2.1) behavior on a memory error.  The default
+       ----ddiissaabbllee--ssttooppccaapp
+        Return nnttoopp to the old (v2.1) behavior on a memory error.  The default
         of  stopcap  enabled  makes  the  web  interface available albeit with
-        static content until [1mntop [22mis shutdown.
+        static content until nnttoopp is shutdown.
 
 
-       [1m--log-extra[0m
+       ----lloogg--eexxttrraa
         This optional parameter controls the addition of more  information  to
         each  log  message.   Both  choices  are useful in different ways, for
         debugging and for using log watching and filtering packages.
@@ -775,40 +775,55 @@ NTOP(8)                                                                NTOP(8)
         Setting 1 adds a [file:line] to the  beginning  of  the  log  message.
         Setting  2  adds  a  [MSGIDnnnnnnn] tag at the end of the log message.
         The nnnnnnn value should be unique number for every message and should
-        be stable across [1mntop [22mreleases.
+        be stable across nnttoopp releases.
 
 
-       [1m--disable-instantsessionpurge[0m
-        [1mntop [22msets completed sessions as 'timed out' and then purge them almost
+       ----ddiissaabbllee--iinnssttaannttsseessssiioonnppuurrggee
+        nnttoopp sets completed sessions as 'timed out' and then purge them almost
         instantly, which is not the behavior you might expect from the discus-
         sions  about purge timeouts.  This switch makes ntop respect the time-
         outs for completed sessions.  It is NOT the default because a busy web
         server  may  have  100s  or 1000s of completed sessions and this would
-        significantly increase the amount of memory [1mntop [22muses.
+        significantly increase the amount of memory nnttoopp uses.
 
 
-       [1m--disable-schedyield[0m
-        [1mntop [22muses sched_yield()  calls  for  better  interactive  performance.
+       ----ddiissaabbllee--sscchheeddyyiieelldd
+        nnttoopp uses sched_yield()  calls  for  better  interactive  performance.
         Under  some  situations,  primarily  under  RedHat Linux 8.0, this can
-        deadlock, causing the [1mntop [22mweb server  to  stop  responding,  although
-        [1mntop  [22mappears to still be operational according to the ps command. Use
+        deadlock, causing the nnttoopp web server  to  stop  responding,  although
+        nnttoopp  appears to still be operational according to the ps command. Use
         this switch to disable these calls, IF you are seeing deadlocks.
 
 
-       [1m--disable-mutexextrainfo[0m
-        [1mntop [22mstores extra information about the locks and unlocks of the  pro-
-        tective  mutexes  it  uses. Since [1mntop [22muses fine-grained locking, this
+       ----ddiissaabbllee--mmuutteexxeexxttrraaiinnffoo
+        nnttoopp stores extra information about the locks and unlocks of the  pro-
+        tective  mutexes  it  uses. Since nnttoopp uses fine-grained locking, this
         information is updated frequently.  On some  OSes,  the  system  calls
         used  to  collect  this  informatio  (getpid() and gettimeofday()) are
         expensive.  This option disables the  extra  information.   It  should
-        have no processing impact on [1mntop[0m
-         -  however  should [1mntop [22mactually deadlock, we would lose the informa-
+        have no processing impact on nnttoopp
+         -  however  should nnttoopp actually deadlock, we would lose the informa-
         tion that sometimes tells us why.
 
 
-[1mWEB VIEWS[0m
-       While [1mntop [22mis running, multiple users can access the  traffic  informa-
-       tion using their web browsers.  [1mntop [22mdoes not generate 'fancy' or 'com-
+       ----sskkiipp--vveerrssiioonn--cchheecckk
+        By default, nnttoopp accesses a remote file to periodically check  if  the
+        most  current  version  is  running.  This option disables that check.
+        Please review the privacy notice at the bottom of this page  for  more
+        information.   By default, the recheck period is slightly more than 15
+        days.  This can be adjusted via a constant in  globals-defines.h.   If
+        the  result  of the initial check indicates that the nnttoopp version is a
+        'new development' version (that is newer  than  the  latest  published
+        development  version), the recheck is disabled.  This is because which
+        fixes and enhancements were present/absent from the code.
+
+        NOTE: At present, the recheck does not work under Windows.
+
+
+
+WWEEBB VVIIEEWWSS
+       While nnttoopp is running, multiple users can access the  traffic  informa-
+       tion using their web browsers.  nnttoopp does not generate 'fancy' or 'com-
        plex' html, although it does use frame,  shallowly  nested  tables  and
        makes minimal use of Cascading Style Sheets.
 
@@ -830,59 +845,59 @@ NTOP(8)                                                                NTOP(8)
        item "Switch NIC" on that Admin menu.
 
 
-[1mNOTES[0m
-       [1mntop [22mrequires a number of external  tools  and  libraries  to  operate.
+NNOOTTEESS
+       nnttoopp requires a number of external  tools  and  libraries  to  operate.
        Certain  other  tools  are optional, but add to the program's capabili-
        ties.
 
 
-       [1m--webserver-queue[0m
+       ----wweebbsseerrvveerr--qquueeuuee
         Specifies the maximum number of web server  requests  for  the  tcp/ip
-        stack  to  retain  in  it's  queue  awaiting  delivery to the [1mntop [22mweb
+        stack  to  retain  in  it's  queue  awaiting  delivery to the nnttoopp web
         server.  Requests in excess of this queue may be dropped (allowing for
         retransmission)  or rejected at the tcp/ip stack level, depending upon
         the OS.  Whatever happens, happens at the OS level, without any infor-
-        mation being delivered to [1mntop[0m
+        mation being delivered to nnttoopp
 
         Required libraries include:
 
-        [1mlibpcap [22mfrom http://www.tcpdump.org/
+        lliibbppccaapp from http://www.tcpdump.org/
 
-        The  Windows  version makes use of [1mWinPcap [22m(libpcap for Windows) which
+        The  Windows  version makes use of WWiinnPPccaapp (libpcap for Windows) which
         may be downloaded from http://winpcap.polito.it/install/default.htm.
 
-        WARNING: The 2.x releases of [1mWinPcap [22mwill NOT support SMP machines.
+        WARNING: The 2.x releases of WWiinnPPccaapp will NOT support SMP machines.
 
-        [1mgdbm [22mfrom http://www.gnu.org/software/gdbm/gdbm.html
+        ggddbbmm from http://www.gnu.org/software/gdbm/gdbm.html
 
-        [1mntop [22mrequires a POSIX  threads  library.  Although  a  single-threaded
-        version  of  [1mntop  [22mcan  be  built  from the source if requested during
-        ./configure, it is not recommended for more than trivial usage.
+        nnttoopp requires a POSIX threads library. Although a single-threaded ver-
+        sion  of  nnttoopp can be built from the source if requested during ./con-
+        figure, it is not recommended for more than trivial usage.
 
-        The  [1mgd  [22mlibrary,  for  the  creation  of  png  files,  available   at
-        http://www.boutell.com/gd/.  [1mntop [22msupports both gd 1.X and 2.X
+        The  ggdd  library,  for  the  creation  of  png  files,  available   at
+        http://www.boutell.com/gd/.  nnttoopp supports both gd 1.X and 2.X
 
-        The  [1mlibpng  [22mlibrary,  for  the  creation  of  png files, available at
-        http://www.libpng.org/pub/png/libpng.html.   [1mntop  [22msupports  both  the
+        The  lliibbppnngg  library,  for  the  creation  of  png files, available at
+        http://www.libpng.org/pub/png/libpng.html.   nnttoopp  supports  both  the
         1.0.x  series  and the 1.2.x series of libpng, but cautions users that
         there are incompatibilities if you compile with one and run  with  the
         other.   Please  read  the discussion in docs/FAQ before reporting ANY
         problem with libpng.
 
-        (if an https:// server is desired) [1mopenSSL [22mfrom  the  OpenSSL  project
+        (if an https:// server is desired) ooppeennSSSSLL from  the  OpenSSL  project
         available at http://www.openssl.org.
 
-        The  [1mrrdtool  [22mlibrary  is required by the rrd plugin.  rrdtool creates
+        The  rrrrddttooooll  library  is required by the rrd plugin.  rrdtool creates
         'Round-Robin databases' which are used to store and  graph  historical
         data  in a format that permits long duration retention without growing
         larger  over   time.    The   rrdtool   home   page   is   http://peo-
         ple.ee.ethz.ch/~oetiker/webtools/rrdtool/
 
-        [1mntop  [22mincludes  a  patched and frozen version of rrdtool 1.0.42 in the
-        myrrd/ directory.  Users of [1mntop [22mv2.3 should not need to  specifically
+        nnttoopp  includes  a  patched and frozen version of rrdtool 1.0.42 in the
+        myrrd/ directory.  Users of nnttoopp v2.3 should not need to  specifically
         install rrdtool.
 
-        The  [1msflow  [22mPlugin  is courtesy of and supported by InMon Corporation,
+        The  ssffllooww  Plugin  is courtesy of and supported by InMon Corporation,
         http://www.inmon.com/sflowTools.htm.
 
         There are other optional libraries.  See the output of ./configure for
@@ -892,11 +907,101 @@ NTOP(8)                                                                NTOP(8)
         report new locations or dead links.
 
 
-[1mSEE ALSO[0m
-       [1mtop[22m(1), [1mtcpdump[22m(8).  [1mpcap[22m(3).
+SSEEEE AALLSSOO
+       ttoopp(1), ttccppdduummpp(8).  ppccaapp(3).
 
 
-[1mUSER SUPPORT[0m
+PPRRIIVVAACCYY NNOOTTIICCEE
+       By default at startup and at periodic intervals, the nnttoopp program  will
+       retrieve  a  file  containing current ntop program version information.
+       Retrieving this file allows this nnttoopp instance to confirm  that  it  is
+       running the most current version.
+
+       The  retrieval is done using standard http:// requests, which will cre-
+       ate log records on the hosting system.  These log  records  do  contain
+       information  which  identifies  a specific nnttoopp site.  Accordingly, you
+       are being notified that this individually identifiable  information  is
+       being transmitted and recorded.
+
+       You  may  request - via the ----sskkiipp--vveerrssiioonn--cchheecckk run-time option - that
+       this check be eliminated.  If you  use  this  option,  no  individually
+       identifiable information is transmitted or recorded, because the entire
+       retrieval and check is skipped.
+
+       We ask you to allow this retrieval and check, because it benefits  both
+       you and the nnttoopp developers.  It benefits you because you will be auto-
+       matically notified if the nnttoopp program  version  is  obsolete,  becomes
+       unsupported  or  is  no  longer current.  It benefits the developers of
+       nnttoopp because it allows us  to  determine  the  number  of  active  nnttoopp
+       instances,  and  the  operating  system/versions that users are running
+       nnttoopp under.  This allows us to focus development resources  on  systems
+       like those our users are using nnttoopp on.
+
+       The  individually  identifiable  information  is  contained  in the web
+       server log records which are automatically created each time  the  ver-
+       sion  file  is retrieved.  This is a function of the web server and not
+       of nnttoopp , but we do take advantage of it.  The log record shows the  IP
+       address  of  the  requestor (the nnttoopp instance) and a User-Agent header
+       field.  We place information in the User-Agent header as follows:
+
+           ntop/<version>
+           host/<name from config.guess>
+           distro/<if one>
+           release/<of the distro, also if one>
+           kernrlse/<kernel version or release>
+           GCC/<version>
+           config() <condensed parameters from ./configure>
+           run()    <condensed flags - no data - from the execution line>
+           libpcap/<version>
+           gdbm/<version>
+           openssl/<version>
+           zlib/<version>
+           access/<http, https, both or none>
+           interfaces() <given interface names>
+
+       For example:
+
+           ntop/2.2.98 host/i686-pc-linux-gnu  distro/redhat  release/9  kern-
+       rlse/2.4.20-8smp
+           GCC/3.2.2  config(i18n) run(i; u; P; w; t; logextra; m; instantses-
+       sionpurge;
+           schedyield; d; usesyslog=; t) gdbm/1.8.0 openssl/0.9.7a zlib/1.1.4
+           access/http interfaces(eth0,eth1)
+
+       Distro and release information is determined at compile time  and  con-
+       sists  of  information typically found in the /etc/release (or similar)
+       file. See the nnttoopp tool linuxrelease for how this is determined.
+
+       gcc compiler version (if available) is the internal version #s for  the
+       gcc compiler, e.g. 3.2.3.
+
+       kernrlse  is  the  Linux  Kernel  version or the xBSD 'release' such as
+       4.9-RELEASE and is determined from the uname data (if it's  available).
+
+       The ./configure parameters are stripped of directory paths, leading -s,
+       etc. to create a short form that shows us what  ./configure  parameters
+       people are using.
+
+       Similarly, the run time parameters are stripped of data and paths, just
+       showing which flags are being used.
+
+       The libpcap, gdbm, openssl and zlib  versions  come  from  the  strings
+       returned by the various inquiry functions (if they're availabe).
+
+       Here's a sample log record:
+
+       67.xxx.xxx.xxx  -  -  [28/Dec/2003:12:11:46  -0500]  "GET  /version.xml
+       HTTP/1.0"
+         200 1568 www.burtonstrauss.com "-"  "ntop/2.2.98  host/i686-pc-linux-
+       gnu
+         distro/redhat release/9 kernrlse/2.4.20-8smp GCC/3.2.2 config(i18n)
+         run(i; u; P; w; t; logextra; m; instantsessionpurge; schedyield; d;
+         usesyslog=)    libpcap/0.8   gdbm/1.8.0   openssl/0.9.7a   zlib/1.1.4
+       access/http
+         interfaces(eth0,eth1,eth2)" "-"
+
+
+UUSSEERR SSUUPPPPOORRTT
        Please send bug reports to  the  ntop-dev  <ntop-dev@ntop.org>  mailing
        list. The ntop <ntop@ntop.org> mailing list is used for discussing ntop
        usage issues. In order to post messages on the lists a (free) subscrip-
@@ -909,16 +1014,16 @@ NTOP(8)                                                                NTOP(8)
        Please send code patches to <patch@ntop.org>.
 
 
-[1mAUTHOR[0m
+AAUUTTHHOORR
        ntop's  author  is Luca Deri (http://luca.ntop.org/) who can be reached
        at <deri@ntop.org>.
 
 
-[1mLICENCE[0m
+LLIICCEENNCCEE
        ntop is distributed under the GNU GPL licence (http://www.gnu.org/).
 
 
-[1mACKNOWLEDGMENTS[0m
+AACCKKNNOOWWLLEEDDGGMMEENNTTSS
        The author acknowledges the Centro Serra of  the  University  of  Pisa,
        Italy (http://www-serra.unipi.it/) for hosting the ntop sites (both web
        and mailing lists), and Burton Strauss <burton@ntopsupport.com> for his
@@ -928,4 +1033,4 @@ NTOP(8)                                                                NTOP(8)
 
 
 
-                           September 2003 (ntop 2.3)                   NTOP(8)
+                           December 2003 (ntop 3.0)                    NTOP(8)

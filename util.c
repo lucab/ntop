@@ -4667,3 +4667,721 @@ FcNameServerCacheEntry *findFcHostNSCacheEntry (FcAddress *fcAddr, u_short vsanI
 }
 
 /* ************************************ */
+
+
+/* HTTP version file retrieval loosely based on wget from FSF
+ *
+ * Retrieve a document through HTTP protocol.
+ *
+ *    <ntopversion>
+ *      <site>www.ntop.org</site>
+ *      <stable>2.2c</stable>
+ *      <development>2.2.97</development>
+ *      <unsupported>2.2</unsupported>
+ *    </ntopversion>
+ *
+ *  However, this is very unsopisticated.  If there's any problem, something
+ *  we don't expect, etc., just report it and move on...
+ *
+ */
+
+/* First a bunch of helper functions to keep the main checkVersion() routine
+ * even slightly understandable...
+ */
+
+void displayPrivacyNotice(void) {
+        if(myGlobals.firstVersionCheckDone == FALSE) {
+          myGlobals.firstVersionCheckDone = TRUE;
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: **********************PRIVACY**NOTICE**********************");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * ntop instances may record individually identifiable     *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * information on a remote system as part of the version   *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * check.                                                  *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: *                                                         *");
+          if(myGlobals.skipVersionCheck == TRUE) {
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * You have requested - via the --skip-version-check       *");
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * option that this check be skipped and so no             *");
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * individually identifiable information will be recorded. *");
+          } else {
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * You may request - via the --skip-version-check option   *");
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * that this check be skipped and that no individually     *");
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * identifiable information be recorded.                   *");
+          }
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: *                                                         *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * In general, we ask you to permit this check because it  *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * benefits both the users and developers of ntop.         *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: *                                                         *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * Review the man ntop page for more information.          *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: *                                                         *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: **********************PRIVACY**NOTICE**********************");
+
+#ifdef CHKVER_DEBUG
+/* This is here so it's only executed ONCE... */
+          #define cNV2N(a, b) traceEvent(CONST_TRACE_INFO, /
+                                         "CHKVER_DEBUG: cNV2N %-10s -> %10u expected %10u", /
+                                         a, convertNtopVersionToNumber(a), b)
+          cNV2N("1.3",    103000000);
+          cNV2N("2.1",    201000000);
+          cNV2N("2.1.1",  201000001);
+          cNV2N("2.1.2",  201000002);
+          cNV2N("2.1.3",  201000003);
+          cNV2N("2.1.50", 201050000);
+          cNV2N("2.1.90", 201090000);
+          cNV2N("2.2",    202000000);
+          cNV2N("2.2a",   202000100);
+          cNV2N("2.2b",   202000200);
+          cNV2N("2.2c",   202000300);
+          cNV2N("2.2.50", 202050000);
+          cNV2N("2.2.90", 202090000);
+          cNV2N("3.0pre1",299998001);
+          cNV2N("3.0rc1", 299999001);
+          cNV2N("3.0rc2", 299999002);
+          cNV2N("3.0",    300000000);
+#endif
+
+        }
+}
+
+unsigned int convertNtopVersionToNumber(char *versionString) {
+  /* This one is purely an arbitrary conversion.
+   *
+   * But it knows about the version # schemes we've used in the past
+   *  e.g. 2.2c, 2.2.50, 2.2.97, 3.0pre1, 3.0rc1 etc. so that the number truly is relative
+   * for numeric testing.
+   *
+   *  The goal is to get the following converted to ascending numeric order:
+   *
+   *   1.3 2.1 2.1.2 2.1.3 2.1.50 2.1.90 2.2 2.2a 2.2b 2.2c 2.2.50 2.2.97 3.0pre1 3.0rc1 3.0
+   *
+   * e.g.:
+   *
+   *   1.3     103000000
+   *   2.1     201000000
+   *   2.1.1   201000001
+   *   2.1.2   201000002
+   *   2.1.3   201000003
+   *   2.1.50  201050000
+   *   2.1.90  201090000
+   *   2.2     202000000
+   *   2.2a    202000100
+   *   2.2b    202000200
+   *   2.2c    202000300
+   *   2.2.50  202050000
+   *   2.2.90  202090000
+   *   3.0pre1 299998001
+   *   3.0rc1  299999001
+   *   3.0rc2  299999002
+   *   3.0     300000000
+   *
+   * n.m   -> nmm000000
+   * n.m.x -> nmmyyy0xx  (if x>=50 yyy=x else xx=x)
+   * n.ml  -> nmm000l00 (where a=1, b=2, etc.)
+   */
+    int f, n=0, m=0, x=0, y=0, l=0, c=0, prerc=0;
+
+    if (versionString == NULL) {
+      return 999999999;
+    }
+
+    f = sscanf(versionString, "%d.%dpre%d", &n, &m, &x);
+    if(f>=3) {
+      prerc=2;
+    } else {
+      f = sscanf(versionString, "%d.%drc%d", &n, &m, &x);
+      if(f>=3) {
+        prerc=1;
+      } else {
+        f = sscanf(versionString, "%d.%d%[a-z].%d", &n, &m, &l, &x);
+        if(f>=3) {
+          if(l>0)
+            l = tolower(l) - 'a' + 1;
+        } else {
+          l = 0;
+          f = sscanf(versionString, "%d.%d.%d", &n, &m, &x);
+          if (f<=0) { 
+            return 999999999;
+          }
+        }
+      }
+    }
+    if (x>=50) {
+      y=x;
+      x=0;
+    }
+    return n*100000000 + m*1000000 + y*1000 + l*100 + x - 1000*prerc;
+}
+
+/* Externally exposed function to turn the code into words... */
+char *reportNtopVersionCheck(void) {
+  switch(myGlobals.checkVersionStatus) {
+    case FLAG_CHECKVERSION_NOTCHECKED:
+        return "was not checked";
+    case FLAG_CHECKVERSION_OBSOLETE:
+        return "an OBSOLETE and UNSUPPORTED version - please upgrade";
+    case FLAG_CHECKVERSION_UNSUPPORTED:
+        return "an UNSUPPORTED version - please upgrade";
+    case FLAG_CHECKVERSION_NOTCURRENT:
+        return "a minimally supported but OLDER version - please upgrade";
+    case FLAG_CHECKVERSION_CURRENT:
+        return "the CURRENT stable version";
+    case FLAG_CHECKVERSION_OLDDEVELOPMENT:
+        return "an unsupported old DEVELOPMENT version - upgrade";
+    case FLAG_CHECKVERSION_DEVELOPMENT:
+        return "the current DEVELOPMENT version - Expect the unexpected!";
+    case FLAG_CHECKVERSION_NEWDEVELOPMENT:
+        return "a new DEVELOPMENT version - Be careful!";
+    default:
+        return "is UNKNOWN...";
+  }
+}
+
+/* pseudo-function to use stringification to find the xml tag */
+#define xmlextract(a) { \
+       a = strstr(next, "<" #a ">"); \
+       if (a != NULL) { \
+           a += sizeof( #a ) + 1; \
+           if (strchr(a, '<') != NULL) \
+               strchr(a, '<')[0] = '\0'; \
+       } \
+}
+
+void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen, char *title, char *input) {
+
+        char *work, *token;
+        int i, j, tCount=0;
+
+        work=strdup(input);
+
+        strncat(userAgent, " ", (userAgentLen - strlen(userAgent)));
+        strncat(userAgent, title, (userAgentLen - strlen(userAgent)));
+        strncat(userAgent, "(", (userAgentLen - strlen(userAgent)));
+
+        token = strtok(work, " \t\n");
+        while (token != NULL) {
+
+            /* No -? then it's a data value - skip */
+            if(token[0] != '-') {
+                token = strtok(NULL, " \t\n");
+                continue;
+            }
+
+            /* Skip -s, end at = */
+            for(j=i=0; i<strlen(token); i++) {
+              if(token[i] == '=') {
+                token[j++] = token[i]; /* we preserve the = so we know it was used,
+                                          but drop the data value */
+                break;
+              } else if(token[i] != '-')
+                token[j++] = token[i];
+            }
+            token[j]='\0';
+
+            if(strncmp(token, "without", strlen("without")) == 0)
+                token += strlen("without");
+            if(strncmp(token, "with", strlen("with")) == 0)
+                token += strlen("with");
+            if(strncmp(token, "disable", strlen("disable")) == 0)
+                token += strlen("disable");
+            if(strncmp(token, "enable", strlen("enable")) == 0)
+                token += strlen("enable");
+
+            if((strncmp(token, "prefix", strlen("prefix")) != 0) &&
+               (strncmp(token, "sysconfdir", strlen("sysconfdir")) != 0) &&
+               (strncmp(token, "norecursion", strlen("norecursion")) != 0)) {
+                if(++tCount > 1)
+                  strncat(userAgent, "; ", (userAgentLen - strlen(userAgent)));
+                strncat(userAgent, token, (userAgentLen - strlen(userAgent)));
+            }
+
+            token = strtok(NULL, " \t\n");
+        }
+        strncat(userAgent, ")", (userAgentLen - strlen(userAgent)));
+
+        free(work);
+}
+
+void extractAndAppend(char *userAgent, int userAgentLen, char *title, char *input) {
+char *work;
+int i, j, dFlag=FALSE;
+
+        work=strdup(input);
+
+        for(j=i=0; i<strlen(work); i++) {
+            if (dFlag == TRUE) {
+                if((work[i] == ' ') ||
+                   (work[i] == ',') ) {
+                    break;
+                }
+                work[j++]=work[i];
+            } else if (isdigit(work[i])) {
+              dFlag = TRUE;
+              work[j++]=work[i];
+            }
+        }
+        work[j]='\0';
+
+        strncat(userAgent, " ", (userAgentLen - strlen(userAgent)));
+        strncat(userAgent, title, (userAgentLen - strlen(userAgent)));
+        strncat(userAgent, "/", (userAgentLen - strlen(userAgent)));
+        strncat(userAgent, work, (userAgentLen - strlen(userAgent)));
+
+        free(work);
+        return;
+}
+
+/* ===== ===== retrieve url ===== ===== */
+int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int bufLen) {
+
+        struct hostent *hptr;
+        char *userAgent, *space;
+        int rc, sock;
+        struct sockaddr_in addr;
+#ifdef HAVE_SYS_UTSNAME_H
+        struct utsname unameData;
+#endif
+
+        /* Establish the connection */
+        hptr = gethostbyname(versionSite);
+        if (!hptr) {
+            traceEvent(CONST_TRACE_ERROR, "CHKVER: Unable to resolve site");
+            return 1; 
+        }
+#ifdef CHKVER_DEBUG
+        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Site resolved to %u.%u.%u.%u",
+                   (hptr->h_addr)[0] & 0xff,
+                   (hptr->h_addr)[1] & 0xff,
+                   (hptr->h_addr)[2] & 0xff,
+                   (hptr->h_addr)[3] & 0xff);
+#endif
+
+        /* Create socket for http GET */
+	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (sock < 0) {
+            traceEvent(CONST_TRACE_ERROR,
+                       "CHKVER: Unable to create socket: %s(%d)", strerror(errno), errno);
+            return 1;
+        }
+#ifdef CHKVER_DEBUG
+        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Socket is %d", sock);
+#endif
+
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port   = htons(80);
+        memcpy((char *) &addr.sin_addr.s_addr, hptr->h_addr_list[0], hptr->h_length);
+
+        /* Connect the socket to the remote host.  */
+        rc = connect(sock, (struct sockaddr*)&addr, (socklen_t) sizeof(addr));
+        if (rc != 0) {
+            traceEvent(CONST_TRACE_ERROR,
+                       "CHKVER: Unable to connect socket: %s(%d)", strerror(errno), errno);
+            close(sock);
+            return 1;
+        }
+#ifdef CHKVER_DEBUG
+        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Connected");
+#endif
+
+        userAgent=malloc(LEN_GENERAL_WORK_BUFFER);
+        memset(userAgent, 0, LEN_GENERAL_WORK_BUFFER);
+        if(snprintf(userAgent, LEN_GENERAL_WORK_BUFFER, "ntop/%s", version) < 0)
+          BufferTooShort();
+
+        /* Convert any spaces in the version to +s
+         *   e.g. 2.2.98 0300 -> 2.2.98+0300
+         */
+        while ((space=strchr(userAgent, ' ')) != NULL) {
+            space[0]='+';
+        }
+
+        strncat(userAgent, " host/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+        strncat(userAgent, osName, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+
+        if((distro != NULL) && (strcmp(distro, "") != 0)) {
+          strncat(userAgent, " distro/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+          strncat(userAgent, distro, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+        }
+          
+        if((release != NULL) && (strcmp(release, "") != 0) && (strcmp(release, "unknown") != 0)) {
+          strncat(userAgent, " release/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+          strncat(userAgent, release, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+        }
+          
+#ifdef HAVE_SYS_UTSNAME_H
+        if (uname(&unameData) == 0) {
+          strncat(userAgent, " kernrlse/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+          strncat(userAgent, unameData.release, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+        }
+#endif
+
+#ifdef __GNUC__
+        /* Macros to kludge around stringing of parameters */
+        #define xstr(s) str(s)
+        #define str(s) #s
+
+#if defined(__GNUC_PATCHLEVEL__)
+        #define GCC_VERSION __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__
+#else
+        #define GCC_VERSION __GNUC__.__GNUC_MINOR__
+#endif
+        strncat(userAgent, " GCC/" xstr(GCC_VERSION) , (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+
+        #undef str
+        #undef xstr
+#endif
+
+        tokenizeCleanupAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "config", configure_parameters);
+        tokenizeCleanupAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "run", myGlobals.startedAs);
+
+#ifdef HAVE_PCAP_LIB_VERSION
+        extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "libpcap", (char*)pcap_lib_version());
+#endif
+
+#if defined(WIN32) && defined(__GNUC__)
+  /* on mingw, gdbm_version not exported by library */
+#else
+        extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "gdbm", gdbm_version);
+#endif
+
+#ifdef HAVE_OPENSSL
+        extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "openssl", (char*)SSLeay_version(0));
+#endif
+
+        extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "zlib", (char*)zlibVersion());
+
+        /* Special case for webPort+sslPort... */
+        strncat(userAgent, " access/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+#ifdef HAVE_OPENSSL
+        if (myGlobals.sslPort != 0) {
+            if(myGlobals.webPort != 0)
+                strncat(userAgent, "both", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+            else
+                strncat(userAgent, "https", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+        } else
+#endif
+        if(myGlobals.webPort != 0)
+            strncat(userAgent, "http", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+        else
+            strncat(userAgent, "none", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+      
+        /* Special case for interfaces */
+        strncat(userAgent, " interfaces(", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+        if(myGlobals.devices != NULL) { 
+            strncat(userAgent, myGlobals.devices, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+        } else {
+            strncat(userAgent, "null", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+        }
+        strncat(userAgent, ")", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+
+        if(snprintf(buf, bufLen, "GET /%s HTTP/1.0\r\n"
+                                 "Host: %s\r\n"
+                                 "User-Agent: %s\r\n"
+                                 "Accept: %s\r\n"
+                                 "\r\n",
+                    versionFile,
+                    versionSite, 
+                    userAgent,
+                    CONST_HTTP_ACCEPT_ALL) < 0) 
+          BufferTooShort();
+
+        free(userAgent);
+
+        /* Send the request to server.  */
+        traceEvent(CONST_TRACE_NOISY, "CHKVER: Sending request: %s", buf);
+        rc = send(sock, buf, strlen(buf), 0);
+        if (rc < 0) {
+            traceEvent(CONST_TRACE_ERROR,
+                       "CHKVER: Unable to send http request: %s(%d)", strerror(errno), errno);
+            close(sock);
+            return 1;
+        }
+
+        /* Pickup the response - 
+         * remember, buf/bufLen better be big enough to handle the whole response
+         */
+        memset(buf, 0, bufLen);
+        rc = recv(sock, buf, bufLen, MSG_WAITALL);
+        if (rc < 0) {
+            traceEvent(CONST_TRACE_ERROR,
+                       "CHKVER: Unable to receive http response: %s(%d)", strerror(errno), errno);
+            close(sock);
+            return 1;
+        }
+        if(rc >= bufLen) {
+            traceEvent(CONST_TRACE_ERROR,
+                       "CHKVER: Unable to receive entire http response (%d/%d)- skipping",
+                       rc,
+                       bufLen);
+            close(sock);
+            return 1;
+        }
+
+#ifdef CHKVER_DEBUG
+        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Received %d bytes '%s'", rc, buf);
+#endif
+
+        return 0;
+}
+
+int processVersionFile(char *buf, int bufLen) {
+        /* Process the returned data
+         *   We march through the big buffer, 
+         *   with hdr pointing at a C string for each header
+         *   and next pointing at the next character we pick up with.
+         */
+
+        int i, j, k, rc, hcount=0;
+        unsigned int sNumber, dNumber, uNumber, oNumber, vNumber;
+        char *hdr, *next, *site, *date, *development, *stable, *unsupported, *obsolete;
+
+        next=hdr=buf;
+        while (1) {
+
+            ++hcount;
+            hdr=next;
+
+            for (i=0; 1; i++) {
+                if (--bufLen <= 0) {
+                    traceEvent(CONST_TRACE_ERROR, "CHKVER: Past end processing http response");
+                    return;
+                }
+                /* Cleanup whitespace */
+                if (hdr[i] == '\r' ||
+                    hdr[i] == '\f' ||
+                    hdr[i] == '\v') {
+                    hdr[i] = ' ';
+                    continue;
+                }
+                if(hdr[i] == '\n') {
+                  hdr[i]=' ';
+
+                  /* Check for header continuation (not allowed on the 1st header)
+                   * by looking at the character ahead.
+                   */
+                  if((hcount > 1) &&
+                     (hdr[i+1] == '\t' || hdr[i+1] == ' ')) {
+                      continue;
+                  }
+
+                  /* Otherwise, set next... */
+                  next=&(hdr[i+1]);
+
+                  /* Clear trailing whitespace... */
+                  hdr[i--]='\0';
+                  while((i>=0) && (hdr[i]==' ')) hdr[i--]='\0';
+ 
+                  break;
+                }
+            }
+
+#ifdef CHKVER_DEBUG
+            traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: %3d. (%3d) '%s'", hcount, strlen(hdr), hdr);
+#endif
+
+            /* Check for rc line.  */
+            if (hcount == 1) {
+                /* Parse the first line of server response */
+                if (hdr[0] == '\0') {
+                    traceEvent(CONST_TRACE_ERROR, "CHKVER: http response: Nothing");
+                    return 1;
+                }
+                /*
+                 * Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+                 */
+                rc=-1;
+                while(hdr[0] != '\0') {
+                    if(hdr[0] == ' ')
+                        rc=0;
+                    else if(rc == 0)
+                        break;
+                    hdr++;
+                }
+                while((hdr[0] != '\0') &&
+                      (hdr[0] != ' ')) {
+                    rc = 10*rc + hdr[0] - '0';
+                    hdr++;
+                }
+                if(rc != 200) {
+                    traceEvent(CONST_TRACE_WARNING,
+                               "CHKVER: http response: %d - skipping check", rc);
+                    return 1;
+                }
+                traceEvent(CONST_TRACE_NOISY, "CHKVER: http response: %d", rc);
+            }
+
+            /* Empty?  Done with the headers...  */
+            if (hdr[0] == '\0') {
+                break;
+            }
+        }
+
+#ifdef CHKVER_DEBUG
+        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: raw version file is %s", next);
+#endif
+
+        /* Cleanup whitespace */
+        for (j=i=0; i<strlen(next); i++) {
+                if(next[i] == '<' &&
+                   next[i+1] == '!' &&
+                   next[i+2] == '-' &&
+                   next[i+3] == '-') {
+                    for(k=i+4; k<strlen(next)-3; k++) {
+                        if(next[k] == '-' &&
+                           next[k+1] == '-' &&
+                           next[k+2] == '>') {
+                            i=k+2;
+                            break;
+                        }
+                    }
+                    if(k<strlen(next)-3)
+                        continue;
+                    /* Otherwise, we never found the close... so we ignore the 'comment' */
+                }
+                if(next[i] == '\n' ||
+                   next[i] == '\r' ||
+                   next[i] == '\f' ||
+                   next[i] == '\v' ||
+                   next[i] == '\t' ||
+                   next[i] == ' ') {
+                } else {
+                   next[j++] = next[i];
+                } 
+        }
+        next[j]='\0';
+
+#ifdef CHKVER_DEBUG
+        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: cleaned version file is %s", next);
+#endif
+
+/* parse - in reverse order so we can do it cheesy using \0s */
+       xmlextract(development);
+       xmlextract(stable);
+       xmlextract(unsupported);
+       xmlextract(obsolete);
+       xmlextract(date);
+       xmlextract(site);
+
+       vNumber = convertNtopVersionToNumber(version);
+       oNumber = convertNtopVersionToNumber(obsolete);
+       uNumber = convertNtopVersionToNumber(unsupported);
+       sNumber = convertNtopVersionToNumber(stable);
+       dNumber = convertNtopVersionToNumber(development);
+       if((oNumber == 999999999) ||
+          (uNumber == 999999999) ||
+          (sNumber == 999999999) ||
+          (dNumber == 999999999) ||
+          (vNumber == 999999999) ||
+          (oNumber >  uNumber)   ||
+          (uNumber >  sNumber)   ||
+          (sNumber >  dNumber)) {
+           traceEvent(CONST_TRACE_WARNING,
+                      "CHKVER: version file INVALID - ignoring version check");
+           traceEvent(CONST_TRACE_WARNING,
+                      "CHKVER: Please report to ntop mailing list, codes (%d,%d,%d,%d,%d)",
+                      oNumber, uNumber, sNumber, dNumber, vNumber);
+           return 1;
+       }
+
+       traceEvent(CONST_TRACE_INFO, "CHKVER: Version file is from '%s'", site);
+       traceEvent(CONST_TRACE_INFO, "CHKVER: as of date is '%s'", date);
+
+       traceEvent(CONST_TRACE_NOISY, "CHKVER: obsolete is    '%-10s' (%9d)", obsolete,    oNumber);
+       traceEvent(CONST_TRACE_NOISY, "CHKVER: unsupported is '%-10s' (%9d)", unsupported, uNumber);
+       traceEvent(CONST_TRACE_NOISY, "CHKVER: stable is      '%-10s' (%9d)", stable,      sNumber);
+       traceEvent(CONST_TRACE_NOISY, "CHKVER: development is '%-10s' (%9d)", development, dNumber);
+       traceEvent(CONST_TRACE_NOISY, "CHKVER: version is     '%-10s' (%9d)", version,     vNumber);
+
+/* Check values - set status flag */
+       if(vNumber < oNumber) {
+           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_OBSOLETE;
+       } else if(vNumber < uNumber) {
+           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_UNSUPPORTED;
+       } else if(vNumber < sNumber) { 
+           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCURRENT;
+       } else if(vNumber == sNumber) { 
+           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_CURRENT;
+       } else if(vNumber < dNumber) { 
+           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_OLDDEVELOPMENT;
+       } else if(vNumber == dNumber) { 
+           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_DEVELOPMENT;
+       } else {
+           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NEWDEVELOPMENT;
+       }
+
+        return 0;
+}
+
+void checkVersion(void) {
+
+        /* The work buffer is a big boy so we can eat the entire XML file all at once
+         * and avoid making this logic any more complex!
+         */
+        char *buf;
+        int bufLen = LEN_CHECKVERSION_BUFFER;
+
+        char *versionSite, *versionFile;
+        int rc=0;
+
+        displayPrivacyNotice();
+
+        if(myGlobals.skipVersionCheck == TRUE)
+          return;
+        
+        /* make a working copy */
+        versionSite=strdup(CONST_VERSIONCHECK_URL);
+
+        traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                   "CHKVER: Checking current ntop version at %s",
+                   versionSite);
+
+        /* then split url into site / file */
+        versionFile=strchr(versionSite, '/');
+        versionFile[0]='\0';
+        versionFile++;
+#ifdef CHKVER_DEBUG
+        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", versionSite, versionFile);
+#endif
+
+        buf = malloc(bufLen);
+        memset(buf, 0, bufLen);
+
+        rc = retrieveVersionFile(versionSite, versionFile, buf, bufLen);
+        free(versionSite);
+
+        if (rc == 0) {
+            rc = processVersionFile(buf, min(bufLen, strlen(buf)));
+        }
+
+        if (rc == 0) {
+            traceEvent(CONST_TRACE_INFO,
+                       "CHKVER: This version of ntop is %s", reportNtopVersionCheck());
+        }
+
+        free(buf);
+
+        if(myGlobals.checkVersionStatus != FLAG_CHECKVERSION_NEWDEVELOPMENT)
+          /* If it was new development at the 1st check, it's not magically going
+           * to become anything else... so don't report a recheck time
+           */
+          myGlobals.checkVersionStatusAgain = time(NULL) + CONST_VERSIONRECHECK_INTERVAL;
+        else
+          myGlobals.checkVersionStatusAgain = 0;
+}
+

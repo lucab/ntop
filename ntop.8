@@ -9,7 +9,7 @@
 .TP 1.2
 .B "\\$1 | \\$2"
 ..
-.TH NTOP 8 "September 2003 (ntop 2.3)"
+.TH NTOP 8 "December 2003 (ntop 3.0)"
 .SH NAME
 ntop \- display top network users
 .SH SYNOPSIS
@@ -74,6 +74,7 @@ ntop \- display top network users
 .RB [ --disable-instantsessionpurge ]
 .RB [ --disable-schedyield ]
 .RB [ --disable-mutexextrainfo ]
+.RB [ --skip-version-check ]
 
 Unix options:
 
@@ -929,6 +930,23 @@ disables the extra information.  It should have no processing impact on
 .B ntop
 actually deadlock, we would lose the information that sometimes tells us why.
 
+.It --skip-version-check
+By default,
+.B ntop
+accesses a remote file to periodically check if the most current version is running.
+This option disables that check.  Please review the privacy notice at the bottom of
+this page for more information.
+By default, the recheck period is slightly more than 15 days.  This can be adjusted
+via a constant in globals-defines.h.  If the result of the initial check indicates that
+the
+.B ntop
+version is a 'new development' version (that is newer than the latest published
+development version), the recheck is disabled.  This is because which fixes and
+enhancements were present/absent from the code.
+
+NOTE: At present, the recheck does not work under Windows.
+ 
+
 .SH "WEB VIEWS"
 While
 .B ntop
@@ -1042,6 +1060,105 @@ report new locations or dead links.
 .BR pcap (3).
 .
 .
+
+.SH PRIVACY NOTICE
+By default at startup and at periodic intervals, the 
+.B ntop
+program will retrieve a file containing current ntop program version information.
+Retrieving this file allows this 
+.B ntop
+instance to confirm that it is running the most current version.
+
+The retrieval is done using standard http:// requests, which will create log 
+records on the hosting system.  These log records do contain information which 
+identifies a specific 
+.B ntop
+site.  Accordingly, you are being notified that this individually identifiable
+information is being transmitted and recorded.
+
+You may request - via the 
+.B --skip-version-check
+run-time option - that this check be eliminated.  If you use this option, no 
+individually identifiable information is transmitted or recorded, because the
+entire retrieval and check is skipped.
+
+We ask you to allow this retrieval and check, because it benefits both you and the 
+.B ntop
+developers.  It benefits you because you will be automatically notified
+if the 
+.B ntop
+program version is obsolete, becomes unsupported or is no longer current.
+It benefits the developers of 
+.B ntop
+because it allows us to determine the number of active 
+.B ntop
+instances, and the operating system/versions that users are running
+.B ntop
+under.  This allows us to focus development resources on systems like those our 
+users are using 
+.B ntop
+on.
+
+The individually identifiable information is contained in the web server log 
+records which are automatically created each time the version file is retrieved.
+This is a function of the web server and not of 
+.B ntop
+, but we do take advantage of it.
+The log record shows the IP address of the requestor (the 
+.B ntop
+instance) and a User-Agent header field.  We place information in the User-Agent 
+header as follows:
+
+    ntop/<version> 
+    host/<name from config.guess>
+    distro/<if one>
+    release/<of the distro, also if one> 
+    kernrlse/<kernel version or release> 
+    GCC/<version>
+    config() <condensed parameters from ./configure>
+    run()    <condensed flags - no data - from the execution line>
+    libpcap/<version>
+    gdbm/<version>
+    openssl/<version>
+    zlib/<version>
+    access/<http, https, both or none>
+    interfaces() <given interface names>
+
+For example:
+
+    ntop/2.2.98 host/i686-pc-linux-gnu distro/redhat release/9 kernrlse/2.4.20-8smp
+    GCC/3.2.2 config(i18n) run(i; u; P; w; t; logextra; m; instantsessionpurge; 
+    schedyield; d; usesyslog=; t) gdbm/1.8.0 openssl/0.9.7a zlib/1.1.4
+    access/http interfaces(eth0,eth1)
+
+Distro and release information is determined at compile time and consists of 
+information typically found in the /etc/release (or similar) file. See the
+.B ntop
+tool linuxrelease for how this is determined.
+
+gcc compiler version (if available) is the internal version #s for the gcc
+compiler, e.g. 3.2.3.
+
+kernrlse is the Linux Kernel version or the xBSD 'release' such as 4.9-RELEASE
+and is determined from the uname data (if it's available).
+
+The ./configure parameters are stripped of directory paths, leading -s, etc. to
+create a short form that shows us what ./configure parameters people are using.
+
+Similarly, the run time parameters are stripped of data and paths, just showing
+which flags are being used.
+
+The libpcap, gdbm, openssl and zlib versions come from the strings returned by the various
+inquiry functions (if they're availabe).
+
+Here's a sample log record:
+
+67.xxx.xxx.xxx - - [28/Dec/2003:12:11:46 -0500] "GET /version.xml HTTP/1.0"
+  200 1568 www.burtonstrauss.com "-" "ntop/2.2.98 host/i686-pc-linux-gnu
+  distro/redhat release/9 kernrlse/2.4.20-8smp GCC/3.2.2 config(i18n)
+  run(i; u; P; w; t; logextra; m; instantsessionpurge; schedyield; d;
+  usesyslog=) libpcap/0.8 gdbm/1.8.0 openssl/0.9.7a zlib/1.1.4 access/http
+  interfaces(eth0,eth1,eth2)" "-"
 
 .SH USER SUPPORT
 Please send bug reports to the ntop-dev <ntop-dev@ntop.org> mailing list. The

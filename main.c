@@ -160,6 +160,8 @@ static struct option const long_options[] = {
   { "no-fc",                            no_argument,       0, 148 },
   { "no-invalid-lun",                   no_argument,       0, 149 },
 
+  { "skip-version-check",               no_argument,       NULL, 150 },
+
   {NULL, 0, NULL, 0}
 };
 
@@ -172,8 +174,8 @@ static void welcome (FILE * fp)
 	initWinsock32(); /* Necessary for initializing globals */
 #endif
 
-  fprintf (fp, "%s v.%s %s [%s] (%s build)\n",
-	   myGlobals.program_name, version, THREAD_MODE, osName, buildDate);
+  fprintf (fp, "%s v.%s %s (configured on %s, built on %s)\n",
+	   myGlobals.program_name, version, THREAD_MODE, configureDate, buildDate);
 
   fprintf (fp, "Copyright 1998-2003 by %s.\n", author);
   fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
@@ -299,6 +301,8 @@ void usage (FILE * fp) {
 	  newLine);
   fprintf(fp, "    [--no-fc]                                             %sDisable processing & Display of Fibre Channel\n", newLine);
   fprintf(fp, "    [--no-invalid-lun]                                    %sDon't display Invalid LUN information\n", newLine);
+
+  fprintf(fp, "    [--no-check-version                                   %sSkip ntop version check\n", newLine);
 
 #ifdef WIN32
   printAvailableInterfaces();
@@ -768,6 +772,10 @@ static int parseOptions(int argc, char* argv []) {
         myGlobals.noInvalidLunDisplay = TRUE;
         break;
 
+    case 150:
+      myGlobals.skipVersionCheck = TRUE;
+      break;
+
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);
 #ifdef DEBUG
@@ -1163,12 +1171,14 @@ int main(int argc, char *argv[]) {
   myGlobals.logView = calloc(sizeof(char*),
                              CONST_LOG_VIEW_BUFFER_SIZE);
 
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s %s [%s] (%s build)",
-	     version, THREAD_MODE, osName, buildDate);
+/* Below here, we use our traceEvent() function to print or log as requested. */
+
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s %s (configured on %s built on %s)",
+	     version, THREAD_MODE, configureDate, buildDate);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2003 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
 
-/* Below here, we use our traceEvent() function to print or log as requested. */
+  checkVersion();
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Initializing ntop");
 
@@ -1268,10 +1278,18 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifndef WIN32
+
   while(!myGlobals.endNtop) {
-    HEARTBEAT(0, "main(), sleep(3000)...", NULL);
+
+    HEARTBEAT(0, "main(), sleep()...", NULL);
     sleep(10);
-    HEARTBEAT(0, "main(), sleep(3000)...woke", NULL);
+
+    /* Periodic recheck of the version status */
+    if((myGlobals.checkVersionStatusAgain > 0) && 
+       (time(NULL) > myGlobals.checkVersionStatusAgain))
+        checkVersion();
+
+    HEARTBEAT(0, "main(), sleep()...woke", NULL);
   }
 #endif
 

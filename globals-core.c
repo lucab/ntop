@@ -36,7 +36,7 @@ int optopt;
 #endif
 
 #ifdef WIN32
-char *version, *osName, *author, *buildDate,
+char *version, *osName, *author, *buildDate, *configureDate,
             *configure_parameters,
             *host_system_type,
             *target_system_type,
@@ -180,6 +180,10 @@ void initNtopGlobals(int argc, char * argv[]) {
   strncpy((char *) &myGlobals.domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(myGlobals.domainName));
   myGlobals.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
   myGlobals.maxNumHashEntries = myGlobals.maxNumSessions = (u_int)-1;
+  myGlobals.skipVersionCheck = FALSE;
+  myGlobals.firstVersionCheckDone = FALSE;
+  myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCHECKED;
+  myGlobals.checkVersionStatusAgain = 0;
   
 #ifndef WIN32
   myGlobals.debugMode = DEFAULT_NTOP_DEBUG_MODE;

@@ -3094,8 +3094,19 @@ void printNtopConfigInfo(int textPrintFlag) {
                       "<CENTER>\n<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n"
                       "<tr><th colspan=2 "DARK_BG"" TH_BG ">Basic information</tr>\n"));
   printFeatureConfigInfo(textPrintFlag, "ntop version", version);
+  printFeatureConfigInfo(textPrintFlag, "Configured on", configureDate);
   printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
   printFeatureConfigInfo(textPrintFlag, "OS", osName);
+
+  if(myGlobals.checkVersionStatus != FLAG_CHECKVERSION_NOTCHECKED) {
+    printFeatureConfigInfo(textPrintFlag, "This version of ntop is", reportNtopVersionCheck());
+    if(myGlobals.checkVersionStatusAgain > 0) {
+      struct tm t;
+      strftime(buf, sizeof(buf), "%c", localtime_r(&myGlobals.checkVersionStatusAgain, &t));
+      printFeatureConfigInfo(textPrintFlag, "Next version recheck is", buf);
+    }
+  }
+
 #ifdef HAVE_PCAP_LIB_VERSION
   printFeatureConfigInfo(textPrintFlag, "libpcap version", pcap_lib_version());
 #endif

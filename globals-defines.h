@@ -395,6 +395,11 @@
  */
 /* #define ADDRESS_DEBUG */
 
+/* CHKVER_DEBUG logs the activities in util.c related to checking the ntop
+ * version.
+ */
+/* #define CHKVER_DEBUG */
+
 /* DNS_DEBUG logs the activites in address.c related to Name resolution.
  */
 /* #define DNS_DEBUG */
@@ -949,6 +954,42 @@
 #endif
 
 /*
+ * This is the URL to request the latest version information
+ */
+//TEMP
+#define CONST_VERSIONCHECK_SITE             "www.burtonstrauss.com"
+//#define CONST_VERSIONCHECK_SITE             "www.ntop.org"
+#define CONST_VERSIONCHECK_DOCUMENT         "version.xml"
+#define CONST_VERSIONCHECK_URL              CONST_VERSIONCHECK_SITE "/" CONST_VERSIONCHECK_DOCUMENT
+
+/*
+ *  How often - in SECONDS - to recheck the version information
+ *   Why the weird value?  So every instance in the world, which is started @ midnight by a
+ *   cron job doesn't hit the web server at exactly the same time every nn days...
+ */ 
+#define CONST_VERSIONRECHECK_INTERVAL       1300000   /* 15 days 1 hour 6 minutes 40 seconds */
+
+/* Other choices: */
+//#define CONST_VERSIONRECHECK_INTERVAL        3600   /* 1 hour */
+//#define CONST_VERSIONRECHECK_INTERVAL       86400   /* 1 Day */
+//#define CONST_VERSIONRECHECK_INTERVAL      360000   /* 100 hours */
+//#define CONST_VERSIONRECHECK_INTERVAL      604800   /* 1 week */
+//#define CONST_VERSIONRECHECK_INTERVAL     1209600   /* 14 days */
+//#define CONST_VERSIONRECHECK_INTERVAL     2592000   /* 30 days */
+
+/*
+ * Status for checkVersion...
+ */
+#define FLAG_CHECKVERSION_NOTCHECKED        0
+#define FLAG_CHECKVERSION_OBSOLETE          1
+#define FLAG_CHECKVERSION_UNSUPPORTED       2
+#define FLAG_CHECKVERSION_NOTCURRENT        3
+#define FLAG_CHECKVERSION_CURRENT           4
+#define FLAG_CHECKVERSION_OLDDEVELOPMENT    5
+#define FLAG_CHECKVERSION_DEVELOPMENT       6
+#define FLAG_CHECKVERSION_NEWDEVELOPMENT    7
+
+/*
  * Items which affect the listen() call in webInterface.c.  Making this larger
  * allows the tcp/ip stack to queue more requests for the ntop web server
  * before it starts dropping them.  See man listen.
@@ -1373,6 +1414,8 @@
 /*
  * Flags related to html and http types
  */
+
+#define CONST_HTTP_ACCEPT_ALL               "*/*"
 
 /*
  * Code below courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar>

@@ -44,9 +44,6 @@
 /* Define to 1 if using `alloca.c'. */
 #undef C_ALLOCA
 
-/* Define to 1 if you have the <ac_header> header file. */
-#undef HAVE_AC_HEADER
-
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
 
@@ -69,9 +66,6 @@
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
-/* Define to 1 if you have the <checking> header file. */
-#undef HAVE_CHECKING
-
 /* Define to 1 if you have the <crypt.h> header file. */
 #undef HAVE_CRYPT_H
 
@@ -87,17 +81,8 @@
 /* Define to 1 if you have the <dl.h> header file. */
 #undef HAVE_DL_H
 
-/* Define to 1 if you have the <do> header file. */
-#undef HAVE_DO
-
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 #undef HAVE_DOPRNT
-
-/* Define to 1 if you have the <echo> header file. */
-#undef HAVE_ECHO
-
-/* Define to 1 if you have the <else> header file. */
-#undef HAVE_ELSE
 
 /* Define to 1 if you have the `endpwent' function. */
 #undef HAVE_ENDPWENT
@@ -108,23 +93,14 @@
 /* Define to 1 if you have the <ethertype.h> header file. */
 #undef HAVE_ETHERTYPE_H
 
-/* Define to 1 if you have the <eval> header file. */
-#undef HAVE_EVAL
-
 /* glibc syslog.h or sys/syslog.h with facilitynames[] option */
 #undef HAVE_FACILITYNAMES
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
 
-/* Define to 1 if you have the <fi> header file. */
-#undef HAVE_FI
-
 /* Define to 1 if you have the <float.h> header file. */
 #undef HAVE_FLOAT_H
-
-/* Define to 1 if you have the <for> header file. */
-#undef HAVE_FOR
 
 /* Define to 1 if you have the `fork' function. */
 #undef HAVE_FORK
@@ -171,17 +147,11 @@
 /* Define to 1 if you have the <icmp6.h> header file. */
 #undef HAVE_ICMP6_H
 
-/* Define to 1 if you have the <if> header file. */
-#undef HAVE_IF
-
 /* use sysctl support for fetch interface informations */
 #undef HAVE_IFLIST_SYSCTL
 
 /* Define to 1 if you have the <if.h> header file. */
 #undef HAVE_IF_H
-
-/* Define to 1 if you have the <in> header file. */
-#undef HAVE_IN
 
 /* For sFlowPlugin.c to define in6_addr for environments without it. */
 #undef HAVE_IN6_ADDR
@@ -418,9 +388,6 @@
 /* regex lib is defined inside -lc for regex.c */
 #undef HAVE_REGEX
 
-/* Define to 1 if you have the <result:> header file. */
-#undef HAVE_RESULT_
-
 /* Define to 1 if you have the `re_comp' function. */
 #undef HAVE_RE_COMP
 
@@ -441,9 +408,6 @@
 
 /* Define to 1 if you have the <setjmp.h> header file. */
 #undef HAVE_SETJMP_H
-
-/* Define to 1 if you have the <set";> header file. */
-#undef HAVE_SET__
 
 /* Define to 1 if you have the <shadow.h> header file. */
 #undef HAVE_SHADOW_H
@@ -592,9 +556,6 @@
 /* Define to 1 if you have the <tcpd.h> header file. */
 #undef HAVE_TCPD_H
 
-/* Define to 1 if you have the <then> header file. */
-#undef HAVE_THEN
-
 /* Define to 1 if your `struct tm' has `tm_zone'. Deprecated, use
    `HAVE_STRUCT_TM_TM_ZONE' instead. */
 #undef HAVE_TM_ZONE
@@ -644,24 +605,6 @@
 
 /* Define to 1 if you have the <zlib.h> header file. */
 #undef HAVE_ZLIB_H
-
-/* Define to 1 if you have the <=> header file. */
-#undef HAVE__
-
-/* Define to 1 if you have the <"checking> header file. */
-#undef HAVE__CHECKING
-
-/* Define to 1 if you have the <"test> header file. */
-#undef HAVE__TEST
-
-/* Define to 1 if you have the <>&5> header file. */
-#undef HAVE___5
-
-/* Define to 1 if you have the <>&6> header file. */
-#undef HAVE___6
-
-/* Define to 1 if you have the <"(cached)> header file. */
-#undef HAVE___CACHED_
 
 /* Enable/disable ipv6 support */
 #undef INET6

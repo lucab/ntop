@@ -2044,6 +2044,9 @@ typedef struct ntopGlobals {
   u_char disableMutexExtraInfo;      /* '145' */
                                      /*XML b disableMutexExtraInfo      Options    "--disable-mutexextrainfo" */
 
+  u_char skipVersionCheck;           /* '150' */
+                                     /*XML b skipVersionCheck           Options    "--skip-version-check" */
+
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
   /*XML b enableFragmentHandling Options  "" */
@@ -2255,6 +2258,9 @@ typedef struct ntopGlobals {
   /* Misc */
   char *separator;         /* html separator */
   volatile unsigned long numHandledSIGPIPEerrors;
+  u_short firstVersionCheckDone;
+  u_short checkVersionStatus;
+  time_t checkVersionStatusAgain;
 
   /* Purge */
   Counter numPurgedHosts, numTerminatedSessions;

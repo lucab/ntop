@@ -43,7 +43,7 @@ extern int allow_severity, deny_severity;
 #endif
 
 /* version.c */
-extern char *version, *osName, *author, *buildDate,
+extern char *version, *osName, *author, *buildDate, *configureDate,
             *configure_parameters,
             *host_system_type,
             *target_system_type,
@@ -53,6 +53,8 @@ extern char *version, *osName, *author, *buildDate,
 #ifdef MAKE_WITH_I18N
             *locale_dir,
 #endif
+            *distro,
+            *release,
             *install_path;
 
 /* util.c */
@@ -70,6 +72,8 @@ extern void setEmptySerial(HostSerial *a);
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
 extern int ntop_sched_yield(char *file, int line);
 #endif
+extern char *reportNtopVersionCheck(void);
+extern void checkVersion(void);
 
 /****** function declarations ***** */
 

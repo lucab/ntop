@@ -1340,7 +1340,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.98.008-2003-12-26"
+SCRIPTVER="v2.2.98.009-2003-12-28"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -7108,7 +7108,7 @@ fi
       ;;
 
     * )
-        DEFINEOS="";          STATUS="UNKNOWN"
+        DEFINEOS="UNKNOWN";   STATUS="UNKNOWN"
       ;;
 esac
 
@@ -26741,12 +26741,11 @@ echo
 /bin/rm -f version.c
 echo $PACKAGE_VERSION $NTOP_VERSION_EXTRA  | sed -e 's/.*/char * version   = "&";/' > version.c
 osName=`./config.guess`
-if test "x${DEFINEOS}" = "xLINUX"; then
-    osName="${osName} (${DISTRO} Linux ${RELEASE})"
-fi
 echo "${osName}" | sed -e 's/.*/char * osName    = "&";/' >> version.c
 echo "char * author    = \"Luca Deri <deri@ntop.org>\";" >> version.c
-date +"%D %r" | sed -e 's/.*/char * buildDate = "&";/' >> version.c
+date +"%b %e %Y %k:%M:%S" | sed -e 's/.*/char * configureDate = "&";/' >> version.c
+echo "#define buildDateIs __DATE__ \" \" __TIME__"  >> version.c
+echo "char * buildDate    = buildDateIs;" >> version.c
 echo $CONFIGURE_PARAMETERS | sed -e 's/.*/char * configure_parameters   = "&";/' >> version.c
 echo ${host} | sed -e 's/.*/char * host_system_type   = "&";/' >> version.c
 echo ${target} | sed -e 's/.*/char * target_system_type   = "&";/' >> version.c
@@ -26756,6 +26755,8 @@ echo ${LDFLAGS} ${LIBS} | sed -e 's/.*/char * system_libs    = "&";/' >> version
 echo ${prefix} | sed -e 's/.*/char * install_path   = "&";/' >> version.c
 echo "/*i18n*/" >>version.c
 echo ${LOCALEDIR} | sed -e 's/.*/char * locale_dir   = "&";/' >> version.c
+echo ${DISTRO} | sed -e 's/.*/char * distro   = "&";/' >> version.c
+echo ${RELEASE} | sed -e 's/.*/char * release   = "&";/' >> version.c
 
 case "${host}" in
     *darwin* )
