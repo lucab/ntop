@@ -27,6 +27,43 @@
 static HostTraffic *freeHostList[FREE_LIST_LEN];
 static int nextIdxToFree=0, freeListLen=0;
 
+
+/* ************************************ */
+
+static void purgeIdleHostSessions(u_int hostIdx,
+                                  IpGlobalSession **sessionScanner) {
+  u_int i, peerFound;
+  u_int *scanner;
+  IpGlobalSession *theScanner = *sessionScanner,
+    *prevScanner = *sessionScanner;
+
+  while(theScanner != NULL) {
+    scanner = theScanner->peersIdx;
+    for(i=0, peerFound=0; i<MAX_NUM_SESSION_PEERS; i++) {
+      if(scanner[i] == hostIdx)
+	scanner[i] = NO_PEER;
+      if(scanner[i] != NO_PEER) 
+	peerFound++;
+    }
+
+    if(peerFound == 0) {
+      /* This entry should be removed */
+      if(theScanner == prevScanner) {
+	*sessionScanner = (*sessionScanner)->next;
+	prevScanner = *sessionScanner;
+      } else {
+	prevScanner->next = theScanner->next;
+      }
+
+      free(theScanner);
+      theScanner = prevScanner;
+    } else {
+      prevScanner = theScanner;
+      theScanner = theScanner->next;
+    }
+  }
+}
+
 /* ******************************* */
 
 u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
@@ -80,8 +117,8 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 
 /* ******************************* */
 
-int _mapIdx(int* mappings, int idx, int lastHashSize, 
-		  char* fileName, int fileLine) {
+static int _mapIdx(int* mappings, int idx, int lastHashSize, 
+		   char* fileName, int fileLine) {
 
   if(idx == NO_PEER) {
 #ifdef DEBUG
@@ -94,7 +131,7 @@ int _mapIdx(int* mappings, int idx, int lastHashSize,
 	       "Mapping failed for index %d [%s:%d]", 
 	       idx, fileName, fileLine);
     return(NO_PEER);
-  } else if((idx < 0) || (idx >= lastHashSize)) {
+  } else if(idx >= lastHashSize) {
     traceEvent(TRACE_WARNING, 
 	       "Index %d out of range (0...%d) [%s:%d]", 
 	       idx, lastHashSize, fileName, fileLine);
@@ -113,7 +150,7 @@ int _mapIdx(int* mappings, int idx, int lastHashSize,
 /* ******************************* */
 
 void resizeHostHash(int deviceToExtend, float multiplier) {
-  int idx, *mappings;
+  u_int idx, *mappings;
   u_int i, j, newSize, k, lastHashSize;
   struct hostTraffic **hash_hostTraffic;
   short numCmp;
@@ -128,7 +165,6 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
     purgeIdleHosts(0); /* Delete only idle hosts */
 
 #if defined(MULTITHREADED)
-
   if(device[actualDeviceId].hostsno < (device[deviceToExtend].actualHashSize*0.85)) {
     if(tryLockMutex(&hostsHashMutex, "resizeHostHash(processPacket)") != 0) {
 #ifdef DEBUG
@@ -691,43 +727,6 @@ void freeHostInstances() {
       free(freeHostList[i]);
 
   traceEvent(TRACE_INFO, "\n%d instances freed\n", num);
-}
-
-/* ************************************ */
-
-void purgeIdleHostSessions(u_int hostIdx,
-			   IpGlobalSession **sessionScanner)
-{
-  int i, peerFound;
-  u_int *scanner;
-  IpGlobalSession *theScanner = *sessionScanner,
-    *prevScanner = *sessionScanner;
-
-  while(theScanner != NULL) {
-    scanner = theScanner->peersIdx;
-    for(i=0, peerFound=0; i<MAX_NUM_SESSION_PEERS; i++) {
-      if(scanner[i] == hostIdx)
-	scanner[i] = NO_PEER;
-      if(scanner[i] != NO_PEER) 
-	peerFound++;
-    }
-
-    if(peerFound == 0) {
-      /* This entry should be removed */
-      if(theScanner == prevScanner) {
-	*sessionScanner = (*sessionScanner)->next;
-	prevScanner = *sessionScanner;
-      } else {
-	prevScanner->next = theScanner->next;
-      }
-
-      free(theScanner);
-      theScanner = prevScanner;
-    } else {
-      prevScanner = theScanner;
-      theScanner = theScanner->next;
-    }
-  }
 }
 
 /* ************************************ */

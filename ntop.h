@@ -80,6 +80,12 @@ typedef char int8_t;
 
 #endif /* linux || __linux__ */
 
+#ifdef __GNUC__
+# define _UNUSED_ __attribute__((unused))
+#else
+# define _UNUSED_
+# define __attribute__(a)
+#endif
 
 /*
  * operating system essential headers
@@ -414,8 +420,6 @@ extern const char *gdbm_strerror (int);
 # define strncasecmp(a, b, c) strnicmp(a, b, c)
 #endif
 
-
-
 #define MAX_NUM_DEVICES 32       /* NIC devices */
 #define MAX_NUM_ROUTERS 512
 
@@ -509,7 +513,7 @@ typedef unsigned long long TrafficCounter;
 #define MAX_NUM_CONTACTED_PEERS   8
 #define SENT_PEERS                2
 #define RCVD_PEERS                2
-#define NO_PEER                   -1
+#define NO_PEER                   UINT_MAX
 
 
 /* ************* Types Definition ********************* */
@@ -520,10 +524,10 @@ struct hostTraffic; /* IP Session global information */
 typedef struct thptEntry {
   float trafficValue;
   /* ****** */
-  int topHostSentIdx, secondHostSentIdx, thirdHostSentIdx;
+  u_int topHostSentIdx, secondHostSentIdx, thirdHostSentIdx;
   TrafficCounter topSentTraffic, secondSentTraffic, thirdSentTraffic;
   /* ****** */
-  int topHostRcvdIdx, secondHostRcvdIdx, thirdHostRcvdIdx;
+  u_int topHostRcvdIdx, secondHostRcvdIdx, thirdHostRcvdIdx;
   TrafficCounter topRcvdTraffic, secondRcvdTraffic, thirdRcvdTraffic;
 } ThptEntry;
 
@@ -641,7 +645,7 @@ typedef struct {
   unsigned long numThptSamples;
   ThptEntry last60MinutesThpt[60], last24HoursThpt[24];
   float last30daysThpt[30];
-  unsigned short last60MinutesThptIdx, last24HoursThptIdx, last30daysThptIdx;
+  u_short last60MinutesThptIdx, last24HoursThptIdx, last30daysThptIdx;
 
   SimpleProtoTrafficInfo tcpGlobalTrafficStats, udpGlobalTrafficStats, icmpGlobalTrafficStats;
   
@@ -649,7 +653,7 @@ typedef struct {
   pthread_t pcapDispatchThreadId;
 #endif
 
-  u_int hostsno; /* # of valid entries in the following table */
+  u_int  hostsno; /* # of valid entries in the following table */
   u_int  actualHashSize, hashThreshold, topHashThreshold;
   struct hostTraffic **hash_hostTraffic;
 } ntopInterface_t;
@@ -661,8 +665,8 @@ typedef struct processInfo {
   int pid;
   TrafficCounter bytesSent, bytesReceived;
   /* peers that talked with this process */
-  int contactedIpPeersIndexes[MAX_NUM_CONTACTED_PEERS];
-  int contactedIpPeersIdx;
+  u_int contactedIpPeersIndexes[MAX_NUM_CONTACTED_PEERS];
+  u_int contactedIpPeersIdx;
 } ProcessInfo;
 
 typedef struct processInfoList {
@@ -1041,8 +1045,8 @@ typedef struct ipGlobalSession {
   u_short sessionCounter;          /* # of sessions we've observed             */
   TrafficCounter bytesSent;        /* # bytes sent     (peer -> initiator)     */
   TrafficCounter bytesReceived;    /* # bytes received (peer -> initiator)     */
-  u_char lastPeer;                 /* idx of the last peer added to the list   */
-  int peersIdx[MAX_NUM_SESSION_PEERS]; /* session peers idx          */
+  u_int lastPeer;                  /* idx of the last peer added to the list   */
+  u_int peersIdx[MAX_NUM_SESSION_PEERS]; /* session peers idx          */
   struct ipGlobalSession  *next;   /* next element (linked list)               */
 } IpGlobalSession;
 
@@ -1052,7 +1056,7 @@ typedef struct ipGlobalSession {
 
 typedef void(*VoidFunc)();
 typedef void(*PluginFunc)(const struct pcap_pkthdr *h, const u_char *p);
-typedef void(*HashResizePluginFunc)(u_int oldSize, u_int newSize, u_int* mappings);
+typedef void(*HashResizePluginFunc)(u_int oldSize, u_int newSize, int* mappings);
 typedef void(*PluginHTTPFunc)(char* url);
 
 typedef struct pluginInfo {
@@ -1094,9 +1098,9 @@ typedef struct flowFilterList {
 /* IP Session Information */
 typedef struct ipSession {
   u_short magic;
-  int initiatorIdx;                 /* initiator address   (IP address)         */
+  u_int initiatorIdx;               /* initiator address   (IP address)         */
   u_short sport;                    /* initiator address   (port)               */
-  int remotePeerIdx;                /* remote peer address (IP address)         */
+  u_int remotePeerIdx;              /* remote peer address (IP address)         */
   u_short dport;                    /* remote peer address (port)               */
   time_t firstSeen;                 /* time when the session has been initiated */
   time_t lastSeen;                  /* time when the session has been closed    */
@@ -1174,7 +1178,7 @@ typedef struct atNBPheader {
 
 typedef struct usageCounter {
   TrafficCounter value;
-  int peersIndexes[MAX_NUM_CONTACTED_PEERS]; 
+  u_int peersIndexes[MAX_NUM_CONTACTED_PEERS]; 
 } UsageCounter;
 
 /* *********************** */
@@ -1285,11 +1289,11 @@ typedef struct hostTraffic
   TrafficCounter  otherSent, otherReceived;
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/received by this host */
   IpGlobalSession *tcpSessionList, *udpSessionList; /* list of sessions initiated/received by this host */
-  int contactedSentPeersIndexes[MAX_NUM_CONTACTED_PEERS]; /* peers that talked with this host */
-  unsigned short contactedSentPeersIdx;
-  int contactedRcvdPeersIndexes[MAX_NUM_CONTACTED_PEERS]; /* peers that talked with this host */
-  unsigned short contactedRcvdPeersIdx;
-  int contactedRouters[MAX_NUM_HOST_ROUTERS]; /* routers contacted by this host */
+  u_int contactedSentPeersIndexes[MAX_NUM_CONTACTED_PEERS]; /* peers that talked with this host */
+  u_int contactedSentPeersIdx;
+  u_int contactedRcvdPeersIndexes[MAX_NUM_CONTACTED_PEERS]; /* peers that talked with this host */
+  u_int contactedRcvdPeersIdx;
+  u_int contactedRouters[MAX_NUM_HOST_ROUTERS]; /* routers contacted by this host */
   ServiceStats *dnsStats, *httpStats;
 
   /* *************** IMPORTANT ***************

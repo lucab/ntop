@@ -26,6 +26,7 @@ int maxNumLines = MAX_NUM_TABLE_ROWS;
 int idleFlag, percentMode, localAddrFlag, refreshRate;
 int webPort, actualReportDeviceId;
 
+short screenNumber, columnSort;
 int sock, newSock;
 #ifdef HAVE_OPENSSL
 int sock_ssl;
@@ -35,5 +36,3 @@ int sock_ssl;
 #ifdef MULTITHREADED
 pthread_t logFileLoopThreadId, cursesRefreshThreadId;
 #endif
-
-short screenNumber, columnSort;

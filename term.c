@@ -27,7 +27,7 @@
 
 /* ******************************* */
 
-void termIPServices() {
+void termIPServices(void) {
   int i;
 
   for(i=0; i<SERVICE_HASH_SIZE; i++) {
@@ -46,7 +46,7 @@ void termIPServices() {
 
 /* ******************************* */
 
-void termIPSessions() {
+void termIPSessions(void) {
   int i;
 
   for(i=0; i<HASHNAMESIZE; i++) {

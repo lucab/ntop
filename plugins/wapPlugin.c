@@ -20,12 +20,13 @@
  */
 
 #include "ntop.h"
+#include "globals-report.h"
 
 static int wapColumnSort = 0;
  
 /* ****************************** */
 
-void printWMLheader()  {
+void printWMLheader(void)  {
   char tmpStr[64];
 
   sendString("HTTP/1.0 200 OK\n");
@@ -36,13 +37,13 @@ void printWMLheader()  {
 
 /* ********************** */
 
-static void printWmlNotFoundError() {
+static void printWmlNotFoundError(void) {
 
 }
 
 /* ********************** */
 
-static void printWmlNoDataYet() {
+static void printWmlNoDataYet(void) {
 
 }
 
@@ -82,7 +83,7 @@ static int cmpFctn(const void *_a, const void *_b) {
 
 /* ********************** */
 
-static void printWmlIndex() {
+static void printWmlIndex(void) {
   int diff;
   u_int idx, numEntries=0;
   HostTraffic *el;
@@ -222,8 +223,6 @@ static void printWmlIndex() {
     sendString(buf);
   }
 
-
-
   /** **/
   sendString("</table>\n");
   sendString("	<a href=\"#home\">[Back Home]</a><br/>\n");
@@ -237,7 +236,7 @@ static void printWmlIndex() {
 
 /* ********************** */
 
-static void printWmlHostInfo(char *host) {
+static void printWmlHostInfo(char *host _UNUSED_) {
 
 }
 
@@ -258,7 +257,7 @@ static void handleWAPrequest(char* url) {
 
 /* ****************************** */
 
-static void termWapFunct() {
+static void termWapFunct(void) {
   traceEvent(TRACE_INFO, "Thanks for using wapWatch...\n");
   traceEvent(TRACE_INFO, "Done.\n");
 }
@@ -283,9 +282,9 @@ static PluginInfo WAPPluginInfo[] = {
 
 /* Plugin entry fctn */
 #ifdef STATIC_PLUGIN
-PluginInfo* wapPluginEntryFctn() {
+PluginInfo* wapPluginEntryFctn(void) {
 #else
-PluginInfo* PluginEntryFctn() {
+PluginInfo* PluginEntryFctn(void) {
 #endif
   traceEvent(TRACE_INFO, "Welcome to %s. (C) 2000 by Luca Deri.\n",  
 	 WAPPluginInfo->pluginName);

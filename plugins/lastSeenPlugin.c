@@ -19,6 +19,7 @@
  */
 
 #include "ntop.h"
+#include "globals-report.h"
 
 /* Forward */
 static void NotesURL(char *addr, char *ip_addr);
@@ -43,7 +44,8 @@ typedef struct LsHostNote {
   char note[50];
 } LsHostNote;
 
-static void handleLsPacket(const struct pcap_pkthdr *h, const u_char *p) {
+static void handleLsPacket(const struct pcap_pkthdr *h _UNUSED_,
+			   const u_char *p) {
   struct ip ip;
   struct ether_header *ep;
   datum key_data, data_data;

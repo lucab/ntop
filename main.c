@@ -331,13 +331,11 @@ int main(int argc, char *argv[]) {
   if(webPort == 0) {
 #ifdef HAVE_OPENSSL
     if(sslPort == 0) {
-      traceEvent(TRACE_ERROR, "FATAL ERROR: both -W and -w can't be set to 0.\n",
-		 optarg);
+      traceEvent(TRACE_ERROR, "FATAL ERROR: both -W and -w can't be set to 0.\n");
       exit(-1);
     }
 #else
-    traceEvent(TRACE_ERROR, "FATAL ERROR: -w can't be set to 0.\n",
-	       optarg);
+    traceEvent(TRACE_ERROR, "FATAL ERROR: -w can't be set to 0.\n");
     exit(-1);
 #endif
   }

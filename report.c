@@ -23,10 +23,11 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+static int sortSendMode=0;
+
 /* #define PRINT_PKTS */
 /* #define PRINT_ALL_ACTIVE_SESSIONS */
-
-#define PRINT_RETRANSMISSON_DATA 
+/* #define PRINT_RETRANSMISSON_DATA  */
 
 /*
   Courtesy of
@@ -43,7 +44,7 @@ static short domainSort = 0;
 /* *************************** */
 
 #ifndef WIN32
-void ignoreSignal(int signalId) {
+void ignoreSignal(int signalId _UNUSED_) {
   closeNwSocket(&newSock);
   (void)setsignal(SIGPIPE, ignoreSignal);
 }
@@ -51,7 +52,7 @@ void ignoreSignal(int signalId) {
 
 /* ******************************* */
 
-void initReports() {
+void initReports(void) {
   columnSort = 0;
   addDefaultAdminUser();
 
@@ -63,7 +64,7 @@ void initReports() {
 
 /* **************************************** */
 
-void termReports() {
+void termReports(void) {
 #ifdef MULTITHREADED
   if(logTimeout != 0)
     killThread(&logFileLoopThreadId);
@@ -73,7 +74,7 @@ void termReports() {
 /* **************************************** */
 
 int reportValues(time_t *lastTime) {
-  if(maxNumLines == 0)
+  if(maxNumLines <= 0)
     maxNumLines = MAX_NUM_TABLE_ROWS;
 
   *lastTime = time(NULL) + refreshRate;
@@ -96,11 +97,190 @@ int reportValues(time_t *lastTime) {
   return(0);
 }
 
+
+/* ************************************ */
+
+static void formatUsageCounter(UsageCounter usageCtr) {
+  char buf[BUF_SIZE];
+  int i, sendHeader=0;
+
+  snprintf(buf, sizeof(buf), "<TD ALIGN=RIGHT>%s</TD>",
+         formatPkts(usageCtr.value));
+  sendString(buf);
+
+  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+    if(usageCtr.peersIndexes[i] != NO_PEER) {
+      struct hostTraffic *el1;
+
+      el1 = device[actualReportDeviceId].
+       hash_hostTraffic[checkSessionIdx(usageCtr.peersIndexes[i])];
+
+      if(el1 != NULL) {
+       if(!sendHeader) {
+         sendString("<TD ALIGN=LEFT><ul>");
+         sendHeader = 1;
+       }
+       sendString("\n<li>");
+       sendString(makeHostLink(el1, 0, 0, 0));
+      }
+    }
+
+  if(sendHeader)
+    sendString("</ul></TD>\n");
+  else
+    sendString("<TD>&nbsp;</TD>\n");
+}
+
+/* ********************************** */
+
+static void printTableDoubleEntry(char *buf, int bufLen,
+                                  char *label, char* color,
+                                  float totalS, float percentageS,
+                                  float totalR, float percentageR) {
+  int int_perc;
+
+  if((totalS == 0) && (totalR == 0)) return;
+  int_perc = (int)percentageS;
+
+  /* This shouldn't happen */
+  if(int_perc < 0) {
+    int_perc = 0;
+    percentageS = 0;
+  } else if(int_perc > 100) {
+    int_perc = 100;
+    percentageS = 100;
+  }
+
+  switch(int_perc) {
+  case 0:
+    snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
+           "<TD ALIGN=RIGHT>%s</TD>"
+           "<TD>&nbsp;</TD>\n",
+           getRowColor(), label, formatKBytes(totalS));
+    break;
+  case 100:
+    snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
+           "<TD ALIGN=RIGHT>%s</TD>"
+           "<TD ALIGN=CENTER BGCOLOR=\"%s\">100%%</TD>\n",
+           getRowColor(), label, formatKBytes(totalS), color);
+    break;
+  default:
+    snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
+           "<TD ALIGN=RIGHT>%s</TD>"
+           "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
+           "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+           "<P>%.1f&nbsp;%%</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" %s>"
+           "<P>&nbsp;</TD></TR></TABLE></TD>\n",
+           getRowColor(), label, formatKBytes(totalS),
+           int_perc, color, percentageS, (100-int_perc), getActualRowColor());
+  }
+
+  sendString(buf);
+
+  /* ************************ */
+
+  if(totalR == 0) percentageR = 0;
+
+  int_perc = (int)percentageR;
+
+  /* This shouldn't happen */
+  if(int_perc < 0) {
+    int_perc = 0;
+    percentageR = 0;
+  } else if(int_perc > 100) {
+    int_perc = 100;
+    percentageS = 100;
+  }
+
+  switch(int_perc) {
+  case 0:
+    snprintf(buf, bufLen, "<TD ALIGN=RIGHT>%s</TD><TD>&nbsp;</TD></TR>\n",
+           formatKBytes(totalR));
+    break;
+  case 100:
+    snprintf(buf, bufLen, "<TD ALIGN=RIGHT>%s</TD>"
+           "<TD ALIGN=CENTER BGCOLOR=\"%s\">100%%</TD></TR>\n",
+           formatKBytes(totalR), color);
+    break;
+  default:
+    snprintf(buf, bufLen, "<TD ALIGN=RIGHT>%s</TD>"
+           "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
+           "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+           "<P>%.1f&nbsp;%%</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" %s>"
+           "<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
+           formatKBytes(totalR),
+           int_perc, color, percentageR,
+           (100-int_perc), getActualRowColor());
+  }
+
+  sendString(buf);
+}
+
+/* ********************************** */
+
+static void printTableEntryPercentage(char *buf, int bufLen,
+                                      char *label, char* label_1,
+                                      char* label_2, float total,
+                                      float percentage) {
+  int int_perc = (int)percentage;
+
+  /* This shouldn't happen */
+  if(int_perc < 0)
+    int_perc = 0;
+  else if(int_perc > 100)
+    int_perc = 100;
+
+  switch(int_perc) {
+  case 0:
+    if(total == -1)
+      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
+             "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+             getRowColor(), label, COLOR_2, label_2);
+    else
+      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>%s</TD>"
+             "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+             getRowColor(), label, formatKBytes(total), COLOR_2, label_2);
+    break;
+  case 100:
+    if(total == -1)
+      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
+             "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+             getRowColor(), label, COLOR_1, label_1);
+    else
+      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>%s</TD>"
+             "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+             getRowColor(), label, formatKBytes(total), COLOR_1, label_1);
+    break;
+  default:
+    if(total == -1)
+      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
+             "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
+             "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
+             getRowColor(), label,
+             int_perc, COLOR_1,
+             label_1, percentage, (100-int_perc), COLOR_2,
+             label_2, (100-percentage));
+    else
+      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>%s</TD>"
+             "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
+             "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
+             getRowColor(), label, formatKBytes(total),
+             int_perc, COLOR_1,
+             label_1, percentage, (100-int_perc), COLOR_2,
+             label_2, (100-percentage));
+  }
+
+  sendString(buf);
+}
+
 /* ******************************* */
 
-void printHeader(int reportType, int revertOrder, u_int column) {
+static void printHeader(int reportType, int revertOrder, u_int column) {
   char buf[BUF_SIZE];
-  char *c="", *d="", *e="";
   char *sign, *arrowGif, *arrow[48], *theAnchor[48];
   int i;
   char htmlAnchor[64], htmlAnchor1[64];
@@ -319,7 +499,7 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 
 /* ******************************* */
 
-char* getOSFlag(char* osName, int showOsName) {
+static char* getOSFlag(char* osName, int showOsName) {
   static char tmpStr[96], *flagImg;
 
   if(strstr(osName, "Windows") != NULL)
@@ -366,7 +546,7 @@ char* getOSFlag(char* osName, int showOsName) {
 
 /* ******************************* */
 
-int sortHostFctn(const void *_a, const void *_b) {
+static int sortHostFctn(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   int rc;
@@ -451,7 +631,7 @@ int sortHostFctn(const void *_a, const void *_b) {
 
 /* ******************************* */
 
-int cmpUsersTraffic(const void *_a, const void *_b) {
+static int cmpUsersTraffic(const void *_a, const void *_b) {
   UsersTraffic **a = (UsersTraffic **)_a;
   UsersTraffic **b = (UsersTraffic **)_b;
   TrafficCounter sum_a, sum_b;
@@ -477,7 +657,7 @@ int cmpUsersTraffic(const void *_a, const void *_b) {
 
 /* ******************************* */
 
-int cmpProcesses(const void *_a, const void *_b) {
+static int cmpProcesses(const void *_a, const void *_b) {
   ProcessInfo **a = (ProcessInfo **)_a;
   ProcessInfo **b = (ProcessInfo **)_b;
 
@@ -521,7 +701,7 @@ int cmpProcesses(const void *_a, const void *_b) {
 
 /* ******************************* */
 
-int cmpFctn(const void *_a, const void *_b) {
+static int cmpFctn(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   TrafficCounter a_=0, b_=0;
@@ -975,7 +1155,7 @@ int cmpFctn(const void *_a, const void *_b) {
 
 /* ******************************* */
 
-int cmpMulticastFctn(const void *_a, const void *_b) {
+static int cmpMulticastFctn(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   int rc;
@@ -1040,11 +1220,10 @@ int cmpMulticastFctn(const void *_a, const void *_b) {
 
 /* ******************************* */
 
-void getProtocolDataSent(TrafficCounter *c,
-			 TrafficCounter *d,
-			 TrafficCounter *e,
-			 HostTraffic *el)
-{
+static void getProtocolDataSent(TrafficCounter *c,
+				TrafficCounter *d,
+				TrafficCounter *e,
+				HostTraffic *el) {
   int idx;
 
   switch(screenNumber) {
@@ -1098,11 +1277,10 @@ void getProtocolDataSent(TrafficCounter *c,
 }
 /* ******************************* */
 
-void getProtocolDataReceived(TrafficCounter *c,
-			     TrafficCounter *d,
-			     TrafficCounter *e,
-			     HostTraffic *el)
-{
+static void getProtocolDataReceived(TrafficCounter *c,
+				    TrafficCounter *d,
+				    TrafficCounter *e,
+				    HostTraffic *el) {
   int idx;
 
   switch(screenNumber) {
@@ -1739,7 +1917,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
 /* ******************************* */
 
-RETSIGTYPE _printHostsTraffic(int signumber_ignored) {
+static RETSIGTYPE _printHostsTraffic(int signumber_ignored) {
   printHostsTraffic(signumber_ignored, 0, 0, 0);
 #ifndef WIN32
   (void)setsignal(SIGALRM, _printHostsTraffic);
@@ -1884,7 +2062,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
 /* ******************************* */
 
-int cmpHostsFctn(const void *_a, const void *_b) {
+static int cmpHostsFctn(const void *_a, const void *_b) {
   struct hostTraffic **a = (struct hostTraffic **)_a;
   struct hostTraffic **b = (struct hostTraffic **)_b;
   char *name_a, *name_b;
@@ -2177,7 +2355,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 
 /* ************************************ */
 
-char* getNbNodeType(char nodeType) {
+static char* getNbNodeType(char nodeType) {
 
   switch(nodeType) {
   case 0x0:
@@ -2192,7 +2370,7 @@ char* getNbNodeType(char nodeType) {
 
 /* ************************************ */
 
-void printTCPflagsStats(HostTraffic *el) {
+static void printTCPflagsStats(HostTraffic *el) {
   char buf[BUF_SIZE];
 
   if(((el->tcpSentLocally+el->tcpSentRemotely+
@@ -2251,10 +2429,9 @@ void printTCPflagsStats(HostTraffic *el) {
   sendString("</TABLE><P>\n");
 }
 
-
 /* ************************************ */
 
-void printHostTrafficStats(HostTraffic *el) {
+static void printHostTrafficStats(HostTraffic *el) {
   TrafficCounter totalSent, totalReceived;
   TrafficCounter actTotalSent, actTotalReceived;
   char buf[BUF_SIZE];
@@ -2366,11 +2543,10 @@ void printHostTrafficStats(HostTraffic *el) {
   sendString("</TABLE><P>\n");
 }
 
-
 /* ************************************ */
 
-void printHostContactedPeers(HostTraffic *el) {
-  int numEntries, i;
+static void printHostContactedPeers(HostTraffic *el) {
+  u_int numEntries, i;
   char buf[BUF_SIZE];
 
   if((el->pktSent != 0) || (el->pktReceived != 0)) {
@@ -2476,7 +2652,7 @@ static char *getSessionState(IPSession *session) {
 
 /* ************************************ */
 
-void printHostSessions(HostTraffic *el, u_int elIdx) {
+static void printHostSessions(HostTraffic *el, u_int elIdx) {
   char buf[BUF_SIZE];
   struct ipGlobalSession *scanner=NULL;
   u_int scanIdx;
@@ -2726,10 +2902,10 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
 
 /* ************************************ */
 
-void printHostDetailedInfo(HostTraffic *el) {
+static void printHostDetailedInfo(HostTraffic *el) {
   char buf[BUF_SIZE];
   float percentage;
-  u_int printedHeader, i;
+  int printedHeader, i;
 
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "printAllSessionsHTML");
@@ -3014,8 +3190,8 @@ void printHostDetailedInfo(HostTraffic *el) {
 
 /* ************************************ */
 
-void printServiceStats(char* svcName, ServiceStats* ss,
-		       short printSentStats) {
+static void printServiceStats(char* svcName, ServiceStats* ss,
+			      short printSentStats) {
   char buf[BUF_SIZE];
   TrafficCounter tot, tot1;
   float f1, f2, f3, f4;
@@ -3101,7 +3277,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
 
 /* ************************************ */
 
-void printHostUsedServices(HostTraffic *el) {
+static void printHostUsedServices(HostTraffic *el) {
   TrafficCounter tot;
 
   if((el->dnsStats == NULL)
@@ -3278,11 +3454,11 @@ void printAllSessionsHTML(char* host) {
 
 /* ************************************ */
 
-void printLocalRoutersList() {
+void printLocalRoutersList(void) {
   char buf[BUF_SIZE];
   HostTraffic *el, *router;
   u_int idx, i, j, numEntries=0;
-  int routerList[MAX_NUM_ROUTERS];
+  u_int routerList[MAX_NUM_ROUTERS];
 
   for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
     if(((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
@@ -3397,9 +3573,8 @@ void printSession(IPSession *theSession, u_short sessionType,
 /* ************************************ */
 
 
-void printSessions(IPSession *sessions[], u_short type)
-{
-  u_int idx;
+static void printSessions(IPSession *sessions[], u_short type) {
+  int idx;
   char* sessionType;
 
   if(type == IPPROTO_TCP)
@@ -3661,8 +3836,8 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
 
 /* ********************************** */
 
-void printActiveTCPSessions() {
-  u_int idx;
+void printActiveTCPSessions(void) {
+  int idx;
   char buf[BUF_SIZE];
   int numSessions;
 
@@ -3753,7 +3928,7 @@ void printActiveTCPSessions() {
 
 /* ********************************** */
 
-void printIpProtocolUsage() {
+void printIpProtocolUsage(void) {
   HostTraffic *hosts[HASHNAMESIZE];
   u_short clientPorts[TOP_ASSIGNED_IP_PORTS], serverPorts[TOP_ASSIGNED_IP_PORTS];
   u_int i, j, idx1, hostsNum=0, numPorts=0;
@@ -3862,9 +4037,10 @@ void printBar(char *buf, int bufLen,
 
 /* ********************************** */
 
-void printShortTableEntry(char *buf, int bufLen,
-			  char *label, char* color,
-			  float total, float percentage) {
+#if 0
+static void printShortTableEntry(char *buf, int bufLen,
+				 char *label, char* color,
+				 float total, float percentage) {
   int int_perc;
 
   if(total == 0) return;
@@ -3899,12 +4075,13 @@ void printShortTableEntry(char *buf, int bufLen,
 
   sendString(buf);
 }
+#endif
 
 /* ********************************** */
 
-void printTableEntry(char *buf, int bufLen,
-		     char *label, char* color,
-		     float total, float percentage) {
+static void printTableEntry(char *buf, int bufLen,
+			    char *label, char* color,
+			    float total, float percentage) {
   int int_perc;
 
   if(total == 0) return;
@@ -3949,154 +4126,8 @@ void printTableEntry(char *buf, int bufLen,
 
 /* ********************************** */
 
-void printTableDoubleEntry(char *buf, int bufLen,
-			   char *label, char* color,
-			   float totalS, float percentageS,
-			   float totalR, float percentageR) {
-  int int_perc;
-
-  if((totalS == 0) && (totalR == 0)) return;
-  int_perc = (int)percentageS;
-
-  /* This shouldn't happen */
-  if(int_perc < 0) {
-    int_perc = 0;
-    percentageS = 0;
-  } else if(int_perc > 100) {
-    int_perc = 100;
-    percentageS = 100;
-  }
-
-  switch(int_perc) {
-  case 0:
-    snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
-	    "<TD ALIGN=RIGHT>%s</TD>"
-	    "<TD>&nbsp;</TD>\n",
-	    getRowColor(), label, formatKBytes(totalS));
-    break;
-  case 100:
-    snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
-	    "<TD ALIGN=RIGHT>%s</TD>"
-	    "<TD ALIGN=CENTER BGCOLOR=\"%s\">100%%</TD>\n",
-	    getRowColor(), label, formatKBytes(totalS), color);
-    break;
-  default:
-    snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
-	    "<TD ALIGN=RIGHT>%s</TD>"
-	    "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
-	    "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
-	    "<P>%.1f&nbsp;%%</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" %s>"
-	    "<P>&nbsp;</TD></TR></TABLE></TD>\n",
-	    getRowColor(), label, formatKBytes(totalS),
-	    int_perc, color, percentageS, (100-int_perc), getActualRowColor());
-  }
-
-  sendString(buf);
-
-  /* ************************ */
-
-  if(totalR == 0) percentageR = 0;
-
-  int_perc = (int)percentageR;
-
-  /* This shouldn't happen */
-  if(int_perc < 0) {
-    int_perc = 0;
-    percentageR = 0;
-  } else if(int_perc > 100) {
-    int_perc = 100;
-    percentageS = 100;
-  }
-
-  switch(int_perc) {
-  case 0:
-    snprintf(buf, bufLen, "<TD ALIGN=RIGHT>%s</TD><TD>&nbsp;</TD></TR>\n",
-	    formatKBytes(totalR));
-    break;
-  case 100:
-    snprintf(buf, bufLen, "<TD ALIGN=RIGHT>%s</TD>"
-	    "<TD ALIGN=CENTER BGCOLOR=\"%s\">100%%</TD></TR>\n",
-	    formatKBytes(totalR), color);
-    break;
-  default:
-    snprintf(buf, bufLen, "<TD ALIGN=RIGHT>%s</TD>"
-	    "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
-	    "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
-	    "<P>%.1f&nbsp;%%</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" %s>"
-	    "<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
-	    formatKBytes(totalR),
-	    int_perc, color, percentageR,
-	    (100-int_perc), getActualRowColor());
-  }
-
-  sendString(buf);
-}
-
-/* ********************************** */
-
-void printTableEntryPercentage(char *buf, int bufLen,
-			       char *label, char* label_1,
-			       char* label_2, float total,
-			       float percentage) {
-  int int_perc = (int)percentage;
-
-  /* This shouldn't happen */
-  if(int_perc < 0)
-    int_perc = 0;
-  else if(int_perc > 100)
-    int_perc = 100;
-
-  switch(int_perc) {
-  case 0:
-    if(total == -1)
-      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
-	      "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
-	      getRowColor(), label, COLOR_2, label_2);
-    else
-      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>%s</TD>"
-	      "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
-	      getRowColor(), label, formatKBytes(total), COLOR_2, label_2);
-    break;
-  case 100:
-    if(total == -1)
-      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
-	      "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
-	      getRowColor(), label, COLOR_1, label_1);
-    else
-      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>%s</TD>"
-	      "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
-	      getRowColor(), label, formatKBytes(total), COLOR_1, label_1);
-    break;
-  default:
-    if(total == -1)
-      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH>"
-	      "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
-	      "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
-	      "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
-	      "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
-	      getRowColor(), label,
-	      int_perc, COLOR_1,
-	      label_1, percentage, (100-int_perc), COLOR_2,
-	      label_2, (100-percentage));
-    else
-      snprintf(buf, bufLen, "<TR %s><TH ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>%s</TD>"
-	      "<TD><TABLE BORDER=\"0\" CELLPADDING=\"0\" CELLSPACING=\"0\" WIDTH=\"100%%\">"
-	      "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
-	      "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
-	      "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
-	      getRowColor(), label, formatKBytes(total),
-	      int_perc, COLOR_1,
-	      label_1, percentage, (100-int_perc), COLOR_2,
-	      label_2, (100-percentage));
-  }
-
-  sendString(buf);
-}
-
-/* ********************************** */
-
 void printIpProtocolDistribution(int mode, int revertOrder) {
-  u_int i;
+  int i;
   char buf[2*BUF_SIZE], *sign;
   float total, partialTotal, remainingTraffic;
   float percentage;
@@ -4296,10 +4327,9 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
  sendString("</CENTER>");
 }
 
-
 /* ************************ */
 
-void printProtoTraffic() {
+void printProtoTraffic(void) {
   float total;
   char buf[BUF_SIZE];
 
@@ -4624,7 +4654,7 @@ void printLsofData(int mode) {
 
 /* ************************ */
 
-char* buildHTMLBrowserWindowsLabel(int i, int j) {
+static char* buildHTMLBrowserWindowsLabel(int i, int j) {
   static char buf[BUF_SIZE];
 
 #ifdef MULTITHREADED
@@ -4662,7 +4692,7 @@ char* buildHTMLBrowserWindowsLabel(int i, int j) {
 
 /* ************************ */
 
-void printIpTrafficMatrix() {
+void printIpTrafficMatrix(void) {
   int i, j, numEntries=0, numConsecutiveEmptyCells;
   char buf[BUF_SIZE];
   short activeHosts[256];
@@ -4764,7 +4794,7 @@ void printIpTrafficMatrix() {
 
 /* ************************ */
 
-void printThptStatsMatrix(int sortedColumn) {
+void printThptStatsMatrix(int sortedColumn _UNUSED_) {
   int i;
   char label[32], label1[32], buf[BUF_SIZE];
   time_t tmpTime;
@@ -5049,7 +5079,7 @@ void printThptStats(int sortedColumn) {
 
 /* ************************ */
 
-int cmpStatsFctn(const void *_a, const void *_b) {
+static int cmpStatsFctn(const void *_a, const void *_b) {
   DomainStats *a = (DomainStats *)_a;
   DomainStats *b = (DomainStats *)_b;
   TrafficCounter a_, b_;
@@ -5473,7 +5503,7 @@ void printLogHeader() {
 
 /* ************************* */
 
-void printNoDataYet() {
+void printNoDataYet(void) {
   sendString("<CENTER><P><i>"
 	     "<IMG SRC=/warning.gif><p>No Data To Display (yet)"
 	     "</i></CENTER>\n");
@@ -5481,7 +5511,7 @@ void printNoDataYet() {
 
 /* ************************* */
 
-void listNetFlows() {
+void listNetFlows(void) {
   char buf[BUF_SIZE];
   int numEntries=0;
   FlowFilterList *list = flowsList;
@@ -5523,7 +5553,7 @@ void listNetFlows() {
 
 /* ****************************************** */
 
-int cmpEventsFctn(const void *_a, const void *_b) {
+static int cmpEventsFctn(const void *_a, const void *_b) {
   EventMsg **a = (EventMsg**)_a;
   EventMsg **b = (EventMsg**)_b;
 
@@ -5824,7 +5854,7 @@ void fillDomainName(HostTraffic *el) {
 
 /* ******************************** */
 
-void printDebugInfo() {
+void printDebugInfo(void) {
   char buf[BUF_SIZE];
 
   sendString("</CENTER><TABLE BORDER=1>\n");
@@ -5846,36 +5876,5 @@ void printDebugInfo() {
   sendString("</TABLE>\n");
 }
 
-/* ************************************ */
 
-void formatUsageCounter(UsageCounter usageCtr) {
-  char buf[BUF_SIZE];
-  int i, sendHeader=0;
-
-  snprintf(buf, sizeof(buf), "<TD ALIGN=RIGHT>%s</TD>",
-	  formatPkts(usageCtr.value));
-  sendString(buf);
-
-  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-    if(usageCtr.peersIndexes[i] != NO_PEER) {
-      struct hostTraffic *el1;
-
-      el1 = device[actualReportDeviceId].
-	hash_hostTraffic[checkSessionIdx(usageCtr.peersIndexes[i])];
-
-      if(el1 != NULL) {
-	if(!sendHeader) {
-	  sendString("<TD ALIGN=LEFT><ul>");
-	  sendHeader = 1;
-	}
-	sendString("\n<li>");
-	sendString(makeHostLink(el1, 0, 0, 0));
-      }
-    }
-
-  if(sendHeader)
-    sendString("</ul></TD>\n");
-  else
-    sendString("<TD>&nbsp;</TD>\n");
-}
 

@@ -180,9 +180,9 @@ static void addMacTableEntry(VendorInfo* theMacHash[],
 
 /* *********************************** */
 
-char* getMacInfo(VendorInfo* vendorTable[], 
-		 u_char* ethAddress,
-		 u_int tableLen, short encodeString) {
+static char* getMacInfo(VendorInfo* vendorTable[], 
+			u_char* ethAddress,
+			u_int tableLen, short encodeString) {
   u_int idx;
   unsigned long vendorValue;
   VendorInfo* cursor;
@@ -330,8 +330,7 @@ char* getSpecialMacInfo(HostTraffic* el, short encodeString) {
 
 /* *********************************** */
 
-void createVendorTable() 
-{
+void createVendorTable(void) {
   int idx;
 
   for(idx=0; vendorInfo[idx].vendorName != NULL; idx++)

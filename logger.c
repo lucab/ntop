@@ -29,7 +29,7 @@ static GDBM_FILE logDB;
 
 /* *************************** */
 
-void initLogger() {
+void initLogger(void) {
 #ifdef HAVE_GDBM_H
   char tmpBuff[200];
   snprintf(tmpBuff, sizeof(tmpBuff), "%s/logger.db",dbPath);
@@ -39,7 +39,7 @@ void initLogger() {
 
 /* *************************** */
 
-void termLogger() {
+void termLogger(void) {
 #ifdef HAVE_GDBM_H
   if(logDB != NULL) {
     gdbm_close(logDB);
@@ -86,8 +86,7 @@ void logMessage(char* message, u_short severity) {
 
 /* ************************ */
 
-void LogStatsToFile() {
-
+void LogStatsToFile(void) {
   if((logd != NULL) && (ipProtoStats != NULL)) {
     char tmpStr[255];
     int i;
@@ -200,7 +199,7 @@ void LogStatsToFile() {
 /* **************************************** */
 
 #ifdef MULTITHREADED
-void* logFileLoop(void* notUsed) {
+void* logFileLoop(void* notUsed _UNUSED_) {
   for(;;) {
     sleep(logTimeout);
     actTime = time(NULL);

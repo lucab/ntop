@@ -21,46 +21,47 @@
  */
 
 
-extern unsigned long allocatedMemory, maxHashSize;
 
-/* Database */
+/* General */
+extern char *version, *osName, *author, *buildDate;
+extern char *program_name;
+extern char domainName[MAXHOSTNAMELEN], *shortDomainName;
+
+
+/* command line options */
+extern u_short traceLevel;
 extern char dbPath[200];
 extern char accessLogPath[200]; /* Apache-like access log */
+extern u_int maxHashSize;
+extern short usePersistentStorage, grabSessionInformation;
+extern char *rFileName;
+extern int numericFlag, logTimeout, daemonMode, mergeInterfaces;
+ 
+/* Search Paths */
+extern const char *dataFileDirs[], *pluginDirs[], *configFileDirs[];
 
-extern short usePersistentStorage, grabSessionInformation, 
-  capturePackets, endNtop;
+/* Debug */
+extern size_t allocatedMemory;
 
-/* Time */
-extern time_t actTime, initialSniffTime, lastRefreshTime;
-extern long delta_time (struct timeval * now, struct timeval * before);
+/* Logging */
+extern time_t nextLogTime;
+extern FILE *logd;
 
-/* NICs */
-extern int numDevices, actualDeviceId;
-
-/* a very import table for ntop engine */
-extern ntopInterface_t device[MAX_NUM_DEVICES];
-
-/* Throughput */
-
-extern char *program_name;
-extern TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
-
-extern char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS]; /* array 0-numIpProtosToMonitor */
-extern u_short numIpProtosToMonitor, numIpPortsToHandle, updateLsof, handleRules;
-extern int* ipPortMapper;
-extern char* rFileName;
-
-extern HostTraffic broadcastEntry;
-
-
+/* Flags */
+extern int isLsofPresent, isNepedPresent, isNmapPresent;
+extern short capturePackets, endNtop;
+ 
+ 
+/* Multithreading */
 #ifdef MULTITHREADED
 extern pthread_mutex_t packetQueueMutex, hostsHashMutex, graphMutex;
 extern pthread_mutex_t lsofMutex, addressResolutionMutex, hashResizeMutex;
-extern pthread_t dequeueThreadId, handleWebConnectionsThreadId,
-  thptUpdateThreadId,
-  scanIdleThreadId, logFileLoopThreadId,
-  dbUpdateThreadId;
-extern pthread_t lsofThreadId;
+extern pthread_t dequeueThreadId, handleWebConnectionsThreadId;
+extern pthread_t thptUpdateThreadId, scanIdleThreadId, logFileLoopThreadId;
+extern pthread_t dbUpdateThreadId, lsofThreadId;
+#ifdef HAVE_GDBM_H
+extern pthread_mutex_t gdbmMutex;
+#endif
 
 #ifdef USE_SEMAPHORES
 extern sem_t queueSem;
@@ -80,684 +81,371 @@ extern pthread_mutex_t addressQueueMutex;
 #endif
 #endif
 
-#ifdef HAVE_LIBWRAP
-extern int allow_severity;
-extern int deny_severity;
-#endif /* HAVE_LIBWRAP */
-
+/* Database */
 #ifdef HAVE_GDBM_H
 extern GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile;
-
-#ifdef MULTITHREADED
-extern pthread_mutex_t gdbmMutex;
-#endif
 #endif
 
-extern int numericFlag;
-extern int logTimeout;
-extern int daemonMode;
-extern time_t nextLogTime;
-extern FILE *logd;
-extern FlowFilterList *flowsList;
-
-extern int isLsofPresent, isNepedPresent, isNmapPresent;
-
-extern FilterRuleChain *tcpChain, *udpChain, *icmpChain;
-extern u_short ruleSerialIdentifier;
-extern FilterRule* filterRulesList[MAX_NUM_RULES];
-
-#ifdef WIN32
-extern int SIZE_BUF;
-#endif
-
-extern u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
-extern short sortSendMode;
-extern int lastNumLines, lastNumCols;
-extern time_t nextSessionTimeoutScan;
-extern struct timeval lastPktTime;
-extern u_int broadcastEntryIdx;
-extern unsigned short alternateColor, maxNameLen;
-extern int deviceId, mergeInterfaces; /* Set by processPacket() */
-
-extern const char *dataFileDirs[];
-extern const char *pluginDirs[];
-extern const char *configFileDirs[];
-
+/* lsof support */
+extern u_short updateLsof;
 extern ProcessInfo *processes[MAX_NUM_PROCESSES];
 extern u_short numProcesses;
 extern ProcessInfoList *localPorts[TOP_IP_PORT];
 
+/* TCP Wrappers */
+#ifdef HAVE_LIBWRAP
+extern int allow_severity, deny_severity;
+#endif /* HAVE_LIBWRAP */
+ 
 
-extern u_short mtuSize[];
-extern u_short headerSize[];
+/* Filter Chains */
+extern u_short handleRules;
+extern FlowFilterList *flowsList;
+extern FilterRuleChain *tcpChain, *udpChain, *icmpChain;
+extern u_short ruleSerialIdentifier;
+extern FilterRule* filterRulesList[MAX_NUM_RULES];
 
+/* Address Resolution */
 #if defined(ASYNC_ADDRESS_RESOLUTION)
-extern unsigned int addressQueueLen, maxAddressQueueLen, addressQueueHead, addressQueueTail;
-
+extern u_int addressQueueLen, maxAddressQueueLen;
+extern u_int addressQueueHead, addressQueueTail;
 extern struct hnamemem *addressQueue[ADDRESS_QUEUE_LENGTH+1];
 #endif
+#ifndef HAVE_GDBM_H
+extern struct hnamemem* hnametable[HASHNAMESIZE];
+#endif
 
+/* Misc */
+extern char *separator;
+extern int32_t thisZone; /* seconds offset from gmt to local time */
 
+/* Time */
+extern time_t actTime, initialSniffTime, lastRefreshTime;
+extern time_t nextSessionTimeoutScan;
+extern struct timeval lastPktTime;
+
+/* NICs */
+/* CHECK ME: if multiple Interfaces are handled by multiple
+   threads deviceId is a bad idea */
+extern int deviceId; /* Set by processPacket() */
+extern int numDevices, actualDeviceId;
+extern ntopInterface_t device[MAX_NUM_DEVICES];
+
+/* Monitored Protocols */
+extern char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS]; /* array 0-numIpProtosToMonitor */
+extern u_short numIpProtosToMonitor, numIpPortsToHandle;
+extern int* ipPortMapper;
+
+/* Packet Capture */
 #if defined(MULTITHREADED)
 extern PacketInformation packetQueue[PACKET_QUEUE_LENGTH+1];
 extern unsigned int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
 #endif
 
-
-extern char domainName[MAXHOSTNAMELEN], *shortDomainName;
-#ifndef HAVE_GDBM_H
-extern struct hnamemem* hnametable[HASHNAMESIZE];
-#endif
+extern TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
+extern u_int broadcastEntryIdx;
+extern HostTraffic broadcastEntry;
+extern u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
+extern u_short mtuSize[], headerSize[];
 extern IpFragment *fragmentList;
 extern IPSession *tcpSession[HASHNAMESIZE]; /* TCP sessions */
 extern IPSession *udpSession[HASHNAMESIZE]; /* UDP sessions */
 extern u_short numTcpSessions, numUdpSessions;
-extern char *separator;
 extern ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
 extern TrafficEntry ipTrafficMatrix[256][256]; /* Subnet traffic Matrix */
 extern HostTraffic* ipTrafficMatrixHosts[256]; /* Subnet traffic Matrix Hosts */
 extern fd_set ipTrafficMatrixPromiscHosts;
-extern int32_t thisZone; /* seconds offset from gmt to local time */
-
-
 extern SimpleProtoTrafficInfo *ipProtoStats;
 
-/* function declaration */
+/* function declaration ***************************************************** */
 
 /* address.c */
-extern void upadateHostNameInfo(unsigned long numeric, char* symbolic);
-extern unsigned short isLocalAddress(struct in_addr *addr);
-extern unsigned short isBroadcastAddress(struct in_addr *addr);
+
+extern void cleanupAddressQueue(void);
+extern void* dequeueAddress(void* notUsed);
+extern char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
+extern char* intoa(struct in_addr addr);
+extern void ipaddr2str(struct in_addr hostIpAddress, char* outBuf,
+                       int outBufLen);
+extern char* etheraddr_string(const u_char *ep);
+extern char* llcsap_string(u_char sap);
+extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
+                               char *fdst);
+extern u_int16_t handleDNSpacket(const u_char *ipPtr, u_short displ,
+                                 DNSHostInfo *hostPtr, short n,
+                                 short *isRequest, short *positiveReply);
+extern void checkSpoofing(u_int idxToCheck);
 
 /* admin.c */
-char* intoa(struct in_addr addr);
-char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
-char* savestr(const char *str);
-
-/* event.c */
-extern void sendHTTPProtoHeader();
-extern void sendString(char *theString);
-extern void printHTTPtrailer();
-
-extern char* getRowColor();
-extern char* getAllPortByNum(int port);
-extern int getAllPortByName(char* portName);
-extern void sendString(char *x);
-extern void  quicksort(void *, size_t, size_t,
-		       int (*)(const void *, const void *));
-extern u_int checkSessionIdx(u_int idx);
-
-extern void freeHostInfo(int theDevice, u_int hostIdx);
-
-/* http.c */
-
-extern void sendGIFHeaderType();
-extern void sendGIFHeaderType();
-extern void sendHTTPHeaderType();
-
-#ifndef WIN32
-extern void execCGI(char* cgiName);
-#endif
-extern void closeNwSocket(int *sockId);
-extern void drawTrafficPie();
-extern void pktCastDistribPie();
-extern void pktSizeDistribPie();
-extern void ipProtoDistribPie();
-extern void interfaceTrafficPie();
-extern void drawGlobalIpProtoDistribution();
-extern void drawGlobalProtoDistribution();
-extern void drawThptGraph(int sortedColumn);
-extern int handlePluginHTTPRequest(char* url);
-extern void printAllSessionsHTML(char* host);
-extern void printMulticastStats(int, int);
-
-extern void printHostsTraffic(int, int, int, int);
-
-extern void printIpAccounting(int, int, int);
-extern void printHostsInfo(int, int);
-extern void printActiveTCPSessions();
-extern void printIpProtocolDistribution(int mode, int);
-extern void printIpTrafficMatrix();
-extern void printIpProtocolUsage();
-extern void printThptStats(int);
-extern void printLocalRoutersList();
-extern void printDomainStats(char*, int, int);
-extern void showPluginsList(char* pluginName);
-extern void listNetFlows();
-extern void resetStats();
-extern void shutdownNtop();
-extern void printProtoTraffic();
-extern void printLsofData(int mode);
-extern void printProcessInfo(int processPid);
-extern void printHostEvents(HostTraffic *theHost, int, int);
-extern void printThptStatsMatrix(int sortedColumn);
-
-#ifdef HAVE_OPENSSL
-extern int init_ssl();
-extern int accept_ssl_connection(int fd);
-extern void term_ssl_connection(int idx);
-extern void term_ssl();
-extern SSL* getSSLsocket(int fd);
-extern int sslInitialized, sslPort;
-#endif
-
-/* Forward */
-#ifdef HAVE_GDBM_H
-extern void showUsers();
-extern void addUser(char*);
-extern void deleteUser(char*);
-extern void doAddUser(int);
-extern void showURLs();
-extern void addURL(char*);
-extern void deleteURL(char*);
-extern void doAddURL(int);
-#endif
-
-/* main.c */
-extern void printHTTPheader();
-extern void printNoDataYet();
-extern void closeNwSocket(int *sockId);
-extern void initLogger();
-extern void termLogger();
-extern char* intoa(struct in_addr addr);
-extern void loadPlugins();
-extern void startPlugins();
-extern void unloadPlugins();
-extern void addDefaultAdminUser();
-extern void cleanup_curses();
-extern int  checkKeyPressed();
-extern void returnHTTPaccessDenied();
-extern void printTCPSessions();
-extern void printUDPSessions();
-extern void printIPpkt();
-extern void printTCPpkt();
-extern void handleHTTPrequest(struct in_addr from);
-extern void clrscr();
-extern void scanAllTcpExpiredRules();
-extern void scanTimedoutTCPSessions();
-extern void initIPServices();
-extern void parseRules(char* path);
-extern RETSIGTYPE _printHostsTraffic(int signumber_ignored);
-extern RETSIGTYPE printHostsTraffic(int signumber_ignored, int reportType,
-				    int sortedColumn, int revertOrder);
-
-/* initialize.c */
-void initIPServices();
-void initCounters(int _mergeInterfaces);
-void resetStats();
-int initGlobalValues();
-void postCommandLineArgumentsInitialization(time_t *lastTime);
-void initGdbm();
-void initThreads(int enableDBsupport);
-void initApps();
-void initDevices(char* devices);
-void initRules(char *rulesFile);
-void initLibpcap(char* rulesFile, int numDevices);
-void initDeviceDatalink();
-void parseTrafficFilter(char *argv[], int optind);
-void initSignals();
-void startSniffer();
-
-extern time_t nextSessionTimeoutScan;
-extern char *optarg;
-
-extern char *version, *osName, *author, *buildDate;
-
-extern ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
-extern void updateThpt();
-extern void LogStatsToFile();
-extern void printLogHeader();
-extern char* formatPkts(TrafficCounter pktNr);
-extern void handleLocalAddresses(char* addresses);
-extern void resetStats();
-extern void processPacket(u_char * Id,
-			  const struct pcap_pkthdr *h,
-			  const u_char *p);
-extern int checkCommand(char* commandName);
-#ifdef MULTITHREADED
-void* updateDBHostsTrafficLoop(void* notUsed);
-#endif
-
-/* *** SQL Engine *** */
-extern void openSQLsocket(char* dstHost, int dstPort);
-extern void closeSQLsocket();
-extern void updateDbHostsTraffic();
-/* ****************** */
-
-#ifndef WIN32
-extern void handleSigHup(int signalId);
-extern void ignoreSignal(int signalId);
-#endif
-
-#ifdef MULTITHREADED
-extern void* pcapDispatch(void *_i);
-#endif
-
-extern void handleFlowsSpecs(char* flows);
-extern void initCurses();
-
-extern void* handleCursesRefresh(void* notUsed);
-extern void readLsofInfo();
-extern void readNepedInfo();
-extern int getLocalHostAddress(struct in_addr *hostAddress, char* dev);
-#ifdef WIN32
-extern short isWinNT();
-#endif
-
-/* Forwards */
-extern RETSIGTYPE cleanup(int);
-extern RETSIGTYPE handleDiedChild(int);
-extern RETSIGTYPE dontFreeze(int);
-extern void detachFromTerminal();
-extern void daemonize();
-extern void handleProtocols(char*);
-extern void addDefaultProtocols();
-extern short handleProtocol(char* protoName, char *protocol);
-extern void handleProtocolList(char* protoName, char *protocolList);
-extern void* handleWebConnections(void*);
-#ifdef MULTITHREADED
-extern void* updateThptLoop(void* notUsed);
-extern void* scanIdleLoop(void* notUsed);
-extern void* logFileLoop(void* notUsed);
-extern void* periodicLsofLoop(void* notUsed);
-#endif
-
-
-/* main.c */
-extern void printHTTPheader();
-extern void printNoDataYet();
-extern void closeNwSocket(int *sockId);
-extern void initLogger();
-extern void termLogger();
-extern char* intoa(struct in_addr addr);
-extern void loadPlugins();
-extern void unloadPlugins();
-extern void addDefaultAdminUser();
-extern void init_counters();
-extern void cleanup_curses();
-extern int  checkKeyPressed();
-extern void returnHTTPaccessDenied();
-extern int  checkHTTPpassword(char *requestedURL, int lenURL, char* pw, int lenPw);
-extern void printTCPSessions();
-extern void printUDPSessions();
-extern void printIPpkt();
-extern void printTCPpkt();
-extern void handleHTTPrequest();
-extern void clrscr();
-extern void scanAllTcpExpiredRules();
-extern void scanTimedoutTCPSessions();
-extern void initIPServices();
-extern void parseRules(char* path);
-
-extern RETSIGTYPE printHostsTraffic(int signumber_ignored, int reportType,
- 				                    int sortedColumn, int revertOrder);
-
-extern void updateThpt();
-extern void LogStatsToFile();
-extern void printLogHeader();
-extern char* formatPkts(TrafficCounter pktNr);
-extern void handleLocalAddresses(char* addresses);
-extern void resetStats();
-extern void processPacket(u_char* Id,
-			  const struct pcap_pkthdr *h,
-			  const u_char *p);
-extern int checkCommand(char* commandName);
-#ifdef MULTITHREADED
-void* updateDBHostsTrafficLoop(void* notUsed);
-#endif
-
-/* *** SQL Engine *** */
-extern void openSQLsocket(char* dstHost, int dstPort);
-extern void closeSQLsocket();
-extern void updateDbHostsTraffic();
-/* ****************** */
-extern void handleFlowsSpecs(char* flows);
-extern void init_curses();
-#ifdef MULTITHREADED
-extern void* dequeuePacket(void*);
-#ifdef ASYNC_ADDRESS_RESOLUTION
-extern void queueAddress(struct hnamemem* elem, int elemLen);
-extern void* dequeueAddress(void*);
-#endif
-
-void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h, const u_char *p);
-
-extern void* handleCursesRefresh(void* notUsed);
-#endif
-extern void readLsofInfo();
-extern void readNepedInfo();
-extern int getLocalHostAddress(struct in_addr *hostAddress, char* dev);
-#ifdef WIN32
-extern short isWinNT();
-#endif
-
-/* Forwards */
-RETSIGTYPE cleanup(int);
-RETSIGTYPE handleDiedChild(int);
-RETSIGTYPE dontFreeze(int);
-void detachFromTerminal();
-void daemonize();
-void handleProtocols(char*);
-void addDefaultProtocols();
-short handleProtocol(char* protoName, char *protocol);
-void handleProtocolList(char* protoName, char *protocolList);
-void* handleWebConnections(void*);
-#ifdef MULTITHREADED
-void* updateThptLoop(void* notUsed);
-void* scanIdleLoop(void* notUsed);
-void* logFileLoop(void* notUsed);
-void* periodicLsofLoop(void* notUsed);
-#endif
-
-/* ntop.c */
-extern void sendString(char *x);
-extern void logMessage(char* message, u_short severity);
-extern void createVendorTable();
-extern RETSIGTYPE cleanup(int signo);
-extern void checkFilterChain(HostTraffic *srcHost, u_int srcHostIdx,
-			     HostTraffic *dstHost, u_int dstHostIdx,
-			     u_short sport, u_short dport,
-			     u_int length,       /* packet length */
-			     u_int hlen,         /* offset from packet header */
-			     u_int8_t flags,     /* TCP flags or ICMP type */
-			     u_char protocol,    /* Protocol */
-			     u_char isFragment, /* 1 = fragment, 0 = packet */
-			     const u_char* bp,   /* pointer to packet content */
-			     FilterRuleChain *selectedChain,
-			     u_short packetType);
-extern void printHeader(int reportType, int revertOrder, u_int column);
-extern void printHelp();
-extern u_int16_t handleDNSpacket(const u_char*, u_short, DNSHostInfo *hostPtr, 
-				 short len, short *isRequest, 
-				 short *positiveReply);
-extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
-extern void printSession(IPSession *theSession, u_short sessionType,
-			 u_short sessionCounter);
-extern unsigned short isLocalAddress(struct in_addr *addr);
-extern unsigned short isPseudoLocalAddress(struct in_addr *addr);
-extern unsigned short isBroadcastAddress(struct in_addr *addr);
-extern char* getHostOS(char* os, int port, char* additionalInfo);
-extern int32_t gmt2local(time_t t);
-extern int mapGlobalToLocalIdx(int port);
-extern unsigned short isMulticastAddress(struct in_addr *addr);
-extern void updateHostNameInfo(unsigned long numeric, char* symbolic);
-
-extern char* llcsap_string(u_char sap);
-extern char* etheraddr_string(const u_char *ep);
-extern void extract_fddi_addrs(struct fddi_header *fddip,
-			       char *fsrc, char *fdst);
-
-/* *** SQL Engine *** */
-extern void updateHostTraffic(HostTraffic *el);
-extern void notifyHostCreation(HostTraffic *el);
-extern void updateDBOSname(HostTraffic *el);
-extern void updateDbHostsTraffic();
-extern void notifyTCPSession(IPSession *session);
-
-extern char* intoa(struct in_addr addr);
-
-extern void processPacket(u_char *_deviceId,
-			  const struct pcap_pkthdr *h,
-			  const u_char *p);
-extern char* savestr(const char *str);
-
-extern void updateThpt();
-extern void purgeIdleHosts(int);
-extern void updatePacketCount(u_int srcHost, u_int dstHost, 
-			      TrafficCounter length);
-extern void purgeOldFragmentEntries();
-extern void deleteFragment(IpFragment *fragment);
-
-/* plugin.c */
-extern void sendString(char *theString);
-
-extern void sendString(char *theString);
-extern char* getRowColor();
-extern void printHTTPheader();
-
-#ifdef AIX
-char* dlerror();
-#endif /* AIX */
-
-#ifdef STATIC_PLUGIN
-extern PluginInfo* icmpPluginEntryFctn();
-extern PluginInfo* arpPluginEntryFctn();
-extern PluginInfo* nfsPluginEntryFctn();
-#endif
-
-
-/* pbuf.c */
-extern int findHostInfo(struct in_addr *hostIpAddress);
-extern HostTraffic* findHostByMAC(char* macAddr);
-
-/* report.c */
-extern char* makeHostLink(HostTraffic *el, short mode, 
-			  short cutName, short addCountryFlag);
-extern void printHostEvents(HostTraffic *theHost, int, int);
-extern void sendString(char *x);
-extern void createVendorTable();
-extern char* getVendorInfo(u_char* ethAddress, short);
-extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
-extern RETSIGTYPE cleanup(int signo);
-
-extern void updateOSName(HostTraffic *el);
-extern void updateThpt();
-extern void ipaddr2str(struct in_addr hostIpAddress, char* outBuf, int outBufLen);
-extern char* getPortByNum(int port, int type);
-extern char* getAllPortByNum(int port);
-extern void clrscr();
-extern void init_curses();
-extern char* getRowColor();
-extern char* getActualRowColor();
-extern unsigned short isLocalAddress(struct in_addr *addr);
-extern unsigned short isPseudoLocalAddress(struct in_addr *addr);
-extern unsigned short isBroadcastAddress(struct in_addr *addr);
-extern char* intoa(struct in_addr addr);
-extern void  quicksort(void *, size_t, size_t,
-		       int (*)(const void *, const void *));
-extern void printLogTime();
-extern void printHTTPtrailer();
-extern void printHTTPheader();
-extern int checkKeyPressed();
-extern u_int checkSessionIdx(u_int idx);
-
-extern char* formatThroughput(float numBytes);
-extern char* getHostName(HostTraffic *el, short cutName);
-extern char* formatSeconds(unsigned long sec);
-extern char* formatMicroSeconds(unsigned long microsec);
-extern time_t delta_time_in_milliseconds(struct timeval * now,
-					 struct timeval * before);
-
-/* Forward */
-void printNoDataYet();
-char* getHostCountryIconURL(HostTraffic *el);
-void fillDomainName(HostTraffic *el);
-char* getCountryIconURL(char* hostName);
-void printIpProtocolDistribution(int mode, int);
-void printTableEntryPercentage(char *buf, int bufLen, char *label, char* label_1, 
-			       char* label_2, float total, float percentage);
-void printTableDoubleEntry(char *buf, int bufLen, char *label, char* color, 
-			   float totalS, float percentageS, 
-			   float totalR, float percentageR);
-void printTableEntry(char *buf, int bufLen, char *label, char* color, 
-		     float total, float percentage);
-char* formatPkts(TrafficCounter pktNr);
-void printBar(char *buf, int bufLen, unsigned short percentage,
-	      unsigned short maxPercentage, unsigned short ratio);
-
-
-/* rules.c */
-extern void fireEvent(FilterRule *rule, HostTraffic *srcHost,
-		      u_int srcHostIdx, HostTraffic *dstHost,
-		      u_int dstHostIdx, short icmpType, u_short sport,
-		      u_short dport,  u_int length);
-
-extern int re_search (struct re_pattern_buffer *bufp,
-		      const char *string,
-		      int size, int startpos,
-		      int range,
-		      struct re_registers *regs);
-extern int getPortByName(ServiceEntry **theSvc, char* portName);
-
-
-/* sql.c */
-extern char* formatBytes(TrafficCounter numBytes, short encodeString);
-extern char* formatTime(time_t *theTime, short encodeString);
-extern char* intoa(struct in_addr addr);
-extern char* getVendorInfo(u_char* ethAddress, short encodeString);
-extern u_int checkSessionIdx(u_int idx);
-
-
-/* ssl.c */
-
-#ifdef HAVE_OPENSSL
-int verify_callback(int ok, X509_STORE_CTX *ctx);
-#endif
-
-
-/* util.c */
-extern char* intoa(struct in_addr addr);
-extern int strOnlyDigits(const char *s);
-
-#ifndef HAVE_LOCALTIME_R
-extern struct tm *localtime_r(const time_t *t, struct tm *tp);
-#endif
-
-#ifndef HAVE_STRTOK_R
-extern char *strtok_r(char *s, const char *delim, char **save_ptr);
-#endif
-
-#ifdef WIN32
-extern ULONG GetHostIPAddr();
-#endif
-
-extern int getAllPortByName(char* portName);
-/* Forward */
-int32_t gmt2local(time_t t);
-unsigned short isPseudoBroadcastAddress(struct in_addr *addr);
-unsigned short isPseudoLocalAddress(struct in_addr *addr);
-
-
-extern u_int getHostInfo(struct in_addr *hostIpAddress,u_char *ether_addr);
-extern u_int _checkSessionIdx(u_int idx, char* file, int line);
-extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
-			    u_char *ether_addr, short* useIPAddressForSearching);
-extern void sendStringLen(char *theString, unsigned int len);
-
-#if defined(MULTITHREADED)
-extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *), 
-			char* userParm);
-extern int createCondvar(ConditionalVariable *condvarId);
-extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *), 
-			char* userParm);
-extern int createMutex(pthread_mutex_t *mutexId);
-
-extern int _accessMutex(pthread_mutex_t *mutexId, char* where, char* fileName, int fileLine);
-extern int _tryLockMutex(pthread_mutex_t *mutexId, char* where, char* fileName, int fileLine);
-extern int _releaseMutex(pthread_mutex_t *mutexId, char* fileName, int fileLine);
-
-#define accessMutex(a, b)  _accessMutex(a, b, __FILE__, __LINE__)
-#define tryLockMutex(a, b) _tryLockMutex(a, b, __FILE__, __LINE__)
-#define releaseMutex(a)    _releaseMutex(a, __FILE__, __LINE__)
-
-extern int signalCondvar(ConditionalVariable *condvarId);
-extern int waitCondvar(ConditionalVariable *condvarId);
-
-void killThread(pthread_t *threadId);
-void deleteMutex(pthread_mutex_t *mutexId);
-void deleteCondvar(ConditionalVariable *condvarId);
-
-#endif
-
-extern HostTraffic* findHostByNumIP(char* numIPaddr);
-
-extern char *copy_argv(char **);
-extern int name_interpret(char *in, char *out);
-
-extern void postCommandLineArgumentsInitialization(time_t *lastTime);
-extern void initGdbm();
-extern void initThreads(int enableDBsupport);
-extern void initApps();
-extern void initDevices(char*);
-extern void initLibpcap(char* rulesFile, int numDevices);
-extern void initDeviceDatalink();
-
-extern char* getRowColor();
-extern char* getActualRowColor();
-
-extern void initWeb(int webPort, char* webAddr);
-
-extern void packetCaptureLoop(time_t*, int);
-extern void startSniffer();
-
-extern int getActualInterface();
-extern void checkSpoofing(u_int idxToCheck);
-extern void smurfAlert(u_int srcHostIdx, u_int dstHostIdx);
-
+extern void showUsers(void);
+extern void addUser(char* user);
+extern void deleteUser(char* user);
+extern void doAddUser(int _len);
+extern void showURLs(void);
+extern void addURL(char* url);
+extern void deleteURL(char* user);
+extern void doAddURL(int _len);
+extern void addDefaultAdminUser(void);
+
+/* dataFormat.c */
 extern char* formatKBytes(float numKBytes);
 extern char* formatBytes(TrafficCounter numBytes, short encodeString);
 extern char* formatSeconds(unsigned long sec);
+extern char* formatMicroSeconds(unsigned long microsec);
 extern char* formatThroughput(float numBytes);
-extern char  formatStatus(HostTraffic *el);
-extern char* formatTimeStamp(unsigned int ndays,
-			     unsigned int nhours,
-			     unsigned int nminutes);
+extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
+                             unsigned int nminutes);
 extern char* formatPkts(TrafficCounter pktNr);
 
-extern char* getNwInterfaceType(int i);
-extern char* calculateCellColor(TrafficCounter actualValue,
-				TrafficCounter avgTrafficLow,
-				TrafficCounter avgTrafficHigh);
-extern void termReports();
-extern void emitEvent(FilterRule *rule,
-		      HostTraffic *srcHost,
-		      u_int srcHostIdx, 
-		      HostTraffic *dstHost,
-		      u_int dstHostIdx,
-		      short icmpType,
-		      u_short sport,
-		      u_short dport);
-extern void addPortHashEntry(ServiceEntry **theSvc, int port, char* name);
-extern void updateTrafficMatrix(HostTraffic *srcHost,
-				HostTraffic *dstHost,
-				TrafficCounter length);
+/* event.c */
+extern void emitEvent(FilterRule *rule, HostTraffic *srcHost,
+                      u_int srcHostIdx, HostTraffic *dstHost,
+                      u_int dstHostIdx, short icmpType,
+                      u_short sport, u_short dport);
+extern void scanAllTcpExpiredRules(void);
+extern void fireEvent(FilterRule *rule, HostTraffic *srcHost,
+                      u_int srcHostIdx, HostTraffic *dstHost,
+                      u_int dstHostIdx, short icmpType,
+                      u_short sport, u_short dport,
+                      u_int length);
+extern void smurfAlert(u_int srcHostIdx, u_int dstHostIdx);
 
-extern void storeHostTrafficInstance(HostTraffic *el);
-extern HostTraffic* resurrectHostTrafficInstance(char *key);
-extern void freeHostInstances();
-extern void purgeIdleHostSessions(u_int hostIdx, 
-				  IpGlobalSession **sessionScanner);
+/* graph.c */
+extern void pktSizeDistribPie(void);
+extern void ipProtoDistribPie(void);
+extern void interfaceTrafficPie(void);
+extern void pktCastDistribPie(void);
+extern void drawTrafficPie(void);
+extern void drawThptGraph(int sortedColumn);
+extern void drawGlobalProtoDistribution(void);
+extern void drawGlobalIpProtoDistribution(void);
 
-extern void cleanupAddressQueue();
-extern void cleanupPacketQueue();
-extern void termIPSessions();
-extern void termIPServices();
+/* hash.c */
+extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
+                                   u_char *ether_addr,
+                                   short* useIPAddressForSearching);
+extern void resizeHostHash(int deviceToExtend, float multiplier);
+extern void freeHostInfo(int theDevice, u_int hostIdx);
+extern void freeHostInstances(void);
+extern void purgeIdleHosts(int ignoreIdleTime);
 
-/* *********************************** */
+/* http.c */
+extern void sendStringLen(char *theString, unsigned int len);
+extern void sendString(char *theString);
+extern void printHTTPheader(void);
+extern void printHTTPtrailer(void);
+extern void initAccessLog(void);
+extern void termAccessLog(void);
+extern void sendHTTPHeaderType(void);
+extern void sendGIFHeaderType(void);
+extern void sendHTTPProtoHeader(void);
+extern void handleHTTPrequest(struct in_addr from);
 
-extern u_short traceLevel;
-extern void traceEvent(int eventTraceLevel, char* file, 
-		       int line, char * format, ...);
+/* initialize.c */
+extern void initIPServices(void);
+extern void initCounters(int _mergeInterfaces);
+extern void resetStats(void);
+extern int initGlobalValues(void);
+extern void postCommandLineArgumentsInitialization(time_t *lastTime);
+extern void initGdbm(void);
+extern void initThreads(int enableDBsupport);
+extern void initApps(void);
+extern void initDevices(char* devices);
+extern void initLibpcap(char* rulesFile, int numDevices);
+extern void initDeviceDatalink(void);
+extern void parseTrafficFilter(char *argv[], int optind);
+extern void initSignals(void);
+extern void startSniffer(void);
 
-/* *********************************** */
-
-extern void* ntop_malloc(unsigned int sz, char* file, int line);
-extern char* ntop_strdup(char *str, char* file, int line);
-extern void  ntop_free(void *ptr, char* file, int line);
-
+/* leaks.c */
 #ifdef MEMORY_DEBUG 
 #define malloc(a) ntop_malloc((unsigned int)a, __FILE__, __LINE__)
 #define strdup(a) ntop_strdup((char*)a, __FILE__, __LINE__)
 #define free(a)   ntop_free((void*)a, __FILE__, __LINE__)
 #endif
+extern void* ntop_malloc(unsigned int sz, char* file, int line);
+extern char* ntop_strdup(char *str, char* file, int line);
+extern void  ntop_free(void *ptr, char* file, int line);
 
-extern u_short in_cksum(const u_short *addr, int len, u_short csum); 
+/* logger.c */
+extern void initLogger(void);
+extern void termLogger(void);
+extern void logMessage(char* message, u_short severity);
+extern void LogStatsToFile(void);
+extern void* logFileLoop(void* notUsed);
 
+
+/* ntop.c */
+extern void handleSigHup(int signalId);
+extern void *pcapDispatch(void *_i);
+extern RETSIGTYPE handleDiedChild(int signal);
+extern RETSIGTYPE dontFreeze(int signo);
+extern void daemonize(void);
+extern void detachFromTerminal(void);
+extern void handleProtocols(char *protos);
+extern void addDefaultProtocols(void);
+extern int mapGlobalToLocalIdx(int port);
+extern void *updateThptLoop(void *notUsed);
+extern void *updateDBHostsTrafficLoop(void* notUsed);
+extern void *scanIdleLoop(void *notUsed);
+extern void *periodicLsofLoop(void *notUsed);
+extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
+extern RETSIGTYPE cleanup(int signo);
+ 
+/* pbuf.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, __FILE__, __LINE__)
-     
-extern void addTimeMapping(u_int16_t transactionId, struct timeval theTime);
-extern time_t getTimeMapping(u_int16_t transactionId, struct timeval theTime);
-extern void resizeHostHash(int deviceToExtend, float multiplier);
-extern void notifyPluginsHashResize(u_int oldSize, u_int newSize, u_int* mappings);
+extern u_int _checkSessionIdx(u_int idx, char* file, int line);
+extern int getPortByName(ServiceEntry **theSvc, char* portName);
+extern char *getPortByNumber(ServiceEntry **theSvc, int port);
+extern char *getPortByNum(int port, int type);
+extern char *getAllPortByNum(int port);
+extern int getAllPortByName(char* portName);
+extern void addPortHashEntry(ServiceEntry **theSvc, int port, char* name);
+extern u_int findHostInfo(struct in_addr *hostIpAddress);
+extern u_int getHostInfo(struct in_addr *hostIpAddress, u_char *ether_addr);
+extern char *getNamedPort(int port);
+extern void scanTimedoutTCPSessions(void);
+extern void deleteFragment(IpFragment *fragment);
+extern void purgeOldFragmentEntries(void);
+extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h,
+                        const u_char *p);
+extern void cleanupPacketQueue(void);
+extern void *dequeuePacket(void* notUsed);
+extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
+                          const u_char *p);
+extern void updateOSName(HostTraffic *el);
 
+/* plugin.c */
+/* CHECK ME: THIS IS NOT CALLED YET! */
+extern void notifyPluginsHashResize(int oldSize, int newSize,
+                                    int* mappings);
+extern int handlePluginHTTPRequest(char* url);
+extern void loadPlugins(void);
+extern void startPlugins(void);
+extern void unloadPlugins(void);
+
+/* qsort.c */
+/* typedef int (*compare_function_t) (const void *p1, const void *p2); */
+extern void quicksort(void *a, size_t n, size_t es,
+                      int (*compare_function) (const void *p1, const void *p2));
+
+/* rules.c */
+extern void parseRules(char* path);
+extern void checkFilterChain(HostTraffic *srcHost, u_int srcHostIdx, 
+                             HostTraffic *dstHost, u_int dstHostIdx,
+                             u_short sport, u_short dport, 
+                             u_int length, u_int hlen, u_int8_t flags,     
+                             u_char protocol, u_char isFragment,  
+                             const u_char* bp, FilterRuleChain *selectedChain,
+                             u_short packetType);
+
+/* sql.c */
+extern void handleDbSupport(char* addr /* host:port */, int* enableDBsupport);
+extern void closeSQLsocket(void);
+extern void updateHostNameInfo(unsigned long numeric, char* symbolic);
+extern void updateHostTraffic(HostTraffic *el);
+extern void notifyHostCreation(HostTraffic *el);
+extern void notifyTCPSession(IPSession *session);
+extern void updateDBOSname(HostTraffic *el);
+
+/* ssl.c */
+#ifdef HAVE_OPENSSL
+extern int sslInitialized, sslPort;
+extern int init_ssl(void);
+extern int accept_ssl_connection(int fd);
+extern SSL *getSSLsocket(int fd);
+extern void term_ssl_connection(int fd);
+/* CHECK ME: THIS IS NOT CALLED YET! */
+extern void term_ssl(void);
+#endif
+
+/* term.c */
+extern void termIPServices(void);
+extern void termIPSessions(void);
+
+/* traffic.c */
+extern void updateThpt(void);
+extern void updateTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
+                                TrafficCounter length);
+extern void updateDbHostsTraffic(int deviceToUpdate);
+
+/* util.c */
 extern FILE *sec_popen(char *cmd, const char *type);
+extern HostTraffic* findHostByNumIP(char* numIPaddr);
+extern HostTraffic* findHostByMAC(char* macAddr);
+extern char* copy_argv(register char **argv);
+extern unsigned short isBroadcastAddress(struct in_addr *addr);
+extern unsigned short isMulticastAddress(struct in_addr *addr);
+extern unsigned short isLocalAddress(struct in_addr *addr);
+extern void handleLocalAddresses(char* addresses);
+extern unsigned short isPseudoLocalAddress(struct in_addr *addr);
+extern unsigned short isPseudoBroadcastAddress(struct in_addr *addr);
+extern void printLogTime(void);
+extern int32_t gmt2local(time_t t);
+extern void handleFlowsSpecs(char* flows);
+extern int getLocalHostAddress(struct in_addr *hostAddress, char* device);
+
+#ifdef MULTITHREADED
+extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
+                        char* userParm);
+extern void killThread(pthread_t *threadId);
+extern int createMutex(pthread_mutex_t *mutexId);
+extern void deleteMutex(pthread_mutex_t *mutexId);
+extern int _accessMutex(pthread_mutex_t *mutexId, char* where,
+                        char* fileName, int fileLine);
+extern int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
+                         char* fileName, int fileLine);
+extern int _releaseMutex(pthread_mutex_t *mutexId,
+                         char* fileName, int fileLine);
+extern int createCondvar(ConditionalVariable *condvarId);
+extern void deleteCondvar(ConditionalVariable *condvarId);
+extern int waitCondvar(ConditionalVariable *condvarId);
+extern int signalCondvar(ConditionalVariable *condvarId);
+#define accessMutex(a, b)  _accessMutex(a, b, __FILE__, __LINE__)
+#define tryLockMutex(a, b) _tryLockMutex(a, b, __FILE__, __LINE__)
+#define releaseMutex(a)    _releaseMutex(a, __FILE__, __LINE__)
+#ifdef HAVE_SEMAPHORE_H
+extern int createSem(sem_t *semId, int initialValue);
+extern void waitSem(sem_t *semId);
+extern int incrementSem(sem_t *semId);
+extern int decrementSem(sem_t *semId);
+extern int deleteSem(sem_t *semId);
+#endif /* HAVE_SEMAPHORE_H */
+#endif /* MULTITHREADED */
+
+extern int checkCommand(char* commandName);
+extern void readLsofInfo(void);
+extern void readNepedInfo(void);
+extern char *getHostOS(char* ipAddr, int port, char* additionalInfo);
+extern void closeNwSocket(int *sockId);
+extern char *savestr(const char *str);
+extern int name_interpret(char *in, char *out);
+
+extern char *getNwInterfaceType(int i);
+extern char *formatTime(time_t *theTime, short encodeString);
+extern int getActualInterface(void);
+extern void storeHostTrafficInstance(HostTraffic *el);
+
+extern HostTraffic *resurrectHostTrafficInstance(char *key);
+extern u_short in_cksum(const u_short *addr, int len, u_short csum);
+extern void addTimeMapping(u_int16_t transactionId, struct timeval theTime);
+extern long delta_time (struct timeval * now, struct timeval * before);
+extern time_t getTimeMapping(u_int16_t transactionId,
+                             struct timeval theTime);
+extern void traceEvent(int eventTraceLevel, char* file,
+                       int line, char * format, ...)
+     __attribute__ ((format (printf, 4, 5))); 
+     extern char *_strncpy(char *dest, const char *src, size_t n);
+#ifndef HAVE_LOCALTIME_R
+extern struct tm *localtime_r(const time_t *t, struct tm *tp);
+ #endif
+#ifndef HAVE_STRTOK_R
+extern char *strtok_r(char *s, const char *delim, char **save_ptr);
+#endif
+extern int strOnlyDigits(const char *s);
+
+/* vendor.c */
+extern char* getVendorInfo(u_char* ethAddress, short encodeString);
+extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
+extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
+extern void createVendorTable(void);

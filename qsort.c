@@ -89,10 +89,8 @@ static char* med3(a, b, c, cmp)
     :(cmp(b, c) > 0 ? b : (cmp(a, c) < 0 ? a : c ));
 }
 
-void quicksort(a, n, es, cmp)
-     void *a;
-     size_t n, es;
-     int (*cmp)();
+void quicksort(void *a, size_t n, size_t es,
+	       int (*compare_function) (const void *p1, const void *p2))
 {
   char *pa, *pb, *pc, *pd, *pl, *pm, *pn;
   int d, r, swaptype, swap_cnt;
@@ -103,7 +101,7 @@ void quicksort(a, n, es, cmp)
 	  for (pm = (char*)((unsigned long)a + es); 
 	       pm < (char *) ((unsigned long)a + n * es); 
 	       pm += es)
-	    for (pl = pm; pl > (char *) a && cmp(pl - es, pl) > 0;
+	    for (pl = pm; pl > (char *) a && compare_function(pl - es, pl) > 0;
 		 pl -= es)
 	      swap(pl, pl - es);
 	  return;
@@ -114,18 +112,18 @@ void quicksort(a, n, es, cmp)
 	  pn = (char*)((unsigned long)a + (n - 1) * es);
 	  if (n > 40) {
 	    d = (n / 8) * es;
-	    pl = med3(pl, pl + d, pl + 2 * d, cmp);
-	    pm = med3(pm - d, pm, pm + d, cmp);
-	    pn = med3(pn - 2 * d, pn - d, pn, cmp);
+	    pl = med3(pl, pl + d, pl + 2 * d, compare_function);
+	    pm = med3(pm - d, pm, pm + d, compare_function);
+	    pn = med3(pn - 2 * d, pn - d, pn, compare_function);
 	  }
-	  pm = med3(pl, pm, pn, cmp);
+	  pm = med3(pl, pm, pn, compare_function);
 	}
 	swap(a, pm);
 	pa = pb = (char*)((unsigned long)a + es);
 
 	pc = pd = (char*)((unsigned long)a + (n - 1) * es);
 	for (;;) {
-	  while (pb <= pc && (r = cmp(pb, a)) <= 0) {
+	  while (pb <= pc && (r = compare_function(pb, a)) <= 0) {
 	    if (r == 0) {
 	      swap_cnt = 1;
 	      swap(pa, pb);
@@ -133,7 +131,7 @@ void quicksort(a, n, es, cmp)
 	    }
 	    pb += es;
 	  }
-	  while (pb <= pc && (r = cmp(pc, a)) >= 0) {
+	  while (pb <= pc && (r = compare_function(pc, a)) >= 0) {
 	    if (r == 0) {
 	      swap_cnt = 1;
 	      swap(pc, pd);
@@ -150,7 +148,7 @@ void quicksort(a, n, es, cmp)
 	}
 	if (swap_cnt == 0) {  /* Switch to insertion sort */
 	  for (pm = (char*)((unsigned long)a + es); pm < (char *) a + n * es; pm += es)
-	    for (pl = pm; pl > (char *) a && cmp(pl - es, pl) > 0;
+	    for (pl = pm; pl > (char *) a && compare_function(pl - es, pl) > 0;
 		 pl -= es)
 	      swap(pl, pl - es);
 	  return;
@@ -162,13 +160,13 @@ void quicksort(a, n, es, cmp)
 	r = min(pd - pc, pn - pd - es);
 	vecswap(pb, pn - r, r);
 	if ((r = pb - pa) > es)
-	  quicksort(a, r / es, es, cmp);
+	  quicksort(a, r / es, es, compare_function);
 	if ((r = pd - pc) > es) {
 	  /* Iterate rather than recurse to save stack space */
 	  a = pn - r;
 	  n = r / es;
 	  goto loop;
 	}
-	/*		quicksort(pn - r, r / es, es, cmp);*/
+	/*		quicksort(pn - r, r / es, es, compare_function);*/
 }
 

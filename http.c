@@ -31,9 +31,9 @@ static FILE *accessLogFd=NULL;
 
 /* ************************* */
 
-int readHTTPheader(char* theRequestedURL, 
-		   int theRequestedURLLen, 
-		   char *thePw, int thePwLen) {
+static int readHTTPheader(char* theRequestedURL, 
+                          int theRequestedURLLen, 
+                          char *thePw, int thePwLen) {
 #ifdef HAVE_OPENSSL
   SSL* ssl = getSSLsocket(-newSock);
 #endif
@@ -148,9 +148,9 @@ int readHTTPheader(char* theRequestedURL,
 
 /* ************************* */
 
-int decodeString(char *bufcoded,
-		 unsigned char *bufplain,
-		 int outbufsize) {
+static int decodeString(char *bufcoded,
+			unsigned char *bufplain,
+			int outbufsize) {
   /* single character decode */
 #define DEC(c) pr2six[(int)c]
 #define MAXVAL 63
@@ -313,7 +313,7 @@ void sendString(char *theString) {
 
 /* ************************* */
 
-void printHTTPheader() {
+void printHTTPheader(void) {
   char buf[BUF_SIZE];
 
   sendString("<HTML>\n<HEAD>\n<META HTTP-EQUIV=REFRESH CONTENT=");
@@ -327,7 +327,7 @@ void printHTTPheader() {
 
 /* ************************* */
 
-void printHTTPtrailer() {
+void printHTTPtrailer(void) {
   char buf2[BUF_SIZE];
   int i;
 
@@ -357,7 +357,7 @@ void printHTTPtrailer() {
 
 /* ******************************* */
 
-void initAccessLog() {   
+void initAccessLog(void) {
   accessLogFd = fopen(accessLogPath, "a");
   if(accessLogFd == NULL) {
     traceEvent(TRACE_ERROR, "Unable to create file %s. Access log is disabled.", 
@@ -367,14 +367,14 @@ void initAccessLog() {
 
 /* ******************************* */
 
-void termAccessLog() {   
+void termAccessLog(void) {   
   if(accessLogFd != NULL)
     fclose(accessLogFd);
 }
 
 /* ************************* */
 
-void logHTTPaccess(int rc) {
+static void logHTTPaccess(int rc) {
  char theDate[48], myUser[64], buf[24];
  struct timeval loggingAt;
  unsigned long msSpent;
@@ -395,18 +395,18 @@ void logHTTPaccess(int rc) {
 
    NTOHL(requestFrom->s_addr);
  
-   fprintf(accessLogFd, "%s -%s- [%s] - \"%s\" %d %d %u\n", 
-	  _intoa(*requestFrom, buf, sizeof(buf)),
-	  myUser, theDate, 
-	  httpRequestedURL, rc, httpBytesSent,
-	  msSpent);
+   fprintf(accessLogFd, "%s -%s- [%s] - \"%s\" %d %d %lu\n", 
+	   _intoa(*requestFrom, buf, sizeof(buf)),
+	   myUser, theDate, 
+	   httpRequestedURL, rc, httpBytesSent,
+	   msSpent);
    fflush(accessLogFd);
  }
 }
 
 /* ************************* */
 
-void returnHTTPaccessDenied() {
+static void returnHTTPaccessDenied(void) {
   sendString("HTTP/1.0 401 Unauthorized to access the document\n");
   sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server [default user=admin,pw=admin];\"\n");
   sendString("Connection: close\n");
@@ -418,7 +418,7 @@ void returnHTTPaccessDenied() {
 
 /* ************************* */
 
-void returnHTTPaccessForbidden() {
+static void returnHTTPaccessForbidden(void) {
   sendString("HTTP/1.0 403 Forbidded\n");
   sendString("Connection: close\n");
   sendString("Content-Type: text/html\n\n");
@@ -429,7 +429,7 @@ void returnHTTPaccessForbidden() {
 
 /* ************************* */
 
-void sendHTTPHeaderType() {
+void sendHTTPHeaderType(void) {
   sendString("Content-type: text/html\n");
   sendString("Cache-Control: no-cache\n");
   sendString("Expires: 0\n\n");
@@ -437,7 +437,7 @@ void sendHTTPHeaderType() {
 
 /* ************************* */
 
-void sendGIFHeaderType() {
+void sendGIFHeaderType(void) {
   sendString("Content-type: image/gif\n");
   sendString("Cache-Control: no-cache\n");
   sendString("Expires: 0\n\n");
@@ -445,7 +445,7 @@ void sendGIFHeaderType() {
 
 /* ************************* */
 
-void sendHTTPProtoHeader() {
+void sendHTTPProtoHeader(void) {
   char tmpStr[64];
 
   sendString("HTTP/1.0 200 OK\n");
@@ -455,7 +455,7 @@ void sendHTTPProtoHeader() {
 
 /* ************************* */
 
-int checkURLsecurity(char *url) {
+static int checkURLsecurity(char *url) {
   int rc = 0, i, len=strlen(url);
 
   for(i=1; i<len; i++)
@@ -480,7 +480,7 @@ int checkURLsecurity(char *url) {
 
 /* ************************* */
 
-void returnHTTPPage(char* pageName, int postLen) {
+static void returnHTTPPage(char* pageName, int postLen) {
   char *questionMark = strchr(pageName, '?');
   int sortedColumn, printTrailer=1, idx;
   FILE *fd = NULL;
@@ -1000,6 +1000,7 @@ void returnHTTPPage(char* pageName, int postLen) {
 
 /* ************************* */
 
+#if 0
 /* similar to Java.String.trim() */
 void trimString(char* str) {
   int len = strlen(str), i, idx;
@@ -1031,18 +1032,19 @@ void trimString(char* str) {
   strncpy(str, out, len);
   free(out);
 }
+#endif  /* #if 0 */
 
 /* ************************* */
 
 #ifndef HAVE_GDBM_H
-int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen,
-		      char* thePw, int thePwLen) {
+static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen,
+			     char* thePw, int thePwLen) {
   return 1; /* Access granted - security is disabled */
 }
 #else
-int checkHTTPpassword(char *theRequestedURL, 
-		      int theRequestedURLLen,
-		      char* thePw, int thePwLen) {
+static int checkHTTPpassword(char *theRequestedURL, 
+			     int theRequestedURLLen,
+			     char* thePw, int thePwLen) {
   char outBuffer[65], *user = NULL, users[BUF_SIZE];
   int i, rc;
   datum key_data, return_data;
@@ -1093,7 +1095,7 @@ int checkHTTPpassword(char *theRequestedURL,
   } else {
     outBuffer[i] = '\0';
 
-    for(i=0; i<sizeof(outBuffer); i++)
+    for(i=0; i<(int)sizeof(outBuffer); i++)
       if(outBuffer[i] == ':') {
 	outBuffer[i] = '\0';
 	user = outBuffer;
@@ -1144,7 +1146,7 @@ int checkHTTPpassword(char *theRequestedURL,
 
 /* ************************* */
 
-void returnHTTPnotImplemented() {
+static void returnHTTPnotImplemented(void) {
   sendString("HTTP/1.0 501 Not Implemented\n");
   sendString("Connection: close\n");
   sendString("Content-Type: text/html\n\n");

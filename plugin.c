@@ -23,12 +23,12 @@
 #include "ntop.h"
 
 #ifdef STATIC_PLUGIN
-extern PluginInfo* icmpPluginEntryFctn();
-extern PluginInfo* arpPluginEntryFctn();
-extern PluginInfo* nfsPluginEntryFctn();
-extern PluginInfo* wapPluginEntryFctn();
-extern PluginInfo* remIntPluginEntryFctn();
-extern PluginInfo* rmonPluginEntryFctn();
+extern PluginInfo* icmpPluginEntryFctn(void);
+extern PluginInfo* arpPluginEntryFctn(void);
+extern PluginInfo* nfsPluginEntryFctn(void);
+extern PluginInfo* wapPluginEntryFctn(void);
+extern PluginInfo* remIntPluginEntryFctn(void);
+extern PluginInfo* rmonPluginEntryFctn(void);
 #endif
 
 #ifndef RTLD_NOW 
@@ -37,7 +37,81 @@ extern PluginInfo* rmonPluginEntryFctn();
 
 /* ******************* */
 
-void notifyPluginsHashResize(u_int oldSize, u_int newSize, u_int* mappings) {
+#ifdef AIX
+
+char* dlerror() {
+  char *errMsg[768];
+  static char tmpStr[256];
+
+  if(loadquery(L_GETMESSAGES, &errMsg, 768) != -1) {
+    int i, j, errCode;
+    char* errName;
+
+    for(i=0; errMsg[i] != NULL; i++){
+      errCode=atoi(errMsg[i]);
+      errName = "";
+	  
+      for(j=1; errMsg[i][j] != '\0'; j++)
+	if(errMsg[i][j] != ' ') {
+	  errName = &errMsg[i][j];
+	  break;
+	}
+	  
+      switch(errCode) {
+	/* sys/ldr.h */
+      case 1:
+	return("Too many errors, rest skipped");
+	break;
+      case 2:
+	snprintf(tmpStr, sizeof(tmpStr), "Can't load library [%s]", errName);
+	break;
+      case 3:
+	snprintf(tmpStr, sizeof(tmpStr), "Can't find symbol in library [%s]", errName);
+	break;
+      case 4:
+	return("Rld data offset or symbol index out of range or bad relocation type");
+	break;
+      case 5:
+	snprintf(tmpStr, sizeof(tmpStr), "File not valid, executable xcoff [%s]", errName);
+	return(tmpStr);
+	break;
+      case 6:
+	snprintf(tmpStr, sizeof(tmpStr), "The errno associated with the failure if not ENOEXEC,"
+		" it indicates the underlying error, such as no memory [%s][errno=%d]", 
+		errName, errno);
+	return(tmpStr);
+	break;
+      case 7:
+	snprintf(tmpStr, sizeof(tmpStr), "Member requested from a file which is not an archive or does not"
+		"contain the member [%s]", errName);
+	return(tmpStr);
+	break;
+      case 8:
+	snprintf(tmpStr, sizeof(tmpStr), "Symbol type mismatch [%s]", errName);
+	return(tmpStr);
+	break;
+      case 9:
+	return("Text alignment in file is wrong");
+	break;
+      case 10:
+	return("Insufficient permission to create a loader domain");
+	break;
+      case 11:
+	return("Insufficient permission to add entries to a loader domain");
+	break;
+      default:
+	snprintf(tmpStr, sizeof(tmpStr), "Unknown error [%d]", errCode);
+	return(tmpStr);
+      }
+    }
+  }
+}
+
+#endif /* AIX */
+
+/* ******************* */
+
+void notifyPluginsHashResize(int oldSize, int newSize, int* mappings) {
   FlowFilterList *flows = flowsList;
 
   while(flows != NULL)
@@ -88,7 +162,7 @@ int handlePluginHTTPRequest(char* url) {
 /* ******************* */
 
 #if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX)
-void loadPlugin(char* dirName, char* pluginName) {
+static void loadPlugin(char* dirName, char* pluginName) {
   char pluginPath[256];
   char tmpBuf[BUF_SIZE];
   int i;
@@ -254,7 +328,7 @@ void loadPlugin(char* dirName, char* pluginName) {
 
 /* ******************* */
 
-void loadPlugins() {
+void loadPlugins(void) {
 #ifndef WIN32
   char dirPath[256];
   struct dirent* dp;
@@ -336,7 +410,7 @@ void startPlugins(void) {
 
 /* ******************* */
 
-void unloadPlugins() {
+void unloadPlugins(void) {
   FlowFilterList *flows = flowsList;
 
   traceEvent(TRACE_INFO, "Unloading plugins (if any)...\n");
@@ -376,75 +450,3 @@ void unloadPlugins() {
 #endif /* defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H) */
 
 /* ************************************* */
-
-#ifdef AIX
-
-char* dlerror() {
-  char *errMsg[768];
-  static char tmpStr[256];
-
-  if(loadquery(L_GETMESSAGES, &errMsg, 768) != -1) {
-    int i, j, errCode;
-    char* errName;
-
-    for(i=0; errMsg[i] != NULL; i++){
-      errCode=atoi(errMsg[i]);
-      errName = "";
-	  
-      for(j=1; errMsg[i][j] != '\0'; j++)
-	if(errMsg[i][j] != ' ') {
-	  errName = &errMsg[i][j];
-	  break;
-	}
-	  
-      switch(errCode) {
-	/* sys/ldr.h */
-      case 1:
-	return("Too many errors, rest skipped");
-	break;
-      case 2:
-	snprintf(tmpStr, sizeof(tmpStr), "Can't load library [%s]", errName);
-	break;
-      case 3:
-	snprintf(tmpStr, sizeof(tmpStr), "Can't find symbol in library [%s]", errName);
-	break;
-      case 4:
-	return("Rld data offset or symbol index out of range or bad relocation type");
-	break;
-      case 5:
-	snprintf(tmpStr, sizeof(tmpStr), "File not valid, executable xcoff [%s]", errName);
-	return(tmpStr);
-	break;
-      case 6:
-	snprintf(tmpStr, sizeof(tmpStr), "The errno associated with the failure if not ENOEXEC,"
-		" it indicates the underlying error, such as no memory [%s][errno=%d]", 
-		errName, errno);
-	return(tmpStr);
-	break;
-      case 7:
-	snprintf(tmpStr, sizeof(tmpStr), "Member requested from a file which is not an archive or does not"
-		"contain the member [%s]", errName);
-	return(tmpStr);
-	break;
-      case 8:
-	snprintf(tmpStr, sizeof(tmpStr), "Symbol type mismatch [%s]", errName);
-	return(tmpStr);
-	break;
-      case 9:
-	return("Text alignment in file is wrong");
-	break;
-      case 10:
-	return("Insufficient permission to create a loader domain");
-	break;
-      case 11:
-	return("Insufficient permission to add entries to a loader domain");
-	break;
-      default:
-	snprintf(tmpStr, sizeof(tmpStr), "Unknown error [%d]", errCode);
-	return(tmpStr);
-      }
-    }
-  }
-}
-
-#endif /* AIX */

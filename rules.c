@@ -25,7 +25,7 @@
 
 /* ************************** */
 
-void freeFilterRule(FilterRule *rule)  {
+static void freeFilterRule(FilterRule *rule)  {
   if(rule->ruleLabel != NULL)   free(rule->ruleLabel);
   if(rule->pktContentPattern != NULL) {
     if(rule->pktContentPattern->fastmap != NULL) 
@@ -418,7 +418,7 @@ FilterRule* parseFilterRule(u_short ruleType,
 }
 /* ************************** */
 
-FilterRule* parseFilterICMPRule(char* line, u_short lineNum) {
+static FilterRule* parseFilterICMPRule(char* line, u_short lineNum) {
   FilterRule *rule;
   char *token, *strtokState;
   int i;
@@ -715,7 +715,7 @@ FilterRule* parseFilterICMPRule(char* line, u_short lineNum) {
 
 /* ************************** */
 
-void parseDnsRule(char* line, u_short lineNum) {
+static void parseDnsRule(char* line, u_short lineNum) {
   traceEvent(TRACE_INFO, "Skipping '%s' (line %d)\n", line, lineNum);
 }
 

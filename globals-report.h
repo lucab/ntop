@@ -20,7 +20,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 extern int maxNumLines, idleFlag, percentMode, localAddrFlag, refreshRate;
 extern int webPort, actualReportDeviceId;
 
@@ -36,23 +35,57 @@ extern short screenNumber, columnSort;
 extern pthread_t logFileLoopThreadId;
 #endif
 
-int cmpFctn(const void *_a, const void *_b);
-extern int reportValues(time_t*);
-extern void updateCursesStats();
-extern void initializeWeb();
-extern void handleDbSupport(char* addr, int*);
-extern void switchNwInterface(int);
+/* report.c */
+extern void initReports(void);
+extern void termReports(void);
+extern int reportValues(time_t *lastTime);
+extern RETSIGTYPE printHostsTraffic(int signumber_ignored, int reportType,
+                                    int sortedColumn, int revertOrder);
+extern void printMulticastStats(int sortedColumn /* ignored so far */,
+                                int revertOrder);
+extern RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder);
+extern void printAllSessionsHTML(char* host);
+extern void printLocalRoutersList(void);
+extern void printSession(IPSession *theSession, u_short sessionType,
+                         u_short sessionCounter);
+extern RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
+                                    int revertOrder);
+extern void printActiveTCPSessions(void);
+extern void printIpProtocolUsage(void);
+extern void printBar(char *buf, int bufLen, unsigned short percentage,
+                     unsigned short maxPercentage, unsigned short ratio);
+extern void printIpProtocolDistribution(int mode, int revertOrder);
+extern void printProtoTraffic(void);
+extern void printProcessInfo(int processPid);
+extern void printLsofData(int mode);
+extern void printIpTrafficMatrix(void);
+extern void printThptStatsMatrix(int sortedColumn);
+extern void printThptStats(int sortedColumn);
+extern void printDomainStats(char* domainName, int sortedColumn, int revertOrder);
+extern void printLogHeader(void);
+extern void printNoDataYet(void);
+extern void listNetFlows(void);
+extern void printHostEvents(HostTraffic *theHost, int column, int revertOrder);
+extern void fillDomainName(HostTraffic *el);
+extern void printDebugInfo(void);
 
-extern void getProtocolDataSent(TrafficCounter *c, TrafficCounter *d,
-				TrafficCounter *e, HostTraffic *el);
-extern void getProtocolDataReceived(TrafficCounter *c, TrafficCounter *d,
-				    TrafficCounter *e, HostTraffic *el);
-extern char formatStatus(HostTraffic *el);
-extern void initReports();
-
-extern void formatUsageCounter(UsageCounter usageCtr);
-extern void usage();
-extern void printDebugInfo();
-
-extern void initAccessLog();
-extern void termAccessLog();
+/* webInterface.c */
+extern void initializeWeb(void);
+extern void *handleWebConnections(void* notUsed);
+extern void execCGI(char* cgiName);
+extern void showPluginsList(char* pluginName);
+/* CHECK ME: loadPlugins() and unloadPlugins() should not be in webInterface.c */
+extern void initWeb(int webPort, char* webAddr);
+extern char *makeHostLink(HostTraffic *el, short mode,
+                          short cutName, short addCountryFlag);
+extern char *getHostName(HostTraffic *el, short cutName);
+extern char *calculateCellColor(TrafficCounter actualValue,
+                                TrafficCounter avgTrafficLow,
+                                TrafficCounter avgTrafficHigh);
+extern char *getCountryIconURL(char* domainName);
+extern char *getHostCountryIconURL(HostTraffic *el);
+extern char *getRowColor(void);
+extern char *getActualRowColor(void);
+extern void switchNwInterface(int _interface);
+extern void usage(void);
+extern void shutdownNtop(void);

@@ -43,7 +43,7 @@ static SSL_connection ssl[MAX_SSL_CONNECTIONS];
 int verify_callback(int ok, X509_STORE_CTX *ctx);
 
 
-int init_ssl() {
+int init_ssl(void) {
   int idx;
   FILE* fd=NULL;
   char     buf [384];
@@ -235,7 +235,7 @@ void term_ssl_connection(int fd) {
 
 /* ********************* */
 
-void term_ssl() {
+void term_ssl(void) {
   int i;
 
   if(!sslInitialized) return;

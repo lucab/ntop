@@ -41,7 +41,7 @@ extern int h_errno; /* netdb.h */
 static void resolveAddress(char* symAddr,
 			   struct in_addr *hostAddr,
 			   short keepAddressNumeric) {
-  int addr, raddr, i;
+  int addr, i;
   struct hostent *hp = NULL;
   char* res;
   char keyBuf[16];
@@ -204,7 +204,7 @@ static void resolveAddress(char* symAddr,
 
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
 
-void queueAddress(struct hnamemem* elem, int elemLen) {
+static void queueAddress(struct hnamemem* elem, int elemLen) {
   /****************************
    - If the queue is full then wait until a slot is freed
    - If the queue is getting full then periodically wait
@@ -257,7 +257,7 @@ void queueAddress(struct hnamemem* elem, int elemLen) {
 
 /* ************************************ */
 
-void cleanupAddressQueue() {
+void cleanupAddressQueue(void) {
   while(addressQueueLen > 0) {
     free(addressQueue[addressQueueTail]->name);
     free(addressQueue[addressQueueTail]);
@@ -270,7 +270,7 @@ void cleanupAddressQueue() {
 
 #ifdef MULTITHREADED
 
-void* dequeueAddress(void* notUsed) {
+void* dequeueAddress(void* notUsed _UNUSED_) {
   struct hnamemem *elem;
 
   while(capturePackets) {
@@ -380,6 +380,8 @@ char* _intoa(struct in_addr addr, char* buf, u_short bufLen) {
 
   return(retStr);
 }
+
+/* ************************************ */
 
 char* intoa(struct in_addr addr) {
   static char buf[sizeof "ff:ff:ff:ff:ff:ff:255.255.255.255"];
@@ -609,7 +611,9 @@ void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc, char *fdst)
 }
 #endif
 
-u_int ns_get16(const u_char *src) {
+/* ************************************ */
+
+static u_int ns_get16(const u_char *src) {
   u_int dst;
 
   NS_GET16(dst, src);
@@ -620,7 +624,9 @@ int printable(int ch) {
   return (ch > 0x20 && ch < 0x7f);
 }
 
-int special(int ch) {
+/* ************************************ */
+
+static int special(int ch) {
   switch (ch) {
   case 0x22: /* '"' */
   case 0x2E: /* '.' */
@@ -635,7 +641,10 @@ int special(int ch) {
   }
 }
 
-int ns_name_ntop(const u_char *src, char *dst, size_t dstsiz) {
+/* ************************************ */
+
+static int ns_name_ntop(const u_char *src, 
+			char *dst, size_t dstsiz) {
   const u_char *cp;
   char *dn, *eom;
   u_char c;
@@ -705,13 +714,16 @@ int ns_name_ntop(const u_char *src, char *dst, size_t dstsiz) {
   return (dn - dst);
 }
 
-int dn_skipname(const u_char *ptr, const u_char *eom); /* forward */
-int ns_name_uncompress(const u_char *msg,
-		       const u_char *eom, const u_char *src,
-		       char *dst, size_t dstsiz);
+/* ************************************ */
 
-char* res_skip_rr(char *cp, char *eom)
-{
+static int dn_skipname(const u_char *ptr, const u_char *eom); /* forward */
+static int ns_name_uncompress(const u_char *msg,
+			      const u_char *eom, const u_char *src,
+			      char *dst, size_t dstsiz);
+
+/* ************************************ */
+
+static char* res_skip_rr(char *cp, char *eom) {
   int tmp;
   int dlen;
 
@@ -731,9 +743,10 @@ char* res_skip_rr(char *cp, char *eom)
   return (cp);
 }
 
-int dn_expand_(const u_char *msg, const u_char *eom, const u_char *src,
-	      char *dst, int dstsiz)
-{
+/* ************************************ */
+
+static int dn_expand_(const u_char *msg, const u_char *eom, const u_char *src,
+		      char *dst, int dstsiz) {
   int n = ns_name_uncompress(msg, eom, src, dst, (size_t)dstsiz);
 
   if (n > 0 && dst[0] == '.')
@@ -741,10 +754,11 @@ int dn_expand_(const u_char *msg, const u_char *eom, const u_char *src,
   return (n);
 }
 
-int ns_name_unpack(const u_char *msg,
-		   const u_char *eom, const u_char *src,
-		   u_char *dst, size_t dstsiz)
-{
+/* ************************************ */
+
+static int ns_name_unpack(const u_char *msg,
+			  const u_char *eom, const u_char *src,
+			  u_char *dst, size_t dstsiz) {
   const u_char *srcp, *dstlim;
   u_char *dstp;
   int n, len, checked;
@@ -801,7 +815,7 @@ int ns_name_unpack(const u_char *msg,
 
     default:
       errno = EMSGSIZE;
-      return (-1);			/* flag error */
+      return (-1); /* flag error */
     }
   }
   *dstp = '\0';
@@ -810,11 +824,11 @@ int ns_name_unpack(const u_char *msg,
   return (len);
 }
 
+/* ************************************ */
 
-int ns_name_uncompress(const u_char *msg,
-		       const u_char *eom, const u_char *src,
-		       char *dst, size_t dstsiz)
-{
+static int ns_name_uncompress(const u_char *msg,
+			      const u_char *eom, const u_char *src,
+			      char *dst, size_t dstsiz) {
   u_char tmp[NS_MAXCDNAME];
   int n;
 
@@ -825,7 +839,9 @@ int ns_name_uncompress(const u_char *msg,
   return (n);
 }
 
-int ns_name_skip(const u_char **ptrptr, const u_char *eom) {
+/* ************************************ */
+
+static int ns_name_skip(const u_char **ptrptr, const u_char *eom) {
   const u_char *cp;
   u_int n;
 
@@ -853,7 +869,10 @@ int ns_name_skip(const u_char **ptrptr, const u_char *eom) {
   return (0);
 }
 
-int dn_skipname(const u_char *ptr, const u_char *eom) {
+/* ************************************ */
+
+static int dn_skipname(const u_char *ptr,
+		       const u_char *eom) {
   const u_char *saveptr = ptr;
 
   if (ns_name_skip(&ptr, eom) == -1)
@@ -861,10 +880,11 @@ int dn_skipname(const u_char *ptr, const u_char *eom) {
   return (ptr - saveptr);
 }
 
+/* ************************************ */
 
-char* res_skip(char *msg, int numFieldsToSkip,
-	       char *eom)
-{
+static char* res_skip(char *msg, 
+		      int numFieldsToSkip,
+		      char *eom) {
   char *cp;
   HEADER *hp;
   int tmp;
@@ -930,6 +950,8 @@ char* res_skip(char *msg, int numFieldsToSkip,
 }
 
 #define GetShort(cp)	ns_get16(cp); cp += INT16SZ;
+
+/* ************************************ */
 
 u_int16_t handleDNSpacket(const u_char *ipPtr,
 		     u_short displ,

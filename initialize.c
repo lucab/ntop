@@ -46,7 +46,7 @@
 
 /* ******************************* */
 
-void initIPServices() {
+void initIPServices(void) {
   FILE* fd;
   int idx, i;
 
@@ -203,7 +203,6 @@ void initCounters(int _mergeInterfaces) {
     shortDomainName = &domainName[len+1];
 
   separator = "&nbsp;";
-  maxNameLen = MAXHOSTNAMELEN;
 
   memset(transTimeHash, 0, sizeof(transTimeHash));
   memset(dummyEthAddress, 0, ETHERNET_ADDRESS_LEN);
@@ -289,7 +288,7 @@ void initCounters(int _mergeInterfaces) {
 
 /* ******************************* */
 
-void resetStats() {
+void resetStats(void) {
   int i, interfacesToCreate;
 
   traceEvent(TRACE_INFO, "Resetting traffic statistics...");
@@ -305,7 +304,7 @@ void resetStats() {
 
   /* Do not reset the first entry (broadcastEntry) */
   for(i=0; i<interfacesToCreate; i++) {
-    int j;
+    u_int j;
     
     for(j=1; j<device[i].actualHashSize; j++)
       if(device[i].hash_hostTraffic[j] != NULL) {
@@ -350,7 +349,7 @@ void resetStats() {
 
 /* ******************************* */
 
-int initGlobalValues() {  
+int initGlobalValues(void) {  
   actualDeviceId = 0;
 
 #ifndef WIN32
@@ -369,7 +368,7 @@ int initGlobalValues() {
 
 /* ******************************* */
 
-void postCommandLineArgumentsInitialization(time_t *lastTime) {
+void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
 
 #ifndef WIN32
   if(daemonMode)
@@ -387,7 +386,7 @@ void postCommandLineArgumentsInitialization(time_t *lastTime) {
 
 /* ******************************* */
 
-void initGdbm() { 
+void initGdbm(void) { 
   char tmpBuf[200];
 
 #ifdef HAVE_GDBM_H
@@ -483,8 +482,6 @@ void initThreads(int enableDBsupport) {
 
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(numericFlag == 0) {
-    addressQueueLen = maxAddressQueueLen = addressQueueHead = addressQueueTail = 0;
-    droppedAddresses = 0;
     memset(addressQueue, 0, sizeof(addressQueue));
     createMutex(&addressQueueMutex);
     createThread(&dequeueAddressThreadId, dequeueAddress, NULL);
@@ -495,7 +492,7 @@ void initThreads(int enableDBsupport) {
 
 /* ******************************* */
 
-void initApps() {
+void initApps(void) {
   if(isLsofPresent) {
 #ifdef MULTITHREADED
     updateLsof = 1;
@@ -631,7 +628,7 @@ void initDevices(char* devices) {
 
 /* ******************************* */
 
-void initRules(char *rulesFile) {
+static void initRules(char *rulesFile) {
   if(rulesFile[0] != '\0') {
     char tmpBuf[200];
 
@@ -742,9 +739,8 @@ void initLibpcap(char* rulesFile, int numDevices) {
 
 /* ******************************* */
 
-void initDeviceDatalink() {
+void initDeviceDatalink(void) {
   int i;
-
 
   /* get datalink type */
 #ifdef AIX
@@ -808,9 +804,9 @@ void parseTrafficFilter(char *argv[], int optind) {
 
 /* ******************************* */
 
-void initSignals() {
+void initSignals(void) {
 #ifndef WIN32
-  RETSIGTYPE (*oldhandler)(int);
+/*  RETSIGTYPE (*oldhandler)(int); */
 #endif
 
 #ifndef WIN32
@@ -842,7 +838,7 @@ void initSignals() {
 
 /* ***************************** */
 
-void startSniffer() {
+void startSniffer(void) {
   int i; 
 
 #ifdef MULTITHREADED

@@ -58,7 +58,7 @@ extern int out_graph(short gifwidth,
 
 /* ************************ */
 
-void pktSizeDistribPie() {
+void pktSizeDistribPie(void) {
   char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[7];
   char	*lbl[] = { "", "", "", "", "", "", "" };
@@ -145,9 +145,8 @@ void pktSizeDistribPie() {
   unlink(fileName);
 }
 
-
 /* ************************ */
-void ipProtoDistribPie() {
+void ipProtoDistribPie(void) {
   char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };

@@ -20,7 +20,7 @@
  */
 
 #include "ntop.h"
-
+#include "globals-report.h"
 
 typedef struct arpEntries {
   HostTraffic* host;
@@ -76,9 +76,8 @@ static int arpColumnSort = 0;
 #define MAX_NUM_ARP_ENTRIES  512
 static ArpEntries theArpEntries[MAX_NUM_ARP_ENTRIES];
 
-
-
-static void handleArpPacket(const struct pcap_pkthdr *h, const u_char *p) {
+static void handleArpPacket(const struct pcap_pkthdr *h _UNUSED_, 
+			    const u_char *p) {
   struct _ether_arp *arpPkt;
   struct in_addr addr;
   u_short op;

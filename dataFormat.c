@@ -182,21 +182,6 @@ char* formatThroughput(float numBytes) {
 
 /* ******************************* */
 
-char formatStatus(HostTraffic *el) {
-  if((el->lastBytesSent == el->bytesSent)
-     && (el->lastBytesReceived == el->bytesReceived))
-    return('I'); /* Idle */
-  else if ((el->lastBytesSent != el->bytesSent)
-	   && (el->lastBytesReceived != el->bytesReceived))
-    return('B'); /* Both */
-  else if (el->lastBytesSent != el->bytesSent)
-    return('S'); /* Send */
-  else
-    return('R'); /* Receive */
-}
-
-/* ************************ */
-
 char* formatTimeStamp(unsigned int ndays,
 		      unsigned int nhours,
 		      unsigned int nminutes) {

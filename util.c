@@ -336,8 +336,7 @@ traceEvent(TRACE_INFO, "%s is %s\n", intoa(*addr),
  *
  *********************************************** */
 
-int int2bits (int number)
-{
+static int int2bits(int number) {
   int bits = 8;
   int test;
 
@@ -397,8 +396,7 @@ int int2bits (int number)
  * Courtesy of Antonello Maiorca <marty@tai.it>
  *
  *********************************************** */
-int dotted2bits (char * mask)
-{
+int dotted2bits(char *mask) {
   int		fields[4];
   int		fields_num, field_bits;
   int		bits = 0;
@@ -622,8 +620,7 @@ unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
 /*
  * Print the log timestamp
  */
-void printLogTime()
-{
+void printLogTime(void) {
   /* Unix timeval style */
   register int s;
 
@@ -1040,7 +1037,7 @@ int checkCommand(char* commandName) {
   #define USE_LSOF_DUMP
 */
 
-void readLsofInfo() {
+void readLsofInfo(void) {
 #ifdef WIN32
 ;
 #else
@@ -1203,7 +1200,7 @@ void readLsofInfo() {
 /* ************************************ */
 
 
-void readNepedInfo() {
+void readNepedInfo(void) {
 #ifdef WIN32
    ;
 #else
@@ -1309,7 +1306,7 @@ RETSIGTYPE (*setsignal (int sig, RETSIGTYPE (*func)(int)))(int)
 
 /* ************************************ */
 
-char* getHostOS(char* ipAddr, int port, char* additionalInfo) {
+char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 #ifdef WIN32
   return(NULL);
 #else
@@ -1541,7 +1538,7 @@ char* formatTime(time_t *theTime, short encodeString) {
 
 /* ************************************ */
 
-int getActualInterface() {
+int getActualInterface(void) {
   if(mergeInterfaces)
     return(0);
   else
@@ -1826,8 +1823,8 @@ void traceEvent(int eventTraceLevel, char* file,
 
 /* ******************************************** */
 
-char *_strncpy(char *dest, const char *src, size_t n) {
-  int len = strlen(src);
+char*_strncpy(char *dest, const char *src, size_t n) {
+  size_t len = strlen(src);
 
   if(len > (n-1))
     len = n-1;

@@ -36,11 +36,11 @@ extern int webPort; /* main.c */
 
 static pthread_t rmonTreadId;
 
-void init_rmon(); /* Forward */
+static void init_rmon(void); /* Forward */
 
 /* ****************************** */
 
-static void termRmonPlugin() {
+static void termRmonPlugin(void) {
   traceEvent(TRACE_INFO, "Thanks for using ntop/RMON...");
   snmp_shutdown(AGENT_NAME);
   traceEvent(TRACE_INFO, "Done.\n");
@@ -49,7 +49,7 @@ static void termRmonPlugin() {
 /* ****************************** */
 
 #ifdef MULTITHREADED
-void* rmonLoop(void* notUsed) {
+void* rmonLoop(void* notUsed _UNUSED_) {
   traceEvent(TRACE_INFO, "ntop/RMON started");
   while(1) {
     /* if you use select(), see snmp_select_info() in snmp_api(3) */
@@ -63,7 +63,7 @@ void* rmonLoop(void* notUsed) {
 
 /* ****************************** */
 
-static void startRmonPlugin() {
+static void startRmonPlugin(void) {
 #ifdef MULTITHREADED
   createThread(&rmonTreadId, rmonLoop, NULL);
 #endif
@@ -71,7 +71,7 @@ static void startRmonPlugin() {
 
 /* ****************************** */
   
-static void handleRmonHTTPrequest(char* url) {
+static void handleRmonHTTPrequest(char* url _UNUSED_) {
   sendHTTPProtoHeader();
   sendHTTPHeaderType();
   printHTTPheader();
@@ -102,9 +102,9 @@ static PluginInfo rmonPluginInfo[] = {
 
 /* Plugin entry fctn */
 #ifdef STATIC_PLUGIN
-PluginInfo* rmonPluginEntryFctn() {
+PluginInfo* rmonPluginEntryFctn(void) {
 #else
-  PluginInfo* PluginEntryFctn() {
+  PluginInfo* PluginEntryFctn(void) {
 #endif
   
     traceEvent(TRACE_INFO, "Welcome to %s. (C) 2000 by Luca Deri.\n", 
@@ -595,7 +595,7 @@ struct variable4 rmon_variables[] = {
  *   Initialization routine.  This is called when the agent starts up.
  *   At a minimum, registration of your variables should take place here.
  */
-void init_rmon(void) {
+static void init_rmon(void) {
 
 
   /* register ourselves with the agent to handle our mib tree */
@@ -625,21 +625,21 @@ var_rmon(struct variable *vp,
                 size_t  *length, 
                 int     exact, 
                 size_t  *var_len, 
-                WriteMethod **write_method)
-{
+                WriteMethod **write_method) {
 
 
   /* variables we may use later */
-  static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
-
+  /*
+    static long long_ret;
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
   if (header_generic(vp,name,length,exact,var_len,write_method)
                                   == MATCH_FAILED )
     return NULL;
-
 
   /* 
    * this is where we do the value assignments for the mib results.
@@ -666,15 +666,13 @@ var_etherStatsTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /* static unsigned char *new_string = 0, *old_string = 0; */
   static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  /* static struct counter64 c64; */
   int ifNum;
 
   /* 
@@ -825,13 +823,11 @@ var_historyControlTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /* static unsigned char *new_string = 0, *old_string = 0; */
   static oid objid[MAX_OID_LEN];
   static struct counter64 c64;
 
@@ -913,16 +909,13 @@ var_etherHistoryTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /* static unsigned char *new_string = 0, *old_string = 0; */
   static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
-
+  /* static struct counter64 c64; */
 
   /* 
    * This assumes that the table is a 'simple' table.
@@ -1038,13 +1031,11 @@ var_alarmTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+    static unsigned char string[SPRINT_MAX_LEN];
+    /* static unsigned char *new_string = 0, *old_string = 0; */
   static oid objid[MAX_OID_LEN];
   static struct counter64 c64;
 
@@ -1151,15 +1142,13 @@ var_hostControlTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /* static unsigned char *new_string = 0, *old_string = 0; */
   static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  /* static struct counter64 c64; */
 
 
   /* 
@@ -1234,13 +1223,11 @@ var_hostTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+    static unsigned char string[SPRINT_MAX_LEN];
+    /* static unsigned char *new_string = 0, *old_string = 0; */
   static oid objid[MAX_OID_LEN];
   static struct counter64 c64;
 
@@ -1335,16 +1322,15 @@ var_hostTimeTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
-
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
   /* 
    * This assumes that the table is a 'simple' table.
@@ -1436,15 +1422,15 @@ var_hostTopNControlTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
 
   /* 
@@ -1537,15 +1523,15 @@ var_hostTopNTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
 
   /* 
@@ -1608,13 +1594,13 @@ var_matrixControlTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+  */
   static oid objid[MAX_OID_LEN];
   static struct counter64 c64;
 
@@ -1691,15 +1677,15 @@ var_matrixSDTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
 
   /* 
@@ -1773,15 +1759,15 @@ var_matrixDSTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
 
   /* 
@@ -1855,15 +1841,15 @@ var_filterTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
 
   /* 
@@ -1964,15 +1950,15 @@ var_channelTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
 
   /* 
@@ -2076,15 +2062,15 @@ var_bufferControlTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
 
   /* 
@@ -2192,15 +2178,15 @@ var_captureBufferTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
 
   /* 
@@ -2278,15 +2264,15 @@ var_eventTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
 
   /* 
@@ -2366,15 +2352,15 @@ var_logTable(struct variable *vp,
     	    size_t  *length,
     	    int     exact,
     	    size_t  *var_len,
-    	    WriteMethod **write_method)
-{
-
-
+    	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
-  static oid objid[MAX_OID_LEN];
-  static struct counter64 c64;
+  static unsigned char string[SPRINT_MAX_LEN];
+  /*
+    static unsigned char *new_string = 0, *old_string = 0;
+    static oid objid[MAX_OID_LEN];
+    static struct counter64 c64;
+  */
 
 
   /* 
@@ -2431,13 +2417,12 @@ var_logTable(struct variable *vp,
 
 int
 write_etherStatsDataSource(int      action,
-            u_char   *var_val,
-            u_char   var_val_type,
-            size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+			   u_char   *var_val,
+			   u_char   var_val_type,
+			   size_t   var_val_len,
+			   u_char   *statP,
+			   oid      *name,
+			   size_t   name_len) {
   static oid *objid;
   int size;
 
@@ -2493,14 +2478,14 @@ write_etherStatsDataSource(int      action,
 
 int
 write_etherStatsOwner(int      action,
-            u_char   *var_val,
-            u_char   var_val_type,
-            size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+		      u_char   *var_val,
+		      u_char   var_val_type,
+		      size_t   var_val_len,
+		      u_char   *statP,
+		      oid      *name,
+		      size_t   name_len) {
+  static unsigned char string[SPRINT_MAX_LEN];
+  static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -2556,18 +2541,15 @@ write_etherStatsOwner(int      action,
 
 
 
-int
-write_etherStatsStatus(int      action,
-            u_char   *var_val,
-            u_char   var_val_type,
-            size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+int write_etherStatsStatus(int      action,
+		       u_char   *var_val,
+		       u_char   var_val_type,
+		       size_t   var_val_len,
+		       u_char   *statP _UNUSED_,
+		       oid      *name _UNUSED_,
+		       size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
-
 
   switch ( action ) {
         case RESERVE1:
@@ -2623,10 +2605,9 @@ write_historyControlDataSource(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static oid *objid;
   int size;
 
@@ -2685,10 +2666,9 @@ write_historyControlBucketsRequested(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -2747,10 +2727,9 @@ write_historyControlInterval(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -2801,19 +2780,16 @@ write_historyControlInterval(int      action,
   return SNMP_ERR_NOERROR;
 }
 
-
-
-
 int
 write_historyControlOwner(int      action,
-            u_char   *var_val,
+            u_char   *var_val _UNUSED_,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+  static unsigned char string[SPRINT_MAX_LEN];
+  static unsigned char  *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -2874,10 +2850,9 @@ write_historyControlStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -2936,10 +2911,9 @@ write_alarmInterval(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -2998,10 +2972,9 @@ write_alarmVariable(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static oid *objid;
   int size;
 
@@ -3060,10 +3033,9 @@ write_alarmSampleType(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3122,10 +3094,9 @@ write_alarmStartupAlarm(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3184,10 +3155,9 @@ write_alarmRisingThreshold(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3246,10 +3216,9 @@ write_alarmFallingThreshold(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3308,10 +3277,9 @@ write_alarmRisingEventIndex(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3370,10 +3338,9 @@ write_alarmFallingEventIndex(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3432,11 +3399,11 @@ write_alarmOwner(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -3497,10 +3464,9 @@ write_alarmStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3559,10 +3525,9 @@ write_hostControlDataSource(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static oid *objid;
   int size;
 
@@ -3621,11 +3586,11 @@ write_hostControlOwner(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -3686,10 +3651,9 @@ write_hostControlStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3748,10 +3712,9 @@ write_hostTopNHostIndex(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3810,10 +3773,9 @@ write_hostTopNRateBase(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3872,10 +3834,9 @@ write_hostTopNTimeRemaining(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3934,10 +3895,9 @@ write_hostTopNRequestedSize(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -3996,11 +3956,11 @@ write_hostTopNOwner(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -4061,10 +4021,9 @@ write_hostTopNStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -4123,10 +4082,9 @@ write_matrixControlDataSource(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static oid *objid;
   int size;
 
@@ -4185,11 +4143,11 @@ write_matrixControlOwner(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -4250,10 +4208,9 @@ write_matrixControlStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -4312,10 +4269,9 @@ write_filterChannelIndex(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -4374,10 +4330,9 @@ write_filterPktDataOffset(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -4436,11 +4391,11 @@ write_filterPktData(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -4501,11 +4456,11 @@ write_filterPktDataMask(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -4566,11 +4521,11 @@ write_filterPktDataNotMask(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -4631,10 +4586,9 @@ write_filterPktStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -4693,10 +4647,9 @@ write_filterPktStatusMask(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -4755,10 +4708,9 @@ write_filterPktStatusNotMask(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -4817,11 +4769,11 @@ write_filterOwner(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -4882,10 +4834,9 @@ write_filterStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -4944,10 +4895,9 @@ write_channelIfIndex(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5006,10 +4956,9 @@ write_channelAcceptType(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5068,10 +5017,9 @@ write_channelDataControl(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5130,10 +5078,9 @@ write_channelTurnOnEventIndex(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5192,10 +5139,9 @@ write_channelTurnOffEventIndex(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5254,10 +5200,9 @@ write_channelEventIndex(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5316,10 +5261,9 @@ write_channelEventStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5378,11 +5322,11 @@ write_channelDescription(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -5443,11 +5387,11 @@ write_channelOwner(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -5508,10 +5452,9 @@ write_channelStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5570,10 +5513,9 @@ write_bufferControlChannelIndex(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5632,10 +5574,9 @@ write_bufferControlFullAction(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5694,10 +5635,9 @@ write_bufferControlCaptureSliceSize(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5756,10 +5696,9 @@ write_bufferControlDownloadSliceSize(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5818,10 +5757,9 @@ write_bufferControlDownloadOffset(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5880,10 +5818,9 @@ write_bufferControlMaxOctetsRequested(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -5942,11 +5879,11 @@ write_bufferControlOwner(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -6007,10 +5944,9 @@ write_bufferControlStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -6069,11 +6005,11 @@ write_eventDescription(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -6134,10 +6070,9 @@ write_eventType(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 
@@ -6196,11 +6131,11 @@ write_eventCommunity(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -6261,11 +6196,11 @@ write_eventOwner(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
-  static unsigned char string[SPRINT_MAX_LEN], *new_string = 0, *old_string = 0;
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
+    static unsigned char string[SPRINT_MAX_LEN];
+    static unsigned char *new_string = 0, *old_string = 0;
   int size;
 
 
@@ -6326,10 +6261,9 @@ write_eventStatus(int      action,
             u_char   *var_val,
             u_char   var_val_type,
             size_t   var_val_len,
-            u_char   *statP,
-            oid      *name,
-            size_t   name_len)
-{
+            u_char   *statP _UNUSED_,
+            oid      *name _UNUSED_,
+            size_t   name_len _UNUSED_) {
   static long *long_ret;
   int size;
 

@@ -25,14 +25,13 @@
 
 /* ******************************* */
 
-void updateThptStats(int deviceToUpdate,
-		     int topSentIdx, int secondSentIdx, int thirdSentIdx,
-		     int topHourSentIdx, int secondHourSentIdx,
-		     int thirdHourSentIdx,
-		     int topRcvdIdx, int secondRcvdIdx, int thirdRcvdIdx,
-		     int topHourRcvdIdx, int secondHourRcvdIdx,
-		     int thirdHourRcvdIdx) 
-{
+static void updateThptStats(int deviceToUpdate,
+			    int topSentIdx, int secondSentIdx, int thirdSentIdx,
+			    int topHourSentIdx, int secondHourSentIdx,
+			    int thirdHourSentIdx,
+			    int topRcvdIdx, int secondRcvdIdx, int thirdRcvdIdx,
+			    int topHourRcvdIdx, int secondHourRcvdIdx,
+			    int thirdHourRcvdIdx) {
   int i;
 
 #ifdef DEBUG
@@ -43,22 +42,22 @@ void updateThptStats(int deviceToUpdate,
 #endif
 
   /* We're never check enough... */
-  if(topSentIdx == -1) 
+  if(topSentIdx == NO_PEER) 
     return;
 
-  if(topRcvdIdx == -1) 
+  if(topRcvdIdx == NO_PEER) 
     return;
 
-  if(secondSentIdx == -1) 
+  if(secondSentIdx == NO_PEER) 
     secondSentIdx = 0;
 
-  if(thirdSentIdx == -1)
+  if(thirdSentIdx == NO_PEER)
     thirdSentIdx = 0;
 
-  if(secondRcvdIdx == -1)
+  if(secondRcvdIdx == NO_PEER)
     secondRcvdIdx = 0;
 
-  if(thirdRcvdIdx == -1)
+  if(thirdRcvdIdx == NO_PEER)
     thirdRcvdIdx = 0;
 
   for(i=58; i>=0; i--)
@@ -83,16 +82,16 @@ void updateThptStats(int deviceToUpdate,
 
   device[deviceToUpdate].last60MinutesThptIdx = (device[deviceToUpdate].last60MinutesThptIdx+1) % 60;
 
-  if(topHourSentIdx != -1) { /* It wrapped -> 1 hour is over */
+  if(topHourSentIdx != NO_PEER) { /* It wrapped -> 1 hour is over */
     float average=0;
     int i;
 
-    if(topHourSentIdx == -1) return;
-    if(topHourRcvdIdx == -1) return;
-    if(secondHourSentIdx == -1) secondHourSentIdx = 0;
-    if(thirdHourSentIdx == -1)  thirdHourSentIdx = 0;
-    if(secondHourRcvdIdx == -1) secondHourRcvdIdx = 0;
-    if(thirdHourRcvdIdx == -1)  thirdHourRcvdIdx = 0;
+    if(topHourSentIdx == NO_PEER) return;
+    if(topHourRcvdIdx == NO_PEER) return;
+    if(secondHourSentIdx == NO_PEER) secondHourSentIdx = 0;
+    if(thirdHourSentIdx == NO_PEER)  thirdHourSentIdx = 0;
+    if(secondHourRcvdIdx == NO_PEER) secondHourRcvdIdx = 0;
+    if(thirdHourRcvdIdx == NO_PEER)  thirdHourRcvdIdx = 0;
 
     for(i=0; i<60; i++) {
       average += device[deviceToUpdate].last60MinutesThpt[i].trafficValue;
@@ -150,7 +149,7 @@ void updateThptStats(int deviceToUpdate,
 
 /* ******************************* */
 
-void updateDeviceThpt(int deviceToUpdate) {
+static void updateDeviceThpt(int deviceToUpdate) {
   time_t timeDiff, timeHourDiff=0, totalTime;
   u_int idx;
   HostTraffic *el;
@@ -160,10 +159,10 @@ void updateDeviceThpt(int deviceToUpdate) {
   /* traceEvent(TRACE_INFO, "%u %u %u\n", timeDiff, throughput, ethernetBytes); */
 
   if(timeDiff > 5 /* secs */) {
-    int topSentIdx=-1, secondSentIdx=-1, thirdSentIdx=-1;\
-    int topHourSentIdx=-1, secondHourSentIdx=-1, thirdHourSentIdx=-1;
-    int topRcvdIdx=-1, secondRcvdIdx=-1, thirdRcvdIdx=-1;\
-    int topHourRcvdIdx=-1, secondHourRcvdIdx=-1, thirdHourRcvdIdx=-1;
+    int topSentIdx=NO_PEER, secondSentIdx=NO_PEER, thirdSentIdx=NO_PEER;\
+    int topHourSentIdx=NO_PEER, secondHourSentIdx=NO_PEER, thirdHourSentIdx=NO_PEER;
+    int topRcvdIdx=NO_PEER, secondRcvdIdx=NO_PEER, thirdRcvdIdx=NO_PEER;\
+    int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
     short updateMinThpt, updateHourThpt;
 
     totalTime = actTime-initialSniffTime;
@@ -210,21 +209,21 @@ void updateDeviceThpt(int deviceToUpdate) {
 	  el->averageRcvdPktThpt = ((float)el->pktReceived)/totalTime;
 	  el->averageSentPktThpt = ((float)el->pktSent)/totalTime;
 
-	  if(topSentIdx == -1) {
+	  if(topSentIdx == NO_PEER) {
 	    topSentIdx = idx;
 	  } else {
 	    if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[topSentIdx]->actualSentThpt) {
 	      secondSentIdx = topSentIdx;
 	      topSentIdx = idx;
 	    } else {
-	      if(secondSentIdx == -1)
+	      if(secondSentIdx == NO_PEER)
 		secondSentIdx = idx;
 	      else {
 		if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[secondSentIdx]->actualSentThpt) {
 		  thirdSentIdx = secondSentIdx;
 		  secondSentIdx = idx;
 		} else {
-		  if(thirdSentIdx == -1)
+		  if(thirdSentIdx == NO_PEER)
 		    thirdSentIdx = idx;
 		  else {
 		    if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[thirdSentIdx]->actualSentThpt) {
@@ -236,21 +235,21 @@ void updateDeviceThpt(int deviceToUpdate) {
 	    }
 	  }
 
-	  if(topRcvdIdx == -1) {
+	  if(topRcvdIdx == NO_PEER) {
 	    topRcvdIdx = idx;
 	  } else {
 	    if(el->actualRcvdThpt > device[deviceToUpdate].hash_hostTraffic[topRcvdIdx]->actualRcvdThpt) {
 	      secondRcvdIdx = topRcvdIdx;
 	      topRcvdIdx = idx;
 	    } else {
-	      if(secondRcvdIdx == -1)
+	      if(secondRcvdIdx == NO_PEER)
 		secondRcvdIdx = idx;
 	      else {
 		if(el->actualRcvdThpt > device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt) {
 		  thirdRcvdIdx = secondRcvdIdx;
 		  secondRcvdIdx = idx;
 		} else {
-		  if(thirdRcvdIdx == -1)
+		  if(thirdRcvdIdx == NO_PEER)
 		    thirdRcvdIdx = idx;
 		  else {
 		    if(el->actualRcvdThpt > device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt) {
@@ -268,21 +267,21 @@ void updateDeviceThpt(int deviceToUpdate) {
 	    el->lastHourBytesReceived = el->bytesReceived;
 	    el->lastHourBytesSent = el->bytesSent;
 
-	    if(topHourSentIdx == -1) {
+	    if(topHourSentIdx == NO_PEER) {
 	      topHourSentIdx = idx;
 	    } else {
 	      if(el->lastHourSentThpt > device[deviceToUpdate].hash_hostTraffic[topHourSentIdx]->lastHourSentThpt) {
 		secondHourSentIdx = topHourSentIdx;
 		topHourSentIdx = idx;
 	      } else {
-		if(secondHourSentIdx == -1)
+		if(secondHourSentIdx == NO_PEER)
 		  secondHourSentIdx = idx;
 		else {
 		  if(el->lastHourSentThpt > device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt) {
 		    thirdHourSentIdx = secondHourSentIdx;
 		    secondHourSentIdx = idx;
 		  } else {
-		    if(thirdHourSentIdx == -1)
+		    if(thirdHourSentIdx == NO_PEER)
 		      thirdHourSentIdx = idx;
 		    else {
 		      if(el->lastHourSentThpt > device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt) {
@@ -294,21 +293,21 @@ void updateDeviceThpt(int deviceToUpdate) {
 	      }
 	    }
 
-	    if(topHourRcvdIdx == -1) {
+	    if(topHourRcvdIdx == NO_PEER) {
 	      topHourRcvdIdx = idx;
 	    } else {
 	      if(el->lastHourRcvdThpt > device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt) {
 		secondHourRcvdIdx = topHourRcvdIdx;
 		topHourRcvdIdx = idx;
 	      } else {
-		if(secondHourRcvdIdx == -1)
+		if(secondHourRcvdIdx == NO_PEER)
 		  secondHourRcvdIdx = idx;
 		else {
 		  if(el->lastHourRcvdThpt > device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt) {
 		    thirdHourRcvdIdx = secondHourRcvdIdx;
 		    secondHourRcvdIdx = idx;
 		  } else {
-		    if(thirdHourRcvdIdx == -1)
+		    if(thirdHourRcvdIdx == NO_PEER)
 		      thirdHourRcvdIdx = idx;
 		    else {
 		      if(el->lastHourRcvdThpt > device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt) {
@@ -365,10 +364,10 @@ void updateDeviceThpt(int deviceToUpdate) {
     }
 
     if((updateMinThpt || updateHourThpt) 
-       && ((topSentIdx    != -1) 
-	   || (topHourSentIdx != -1)
-	   || (topRcvdIdx     != -1)
-	   || (topHourRcvdIdx != -1)))
+       && ((topSentIdx    != NO_PEER) 
+	   || (topHourSentIdx != NO_PEER)
+	   || (topRcvdIdx     != NO_PEER)
+	   || (topHourRcvdIdx != NO_PEER)))
       updateThptStats(deviceToUpdate,
 		      topSentIdx, secondSentIdx, thirdSentIdx,
 		      topHourSentIdx, secondHourSentIdx, thirdHourSentIdx,
@@ -381,7 +380,7 @@ void updateDeviceThpt(int deviceToUpdate) {
 
 /* ******************************* */
 
-void updateThpt() {
+void updateThpt(void) {
   int i;
 
   if(mergeInterfaces)

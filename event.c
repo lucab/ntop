@@ -29,7 +29,7 @@ static char *actions[] = {
 
 /* ****************************************** */
 
-char* icmpType2Str(short icmp_type) {
+static char* icmpType2Str(short icmp_type) {
   switch(icmp_type) {
     case ICMP_ECHOREPLY:      return("ICMP_ECHOREPLY");
     case ICMP_ECHO:           return("ICMP_ECHO");
@@ -54,9 +54,9 @@ char* icmpType2Str(short icmp_type) {
 
 void emitEvent(FilterRule *rule,
 	       HostTraffic *srcHost,
-	       u_int srcHostIdx,
+	       u_int srcHostIdx _UNUSED_,
 	       HostTraffic *dstHost,
-	       u_int dstHostIdx,
+	       u_int dstHostIdx _UNUSED_,
 	       short icmpType,
 	       u_short sport,
 	       u_short dport) {
@@ -118,12 +118,14 @@ void emitEvent(FilterRule *rule,
 
 /* ****************************************** */
 
-void scanExpiredRules(FilterRule *rule) {
-  if((rule->numMatchedRules > 0) && (rule->lastRuleCheck+MIN_SCAN_TIMEOUT < actTime)) {
+static void scanExpiredRules(FilterRule *rule) {
+  if((rule->numMatchedRules > 0) 
+     && (rule->lastRuleCheck+MIN_SCAN_TIMEOUT < actTime)) {
     /* Let's check whether there are some expired rules */
     int i, rulesFound;
 
-    for(i=0, rulesFound=0; (i<MAX_NUM_RULES) && (rulesFound < rule->numMatchedRules); i++)
+    for(i=0, rulesFound=0; (i<MAX_NUM_RULES) 
+	  && (rulesFound < rule->numMatchedRules); i++)
       if(rule->queuedPacketRules[i] != NULL) {
 	if(((rule->queuedPacketRules[i]->firstMatchTime+rule->expireTime)   < actTime)
 	   && ((rule->queuedPacketRules[i]->firstMatchTime+rule->unitValue) < actTime)
@@ -178,7 +180,7 @@ void scanExpiredRules(FilterRule *rule) {
 
 /* ****************************************** */
 
-void scanAllTcpExpiredRules() {
+void scanAllTcpExpiredRules(void) {
   u_short i;
 
 #ifdef DEBUG
@@ -200,9 +202,9 @@ void fireEvent(FilterRule *rule,
 	       short icmpType,
 	       u_short sport,
 	       u_short dport,
-	       u_int length) {
+	       u_int length _UNUSED_) {
   int i, rulesFound;
-
+  
 #ifdef DEBUG
  traceEvent(TRACE_INFO, "fireTcpUdpEvent() called.\n");
 #endif

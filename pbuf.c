@@ -47,6 +47,8 @@
 #define GDBM_DEBUG
 #define FREE_HOST_INFO
 #define PURGE_DEBUG
+#define PACKET_DEBUG
+#define FARGMENT_DEBUG
 */
 
 #define SESSION_PATCH /* Experimental (L.Deri) */
@@ -176,9 +178,8 @@ void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
 
 /* ******************************* */
 
-int findHostInfo(struct in_addr *hostIpAddress)
-{
-  u_int i = 0;
+u_int findHostInfo(struct in_addr *hostIpAddress) {
+  u_int i;
 
   for(i=0; i<device[actualDeviceId].actualHashSize; i++)
     if(device[actualDeviceId].hash_hostTraffic[i] != NULL)
@@ -186,7 +187,7 @@ int findHostInfo(struct in_addr *hostIpAddress)
 	 == hostIpAddress->s_addr)
 	return i;
 
-  return(-1);
+  return(NO_PEER);
 }
 
 /* ******************************* */
@@ -196,7 +197,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 {
   u_int idx, i, run=0;
   HostTraffic *el=NULL;
-  int firstEmptySlot = -1;
+  int firstEmptySlot = NO_PEER;
   char buf[32];
   short useIPAddressForSearching;
   char* symEthName = NULL, *ethAddr;
@@ -272,7 +273,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
        ************************ */
 
-      if(firstEmptySlot == -1)
+      if(firstEmptySlot == NO_PEER)
 	firstEmptySlot = idx;
     }
 
@@ -280,7 +281,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   }
 
   if(i == device[actualDeviceId].actualHashSize) {
-    if(firstEmptySlot != -1) {
+    if(firstEmptySlot != NO_PEER) {
       /* New table entry */
       int len;
 
@@ -483,18 +484,18 @@ char* getNamedPort(int port) {
 
 /* ************************************ */
 
-void updateHostSessionsList(u_int theHostIdx,
-			    u_short port,
-			    u_int remotePeerIdx,
-			    IPSession *theSession,
-			    u_short sessionType,
-			    u_char initiator,
-			    int role)
+static void updateHostSessionsList(u_int theHostIdx,
+				   u_short port,
+				   u_int remotePeerIdx,
+				   IPSession *theSession,
+				   u_short sessionType,
+				   u_char initiator,
+				   int role)
 {
   /* This is a known port hence we're interested in */
   IpGlobalSession *scanner=NULL, *prevScanner;
   HostTraffic* theHost;
-  int i;
+  u_int i;
 
   if((theHostIdx == broadcastEntryIdx)
      || (remotePeerIdx == broadcastEntryIdx)
@@ -696,14 +697,14 @@ void scanTimedoutTCPSessions() {
 
 /* ************************************ */
 
-void updateUsedPorts(HostTraffic *srcHost,
-		     u_int srcHostIdx,
-		     HostTraffic *dstHost,
-		     u_int dstHostIdx,
-		     u_short sport,
-		     u_short dport,
-		     u_int length) {
-
+static void updateUsedPorts(HostTraffic *srcHost,
+			    u_int srcHostIdx,
+			    HostTraffic *dstHost,
+			    u_int dstHostIdx,
+			    u_short sport,
+			    u_short dport,
+			    u_int length) {
+  
   /* traceEvent(TRACE_INFO, "%d\n", length); */
 
   if(srcHostIdx != broadcastEntryIdx) {
@@ -757,7 +758,7 @@ void updateUsedPorts(HostTraffic *srcHost,
 
 static void incrementUsageCounter(UsageCounter *counter,
 				  u_int peerIdx) {
-  int i, found=0;
+  u_int i, found=0;
 
   counter->value++;
 
@@ -781,18 +782,17 @@ static void incrementUsageCounter(UsageCounter *counter,
 
 /* ************************************ */
 
-void handleSession(const struct pcap_pkthdr *h,
-		   IPSession *sessions[],
-		   u_short *numSessions,
-		   u_int srcHostIdx,
-		   u_short sport,
-		   u_int dstHostIdx,
-		   u_short dport,
-		   u_int length,
-		   struct tcphdr *tp,
-		   u_int tcpDataLength,
-		   char* packetData)
-{
+static void handleSession(const struct pcap_pkthdr *h,
+			  IPSession *sessions[],
+			  u_short *numSessions,
+			  u_int srcHostIdx,
+			  u_short sport,
+			  u_int dstHostIdx,
+			  u_short dport,
+			  u_int length,
+			  struct tcphdr *tp,
+			  u_int tcpDataLength,
+			  char* packetData) {
   u_int idx, initialIdx;
   IPSession *theSession = NULL;
   short flowDirection;
@@ -1278,8 +1278,9 @@ void handleSession(const struct pcap_pkthdr *h,
 
 /* ************************************ */
 
-void addLsofContactedPeers(ProcessInfo *process, u_int peerHostIdx) {
-  int i;
+static void addLsofContactedPeers(ProcessInfo *process, 
+				  u_int peerHostIdx) {
+  u_int i;
 
   if((process == NULL)
      || (peerHostIdx == NO_PEER)
@@ -1296,11 +1297,11 @@ void addLsofContactedPeers(ProcessInfo *process, u_int peerHostIdx) {
 
 /* ************************************ */
 
-void handleLsof(u_int srcHostIdx,
-		u_short sport,
-		u_int dstHostIdx,
-		u_short dport,
-		u_int length) {
+static void handleLsof(u_int srcHostIdx,
+		       u_short sport,
+		       u_int dstHostIdx,
+		       u_short dport,
+		       u_int length) {
   HostTraffic *srcHost, *dstHost;
 
 #ifdef MULTITHREADED
@@ -1340,16 +1341,15 @@ void handleLsof(u_int srcHostIdx,
 
 /* *********************************** */
 
-void handleTCPSession(const struct pcap_pkthdr *h,
-		      u_int srcHostIdx,
-		      u_short sport,
-		      u_int dstHostIdx,
-		      u_short dport,
-		      u_int length,
-		      struct tcphdr *tp,
-		      u_int tcpDataLength,
-		      char* packetData) {
-
+static void handleTCPSession(const struct pcap_pkthdr *h,
+			     u_int srcHostIdx,
+			     u_short sport,
+			     u_int dstHostIdx,
+			     u_short dport,
+			     u_int length,
+			     struct tcphdr *tp,
+			     u_int tcpDataLength,
+			     char* packetData) {
   if(
 #ifdef SESSION_PATCH
      1
@@ -1374,14 +1374,13 @@ void handleTCPSession(const struct pcap_pkthdr *h,
 
 /* ************************************ */
 
-void handleUDPSession(const struct pcap_pkthdr *h,
-		      u_int srcHostIdx,
-		      u_short sport,
-		      u_int dstHostIdx,
-		      u_short dport,
-		      u_int length,
-		      char* packetData) {
-
+static void handleUDPSession(const struct pcap_pkthdr *h,
+			     u_int srcHostIdx,
+			     u_short sport,
+			     u_int dstHostIdx,
+			     u_short dport,
+			     u_int length,
+			     char* packetData) {  
   handleSession(h, udpSession, &numUdpSessions, srcHostIdx, sport,
 		dstHostIdx, dport, length, NULL, 0, packetData);
 
@@ -1391,11 +1390,10 @@ void handleUDPSession(const struct pcap_pkthdr *h,
 
 /* ************************************ */
 
-int handleIP(u_short port,
-	     u_int srcHostIdx,
-	     u_int dstHostIdx,
-	     u_int length) {
-
+static int handleIP(u_short port,
+		    u_int srcHostIdx,
+		    u_int dstHostIdx,
+		    u_int length) {
   int idx = mapGlobalToLocalIdx(port);
   HostTraffic *srcHost, *dstHost;
 
@@ -1443,7 +1441,7 @@ int handleIP(u_short port,
 
 /* ************************************ */
 
-void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
+static void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
   short i, found;
   HostTraffic *sender, *receiver;
 
@@ -1536,8 +1534,9 @@ void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
  *
  * ***************************************** */
 
+#ifdef FRAGMENT_DEBUG
 static void dumpFragmentData(IpFragment *fragment) {
-  printf("IPFragment (%x)\n", fragment);
+  printf("IPFragment (%p)\n", fragment);
   printf("  %s:%d -> %s:%d\n",
          fragment->src->hostSymIpAddress, fragment->sport,
          fragment->dest->hostSymIpAddress, fragment->dport);
@@ -1548,6 +1547,7 @@ static void dumpFragmentData(IpFragment *fragment) {
          fragment->totalDataLength, fragment->expectedDataLength);
   fflush(stdout);
 }
+#endif
 
 /* ************************************ */
 
@@ -1660,7 +1660,7 @@ static u_int handleFragment(HostTraffic *srcHost,
   } else if (!(off & IP_MF)) /* last fragment -> we know the total data size */
     fragment->expectedDataLength = fragmentOffset+dataLength;
 
-#ifdef DEBUG
+#ifdef FRAGMENT_DEBUG
   dumpFragmentData(fragment);
 #endif
 
@@ -1686,7 +1686,7 @@ static u_int handleFragment(HostTraffic *srcHost,
 
 /* ************************************ */
 
-void purgeOldFragmentEntries() {
+void purgeOldFragmentEntries(void) {
   IpFragment *fragment, *next;
   u_int fragcnt=0, expcnt=0;
 
@@ -1697,7 +1697,7 @@ void purgeOldFragmentEntries() {
     next = fragment->next;
     if((fragment->firstSeen + DOUBLE_TWO_MSL_TIMEOUT) < actTime) {
       expcnt++;
-#ifdef DEBUG
+#ifdef FRAGMENT_DEBUG
       dumpFragmentData(fragment);
 #endif
       deleteFragment(fragment);
@@ -1705,7 +1705,7 @@ void purgeOldFragmentEntries() {
     fragment=next;
   }
 
-#ifdef DEBUG
+#ifdef FRAGMENT_DEBUG
   if(fragcnt) {
     printf("fragcnt=%d, expcnt=%d\n", fragcnt, expcnt);
     fflush(stdout);
@@ -1785,15 +1785,14 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
 
 /* ************************************ */
 
-void checkNetworkRouter(HostTraffic *srcHost,
-			HostTraffic *dstHost,
-			u_char *ether_dst) {
-
+static void checkNetworkRouter(HostTraffic *srcHost,
+			       HostTraffic *dstHost,
+			       u_char *ether_dst) {
   if(subnetLocalHost(srcHost)
      && (!subnetLocalHost(dstHost))
      && (!broadcastHost(dstHost))
      && (!multicastHost(dstHost))) {
-    int routerIdx, j;
+    u_int routerIdx, j;
     HostTraffic *router;
 
     routerIdx = getHostInfo(NULL, ether_dst);
@@ -1822,9 +1821,9 @@ void checkNetworkRouter(HostTraffic *srcHost,
 
 /* ************************************ */
 
-void grabSession(HostTraffic *srcHost, u_short sport,
-		 HostTraffic *dstHost, u_short dport,
-		 char* data, int len) {
+static void grabSession(HostTraffic *srcHost, u_short sport,
+			HostTraffic *dstHost, u_short dport,
+			char* data, int len) {
   if((dport == 21 /* ftp */) || (sport == 21 /* ftp */)
 #ifdef AA
      || (dport == 23 /* telnet */) || (sport == 23 /* telnet */)
@@ -1848,11 +1847,84 @@ void grabSession(HostTraffic *srcHost, u_short sport,
 
 /* ************************************ */
 
-void processIpPkt(const u_char *bp,
-		  const struct pcap_pkthdr *h,
-		  u_int length,
-		  u_char *ether_src,
-		  u_char *ether_dst)
+static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
+                              TrafficCounter length) {
+
+  HostTraffic *srcHost, *dstHost;
+
+  if(/* (srcHostIdx == dstHostIdx) || */
+     (srcHostIdx == broadcastEntryIdx)
+     || (srcHostIdx == NO_PEER)
+     || (dstHostIdx == NO_PEER))
+    return; /* It looks there's something wrong here */
+
+  if(length > mtuSize[device[deviceId].datalink]) {
+    /* Sanity check */
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Wrong packet length (%lu on %s (deviceId=%d) [too long1]!\n",
+              (unsigned long)length,
+              device[actualDeviceId].name, deviceId);
+#endif
+    /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+    length = mtuSize[device[deviceId].datalink];
+    device[actualDeviceId].rcvdPktStats.tooLong++;
+  }
+
+  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
+  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
+
+  if((srcHost == NULL) || (dstHost == NULL))
+    return;
+
+  srcHost->pktSent++;
+
+  if((dstHostIdx == broadcastEntryIdx) || broadcastHost(dstHost)) {
+    srcHost->pktBroadcastSent++;
+    srcHost->bytesBroadcastSent += length;
+    device[actualDeviceId].broadcastPkts++;
+  } else if(isMulticastAddress(&(dstHost->hostIpAddress))) {
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "%s -> %s\n",
+              srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+#endif
+    srcHost->pktMulticastSent++;
+    srcHost->bytesMulticastSent += length;
+    dstHost->pktMulticastRcvd++;
+    dstHost->bytesMulticastRcvd += length;
+    device[actualDeviceId].multicastPkts++;
+  }
+
+  srcHost->bytesSent += length;
+  if(dstHost != NULL) dstHost->bytesReceived += length;
+
+  dstHost->pktReceived++;
+
+  if(length < 64) device[actualDeviceId].rcvdPktStats.upTo64++;
+  else if(length < 128) device[actualDeviceId].rcvdPktStats.upTo128++;
+  else if(length < 256) device[actualDeviceId].rcvdPktStats.upTo256++;
+  else if(length < 512) device[actualDeviceId].rcvdPktStats.upTo512++;
+  else if(length < 1024) device[actualDeviceId].rcvdPktStats.upTo1024++;
+  else if(length < 1518) device[actualDeviceId].rcvdPktStats.upTo1518++;
+  else device[actualDeviceId].rcvdPktStats.above1518++;
+
+  if((device[actualDeviceId].rcvdPktStats.shortest == 0)
+     || (device[actualDeviceId].rcvdPktStats.shortest > length))
+    device[actualDeviceId].rcvdPktStats.shortest = length;
+
+  if(device[actualDeviceId].rcvdPktStats.longest < length)
+    device[actualDeviceId].rcvdPktStats.longest = length;
+
+  if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
+    addContactedPeers(srcHostIdx, dstHostIdx);
+}
+
+/* ************************************ */
+
+static void processIpPkt(const u_char *bp,
+			 const struct pcap_pkthdr *h,
+			 u_int length,
+			 u_char *ether_src,
+			 u_char *ether_dst)
 {
   u_short sport, dport;
   struct ip ip;
@@ -1964,7 +2036,7 @@ void processIpPkt(const u_char *bp,
 
   device[actualDeviceId].ipBytes += length;
 
-#if (0)
+#if PACKET_DEBUG
   /*
    * Time to show the IP Packet Header (when enabled).
    */
@@ -2132,7 +2204,7 @@ void processIpPkt(const u_char *bp,
           addTimeMapping(transactionId, tvstrct);
 	  
           if(subnetLocalHost(dstHost))
-            srcHost->dnsStats->numLocalReqSent;
+            srcHost->dnsStats->numLocalReqSent++;
           else
             srcHost->dnsStats->numRemoteReqSent++;
 
@@ -2363,79 +2435,6 @@ void processIpPkt(const u_char *bp,
 
 /* ************************************ */
 
-void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
-		       TrafficCounter length) {
-
-  HostTraffic *srcHost, *dstHost;
-
-  if(/* (srcHostIdx == dstHostIdx) || */
-     (srcHostIdx == broadcastEntryIdx)
-     || (srcHostIdx == NO_PEER)
-     || (dstHostIdx == NO_PEER))
-    return; /* It looks there's something wrong here */
-
-  if(length > mtuSize[device[deviceId].datalink]) {
-    /* Sanity check */
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Wrong packet length (%lu on %s (deviceId=%d) [too long1]!\n",
-	       (unsigned long)length,
-	       device[actualDeviceId].name, deviceId);
-#endif
-    /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-    length = mtuSize[device[deviceId].datalink];
-    device[actualDeviceId].rcvdPktStats.tooLong++;
-  }
-
-  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
-  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
-
-  if((srcHost == NULL) || (dstHost == NULL))
-    return;
-
-  srcHost->pktSent++;
-
-  if((dstHostIdx == broadcastEntryIdx) || broadcastHost(dstHost)) {
-    srcHost->pktBroadcastSent++;
-    srcHost->bytesBroadcastSent += length;
-    device[actualDeviceId].broadcastPkts++;
-  } else if(isMulticastAddress(&(dstHost->hostIpAddress))) {
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "%s -> %s\n",
-	       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
-#endif
-    srcHost->pktMulticastSent++;
-    srcHost->bytesMulticastSent += length;
-    dstHost->pktMulticastRcvd++;
-    dstHost->bytesMulticastRcvd += length;
-    device[actualDeviceId].multicastPkts++;
-  }
-
-  srcHost->bytesSent += length;
-  if(dstHost != NULL) dstHost->bytesReceived += length;
-
-  dstHost->pktReceived++;
-
-  if(length < 64) device[actualDeviceId].rcvdPktStats.upTo64++;
-  else if(length < 128) device[actualDeviceId].rcvdPktStats.upTo128++;
-  else if(length < 256) device[actualDeviceId].rcvdPktStats.upTo256++;
-  else if(length < 512) device[actualDeviceId].rcvdPktStats.upTo512++;
-  else if(length < 1024) device[actualDeviceId].rcvdPktStats.upTo1024++;
-  else if(length < 1518) device[actualDeviceId].rcvdPktStats.upTo1518++;
-  else device[actualDeviceId].rcvdPktStats.above1518++;
-
-  if((device[actualDeviceId].rcvdPktStats.shortest == 0)
-     || (device[actualDeviceId].rcvdPktStats.shortest > length))
-    device[actualDeviceId].rcvdPktStats.shortest = length;
-
-  if(device[actualDeviceId].rcvdPktStats.longest < length)
-    device[actualDeviceId].rcvdPktStats.longest = length;
-
-  if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
-    addContactedPeers(srcHostIdx, dstHostIdx);
-}
-
-/* ************************************ */
-
 #ifdef MULTITHREADED
 
 void queuePacket(u_char * _deviceId,
@@ -2508,13 +2507,13 @@ void queuePacket(u_char * _deviceId,
 
 /* ************************************ */
 
-void cleanupPacketQueue() {
+void cleanupPacketQueue(void) {
   ; /* Nothing to do */
 }
 
 /* ************************************ */
 
-void* dequeuePacket(void* notUsed) {
+void* dequeuePacket(void* notUsed _UNUSED_) {
   PacketInformation pktInfo;
 
   while(capturePackets) {
@@ -2567,8 +2566,7 @@ void* dequeuePacket(void* notUsed) {
 
 /* ************************************ */
 
-
-void flowsProcess(const struct pcap_pkthdr *h, const u_char *p) {
+static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p) {
   FlowFilterList *list = flowsList;
 
   while(list != NULL) {
@@ -2610,19 +2608,18 @@ void flowsProcess(const struct pcap_pkthdr *h, const u_char *p) {
 #define RELATIVE_FMT   3   /* the time relative to the first packet received */
 
 
-struct timeval current_pkt = {0};
-struct timeval first_pkt = {0};
-struct timeval last_pkt = {0};
+struct timeval current_pkt = {0,0};
+struct timeval first_pkt = {0,0};
+struct timeval last_pkt = {0,0};
 
-
+#if PACKET_DEBUG
 /*
  * The time difference in milliseconds.
  *
  * Rocco Carbone <rocco@ntop.org>
  */
-time_t delta_time_in_milliseconds (struct timeval * now,
-				   struct timeval * before)
-{
+static time_t delta_time_in_milliseconds (struct timeval * now,
+					  struct timeval * before) {
   /*
    * compute delta in second, 1/10's and 1/1000's second units
    */
@@ -2636,13 +2633,15 @@ time_t delta_time_in_milliseconds (struct timeval * now,
     }
   return ((delta_seconds * 1000) + delta_milliseconds);
 }
+#endif
 
+/* ************************************************ */
 
+#if PACKET_DEBUG
 /*
  * Return a well formatted timestamp.
  */
-static char* timestamp(const struct timeval* t, int fmt)
-{
+static char* timestamp(const struct timeval* t, int fmt) {
   static char buf [16] = {0};
 
   time_t now = time((time_t*) 0);
@@ -2670,7 +2669,8 @@ static char* timestamp(const struct timeval* t, int fmt)
 
     case RELATIVE_FMT:
       /*
-       * calculate the difference in milliseconds since the previous packet was displayed
+       * calculate the difference in milliseconds 
+       * since the previous packet was displayed
        */
       snprintf(buf, 16, "%10ld ms", 
 	       delta_time_in_milliseconds(&current_pkt, &first_pkt));
@@ -2679,8 +2679,9 @@ static char* timestamp(const struct timeval* t, int fmt)
 
   return (buf);
 }
+#endif
 
-
+/* ***************************************************** */
 
 /*
  * This is the top level routine of the printer.  'p' is the points
@@ -2861,7 +2862,7 @@ void processPacket(u_char *_deviceId,
       ether_src = ESRC(ep), ether_dst = EDST(ep);
     } /* switch(device[deviceId].datalink) */
 
-#if (0)
+#if PACKET_DEBUG
     /*
      * Time to show the Ethernet Packet Header (when enabled).
      */

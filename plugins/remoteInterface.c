@@ -152,8 +152,8 @@ void returnHostEntry(HostTraffic* theHost, char* udpBuf) {
 
 /* ****************************** */
 
-void returnHostEntryIdx(int idx, char* udpBuf) {
-  if((idx < 0) || (idx > device[actualReportDeviceId].actualHashSize)) {
+void returnHostEntryIdx(u_int idx, char* udpBuf) {
+  if(idx > device[actualReportDeviceId].actualHashSize) {
     snprintf(udpBuf, sizeof(udpBuf), "%s\n", OUT_OF_RANGE_RC);
     return;
   }
@@ -164,7 +164,7 @@ void returnHostEntryIdx(int idx, char* udpBuf) {
 /* ****************************** */
 
 #ifdef MULTITHREADED
-void* remIntLoop(void* notUsed) {
+void* remIntLoop(void* notUsed _UNUSED_) {
 #ifndef WIN32
   struct sockaddr_un sunix;
   int servlen;
@@ -313,7 +313,7 @@ void* remIntLoop(void* notUsed) {
 
 /* ****************************** */
   
-static void handleRemIntHTTPrequest(char* url) {
+static void handleRemIntHTTPrequest(char* url _UNUSED_) {
   sendHTTPProtoHeader();
   sendHTTPHeaderType();
   printHTTPheader();

@@ -53,7 +53,7 @@ static int enableDBsupport=0;
 /* *************************** */
 
 #ifndef WIN32
-void handleSigHup(int signalId) {
+void handleSigHup(int signalId _UNUSED_) {
   traceEvent(TRACE_INFO, "Caught sighup: statistics have been reset.\n");
   resetStats();
   (void)setsignal(SIGHUP,  handleSigHup);
@@ -66,7 +66,7 @@ void handleSigHup(int signalId) {
 #ifdef MULTITHREADED
 void* pcapDispatch(void *_i) {
   int rc;
-  int i = (int)_i, numPkts=0;
+  int i = (int)_i;
 
   for(;capturePackets == 1;) {
     rc = pcap_dispatch(device[i].pcapPtr, -1, queuePacket, (u_char*) &_i);
@@ -84,7 +84,7 @@ void* pcapDispatch(void *_i) {
 /* **************************************** */
 
 #ifndef WIN32
-RETSIGTYPE handleDiedChild(int signal) {
+RETSIGTYPE handleDiedChild(int signal _UNUSED_) {
   int status;
   pid_t pidId;
 
@@ -106,7 +106,7 @@ RETSIGTYPE handleDiedChild(int signal) {
 
 /* **************************************** */
 
-RETSIGTYPE dontFreeze(int signo) {
+RETSIGTYPE dontFreeze(int signo _UNUSED_) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Caught a SIGALRM...\n");
 #endif
@@ -119,7 +119,7 @@ RETSIGTYPE dontFreeze(int signo) {
 
 #ifndef WIN32
 
-void daemonize() {
+void daemonize(void) {
   int childpid;
 
   (void)signal(SIGHUP, SIG_IGN);
@@ -138,10 +138,9 @@ void daemonize() {
   }
 }
 
-
 /* **************************************** */
 
-void detachFromTerminal() {
+void detachFromTerminal(void) {
 #ifndef MULTITHREADED
   alarm(120); /* Don't freeze */
 #endif
@@ -187,6 +186,116 @@ void detachFromTerminal() {
 #endif /* ORIGINAL_DETACH */
 }
 #endif /* WIN32 */
+
+/* **************************************** */
+
+static short handleProtocol(char* protoName, char *protocol) {
+  int i, idx, lowProtoPort, highProtoPort;
+  short printWarnings = 0;
+
+  if(protocol[0] == '\0')
+    return(-1);
+  else if(isdigit(protocol[0])) {
+    /* numeric protocol port handling */
+    lowProtoPort = highProtoPort = 0;
+    sscanf(protocol, "%d-%d", &lowProtoPort, &highProtoPort);
+    if(highProtoPort < lowProtoPort)
+      highProtoPort = lowProtoPort;
+
+    if(lowProtoPort < 0) lowProtoPort = 0;
+    if(highProtoPort >= TOP_IP_PORT) highProtoPort = TOP_IP_PORT-1;
+
+    for(idx=lowProtoPort; idx<= highProtoPort; idx++) {
+      if(ipPortMapper[idx] == -1) {
+	numIpPortsToHandle++;
+
+#ifdef DEBUG
+	printf("[%d] '%s' [port=%d]\n", numIpProtosToMonitor, protoName, idx);
+#endif
+	ipPortMapper[idx] = numIpProtosToMonitor;
+      } else if(printWarnings)
+	printf("WARNING: IP port %d (%s) has been discarded (multiple instances).\n",
+	       idx, protoName);
+    }
+
+    return(1);
+  }
+
+  for(i=1; i<SERVICE_HASH_SIZE; i++) {
+    idx = -1;
+
+    if((udpSvc[i] != NULL) && (strcmp(udpSvc[i]->name, protocol) == 0))
+      idx = udpSvc[i]->port;
+    else if((tcpSvc[i] != NULL) && (strcmp(tcpSvc[i]->name, protocol) == 0))
+      idx = tcpSvc[i]->port;
+
+    if(idx != -1) {
+      if(ipPortMapper[idx] == -1) {
+	numIpPortsToHandle++;
+
+#ifdef DEBUG
+	printf("[%d] '%s' [%s:%d]\n", numIpProtosToMonitor, protoName, protocol, idx);
+#endif
+	ipPortMapper[idx] = numIpProtosToMonitor;
+      } else if(printWarnings)
+	printf("WARNING: protocol '%s' has been discarded (multiple instances).\n",
+	       protocol);
+      return(1);
+    }
+  }
+
+  if(printWarnings)
+    traceEvent(TRACE_WARNING, "WARNING: unknown protocol '%s'. It has been ignored.\n",
+	       protocol);
+
+  return(-1);
+}
+
+/* **************************************** */
+
+static void handleProtocolList(char* protoName, 
+			       char *protocolList) {
+  char tmpStr[255];
+  char* lastEntry, *protoEntry;
+  int increment=0, rc;
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "%s - %s\n", protoName, protocolList);
+#endif
+
+  if(numIpProtosToMonitor == MAX_NUM_HANDLED_IP_PROTOCOLS) {
+    /* MAX_NUM_HANDLED_IP_PROTOCOLS is defined in ntop.h: increase it! */
+    traceEvent(TRACE_WARNING, "WARNING: Unable to handle '%s'. "
+	       "You've reached the max number\n"
+	       "of handled IP protocols.\n", protoName);
+    return;
+  }
+
+  /* The trick below is used to avoid to modify static
+     memory like in the case where this function is
+     called by addDefaultProtocols()
+  */
+  lastEntry = strncpy(tmpStr, protocolList, sizeof(tmpStr));
+
+  while((protoEntry  = strchr(lastEntry, '|')) != NULL) {
+    protoEntry[0] = '\0';
+    rc = handleProtocol(protoName, lastEntry);
+
+    if(rc != -1)
+      increment=1;
+
+    lastEntry = &protoEntry[1];
+  }
+
+  if(increment == 1) {
+    protoIPTrafficInfos[numIpProtosToMonitor] = strdup(protoName);
+    numIpProtosToMonitor++;
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "%d) %s - %s\n",
+	       numIpProtosToMonitor, protoName, protocolList);
+#endif
+  }
+}
 
 /* **************************************** */
 
@@ -256,7 +365,7 @@ void handleProtocols(char *protos) {
 
 /* **************************************** */
 
-void addDefaultProtocols() {
+void addDefaultProtocols(void) {
   handleProtocolList("FTP", "ftp|ftp-data|");
   handleProtocolList("HTTP", "http|www|https|");
   handleProtocolList("DNS", "name|domain|");
@@ -273,119 +382,9 @@ void addDefaultProtocols() {
 
 /* **************************************** */
 
-short handleProtocol(char* protoName, char *protocol) {
-  int i, idx, lowProtoPort, highProtoPort;
-  short printWarnings = 0;
-
-  if(protocol[0] == '\0')
-    return(-1);
-  else if(isdigit(protocol[0])) {
-    /* numeric protocol port handling */
-    lowProtoPort = highProtoPort = 0;
-    sscanf(protocol, "%d-%d", &lowProtoPort, &highProtoPort);
-    if(highProtoPort < lowProtoPort)
-      highProtoPort = lowProtoPort;
-
-    if(lowProtoPort < 0) lowProtoPort = 0;
-    if(highProtoPort >= TOP_IP_PORT) highProtoPort = TOP_IP_PORT-1;
-
-    for(idx=lowProtoPort; idx<= highProtoPort; idx++) {
-      if(ipPortMapper[idx] == -1) {
-	numIpPortsToHandle++;
-
-#ifdef DEBUG
-	printf("[%d] '%s' [port=%d]\n", numIpProtosToMonitor, protoName, idx);
-#endif
-	ipPortMapper[idx] = numIpProtosToMonitor;
-      } else if(printWarnings)
-	printf("WARNING: IP port %d (%s) has been discarded (multiple instances).\n",
-	       idx, protoName);
-    }
-
-    return(1);
-  }
-
-  for(i=1; i<SERVICE_HASH_SIZE; i++) {
-    idx = -1;
-
-    if((udpSvc[i] != NULL) && (strcmp(udpSvc[i]->name, protocol) == 0))
-      idx = udpSvc[i]->port;
-    else if((tcpSvc[i] != NULL) && (strcmp(tcpSvc[i]->name, protocol) == 0))
-      idx = tcpSvc[i]->port;
-
-    if(idx != -1) {
-      if(ipPortMapper[idx] == -1) {
-	numIpPortsToHandle++;
-
-#ifdef DEBUG
-	printf("[%d] '%s' [%s:%d]\n", numIpProtosToMonitor, protoName, protocol, idx);
-#endif
-	ipPortMapper[idx] = numIpProtosToMonitor;
-      } else if(printWarnings)
-	printf("WARNING: protocol '%s' has been discarded (multiple instances).\n",
-	       protocol);
-
-      return(1);
-    }
-  }
-
-  if(printWarnings)
-    traceEvent(TRACE_WARNING, "WARNING: unknown protocol '%s'. It has been ignored.\n",
-	       protocol);
-
-  return(-1);
-}
-
-/* **************************************** */
-
-void handleProtocolList(char* protoName, char *protocolList) {
-  char tmpStr[255];
-  char* lastEntry, *protoEntry;
-  int increment=0, rc;
-
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "%s - %s\n", protoName, protocolList);
-#endif
-
-  if(numIpProtosToMonitor == MAX_NUM_HANDLED_IP_PROTOCOLS) {
-    /* MAX_NUM_HANDLED_IP_PROTOCOLS is defined in ntop.h: increase it! */
-    traceEvent(TRACE_WARNING, "WARNING: Unable to handle '%s'. "
-	       "You've reached the max number\n"
-	       "of handled IP protocols.\n", protoName);
-    return;
-  }
-
-  /* The trick below is used to avoid to modify static
-     memory like in the case where this function is
-     called by addDefaultProtocols()
-  */
-  lastEntry = strncpy(tmpStr, protocolList, sizeof(tmpStr));
-
-  while((protoEntry  = strchr(lastEntry, '|')) != NULL) {
-    protoEntry[0] = '\0';
-    rc = handleProtocol(protoName, lastEntry);
-
-    if(rc != -1)
-      increment=1;
-
-    lastEntry = &protoEntry[1];
-  }
-
-  if(increment == 1) {
-    protoIPTrafficInfos[numIpProtosToMonitor] = strdup(protoName);
-    numIpProtosToMonitor++;
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "%d) %s - %s\n",
-	       numIpProtosToMonitor, protoName, protocolList);
-#endif
-  }
-}
-
-/* **************************************** */
-
 int mapGlobalToLocalIdx(int port) {
   if((port < 0) || (port >= TOP_IP_PORT))
-    return -1;
+   return -1;
   else {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "IP port %d -> %d\n",
@@ -398,7 +397,7 @@ int mapGlobalToLocalIdx(int port) {
 /* **************************************** */
 
 #ifdef MULTITHREADED
-void* updateThptLoop(void* notUsed) {
+void* updateThptLoop(void* notUsed _UNUSED_) {
   for(;;) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Sleeping for %d seconds\n",
@@ -435,7 +434,7 @@ void* updateThptLoop(void* notUsed) {
 /* **************************************** */
 
 #ifdef MULTITHREADED
-void* updateDBHostsTrafficLoop(void* notUsed) {
+void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
   u_short updateTime = DEFAULT_DB_UPDATE_TIME; /* This should be user configurable */
 
   for(;;) {
@@ -448,7 +447,8 @@ void* updateDBHostsTrafficLoop(void* notUsed) {
     if(!capturePackets) break;
 
     /* accessMutex(&hostsHashMutex); */
-    updateDbHostsTraffic();
+    /* CHECK ME: Parmeter to updateDbHostsTraffic */ 
+    updateDbHostsTraffic(0);
     /* releaseMutex(&hostsHashMutex); */
   }
   return(NULL);
@@ -458,7 +458,7 @@ void* updateDBHostsTrafficLoop(void* notUsed) {
 
 /* **************************************** */
 
-void* scanIdleLoop(void* notUsed) {
+void* scanIdleLoop(void* notUsed _UNUSED_) {
   for(;;) {
     sleep(SESSION_SCAN_DELAY);
 
@@ -499,8 +499,8 @@ void* scanIdleLoop(void* notUsed) {
     if(handleRules)
       scanAllTcpExpiredRules();
   }
-  return(NULL);
 
+  return(NULL);
 }
 
 /* **************************************** */

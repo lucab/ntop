@@ -22,65 +22,65 @@
 
 #include "ntop.h"
 
-unsigned long allocatedMemory, maxHashSize;
+/* general */
+#ifdef WIN32
+char *version, *osName, *author, *buildDate;
+#endif
+char *program_name;
+char domainName[MAXHOSTNAMELEN], *shortDomainName;
 
-/* Database */
-char dbPath[200];
-char accessLogPath[200]; /* Apache-like access log */
-short usePersistentStorage, grabSessionInformation, capturePackets, endNtop;
+/* command line options */
+u_short traceLevel;
+char dbPath[200], accessLogPath[200], *rFileName;
+u_int maxHashSize;
+short usePersistentStorage, grabSessionInformation;
+int numericFlag, logTimeout, daemonMode, mergeInterfaces;
 
-/* Time */
-time_t actTime, initialSniffTime, lastRefreshTime;
-int32_t thisZone; /* seconds offset from gmt to local time */
+/* Search paths */
+const char *dataFileDirs[]   = {".", DATAFILE_DIR, NULL};
+const char *pluginDirs[]     = {"./plugins", PLUGIN_DIR, NULL};
+const char *configFileDirs[] = {".", CONFIGFILE_DIR, "/etc", NULL};
 
-/* NICs */
-int numDevices, mergeInterfaces, actualDeviceId;
+/* Debug */
+extern size_t allocatedMemory;
 
-ntopInterface_t device[MAX_NUM_DEVICES];
+/* SSL */
+#ifdef HAVE_OPENSSL
+int sslInitialized, sslPort;
+#endif
 
+/* Logging */
+time_t nextLogTime;
+FILE *logd;
 
-/* Throughput */
-
-/* Traffic Statistics */
-SimpleProtoTrafficInfo *ipProtoStats;
-
-/* Periodic Updates */
-u_short updateLsof;
-
-
-/* Monitored Protocols */
-char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS]; /* array 0-numIpProtosToMonitor */
-u_short numIpProtosToMonitor=0, numIpPortsToHandle=0;
-int* ipPortMapper;
+/* Flags */
+int isLsofPresent=1, isNepedPresent=1, isNmapPresent=1;
+short capturePackets;
+short endNtop;
 
 
-/* Rules */
-u_short handleRules=0;
-char* rFileName;
-FilterRuleChain *tcpChain, *udpChain, *icmpChain;
-u_short ruleSerialIdentifier;
-FilterRule* filterRulesList[MAX_NUM_RULES];
-
-/* Threads */
+/* Multithreading */
 #ifdef MULTITHREADED
 pthread_mutex_t packetQueueMutex, hostsHashMutex, graphMutex;
 pthread_mutex_t lsofMutex, addressResolutionMutex, hashResizeMutex;
-pthread_t dequeueThreadId, handleWebConnectionsThreadId,
-  thptUpdateThreadId,
-  scanIdleThreadId, dbUpdateThreadId;
-pthread_t lsofThreadId;
 
+pthread_t dequeueThreadId, handleWebConnectionsThreadId;
+pthread_t thptUpdateThreadId, scanIdleThreadId, logFileLoopThreadId;
+pthread_t dbUpdateThreadId, lsofThreadId;
+#ifdef HAVE_GDBM_H
+pthread_mutex_t gdbmMutex;
+#endif /* HAVE_GDBM_H */
 #ifdef USE_SEMAPHORES
 sem_t queueSem;
 #ifdef ASYNC_ADDRESS_RESOLUTION
 sem_t queueAddressSem;
-#endif
-#else
+#endif /* ASYNC_ADDRESS_RESOLUTION */
+#else /* USE_SEMAPHORES */
 ConditionalVariable queueCondvar;
 #ifdef ASYNC_ADDRESS_RESOLUTION
 ConditionalVariable queueAddressCondvar;
-#endif
-#endif
+#endif /* USE_SEMAPHORES */
+#endif 
 #ifdef ASYNC_ADDRESS_RESOLUTION
 pthread_t dequeueAddressThreadId;
 TrafficCounter droppedAddresses;
@@ -88,94 +88,83 @@ pthread_mutex_t addressQueueMutex;
 #endif
 #endif
 
-#ifdef HAVE_OPENSSL
-int sslInitialized, sslPort;
-#endif
-
-/* Libwrap */
-#ifdef HAVE_LIBWRAP
-int allow_severity = LOG_INFO;
-int deny_severity = LOG_WARNING;
-#endif /* HAVE_LIBWRAP */
-
-
-/* GDBM */
+/* Database */
 #ifdef HAVE_GDBM_H
 GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile;
-#ifdef MULTITHREADED
-pthread_mutex_t gdbmMutex;
-#endif
 #endif
 
-/* Addressing */
+/* lsof support */
+u_short updateLsof;
+ProcessInfo *processes[MAX_NUM_PROCESSES];
+u_short numProcesses;
+ProcessInfoList *localPorts[TOP_IP_PORT];
+
+
+/* TCP Wrappers */
+#ifdef HAVE_LIBWRAP
+int allow_severity = LOG_INFO;
+int deny_severity  = LOG_WARNING;
+#endif /* HAVE_LIBWRAP */
+
+/* Filter Chains */
+u_short handleRules;
+FlowFilterList *flowsList;
+FilterRuleChain *tcpChain, *udpChain, *icmpChain;
+u_short ruleSerialIdentifier;
+FilterRule* filterRulesList[MAX_NUM_RULES];
+
+/* Address Resolution */
 #if defined(ASYNC_ADDRESS_RESOLUTION)
-unsigned int addressQueueLen, maxAddressQueueLen, addressQueueHead, addressQueueTail;
+u_int addressQueueLen, maxAddressQueueLen;
+u_int addressQueueHead, addressQueueTail;
 struct hnamemem *addressQueue[ADDRESS_QUEUE_LENGTH+1];
 #endif
-char domainName[MAXHOSTNAMELEN], *shortDomainName;
+#ifndef HAVE_GDBM_H
+struct hnamemem* hnametable[HASHNAMESIZE];
+#endif
+
+/* Misc */
+char *separator = "&nbsp;";
+int32_t thisZone; /* seconds offset from gmt to local time */
+
+/* Time */
+time_t actTime, initialSniffTime, lastRefreshTime;
+time_t nextSessionTimeoutScan;
+struct timeval lastPktTime;
+
+/* NICs */
+int deviceId; /* Set by processPacket() */
+int numDevices, actualDeviceId;
+ntopInterface_t device[MAX_NUM_DEVICES];
 
 
-/* Global application parameters */
-int numericFlag, daemonMode;
-char *program_name;
-
-/* Logging */
-int logTimeout;
-time_t nextLogTime=0;
-FILE *logd;
-
-/* Flows */
-FlowFilterList *flowsList;
-
-/* External Applications */
-int isLsofPresent=1, isNepedPresent=1, isNmapPresent=1;
+/* Monitored Protocols */
+char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS];
+u_short numIpProtosToMonitor, numIpPortsToHandle;
+int* ipPortMapper;
 
 
-/* Packet queue (multithread mode) */
-#ifdef MULTITHREADED
+/* Packet Capture */
+#if defined(MULTITHREADED)
 PacketInformation packetQueue[PACKET_QUEUE_LENGTH+1];
-unsigned int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
+u_int packetQueueLen, maxPacketQueueLen, packetQueueHead, packetQueueTail;
 #endif
 
 TransactionTime transTimeHash[NUM_TRANSACTION_ENTRIES];
 
-#ifndef HAVE_GDBM_H
-struct hnamemem* hnametable[HASHNAMESIZE];
-#endif
+u_int broadcastEntryIdx;
+HostTraffic broadcastEntry;
+u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
 IpFragment *fragmentList;
 IPSession *tcpSession[HASHNAMESIZE]; /* TCP sessions */
 IPSession *udpSession[HASHNAMESIZE]; /* UDP sessions */
-u_short numTcpSessions=0, numUdpSessions=0;
-char *separator;
+u_short numTcpSessions, numUdpSessions;
 ServiceEntry *udpSvc[SERVICE_HASH_SIZE], *tcpSvc[SERVICE_HASH_SIZE];
 TrafficEntry ipTrafficMatrix[256][256]; /* Subnet traffic Matrix */
 HostTraffic* ipTrafficMatrixHosts[256]; /* Subnet traffic Matrix Hosts */
 fd_set ipTrafficMatrixPromiscHosts;
 
-
-u_char dummyEthAddress[ETHERNET_ADDRESS_LEN];
-short sortSendMode=0;
-int lastNumLines, lastNumCols;
-time_t nextSessionTimeoutScan;
-struct timeval lastPktTime;
-u_int broadcastEntryIdx;
-unsigned short alternateColor = 0, maxNameLen;
-int deviceId; /* Set by processPacket() */
-
-#ifdef WIN32
-char* version;
-char* osName;
-char* author;
-#endif
-
-const char *dataFileDirs[]={".", DATAFILE_DIR, NULL};
-const char *pluginDirs[]={"./plugins", PLUGIN_DIR, NULL};
-const char *configFileDirs[]={".", CONFIGFILE_DIR, "/etc", NULL};
-
-ProcessInfo *processes[MAX_NUM_PROCESSES];
-u_short numProcesses;
-ProcessInfoList *localPorts[TOP_IP_PORT];
-
+SimpleProtoTrafficInfo *ipProtoStats;
 
 u_short mtuSize[] = {
   8232,   	/* no link-layer encapsulation */
@@ -214,5 +203,3 @@ u_short headerSize[] = {
   UNKNOWN_MTU,  /* BSD/OS Serial Line IP */
   UNKNOWN_MTU	/* BSD/OS Point-to-point Protocol */
 };
-
-u_short traceLevel;

@@ -26,7 +26,7 @@
 /* *******************************/
 
 #ifdef HAVE_GDBM_H
-void showUsers() {
+void showUsers(void) {
   u_int numUsers=0;
   char buf[BUF_SIZE];
   datum key_data, return_data;
@@ -113,7 +113,7 @@ void addUser(char* user) {
 
 /* *******************************/
 
-void redirectURL(char* destination) {
+static void redirectURL(char* destination) {
   sendString("HTTP/1.0 302 Found\n");
   sendString("Content-type: text/html\n");
   sendString("Location: /");
@@ -283,7 +283,7 @@ void doAddUser(int _len) {
 /* ***********************************
    *********************************** */
 
-void showURLs() {
+void showURLs(void) {
   u_int numUsers=0;
   char buf[BUF_SIZE];
   datum key_data, return_data;
@@ -554,7 +554,7 @@ void doAddURL(int _len) {
 
 /* *******************************/
 
-void addKeyIfMissing(char* key, char* value, int encryptValue) {
+static void addKeyIfMissing(char* key, char* value, int encryptValue) {
   datum key_data, return_data, data_data;
 
   /* Check existence of user 'admin' */
