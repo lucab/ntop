@@ -63,7 +63,8 @@ void formatUsageCounter(UsageCounter usageCtr,
 	sendString("\n<li>");
 	sendString(makeHostLink(&el, 0, 0, 0));
       } else
-	traceEvent(CONST_TRACE_INFO, "Unable to find serial %u", usageCtr.peersIndexes[i]);
+	traceEvent(CONST_TRACE_INFO, "Unable to find serial %u", 
+		   (unsigned int)usageCtr.peersIndexes[i]);
     }
   }
 
@@ -103,9 +104,9 @@ void printTableDoubleEntry(char *buf, int bufLen,
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
-           "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
-           "<TD WIDTH=100><IMG ALT=\"100%\"ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=100 HEIGHT=12></TD>\n",
-           getRowColor(), label, formatKBytes(totalS)) < 0)
+		"<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
+		"<TD WIDTH=100><IMG ALT=\"100%%\"ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=100 HEIGHT=12></TD>\n",
+		getRowColor(), label, formatKBytes(totalS)) < 0)
       BufferTooShort();
     break;
   default:
@@ -1467,7 +1468,7 @@ void printHostThtpShort(HostTraffic *el, int reportType) {
   }
   
   for(i=0; i<24; i++) {
-    float pctg;
+    float pctg=0;
     
     if(tc > 0) {
       switch(reportType) {
@@ -3735,7 +3736,7 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
   Counter tot;
 
   if((el->protocolInfo == NULL)
-     || (el->protocolInfo->dnsStats == NULL) && (el->protocolInfo->httpStats == NULL))
+     || ((el->protocolInfo->dnsStats == NULL) && (el->protocolInfo->httpStats == NULL)))
     return;
 
   tot = 0;

@@ -2772,7 +2772,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   /*
     SSL fix courtesy of Curtis Doty <curtis@greenkey.net>
   */
-  void initWeb() {
+void initWeb() {
     int sockopt = 1;
     struct sockaddr_in sockIn;
     char value[8];
@@ -2908,13 +2908,14 @@ void printNtopConfigInfo(int textPrintFlag) {
     }
 
 #ifdef HAVE_OPENSSL
-    if(myGlobals.sslInitialized)
+    if(myGlobals.sslInitialized) {
       if(myGlobals.sslAddr)
 	traceEvent(CONST_TRACE_INFO, "Waiting for HTTPS (SSL) connections on %s port %d...\n",
 		   myGlobals.sslAddr, myGlobals.sslPort);
       else
 	traceEvent(CONST_TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
 		   myGlobals.sslPort);
+    }
 #endif
 
 #ifdef CFG_MULTITHREADED
@@ -2978,7 +2979,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag) { 
     int waitwokeCount;
-    int rc, rc1;
+    int rc=0, rc1;
 
     sslwatchdogDebugN("WaitFor=", parentchildFlag, stateValue);
 
@@ -3070,12 +3071,15 @@ void printNtopConfigInfo(int textPrintFlag) {
     } else {
       sslwatchdogDebug("signal->", parentchildFlag, "");
     }
+
+    return(rc);
   }
 
   /* **************************************** */
 
-  int sslwatchdogSetState(int stateNewValue, int parentchildFlag, int enterLockedFlag, int exitLockedFlag) {
-    int rc;
+  int sslwatchdogSetState(int stateNewValue, int parentchildFlag, 
+			  int enterLockedFlag, int exitLockedFlag) {
+    int rc=0;
     
     sslwatchdogDebugN("SetState=", parentchildFlag, stateNewValue);
 
@@ -3091,7 +3095,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       rc = sslwatchdogClearLock(parentchildFlag);
     }
 
-    return rc;
+    return(rc);
   }
 
   /* **************************************** */
@@ -3107,13 +3111,11 @@ void printNtopConfigInfo(int textPrintFlag) {
   /* **************************************** */
   /* **************************************** */
 
-  void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
+void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
     /* This is the watchdog (child) */
     int rc;
-    int childpid, parentpid;
     struct timespec expiration;
-    time_t returnedAt;
-
+    
     /* ENTRY: from above, state 0 (FLAG_SSLWATCHDOG_UNINIT) */
     sslwatchdogDebug("BEGINthread", FLAG_SSLWATCHDOG_CHILD, "");
 
@@ -3189,8 +3191,9 @@ void printNtopConfigInfo(int textPrintFlag) {
 
     sslwatchdogDebug("ENDthread", FLAG_SSLWATCHDOG_CHILD, "");
 
-    return;
+    return(NULL);
   }
+   
 #endif /* MAKE_WITH_SSLWATCHDOG */
 
   /* ******************************************* */

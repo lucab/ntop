@@ -720,7 +720,7 @@ void initDevices(char* devices) {
   char ebuf[CONST_SIZE_PCAP_ERR_BUF], *myDevices;
   int i, j, mallocLen;
   NtopInterface *tmpDevice;
-  char *tmpDev, *tmpDescr;
+  char *tmpDev;
 #ifdef WIN32
   char *ifName, intNames[32][256], intDescr[32][256];
   int ifIdx = 0;

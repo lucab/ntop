@@ -104,7 +104,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 */
 
 static void freeHostSessions(u_int hostIdx, int theDevice) {
-  int i, eCount=0, mutexLocked = 0; 
+  int i, mutexLocked = 0; 
 
   for(i=0; i<myGlobals.device[theDevice].numTotSessions; i++) {
     IPSession *prevSession, *nextSession, *theSession;
@@ -297,7 +297,6 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     }
 
     host->tcpSessionList = host->udpSessionList = NULL;
-
 
     HEARTBEAT(1, "freeHostInfo() calling freeHostSessions(), mutex: [%s %s:%d]",   
 	      myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
@@ -1041,7 +1040,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
   if(el == NULL)
     traceEvent(CONST_TRACE_INFO, "getHostInfo(idx=%d)(ptr=%x)",
-	       list->idx, myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx]);
+	       list->idx, (void*)myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx]);
 
   return(list->idx);
 }

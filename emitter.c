@@ -299,7 +299,7 @@ static void wrtLlongItm(FILE *fDescr, int lang, char* indent, char* name,
 			TrafficCounter value, char last, int numEntriesSent) {
   char buf[80];
 
-  sprintf(buf,"%lu",value);
+  sprintf(buf, "%lu", value.value);
   wrtStrItm(fDescr, lang, indent, name, buf, last, numEntriesSent);
 }
 
@@ -436,7 +436,7 @@ void dumpNtopFlows(FILE *fDescr, char* options, int actualDeviceId) {
 void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
   char key[64];
   unsigned int numEntries=0, lang=DEFAULT_FLAG_LANGUAGE;
-  int i, j;
+  int i=0, j;
   char buf[LEN_GENERAL_WORK_BUFFER];
 
   memset(key, 0, sizeof(key));

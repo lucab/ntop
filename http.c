@@ -1051,15 +1051,12 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 			  struct timeval *httpRequestedAt, int *usedFork, char *agent) {
   char *questionMark;
   int sortedColumn = 0, printTrailer=1, idx;
-  int errorCode=0, pageNum = 0, found=0, portNr;
+  int errorCode=0, pageNum = 0, found=0, portNr=0;
   struct stat statbuf;
   FILE *fd = NULL;
   char tmpStr[512];
   char *domainNameParm = NULL;
   int revertOrder=0, rc;
-#ifdef CFG_MULTITHREADED
-  u_char mutexReleased = 0;
-#endif
   struct tm t;
 #ifdef WIN32
   int i;
@@ -1124,8 +1121,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 
   /* Search in the local directory first... */
   for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
-    int j;
-
     if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s",
 		myGlobals.dataFileDirs[idx], pageName) < 0)
       BufferTooShort();

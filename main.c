@@ -671,7 +671,7 @@ int ntop_main(int argc, char *argv[]) {
 #else
 int main(int argc, char *argv[]) {
 #endif
-  int i, j, rc, userSpecified, bufLen;
+  int i, rc, userSpecified, bufLen;
 #ifndef WIN32
   int effective_argc;
   char **effective_argv;
@@ -768,13 +768,12 @@ int main(int argc, char *argv[]) {
 
           rc = stat(&argv[i][1], &fileStat);
           if (rc != 0) {
-              if (errno = ENOENT) {
-                  printf("ERROR: Parameter file %s not found/unable to access\n",
-		         &argv[i][1]);
-              } else {
-                  printf("ERROR: %d in stat(%s, ...)\n", errno, &argv[i][1]);
-              }
-              return(-1);
+	    if (errno == ENOENT) {
+	      printf("ERROR: Parameter file %s not found/unable to access\n", &argv[i][1]);
+	    } else {
+	      printf("ERROR: %d in stat(%s, ...)\n", errno, &argv[i][1]);
+	    }
+	    return(-1);
           }
 
 #ifdef PARAM_DEBUG
@@ -1068,14 +1067,16 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifndef WIN32
-  pause();
-#endif
-
+  while(1) {
+    pause(); 
+  }
+#else  
   while(!myGlobals.endNtop) {
     HEARTBEAT(0, "main(), sleep(3000)...", NULL);
-    sleep(3000);
+    sleep(10);
     HEARTBEAT(0, "main(), sleep(3000)...woke", NULL);
   }
+#endif
 
   return(0);
 }

@@ -324,7 +324,7 @@ static int handleProtocolList(char* protoName,
 			       char *protocolList) {
   char tmpStr[255];
   char* lastEntry, *protoEntry;
-  int increment=0, rc;
+  int increment=0, rc=0;
 
   if(servicesMapper == NULL) {
     servicesMapper = (int*)malloc(sizeof(int)*MAX_IP_PORT);

@@ -3192,11 +3192,11 @@ int guessHops(HostTraffic *el) {
 #ifndef WIN32
 #undef sleep
 
-int ntop_sleep(int secs) {
-  int unsleptTime = secs;
+unsigned int ntop_sleep(unsigned int secs) {
+  unsigned int unsleptTime = secs, rest;
 
-  while((unsleptTime = sleep(unsleptTime)) > 0)
-    ;
+  while((rest = sleep(unsleptTime)) > 0)
+    unsleptTime = rest;
 
   return(secs);
 }

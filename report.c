@@ -2098,14 +2098,14 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     }
 
     sendString("<CENTER>\n");
-    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\">\n<TR "TR_ON"><TH "TH_BG">"
-	    "%s1>Host%s</A></TH>"
-	    "<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
-	    "<TH "TH_BG" COLSPAN=2>%s3>Data&nbsp;Sent%s</A></TH>"
-	    "<TH "TH_BG" COLSPAN=2>%s4>Data&nbsp;Rcvd%s</A></TH></TR>\n",
-	    theAnchor[1], arrow[1],
-	    theAnchor[2], arrow[2], theAnchor[3], arrow[3],
-	    theAnchor[4], arrow[4]) < 0)
+    if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR "TR_ON"><TH "TH_BG">"
+		"%s1>Host%s</A></TH>"
+		"<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
+		"<TH "TH_BG" COLSPAN=2>%s3>Data&nbsp;Sent%s</A></TH>"
+		"<TH "TH_BG" COLSPAN=2>%s4>Data&nbsp;Rcvd%s</A></TH></TR>\n",
+		theAnchor[1], arrow[1],
+		theAnchor[2], arrow[2], theAnchor[3], arrow[3],
+		theAnchor[4], arrow[4]) < 0)
       BufferTooShort();
 
     sendString(buf);
@@ -2913,7 +2913,7 @@ void printProtoTraffic(void) {
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT>IP</TH>"
 	      "<TD "TD_BG" WIDTH=50 ALIGN=RIGHT>%s"
 	      "</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
-	      "<TABLE BORDER=1 WIDTH=\"100%\">",
+	      "<TABLE BORDER=1 WIDTH=\"100%%\">",
 	      getRowColor(),
 	      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1),
 	      perc) < 0)
@@ -3125,7 +3125,7 @@ void printProcessInfo(int processPid, int actualDeviceId) {
 void printLsofData(int mode) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   int i, j, found, processSize;
-  int numUsers, numProcessesToDisplay;
+  int numUsers=0, numProcessesToDisplay;
   ProcessInfo **processesList;
   UsersTraffic usersTraffic[256], *usersTrafficList[256];
 
@@ -3185,8 +3185,9 @@ void printLsofData(int mode) {
 
       if(!found) {
 	usersTraffic[numUsers].userName = processesList[i]->user;
-	usersTrafficList[numUsers++] = &usersTraffic[numUsers];
+	usersTrafficList[numUsers] = &usersTraffic[numUsers];
 	usersTraffic[j].bytesSent = usersTraffic[j].bytesRcvd = 0;
+	numUsers++;
       }
 
       usersTraffic[j].bytesSent += processesList[i]->bytesSent.value;

@@ -432,7 +432,7 @@
 /* #define RRD_DEBUG */
 
  /*
-/* SEMAPHORE_DEBUG causes util.c to log information about semaphore operations.
+  * SEMAPHORE_DEBUG causes util.c to log information about semaphore operations.
  */
 /* #define SEMAPHORE_DEBUG */
 

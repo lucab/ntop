@@ -41,18 +41,17 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 
 #if !defined(PARM_DISABLE_GDC_WATCHDOG) && !defined(WIN32)
 
-void _GDC_out_pie(short width,
-                  short height,
-                  FILE* filepointer,            /* open file pointer, can be stdout */
-                  GDCPIE_TYPE pietype,
-                  int   num_points,
-                  char  *labels[],              /* slice labels */
-                  float data[] ) {
-
+static void _GDC_out_pie(short width,
+			 short height,
+			 FILE* filepointer,            /* open file pointer, can be stdout */
+			 GDCPIE_TYPE pietype,
+			 int   num_points,
+			 char  *labels[],              /* slice labels */
+			 float data[] ) {
   int status;
   pid_t wait_result, fork_result;
-  FILE *fd;
-  int idx, i, found, len;
+  FILE *fd = NULL;
+  int idx, found, len;
   struct stat statbuf;
   char tmpStr[512];
 
