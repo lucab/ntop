@@ -240,7 +240,7 @@ static void processHTMLrequest(char* url) {
     /* ================================================================== */
 
     addrcpy(&addr, &tablehost[entry].HostIpAddress);
-    HostT = findHostByNumIP(addr, myGlobals.actualReportDeviceId);
+    HostT = findHostByNumIP(addr, 0, myGlobals.actualReportDeviceId);
     if(HostT)
       tmp = makeHostLink(HostT, FLAG_HOSTLINK_HTML_FORMAT, 
 			 0, 0, hostLinkBuf, sizeof(hostLinkBuf));

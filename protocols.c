@@ -124,7 +124,7 @@ void handleBootp(HostTraffic *srcHost,
 	      dstHost is a broadcast address
 	    */
 
-	    realDstHost = findHostByMAC(bootProto.bp_chaddr, actualDeviceId);
+	    realDstHost = findHostByMAC(bootProto.bp_chaddr, dstHost->vlanId, actualDeviceId);
 	    if(realDstHost == NULL) {
 	      realDstHost = lookupHost(/* &bootProto.bp_yiaddr */ NULL, bootProto.bp_chaddr, 
 				       srcHost->vlanId, 0, 0, actualDeviceId);
@@ -206,7 +206,7 @@ void handleBootp(HostTraffic *srcHost,
 #endif
 		  /* *************** */
 		  addr.Ip4Address.s_addr = hostIpAddress.s_addr;
-		  trafficHost = findHostByNumIP(addr, actualDeviceId);
+		  trafficHost = findHostByNumIP(addr, srcHost->vlanId, actualDeviceId);
 		  if(trafficHost != NULL) {
 		    incrementUsageCounter(&realDstHost->contactedRouters, trafficHost, actualDeviceId);
 		    FD_SET(FLAG_GATEWAY_HOST, &trafficHost->flags);
@@ -306,7 +306,7 @@ void handleBootp(HostTraffic *srcHost,
 		  /* *************** */
 		  addr.Ip4Address.s_addr = hostIpAddress.s_addr;
 
-		  trafficHost = findHostByNumIP(addr, actualDeviceId);
+		  trafficHost = findHostByNumIP(addr, srcHost->vlanId, actualDeviceId);
 		  if(trafficHost != NULL) {
 		    FD_SET(FLAG_HOST_TYPE_SVC_WINS, &trafficHost->flags);
 		  }
@@ -469,7 +469,7 @@ void handleBootp(HostTraffic *srcHost,
 	      dstHost is a broadcast address
 	    */
 
-	    realClientHost = findHostByMAC(bootProto.bp_chaddr, actualDeviceId);
+	    realClientHost = findHostByMAC(bootProto.bp_chaddr, srcHost->vlanId, actualDeviceId);
 	    if(realClientHost == NULL) {
 	      realClientHost = lookupHost(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr,
 					  srcHost->vlanId, 0, 0, actualDeviceId);

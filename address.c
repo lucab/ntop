@@ -46,33 +46,34 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
-
   /* Search the instance and update its name */
     
   if(myGlobals.device[actualDeviceId].virtualDevice) return;
 
-  el = findHostByNumIP(addr, actualDeviceId);
-
-  accessAddrResMutex("updateHostNameInfo");
-
-  if(el != NULL) {    
-    int i;
-    
-    if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1)) 
-      symbolic[MAX_LEN_SYM_HOST_NAME-2] = '\0';
-    
-    for(i=0; i<strlen(symbolic); i++)
-      if(isupper(symbolic[i])) tolower(symbolic[i]);
-
-    setResolvedName(el, symbolic, type);
+  for(el=getFirstHost(actualDeviceId); el != NULL; el = getNextHost(actualDeviceId, el)) {
+    if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress, &addr) == 0)) {
+      accessAddrResMutex("updateHostNameInfo");
+      
+      if(el != NULL) {    
+	int i;
+	
+	if(strlen(symbolic) >= (MAX_LEN_SYM_HOST_NAME-1)) 
+	  symbolic[MAX_LEN_SYM_HOST_NAME-2] = '\0';
+	
+	for(i=0; i<strlen(symbolic); i++)
+	  if(isupper(symbolic[i])) tolower(symbolic[i]);
+	
+	setResolvedName(el, symbolic, type);
+      }
+      
+      releaseAddrResMutex();
+    }
   }
-
-  releaseAddrResMutex();
 }
 
 /* **************************************** */
 
-static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
+  static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
   int i; 
 
   for(i=0; i<myGlobals.numDevices; i++)
@@ -81,8 +82,7 @@ static void updateHostNameInfo(HostAddr addr, char* symbolic, int type) {
 
 /* ************************************ */
 
-static void resolveAddress(HostAddr *hostAddr,
-			   short keepAddressNumeric) {
+static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
   char symAddr[MAX_LEN_SYM_HOST_NAME];
   short symAddrType=FLAG_HOST_SYM_ADDR_TYPE_NONE;
   StoredAddress storedAddress;

@@ -163,7 +163,7 @@ extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
 extern void setHostSerial(HostTraffic *el);
-HostTraffic * lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, int vlanId,
+HostTraffic * lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanId,
 			 u_char checkForMultihoming, u_char forceUsingIPaddress, int actualDeviceId);
 
 HostTraffic * lookupFcHost (FcAddress *fcAddress, u_short vsanId,
@@ -358,9 +358,9 @@ extern void incrementTrafficCounter(TrafficCounter *ctr, Counter value);
 extern void resetTrafficCounter(TrafficCounter *ctr);
 extern HostTraffic* getFirstHost(u_int actualDeviceId);
 extern HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host);
-extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, u_int actualDeviceId);
+extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualDeviceId);
 extern HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId);
-extern HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId);
+extern HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId);
 extern HostTraffic* findHostByFcAddress (FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId);
 extern FcNameServerCacheEntry *findFcHostNSCacheEntry (FcAddress *fcAddr, u_short vsanId);
 extern char* fc_to_str(const u_int8_t *ad);
