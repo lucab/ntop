@@ -953,7 +953,7 @@ RETSIGTYPE cleanup(int signo) {
 
     traceEvent(TRACE_INFO, "Freeing device %s (idx=%d)...", myGlobals.device[i].name, i);
 
-    if(!myGlobals.device[i].virtualDevice) {
+    if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
       if (pcap_stats(myGlobals.device[i].pcapPtr, &stat) >= 0) {
 	traceEvent(TRACE_INFO, "%s packets received by filter on %s\n",
 		   formatPkts((TrafficCounter)stat.ps_recv), myGlobals.device[i].name);
@@ -967,7 +967,6 @@ RETSIGTYPE cleanup(int signo) {
     }
 
     if(myGlobals.device[i].ipTrafficMatrix != NULL) {
-
       /* Courtesy of Wies-Software <wies@wiessoft.de> */
       for(j=0; j<(myGlobals.device[i].numHosts*myGlobals.device[i].numHosts); j++)
         if(myGlobals.device[i].ipTrafficMatrix[j] != NULL)

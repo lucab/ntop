@@ -149,7 +149,7 @@ SUBDIRS = . @PLUGINS@ @INTOP@
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog               MANIFESTO NEWS PORTING                SUPPORT_NTOP.txt THANKS               ntop.8 ntop.txt ntop.html               ntop-cert.pem
 
 
-NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.png html/*.css html/statsicons            html/statsicons/flags html/statsicons/os            html/statsicons/flags/*.gif html/statsicons/os/*.gif
+NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png html/*.css html/statsicons            html/statsicons/flags html/statsicons/os            html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
 
 EXTRA_DIST = Makefile.am Makefile.in              acconfig.h acinclude.m4 acinclude.m4.in              autogen.sh config.guess config.h.in config.sub              configure configure.in              install-sh libtool ltconfig ltmain.sh              missing mkinstalldirs ntop-config.in              vt.sed
@@ -213,7 +213,7 @@ libntopreport_la_DEPENDENCIES = config.h
 libntopreport_la_LIBADD = $(MORELIBS)
 libntopreport_la_LDFLAGS = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic @DYN_FLAGS@
 
-man_MANS = ntop.8 intop/intop.1
+man_MANS = ntop.8
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
@@ -240,7 +240,6 @@ SCRIPTS =  $(bin_SCRIPTS)
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LINK = $(LIBTOOL) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
-man1dir = $(mandir)/man1
 man8dir = $(mandir)/man8
 MANS = $(man_MANS)
 
@@ -432,39 +431,6 @@ uninstall-binSCRIPTS:
 	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed '$(transform)'`; \
 	done
 
-install-man1:
-	$(mkinstalldirs) $(DESTDIR)$(man1dir)
-	@list='$(man1_MANS)'; \
-	l2='$(man_MANS)'; for i in $$l2; do \
-	  case "$$i" in \
-	    *.1*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
-	  else file=$$i; fi; \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " $(INSTALL_DATA) $$file $(DESTDIR)$(man1dir)/$$inst"; \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(man1dir)/$$inst; \
-	done
-
-uninstall-man1:
-	@list='$(man1_MANS)'; \
-	l2='$(man_MANS)'; for i in $$l2; do \
-	  case "$$i" in \
-	    *.1*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " rm -f $(DESTDIR)$(man1dir)/$$inst"; \
-	  rm -f $(DESTDIR)$(man1dir)/$$inst; \
-	done
-
 install-man8:
 	$(mkinstalldirs) $(DESTDIR)$(man8dir)
 	@list='$(man8_MANS)'; \
@@ -499,10 +465,10 @@ uninstall-man8:
 	done
 install-man: $(MANS)
 	@$(NORMAL_INSTALL)
-	$(MAKE) $(AM_MAKEFLAGS) install-man1 install-man8
+	$(MAKE) $(AM_MAKEFLAGS) install-man8
 uninstall-man:
 	@$(NORMAL_UNINSTALL)
-	$(MAKE) $(AM_MAKEFLAGS) uninstall-man1 uninstall-man8
+	$(MAKE) $(AM_MAKEFLAGS) uninstall-man8
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -720,8 +686,7 @@ install-strip:
 installdirs: installdirs-recursive
 installdirs-am:
 	$(mkinstalldirs)  $(DESTDIR)$(libdir) $(DESTDIR)$(bindir) \
-		$(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man1 \
-		$(DESTDIR)$(mandir)/man8
+		$(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man8
 
 
 mostlyclean-generic:
@@ -778,12 +743,11 @@ mostlyclean-libtool distclean-libtool clean-libtool \
 maintainer-clean-libtool mostlyclean-binPROGRAMS distclean-binPROGRAMS \
 clean-binPROGRAMS maintainer-clean-binPROGRAMS uninstall-binPROGRAMS \
 install-binPROGRAMS uninstall-binSCRIPTS install-binSCRIPTS \
-install-man1 uninstall-man1 install-man8 uninstall-man8 install-man \
-uninstall-man install-data-recursive uninstall-data-recursive \
-install-exec-recursive uninstall-exec-recursive installdirs-recursive \
-uninstalldirs-recursive all-recursive check-recursive \
-installcheck-recursive info-recursive dvi-recursive \
-mostlyclean-recursive distclean-recursive clean-recursive \
+install-man8 uninstall-man8 install-man uninstall-man \
+install-data-recursive uninstall-data-recursive install-exec-recursive \
+uninstall-exec-recursive installdirs-recursive uninstalldirs-recursive \
+all-recursive check-recursive installcheck-recursive info-recursive \
+dvi-recursive mostlyclean-recursive distclean-recursive clean-recursive \
 maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
 distclean-tags clean-tags maintainer-clean-tags distdir \
 mostlyclean-depend distclean-depend clean-depend \

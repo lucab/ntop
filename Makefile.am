@@ -61,7 +61,7 @@ DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               ntop.8 ntop.txt ntop.html \
               ntop-cert.pem
 
-NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.png html/*.css html/statsicons \
+NTOPHTML = html html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png html/*.css html/statsicons \
            html/statsicons/flags html/statsicons/os \
            html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
@@ -144,7 +144,7 @@ libntopreport_la_DEPENDENCIES = config.h
 libntopreport_la_LIBADD       = $(MORELIBS)
 libntopreport_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic @DYN_FLAGS@
 
-man_MANS = ntop.8 intop/intop.1
+man_MANS = ntop.8
 
 .PHONY: snapshot
 
