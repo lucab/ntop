@@ -20,6 +20,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #
 
+AUTOMAKE_OPTIONS = 1.6   # Require Automake 1.6 or better.
 
 #
 # The name of the game with its own major, minor and release version.
