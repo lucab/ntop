@@ -1407,6 +1407,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 
   printHostDetailedInfo(el, actualDeviceId);
   printHostTrafficStats(el, actualDeviceId);
+  printHostIcmpStats(el);
   printHostFragmentStats(el, actualDeviceId);
   printHostContactedPeers(el, actualDeviceId);
   printHostUsedServices(el, actualDeviceId);
@@ -3439,10 +3440,10 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", STR_DOMAIN_STATS) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
  } else {
-   if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s?col=%s",
+   if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?dom=%s&col=%s",
 	       DOMAIN_INFO_HTML, domainName, sign) < 0)
      traceEvent(TRACE_ERROR, "Buffer overflow!");
-   if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?dom=%s?col=",
+   if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?dom=%s&col=",
 	       DOMAIN_INFO_HTML, domainName) < 0)
      traceEvent(TRACE_ERROR, "Buffer overflow!");
  }

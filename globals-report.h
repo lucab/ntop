@@ -88,6 +88,7 @@ extern void printHostDetailedInfo(HostTraffic *el, int actualDeviceId);
 extern void printServiceStats(char* svcName, ServiceStats* ss,
 			      short printSentStats);
 extern void printHostUsedServices(HostTraffic *el, int actualDeviceId);
+extern void printHostIcmpStats(HostTraffic *el);
 extern void printTableEntry(char *buf, int bufLen,
 			    char *label, char* color,
 			    float total, float percentage);

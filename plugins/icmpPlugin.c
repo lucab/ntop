@@ -196,7 +196,10 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   hosts = (HostTraffic**)malloc(i);
 
   for(i=0, num=0; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++)
-    if((myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i] != NULL)
+    if((i != myGlobals.broadcastEntryIdx) 
+       && (i != myGlobals.otherHostEntryIdx)
+       && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i] != NULL)
+       && (!broadcastHost(myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]))
        && (myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i]->icmpInfo != NULL)) {
       hosts[num++] = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[i];
     }

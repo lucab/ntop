@@ -20,9 +20,12 @@
 
 #include "ntop.h"
 
+/* Good
 #define MIN_NUM_USES   3
-
-#define MAX_NUM_PURGED_HOSTS  256
+#define MAX_NUM_PURGED_HOSTS  512
+*/
+#define MIN_NUM_USES             1
+#define MAX_NUM_PURGED_HOSTS  1024
 
 /* ******************************* */
 
@@ -314,7 +317,7 @@ void freeHostInstances(int actualDeviceId) {
 /* #define DEBUG */
 
 void purgeIdleHosts(int actDevice) {
-  u_int idx, numFreedBuckets=0, len, hashLen, maxBucket = 0;
+  u_int idx, numFreedBuckets=0, len, hashLen, maxBucket = 0, theIdx, hashFull = 0;
   time_t startTime = time(NULL);
   static time_t lastPurgeTime = 0;
   HostTraffic **theFlaggedHosts;
@@ -348,23 +351,39 @@ void purgeIdleHosts(int actDevice) {
   accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
   /* Calculates entries to free */
-  for(idx=1; idx<hashLen; idx++)
-    if(myGlobals.device[actDevice].hash_hostTraffic[idx] != NULL) {
-      if((idx != myGlobals.otherHostEntryIdx)
-	 && (myGlobals.device[actDevice].hash_hostTraffic[idx]->numUses < MIN_NUM_USES)
-	 && (!subnetPseudoLocalHost(myGlobals.device[actDevice].hash_hostTraffic[idx]))) {
+  for(theIdx = (myGlobals.actTime % hashLen),
+	hashFull = 0,
+	idx=1; idx<hashLen; idx++) {
+    HostTraffic *el;
 
-	if(!myGlobals.stickyHosts) {
-	    theFlaggedHosts[maxBucket++] = myGlobals.device[actDevice].hash_hostTraffic[idx];
-	    myGlobals.device[actDevice].hash_hostTraffic[idx] = NULL;
-	    if(maxBucket == (MAX_NUM_PURGED_HOSTS-1))
-	      break;
+    if((theIdx == myGlobals.broadcastEntryIdx) || (theIdx == myGlobals.otherHostEntryIdx)) {
+      theIdx = (theIdx+1) % hashLen;
+      continue;
+    }
+
+    if((el = myGlobals.device[actDevice].hash_hostTraffic[theIdx]) != NULL) {
+      if((!hashFull)
+	 && (el->numUses < MIN_NUM_USES)) {
+
+	if((!myGlobals.stickyHosts)
+	   || (myGlobals.borderSnifferMode)
+	   || (!subnetPseudoLocalHost(el))) {
+	    theFlaggedHosts[maxBucket++] = el;
+	    myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
+	    if(maxBucket == (MAX_NUM_PURGED_HOSTS-1)) {
+	      hashFull = 1;
+	      continue;
+	    }
 	}
       }
-
-      if(myGlobals.device[actDevice].hash_hostTraffic[idx] != NULL)
-	  myGlobals.device[actDevice].hash_hostTraffic[idx]->numUses = 0;
+      
+      /* If (*) the entry might be NULL */
+      if(myGlobals.device[actDevice].hash_hostTraffic[theIdx] != NULL)
+	myGlobals.device[actDevice].hash_hostTraffic[theIdx]->numUses = 0;
     }
+
+    theIdx = (theIdx+1) % hashLen;
+  }
 
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
@@ -376,14 +395,14 @@ void purgeIdleHosts(int actDevice) {
     traceEvent(TRACE_INFO, "Purging host (idx=%d/%s) (%d hosts purged)",
 	       idx, theFlaggedHosts[idx]->hostSymIpAddress, numFreedBuckets);
 #endif
-    
+
     freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
     numFreedBuckets++;
   }
 
   free(theFlaggedHosts);
 
-#ifdef DEBUG
+#ifndef DEBUG
   if(numFreedBuckets > 0) {
     traceEvent(TRACE_INFO, "Purging completed in %d sec [%d hosts deleted]",
 	       (int)(time(NULL)-startTime), numFreedBuckets);
@@ -802,17 +821,17 @@ void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
 /* ************************************ */
 
 int retrieveHost(HostSerial theSerial, HostTraffic *el) {
-  if((theSerial != NO_PEER) 
+  if((theSerial != NO_PEER)
      && (theSerial != myGlobals.broadcastEntryIdx /* Safety check: broadcast */)) {
     datum key_data;
     datum data_data;
     char buf[128];
 
     if(theSerial == myGlobals.broadcastEntryIdx) {
-      memcpy(el, &myGlobals.broadcastEntry, sizeof(HostTraffic));
+      memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
       return(0);
     } else if(theSerial == myGlobals.otherHostEntryIdx) {
-      memcpy(el, &myGlobals.otherHostEntry, sizeof(HostTraffic));
+      memcpy(el, myGlobals.otherHostEntry, sizeof(HostTraffic));
       return(0);
     }
 
@@ -827,7 +846,7 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif
-      
+
     if(data_data.dptr != NULL) {
       memset(el, 0, sizeof(HostTraffic));
       /* memset(&el->flags, 0, sizeof(fd_set)); */

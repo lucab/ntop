@@ -3087,8 +3087,15 @@ void _incrementUsageCounter(UsageCounter *counter,
 	       peerIdx, myGlobals.device[actualDeviceId].actualHashSize, file, line);
     return;
   } 
-  
- if((theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(peerIdx)]) == NULL) {
+
+  if(myGlobals.borderSnifferMode
+     && ((peerIdx == myGlobals.broadcastEntryIdx)
+	 || (peerIdx == myGlobals.otherHostEntryIdx))) {
+    return;
+  }
+
+ if((theHost = myGlobals.device[actualDeviceId].
+     hash_hostTraffic[checkSessionIdx(peerIdx)]) == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: wrong Index %u @ %s:%d",
 	       peerIdx, file, line);
     return;

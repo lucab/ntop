@@ -34,7 +34,7 @@ void formatUsageCounter(UsageCounter usageCtr,
   char buf[BUF_SIZE];
   int i, sendHeader=0;
   HostTraffic el;
-  
+
   if(topValue == 0) {
     /* No percentage is printed */
     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
@@ -61,14 +61,14 @@ void formatUsageCounter(UsageCounter usageCtr,
 	  sendString("<TD "TD_BG" ALIGN=LEFT><ul>");
 	  sendHeader = 1;
 	}
-	
-	sendString("\n<li>");     
+
+	sendString("\n<li>");
 	sendString(makeHostLink(&el, 0, 0, 0));
       } else
 	traceEvent(TRACE_INFO, "Unable to find serial %u", usageCtr.peersIndexes[i]);
     }
   }
-  
+
   if(sendHeader)
     sendString("</ul></TD>\n");
   else
@@ -829,11 +829,11 @@ int cmpFctn(const void *_a, const void *_b) {
       }
     } else {
       a_ = (*a)->ipBytesRcvd, b_ = (*b)->ipBytesRcvd;
-      
+
       if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
 	/* other IP */
 	int i;
-	
+
 	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
 	  a_val = ((*a)->protoIPTrafficInfos[i].rcvdLoc
 		   +(*a)->protoIPTrafficInfos[i].rcvdFromRem);
@@ -847,7 +847,7 @@ int cmpFctn(const void *_a, const void *_b) {
       }
     }
     break;
-  case 2: /* STR_SORT_DATA_RECEIVED_THPT */    
+  case 2: /* STR_SORT_DATA_RECEIVED_THPT */
     switch(myGlobals.columnSort) {
     case 1:
       fa_ = (*a)->actualRcvdThpt, fb_ = (*b)->actualRcvdThpt, floatCompare = 1;
@@ -944,13 +944,13 @@ int cmpFctn(const void *_a, const void *_b) {
       if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
 	/* other IP */
 	int i;
-	
+
 	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
 	  a_val = ((*a)->protoIPTrafficInfos[i].sentLoc
 		   +(*a)->protoIPTrafficInfos[i].sentRem);
 	  b_val = ((*b)->protoIPTrafficInfos[i].sentLoc
 		   +(*b)->protoIPTrafficInfos[i].sentRem);
-	  
+
 	  /* Better be safe... */
 	  if(a_ > a_val) a_ -= a_val; else a_ = 0;
 	  if(b_ > b_val) b_ -= b_val; else b_ = 0;
@@ -1834,8 +1834,102 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
 /* ************************************ */
 
+void printHostIcmpStats(HostTraffic *el) {
+  char buf[BUF_SIZE];
+
+  if(el->icmpInfo == NULL) return;
+
+  sendString("<CENTER>\n<H1>ICMP Traffic</H1><p>\n");
+  sendString("<TABLE BORDER>\n");
+  sendString("<TR><th>Type</th>"
+	     "<TH ALIGN=LEFT>Pkt&nbsp;Sent</TH>"
+	     "<TH ALIGN=LEFT>Pkt&nbsp;Rcvd</TH></TR>\n");
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Echo Request</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHO]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHO])) < 0)
+    BufferOverflow();
+  sendString(buf);
+     
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Echo Reply</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY])) < 0)
+    BufferOverflow();
+  sendString(buf);
+  
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Unreach</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_UNREACH]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH])) < 0)
+    BufferOverflow();
+  sendString(buf);
+  
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Redirect</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_REDIRECT]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT])) < 0)
+    BufferOverflow();
+  sendString(buf);
+  
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Router Advertisement</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT])) < 0)
+    BufferOverflow();
+  sendString(buf);
+  
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Time Exceeded</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED])) < 0)
+    BufferOverflow();
+  sendString(buf);
+  
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Parameter Problem</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB])) < 0)
+    BufferOverflow();
+  sendString(buf);
+  
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Network Mask Request</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREQ]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ])) < 0)
+    BufferOverflow();
+  sendString(buf);
+  
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Network Mask Reply</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY])) < 0)
+    BufferOverflow();
+  sendString(buf);
+  
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Source Quench</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH])) < 0)
+    BufferOverflow();
+  sendString(buf);
+  
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Timestamp</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP]),
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP])) < 0)
+    BufferOverflow();
+  sendString(buf);
+  
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Info Request</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST])) < 0)
+    BufferOverflow();
+  sendString(buf);
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Info Reply</TH><TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s</TD></TR>",
+	      formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY]), 
+	      formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY])) < 0)
+    BufferOverflow();
+  sendString(buf);
+
+  sendString("</TABLE></CENTER>\n");
+}
+
+/* ************************************ */
+
 void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
-  u_int i;
+  u_int i, titleSent = 0;
   char buf[BUF_SIZE];
 
   if((el->pktSent != 0) || (el->pktRcvd != 0)) {
@@ -1852,16 +1946,17 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       struct hostTraffic *el1, el2;
       int numEntries;
 
-      printSectionTitle("Last Contacted Peers");
-      sendString("<CENTER>\n"
-		 "<TABLE BORDER=0 WIDTH=100%><TR><TD "TD_BG" VALIGN=TOP>\n");
-
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	  if((el->contactedSentPeers.peersIndexes[i] != NO_PEER)
 	     && (el->contactedSentPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) {
 
-	    if(retrieveHost(el->contactedSentPeers.peersIndexes[i], &el2) == 0) {	   
+	    if(retrieveHost(el->contactedSentPeers.peersIndexes[i], &el2) == 0) {
 	      if(numEntries == 0) {
+		printSectionTitle("Last Contacted Peers");
+		titleSent = 1;
+		sendString("<CENTER>\n"
+			   "<TABLE BORDER=0 WIDTH=100%><TR><TD "TD_BG" VALIGN=TOP>\n");
+
 		sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
 			   "<TR><TH "TH_BG">Sent To</TH>"
 			   "<TH "TH_BG">Address</TH></TR>\n");
@@ -1870,7 +1965,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 			  "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
 			  getRowColor(), makeHostLink(&el2, 0, 0, 0),
-			  el2.hostNumIpAddress) < 0) 
+			  el2.hostNumIpAddress) < 0)
 		BufferOverflow();
 
 	      sendString(buf);
@@ -1884,28 +1979,30 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	sendString("&nbsp;</TD><TD "TD_BG">\n");
 
       /* ***************************************************** */
+
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	if((el->contactedRcvdPeers.peersIndexes[i] != NO_PEER)   
+	if((el->contactedRcvdPeers.peersIndexes[i] != NO_PEER)
 	   && (el->contactedRcvdPeers.peersIndexes[i] != myGlobals.otherHostEntryIdx)) {
-	  
-	  if(retrieveHost(el->contactedRcvdPeers.peersIndexes[i], &el2) == 0) {	   
+
+	  if(retrieveHost(el->contactedRcvdPeers.peersIndexes[i], &el2) == 0) {
 	      if(numEntries == 0) {
+		if(!titleSent) printSectionTitle("Last Contacted Peers");
 		sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%>"
 			   "<TR><TH "TH_BG">Recevived From</TH>"
 			   "<TH "TH_BG">Address</TH></TR>\n");
 	      }
-	      
+
 	      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
 			  "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
 			  getRowColor(), makeHostLink(&el2, 0, 0, 0),
-			  el2.hostNumIpAddress) < 0) 
+			  el2.hostNumIpAddress) < 0)
 		BufferOverflow();
-	      
+
 	      sendString(buf);
 	      numEntries++;
 	    }
 	  }
-	  
+
 
       if(numEntries > 0)
 	sendString("</TABLE>"TABLE_OFF"\n");
@@ -2364,10 +2461,10 @@ static int guessHops(HostTraffic *el) {
   else if(el->minTTL <= 64) numHops = 64 - el->minTTL;
   else if(el->minTTL <= 128) numHops = 128 - el->minTTL;
   else if(el->minTTL <= 256) numHops = 255 - el->minTTL;
-  
+
   return(numHops);
 }
-  
+
 /* ************************************ */
 
 void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
@@ -2990,7 +3087,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		getRowColor(), "Further Host Information", el->hostNumIpAddress) < 0)
       BufferOverflow();
     sendString(buf);
-    
+
     if(myGlobals.mapperURL) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "<IMG SRC=\"%s?host=%s\" WIDTH=320 HEIGHT=200></TD></TR>\n",
