@@ -1377,7 +1377,7 @@ A. ntop is designed as a hybrid packet analyzer, not a pure Ethernet analyzer
 Q. I am using a /16 (/25 or whatever) mask and I get this message:
       Truncated network size to 1024 hosts (real netmask 255.255.255.0)
 A. Yes.  ntop limits each network to 1024 hosts (a /24). If you need more, alter the
-   #define for MAX_SUBNET_HOSTS in ntop.h and recompile.  Space has to be reserved 
+   #define for MAX_SUBNET_HOSTS in globals-defines.h and recompile.  Space has to be reserved 
    for this many hosts for each network, so the limit exists to keep memory usage
    from growing to absurd levels on people with "class A" (/8) interfaces (e.g. 10. or
    Cable Modems, etc.).
@@ -1385,7 +1385,7 @@ A. Yes.  ntop limits each network to 1024 hosts (a /24). If you need more, alter
 
 Q. How does ntop purge idle hosts?
 A. ntop tracks the last timestamp of a packet on a per-host and per-session
-   basis.  After a period of time - configured through a #define in ntop.h -
+   basis.  After a period of time - configured through a #define in globals-defines.h -
    with no packets received, the host is eligible for purge.  Purge starts
    in a random place in the list and selects the eligibles up to a per-cycle
    limit (512 hosts or 1/3 of the hash size). 
@@ -1461,7 +1461,7 @@ A. ntop holds a lot of information about each host it has seen in an in-memory t
    been idle for a period of time.
    
    You can change the sizing of the table and the flushing interval via #define 
-   statements in ntop.h.  
+   statements in globals-defines.h.  
    
    But realistically, ntop needs enough memory to hold information about what's 
    active on YOUR network.
