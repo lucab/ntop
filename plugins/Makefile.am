@@ -37,7 +37,7 @@ SUFFIXES    = .so
 # 
 plugindir = $(libdir)/ntop/plugins
 
-INCLUDES = -I.. @INCS@
+INCLUDES = -I.. @INCS@ -I../myrrd
 
 #
 # The meat for ntop
@@ -76,7 +76,7 @@ libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
 librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
-librrdPlugin_la_LIBADD = -L../myrrd -lmyrrd
+librrdPlugin_la_LIBADD = -L../myrrd/ -lmyrrd
 
 libsnmpPlugin_la_SOURCES = snmpPlugin.c
 libsnmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@

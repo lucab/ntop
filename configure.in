@@ -2845,7 +2845,7 @@ if test ".${CCLD}" = "."; then
 fi
 
 dnl> Append RRD finally
-NTOP_APPENDS([${MYRRD}], [${MYRRD}], [myrrd])
+dnl> NTOP_APPENDS([${MYRRD}], [${MYRRD}], [myrrd])
 
 echo
 echo "-------------------------------------------------------------------"
