@@ -225,16 +225,16 @@ static void loadPlugin(char* dirName, char* pluginName) {
     newFlow->fcode = (struct bpf_program*)calloc(MAX_NUM_DEVICES, sizeof(struct bpf_program));
     newFlow->flowName = strdup(pluginInfo->pluginName);
 
-    if((pluginInfo->bpfFilter == NULL)
-       || (pluginInfo->bpfFilter[0] == '\0')) {
-	traceEvent(CONST_TRACE_NOISY, "Note: Plugin '%s' has an empty BPF filter (this may not be wrong)",
-	pluginPath);
+    if((pluginInfo->bpfFilter == NULL) || (pluginInfo->bpfFilter[0] == '\0')) {
+      if(pluginInfo->pluginFunct != NULL)
+	traceEvent(CONST_TRACE_NOISY, "Note: Plugin '%s' has an empty BPF filter (this may not be wrong)", 
+		   pluginPath);
       for(i=0; i<myGlobals.numDevices; i++)
 	newFlow->fcode[i].bf_insns = NULL;
     } else {
       strncpy(tmpBuf, pluginInfo->bpfFilter, sizeof(tmpBuf));
       tmpBuf[sizeof(tmpBuf)-1] = '\0'; /* just in case bpfFilter is too long... */
-
+      
       for(i=0; i<myGlobals.numDevices; i++) 
 	if(!myGlobals.device[i].virtualDevice) {
 	  traceEvent(CONST_TRACE_NOISY, "Compiling filter '%s' on interface %s", 
@@ -348,9 +348,9 @@ void unloadPlugins(void) {
       traceEvent(CONST_TRACE_INFO, "PLUGIN_TERM: Unloading plugin '%s'",
 		 flows->pluginStatus.pluginPtr->pluginName);
 #endif
-      if((flows->pluginStatus.pluginPtr->termFunc != NULL)
+      if((flows->pluginStatus.pluginPtr->termFunct != NULL)
 	 && (flows->pluginStatus.activePlugin))
-	flows->pluginStatus.pluginPtr->termFunc();
+	flows->pluginStatus.pluginPtr->termFunct();
 
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
       shl_unload((shl_t)flows->pluginStatus.pluginMemoryPtr);
@@ -389,9 +389,9 @@ void startPlugins(void) {
     if(flows->pluginStatus.pluginPtr != NULL) {
       traceEvent(CONST_TRACE_NOISY, "Starting '%s'",
 		 flows->pluginStatus.pluginPtr->pluginName);
-      if((flows->pluginStatus.pluginPtr->startFunc != NULL)
+      if((flows->pluginStatus.pluginPtr->startFunct != NULL)
 	 && (flows->pluginStatus.activePlugin))
-	rc = flows->pluginStatus.pluginPtr->startFunc();
+	rc = flows->pluginStatus.pluginPtr->startFunct();
         if (rc != 0)
 	  flows->pluginStatus.activePlugin = 0;
     }

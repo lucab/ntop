@@ -280,7 +280,7 @@ char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
                                tmpBuf);
 #endif
 
-  if (special == TRUE) {
+  if(special == TRUE) {
 
       /* Search the database for the specified MAC address - full 48 bit */
 
@@ -293,7 +293,7 @@ char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
 
       data_data = gdbm_fetch(myGlobals.macPrefixFile, key_data);
 
-      if ( (data_data.dptr != NULL) && ( ((MACInfo*)data_data.dptr)->isSpecial = 's') ) {
+      if( (data_data.dptr != NULL) && ( ((MACInfo*)data_data.dptr)->isSpecial = 's') ) {
           strncpy(tmpBuf, ((MACInfo*)data_data.dptr)->vendorName, sizeof(tmpBuf));
           free(data_data.dptr);
           myGlobals.numVendorLookupFound48bit++;
@@ -323,13 +323,25 @@ char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
     }
   }
 
+ 
   /* Hand coded for LAA/Multicast */
-  if (ethAddress[0] && 0x01 != 0) {
+  if(((ethAddress[5] & 0x01) == 0) && ((ethAddress[6] & 0x01) == 0)) {
+    /*
+      This is a dummy MAC that instead contains an IP addresses
+      in the first four bytes
+      
+      Example: 0D:68:2B:C1:00:00
+    */
+    return("");
+  }
+
+ /* Hand coded for LAA/Multicast */
+  if((ethAddress[0] & 0x01) != 0) {
     myGlobals.numVendorLookupFoundMulticast++;
     return("Multicast");
   }
 
-  if (ethAddress[0] && 0x02 != 0) {
+  if(ethAddress[0] & 0x02 != 0) {
     myGlobals.numVendorLookupFoundLAA++;
     return("LAA (Locally assigned address)");
   }
@@ -397,11 +409,11 @@ void createVendorTable(void) {
       j=0;
       for(idx=0; ipxSAP[idx].ipxsapName != NULL; idx++)
 	j += addIPXSAPTableEntry(ipxSAPhash, &ipxSAP[idx], i);
-      if (j == 0) {
+      if(j == 0) {
 	best=0;
 	besti=i;
 	break;
-      } else if ( j < best ) {
+      } else if( j < best ) {
 	best = j;
 	besti = i;
 	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "TEST_HASHSIZE: ipxSAP %3d %3d\n", i, j);
@@ -476,24 +488,24 @@ void createVendorTable(void) {
 	while (compressedFormat ? gzgets(fd, tmpLine, sizeof(tmpLine)) : fgets(tmpLine, sizeof(tmpLine), fd)) {
 	  numRead++;
 	  myGlobals.numVendorLookupRead++;
-	  if ( (strstr(tmpLine, "(base") == NULL) &&
+	  if( (strstr(tmpLine, "(base") == NULL) &&
 	       (strstr(tmpLine, "(special") == NULL) ) {
 	    continue;
 	  }
 	  tmpMAC = strtok_r(tmpLine, " \t", &strtokState);
-	  if (tmpMAC == NULL) continue;
+	  if(tmpMAC == NULL) continue;
 	  tmpTag1 = strtok_r(NULL, " \t", &strtokState);
-	  if (tmpTag1 == NULL) continue;
-	  if ( (strcmp(tmpTag1, "(base") == 0) || 
+	  if(tmpTag1 == NULL) continue;
+	  if( (strcmp(tmpTag1, "(base") == 0) || 
 	       (strcmp(tmpTag1, "(special") == 0) ) { 
 	    tmpTag2 = strtok_r(NULL, " \t", &strtokState);
-	    if (tmpTag2 == NULL) continue;
+	    if(tmpTag2 == NULL) continue;
 	    tmpVendor = strtok_r(NULL, "\n", &strtokState);
-	    if (tmpVendor == NULL) continue;
+	    if(tmpVendor == NULL) continue;
 	    /* Skip leading blanks and tabs*/
 	    while ( (tmpVendor[0] == ' ') || (tmpVendor[0] == '\t') ) tmpVendor++;
 	    memset(&macInfoEntry, 0, sizeof(macInfoEntry));
-	    if (strcmp(tmpTag1, "(special") == 0) {
+	    if(strcmp(tmpTag1, "(special") == 0) {
 	      macInfoEntry.isSpecial = 's';
 	    } else {
 	      macInfoEntry.isSpecial = 'r';
@@ -509,7 +521,7 @@ void createVendorTable(void) {
 	    strncat(tmpMACkey, tmpMAC+2, 2);
 	    strcat(tmpMACkey, ":");
 	    strncat(tmpMACkey, tmpMAC+4, 2);
-	    if (strcmp(tmpTag2, "48)") == 0) {
+	    if(strcmp(tmpTag2, "48)") == 0) {
 	      /* special 48 - full tag */
 	      strcat(tmpMACkey, ":");
 	      strncat(tmpMACkey, tmpMAC+6, 2);
@@ -526,14 +538,13 @@ void createVendorTable(void) {
 	    } else {
 	      numLoaded++;
 	      myGlobals.numVendorLookupAdded++;
-	      if (macInfoEntry.isSpecial == 's')
+	      if(macInfoEntry.isSpecial == 's')
 		myGlobals.numVendorLookupAddedSpecial++;
 #ifdef VENDOR_DEBUG
 	      traceEvent(CONST_TRACE_INFO, "VENDOR_DEBUG: Added '%s': {%c, %s}\n",
 			 tmpMACkey, macInfoEntry.isSpecial, macInfoEntry.vendorName);
 #endif
 	    }
-
 	  }
 	}
 
@@ -547,7 +558,7 @@ void createVendorTable(void) {
       }
     }
 
-    if (configFileFound == 0) {
+    if(configFileFound == 0) {
       traceEvent(CONST_TRACE_WARNING, "VENDOR: Unable to open file '%s'", macInputFiles[idx]);
       traceEvent(CONST_TRACE_INFO, "VENDOR: ntop continues ok, but without or with partial MAC->Vendor mapping");
     }

@@ -26,10 +26,10 @@
 #endif
 
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
- #include <malloc.h>
- #ifdef HAVE_SYS_RESOURCE_H
-  #include <sys/resource.h>
- #endif
+#include <malloc.h>
+#ifdef HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
 #endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG
@@ -187,12 +187,12 @@ void showPluginsList(char* pluginName) {
 	char key[64];
 
 	if(newPluginStatus == 0 /* disabled */) {
-	  if(flows->pluginStatus.pluginPtr->termFunc != NULL)
-	    flows->pluginStatus.pluginPtr->termFunc();
+	  if(flows->pluginStatus.pluginPtr->termFunct != NULL)
+	    flows->pluginStatus.pluginPtr->termFunct();
 	} else {
-	  if(flows->pluginStatus.pluginPtr->startFunc != NULL)
-	    flows->pluginStatus.pluginPtr->startFunc();
-	  if (flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL)
+	  if(flows->pluginStatus.pluginPtr->startFunct != NULL)
+	    flows->pluginStatus.pluginPtr->startFunct();
+	  if(flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL)
 	    newPluginStatus = 0 /* Disabled */;
 	}
 
@@ -230,11 +230,11 @@ void showPluginsList(char* pluginName) {
       sendString(tmpBuf);
 
       if(flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL) {
-          if(snprintf(tmpBuf, sizeof(tmpBuf), "<TD colspan=\"4\"><font COLOR=\"#FF0000\">%s</font></TD></TR>\n<TR "TR_ON" %s>\n",
-                      flows->pluginStatus.pluginPtr->pluginStatusMessage,
-	              getRowColor()) < 0)
-	      BufferTooShort();
-          sendString(tmpBuf);
+	if(snprintf(tmpBuf, sizeof(tmpBuf), "<TD colspan=\"4\"><font COLOR=\"#FF0000\">%s</font></TD></TR>\n<TR "TR_ON" %s>\n",
+		    flows->pluginStatus.pluginPtr->pluginStatusMessage,
+		    getRowColor()) < 0)
+	  BufferTooShort();
+	sendString(tmpBuf);
       }
 
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<TD "TD_BG" ALIGN=LEFT>%s</TD>"
@@ -289,11 +289,11 @@ static char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
 
   if(myGlobals.actTime - el->firstSeen > 60*60)
     age = 60;
-  else if (myGlobals.actTime - el->firstSeen > 30*60)
+  else if(myGlobals.actTime - el->firstSeen > 30*60)
     age = 30;
-  else if (myGlobals.actTime - el->firstSeen > 15*60)
+  else if(myGlobals.actTime - el->firstSeen > 15*60)
     age = 15;
-  else if (myGlobals.actTime - el->firstSeen > 5*60)
+  else if(myGlobals.actTime - el->firstSeen > 5*60)
     age = 5;
   else
     age = 0;
@@ -596,11 +596,11 @@ char* getCountryIconURL(char* domainName, u_short fullDomainNameIsFallback) {
     }
 
     if(snprintf(flagBuf, sizeof(flagBuf),
-		"<IMG ALT=\"Flag for (ISO 3166 code) %s %s\" ALIGN=MIDDLE SRC=\"/statsicons/flags/%s.gif\" BORDER=0>%s",
+		"<IMG ALT=\"Flag for(ISO 3166 code) %s %s\" ALIGN=MIDDLE SRC=\"/statsicons/flags/%s.gif\" BORDER=0>%s",
 		domainName,
                 fullDomainNameIsFallback == TRUE ? 
-                     "(Guessing from gTLD/ccTLD)" :
-                     "(from p2c file)",
+		"(Guessing from gTLD/ccTLD)" :
+		"(from p2c file)",
                 domainName,
                 fullDomainNameIsFallback == TRUE ? " (?)" : "") < 0) BufferTooShort();
 
@@ -717,16 +717,16 @@ void shutdownNtop(void) {
   termAccessLog();
 
 #ifdef MAKE_WITH_XMLDUMP
-  if (myGlobals.xmlFileOut != NULL) {
-      int rc;
+  if(myGlobals.xmlFileOut != NULL) {
+    int rc;
 
-      traceEvent(CONST_TRACE_INFO, "Saving ntop data (xml) to %s...\n", myGlobals.xmlFileOut);
+    traceEvent(CONST_TRACE_INFO, "Saving ntop data (xml) to %s...\n", myGlobals.xmlFileOut);
 
-      /* Take the shutdown dump */
-      rc = dumpXML(1, NULL);
-      if (rc != 0) {
-          traceEvent(CONST_TRACE_ERROR, "ERROR: xml save, rc %d\n", rc);
-      }
+    /* Take the shutdown dump */
+    rc = dumpXML(1, NULL);
+    if(rc != 0) {
+      traceEvent(CONST_TRACE_ERROR, "ERROR: xml save, rc %d\n", rc);
+    }
   }
 #endif
 
@@ -753,17 +753,17 @@ static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* statu
   sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
   sendString(feature);
   sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
-  if (status == NULL) {
+  if(status == NULL) {
     sendString("(nil)");
   } else {
     snprintf(tmpBuf, sizeof(tmpBuf), "%s", status);
     tmpStr = strtok_r(tmpBuf, "\n", &strtokState);
     while(tmpStr != NULL) {
-        sendString(tmpStr);
-        tmpStr = strtok_r(NULL, "\n", &strtokState);
-        if (tmpStr != NULL) {
-            sendString(texthtml("\n          ", "<BR>"));
-        }
+      sendString(tmpStr);
+      tmpStr = strtok_r(NULL, "\n", &strtokState);
+      if(tmpStr != NULL) {
+	sendString(texthtml("\n          ", "<BR>"));
+      }
     }
   }
   sendString(texthtml("\n", "</TD></TR>\n"));
@@ -775,14 +775,14 @@ static void printParameterConfigInfo(int textPrintFlag, char* feature, char* sta
   sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
   sendString(feature);
   sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
-  if (status == NULL) {
-    if (defaultValue == NULL) {
+  if(status == NULL) {
+    if(defaultValue == NULL) {
       sendString(CONST_REPORT_ITS_DEFAULT);
     }
-  } else if ( (defaultValue != NULL) && (strcmp(status, defaultValue) == 0) ){
+  } else if( (defaultValue != NULL) && (strcmp(status, defaultValue) == 0) ){
     sendString(CONST_REPORT_ITS_DEFAULT);
   }
-  if (status == NULL) {
+  if(status == NULL) {
     sendString("(nil)");
   } else {
     sendString(status);
@@ -912,11 +912,11 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
 #ifdef MAKE_WITH_SSLWATCHDOG
   printFeatureConfigInfo(textPrintFlag, "SSLWATCHDOG_DEBUG",
- #ifdef SSLWATCHDOG_DEBUG
+#ifdef SSLWATCHDOG_DEBUG
 			 "yes"
- #else
+#else
 			 "no"
- #endif
+#endif
 			 );
 #endif
 
@@ -1015,11 +1015,11 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
 #ifdef MAKE_WITH_SSLWATCHDOG
   printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG_RUNTIME (derived)",
- #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
 			 "yes"
- #else
+#else
 			 "no"
- #endif
+#endif
 			 );
 #endif
 
@@ -1112,16 +1112,16 @@ void printNtopConfigHInfo(int textPrintFlag) {
   sendString(texthtml("\n\nCompile Time: config.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: config.h</tr>\n"));
 
-/*
- * Drop the autogenerated lines (utils/config_h2.awk) in HERE 
- */
+  /*
+   * Drop the autogenerated lines (utils/config_h2.awk) in HERE 
+   */
 
-/*                                                       B E G I N
- *
- * Autogenerated from config.h and inserted into webInterface.c 
- *      Tue Apr 08 12:06:53 CDT 2003
- *
- */
+  /*                                                       B E G I N
+   *
+   * Autogenerated from config.h and inserted into webInterface.c 
+   *      Tue Apr 08 12:06:53 CDT 2003
+   *
+   */
 
   printFeatureConfigInfo(textPrintFlag, "CFG_ETHER_HEADER_HAS_EA",
 #ifdef CFG_ETHER_HEADER_HAS_EA
@@ -2323,13 +2323,13 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-/*                                                       E N D
- *
- * Autogenerated from config.h and inserted into webInterface.c 
- *
- */
+  /*                                                       E N D
+   *
+   * Autogenerated from config.h and inserted into webInterface.c 
+   *
+   */
 
-/* Manual lines for special cases in config.h */
+  /* Manual lines for special cases in config.h */
 
   printFeatureConfigInfo(textPrintFlag, "CFG_CONFIGFILE_DIR - config file directory", CFG_CONFIGFILE_DIR);
 
@@ -2361,23 +2361,23 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-/* semi auto generated from globals-defines.h */
+  /* semi auto generated from globals-defines.h */
 
   sendString(texthtml("\n\nCompile Time: globals-defines.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-defines.h</tr>\n"));
 
-/*                                                       B E G I N
- *
- * Autogenerated from globals-defines.h and inserted into webInterface.c 
- *      Tue Apr 08 12:16:15 CDT 2003
- *
- * Manual edits:
+  /*                                                       B E G I N
+   *
+   * Autogenerated from globals-defines.h and inserted into webInterface.c 
+   *      Tue Apr 08 12:16:15 CDT 2003
+   *
+   * Manual edits:
 
    (Already part of info.html/textinfo.html):
-      MAKE_WITH_SSLWATCHDOG
-      MAKE_WITH_SSLWATCHDOG_RUNTIME
+   MAKE_WITH_SSLWATCHDOG
+   MAKE_WITH_SSLWATCHDOG_RUNTIME
 
- */
+  */
 
   printFeatureConfigNum(textPrintFlag, "EMSGSIZE", EMSGSIZE);
 
@@ -2632,11 +2632,11 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "THREAD_MODE", THREAD_MODE);
 
-/*                                                       E N D
- *
- * Autogenerated from globals-defines.h and inserted into webInterface.c 
- *
- */
+  /*                                                       E N D
+   *
+   * Autogenerated from globals-defines.h and inserted into webInterface.c 
+   *
+   */
 
 }
 
@@ -2656,7 +2656,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 #endif
 
-  if (textPrintFlag != TRUE) {
+  if(textPrintFlag != TRUE) {
     printHTMLheader("Current ntop Configuration", 0);
     sendString("<CENTER><TABLE BORDER=\"0\">"
 	       "<TR>"
@@ -2681,7 +2681,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   {
     char pid[16];
 
-    if (myGlobals.daemonMode == 1) {
+    if(myGlobals.daemonMode == 1) {
       sprintf(pid, "%d", myGlobals.basentoppid);
       printFeatureConfigInfo(textPrintFlag, "ntop Process Id", pid);
       sprintf(pid, "%d", getppid());
@@ -2694,7 +2694,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
 #endif
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
-  if (snprintf(buf, sizeof(buf), "%d", myGlobals.heartbeatCounter) < 0)
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.heartbeatCounter) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Heartbeat (counter)", buf);
   sendString(texthtml("\n\n", "<tr><td colspan=\"2\">"));
@@ -2770,14 +2770,14 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.filterExpressionInExtraFrame == 1 ? "Yes" : "No",
                            DEFAULT_NTOP_FILTER_IN_FRAME == 1 ? "Yes" : "No");
 
-  if (myGlobals.pcapLog == NULL) {
+  if(myGlobals.pcapLog == NULL) {
     printParameterConfigInfo(textPrintFlag, "-l | --pcap-log",
 			     myGlobals.pcapLog,
 			     DEFAULT_NTOP_PCAP_LOG_FILENAME);
   } else {
-    if (snprintf(buf, sizeof(buf), "%s/%s.&lt;device&gt;.pcap",
-		 myGlobals.pcapLogBasePath,
-		 myGlobals.pcapLog) < 0)
+    if(snprintf(buf, sizeof(buf), "%s/%s.&lt;device&gt;.pcap",
+		myGlobals.pcapLogBasePath,
+		myGlobals.pcapLog) < 0)
       BufferTooShort();
     printParameterConfigInfo(textPrintFlag, "-l | --pcap-log" CONST_REPORT_ITS_EFFECTIVE,
 			     buf,
@@ -2792,7 +2792,7 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.numericFlag > 0 ? "Yes" : "No",
                            DEFAULT_NTOP_NUMERIC_IP_ADDRESSES > 0 ? "Yes" : "No");
 
-  if (myGlobals.protoSpecs == NULL) {
+  if(myGlobals.protoSpecs == NULL) {
     printFeatureConfigInfo(textPrintFlag, "-p | --protocols", CONST_REPORT_ITS_DEFAULT "internal list");
   } else {
     printFeatureConfigInfo(textPrintFlag, "-p | --protocols", myGlobals.protoSpecs);
@@ -2827,9 +2827,9 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "-u | --user", buf);
 #endif
 
-  if (myGlobals.webPort == 0) {
+  if(myGlobals.webPort == 0) {
     strcpy(buf, "Inactive");
-  } else if (myGlobals.webAddr != 0) {
+  } else if(myGlobals.webAddr != 0) {
     if(snprintf(buf, sizeof(buf),
 		"%sActive, address %s, port %d",
 		( (myGlobals.webAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.webPort == DEFAULT_NTOP_WEB_PORT) ) ? CONST_REPORT_ITS_DEFAULT : "",
@@ -2878,16 +2878,16 @@ void printNtopConfigInfo(int textPrintFlag) {
 			   DEFAULT_NTOP_DEBUG_MODE == 1 ? "Yes" : "No");
 
 #ifdef MAKE_WITH_SYSLOG
-  if (myGlobals.useSyslog == FLAG_SYSLOG_NONE) {
+  if(myGlobals.useSyslog == FLAG_SYSLOG_NONE) {
     printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "No");
   } else {
-    for (i=0; myFacilityNames[i].c_name != NULL; i++) {
-      if (myFacilityNames[i].c_val == myGlobals.useSyslog) {
+    for(i=0; myFacilityNames[i].c_name != NULL; i++) {
+      if(myFacilityNames[i].c_val == myGlobals.useSyslog) {
 	printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", myFacilityNames[i].c_name);
 	break;
       }
     }
-    if (myFacilityNames[i].c_name == NULL) {
+    if(myFacilityNames[i].c_name == NULL) {
       printFeatureConfigInfo(textPrintFlag, "-L | --use-syslog", "**UNKNOWN**");
     }
   }
@@ -2912,11 +2912,11 @@ void printNtopConfigInfo(int textPrintFlag) {
                            DEFAULT_NTOP_MAPPER_URL);
 
 #ifdef HAVE_OPENSSL
-  if (myGlobals.sslInitialized == 0) {
+  if(myGlobals.sslInitialized == 0) {
     strcpy(buf, "Uninitialized");
-  } else if (myGlobals.sslPort == 0) {
+  } else if(myGlobals.sslPort == 0) {
     strcpy(buf, "Inactive");
-  } else if (myGlobals.sslAddr != 0) {
+  } else if(myGlobals.sslAddr != 0) {
     if(snprintf(buf, sizeof(buf),
 		"%sActive, address %s, port %d",
 		( (myGlobals.sslAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.sslPort == DEFAULT_NTOP_WEB_PORT) ) 
@@ -2990,16 +2990,16 @@ void printNtopConfigInfo(int textPrintFlag) {
                       "<tr><th colspan=\"2\"" TH_BG ">Run time/Internal</tr>\n"));
   
 #ifndef WIN32
-  if (myGlobals.enableExternalTools) {
+  if(myGlobals.enableExternalTools) {
     if(myGlobals.isLsofPresent) {
-      if (textPrintFlag == TRUE) {
+      if(textPrintFlag == TRUE) {
 	printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Yes");
       } else {
 	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_LSOF_URL "\" title=\"" CONST_HTML_LSOF_URL_ALT "\">lsof</A>",
 			       "Yes");
       }
     } else {
-      if (textPrintFlag == TRUE) {
+      if(textPrintFlag == TRUE) {
 	printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "Not found on system OR unable to run suid root");
       } else {
 	printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_LSOF_URL "\" title=\"" CONST_HTML_LSOF_URL_ALT "\">lsof</A>\"",
@@ -3007,7 +3007,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       }
     }
   } else {
-    if (textPrintFlag == TRUE) {
+    if(textPrintFlag == TRUE) {
       printFeatureConfigInfo(textPrintFlag, "External tool: lsof", "(no -E parameter): Disabled");
     } else {
       printFeatureConfigInfo(textPrintFlag, "External tool: <A HREF=\"" HTML_LSOF_URL "\" title=\"" CONST_HTML_LSOF_URL_ALT "\">lsof</A>",
@@ -3099,7 +3099,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  if (myGlobals.useSSLwatchdog == 1)
+  if(myGlobals.useSSLwatchdog == 1)
 #endif
     {
       if(snprintf(buf, sizeof(buf), "%d", myGlobals.numHTTPSrequestTimeouts) < 0)
@@ -3182,7 +3182,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Free (fordblks)", buf);
 
-  if (memStats.uordblks + memStats.fordblks != memStats.arena)
+  if(memStats.uordblks + memStats.fordblks != memStats.arena)
     printFeatureConfigInfo(textPrintFlag, "WARNING:", "Used+Free != Allocated");
 
   sendString(texthtml("\n\nMemory allocation - mmapped\n\n", "<tr><th colspan=\"2\">Memory allocation - mmapped</th></tr>\n"));
@@ -3197,7 +3197,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 #endif
 
-  if (textPrintFlag == TRUE) {
+  if(textPrintFlag == TRUE) {
     sendString(texthtml("\n\nMemory Usage\n\n", "<tr><th colspan=\"2\">Memory Usage</th></tr>\n"));
 
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadSize) < 0)
@@ -3208,7 +3208,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "IP to country flag table (bytes)", buf);
 
-    if (myGlobals.ipCountryCount > 0) {
+    if(myGlobals.ipCountryCount > 0) {
       if(snprintf(buf, sizeof(buf), "%.1f", (float)myGlobals.ipCountryMem/myGlobals.ipCountryCount) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Bytes per entry", buf);
@@ -3224,10 +3224,10 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Base memory usage", buf);
 
-    for (i=0; i<myGlobals.numDevices; i++)
+    for(i=0; i<myGlobals.numDevices; i++)
       totalHostsMonitored += myGlobals.device[i].hostsno;
 
-    if (totalHostsMonitored > 0) {
+    if(totalHostsMonitored > 0) {
       if(snprintf(buf, sizeof(buf), "%d = (%d + %d)", 
 		  totalHostsMonitored + myGlobals.hostsCacheLen,
 		  totalHostsMonitored,
@@ -3285,7 +3285,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
 #endif
 
-  if (textPrintFlag == TRUE) {
+  if(textPrintFlag == TRUE) {
     sendString(texthtml("\n\nMAC/IPX Hash tables\n\n", "<tr><th colspan=\"2\">MAC/IPX Hash Tables</th></tr>\n"));
 
     if(snprintf(buf, sizeof(buf), "%d", MAX_IPXSAP_NAME_HASH) < 0)
@@ -3331,12 +3331,12 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Maximum hosts to purge per cycle", buf);
 
-  if (textPrintFlag == TRUE) {
+  if(textPrintFlag == TRUE) {
     if(snprintf(buf, sizeof(buf), "%d", DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE", buf);
 
-    if (myGlobals.dynamicPurgeLimits == 1) {
+    if(myGlobals.dynamicPurgeLimits == 1) {
       if(snprintf(buf, sizeof(buf), "%f", CONST_IDLE_PURGE_MINIMUM_TARGET_TIME) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MINIMUM_TARGET_TIME", buf);
@@ -3354,10 +3354,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* **** */
 
-  for (i=0; i<myGlobals.numDevices; i++) {
-    if (snprintf(buf, sizeof(buf), "\nHost/Session counts - Device %d (%s)\n", i, myGlobals.device[i].name) < 0)
+  for(i=0; i<myGlobals.numDevices; i++) {
+    if(snprintf(buf, sizeof(buf), "\nHost/Session counts - Device %d (%s)\n", i, myGlobals.device[i].name) < 0)
       BufferTooShort();
-    if (snprintf(buf2, sizeof(buf2), "<tr><th colspan=\"2\">Host/Session counts - Device %d (%s)</th></tr>\n", i, myGlobals.device[i].name) < 0)
+    if(snprintf(buf2, sizeof(buf2), "<tr><th colspan=\"2\">Host/Session counts - Device %d (%s)</th></tr>\n", i, myGlobals.device[i].name) < 0)
       BufferTooShort();
     sendString(texthtml(buf, buf2));
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize) < 0)
@@ -3420,7 +3420,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Stored in cache (includes aliases)", buf);
 
-  if (textPrintFlag != TRUE) {
+  if(textPrintFlag != TRUE) {
     sendString("</table></td></tr>\n");
   }
 
@@ -3431,7 +3431,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Total calls", buf);
 
-    if (myGlobals.numipaddr2strCalls != myGlobals.numFetchAddressFromCacheCalls) {
+    if(myGlobals.numipaddr2strCalls != myGlobals.numFetchAddressFromCacheCalls) {
       if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCalls) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "ERROR: cache fetch attempts != ipaddr2str() calls", buf);
@@ -3476,14 +3476,14 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
 
-    if (textPrintFlag != TRUE) {
+    if(textPrintFlag != TRUE) {
       sendString("</table></td></tr>\n");
     }
   }
 
 #endif
 
-  if (textPrintFlag == TRUE) {
+  if(textPrintFlag == TRUE) {
     sendString("\n\nResolved - resolveAddress():\n\n");
 
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveAddressCalls) < 0)
@@ -3513,12 +3513,12 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Gives: # gethost (DNS lookup) calls", buf);
 
-    if ((myGlobals.numResolveAddressCalls
+    if((myGlobals.numResolveAddressCalls
 #ifdef PARM_USE_HOST
-	 - myGlobals.numResolvedFromHostAddresses
+	- myGlobals.numResolvedFromHostAddresses
 #endif
-	 - myGlobals.numResolveNoCacheDB
-	 - myGlobals.numResolvedFromCache) != myGlobals.numAttemptingResolutionWithDNS) {
+	- myGlobals.numResolveNoCacheDB
+	- myGlobals.numResolvedFromCache) != myGlobals.numAttemptingResolutionWithDNS) {
       if(snprintf(buf, sizeof(buf), "%d", myGlobals.numAttemptingResolutionWithDNS) < 0)
 	BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "    ERROR: actual count does not match!", buf);
@@ -3543,7 +3543,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "....Failed", buf);
 
-  if (textPrintFlag == TRUE) {
+  if(textPrintFlag == TRUE) {
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorHostNotFound) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "........HOST_NOT_FOUND", buf);
@@ -3574,7 +3574,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Host addresses kept numeric", buf);
 
 
-  if (textPrintFlag != TRUE) {
+  if(textPrintFlag != TRUE) {
     sendString("</table><br>\n");
     sendString("<table><tr><td><b>REMEMBER</b>:&nbsp;\n"
 	       "'DNS lookups stored in cache' includes HOST_NOT_FOUND "
@@ -3652,7 +3652,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
     for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
       if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr != 0) {
-	if (++countBadGuys == 1) {
+	if(++countBadGuys == 1) {
 	  sendString(texthtml("\n\nIP Address reject list\n\n",
 			      "<tr><th colspan=\"2\">IP Address reject list</th></tr>\n"));
 	  sendString(texthtml("\nAddress ... Count ... Last Bad Access ... Lockout Expires\n",
@@ -3672,7 +3672,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 	lockoutExpires = myGlobals.weDontWantToTalkWithYou[i].lastBadAccess + 
 	  PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL;
 	strftime(buf4, sizeof(buf4), "%c", localtime_r(&lockoutExpires, &t));
-	if (textPrintFlag) {
+	if(textPrintFlag) {
 	  sendString("    ");
 	  sendString(buf);
 	  sendString("... ");
@@ -3695,7 +3695,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 	}
       }
     }
-    if (countBadGuys > 0) {
+    if(countBadGuys > 0) {
   
       sendString(texthtml("\n", "</table></td>\n"));
 
@@ -3735,11 +3735,11 @@ void printNtopConfigInfo(int textPrintFlag) {
   bufUsed = 0;
 
   for(i=0; myGlobals.dataFileDirs[i] != NULL; i++) {
-    if ((bufUsed = snprintf(&buf[bufPosition],
-			    bufLength,
-			    "%s%s\n",
-                            i > 0 ? "                " : "",
-                            myGlobals.dataFileDirs[i])) < 0)
+    if((bufUsed = snprintf(&buf[bufPosition],
+			   bufLength,
+			   "%s%s\n",
+			   i > 0 ? "                " : "",
+			   myGlobals.dataFileDirs[i])) < 0)
       BufferTooShort();
     if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
@@ -3752,11 +3752,11 @@ void printNtopConfigInfo(int textPrintFlag) {
   bufUsed = 0;
 
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
-    if ((bufUsed = snprintf(&buf[bufPosition],
-			    bufLength,
-			    "%s%s\n",
-                            i > 0 ? "                  " : "",
-			    myGlobals.configFileDirs[i])) < 0)
+    if((bufUsed = snprintf(&buf[bufPosition],
+			   bufLength,
+			   "%s%s\n",
+			   i > 0 ? "                  " : "",
+			   myGlobals.configFileDirs[i])) < 0)
       BufferTooShort();
     if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
@@ -3769,10 +3769,10 @@ void printNtopConfigInfo(int textPrintFlag) {
   bufUsed = 0;
 
   for(i=0; myGlobals.pluginDirs[i] != NULL; i++) {
-    if ((bufUsed = snprintf(&buf[bufPosition],
-			    bufLength, "%s%s\n",
-                            i > 0 ? "             " : "",
-                            myGlobals.pluginDirs[i])) < 0)
+    if((bufUsed = snprintf(&buf[bufPosition],
+			   bufLength, "%s%s\n",
+			   i > 0 ? "             " : "",
+			   myGlobals.pluginDirs[i])) < 0)
       BufferTooShort();
     if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
@@ -3786,7 +3786,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   sendString(texthtml("\n\nCompile Time: ./configure\n\n", "<tr><th colspan=\"2\"" TH_BG ">Compile Time: ./configure</tr>\n"));
   printFeatureConfigInfo(textPrintFlag, "./configure parameters", configure_parameters);
   printFeatureConfigInfo(textPrintFlag, "Built on (Host)", host_system_type);
-  printFeatureConfigInfo(textPrintFlag, "Built for (Target)", target_system_type);
+  printFeatureConfigInfo(textPrintFlag, "Built for(Target)", target_system_type);
   printFeatureConfigInfo(textPrintFlag, "compiler (cflags)", compiler_cflags);
   printFeatureConfigInfo(textPrintFlag, "include path", include_path);
   printFeatureConfigInfo(textPrintFlag, "system libraries", system_libs);
@@ -3818,7 +3818,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 #ifdef MAKE_WITH_I18N
 
-  if (textPrintFlag == TRUE) {
+  if(textPrintFlag == TRUE) {
     printFeatureConfigInfo(textPrintFlag, "HAVE_LOCALE_H",
 #ifdef HAVE_LOCALE_H
                            "present"
@@ -3838,31 +3838,31 @@ void printNtopConfigInfo(int textPrintFlag) {
     printFeatureConfigInfo(textPrintFlag, "Locale directory (version.c)", locale_dir);
   }
 
-  if (textPrintFlag == TRUE) {
-    if (snprintf(buf, sizeof(buf),
-                 "globals-defines.h: #define MAX_LANGUAGES_REQUESTED %d",
-                 MAX_LANGUAGES_REQUESTED) < 0)
+  if(textPrintFlag == TRUE) {
+    if(snprintf(buf, sizeof(buf),
+		"globals-defines.h: #define MAX_LANGUAGES_REQUESTED %d",
+		MAX_LANGUAGES_REQUESTED) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Languages - per request (Accept-Language:)", buf);
-    if (snprintf(buf, sizeof(buf),
-                 "globals-defines.h: #define MAX_LANGUAGES_SUPPORTED %d",
-                 MAX_LANGUAGES_SUPPORTED) < 0)
+    if(snprintf(buf, sizeof(buf),
+		"globals-defines.h: #define MAX_LANGUAGES_SUPPORTED %d",
+		MAX_LANGUAGES_SUPPORTED) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Languages supported - maximum", buf);
   }
 
-  if (snprintf(buf, sizeof(buf), "%d", myGlobals.maxSupportedLanguages + 1) < 0)
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.maxSupportedLanguages + 1) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Languages supported - actual ", buf);
 
   printFeatureConfigInfo(textPrintFlag, "Default language", myGlobals.defaultLanguage);
 
-  for (i=0; i< myGlobals.maxSupportedLanguages; i++) {
-    if (snprintf(buf, sizeof(buf), "Additional language %d", i+1) < 0)
+  for(i=0; i< myGlobals.maxSupportedLanguages; i++) {
+    if(snprintf(buf, sizeof(buf), "Additional language %d", i+1) < 0)
       BufferTooShort();
-    if (snprintf(buf2, sizeof(buf2), "'%s', time format '%s'", 
-                 myGlobals.supportedLanguages[i],
-                 myGlobals.strftimeFormat[i]) < 0)
+    if(snprintf(buf2, sizeof(buf2), "'%s', time format '%s'", 
+		myGlobals.supportedLanguages[i],
+		myGlobals.strftimeFormat[i]) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, buf, buf2);
   }
@@ -3900,7 +3900,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     defined(STORAGE_DEBUG)             || \
     defined(UNKNOWN_PACKET_DEBUG)
 #else
-  if (textPrintFlag == TRUE)
+  if(textPrintFlag == TRUE)
 #endif
     printNtopConfigHInfo(textPrintFlag);
 
@@ -3945,7 +3945,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     }
 #endif /* CFG_MULTITHREADED */
 
-  if (textPrintFlag != TRUE) {
+  if(textPrintFlag != TRUE) {
     sendString("<p>Click <a href=\"textinfo.html\" alt=\"Text version of this page\">"
 	       "here</a> for a more extensive, text version of this page, suitable for "
 	       "inclusion into a bug report!</p>\n");
@@ -4053,10 +4053,10 @@ void printNtopProblemReport(void) {
 
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
   v += myGlobals.heartbeatCounter /* If we have it */ ;
- #ifdef PROBLEMREPORTID_DEBUG
+#ifdef PROBLEMREPORTID_DEBUG
   snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat", myGlobals.heartbeatCounter, myGlobals.heartbeatCounter, v);
   sendString(buf2);
- #endif
+#endif
 #endif
 
   v += (unsigned int) t;
@@ -4074,8 +4074,8 @@ void printNtopProblemReport(void) {
 #endif
 
   raw = 0;
-  for (i=0; i<= myGlobals.numDevices; i++)
-      raw += (unsigned int) (myGlobals.device[i].ethernetBytes.value);
+  for(i=0; i<= myGlobals.numDevices; i++)
+    raw += (unsigned int) (myGlobals.device[i].ethernetBytes.value);
 
 #ifdef PROBLEMREPORTID_DEBUG
   snprintf(buf2, sizeof(buf2), "%-12s %48u %08x\n", "Bytes", raw, raw);
@@ -4083,13 +4083,13 @@ void printNtopProblemReport(void) {
 #endif
   /* Scramble the nibbles so we have some data high and some low.  Arbitrary: abcdefgh -> fhgdaecb */
   scramble = (raw & 0xf0000000) >> 16 |
-             (raw & 0x0f000000) >> 24 |
-             (raw & 0x00f00000) >> 16 |
-             (raw & 0x000f0000)       |
-             (raw & 0x0000f000) >>  4 |
-             (raw & 0x00000f00) << 20 |
-             (raw & 0x000000f0) << 16 |
-             (raw & 0x0000000f) << 24;
+    (raw & 0x0f000000) >> 24 |
+    (raw & 0x00f00000) >> 16 |
+    (raw & 0x000f0000)       |
+    (raw & 0x0000f000) >>  4 |
+    (raw & 0x00000f00) << 20 |
+    (raw & 0x000000f0) << 16 |
+    (raw & 0x0000000f) << 24;
   v ^= scramble;
 #ifdef PROBLEMREPORTID_DEBUG
   snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)", scramble, scramble, v);
@@ -4098,15 +4098,15 @@ void printNtopProblemReport(void) {
 
   i=0;
   memset(buf, 0, sizeof(buf));
-  while (v > 0) {
-      j = v % (sizeof(xvert) - 1);
-      v = v / (sizeof(xvert) - 1);
-      buf[i] = xvert[j];   
+  while(v > 0) {
+    j = v % (sizeof(xvert) - 1);
+    v = v / (sizeof(xvert) - 1);
+    buf[i] = xvert[j];   
 #ifdef PROBLEMREPORTID_DEBUG
-      snprintf(buf2, sizeof(buf2), "(%2d", j);
-      sendString(buf2);
+    snprintf(buf2, sizeof(buf2), "(%2d", j);
+    sendString(buf2);
 #endif
-      i++;
+    i++;
   }
 #ifdef PROBLEMREPORTID_DEBUG
   sendString("\n\n");
@@ -4124,89 +4124,89 @@ void printNtopProblemReport(void) {
   sendString("           Memory:        _____ MB\n");
   sendString("Network:\n");
 
-  if (myGlobals.mergeInterfaces == 1) {
-      sendString("Merged packet counts:\n");
-      if (myGlobals.device[0].droppedPkts.value > 0) {
-          snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[0].droppedPkts.value);
-          sendString(buf);
-      }
-      if (myGlobals.device[0].ethernetPkts.value > 0) {
-          snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[0].ethernetPkts.value);
-          sendString(buf);
-      }
-      if (myGlobals.device[0].broadcastPkts.value > 0) {
-          snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[0].broadcastPkts.value);
-          sendString(buf);
-      }
-      if (myGlobals.device[0].multicastPkts.value > 0) {
-          snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[0].multicastPkts.value);
-          sendString(buf);
-      }
-      if (myGlobals.device[0].ipPkts.value > 0) {
-          snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[0].ipPkts.value);
-          sendString(buf);
-      }
-      sendString("\n");
+  if(myGlobals.mergeInterfaces == 1) {
+    sendString("Merged packet counts:\n");
+    if(myGlobals.device[0].droppedPkts.value > 0) {
+      snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[0].droppedPkts.value);
+      sendString(buf);
+    }
+    if(myGlobals.device[0].ethernetPkts.value > 0) {
+      snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[0].ethernetPkts.value);
+      sendString(buf);
+    }
+    if(myGlobals.device[0].broadcastPkts.value > 0) {
+      snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[0].broadcastPkts.value);
+      sendString(buf);
+    }
+    if(myGlobals.device[0].multicastPkts.value > 0) {
+      snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[0].multicastPkts.value);
+      sendString(buf);
+    }
+    if(myGlobals.device[0].ipPkts.value > 0) {
+      snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[0].ipPkts.value);
+      sendString(buf);
+    }
+    sendString("\n");
   }
 
-  for (i=0; i<myGlobals.numDevices; i++) {
-      snprintf(buf, sizeof(buf), "     Network Interface %2d ", i);
-      sendString(buf);
-      if (myGlobals.device[0].dummyDevice)
-          sendString(" (dummy)");
-      if (myGlobals.device[i].virtualDevice)
-          sendString(" (virtual)");
-      if (myGlobals.device[i].name != NULL) {
-          sendString(" ");
-          sendString(myGlobals.device[i].name);
+  for(i=0; i<myGlobals.numDevices; i++) {
+    snprintf(buf, sizeof(buf), "     Network Interface %2d ", i);
+    sendString(buf);
+    if(myGlobals.device[0].dummyDevice)
+      sendString(" (dummy)");
+    if(myGlobals.device[i].virtualDevice)
+      sendString(" (virtual)");
+    if(myGlobals.device[i].name != NULL) {
+      sendString(" ");
+      sendString(myGlobals.device[i].name);
+    }
+    if(myGlobals.device[i].humanFriendlyName != NULL) {
+      if(myGlobals.device[i].name != NULL) {
+	if(strcmp(myGlobals.device[i].name, myGlobals.device[i].humanFriendlyName)) {
+	  sendString(" "); 
+	  sendString(myGlobals.device[i].humanFriendlyName);
+	}
+      } else {
+	sendString(" "); 
+	sendString(myGlobals.device[i].humanFriendlyName);
       }
-      if (myGlobals.device[i].humanFriendlyName != NULL) {
-          if (myGlobals.device[i].name != NULL) {
-              if (strcmp(myGlobals.device[i].name, myGlobals.device[i].humanFriendlyName)) {
-                  sendString(" "); 
-                  sendString(myGlobals.device[i].humanFriendlyName);
-              }
-          } else {
-              sendString(" "); 
-              sendString(myGlobals.device[i].humanFriendlyName);
-          }
-      }
+    }
+    sendString("\n");
+
+    if(myGlobals.device[i].filter != NULL) {
+      sendString("      Filter: ");
+      sendString(myGlobals.device[i].filter);
       sendString("\n");
+    }
 
-      if (myGlobals.device[i].filter != NULL) {
-          sendString("      Filter: ");
-          sendString(myGlobals.device[i].filter);
-          sendString("\n");
+    if(myGlobals.mergeInterfaces == 0) {
+      if(myGlobals.device[i].droppedPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[i].droppedPkts.value);
+	sendString(buf);
       }
-
-      if (myGlobals.mergeInterfaces == 0) {
-          if (myGlobals.device[i].droppedPkts.value > 0) {
-              snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[i].droppedPkts.value);
-              sendString(buf);
-          }
-          if (myGlobals.device[i].ethernetPkts.value > 0) {
-              snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[i].ethernetPkts.value);
-              sendString(buf);
-          }
-          if (myGlobals.device[i].broadcastPkts.value > 0) {
-              snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[i].broadcastPkts.value);
-              sendString(buf);
-          }
-          if (myGlobals.device[i].multicastPkts.value > 0) {
-              snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[i].multicastPkts.value);
-              sendString(buf);
-          }
-          if (myGlobals.device[i].ipPkts.value > 0) {
-              snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[i].ipPkts.value);
-              sendString(buf);
-          }
+      if(myGlobals.device[i].ethernetPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[i].ethernetPkts.value);
+	sendString(buf);
       }
+      if(myGlobals.device[i].broadcastPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[i].broadcastPkts.value);
+	sendString(buf);
+      }
+      if(myGlobals.device[i].multicastPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[i].multicastPkts.value);
+	sendString(buf);
+      }
+      if(myGlobals.device[i].ipPkts.value > 0) {
+	snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[i].ipPkts.value);
+	sendString(buf);
+      }
+    }
 
-      sendString("          Mfg: ____________________  Model: ____________________\n");
-      sendString("          NIC Speed: 10/100/1000/Other  Bus: PCI ISA USB Firewire Other\n");
-      sendString("          Location:  Public Internet / LAN / WAN\n");
-      sendString("          Bandwidth: Dialup  DSL/CableModem  fT1  T1  10Mbps T3 100Mbps+\n");
-      sendString("          # Hosts (machines): __________\n\n");
+    sendString("          Mfg: ____________________  Model: ____________________\n");
+    sendString("          NIC Speed: 10/100/1000/Other  Bus: PCI ISA USB Firewire Other\n");
+    sendString("          Location:  Public Internet / LAN / WAN\n");
+    sendString("          Bandwidth: Dialup  DSL/CableModem  fT1  T1  10Mbps T3 100Mbps+\n");
+    sendString("          # Hosts (machines): __________\n\n");
   }
   sendString("----------------------------------------------------------------------------\n");
   sendString("Log extract\n\n\n\n\n\n");
@@ -4216,809 +4216,813 @@ void printNtopProblemReport(void) {
   printNtopConfigInfo(TRUE);
   sendString("----------------------------------------------------------------------------\n");
 }
-  /* **************************************** */
+/* **************************************** */
 
-  /*
-    SSL fix courtesy of Curtis Doty <curtis@greenkey.net>
-  */
+/*
+  SSL fix courtesy of Curtis Doty <curtis@greenkey.net>
+*/
 void initWeb() {
-    int i, sockopt = 1;
-    struct sockaddr_in sockIn;
-    char value[8];
+  int i, sockopt = 1;
+  struct sockaddr_in sockIn;
+  char value[8];
 
-    traceEvent(CONST_TRACE_INFO, "WEB: Initializing");
+  traceEvent(CONST_TRACE_INFO, "WEB: Initializing");
 
-    initReports();
-    initializeWeb();
+  initReports();
+  initializeWeb();
 
-    if(myGlobals.mergeInterfaces) {
+  myGlobals.webInterfaceEnabled = 1;
+
+  if(myGlobals.mergeInterfaces) {
+    storePrefsValue("actualReportDeviceId", "0");
+  } else if(fetchPrefsValue("actualReportDeviceId", value, sizeof(value)) == -1) {
+    storePrefsValue("actualReportDeviceId", "0");
+  } else {
+    myGlobals.actualReportDeviceId = atoi(value);
+    if(myGlobals.actualReportDeviceId >= myGlobals.numDevices) {
+      traceEvent(CONST_TRACE_INFO, "Note: stored actualReportDeviceId(%d) > numDevices(%d) - "
+		 "probably leftover, reset",
+		 myGlobals.actualReportDeviceId,
+		 myGlobals.numDevices);
       storePrefsValue("actualReportDeviceId", "0");
-    } else if(fetchPrefsValue("actualReportDeviceId", value, sizeof(value)) == -1) {
-      storePrefsValue("actualReportDeviceId", "0");
-    } else {
-      myGlobals.actualReportDeviceId = atoi(value);
-      if(myGlobals.actualReportDeviceId >= myGlobals.numDevices) {
-        traceEvent(CONST_TRACE_INFO, "Note: stored actualReportDeviceId(%d) > numDevices(%d) - "
-                               "probably leftover, reset",
-                   myGlobals.actualReportDeviceId,
-                   myGlobals.numDevices);
-        storePrefsValue("actualReportDeviceId", "0");
-      }
     }
+  }
     
-    if (myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) {
-      /* Bad idea, set to 1st non-virtual device */
-      for(i=0; i<myGlobals.numDevices; i++) {
+  if(myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) {
+    /* Bad idea, set to 1st non-virtual device */
+    for(i=0; i<myGlobals.numDevices; i++) {
 #ifdef DEBUG
-        traceEvent(CONST_TRACE_INFO, "DEBUG: Device %d[%s] is v%d d%d a%d",
-                   i, myGlobals.device[i].name,
-                   myGlobals.device[i].virtualDevice,
-                   myGlobals.device[i].dummyDevice,
-                   myGlobals.device[i].activeDevice);
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Device %d[%s] is v%d d%d a%d",
+		 i, myGlobals.device[i].name,
+		 myGlobals.device[i].virtualDevice,
+		 myGlobals.device[i].dummyDevice,
+		 myGlobals.device[i].activeDevice);
 #endif
-        if(!myGlobals.device[i].virtualDevice) {
-            myGlobals.actualReportDeviceId = i;
+      if(!myGlobals.device[i].virtualDevice) {
+	myGlobals.actualReportDeviceId = i;
 #ifdef DEBUG
-            traceEvent(CONST_TRACE_INFO, "DEBUG: actualReportDeviceId invalid, changed to %d[%s]",
-                                         myGlobals.actualReportDeviceId,
-                                         myGlobals.device[myGlobals.actualReportDeviceId].name);
+	traceEvent(CONST_TRACE_INFO, "DEBUG: actualReportDeviceId invalid, changed to %d[%s]",
+		   myGlobals.actualReportDeviceId,
+		   myGlobals.device[myGlobals.actualReportDeviceId].name);
 #endif
-            break;
-        }
+	break;
       }
     }
-    traceEvent(CONST_TRACE_INFO,
-               "Note: Reporting device set to %d[%s]",
-               myGlobals.actualReportDeviceId,
-               myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName != NULL ?
-                   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName :
-                   myGlobals.device[myGlobals.actualReportDeviceId].name
-              );
+  }
+  traceEvent(CONST_TRACE_INFO,
+	     "Note: Reporting device set to %d[%s]",
+	     myGlobals.actualReportDeviceId,
+	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName != NULL ?
+	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName :
+	     myGlobals.device[myGlobals.actualReportDeviceId].name
+	     );
 
-    if(myGlobals.webPort > 0) {
-      sockIn.sin_family = AF_INET;
-      sockIn.sin_port   = (int)htons((unsigned short int)myGlobals.webPort);
+  if(myGlobals.webPort > 0) {
+    sockIn.sin_family = AF_INET;
+    sockIn.sin_port   = (int)htons((unsigned short int)myGlobals.webPort);
 #ifndef WIN32
-      if(myGlobals.webAddr) {
-	if(!inet_aton(myGlobals.webAddr, &sockIn.sin_addr)) {
-	  traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: Unable to convert address '%s' - "
-		     "not binding to a particular interface", myGlobals.webAddr);
-	  sockIn.sin_addr.s_addr = INADDR_ANY;
-	} else {
-	  traceEvent(CONST_TRACE_INFO, "WEB: Converted address '%s' - "
-		     "binding to the specific interface", myGlobals.webAddr);
-	}
+    if(myGlobals.webAddr) {
+      if(!inet_aton(myGlobals.webAddr, &sockIn.sin_addr)) {
+	traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: Unable to convert address '%s' - "
+		   "not binding to a particular interface", myGlobals.webAddr);
+	sockIn.sin_addr.s_addr = INADDR_ANY;
       } else {
-        sockIn.sin_addr.s_addr = INADDR_ANY;
+	traceEvent(CONST_TRACE_INFO, "WEB: Converted address '%s' - "
+		   "binding to the specific interface", myGlobals.webAddr);
       }
-#else
+    } else {
       sockIn.sin_addr.s_addr = INADDR_ANY;
+    }
+#else
+    sockIn.sin_addr.s_addr = INADDR_ANY;
 #endif
 
-      myGlobals.sock = socket(AF_INET, SOCK_STREAM, 0);
-      if(myGlobals.sock < 0) {
-	traceEvent(CONST_TRACE_ERROR, "WEB: FATAL_ERROR: Unable to create a new socket");
-	exit(-1);
-      }
+    myGlobals.sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(myGlobals.sock < 0) {
+      traceEvent(CONST_TRACE_ERROR, "WEB: FATAL_ERROR: Unable to create a new socket");
+      exit(-1);
+    }
 
-      setsockopt(myGlobals.sock, SOL_SOCKET, SO_REUSEADDR,
-		 (char *)&sockopt, sizeof(sockopt));
-    } else
-      myGlobals.sock = 0;
+    setsockopt(myGlobals.sock, SOL_SOCKET, SO_REUSEADDR,
+	       (char *)&sockopt, sizeof(sockopt));
+  } else
+    myGlobals.sock = 0;
 
 #ifdef HAVE_OPENSSL
-    if(myGlobals.sslInitialized) {
-      myGlobals.sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
-      if(myGlobals.sock_ssl < 0) {
-	traceEvent(CONST_TRACE_ERROR, "WEB: FATAL_ERROR: Unable to create a new socket");
-	exit(-1);
-      }
-
-      setsockopt(myGlobals.sock_ssl, SOL_SOCKET, SO_REUSEADDR,
-		 (char *)&sockopt, sizeof(sockopt));
+  if(myGlobals.sslInitialized) {
+    myGlobals.sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
+    if(myGlobals.sock_ssl < 0) {
+      traceEvent(CONST_TRACE_ERROR, "WEB: FATAL_ERROR: Unable to create a new socket");
+      exit(-1);
     }
+
+    setsockopt(myGlobals.sock_ssl, SOL_SOCKET, SO_REUSEADDR,
+	       (char *)&sockopt, sizeof(sockopt));
+  }
 #endif
 
-    if(myGlobals.webPort > 0) {
-      if(bind(myGlobals.sock, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-	traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR Port %d already in use (is another instance of ntop running?)", myGlobals.webPort);
-	closeNwSocket(&myGlobals.sock);
-	exit(-1);
-      }
+  if(myGlobals.webPort > 0) {
+    if(bind(myGlobals.sock, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
+      traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR Port %d already in use (is another instance of ntop running?)", 
+		 myGlobals.webPort);
+      closeNwSocket(&myGlobals.sock);
+      exit(-1);
     }
+  }
 
 #ifdef HAVE_OPENSSL
-    if(myGlobals.sslInitialized) {
-      sockIn.sin_family = AF_INET;
-      sockIn.sin_port   = (int)htons(myGlobals.sslPort);
+  if(myGlobals.sslInitialized) {
+    sockIn.sin_family = AF_INET;
+    sockIn.sin_port   = (int)htons(myGlobals.sslPort);
 #ifndef WIN32
-      if(myGlobals.sslAddr) {
-	if(!inet_aton(myGlobals.sslAddr, &sockIn.sin_addr)) {
-	  traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: Unable to convert address '%s' - "
-		     "not binding SSL to a particular interface", myGlobals.sslAddr);
-	  sockIn.sin_addr.s_addr = INADDR_ANY;
-	} else {
-	  traceEvent(CONST_TRACE_INFO, "WEB: ERROR: Converted address '%s' - "
-		     "binding SSL to the specific interface", myGlobals.sslAddr);
-	}
+    if(myGlobals.sslAddr) {
+      if(!inet_aton(myGlobals.sslAddr, &sockIn.sin_addr)) {
+	traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: Unable to convert address '%s' - "
+		   "not binding SSL to a particular interface", myGlobals.sslAddr);
+	sockIn.sin_addr.s_addr = INADDR_ANY;
       } else {
-        sockIn.sin_addr.s_addr = INADDR_ANY;
+	traceEvent(CONST_TRACE_INFO, "WEB: ERROR: Converted address '%s' - "
+		   "binding SSL to the specific interface", myGlobals.sslAddr);
       }
-#else
+    } else {
       sockIn.sin_addr.s_addr = INADDR_ANY;
+    }
+#else
+    sockIn.sin_addr.s_addr = INADDR_ANY;
 #endif
 
-      if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-	/* Fix below courtesy of Matthias Kattanek <mattes@mykmk.com> */
-	traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: ssl port %d already in use (is another instance of ntop running?)", myGlobals.sslPort);
-	closeNwSocket(&myGlobals.sock_ssl);
-	exit(-1);
-      }
+    if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
+      /* Fix below courtesy of Matthias Kattanek <mattes@mykmk.com> */
+      traceEvent(CONST_TRACE_ERROR, "WEB: ERROR: ssl port %d already in use (is another instance of ntop running?)",
+		 myGlobals.sslPort);
+      closeNwSocket(&myGlobals.sock_ssl);
+      exit(-1);
     }
+  }
 #endif
 
-    if(myGlobals.webPort > 0) {
-      if(listen(myGlobals.sock, 2) < 0) {
-	traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR: listen(%d, 2) error %d %s",
-                                        myGlobals.sock,
-                                        errno == EADDRINUSE ? "EADDRINUSE" :
-                                            errno == EBADF ? "EBADF" :
-                                            errno == ENOTSOCK ? "ENOTSOCK" :
-                                            errno == EOPNOTSUPP ? "EOPNOTSUPP" : "unknown code");
-	closeNwSocket(&myGlobals.sock);
-	exit(-1);
-      }
+  if(myGlobals.webPort > 0) {
+    if(listen(myGlobals.sock, 2) < 0) {
+      traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR: listen(%d, 2) error %d %s",
+		 myGlobals.sock,
+		 errno == EADDRINUSE ? "EADDRINUSE" :
+		 errno == EBADF ? "EBADF" :
+		 errno == ENOTSOCK ? "ENOTSOCK" :
+		 errno == EOPNOTSUPP ? "EOPNOTSUPP" : "unknown code");
+      closeNwSocket(&myGlobals.sock);
+      exit(-1);
     }
+  }
 
 #ifdef HAVE_OPENSSL
-    if(myGlobals.sslInitialized)
-      if(listen(myGlobals.sock_ssl, 2) < 0) {
-	traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR: listen(%d, 2) error %d %s",
-                                        myGlobals.sock_ssl,
-                                        errno == EADDRINUSE ? "EADDRINUSE" :
-                                            errno == EBADF ? "EBADF" :
-                                            errno == ENOTSOCK ? "ENOTSOCK" :
-                                            errno == EOPNOTSUPP ? "EOPNOTSUPP" : "unknown code");
-	closeNwSocket(&myGlobals.sock_ssl);
-	exit(-1);
-      }
+  if(myGlobals.sslInitialized)
+    if(listen(myGlobals.sock_ssl, 2) < 0) {
+      traceEvent(CONST_TRACE_WARNING, "WEB: FATAL_ERROR: listen(%d, 2) error %d %s",
+		 myGlobals.sock_ssl,
+		 errno == EADDRINUSE ? "EADDRINUSE" :
+		 errno == EBADF ? "EBADF" :
+		 errno == ENOTSOCK ? "ENOTSOCK" :
+		 errno == EOPNOTSUPP ? "EOPNOTSUPP" : "unknown code");
+      closeNwSocket(&myGlobals.sock_ssl);
+      exit(-1);
+    }
 #endif
 
-    if(myGlobals.webPort > 0) {
-      /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-      if(myGlobals.webAddr)
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTP connections on %s port %d",
-		   myGlobals.webAddr, myGlobals.webPort);
-      else
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTP connections on port %d",
-		   myGlobals.webPort);
-    }
+  if(myGlobals.webPort > 0) {
+    /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
+    if(myGlobals.webAddr)
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTP connections on %s port %d",
+		 myGlobals.webAddr, myGlobals.webPort);
+    else
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTP connections on port %d",
+		 myGlobals.webPort);
+  }
 
 #ifdef HAVE_OPENSSL
-    if(myGlobals.sslInitialized) {
-      if(myGlobals.sslAddr)
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTPS (SSL) connections on %s port %d",
-		   myGlobals.sslAddr, myGlobals.sslPort);
-      else
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTPS (SSL) connections on port %d",
-		   myGlobals.sslPort);
-    }
+  if(myGlobals.sslInitialized) {
+    if(myGlobals.sslAddr)
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTPS (SSL) connections on %s port %d",
+		 myGlobals.sslAddr, myGlobals.sslPort);
+    else
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTPS (SSL) connections on port %d",
+		 myGlobals.sslPort);
+  }
 #endif
 
 #ifdef CFG_MULTITHREADED
-    createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for web server",
-	       myGlobals.handleWebConnectionsThreadId);
+  createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for web server",
+	     myGlobals.handleWebConnectionsThreadId);
 #endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG
- #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-    if (myGlobals.useSSLwatchdog == 1)
- #endif
-      {
-	int rc;
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+  if(myGlobals.useSSLwatchdog == 1)
+#endif
+    {
+      int rc;
 
- #ifdef SSLWATCHDOG_DEBUG
-	traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: ****S*S*L*W*A*T*C*H*D*O*G*********STARTING\n");
-	traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: P Common     Parent         Child\n");
-	traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: - ---------- -------------- --------------\n");
- #endif
+#ifdef SSLWATCHDOG_DEBUG
+      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: ****S*S*L*W*A*T*C*H*D*O*G*********STARTING\n");
+      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: P Common     Parent         Child\n");
+      traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: - ---------- -------------- --------------\n");
+#endif
 
-	if ((rc = sslwatchdogGetLock(FLAG_SSLWATCHDOG_BOTH)) != 0) {
-          /* Bad thing - can't lock the mutex */
-          sslwatchdogErrorN(">LockErr", FLAG_SSLWATCHDOG_BOTH, rc);
- #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-          /* --use-sslwatchdog?  Let's cheat - turn it off */
-          traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****Turning off sslWatchdog and continuing...\n");
-          myGlobals.useSSLwatchdog = 0;
- #else
-          /* ./configure parm? very bad... */
-          traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****SSL Watchdog set via ./configure, aborting...\n");
-          cleanup(0);
- #endif
-	}
-
-	sslwatchdogDebug("CreateThread", FLAG_SSLWATCHDOG_BOTH, "");
-	createThread(&myGlobals.sslwatchdogChildThreadId, sslwatchdogChildThread, NULL);
-	traceEvent(CONST_TRACE_INFO, "Started thread (%ld) for ssl watchdog",
-		   myGlobals.sslwatchdogChildThreadId);
-
-	signal(SIGUSR1, sslwatchdogSighandler);
-	sslwatchdogDebug("setsig()", FLAG_SSLWATCHDOG_BOTH, "");
-
-	sslwatchdogClearLock(FLAG_SSLWATCHDOG_BOTH);
+      if((rc = sslwatchdogGetLock(FLAG_SSLWATCHDOG_BOTH)) != 0) {
+	/* Bad thing - can't lock the mutex */
+	sslwatchdogErrorN(">LockErr", FLAG_SSLWATCHDOG_BOTH, rc);
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+	/* --use-sslwatchdog?  Let's cheat - turn it off */
+	traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****Turning off sslWatchdog and continuing...\n");
+	myGlobals.useSSLwatchdog = 0;
+#else
+	/* ./configure parm? very bad... */
+	traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: *****SSL Watchdog set via ./configure, aborting...\n");
+	cleanup(0);
+#endif
       }
-#endif /* MAKE_WITH_SSLWATCHDOG */
-  }
 
-  /* **************************************** */
+      sslwatchdogDebug("CreateThread", FLAG_SSLWATCHDOG_BOTH, "");
+      createThread(&myGlobals.sslwatchdogChildThreadId, sslwatchdogChildThread, NULL);
+      traceEvent(CONST_TRACE_INFO, "Started thread (%ld) for ssl watchdog",
+		 myGlobals.sslwatchdogChildThreadId);
+
+      signal(SIGUSR1, sslwatchdogSighandler);
+      sslwatchdogDebug("setsig()", FLAG_SSLWATCHDOG_BOTH, "");
+
+      sslwatchdogClearLock(FLAG_SSLWATCHDOG_BOTH);
+    }
+#endif /* MAKE_WITH_SSLWATCHDOG */
+}
+
+/* **************************************** */
 
 #ifndef WIN32
-  static void PIPEhandler(int sig) {
-    myGlobals.numHandledSIGPIPEerrors++;
-    signal (SIGPIPE, PIPEhandler);
-  }
+static void PIPEhandler(int sig) {
+  myGlobals.numHandledSIGPIPEerrors++;
+  signal (SIGPIPE, PIPEhandler);
+}
 #endif
 
-  /* **************************************** */
+/* **************************************** */
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 
-  int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag) { 
-    int waitwokeCount;
-    int rc=0, rc1;
+int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag) { 
+  int waitwokeCount;
+  int rc=0, rc1;
 
-    sslwatchdogDebugN("WaitFor=", parentchildFlag, stateValue);
+  sslwatchdogDebugN("WaitFor=", parentchildFlag, stateValue);
 
-    if (alreadyLockedFlag == FLAG_SSLWATCHDOG_ENTER_LOCKED) {
-      sslwatchdogDebug("Lock", parentchildFlag, "");
-      if ((rc = pthread_mutex_lock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
-	sslwatchdogDebugN(">LockErr", parentchildFlag, rc);
-	return rc;
-      } else {
-	sslwatchdogDebug(">Locked", parentchildFlag, "");
-      }
-    }
-    
-    /* We're going to wait until the state = our test value or abort... */
-    waitwokeCount = 0;
-
-    while (myGlobals.sslwatchdogCondvar.predicate != stateValue) { 
-      /* Test for finished flag... */ 
-      if (myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_FINISHED) { 
-	sslwatchdogDebug(">ABORT", parentchildFlag, "");
-	break;
-      } 
-      if (myGlobals.sslwatchdogCondvar.predicate == stateValue) { 
-	sslwatchdogDebug(">Continue", parentchildFlag, "");
-	break;
-      } 
-      if (waitwokeCount > PARM_SSLWATCHDOG_WAITWOKE_LIMIT) { 
-	sslwatchdogDebug(">abort(lim)", parentchildFlag, "");
-	break;
-      } 
-      sslwatchdogDebugN("wait", parentchildFlag, waitwokeCount);
-      sslwatchdogDebug("(unlock)", parentchildFlag, "");
-      rc = pthread_cond_wait(&myGlobals.sslwatchdogCondvar.condvar, 
-			     &myGlobals.sslwatchdogCondvar.mutex); 
-      sslwatchdogDebug("(lock)", parentchildFlag, "");
-      sslwatchdogDebug("woke", parentchildFlag, "");
-      waitwokeCount++;
-    } /* while */
-
-    sslwatchdogDebug("unlock", parentchildFlag, "");
-    if ((rc1 = pthread_mutex_unlock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
-      sslwatchdogDebugN(">UnlockErr", parentchildFlag, rc1);
-      return rc1;
-    } else {
-      sslwatchdogDebug(">Unlocked", parentchildFlag, "");
-    }
-    
-    return rc; /* This is the code from the while loop, above */
-  }
-
-  /* **************************************** */
-
-  int sslwatchdogClearLock(int parentchildFlag) {
-    int rc;
-
-    sslwatchdogDebug("unlock", parentchildFlag, "");
-    if ((rc = pthread_mutex_unlock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
-      sslwatchdogDebugN(">UnlockErr", parentchildFlag, rc);
-    } else {
-      sslwatchdogDebug(">Unlocked", parentchildFlag, "");
-    };
-    return rc;
-  }
-
-  /* **************************************** */
-
-  int sslwatchdogGetLock(int parentchildFlag) {
-    int rc;
-
-    sslwatchdogDebug("lock", parentchildFlag, "");
-    if ((rc = pthread_mutex_lock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
+  if(alreadyLockedFlag == FLAG_SSLWATCHDOG_ENTER_LOCKED) {
+    sslwatchdogDebug("Lock", parentchildFlag, "");
+    if((rc = pthread_mutex_lock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
       sslwatchdogDebugN(">LockErr", parentchildFlag, rc);
+      return rc;
     } else {
       sslwatchdogDebug(">Locked", parentchildFlag, "");
     }
-
-    return rc;
   }
-
-  /* **************************************** */
-
-  int sslwatchdogSignal(int parentchildFlag) {
-    int rc;
-
-    sslwatchdogDebug("signaling", parentchildFlag, "");
-    rc = pthread_cond_signal(&myGlobals.sslwatchdogCondvar.condvar);
-    if (rc != 0) {
-      sslwatchdogError("sigfail",  parentchildFlag, "");
-    } else {
-      sslwatchdogDebug("signal->", parentchildFlag, "");
-    }
-
-    return(rc);
-  }
-
-  /* **************************************** */
-
-  int sslwatchdogSetState(int stateNewValue, int parentchildFlag, 
-			  int enterLockedFlag, int exitLockedFlag) {
-    int rc=0;
     
-    sslwatchdogDebugN("SetState=", parentchildFlag, stateNewValue);
+  /* We're going to wait until the state = our test value or abort... */
+  waitwokeCount = 0;
 
-    if (enterLockedFlag != FLAG_SSLWATCHDOG_ENTER_LOCKED) {
-      rc = sslwatchdogGetLock(parentchildFlag);
-    }
+  while(myGlobals.sslwatchdogCondvar.predicate != stateValue) { 
+    /* Test for finished flag... */ 
+    if(myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_FINISHED) { 
+      sslwatchdogDebug(">ABORT", parentchildFlag, "");
+      break;
+    } 
+    if(myGlobals.sslwatchdogCondvar.predicate == stateValue) { 
+      sslwatchdogDebug(">Continue", parentchildFlag, "");
+      break;
+    } 
+    if(waitwokeCount > PARM_SSLWATCHDOG_WAITWOKE_LIMIT) { 
+      sslwatchdogDebug(">abort(lim)", parentchildFlag, "");
+      break;
+    } 
+    sslwatchdogDebugN("wait", parentchildFlag, waitwokeCount);
+    sslwatchdogDebug("(unlock)", parentchildFlag, "");
+    rc = pthread_cond_wait(&myGlobals.sslwatchdogCondvar.condvar, 
+			   &myGlobals.sslwatchdogCondvar.mutex); 
+    sslwatchdogDebug("(lock)", parentchildFlag, "");
+    sslwatchdogDebug("woke", parentchildFlag, "");
+    waitwokeCount++;
+  } /* while */
 
-    myGlobals.sslwatchdogCondvar.predicate = stateNewValue;
+  sslwatchdogDebug("unlock", parentchildFlag, "");
+  if((rc1 = pthread_mutex_unlock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
+    sslwatchdogDebugN(">UnlockErr", parentchildFlag, rc1);
+    return rc1;
+  } else {
+    sslwatchdogDebug(">Unlocked", parentchildFlag, "");
+  }
     
-    sslwatchdogSignal(parentchildFlag);
+  return rc; /* This is the code from the while loop, above */
+}
 
-    if (exitLockedFlag != FLAG_SSLWATCHDOG_RETURN_LOCKED) {
-      rc = sslwatchdogClearLock(parentchildFlag);
-    }
+/* **************************************** */
 
-    return(rc);
+int sslwatchdogClearLock(int parentchildFlag) {
+  int rc;
+
+  sslwatchdogDebug("unlock", parentchildFlag, "");
+  if((rc = pthread_mutex_unlock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
+    sslwatchdogDebugN(">UnlockErr", parentchildFlag, rc);
+  } else {
+    sslwatchdogDebug(">Unlocked", parentchildFlag, "");
+  };
+  return rc;
+}
+
+/* **************************************** */
+
+int sslwatchdogGetLock(int parentchildFlag) {
+  int rc;
+
+  sslwatchdogDebug("lock", parentchildFlag, "");
+  if((rc = pthread_mutex_lock(&myGlobals.sslwatchdogCondvar.mutex)) != 0) {
+    sslwatchdogDebugN(">LockErr", parentchildFlag, rc);
+  } else {
+    sslwatchdogDebug(">Locked", parentchildFlag, "");
   }
 
-  /* **************************************** */
+  return rc;
+}
 
-  void sslwatchdogSighandler(int signum)
-    {
-      /* If this goes off, the ssl_accept() below didn't respond */
-      signal(SIGUSR1, SIG_DFL);
-      sslwatchdogDebug("->SIGUSR1", FLAG_SSLWATCHDOG_PARENT, "");
-      longjmp (sslwatchdogJump, 1);
-    }
+/* **************************************** */
 
-  /* **************************************** */
-  /* **************************************** */
+int sslwatchdogSignal(int parentchildFlag) {
+  int rc;
+
+  sslwatchdogDebug("signaling", parentchildFlag, "");
+  rc = pthread_cond_signal(&myGlobals.sslwatchdogCondvar.condvar);
+  if(rc != 0) {
+    sslwatchdogError("sigfail",  parentchildFlag, "");
+  } else {
+    sslwatchdogDebug("signal->", parentchildFlag, "");
+  }
+
+  return(rc);
+}
+
+/* **************************************** */
+
+int sslwatchdogSetState(int stateNewValue, int parentchildFlag, 
+			int enterLockedFlag, int exitLockedFlag) {
+  int rc=0;
+    
+  sslwatchdogDebugN("SetState=", parentchildFlag, stateNewValue);
+
+  if(enterLockedFlag != FLAG_SSLWATCHDOG_ENTER_LOCKED) {
+    rc = sslwatchdogGetLock(parentchildFlag);
+  }
+
+  myGlobals.sslwatchdogCondvar.predicate = stateNewValue;
+    
+  sslwatchdogSignal(parentchildFlag);
+
+  if(exitLockedFlag != FLAG_SSLWATCHDOG_RETURN_LOCKED) {
+    rc = sslwatchdogClearLock(parentchildFlag);
+  }
+
+  return(rc);
+}
+
+/* **************************************** */
+
+void sslwatchdogSighandler(int signum)
+{
+  /* If this goes off, the ssl_accept() below didn't respond */
+  signal(SIGUSR1, SIG_DFL);
+  sslwatchdogDebug("->SIGUSR1", FLAG_SSLWATCHDOG_PARENT, "");
+  longjmp (sslwatchdogJump, 1);
+}
+
+/* **************************************** */
+/* **************************************** */
 
 void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
-    /* This is the watchdog (child) */
-    int rc;
-    struct timespec expiration;
+  /* This is the watchdog (child) */
+  int rc;
+  struct timespec expiration;
     
-    /* ENTRY: from above, state 0 (FLAG_SSLWATCHDOG_UNINIT) */
-    sslwatchdogDebug("BEGINthread", FLAG_SSLWATCHDOG_CHILD, "");
+  /* ENTRY: from above, state 0 (FLAG_SSLWATCHDOG_UNINIT) */
+  sslwatchdogDebug("BEGINthread", FLAG_SSLWATCHDOG_CHILD, "");
 
-    rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
-                             FLAG_SSLWATCHDOG_CHILD, 
-                             0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
-                             0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
+  rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
+			   FLAG_SSLWATCHDOG_CHILD, 
+			   0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
+			   0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
 
-    while (myGlobals.sslwatchdogCondvar.predicate != FLAG_SSLWATCHDOG_FINISHED) { 
+  while(myGlobals.sslwatchdogCondvar.predicate != FLAG_SSLWATCHDOG_FINISHED) { 
     
-      sslwatchdogWaitFor(FLAG_SSLWATCHDOG_HTTPREQUEST, 
-			 FLAG_SSLWATCHDOG_CHILD, 
-			 0-FLAG_SSLWATCHDOG_ENTER_LOCKED);
+    sslwatchdogWaitFor(FLAG_SSLWATCHDOG_HTTPREQUEST, 
+		       FLAG_SSLWATCHDOG_CHILD, 
+		       0-FLAG_SSLWATCHDOG_ENTER_LOCKED);
     
-      expiration.tv_sec = time(NULL) + PARM_SSLWATCHDOG_WAIT_INTERVAL; /* watchdog timeout */
-      expiration.tv_nsec = 0;
-      sslwatchdogDebug("Expires", FLAG_SSLWATCHDOG_CHILD, formatTime(&expiration.tv_sec, 0));
+    expiration.tv_sec = time(NULL) + PARM_SSLWATCHDOG_WAIT_INTERVAL; /* watchdog timeout */
+    expiration.tv_nsec = 0;
+    sslwatchdogDebug("Expires", FLAG_SSLWATCHDOG_CHILD, formatTime(&expiration.tv_sec, 0));
 
-      while (myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_HTTPREQUEST) { 
+    while(myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_HTTPREQUEST) { 
 
-	rc = sslwatchdogGetLock(FLAG_SSLWATCHDOG_CHILD);
+      rc = sslwatchdogGetLock(FLAG_SSLWATCHDOG_CHILD);
 
-	/* Suspended wait until abort or we're woken up for a request */
-	/*   Note: we hold the mutex when we come back */
-	sslwatchdogDebug("twait",    FLAG_SSLWATCHDOG_CHILD, "");
-	sslwatchdogDebug("(unlock)", FLAG_SSLWATCHDOG_CHILD, "");
-	rc = pthread_cond_timedwait(&myGlobals.sslwatchdogCondvar.condvar, 
-				    &myGlobals.sslwatchdogCondvar.mutex, 
-				    &expiration);
+      /* Suspended wait until abort or we're woken up for a request */
+      /*   Note: we hold the mutex when we come back */
+      sslwatchdogDebug("twait",    FLAG_SSLWATCHDOG_CHILD, "");
+      sslwatchdogDebug("(unlock)", FLAG_SSLWATCHDOG_CHILD, "");
+      rc = pthread_cond_timedwait(&myGlobals.sslwatchdogCondvar.condvar, 
+				  &myGlobals.sslwatchdogCondvar.mutex, 
+				  &expiration);
 
-	sslwatchdogDebug("(lock)",  FLAG_SSLWATCHDOG_CHILD, "");
-	sslwatchdogDebug("endwait", 
-			 FLAG_SSLWATCHDOG_CHILD, 
-			 ((rc == ETIMEDOUT) ? " TIMEDOUT" : ""));
+      sslwatchdogDebug("(lock)",  FLAG_SSLWATCHDOG_CHILD, "");
+      sslwatchdogDebug("endwait", 
+		       FLAG_SSLWATCHDOG_CHILD, 
+		       ((rc == ETIMEDOUT) ? " TIMEDOUT" : ""));
 
-	/* Something woke us up ... probably "https complete" or "finshed" message */
-	if (rc == ETIMEDOUT) {
-	  /* No response from the parent thread... oh dear... */
-	  sslwatchdogDebug("send(USR1)", FLAG_SSLWATCHDOG_CHILD, "");
-	  rc = pthread_kill(myGlobals.handleWebConnectionsThreadId, SIGUSR1);
-	  if (rc != 0) {
-	    sslwatchdogErrorN("sent(USR1)", FLAG_SSLWATCHDOG_CHILD, rc);
-	  } else {
-	    sslwatchdogDebug("sent(USR1)", FLAG_SSLWATCHDOG_CHILD, "");
-	  }
-	  rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
-				   FLAG_SSLWATCHDOG_CHILD, 
-				   FLAG_SSLWATCHDOG_ENTER_LOCKED,
-				   0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
-	  break;
+      /* Something woke us up ... probably "https complete" or "finshed" message */
+      if(rc == ETIMEDOUT) {
+	/* No response from the parent thread... oh dear... */
+	sslwatchdogDebug("send(USR1)", FLAG_SSLWATCHDOG_CHILD, "");
+	rc = pthread_kill(myGlobals.handleWebConnectionsThreadId, SIGUSR1);
+	if(rc != 0) {
+	  sslwatchdogErrorN("sent(USR1)", FLAG_SSLWATCHDOG_CHILD, rc);
+	} else {
+	  sslwatchdogDebug("sent(USR1)", FLAG_SSLWATCHDOG_CHILD, "");
 	}
-	if (rc == 0) {
-	  if (myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_FINISHED) {
-	    sslwatchdogDebug("woke", FLAG_SSLWATCHDOG_CHILD, "*finished*");
-	    break;
-	  }
-
-	  /* Ok, hSWC() is done, so recycle the watchdog for next time */
-	  rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
-				   FLAG_SSLWATCHDOG_CHILD, 
-				   FLAG_SSLWATCHDOG_ENTER_LOCKED,
-				   0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
+	rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
+				 FLAG_SSLWATCHDOG_CHILD, 
+				 FLAG_SSLWATCHDOG_ENTER_LOCKED,
+				 0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
+	break;
+      }
+      if(rc == 0) {
+	if(myGlobals.sslwatchdogCondvar.predicate == FLAG_SSLWATCHDOG_FINISHED) {
+	  sslwatchdogDebug("woke", FLAG_SSLWATCHDOG_CHILD, "*finished*");
 	  break;
 	}
 
-	/* rc != 0 --- error */
-	rc = sslwatchdogClearLock(FLAG_SSLWATCHDOG_CHILD);
+	/* Ok, hSWC() is done, so recycle the watchdog for next time */
+	rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_WAITINGREQUEST,
+				 FLAG_SSLWATCHDOG_CHILD, 
+				 FLAG_SSLWATCHDOG_ENTER_LOCKED,
+				 0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
+	break;
+      }
 
-      } /* while (... == FLAG_SSLWATCHDOG_HTTPREQUEST) */
-    } /* while (... != FLAG_SSLWATCHDOG_FINISHED) */
+      /* rc != 0 --- error */
+      rc = sslwatchdogClearLock(FLAG_SSLWATCHDOG_CHILD);
+
+    } /* while(... == FLAG_SSLWATCHDOG_HTTPREQUEST) */
+  } /* while(... != FLAG_SSLWATCHDOG_FINISHED) */
 
     /* Bye bye child... */
 
-    sslwatchdogDebug("ENDthread", FLAG_SSLWATCHDOG_CHILD, "");
+  sslwatchdogDebug("ENDthread", FLAG_SSLWATCHDOG_CHILD, "");
 
-    return(NULL);
-  }
+  return(NULL);
+}
    
 #endif /* MAKE_WITH_SSLWATCHDOG */
 
-  /* ******************************************* */
+/* ******************************************* */
 
-  void* handleWebConnections(void* notUsed _UNUSED_) {
+void* handleWebConnections(void* notUsed _UNUSED_) {
 #ifndef CFG_MULTITHREADED
-    struct timeval wait_time;
+  struct timeval wait_time;
 #else
-    int rc;
+  int rc;
 #endif
-    fd_set mask, mask_copy;
-    int topSock = myGlobals.sock;
+  fd_set mask, mask_copy;
+  int topSock = myGlobals.sock;
 
 #ifdef CFG_MULTITHREADED
-    traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) started...\n", myGlobals.handleWebConnectionsThreadId);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: web connections thread (%ld) started...\n", myGlobals.handleWebConnectionsThreadId);
 #endif
 
 #ifndef WIN32
 #ifdef CFG_MULTITHREADED
-    /*
-     *  The great ntop "mysterious web server death" fix... and other tales of
-     *  sorcery.
-     *
-     *PART1
-     *
-     *  The problem is that Internet Explorer (and other browsers) seem to close
-     *  the connection when they receive an unknown certificate in response to
-     *  an https:// request.  This causes a SIGPIPE and kills the web handling
-     *  thread - sometimes (for sure, the ONLY case I know of is if ntop is
-     *  run under Linux gdb connected to from a Win2K browser).
-     *
-     *  This code simply counts SIGPIPEs and ignores them. 
-     *
-     *  However, it's not that simple - under gdb under Linux (and perhaps other 
-     *  OSes), the thread mask on a child thread disables our ability to set a 
-     *  signal handler for SIGPIPE. However, gdb seems to trap the SIGPIPE and
-     *  reflect it to the code, even if the code wouldn't see it without the debug!
-     *
-     *  Hence the multi-step code.
-     *
-     *  This code SHOULD be safe.  Many other programs have had to so this.
-     *
-     *  Because I'm not sure, I've put both a compile time (--enable-ignoresigpipe)
-     *  and run-time --ignore-sigpipe option in place.
-     *
-     *  Recommended:
-     *    If you aren't seeing the "mysterious death of web server" problem:
-     *        don't worry - be happy.
-     *    If you are, try running for a while with --ignore-sigpipe
-     *        If that seems to fix it, then compile with --enable-ignoressigpipe
-     *
-     *PART2
-     *
-     *  For reasons unknown Netscape 6.2.2 (and probably others) goes into ssl_accept
-     *  and never returns.
-     *
-     *  It's been reported as a bug in Netscape 6.2.2, that has a workaround in 
-     *  openSSL 0.9.6c but I can't get it to work.
-     *
-     *  So, we create - also optional - and only if we're using ssl - a watchdog
-     *  thread.  If we've not completed the sslAccept in a few seconds, we signal
-     *  the main thread and force it to abandon the accept.
-     *
-     *  June 2002 - Burton M. Strauss III <Burton@ntopsupport.com>
-     *
-     */
+  /*
+   *  The great ntop "mysterious web server death" fix... and other tales of
+   *  sorcery.
+   *
+   *PART1
+   *
+   *  The problem is that Internet Explorer (and other browsers) seem to close
+   *  the connection when they receive an unknown certificate in response to
+   *  an https:// request.  This causes a SIGPIPE and kills the web handling
+   *  thread - sometimes (for sure, the ONLY case I know of is if ntop is
+   *  run under Linux gdb connected to from a Win2K browser).
+   *
+   *  This code simply counts SIGPIPEs and ignores them. 
+   *
+   *  However, it's not that simple - under gdb under Linux (and perhaps other 
+   *  OSes), the thread mask on a child thread disables our ability to set a 
+   *  signal handler for SIGPIPE. However, gdb seems to trap the SIGPIPE and
+   *  reflect it to the code, even if the code wouldn't see it without the debug!
+   *
+   *  Hence the multi-step code.
+   *
+   *  This code SHOULD be safe.  Many other programs have had to so this.
+   *
+   *  Because I'm not sure, I've put both a compile time (--enable-ignoresigpipe)
+   *  and run-time --ignore-sigpipe option in place.
+   *
+   *  Recommended:
+   *    If you aren't seeing the "mysterious death of web server" problem:
+   *        don't worry - be happy.
+   *    If you are, try running for a while with --ignore-sigpipe
+   *        If that seems to fix it, then compile with --enable-ignoressigpipe
+   *
+   *PART2
+   *
+   *  For reasons unknown Netscape 6.2.2 (and probably others) goes into ssl_accept
+   *  and never returns.
+   *
+   *  It's been reported as a bug in Netscape 6.2.2, that has a workaround in 
+   *  openSSL 0.9.6c but I can't get it to work.
+   *
+   *  So, we create - also optional - and only if we're using ssl - a watchdog
+   *  thread.  If we've not completed the sslAccept in a few seconds, we signal
+   *  the main thread and force it to abandon the accept.
+   *
+   *  June 2002 - Burton M. Strauss III <Burton@ntopsupport.com>
+   *
+   */
 
 #ifndef MAKE_WITH_IGNORE_SIGPIPE
-    if (myGlobals.ignoreSIGPIPE == TRUE) {
+  if(myGlobals.ignoreSIGPIPE == TRUE) {
 #else
-      {
+    {
 #endif /* MAKE_WITH_IGNORE_SIGPIPE */
 
-	sigset_t a_oset, a_nset;
-	sigset_t *oset, *nset;
+      sigset_t a_oset, a_nset;
+      sigset_t *oset, *nset;
 
-	/* First, build our mask - empty, except for "UNBLOCK" SIGPIPE... */
-	oset = &a_oset;
-	nset = &a_nset;
+      /* First, build our mask - empty, except for "UNBLOCK" SIGPIPE... */
+      oset = &a_oset;
+      nset = &a_nset;
 
-	sigemptyset(nset);
-	rc = sigemptyset(nset);
-	if (rc != 0) 
-	  traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigemptyset() = %d, gave %p\n", rc, nset);
-	rc = sigaddset(nset, SIGPIPE);
-	if (rc != 0)
-	  traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p\n", rc, nset);
+      sigemptyset(nset);
+      rc = sigemptyset(nset);
+      if(rc != 0) 
+	traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigemptyset() = %d, gave %p\n", rc, nset);
+      rc = sigaddset(nset, SIGPIPE);
+      if(rc != 0)
+	traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p\n", rc, nset);
 
 #ifndef DARWIN
-	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
+      rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #endif
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
-#endif
-
-#ifndef DARWIN
-	rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
-	if (rc != 0)
-	  traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d\n", nset, oset, rc);
+      traceEvent(CONST_TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
 #endif
 
 #ifndef DARWIN
-	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
-#endif
-#ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
+      rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
+      if(rc != 0)
+	traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d\n", nset, oset, rc);
 #endif
 
-	if (rc == 0) {
-          signal(SIGPIPE, PIPEhandler); 
-#ifdef DEBUG
-          traceEvent(CONST_TRACE_INFO, "DEBUG: Note: SIGPIPE handler set\n");
+#ifndef DARWIN
+      rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #endif
-	}
+#ifdef DEBUG
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
+#endif
+
+      if(rc == 0) {
+	signal(SIGPIPE, PIPEhandler); 
+#ifdef DEBUG
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Note: SIGPIPE handler set\n");
+#endif
       }
+    }
 #endif /* CFG_MULTITHREADED */
 #endif /* WIN32 */
 
-      FD_ZERO(&mask);
+    FD_ZERO(&mask);
 
-      if(myGlobals.webPort > 0)
-	FD_SET((unsigned int)myGlobals.sock, &mask);
+    if(myGlobals.webPort > 0)
+      FD_SET((unsigned int)myGlobals.sock, &mask);
 
 #ifdef HAVE_OPENSSL
-      if(myGlobals.sslInitialized) {
-	FD_SET(myGlobals.sock_ssl, &mask);
-	if(myGlobals.sock_ssl > topSock)
-	  topSock = myGlobals.sock_ssl;
-      }
+    if(myGlobals.sslInitialized) {
+      FD_SET(myGlobals.sock_ssl, &mask);
+      if(myGlobals.sock_ssl > topSock)
+	topSock = myGlobals.sock_ssl;
+    }
 #endif
 
-      memcpy(&mask_copy, &mask, sizeof(fd_set));
+    memcpy(&mask_copy, &mask, sizeof(fd_set));
 
 #ifndef CFG_MULTITHREADED
-      /* select returns immediately */
-      wait_time.tv_sec = 0, wait_time.tv_usec = 0;
-      if(select(topSock+1, &mask, 0, 0, &wait_time) == 1)
-	handleSingleWebConnection(&mask);
+    /* select returns immediately */
+    wait_time.tv_sec = 0, wait_time.tv_usec = 0;
+    if(select(topSock+1, &mask, 0, 0, &wait_time) == 1)
+      handleSingleWebConnection(&mask);
 #else /* CFG_MULTITHREADED */
-      while(myGlobals.capturePackets != FLAG_NTOPSTATE_TERM) {
-	sslwatchdogDebug("BEGINloop", FLAG_SSLWATCHDOG_BOTH, "");
- #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
- #endif
-	memcpy(&mask, &mask_copy, sizeof(fd_set));
-	rc = select(topSock+1, &mask, 0, 0, NULL /* Infinite */);
- #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d\n", rc);
- #endif
-	if(rc > 0) {
-          HEARTBEAT(1, "handleWebConnections()", NULL);
-	  /* Now, handle the web connection ends up in SSL_Accept() */
-	  sslwatchdogDebug("->hSWC()", FLAG_SSLWATCHDOG_PARENT, "");
-	  handleSingleWebConnection(&mask);
-	  sslwatchdogDebug("hSWC()->", FLAG_SSLWATCHDOG_PARENT, "");
-	}
-	sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
+    while(myGlobals.capturePackets != FLAG_NTOPSTATE_TERM) {
+      sslwatchdogDebug("BEGINloop", FLAG_SSLWATCHDOG_BOTH, "");
+#ifdef DEBUG
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Select(ing) %d....", topSock);
+#endif
+      memcpy(&mask, &mask_copy, sizeof(fd_set));
+      rc = select(topSock+1, &mask, 0, 0, NULL /* Infinite */);
+#ifdef DEBUG
+      traceEvent(CONST_TRACE_INFO, "DEBUG: select returned: %d\n", rc);
+#endif
+      if(rc > 0) {
+	HEARTBEAT(1, "handleWebConnections()", NULL);
+	/* Now, handle the web connection ends up in SSL_Accept() */
+	sslwatchdogDebug("->hSWC()", FLAG_SSLWATCHDOG_PARENT, "");
+	handleSingleWebConnection(&mask);
+	sslwatchdogDebug("hSWC()->", FLAG_SSLWATCHDOG_PARENT, "");
       }
+      sslwatchdogDebug("ENDloop", FLAG_SSLWATCHDOG_BOTH, "");
+    }
 
-      traceEvent(CONST_TRACE_WARNING, "THREADMGMT: web connections thread (%ld) terminated...\n", myGlobals.handleWebConnectionsThreadId);
+    traceEvent(CONST_TRACE_WARNING, "THREADMGMT: web connections thread (%ld) terminated...\n", myGlobals.handleWebConnectionsThreadId);
 
 #endif /* CFG_MULTITHREADED */
 
-      return(NULL); 
+    return(NULL); 
 
+  }
+
+  /* ************************************* */
+
+  static void handleSingleWebConnection(fd_set *fdmask) {
+    struct sockaddr_in from;
+    int from_len = sizeof(from);
+
+    errno = 0;
+
+    if(FD_ISSET(myGlobals.sock, fdmask)) {
+#ifdef DEBUG
+      traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTP request...\n");
+#endif
+      myGlobals.newSock = accept(myGlobals.sock, (struct sockaddr*)&from, &from_len);
+    } else {
+#if defined(DEBUG) && defined(HAVE_OPENSSL)
+      if(myGlobals.sslInitialized)
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTPS request...\n");
+#endif
+#ifdef HAVE_OPENSSL
+      if(myGlobals.sslInitialized)
+	myGlobals.newSock = accept(myGlobals.sock_ssl, (struct sockaddr*)&from, &from_len);
+#else
+      ;
+#endif
     }
 
-    /* ************************************* */
-
-    static void handleSingleWebConnection(fd_set *fdmask) {
-      struct sockaddr_in from;
-      int from_len = sizeof(from);
-
-      errno = 0;
-
-      if(FD_ISSET(myGlobals.sock, fdmask)) {
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTP request...\n");
+    traceEvent(CONST_TRACE_INFO, "Request accepted (sock=%d) (errno=%d)\n", myGlobals.newSock, errno);
 #endif
-	myGlobals.newSock = accept(myGlobals.sock, (struct sockaddr*)&from, &from_len);
-      } else {
-#if defined(DEBUG) && defined(HAVE_OPENSSL)
-	if(myGlobals.sslInitialized)
-	  traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTPS request...\n");
-#endif
+
+    if(myGlobals.newSock > 0) {
 #ifdef HAVE_OPENSSL
-	if(myGlobals.sslInitialized)
-	  myGlobals.newSock = accept(myGlobals.sock_ssl, (struct sockaddr*)&from, &from_len);
-#else
-	;
+      if(myGlobals.sslInitialized)
+	if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+	  if(myGlobals.useSSLwatchdog == 1)
 #endif
-      }
+	    {		
+#ifdef MAKE_WITH_SSLWATCHDOG
+	      int rc;
 
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "Request accepted (sock=%d) (errno=%d)\n", myGlobals.newSock, errno);
-#endif
+	      /* The watchdog ... */
+	      if(setjmp(sslwatchdogJump) != 0) {
+		int i, j, k;
+		char buf[256];
 
-      if(myGlobals.newSock > 0) {
-#ifdef HAVE_OPENSSL
-	if(myGlobals.sslInitialized)
-	  if(FD_ISSET(myGlobals.sock_ssl, fdmask)) {
- #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-	    if (myGlobals.useSSLwatchdog == 1)
- #endif
-	      {		
- #ifdef MAKE_WITH_SSLWATCHDOG
-		int rc;
-
-		/* The watchdog ... */
-		if (setjmp(sslwatchdogJump) != 0) {
-                  int i, j, k;
-                  char buf[256];
-
-                  sslwatchdogError("TIMEOUT", FLAG_SSLWATCHDOG_PARENT, "processing continues!");
-                  myGlobals.numHTTPSrequestTimeouts++;
-                  traceEvent(CONST_TRACE_ERROR, 
-                             "SSLWDERROR: Watchdog timer has expired. "
-                             "Aborting request, but ntop processing continues!\n");
-                  for (i=0; i<MAX_SSL_CONNECTIONS; i++) {
-		    if (myGlobals.ssl[i].socketId == myGlobals.newSock) {
-		      break;
-		    }
-                  }
-                  if (i<MAX_SSL_CONNECTIONS) {
-		    j=k=0;
-		    while ((k<255) && (myGlobals.ssl[i].ctx->packet[j] != '\0')) {
-		      if ((myGlobals.ssl[i].ctx->packet[j] >= 32 /* space */) && 
-			  (myGlobals.ssl[i].ctx->packet[j] < 127)) 
-			buf[k++]=myGlobals.ssl[i].ctx->packet[j];
-		      j++;
-		    }
-		    buf[k+1]='\0';
-		    traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: Failing request was (translated): %s\n", buf);
-                  }
-                  signal(SIGUSR1, sslwatchdogSighandler);
-                  return;
+		sslwatchdogError("TIMEOUT", FLAG_SSLWATCHDOG_PARENT, "processing continues!");
+		myGlobals.numHTTPSrequestTimeouts++;
+		traceEvent(CONST_TRACE_ERROR, 
+			   "SSLWDERROR: Watchdog timer has expired. "
+			   "Aborting request, but ntop processing continues!\n");
+		for(i=0; i<MAX_SSL_CONNECTIONS; i++) {
+		  if(myGlobals.ssl[i].socketId == myGlobals.newSock) {
+		    break;
+		  }
 		}
-
-		rc = sslwatchdogWaitFor(FLAG_SSLWATCHDOG_WAITINGREQUEST,
-					FLAG_SSLWATCHDOG_PARENT, 
-					0-FLAG_SSLWATCHDOG_ENTER_LOCKED);
-
-		rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPREQUEST,
-					 FLAG_SSLWATCHDOG_PARENT,
-					 0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
-					 0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
- #endif /* MAKE_WITH_SSLWATCHDOG */
-              }
-
-	    if(accept_ssl_connection(myGlobals.newSock) == -1) {
-	      traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection\n");
-	      closeNwSocket(&myGlobals.newSock);
-	      return;
-	    } else {
-	      myGlobals.newSock = -myGlobals.newSock;
-            }
-
- #ifdef MAKE_WITH_SSLWATCHDOG
-  #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-	    if (myGlobals.useSSLwatchdog == 1)
-  #endif
-	      {
-                int rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPCOMPLETE,
-					     FLAG_SSLWATCHDOG_PARENT,
-					     0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
-					     0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
-                /* Wake up child */ 
-                rc = sslwatchdogSignal(FLAG_SSLWATCHDOG_PARENT);
+		if(i<MAX_SSL_CONNECTIONS) {
+		  j=k=0;
+		  while((k<255) && (myGlobals.ssl[i].ctx->packet[j] != '\0')) {
+		    if((myGlobals.ssl[i].ctx->packet[j] >= 32 /* space */) && 
+		       (myGlobals.ssl[i].ctx->packet[j] < 127)) 
+		      buf[k++]=myGlobals.ssl[i].ctx->packet[j];
+		    j++;
+		  }
+		  buf[k+1]='\0';
+		  traceEvent(CONST_TRACE_ERROR, "SSLWDERROR: Failing request was (translated): %s\n", buf);
+		}
+		signal(SIGUSR1, sslwatchdogSighandler);
+		return;
 	      }
- #endif /* MAKE_WITH_SSLWATCHDOG */
+
+	      rc = sslwatchdogWaitFor(FLAG_SSLWATCHDOG_WAITINGREQUEST,
+				      FLAG_SSLWATCHDOG_PARENT, 
+				      0-FLAG_SSLWATCHDOG_ENTER_LOCKED);
+
+	      rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPREQUEST,
+				       FLAG_SSLWATCHDOG_PARENT,
+				       0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
+				       0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
+#endif /* MAKE_WITH_SSLWATCHDOG */
+	    }
+
+	  if(accept_ssl_connection(myGlobals.newSock) == -1) {
+	    traceEvent(CONST_TRACE_WARNING, "Unable to accept SSL connection\n");
+	    closeNwSocket(&myGlobals.newSock);
+	    return;
+	  } else {
+	    myGlobals.newSock = -myGlobals.newSock;
 	  }
+
+#ifdef MAKE_WITH_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+	  if(myGlobals.useSSLwatchdog == 1)
+#endif
+	    {
+	      int rc = sslwatchdogSetState(FLAG_SSLWATCHDOG_HTTPCOMPLETE,
+					   FLAG_SSLWATCHDOG_PARENT,
+					   0-FLAG_SSLWATCHDOG_ENTER_LOCKED,
+					   0-FLAG_SSLWATCHDOG_RETURN_LOCKED);
+	      /* Wake up child */ 
+	      rc = sslwatchdogSignal(FLAG_SSLWATCHDOG_PARENT);
+	    }
+#endif /* MAKE_WITH_SSLWATCHDOG */
+	}
 #endif /* HAVE_OPENSSL */
 
 #ifdef HAVE_LIBWRAP
-	{
-	  struct request_info req;
-	  request_init(&req, RQ_DAEMON, CONST_DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
-	  fromhost(&req);
-	  if(!hosts_access(&req)) {
-	    closelog(); /* just in case */
-	    openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
-	    syslog(deny_severity, "refused connect from %s", eval_client(&req));
-	  }
-	  else
-	    handleHTTPrequest(from.sin_addr);
+      {
+	struct request_info req;
+	request_init(&req, RQ_DAEMON, CONST_DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
+	fromhost(&req);
+	if(!hosts_access(&req)) {
+	  closelog(); /* just in case */
+	  openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
+	  syslog(deny_severity, "refused connect from %s", eval_client(&req));
 	}
+	else
+	  handleHTTPrequest(from.sin_addr);
+      }
 #else
-	handleHTTPrequest(from.sin_addr);
+      handleHTTPrequest(from.sin_addr);
 #endif /* HAVE_LIBWRAP */
 
-	closeNwSocket(&myGlobals.newSock);
-      } else {
-	traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d)", errno);
-      }
+      closeNwSocket(&myGlobals.newSock);
+    } else {
+      traceEvent(CONST_TRACE_INFO, "Unable to accept HTTP(S) request (errno=%d)", errno);
     }
+  }
 
-    /* ******************* */
+  /* ******************* */
 
-    int handlePluginHTTPRequest(char* url) {
-      FlowFilterList *flows = myGlobals.flowsList;
+  int handlePluginHTTPRequest(char* url) {
+    FlowFilterList *flows = myGlobals.flowsList;
 
-      while(flows != NULL)
-	if((flows->pluginStatus.pluginPtr != NULL)
-	   && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)
-	   && (flows->pluginStatus.pluginPtr->httpFunct != NULL)
-	   && (strncmp(flows->pluginStatus.pluginPtr->pluginURLname,
-		       url, strlen(flows->pluginStatus.pluginPtr->pluginURLname)) == 0)) {
-	  char *arg;
+    while(flows != NULL)
+      if((flows->pluginStatus.pluginPtr != NULL)
+	 && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)
+	 && (flows->pluginStatus.pluginPtr->httpFunct != NULL)
+	 && (strncmp(flows->pluginStatus.pluginPtr->pluginURLname,
+		     url, strlen(flows->pluginStatus.pluginPtr->pluginURLname)) == 0)) {
+	char *arg;
 
-	  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-	  if((!flows->pluginStatus.activePlugin) &&
-	     (!flows->pluginStatus.pluginPtr->inactiveSetup) ) {
-	    char buf[LEN_GENERAL_WORK_BUFFER], name[32];
+	/* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+	if((!flows->pluginStatus.activePlugin) &&
+	   (!flows->pluginStatus.pluginPtr->inactiveSetup) ) {
+	  char buf[LEN_GENERAL_WORK_BUFFER], name[32];
 
-	    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-	    strncpy(name, flows->pluginStatus.pluginPtr->pluginURLname, sizeof(name));
-	    name[sizeof(name)-1] = '\0'; /* just in case pluginURLname is too long... */
-	    if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))
-	      name[strlen(name)-6] = '\0';
-	    if(snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name) < 0)
-	      BufferTooShort();
-	    printHTMLheader(buf, BITFLAG_HTML_NO_REFRESH);
-	    printFlagedWarning("<I>This plugin is currently inactive.</I>");
-	    printHTMLtrailer();
-	    return(1);
-	  }
-
-	  if(strlen(url) == strlen(flows->pluginStatus.pluginPtr->pluginURLname))
-	    arg = "";
-	  else
-	    arg = &url[strlen(flows->pluginStatus.pluginPtr->pluginURLname)+1];
-
-	  /* traceEvent(CONST_TRACE_INFO, "Found %s [%s]\n",
-	     flows->pluginStatus.pluginPtr->pluginURLname, arg); */
-	  flows->pluginStatus.pluginPtr->httpFunct(arg);
+	  sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+	  strncpy(name, flows->pluginStatus.pluginPtr->pluginURLname, sizeof(name));
+	  name[sizeof(name)-1] = '\0'; /* just in case pluginURLname is too long... */
+	  if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))
+	    name[strlen(name)-6] = '\0';
+	  if(snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name) < 0)
+	    BufferTooShort();
+	  printHTMLheader(buf, BITFLAG_HTML_NO_REFRESH);
+	  printFlagedWarning("<I>This plugin is currently inactive.</I>");
+	  printHTMLtrailer();
 	  return(1);
-	} else
-	  flows = flows->next;
+	}
 
-      return(0); /* Plugin not found */
-    }
+	if(strlen(url) == strlen(flows->pluginStatus.pluginPtr->pluginURLname))
+	  arg = "";
+	else
+	  arg = &url[strlen(flows->pluginStatus.pluginPtr->pluginURLname)+1];
+
+	/* traceEvent(CONST_TRACE_INFO, "Found %s [%s]\n",
+	   flows->pluginStatus.pluginPtr->pluginURLname, arg); */
+	flows->pluginStatus.pluginPtr->httpFunct(arg);
+	return(1);
+      } else
+	flows = flows->next;
+
+    return(0); /* Plugin not found */
+  }

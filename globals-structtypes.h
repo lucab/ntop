@@ -1025,10 +1025,10 @@ struct enamemem {
 
 /* **************** Plugin **************** */
 
-typedef void(*VoidFunc)(void);
-typedef int(*IntFunc)(void);
-typedef void(*PluginFunc)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
-typedef void(*PluginHTTPFunc)(char* url);
+typedef void(*VoidFunct)(void);
+typedef int(*IntFunct)(void);
+typedef void(*PluginFunct)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
+typedef void(*PluginHTTPFunct)(char* url);
 #ifdef SESSION_PLUGIN
 typedef void(*PluginSessionFunc)(IPSession *sessionToPurge, int actualDeviceId);
 #endif
@@ -1042,12 +1042,12 @@ typedef struct pluginInfo {
   char *pluginURLname;      /* Set it to NULL if the plugin doesn't speak HTTP */
   char activeByDefault;     /* Set it to 1 if this plugin is active by default */
   char inactiveSetup;       /* Set it to 1 if this plugin can be called inactive for setup */
-  IntFunc startFunc;
-  VoidFunc termFunc;
-  PluginFunc pluginFunc;    /* Initialize here all the plugin structs... */
-  PluginHTTPFunc httpFunct; /* Set it to NULL if the plugin doesn't speak HTTP */
+  IntFunct startFunct;
+  VoidFunct termFunct;
+  PluginFunct pluginFunct;    /* Initialize here all the plugin structs... */
+  PluginHTTPFunct httpFunct; /* Set it to NULL if the plugin doesn't speak HTTP */
 #ifdef SESSION_PLUGIN
-  PluginSessionFunc sessionFunct; /* Set it to NULL if the plugin doesn't care of terminated sessions */
+  PluginSessionFunct sessionFunct; /* Set it to NULL if the plugin doesn't care of terminated sessions */
 #endif
   char* bpfFilter;          /* BPF filter for selecting packets that
        		               will be routed to the plugin  */
@@ -1787,10 +1787,7 @@ XML*/
   u_int baseMemoryUsage;
 #endif
   u_int ipTrafficMatrixMemoryUsage;
-
-  /*
-   * local variables
-   */
+  u_char webInterfaceEnabled;
   int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
   int sortSendMode;
   int actualReportDeviceId;
