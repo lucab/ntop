@@ -335,9 +335,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       /* NOTE: el->nextDBupdate = 0 */
       el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
       memset(el->protoIPTrafficInfos, 0, len);
-
-      device[actualDeviceId].hash_hostTraffic[firstEmptySlot] =
-	el; /* Insert a new entry */
+      device[actualDeviceId].hash_hostTraffic[firstEmptySlot] = el; /* Insert a new entry */
       idx = firstEmptySlot;
       device[actualDeviceId].hostsno++;
 
@@ -1311,6 +1309,7 @@ static void handleSession(const struct pcap_pkthdr *h,
   u_int idx, initialIdx;
   IPSession *theSession = NULL;
   short flowDirection;
+  char addedNewEntry = 0;
   u_short sessionType, check, napsterDownload=0;
   u_short sessSport, sessDport;
   HostTraffic *srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
@@ -1413,6 +1412,20 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  /* There's enough space left in the hashtable */
 	  theSession = (IPSession*)malloc(sizeof(IPSession));
 	  memset(theSession, 0, sizeof(IPSession));
+	  addedNewEntry = 1;
+
+	  if((tp->th_flags & TH_SYN) == TH_SYN) {
+	    theSession->nwLatency.tv_sec = h->ts.tv_sec;
+	    theSession->nwLatency.tv_usec = h->ts.tv_usec;
+	    theSession->sessionState = STATE_SYN;
+	  } else {
+	    /*
+	      It might be that this session was 
+	      already active when ntop started up
+	    */
+	    theSession->sessionState = STATE_ACTIVE;
+	  }
+
 	  theSession->magic = MAGIC_NUMBER;
 	  (*numSessions)++;
 
@@ -1721,6 +1734,28 @@ static void handleSession(const struct pcap_pkthdr *h,
 
     if((theSession->maxWindow < tcpWin) || (theSession->maxWindow == 0))
       theSession->maxWindow = tcpWin;
+
+    if(((tp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)) 
+       && (theSession->sessionState == STATE_SYN))  {
+      theSession->sessionState = STATE_SYN_ACK ;
+    } else if(((tp->th_flags & TH_ACK) == TH_ACK) 
+	       && (theSession->sessionState == STATE_SYN_ACK)) {
+      theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
+
+      if((h->ts.tv_usec-theSession->nwLatency.tv_usec) < 0) {
+	theSession->nwLatency.tv_usec = 1000000-(h->ts.tv_usec-theSession->nwLatency.tv_usec);
+	theSession->nwLatency.tv_sec--;
+      } else 
+	theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
+
+      theSession->sessionState = STATE_ACTIVE;
+    } else if((addedNewEntry == 0) 
+	      && ((theSession->sessionState == STATE_SYN)
+		  || (theSession->sessionState == STATE_SYN_ACK))) {
+      /* We might have lost a packet so we cannot calculate latency */
+      theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
+      theSession->sessionState = STATE_ACTIVE;
+    }
 
     /* Let's decode some Napster packets */
     if((!theSession->napsterSession)

@@ -1229,7 +1229,7 @@ static PluginInfo icmpPluginInfo[] = {
   { "icmpWatchPlugin",
     "This plugin handles ICMP packets",
     "1.0", /* version */
-    "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>",
+    "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "icmpWatch", /* http://<host>:<port>/plugins/icmpWatch */
     1, /* Active */
     NULL, /* no special startup after init */

@@ -352,7 +352,7 @@ static PluginInfo pluginInfo[] = {
   { "remoteInterface",
     "Remote Perl/C++ handler",
     "1.0", /* plugin version */
-    "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>",
+    "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "remoteInterface", /* http://<host>:<port>/plugins/remoteInterface */
     0, /* Not Active */
     startRemIntFunct, /* StartFunc */

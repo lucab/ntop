@@ -23,6 +23,8 @@
 #include "globals-report.h"
 
 
+#ifndef MICRO_NTOP
+
 /* Forward */
 #ifdef HAVE_GDBM_H
 static void sendMenuFooter(int itm1Idx, int itm2Idx);
@@ -581,53 +583,6 @@ void doAddURL(int len) {
 
 /* *******************************/
 
-static void addKeyIfMissing(char* key, char* value, int encryptValue) {
-  char cpw[14];
-  datum key_data, return_data, data_data;
-
-  /* Check existence of user 'admin' */
-  key_data.dptr = key;
-  key_data.dsize = strlen(key_data.dptr)+1;
-  return_data = gdbm_fetch(pwFile, key_data);
-
-  if(return_data.dptr == NULL) {
-    /* If not existing, the add user 'admin', pw 'admin' */
-	  if(encryptValue) {
-#ifdef WIN32
-	  data_data.dptr = value;
-#else
-      strncpy(cpw, (char*)crypt(value, (const char*)CRYPT_SALT), sizeof(cpw));
-      cpw[sizeof(cpw)-1] = '\0';
-      data_data.dptr = cpw;
-#endif
-	  } else
-      data_data.dptr = value;    
-
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "'%s' <-> '%s'\n", key, data_data.dptr);
-#endif
-
-    data_data.dsize = strlen(data_data.dptr)+1;
-    gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE);
-  } else
-    free(return_data.dptr);
-}
-
-/* *******************************/
-
-void addDefaultAdminUser(void) {
-  /* Add user 'admin/admin' if not existing */
-  addKeyIfMissing("1admin", "admin", 1);
-
-  /* Add user 'admin' for URL 'show...' if not existing */
-  addKeyIfMissing("2showU",    "users=1admin", 0);
-  addKeyIfMissing("2modifyU",  "users=1admin", 0);
-  addKeyIfMissing("2deleteU",  "users=1admin", 0);
-  addKeyIfMissing("2shutdown", "users=1admin", 0);
-}
-
-/* *******************************/
-
 struct _menuData {
   char	*text, *anchor;
 };
@@ -767,3 +722,52 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
 }
 
 #endif /* HAVE_GDBM_H */
+#endif /* MICRO_NTOP */
+
+/* *******************************/
+
+static void addKeyIfMissing(char* key, char* value, int encryptValue) {
+  char cpw[14];
+  datum key_data, return_data, data_data;
+
+  /* Check existence of user 'admin' */
+  key_data.dptr = key;
+  key_data.dsize = strlen(key_data.dptr)+1;
+  return_data = gdbm_fetch(pwFile, key_data);
+
+  if(return_data.dptr == NULL) {
+    /* If not existing, the add user 'admin', pw 'admin' */
+	  if(encryptValue) {
+#ifdef WIN32
+	  data_data.dptr = value;
+#else
+      strncpy(cpw, (char*)crypt(value, (const char*)CRYPT_SALT), sizeof(cpw));
+      cpw[sizeof(cpw)-1] = '\0';
+      data_data.dptr = cpw;
+#endif
+	  } else
+      data_data.dptr = value;    
+
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "'%s' <-> '%s'\n", key, data_data.dptr);
+#endif
+
+    data_data.dsize = strlen(data_data.dptr)+1;
+    gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE);
+  } else
+    free(return_data.dptr);
+}
+
+/* *******************************/
+
+void addDefaultAdminUser(void) {
+  /* Add user 'admin/admin' if not existing */
+  addKeyIfMissing("1admin", "admin", 1);
+
+  /* Add user 'admin' for URL 'show...' if not existing */
+  addKeyIfMissing("2showU",    "users=1admin", 0);
+  addKeyIfMissing("2modifyU",  "users=1admin", 0);
+  addKeyIfMissing("2deleteU",  "users=1admin", 0);
+  addKeyIfMissing("2shutdown", "users=1admin", 0);
+}
+

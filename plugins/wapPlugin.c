@@ -21,6 +21,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+#ifndef MICRO_NTOP
 static int wapColumnSort = 0;
  
 /* ****************************** */
@@ -266,19 +267,29 @@ static void termWapFunct(void) {
   traceEvent(TRACE_INFO, "Done.\n");
 }
 
+#endif /* MICRO_NTOP */
+
 /* ****************************** */
 
 static PluginInfo WAPPluginInfo[] = {
   { "WAPPlugin",
     "ntop WAP (Wireless Application protocol) Interface",
     "1.0",           /* version */
-    "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>", 
+    "<A HREF=http://luca.ntop.org/>L.Deri</A>", 
     "WAPPlugin",      /* http://<host>:<port>/plugins/WAPPlugin */
     0, /* Not Active */
     NULL, /* no special startup after init */
+#ifndef MICRO_NTOP
     termWapFunct,    /* TermFunc   */
+#else
+    NULL,
+#endif
     NULL,    /* PluginFunc */
+#ifndef MICRO_NTOP
     handleWAPrequest,
+#else
+    NULL,
+#endif
     NULL,
     NULL /* BPF Filter */
   }

@@ -527,6 +527,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
     traceEvent (TRACE_INFO, "Thread %d for Scan Idle Host started.\n", scanIdleThreadId);
   }
 
+#ifndef MICRO_NTOP
   /*
    * (5) - DBU - DB Update - optional
    */
@@ -534,6 +535,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
     createThread(&dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);
     traceEvent (TRACE_INFO, "Thread %d for DB Update started.\n", dbUpdateThreadId);
   }
+#endif /* MICRO_NTOP */
 
   numResolvedWithDNSAddresses = numKeptNumericAddresses = numResolvedOnCacheAddresses = 0;
 #ifdef ASYNC_ADDRESS_RESOLUTION

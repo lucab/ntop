@@ -31,63 +31,7 @@ static short alternateColor=0;
 /* Forward */
 void handleSingleWebConnection(fd_set *fdmask);
 
-/* **************************************** */
-
-void initializeWeb(void) {
-  columnSort = 0, sortSendMode = 0;
-  addDefaultAdminUser();
-  initAccessLog();
-}
-
-/* **************************************** */
-
-void* handleWebConnections(void* notUsed _UNUSED_) {
-#ifndef MULTITHREADED
-  struct timeval wait_time;
-#else
-  int rc;
-#endif
-  fd_set mask, mask_copy;
-  int topSock = sock;
-
-  FD_ZERO(&mask);
-
-  if(webPort > 0) 
-    FD_SET((unsigned int)sock, &mask);
-
-#ifdef HAVE_OPENSSL
-  if(sslInitialized) {
-    FD_SET(sock_ssl, &mask);
-    if(sock_ssl > topSock)
-      topSock = sock_ssl;
-  }
-#endif
-
-  memcpy(&mask_copy, &mask, sizeof(fd_set));
-
-#ifndef MULTITHREADED
-  /* select returns immediately */
-  wait_time.tv_sec = 0, wait_time.tv_usec = 0;
-  if(select(topSock+1, &mask, 0, 0, &wait_time) == 1)
-    handleSingleWebConnection(&mask);
-#else
-  while(capturePackets) {
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Select(ing)....\n");
-#endif
-    memcpy(&mask, &mask_copy, sizeof(fd_set));
-    rc = select(topSock+1, &mask, 0, 0, NULL /* Infinite */);
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "select returned: %d\n", rc);
-#endif
-    if(rc > 0)
-      handleSingleWebConnection(&mask);
-  }
-#endif
-
-return(NULL); /* NOTREACHED */
-}
-
+#ifndef MICRO_NTOP
 
 /* ************************************* */
 
@@ -228,180 +172,6 @@ void execCGI(char* cgiName) {
  
 #endif /* defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H) */
  
- /* ************************************* */
- 
- void handleSingleWebConnection(fd_set *fdmask) {
-   struct sockaddr_in from;
-  int from_len = sizeof(from);
-
-  if(FD_ISSET(sock, fdmask)) {
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "Accepting HTTP request...\n");
-#endif
-    newSock = accept(sock, (struct sockaddr*)&from, &from_len);
-  } else {
-#ifdef DEBUG
-    if(sslInitialized)
-      traceEvent(TRACE_INFO, "Accepting HTTPS request...\n");
-#endif
-#ifdef HAVE_OPENSSL
-    if(sslInitialized)
-      newSock = accept(sock_ssl, (struct sockaddr*)&from, &from_len); 
-#else
-    ;
-#endif
-  }
-
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "Request accepted (sock=%d)\n", newSock);
-#endif
-
-  if(newSock > 0) {
-#ifdef HAVE_OPENSSL
-    if(sslInitialized) 
-      if(FD_ISSET(sock_ssl, fdmask))
-	if(accept_ssl_connection(newSock) == -1) {
-	  traceEvent(TRACE_WARNING, "Unable to accept SSL connection\n");
-	  closeNwSocket(&newSock);
-	  return;
-	} else {
-	  newSock = -newSock;
-	}
-#endif /* HAVE_OPENSSL */
-
-#ifdef HAVE_LIBWRAP
-    {
-      struct request_info req;
-      request_init(&req, RQ_DAEMON, DAEMONNAME, RQ_FILE, newSock, NULL);
-      fromhost(&req);
-      if (!hosts_access(&req)) {
-	closelog(); /* just in case */
-	openlog(DAEMONNAME,LOG_PID,SYSLOG_FACILITY);
-	syslog(deny_severity, "refused connect from %s", eval_client(&req));
-      }
-      else
-	handleHTTPrequest(from.sin_addr);
-    }
-#else
-    handleHTTPrequest(from.sin_addr);
-#endif /* HAVE_LIBWRAP */
-
-    closeNwSocket(&newSock);
-  }
-}
-
-/* ******************************* */
-/* 
-   SSL fix courtesy of 
-   Curtis Doty <Curtis@GreenKey.net>
-*/
-void initWeb(int webPort, char* webAddr, char* sslAddr) {
-  int sockopt = 1;
-  struct sockaddr_in sin;
-
-  actualReportDeviceId = 0;
-
-  if(webPort > 0) {
-    sin.sin_family      = AF_INET;
-    sin.sin_port        = (int)htons((unsigned short int)webPort);
-    sin.sin_addr.s_addr = INADDR_ANY;
-
-#ifndef WIN32
-    if(sslAddr) {
-      if(!inet_aton(sslAddr,&sin.sin_addr))
-		traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
-		   "Not binding SSL to a particular interface!\n",  sslAddr);
-    }
-
-    if (webAddr) {      /* Code added to be able to bind to a particular interface */
-      if (!inet_aton(webAddr,&sin.sin_addr))
-	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
-		   "Not binding to a particular interface!\n",  webAddr);
-    }
-#endif
-
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if(sock < 0) {
-      traceEvent(TRACE_ERROR, "Unable to create a new socket");
-      exit(-1);
-    }
-
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
-  } else
-    sock = 0;
-
-#ifdef HAVE_OPENSSL
-  if(sslInitialized) {
-    sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
-    if(sock_ssl < 0) {
-      traceEvent(TRACE_ERROR, "unable to create a new socket");
-      exit(-1);
-    }
-      
-    setsockopt(sock_ssl, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
-  }
-#endif
-
-  if(webPort > 0) {
-    if(bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-      traceEvent(TRACE_WARNING, "bind: port %d already in use.", webPort);
-      closeNwSocket(&sock);
-      exit(-1);
-    }
-  }
-
-#ifdef HAVE_OPENSSL
-  if(sslInitialized) {
-    sin.sin_family      = AF_INET;
-    sin.sin_port        = (int)htons(sslPort);
-    sin.sin_addr.s_addr = INADDR_ANY;
-      
-    if(bind(sock_ssl, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-      traceEvent(TRACE_ERROR, "bind: port %d already in use.", webPort);
-      closeNwSocket(&sock_ssl);
-      exit(-1);
-    }
-  }
-#endif
-
-  if(webPort > 0) {
-    if(listen(sock, 5) < 0) {
-      traceEvent(TRACE_WARNING, "listen error.\n");
-      closeNwSocket(&sock);
-      exit(-1);
-    } 
-  }
-  
-#ifdef HAVE_OPENSSL
-  if(sslInitialized) 
-    if(listen(sock_ssl, 5) < 0) {
-      traceEvent(TRACE_WARNING, "listen error.\n");
-      closeNwSocket(&sock_ssl);
-      exit(-1);
-    }
-#endif
-
-  if(webPort > 0) {
-    /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-    if (webAddr) 
-      traceEvent(TRACE_INFO, "Waiting for HTTP connections on %s port %d...\n",
-		 webAddr, webPort);
-    else 
-      traceEvent(TRACE_INFO, "Waiting for HTTP connections on port %d...\n",
-		 webPort);
-  }
-  
-#ifdef HAVE_OPENSSL
-  if(sslInitialized) 
-    traceEvent(TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
-	       sslPort);
-#endif
-  
-#ifdef MULTITHREADED
-  createThread(&handleWebConnectionsThreadId, handleWebConnections, NULL);
-#endif
-}
-
 /* ******************************* */
 
 char* makeHostLink(HostTraffic *el, short mode,
@@ -787,78 +557,10 @@ void switchNwInterface(int _interface) {
 
 /* **************************************** */
 
-void usage(void) {
-  char buf[80];
-
-  if(snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
-	  program_name, version, THREAD_MODE, osName, buildDate) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  traceEvent(TRACE_INFO, "%s\n", buf);
-
-  traceEvent(TRACE_INFO, "Copyright 1998-2001 by %s\n", author);
-  traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
-  if(snprintf(buf, sizeof(buf), "Written by %s.", author) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-  traceEvent(TRACE_INFO, "%s\n", buf);
-
-  if(snprintf(buf, sizeof(buf), "Usage: %s", program_name) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-  traceEvent(TRACE_INFO, "%s\n", buf);
-
-#ifdef WIN32
-    traceEvent(TRACE_INFO, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
-#else
-    traceEvent(TRACE_INFO, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
-	    ALARM_TIME, REFRESH_TIME);
-#endif
-    traceEvent(TRACE_INFO, "    %s\n",   "[-f <traffic dump file (see tcpdump)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
-#ifdef WIN32
-    traceEvent(TRACE_INFO, "    %s%d Kb)>]\n", "[-B <NDIS buffer in Kbytes (default ", (int)(SIZE_BUF/1024));
-#endif
-#ifndef WIN32
-    traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
-#endif
-    traceEvent(TRACE_INFO, "    %s\n",   "[-S (store persistently host stats)]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");
-#ifdef HAVE_OPENSSL
-    traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
-#endif
-    traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows"
-#ifndef WIN32
-		" (use only with -w)>"
-#endif
-	       );
-#ifndef WIN32
-    traceEvent(TRACE_INFO, "    %s\n",   "[-d (daemon mode (use only with -w))]");
-#endif
-    traceEvent(TRACE_INFO, "    %s\n",   "[-m <local addresses (see man page)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-l <log period (seconds)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-s <max hash size (default 32768)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-F <flow specs (see man page)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-b <client:port (ntop DB client)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-R <matching rules file>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-N <don't use nmap if installed>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-M <don't merge network interfaces (see man page)>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-P <path for db-files>]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-g (grab session data on screen)]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
-    traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
-    traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");
-}
-
-/* **************************************** */
-
 void shutdownNtop(void) {
   printHTMLheader("ntop is shutting down...", HTML_FLAG_NO_REFRESH);
   closeNwSocket(&newSock);
-
   termAccessLog();
-  termReports();
   cleanup(0);
 }
 
@@ -1026,6 +728,309 @@ void printNtopConfigInfo(void) {
   sendString("</CENTER>\n");
 }
 
+#endif /* MICRO_NTOP */
+
+/* ******************************* */
+
+/* 
+   SSL fix courtesy of 
+   Curtis Doty <Curtis@GreenKey.net>
+*/
+void initWeb(int webPort, char* webAddr, char* sslAddr) {
+  int sockopt = 1;
+  struct sockaddr_in sin;
+
+  actualReportDeviceId = 0;
+
+  if(webPort > 0) {
+    sin.sin_family      = AF_INET;
+    sin.sin_port        = (int)htons((unsigned short int)webPort);
+    sin.sin_addr.s_addr = INADDR_ANY;
+
+#ifndef WIN32
+    if(sslAddr) {
+      if(!inet_aton(sslAddr,&sin.sin_addr))
+		traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
+		   "Not binding SSL to a particular interface!\n",  sslAddr);
+    }
+
+    if (webAddr) {      /* Code added to be able to bind to a particular interface */
+      if (!inet_aton(webAddr,&sin.sin_addr))
+	traceEvent(TRACE_ERROR, "Unable to convert address '%s'...\n"
+		   "Not binding to a particular interface!\n",  webAddr);
+    }
+#endif
+
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock < 0) {
+      traceEvent(TRACE_ERROR, "Unable to create a new socket");
+      exit(-1);
+    }
+
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+  } else
+    sock = 0;
+
+#ifdef HAVE_OPENSSL
+  if(sslInitialized) {
+    sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock_ssl < 0) {
+      traceEvent(TRACE_ERROR, "unable to create a new socket");
+      exit(-1);
+    }
+      
+    setsockopt(sock_ssl, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+  }
+#endif
+
+  if(webPort > 0) {
+    if(bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+      traceEvent(TRACE_WARNING, "bind: port %d already in use.", webPort);
+      closeNwSocket(&sock);
+      exit(-1);
+    }
+  }
+
+#ifdef HAVE_OPENSSL
+  if(sslInitialized) {
+    sin.sin_family      = AF_INET;
+    sin.sin_port        = (int)htons(sslPort);
+    sin.sin_addr.s_addr = INADDR_ANY;
+      
+    if(bind(sock_ssl, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+      traceEvent(TRACE_ERROR, "bind: port %d already in use.", webPort);
+      closeNwSocket(&sock_ssl);
+      exit(-1);
+    }
+  }
+#endif
+
+  if(webPort > 0) {
+    if(listen(sock, 5) < 0) {
+      traceEvent(TRACE_WARNING, "listen error.\n");
+      closeNwSocket(&sock);
+      exit(-1);
+    } 
+  }
+  
+#ifdef HAVE_OPENSSL
+  if(sslInitialized) 
+    if(listen(sock_ssl, 5) < 0) {
+      traceEvent(TRACE_WARNING, "listen error.\n");
+      closeNwSocket(&sock_ssl);
+      exit(-1);
+    }
+#endif
+
+  if(webPort > 0) {
+    /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
+    if (webAddr) 
+      traceEvent(TRACE_INFO, "Waiting for HTTP connections on %s port %d...\n",
+		 webAddr, webPort);
+    else 
+      traceEvent(TRACE_INFO, "Waiting for HTTP connections on port %d...\n",
+		 webPort);
+  }
+  
+#ifdef HAVE_OPENSSL
+  if(sslInitialized) 
+    traceEvent(TRACE_INFO, "Waiting for HTTPS (SSL) connections on port %d...\n",
+	       sslPort);
+#endif
+  
+#ifdef MULTITHREADED
+  createThread(&handleWebConnectionsThreadId, handleWebConnections, NULL);
+#endif
+}
+
+/* **************************************** */
+
+void initializeWeb(void) {
+#ifndef MICRO_NTOP
+  columnSort = 0, sortSendMode = 0;
+#endif
+  addDefaultAdminUser();
+  initAccessLog();
+}
+
+/* **************************************** */
+
+void usage(void) {
+  char buf[80];
+
+  if(snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
+	  program_name, version, THREAD_MODE, osName, buildDate) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  traceEvent(TRACE_INFO, "%s\n", buf);
+
+  traceEvent(TRACE_INFO, "Copyright 1998-2001 by %s\n", author);
+  traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
+  if(snprintf(buf, sizeof(buf), "Written by %s.", author) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+  traceEvent(TRACE_INFO, "%s\n", buf);
+
+  if(snprintf(buf, sizeof(buf), "Usage: %s", program_name) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+  traceEvent(TRACE_INFO, "%s\n", buf);
+
+#ifdef WIN32
+    traceEvent(TRACE_INFO, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
+#else
+    traceEvent(TRACE_INFO, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
+	       ALARM_TIME, REFRESH_TIME);
+#endif
+    traceEvent(TRACE_INFO, "    %s\n",   "[-f <traffic dump file (see tcpdump)>]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
+#ifdef WIN32
+    traceEvent(TRACE_INFO, "    %s%d Kb)>]\n", "[-B <NDIS buffer in Kbytes (default ",
+	       (int)(SIZE_BUF/1024));
+#endif
+#ifndef WIN32
+    traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
+#endif
+    traceEvent(TRACE_INFO, "    %s\n",   "[-S (store persistently host stats)]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");
+#ifdef HAVE_OPENSSL
+    traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
+#endif
+    traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows"
+#ifndef WIN32
+		" (use only with -w)>"
+#endif
+	       );
+#ifndef WIN32
+    traceEvent(TRACE_INFO, "    %s\n",   "[-d (daemon mode (use only with -w))]");
+#endif
+    traceEvent(TRACE_INFO, "    %s\n",   "[-m <local addresses (see man page)>]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-s <max hash size (default 32768)>]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-F <flow specs (see man page)>]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-b <client:port (ntop DB client)>]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-R <matching rules file>]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-N <don't use nmap if installed>]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-M <don't merge network interfaces (see man page)>]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-P <path for db-files>]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-g (grab session data on screen)]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
+    traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");
+}
+
+/* ******************************************* */
+
+void* handleWebConnections(void* notUsed _UNUSED_) {
+#ifndef MULTITHREADED
+  struct timeval wait_time;
+#else
+  int rc;
+#endif
+  fd_set mask, mask_copy;
+  int topSock = sock;
+
+  FD_ZERO(&mask);
+
+  if(webPort > 0) 
+    FD_SET((unsigned int)sock, &mask);
+
+#ifdef HAVE_OPENSSL
+  if(sslInitialized) {
+    FD_SET(sock_ssl, &mask);
+    if(sock_ssl > topSock)
+      topSock = sock_ssl;
+  }
+#endif
+
+  memcpy(&mask_copy, &mask, sizeof(fd_set));
+
+#ifndef MULTITHREADED
+  /* select returns immediately */
+  wait_time.tv_sec = 0, wait_time.tv_usec = 0;
+  if(select(topSock+1, &mask, 0, 0, &wait_time) == 1)
+    handleSingleWebConnection(&mask);
+#else
+  while(capturePackets) {
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Select(ing)....\n");
+#endif
+    memcpy(&mask, &mask_copy, sizeof(fd_set));
+    rc = select(topSock+1, &mask, 0, 0, NULL /* Infinite */);
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "select returned: %d\n", rc);
+#endif
+    if(rc > 0)
+      handleSingleWebConnection(&mask);
+  }
+#endif
+
+return(NULL); /* NOTREACHED */
+}
+
+
+/* ************************************* */
+ 
+void handleSingleWebConnection(fd_set *fdmask) {
+   struct sockaddr_in from;
+  int from_len = sizeof(from);
+
+  if(FD_ISSET(sock, fdmask)) {
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Accepting HTTP request...\n");
+#endif
+    newSock = accept(sock, (struct sockaddr*)&from, &from_len);
+  } else {
+#ifdef DEBUG
+    if(sslInitialized)
+      traceEvent(TRACE_INFO, "Accepting HTTPS request...\n");
+#endif
+#ifdef HAVE_OPENSSL
+    if(sslInitialized)
+      newSock = accept(sock_ssl, (struct sockaddr*)&from, &from_len); 
+#else
+    ;
+#endif
+  }
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "Request accepted (sock=%d)\n", newSock);
+#endif
+
+  if(newSock > 0) {
+#ifdef HAVE_OPENSSL
+    if(sslInitialized) 
+      if(FD_ISSET(sock_ssl, fdmask))
+	if(accept_ssl_connection(newSock) == -1) {
+	  traceEvent(TRACE_WARNING, "Unable to accept SSL connection\n");
+	  closeNwSocket(&newSock);
+	  return;
+	} else {
+	  newSock = -newSock;
+	}
+#endif /* HAVE_OPENSSL */
+
+#ifdef HAVE_LIBWRAP
+    {
+      struct request_info req;
+      request_init(&req, RQ_DAEMON, DAEMONNAME, RQ_FILE, newSock, NULL);
+      fromhost(&req);
+      if (!hosts_access(&req)) {
+	closelog(); /* just in case */
+	openlog(DAEMONNAME,LOG_PID,SYSLOG_FACILITY);
+	syslog(deny_severity, "refused connect from %s", eval_client(&req));
+      }
+      else
+	handleHTTPrequest(from.sin_addr);
+    }
+#else
+    handleHTTPrequest(from.sin_addr);
+#endif /* HAVE_LIBWRAP */
+
+    closeNwSocket(&newSock);
+  }
+}
+
 /* ******************* */
 
 int handlePluginHTTPRequest(char* url) {
@@ -1070,4 +1075,3 @@ int handlePluginHTTPRequest(char* url) {
 
   return(0); /* Plugin not found */
 }
-

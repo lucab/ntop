@@ -44,7 +44,6 @@ extern size_t allocatedMemory;
 
 /* Logging */
 extern time_t nextLogTime;
-extern FILE *logd;
 
 /* Flags */
 extern int isLsofPresent, isNepedPresent, isNmapPresent;
@@ -57,7 +56,7 @@ extern unsigned short numThreads;
 extern pthread_mutex_t packetQueueMutex, hostsHashMutex, graphMutex;
 extern pthread_mutex_t lsofMutex, addressResolutionMutex, hashResizeMutex;
 extern pthread_t dequeueThreadId, handleWebConnectionsThreadId;
-extern pthread_t thptUpdateThreadId, scanIdleThreadId, logFileLoopThreadId;
+extern pthread_t thptUpdateThreadId, scanIdleThreadId;
 extern pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
 #ifdef HAVE_GDBM_H
 extern pthread_mutex_t gdbmMutex;

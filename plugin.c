@@ -138,6 +138,8 @@ void notifyPluginsHashResize(int oldSize, int newSize, int* mappings) {
 
 /* ******************* */
 
+#ifndef MICRO_NTOP
+
 #if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32)
 static void loadPlugin(char* dirName, char* pluginName) {
   char pluginPath[256];
@@ -422,3 +424,6 @@ void startPlugins(void) {
 }
 
 /* ************************************* */
+
+#endif /* MICRO_NTOP */
+

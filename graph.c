@@ -26,6 +26,7 @@
 
 #include "ntop.h"
 
+#ifndef MICRO_NTOP
 #ifdef HAVE_GDCHART
 
 #define _GRAPH_C_
@@ -714,3 +715,4 @@ void drawGlobalIpProtoDistribution(void) {
 }
 
 #endif /* HAVE_GDCHART */
+#endif /* MICRO_NTOP   */

@@ -1017,6 +1017,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
   accessMutex(&hashResizeMutex, "returnHTTPpage"); 
 #endif
 
+#ifndef MICRO_NTOP
   if(strcmp(pageName, STR_INDEX_HTML) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printHTMLheader("Welcome to ntop!", HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_BODY);
@@ -1364,14 +1365,25 @@ static int returnHTTPPage(char* pageName, int postLen) {
   } else if(strncmp(pageName, INFO_NTOP_HTML, strlen(INFO_NTOP_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printNtopConfigInfo();
-  } else if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
+  } else 
+#endif /* MICRO_NTOP */
+    if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_TEXT, 0);
     if((questionMark == NULL) || (questionMark[0] == '\0'))
       dumpNtopHashes(NULL);
     else
       dumpNtopHashes(&questionMark[1]);
     printTrailer = 0;
-  } else if(strlen(pageName) > 5) {
+  } else if(strncmp(pageName, DUMP_TRAFFIC_DATA_HTML, strlen(DUMP_TRAFFIC_DATA_HTML)) == 0) {
+    sendHTTPHeader(HTTP_TYPE_TEXT, 0);
+    if((questionMark == NULL) || (questionMark[0] == '\0'))
+      dumpNtopTrafficInfo(NULL);
+    else
+      dumpNtopTrafficInfo(&questionMark[1]);
+    printTrailer = 0;
+ } 
+#ifndef MICRO_NTOP
+    else if(strlen(pageName) > 5) {
     int i;
     char hostName[32];
 
@@ -1385,10 +1397,12 @@ static int returnHTTPPage(char* pageName, int postLen) {
     strncpy(hostName, pageName, sizeof(hostName));
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printAllSessionsHTML(hostName);
-  } else {
-    printTrailer = 0;
-    errorCode = HTTP_INVALID_PAGE;
-  }
+  } 
+#endif
+    else {
+      printTrailer = 0;
+      errorCode = HTTP_INVALID_PAGE;
+    }
 
   if(printTrailer && (postLen == -1)) printHTMLtrailer();
 

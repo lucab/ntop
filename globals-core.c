@@ -50,7 +50,6 @@ int sslInitialized, sslPort;
 
 /* Logging */
 time_t nextLogTime;
-FILE *logd;
 
 /* Flags */
 int isLsofPresent=1, isNepedPresent=1, isNmapPresent=1;
@@ -65,7 +64,7 @@ pthread_mutex_t packetQueueMutex, hostsHashMutex, graphMutex;
 pthread_mutex_t lsofMutex, addressResolutionMutex, hashResizeMutex;
 
 pthread_t dequeueThreadId, handleWebConnectionsThreadId;
-pthread_t thptUpdateThreadId, scanIdleThreadId, logFileLoopThreadId;
+pthread_t thptUpdateThreadId, scanIdleThreadId;
 pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
 #ifdef HAVE_GDBM_H
 pthread_mutex_t gdbmMutex;

@@ -780,14 +780,14 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef FULL_MEMORY_FREE
   freeHostInstances();
 #endif
+#ifndef MICRO_NTOP
   unloadPlugins();
+#endif
   termLogger();
   (void)fflush(stdout);
 
   termIPServices();
   termIPSessions();
-
-  if(logTimeout) fclose(logd);
 
 #ifndef WIN32
   endservent();

@@ -24,25 +24,24 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+#ifndef MICRO_NTOP
 int maxNumLines = MAX_NUM_TABLE_ROWS;
-int idleFlag, percentMode, localAddrFlag, refreshRate;
-int webPort, actualReportDeviceId;
 int sortSendMode=0;
 short sortFilter;
 
-short screenNumber, columnSort;
-int sock, newSock;
-#ifdef HAVE_OPENSSL
-int sock_ssl;
-#endif
-
 /* Threads */
-#ifdef MULTITHREADED
-pthread_t logFileLoopThreadId, cursesRefreshThreadId;
-#endif
 
 /* TCP Wrappers */
 #ifdef HAVE_LIBWRAP
 int allow_severity = LOG_INFO;
 int deny_severity  = LOG_WARNING;
 #endif /* HAVE_LIBWRAP */
+
+#endif /* MICRO_NTOP */
+
+int webPort, refreshRate, localAddrFlag, actualReportDeviceId;
+short screenNumber, columnSort;
+int sock, newSock;
+#ifdef HAVE_OPENSSL
+int sock_ssl;
+#endif

@@ -636,21 +636,6 @@ unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
 /* ********************************* */
 
 /*
- * Print the log timestamp
- */
-void printLogTime(void) {
-  /* Unix timeval style */
-  register int s;
-
-  s = (lastPktTime.tv_sec + thisZone) % 86400;
-  fprintf(logd, "%02d:%02d:%02d.%06u ",
-	  s/3600, (s%3600)/60, s%60,
-	  (u_int32_t)lastPktTime.tv_usec);
-}
-
-/* ********************************* */
-
-/*
  * Returns the difference between gmt and local time in seconds.
  * Use gmtime() and localtime() to keep things simple.
  * [Borrowed from tcpdump]

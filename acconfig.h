@@ -30,6 +30,9 @@
 
 /* insert here custom defines */
 
+/* Define if you want to build micro ntop. */
+#undef MICRO_NTOP
+
 /* Define if you want a debugging version. */
 #undef DEBUG
 

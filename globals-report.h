@@ -58,22 +58,13 @@
 /* #define PRINT_ALL_ACTIVE_SESSIONS  */
 /* #define PRINT_RETRANSMISSION_DATA  */
 
-extern int maxNumLines, idleFlag, percentMode, localAddrFlag, refreshRate;
-extern int webPort, actualReportDeviceId;
-extern int sortSendMode, sortSendMode;
+#ifndef MICRO_NTOP
+extern int maxNumLines, sortSendMode;
 extern short sortFilter;
-
-extern int sock, newSock;
-#ifdef HAVE_OPENSSL
-extern int sock_ssl;
-#endif
 
 extern short screenNumber, columnSort;
 
 /* Threads */
-#ifdef MULTITHREADED
-extern pthread_t logFileLoopThreadId;
-#endif
 
 /* reportUtils.c */
 extern void formatUsageCounter(UsageCounter usageCtr);
@@ -126,7 +117,6 @@ extern void dumpNtopHashes(char*);
 
 /* report.c */
 extern void initReports(void);
-extern void termReports(void);
 extern int reportValues(time_t *lastTime);
 extern RETSIGTYPE printHostsTraffic(int signumber_ignored, int reportType,
                                     int sortedColumn, int revertOrder);
@@ -151,7 +141,6 @@ extern void printIpTrafficMatrix(void);
 extern void printThptStatsMatrix(int sortedColumn);
 extern void printThptStats(int sortedColumn);
 extern void printDomainStats(char* domainName, int sortedColumn, int revertOrder);
-extern void printLogHeader(void);
 extern void printNoDataYet(void);
 extern void listNetFlows(void);
 extern void printHostEvents(HostTraffic *theHost, int column, int revertOrder);
@@ -161,28 +150,20 @@ extern void updateHostThpt(HostTraffic *el, int hourId, int fullUpdate);
 
 /* webInterface.c */
 extern void initializeWeb(void);
-extern void *handleWebConnections(void* notUsed);
 extern void execCGI(char* cgiName);
 extern void showPluginsList(char* pluginName);
 /* CHECK ME: loadPlugins() and unloadPlugins() should not be in webInterface.c */
 extern void initWeb(int webPort, char* webAddr, char* sslAddr);
-extern char *makeHostLink(HostTraffic *el, short mode,
-                          short cutName, short addCountryFlag);
-extern char *getHostName(HostTraffic *el, short cutName);
 extern char *calculateCellColor(TrafficCounter actualValue,
                                 TrafficCounter avgTrafficLow,
                                 TrafficCounter avgTrafficHigh);
 extern char *getCountryIconURL(char* domainName);
 extern char *getHostCountryIconURL(HostTraffic *el);
-extern char *getRowColor(void);
 extern char *getActualRowColor(void);
 extern void switchNwInterface(int _interface);
 extern void usage(void);
 extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
-
-/* http.c */
-extern void sendHTTPHeader(int mimeType, int headerFlags);
 
 #ifdef HAVE_GDCHART
 
@@ -218,11 +199,8 @@ extern int out_graph(short gifwidth,
 		     ... );
 #endif
 
-extern FILE* getNewRandomFile(char* fileName, int len);
-
 /* **************************** */
 
-#define STR_INDEX_HTML                  "index.html"
 #define STR_SORT_DATA_RECEIVED_PROTOS   "sortDataReceivedProtos.html"
 #define STR_SORT_DATA_RECEIVED_IP       "sortDataReceivedIP.html"
 #define STR_SORT_DATA_RECEIVED_THPT     "sortDataReceivedThpt.html"
@@ -241,7 +219,6 @@ extern FILE* getNewRandomFile(char* fileName, int len);
 #define IP_L_2_L_HTML                   "IpL2L.html"
 #define DOMAIN_INFO_HTML                "domainInfo"
 #define CGI_HEADER                      "cgi/"
-#define PLUGINS_HEADER                  "plugins/"
 #define STR_SHOW_PLUGINS                "showPlugins.html"
 #define SHUTDOWN_NTOP_HTML              "shutdown.html"
 #define INFO_NTOP_HTML                  "info.html"
@@ -250,10 +227,32 @@ extern FILE* getNewRandomFile(char* fileName, int len);
 #define STR_SORT_DATA_RCVD_HOST_TRAFFIC "dataRcvdHostTraffic.html"
 #define STR_SORT_DATA_SENT_HOST_TRAFFIC "dataSentHostTraffic.html"
 #define SWITCH_NIC_HTML                 "switch.html"
-#define DUMP_DATA_HTML                  "dumpData.html"
+
 
 
 /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
 #define RESET_STATS_HTML              "resetStats.html"
+#endif
 
+extern int webPort, refreshRate, localAddrFlag, actualReportDeviceId;
+extern int sock, newSock;
+#ifdef HAVE_OPENSSL
+extern int sock_ssl;
+#endif
 
+/* http.c */
+extern void sendHTTPHeader(int mimeType, int headerFlags);
+
+#define STR_INDEX_HTML                  "index.html"
+#define PLUGINS_HEADER                  "plugins/"
+#define DUMP_DATA_HTML                  "dumpData.html"
+#define DUMP_TRAFFIC_DATA_HTML          "dumpTrafficData.html"
+
+/* webInterface.c */
+extern void *handleWebConnections(void* notUsed);
+extern char *getRowColor(void);
+extern char *makeHostLink(HostTraffic *el, short mode,
+                          short cutName, short addCountryFlag);
+
+extern FILE* getNewRandomFile(char* fileName, int len);
+extern char *getHostName(HostTraffic *el, short cutName);

@@ -754,7 +754,7 @@ typedef struct {
   TrafficCounter lastFiveMinsEthernetPkts;
   TrafficCounter lastNumEthernetPkts;
 
-  TrafficCounter lastethernetPkts;
+  TrafficCounter lastEthernetPkts;
   TrafficCounter lastTotalPkts;
 
   TrafficCounter lastBroadcastPkts;

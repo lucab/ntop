@@ -37,23 +37,13 @@ void ignoreSignal(int signalId) {
 /* ******************************* */
 
 void initReports(void) {
+#ifndef MICRO_NTOP
   columnSort = 0;
+#endif
   addDefaultAdminUser();
-
-#ifdef MULTITHREADED
-  if(logTimeout != 0)
-    createThread(&logFileLoopThreadId, logFileLoop, NULL);
-#endif
 }
 
-/* **************************************** */
-
-void termReports(void) {
-#ifdef MULTITHREADED
-  if(logTimeout != 0)
-    killThread(&logFileLoopThreadId);
-#endif
-}
+#ifndef MICRO_NTOP
 
 /* **************************************** */
 
@@ -67,8 +57,6 @@ int reportValues(time_t *lastTime) {
     Make sure that the other flags are't set. They have
     no effect in web mode
   */
-  percentMode = 0;
-
   if(refreshRate == 0)
     refreshRate = REFRESH_TIME;
   else if(refreshRate < MIN_REFRESH_TIME)
@@ -221,6 +209,10 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
 
     for(idx=0; idx<numEntries; idx++) {
+	  int i;
+	  TrafficCounter a, b, c, d, e;
+	  char webHostName[256];
+
       if(revertOrder)
 	el = tmpTable[numEntries-idx-1];
       else
@@ -229,25 +221,6 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
       if(el != NULL) {
 	sentPercent = (100*(float)el->bytesSent)/device[actualReportDeviceId].ethernetBytes;
 	rcvdPercent = (100*(float)el->bytesReceived)/device[actualReportDeviceId].ethernetBytes;
-
-	if(percentMode == 1) {
-	  float a, b;
-	  TrafficCounter c, d, e;
-
-	  /* % mode */
-	  if(!sortSendMode) {
-	    a = rcvdPercent;
-	    b = sentPercent;
-	    getProtocolDataReceived(&c, &d, &e, el);
-	  } else {
-	    a = rcvdPercent;
-	    b = sentPercent;
-	    getProtocolDataSent(&c, &d, &e, el);
-	  }
-	} else {
-	  int i;
-	  TrafficCounter a, b, c, d, e;
-	  char webHostName[256];
 
 	  a = el->bytesReceived, b = el->bytesSent;
 
@@ -483,8 +456,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
 	    sendString("</TR>\n");
 	  }
-	}
       }
+
       /* Avoid huge tables */
       if(printedEntries++ > maxNumLines)
 	break;
@@ -946,7 +919,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 
       /* Avoid huge tables */
       if(printedEntries++ > maxNumLines)
-		break;
+	break;
       }
     }
 
@@ -3398,25 +3371,6 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   free(tmpStats);
 }
 
-
-/* ************************ */
-
-void printLogHeader(void) {
-
-  if(logd != NULL) {
-    int i;
-
-    fprintf(logd, "# date totalPkts broadcastPkts multicastPkts "
-	    "ethernetBytes ipBytes nonIpBytes peakThroughput TCP UDP ICMP");
-
-    for(i=0; i<numIpProtosToMonitor; i++)
-      fprintf(logd, " %s", protoIPTrafficInfos[i]);
-
-    fprintf(logd, "\n");
-  }
-}
-
-
 /* ************************* */
 
 void printNoDataYet(void) {
@@ -3719,3 +3673,4 @@ void printHostHourlyTraffic(HostTraffic *el) {
   sendString("</CENTER>\n");
 }
 
+#endif /* MICRO_NTOP */

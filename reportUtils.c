@@ -24,6 +24,8 @@
 
 /* #define PRINT_ALL_ACTIVE_SESSIONS 1 */
 
+#ifndef MICRO_NTOP
+
 /* ************************************ */
 
 void formatUsageCounter(UsageCounter usageCtr) {
@@ -212,19 +214,6 @@ void printTableEntryPercentage(char *buf, int bufLen,
     }
   }
 
-  sendString(buf);
-}
-
- /* ********************************** */
-
-void printFlagedWarning(char *text) {
-  char buf[BUF_SIZE];
-
-  snprintf(buf, BUF_SIZE,
- 	   "<CENTER>\n"
- 	   "<P><IMG SRC=/warning.gif>\n"
- 	   "<P><FONT COLOR=\"#FF0000\" SIZE=+1>%s</FONT>\n"
- 	   "</CENTER>\n", text);
   sendString(buf);
 }
 
@@ -3060,6 +3049,21 @@ char* getNbNodeType(char nodeType) {
   return(""); /* NOTREACHED */
 }
 
+#endif /* MICRO_NTOP */
+
+ /* ********************************** */
+
+void printFlagedWarning(char *text) {
+  char buf[BUF_SIZE];
+
+  snprintf(buf, BUF_SIZE,
+ 	   "<CENTER>\n"
+ 	   "<P><IMG SRC=/warning.gif>\n"
+ 	   "<P><FONT COLOR=\"#FF0000\" SIZE=+1>%s</FONT>\n"
+ 	   "</CENTER>\n", text);
+  sendString(buf);
+}
+
 /* ********************************** */
 
 void printSectionTitle(char *text) {
@@ -3071,3 +3075,5 @@ void printSectionTitle(char *text) {
  	   "</CENTER>\n", text);
   sendString(buf);
 }
+
+

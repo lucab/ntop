@@ -375,7 +375,7 @@ static PluginInfo arpPluginInfo[] = {
   { "arpWatchPlugin",
     "This plugin handles ARP packets",
     "1.0", /* version */
-    "<A HREF=http://jake.unipi.it/~deri/>L.Deri</A>", 
+    "<A HREF=http://luca.ntop.org/>L.Deri</A>", 
     "arpWatch", /* http://<host>:<port>/plugins/arpWatch */
     1, /* Active */
     NULL, /* no special startup after init */
