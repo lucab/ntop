@@ -2279,7 +2279,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		  "<TH "TH_BG">%s5\">Nw&nbsp;Board&nbsp;Vendor%s</A></TH>\n"
 		  "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
 		  "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
-		  "<TH "TH_BG">%s9\">Age%s</A></TH>\n"
+		  "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
 		  "<TH "TH_BG">%s10\">AS%s</A></TH>"
 		  "</TR>\n",
 		  theAnchor[1], arrow[1],
@@ -2303,7 +2303,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 		  "<TH "TH_BG">%s4\">Bandwidth%s</A></TH>\n"
 		  "<TH "TH_BG">%s7\">Hops&nbsp;Distance%s</A></TH>\n"
 		  "<TH "TH_BG">%s8\">Host&nbsp;Contacts%s</A></TH>\n"
-		  "<TH "TH_BG">%s9\">Age%s</A></TH>\n"
+		  "<TH "TH_BG" COLSPAN=2>%s9\">Age/Inactivity%s</A></TH>\n"
 		  "<TH "TH_BG">%s10\">AS%s</A></TH>"
 		  "</TR>\n",
 		  theAnchor[1], arrow[1],
@@ -2527,7 +2527,11 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum, int showByte
 #endif
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
-		    formatSeconds(el->lastSeen - el->firstSeen, formatBuf, sizeof(formatBuf)));
+		      formatSeconds(el->lastSeen - el->firstSeen, formatBuf, sizeof(formatBuf)));
+	sendString(buf);
+
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td "TD_BG" align=\"right\" nowrap>%s</td>",
+		      formatSeconds(myGlobals.actTime-el->lastSeen, formatBuf, sizeof(formatBuf)));
 	sendString(buf);
 	
         if(el->hostAS == 0) {

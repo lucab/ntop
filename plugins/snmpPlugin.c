@@ -53,13 +53,10 @@
 #define AGENT_ISSUBAGENT 0     /* 0 main agent, 1 sub agentx */
 #define AGENT_PORT       161   /* TODO: how to set a different port? */
 
+
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 // #ifndef NTOP_H
 #define NTOP_H
@@ -474,8 +471,8 @@ getHostSerialFromIndex (netsnmp_table_request_info * table_info,
       if(snmpDebug)
 	traceEvent (CONST_TRACE_ALWAYSDISPLAY, "The value is %s \n",
 		    inet_ntop (AF_INET6,&(serial->value.ipSerial.ipAddress.Ip6Address), display_buffer, 20));
-      for (i=0;i<4;i++){
-	mod_value[i] = htonl (serial->value.ipSerial.ipAddress.Ip6Address.s6_addr32[i]);
+      for (i=0;i<16;i++){
+	mod_value[i] = htonl (serial->value.ipSerial.ipAddress.Ip6Address.s6_addr[i]);
       }
       addrput (AF_INET, &(serial->value.ipSerial.ipAddress), &mod_value);
 
@@ -694,8 +691,8 @@ static oid* encodeIpv6(HostTraffic* el){
   int i,j;
   u_int32_t buf[4];
   u_int8_t* ptr;
-  for(i=0;i<4;i++)
-    buf[i] =  htonl(el->hostSerial.value.ipSerial.ipAddress.Ip6Address.s6_addr32[i]);
+  for(i=0;i<16;i++)
+    buf[i] =  el->hostSerial.value.ipSerial.ipAddress.Ip6Address.s6_addr[i];
   tmpoid[0]=17;
   for(i=0;i<4;i++){
     ptr = (u_int8_t*) &buf[i];
@@ -847,7 +844,7 @@ processRequest (netsnmp_table_request_info * table_info,
 	      size = 4;
 	      break;
 	    case SERIAL_IPV6:
-	      cp =(char *)&traffic->hostSerial.value.ipSerial.ipAddress.Ip6Address.s6_addr32;
+	      cp =(char *)&traffic->hostSerial.value.ipSerial.ipAddress.Ip6Address.s6_addr;
 	      size = 16;
 	      break;
 	    case SERIAL_FC:
@@ -870,7 +867,7 @@ processRequest (netsnmp_table_request_info * table_info,
 	case COLUMN_FINGERPRINT:
 	  snmp_set_var_typed_value(var, ASN_OCTET_STR,
 				   (u_char *)(traffic->fingerprint == NULL ? "" : traffic->fingerprint),
-				   (traffic->fingerprint == NULL ? : strlen(traffic->fingerprint)));
+				   (traffic->fingerprint == NULL ? 0 : strlen(traffic->fingerprint)));
 	  break;
 
 	case COLUMN_PKTSENT:

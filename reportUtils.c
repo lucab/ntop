@@ -3588,12 +3588,12 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 	      "<TD "TD_BG" ALIGN=RIGHT>"
-	      "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[%s]</TD></TR>\n",
+	      "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[Inactive since %s]</TD></TR>\n",
 	      getRowColor(),
 	      "First/Last&nbsp;Seen",
 	      formatTime(&(el->firstSeen), formatBuf, sizeof(formatBuf)),
 	      formatTime(&(el->lastSeen), formatBuf1, sizeof(formatBuf1)),
-	      formatSeconds(el->lastSeen - el->firstSeen, formatBuf2, sizeof(formatBuf2)));
+	      formatSeconds(myGlobals.actTime-el->lastSeen, formatBuf2, sizeof(formatBuf2)));
   sendString(buf);
 
   if(el->hostAS != 0) {

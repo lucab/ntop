@@ -172,33 +172,37 @@ static int setNetFlowInSocket(int deviceId) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Collector terminated");
     closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSocket);
 #ifdef HAVE_SCTP
-    closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
+    if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0)
+      closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
 #endif
   }
 
   if(myGlobals.device[deviceId].netflowGlobals->netFlowInPort > 0) {
     errno = 0;
     myGlobals.device[deviceId].netflowGlobals->netFlowInSocket = socket(AF_INET, SOCK_DGRAM, 0);
-#ifdef HAVE_SCTP
-    myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
-#endif
-
-    if((myGlobals.device[deviceId].netflowGlobals->netFlowInSocket <= 0)
-#ifdef HAVE_SCTP
-       || (myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket <= 0)
-#endif
-       || (errno != 0) ) {
-      traceEvent(CONST_TRACE_INFO, "NETFLOW: Unable to create a socket - returned %d, error is '%s'(%d)",
+    if((myGlobals.device[deviceId].netflowGlobals->netFlowInSocket <= 0) || (errno != 0) ) {
+      traceEvent(CONST_TRACE_INFO, "NETFLOW: Unable to create a UDP socket - returned %d, error is '%s'(%d)",
 		 myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, strerror(errno), errno);
       setPluginStatus("Disabled - Unable to create listening socket.");
       return(-1);
     }
 
+#ifdef HAVE_SCTP
+    myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
+
+    if((myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket <= 0) || (errno != 0)) {
+      traceEvent(CONST_TRACE_INFO, "NETFLOW: Unable to create a SCTP socket - returned %d, error is '%s'(%d)",
+		 myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, strerror(errno), errno);
+      setPluginStatus("SCTP disabled - Unable to create listening socket.");
+    }
+#endif
+
     traceEvent(CONST_TRACE_INFO, "NETFLOW: Created a UDP socket (%d)",
 	       myGlobals.device[deviceId].netflowGlobals->netFlowInSocket);
 #ifdef HAVE_SCTP
-    traceEvent(CONST_TRACE_INFO, "NETFLOW: Created a SCTP socket (%d)",
-	       myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
+    if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0)
+      traceEvent(CONST_TRACE_INFO, "NETFLOW: Created a SCTP socket (%d)",
+		 myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
 #endif
 
     setsockopt(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket,
@@ -211,8 +215,8 @@ static int setNetFlowInSocket(int deviceId) {
     if((bind(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket,
 	     (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0)
 #ifdef HAVE_SCTP
-       || (bind(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket,
-		(struct sockaddr *)&sockIn, sizeof(sockIn)) < 0)
+       || ((myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0)
+	   && (bind(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0))
 #endif
        ) {
       traceEvent(CONST_TRACE_ERROR, "NETFLOW: Collector port %d already in use",
@@ -220,7 +224,8 @@ static int setNetFlowInSocket(int deviceId) {
       closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSocket);
       myGlobals.device[deviceId].netflowGlobals->netFlowInSocket = 0;
 #ifdef HAVE_SCTP
-      closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
+      if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket)
+	closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
       myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket = 0;
 #endif
       return(0);
@@ -296,7 +301,7 @@ static int handleV5Flow(time_t recordActTime,
   struct pcap_pkthdr h;
   struct tcphdr tp;
   IPSession *session = NULL;
-  time_t firstSeen, lastSeen;
+  time_t firstSeen, lastSeen, initTime;
 
   myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd++;
 
@@ -321,8 +326,13 @@ static int handleV5Flow(time_t recordActTime,
     return(0);
   }
 
-  firstSeen = ntohl(record->First);
-  lastSeen  = ntohl(record->Last);
+  recordActTime   = ntohl(recordActTime);
+  recordSysUpTime = ntohl(recordSysUpTime);
+  
+  initTime = recordActTime-recordSysUpTime;
+
+  firstSeen = ntohl(record->First) + initTime;
+  lastSeen  = ntohl(record->Last) + initTime;
 
   /* Sanity check */
   if(firstSeen > lastSeen)
@@ -480,8 +490,10 @@ static int handleV5Flow(time_t recordActTime,
 
   if((srcHost == NULL) ||(dstHost == NULL)) return(0);
 
-  recordActTime   = ntohl(recordActTime);
-  recordSysUpTime = ntohl(recordSysUpTime);
+  if(srcHost->firstSeen > firstSeen) srcHost->firstSeen = firstSeen;
+  if(srcHost->lastSeen > lastSeen)   srcHost->lastSeen = lastSeen;
+  if(dstHost->firstSeen > firstSeen) dstHost->firstSeen = firstSeen;
+  if(dstHost->lastSeen > lastSeen)   dstHost->lastSeen = lastSeen;
 
   srcHost->lastSeen = dstHost->lastSeen = recordActTime;
   /* Commented out ... already done in updatePacketCount()                         */
@@ -1200,13 +1212,14 @@ static void* netflowMainLoop(void* _deviceId) {
     FD_SET(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, &netflowMask);
 
 #ifdef HAVE_SCTP
-    FD_SET(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket, &netflowMask);
-    if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > maxSock)
-      maxSock = myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket;
+    if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0) {
+      FD_SET(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket, &netflowMask);
+      if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > maxSock)
+	maxSock = myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket;
+    }
 #endif
 
     if((rc = select(maxSock+1, &netflowMask, NULL, NULL, NULL)) > 0) {
-
       if(FD_ISSET(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket, &netflowMask)){
 	len = sizeof(fromHost);
 	rc = recvfrom(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket,(char*)&buffer, sizeof(buffer),
@@ -2722,7 +2735,8 @@ static void termNetflowDevice(int deviceId) {
     if(myGlobals.device[deviceId].netflowGlobals->netFlowInSocket > 0) {
       closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSocket);
 #ifdef HAVE_SCTP
-      closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
+      if(myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket > 0)
+	closeNwSocket(&myGlobals.device[deviceId].netflowGlobals->netFlowInSctpSocket);
 #endif
     }
 
@@ -2774,8 +2788,7 @@ static void termNetflowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
 
 #ifdef DEBUG_FLOWS
 
-static void handleNetFlowPacket(u_char *_deviceId,
-				const struct pcap_pkthdr *h,
+static void handleNetFlowPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
 				const u_char *p) {
   int sampledPacketSize;
   int deviceId, rc;
