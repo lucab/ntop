@@ -1463,6 +1463,102 @@ A. No. All ntop does is send a packet to the network addressed to the
    But how it goes out (and thus the source IP address) is totally up to the OS.  
    Just be aware when it gets to the netflow/sflow collector, it might have an 
    unexpected ip address as the source.
+
+Q: What is the ssl watchdog?
+A: (Added 2002-Sep-09, Burton)
+
+   Short answer: There are reported problems w/ the ntop web server hanging when 
+                 accessed via ssl (https://) from Netscape 6.2.2 (Win2K) (and others).
+
+                 The ssl "watchdog" keeps an eye on the web server - it waits for 3 seconds 
+                 and then if the SSL_accept call (openSSL) hasn't finished, it aborts it.  
+                 This leaves the user with nothing on their web browser, but at least ntop's 
+                 web server continues on.
+
+                 There is no know way to send something back to the user. DON'T EVEN ASK.
+                 It's not in ntop, it's the browser-server handshake that's hung.
+                 So, it looks - to the user - like a failed connection.  S'be'it...
+
+   If you are using https:// and seem to have the problem, run ntop with the --ssl-watchdog 
+   command line parameter... The item to look for on the configuration page (info.html) is:
+
+       # HTTPS Request Timeouts 
+
+   Or messages in the log:
+
+   ...: SSLWDERROR: Watchdog timer has expired. Aborting request, but ntop processing continues!
+
+   You can also enable it via a ./configure parameter (./configure --help | less) if it's
+   something you're going to always require.
+
+
+Q. Tell me more
+A. The problem is that ntop's web server is single threaded until we determine that the 
+   request is simply one that will be reading data.  At that point we fork to generate 
+   the page.  But the basic "accept a request" code is single threaded.  This happens 
+   all but instantaneously and hasn't been a problem previously.
+
+   The code is pretty basic and pretty common:
+
+       select() to wait for a connection, then
+       ssl_accept() to fireup a "server", meaning the ssl handshake.
+
+       Then process the http request (i.e. the GET and associated headers).
+
+   With Netscape 6.2.2 (and others), there seems to be a bug in the Netscape code 
+   (ntop's is identical to other projects like sshd).
+
+   According to something I read - but now can't find again - Netscape doesn't accept a 
+   legal combination of options on the handshake back from openSSL and hangs in a deadly 
+   embrace.  Supposedly openSSL 0.9.6c (or was it d - it's not in the changelog) built 
+   in a patch.  However, I didn't find the new version changed the behavior, nor are a 
+   lot of vendors shipping those releases (yet).  There is stuff about a bug w/ 
+   Netscape 4.x on the openSSL website, but I'm not having trouble with Netscape 4.x.
+
+   I don't understand the details and really don't care to find out.  It boils down to a 
+   hang in a call, SSL_accept() that doesn't have a timeout parameter.  Argh...
+
+   Because the code is invasive, I built it (like the SIGPIPE stuff) so you can turn it 
+   on at ./configure time:
+
+      --enable-sslwatchdog    Watchdog for ssl hangups (Netscape 6.2.2) [default=disabled]
+
+   or via a command line option:
+
+      --ssl-watchdog          Use ssl watchdog (NS6 problem)
+
+   With the "fix", ntop's web server hangs for at most 3 seconds, then continues on.  The 
+   user gets nada - and I don't know a way to send them anything, because we haven't 
+   retrieved the request yet nor done the handshake (so there isn't a TCP connection!)
+
+   It only affects https:// requests and I've coded the watchdog so it doesn't activate 
+   unless we have openSSL and either the compile or runtime parameter set.  If you don't 
+   get https:// requests, it's just another idle thread.
+
+   The fix is working for me... What I've tested (and the results with and without 
+   the watchdog):
+
+    Win2k
+      MS Internet Explorer 5.5 - ok
+      Netscape 4.61 - ok
+      Netscape 4.79 - ok
+      Netscape 6.2.2 - user gets no response 
+                     - old: ntop webserver hung and must restart ntop!!
+      Opera 6.03 - user gets a partial response 
+                 - old: browser says "setting up secure connection" and never continues, but 
+                          ntop webserver is ok  (SOMETIMES you get SSL errors in log, esp. 
+                          if you cancel the browser)
+    
+    Linux
+      Konqueror 2.2.2 - ok
+      Mozilla - 1.0 - ok
+      Netscape 4.78 - ok
+      Galeon 1.2.5 - almost complete response, browser session is toast (must restart) 
+                   - old: user gets nothing, but the ntop webserver is ok
+      Opera 6.0B1 - user gets a partial response, but browser session is ok 
+                  - old: browser says "setting up secure connection" and never continues, but
+                           ntop webserver is ok.
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
