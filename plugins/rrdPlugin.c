@@ -2202,11 +2202,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 #endif
 #endif /* MAKE_WITH_RRDSIGTRAP */
 
-
   /* Wait until the main thread changed privileges */
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleeping for %d seconds", 10);
   sleep(10);
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: Sleept");
+
+  if(active == 0) return(NULL);
 
   safe_snprintf(__FILE__, __LINE__, dname, sizeof(dname), "%s", myGlobals.rrdPath);
   if(_mkdir(dname) == -1) {
@@ -2242,9 +2241,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
      so that it expires once everything is up and running. */
   end_tm = myGlobals.actTime - dumpInterval + 15;
 
-  /* Show we're running */
-  active = 1;
-
   for(;myGlobals.capturePackets != FLAG_NTOPSTATE_TERM;) {
     int j;
 
@@ -2274,6 +2270,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     sleep(sleep_tm);
     HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...woke", sleep_tm);
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
+    if(active == 0) return(NULL);
 
     numRRDUpdates = 0;
     numRuns++;
@@ -2713,6 +2710,8 @@ static int initRRDfunct(void) {
 
   fflush(stdout);
   numTotalRRDUpdates = 0;
+  
+  active = 1; /* Show we're running */  
   return(0);
 }
 
@@ -2755,6 +2754,7 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   fflush(stdout);
 
   initialized = 0; /* Reinit on restart */
+  active = 0;
 }
 
 /* ****************************** */
@@ -2766,11 +2766,14 @@ PluginInfo* rrdPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Welcome to %s. (C) 2002-04 by Luca Deri.",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+	     "RRD: Welcome to %s. (C) 2002-04 by Luca Deri.",
 	     rrdPluginInfo->pluginName);
 
   return(rrdPluginInfo);
 }
+
+/* ************************************************ */
 
 /* This must be here so it can access the struct PluginInfo, above */
 static void setPluginStatus(char * status) {
