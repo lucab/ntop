@@ -1544,7 +1544,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		  -totalIPTraffic;
 	      else
 		totalIPTraffic = 0;
-	      snprintf(buf, sizeof(buf), "<TD ALIGN=RIGHT>%s</TD>", 
+	      snprintf(buf, sizeof(buf), "<TD ALIGN=RIGHT>%s</TD>",
 		       formatBytes(totalIPTraffic, 1));
 	      sendString(buf);
 	    } else if(reportType == 2) /* Throughtput */ {
@@ -1739,11 +1739,11 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 	/* if(unicastPkts < 0) unicastPkts = 0; */ /* It shouldn't happen */
 	if(device[actualReportDeviceId].ethernetPkts <= 0) device[actualReportDeviceId].ethernetPkts = 1;
 
-	snprintf(buf2, sizeof(buf2), 
+	snprintf(buf2, sizeof(buf2),
 		"<tr %s><th align=left>Total</th><td COLSPAN=2 align=right>%s</td></TR>\n",
 		getRowColor(), formatPkts(device[actualReportDeviceId].ethernetPkts));
 	sendString(buf2);
-	snprintf(buf2, sizeof(buf2), 
+	snprintf(buf2, sizeof(buf2),
 		"<tr %s><th align=left>Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
 		"<td COLSPAN=2 align=right>%s</td></TR>\n",
 		getRowColor(), formatPkts(droppedByKernel));
@@ -2646,7 +2646,7 @@ static char *getSessionState(IPSession *session) {
   case STATE_END:
     return("End");
   }
- 
+
  return("*Unknown*");
 }
 
@@ -3228,9 +3228,9 @@ static void printServiceStats(char* svcName, ServiceStats* ss,
 		formatPkts(ss->numRemoteReqSent), f2,
 		formatPkts(ss->numPositiveReplRcvd), f3,
 		formatPkts(ss->numNegativeReplRcvd), f4,
-		formatMicroSeconds(ss->fastestMicrosecLocalReqMade), 
+		formatMicroSeconds(ss->fastestMicrosecLocalReqMade),
 		formatMicroSeconds(ss->slowestMicrosecLocalReqMade),
-		formatMicroSeconds(ss->fastestMicrosecRemoteReqMade), 
+		formatMicroSeconds(ss->fastestMicrosecRemoteReqMade),
 		formatMicroSeconds(ss->slowestMicrosecRemoteReqMade)
 		);
 	sendString(buf);
@@ -3265,9 +3265,9 @@ static void printServiceStats(char* svcName, ServiceStats* ss,
 		formatPkts(ss->numRemoteReqRcvd), f2,
 		formatPkts(ss->numPositiveReplSent), f3,
 		formatPkts(ss->numNegativeReplSent), f4,
-		formatMicroSeconds(ss->fastestMicrosecLocalReqServed), 
+		formatMicroSeconds(ss->fastestMicrosecLocalReqServed),
 		formatMicroSeconds(ss->slowestMicrosecLocalReqServed),
-		formatMicroSeconds(ss->fastestMicrosecRemoteReqServed), 
+		formatMicroSeconds(ss->fastestMicrosecRemoteReqServed),
 		formatMicroSeconds(ss->slowestMicrosecRemoteReqServed)
 		);
 	sendString(buf);
@@ -3284,7 +3284,7 @@ static void printHostUsedServices(HostTraffic *el) {
   if((el->dnsStats == NULL)
      && (el->httpStats == NULL))
     return;
-  
+
 
   tot = 0;
 
@@ -4006,7 +4006,7 @@ void printIpProtocolUsage(void) {
 
 /* ********************************** */
 
-void printBar(char *buf, int bufLen, 
+void printBar(char *buf, int bufLen,
 	      unsigned short percentage,
 	      unsigned short maxPercentage,
 	      unsigned short ratio) {
@@ -4160,7 +4160,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       partialTotal = (float)device[actualReportDeviceId].tcpGlobalTrafficStats.local/1024;
       percentage = ((float)(partialTotal*100))/((float)total);
-      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP", 
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage);
 
       for(i=0; i<numIpProtosToMonitor; i++) {
@@ -4169,7 +4169,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
-	  printTableEntry(buf, sizeof(buf), protoIPTrafficInfos[i], 
+	  printTableEntry(buf, sizeof(buf), protoIPTrafficInfos[i],
 			  COLOR_1, partialTotal, percentage);
 	}
       }
@@ -4181,7 +4181,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       if(remainingTraffic > 0) {
 	percentage = ((float)(remainingTraffic*100))/((float)total);
-	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Prot.", 
+	printTableEntry(buf, sizeof(buf), "Other&nbsp;TCP/UDP-based&nbsp;Prot.",
 			COLOR_1, remainingTraffic, percentage);
       }
 
@@ -4206,7 +4206,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       partialTotal = (float)device[actualReportDeviceId].tcpGlobalTrafficStats.remote2local/1024;
       percentage = ((float)(partialTotal*100))/((float)total);
-      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP", 
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage);
 
       for(i=0; i<numIpProtosToMonitor; i++) {
@@ -4250,7 +4250,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
       partialTotal = (float)device[actualReportDeviceId].tcpGlobalTrafficStats.local2remote/1024;
       percentage = ((float)(partialTotal*100))/((float)total);
-      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP", 
+      printTableEntryPercentage(buf, sizeof(buf), "TCP&nbsp;vs.&nbsp;UDP",
 				"TCP", "UDP", total, percentage);
 
       for(i=0; i<numIpProtosToMonitor; i++) {
@@ -4259,7 +4259,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	if(partialTotal > 0) {
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
-	  printTableEntry(buf, sizeof(buf), protoIPTrafficInfos[i], 
+	  printTableEntry(buf, sizeof(buf), protoIPTrafficInfos[i],
 			  COLOR_1, partialTotal, percentage);
 	}
       }
@@ -4302,7 +4302,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	  partialTotal /= 1024;
 	  remainingTraffic += partialTotal;
 	  percentage = ((float)(partialTotal*100))/((float)total);
-	  printTableEntry(buf, sizeof(buf), protoIPTrafficInfos[i], 
+	  printTableEntry(buf, sizeof(buf), protoIPTrafficInfos[i],
 			  COLOR_1, partialTotal, percentage);
 	}
       }
@@ -4351,52 +4351,52 @@ void printProtoTraffic(void) {
 	  100*((float)device[actualReportDeviceId].ipBytes/device[actualReportDeviceId].ethernetBytes));
   sendString(buf);
 
-  printTableEntry(buf, sizeof(buf), "TCP", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "TCP", COLOR_1,
 		  (float)device[actualReportDeviceId].tcpBytes/1024,
 		  100*((float)device[actualReportDeviceId].tcpBytes/device[actualReportDeviceId].ipBytes));
-  printTableEntry(buf, sizeof(buf), "UDP", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "UDP", COLOR_1,
 		  (float)device[actualReportDeviceId].udpBytes/1024,
 		  100*((float)device[actualReportDeviceId].udpBytes/device[actualReportDeviceId].ipBytes));
-  printTableEntry(buf, sizeof(buf), "ICMP", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "ICMP", COLOR_1,
 		  (float)device[actualReportDeviceId].icmpBytes/1024,
 		  100*((float)device[actualReportDeviceId].icmpBytes/device[actualReportDeviceId].ipBytes));
-  printTableEntry(buf, sizeof(buf), "Other&nbsp;IP", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "Other&nbsp;IP", COLOR_1,
 		  (float)device[actualReportDeviceId].otherIpBytes/1024,
 		  ((float)device[actualReportDeviceId].otherIpBytes/device[actualReportDeviceId].ipBytes));
 
   sendString("</TABLE></TR>");
 
-  printTableEntry(buf, sizeof(buf), "(R)ARP", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "(R)ARP", COLOR_1,
 		  (float)device[actualReportDeviceId].arpRarpBytes/1024,
 		  100*((float)device[actualReportDeviceId].arpRarpBytes/device[actualReportDeviceId].ipBytes));
-  printTableEntry(buf, sizeof(buf), "DLC", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "DLC", COLOR_1,
 		  (float)device[actualReportDeviceId].dlcBytes/1024,
 		  100*((float)device[actualReportDeviceId].dlcBytes/device[actualReportDeviceId].ethernetBytes));
-  printTableEntry(buf, sizeof(buf), "IPX", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "IPX", COLOR_1,
 		  (float)device[actualReportDeviceId].ipxBytes/1024,
 		  100*((float)device[actualReportDeviceId].ipxBytes/device[actualReportDeviceId].ethernetBytes));
-  printTableEntry(buf, sizeof(buf), "Decnet", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "Decnet", COLOR_1,
 		  (float)device[actualReportDeviceId].decnetBytes/1024,
 		  100*((float)device[actualReportDeviceId].decnetBytes/device[actualReportDeviceId].ethernetBytes));
-  printTableEntry(buf, sizeof(buf), "AppleTalk", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "AppleTalk", COLOR_1,
 		  (float)device[actualReportDeviceId].atalkBytes/1024,
 		  100*((float)device[actualReportDeviceId].atalkBytes/device[actualReportDeviceId].ethernetBytes));
-  printTableEntry(buf, sizeof(buf), "OSPF", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "OSPF", COLOR_1,
 		  (float)device[actualReportDeviceId].ospfBytes/1024,
 		  100*((float)device[actualReportDeviceId].ospfBytes/device[actualReportDeviceId].ethernetBytes));
-  printTableEntry(buf, sizeof(buf), "NetBios", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "NetBios", COLOR_1,
 		  (float)device[actualReportDeviceId].netbiosBytes/1024,
 		  100*((float)device[actualReportDeviceId].netbiosBytes/device[actualReportDeviceId].ethernetBytes));
-  printTableEntry(buf, sizeof(buf), "IGMP", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "IGMP", COLOR_1,
 		  (float)device[actualReportDeviceId].igmpBytes/1024,
 		  100*((float)device[actualReportDeviceId].igmpBytes/device[actualReportDeviceId].ethernetBytes));
-  printTableEntry(buf, sizeof(buf), "OSI", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "OSI", COLOR_1,
 		  (float)device[actualReportDeviceId].osiBytes/1024,
 		  100*((float)device[actualReportDeviceId].osiBytes/device[actualReportDeviceId].ethernetBytes));
-  printTableEntry(buf, sizeof(buf), "QNX", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "QNX", COLOR_1,
 		  (float)device[actualReportDeviceId].qnxBytes/1024,
 		  100*((float)device[actualReportDeviceId].qnxBytes/device[actualReportDeviceId].ethernetBytes));
-  printTableEntry(buf, sizeof(buf), "Other", COLOR_1, 
+  printTableEntry(buf, sizeof(buf), "Other", COLOR_1,
 		  (float)device[actualReportDeviceId].otherBytes/1024,
 		  100*((float)device[actualReportDeviceId].otherBytes/device[actualReportDeviceId].ethernetBytes));
 
@@ -4665,23 +4665,23 @@ static char* buildHTMLBrowserWindowsLabel(int i, int j) {
   if((ipTrafficMatrix[i][j].bytesSent == 0)
      && (ipTrafficMatrix[i][j].bytesReceived == 0))
     buf[0]='\0';
-  else if ((ipTrafficMatrix[i][j].bytesSent > 0) 
+  else if ((ipTrafficMatrix[i][j].bytesSent > 0)
 	   && (ipTrafficMatrix[i][j].bytesReceived == 0))
-    snprintf(buf, sizeof(buf), "(%s->%s)=%s", ipTrafficMatrixHosts[i]->hostSymIpAddress, 
-	     ipTrafficMatrixHosts[j]->hostSymIpAddress, 
+    snprintf(buf, sizeof(buf), "(%s->%s)=%s", ipTrafficMatrixHosts[i]->hostSymIpAddress,
+	     ipTrafficMatrixHosts[j]->hostSymIpAddress,
 	     formatBytes(ipTrafficMatrix[i][j].bytesSent, 1));
-  else if ((ipTrafficMatrix[i][j].bytesSent == 0) 
+  else if ((ipTrafficMatrix[i][j].bytesSent == 0)
 	   &&  (ipTrafficMatrix[i][j].bytesReceived > 0))
-    snprintf(buf, sizeof(buf), "(%s->%s)=%s", ipTrafficMatrixHosts[j]->hostSymIpAddress, 
-	     ipTrafficMatrixHosts[i]->hostSymIpAddress, 
+    snprintf(buf, sizeof(buf), "(%s->%s)=%s", ipTrafficMatrixHosts[j]->hostSymIpAddress,
+	     ipTrafficMatrixHosts[i]->hostSymIpAddress,
 	     formatBytes(ipTrafficMatrix[i][j].bytesReceived, 1));
   else
     snprintf(buf, sizeof(buf), "(%s->%s)=%s, (%s->%s)=%s",
-	     ipTrafficMatrixHosts[i]->hostSymIpAddress, 
-	     ipTrafficMatrixHosts[j]->hostSymIpAddress, 
+	     ipTrafficMatrixHosts[i]->hostSymIpAddress,
+	     ipTrafficMatrixHosts[j]->hostSymIpAddress,
 	     formatBytes(ipTrafficMatrix[i][j].bytesSent, 1),
-	     ipTrafficMatrixHosts[j]->hostSymIpAddress, 
-	     ipTrafficMatrixHosts[i]->hostSymIpAddress, 
+	     ipTrafficMatrixHosts[j]->hostSymIpAddress,
+	     ipTrafficMatrixHosts[i]->hostSymIpAddress,
 	     formatBytes(ipTrafficMatrix[i][j].bytesReceived, 1));
 
 #ifdef MULTITHREADED
@@ -5526,7 +5526,7 @@ void listNetFlows(void) {
 	if(numEntries == 0) {
 	  sendString("<CENTER><P><H1>Network Flows</H1><P>"
 		     "<TABLE BORDER=1><TR><TH>Flow Name</TH>"
-		     "<TH>Packets</TH><TH>Traffic</TH></TR>");   
+		     "<TH>Packets</TH><TH>Traffic</TH></TR>");
 	}
 
 	snprintf(buf, sizeof(buf), "<TR %s><TH ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>%s"
@@ -5649,21 +5649,21 @@ void printHostEvents(HostTraffic *theHost, int column, int revertOrder) {
 	  theMsgTable[numEntries] = &(theMsgs[numEntries]);
 	  numEntries++;
 	}
-	
-	if(data_data.dptr != NULL) 
+
+	if(data_data.dptr != NULL)
 	  free(data_data.dptr);
       }
     }
-    
+
     free(key_data.dptr);
   } /* while */
-  
+
   if(numEntries == 0) {
     if(theHost == NULL)  {
       /* All the events */
       printNoDataYet();
     }
-    
+
     return;
   }
 
@@ -5813,7 +5813,7 @@ void fillDomainName(HostTraffic *el) {
       int len  = strlen(el->hostSymIpAddress);
       int len1 = strlen(domainName);
 
-      /* traceEvent(TRACE_INFO, "%s [%s]\n", 
+      /* traceEvent(TRACE_INFO, "%s [%s]\n",
 	 el->hostSymIpAddress, &el->hostSymIpAddress[len-len1]); */
 
       if((len > len1)
@@ -5933,76 +5933,92 @@ void printNtopConfigInfo(void) {
 
 /* *********************************** */
 
-void printHostHourlyTraffic(HostTraffic *el) {
-  char buf[BUF_SIZE];
-  int i;
-  TrafficCounter tc;
+static printHostHourlyTrafficEntry(HostTraffic *el, int i,
+				   TrafficCounter tcSent, TrafficCounter tcRcvd) {
   float pctg;
+  char buf[BUF_SIZE];
+
+  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT>%s</TD>", formatBytes(el->last24HoursBytesSent[i], 0));
+  sendString(buf);
+  if(tcSent > 0)
+    pctg = (float)(el->last24HoursBytesSent[i]*100)/(float)tcSent;
+  else
+    pctg = 0;
+  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT>%.2f %%</TD>", pctg);
+  sendString(buf);
+  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT>%s</TD>", formatBytes(el->last24HoursBytesRcvd[i], 0));
+  sendString(buf);
+  if(tcRcvd > 0)
+    pctg = (float)(el->last24HoursBytesRcvd[i]*100)/(float)tcRcvd;
+  else
+    pctg = 0;
+  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT>%.2f %%</TD></TR>", pctg);
+  sendString(buf);
+}
+
+/* *********************************** */
+
+void printHostHourlyTraffic(HostTraffic *el) {
+  TrafficCounter tcSent, tcRcvd;
 
   sendString("<P><H1>Traffic Stats</H1><P>\n<TABLE BORDER=1>\n<TR>");
-  sendString("<TH></TH>");
-  sendString("<TH>Midnight- 1AM</TH>");
-  sendString("<TH>1AM - 2AM</TH>");
-  sendString("<TH>2AM - 3AM</TH>");
-  sendString("<TH>3AM - 4AM</TH>");
-  sendString("<TH>4AM - 5AM</TH>");
-  sendString("<TH>5AM - 6AM</TH>");
-  sendString("<TH>6AM - 7AM</TH>");
-  sendString("<TH>7AM - 8AM</TH>");
-  sendString("<TH>8AM - 9AM</TH>");
-  sendString("<TH>9AM - 10AM</TH>");
-  sendString("<TH>10AM - 11AM</TH>");
-  sendString("<TH>11AM - Noon</TH>");
-  sendString("<TH>Noon - 1PM</TH>");
-  sendString("<TH>1PM - 2PM</TH>");
-  sendString("<TH>2PM - 3PM</TH>");
-  sendString("<TH>3PM - 4PM</TH>");
-  sendString("<TH>4PM - 5PM</TH>");
-  sendString("<TH>5PM - 6PM</TH>");
-  sendString("<TH>6PM - 7PM</TH>");
-  sendString("<TH>7PM - 8PM</TH>");
-  sendString("<TH>8PM - 9PM</TH>");
-  sendString("<TH>9PM - 10PM</TH>");
-  sendString("<TH>10PM - 11PM</TH>");
-  sendString("<TH>11PM - Midnight</TH></TR>");
+  sendString("<TH NOWRAP>Time</TH>");
+  sendString("<TH NOWRAP>Tot. Traffic Sent</TH>");
+  sendString("<TH NOWRAP>% Traffic Sent</TH>");
+  sendString("<TH NOWRAP>Tot. Traffic Rcvd</TH>");
+  sendString("<TH NOWRAP>% Traffic Rcvd</TH></TR>");
 
-  sendString("<TR><TH>Tot. Traffic Sent</TH>");
-  for(i=0; i<24; i++) {
-    sprintf(buf, "<TD>%s</TD>", formatBytes(el->last24HoursBytesSent[i], 0));
-    sendString(buf);
-  }
-  sendString("</TR>");
+  tcSent = el->bytesSent - el->lastDayBytesSent;
+  tcRcvd = el->bytesReceived - el->lastDayBytesRcvd;
 
-  tc = el->bytesSent - el->lastDayBytesSent;
-  sendString("<TR><TH>% Traffic Sent</TH>");
-  for(i=0; i<24; i++) {
-    if(tc > 0)
-      pctg = (float)(el->last24HoursBytesSent[i]*100)/(float)tc;
-    else
-      pctg = 0;
-    sprintf(buf, "<TD>%.2f</TD>", pctg);
-    sendString(buf);
-  }
-  sendString("</TR>");
-
-  sendString("<TR><TH>Tot. Traffic Rcvd</TH>");
-  for(i=0; i<24; i++) {
-    sprintf(buf, "<TD>%s</TD>", formatBytes(el->last24HoursBytesRcvd[i], 0));
-    sendString(buf);
-  }
-  sendString("</TR>");
-
-  tc = el->bytesReceived - el->lastDayBytesRcvd;
-  sendString("<TR><TH>% Traffic Rcvd</TH>");
-  for(i=0; i<24; i++) {
-    if(tc > 0)
-      pctg = (float)(el->last24HoursBytesRcvd[i]*100)/(float)tc;
-    else
-      pctg = 0;
-    sprintf(buf, "<TD>%.2f</TD>", pctg);
-    sendString(buf);
-  }
-  sendString("</TR>");
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>Midnight - 1AM</TH>");
+  printHostHourlyTrafficEntry(el, 0, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>1AM - 2AM</TH>");
+  printHostHourlyTrafficEntry(el, 1, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>2AM - 3AM</TH>");
+  printHostHourlyTrafficEntry(el, 2, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>3AM - 4AM</TH>");
+  printHostHourlyTrafficEntry(el, 3, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>4AM - 5AM</TH>");
+  printHostHourlyTrafficEntry(el, 4, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>5AM - 6AM</TH>");
+  printHostHourlyTrafficEntry(el, 5, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>6AM - 7AM</TH>");
+  printHostHourlyTrafficEntry(el, 6, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>7AM - 8AM</TH>");
+  printHostHourlyTrafficEntry(el, 7, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>8AM - 9AM</TH>");
+  printHostHourlyTrafficEntry(el, 8, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>9AM - 10AM</TH>");
+  printHostHourlyTrafficEntry(el, 9, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>10AM - 11AM</TH>");
+  printHostHourlyTrafficEntry(el, 10, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>11AM - Noon</TH>");
+  printHostHourlyTrafficEntry(el, 11, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>Noon - 1PM</TH>");
+  printHostHourlyTrafficEntry(el, 12, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>1PM - 2PM</TH>");
+  printHostHourlyTrafficEntry(el, 13, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>2PM - 3PM</TH>");
+  printHostHourlyTrafficEntry(el, 14, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>3PM - 4PM</TH>");
+  printHostHourlyTrafficEntry(el, 15, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>4PM - 5PM</TH>");
+  printHostHourlyTrafficEntry(el, 16, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>5PM - 6PM</TH>");
+  printHostHourlyTrafficEntry(el, 17, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>6PM - 7PM</TH>");
+  printHostHourlyTrafficEntry(el, 18, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>7PM - 8PM</TH>");
+  printHostHourlyTrafficEntry(el, 19, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>8PM - 9PM</TH>");
+  printHostHourlyTrafficEntry(el, 20, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>9PM - 10PM</TH>");
+  printHostHourlyTrafficEntry(el, 21, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>10PM - 11PM</TH>");
+  printHostHourlyTrafficEntry(el, 22, tcSent, tcRcvd);
+  sendString("<TR><TH NOWRAP ALIGN=LEFT>11PM - Midnight</TH>");
+  printHostHourlyTrafficEntry(el, 23, tcSent, tcRcvd);
 
   sendString("</TABLE>\n");
 }

@@ -812,7 +812,7 @@ static void returnHTTPPage(char* pageName, int postLen) {
     printActiveTCPSessions();
     sendString("</CENTER>\n");
   } else if(strncmp(pageName, SHUTDOWN_NTOP_HTML, strlen(SHUTDOWN_NTOP_HTML)) == 0) {
-    printHTTPheader();
+    sendHTTPProtoHeader(); sendHTTPHeaderType(); printHTTPheader();
     sendString("<CENTER><p><H1>ntop is shutting down...</H1><p>\n");
     sendString("</CENTER>\n");
     shutdownNtop();

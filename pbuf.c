@@ -2006,6 +2006,16 @@ static void processIpPkt(const u_char *bp,
     dstHost->instanceInUse++;
   }
 
+  if(rFileName != NULL) {
+    static int numPkt=1;
+    
+    traceEvent(TRACE_INFO, "%d) %s:%d -> %s:%d", 
+	       numPkt++,
+	       srcHost->hostNumIpAddress, sport,
+	       srcHost->hostNumIpAddress, dport);
+    fflush(stdout);
+  }
+
   if((srcHost->minTTL == 0) || (ip.ip_ttl < srcHost->minTTL)) srcHost->minTTL = ip.ip_ttl;
   if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
   if((dstHost->minTTL == 0) || (ip.ip_ttl < dstHost->minTTL)) dstHost->minTTL = ip.ip_ttl;
