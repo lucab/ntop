@@ -1314,11 +1314,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       if(len > 0) {
 	if((sport == 21) || (dport == 21)) {
 	  FD_SET(HOST_SVC_FTP, &srcHost->flags);
-	  memset(rcStr, 0, sizeof(rcStr));
+	  memset(tmpStr, 0, sizeof(tmpStr));
+	  strncpy(tmpStr, packetData, len);
 
-	  strncpy(rcStr, packetData, len);
-
-	  /* traceEvent(TRACE_INFO, "FTP: %s", rcStr); */
+	  /* traceEvent(TRACE_INFO, "FTP: %s", tmpStr); */
 
 	  /*
 	    227 Entering Passive Mode (131,114,21,11,156,95)
@@ -1326,22 +1325,22 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	    131.114.21.11:40012 (40012 = 156 * 256 + 95)
 	  */
-	  if((strncmp(rcStr, "227", 3) == 0)
-		|| (strncmp(rcStr, "PORT", 4) == 0)) {
+	  if((strncmp(tmpStr, "227", 3) == 0)
+		|| (strncmp(tmpStr, "PORT", 4) == 0)) {
 	    int a, b, c, d, e, f;
 
-		if(strncmp(rcStr, "PORT", 4) == 0) {
-			sscanf(&rcStr[5], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
+		if(strncmp(tmpStr, "PORT", 4) == 0) {
+			sscanf(&tmpStr[5], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
 		} else {
-			sscanf(&rcStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
+			sscanf(&tmpStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
 		}
-	    sprintf(rcStr, "%d.%d.%d.%d", a, b, c, d);
+	    sprintf(tmpStr, "%d.%d.%d.%d", a, b, c, d);
 
 #ifdef FTP_DEBUG
 	    traceEvent(TRACE_INFO, "FTP_DEBUG: (%d) [%d.%d.%d.%d:%d]",
-		       inet_addr(rcStr), a, b, c, d, (e*256+f));
+		       inet_addr(tmpStr), a, b, c, d, (e*256+f));
 #endif
-	    addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
+	    addPassiveSessionInfo(htonl((unsigned long)inet_addr(tmpStr)), (e*256+f));
 	  }
 	}
       } /* len > 0 */
