@@ -2993,7 +2993,7 @@ void printNtopProblemReport(void) {
   sendString("-------------------------------------------------------------------------------\n");
   sendString("  n t o p   v e r s i o n  '");
   sendString(version);
-  sendString("'  b u g   r e p o r t\n\n");
+  sendString("'  p r o b l e m   r e p o r t\n\n");
   sendString("From:  ______________________________\n\n");
   sendString("EMail: ______________________________\n\n");
   sendString("Date:  ");
