@@ -109,6 +109,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   char* symEthName = NULL, *ethAddr;
   u_char setSpoofingFlag = 0;
 
+  if((hostIpAddress == NULL) && (ether_addr == NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
+    return(NO_PEER);
+  }
+
   idx = computeInitialHashIdx(hostIpAddress, ether_addr, &useIPAddressForSearching);
   idx = (u_int)((idx*3) % device[actualDeviceId].actualHashSize);
 
@@ -748,7 +753,7 @@ static void updateUsedPorts(HostTraffic *srcHost,
       if(srcHostIdx != broadcastEntryIdx) {
 	if(srcHost->portsUsage[dport] == NULL)
 	  srcHost->portsUsage[dport] = allocatePortUsage();
-	
+
 	srcHost->portsUsage[dport]->clientTraffic += length;
 	srcHost->portsUsage[dport]->clientUses++;
 	srcHost->portsUsage[dport]->clientUsesLastPeer = dstHostIdx;
@@ -756,7 +761,7 @@ static void updateUsedPorts(HostTraffic *srcHost,
 
       if(dstHost->portsUsage[dport] == NULL)
 	dstHost->portsUsage[dport] = allocatePortUsage();
-      
+
       dstHost->portsUsage[dport]->serverTraffic += length;
       dstHost->portsUsage[dport]->serverUses++;
       dstHost->portsUsage[dport]->serverUsesLastPeer = srcHostIdx;
@@ -1261,9 +1266,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   char addedNewEntry = 0;
   u_short sessionType, check, found;
 #ifdef ENABLE_NAPSTER
-  u_short napsterDownload = 0
+  u_short napsterDownload = 0;
 #endif
-    u_short sessSport, sessDport;
+  u_short sessSport, sessDport;
   HostTraffic *srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
   HostTraffic *dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
   struct timeval tvstrct;
@@ -3424,7 +3429,7 @@ static void processIpPkt(const u_char *bp,
   off = ntohs(ip.ip_off);
 
   tcpUdpLen = ntohs(ip.ip_len) - hlen;
-  
+
   switch(ip.ip_p) {
   case IPPROTO_TCP:
     if(tcpUdpLen < sizeof(struct tcphdr)) {
@@ -4728,6 +4733,8 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0);
 	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0);
+
+	  if((srcHostIdx != NO_PEER) && (dstHostIdx != NO_PEER)) {
 	  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
@@ -4963,9 +4970,9 @@ void processPacket(u_char *_deviceId,
 	    dstHost->otherReceived += length;
 	    device[actualDeviceId].otherBytes += length;
 	  }
+	  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length);
+	  }
 	}
-
-	updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length);
       } else if(eth_type == ETHERTYPE_IP) {
 	if((device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU))
 	  processIpPkt(p, h, length, ether_src, ether_dst);
