@@ -975,8 +975,10 @@ RETSIGTYPE cleanup(int signo) {
        Wies-Software <wies@wiessoft.de> on 06/11/2001 says:
        myGlobals.device[i].pcapPtr seems to be already freed. further tests needed!
     */
-    if(myGlobals.device[i].pcapPtr != NULL)
+    if(myGlobals.device[i].pcapPtr != NULL) {
+      pcap_close(myGlobals.device[i].pcapPtr);
       free(myGlobals.device[i].pcapPtr);
+    }
 
     free(myGlobals.device[i].hashList);
   }
@@ -996,6 +998,18 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef WIN32
   termWinsock32();
 #endif
+
+  for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
+    free(myGlobals.protoIPTrafficInfos[i]);
+
+  free(myGlobals.protoIPTrafficInfos);
+  free(myGlobals.ipPortMapper);
+
+  if(myGlobals.currentFilterExpression != NULL)
+    free(myGlobals.currentFilterExpression);
+
+  free(myGlobals.pcapLogBasePath);
+  free(myGlobals.dbPath);
 
   myGlobals.endNtop = 1;
 
