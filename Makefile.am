@@ -145,7 +145,7 @@ libntopreport_la_DEPENDENCIES = config.h
 libntopreport_la_LIBADD       = $(MORELIBS)
 libntopreport_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic @DYN_FLAGS@
 
-man_MANS = ntop.8 intop/intop.1
+man_MANS = ntop.8 ntop-rules.8 intop/intop.1
 
 .PHONY: snapshot
 
