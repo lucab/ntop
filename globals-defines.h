@@ -1539,56 +1539,56 @@
 /*
  * html img tags for various devices
  */
-#define CONST_IMG_FIBRECHANNEL_SWITCH  "<img src=\"/switch.gif\" border=\"0\" alt=\"FibreChannel Switch\">"
-#define CONST_IMG_DHCP_CLIENT          "<img src=\"/bulb.gif\" border=\"0\" alt=\"DHCP Client\">"
-#define CONST_IMG_DHCP_SERVER          "<img src=\"/antenna.gif\" border=\"0\" alt=\"DHCP Server\">"
-#define CONST_IMG_MULTIHOMED           "<img src=\"/multihomed.gif\" border=\"0\" alt=\"Multihomed\">"
-#define CONST_IMG_BRIDGE               "<img src=\"/bridge.gif\" border=\"0\" alt=\"Bridge\">"
-#define CONST_IMG_ROUTER               "<img src=\"/router.gif\" border=\"0\" alt=\"Router\">"
-#define CONST_IMG_DNS_SERVER           "<img src=\"/dns.gif\" border=\"0\" alt=\"DNS\">"
-#define CONST_IMG_PRINTER              "<img src=\"/printer.gif\" border=\"0\" alt=\"Printer\">"
-#define CONST_IMG_SMTP_SERVER          "<img src=\"/mail.gif\" border=\"0\" alt=\"Mail (SMTP)\">"
+#define CONST_IMG_FIBRECHANNEL_SWITCH  "<img src=\"/switch.gif\" border=\"0\" alt=\"FibreChannel Switch\" title=\"FibreChannel Switch\">"
+#define CONST_IMG_DHCP_CLIENT          "<img src=\"/bulb.gif\" border=\"0\" alt=\"DHCP Client\" title=\"DHCP Client\">"
+#define CONST_IMG_DHCP_SERVER          "<img src=\"/antenna.gif\" border=\"0\" alt=\"DHCP Server\" title=\"DHCP Server\">"
+#define CONST_IMG_MULTIHOMED           "<img src=\"/multihomed.gif\" border=\"0\" alt=\"Multihomed\" title=\"Multihomed\">"
+#define CONST_IMG_BRIDGE               "<img src=\"/bridge.gif\" border=\"0\" alt=\"Bridge\" title=\"Bridge\">"
+#define CONST_IMG_ROUTER               "<img src=\"/router.gif\" border=\"0\" alt=\"Router\" title=\"Router\">"
+#define CONST_IMG_DNS_SERVER           "<img src=\"/dns.gif\" border=\"0\" alt=\"DNS\" title=\"DNS\">"
+#define CONST_IMG_PRINTER              "<img src=\"/printer.gif\" border=\"0\" alt=\"Printer\" title=\"Printer\">"
+#define CONST_IMG_SMTP_SERVER          "<img src=\"/mail.gif\" border=\"0\" alt=\"Mail (SMTP)\" title=\"Mail (SMTP)\">"
 #define CONST_IMG_POP_SERVER           "" /* No icon, yet */
 #define CONST_IMG_IMAP_SERVER          "" /* No icon, yet */
 #define CONST_IMG_DIRECTORY_SERVER     "" /* No icon, yet */
 #define CONST_IMG_FTP_SERVER           "" /* No icon, yet */
-#define CONST_IMG_HTTP_SERVER          "<img src=\"/web.gif\" border=\"0\" alt=\"HTTP Server\">"
-#define CONST_IMG_NTP_SERVER           "<img src=\"/clock.gif\" border=\"0\" alt=\"NTP Server\">"
-#define CONST_IMG_HAS_P2P              "<img src=\"/p2p.gif\" border=\"0\" alt=\"P2P Server\">"
-#define CONST_IMG_HAS_USERS            "<img src=\"/users.gif\" border=\"0\" alt=\"Users\">"
+#define CONST_IMG_HTTP_SERVER          "<img src=\"/web.gif\" border=\"0\" alt=\"HTTP Server\" title=\"HTTP Server\">"
+#define CONST_IMG_NTP_SERVER           "<img src=\"/clock.gif\" border=\"0\" alt=\"NTP Server\" title=\"NTP Server\">"
+#define CONST_IMG_HAS_P2P              "<img src=\"/p2p.gif\" border=\"0\" alt=\"P2P Server\" title=\"P2P Server\">"
+#define CONST_IMG_HAS_USERS            "<img src=\"/users.gif\" border=\"0\" alt=\"Users\" title=\"Users\">"
 
-#define CONST_IMG_HIGH_RISK            " <img src=\"/Risk_high.gif\" border=\"0\" alt=\"High Risk\">"
-#define CONST_IMG_MEDIUM_RISK          " <img src=\"/Risk_medium.gif\" border=\"0\" alt=\"Medium Risk\">"
-#define CONST_IMG_LOW_RISK             " <img src=\"/Risk_low.gif\" border=\"0\" alt=\"Low Risk\">"
+#define CONST_IMG_HIGH_RISK            " <img src=\"/Risk_high.gif\" border=\"0\" alt=\"High Risk\" title=\"High Risk\">"
+#define CONST_IMG_MEDIUM_RISK          " <img src=\"/Risk_medium.gif\" border=\"0\" alt=\"Medium Risk\" title=\"Medium Risk\">"
+#define CONST_IMG_LOW_RISK             " <img src=\"/Risk_low.gif\" border=\"0\" alt=\"Low Risk\" title=\"Low Risk\">"
 
-#define CONST_IMG_NIC_CARD             "<img src=\"/card.gif\" border=\"0\" alt=\"Network Card\">"
+#define CONST_IMG_NIC_CARD             "<img src=\"/card.gif\" border=\"0\" alt=\"Network Card\" title=\"Network Card\">"
 
-#define CONST_IMG_SCSI_INITIATOR       "<img src=\"/initiator.gif\" border=\"0\" alt=\"SCSI Initiator\">"
-#define CONST_IMG_SCSI_DISK            "<img src=\"/disk.gif\" border=\"0\" alt=\"SCSI Block Device (disk)\">"
+#define CONST_IMG_SCSI_INITIATOR       "<img src=\"/initiator.gif\" border=\"0\" alt=\"SCSI Initiator\" title=\"SCSI Initiator\">"
+#define CONST_IMG_SCSI_DISK            "<img src=\"/disk.gif\" border=\"0\" alt=\"SCSI Block Device (disk)\" title=\"SCSI Block Device (disk)\">"
 
-#define CONST_IMG_FC_VEN_BROCADE       "<img src=\"/brocade.gif\" border=\"0\" alt=\"Brocade Communications Systems, Inc.\">"
-#define CONST_IMG_FC_VEN_EMC           "<img src=\"/emc.gif\" border=\"0\" alt=\"EMC Corporation\">"
-#define CONST_IMG_FC_VEN_EMULEX        "<img src=\"/emulex.gif\" border=\"0\" alt=\"Emulex Corporation\">"
-#define CONST_IMG_FC_VEN_JNI           "<img src=\"/jni.gif\" border=\"0\" alt=\"JNI Corporation\">"
-#define CONST_IMG_FC_VEN_SEAGATE       "<img src=\"/seagate.gif\" border=\"0\" alt=\"Seagate Technology\">"
+#define CONST_IMG_FC_VEN_BROCADE       "<img src=\"/brocade.gif\" border=\"0\" alt=\"Brocade Communications Systems, Inc.\" title=\"Brocade Communications Systems, Inc.\">"
+#define CONST_IMG_FC_VEN_EMC           "<img src=\"/emc.gif\" border=\"0\" alt=\"EMC Corporation\" title=\"EMC Corporation\">"
+#define CONST_IMG_FC_VEN_EMULEX        "<img src=\"/emulex.gif\" border=\"0\" alt=\"Emulex Corporation\" title=\"Emulex Corporation\">"
+#define CONST_IMG_FC_VEN_JNI           "<img src=\"/jni.gif\" border=\"0\" alt=\"JNI Corporation\" title=\"JNI Corporation\">"
+#define CONST_IMG_FC_VEN_SEAGATE       "<img src=\"/seagate.gif\" border=\"0\" alt=\"Seagate Technology\" title=\"Seagate Technology\">"
 
-#define CONST_IMG_ARROW_UP             "<img src=\"/arrow_up.gif\" border=\"0\" alt=\"Ascending order, click to reverse\">"
-#define CONST_IMG_ARROW_DOWN           "<img src=\"/arrow_down.gif\" border=\"0\" alt=\"Descending order, click to reverse\">"
+#define CONST_IMG_ARROW_UP             "<img src=\"/arrow_up.gif\" border=\"0\" alt=\"Ascending order, click to reverse\" title=\"Ascending order, click to reverse\">"
+#define CONST_IMG_ARROW_DOWN           "<img src=\"/arrow_down.gif\" border=\"0\" alt=\"Descending order, click to reverse\" title=\"Descending order, click to reverse\">"
 
-#define CONST_IMG_OS_WINDOWS           "<img alt=\"OS: Windows\" align=\"middle\" src=\"/statsicons/os/windows.gif\">"
-#define CONST_IMG_OS_IRIX              "<img alt=\"OS: Irix\" align=\"middle\" src=\"/statsicons/os/irix.gif\">"
-#define CONST_IMG_OS_LINUX             "<img alt=\"OS: Linux\" align=\"middle\" src=\"/statsicons/os/linux.gif\">"
-#define CONST_IMG_OS_SUNOS             "<img alt=\"OS: SunOS\" align=\"middle\" src=\"/statsicons/os/sun.gif\">"
-#define CONST_IMG_OS_SOLARIS           "<img alt=\"OS: Solaris\" align=\"middle\" src=\"/statsicons/os/sun.gif\">"
-#define CONST_IMG_OS_HP_JETDIRET       "<img alt=\"OS: HP/JetDirect\" align=\"middle\" src=\"/statsicons/os/hp.gif\">"
-#define CONST_IMG_OS_MAC               "<img alt=\"OS: Apple Mac\" align=\"middle\" src=\"/statsicons/os/mac.gif\">"
-#define CONST_IMG_OS_NOVELL            "<img alt=\"OS: Novell\" align=\"middle\" src=\"/statsicons/os/novell.gif\">"
-#define CONST_IMG_OS_BSD               "<img alt=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
-#define CONST_IMG_OS_UNIX              "<img alt=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
-#define CONST_IMG_OS_BERKELEY          "<img alt=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
-#define CONST_IMG_OS_HP_UX             "<img alt=\"OS: HP-UX\" align=\"middle\" src=\"/statsicons/os/hp.gif\">"
-#define CONST_IMG_OS_AIX               "<img alt=\"OS: AIX\" align=\"middle\" src=\"/statsicons/os/aix.gif\">"
-#define CONST_IMG_OS_CISCO             "<img alt=\"OS: Cisco\" align=\"middle\" src=\"/statsicons/os/cisco.gif\">"
+#define CONST_IMG_OS_WINDOWS           "<img alt=\"OS: Windows\" title=\"OS: Windows\" align=\"middle\" src=\"/statsicons/os/windows.gif\">"
+#define CONST_IMG_OS_IRIX              "<img alt=\"OS: Irix\" title=\"OS: Irix\" align=\"middle\" src=\"/statsicons/os/irix.gif\">"
+#define CONST_IMG_OS_LINUX             "<img alt=\"OS: Linux\" title=\"OS: Linux\" align=\"middle\" src=\"/statsicons/os/linux.gif\">"
+#define CONST_IMG_OS_SUNOS             "<img alt=\"OS: SunOS\" title=\"OS: SunOS\" align=\"middle\" src=\"/statsicons/os/sun.gif\">"
+#define CONST_IMG_OS_SOLARIS           "<img alt=\"OS: Solaris\" title=\"OS: Solaris\" align=\"middle\" src=\"/statsicons/os/sun.gif\">"
+#define CONST_IMG_OS_HP_JETDIRET       "<img alt=\"OS: HP/JetDirect\" title=\"OS: HP/JetDirect\" align=\"middle\" src=\"/statsicons/os/hp.gif\">"
+#define CONST_IMG_OS_MAC               "<img alt=\"OS: Apple Mac\" title=\"OS: Apple Mac\" align=\"middle\" src=\"/statsicons/os/mac.gif\">"
+#define CONST_IMG_OS_NOVELL            "<img alt=\"OS: Novell\" title=\"OS: Novell\" align=\"middle\" src=\"/statsicons/os/novell.gif\">"
+#define CONST_IMG_OS_BSD               "<img alt=\"OS: BSD Unix\" title=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
+#define CONST_IMG_OS_UNIX              "<img alt=\"OS: BSD Unix\" title=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
+#define CONST_IMG_OS_BERKELEY          "<img alt=\"OS: BSD Unix\" title=\"OS: BSD Unix\" align=\"middle\" src=\"/statsicons/os/bsd.gif\">"
+#define CONST_IMG_OS_HP_UX             "<img alt=\"OS: HP-UX\" title=\"OS: HP-UX\" align=\"middle\" src=\"/statsicons/os/hp.gif\">"
+#define CONST_IMG_OS_AIX               "<img alt=\"OS: AIX\" title=\"OS: AIX\" align=\"middle\" src=\"/statsicons/os/aix.gif\">"
+#define CONST_IMG_OS_CISCO             "<img alt=\"OS: Cisco\" title=\"OS: Cisco\" align=\"middle\" src=\"/statsicons/os/cisco.gif\">"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* F L A G  and  B I T F L A G  items                                              */
@@ -2070,7 +2070,7 @@
 /*
  * img tag for lock (secure URL)
  */
-#define CONST_IMG_LOCK                 "<img src=\"/lock.png\" alt=\"secured URL\" border=\"0\">"
+#define CONST_IMG_LOCK                 "<img src=\"/lock.png\" alt=\"secured URL\" title=\"secured URL\" border=\"0\">"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* MISSING items                                                                   */
