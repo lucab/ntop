@@ -1330,7 +1330,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.99.014-2004-02-02"
+SCRIPTVER="v2.2.99.015-2004-02-10"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -19015,6 +19015,135 @@ fi
 fi
 
 
+echo "$as_me:$LINENO: checking for crypt_get_format_get_format in -lc" >&5
+echo $ECHO_N "checking for crypt_get_format_get_format in -lc... $ECHO_C" >&6
+if test "${ac_cv_lib_c_crypt_get_format_get_format+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lc  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char crypt_get_format_get_format ();
+int
+main ()
+{
+crypt_get_format_get_format ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_c_crypt_get_format_get_format=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_c_crypt_get_format_get_format=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_c_crypt_get_format_get_format" >&5
+echo "${ECHO_T}$ac_cv_lib_c_crypt_get_format_get_format" >&6
+if test $ac_cv_lib_c_crypt_get_format_get_format = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBC 1
+_ACEOF
+
+  LIBS="-lc $LIBS"
+
+else
+
+echo "$as_me:$LINENO: checking for crypt_get_format in -lcrypt" >&5
+echo $ECHO_N "checking for crypt_get_format in -lcrypt... $ECHO_C" >&6
+if test "${ac_cv_lib_crypt_crypt_get_format+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcrypt  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char crypt_get_format ();
+int
+main ()
+{
+crypt_get_format ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_crypt_crypt_get_format=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_crypt_crypt_get_format=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_crypt_crypt_get_format" >&5
+echo "${ECHO_T}$ac_cv_lib_crypt_crypt_get_format" >&6
+if test $ac_cv_lib_crypt_crypt_get_format = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBCRYPT 1
+_ACEOF
+
+  LIBS="-lcrypt $LIBS"
+
+fi
+
+fi
+
+
 echo "$as_me:$LINENO: checking for getopt_long in -lc" >&5
 echo $ECHO_N "checking for getopt_long in -lc... $ECHO_C" >&6
 if test "${ac_cv_lib_c_getopt_long+set}" = set; then
@@ -24474,6 +24603,14 @@ echo "$as_me: error: Unable to continue... aborting ./configure" >&2;}
 else
     echo "$as_me:$LINENO: result: ok" >&5
 echo "${ECHO_T}ok" >&6
+fi
+if (test ".${ac_cv_lib_c_crypt_get_format}" = ".yes") ||
+   (test ".${ac_cv_lib_crypt_crypt_get_format}" = ".yes"); then
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_CRYPTGETFORMAT 1
+_ACEOF
+
 fi
 
 echo "$as_me:$LINENO: checking for dynamic load module" >&5

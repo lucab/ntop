@@ -245,7 +245,11 @@ void doAddUser(int len) {
     } else {
       char tmpBuf[64];
 #ifndef WIN32
-      char cpw[14];
+      /* 14 is ok for traditional crypt, but the enhanced crypt() in FreeBSD
+       * (and others?) can be much larger. Just us a big buffer for ALL OSes
+       * in case others change too...
+       */
+      char cpw[LEN_MEDIUM_WORK_BUFFER];
 #endif
       datum data_data, key_data;
 
@@ -270,6 +274,23 @@ void doAddUser(int len) {
 
       /* Added user, clear the list */
       clearUserUrlList();  
+
+#ifdef HAVE_CRYPTGETFORMAT
+      /* If we have the routine, store the crypt type too */
+      {
+        char cgf[LEN_MEDIUM_WORK_BUFFER];
+        if(snprintf(tmpBuf, sizeof(tmpBuf), "3%s", user) < 0)
+	   BufferTooShort();
+        key_data.dptr = tmpBuf;
+        key_data.dsize = strlen(tmpBuf)+1;
+        strncpy(cgf, (char*)crypt_get_format(),  sizeof(cgf));
+        cgf[sizeof(cgf)-1] = '\0';
+        data_data.dptr = cgf;
+        data_data.dsize = strlen(data_data.dptr)+1;
+        gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE);
+      }
+#endif
+
     }
   }
 
@@ -903,7 +924,11 @@ static void addKeyIfMissing(char* key, char* value,
 			    char *userQuestion) {
   datum key_data, return_data, data_data;
 #ifndef WIN32
-  char cpw[14];
+ /* 14 is ok for traditional crypt, but the enhanced crypt() in FreeBSD
+  * (and others?) can be much larger. Just us a big buffer for ALL OSes
+  * in case others change too...
+  */
+  char cpw[LEN_MEDIUM_WORK_BUFFER];
 #endif
 
   /* Check existence of user 'admin' */
@@ -983,6 +1008,20 @@ static void addKeyIfMissing(char* key, char* value,
     /* print notice to the user */
     if(memcmp(key,"1admin",6) == 0)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Admin user password has been set");
+
+#ifdef HAVE_CRYPTGETFORMAT
+    if(memcmp(key,"1",1) == 0) {
+      /* If we have the routine, store the crypt type too */
+      char cgf[LEN_MEDIUM_WORK_BUFFER];
+      key_data.dptr = "3admin";
+      key_data.dsize = strlen(key_data.dptr)+1;
+      strncpy(cgf, (char*)crypt_get_format(),  sizeof(cgf));
+      cgf[sizeof(cgf)-1] = '\0';
+      data_data.dptr = cgf;
+      data_data.dsize = strlen(data_data.dptr)+1;
+      gdbm_store(myGlobals.pwFile, key_data, data_data, GDBM_REPLACE);
+    }
+#endif
 
   } else
     free(return_data.dptr);

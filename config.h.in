@@ -66,6 +66,9 @@
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
+/* Have crypt_get_format() function */
+#undef HAVE_CRYPTGETFORMAT
+
 /* Define to 1 if you have the <crypt.h> header file. */
 #undef HAVE_CRYPT_H
 

@@ -2625,6 +2625,7 @@ static int checkHTTPpassword(char *theRequestedURL,
     return 1; /* This is a non protected URL */
   }
 
+  /* Retrieve CURRENT record - it might have changed since stored above */
 #ifdef URL_DEBUG
   traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Retrieving '%s'", outBuffer);
 #endif
@@ -2635,17 +2636,13 @@ static int checkHTTPpassword(char *theRequestedURL,
 
   if(nextkey.dptr == NULL) {
     traceEvent(CONST_TRACE_NOISY,
-               "SECURITY: %s request for url '%s' disallowed",
-               user == NULL ? "'no user'" :
-                 strcmp(user, "") ? "'unspecified'" : user,
+               "SECURITY: request for url '%s' disallowed (I'm confused)",
                &theRequestedURL[1]);
-    return 0; /* The specified user is not among those who are
-                 allowed to access the URL */
+    return 0; /* The record used to exist - it's in securityItems, now it's gone.  Punt */
   }
 
-/* Following is not URL_DEBUG so we don't accidentally log the crypt()ed password value */
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: gdbm_fetch(..., '%s')='%s'", key.dptr, nextkey.dptr);
+#ifdef URL_DEBUG
+  traceEvent(CONST_TRACE_INFO, "URL_DEBUG: gdbm_fetch(..., '%s')='%s'", key.dptr, nextkey.dptr);
 #endif
 
   i = decodeString(thePw, (unsigned char*)outBuffer, sizeof(outBuffer));
@@ -2677,6 +2674,7 @@ static int checkHTTPpassword(char *theRequestedURL,
   if(snprintf(users, LEN_GENERAL_WORK_BUFFER, "1%s", user) < 0)
     BufferTooShort();
 
+  /* Start simple.  Is the user even in the permitted list? */
   if(strstr(nextkey.dptr, users) == NULL) {
     if(nextkey.dptr != NULL) free(nextkey.dptr);
     if (strlen(&theRequestedURL[1]) > 40) {
@@ -2694,6 +2692,41 @@ static int checkHTTPpassword(char *theRequestedURL,
                  allowed to access the URL */
   }
   free(nextkey.dptr);
+
+#ifdef HAVE_CRYPTGETFORMAT
+  /* If we have the routine retrieve the format and do the crypt_set_format first... */
+  {
+    datum fmtkey, fmtdata;
+    char users3[LEN_GENERAL_WORK_BUFFER];
+
+    memset(&fmtdata, 0, sizeof(fmtdata));
+
+    if(snprintf(users3, sizeof(users3), "3%s", user) < 0)
+      BufferTooShort();
+
+#ifdef URL_DEBUG
+    traceEvent(CONST_TRACE_NOISY, "URL_DEBUG: Checking for crypt_set_format() for %s", users3);
+#endif
+
+    fmtkey.dptr = users3;
+    fmtkey.dsize = strlen(users3) + 1;
+    fmtdata = gdbm_fetch(myGlobals.pwFile, fmtkey);
+    if(fmtdata.dptr != NULL) {
+      rc=crypt_set_format(fmtdata.dptr);
+      if(rc == 0)
+        traceEvent(CONST_TRACE_WARNING, "Unable to set crypt format ... password compare may fail");
+#ifdef URL_DEBUG
+      else
+        traceEvent(CONST_TRACE_NOISY, "URL_DEBUG: crypt_set_format(%d) ok", fmtdata.dptr);
+#endif
+      free (fmtdata.dptr);
+    }
+#ifdef URL_DEBUG
+      else
+        traceEvent(CONST_TRACE_NOISY, "URL_DEBUG: '3' record for %s(%d) not found", fmtkey.dptr, fmtkey.dsize);
+#endif
+  }
+#endif
 
   key.dptr = users;
   key.dsize = strlen(users)+1;
