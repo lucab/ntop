@@ -36,6 +36,7 @@
 /LOG_/ { next }
 /_URL/ { next }
 /SLL_HDR_LEN/ { next }
+/SAP_/ { next }
 
 $2 == "PACKAGE" { next }
 
