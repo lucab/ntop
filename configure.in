@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.99])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.99.016-2004-02-10"
+SCRIPTVER="v2.2.99.017-2004-02-15"
 
 dnl>
 dnl> generate the config header
@@ -903,15 +903,17 @@ case "${target}:${CC}" in
       ;;
 
     *-*-linux*:*gcc* )
-        VERIFIED1="2.1.90:2003-03-28:Burton Strauss <burton@ntopsupport.com>:RedHat AS2.1, 7.3 and 8.0"
-        VERIFIED2="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:redhat 7.3 2.4.20-18.7"
-        VERIFIED3="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:redhat 8.0 2.4.20-18.8"
-        VERIFIED4="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:redhat 9 2.4.20-8"
-        VERIFIED5="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:suse 8.2 2.4.20-4GB"
-        VERIFIED6="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:gentoo 1.4.3.8p1 2.4.20-gentoo-r5"
-        VERIFIED7="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:mandrake 9.1 2.4.21-0.13mdk"
-        VERIFIED8="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:debian 3.0 2.4.16-686"
-        VERIFIED9="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:slackware 9.0.0 2.4.20"
+        VERIFIED1="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:Fedora Core 1"
+        VERIFIED2="2.2.99:2004-02-15:Burton Strauss <burton@ntopsupport.com>:RedHat 9.0"
+        VERIFIED3="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:SuSE 9.0"
+        VERIFIED4="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:Gentoo 1.4"
+        VERIFIED5="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:Mandrake 9.2"
+        VERIFIED6="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:Debian 3.0"
+        VERIFIED7="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:Slackware 9.1.0"
+        UNVERIFIED1="2.2.98:2004-02-15:Various:RedHat 1, 3, 6.2, 6.3, 7.0, 7.1, 7.2, 7.3 and 8.0"
+        UNVERIFIED2="2.2.98:2004-02-15:Various:Slackware 7.1.0, 9.0.0"
+        UNVERIFIED3="2.2.98:2004-02-15:Various:SuSE 6.3, 7.0, 8.0, 8.1, 8.2"
+        UNVERIFIED4="2.2.98:2004-02-15:Various:Various distributions, 2.6 kernel"
 
         DEFINEOS="LINUX";     STATUS="SUPPORTED"
 
@@ -922,8 +924,9 @@ case "${target}:${CC}" in
       ;;
 
     *-*-solaris2.9*:* )
-        NOTE1="Supported: Solaris 8 for both sparc and i86"
-        DEFINEOS="SOLARIS";   STATUS="UNTESTED"
+        NOTE1="Requires various gnu tools from SunFreeware.com"
+        NOTE2="--enable-i18n is disabled"
+        DEFINEOS="SOLARIS";   STATUS="SUPPORTED"
         RELEASE="9"
       ;;
 
@@ -952,20 +955,18 @@ case "${target}:${CC}" in
       ;;
 
     *-*-darwin*:* )
-        VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com>:MAC OS X 10.1 (Darwin)"
-        VERIFIED2="2.1.90:2003-03-28:Luca Deri:MAC OS X 10.2 (Jaguar)"
-	VERIFIED3="2.2.96:2003-10-29:Luca Deri:MAC OS X 10.3 (Panther)"
+	VERIFIED1="2.2.98:2003-12-30:Luca Deri:MAC OS X 10.3 (Panther)"
         NOTE1="'Darwin 5.5' is the kernel of the os known as MAC OS X 10.1"
         NOTE2="'Darwin 6.1' is the kernel of the os known as MAC OS X 10.2 (Jaguar)"
+        NOTE3="'Darwin 7.2' is the kernel of the os known as MAC OS X 10.3 (Panther)"
         DEFINEOS="DARWIN";    STATUS="SUPPORTED"
       ;;
 
     *-*-freebsd[[45]]*:*gcc* )
-        VERIFIED1="2.2:2003-04-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.3-RELEASE"
-        VERIFIED2="2.1.90:2003-03-18:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE-p7"
-        VERIFIED3="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.8-RELEASE"
-        VERIFIED4="2.2:2003-04-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-5.0-RELEASE"
-        VERIFIED5="2.2.4:2003-07-29:Burton Strauss <burton@ntopsupport.com>:FreeBSD-5.1-RELEASE"
+        VERIFIED1="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.9-RELEASE"
+        VERIFIED2="2.2.98:2003-12-30:Burton Strauss <burton@ntopsupport.com>:FreeBSD-5.1-RELEASE"
+        VERIFIED3="2.1.90:2003-03-18:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE-p7"
+        UNVERIFIED1="2.2.98:2004-02-15:Various:FreeBSD 4.6.2, 4.8, 5.2, 5.2.1"
         DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
       ;;
 
@@ -1221,6 +1222,36 @@ else
     echo "*   Support is unverified..."
 fi
 echo "*"
+if test ".${UNVERIFIED1}" != "."; then
+    echo "*   From version check log reports, ntop's users are also "
+    echo "*   running under:"
+    echo "*"
+    echo $UNVERIFIED1 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    if test ".${UNVERIFIED2}" != "."; then
+        echo $UNVERIFIED2 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${UNVERIFIED3}" != "."; then
+        echo $UNVERIFIED3 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${UNVERIFIED4}" != "."; then
+        echo $UNVERIFIED4 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${UNVERIFIED5}" != "."; then
+        echo $UNVERIFIED5 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${UNVERIFIED6}" != "."; then
+        echo $UNVERIFIED6 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${UNVERIFIED7}" != "."; then
+        echo $UNVERIFIED7 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${UNVERIFIED8}" != "."; then
+        echo $UNVERIFIED8 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+    if test ".${UNVERIFIED9}" != "."; then
+        echo $UNVERIFIED9 | ${ac_cv_prog_AWK} -f utils/verified.awk
+    fi
+fi
 echo "*******************************************************************"
 echo
 
