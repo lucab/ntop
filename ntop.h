@@ -291,9 +291,6 @@ int getdomainname(char *name, size_t len);
 # ifndef ETHERTYPE_IP
 #  define ETHERTYPE_IP        0x0800
 # endif
-# ifndef ETHERTYPE_IPv6
-#  define ETHERTYPE_IPv6        0x86DD
-# endif
 # ifndef ETHERTYPE_NS
 #  define ETHERTYPE_NS        0x0600
 # endif
@@ -357,6 +354,9 @@ int getdomainname(char *name, size_t len);
 
 # ifndef ETHERTYPE_QNX
 #  define ETHERTYPE_QNX       0x8203
+# endif
+# ifndef ETHERTYPE_IPv6
+#  define ETHERTYPE_IPv6        0x86DD
 # endif
 
 #ifndef ETHERMTU
