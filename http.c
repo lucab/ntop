@@ -1108,6 +1108,9 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 			myGlobals.dataFileDirs[idx], pageName) < 0)
 	      BufferOverflow();
 	  }
+
+	  /* traceEvent(TRACE_ERROR, "Searching '%s'\n", tmpStr); */
+	  
 #ifdef WIN32
 	  i=0;
 	  while(tmpStr[i] != '\0') {
@@ -1117,7 +1120,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 #endif
 
 	  if(stat(tmpStr, &statbuf) == 0) {
-	      if((fd = fopen(tmpStr, "rb")) != NULL) {
+	      if((fd = fopen(tmpStr, "rb")) != NULL) {		
 		  found = 1;
 		  break;
 	      }

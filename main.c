@@ -293,7 +293,7 @@ static void usage (FILE * fp) {
 #endif
 
   fprintf(fp, "    [-t (trace level [0-5])]\n");
-
+  fprintf(fp, "    [-s Disable promiscuous mode]\n");
 #ifndef WIN32
   fprintf(fp, "    [-u <userid> | <username> (see man page)]\n");
 #endif
@@ -349,9 +349,9 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:t:w:A:B:D:F:MP:R:S:U:VW:12";
+  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:A:B:D:F:MP:R:S:U:VW:12";
 #else
-  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:t:u:v:w:A:B:D:EF:IKLMNP:R:S:U:VW:12";
+  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:A:B:D:EF:IKLMNP:R:S:U:VW:12";
 #endif
   int opt;
 
@@ -438,7 +438,7 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.protoSpecs = strdup(optarg);
       break;
 
-    case 'q': /* allow ntop to save suspicious packets in a file in pcap (tcpdump) format */
+    case 'q': /* save suspicious packets in a file in pcap (tcpdump) format */
       myGlobals.enableSuspiciousPacketDump = 1;
       break;
 
@@ -717,12 +717,12 @@ int main(int argc, char *argv[]) {
   reportValues(&lastTime);
 #endif /* MICRO_NTOP */
 
+  initGdbm();
+
 #ifndef WIN32
   if(myGlobals.daemonMode)
     daemonize();
-#endif
-  
-  initGdbm(myGlobals.dbPath);
+#endif  
 
   /*
    * initialize memory and data 
