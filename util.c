@@ -32,7 +32,6 @@
 #endif
 
 /* Local */
-#define MAX_NUM_NETWORKS      32
 #define NETWORK                0
 #define NETMASK                1
 #define BROADCAST              2
@@ -340,19 +339,16 @@ int dotted2bits(char *mask) {
 
 /* Example: "131.114.0.0/16,193.43.104.0/255.255.255.0" */
 
-void handleLocalAddresses(char* addresses) {
+void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3], u_short *numNetworks, 
+			char *localAddresses, int localAddressesLen) {
   char *strtokState, *address;
-  char localAddresses[1024];
-  int laBufferLength = sizeof(localAddresses);
-  int laBufferPosition = 0;
-  int laBufferUsed = 0;
+  int  laBufferLength = sizeof(localAddresses);
+  int  laBufferPosition = 0, laBufferUsed = 0, i;
 
-  int i;
-
-  if (! addresses)
+  if(addresses == NULL)
     return;
-
-  memset(localAddresses, 0, sizeof(localAddresses));
+  
+  memset(localAddresses, 0, localAddressesLen);
 
   address = strtok_r(addresses, ",", &strtokState);
 
@@ -437,7 +433,7 @@ void handleLocalAddresses(char* addresses) {
 		 network, a, b, c, d);
 #endif
 
-      if(numLocalNets < MAX_NUM_NETWORKS) {
+      if((*numNetworks) < MAX_NUM_NETWORKS) {
 	int found = 0;
 
 	for(i=0; i<myGlobals.numDevices; i++)
@@ -455,26 +451,26 @@ void handleLocalAddresses(char* addresses) {
 	  }
 
 	if(found == 0) {
-	  networks[numLocalNets][NETWORK]   = network;
-	  networks[numLocalNets][NETMASK]   = networkMask;
-	  networks[numLocalNets][BROADCAST] = broadcast;
+	  theNetworks[(*numNetworks)][NETWORK]   = network;
+	  theNetworks[(*numNetworks)][NETMASK]   = networkMask;
+	  theNetworks[(*numNetworks)][BROADCAST] = broadcast;
 
           a = (int) ((network >> 24) & 0xff);
           b = (int) ((network >> 16) & 0xff);
           c = (int) ((network >>  8) & 0xff);
           d = (int) ((network >>  0) & 0xff);
-
+	  
           if ((laBufferUsed = snprintf(&localAddresses[laBufferPosition],
-                                      laBufferLength,
-                                      "%s%d.%d.%d.%d/%d",
-                                      numLocalNets == 0 ? "" : ", ",
-                                      a, b, c, d,
-                                      bits)) < 0)
-              BufferTooShort();
+				       laBufferLength,
+				       "%s%d.%d.%d.%d/%d",
+				       (*numNetworks) == 0 ? "" : ", ",
+				       a, b, c, d,
+				       bits)) < 0)
+	    BufferTooShort();
           laBufferPosition += laBufferUsed;
           laBufferLength   -= laBufferUsed;
-
-	  numLocalNets++;
+	  
+	  (*numNetworks)++;
 	}
       } else
 	traceEvent(TRACE_WARNING, "Unable to handle network (too many entries!).\n");
@@ -482,16 +478,26 @@ void handleLocalAddresses(char* addresses) {
 
     address = strtok_r(NULL, ",", &strtokState);
   }
-
-  /* Not used anymore */
-  free(myGlobals.localAddresses);
-  myGlobals.localAddresses = strdup(localAddresses);
 }
-
 
 /* ********************************* */
 
-unsigned short _pseudoLocalAddress(struct in_addr *addr) {
+void handleLocalAddresses(char* addresses) {
+  char localAddresses[1024];
+
+  handleAddressLists(addresses, networks, &numLocalNets, 
+		     localAddresses, sizeof(localAddresses));
+
+  /* Not used anymore */
+  if(myGlobals.localAddresses != NULL) free(myGlobals.localAddresses);
+  myGlobals.localAddresses = strdup(localAddresses);
+}
+
+/* ********************************* */
+
+unsigned short __pseudoLocalAddress(struct in_addr *addr,
+				    u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
+				    u_short numNetworks) {
     int i;
 
   for(i=0; i<numLocalNets; i++) {
@@ -499,15 +505,15 @@ unsigned short _pseudoLocalAddress(struct in_addr *addr) {
     char buf[32], buf1[32], buf2[32];
     struct in_addr addr1, addr2;
 
-    addr1.s_addr = networks[i][NETWORK];
-    addr2.s_addr = networks[i][NETMASK];
+    addr1.s_addr = theNetworks[i][NETWORK];
+    addr2.s_addr = theNetworks[i][NETMASK];
 
     traceEvent(TRACE_INFO, "DEBUG: %s comparing [%s/%s]\n",
 	       _intoa(*addr, buf, sizeof(buf)),
 	       _intoa(addr1, buf1, sizeof(buf1)),
 	       _intoa(addr2, buf2, sizeof(buf2)));
 #endif
-    if((addr->s_addr & networks[i][NETMASK]) == networks[i][NETWORK]) {
+    if((addr->s_addr & theNetworks[i][NETMASK]) == theNetworks[i][NETWORK]) {
 #ifdef ADDRESS_DEBUG
       traceEvent(TRACE_WARNING, "ADDRESS_DEBUG: %s is pseudolocal\n", intoa(*addr));
 #endif
@@ -520,6 +526,12 @@ unsigned short _pseudoLocalAddress(struct in_addr *addr) {
   }
 
   return(0);
+}
+
+/* ********************************* */
+
+unsigned short _pseudoLocalAddress(struct in_addr *addr) {
+  __pseudoLocalAddress(addr, networks, numLocalNets);
 }
 
 /* ********************************* */
@@ -2484,7 +2496,7 @@ void fillDomainName(HostTraffic *el) {
      || (el->hostSymIpAddress == NULL))
     return;
 
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#ifdef MULTITHREADED
   if(myGlobals.numericFlag == 0)
     accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
 #endif
@@ -2495,7 +2507,7 @@ void fillDomainName(HostTraffic *el) {
 	 isdigit(el->hostSymIpAddress[0]))) {
     /* NOTE: theDomainHasBeenComputed(el) = 0 */
     el->fullDomainName = el->dotDomainName = "";
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#ifdef MULTITHREADED
     if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -2541,7 +2553,7 @@ void fillDomainName(HostTraffic *el) {
       el->fullDomainName = el->dotDomainName = "";
     }
 
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#ifdef MULTITHREADED
     if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
@@ -2564,7 +2576,7 @@ void fillDomainName(HostTraffic *el) {
 
   /* traceEvent(TRACE_INFO, "'%s'\n", el->domainName); */
 
-#if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
+#ifdef MULTITHREADED
   if(myGlobals.numericFlag == 0)
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
