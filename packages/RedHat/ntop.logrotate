@@ -1,0 +1,12 @@
+/var/log/ntop.access.log { 
+    missingok 
+    compress 
+    rotate 2 
+    weekly 
+    postrotate 
+     touch $* 
+     chown ntop.ntop $* 
+     (/sbin/pidof ntop && /sbin/service ntop restart) >/dev/null 2>&1 || true 
+    endscript 
+} 
+

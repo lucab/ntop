@@ -1,165 +1,286 @@
-#
-# spec file for package ntop (Version 2)
-# 
-# (c) Pablo Ruiz Garcia 2002 (pruiz@ip6seguridad.com)
-# This file and all modifications and additions to the pristine
-# package are under the same license as the package itself.
-# 
-#
+%define ntoproot	/usr
 
-%define ntopversion %{!?version:2.0} %{?version:%version}
-%define ntoprelease 1
+Summary: ntop shows the network usage
+Name: ntop
+Version: 2.1.92
+Release: 0
+Source: ntop-2.1.92.tgz
+Source1: ntop.init
+Source2: ntop.logrotate
+Source3: ntop.conf.sample
+Source4: 1STRUN.txt
+Source5: FAQ
+Source6: BUILD-NTOP.txt
+Patch1: version.patch
+Patch2: makefile_am.patch
+Copyright: GPL
+Group: Applications/System
+BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, autoconf, automake, binutils, openssl, openssl-devel, gdbm, gdbm-devel, libpcap, rrdtool, gdome2, libxml2-devel, zlib-devel, glib-devel
+Requires: glibc, openssl, gdbm, libpcap, chkconfig, rrdtool, libxml2, gdome2
 
-Name:         ntop
-Copyright:    GPL
-Group:        Networking/Utilities
-Autoreqprov:  on
-Version:      %{ntopversion}
-Release:      %( ([ "%version" != "current" ]&& echo "%ntoprelease") || echo "%(date +%d%m%Y)" )
-Summary:      Web-based Network Traffic Monitor
-Source:              ntop-%{version}%([ "%version" != "current" ]&& echo "-src").tgz
-Source1:       ntopd
-URL:          http://www.ntop.org
-Buildroot:  %{_tmppath}/%{name}-root
-%define prefix /usr
+Buildroot: %{_tmppath}/%{name}-root
+Prereq: /sbin/chkconfig, /sbin/ldconfig
 
 %description
-ntop is a web-based traffic monitor that shows the network usage.
-It can be used in both interactive or web mode using the
-embedded web server.
+ntop is a network and traffic analyzer that provides a wealth of information on
+various networking hosts and protocols. ntop is primarily accessed via a built-in 
+web interface. Optionally, data may be stored into a database for analysis or 
+extracted from the web server in formats suitable for manipulation in perl or php.
 
-Authors:
---------
-    Luca Deri <deri@ntop.org>
-    Pablo Ruiz <pruiz@ip6seguridad.com>
+See 1STRUN.txt for the 1st time startup procedure!  See FAQ for answers to questions
+and BUILD-NTOP.txt for howto build from source.
+
+ntop 2.1.92 is a RELEASE CANDIDATE release, from the ntop cvs tree at cvs.ntop.org. 
+This is designed to allow wide-spread testing before the 2.2 release.
+
+This version is compiled with rrdtool.  It assumes that the associated rrdtool rpm has been
+installed and that rrdtool is installed in /usr.  Note that SOME rrdtool packages do not
+have the librrd.so, only a librrd.a, which may cause problems between the older version
+of gd included with rrdtool and the gd-1.8.3 that ntop uses.
+
+This version is compiled WITH SSLv3.
+
+This version is compiled WITH --enable-xmldump (dump.xml handler)
+
+This version is compiled WITH --enable-i18n.
+
+IgnoreSIGPIPE and SSLWATCHDOG are not compiled but may be selected at run times.
+
+Note that the command line version, intop, is unsupported. And is NOT included in
+this rpm - if you want it you will have to build from source!
+
+This version is compiled on a Pentium III, under RedHat 7.3 using User Mode Linux.
+(Note that updated autoconf 2.53 and automake 1.6.3 from RedHat 8.0 are required)
+
+YOU MUST SETUP A PASSWORD BEFORE RUNNING NTOP - see 1STRUN.txt in /usr/share/doc/ntop-<release>
+
+Please send problem reports (using the automatically generated form if at all possible) (Click
+on the 'bug' icon on the About tab) to the ntop mailing list.
 
 %prep
-if [ -n "$RPM_BUILD_ROOT" ] ; then
-   [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-fi
-%setup -c ntop-%{version}
-if [ -n "ntop-%{version}" ] ; then
-   [ "ntop-%{version}" == "ntop-current" ] && cd ntop-current
-fi
-cd gdchart0.94c/
-rm -rf gd-1.8.3
-rm -rf zlib-1.1.3
-sed -e 's/\(all:.*\)\$.GD_LIB.\/libgd.a\(.*\)/\1 \2/g' Makefile.in > Make.tmp
-mv Make.tmp Makefile.in
-CFLAGS="${RPM_OPT_FLAGS}" ./configure
-make
-cd ..
-cd ntop
-mkdir ../gdchart0.94c/zlib-1.1.3/
-touch ../gdchart0.94c/zlib-1.1.3/libz.a
-mkdir ../gdchart0.94c/gd-1.8.3/
-touch ../gdchart0.94c/gd-1.8.3/libgd.a
-touch ../gdchart0.94c/gd-1.8.3/gd.h
-CFLAGS="${RPM_OPT_FLAGS}" ./configure --prefix=%{prefix} --mandir=%{_mandir} --sysconfdir=/etc/ntop --localstatedir=/var/lib
-rm -rf ../gdchart0.94c/zlib-1.1.3/
-rm -rf ../gdchart0.94c/gd-1.8.3/
+%setup -q -c ${NAME}${VERSION}
+
+%build
+unset RPM_OPT_FLAGS
+%undefine optflags 
+# Adjust the .tgz format to what we expect for build...
+mv ntop-2.1.92/* .
+# Patches
+patch -p0 < ../../SOURCES/version.patch
+patch -p0 < ../../SOURCES/makefile_am.patch
+# First, build static libraries - use the new buildAll script
+cd gdchart0.94c
+./buildAll.sh
+#
+cd ../ntop
+# Now, configure and build ntop
+# %automake
+# %autoconf
+%configure --enable-optimize  --bindir=%{_bindir} --datadir=%{ntoproot}/share \
+     --with-pcap-include=/usr/include/pcap \
+     --enable-sslv3 \
+     --enable-i18n \
+     --enable-xmldump \
+           --with-xml2-include=/usr/include/libxml2/libxml \
+           --with-glib-include=/usr/include/glib-1.2       \
+           --with-glibconfig-root=/usr/lib/glib/include    \
+           --with-gdome-include=/usr/include/libgdome
+make faq.html
+make ntop.txt
+make ntop.html
 make
 
 %install
-if [ -n "$RPM_BUILD_ROOT" ] ; then
-   [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-fi
-mkdir -p "$RPM_BUILD_ROOT/usr/share/man/man1/intop"
 cd ntop
-mkdir -p "$RPM_BUILD_ROOT/etc/rc.d/init.d"
-mkdir -p "$RPM_BUILD_ROOT/etc/init.d"
-make install DESTDIR="${RPM_BUILD_ROOT}"
-mv $RPM_BUILD_ROOT/usr/share/man/man1/intop/* "$RPM_BUILD_ROOT/usr/share/man/man1/"
-chmod +x ${RPM_BUILD_ROOT}%{prefix}/lib/*.so.*.*
-install -m 755 %{S:1}           ${RPM_BUILD_ROOT}/etc/init.d/ntopd
-mkdir -p ${RPM_BUILD_ROOT}/var/lib/ntop
-mv $RPM_BUILD_ROOT/etc/init.d/* "$RPM_BUILD_ROOT/etc/rc.d/init.d/"
+mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d \
+         $RPM_BUILD_ROOT/%{_bindir} \
+         $RPM_BUILD_ROOT/etc/logrotate.d \
+         $RPM_BUILD_ROOT/%{_datadir}/%{name}
+
+make install DESTDIR=$RPM_BUILD_ROOT
+make install-data-local DESTDIR=$RPM_BUILD_ROOT
+
+mv -f $RPM_BUILD_ROOT/usr/bin/i386-redhat-linux-ntop \
+      $RPM_BUILD_ROOT/usr/bin/ntop
+mv -f $RPM_BUILD_ROOT/usr/share/man/man8/i386-redhat-linux-ntop.8 \
+      $RPM_BUILD_ROOT/usr/share/man/man8/ntop.8
+
+install -c -m0755 %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/ntop
+install -c -m0644 %{SOURCE2} $RPM_BUILD_ROOT/etc/logrotate.d/ntop
+install -c -m0700 %{SOURCE3} $RPM_BUILD_ROOT/etc/ntop.conf.sample
+
+%pre
+g=`cat /etc/group | grep ^ntop:`
+if test ".${g}" = "."; then
+    /usr/sbin/groupadd -r ntop 2>/dev/null || :
+fi
+u=`cat /etc/passwd | grep ^ntop:`
+if test ".${u}" = "."; then
+    /usr/sbin/useradd -s /bin/false -c "ntop server user" -g ntop \
+                      -d %{ntoproot}/share/ntop -M -r ntop 2>/dev/null || :
+fi
 
 %post
-/sbin/chkconfig --add ntopd
+echo "***********************************************************************"
+mkdir /usr/share/ntop/rrd
+chown ntop.ntop /usr/share/ntop/rrd
+echo "***********************************************************************"
+if test -f /etc/init.d/ntop; then
+    /sbin/chkconfig --add  ntop
+    /sbin/ldconfig
+    echo "***********************************************************************"
+    if ! test -f /usr/share/ntop/ntop_pw.db; then
+        if ! test -f /etc/ntop.conf; then
+            echo "*    You must configure /etc/ntop.conf - see /etc/ntop.conf.sample    *"
+            echo "*                                                                     *"
+            echo "*    (as root run) $ cp /etc/ntop.conf.sample /etc/ntop.conf          *"
+            echo "*                  $ vi /etc/ntop.conf                                *"
+            echo "*                                                                     *"
+            echo "***********************************************************************"
+        fi
+        echo "* YOU MUST SETUP A PASSWORD BEFORE RUNNING NTOP                       *"
+        echo "*                                                                     *"
+        echo "*       (as root run) $ /usr/bin/ntop @/etc/ntop.conf -A              *"
+        echo "*                                                                     *"
+        echo "*       see 1STRUN.txt in /usr/share/doc/ntop-<release>               *"
+        echo "***********************************************************************"
+    elif ! test -f /etc/ntop.conf; then
+        echo "*    You must configure /etc/ntop.conf - see /etc/ntop.conf.sample    *"
+        echo "*                                                                     *"
+        echo "*    (as root run) $ cp /etc/ntop.conf.sample /etc/ntop.conf          *"
+        echo "*                  $ vi /etc/ntop.conf                                *"
+        echo "*                                                                     *"
+    else
+        echo "*                                                                     *"
+        echo "*    Starting ntop using a pre-existing setup - check the results!    *"
+        echo "*                                                                     *"
+        /sbin/service ntop condrestart > /dev/null 2>&1
+    fi
+fi
+echo "***********************************************************************"
+echo " "
+echo "Questions?  See the FAQ in /usr/share/doc/ntop-<release>"
+echo " "
+
+%preun
+if [ "$1" = "0" ]; then
+	/sbin/service ntop stop > /dev/null 2>&1
+	/sbin/chkconfig --del ntop
+fi
 
 %postun
-if [ "$1" = 0 ]
-then
-   /sbin/service ntopd stop > /dev/null 2>&1 || :
-  /sbin/chkconfig --del ntopd
+if [ "$1" -ge "1" ]; then
+	/sbin/service ntop condrestart > /dev/null 2>&1
 fi
-/sbin/service ntopd condrestart > /dev/null 2>&1 || :
+/sbin/ldconfig
+
+%clean
+rm -rf $RPM_BUILD_ROOT
 
 %files
-#%doc docs
-%config /etc/rc.d/init.d/ntopd
-/usr/bin/intop
-/usr/bin/ntop
-/usr/bin/ntop-config
-/usr/lib/libicmpPlugin.*
-/usr/lib/liblastSeenPlugin.*
-/usr/lib/libnfsPlugin.*
-/usr/lib/libntop-2.0.*
-/usr/lib/libntop.*
-/usr/lib/libntopreport-2.0.*
-/usr/lib/libntopreport.*
-%dir /usr/share/ntop
-/usr/share/ntop/html
-%dir /usr/lib/ntop
-/usr/lib/ntop/plugins
-%doc %{_mandir}/man1/intop.1.gz
-%doc %{_mandir}/man8/ntop.8.gz
-%dir /var/lib/ntop
+%defattr(-,root,root)
+%doc ntop/AUTHORS
+%doc ntop/CONTENTS
+%doc ntop/MANIFESTO
+%doc ntop/COPYING
+%doc ntop/ChangeLog
+%doc ntop/docs/FAQ
+%doc ntop/docs/HACKING
+%doc ntop/docs/KNOWN_BUGS
+%doc ntop/docs/TODO
+%doc ntop/docs/1STRUN.txt
+%doc ntop/NEWS
+%doc ntop/PORTING
+%doc ntop/README
+%doc ntop/SUPPORT_NTOP.txt
+%doc ntop/THANKS
+%config %{_sysconfdir}/rc.d/init.d/ntop
+%config %{_sysconfdir}/logrotate.d/ntop
+%config %{_sysconfdir}/ntop.conf.sample
+%{_bindir}/ntop
+%{_datadir}/%{name}
+/etc/ntop
 
-%changelog -n ntop
-* Tue Jan 22 2002 - pruiz@ip6seguridad.com
-- Modified to work with Redhat
-- Modified to work with current and 2.0
-* Sun Dec 23 2001 - deri@ntop.org
-- Updated to version 2.0
-* Wed Jul 18 2001 - uli@suse.de
-- fixed OS ident via nmap
-* Thu Jul 05 2001 - bg@suse.de
-- fix Bug #9056
-- add ucdsnmp and ssl
-- activate gdchart
-* Mon Jun 11 2001 - bg@suse.de
-- moved AC_INIT to the beginning of configure.in
-* Wed May 09 2001 - mfabian@suse.de
-- bzip2 sources
-* Fri Feb 23 2001 - ro@suse.de
-- added readline/readline-devel to neededforbuild (split from bash)
-* Fri Dec 01 2000 - ro@suse.de
-- moved startscript to etc
-* Fri Nov 24 2000 - bg@suse.de
-- cleaned up specfile with ro
-* Thu Nov 23 2000 - bg@suse.de
-- removed runlevel links in ntop.spec
-- fixed init script for 7.1
-* Fri Nov 10 2000 - bg@suse.de
-- new verion 1.3.2
-  this fixes Bug #4121
-* Fri Oct 13 2000 - kukuk@suse.de
-- fix compiling with glibc 2.2
-* Mon Aug 28 2000 - ro@suse.de
-- cvs-update of 2000/08/28 (all patches included)
-* Tue Aug 15 2000 - ro@suse.de
-- update to cvs version of 2000/08/15
-* Tue Aug 15 2000 - ro@suse.de
-- removed deprecated referring to .ntop
-* Wed Jul 05 2000 - ro@suse.de
-- fixed another segfault
-* Fri Jun 30 2000 - ro@suse.de
-- added fix for segfault from cvs
-* Tue Jun 27 2000 - ro@suse.de
-- update to 1.3.1
-* Sat Mar 04 2000 - uli@suse.de
-- moved man page to %%{_mandir}
-* Thu Jan 13 2000 - freitag@suse.de
-- dropped own libpcap and use one in needforbuild
-- update to version 1.1
-- using configure instead of own Makefile
-- new tags in specfile like version
-* Mon Sep 13 1999 - bs@suse.de
-- ran old prepare_spec on spec file to switch to new prepare_spec.
-* Sat Jun 12 1999 - ray@suse.de
-- fix in init-script
-* Tue Dec 01 1998 - ray@suse.de
-- new package
+%{_mandir}/man8/ntop.8.gz
+
+%{_libdir}/ntop
+%{_libdir}/plugins
+%{_libdir}/libntop*
+%{_libdir}/libicmpPlugin*
+
+%changelog
+* Thu Apr 10 2003 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.92 - Of major note is the rewrite of the ./configure system
+            should be more accurate, more informative and not
+            require the auto* tools for non-developers.
+
+* Wed Apr 02 2003 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.91
+
+* Mon Mar 17 2003 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.90
+
+* Fri Mar 14 2003 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.58 -1 add the data and .pem files to the install
+
+* Sat Feb 08 2003 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.57 - Minor fixup in ntop.init where I had the old name for ntop.conf
+          - Enabled i18n
+- v2.1.56 
+
+* Tue Jan 28 2003 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.55 
+
+* Sat Dec 14 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- -1 - Fix init and logrotate scripts, also create rrd directory and chown it
+- v2.1.53 - Fix deadlock occuring in 2.1.52
+          - other minor stuff
+
+* Wed Dec 05 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.52 - ./configure scripts
+          - rrd
+          - Force gdchart to i386
+          - 1strun stuff
+          - @/etc/ntop.conf
+
+* Sun Nov 24 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.51-1 (new tigger/ur-tigger)
+
+* Fri Nov 1 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.51
+
+* Tue Sep 20 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.3
+
+* Tue Jul 30 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.2a (not released) - added chkconfig to requires list
+-                        - rearranged patches
+-                        - Added creation of ntop user
+
+* Thu Jul 25 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1.2
+
+* Thu Jul 11 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.1
+
+* Thu Jul 03 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- Updated to RC3
+
+* Thu Jun 20 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- Updated to RC2A - unofficial post RC2 build.
+
+* Tue Jun 04 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- Updated to RC2
+
+* Fri May 17 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- Updated to RC1
+
+* Mon May 13 2002 Burton M. Strauss III <burton@ntopsupport.com>
+- Updated for 2.0.99 - beta - from 13May2002 snapshot
+
+* Fri Nov 23 2001 Hal Burgiss <hal@foobox.net>
+- Updated for 2.0 beta.
+
+* Thu Oct 11 2001 Hal Burgiss <hal@foobox.net>
+- Updated for 2.0 pre-release snapshots. Many changes.
 

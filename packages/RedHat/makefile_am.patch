@@ -1,0 +1,14 @@
+--- ntop/Makefile.am.orig	Sat Feb  8 16:27:07 2003
++++ ntop/Makefile.am	Sat Feb  8 16:27:45 2003
+@@ -228,9 +228,9 @@
+ 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR);
+ 	@for file in $(NTOPDATA); do \
+           if test -d $$file; then \
+-             $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/$$file; \
++             $(top_srcdir)/mkinstalldirs $(DESTDIR)/etc/ntop/$$file; \
+            else \
+-             cp -p $$file $(DESTDIR)/$(CFG_CONFIGFILE_DIR)/$$file; \
++             cp -p $$file $(DESTDIR)/etc/ntop/$$file; \
+           fi; \
+         done
+ 

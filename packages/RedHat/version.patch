@@ -1,0 +1,25 @@
+--- ntop/configure.in.orig	Tue Jul  9 18:49:48 2002
++++ ntop/configure.in	Tue Jul  9 18:50:04 2002
+@@ -57,7 +57,7 @@
+ umask 002
+ AM_CONFIG_HEADER(config.h)
+ 
+-NTOP_VERSION_EXTRA=""
++NTOP_VERSION_EXTRA="SourceForge rpm"
+ 
+ GDCHART_DIRECTORY="gdchart0.94c"
+ GD_DIRECTORY="gd-1.8.3"
+--- gdchart0.94c/buildAll.sh	Wed Oct 30 15:42:56 2002
++++ gdchart0.94c/buildAll.sh	Thu Dec  5 10:15:12 2002
+@@ -36,9 +36,9 @@
+ fi
+ 
+ echo ""
+-echo "Configuring gdchart..."
++echo "Configuring gdchart (i386)..."
+ echo ""
+-./configure
++./configure i386-pc-linux-gnu
+ 
+ echo ""
+ echo "Configuring and making zlib..."
