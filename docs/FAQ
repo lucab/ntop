@@ -1221,20 +1221,6 @@ A. 1.  Found a % in the request (Unicode problems)
    5.  Found a bad extension
 
 
-Q. Is ntop localized for language x? (i18n)
-A. No.  ntop isn't really written with i18n in mind.
-
-   Most of the text is generated in-line, on the fly.
-
-   We are certainly open to some sweat equity to fix this!
-
-   My suggestion (Burton's) - as the simplest way - would be to create an 
-   new messagetext.h file, with #defines for the various translatable 
-   phrases and then work through the code moving text from in-line text to 
-   use the #defines.  Once that was in place, we could then look at some 
-   form of run-time substitution...
-
-
 Q. How can I run ntop without being root?
 A. A very simple way of doing this is:
    > su
@@ -2020,6 +2006,135 @@ A. There are tools available to create p3p policy files - search the web for 'p3
    (http://www.alphaworks.ibm.com/tech/p3peditor).
 
 (P3P stuff added 4Dec2002, Burton Strauss)
+
+Q. Is ntop localized for language x? (i18n)
+A. No.  ntop wasn't really written with i18n in mind.
+
+   Most of the text is generated in-line, on the fly.  Plus ntop must dynamically support
+   multiple locales simultaneously.
+
+   However, beginning with v2.1.56 (2.2 development release), there is limited, optional,
+   i18n support in ntop.
+
+Q. So, what internationalization (i18n) support does ntop provide.
+A. The key word is LIMITED
+    
+   This only applies to the pages that are pulled from .html files, NOT those created
+   internally.  This includes the menus and the few static text pages, but none of the
+   pages with interesting data on them.
+   
+   The localized pages must be placed in parallel directories to the existing html ones.
+   
+   For example, if ntop is installed in /usr/share/ntop, the html files are in
+   /usr/share/ntop/html.
+   
+   To support them Canadians, then, you would need to create a /usr/share/ntop/html_en_CA
+   AND that locale would need to be installed on the ntop host system.
+   
+   
+   Note that there are NO i18n files distributed with ntop (yet!)
+   
+   
+   At ./configure time, you enable support via --enable-i18n.  ntop MUST be told how to
+   find the locale files.  In ./configure, a "standard" location is defined per OS. 
+   (Initially only the value for FreeBSD is populated).  All others assume the "default",
+   /usr/lib/locale.  If that isn't right for your OS, then you MUST use the optional
+   parameter --with-localedir= to tell ntop where to find the files.
+   
+   
+   At run time, ntop scans the host for the installed locales (locale -a should - on most
+   systems give you a list) and checks if a comparable html_cc_XX directory exists.
+   
+   This builds a list of supported languages, which (along with i18n status) is shown on
+   the configuration pages, info.html and textinfo.html.
+   
+   
+   When an http request is made, your browser sends a list of languages it is willing to
+   accept in the http Accept-Language: header.
+   
+   (check View | Internet Options | Languages in IE to see what you're sending)
+   
+   For example,
+   
+       Accept-Languages: en_US, en
+   
+   Means that you prefer US English, but will accept any English dialect if US English
+   isn't available.
+   
+   
+   Be aware that the locale settings and Accept-Language settings are not well
+   standardized, nor common and may not necessarily map very cleanly.  You should
+   see what's defined (perhaps it's locale 'german' instead of 'gr') and make or
+   link directories as necessary.  You can always create the directory you tell
+   ntop to use via --with-localedir= in the /usr/share/ntop structure and create
+   links from there to the real locale directories!
+   
+   
+   Limits in the per-request and total # of languages to support are in globals-defines.h
+   
+   
+   Because of directory structure limits, a lack of interest in multiple character sets,
+   etc. the locale and accept-language headers are coerced into a common format:
+   
+   locales are                  ll[_XX][.char][@modifier]
+   
+       ll - language, usually the 2 character ISO abrev., such as us, it.
+       XX - dialect (often a country), such as CA or US (en_US != en_CA)
+       char - character set (we sort of assume UTF-8)
+       modifier - euro
+   
+   Accept-Language: values are  ll-XX or ll or ll-*
+   
+   
+   Once the user makes a request, each page pulled is checked:
+   
+       1. For each of the Accept-Language values.
+       2. For the ntop host locale value.
+       3. In the ntop default (English) set.
+   
+   These checks are performed for each of the libraries specified in the config value
+   (CFG_DATAFILE_DIR).
+   
+   
+Q. What pages can be customized?
+A. ls /usr/share/ntop/html/*.html (or wherever the ntop pages are installed):
+   
+   frameset
+   --------
+   
+       Note: There is no real benefit, except maybe the title in index.html so you
+         can see that it really does work!
+   
+   index.html
+   index_inner.html
+   index_left.html
+   index_top.html
+   top.html
+   
+   Navigation
+   ----------
+   About.html
+   Admin.html
+   Copyright.html
+   DataRcvd.html
+   DataSent.html
+   IPProtocols.html
+   IPTraffic.html
+   Stats.html
+   TotalData.html
+   
+   Misc data
+   ---------
+   dump.html
+   faq.html - lots of work
+   help.html - good candidate
+   ntop.html - splash page
+   
+   
+   Also, remember that a file overrides ntop's internal page generation, so you
+   can also use this facility to override ANY of ntop's pages and return a
+   customized page (perhaps you don't want users seeing them?).
+(i18n Added 23Jan2003 - Burton)
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
