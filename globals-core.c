@@ -525,9 +525,6 @@ void initNtop(char *devices) {
    */
 
   initIPServices();
-#ifdef HAVE_OPENSSL
-  init_ssl();
-#endif
 
   /* ********************************** */
 

@@ -1094,6 +1094,10 @@ int main(int argc, char *argv[]) {
 
   initSignals();
 
+#ifdef HAVE_OPENSSL
+  init_ssl();
+#endif
+
   /* create the main listener */
   traceEvent(CONST_TRACE_NOISY, "Starting web server");
   initWeb();
