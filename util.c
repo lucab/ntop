@@ -3836,6 +3836,8 @@ void readASs(FILE *fd) {
   myGlobals.asHead->node.as = 0;
   myGlobals.asMem += sizeof(IPNode);
 
+  traceEvent(CONST_TRACE_INFO, "Reading AS info...");
+
   while(1) {
     char buff[256];
     char *strtokState, *as, *ip, *prefix;

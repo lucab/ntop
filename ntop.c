@@ -67,7 +67,7 @@ void handleSigHup(int signalId _UNUSED_) {
 /* *************************** */
 
 #ifdef CFG_MULTITHREADED
-#if !defined(WIN32) && !defined(DARWIN)
+#if !defined(WIN32)
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
@@ -104,7 +104,6 @@ void* pcapDispatch(void *_i) {
     /* timeout.tv_sec  = 5, timeout.tv_usec = 0; */
 
     if(select(pcap_fd+1, &readMask, NULL, NULL, NULL /* &timeout */ ) > 0) {
-      /* printf("dispatch myGlobals.device %s\n", myGlobals.device[i].name);*/
       if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
       HEARTBEAT(2, "pcapDispatch()", NULL);
       rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, processPacket, (u_char*)_i);
@@ -116,13 +115,13 @@ void* pcapDispatch(void *_i) {
 		   pcap_geterr(myGlobals.device[i].pcapPtr));
 	break;
       } else if((rc == 0) && (myGlobals.rFileName != NULL)) {
-	traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d "
-		   "[No more packets to read]", rc);
+	traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d [No more packets to read]", rc);
 	break; /* No more packets to read */
+      } else {
+#if 0
+	traceEvent(CONST_TRACE_INFO, "1) %d\n", numPkts++);
+#endif
       }
-      /* else
-	 traceEvent(CONST_TRACE_INFO, "1) %d\n", numPkts++);
-      */
     }
   }
 

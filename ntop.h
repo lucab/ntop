@@ -481,4 +481,7 @@ void          rewinddir(DIR *);
 
 /* *************************************************************** */
 
+#define HAVE_RRD
+#define CFG_USE_GRAPHICS
+
 #endif /* NTOP_H */

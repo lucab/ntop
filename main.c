@@ -224,7 +224,6 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-A                                                   %sAsk admin user password and exit\n", newLine);
   fprintf(fp, "    [                 --set-admin-password=<pass>]        %sSet password for the admin user to <pass>\n", newLine);
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 %sPacket filter expression, like tcpdump\n", newLine);
-  fprintf(fp, "    [-C             | --large-network                     %sntop will be used to analyze a large network (hint)\n", newLine);
   fprintf(fp, "    [-D <name>      | --domain <name>]                    %sInternet domain name\n", newLine);
 
 #ifndef WIN32

@@ -826,8 +826,25 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
                    newHashSize,
                    actualDeviceId);
 
+	if(myGlobals.device[actualDeviceId].actualHashSize > 32000) {
+	  static char showOnce = 0;
+
+	  if(!showOnce) {
+	    traceEvent(CONST_TRACE_INFO, "============================================================");
+	    traceEvent(CONST_TRACE_INFO, "You hash is getting large. This is not necessarely a problem");
+	    traceEvent(CONST_TRACE_INFO, "if you know what you're doing. Nevertheless you memory/CPU usage");
+	    traceEvent(CONST_TRACE_INFO, "will increase as ntop has to handle a large amount of data. If");
+	    traceEvent(CONST_TRACE_INFO, "you want, you can limit the number of hosts ntop handles");
+	    traceEvent(CONST_TRACE_INFO, "specifying the following options:");
+	    traceEvent(CONST_TRACE_INFO, "-m <the list of networks where the hosts you *really* care belong>");
+	    traceEvent(CONST_TRACE_INFO, "-b -g -z");
+	    traceEvent(CONST_TRACE_INFO, "============================================================");
+	    showOnce = 1;
+	  }
+	}
+
         ptrLen = sizeof(struct hostTraffic*) * newHashSize;
-        if ( (newPtr = (struct hostTraffic**)malloc(ptrLen)) == NULL) return;
+        if((newPtr = (struct hostTraffic**)malloc(ptrLen)) == NULL) return;
 
         myGlobals.device[actualDeviceId].actualHashSize = newHashSize;
         
