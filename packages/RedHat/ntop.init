@@ -168,6 +168,8 @@ cmd=`echo -i tbd \
 
 echo ${cmd} | awk ' \
 BEGIN { eff=""; \
+        xvert["4"] = "ipv4"; \
+        xvert["6"] = "ipv6"; \
         xvert["a"] = "access-log-path"; \
         xvert["b"] = "disable-decoders"; \
         xvert["c"] = "sticky-hosts"; \
@@ -177,6 +179,7 @@ BEGIN { eff=""; \
         xvert["g"] = "track-local-hosts"; \
         xvert["h"] = "help"; \
         xvert["i"] = "interface"; \
+        xvert["j"] = "create-other-packets"; \
         xvert["l"] = "pcap-log"; \
         xvert["m"] = "local-subnets"; \
         xvert["n"] = "numeric-ip-addresses"; \
@@ -285,11 +288,16 @@ if [ ".${ntopinterface}" = ".tbd" ]; then
 
     for eth in $iflist; do
 
-       if ! LANG=C egrep -L "^[Nn][Tt][Oo][Pp]=['\"]?[Yy][Ee][Ss]['\"]?" \
+       if [ -f /etc/sysconfig/network-scripts/ifcfg-$eth ]; then
+         if ! LANG=C egrep -L "^[Nn][Tt][Oo][Pp]=['\"]?[Yy][Ee][Ss]['\"]?" \
                 /etc/sysconfig/network-scripts/ifcfg-$eth > /dev/null ; then
-            logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth is not ntop=yes, skipping"
-            if [ "${debug}" = "y" ]; then echo "DEBUG: $eth not ntop=yes"; fi
-            continue
+           logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth is not ntop=yes, skipping"
+           if [ "${debug}" = "y" ]; then echo "DEBUG: $eth not ntop=yes"; fi
+           continue
+         fi
+       else
+         logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth not in network-scripts, forcing"
+         if [ "${debug}" = "y" ]; then echo "DEBUG: $eth not in network-scripts"; fi
        fi
 
        ntopinterface="${ntopinterface} $eth"
@@ -311,15 +319,14 @@ else
     logger -p ${ntopusesyslog} -t ${name} -- "INITD - Skipping interface scan - list in parms"
 fi
 
+if [ "x${ntopinterface}" = "x" ]; then
+  ntopinterface="none"
+fi
+
 logger -p ${ntopusesyslog} -t ${name} -- "INITD - interfaces are ${ntopinterface}"
 if [ "${debug}" = "y" ]; then echo "DEBUG: Interfaces are ${ntopinterface}"; fi
 
-start () {
-  # start daemon
-
-  shift
-
-
+start_checks() {
   # check password database exists
   if ! [ -f "${ntopdbfilepath}/ntop_pw.db" ]; then
       logger -p ${ntopusesyslog} -t ${name} -- "INITD - FATALERROR - no password database"
@@ -413,12 +420,16 @@ start () {
       exit 1
     fi 
   fi
+}
 
+show_extra () {
   logger -p ${ntopusesyslog} -t ${name} -- "INITD - Given parameter(s) are: '$@'"
   logger -p ${ntopusesyslog} -t ${name} -- "INITD - Extra parameter(s) are: '$extra'"
   if [ "${debug}" = "y" ]; then echo "DEBUG: Given parameter(s) are: '$@'";
                                 echo "DEBUG: Extra parameter(s) are: '$extra'"; fi
+}
 
+config_interfaces () {
   logger -p ${ntopusesyslog} -t ${name} -- "INITD - Configuring interfaces"
   if [ "${debug}" = "y" ]; then echo "DEBUG: Configuring interfaces"; fi
   if=""
@@ -429,11 +440,18 @@ start () {
           if="${if},${eth}"
       fi
 
-       if ! LANG=C egrep -L "^[Nn][Tt][Oo][Pp][Cc].*=['\"]?[Yy][Ee][Ss]['\"]?" \
-                /etc/sysconfig/network-scripts/ifcfg-$eth > /dev/null ; then
-            logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth is not ntopconfigure=yes, skipping"
-            continue
-       fi
+      if [ -f /etc/sysconfig/network-scripts/ifcfg-$eth ]; then
+        if ! LANG=C egrep -L "^[Nn][Tt][Oo][Pp]=['\"]?[Yy][Ee][Ss]['\"]?" \
+               /etc/sysconfig/network-scripts/ifcfg-$eth > /dev/null ; then
+          logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth is not ntop=yes, skipping"
+          if [ "${debug}" = "y" ]; then echo "DEBUG: $eth not ntop=yes"; fi
+          continue
+        fi
+      else
+        logger -p ${ntopusesyslog} -t ${name} -- "INITD - $eth not in network-scripts, skipping"
+        if [ "${debug}" = "y" ]; then echo "DEBUG: $eth not in network-scripts"; fi
+        continue
+      fi
 
       logger -p ${ntopusesyslog} -t ${name} -- "INITD - Configuring $eth"
       if [ "${debug}" = "y" ]; then echo "DEBUG: Configuring $eth"; fi
@@ -442,7 +460,7 @@ start () {
       ip=`$sudo /sbin/ip addr show $eth | \
           awk '/inet/ { printf("%s", substr($2, 1, index($2, "/")-1)) }'`
 
-      $sudo /sbin/ip link set $eth promisc on
+      $sudo /sbin/ifconfig $eth promisc
       $sudo /sbin/ip link set $eth up
 
       $sudo /sbin/ip addr show $eth | logger -p ${ntopusesyslog} -t ${name}
@@ -451,16 +469,30 @@ start () {
   done
   logger -p ${ntopusesyslog} -t ${name} -- "INITD - Interfaces are configured"
   if [ "${debug}" = "y" ]; then echo "DEBUG: Interfaces are configured"; fi
+}
 
+show_starting () {
   echo -n $"Starting $name: "
   echo
+
+  logger -p ${ntopusesyslog} -t ${name} -- "INITD - Starting: ${cmd}"
+  if [ "${debug}" = "y" ]; then echo "DEBUG: Starting: ${cmd}"; fi
+}
+
+start () {
+  # start daemon
+
+  shift
+
+  start_checks
+  show_extra
+  config_interfaces
 
   cmd=`echo $prog -i $if \
                @${conf} \
                $extra $@`
 
-  logger -p ${ntopusesyslog} -t ${name} -- "INITD - Starting: ${cmd}"
-  if [ "${debug}" = "y" ]; then echo "DEBUG: Starting: ${cmd}"; fi
+  show_starting
 
   daemon ${cmd}
   RETVAL=$?
@@ -498,7 +530,7 @@ stop () {
           if [ "${debug}" = "y" ]; then echo "DEBUG: Unconfiguring $eth"; fi
     
           $sudo /sbin/ip link set $eth down
-          $sudo /sbin/ip link set $eth promisc off
+          $sudo /sbin/ifconfig $eth -promisc
     
           $sudo /sbin/ip addr show $eth | logger -p ${ntopusesyslog} -t ${name}
           if [ "${debug}" = "y" ]; then $sudo /sbin/ip addr show $eth; fi
