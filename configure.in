@@ -849,20 +849,41 @@ dnl> 2. standard installation in /usr/lib and /usr/include respectively
 dnl> 3. default package installation in /usr/local/lib and /usr/local/include respectively
 
 AC_MSG_CHECKING([for LBL Packet Capture Library (required package)])
+dnl> Dummy to prevent word wrap
+AC_MSG_RESULT([])
 
 dnl>
 dnl> user defined directory passed as option at configuration time
 dnl>
 if test ".${PCAP_ROOT}" != .; then
-  if test -d $PCAP_ROOT &&
-     test -r $PCAP_ROOT/libpcap.a &&
-     test -r $PCAP_ROOT/pcap.h; then
+  if test -d ${PCAP_ROOT} &&
+     test -r ${PCAP_ROOT}/libpcap.a &&
+     test -r ${PCAP_ROOT}/pcap.h; then
        PCAP_ROOT=`cd ${PCAP_ROOT} && pwd`
-       CORELIBS="${CORELIBS} -L$PCAP_ROOT -lpcap"
-       INCS="${INCS} -I$PCAP_ROOT"
-       AC_MSG_RESULT([found in $PCAP_ROOT])
+       CORELIBS="${CORELIBS} -L${PCAP_ROOT} -lpcap"
+       INCS="${INCS} -I${PCAP_ROOT}"
+       AC_MSG_RESULT([    found in ${PCAP_ROOT}])
+  elif test -d ${PCAP_ROOT} &&
+       test -d ${PCAP_ROOT}/lib &&
+       test -d ${PCAP_ROOT}/include &&
+       test -r ${PCAP_ROOT}/lib/libpcap.a &&
+       test -r ${PCAP_ROOT}/include/pcap.h; then
+         PCAP_ROOT=`cd ${PCAP_ROOT} && pwd`
+         CORELIBS="${CORELIBS} -L${PCAP_ROOT}/lib -lpcap"
+         INCS="${INCS} -I${PCAP_ROOT}/include"
+         AC_MSG_RESULT([    found in $PCAP_ROOT/lib and .../include])
+  elif test -d ${PCAP_ROOT} &&
+       test -d ${PCAP_ROOT}/lib &&
+       test -d ${PCAP_ROOT}/include &&
+       test -d ${PCAP_ROOT}/include/pcap &&
+       test -r ${PCAP_ROOT}/lib/libpcap.a &&
+       test -r ${PCAP_ROOT}/include/pcap/pcap.h; then
+         PCAP_ROOT=`cd ${PCAP_ROOT} && pwd`
+         CORELIBS="${CORELIBS} -L${PCAP_ROOT}/lib -lpcap"
+         INCS="${INCS} -I${PCAP_ROOT}/include/pcap"
+         AC_MSG_RESULT([    found in $PCAP_ROOT/lib and .../include/pcap])
   else
-    AC_MSG_RESULT([not found in ${PCAP_ROOT}])
+    AC_MSG_RESULT([    not found in ${PCAP_ROOT}])
     AC_MSG_RESULT([             *** FATAL ERROR ***             ])
     AC_MSG_RESULT([ It looks that you don't have some files needed to use the pcap library.])
     AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
@@ -871,7 +892,7 @@ if test ".${PCAP_ROOT}" != .; then
     AC_MSG_ERROR([ The LBL Packet Capture Library development tree seems corrupted or incomplete!])
   fi
 dnl>
-dnl> default installation as defined in latest available libpcap-0.4a6
+dnl> Older default installation 
 dnl>
 elif test -d /usr/local &&
      test -r /usr/local/lib/libpcap.a &&
@@ -879,39 +900,29 @@ elif test -d /usr/local &&
        PCAP_ROOT="/usr/local"
        CORELIBS="${CORELIBS} -L$PCAP_ROOT/lib -lpcap"
        INCS="${INCS} -I$PCAP_ROOT/include"
-       AC_MSG_RESULT([found in $PCAP_ROOT])
+       AC_MSG_RESULT([    found in ${PCAP_ROOT}/lib and ${PCAP_ROOT}/include])
 dnl>
 dnl> installation used by most packagers
 dnl>
 elif test -r /usr/lib/libpcap.a &&
      test -r /usr/include/pcap.h; then
-       PCAP_ROOT="standard installation"
+       PCAP_ROOT="standard installation (/usr/lib and /usr/include)"
        CORELIBS="${CORELIBS} -lpcap"
-       AC_MSG_RESULT([found in $PCAP_ROOT])
+       AC_MSG_RESULT([    found in $PCAP_ROOT])
 dnl>
 dnl> unusual and more complex installation used by some packagers
 dnl> (e.g. Red Hat Linux)
 dnl>
 elif test -r /usr/lib/libpcap.a &&
      test -r /usr/include/pcap/pcap.h; then
-       PCAP_ROOT="semi-standard installation"
+       PCAP_ROOT="semi-standard installation (/usr/lib and /usr/include/pcap)"
        CORELIBS="${CORELIBS} -lpcap"
        INCS="${INCS} -I/usr/include/pcap"
-       AC_MSG_RESULT([found in $PCAP_ROOT])
-dnl>
-dnl> on place source tree under the same ntop's root
-dnl>
-elif test -d ../libpcap-0.4 &&
-     test -r ../libpcap-0.4/libpcap.a &&
-     test -r ../libpcap-0.4/pcap.h; then
-       PCAP_ROOT=`cd ../libpcap-0.4 && pwd`
-       CORELIBS="${CORELIBS} -L$PCAP_ROOT -lpcap"
-       INCS="${INCS} -I$PCAP_ROOT"
-       AC_MSG_RESULT([found in $PCAP_ROOT])
+       AC_MSG_RESULT([    found in $PCAP_ROOT])
 else
      AC_CHECK_LIB(pcap, pcap_lookupdev)
      if test "$ac_tr_lib" != "HAVE_LIBPCAP"; then
-       AC_MSG_RESULT([not found!])
+       AC_MSG_RESULT([    not found!])
        AC_MSG_RESULT([             *** FATAL ERROR ***             ])
        AC_MSG_RESULT([ It looks that you don't have the libpcap distribution installed.])
        AC_MSG_RESULT([ Download, compile and, optionally, install it.])
@@ -921,7 +932,7 @@ else
      else
 	if test -r /usr/include/pcap/pcap.h; then
 	       INCS="${INCS} -I/usr/include/pcap"
-	       PCAP_ROOT="standard installation"
+	       PCAP_ROOT="standard installation (ld.so.conf and /usr/include/pcap)"
 	else
        AC_MSG_RESULT([             *** FATAL ERROR ***             ])
        AC_MSG_RESULT([ It looks that you don't have the libpcap distribution installed.])
