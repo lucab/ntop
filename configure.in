@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.99])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.99.015-2004-02-10"
+SCRIPTVER="v2.2.99.016-2004-02-10"
 
 dnl>
 dnl> generate the config header
@@ -2768,6 +2768,48 @@ INCS=`echo ${INCS} | ${ac_cv_prog_AWK} '{ \
     } \
     print "" \
 }'`
+
+NTOPCONFIGDEBUG_SETTINGS([precet])
+
+if test -d ./configureextra; then
+
+    dnl> If there is a os/distro/release specific file (additional settings),
+    dnl> run it. Go from least specific to most specific, running ANY that match.
+    dnl> E.g. 'solaris 8' will match solaris 1st then solaris8.
+
+    echo ""
+    echo "Testing for special final configuration options for ${DEFINEOS} ${DISTRO} ${RELEASE}"
+   
+    if test -f ./configureextra/final_${DEFINEOS}; then
+        echo ""
+        echo "    Executing configureextra/final_${DEFINEOS}"
+        . ./configureextra/final_${DEFINEOS}
+        echo ""
+    fi
+    if test ".${DISTRO}" != "."; then
+        if test -f ./configureextra/final_${DEFINEOS}${DISTRO}; then
+            echo ""
+            echo "    Executing configureextra/final_${DEFINEOS}${DISTRO}"
+            . ./configureextra/final_${DEFINEOS}${DISTRO}
+            echo ""
+        fi
+        if test ".${RELEASE}" != "." &&
+           test -f ./configureextra/final_${DEFINEOS}${DISTRO}${RELEASE}; then
+            echo ""
+            echo "    Executing configureextra/final_${DEFINEOS}${DISTRO}${RELEASE}"
+            . ./configureextra/final_${DEFINEOS}${DISTRO}${RELEASE}
+            echo ""
+        fi
+    else
+        if test ".${RELEASE}" != "." &&
+           test -f ./configureextra/final_${DEFINEOS}${RELEASE}; then
+            echo ""
+            echo "    Executing configureextra/final_${DEFINEOS}${RELEASE}"
+            . ./configureextra/final_${DEFINEOS}${RELEASE}
+            echo ""
+        fi
+    fi
+fi
 
 NTOPCONFIGDEBUG_SETTINGS([final])
 

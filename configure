@@ -1330,7 +1330,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.99.015-2004-02-10"
+SCRIPTVER="v2.2.99.016-2004-02-10"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -25298,6 +25298,79 @@ INCS=`echo ${INCS} | ${ac_cv_prog_AWK} '{ \
     } \
     print "" \
 }'`
+
+# Expansion of NTOPCONFIGDEBUG_SETTINGS()
+if test ".${NTOPCONFIGDEBUG}" = ".yes"; then
+    echo "DEBUG: precet"
+    echo "       AWK.................'${AWK}'"
+    echo "       AS..................'${AS}'"
+    echo "       ACLOCAL.............'${ACLOCAL}'"
+    echo "       AUTOCONF............'${AUTOCONF}'"
+    echo "       AUTOHEADER..........'${AUTOHEADER}'"
+    echo "       AUTOMAKE............'${AUTOMAKE}'"
+    echo "       CC..................'${CC}'"
+    echo "          gcc?.............'${GCC}'"
+    echo "       CCLD................'${CCLD}'"
+    echo "       CFLAGS..............'${CFLAGS}'"
+    echo "       CPP.................'${CPP}'"
+    echo "       CPPFLAGS............'${CPPFLAGS}'"
+    echo "       DEFS................'${DEFS}'"
+    echo "       DEPDIR..............'${DEPDIR}'"
+    echo "       DLLTOOL.............'${DLLTOOL}'"
+    echo "       DYN_FLAGS...........'${DYNFLAGS}'"
+    echo "       EXEEXT..............'${EXEEXT}'"
+    echo "       INCS................'${INCS}'"
+    echo "       LDFLAGS.............'${LDFLAGS}'"
+    echo "       LIBS................'${LIBS}'"
+    echo "       LN_S................'${LN_S}'"
+    echo "       MYRRD...............'${MYRRD}'"
+    echo "       OBJDUMP.............'${OBJDUMP}'"
+    echo "       OBJEXT..............'${OBJEXT}'"
+    echo "       RANLIB..............'${RANLIB}'"
+    echo "       SO_VERSION_PATCH....'${SO_VERSION_PATCH}'"
+    echo "       build...............'${build}'"
+    echo "       host................'${host}'"
+    echo "       target..............'${target}'"
+fi
+# Finished expansion of NTOPCONFIGDEBUG_SETTINGS()
+
+
+if test -d ./configureextra; then
+
+
+    echo ""
+    echo "Testing for special final configuration options for ${DEFINEOS} ${DISTRO} ${RELEASE}"
+
+    if test -f ./configureextra/final_${DEFINEOS}; then
+        echo ""
+        echo "    Executing configureextra/final_${DEFINEOS}"
+        . ./configureextra/final_${DEFINEOS}
+        echo ""
+    fi
+    if test ".${DISTRO}" != "."; then
+        if test -f ./configureextra/final_${DEFINEOS}${DISTRO}; then
+            echo ""
+            echo "    Executing configureextra/final_${DEFINEOS}${DISTRO}"
+            . ./configureextra/final_${DEFINEOS}${DISTRO}
+            echo ""
+        fi
+        if test ".${RELEASE}" != "." &&
+           test -f ./configureextra/final_${DEFINEOS}${DISTRO}${RELEASE}; then
+            echo ""
+            echo "    Executing configureextra/final_${DEFINEOS}${DISTRO}${RELEASE}"
+            . ./configureextra/final_${DEFINEOS}${DISTRO}${RELEASE}
+            echo ""
+        fi
+    else
+        if test ".${RELEASE}" != "." &&
+           test -f ./configureextra/final_${DEFINEOS}${RELEASE}; then
+            echo ""
+            echo "    Executing configureextra/final_${DEFINEOS}${RELEASE}"
+            . ./configureextra/final_${DEFINEOS}${RELEASE}
+            echo ""
+        fi
+    fi
+fi
 
 # Expansion of NTOPCONFIGDEBUG_SETTINGS()
 if test ".${NTOPCONFIGDEBUG}" = ".yes"; then
