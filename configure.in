@@ -414,9 +414,39 @@ AC_CHECK_HEADERS(sys/select.h sys/ldr.h sys/sockio.h dl.h dirent.h dlfcn.h)
 dnl> OPTIONAL security headers
 AC_CHECK_HEADERS(security/pam_appl.h shadow.h crypt.h)
 
-dnl> OPTIONAL MySQL
+dnl>
+dnl> OPTIONAL MySQL library - check for mysql.h and mysqlclient.so
+dnl>
+
 if test ".$ac_disable_mysql" = ".no"; then
-AC_CHECK_HEADERS(mysql/mysql.h, MORELIBS="$MORELIBS -L/usr/lib/mysql -lmysqlclient" && AC_DEFINE(HAVE_MYSQL))
+        have_mysql=no
+        AC_CHECK_HEADERS(mysql/mysql.h, [
+                AC_MSG_CHECKING([for library for mySQL (client)])
+                _libs=${LIBS}
+                LIBS="${LIBS} -lmysqlclient"
+                AC_TRY_LINK([#include <mysql/mysql.h>], [
+MYSQL *mysql;
+mysql_shutdown(mysql);], [
+                AC_MSG_RESULT(yes)
+                have_mysql=yes], [
+
+                LIBS="${_libs} -L/usr/lib/mysql -lmysqlclient"
+                AC_TRY_LINK([#include <mysql/mysql.h>], [
+MYSQL *mysql;
+mysql_shutdown(mysql);], [
+                    AC_MSG_RESULT(yes - /usr/lib/mysql)
+                    have_mysql=yes], [
+
+                    have_mysql=no
+                    LIBS=${_libs}])])], [
+
+                have_mysql=no])
+
+        if test ".$have_mysql" = ".yes"; then
+                AC_DEFINE(HAVE_MYSQL)
+        else
+                AC_MSG_ERROR([could not find -lmysqlclient, rerun with --disable-mysql])
+        fi
 fi
 
 dnl> OPTIONAL curses headers
