@@ -45,7 +45,7 @@ static OsInfo osInfos[] = {
   { "HP-UX",         CONST_IMG_OS_HP_UX },
   { "AIX",           CONST_IMG_OS_AIX },
   { "Cisco",         CONST_IMG_OS_CISCO },
-  NULL
+  { NULL, NULL }
 };
 
 /* ************************* */
@@ -150,7 +150,7 @@ void printTableDoubleEntry(char *buf, int bufLen,
   case 100:
     if(snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		"<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
-		"<TD WIDTH=100><IMG ALT=\"100%%\"ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=100 HEIGHT=12></TD>\n",
+		"<TD WIDTH=100><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=100 HEIGHT=12></TD>\n",
 		getRowColor(), label, formatKBytes(totalS, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     break;
@@ -781,10 +781,10 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, i
   }
 
   if(!showOsName) {
-    if(flagImg != NULL)
+    if(flagImg != NULL) {
       if(snprintf(tmpStr, tmpStrLen, "%s", flagImg) < 0)
         BufferTooShort();
-    else
+    } else
       tmpStr[0] = '\0';
   } else {
     if(flagImg != NULL) {
@@ -1648,78 +1648,79 @@ void printHostThtpShort(HostTraffic *el, int reportType, u_int hourId)
 int cmpHostsFctn(const void *_a, const void *_b) {
   struct hostTraffic **a = (struct hostTraffic **)_a;
   struct hostTraffic **b = (struct hostTraffic **)_b;
-  char *name_a, *name_b;
   Counter a_=0, b_=0;
 
   switch(myGlobals.columnSort) {
   case 2: /* IP Address */
-      if(isFcHost ((*a)) && isFcHost ((*b))) {
-          return (memcmp (((u_int8_t *)&(*a)->hostFcAddress), ((u_int8_t *)&(*b)->hostFcAddress),
-                          LEN_FC_ADDRESS));
-      }
-      else {
-          return (addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress));
-      }
-      break;
+    if(isFcHost((*a)) && isFcHost((*b))) {
+      return(memcmp(((u_int8_t *)&(*a)->hostFcAddress), 
+		    ((u_int8_t *)&(*b)->hostFcAddress),
+		    LEN_FC_ADDRESS));
+    }
+    else
+      return(addrcmp(&(*a)->hostIpAddress, &(*b)->hostIpAddress));
+    break;
 
   case 3: /* Data Sent */
-      if (isFcHost ((*a)) && isFcHost ((*b))) {
-          a_ = (*a)->fcBytesSent.value;
-          b_ = (*b)->fcBytesSent.value;
+    if (isFcHost((*a)) && isFcHost((*b))) {
+      a_ = (*a)->fcBytesSent.value;
+      b_ = (*b)->fcBytesSent.value;
+    }
+    else {
+      switch(myGlobals.sortFilter) {
+      case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
+	a_ = (*a)->bytesSentLoc.value;
+	b_ = (*b)->bytesSentLoc.value;
+	break;
+      case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
+	a_ = (*a)->bytesSentRem.value;
+	b_ = (*b)->bytesSentRem.value;
+	break;
+      case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
+	a_ = (*a)->bytesSentLoc.value;
+	b_ = (*b)->bytesSentLoc.value;
+	break;
       }
-      else {
-          switch(myGlobals.sortFilter) {
-          case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
-              a_ = (*a)->bytesSentLoc.value;
-              b_ = (*b)->bytesSentLoc.value;
-              break;
-          case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
-              a_ = (*a)->bytesSentRem.value;
-              b_ = (*b)->bytesSentRem.value;
-              break;
-          case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
-              a_ = (*a)->bytesSentLoc.value;
-              b_ = (*b)->bytesSentLoc.value;
-              break;
-          }
-      }
-      if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
-      break;
+    }
+    if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
+    break;
 
   case 4: /* Data Rcvd */
-      if (isFcHost ((*a)) && isFcHost ((*b))) {
-          a_ = (*a)->fcBytesRcvd.value;
-          b_ = (*b)->fcBytesRcvd.value;
+    if(isFcHost((*a)) && isFcHost((*b))) {
+      a_ = (*a)->fcBytesRcvd.value;
+      b_ = (*b)->fcBytesRcvd.value;
+    }
+    else {
+      switch(myGlobals.sortFilter) {
+      case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
+	a_ = (*a)->bytesRcvdLoc.value;
+	b_ = (*b)->bytesRcvdLoc.value;
+	break;
+      case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
+	a_ = (*a)->bytesRcvdFromRem.value;
+	b_ = (*b)->bytesRcvdFromRem.value;
+	break;
+      case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
+	a_ = (*a)->bytesRcvdLoc.value;
+	b_ = (*b)->bytesRcvdLoc.value;
+	break;
       }
-      else {
-          switch(myGlobals.sortFilter) {
-          case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
-              a_ = (*a)->bytesRcvdLoc.value;
-              b_ = (*b)->bytesRcvdLoc.value;
-              break;
-          case FLAG_LOCAL_TO_REMOTE_ACCOUNTING:
-              a_ = (*a)->bytesRcvdFromRem.value;
-              b_ = (*b)->bytesRcvdFromRem.value;
-              break;
-          case FLAG_LOCAL_TO_LOCAL_ACCOUNTING:
-              a_ = (*a)->bytesRcvdLoc.value;
-              b_ = (*b)->bytesRcvdLoc.value;
-              break;
-          }
-      }
-      if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
-      break;
+    }
+    if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
+    break;
 
   case 5: /* VSAN */
-      if (isFcHost ((*a)) && isFcHost ((*b))) {
-          a_ = (*a)->vsanId, b_ = (*b)->vsanId;
-          return ((a_ < b_) ? -1 : (a_ > b_) ? 1 : 0);
-      }
-      break;
-
+    if(isFcHost((*a)) && isFcHost((*b))) {
+      a_ = (*a)->vsanId, b_ = (*b)->vsanId;
+      return((a_ < b_) ? -1 : (a_ > b_) ? 1 : 0);
+    }
+    break;
+    
   default: /* Host Name */
     return(cmpFctnResolvedName(a, b));
   }
+  
+  return(-1);
 }
 
 /* ************************************ */
@@ -1743,7 +1744,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
 
       sendString("<CENTER>\n"
-		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">"
+		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>"
 		 "<TR "TR_ON" "DARK_BG"><TH "TH_BG">TCP Connections</TH>"
 		 "<TH "TH_BG" COLSPAN=2>Directed to</TH>"
 		 "<TH "TH_BG" COLSPAN=2>Rcvd From</TH></TR>\n");
@@ -1792,7 +1793,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
 
       sendString("<CENTER>\n"
-		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON" "DARK_BG"><TH "TH_BG">TCP Flags</TH>"
+		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%><TR "TR_ON" "DARK_BG"><TH "TH_BG">TCP Flags</TH>"
 		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent</TH>"
 		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd</TH></TR>\n");
 
@@ -1886,7 +1887,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
 
       sendString("<CENTER>\n"
-		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON" "DARK_BG"><TH "TH_BG">Anomaly</TH>"
+		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%><TR "TR_ON" "DARK_BG"><TH "TH_BG">Anomaly</TH>"
 		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent&nbsp;to</TH>"
 		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd&nbsp;from</TH>"
 		 "</TR>\n");
@@ -2035,7 +2036,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
     }
 
     sendString("<CENTER>\n"
-	       ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON" "DARK_BG">"
+	       ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%><TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">ARP</TH>"
 	       "<TH "TH_BG">Packet</TH>"
 	       "</TR>\n");
@@ -2076,7 +2077,6 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   char buf[LEN_GENERAL_WORK_BUFFER];
   char linkName[LEN_GENERAL_WORK_BUFFER/2], vlanStr[32];
-  int i;
 
   totalSent = el->tcpFragmentsSent.value + el->udpFragmentsSent.value + el->icmpFragmentsSent.value;
   totalRcvd = el->tcpFragmentsRcvd.value + el->udpFragmentsRcvd.value + el->icmpFragmentsRcvd.value;
@@ -2892,7 +2892,7 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
     printSectionTitle("HTTP Virtual Hosts Traffic");
     sendString("<CENTER>\n<TABLE BORDER=0 "TABLE_DEFAULTS"><TR><TD "TD_BG" VALIGN=TOP>\n");
 
-    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">"
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>"
 	       "<TR "TR_ON" "DARK_BG"><TH "TH_BG">Virtual Host</TH>"
 	       "<TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>\n");
 
@@ -2916,8 +2916,7 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 /* ************************************ */
 
 HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
-  HostTraffic *theEntry = NULL;
-  int found = 0, type;
+  int type;
   FcNameServerCacheEntry *fcnsEntry;
 
   if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
@@ -3005,13 +3004,13 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
       int ok =0;
 
     for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	if((!emptySerial(&el->contactedSentPeers.peersSerials[i])
-	    && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))
-	   || (!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
-	       && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))))) {
-	  ok = 1;
-	  break;
-	}
+      if(((!emptySerial(&el->contactedSentPeers.peersSerials[i])
+	   && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial)))
+	  || ((!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
+	       && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial)))))) {
+	ok = 1;
+	break;
+      }
 
     if(ok) {
       HostTraffic *el2;
@@ -3027,7 +3026,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 		      titleSent = 1;
 		      sendString("<CENTER>\n<TABLE BORDER=0 "TABLE_DEFAULTS"><TR><TD "TD_BG" VALIGN=TOP>\n");
 
-		      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">"
+		      sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>"
 				 "<TR "TR_ON" "DARK_BG"><TH "TH_BG">Sent To</TH>"
 				 "<TH "TH_BG">IP Address</TH></TR>\n");
 		  }
@@ -3472,7 +3471,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	BufferTooShort();
       sendString(buf);
 
-      sendString("<TD "TD_BG"><TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n");
+      sendString("<TD "TD_BG"><TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "DHCP Server",
@@ -4177,7 +4176,7 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
   if(tot > 0) {
     printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Client&nbsp;Role");
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n<TR "TR_ON" "DARK_BG">"
+    sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">&nbsp;</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Sent</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Sent</TH>"
@@ -4207,7 +4206,7 @@ void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
   if(tot > 0) {
     printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Server&nbsp;Role");
     sendString("<CENTER>\n");
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n<TR "TR_ON" "DARK_BG">"
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n<TR "TR_ON" "DARK_BG">"
 	       "<TH "TH_BG">&nbsp;</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Rcvd</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Rcvd</TH>"
@@ -4572,12 +4571,11 @@ void printHostsCharacterization(void) {
 
 /* ******************************** */
 
-static printFingerprintCounts(int countScanned, int countWithoutFP, int countBroadcast,
-                              int countMulticast, int countRemote, int countNotIP,
-                              int countUnknownFP, int unknownFPsEtc, int countCantResolve,
-                              int fingerprintRemote,
-                              char *unknownFPs) {
-
+static void printFingerprintCounts(int countScanned, int countWithoutFP, int countBroadcast,
+				   int countMulticast, int countRemote, int countNotIP,
+				   int countUnknownFP, int unknownFPsEtc, int countCantResolve,
+				   int fingerprintRemote,
+				   char *unknownFPs) {  
   char buf[LEN_GENERAL_WORK_BUFFER];
   struct tm t;
 
@@ -4935,7 +4933,7 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
         if(snprintf(buf, sizeof(buf),
                     "Mutex %s is %s.\n"
                     "     locked: %u times, last was at %s %s:%d(%d)\n"
-                    "     blocked: at %s:%d%(%d)\n",
+                    "     blocked: at %s:%d(%d)\n",
                     mutexName, mutexId->isLocked ? "locked" : "unlocked",
                     mutexId->numLocks,
                     buf2,
@@ -5022,11 +5020,9 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
 }
 #endif
 
-void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, char *url)
-{
+void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, char *url) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   char *sign, *arrowGif, *arrow[48], *theAnchor[48];
-  int soFar=2;
   char htmlAnchor[64], htmlAnchor1[64];
   char hours[][24] = {"12<BR>AM", "1<BR>AM", "2<BR>AM", "3<BR>AM", "4<BR>AM", "5<BR>AM", "6<BR>AM",
                        "7<BR>AM", "8<BR>AM", "9<BR>AM", "10<BR>AM", "11<BR>AM", "12<BR>PM", "1<BR>PM",
@@ -5140,7 +5136,7 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
 		"<TH "TH_BG" ROWSPAN=\"2\" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>"
 		"<TH "TH_BG" ROWSPAN=\"2\" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>",
-		theAnchor[1], arrow[1], theAnchor[0], arrow[0], theAnchor[2], arrow[2]) < 0)
+		theAnchor[1], arrow[1], theAnchor[0], arrow[0]) < 0)
       BufferTooShort();
     sendString(buf);
     updateThpt(1);
@@ -5181,8 +5177,7 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>",
-		theAnchor[1], arrow[1], theAnchor[0], arrow[0],
-                theAnchor[2], arrow[2]) < 0)
+		theAnchor[1], arrow[1], theAnchor[0], arrow[0]) < 0)
       BufferTooShort();
     sendString(buf);
     break;
@@ -5194,10 +5189,8 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
 /* ******************************* */
 
 void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
-                        int column, int hostInfoPage)
-{
+                        int column, int hostInfoPage) {
   char buf[LEN_GENERAL_WORK_BUFFER];
-  int soFar=2;
   char theLink[256];
 
   if(snprintf(theLink, sizeof(theLink),
@@ -5365,13 +5358,13 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
       }
       else {
           if(snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
-                   "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
-                   "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
-                   "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
-                   "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
-                   "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
-                   "[ <B>FC Sessions</B> ]&nbsp;</p>",
-                   theLink, theLink, theLink, theLink, theLink, theLink, theLink) < 0)
+		      "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
+		      "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
+		      "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
+		      "[ <A HREF=%s5>SCSI Session(Status)</A> ]&nbsp;"
+		      "[ <A HREF=%s6>SCSI Session(Task Mgmt)</A> ]&nbsp;"
+		      "[ <B>FC Sessions</B> ]&nbsp;</p>",
+		      theLink, theLink, theLink, theLink, theLink) < 0)
             BufferTooShort();
       }
       break;
@@ -5771,8 +5764,7 @@ int cmpFcFctn(const void *_a, const void *_b)
 
 /* ******************************* */
 
-int cmpFcSessionsFctn (const void *_a, const void *_b)
-{
+int cmpFcSessionsFctn (const void *_a, const void *_b) {
     FCSession **a = (FCSession **)_a;
     FCSession **b = (FCSession **)_b;
     int a_, b_;
@@ -5861,7 +5853,11 @@ int cmpFcSessionsFctn (const void *_a, const void *_b)
     default:
         break;
     }
+
+    return(-1);
 }
+
+/* ************************** */
 
 int cmpScsiSessionsFctn (const void *_a, const void *_b)
 {
@@ -6223,6 +6219,8 @@ int cmpScsiSessionsFctn (const void *_a, const void *_b)
     default:
         break;
     }
+
+    return(-1);
 }
 
 int cmpLunFctn (const void *_a, const void *_b)
@@ -6300,6 +6298,8 @@ int cmpVsanFctn (const void *_a, const void *_b)
         if(a_ < b_) return(-1); else if (a_ > b_) return(1); else return(0);
         break;
     }
+
+    return(-1);
 }
 
 /* ************************************ */
@@ -6308,7 +6308,6 @@ int cmpFcDomainFctn (const void *_a, const void *_b)
 {
     SortedFcDomainStatsEntry *a = (SortedFcDomainStatsEntry *)_a;
     SortedFcDomainStatsEntry *b = (SortedFcDomainStatsEntry *)_b;
-    Counter a_=0, b_=0;
 
     switch(myGlobals.columnSort) {
     case 0: /* Rcvd */
@@ -6488,14 +6487,14 @@ void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId)
         int ok =0;
 
         for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-            if((!emptySerial(&el->contactedSentPeers.peersSerials[i])
-                && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))
-                || (!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
-                    && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial))))) {
-                ok = 1;
-                break;
-            }
-
+	  if(((!emptySerial(&el->contactedSentPeers.peersSerials[i])
+	       && (!cmpSerial(&el->contactedSentPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial)))
+	      || ((!emptySerial(&el->contactedRcvdPeers.peersSerials[i])
+		   && (!cmpSerial(&el->contactedRcvdPeers.peersSerials[i], &myGlobals.otherHostEntry->hostSerial)))))) {
+	    ok = 1;
+	    break;
+	  }
+	
         if(ok) {
             HostTraffic *el2;
             int numEntries;
@@ -6512,7 +6511,7 @@ void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId)
                             sendString("<CENTER>\n"
                                        "<TABLE BORDER=0 "TABLE_DEFAULTS"><TR><TD "TD_BG" VALIGN=TOP>\n");
 
-                            sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">"
+                            sendString(""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>"
                                        "<TR "TR_ON"><TH "TH_BG" "DARK_BG">Sent To</TH>"
                                        "<TH "TH_BG" "DARK_BG">Address</TH></TR>\n");
                         }
@@ -6603,7 +6602,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     releaseAddrResMutex();
     printHTMLheader(buf, 0, 0);
     sendString("<CENTER>\n");
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n");
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
     accessAddrResMutex("printAllSessions-2");
 
@@ -6667,7 +6666,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     sendString("</CENTER>\n");
 
     sendString("<CENTER>\n");
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n");
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>"
@@ -6713,7 +6712,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     sendString("</CENTER>\n");
 
     sendString("<CENTER>\n");
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n");
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
     if (snprintf (buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
                   "<TD "TD_BG" ALIGN=RIGHT>%d&nbsp;</TD></TR>\n",
@@ -6772,7 +6771,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     sendString("</CENTER>\n");
 
     sendString("<CENTER>\n");
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n");
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
                 "</TH><TD "TD_BG" ALIGN=RIGHT>"
@@ -6846,7 +6845,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
     int duration;
     LunStatsSortedEntry sortedLunTbl[MAX_LUNS_SUPPORTED];
     LunStatsSortedEntry *entry;
-    char buf[LEN_GENERAL_WORK_BUFFER], *sign, *title=NULL;
+    char buf[LEN_GENERAL_WORK_BUFFER], *sign;
     char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32],
          formatBuf4[32], formatBuf5[32];
     char *arrowGif, *arrow[48], *theAnchor[48];
@@ -6944,7 +6943,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
         
         sendString("<CENTER>\n");
         if (snprintf(buf, sizeof (buf),
-                     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
+                     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%%><TR "TR_ON">"
                      "<TH "TH_BG" >%s1>LUN%s</A></TH>"
                      "<TH "TH_BG" COLSPAN=2>Total&nbsp;Bytes</TH>"
                      "<TH "TH_BG" COLSPAN=3>Data&nbsp;Bytes</TH>"
@@ -6955,8 +6954,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
                      "<TH "TH_BG" >Duration(secs)</TH>"
                      "<TH "TH_BG" >Last&nbsp;Seen</TH>"
                      "</TR>\n",
-                     theAnchor[1], arrow[1]
-                     ) < 0)                 
+                     theAnchor[1], arrow[1]) < 0)                 
             BufferTooShort();
 
         sendString(buf);
@@ -7149,7 +7147,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
     hash = theHash[idx];
   
     sendString("<CENTER>\n");
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">\n");
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
     accessAddrResMutex("printAllSessions-2");
 
@@ -7484,7 +7482,7 @@ void printVsanProtocolStats (FcFabricElementHash *hash, int actualDeviceId)
 /* ************************************ */
 
 void printPluginTrailer(char *left, char *middle) {
-  sendString("<br>\n<hr>\n<br>\n<table border=\"0\" width=\"100%\"><tr>");
+  sendString("<br>\n<hr>\n<br>\n<table border=\"0\" width=100%><tr>");
 
   if(left != NULL) {
     sendString("<td width=\"20%\">[ <a href=\"../" CONST_PLUGINS_HEADER);

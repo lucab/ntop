@@ -777,7 +777,7 @@ char* calculateCellColor(Counter actualValue,
 /* ************************ */
 
 char* getHostCountryIconURL(HostTraffic *el) {
-  char *ret, path[256], *img, *source;
+  char path[256], *img, *source;
   static char flagBuf[384];
   struct stat buf;
   int rc;
@@ -794,7 +794,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
   if(el->ip2ccValue != NULL) {
     if(rc != 0) {
       if(snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif",
-                  CFG_DATAFILE_DIR, el->ip2ccValue) < 0)
+                  el->ip2ccValue) < 0)
         BufferTooShort();
       rc = stat(path, &buf);
     }
@@ -7403,7 +7403,6 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   char strport[32];
   char ntop[1024];
 #endif
-  struct sockaddr_in sockIn;
 #ifdef INITWEB_DEBUG
   char value[LEN_SMALL_WORK_BUFFER];
 #endif
@@ -7847,12 +7846,10 @@ void sslwatchdogSighandler(int signum) {
 }
 
 /* **************************************** */
-/* **************************************** */
 
 void* sslwatchdogChildThread(void* notUsed _UNUSED_) {
   /* This is the watchdog (child) */
   int rc;
-  char buf[LEN_SMALL_WORK_BUFFER];
   struct timespec expiration;
     
   /* ENTRY: from above, state 0 (FLAG_SSLWATCHDOG_UNINIT) */

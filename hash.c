@@ -218,10 +218,10 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 #endif
 #endif
   } /* for */
-
+      
       if(host->numHostSessions > 0) {
-          traceEvent(CONST_TRACE_ERROR, "====> Host %/%s has %d sessions still to be purged",
-                     host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
+	traceEvent(CONST_TRACE_ERROR, "====> Host %s/%s has %d sessions still to be purged",
+		   host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
       }
   }
   else {
@@ -273,7 +273,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
       } /* for */
 
       if(host->numHostSessions > 0) {
-          traceEvent(CONST_TRACE_ERROR, "====> Host %/%s has %d sessions still to be purged",
+          traceEvent(CONST_TRACE_ERROR, "====> Host %s/%s has %d sessions still to be purged",
                      host->hostNumIpAddress, host->hostResolvedName, host->numHostSessions);
       }
   }

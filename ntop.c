@@ -44,16 +44,16 @@ static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
 void handleSigHup(int signalId _UNUSED_) {
 #ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "========================================");
-   printMutexInfo(&myGlobals.gdbmMutex, "myGlobals.gdbmMutex");
-   printMutexInfo(&myGlobals.packetProcessMutex, "myGlobals.packetProcessMutex");
-   printMutexInfo(&myGlobals.packetQueueMutex, "myGlobals.packetQueueMutex");
+  printMutexInfo(&myGlobals.gdbmMutex, "myGlobals.gdbmMutex");
+  printMutexInfo(&myGlobals.packetProcessMutex, "myGlobals.packetProcessMutex");
+  printMutexInfo(&myGlobals.packetQueueMutex, "myGlobals.packetQueueMutex");
 
 #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-   if(myGlobals.numericFlag == 0)
-     printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
+  if(myGlobals.numericFlag == 0)
+    printMutexInfo(&myGlobals.addressResolutionMutex, "myGlobals.addressResolutionMutex");
 #endif
 
-   printMutexInfo(&myGlobals.hostsHashMutex, "myGlobals.hostsHashMutex");
+  printMutexInfo(&myGlobals.hostsHashMutex, "myGlobals.hostsHashMutex");
   traceEvent(CONST_TRACE_INFO, "========================================");
 #endif /* CFG_MULTITHREADED */
 
@@ -73,9 +73,9 @@ void* pcapDispatch(void *_i) {
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread running...");
 
   /* Reset stats before to start */
-    if (myGlobals.rFileName == NULL) {
-        pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats);
-    }
+  if (myGlobals.rFileName == NULL) {
+    pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats);
+  }
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     HEARTBEAT(2, "pcapDispatch()", NULL);
@@ -90,18 +90,18 @@ void* pcapDispatch(void *_i) {
 		   pcap_geterr(myGlobals.device[i].pcapPtr));
       break;
     } else if(rc == 0) {
-        if(myGlobals.rFileName != NULL) {
-          traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d [No more packets to read]", rc);
-          break; /* No more packets to read */
-        } 
+      if(myGlobals.rFileName != NULL) {
+	traceEvent(CONST_TRACE_INFO, "pcap_dispatch returned %d [No more packets to read]", rc);
+	break; /* No more packets to read */
+      } 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-        if(myGlobals.setNonBlocking == TRUE) {
-            /* select returned no data - either a signal or setNonBlock */
-            struct timespec sleepAmount;
-            sleepAmount.tv_sec = 0; sleepAmount.tv_nsec = CONST_PCAPNONBLOCKING_SLEEP_TIME;
-            rc = nanosleep(&sleepAmount, NULL);
-            myGlobals.setNonBlockingSleepCount++;
-         }
+      if(myGlobals.setNonBlocking == TRUE) {
+	/* select returned no data - either a signal or setNonBlock */
+	struct timespec sleepAmount;
+	sleepAmount.tv_sec = 0; sleepAmount.tv_nsec = CONST_PCAPNONBLOCKING_SLEEP_TIME;
+	rc = nanosleep(&sleepAmount, NULL);
+	myGlobals.setNonBlockingSleepCount++;
+      }
 #endif
     } 
   }
@@ -164,7 +164,7 @@ void daemonize(void) {
   else {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: after fork() in %s (%d)", 
-                           childpid ? "parent" : "child", childpid);
+	       childpid ? "parent" : "child", childpid);
 #endif
     if(!childpid) { /* child */
       traceEvent(CONST_TRACE_INFO, "INIT: Bye bye: I'm becoming a daemon...");
@@ -272,7 +272,7 @@ static short handleProtocol(char* protoName, char *protocol) {
 	servicesMapper[idx] = myGlobals.numIpProtosToMonitor;
       } else if(printWarnings)
 	traceEvent(CONST_TRACE_WARNING, "INIT: Protocol '%s' has been discarded (multiple instances)",
-	       protocol);
+		   protocol);
       return(idx);
     }
   }
@@ -317,18 +317,18 @@ static int handleProtocolList(char* protoName, char *protocolList) {
   }
 
   if(increment == 1) {
-      if(myGlobals.numIpProtosToMonitor == 0)
-	  myGlobals.protoIPTrafficInfos = (char**)malloc(sizeof(char*));
-      else
-	  myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos, 
-							  sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
+    if(myGlobals.numIpProtosToMonitor == 0)
+      myGlobals.protoIPTrafficInfos = (char**)malloc(sizeof(char*));
+    else
+      myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos, 
+						      sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
       
-      rc = myGlobals.numIpProtosToMonitor;
-      myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
-      myGlobals.numIpProtosToMonitor++;
+    rc = myGlobals.numIpProtosToMonitor;
+    myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
+    myGlobals.numIpProtosToMonitor++;
 #ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "%d) %s - %s",
-		 myGlobals.numIpProtosToMonitor, protoName, protocolList);
+    traceEvent(CONST_TRACE_INFO, "%d) %s - %s",
+	       myGlobals.numIpProtosToMonitor, protoName, protocolList);
 #endif
   }
 
@@ -367,9 +367,9 @@ void createPortHash(void) {
   int theSize, i;
 
   /*
-     At this point in time servicesMapper contains all
-     the port data hence we can transform it from
-     an array to a hash table.
+    At this point in time servicesMapper contains all
+    the port data hence we can transform it from
+    an array to a hash table.
   */
   myGlobals.ipPortMapper.numSlots = 2*myGlobals.ipPortMapper.numElements;
   theSize = sizeof(PortProtoMapper)*2*myGlobals.ipPortMapper.numSlots;
@@ -420,7 +420,7 @@ void handleProtocols(void) {
   */
 
   if((!myGlobals.protoSpecs)
-      || (!myGlobals.protoSpecs[0]))
+     || (!myGlobals.protoSpecs[0]))
     return;
 
   fd = fopen(myGlobals.protoSpecs, "rb");
@@ -441,7 +441,7 @@ void handleProtocols(void) {
     bufferCurrent = buffer = (char*)malloc(buf.st_size+8) /* just to be safe */;
 
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "PROTO_INIT: Processing protocol file: '%s', size: %ld",
-	       myGlobals.protoSpecs, buf.st_size+8);
+	       myGlobals.protoSpecs, (long)(buf.st_size+8));
 
     for (;;) {
       bufferCurrent = fgets(bufferCurrent, buf.st_size, fd);
@@ -552,7 +552,7 @@ void addDefaultProtocols(void) {
 
 int mapGlobalToLocalIdx(int port) {
   if((port < 0) || (port >= MAX_IP_PORT))
-   return(-1);
+    return(-1);
   else {
     int j, found, slotId = (3*port) % myGlobals.ipPortMapper.numSlots;
 
@@ -641,7 +641,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated", 
-	     myGlobals.scanIdleThreadId);
+	     (long)myGlobals.scanIdleThreadId);
   return(NULL); 
 }
 #endif
@@ -652,7 +652,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
 void* scanFingerprintLoop(void* notUsed _UNUSED_) {
   HostTraffic *el;
-  int i, deviceId, countScan, countResolved;
+  int deviceId, countScan, countResolved;
 #ifdef FINGERPRINT_DEBUG
   int countCycle=0;
 #endif
@@ -785,7 +785,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
 
 /* Report statistics and write out the raw packet file */
 RETSIGTYPE cleanup(int signo) {
-  static int unloaded = 0, msgSent = 0;
+  static int unloaded = 0;
   struct pcap_stat pcapStat;
   int i;
   char buf[32];
@@ -832,35 +832,36 @@ RETSIGTYPE cleanup(int signo) {
   myGlobals.capturePackets = FLAG_NTOPSTATE_TERM;
 
 #ifndef WIN32
- #ifdef CFG_MULTITHREADED
+#ifdef CFG_MULTITHREADED
 
   killThread(&myGlobals.dequeueThreadId);
 
-  #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0) {
     for(i=0; i<myGlobals.numDequeueThreads; i++)
       killThread(&myGlobals.dequeueAddressThreadId[i]);
   }
-  #endif
+#endif
 
   killThread(&myGlobals.handleWebConnectionsThreadId);
 #if !defined(WIN32) && defined(CFG_MULTITHREADED)
-  traceEvent(CONST_TRACE_INFO, "SIGPIPE: Handled (ignored) %u errors", myGlobals.numHandledSIGPIPEerrors);
+  traceEvent(CONST_TRACE_INFO, "SIGPIPE: Handled (ignored) %lu errors", 
+	     myGlobals.numHandledSIGPIPEerrors);
 #endif
 
-  #ifdef MAKE_WITH_SSLWATCHDOG
+#ifdef MAKE_WITH_SSLWATCHDOG
   if (myGlobals.sslwatchdogChildThreadId != 0) {
-      killThread(&myGlobals.sslwatchdogChildThreadId);
+    killThread(&myGlobals.sslwatchdogChildThreadId);
   }
-   #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   if (myGlobals.useSSLwatchdog == 1)
-   #endif
-  {
+#endif
+    {
       deleteCondvar(&myGlobals.sslwatchdogCondvar);
-  }
-  #endif
+    }
+#endif
 
- #endif
+#endif
 
 #else /* #ifndef WIN32 */
 
@@ -871,45 +872,45 @@ RETSIGTYPE cleanup(int signo) {
     #else clause added to force dequeue threads to terminate
     MAKE_WITH_SEMAPHORES is *NOT* tested!!!
   */
- #ifdef CFG_MULTITHREADED
-  #ifdef MAKE_WITH_SEMAPHORES
+#ifdef CFG_MULTITHREADED
+#ifdef MAKE_WITH_SEMAPHORES
   incrementSem(&myGlobals.queueSem);
-   #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   incrementSem(&myGlobals.queueAddressSem);
-   #endif
-  #else
+#endif
+#else
   signalCondvar(&myGlobals.queueCondvar);
-   #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   signalCondvar(&myGlobals.queueAddressCondvar);
-   #endif
-  #endif
- #endif /* MULTITREADED */
+#endif
+#endif
+#endif /* MULTITREADED */
 #endif /* #ifndef WIN32 */
 
 #ifdef HAVE_FILEDESCRIPTORBUG
-    /* Close and delete the temporary - junk - files */
-    traceEvent(CONST_TRACE_INFO, "FILEDESCRIPTORBUG: Bug work-around cleanup");
-    for(i=CONST_FILEDESCRIPTORBUG_COUNT-1; i>=0; i--) {
-      if(myGlobals.tempF[i] >= 0) {
-        traceEvent(CONST_TRACE_NOISY, "FILEDESCRIPTORBUG: Removing %d, '%s'(%d)", i, myGlobals.tempFname[i], myGlobals.tempF[i]);
-        if(close(myGlobals.tempF[i])) {
-          traceEvent(CONST_TRACE_ERROR,
-                     "FILEDESCRIPTORBUG: Unable to close file %d - '%s'(%d)",
-                     i,
-                     strerror(errno), errno);
-        } else {
-          if(unlink(myGlobals.tempFname[i]))
-            traceEvent(CONST_TRACE_ERROR,
-                       "FILEDESCRIPTORBUG: Unable to delete file '%s' - '%s'(%d)",
-                       myGlobals.tempFname[i],
-                       strerror(errno), errno);
-          else
-            traceEvent(CONST_TRACE_NOISY,
-                       "FILEDESCRIPTORBUG: Removed file '%s'",
-                       myGlobals.tempFname[i]);
-        }
+  /* Close and delete the temporary - junk - files */
+  traceEvent(CONST_TRACE_INFO, "FILEDESCRIPTORBUG: Bug work-around cleanup");
+  for(i=CONST_FILEDESCRIPTORBUG_COUNT-1; i>=0; i--) {
+    if(myGlobals.tempF[i] >= 0) {
+      traceEvent(CONST_TRACE_NOISY, "FILEDESCRIPTORBUG: Removing %d, '%s'(%d)", i, myGlobals.tempFname[i], myGlobals.tempF[i]);
+      if(close(myGlobals.tempF[i])) {
+	traceEvent(CONST_TRACE_ERROR,
+		   "FILEDESCRIPTORBUG: Unable to close file %d - '%s'(%d)",
+		   i,
+		   strerror(errno), errno);
+      } else {
+	if(unlink(myGlobals.tempFname[i]))
+	  traceEvent(CONST_TRACE_ERROR,
+		     "FILEDESCRIPTORBUG: Unable to delete file '%s' - '%s'(%d)",
+		     myGlobals.tempFname[i],
+		     strerror(errno), errno);
+	else
+	  traceEvent(CONST_TRACE_NOISY,
+		     "FILEDESCRIPTORBUG: Removed file '%s'",
+		     myGlobals.tempFname[i]);
       }
     }
+  }
 #endif /* FILEDESCRIPTORBUG */
 
 #if 0
@@ -996,14 +997,14 @@ RETSIGTYPE cleanup(int signo) {
     if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
       if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
 	traceEvent(CONST_TRACE_INFO, "STATS: %s packets received by filter on %s",
-		formatPkts((Counter)pcapStat.ps_recv, buf, sizeof(buf)), myGlobals.device[i].name);
+		   formatPkts((Counter)pcapStat.ps_recv, buf, sizeof(buf)), myGlobals.device[i].name);
 
 	traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (according to libpcap)",
-		formatPkts((Counter)pcapStat.ps_drop, buf, sizeof(buf)));
+		   formatPkts((Counter)pcapStat.ps_drop, buf, sizeof(buf)));
       }
 #ifdef CFG_MULTITHREADED
       traceEvent(CONST_TRACE_INFO, "STATS: %s packets dropped (by ntop)",
-		formatPkts(myGlobals.device[i].droppedPkts.value, buf, sizeof(buf)));
+		 formatPkts(myGlobals.device[i].droppedPkts.value, buf, sizeof(buf)));
 #endif
     }
 
@@ -1133,10 +1134,10 @@ RETSIGTYPE cleanup(int signo) {
   /* free(myGlobals.dbPath); -- later, need this to remove pid */
   free(myGlobals.spoolPath);
   if (myGlobals.rrdPath != NULL)
-      free(myGlobals.rrdPath);
+    free(myGlobals.rrdPath);
 
   if (myGlobals.gdVersionGuessValue != NULL)
-      free(myGlobals.gdVersionGuessValue);
+    free(myGlobals.gdVersionGuessValue);
 
   myGlobals.endNtop = 2;
 
@@ -1160,171 +1161,4 @@ RETSIGTYPE cleanup(int signo) {
   traceEvent(CONST_TRACE_INFO, "===================================");
 
   exit(0);
-}
-
-/* **************************************** */
-
-void processFcNSCacheFile(char *filename) {
-    char *token, *bufptr, *strtokState;
-    FcNameServerCacheEntry *entry;
-    HostTraffic *el;
-    FcAddress fcid;
-    u_int32_t vsanId, domain, area, port, tgtType, i, j;
-    wwn_t pWWN, nWWN;
-    char alias[MAX_LEN_SYM_HOST_NAME];
-    FILE *fd;
-    int id, hashIdx = 0, entryFound, hex;
-    char buffer[256];
-
-    if (filename == NULL) {
-        return;
-    }
-
-    if (myGlobals.fcnsCacheHash == NULL) {
-        /* We cannot use the file if the entry is NULL */
-        return;
-    }
-    
-    if ((fd = fopen (filename, "r")) == NULL) {
-        traceEvent (CONST_TRACE_WARNING, "Unable to open FC WWN cache file %s"
-                    "error = %d\n", filename, errno);
-        return;
-    }
-
-    traceEvent (CONST_TRACE_ALWAYSDISPLAY, "Processing FC NS file %s\n", filename);
-    while (!feof (fd) && (fgets(buffer, 256, fd) != NULL)) {
-        alias[0] = '\0';
-        pWWN.str[0] = '\0';
-        nWWN.str[0] = '\0';
-        
-        /* Ignore lines that start with '#' as comments */
-        if (strrchr(buffer, '#') != NULL) {
-            continue;
-        }
-
-        /*
-         * The file is a CSV list of lines with a line format as follows:
-         * VSAN, FC_ID, pWWN, nWWN, Alias, Target type
-         *
-         * FC_ID is specified as a 3-byte hex i.e. 0xFFFFFD
-         * pWWN & nWWN are specified as octets separated by ':'
-         * Alias is a comma-separated string of max 64 chars
-         * Target type is a decimal returned by the INQUIRY command
-         *
-         * If a field is missing, it is represented by a null string i.e. two
-         * consecutive commas.
-         */
-        id = 0;
-        bufptr = buffer;
-        token = strtok_r (buffer, ",", &strtokState);
-        while (token != NULL) {
-            if (token[0]  != '\0') {
-                switch (id) {
-                case FLAG_FC_NS_CASE_VSAN:
-                    if (isxdigit (*token)) {
-                        sscanf (token, "%d", &vsanId);
-                    }
-                    else {
-                        /* Invalid input. Skip rest of line */
-                        token = NULL;
-                        continue;
-                    }
-                    break;
-                case FLAG_FC_NS_CASE_FCID:
-                    if (isxdigit (*token)) {
-                        if (sscanf (token, "%02hx.%02hx.%02hx", &domain, &area, &port) == 3) {
-                            fcid.domain = domain;
-                            fcid.area = area;
-                            fcid.port = port;
-                        }
-                        else {
-                            /* Invalid input. Skip rest of line */
-                            token = NULL;
-                            continue;
-                        }
-                    }
-                    else {
-                        /* Invalid input. Skip rest of line */
-                        token = NULL;
-                        continue;
-                    }
-                    break;
-                case FLAG_FC_NS_CASE_PWWN:
-                    for (i = 0, j = 0; i < LEN_WWN_ADDRESS; i++) {
-                        sscanf (&token[j], "%02x:", &hex);
-                        pWWN.str[i] = (char)hex;
-                        j += 3;
-                    }
-                    break;
-                case FLAG_FC_NS_CASE_NWWN:
-                    for (i = 0, j = 0; i < LEN_WWN_ADDRESS; i++) {
-                        sscanf (&token[j], "%02x:", &hex);
-                        nWWN.str[i] = (char)hex;
-                        j += 3;
-                    }
-                    break;
-                case FLAG_FC_NS_CASE_ALIAS:
-                    sscanf (token, "%63s", alias);
-                    break;
-                case FLAG_FC_NS_CASE_TGTTYPE:
-                    if (isxdigit (*token)) {
-                        sscanf (token, "%d", &tgtType);
-                    }
-                    else {
-                        /* Invalid input. Skip rest of line */
-                        token = NULL;
-                        continue;
-                    }
-                    break;
-                default:
-                    break;
-                }
-            }
-            id++;
-
-            token = strtok_r (NULL, ",", &strtokState);
-        }
-
-        /* Validate inputs */
-        if (id < FLAG_FC_NS_CASE_NWWN) {
-            continue;
-        }
-
-        /* Obtain hash index. We pass -1 for device ID since this file is
-         * device-independent.
-         */
-        hashIdx = hashFcHost (&fcid, vsanId, &el, -1);
-        entry = myGlobals.fcnsCacheHash[hashIdx];
-
-        entryFound = 0;
-        while (entry != NULL) {
-            if (memcmp ((u_int8_t *)&(entry->fcAddress), (u_int8_t *)&fcid,
-                        LEN_FC_ADDRESS) == 0) {
-                entryFound = 1;
-                break;
-            }
-
-            entry = entry->next;
-        }
-
-        if (!entryFound) {
-            if ((entry = malloc (sizeof (FcNameServerCacheEntry))) == NULL) {
-                traceEvent (CONST_TRACE_ERROR, "Unable to malloc entry for FcNameServerCache Entry\n");
-                return;
-            }
-
-            memset (entry, 0, sizeof (FcNameServerCacheEntry));
-            entry->hashIdx = hashIdx;
-            entry->next = myGlobals.fcnsCacheHash[hashIdx];
-            myGlobals.fcnsCacheHash[hashIdx] = entry;
-        }
-
-        entry->vsanId = vsanId;
-        entry->fcAddress = fcid;
-        memcpy (&entry->pWWN.str[0], &pWWN.str[0], LEN_WWN_ADDRESS);
-        memcpy (&entry->nWWN.str[0], &nWWN.str[0], LEN_WWN_ADDRESS);
-        strncpy (&entry->alias[0], alias, MAX_LEN_SYM_HOST_NAME);
-        entry->alias[MAX_LEN_SYM_HOST_NAME] = '\0';
-    }
-
 }

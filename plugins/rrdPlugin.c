@@ -210,7 +210,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   char          **ds_namv;
 
   if(snprintf(path, sizeof(path), "%s/%s/%s",
-	   myGlobals.rrdPath, rrdPath, rrdFilePath) < 0)
+	      myGlobals.rrdPath, rrdPath, rrdFilePath) < 0)
     BufferTooShort();
 
 #ifdef WIN32

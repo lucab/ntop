@@ -873,28 +873,6 @@ static void decodeIPV4(SFSample *sample)
 }
 
 /*_________________---------------------------__________________
-  _________________   writePcapHeader         __________________
-  -----------------___________________________------------------
-*/
-
-static void writePcapHeader() {
-  struct pcap_file_header hdr;
-  memset(&hdr, 0, sizeof(hdr));
-  hdr.magic = CONST_SFLOW_TCPDUMP_MAGIC;
-  hdr.version_major = CONST_SFLOW_PCAP_VERSION_MAJOR;
-  hdr.version_minor = CONST_SFLOW_PCAP_VERSION_MINOR;
-  hdr.thiszone = 0;
-  hdr.snaplen = 128;
-  hdr.sigfigs = 0;
-  hdr.linktype = DLT_EN10MB;
-  if (fwrite((char *)&hdr, sizeof(hdr), 1, stdout) != 1) {
-    printf("failed to write tcpdump header: %s\n", strerror(errno));
-    exit(-1);
-  }
-  fflush(stdout);
-}
-
-/*_________________---------------------------__________________
   _________________   writePcapPacket         __________________
   -----------------___________________________------------------
 */
@@ -1028,12 +1006,12 @@ static u_long *readExtendedGateway(SFSample *sample, u_long *datap, u_char *endP
   if(sample->dst_as_path_len > 0) {
     u_int i = 0;
     for(; i < sample->dst_as_path_len; i++) {
-      if(i == 0) if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dst_as_path ");
-      else if(debug) traceEvent(CONST_TRACE_INFO, "-");
+      if(i == 0) { if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: dst_as_path "); }
+      else { if(debug) traceEvent(CONST_TRACE_INFO, "-"); }
       if(debug) traceEvent(CONST_TRACE_INFO, "%lu", ntohl(sample->dst_as_path[i]));
     }
-    if(debug) traceEvent(CONST_TRACE_INFO, "");
   }
+
   return datap;
 }
 
@@ -1082,7 +1060,6 @@ static u_long *readExtendedUser(SFSample *sample, u_long *datap, u_char *endPtr)
 
 static void receiveSflowSample(SFSample *sample)
 {
-  u_int numFlowSamples = 0;
   u_int32_t datagramVersion;
   u_int32_t addressType;
   struct in_addr agentIP;
@@ -1588,47 +1565,6 @@ static void setSflowInterfaceMatrix() {
 												  myGlobals.device[myGlobals.sflowDeviceId].numHosts);
 }
 
-/* ************************************** */
-
-static void setSflowInSocket() {
-  struct sockaddr_in sockIn;
-  int sockopt = 1;
-
-  if(myGlobals.sflowInSocket > 0) {
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Collector terminated");
-    closeNwSocket(&myGlobals.sflowInSocket);
-  }
-
-  if(myGlobals.sflowInPort > 0) {
-    myGlobals.sflowInSocket = socket(AF_INET, SOCK_DGRAM, 0);
-
-    setsockopt(myGlobals.sflowInSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
-
-    sockIn.sin_family            = AF_INET;
-    sockIn.sin_port              = (int)htons(myGlobals.sflowInPort);
-    sockIn.sin_addr.s_addr       = INADDR_ANY;
-
-    if(bind(myGlobals.sflowInSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-      traceEvent(CONST_TRACE_ERROR, "SFLOW: Collector, port %d already in use - import disabled",
-		 myGlobals.sflowInPort);
-      closeNwSocket(&myGlobals.sflowInSocket);
-      myGlobals.sflowInSocket = 0;
-      return;
-    }
-
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Collector listening on port %d",
-	       myGlobals.sflowInPort);
-  }
-
-  if((myGlobals.sflowInPort > 0) && (myGlobals.sflowDeviceId == -1)) {
-    myGlobals.sflowDeviceId = createDummyInterface(SFLOW_DEVICE_NAME);
-    setSflowInterfaceMatrix();
-    myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 1;
-  }
-
-  myGlobals.mergeInterfaces = 0; /* Use different devices */
-}
-
 /* ****************************** */
 
 static void handlesFlowHTTPrequest(char* url) {
@@ -1928,47 +1864,6 @@ static void initSflowInSocket(void) {
 
 /* ****************************** */
 
-static void setSflowOutSocket() {
-  struct sockaddr_in sockIn;
-  int sockopt = 1;
-
-  if(myGlobals.sflowOutSocket != 0) {
-    traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sFlow collector terminated");
-    closeNwSocket(&myGlobals.sflowOutSocket);
-  }
-
-  if(myGlobals.sflowInPort != 0) {
-    myGlobals.sflowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    setsockopt(myGlobals.sflowOutSocket, SOL_SOCKET, SO_REUSEADDR,
-	       (char *)&sockopt, sizeof(sockopt));
-
-    sockIn.sin_family            = AF_INET;
-    sockIn.sin_port              = (int)htons(myGlobals.sflowInPort);
-    sockIn.sin_addr.s_addr       = INADDR_ANY;
-
-    if(bind(myGlobals.sflowOutSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-      traceEvent(CONST_TRACE_WARNING, "SFLOW: Collector: port %d already in use",
-		 myGlobals.sflowInPort);
-      closeNwSocket(&myGlobals.sflowOutSocket);
-      myGlobals.sflowOutSocket = 0;
-      return;
-    }
-
-    traceEvent(CONST_TRACE_INFO, "SFLOW: Collector listening on port %d",
-	       myGlobals.sflowInPort);
-  }
-
-  if((myGlobals.sflowOutSocket != 0) && (myGlobals.sflowDeviceId == 1)) {
-    myGlobals.sflowDeviceId = createDummyInterface(SFLOW_DEVICE_NAME);
-    setSflowInterfaceMatrix();
-    myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 1;
-  }
-
-  myGlobals.mergeInterfaces = 0; /* Use different devices */
-}
-
-/* ****************************** */
-
 typedef struct sflowSample {
   u_int32_t datagramVersion;
   u_int32_t addressType;
@@ -2008,7 +1903,6 @@ static void handleSflowPacket(u_char *_deviceId,
     u_int caplen = h->caplen;
     u_int length = h->len;
     unsigned short eth_type;
-    u_int8_t flags = 0;
     struct ip ip;
     struct udphdr up;
 

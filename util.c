@@ -214,7 +214,7 @@ unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int d
   unsigned short idx;
   if (srcAddr->hostFamily != dstAddr->hostFamily)
     return -1;
-  switch (srcAddr->hostFamily){
+  switch (srcAddr->hostFamily) {
   case AF_INET:
     /*
      * The hash key has to be calculated in a specular
@@ -244,7 +244,7 @@ u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dp
   u_int16_t transactionId;
   if (srcAddr->hostFamily != dstAddr->hostFamily)
     return -1;
-  switch (srcAddr->hostFamily){
+  switch (srcAddr->hostFamily) {
   case AF_INET:
     transactionId = (u_int16_t)(3*srcAddr->Ip4Address.s_addr+
 				dstAddr->Ip4Address.s_addr+5*dport+7*sport);
@@ -287,13 +287,14 @@ short addrcmp(HostAddr *addr1, HostAddr *addr2) {
   else if(addr2->hostFamily == 0)
     return -1;
 
-  if(addr1->hostFamily != addr2->hostFamily)
+  if(addr1->hostFamily != addr2->hostFamily) {
     if(addr1->hostFamily > addr2->hostFamily)
       return 1;
     else
       return -1;
+  }
 
-  switch (addr1->hostFamily){
+  switch (addr1->hostFamily) {
   case AF_INET:
     if (addr1->Ip4Address.s_addr > addr2->Ip4Address.s_addr)
       return (1);
@@ -322,7 +323,7 @@ short addrcmp(HostAddr *addr1, HostAddr *addr2) {
 
 HostAddr *addrcpy(HostAddr *dst, HostAddr *src) {
   dst->hostFamily = src->hostFamily;
-  switch (src->hostFamily){
+  switch (src->hostFamily) {
   case AF_INET:
     return memcpy(&dst->Ip4Address,&src->Ip4Address,sizeof(struct in_addr));
 #ifdef INET6
@@ -349,7 +350,7 @@ unsigned short addrget(HostAddr *Haddr,void *addr, int *family , int *size) {
   struct in_addr v4addr;
 
   *family = Haddr->hostFamily;
-  switch(Haddr->hostFamily){
+  switch(Haddr->hostFamily) {
   case AF_INET:
     v4addr.s_addr = ntohl(Haddr->Ip4Address.s_addr);
     memcpy((struct in_addr *)addr,&v4addr,sizeof(struct in_addr));
@@ -371,7 +372,7 @@ unsigned short addrput(int family, HostAddr *dst, void *src) {
   if (dst == NULL)
     return -1;
   dst->hostFamily = family;
-  switch (family){
+  switch (family) {
   case AF_INET:
     memcpy(&dst->Ip4Address, (struct in_addr *)src,sizeof(struct in_addr));
     break;
@@ -387,7 +388,7 @@ unsigned short addrput(int family, HostAddr *dst, void *src) {
 /* ****************************************** */
 
 unsigned short addrnull(HostAddr *addr) {
-  switch(addr->hostFamily){
+  switch(addr->hostFamily) {
   case AF_INET:
     return (addr->Ip4Address.s_addr == 0x0);
 #ifdef INET6
@@ -402,7 +403,7 @@ unsigned short addrnull(HostAddr *addr) {
 /* ****************************************** */
 
 unsigned short addrfull(HostAddr *addr) {
-  switch(addr->hostFamily){
+  switch(addr->hostFamily) {
   case AF_INET:
     return (addr->Ip4Address.s_addr == 0xffffffff);
 #ifdef INET6
@@ -420,7 +421,7 @@ unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int siz
   int found = 0;
   NtopIfaceAddr *it;
 
-  for (it = addrs ; it != NULL; it = it->next){
+  for (it = addrs ; it != NULL; it = it->next) {
     if (size == 0)
       size = it->af.inet6.prefixlen / 8;
 #if DEBUG
@@ -431,7 +432,7 @@ unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int siz
 		 _intop(&it->af.inet6.ifAddr, buf1, INET6_ADDRSTRLEN), found);
     }
 #endif
-    if (memcmp(&it->af.inet6.ifAddr,addr,size) == 0){
+    if (memcmp(&it->af.inet6.ifAddr,addr,size) == 0) {
       found = 1;
       break;
     }
@@ -712,8 +713,8 @@ unsigned short in_isPrivateAddress(struct in_addr *addr) {
 
 /***************************************/
 
-unsigned short isBroadcastAddress(HostAddr *addr){
-  switch(addr->hostFamily){
+unsigned short isBroadcastAddress(HostAddr *addr) {
+  switch(addr->hostFamily) {
   case AF_INET:
     return (in_isBroadcastAddress(&addr->Ip4Address));
 #ifdef INET6
@@ -726,8 +727,8 @@ unsigned short isBroadcastAddress(HostAddr *addr){
 
 /* ******************************************** */
 
-unsigned short isMulticastAddress(HostAddr *addr){
-  switch(addr->hostFamily){
+unsigned short isMulticastAddress(HostAddr *addr) {
+  switch(addr->hostFamily) {
   case AF_INET:
     return (in_isMulticastAddress(&addr->Ip4Address));
 #ifdef INET6
@@ -741,7 +742,7 @@ unsigned short isMulticastAddress(HostAddr *addr){
 /* ************************************************* */
 
 unsigned short isLocalAddress(HostAddr *addr, u_int deviceId) {
-  switch(addr->hostFamily){
+  switch(addr->hostFamily) {
   case AF_INET:
     return (in_isLocalAddress(&addr->Ip4Address, deviceId));
 #ifdef INET6
@@ -755,7 +756,7 @@ unsigned short isLocalAddress(HostAddr *addr, u_int deviceId) {
 /* ************************************************** */
 
 unsigned short isPrivateAddress(HostAddr *addr) {
-  switch(addr->hostFamily){
+  switch(addr->hostFamily) {
   case AF_INET:
     return (in_isPrivateAddress(&addr->Ip4Address));
 #ifdef INET6
@@ -1281,7 +1282,7 @@ unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr) {
 /*************************************/
 
 unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId) {
-  switch(addr->hostFamily){
+  switch(addr->hostFamily) {
   case AF_INET:
     return (in_deviceLocalAddress(&addr->Ip4Address, deviceId));
 #ifdef INET6
@@ -1295,7 +1296,7 @@ unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId) {
 /* ********************************* */
 
 unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId) {
-  switch(addr->hostFamily){
+  switch(addr->hostFamily) {
   case AF_INET:
     return (in_isPseudoLocalAddress(&addr->Ip4Address, deviceId));
 #ifdef INET6
@@ -1309,7 +1310,7 @@ unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId) {
 /* ********************************* */
 
 unsigned short isPseudoBroadcastAddress(HostAddr *addr) {
-  switch(addr->hostFamily){
+  switch(addr->hostFamily) {
   case AF_INET:
     return (in_isPseudoBroadcastAddress(&addr->Ip4Address));
 #ifdef INET6
@@ -1323,7 +1324,7 @@ unsigned short isPseudoBroadcastAddress(HostAddr *addr) {
 /* ********************************* */
 
 unsigned short _pseudoLocalAddress(HostAddr *addr) {
-  switch(addr->hostFamily){
+  switch(addr->hostFamily) {
   case AF_INET:
     return (in_pseudoLocalAddress(&addr->Ip4Address));
 #ifdef INET6
@@ -4523,7 +4524,6 @@ fcwwn_to_str (const u_int8_t *ad)
 
 /* BStrauss - August 2003 - Check the flag and skip the call... */
 extern int ntop_sched_yield(char *file, int line) {
-
 #ifdef DEBUG
   static int firstTime=0;
 
@@ -4540,9 +4540,12 @@ extern int ntop_sched_yield(char *file, int line) {
     traceEvent(CONST_TRACE_INFO, "DEBUG: skipping sched_yield()");
 #endif
   }
-}
 
+  return(0);
+}
 #endif
+
+/* ********************************* */
 
 #ifdef EMBEDDED
 extern char *crypt (__const char *__key, __const char *__salt) {
@@ -4800,7 +4803,7 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
    * n.m.x -> nmmyyy0xx  (if x>=50 yyy=x else xx=x)
    * n.ml  -> nmm000l00 (where a=1, b=2, etc.)
    */
-  unsigned int f, n=0, m=0, x=0, y=0, c=0, prerc=0;
+  unsigned int f, n=0, m=0, x=0, y=0, prerc=0;
   unsigned char l[4];
 
   if (versionString == NULL) {
@@ -5554,13 +5557,14 @@ int readInputFile(FILE* fd,
   if(logTag != NULL)
     traceEvent(CONST_TRACE_NOISY, "%s: Closing file", logTag);
 
-  if(fd != NULL)
+  if(fd != NULL) {
 #ifdef MAKE_WITH_ZLIB
     if(compressedFormat)
       gzclose(fd);
     else
 #endif
       fclose(fd);
+  }
 
   if((logTag != NULL) && (*recordsRead > 0))
     traceEvent(CONST_TRACE_INFO, "%s: ...found %d lines", logTag, *recordsRead);

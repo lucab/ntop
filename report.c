@@ -80,7 +80,8 @@ void initReports(void) {
     storePrefsValue("actualReportDeviceId", "0");
   } else if(atoi(value) >= myGlobals.numDevices) {
     traceEvent(CONST_TRACE_WARNING, 
-               "INITWEB: Reporting device (%d) invalid (> max, %d), defaulting to 0");
+               "INITWEB: Reporting device (%d) invalid (> max, %d), defaulting to 0",
+	       atoi(value), myGlobals.numDevices);
     storePrefsValue("actualReportDeviceId", "0");
   }
   
@@ -94,7 +95,7 @@ void initReports(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) {
     /* Bad idea, set to 1st non-virtual device */
     traceEvent(CONST_TRACE_WARNING,
-               "INITWEB: Reporting device (%d) invalid (virtual), using 1st non-virtual device");
+               "INITWEB: Reporting device (%d) invalid (virtual), using 1st non-virtual device", i);
     for(i=0; i<myGlobals.numDevices; i++) {
       if(!myGlobals.device[i].virtualDevice) {
         myGlobals.actualReportDeviceId = i;
@@ -939,7 +940,7 @@ void printTrafficStatistics(int revertOrder) {
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt, 
 						  1, formatBuf, sizeof(formatBuf)),
-		  myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt, 1) < 0)
+		  myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left "DARK_BG">Last Minute</th>"
@@ -947,7 +948,7 @@ void printTrafficStatistics(int revertOrder) {
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt, 
 						  1, formatBuf, sizeof(formatBuf)),
-		  myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt, 1) < 0)
+		  myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -956,7 +957,7 @@ void printTrafficStatistics(int revertOrder) {
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",		  
 		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt, 
 						  1, formatBuf, sizeof(formatBuf)),
-		  myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt, 1) < 0)
+		  myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -1028,9 +1029,7 @@ void printTrafficStatistics(int revertOrder) {
 /* ******************************* */
 
 int combineReportTypeLocality(int reportTypeReq, LocalityDisplayPolicy showLocalityMode) {
-  int rc;
-
-  rc=reportTypeReq;
+  int rc = reportTypeReq;
 
   switch(reportTypeReq) {
     case SORT_DATA_HOST_TRAFFIC:
@@ -1615,7 +1614,7 @@ void printHostsTraffic(int reportTypeReq,
 			formatThroughput(el->peakRcvdThpt, 1, formatBuf2, sizeof(formatBuf2)),
 			el->actualRcvdPktThpt,
 			el->averageRcvdPktThpt,
-			el->peakRcvdPktThpt, 1) < 0)
+			el->peakRcvdPktThpt) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3062,14 +3061,14 @@ void printIpProtocolUsage(void) {
   u_short clientPorts[MAX_ASSIGNED_IP_PORTS], serverPorts[MAX_ASSIGNED_IP_PORTS];
   u_int j, idx1, hostsNum=0, numPorts=0, maxHosts;
   char buf[LEN_GENERAL_WORK_BUFFER], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-  int portBufLen;
   
   printHTMLheader("TCP/UDP: Local Protocol Usage", NULL, 0);
 
   memset(clientPorts, 0, sizeof(clientPorts));
   memset(serverPorts, 0, sizeof(serverPorts));
 
-  hosts = (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*), "printIpProtocolUsage");
+  hosts = (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].hostsno*sizeof(HostTraffic*), 
+						     "printIpProtocolUsage");
   if(hosts == NULL)
       return;
 
@@ -3573,7 +3572,8 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	      if(symPort == NULL) symPort = "";
 
 	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
-                          "<TH "TH_BG" ALIGN=LEFT><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A></th><td align=right>%d</td>"
+                          "<TH "TH_BG" ALIGN=LEFT><A HREF=\"" CONST_SHOW_PORT_TRAFFIC_HTML "?port=%d\">%s</A>"
+			  "</th><td align=right>%d</td>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -4737,7 +4737,6 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
   u_int numEntries=0, i, maxHosts;
   HostTraffic **tmpTable, *el;
   char buf[LEN_GENERAL_WORK_BUFFER];
-  float marcoRcvd = 0, marcoSent = 0;
   char formatBuf[32], formatBuf1[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
 
   maxHosts = ifName->hostsno; /* save it as it can change */
@@ -5014,7 +5013,6 @@ void printFcHostsTraffic(int reportType,
   char hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   float sentPercent=0, rcvdPercent=0, totPercent=0;
   Counter totFcBytesSent=0, totFcBytesRcvd=0, totFcBytes=0;
-  char *url0=NULL, *url1=NULL, *url2=NULL;
 
     memset(buf, 0, sizeof(buf));
     switch(reportType) {
@@ -5053,7 +5051,8 @@ void printFcHostsTraffic(int reportType,
 
     maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
 
-    tmpTable =  (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize*sizeof(HostTraffic*), "printFcHostsTraffic");
+    tmpTable =  (HostTraffic**)mallocAndInitWithReportWarn(myGlobals.device[myGlobals.actualReportDeviceId].
+							   actualHashSize*sizeof(HostTraffic*), "printFcHostsTraffic");
     if(tmpTable == NULL)
       return;
 
@@ -5088,21 +5087,21 @@ void printFcHostsTraffic(int reportType,
       switch(showLocalityMode) {
         case showSentReceived:
           if(snprintf(buf, sizeof(buf), "<p align=\"right\">"
-      	     "[<b> All </b>]&nbsp;"
-      	     "[ <a href=\"%s?col=%s%d&showL=1\">Sent Only</a> ]&nbsp;"
-      	     "[ <a href=\"%s?col=%s%d&showL=2\">Received Only</a> ]&nbsp;</p>",
-      	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode,
-      	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode) < 0)
+		      "[<b> All </b>]&nbsp;"
+		      "[ <a href=\"%s?col=%s%d&showL=1\">Sent Only</a> ]&nbsp;"
+		      "[ <a href=\"%s?col=%s%d&showL=2\">Received Only</a> ]&nbsp;</p>",
+		      url, revertOrder ? "-" : "", sortedColumn,
+		      url, revertOrder ? "-" : "", sortedColumn) < 0)
             BufferTooShort();
           break;
-        case showOnlySent:
-          if(snprintf(buf, sizeof(buf), "<p align=\"right\">"
-      	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
-      	     "[<b> Sent Only </b>]&nbsp;"
-      	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;</p>",
-      	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode,
-      	     url, revertOrder ? "-" : "", sortedColumn, showLocalityMode) < 0)
-            BufferTooShort();
+      case showOnlySent:
+	if(snprintf(buf, sizeof(buf), "<p align=\"right\">"
+		    "[ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
+		    "[<b> Sent Only </b>]&nbsp;"
+		    "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;</p>",
+		    url, revertOrder ? "-" : "", sortedColumn, showLocalityMode,
+		    url, revertOrder ? "-" : "", sortedColumn, showLocalityMode) < 0)
+	  BufferTooShort();
           break;
         default:
           if(snprintf(buf, sizeof(buf), "<p align=\"right\">"
@@ -5722,7 +5721,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
     int numSessions, printedSessions, skipSessions;
     ScsiSessionSortEntry *tmpTable, *entry;
     FCSession *session;
-    char buf[LEN_GENERAL_WORK_BUFFER*2], *sign, *title=NULL;
+    char buf[LEN_GENERAL_WORK_BUFFER*2], *sign;
     char *arrowGif, *arrow[48], *theAnchor[48];
     char htmlAnchor[64], htmlAnchor1[64];
     char vsanBuf[LEN_MEDIUM_WORK_BUFFER], formatBuf[7][32];
@@ -5921,8 +5920,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
                              "</TR>\n",
                              theAnchor[1], arrow[1],
                              theAnchor[2], arrow[2],
-                             theAnchor[3], arrow[3]
-                        ) < 0) BufferTooShort ();
+                             theAnchor[3], arrow[3]) < 0) BufferTooShort ();
                 sendString (buf);
         
                 if (snprintf(buf, sizeof (buf),
@@ -5954,8 +5952,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
                              theAnchor[13], arrow[13],
                              theAnchor[14], arrow[14],
                              theAnchor[15], arrow[15],
-                             theAnchor[16], arrow[16]
-                        ) < 0)
+                             theAnchor[16], arrow[16]) < 0)
                     BufferTooShort();
         
                 sendString(buf);
@@ -6097,10 +6094,9 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
                            int pageNum, char *url, HostTraffic *el) {
     int idx, j, i;
     int numSessions, printedSessions, skipSessions;
-    unsigned long duration;
     ScsiSessionSortEntry *tmpTable, *entry;
     FCSession *session;
-    char buf[LEN_GENERAL_WORK_BUFFER], *sign, *title=NULL;
+    char buf[LEN_GENERAL_WORK_BUFFER], *sign;
     char vsanBuf[LEN_MEDIUM_WORK_BUFFER], formatBuf[10][32];
     char hostLinkBuf[LEN_GENERAL_WORK_BUFFER],
          hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
@@ -6288,8 +6284,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
                              theAnchor[2], arrow[2],
                              theAnchor[3], arrow[3],
                              theAnchor[26], arrow[26],
-                             theAnchor[27], arrow[27]
-                             ) < 0) BufferTooShort ();
+                             theAnchor[27], arrow[27]) < 0) BufferTooShort ();
                 sendString (buf);
 
                 if (snprintf(buf, sizeof (buf),
@@ -6311,8 +6306,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
                              theAnchor[22], arrow[22],
                              theAnchor[23], arrow[23],
                              theAnchor[24], arrow[24],
-                             theAnchor[25], arrow[25]
-                        ) < 0)
+                             theAnchor[25], arrow[25]) < 0)
                     BufferTooShort();
                         
                 sendString(buf);
@@ -6393,267 +6387,264 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
 
 /* ********************************** */
 
-int printScsiSessionStatusInfo (int actualDeviceId, int sortedColumn,
-                                int revertOrder, int pageNum, char *url,
-                                HostTraffic *el) {
+int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
+			       int revertOrder, int pageNum, char *url,
+			       HostTraffic *el) {
+  int idx, j, i;
+  int numSessions, printedSessions, skipSessions;
+  ScsiSessionSortEntry *tmpTable, *entry;
+  FCSession *session;
+  char buf[LEN_GENERAL_WORK_BUFFER], *sign;
+  char *arrowGif, *arrow[48], *theAnchor[48];
+  char htmlAnchor[64], htmlAnchor1[64], pageUrl[64];
+  char vsanBuf[LEN_MEDIUM_WORK_BUFFER];
+  char hostLinkBuf[LEN_GENERAL_WORK_BUFFER],
+    hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
+
+  printHTMLheader("SCSI Sessions: Status Info", 0, 0);
+
+  if(!myGlobals.enableSessionHandling) {
+    printNotAvailable("-z or --disable-sessions");
+    return 0;
+  }
+
+  /* We have to allocate as many entries as there are sessions and LUNs
+   * within a session.
+   */
+  tmpTable = (ScsiSessionSortEntry *) malloc (myGlobals.device[actualDeviceId].numFcSessions*MAX_LUNS_SUPPORTED*sizeof(ScsiSessionSortEntry));
+  if (tmpTable == NULL) {
+    traceEvent (CONST_TRACE_ERROR, "printScsiSessions: Unable to malloc sorting table\n");
+    return 0;
+  }
+
+  memset (tmpTable, 0, myGlobals.device[actualDeviceId].numFcSessions*MAX_LUNS_SUPPORTED*sizeof(ScsiSessionSortEntry));
+    
+  for(i=strlen(url); i>0; i--)
+    if(url[i] == '?') {
+      url[i] = '\0';
+      break;
+    }
+      
+  urlFixupFromRFC1945Inplace(url);
+
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionStatusInfo");
+#endif
+  /* Let's count sessions first */
+  for (idx=1, numSessions=0; idx < MAX_TOT_NUM_SESSIONS; idx++) {
+    session = myGlobals.device[myGlobals.actualReportDeviceId].fcSession[idx];
+    while (session != NULL) {
+      if (session->magic != CONST_MAGIC_NUMBER) {
+	traceEvent (CONST_TRACE_ERROR, "printScsiSessions: Invalid session magic\n");
+	break;
+      }
+      if (session->fcpBytesSent.value || session->fcpBytesRcvd.value) {
+	if ((el && ((session->initiator  == el)
+		    || (session->remotePeer == el)))
+	    || (el == NULL)) {
+	  for (j = 0; j < MAX_LUNS_SUPPORTED; j++) {
+	    if (session->activeLuns[j] != NULL) {
+	      if ((session->activeLuns[j]->invalidLun &&
+		   !myGlobals.noInvalidLunDisplay) ||
+		  (!session->activeLuns[j]->invalidLun)) {
+		tmpTable[numSessions].initiator = session->initiator;
+		tmpTable[numSessions].target = session->remotePeer;
+		tmpTable[numSessions].lun = j;
+		tmpTable[numSessions++].stats = session->activeLuns[j];
+	      }
+	      if (j > session->lunMax)
+		break;
+	    }
+	  }
+	}
+      }
+      session = session->next;
+    }
+  }
+
+  if(numSessions > 0) {
+
+    if(revertOrder) {
+      sign = "";
+      arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
+    } else {
+      sign = "-";
+      arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
+    }
+
+    myGlobals.columnSort = sortedColumn;
+    qsort (tmpTable, numSessions, sizeof (ScsiSessionSortEntry), cmpScsiSessionsFctn);
+
+    if (el == NULL) {
+      if (strcmp (url, CONST_SCSI_STATUS_HTML) == 0) {
+	if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
+	  BufferTooShort();
+	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url) < 0)
+	  BufferTooShort();
+	if (snprintf (pageUrl, sizeof (pageUrl), "%s", url) < 0)
+	  BufferTooShort();
+      }
+      else {
+	if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign) < 0)
+	  BufferTooShort();
+	if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url) < 0)
+	  BufferTooShort();
+	if (snprintf (pageUrl, sizeof (pageUrl), "%s.html", url) < 0)
+	  BufferTooShort();
+      }
+    }
+    else {
+      /* Need to add info about page in Hosts Info mode */
+      if(snprintf(htmlAnchor, sizeof(htmlAnchor),
+		  "<A HREF=/%s.html?showF=%d&page=%d&col=%s", url, 
+		  showHostScsiSessionStatus, pageNum, sign) < 0)
+	BufferTooShort();
+      if(snprintf(htmlAnchor1, sizeof(htmlAnchor1),
+		  "<A HREF=/%s.html?showF=%d&page=%d&col=", url,
+		  showHostScsiSessionStatus, pageNum) < 0)
+	BufferTooShort();
+      if (snprintf (pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
+		    url, showHostScsiSessionStatus) < 0)
+	BufferTooShort();
+    }
+
+    for (i = 1; i < 48; i++) {
+      if(abs(myGlobals.columnSort) == i) {
+	arrow[i] = arrowGif;
+	theAnchor[i] = htmlAnchor;
+      } else {
+	arrow[i] = "";
+	theAnchor[i] = htmlAnchor1;
+      }
+    }
+  }
+  else {
+#ifdef CFG_MULTITHREADED
+    releaseMutex(&myGlobals.fcSessionsMutex);
+#endif
+    printNoDataYet();
+    free (tmpTable);
+    return 0;
+  }
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.fcSessionsMutex);
+#endif
+  /*
+    Due to the way sessions are handled, sessions before those to
+    display need to be skipped
+  */
+  printedSessions = skipSessions = 0;
+  for (idx = 0; idx < numSessions; idx++) {
+
+    if(revertOrder)
+      entry = &tmpTable[numSessions-idx-1];
+    else
+      entry = &tmpTable[idx];
+
+    if (entry == NULL) {
+      continue;
+    }
+        
+    if (printedSessions < myGlobals.maxNumLines) {
+
+      if(el
+	 && (entry->initiator  != el)
+	 && (entry->target != el)) {
+	continue;
+      }
+
+      if((skipSessions++) < pageNum*myGlobals.maxNumLines) {
+	continue;
+      }
+            
+      if(printedSessions == 0) {
+	sendString("<CENTER>\n");
+	if (snprintf(buf, sizeof (buf),
+		     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
+		     "<TH "TH_BG" "DARK_BG">%s1>VSAN%s</A></TH>"
+		     "<TH "TH_BG" "DARK_BG">%s2>Initiator%s</A></TH>"
+		     "<TH "TH_BG" "DARK_BG">%s3>Target%s</A></TH>"
+		     "<TH "TH_BG" "DARK_BG">LUN</TH>"
+		     "<TH "TH_BG" "DARK_BG">%s17>#&nbsp;Failed&nbsp;Cmds%s</A></TH>"
+		     "<TH "TH_BG" "DARK_BG">%s28>#&nbsp;Check Condition%s</A></TH>"
+		     "<TH "TH_BG" "DARK_BG">%s29>#&nbsp;Busy%s</A></TH>"
+		     "<TH "TH_BG" "DARK_BG">%s30>#&nbsp;Reservation&nbsp;Conflict%s</A></TH>"
+		     "<TH "TH_BG" "DARK_BG">%s31>#&nbsp;Task Set Full%s</A></TH>"
+		     "<TH "TH_BG" "DARK_BG">%s32>#&nbsp;Task Aborts%s</A></TH>"
+		     "</TR>\n",
+		     theAnchor[1], arrow[1],
+		     theAnchor[2], arrow[2],
+		     theAnchor[3], arrow[3],
+		     theAnchor[17], arrow[17],
+		     theAnchor[28], arrow[28],
+		     theAnchor[29], arrow[29],
+		     theAnchor[30], arrow[30],
+		     theAnchor[31], arrow[31],
+		     theAnchor[32], arrow[32]) < 0) BufferTooShort ();
+	sendString (buf);
+      }
+            
+      /* Sanity check */
+      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+		  "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
+		  "</TR>\n",
+		  getRowColor(),
+		  makeVsanLink (entry->initiator->vsanId, 0, vsanBuf,
+				sizeof (vsanBuf)),
+		  makeFcHostLink(entry->initiator,
+				 FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
+				 hostLinkBuf, sizeof (hostLinkBuf)),
+		  makeFcHostLink(entry->target,
+				 FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
+				 hostLinkBuf1, sizeof (hostLinkBuf1)),
+		  entry->lun,
+		  entry->stats->numFailedCmds,
+		  entry->stats->chkCondCnt,
+		  entry->stats->busyCnt,
+		  entry->stats->resvConflictCnt,
+		  entry->stats->taskSetFullCnt,
+		  entry->stats->taskAbrtCnt) < 0) BufferTooShort();
+                
+      sendString(buf);
+      printedSessions++;
+    }
+  }
+    
+  if (printedSessions > 0) {
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
+
+    addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.maxNumLines,
+		     revertOrder, sortedColumn);
+
+    printFooterHostLink();
+  } else {
+    if(el == NULL) printFlagedWarning("<I>No SCSI Sessions</I>");
+  }
+
+  free (tmpTable);
+  return (printedSessions);
+}
+
+/* ********************************** */
+
+int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
+                            int revertOrder, int pageNum, char *url,
+                            HostTraffic *el) {
     int idx, j, i;
     int numSessions, printedSessions, skipSessions;
     ScsiSessionSortEntry *tmpTable, *entry;
     FCSession *session;
-    char buf[LEN_GENERAL_WORK_BUFFER], *sign, *title=NULL;
-    char *arrowGif, *arrow[48], *theAnchor[48];
-    char htmlAnchor[64], htmlAnchor1[64], pageUrl[64];
-    char vsanBuf[LEN_MEDIUM_WORK_BUFFER];
-    char hostLinkBuf[LEN_GENERAL_WORK_BUFFER],
-         hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
-
-    printHTMLheader("SCSI Sessions: Status Info", 0, 0);
-
-    if(!myGlobals.enableSessionHandling) {
-        printNotAvailable("-z or --disable-sessions");
-        return 0;
-    }
-
-    /* We have to allocate as many entries as there are sessions and LUNs
-     * within a session.
-     */
-    tmpTable = (ScsiSessionSortEntry *) malloc (myGlobals.device[actualDeviceId].numFcSessions*MAX_LUNS_SUPPORTED*sizeof(ScsiSessionSortEntry));
-    if (tmpTable == NULL) {
-        traceEvent (CONST_TRACE_ERROR, "printScsiSessions: Unable to malloc sorting table\n");
-        return 0;
-    }
-
-    memset (tmpTable, 0, myGlobals.device[actualDeviceId].numFcSessions*MAX_LUNS_SUPPORTED*sizeof(ScsiSessionSortEntry));
-    
-    for(i=strlen(url); i>0; i--)
-        if(url[i] == '?') {
-            url[i] = '\0';
-            break;
-        }
-      
-    urlFixupFromRFC1945Inplace(url);
-
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.fcSessionsMutex, "printScsiSessionStatusInfo");
-#endif
-    /* Let's count sessions first */
-    for (idx=1, numSessions=0; idx < MAX_TOT_NUM_SESSIONS; idx++) {
-        session = myGlobals.device[myGlobals.actualReportDeviceId].fcSession[idx];
-        while (session != NULL) {
-            if (session->magic != CONST_MAGIC_NUMBER) {
-                traceEvent (CONST_TRACE_ERROR, "printScsiSessions: Invalid session magic\n");
-                break;
-            }
-            if (session->fcpBytesSent.value || session->fcpBytesRcvd.value) {
-                if ((el && ((session->initiator  == el)
-                            || (session->remotePeer == el)))
-                    || (el == NULL)) {
-                    for (j = 0; j < MAX_LUNS_SUPPORTED; j++) {
-                        if (session->activeLuns[j] != NULL) {
-                            if ((session->activeLuns[j]->invalidLun &&
-                                 !myGlobals.noInvalidLunDisplay) ||
-                                (!session->activeLuns[j]->invalidLun)) {
-                                tmpTable[numSessions].initiator = session->initiator;
-                                tmpTable[numSessions].target = session->remotePeer;
-                                tmpTable[numSessions].lun = j;
-                                tmpTable[numSessions++].stats = session->activeLuns[j];
-                            }
-                            if (j > session->lunMax)
-                                break;
-                        }
-                    }
-                }
-            }
-            session = session->next;
-        }
-    }
-
-    if(numSessions > 0) {
-
-        if(revertOrder) {
-            sign = "";
-            arrowGif = "&nbsp;" CONST_IMG_ARROW_UP;
-        } else {
-            sign = "-";
-            arrowGif = "&nbsp;" CONST_IMG_ARROW_DOWN;
-        }
-
-        myGlobals.columnSort = sortedColumn;
-        qsort (tmpTable, numSessions, sizeof (ScsiSessionSortEntry), cmpScsiSessionsFctn);
-
-        if (el == NULL) {
-            if (strcmp (url, CONST_SCSI_STATUS_HTML) == 0) {
-                if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign) < 0)
-                    BufferTooShort();
-                if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url) < 0)
-                    BufferTooShort();
-                if (snprintf (pageUrl, sizeof (pageUrl), "%s", url) < 0)
-                    BufferTooShort();
-            }
-            else {
-                if(snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign) < 0)
-                    BufferTooShort();
-                if(snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url) < 0)
-                    BufferTooShort();
-                if (snprintf (pageUrl, sizeof (pageUrl), "%s.html", url) < 0)
-                    BufferTooShort();
-            }
-        }
-        else {
-            /* Need to add info about page in Hosts Info mode */
-            if(snprintf(htmlAnchor, sizeof(htmlAnchor),
-                        "<A HREF=/%s.html?showF=%d&page=%d&col=%s", url, 
-                        showHostScsiSessionStatus, pageNum, sign) < 0)
-                BufferTooShort();
-            if(snprintf(htmlAnchor1, sizeof(htmlAnchor1),
-                        "<A HREF=/%s.html?showF=%d&page=%d&col=", url,
-                        showHostScsiSessionStatus, pageNum) < 0)
-                BufferTooShort();
-            if (snprintf (pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
-                          url, showHostScsiSessionStatus) < 0)
-                BufferTooShort();
-        }
-
-        for (i = 1; i < 48; i++) {
-            if(abs(myGlobals.columnSort) == i) {
-                arrow[i] = arrowGif;
-                theAnchor[i] = htmlAnchor;
-            } else {
-                arrow[i] = "";
-                theAnchor[i] = htmlAnchor1;
-            }
-        }
-    }
-    else {
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
-        printNoDataYet();
-        free (tmpTable);
-        return 0;
-    }
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.fcSessionsMutex);
-#endif
-    /*
-      Due to the way sessions are handled, sessions before those to
-      display need to be skipped
-    */
-    printedSessions = skipSessions = 0;
-    for (idx = 0; idx < numSessions; idx++) {
-
-        if(revertOrder)
-            entry = &tmpTable[numSessions-idx-1];
-        else
-            entry = &tmpTable[idx];
-
-        if (entry == NULL) {
-            continue;
-        }
-        
-        if (printedSessions < myGlobals.maxNumLines) {
-
-            if(el
-               && (entry->initiator  != el)
-               && (entry->target != el)) {
-                continue;
-            }
-
-            if((skipSessions++) < pageNum*myGlobals.maxNumLines) {
-                continue;
-            }
-            
-            if(printedSessions == 0) {
-                sendString("<CENTER>\n");
-                if (snprintf(buf, sizeof (buf),
-                             ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON">"
-                             "<TH "TH_BG" "DARK_BG">%s1>VSAN%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG">%s2>Initiator%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG">%s3>Target%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG">LUN</TH>"
-                             "<TH "TH_BG" "DARK_BG">%s17>#&nbsp;Failed&nbsp;Cmds%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG">%s28>#&nbsp;Check Condition%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG">%s29>#&nbsp;Busy%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG">%s30>#&nbsp;Reservation&nbsp;Conflict%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG">%s31>#&nbsp;Task Set Full%s</A></TH>"
-                             "<TH "TH_BG" "DARK_BG">%s32>#&nbsp;Task Aborts%s</A></TH>"
-                             "</TR>\n",
-                             theAnchor[1], arrow[1],
-                             theAnchor[2], arrow[2],
-                             theAnchor[3], arrow[3],
-                             theAnchor[17], arrow[17],
-                             theAnchor[28], arrow[28],
-                             theAnchor[29], arrow[29],
-                             theAnchor[30], arrow[30],
-                             theAnchor[31], arrow[31],
-                             theAnchor[32], arrow[32]
-                             ) < 0) BufferTooShort ();
-                sendString (buf);
-            }
-            
-            /* Sanity check */
-            if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
-                        "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                        "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                        "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                        "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
-                        "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
-                        "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
-                        "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
-                        "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
-                        "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
-                        "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
-                        "</TR>\n",
-                        getRowColor(),
-                        makeVsanLink (entry->initiator->vsanId, 0, vsanBuf,
-                                      sizeof (vsanBuf)),
-                        makeFcHostLink(entry->initiator,
-                                       FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
-                                       hostLinkBuf, sizeof (hostLinkBuf)),
-                        makeFcHostLink(entry->target,
-                                       FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
-                                       hostLinkBuf1, sizeof (hostLinkBuf1)),
-                        entry->lun,
-                        entry->stats->numFailedCmds,
-                        entry->stats->chkCondCnt,
-                        entry->stats->busyCnt,
-                        entry->stats->resvConflictCnt,
-                        entry->stats->taskSetFullCnt,
-                        entry->stats->taskAbrtCnt
-                   ) < 0) BufferTooShort();
-                
-            sendString(buf);
-            printedSessions++;
-        }
-    }
-    
-    if (printedSessions > 0) {
-        sendString("</TABLE>"TABLE_OFF"<P>\n");
-        sendString("</CENTER>\n");
-
-        addPageIndicator(pageUrl, pageNum, numSessions, myGlobals.maxNumLines,
-                         revertOrder, sortedColumn);
-
-        printFooterHostLink();
-    } else {
-        if(el == NULL) {
-            printFlagedWarning("<I>No SCSI Sessions</I>");
-        }
-    }
-
-    free (tmpTable);
-    return (printedSessions);
-}
-
-int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
-                            int revertOrder, int pageNum, char *url,
-                            HostTraffic *el)
-{
-    int idx, j, i;
-    int numSessions, printedSessions, skipSessions, total;
-    ScsiSessionSortEntry *tmpTable, *entry;
-    FCSession *session;
-    char buf[LEN_GENERAL_WORK_BUFFER], *sign, *title=NULL;
+    char buf[LEN_GENERAL_WORK_BUFFER], *sign;
     char *arrowGif, *arrow[48], *theAnchor[48];
     char htmlAnchor[64], htmlAnchor1[64], pageUrl[64];
     char vsanBuf[LEN_MEDIUM_WORK_BUFFER], formatBuf[2][32];
@@ -6843,8 +6834,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
                              theAnchor[36], arrow[36],
                              theAnchor[37], arrow[37],
                              theAnchor[38], arrow[38],
-                             theAnchor[39], arrow[39]
-                        ) < 0) BufferTooShort ();
+                             theAnchor[39], arrow[39]) < 0) BufferTooShort ();
                 sendString (buf);
             }
             
@@ -6880,8 +6870,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
                         formatTime((time_t *)&(entry->stats->lastTgtRstTime),
                                    formatBuf[0], 32),
                         formatTime((time_t *)&(entry->stats->lastLunRstTime),
-                                   formatBuf[1], 32)
-                   ) < 0) BufferTooShort();
+                                   formatBuf[1], 32)) < 0) BufferTooShort();
                 
             sendString(buf);
             printedSessions++;
@@ -6913,7 +6902,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
     int idx, i;
     int numSessions, printedSessions, skipSessions;
     unsigned long duration;
-    char buf[LEN_GENERAL_WORK_BUFFER], *sign, *title=NULL;
+    char buf[LEN_GENERAL_WORK_BUFFER], *sign;
     char *arrowGif, *arrow[48], *theAnchor[48];
     char htmlAnchor[64], htmlAnchor1[64];
     char vsanBuf[LEN_MEDIUM_WORK_BUFFER], formatBuf[7][32];
@@ -7055,13 +7044,11 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
                               theAnchor[2], arrow[2],
                               theAnchor[3], arrow[3],
                               theAnchor[18], arrow[18],
-                              theAnchor[19], arrow[19]
-                        ) < 0)
-                    BufferTooShort();
-                
+                              theAnchor[19], arrow[19]) < 0)
+                    BufferTooShort();                
                 sendString (buf);
                 
-                if (snprintf (buf, sizeof (buf),
+                if (snprintf(buf, sizeof (buf),
                               "<TR "TR_ON">"
                               "<TH "TH_BG" "DARK_BG">%s4>Sent%s</A></TH>\n"
                               "<TH "TH_BG" "DARK_BG">%s5>Rcvd%s</A></TH>\n"
@@ -7078,12 +7065,11 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
                               theAnchor[8], arrow[8],
                               theAnchor[9], arrow[9],
                               theAnchor[10], arrow[10],
-                              theAnchor[11], arrow[11]
-                        ) < 0)
-                    BufferTooShort ();
-                sendString (buf);
+                              theAnchor[11], arrow[11]) < 0)
+                    BufferTooShort();
+                sendString(buf);
 
-                if (snprintf (buf, sizeof (buf),
+                if(snprintf(buf, sizeof (buf),
                               "<TH "TH_BG" "DARK_BG">%s12>Sent%s</A></TH>\n"
                               "<TH "TH_BG" "DARK_BG">%s13>Rcvd%s</A></TH>\n"
                               "<TH "TH_BG" "DARK_BG">%s14>Sent%s</A></TH>\n"
@@ -7096,8 +7082,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
                               theAnchor[14], arrow[14],
                               theAnchor[15], arrow[15],
                               theAnchor[16], arrow[16],
-                              theAnchor[17], arrow[17]
-                        ) < 0)
+                              theAnchor[17], arrow[17]) < 0)
                     BufferTooShort ();
                 sendString (buf);
             }

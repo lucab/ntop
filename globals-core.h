@@ -270,7 +270,6 @@ extern void *scanFingerprintLoop(void *notUsed);
 extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
 #endif
 extern RETSIGTYPE cleanup(int signo);
-extern void processFcNSCacheFile(char *filename);
 
 /* pbuf.c */
 extern void allocateSecurityHostPkts(HostTraffic *srcHost);
@@ -643,8 +642,8 @@ extern FCSession* handleFcSession (const struct pcap_pkthdr *h,
                                    u_char isXchgOrig, const u_char *bp,
                                    int actualDeviceId);
 
-extern int isFlogiAcc (FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type,
-                       u_int8_t cmd);
+/* fcUtils.c */
+extern int isFlogiAcc (FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
 extern int fillFcHostInfo (const u_char *bp, HostTraffic *srcHost);
 extern int isPlogi (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
 extern int isLogout (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
@@ -659,7 +658,7 @@ extern int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsa
                                       FcAddress *dstAddr,
                                       u_short protocol, u_char r_ctl,
                                       u_int32_t pktlen);
-
+extern void processFcNSCacheFile(char *filename);
 
 
 #ifdef HAVE_NETDB_H

@@ -1287,13 +1287,11 @@ static void processIpPkt(const u_char *bp,
 		    }
 		}
 
-	      if(WS == -1) if(snprintf(WSS, sizeof(WSS), "WS") < 0) BufferTooShort();
-	      else if(snprintf(WSS, sizeof(WSS), "%02d", WS) < 0)
-                BufferTooShort();
-
-	      if(MSS == -1) if(snprintf(_MSS, sizeof(_MSS), "_MSS") < 0) BufferTooShort();
-	      else if(snprintf(_MSS, sizeof(_MSS), "%04X", MSS) < 0)
-                BufferTooShort();
+	      if(WS == -1) { if(snprintf(WSS, sizeof(WSS), "WS") < 0) BufferTooShort(); }
+	      else { if(snprintf(WSS, sizeof(WSS), "%02d", WS) < 0) BufferTooShort(); }
+	      
+	      if(MSS == -1) { if(snprintf(_MSS, sizeof(_MSS), "_MSS") < 0) BufferTooShort(); }
+	      else { if(snprintf(_MSS, sizeof(_MSS), "%04X", MSS) < 0) BufferTooShort(); }
 
 	      if(snprintf(fingerprint, sizeof(fingerprint),
 		       "%04X:%s:%02X:%s:%d:%d:%d:%d:%c:%02X",
@@ -3367,7 +3365,9 @@ static void processFcPkt(const u_char *bp,
     uint16_t vsanId = 0,
              fcFrameLen = 0;
     uint8_t sof = 0, eof = 0, error = 0;
+#if CFG_LITTLE_ENDIAN
     uint16_t didx;        /* source & dest port indices on MDS */
+#endif
     u_char isFirstFrame = FALSE,
            isLastFrame = FALSE,
            isFragment = FALSE;

@@ -468,7 +468,9 @@ static int decodeString(char *bufcoded,
 
 void sendStringLen(char *theString, unsigned int len) {
   int bytesSent, rc, retries = 0;
+#ifdef WIN32
   static unsigned int fileSerial = 0;
+#endif
 
   if(myGlobals.newSock == FLAG_DUMMY_SOCKET)
     return;
@@ -1523,7 +1525,7 @@ static int returnHTTPPage(char* pageName,
 
   *usedFork = 0;
 
-#ifndef URL_DEBUG
+#ifdef URL_DEBUG
   traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Page: '%s'", pageName);
 #endif
 

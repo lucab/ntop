@@ -406,7 +406,7 @@ void resetDevice(int devIdx) {
 /* ******************************************* */
 
 void initCounters(void) {
-  int len, i, rc;
+  int len, i;
   FILE* fd;
   int numRead = 0;
   u_char compressedFormat;
@@ -573,9 +573,8 @@ void initCounters(void) {
       }
       traceEvent(CONST_TRACE_INFO, "ASN: ....Used %d KB of memory (%d per entry)",
                  ((myGlobals.asMem+512)/1024), sizeof(IPNode));
-  } else {
+  } else
     traceEvent(CONST_TRACE_NOISY, "ASN: ntop continues ok, but without ASN information.");
-  }
 
   /* i18n */
 #ifdef MAKE_WITH_I18N
@@ -1030,7 +1029,7 @@ void initThreads(void) {
   createMutex(&myGlobals.packetQueueMutex);
   createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for network packet analyser",
-	     myGlobals.dequeueThreadId);
+	     (long)myGlobals.dequeueThreadId);
 
   /*
    * Create the thread (2) - HTS - Host Traffic Statistics
@@ -1042,7 +1041,7 @@ void initThreads(void) {
    */
   createThread(&myGlobals.scanFingerprintsThreadId, scanFingerprintLoop, NULL);
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for fingerprinting",
-             myGlobals.scanFingerprintsThreadId);
+             (long)myGlobals.scanFingerprintsThreadId);
 
   /*
    * Create the thread (4) - SIH - Scan Idle Hosts - optional
@@ -1050,7 +1049,7 @@ void initThreads(void) {
   if(myGlobals.rFileName == NULL) {
     createThread(&myGlobals.scanIdleThreadId, scanIdleLoop, NULL);
     traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for idle hosts detection",
-	       myGlobals.scanIdleThreadId);
+	       (long)myGlobals.scanIdleThreadId);
   }
 
 #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
@@ -1063,7 +1062,7 @@ void initThreads(void) {
     for(i=0; i<myGlobals.numDequeueThreads; i++) {
       createThread(&myGlobals.dequeueAddressThreadId[i], dequeueAddress, NULL);
       traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for DNS address resolution",
-		 myGlobals.dequeueAddressThreadId[i]);
+		 (long)myGlobals.dequeueAddressThreadId[i]);
     }
   }
 #endif
@@ -1241,7 +1240,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
       }
 
     if(myGlobals.enableSuspiciousPacketDump) {
-	if(snprintf(myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%d.pcap",
+	if(snprintf(myName, sizeof(myName), "%s%cntop-suspicious-pkts.dev%s.pcap",
 		myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 		CONST_PATH_SEP,
 #ifdef WIN32
@@ -1249,7 +1248,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 #else
 		myGlobals.device[deviceId].name
 #endif
-		) < 0)
+		    ) < 0)
           BufferTooShort();
 	myGlobals.device[deviceId].pcapErrDumper = pcap_dump_open(myGlobals.device[deviceId].pcapPtr, myName);
 
@@ -1854,7 +1853,7 @@ void startSniffer(void) {
        */
       createThread(&myGlobals.device[i].pcapDispatchThreadId, pcapDispatch, (char*)i);
       traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for network packet sniffing on %s",
-		 myGlobals.device[i].pcapDispatchThreadId, myGlobals.device[i].name);
+		 (long)myGlobals.device[i].pcapDispatchThreadId, myGlobals.device[i].name);
     }
 #endif
 }

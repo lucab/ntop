@@ -734,7 +734,6 @@ static int handleV5Flow(time_t recordActTime,
   /* accessMutex(&myGlobals.hostsHashMutex, "processNetFlowPacket"); */
 #endif
 
-
   if(!skipSRC) {
     switch((skipSRC = isOKtoSave(ntohl(record->srcaddr),
 				 whiteNetworks, blackNetworks,
@@ -2425,9 +2424,9 @@ static void printNetFlowStatisticsRcvd(void) {
   if(snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Port(s) zero (not tcp/ip)</th>\n"
-              "<td><table width=\"100%\" border=\"0\" "TABLE_DEFAULTS">\n"
-              "<tr><td width=\"50%\" " TD_BG " align=\"right\">%u</td>\n"
-              "<td width=\"50%\" " TD_BG " align=\"right\">%s</td></tr>\n"
+              "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
+              "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
+              "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
               "</table></td>\n"
               "</tr>\n",
               flowIgnoredZeroPort,
@@ -2438,9 +2437,9 @@ static void printNetFlowStatisticsRcvd(void) {
   if(snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">netFlow port</th>\n"
-              "<td><table width=\"100%\" border=\"0\" "TABLE_DEFAULTS">\n"
-              "<tr><td width=\"50%\" " TD_BG " align=\"right\">%u</td>\n"
-              "<td width=\"50%\" " TD_BG " align=\"right\">%s</td></tr>\n"
+              "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
+              "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
+              "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
               "</table></td>\n"
               "</tr>\n",
               flowIgnoredNetFlow,
@@ -2451,9 +2450,9 @@ static void printNetFlowStatisticsRcvd(void) {
   if(snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Unrecognized port &lt;= 1023</th>\n"
-              "<td><table width=\"100%\" border=\"0\" "TABLE_DEFAULTS">\n"
-              "<tr><td width=\"50%\" " TD_BG " align=\"right\">%u</td>\n"
-              "<td width=\"50%\" " TD_BG " align=\"right\">%s</td></tr>\n"
+              "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
+              "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
+              "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
               "</table></td>\n"
               "</tr>\n",
               flowIgnoredLowPort,
@@ -2464,9 +2463,9 @@ static void printNetFlowStatisticsRcvd(void) {
   if(snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Unrecognized port &gt; 1023</th>\n"
-              "<td><table width=\"100%\" border=\"0\" "TABLE_DEFAULTS">\n"
-              "<tr><td width=\"50%\" " TD_BG " align=\"right\">%u</td>\n"
-              "<td width=\"50%\" " TD_BG " align=\"right\">%s</td></tr>\n"
+              "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
+              "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
+              "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
               "</table></td>\n"
               "</tr>\n",
               flowIgnoredHighPort,
@@ -2489,9 +2488,9 @@ static void printNetFlowStatisticsRcvd(void) {
   if(snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Processed</th>\n"
-              "<td><table width=\"100%\" border=\"0\" "TABLE_DEFAULTS">\n"
-              "<tr><td width=\"50%\" " TD_BG " align=\"right\">%u</td>\n"
-              "<td width=\"50%\" " TD_BG " align=\"right\">%s</td></tr>\n"
+              "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
+              "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
+              "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
               "</table></td>\n"
               "</tr>\n",
               flowProcessed,
@@ -2504,9 +2503,9 @@ static void printNetFlowStatisticsRcvd(void) {
     if(snprintf(buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Assumed ftpdat</th>\n"
-                "<td><table width=\"100%\" border=\"0\" "TABLE_DEFAULTS">\n"
-                "<tr><td width=\"50%\" " TD_BG " align=\"right\">%u</td>\n"
-                "<td width=\"50%\" " TD_BG " align=\"right\">%s</td></tr>\n"
+                "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
+                "<tr><td width=\"50%%\" " TD_BG " align=\"right\">%u</td>\n"
+                "<td width=\"50%%\" " TD_BG " align=\"right\">%s</td></tr>\n"
                 "</table></td>\n"
                 "</tr>\n",
                 flowAssumedFtpData,

@@ -45,7 +45,7 @@ static struct in_addr *in4_cpy(struct in_addr *dst, struct in_addr *src) {
   return memcpy(dst, src, sizeof(struct in_addr));
 }
 
-static str2in6_addr(char *str, struct in6_addr *addr){
+static void str2in6_addr(char *str, struct in6_addr *addr) {
   int i;
   unsigned int x;
 
@@ -54,6 +54,7 @@ static str2in6_addr(char *str, struct in6_addr *addr){
     addr->s6_addr[i]= x & 0xff;
   }
 }
+
 static int prefixlen(void *val, int size) {
   unsigned char *name = (unsigned char *)val;
   int byte, bit, plen = 0;
