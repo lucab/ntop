@@ -103,17 +103,34 @@ typedef struct ether80211q {
   u_int16_t protoType;
 } Ether80211q;
 
+typedef struct hostAddr {
+  u_int    hostFamily; /* AF_INET AF_INET6 */
+  union {
+    struct in_addr  _hostIp4Address;
+#ifdef INET6
+    struct in6_addr _hostIp6Address;
+#endif
+  } addr;
+}HostAddr;
+
+#define Ip4Address addr._hostIp4Address
+
+#ifdef INET6
+#define Ip6Address addr._hostIp6Address
+#endif
+
 #define SIZEOF_HOSTSERIAL   8
 
 #define SERIAL_NONE         0
 #define SERIAL_MAC          1
 #define SERIAL_IPV4         2
+#define SERIAL_IPV6         3
 
 typedef struct hostSerial {
   u_char serialType; /* 0 == empty */
   union {
     u_char          ethAddress[LEN_ETHERNET_ADDRESS]; /* hostSerial == SERIAL_MAC */
-    struct in_addr  ipAddress;                        /* hostSerial == SERIAL_IPV4 */
+    HostAddr        ipAddress;/* hostSerial == SERIAL_IPV4/SERIAL_IPV6 */
   } value;	
 } HostSerial;
 
@@ -471,9 +488,13 @@ typedef struct dhcpStats {
 
 /* *********************** */
 
+#ifndef ICMP6_MAXTYPE
+#define ICMP6_MAXTYPE 142
+#endif
+
 typedef struct icmpHostInfo {
-  TrafficCounter icmpMsgSent[ICMP_MAXTYPE+1];
-  TrafficCounter icmpMsgRcvd[ICMP_MAXTYPE+1];
+  TrafficCounter icmpMsgSent[ICMP6_MAXTYPE+1];
+  TrafficCounter icmpMsgRcvd[ICMP6_MAXTYPE+1];
   time_t        lastUpdated;
 } IcmpHostInfo;
 
@@ -507,15 +528,19 @@ typedef struct nonIpProtoTrafficInfo {
 } NonIpProtoTrafficInfo;
 
 /* **************************** */
+/********************************************************/
+
+#define hostIp4Address hostIpAddress.Ip4Address
+#define hostIp6Address hostIpAddress.Ip6Address
 
 /* Host Traffic */
 typedef struct hostTraffic {
   u_short          magic;
   u_int            hostTrafficBucket; /* Index in the **hash_hostTraffic list */
-  u_int            originalHostTrafficBucket; /* Debug */
+  u_int            originalHostTrafficBucket; /* REMOVE */
   u_short          refCount;         /* Reference counter */
   HostSerial       hostSerial;
-  struct in_addr   hostIpAddress;
+  HostAddr         hostIpAddress;
   short            vlanId;           /* VLAN Id (-1 if not set) */
   u_int16_t        hostAS;           /* AS to which the host belongs to */
   time_t           firstSeen;
@@ -523,8 +548,9 @@ typedef struct hostTraffic {
   u_char           ethAddress[LEN_ETHERNET_ADDRESS];
   u_char           lastEthAddress[LEN_ETHERNET_ADDRESS]; /* used for remote addresses */
   char             ethAddressString[LEN_ETHERNET_ADDRESS_DISPLAY];
-  char             hostNumIpAddress[17], *fullDomainName;
+  char             hostNumIpAddress[47], *fullDomainName;
   char             *dotDomainName, hostSymIpAddress[MAX_LEN_SYM_HOST_NAME], *fingerprint;
+  u_short          dotDomainNameIsFallback;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
 
@@ -552,6 +578,7 @@ typedef struct hostTraffic {
   TrafficDistribution *trafficDistribution;
   u_int32_t        numHostSessions;
 
+
   /* Routing */
   RoutingCounter   *routedTraffic;
 
@@ -561,12 +588,14 @@ typedef struct hostTraffic {
   int              recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];
   int              otherIpPortsRcvd[MAX_NUM_RECENT_PORTS], otherIpPortsSent[MAX_NUM_RECENT_PORTS];
   TrafficCounter   ipBytesSent, ipBytesRcvd;
-  TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc, udpSentRem, icmpSent;
-  TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc, udpRcvdFromRem, icmpRcvd;
+  TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc, udpSentRem, icmpSent,icmp6Sent;
+  TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc, udpRcvdFromRem, icmpRcvd,
+                   icmp6Rcvd;
 
   TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
     udpFragmentsSent,  udpFragmentsRcvd,
-    icmpFragmentsSent, icmpFragmentsRcvd;
+    icmpFragmentsSent, icmpFragmentsRcvd,
+    icmp6FragmentsSent,icmp6FragmentsRcvd;
 
   /* Protocol decoders */
   ProtocolInfo     *protocolInfo;
@@ -605,9 +634,9 @@ typedef struct domainStats {
   HostTraffic *domainHost; /* ptr to a host that belongs to the domain */
   TrafficCounter bytesSent, bytesRcvd;
   TrafficCounter tcpSent, udpSent;
-  TrafficCounter icmpSent;
+  TrafficCounter icmpSent,icmp6Sent;
   TrafficCounter tcpRcvd, udpRcvd;
-  TrafficCounter icmpRcvd;
+  TrafficCounter icmpRcvd,icmp6Rcvd;
 } DomainStats;
 
 /* *********************** */
@@ -645,10 +674,10 @@ typedef struct ipSession {
   u_short magic;
   u_char isP2P;                     /* Set to 1 if this is a P2P session          */
   HostTraffic* initiator;           /* initiator address                          */
-  struct in_addr initiatorRealIp;   /* Real IP address (if masqueraded and known) */
+  HostAddr initiatorRealIp;   /* Real IP address (if masqueraded and known) */
   u_short sport;                    /* initiator address (port)                   */
   HostTraffic *remotePeer;          /* remote peer address                        */
-  struct in_addr remotePeerRealIp;  /* Real IP address (if masqueraded and known) */
+  HostAddr remotePeerRealIp;  /* Real IP address (if masqueraded and known) */
   char *virtualPeerName;            /* Name of a virtual host (e.g. HTTP virtual host) */
   u_short dport;                    /* remote peer address (port)                       */
   time_t firstSeen;                 /* time when the session has been initiated         */
@@ -682,10 +711,31 @@ typedef struct ipSession {
 } IPSession;
 
 /* ************************************* */
+typedef struct ntopIfaceAddrInet {
+  struct in_addr ifAddr;
+  struct in_addr network;
+  struct in_addr netmask;
+}NtopIfaceAddrInet;
+
+typedef struct ntopIfaceAddrInet6 {
+  struct in6_addr ifAddr;
+  int            prefixlen;
+}NtopIfaceAddrInet6;
+
+typedef struct ntopIfaceaddr{
+  int family;
+  struct ntopIfaceaddr *next;
+  union {
+    NtopIfaceAddrInet  inet;
+    NtopIfaceAddrInet6 inet6;
+  }af;
+}NtopIfaceAddr;
+
 
 typedef struct ntopInterface {
   char *name;                    /* unique interface name */
   char *humanFriendlyName;       /* Human friendly name of the interface (needed under WinNT and above) */
+  int flags;                     /* the status of the interface as viewed by ntop */
 
   u_int32_t addr;                /* Internet address (four bytes notation) */
   char *ipdot;                   /* IP address (dot notation) */
@@ -695,7 +745,9 @@ typedef struct ntopInterface {
   struct in_addr netmask;        /* netmask associated to this interface */
   u_int          numHosts;       /* # hosts of the subnet */
   struct in_addr ifAddr;         /* network number associated to this interface */
-                                 /* local domainname */
+#ifdef INET6
+  NtopIfaceAddr  *v6Addrs;
+#endif
   time_t started;                /* time the interface was enabled to look at pkts */
   time_t firstpkt;               /* time first packet was captured */
   time_t lastpkt;                /* time last packet was captured */
@@ -711,7 +763,9 @@ typedef struct ntopInterface {
   int snaplen;                   /* maximum # of bytes to capture foreach pkt */
                                  /* read timeout in milliseconds */
   int datalink;                  /* data-link encapsulation type (see DLT_* in net/bph.h) */
+
   char *filter;                  /* user defined filter expression (if any) */
+
   int fd;                        /* unique identifier (Unix file descriptor) */
 
   /*
@@ -723,7 +777,6 @@ typedef struct ntopInterface {
   TrafficCounter broadcastPkts;  /* # of broadcast pkts captured by the application */
   TrafficCounter multicastPkts;  /* # of multicast pkts captured by the application */
   TrafficCounter ipPkts;         /* # of IP pkts captured by the application */
-
   /*
    * The bytes section
    */
@@ -745,6 +798,7 @@ typedef struct ntopInterface {
   TrafficCounter egpBytes;
   TrafficCounter osiBytes;
   TrafficCounter ipv6Bytes;
+  TrafficCounter icmp6Bytes;
   TrafficCounter otherBytes;
   TrafficCounter *ipProtosList;        /* List of myGlobals.numIpProtosList entries */
   PortCounter    *ipPorts[MAX_IP_PORT];
@@ -786,6 +840,8 @@ typedef struct ntopInterface {
   SimpleProtoTrafficInfo *ipProtoStats;
   SecurityDeviceProbes securityPkts;
 
+  TrafficCounter numEstablishedTCPConnections; /* = # really established connections */
+
 #ifdef CFG_MULTITHREADED
   pthread_t pcapDispatchThreadId;
 #endif
@@ -803,6 +859,7 @@ typedef struct ntopInterface {
   u_short numTcpSessions, maxNumTcpSessions;
   TrafficEntry** ipTrafficMatrix; /* Subnet traffic Matrix */
   struct hostTraffic** ipTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
+  fd_set ipTrafficMatrixPromiscHosts;
 
   /* ************************** */
 
@@ -1130,7 +1187,7 @@ typedef struct flowFilterList {
 } FlowFilterList;
 
 typedef struct sessionInfo {
-  struct in_addr sessionHost;
+  HostAddr sessionHost;
   u_short sessionPort;
   time_t  creationTime;
 } SessionInfo;
@@ -1181,7 +1238,7 @@ struct pbuf {
 /* **************************** */
 
 typedef struct badGuysAddr {
-  struct in_addr addr;
+  HostAddr       addr;
   time_t         lastBadAccess;
   u_int16_t      count;
 } BadGuysAddr;
@@ -1495,8 +1552,6 @@ typedef struct ntopGlobals {
                                      /*XML b enablePacketDecoding Options    "-b | --disable-decoders" */
   u_char stickyHosts;                /* 'c' */
                                      /*XML b stickyHosts          Options    "-c | --sticky-hosts" */
-  u_char configurationMode;          /* 'C' */
-                                     /*XML C configurationMode    Options    "-C" */
   int daemonMode;                    /* 'd' */
                                      /*XML b daemonMode           Options    "-d | --daemon: run as daemon flag" */
   int maxNumLines;                   /* 'e' */
@@ -1550,6 +1605,7 @@ typedef struct ntopGlobals {
   int webPort;
   /*XML s webAddr              Options    "-w | --http-server address"  */
   /*XML n webPort              Options    "-w | --http-server :port" */
+  int ipv4or6;                       /* '6/4' */ 
   u_char enableSessionHandling;      /* 'z' */
                                      /*XML b enableSessionHandling Options   "-z | --disable-sessions" */
 

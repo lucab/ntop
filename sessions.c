@@ -538,9 +538,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     because BOOTP uses broadcast addresses hence
     it would be filtered out by the (**) check
   */
-  if(myGlobals.enablePacketDecoding && (tp == NULL /* UDP session */))
+  if(myGlobals.enablePacketDecoding && (tp == NULL /* UDP session */) &&
+     (srcHost->hostIpAddress.hostFamily == AF_INET && 
+      dstHost->hostIpAddress.hostFamily == AF_INET)) 
     handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData, actualDeviceId);
-
+  
   if(broadcastHost(srcHost) || broadcastHost(dstHost)) /* (**) */
     return(theSession);
 
@@ -552,26 +554,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     sessionType = IPPROTO_TCP;
   }
 
-  /*
-   * The hash key has to be calculated in a specular
-   * way: its value has to be the same regardless
-   * of the flow direction.
-   *
-   * Patch on the line below courtesy of
-   * Paul Chapman <pchapman@fury.bio.dfo.ca>
-   */
-  /*
-  idx = (u_int)((srcHost->hostIpAddress.s_addr+
-		 dstHost->hostIpAddress.s_addr+
-		 sport+dport) % MAX_TOT_NUM_SESSIONS);
-*/
-
-  idx = (u_int)(((dstHost->hostIpAddress.s_addr) & 0xffff) ^
-    ((dstHost->hostIpAddress.s_addr >> 15) & 0xffff) ^
-    ((srcHost->hostIpAddress.s_addr << 1) & 0xffff) ^
-    ((srcHost->hostIpAddress.s_addr >> 16 ) & 0xffff) ^
-    (dport << 1) ^ (sport));
-  
+  idx= computeIdx(&srcHost->hostIpAddress,&dstHost->hostIpAddress, sport, dport);
+   
   idx %= MAX_TOT_NUM_SESSIONS;
 
 #ifdef DEBUG
@@ -650,7 +634,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #ifdef DEBUG
       printf("DEBUG: NEW ");
 #endif
-
+      
       if(myGlobals.device[actualDeviceId].numTcpSessions >= myGlobals.maxNumSessions) {
 	static char messageShown = 0;
 	
@@ -696,8 +680,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
       theSession->magic = CONST_MAGIC_NUMBER;
 
-      theSession->initiatorRealIp.s_addr = srcHost->hostIpAddress.s_addr;
-      theSession->remotePeerRealIp.s_addr = dstHost->hostIpAddress.s_addr;
+      addrcpy(&theSession->initiatorRealIp,&srcHost->hostIpAddress);
+      addrcpy(&theSession->remotePeerRealIp,&dstHost->hostIpAddress);
 
 #ifdef SESSION_TRACE_DEBUG
       traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: New TCP session [%s:%d] <-> [%s:%d] (# sessions = %d)",
@@ -718,7 +702,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->initiator->numHostSessions++, theSession->remotePeer->numHostSessions++;
       theSession->sport = sport;
       theSession->dport = dport;
-      theSession->passiveFtpSession = isPassiveSession(dstHost->hostIpAddress.s_addr, dport);
+      theSession->passiveFtpSession = isPassiveSession(&dstHost->hostIpAddress, dport);
       theSession->firstSeen = myGlobals.actTime;
       flowDirection = FLAG_CLIENT_TO_SERVER;
     }
@@ -750,8 +734,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  int rc;
 	  time_t microSecTimeDiff;
 
-	  u_int16_t transactionId = (u_int16_t)(3*srcHost->hostIpAddress.s_addr
-						+dstHost->hostIpAddress.s_addr+5*dport+7*sport);
+	  u_int16_t transactionId = computeTransId(&srcHost->hostIpAddress,
+						   &dstHost->hostIpAddress,
+						   sport,dport);
 
 	  /* to be 64bit-proof we have to copy the elements */
 	  tvstrct.tv_sec = h->ts.tv_sec;
@@ -837,9 +822,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  if(isInitialHttpData(rcStr)) {
 	    char *strtokState, *row;
 
-	    u_int16_t transactionId = (u_int16_t)(srcHost->hostIpAddress.s_addr+
-						  3*dstHost->hostIpAddress.s_addr
-						  +5*sport+7*dport);
+	    u_int16_t transactionId = computeTransId(&srcHost->hostIpAddress,
+						     &dstHost->hostIpAddress,
+						     sport,dport);
 	    /* to be 64bit-proof we have to copy the elements */
 	    tvstrct.tv_sec = h->ts.tv_sec;
 	    tvstrct.tv_usec = h->ts.tv_usec;
@@ -1492,7 +1477,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    traceEvent(CONST_TRACE_INFO, "FTP_DEBUG: (%d) [%d.%d.%d.%d:%d]",
 		       inet_addr(tmpStr), a, b, c, d, (e*256+f));
 #endif
-	    addPassiveSessionInfo(htonl((unsigned long)inet_addr(tmpStr)), (e*256+f));
+	    /*addPassiveSessionInfo(htonl((unsigned long)inet_addr(tmpStr)), (e*256+f));*/
 	  }
 	}
       } /* len > 0 */
@@ -1577,6 +1562,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHost, actualDeviceId);
       incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHost, actualDeviceId);
       incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.establishedTCPConn, 1);
+      incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
     } else if((addedNewEntry == 0)
 	      && ((theSession->sessionState == FLAG_STATE_SYN) || (theSession->sessionState == FLAG_FLAG_STATE_SYN_ACK))
 	      && (!(tp->th_flags & TH_RST))) {
@@ -1617,6 +1603,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.establishedTCPConn, 1);
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].securityPkts.synPkts, 1);
       }
+
+      incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
     }
 
 

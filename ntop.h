@@ -260,6 +260,14 @@ ntop.h
 #include <netinet/ip_icmp.h>
 #include <netinet/udp.h>
 #include <netinet/tcp.h>
+
+#ifndef HAVE_IPV6_H
+#include <netinet/ip6.h>
+#endif
+
+#ifndef HAVE_ICMPV6_H
+#include <netinet/icmp6.h>
+#endif
 #endif
 
 #ifdef HAVE_NETINET_IF_ETHER_H
@@ -495,5 +503,13 @@ void          rewinddir(DIR *);
 #ifdef FREEBSD
 #define HANDLE_DIED_CHILD
 #endif
+
+/*****************************************************************/
+
+#ifdef INET6
+#include "iface.h"
+#endif
+
+/*****************************************************************/
 
 #endif /* NTOP_H */

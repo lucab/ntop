@@ -97,7 +97,7 @@ struct _HTTPstatus HTTPstatus[] = {
 
 static u_int httpBytesSent;
 static char httpRequestedURL[512], theUser[32];
-static struct in_addr *requestFrom;
+static HostAddr *requestFrom;
 
 /* ************************* */
 
@@ -113,7 +113,7 @@ static int readHTTPheader(char* theRequestedURL,
                           int theLanguageLen);
 static int returnHTTPPage(char* pageName,
                           int postLen,
-                          struct in_addr *from,
+                          HostAddr *from,
 			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent,
@@ -128,7 +128,7 @@ static int readHTTPheader(char* theRequestedURL,
                           int theAgentLen);
 static int returnHTTPPage(char* pageName,
                           int postLen,
-                          struct in_addr *from,
+                          HostAddr *from,
 			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent);
@@ -275,6 +275,7 @@ static int readHTTPheader(char* theRequestedURL,
 #ifdef DEBUG
 	    traceEvent(CONST_TRACE_INFO, "DEBUG: Too short request line.");
 #endif
+
 	  } else if(strncmp(&lineStr[idxChar-9], " HTTP/", 6) != 0) {
 	    errorCode = FLAG_HTTP_INVALID_REQUEST;
 #ifdef DEBUG
@@ -287,6 +288,7 @@ static int readHTTPheader(char* theRequestedURL,
 #ifdef DEBUG
 	    traceEvent(CONST_TRACE_INFO, "DEBUG: Unsupported HTTP version.");
 #endif
+
 	  } else {
 
             lineStr[idxChar-9] = '\0'; idxChar -= 9; tmpStr = NULL;
@@ -295,11 +297,11 @@ static int readHTTPheader(char* theRequestedURL,
 	      tmpStr = &lineStr[4];
 	    } else if((idxChar >= 4) && (strncmp(lineStr, "POST ", 5) == 0)) {
 	      tmpStr = &lineStr[5];
-	      /*
-		HEAD method could be supported with some litle modifications...
-		} else if((idxChar >= 4) && (strncmp(lineStr, "HEAD ", 5) == 0)) {
-		tmpStr = &lineStr[5];
-	      */
+/*
+  HEAD method could be supported with some litle modifications...
+  } else if((idxChar >= 4) && (strncmp(lineStr, "HEAD ", 5) == 0)) {
+  tmpStr = &lineStr[5];
+*/
 	    } else {
 	      errorCode = FLAG_HTTP_INVALID_METHOD;
 #ifdef DEBUG
@@ -345,8 +347,8 @@ static int readHTTPheader(char* theRequestedURL,
       } else {
 	lineStr[idxChar++] = aChar[0];
       }
-    }
 
+    }
     lastChar = aChar[0];
   }
 
@@ -688,13 +690,13 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
 
    if(gzipBytesSent > 0)
      fprintf(myGlobals.accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %u/%u %lu\n",
-	     _intoa(*requestFrom, buf, sizeof(buf)),
+	     _addrtostr(requestFrom, buf, sizeof(buf)),
 	     myUser, theDate, theZone,
 	     httpRequestedURL, rc, gzipBytesSent, httpBytesSent,
 	     msSpent);
    else
      fprintf(myGlobals.accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %u %lu\n",
-	     _intoa(*requestFrom, buf, sizeof(buf)),
+	     _addrtostr(requestFrom, buf, sizeof(buf)),
 	     myUser, theDate, theZone,
 	     httpRequestedURL, rc, httpBytesSent,
 	     msSpent);
@@ -1188,7 +1190,7 @@ RETSIGTYPE httpcleanup(int signo) {
 #ifdef MAKE_WITH_I18N
 static int returnHTTPPage(char* pageName,
                           int postLen,
-                          struct in_addr *from,
+                          HostAddr *from,
 			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent,
@@ -1197,7 +1199,7 @@ static int returnHTTPPage(char* pageName,
 #else
 static int returnHTTPPage(char* pageName,
                           int postLen,
-                          struct in_addr *from,
+                          HostAddr *from,
 			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent) {
@@ -1977,7 +1979,7 @@ static int returnHTTPPage(char* pageName,
 	      || (strncmp(pageName, "hostFragmentDistrib", strlen("hostFragmentDistrib")) == 0)
 	      || (strncmp(pageName, "hostTotalFragmentDistrib", strlen("hostTotalFragmentDistrib")) == 0)
 	      || (strncmp(pageName, "hostIPTrafficDistrib", strlen("hostIPTrafficDistrib")) == 0)) {
-      char hostName[32], *theHost;
+      char hostName[47], *theHost;
 
     if(strncmp(pageName, "hostTrafficDistrib", strlen("hostTrafficDistrib")) == 0) {
       idx = 0;
@@ -1999,7 +2001,7 @@ static int returnHTTPPage(char* pageName,
       u_int i;
       HostTraffic *el=NULL;
 
-      if(strlen(theHost) >= 31) theHost[31] = 0;
+      if(strlen(theHost) >= 47) theHost[47] = 0;
       for(i=strlen(theHost); i>0; i--)
 	if(theHost[i] == '?') {
 	  theHost[i] = '\0';
@@ -2066,7 +2068,9 @@ static int returnHTTPPage(char* pageName,
       sendString("<li>is capable of handling both IP and non IP protocols </ul> <p> Although it\n");
       sendString("might not seem so, <b>ntop</b> has definitively more than an author.\n");
       sendString("<A HREF=\"mailto:stefano@ntop.org\">Stefano Suin</A> has contributed with ");
-      sendString("several ideas and comments, whereas <A HREF=\"mailto:burton@ntopsupport.com\">Burton Strauss</A>\n");
+      sendString("several ideas and comments, <A HREF=\"mailto:Abdelkader.Lahmadi@loria.fr\">Abdelkader Lahmadi</A>\n");
+      sendString("and <A HREF=\"mailto:Olivier.Festor@loria.fr\">Olivier Festor</A> provided IPv6 support,\n");
+      sendString("and <A HREF=\"mailto:burton@ntopsupport.com\">Burton Strauss</A>\n");
       sendString(" is the ntop factotum (user support, bug fixing, testing, packaging).\n");
       sendString(" In addition, many other people downloaded this program, tested it,\n");
       sendString("joined the <A HREF=http://lists.ntop.org/mailman/listinfo/ntop>ntop</A>\n");
@@ -2131,10 +2135,10 @@ static int returnHTTPPage(char* pageName,
 	printTrailer = 0;
       } else if(strlen(pageName) > 5) {
 	int i;
-	char hostName[32];
+	char hostName[47];
 
 	pageName[strlen(pageName)-5] = '\0';
-	if(strlen(pageName) >= 31) pageName[31] = 0;
+	if(strlen(pageName) >= 47) pageName[47] = 0;
 
 	/* Patch for ethernet addresses and MS Explorer */
 	for(i=0; pageName[i] != '\0'; i++)
@@ -2379,7 +2383,8 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
 /* ************************* */
 
-void handleHTTPrequest(struct in_addr from) {
+void handleHTTPrequest(HostAddr from) {
+
   int skipLeading, postLen, usedFork = 0;
   char requestedURL[MAX_LEN_URL], pw[64], agent[256];
   int rc, i;
@@ -2400,7 +2405,6 @@ void handleHTTPrequest(struct in_addr from) {
   gettimeofday(&httpRequestedAt, NULL);
 
   requestFrom = &from;
-  NTOHL(requestFrom->s_addr);
 
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
    /* Note if the size of the table is zero, we simply nullify all of this
@@ -2409,7 +2413,7 @@ void handleHTTPrequest(struct in_addr from) {
     */
 
   for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
-    if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr == from.s_addr) {
+    if(addrcmp(&myGlobals.weDontWantToTalkWithYou[i].addr,&from) == 0) {
        if((myGlobals.weDontWantToTalkWithYou[i].lastBadAccess +
            PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < myGlobals.actTime) {
          /*
@@ -2419,11 +2423,11 @@ void handleHTTPrequest(struct in_addr from) {
           */
          memset(&myGlobals.weDontWantToTalkWithYou[i], 0, sizeof(BadGuysAddr));
          traceEvent(CONST_TRACE_INFO, "clearing lockout for address %s",
-                    _intoa(from, requestedURL, sizeof(requestedURL)));
+                    _addrtostr(&from, requestedURL, sizeof(requestedURL)));
        } else {
          myGlobals.weDontWantToTalkWithYou[i].count++;
          traceEvent(CONST_TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
-                    _intoa(from, requestedURL, sizeof(requestedURL)));
+                    _addrtostr(&from, requestedURL, sizeof(requestedURL)));
          return;
        }
     }
@@ -2494,7 +2498,7 @@ void handleHTTPrequest(struct in_addr from) {
   */
   if((rc = checkURLsecurity(requestedURL)) != 0) {
     traceEvent(CONST_TRACE_ERROR, "URL security: '%s' rejected (code=%d)(client=%s)",
-	       requestedURL, rc, _intoa(from, tmpStr, sizeof(tmpStr)));
+	       requestedURL, rc, _addrtostr(&from, tmpStr, sizeof(tmpStr)));
 
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
   {
@@ -2511,19 +2515,19 @@ void handleHTTPrequest(struct in_addr from) {
        for a while
     */
     for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++)
-      if(myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr.s_addr == from.s_addr) {
+      if(addrcmp(&myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr,&from) == 0) {
 	found = 1;
 	break;
       }
     
     if(!found) {
       for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++) {
-	myGlobals.weDontWantToTalkWithYou[i].addr.s_addr   = myGlobals.weDontWantToTalkWithYou[i+1].addr.s_addr;
+	addrcpy(&myGlobals.weDontWantToTalkWithYou[i].addr,&myGlobals.weDontWantToTalkWithYou[i+1].addr);
 	myGlobals.weDontWantToTalkWithYou[i].lastBadAccess = myGlobals.weDontWantToTalkWithYou[i+1].lastBadAccess;
 	myGlobals.weDontWantToTalkWithYou[i].count = myGlobals.weDontWantToTalkWithYou[i+1].count;
       }
 
-      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr.s_addr = from.s_addr;
+      addrcpy(&myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].addr,&from);
       myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].lastBadAccess = myGlobals.actTime;
       myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].count = 1;
     }

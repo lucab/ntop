@@ -1,5 +1,4 @@
-/*
- *  Copyright (C) 1998-2002 Luca Deri <deri@ntop.org>
+/*(C) 1998-2002 Luca Deri <deri@ntop.org>
  *
  *		 	    http://www.ntop.org/
  *
@@ -19,7 +18,6 @@
  */
 
 /****** data declarations ***** */
-
 /* globals-core.c */
 extern NtopGlobals myGlobals;
 #ifdef MAKE_WITH_SYSLOG
@@ -78,10 +76,16 @@ extern void initNtop(char *devices);
 extern int printable(int ch);
 extern void cleanupAddressQueue(void);
 extern void* dequeueAddress(void* notUsed);
+#ifdef INET6
+extern char* _intop(struct in6_addr *addr,char *buf, u_short buflen);
+extern char* intop(struct in6_addr *addr);
+#endif
 extern char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
 extern char* intoa(struct in_addr addr);
-extern int fetchAddressFromCache(struct in_addr hostIpAddress, char *buffer);
-extern void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId);
+extern char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen);
+extern char * addrtostr(HostAddr *addr);
+extern int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer);
+extern void ipaddr2str(HostAddr hostIpAddress, int actualDeviceId);
 extern char* etheraddr_string(const u_char *ep, char *buf);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
@@ -118,15 +122,16 @@ extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
                              unsigned int nminutes);
 extern char* formatPkts(Counter pktNr);
 extern char *formatTime(time_t *theTime, short encodeString);
+extern void clearUserUrlList(void);
 
 /* hash.c */
-extern u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
+extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
 extern void setHostSerial(HostTraffic *el);
-HostTraffic * lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
+HostTraffic * lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 			 u_char checkForMultihoming, u_char forceUsingIPaddress, int actualDeviceId);
 
 /* initialize.c */
@@ -313,29 +318,61 @@ extern void incrementTrafficCounter(TrafficCounter *ctr, Counter value);
 extern void resetTrafficCounter(TrafficCounter *ctr);
 extern HostTraffic* getFirstHost(u_int actualDeviceId);
 extern HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host);
-extern HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId);
+extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, u_int actualDeviceId);
 extern HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId);
 extern HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId);
+#ifdef INET6
+extern unsigned long in6_hash(struct in6_addr *addr);
+extern int in6_isglobal(struct in6_addr *addr);
+extern unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int size);
+extern unsigned short addrlookup(struct in6_addr *addr,  NtopIfaceAddr *addrs);
+extern NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
+extern unsigned short isLinkLocalAddress(struct in6_addr *addr);
+extern unsigned short in6_isMulticastAddress(struct in6_addr *addr);
+extern unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId);
+extern unsigned short in6_pseudoLocalAddress(struct in6_addr *addr);
+extern unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId);
+extern unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId);
+extern unsigned short in6_isPrivateAddress(struct in6_addr *addr);
+#endif
+extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
+extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport);
+extern unsigned short addrcmp(HostAddr *addr1, HostAddr *addr2);
+extern HostAddr *addrcpy(HostAddr *dst, HostAddr *src);
+extern int addrinit(HostAddr *addr);
+extern unsigned short addrget(HostAddr *Haddr,void *addr, int *family , int *size);
+extern unsigned short addrput(int family, HostAddr *dst, void *src);
+extern unsigned short addrnull(HostAddr *addr);
+extern unsigned short addrfull(HostAddr *addr);
+extern unsigned short in_isBroadcastAddress(struct in_addr *addr);
+extern unsigned short in_isMulticastAddress(struct in_addr *addr);
+extern unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId);
+extern unsigned short in_isPrivateAddress(struct in_addr *addr);
+extern unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId);
+extern unsigned short in_pseudoLocalAddress(struct in_addr *addr);
+extern unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId);
+extern unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr);
 extern char* copy_argv(register char **argv);
-extern unsigned short isPrivateAddress(struct in_addr *addr);
-extern unsigned short isBroadcastAddress(struct in_addr *addr);
-extern unsigned short isMulticastAddress(struct in_addr *addr);
-extern unsigned short isLocalAddress(struct in_addr *addr, u_int actualDeviceId);
+extern unsigned short isPrivateAddress(HostAddr *addr);
+extern unsigned short isBroadcastAddress(HostAddr *addr);
+extern unsigned short isMulticastAddress(HostAddr *addr);
+extern unsigned short isLocalAddress(HostAddr *addr, u_int actualDeviceId);
 extern int dotted2bits(char *mask);
 extern void handleFlowsSpecs();
 extern void handleLocalAddresses(char* addresses);
-extern unsigned short isPseudoLocalAddress(struct in_addr *addr, u_int actualDeviceId);
-extern unsigned short _pseudoLocalAddress(struct in_addr *addr);
+extern unsigned short isPseudoLocalAddress(HostAddr *addr, u_int actualDeviceId);
+extern unsigned short _pseudoLocalAddress(HostAddr *addr);
 extern unsigned short __pseudoLocalAddress(struct in_addr *addr,
 					   u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
 					   u_short numNetworks);
-extern unsigned short deviceLocalAddress(struct in_addr *addr, u_int deviceId);
-extern unsigned short isPseudoBroadcastAddress(struct in_addr *addr);
+extern unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId);
+extern unsigned short isPseudoBroadcastAddress(HostAddr *addr);
 extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);
 extern char *dotToSlash(char *name);
 extern void handleFlowsSpecs();
 extern int getLocalHostAddress(struct in_addr *hostAddress, char* device);
+extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);
 #ifdef CFG_MULTITHREADED
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
@@ -404,8 +441,8 @@ extern char *strtok_r(char *s, const char *delim, char **save_ptr);
 #endif
 extern int getSniffedDNSName(char *hostNumIpAddress, char *name, int maxNameLen);
 extern int strOnlyDigits(const char *s);
-extern void addPassiveSessionInfo(u_long theHost, u_short thePort);
-extern int isPassiveSession(u_long theHost, u_short thePort);
+extern void addPassiveSessionInfo(HostAddr *theHost, u_short thePort);
+extern int isPassiveSession(HostAddr *theHost, u_short thePort);
 extern void initPassiveSessions();
 extern void termPassiveSessions();
 extern int getPortByName(ServiceEntry **theSvc, char* portName);
@@ -430,8 +467,22 @@ extern void unescape(char *dest, int destLen, char *url);
 extern u_int numActiveSenders(u_int deviceId);
 extern u_int32_t xaton(char *s);
 extern void addNodeInternal(u_int32_t ip, int prefix, char *country, int as);
-extern char *ip2CountryCode(u_int32_t ip);
-
+extern char *ip2CountryCode(HostAddr ip);
+extern unsigned long in6_hash(struct in6_addr *addr);
+extern unsigned short addrcmp(HostAddr *addr1, HostAddr *addr2);
+extern HostAddr     * addrcpy(HostAddr *dst, HostAddr *src);
+extern int            addrinit(HostAddr *addr);
+extern unsigned short addrget(HostAddr *Haddr,void *addr, int *family , int *size);
+extern unsigned short addrput(int family, HostAddr *dst, void *src);
+extern unsigned short addrnull(HostAddr *addr);
+extern unsigned short addrfull(HostAddr *addr);
+extern unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, 
+				   int size);
+extern unsigned short addrlookup(struct in6_addr *addr,  NtopIfaceAddr *addrs);
+extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, 
+				 int sport, int dport);
+extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, 
+				int sport, int dport);
 #ifdef MAKE_WITH_I18N
 char *i18n_xvert_locale2common(const char *input);
 char *i18n_xvert_acceptlanguage2common(const char *input);
@@ -441,7 +492,7 @@ char *i18n_xvert_acceptlanguage2common(const char *input);
 extern pcap_t *pcap_open_dead(int linktype, int snaplen);
 #endif
 extern int setSpecifiedUser(void);
-extern u_short ip2AS(u_int32_t ip);
+extern u_short ip2AS(HostAddr ip);
 extern u_int16_t getHostAS(HostTraffic *el);
 extern void readASs(FILE *fd);
 extern int emptySerial(HostSerial *a);
@@ -654,7 +705,7 @@ int getdomainname(char *name, size_t len);
 #define theDomainHasBeenComputed(a) FD_ISSET(FLAG_THE_DOMAIN_HAS_BEEN_COMPUTED, &(a->flags))
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(FLAG_SUBNET_LOCALHOST, &(a->flags)))
 #define privateIPAddress(a)         ((a != NULL) && FD_ISSET(FLAG_PRIVATE_IP_ADDRESS, &(a->flags)))
-#define broadcastHost(a)            ((a != NULL) && (cmpSerial(&a->hostSerial, &myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))) || ((a->hostIpAddress.s_addr == 0) && (a->ethAddressString[0] == '\0')))
+#define broadcastHost(a)            ((a != NULL) && (cmpSerial(&a->hostSerial, &myGlobals.broadcastEntry->hostSerial) || FD_ISSET(FLAG_BROADCAST_HOST, &(a->flags))) || ((addrnull(&a->hostIpAddress)) && (a->ethAddressString[0] == '\0')))
 #define multicastHost(a)            ((a != NULL) && FD_ISSET(FLAG_MULTICAST_HOST, &(a->flags)))
 #define gatewayHost(a)              ((a != NULL) && FD_ISSET(FLAG_GATEWAY_HOST, &(a->flags)))
 #define nameServerHost(a)           ((a != NULL) && FD_ISSET(FLAG_NAME_SERVER_HOST, &(a->flags)))

@@ -72,6 +72,10 @@ extern void printHostThtpShort(HostTraffic *el, int reportType);
 extern int cmpHostsFctn(const void *_a, const void *_b);
 extern void printPacketStats(HostTraffic *el, int actualDeviceId);
 extern void printHostTrafficStats(HostTraffic *el, int actualDeviceId);
+#ifdef INET6
+extern void printIcmpv6Stats(HostTraffic *el);
+#endif
+extern void printIcmpv4Stats(HostTraffic *el);
 extern void printHostFragmentStats(HostTraffic *el, int actualDeviceId);
 extern void printTotalFragmentStats(HostTraffic *el, int actualDeviceId);
 extern HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el);
@@ -115,7 +119,7 @@ extern void termAccessLog(void);
 extern void sendHTTPHeaderType(void);
 extern void sendGIFHeaderType(void);
 extern void sendHTTPProtoHeader(void);
-extern void handleHTTPrequest(struct in_addr from);
+extern void handleHTTPrequest(HostAddr from);
 extern void printHTMLheader(char *title, int  headerFlags);
 #ifdef HAVE_OPENSSL
 extern char* printSSLError(int errorId);
@@ -191,6 +195,8 @@ extern void printMutexStatusReport(int textPrintFlag);
 #endif
 extern void printNtopConfigInfo(int textPrintFlag);
 extern void printNtopProblemReport(void);
+extern void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr);
+
 #ifdef MAKE_WITH_SSLWATCHDOG
 extern int sslwatchdogWaitFor(int stateValue, int parentchildFlag, int alreadyLockedFlag);
 extern int sslwatchdogClearLock(int parentchildFlag);
@@ -295,5 +301,6 @@ extern void drawPie(short width, short height, FILE* filepointer,
 		    int   num_points, char  *labels[], float data[]);
 
 /* xmldump.c */
+#ifndef MAKE_WITH_XMLDUMP
 extern int dumpXML(int dumpToFile, char * parms);
-
+#endif

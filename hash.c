@@ -31,11 +31,10 @@ static void hostHashSanityCheck(HostTraffic *host);
 
 /* ******************************* */
 
-u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
+u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 	       short* useIPAddressForSearching, HostTraffic **el,
 	       int actualDeviceId) {
   u_int idx = 0;
-
   *el = NULL;
 
   if(myGlobals.dontTrustMACaddr)  /* MAC addresses don't make sense here */
@@ -58,7 +57,12 @@ u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
       return(OTHER_HOSTS_ENTRY);
     } else {
       /* idx = hostIpAddress->s_addr; */
-      idx = (hostIpAddress->s_addr & 0xffff) ^ ((hostIpAddress->s_addr >> 15) & 0xffff);
+      if (hostIpAddress->hostFamily == AF_INET)
+	idx = (hostIpAddress->Ip4Address.s_addr & 0xffff) ^ ((hostIpAddress->Ip4Address.s_addr >> 15) & 0xffff);
+#ifdef INET6
+      else if (hostIpAddress->hostFamily == AF_INET6)
+	idx = in6_hash(&hostIpAddress->Ip6Address);
+#endif
     }
 
     (*useIPAddressForSearching) = 1;
@@ -82,7 +86,12 @@ u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
 	return(OTHER_HOSTS_ENTRY);
       } else {
 	/* idx = hostIpAddress->s_addr; */
-	idx = (hostIpAddress->s_addr & 0xffff) ^ ((hostIpAddress->s_addr >> 15) & 0xffff);
+	if (hostIpAddress->hostFamily == AF_INET)
+	  idx = (hostIpAddress->Ip4Address.s_addr & 0xffff) ^ ((hostIpAddress->Ip4Address.s_addr >> 15) & 0xffff);
+#ifdef INET6
+	else if (hostIpAddress->hostFamily == AF_INET6)
+	  idx = in6_hash(&hostIpAddress->Ip6Address);
+#endif
       }
     } else {
       idx = FLAG_NO_PEER;
@@ -93,11 +102,11 @@ u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
   }
 
   idx = idx % myGlobals.device[actualDeviceId].actualHashSize;
-
+  
   /* Skip reserved entries */
   if((idx == BROADCAST_HOSTS_ENTRY) || (idx == OTHER_HOSTS_ENTRY))
     idx = FIRST_HOSTS_ENTRY;
-
+  
 #ifdef DEBUG
   if(hostIpAddress != NULL) {
     char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
@@ -608,8 +617,12 @@ void setHostSerial(HostTraffic *el) {
     el->hostSerial.serialType = SERIAL_MAC;
     memcpy(&el->hostSerial.value.ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS);
   } else {
-    el->hostSerial.serialType = SERIAL_IPV4;
-    el->hostSerial.value.ipAddress.s_addr = el->hostIpAddress.s_addr;
+    if (el->hostIpAddress.hostFamily == AF_INET){
+      el->hostSerial.serialType = SERIAL_IPV4;
+    }else if (el->hostIpAddress.hostFamily == AF_INET6){
+      el->hostSerial.serialType = SERIAL_IPV6;
+    }
+    addrcpy(&el->hostSerial.value.ipAddress,&el->hostIpAddress);
   }
 }
 
@@ -617,7 +630,7 @@ void setHostSerial(HostTraffic *el) {
   Searches a host and returns it. If the host is not
   present in the hash a new bucket is created
 */
-HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
+HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 			u_char checkForMultihoming,    u_char forceUsingIPaddress,
 			int actualDeviceId) {
   u_int idx, isMultihomed = 0;
@@ -641,12 +654,6 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
   hashSanityCheck();
 #endif
 
-  if((hostIpAddress != NULL)
-     && (myGlobals.configurationMode == NETWORK_MODE)) {
-    /* Assume C-class network */
-    hostIpAddress->s_addr = hostIpAddress->s_addr & 0xFFFFFF00;
-  }
-
   idx = hashHost(hostIpAddress, ether_addr,
 		 &useIPAddressForSearching,
 		 &el, actualDeviceId);
@@ -658,7 +665,7 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
   else
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
-  while(el != NULL) {
+  while (el != NULL) {
     if(el->magic != CONST_MAGIC_NUMBER) {
       traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
 		 CONST_MAGIC_NUMBER, el->magic);
@@ -673,21 +680,22 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
     if(useIPAddressForSearching == 0) {
       /* compare with the ethernet-address */
       if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
-	if(hostIpAddress != NULL) {
+	if((hostIpAddress != NULL) && 
+	   (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)){
 	  if((!isMultihomed) && checkForMultihoming) {
 	    /* This is a local address hence this is a potential multihomed host. */
 
-	    if((el->hostIpAddress.s_addr != 0x0)
-	       && (el->hostIpAddress.s_addr != hostIpAddress->s_addr)) {
+	    if(!(addrnull(&el->hostIpAddress))
+	       && (addrcmp(&el->hostIpAddress,hostIpAddress) != 0)) {
 	      isMultihomed = 1;
 	      FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
 	    }
 
 	    if(el->hostNumIpAddress[0] == '\0') {
 	      /* This entry didn't have IP fields set: let's set them now */
-	      el->hostIpAddress.s_addr = hostIpAddress->s_addr;
+	      addrcpy(&el->hostIpAddress,hostIpAddress);
 	      strncpy(el->hostNumIpAddress,
-		      _intoa(*hostIpAddress, buf, sizeof(buf)),
+		      _addrtostr(hostIpAddress, buf, sizeof(buf)),
 		      sizeof(el->hostNumIpAddress));
 
 	      if(myGlobals.numericFlag == 0)
@@ -700,12 +708,14 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 		FD_SET(FLAG_BROADCAST_HOST, &el->flags);
 	    }
 	  }
+	  hostFound = 1;
+	  break;	
+	}else if (hostIpAddress == NULL){  /* Mac Addresses */
+	  hostFound = 1;
+	  break;
 	}
-
-	hostFound = 1;
-	break;
       } else if((hostIpAddress != NULL)
-		&& (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
+		&& (addrcmp(&el->hostIpAddress,hostIpAddress) == 0)) {
 	/* Spoofing or duplicated MAC address:
 	   two hosts with the same IP address and different MAC
 	   addresses
@@ -731,7 +741,7 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 	break;
       }
     } else {
-      if(el->hostIpAddress.s_addr == hostIpAddress->s_addr) {
+      if(addrcmp(&el->hostIpAddress,hostIpAddress) == 0) {
 	hostFound = 1;
 	break;
       }
@@ -825,8 +835,13 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 	/* This is packet that's being routed or belonging to a
 	   remote network that uses the same physical wire (or forged)*/
 	memcpy(el->lastEthAddress, ether_addr, LEN_ETHERNET_ADDRESS);
+	if (hostIpAddress->hostFamily == AF_INET)
+	  memcpy(el->ethAddress, &hostIpAddress->Ip4Address.s_addr, 4); /* Dummy/unique eth address */
+#ifdef INET6
+	else if (hostIpAddress->hostFamily == AF_INET6)
+	  memcpy(el->ethAddress, &hostIpAddress->Ip6Address.s6_addr[8], 4);
+#endif
 
-	memcpy(el->ethAddress, &hostIpAddress->s_addr, 4); /* Dummy/unique eth address */
 	FD_CLR(FLAG_SUBNET_LOCALHOST, &el->flags);
 
 	if(isPrivateAddress(hostIpAddress)) FD_SET(FLAG_PRIVATE_IP_ADDRESS, &el->flags);
@@ -847,17 +862,22 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 	  The trick below allows me not to duplicate the
 	  "<broadcast>" string in the code
 	*/
-	el->hostIpAddress.s_addr = INADDR_BROADCAST;
+	if (hostIpAddress->hostFamily == AF_INET)
+	  el->hostIp4Address.s_addr = INADDR_BROADCAST;
+#ifdef INET6
+	else if (hostIpAddress->hostFamily == AF_INET6)
+	  el->hostIp6Address = in6addr_linklocal_allnodes;
+#endif
 	FD_SET(FLAG_BROADCAST_HOST, &el->flags);
 	if(isMulticastAddress(&el->hostIpAddress))
 	  FD_SET(FLAG_MULTICAST_HOST, &el->flags);
 	strncpy(el->hostNumIpAddress,
-		_intoa(el->hostIpAddress, buf, sizeof(buf)),
+		_addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 		strlen(el->hostNumIpAddress));
 	strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
 
-	if((el->hostIpAddress.s_addr != 0x0) /* 0.0.0.0 */
-	   && (el->hostIpAddress.s_addr != 0xFFFFFFFF) /* 255.255.255.255 */
+	if((!addrnull(&el->hostIpAddress)) /* 0.0.0.0 */
+	   && (!addrfull(&el->hostIpAddress)) /* 255.255.255.255 */
 	   && isBroadcastAddress(&el->hostIpAddress)) {
 	  /*
 	    The sender of this packet has obviously a wrong netmask because:
@@ -867,7 +887,7 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 	  */
 
 	  traceEvent(CONST_TRACE_WARNING, "Wrong netmask detected [%s/%s]",
-		     _intoa(el->hostIpAddress, buf, sizeof(buf)),
+		     _addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 		     el->ethAddressString);
 	}
       }
@@ -896,16 +916,12 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
       if(myGlobals.dontTrustMACaddr && (ether_addr != NULL))
 	memcpy(el->lastEthAddress, ether_addr, LEN_ETHERNET_ADDRESS);
 
-      el->hostIpAddress.s_addr = hostIpAddress->s_addr;
+      addrcpy(&el->hostIpAddress,hostIpAddress);
       strncpy(el->hostNumIpAddress,
-	      _intoa(*hostIpAddress, buf, sizeof(buf)),
+	      _addrtostr(hostIpAddress, buf, sizeof(buf)),
 	      sizeof(el->hostNumIpAddress));
-
-      if(myGlobals.configurationMode == HOST_MODE) {
-	if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(FLAG_BROADCAST_HOST, &el->flags);
-	if(isMulticastAddress(&el->hostIpAddress)) FD_SET(FLAG_MULTICAST_HOST, &el->flags);
-      }
-
+      if(isBroadcastAddress(&el->hostIpAddress)) FD_SET(FLAG_BROADCAST_HOST, &el->flags);
+      if(isMulticastAddress(&el->hostIpAddress)) FD_SET(FLAG_MULTICAST_HOST, &el->flags);
       if(isPrivateAddress(hostIpAddress))        FD_SET(FLAG_PRIVATE_IP_ADDRESS,  &el->flags);
       if((ether_addr == NULL) && (isPseudoLocalAddress(hostIpAddress, actualDeviceId)))
 	FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
@@ -946,12 +962,14 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 
 #ifdef DEBUG
     {
-      char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
-      traceEvent(CONST_TRACE_INFO, "lookupHost(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]",
-		 idx, actualDeviceId,
-		 etheraddr_string(ether_addr, etherbuf), el->hostSymIpAddress,
-		 el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno,
-		 useIPAddressForSearching);
+      if ((hostIpAddress != NULL) && (hostIpAddress->hostFamily == AF_INET6)){
+	char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+	traceEvent(CONST_TRACE_INFO, "lookupHost(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]",
+		   idx, actualDeviceId,
+		   etheraddr_string(ether_addr, etherbuf), el->hostSymIpAddress,
+		   el->hostNumIpAddress, myGlobals.device[actualDeviceId].hostsno,
+		   useIPAddressForSearching);
+      }
     }
 #endif
   }

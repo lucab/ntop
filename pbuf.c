@@ -35,19 +35,19 @@
          char tag_data;
  };
 
- struct pppoe_hdr {
- #ifdef CFG_LITTLE_ENDIAN
-         u_int8_t ver : 4;
-         u_int8_t type : 4;
- #else
-         u_int8_t type : 4;
-         u_int8_t ver : 4;
- #endif
-         u_int8_t code;
-         u_int16_t sid;
-         u_int16_t length;
-         struct pppoe_tag tag;
- };
+struct pppoe_hdr {
+#ifdef CFG_LITTLE_ENDIAN
+  u_int8_t ver : 4;
+  u_int8_t type : 4;
+#else
+  u_int8_t type : 4;
+  u_int8_t ver : 4;
+#endif
+  u_int8_t code;
+  u_int16_t sid;
+  u_int16_t length;
+  struct pppoe_tag tag;
+};
 #endif
 
 static const struct pcap_pkthdr *h_save;
@@ -270,7 +270,7 @@ static IpFragment *searchFragment(HostTraffic *srcHost,
 
 void deleteFragment(IpFragment *fragment, int actualDeviceId) {
 
-  if (fragment->prev == NULL)
+  if(fragment->prev == NULL)
     myGlobals.device[actualDeviceId].fragmentList = fragment->next;
   else
     fragment->prev->next = fragment->next;
@@ -287,14 +287,14 @@ static void checkFragmentOverlap(HostTraffic *srcHost,
                                  u_int fragmentOffset,
                                  u_int dataLength,
 				 int actualDeviceId) {
-  if (fragment->fragmentOrder == FLAG_UNKNOWN_FRAGMENT_ORDER) {
+  if(fragment->fragmentOrder == FLAG_UNKNOWN_FRAGMENT_ORDER) {
     if(fragment->lastOffset > fragmentOffset)
       fragment->fragmentOrder = FLAG_DECREASING_FRAGMENT_ORDER;
     else
       fragment->fragmentOrder = FLAG_INCREASING_FRAGMENT_ORDER;
   }
 
-  if ((fragment->fragmentOrder == FLAG_INCREASING_FRAGMENT_ORDER
+  if((fragment->fragmentOrder == FLAG_INCREASING_FRAGMENT_ORDER
        && fragment->lastOffset+fragment->lastDataLength > fragmentOffset)
       ||
       (fragment->fragmentOrder == FLAG_DECREASING_FRAGMENT_ORDER
@@ -341,10 +341,10 @@ static u_int handleFragment(HostTraffic *srcHost,
 
   fragment = searchFragment(srcHost, dstHost, fragmentId, actualDeviceId);
 
-  if (fragment == NULL) {
+  if(fragment == NULL) {
     /* new fragment */
     fragment = (IpFragment*) malloc(sizeof(IpFragment));
-    if (fragment == NULL)
+    if(fragment == NULL)
       return(0); /* out of memory, not much we can do */
     memset(fragment, 0, sizeof(IpFragment));
     fragment->src = srcHost;
@@ -364,11 +364,11 @@ static u_int handleFragment(HostTraffic *srcHost,
   fragment->totalDataLength += dataLength;
   fragment->lastDataLength = dataLength;
 
-  if (fragmentOffset == 0) {
+  if(fragmentOffset == 0) {
     /* first fragment contains port numbers */
     fragment->sport = *sport;
     fragment->dport = *dport;
-  } else if (!(off & IP_MF)) /* last fragment->we know the total data size */
+  } else if(!(off & IP_MF)) /* last fragment->we know the total data size */
     fragment->expectedDataLength = fragmentOffset+dataLength;
 
 #ifdef FRAGMENT_DEBUG
@@ -376,7 +376,7 @@ static u_int handleFragment(HostTraffic *srcHost,
 #endif
 
   /* Now check if we have all the data needed for the statistics */
-  if ((fragment->sport != 0) && (fragment->dport != 0) /* first fragment rcvd */
+  if((fragment->sport != 0) && (fragment->dport != 0) /* first fragment rcvd */
       /* last fragment rcvd */
       && (fragment->expectedDataLength != 0)
       /* probably all fragments rcvd */
@@ -441,7 +441,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 	&& (broadcastHost(router)
 	    || multicastHost(router)
 	    || (!subnetLocalHost(router)) /* No IP: is this a special Multicast address ? */))
-       || (router->hostIpAddress.s_addr == dstHost->hostIpAddress.s_addr)
+       || (addrcmp(&router->hostIpAddress,&dstHost->hostIpAddress) == 0)
        || (memcmp(router->ethAddress, dstHost->ethAddress, LEN_ETHERNET_ADDRESS) == 0)
        )
       return;
@@ -468,7 +468,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 /* Reset the traffic at every hour */
 static void resetHourTraffic(u_short hourId) {
   int i;
-  
+
   for(i=0; i<myGlobals.numDevices; i++) {
     HostTraffic *el;
 
@@ -636,7 +636,7 @@ static u_char TTL_PREDICTOR(u_char x)		/* coded by awgn <awgn@antifork.org> */
     j <<= 1;
   } while ( i >>= 1 );
 
-  if ( c == 1 )
+  if( c == 1 )
     return x;
   else
     return ( j ? j : 0xff );
@@ -644,7 +644,7 @@ static u_char TTL_PREDICTOR(u_char x)		/* coded by awgn <awgn@antifork.org> */
 
 /* ************************************ */
 
-void incrementUnknownProto(HostTraffic *host, 
+void incrementUnknownProto(HostTraffic *host,
 			   int direction,
 			   u_int16_t eth_type,
 			   u_int16_t dsap,  u_int16_t ssap,
@@ -658,7 +658,7 @@ void incrementUnknownProto(HostTraffic *host,
       if(host->unknownProtoSent == NULL) return;
       memset(host->unknownProtoSent, 0, sizeof(UnknownProto)*MAX_NUM_UNKNOWN_PROTOS);
     }
-  
+
     for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++) {
       if(host->unknownProtoSent[i].protoType == 0) break;
       if((host->unknownProtoSent[i].protoType == 1) && eth_type) {
@@ -730,12 +730,23 @@ static void processIpPkt(const u_char *bp,
 			 int vlanId) {
   u_short sport=0, dport=0;
   struct ip ip;
+#ifdef INET6
+  struct ip6_hdr *ip6;
+  struct icmp6_hdr icmp6Pkt;
+  u_int advance;
+  u_char *cp;
+  u_char *snapend;
+  u_int icmp6len;
+#endif
+  u_int nh;
+  int fragmented = 0;
   struct tcphdr tp;
   struct udphdr up;
   struct icmp icmpPkt;
-  u_int hlen, tcpDataLength, udpDataLength, off, tcpUdpLen, idx;
+  u_int hlen, ip_len,tcpDataLength, udpDataLength, off, tcpUdpLen, idx;
   char *proto;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
+  HostAddr srcAddr, dstAddr; /* Protocol Independent addresses */
   u_char forceUsingIPaddress = 0;
   struct timeval tvstrct;
   u_char *theData, found = 0;
@@ -746,22 +757,47 @@ static void processIpPkt(const u_char *bp,
     * This occurs on SunOS 4.x at least.
     * Paul D. Smith <psmith@baynetworks.com>
     */
+
    memcpy(&ip, bp, sizeof(struct ip));
-   hlen = (u_int)ip.ip_hl * 4;
+#ifdef INET6
+   /* TODO: isipv6 = (ip.ip_v == 6)?1:0; */
+   if(ip.ip_v == 6) {
+     /* handle IPv6 packets */
+     ip6 = (struct ip6_hdr *)bp;
+   } else
+     ip6 = NULL;
+#endif
+
+#ifdef INET6
+   if(ip6)
+     hlen = sizeof(struct ip6_hdr);
+   else
+#endif
+     hlen = (u_int)ip.ip_hl * 4;
 
    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipPkts, 1);
-
-   if((bp != NULL) && (in_cksum((const u_short *)bp, hlen, 0) != 0)) {
-     incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.badChecksum, 1);
-     return;
-   }
+#ifdef INET6
+   if(ip6 == NULL)
+#endif
+     if((bp != NULL) && (in_cksum((const u_short *)bp, hlen, 0) != 0)) {
+       incrementTrafficCounter(&myGlobals.device[actualDeviceId].rcvdPktStats.badChecksum, 1);
+       return;
+     }
 
    /*
       Fix below courtesy of
       Christian Hammers <ch@westend.com>
    */
-   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipBytes, length /* ntohs(ip.ip_len) */);
+#ifdef INET6
+   if(ip6)
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv6Bytes, length /* ntohs(ip.ip_len) */);
+   else
+#endif
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipBytes, length /* ntohs(ip.ip_len) */);
 
+#ifdef INET6
+   if(ip6 == NULL) {
+#endif
    if(ip.ip_p == CONST_GRE_PROTOCOL_TYPE) {
      /*
        Cisco GRE (Generic Routing Encapsulation) Tunnels (RFC 1701, 1702)
@@ -788,53 +824,71 @@ static void processIpPkt(const u_char *bp,
        break;
      }
    }
+#ifdef INET6
+   }
+#endif
 
    if((ether_src == NULL) && (ether_dst == NULL)) {
      /* Ethernet-less protocols (e.g. PPP/RAW IP) */
      forceUsingIPaddress = 1;
    }
 
-   NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
-
-   if((!myGlobals.dontTrustMACaddr)
-      && isBroadcastAddress(&ip.ip_dst)
-      && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
-     /* forceUsingIPaddress = 1; */
-
-     srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
-     if(srcHost != NULL) {
-       if(vlanId != -1) srcHost->vlanId = vlanId;
-       if(myGlobals.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
-	 /* Dump the first packet only */
-	 char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
-
-	 traceEvent(CONST_TRACE_WARNING, "Host %s has a wrong netmask",
-		    etheraddr_string(ether_src, etherbuf));
-	 dumpSuspiciousPacket(actualDeviceId);
-       }
-       FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost->flags);
+#ifdef INET6
+   if(ip6) {
+     addrput(AF_INET6, &srcAddr, &ip6->ip6_src);
+     addrput(AF_INET6, &dstAddr, &ip6->ip6_dst);
+   } else
+#endif
+     {
+       NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
+       addrput(AF_INET, &srcAddr,&ip.ip_src.s_addr);
+       addrput(AF_INET, &dstAddr,&ip.ip_dst.s_addr);
      }
+
+#ifdef INET6
+   if(ip6 == NULL) {
+#endif
+     if((!myGlobals.dontTrustMACaddr)
+	&& isBroadcastAddress(&dstAddr)
+	&& (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
+       /* forceUsingIPaddress = 1; */
+
+       srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
+       if(srcHost != NULL) {
+	 if(vlanId != -1) srcHost->vlanId = vlanId;
+	 if(myGlobals.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
+	   /* Dump the first packet only */
+	   char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
+	   traceEvent(CONST_TRACE_WARNING, "Host %s has a wrong netmask",
+		      etheraddr_string(ether_src, etherbuf));
+	   dumpSuspiciousPacket(actualDeviceId);
+	 }
+	 FD_SET(FLAG_HOST_WRONG_NETMASK, &srcHost->flags);
+       }
+     }
+#ifdef INET6
    }
+#endif
 
    /*
      IMPORTANT:
      do NOT change the order of the lines below (see isBroadcastAddress call)
    */
-   dstHost = lookupHost(&ip.ip_dst, ether_dst, 1, 0, actualDeviceId);
+   dstHost = lookupHost(&dstAddr, ether_dst, 1 , 0 ,actualDeviceId);
    if(dstHost == NULL) {
      /* Sanity check */
      if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (2) [Low memory?]");
      lowMemoryMsgShown = 1;
      return;
    }
-   
-   srcHost = lookupHost(&ip.ip_src, ether_src,
-			 /*
+   srcHost = lookupHost(&srcAddr, ether_src,
+			/*
 			   Don't check for multihoming when
 			   the destination address is a broadcast address
 			 */
-			 (!isBroadcastAddress(&dstHost->hostIpAddress)),
-			 forceUsingIPaddress, actualDeviceId);
+			(!isBroadcastAddress(&dstAddr)),
+			forceUsingIPaddress, actualDeviceId);
 
    if(srcHost == NULL) {
      /* Sanity check */
@@ -844,31 +898,44 @@ static void processIpPkt(const u_char *bp,
 		dstHost = lookupHost(&ip.ip_dst, ether_dst) caused
 		srcHost to be freed */
    }
-   
-  if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
+
+   if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 
 #ifdef DEBUG
-  if(myGlobals.rFileName != NULL) {
-    static int numPkt=1;
+   if(myGlobals.rFileName != NULL) {
+     static int numPkt=1;
 
-    traceEvent(CONST_TRACE_INFO, "%d) %s -> %s",
-	       numPkt++,
+     traceEvent(CONST_TRACE_INFO, "%d) %s -> %s",
+		numPkt++,
 	       srcHost->hostNumIpAddress,
-	       dstHost->hostNumIpAddress);
-    fflush(stdout);
-  }
+		dstHost->hostNumIpAddress);
+     fflush(stdout);
+   }
 #endif
 
-  updateDevicePacketTTLStats(ip.ip_ttl, actualDeviceId);
+#ifdef INET6
+   if(ip6) {
+     updateDevicePacketTTLStats(ip6->ip6_hlim, actualDeviceId);
 
-  if(ip.ip_ttl != 255) {
-    /*
-      TTL can be calculated only when the packet
-      is originated by the sender
-    */
-    if((srcHost->minTTL == 0) || (ip.ip_ttl < srcHost->minTTL)) srcHost->minTTL = ip.ip_ttl;
-    if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
-  }
+     if(ip6->ip6_hlim != 255) {
+       if((srcHost->minTTL == 0) || (ip6->ip6_hlim < srcHost->minTTL)) srcHost->minTTL = ip6->ip6_hlim;
+      if((ip6->ip6_hlim > srcHost->maxTTL)) srcHost->maxTTL = ip6->ip6_hlim;
+     }
+
+   } else
+#endif
+    {
+      updateDevicePacketTTLStats(ip.ip_ttl, actualDeviceId);
+
+      if(ip.ip_ttl != 255) {
+	/*
+	  TTL can be calculated only when the packet
+	  is originated by the sender
+	*/
+	if((srcHost->minTTL == 0) || (ip.ip_ttl < srcHost->minTTL)) srcHost->minTTL = ip.ip_ttl;
+	if((ip.ip_ttl > srcHost->maxTTL)) srcHost->maxTTL = ip.ip_ttl;
+      }
+    }
 
   ctr.value = h->len;
   updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
@@ -878,9 +945,16 @@ static void processIpPkt(const u_char *bp,
     ctr.value = length;
     updateTrafficMatrix(srcHost, dstHost, ctr, actualDeviceId);
   }
-
-  incrementTrafficCounter(&srcHost->ipBytesSent, length),
-    incrementTrafficCounter(&dstHost->ipBytesRcvd, length);
+#ifdef INET6
+  if(ip6) {
+    incrementTrafficCounter(&srcHost->ipv6Sent, length),
+      incrementTrafficCounter(&dstHost->ipv6Rcvd, length);
+  } else
+#endif
+    {
+      incrementTrafficCounter(&srcHost->ipBytesSent, length),
+	incrementTrafficCounter(&dstHost->ipBytesRcvd, length);
+    }
 
   if(subnetPseudoLocalHost(srcHost)) {
     if(subnetPseudoLocalHost(dstHost)) {
@@ -901,18 +975,32 @@ static void processIpPkt(const u_char *bp,
     }
   }
 
-  off = ntohs(ip.ip_off);
+#ifdef INET6
+  if(ip6) {
+    if(ip6->ip6_nxt == IPPROTO_FRAGMENT) {
+      fragmented = 1;
+      nh = ip6->ip6_nxt;
+    }
+  } else
+#endif
+    {
+      off = ntohs(ip.ip_off);
+      if(off & 0x3fff) {
+	fragmented = 1;
+	nh = ip.ip_p;
+      }
+    }
 
-  if (off & 0x3fff) {
-    /*
-      This is a fragment: fragment handling is handled by handleFragment()
-      called below.
+      /*
+	This is a fragment: fragment handling is handled by handleFragment()
+	called below.
 
-      Courtesy of Andreas Pfaller
+	Courtesy of Andreas Pfaller
     */
+  if(fragmented) {
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].fragmentedIpBytes, length);
 
-    switch(ip.ip_p) {
+    switch(nh) {
     case IPPROTO_TCP:
       incrementTrafficCounter(&srcHost->tcpFragmentsSent, length),
 	incrementTrafficCounter(&dstHost->tcpFragmentsRcvd, length);
@@ -925,12 +1013,45 @@ static void processIpPkt(const u_char *bp,
       incrementTrafficCounter(&srcHost->icmpFragmentsSent, length),
 	incrementTrafficCounter(&dstHost->icmpFragmentsRcvd, length);
       break;
+#ifdef INET6
+    case IPPROTO_ICMPV6:
+      incrementTrafficCounter(&srcHost->icmp6FragmentsSent, length),
+	incrementTrafficCounter(&dstHost->icmp6FragmentsRcvd, length);
+      break;
+#endif
     }
   }
 
-  tcpUdpLen = ntohs(ip.ip_len) - hlen;
+#ifdef INET6
+  if(ip6) {
+    advance = sizeof(struct ip6_hdr);
+    cp = (unsigned char *) ip6;
+    snapend = (unsigned char *)(bp+length);
+    nh = ip6->ip6_nxt;
+    ip_len =  ntohs(ip6->ip6_plen);
+    tcpUdpLen = ip_len;
+  } else
+#endif
+    {
+      nh  = ip.ip_p;
+      ip_len = ntohs(ip.ip_len);
+      tcpUdpLen = ip_len - hlen;
+    }
 
-  switch(ip.ip_p) {
+#ifdef INET6
+ loop:
+  if(ip6)
+    cp +=advance;
+#endif
+
+  switch(nh) {
+#ifdef INET6
+  case IPPROTO_FRAGMENT:
+    advance = sizeof(struct ip6_frag);
+    if(snapend <= cp+advance) goto end;
+    nh = *cp;
+    goto loop;
+#endif
   case IPPROTO_TCP:
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpBytes, length);
 
@@ -954,7 +1075,7 @@ static void processIpPkt(const u_char *bp,
       if(tcpUdpLen >= (tp.th_off * 4)) {
 	/* Real lenght if we captured the full packet */
 	tcpDataLength = tcpUdpLen - (tp.th_off * 4);
-	
+
 	/* Actual lenght scaled with caplen */
 	tcpDataLength = h->caplen - (h->len - tcpDataLength);
 
@@ -973,11 +1094,19 @@ static void processIpPkt(const u_char *bp,
 
 	Courtesy of Andreas Pfaller
       */
-      if(myGlobals.enableFragmentHandling && (off & 0x3fff)) {
+      if(myGlobals.enableFragmentHandling && (fragmented)) {
 	/* Handle fragmented packets */
-	length = handleFragment(srcHost, dstHost, &sport, &dport,
-				ntohs(ip.ip_id), off, length,
-				ntohs(ip.ip_len) - hlen, actualDeviceId);
+#ifdef INET6
+	if(ip6)
+	  length = handleFragment(srcHost, dstHost, &sport,&dport,
+				  (u_short)(ip6->ip6_flow & 0xffff),fragmented,
+				  length,ntohs(ip6->ip6_plen),
+				  actualDeviceId);
+	else
+#endif
+	  length = handleFragment(srcHost, dstHost, &sport, &dport,
+				  ntohs(ip.ip_id), off, length,
+				  ip_len - hlen, actualDeviceId);
       }
 
      if(srcHost->fingerprint == NULL) {
@@ -987,17 +1116,21 @@ static void processIpPkt(const u_char *bp,
 	char WSS[3], _MSS[5];
 	struct tcphdr *tcp = (struct tcphdr*)(bp+hlen);
 	u_char *tcp_opt = (u_char *)(tcp + 1);
-	u_char *tcp_data = (u_char *)((int)tcp + tp.th_off * 4);
+	u_char *tcp_data = (u_char *)((int)tcp + tcp->th_off * 4);
 
-	if (tcp->th_flags & TH_SYN)   /* only SYN or SYN-2ACK packets */
+	if(tcp->th_flags & TH_SYN)   /* only SYN or SYN-2ACK packets */
 	  {
-	    if (tcpUdpLen > 0) {
-
-	      if(ntohs(ip.ip_off) & IP_DF) D = 1;   /* don't fragment bit is set */
+	    if(tcpUdpLen > 0) {
+#ifdef INET6
+	      if(ip6) {
+		if(!fragmented) D = 1;
+	      } else
+#endif
+		if(ntohs(ip.ip_off) & IP_DF) D = 1;   /* don't fragment bit is set */
 
 	      WIN = ntohs(tcp->th_win);  /* TCP window size */
 
-	      if (tcp_data != tcp_opt) /* there are some tcp_option to be parsed */
+	      if(tcp_data != tcp_opt) /* there are some tcp_option to be parsed */
 		{
 		  u_char *opt_ptr = tcp_opt;
 
@@ -1033,17 +1166,17 @@ static void processIpPkt(const u_char *bp,
 			  break;
 			default:
 			  opt_ptr++;
-			  if (*opt_ptr > 0) 
+			  if(*opt_ptr > 0)
 			    opt_ptr += (*opt_ptr - 1);
 			  break;
 			}
 		    }
 		}
 
-	      if (WS == -1) sprintf(WSS, "WS");
+	      if(WS == -1) sprintf(WSS, "WS");
 	      else snprintf(WSS, sizeof(WSS), "%02d", WS);
 
-	      if (MSS == -1) sprintf(_MSS, "_MSS");
+	      if(MSS == -1) sprintf(_MSS, "_MSS");
 	      else snprintf(_MSS, sizeof(_MSS), "%04X", MSS);
 
 	      snprintf(fingerprint, sizeof(fingerprint),
@@ -1098,16 +1231,24 @@ static void processIpPkt(const u_char *bp,
 	}
 
 	if(nonFullyRemoteSession) {
-	  theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
+#ifdef INET6
+	  if(ip6)
+	    theSession = handleTCPSession(h, fragmented, tp.th_win,
 					srcHost, sport, dstHost,
-					dport, ntohs(ip.ip_len), &tp, tcpDataLength,
+					dport, ntohs(ip6->ip6_plen), &tp, tcpDataLength,
 					theData, actualDeviceId);
+	  else
+#endif
+	    theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
+					  srcHost, sport, dstHost,
+					  dport, ip_len, &tp, tcpDataLength,
+					  theData, actualDeviceId);
 	  if(theSession == NULL)
 	    isPassiveSess = 0;
 	  else
 	    isPassiveSess = theSession->passiveFtpSession;
 	}
-	
+
 	/* choose most likely port for protocol traffic accounting
 	 * by trying lower number port first. This is based
 	 * on the assumption that lower port numbers are more likely
@@ -1127,7 +1268,7 @@ static void processIpPkt(const u_char *bp,
 	   && ((!((sportIdx != -1) && (dportIdx == -1)))
 	       || ((sportIdx == -1) && (dportIdx != -1)))) {
 	  /* traceEvent(CONST_TRACE_INFO, "[1] sportIdx(%d)=%d - dportIdx(%d)=%d", sport, sportIdx, dport, dportIdx); */
-	  
+
 	  if(handleIP(dport, srcHost, dstHost, length, isPassiveSess,
 		      theSession != NULL ? theSession->isP2P : 0, actualDeviceId) == -1)
 	    handleIP(sport, srcHost, dstHost, length, isPassiveSess,
@@ -1142,7 +1283,13 @@ static void processIpPkt(const u_char *bp,
 	}
       }
     }
+#ifdef INET6
+    if(ip6)
+      goto end;
+    else
+#endif
     break;
+
 
   case IPPROTO_UDP:
     proto = "UDP";
@@ -1167,8 +1314,8 @@ static void processIpPkt(const u_char *bp,
       sport = ntohs(up.uh_sport);
       dport = ntohs(up.uh_dport);
 
-      if(!(off & 0x3fff)) {
-	/* Not fragmented */      
+      if(!(fragmented)) {
+	/* Not fragmented */
 	if(((sport == 53) || (dport == 53) /* domain */)) {
 	  short isRequest = 0, positiveReply = 0;
 	  u_int16_t transactionId = 0;
@@ -1277,8 +1424,7 @@ static void processIpPkt(const u_char *bp,
 	    }
 	  } else {
 	    /* no packet decoding (let's speculate a bit) */
-	    if(myGlobals.configurationMode == HOST_MODE)
-	      FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
+	    FD_SET(FLAG_NAME_SERVER_HOST, &srcHost->flags);
 	  }
 	} else {
 	  if(myGlobals.enablePacketDecoding)
@@ -1294,11 +1440,18 @@ static void processIpPkt(const u_char *bp,
 
 	Courtesy of Andreas Pfaller
       */
-      if(myGlobals.enableFragmentHandling && (off & 0x3fff)) {
+      if(myGlobals.enableFragmentHandling && (fragmented)) {
 	/* Handle fragmented packets */
-	length = handleFragment(srcHost, dstHost, &sport, &dport,
+#ifdef INET6
+	if(ip6)
+	  length = handleFragment(srcHost, dstHost, &sport, &dport,
+				  (u_short)(ip6->ip6_flow & 0xffff), fragmented, length,
+				  ntohs(ip6->ip6_plen), actualDeviceId);
+	else
+#endif
+	  length = handleFragment(srcHost, dstHost, &sport, &dport,
 				ntohs(ip.ip_id), off, length,
-				ntohs(ip.ip_len) - hlen, actualDeviceId);	
+				ip_len - hlen, actualDeviceId);
       }
 
       if((sport > 0) || (dport > 0)) {
@@ -1349,13 +1502,23 @@ static void processIpPkt(const u_char *bp,
         }
 
 	if(nonFullyRemoteSession)
-	  handleUDPSession(h, (off & 0x3fff),
+	  handleUDPSession(h, fragmented,
 			   srcHost, sport, dstHost, dport, udpDataLength,
 			   (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
-	sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip.ip_len), actualDeviceId);
+#ifdef INET6
+	if(ip6)
+	  sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip6->ip6_plen), actualDeviceId);
+	else
+#endif
+	  sendUDPflow(srcHost, dstHost, sport, dport, ntohs(ip.ip_len), actualDeviceId);
       }
     }
-    break;
+#ifdef INET6
+    if(ip6)
+      goto end;
+    else
+#endif
+      break;
 
   case IPPROTO_ICMP:
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpBytes, length);
@@ -1407,7 +1570,7 @@ static void processIpPkt(const u_char *bp,
 	incrementTrafficCounter(&srcHost->icmpInfo->icmpMsgSent[icmpPkt.icmp_type], 1);
 
 	if(dstHost->icmpInfo == NULL) {
-	  if ( (dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
+	  if( (dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
 	  memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
 	}
 
@@ -1548,39 +1711,203 @@ static void processIpPkt(const u_char *bp,
       sendICMPflow(srcHost, dstHost, ntohs(ip.ip_len), actualDeviceId);
     }
     break;
+#ifdef INET6
+  case IPPROTO_ICMPV6:
+    if(ip6 == NULL) {
+      if(myGlobals.enableSuspiciousPacketDump) {
+	traceEvent(CONST_TRACE_WARNING,"Protocol violation: ICMPv6 protocol in IPv4 packet: %s->%s",
+		   srcHost->hostSymIpAddress,
+		   dstHost->hostSymIpAddress);
+	dumpSuspiciousPacket(actualDeviceId);
+      }
+      goto end;
+    }
+    incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmp6Bytes, length);
+    if(ip6->ip6_plen)
+      icmp6len = ntohs(ip6->ip6_plen); /* TODO: considering the pointers cp et bp*/
+    if(icmp6len < sizeof(struct icmp6_hdr)) {
+      if(myGlobals.enableSuspiciousPacketDump) {
+	traceEvent(CONST_TRACE_WARNING, "Malformed ICMPv6 pkt %s->%s detected (packet too short)",
+		   srcHost->hostSymIpAddress,
+		   dstHost->hostSymIpAddress);
+	dumpSuspiciousPacket(actualDeviceId);
 
+	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->malformedPktsRcvd, srcHost, actualDeviceId);
+      }
+    } else {
+      proto = "ICMPv6";
+      memcpy(&icmp6Pkt, bp+hlen, sizeof(struct icmp6_hdr));
+      incrementTrafficCounter(&srcHost->icmp6Sent, length);
+      incrementTrafficCounter(&dstHost->icmp6Rcvd, length);
+
+      if(fragmented) {
+	char *fmt = "Detected ICMPv6 fragment [%s -> %s] (network attack attempt?)";
+
+	incrementTrafficCounter(&srcHost->icmp6FragmentsSent, length),
+	  incrementTrafficCounter(&dstHost->icmp6FragmentsRcvd, length);
+	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	incrementUsageCounter(&srcHost->secHostPkts->icmpFragmentSent, dstHost, actualDeviceId);
+	incrementUsageCounter(&dstHost->secHostPkts->icmpFragmentRcvd, srcHost, actualDeviceId);
+	if(myGlobals.enableSuspiciousPacketDump) {
+	  traceEvent(CONST_TRACE_WARNING, fmt,
+		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
+	  dumpSuspiciousPacket(actualDeviceId);
+	}
+      }
+
+      /* ************************************************************* */
+
+      if(icmp6Pkt.icmp6_type <= ICMP6_MAXTYPE) {
+	short dumpPacket = 1;
+	if(srcHost->icmpInfo == NULL) {
+	  if( (srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
+	  memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
+	}
+
+	incrementTrafficCounter(&srcHost->icmpInfo->icmpMsgSent[icmp6Pkt.icmp6_type], 1);
+	if(dstHost->icmpInfo == NULL) {
+	  if( (dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo))) == NULL) return;
+	  memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
+	}
+
+	incrementTrafficCounter(&dstHost->icmpInfo->icmpMsgRcvd[icmp6Pkt.icmp6_type], 1);
+	switch (icmp6Pkt.icmp6_type) {
+	case ICMP6_ECHO_REPLY:
+	case ICMP6_ECHO_REQUEST:
+	  /* Do not log anything */
+	  dumpPacket = 0;
+	  break;
+	case ICMP6_DST_UNREACH:
+	case ND_REDIRECT:
+	case ICMP6_TIME_EXCEEDED:
+	case ICMP6_PARAM_PROB:
+	case ICMP6_NI_QUERY:
+	case ICMP6_NI_REPLY:
+	  if(myGlobals.enableSuspiciousPacketDump) {
+	    dumpSuspiciousPacket(actualDeviceId);
+	  }
+		      break;
+	}
+
+      }
+
+      /* ************************************************************* */
+
+      if(subnetPseudoLocalHost(srcHost))
+	if(subnetPseudoLocalHost(dstHost))
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.local, length);
+	else
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.local2remote, length);
+      else /* srcHost is remote */
+	if(subnetPseudoLocalHost(dstHost))
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote2local, length);
+	else
+	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote, length);
+
+      if(icmp6Pkt.icmp6_type == ND_ROUTER_ADVERT) {
+	HostTraffic *router;
+	router = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
+	FD_SET(FLAG_GATEWAY_HOST, &router->flags);
+      }
+
+      if(icmp6Pkt.icmp6_type == ICMP6_DST_UNREACH /* Destination Unreachable */) {
+	struct ip6_hdr *oip = (struct ip6_hdr *)&icmp6Pkt+1;
+
+	switch(icmp6Pkt.icmp6_code) {
+	case ICMP6_DST_UNREACH_NOPORT: /* Port Unreachable */
+	  memcpy(&dport, ((u_char *)bp+hlen+30), sizeof(dport));
+	  dport = ntohs(dport);
+	  switch (oip->ip6_nxt) {
+	  case IPPROTO_TCP:
+	    if(myGlobals.enableSuspiciousPacketDump)
+	      traceEvent(CONST_TRACE_WARNING,
+			 "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
+			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	    /* Simulation of rejected TCP connection */
+	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	    incrementUsageCounter(&srcHost->secHostPkts->rejectedTCPConnSent, dstHost, actualDeviceId);
+	    incrementUsageCounter(&dstHost->secHostPkts->rejectedTCPConnRcvd, srcHost, actualDeviceId);
+	    break;
+
+	  case IPPROTO_UDP:
+	    if(myGlobals.enableSuspiciousPacketDump)
+	      traceEvent(CONST_TRACE_WARNING,
+			 "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
+			 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	    allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	    incrementUsageCounter(&dstHost->secHostPkts->udpToClosedPortSent, srcHost, actualDeviceId);
+	    incrementUsageCounter(&srcHost->secHostPkts->udpToClosedPortRcvd, dstHost, actualDeviceId);
+	    break;
+	  }
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&srcHost->secHostPkts->icmpPortUnreachSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->icmpPortUnreachRcvd, srcHost, actualDeviceId);
+	  break;
+
+	case ICMP6_DST_UNREACH_NOROUTE:
+	case ICMP6_DST_UNREACH_ADDR:
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&srcHost->secHostPkts->icmpHostNetUnreachSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->icmpHostNetUnreachRcvd, srcHost, actualDeviceId);
+	  break;
+
+	case ICMP6_DST_UNREACH_ADMIN:    /* Administratively Prohibited */
+	  if(myGlobals.enableSuspiciousPacketDump)
+	    traceEvent(CONST_TRACE_WARNING, /* See http://www.packetfactory.net/firewalk/ */
+		       "Host [%s] sent ICMPv6 Administratively Prohibited packet to host [%s]"
+		       " (Firewalking scan attempt?)",
+		       dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
+	  allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
+	  incrementUsageCounter(&srcHost->secHostPkts->icmpAdminProhibitedSent, dstHost, actualDeviceId);
+	  incrementUsageCounter(&dstHost->secHostPkts->icmpAdminProhibitedRcvd, srcHost, actualDeviceId);
+	  break;
+	}
+	if(myGlobals.enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
+      }
+
+      sendICMPflow(srcHost, dstHost, ntohs(ip6->ip6_plen), actualDeviceId);
+    }
+    break;
+    
+#endif
   default:
     if(srcHost->ipProtosList != NULL) {
-      protoList = myGlobals.ipProtosList;    
+      protoList = myGlobals.ipProtosList;
       idx = 0;
-      
+
       while(protoList != NULL) {
-	if((protoList->protocolId == ip.ip_p) 
-	   || ((protoList->protocolIdAlias != 0) && (protoList->protocolIdAlias == ip.ip_p))) {
+	if((protoList->protocolId == nh)
+	   || ((protoList->protocolIdAlias != 0) && (protoList->protocolIdAlias == nh))) {
 	  if(srcHost->ipProtosList) incrementTrafficCounter(&srcHost->ipProtosList[idx].sent, length);
 	  if(dstHost->ipProtosList) incrementTrafficCounter(&dstHost->ipProtosList[idx].rcvd, length);
-	  if(myGlobals.device[actualDeviceId].ipProtosList) 
+	  if(myGlobals.device[actualDeviceId].ipProtosList)
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtosList[idx], length);
 	  found = 1;
 	  break;
 	}
-	
+
 	idx++, protoList = protoList->next;
       }
     }
 
-   if(!found) {
+    if(!found) {
      proto = "IP (Other)";
      incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherIpBytes, length);
      sport = dport = 0;
      incrementTrafficCounter(&srcHost->otherSent, length);
-     incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, ip.ip_p);
+     incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, nh);
      incrementTrafficCounter(&dstHost->otherRcvd, length);
-     incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, ip.ip_p);
-     sendOTHERflow(srcHost, dstHost, ip.ip_p, ntohs(ip.ip_len), actualDeviceId);
-   }
+     incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, 0 /* dsap */, 0 /* ssap */, nh);
+     sendOTHERflow(srcHost, dstHost, nh, ip_len, actualDeviceId);
+    }
    break;
   }
+
+#ifdef INET6
+ end:
+#endif
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "IP=%d TCP=%d UDP=%d ICMP=%d (len=%d)",
@@ -1595,6 +1922,7 @@ static void processIpPkt(const u_char *bp,
 /* ************************************ */
 
 #ifdef CFG_MULTITHREADED
+
 void queuePacket(u_char *_deviceId,
 		 const struct pcap_pkthdr *h,
 		 const u_char *p) {
@@ -1822,7 +2150,7 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
 
 /* ************************************ */
 
-static void addNonIpTrafficInfo(HostTraffic *el, u_int16_t proto, 
+static void addNonIpTrafficInfo(HostTraffic *el, u_int16_t proto,
 				u_short len, u_int direction) {
   NonIpProtoTrafficInfo *nonIp;
   int numIterations;
@@ -1831,9 +2159,9 @@ static void addNonIpTrafficInfo(HostTraffic *el, u_int16_t proto,
     goto  notFoundProto;
   else
     nonIp = el->nonIpProtoTrafficInfos;
-  
+
   numIterations = 0;
-  
+
   while(nonIp != NULL) {
     if(nonIp->protocolId == proto)
       break;
@@ -1969,6 +2297,7 @@ void processPacket(u_char *_deviceId,
 #endif
 
   updateDevicePacketStats(length, actualDeviceId);
+
 
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetPkts, 1);
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetBytes, h->len);
@@ -2473,9 +2802,9 @@ void processPacket(u_char *_deviceId,
 		if(srcHost->nonIPTraffic == NULL) srcHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 		if(dstHost->nonIPTraffic == NULL) dstHost->nonIPTraffic = (NonIPTraffic*)calloc(1, sizeof(NonIPTraffic));
 
-		srcHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.srcNet), 
+		srcHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.srcNet),
 		  srcHost->nonIPTraffic->atNode = ddpHeader.srcNode;
-		dstHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.dstNet), 
+		dstHost->nonIPTraffic->atNetwork = ntohs(ddpHeader.dstNet),
 		  dstHost->nonIPTraffic->atNode = ddpHeader.dstNode;
 
 		if(ddpHeader.ddpType == 2) {
@@ -2541,9 +2870,9 @@ void processPacket(u_char *_deviceId,
 		incrementTrafficCounter(&dstHost->otherRcvd, length);
 		incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
 
-		incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */, 
+		incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				      llcHeader.ssap /* ssap */, 0 /* ip */);
-		incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */, 
+		incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				      llcHeader.ssap /* ssap */, 0 /* ip */);
 	      }
 	    } else if(myGlobals.enablePacketDecoding
@@ -2565,9 +2894,9 @@ void processPacket(u_char *_deviceId,
 	      incrementTrafficCounter(&srcHost->otherSent, length);
 	      incrementTrafficCounter(&dstHost->otherRcvd, length);
 	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
-	      incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */, 
+	      incrementUnknownProto(srcHost, 0 /* sent */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
-	      incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */, 
+	      incrementUnknownProto(dstHost, 1 /* rcvd */, 0 /* eth */, llcHeader.dsap /* dsap */,
 				    llcHeader.ssap /* ssap */, 0 /* ip */);
 	    }
 
@@ -2575,19 +2904,19 @@ void processPacket(u_char *_deviceId,
 	    updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
 	  }
 	}
-      } else if(eth_type == ETHERTYPE_IP) {
+      } else if((eth_type == ETHERTYPE_IP) || (eth_type == ETHERTYPE_IPv6)) {
 	if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU))
 	  processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	else
 	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
-      } else if (eth_type == 0x8864) /* PPPOE */ {
+      } else if(eth_type == 0x8864) /* PPPOE */ {
         /* PPPoE - Courtesy of Andreas Pfaller Feb2003
          *   This strips the PPPoE encapsulation for traffic transiting the network.
          */
         struct pppoe_hdr *pppoe_hdr=(struct pppoe_hdr *) (p+hlen);
         int protocol=ntohs(*((int *) (p+hlen+6)));
 
-        if (pppoe_hdr->ver==1 && pppoe_hdr->type==1 && pppoe_hdr->code==0 &&
+        if(pppoe_hdr->ver==1 && pppoe_hdr->type==1 && pppoe_hdr->code==0 &&
             protocol==0x0021) {
           hlen+=8; /* length of pppoe header */
 	  processIpPkt(p+hlen, h, length, NULL, NULL, actualDeviceId, vlanId);
@@ -2595,7 +2924,7 @@ void processPacket(u_char *_deviceId,
       } else  /* Non IP */ if(!myGlobals.dontTrustMACaddr) {
 	/* MAC addresses are meaningful here */
 	struct ether_arp arpHdr;
-	struct in_addr addr;
+	HostAddr addr;
 	TrafficCounter ctr;
 
 	if(length > hlen)
@@ -2635,18 +2964,20 @@ void processPacket(u_char *_deviceId,
 
 	    switch(arpOp) {
 	    case ARPOP_REPLY: /* ARP REPLY */
-	      memcpy(&addr.s_addr, arpHdr.arp_tpa, sizeof(addr.s_addr));
-	      addr.s_addr = ntohl(addr.s_addr);
+	      addr.hostFamily = AF_INET;
+	      memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_tpa, sizeof(struct in_addr));
+	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
 	      dstHost = lookupHost(&addr, (u_char*)&arpHdr.arp_tha, 0, 0, actualDeviceId);
-	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
-	      addr.s_addr = ntohl(addr.s_addr);
+	      memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_spa, sizeof(struct in_addr));
+	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
 	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
 	      if(srcHost != NULL) incrementTrafficCounter(&srcHost->arpReplyPktsSent, 1);
 	      if(dstHost != NULL) incrementTrafficCounter(&dstHost->arpReplyPktsRcvd, 1);
 	      /* DO NOT ADD A break ABOVE ! */
 	    case ARPOP_REQUEST: /* ARP request */
-	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
-	      addr.s_addr = ntohl(addr.s_addr);
+	      addr.hostFamily = AF_INET;
+	      memcpy(&addr.Ip4Address.s_addr, arpHdr.arp_spa, sizeof(struct in_addr));
+	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
 	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
 	      if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) incrementTrafficCounter(&srcHost->arpReqPktsSent, 1);
 	    }
@@ -2669,6 +3000,7 @@ void processPacket(u_char *_deviceId,
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].atalkBytes, length);
 	  break;
 	case ETHERTYPE_IPv6:
+	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId, vlanId);
 	  incrementTrafficCounter(&srcHost->ipv6Sent, length);
 	  incrementTrafficCounter(&dstHost->ipv6Rcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipv6Bytes, length);
@@ -2683,9 +3015,9 @@ void processPacket(u_char *_deviceId,
 	  incrementTrafficCounter(&srcHost->otherSent, length);
 	  incrementTrafficCounter(&dstHost->otherRcvd, length);
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherBytes, length);
-	  incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */, 
+	  incrementUnknownProto(srcHost, 0 /* sent */, eth_type /* eth */, 0 /* dsap */,
 				0 /* ssap */, 0 /* ip */);
-	  incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */, 
+	  incrementUnknownProto(dstHost, 1 /* rcvd */, eth_type /* eth */, 0 /* dsap */,
 				0 /* ssap */, 0 /* ip */);
 	  break;
 	}

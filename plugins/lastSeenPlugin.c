@@ -33,8 +33,8 @@ static GDBM_FILE LsDB = NULL;
 static int disabled = 0;
 
 typedef struct LsHostInfo {
-  struct in_addr HostIpAddress;
-  time_t         LastUpdated;
+  HostAddr HostIpAddress;
+  time_t   LastUpdated;
 } LsHostInfo;
 
 typedef struct LsHostNote {
@@ -70,7 +70,7 @@ static void handleLsPacket(u_char *_deviceId,
   traceEvent(CONST_TRACE_INFO, "->%s [%x]", intoa(ip.ip_dst), ip.ip_dst.s_addr);
 #endif
 
-  rc = isPseudoLocalAddress(&ip.ip_src, deviceId);
+  rc = in_isPseudoLocalAddress(&ip.ip_src, deviceId);
 
   if(rc == 0) 
     return;
@@ -79,7 +79,8 @@ static void handleLsPacket(u_char *_deviceId,
   traceEvent(CONST_TRACE_INFO, "-->>>>%s [%d]", intoa(ip.ip_src), rc); 
 #endif
 
-  HostI.HostIpAddress = ip.ip_src;
+  addrinit(&HostI.HostIpAddress);
+  HostI.HostIpAddress.addr._hostIp4Address = ip.ip_src;
   HostI.LastUpdated = myGlobals.actTime;
 
   if(snprintf(tmpStr, sizeof(tmpStr), "%u", (unsigned) ip.ip_src.s_addr) < 0)
@@ -111,11 +112,13 @@ static int SortLS(const void *_a, const void *_b) {
     traceEvent(CONST_TRACE_WARNING, "SortLS() (3)");
     return(0);
   }
-  n1 = (*a).HostIpAddress.s_addr;
-  n2 = (*b).HostIpAddress.s_addr;
-  if ( n1==n2 )
+
+  n1 = (*a).HostIpAddress.Ip4Address.s_addr;
+  n2 = (*b).HostIpAddress.Ip4Address.s_addr;
+  
+  if (n1 == n2)
     return(0);
-  else if ( n1 > n2 )
+  else if(n1 > n2)
     return(-1);
   else
     return(1);
@@ -200,12 +203,11 @@ static void handleLsHTTPrequest(char* url) {
   sendString("<CENTER><TABLE BORDER>\n");
   sendString("<TR "TR_ON"><TH "TH_BG">Host</TH><TH "TH_BG">Address</TH><TH "TH_BG">LastSeen</TH><TH "TH_BG">Comments</TH><TH "TH_BG">Options</TH></TR>\n");
   while ( entry >= 0 ) {
-    struct in_addr addr;
+    HostAddr addr;
 
     /* Getting notes from the DN */
 
-    if(snprintf(tmpStr, sizeof(tmpStr), "N_%u", 
-		(unsigned)tablehost[entry].HostIpAddress.s_addr) < 0) 
+    if(snprintf(tmpStr, sizeof(tmpStr), "N_%u", (unsigned)tablehost[entry].HostIpAddress.Ip4Address.s_addr) < 0) 
       BufferTooShort();
 
     key_data.dptr = tmpStr;
@@ -219,7 +221,7 @@ static void handleLsHTTPrequest(char* url) {
     }
     /* ================================================================== */
 
-    addr.s_addr = tablehost[entry].HostIpAddress.s_addr;
+    addrcpy(&addr, &tablehost[entry].HostIpAddress);
     HostT = findHostByNumIP(addr, myGlobals.actualReportDeviceId);
     if ( HostT )
       tmp = makeHostLink(HostT,FLAG_HOSTLINK_HTML_FORMAT,0,0);
@@ -236,11 +238,11 @@ static void handleLsHTTPrequest(char* url) {
 		"<A HREF=\"/plugins/LastSeen?N%u\">Notes</A></TH></TR>\n",
 		getRowColor(),
 		tmp,
-		intoa(tablehost[entry].HostIpAddress),
+		addrtostr(&tablehost[entry].HostIpAddress),
 		tmpTime,
 		HostN.note,
-		(unsigned) tablehost[entry].HostIpAddress.s_addr,
-		(unsigned) tablehost[entry].HostIpAddress.s_addr) < 0)
+		(unsigned) tablehost[entry].HostIpAddress.Ip4Address.s_addr,
+		(unsigned) tablehost[entry].HostIpAddress.Ip4Address.s_addr) < 0)
       BufferTooShort();
     sendString(tmpStr);
     entry--;

@@ -144,6 +144,12 @@
 /* Define to 1 if you have the <glib.h> header file. */
 #undef HAVE_GLIB_H
 
+/* Define to 1 if you have the <icmp6.h> header file. */
+#undef HAVE_ICMP6_H
+
+/* use sysctl support for fetch interface informations */
+#undef HAVE_IFLIST_SYSCTL
+
 /* Define to 1 if you have the <if.h> header file. */
 #undef HAVE_IF_H
 
@@ -167,6 +173,9 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the <ip6.h> header file. */
+#undef HAVE_IP6_H
 
 /* Define to 1 if you have the <langinfo.h> header file. */
 #undef HAVE_LANGINFO_H
@@ -572,6 +581,9 @@
 
 /* Define to 1 if you have the <zlib.h> header file. */
 #undef HAVE_ZLIB_H
+
+/* Enable/disable ipv6 support */
+#undef INET6
 
 /* Define to 1 if `lstat' dereferences a symlink specified with a trailing
    slash. */

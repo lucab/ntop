@@ -349,7 +349,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     return("&nbsp;");
 
   if(broadcastHost(el)
-     || ((el->hostIpAddress.s_addr == 0) && (el->ethAddressString[0] == '\0'))) {
+     || (addrnull(&el->hostIpAddress) && (el->ethAddressString[0] == '\0'))) {
     FD_SET(FLAG_BROADCAST_HOST, &el->flags); /* Just to be safe */
     if(mode == FLAG_HOSTLINK_HTML_FORMAT) 
       return("<TH "TH_BG" ALIGN=LEFT>&lt;broadcast&gt;</TH>");
@@ -602,7 +602,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
   if(stat(path, &buf) == 0)
     ret = getCountryIconURL(el->fullDomainName, FALSE);
   else
-    ret = getCountryIconURL(el->dotDomainName, FALSE);
+    ret = getCountryIconURL(el->dotDomainName, el->dotDomainNameIsFallback);
 
   if(ret == NULL)
     ret = "&nbsp;";
@@ -795,7 +795,7 @@ static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* statu
   if(status == NULL) {
     sendString("(nil)");
   } else {
-    if (snprintf(tmpBuf, sizeof(tmpBuf), "%s", status) < 0)
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", status) < 0)
       BufferTooShort();
     tmpStr = strtok_r(tmpBuf, "\n", &strtokState);
     while(tmpStr != NULL) {
@@ -2972,7 +2972,7 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
     sendString("<CENTER><TABLE BORDER=\"0\">"
 	       "<TR>"
 	       "<TD COLSPAN=5 align=\"center\">The color of the host link");
-    if (isInfo == 1)
+    if(isInfo == 1)
         sendString(" on many pages");
     sendString(" indicates how recently the host was FIRST seen"
                "</TR>"
@@ -4057,7 +4057,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     int countBadGuys=0;
 
     for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
-      if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr != 0) {
+      if(!addrnull(&myGlobals.weDontWantToTalkWithYou[i].addr)) {
 	if(++countBadGuys == 1) {
 	  sendString(texthtml("\n\nIP Address reject list\n\n",
 			      "<tr><th colspan=2 "DARK_BG">IP Address reject list</th></tr>\n"));
@@ -4069,7 +4069,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 	}
       
 	if(snprintf(buf, sizeof(buf), "%s", 
-		    _intoa(myGlobals.weDontWantToTalkWithYou[i].addr, buf3, sizeof(buf3))) < 0)
+		    _addrtostr(&myGlobals.weDontWantToTalkWithYou[i].addr, buf3, sizeof(buf3))) < 0)
 	  BufferTooShort();
 	if(snprintf(buf2, sizeof(buf2), "%d", myGlobals.weDontWantToTalkWithYou[i].count) < 0)
 	  BufferTooShort();
@@ -4355,10 +4355,10 @@ int printNtopLogReport(int printAsText) {
     for (i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++) {
         j = (myGlobals.logViewNext + i) % CONST_LOG_VIEW_BUFFER_SIZE;
         
-        if (myGlobals.logView[j] != NULL) {
+        if(myGlobals.logView[j] != NULL) {
             sendString(myGlobals.logView[j]);
             lines++;
-            if (myGlobals.logView[j][strlen(myGlobals.logView[j])-1] != '\n');
+            if(myGlobals.logView[j][strlen(myGlobals.logView[j])-1] != '\n');
                 sendString("\n");
         }
     }
@@ -4633,7 +4633,7 @@ void printNtopProblemReport(void) {
        (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0)) {
       snprintf(buf, sizeof(buf), "     Received (pcap):%10u\n", pcapStats.ps_recv);
       sendString(buf);
-      if (pcapStats.ps_ifdrop > 0) {
+      if(pcapStats.ps_ifdrop > 0) {
         snprintf(buf, sizeof(buf), "     Dropped (NIC):  %10u\n", pcapStats.ps_ifdrop);
         sendString(buf);
       }
@@ -4697,8 +4697,13 @@ void printNtopProblemReport(void) {
 
 #define sslOrNot (isSSL ? " ssl" : "")
 
-void initSocket(int isSSL, int *port, int *sock, char *addr) {
+void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   int sockopt = 1, rc;
+#ifdef INET6
+  struct addrinfo hints, *ai, *aitop;
+  char strport[32];
+  char ntop[1024];
+#endif
   struct sockaddr_in sockIn;
 #ifdef INITWEB_DEBUG
   char value[LEN_SMALL_WORK_BUFFER];
@@ -4715,7 +4720,24 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
 
   traceEvent(CONST_TRACE_NOISY, "Initializing%s socket, port %d, address %s",
              sslOrNot, *port, addr == NULL ? "(any)" : addr);
-
+#ifdef INET6
+  memset(&hints,0,sizeof(hints));
+  hints.ai_family = ipv4or6;
+  hints.ai_flags = AI_PASSIVE;
+  hints.ai_socktype = SOCK_STREAM;
+  snprintf(strport,sizeof(strport),"%d",*port);
+  if(getaddrinfo(addr,strport,&hints,&aitop) !=0)
+    traceEvent(CONST_TRACE_INFO,"getaddrinfo: fatal error\n");
+  for (ai = aitop; ai; ai = ai->ai_next) {
+    if(ai->ai_family != AF_INET && ai->ai_family != AF_INET6)
+      continue;
+    if(getnameinfo(ai->ai_addr, ai->ai_addrlen, ntop,sizeof(ntop),
+		    strport, sizeof(strport), NI_NUMERICHOST|NI_NUMERICSERV) != 0){
+      traceEvent(CONST_TRACE_INFO,"getnameinfo: fatal error\n");
+    }else
+      break;
+  }
+#else
   memset(&sockIn, 0, sizeof(sockIn));
   sockIn.sin_family = AF_INET;
   sockIn.sin_port   = (int)htons((unsigned short int)(*port));
@@ -4737,7 +4759,7 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
 #endif
 
 #ifdef INITWEB_DEBUG
-  if (snprintf(value, sizeof(value), "%d.%d.%d.%d", \
+  if(snprintf(value, sizeof(value), "%d.%d.%d.%d", \
                (int) ((sockIn.sin_addr.s_addr >> 24) & 0xff), \
                (int) ((sockIn.sin_addr.s_addr >> 16) & 0xff), \
                (int) ((sockIn.sin_addr.s_addr >>  8) & 0xff), \
@@ -4747,7 +4769,7 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
              value,
              ntohs(sockIn.sin_port));
 #endif
-
+#endif /* INET6 */
 #ifdef HAVE_FILEDESCRIPTORBUG
   /* Burton - Aug2003
    *   Work-around for file descriptor bug (FreeBSD PR51535 et al)
@@ -4781,14 +4803,28 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
 #endif /* FILEDESCRIPTORBUG */
 
     errno = 0;
+#ifdef INET6
+    *sock = socket(ai->ai_family, SOCK_STREAM, 0);
+#else
     *sock = socket(AF_INET, SOCK_STREAM, 0);
+#endif
     if((*sock <= 0) || (errno != 0) ) {
-      traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to create a new%s socket - returned %d, error is '%s'(%d)",
-                sslOrNot, *sock, strerror(errno), errno);
-      exit(-1);
+      {
+#ifdef INET6
+	errno = 0;
+	/* It might be that IPv6 is not supported by the running system */
+	*sock = socket(AF_INET, SOCK_STREAM, 0);
+	if((*sock <= 0) || (errno != 0))
+#endif
+	  {
+	    traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to create a new%s socket - returned %d, error is '%s'(%d)",
+		       sslOrNot, *sock, strerror(errno), errno);
+	    exit(-1);
+	  }
+      }
     }
     traceEvent(CONST_TRACE_NOISY, "WEB: Created a new%s socket (%d)", sslOrNot, *sock);
-
+    
 #ifdef INITWEB_DEBUG
   traceEvent(CONST_TRACE_INFO, "INITWEB_DEBUG:%s setsockopt(%d, SOL_SOCKET, SO_REUSEADDR ...",
              sslOrNot, *sock);
@@ -4806,7 +4842,11 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
 #endif
 
   errno = 0;
+#ifdef INET6
+  rc = bind(*sock, ai->ai_addr, ai->ai_addrlen);
+#else
   rc = bind(*sock, (struct sockaddr *)&sockIn, sizeof(sockIn));
+#endif
   if((rc < 0) || (errno != 0)) {
     traceEvent(CONST_TRACE_FATALERROR,
                "WEB:%s binding problem - '%s'(%d)",
@@ -4856,7 +4896,7 @@ void initWeb(void) {
   traceEvent(CONST_TRACE_INFO, "WEB: Initializing tcp/ip socket connections for web server");
 
   if(myGlobals.webPort > 0) {
-    initSocket(FALSE, &myGlobals.webPort, &myGlobals.sock, myGlobals.webAddr);
+    initSocket(FALSE, myGlobals.ipv4or6, &myGlobals.webPort, &myGlobals.sock, myGlobals.webAddr);
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     if(myGlobals.webAddr)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTP connections on %s port %d",
@@ -4868,7 +4908,7 @@ void initWeb(void) {
 
 #ifdef HAVE_OPENSSL
   if((myGlobals.sslInitialized) && (myGlobals.sslPort > 0)) {
-    initSocket(TRUE, &myGlobals.sslPort, &myGlobals.sock_ssl, myGlobals.sslAddr);
+    initSocket(TRUE, myGlobals.ipv4or6, &myGlobals.sslPort, &myGlobals.sock_ssl, myGlobals.sslAddr);
     if(myGlobals.sslAddr)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTPS (SSL) connections on %s port %d",
 		 myGlobals.sslAddr, myGlobals.sslPort);
@@ -5234,7 +5274,7 @@ RETSIGTYPE webservercleanup(int signo) {
   strings = (char**)backtrace_symbols(array, size);
 
   traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:     backtrace is:");
-  if (size < 2)
+  if(size < 2)
       traceEvent(CONST_TRACE_FATALERROR, "webserver: BACKTRACE:         **unavailable!");
   else
       /* Ignore the 0th entry, that's our cleanup() */
@@ -5439,29 +5479,44 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 /* ************************************* */
 
 static void handleSingleWebConnection(fd_set *fdmask) {
-    struct sockaddr_in from;
-    int from_len = sizeof(from);
-
-    errno = 0;
-
-    if(FD_ISSET(myGlobals.sock, fdmask)) {
+#ifdef INET6
+  struct sockaddr from;
+#else
+  struct sockaddr_in from;
+#endif
+  HostAddr remote_ipaddr;
+  int from_len = sizeof(from);
+  errno = 0;
+  
+  if(FD_ISSET(myGlobals.sock, fdmask)) {
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTP request...");
+    traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTP request...");
 #endif
 	myGlobals.newSock = accept(myGlobals.sock, (struct sockaddr*)&from, &from_len);
-    } else {
+  } else {
 #if defined(DEBUG) && defined(HAVE_OPENSSL)
-	if(myGlobals.sslInitialized)
+    if(myGlobals.sslInitialized)
 	    traceEvent(CONST_TRACE_INFO, "DEBUG: Accepting HTTPS request...");
 #endif
 #ifdef HAVE_OPENSSL
-	if(myGlobals.sslInitialized)
+    if(myGlobals.sslInitialized)
 	    myGlobals.newSock = accept(myGlobals.sock_ssl, (struct sockaddr*)&from, &from_len);
 #else
-	;
+    ;
 #endif
-    }
+  }
 
+  if(myGlobals.newSock > 0) {
+#ifdef INET6
+    if(from.sa_family == AF_INET)
+      addrput(AF_INET, &remote_ipaddr, &(((struct sockaddr_in *)&from)->sin_addr));
+    else if(from.sa_family == AF_INET6)
+      addrput(AF_INET6, &remote_ipaddr, &(((struct sockaddr_in6 *)&from)->sin6_addr));
+#else
+    addrput(AF_INET, &remote_ipaddr, &(((struct sockaddr_in *)&from)->sin_addr));
+#endif
+  }
+  
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Request accepted (sock=%d) (errno=%d)", myGlobals.newSock, errno);
 #endif
@@ -5548,15 +5603,18 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 	    request_init(&req, RQ_DAEMON, CONST_DAEMONNAME, RQ_FILE, myGlobals.newSock, NULL);
 	    fromhost(&req);
 	    if(!hosts_access(&req)) {
-		closelog(); /* just in case */
-		openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
-		syslog(deny_severity, "refused connect from %s", eval_client(&req));
+	      closelog(); /* just in case */
+	      openlog(CONST_DAEMONNAME, LOG_PID, deny_severity);
+	      syslog(deny_severity, "refused connect from %s", eval_client(&req));
 	    }
 	    else
-		handleHTTPrequest(from.sin_addr);
+
+	      handleHTTPrequest(remote_ipaddr);
+	    
 	}
 #else
-	handleHTTPrequest(from.sin_addr);
+	handleHTTPrequest(remote_ipaddr);
+	
 #endif /* HAVE_LIBWRAP */
 
 	closeNwSocket(&myGlobals.newSock);

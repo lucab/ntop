@@ -536,7 +536,15 @@ int isMatrixHost(HostTraffic *host, int actualDeviceId) {
 /* ******************************* */
 
 unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId) {
-  return((unsigned int)(host->hostIpAddress.s_addr) % myGlobals.device[actualDeviceId].numHosts);
+  unsigned long hash;
+  if (host->hostIpAddress.hostFamily == AF_INET)
+    hash = host->hostIp4Address.s_addr;
+#ifdef INET6
+  else if (host->hostIpAddress.hostFamily == AF_INET6)
+    hash = *(u_int32_t *)&host->hostIp6Address.s6_addr[0];
+#endif
+
+  return((unsigned int)(hash) % myGlobals.device[actualDeviceId].numHosts);
 }
 
 /* ******************************* */

@@ -1644,6 +1644,8 @@
 #define DEFAULT_NTOP_WEB_ADDR               NULL      /* -w */ /* e.g. all interfaces & addresses */
 #define DEFAULT_NTOP_WEB_PORT               3000
 
+#define DEFAULT_NTOP_FAMILY                 AF_UNSPEC /* -6/4 */
+
 #define DEFAULT_NTOP_ENABLE_SESSIONHANDLE   1         /* -z */
 
 #define DEFAULT_NTOP_FILTER_EXPRESSION      NULL      /* -B */
@@ -2222,6 +2224,14 @@
 #endif
 
 
+#ifndef IN6ADDR_LINKLOCAL_ALLNODES_INIT
+#define IN6ADDR_LINKLOCAL_ALLNODES_INIT \
+        {{{ 0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, \
+                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }}}
+extern const struct in6_addr in6addr_linklocal_allnodes;
+#endif
+
+
 /*
  * Somehow, gcc under HPUX decides to build a c++ version of malloc.h
  *   Disable the malloc.h stuff.
@@ -2266,7 +2276,3 @@
 #define	SAP_RPL			0xFC
 #define	SAP_OSINL		0xFE
 #define	SAP_GLOBAL		0xFF
-
-#define HOST_MODE               0
-#define NETWORK_MODE            1
-#define MAX_MODE                NETWORK_MODE

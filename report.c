@@ -193,12 +193,13 @@ void printTrafficStatistics(void) {
 
   sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR "TR_ON"><TH "TH_BG">Name</TH>"
 	     "<TH "TH_BG">Device</TH><TH "TH_BG">Type</TH><TH "TH_BG">Speed</TH><TH "TH_BG">MTU</TH>"
-	     "<TH "TH_BG">Header</TH><TH "TH_BG">Address</TH></TR>\n");
+	     "<TH "TH_BG">Header</TH><TH "TH_BG">Address</TH><TH "TH_BG">IPv6 Addresses</TH></TR>\n");
 
   if(myGlobals.rFileName == NULL) {
     for(i=0; i<myGlobals.numDevices; i++) {
       if(myGlobals.device[i].activeDevice) {
 	char buf1[128];
+	NtopIfaceAddr *ifaddr;
 
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" ALIGN=CENTER><TD "TD_BG">%s</TD>",
 		    myGlobals.device[i].humanFriendlyName) < 0)
@@ -230,10 +231,22 @@ void printTrafficStatistics(void) {
 	  BufferTooShort();
 	sendString(buf);
 
-	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD></TR>\n",
+	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
 		    _intoa(myGlobals.device[i].ifAddr, buf1, sizeof(buf1))) < 0)
 	  BufferTooShort();
 	sendString(buf);
+#ifdef INET6
+	sendString("<TD ALIGN=RIGHT><OL>");
+	for (ifaddr = myGlobals.device[myGlobals.actualReportDeviceId].v6Addrs; 
+	     ifaddr != NULL; ifaddr = ifaddr->next){
+	  if(snprintf(buf, sizeof(buf), "<LI>%s/%d",
+		      _intop(&ifaddr->af.inet6.ifAddr,buf1,sizeof(buf1)), ifaddr->af.inet6.prefixlen) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+	}
+	sendString("</TD>");
+#endif
+	sendString("</TR>\n");
       }
     }
   } else {
@@ -296,7 +309,7 @@ void printTrafficStatistics(void) {
 
     sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
     if(snprintf(buf, sizeof(buf),
-                "Device '%s' (current reporting device)",
+                "For device: '%s' (current reporting device)",
                 myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
       BufferTooShort();
     printHTMLheader(buf, 0);
@@ -731,6 +744,9 @@ void printTrafficStatistics(void) {
       sendString(buf);
     }
 
+    sendString("</TABLE>"TABLE_OFF"</TR>\n");
+  }
+
   /* ********************* */
 
 #ifndef EMBEDDED
@@ -752,9 +768,6 @@ void printTrafficStatistics(void) {
 #endif
 
   /* ********************* */
-    sendString("</TABLE>"TABLE_OFF"</TR>\n");
-  }
-
 
   sendString("</TABLE></CENTER>\n");
 }
@@ -989,7 +1002,7 @@ void printHostsTraffic(int reportType,
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
@@ -999,6 +1012,7 @@ void printHostsTraffic(int reportType,
 		      formatBytes(el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1),
 		      formatBytes(el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1),
 		      formatBytes(el->icmpRcvd.value, 1),
+		      formatBytes(el->icmp6Rcvd.value, 1),
 		      formatBytes(el->dlcRcvd.value, 1),
 		      formatBytes(el->ipxRcvd.value, 1),
 		      formatBytes(el->decnetRcvd.value, 1),
@@ -1037,13 +1051,14 @@ void printHostsTraffic(int reportType,
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 		      getRowColor(), webHostName,
 		      formatBytes(el->bytesSent.value, 1), sentPercent, myGlobals.separator,
 		      formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value, 1),
 		      formatBytes(el->udpSentLoc.value+el->udpSentRem.value, 1),
 		      formatBytes(el->icmpSent.value, 1),
+		      formatBytes(el->icmp6Sent.value, 1),
 		      formatBytes(el->dlcSent.value, 1),
 		      formatBytes(el->ipxSent.value, 1),
 		      formatBytes(el->decnetSent.value, 1),
@@ -1086,7 +1101,7 @@ void printHostsTraffic(int reportType,
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
                       getRowColor(), webHostName,
                       formatBytes(el->bytesSent.value+el->bytesRcvd.value, 1),
@@ -1096,6 +1111,7 @@ void printHostsTraffic(int reportType,
                       formatBytes(el->udpSentLoc.value+el->udpSentRem.value+
                                   el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1),
                       formatBytes(el->icmpSent.value+el->icmpRcvd.value, 1),
+		      formatBytes(el->icmp6Sent.value+el->icmp6Rcvd.value, 1),
                       formatBytes(el->dlcSent.value+el->dlcRcvd.value, 1),
                       formatBytes(el->ipxSent.value+el->ipxRcvd.value, 1),
                       formatBytes(el->decnetSent.value+el->decnetRcvd.value, 1),
@@ -1642,6 +1658,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	int displaySniffedName=0;
 
 	tmpName1 = el->hostNumIpAddress;
+
 	if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
 	  tmpName1 = myGlobals.separator;
 
@@ -1659,7 +1676,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	  tmpName3 = myGlobals.separator;
 	}
 
-	if((el->hostIpAddress.s_addr != 0)
+	if(!addrnull(&el->hostIpAddress)
 	   && (getSniffedDNSName(el->hostNumIpAddress,
 				 sniffedName, sizeof(sniffedName)))) {
 #ifdef DEBUG
@@ -1902,7 +1919,6 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
       break;
     }
   }
-
   /* Dennis Schoen (dennis@cns.dnsalias.org)
    *
    * send 404 if we cannot generate the requested page
@@ -2249,7 +2265,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     if((broadcastHost(el) == 0) /* No broadcast addresses please */
        && (multicastHost(el) == 0) /* No multicast addresses please */
        && ((el->hostNumIpAddress[0] != '\0')
-	   && (el->hostIpAddress.s_addr != '0' /* 0.0.0.0 */)
+	   && (!addrnull(&el->hostIpAddress))
 	   /* This host speaks IP */)) {
       switch(remoteToLocal) {
       case FLAG_REMOTE_TO_LOCAL_ACCOUNTING:
@@ -3232,7 +3248,11 @@ void printProtoTraffic(void) {
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/1024,
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmpBytes.value/
 		       myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value));
-
+  
+  printTableEntry(buf, sizeof(buf), "ICMPv6", CONST_COLOR_1,
+		  (float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/1024,
+		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].icmp6Bytes.value/
+		     myGlobals.device[myGlobals.actualReportDeviceId].ipv6Bytes.value));
   {
     ProtocolsList *protoList = myGlobals.ipProtosList;
     int idx = 0;
@@ -3811,6 +3831,8 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
   case 7: a_  = a->udpRcvd.value  , b_ = b->udpRcvd.value;   break;
   case 8: a_  = a->icmpSent.value , b_ = b->icmpSent.value;  break;
   case 9: a_  = a->icmpRcvd.value , b_ = b->icmpRcvd.value;  break;
+  case 10:a_  = a->icmp6Sent.value , b_ = b->icmp6Sent.value;  break;
+  case 11:a_  = a->icmp6Rcvd.value , b_ = b->icmp6Rcvd.value;  break;
   default:
   case 0:
     if(domainSort) {
@@ -3923,9 +3945,11 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     statsEntry->tcpSent.value   += el->tcpSentLoc.value + el->tcpSentRem.value;
     statsEntry->udpSent.value   += el->udpSentLoc.value + el->udpSentRem.value;
     statsEntry->icmpSent.value  += el->icmpSent.value;
+    statsEntry->icmp6Sent.value  += el->icmp6Sent.value;
     statsEntry->tcpRcvd.value   += el->tcpRcvdLoc.value + el->tcpRcvdFromRem.value;
     statsEntry->udpRcvd.value   += el->udpRcvdLoc.value + el->udpRcvdFromRem.value;
     statsEntry->icmpRcvd.value  += el->icmpRcvd.value;
+    statsEntry->icmp6Sent.value  += el->icmp6Sent.value;
 
     if(numEntries >= maxHosts) break;
   } /* for(;;) */
@@ -4006,7 +4030,6 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     arrow[4] = "";
     theAnchor[4] = htmlAnchor1;
   }
-
   if(abs(myGlobals.columnSort) == 5) {
     arrow[5] = arrowGif;
     theAnchor[5] = htmlAnchor;
@@ -4087,6 +4110,14 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[14] = htmlAnchor1;
   }
 
+  if(abs(myGlobals.columnSort) == 15) {
+    arrow[15] = arrowGif;
+    theAnchor[15] = htmlAnchor;
+  } else {
+    arrow[15] = "";
+    theAnchor[15] = htmlAnchor1;
+  }
+
   /* Split below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
   sendString("<CENTER>\n");
   if(snprintf(buf, sizeof(buf),
@@ -4109,12 +4140,16 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 	      "<TH "TH_BG">%s6>UDP&nbsp;Sent%s</A></TH>"
 	      "<TH "TH_BG">%s7>UDP&nbsp;Rcvd%s</A></TH>"
 	      "<TH "TH_BG">%s8>ICMP&nbsp;Sent%s</A></TH>"
-	      "<TH "TH_BG">%s9>ICMP&nbsp;Rcvd%s</A></TH>",
+	      "<TH "TH_BG">%s9>ICMP&nbsp;Rcvd%s</A></TH>"
+	      "<TH "TH_BG">%s10>ICMPv6&nbsp;Sent%s</A></TH>"
+	      "<TH "TH_BG">%s11>ICMPv6&nbsp;Rcvd%s</A></TH>",
 	      theAnchor[5], arrow[5],
 	      theAnchor[6], arrow[6],
 	      theAnchor[7], arrow[7],
 	      theAnchor[8], arrow[8],
-	      theAnchor[9], arrow[9]) < 0)
+	      theAnchor[9], arrow[9],
+	      theAnchor[10], arrow[10],
+	      theAnchor[11], arrow[11]) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -4158,7 +4193,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%%</TD>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
+		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		getRowColor(), htmlAnchor,
 		getHostCountryIconURL(statsEntry->domainHost),
 		formatBytes(statsEntry->bytesSent.value, 1),
@@ -4170,7 +4205,9 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 		formatBytes(statsEntry->udpSent.value, 1),
 		formatBytes(statsEntry->udpRcvd.value, 1),
 		formatBytes(statsEntry->icmpSent.value, 1),
-		formatBytes(statsEntry->icmpRcvd.value, 1)
+		formatBytes(statsEntry->icmpRcvd.value, 1),
+		formatBytes(statsEntry->icmp6Sent.value, 1),
+		formatBytes(statsEntry->icmp6Rcvd.value, 1)
 		) < 0) BufferTooShort();
     sendString(buf);
 

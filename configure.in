@@ -45,12 +45,12 @@ dnl>   Edit the version # in the AC_INIT line to roll the version.
 dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm version"
 dnl>       into the stamp.
 dnl>
-AC_INIT([ntop],[2.2.96])
+AC_INIT([ntop],[2.2.97])
 
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.94.117-2003-09-02"
+SCRIPTVER="v2.2.97.1-2003-12-01"
 
 dnl>
 dnl> generate the config header
@@ -673,6 +673,10 @@ AC_ARG_ENABLE(xmldump,
               [  --enable-xmldump            Enable xml-based data dump [[default=disabled]]],
               ac_enable_xmldump="yes",
               ac_enable_xmldump="no")
+AC_ARG_ENABLE(ipv6,
+		[ --disable-ipv6              use IPv6 [[default=enabled]]],
+	      ac_disable_ipv6="yes",
+	      ac_disable_ipv6="no")        
 
 dnl>
 dnl> Define the "WITH"s for package root directories ... deal with these later...
@@ -865,6 +869,9 @@ if test ".${ac_enable_xmldump}" = ".yes"; then
   NTOP_SET_LIBINC(GDOME)
   NTOP_SET_LIBINC(GLIB)
 fi
+
+
+
 dnl> From here on out, we only use the _INCLUDE and _LIB except for locale and glibconfig
 
 NTOPCONFIGDEBUG_SETTINGS([After set libinc])
@@ -1415,6 +1422,8 @@ if test ".${ac_cv_header_pcap_h}" != ".yes" ||
     echo
     AC_MSG_ERROR(Unable to continue... aborting ./configure)
 fi
+
+
 
 AC_MSG_CHECKING([for gdbm])
 AC_MSG_RESULT([])
@@ -1972,6 +1981,11 @@ AC_CHECK_HEADERS([net/if.h], [], [], [
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif])
+
+AC_CHECK_HEADER([net/if_dl.h],[
+AC_DEFINE_UNQUOTED(HAVE_IFLIST_SYSCTL,   1, [use sysctl support for fetch interface informations])
+])
+
 AC_CHECK_HEADERS([netinet/if_ether.h], [], [], [
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -2064,6 +2078,18 @@ AC_CHECK_HEADERS([sys/syslog.h syslog.h])
 
 dnl> Used for tcpwrappers
 AC_CHECK_HEADERS([tcpd.h])
+
+dnl> IPv6
+case "$ac_disable_ipv6" in
+        yes|''|autodetect)
+                AC_DEFINE_UNQUOTED(INET6,  0, [Enable/disable ipv6 support])
+                ;;
+        no)
+		AC_DEFINE_UNQUOTED(INET6,  1, [Enable/disable ipv6 support])
+		AC_CHECK_HEADERS([ip6.h icmp6.h])
+                ;;
+esac
+
 
 dnl> XML dump
 if test ".${ac_enable_xmldump}" = ".yes"; then

@@ -72,7 +72,9 @@ static char *_configFileDirs[] = { ".", CFG_CONFIGFILE_DIR,
 				   "/etc",
 #endif
 				   NULL };
-
+#ifndef FREEBSD
+const struct in6_addr in6addr_linklocal_allnodes=IN6ADDR_LINKLOCAL_ALLNODES_INIT;
+#endif
 
 /*
  *  ** TCP Wrappers
@@ -118,7 +120,7 @@ static void allocateOtherHosts() {
   myGlobals.otherHostEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
   memset(myGlobals.otherHostEntry, 0, sizeof(HostTraffic));
 
-  myGlobals.otherHostEntry->hostIpAddress.s_addr = 0x00112233;
+  myGlobals.otherHostEntry->hostIp4Address.s_addr = 0x00112233;
   strncpy(myGlobals.otherHostEntry->hostNumIpAddress, "&nbsp;",
 	  sizeof(myGlobals.otherHostEntry->hostNumIpAddress));
   strncpy(myGlobals.otherHostEntry->hostSymIpAddress, "Remaining Host(s)",
@@ -177,8 +179,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   strncpy((char *) &myGlobals.domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(myGlobals.domainName));
   myGlobals.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
   myGlobals.maxNumHashEntries = myGlobals.maxNumSessions = (u_int)-1;
-  myGlobals.configurationMode = HOST_MODE;
-
+  
 #ifndef WIN32
   myGlobals.debugMode = DEFAULT_NTOP_DEBUG_MODE;
   myGlobals.useSyslog = DEFAULT_NTOP_SYSLOG;
@@ -256,6 +257,7 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   myGlobals.webAddr = DEFAULT_NTOP_WEB_ADDR;
   myGlobals.webPort = DEFAULT_NTOP_WEB_PORT;
+  myGlobals.ipv4or6 = DEFAULT_NTOP_FAMILY;
 
   /* Termination flags */
   myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;    /* By default data are collected into internal variables */
@@ -464,7 +466,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   for(i=0; i<LEN_ETHERNET_ADDRESS; i++)
     myGlobals.broadcastEntry->ethAddress[i] = 0xFF;
 
-  myGlobals.broadcastEntry->hostIpAddress.s_addr = 0xFFFFFFFF;
+  myGlobals.broadcastEntry->hostIp4Address.s_addr = 0xFFFFFFFF;
   strncpy(myGlobals.broadcastEntry->hostNumIpAddress, "broadcast",
 	  sizeof(myGlobals.broadcastEntry->hostNumIpAddress));
   strncpy(myGlobals.broadcastEntry->hostSymIpAddress, myGlobals.broadcastEntry->hostNumIpAddress,

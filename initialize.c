@@ -776,7 +776,7 @@ void resetStats(int deviceId) {
 
   myGlobals.device[deviceId].hash_hostTraffic[BROADCAST_HOSTS_ENTRY] = myGlobals.broadcastEntry;
   myGlobals.broadcastEntry->hostSerial.serialType = SERIAL_IPV4;
-  myGlobals.broadcastEntry->hostSerial.value.ipAddress.s_addr = -1;
+  myGlobals.broadcastEntry->hostSerial.value.ipAddress.Ip4Address.s_addr = -1;
   myGlobals.broadcastEntry->next = NULL;
   FD_SET(FLAG_BROADCAST_HOST, &(myGlobals.broadcastEntry->flags));
 
@@ -784,7 +784,7 @@ void resetStats(int deviceId) {
     myGlobals.device[deviceId].hash_hostTraffic[OTHER_HOSTS_ENTRY] = myGlobals.otherHostEntry;
     /* Dirty trick */
     myGlobals.otherHostEntry->hostSerial.serialType = SERIAL_IPV4;
-    myGlobals.otherHostEntry->hostSerial.value.ipAddress.s_addr = -1;
+    myGlobals.otherHostEntry->hostSerial.value.ipAddress.Ip4Address.s_addr = -1;
     myGlobals.otherHostEntry->next = NULL;
     FD_SET(FLAG_BROADCAST_HOST, &(myGlobals.broadcastEntry->flags));
     myGlobals.otherHostEntry->next = NULL;
@@ -1052,7 +1052,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
   char *workDevices = NULL;
   char myName[80], *column = NULL;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
-
+  
   if(deviceName == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Attempt to add a NULL device");
     return;
@@ -1122,12 +1122,10 @@ void addDevice(char* deviceName, char* deviceDescr) {
 		     myGlobals.device[deviceId].name);
 	  exit(-1);
 	}
-	
-	if(PacketGetNetType (a, &adapter)) {
+	if(PacketGetNetType (a,&adapter)) {
 	  myGlobals.device[deviceId].deviceSpeed = adapter.LinkSpeed;
-	}
-
-	PacketCloseAdapter((LPTSTR)myGlobals.device[deviceId].name);
+	} else
+	  PacketCloseAdapter((LPTSTR)myGlobals.device[deviceId].name);
       }
 #else
     if(setuid(0) == -1) {
@@ -1262,8 +1260,12 @@ void addDevice(char* deviceName, char* deviceDescr) {
 
   /* ********************************************* */
 
-  if(!(myGlobals.device[deviceId].dummyDevice || myGlobals.device[deviceId].virtualDevice))
+  if(!(myGlobals.device[deviceId].dummyDevice || myGlobals.device[deviceId].virtualDevice)){
     getLocalHostAddress(&myGlobals.device[deviceId].ifAddr, myGlobals.device[deviceId].name);
+#ifdef INET6
+    myGlobals.device[deviceId].v6Addrs = getLocalHostAddressv6(myGlobals.device[deviceId].v6Addrs, myGlobals.device[deviceId].name);
+#endif
+  }
 
   mallocLen = 2;
   for(i=0; i<myGlobals.numDevices; i++) {
@@ -1291,11 +1293,11 @@ void addDevice(char* deviceName, char* deviceDescr) {
     int k;
     char tmpDeviceName[64];
     struct in_addr myLocalHostAddress;
+    
 
     if(myGlobals.numDevices < MAX_NUM_DEVICES) {
       traceEvent(CONST_TRACE_INFO, "Checking %s for additional devices", myGlobals.device[deviceId].name);
-     
-     for(k=0; k<8; k++) {
+      for(k=0; k<8; k++) {
 	if(snprintf(tmpDeviceName, sizeof(tmpDeviceName), "%s:%d", myGlobals.device[deviceId].name, k) < 0)
 	  BufferTooShort();
 

@@ -151,20 +151,20 @@ void handleBootp(HostTraffic *srcHost,
 
 	      FD_SET(FLAG_HOST_TYPE_SVC_DHCP_CLIENT, &realDstHost->flags);
 	      realDstHost->protocolInfo->dhcpStats->assignTime = myGlobals.actTime;
-	      realDstHost->protocolInfo->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
-	      realDstHost->protocolInfo->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIpAddress.s_addr;
+	      realDstHost->protocolInfo->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIp4Address.s_addr;
+	      realDstHost->protocolInfo->dhcpStats->dhcpServerIpAddress.s_addr = srcHost->hostIp4Address.s_addr;
 
-	      if(realDstHost->hostIpAddress.s_addr != bootProto.bp_yiaddr.s_addr) {
+	      if(realDstHost->hostIp4Address.s_addr != bootProto.bp_yiaddr.s_addr) {
 		/* The host address has changed */
 #ifdef DHCP_DEBUG
 		traceEvent(CONST_TRACE_INFO, "DHCP host address changed: %s->%s",
-			   intoa(realDstHost->hostIpAddress),
+			   intoa(realDstHost->hostIp4Address),
 			   _intoa(bootProto.bp_yiaddr, buf, sizeof(buf)));
 #endif
-		realDstHost->protocolInfo->dhcpStats->previousIpAddress.s_addr = realDstHost->hostIpAddress.s_addr;
-		realDstHost->hostIpAddress.s_addr = bootProto.bp_yiaddr.s_addr;
+		realDstHost->protocolInfo->dhcpStats->previousIpAddress.s_addr = realDstHost->hostIp4Address.s_addr;
+		realDstHost->hostIp4Address.s_addr = bootProto.bp_yiaddr.s_addr;
 		strncpy(realDstHost->hostNumIpAddress,
-			_intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
+			_intoa(realDstHost->hostIp4Address, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
 		if(myGlobals.numericFlag == 0) ipaddr2str(realDstHost->hostIpAddress, actualDeviceId);
                 if (realDstHost->fullDomainName != NULL) free(realDstHost->fullDomainName);
@@ -180,6 +180,8 @@ void handleBootp(HostTraffic *srcHost,
 	      while(idx < 64 /* Length of the BOOTP vendor-specific area */) {
 		u_char optionId = bootProto.bp_vend[idx++];
 		u_long tmpUlong;
+		HostAddr addr;
+		addr.hostFamily = AF_INET;
 
 		if(optionId == 255) break; /* End of options */
 		switch(optionId) { /* RFC 2132 */
@@ -200,8 +202,8 @@ void handleBootp(HostTraffic *srcHost,
 		  traceEvent(CONST_TRACE_INFO, "Gateway: %s", _intoa(hostIpAddress, buf, sizeof(buf)));
 #endif
 		  /* *************** */
-
-		  trafficHost = findHostByNumIP(hostIpAddress, actualDeviceId);
+		  addr.Ip4Address.s_addr = hostIpAddress.s_addr;
+		  trafficHost = findHostByNumIP(addr, actualDeviceId);
 		  if(trafficHost != NULL) {
 		    incrementUsageCounter(&realDstHost->contactedRouters, trafficHost, actualDeviceId);
 		    FD_SET(FLAG_GATEWAY_HOST, &trafficHost->flags);
@@ -303,8 +305,9 @@ void handleBootp(HostTraffic *srcHost,
 		  idx += len;
 
 		  /* *************** */
+		  addr.Ip4Address.s_addr = hostIpAddress.s_addr;
 
-		  trafficHost = findHostByNumIP(hostIpAddress, actualDeviceId);
+		  trafficHost = findHostByNumIP(addr, actualDeviceId);
 		  if(trafficHost != NULL) {
 		    FD_SET(FLAG_HOST_TYPE_SVC_WINS, &trafficHost->flags);
 		  }

@@ -599,65 +599,68 @@ void printHeader(int reportType, int revertOrder, u_int column,
     else { arrow[1] = "";  theAnchor[1] = htmlAnchor1;}
     if(abs(column) == 3)
       { arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
-    else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
     if(abs(column) == 4)
       { arrow[3] = arrowGif; theAnchor[3] = htmlAnchor;  }
     else { arrow[3] = ""; theAnchor[3] = htmlAnchor1; }
     if(abs(column) == 5)
       { arrow[4] = arrowGif; theAnchor[4] = htmlAnchor;  }
-    else { arrow[4] = ""; theAnchor[4] = htmlAnchor1;  }
+    else { arrow[4] = ""; theAnchor[4] = htmlAnchor1; }
     if(abs(column) == 6)
       { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor;  }
     else { arrow[5] = ""; theAnchor[5] = htmlAnchor1;  }
     if(abs(column) == 7)
-      { arrow[6] = arrowGif; theAnchor[6] = htmlAnchor1;  }
-    else { arrow[6] = ""; theAnchor[6] = htmlAnchor; }
+      { arrow[6] = arrowGif; theAnchor[6] = htmlAnchor;  }
+    else { arrow[6] = ""; theAnchor[6] = htmlAnchor1;  }
     if(abs(column) == 8)
-      { arrow[7] = arrowGif; theAnchor[7] = htmlAnchor;  }
-    else { arrow[7] = ""; theAnchor[7] = htmlAnchor1;  }
+      { arrow[7] = arrowGif; theAnchor[7] = htmlAnchor1;  }
+    else { arrow[7] = ""; theAnchor[7] = htmlAnchor; }
     if(abs(column) == 9)
       { arrow[8] = arrowGif; theAnchor[8] = htmlAnchor;  }
-    else { arrow[8] = ""; theAnchor[8] = htmlAnchor1; }
+    else { arrow[8] = ""; theAnchor[8] = htmlAnchor1;  }
     if(abs(column) == 10)
       { arrow[9] = arrowGif; theAnchor[9] = htmlAnchor;  }
     else { arrow[9] = ""; theAnchor[9] = htmlAnchor1; }
     if(abs(column) == 11)
       { arrow[10] = arrowGif; theAnchor[10] = htmlAnchor;  }
-    else { arrow[10] = "";  theAnchor[10] = htmlAnchor1;}
+    else { arrow[10] = ""; theAnchor[10] = htmlAnchor1; }
     if(abs(column) == 12)
       { arrow[11] = arrowGif; theAnchor[11] = htmlAnchor;  }
-    else { arrow[11] = "";theAnchor[11] = htmlAnchor1; }
+    else { arrow[11] = "";  theAnchor[11] = htmlAnchor1;}
     if(abs(column) == 13)
       { arrow[12] = arrowGif; theAnchor[12] = htmlAnchor;  }
-    else { arrow[12] = "";  theAnchor[12] = htmlAnchor1;  }
+    else { arrow[12] = "";theAnchor[12] = htmlAnchor1; }
     if(abs(column) == 14)
       { arrow[13] = arrowGif; theAnchor[13] = htmlAnchor;  }
     else { arrow[13] = "";  theAnchor[13] = htmlAnchor1;  }
     if(abs(column) == 15)
       { arrow[14] = arrowGif; theAnchor[14] = htmlAnchor;  }
     else { arrow[14] = "";  theAnchor[14] = htmlAnchor1;  }
+    if(abs(column) == 16)
+      { arrow[15] = arrowGif; theAnchor[15] = htmlAnchor;  }
+    else { arrow[15] = "";  theAnchor[15] = htmlAnchor1;  }
 
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1>TCP%s</A></TH>"
-		"<TH "TH_BG">%s2>UDP%s</A></TH><TH "TH_BG">%s3>ICMP%s</A></TH>"
-		"<TH "TH_BG">%s4>DLC%s</A></TH><TH "TH_BG">%s5>IPX%s</A>"
-		"</TH><TH "TH_BG">%s6>Decnet%s</A></TH>"
-		"<TH "TH_BG">%s7>(R)ARP%s</A></TH><TH "TH_BG">%s8>AppleTalk%s</A></TH>",
+		"<TH "TH_BG">%s2>UDP%s</A></TH><TH "TH_BG">%s3>ICMP%s</A></TH>""<TH "TH_BG">%s4>ICMPv6%s</A></TH>"
+		"<TH "TH_BG">%s5>DLC%s</A></TH><TH "TH_BG">%s6>IPX%s</A>"
+		"</TH><TH "TH_BG">%s7>Decnet%s</A></TH>"
+		"<TH "TH_BG">%s8>(R)ARP%s</A></TH><TH "TH_BG">%s9>AppleTalk%s</A></TH>",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1],
 		theAnchor[2], arrow[2], theAnchor[3], arrow[3],
-		theAnchor[4], arrow[4], theAnchor[5], arrow[5],
-		theAnchor[6], arrow[6], theAnchor[7], arrow[7]) < 0)
+		theAnchor[4], arrow[4],	
+		theAnchor[5], arrow[5], theAnchor[6], arrow[6],
+		theAnchor[7], arrow[7], theAnchor[8], arrow[8]) < 0)
       BufferTooShort();
     sendString(buf);
 
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER,
-		"<TH "TH_BG">%s10>NetBios%s</A></TH>"
-		"<TH "TH_BG">%s12>OSI%s</A></TH>"
-		"<TH "TH_BG">%s13>IPv6%s</A></TH>"
-		"<TH "TH_BG">%s14>STP%s</A></TH>",
-		theAnchor[9], arrow[9],
-		theAnchor[11], arrow[11],
+		"<TH "TH_BG">%s11>NetBios%s</A></TH>"
+		"<TH "TH_BG">%s13>OSI%s</A></TH>"
+		"<TH "TH_BG">%s14>IPv6%s</A></TH>"
+		"<TH "TH_BG">%s15>STP%s</A></TH>",
+		theAnchor[10], arrow[10],
 		theAnchor[12], arrow[12],
-		theAnchor[13], arrow[13]) < 0)
+		theAnchor[13], arrow[13],
+		theAnchor[14], arrow[14]) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -682,8 +685,8 @@ void printHeader(int reportType, int revertOrder, u_int column,
     }
 
     if(snprintf(buf, LEN_GENERAL_WORK_BUFFER,
-		"<TH "TH_BG">%s15>Other%s</A></TH>",
-		theAnchor[14], arrow[14]) < 0)
+		"<TH "TH_BG">%s16>Other%s</A></TH>",
+		theAnchor[15], arrow[15]) < 0)
       BufferTooShort();
     sendString(buf);
     break;
@@ -886,12 +889,13 @@ int sortHostFctn(const void *_a, const void *_b) {
     return(rc);
     break;
   case 2:
-    if((*a)->hostIpAddress.s_addr > (*b)->hostIpAddress.s_addr)
+    /*if((*a)->hostIpAddress.s_addr > (*b)->hostIpAddress.s_addr)
       return(1);
-    else if((*a)->hostIpAddress.s_addr < (*b)->hostIpAddress.s_addr)
+      else if((*a)->hostIpAddress.s_addr < (*b)->hostIpAddress.s_addr)
       return(-1);
-    else
-      return(0);
+      else
+      return(0);*/
+    return addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress);
     /* return(strcasecmp((*a)->hostNumIpAddress, (*b)->hostNumIpAddress)); */
     break;
   case 3:
@@ -1183,33 +1187,36 @@ int cmpFctn(const void *_a, const void *_b) {
       a_ = (*a)->icmpRcvd.value, b_ = (*b)->icmpRcvd.value;
       break;
     case 4:
-      a_ = (*a)->dlcRcvd.value, b_ = (*b)->dlcRcvd.value;
+      a_ = (*a)->icmp6Rcvd.value, b_ = (*b)->icmp6Rcvd.value;
       break;
     case 5:
-      a_ = (*a)->ipxRcvd.value, b_ = (*b)->ipxRcvd.value;
+      a_ = (*a)->dlcRcvd.value, b_ = (*b)->dlcRcvd.value;
       break;
     case 6:
-      a_ = (*a)->decnetRcvd.value, b_ = (*b)->decnetRcvd.value;
+      a_ = (*a)->ipxRcvd.value, b_ = (*b)->ipxRcvd.value;
       break;
     case 7:
-      a_ = (*a)->arp_rarpRcvd.value, b_ = (*b)->arp_rarpRcvd.value;
+      a_ = (*a)->decnetRcvd.value, b_ = (*b)->decnetRcvd.value;
       break;
     case 8:
+      a_ = (*a)->arp_rarpRcvd.value, b_ = (*b)->arp_rarpRcvd.value;
+      break;
+    case 9:
       a_ = (*a)->appletalkRcvd.value, b_ = (*b)->appletalkRcvd.value;
       break;
-    case 10:
+    case 11:
       a_ = (*a)->netbiosRcvd.value, b_ = (*b)->netbiosRcvd.value;
       break;
-    case 12:
+    case 13:
       a_ = (*a)->osiRcvd.value, b_ = (*b)->osiRcvd.value;
       break;
-    case 13:
+    case 14:
       a_ = (*a)->ipv6Rcvd.value, b_ = (*b)->ipv6Rcvd.value;
       break;
-    case 14:
+    case 15:
       a_ = (*a)->stpRcvd.value, b_ = (*b)->stpRcvd.value;
       break;
-    case 15:
+    case 16:
       a_ = (*a)->otherRcvd.value, b_ = (*b)->otherRcvd.value;
       break;
     default:
@@ -1296,33 +1303,36 @@ int cmpFctn(const void *_a, const void *_b) {
       a_ = (*a)->icmpSent.value, b_ = (*b)->icmpSent.value;
       break;
     case 4:
+      a_ = (*a)->icmp6Sent.value, b_ = (*b)->icmp6Sent.value;
+      break; 
+    case 5:
       a_ = (*a)->dlcSent.value, b_ = (*b)->dlcSent.value;
       break;
-    case 5:
+    case 6:
       a_ = (*a)->ipxSent.value, b_ = (*b)->ipxSent.value;
       break;
-    case 6:
+    case 7:
       a_ = (*a)->decnetSent.value, b_ = (*b)->decnetSent.value;
       break;
-    case 7:
+    case 8:
       a_ = (*a)->arp_rarpSent.value, b_ = (*b)->arp_rarpSent.value;
       break;
-    case 8:
+    case 9:
       a_ = (*a)->appletalkSent.value, b_ = (*b)->appletalkSent.value;
       break;
-    case 10:
+    case 11:
       a_ = (*a)->netbiosSent.value, b_ = (*b)->netbiosSent.value;
       break;
-    case 12:
+    case 13:
       a_ = (*a)->osiSent.value, b_ = (*b)->osiSent.value;
       break;
-    case 13:
+    case 14:
       a_ = (*a)->ipv6Sent.value, b_ = (*b)->ipv6Sent.value;
       break;
-    case 14:
+    case 15:
       a_ = (*a)->stpSent.value, b_ = (*b)->stpSent.value;
       break;
-    case 15:
+    case 16:
       a_ = (*a)->otherSent.value, b_ = (*b)->otherSent.value;
       break;
     default:
@@ -1411,36 +1421,39 @@ int cmpFctn(const void *_a, const void *_b) {
       a_ = (*a)->icmpRcvd.value+(*a)->icmpSent.value, b_ = (*b)->icmpRcvd.value+(*b)->icmpSent.value;
       break;
     case 4:
+      a_ = (*a)->icmp6Rcvd.value+(*a)->icmp6Sent.value, b_ = (*b)->icmp6Rcvd.value+(*b)->icmp6Sent.value;
+      break;  
+    case 5:
       a_ = (*a)->dlcRcvd.value+(*a)->dlcSent.value, b_ = (*b)->dlcRcvd.value+(*b)->dlcSent.value;
       break;
-    case 5:
+    case 6:
       a_ = (*a)->ipxRcvd.value+(*a)->ipxSent.value, b_ = (*b)->ipxRcvd.value+(*b)->ipxSent.value;
       break;
-    case 6:
+    case 7:
       a_ = (*a)->decnetRcvd.value+(*a)->decnetSent.value, b_ = (*b)->decnetRcvd.value+(*b)->decnetSent.value;
       break;
-    case 7:
+    case 8:
       a_ = (*a)->arp_rarpRcvd.value+(*a)->arp_rarpSent.value;
       b_ = (*b)->arp_rarpRcvd.value+(*b)->arp_rarpSent.value;
       break;
-    case 8:
+    case 9:
       a_ = (*a)->appletalkRcvd.value+(*a)->appletalkSent.value;
       b_ = (*b)->appletalkRcvd.value+(*b)->appletalkSent.value;
       break;
-    case 10:
+    case 11:
       a_ = (*a)->netbiosRcvd.value+(*a)->netbiosSent.value;
       b_ = (*b)->netbiosRcvd.value+(*b)->netbiosSent.value;
       break;
-    case 12:
+    case 13:
       a_ = (*a)->osiRcvd.value+(*a)->osiSent.value, b_ = (*b)->osiRcvd.value+(*b)->osiSent.value;
       break;
-    case 13:
+    case 14:
       a_ = (*a)->ipv6Rcvd.value+(*a)->ipv6Sent.value, b_ = (*b)->ipv6Rcvd.value+(*b)->ipv6Sent.value;
       break;
-    case 14:
+    case 15:
       a_ = (*a)->stpRcvd.value+(*a)->stpSent.value, b_ = (*b)->stpRcvd.value+(*b)->stpSent.value;
       break;
-    case 15:
+    case 16:
       a_ = (*a)->otherRcvd.value+(*a)->otherSent.value, b_ = (*b)->otherRcvd.value+(*b)->otherSent.value;
       break;
     default:
@@ -1690,12 +1703,13 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 
   switch(myGlobals.columnSort) {
   case 2: /* IP Address */
-    if((*a)->hostIpAddress.s_addr > (*b)->hostIpAddress.s_addr)
+    /*if((*a)->hostIpAddress.s_addr > (*b)->hostIpAddress.s_addr)
       return(1);
-    else if((*a)->hostIpAddress.s_addr < (*b)->hostIpAddress.s_addr)
+      else if((*a)->hostIpAddress.s_addr < (*b)->hostIpAddress.s_addr)
       return(-1);
-    else
-      return(0);
+      else
+      return(0);*/
+    return (addrcmp(&(*a)->hostIpAddress,&(*b)->hostIpAddress));
     break;
 
   case 3: /* Data Sent.value */
@@ -2141,11 +2155,12 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
         strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
       } else {
         strncpy(linkName, el->ethAddressString, sizeof(linkName));
-        for(i=0; linkName[i] != '\0'; i++)
+      }
+      /* For Ethernet and IPv6 addresses */
+      for(i=0; linkName[i] != '\0'; i++)
           if(linkName[i] == ':')
             linkName[i] = '_';  /* to avoid escaping chars */
-      }
-
+      
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Fragment Distribution for %s\"></TD>",
@@ -2280,13 +2295,13 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   ProtocolsList *protoList;
 
   totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value;
-  totalSent += el->icmpSent.value+el->ipxSent.value+el->dlcSent.value+el->arp_rarpSent.value;
+  totalSent += el->icmpSent.value+el->icmp6Sent.value+el->ipxSent.value+el->dlcSent.value+el->arp_rarpSent.value;
   totalSent +=  el->decnetSent.value+el->appletalkSent.value+el->netbiosSent.value+
     el->osiSent.value+el->ipv6Sent.value+el->stpSent.value+el->otherSent.value;
 
   totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
   totalRcvd += el->udpRcvdLoc.value+el->udpRcvdFromRem.value;
-  totalRcvd += el->icmpRcvd.value;
+  totalRcvd += el->icmpRcvd.value+el->icmp6Rcvd.value;
   totalRcvd += el->ipxRcvd.value+el->dlcRcvd.value+el->arp_rarpRcvd.value;
   totalRcvd += el->decnetRcvd.value+el->appletalkRcvd.value;
   totalRcvd += el->osiRcvd.value+el->netbiosRcvd.value+el->ipv6Rcvd.value
@@ -2334,6 +2349,11 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			100*((float)SD(el->icmpSent.value, totalSent)),
 			(float)el->icmpRcvd.value/1024,
 			100*((float)SD(el->icmpRcvd.value, totalRcvd)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "ICMPv6", CONST_COLOR_1, (float)el->icmp6Sent.value/1024,
+                        100*((float)SD(el->icmp6Sent.value, totalSent)),
+                        (float)el->icmp6Rcvd.value/1024,
+                        100*((float)SD(el->icmp6Rcvd.value, totalRcvd)));
 
   printTableDoubleEntry(buf, sizeof(buf), "(R)ARP", CONST_COLOR_1, (float)el->arp_rarpSent.value/1024,
 			100*((float)SD(el->arp_rarpSent.value, totalSent)),
@@ -2402,14 +2422,14 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   {
     totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+
       el->udpSentLoc.value+el->udpSentRem.value+
-      el->icmpSent.value+el->stpSent.value+
+      el->icmpSent.value+el->icmp6Sent.value+el->stpSent.value+
       el->ipxSent.value+el->osiSent.value+el->dlcSent.value+
       el->arp_rarpSent.value+el->decnetSent.value+el->appletalkSent.value+
       el->netbiosSent.value+el->ipv6Sent.value+el->otherSent.value;
 
     totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+
       el->udpRcvdLoc.value+el->udpRcvdFromRem.value+
-      el->icmpRcvd.value+el->stpRcvd.value+
+      el->icmpRcvd.value+el->icmp6Rcvd.value+el->stpRcvd.value+
       el->ipxRcvd.value+el->osiRcvd.value+el->dlcRcvd.value+
       el->arp_rarpRcvd.value+el->decnetRcvd.value+el->appletalkRcvd.value+
       el->netbiosRcvd.value+el->ipv6Rcvd.value+el->otherRcvd.value;
@@ -2433,11 +2453,12 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
         strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
       } else {
         strncpy(linkName, el->ethAddressString, sizeof(linkName));
-        for(i=0; linkName[i] != '\0'; i++)
-          if(linkName[i] == ':')
-            linkName[i] = '_';  /* to avoid escaping chars */
       }
-
+      /* For Ethernet and Ipv6 addresses */
+      for(i=0; linkName[i] != '\0'; i++)
+	if(linkName[i] == ':')
+            linkName[i] = '_';  /* to avoid escaping chars */
+      
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2>"
@@ -2475,7 +2496,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	if((el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value) > 0) {
 	  if(snprintf(buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent IP Traffic Distribution for %s\"></TD>",
-		      el->hostNumIpAddress, el->hostNumIpAddress) < 0)
+		      linkName, el->hostNumIpAddress) < 0)
 	    BufferTooShort();
 	  sendString(buf);
 	} else
@@ -2485,7 +2506,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  if(snprintf(buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-"
 		      "%s"CHART_FORMAT" ALT=\"Received IP Traffic Distribution for %s\"></TD></TR>",
-		      el->hostNumIpAddress, el->hostNumIpAddress) < 0)
+		      linkName, el->hostNumIpAddress) < 0)
 	    BufferTooShort();
 	  sendString(buf);
 	} else
@@ -2563,10 +2584,95 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
 /* ************************************ */
 
-void printHostIcmpStats(HostTraffic *el) {
+#ifdef INET6
+void printIcmpv6Stats(HostTraffic *el) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 
-  if(el->icmpInfo == NULL) return;
+  sendString("<CENTER>\n<H1>ICMPv6 Traffic</H1><p>\n");
+  sendString("<TABLE BORDER>\n");
+  sendString("<TR "TR_ON"><th>Type</th>"
+             "<TH "TH_BG" ALIGN=LEFT>Pkt&nbsp;Sent</TH>"
+             "<TH "TH_BG" ALIGN=LEFT>Pkt&nbsp;Rcvd</TH></TR>\n");
+
+  if(el->icmpInfo->icmpMsgSent[ICMP6_ECHO_REQUEST].value+el->icmpInfo->icmpMsgRcvd[ICMP6_ECHO_REQUEST].value > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Request</TH>"
+                "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+                formatPkts(el->icmpInfo->icmpMsgSent[ICMP6_ECHO_REQUEST].value),
+                formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP6_ECHO_REQUEST].value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+  
+  if(el->icmpInfo->icmpMsgSent[ICMP6_ECHO_REPLY].value+el->icmpInfo->icmpMsgRcvd[ICMP6_ECHO_REPLY].value > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Reply</TH>"
+                "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+                formatPkts(el->icmpInfo->icmpMsgSent[ICMP6_ECHO_REPLY].value),
+                formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP6_ECHO_REPLY].value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+
+  if(el->icmpInfo->icmpMsgSent[ICMP6_DST_UNREACH].value+el->icmpInfo->icmpMsgRcvd[ICMP6_DST_UNREACH].value > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Unreach</TH>"
+                "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+                formatPkts(el->icmpInfo->icmpMsgSent[ICMP6_DST_UNREACH].value),
+                formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP6_DST_UNREACH].value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+
+  if(el->icmpInfo->icmpMsgSent[ND_REDIRECT].value+el->icmpInfo->icmpMsgRcvd[ND_REDIRECT].value > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Redirect</TH>"
+                "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+                formatPkts(el->icmpInfo->icmpMsgSent[ND_REDIRECT].value),
+                formatPkts(el->icmpInfo->icmpMsgRcvd[ND_REDIRECT].value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+  
+  if(el->icmpInfo->icmpMsgSent[ND_ROUTER_ADVERT].value+el->icmpInfo->icmpMsgRcvd[ND_ROUTER_ADVERT].value > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router Advertisement</TH>"
+                "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+                formatPkts(el->icmpInfo->icmpMsgSent[ND_ROUTER_ADVERT].value),
+                formatPkts(el->icmpInfo->icmpMsgRcvd[ND_ROUTER_ADVERT].value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+
+  if(el->icmpInfo->icmpMsgSent[ND_ROUTER_SOLICIT].value+el->icmpInfo->icmpMsgRcvd[ND_ROUTER_SOLICIT].value > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router solicitation</TH>"
+                "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+                formatPkts(el->icmpInfo->icmpMsgSent[ND_ROUTER_SOLICIT].value),
+                formatPkts(el->icmpInfo->icmpMsgRcvd[ND_ROUTER_SOLICIT].value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+
+  if(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_SOLICIT].value+el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_SOLICIT].value > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Neighbor solicitation</TH>"
+                "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+                formatPkts(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_SOLICIT].value),  
+                formatPkts(el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_SOLICIT].value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+
+  if(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_ADVERT].value+el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_ADVERT].value > 0) {
+    if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Neighbor advertisment</TH>"
+                "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+                formatPkts(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_ADVERT].value),  
+                formatPkts(el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_ADVERT].value)) < 0)
+      BufferTooShort();
+    sendString(buf);
+  }
+  sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
+}
+#endif
+
+/* ******************************************** */
+
+void printIcmpv4Stats(HostTraffic *el) {
+  char buf[LEN_GENERAL_WORK_BUFFER];
 
   sendString("<CENTER>\n<H1>ICMP Traffic</H1><p>\n");
   sendString("<TABLE BORDER>\n");
@@ -2609,8 +2715,8 @@ void printHostIcmpStats(HostTraffic *el) {
       BufferTooShort();
     sendString(buf);
   }
-
-  if(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value+el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value > 0) {
+  
+   if(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value+el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value > 0) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router Advertisement</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value),
@@ -2619,7 +2725,7 @@ void printHostIcmpStats(HostTraffic *el) {
     sendString(buf);
   }
 
-  if(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value+el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value > 0) {
+   if(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value+el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value > 0) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Time Exceeded</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value),
@@ -2690,8 +2796,24 @@ void printHostIcmpStats(HostTraffic *el) {
       BufferTooShort();
     sendString(buf);
   }
-
+  /************ ICMPv6 info*********************/
+  
   sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
+}
+
+/* ************************************ */
+
+void printHostIcmpStats(HostTraffic *el){
+  int family;
+
+  if(el->icmpInfo == NULL) return;
+  family = el->hostIpAddress.hostFamily;
+  if (family == AF_INET)
+    printIcmpv4Stats(el);
+#ifdef INET6
+  else if (family == AF_INET6)
+    printIcmpv6Stats(el);
+#endif
 }
 
 /* ************************************ */
@@ -2743,15 +2865,15 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
   memset(el, 0, sizeof(HostTraffic));
   copySerial(&el->hostSerial, &theSerial);
 
-  if(theSerial.serialType == SERIAL_IPV4) {
+  if((theSerial.serialType == SERIAL_IPV4) ||
+     (theSerial.serialType == SERIAL_IPV6)){
     /* IP */
     char sniffedName[MAXDNAME];
     char buf[LEN_GENERAL_WORK_BUFFER];
 
-   el->hostIpAddress.s_addr = theSerial.value.ipAddress.s_addr;
-
+    addrcpy(&el->hostIpAddress,&theSerial.value.ipAddress);
     strncpy(el->hostNumIpAddress,
-	    _intoa(el->hostIpAddress, buf, sizeof(buf)),
+	    _addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 	    sizeof(el->hostNumIpAddress));
     fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
 
@@ -2771,7 +2893,8 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     memcpy(el->ethAddress, theSerial.value.ethAddress, LEN_ETHERNET_ADDRESS);
     ethAddr = etheraddr_string(el->ethAddress, etherbuf);
     strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
-    el->hostIpAddress.s_addr = 0x1234; /* dummy */
+    if (el->hostIpAddress.hostFamily == AF_INET)
+      el->hostIp4Address.s_addr = 0x1234; /* dummy */
   }
 
   return(el);
@@ -3065,17 +3188,21 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       snprintf(buf1, sizeof(buf1), " (%s)", sniffedName);
   }
 
-  if(el->hostSymIpAddress[0] != '\0') {
+  if((el->hostSymIpAddress[0] != '\0') && (strcmp(el->hostSymIpAddress, el->hostNumIpAddress))) {
     if(snprintf(buf, sizeof(buf), "Info about host"
 		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
                 "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n",
-                el->hostSymIpAddress, el->hostSymIpAddress, buf1) < 0)
+                el->hostSymIpAddress, 
+		el->hostSymIpAddress, buf1) < 0)
       BufferTooShort();
   } else if(el->hostNumIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about host"
-		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
+		" <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
                 "TITLE=\"Link to web server on host, if available\">%s %s</A>\n",
-                el->hostNumIpAddress, el->hostNumIpAddress, buf1) < 0)
+                el->hostIpAddress.hostFamily == AF_INET6 ? "[" : "",
+		el->hostNumIpAddress, 
+                el->hostIpAddress.hostFamily == AF_INET6 ? "]" : "",
+		el->hostNumIpAddress, buf1) < 0)
       BufferTooShort();
   } else {
     if(snprintf(buf, sizeof(buf), "Info about host %s",	el->ethAddressString) < 0)
@@ -4116,7 +4243,8 @@ void printSectionTitle(char *text) {
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if((broadcastHost(el) == 0) /* No broadcast addresses please */
        && (multicastHost(el) == 0) /* No multicast addresses please */
-       && ((el->hostNumIpAddress[0] != '\0') && (el->hostIpAddress.s_addr != '0' /* 0.0.0.0 */) /* This host speaks IP */)
+       && ((el->hostNumIpAddress[0] != '\0') && (!addrnull(&el->hostIpAddress))
+	   /* This host speaks IP */)
        && subnetPseudoLocalHost(el)) {
 
       if(el->fingerprint == NULL)   { continue; }

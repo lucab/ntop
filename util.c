@@ -98,7 +98,7 @@ HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
 
 /* ************************************ */
 
-HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId) {
+HostTraffic* findHostByNumIP(HostAddr hostIpAddress, u_int actualDeviceId) {
   HostTraffic *el;
   short dummyShort=1;
   u_int idx = hashHost(&hostIpAddress, NULL, &dummyShort, &el, actualDeviceId);
@@ -111,7 +111,7 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
-    if((el->hostNumIpAddress != NULL) && (el->hostIpAddress.s_addr == hostIpAddress.s_addr))
+    if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress,&hostIpAddress) == 0))
       return(el);
   }
 
@@ -126,11 +126,10 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
       el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
       for(; el != NULL; el = el->next) {
-	if((el->hostNumIpAddress != NULL) && (el->hostIpAddress.s_addr == hostIpAddress.s_addr))
+	if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress,&hostIpAddress) == 0))
 	  return(el);
       }
-    }
-  }
+    }  }
 
 #ifdef DEBUG
   {
@@ -147,12 +146,12 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
 /* ************************************ */
 
 HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
-    if(theSerial.serialType == SERIAL_IPV4) {
-	return(findHostByNumIP(theSerial.value.ipAddress, actualDeviceId));
-    } else {
-	/* MAC */
-	return(findHostByMAC(theSerial.value.ethAddress, actualDeviceId));
-    }
+  if(theSerial.serialType == SERIAL_IPV4 || theSerial.serialType == SERIAL_IPV6) {
+    return(findHostByNumIP(theSerial.value.ipAddress, actualDeviceId));
+  } else {
+    /* MAC */
+    return(findHostByMAC(theSerial.value.ethAddress, actualDeviceId));
+  }
 }
 
 /* ************************************ */
@@ -177,8 +176,286 @@ HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId) {
   return(NULL);
 }
 
-/* ************************************ */
+/* *****************************************************/
 
+#ifdef INET6
+unsigned long in6_hash(struct in6_addr *addr) {
+  return
+    (addr->s6_addr[13]      ) | (addr->s6_addr[15] << 8) |
+    (addr->s6_addr[14] << 16) | (addr->s6_addr[11] << 24);
+  
+} 
+#endif
+
+/* *************************************** */
+
+unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport) {
+  
+  unsigned short idx;
+  if (srcAddr->hostFamily != dstAddr->hostFamily)
+    return -1;
+  switch (srcAddr->hostFamily){
+  case AF_INET:
+    /*
+     * The hash key has to be calculated in a specular
+     * way: its value has to be the same regardless
+     * of the flow direction.
+     *
+     * Patch on the line below courtesy of
+     * Paul Chapman <pchapman@fury.bio.dfo.ca>
+     */
+    idx = (u_int)(((dstAddr->Ip4Address.s_addr) & 0xffff) ^
+		  ((dstAddr->Ip4Address.s_addr >> 15) & 0xffff) ^
+		  ((srcAddr->Ip4Address.s_addr << 1) & 0xffff) ^
+		  ((srcAddr->Ip4Address.s_addr >> 16 ) & 0xffff) ^
+		  (dport << 1) ^ (sport));
+    break;
+#ifdef INET6
+  case AF_INET6:
+    idx = (u_int)(((dstAddr->Ip6Address.s6_addr[0]) & 0xffff) ^
+		  ((dstAddr->Ip6Address.s6_addr[0] >> 15) & 0xffff) ^
+		  ((srcAddr->Ip6Address.s6_addr[0] << 1) & 0xffff) ^
+		  ((srcAddr->Ip6Address.s6_addr[0] >> 16 ) & 0xffff) ^
+		  (dport << 1) ^ (sport));
+    break;
+#endif
+  }
+  return idx;
+}
+
+/* ******************************************** */
+
+u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport) {
+  u_int16_t transactionId;
+  if (srcAddr->hostFamily != dstAddr->hostFamily)
+    return -1;
+  switch (srcAddr->hostFamily){
+  case AF_INET:
+    transactionId = (u_int16_t)(3*srcAddr->Ip4Address.s_addr+
+				dstAddr->Ip4Address.s_addr+5*dport+7*sport);
+    break;
+#ifdef INET6
+  case AF_INET6:
+    transactionId = (u_int16_t)(3*srcAddr->Ip6Address.s6_addr[0]+
+				dstAddr->Ip6Address.s6_addr[0]+5*dport+7*sport);
+    break;
+#endif
+  }
+  return transactionId;
+}
+
+/* ***************************** */
+
+#ifdef INET6
+int in6_isglobal(struct in6_addr *addr) {
+  return (addr->s6_addr[0] & 0xe0) == 0x20;
+}
+#endif
+
+/* ***************************** */
+
+unsigned short addrcmp(HostAddr *addr1, HostAddr *addr2) {
+  if (addr1->hostFamily != addr2->hostFamily)
+    return 1;
+  switch (addr1->hostFamily){
+  case AF_INET:
+    if (addr1->Ip4Address.s_addr > addr2->Ip4Address.s_addr)
+      return (1);
+    else if (addr1->Ip4Address.s_addr < addr2->Ip4Address.s_addr)
+      return (-1);
+    else 
+      return (0);
+    /*return (addr1->Ip4Address.s_addr != addr2->Ip4Address.s_addr);*/
+
+#ifdef INET6
+  case AF_INET6:
+    if(memcmp(&addr1->Ip6Address,&addr2->Ip6Address,sizeof(struct in6_addr)) > 0)
+      return (1);
+    else if (memcmp(&addr1->Ip6Address,&addr2->Ip6Address,sizeof(struct in6_addr)) <0)
+      return (-1);
+    else 
+      return (0);
+    break;
+#endif
+  default:
+    return 1;
+  }
+}
+
+/* ****************************************** */
+
+HostAddr *addrcpy(HostAddr *dst, HostAddr *src) {  
+  dst->hostFamily = src->hostFamily;
+  switch (src->hostFamily){
+  case AF_INET:
+    return memcpy(&dst->Ip4Address,&src->Ip4Address,sizeof(struct in_addr));
+#ifdef INET6
+  case AF_INET6:
+    return memcpy(&dst->Ip6Address,&src->Ip6Address,sizeof(struct in6_addr));
+#endif
+
+  default:
+    return NULL;
+  }
+}
+
+/* ****************************************** */
+
+int addrinit(HostAddr *addr) {  
+  addr->hostFamily = AF_INET;
+  addr->Ip4Address.s_addr = 0;
+  return(0);
+}
+
+/* ****************************************** */
+
+unsigned short addrget(HostAddr *Haddr,void *addr, int *family , int *size) {
+  struct in_addr v4addr;
+  
+  *family = Haddr->hostFamily;
+  switch(Haddr->hostFamily){
+  case AF_INET:
+    v4addr.s_addr = ntohl(Haddr->Ip4Address.s_addr);
+    memcpy((struct in_addr *)addr,&v4addr,sizeof(struct in_addr));
+    *size = sizeof(struct in_addr);
+    break;
+#ifdef INET6
+  case AF_INET6:
+    memcpy((struct in6_addr *)addr,&Haddr->Ip6Address, sizeof(struct in6_addr));
+    *size = sizeof(struct in6_addr);
+    break;
+#endif
+  }
+  return 1;
+}
+
+/* ****************************************** */
+
+unsigned short addrput(int family, HostAddr *dst, void *src) {
+  if (dst == NULL)
+    return -1;
+  dst->hostFamily = family;
+  switch (family){
+  case AF_INET:
+    memcpy(&dst->Ip4Address, (struct in_addr *)src,sizeof(struct in_addr));
+    break;
+#ifdef INET6
+  case AF_INET6:
+    memcpy(&dst->Ip6Address, (struct in6_addr *)src, sizeof(struct in6_addr));
+    break;
+#endif
+  }
+  return(1);
+}
+
+/* ****************************************** */
+
+unsigned short addrnull(HostAddr *addr) {
+  switch(addr->hostFamily){
+  case AF_INET:
+    return (addr->Ip4Address.s_addr == 0x0);
+#ifdef INET6
+  case AF_INET6:
+    return (addr->Ip6Address.s6_addr[0] == 0x0);
+#endif
+  }    
+}
+
+/* ****************************************** */
+
+unsigned short addrfull(HostAddr *addr) {
+  switch(addr->hostFamily){
+  case AF_INET:
+    return (addr->Ip4Address.s_addr == 0xffffffff);
+#ifdef INET6
+  case AF_INET6:
+    return 0;
+#endif
+  }
+}
+
+/* ****************************************** */
+
+#ifdef INET6
+unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int size) {
+  int found = 0;
+  NtopIfaceAddr *it;
+  
+  for (it = addrs ; it != NULL; it = it->next){
+    if (size == 0) 
+      size = it->af.inet6.prefixlen / 8;
+#if DEBUG
+    {
+      char buf[47], buf1[47];
+      traceEvent(CONST_TRACE_INFO, "DEBUG: comparing [%s/%s]: %d\n",
+		 _intop(addr, buf, INET6_ADDRSTRLEN),
+		 _intop(&it->af.inet6.ifAddr, buf1, INET6_ADDRSTRLEN), found);
+    }
+#endif
+    if (memcmp(&it->af.inet6.ifAddr,addr,size) == 0){
+      found = 1;
+      break;
+    }
+  }
+
+  return found; 
+}
+#endif
+
+/* ****************************************** */
+
+#ifdef INET6
+unsigned short addrlookup(struct in6_addr *addr,  NtopIfaceAddr *addrs) {
+  return (prefixlookup(addr,addrs, sizeof(struct in6_addr)));
+}
+#endif
+
+/* ****************************************** */
+
+#ifdef INET6
+NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
+  struct iface_handler        *ih;
+  struct iface_if             *ii;
+  struct iface_addr           *ia;
+  NtopIfaceAddr               *tmp;
+  int count, addr_pos;
+  char bufaddr[INET6_ADDRSTRLEN+1];
+  if (! (ih = iface_new()))
+    goto oops;
+  for (ii = iface_getif_first(ih) ; ii ; ii = iface_getif_next(ii))
+    if (!strcmp(ii->name,device))
+      if (iface_if_getinfo(ii) & IFACE_INFO_UP){
+	/* Allocate memory for IPv6 addresses*/
+	count = iface_if_addrcount(ii, AF_INET6);
+	addrs = (NtopIfaceAddr *)calloc(count, sizeof(NtopIfaceAddr));
+	addr_pos = 0;
+	for (ia = iface_getaddr_first(ii, AF_INET6) ; ia ;
+	     ia = iface_getaddr_next(ia, AF_INET6)) {
+	  struct iface_addr_inet6 i6;
+	  iface_addr_getinfo(ia, &i6);
+	  if (in6_isglobal(&i6.addr)&& (addr_pos < count) ) {
+	    tmp = &addrs[addr_pos];
+	    tmp->family = AF_INET6;
+	    memcpy(&tmp->af.inet6.ifAddr, &i6.addr,sizeof(struct in6_addr));
+	    tmp->af.inet6.prefixlen = ia->af.inet6.prefixlen;
+	    tmp->next = &addrs[addr_pos+1];
+	    addr_pos++;
+	  }
+	}
+      }
+  tmp->next = NULL;
+  iface_destroy(ih);
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "DEBUG: Local address is: %s\n", intop(hostAddress));
+#endif
+  return addrs;
+    
+ oops:    
+  return NULL;
+}
+#endif
+
+/*******************************************/
 /*
  * Copy arg vector into a new buffer, concatenating arguments with spaces.
  */
@@ -213,9 +490,82 @@ char* copy_argv(register char **argv) {
   return buf;
 }
 
+/**************************************/
+
+#ifdef INET6
+unsigned short isLinkLocalAddress(struct in6_addr *addr) {
+  int i;
+
+  if(addr == NULL)
+    return 1;
+  else if(addr->s6_addr == 0x0)
+    return 0; /* IP-less myGlobals.device (is it trying to boot via DHCP/BOOTP ?) */
+  else {
+    for(i=0; i<myGlobals.numDevices; i++)
+      if(IN6_IS_ADDR_LINKLOCAL(addr)) {
+#ifdef DEBUG
+	traceEvent(CONST_TRACE_INFO, "DEBUG: %s is a linklocal address", intop(addr));
+#endif
+	return 1;
+      }
+    return 0;
+  }
+}
+#endif
+
+/*******************************************/
+
+#ifdef INET6
+unsigned short in6_isMulticastAddress(struct in6_addr *addr) {
+  if(IN6_IS_ADDR_MULTICAST(addr)) {
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: %s is multicast [%X/%X]\n",
+	       intop(addr));
+#endif
+    return 1;
+  } else
+    return 0;
+}
+#endif
+
+/*******************************************/
+
+#ifdef INET6
+unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId) {
+  if(deviceId >= myGlobals.numDevices) {
+    traceEvent(CONST_TRACE_WARNING, "WARNING: Index %u out of range [0..%u] - address treated as remote",
+	       deviceId, myGlobals.numDevices); 
+    return(0);
+  }
+  
+  if(addrlookup(addr,myGlobals.device[deviceId].v6Addrs) == 1) {
+#ifdef ADDRESS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local\n", intop(addr));
+#endif
+    return 1;
+  }
+
+  if(myGlobals.trackOnlyLocalHosts)
+    return(0);
+  
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "DEBUG: %s is %s\n", intop(addr));
+#endif
+  /* Link Local Addresses are local */
+  return(isLinkLocalAddress(addr));
+}
+
+/* ******************************************* */
+
+unsigned short in6_isPrivateAddress(struct in6_addr *addr) {
+  /* IPv6 have private addresses ?*/
+  return(0);
+}
+#endif
+
 /* ********************************* */
 
-unsigned short isBroadcastAddress(struct in_addr *addr) {
+unsigned short in_isBroadcastAddress(struct in_addr *addr) {
   int i;
 
   if(addr == NULL)
@@ -236,13 +586,13 @@ unsigned short isBroadcastAddress(struct in_addr *addr) {
 	return 1;
       }
 
-    return(isPseudoBroadcastAddress(addr));
+    return(in_isPseudoBroadcastAddress(addr));
   }
 }
 
 /* ********************************* */
 
-unsigned short isMulticastAddress(struct in_addr *addr) {
+unsigned short in_isMulticastAddress(struct in_addr *addr) {
   if((addr->s_addr & CONST_MULTICAST_MASK) == CONST_MULTICAST_MASK) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG: %s is multicast [%X/%X]",
@@ -258,7 +608,7 @@ unsigned short isMulticastAddress(struct in_addr *addr) {
 
 /* ********************************* */
 
-unsigned short isLocalAddress(struct in_addr *addr, u_int deviceId) {
+unsigned short in_isLocalAddress(struct in_addr *addr, u_int deviceId) {
   if(deviceId >= myGlobals.numDevices) {
     traceEvent(CONST_TRACE_WARNING, "Index %u out of range [0..%u] - address treated as remote",
 	       deviceId, myGlobals.numDevices);
@@ -300,13 +650,12 @@ unsigned short isLocalAddress(struct in_addr *addr, u_int deviceId) {
 	     isBroadcastAddress(addr) ? "pseudolocal" : "remote");
 #endif
   /* Broadcast is considered a local address */
-  return(isBroadcastAddress(addr));
+  return(in_isBroadcastAddress(addr));
 }
 
 /* ********************************* */
 
-unsigned short isPrivateAddress(struct in_addr *addr) {
-
+unsigned short in_isPrivateAddress(struct in_addr *addr) {
   /* See http://www.isi.edu/in-notes/rfc1918.txt */
 
   /* Fixes below courtesy of Wies-Software <wies@wiessoft.de> */
@@ -318,6 +667,59 @@ unsigned short isPrivateAddress(struct in_addr *addr) {
   else
     return(0);
 }
+
+/***************************************/
+
+unsigned short isBroadcastAddress(HostAddr *addr){
+  switch(addr->hostFamily){
+  case AF_INET:
+    return (in_isBroadcastAddress(&addr->Ip4Address));
+#ifdef INET6
+  case AF_INET6:
+    return (isLinkLocalAddress(&addr->Ip6Address));
+#endif
+  }
+}
+
+/* ******************************************** */
+
+unsigned short isMulticastAddress(HostAddr *addr){
+  switch(addr->hostFamily){
+  case AF_INET:
+    return (in_isMulticastAddress(&addr->Ip4Address));
+#ifdef INET6
+  case AF_INET6:
+    return (in6_isMulticastAddress(&addr->Ip6Address));
+#endif
+  }
+}
+
+/* ************************************************* */
+
+unsigned short isLocalAddress(HostAddr *addr, u_int deviceId) {
+  switch(addr->hostFamily){
+  case AF_INET:
+    return (in_isLocalAddress(&addr->Ip4Address,deviceId));
+#ifdef INET6
+  case AF_INET6:
+    return (in6_isLocalAddress(&addr->Ip6Address,deviceId));
+#endif
+  }
+}
+
+/* ************************************************** */
+
+unsigned short isPrivateAddress(HostAddr *addr) {
+  switch(addr->hostFamily){
+  case AF_INET:
+    return (in_isPrivateAddress(&addr->Ip4Address));
+#ifdef INET6
+  case AF_INET6:
+    return (in6_isPrivateAddress(&addr->Ip6Address));
+#endif
+  }
+}
+
 
 /* **********************************************
  *
@@ -490,10 +892,10 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 
       if(sscanf(address, "%d.%d.%d.%d", &a, &b, &c, &d) != 4) {
         traceEvent(CONST_TRACE_WARNING, "%s: Bad format '%s' - ignoring entry",
-                     flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
-                         flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-                         flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" : "unknown",
-                      address);
+		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" : "unknown",
+		   address);
 	address = strtok_r(NULL, ",", &strtokState);
 	continue;
       }
@@ -501,10 +903,10 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
       if(bits == CONST_INVALIDNETMASK) {
 	/* malformed netmask specification */
         traceEvent(CONST_TRACE_WARNING, "%s: Net mask '%s' not valid - ignoring entry",
-                     flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
-                         flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-                         flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" : "unknown",
-                     mask);
+		   flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" : "unknown",
+		   mask);
 	address = strtok_r(NULL, ",", &strtokState);
 	continue;
       }
@@ -531,8 +933,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 	/* malformed network specification */
 	traceEvent(CONST_TRACE_WARNING, "%s: %d.%d.%d.%d/%d is not a valid network - correcting mask",
                    flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
-                       flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-                       flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" : "unknown",
                    a, b, c, d, bits);
 
 	/* correcting network numbers as specified in the netmask */
@@ -618,8 +1020,8 @@ void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS]
 
         traceEvent(CONST_TRACE_ERROR, "%s: %d.%d.%d.%d/%d - Too many networks (limit %d) - discarded",
                    flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m"  :
-                       flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-                       flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" : "unknown",
+		   flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
+		   flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow" : "unknown",
                    a, b, c, d, bits,
                    MAX_NUM_NETWORKS);
       }
@@ -645,6 +1047,19 @@ void handleLocalAddresses(char* addresses) {
 }
 
 /* ********************************* */
+
+#ifdef INET6
+unsigned short in6_pseudoLocalAddress(struct in6_addr *addr) {
+  int i;
+ 
+  for(i=0; i<myGlobals.numDevices; i++) {
+    if (prefixlookup(addr,myGlobals.device[i].v6Addrs,0) == 1)
+      return (1);
+      
+  }
+  return(0);
+}
+#endif
 
 unsigned short __pseudoLocalAddress(struct in_addr *addr,
 				    u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
@@ -681,13 +1096,28 @@ unsigned short __pseudoLocalAddress(struct in_addr *addr,
 
 /* ********************************* */
 
-unsigned short _pseudoLocalAddress(struct in_addr *addr) {
+unsigned short in_pseudoLocalAddress(struct in_addr *addr) {
   return(__pseudoLocalAddress(addr, myGlobals.localNetworks, myGlobals.numLocalNetworks));
 }
 
 /* ********************************* */
 
-unsigned short deviceLocalAddress(struct in_addr *addr, u_int deviceId) {
+#ifdef INET6
+unsigned short in6_deviceLocalAddress(struct in6_addr *addr, u_int deviceId) {
+  int rc;
+
+  if(addrlookup(addr,myGlobals.device[deviceId].v6Addrs))
+    rc = 1;
+  else
+    rc = 0;
+
+  return(rc);
+}
+#endif
+
+/* ********************************* */
+
+unsigned short in_deviceLocalAddress(struct in_addr *addr, u_int deviceId) {
   int rc;
 
   if((addr->s_addr & myGlobals.device[deviceId].netmask.s_addr) == myGlobals.device[deviceId].network.s_addr)
@@ -709,12 +1139,44 @@ unsigned short deviceLocalAddress(struct in_addr *addr, u_int deviceId) {
 
 /* ********************************* */
 
-/* This function returns true when a host is considered local
-   as specified using the 'm' flag */
-unsigned short isPseudoLocalAddress(struct in_addr *addr, u_int deviceId) {
+#ifdef INET6
+unsigned short in6_isPseudoLocalAddress(struct in6_addr *addr, u_int deviceId) {
   int i;
 
-  i = isLocalAddress(addr, deviceId);
+  i = in6_isLocalAddress(addr, deviceId);
+
+  if(i == 1) {
+#ifdef ADDRESS_DEBUG
+    traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s is local\n", intop(addr));
+#endif
+
+    return 1; /* This is a real local address */
+  }
+
+  if(in6_pseudoLocalAddress(addr))
+    return 1;
+
+  /*
+    We don't check for broadcast as this check has been
+    performed already by isLocalAddress() just called
+  */
+
+#ifdef ADDRESS_DEBUG
+  traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s is remote\n", intop(addr));
+#endif
+
+  return(0);
+}
+#endif
+
+/* ******************************************** */
+
+/* This function returns true when a host is considered local
+   as specified using the 'm' flag */
+unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId) {
+  int i;
+
+  i = in_isLocalAddress(addr, deviceId);
 
   if(i == 1) {
 #ifdef ADDRESS_DEBUG
@@ -724,7 +1186,7 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr, u_int deviceId) {
     return 1; /* This is a real local address */
   }
 
-  if(_pseudoLocalAddress(addr))
+  if(in_pseudoLocalAddress(addr))
     return 1;
 
   /*
@@ -744,7 +1206,7 @@ unsigned short isPseudoLocalAddress(struct in_addr *addr, u_int deviceId) {
 /* This function returns true when an address is the broadcast
    for the specified (-m flag subnets */
 
-unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
+unsigned short in_isPseudoBroadcastAddress(struct in_addr *addr) {
   int i;
 
 #ifdef ADDRESS_DEBUG
@@ -766,6 +1228,58 @@ unsigned short isPseudoBroadcastAddress(struct in_addr *addr) {
   }
 
   return(0);
+}
+
+/*************************************/
+
+unsigned short deviceLocalAddress(HostAddr *addr, u_int deviceId) {
+  switch(addr->hostFamily){
+  case AF_INET:
+    return (in_deviceLocalAddress(&addr->Ip4Address, deviceId));
+#ifdef INET6
+  case AF_INET6:
+    return (in6_deviceLocalAddress(&addr->Ip6Address, deviceId));
+#endif
+  }
+}
+
+/* ********************************* */
+
+unsigned short isPseudoLocalAddress(HostAddr *addr, u_int deviceId) {
+  switch(addr->hostFamily){
+  case AF_INET:
+    return (in_isPseudoLocalAddress(&addr->Ip4Address, deviceId));
+#ifdef INET6
+  case AF_INET6:
+    return (in6_isPseudoLocalAddress(&addr->Ip6Address, deviceId));
+#endif
+  }
+}
+
+/* ********************************* */
+
+unsigned short isPseudoBroadcastAddress(HostAddr *addr) {
+  switch(addr->hostFamily){
+  case AF_INET:
+    return (in_isPseudoBroadcastAddress(&addr->Ip4Address));
+#ifdef INET6
+  case AF_INET6:
+    return 0;
+#endif
+  }
+}
+
+/* ********************************* */
+
+unsigned short _pseudoLocalAddress(HostAddr *addr) {
+  switch(addr->hostFamily){
+  case AF_INET:
+    return (in_pseudoLocalAddress(&addr->Ip4Address));
+#ifdef INET6
+  case AF_INET6:
+    return (in6_pseudoLocalAddress(&addr->Ip6Address));
+#endif
+  } 
 }
 
 /* ********************************* */
@@ -1184,7 +1698,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 
 #ifdef SEMAPHORE_DEBUG
     traceEvent(CONST_TRACE_INFO, "SEMAPHORE_DEBUG: accessMutex() call '%s' succeeded [0x%X@%s:%d]",
-              where, (void*)&(mutexId->mutex), fileName, fileLine);
+	       where, (void*)&(mutexId->mutex), fileName, fileLine);
 #endif
 
     mutexId->numLocks++;
@@ -1245,8 +1759,8 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
          && (pthread_equal(mutexId->lockThread, pthread_self()))
          ) {
         traceEvent(CONST_TRACE_WARNING,
-  		 "tryLockMutex() called '%s' with a self-LOCKED mutex [0x%X@%s:%d]",
-  		 where, (void*)&(mutexId->mutex), fileName, fileLine);
+		   "tryLockMutex() called '%s' with a self-LOCKED mutex [0x%X@%s:%d]",
+		   where, (void*)&(mutexId->mutex), fileName, fileLine);
       }
     }
 
@@ -1982,7 +2496,7 @@ void traceEvent(int eventTraceLevel, char* file,
         int i;
         /* Hash the message format into an id */
         for (i=0; i<=strlen(format); i++) {
-            messageid = (messageid << 1) ^ max(0,format[i]-32);
+	  messageid = (messageid << 1) ^ max(0,format[i]-32);
         }
         /* 1st chars of file name for uniqueness */
         messageid += (file[0]-32) * 256 + file[1]-32;
@@ -2031,7 +2545,7 @@ void traceEvent(int eventTraceLevel, char* file,
       myGlobals.logViewNext = (myGlobals.logViewNext + 1) % CONST_LOG_VIEW_BUFFER_SIZE;
 
 #ifdef CFG_MULTITHREADED
-	  #ifndef WIN32
+#ifndef WIN32
       if(myGlobals.logViewMutex.isInitialized)
 	pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
 #endif
@@ -2362,7 +2876,7 @@ void fillDomainName(HostTraffic *el) {
   if(theDomainHasBeenComputed(el)
      || (el->hostSymIpAddress    == NULL)
      || (el->hostSymIpAddress[0] == '\0')) {
-	  el->fullDomainName = strdup("");
+    el->fullDomainName = strdup("");
     return;
   }
 
@@ -2372,7 +2886,8 @@ void fillDomainName(HostTraffic *el) {
   if(el->fullDomainName != NULL) free(el->fullDomainName);
   if(el->dotDomainName != NULL) free(el->dotDomainName);
 
-  ip2cc = ip2CountryCode(el->hostIpAddress.s_addr);
+  ip2cc = ip2CountryCode(el->hostIpAddress);
+  
   if(ip2cc == NULL) {
     /* We are unable to associate a domain with an IP address. */
     el->dotDomainName = strdup("");
@@ -2442,13 +2957,13 @@ void fillDomainName(HostTraffic *el) {
     else
       i++;
 
-    if((el->hostSymIpAddress[i] == '.')
-       && (strlen(el->hostSymIpAddress) > (i+1)))
-      el->fullDomainName = strdup(&el->hostSymIpAddress[i+1]);
-    else
-      el->fullDomainName = strdup("");
+  if((el->hostSymIpAddress[i] == '.')
+     && (strlen(el->hostSymIpAddress) > (i+1)))
+    el->fullDomainName = strdup(&el->hostSymIpAddress[i+1]);
+  else
+    el->fullDomainName = strdup("");
 
-    /* traceEvent(CONST_TRACE_INFO, "'%s'", el->domainName); */
+  /* traceEvent(CONST_TRACE_INFO, "'%s'", el->domainName); */
 
   releaseAddrResMutex();
 }
@@ -2548,7 +3063,7 @@ void setNBnodeNameType(HostTraffic *theHost,
 
 /* ******************************************* */
 
-void addPassiveSessionInfo(u_long theHost, u_short thePort) {
+void addPassiveSessionInfo(HostAddr *theHost, u_short thePort) {
   int i;
   time_t timeoutTime = myGlobals.actTime - PARM_PASSIVE_SESSION_MINIMUM_IDLE;
 
@@ -2559,7 +3074,7 @@ void addPassiveSessionInfo(u_long theHost, u_short thePort) {
   for(i=0; i<passiveSessionsLen; i++) {
     if((passiveSessions[i].sessionPort == 0)
        || (passiveSessions[i].creationTime < timeoutTime)) {
-      passiveSessions[i].sessionHost.s_addr = theHost,
+      addrcpy(&passiveSessions[i].sessionHost,theHost),
 	passiveSessions[i].sessionPort = thePort,
 	passiveSessions[i].creationTime = myGlobals.actTime;
       break;
@@ -2575,14 +3090,14 @@ void addPassiveSessionInfo(u_long theHost, u_short thePort) {
       passiveSessions[i-1].sessionHost = passiveSessions[i].sessionHost,
 	passiveSessions[i-1].sessionPort = passiveSessions[i].sessionPort;
     }
-    passiveSessions[passiveSessionsLen-1].sessionHost.s_addr = theHost,
+    addrcpy(&passiveSessions[passiveSessionsLen-1].sessionHost,theHost),
       passiveSessions[passiveSessionsLen-1].sessionPort = thePort;
   }
 }
 
 /* ******************************************* */
 
-int isPassiveSession(u_long theHost, u_short thePort) {
+int isPassiveSession(HostAddr *theHost, u_short thePort) {
   int i;
 
 #ifdef DEBUG
@@ -2591,9 +3106,9 @@ int isPassiveSession(u_long theHost, u_short thePort) {
 #endif
 
   for(i=0; i<passiveSessionsLen; i++) {
-    if((passiveSessions[i].sessionHost.s_addr == theHost)
+    if((addrcmp(&passiveSessions[i].sessionHost,theHost) == 0)
        && (passiveSessions[i].sessionPort == thePort)) {
-      passiveSessions[i].sessionHost.s_addr = 0,
+      addrinit(&passiveSessions[i].sessionHost),
 	passiveSessions[i].sessionPort = 0,
 	passiveSessions[i].creationTime = 0;
 #ifdef DEBUG
@@ -2741,7 +3256,7 @@ void resetUsageCounter(UsageCounter *counter) {
   memset(counter, 0, sizeof(UsageCounter));
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-      setEmptySerial(&counter->peersSerials[i]);
+    setEmptySerial(&counter->peersSerials[i]);
 }
 
 /* ************************************ */
@@ -2866,19 +3381,19 @@ int _incrementUsageCounter(UsageCounter *counter,
   counter->value.value++;
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-      if(emptySerial(&counter->peersSerials[i])) {
-	  copySerial(&counter->peersSerials[i], &theHost->hostSerial);
-	  return(1);
-	  break;
-      } else if(cmpSerial(&counter->peersSerials[i], &theHost->hostSerial)) {
-	  found = 1;
-	  break;
-      }
+    if(emptySerial(&counter->peersSerials[i])) {
+      copySerial(&counter->peersSerials[i], &theHost->hostSerial);
+      return(1);
+      break;
+    } else if(cmpSerial(&counter->peersSerials[i], &theHost->hostSerial)) {
+      found = 1;
+      break;
+    }
   }
 
   if(!found) {
     for(i=0; i<MAX_NUM_CONTACTED_PEERS-1; i++)
-	copySerial(&counter->peersSerials[i], &counter->peersSerials[i+1]);
+      copySerial(&counter->peersSerials[i], &counter->peersSerials[i+1]);
 
     /* Add host serial and not it's index */
     copySerial(&counter->peersSerials[MAX_NUM_CONTACTED_PEERS-1], &theHost->hostSerial);
@@ -3135,16 +3650,20 @@ void addNodeInternal(u_int32_t ip, int prefix, char *country, int as) {
 
 /* ******************************************************************* */
 
-char *ip2CountryCode(u_int32_t ip) {
+char *ip2CountryCode(HostAddr ip) {
   IPNode *p = myGlobals.countryFlagHead;
   int i, b;
   char *cc = "";
-
+  u_int32_t addr;
+  
+  if (ip.hostFamily == AF_INET6)
+    return NULL;
+  addr  = ip.Ip4Address.s_addr;
   i = 0;
   while(p != NULL) {
     if(p->node.cc[0] != 0)
       cc = p->node.cc;
-    b = (ip>>(31-i)) & 0x1;
+    b = (addr >>(31-i)) & 0x1;
     p = p->b[b];
     i++;
   }
@@ -3350,15 +3869,15 @@ int ntop_gdbm_delete(GDBM_FILE g, datum d) {
   int rc;
 
 #ifdef CFG_MULTITHREADED
-    if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-      accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_delete");
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_delete");
 #endif
 
   rc = gdbm_delete(g, d);
 
 #ifdef CFG_MULTITHREADED
-   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
-     releaseMutex(&myGlobals.gdbmMutex);
+  if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
+    releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
   return(rc);
@@ -3471,9 +3990,9 @@ void handleWhiteBlackListAddresses(char* addresses,
 
   *numNets = 0;
   if((addresses == NULL) ||(strlen(addresses) == 0) ) {
-      /* No list - return with numNets = 0 */
-      outAddresses[0]='\0';
-      return;
+    /* No list - return with numNets = 0 */
+    outAddresses[0]='\0';
+    return;
   }
 
   handleAddressLists(addresses, theNetworks,
@@ -3506,14 +4025,14 @@ unsigned short isOKtoSave(u_int32_t addr,
   workAddr.s_addr = addr;
 
   if(numBlackNets > 0) {
-      rc = __pseudoLocalAddress(&workAddr, blackNetworks, numBlackNets);
-      if(rc == 1)
-          return 2;
+    rc = __pseudoLocalAddress(&workAddr, blackNetworks, numBlackNets);
+    if(rc == 1)
+      return 2;
   }
 
   if(numWhiteNets > 0) {
-      rc = __pseudoLocalAddress(&workAddr, whiteNetworks, numWhiteNets);
-      return(1 - rc);
+    rc = __pseudoLocalAddress(&workAddr, whiteNetworks, numWhiteNets);
+    return(1 - rc);
   }
 
   return(0 /* SAVE */);
@@ -3522,64 +4041,64 @@ unsigned short isOKtoSave(u_int32_t addr,
 #ifndef HAVE_PCAP_OPEN_DEAD
 
 struct pcap_sf {
-	FILE *rfile;
-	int swapped;
-	int hdrsize;
-	int version_major;
-	int version_minor;
-	u_char *base;
+  FILE *rfile;
+  int swapped;
+  int hdrsize;
+  int version_major;
+  int version_minor;
+  u_char *base;
 };
 
 struct pcap_md {
-	struct pcap_stat stat;
-	/*XXX*/
-	int use_bpf;		/* using kernel filter */
-	u_long	TotPkts;	/* can't oflow for 79 hrs on ether */
-	u_long	TotAccepted;	/* count accepted by filter */
-	u_long	TotDrops;	/* count of dropped packets */
-	long	TotMissed;	/* missed by i/f during this run */
-	long	OrigMissed;	/* missed by i/f before this run */
+  struct pcap_stat stat;
+  /*XXX*/
+  int use_bpf;		/* using kernel filter */
+  u_long	TotPkts;	/* can't oflow for 79 hrs on ether */
+  u_long	TotAccepted;	/* count accepted by filter */
+  u_long	TotDrops;	/* count of dropped packets */
+  long	TotMissed;	/* missed by i/f during this run */
+  long	OrigMissed;	/* missed by i/f before this run */
 #ifdef linux
-	int	sock_packet;	/* using Linux 2.0 compatible interface */
-	int	timeout;	/* timeout specified to pcap_open_live */
-	int	clear_promisc;	/* must clear promiscuous mode when we close */
-	int	cooked;		/* using SOCK_DGRAM rather than SOCK_RAW */
-	int	lo_ifindex;	/* interface index of the loopback device */
-	char 	*device;	/* device name */
-	struct pcap *next;	/* list of open promiscuous sock_packet pcaps */
+  int	sock_packet;	/* using Linux 2.0 compatible interface */
+  int	timeout;	/* timeout specified to pcap_open_live */
+  int	clear_promisc;	/* must clear promiscuous mode when we close */
+  int	cooked;		/* using SOCK_DGRAM rather than SOCK_RAW */
+  int	lo_ifindex;	/* interface index of the loopback device */
+  char 	*device;	/* device name */
+  struct pcap *next;	/* list of open promiscuous sock_packet pcaps */
 #endif
 };
 
 struct pcap {
-	int fd;
-	int snapshot;
-	int linktype;
-	int tzoff;		/* timezone offset */
-	int offset;		/* offset for proper alignment */
+  int fd;
+  int snapshot;
+  int linktype;
+  int tzoff;		/* timezone offset */
+  int offset;		/* offset for proper alignment */
 
-	struct pcap_sf sf;
-	struct pcap_md md;
+  struct pcap_sf sf;
+  struct pcap_md md;
 
-	/*
-	 * Read buffer.
-	 */
-	int bufsize;
-	u_char *buffer;
-	u_char *bp;
-	int cc;
+  /*
+   * Read buffer.
+   */
+  int bufsize;
+  u_char *buffer;
+  u_char *bp;
+  int cc;
 
-	/*
-	 * Place holder for pcap_next().
-	 */
-	u_char *pkt;
+  /*
+   * Place holder for pcap_next().
+   */
+  u_char *pkt;
 
 
-	/*
-	 * Placeholder for filter code if bpf not in kernel.
-	 */
-	struct bpf_program fcode;
+  /*
+   * Placeholder for filter code if bpf not in kernel.
+   */
+  struct bpf_program fcode;
 
-	char errbuf[PCAP_ERRBUF_SIZE];
+  char errbuf[PCAP_ERRBUF_SIZE];
 };
 
 pcap_t *pcap_open_dead(int linktype, int snaplen)
@@ -3644,18 +4163,24 @@ int setSpecifiedUser(void) {
 
 /* ******************************************************************* */
 
-u_short ip2AS(u_int32_t ip) {
+u_short ip2AS(HostAddr ip) {
   IPNode *p;
   int i, b;
   u_short as=0;
-
+  u_int32_t addr;
+  
+  if (ip.hostFamily == AF_INET6)
+    return 0;
+  
+  addr = ip.Ip4Address.s_addr;
+  
   p = myGlobals.asHead;
-
+  
   i=0;
   while(p!=NULL) {
     if(p->node.as !=0 )
       as = p->node.as;
-    b=(ip>>(31-i)) & 0x1;
+    b=(addr>>(31-i)) & 0x1;
     p=p->b[b];
     i++;
   }
@@ -3664,10 +4189,8 @@ u_short ip2AS(u_int32_t ip) {
 #ifdef DEBUG
   {
     char buf[64];
-    struct in_addr addr;
-
-    addr.s_addr = ip;
-    traceEvent(CONST_TRACE_INFO, "%s: %d AS",  _intoa(addr, buf, sizeof(buf)), as);
+  
+    traceEvent(CONST_TRACE_INFO, "%s: %d AS", _intoa(&addr, buf, sizeof(buf)), as);
   }
 #endif
 
@@ -3677,7 +4200,7 @@ u_short ip2AS(u_int32_t ip) {
 /* ************************************ */
 
 u_int16_t getHostAS(HostTraffic *el) {
-  return(el->hostAS || (el->hostAS = ip2AS(el->hostIpAddress.s_addr)));
+  return(el->hostAS || (el->hostAS = ip2AS(el->hostIpAddress)));
 }
 
 /* ************************************ */
@@ -3711,25 +4234,25 @@ void readASs(FILE *fd) {
 /* ********************************** */
 
 int emptySerial(HostSerial *a) {
-    return(a->serialType == 0);
+  return(a->serialType == 0);
 }
 
 /* ********************************** */
 
 int cmpSerial(HostSerial *a, HostSerial *b) {
-    return(!memcmp(a, b, sizeof(HostSerial)));
+  return(!memcmp(a, b, sizeof(HostSerial)));
 }
 
 /* ********************************** */
 
 int copySerial(HostSerial *a, HostSerial *b) {
-    return(!memcpy(a, b, sizeof(HostSerial)));
+  return(!memcpy(a, b, sizeof(HostSerial)));
 }
 
 /* ********************************** */
 
 void setEmptySerial(HostSerial *a) {
-    memset(a, 0, sizeof(HostSerial));
+  memset(a, 0, sizeof(HostSerial));
 }
 
 /* ********************************* */
@@ -3765,8 +4288,8 @@ void saveNtopPid(void) {
   myGlobals.basentoppid = getpid();
   sprintf(pidFileName, "%s/%s",
           getuid() ? 
-            /* We're not root */ myGlobals.dbPath :
-            /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
+	  /* We're not root */ myGlobals.dbPath :
+	  /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
           DEFAULT_NTOP_PIDFILE);
   fd = fopen(pidFileName, "wb");
 
@@ -3787,8 +4310,8 @@ void removeNtopPid(void) {
 
   sprintf(pidFileName, "%s/%s", 
           getuid() ? 
-            /* We're not root */ myGlobals.dbPath :
-            /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
+	  /* We're not root */ myGlobals.dbPath :
+	  /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
           DEFAULT_NTOP_PIDFILE);
   rc = unlink(pidFileName);
   if (rc == 0) {
@@ -3819,10 +4342,10 @@ extern int ntop_sched_yield(char *file, int line) {
 #endif
 
   if(!myGlobals.disableSchedYield) {
-      sched_yield();
+    sched_yield();
 #ifdef DEBUG
   } else {
-      traceEvent(CONST_TRACE_INFO, "DEBUG: skipping sched_yield()");
+    traceEvent(CONST_TRACE_INFO, "DEBUG: skipping sched_yield()");
 #endif
   }
 }

@@ -91,6 +91,7 @@ reference the new structure.
  */
 
 #include "ntop.h"
+#include "globals-report.h"
 #include <stdarg.h>
 
 #ifdef MAKE_WITH_XMLDUMP
@@ -1832,6 +1833,8 @@ int dumpXML(int dumpToFile, char * options) {
 }
 
 #else
+
+/* ************************************************** */
 
 int dumpXML(int dumpToFile, char * options) {
 #ifdef XMLDUMP_DEBUG

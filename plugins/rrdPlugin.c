@@ -1557,7 +1557,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		hostKey = el->hostNumIpAddress;
 
 		if((numLocalNets > 0)
-		   && (!__pseudoLocalAddress(&el->hostIpAddress, networks, numLocalNets))) {
+		   && (el->hostIpAddress.hostFamily == AF_INET) /* IPv4 ONLY <-- FIX */
+		   && (!__pseudoLocalAddress(&el->hostIpAddress.Ip4Address, networks, numLocalNets))) {
 	          el = el->next;
 #ifdef CFG_MULTITHREADED
                   releaseMutex(&myGlobals.hostsHashMutex);
