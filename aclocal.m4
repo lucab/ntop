@@ -86,14 +86,7 @@ AC_DEFUN([NTOP_APPENDS],
     if test ".$2" != "."; then
         rc=`(echo $LDFLAGS | grep '$2 ' > /dev/null 2> /dev/null; echo $?)`
         if [[ $rc -eq 1 ]]; then
-            case "${DEFINEOS}" in
-              DARWIN )
-                LDFLAGS="$LDFLAGS -L$2 -L$2/lib"
-                ;;
-              * )
                 LDFLAGS="$LDFLAGS -L$2"
-                ;;
-            esac
         fi
     fi
     if test ".$3" != "."; then

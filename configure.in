@@ -1566,7 +1566,6 @@ fi
 AC_CHECK_HEADERS(png.h)
 AC_CHECK_LIB([png], [main])
 
-
 if test ".${ac_cv_header_png_h}" != ".yes" ||
    test ".${ac_cv_lib_png_main}" != ".yes"; then
     echo
@@ -1587,6 +1586,8 @@ if test ".${ac_cv_header_png_h}" != ".yes" ||
     echo
     exit 1 
 fi
+	
+NTOP_APPENDS(, [${MYRRD}], [myrrd])
 
 if test ".${ac_debug}" = ".yes"; then
     echo "DEBUG: CC            is '${CC}')"
