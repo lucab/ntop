@@ -2026,7 +2026,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	     && (theSession->bytesReceived == 0))) {
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
 		   srcHost->hostSymIpAddress, sport,
-		   dstHost->hostSymIpAddress, dport);		   
+		   dstHost->hostSymIpAddress, dport);
       }
       /* Connection terminated */
       incrementUsageCounter(&srcHost->rstPktsSent, dstHostIdx);
@@ -2064,7 +2064,7 @@ static void handleSession(const struct pcap_pkthdr *h,
        && ((tp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)))
 
       {
-	traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d]",		   
+	traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
       }
@@ -3346,6 +3346,17 @@ static void processIpPkt(const u_char *bp,
 	  break;
 #endif
 	}
+      } else if((sport == 7) || (dport == 7) /* echo */) {
+	char *fmt = "WARNING: host [%s] sent a UDP packet to host [%s:echo] (Network mapping attempt?)";
+
+	if(dport == 7)
+	  traceEvent(TRACE_INFO, fmt,
+		     srcHost->hostSymIpAddress,
+		     dstHost->hostSymIpAddress);
+	else /* sport == 7 */
+	  traceEvent(TRACE_INFO, fmt,
+		     dstHost->hostSymIpAddress,
+		     srcHost->hostSymIpAddress);
       }
     }
 
@@ -3444,8 +3455,31 @@ static void processIpPkt(const u_char *bp,
     if((icmpPkt.icmp_type == ICMP_ECHO)
        && (broadcastHost(dstHost) || multicastHost(dstHost)))
       smurfAlert(srcHostIdx, dstHostIdx);
-    else if(icmpPkt.icmp_type == ICMP_UNREACH_PORT /* Port Unreachable */)
-      traceEvent(TRACE_INFO, "Host [%s] sent UDP data to a closed port of host [%s] (UDP scan attempt?)", 
+    else if((icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */)
+	    && (icmpPkt.icmp_code == ICMP_UNREACH_PORT /* Port Unreachable */)) {
+      u_int16_t dport;
+      struct ip *oip = &icmpPkt.icmp_ip;
+
+      memcpy(&dport, ((u_char *)bp+hlen+30), sizeof(dport));
+      dport = ntohs(dport);
+      switch (oip->ip_p) {	
+      case IPPROTO_TCP:
+	traceEvent(TRACE_INFO, 
+		   "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
+		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	break;
+	
+      case IPPROTO_UDP:
+	traceEvent(TRACE_INFO, 
+		   "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
+		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	break;
+      }
+    } else if((icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */)
+	    && (icmpPkt.icmp_code == ICMP_UNREACH_FILTER_PROHIB /* Administratively Prohibited */))
+      traceEvent(TRACE_INFO, /* See http://www.packetfactory.net/firewalk/ */
+		 "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
+		 " (Firewalking scan attempt?)",
 		 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
    break;
 

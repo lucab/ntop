@@ -1599,6 +1599,9 @@ void storeHostTrafficInstance(HostTraffic *el) {
   datum data_data;
   char *key;
 
+  if(broadcastHost(el))
+    return;
+
   if(el->ethAddressString[0] == '\0')
     key = el->hostNumIpAddress;
   else
@@ -1653,7 +1656,8 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
 
     if(data_data.dsize != sizeof(HostTraffic)) {
 #ifdef STORAGE_DEBUG
-      traceEvent(TRACE_INFO, "Wrong size for '%s'[size=%d, expected=%d]. Deleted.\n",
+      traceEvent(TRACE_INFO, 
+		 "Wrong size for '%s'[size=%d, expected=%d]. Deleted.\n",
 		 key, data_data.dsize, sizeof(HostTraffic));
 #endif
       gdbm_delete(hostsInfoFile, key_data);
@@ -1696,8 +1700,17 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
     el->napsterStats = NULL;
     el->dhcpStats = NULL;
 
+    if(broadcastHost(el)) {
+      /*
+	Broadcast entries should
+	NOT be stored on disk
+      */
+      free(el);
+      return(NULL);
+    }
+
 #ifdef STORAGE_DEBUG
-    traceEvent(TRACE_INFO, "Resurrected instance: '%s/%s'\n",
+    traceEvent(TRACE_INFO, "\nResurrected instance: '%s/%s'\n",
 	       el->ethAddressString, el->hostNumIpAddress);
 #endif
     fprintf(stdout, "*"); fflush(stdout);

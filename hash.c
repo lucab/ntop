@@ -724,12 +724,13 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 
   /* ********** */
 
-  if((usePersistentStorage == 1)
-     || subnetPseudoLocalHost(host) /* <==== 
-				       Courtesy of  
-				       Joel Crisp <jcrisp@dyn21-126.trilogy.com>
-				    */
-     )
+  if((!broadcastHost(host))
+     && ((usePersistentStorage == 1)
+	 || subnetPseudoLocalHost(host) /* <==== 
+					   Courtesy of  
+					   Joel Crisp <jcrisp@dyn21-126.trilogy.com>
+					*/
+	 ))
     storeHostTrafficInstance(host);
 
   if(freeListLen == FREE_LIST_LEN) {

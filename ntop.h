@@ -914,6 +914,10 @@ typedef struct {
 #define ICMP_INFO_REQUEST               15      /* Information Request          */
 #endif
 
+#ifndef ICMP_DEST_UNREACHABLE
+#define	ICMP_DEST_UNREACHABLE		3       /* Destination Unreachable */
+#endif
+
 #ifndef ICMP_INFO_REPLY
 #define ICMP_INFO_REPLY                 16      /* Information Reply            */
 #endif
