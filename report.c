@@ -1938,7 +1938,7 @@ void printActiveTCPSessions(int actualDeviceId) {
 
   printHTMLheader("Active TCP Sessions", 0);
 
-  if(myGlobals.borderSnifferMode) {
+  if(!myGlobals.enableSessionHandling) {
     printNotAvailable();
     return;
   }

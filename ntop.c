@@ -527,20 +527,23 @@ void handleProtocols(char *protos) {
 /* **************************************** */
 
 void addDefaultProtocols(void) {
-  handleProtocolList("FTP", "ftp|ftp-data|");
-  handleProtocolList("HTTP", "http|www|https|");
-  handleProtocolList("DNS", "name|domain|");
-  handleProtocolList("Telnet", "telnet|login|");
+  handleProtocolList("FTP",      "ftp|ftp-data|");
+  handleProtocolList("HTTP",     "http|www|https|");
+  handleProtocolList("DNS",      "name|domain|");
+  handleProtocolList("Telnet",   "telnet|login|");
   handleProtocolList("NBios-IP", "netbios-ns|netbios-dgm|netbios-ssn|");
-  handleProtocolList("Mail", "pop-2|pop-3|pop3|kpop|smtp|imap|imap2|");
+  handleProtocolList("Mail",     "pop-2|pop-3|pop3|kpop|smtp|imap|imap2|");
   handleProtocolList("DHCP/BOOTP", "67-68|");
   handleProtocolList("SNMP", "snmp|snmp-trap|");
   handleProtocolList("NNTP", "nntp|");
-  handleProtocolList("NFS", "mount|pcnfs|bwnfs|nfsd|nfsd-status|");
-  handleProtocolList("X11", "6000-6010|");
+  handleProtocolList("NFS",  "mount|pcnfs|bwnfs|nfsd|nfsd-status|");
+  handleProtocolList("X11",  "6000-6010|");
   /* 22 == ssh (just to make sure the port is defined) */
-  handleProtocolList("SSH", "22|");
-
+  handleProtocolList("SSH",  "22|");
+  /* Peer-to-Peer Protocols */
+  handleProtocolList("Gnutella", "6346|6347|6348|");
+  handleProtocolList("Morpheus", "1214|");
+  handleProtocolList("WinMX",    "6699|7730|");
   createPortHash();
 }
 
