@@ -30,6 +30,11 @@
 
 static int *servicesMapper = NULL; /* temporary value */
 
+#if defined(FREEBSD) && defined(__FreeBSD_cc_version) && (__FreeBSD_cc_version < 500000) && defined(HAVE_PCAP_SETNONBLOCK)
+#warning special code for freeBSD 4.x
+static unsigned long long setNonBlockingSleepCount;
+#endif
+
 /* *************************** */
 
 #ifdef CFG_MULTITHREADED
@@ -75,6 +80,10 @@ void* pcapDispatch(void *_i) {
   int i = (int)_i;
   struct pcap_stat pcapStats;
 
+#if defined(FREEBSD) && defined(__FreeBSD_cc_version) && (__FreeBSD_cc_version < 500000) && defined(HAVE_PCAP_SETNONBLOCK)
+  setNonBlockingSleepCount = 0;
+#endif
+
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcapDispatch(%s) thread running...",
 	     myGlobals.device[i].humanFriendlyName);
 
@@ -87,7 +96,11 @@ void* pcapDispatch(void *_i) {
     HEARTBEAT(2, "pcapDispatch()", NULL);
     /* rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i); */
 
+#if defined(FREEBSD) && defined(__FreeBSD_cc_version) && (__FreeBSD_cc_version < 500000) && defined(HAVE_PCAP_SETNONBLOCK)
+    rc = pcap_dispatch(myGlobals.device[i].pcapPtr, -1, queuePacket, (u_char*)_i);
+#else
     rc = pcap_loop(myGlobals.device[i].pcapPtr, -1, queuePacket, (u_char*)_i);
+#endif
 
     if(rc == -1) {
       if(myGlobals.device[i].name != NULL) /* This is not a shutdown */
@@ -102,6 +115,22 @@ void* pcapDispatch(void *_i) {
 		   myGlobals.device[i].humanFriendlyName, rc);
 	break; /* No more packets to read */
       }
+#if defined(FREEBSD) && defined(__FreeBSD_cc_version) && (__FreeBSD_cc_version < 500000) && defined(HAVE_PCAP_SETNONBLOCK)
+      if(myGlobals.runningPref.setNonBlocking == TRUE) {
+        /* select returned no data - either a signal or setNonBlock */
+        struct timespec sleepAmount;
+        sleepAmount.tv_sec = 0; sleepAmount.tv_nsec = CONST_PCAPNONBLOCKING_SLEEP_TIME;
+        rc = nanosleep(&sleepAmount, NULL);
+        ++setNonBlockingSleepCount;
+        if( ( (setNonBlockingSleepCount < 1000) && (setNonBlockingSleepCount % 250 == 0) ) || 
+            (setNonBlockingSleepCount % 100000 == 0) ){
+          traceEvent(CONST_TRACE_NOISY, "NONBLOCK: Sleep count %s %llu",
+                     myGlobals.device[i].humanFriendlyName,
+                     setNonBlockingSleepCount);
+        }
+      }
+      continue; /* Try again */
+#endif
     }
   }
 
