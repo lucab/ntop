@@ -630,6 +630,7 @@ static int parseOptions(int argc, char* argv []) {
     exit(0);
   }
 
+#ifndef WIN32
   /* Handle any unrecognized options, such as a nested @filename */
   if (optind < argc) {
       printf("FATAL ERROR: Unrecognized/unprocessed ntop options...\n     ");
@@ -642,6 +643,7 @@ static int parseOptions(int argc, char* argv []) {
       printf("        --use-syslog=facilty (the = is required)\n\n");
       exit(-1);
   }
+#endif /* WIN32 */
 
   return(userSpecified);
 }
@@ -787,6 +789,7 @@ int main(int argc, char *argv[]) {
   printf("PARAM_DEBUG: effective cmd line: '%s'\n", cmdLineBuffer);
 #endif
 
+#ifndef WIN32
   effective_argv=buildargv(cmdLineBuffer); /* Build a new argv[] from the string */
 
  /* count effective_argv[] */
@@ -799,11 +802,13 @@ int main(int argc, char *argv[]) {
       printf("PARAM_DEBUG:    %3d. '%s'\n", i, effective_argv[i]);
   }
 #endif
-
   /*
    * Initialize all global run-time parameters to reasonable values
    */
   initNtopGlobals(effective_argc, effective_argv);
+#else
+  initNtopGlobals(argc, argv);
+#endif
 
   myGlobals.startedAs = strdup(startedAs);
 
@@ -811,10 +816,15 @@ int main(int argc, char *argv[]) {
   free(cmdLineBuffer);
   free(readBuffer);
 
+
   /*
    * Parse command line options to the application via standard system calls
    */
+#ifndef WIN32
   userSpecified = parseOptions(effective_argc, effective_argv);
+#else
+  userSpecified = parseOptions(argc, argv);
+#endif
 
   /*
    * check for valid parameters

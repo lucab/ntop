@@ -46,9 +46,15 @@ static const char *rrd_subdirs[] =
 #include "ntop.h"
 #include "globals-report.h"
 
-#include <dirent.h>
+#ifdef WIN32
+#define HAVE_RRD
+#endif
 
 #ifdef HAVE_RRD
+
+/* #define RRD_DEBUG 4 */
+
+#include <dirent.h>
 
 #ifdef WIN32
 int optind, opterr;
@@ -127,7 +133,7 @@ void revertSlash(char *str) {
 #define _mkdir(a) mkdir(a)
 #define SEPARATOR '\\'
 #else
-#define _mkdir(a) mkdir(a, 0744 /* -rwxr--r-- */)
+#define _mkdir(a) mkdir(a, (mode_t)0700)
 #define SEPARATOR '/'
 #endif
 
@@ -143,14 +149,14 @@ void mkdir_p(char *path) {
       path[i] = '\0';
       _mkdir(path);
 #if RRD_DEBUG >= 3
-      traceEvent(TRACE_INFO, "RRD_DEBUG: mkdir(%s)", path);
+      /* traceEvent(TRACE_INFO, "RRD_DEBUG: mkdir(%s)", path); */
 #endif
       path[i] = SEPARATOR;
     }
 
   _mkdir(path);
 #if RRD_DEBUG >= 2
-  traceEvent(TRACE_INFO, "RRD_DEBUG: mkdir(%s)", path);
+ /* traceEvent(TRACE_INFO, "RRD_DEBUG: mkdir(%s)", path); */
 #endif
 }
 
@@ -180,8 +186,12 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   argv[argc++] = endTime;
 
 #if RRD_DEBUG >= 3
-  for (x = 0; x < argc; x++)
-    traceEvent(TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+  {
+	int x;
+
+	  for (x = 0; x < argc; x++)
+		traceEvent(TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+  }
 #endif
 
   optind=0; /* reset gnu getopt */
@@ -213,8 +223,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
 
 static void listResource(char *rrdPath, char *rrdTitle,
 			 char *startTime, char* endTime) {
-#ifndef WIN32
-	char path[512], url[256];
+  char path[512], url[256];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
   int numEntries = 0;
@@ -314,14 +323,13 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   closedir(directoryPointer);
 
-  if(numEntries > 0) {
+  /* if(numEntries > 0) */ {
     sendString("</TABLE>\n");
   }
 
   sendString("</CENTER>");
   sendString("<br><b>NOTE: total and average values are NOT absolute but calculated on the specified time interval.</b>\n");
 
-#endif /* WIN32 */
   printHTMLtrailer();
 }
 
@@ -346,13 +354,11 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
   char path[512], *argv[16], buf[96], buf1[96], fname[256], *label;
   struct stat statbuf;
   struct stat reusebuf;
-  char startTimeBuf[32], endTimeBuf[32], fileTimeBuf[32];
-  struct tm t;
   int argc = 0, rc, x, y;
 
   sprintf(path, "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
   /* startTime[4] skips the 'now-' */
-  sprintf(fname, "%s/%s/%s-%s%s.%s", myGlobals.rrdPath, rrd_subdirs[0], &startTime[4], rrdPrefix, rrdName,
+  sprintf(fname, "%s/%s/%s-%s%s.%s", myGlobals.rrdPath, rrd_subdirs[0], startTime, rrdPrefix, rrdName,
 #ifdef WIN32
                        "gif"
 #else
@@ -377,8 +383,8 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
 #if RRD_DEBUG >= 2
     strftime(startTimeBuf, sizeof(startTimeBuf), "%H:%M:%S", localtime_r(&start_tm, &t));
-    strftime(endTimeBuf, sizeof(endTimeBuf), "%H:%M:%S", localtime_r(&end_tm, &t));
-    strftime(fileTimeBuf, sizeof(fileTimeBuf), "%H:%M:%S", localtime_r(&reusebuf.st_mtime, &t));
+    strftime(endTimeBuf,   sizeof(endTimeBuf), "%H:%M:%S", localtime_r(&end_tm, &t));
+    strftime(fileTimeBuf,  sizeof(fileTimeBuf), "%H:%M:%S", localtime_r(&reusebuf.st_mtime, &t));
     traceEvent(TRACE_INFO, "RRD_DEBUG: Reuse of '%s' (%s > %s > %s)? is %spossible...\n",
                                fname,
                                startTimeBuf,
@@ -451,7 +457,8 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     } else {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printHTMLheader("RRD Graph", 0);
-      snprintf(path, sizeof(path), "<I>Error while building graph of the requested file. %s</I>", rrd_get_error());
+      snprintf(path, sizeof(path), "<I>Error while building graph of the requested file. %s</I>",
+			   rrd_get_error());
       printFlagedWarning(path);
       rrd_clear_error();
     }
@@ -518,9 +525,8 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
       rrd_clear_error();
     }
 
-#ifdef RRD_DEBUG
-    if(rc != 0)
-      traceEvent(TRACE_WARNING, "RRD_DEBUG: rrd_create(%s, %s, %u)=%d", hostPath, key, value, rc);
+#ifdef RRD_DEBUG > 0
+    traceEvent(TRACE_INFO, "RRD_DEBUG: rrd_create(%s, %s, %u)=%d", hostPath, key, (unsigned long)value, rc);
 #endif
     createdCounter = 1;
   }
@@ -558,7 +564,7 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 
     sprintf(cmd, "%u:u", myGlobals.actTime-10); /* u = undefined */
   } else {
-    sprintf(cmd, "%u:%u", myGlobals.actTime, value);
+    sprintf(cmd, "%u:%u", myGlobals.actTime, (unsigned long)value);
   }
 
   argv[argc++] = cmd;
@@ -579,9 +585,8 @@ void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
       traceEvent(TRACE_INFO, "argv[%d]: %s", x, argv[x]);
   }
 
-#ifdef RRD_DEBUG
-  if(rc != 0)
-    traceEvent(TRACE_WARNING, "RRD_DEBUG: rrd_update(%s, %u, %u)=%d", path, value, rc);
+#if RRD_DEBUG > 0
+  traceEvent(TRACE_INFO, "RRD_DEBUG: rrd_update(%s, %u, %u)=%d", path, (unsigned long)value, rc);
 #endif
 
 }
@@ -745,11 +750,12 @@ static void handleRRDHTTPrequest(char* url) {
 	  if(strcmp(value, "graph") == 0)     action = ACTION_GRAPH;
 	  else if(strcmp(value, "list") == 0) action = ACTION_LIST;
 	} else if(strcmp(key, "key") == 0) {
-	  int len = strlen(value);
+	  int len = strlen(value), i;
 
 	  if(len >= sizeof(rrdKey)) len = sizeof(rrdKey)-1;
 	  strncpy(rrdKey, value, len);
 	  rrdKey[len] = '\0';
+	  for(i=0; i<len; i++) if(rrdKey[i] == '+') rrdKey[i] = ' ';
 
           if(strncmp(value, "hosts/", strlen("hosts/")) == 0) {
               int plen, ii;
@@ -763,16 +769,20 @@ static void handleRRDHTTPrequest(char* url) {
               rrdPrefix[0] = '\0';
           }
 	} else if(strcmp(key, "name") == 0) {
-	  int len = strlen(value);
+	  int len = strlen(value), i;
 
 	  if(len >= sizeof(rrdName)) len = sizeof(rrdName)-1;
 	  strncpy(rrdName, value, len);
+  	  for(i=0; i<len; i++) if(rrdName[i] == '+') rrdName[i] = ' ';
+
 	  rrdName[len] = '\0';
 	} else if(strcmp(key, "title") == 0) {
-	  int len = strlen(value);
+	  int len = strlen(value), i;
 
 	  if(len >= sizeof(rrdTitle)) len = sizeof(rrdTitle)-1;
 	  strncpy(rrdTitle, value, len);
+  	  for(i=0; i<len; i++) if(rrdTitle[i] == '+') rrdTitle[i] = ' ';
+
 	  rrdTitle[len] = '\0';
 	} else if(strcmp(key, "start") == 0) {
 	  int len = strlen(value);
@@ -819,7 +829,7 @@ static void handleRRDHTTPrequest(char* url) {
     if(action == ACTION_NONE) {
       /* traceEvent(TRACE_INFO, "RRD: dumpFlows=%d", dumpFlows); */
       dumpFlows=_dumpFlows, dumpHosts=_dumpHosts,
-	dumpInterfaces=_dumpInterfaces, dumpMatrix=_dumpMatrix;
+      dumpInterfaces=_dumpInterfaces, dumpMatrix=_dumpMatrix;
       sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dumpFlows", buf);
       sprintf(buf, "%d", dumpHosts);      storePrefsValue("rrd.dumpHosts", buf);
       sprintf(buf, "%d", dumpInterfaces); storePrefsValue("rrd.dumpInterfaces", buf);
@@ -951,8 +961,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   int sleep_tm;
   char rrdPath[512], fname[512];
   struct stat statbuf;
-  char fileTimeBuf[32];
-  struct tm t;
   int purgeCountFiles, purgeCountUnlink, purgeCountErrors;
   int cycleCount=0;
 
@@ -971,7 +979,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   active = 1;
 
   for(;myGlobals.capturePackets == 1;) {
-    char *hostKey, filePath[512];
+    char *hostKey;
     int i, j;
     Counter numRRDs = numTotalRRDs;
 
@@ -1324,7 +1332,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 static void initRrdFunct(void) {
   char dname[256];
-  int i, rc;
+  int i;
 
   traceEvent(TRACE_INFO, "Welcome to the RRD plugin...");
 
@@ -1332,7 +1340,7 @@ static void initRrdFunct(void) {
       commonRRDinit();
 
   sprintf(dname, "%s", myGlobals.rrdPath);
-  if (mkdir(dname, (mode_t)0700) == -1) { 
+  if (_mkdir(dname) == -1) { 
       if (errno != EEXIST) {
           traceEvent(TRACE_ERROR, "RRD: ERROR: Disabled - unable to create base directory (err %d, %s)\n", errno, dname);
           /* Return w/o creating the rrd thread ... disabled */
@@ -1345,7 +1353,7 @@ static void initRrdFunct(void) {
   for (i=0; i<sizeof(rrd_subdirs)/sizeof(rrd_subdirs[0]); i++) {
       
       sprintf(dname, "%s/%s", myGlobals.rrdPath, rrd_subdirs[i]);
-      if (mkdir(dname, (mode_t)0700) == -1) {
+      if (_mkdir(dname) == -1) {
           if (errno != EEXIST) {
               traceEvent(TRACE_ERROR, "RRD: Disabled - unable to create directory (err %d, %s)\n", errno, dname);
               /* Return w/o creating the rrd thread ... disabled */

@@ -2557,4 +2557,74 @@ typedef struct probeInfo {
 #error MUTEX_FHS_GRANULARITY out of range 0..15!
 #endif 
 
+
+/* *************************************************************** */
+
+/*
+
+    Declaration of POSIX directory browsing functions and types for Win32.
+
+    Kevlin Henney (mailto:kevlin@acm.org), March 1997.
+
+    Copyright Kevlin Henney, 1997. All rights reserved.
+
+    Permission to use, copy, modify, and distribute this software and its
+    documentation for any purpose is hereby granted without fee, provided
+    that this copyright and permissions notice appear in all copies and
+    derivatives, and that no charge may be made for the software and its
+    documentation except to cover cost of distribution.
+    
+*/
+
+#ifdef WIN32
+#ifndef DIRENT_INCLUDED
+#define DIRENT_INCLUDED
+
+
+#include <errno.h>
+#include <io.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct dirent
+{
+    char *d_name;
+};
+
+
+typedef struct DIR
+{
+    long                handle; /* -1 for failed rewind */
+    struct _finddata_t  info;
+    struct dirent       result; /* d_name null iff first time */
+    char                *name;  /* NTBS */
+} DIR;
+
+/* 
+struct dirent
+{
+  char d_name[2048];
+  int  d_namlen;
+};
+
+typedef struct _DIR
+{
+  HANDLE hSearch;
+  WIN32_FIND_DATA Win32FindData;
+  BOOL firsttime;
+  struct dirent file_info;
+} DIR;
+
+*/
+
+DIR           *opendir(const char *);
+int           closedir(DIR *);
+struct dirent *readdir(DIR *);
+void          rewinddir(DIR *);
+
+#endif
+#endif /* WIN32 */
+
+/* *************************************************************** */
+
 #endif /* NTOP_H */

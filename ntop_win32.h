@@ -398,15 +398,6 @@ extern void sniffSinglePacket(void(*pbuf_process)(u_char *unused,
 		  const struct pcap_pkthdr *h, 
 		  const u_char *p));
 
-/*
- * on mingw, call closesocket, not close, at least on win2k (the args
- * have different types: int vs. SOCKET
- *
- */
-#if defined (WIN32) && !defined (__GNUC__)
-#define close(fd) closesocket(fd)
-#endif
-
 /* ********* MULTITHREAD STUFF ********* */
 
 #define pthread_t              HANDLE

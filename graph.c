@@ -39,7 +39,7 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 
 /* ************************ */
 
-#ifndef DISABLE_GDC_WATCHDOG
+#if !defined(DISABLE_GDC_WATCHDOG) && !defined(WIN32)
 
 void _GDC_out_pie(short width,
                   short height,
@@ -162,6 +162,8 @@ void _GDC_out_pie(short width,
 #else /* DISABLE_GDC_WATCHDOG */
 
 #undef GDC_out_pie
+
+#ifndef WIN32
 #warning
 #warning
 #warning
@@ -169,7 +171,7 @@ void _GDC_out_pie(short width,
 #warning
 #warning
 #warning
-
+#endif
 #endif /* DISABLE_GDC_WATCHDOG */
 
 /* ************************ */

@@ -3238,6 +3238,8 @@ u_int numActiveSenders(int deviceId) {
   return(numSenders);
 }
 
+#ifndef WIN32
+
 /* ********************************************************
  *  The following code is taken from GNU's gcc libiberty,
  *  a collection of extension and replacement routines
@@ -3996,7 +3998,7 @@ char **buildargv (const char *input) {
 		    }
 		  else if (*input == '\\')
 		    {
-		      bsquote = 1;
+			  bsquote = 1;
 		    }
 		  else if (squote)
 		    {
@@ -4060,3 +4062,5 @@ char **buildargv (const char *input) {
 }
 
 #endif /* HAVE_BUILDARGV */
+
+#endif /* WIN32*/ 
