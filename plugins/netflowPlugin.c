@@ -216,10 +216,10 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	      
 	      allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	      /*
-	      incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHostIdx, actualDeviceId);
-	      incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
-	      incrementUsageCounter(&srcHost->secHostPkts->terminatedTCPConnSent, dstHostIdx, actualDeviceId);
-	      incrementUsageCounter(&dstHost->secHostPkts->terminatedTCPConnRcvd, srcHostIdx, actualDeviceId);
+		incrementUsageCounter(&srcHost->secHostPkts->establishedTCPConnSent, dstHostIdx, actualDeviceId);
+		incrementUsageCounter(&dstHost->secHostPkts->establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
+		incrementUsageCounter(&srcHost->secHostPkts->terminatedTCPConnSent, dstHostIdx, actualDeviceId);
+		incrementUsageCounter(&dstHost->secHostPkts->terminatedTCPConnRcvd, srcHostIdx, actualDeviceId);
 	      */
 	      myGlobals.device[actualDeviceId].numEstablishedTCPConnections++;
 	      updateUsedPorts(srcHost, srcHostIdx, dstHost, dstHostIdx, sport, dport,
@@ -353,7 +353,7 @@ static void handleNetflowHTTPrequest(char* url) {
     }
   }
 
- sendString("<TABLE BORDER>");
+  sendString("<TABLE BORDER>");
   sendString("<TR><TH>Flow Direction</TH><TH COLSPAN=2>Description</TH></TR>\n");
 
   sendString("<TR><TH>Incoming</TH><TD><FORM ACTION=/plugins/NetFlow METHOD=GET>"

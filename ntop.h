@@ -1949,7 +1949,7 @@ struct flow_ver5_hdr {
 
 typedef struct single_flow_ver5_rec {
   struct flow_ver5_hdr flowHeader;
-  struct flow_ver5_rec flowRecord[V5FLOWS_PER_PAK];
+  struct flow_ver5_rec flowRecord[V5FLOWS_PER_PAK+1 /* safe against buffer overflows */];
 } NetFlow5Record;
 
 /* **************************** */

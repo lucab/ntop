@@ -354,10 +354,12 @@ void resetStats(void) {
     accessMutex(&myGlobals.hostsHashMutex, "resetStats");
 #endif
 
-  if(myGlobals.mergeInterfaces)
-    interfacesToCreate = 1;
-  else
-    interfacesToCreate = myGlobals.numDevices;
+  /*
+    We create the hash anyway in case the plugins (that are loaded
+    later) will tweak the value of myGlobals.mergeInterfaces
+  */
+  
+  interfacesToCreate = myGlobals.numDevices;
 
   /* Do not reset the first entry (myGlobals.broadcastEntry) */
   for(i=0; i<interfacesToCreate; i++) {
@@ -395,13 +397,16 @@ void resetStats(void) {
 int initGlobalValues(void) {
   switch(myGlobals.accuracyLevel) {
   case HIGH_ACCURACY_LEVEL:
-    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 1, myGlobals.trackOnlyLocalHosts = 0;
+    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 1;
+    myGlobals.trackOnlyLocalHosts = 0;
     break;
   case MEDIUM_ACCURACY_LEVEL:
-    myGlobals.enableSessionHandling = 1, myGlobals.enablePacketDecoding = 0, myGlobals.enableFragmentHandling = myGlobals.trackOnlyLocalHosts = 1;
+    myGlobals.enablePacketDecoding = 0;
+    myGlobals.enableSessionHandling = myGlobals.enableFragmentHandling = myGlobals.trackOnlyLocalHosts = 1;
     break;
   case LOW_ACCURACY_LEVEL:
-    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0, myGlobals.trackOnlyLocalHosts = 1;
+    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0;
+    myGlobals.trackOnlyLocalHosts = 1;
     break;
   }
 
@@ -426,7 +431,6 @@ int initGlobalValues(void) {
 /* ******************************* */
 
 void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
-
 #ifndef WIN32
   if(myGlobals.daemonMode)
     daemonize();
