@@ -175,7 +175,6 @@ typedef struct ntopGlobals {
   char *mySQLuser;
    /* password is NOT stored in globals */
   char *mySQLdatabase;
-  int  mySQLportNumber;
 
   char *webAddr;                     /* 'w' */
   int webPort;
@@ -274,8 +273,10 @@ typedef struct ntopGlobals {
    * HTS - Host Traffic Statistics
    */
   PthreadMutex hostsHashMutex;
-  pthread_t hostTrafficStatsThreadId;
 
+  /*
+   * SIH - Scan Idle Hosts - optional
+   */
   pthread_t scanIdleThreadId;
 
   /*
