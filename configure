@@ -1004,15 +1004,15 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   +--ntop-specific:------------------------------------------------------------+
   --enable-configuredebug     display debug information during ./configure
-  --disable-mt                disable multithread support default=enabled
-  --enable-sslv3              enable ssl v3 support default=disabled
-  --enable-sslwatchdog        enable Watchdog for ssl hangups default=disabled
-  --disable-plugins           disable compilation of plugins default=enabled
-  --enable-micro-ntop         compile a slim version of ntop default=disabled
-  --enable-intop              enable intop (obsolete) command line version default=disabled
-  --enable-ignoresigpipe      Ignore SIGPIPE errors default=do not ignore
-  --enable-i18n               Enable (limited) internationalization default=disabled
-  --enable-xmldump            Enable xml-based data dump default=disabled
+  --disable-mt                disable multithread support [default=enabled]
+  --enable-sslv3              enable ssl v3 support [default=disabled]
+  --enable-sslwatchdog        enable Watchdog for ssl hangups [default=disabled]
+  --disable-plugins           disable compilation of plugins [default=enabled]
+  --enable-micro-ntop         compile a slim version of ntop [default=disabled]
+  --enable-intop              enable intop (obsolete) command line version [default=disabled]
+  --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]
+  --enable-i18n               Enable (limited) internationalization [default=disabled]
+  --enable-xmldump            Enable xml-based data dump [default=disabled]
   --enable-showoses           display OS Support information.
   --enable-iknowbetter        Override WILLFAIL
   +----------------------------------------------------------------------------+
@@ -1028,11 +1028,11 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   +--external-packages:--------------------------------------------------------+
-  --without-ssl               disable HTPPS support default=enabled
-  --without-gdchart           disable use of GDChart default=enabled
-  --with-tcpwrap              enable use of TCP Wrapper default=disabled
-  --without-curses            disable use of curses default=enabled
-  --without-readline          disable use of GNU readline default=enabled
+  --without-ssl               disable HTPPS support [default=enabled]
+  --without-gdchart           disable use of GDChart [default=enabled]
+  --with-tcpwrap              enable use of TCP Wrapper [default=disabled]
+  --without-curses            disable use of curses [intop, default=enabled]
+  --without-readline          disable use of GNU readline [intop, default=enabled]
   +-External-source-locations:-------------------------------------------------+
   --with-pcap-root=DIR        LBNL pcap source tree located in DIR
   --with-gdbm-root=DIR        GNU gdbm source tree located in DIR

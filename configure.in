@@ -348,72 +348,72 @@ AC_ARG_ENABLE(configuredebug,
               ac_debug="no")
 
 AC_ARG_ENABLE(mt,
-              [  --disable-mt                disable multithread support [default=enabled]],
+              [  --disable-mt                disable multithread support [[default=enabled]]],
               ac_disable_multithread="yes",
               ac_disable_multithread="no")
 
 AC_ARG_WITH(ssl,
-              [  --without-ssl               disable HTPPS support [default=enabled]],
+              [  --without-ssl               disable HTPPS support [[default=enabled]]],
               ac_disable_openssl="yes",
               ac_disable_openssl="no")
 
 AC_ARG_ENABLE(sslv3,
-              [  --enable-sslv3              enable ssl v3 support [default=disabled]],
+              [  --enable-sslv3              enable ssl v3 support [[default=disabled]]],
               ac_enable_sslv3="yes",
               ac_enable_sslv3="no")
 
 AC_ARG_ENABLE(sslwatchdog,
-              [  --enable-sslwatchdog        enable Watchdog for ssl hangups [default=disabled]],
+              [  --enable-sslwatchdog        enable Watchdog for ssl hangups [[default=disabled]]],
               ac_enable_sslwatchdog="yes",
               ac_enable_sslwatchdog="no")
 
 AC_ARG_WITH(gdchart,
-              [  --without-gdchart           disable use of GDChart [default=enabled]],
+              [  --without-gdchart           disable use of GDChart [[default=enabled]]],
               ac_disable_gdchart="yes",
               ac_disable_gdchart="no")
 
 AC_ARG_WITH(tcpwrap,
-              [  --with-tcpwrap              enable use of TCP Wrapper [default=disabled]],
+              [  --with-tcpwrap              enable use of TCP Wrapper [[default=disabled]]],
               ac_enable_tcpwrap="yes",
               ac_enable_tcpwrap="no")
 
 AC_ARG_ENABLE(plugins,
-              [  --disable-plugins           disable compilation of plugins [default=enabled]],
+              [  --disable-plugins           disable compilation of plugins [[default=enabled]]],
               ac_disable_plugins="yes",
               ac_disable_plugins="no")
 
 AC_ARG_ENABLE(micro-ntop,
-              [  --enable-micro-ntop         compile a slim version of ntop [default=disabled]],
+              [  --enable-micro-ntop         compile a slim version of ntop [[default=disabled]]],
               ac_micro_ntop="yes",
               ac_micro_ntop="no")
 
 AC_ARG_ENABLE(intop,
-              [  --enable-intop              enable intop (obsolete) command line version [default=disabled]],
+              [  --enable-intop              enable intop (obsolete) command line version [[default=disabled]]],
               ac_enable_intop="yes",
               ac_enable_intop="no")
 
 AC_ARG_WITH(curses,
-              [  --without-curses            disable use of curses [default=enabled]],
+              [  --without-curses            disable use of curses [[intop, default=enabled]]],
               ac_disable_curses="yes",
               ac_disable_curses="no")
 
 AC_ARG_WITH(readline,
-              [  --without-readline          disable use of GNU readline [default=enabled]],
+              [  --without-readline          disable use of GNU readline [[intop, default=enabled]]],
               ac_disable_readline="yes",
               ac_disable_readline="no")
 
 AC_ARG_ENABLE(ignoresigpipe,
-              [  --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]],
+              [  --enable-ignoresigpipe      Ignore SIGPIPE errors [[default=do not ignore]]],
               ac_enable_ignoresigpipe="yes",
               ac_enable_ignoresigpipe="no")
 
 AC_ARG_ENABLE(i18n,
-              [  --enable-i18n               Enable (limited) internationalization [default=disabled]],
+              [  --enable-i18n               Enable (limited) internationalization [[default=disabled]]],
               ac_enable_i18n="yes",
               ac_enable_i18n="no")
 
 AC_ARG_ENABLE(xmldump,
-              [  --enable-xmldump            Enable xml-based data dump [default=disabled]],
+              [  --enable-xmldump            Enable xml-based data dump [[default=disabled]]],
               ac_enable_xmldump="yes",
               ac_enable_xmldump="no")
 
