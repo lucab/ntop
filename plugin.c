@@ -239,8 +239,6 @@ static void loadPlugin(char* dirName, char* pluginName) {
   else if(strcmp(pluginName, "ntopRmon") == 0)
     pluginInfo = rmonPluginEntryFctn();
 #endif
-  else if(strcmp(pluginName, "remoteInterface") == 0)
-    pluginInfo = remIntPluginEntryFctn();  
   else
     pluginInfo = NULL;
 
@@ -357,7 +355,6 @@ void loadPlugins(void) {
   loadPlugin(NULL, "arpPlugin");
   loadPlugin(NULL, "nfsPlugin");
   loadPlugin(NULL, "wapPlugin");
-  loadPlugin(NULL, "remoteInterface");
 #ifdef RMON_SUPPORT
   loadPlugin(NULL, "rmonPlugin");
 #endif
