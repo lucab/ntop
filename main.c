@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "ce:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12l:";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:gt:a:W:12l:";
 #else
   theOpts = "cIde:f:F:hr:i:p:nNw:m:b:D:s:P:R:MS:gt:a:u:W:12l:";
 #endif

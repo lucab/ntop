@@ -1108,7 +1108,7 @@ void dumpNtopHashes(char* options) {
       sendString(buf);
    
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"nullPkts", el->securityHostPkts.nullPktsRcvd) < 0)
+		"nullPktsRcvd", el->securityHostPkts.nullPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
