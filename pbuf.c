@@ -2099,17 +2099,23 @@ static void processIpPkt(const u_char *bp,
       while(protoList != NULL) {
 	if((protoList->protocolId == nh)
 	   || ((protoList->protocolIdAlias != 0) && (protoList->protocolIdAlias == nh))) {
-	  if(srcHost->ipProtosList[idx] == NULL) {
-	    srcHost->ipProtosList[idx] = calloc(sizeof(ShortProtoTrafficInfo), 1);
-	    if(srcHost->ipProtosList[idx] == NULL) return;
-	  }
-	  if(srcHost->ipProtosList) incrementTrafficCounter(&srcHost->ipProtosList[idx]->sent, length);
 
-	  if(dstHost->ipProtosList[idx] == NULL) {
-	    dstHost->ipProtosList[idx] = calloc(sizeof(ShortProtoTrafficInfo), 1);
-	    if(dstHost->ipProtosList[idx] == NULL) return;
+	  if(srcHost->ipProtosList) {
+	    if(srcHost->ipProtosList[idx] == NULL) {
+	      srcHost->ipProtosList[idx] = calloc(sizeof(ShortProtoTrafficInfo), 1);
+	      if(srcHost->ipProtosList[idx] == NULL) return;
+	    }
+	    incrementTrafficCounter(&srcHost->ipProtosList[idx]->sent, length);
 	  }
-	  if(dstHost->ipProtosList) incrementTrafficCounter(&dstHost->ipProtosList[idx]->rcvd, length);
+
+	  if(dstHost->ipProtosList) {
+	    if(dstHost->ipProtosList[idx] == NULL) {
+	      dstHost->ipProtosList[idx] = calloc(sizeof(ShortProtoTrafficInfo), 1);
+	      if(dstHost->ipProtosList[idx] == NULL) return;
+	    }
+	    incrementTrafficCounter(&dstHost->ipProtosList[idx]->rcvd, length);
+	  }
+
 	  if(myGlobals.device[actualDeviceId].ipProtosList)
 	    incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipProtosList[idx], length);
 	  found = 1;
@@ -2232,7 +2238,6 @@ void queuePacket(u_char *_deviceId,
     If we reach this point it means that somebody was already processing
     a packet so we need to queue it
   */
-
   if(myGlobals.packetQueueLen >= CONST_PACKET_QUEUE_LENGTH) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]",
@@ -2345,10 +2350,10 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
       traceEvent (CONST_TRACE_WARNING, "dequeuePacket: caplen %d != len %d\n", h.caplen, h.len);
     }
     if (myGlobals.noFc) {
-        memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
+      memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, DEFAULT_SNAPLEN);
     }
     else {
-        memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, MAX_PACKET_LEN);
+      memcpy(p, myGlobals.packetQueue[myGlobals.packetQueueTail].p, MAX_PACKET_LEN);
     }
     if(h.len > MAX_PACKET_LEN) {
       traceEvent(CONST_TRACE_WARNING, "packet truncated (%d->%d)", h.len, MAX_PACKET_LEN);
