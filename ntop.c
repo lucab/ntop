@@ -988,6 +988,22 @@ RETSIGTYPE cleanup(int signo) {
   if(myGlobals.numProcesses > 0)
     free(myGlobals.processes);
 
+  if(myGlobals.udpSvc) {
+    for(i=0; i<myGlobals.numActServices; i++)
+      if(myGlobals.udpSvc[i] != NULL)
+	free(myGlobals.udpSvc[i]);
+
+    free(myGlobals.udpSvc);
+  }
+
+  if(myGlobals.tcpSvc) {
+    for(i=0; i<myGlobals.numActServices; i++)
+      if(myGlobals.tcpSvc[i] != NULL)
+	free(myGlobals.tcpSvc[i]);
+
+    free(myGlobals.tcpSvc);
+  }
+
   if(myGlobals.enableDBsupport) {
     closeSQLsocket(); /* *** SQL Engine *** */
 #ifdef HAVE_MYSQL
