@@ -250,7 +250,7 @@ HEADERS =  $(noinst_HEADERS)
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gnutar
+TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/address.P .deps/admin.P .deps/dataFormat.P \
 .deps/emitter.P .deps/event.P .deps/globals-core.P \

@@ -469,7 +469,7 @@ if test ".$ac_enable_tcpwrap" = ".yes"; then
 fi
 
 dnl> OPTIONAL UCD-SNMP
-AC_HAVE_HEADERS(ucd-snmp/ucd-snmp-agent-includes.h)
+dnl> AC_HAVE_HEADERS(ucd-snmp/ucd-snmp-agent-includes.h)
 
 
 dnl>
@@ -1036,7 +1036,7 @@ fi
 dnl>
 dnl> check for `UCD-SNMP' library by University of California [http://ucd-snmp.ucdavis.edu]
 dnl>
-AC_CHECK_LIB(ucdagent, register_mib, [AC_DEFINE(HAVE_SNMP) SNMPLIBS="-lsnmp -lucdagent -lucdmibs"], , -lsnmp -lucdagent -lucdmibs $LIBS $MORELIBS)
+dnl>AC_CHECK_LIB(ucdagent, register_mib, [AC_DEFINE(HAVE_SNMP) SNMPLIBS="-lsnmp -lucdagent -lucdmibs"], , -lsnmp -lucdagent -lucdmibs $LIBS $MORELIBS)
 
 
 echo
@@ -1120,12 +1120,11 @@ PLUGIN_DIR=`(
 AC_DEFINE_UNQUOTED(PLUGIN_DIR,"$PLUGIN_DIR", [Plugin installation directory])
 AC_SUBST(PLUGIN_DIR)
 
-dnl> DBFILE_DIR=$localstatedir/ntop
-dnl> DBFILE_DIR=`(
-dnl>  test "x$prefix" = xNONE && prefix=$ac_default_prefix
-dnl>  eval echo "$DBFILE_DIR"
-dnl>)`
-DBFILE_DIR=/tmp
+DBFILE_DIR=$localstatedir/ntop
+DBFILE_DIR=`(
+  test "x$prefix" = xNONE && prefix=$ac_default_prefix
+  eval echo "$DBFILE_DIR"
+)`
 AC_DEFINE_UNQUOTED(DBFILE_DIR,"$DBFILE_DIR", [Database file directory])
 AC_SUBST(DBFILE_DIR)
 
