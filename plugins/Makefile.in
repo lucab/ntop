@@ -64,10 +64,10 @@ pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 
-ACLOCAL = /bin/sh /home/rocco/cvs/ntop/ntop/missing --run echo
-AUTOCONF = /bin/sh /home/rocco/cvs/ntop/ntop/missing --run echo
-AUTOMAKE = /bin/sh /home/rocco/cvs/ntop/ntop/missing --run echo
-AUTOHEADER = /bin/sh /home/rocco/cvs/ntop/ntop/missing --run echo
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
 
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
@@ -109,21 +109,17 @@ DLLTOOL = @DLLTOOL@
 DYN_FLAGS = @DYN_FLAGS@
 INCS = @INCS@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-INTOP = @INTOP@
 LD = @LD@
-LIBCURSES = @LIBCURSES@
-LIBREADLINE = @LIBREADLINE@
-LIBTERMCAP = @LIBTERMCAP@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 NM = @NM@
+NTCSH = @NTCSH@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
 PLUGINS = @PLUGINS@
 RANLIB = @RANLIB@
-RRDLIB = @RRDLIB@
 SCRIPTVER = @SCRIPTVER@
 SO_VERSION_PATCH = @SO_VERSION_PATCH@
 STRIP = @STRIP@
@@ -169,7 +165,7 @@ libicmpPlugin_la_SOURCES = icmpPlugin.c
 libicmpPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 librrdPlugin_la_SOURCES = rrdPlugin.c
-librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@ $(RRDLIB)
+librrdPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@
 
 libpdaPlugin_la_SOURCES = pdaPlugin.c
 libpdaPlugin_la_LDFLAGS = -shared -release @PACKAGE_VERSION@ @DYN_FLAGS@

@@ -21,8 +21,6 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#ifndef MAKE_MICRO_NTOP
-
 typedef struct osInfo {
   char *name, *link;
 } OsInfo;
@@ -1990,7 +1988,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   char buf[LEN_GENERAL_WORK_BUFFER];
-#ifdef MAKE_WITH_GDCHART
+#ifdef CFG_USE_GRAPHICS
   char linkName[LEN_GENERAL_WORK_BUFFER/2];
   int i;
 #endif
@@ -2023,7 +2021,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->icmpFragmentsRcvd.value/1024,
 			100*((float)SD(el->icmpFragmentsRcvd.value, totalRcvd)));
 
-#ifdef MAKE_WITH_GDCHART
+#ifdef CFG_USE_GRAPHICS
   {
     if((totalSent > 0) || (totalRcvd > 0)) {
       if(snprintf(buf, sizeof(buf),
@@ -2110,7 +2108,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   Counter actTotalSent, actTotalRcvd;
   char buf[LEN_GENERAL_WORK_BUFFER];
-#ifdef MAKE_WITH_GDCHART
+#ifdef CFG_USE_GRAPHICS
   char linkName[LEN_GENERAL_WORK_BUFFER/2];
   int i;
 #endif
@@ -2222,7 +2220,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->otherRcvd.value/1024,
 			100*((float)SD(el->otherRcvd.value, totalRcvd)));
 
-#ifdef MAKE_WITH_GDCHART
+#ifdef CFG_USE_GRAPHICS
   {
     totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+
       el->udpSentLoc.value+el->udpSentRem.value+
@@ -3400,12 +3398,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
     snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s", myGlobals.rrdPath, 
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-#ifdef MAKE_WITH_LARGERRDPOP
-             dotToSlash(el->hostNumIpAddress)
-#else
-             el->hostNumIpAddress
-#endif
-            );
+             dotToSlash(el->hostNumIpAddress));
 
     if(stat(buf, &statbuf) == 0) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
@@ -3413,11 +3406,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
                    "<IMG BORDER=0 SRC=/graph.gif TITLE=\"link to rrd graphs\"></A> ]</TD></TR>\n",
 		  getRowColor(), "RRD Stats", 
                   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-#ifdef MAKE_WITH_LARGERRDPOP
                   dotToSlash(el->hostNumIpAddress),
-#else
-                  el->hostNumIpAddress,
-#endif
 		  el->hostSymIpAddress[0] != '\0' ? el->hostSymIpAddress : el->hostNumIpAddress) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -3739,8 +3728,6 @@ char* getNbNodeType(char nodeType) {
   return(""); /* NOTREACHED */
 }
 
-#endif /* MAKE_MICRO_NTOP */
-
  /* ********************************** */
 
 void printFlagedWarning(char *text) {
@@ -3940,8 +3927,6 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 
 #define MAX_NUM_OS           256
 
-#ifndef MAKE_MICRO_NTOP
-
 void printLocalHostsStats() {
   u_int idx, numEntries=0;
   int printedEntries=0;
@@ -4069,8 +4054,6 @@ void printLocalHostsStats() {
 
   free(tmpTable);
 }
-
-#endif
 
 /* ******************************************************** */
 

@@ -96,13 +96,6 @@
 /* #define PARM_ENABLE_EXPERIMENTAL */
 
 /*
- * PARM_DISABLE_GDC_WATCHDOG disables the watchdog and returns ntop to the
- *    pre 2.1.52 behavor - which means that a libpng conflict will kill
- *    the ntop web browser thread.  See _GDC_out_pie() in graph.c.
- */
-/* #define PARM_DISABLE_GDC_WATCHDOG */
-
-/*
  * Controls whether to make a fork() call in http.c and xmldump.c
  */
 #define PARM_FORK_CHILD_PROCESS
@@ -210,10 +203,6 @@
   #define HAVE_GDBM_H
  #endif
 
- #ifndef MAKE_WITH_GDCHART
-  #define MAKE_WITH_GDCHART
- #endif
-
  #ifndef CFG_MULTITHREADED
   #define CFG_MULTITHREADED
  #endif
@@ -307,19 +296,6 @@
  #define MAKE_WITH_SCHED_YIELD
 #else
  #undef MAKE_WITH_SCHED_YIELD
-#endif
-
-/*
- * Do we have the stuff we need for gdchart?
- *    ./configure sets MAKE_WITH_GDCHART - that's the reliable one.
- *    But it's possible we have some of the others set (say we found libpng).
- *    Unset them so we don't build partial code
- */
-#ifndef MAKE_WITH_GDCHART
- #undef HAVE_GDCHART_H
- #undef HAVE_GDC_H 
- #undef HAVE_GD_H
- #undef HAVE_PNG_H
 #endif
 
 /*
@@ -434,11 +410,6 @@
 
 /* GDBM_DEBUG logs the activites in address.c related to gdbm */
 /* #define GDBM_DEBUG */
-
-/* GDC_WATCHDOG_DEBUG logs the activites in graph.c related to the
- *  gdchart watchdog.
- */
-/* #define GDC_WATCHDOG_DEBUG */
 
 /* HASH_DEBUG logs the adding of values to the hash.  It also enables
  * (a presently unused) routine, hashDump().
@@ -1608,9 +1579,6 @@
 #define HTML_LSOF_URL                       "http://freshmeat.net/projects/lsof/"
 #define CONST_HTML_LSOF_URL_ALT             "lsof home page at freshmeat.net"
 
-#define HTML_GDCHART_URL                    "http://www.fred.net/brv/chart/"
-#define CONST_HTML_GDCHART_URL_ALT          "GDChart home page"
-
 #define HTML_OPENSSL_URL                    "http://www.openssl.org/"
 #define CONST_HTML_OPENSSL_URL_ALT          "OpenSSL home page"
 
@@ -1682,8 +1650,6 @@
 
 #define DEFAULT_NTOP_SSL_ADDR               NULL     /* -W */ /* e.g. all interfaces & addresses */
 #define DEFAULT_NTOP_SSL_PORT               0                 /* e.g. inactive */
-
-#define DEFAULT_NTOP_CHART_TYPE             GDC_AREA /* --throughput-chart-type */
 
 /*
  * How often should we update rrd statistics?  Overridden in rrd plugin

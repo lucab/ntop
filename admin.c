@@ -22,8 +22,6 @@
 #include "globals-report.h"
 
 
-#ifndef MAKE_MICRO_NTOP
-
 /* Forward */
 static void sendMenuFooter(int itm1Idx, int itm2Idx);
 static void encodeWebFormURL(char *in, char *buf, int buflen);
@@ -859,8 +857,6 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
 
   return (idx);
 }
-#endif /* MAKE_MICRO_NTOP */
-
 
 /* ****************************** */
 

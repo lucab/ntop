@@ -23,7 +23,6 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#ifndef MAKE_MICRO_NTOP
 static int pdaColumnSort = 0;
  
 
@@ -264,7 +263,6 @@ static void printHtmlHostInfo(char *host _UNUSED_) {
 
 }
 
-#endif /* MAKE_MICRO_NTOP */
 
 /* ********************** */
 

@@ -1427,7 +1427,6 @@ static int returnHTTPPage(char* pageName,
     helps because at least a partial respose
     has been send back to the user in the meantime
   */
-#ifndef MAKE_MICRO_NTOP
   if(strncmp(pageName, SHUTDOWN_NTOP_HTML, strlen(SHUTDOWN_NTOP_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
     sendString("<P>Your shutdown request is being processed</P>\n");
@@ -1621,8 +1620,6 @@ static int returnHTTPPage(char* pageName,
     }
   } else
 #endif
-
-#endif /* !MAKE_MICRO_NTOP */
 
   if(strcmp(pageName, STR_INDEX_HTML) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
@@ -1902,7 +1899,7 @@ static int returnHTTPPage(char* pageName,
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
-#ifdef MAKE_WITH_GDCHART
+#ifdef CFG_USE_GRAPHICS
     } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawThptGraph(sortedColumn);
@@ -2037,7 +2034,7 @@ static int returnHTTPPage(char* pageName,
 	printTrailer=0;
       }
     }
-#endif /*  MAKE_WITH_GDCHART */
+#endif /* CFG_USE_GRAPHICS */
     } else if(strcmp(pageName, "Credits.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("Credits", BITFLAG_HTML_NO_REFRESH);
@@ -2077,7 +2074,7 @@ static int returnHTTPPage(char* pageName,
       printNtopProblemReport();
       printTrailer = 0;
     } else
-#endif /* MAKE_MICRO_NTOP */
+#endif
       if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
@@ -2113,9 +2110,7 @@ static int returnHTTPPage(char* pageName,
 	else
 	  dumpNtopTrafficInfo(NULL, &questionMark[1]);
 	printTrailer = 0;
-      }
-#ifndef MAKE_MICRO_NTOP
-      else if(strlen(pageName) > 5) {
+      } else if(strlen(pageName) > 5) {
 	int i;
 	char hostName[32];
 
@@ -2129,15 +2124,11 @@ static int returnHTTPPage(char* pageName,
 
 	strncpy(hostName, pageName, sizeof(hostName));
 	printAllSessionsHTML(hostName, myGlobals.actualReportDeviceId);
-      }
-#endif /* !MAKE_MICRO_NTOP */
-      else {
+      } else {
 	printTrailer = 0;
 	errorCode = FLAG_HTTP_INVALID_PAGE;
       }
-#ifndef MAKE_MICRO_NTOP
   }
-#endif /* !MAKE_MICRO_NTOP */
 
   if(domainNameParm != NULL)
     free(domainNameParm);

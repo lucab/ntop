@@ -71,11 +71,7 @@ static struct option const long_options[] = {
 #ifndef WIN32
   { "daemon",                           no_argument,       NULL, 'd' },
 #endif
-
-#ifndef MAKE_MICRO_NTOP
   { "max-table-rows",                   required_argument, NULL, 'e' },
-#endif
-
   { "traffic-dump-file",                required_argument, NULL, 'f' },
   { "track-local-hosts",                no_argument,       NULL, 'g' },
   { "help",                             no_argument,       NULL, 'h' },
@@ -132,9 +128,6 @@ static struct option const long_options[] = {
    * (since op is unsigned this is fine)
    *  add corresponding case nnn: below
    */
-#ifdef MAKE_WITH_GDCHART
-  { "throughput-bar-chart",             no_argument,       NULL, 129 },
-#endif
 #if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
   { "use-syslog",                       optional_argument, NULL, 131 },
 #endif
@@ -204,11 +197,7 @@ void usage (FILE * fp) {
 #ifndef WIN32
   fprintf(fp, "    [-d             | --daemon]                           %sRun ntop in daemon mode\n", newLine);
 #endif
-
-#ifndef MAKE_MICRO_NTOP
   fprintf(fp, "    [-e <number>    | --max-table-rows <number>]          %sMaximum number of table rows to report\n", newLine);
-#endif
-
   fprintf(fp, "    [-f <file>      | --traffic-dump-file <file>]         %sTraffic dump file (see tcpdump)\n", newLine);
   fprintf(fp, "    [-g             | --track-local-hosts]                %sTrack only local hosts\n", newLine);
 
@@ -266,10 +255,6 @@ void usage (FILE * fp) {
 
 #ifdef HAVE_OPENSSL
   fprintf(fp, "    [-W <port>      | --https-server <port>]              %sWeb server (https:) port (or address:port) to listen on\n", newLine);
-#endif
-
-#ifdef MAKE_WITH_GDCHART
-  fprintf(fp, "    [--throughput-bar-chart]                              %sUse BAR chart for graphs\n", newLine);
 #endif
 
 #ifndef MAKE_WITH_IGNORE_SIGPIPE 
@@ -415,11 +400,9 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-#ifndef MAKE_MICRO_NTOP
     case 'e':
       myGlobals.maxNumLines = atoi(optarg);
       break;
-#endif
 
     case 'f':
       myGlobals.rFileName = strdup(optarg);
@@ -621,12 +604,6 @@ static int parseOptions(int argc, char* argv []) {
 	myGlobals.sslPort = atoi(optarg);
       }
 
-      break;
-#endif
-
-#ifdef MAKE_WITH_GDCHART
-    case 129:
-      myGlobals.throughput_chart_type = GDC_BAR;
       break;
 #endif
 
@@ -862,11 +839,7 @@ int main(int argc, char *argv[]) {
 
   /* printf("HostTraffic=%d\n", sizeof(HostTraffic)); return(-1); */
 
-#ifndef MAKE_MICRO_NTOP
   printf("Wait please: ntop is coming up...\n");
-#else
-  printf("Wait please: ntop (micro) is coming up...\n");
-#endif
 
 #ifdef MTRACE  
   mtrace();
@@ -1053,9 +1026,7 @@ int main(int argc, char *argv[]) {
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Initializing ntop");
 
-#ifndef MAKE_MICRO_NTOP
   reportValues(&lastTime);
-#endif /* MAKE_MICRO_NTOP */
 
   initNtop(myGlobals.devices);
 
@@ -1085,13 +1056,13 @@ int main(int argc, char *argv[]) {
 
   /* ******************************* */
 
-#ifndef MAKE_MICRO_NTOP
+  checkUserIdentity(userSpecified);
+
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Loading Plugins");
   loadPlugins();
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Plugins loaded... continuing with initialization");
-#endif
-
-  checkUserIdentity(userSpecified);
+  traceEvent(CONST_TRACE_NOISY, "Starting Plugins");
+  startPlugins();
+  traceEvent(CONST_TRACE_NOISY, "Plugins started... continuing with initialization");
 
   initSignals();
 

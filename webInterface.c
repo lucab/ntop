@@ -52,9 +52,6 @@ static short alternateColor=0;
 /* Forward */
 static void handleSingleWebConnection(fd_set *fdmask);
 
-#ifndef MAKE_MICRO_NTOP
-
-
 #if defined(CFG_NEED_INET_ATON)
 /*
  * Minimal implementation of inet_aton.
@@ -1106,7 +1103,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
   sendString(texthtml("\n\nCompile Time: globals-define.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-define.h</tr>\n"));
 
-#ifdef MAKE_WITH_GDCHART
+#ifdef CFG_USE_GRAPHICS
   if(snprintf(buf, sizeof(buf), 
               "globals-report.h: #define CHART_FORMAT \"%s\"",
               CHART_FORMAT) < 0)
@@ -1480,8 +1477,8 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBGD",
-#ifdef HAVE_LIBGD
+  printFeatureConfigInfo(textPrintFlag, "CFG_USE_GRAPHICS",
+#ifdef CFG_USE_GRAPHICS
                          "yes"
 #else
                          "no"
@@ -2320,24 +2317,8 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
-  printFeatureConfigInfo(textPrintFlag, "MAKE_MICRO_NTOP",
-#ifdef MAKE_MICRO_NTOP
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_FTPDATA_ASSUMED",
-#ifdef MAKE_WITH_FTPDATA_ASSUMED
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_GDCHART",
-#ifdef MAKE_WITH_GDCHART
+  printFeatureConfigInfo(textPrintFlag, "CFG_USE_GRAPHICS",
+#ifdef CFG_USE_GRAPHICS
                          "yes"
 #else
                          "no"
@@ -2765,27 +2746,27 @@ void printNtopConfigInfo(int textPrintFlag) {
   int bufLength, bufPosition, bufUsed;
 
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
-    struct mallinfo memStats;
-    int totalHostsMonitored = 0;
+  struct mallinfo memStats;
+  int totalHostsMonitored = 0;
 
- #ifdef HAVE_SYS_RESOURCE_H
-    struct rlimit rlim;
- #endif
+#ifdef HAVE_SYS_RESOURCE_H
+  struct rlimit rlim;
+#endif
 #endif
 
   if (textPrintFlag != TRUE) {
     printHTMLheader("Current ntop Configuration", 0);
     sendString("<CENTER><TABLE BORDER=\"0\">"
-                "<TR>"
-                 "<TD COLSPAN=5 align=\"center\">The color of the host link on many pages indicates how recently the host was FIRST seen</TD>"
-                "</TR>"
-                "<TR>"
-                  "<TD>&nbsp;&nbsp;<A href=# class=\"age0min\">0 to 5 minutes</A>&nbsp;&nbsp;</TD>"
-                  "<TD>&nbsp;&nbsp;<A href=# class=\"age5min\">5 to 15 minutes</A>&nbsp;&nbsp;</TD>"
-                  "<TD>&nbsp;&nbsp;<A href=# class=\"age15min\">15 to 30 minutes</A>&nbsp;&nbsp;</TD>"
-                  "<TD>&nbsp;&nbsp;<A href=# class=\"age30min\">30 to 60 minutes</A>&nbsp;&nbsp;</TD>"
-                  "<TD>&nbsp;&nbsp;<A href=# class=\"age60min\">60+ minutes</A>&nbsp;&nbsp;</TD>"
-                "</TR></TABLE></CENTER>\n");
+	       "<TR>"
+	       "<TD COLSPAN=5 align=\"center\">The color of the host link on many pages indicates how recently the host was FIRST seen</TD>"
+	       "</TR>"
+	       "<TR>"
+	       "<TD>&nbsp;&nbsp;<A href=# class=\"age0min\">0 to 5 minutes</A>&nbsp;&nbsp;</TD>"
+	       "<TD>&nbsp;&nbsp;<A href=# class=\"age5min\">5 to 15 minutes</A>&nbsp;&nbsp;</TD>"
+	       "<TD>&nbsp;&nbsp;<A href=# class=\"age15min\">15 to 30 minutes</A>&nbsp;&nbsp;</TD>"
+	       "<TD>&nbsp;&nbsp;<A href=# class=\"age30min\">30 to 60 minutes</A>&nbsp;&nbsp;</TD>"
+	       "<TD>&nbsp;&nbsp;<A href=# class=\"age60min\">60+ minutes</A>&nbsp;&nbsp;</TD>"
+	       "</TR></TABLE></CENTER>\n");
   }
   sendString(texthtml("\n", 
                       "<CENTER>\n<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n"
@@ -2812,7 +2793,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
   if (snprintf(buf, sizeof(buf), "%d", myGlobals.heartbeatCounter) < 0)
-      BufferTooShort();
+    BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Heartbeat (counter)", buf);
   sendString(texthtml("\n\n", "<tr><td colspan=\"2\">"));
   sendString("Note: The value of the heartbeat counter is meaningless.  It's just incremented "
@@ -2861,13 +2842,11 @@ void printNtopConfigInfo(int textPrintFlag) {
                            strcmp(myGlobals.program_name, "ntopd") == 0 ? "Yes" : DEFAULT_NTOP_DAEMON_MODE);
 #endif
 
-#ifndef MAKE_MICRO_NTOP
   if(snprintf(buf, sizeof(buf), "%s%d",
 	      myGlobals.maxNumLines == CONST_NUM_TABLE_ROWS_PER_PAGE ? CONST_REPORT_ITS_DEFAULT : "",
 	      myGlobals.maxNumLines) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "-e | --max-table-rows", buf);
-#endif
 
   printParameterConfigInfo(textPrintFlag, "-f | --traffic-dump-file",
                            myGlobals.rFileName,
@@ -3051,12 +3030,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
 #endif
 
-#ifdef MAKE_WITH_GDCHART
-  printParameterConfigInfo(textPrintFlag, "--throughput-chart-type",
-                           myGlobals.throughput_chart_type == GDC_AREA ? "Area" : "Bar",
-                           DEFAULT_NTOP_CHART_TYPE == GDC_AREA ? "Area" : "Bar");
-#endif
-
 #ifndef MAKE_WITH_IGNORE_SIGPIPE
   printParameterConfigInfo(textPrintFlag, "--ignore-sigpipe",
                            myGlobals.ignoreSIGPIPE == 1 ? "Yes" : "No",
@@ -3231,9 +3204,9 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "# Handled HTTP Requests", buf);
 
 #ifdef MAKE_WITH_SSLWATCHDOG
- #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
+#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   if (myGlobals.useSSLwatchdog == 1)
- #endif
+#endif
     {
       if(snprintf(buf, sizeof(buf), "%d", myGlobals.numHTTPSrequestTimeouts) < 0)
 	BufferTooShort();
@@ -3248,7 +3221,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Domain name (short)", myGlobals.shortDomainName);
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipCountryCount) < 0)
-      BufferTooShort();
+    BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "IP to country flag table (entries)", buf);
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup) < 0)
@@ -3288,45 +3261,45 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
-    sendString(texthtml("\n\nMemory allocation - data segment\n\n", "<tr><th colspan=\"2\">Memory allocation - data segment</th></tr>\n"));
+  sendString(texthtml("\n\nMemory allocation - data segment\n\n", "<tr><th colspan=\"2\">Memory allocation - data segment</th></tr>\n"));
 
-    memStats = mallinfo();
+  memStats = mallinfo();
 
- #ifdef HAVE_SYS_RESOURCE_H
-    getrlimit(RLIMIT_DATA, &rlim);
-    if(snprintf(buf, sizeof(buf), "%d", rlim.rlim_cur) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "arena limit, getrlimit(RLIMIT_DATA, ...)", buf);
- #endif
+#ifdef HAVE_SYS_RESOURCE_H
+  getrlimit(RLIMIT_DATA, &rlim);
+  if(snprintf(buf, sizeof(buf), "%d", rlim.rlim_cur) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "arena limit, getrlimit(RLIMIT_DATA, ...)", buf);
+#endif
 
-    if(snprintf(buf, sizeof(buf), "%d", memStats.ordblks) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Allocated blocks (ordblks)", buf);
+  if(snprintf(buf, sizeof(buf), "%d", memStats.ordblks) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Allocated blocks (ordblks)", buf);
 
-    if(snprintf(buf, sizeof(buf), "%d", memStats.arena) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Allocated (arena)", buf);
+  if(snprintf(buf, sizeof(buf), "%d", memStats.arena) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Allocated (arena)", buf);
 
-    if(snprintf(buf, sizeof(buf), "%d", memStats.uordblks) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Used (uordblks)", buf);
+  if(snprintf(buf, sizeof(buf), "%d", memStats.uordblks) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Used (uordblks)", buf);
 
-    if(snprintf(buf, sizeof(buf), "%d", memStats.fordblks) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Free (fordblks)", buf);
+  if(snprintf(buf, sizeof(buf), "%d", memStats.fordblks) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Free (fordblks)", buf);
 
-    if (memStats.uordblks + memStats.fordblks != memStats.arena)
-      printFeatureConfigInfo(textPrintFlag, "WARNING:", "Used+Free != Allocated");
+  if (memStats.uordblks + memStats.fordblks != memStats.arena)
+    printFeatureConfigInfo(textPrintFlag, "WARNING:", "Used+Free != Allocated");
 
-    sendString(texthtml("\n\nMemory allocation - mmapped\n\n", "<tr><th colspan=\"2\">Memory allocation - mmapped</th></tr>\n"));
+  sendString(texthtml("\n\nMemory allocation - mmapped\n\n", "<tr><th colspan=\"2\">Memory allocation - mmapped</th></tr>\n"));
 
-    if(snprintf(buf, sizeof(buf), "%d", memStats.hblks) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Allocated blocks (hblks)", buf);
+  if(snprintf(buf, sizeof(buf), "%d", memStats.hblks) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Allocated blocks (hblks)", buf);
 
-    if(snprintf(buf, sizeof(buf), "%d", memStats.hblkhd) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Allocated bytes (hblkhd)", buf);
+  if(snprintf(buf, sizeof(buf), "%d", memStats.hblkhd) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Allocated bytes (hblkhd)", buf);
 
 #endif
 
@@ -3338,13 +3311,13 @@ void printNtopConfigInfo(int textPrintFlag) {
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (bytes)", buf);
   
     if(snprintf(buf, sizeof(buf), "%d (%.1f MB)", myGlobals.ipCountryMem, (float)myGlobals.ipCountryMem/(1024.0*1024.0)) < 0)
-        BufferTooShort();
+      BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "IP to country flag table (bytes)", buf);
 
     if (myGlobals.ipCountryCount > 0) {
-        if(snprintf(buf, sizeof(buf), "%.1f", (float)myGlobals.ipCountryMem/myGlobals.ipCountryCount) < 0)
-            BufferTooShort();
-        printFeatureConfigInfo(textPrintFlag, "Bytes per entry", buf);
+      if(snprintf(buf, sizeof(buf), "%.1f", (float)myGlobals.ipCountryMem/myGlobals.ipCountryCount) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Bytes per entry", buf);
     }
 
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
@@ -3361,19 +3334,19 @@ void printNtopConfigInfo(int textPrintFlag) {
       totalHostsMonitored += myGlobals.device[i].hostsno;
 
     if (totalHostsMonitored > 0) {
-        if(snprintf(buf, sizeof(buf), "%d = (%d + %d)", 
-            totalHostsMonitored + myGlobals.hostsCacheLen,
-            totalHostsMonitored,
-            myGlobals.hostsCacheLen) < 0)
-          BufferTooShort();
-        printFeatureConfigInfo(textPrintFlag, "Hosts stored (active+cache)", buf);
+      if(snprintf(buf, sizeof(buf), "%d = (%d + %d)", 
+		  totalHostsMonitored + myGlobals.hostsCacheLen,
+		  totalHostsMonitored,
+		  myGlobals.hostsCacheLen) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Hosts stored (active+cache)", buf);
 
-        if(snprintf(buf, sizeof(buf), "%.1fKB", 
-                    ((float)(memStats.arena + memStats.hblkhd - myGlobals.baseMemoryUsage) /
-                     (float)(totalHostsMonitored + myGlobals.hostsCacheLen) /
-                     1024.0 + 0.05)) < 0)
-          BufferTooShort();
-        printFeatureConfigInfo(textPrintFlag, "(very) Approximate memory per host", buf);
+      if(snprintf(buf, sizeof(buf), "%.1fKB", 
+		  ((float)(memStats.arena + memStats.hblkhd - myGlobals.baseMemoryUsage) /
+		   (float)(totalHostsMonitored + myGlobals.hostsCacheLen) /
+		   1024.0 + 0.05)) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "(very) Approximate memory per host", buf);
     }
 #endif
   }
@@ -3465,18 +3438,18 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "Maximum hosts to purge per cycle", buf);
 
   if (textPrintFlag == TRUE) {
-      if(snprintf(buf, sizeof(buf), "%d", DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE) < 0)
-          BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE", buf);
+    if(snprintf(buf, sizeof(buf), "%d", DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE", buf);
 
-      if (myGlobals.dynamicPurgeLimits == 1) {
-          if(snprintf(buf, sizeof(buf), "%f", CONST_IDLE_PURGE_MINIMUM_TARGET_TIME) < 0)
-              BufferTooShort();
-          printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MINIMUM_TARGET_TIME", buf);
-          if(snprintf(buf, sizeof(buf), "%f", CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME) < 0)
-              BufferTooShort();
-          printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME", buf);
-      }
+    if (myGlobals.dynamicPurgeLimits == 1) {
+      if(snprintf(buf, sizeof(buf), "%f", CONST_IDLE_PURGE_MINIMUM_TARGET_TIME) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MINIMUM_TARGET_TIME", buf);
+      if(snprintf(buf, sizeof(buf), "%f", CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "CONST_IDLE_PURGE_MAXIMUM_TARGET_TIME", buf);
+    }
   }
 
   if(myGlobals.enableSessionHandling) {
@@ -3488,31 +3461,31 @@ void printNtopConfigInfo(int textPrintFlag) {
   /* **** */
 
   for (i=0; i<myGlobals.numDevices; i++) {
-      if (snprintf(buf, sizeof(buf), "\nHost/Session counts - Device %d (%s)\n", i, myGlobals.device[i].name) < 0)
-          BufferTooShort();
-      if (snprintf(buf2, sizeof(buf2), "<tr><th colspan=\"2\">Host/Session counts - Device %d (%s)</th></tr>\n", i, myGlobals.device[i].name) < 0)
-          BufferTooShort();
-      sendString(texthtml(buf, buf2));
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize) < 0)
-          BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
+    if (snprintf(buf, sizeof(buf), "\nHost/Session counts - Device %d (%s)\n", i, myGlobals.device[i].name) < 0)
+      BufferTooShort();
+    if (snprintf(buf2, sizeof(buf2), "<tr><th colspan=\"2\">Host/Session counts - Device %d (%s)</th></tr>\n", i, myGlobals.device[i].name) < 0)
+      BufferTooShort();
+    sendString(texthtml(buf, buf2));
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d [%d %%]", (int)myGlobals.device[i].hostsno,
-                  (((int)myGlobals.device[i].hostsno*100)/
-                   (int)myGlobals.device[i].actualHashSize)) < 0)
-          BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
+    if(snprintf(buf, sizeof(buf), "%d [%d %%]", (int)myGlobals.device[i].hostsno,
+		(((int)myGlobals.device[i].hostsno*100)/
+		 (int)myGlobals.device[i].actualHashSize)) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
 
 
-      if(myGlobals.enableSessionHandling) {
-          if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[i].numTcpSessions)) < 0)
-              BufferTooShort();
-          printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
+    if(myGlobals.enableSessionHandling) {
+      if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[i].numTcpSessions)) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
     
-          if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[i].maxNumTcpSessions)) < 0)
-              BufferTooShort();
-          printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
-      }
+      if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[i].maxNumTcpSessions)) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
+    }
   }
 
   /* **** */
@@ -3526,23 +3499,23 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "DNS Packets sniffed", buf);
 
   if(textPrintFlag == TRUE) {
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffRequestCount) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "  less 'requests'", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffRequestCount) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "  less 'requests'", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffFailedCount) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "  less 'failed'", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffFailedCount) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "  less 'failed'", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffARPACount) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "  less 'reverse dns' (in-addr.arpa)", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffARPACount) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "  less 'reverse dns' (in-addr.arpa)", buf);
   }
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffCount
-                                      - myGlobals.dnsSniffRequestCount
-                                      - myGlobals.dnsSniffFailedCount
-                                      - myGlobals.dnsSniffARPACount) < 0)
+	      - myGlobals.dnsSniffRequestCount
+	      - myGlobals.dnsSniffFailedCount
+	      - myGlobals.dnsSniffARPACount) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "DNS Packets processed", buf);
 
@@ -3555,34 +3528,34 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
 
   if(textPrintFlag == TRUE) {
-      sendString("\n\nIP to name - ipaddr2str():\n\n");
+    sendString("\n\nIP to name - ipaddr2str():\n\n");
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numipaddr2strCalls) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Total calls", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numipaddr2strCalls) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Total calls", buf);
 
-      if (myGlobals.numipaddr2strCalls != myGlobals.numFetchAddressFromCacheCalls) {
-          if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCalls) < 0)
-            BufferTooShort();
-          printFeatureConfigInfo(textPrintFlag, "ERROR: cache fetch attempts != ipaddr2str() calls", buf);
-      }
+    if (myGlobals.numipaddr2strCalls != myGlobals.numFetchAddressFromCacheCalls) {
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCalls) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "ERROR: cache fetch attempts != ipaddr2str() calls", buf);
+    }
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCallsOK) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "....OK", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCallsOK) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "....OK", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numipaddr2strCalls
-                                          - myGlobals.numFetchAddressFromCacheCallsOK) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "....Total not found", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numipaddr2strCalls
+		- myGlobals.numFetchAddressFromCacheCallsOK) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "....Total not found", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCallsFAIL) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "........Not found in cache", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCallsFAIL) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "........Not found in cache", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCallsSTALE) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "........Too old in cache", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numFetchAddressFromCacheCallsSTALE) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "........Too old in cache", buf);
   }
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
@@ -3614,45 +3587,45 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 
   if (textPrintFlag == TRUE) {
-      sendString("\n\nResolved - resolveAddress():\n\n");
+    sendString("\n\nResolved - resolveAddress():\n\n");
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveAddressCalls) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Addresses to resolve", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveAddressCalls) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Addresses to resolve", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveNoCacheDB) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "....less 'Error: No cache database'", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveNoCacheDB) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "....less 'Error: No cache database'", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedFromCache) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "....less 'Found in ntop cache'", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedFromCache) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "....less 'Found in ntop cache'", buf);
 
 #ifdef PARM_USE_HOST
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedFromHostAddresses) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "....less 'Resolved from /usr/bin/host'", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedFromHostAddresses) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "....less 'Resolved from /usr/bin/host'", buf);
 #endif
 
-      if(snprintf(buf, sizeof(buf), "%d", (myGlobals.numResolveAddressCalls
+    if(snprintf(buf, sizeof(buf), "%d", (myGlobals.numResolveAddressCalls
 #ifdef PARM_USE_HOST
-                                           - myGlobals.numResolvedFromHostAddresses
+					 - myGlobals.numResolvedFromHostAddresses
 #endif
-                                           - myGlobals.numResolveNoCacheDB
-                                           - myGlobals.numResolvedFromCache)) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Gives: # gethost (DNS lookup) calls", buf);
+					 - myGlobals.numResolveNoCacheDB
+					 - myGlobals.numResolvedFromCache)) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Gives: # gethost (DNS lookup) calls", buf);
 
-      if ((myGlobals.numResolveAddressCalls
+    if ((myGlobals.numResolveAddressCalls
 #ifdef PARM_USE_HOST
-            - myGlobals.numResolvedFromHostAddresses
+	 - myGlobals.numResolvedFromHostAddresses
 #endif
-            - myGlobals.numResolveNoCacheDB
-            - myGlobals.numResolvedFromCache) != myGlobals.numAttemptingResolutionWithDNS) {
-        if(snprintf(buf, sizeof(buf), "%d", myGlobals.numAttemptingResolutionWithDNS) < 0)
-          BufferTooShort();
-        printFeatureConfigInfo(textPrintFlag, "    ERROR: actual count does not match!", buf);
-      }
+	 - myGlobals.numResolveNoCacheDB
+	 - myGlobals.numResolvedFromCache) != myGlobals.numAttemptingResolutionWithDNS) {
+      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numAttemptingResolutionWithDNS) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "    ERROR: actual count does not match!", buf);
+    }
   }
 
   sendString(texthtml("\n\nDNS lookup calls:\n\n", "<tr><td align=\"center\">DNS lookup calls</td>\n<td><table>\n"));
@@ -3666,33 +3639,33 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "....Success: Resolved", buf);
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorHostNotFound
-                                      + myGlobals.numDNSErrorNoData
-                                      + myGlobals.numDNSErrorNoRecovery
-                                      + myGlobals.numDNSErrorTryAgain
-                                      + myGlobals.numDNSErrorOther) < 0)
+	      + myGlobals.numDNSErrorNoData
+	      + myGlobals.numDNSErrorNoRecovery
+	      + myGlobals.numDNSErrorTryAgain
+	      + myGlobals.numDNSErrorOther) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "....Failed", buf);
 
   if (textPrintFlag == TRUE) {
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorHostNotFound) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "........HOST_NOT_FOUND", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorHostNotFound) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "........HOST_NOT_FOUND", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorNoData) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "........NO_DATA", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorNoData) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "........NO_DATA", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorNoRecovery) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "........NO_RECOVERY", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorNoRecovery) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "........NO_RECOVERY", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorTryAgain) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "........TRY_AGAIN (don't store)", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorTryAgain) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "........TRY_AGAIN (don't store)", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorOther) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "........Other error (don't store)", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorOther) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "........Other error (don't store)", buf);
   }
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsCacheStoredLookup) < 0)
@@ -3707,51 +3680,51 @@ void printNtopConfigInfo(int textPrintFlag) {
   if (textPrintFlag != TRUE) {
     sendString("</table><br>\n");
     sendString("<table><tr><td><b>REMEMBER</b>:&nbsp;\n"
-                                      "'DNS lookups stored in cache' includes HOST_NOT_FOUND "
-                                      "replies, so that it may be larger than the number of "
-                                      "'Success: Resolved' queries.</td></tr></table>\n");
+	       "'DNS lookups stored in cache' includes HOST_NOT_FOUND "
+	       "replies, so that it may be larger than the number of "
+	       "'Success: Resolved' queries.</td></tr></table>\n");
   }
 
   /* **** */
 
   if(textPrintFlag == TRUE) {
-      sendString("\n\nVendor Lookup Table\n\n");
+    sendString("\n\nVendor Lookup Table\n\n");
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupRead) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Input lines read", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupRead) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Input lines read", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupAdded) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Records added total", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupAdded) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Records added total", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupAddedSpecial) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, ".....includes special records", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupAddedSpecial) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, ".....includes special records", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupCalls) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "getVendorInfo() calls", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupCalls) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "getVendorInfo() calls", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupSpecialCalls) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "getSpecialVendorInfo() calls", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupSpecialCalls) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "getSpecialVendorInfo() calls", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFound48bit) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Found 48bit (xx:xx:xx:xx:xx:xx) match", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFound48bit) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Found 48bit (xx:xx:xx:xx:xx:xx) match", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFound24bit) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Found 24bit (xx:xx:xx) match", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFound24bit) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Found 24bit (xx:xx:xx) match", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFoundMulticast) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Found multicast bit set", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFoundMulticast) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Found multicast bit set", buf);
 
-      if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFoundLAA) < 0)
-        BufferTooShort();
-      printFeatureConfigInfo(textPrintFlag, "Found LAA (Locally assigned address) bit set", buf);
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFoundLAA) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Found LAA (Locally assigned address) bit set", buf);
 
   }
 
@@ -3774,70 +3747,70 @@ void printNtopConfigInfo(int textPrintFlag) {
   /* **** */
 
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
-{
-  struct tm t;
-  char buf3[64], buf4[64];
-  time_t lockoutExpires;
-  int countBadGuys;
+  {
+    struct tm t;
+    char buf3[64], buf4[64];
+    time_t lockoutExpires;
+    int countBadGuys;
 
-  for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
-    if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr != 0) {
-      if (++countBadGuys == 1) {
-        sendString(texthtml("\n\nIP Address reject list\n\n",
-                            "<tr><th colspan=\"2\">IP Address reject list</th></tr>\n"));
-        sendString(texthtml("\nAddress ... Count ... Last Bad Access ... Lockout Expires\n",
-                            "<tr><th>Rejects</th>"
-                                "<td><table border=\"1\">"
-                                      "<tr><th>Address</th><th>Count</th>"
-                                      "<th>Last Bad Access</th><th>Lockout Expires</th></tr>"));
-      }
+    for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++) {
+      if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr != 0) {
+	if (++countBadGuys == 1) {
+	  sendString(texthtml("\n\nIP Address reject list\n\n",
+			      "<tr><th colspan=\"2\">IP Address reject list</th></tr>\n"));
+	  sendString(texthtml("\nAddress ... Count ... Last Bad Access ... Lockout Expires\n",
+			      "<tr><th>Rejects</th>"
+			      "<td><table border=\"1\">"
+			      "<tr><th>Address</th><th>Count</th>"
+			      "<th>Last Bad Access</th><th>Lockout Expires</th></tr>"));
+	}
       
-      if(snprintf(buf, sizeof(buf), "%s", 
-                  _intoa(myGlobals.weDontWantToTalkWithYou[i].addr, buf3, sizeof(buf3))) < 0)
-        BufferTooShort();
-      if(snprintf(buf2, sizeof(buf2), "%d", myGlobals.weDontWantToTalkWithYou[i].count) < 0)
-        BufferTooShort();
-      strftime(buf3, sizeof(buf3), "%c", 
-               localtime_r(&myGlobals.weDontWantToTalkWithYou[i].lastBadAccess, &t));
-      lockoutExpires = myGlobals.weDontWantToTalkWithYou[i].lastBadAccess + 
-                       PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL;
-      strftime(buf4, sizeof(buf4), "%c", localtime_r(&lockoutExpires, &t));
-      if (textPrintFlag) {
-        sendString("    ");
-        sendString(buf);
-        sendString("... ");
-        sendString(buf2);
-        sendString("... ");
-        sendString(buf3);
-        sendString("... ");
-        sendString(buf4);
-        sendString("\n");
-      } else {
-        sendString("<tr><td>");
-        sendString(buf);
-        sendString("</td><td>");
-        sendString(buf2);
-        sendString("</td><td>");
-        sendString(buf3);
-        sendString("</td><td>");
-        sendString(buf4);
-        sendString("</td></tr>\n");
+	if(snprintf(buf, sizeof(buf), "%s", 
+		    _intoa(myGlobals.weDontWantToTalkWithYou[i].addr, buf3, sizeof(buf3))) < 0)
+	  BufferTooShort();
+	if(snprintf(buf2, sizeof(buf2), "%d", myGlobals.weDontWantToTalkWithYou[i].count) < 0)
+	  BufferTooShort();
+	strftime(buf3, sizeof(buf3), "%c", 
+		 localtime_r(&myGlobals.weDontWantToTalkWithYou[i].lastBadAccess, &t));
+	lockoutExpires = myGlobals.weDontWantToTalkWithYou[i].lastBadAccess + 
+	  PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL;
+	strftime(buf4, sizeof(buf4), "%c", localtime_r(&lockoutExpires, &t));
+	if (textPrintFlag) {
+	  sendString("    ");
+	  sendString(buf);
+	  sendString("... ");
+	  sendString(buf2);
+	  sendString("... ");
+	  sendString(buf3);
+	  sendString("... ");
+	  sendString(buf4);
+	  sendString("\n");
+	} else {
+	  sendString("<tr><td>");
+	  sendString(buf);
+	  sendString("</td><td>");
+	  sendString(buf2);
+	  sendString("</td><td>");
+	  sendString(buf3);
+	  sendString("</td><td>");
+	  sendString(buf4);
+	  sendString("</td></tr>\n");
+	}
       }
     }
-  }
-  if (countBadGuys > 0) {
+    if (countBadGuys > 0) {
   
-    sendString(texthtml("\n", "</table></td>\n"));
+      sendString(texthtml("\n", "</table></td>\n"));
 
-    if(snprintf(buf, sizeof(buf), "%d", PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Reject duration (seconds)", buf);
+      if(snprintf(buf, sizeof(buf), "%d", PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL) < 0)
+	BufferTooShort();
+      printFeatureConfigInfo(textPrintFlag, "Reject duration (seconds)", buf);
   
-    strftime(buf, sizeof(buf), "%c", localtime_r(&myGlobals.actTime, &t));
-    printFeatureConfigInfo(textPrintFlag, "It is now", buf);
-  }
+      strftime(buf, sizeof(buf), "%c", localtime_r(&myGlobals.actTime, &t));
+      printFeatureConfigInfo(textPrintFlag, "It is now", buf);
+    }
 
-}
+  }
 #endif
   /* **** */
 
@@ -3927,7 +3900,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #else
               0
 #endif
-             ) < 0)
+	      ) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "GNU C (gcc) version", buf);
 
@@ -3939,25 +3912,25 @@ void printNtopConfigInfo(int textPrintFlag) {
 #else
                          "No"
 #endif
-  );
+			 );
 
 #ifdef MAKE_WITH_I18N
 
   if (textPrintFlag == TRUE) {
     printFeatureConfigInfo(textPrintFlag, "HAVE_LOCALE_H",
- #ifdef HAVE_LOCALE_H
+#ifdef HAVE_LOCALE_H
                            "present"
- #else
+#else
                            "absent"
- #endif
+#endif
                            );
 
     printFeatureConfigInfo(textPrintFlag, "HAVE_LANGINFO_H",
- #ifdef HAVE_LANGINFO_H
+#ifdef HAVE_LANGINFO_H
                            "present"
- #else
+#else
                            "absent"
- #endif
+#endif
                            );
 
     printFeatureConfigInfo(textPrintFlag, "Locale directory (version.c)", locale_dir);
@@ -3977,18 +3950,18 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
 
   if (snprintf(buf, sizeof(buf), "%d", myGlobals.maxSupportedLanguages + 1) < 0)
-      BufferTooShort();
+    BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Languages supported - actual ", buf);
 
   printFeatureConfigInfo(textPrintFlag, "Default language", myGlobals.defaultLanguage);
 
   for (i=0; i< myGlobals.maxSupportedLanguages; i++) {
     if (snprintf(buf, sizeof(buf), "Additional language %d", i+1) < 0)
-        BufferTooShort();
+      BufferTooShort();
     if (snprintf(buf2, sizeof(buf2), "'%s', time format '%s'", 
                  myGlobals.supportedLanguages[i],
                  myGlobals.strftimeFormat[i]) < 0)
-        BufferTooShort();
+      BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, buf, buf2);
   }
 
@@ -3998,10 +3971,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* *************************** */
 
-    /* At Luca's request, we generate less information for the html version...
-       so I've pushed all the config.h and #define stuff into a sub-function
-       (Burton - 05-Jun-2002) (Unless we're in debug mode)
-    */
+  /* At Luca's request, we generate less information for the html version...
+     so I've pushed all the config.h and #define stuff into a sub-function
+     (Burton - 05-Jun-2002) (Unless we're in debug mode)
+  */
 
 #if defined(DEBUG)                     || \
     defined(ADDRESS_DEBUG)             || \
@@ -4025,74 +3998,69 @@ void printNtopConfigInfo(int textPrintFlag) {
     defined(STORAGE_DEBUG)             || \
     defined(UNKNOWN_PACKET_DEBUG)
 #else
-    if (textPrintFlag == TRUE)
+  if (textPrintFlag == TRUE)
 #endif
-      printNtopConfigHInfo(textPrintFlag);
+    printNtopConfigHInfo(textPrintFlag);
 
-    /* *************************** */
+  /* *************************** */
 
-    sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
+  sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
 
-    /* **************************** */
+  /* **************************** */
 
 #ifdef CFG_MULTITHREADED
 #if !defined(DEBUG) && !defined(WIN32)
-    if(myGlobals.debugMode)
+  if(myGlobals.debugMode)
 #endif /* DEBUG or WIN32 */
-      {
-	sendString(texthtml("\nMutexes:\n\n", 
-			    "<P>"TABLE_ON"<TABLE BORDER=1>\n"
-			    "<TR><TH>Mutex Name</TH>"
-			    "<TH>State</TH>"
-			    "<TH>Last Lock</TH>"
-			    "<TH>Blocked</TH>"
-			    "<TH>Last UnLock</TH>"
-			    "<TH COLSPAN=2># Locks/Releases</TH>"
-			    "<TH>Max Lock</TH></TR>"));
+    {
+      sendString(texthtml("\nMutexes:\n\n", 
+			  "<P>"TABLE_ON"<TABLE BORDER=1>\n"
+			  "<TR><TH>Mutex Name</TH>"
+			  "<TH>State</TH>"
+			  "<TH>Last Lock</TH>"
+			  "<TH>Blocked</TH>"
+			  "<TH>Last UnLock</TH>"
+			  "<TH COLSPAN=2># Locks/Releases</TH>"
+			  "<TH>Max Lock</TH></TR>"));
 
-	printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
-	printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
+      printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
+      printMutexStatus(textPrintFlag, &myGlobals.packetQueueMutex, "packetQueueMutex");
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-	if(myGlobals.numericFlag == 0) 
-	  printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
+      if(myGlobals.numericFlag == 0) 
+	printMutexStatus(textPrintFlag, &myGlobals.addressResolutionMutex, "addressResolutionMutex");
 #endif
 
 #ifndef WIN32
-	if(myGlobals.isLsofPresent)
-	  printMutexStatus(textPrintFlag, &myGlobals.lsofMutex,      "lsofMutex");
+      if(myGlobals.isLsofPresent)
+	printMutexStatus(textPrintFlag, &myGlobals.lsofMutex,      "lsofMutex");
 #endif
-	printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
-	printMutexStatus(textPrintFlag, &myGlobals.graphMutex,       "graphMutex");
-	printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
+      printMutexStatus(textPrintFlag, &myGlobals.hostsHashMutex,   "hostsHashMutex");
+      printMutexStatus(textPrintFlag, &myGlobals.tcpSessionsMutex, "tcpSessionsMutex");
 #ifdef MEMORY_DEBUG
-	printMutexStatus(textPrintFlag, &myGlobals.leaksMutex,       "leaksMutex");
+      printMutexStatus(textPrintFlag, &myGlobals.leaksMutex,       "leaksMutex");
 #endif
-	sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
-      }
+      sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
+    }
 #endif /* CFG_MULTITHREADED */
 
-    if (textPrintFlag != TRUE) {
-      sendString("<p>Click <a href=\"textinfo.html\" alt=\"Text version of this page\">"
-		 "here</a> for a more extensive, text version of this page, suitable for "
-                 "inclusion into a bug report!</p>\n");
-    }
-
-    sendString(texthtml("\n", "</CENTER>\n"));
+  if (textPrintFlag != TRUE) {
+    sendString("<p>Click <a href=\"textinfo.html\" alt=\"Text version of this page\">"
+	       "here</a> for a more extensive, text version of this page, suitable for "
+	       "inclusion into a bug report!</p>\n");
   }
 
-#endif /* MAKE_MICRO_NTOP */
+  sendString(texthtml("\n", "</CENTER>\n"));
+}
 
-  /* ******************************* */
+/* ******************************* */
 
-  static void initializeWeb(void) {
-#ifndef MAKE_MICRO_NTOP
-    myGlobals.columnSort = 0, myGlobals.sortSendMode = 0;
-#endif
-    addDefaultAdminUser();
-    initAccessLog();
-  }
+static void initializeWeb(void) {
+  myGlobals.columnSort = 0, myGlobals.sortSendMode = 0;
+  addDefaultAdminUser();
+  initAccessLog();
+}
 
-  /* *************************** */
+/* *************************** */
 
 void printNtopProblemReport(void) {
   char buf[LEN_TIMEFORMAT_BUFFER];

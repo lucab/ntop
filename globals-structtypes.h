@@ -1408,10 +1408,8 @@ XML*/
                                      /*XML b stickyHosts          Options    "-c | --sticky-hosts" */
   int daemonMode;                    /* 'd' */
                                      /*XML b daemonMode           Options    "-d | --daemon: run as daemon flag" */
-#ifndef MAKE_MICRO_NTOP
   int maxNumLines;                   /* 'e' */
                                      /*XML n maxNumLines          Options    "-e | --max-table-rows: maximum lines/page" */
-#endif
   char *rFileName;                   /* 'f' */
                                      /*XML s rFileName            Options    "-f | --traffic-dump-file: input packet capture file" */
   u_char trackOnlyLocalHosts;        /* 'g' */
@@ -1493,16 +1491,6 @@ XML*/
   int sslPort;
                                      /*XML s sslAddr              Options    "-W | --https-server address" */
                                      /*XML n sslPort              Options    "-W | --https-server :port" */
-#endif
-
-#ifdef MAKE_WITH_GDCHART
-  int throughput_chart_type;         /* '129' */
-                                     /*XML * throughputChartType  Options    "--throughput-chart-type"
-                                     newxml_namedstring(elOptions, "throughput_chart_type",
-                                                        myGlobals.throughput_chart_type == 0 ? "Area" : "Bar",
-                                                        "--throughput-chart-type",
-                                                        "value");
-XML*/
 #endif
 
 #ifndef MAKE_WITH_IGNORE_SIGPIPE
@@ -1655,8 +1643,6 @@ XML*/
      */
     PthreadMutex gdbmMutex;
                                      /*XMLNOTE &pthreadmutex gdbmMutex mutexes "" */
-    PthreadMutex graphMutex;
-                                     /*XMLNOTE &pthreadmutex graphMutex mutexes "" */
     PthreadMutex tcpSessionsMutex;
                                      /*XMLNOTE &pthreadmutex tcpSessionsMutex mutexes"" */
 
@@ -1811,12 +1797,7 @@ XML*/
    * local variables
    */
   int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
-
-#ifndef MAKE_MICRO_NTOP
   int sortSendMode;
-
-#endif /* MAKE_MICRO_NTOP */
-
   int actualReportDeviceId;
   short columnSort, reportKind, sortFilter;
   int sock, newSock;

@@ -56,7 +56,6 @@ void handleSigHup(int signalId _UNUSED_) {
   if(myGlobals.isLsofPresent)
      printMutexInfo(&myGlobals.lsofMutex, "myGlobals.lsofMutex");
    printMutexInfo(&myGlobals.hostsHashMutex, "myGlobals.hostsHashMutex");
-   printMutexInfo(&myGlobals.graphMutex, "myGlobals.graphMutex");
   traceEvent(CONST_TRACE_INFO, "========================================");
 #endif /* CFG_MULTITHREADED */
 
@@ -925,9 +924,7 @@ RETSIGTYPE cleanup(int signo) {
     free(myGlobals.hostsCache[i]);
   myGlobals.hostsCacheLen = 0;
 
-#ifndef MAKE_MICRO_NTOP
   unloadPlugins();
-#endif
 
   (void)fflush(stdout);
 
@@ -947,7 +944,6 @@ RETSIGTYPE cleanup(int signo) {
     deleteMutex(&myGlobals.addressResolutionMutex);
 #endif
   deleteMutex(&myGlobals.hostsHashMutex);
-  deleteMutex(&myGlobals.graphMutex);
 
   if(myGlobals.isLsofPresent)
     deleteMutex(&myGlobals.lsofMutex);

@@ -136,7 +136,7 @@ sntop_SOURCES      = $(ntop_SOURCES) plugins/icmpPlugin.c plugins/lastSeenPlugin
 		     plugins/sflowPlugin.c plugins/rrdPlugin.c
 
 sntop_DEPENDENCIES = $(ntop_DEPENDENCIES)
-sntop_LDADD        = $(ntop_LDADD) -lrrd
+sntop_LDADD        = $(ntop_LDADD)
 sntop_LDFLAGS      = $(ntop_LDFLAGS) -static
 
 noinst_HEADERS     = globals-core.h globals-report.h ntop.h regex.h

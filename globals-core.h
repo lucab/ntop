@@ -320,9 +320,7 @@ extern unsigned short deviceLocalAddress(struct in_addr *addr, u_int deviceId);
 extern unsigned short isPseudoBroadcastAddress(struct in_addr *addr);
 extern void printLogTime(void);
 extern int32_t gmt2local(time_t t);
-#ifdef MAKE_WITH_LARGERRDPOP
 extern char *dotToSlash(char *name);
-#endif
 extern void handleFlowsSpecs();
 extern int getLocalHostAddress(struct in_addr *hostAddress, char* device);
 extern void fillDomainName(HostTraffic *el);

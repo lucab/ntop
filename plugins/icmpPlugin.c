@@ -211,19 +211,12 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   } else /* host=3240847503&icmp=3 */ {
     char *tmpStr;    
 
-#ifdef MAKE_WITH_GDCHART
+#ifdef CFG_USE_GRAPHICS
     if(strncmp(url, "chart", strlen("chart")) == 0) {
       unsigned long  sc[2] = { 0xf08080L, 0x4682b4L }; /* see clr[] in graph.c */
 
-      GDC_BGColor   = 0xFFFFFFL;                  /* backgound color (white) */
-      GDC_LineColor = 0x000000L;                  /* line color      (black) */
-      GDC_SetColor  = &(sc[0]);                   /* assign set colors */
-      GDC_ytitle = "Packets";
-
-#ifndef MAKE_MICRO_NTOP
       /* Avoid to draw too many entries */
       if(num > myGlobals.maxNumLines) num = myGlobals.maxNumLines;
-#endif
 
       quicksort(hosts, num, sizeof(HostTraffic **), sortICMPhosts);
 
@@ -251,33 +244,19 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
 
-#ifdef CFG_MULTITHREADED
-      accessMutex(&myGlobals.graphMutex, "icmpPlugin");
-#endif
-
 #ifndef WIN32
       fd = fdopen(abs(myGlobals.newSock), "ab");
 #else
       fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-      GDC_title = "ICMP Host Traffic";
-      /* The line below causes a crash on Solaris/SPARC (who knows why) */
-      /* GDC_yaxis=1; */
-      GDC_ylabel_fmt = NULL;
-      out_graph(600, 450,           /* width, height           */
-		fd,                 /* open FILE pointer       */
-		GDC_3DBAR,          /* chart type              */
-		tot,                /* num points per data set */
-		lbls,               /* X labels array of char* */
-		2,                  /* number of data sets     */
-		s, r);              /* dataset 2               */
+      drawBar(600, 450,           /* width, height           */
+	      fd,                 /* open FILE pointer       */
+	      tot,                /* num points per data set */
+	      lbls,               /* X labels array of char* */
+	      s);                /* dataset 2               */
 
       fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-      releaseMutex(&myGlobals.graphMutex);
-#endif
 
 #ifdef WIN32
       sendGraphFile(fileName, 0);
@@ -308,13 +287,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
     printHTMLtrailer();
     return;
   }
-
-#if 0 /* Not quite useful */
-#ifdef MAKE_WITH_GDCHART
-  if(hostIpAddress.s_addr == 0)
-    sendString("<BR><CENTER><IMG SRC=\"/plugins/icmpWatch?chart\"></CENTER><P>\n");
-#endif
-#endif
 
   sendString("<CENTER>\n");
   sendString("<TABLE BORDER>\n");
@@ -415,10 +387,8 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       sendString("</TR>\n");
 
       /* Avoid huge tables */
-#ifndef MAKE_MICRO_NTOP
       if(printedEntries++ > myGlobals.maxNumLines)
 	break;
-#endif
     }
 
   sendString("</TABLE>\n<p></CENTER>\n");

@@ -111,8 +111,6 @@ static char* dlerror() {
 
 /* ******************* */
 
-#ifndef MAKE_MICRO_NTOP
-
 #if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)
 static void loadPlugin(char* dirName, char* pluginName) {
   char pluginPath[256];
@@ -338,9 +336,6 @@ void loadPlugins(void) {
   loadPlugin(NULL, "sflowPlugin");
   loadPlugin(NULL, "netflowPlugin");
   loadPlugin(NULL, "rrdPlugin");
-#ifdef MAKE_RMON_SUPPORT
-  loadPlugin(NULL, "rmonPlugin");
-#endif
 #endif /* MAKE_STATIC_PLUGIN */
 }
 
@@ -410,5 +405,4 @@ void startPlugins(void) {
 
 /* ************************************* */
 
-#endif /* MAKE_MICRO_NTOP */
 

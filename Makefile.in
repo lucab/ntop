@@ -110,21 +110,17 @@ DLLTOOL = @DLLTOOL@
 DYN_FLAGS = @DYN_FLAGS@
 INCS = @INCS@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-NTCSH = @NTCSH@
 LD = @LD@
-LIBCURSES = @LIBCURSES@
-LIBREADLINE = @LIBREADLINE@
-LIBTERMCAP = @LIBTERMCAP@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 NM = @NM@
+NTCSH = @NTCSH@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
 PLUGINS = @PLUGINS@
 RANLIB = @RANLIB@
-RRDLIB = @RRDLIB@
 SCRIPTVER = @SCRIPTVER@
 SO_VERSION_PATCH = @SO_VERSION_PATCH@
 STRIP = @STRIP@
@@ -239,7 +235,7 @@ sntop_SOURCES = $(ntop_SOURCES) plugins/icmpPlugin.c plugins/lastSeenPlugin.c \
 
 
 sntop_DEPENDENCIES = $(ntop_DEPENDENCIES)
-sntop_LDADD = $(ntop_LDADD) -lrrd
+sntop_LDADD = $(ntop_LDADD)
 sntop_LDFLAGS = $(ntop_LDFLAGS) -static
 
 noinst_HEADERS = globals-core.h globals-report.h ntop.h regex.h
@@ -284,7 +280,7 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = ntcsh/Makefile
 LTLIBRARIES = $(lib_LTLIBRARIES)
 
 am_libntop_la_OBJECTS = address.lo dataFormat.lo getopt.lo getopt1.lo \
@@ -410,6 +406,8 @@ $(srcdir)/config.h.in:  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
+ntcsh/Makefile: $(top_builddir)/config.status $(top_srcdir)/ntcsh/Makefile.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 libLTLIBRARIES_INSTALL = $(INSTALL)
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
@@ -908,6 +906,7 @@ distcleancheck_listfiles = find . -type f -print
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
+	$(mkinstalldirs) $(distdir)/ntcsh
 	@list='$(DISTFILES)'; for file in $$list; do \
 	  if test -f $$file || test -d $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \

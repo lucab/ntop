@@ -41,10 +41,6 @@ static u_short nextFlowIgnored;
 static HostTraffic *dummyHost;
 static u_int dummyHostIdx;
 
-#ifdef MAKE_WITH_FTPDATA_ASSUMED
-static u_int32_t flowIgnoredLowPort, flowAssumedFtpData;
-#endif
-
 /* Forward */
 static void setNetFlowInSocket();
 static void setNetFlowOutSocket();
@@ -414,20 +410,6 @@ static void dissectFlow(char *buffer, int bufferLen) {
                          ntohl(the5Record.flowRecord[i].srcaddr), sport,
                          ntohl(the5Record.flowRecord[i].dstaddr), dport,
                          len);
-
-#ifdef MAKE_WITH_FTPDATA_ASSUMED
-              /*
-               * As a last resort, user selectable, we assume it's ftp-data traffic
-               */
-              if((dport == myGlobals.netFlowInPort) || (sport == myGlobals.netFlowInPort))
-                  flowIgnoredNETFLOW++;
-              else if(min(sport, dport) > 1023) {
-	          handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
-                  flowAssumedFtpData++;
-              } else
-                  flowIgnoredLowPort++;
-#endif
-
             }
 	} else {
 	  if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1)
@@ -437,20 +419,6 @@ static void dissectFlow(char *buffer, int bufferLen) {
                          ntohl(the5Record.flowRecord[i].srcaddr), sport,
                          ntohl(the5Record.flowRecord[i].dstaddr), dport,
                          len);
-
-#ifdef MAKE_WITH_FTPDATA_ASSUMED
-              /*
-               * As a last resort, user selectable, we assume it's ftp-data traffic
-               */
-              if((dport == myGlobals.netFlowInPort) || (sport == myGlobals.netFlowInPort))
-                  flowIgnoredNETFLOW++;
-              else if(min(sport, dport) > 1023) {
-                  handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
-                  flowAssumedFtpData++;
-              } else
-                  flowIgnoredLowPort++;
-#endif
-
             }
 	}
       } else {
@@ -1263,32 +1231,6 @@ static void handleNetflowHTTPrequest(char* url) {
         ) < 0)
           BufferTooShort();
       sendString(buf);
-
-#ifdef MAKE_WITH_FTPDATA_ASSUMED
-      if(snprintf(buf, sizeof(buf),
-                  "<TR><TH ALIGN=\"LEFT\">&nbsp;&nbsp;less: netFlow</TH>\n"
-                      "<TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
-                  flowIgnoredNETFLOW
-        ) < 0)
-          BufferTooShort();
-      sendString(buf);
-
-      if(snprintf(buf, sizeof(buf),
-                  "<TR><TH ALIGN=\"LEFT\">&nbsp;&nbsp;less: port <= 1023</TH>\n"
-                      "<TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
-                      flowIgnoredLowPort
-        ) < 0)
-          BufferTooShort();
-      sendString(buf);
-
-      if(snprintf(buf, sizeof(buf),
-                  "<TR><TH ALIGN=\"LEFT\">Gives: Assumed ftpdata</TH>\n"
-                      "<TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
-                      flowAssumedFtpData
-        ) < 0)
-          BufferTooShort();
-      sendString(buf);
-#endif
 
       sendString("<TR><TD COLSPAN=\"2\" ALIGN=\"CENTER\">Most recent problem flows<br>"
                                                         "(n) is consecutive count<br>"

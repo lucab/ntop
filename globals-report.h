@@ -18,15 +18,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef MAKE_WITH_GDCHART
-#ifndef _GRAPH_C_
-#define GDC_LIB
-#endif
-#include "gdc.h"
-#include "gdchart.h"
-#include "gdcpie.h"
-#endif
-
 #ifdef  PARM_ENABLE_EXPERIMENTAL
 #define TABLE_ON  "<TABLE BGCOLOR=#999999 CELLSPACING=1 CELLPADDING=1 BORDER=0><TR><TD>"
 #define TABLE_OFF "</TD></TR></TABLE>"
@@ -54,8 +45,6 @@
   Peter Marquardt <wwwutz@mpimg-berlin-dahlem.mpg.de>
 */
 #define SD(a,b) ((b)?((float)a)/(b):0)
-
-#ifndef MAKE_MICRO_NTOP
 
 /* reportUtils.c */
 extern void formatUsageCounter(UsageCounter usageCtr, Counter maxValue, int actualDeviceId);
@@ -201,29 +190,6 @@ extern void sslwatchdogSighandler(int signum);
 extern void* sslwatchdogChildThread(void* notUsed _UNUSED_);
 #endif
 
-#ifdef MAKE_WITH_GDCHART
-#ifndef _GLOBALS_REPORT_C_
-#define GDC_LIB
-#endif
-
-#include "gdc.h"
-#include "gdchart.h"
-#include "gdcpie.h"
-
-
-extern char GDC_yaxis;
-extern char* GDC_ylabel_fmt;
-
-extern int out_graph(short gifwidth,
-		     short gifheight,
-		     FILE  *gif_fptr,
-		     GDC_CHART_T type,
-		     int  num_points,
-		     char *xlbl[],
-		     int  num_sets,
-		     ... );
-#endif
-
 /* **************************** */
 
 #define TRAFFIC_STATS                   0
@@ -281,7 +247,6 @@ extern int out_graph(short gifwidth,
 
 /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
 #define RESET_STATS_HTML              "resetStats.html"
-#endif
 
 #define STR_W3C_P3P_XML                 "w3c/p3p.xml"
 #define STR_NTOP_P3P                    "ntop.p3p"
@@ -334,6 +299,12 @@ extern void drawThptGraph(int sortedColumn);
 extern void drawGlobalProtoDistribution(void);
 extern void drawHostsDistanceGraph();
 extern void drawGlobalIpProtoDistribution(void);
+extern void drawBar(short width, short height, FILE* filepointer,
+		    int   num_points, char  *labels[], float data[]);
+extern void drawArea(short width, short height, FILE* filepointer,
+		     int   num_points, char  *labels[], float data[]);
+extern void drawPie(short width, short height, FILE* filepointer,
+		    int   num_points, char  *labels[], float data[]);
 
 /* xmldump.c */
 extern int dumpXML(int dumpToFile, char * parms);

@@ -18,15 +18,14 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
- /*
-  * Do not use local defs for pnggraph
-  * (included by ntop.h)
-  */
+/*
+ * Do not use local defs for pnggraph
+ * (included by ntop.h)
+ */
 
 #include "ntop.h"
 
-#ifndef MAKE_MICRO_NTOP
-#ifdef MAKE_WITH_GDCHART
+#ifdef CFG_USE_GRAPHICS
 
 #define _GRAPH_C_
 #include "globals-report.h"
@@ -37,147 +36,379 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
                                0x7fffd4L, 0xffb6c1L, 0x708090L,
                                0x6495edL, 0xdeb887L, 0x6b8e23L};
 
+/* ******************************************************************* */
+
+#include "gd.h"
+#include "gdfontl.h"
+#include "gdfonts.h"
+#include "gdfontmb.h"
+#define M_PI	3.14159265358979323846
+
+#include <stdio.h>
+
+/* ******************************************************************* */
+
 #define MIN_SLICE_PERCENTAGE 0.1 /* % */
+#define BOX_SIZE               7
+
+/* #define GD_2 */
+
+
+static void drawLegend(gdImagePtr im,
+		       short width,
+		       short height,
+		       int   num_points,
+		       char  *labels[],              /* slice labels */
+		       float data[],
+		       int colors[], int labelColor) {
+
+  int edge_x, edge_y, i;
+#ifdef SHOW_PERCENTAGE
+  float total;
+  char str[32];
+#endif
+  
+  edge_x = (width*.75)+10;
+  edge_y = (height/10);
+
+#ifdef SHOW_PERCENTAGE
+   for(i=0, total=0; i<num_points; i++)
+    total += data[i];
+#endif
+
+   for(i=0; i<num_points; i++) {    
+     gdImageFilledRectangle(im, edge_x, edge_y, edge_x+BOX_SIZE, edge_y+BOX_SIZE, colors[i]);
+     gdImageRectangle(im, edge_x-1, edge_y-1, edge_x+BOX_SIZE+1, edge_y+BOX_SIZE+1, labelColor);
+#ifdef SHOW_PERCENTAGE
+     snprintf(str, sizeof(str), "%s(%.1f%%)", labels[i], (data[i]*100)/total);
+     gdImageString(im, gdFontSmall, edge_x+BOX_SIZE+5, edge_y-5, str, labelColor);
+#else
+     gdImageString(im, gdFontSmall, edge_x+BOX_SIZE+5, edge_y-3, labels[i], labelColor);
+#endif
+     edge_y += gdFontSmall->h*1.5;
+   }  
+}
 
 /* ************************ */
 
-#if !defined(PARM_DISABLE_GDC_WATCHDOG) && !defined(WIN32)
-
-static void _GDC_out_pie(short width,
-			 short height,
-			 FILE* filepointer,            /* open file pointer, can be stdout */
-			 GDCPIE_TYPE pietype,
-			 int   num_points,
-			 char  *labels[],              /* slice labels */
-			 float data[] ) {
-  int status;
-  pid_t wait_result, fork_result;
-  FILE *fd = NULL;
-  int idx, found, len;
-  struct stat statbuf;
-  char tmpStr[512];
-
-#ifdef GDC_WATCHDOG_DEBUG
-  traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: GDC_out_pie forking...\n");
-#endif
-
-  fork_result = fork();
-
-  if (fork_result == (pid_t) -1) {
-    traceEvent(CONST_TRACE_WARNING, "GDC_out_pie(001) - fork failed!");
-    return;
-  }
-  if (fork_result == (pid_t) 0) {
-
-#ifdef GDC_WATCHDOG_DEBUG
-    traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: in child, calling\n");
-#endif
-
-    GDC_out_pie(width,
-                height,
-                filepointer,
-                pietype,
-                num_points,
-                labels,
-                data);
-
-#ifdef GDC_WATCHDOG_DEBUG
-    traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: in child, returned\n");
-#endif
-
-    exit(0);
-  }
-
-  /* parent */
-
-#ifdef GDC_WATCHDOG_DEBUG
-  traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: in parent, waiting for %d...\n", fork_result);
-#endif
-
-  wait_result = waitpid(fork_result, &status, 0);
-
-  if (wait_result == (pid_t) -1) {
-      traceEvent(CONST_TRACE_WARNING, "GDC_out_pie(002) - wait failed/interrupted (%d - %s)",
-                 errno,
-                 (errno == ECHILD ? "ECHILD" :
-                  errno == EINVAL ? "EINVAL" :
-                  errno == EINTR  ? "EINTR"  : "unrecognized code"));
-  } else if (wait_result != fork_result) {
-      traceEvent(CONST_TRACE_WARNING, "GDC_out_pie(003) - unexpected child termination");
-  } else if (status) {
-      traceEvent(CONST_TRACE_WARNING, "GDC_out_pie(004) - child abnormal termination");
-  } else {
-#ifdef GDC_WATCHDOG_DEBUG
-      traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: in parent, ran OK\n");
-#endif
-      return;
-  }
-
-  /* Some kind of failure -- send PIE-ERROR.png */
-
-  /* Search in the local directory first... */
-  found=0;
-  for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
-
-      if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s",
-                  myGlobals.dataFileDirs[idx], HTML_GDC_OUT_PIE_ERROR_FILE) < 0)
-          BufferTooShort();
+void drawPie(short width,
+	     short height,
+	     FILE* filepointer,            /* open file pointer, can be stdout */
+	     int   num_points,
+	     char  *labels[],              /* slice labels */
+	     float data[] ) { 
+  gdImagePtr im;
+  int black, white, colors[64], numColors, i;
+  int center_x, center_y, radius, begDeg, endDeg, x, y;
+  float total;
+  int displ;
+  float radiant;
   
-#ifdef WIN32
-      i=0;
-      while(tmpStr[i] != '\0') {
-          if(tmpStr[i] == '/') tmpStr[i] = '\\';
-          i++;
-      }
-#endif
-  
-      if(stat(tmpStr, &statbuf) == 0) {
-          if((fd = fopen(tmpStr, "rb")) != NULL) {
-              found = 1;
-              break;
-          }
-      }
+
+  im = gdImageCreate(width, height);
+
+  white = gdImageColorAllocate(im, 255, 255, 255); /* bg color */
+  black = gdImageColorAllocate(im, 0, 0, 0);	
+  numColors = sizeof(clr)/sizeof(unsigned long);
+  for(i=0; i<numColors; i++) {
+    colors[i] = gdImageColorAllocate(im, clr[i]>>16, clr[i]>>8, clr[i]&0x0000FF);
   }
+
+  /* ******************************* */
+  for(i=0, total=0; i<num_points; i++)
+    total += data[i];
   
-  if(fd != NULL) {
-      int bufsize=sizeof(tmpStr);
-#ifdef GDC_WATCHDOG_DEBUG
-      traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: sending error graphic, '%s'\n", tmpStr);
+  center_x = width/3, center_y = height/2;
+  radius = height/3;
+  begDeg = 0;
+
+  for(i=0; i<num_points; i++) {
+    displ = (360*data[i])/total;
+
+    if(i < (num_points-1))
+      endDeg = begDeg+displ;
+    else
+      endDeg = 360;
+
+#ifdef GD_2
+    gdImageFilledArc(im, center_x, center_y, 2*radius, 2*radius,
+		     begDeg+270, endDeg+270, colors[i], gdArc);
+#else
+    radiant = begDeg-90; radiant /= 360; radiant *= 2*M_PI;
+    x = center_x+(radius)*cos(radiant);
+    y = center_y+(radius)*sin(radiant);
+    gdImageArc(im, center_x, center_y, 2*radius, 2*radius,
+	       begDeg+270, endDeg+270, colors[i]);
+    gdImageLine(im, center_x, center_y, x,y, colors[i]);
+    /* printf("Line [%d][%d]->[%d][%d]\n", center_x, center_y, x,y); */
 #endif
-      for(;;) {
-          len = fread(tmpStr, sizeof(char), bufsize, fd);
-          if(len > 0) {
-              sendStringLen(tmpStr, len);
-          }
-          if(len <= bufsize) break;
-      }
-#ifdef GDC_WATCHDOG_DEBUG
-      traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: sent error graphic\n");
-#endif
-      fclose(fd);
-  } else {
-      traceEvent(CONST_TRACE_WARNING, "GDC_out_pie(005) - unable to find %s\n", 
-                              HTML_GDC_OUT_PIE_ERROR_FILE);
+
+    begDeg = endDeg;
   }
-  return;
+
+  gdImageArc(im, center_x, center_y, 2*radius, 2*radius, 0, 360, black);
+  drawLegend(im, width, height, num_points, labels, data, colors, black);
+  gdImagePng(im, filepointer);
+  gdImageDestroy(im);
 }
 
-#define GDC_out_pie(w, h, file, type, slices, labels, data) _GDC_out_pie(w, h, file, type, slices, labels, data)
+/* ************************ */
 
-#else /* PARM_DISABLE_GDC_WATCHDOG */
+void drawBar(short width,
+	     short height,
+	     FILE* filepointer,            /* open file pointer, can be stdout */
+	     int   num_points,
+	     char  *labels[],              /* slice labels */
+	     float data[]) { 
+  gdImagePtr im;
+  int black, white, colors[64], numColors, i, maxval=0;
+  int center_x, center_y;
+  float total, yscale, txtsz, txtht;
+  int vmargin, hmargin, base, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
+  int padding, ymax, ymin, xmax, xmin, gray;
 
-#undef GDC_out_pie
+  im = gdImageCreate(width, height);
 
-#ifndef WIN32
-#warning
-#warning
-#warning
-#warning GDC WATCHDOG Disabled - ntop web server will crash on libpng version conflicts.
-#warning
-#warning
-#warning
-#endif
-#endif /* PARM_DISABLE_GDC_WATCHDOG */
+  white = gdImageColorAllocate(im, 255, 255, 255); /* bg color */
+  black = gdImageColorAllocate(im, 0, 0, 0);	
+  gray = gdImageColorAllocate(im, 200, 200, 200);	
+  numColors = sizeof(clr)/sizeof(unsigned long);
+  for(i=0; i<numColors; i++) {
+    colors[i] = gdImageColorAllocate(im, clr[i]>>16, clr[i]>>8, clr[i]&0x0000FF);
+  }
+
+  /* ******************************* */
+  for(i=0, total=0; i<num_points; i++) {
+    total += data[i];
+    if(data[i] > maxval) maxval =  data[i];
+  }
+
+  center_x = width/3, center_y = height/2;
+
+  /* ************************* */
+
+  vmargin = 20; // top (bottom) vertical margin for title (x-labels)
+  hmargin = 60; // left horizontal margin for y-labels
+  
+  base = floor((((width*.75)) - hmargin) / num_points); // distance between columns
+  
+  ysize = height - 2 * vmargin; // y-size of plot
+  xsize = num_points * base; // x-size of plot
+  
+  // y labels and grid lines
+  ngrid = 4; // number of grid lines
+  
+  dydat = maxval / ngrid; // data units between grid lines
+  dypix = ysize / (ngrid + 1); // pixels between grid lines
+  
+  for (i = 0; i <= (ngrid + 1); i++) { 
+    char *theStr;
+    char str[16];
+ 
+    // height of grid line in units of data
+    ydat = (int)(i * dydat); 
+    
+    if(0) {
+      snprintf(str, sizeof(str), "%d", ydat);
+      theStr = str;
+    } else {
+      Counter c = ydat;
+      theStr = formatBytes(c, 0);      
+    }
+
+    // height of grid line in pixels
+    ypos = vmargin + ysize - (int)(i*dypix); 
+
+    txtsz = gdFontSmall->w*strlen(theStr); // pixel-width of label
+    txtht = gdFontSmall->h; // pixel-height of label
+
+    xpos = hmargin - 10 - txtsz; 
+    if(xpos < 1) xpos = 1;
+    
+    gdImageString(im, gdFontSmall, xpos, ypos - (int)(txtht/2), theStr, black); 
+
+    if (!(i == 0) && !(i > ngrid)) {
+      gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray); 
+    }
+  } 
+ 
+  // columns and x labels
+  padding = 3; // half of spacing between columns
+  yscale = (float)ysize / ((ngrid+1) * dydat); // pixels per data unit
+
+  for (i = 0; i<num_points; i++) { 
+    // vertical columns
+    ymax = vmargin + ysize; 
+    ymin = ymax - (int)(data[i]*yscale); 
+    xmax = hmargin + (i+1)*base - padding; 
+    xmin = hmargin + i*base + padding; 
+
+    if((xmax-xmin) > 100) {
+      xmax = xmin+100;
+    }
+
+    gdImageFilledRectangle(im, xmin, ymin, xmax, ymax, colors[i]); 
+    gdImageRectangle(im, xmin, ymin, xmax, ymax, black); 
+
+    // x labels
+    txtsz = gdFontSmall->w * strlen(labels[i]); 
+
+    xpos = xmin + (int)((base - txtsz) / 2); 
+    if(xmin > xpos) xpos = xmin; else xmin = xpos; 
+    ypos = ymax + 3; // distance from x axis
+  } 
+
+  // plot frame
+  gdImageRectangle(im, hmargin, vmargin, hmargin + xsize, vmargin + ysize, black); 
+
+  /* ************************* */
+
+  drawLegend(im, width, height, num_points, labels, data, colors, black);
+  gdImagePng(im, filepointer);
+  gdImageDestroy(im);
+}
+
+/* ************************** */
+
+void drawArea(short width,
+	      short height,
+	      FILE* filepointer,            /* open file pointer, can be stdout */
+	      int   num_points,
+	      char  *labels[],              /* slice labels */
+	      float data[]) { 
+  gdImagePtr im;
+  int black, white, colors[64], numColors, i, maxval=0;
+  int center_x, center_y;
+  float total, yscale, txtsz, txtht;
+  int vmargin, hmargin, base, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
+  int padding, ymax, ymin, xmax, xmin, gray;
+
+  im = gdImageCreate(width, height);
+
+  white = gdImageColorAllocate(im, 255, 255, 255); /* bg color */
+  black = gdImageColorAllocate(im, 0, 0, 0);	
+  gray = gdImageColorAllocate(im, 200, 200, 200);	
+  numColors = sizeof(clr)/sizeof(unsigned long);
+  for(i=0; i<numColors; i++) {
+    colors[i] = gdImageColorAllocate(im, clr[i]>>16, clr[i]>>8, clr[i]&0x0000FF);
+  }
+
+  /* ******************************* */
+  for(i=0, total=0; i<num_points; i++) {
+    total += data[i];
+    if(data[i] > maxval) maxval =  data[i];
+    /* printf("%d) %.1f\n", i, data[i]); */
+  }
+
+  center_x = width/2, center_y = height/2;
+
+  /* ************************* */
+
+  vmargin = 20; // top (bottom) vertical margin for title (x-labels)
+  hmargin = 38; // left horizontal margin for y-labels
+  
+  base = floor(((width) - hmargin) / num_points); // distance between columns
+  
+  ysize = height - 2 * vmargin; // y-size of plot
+  xsize = num_points * base; // x-size of plot
+  
+  // y labels and grid lines
+  ngrid = 4; // number of grid lines
+  
+  dydat = maxval / ngrid; // data units between grid lines
+  dypix = ysize / (ngrid + 1); // pixels between grid lines
+
+  for (i = 0; i <= (ngrid + 1); i++) { 
+    char str[16];
+
+    // height of grid line in units of data
+    ydat = (int)(i * dydat); 
+    snprintf(str, sizeof(str), "%d", ydat);
+
+    // height of grid line in pixels
+    ypos = vmargin + ysize - (int)(i*dypix); 
+
+    txtsz = gdFontSmall->w*strlen(str); // pixel-width of label
+    txtht = gdFontSmall->h; // pixel-height of label
+
+    xpos = hmargin - txtsz; 
+    if(xpos < 1) xpos = 1;
+    
+    if(maxval > 0) gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), str, black); 
+
+    if (!(i == 0) && !(i > ngrid)) {
+      gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray); 
+    }
+  } 
+ 
+  // columns and x labels
+  padding = 0; // half of spacing between columns
+  yscale = (float)ysize / ((ngrid+1) * dydat); // pixels per data unit
+
+  if(maxval > 0) {
+    for (i = 0; i<num_points; i++) {
+      gdPoint points[4];
+      // vertical columns
+      ymax = vmargin + ysize; 
+      ymin = ymax - (int)(data[i]*yscale); 
+      xmax = hmargin + (i+1)*base - padding; 
+      xmin = hmargin + i*base + padding; 
+
+      if(i == 0) {
+	points[0].x = xmin; points[0].y = ymin;
+	points[1].x = xmin; points[1].y = ymax;
+	points[2].x = xmax; points[2].y = ymax;
+	points[3].x = xmax; points[3].y = ymin;
+      } else {
+	points[0].x = points[3].x; points[0].y = points[3].y;
+	points[1].x = points[2].x; points[1].y = points[2].y;
+	points[2].x = xmax; points[2].y = ymax;
+	points[3].x = xmax; points[3].y = ymin;
+      }
+
+      if((points[0].x == points[0].x) && (points[1].x == points[1].x)
+	 && (points[0].y == points[0].y) && (points[1].y == points[1].y))
+	continue;
+
+      gdImageFilledPolygon(im, points, 4, colors[0]); 
+
+      // x labels
+      txtsz = gdFontSmall->w * strlen(labels[i]); 
+
+      xpos = xmin + (int)((base - txtsz) / 2); 
+      if(xmin > xpos) xpos = xmin; else xmin = xpos; 
+      ypos = ymax + 3; // distance from x axis
+    }
+  } 
+
+  // plot frame
+  gdImageRectangle(im, hmargin, vmargin, hmargin + xsize, vmargin + ysize, black); 
+
+  /* ************************* */
+
+  gdImagePng(im, filepointer);
+  gdImageDestroy(im);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* ************************ */
 
@@ -187,35 +418,22 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
   char tmpStr[256];
   int bufSize=sizeof(tmpStr)-1;
 
-#ifdef GDC_WATCHDOG_DEBUG
-  int byteCount=0;
-
-  traceEvent(CONST_TRACE_INFO, "GDC_WATCHDOG_DEBUG: Sending graphics file, %s\n", fileName);
-#endif
 
   if((fd = fopen(fileName, "rb")) != NULL) {
 
     for(;;) {
       len = fread(tmpStr, sizeof(char), bufSize, fd);
       if(len > 0) {
-#ifdef GDC_WATCHDOG_DEBUG
-          byteCount += len;
-#endif
-          sendStringLen(tmpStr, len);
+	sendStringLen(tmpStr, len);
       }
       if(len <= 0) break;
     }
-
-#ifdef GDC_WATCHDOG_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: Sent graphics file, %d bytes\n", byteCount);
-#endif
-
     fclose(fd);
   } else 
     traceEvent(CONST_TRACE_WARNING, "Unable to open file %s - graphic not sent", fileName);
 
   if (doNotUnlink == 0) {
-      unlink(fileName);
+    unlink(fileName);
   }
 }
 
@@ -227,7 +445,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
   int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40,
-			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+				 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
   int useFdOpen = 0;
@@ -410,48 +628,30 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       return; /* TODO: this has to be handled better */
     }
 
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.graphMutex, "pktHostTrafficDistrib");
-#endif
-
 #ifndef WIN32
-  /* Unices */
+    /* Unices */
 
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
+    if(myGlobals.newSock < 0)
+      useFdOpen = 0;
+    else
+      useFdOpen = 1;
   
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    if(useFdOpen)
+      fd = fdopen(abs(myGlobals.newSock), "ab");
+    else
+      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
-
-    GDCPIE_LineColor = 0x000000L;
-    GDCPIE_explode   = explodePieces;    /* default: NULL - no explosion */
-    GDCPIE_Color     = clr;
-    GDCPIE_BGColor   = 0xFFFFFFL;
-    GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-    GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
     if(num == 1) p[0] = 100; /* just to be safe */
 
-    GDC_out_pie(250,			/* width */
-		250,			/* height */
-		fd,			/* open file pointer */
-		GDC_2DPIE,		/* or GDC_2DPIE */
-		num,			/* number of slices */
-		lbl,			/* slice labels (unlike out_png(), can be NULL */
-		p);			/* data array */
-
+    drawPie(400, 250,
+	    fd,			/* open file pointer */
+	    num,			/* number of slices */
+	    lbl,			/* slice labels (unlike out_png(), can be NULL */
+	    p);			/* data array */
     fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.graphMutex);
-#endif
 
     if(!useFdOpen)
       sendGraphFile(fileName, 0);
@@ -466,7 +666,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
   int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40,
-			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+				 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
   int useFdOpen = 0;
@@ -514,47 +714,30 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
       return; /* TODO: this has to be handled better */
     }
 
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.graphMutex, "pktHostFragmentDistrib");
-#endif
-
 #ifndef WIN32
-  /* Unices */
+    /* Unices */
 
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
+    if(myGlobals.newSock < 0)
+      useFdOpen = 0;
+    else
+      useFdOpen = 1;
   
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    if(useFdOpen)
+      fd = fdopen(abs(myGlobals.newSock), "ab");
+    else
+      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
-
-    GDCPIE_LineColor = 0x000000L;
-    GDCPIE_explode   = explodePieces;    /* default: NULL - no explosion */
-    GDCPIE_Color     = clr;
-    GDCPIE_BGColor   = 0xFFFFFFL;
-    GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-    GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
     if(num == 1) p[0] = 100; /* just to be safe */
-    GDC_out_pie(250,			/* width */
-		250,			/* height */
-		fd,			/* open file pointer */
-		GDC_2DPIE,		/* or GDC_2DPIE */
-		num,			/* number of slices */
-		lbl,			/* slice labels (unlike out_png(), can be NULL */
-		p);			/* data array */
+    drawPie(400, 250,
+	    fd,			/* open file pointer */
+	    num,			/* number of slices */
+	    lbl,			/* slice labels (unlike out_png(), can be NULL */
+	    p);			/* data array */
 
     fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.graphMutex);
-#endif
 
     if(!useFdOpen)
       sendGraphFile(fileName, 0);
@@ -569,7 +752,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
   int num=0, explodePieces[] = { 5, 10, 15, 20, 25, 30, 35, 40,
-			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+				 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totFragmentedTraffic, totTraffic;
   int useFdOpen = 0;
@@ -596,47 +779,30 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
       return; /* TODO: this has to be handled better */
     }
 
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.graphMutex, "pktHostFragmentDistrib");
-#endif
-
 #ifndef WIN32
-  /* Unices */
+    /* Unices */
 
-  if(myGlobals.newSock < 0)
-    useFdOpen = 0;
-  else
-    useFdOpen = 1;
+    if(myGlobals.newSock < 0)
+      useFdOpen = 0;
+    else
+      useFdOpen = 1;
   
-  if(useFdOpen)
-    fd = fdopen(abs(myGlobals.newSock), "ab");
-  else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    if(useFdOpen)
+      fd = fdopen(abs(myGlobals.newSock), "ab");
+    else
+      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
 #else
-  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
-
-    GDCPIE_LineColor      = 0x000000L;
-    GDCPIE_explode        = explodePieces;      /* default: NULL - no explosion */
-    GDCPIE_Color          = clr;
-    GDCPIE_BGColor        = 0xFFFFFFL;
-    GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-    GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
     if(num == 1) p[0] = 100; /* just to be safe */
-    GDC_out_pie(250,			/* width */
-		250,			/* height */
-		fd,			/* open file pointer */
-		GDC_2DPIE,		/* or GDC_2DPIE */
-		num,			/* number of slices */
-		lbl,			/* slice labels (unlike out_png(), can be NULL */
-		p);			/* data array */
+    drawPie(400, 250,
+	    fd,			/* open file pointer */
+	    num,			/* number of slices */
+	    lbl,			/* slice labels (unlike out_png(), can be NULL */
+	    p);			/* data array */
 
     fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.graphMutex);
-#endif
 
     if(!useFdOpen)
       sendGraphFile(fileName, 0);
@@ -706,10 +872,6 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     }
   }
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "pktHostTrafficDistrib");
-#endif
-
 #ifndef WIN32
   /* Unices */
 
@@ -726,28 +888,16 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = explodePieces;    /* default: NULL - no explosion */
-  GDCPIE_Color          = clr;
-  GDCPIE_BGColor        = 0xFFFFFFL;
-  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-  GDCPIE_percent_labels = GDCPIE_PCT_NONE;
   if(num == 1) p[0] = 100;
 
   if(num == 1) p[0] = 100; /* just to be safe */
-  GDC_out_pie(250,			/* width */
-	      250,			/* height */
-	      fd,			/* open file pointer */
-	      GDC_2DPIE,		/* or GDC_2DPIE */
-	      num,			/* number of slices */
-	      lbl,			/* slice labels (unlike out_png(), can be NULL */
-	      p);			/* data array */
+  drawPie(400, 250,
+	  fd,			/* open file pointer */
+	  num,			/* number of slices */
+	  lbl,			/* slice labels (unlike out_png(), can be NULL */
+	  p);			/* data array */
 
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -806,10 +956,6 @@ void pktSizeDistribPie(void) {
   };
 
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "pktSizeDistrib");
-#endif
-
 #ifndef WIN32
   /* Unices */
 
@@ -826,27 +972,14 @@ void pktSizeDistribPie(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = explodePieces;    /* default: NULL - no explosion */
-  GDCPIE_Color          = clr;
-  GDCPIE_BGColor        = 0xFFFFFFL;
-  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-  GDCPIE_percent_labels = GDCPIE_PCT_NONE;
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  GDC_out_pie(250,			/* width */
-	      250,			/* height */
-	      fd,			/* open file pointer */
-	      GDC_2DPIE,		/* or GDC_2DPIE */
-	      num,			/* number of slices */
-	      lbl,			/* slice labels (unlike out_png(), can be NULL */
-	      p);			/* data array */
+  drawPie(400, 250,
+	  fd,			/* open file pointer */
+	  num,			/* number of slices */
+	  lbl,			/* slice labels (unlike out_png(), can be NULL */
+	  p);			/* data array */
 
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -898,7 +1031,7 @@ void pktTTLDistribPie(void) {
     lbl[num++] = "< 192";
   };
 
- if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value > 0) {
+  if(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value > 0) {
     p[num] = (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value)/
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
     lbl[num++] = "< 224";
@@ -909,10 +1042,6 @@ void pktTTLDistribPie(void) {
       (float)myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value;
     lbl[num++] = "<= 255";
   };
-
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "pktSizeDistrib");
-#endif
 
 #ifndef WIN32
   /* Unices */
@@ -930,27 +1059,14 @@ void pktTTLDistribPie(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = explodePieces;    /* default: NULL - no explosion */
-  GDCPIE_Color          = clr;
-  GDCPIE_BGColor        = 0xFFFFFFL;
-  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-  GDCPIE_percent_labels = GDCPIE_PCT_NONE;
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  GDC_out_pie(250,			/* width */
-	      250,			/* height */
-	      fd,			/* open file pointer */
-	      GDC_2DPIE,		/* or GDC_2DPIE */
-	      num,			/* number of slices */
-	      lbl,			/* slice labels (unlike out_png(), can be NULL */
-	      p);			/* data array */
+  drawPie(400, 250,
+	  fd,			/* open file pointer */
+	  num,			/* number of slices */
+	  lbl,			/* slice labels (unlike out_png(), can be NULL */
+	  p);			/* data array */
 
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -984,10 +1100,6 @@ void ipProtoDistribPie(void) {
     lbl[num++] = "Loc->Rem";
   }
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "ipProtoDistribPie");
-#endif
-
 #ifndef WIN32
   /* Unices */
 
@@ -1004,27 +1116,14 @@ void ipProtoDistribPie(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = explodePieces;    /* default: NULL - no explosion */
-  GDCPIE_Color          = clr;
-  GDCPIE_BGColor        = 0xFFFFFFL;
-  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-  GDCPIE_percent_labels = GDCPIE_PCT_NONE;
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  GDC_out_pie(250,			/* width */
-	      250,			/* height */
-	      fd,			/* open file pointer */
-	      GDC_2DPIE,		/* or GDC_2DPIE */
-	      num,			/* number of slices */
-	      lbl,			/* slice labels (unlike out_png(), can be NULL */
-	      p);			/* data array */
+  drawPie(400, 250,
+	  fd,			/* open file pointer */
+	  num,			/* number of slices */
+	  lbl,			/* slice labels (unlike out_png(), can be NULL */
+	  p);			/* data array */
 
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -1065,10 +1164,6 @@ void interfaceTrafficPie(void) {
     }
   }
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "interfaceTrafficPie");
-#endif
-
 #ifndef WIN32
   /* Unices */
 
@@ -1085,27 +1180,14 @@ void interfaceTrafficPie(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = explodePieces;
-  GDCPIE_Color          = clr;
-  GDCPIE_BGColor        = 0xFFFFFFL;
-  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-  GDCPIE_percent_labels = GDCPIE_PCT_RIGHT;
-
   if(myDevices == 1) p[0] = 100; /* just to be safe */
-  GDC_out_pie(250,	/* width */
-	      250,		/* height */
-	      fd,		/* open file pointer */
-	      GDC_2DPIE,	/* or GDC_2DPIE */
-	      myDevices,	/* number of slices */
-	      lbl,		/* slice labels (unlike out_png(), can be NULL) */
-	      p);		/* data array */
+  drawPie(400, 250,
+	  fd,		/* open file pointer */
+	  myDevices,	/* number of slices */
+	  lbl,		/* slice labels (unlike out_png(), can be NULL) */
+	  p);		/* data array */
 
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -1147,10 +1229,6 @@ void pktCastDistribPie(void) {
     lbl[num++] = "Multicast";
   };
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "pktCastDistribPie");
-#endif
-
 #ifndef WIN32
   /* Unices */
 
@@ -1167,27 +1245,14 @@ void pktCastDistribPie(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDCPIE_LineColor      = 0x000000L;
-  GDCPIE_explode        = explodePieces;         /* default: NULL - no explosion */
-  GDCPIE_Color          = clr;
-  GDCPIE_BGColor        = 0xFFFFFFL;
-  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-  GDCPIE_percent_labels = GDCPIE_PCT_NONE;
-
   if(num == 1) p[0] = 100;  /* just to be safe */
-  GDC_out_pie(250,			/* width */
-	      250,			/* height */
-	      fd,			/* open file pointer */
-	      GDC_2DPIE,		/* or GDC_2DPIE */
-	      num,			/* number of slic2es */
-	      lbl,			/* slice labels (unlike out_png(), can be NULL) */
-	      p);			/* data array */
+  drawPie(400, 250,
+	  fd,			/* open file pointer */
+	  num,			/* number of slic2es */
+	  lbl,			/* slice labels (unlike out_png(), can be NULL) */
+	  p);			/* data array */
 
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -1214,10 +1279,6 @@ void drawTrafficPie(void) {
   if(p[1] > 0)
     num++;
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "drawTrafficPie");
-#endif
-
 #ifndef WIN32
   /* Unices */
 
@@ -1234,26 +1295,14 @@ void drawTrafficPie(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDCPIE_LineColor = 0x000000L;
-  GDCPIE_BGColor   = 0xFFFFFFL;
-  GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-  GDCPIE_explode   = explodePieces;    /* default: NULL - no explosion */
-  GDCPIE_Color     = clr;
-
   if(num == 1) p[0] = 100; /* just to be safe */
-  GDC_out_pie(250,			/* width */
-	      250,			/* height */
-	      fd,			/* open file pointer */
-	      GDC_2DPIE,		/* or GDC_2DPIE */
-	      num,			/* number of slices */
-	      lbl,			/* slice labels (unlike out_png(), can be NULL */
-	      p);			/* data array */
-
+  drawPie(400, 250,
+	  fd,			/* open file pointer */
+	  num,			/* number of slices */
+	  lbl,			/* slice labels (unlike out_png(), can be NULL */
+	  p);			/* data array */
+  
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -1274,10 +1323,6 @@ void drawThptGraph(int sortedColumn) {
 
   memset(graphData, 0, sizeof(graphData));
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "drawThptGraph");
-#endif
-
 #ifndef WIN32
   /* Unices */
 
@@ -1293,13 +1338,6 @@ void drawThptGraph(int sortedColumn) {
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
-
-  GDC_BGColor    = 0xFFFFFFL;      /* backgound color (white) */
-  GDC_LineColor  = 0x000000L;      /* line color      (black) */
-  GDC_SetColor   = &(clr[0]);       /* assign set colors */
-  GDC_ytitle     = "Throughput";
-  GDC_yaxis      = 1;
-  GDC_ylabel_fmt = "%d Bps";
 
   switch(sortedColumn) {
   case 1: /* 60 Minutes */
@@ -1323,21 +1361,16 @@ void drawThptGraph(int sortedColumn) {
     if(maxBytesPerSecond > 1048576 /* 1024*1024 */) {
       for(i=0; i<len; i++)
 	graphData[59-i] /= 1048576;
-      GDC_ylabel_fmt = "%.1f Mbps";
     } else if(maxBytesPerSecond > 1024) {
       for(i=0; i<len; i++)
 	graphData[59-i] /= 1024;
-      GDC_ylabel_fmt = "%.1f Kbps";
     }
 
-    GDC_title = "Last 60 Minutes Average Throughput";
-    out_graph(600, 300,    /* width, height           */
-	      fd,          /* open FILE pointer       */
-	      myGlobals.throughput_chart_type,    /* chart type  */
-	      60,          /* num points per data set */
-	      (char**)lbls,        /* X labels array of char* */
-	      1,           /* number of data sets     */
-	      graphData);  /* dataset 1   */
+    drawArea(600, 300,    /* width, height           */
+	     fd,          /* open FILE pointer       */
+	     60,          /* num points per data set */
+	     (char**)lbls,        /* X labels array of char* */
+	     graphData);  /* dataset 1   */
     break;
   case 2: /* 24 Hours */
     for(i=0; i<24; i++) {
@@ -1360,21 +1393,16 @@ void drawThptGraph(int sortedColumn) {
     if(maxBytesPerSecond > 1048576 /* 1024*1024 */) {
       for(i=0; i<len; i++)
 	graphData[23-i] /= 1048576;
-      GDC_ylabel_fmt = "%.1f Mbps";
     } else if(maxBytesPerSecond > 1024) {
       for(i=0; i<len; i++)
 	graphData[23-i] /= 1024;
-      GDC_ylabel_fmt = "%.1f Kbps";
     }
 
-    GDC_title = "Last 24 Hours Average Throughput";
-    out_graph(600, 300,      /* width, height           */
-	      fd,/* open FILE pointer       */
-	      myGlobals.throughput_chart_type,      /* chart type  */
-	      24,/* num points per data set */
-	      lbls,          /* X labels array of char* */
-	      1, /* number of data sets     */
-	      graphData);    /* dataset 1   */
+    drawArea(600, 300,      /* width, height           */
+	     fd,/* open FILE pointer       */
+	     24,/* num points per data set */
+	     lbls,          /* X labels array of char* */
+	     graphData);    /* dataset 1   */
     break;
   case 3: /* 30 Days */
     for(i=0; i<30; i++) {
@@ -1394,33 +1422,23 @@ void drawThptGraph(int sortedColumn) {
       if(graphData[29-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[29-i];
     }
 
-    GDC_title = "Last 30 Days Average Throughput";
-
     if(maxBytesPerSecond > 1048576 /* 1024*1024 */) {
       for(i=0; i<len; i++)
 	graphData[29-i] /= 1048576;
-      GDC_ylabel_fmt = "%.1f Mbps";
     } else if(maxBytesPerSecond > 1024) {
       for(i=0; i<len; i++)
 	graphData[29-i] /= 1024;
-      GDC_ylabel_fmt = "%.1f Kb";
     }
 
-    out_graph(600, 300,          /* width, height           */
-	      fd,    /* open FILE pointer       */
-	      myGlobals.throughput_chart_type,          /* chart type  */
-	      30,    /* num points per data set */
-	      lbls,  /* X labels array of char* */
-	      1,     /* number of data sets     */
-	      graphData);        /* dataset 1   */
+    drawArea(600, 300,          /* width, height           */
+	     fd,    /* open FILE pointer       */
+	     30,    /* num points per data set */
+	     lbls,  /* X labels array of char* */
+	     graphData);        /* dataset 1   */
     break;
   }
 
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -1472,10 +1490,6 @@ void drawGlobalProtoDistribution(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value > 0) {
     p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value; lbl[idx] = "Other"; idx++; }
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "drawGlobalProtoDistribution");
-#endif
-
 #ifndef WIN32
   /* Unices */
 
@@ -1492,26 +1506,13 @@ void drawGlobalProtoDistribution(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDC_LineColor      = 0x000000L;
-  GDC_BGColor        = 0xFFFFFFL;
-  GDC_SetColor       = &(clr[0]);
-  GDC_yaxis          = 0;
-  GDC_requested_ymin = 0;
-  GDC_title          = "";
-
-  out_graph(600, 250,	/* width/height */
-	    fd,	        /* open file pointer */
-	    GDC_BAR,	/* or GDC_3DBAR */
-	    idx,	/* number of slices */
-	    lbl,	/* slice labels (unlike out_png(), can be NULL */
-	    1,
-	    p);	        /* data array */
+  drawBar(600, 250,	/* width/height */
+	  fd,	        /* open file pointer */
+	  idx,	/* number of slices */
+	  lbl,	/* slice labels (unlike out_png(), can be NULL */
+	  p);	        /* data array */
 
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -1532,7 +1533,7 @@ void drawGlobalIpProtoDistribution(void) {
   for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
     p[idx]  = (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local.value
       +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote.value;
-     p[idx] += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
+    p[idx] += (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].remote2local.value
       +myGlobals.device[myGlobals.actualReportDeviceId].ipProtoStats[i].local2remote.value;
     if(p[idx] > 0) {
       p[myGlobals.numIpProtosToMonitor] += p[idx];
@@ -1540,10 +1541,6 @@ void drawGlobalIpProtoDistribution(void) {
       idx++;
     }
   }
-
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "drawGlobalIpProtoDistribution");
-#endif
 
 #ifndef WIN32
   /* Unices */
@@ -1561,25 +1558,13 @@ void drawGlobalIpProtoDistribution(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  GDC_LineColor = 0x000000L;
-  GDC_BGColor   = 0xFFFFFFL;
-  GDC_SetColor  = &(clr[0]);
-  GDC_yaxis     = 0;
-  GDC_title     = "";
-
-  out_graph(600, 250,		/* width/height */
-	    fd,			/* open file pointer */
-	    GDC_BAR,		/* or GDC_3DBAR */
-	    idx,		/* number of slices */
-	    lbl,		/* slice labels (unlike out_png(), can be NULL */
-	    1,
-	    p);			/* data array */
+  drawBar(600, 250,		/* width/height */
+	  fd,			/* open file pointer */
+	  idx,		/* number of slices */
+	  lbl,		/* slice labels (unlike out_png(), can be NULL */
+	  p);			/* data array */
 
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -1597,10 +1582,6 @@ void drawHostsDistanceGraph() {
 
   memset(graphData, 0, sizeof(graphData));
 
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.graphMutex, "drawThptGraph");
-#endif
-
 #ifndef WIN32
   /* Unices */
 
@@ -1618,23 +1599,11 @@ void drawHostsDistanceGraph() {
 #endif
 
 
-  GDC_BGColor    = 0xFFFFFFL;      /* backgound color (white) */
-  GDC_LineColor  = 0x000000L;      /* line color      (black) */
-  GDC_SetColor   = &(clr[1]);       /* assign set colors */
-  GDC_xtitle     = "Hops (TTL)";
-  GDC_ytitle     = "Hosts";
-  GDC_yaxis      = 1;
-  /* GDC_ylabel_fmt = "%d"; */
-
   for(i=0; i<=30; i++) {
     sprintf(labels[i], "%d", i);
     lbls[i] = labels[i];
     graphData[i] = 0;
   }
-
-#ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.hostsHashMutex, "drawHostsDistanceGraph");
-#endif
 
   for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
     struct hostTraffic *el;
@@ -1651,26 +1620,13 @@ void drawHostsDistanceGraph() {
     }
   }
 
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.hostsHashMutex);
-#endif
-
-  GDC_title = "";
-  out_graph(300, 250,    /* width, height           */
-	    fd,          /* open FILE pointer       */
-	    myGlobals.throughput_chart_type,    /* chart type  */
-	    30,          /* num points per data set */
-	    lbls,        /* X labels array of char* */
-	    1,           /* number of data sets     */
-	    graphData);  /* dataset 1   */
+  drawArea(300, 250,    /* width, height           */
+	   fd,          /* open FILE pointer       */
+	   30,          /* num points per data set */
+	   lbls,        /* X labels array of char* */
+	   graphData);  /* dataset 1   */
 
   fclose(fd);
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.graphMutex);
-#endif
-
-  GDC_xtitle = GDC_ytitle     = "";
 
   if(!useFdOpen)
     sendGraphFile(fileName, 0);
@@ -1678,9 +1634,5 @@ void drawHostsDistanceGraph() {
 
 /* ************************ */
 
-#ifdef HAVE_RRD_H
-void gdImageWBMP() {; }
-#endif
+#endif /* CFG_USE_GRAPHICS */
 
-#endif /* MAKE_WITH_GDCHART */
-#endif /* MAKE_MICRO_NTOP   */

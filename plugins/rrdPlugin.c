@@ -20,6 +20,8 @@
 
 /* This plugin works only with threads */
 
+/* #define RRD_DEBUG  8 */
+
 /*
 
        Plugin History
@@ -698,7 +700,6 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   if (rrd_test_error()) {
     int x;
     char *rrdError;
-    struct tm workT;
 
     numRRDerrors++;
     rrdError = rrd_get_error();
@@ -820,29 +821,29 @@ static void commonRRDinit(void) {
     dumpMonths = atoi(value);
   }
 
-  if(fetchPrefsValue("rrd.dumpFlows", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpFlows", "0");
+  if(fetchPrefsValue("rrd.dataDumpFlows", value, sizeof(value)) == -1) {
+    storePrefsValue("rrd.dataDumpFlows", "0");
     dumpFlows = 0;
   } else {
     dumpFlows = atoi(value);
   }
 
-  if(fetchPrefsValue("rrd.dumpHosts", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpHosts", "0");
+  if(fetchPrefsValue("rrd.dataDumpHosts", value, sizeof(value)) == -1) {
+    storePrefsValue("rrd.dataDumpHosts", "0");
     dumpHosts = 0;
   } else {
     dumpHosts = atoi(value);
   }
 
-  if(fetchPrefsValue("rrd.dumpInterfaces", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpInterfaces", "1");
+  if(fetchPrefsValue("rrd.dataDumpInterfaces", value, sizeof(value)) == -1) {
+    storePrefsValue("rrd.dataDumpInterfaces", "1");
     dumpInterfaces = 1;
   } else {
     dumpInterfaces = atoi(value);
   }
 
-  if(fetchPrefsValue("rrd.dumpMatrix", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpMatrix", "0");
+  if(fetchPrefsValue("rrd.dataDumpMatrix", value, sizeof(value)) == -1) {
+    storePrefsValue("rrd.dataDumpMatrix", "0");
     dumpMatrix = 0;
   } else {
     dumpMatrix = atoi(value);
@@ -855,9 +856,9 @@ static void commonRRDinit(void) {
     hostsFilter  = strdup(value);
   }
 
-  if(fetchPrefsValue("rrd.dumpDetail", value, sizeof(value)) == -1) {
+  if(fetchPrefsValue("rrd.dataDumpDetail", value, sizeof(value)) == -1) {
     sprintf(value, "%d", CONST_RRD_DETIL_DEFAULT);
-    storePrefsValue("rrd.dumpDetail", value);
+    storePrefsValue("rrd.dataDumpDetail", value);
     dumpDetail = CONST_RRD_DETIL_DEFAULT;
   } else {
     dumpDetail  = atoi(value);
@@ -865,10 +866,11 @@ static void commonRRDinit(void) {
 
   if(fetchPrefsValue("rrd.rrdPath", value, sizeof(value)) == -1) {
     char *thePath = "/rrd";
-	int len = strlen(myGlobals.dbPath)+strlen(thePath)+1;
+    int len = strlen(myGlobals.dbPath)+strlen(thePath)+1;
 
-	myGlobals.rrdPath = (char*)malloc(len);
-	snprintf(myGlobals.rrdPath, len, "%s%s", myGlobals.dbPath, thePath);
+    if(myGlobals.rrdPath) free(myGlobals.rrdPath);
+    myGlobals.rrdPath = (char*)malloc(len);
+    snprintf(myGlobals.rrdPath, len, "%s%s", myGlobals.dbPath, thePath);
     storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
   } else {
     int vlen = strlen(value)+1;
@@ -1037,15 +1039,15 @@ static void handleRRDHTTPrequest(char* url) {
       dumpInterfaces=_dumpInterfaces;
       dumpMatrix=_dumpMatrix;
       dumpDetail = _dumpDetail;
-      sprintf(buf, "%d", dumpInterval);   storePrefsValue("rrd.dumpInterval", buf);
-      sprintf(buf, "%d", dumpHours);   storePrefsValue("rrd.dumpHours", buf);
-      sprintf(buf, "%d", dumpDays);   storePrefsValue("rrd.dumpDays", buf);
-      sprintf(buf, "%d", dumpMonths);   storePrefsValue("rrd.dumpMonths", buf);
-      sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dumpFlows", buf);
-      sprintf(buf, "%d", dumpHosts);      storePrefsValue("rrd.dumpHosts", buf);
-      sprintf(buf, "%d", dumpInterfaces); storePrefsValue("rrd.dumpInterfaces", buf);
-      sprintf(buf, "%d", dumpMatrix);     storePrefsValue("rrd.dumpMatrix", buf);
-      sprintf(buf, "%d", dumpDetail);     storePrefsValue("rrd.dumpDetail", buf);
+      sprintf(buf, "%d", dumpInterval);   storePrefsValue("rrd.dataDumpInterval", buf);
+      sprintf(buf, "%d", dumpHours);      storePrefsValue("rrd.dataDumpHours", buf);
+      sprintf(buf, "%d", dumpDays);       storePrefsValue("rrd.dataDumpDays", buf);
+      sprintf(buf, "%d", dumpMonths);     storePrefsValue("rrd.dataDumpMonths", buf);
+      sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dataDumpFlows", buf);
+      sprintf(buf, "%d", dumpHosts);      storePrefsValue("rrd.dataDumpHosts", buf);
+      sprintf(buf, "%d", dumpInterfaces); storePrefsValue("rrd.dataDumpInterfaces", buf);
+      sprintf(buf, "%d", dumpMatrix);     storePrefsValue("rrd.dataDumpMatrix", buf);
+      sprintf(buf, "%d", dumpDetail);     storePrefsValue("rrd.dataDumpDetail", buf);
       if(hostsFilter != NULL) free(hostsFilter);
       if (_hostsFilter == NULL) {
           hostsFilter  = strdup("");
@@ -1102,7 +1104,8 @@ static void handleRRDHTTPrequest(char* url) {
   sendString(buf);
   sendString("><br>Specifies how many months of daily data is stored permanently.</TD></tr>\n");
 
-  sendString("<TR><TD ALIGN=CENTER COLSPAN=2><B>WARNING:</B>&nbsp;Changes to the above values will ONLY affect NEW rrds</TD></TR>");
+  sendString("<TR><TD ALIGN=CENTER COLSPAN=2><B>WARNING:</B>&nbsp;"
+	     "Changes to the above values will ONLY affect NEW rrds</TD></TR>");
 
   sendString("<TR><TH ALIGN=LEFT>Data to Dump</TH><TD>");
 
@@ -1161,7 +1164,6 @@ static void handleRRDHTTPrequest(char* url) {
              "<INPUT NAME=rrdPath SIZE=50 VALUE=\"");
   sendString(myGlobals.rrdPath);
   sendString("\">");
-#ifdef MAKE_WITH_LARGERRDPOP
   sendString("<br>NOTE: The 'large rrd population' option is in effect.\n");
   sendString("This means that the rrd files will be in a subdirectory structure, e.g.\n");
   if (snprintf(buf, sizeof(buf), 
@@ -1183,7 +1185,6 @@ static void handleRRDHTTPrequest(char* url) {
                myGlobals.rrdPath) < 0)
     BufferTooShort();
   sendString(buf);
-#endif
   sendString("</TD></tr>\n");
 
   sendString("<TR><TH ALIGN=LEFT>RRD Updates</TH><TD>");
@@ -1212,7 +1213,8 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("<TD COLSPAN=2 ALIGN=center><INPUT TYPE=submit VALUE=Set></td></FORM></tr>\n");
   sendString("</TABLE>\n<p></CENTER>\n");
 
-  sendString("<p><H5><A HREF=http://www.rrdtool.org/>RRDtool</A> has been created by <A HREF=http://ee-staff.ethz.ch/~oetiker/>Tobi Oetiker</A>.</H5>\n");
+  sendString("<p><H5><A HREF=http://www.rrdtool.org/>RRDtool</A> has been created by "
+	     "<A HREF=http://ee-staff.ethz.ch/~oetiker/>Tobi Oetiker</A>.</H5>\n");
 
   if (active == 1) {
     sendString("<p><center>You must restart the rrd plugin - for changes here to take affect.</center></p>\n");
@@ -1299,9 +1301,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   struct stat statbuf;
   int purgeCountFiles, purgeCountUnlink, purgeCountErrors;
   int cycleCount=0;
-#ifdef MAKE_WITH_LARGERRDPOP
   char *adjHostName;
-#endif
 
 #ifdef CFG_MULTITHREADED
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: rrd thread (%ld) started", rrdThread);
@@ -1425,17 +1425,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	      continue;
 	    }
 
-#ifdef MAKE_WITH_LARGERRDPOP
             adjHostName = dotToSlash(hostKey);
-#endif
 
 	    sprintf(rrdPath, "%s/interfaces/%s/hosts/%s/",
 		    myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName, 
-#ifdef MAKE_WITH_LARGERRDPOP
                     adjHostName
-#else
-                    hostKey
-#endif
                    );
 	    mkdir_p(rrdPath);
 
@@ -1518,11 +1512,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 		sprintf(rrdPath, "%s/interfaces/%s/hosts/%s/IP_",
                         myGlobals.rrdPath,  
 			myGlobals.device[devIdx].humanFriendlyName,
-#ifdef MAKE_WITH_LARGERRDPOP
                         adjHostName
-#else
-                        hostKey
-#endif
                        );
 
 		for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
@@ -1539,10 +1529,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    }
 	  }	
 
-#ifdef MAKE_WITH_LARGERRDPOP
           if (adjHostName != NULL)
               free(adjHostName);
-#endif
 
 	  if(mutexLocked && (((i+1) & CONST_MUTEX_FHS_MASK) == 0)) {
 #ifdef CFG_MULTITHREADED
@@ -1654,7 +1642,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     /* ************************** */
 
-#ifndef MAKE_WITH_LARGERRDPOP
     if(dumpMatrix) {
       int k;
 
@@ -1688,7 +1675,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    }
 	  }
     }
-#endif
 
 #ifdef RRD_DEBUG
     traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: %lu RRDs updated (%lu total updates)\n",
