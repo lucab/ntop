@@ -669,10 +669,10 @@ void scanTimedoutTCPSessions(void) {
 		incrementUsageCounter(&theRemHost->securityHostPkts.closedEmptyTCPConnRcvd,
 				      sessionToPurge->initiatorIdx);
 
-		traceEvent(TRACE_WARNING, fmt,
-			   theHost->hostSymIpAddress, sessionToPurge->sport,
-			   theRemHost->hostSymIpAddress, sessionToPurge->dport);
-
+		if(enableSuspiciousPacketDump)
+		  traceEvent(TRACE_WARNING, fmt,
+			     theHost->hostSymIpAddress, sessionToPurge->sport,
+			     theRemHost->hostSymIpAddress, sessionToPurge->dport);		
 	      }
 	    }
 
@@ -2303,9 +2303,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnSent, srcHostIdx);
 	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx);
 
-	traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
-		   dstHost->hostSymIpAddress, dport,
-		   srcHost->hostSymIpAddress, sport);
+	if(enableSuspiciousPacketDump) {
+	  traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
+		     dstHost->hostSymIpAddress, dport,
+		     srcHost->hostSymIpAddress, sport);
+	  dumpSuspiciousPacket();
+	}
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && (theSession->lastRemote2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
 		|| ((theSession->initiatorIdx == dstHostIdx)
