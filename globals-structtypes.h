@@ -798,7 +798,7 @@ typedef struct hostTraffic {
   short            hostResolvedNameType;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
-  
+
   NonIPTraffic     *nonIPTraffic;
   NonIpProtoTrafficInfo *nonIpProtoTrafficInfos; /* Info about further non IP protos */
 
@@ -835,7 +835,7 @@ typedef struct hostTraffic {
   TrafficCounter   ipBytesSent, ipBytesRcvd, ipv6Sent, ipv6Rcvd;
   TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc, udpSentRem, icmpSent,icmp6Sent;
   TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc, udpRcvdFromRem, icmpRcvd, icmp6Rcvd;
- 
+
   TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
     udpFragmentsSent, udpFragmentsRcvd,
     icmpFragmentsSent, icmpFragmentsRcvd,
@@ -1223,8 +1223,8 @@ typedef struct netFlowGlobals {
   u_long numNetFlowsPktsRcvd, numNetFlowsV5Rcvd;
   u_long numNetFlowsV1Rcvd, numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed;
   u_long numNetFlowsRcvd, lastNumNetFlowsRcvd;
-  u_long totalNetFlowsTCPSize, totalNetFlowsUDPSize, totalNetFlowsICMPSize, totalNetFlowsOtherSize; 
-  u_long numNetFlowsTCPRcvd, numNetFlowsUDPRcvd, numNetFlowsICMPRcvd, numNetFlowsOtherRcvd; 
+  u_long totalNetFlowsTCPSize, totalNetFlowsUDPSize, totalNetFlowsICMPSize, totalNetFlowsOtherSize;
+  u_long numNetFlowsTCPRcvd, numNetFlowsUDPRcvd, numNetFlowsICMPRcvd, numNetFlowsOtherRcvd;
   u_long numBadNetFlowsVersionsRcvd, numBadFlowPkts, numBadFlowBytes, numBadFlowReality;
   u_long numSrcNetFlowsEntryFailedBlackList, numSrcNetFlowsEntryFailedWhiteList,
     numSrcNetFlowsEntryAccepted,
@@ -1305,13 +1305,13 @@ typedef struct sFlowGlobals {
   u_int32_t flowProcessed;
   Counter flowProcessedBytes;
   HostTraffic *dummyHost;
-  
+
 #ifdef CFG_MULTITHREADED
   pthread_t sflowThread;
   int threadActive;
   PthreadMutex whiteblackListMutex;
 #endif
-  
+
   u_long numSamplesReceived, initialPool, lastSample;
   u_int32_t flowSampleSeqNo, numSamplesToGo;
   IfCounters *ifCounters[MAX_NUM_SFLOW_INTERFACES];
@@ -1483,7 +1483,7 @@ typedef struct ntopInterface {
   u_short numFcSessions, maxNumFcSessions;
   TrafficEntry** fcTrafficMatrix; /* Subnet traffic Matrix */
   struct hostTraffic** fcTrafficMatrixHosts; /* Subnet traffic Matrix Hosts */
-  
+
   NetFlowGlobals *netflowGlobals;  /* NetFlow */
   SflowGlobals *sflowGlobals;      /* sFlow */
 } NtopInterface;
@@ -1876,22 +1876,13 @@ typedef enum {
 
 /* *********************************** */
 
-typedef struct hiresTimer {
-  Counter count,
-          usElapsed;
-  struct timeval startTm;
-  char   *name;
-} HiresTimer;
-
-/* *************************************************************** */
-
 #define BROADCAST_HOSTS_ENTRY    0
 #define OTHER_HOSTS_ENTRY        1
 #define FIRST_HOSTS_ENTRY        2 /* first available host entry */
 
 /*
  * Preferences settable by a user, from the web page & cmd line
- * 
+ *
  */
 typedef struct _userPref {
   char *accessLogFile;          /* 'a' */
@@ -1991,7 +1982,7 @@ typedef struct ntopGlobals {
   char **pluginDirs;
   char **configFileDirs;
 
-  /* User-configurable parameters via the command line and the web page. */ 
+  /* User-configurable parameters via the command line and the web page. */
   UserPref savedPref;         /* this is what is saved */
   UserPref runningPref;       /* this is what is currently used */
 #ifndef WIN32
@@ -2096,7 +2087,6 @@ typedef struct ntopGlobals {
   PthreadMutex fcSessionsMutex;
   PthreadMutex purgePortsMutex;
   PthreadMutex securityItemsMutex;
-  PthreadMutex hiresTimerAllocMutex;
 
   pthread_t handleWebConnectionsThreadId;
 
@@ -2342,8 +2332,5 @@ typedef struct ntopGlobals {
 #ifdef PARM_ENABLE_EXPERIMENTAL
   u_short experimentalFlagSet;  /* Is the 'experimental' flag set? */
 #endif
-
-  HiresTimer hiresTimers[MAX_INTERNALTIMEINTERVALS];
-
 } NtopGlobals;
 

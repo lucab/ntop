@@ -35,7 +35,7 @@
  *
  *  Names have at least one part that defines their "type".  Listed below in the order
  *  they are most frequently changed.
- *  
+ *
  *  PARM -- any "PARM" item is an internal tuning item, e.g. one that must be set at
  *  compile time and can not be overridden at run time.
  *
@@ -44,7 +44,7 @@
  *
  *  DEBUG -- any "DEBUG" item is not normally set, but if #define(d) causes additional
  *  output fron ntop of a debugging nature.
- *  
+ *
  *  CONST, LEN and MAX - these are arbitrary values, limits and lengths of fields
  *  (buffer size, ethernet address, et al) and arrays.
  *
@@ -56,25 +56,25 @@
  *  these constants ensures that the same name is used for testing and for including in
  *  generated html.  Note that this includes the graphics we use (.jpg, .gif and .png)
  *  regardless of whether it's a generated "page" or just a static included image.
- *  
+ *
  *  CFG -- any "CFG" item is set in config.h by ./configure indicating that ntop was
  *  requested to be compiled with a particular configuration.  These are not defined in
  *  this file.
- *  
+ *
  *  HAVE -- any "HAVE" item is set in config.h by ./configure indicating that the .h and
  *  .a/.so tests found we have a particular file or library during the testing process.
- *  HAVE items are not defined in this file (they're in config.h).  However - 
+ *  HAVE items are not defined in this file (they're in config.h).  However -
  *  Note that we don't differentiate in the code between the automatically generated
  *  singular items (HAVE_SSL_H) and the composite ones (generated from a bunch of tests,
  *  HAVE_OPENSSL).  Forced and/or Composite items should be defined here.
- *  
+ *
  *  DEFAULT -- any "DEFAULT" item is the standard, default value of a global data item.
  *  This can be over-ridden (usually) by a command-line pararameter at run-time.
  *  These go pretty much last so they can use values from other classes.
- *  
+ *
  *  -- any MISSING or EXTERNALLY named item, obviously, has to have the proper missing
  *     or externally named name.  These are grouped after the ntop stuff...
- *  
+ *
  *  Note that with this initial version (01-2003), there is something less than 100%
  *  adherence to this.  Any corrections, comments, (hopefully) documentation would be
  *  greatly appreciated.
@@ -86,7 +86,7 @@
 /*  These typically make MAJOR changes in how ntop's operates                      */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * These cause features (debugging or ones that may have problems) to be enabled/disabled.
  */
 
@@ -118,10 +118,10 @@
 /*
  * This causes the hash functions in vendor.c to invert the mac address #s when
  * computing the hash.  This allows a lot fewer entries in the hash table.
- */        
+ */
 #define PARM_USE_MACHASH_INVERT
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * These cause more data (perhaps controversial or experimental) to be reported.
  */
 
@@ -135,7 +135,7 @@
  */
 /* #define PARM_SHOW_NTOP_HEARTBEAT 1 */
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Timeouts and intervals - in seconds (x*60 = x minutes)
  */
 
@@ -339,7 +339,7 @@
  *
  *                   OK?  You've been warned!
  *
- *  If you add something here, remember to add it to the #ifdef and the 
+ *  If you add something here, remember to add it to the #ifdef and the
  *  detailed reporting lines in webInterface.c
  *
  */
@@ -555,7 +555,7 @@
  */
 
 /*
- * Number of entries in myGlobals.packetQueue[], which is the queue of 
+ * Number of entries in myGlobals.packetQueue[], which is the queue of
  * received but unanalyzed packets.
  *
  * Keep an eye on myGlobals.maxPacketQueueLen - this can eat up a lot of memory.
@@ -733,13 +733,13 @@
  *
  * NOTE: The hashs can be optimized - look at the note in vendor.c
  *
- *   Don't kill yourself on this - it's not a LOT of storage - unused entries cost 
+ *   Don't kill yourself on this - it's not a LOT of storage - unused entries cost
  *   only 8 bytes...  These values are pretty good for the table as of 01-2003.
  *
  * Based on the data as of 01-2003:
  *      normal: size 181   2 collisions
  *                   109   4 collisions
- *      invert: size 179   0 collisions 
+ *      invert: size 179   0 collisions
  *                    93   2 collisions
  */
 #ifdef PARM_USE_MACHASH_INVERT
@@ -766,7 +766,7 @@
 /*
  * Maximum number of entries in the User Lists.
  *  See updateHTTPVirtualHosts(), updateFileList() and updateHostUsers().
- *  Note that these are singly linked lists, so this is the only limit 
+ *  Note that these are singly linked lists, so this is the only limit
  *  on their size.
  */
 #define MAX_NUM_LIST_ENTRIES                32
@@ -780,7 +780,7 @@
 
 /*
  * This is the maximum number of 'routers' to report in the "Local Subnet Routers" section
- * (that is localRoutersList.html).  It's a local array, routerList[] built in 
+ * (that is localRoutersList.html).  It's a local array, routerList[] built in
  * printLocalRoutersList(). It is built from a scan of all of the contacted peers data.
  */
 #define MAX_NUM_ROUTERS                     512
@@ -855,7 +855,7 @@
  * handling lots of long running requests, you might need to up this -
  * IF coding for other longer-running services is added.  The key structure
  * is   ServiceStats in ProtocolInfo.
- */ 
+ */
 #define CONST_NUM_TRANSACTION_ENTRIES       256
 
 /*
@@ -865,7 +865,7 @@
 
 /*
  * Number of entries in flowIgnored[] in netFlowPlugin.c
- */ 
+ */
 #define MAX_NUM_IGNOREDFLOWS                32
 
 /*
@@ -896,7 +896,7 @@
  * Defines how long to sleep if there's no packet available and we are in
  * --set-pcap-nonblocking mode.
  *
- * If you are running in this mode and consistently losing packets, this 
+ * If you are running in this mode and consistently losing packets, this
  * value needs tweaking.
  *
  * There's no good data to understand the 'best' value.  The value is a
@@ -948,7 +948,7 @@
  *     of simultaneous SSL connections ntop can support.
  *
  *  CONST_SSL_CERTF_FILENAME
- *     This is the name of the ssl certificate file ntop used, located in the 
+ *     This is the name of the ssl certificate file ntop used, located in the
  *     myGlobals.configFileDirs[] list of directories.
  */
 #ifdef HAVE_OPENSSL
@@ -968,7 +968,7 @@
  *  How often - in SECONDS - to recheck the version information
  *   Why the weird value?  So every instance in the world, which is started @ midnight by a
  *   cron job doesn't hit the web server at exactly the same time every nn days...
- */ 
+ */
 #define CONST_VERSIONRECHECK_INTERVAL       1300000   /* 15 days 1 hour 6 minutes 40 seconds */
 
 /* Other choices: */
@@ -1012,11 +1012,6 @@
  * FibreChannel/SCSI constants
  */
 
-/* 
- * Number of hires timers
- */
-#define MAX_INTERNALTIMEINTERVALS           10
-
 /*
  * This is the maximum number of FibreChannel domains to report on at once.
  */
@@ -1045,11 +1040,6 @@
  * Theoretical maximum number of VSANs
  */
 #define MAX_VSANS               4095
-
-/*
- * Number of internal hires timers to maintain
- */
-#define MAX_INTERNALTIMEINTERVALS           10
 
 /*
  * These are the constants used by the ntop web server to match requests and
@@ -1146,7 +1136,6 @@
 #define CONST_SCSI_STATUS_HTML              "ScsiStatus.html"
 #define CONST_SCSI_TIMES_HTML               "ScsiTimes.html"
 #define CONST_SCSI_TM_HTML                  "ScsiTMInfo.html"
-#define CONST_SHOW_HIRESTIMERS_HTML         "showHiresTimers.html"
 #define CONST_SHOW_MUTEX_HTML               "showMutex.html"
 #define CONST_SHOW_PLUGINS_HTML             "showPlugins.html"
 #define CONST_SHOW_PORT_TRAFFIC_HTML        "showPortTraffic.html"
@@ -1279,7 +1268,7 @@
 #define CONST_RRD_EXTENSION                 ".rrd"
 #define CONST_PLUGIN_EXTENSION              ".so"
 
-/* 
+/*
  * The (internal) name of the plugin function itself.
  * courtesy of Tanner Lovelace <lovelace@opennms.org>
  */
@@ -1433,7 +1422,7 @@
 #define CONST_REPORT_ITS_EFFECTIVE          "   (effective)"
 
 /*
- * Text used for the "Listening on [...]" message.  Either this value or 
+ * Text used for the "Listening on [...]" message.  Either this value or
  * the name of the file being read is displayed.
  */
 #define CONST_PCAP_NW_INTERFACE_FILE        "pcap file"
@@ -1592,7 +1581,7 @@
 
 /*
  * Flags for myGlobals.capturePackets
- */ 
+ */
 #define FLAG_NTOPSTATE_RUN                  0
 #define FLAG_NTOPSTATE_STOPCAP              1
 #define FLAG_NTOPSTATE_TERM                 2
@@ -1633,7 +1622,7 @@
 #define FLAG_HTTP_TYPE_JS                   8
 #define FLAG_HTTP_TYPE_XML                  9
 #define FLAG_HTTP_TYPE_P3P                  10
- 
+
 #define BITFLAG_HTTP_IS_CACHEABLE           (1<<0)
 #define BITFLAG_HTTP_NO_CACHE_CONTROL       (1<<1)
 #define BITFLAG_HTTP_KEEP_OPEN              (1<<2)
@@ -1705,7 +1694,7 @@
 
 /*
  * Some defines for the isP2P field of "struct ipSession"
- *     Over time, as one p2p system waxes or wanes, this list 
+ *     Over time, as one p2p system waxes or wanes, this list
  *     will change. It is suggested that you DO NOT reuse old #s
  */
 #define FLAG_P2P_GNUTELLA                   1
@@ -1988,7 +1977,7 @@
 #define DEFAULT_TRACE_LEVEL                 3
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-#define DEFAULT_NTOP_SCHED_YIELD            TRUE    
+#define DEFAULT_NTOP_SCHED_YIELD            TRUE
 #endif
 
 #define DEFAULT_NTOP_FCNS_FILE              NULL
@@ -2002,16 +1991,16 @@
 #define DEFAULT_NTOP_PRINTFCONLY            FALSE
 #define DEFAULT_NTOP_NO_INVLUN_DISPLAY      FALSE
 #define DEFAULT_NTOP_DISABLE_MUTEXINFO      TRUE
-#define DEFAULT_NTOP_SKIP_VERSION_CHECK     TRUE    
-    
+#define DEFAULT_NTOP_SKIP_VERSION_CHECK     TRUE
+
 /*
- * Bytes to save out of each packet - 
- *    remember, if we're decoding packets, 68 (the default) is not enough 
+ * Bytes to save out of each packet -
+ *    remember, if we're decoding packets, 68 (the default) is not enough
  *    for DNS packets.
  */
 #define DEFAULT_SNAPLEN                     384
 
-/* 
+/*
  * emitter.c default language is
  */
 #define DEFAULT_FLAG_LANGUAGE               FLAG_NO_LANGUAGE
@@ -2047,7 +2036,7 @@
  */
 #define DEFAULT_NETFLOW_PORT_STR   "2055"
 
-/* 
+/*
  * Default port to use for sFlow.
  */
 #define DEFAULT_SFLOW_PORT_STR    "6343"
@@ -2078,7 +2067,7 @@
  *
  *   However, there is a chance - on some systems - for these not to be defined.
  *
- *   So we provide the definitions here, usually swiped from the header files which 
+ *   So we provide the definitions here, usually swiped from the header files which
  *   exist on Linux or Solaris or Darwin.
  */
 #if !defined(HAVE_ETHERTYPE_H)
@@ -2662,7 +2651,7 @@ struct ip6_hdr
 #define	SAP_OSINL		0xFE
 #define	SAP_GLOBAL		0xFF
 
-/* TCP/UDP Port Numbers; generic TCP/UDP Ports are defined as IP_L4_* */ 
+/* TCP/UDP Port Numbers; generic TCP/UDP Ports are defined as IP_L4_* */
 #define IP_L4_PORT_ECHO            7
 #define IP_L4_PORT_DISCARD         9
 #define IP_L4_PORT_DAYTIME         13

@@ -578,8 +578,8 @@ void purgeIdleHosts(int actDevice) {
   static char firstRun = 1;
   HostTraffic **theFlaggedHosts = NULL;
   u_int maxHosts, scannedHosts=0;
-  int iHRT, iHRT2;
-  float elapsed;
+  float hiresDeltaTime;
+  struct timeval hiresTimeStart, hiresTimeEnd;
   HostTraffic *el, *prev, *next;
 
   /* if(myGlobals.runningPref.rFileName != NULL) return; */
@@ -593,8 +593,7 @@ void purgeIdleHosts(int actDevice) {
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
   }
 
-  iHRT = hiresIntervalTimerAlloc("PurgeIdleHosts");
-  iHRT2 = hiresIntervalTimerAlloc("PurgeIdleHosts-sections");
+  gettimeofday(&hiresTimeStart, NULL);
 
   if(startTime < (lastPurgeTime[actDevice]+PARM_HOST_PURGE_INTERVAL))
     return; /* Too short */
@@ -610,11 +609,10 @@ void purgeIdleHosts(int actDevice) {
   withSessionPurgeTime = startTime-PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES;
 
 #ifdef IDLE_PURGE_DEBUG
-  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Beginning noS < %d, wS < %d", 
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Beginning noS < %d, wS < %d",
 	     noSessionPurgeTime, withSessionPurgeTime);
 #endif
 
-  hiresIntervalTimerStart(iHRT2);
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
 #endif
@@ -622,12 +620,7 @@ void purgeIdleHosts(int actDevice) {
 #ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
-  elapsed = hiresIntervalTimerStopAbs(iHRT2);
-  traceEvent(CONST_TRACE_NOISY,
-             "IDLE_PURGE: Device %d [%s]: purgeOldFragmentEntries(), elapsed time is %.6f seconds",
-             elapsed);
 
-  hiresIntervalTimerStart(iHRT2);
 #ifdef CFG_MULTITHREADED
 #ifdef IDLE_PURGE_DEBUG
   traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: accessMutex(purgeMutex)...calling");
@@ -656,7 +649,7 @@ void purgeIdleHosts(int actDevice) {
 	       || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
 	   && (!broadcastHost(el)) && (el != myGlobals.otherHostEntry)
 	   && (myGlobals.device[actDevice].virtualDevice /* e.g. sFlow/NetFlow */
-	       || (!myGlobals.runningPref.stickyHosts)	       
+	       || (!myGlobals.runningPref.stickyHosts)
 	       || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_ETH) &&
                    ((el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
                     || (!subnetPseudoLocalHost(el)))) /* Purge remote hosts only */
@@ -712,11 +705,6 @@ void purgeIdleHosts(int actDevice) {
 #endif
 #endif
 
-  elapsed = hiresIntervalTimerStopAbs(iHRT2);
-  traceEvent(CONST_TRACE_NOISY,
-             "IDLE_PURGE: Device %d [%s]: selection, elapsed time is %.6f seconds",
-             elapsed);
-
   traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %d [%s] FINISHED selection, %d [out of %d] hosts selected",
 	     actDevice, myGlobals.device[actDevice].name, numHosts, scannedHosts);
 
@@ -734,36 +722,23 @@ void purgeIdleHosts(int actDevice) {
   }
 
   free(theFlaggedHosts);
-  elapsed = hiresIntervalTimerStopAbs(iHRT2);
-  traceEvent(CONST_TRACE_NOISY,
-             "IDLE_PURGE: Device %d [%s]: freeHostInfo() et al, elapsed time is %.6f seconds",
-             elapsed);
 
   if(myGlobals.runningPref.enableSessionHandling)
-    hiresIntervalTimerStart(iHRT2);
     scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */
-    elapsed = hiresIntervalTimerStopAbs(iHRT2);
-    traceEvent(CONST_TRACE_NOISY,
-               "IDLE_PURGE: Device %d [%s]: scanTimedoutTCPSessions(), elapsed time is %.6f seconds",
-               elapsed);
 
-  elapsed = hiresIntervalTimerStopAbs(iHRT);
+  gettimeofday(&hiresTimeEnd, NULL);
+  hiresDeltaTime = timeval_subtract(hiresTimeEnd, hiresTimeStart);
 
-  if(numFreedBuckets > 0) {
-    float elapsed = (float)hiresIntervalTimerElapsed_s(iHRT);
+  if(numFreedBuckets > 0)
     traceEvent(CONST_TRACE_NOISY,
-               "IDLE_PURGE: Device %d [%s]: %d/%d hosts deleted, elapsed time is %.6f seconds (%.6f per freed host)",
-               actDevice, myGlobals.device[actDevice].name,
-               numFreedBuckets, maxHosts,
-               elapsed,
-               elapsed / numFreedBuckets);
-  } else
-    traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %s: no hosts [out of %d] deleted", 
+	       "IDLE_PURGE: Device %d [%s]: %d/%d hosts deleted, elapsed time is %.6f seconds (%.6f per host)",
+	       actDevice, myGlobals.device[actDevice].name,
+	       numFreedBuckets, maxHosts,
+	       hiresDeltaTime,
+	       hiresDeltaTime / numFreedBuckets);
+  else
+    traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: Device %s: no hosts [out of %d] deleted",
 	       myGlobals.device[actDevice].name, maxHosts);
-
-  hiresIntervalTimerFree(iHRT2);
-  hiresIntervalTimerFree(iHRT);
-
 }
 
 /* **************************************************** */

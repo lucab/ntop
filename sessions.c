@@ -620,7 +620,11 @@ static void handleSMTPSession (const struct pcap_pkthdr *h,
     memcpy(rcStr, packetData, packetDataLength-1);
     rcStr[packetDataLength-1] = '\0';
 
-    if(strncmp(rcStr, "MAIL FROM:", 10) == 0) {
+#ifdef SMTP_DEBUG
+    traceEvent (CONST_TRACE_INFO, "SMTP: %s", rcStr);
+#endif
+
+    if(strncasecmp(rcStr, "MAIL FROM:", 10) == 0) {
       if(iscntrl(rcStr[strlen(rcStr)-1])) rcStr[strlen(rcStr)-1] = '\0';
       rcStr[strlen(rcStr)-1] = '\0';
       if(rcStr[beginIdx] == '<') beginIdx++;
@@ -634,6 +638,7 @@ static void handleSMTPSession (const struct pcap_pkthdr *h,
 
 	i++;
       }
+
       if(sport == 25)
 	updateHostUsers(&rcStr[beginIdx], BITFLAG_SMTP_USER, dstHost);
       else

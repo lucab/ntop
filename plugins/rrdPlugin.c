@@ -68,16 +68,15 @@ int optind, opterr;
 static unsigned short initialized = 0, active = 0, dumpInterval, dumpDetail;
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
-static Counter numTotalRRDUpdates = 0,  numPriorTotalRRDupdates = 0;
+static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
 static unsigned long numRuns = 0, numRRDerrors = 0;
 static time_t start_tm, end_tm, rrdTime;
-static int iHRT;
 
 #ifdef CFG_MULTITHREADED
 pthread_t rrdThread;
 #endif
 
-static u_short dumpDomains, dumpFlows, dumpHosts, 
+static u_short dumpDomains, dumpFlows, dumpHosts,
   dumpInterfaces, dumpMatrix, shownCreate=0;
 #ifndef WIN32
 static u_short dumpPermissions;
@@ -224,7 +223,7 @@ static void addRrdDelay() {
     Sleep((int)dumpDelay);
 #else
     struct timespec sleepAmount;
-    
+
     sleepAmount.tv_sec = 0; sleepAmount.tv_nsec = (int)dumpDelay * 1000;
     nanosleep(&sleepAmount, NULL);
 #endif
@@ -350,13 +349,13 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   if(strstr(rrdPath, "/sFlow/") == NULL) {
     sendString("<TR><TH "DARK_BG" COLSPAN=2>Traffic Summary</TH></TR>\n");
-    
+
     if(strncmp(rrdTitle, "interface", strlen("interface")) == 0) {
       min = 0, max = 4;
     } else {
       min = 5, max = 6;
     }
-    
+
     for(i=min; i<=max; i++) {
       sendString("<TR><TD COLSPAN=1 ALIGN=CENTER>");
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary"
@@ -389,14 +388,14 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
   if(hasNetFlow) {
     sendString("<TR><TH "DARK_BG" COLSPAN=2>NetFlow Detail</TH></TR>\n");
-    
+
     for(i=0; i<=2; i++) {
       sendString("<TR><TD COLSPAN=2 ALIGN=CENTER>");
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<IMG SRC=\"/plugins/rrdPlugin?action=netflowSummary"
 		    "&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
 		    i, rrdPath, startTime, endTime);
       sendString(buf);
-    }    
+    }
   }
 
   sendString("<TR><TH "DARK_BG">Traffic Counter Detail</TH><TH "DARK_BG">Total</TH></TR>\n");
@@ -638,7 +637,7 @@ void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, 
 
   /* startTime[4] skips the 'now-' */
   safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s-%s%d%s",
-	  myGlobals.rrdPath, rrd_subdirs[0], 
+	  myGlobals.rrdPath, rrd_subdirs[0],
 	      startTime, rrdPrefix, graphId,
 	      CHART_FORMAT);
 
@@ -689,11 +688,11 @@ void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, 
 #endif
 
     if(stat(path, &statbuf) == 0) {
-      safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path); 
+      safe_snprintf(__FILE__, __LINE__, buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
       argv[argc++] = buf[entryId];
 
       safe_snprintf(__FILE__, __LINE__, buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		  entryId, rrd_colors[entryId], spacer(&rrds[i][3], tmpStr)); 
+		  entryId, rrd_colors[entryId], spacer(&rrds[i][3], tmpStr));
       argv[argc++] = buf1[entryId];
 
 
@@ -778,7 +777,7 @@ static char* spacer(char* _str, char *tmpStr) {
   snprintf(tmpStr, len, "% -15s", str);
   for(i=len-1; i<15; i++) tmpStr[i] = ' ';
   tmpStr[15] = '\0';
-  
+
   /* traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: '%s' [len=%d]", tmpStr, len); */
 
   return(tmpStr);
@@ -842,7 +841,7 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
 
   /* startTime[4] skips the 'now-' */
   safe_snprintf(__FILE__, __LINE__, fname, sizeof(fname), "%s/%s/%s-%s%d%s",
-	  myGlobals.rrdPath, rrd_subdirs[0], 
+	  myGlobals.rrdPath, rrd_subdirs[0],
 	      startTime, rrdPrefix, graphId,
 	      CHART_FORMAT);
 
@@ -894,13 +893,13 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
 #endif
 
     if(stat(path, &statbuf) == 0) {
-      safe_snprintf(__FILE__, __LINE__, buf[entryId], 2*MAX_BUF_LEN, 
-		    "DEF:ctr%d=%s:counter:AVERAGE", entryId, path); 
+      safe_snprintf(__FILE__, __LINE__, buf[entryId], 2*MAX_BUF_LEN,
+		    "DEF:ctr%d=%s:counter:AVERAGE", entryId, path);
       argv[argc++] = buf[entryId];
-      safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN, 
+      safe_snprintf(__FILE__, __LINE__, buf1[entryId], 2*MAX_BUF_LEN,
 		    "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		    entryId, rrd_colors[entryId], 
-		    spacer(rrds[i], tmpStr)); 
+		    entryId, rrd_colors[entryId],
+		    spacer(rrds[i], tmpStr));
       argv[argc++] = buf1[entryId];
       entryId++;
     }
@@ -1003,7 +1002,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     if(isCounter) {
       safe_snprintf(__FILE__, __LINE__, counterStr, sizeof(counterStr), "DS:counter:COUNTER:%d:0:%u", step, topValue);
     } else {
-      /* 
+      /*
 	 Unlimited (sort of)
 	 Well I have decided to add a limit too in order to avoid crazy values.
       */
@@ -1152,6 +1151,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   addRrdDelay();
   rc = rrd_update(argc, argv);
 
+  numRRDUpdates++;
   numTotalRRDUpdates++;
 
   if(rrd_test_error()) {
@@ -1411,8 +1411,6 @@ static void commonRRDinit(void) {
 #endif
 #endif /* RRD_DEBUG */
 
-  iHRT = hiresIntervalTimerAlloc("RRD");
-
   initialized = 1;
 }
 
@@ -1422,7 +1420,7 @@ static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
     rrdKey[64], rrdName[64], rrdTitle[64], startTime[32], endTime[32], rrdPrefix[32];
   u_char action = FLAG_RRD_ACTION_NONE;
-  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces, 
+  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces,
     _dumpMatrix, _dumpDetail, _dumpInterval, _dumpHours, _dumpDays, _dumpMonths, graphId;
   char * _hostsFilter;
 #ifndef WIN32
@@ -1539,7 +1537,7 @@ static void handleRRDHTTPrequest(char* url) {
 	  _hostsFilter = strdup(value);
 	} else if(strcmp(key, "rrdPath") == 0) {
 	  int vlen = strlen(value)+1, idx = 0;
-	  
+
 #ifdef WIN32
 	  /*
 		RRD does not accept ':' in path names as this
@@ -1909,10 +1907,10 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
   int idx;
   char rrdPath[512];
   char *adjHostName;
-  ProtocolsList *protoList;  
+  ProtocolsList *protoList;
   char *hostKey;
   int j;
-  
+
   if((el == myGlobals.otherHostEntry) || (el == myGlobals.broadcastEntry)
      || broadcastHost(el) || (myGlobals.runningPref.trackOnlyLocalHosts &&
                               (!subnetPseudoLocalHost(el)))) {
@@ -1924,7 +1922,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 #endif
 
   /* ********************************************* */
-  
+
   numLocalNets = 0;
   /* Avoids strtok to blanks into hostsFilter */
   safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s", hostsFilter);
@@ -2043,7 +2041,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
       protoList = myGlobals.ipProtosList, idx=0;
       while(protoList != NULL) {
 	char buf[64];
-	
+
 	if(el->ipProtosList[idx] != NULL) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sSent", protoList->protocolName);
 	  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->sent);
@@ -2078,7 +2076,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 			    myGlobals.protoIPTrafficInfos[j]);
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->sentLoc.value+
 			    el->protoIPTrafficInfos[j]->sentRem.value);
-	    
+
 	      safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sRcvdBytes",
 			    myGlobals.protoIPTrafficInfos[j]);
 	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
@@ -2088,7 +2086,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 	}
       }
     }
-    
+
     if(adjHostName != NULL)
       free(adjHostName);
   }
@@ -2099,7 +2097,7 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 #ifdef MAKE_WITH_SCHED_YIELD
   sched_yield(); /* Allow other threads to run */
 #endif
-    
+
   return;
 }
 
@@ -2113,7 +2111,7 @@ static void rrdUpdateFcHostStats (HostTraffic *el, int devIdx) {
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
 #endif
-    
+
     if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
       if(el->fcCounters->hostNumFcAddress[0] != '\0') {
 	  safe_snprintf(__FILE__, __LINE__, hostKey, sizeof (hostKey), "%s-%d",
@@ -2201,7 +2199,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   char rrdPath[512];
   int cycleCount=0;
   ProtocolsList *protoList;
-  float elapsed;
   char dname[256];
   int i;
 
@@ -2312,7 +2309,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
     if(active == 0) return(NULL);
 
-    hiresIntervalTimerStart(iHRT);
+    numRRDUpdates = 0;
     numRuns++;
     rrdTime =  time(NULL);
 
@@ -2346,23 +2343,23 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	}
 
 	stats = (DomainStats**)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats*),"rrdMainLoop(2)");
-	
+
 	if (stats == NULL) {
 	  traceEvent(CONST_TRACE_WARNING, "RRD: Out of memory, skipping domain RRD dumps");
 	  /* before continuing, also free the block of memory allocated a few lines up */
 	  if (tmpStats != NULL) free(tmpStats);
 	  continue;
 	}
-	
+
 	/* walk through all hosts, getting their domain names and counting stats */
 	for (el = getFirstHost(devIdx);
 	  el != NULL; el = getNextHost(devIdx, el)) {
 
             if (el->l2Family != FLAG_HOST_TRAFFIC_AF_ETH)
                 continue;
-            
+
 	    fillDomainName(el);
-	    
+
 	    /* if we didn't get a domain name, bail out */
 	    if ((el->dnsDomainValue == NULL)
 	       || (el->dnsDomainValue[0] == '\0')
@@ -2491,11 +2488,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
     if(dumpInterfaces) {
       for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
-	
+
 	if((myGlobals.device[devIdx].virtualDevice && (!myGlobals.device[devIdx].sflowGlobals))
 	   || (!myGlobals.device[devIdx].activeDevice))
 	  continue;
-	   
+
 	safe_snprintf(__FILE__, __LINE__, rrdPath, sizeof(rrdPath), "%s/interfaces/%s/", myGlobals.rrdPath,
                     myGlobals.device[devIdx].humanFriendlyName);
 	mkdir_p(rrdPath);
@@ -2511,48 +2508,48 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	if(myGlobals.device[devIdx].netflowGlobals != NULL) {
 	  updateCounter(rrdPath, "NF_numFlowPkts", myGlobals.device[devIdx].netflowGlobals->numNetFlowsPktsRcvd);
 	  updateCounter(rrdPath, "NF_numFlows", myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd);
-	  updateCounter(rrdPath, "NF_numDiscardedFlows", 
+	  updateCounter(rrdPath, "NF_numDiscardedFlows",
 			myGlobals.device[devIdx].netflowGlobals->numBadFlowPkts+
 			myGlobals.device[devIdx].netflowGlobals->numBadFlowBytes+
 			myGlobals.device[devIdx].netflowGlobals->numBadFlowReality+
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsV9UnknTemplRcvd);
-	  
+
 	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd > 0)
-	    updateGauge(rrdPath, "NF_avgTcpNewFlowSize", 
+	    updateGauge(rrdPath, "NF_avgTcpNewFlowSize",
 			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize/
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
 
 	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd > 0)
-	    updateGauge(rrdPath, "NF_avgUdpNewFlowSize", 
+	    updateGauge(rrdPath, "NF_avgUdpNewFlowSize",
 			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize/
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
 
 	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd > 0)
-	    updateGauge(rrdPath, "NF_avgICMPNewFlowSize", 
+	    updateGauge(rrdPath, "NF_avgICMPNewFlowSize",
 		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize/
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd);
 
 	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd > 0)
-	    updateGauge(rrdPath, "NF_avgOtherFlowSize", 
+	    updateGauge(rrdPath, "NF_avgOtherFlowSize",
 		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize/
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd);
 
-	  updateGauge(rrdPath, "NF_newTcpNetFlows", 
+	  updateGauge(rrdPath, "NF_newTcpNetFlows",
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
-	  updateGauge(rrdPath, "NF_newUdpNetFlows", 
+	  updateGauge(rrdPath, "NF_newUdpNetFlows",
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
-	  updateGauge(rrdPath, "NF_newIcmpNetFlows", 
+	  updateGauge(rrdPath, "NF_newIcmpNetFlows",
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd);
-	  updateGauge(rrdPath, "NF_newOtherNetFlows", 
+	  updateGauge(rrdPath, "NF_newOtherNetFlows",
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd);
 
-	  updateGauge(rrdPath, "NF_numNetFlows", 
+	  updateGauge(rrdPath, "NF_numNetFlows",
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd-
 			myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd);
 
 	  /* Update Counters */
-	  myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd = 
-	    myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd; 
+	  myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd =
+	    myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd;
 	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize = 0;
 	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize = 0;
 	  myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize = 0;
@@ -2561,7 +2558,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd = 0;
 	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd = 0;
 	  myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd = 0;
-	  
+
 	}
 
 	if(dumpDetail >= FLAG_RRD_DETAIL_MEDIUM) {
@@ -2624,11 +2621,11 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	if(myGlobals.device[devIdx].sflowGlobals) {
 	  for(i=0; i<MAX_NUM_SFLOW_INTERFACES; i++) {
 	    IfCounters *ifName = myGlobals.device[devIdx].sflowGlobals->ifCounters[i];
-	    
+
 	    if(ifName != NULL) {
 	      char rrdIfPath[512];
 
-	      safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath), 
+	      safe_snprintf(__FILE__, __LINE__, rrdIfPath, sizeof(rrdIfPath),
 			    "%s/interfaces/%s/sFlow/%d/", myGlobals.rrdPath,
 			    myGlobals.device[devIdx].humanFriendlyName, i);
 	      mkdir_p(rrdIfPath);
@@ -2688,15 +2685,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  }
     }
 
-    elapsed = hiresIntervalTimerStopAbs(iHRT);
-    if((numTotalRRDUpdates - numPriorTotalRRDupdates) > 0) {
-      traceEvent(CONST_TRACE_NOISY,
-                 "RRD: %lu RRDs updated in %.6f seconds (%.6f per update)",
-                 (unsigned long)(numTotalRRDUpdates - numPriorTotalRRDupdates),
-                 elapsed,
-                 elapsed / (numTotalRRDUpdates - numPriorTotalRRDupdates));
-    }
-    numPriorTotalRRDupdates = numTotalRRDUpdates;
+#ifdef RRD_DEBUG
+    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: %lu RRDs updated (%lu total updates)",
+	       (unsigned long)(numRRDUpdates), (unsigned long)numTotalRRDUpdates);
+#endif
 
     /*
      * If it's FLAG_NTOPSTATE_STOPCAP, and we're still running, then this
@@ -2738,7 +2730,7 @@ static int initRRDfunct(void) {
       active = 0;
       return (TRUE);            /* 0 indicates success */
   }
-  
+
   traceEvent(CONST_TRACE_INFO, "RRD: Welcome to the RRD plugin");
 
   if(myGlobals.rrdPath == NULL)
@@ -2754,9 +2746,9 @@ static int initRRDfunct(void) {
 #endif
 
   fflush(stdout);
-  numTotalRRDUpdates = numPriorTotalRRDupdates = 0;
-  
-  active = 1; /* Show we're running */  
+  numTotalRRDUpdates = 0;
+
+  active = 1; /* Show we're running */
   return(0);
 }
 
@@ -2798,8 +2790,6 @@ static void termRRDfunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "RRD: Done");
   fflush(stdout);
 
-  hiresIntervalTimerFree(iHRT);
-
   initialized = 0; /* Reinit on restart */
   active = 0;
 }
@@ -2813,7 +2803,7 @@ PluginInfo* rrdPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY,
 	     "RRD: Welcome to %s. (C) 2002-04 by Luca Deri.",
 	     rrdPluginInfo->pluginName);
 

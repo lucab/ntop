@@ -70,7 +70,7 @@ void* pcapDispatch(void *_i) {
   int i = (int)_i;
   struct pcap_stat pcapStats;
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap (%s) dispatch thread running...", 
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap (%s) dispatch thread running...",
 	     myGlobals.device[i].humanFriendlyName);
 
   /* Reset stats before to start */
@@ -81,7 +81,7 @@ void* pcapDispatch(void *_i) {
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     HEARTBEAT(2, "pcapDispatch()", NULL);
     rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
-    
+
     if(rc == -1) {
       if(myGlobals.device[i].name != NULL) /* This is not a shutdown */
 	traceEvent(CONST_TRACE_ERROR, "Reading packets on device %d (%s): '%s'",
@@ -91,10 +91,10 @@ void* pcapDispatch(void *_i) {
       break;
     } else if(rc == 0) {
       if(myGlobals.runningPref.rFileName != NULL) {
-	traceEvent(CONST_TRACE_INFO, "pcap_dispatch (%s) returned %d [No more packets to read]", 
+	traceEvent(CONST_TRACE_INFO, "pcap_dispatch (%s) returned %d [No more packets to read]",
 		   myGlobals.device[i].humanFriendlyName, rc);
 	break; /* No more packets to read */
-      } 
+      }
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
       if(myGlobals.runningPref.setNonBlocking == TRUE) {
 	/* select returned no data - either a signal or setNonBlock */
@@ -104,7 +104,7 @@ void* pcapDispatch(void *_i) {
 	myGlobals.setNonBlockingSleepCount++;
       }
 #endif
-    } 
+    }
   }
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: pcap dispatch thread terminated...");
@@ -113,7 +113,7 @@ void* pcapDispatch(void *_i) {
   cleanup(2);
 #endif
 
-  return(NULL); 
+  return(NULL);
 }
 #endif /* CFG_MULTITHREADED */
 
@@ -164,7 +164,7 @@ void daemonize(void) {
     traceEvent(CONST_TRACE_ERROR, "INIT: Occurred while daemonizing (errno=%d)", errno);
   else {
 #ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: after fork() in %s (%d)", 
+    traceEvent(CONST_TRACE_INFO, "DEBUG: after fork() in %s (%d)",
 	       childpid ? "parent" : "child", childpid);
 #endif
     if(!childpid) { /* child */
@@ -246,7 +246,7 @@ static short handleProtocol(char* protoName, char *protocol) {
 	else
 	  servicesMapper[idx] = myGlobals.numIpProtosToMonitor;
       } else if(printWarnings)
-	traceEvent(CONST_TRACE_WARNING, 
+	traceEvent(CONST_TRACE_WARNING,
                    "INIT: IP port %d (%s) has been discarded (multiple instances)",
                    idx,
                    protoName);
@@ -321,9 +321,9 @@ static int handleProtocolList(char* protoName, char *protocolList) {
     if(myGlobals.numIpProtosToMonitor == 0)
       myGlobals.protoIPTrafficInfos = (char**)malloc(sizeof(char*));
     else
-      myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos, 
+      myGlobals.protoIPTrafficInfos = (char**)realloc(myGlobals.protoIPTrafficInfos,
 						      sizeof(char*)*(myGlobals.numIpProtosToMonitor+1));
-      
+
     rc = myGlobals.numIpProtosToMonitor;
     myGlobals.protoIPTrafficInfos[myGlobals.numIpProtosToMonitor] = strdup(protoName);
     myGlobals.numIpProtosToMonitor++;
@@ -356,7 +356,7 @@ void addNewIpProtocolToHandle(char* name, u_int16_t id, u_int16_t idAlias) {
   proto->protocolName = strdup(name);
   proto->protocolId = id, proto->protocolIdAlias = idAlias;
   myGlobals.ipProtosList = proto;
-  myGlobals.numIpProtosList++;    
+  myGlobals.numIpProtosList++;
 
   for(i=0; i<myGlobals.numDevices; i++)
     createDeviceIpProtosList(i);
@@ -397,7 +397,7 @@ void createPortHash(void) {
 	myGlobals.ipPortMapper.theMapper[slotId].dummyEntry = 1;
       } else
 	myGlobals.ipPortMapper.theMapper[slotId].dummyEntry = 0;
-      
+
       myGlobals.ipPortMapper.theMapper[slotId].portProto = i;
       myGlobals.ipPortMapper.theMapper[slotId].mappedPortProto = servicesMapper[i];
     }
@@ -434,7 +434,7 @@ void handleProtocols(void) {
 
     if(stat(myGlobals.runningPref.protoSpecs, &buf) != 0) {
       fclose(fd);
-      traceEvent(CONST_TRACE_ERROR, "PROTO_INIT: Unable to get information about file '%s'", 
+      traceEvent(CONST_TRACE_ERROR, "PROTO_INIT: Unable to get information about file '%s'",
 		 myGlobals.runningPref.protoSpecs);
       return;
     }
@@ -585,27 +585,27 @@ static void purgeIpPorts(int theDevice) {
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Calling purgeIpPorts(%d)", theDevice);
 #endif
-  
+
   if(myGlobals.device[myGlobals.actualReportDeviceId].numHosts == 0) return;
 
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.purgePortsMutex, "purgeIpPorts");
 #endif
-  
+
   for(i=1; i<MAX_IP_PORT; i++) {
     if(myGlobals.device[theDevice].ipPorts[i] != NULL) {
       free(myGlobals.device[theDevice].ipPorts[i]);
       myGlobals.device[theDevice].ipPorts[i] = NULL;
     }
   }
-  
+
 #ifdef CFG_MULTITHREADED
   releaseMutex(&myGlobals.purgePortsMutex);
 #endif
 
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "purgeIpPorts(%d) completed", theDevice);
-#endif  
+#endif
 }
 
 /* **************************************** */
@@ -633,7 +633,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 #if !defined(__FreeBSD__)
 	purgeIpPorts(i);
 #endif
-	
+
 #ifdef MAKE_WITH_SCHED_YIELD
 	sched_yield(); /* Allow other threads to run */
 #endif
@@ -642,9 +642,9 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
     updateThpt(1);
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated", 
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Idle Scan thread (%ld) terminated",
 	     (long)myGlobals.scanIdleThreadId);
-  return(NULL); 
+  return(NULL);
 }
 #endif
 
@@ -654,13 +654,10 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
 void* scanFingerprintLoop(void* notUsed _UNUSED_) {
   HostTraffic *el;
-  int deviceId, countScan, countResolved, iHRT;
+  int deviceId, countScan, countResolved;
 #ifdef FINGERPRINT_DEBUG
   int countCycle=0;
 #endif
-  float elapsed;
-
-  iHRT = hiresIntervalTimerAlloc("Scan Fingerprints");
 
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Fingerprint scan thread running...");
 
@@ -676,7 +673,6 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
 
     if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) break;
     HEARTBEAT(0, "scanFingerprintLoop(), sleep()...woke", NULL);
-    hiresIntervalTimerStart(iHRT);
     if(myGlobals.runningPref.rFileName == NULL)
         myGlobals.actTime = time(NULL);
 #ifdef FINGERPRINT_DEBUG
@@ -701,27 +697,16 @@ void* scanFingerprintLoop(void* notUsed _UNUSED_) {
 
     }
 
-    elapsed = hiresIntervalTimerStopAbs(iHRT);
-
     if(countScan > 0)
-      if((iHRT >= 0) && (iHRT < MAX_INTERNALTIMEINTERVALS)) {
-        traceEvent(CONST_TRACE_NOISY, "OSFP: scanFingerprintLoop() checked %d, resolved %d (%.6f per check)",
-                   countScan,
-                   countResolved,
-                   elapsed / countScan);
-      } else {
-        traceEvent(CONST_TRACE_NOISY, "OSFP: scanFingerprintLoop() checked %d", countScan, countResolved);  
-      }
+      traceEvent(CONST_TRACE_NOISY, "OSFP: scanFingerprintLoop() checked %d, resolved %d",
+                 countScan, countResolved);
 
   }
 
-  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Fingerprint Scan thread (%ld) terminated", 
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: Fingerprint Scan thread (%ld) terminated",
 	     myGlobals.scanFingerprintsThreadId);
   myGlobals.nextFingerprintScan = 0;
-
-  hiresIntervalTimerFree(iHRT);
-
-  return(NULL); 
+  return(NULL);
 }
 #endif
 
@@ -863,7 +848,7 @@ RETSIGTYPE cleanup(int signo) {
 
   killThread(&myGlobals.handleWebConnectionsThreadId);
 #if !defined(WIN32) && defined(CFG_MULTITHREADED)
-  traceEvent(CONST_TRACE_INFO, "SIGPIPE: Handled (ignored) %lu errors", 
+  traceEvent(CONST_TRACE_INFO, "SIGPIPE: Handled (ignored) %lu errors",
 	     myGlobals.numHandledSIGPIPEerrors);
 #endif
 
@@ -1026,10 +1011,10 @@ RETSIGTYPE cleanup(int signo) {
       int port;
 
       for(port=0; port<MAX_IP_PORT; port++)
-	if(myGlobals.device[i].ipPorts[port] != NULL) 
+	if(myGlobals.device[i].ipPorts[port] != NULL)
 	  free(myGlobals.device[i].ipPorts[port]);
     }
-    
+
 
 #ifdef CFG_MULTITHREADED
     accessMutex(&myGlobals.tcpSessionsMutex, "cleanup");
@@ -1074,7 +1059,7 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
   }
-  
+
   if(myGlobals.device)
       free(myGlobals.device);
 
@@ -1092,14 +1077,13 @@ RETSIGTYPE cleanup(int signo) {
   tryLockMutex(&myGlobals.purgePortsMutex, "cleanup");
   deleteMutex(&myGlobals.purgePortsMutex);
   tryLockMutex(&myGlobals.securityItemsMutex, "cleanup");
-  tryLockMutex(&myGlobals.hiresTimerAllocMutex, "cleanup");
   deleteMutex(&myGlobals.securityItemsMutex);
   /* DO NOT DO deleteMutex(&myGlobals.logViewMutex); - need it for the last traceEvent()s */
 #endif
 
   if(myGlobals.logView != NULL) {
     for(i=0; i<CONST_LOG_VIEW_BUFFER_SIZE; i++)
-      if(myGlobals.logView[i] != NULL) 
+      if(myGlobals.logView[i] != NULL)
 	free(myGlobals.logView[i]);
     free(myGlobals.logView);
   }

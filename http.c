@@ -120,7 +120,7 @@ static int readHTTPheader(char* theRequestedURL,
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
-			  int iHRThttpRequestedAt,
+			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent,
                           char *referer,
@@ -138,7 +138,7 @@ static int readHTTPheader(char* theRequestedURL,
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
-			  int iHRThttpRequestedAt,
+			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent,
                           char *referer, int isPostMethod);
@@ -146,7 +146,7 @@ static int returnHTTPPage(char* pageName,
 
 static int generateNewInternalPages(char* pageName);
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
-static void logHTTPaccess(int rc, int iHRThttpRequestedAt, u_int gzipBytesSent);
+static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent);
 static void returnHTTPspecialStatusCode(int statusIdx, char *additionalText);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 static char compressedFilePath[256];
@@ -222,9 +222,9 @@ static int readHTTPheader(char* theRequestedURL,
     FD_SET((unsigned int)topSock, &mask);
 
     /* printf("About to call select()\n"); fflush(stdout); */
-    
+
     if(myGlobals.newSock > 0) {
-      /* 
+      /*
 	 Call select only for HTTP.
 	 Fix courtesy of Olivier Maul <oli@42.nu>
       */
@@ -333,14 +333,14 @@ static int readHTTPheader(char* theRequestedURL,
 
 	      /*
 		Before to copy the URL let's check whether
-		it has been sent through a proxy 
+		it has been sent through a proxy
 	      */
-	      
+
 	      if(strncasecmp(tmpStr, "http://", 7) == 0)
 		beginIdx = 7;
 	      else if(strncasecmp(tmpStr, "https://", 8) == 0)
 		beginIdx = 8;
-	      else 
+	      else
 		beginIdx = 0;
 
 	      if(beginIdx > 0) {
@@ -496,7 +496,7 @@ void sendStringLen(char *theString, unsigned int len) {
 #else
 	safe_snprintf(__FILE__, __LINE__, compressedFilePath, sizeof(compressedFilePath), "/tmp/ntop-gzip-%d", getpid());
 #endif
-	
+
 	compressFileFd = gzopen(compressedFilePath, "wb");
       }
 
@@ -507,7 +507,7 @@ void sendStringLen(char *theString, unsigned int len) {
         gzErrorMsg = (char*)gzerror(compressFileFd, &err);
         if(err == Z_ERRNO)
           traceEvent(CONST_TRACE_WARNING, "gzwrite file error %d (%s)", errno, strerror(errno));
-        else 
+        else
 	  traceEvent(CONST_TRACE_WARNING, "gzwrite error %s(%d)", gzErrorMsg, err);
 
         gzclose(compressFileFd);
@@ -596,7 +596,7 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   if((headerFlags & BITFLAG_HTML_NO_STYLESHEET) == 0) {
     sendString("<LINK REL=stylesheet HREF=\"/style.css\" type=\"text/css\">\n");
   }
-  
+
   sendString("<SCRIPT SRC=\"/functions.js\" TYPE=\"text/javascript\" LANGUAGE=\"javascript\"></SCRIPT>\n");
 
   sendString("</HEAD>\n");
@@ -651,7 +651,7 @@ void printHTMLtrailer(void) {
 		"Build: %s.\n",
 		version, THREAD_MODE, osName, buildDate);
   sendString(buf);
-  
+
   if(myGlobals.checkVersionStatus != FLAG_CHECKVERSION_NOTCHECKED) {
     u_char useRed;
 
@@ -668,7 +668,7 @@ void printHTMLtrailer(void) {
       useRed = 0;
       break;
     }
-    
+
     sendString("Version: ");
     if(useRed) sendString("<FONT COLOR=red>");
     sendString(reportNtopVersionCheck());
@@ -678,7 +678,7 @@ void printHTMLtrailer(void) {
 
   if(myGlobals.runningPref.rFileName != NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Listening on [%s]\n", CONST_PCAP_NW_INTERFACE_FILE);
-  } else {   
+  } else {
     buf[0] = '\0';
 
     for(i=len=numRealDevices=0; i<myGlobals.numDevices; i++, len=strlen(buf)) {
@@ -713,7 +713,7 @@ void printHTMLtrailer(void) {
   safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<br>Web report active on interface %s",
 		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
   sendString(buf);
-  
+
   sendString("<BR>\n&copy; 1998-2004 by <A HREF=\"mailto:&#100;&#101;&#114;&#105;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\">Luca Deri</A>\n");
   sendString("</B></FONT>\n</BODY>\n</HTML>\n");
 }
@@ -740,16 +740,21 @@ void termAccessLog(void) {
 
 /* ************************* */
 
-static void logHTTPaccess(int rc, int iHRThttpRequestedAt, u_int gzipBytesSent) {
+static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent) {
  char theDate[48], myUser[64], buf[24];
+ struct timeval loggingAt;
  unsigned long msSpent;
  char theZone[6];
  unsigned long gmtoffset;
   struct tm t;
 
   if(myGlobals.accessLogFd != NULL) {
-   hiresIntervalTimerStopAbs(iHRThttpRequestedAt);  
-   msSpent = hiresIntervalTimerElapsed_us(iHRThttpRequestedAt);
+   gettimeofday(&loggingAt, NULL);
+
+   if(httpRequestedAt != NULL)
+     msSpent = (unsigned long)(delta_time(&loggingAt, httpRequestedAt)/1000);
+   else
+     msSpent = 0;
 
    /* Use standard Apache format per http://httpd.apache.org/docs/logs.html */
    strftime(theDate, sizeof(theDate), CONST_APACHELOG_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
@@ -866,7 +871,7 @@ static void returnHTTPspecialStatusCode(int statusFlag, char *additionalText) {
     sendString(additionalText);
   }
 
-  logHTTPaccess(HTTPstatus[statusIdx].statusCode, -1, 0);
+  logHTTPaccess(HTTPstatus[statusIdx].statusCode, NULL, 0);
 }
 
 /* *******************************/
@@ -906,11 +911,11 @@ void sendHTTPHeader(int mimeType, int headerFlags, int useCompressionIfAvailable
   if( (myGlobals.runningPref.P3Pcp != NULL) || (myGlobals.runningPref.P3Puri != NULL) ) {
       sendString("P3P: ");
       if(myGlobals.runningPref.P3Pcp != NULL) {
-          safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "cp=\"%s\"%s", 
+          safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "cp=\"%s\"%s",
                               myGlobals.runningPref.P3Pcp, myGlobals.runningPref.P3Puri != NULL ? ", " : "");
           sendString(tmpStr);
       }
-    
+
       if(myGlobals.runningPref.P3Puri != NULL) {
           safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "policyref=\"%s\"", myGlobals.runningPref.P3Puri);
           sendString(tmpStr);
@@ -1048,8 +1053,8 @@ static int checkURLsecurity(char *url) {
   if(strstr(url, "%") != NULL) {
 
     /* Convert encoding (%nn) to their base characters -
-     * we also handle the special case of %3A (:) 
-     * which we convert to _ (not :) 
+     * we also handle the special case of %3A (:)
+     * which we convert to _ (not :)
          * See urlFixupFromRFC1945Inplace() and urlFixupToRFC1945Inplace()
      * We handle this 1st because some of the gcc functions interpret encoding/unicode "for" us
      */
@@ -1078,32 +1083,32 @@ static int checkURLsecurity(char *url) {
             traceEvent(CONST_TRACE_NOISY,
                        "URL security(1): Found invald percent in URL...DANGER...rejecting request partial (url=%s...)",
                        url);
- 
+
             /* Explicitly, update so it's not used anywhere else in ntop */
-            url[0] = '*'; url[1] = 'd'; url[2] = 'a'; url[3] = 'n'; url[4] = 'g'; url[5] = 'e'; url[6] = 'r'; url[7] = '*'; 
-            url[8] = '\0'; 
+            url[0] = '*'; url[1] = 'd'; url[2] = 'a'; url[3] = 'n'; url[4] = 'g'; url[5] = 'e'; url[6] = 'r'; url[7] = '*';
+            url[8] = '\0';
             httpRequestedURL[0] = '*'; httpRequestedURL[1] = 'd'; httpRequestedURL[2] = 'a';
             httpRequestedURL[3] = 'n'; httpRequestedURL[4] = 'g'; httpRequestedURL[5] = 'e';
-            httpRequestedURL[6] = 'r'; httpRequestedURL[7] = '*'; 
-            httpRequestedURL[8] = '\0'; 
+            httpRequestedURL[6] = 'r'; httpRequestedURL[7] = '*';
+            httpRequestedURL[8] = '\0';
 
             return(1);
           }
- 
+
           url[begin++] = v1 * 16 + v2;
           i += 2;
         }
       } else {
         url[begin++] = url[i];
       }
-    }       
+    }
 
     url[begin] = '\0';
- 
+
 #ifdef URL_DEBUG
     traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Decoded url is '%s', %% at %08x", url, strstr(url, "%"));
 #endif
-  }       
+  }
 
   /* Still got a % - maybe it's Unicode?  Somethings fishy... */
   if(strstr(url, "%") != NULL) {
@@ -1111,12 +1116,12 @@ static int checkURLsecurity(char *url) {
                  "URL security(1): Found percent in decoded URL...DANGER...rejecting request (%s)", url);
 
       /* Explicitly, update so it's not used anywhere else in ntop */
-      url[0] = '*'; url[1] = 'd'; url[2] = 'a'; url[3] = 'n'; url[4] = 'g'; url[5] = 'e'; url[6] = 'r'; url[7] = '*'; 
-      url[8] = '\0'; 
+      url[0] = '*'; url[1] = 'd'; url[2] = 'a'; url[3] = 'n'; url[4] = 'g'; url[5] = 'e'; url[6] = 'r'; url[7] = '*';
+      url[8] = '\0';
       httpRequestedURL[0] = '*'; httpRequestedURL[1] = 'd'; httpRequestedURL[2] = 'a';
       httpRequestedURL[3] = 'n'; httpRequestedURL[4] = 'g'; httpRequestedURL[5] = 'e';
-      httpRequestedURL[6] = 'r'; httpRequestedURL[7] = '*'; 
-      httpRequestedURL[8] = '\0'; 
+      httpRequestedURL[6] = 'r'; httpRequestedURL[7] = '*';
+      httpRequestedURL[8] = '\0';
       return(1);
   }
 
@@ -1180,7 +1185,7 @@ static int checkURLsecurity(char *url) {
     free(workURL);
     return(0);
   }
-  
+
   if(strncasecmp(workURL, CONST_NTOP_P3P, strlen(CONST_NTOP_P3P)) == 0) {
     free(workURL);
     return(0);
@@ -1188,8 +1193,8 @@ static int checkURLsecurity(char *url) {
 
 #ifdef MAKE_WITH_XMLDUMP
   /* Special cases for plugins/xmldump/xxxx.xml... */
-  if((strncasecmp(workURL, 
-             "/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME, 
+  if((strncasecmp(workURL,
+             "/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME,
              strlen("/" CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME)) == 0) ||
     (strncasecmp(workURL, "/" CONST_XML_DTD_NAME, strlen("/" CONST_XML_DTD_NAME)) == 0)) {
     free(workURL);
@@ -1357,7 +1362,7 @@ int generateInternalPages(char* pageName) {
           menuitem(CONST_SORT_DATA_PROTOS_HTML, "Traffic", "");
           menuitem(CONST_SORT_DATA_THPT_HTML, "Throughput", "");
           menuitem(CONST_SORT_DATA_HOST_TRAFFIC_HTML, "Activity", "");
-          
+
           sendString("<p><b>IP Summary</b></p>\n");
           menuitem(CONST_SORT_DATA_IP_HTML, "Traffic", "");
           menuitem(CONST_MULTICAST_STATS_HTML, "Multicast", "");
@@ -1367,7 +1372,7 @@ int generateInternalPages(char* pageName) {
           menuitem(CONST_IP_L_2_R_HTML, "Local &raquo; Remote", "");
           menuitem(CONST_IP_R_2_L_HTML, "Remote &raquo; Local", "");
           menuitem(CONST_IP_R_2_R_HTML, "Remote &raquo; Remote", "");
-          
+
           sendString("<p><b>Local IP</b></p>\n");
           menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
           menuitem(CONST_IP_PROTO_USAGE_HTML, "Ports Used", "");
@@ -1379,8 +1384,8 @@ int generateInternalPages(char* pageName) {
       if (!myGlobals.runningPref.printIpOnly) {
           sendString("<p><b>FibreChannel</b></p>\n");
           /*
-            Fibre Channel:  Traffic  |   Throughput  |   Activity  |   Hosts  |   Traffic Per Port  
-            |   Sessions  |   VSANs  |   VSAN Summary 
+            Fibre Channel:  Traffic  |   Throughput  |   Activity  |   Hosts  |   Traffic Per Port
+            |   Sessions  |   VSANs  |   VSAN Summary
           */
           menuitem(CONST_FC_DATA_HTML, "Traffic", "");
           menuitem(CONST_FC_THPT_HTML, "Throughput", "");
@@ -1397,7 +1402,7 @@ int generateInternalPages(char* pageName) {
           menuitem(CONST_SCSI_TIMES_HTML, "Times", "");
           menuitem(CONST_SCSI_TM_HTML, "Task Management", "");
       }
-          
+
       sendString("<p><b>Admin</b></p>\n");
       menuitem(CONST_SHOW_PLUGINS_HTML, "Plugins", "");
       if(!myGlobals.runningPref.mergeInterfaces)
@@ -1415,10 +1420,10 @@ int generateInternalPages(char* pageName) {
       menuitem(CONST_INFO_NTOP_HTML, "Configuration", "");
       menuitem(CONST_CREDITS_HTML, "Credits", "");
       menuitem(CONST_MAN_NTOP_HTML, "Man Page", "");
-      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report", 
+      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report",
                "<img src=\"/bug.png\" alt=\"create ntop problem report\" "
                 "width=\"23\" height=\"20\" border=\"0\" align=\"middle\">");
-      menuitem("ntophelp.html", "Help Me!", 
+      menuitem("ntophelp.html", "Help Me!",
                "<img src=\"/help.png\" alt=\"HELP! page\" width=\"20\" height=\"20\" "
                  "border=\"0\" align=\"middle\">");
 
@@ -1512,7 +1517,7 @@ static int generateNewInternalPages(char* pageName) {
   if(strcasecmp(pageName, CONST_INDEX_INNER_HTML) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
-     
+
       sendString("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\">\n<html>\n<head>\n"
 		 "<meta http-equiv=\"Expires\" content=\"0\">\n"
 		 "<meta http-equiv=\"Pragma\" content=\"no-cache\">\n"
@@ -1580,7 +1585,7 @@ static int generateNewInternalPages(char* pageName) {
           menuitem(CONST_FC_TRAFFIC_HTML, "FC_Ports", "");
           menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
       }
-      
+
       sendString("<p><b>Throughput</b></p>\n");
       if (!myGlobals.runningPref.printFcOnly) {
           menuitem(CONST_SORT_DATA_THPT_HTML, "IP_Hosts", "");
@@ -1646,10 +1651,10 @@ static int generateNewInternalPages(char* pageName) {
       menuitem(CONST_INFO_NTOP_HTML, "Show Configuration", "");
       menuitem(CONST_CREDITS_HTML, "Credits", "");
       menuitem(CONST_MAN_NTOP_HTML, "Man Page", "");
-      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report", 
+      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report",
                "<img src=\"/bug.png\" alt=\"create ntop problem report\" "
                 "width=\"23\" height=\"20\" border=\"0\" align=\"middle\">");
-      menuitem("ntophelp.html", "Help Me!", 
+      menuitem("ntophelp.html", "Help Me!",
                "<img src=\"/help.png\" alt=\"HELP! page\" width=\"20\" height=\"20\" "
                  "border=\"0\" align=\"middle\">");
 
@@ -1767,7 +1772,7 @@ int generateNew1InternalPages(char* pageName) {
       if (!myGlobals.runningPref.printIpOnly) {
           menuitem(CONST_VSAN_LIST_HTML, "VSANs", "");
       }
-      
+
       sendString("<p><b>Protocols</b></p>\n");
       if (!myGlobals.runningPref.printFcOnly) {
           menuitem(CONST_SORT_DATA_PROTOS_HTML, "All Protocols", "");
@@ -1788,7 +1793,7 @@ int generateNew1InternalPages(char* pageName) {
           menuitem(CONST_IP_L_2_R_HTML, "Local &raquo; Remote", "");
           menuitem(CONST_IP_R_2_L_HTML, "Remote &raquo; Local", "");
           menuitem(CONST_IP_R_2_R_HTML, "Remote &raquo; Remote", "");
-          
+
           sendString ("<p><b>Local IP</b></p>\n");
           menuitem(CONST_LOCAL_ROUTERS_LIST_HTML, "Routers", "");
           menuitem(CONST_IP_PROTO_USAGE_HTML, "Local Ports Used", "");
@@ -1840,10 +1845,10 @@ int generateNew1InternalPages(char* pageName) {
       menuitem(CONST_INFO_NTOP_HTML, "Configuration", "");
       menuitem(CONST_CREDITS_HTML, "Credits", "");
       menuitem(CONST_MAN_NTOP_HTML, "Man Page", "");
-      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report", 
+      menuitem(CONST_PROBLEMRPT_HTML, "Problem Report",
                "<img src=\"/bug.png\" alt=\"create ntop problem report\" "
                 "width=\"23\" height=\"20\" border=\"0\" align=\"middle\">");
-      menuitem("ntophelp.html", "Help Me!", 
+      menuitem("ntophelp.html", "Help Me!",
                "<img src=\"/help.png\" alt=\"HELP! page\" width=\"20\" height=\"20\" "
                  "border=\"0\" align=\"middle\">");
 
@@ -1914,7 +1919,7 @@ int generateNew1InternalPages(char* pageName) {
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
-			  int iHRThttpRequestedAt,
+			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent,
                           char *referer,
@@ -1924,7 +1929,7 @@ static int returnHTTPPage(char* pageName,
 static int returnHTTPPage(char* pageName,
                           int postLen,
                           HostAddr *from,
-			  int iHRThttpRequestedAt,
+			  struct timeval *httpRequestedAt,
                           int *usedFork,
                           char *agent,
                           char *referer, int isPostMethod)
@@ -1964,7 +1969,7 @@ static int returnHTTPPage(char* pageName,
      && (questionMark[0] == '?')) {
     char requestedURL[MAX_LEN_URL];
     char *tkn;
-    
+
     /* Safe strcpy as requestedURL < MAX_LEN_URL (checked by checkURLsecurity) */
     strcpy(requestedURL, &questionMark[1]);
 
@@ -2063,7 +2068,7 @@ static int returnHTTPPage(char* pageName,
   pageURI = strdup(pageName);
   token   = strchr(pageURI, '?');
   if(token != NULL) token[0] = '\0';
-  
+
 #ifdef MAKE_WITH_I18N
   for(lang=0; (!found) && lang < numLang + 2; lang++) {
 #endif
@@ -2073,14 +2078,14 @@ static int returnHTTPPage(char* pageName,
 	if(myGlobals.defaultLanguage == NULL) {
 	  continue;
 	}
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 		      "%s/html_%s/%s",
 		      myGlobals.dataFileDirs[idx],
 		      myGlobals.defaultLanguage,
 		      pageURI);
       } else if(lang == numLang+1) {
 #endif
-        safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
+        safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 		      "%s/html/%s",
 		      myGlobals.dataFileDirs[idx],
 		      pageURI);
@@ -2089,14 +2094,14 @@ static int returnHTTPPage(char* pageName,
 	if(requestedLanguage[lang] == NULL) {
 	  continue;
 	}
-	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 		      "%s/html_%s/%s",
 		      myGlobals.dataFileDirs[idx],
 		      requestedLanguage[lang],
 		      pageURI);
       }
 #endif
-	
+
 #ifdef WIN32
       i=0;
       while(tmpStr[i] != '\0') {
@@ -2108,7 +2113,7 @@ static int returnHTTPPage(char* pageName,
 #if defined(HTTP_DEBUG) || defined(I18N_DEBUG) || defined(URL_DEBUG)
       traceEvent(CONST_TRACE_INFO, "HTTP/I18N/URL_DEBUG: Testing for page %s at %s", pageURI, tmpStr);
 #endif
-	
+
       if(stat(tmpStr, &statbuf) == 0) {
 	if((fd = fopen(tmpStr, "rb")) != NULL) {
 	  found = 1;
@@ -2186,12 +2191,12 @@ static int returnHTTPPage(char* pageName,
 
   /* **************** */
 
-  /* 
+  /*
      Revert to the full requested pageName, as these strncasecmp strcasecmp
-     check the fronts only 
+     check the fronts only
   */
   free(pageURI);
- 
+
   if(strncasecmp(pageName, CONST_PLUGINS_HEADER, strlen(CONST_PLUGINS_HEADER)) == 0) {
     if(handlePluginHTTPRequest(&pageName[strlen(CONST_PLUGINS_HEADER)])) {
       return(0);
@@ -2210,12 +2215,12 @@ static int returnHTTPPage(char* pageName,
                       strlen(CONST_LEFTMENU_HTML)) == 0)) {
     if (generateNewInternalPages(pageName) == 0) {
       /* We did the work in the function except for this */
-      if(strcasecmp(pageName, CONST_HOME_HTML) != 0) 
+      if(strcasecmp(pageName, CONST_HOME_HTML) != 0)
 	printTrailer=0;
     }
     return (0);
   }
-  
+
   /*
     Putting this here (and not on top of this function)
     helps because at least a partial respose
@@ -2325,10 +2330,6 @@ static int returnHTTPPage(char* pageName,
 #endif
     returnHTTPpageNotFound(NULL);
     printTrailer=0;
-  } else if(strncasecmp(pageName, CONST_SHOW_HIRESTIMERS_HTML, strlen(CONST_SHOW_HIRESTIMERS_HTML)) == 0) {
-    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-    printTrailer=0;
-    printHiresTimersStatusReport();
 #ifdef CFG_MULTITHREADED
   } else if(strncasecmp(pageName, CONST_SHOW_MUTEX_HTML, strlen(CONST_SHOW_MUTEX_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -2356,17 +2357,17 @@ static int returnHTTPPage(char* pageName,
 			strlen(CONST_TRAFFIC_STATS_HTML)) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 
-    if((myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT) 
+    if((myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT)
        || ((myGlobals.numDevices == 1) && (!strcmp(myGlobals.device[0].name, "none")))) {
       printHTMLheader("Configure ntop", NULL, BITFLAG_HTML_NO_REFRESH);
-      
+
       safe_snprintf (__FILE__, __LINE__, tmpStr, sizeof (tmpStr),
 		     "No interface has been configured. Please <a href=%s>configure ntop</a> first.",
 		     CONST_CONFIG_NTOP_HTML);
       printFlagedWarning (tmpStr);
       return (0);
     }
-     
+
     /*
       It needs to go here otherwise when we update the pcap dropped packets
       this value is updated only in the child process and not
@@ -2385,7 +2386,7 @@ static int returnHTTPPage(char* pageName,
       printFlagedWarning (tmpStr);
       return (0);
     }
-    
+
 #if defined(PARM_FORK_CHILD_PROCESS) && (!defined(WIN32))
     if(!myGlobals.runningPref.debugMode) {
 #ifdef HANDLE_DIED_CHILD
@@ -2406,7 +2407,7 @@ static int returnHTTPPage(char* pageName,
 
 	if(!messageSent) {
 	  messageSent = 1;
-	  traceEvent(CONST_TRACE_INFO, "NOTE: -L | --use-syslog=facility not specified, child processes will log to the default (%d).", 
+	  traceEvent(CONST_TRACE_INFO, "NOTE: -L | --use-syslog=facility not specified, child processes will log to the default (%d).",
 		     DEFAULT_SYSLOG_FACILITY);
 	}
       }
@@ -2486,9 +2487,9 @@ static int returnHTTPPage(char* pageName,
 
       if(generateNewInternalPages(pageName) == 0) {
 	/* We did the work in the function except for this */
-	if(strcasecmp(pageName, CONST_HOME_HTML) != 0) 
+	if(strcasecmp(pageName, CONST_HOME_HTML) != 0)
 	  printTrailer=0;
-      } else if(strncasecmp(pageName, CONST_FC_DATA_HTML, 
+      } else if(strncasecmp(pageName, CONST_FC_DATA_HTML,
 			    strlen(CONST_FC_DATA_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printFcHostsTraffic(SORT_FC_DATA, sortedColumn, revertOrder,
@@ -2507,31 +2508,31 @@ static int returnHTTPPage(char* pageName,
       } else if(strncasecmp(pageName, CONST_FC_HOSTS_INFO_HTML,
 			    strlen(CONST_FC_HOSTS_INFO_HTML)) == 0) {
         printFcHostsInfo(sortedColumn, revertOrder, pageNum, showBytes, vsanId);
-      } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_FINGERPRINT_HTML, 
+      } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_FINGERPRINT_HTML,
 			    strlen(CONST_HOSTS_LOCAL_FINGERPRINT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHostsStats(FALSE);
-      } else if(strncasecmp(pageName, CONST_HOSTS_REMOTE_FINGERPRINT_HTML, 
+      } else if(strncasecmp(pageName, CONST_HOSTS_REMOTE_FINGERPRINT_HTML,
 			    strlen(CONST_HOSTS_REMOTE_FINGERPRINT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHostsStats(TRUE);
-      } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_CHARACT_HTML, 
+      } else if(strncasecmp(pageName, CONST_HOSTS_LOCAL_CHARACT_HTML,
 			    strlen(CONST_HOSTS_LOCAL_CHARACT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	printHostsCharacterization();
       } else if(strncasecmp(pageName, CONST_SORT_DATA_PROTOS_HTML, strlen(CONST_SORT_DATA_PROTOS_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printHostsTraffic(SORT_DATA_PROTOS, sortedColumn, revertOrder, 
+	printHostsTraffic(SORT_DATA_PROTOS, sortedColumn, revertOrder,
 			  pageNum, CONST_SORT_DATA_PROTOS_HTML,
 			  showHostsMode, showLocalityMode, vlanId);
       } else if(strncasecmp(pageName, CONST_SORT_DATA_IP_HTML, strlen(CONST_SORT_DATA_IP_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-	printHostsTraffic(SORT_DATA_IP, sortedColumn, revertOrder, 
+	printHostsTraffic(SORT_DATA_IP, sortedColumn, revertOrder,
 			  pageNum, CONST_SORT_DATA_IP_HTML, showHostsMode, showLocalityMode, vlanId);
       } else if(strncasecmp(pageName, CONST_SORT_DATA_THPT_HTML, strlen(CONST_SORT_DATA_THPT_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-	printHostsTraffic(SORT_DATA_THPT, sortedColumn, revertOrder, 
+	printHostsTraffic(SORT_DATA_THPT, sortedColumn, revertOrder,
 			  pageNum, CONST_SORT_DATA_THPT_HTML,
 			  showHostsMode, showLocalityMode, vlanId);
       } else if(strncasecmp(pageName, CONST_FC_THPT_HTML,
@@ -2544,7 +2545,7 @@ static int returnHTTPPage(char* pageName,
 			    strlen(CONST_SORT_DATA_HOST_TRAFFIC_HTML)) == 0) {
 	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 	if(sortedColumn == 0) { sortedColumn = FLAG_HOST_DUMMY_IDX; }
-	printHostsTraffic(SORT_DATA_HOST_TRAFFIC, sortedColumn, revertOrder, 
+	printHostsTraffic(SORT_DATA_HOST_TRAFFIC, sortedColumn, revertOrder,
 			  pageNum, CONST_SORT_DATA_HOST_TRAFFIC_HTML,
 			  showHostsMode, showLocalityMode, vlanId);
       } else if(strncasecmp(pageName, CONST_FC_ACTIVITY_HTML,
@@ -2749,7 +2750,7 @@ static int returnHTTPPage(char* pageName,
 	    break;
 	  }
         }
-        
+
         memset(hostName, 0, sizeof(hostName));
         strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
 
@@ -2761,10 +2762,10 @@ static int returnHTTPPage(char* pageName,
         urlFixupFromRFC1945Inplace(hostName);
 
 #ifdef URL_DEBUG
-        traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName); 
+        traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName);
 #endif
-        
-        for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+
+        for(el=getFirstHost(myGlobals.actualReportDeviceId);
             el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
 	  if(!isFcHost(el)) {
 	    if((el != myGlobals.broadcastEntry)
@@ -2780,7 +2781,7 @@ static int returnHTTPPage(char* pageName,
 	      break;
           }
         }
-	
+
 	if(el == NULL) {
 	  returnHTTPpageNotFound(NULL);
 	  printTrailer=0;
@@ -2803,7 +2804,7 @@ static int returnHTTPPage(char* pageName,
 	    break;
 	  }
         }
-        
+
         memset(hostName, 0, sizeof(hostName));
         strncpy(hostName, theHost, strlen(theHost)-strlen(CHART_FORMAT));
 
@@ -2815,10 +2816,10 @@ static int returnHTTPPage(char* pageName,
         urlFixupFromRFC1945Inplace(hostName);
 
 #ifdef URL_DEBUG
-        traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName); 
+        traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName);
 #endif
 
-        for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+        for(el=getFirstHost(myGlobals.actualReportDeviceId);
             el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
 	  if(!isFcHost(el)) {
 	    if((el != myGlobals.broadcastEntry)
@@ -2880,7 +2881,7 @@ static int returnHTTPPage(char* pageName,
 	  idx = 4;
 	  theHost = &pageName[strlen("hostIPTrafficDistrib")+1];
 	}
-    
+
 	if(strlen(theHost) <= strlen(CHART_FORMAT)) {
 	  printNoDataYet();
 	} else {
@@ -2904,10 +2905,10 @@ static int returnHTTPPage(char* pageName,
 	  urlFixupFromRFC1945Inplace(hostName);
 
 #ifdef URL_DEBUG
-	  traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName); 
+	  traceEvent(CONST_TRACE_INFO, "Searching hostname: '%s'\r\n", hostName);
 #endif
 
-	  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+	  for(el=getFirstHost(myGlobals.actualReportDeviceId);
 	      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
 	    if(isFcHost(el)) {
               if((el->fcCounters->hostNumFcAddress != NULL) &&
@@ -2920,7 +2921,7 @@ static int returnHTTPPage(char* pageName,
 		 && ((strcmp(el->hostNumIpAddress, hostName) == 0)
                      || (strcmp(el->ethAddressString, hostName) == 0)))
 		break;
-	    }   
+	    }
 	  } /* for */
 
 	  if(el == NULL) {
@@ -2969,8 +2970,8 @@ static int returnHTTPPage(char* pageName,
 	sendString("<p>The current release is very different from the initial one as it includes");
 	sendString("many features and much additional media support.</p>");
 	sendString("<p><b>ntop</b> has definitively more than one author:</p>");
-	/* Addresses are blinded to prevent easy spam harvest - 
-	 *   see http://www.wbwip.com/wbw/emailencoder.html 
+	/* Addresses are blinded to prevent easy spam harvest -
+	 *   see http://www.wbwip.com/wbw/emailencoder.html
 	 */
 	sendString("<ul><li><a href=\"mailto:&#115;&#116;&#101;&#102;&#097;&#110;&#111;&#064;&#110;&#116;&#111;&#112;&#046;&#111;&#114;&#103;\"");
 	sendString(" title=\"Send mail to Stefano\">Stefano Suin</a> ");
@@ -3056,7 +3057,7 @@ static int returnHTTPPage(char* pageName,
 	    pageName[i] = '\0';
 	    break;
 	  }
-        
+
 	pageName[strlen(pageName)-5] = '\0';
 	if(strlen(pageName) >= 31) pageName[31] = 0;
 	urlFixupFromRFC1945Inplace(pageName);
@@ -3089,7 +3090,7 @@ static int returnHTTPPage(char* pageName,
       compressAndSendData(&gzipBytesSent);
 #endif
     closeNwSocket(&myGlobals.newSock);
-    logHTTPaccess(200, iHRThttpRequestedAt, gzipBytesSent);
+    logHTTPaccess(200, httpRequestedAt, gzipBytesSent);
     exit(0);
   } else
     return(errorCode);
@@ -3122,7 +3123,7 @@ static int checkHTTPpassword(char *theRequestedURL,
 #endif
 
     key = gdbm_firstkey(myGlobals.pwFile);
-    
+
     while(key.dptr != NULL) {
       myGlobals.securityItems[myGlobals.securityItemsLoaded++] = key.dptr;
       nextkey = gdbm_nextkey(myGlobals.pwFile, key);
@@ -3354,10 +3355,11 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
 /* ************************* */
 
-void handleHTTPrequest(HostAddr from, int iHRThttpRequestedAt) {
+void handleHTTPrequest(HostAddr from) {
   int skipLeading, postLen, usedFork = 0;
   char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256], *requestedURLCopy=NULL;
   int rc, i;
+  struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
 #ifdef MAKE_WITH_I18N
   char workLanguage[256];
@@ -3371,13 +3373,13 @@ void handleHTTPrequest(HostAddr from, int iHRThttpRequestedAt) {
 
   myGlobals.numHandledRequests[myGlobals.newSock > 0]++;
 
-  hiresIntervalTimerStart(iHRThttpRequestedAt);
+  gettimeofday(&httpRequestedAt, NULL);
 
   if(from.hostFamily == AF_INET)
     from.Ip4Address.s_addr = ntohl(from.Ip4Address.s_addr);
 
   requestFrom = &from;
-  
+
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
    /* Note if the size of the table is zero, we simply nullify all of this
       code (why bother wasting the work effort)
@@ -3491,8 +3493,8 @@ void handleHTTPrequest(HostAddr from, int iHRThttpRequestedAt) {
     */
 
     int found = 0;
-    
-    /* 
+
+    /*
        Let's record the IP address of this nasty
        guy so he will stay far from ntop
        for a while
@@ -3502,7 +3504,7 @@ void handleHTTPrequest(HostAddr from, int iHRThttpRequestedAt) {
 	found = 1;
 	break;
       }
-    
+
     if(!found) {
       for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++) {
 	addrcpy(&myGlobals.weDontWantToTalkWithYou[i].addr,&myGlobals.weDontWantToTalkWithYou[i+1].addr);
@@ -3594,7 +3596,7 @@ void handleHTTPrequest(HostAddr from, int iHRThttpRequestedAt) {
  #endif
 
   rc = returnHTTPPage(&requestedURL[1], postLen,
-		      &from, iHRThttpRequestedAt, &usedFork,
+		      &from, &httpRequestedAt, &usedFork,
                       agent,
                       referer,
                       requestedLanguage,
@@ -3606,7 +3608,7 @@ void handleHTTPrequest(HostAddr from, int iHRThttpRequestedAt) {
 
 #else
   rc =  returnHTTPPage(&requestedURL[1], postLen,
-		       &from, iHRThttpRequestedAt, &usedFork,
+		       &from, &httpRequestedAt, &usedFork,
 		       agent, referer, isPostMethod);
 #endif
 
@@ -3620,6 +3622,7 @@ void handleHTTPrequest(HostAddr from, int iHRThttpRequestedAt) {
 #endif
 #endif
 
+
   if(rc == 0) {
     myGlobals.numSuccessfulRequests[myGlobals.newSock > 0]++;
 
@@ -3631,7 +3634,7 @@ void handleHTTPrequest(HostAddr from, int iHRThttpRequestedAt) {
       gzipBytesSent = 0;
 
     if(!usedFork)
-      logHTTPaccess(200, iHRThttpRequestedAt, gzipBytesSent);
+      logHTTPaccess(200, &httpRequestedAt, gzipBytesSent);
 
   } else if(rc == FLAG_HTTP_INVALID_PAGE) {
     returnHTTPpageNotFound(NULL);

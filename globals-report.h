@@ -77,7 +77,7 @@ extern void printPageTitle(char *text);
 extern void printSectionTitle(char *text);
 extern void printHostsCharacterization(void);
 extern void printFlagedWarning(char *text);
-extern void printHeader(int reportType, int revertOrder, u_int column, 
+extern void printHeader(int reportType, int revertOrder, u_int column,
                         HostsDisplayPolicy showHostsMode,
                         LocalityDisplayPolicy showLocalityMode,
 			char *vlanList, u_short vlanId);
@@ -167,7 +167,7 @@ extern void termAccessLog(void);
 extern void sendHTTPHeaderType(void);
 extern void sendGIFHeaderType(void);
 extern void sendHTTPProtoHeader(void);
-extern void handleHTTPrequest(HostAddr from, int iHRThttpRequestedAt);
+extern void handleHTTPrequest(HostAddr from);
 extern void printHTMLheader(char *title, char *htmlTitle, int headerFlags);
 #ifdef HAVE_OPENSSL
 extern char* printSSLError(int errorId);
@@ -265,7 +265,6 @@ extern void shutdownNtop(void);
 extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printNtopConfigHInfo(int textPrintFlag);
 extern void printHostColorCode(int textPrintFlag, int isInfo);
-extern void printHiresTimersStatusReport(void);
 #ifdef CFG_MULTITHREADED
 extern void printMutexStatusReport(int textPrintFlag);
 #endif

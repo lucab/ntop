@@ -57,7 +57,7 @@ static u_short _headerSize[MAX_DLT_ARRAY];
 extern char _wdir[];
 #endif
 
-static char *_dataFileDirs[]   = { 
+static char *_dataFileDirs[]   = {
 #ifndef EMBEDDED
   ".",
 #endif
@@ -100,7 +100,7 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
 
   if(initPrefsOnly) {
     initSingleGdbm(&myGlobals.prefsFile,        "prefsCache.db",   prefDirectory,  FALSE, NULL);
-    initSingleGdbm(&myGlobals.pwFile,           "ntop_pw.db",      prefDirectory,  FALSE, NULL);    
+    initSingleGdbm(&myGlobals.pwFile,           "ntop_pw.db",      prefDirectory,  FALSE, NULL);
     return;
   }
 
@@ -163,7 +163,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   if (strcmp(myGlobals.program_name, "ntopd") == 0) {
     myGlobals.runningPref.daemonMode = 1;
   }
-  
+
   myGlobals.runningPref.rFileName = DEFAULT_NTOP_TRAFFICDUMP_FILENAME;
   myGlobals.runningPref.devices = DEFAULT_NTOP_DEVICES;
   myGlobals.runningPref.dontTrustMACaddr = DEFAULT_NTOP_DONT_TRUST_MAC_ADDR;
@@ -186,7 +186,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.runningPref.skipVersionCheck = FALSE;
   myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCHECKED;
   myGlobals.checkVersionStatusAgain = 0;
-  
+
 #ifndef WIN32
   myGlobals.runningPref.debugMode = DEFAULT_NTOP_DEBUG_MODE;
   myGlobals.runningPref.useSyslog = DEFAULT_NTOP_SYSLOG;
@@ -266,7 +266,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.runningPref.ipv4or6 = DEFAULT_NTOP_FAMILY;
 
   /* Termination flags */
-  myGlobals.capturePackets = FLAG_NTOPSTATE_NOTINIT; 
+  myGlobals.capturePackets = FLAG_NTOPSTATE_NOTINIT;
   myGlobals.endNtop = 0;
 
   myGlobals.dnsSniffCount = 0;
@@ -411,7 +411,7 @@ void initNtopGlobals(int argc, char * argv[]) {
 #endif
 
 #endif /* CFG_MULTITHREADED */
-  
+
   /* NB: Log View is allocated in main.c so it's available for the very 1st traceEvent() */
 
   for (i = 0; i < CONST_NUM_TRANSACTION_ENTRIES; i ++)
@@ -619,13 +619,13 @@ void initNtop(char *devices) {
   if((myGlobals.runningPref.rFileName != NULL) &&
      ((myGlobals.runningPref.localAddresses == NULL) &&
       !myGlobals.runningPref.printFcOnly)) {
-      traceEvent(CONST_TRACE_FATALERROR, 
+      traceEvent(CONST_TRACE_FATALERROR,
                  "-m | local-subnets must be specified when the -f | --traffic-dump-file option is used"
                  "Capture not started");
       myGlobals.capturePackets = FLAG_NTOPSTATE_NOTINIT;
-      return;
+      exit(1);
   }
-  
+
   if(myGlobals.runningPref.currentFilterExpression != NULL)
     parseTrafficFilter();
   else
@@ -658,9 +658,9 @@ void initNtop(char *devices) {
     storePrefsValue("globals.displayPolicy", "0");
   } else {
     myGlobals.hostsDisplayPolicy = atoi(value);
-    
+
     /* Out of range check */
-    if((myGlobals.hostsDisplayPolicy < showAllHosts) 
+    if((myGlobals.hostsDisplayPolicy < showAllHosts)
        || (myGlobals.hostsDisplayPolicy > showOnlyRemoteHosts))
       myGlobals.hostsDisplayPolicy = showAllHosts;
   }
@@ -670,9 +670,9 @@ void initNtop(char *devices) {
     storePrefsValue("globals.localityPolicy", "0");
   } else {
     myGlobals.localityDisplayPolicy = atoi(value);
-    
+
     /* Out of range check */
-    if((myGlobals.localityDisplayPolicy < showSentReceived) 
+    if((myGlobals.localityDisplayPolicy < showSentReceived)
        || (myGlobals.localityDisplayPolicy > showOnlyReceived))
       myGlobals.localityDisplayPolicy = showSentReceived;
   }

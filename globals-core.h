@@ -41,8 +41,8 @@ extern struct in6_addr _in6addr_linklocal_allnodes;
 #define accessAddrResMutex(a) if(myGlobals.runningPref.numericFlag == 0) accessMutex(&myGlobals.addressResolutionMutex,a)
 #define releaseAddrResMutex() if(myGlobals.runningPref.numericFlag == 0) releaseMutex(&myGlobals.addressResolutionMutex)
 #else
-#define accessAddrResMutex(a) 
-#define releaseAddrResMutex() 
+#define accessAddrResMutex(a)
+#define releaseAddrResMutex()
 #endif
 
 #ifdef HAVE_LIBWRAP
@@ -101,12 +101,6 @@ extern void unescape_url(char *url);
 extern void revertSlash(char *str, int mode);
 extern void revertDoubleColumn(char *str);
 extern void checkUserIdentity(int userSpecified);
-extern long timeval_subtractl(struct timeval x, struct timeval y);
-extern float timeval_subtract(struct timeval x, struct timeval y);
-extern int hiresIntervalTimerAlloc(char *name);
-extern float hiresIntervalTimerStopAbs(int iHRT);
-extern Counter hiresIntervalTimerElapsed_us(int i);
-extern float hiresIntervalTimerElapsed_s(int i);
 
 /****** function declarations ***** */
 
@@ -133,7 +127,7 @@ extern char* etheraddr_string(const u_char *ep, char *buf);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
                                char *fdst);
-extern u_int16_t handleDNSpacket(const u_char *ipPtr, 
+extern u_int16_t handleDNSpacket(const u_char *ipPtr,
                                  DNSHostInfo *hostPtr, short length,
                                  short *isRequest, short *positiveReply);
 extern void checkSpoofing(HostTraffic *el, int actualDeviceId);
@@ -222,7 +216,7 @@ extern void termLeaks(void);
 extern void resetLeaks(void);
 
 #ifndef MTRACE
-#ifdef MEMORY_DEBUG 
+#ifdef MEMORY_DEBUG
 #define gdbm_firstkey(a)     ntop_gdbm_firstkey(a, __FILE__, __LINE__)
 #define gdbm_nextkey(a, b)   ntop_gdbm_nextkey(a, b, __FILE__, __LINE__)
 #define gdbm_fetch(a, b)     ntop_gdbm_fetch(a, b, __FILE__, __LINE__)
@@ -389,7 +383,7 @@ extern void initUserPrefs(UserPref *pref);
 /* util.c */
 extern void setEmptySerial(HostSerial *a);
 extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
-			       u_short *numNetworks, char *localAddresses, 
+			       u_short *numNetworks, char *localAddresses,
 			       int localAddressesLen, int flagWhat);
 extern void handleFlowsSpecs(void);
 extern void initPassiveSessions(void);
@@ -506,7 +500,7 @@ extern time_t getTimeMapping(u_int16_t transactionId,
                              struct timeval theTime);
 extern void traceEvent(int eventTraceLevel, char* file,
                        int line, char * format, ...)
-     __attribute__ ((format (printf, 4, 5))); 
+     __attribute__ ((format (printf, 4, 5)));
      extern char *_strncpy(char *dest, const char *src, size_t n);
 #ifndef HAVE_LOCALTIME_R
 extern struct tm *localtime_r(const time_t *t, struct tm *tp);
@@ -553,16 +547,16 @@ extern unsigned short addrget(HostAddr *Haddr,void *addr, int *family , int *siz
 extern unsigned short addrput(int family, HostAddr *dst, void *src);
 extern unsigned short addrnull(HostAddr *addr);
 extern unsigned short addrfull(HostAddr *addr);
-extern unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, 
+extern unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs,
 				   int size);
-extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, 
+extern unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr,
 				 int sport, int dport);
-extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr, 
+extern u_int16_t computeTransId(HostAddr *srcAddr, HostAddr *dstAddr,
 				int sport, int dport);
 #ifdef MAKE_WITH_I18N
 char *i18n_xvert_locale2common(const char *input);
 char *i18n_xvert_acceptlanguage2common(const char *input);
-#endif /* MAKE_WITH_I18N */ 
+#endif /* MAKE_WITH_I18N */
 
 #ifndef HAVE_PCAP_OPEN_DEAD
 extern pcap_t *pcap_open_dead(int linktype, int snaplen);
@@ -630,10 +624,11 @@ extern void freeargv(char **argv);
 extern void handleWhiteBlackListAddresses(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
 					  u_short *numNets, char* outAddresses,
 					  int outAddressesLen);
-extern unsigned short isOKtoSave(u_int32_t addr, 
-				 u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], 
+extern unsigned short isOKtoSave(u_int32_t addr,
+				 u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3],
 				 u_int32_t blackNetworks[MAX_NUM_NETWORKS][3],
 				 u_short numWhiteNets, u_short numBlackNets);
+extern float timeval_subtract(struct timeval x, struct timeval y);
 extern void freePortsUsage(PortUsage *ports);
 extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
 
@@ -662,7 +657,7 @@ extern IPSession* handleSession(const struct pcap_pkthdr *h,
                                 HostTraffic *srcHost, u_short sport,
                                 HostTraffic *dstHost, u_short dport,
                                 u_int length, struct tcphdr *tp,
-                                u_int tcpDataLength, u_char* packetData, 
+                                u_int tcpDataLength, u_char* packetData,
                                 int actualDeviceId);
 
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
@@ -716,7 +711,7 @@ extern int h_errno; /* netdb.h */
 #endif
 
 #ifndef BufferTooSmall
-#define BufferTooSmall(buf, len) traceEvent(CONST_TRACE_ERROR, "Buffer [buffer len=%d] too small @ %s:%d", len,  __FILE__,__LINE__) 
+#define BufferTooSmall(buf, len) traceEvent(CONST_TRACE_ERROR, "Buffer [buffer len=%d] too small @ %s:%d", len,  __FILE__,__LINE__)
 #endif
 
 #ifdef WIN32
@@ -894,12 +889,12 @@ int getdomainname(char *name, size_t len);
 #endif
 
 
-/* ********************************************************** 
+/* **********************************************************
    Used in all the prints flowing from printNtopConfigInfo...
    ********************************************************** */
 #define texthtml(a, b) (textPrintFlag == TRUE ? a : b)
 
-/* ********************************************************** 
+/* **********************************************************
    invoke our sched_yield routine
    ********************************************************** */
 #if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
@@ -909,57 +904,5 @@ int getdomainname(char *name, size_t len);
 /* Stringification */
 #define xstr(s) str(s)
 #define str(s) #s
-
-/* **********************************************************
-   hi res timing tools
-   (except for the one that returns a value we use inline macros for speed!
-   ********************************************************** */
-
-#define hiresIntervalTimerClear(i) \
- if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) { \
-   myGlobals.hiresTimers[i].count = 0; \
-   myGlobals.hiresTimers[i].usElapsed = 0; \
-   memset(&(myGlobals.hiresTimers[i].startTm), 0, sizeof(struct timeval)); \
- }
-
-#define hiresIntervalTimerFree(i) \
- if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) { \
-   accessMutex(&myGlobals.hiresTimerAllocMutex, "free"); \
-   if(myGlobals.hiresTimers[i].name != NULL) free(myGlobals.hiresTimers[i].name); \
-   hiresIntervalTimerClear(i); \
-   releaseMutex(&myGlobals.hiresTimerAllocMutex); \
-   i = -1; \
- }
-
-#define hiresIntervalTimerStart(i) \
- if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) { \
-   gettimeofday(&(myGlobals.hiresTimers[i].startTm), NULL); \
- }
-
-#define hiresIntervalTimerStartDup(i, j) \
- if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS) && (j>=0) && (j<MAX_INTERNALTIMEINTERVALS)) { \
-   memmove(&(myGlobals.hiresTimers[i].startTm), &(myGlobals.hiresTimers[i].startTm), sizeof(struct timeval)); \
- }
-
-#define hiresIntervalTimerStopIncr(i) \
- if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) { \
-   struct timeval hiresEndTm; \
-   gettimeofday(&hiresEndTm, NULL); \
-   myGlobals.hiresTimers[i].count++; \
-   myGlobals.hiresTimers[i].usElapsed += timeval_subtractl(hiresEndTm, (myGlobals.hiresTimers[i].startTm)); \
- }
-
-#define hiresIntervalTimerStats(i, t, what) \
- if((i>=0) && (i<MAX_INTERNALTIMEINTERVALS)) { \
-    if(myGlobals.hiresTimers[i].count > 0) \
-      traceEvent(CONST_TRACE_INFO, \
-                 "STATS: %20s %6.2fus per %s (%llu %s(s), %lluus total)", \
-                 t, \
-                 (float)myGlobals.hiresTimers[i].usElapsed / (float)myGlobals.hiresTimers[i].count, \
-                 what, \
-                 myGlobals.hiresTimers[i].count, \
-                 what, \
-                 myGlobals.hiresTimers[i].usElapsed); \
- }
 
 #endif /* _GLOBALS_CORE_H */

@@ -234,7 +234,7 @@ static void initIPCountryTable(void) {
       if(fd != NULL) {
           char *strtokState, *cc, *ip, *prefix;
           int numRead=0;
-          
+
           while(readInputFile(fd,
                               "IP2CC",
                               FALSE,
@@ -245,12 +245,12 @@ static void initIPCountryTable(void) {
               if((cc=strtok_r(buf, ":", &strtokState))==NULL)       continue;
               if((ip=strtok_r(NULL, "/", &strtokState))==NULL)      continue;
               if((prefix=strtok_r(NULL, "\n", &strtokState))==NULL) continue;
-              
+
               strtolower(cc);
-              
+
               addNodeInternal(xaton(ip), atoi(prefix), cc, 0);
           }
-          
+
           myGlobals.ipCountryCount += numRead;
       } else {
           traceEvent(CONST_TRACE_WARNING,
@@ -265,10 +265,10 @@ static void initIPCountryTable(void) {
 
 void createDeviceIpProtosList(int devIdx) {
   size_t len = (size_t)myGlobals.numIpProtosList*sizeof(TrafficCounter);
-  
+
   if(len > 0) {
 
-    if(myGlobals.device[devIdx].ipProtosList != NULL) 
+    if(myGlobals.device[devIdx].ipProtosList != NULL)
       free(myGlobals.device[devIdx].ipProtosList);
     if((myGlobals.device[devIdx].ipProtosList = (TrafficCounter*)malloc(len)) == NULL)
       return;
@@ -295,8 +295,8 @@ void resetDevice(int devIdx) {
     ptr = calloc(CONST_HASH_INITIAL_SIZE, sizeof(HostTraffic*));
     myGlobals.device[devIdx].hash_hostTraffic = ptr;
   }
-   
-  memset(myGlobals.device[devIdx].hash_hostTraffic, 0, len); 
+
+  memset(myGlobals.device[devIdx].hash_hostTraffic, 0, len);
 
   resetTrafficCounter(&myGlobals.device[devIdx].receivedPkts);
   resetTrafficCounter(&myGlobals.device[devIdx].droppedPkts);
@@ -404,9 +404,9 @@ void resetDevice(int devIdx) {
     myGlobals.device[devIdx].ipProtoStats = (SimpleProtoTrafficInfo*)malloc(len);
 
   memset(myGlobals.device[devIdx].ipProtoStats, 0, len);
-  
+
   if(myGlobals.device[devIdx].ipProtosList != NULL) {
-    free(myGlobals.device[devIdx].ipProtosList); 
+    free(myGlobals.device[devIdx].ipProtosList);
     myGlobals.device[devIdx].ipProtosList = NULL;
   }
 
@@ -494,7 +494,7 @@ void initCounters(void) {
   }
   else {
       myGlobals.initialSniffTime = 0; /* We set the start when first pkt is
-                                       * read */ 
+                                       * read */
   }
 
 /* TODO why here AND in globals-core.c? */
@@ -535,14 +535,14 @@ void initCounters(void) {
                            &compressedFormat);
       if(fd != NULL) {
           char *strtokState, *as, *ip, *prefix;
-          
+
           memset(&buf, 0, sizeof(buf));
-          
+
           myGlobals.asHead = malloc(sizeof(IPNode));
           memset(myGlobals.asHead, 0, sizeof(IPNode));
           myGlobals.asHead->node.as = 0;
           myGlobals.asMem += sizeof(IPNode);
-          
+
           while(readInputFile(fd,
                               "ASN",
                               FALSE,
@@ -550,11 +550,11 @@ void initCounters(void) {
                               25000,
                               buf, sizeof(buf),
                               &numRead) == 0) {
-              
+
               if((as = strtok_r(buf, ":", &strtokState)) == NULL)  continue;
               if((ip = strtok_r(NULL, "/", &strtokState)) == NULL)  continue;
               if((prefix = strtok_r(NULL, "\n", &strtokState)) == NULL)  continue;
-              
+
               addNodeInternal(xaton(ip), atoi(prefix), NULL, atoi(as));
               myGlobals.asCount++;
           }
@@ -622,7 +622,7 @@ void initCounters(void) {
       if( (dirList[iLang]->d_type == DT_DIR) ||
 	  (dirList[iLang]->d_type == DT_LNK) ) {
 	tmpStr = i18n_xvert_locale2common(dirList[iLang]->d_name);
-	
+
 	if(!strcmp(myGlobals.defaultLanguage, tmpStr)) {
 	  /* skip default language */
 	  traceEvent(CONST_TRACE_NOISY,
@@ -742,9 +742,6 @@ void initCounters(void) {
   myGlobals.gdVersionGuessValue = strdup(gdVersionGuess());
   if(myGlobals.gdVersionGuessValue != NULL)
     traceEvent(CONST_TRACE_INFO, "GDVERCHK: ... as %s", myGlobals.gdVersionGuessValue);
-
-  for(i=0; i<MAX_INTERNALTIMEINTERVALS; i++)
-    hiresIntervalTimerClear(i);
 
 }
 
@@ -914,12 +911,12 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 	       gdbm_strerror(gdbm_errno)
 #endif
 	       );
-       
+
     if(directory == NULL)
       traceEvent(CONST_TRACE_INFO, "Possible solution: please use '-P <directory>'");
     else {
       traceEvent(CONST_TRACE_INFO, "1. Is another instance of ntop running?");
-      traceEvent(CONST_TRACE_INFO, "2. Make sure that the use you specified can write in the target directory"); 
+      traceEvent(CONST_TRACE_INFO, "2. Make sure that the use you specified can write in the target directory");
     }
     exit(-1);
   }
@@ -955,7 +952,6 @@ void reinitMutexes (void) {
   createMutex(&myGlobals.packetProcessMutex);
   createMutex(&myGlobals.hostsHashMutex);
   createMutex(&myGlobals.securityItemsMutex);
-  createMutex(&myGlobals.hiresTimerAllocMutex);
 
  #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.runningPref.numericFlag == 0) {
@@ -975,7 +971,7 @@ void reinitMutexes (void) {
 void initThreads(void) {
   int i;
 
-#ifdef CFG_MULTITHREADED  
+#ifdef CFG_MULTITHREADED
   if (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) {
       createThread(&myGlobals.dequeueThreadId, dequeuePacket, NULL);
       traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for network packet analyser",
@@ -1059,9 +1055,9 @@ void addDevice(char* deviceName, char* deviceDescr) {
   char myName[80], *column = NULL;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
 
-  
+
   ebuf[0] = '\0', myName[0] = '\0';
-  
+
   if(deviceName == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Attempt to add a NULL device");
     return;
@@ -1124,7 +1120,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 #ifdef WIN32
       if(strncmp(myGlobals.device[deviceId].name, "rpcap:", 6) != 0) {
 
-	/* 
+	/*
 	   The code below has been disabled because it seems
 	   that with some network adapters, although there are no
 	   errors at all, the stack memory is corrupted and this
@@ -1149,6 +1145,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 #else
     if(setuid(0) == -1) {
       traceEvent(CONST_TRACE_FATALERROR, "Unable to become root");
+      exit(1);
     }
 #endif
 
@@ -1175,7 +1172,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
 		     "that ntop must be started as root");
 	traceEvent(CONST_TRACE_INFO, "Please correct the problem or select "
 		   "a different interface using the -i flag");
-	return;
+	    exit(1);
       }
 
       if(myGlobals.runningPref.pcapLog != NULL) {
@@ -1307,7 +1304,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     }
 
     /* Allocate FC Traffic Matrices */
-#ifdef NOT_YET    
+#ifdef NOT_YET
     if (!myGlobals.runningPref.printIpOnly) {
         memlen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
         myGlobals.device[deviceId].fcTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
@@ -1323,7 +1320,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
         myGlobals.device[deviceId].fcTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
                                                                                        myGlobals.device[deviceId].numHosts);
     }
-#endif    
+#endif
   }
 
   /* ********************************************* */
@@ -1350,21 +1347,21 @@ void addDevice(char* deviceName, char* deviceDescr) {
     if(myGlobals.device[i].name != NULL) {
       int hasSpace;
 
-      if(i>0) 
+      if(i>0)
         strncat(workDevices, ", ", (sizeof(workDevices) - strlen(workDevices) - 1));
 
       if(myGlobals.device[i].name[strlen(myGlobals.device[i].name)-1] == ' ')
 	hasSpace = 1;
       else
 	hasSpace = 0;
-      
+
       strncat(workDevices,
               myGlobals.device[i].name,
               (sizeof(workDevices) - strlen(workDevices) - hasSpace));
     }
   }
-  
-  if(myGlobals.runningPref.devices != NULL) 
+
+  if(myGlobals.runningPref.devices != NULL)
     free(myGlobals.runningPref.devices);
 
   myGlobals.runningPref.devices = strdup(workDevices);
@@ -1378,7 +1375,7 @@ void addDevice(char* deviceName, char* deviceDescr) {
     int k;
     char tmpDeviceName[64];
     struct in_addr myLocalHostAddress;
-    
+
 
     if(myGlobals.numDevices < MAX_NUM_DEVICES) {
       traceEvent(CONST_TRACE_INFO, "Checking %s for additional devices", myGlobals.device[deviceId].name);
@@ -1450,16 +1447,16 @@ void initDevices(char* devices) {
     createDummyInterface("none");
     myGlobals.device[0].dummyDevice = 0;
     myGlobals.device[0].pcapPtr  = pcap_open_offline(myGlobals.runningPref.rFileName, ebuf);
-    
+
     if(myGlobals.device[0].pcapPtr == NULL) {
-      traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(%s): '%s'", 
+      traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(%s): '%s'",
 		 myGlobals.runningPref.rFileName, ebuf);
       return;
     } else {
       if(myGlobals.device[0].humanFriendlyName != NULL) free(myGlobals.device[0].humanFriendlyName);
       myGlobals.device[0].humanFriendlyName = strdup(myGlobals.runningPref.rFileName);
     }
-    
+
     resetStats(0);
     initDeviceDatalink(0);
 
@@ -1472,11 +1469,11 @@ void initDevices(char* devices) {
                   myGlobals.device[0].name);
 
         myGlobals.device[0].pcapErrDumper = pcap_dump_open(myGlobals.device[0].pcapPtr, myName);
-        
+
         if(myGlobals.device[0].pcapErrDumper == NULL)
             traceEvent(CONST_TRACE_ALWAYSDISPLAY, "pcap_dump_open() for suspicious packets: '%s'", ebuf);
     }
-  
+
     free(myGlobals.device[0].name);
     myGlobals.device[0].name = strdup("pcap-file");
     myGlobals.numDevices = 1;
@@ -1515,9 +1512,9 @@ void initDevices(char* devices) {
 
 	  while(descr[strlen(descr)-1] == ' ')
 	    descr[strlen(descr)-1] = '\0';
-	  
+
 	  safe_snprintf(__FILE__, __LINE__, intDescr[ifIdx], MAX_IF_NAME, "%s_%d", descr, ifIdx);
-	} else 
+	} else
 	  safe_snprintf(__FILE__, __LINE__, intDescr[ifIdx], MAX_IF_NAME, "%s", devpointer->name);
 
 	strncpy(intNames[ifIdx], devpointer->name, MAX_IF_NAME);
@@ -1574,7 +1571,7 @@ void initDevices(char* devices) {
  	for(intfc=0; intfc<myGlobals.numDevices; intfc++) {
  	  if(myGlobals.device[intfc].name && (strcmp(myGlobals.device[intfc].name, tmpDev) == 0)) {
  	    found = 1;
-            traceEvent(CONST_TRACE_INFO, 
+            traceEvent(CONST_TRACE_INFO,
                        "NOTE: Virual device '%s' is already implied from a prior base device",
                        requestedDev);
  	    break;
@@ -1587,7 +1584,7 @@ void initDevices(char* devices) {
  	  continue;
  	}
 
-        traceEvent(CONST_TRACE_INFO, "Using base device %s in place of requested %s", 
+        traceEvent(CONST_TRACE_INFO, "Using base device %s in place of requested %s",
                    tmpDev, requestedDev);
 
         free(requestedDev);
@@ -1625,7 +1622,7 @@ void initDevices(char* devices) {
       if(found)
         traceEvent(CONST_TRACE_WARNING,
                    "Device '%s' is already specified/implied - ignoring it", tmpDev);
-      else 
+      else
         addDevice(tmpDev, tmpDescr == NULL ? tmpDev : tmpDescr);
 
       tmpDev = strtok_r(NULL, ",", &strtokState);
@@ -1714,7 +1711,7 @@ void initDeviceDatalink(int deviceId) {
       traceEvent(CONST_TRACE_WARNING, "DLT: Device %d [%s] MTU value unknown",
                  deviceId,
                  myGlobals.device[deviceId].name);
-      if(myGlobals.device[deviceId].datalink != DLT_RAW) 
+      if(myGlobals.device[deviceId].datalink != DLT_RAW)
         traceEvent(CONST_TRACE_NOISY, "DLT: Please report your DLT and MTU values (e.g. ifconfig) to the ntop-dev list");
       traceEvent(CONST_TRACE_WARNING, "DLT: Processing continues OK");
     }
@@ -1814,7 +1811,7 @@ void startSniffer(void) {
       return;
 
   myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;
-  
+
   for(i=0; i<myGlobals.numDevices; i++)
     if((!myGlobals.device[i].virtualDevice)
        && (!myGlobals.device[i].dummyDevice)
@@ -1839,7 +1836,7 @@ u_int createDummyInterface(char *ifName) {
 
   mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
   tmpDevice = (NtopInterface*)malloc(mallocLen);
-  
+
   if(tmpDevice == NULL)
     return(-1);
 
@@ -1874,7 +1871,7 @@ u_int createDummyInterface(char *ifName) {
     myGlobals.otherHostEntry->next = NULL;
   }
 
-#ifdef NOT_YET  
+#ifdef NOT_YET
   mallocLen = sizeof(TrafficEntry*)*myGlobals.device[deviceId].numHosts*myGlobals.device[deviceId].numHosts;
   myGlobals.device[deviceId].fcTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[deviceId].numHosts
                                                                       *myGlobals.device[deviceId].numHosts,
@@ -1883,7 +1880,7 @@ u_int createDummyInterface(char *ifName) {
       traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTraffixMatrix failed", mallocLen);
       exit(-1);
   }
-  
+
   mallocLen = sizeof(struct hostTraffic*)*myGlobals.device[deviceId].numHosts;
   myGlobals.device[deviceId].fcTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
                                                                                  myGlobals.device[deviceId].numHosts);
@@ -1892,7 +1889,7 @@ u_int createDummyInterface(char *ifName) {
       traceEvent(CONST_TRACE_FATALERROR, "Memory allocation (%d bytes) for fcTrafficMatrixHosts failed", mallocLen);
       exit(-1);
   }
-#endif 
+#endif
 
   if(myGlobals.runningPref.enableSessionHandling) {
     int len = sizeof(IPSession*)*MAX_TOT_NUM_SESSIONS;
