@@ -3400,12 +3400,15 @@ u_int numActiveSenders(int deviceId) {
 
 # define SWAP_FLAGS(ch1, ch2)
 
+#ifndef DARWIN
 char *optarg = NULL;
 int optind = 1;
-int __getopt_initialized = 0;
-static char *nextchar;
 int opterr = 1;
 int optopt = '?';
+#endif
+int __getopt_initialized = 0;
+static char *nextchar;
+
 
 static enum
 {
