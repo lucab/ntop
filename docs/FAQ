@@ -52,6 +52,18 @@ Post 2.3 release entries will have a author/date stamp, at the end:
 Q. Where can I find ntop?
 A. The official website can be found at http://www.ntop.org/.
 
+Q. Where do I get the source?
+A. SourceForge -- http://sourceforge.net/projects/ntop/
+
+   There is also a cvs (current development) maintained at cvs.ntop.org.
+   (instructions are on the download page of www.ntop.org)
+
+     DO NOT
+          (under ANY circumstances)
+     USE THE SOURCE FILES FROM http://snapshot.ntop.org!!!!!
+
+     They are broken, incomplete and WILL NOT WORK.
+
 
 Q. What is ntop?
 A. ntop is an open source network top - it monitors a network and collects
