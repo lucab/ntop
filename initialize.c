@@ -329,10 +329,10 @@ void resetStats(void) {
     resetDevice(i);
   }
   
-  for(i=0; i<device[i].numTotSessions; i++)
-    if(device[i].tcpSession[i] != NULL) {
-      free(device[i].tcpSession[i]);
-      device[i].tcpSession[i] = NULL;
+  for(j=0; i<device[i].numTotSessions; i++)
+    if(device[i].tcpSession[j] != NULL) {
+      free(device[i].tcpSession[j]);
+      device[i].tcpSession[j] = NULL;
     }
 
   device[i].numTcpSessions = 0;
