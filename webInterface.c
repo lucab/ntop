@@ -316,7 +316,7 @@ char* makeHostLink(HostTraffic *el, short mode,
     dynIp = "&nbsp;<IMG ALT=\"DHCP Client\" SRC=/bulb.gif BORDER=0>&nbsp;"; 
   else { 
     if(isDHCPServer(el))
-      dynIp = "&nbsp;<IMG ALT=\"DHCP Server\" SRC=/wheel.gif BORDER=0>&nbsp;"; 
+      dynIp = "&nbsp;<IMG ALT=\"DHCP Server\" SRC=/antenna.gif BORDER=0>&nbsp;"; 
     else
       dynIp = ""; 
   }
@@ -445,7 +445,7 @@ char* getCountryIconURL(char* domainName) {
     }
     
     if(snprintf(flagBuf, sizeof(flagBuf), 
-		"<IMG ALT=\"Flag for domain %s\"  ALIGN=MIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
+		"<IMG ALT=\"Flag for domain %s\" ALIGN=MIDDLE SRC=\"/statsicons/flags/%s.gif\" BORDER=0>",
 		domainName, domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     return(flagBuf);

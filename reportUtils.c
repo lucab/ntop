@@ -2727,7 +2727,7 @@ void checkHostProvidedServices(HostTraffic *el) {
 #endif
 
     if(isDHCPClient(el))          sendString("BOOTP/DHCP Client&nbsp;<IMG ALT=\"DHCP Client\" SRC=/bulb.gif BORDER=0><br>");
-    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=/wheel.gif BORDER=0>&nbsp;<br>");
+    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=/antenna.gif BORDER=0>&nbsp;<br>");
     sendString("</TD></TR>");
   }
 }

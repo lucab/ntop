@@ -450,9 +450,6 @@ void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
     daemonize();
 #endif
 
-  if(numIpProtosToMonitor == 0)
-    addDefaultProtocols();
-
 #ifndef MULTITHREADED
   if(logTimeout != 0)
     nextLogTime = time(NULL) + logTimeout;

@@ -628,6 +628,93 @@ void pktSizeDistribPie(void) {
   sendGraphFile(fileName);
 }
 
+/* ********************************** */
+
+void pktTTLDistribPie(void) {
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  float p[8];
+  char	*lbl[] = { "", "", "", "", "", "", "" };
+  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
+  FILE *fd;
+
+  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo32 > 0) {
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo32)/
+      (float)device[actualReportDeviceId].ipPkts;
+    lbl[num++] = "< 32";
+  };
+
+  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo64 > 0) {
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo64)/
+      (float)device[actualReportDeviceId].ipPkts;
+    lbl[num++] = "< 64";
+  };
+
+  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo96 > 0) {
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo96)/
+      (float)device[actualReportDeviceId].ipPkts;
+    lbl[num++] = "< 96";
+  };
+
+  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo128 > 0) {
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo128)/
+      (float)device[actualReportDeviceId].ipPkts;
+    lbl[num++] = "< 128";
+  };
+
+  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo160 > 0) {
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo160)/
+      (float)device[actualReportDeviceId].ipPkts;
+    lbl[num++] = "< 160";
+  };
+
+  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo192 > 0) {
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo192)/
+      (float)device[actualReportDeviceId].ipPkts;
+    lbl[num++] = "< 192";
+  };
+
+ if(device[actualReportDeviceId].rcvdPktTTLStats.upTo224 > 0) {
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo224)/
+      (float)device[actualReportDeviceId].ipPkts;
+    lbl[num++] = "< 224";
+  };
+
+  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo255 > 0) {
+    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo255)/
+      (float)device[actualReportDeviceId].ipPkts;
+    lbl[num++] = "<= 255";
+  };
+
+#ifdef MULTITHREADED
+  accessMutex(&graphMutex, "pktSizeDistrib");
+#endif
+
+  fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+
+  GDCPIE_LineColor      = 0x000000L;
+  GDCPIE_explode        = expl;    /* default: NULL - no explosion */
+  GDCPIE_Color          = clr;
+  GDCPIE_BGColor        = 0xFFFFFFL;
+  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
+  GDCPIE_percent_labels = GDCPIE_PCT_NONE;
+
+  GDC_out_pie(250,			/* width */
+	      250,			/* height */
+	      fd,			/* open file pointer */
+	      GDC_3DPIE,		/* or GDC_2DPIE */
+	      num,			/* number of slices */
+	      lbl,			/* slice labels (unlike out_png(), can be NULL */
+	      p);			/* data array */
+
+  fclose(fd);
+
+#ifdef MULTITHREADED
+  releaseMutex(&graphMutex);
+#endif
+
+  sendGraphFile(fileName);
+}
+
 /* ************************ */
 
 void ipProtoDistribPie(void) {

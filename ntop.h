@@ -710,6 +710,13 @@ typedef struct packetStats {
 
 /* *********************** */
 
+typedef struct ttlStats {
+  TrafficCounter upTo32, upTo64, upTo96;
+  TrafficCounter upTo128, upTo160, upTo192, upTo224, upTo255;
+} TTLstats;
+
+/* *********************** */
+
 typedef struct simpleProtoTrafficInfo {
   TrafficCounter local, local2remote, remote, remote2local;
   TrafficCounter lastLocal, lastLocal2remote, lastRem, lastRem2local;
@@ -865,7 +872,7 @@ typedef struct ntopInterface {
   TrafficCounter ethernetPkts;   /* # of Ethernet pkts captured by the application */
   TrafficCounter broadcastPkts;  /* # of broadcast pkts captured by the application */
   TrafficCounter multicastPkts;  /* # of multicast pkts captured by the application */
-
+  TrafficCounter ipPkts;         /* # of IP pkts captured by the application */
   /*
    * The bytes section
    */
@@ -908,6 +915,7 @@ typedef struct ntopInterface {
   TrafficCounter lastNonIpBytes;
 
   PacketStats rcvdPktStats; /* statistics from start of the run to time of call */
+  TTLstats    rcvdPktTTLStats;
 
   float peakThroughput, actualThpt, lastMinThpt, lastFiveMinsThpt;
   float peakPacketThroughput, actualPktsThpt, lastMinPktsThpt, lastFiveMinsPktsThpt;

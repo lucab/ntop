@@ -217,6 +217,7 @@ extern void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFragmentDistrib(HostTraffic *theHost, short dataSent);
 extern void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent);
 extern void pktSizeDistribPie(void);
+extern void pktTTLDistribPie(void);
 extern void ipProtoDistribPie(void);
 extern void interfaceTrafficPie(void);
 extern void pktCastDistribPie(void);

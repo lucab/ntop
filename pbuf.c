@@ -2729,6 +2729,19 @@ void updateHostName(HostTraffic *el) {
 
 /* ************************************ */
 
+static void updateDevicePacketTTLStats(u_int ttl, int actualDeviceId) {
+  if(ttl < 32) device[actualDeviceId].rcvdPktTTLStats.upTo32++;
+  else if(ttl < 64) device[actualDeviceId].rcvdPktTTLStats.upTo64++;
+  else if(ttl < 96) device[actualDeviceId].rcvdPktTTLStats.upTo96++;
+  else if(ttl < 128) device[actualDeviceId].rcvdPktTTLStats.upTo128++;
+  else if(ttl < 160) device[actualDeviceId].rcvdPktTTLStats.upTo160++;
+  else if(ttl < 192) device[actualDeviceId].rcvdPktTTLStats.upTo192++;
+  else if(ttl < 224) device[actualDeviceId].rcvdPktTTLStats.upTo224++;
+  else device[actualDeviceId].rcvdPktTTLStats.upTo255++;
+}
+
+/* ************************************ */
+
 static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
 			 u_int length,
@@ -2749,7 +2762,7 @@ static void processIpPkt(const u_char *bp,
   struct timeval tvstrct;
   u_char *theData;
 
-  device[actualDeviceId].ipBytes += length;
+  device[actualDeviceId].ipBytes += length; device[actualDeviceId].ipPkts++;
 
   /* Need to copy this over in case bp isn't properly aligned.
    * This occurs on SunOS 4.x at least.
@@ -2867,6 +2880,8 @@ static void processIpPkt(const u_char *bp,
     fflush(stdout);
   }
 #endif
+  
+  updateDevicePacketTTLStats(ip.ip_ttl, actualDeviceId);
 
   if(ip.ip_ttl != 255) {
     if((srcHost->minTTL == 0) || (ip.ip_ttl < srcHost->minTTL)) srcHost->minTTL = ip.ip_ttl;

@@ -268,8 +268,6 @@ static int readHTTPheader(char* theRequestedURL,
 		  && (strncasecmp(lineStr, "Accept-Encoding: ", 17) == 0)) {
 	  if(strstr(&lineStr[17], "gzip"))
 	    acceptGzEncoding = 1;
-	  else
-	    acceptGzEncoding = 0;
 #endif
 	} else if((idxChar >= 16)
 		  && (strncasecmp(lineStr, "Content-Length: ", 16) == 0)) {
@@ -1548,6 +1546,14 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       } else {
 	printNoDataYet();
       }
+    } else if(strncmp(pageName, "pktTTLDistribPie", strlen("pktTTLDistribPie")) == 0) {
+      if(device[actualReportDeviceId].ipPkts > 0) {
+	sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
+	pktTTLDistribPie();
+	printTrailer=0;
+      } else {
+	printNoDataYet();
+      }
     } else if(strncmp(pageName, "ipProtoDistribPie", strlen("ipProtoDistribPie")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       ipProtoDistribPie();
@@ -1847,6 +1853,7 @@ void handleHTTPrequest(struct in_addr from) {
 #ifdef HAVE_ZLIB
   compressFile = 0;
   compressFileFd = NULL;
+  acceptGzEncoding = 0;
 #endif
 
  postLen = readHTTPheader(requestedURL, sizeof(requestedURL), pw, sizeof(pw));
