@@ -647,6 +647,7 @@ typedef unsigned long long TrafficCounter;
 
 
 /* ************* Types Definition ********************* */
+
 struct hostTraffic; /* IP Session global information */
 
 /* *********************** */
@@ -661,18 +662,63 @@ typedef struct thptEntry {
   TrafficCounter topRcvdTraffic, secondRcvdTraffic, thirdRcvdTraffic;
 } ThptEntry;
 
-typedef struct packetStats
-{
+/* *********************** */
+
+typedef struct packetStats {
   TrafficCounter upTo64, upTo128, upTo256;
   TrafficCounter upTo512, upTo1024, upTo1518, above1518;
   TrafficCounter shortest, longest;
   TrafficCounter badChecksum, tooLong;
 } PacketStats;
 
+/* *********************** */
+
 typedef struct simpleProtoTrafficInfo {
   TrafficCounter local, local2remote, remote, remote2local;
   TrafficCounter lastLocal, lastLocal2remote, lastRemote, lastRemote2local;
 } SimpleProtoTrafficInfo;
+
+/* *********************** */
+
+typedef struct securityProbes {
+  TrafficCounter synPkts, rstPkts, rstAckPkts, synFinPkts, finPushUrgPkts, nullPkts;
+  TrafficCounter ackScanSent, ackScanRcvd;
+  TrafficCounter xmasScanSent, xmasScanRcvd;
+  TrafficCounter finScanSent, finScanRcvd;
+  TrafficCounter nullScanSent, nullScanRcvd;
+  TrafficCounter udpToClosedPortSent, udpToClosedPortRcvd;
+} SecurityProbes;
+
+/* *********************** */
+
+typedef struct usageCounter {
+  TrafficCounter value;
+  u_int peersIndexes[MAX_NUM_CONTACTED_PEERS];
+} UsageCounter;
+
+/* *******************************
+   
+   NOTE
+
+   Do not forget to MAP all the
+   peersIndexes [call mapIdx()]
+
+   ******************************* */
+
+typedef struct securityHostProbes {
+  UsageCounter synPktsSent, rstPktsSent, rstAckPktsSent, 
+               synFinPktsSent, finPushUrgPktsSent, nullPktsSent;
+  UsageCounter synPktsRcvd, rstPktsRcvd, rstAckPktsRcvd, 
+               synFinPktsRcvd, finPushUrgPktsRcvd, nullPktsRcvd;
+  UsageCounter ackScanSent, ackScanRcvd;
+  UsageCounter xmasScanSent, xmasScanRcvd;
+  UsageCounter finScanSent, finScanRcvd;
+  UsageCounter nullScanSent, nullScanRcvd;
+  UsageCounter rejectedTCPConnSent, rejectedTCPConnRcvd;
+  UsageCounter establishedTCPConnSent, establishedTCPConnRcvd;
+  /* ********* */
+  UsageCounter udpToClosedPortSent, udpToClosedPortRcvd;
+} SecurityHostProbes;
 
 /*
  * Interface's flags.
@@ -780,8 +826,8 @@ typedef struct {
 
   SimpleProtoTrafficInfo tcpGlobalTrafficStats, udpGlobalTrafficStats, icmpGlobalTrafficStats;
   SimpleProtoTrafficInfo *ipProtoStats;
-
-  TrafficCounter synPkts, rstPkts, rstAckPkts, synFinPkts, finPushUrgPkts, nullPkts;
+  
+  SecurityProbes securityPkts;
   TrafficCounter numEstablishedTCPConnections; /* = # really established connections */
 
 #ifdef MULTITHREADED
@@ -1401,13 +1447,6 @@ typedef struct atNBPheader {
 
 /* *********************** */
 
-typedef struct usageCounter {
-  TrafficCounter value;
-  u_int peersIndexes[MAX_NUM_CONTACTED_PEERS];
-} UsageCounter;
-
-/* *********************** */
-
 typedef struct serviceStats {
   TrafficCounter numLocalReqSent, numRemoteReqSent;
   TrafficCounter numPositiveReplSent, numNegativeReplSent;
@@ -1537,12 +1576,8 @@ typedef struct hostTraffic
   TrafficCounter tcpReceivedLocally, tcpReceivedFromRemote, udpReceivedLocally,
                  udpReceivedFromRemote, icmpReceived, ospfReceived, igmpReceived;
 
-  /* Interesting TCP Packets */
-  UsageCounter synPktsSent, rstPktsSent, rstAckPktsSent, 
-               synFinPktsSent, finPushUrgPktsSent, nullPktsSent;
-  UsageCounter synPktsRcvd, rstPktsRcvd, rstAckPktsRcvd, 
-               synFinPktsRcvd, finPushUrgPktsRcvd, nullPktsRcvd;
-  TrafficCounter numEstablishedTCPConnections;
+  /* Interesting Packets */  
+  SecurityHostProbes securityHostPkts;  
 
   /* non IP */
   IcmpHostInfo    *icmpInfo;

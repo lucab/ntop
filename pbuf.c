@@ -319,18 +319,33 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
 	el->contactedSentPeersIndexes[i] = NO_PEER;
 	el->contactedRcvdPeersIndexes[i] = NO_PEER;
-	el->synPktsSent.peersIndexes[i] = NO_PEER;
-	el->rstAckPktsSent.peersIndexes[i] = NO_PEER;
-	el->rstPktsSent.peersIndexes[i] = NO_PEER;
-	el->synFinPktsSent.peersIndexes[i] = NO_PEER;
-	el->finPushUrgPktsSent.peersIndexes[i] = NO_PEER;
-	el->nullPktsSent.peersIndexes[i] = NO_PEER;
-	el->synPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->rstAckPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->rstPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->synFinPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->finPushUrgPktsRcvd.peersIndexes[i] = NO_PEER;
-	el->nullPktsRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.synPktsSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.rstPktsSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.rstAckPktsSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.synFinPktsSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.finPushUrgPktsSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.nullPktsSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.ackScanSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.xmasScanSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.finScanSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.nullScanSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.rejectedTCPConnSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.establishedTCPConnSent.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.udpToClosedPortSent.peersIndexes[i] = NO_PEER;
+	/* ************* */
+	el->securityHostPkts.synPktsRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.rstAckPktsRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.rstPktsRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.synFinPktsRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.nullPktsRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.ackScanRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.xmasScanRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.finScanRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.nullScanRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.establishedTCPConnRcvd.peersIndexes[i] = NO_PEER;
+	el->securityHostPkts.udpToClosedPortRcvd.peersIndexes[i] = NO_PEER;
       }
       for(i=0; i<MAX_NUM_HOST_ROUTERS; i++) el->contactedRouters[i] = NO_PEER;
 
@@ -1418,14 +1433,14 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  memset(theSession, 0, sizeof(IPSession));
 	  addedNewEntry = 1;
 
-	  if((tp->th_flags & TH_SYN) == TH_SYN) {
+	  if(tp->th_flags == TH_SYN) {
 	    theSession->nwLatency.tv_sec = h->ts.tv_sec;
 	    theSession->nwLatency.tv_usec = h->ts.tv_usec;
 	    theSession->sessionState = STATE_SYN;
-	  } 
-	  
+	  }
+
 #if 0
-	  else if(tp->th_flags & TH_FIN) {
+	  else if(tp->th_flags == TH_FIN) {
 	    theSession->sessionState = STATE_TIMEOUT;
 	  } else {
 	    /*
@@ -1433,10 +1448,32 @@ static void handleSession(const struct pcap_pkthdr *h,
 	      already active when ntop started up
 	    */
 	    theSession->sessionState = STATE_ACTIVE;
-	    srcHost->numEstablishedTCPConnections++,
-	      dstHost->numEstablishedTCPConnections++,
-	      device[actualDeviceId].numEstablishedTCPConnections++;
-		theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
+
+	    /*
+	      ntop has no way to know who started the connection
+	       as the connection already started. Hence we use this simple
+	       heuristic algorithm:
+	       if(sport < dport) {
+  	         sport = server;
+                 srchost = server host;
+               }
+	    */
+	    if(sport > dport) {
+	      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent, dstHostIdx);
+	      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, srcHostIdx);
+	      /* This simulates a connection establishment */
+	      incrementUsageCounter(&srcHost->securityHostPkts.synPktsSent, dstHostIdx);
+	      incrementUsageCounter(&dstHost->securityHostPkts.synPktsRcvd, srcHostIdx);
+	    } else {
+	      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnRcvd, dstHostIdx);
+	      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnSent, srcHostIdx);
+	      /* This simulates a connection establishment */
+	      incrementUsageCounter(&dstHost->securityHostPkts.synPktsSent, srcHostIdx);
+	      incrementUsageCounter(&srcHost->securityHostPkts.synPktsRcvd, dstHostIdx);
+	    }
+
+	    device[actualDeviceId].numEstablishedTCPConnections++;
+	    theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
 	  }
 #endif
 
@@ -1672,7 +1709,6 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  u_int16_t transactionId = (u_int16_t)(srcHost->hostIpAddress.s_addr+
 						3*dstHost->hostIpAddress.s_addr
 						+5*sport+7*dport);
-
 	  /* to be 64bit-proof we have to copy the elements */
 	  tvstrct.tv_sec = h->ts.tv_sec;
 	  tvstrct.tv_usec = h->ts.tv_usec;
@@ -1760,11 +1796,9 @@ static void handleSession(const struct pcap_pkthdr *h,
     printf("\n");
 #endif
 
-    if(((tp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK))
-       && (theSession->sessionState == STATE_SYN))  {
+    if((tp->th_flags == (TH_SYN|TH_ACK)) && (theSession->sessionState == STATE_SYN))  {
       theSession->sessionState = STATE_SYN_ACK ;
-    } else if(((tp->th_flags & TH_ACK) == TH_ACK)
-	       && (theSession->sessionState == STATE_SYN_ACK)) {
+    } else if((tp->th_flags == TH_ACK) && (theSession->sessionState == STATE_SYN_ACK)) {
       theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
       if((h->ts.tv_usec-theSession->nwLatency.tv_usec) < 0) {
@@ -1776,18 +1810,42 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  theSession->nwLatency.tv_sec /= 2;
 	  theSession->nwLatency.tv_usec /= 2;
       theSession->sessionState = STATE_ACTIVE;
-      srcHost->numEstablishedTCPConnections++,
-	dstHost->numEstablishedTCPConnections++,
-	device[actualDeviceId].numEstablishedTCPConnections++;
+
+      incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, srcHostIdx);
+      device[actualDeviceId].numEstablishedTCPConnections++;
     } else if((addedNewEntry == 0)
 	      && ((theSession->sessionState == STATE_SYN)
 		  || (theSession->sessionState == STATE_SYN_ACK))) {
       /* We might have lost a packet so we cannot calculate latency */
       theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
       theSession->sessionState = STATE_ACTIVE;
-      srcHost->numEstablishedTCPConnections++,
-	dstHost->numEstablishedTCPConnections++,
-	device[actualDeviceId].numEstablishedTCPConnections++;
+
+      /*
+	ntop has no way to know who started the connection
+	as the connection already started. Hence we use this simple
+	heuristic algorithm:
+	if(sport < dport) {
+	  sport = server;
+	  srchost = server host;
+	}
+      */
+
+      if(sport > dport) {
+	incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, srcHostIdx);
+	/* This simulates a connection establishment */
+	incrementUsageCounter(&srcHost->securityHostPkts.synPktsSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.synPktsRcvd, srcHostIdx);
+      } else {
+	incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnRcvd, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnSent, srcHostIdx);
+	/* This simulates a connection establishment */
+	incrementUsageCounter(&dstHost->securityHostPkts.synPktsSent, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.synPktsRcvd, dstHostIdx);
+      }
+
+      device[actualDeviceId].numEstablishedTCPConnections++;
     }
 
     /* Let's decode some Napster packets */
@@ -1923,7 +1981,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	printf("Rcvd Duplicated FIN %u\n", fin);
 #endif
       }
-    } else if(tp->th_flags & TH_ACK) {
+    } else if(tp->th_flags == TH_ACK) {
       u_int32_t ack = ntohl(tp->th_ack);
 
       if((ack == theSession->lastAckIdI2R) && (ack == theSession->lastAckIdR2I)) {
@@ -2019,42 +2077,44 @@ static void handleSession(const struct pcap_pkthdr *h,
 
     /* ****************************** */
 
-    if((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK)) {
+    if(tp->th_flags == (TH_RST|TH_ACK)) {
       /* RST|ACK is sent when a connection is refused */
-      incrementUsageCounter(&srcHost->rstAckPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->rstAckPktsRcvd, srcHostIdx);
-      device[actualDeviceId].rstAckPkts++;
-    } else if((tp->th_flags & TH_RST) == TH_RST) {
+      incrementUsageCounter(&srcHost->securityHostPkts.rstAckPktsSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->securityHostPkts.rstAckPktsRcvd, srcHostIdx);
+      device[actualDeviceId].securityPkts.rstAckPkts++;
+    } else if(tp->th_flags & TH_RST) {
       if(((theSession->initiatorIdx == srcHostIdx)
 	  && ((theSession->lastRemote2InitiatorFlags[0] & TH_ACK) == TH_ACK)
 	  && (theSession->bytesSent == 0))
 	 || ((theSession->initiatorIdx == dstHostIdx)
 	     && ((theSession->lastInitiator2RemoteFlags[0] & TH_ACK) == TH_ACK)
 	     && (theSession->bytesReceived == 0))) {
+	incrementUsageCounter(&srcHost->securityHostPkts.ackScanSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.ackScanRcvd, srcHostIdx);
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
 		   srcHost->hostSymIpAddress, sport,
 		   dstHost->hostSymIpAddress, dport);
       }
       /* Connection terminated */
-      incrementUsageCounter(&srcHost->rstPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->rstPktsRcvd, srcHostIdx);
-      device[actualDeviceId].rstPkts++;
-    } else if((tp->th_flags & (TH_SYN|TH_FIN)) == (TH_SYN|TH_FIN)) {
-      incrementUsageCounter(&srcHost->synFinPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->synFinPktsRcvd, srcHostIdx);
-      device[actualDeviceId].synFinPkts++;
-    } else if((tp->th_flags & (TH_FIN|TH_PUSH|TH_URG)) == (TH_FIN|TH_PUSH|TH_URG)) {
-      incrementUsageCounter(&srcHost->finPushUrgPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->finPushUrgPktsRcvd, srcHostIdx);
-      device[actualDeviceId].finPushUrgPkts++;
-    } else if((tp->th_flags & TH_SYN) == TH_SYN) {
-      incrementUsageCounter(&srcHost->synPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->synPktsRcvd, srcHostIdx);
-      device[actualDeviceId].synPkts++;
+      incrementUsageCounter(&srcHost->securityHostPkts.rstPktsSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->securityHostPkts.rstPktsRcvd, srcHostIdx);
+      device[actualDeviceId].securityPkts.rstPkts++;
+    } else if(tp->th_flags == (TH_SYN|TH_FIN)) {
+      incrementUsageCounter(&srcHost->securityHostPkts.synFinPktsSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->securityHostPkts.synFinPktsRcvd, srcHostIdx);
+      device[actualDeviceId].securityPkts.synFinPkts++;
+    } else if(tp->th_flags == (TH_FIN|TH_PUSH|TH_URG)) {
+      incrementUsageCounter(&srcHost->securityHostPkts.finPushUrgPktsSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->securityHostPkts.finPushUrgPktsRcvd, srcHostIdx);
+      device[actualDeviceId].securityPkts.finPushUrgPkts++;
+    } else if(tp->th_flags == TH_SYN) {
+      incrementUsageCounter(&srcHost->securityHostPkts.synPktsSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->securityHostPkts.synPktsRcvd, srcHostIdx);
+      device[actualDeviceId].securityPkts.synPkts++;
     } else if(tp->th_flags == 0x0 /* NULL */) {
-      incrementUsageCounter(&srcHost->nullPktsSent, dstHostIdx);
-      incrementUsageCounter(&dstHost->nullPktsRcvd, srcHostIdx);
-      device[actualDeviceId].nullPkts++;
+      incrementUsageCounter(&srcHost->securityHostPkts.nullPktsSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->securityHostPkts.nullPktsRcvd, srcHostIdx);
+      device[actualDeviceId].securityPkts.nullPkts++;
     }
 
     /* **************************** */
@@ -2068,7 +2128,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	 && ((theSession->lastRemote2InitiatorFlags[0] & TH_SYN) == TH_SYN))
 	|| ((theSession->initiatorIdx == dstHostIdx)
 	    && ((theSession->lastInitiator2RemoteFlags[0] & TH_SYN) == TH_SYN)))
-       && ((tp->th_flags & (TH_SYN|TH_ACK)) == (TH_SYN|TH_ACK)))
+       && (tp->th_flags == (TH_SYN|TH_ACK)))
 
       {
 	traceEvent(TRACE_INFO, "New TCP session [%s:%d] <-> [%s:%d]",
@@ -2080,52 +2140,51 @@ static void handleSession(const struct pcap_pkthdr *h,
 	 && ((theSession->lastRemote2InitiatorFlags[0] & TH_SYN) == TH_SYN))
 	|| ((theSession->initiatorIdx == dstHostIdx)
 	    && ((theSession->lastInitiator2RemoteFlags[0] & TH_SYN) == TH_SYN)))
-       && ((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK)))
+       && (tp->th_flags == (TH_RST|TH_ACK))) {
+	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnSent, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnRcvd, dstHostIdx);
 
-      {
 	traceEvent(TRACE_INFO, "Rejected TCP session [%s:%d] -> [%s:%d] (port closed?)",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
       }
 
-    if((((theSession->initiatorIdx == srcHostIdx)
-	 && ((theSession->lastRemote2InitiatorFlags[0]
-	      & (TH_FIN|TH_PUSH|TH_URG)) == (TH_FIN|TH_PUSH|TH_URG)))
-	|| ((theSession->initiatorIdx == dstHostIdx)
-	    && ((theSession->lastInitiator2RemoteFlags[0]
-		 & (TH_FIN|TH_PUSH|TH_URG)) == (TH_FIN|TH_PUSH|TH_URG))))
-       && ((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK)))
+    if(((theSession->initiatorIdx == srcHostIdx) && (theSession->lastRemote2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
+	 || ((theSession->initiatorIdx == dstHostIdx) && (theSession->lastInitiator2RemoteFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
+       && (tp->th_flags == (TH_RST|TH_ACK))) {
+      incrementUsageCounter(&dstHost->securityHostPkts.xmasScanSent, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.xmasScanRcvd, dstHostIdx);
 
-      {
-	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
-		   dstHost->hostSymIpAddress, dport,
-		   srcHost->hostSymIpAddress, sport);
-      } else if((((theSession->initiatorIdx == srcHostIdx)
-		  && ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
-		 || ((theSession->initiatorIdx == dstHostIdx)
-		     && ((theSession->lastInitiator2RemoteFlags[0] & TH_FIN) == TH_FIN)))
-		&& ((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK)))
+      traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
+		 dstHost->hostSymIpAddress, dport,
+		 srcHost->hostSymIpAddress, sport);
+    } else if((((theSession->initiatorIdx == srcHostIdx)
+		&& ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
+	       || ((theSession->initiatorIdx == dstHostIdx)
+		   && ((theSession->lastInitiator2RemoteFlags[0] & TH_FIN) == TH_FIN)))
+	      && (tp->th_flags == (TH_RST|TH_ACK))) {
 
-	{
-	  traceEvent(TRACE_INFO, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
-		     dstHost->hostSymIpAddress, dport,
-		     srcHost->hostSymIpAddress, sport);
-	} else if((((theSession->initiatorIdx == srcHostIdx)
-		    && (theSession->lastRemote2InitiatorFlags[0] == 0)
+      incrementUsageCounter(&dstHost->securityHostPkts.finScanSent, srcHostIdx);
+      incrementUsageCounter(&srcHost->securityHostPkts.finScanRcvd, dstHostIdx);
+
+      traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
+		 dstHost->hostSymIpAddress, dport,
+		 srcHost->hostSymIpAddress, sport);
+    } else if((((theSession->initiatorIdx == srcHostIdx)
+		&& (theSession->lastRemote2InitiatorFlags[0] == 0)
 		    && (theSession->bytesReceived > 0)
 		    ))
 		  || ((theSession->initiatorIdx == dstHostIdx)
 		      && ((theSession->lastInitiator2RemoteFlags[0] == 0))
 		      && (theSession->bytesSent > 0))
-		  && ((tp->th_flags & (TH_RST|TH_ACK)) == (TH_RST|TH_ACK))
-		  )
-	  {
-	    traceEvent(TRACE_INFO, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d] [s=%d/r=%d/f=%d]",
-		       srcHost->hostSymIpAddress, sport,
-		       dstHost->hostSymIpAddress, dport,
-		       theSession->bytesSent, theSession->bytesReceived,
-		       fragmentedData);
-      }
+		  && (tp->th_flags == (TH_RST|TH_ACK))) {
+      incrementUsageCounter(&srcHost->securityHostPkts.nullScanSent, dstHostIdx);
+      incrementUsageCounter(&dstHost->securityHostPkts.nullScanRcvd, srcHostIdx);
+
+      traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
+		 srcHost->hostSymIpAddress, sport,
+		 dstHost->hostSymIpAddress, dport);
+    }
 
    /* **************************** */
 
@@ -3354,16 +3413,23 @@ static void processIpPkt(const u_char *bp,
 #endif
 	}
       } else if((sport == 7) || (dport == 7) /* echo */) {
-	char *fmt = "WARNING: host [%s] sent a UDP packet to host [%s:echo] (Network mapping attempt?)";
+	char *fmt = "WARNING: host [%s] sent a UDP packet to host [%s:echo] (network mapping attempt?)";
 
-	if(dport == 7)
+	if(dport == 7) {
+	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortSent, dstHostIdx);
+	  incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortRcvd, srcHostIdx);
+
 	  traceEvent(TRACE_INFO, fmt,
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress);
-	else /* sport == 7 */
+	} else /* sport == 7 */ {
+	  incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx);
+	  incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx);
+
 	  traceEvent(TRACE_INFO, fmt,
 		     dstHost->hostSymIpAddress,
 		     srcHost->hostSymIpAddress);
+	}
       }
     }
 
@@ -3469,17 +3535,22 @@ static void processIpPkt(const u_char *bp,
 
       memcpy(&dport, ((u_char *)bp+hlen+30), sizeof(dport));
       dport = ntohs(dport);
-      switch (oip->ip_p) {	
+      switch (oip->ip_p) {
       case IPPROTO_TCP:
-	traceEvent(TRACE_INFO, 
+	traceEvent(TRACE_INFO,
 		   "Host [%s] sent TCP data to a closed port of host [%s:%d] (scan attempt?)",
 		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	/* Simulation of rejected TCP connection */
+	incrementUsageCounter(&srcHost->securityHostPkts.rejectedTCPConnSent, dstHostIdx);
+	incrementUsageCounter(&dstHost->securityHostPkts.rejectedTCPConnRcvd, srcHostIdx);
 	break;
-	
+
       case IPPROTO_UDP:
-	traceEvent(TRACE_INFO, 
+	traceEvent(TRACE_INFO,
 		   "Host [%s] sent UDP data to a closed port of host [%s:%d] (scan attempt?)",
 		   dstHost->hostSymIpAddress, srcHost->hostSymIpAddress, dport);
+	incrementUsageCounter(&dstHost->securityHostPkts.udpToClosedPortSent, srcHostIdx);
+	incrementUsageCounter(&srcHost->securityHostPkts.udpToClosedPortRcvd, dstHostIdx);
 	break;
       }
     } else if((icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */)

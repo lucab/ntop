@@ -28,13 +28,32 @@
 
 /* ************************************ */
 
-void formatUsageCounter(UsageCounter usageCtr) {
+void formatUsageCounter(UsageCounter usageCtr, 
+			TrafficCounter topValue /* If this value != 0 then
+						   a percentage is printed */
+			) {
   char buf[BUF_SIZE];
   int i, sendHeader=0;
 
-  if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
-	      formatPkts(usageCtr.value)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
+  if(topValue == 0) {
+    /* No percentage is printed */
+    if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+		formatPkts(usageCtr.value)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  } else {
+    float pctg;
+    
+    pctg = ((float)usageCtr.value/(float)topValue)*100;
+
+    if(pctg > 100) pctg = 100; /* This should not happen ! */
+
+    if(snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s [%.0f %%]</TD>",
+		formatPkts(usageCtr.value), pctg) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+
+  }
 
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
     if(usageCtr.peersIndexes[i] != NO_PEER) {
@@ -1543,82 +1562,195 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 
 /* ************************************ */
 
-void printTCPflagsStats(HostTraffic *el) {
+void printPacketStats(HostTraffic *el) {
   char buf[BUF_SIZE];
+  int headerSent = 0;
+  char *tableHeader = "<center><TABLE BORDER=0><TR><TD>";
 
-  if(((el->tcpSentLocally+el->tcpSentRemotely+
-       el->tcpReceivedLocally+el->tcpReceivedFromRemote) == 0)
-     || ((el->synPktsSent.value+el->synPktsRcvd.value
-	  +el->rstAckPktsSent.value+el->rstAckPktsRcvd.value
-	  +el->rstPktsSent.value+el->rstPktsRcvd.value
-	  +el->synFinPktsSent.value+el->synFinPktsRcvd.value
-	  +el->finPushUrgPktsSent.value+el->finPushUrgPktsRcvd.value
-	  +el->nullPktsSent.value+el->nullPktsRcvd.value) == 0))
-    return;
+  /* *********************** */
 
-    printSectionTitle("TCP Packets Stats");
+  if(((el->securityHostPkts.rejectedTCPConnSent.value+el->securityHostPkts.rejectedTCPConnRcvd.value
+       +el->securityHostPkts.establishedTCPConnSent.value+el->securityHostPkts.establishedTCPConnRcvd.value
+       +el->securityHostPkts.synPktsSent.value+el->securityHostPkts.synPktsRcvd.value) > 0)) {
+
+    if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
+
     sendString("<CENTER>\n"
-    ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">Flags</TH>"
-    "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent</TH>"
-    "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Received</TH></TR>\n");
-
-  if((el->synPktsSent.value+el->synPktsRcvd.value) > 0) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>SYN</TH>",
-		getRowColor()) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-    formatUsageCounter(el->synPktsSent);
-    formatUsageCounter(el->synPktsRcvd);
-    sendString("</TR>\n");
+	       ""TABLE_ON"<TABLE BORDER=1 WIDTH=100%><TR><TH "TH_BG">TCP Connections</TH>"
+	       "<TH "TH_BG" COLSPAN=2>Directed to</TH>"
+	       "<TH "TH_BG" COLSPAN=2>Received From</TH></TR>\n");
+    
+    if((el->securityHostPkts.synPktsSent.value+el->securityHostPkts.synPktsRcvd.value) > 0) {
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT>Attempted</TH>");
+      formatUsageCounter(el->securityHostPkts.synPktsSent, 0);
+      formatUsageCounter(el->securityHostPkts.synPktsRcvd, 0);
+      sendString("</TR>\n");
+    }
+    
+    if((el->securityHostPkts.establishedTCPConnSent.value+el->securityHostPkts.establishedTCPConnRcvd.value) > 0) {
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT>Established</TH>");
+      formatUsageCounter(el->securityHostPkts.establishedTCPConnSent, el->securityHostPkts.synPktsSent.value);
+      formatUsageCounter(el->securityHostPkts.establishedTCPConnRcvd, el->securityHostPkts.synPktsRcvd.value);
+      sendString("</TR>\n");
+    }
+    
+    if((el->securityHostPkts.rejectedTCPConnSent.value+el->securityHostPkts.rejectedTCPConnRcvd.value) > 0) {
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT>Rejected</TH>");
+      formatUsageCounter(el->securityHostPkts.rejectedTCPConnSent, el->securityHostPkts.synPktsSent.value);
+      formatUsageCounter(el->securityHostPkts.rejectedTCPConnRcvd, el->securityHostPkts.synPktsRcvd.value);
+      sendString("</TR>\n");
+    }
+    
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");    
   }
 
-  if((el->rstAckPktsSent.value+el->rstAckPktsRcvd.value) > 0) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>RST|ACK</TH>",
-		getRowColor()) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-    formatUsageCounter(el->rstAckPktsSent);
-    formatUsageCounter(el->rstAckPktsRcvd);
-    sendString("</TR>\n");
+  /* *********************** */
+
+  if((el->securityHostPkts.synPktsSent.value+el->securityHostPkts.synPktsRcvd.value
+      +el->securityHostPkts.rstAckPktsSent.value+el->securityHostPkts.rstAckPktsRcvd.value
+      +el->securityHostPkts.rstPktsSent.value+el->securityHostPkts.rstPktsRcvd.value
+      +el->securityHostPkts.synFinPktsSent.value+el->securityHostPkts.synFinPktsRcvd.value
+      +el->securityHostPkts.finPushUrgPktsSent.value+el->securityHostPkts.finPushUrgPktsRcvd.value
+      +el->securityHostPkts.nullPktsSent.value+el->securityHostPkts.nullPktsRcvd.value) > 0) {
+    
+    if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
+    
+    sendString("<CENTER>\n"
+	       ""TABLE_ON"<TABLE BORDER=1 WIDTH=100%><TR><TH "TH_BG">TCP Flags</TH>"
+	       "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent</TH>"
+	       "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Received</TH></TR>\n");
+
+    if((el->securityHostPkts.synPktsSent.value+el->securityHostPkts.synPktsRcvd.value) > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>SYN</TH>",
+		  getRowColor()) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      formatUsageCounter(el->securityHostPkts.synPktsSent, 0);
+      formatUsageCounter(el->securityHostPkts.synPktsRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    if((el->securityHostPkts.rstAckPktsSent.value+el->securityHostPkts.rstAckPktsRcvd.value) > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>RST|ACK</TH>",
+		  getRowColor()) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      formatUsageCounter(el->securityHostPkts.rstAckPktsSent, 0);
+      formatUsageCounter(el->securityHostPkts.rstAckPktsRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    if((el->securityHostPkts.rstPktsSent.value+el->securityHostPkts.rstPktsRcvd.value) > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>RST</TH>",
+		  getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      formatUsageCounter(el->securityHostPkts.rstPktsSent, 0);
+      formatUsageCounter(el->securityHostPkts.rstPktsRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    if((el->securityHostPkts.synFinPktsSent.value+el->securityHostPkts.synFinPktsRcvd.value) > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>SYN|FIN</TH>",
+		  getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      formatUsageCounter(el->securityHostPkts.synFinPktsSent, 0);
+      formatUsageCounter(el->securityHostPkts.synFinPktsRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    if((el->securityHostPkts.finPushUrgPktsSent.value+el->securityHostPkts.finPushUrgPktsRcvd.value) > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>FIN|PUSH|URG</TH>",
+		  getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      formatUsageCounter(el->securityHostPkts.finPushUrgPktsSent, 0);
+      formatUsageCounter(el->securityHostPkts.finPushUrgPktsRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    if((el->securityHostPkts.nullPktsSent.value+el->securityHostPkts.nullPktsRcvd.value) > 0) {
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT>NULL</TH>");
+      formatUsageCounter(el->securityHostPkts.nullPktsSent, 0);
+      formatUsageCounter(el->securityHostPkts.nullPktsRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
   }
 
-  if((el->rstPktsSent.value+el->rstPktsRcvd.value) > 0) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>RST</TH>",
-		getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-    formatUsageCounter(el->rstPktsSent);
-    formatUsageCounter(el->rstPktsRcvd);
-    sendString("</TR>\n");
+  /* *********************** */
+
+  if(((el->securityHostPkts.ackScanSent.value+el->securityHostPkts.ackScanRcvd.value
+       +el->securityHostPkts.xmasScanSent.value+el->securityHostPkts.xmasScanRcvd.value
+       +el->securityHostPkts.finScanSent.value+el->securityHostPkts.finScanRcvd.value
+       +el->securityHostPkts.synFinPktsSent.value+el->securityHostPkts.synFinPktsRcvd.value
+       +el->securityHostPkts.nullScanSent.value+el->securityHostPkts.nullScanRcvd.value
+       +el->securityHostPkts.udpToClosedPortSent.value
+       +el->securityHostPkts.udpToClosedPortRcvd.value) > 0)) {
+
+    if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
+
+    sendString("<CENTER>\n"
+	       ""TABLE_ON"<TABLE BORDER=1 WIDTH=100%><TR><TH "TH_BG">Anomaly</TH>"
+	       "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent&nbsp;to</TH>"
+	       "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Received&nbsp;by</TH>"
+	       "</TR>\n");
+    
+    if((el->securityHostPkts.ackScanSent.value+el->securityHostPkts.ackScanRcvd.value) > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>ACK Scan</TH>",
+		  getRowColor()) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      formatUsageCounter(el->securityHostPkts.ackScanSent, 0);
+      formatUsageCounter(el->securityHostPkts.ackScanRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    if((el->securityHostPkts.xmasScanSent.value+el->securityHostPkts.xmasScanRcvd.value) > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>XMAS Scan</TH>",
+		  getRowColor()) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      formatUsageCounter(el->securityHostPkts.xmasScanSent, 0);
+      formatUsageCounter(el->securityHostPkts.xmasScanRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    if((el->securityHostPkts.finScanSent.value+el->securityHostPkts.finScanRcvd.value) > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>FIN Scan</TH>",
+		  getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      formatUsageCounter(el->securityHostPkts.finScanSent, 0);
+      formatUsageCounter(el->securityHostPkts.finScanRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    if((el->securityHostPkts.nullScanSent.value+el->securityHostPkts.nullScanRcvd.value) > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>NULL Scan</TH>",
+		  getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      formatUsageCounter(el->securityHostPkts.nullScanSent, 0);
+      formatUsageCounter(el->securityHostPkts.nullScanRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    if((el->securityHostPkts.udpToClosedPortSent.value+
+	el->securityHostPkts.udpToClosedPortRcvd.value) > 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>UDP Pkt to Closed Port</TH>",
+		  getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+      formatUsageCounter(el->securityHostPkts.udpToClosedPortSent, 0);
+      formatUsageCounter(el->securityHostPkts.udpToClosedPortRcvd, 0);
+      sendString("</TR>\n");
+    }
+
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");
   }
 
-  if((el->synFinPktsSent.value+el->synFinPktsRcvd.value) > 0) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>SYN|FIN</TH>",
-		getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-    formatUsageCounter(el->synFinPktsSent);
-    formatUsageCounter(el->synFinPktsRcvd);
-    sendString("</TR>\n");
-  }
-
-  if((el->finPushUrgPktsSent.value+el->finPushUrgPktsRcvd.value) > 0) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>FIN|PUSH|URG</TH>",
-		getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-    formatUsageCounter(el->finPushUrgPktsSent);
-    formatUsageCounter(el->finPushUrgPktsRcvd);
-    sendString("</TR>\n");
-  }
-
-  if((el->nullPktsSent.value+el->nullPktsRcvd.value) > 0) {
-    sendString("<TR><TH "TH_BG" ALIGN=LEFT>NULL</TH>");
-    formatUsageCounter(el->nullPktsSent);
-    formatUsageCounter(el->nullPktsRcvd);
-    sendString("</TR>\n");
-  }
-  sendString("</TABLE>"TABLE_OFF"<P>\n");
-  sendString("</CENTER>\n");
+  if(headerSent) { sendString("</TD></TR></TABLE></center>"); }
 }
-
 
 /* ************************************ */
 
@@ -1644,7 +1776,7 @@ void printHostTrafficStats(HostTraffic *el) {
 
   printHostEvents(el, -1, -1);
   printHostHourlyTraffic(el);
-  printTCPflagsStats(el);
+  printPacketStats(el);
 
   if((el->tcpSentLocally+el->tcpSentRemotely+
       el->tcpReceivedLocally+el->tcpReceivedFromRemote+
@@ -2248,7 +2380,7 @@ void printHostDetailedInfo(HostTraffic *el) {
 	  break;
       }
 
-      if(snprintf(buf, sizeof(buf), "</ol><br>%s&nbsp;[%s - multihomed]",
+      if(snprintf(buf, sizeof(buf), "</ol>%s&nbsp;[%s - multihomed]",
 		  countryIcon, hostType) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);

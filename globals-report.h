@@ -67,7 +67,7 @@ extern short screenNumber, columnSort;
 /* Threads */
 
 /* reportUtils.c */
-extern void formatUsageCounter(UsageCounter usageCtr);
+extern void formatUsageCounter(UsageCounter usageCtr, TrafficCounter maxValue);
 extern void printTableDoubleEntry(char *buf, int bufLen,
 				  char *label, char* color,
 				  float totalS, float percentageS,
@@ -95,7 +95,7 @@ extern void getProtocolDataReceived(TrafficCounter *c,
 				    HostTraffic *el);
 extern void printHostThtpShort(HostTraffic *el, short dataSent);
 extern int cmpHostsFctn(const void *_a, const void *_b);
-extern void printTCPflagsStats(HostTraffic *el);
+extern void printPacketStats(HostTraffic *el);
 extern void printHostTrafficStats(HostTraffic *el);
 extern void printHostContactedPeers(HostTraffic *el);
 extern char *getSessionState(IPSession *session);

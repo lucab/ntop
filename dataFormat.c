@@ -75,7 +75,7 @@ char* formatBytes(TrafficCounter numBytes, short encodeString) {
     if(snprintf(outStr[bufIdx], 32, "%lu", (unsigned long)numBytes) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else if (numBytes < 1048576) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sKb",
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sKB",
 		((float)(numBytes)/1024), locSeparator) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
@@ -172,7 +172,6 @@ char* formatThroughput(float numBytes) {
   float numBits;
   static int divider = 1000;   /* As SNMP does instead of using 1024
 				  ntop divides for 1000 */
-
   bufIdx = (bufIdx+1)%5;
 
   if(numBytes < 0) numBytes = 0; /* Sanity check */

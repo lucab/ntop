@@ -455,93 +455,123 @@ void dumpNtopHashes(char* options) {
 	sendString(buf);
       }
 
-      if(el->synPktsSent.value > 0) {
+      /* ***************************** */
+
+      if(languageType == PERL_LANGUAGE) {
+	if(snprintf(buf, sizeof(buf), "\t'%s' => {\n", 
+		    "securityHostPkts") < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      } else {
+	if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n", 
+		    "securityHostPkts") < 0) 
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      }
+
+      if(el->securityHostPkts.synPktsSent.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
-		    "synPktsSent", el->synPktsSent.value)
+		    "synPktsSent", el->securityHostPkts.synPktsSent.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
       
       /* Added by Andreas Pfaller <a.pfaller@pop.gun.de> */
-      if(el->rstAckPktsSent.value > 0) {
+      if(el->securityHostPkts.rstAckPktsSent.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
-		    "rstAckPktsSent", el->rstAckPktsSent.value)
+		    "rstAckPktsSent",
+		    el->securityHostPkts.rstAckPktsSent.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
-      if(el->rstPktsSent.value > 0) {
+      if(el->securityHostPkts.rstPktsSent.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
-		    "rstPktsSent", el->rstPktsSent.value)
+		    "rstPktsSent",
+		    el->securityHostPkts.rstPktsSent.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
-      if(el->synFinPktsSent.value > 0) {
+      if(el->securityHostPkts.synFinPktsSent.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
-		    "synFinPktsSent", el->synFinPktsSent.value)
+		    "synFinPktsSent", 
+		    el->securityHostPkts.synFinPktsSent.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
-      if(el->finPushUrgPktsSent.value > 0) {
+      if(el->securityHostPkts.finPushUrgPktsSent.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
 		    "finPushUrgPktsSent",
-		    el->finPushUrgPktsSent.value)
+		    el->securityHostPkts.finPushUrgPktsSent.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
-      if(el->nullPktsSent.value > 0) {
+      if(el->securityHostPkts.nullPktsSent.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
-		    "nullPktsSent", el->nullPktsSent.value)
+		    "nullPktsSent", 
+		    el->securityHostPkts.nullPktsSent.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
-      if(el->synPktsRcvd.value > 0) {
+      if(el->securityHostPkts.synPktsRcvd.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
-		    "synPktsRcvd", el->synPktsRcvd.value)
+		    "synPktsRcvd", 
+		    el->securityHostPkts.synPktsRcvd.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
       /* Added by Andreas Pfaller <a.pfaller@pop.gun.de> */
-      if(el->rstAckPktsRcvd.value > 0) {
+      if(el->securityHostPkts.rstAckPktsRcvd.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
-		    "rstAckPktsRcvd", el->rstAckPktsRcvd.value)
+		    "rstAckPktsRcvd", 
+		    el->securityHostPkts.rstAckPktsRcvd.value)
  	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
  	sendString(buf);
-       }
+      }
 
-      if(el->rstPktsRcvd.value > 0) {
+      if(el->securityHostPkts.rstPktsRcvd.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
-		    "rstPktsRcvd", el->rstPktsRcvd.value)
+		    "rstPktsRcvd", 
+		    el->securityHostPkts.rstPktsRcvd.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
-      if(el->synFinPktsRcvd.value > 0) {
+      if(el->securityHostPkts.synFinPktsRcvd.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
-		    "synFinPktsRcvd", el->synFinPktsRcvd.value)
+		    "synFinPktsRcvd", 
+		    el->securityHostPkts.synFinPktsRcvd.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
-      if(el->finPushUrgPktsRcvd.value > 0) {
+      if(el->securityHostPkts.finPushUrgPktsRcvd.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
 		    "finPushUrgPktsRcvd",
-		    el->finPushUrgPktsRcvd.value)
+		    el->securityHostPkts.finPushUrgPktsRcvd.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
 
-      if(el->nullPktsRcvd.value > 0) {
+      if(el->securityHostPkts.nullPktsRcvd.value > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
-		    "nullPktsRcvd", el->nullPktsRcvd.value)
+		    "nullPktsRcvd", 
+		    el->securityHostPkts.nullPktsRcvd.value)
 	   < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       }
+
+      if(languageType == PERL_LANGUAGE)
+	sendString("\t},\n\n");
+      else
+	sendString("\t),\n\n");
+ 
+      /* ***************************** */
 
       if(el->stpSent > 0) {
 	if(snprintf(buf, sizeof(buf), "\t'%s' => %lu,\n",
@@ -969,90 +999,181 @@ void dumpNtopHashes(char* options) {
     /* ********************************* */
     
     if(languageType == PERL_LANGUAGE) {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => {\n", "TCPflags") < 0)
+      if(snprintf(buf, sizeof(buf), "\t'%s' => {\n", "securityPkts") < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     } else {
-      if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n","TCPflags") < 0)
+      if(snprintf(buf, sizeof(buf), "\t'%s' => array(\n","securityPkts") < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
 
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"synPkts", el->synPktsSent) < 0)
+		"synPkts", el->securityHostPkts.synPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"synPkts", el->synPktsRcvd) < 0)
+		"synPkts", el->securityHostPkts.synPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"rstPkts", el->rstPktsSent) < 0)
+		"rstPkts", el->securityHostPkts.rstPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"rstPkts", el->rstPktsRcvd) < 0)
+		"rstPkts", el->securityHostPkts.rstPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"rstAckPkts", el->rstAckPktsSent) < 0)
+		"rstAckPkts", el->securityHostPkts.rstAckPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"rstAckPkts", el->rstAckPktsRcvd) < 0)
+		"rstAckPkts", el->securityHostPkts.rstAckPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"synFinPkts", el->synFinPktsSent) < 0)
+		"synFinPkts", el->securityHostPkts.synFinPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"synFinPkts", el->synFinPktsRcvd) < 0)
+		"synFinPkts", el->securityHostPkts.synFinPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"finPushUrgPkts", el->finPushUrgPktsSent) < 0)
+		"finPushUrgPkts", el->securityHostPkts.finPushUrgPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"finPushUrgPkts", el->finPushUrgPktsRcvd) < 0)
+		"finPushUrgPkts", el->securityHostPkts.finPushUrgPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"nullPkts", el->nullPktsSent) < 0)
+		"nullPkts", el->securityHostPkts.nullPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
    
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"nullPkts", el->nullPktsRcvd) < 0)
+		"nullPkts", el->securityHostPkts.nullPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
    
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"numEstablishedTCPConnections", 
-		el->numEstablishedTCPConnections) < 0)
+		"ackScanSent", 
+		el->securityHostPkts.ackScanSent) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"ackScanRcvd", 
+		el->securityHostPkts.ackScanRcvd) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"xmasScanSent", 
+		el->securityHostPkts.xmasScanSent) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"xmasScanRcvd", 
+		el->securityHostPkts.xmasScanRcvd) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"finScanSent", 
+		el->securityHostPkts.finScanSent) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"finScanRcvd", 
+		el->securityHostPkts.finScanRcvd) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"nullScanSent", 
+		el->securityHostPkts.nullScanSent) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"nullScanRcvd", 
+		el->securityHostPkts.nullScanRcvd) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"rejectedTCPConnSent", 
+		el->securityHostPkts.rejectedTCPConnSent) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"rejectedTCPConnRcvd", 
+		el->securityHostPkts.rejectedTCPConnRcvd) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"establishedTCPConnSent", 
+		el->securityHostPkts.establishedTCPConnSent) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"establishedTCPConnRcvd", 
+		el->securityHostPkts.establishedTCPConnRcvd) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"udpToClosedPortSent", 
+		el->securityHostPkts.udpToClosedPortSent) < 0)
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    else
+      sendString(buf);
+
+    if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
+		"udpToClosedPortRcvd", 
+		el->securityHostPkts.udpToClosedPortRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
@@ -1704,37 +1825,37 @@ void dumpNtopTrafficInfo(char* options) {
     }
 
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"synPkts", device[i].synPkts) < 0)
+		"synPkts", device[i].securityPkts.synPkts) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"rstPkts", device[i].rstPkts) < 0)
+		"rstPkts", device[i].securityPkts.rstPkts) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"rstAckPkts", device[i].rstAckPkts) < 0)
+		"rstAckPkts", device[i].securityPkts.rstAckPkts) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"synFinPkts", device[i].synFinPkts) < 0)
+		"synFinPkts", device[i].securityPkts.synFinPkts) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"finPushUrgPkts", device[i].finPushUrgPkts) < 0)
+		"finPushUrgPkts", device[i].securityPkts.finPushUrgPkts) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"nullPkts", device[i].nullPkts) < 0)
+		"nullPkts", device[i].securityPkts.nullPkts) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);

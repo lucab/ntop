@@ -885,7 +885,7 @@ void usage(void) {
     traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
     traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
 #ifdef WIN32
-    traceEvent(TRACE_INFO, "    %s%d Kb)>]\n", "[-B <NDIS buffer in Kbytes (default ",
+    traceEvent(TRACE_INFO, "    %s%d KB)>]\n", "[-B <NDIS buffer in Kbytes (default ",
 	       (int)(SIZE_BUF/1024));
 #endif
 #ifndef WIN32
@@ -973,7 +973,7 @@ return(NULL); /* NOTREACHED */
  
 void handleSingleWebConnection(fd_set *fdmask) {
    struct sockaddr_in from;
-  int from_len = sizeof(from);
+   int from_len = sizeof(from);
 
   if(FD_ISSET(sock, fdmask)) {
 #ifdef DEBUG

@@ -263,75 +263,191 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 	}
       }
 
+      /* ********************************* */
+
       for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-	if(device[deviceToExtend].hash_hostTraffic[j]->synPktsSent.peersIndexes[i]
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synPktsSent.peersIndexes[i]
 	   != NO_PEER) {
-	  device[deviceToExtend].hash_hostTraffic[j]->synPktsSent.peersIndexes[i]
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synPktsSent.peersIndexes[i]
 	    = mapIdx(device[deviceToExtend].
-				    hash_hostTraffic[j]->synPktsSent.peersIndexes[i]);
+		     hash_hostTraffic[j]->securityHostPkts.synPktsSent.peersIndexes[i]);
 	}
 
-	if(device[deviceToExtend].hash_hostTraffic[j]->rstPktsSent.peersIndexes[i]
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstPktsSent.peersIndexes[i]
 	   != NO_PEER) {
-	  device[deviceToExtend].hash_hostTraffic[j]->rstPktsSent.peersIndexes[i]
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstPktsSent.peersIndexes[i]
 	    = mapIdx(device[deviceToExtend].
-				    hash_hostTraffic[j]->rstPktsSent.peersIndexes[i]);
+		     hash_hostTraffic[j]->securityHostPkts.rstPktsSent.peersIndexes[i]);
 	}
 
-	if(device[deviceToExtend].hash_hostTraffic[j]->synFinPktsSent.peersIndexes[i]
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstAckPktsSent.peersIndexes[i]
 	   != NO_PEER) {
-	  device[deviceToExtend].hash_hostTraffic[j]->synFinPktsSent.peersIndexes[i]
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstAckPktsSent.peersIndexes[i]
 	    = mapIdx(device[deviceToExtend].
-				    hash_hostTraffic[j]->synFinPktsSent.peersIndexes[i]);
+		     hash_hostTraffic[j]->securityHostPkts.rstAckPktsSent.peersIndexes[i]);
 	}
 
-	if(device[deviceToExtend].hash_hostTraffic[j]->finPushUrgPktsSent.peersIndexes[i]
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synFinPktsSent.peersIndexes[i]
 	   != NO_PEER) {
-	  device[deviceToExtend].hash_hostTraffic[j]->finPushUrgPktsSent.peersIndexes[i]
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synFinPktsSent.peersIndexes[i]
 	    = mapIdx(device[deviceToExtend].
-				    hash_hostTraffic[j]->finPushUrgPktsSent.peersIndexes[i]);
+		     hash_hostTraffic[j]->securityHostPkts.synFinPktsSent.peersIndexes[i]);
 	}
 
-	if(device[deviceToExtend].hash_hostTraffic[j]->nullPktsSent.peersIndexes[i]
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finPushUrgPktsSent.peersIndexes[i]
 	   != NO_PEER) {
-	  device[deviceToExtend].hash_hostTraffic[j]->nullPktsSent.peersIndexes[i]
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finPushUrgPktsSent.peersIndexes[i]
 	    = mapIdx(device[deviceToExtend].
-				    hash_hostTraffic[j]->nullPktsSent.peersIndexes[i]);
+		     hash_hostTraffic[j]->securityHostPkts.finPushUrgPktsSent.peersIndexes[i]);
 	}
 
-	if(device[deviceToExtend].hash_hostTraffic[j]->synPktsRcvd.peersIndexes[i]
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullPktsSent.peersIndexes[i]
 	   != NO_PEER) {
-	  device[deviceToExtend].hash_hostTraffic[j]->synPktsRcvd.peersIndexes[i]
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullPktsSent.peersIndexes[i]
 	    = mapIdx(device[deviceToExtend].
-				    hash_hostTraffic[j]->synPktsRcvd.peersIndexes[i]);
+		     hash_hostTraffic[j]->securityHostPkts.nullPktsSent.peersIndexes[i]);
+	}
+	
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.ackScanSent.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.ackScanSent.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.ackScanSent.peersIndexes[i]);
+	}
+	
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.xmasScanSent.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.xmasScanSent.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.xmasScanSent.peersIndexes[i]);
+	}
+	
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finScanSent.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finScanSent.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.finScanSent.peersIndexes[i]);
+	}
+	
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullScanSent.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullScanSent.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.nullScanSent.peersIndexes[i]);
+	}
+	
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rejectedTCPConnSent.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rejectedTCPConnSent.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.rejectedTCPConnSent.peersIndexes[i]);
+	}
+	
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.establishedTCPConnSent.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.establishedTCPConnSent.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.establishedTCPConnSent.peersIndexes[i]);
+	}
+	
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.udpToClosedPortSent.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.udpToClosedPortSent.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.udpToClosedPortSent.peersIndexes[i]);
+	}
+	
+	/* ************** */
+
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synPktsRcvd.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synPktsRcvd.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.synPktsRcvd.peersIndexes[i]);
 	}
 
-	if(device[deviceToExtend].hash_hostTraffic[j]->rstPktsRcvd.peersIndexes[i]
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstPktsRcvd.peersIndexes[i]
 	   != NO_PEER) {
-	  device[deviceToExtend].hash_hostTraffic[j]->rstPktsRcvd.peersIndexes[i]
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstPktsRcvd.peersIndexes[i]
 	    = mapIdx(device[deviceToExtend].
-				    hash_hostTraffic[j]->rstPktsRcvd.peersIndexes[i]);
+		     hash_hostTraffic[j]->securityHostPkts.rstPktsRcvd.peersIndexes[i]);
 	}
 
-	if(device[deviceToExtend].hash_hostTraffic[j]->synFinPktsRcvd.peersIndexes[i]
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstAckPktsRcvd.peersIndexes[i]
 	   != NO_PEER) {
-	  device[deviceToExtend].hash_hostTraffic[j]->synFinPktsRcvd.peersIndexes[i]
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rstAckPktsRcvd.peersIndexes[i]
 	    = mapIdx(device[deviceToExtend].
-				    hash_hostTraffic[j]->synFinPktsRcvd.peersIndexes[i]);
+		     hash_hostTraffic[j]->securityHostPkts.rstAckPktsRcvd.peersIndexes[i]);
 	}
 
-	if(device[deviceToExtend].hash_hostTraffic[j]->finPushUrgPktsRcvd.peersIndexes[i]
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synFinPktsRcvd.peersIndexes[i]
 	   != NO_PEER) {
-	  device[deviceToExtend].hash_hostTraffic[j]->finPushUrgPktsRcvd.peersIndexes[i]
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.synFinPktsRcvd.peersIndexes[i]
 	    = mapIdx(device[deviceToExtend].
-				    hash_hostTraffic[j]->finPushUrgPktsRcvd.peersIndexes[i]);
+		     hash_hostTraffic[j]->securityHostPkts.synFinPktsRcvd.peersIndexes[i]);
 	}
 
-	if(device[deviceToExtend].hash_hostTraffic[j]->nullPktsRcvd.peersIndexes[i]
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[i]
 	   != NO_PEER) {
-	  device[deviceToExtend].hash_hostTraffic[j]->nullPktsRcvd.peersIndexes[i]
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[i]
 	    = mapIdx(device[deviceToExtend].
-				    hash_hostTraffic[j]->nullPktsRcvd.peersIndexes[i]);
+		     hash_hostTraffic[j]->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[i]);
+	}
+
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullPktsRcvd.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullPktsRcvd.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.nullPktsRcvd.peersIndexes[i]);
+	}
+
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.ackScanRcvd.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.ackScanRcvd.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.ackScanRcvd.peersIndexes[i]);
+	}
+
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.xmasScanRcvd.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.xmasScanRcvd.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.xmasScanRcvd.peersIndexes[i]);
+	}
+
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finScanRcvd.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.finScanRcvd.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.finScanRcvd.peersIndexes[i]);
+	}
+
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullScanRcvd.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.nullScanRcvd.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.nullScanRcvd.peersIndexes[i]);
+	}
+
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[i]);
+	}
+
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.establishedTCPConnRcvd.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.establishedTCPConnRcvd.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.establishedTCPConnRcvd.peersIndexes[i]);
+	}
+
+	if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.udpToClosedPortRcvd.peersIndexes[i]
+	   != NO_PEER) {
+	  device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts.udpToClosedPortRcvd.peersIndexes[i]
+	    = mapIdx(device[deviceToExtend].
+		     hash_hostTraffic[j]->securityHostPkts.udpToClosedPortRcvd.peersIndexes[i]);
 	}
       }
 
@@ -349,6 +465,7 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
       }
 
       /* ********************************* */
+
       for(k=0; k<2; k++) {
 	struct ipGlobalSession *scanner=NULL;
 
@@ -648,31 +765,31 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 	    el->contactedSentPeersIndexes[j] = NO_PEER;
 	  if(el->contactedRcvdPeersIndexes[j] == hostIdx)
 	    el->contactedRcvdPeersIndexes[j] = NO_PEER;
-	  if(el->synPktsSent.peersIndexes[j] == hostIdx)
-	    el->synPktsSent.peersIndexes[j] = NO_PEER;
-	  if(el->rstAckPktsSent.peersIndexes[j] == hostIdx)
-	    el->rstAckPktsSent.peersIndexes[j] = NO_PEER;
-	  if(el->rstPktsSent.peersIndexes[j] == hostIdx)
-	    el->rstPktsSent.peersIndexes[j] = NO_PEER;
-	  if(el->synFinPktsSent.peersIndexes[j] == hostIdx)
-	    el->synFinPktsSent.peersIndexes[j] = NO_PEER;
-	  if(el->finPushUrgPktsSent.peersIndexes[j] == hostIdx)
-	    el->finPushUrgPktsSent.peersIndexes[j] = NO_PEER;
-	  if(el->nullPktsSent.peersIndexes[j] == hostIdx)
-	    el->nullPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.synPktsSent.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.synPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.rstAckPktsSent.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.rstAckPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.rstPktsSent.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.rstPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.synFinPktsSent.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.synFinPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.finPushUrgPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.nullPktsSent.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.nullPktsSent.peersIndexes[j] = NO_PEER;
 
-	  if(el->synPktsRcvd.peersIndexes[j] == hostIdx)
-	    el->synPktsRcvd.peersIndexes[j] = NO_PEER;
-	  if(el->rstAckPktsRcvd.peersIndexes[j] == hostIdx)
-	    el->rstAckPktsRcvd.peersIndexes[j] = NO_PEER;
-	  if(el->rstPktsRcvd.peersIndexes[j] == hostIdx)
-	    el->rstPktsRcvd.peersIndexes[j] = NO_PEER;
-	  if(el->synFinPktsRcvd.peersIndexes[j] == hostIdx)
-	    el->synFinPktsRcvd.peersIndexes[j] = NO_PEER;
-	  if(el->finPushUrgPktsRcvd.peersIndexes[j] == hostIdx)
-	    el->finPushUrgPktsRcvd.peersIndexes[j] = NO_PEER;
-	  if(el->nullPktsRcvd.peersIndexes[j] == hostIdx)
-	    el->nullPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.synPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.synPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.rstAckPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.rstPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.rstPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.synFinPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.synFinPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->securityHostPkts.nullPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->securityHostPkts.nullPktsRcvd.peersIndexes[j] = NO_PEER;
 	}
 
 	for(j=0; j<MAX_NUM_HOST_ROUTERS; j++)
