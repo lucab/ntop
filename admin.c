@@ -34,7 +34,7 @@ static int readHTTPpostData(int len, char *buf, int buflen);
 
 void showUsers(void) {
   u_int numUsers=0;
-  char buf[LEN_GENERAL_WORK_BUFFER], ebuf[128];
+  char buf[LEN_GENERAL_WORK_BUFFER];
   datum key_data, return_data;
 
   printHTMLheader("Registered ntop Users", BITFLAG_HTML_NO_REFRESH);
@@ -63,7 +63,9 @@ void showUsers(void) {
 		    "&nbsp;</TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr) < 0)
 	 BufferTooShort();
       } else{
+	char ebuf[128];
 	encodeWebFormURL(key_data.dptr, ebuf, sizeof(ebuf));
+
 	if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 		    "&nbsp;%s</TH><TD "TD_BG"><A HREF=/modifyUser?%s>"
 		"<IMG ALT=\"Modify User\" SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"

@@ -2439,7 +2439,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	      }
 
 	      if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-			  "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+			  "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
 			  getRowColor(), makeHostLink(&el2, 0, 0, 0),
 			  el2.hostNumIpAddress) < 0)
 		BufferTooShort();
@@ -2959,14 +2959,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(el->hostSymIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about host"
-		" <A HREF=http://%s/ TARGET=\"_blank\" "
+		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
                 "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n",
                 el->hostSymIpAddress, el->hostSymIpAddress, buf1) < 0)
       BufferTooShort();
   } else if(el->hostNumIpAddress[0] != '\0') {
     if(snprintf(buf, sizeof(buf), "Info about host"
-		" <A HREF=http://%s/ TARGET=\"_blank\" "
-                "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n",
+		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
+                "TITLE=\"Link to web server on host, if available\">%s %s</A>\n",
                 el->hostNumIpAddress, el->hostNumIpAddress, buf1) < 0)
       BufferTooShort();
   } else {
@@ -3968,13 +3968,9 @@ void printFlagedWarning(char *text) {
 /* ********************************** */
 
 void printSectionTitle(char *text) {
-  char buf[LEN_GENERAL_WORK_BUFFER];
-
-  snprintf(buf, LEN_GENERAL_WORK_BUFFER,
- 	   "<CENTER>\n"
- 	   "<H1><FONT FACE=\"Helvetica, Arial, Sans Serif\">%s</FONT></H1><P>\n"
- 	   "</CENTER>\n", text);
-  sendString(buf);
+  sendString("<CENTER>\n<H1><FONT FACE=\"Helvetica, Arial, Sans Serif\">");
+  sendString(text);
+  sendString("</FONT></H1><P>\n</CENTER>\n");
 }
 
 /* ******************************** */
