@@ -48,7 +48,7 @@ dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.1.56pre])
 AC_PREREQ([2.50])
-SCRIPTVER="v1.100-2003-01-29"
+SCRIPTVER="v1.101-2003-01-31"
 
 dnl>
 dnl> generate the config header
@@ -82,8 +82,101 @@ echo "Configuring ${PACKAGE_NAME} according to your request(s):"
 echo "   ./configure ${CONFIGURE_PARAMETERS}"
 echo
 
+echo "*******************************************************************"
+echo "*                                                                 *"
+echo "* NOTICE:  I know you're used to ignoring output from ./configure *"
+echo "*                                                                 *"
+echo "*          ntop has a lot of complexity and interdependences.     *"
+echo "*                                                                 *"
+echo "*          Please, please AT LEAST read the stuff in these        *"
+echo "*          boxes!                                                 *"
+echo "*                                                                 *"
+echo "*>>> The ACTION taken is shown prefixed '>>>'                     *"
+echo "*                                                                 *"
+echo "*    If the ACTION is unacceptable,                               *"
+echo "*??? The REMEDIATION plan is shown prefixed with '???'            *"
+echo "*                                                                 *"
+echo "*******************************************************************"
+echo
+
+dnl> early since we need it for --enable-showoses and autotool version check.
+AC_PROG_AWK
+
 dnl>
-dnl> Check versions of autotools...
+dnl> Check versions of autotools
+
+dnl> First check minimum versions...
+echo "  Checking automake version..."
+automakeversion=`automake --version | grep ^automake | awk '{ print $4 }'`
+case "${automakeversion}" in
+    *1\.[[0-5]]*)
+        echo "*******************************************************************"
+        echo "*                                                                 *"
+        echo "*ERROR: ntop requires automake version 1.6 or newer...            *"
+        echo "*                                                                 *"
+        echo "*  You are executing ${automakeversion}"
+        echo "*                                                                 *"
+        echo "*>>>   Unable to proceed with your request, aborting ./configure! *"
+        echo "*                                                                 *"
+        echo "*???    Suggestion - Install a private copy of automake 1.6.3.    *"
+        echo "*???                 It's quite easy and does NOT require root:   *"
+        echo "*                                                                 *"
+        echo "*   Download automake 1.6.3 from gnu                              *"
+        echo "*     $ wget http://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.gz*"
+        echo "*                                                                 *"
+        echo "*   Untar it                                                      *"
+        echo "*     $ tar xfvz automake-1.6.3.tar.gz                            *"
+        echo "*                                                                 *"
+        echo "*   Make it                                                       *"
+        echo "*     $ cd automake-1.6.3                                         *"
+        echo "*     $ ./configure --prefix=/home/<whatever>/automake163         *"
+        echo "*     $ make                                                      *"
+        echo "*     $ make install                                              *"
+        echo "*                                                                 *"
+        echo "*   Add it to your path.  Under bash do this:                     *"
+        echo "*     $ PATH=/home/<whatever>automake163/bin:\$PATH                *"
+        echo "*     $ export PATH                                               *"
+        echo "*                                                                 *"
+        echo "*******************************************************************"
+        exit 1
+        ;;
+esac
+echo "  Checking autoconf version..."
+case "${autoconfversion}" in
+    *2\.[[0-4]]*)
+        echo "*******************************************************************"
+        echo "*                                                                 *"  
+        echo "*ERROR: ntop requires autoconf version 2.50 or newer...           *"  
+        echo "*                                                                 *"  
+        echo "*  You are executing ${autoconfversion}"
+        echo "*                                                                 *"  
+        echo "*>>>   Unable to proceed with your request, aborting ./configure! *"
+        echo "*                                                                 *"  
+        echo "*???    Suggestion - Install a private copy of autoconf 2.5x.     *"  
+        echo "*???                 It's quite easy and does NOT require root:   *"  
+        echo "*                                                                 *"  
+        echo "*   Download autoconf 2.57 from gnu                               *"  
+        echo "*     $ wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.57.tar.gz *"
+        echo "*                                                                 *"  
+        echo "*   Untar it                                                      *"  
+        echo "*     $ tar xfvz autoconf-2.57.tar.gz                             *"  
+        echo "*                                                                 *"  
+        echo "*   Make it                                                       *"  
+        echo "*     $ cd autoconf-2.57                                          *"  
+        echo "*     $ ./configure --prefix=/home/<whatever>/autoconf257         *"  
+        echo "*     $ make                                                      *"  
+        echo "*     $ make install                                              *"  
+        echo "*                                                                 *"  
+        echo "*   Add it to your path.  Under bash do this:                     *"  
+        echo "*     $ PATH=/home/<whatever>autoconf257/bin:\$PATH                *"  
+        echo "*     $ export PATH                                               *"  
+        echo "*                                                                 *"
+        echo "*******************************************************************"
+        exit 1
+        ;;
+esac
+
+dnl> Then check for a match with the scripts...
 dnl>
 dnl>      We know that all of the 1.6.x [1..3] versions of automake work ok
 dnl>      and the 2.5x [1..7] of autoconf work ok too.
@@ -93,9 +186,9 @@ dnl>
 if test -f /tmp/autotoolversions; then
      rm -f /tmp/autotoolversions
 fi
-automake --version | head -n 1 | awk '{ gsub(/)/, "", $3); print "     " $3 " " $4 }'  >/tmp/autotoolversions
-autoconf --version | head -n 1 | awk '{ gsub(/)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
-libtool --version | head -n 1  | awk '{ gsub(/)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+automake --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }'  >/tmp/autotoolversions
+autoconf --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+libtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
 
 touch autotoolversions
 diff -q autotoolversions /tmp/autotoolversions 2>/dev/null
@@ -121,7 +214,7 @@ if test ".${rc}" = ".1"; then
     echo "*>>>     2. use the auto* tools to recreate them"
     echo "*                (if you do not have automake, autoconf and libtool"
     echo "*                 intalled, this will fail)"
-    echo "*>>>     3. tell you to rerun ./configure with the --enable-automake171 flag"
+    echo "*>>>     3. tell you to rerun ./configure"
     echo "*"
     echo "*    Please, tell the ntop-dev mailing list if there are problems..."
     echo "*"
@@ -189,10 +282,15 @@ if test ".${rc}" = ".1"; then
     fi
 
     echo
-    echo
-    echo "Now, rerun ./configure"
+    echo "*******************************************************************"
+    echo "*                                                                 *"
+    echo "*   Now, rerun ./configure                                        *"
+    echo "*                                                                 *"
+    echo "*******************************************************************"
     echo
     exit 1
+else
+    echo "auto* tools are OK, continuing with ./configure"
 fi
 
 dnl> autoheader stuff...just ignore
@@ -207,23 +305,6 @@ AH_TEMPLATE([HAVE_U_INT64_T], [Define for unsigned int 64 typedef])
 AH_TEMPLATE([HAVE_U_INT8_T],  [Define for unsigned int 8 typedef])
 AH_TEMPLATE([HAVE_LIBWRAP],   [Define for tcp wrappers (-lwrap)])
 dnl> end autoheader stuff
-
-echo "*******************************************************************"
-echo "*                                                                 *"
-echo "* NOTICE:  I know you're used to ignoring output from ./configure *"
-echo "*                                                                 *"
-echo "*          ntop has a lot of complexity and interdependences.     *"
-echo "*                                                                 *"
-echo "*          Please, please AT LEAST read the stuff in these        *"
-echo "*          boxes!                                                 *"
-echo "*                                                                 *"
-echo "*>>> The ACTION taken is shown prefixed '>>>'                     *"
-echo "*                                                                 *"
-echo "*    If the ACTION is unacceptable,                               *"
-echo "*??? The REMEDIATION plan is shown prefixed with '???'            *"
-echo "*                                                                 *"
-echo "*******************************************************************"
-echo
 
 dnl> Basic sanity check ... does ntop.c exist?
 AC_CONFIG_SRCDIR([ntop.c])
@@ -246,49 +327,10 @@ AC_CHECK_FILE(depcomp, , [
 
     echo ""
     echo "depcomp missing... will install it in this ntop directory."
-    echo "  Checking automake version..."
-    automakeversion=`automake --version | grep ^automake | awk '{ print $4 }'`
-    case "${automakeversion}" in
-        *1\.[[45]]*)
-            echo "*******************************************************************"
-            echo "*                                                                 *"
-            echo "*ERROR: ntop requires automake version 1.6 or newer...            *"
-            echo "*                                                                 *"
-            echo "*  You are executing ${automakeversion}"
-            echo "*                                                                 *"
-            echo "*>>>   Unable to proceed with your request, aborting ./configure! *"
-            echo "*                                                                 *"
-            echo "*???    Suggestion - Install a private copy of automake 1.6.3.    *"
-            echo "*???                 It's quite easy and does NOT require root:   *"
-            echo "*                                                                 *"
-            echo "*   Download automake 1.6.3 from gnu                              *"
-            echo "*     $ wget http://ftp.gnu.org/gnu/automake/automake-1.6.3.tar.gz*"
-            echo "*                                                                 *"
-            echo "*   Untar it                                                      *"
-            echo "*     $ tar xfvz automake-1.6.3.tar.gz                            *"
-            echo "*                                                                 *"
-            echo "*   Make it                                                       *"
-            echo "*     $ cd automake-1.6.3                                         *"
-            echo "*     $ ./configure --prefix=/home/<whatever>/automake163         *"
-            echo "*     $ make                                                      *"
-            echo "*     $ make install                                              *"
-            echo "*                                                                 *"
-            echo "*   Add it to your path.  Under bash do this:                     *"
-            echo "*     $ PATH=/home/<whatever>automake163/bin:\$PATH                *"
-            echo "*     $ export PATH                                               *"
-            echo "*                                                                 *"
-            echo "*******************************************************************"
-            exit 1 
-            ;;
-    esac
-
     echo "  Invoking automake to copy depcomp..."
     automake --gnu --copy --add-missing
     echo ""
 ])
-
-dnl> early since we need it for --enable-showoses
-AC_PROG_AWK
 
 AC_ARG_ENABLE(void,
               [  +--ntop-specific:------------------------------------------------------------+])
