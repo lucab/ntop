@@ -3774,7 +3774,9 @@ void printNtopConfigInfo(int textPrintFlag) {
   for(i=0; myGlobals.dataFileDirs[i] != NULL; i++) {
     if ((bufUsed = snprintf(&buf[bufPosition],
 			    bufLength,
-			    "%s<br>", myGlobals.dataFileDirs[i])) < 0)
+			    "%s%s\n",
+                            i > 0 ? "                " : "",
+                            myGlobals.dataFileDirs[i])) < 0)
       BufferTooShort();
     if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
@@ -3789,7 +3791,8 @@ void printNtopConfigInfo(int textPrintFlag) {
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
     if ((bufUsed = snprintf(&buf[bufPosition],
 			    bufLength,
-			    "%s<br>",
+			    "%s%s\n",
+                            i > 0 ? "                  " : "",
 			    myGlobals.configFileDirs[i])) < 0)
       BufferTooShort();
     if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
@@ -3804,7 +3807,9 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   for(i=0; myGlobals.pluginDirs[i] != NULL; i++) {
     if ((bufUsed = snprintf(&buf[bufPosition],
-			    bufLength, "%s<br>", myGlobals.pluginDirs[i])) < 0)
+			    bufLength, "%s%s\n",
+                            i > 0 ? "             " : "",
+                            myGlobals.pluginDirs[i])) < 0)
       BufferTooShort();
     if(bufUsed == 0) bufUsed = strlen(&buf[bufPosition]); /* Win32 patch */
     bufPosition += bufUsed;
@@ -4020,11 +4025,24 @@ void printNtopProblemReport(void) {
   sendString("The summary should be 5-10 words that indicate the problem and which would have\n");
   sendString("helped you to find a previous report of the same problem, e.g.:\n");
   sendString("   2003-02-07 cvs compile error in util.c, #define NONOPTION_P...\n\n");
-  sendString("For the 'Log Extract', cut and past the last 10-15 system log messages, i.e.:\n");
+  sendString("Use the SAME 'summary' as the subject of your message, with the addition\n");
+  sendString("of the PR_xxxxxx value.\n\n");
+  sendString("For the 'Log Extract', cut and paste the last 10-15 system log messages.\n");
+  sendString("Make sure - even if it's more than 15 messages that you show at least 5\n");
+  sendString("or 6 messages (or a few minutes in time) BEFORE the first sign of failure.\n\n");
+  sendString("Assuming your system log is in /var/log/messages, the command is:\n");
   sendString("   grep 'ntop' /var/log/messages | head -n 15\n");
-  sendString("Assuming your system log is in /var/log/messages.\n\n");
-  sendString("Delete this line to the top before sending...\n");
-  sendString("-------------------------------------------------------------------------------\n");
+  sendString("but you may have to increase the 15 to get the right messages.\n\n");
+
+  sendString("Note: The generated id below should be unique. It's essentially a random 6\n");
+  sendString("      or 7 character tracking tag for each problem report.  Since it's\n");
+  sendString("      generated on your machine, we can't just use an ever increasing global\n");
+  sendString("      number.  While it should be unique, it is not traceable back to a\n");
+  sendString("      specific user or machine.\n\n");
+  sendString("      If it makes you uncomfortable just delete it.\n\n");
+  sendString("----------------------------------------------------------------------------\n");
+  sendString(">>>>> Delete this line to the top before sending...\n");
+
   sendString("  n t o p   v e r s i o n  '");
   sendString(version);
   sendString("'  p r o b l e m   r e p o r t\n\n");
@@ -4035,111 +4053,6 @@ void printNtopProblemReport(void) {
   buf[sizeof(buf)-1] = '\0';
   sendString(buf);
   sendString("\n\n");
-  sendString("-------------------------------------------------------------------------------\n");
-  sendString("Summary\n\n\n\n\n\n");
-  sendString("OS: __________  version: __________\n\n");
-  sendString("ntop from: ______________________________ (rpm, source, ports, etc.)\n\n");
-  sendString("Hardware:  CPU:           _____ (i86, SPARC, etc.)\n");
-  sendString("           # Processors:  _____\n");
-  sendString("           Memory:        _____ MB\n");
-  sendString("Network:\n");
-
-  if (myGlobals.mergeInterfaces == 1) {
-      if (myGlobals.device[0].droppedPkts.value > 0) {
-          snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[0].droppedPkts.value);
-          sendString(buf);
-      }
-      if (myGlobals.device[0].ethernetPkts.value > 0) {
-          snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[0].ethernetPkts.value);
-          sendString(buf);
-      }
-      if (myGlobals.device[0].broadcastPkts.value > 0) {
-          snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[0].broadcastPkts.value);
-          sendString(buf);
-      }
-      if (myGlobals.device[0].multicastPkts.value > 0) {
-          snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[0].multicastPkts.value);
-          sendString(buf);
-      }
-      if (myGlobals.device[0].ipPkts.value > 0) {
-          snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[0].ipPkts.value);
-          sendString(buf);
-      }
-      sendString("\n");
-  }
-
-  for (i=0; i<myGlobals.numDevices; i++) {
-      snprintf(buf, sizeof(buf), "     Network Interface %2d ", i);
-      sendString(buf);
-      if (myGlobals.device[0].dummyDevice)
-          sendString(" (dummy)");
-      if (myGlobals.device[i].virtualDevice)
-          sendString(" (virtual)");
-      if (myGlobals.device[i].name != NULL) {
-          sendString(" ");
-          sendString(myGlobals.device[i].name);
-      }
-      if (myGlobals.device[i].humanFriendlyName != NULL) {
-          if (myGlobals.device[i].name != NULL) {
-              if (strcmp(myGlobals.device[i].name, myGlobals.device[i].humanFriendlyName)) {
-                  sendString(" "); 
-                  sendString(myGlobals.device[i].humanFriendlyName);
-              }
-          } else {
-              sendString(" "); 
-              sendString(myGlobals.device[i].humanFriendlyName);
-          }
-      }
-      sendString("\n");
-
-      if (myGlobals.device[i].filter != NULL) {
-          sendString("      Filter: ");
-          sendString(myGlobals.device[i].filter);
-          sendString("\n");
-      }
-
-      if (myGlobals.mergeInterfaces == 0) {
-          if (myGlobals.device[i].droppedPkts.value > 0) {
-              snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[i].droppedPkts.value);
-              sendString(buf);
-          }
-          if (myGlobals.device[i].ethernetPkts.value > 0) {
-              snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[i].ethernetPkts.value);
-              sendString(buf);
-          }
-          if (myGlobals.device[i].broadcastPkts.value > 0) {
-              snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[i].broadcastPkts.value);
-              sendString(buf);
-          }
-          if (myGlobals.device[i].multicastPkts.value > 0) {
-              snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[i].multicastPkts.value);
-              sendString(buf);
-          }
-          if (myGlobals.device[i].ipPkts.value > 0) {
-              snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[i].ipPkts.value);
-              sendString(buf);
-          }
-      }
-
-      sendString("          Mfg: ____________________  Model: ____________________\n");
-      sendString("          NIC Speed: 10/100/1000/Other  Bus: PCI ISA USB Firewire Other\n");
-      sendString("          Location:  Public Internet / LAN / WAN\n");
-      sendString("          Bandwidth: Dialup  DSL/CableModem  fT1  T1  10Mbps T3 100Mbps+\n");
-      sendString("          # Hosts (machines): __________\n\n");
-  }
-  sendString("-------------------------------------------------------------------------------\n");
-  sendString("Log extract\n\n\n\n\n\n");
-  sendString("-------------------------------------------------------------------------------\n");
-  sendString("Problem Description\n\n\n\n\n\n\n\n\n\n");
-  sendString("-------------------------------------------------------------------------------\n");
-  printNtopConfigInfo(TRUE);
-  sendString("-------------------------------------------------------------------------------\n");
-
-  sendString("Note: The generated id below should be unique. It's essentially a random 6 or 7\n");
-  sendString("      character tracking tag for each problem report.  Since it's generated on\n");
-  sendString("      your machine, we can't just use an ever increasing global number.\n\n");
-  sendString("      While it should be unique, it is not traceable back to a specific user or\n");
-  sendString("      machine.  If it makes you uncomfortable just delete it.\n\n");
 
   /*
    *  Generate a (hopefully) globally unique tag for each report. The goal is to create something 
@@ -4239,7 +4152,106 @@ void printNtopProblemReport(void) {
   sendString("Problem Report Id: PR_");
   sendString(buf);
   sendString("\n\n");
-  sendString("-------------------------------------------------------------------------------\n");
+  sendString("----------------------------------------------------------------------------\n");
+  sendString("Summary\n\n\n\n\n\n");
+  sendString("OS: __________  version: __________\n\n");
+  sendString("ntop from: ______________________________ (rpm, source, ports, etc.)\n\n");
+  sendString("Hardware:  CPU:           _____ (i86, SPARC, etc.)\n");
+  sendString("           # Processors:  _____\n");
+  sendString("           Memory:        _____ MB\n");
+  sendString("Network:\n");
+
+  if (myGlobals.mergeInterfaces == 1) {
+      sendString("Merged packet counts:\n");
+      if (myGlobals.device[0].droppedPkts.value > 0) {
+          snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[0].droppedPkts.value);
+          sendString(buf);
+      }
+      if (myGlobals.device[0].ethernetPkts.value > 0) {
+          snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[0].ethernetPkts.value);
+          sendString(buf);
+      }
+      if (myGlobals.device[0].broadcastPkts.value > 0) {
+          snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[0].broadcastPkts.value);
+          sendString(buf);
+      }
+      if (myGlobals.device[0].multicastPkts.value > 0) {
+          snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[0].multicastPkts.value);
+          sendString(buf);
+      }
+      if (myGlobals.device[0].ipPkts.value > 0) {
+          snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[0].ipPkts.value);
+          sendString(buf);
+      }
+      sendString("\n");
+  }
+
+  for (i=0; i<myGlobals.numDevices; i++) {
+      snprintf(buf, sizeof(buf), "     Network Interface %2d ", i);
+      sendString(buf);
+      if (myGlobals.device[0].dummyDevice)
+          sendString(" (dummy)");
+      if (myGlobals.device[i].virtualDevice)
+          sendString(" (virtual)");
+      if (myGlobals.device[i].name != NULL) {
+          sendString(" ");
+          sendString(myGlobals.device[i].name);
+      }
+      if (myGlobals.device[i].humanFriendlyName != NULL) {
+          if (myGlobals.device[i].name != NULL) {
+              if (strcmp(myGlobals.device[i].name, myGlobals.device[i].humanFriendlyName)) {
+                  sendString(" "); 
+                  sendString(myGlobals.device[i].humanFriendlyName);
+              }
+          } else {
+              sendString(" "); 
+              sendString(myGlobals.device[i].humanFriendlyName);
+          }
+      }
+      sendString("\n");
+
+      if (myGlobals.device[i].filter != NULL) {
+          sendString("      Filter: ");
+          sendString(myGlobals.device[i].filter);
+          sendString("\n");
+      }
+
+      if (myGlobals.mergeInterfaces == 0) {
+          if (myGlobals.device[i].droppedPkts.value > 0) {
+              snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[i].droppedPkts.value);
+              sendString(buf);
+          }
+          if (myGlobals.device[i].ethernetPkts.value > 0) {
+              snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[i].ethernetPkts.value);
+              sendString(buf);
+          }
+          if (myGlobals.device[i].broadcastPkts.value > 0) {
+              snprintf(buf, sizeof(buf), "     Broadcast: %10u\n", myGlobals.device[i].broadcastPkts.value);
+              sendString(buf);
+          }
+          if (myGlobals.device[i].multicastPkts.value > 0) {
+              snprintf(buf, sizeof(buf), "     Multicast: %10u\n", myGlobals.device[i].multicastPkts.value);
+              sendString(buf);
+          }
+          if (myGlobals.device[i].ipPkts.value > 0) {
+              snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[i].ipPkts.value);
+              sendString(buf);
+          }
+      }
+
+      sendString("          Mfg: ____________________  Model: ____________________\n");
+      sendString("          NIC Speed: 10/100/1000/Other  Bus: PCI ISA USB Firewire Other\n");
+      sendString("          Location:  Public Internet / LAN / WAN\n");
+      sendString("          Bandwidth: Dialup  DSL/CableModem  fT1  T1  10Mbps T3 100Mbps+\n");
+      sendString("          # Hosts (machines): __________\n\n");
+  }
+  sendString("----------------------------------------------------------------------------\n");
+  sendString("Log extract\n\n\n\n\n\n");
+  sendString("----------------------------------------------------------------------------\n");
+  sendString("Problem Description\n\n\n\n\n\n\n\n\n\n");
+  sendString("----------------------------------------------------------------------------\n");
+  printNtopConfigInfo(TRUE);
+  sendString("----------------------------------------------------------------------------\n");
 }
   /* **************************************** */
 
