@@ -948,7 +948,9 @@ void initLibpcap(char* rulesFile, int numDevices) {
 	  if(strlen(myGlobals.pcapLog) > 64)
 	    myGlobals.pcapLog[64] = '\0';
 
-	  sprintf(myName, "%s.%s.pcap", myGlobals.pcapLog, myGlobals.device[i].name);
+	  sprintf(myName, "%s/%s.%s.pcap", 
+		  myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+		  myGlobals.pcapLog, myGlobals.device[i].name);
 	  myGlobals.device[i].pcapDumper = pcap_dump_open(myGlobals.device[i].pcapPtr, myName);
 
 	  if(myGlobals.device[i].pcapDumper == NULL) {
@@ -958,7 +960,9 @@ void initLibpcap(char* rulesFile, int numDevices) {
 	}
 
 	if(myGlobals.enableSuspiciousPacketDump) {
-	  sprintf(myName, "ntop-suspicious-pkts.%s.pcap", myGlobals.device[i].name);
+	  sprintf(myName, "%s/ntop-suspicious-pkts.%s.pcap", 
+		  myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
+		  myGlobals.device[i].name);
 	  myGlobals.device[i].pcapErrDumper = pcap_dump_open(myGlobals.device[i].pcapPtr, myName);
 
 	  if(myGlobals.device[i].pcapErrDumper == NULL)

@@ -126,10 +126,6 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   myGlobals.mergeInterfaces = 1;     /* by default ntop will merge network interfaces */
   myGlobals.isNmapPresent = 0;
-
-  if(!myGlobals.dbPath)
-    myGlobals.dbPath = strdup(DBFILE_DIR);   /* a NULL pointer will break the logic */
-
   myGlobals.usePersistentStorage = 0;
   myGlobals.mapperURL = NULL;
 
@@ -144,9 +140,11 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.trackOnlyLocalHosts = 0;
 
   /* Search paths */
-  myGlobals.dataFileDirs   = _dataFileDirs;
-  myGlobals.pluginDirs     = _pluginDirs;
-  myGlobals.configFileDirs = _configFileDirs;
+  myGlobals.dataFileDirs    = _dataFileDirs;
+  myGlobals.pluginDirs      = _pluginDirs;
+  myGlobals.configFileDirs  = _configFileDirs;
+  myGlobals.pcapLogBasePath = strdup(DBFILE_DIR);   /* a NULL pointer will break the logic */
+  myGlobals.dbPath          = strdup(DBFILE_DIR);   /* a NULL pointer will break the logic */
 
   /* the table of enabled NICs */
   myGlobals.numDevices = 0;

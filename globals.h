@@ -87,9 +87,11 @@ typedef struct ntopGlobals {
 
   int mergeInterfaces;               /* 'M' */
   int isNmapPresent;                 /* 'N' */
+  char *pcapLogBasePath;             /* 'O' */ /* Added by Ola Lundqvist <opal@debian.org>. */
   char *dbPath;                      /* 'P' */
   short usePersistentStorage;        /* 'S' */
   char *mapperURL;                   /* 'U' */
+
 
 #ifdef HAVE_GDCHART
   int throughput_chart_type;         /* '129' */

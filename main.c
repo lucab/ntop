@@ -126,7 +126,7 @@ static struct option const long_options[] = {
 #ifndef WIN32
   { "no-nmap",                          no_argument,       NULL, 'N' },
 #endif
-
+  { "pcap-file-path",                   required_argument, NULL, 'O' },
   { "db-file-path",                     required_argument, NULL, 'P' },
   { "filter-rule",                      required_argument, NULL, 'R' },
   { "store-mode",                       required_argument, NULL, 'S' },
@@ -242,6 +242,7 @@ static void usage (FILE * fp) {
 
   fprintf(fp, "    [-M             | --no-interface-merge]               Don't merge network interfaces (see man page)\n");
   fprintf(fp, "    [-N             | --no-nmap]                          Don't use nmap even if installed\n");
+  fprintf(fp, "    [-O <path>      | --pcap-file-path <path>]            Path for log files in pcap format\n");
   fprintf(fp, "    [-P <path>      | --db-file-path <path>]              Path for ntop internal database files\n");
   fprintf(fp, "    [-R <file>      | --filter-rule <file>]               Matching rules file\n");
   fprintf(fp, "    [-S <number>    | --store-mode <number>]              Persistent storage mode [0-none, 1-local, 2-all]\n");
@@ -557,8 +558,15 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.isNmapPresent = 0;
       break;
 
-    case 'P':                                       /* DB-Path (ntop's spool directory) */
+    case 'O': /* pcap log path - Ola Lundqvist <opal@debian.org> */
       stringSanityCheck(optarg);
+      if(myGlobals.pcapLogBasePath != NULL) free(myGlobals.pcapLogBasePath);
+      myGlobals.pcapLogBasePath = strdup(optarg);
+      break;
+
+    case 'P': /* DB-Path (ntop's spool directory) */
+      stringSanityCheck(optarg);
+      if(myGlobals.dbPath != NULL) free(myGlobals.dbPath);
       myGlobals.dbPath = strdup(optarg);
       break;
 

@@ -368,6 +368,7 @@ void purgeIdleHosts(int actDevice) {
       if(myGlobals.device[actDevice].hash_hostTraffic[idx] != NULL)
 	  myGlobals.device[actDevice].hash_hostTraffic[idx]->numUses = 0;
     }
+
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
@@ -378,9 +379,9 @@ void purgeIdleHosts(int actDevice) {
     traceEvent(TRACE_INFO, "Purging host (idx=%d/%s) (%d hosts purged)",
 	       idx, theFlaggedHosts[idx]->hostSymIpAddress, numFreedBuckets);
 #endif
-
-      freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
-      numFreedBuckets++;
+    
+    freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
+    numFreedBuckets++;
   }
 
   free(theFlaggedHosts);
