@@ -264,17 +264,25 @@ extern void initLeaks(void);
 extern void termLeaks(void);
 extern void resetLeaks(void);
 #ifdef MEMORY_DEBUG 
-#define malloc(a) ntop_malloc((unsigned int)a, __FILE__, __LINE__)
-#define strdup(a) ntop_strdup((char*)a, __FILE__, __LINE__)
-#define free(a)   ntop_free((void*)&(a), __FILE__, __LINE__)
-extern void* ntop_malloc(unsigned int sz, char* file, int line);
-extern char* ntop_strdup(char *str, char* file, int line);
-extern void  ntop_free(void **ptr, char* file, int line);
+#define malloc(a)     ntop_malloc((unsigned int)a, __FILE__, __LINE__)
+#define calloc(a, b)  ntop_calloc((unsigned int)a, (unsigned int)b, __FILE__, __LINE__)
+#define realloc(p, a) ntop_realloc((void*)p, (unsigned int)a,  __FILE__, __LINE__)
+#define strdup(a)     ntop_strdup((char*)a, __FILE__, __LINE__)
+#define free(a)       ntop_free((void*)&(a), __FILE__, __LINE__)
+extern void*          ntop_malloc(unsigned int sz, char* file, int line);
+extern void*          ntop_calloc(unsigned int c, unsigned int sz, char* file, int line);
+extern void*          ntop_realloc(void* ptr, unsigned int sz, char* file, int line);
+extern char*          ntop_strdup(char *str, char* file, int line);
+extern void           ntop_free(void **ptr, char* file, int line);
 #else
-#define free(a)    ntop_safefree((void*)&(a), __FILE__, __LINE__)
-extern void        ntop_safefree(void **ptr, char* file, int line);
-#define malloc(sz) ntop_safemalloc(sz, __FILE__, __LINE__)
-extern void*       ntop_safemalloc(unsigned int sz, char* file, int line);
+#define free(a)       ntop_safefree((void*)&(a), __FILE__, __LINE__)
+extern void           ntop_safefree(void **ptr, char* file, int line);
+#define malloc(sz)    ntop_safemalloc(sz, __FILE__, __LINE__)
+extern void*          ntop_safemalloc(unsigned int sz, char* file, int line);
+#define calloc(c,sz)  ntop_safecalloc(c, sz, __FILE__, __LINE__)
+extern void*          ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line);
+#define realloc(p,sz) ntop_saferealloc(p, sz, __FILE__, __LINE__)
+extern void*          ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line);
 #endif
 
 /* logger.c */
@@ -406,7 +414,7 @@ extern void fillDomainName(HostTraffic *el);
 extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
                         char* userParm);
 extern void killThread(pthread_t *threadId);
-extern int createMutex(PthreadMutex *mutexId);
+extern int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
 extern int _accessMutex(PthreadMutex *mutexId, char* where,
                         char* fileName, int fileLine);
 extern void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
@@ -420,6 +428,7 @@ extern int createCondvar(ConditionalVariable *condvarId);
 extern void deleteCondvar(ConditionalVariable *condvarId);
 extern int waitCondvar(ConditionalVariable *condvarId);
 extern int signalCondvar(ConditionalVariable *condvarId);
+#define createMutex(a)     _createMutex(a, __FILE__, __LINE__)
 #define accessMutex(a, b)  _accessMutex(a, b, __FILE__, __LINE__)
 #define deleteMutex(a)     _deleteMutex(a, __FILE__, __LINE__)
 #define tryLockMutex(a, b) _tryLockMutex(a, b, __FILE__, __LINE__)

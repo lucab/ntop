@@ -1305,84 +1305,86 @@ void printAllSessionsHTML(char* host) {
 
   i = 0;
 
-  for(idx=1; idx<1024; idx++) {
-    if(el->portsUsage[idx] != NULL) {
-      char *svc = getAllPortByNum(idx);
-      char webHostName[256];
-      HostTraffic *peerHost;
+  if(el->portsUsage != NULL) {
+    for(idx=1; idx<1024; idx++) {
+      if(el->portsUsage[idx] != NULL) {
+	char *svc = getAllPortByNum(idx);
+	char webHostName[256];
+	HostTraffic *peerHost;
 
-      if(i == 0) {
-	printSectionTitle("TCP/UDP&nbsp;Service/Port&nbsp;Usage\n");
-	sendString("<CENTER>\n");
-	sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
-		   "<TH "TH_BG">IP&nbsp;Service</TH>"
-		   "<TH "TH_BG">Port</TH>"
-		   "<TH "TH_BG">#&nbsp;Client&nbsp;Sess.</TH>"
-		   "<TH "TH_BG">Last&nbsp;Client&nbsp;Peer</TH>"
-		   "<TH "TH_BG">#&nbsp;Server&nbsp;Sess.</TH>"
-		   "<TH "TH_BG">Last&nbsp;Server&nbsp;Peer</TH>"
-		   "</TR>\n");
-	i++;
-      }
+	if(i == 0) {
+	  printSectionTitle("TCP/UDP&nbsp;Service/Port&nbsp;Usage\n");
+	  sendString("<CENTER>\n");
+	  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
+		     "<TH "TH_BG">IP&nbsp;Service</TH>"
+		     "<TH "TH_BG">Port</TH>"
+		     "<TH "TH_BG">#&nbsp;Client&nbsp;Sess.</TH>"
+		     "<TH "TH_BG">Last&nbsp;Client&nbsp;Peer</TH>"
+		     "<TH "TH_BG">#&nbsp;Server&nbsp;Sess.</TH>"
+		     "<TH "TH_BG">Last&nbsp;Server&nbsp;Peer</TH>"
+		     "</TR>\n");
+	  i++;
+	}
 
-      if(svc != NULL) {
-	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
-		"<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), svc, idx) < 0) 
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-      } else {
-	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%d</TH>"
-		 "<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), idx, idx) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-      }
+	if(svc != NULL) {
+	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		      "<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), svc, idx) < 0) 
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	} else {
+	  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%d</TH>"
+		      "<TD "TD_BG" ALIGN=CENTER>%d</TD>", getRowColor(), idx, idx) < 0)
+	    traceEvent(TRACE_ERROR, "Buffer overflow!");
+	}
 
-      sendString(buf);
+	sendString(buf);
 
-      if(el->portsUsage[idx]->clientUses > 0) {
-	/* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+	if(el->portsUsage[idx]->clientUses > 0) {
+	  /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
 
-	if(el->portsUsage[idx]->clientUsesLastPeer == NO_PEER)
-	  peerHost = NULL;
-	else
-	  peerHost = device[actualReportDeviceId].
-	    hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->clientUsesLastPeer)];
+	  if(el->portsUsage[idx]->clientUsesLastPeer == NO_PEER)
+	    peerHost = NULL;
+	  else
+	    peerHost = device[actualReportDeviceId].
+	      hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->clientUsesLastPeer)];
 	
-	if(peerHost == NULL) {
-	  /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
-	  strncpy(webHostName, "&nbsp;", sizeof(webHostName));
+	  if(peerHost == NULL) {
+	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
+	    strncpy(webHostName, "&nbsp;", sizeof(webHostName));
+	  } else
+	    strncpy(webHostName, makeHostLink(peerHost, SHORT_FORMAT, 0, 0), sizeof(webHostName));
+
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
+		      "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
+		      el->portsUsage[idx]->clientUses,
+		      formatBytes(el->portsUsage[idx]->clientTraffic, 1),
+		      webHostName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
 	} else
-	  strncpy(webHostName, makeHostLink(peerHost, SHORT_FORMAT, 0, 0), sizeof(webHostName));
+	  sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD>");
 
-	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
-		    "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
-		    el->portsUsage[idx]->clientUses,
-		    formatBytes(el->portsUsage[idx]->clientTraffic, 1),
-		    webHostName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      } else
-	sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD>");
+	if(el->portsUsage[idx]->serverUses > 0) {
 
-      if(el->portsUsage[idx]->serverUses > 0) {
+	  if(el->portsUsage[idx]->serverUsesLastPeer == NO_PEER)
+	    peerHost = NULL;
+	  else
+	    peerHost = device[actualReportDeviceId].
+	      hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->serverUsesLastPeer)];
 
-	if(el->portsUsage[idx]->serverUsesLastPeer == NO_PEER)
-	  peerHost = NULL;
-	else
-	  peerHost = device[actualReportDeviceId].
-	    hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->serverUsesLastPeer)];
+	  if(peerHost == NULL) {
+	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
+	    strncpy(webHostName, "&nbsp;", sizeof(webHostName));
+	  } else
+	    strncpy(webHostName, makeHostLink(peerHost, SHORT_FORMAT, 0, 0), sizeof(webHostName));
 
-	if(peerHost == NULL) {
-	  /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
-	  strncpy(webHostName, "&nbsp;", sizeof(webHostName));
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
+		      "<TD "TD_BG" ALIGN=CENTER>%s</TD></TR>",
+		      el->portsUsage[idx]->serverUses,
+		      formatBytes(el->portsUsage[idx]->serverTraffic, 1),
+		      webHostName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  sendString(buf);
 	} else
-	  strncpy(webHostName, makeHostLink(peerHost, SHORT_FORMAT, 0, 0), sizeof(webHostName));
-
-	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
-		"<TD "TD_BG" ALIGN=CENTER>%s</TD></TR>",
-		el->portsUsage[idx]->serverUses,
-		formatBytes(el->portsUsage[idx]->serverTraffic, 1),
-		webHostName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-	sendString(buf);
-      } else
-	sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD></TR>");
+	  sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD></TR>");
+      }
     }
   }
 
@@ -1933,11 +1935,13 @@ void printIpProtocolUsage(void) {
        && (device[actualReportDeviceId].hash_hostTraffic[i]->hostNumIpAddress[0] != '\0')) {
       hosts[hostsNum++] = device[actualReportDeviceId].hash_hostTraffic[i];
 
-      for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++) {
-	if(device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j] != NULL)  {
-	  clientPorts[j] += device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->clientUses;
-	  serverPorts[j] += device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->serverUses;
-	  numPorts++;
+      if(device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage != NULL) {
+	for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++) {
+	  if(device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j] != NULL)  {
+	    clientPorts[j] += device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->clientUses;
+	    serverPorts[j] += device[actualReportDeviceId].hash_hostTraffic[i]->portsUsage[j]->serverUses;
+	    numPorts++;
+	  }
 	}
       }
     }

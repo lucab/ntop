@@ -903,7 +903,7 @@ void killThread(pthread_t *threadId) {
 
 /* ************************************ */
 
-int createMutex(PthreadMutex *mutexId) {
+int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
   memset(mutexId, 0, sizeof(PthreadMutex));
@@ -949,8 +949,7 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 	       "ERROR: deleteMutex() call with a NULL mutex [%s:%d]\n",
 	       fileName, fileLine);
     return;
-  }
-  
+  }  
 
   pthread_mutex_unlock(&(mutexId->mutex));
   pthread_mutex_destroy(&(mutexId->mutex));

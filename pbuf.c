@@ -4229,19 +4229,17 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Waiting for packet...\n");
 #endif
-
-    if(!capturePackets) break;
-
-    /* #ifdef WIN32 */
-    while(packetQueueLen == 0)
-      /*  #endif */
-      {
+    
+    while((packetQueueLen == 0)
+	  && (capturePackets) /* Courtesy of Wies-Software <wies@wiessoft.de> */) {
 #ifdef USE_SEMAPHORES
-	waitSem(&queueSem);
+      waitSem(&queueSem);
 #else
-	waitCondvar(&queueCondvar);
+      waitCondvar(&queueCondvar);
 #endif
-      }
+    }
+    
+    if(!capturePackets) break;
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Got packet...\n");

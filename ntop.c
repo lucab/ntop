@@ -172,18 +172,18 @@ RETSIGTYPE handleDiedChild(int signal _UNUSED_) {
   int status;
   pid_t pidId;
 
-  pidId = waitpid(-1, &status, WNOHANG);
-
+  while((pidId = waitpid(-1, &status, WNOHANG)) > 0) {
 #ifdef DEBUG
-  if(status == 0) {
-    numChildren--;
-    traceEvent(TRACE_INFO,
-	       "A child has terminated [pid=%d status=%d children=%d]\n",
-	       pidId, status, numChildren);
-  }
+    if(status == 0) {
+      numChildren--;
+      traceEvent(TRACE_INFO,
+		 "A child has terminated [pid=%d status=%d children=%d]\n",
+		 pidId, status, numChildren);
+    }
 #endif
+  }
 
-  (void)setsignal(SIGCHLD, handleDiedChild);
+  setsignal(SIGCHLD, handleDiedChild);
 }
 #endif
 
@@ -906,7 +906,7 @@ RETSIGTYPE cleanup(int signo) {
 
 #ifdef HAVE_GDBM_H
 #ifdef MULTITHREADED
-    accessMutex(&gdbmMutex, "cleanup");
+  accessMutex(&gdbmMutex, "cleanup");
 #endif 
   gdbm_close(gdbm_file); gdbm_file = NULL;
   gdbm_close(pwFile);    pwFile = NULL;
@@ -942,23 +942,17 @@ RETSIGTYPE cleanup(int signo) {
     }
 
     if(device[i].ipTrafficMatrix != NULL) {
-      /*
-	Do not free device[i].ipTrafficMatrix[j] as they are
-	pointers to other hosts stored by updateTrafficMatrix()
-	
-	Courtesy of Francis Pintos <francis@arhl.com.hk>
-      */
-	
+
+      /* Courtesy of Wies-Software <wies@wiessoft.de> */
+      for(j=0; j<(device[i].numHosts*device[i].numHosts); j++)
+        if(device[i].ipTrafficMatrix[j] != NULL) 
+	  free(device[i].ipTrafficMatrix[j]);
+      
       free(device[i].ipTrafficMatrix);
     }
       
     if(device[i].ipTrafficMatrix != NULL) 
       free(device[i].ipTrafficMatrix);
-
-    for(j=0; j<device[i].numHosts; j++) {
-      if(device[i].ipTrafficMatrixHosts[j] != NULL) 
-	free(device[i].ipTrafficMatrixHosts[j]);
-    }
 
     if(device[i].ipTrafficMatrixHosts != NULL) 
       free(device[i].ipTrafficMatrixHosts);
@@ -980,6 +974,10 @@ RETSIGTYPE cleanup(int signo) {
     if(device[i].pcapErrDumper != NULL)
       pcap_dump_close(device[i].pcapErrDumper);
       
+    /* 
+       Wies-Software <wies@wiessoft.de> on 06/11/2001 says:
+       device[i].pcapPtr seems to be already freed. further tests needed! 
+    */
     if(device[i].pcapPtr != NULL)
       free(device[i].pcapPtr);
   }

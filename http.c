@@ -22,10 +22,9 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-#define TEST
-#ifdef TEST
+/* #ifdef TEST */
 #define FORK_CHILD_PROCESS
-#endif
+/* #endif */
 
 struct _HTTPstatus {
     int statusCode;

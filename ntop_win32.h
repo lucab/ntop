@@ -29,7 +29,9 @@
 
 #define STATIC_PLUGIN
 
-#define sleep(a /* sec */) Sleep(1000*a /* ms */)
+/* Courtesy of Wies-Software <wies@wiessoft.de> */
+extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
+#define sleep(a /* sec */) waitForNextEvent(1000*a /* ms */)
 
 #define DATAFILE_DIR	"."
 #define PLUGIN_DIR		"."
@@ -62,6 +64,7 @@ typedef long int32_t;
 
 extern int getopt(int num, char *const *argv, const char *opts);
 extern int gettimeofday(struct timeval*, struct timezone*);
+extern unsigned long waitForNextEvent(unsigned long ulDelay /* ms */);
 
 extern ULONG GetHostIPAddr();
 

@@ -404,7 +404,9 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     traceEvent(TRACE_INFO, "Waiting for address...\n");
 #endif
 
-    while(addressQueueLen == 0) {
+    while((addressQueueLen == 0) 
+	  && (capturePackets) /* Courtesy of Wies-Software <wies@wiessoft.de> */
+	  ) {
 #ifdef USE_SEMAPHORES
       waitSem(&queueAddressSem);
 #else

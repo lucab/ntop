@@ -360,6 +360,26 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 
 /* ************************************ */
 
+void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
+#ifdef DEBUG
+  traceEvent(TRACE_WARNING, "calloc(%d,%d) [%s] @ %s:%d",
+	     c, sz, formatBytes(allocatedMemory, 0), file, line);
+#endif
+  return(myCalloc(c, sz, line, file));
+}
+
+/* ************************************ */
+
+void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {  
+#ifdef DEBUG
+  traceEvent(TRACE_WARNING, "realloc(%p,%d) [%s] @ %s:%d",
+	     ptr, sz, formatBytes(allocatedMemory, 0), file, line);
+#endif  
+  return(myRealloc(ptr, sz, line, file));
+}
+
+/* ************************************ */
+
 char* ntop_strdup(char *str, char* file, int line) {
 #ifdef DEBUG
   traceEvent(TRACE_WARNING, "strdup(%s) [%s] @ %s:%d", str, 
@@ -378,7 +398,11 @@ void ntop_free(void **ptr, char* file, int line) {
   myFree(ptr, line, file);
 }
 
+/* ****************************************** */
+
 #else /* MEMORY_DEBUG */
+
+/* ****************************************** */
 
 #undef malloc /* just to be safe */
 void* ntop_safemalloc(unsigned int sz, char* file, int line) {
@@ -393,6 +417,42 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
 
   thePtr = malloc(sz);
   memset(thePtr, 0xee, sz); /* Fill it with garbage */
+  return(thePtr);
+}
+
+/* ****************************************** */
+
+/* Courtesy of Wies-Software <wies@wiessoft.de> */
+#undef calloc /* just to be safe */
+void* ntop_safecalloc(unsigned int c, unsigned int sz, char* file, int line) {  
+  void *thePtr;
+  
+#ifdef DEBUG
+  if((sz == 0) || (sz > 32768)) {
+    traceEvent(TRACE_WARNING, "WARNING: called calloc(%u,%u) @ %s:%d",
+	       c, sz, file, line);
+  }
+#endif
+  
+  thePtr = calloc(c, sz);
+  return(thePtr);
+}
+
+/* ****************************************** */
+
+/* Courtesy of Wies-Software <wies@wiessoft.de> */
+#undef realloc /* just to be safe */
+void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
+  void *thePtr;
+  
+#ifdef DEBUG
+  if((sz == 0) || (sz > 32768)) {
+    traceEvent(TRACE_WARNING, "WARNING: called realloc(%p,%u) @ %s:%d",
+	       ptr, sz, file, line);
+  }
+#endif
+  
+  thePtr = realloc(ptr, sz);
   return(thePtr);
 }
 

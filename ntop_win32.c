@@ -67,7 +67,7 @@ void initSniffer() {
 
   Adapter = PacketOpenAdapter(AdapterName);
   if(Adapter == NULL) {
-    traceEvent(TRACE_ERROR, "FATAL ERROR: please install MS NDIS 3.0 driver. Bye...\n");
+    traceEvent(TRACE_ERROR, "FATAL ERROR: please install MS NDIS 3.0 driver. Bye...");
     exit(-1);
   }
   PacketSetFilter(Adapter, NDIS_PACKET_TYPE_PROMISCUOUS);
@@ -131,7 +131,7 @@ void initWinsock32() {
   if( err != 0 ) {
     /* Tell the user that we could not find a usable */
     /* WinSock DLL.                                  */
-    traceEvent(TRACE_ERROR, "FATAL ERROR: unable to initialise Winsock 2.x.\n");
+    traceEvent(TRACE_ERROR, "FATAL ERROR: unable to initialise Winsock 2.x.");
     exit(-1);
   }
 
@@ -146,12 +146,12 @@ void initWinsock32() {
     osName = "Win95/98/ME";
 
 #ifdef WIN32_DEMO
-  traceEvent(TRACE_INFO, "\n-----------------------------------------------------------\n");
-  traceEvent(TRACE_INFO, "WARNING: this application is a limited ntop version able to\n");
-  traceEvent(TRACE_INFO, "capture up to %d packets. If you are interested\n", MAX_NUM_PACKETS);
-  traceEvent(TRACE_INFO, "in the full version please have a look at the ntop\n");
-  traceEvent(TRACE_INFO, "home page http://www.ntop.org/.\n");
-  traceEvent(TRACE_INFO, "-----------------------------------------------------------\n\n");
+  traceEvent(TRACE_INFO, "\n-----------------------------------------------------------");
+  traceEvent(TRACE_INFO, "WARNING: this application is a limited ntop version able to");
+  traceEvent(TRACE_INFO, "capture up to %d packets. If you are interested", MAX_NUM_PACKETS);
+  traceEvent(TRACE_INFO, "in the full version please have a look at the ntop");
+  traceEvent(TRACE_INFO, "home page http://www.ntop.org/.");
+  traceEvent(TRACE_INFO, "-----------------------------------------------------------\n");
 #endif
 }
 
@@ -259,11 +259,20 @@ void killThread(pthread_t *threadId) {
 
 /* ************************************ */
 
-int createMutex(PthreadMutex *mutexId) {
+int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   memset(mutexId, 0, sizeof(PthreadMutex));
 
   mutexId->mutex = CreateMutex(NULL, FALSE, NULL);
+  mutexId->isInitialized = 1;
+
+#ifdef DEBUG
+  if (fileName)
+    traceEvent(TRACE_INFO,
+	       "INFO: createMutex() call with %x mutex [%s:%d]", mutexId,
+	       fileName, fileLine);
+#endif
+
   return(1);
 }
 
@@ -271,9 +280,17 @@ int createMutex(PthreadMutex *mutexId) {
 
 void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
  
+#ifdef DEBUG
+  if (fileName)
+    traceEvent(TRACE_INFO,
+	       "INFO: deleteMutex() call with %x(%c,%x) mutex [%s:%d]",
+	       mutexId, (mutexId && mutexId->isInitialized) ? 'i' : '-',
+	       mutexId ? mutexId->mutex : 0, fileName, fileLine);
+#endif
+  
   if(!mutexId->isInitialized) {
     traceEvent(TRACE_ERROR, 
-	       "ERROR: deleteMutex() call with a NULL mutex [%s:%d]\n",
+	       "ERROR: deleteMutex() call with a NULL mutex [%s:%d]",
 	       fileName, fileLine);
     return;
   }
@@ -289,7 +306,7 @@ void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 int _accessMutex(PthreadMutex *mutexId, char* where,
 		 char* fileName, int fileLine) {
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n",
+  traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]",
 	     mutexId->mutex, where, fileName, fileLine);
 #endif
 
@@ -312,7 +329,7 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 int _tryLockMutex(PthreadMutex *mutexId, char* where,
 		  char* fileName, int fileLine) {
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
+  traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]",
 	     mutexId->mutex, where, fileName, fileLine);
   fflush(stdout);
 #endif
@@ -342,13 +359,13 @@ int _releaseMutex(PthreadMutex *mutexId,
   BOOL rc;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n",
+  traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]",
 	     mutexId->mutex, fileName, fileLine);
 #endif
   rc = ReleaseMutex(mutexId->mutex);
 
-  if(rc == 0) {
-    traceEvent(TRACE_ERROR, "ERROR while unlocking 0x%X [%s:%d] (LastError=%d)\n",
+  if((rc == 0) && (fileName)) {
+    traceEvent(TRACE_ERROR, "ERROR while unlocking 0x%X [%s:%d] (LastError=%d)",
 	       mutexId->mutex, fileName, fileLine, GetLastError());
   }
 
@@ -363,7 +380,7 @@ int _releaseMutex(PthreadMutex *mutexId,
       mutexId->maxLockedDurationUnlockLine = fileLine;
     }
 
-    traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
+    traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs",
 	       &(mutexId->mutex), fileName, fileLine,
 	       mutexId->maxLockedDuration);
   }
@@ -401,14 +418,16 @@ void deleteCondvar(ConditionalVariable *condvarId) {
 int waitCondvar(ConditionalVariable *condvarId) {
   int rc;
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Wait (%x)...\n", condvarId->condVar);
+  traceEvent(TRACE_INFO, "Wait (%x)...", condvarId->condVar);
 #endif
   EnterCriticalSection(&condvarId->criticalSection);
   rc = WaitForSingleObject(condvarId->condVar, INFINITE);
   LeaveCriticalSection(&condvarId->criticalSection);
+
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Got signal (%d)...\n", rc);
+  traceEvent(TRACE_INFO, "Got signal (%d)...", rc);
 #endif
+
   return(rc);
 }
 
@@ -416,7 +435,7 @@ int waitCondvar(ConditionalVariable *condvarId) {
 
 int signalCondvar(ConditionalVariable *condvarId) {
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Signaling (%x)...\n", condvarId->condVar);
+  traceEvent(TRACE_INFO, "Signaling (%x)...", condvarId->condVar);
 #endif
   return((int)PulseEvent(condvarId->condVar));
 }
@@ -444,7 +463,7 @@ void printAvailableInterfaces() {
       memcpy(adaptersName, tmpString, 128);
     }
 
-  traceEvent(TRACE_INFO, "Available interfaces:\n%s\n", (char*)adaptersName);
+  traceEvent(TRACE_INFO, "Available interfaces:\n%s", (char*)adaptersName);
 }
 #endif
 
@@ -653,4 +672,20 @@ int gettimeofday(struct timeval *tv, struct timezone *notUsed) {
   tv->tv_sec = time(NULL);
   tv->tv_usec = 0;
   return(0);
+}
+
+/* ****************************************************** */
+
+/* Courtesy of Wies-Software <wies@wiessoft.de> */
+unsigned long waitForNextEvent(unsigned long ulDelay /* ms */) {
+  unsigned long ulSlice = 1000L; // 1 Second
+
+  while (capturePackets && (ulDelay > 0L)) {
+    if (ulDelay < ulSlice)
+      ulSlice = ulDelay;
+    Sleep(ulSlice);
+    ulDelay -= ulSlice;
+  }
+
+  return ulDelay;
 }
