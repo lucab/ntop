@@ -1013,10 +1013,16 @@ static int returnHTTPPage(char* pageName, int postLen) {
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
 
+#ifdef __OpenBSD__
+    handleDiedChild(0); /* 
+			   Workaround because on this platform
+			   signal handling is broken as the system
+			   creates zombies although we decided to
+			   ignore SIGCHLD
+			*/
+#endif
+
     /* The URLs below are "read-only" hence I can fork a copy of ntop  */ 
-    /* signal(SIGHUP,  SIG_IGN); */
-    /* SIGCHLD is handled in initialize.c */
-    /* signal(SIGQUIT, SIG_IGN); */
 
     if((childpid = fork()) < 0)
       traceEvent(TRACE_ERROR, "An error occurred while forking ntop (errno=%d)...\n", errno);
