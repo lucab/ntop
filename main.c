@@ -734,7 +734,7 @@ int main(int argc, char *argv[]) {
       /* exit(-1); */
     }
 #else
-    printf("WARNING: both -W and -w are set to 0. The web interface will be disabled\n");
+    printf("WARNING: -w is set to 0. The web interface will be disabled\n");
     /* exit(-1); */
 #endif
   }
