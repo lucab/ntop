@@ -447,8 +447,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
     HashList *list;
 
     if((hostIpAddress == NULL) && (ether_addr == NULL)) {
-	traceEvent(TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
-	return(NO_PEER);
+      traceEvent(TRACE_WARNING, "WARNING: both Ethernet and IP addresses are NULL");
+      return(NO_PEER);
     }
 
     idx = computeInitialHashIdx(hostIpAddress, ether_addr,

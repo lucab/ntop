@@ -680,12 +680,12 @@ int main(int argc, char *argv[]) {
   if(myGlobals.webPort == 0) {
 #ifdef HAVE_OPENSSL
     if(myGlobals.sslPort == 0) {
-      printf("FATAL ERROR: both -W and -w can't be set to 0.\n");
-      exit(-1);
+      printf("WARNING: both -W and -w are set to 0. The web interface will be disabled\n");
+      /* exit(-1); */
     }
 #else
-    printf("FATAL ERROR: -w can't be set to 0.\n");
-    exit(-1);
+    printf("WARNING: both -W and -w are set to 0. The web interface will be disabled\n");
+    /* exit(-1); */
 #endif
   }
 

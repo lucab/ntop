@@ -952,13 +952,12 @@ static int checkURLsecurity(char *url) {
       for (tokenCharacter=0; tokenCharacter<=strlen(token); tokenCharacter++) {
 	token[tokenCharacter] = (char)tolower(token[tokenCharacter]);
       }
-      if((strcmp(token , "htm") == 0) ||
+      if((strcmp(token , "htm") == 0)  ||
 	 (strcmp(token , "html") == 0) ||
-	 (strcmp(token , "txt") == 0) ||
-	 (strcmp(token , "jpg") == 0) ||
-	 (strcmp(token , "png") == 0) ||
-	 (strcmp(token , "cgi") == 0) || (strcmp(token , "pl") == 0) ||
-	 (strcmp(token , "gif") == 0) ||
+	 (strcmp(token , "txt") == 0)  ||
+	 (strcmp(token , "jpg") == 0)  ||
+	 (strcmp(token , "png") == 0)  ||
+	 (strcmp(token , "gif") == 0)  ||
 	 (strcmp(token , "css") == 0) ) {
 	countOKextension++;
       } else {

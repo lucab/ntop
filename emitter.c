@@ -946,83 +946,148 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
     wrtStrItm(fDescr, lang, "\t", "name", myGlobals.device[i].name, ',', numEntries);
 
     if(!shortView) {
-      if(checkFilter(filter, &filterPattern, "ipdot")) wrtStrItm(fDescr, lang, "\t", "ipdot", myGlobals.device[i].ipdot, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "fqdn")) wrtStrItm(fDescr, lang, "\t", "fqdn", myGlobals.device[i].fqdn, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "ipdot")) 
+	wrtStrItm(fDescr, lang, "\t", "ipdot", myGlobals.device[i].ipdot, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "fqdn")) 
+	wrtStrItm(fDescr, lang, "\t", "fqdn", myGlobals.device[i].fqdn, ',', numEntries);
 
       snprintf(localbuf, sizeof(localbuf), "%s",
 	       _intoa(myGlobals.device[i].network, intoabuf, sizeof(intoabuf)));
-      if(checkFilter(filter, &filterPattern, "network")) wrtStrItm(fDescr, lang, "\t", "network", localbuf, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "network")) 
+	wrtStrItm(fDescr, lang, "\t", "network", localbuf, ',', numEntries);
       snprintf(localbuf, sizeof(localbuf), "%s",
 	       _intoa(myGlobals.device[i].netmask, intoabuf, sizeof(intoabuf)));
-      if(checkFilter(filter, &filterPattern, "netmask")) wrtStrItm(fDescr, lang, "\t", "netmask", localbuf, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "netmask")) 
+	wrtStrItm(fDescr, lang, "\t", "netmask", localbuf, ',', numEntries);
       snprintf(localbuf, sizeof(localbuf), "%s",
 	       _intoa(myGlobals.device[i].ifAddr, intoabuf, sizeof(intoabuf)));
-      if(checkFilter(filter, &filterPattern, "ifAddr")) wrtStrItm(fDescr, lang, "\t", "ifAddr", localbuf, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "ifAddr"))
+	wrtStrItm(fDescr, lang, "\t", "ifAddr", localbuf, ',', numEntries);
 
-      if(checkFilter(filter, &filterPattern, "started")) wrtTime_tItm(fDescr, lang, "\t", "started", myGlobals.device[i].started, ' ', numEntries);
-      if(checkFilter(filter, &filterPattern, "firstpkt")) wrtTime_tItm(fDescr, lang, "\t", "firstpkt", myGlobals.device[i].firstpkt, ' ', numEntries);
-      if(checkFilter(filter, &filterPattern, "lastpkt")) wrtTime_tItm(fDescr, lang, "\t", "lastpkt", myGlobals.device[i].lastpkt, ' ', numEntries);
-      if(checkFilter(filter, &filterPattern, "virtualDevice")) wrtIntItm(fDescr, lang, "\t", "virtualDevice",(int)myGlobals.device[i].virtualDevice, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "snaplen")) wrtIntItm(fDescr, lang, "\t", "snaplen", myGlobals.device[i].snaplen, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "datalink")) wrtIntItm(fDescr, lang, "\t", "datalink", myGlobals.device[i].datalink, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "filter")) wrtStrItm(fDescr, lang, "\t", "filter", myGlobals.device[i].filter ? myGlobals.device[i].filter : "", ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "droppedPkts")) wrtLlongItm(fDescr, lang, "\t", "droppedPkts",myGlobals.device[i].droppedPkts, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "started")) 
+	wrtTime_tItm(fDescr, lang, "\t", "started", myGlobals.device[i].started, ' ', numEntries);
+      if(checkFilter(filter, &filterPattern, "firstpkt"))
+	wrtTime_tItm(fDescr, lang, "\t", "firstpkt", myGlobals.device[i].firstpkt, ' ', numEntries);
+      if(checkFilter(filter, &filterPattern, "lastpkt"))
+	wrtTime_tItm(fDescr, lang, "\t", "lastpkt", myGlobals.device[i].lastpkt, ' ', numEntries);
+      if(checkFilter(filter, &filterPattern, "virtualDevice")) 
+	wrtIntItm(fDescr, lang, "\t", "virtualDevice",(int)myGlobals.device[i].virtualDevice, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "snaplen"))
+	wrtIntItm(fDescr, lang, "\t", "snaplen", myGlobals.device[i].snaplen, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "datalink")) 
+	wrtIntItm(fDescr, lang, "\t", "datalink", myGlobals.device[i].datalink, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "filter")) 
+	wrtStrItm(fDescr, lang, "\t", "filter", myGlobals.device[i].filter ? myGlobals.device[i].filter : "", ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "droppedPkts")) 
+	wrtLlongItm(fDescr, lang, "\t", "droppedPkts",myGlobals.device[i].droppedPkts, ',', numEntries);
     }
 
-    if(checkFilter(filter, &filterPattern, "ethernetPkts")) wrtLlongItm(fDescr, lang, "\t", "ethernetPkts",myGlobals.device[i].ethernetPkts, ',', numEntries);
-    if(checkFilter(filter, &filterPattern, "broadcastPkts")) wrtLlongItm(fDescr, lang, "\t", "broadcastPkts",myGlobals.device[i].broadcastPkts, ',', numEntries);
-    if(checkFilter(filter, &filterPattern, "multicastPkts")) wrtLlongItm(fDescr, lang, "\t", "multicastPkts",myGlobals.device[i].multicastPkts, ',', numEntries);
-    if(checkFilter(filter, &filterPattern, "ethernetBytes")) wrtLlongItm(fDescr, lang, "\t", "ethernetBytes",myGlobals.device[i].ethernetBytes, ',', numEntries);
-    if(checkFilter(filter, &filterPattern, "ipBytes")) wrtLlongItm(fDescr, lang, "\t", "ipBytes",myGlobals.device[i].ipBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "ethernetPkts")) 
+      wrtLlongItm(fDescr, lang, "\t", "ethernetPkts",myGlobals.device[i].ethernetPkts, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "broadcastPkts"))
+      wrtLlongItm(fDescr, lang, "\t", "broadcastPkts",myGlobals.device[i].broadcastPkts, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "multicastPkts")) 
+      wrtLlongItm(fDescr, lang, "\t", "multicastPkts",myGlobals.device[i].multicastPkts, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "ethernetBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "ethernetBytes",myGlobals.device[i].ethernetBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "ipBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "ipBytes",myGlobals.device[i].ipBytes, ',', numEntries);
+
     if(!shortView) {
-      if(checkFilter(filter, &filterPattern, "fragmentedIpBytes")) wrtLlongItm(fDescr, lang, "\t", "fragmentedIpBytes",myGlobals.device[i].fragmentedIpBytes, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "fragmentedIpBytes")) 
+	wrtLlongItm(fDescr, lang, "\t", "fragmentedIpBytes",myGlobals.device[i].fragmentedIpBytes, ',', numEntries);
     }
-    if(checkFilter(filter, &filterPattern, "tcpBytes")) wrtLlongItm(fDescr, lang, "\t", "tcpBytes",myGlobals.device[i].tcpBytes, ',', numEntries);
-    if(checkFilter(filter, &filterPattern, "udpBytes")) wrtLlongItm(fDescr, lang, "\t", "udpBytes",myGlobals.device[i].udpBytes, ',', numEntries);
-    if(checkFilter(filter, &filterPattern, "otherIpBytes")) wrtLlongItm(fDescr, lang, "\t", "otherIpBytes",myGlobals.device[i].otherIpBytes, ',', numEntries);
-    if(checkFilter(filter, &filterPattern, "icmpBytes")) wrtLlongItm(fDescr, lang, "\t", "icmpBytes",myGlobals.device[i].icmpBytes, ',', numEntries);
-    if(checkFilter(filter, &filterPattern, "dlcBytes")) wrtLlongItm(fDescr, lang, "\t", "dlcBytes",myGlobals.device[i].dlcBytes, ',', numEntries);
+
+    if(checkFilter(filter, &filterPattern, "tcpBytes"))
+      wrtLlongItm(fDescr, lang, "\t", "tcpBytes",myGlobals.device[i].tcpBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "udpBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "udpBytes",myGlobals.device[i].udpBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "otherIpBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "otherIpBytes",myGlobals.device[i].otherIpBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "icmpBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "icmpBytes",myGlobals.device[i].icmpBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "dlcBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "dlcBytes",myGlobals.device[i].dlcBytes, ',', numEntries);
+
+    if(checkFilter(filter, &filterPattern, "ipxBytes"))
+      wrtLlongItm(fDescr, lang, "\t", "ipxBytes",myGlobals.device[i].ipxBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "stpBytes"))
+      wrtLlongItm(fDescr, lang, "\t", "stpBytes",myGlobals.device[i].stpBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "decnetBytes"))
+      wrtLlongItm(fDescr, lang, "\t", "decnetBytes",myGlobals.device[i].decnetBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "netbiosBytes"))
+      wrtLlongItm(fDescr, lang, "\t", "netbiosBytes",myGlobals.device[i].netbiosBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "arpRarpBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "arpRarpBytes",myGlobals.device[i].arpRarpBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "atalkBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "atalkBytes",myGlobals.device[i].atalkBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "ospfBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "ospfBytes",myGlobals.device[i].ospfBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "egpBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "egpBytes",myGlobals.device[i].egpBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "igmpBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "igmpBytes",myGlobals.device[i].igmpBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "osiBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "osiBytes",myGlobals.device[i].osiBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "qnxBytes")) 
+      wrtLlongItm(fDescr, lang, "\t", "qnxBytes",myGlobals.device[i].qnxBytes, ',', numEntries);
+    if(checkFilter(filter, &filterPattern, "otherBytes"))
+      wrtLlongItm(fDescr, lang, "\t", "otherBytes",myGlobals.device[i].otherBytes, ',', numEntries);
+
     if(!shortView) {
-      if(checkFilter(filter, &filterPattern, "ipxBytes")) wrtLlongItm(fDescr, lang, "\t", "ipxBytes",myGlobals.device[i].ipxBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "stpBytes")) wrtLlongItm(fDescr, lang, "\t", "stpBytes",myGlobals.device[i].stpBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "decnetBytes")) wrtLlongItm(fDescr, lang, "\t", "decnetBytes",myGlobals.device[i].decnetBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "netbiosBytes")) wrtLlongItm(fDescr, lang, "\t", "netbiosBytes",myGlobals.device[i].netbiosBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "arpRarpBytes")) wrtLlongItm(fDescr, lang, "\t", "arpRarpBytes",myGlobals.device[i].arpRarpBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "atalkBytes")) wrtLlongItm(fDescr, lang, "\t", "atalkBytes",myGlobals.device[i].atalkBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "ospfBytes")) wrtLlongItm(fDescr, lang, "\t", "ospfBytes",myGlobals.device[i].ospfBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "egpBytes")) wrtLlongItm(fDescr, lang, "\t", "egpBytes",myGlobals.device[i].egpBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "igmpBytes")) wrtLlongItm(fDescr, lang, "\t", "igmpBytes",myGlobals.device[i].igmpBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "osiBytes")) wrtLlongItm(fDescr, lang, "\t", "osiBytes",myGlobals.device[i].osiBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "qnxBytes")) wrtLlongItm(fDescr, lang, "\t", "qnxBytes",myGlobals.device[i].qnxBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "otherBytes")) wrtLlongItm(fDescr, lang, "\t", "otherBytes",myGlobals.device[i].otherBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "lastMinEthernetBytes")) wrtLlongItm(fDescr, lang, "\t", "lastMinEthernetBytes",
-										  myGlobals.device[i].lastMinEthernetBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "lastFiveMinsEthernetBytes")) wrtLlongItm(fDescr, lang, "\t", "lastFiveMinsEthernetBytes",
-										       myGlobals.device[i].lastFiveMinsEthernetBytes, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "lastMinEthernetPkts")) wrtLlongItm(fDescr, lang, "\t", "lastMinEthernetPkts",myGlobals.device[i].lastMinEthernetPkts, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "lastFiveMinsEthernetPkts")) wrtLlongItm(fDescr, lang, "\t", "lastFiveMinsEthernetPkts",
-										      myGlobals.device[i].lastFiveMinsEthernetPkts, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "upTo64")) wrtLlongItm(fDescr, lang, "\t", "upTo64",myGlobals.device[i].rcvdPktStats.upTo64, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "upTo128")) wrtLlongItm(fDescr, lang, "\t", "upTo128",myGlobals.device[i].rcvdPktStats.upTo128, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "upTo256")) wrtLlongItm(fDescr, lang, "\t", "upTo256",myGlobals.device[i].rcvdPktStats.upTo256, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "upTo512")) wrtLlongItm(fDescr, lang, "\t", "upTo512",myGlobals.device[i].rcvdPktStats.upTo512, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "upTo1024")) wrtLlongItm(fDescr, lang, "\t", "upTo1024",myGlobals.device[i].rcvdPktStats.upTo1024, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "upTo1518")) wrtLlongItm(fDescr, lang, "\t", "upTo1518",myGlobals.device[i].rcvdPktStats.upTo1518, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "above1518")) wrtLlongItm(fDescr, lang, "\t", "above1518",myGlobals.device[i].rcvdPktStats.above1518, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "shortest")) wrtLlongItm(fDescr, lang, "\t", "shortest",myGlobals.device[i].rcvdPktStats.shortest, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "longest")) wrtLlongItm(fDescr, lang, "\t", "longest",myGlobals.device[i].rcvdPktStats.longest, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "badChecksum")) wrtLlongItm(fDescr, lang, "\t", "badChecksum",myGlobals.device[i].rcvdPktStats.badChecksum, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "tooLong")) wrtLlongItm(fDescr, lang, "\t", "tooLong",myGlobals.device[i].rcvdPktStats.tooLong, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "peakThroughput")) wrtFloatItm(fDescr, lang, "\t", "peakThroughput",myGlobals.device[i].peakThroughput, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "actualThpt")) wrtFloatItm(fDescr, lang, "\t", "actualThpt",myGlobals.device[i].actualThpt, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "lastMinThpt")) wrtFloatItm(fDescr, lang, "\t", "lastMinThpt",myGlobals.device[i].lastMinThpt, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "lastFiveMinsThpt")) wrtFloatItm(fDescr, lang, "\t", "lastFiveMinsThpt",myGlobals.device[i].lastFiveMinsThpt, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "peakPacketThroughput")) wrtFloatItm(fDescr, lang, "\t", "peakPacketThroughput",myGlobals.device[i].peakPacketThroughput, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "actualPktsThpt")) wrtFloatItm(fDescr, lang, "\t", "actualPktsThpt",myGlobals.device[i].actualPktsThpt, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "lastMinPktsThpt")) wrtFloatItm(fDescr, lang, "\t", "lastMinPktsThpt",myGlobals.device[i].lastMinPktsThpt, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "lastFiveMinsPktsThpt")) wrtFloatItm(fDescr, lang, "\t", "lastFiveMinsPktsThpt",myGlobals.device[i].lastFiveMinsPktsThpt, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "throughput")) wrtLlongItm(fDescr, lang, "\t", "throughput", myGlobals.device[i].throughput, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "packetThroughput")) wrtFloatItm(fDescr, lang, "\t", "packetThroughput",myGlobals.device[i].packetThroughput, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "lastMinEthernetBytes"))
+	wrtLlongItm(fDescr, lang, "\t", "lastMinEthernetBytes",
+		    myGlobals.device[i].lastMinEthernetBytes, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "lastFiveMinsEthernetBytes"))
+	wrtLlongItm(fDescr, lang, "\t", "lastFiveMinsEthernetBytes",
+		    myGlobals.device[i].lastFiveMinsEthernetBytes, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "lastMinEthernetPkts")) 
+	wrtLlongItm(fDescr, lang, "\t", "lastMinEthernetPkts",myGlobals.device[i].lastMinEthernetPkts, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "lastFiveMinsEthernetPkts")) 
+	wrtLlongItm(fDescr, lang, "\t", "lastFiveMinsEthernetPkts",
+		    myGlobals.device[i].lastFiveMinsEthernetPkts, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "upTo64")) 
+	wrtLlongItm(fDescr, lang, "\t", "upTo64",myGlobals.device[i].rcvdPktStats.upTo64, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "upTo128"))
+	wrtLlongItm(fDescr, lang, "\t", "upTo128",myGlobals.device[i].rcvdPktStats.upTo128, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "upTo256")) 
+	wrtLlongItm(fDescr, lang, "\t", "upTo256",myGlobals.device[i].rcvdPktStats.upTo256, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "upTo512")) 
+	wrtLlongItm(fDescr, lang, "\t", "upTo512",myGlobals.device[i].rcvdPktStats.upTo512, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "upTo1024"))
+	wrtLlongItm(fDescr, lang, "\t", "upTo1024",myGlobals.device[i].rcvdPktStats.upTo1024, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "upTo1518"))
+	wrtLlongItm(fDescr, lang, "\t", "upTo1518",myGlobals.device[i].rcvdPktStats.upTo1518, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "above1518"))
+	wrtLlongItm(fDescr, lang, "\t", "above1518",myGlobals.device[i].rcvdPktStats.above1518, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "shortest"))
+	wrtLlongItm(fDescr, lang, "\t", "shortest",myGlobals.device[i].rcvdPktStats.shortest, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "longest")) 
+	wrtLlongItm(fDescr, lang, "\t", "longest",myGlobals.device[i].rcvdPktStats.longest, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "badChecksum")) 
+	wrtLlongItm(fDescr, lang, "\t", "badChecksum",myGlobals.device[i].rcvdPktStats.badChecksum, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "tooLong")) 
+	wrtLlongItm(fDescr, lang, "\t", "tooLong",myGlobals.device[i].rcvdPktStats.tooLong, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "peakThroughput")) 
+	wrtFloatItm(fDescr, lang, "\t", "peakThroughput",myGlobals.device[i].peakThroughput, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "actualThpt")) 
+	wrtFloatItm(fDescr, lang, "\t", "actualThpt",myGlobals.device[i].actualThpt, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "lastMinThpt")) 
+	wrtFloatItm(fDescr, lang, "\t", "lastMinThpt",myGlobals.device[i].lastMinThpt, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "lastFiveMinsThpt"))
+	wrtFloatItm(fDescr, lang, "\t", "lastFiveMinsThpt",myGlobals.device[i].lastFiveMinsThpt, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "peakPacketThroughput")) 
+	wrtFloatItm(fDescr, lang, "\t", "peakPacketThroughput",myGlobals.device[i].peakPacketThroughput, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "actualPktsThpt")) 
+	wrtFloatItm(fDescr, lang, "\t", "actualPktsThpt",myGlobals.device[i].actualPktsThpt, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "lastMinPktsThpt"))
+	wrtFloatItm(fDescr, lang, "\t", "lastMinPktsThpt",myGlobals.device[i].lastMinPktsThpt, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "lastFiveMinsPktsThpt")) 
+	wrtFloatItm(fDescr, lang, "\t", "lastFiveMinsPktsThpt",myGlobals.device[i].lastFiveMinsPktsThpt, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "throughput")) 
+	wrtLlongItm(fDescr, lang, "\t", "throughput", myGlobals.device[i].throughput, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "packetThroughput"))
+	wrtFloatItm(fDescr, lang, "\t", "packetThroughput",myGlobals.device[i].packetThroughput, ',', numEntries);
 
       /* ********************************* */
 
@@ -1058,16 +1123,19 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 	wrtIntFloatItm(fDescr, lang,"\t\t",j+1,myGlobals.device[i].last30daysThpt[j], ' ', numEntries);
 	endWriteKey(fDescr, lang,"\t", "last30daysThpt", ',');
       }
+    }
 
-      /* ********************************* */
+    /* ********************************* */
 
-      if(checkFilter(filter, &filterPattern, "IP")) {
-	char *hostKey = NULL;
+    if(checkFilter(filter, &filterPattern, "IP")) {
+      char *hostKey = NULL;
 
-	if(myGlobals.device[i].ipProtoStats != NULL) {
-	  initWriteKey(fDescr, lang, "\t", "IP", numEntries);
+      if(myGlobals.device[i].ipProtoStats != NULL) {
+	if(!shortView) { initWriteKey(fDescr, lang, "\t", "IP", numEntries); }
 
-	  for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
+	for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
+
+	  if(!shortView) {
 	    if(j > 0) endWriteKey(fDescr, lang, "\t\t", hostKey, ',');
 	    initWriteKey(fDescr, lang, "\t\t", (hostKey = myGlobals.protoIPTrafficInfos[j]), numEntries);
 	    wrtLlongItm(fDescr, lang,"\t\t\t","local",
@@ -1078,15 +1146,27 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 			myGlobals.device[i].ipProtoStats[j].remote2local, ',', numEntries);
 	    wrtLlongItm(fDescr, lang,"\t\t\t","remote",
 			myGlobals.device[i].ipProtoStats[j].remote, ' ', numEntries);
+	  } else {
+	    wrtLlongItm(fDescr, lang, "\t",  myGlobals.protoIPTrafficInfos[j],
+			myGlobals.device[i].ipProtoStats[j].local+
+			myGlobals.device[i].ipProtoStats[j].local2remote+
+			myGlobals.device[i].ipProtoStats[j].remote2local+
+			myGlobals.device[i].ipProtoStats[j].remote,
+			',', numEntries);
 	  }
+	}
 
+	
+	if(!shortView) { 
 	  if(hostKey != NULL) endWriteKey(fDescr, lang,"\t\t", hostKey, ',');
-	  endWriteKey(fDescr, lang,"\t", "IP", ',');
+	  endWriteKey(fDescr, lang,"\t", "IP", ','); 
 	}
       }
+    }
 
-      /* ********************************* */
+    /* ********************************* */
 
+    if(!shortView) {
       if(checkFilter(filter, &filterPattern, "TCPflags")) {
 	initWriteKey(fDescr, lang, "\t", "TCPflags", numEntries);
 
@@ -1098,36 +1178,48 @@ void dumpNtopTrafficInfo(FILE *fDescr, char* options) {
 
       /* ********************************* */
 
-      if(checkFilter(filter, &filterPattern, "tcpLocal")) wrtLlongItm(fDescr, lang,"\t","tcpLocal",
-								      myGlobals.device[i].tcpGlobalTrafficStats.local, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "tcpLocal2Rem")) wrtLlongItm(fDescr, lang,"\t","tcpLocal2Rem",
-									  myGlobals.device[i].tcpGlobalTrafficStats.local2remote, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "tcpRem")) wrtLlongItm(fDescr, lang,"\t","tcpRem",
-								    myGlobals.device[i].tcpGlobalTrafficStats.remote, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "tcpRem2Local")) wrtLlongItm(fDescr, lang,"\t","tcpRem2Local",
-									  myGlobals.device[i].tcpGlobalTrafficStats.remote2local, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "tcpLocal")) 
+	wrtLlongItm(fDescr, lang,"\t","tcpLocal",
+		    myGlobals.device[i].tcpGlobalTrafficStats.local, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "tcpLocal2Rem")) 
+	wrtLlongItm(fDescr, lang,"\t","tcpLocal2Rem",
+		    myGlobals.device[i].tcpGlobalTrafficStats.local2remote, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "tcpRem")) 
+	wrtLlongItm(fDescr, lang,"\t","tcpRem",
+		    myGlobals.device[i].tcpGlobalTrafficStats.remote, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "tcpRem2Local")) 
+	wrtLlongItm(fDescr, lang,"\t","tcpRem2Local",
+		    myGlobals.device[i].tcpGlobalTrafficStats.remote2local, ',', numEntries);
 
       /* ********************************* */
 
-      if(checkFilter(filter, &filterPattern, "udpLocal")) wrtLlongItm(fDescr, lang,"\t","udpLocal",
-								      myGlobals.device[i].udpGlobalTrafficStats.local, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "udpLocal2Rem")) wrtLlongItm(fDescr, lang,"\t","udpLocal2Rem",
-									  myGlobals.device[i].udpGlobalTrafficStats.local2remote, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "udpRem")) wrtLlongItm(fDescr, lang,"\t","udpRem",
-								    myGlobals.device[i].udpGlobalTrafficStats.remote, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "udpRem2Local")) wrtLlongItm(fDescr, lang,"\t","udpRem2Local",
-									  myGlobals.device[i].udpGlobalTrafficStats.remote2local, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "udpLocal")) 
+	wrtLlongItm(fDescr, lang,"\t","udpLocal",
+		    myGlobals.device[i].udpGlobalTrafficStats.local, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "udpLocal2Rem"))
+	wrtLlongItm(fDescr, lang,"\t","udpLocal2Rem",
+		    myGlobals.device[i].udpGlobalTrafficStats.local2remote, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "udpRem"))
+	wrtLlongItm(fDescr, lang,"\t","udpRem",
+		    myGlobals.device[i].udpGlobalTrafficStats.remote, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "udpRem2Local"))
+	wrtLlongItm(fDescr, lang,"\t","udpRem2Local",
+		    myGlobals.device[i].udpGlobalTrafficStats.remote2local, ',', numEntries);
 
       /* ********************************* */
 
-      if(checkFilter(filter, &filterPattern, "icmpLocal")) wrtLlongItm(fDescr, lang,"\t","icmpLocal",
-								       myGlobals.device[i].icmpGlobalTrafficStats.local, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "icmpLocal2Rem")) wrtLlongItm(fDescr, lang,"\t","icmpLocal2Rem",
-									   myGlobals.device[i].icmpGlobalTrafficStats.local2remote, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "icmpRem")) wrtLlongItm(fDescr, lang,"\t","icmpRem",
-								     myGlobals.device[i].icmpGlobalTrafficStats.remote, ',', numEntries);
-      if(checkFilter(filter, &filterPattern, "icmpRem2Local")) wrtLlongItm(fDescr, lang,"\t","icmpRem2Local",
-									   myGlobals.device[i].icmpGlobalTrafficStats.remote2local, ' ', numEntries);
+      if(checkFilter(filter, &filterPattern, "icmpLocal")) 
+	wrtLlongItm(fDescr, lang,"\t","icmpLocal",
+		    myGlobals.device[i].icmpGlobalTrafficStats.local, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "icmpLocal2Rem")) 
+	wrtLlongItm(fDescr, lang,"\t","icmpLocal2Rem",
+		    myGlobals.device[i].icmpGlobalTrafficStats.local2remote, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "icmpRem")) 
+	wrtLlongItm(fDescr, lang,"\t","icmpRem",
+		    myGlobals.device[i].icmpGlobalTrafficStats.remote, ',', numEntries);
+      if(checkFilter(filter, &filterPattern, "icmpRem2Local")) 
+	wrtLlongItm(fDescr, lang,"\t","icmpRem2Local",
+		    myGlobals.device[i].icmpGlobalTrafficStats.remote2local, ' ', numEntries);
     }
 
     numEntries++;
