@@ -1715,6 +1715,7 @@ typedef struct icmpHostInfo {
 #define HASH_INCREASE_FACTOR      2    /* Between MINIMUM and TERMINAL, grow by... */
 
 #define MAX_HOST_SYM_NAME_LEN     64
+#define MAX_HOST_SYM_NAME_LEN_HTML 256 /* Fully tricked out html version - hash.c */
 #define MAX_NODE_TYPES             8
 
 typedef struct storedAddress {

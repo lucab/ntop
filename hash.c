@@ -770,14 +770,14 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       } else {
 	/* el->hostNumIpAddress == "" */
 	if(symEthName[0] != '\0') {
-	  char buf[MAX_HOST_SYM_NAME_LEN];
+	  char buf[MAX_HOST_SYM_NAME_LEN_HTML];
 
-	  if(snprintf(buf, sizeof(buf), "%s <IMG SRC=/card.gif BORDER=0>", symEthName) < 0)
+	  if(snprintf(buf, sizeof(buf), "%s <IMG SRC=\"/card.gif\" ALT=\"Network Interface Card (NIC)\"  BORDER=0>", symEthName) < 0)
 	    BufferTooShort();
 	  else
-	    strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN);
+	    strncpy(el->hostSymIpAddress, buf, MAX_HOST_SYM_NAME_LEN_HTML);
 	} else
-	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
+	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN_HTML);
       }
 
 #ifdef HASH_DEBUG

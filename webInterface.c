@@ -272,6 +272,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   short specialMacAddress = 0;
   static short bufIdx=0;
   short usedEthAddress=0;
+  int i;
 
   if(el == NULL)
     return("&nbsp;");
@@ -338,8 +339,6 @@ char* makeHostLink(HostTraffic *el, short mode,
     } else {
       if(cutName && (symIp[0] != '*')
 	 && strcmp(symIp, el->hostNumIpAddress)) {
-	int i;
-
 	for(i=0; symIp[i] != '\0'; i++)
 	  if(symIp[i] == '.') {
 	    symIp[i] = '\0';
@@ -365,9 +364,9 @@ char* makeHostLink(HostTraffic *el, short mode,
   } else {
     if(usedEthAddress) {
       if(el->nbHostName != NULL) {
-	strncpy(symIp, el->nbHostName, sizeof(linkName));
+	strncpy(symIp, el->nbHostName, sizeof(symIp));
       } else if(el->ipxHostName != NULL) {
-	strncpy(symIp, el->ipxHostName, sizeof(linkName));
+	strncpy(symIp, el->ipxHostName, sizeof(symIp));
       }
     }
 
@@ -382,8 +381,6 @@ char* makeHostLink(HostTraffic *el, short mode,
   strncpy(linkName, tmpStr, sizeof(linkName));
 
   if(usedEthAddress) {
-    /* Patch for ethernet addresses and MS Explorer */
-    int i;
     char tmpStr[256], *vendorInfo;
 
     if(el->nbHostName != NULL) {
@@ -396,10 +393,6 @@ char* makeHostLink(HostTraffic *el, short mode,
 	sprintf(tmpStr, "%s%s", vendorInfo, &linkName[8]);
 	strcpy(symIp, tmpStr);
       }
-
-      for(i=0; linkName[i] != '\0'; i++)
-	if(linkName[i] == ':')
-	  linkName[i] = '_';
     }
   }
 
@@ -437,6 +430,11 @@ char* makeHostLink(HostTraffic *el, short mode,
     healthStr = "<IMG ALT=\"High Risk\" SRC=/Risk_high.gif BORDER=0>";
     break;
   }
+
+  /* Fixup ethernet addresses for RFC1945 compliance (: is bad, _ is good) */
+  for(i=0; linkName[i] != '\0'; i++)
+      if(linkName[i] == ':')
+          linkName[i] = '_';
 
   if(mode == LONG_FORMAT) {
     if(snprintf(buf[bufIdx], BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
