@@ -2418,6 +2418,8 @@ void fillDomainName(HostTraffic *el) {
   accessAddrResMutex("fillDomainName");
 
   el->dotDomainName = ip2CountryCode(el->hostIpAddress.s_addr);
+  if(el->dotDomainName == NULL) el->dotDomainName = "";
+
 
   if((el->hostSymIpAddress[0] == '*')
      || (el->hostNumIpAddress[0] == '\0')

@@ -561,7 +561,7 @@ void printTrafficStatistics() {
     /* ************************ */
 
     if(myGlobals.enableSessionHandling && drawHostsDistanceGraph(1))
-      sendString("<TR><TH "TH_BG" ALIGN=LEFT>Remote Hosts Distance</TH><TD "TH_BG" ALIGN=CENTER>"
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT>Remote Hosts Distance</TH><TD BGCOLOR=white ALIGN=CENTER>"
 		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
 
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
@@ -610,6 +610,9 @@ void printTrafficStatistics() {
 	BufferTooShort();
       sendString(buf);
     }
+  }
+
+  sendString("</TABLE>"TABLE_OFF"</TR>\n");
 
     /* ********************* */
 
@@ -629,9 +632,6 @@ void printTrafficStatistics() {
     }
     
     /* ********************* */
-  }
-
-  sendString("</TABLE>"TABLE_OFF"</TR>\n");
 
   sendString("</TABLE></CENTER>\n");
 }
