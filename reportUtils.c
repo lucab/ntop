@@ -997,6 +997,18 @@ int cmpProcesses(const void *_a, const void *_b) {
 
 /* ******************************* */
 
+int cmpOSFctn(const void *_a, const void *_b) {
+  OsNumInfo *a = (OsNumInfo *)_a;
+  OsNumInfo *b = (OsNumInfo *)_b;
+
+  if(a->num < b->num)
+    return(1);
+  else
+    return(-1);
+}
+
+/* ******************************* */
+
 int cmpFctn(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
@@ -2100,6 +2112,44 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
 /* ************************************ */
 
+static char* sap2name(u_int16_t proto, char *sap, int sap_len) {
+  switch(proto) {
+  case SAP_NULL:           snprintf(sap, sap_len, "NULL LSAP"); break;
+  case SAP_LLC_SLMGMT:     snprintf(sap, sap_len, "LLC Sub-Layer Management"); break;
+  case SAP_SNA_PATHCTRL:   snprintf(sap, sap_len, "SNA Path Control"); break;
+  case SAP_IP:             snprintf(sap, sap_len, "TCP/IP"); break;
+  case SAP_SNA1:           snprintf(sap, sap_len, "SNA"); break;
+  case SAP_SNA2:           snprintf(sap, sap_len, "SNA"); break;
+  case SAP_PROWAY_NM_INIT: snprintf(sap, sap_len, "PROWAY (IEC955) Network Management and Initialization"); break;
+  case SAP_TI:             snprintf(sap, sap_len, "Texas Instruments"); break;
+  case SAP_BPDU:           snprintf(sap, sap_len, "Spanning Tree BPDU"); break;
+  case SAP_RS511:          snprintf(sap, sap_len, "EIA RS-511 Manufacturing Message Service"); break;
+  case SAP_X25:            snprintf(sap, sap_len, "ISO 8208 (X.25 over 802.2)"); break;
+  case 0x7F:               snprintf(sap, sap_len, "ISO 802.2"); break;
+  case SAP_XNS:            snprintf(sap, sap_len, "XNS"); break;
+  case SAP_BACNET:         snprintf(sap, sap_len, "BACnet"); break;
+  case SAP_NESTAR:         snprintf(sap, sap_len, "Nestar"); break;
+  case SAP_PROWAY_ASLM:    snprintf(sap, sap_len, "PROWAY (IEC955) Active Station List Maintenance"); break;
+  case SAP_ARP:            snprintf(sap, sap_len, "ARP"); break;
+  case SAP_SNAP:           snprintf(sap, sap_len, "SNAP"); break;
+  case SAP_VINES1:         
+  case SAP_VINES2:         snprintf(sap, sap_len, "Banyan Vines"); break;
+  case SAP_NETWARE:        snprintf(sap, sap_len, "NetWare"); break;
+  case SAP_NETBIOS:        snprintf(sap, sap_len, "NetBIOS"); break;
+  case SAP_IBMNM:          snprintf(sap, sap_len, "IBM Net Management"); break;
+  case SAP_HPEXT:          snprintf(sap, sap_len, "HP Extended LLC"); break;
+  case SAP_UB:             snprintf(sap, sap_len, "Ungermann-Bass"); break;
+  case SAP_RPL:            snprintf(sap, sap_len, "Remote Program Load"); break;
+  case SAP_OSINL:          snprintf(sap, sap_len, "ISO Network Layer"); break;
+  case SAP_GLOBAL:         snprintf(sap, sap_len, "Global LSAP"); break;
+  default:                 snprintf(sap, sap_len, "0x%X", proto); break;
+  }
+
+  return(sap);
+}
+
+/* ************************************ */
+
 void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   Counter actTotalSent, actTotalRcvd;
@@ -2209,7 +2259,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->stpRcvd.value/1024,
 			100*((float)SD(el->stpRcvd.value, totalRcvd)));
 
-  printTableDoubleEntry(buf, sizeof(buf), "Other", CONST_COLOR_1, (float)el->otherSent.value/1024,
+  printTableDoubleEntry(buf, sizeof(buf), "Other (Non IP)", CONST_COLOR_1, (float)el->otherSent.value/1024,
 			100*((float)SD(el->otherSent.value, totalSent)),
 			(float)el->otherRcvd.value/1024,
 			100*((float)SD(el->otherRcvd.value, totalRcvd)));
@@ -2302,6 +2352,35 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");
+
+  /* ************************************** */
+  
+  if(el->nonIpProtoTrafficInfos != NULL) {
+    NonIpProtoTrafficInfo *nonIp = el->nonIpProtoTrafficInfos;
+
+    printSectionTitle("Non IP Protocol Distribution");
+    
+    sendString("<CENTER>\n"
+	       ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
+	       "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
+	       "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Rcvd</TH></TR>\n");
+
+
+    while(nonIp != NULL) {
+      char buf1[64];
+
+      printTableDoubleEntry(buf, sizeof(buf), sap2name(nonIp->protocolId, buf1, sizeof(buf1)), 
+			    CONST_COLOR_1, (float)nonIp->sentBytes.value/1024,
+			    100*((float)SD(nonIp->sentBytes.value, el->otherSent.value)),
+			    (float)nonIp->rcvdBytes.value/1024,
+			    100*((float)SD(nonIp->rcvdBytes.value, el->otherRcvd.value)));
+      
+      nonIp = nonIp->next;
+    }
+    
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+    sendString("</CENTER>\n");  
+  }
 }
 
 /* ************************************ */
@@ -3951,7 +4030,7 @@ void dumpElementHash(ElementHash **theHash, char* label, u_char dumpLoopbackTraf
 void printLocalHostsStats() {
   u_int idx, numEntries=0;
   HostTraffic *el, **tmpTable;
-  OsNumInfo theOSs[256];
+  OsNumInfo theOSs[MAX_NUM_OS];
   int i, j;
   char buf[LEN_GENERAL_WORK_BUFFER];
 
@@ -4049,24 +4128,23 @@ void printLocalHostsStats() {
       }
     }
 
-    sendString("<TR><TH ALIGN=LEFT>Total</TH>\n");
+    sendString("</TABLE><P>");
+
+    /* ********************************** */
+
+    /* quicksort(theOSs, MAX_NUM_OS, sizeof(OsNumInfo), cmpOSFctn); */
+
+    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON"><TH "TH_BG">OS</TH><TH "TH_BG">Total</TH></TR>");
 
     for(i=0; i<MAX_NUM_OS; i++) {
-      if(theOSs[i].name == NULL)
-	break;
-      else {
-	snprintf(buf, sizeof(buf), "<TH>%d</TH>", theOSs[i].num);
+      if(theOSs[i].name != NULL) {
+	snprintf(buf, sizeof(buf), "<TR><TH ALIGN=left>%s</TH><TD ALIGN=RIGHT>%d</TD></TR>\n", theOSs[i].name, theOSs[i].num);
 	sendString(buf);
+	free(theOSs[i].name);
       }
     }
-    sendString("</TR>\n</TABLE></CENTER>");
 
     sendString("</TABLE></CENTER>");
-
-    for(j=0; j<MAX_NUM_OS; j++) {
-      if(theOSs[i].name == NULL) break;
-      else free(theOSs[i].name);
-    }
   } else
     printNoDataYet();
 

@@ -412,6 +412,15 @@ typedef struct protoTrafficInfo {
   TrafficCounter rcvdLoc, rcvdFromRem;
 } ProtoTrafficInfo;
 
+#define MAX_NUM_NON_IP_PROTO_TRAFFIC_INFO   8
+
+typedef struct nonIpProtoTrafficInfo {
+  uint16_t protocolId;
+  TrafficCounter sentBytes, rcvdBytes;
+  TrafficCounter sentPkts, rcvdPkts;
+  struct nonIpProtoTrafficInfo *next;
+} NonIpProtoTrafficInfo;
+
 typedef struct ipGlobalSession {
   u_short magic;
   u_short port;                    /* port (either client or server)           */
@@ -449,6 +458,7 @@ typedef struct hostTraffic {
   struct timeval   minLatency, maxLatency;
 
   NonIPTraffic     *nonIPTraffic;
+  NonIpProtoTrafficInfo *nonIpProtoTrafficInfos; /* Info about further non IP protos */
 
   fd_set           flags;
   TrafficCounter   pktSent, pktRcvd, pktSentSession, pktRcvdSession,
@@ -507,6 +517,7 @@ typedef struct hostTraffic {
   TrafficCounter   otherSent, otherRcvd;
   
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/rcvd by this host */
+
   Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   UsageCounter     contactedSentPeers;   /* peers that talked with this host */
   UsageCounter     contactedRcvdPeers;   /* peers that talked with this host */

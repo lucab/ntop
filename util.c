@@ -2759,6 +2759,8 @@ void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
       theSvc[idx]->port = (u_short)port;
       theSvc[idx]->name = strdup(name);
       break;
+    } else if(scan->port == port) {
+      break; /* Already there */
     } else
       idx = (idx+1) % myGlobals.numActServices;
   }
