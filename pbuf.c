@@ -497,15 +497,12 @@ static void updateHostSessionsList(u_int theHostIdx,
   if((theHostIdx == broadcastEntryIdx)
      || (remotePeerIdx == broadcastEntryIdx)
      || (remotePeerIdx == NO_PEER)
+     || (theHostIdx == NO_PEER)
      || (device[actualDeviceId].hash_hostTraffic[checkSessionIdx(remotePeerIdx)] == NULL)
      )
     return;
 
-  if(remotePeerIdx == NO_PEER) {
-    traceEvent(TRACE_ERROR, "WARNING (internal error): wrong index value\n");
-    return;
-  } else
-    theHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(theHostIdx)];
+  theHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(theHostIdx)];
 
   if((theHost == NULL) /* Probably the host has been deleted */
      || broadcastHost(theHost)) /* We could't care less of junk traffic */
