@@ -5353,36 +5353,34 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 	sigemptyset(nset);
 	rc = sigemptyset(nset);
 	if(rc != 0) 
-	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE handler set, sigemptyset() = %d, gave %p", rc, nset);
+	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask, sigemptyset() = %d, gave %p", rc, nset);
 
 	rc = sigaddset(nset, SIGPIPE);
 	if(rc != 0)
-	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE handler set, sigaddset() = %d, gave %p", rc, nset);
+	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask, sigaddset() = %d, gave %p", rc, nset);
 
 #ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d", 
+	traceEvent(CONST_TRACE_INFO, "DEBUG: SIGPIPE mask was pthread_setsigmask(-, NULL, %x) returned %d", 
 		   oset, rc);
 #endif
 
 	rc = pthread_sigmask(SIG_UNBLOCK, nset, oset);
 	if(rc != 0)
-	    traceEvent(CONST_TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d", 
+	    traceEvent(CONST_TRACE_ERROR, "SIGPIPE mask set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d", 
 		       nset, oset, rc);
 
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
 #ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d", 
+	traceEvent(CONST_TRACE_INFO, "DEBUG: SIGPIPE mask is pthread_setsigmask(-, NULL, %x) returned %d", 
 		   oset, rc);
 #endif
 #endif /* DARWIN */
 
 	if(rc == 0) {
 	    signal(SIGPIPE, PIPEhandler); 
-#ifdef DEBUG
-	    traceEvent(CONST_TRACE_INFO, "DEBUG: Note: SIGPIPE handler set");
-#endif
+	    traceEvent(CONST_TRACE_INFO, "Note: SIGPIPE handler set (ignore)");
 	}
     }
 #endif /* CFG_MULTITHREADED */

@@ -771,6 +771,9 @@ RETSIGTYPE cleanup(int signo) {
   #endif
 
   killThread(&myGlobals.handleWebConnectionsThreadId);
+#if !defined(WIN32) && defined(CFG_MULTITHREADED)
+  traceEvent(CONST_TRACE_INFO, "SIGPIPE: Handled (ignored) %u errors", myGlobals.numHandledSIGPIPEerrors);
+#endif
 
   #ifdef MAKE_WITH_SSLWATCHDOG
   if (myGlobals.sslwatchdogChildThreadId != 0) {
