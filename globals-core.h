@@ -333,7 +333,7 @@ extern void loadPlugins(void);
 extern void startPlugins(void);
 extern void unloadPlugins(void);
 extern PluginInfo* PluginEntryFctn(void);
-extern void handlePluginHostCreationDeletion(HostTraffic *el, u_char hostCreation);
+extern void handlePluginHostCreationDeletion(HostTraffic *el, u_short deviceId, u_char hostCreation);
 
 /* ssl.c */
 #ifdef HAVE_OPENSSL

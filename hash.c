@@ -343,7 +343,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     }
   }
 
-  handlePluginHostCreationDeletion(host, 0 /* host deletion */);
+  handlePluginHostCreationDeletion(host, (u_short)actualDeviceId, 0 /* host deletion */);
 
   /* Make sure this host is not part of the ipTrafficMatrixHosts list */
   if((myGlobals.device[actualDeviceId].ipTrafficMatrix != NULL)
@@ -1198,7 +1198,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 #endif
 
     setHostSerial(el);
-    handlePluginHostCreationDeletion(el, 1 /* host creation */);
+    handlePluginHostCreationDeletion(el, (u_short)actualDeviceId, 1 /* host creation */);
   }
 
 

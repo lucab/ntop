@@ -1596,7 +1596,7 @@ typedef void(*VoidFunct)(void);
 typedef int(*IntFunct)(void);
 typedef void(*PluginFunct)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
 typedef void(*PluginHTTPFunct)(char* url);
-typedef void(*PluginCreateDeleteFunct)(HostTraffic*, u_char);
+typedef void(*PluginCreateDeleteFunct)(HostTraffic*, u_short, u_char);
 
 typedef struct pluginInfo {
   /* Plugin Info */
