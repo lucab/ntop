@@ -1294,8 +1294,6 @@ int _releaseMutex(PthreadMutex *mutexId,
     return(-1);
   }
 
-  pthread_mutex_lock(&stateChangeMutex);
-
   if(!mutexId->isLocked) {
     traceEvent(CONST_TRACE_WARNING,
 	       "WARNING: releaseMutex() call with an UN-LOCKED mutex [%s:%d] last unlock [pid %d, %s:%d]",
@@ -1308,6 +1306,8 @@ int _releaseMutex(PthreadMutex *mutexId,
   traceEvent(CONST_TRACE_INFO, "Unlocking 0x%X [%s:%d]", &(mutexId->mutex), fileName, fileLine);
 #endif
   rc = pthread_mutex_unlock(&(mutexId->mutex));
+
+  pthread_mutex_lock(&stateChangeMutex);
 
   if(rc != 0)
     traceEvent(CONST_TRACE_ERROR, "Unlock failed 0x%X [%s:%d]",

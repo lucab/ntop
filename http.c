@@ -2445,7 +2445,7 @@ void handleHTTPrequest(struct in_addr from) {
     returnHTTPpageNotFound();
 
 #ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
+  accessMutex(&myGlobals.purgeMutex, "returnHTTPPage");
 #endif
 
 #ifdef MAKE_WITH_I18N
