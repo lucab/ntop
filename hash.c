@@ -502,7 +502,6 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 /* Delayed free */
 void freeHostInfo(int theDevice, u_int hostIdx) {
   u_int idx, j, i;
-
   HostTraffic *host = device[theDevice].hash_hostTraffic[checkSessionIdx(hostIdx)];
 
   if(host == NULL)
@@ -602,65 +601,69 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
       device[theDevice].last24HoursThpt[i].thirdHostRcvdIdx = NO_PEER;
   }
 
-
   /* 
      Check whether there are hosts that have the host being 
      purged as peer. Fixes courtesy of 
      Andreas Pfaller <a.pfaller@pop.gun.de>. 
   */
-  for(idx=0; idx<device[theDevice].actualHashSize; idx++) {
-    HostTraffic *el=device[theDevice].hash_hostTraffic[idx];
+  for(idx=1; idx<device[theDevice].actualHashSize; idx++) {
+    HostTraffic *el;
+
+    if(idx != hostIdx) {
+      /* Skip the host we're currently freeing */
+      el = device[theDevice].hash_hostTraffic[idx];
     
-    if(el != NULL) {
-      if(el->tcpSessionList != NULL)
-	purgeIdleHostSessions(hostIdx, &el->tcpSessionList);
+      if(el != NULL) {
+	if(el->tcpSessionList != NULL)
+	  purgeIdleHostSessions(hostIdx, &el->tcpSessionList);
 
-      if(el->udpSessionList != NULL)
-	purgeIdleHostSessions(hostIdx, &el->udpSessionList);
+	if(el->udpSessionList != NULL)
+	  purgeIdleHostSessions(hostIdx, &el->udpSessionList);
 
-      for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
-	if(el->contactedSentPeersIndexes[j] == hostIdx)
-	  el->contactedSentPeersIndexes[j] = NO_PEER;
-	if(el->contactedRcvdPeersIndexes[j] == hostIdx)
-	  el->contactedRcvdPeersIndexes[j] = NO_PEER;
+	for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
+	  if(el->contactedSentPeersIndexes[j] == hostIdx)
+	    el->contactedSentPeersIndexes[j] = NO_PEER;
+	  if(el->contactedRcvdPeersIndexes[j] == hostIdx)
+	    el->contactedRcvdPeersIndexes[j] = NO_PEER;
 
-	if(el->synPktsSent.peersIndexes[j] == hostIdx)
-	  el->synPktsSent.peersIndexes[j] = NO_PEER;
-	if(el->rstPktsSent.peersIndexes[j] == hostIdx)
-	  el->rstPktsSent.peersIndexes[j] = NO_PEER;
-	if(el->synFinPktsSent.peersIndexes[j] == hostIdx)
-	  el->synFinPktsSent.peersIndexes[j] = NO_PEER;
-	if(el->finPushUrgPktsSent.peersIndexes[j] == hostIdx)
-	  el->finPushUrgPktsSent.peersIndexes[j] = NO_PEER;
-	if(el->nullPktsSent.peersIndexes[j] == hostIdx)
-	  el->nullPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->synPktsSent.peersIndexes[j] == hostIdx)
+	    el->synPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->rstPktsSent.peersIndexes[j] == hostIdx)
+	    el->rstPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->synFinPktsSent.peersIndexes[j] == hostIdx)
+	    el->synFinPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->finPushUrgPktsSent.peersIndexes[j] == hostIdx)
+	    el->finPushUrgPktsSent.peersIndexes[j] = NO_PEER;
+	  if(el->nullPktsSent.peersIndexes[j] == hostIdx)
+	    el->nullPktsSent.peersIndexes[j] = NO_PEER;
 
-	if(el->synPktsRcvd.peersIndexes[j] == hostIdx)
-	  el->synPktsRcvd.peersIndexes[j] = NO_PEER;
-	if(el->rstPktsRcvd.peersIndexes[j] == hostIdx)
-	  el->rstPktsRcvd.peersIndexes[j] = NO_PEER;
-	if(el->synFinPktsRcvd.peersIndexes[j] == hostIdx)
-	  el->synFinPktsRcvd.peersIndexes[j] = NO_PEER;
-	if(el->finPushUrgPktsRcvd.peersIndexes[j] == hostIdx)
-	  el->finPushUrgPktsRcvd.peersIndexes[j] = NO_PEER;
-	if(el->nullPktsRcvd.peersIndexes[j] == hostIdx)
-	  el->nullPktsRcvd.peersIndexes[j] = NO_PEER;
-      }
-
-      for(j=0; j<MAX_NUM_HOST_ROUTERS; j++)
-	if(el->contactedRouters[j] == hostIdx)
-	  el->contactedRouters[j] = NO_PEER;
-
-      for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++)
-	if(el->portsUsage[j] != NULL) {
-	  if((el->portsUsage[j]->clientUsesLastPeer == hostIdx)
-	     || (el->portsUsage[j]->serverUsesLastPeer == hostIdx)) {
-	    free(el->portsUsage[j]);
-	    el->portsUsage[j] = NULL;
-	  }
+	  if(el->synPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->synPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->rstPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->rstPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->synFinPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->synFinPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->finPushUrgPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->finPushUrgPktsRcvd.peersIndexes[j] = NO_PEER;
+	  if(el->nullPktsRcvd.peersIndexes[j] == hostIdx)
+	    el->nullPktsRcvd.peersIndexes[j] = NO_PEER;
 	}
+
+	for(j=0; j<MAX_NUM_HOST_ROUTERS; j++)
+	  if(el->contactedRouters[j] == hostIdx)
+	    el->contactedRouters[j] = NO_PEER;
+
+	for(j=0; j<TOP_ASSIGNED_IP_PORTS; j++)
+	  if(el->portsUsage[j] != NULL) {
+	    if((el->portsUsage[j]->clientUsesLastPeer == hostIdx)
+	       || (el->portsUsage[j]->serverUsesLastPeer == hostIdx)) {
+	      free(el->portsUsage[j]);
+	      el->portsUsage[j] = NULL;
+	    }
+	  }
+      }
     }
-  }
+  } /* for */
 
 #ifdef MULTITHREADED
   accessMutex(&lsofMutex, "readLsofInfo-2");

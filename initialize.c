@@ -293,7 +293,7 @@ void resetStats(void) {
   traceEvent(TRACE_INFO, "Resetting traffic statistics...");
   
 #ifdef MULTITHREADED
-  accessMutex(&hostsHashMutex, "processPacket");
+  accessMutex(&hostsHashMutex, "resetStats");
 #endif
 
   if(mergeInterfaces)

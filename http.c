@@ -830,7 +830,7 @@ static void returnHTTPPage(char* pageName, int postLen) {
     shutdownNtop();
   } else if(strncmp(pageName, RESET_STATS_HTML, strlen(RESET_STATS_HTML)) == 0) {
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-    printHTTPheader();
+    sendHTTPProtoHeader(); sendHTTPHeaderType(); printHTTPheader();
     resetStats();
     sendString("<CENTER><p><H1><FONT FACE=Helvetica>"
 	       "All statistics are now reseted</FONT></H1><p>\n");
