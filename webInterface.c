@@ -2241,6 +2241,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_SETNONBLOCK",
+#ifdef HAVE_PCAP_SETNONBLOCK
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
   printFeatureConfigInfo(textPrintFlag, "HAVE_PNG_H",
 #ifdef HAVE_PNG_H
                          "yes"
@@ -4536,6 +4544,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
+#ifdef DEFAULT_NTOP_SETNONBLOCK
+  printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_SETNONBLOCK", DEFAULT_NTOP_SETNONBLOCK);
+#else
+  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_SETNONBLOCK", "undefined");
+#endif
+
 #ifdef DEFAULT_NTOP_STICKY_HOSTS
   printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_STICKY_HOSTS", DEFAULT_NTOP_STICKY_HOSTS);
 #else
@@ -6718,6 +6732,12 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
                             (pref->P3Puri[0] == '\0')) ? "none" :
                            pref->P3Puri,
                            "none");
+
+#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
+  printParameterConfigInfo(textPrintFlag, "--pcap-nonblocking",
+                           pref->setNonBlocking == 1 ? "Yes" : "No",
+                           "No");
+#endif
 
   printParameterConfigInfo(textPrintFlag, "--skip-version-check",
                            pref->skipVersionCheck == 1 ? "Yes" : "No",

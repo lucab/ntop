@@ -2180,7 +2180,6 @@ typedef struct ntopGlobals {
   u_short checkVersionStatus;
   time_t checkVersionStatusAgain;
   char *gdVersionGuessValue;
-  Counter setNonBlockingSleepCount;
 
   /* Purge */
   Counter numPurgedHosts, numTerminatedSessions;

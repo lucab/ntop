@@ -1618,8 +1618,9 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
     CONFIG_RADIO_ENTRY (DARK_BG, "Set Pcap to Nonblocking",
 			 NTOP_PREF_NOBLOCK, pref->setNonBlocking,
-			 "On platforms without select(). <B>Increases CPU usage "
-			 "significantly</B>");
+			 "On platforms without independent select().<br>"
+                         "<B>WARNING</B>: Selecting this option will increase "
+                         "CPU usage significantly - see the man page and FAQ.");
 #endif
     CONFIG_RADIO_ENTRY (DARK_BG, "No web on memory error",
 			 NTOP_PREF_NO_STOPCAP, pref->disableStopcap,

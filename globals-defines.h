@@ -1999,7 +1999,6 @@
 #define DEFAULT_NTOP_W3C                    TRUE
 #define DEFAULT_NTOP_P3PCP                  NULL
 #define DEFAULT_NTOP_P3PURI                 NULL
-#define DEFAULT_NTOP_SETNONBLOCK            TRUE
 #define DEFAULT_NTOP_DISABLE_STOPCAP        TRUE
 #define DEFAULT_NTOP_DISABLE_IS_PURGE       TRUE
 #define DEFAULT_NTOP_PRINTIPONLY            FALSE
@@ -2007,6 +2006,11 @@
 #define DEFAULT_NTOP_NO_INVLUN_DISPLAY      FALSE
 #define DEFAULT_NTOP_DISABLE_MUTEXINFO      TRUE
 #define DEFAULT_NTOP_SKIP_VERSION_CHECK     TRUE
+
+/*
+ * --set-pcap-nonblocking option init
+ */
+#define DEFAULT_NTOP_SETNONBLOCK            FALSE
 
 /*
  * Bytes to save out of each packet -

@@ -955,6 +955,27 @@ These parameters allow
 .b ntop
 to return P3P information.  We do not supply samples.
 
+.It --pcap_setnonblock
+On some platforms, the 
+.B ntop 
+web server will hang or appear to hang (it actually just responds incredibly
+slowly to the first request from a browser session), while the rest of
+.B ntop
+runs just fine. This is known to be an issue under FreeBSD 4.x.
+
+This option sets the non-blocking 
+option (assuming it's available in the version of libpcap that is installed).
+
+While this works around the problem (by turing an interupt driven process into 
+a poll), it also MAY signifcantly increases the cpu usage of
+.B ntop.
+Although it does not actually interfere with other work, seeing
+.B ntop
+use 80-90% or more of the cpu is not uncommon - don't say we didn't warn you.
+
+.B THIS OPTION IS OFFICIALLY UNSUPPORTED
+and used at your own risk.  Read the docs/FAQ write-up.
+
 .It --skip-version-check
 By default,
 .B ntop
