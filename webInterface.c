@@ -1064,308 +1064,251 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "ADDRESS_DEBUG",
 #ifdef ADDRESS_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "CHKVER_DEBUG",
+#ifdef CHKVER_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "CMPFCTN_DEBUG",
+#ifdef CMPFCTN_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "DNS_DEBUG",
 #ifdef DNS_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "DNS_SNIFF_DEBUG",
 #ifdef DNS_SNIFF_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "FC_DEBUG",
 #ifdef FC_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "FINGERPRINT_DEBUG",
 #ifdef FINGERPRINT_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "FRAGMENT_DEBUG",
+#ifdef FRAGMENT_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "FTP_DEBUG",
 #ifdef FTP_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "GDBM_DEBUG",
 #ifdef GDBM_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "HASH_DEBUG",
 #ifdef HASH_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "HOST_FREE_DEBUG",
 #ifdef HOST_FREE_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "HTTP_DEBUG",
 #ifdef HTTP_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "I18N_DEBUG",
+#ifdef I18N_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "IDLE_PURGE_DEBUG",
 #ifdef IDLE_PURGE_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "INITWEB_DEBUG",
 #ifdef INITWEB_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "MEMORY_DEBUG",
 #ifdef MEMORY_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "NETFLOW_DEBUG",
 #ifdef NETFLOW_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "P2P_DEBUG",
+#ifdef P2P_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "PACKET_DEBUG",
+#ifdef PACKET_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "PARAM_DEBUG",
+#ifdef PARAM_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "PLUGIN_DEBUG",
+#ifdef PLUGIN_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "PROBLEMREPORTID_DEBUG",
+#ifdef PROBLEMREPORTID_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "RRD_DEBUG",
+#ifdef RRD_DEBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "SEMAPHORE_DEBUG",
 #ifdef SEMAPHORE_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "SESSION_TRACE_DEBUG",
 #ifdef SESSION_TRACE_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
-#ifdef MAKE_WITH_SSLWATCHDOG
   printFeatureConfigInfo(textPrintFlag, "SSLWATCHDOG_DEBUG",
 #ifdef SSLWATCHDOG_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
-#endif
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "STORAGE_DEBUG",
 #ifdef STORAGE_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "UNKNOWN_PACKET_DEBUG",
 #ifdef UNKNOWN_PACKET_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
   printFeatureConfigInfo(textPrintFlag, "URL_DEBUG",
 #ifdef URL_DEBUG
-			 "yes"
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
+                         );
 
-  sendString(texthtml("\n\nCompile Time: globals-define.h\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-define.h</tr>\n"));
-
-  printFeatureConfigInfo(textPrintFlag, "PARM_PRINT_ALL_SESSIONS",
-#ifdef PARM_PRINT_ALL_SESSIONS
-			 "yes"
+  printFeatureConfigInfo(textPrintFlag, "VENDOR_DEBUG",
+#ifdef VENDOR_DEBUG
+                         "yes"
 #else
-			 "no"
+                         "no"
 #endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "PARM_FORK_CHILD_PROCESS",
-#ifdef PARM_FORK_CHILD_PROCESS
-			 "yes (normal)"
-#else
-			 "no"
-#endif
-			 );
-
-#ifndef WIN32
-  if(snprintf(buf, sizeof(buf),
-              "globals-defines.h: %s#define PARM_USE_CGI%s",
-#ifdef PARM_USE_CGI
-              "", ""
-#else
-              "/* ", " */"
-#endif
-              ) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "CGI Scripts", buf);
-#endif /* WIN32 */
-
-  if(snprintf(buf, sizeof(buf),
-              "globals-defines.h: %s#define PARM_USE_COLOR%s",
-#ifdef PARM_USE_COLOR
-              "", ""
-#else
-              "/* ", " */"
-#endif
-              ) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Alternate row colors", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "globals-defines.h: %s#define PARM_USE_HOST%s",
-#ifdef PARM_USE_HOST
-              "", ""
-#else
-              "/* ", " */"
-#endif
-              ) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Buggy gethostbyaddr() - use alternate implementation", buf);
-  printFeatureConfigInfo(textPrintFlag, "MAKE_ASYNC_ADDRESS_RESOLUTION",
-#ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG",
-#ifdef MAKE_WITH_SSLWATCHDOG
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
-
-#ifdef MAKE_WITH_SSLWATCHDOG
-  printFeatureConfigInfo(textPrintFlag, "MAKE_WITH_SSLWATCHDOG_RUNTIME (derived)",
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-			 "yes"
-#else
-			 "no"
-#endif
-			 );
-#endif
-
-  if(snprintf(buf, sizeof(buf), 
-              "globals-defines.h: #define MAX_NUM_BAD_IP_ADDRESSES %d", MAX_NUM_BAD_IP_ADDRESSES) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Bad IP Address table size", buf);
-
-
-  if(snprintf(buf, sizeof(buf), 
-              "#define PARM_MIN_WEBPAGE_AUTOREFRESH_TIME %d", PARM_MIN_WEBPAGE_AUTOREFRESH_TIME) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Minimum refresh interval (seconds)", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "#define MAX_NUM_PROTOS %d", MAX_NUM_PROTOS) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum # of Protocols to show in graphs", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "#define MAX_NUM_ROUTERS %d", MAX_NUM_ROUTERS) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum # of routers (Local Subnet Routers report)", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "#define MAX_NUM_DEVICES %d", MAX_NUM_DEVICES) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum # of network interface devices", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "#define MAX_NUM_DEVICES_VIRTUAL %d", MAX_NUM_DEVICES_VIRTUAL) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum # of virtual network interfaces (per device)", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "#define MAX_SUBNET_HOSTS %d", MAX_SUBNET_HOSTS) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum network size (hosts per interface)", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "#define MAX_PASSIVE_FTP_SESSION_TRACKER %d", MAX_PASSIVE_FTP_SESSION_TRACKER) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Allocated # of passive FTP sessions", buf);
-
-  if(snprintf(buf, sizeof(buf),
-              "#define PARM_PASSIVE_SESSION_MINIMUM_IDLE %d", PARM_PASSIVE_SESSION_MINIMUM_IDLE) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Inactive passive FTP session timeout (seconds)", buf);
-
-
-  sendString(texthtml("\n\nCompile Time: Hash Table Sizes\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: Hash Table Sizes</tr>\n"));
-
-  if(snprintf(buf, sizeof(buf), 
-              "#define CONST_HASH_INITIAL_SIZE %d", CONST_HASH_INITIAL_SIZE) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Size", buf);
-
-  sendString(texthtml("\n\nCompile Time: globals-define.h\n\n",
-                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-define.h</tr>\n"));
-
-  if(snprintf(buf, sizeof(buf), 
-              "globals-report.h: #define CHART_FORMAT \"%s\"",
-              CHART_FORMAT) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Chart Format", buf);
+                         );
 
   sendString(texthtml("\n\nCompile Time: config.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: config.h</tr>\n"));
@@ -1374,10 +1317,11 @@ void printNtopConfigHInfo(int textPrintFlag) {
    * Drop the autogenerated lines (utils/config_h2.awk) in HERE 
    */
 
+
   /*                                                       B E G I N
    *
    * Autogenerated from config.h.in and inserted into webInterface.c 
-   *      Tue Jan 27 14:57:13 CST 2004
+   *      Sun Mar 21 07:25:51 CST 2004
    *
    */
 
@@ -1455,6 +1399,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_BZERO",
 #ifdef HAVE_BZERO
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_CRYPTGETFORMAT",
+#ifdef HAVE_CRYPTGETFORMAT
                          "yes"
 #else
                          "no"
@@ -2093,6 +2045,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
                          );
 
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_ICMP6_H",
+#ifdef HAVE_NETINET_ICMP6_H
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
   printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IF_ETHER_H",
 #ifdef HAVE_NETINET_IF_ETHER_H
                          "yes"
@@ -2111,6 +2071,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IN_SYSTM_H",
 #ifdef HAVE_NETINET_IN_SYSTM_H
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_NETINET_IP6_H",
+#ifdef HAVE_NETINET_IP6_H
                          "yes"
 #else
                          "no"
@@ -2231,6 +2199,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_OPEN_DEAD",
 #ifdef HAVE_PCAP_OPEN_DEAD
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_PCAP_SETNONBLOCK",
+#ifdef HAVE_PCAP_SETNONBLOCK
                          "yes"
 #else
                          "no"
@@ -2992,10 +2968,11 @@ void printNtopConfigHInfo(int textPrintFlag) {
   sendString(texthtml("\n\nCompile Time: globals-defines.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-defines.h</tr>\n"));
 
+
   /*                                                       B E G I N
    *
    * Autogenerated from globals-defines.h and inserted into webInterface.c 
-   *      Tue Jan 27 14:57:13 CST 2004
+   *      Sun Mar 21 07:25:51 CST 2004
    *
    */
 
@@ -3017,6 +2994,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_ADD_USERS_HTML", "undefined");
 #endif
 
+#ifdef CONST_APACHELOG_TIMESPEC
+  printFeatureConfigInfo(textPrintFlag, "CONST_APACHELOG_TIMESPEC", CONST_APACHELOG_TIMESPEC);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_APACHELOG_TIMESPEC", "undefined");
+#endif
+
 #ifdef CONST_ASLIST_FILE
   printFeatureConfigInfo(textPrintFlag, "CONST_ASLIST_FILE", CONST_ASLIST_FILE);
 #else
@@ -3027,6 +3010,42 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_AS_LIST_HTML", CONST_AS_LIST_HTML);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_AS_LIST_HTML", "undefined");
+#endif
+
+#ifdef CONST_BAR_ALLPROTO_DIST
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_ALLPROTO_DIST", CONST_BAR_ALLPROTO_DIST);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_ALLPROTO_DIST", "undefined");
+#endif
+
+#ifdef CONST_BAR_FC_PROTO_DIST
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_FC_PROTO_DIST", CONST_BAR_FC_PROTO_DIST);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_FC_PROTO_DIST", "undefined");
+#endif
+
+#ifdef CONST_BAR_HOST_DISTANCE
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_HOST_DISTANCE", CONST_BAR_HOST_DISTANCE);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_HOST_DISTANCE", "undefined");
+#endif
+
+#ifdef CONST_BAR_LUNSTATS_DIST
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_LUNSTATS_DIST", CONST_BAR_LUNSTATS_DIST);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_LUNSTATS_DIST", "undefined");
+#endif
+
+#ifdef CONST_BAR_VSAN_TRAF_DIST_RCVD
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_VSAN_TRAF_DIST_RCVD", CONST_BAR_VSAN_TRAF_DIST_RCVD);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_VSAN_TRAF_DIST_RCVD", "undefined");
+#endif
+
+#ifdef CONST_BAR_VSAN_TRAF_DIST_SENT
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_VSAN_TRAF_DIST_SENT", CONST_BAR_VSAN_TRAF_DIST_SENT);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_BAR_VSAN_TRAF_DIST_SENT", "undefined");
 #endif
 
 #ifdef CONST_BROADCAST_ENTRY
@@ -3123,6 +3142,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_DO_ADD_USER", CONST_DO_ADD_USER);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_DO_ADD_USER", "undefined");
+#endif
+
+#ifdef CONST_DO_CHANGE_FILTER
+  printFeatureConfigInfo(textPrintFlag, "CONST_DO_CHANGE_FILTER", CONST_DO_CHANGE_FILTER);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_DO_CHANGE_FILTER", "undefined");
 #endif
 
 #ifdef CONST_DOMAIN_STATS_HTML
@@ -3227,6 +3252,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_FILTER_INFO_HTML", "undefined");
 #endif
 
+#ifdef CONST_FINGERPRINT_LOOP_INTERVAL
+  printFeatureConfigNum(textPrintFlag, "CONST_FINGERPRINT_LOOP_INTERVAL", CONST_FINGERPRINT_LOOP_INTERVAL);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_FINGERPRINT_LOOP_INTERVAL", "undefined");
+#endif
+
 #ifdef CONST_FTPDATA
   printFeatureConfigNum(textPrintFlag, "CONST_FTPDATA", CONST_FTPDATA);
 #else
@@ -3289,12 +3320,28 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_INFO_HTML", "undefined");
 #endif
 
-#ifdef CONST_HOSTS_LOCAL_INFO_HTML
+#ifdef CONST_HOSTS_LOCAL_CHARACT_HTML
+  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_CHARACT_HTML", CONST_HOSTS_LOCAL_CHARACT_HTML);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_CHARACT_HTML", "undefined");
+#endif
+
+#ifdef CONST_HOSTS_LOCAL_FINGERPRINT_HTML
   printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_FINGERPRINT_HTML", CONST_HOSTS_LOCAL_FINGERPRINT_HTML);
-  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_CHARACT", CONST_HOSTS_LOCAL_CHARACT_HTML);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_FINGERPRINT_HTML", "undefined");
-  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_LOCAL_CHARACT_HTML", "undefined");
+#endif
+
+#ifdef CONST_HOST_SORT_NOTE_HTML
+  printFeatureConfigInfo(textPrintFlag, "CONST_HOST_SORT_NOTE_HTML", CONST_HOST_SORT_NOTE_HTML);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_HOST_SORT_NOTE_HTML", "undefined");
+#endif
+
+#ifdef CONST_HOSTS_REMOTE_FINGERPRINT_HTML
+  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_REMOTE_FINGERPRINT_HTML", CONST_HOSTS_REMOTE_FINGERPRINT_HTML);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_HOSTS_REMOTE_FINGERPRINT_HTML", "undefined");
 #endif
 
 #ifdef CONST_HTTP_ACCEPT_ALL
@@ -3537,12 +3584,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_IMG_OS_WINDOWS", "undefined");
 #endif
 
-#ifdef CONST_PCAPNONBLOCKING_SLEEP_TIME
-  printFeatureConfigNum(textPrintFlag, "CONST_PCAPNONBLOCKING_SLEEP_TIME", CONST_PCAPNONBLOCKING_SLEEP_TIME);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_PCAPNONBLOCKING_SLEEP_TIME", "undefined");
-#endif
-
 #ifdef CONST_IMG_POP_SERVER
   printFeatureConfigInfo(textPrintFlag, "CONST_IMG_POP_SERVER", CONST_IMG_POP_SERVER);
 #else
@@ -3655,6 +3696,24 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_LEFTMENU_NOJS_HTML", CONST_LEFTMENU_NOJS_HTML);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_LEFTMENU_NOJS_HTML", "undefined");
+#endif
+
+#ifdef CONST_LEGEND_BOX_SIZE
+  printFeatureConfigNum(textPrintFlag, "CONST_LEGEND_BOX_SIZE", CONST_LEGEND_BOX_SIZE);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_LEGEND_BOX_SIZE", "undefined");
+#endif
+
+#ifdef CONST_LIBGD_SO
+  printFeatureConfigInfo(textPrintFlag, "CONST_LIBGD_SO", CONST_LIBGD_SO);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_LIBGD_SO", "undefined");
+#endif
+
+#ifdef CONST_LOCALE_TIMESPEC
+  printFeatureConfigInfo(textPrintFlag, "CONST_LOCALE_TIMESPEC", CONST_LOCALE_TIMESPEC);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_LOCALE_TIMESPEC", "undefined");
 #endif
 
 #ifdef CONST_LOCAL_ROUTERS_LIST_HTML
@@ -3779,6 +3838,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_PATH_SEP", "undefined");
 #endif
 
+#ifdef CONST_PCAPNONBLOCKING_SLEEP_TIME
+  printFeatureConfigNum(textPrintFlag, "CONST_PCAPNONBLOCKING_SLEEP_TIME", CONST_PCAPNONBLOCKING_SLEEP_TIME);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_PCAPNONBLOCKING_SLEEP_TIME", "undefined");
+#endif
+
 #ifdef CONST_PCAP_NW_INTERFACE_FILE
   printFeatureConfigInfo(textPrintFlag, "CONST_PCAP_NW_INTERFACE_FILE", CONST_PCAP_NW_INTERFACE_FILE);
 #else
@@ -3801,6 +3866,48 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigNum(textPrintFlag, "CONST_PCTG_MID", CONST_PCTG_MID);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_PCTG_MID", "undefined");
+#endif
+
+#ifdef CONST_PIE_FC_PKT_SZ_DIST
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_FC_PKT_SZ_DIST", CONST_PIE_FC_PKT_SZ_DIST);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_FC_PKT_SZ_DIST", "undefined");
+#endif
+
+#ifdef CONST_PIE_INTERFACE_DIST
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_INTERFACE_DIST", CONST_PIE_INTERFACE_DIST);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_INTERFACE_DIST", "undefined");
+#endif
+
+#ifdef CONST_PIE_IP_TRAFFIC
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_IP_TRAFFIC", CONST_PIE_IP_TRAFFIC);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_IP_TRAFFIC", "undefined");
+#endif
+
+#ifdef CONST_PIE_PKT_CAST_DIST
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_PKT_CAST_DIST", CONST_PIE_PKT_CAST_DIST);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_PKT_CAST_DIST", "undefined");
+#endif
+
+#ifdef CONST_PIE_PKT_SIZE_DIST
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_PKT_SIZE_DIST", CONST_PIE_PKT_SIZE_DIST);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_PKT_SIZE_DIST", "undefined");
+#endif
+
+#ifdef CONST_PIE_TTL_DIST
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_TTL_DIST", CONST_PIE_TTL_DIST);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_TTL_DIST", "undefined");
+#endif
+
+#ifdef CONST_PIE_VSAN_CNTL_TRAF_DIST
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_VSAN_CNTL_TRAF_DIST", CONST_PIE_VSAN_CNTL_TRAF_DIST);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_PIE_VSAN_CNTL_TRAF_DIST", "undefined");
 #endif
 
 #ifdef CONST_PLUGIN_ENTRY_FCTN_NAME
@@ -3873,6 +3980,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_RESET_STATS_HTML", CONST_RESET_STATS_HTML);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_RESET_STATS_HTML", "undefined");
+#endif
+
+#ifdef CONST_RFC1945_TIMESPEC
+  printFeatureConfigInfo(textPrintFlag, "CONST_RFC1945_TIMESPEC", CONST_RFC1945_TIMESPEC);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_RFC1945_TIMESPEC", "undefined");
 #endif
 
 #ifdef CONST_RRD_DEFAULT_FONT_NAME
@@ -4057,12 +4170,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML", "undefined");
 #endif
 
-#ifdef CONST_SORT_DATA_SENT_THPT_HTML
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_SENT_THPT_HTML", CONST_SORT_DATA_SENT_THPT_HTML);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_SENT_THPT_HTML", "undefined");
-#endif
-
 #ifdef CONST_SORT_DATA_THPT_HTML
   printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_THPT_HTML", CONST_SORT_DATA_THPT_HTML);
 #else
@@ -4093,6 +4200,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_TEXT_INFO_NTOP_HTML", "undefined");
 #endif
 
+#ifdef CONST_THPTLABEL_TIMESPEC
+  printFeatureConfigInfo(textPrintFlag, "CONST_THPTLABEL_TIMESPEC", CONST_THPTLABEL_TIMESPEC);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_THPTLABEL_TIMESPEC", "undefined");
+#endif
+
 #ifdef CONST_THPT_STATS_MATRIX_HTML
   printFeatureConfigInfo(textPrintFlag, "CONST_THPT_STATS_MATRIX_HTML", CONST_THPT_STATS_MATRIX_HTML);
 #else
@@ -4105,10 +4218,34 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_THROUGHPUT_GRAPH", "undefined");
 #endif
 
+#ifdef CONST_TOD_HOUR_TIMESPEC
+  printFeatureConfigInfo(textPrintFlag, "CONST_TOD_HOUR_TIMESPEC", CONST_TOD_HOUR_TIMESPEC);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_TOD_HOUR_TIMESPEC", "undefined");
+#endif
+
+#ifdef CONST_TOD_NOSEC_TIMESPEC
+  printFeatureConfigInfo(textPrintFlag, "CONST_TOD_NOSEC_TIMESPEC", CONST_TOD_NOSEC_TIMESPEC);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_TOD_NOSEC_TIMESPEC", "undefined");
+#endif
+
+#ifdef CONST_TOD_WSEC_TIMESPEC
+  printFeatureConfigInfo(textPrintFlag, "CONST_TOD_WSEC_TIMESPEC", CONST_TOD_WSEC_TIMESPEC);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_TOD_WSEC_TIMESPEC", "undefined");
+#endif
+
 #ifdef CONST_TRAFFIC_STATS_HTML
   printFeatureConfigInfo(textPrintFlag, "CONST_TRAFFIC_STATS_HTML", CONST_TRAFFIC_STATS_HTML);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_TRAFFIC_STATS_HTML", "undefined");
+#endif
+
+#ifdef CONST_TRMTU
+  printFeatureConfigNum(textPrintFlag, "CONST_TRMTU", CONST_TRMTU);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_TRMTU", "undefined");
 #endif
 
 #ifdef CONST_TWO_MSL_TIMEOUT
@@ -4123,16 +4260,10 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_UNKNOWN_MTU", "undefined");
 #endif
 
-#ifdef CONST_V5FLOWS_PER_PAK
-  printFeatureConfigNum(textPrintFlag, "CONST_V5FLOWS_PER_PAK", CONST_V5FLOWS_PER_PAK);
+#ifdef CONST_VERY_DETAIL_TRACE_LEVEL
+  printFeatureConfigNum(textPrintFlag, "CONST_VERY_DETAIL_TRACE_LEVEL", CONST_VERY_DETAIL_TRACE_LEVEL);
 #else
-  printFeatureConfigInfo(textPrintFlag, "CONST_V5FLOWS_PER_PAK", "undefined");
-#endif
-
-#ifdef CONST_V7FLOWS_PER_PAK
-  printFeatureConfigNum(textPrintFlag, "CONST_V7FLOWS_PER_PAK", CONST_V7FLOWS_PER_PAK);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_V7FLOWS_PER_PAK", "undefined");
+  printFeatureConfigInfo(textPrintFlag, "CONST_VERY_DETAIL_TRACE_LEVEL", "undefined");
 #endif
 
 #ifdef CONST_VIEW_LOG_HTML
@@ -4169,6 +4300,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_W3C_CHARTYPE_LINE", CONST_W3C_CHARTYPE_LINE);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_W3C_CHARTYPE_LINE", "undefined");
+#endif
+
+#ifdef CONST_W3C_DOCTYPE_LINE_32
+  printFeatureConfigInfo(textPrintFlag, "CONST_W3C_DOCTYPE_LINE_32", CONST_W3C_DOCTYPE_LINE_32);
+#else
+  printFeatureConfigInfo(textPrintFlag, "CONST_W3C_DOCTYPE_LINE_32", "undefined");
 #endif
 
 #ifdef CONST_W3C_DOCTYPE_LINE
@@ -4225,12 +4362,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_AS_LOOKUP_URL", "undefined");
 #endif
 
-#ifdef DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE
-  printFeatureConfigNum(textPrintFlag, "DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE", DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE", "undefined");
-#endif
-
 #ifdef DEFAULT_NETFLOW_PORT_STR
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NETFLOW_PORT_STR", DEFAULT_NETFLOW_PORT_STR);
 #else
@@ -4249,6 +4380,18 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_DAEMON_MODE", DEFAULT_NTOP_DAEMON_MODE);
 #else
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_DAEMON_MODE", "undefined");
+#endif
+
+#ifdef DEFAULT_NTOP_DEBUG
+  printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_DEBUG", DEFAULT_NTOP_DEBUG);
+#else
+  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_DEBUG", "undefined");
+#endif
+
+#ifdef DEFAULT_NTOP_DEBUG_MODE
+  printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_DEBUG_MODE", DEFAULT_NTOP_DEBUG_MODE);
+#else
+  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_DEBUG_MODE", "undefined");
 #endif
 
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_DEVICES", "(null)");
@@ -4445,6 +4588,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "DEFAULT_TRACE_LEVEL", "undefined");
 #endif
 
+  printFeatureConfigInfo(textPrintFlag, "DEFAULT_VSAN",
+#ifdef DEFAULT_VSAN
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
 #ifdef DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN
   printFeatureConfigNum(textPrintFlag, "DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN", DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN);
 #else
@@ -4461,6 +4612,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigNum(textPrintFlag, "ETHERMTU", ETHERMTU);
 #else
   printFeatureConfigInfo(textPrintFlag, "ETHERMTU", "undefined");
+#endif
+
+#ifdef LEN_ADDRESS_BUFFER
+  printFeatureConfigNum(textPrintFlag, "LEN_ADDRESS_BUFFER", LEN_ADDRESS_BUFFER);
+#else
+  printFeatureConfigInfo(textPrintFlag, "LEN_ADDRESS_BUFFER", "undefined");
 #endif
 
 #ifdef LEN_CMDLINE_BUFFER
@@ -4691,6 +4848,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "MAX_ELEMENT_HASH", "undefined");
 #endif
 
+#ifdef MAX_FC_DOMAINS
+  printFeatureConfigNum(textPrintFlag, "MAX_FC_DOMAINS", MAX_FC_DOMAINS);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_FC_DOMAINS", "undefined");
+#endif
+
 #ifdef MAX_HASHDUMP_ENTRY
   printFeatureConfigNum(textPrintFlag, "MAX_HASHDUMP_ENTRY", MAX_HASHDUMP_ENTRY);
 #else
@@ -4707,6 +4870,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigNum(textPrintFlag, "MAX_HOSTS_CACHE_LEN", MAX_HOSTS_CACHE_LEN);
 #else
   printFeatureConfigInfo(textPrintFlag, "MAX_HOSTS_CACHE_LEN", "undefined");
+#endif
+
+#ifdef MAX_HOSTS_PURGE_PER_CYCLE
+  printFeatureConfigNum(textPrintFlag, "MAX_HOSTS_PURGE_PER_CYCLE", MAX_HOSTS_PURGE_PER_CYCLE);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_HOSTS_PURGE_PER_CYCLE", "unlimited");
 #endif
 
 #ifdef MAX_IP_PORT
@@ -4837,6 +5006,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "MAX_NUM_NETWORKS", "undefined");
 #endif
 
+#ifdef MAX_NUM_OS
+  printFeatureConfigNum(textPrintFlag, "MAX_NUM_OS", MAX_NUM_OS);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_NUM_OS", "undefined");
+#endif
+
 #ifdef MAX_NUM_PROBES
   printFeatureConfigNum(textPrintFlag, "MAX_NUM_PROBES", MAX_NUM_PROBES);
 #else
@@ -4939,6 +5114,24 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "MAX_TOT_NUM_SESSIONS", "undefined");
 #endif
 
+#ifdef MAX_USER_VSAN
+  printFeatureConfigNum(textPrintFlag, "MAX_USER_VSAN", MAX_USER_VSAN);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_USER_VSAN", "undefined");
+#endif
+
+#ifdef MAX_VSANS_GRAPHED
+  printFeatureConfigNum(textPrintFlag, "MAX_VSANS_GRAPHED", MAX_VSANS_GRAPHED);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_VSANS_GRAPHED", "undefined");
+#endif
+
+#ifdef MAX_VSANS
+  printFeatureConfigNum(textPrintFlag, "MAX_VSANS", MAX_VSANS);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MAX_VSANS", "undefined");
+#endif
+
 #ifdef MAX_WEBSERVER_REQUEST_QUEUE_LEN
   printFeatureConfigNum(textPrintFlag, "MAX_WEBSERVER_REQUEST_QUEUE_LEN", MAX_WEBSERVER_REQUEST_QUEUE_LEN);
 #else
@@ -4949,6 +5142,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigNum(textPrintFlag, "MAX_WIN32_NET_ALIASES", MAX_WIN32_NET_ALIASES);
 #else
   printFeatureConfigInfo(textPrintFlag, "MAX_WIN32_NET_ALIASES", "undefined");
+#endif
+
+#ifdef MIN_SLICE_PERCENTAGE
+  printFeatureConfigNum(textPrintFlag, "MIN_SLICE_PERCENTAGE", MIN_SLICE_PERCENTAGE);
+#else
+  printFeatureConfigInfo(textPrintFlag, "MIN_SLICE_PERCENTAGE", "undefined");
 #endif
 
 #ifdef MIN_WEBSERVER_REQUEST_QUEUE_LEN
@@ -4995,6 +5194,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "PARM_ENABLE_EXPERIMENTAL",
 #ifdef PARM_ENABLE_EXPERIMENTAL
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
+
+  printFeatureConfigInfo(textPrintFlag, "PARM_FORK_CHILD_PROCESS",
+#ifdef PARM_FORK_CHILD_PROCESS
                          "yes"
 #else
                          "no"
@@ -5080,11 +5287,15 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 
   printFeatureConfigInfo(textPrintFlag, "PARM_USE_CGI",
+#ifndef WIN32
 #ifdef PARM_USE_CGI
                          "yes"
 #else
                          "no"
 #endif
+#else
+                         "not available"
+#endif /* WIN32 */
                          );
 
   printFeatureConfigInfo(textPrintFlag, "PARM_USE_COLOR",
@@ -5137,263 +5348,16 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "THREAD_MODE", "undefined");
 #endif
 
-  printFeatureConfigInfo(textPrintFlag, "ADDRESS_DEBUG",
-#ifdef ADDRESS_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "CHKVER_DEBUG",
-#ifdef CHKVER_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-#ifdef DEFAULT_NTOP_DEBUG
-  printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_DEBUG", DEFAULT_NTOP_DEBUG);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_DEBUG", "undefined");
-#endif
-
-#ifdef DEFAULT_NTOP_DEBUG_MODE
-  printFeatureConfigNum(textPrintFlag, "DEFAULT_NTOP_DEBUG_MODE", DEFAULT_NTOP_DEBUG_MODE);
-#else
-  printFeatureConfigInfo(textPrintFlag, "DEFAULT_NTOP_DEBUG_MODE", "undefined");
-#endif
-
-  printFeatureConfigInfo(textPrintFlag, "DNS_DEBUG",
-#ifdef DNS_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "DNS_SNIFF_DEBUG",
-#ifdef DNS_SNIFF_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "FC_DEBUG",
-#ifdef FC_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "FINGERPRINT_DEBUG",
-#ifdef FINGERPRINT_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "FRAGMENT_DEBUG",
-#ifdef FRAGMENT_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "FTP_DEBUG",
-#ifdef FTP_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "GDBM_DEBUG",
-#ifdef GDBM_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HASH_DEBUG",
-#ifdef HASH_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HOST_FREE_DEBUG",
-#ifdef HOST_FREE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HTTP_DEBUG",
-#ifdef HTTP_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "I18N_DEBUG",
-#ifdef I18N_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "IDLE_PURGE_DEBUG",
-#ifdef IDLE_PURGE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "INITWEB_DEBUG",
-#ifdef INITWEB_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "MEMORY_DEBUG",
-#ifdef MEMORY_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "NETFLOW_DEBUG",
-#ifdef NETFLOW_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "P2P_DEBUG",
-#ifdef P2P_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "PACKET_DEBUG",
-#ifdef PACKET_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "PARAM_DEBUG",
-#ifdef PARAM_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "PLUGIN_DEBUG",
-#ifdef PLUGIN_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "PROBLEMREPORTID_DEBUG",
-#ifdef PROBLEMREPORTID_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "RRD_DEBUG",
-#ifdef RRD_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "SEMAPHORE_DEBUG",
-#ifdef SEMAPHORE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "SESSION_TRACE_DEBUG",
-#ifdef SESSION_TRACE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "SSLWATCHDOG_DEBUG",
-#ifdef SSLWATCHDOG_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "STORAGE_DEBUG",
-#ifdef STORAGE_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "UNKNOWN_PACKET_DEBUG",
-#ifdef UNKNOWN_PACKET_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "URL_DEBUG",
-#ifdef URL_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "VENDOR_DEBUG",
-#ifdef VENDOR_DEBUG
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
   /*                                                       E N D
    *
    * Autogenerated from globals-defines.h and inserted into webInterface.c 
    *
    */
+
+  sendString(texthtml("\n\nCompile Time: globals-report.h\n\n",
+                      "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-report.h</tr>\n"));
+
+  printFeatureConfigInfo(textPrintFlag, "Chart Format", CHART_FORMAT);
 
   /* ***Plugins stuff************************ */
   if(textPrintFlag == TRUE) {
@@ -6343,15 +6307,13 @@ if(myGlobals.gdVersionGuessValue != NULL)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Purged Hosts", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.maximumHostsToPurgePerCycle) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Maximum hosts to purge per cycle", buf);
-
+#ifdef MAX_HOSTS_PURGE_PER_CYCLE
   if(textPrintFlag == TRUE) {
-    if(snprintf(buf, sizeof(buf), "%d", DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE) < 0)
+    if(snprintf(buf, sizeof(buf), "%d", MAX_HOSTS_PURGE_PER_CYCLE) < 0)
       BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE", buf);
+    printFeatureConfigInfo(textPrintFlag, "MAX_HOSTS_PURGE_PER_CYCLE", buf);
   }
+#endif
 
   if(myGlobals.enableSessionHandling) {
     if(snprintf(buf, sizeof(buf), "%s",

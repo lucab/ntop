@@ -1837,7 +1837,6 @@ typedef struct ntopGlobals {
 
   /* Purge */
   Counter numPurgedHosts, numTerminatedSessions;
-  int    maximumHostsToPurgePerCycle;
 
   /* Time */
   int32_t thisZone;        /* seconds offset from gmt to local time */

@@ -464,7 +464,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* ********************************** */
 
   myGlobals.numPurgedHosts = myGlobals.numTerminatedSessions = 0;
-  myGlobals.maximumHostsToPurgePerCycle = DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE;
 
   myGlobals.broadcastEntry = (HostTraffic*)malloc(sizeof(HostTraffic));
   memset(myGlobals.broadcastEntry, 0, sizeof(HostTraffic));

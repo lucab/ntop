@@ -730,6 +730,9 @@ void purgeIdleHosts(int actDevice) {
 	}
 
 	scannedHosts++;
+#ifdef MAX_HOSTS_PURGE_PER_CYCLE
+	if(numHosts >= MAX_HOSTS_PURGE_PER_CYCLE) break;
+#endif
 	if(numHosts >= (maxHosts-1)) break;
       } /* while */
 

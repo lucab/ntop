@@ -2058,10 +2058,10 @@
 #endif
 
 /*
- * What is the default maximum number of hosts to purge (per device) per cycle?
- * This value can be dynamically adjusted, look for myGlobals.maximumHostsToPurgePerCycle
+ * Define this constant if - for performance reasons - you need to limit the number of
+ * hosts purged per cycle (per device).
  */
-#define DEFAULT_MAXIMUM_HOSTS_PURGE_PER_CYCLE 512
+/* #define MAX_HOSTS_PURGE_PER_CYCLE 512 */
 
 /*
  * TCP Wrapper defaults
