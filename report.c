@@ -1657,7 +1657,6 @@ void printLocalRoutersList(int actualDeviceId) {
 	       "<TH "TH_BG">Used by</TH></TR>\n");
 
     for(i=0; i<numEntries; i++) {
-
       if(retrieveHost(routerList[i], &router) == 0) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
 		    getRowColor(),

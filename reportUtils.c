@@ -3066,7 +3066,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   printedHeader=0;
   for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
     if(el->contactedRouters.peersIndexes[i] != NO_PEER) {
-      int routerIdx = el->contactedRouters.peersIndexes[i];
+      HostSerial routerIdx = el->contactedRouters.peersIndexes[i];
 
       if(routerIdx != NO_PEER) {
 	HostTraffic router;

@@ -424,7 +424,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
       && (!broadcastHost(dstHost)) && (!multicastHost(dstHost)))
      || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost))
 	 && (!broadcastHost(srcHost)) && (!multicastHost(srcHost)))) {
-    u_int routerIdx;
+    HostSerial routerIdx;
     HostTraffic *router;
 
     routerIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
@@ -440,7 +440,7 @@ static void checkNetworkRouter(HostTraffic *srcHost,
        )
       return;
 
-    incrementUsageCounter(&srcHost->contactedRouters, routerIdx, actualDeviceId);
+    incrementUsageCounter(&srcHost->contactedRouters, router->hostTrafficBucket, actualDeviceId);
 
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "(%s/%s/%s) -> (%s/%s/%s) routed by [idx=%d/%s/%s/%s]",

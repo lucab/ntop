@@ -491,7 +491,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   u_int run=0;
 #endif
   HostTraffic *el=NULL;
-  char buf[32];
+  unsigned char buf[32];
   short useIPAddressForSearching = forceUsingIPaddress;
   char* symEthName = NULL, *ethAddr;
   u_char setSpoofingFlag = 0, hostFound = 0;
@@ -801,7 +801,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 #ifdef NTOP_LITTLE_ENDIAN
 	{
-	  char buf1[8];
+	  unsigned char buf1[8];
 	  int i;
 	  
 	  for(i=0; i<8; i++)
@@ -810,7 +810,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  memcpy(buf, buf1, 8);
 	}
 #endif
-		
 	memcpy(&el->hostSerial, buf, 8);
       }
     }
@@ -878,7 +877,7 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
 
 #ifdef NTOP_LITTLE_ENDIAN
     {
-      char buf1[8];
+      unsigned char buf1[8];
       int i;
 
       for(i=0; i<8; i++)
