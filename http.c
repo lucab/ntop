@@ -881,6 +881,12 @@ static int checkURLsecurity(char *url) {
   if((url == NULL) || (url[0] == '\0'))
     return(0);
 
+  if(strlen(url) >= URL_LEN) {
+    traceEvent(TRACE_ERROR, "URL security(2): URL too long (len=%d)", strlen(url));
+    return(2);
+  }
+
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "URL security: Testing '%s'...\n", url);
 #endif
@@ -997,7 +1003,7 @@ static RETSIGTYPE quitNow(int signo _UNUSED_) {
 
 static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 			  struct timeval *httpRequestedAt, int *usedFork) {
-  char *questionMark = strchr(pageName, '?');
+  char *questionMark;
   int sortedColumn = 0, printTrailer=1, idx;
   int errorCode=0, pageNum = 0, found=0;
   struct stat statbuf;
@@ -1034,11 +1040,14 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 
   /* traceEvent(TRACE_INFO, "Page: '%s'\n", pageName); */
 
+  questionMark = strchr(pageName, '?');
+
   if((questionMark != NULL)
      && (questionMark[0] == '?')) {
     char requestedURL[URL_LEN];
     char *tkn;
-
+    
+    /* Safe strcpy as requestedURL < URL_LEN (checked by checkURLsecurity) */
     strcpy(requestedURL, &questionMark[1]);
 
     tkn = strtok(requestedURL, "&");
@@ -1966,7 +1975,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 void handleHTTPrequest(struct in_addr from) {
   int skipLeading, postLen, usedFork = 0;
   char requestedURL[URL_LEN], pw[64];
-  int rc;
+  int rc, i;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
 
@@ -1976,6 +1985,13 @@ void handleHTTPrequest(struct in_addr from) {
 
   requestFrom = &from;
   NTOHL(requestFrom->s_addr);
+
+  for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES; i++)
+    if(myGlobals.weDontWantToTalkWithYou[i].s_addr == from.s_addr) {
+      traceEvent(TRACE_ERROR, "Rejected request from address %s (it previously sent ntop a bad request)",
+		 _intoa(from, requestedURL, sizeof(requestedURL)));
+      return;
+    }
 
   memset(requestedURL, 0, sizeof(requestedURL));
   memset(pw, 0, sizeof(pw));
@@ -1991,7 +2007,7 @@ void handleHTTPrequest(struct in_addr from) {
  postLen = readHTTPheader(requestedURL, sizeof(requestedURL), pw, sizeof(pw));
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Requested URL = '%s', length = %d\n", requestedURL, postLen);
+ traceEvent(TRACE_INFO, "Requested URL = '%s', length = %d\n", requestedURL, postLen);
 #endif
 
   if(postLen >= -1) {
@@ -2032,10 +2048,13 @@ void handleHTTPrequest(struct in_addr from) {
     skipLeading++;
   }
 
-  if(requestedURL[0] == '\0') {
+  if(requestedURL[0] == '\0')
     returnHTTPpageNotFound(0);
-  } else if((rc = returnHTTPPage(&requestedURL[1], postLen,
-			  &from, &httpRequestedAt, &usedFork) == 0)) {
+
+  rc = returnHTTPPage(&requestedURL[1], postLen,
+		      &from, &httpRequestedAt, &usedFork) ;
+  
+  if(rc == 0) {
 #if defined(HAVE_ZLIB)
     if(compressFile)
       compressAndSendData(&gzipBytesSent);
@@ -2046,6 +2065,26 @@ void handleHTTPrequest(struct in_addr from) {
     if(!usedFork)
       logHTTPaccess(200, &httpRequestedAt, gzipBytesSent);
   } else if(rc == HTTP_FORBIDDEN_PAGE) {
+    int found = 0;
+    
+    /* 
+       Let's record the IP address of this nasty
+       guy so he will stay far from ntop
+       for a while
+    */
+    for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++)
+      if(myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].s_addr == from.s_addr) {
+	found = 1;
+	break;
+      }
+    
+    if(!found) {
+      for(i=0; i<MAX_NUM_BAD_IP_ADDRESSES-1; i++)
+	myGlobals.weDontWantToTalkWithYou[i] = myGlobals.weDontWantToTalkWithYou[i+1];
+
+      myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].s_addr = from.s_addr;
+    }
+
     returnHTTPaccessForbidden(0);
   } else if(rc == HTTP_INVALID_PAGE) {
     returnHTTPpageNotFound(0);

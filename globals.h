@@ -48,6 +48,7 @@
 
 #define NOW ((time_t) time ((time_t *) 0))
 
+#define MAX_NUM_BAD_IP_ADDRESSES         3
 
 /*
  * used to drive the ntop's behaviour at run-time
@@ -124,6 +125,7 @@ typedef struct ntopGlobals {
 
   /* Administrative */
   char *shortDomainName;
+  struct in_addr weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES];
 
 #ifdef MULTITHREADED
   unsigned short numThreads;           /* # of running threads */
