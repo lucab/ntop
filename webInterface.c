@@ -703,7 +703,7 @@ char* getCountryIconURL(char* domainName) {
      printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support", "Yes");
    else
      printFeatureConfigInfo("<A HREF=ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/>lsof</A> Support",
-			    "No (Either disabled or missing)");
+			    "No (Either disabled [Use -E option] or missing)");
 
    if(isNmapPresent) 
      printFeatureConfigInfo("<A HREF=http://www.insecure.org/nmap/>nmap</A> Support", "Yes");
