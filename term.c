@@ -51,9 +51,9 @@ void termIPServices(void) {
 void termIPSessions(void) {
   int i, j;
 
-  if(myGlobals.device[j].tcpSession == NULL) return;
-
   for(j=0; j<myGlobals.numDevices; j++) {
+    if(myGlobals.device[j].tcpSession == NULL) continue;
+  
     for(i=0; i<MAX_TOT_NUM_SESSIONS; i++) {
       IPSession *session = myGlobals.device[j].tcpSession[i];
 
