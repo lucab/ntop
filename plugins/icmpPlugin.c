@@ -227,8 +227,10 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       GDC_SetColor  = &(sc[0]);                   /* assign set colors */
       GDC_ytitle = "Packets";
 
+#ifndef MICRO_NTOP
       /* Avoid to draw too many entries */
       if(num > myGlobals.maxNumLines) num = myGlobals.maxNumLines;
+#endif
 
       quicksort(hosts, num, sizeof(HostTraffic **), sortICMPhosts);
 
@@ -419,8 +421,10 @@ static void handleIcmpWatchHTTPrequest(char* url) {
       sendString("</TR>\n");
 
       /* Avoid huge tables */
+#ifndef MICRO_NTOP
       if(printedEntries++ > myGlobals.maxNumLines)
 	break;
+#endif
     }
 
   sendString("</TABLE>\n<p></CENTER>\n");

@@ -268,6 +268,8 @@ static void printHtmlHostInfo(char *host _UNUSED_) {
 
 }
 
+#endif /* MICRO_NTOP */
+
 /* ********************** */
 
 static void handlePDArequest(char* url) {
@@ -289,8 +291,6 @@ static void termPdaFunct(void) {
   traceEvent(TRACE_INFO, "Thanks for using PDAWatch...\n");
   traceEvent(TRACE_INFO, "Done.\n");
 }
-
-#endif /* MICRO_NTOP */
 
 /* ****************************** */
 
