@@ -654,6 +654,8 @@ static void returnHTTPPage(char* pageName, int postLen) {
 	       "ALT=\"IP Data Received\">IP</a></li>\n");
     sendString("<li><a href="STR_SORT_DATA_RECEIVED_THPT" target=area "
 	       "ALT=\"Data Received Throughput\">Thpt</a></li></ul></li>\n");
+    sendString("<li><a href="STR_SORT_DATA_RCVD_HOST_TRAFFIC" target=area "
+	       "ALT=\"Data Received Host Traffic\">Traffic</a></li></ul></li>\n");
 
     sendString("<li>Data Sent<ul>");
     sendString("<li><a href="STR_SORT_DATA_SENT_PROTOS" target=area "
@@ -662,6 +664,9 @@ static void returnHTTPPage(char* pageName, int postLen) {
 	       "ALT=\"IP Data Sent\">IP</a></li>\n");
     sendString("<li><a href="STR_SORT_DATA_SENT_THPT" target=area "
 	       "ALT=\"Data Sent Throughput\">Thpt</a></li></ul></li>\n");
+    sendString("<li><a href="STR_SORT_DATA_SENT_HOST_TRAFFIC" target=area "
+	       "ALT=\"Data Sent Host Traffic\">Traffic</a></li></ul></li>\n");
+
     sendString("<li><a href="STR_MULTICAST_STATS" target=area ALT=\"Multicast Stats\">"
 	       "Multicast Stats</a></li>\n");
     sendString("<li><a href=trafficStats.html target=area ALT=\"Traffic Statistics\">"
@@ -757,6 +762,14 @@ static void returnHTTPPage(char* pageName, int postLen) {
     sendHTTPProtoHeader(); sendHTTPHeaderType();
     if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
     printHostsTraffic(0, 2, sortedColumn, revertOrder);
+  } else if(strncmp(pageName, STR_SORT_DATA_RCVD_HOST_TRAFFIC, strlen(STR_SORT_DATA_RCVD_HOST_TRAFFIC)) == 0) {
+    sendHTTPProtoHeader(); sendHTTPHeaderType();
+    if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+    printHostsTraffic(0, 3, sortedColumn, revertOrder);
+  } else if(strncmp(pageName, STR_SORT_DATA_SENT_HOST_TRAFFIC, strlen(STR_SORT_DATA_SENT_HOST_TRAFFIC)) == 0) {
+    sendHTTPProtoHeader(); sendHTTPHeaderType();
+    if(sortedColumn == 0) { sortedColumn = HOST_DUMMY_IDX_VALUE; }
+    printHostsTraffic(1, 3, sortedColumn, revertOrder);
   } else if(strncmp(pageName, STR_SORT_DATA_SENT_PROTOS, strlen(STR_SORT_DATA_SENT_PROTOS)) == 0) {
     sendHTTPProtoHeader(); sendHTTPHeaderType();
     printHostsTraffic(1, 0, sortedColumn, revertOrder);

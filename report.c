@@ -320,6 +320,9 @@ static void printHeader(int reportType, int revertOrder, u_int column) {
     } else if(reportType == 2) {
       snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   STR_SORT_DATA_SENT_THPT, sign);
       snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",   STR_SORT_DATA_SENT_THPT);
+    } else if(reportType == 3) {
+      snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   STR_SORT_DATA_SENT_HOST_TRAFFIC, sign);
+      snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",   STR_SORT_DATA_SENT_HOST_TRAFFIC);
     }
 
     if((reportType == 0) || (reportType == 1)) {
@@ -332,7 +335,7 @@ static void printHeader(int reportType, int revertOrder, u_int column) {
       if(abs(column) == 0)
 	{ arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
       else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
-      snprintf(buf, BUF_SIZE, "<TABLE BORDER=1><TR><TH>%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
+      snprintf(buf, BUF_SIZE, "<TABLE BORDER=1><TR><TH NOWRAP>%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
 	      "<TH>%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
 	      "<TH COLSPAN=2>%s0>Sent%s</A></TH>\n",
 	      theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2]);
@@ -343,7 +346,7 @@ static void printHeader(int reportType, int revertOrder, u_int column) {
       if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
 	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
       else { arrow[1] = ""; theAnchor[1] = htmlAnchor1; }
-      snprintf(buf, BUF_SIZE, "<TABLE BORDER=1><TR><TH>%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
+      snprintf(buf, BUF_SIZE, "<TABLE BORDER=1><TR><TH NOWRAP>%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
 	      "<TH>%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
 	      theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
     }
@@ -363,6 +366,9 @@ static void printHeader(int reportType, int revertOrder, u_int column) {
     } else if(reportType == 2) {
       snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   STR_SORT_DATA_RECEIVED_THPT, sign);
       snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",   STR_SORT_DATA_RECEIVED_THPT);
+    } else if(reportType == 3) {
+      snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   STR_SORT_DATA_RCVD_HOST_TRAFFIC, sign);
+      snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",   STR_SORT_DATA_RCVD_HOST_TRAFFIC);
     }
 
     if((reportType == 0) || (reportType == 1)) {
@@ -375,7 +381,7 @@ static void printHeader(int reportType, int revertOrder, u_int column) {
       if(abs(column) == 0)
 	{ arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
       else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
-      snprintf(buf, BUF_SIZE, "<TABLE BORDER=1><TR><TH>%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
+      snprintf(buf, BUF_SIZE, "<TABLE BORDER=1><TR><TH NOWRAP>%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
 	      "<TH>%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
 	      "<TH COLSPAN=2>%s0>Received%s</A></TH>\n",
 	      theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2]);
@@ -386,7 +392,7 @@ static void printHeader(int reportType, int revertOrder, u_int column) {
       if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
 	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor; }
       else { arrow[1] = ""; theAnchor[1] = htmlAnchor1;}
-      snprintf(buf, BUF_SIZE, "<TABLE BORDER=1><TR><TH>%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
+      snprintf(buf, BUF_SIZE, "<TABLE BORDER=1><TR><TH NOWRAP>%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
 	      "<TH>%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
 	      theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
     }
@@ -494,16 +500,16 @@ static void printHeader(int reportType, int revertOrder, u_int column) {
 	    theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2],
 	    theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]);
     sendString(buf);
-    sendString("<TH>0 AM</TH><TH>1 AM</TH><TH>2 AM</TH><TH>3 AM</TH>"
-	       "<TH>4 AM</TH><TH>5 AM</TH><TH>6 AM</TH>"
-	       "<TH>7 AM</TH><TH>8 AM</TH><TH>9 AM</TH>"
-	       "<TH>10 AM</TH><TH>11 AM</TH><TH>12 AM</TH>\n");
-    sendString("<TH>1 PM</TH><TH>2 PM</TH><TH>3 PM</TH>"
-	       "<TH>4 PM</TH><TH>5 PM</TH><TH>6 PM</TH>"
-	       "<TH>7 PM</TH><TH>8 PM</TH><TH>9 PM</TH>"
-	       "<TH>10 PM</TH><TH>11 PM</TH>\n");
+  } else if(reportType == 3) {
+    sendString("<TH>0<br>AM</TH><TH>1<br>AM</TH><TH>2<br>AM</TH><TH>3<br>AM</TH>"
+	       "<TH>4<br>AM</TH><TH>5<br>AM</TH><TH>6<br>AM</TH>"
+	       "<TH>7<br>AM</TH><TH>8<br>AM</TH><TH>9<br>AM</TH>"
+	       "<TH>10<br>AM</TH><TH>11<br>AM</TH><TH>12<br>AM</TH>\n");
+    sendString("<TH>1<br>PM</TH><TH>2<br>PM</TH><TH>3<br>PM</TH>"
+	       "<TH>4<br>PM</TH><TH>5<br>PM</TH><TH>6<br>PM</TH>"
+	       "<TH>7<br>PM</TH><TH>8<br>PM</TH><TH>9<br>PM</TH>"
+	       "<TH>10<br>PM</TH><TH>11<br>PM</TH>\n");    
   }
-
   sendString("</TR>\n");
 }
 
@@ -1390,6 +1396,10 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
   float sentPercent, rcvdPercent;
   struct pcap_stat stat;
 
+  /*
+    printf("%d - %d - %d - %d\n", 
+    signumber_ignored, reportType, sortedColumn, revertOrder);
+  */
   strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
   hourId = atoi(theDate);
 
@@ -1478,7 +1488,8 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
     } else if(reportType == 1) {
       /* if(sortedColumn == 0) sortedColumn = 1; */
       screenNumber = DUMMY_IDX_VALUE /* dirty trick */, columnSort = sortedColumn;
-    } else if(reportType == 2) /* Thpt */ {
+    } else if((reportType == 2) /* Thpt */
+	      || ((reportType == 3) /* Host Traffic */)){
       if(sortedColumn == 0) sortedColumn = 1;
       screenNumber = MAX_NUM_PROTOS_SCREENS /* dirty trick */, columnSort = sortedColumn;
     }
@@ -1609,7 +1620,9 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		      el->averageSentPktThpt,
 		      el->peakSentPktThpt);
 	      sendString(buf);
-
+	    } else if(reportType == 3) /* Host Traffic Stats */ {
+	      snprintf(buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName);
+	      sendString(buf);
 	      updateHostThpt(el, hourId, 0);
 	      printHostThtpShort(el, 1);
 	    }
@@ -1690,7 +1703,9 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		      el->averageRcvdPktThpt,
 		      el->peakRcvdPktThpt);
 	      sendString(buf);
-
+	    } else if(reportType == 3) /* Host Traffic Stats */ {
+	      snprintf(buf, sizeof(buf), "<TR %s>%s", getRowColor(), webHostName);
+	      sendString(buf);
 	      updateHostThpt(el, hourId, 0);
 	      printHostThtpShort(el, 0);
 	    }
@@ -2062,7 +2077,7 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
       theAnchor[5] = htmlAnchor1;
     }
 
-    snprintf(buf, sizeof(buf), "<TABLE BORDER=1><TR><TH>%s0>Host%s</A></TH>\n"
+    snprintf(buf, sizeof(buf), "<TABLE BORDER=1><TR><TH NOWRAP>%s0>Host%s</A></TH>\n"
 	    "<TH>%s1>Domain%s</A></TH>"
 	    "<TH>%s2>Pkts Sent%s</A></TH>"
 	    "<TH>%s3>Data Sent%s</A></TH>"
@@ -2304,7 +2319,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
       theAnchor[0] = htmlAnchor1;
     }
 
-    snprintf(buf, sizeof(buf), "<TABLE BORDER=1>\n<TR><TH>%s1>Host%s</A>"
+    snprintf(buf, sizeof(buf), "<TABLE BORDER=1>\n<TR><TH NOWRAP>%s1>Host%s</A>"
 	    "<TH>%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
 	    "</TH><TH>%s2>IP&nbsp;Address%s</A></TH>\n"
 	    "<TH>%s3>MAC&nbsp;Address%s</A></TH>"
@@ -2881,7 +2896,8 @@ static void printHostSessions(HostTraffic *el, u_int elIdx) {
 	  snprintf(_dport, sizeof(_dport), "%d", tcpSession[idx]->sport); dport = _dport;
 	}
 
-	remotePeer = makeHostLink(device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(tcpSession[idx]->initiatorIdx)],
+	remotePeer = makeHostLink(device[actualReportDeviceId].
+				  hash_hostTraffic[checkSessionIdx(tcpSession[idx]->initiatorIdx)],
 				  SHORT_FORMAT, 0, 0);
 	dataSent = tcpSession[idx]->bytesReceived;
 	dataReceived = tcpSession[idx]->bytesSent;
@@ -3050,9 +3066,9 @@ static void printHostDetailedInfo(HostTraffic *el) {
 
   if(el->fullDomainName && (el->fullDomainName[0] != '\0')) {
     snprintf(buf, sizeof(buf), "<TR %s><TH ALIGN=LEFT>%s</TH><TD ALIGN=RIGHT>"
-	    "%s&nbsp;</TD></TR>\n",
+	    "%s&nbsp;(%s)</TD></TR>\n",
 	    getRowColor(),
-	    "Domain", el->fullDomainName);
+	    "Domain", el->fullDomainName, el->dotDomainName);
     sendString(buf);
   }
 
@@ -3461,7 +3477,9 @@ void printAllSessionsHTML(char* host) {
 
       if(el->portsUsage[idx]->clientUses > 0) {
 	/* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-	peerHost = device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->clientUsesLastPeer)];
+	peerHost = device[actualReportDeviceId].
+	  hash_hostTraffic[
+			   checkSessionIdx(el->portsUsage[idx]->clientUsesLastPeer)];
 
 	if(peerHost == NULL) {
 	  /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
@@ -3479,7 +3497,8 @@ void printAllSessionsHTML(char* host) {
 	sendString("<TD>&nbsp;</TD><TD>&nbsp;</TD>");
 
       if(el->portsUsage[idx]->serverUses > 0) {
-	peerHost = device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->serverUsesLastPeer)];
+	peerHost = device[actualReportDeviceId].
+	  hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->serverUsesLastPeer)];
 
 	if(peerHost == NULL) {
 	  /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
@@ -3796,7 +3815,7 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
       theAnchor[4] = htmlAnchor1;
     }
 
-    snprintf(buf, sizeof(buf), "<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR><TH>"
+    snprintf(buf, sizeof(buf), "<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR><TH NOWRAP>"
 	    "%s1>Host%s</A></TH>"
 	    "<TH>%s2>IP&nbsp;Address%s</A></TH>\n"
 	    "<TH COLSPAN=2>%s3>Data&nbsp;Sent%s</A></TH>"
@@ -3953,9 +3972,13 @@ void printActiveTCPSessions(void) {
 #endif
 	      "</TR>\n",
 	      getRowColor(),
-	      makeHostLink(device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(tcpSession[idx]->initiatorIdx)], SHORT_FORMAT, 0, 0),
+	      makeHostLink(device[actualReportDeviceId].
+			   hash_hostTraffic[checkSessionIdx(tcpSession[idx]->initiatorIdx)], 
+			   SHORT_FORMAT, 0, 0),
 	      sport,
-	      makeHostLink(device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(tcpSession[idx]->remotePeerIdx)], SHORT_FORMAT, 0, 0),
+	      makeHostLink(device[actualReportDeviceId].
+			   hash_hostTraffic[checkSessionIdx(tcpSession[idx]->remotePeerIdx)], 
+			   SHORT_FORMAT, 0, 0),
 	      dport,
 	      formatBytes(dataSent, 1),
 	      formatBytes(dataReceived, 1),
@@ -4556,7 +4579,8 @@ void printProcessInfo(int processPid) {
       }
 
       snprintf(buf, sizeof(buf), "%s<BR>\n",
-	      makeHostLink(device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(processes[i]->contactedIpPeersIndexes[j])],
+	      makeHostLink(device[actualReportDeviceId].
+			   hash_hostTraffic[checkSessionIdx(processes[i]->contactedIpPeersIndexes[j])],
 			   0, 0, 0));
       sendString(buf);
       numEntries++;
@@ -4877,7 +4901,9 @@ void printThptStatsMatrix(int sortedColumn) {
 	      formatThroughput(device[actualReportDeviceId].last60MinutesThpt[i].trafficValue/ratio));
       sendString(buf);
 
-      if(device[actualReportDeviceId].hash_hostTraffic[device[actualReportDeviceId].last60MinutesThpt[i].topHostSentIdx] != NULL) {
+      if(device[actualReportDeviceId].
+	 hash_hostTraffic[device[actualReportDeviceId].
+			 last60MinutesThpt[i].topHostSentIdx] != NULL) {
 	snprintf(buf, sizeof(buf), "<TR>%s<TD ALIGN=RIGHT>%s</TD>\n",
 		makeHostLink(device[actualReportDeviceId].
 			     hash_hostTraffic[device[actualReportDeviceId].

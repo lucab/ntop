@@ -134,3 +134,38 @@ extern int out_graph(short gifwidth,
 		     int  num_sets,
 		     ... );
 #endif
+
+/* **************************** */
+
+#define STR_INDEX_HTML                  "index.html"
+#define STR_SORT_DATA_RECEIVED_PROTOS   "sortDataReceivedProtos.html"
+#define STR_SORT_DATA_RECEIVED_IP       "sortDataReceivedIP.html"
+#define STR_SORT_DATA_RECEIVED_THPT     "sortDataReceivedThpt.html"
+#define STR_SORT_DATA_SENT_PROTOS       "sortDataSentProtos.html"
+#define STR_SORT_DATA_SENT_IP           "sortDataSentIP.html"
+#define STR_SORT_DATA_SENT_THPT         "sortDataSentThpt.html"
+#define STR_SORT_DATA_THPT_STATS        "thptStats.html"
+#define STR_THPT_STATS_MATRIX           "thptStatsMatrix.html"
+#define STR_DOMAIN_STATS                "domainTrafficStats.html"
+#define STR_MULTICAST_STATS             "multicastStats.html"
+#define HOSTS_INFO_HTML                 "hostsInfo.html"
+#define STR_LSOF_DATA                   "lsofData.html"
+#define PROCESS_INFO_HTML               "processInfo.html"
+#define IP_R_2_L_HTML                   "IpR2L.html"
+#define IP_L_2_R_HTML                   "IpL2R.html"
+#define IP_L_2_L_HTML                   "IpL2L.html"
+#define DOMAIN_INFO_HTML                "domainInfo"
+#define CGI_HEADER                      "cgi/"
+#define PLUGINS_HEADER                  "plugins/"
+#define STR_SHOW_PLUGINS                "showPlugins.html"
+#define SHUTDOWN_NTOP_HTML              "shutdown.html"
+#define INFO_NTOP_HTML                  "info.html"
+#define TRAFFIC_STATS_HTML              "trafficStats.html"
+#define NW_EVENTS_HTML                  "networkEvents.html"
+#define STR_SORT_DATA_RCVD_HOST_TRAFFIC "dataRcvdHostTraffic.html"
+#define STR_SORT_DATA_SENT_HOST_TRAFFIC "dataSentHostTraffic.html"
+
+/* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
+#define RESET_STATS_HTML              "resetStats.html"
+
+

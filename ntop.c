@@ -433,7 +433,7 @@ void* updateThptLoop(void* notUsed _UNUSED_) {
 #ifdef MULTITHREADED
 void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
   time_t nextUpdate = actTime+3600;
-  int hourId;
+  int hourId, minuteId, lastUpdatedHour=-1;
   char theDate[8];
   struct tm t;
 
@@ -452,18 +452,23 @@ void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
     traceEvent(TRACE_INFO, "Trying to update host traffic stats");
 #endif
 
-      actTime = time(NULL);
+    actTime = time(NULL);
+    strftime(theDate, 8, "%M", localtime_r(&actTime, &t)); 
+    minuteId = atoi(theDate);
+    strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
+    hourId = atoi(theDate);
+    if((minuteId <= 1) && (hourId != lastUpdatedHour)) {
+      lastUpdatedHour = hourId;
       accessMutex(&hostsHashMutex, "updateHostTrafficStatsThptLoop");
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Updating host traffic stats\n");
 #endif
-      strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
-      hourId = atoi(theDate);
       updateHostTrafficStatsThpt(hourId); /* Update Throughput */
       releaseMutex(&hostsHashMutex);
       nextUpdate = actTime+3600;
+    }
   }
-
+  
   return(NULL);
 }
 #endif
