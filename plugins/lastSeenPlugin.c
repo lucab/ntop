@@ -29,7 +29,7 @@ static void setPluginStatus(char * status);
 
 /* ****************************** */
 
-static GDBM_FILE LsDB;
+static GDBM_FILE LsDB = NULL;
 static int disabled = 0;
 
 typedef struct LsHostInfo {
@@ -55,9 +55,9 @@ static void handleLsPacket(u_char *_deviceId,
   if ( disabled ) return;
 
 #ifdef WIN32
-    deviceId = 0;
+  deviceId = 0;
 #else
-    deviceId = (u_int)(*_deviceId);
+  deviceId = (u_int)(*_deviceId);
 #endif
 
   ep = (struct ether_header *)p;
@@ -91,11 +91,11 @@ static void handleLsPacket(u_char *_deviceId,
   /* Test for disabled inside the protection of the mutex, also, so that if
    * we disabled the plugin since the test above, we don't seg fault
    */
-  if (!disabled )
-      gdbm_store(LsDB, key_data, data_data, GDBM_REPLACE);
+  if (!disabled)
+    gdbm_store(LsDB, key_data, data_data, GDBM_REPLACE);
 }
 
- /* Record sort */
+/* Record sort */
 
 static int SortLS(const void *_a, const void *_b) {
   LsHostInfo *a = (LsHostInfo *)_a;
@@ -194,7 +194,7 @@ static void handleLsHTTPrequest(char* url) {
   printSectionTitle("Last Seen Statistics");
 
   if (entry >= MAX_LASTSEEN_TABLE_SIZE - 1) {
-      sendString("<P><CENTER>NOTE:&nbsp;Table size at/exceeds limit, some data may not be displayed.</CENTER></P>\n");
+    sendString("<P><CENTER>NOTE:&nbsp;Table size at/exceeds limit, some data may not be displayed.</CENTER></P>\n");
   }
 
   sendString("<CENTER><TABLE BORDER>\n");
@@ -230,25 +230,25 @@ static void handleLsHTTPrequest(char* url) {
     strftime(tmpTime,25,"%d-%m-%Y&nbsp;%H:%M", &loctime);
 
     if(snprintf(tmpStr, sizeof(tmpStr), "<TR "TR_ON" %s>%s</TH>"
-	    "<TH "TH_BG" ALIGN=LEFT>&nbsp;&nbsp;%s&nbsp;&nbsp</TH>"
-	    "<TH "TH_BG">&nbsp;&nbsp;%s&nbsp;&nbsp</TH><TH "TH_BG">%s</TH><TH "TH_BG">"
-	    "<A HREF=\"/plugins/LastSeen?D%u\">Del</A>&nbsp;&nbsp;&nbsp;"
-	    "<A HREF=\"/plugins/LastSeen?N%u\">Notes</A></TH></TR>\n",
-	    getRowColor(),
-	    tmp,
-	    intoa(tablehost[entry].HostIpAddress),
-	    tmpTime,
-	    HostN.note,
-	    (unsigned) tablehost[entry].HostIpAddress.s_addr,
-	    (unsigned) tablehost[entry].HostIpAddress.s_addr) < 0)
+		"<TH "TH_BG" ALIGN=LEFT>&nbsp;&nbsp;%s&nbsp;&nbsp</TH>"
+		"<TH "TH_BG">&nbsp;&nbsp;%s&nbsp;&nbsp</TH><TH "TH_BG">%s</TH><TH "TH_BG">"
+		"<A HREF=\"/plugins/LastSeen?D%u\">Del</A>&nbsp;&nbsp;&nbsp;"
+		"<A HREF=\"/plugins/LastSeen?N%u\">Notes</A></TH></TR>\n",
+		getRowColor(),
+		tmp,
+		intoa(tablehost[entry].HostIpAddress),
+		tmpTime,
+		HostN.note,
+		(unsigned) tablehost[entry].HostIpAddress.s_addr,
+		(unsigned) tablehost[entry].HostIpAddress.s_addr) < 0)
       BufferTooShort();
     sendString(tmpStr);
     entry--;
   }
   sendString("</TABLE></CENTER><p>\n");
   if(snprintf(tmpStr, sizeof(tmpStr), 
-	   "<CENTER><b>%u</b> host(s) collected.</CENTER><br>",
-	   num_hosts) < 0) BufferTooShort();
+	      "<CENTER><b>%u</b> host(s) collected.</CENTER><br>",
+	      num_hosts) < 0) BufferTooShort();
   sendString(tmpStr);
   sendString("<p align=right>[ Back to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> ]&nbsp;</p>\n");
   printHTMLtrailer();
@@ -261,6 +261,8 @@ static void addNotes(char *addr, char *PostNotes) {
   char tmpStr[32];
   LsHostNote HostN;
   int idx;
+
+  if(disabled) return;
 
   for ( idx =0; PostNotes[idx]; idx++) {
     if ( PostNotes[idx]=='+') PostNotes[idx]=' ';
@@ -281,12 +283,19 @@ static void addNotes(char *addr, char *PostNotes) {
     gdbm_delete(LsDB,key_data);
 }
 
-/* Prepearing the page */
+/* Preparing the page */
 
 static void NotesURL(char *addr, char *ip_addr) {
   datum key_data, content;
   char tmpStr[32];
   char tmp[64];
+
+  if(disabled) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
+    printFlagedWarning("<I>This plugin is disabled.<I>");
+    printHTMLtrailer();
+    return;
+  }
 
   if(snprintf(tmpStr, sizeof(tmpStr), "N_%s",addr) < 0) BufferTooShort();
   key_data.dptr = tmpStr;
@@ -323,6 +332,8 @@ static void deletelastSeenURL( char *addr ) {
   datum key_data;
   char tmpStr[32];
 
+  if(disabled) return;
+
   if(snprintf(tmpStr, sizeof(tmpStr), "N_%s",addr) < 0)
     BufferTooShort();
 
@@ -339,8 +350,13 @@ static void termLsFunct(void) {
   traceEvent(CONST_TRACE_INFO, "LASTSEEN: Thanks for using LsWatch"); fflush(stdout);
     
   if(LsDB != NULL) {
-    gdbm_close(LsDB);
     disabled = 1;
+    sleep(1); /*
+		Wait if there's an ongoing request
+		being processed (otherwise we get an lseek_error if we
+		close the DB while somebody is using it
+	      */
+    gdbm_close(LsDB);
     LsDB = NULL;
   }
 
@@ -353,8 +369,8 @@ static void termLsFunct(void) {
 static PluginInfo LsPluginInfo[] = {
   { "LastSeenWatchPlugin",
     "This plugin produces a report about the last time packets were seen from "
-      "each specific host.  A note card database is available for recording "
-      "additional information.",
+    "each specific host.  A note card database is available for recording "
+    "additional information.",
     "2.2", /* version */
     "<A HREF=mailto:marangoni@unimc.it>A.Marangoni</A>", 
     "LastSeen", /* http://<host>:<port>/plugins/Ls */
@@ -375,34 +391,34 @@ PluginInfo* lsPluginEntryFctn(void) {
 #else
   PluginInfo* PluginEntryFctn(void) {
 #endif
-  char tmpBuf[200];
+    char tmpBuf[200];
 
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "LASTSEEN: Welcome to %s. (C) 1999 by Andrea Marangoni", 
-	     LsPluginInfo->pluginName);
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "LASTSEEN: Welcome to %s. (C) 1999 by Andrea Marangoni", 
+	       LsPluginInfo->pluginName);
   
-  /* Fix courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/LsWatch.db", myGlobals.dbPath) < 0) 
-    BufferTooShort();
-  LsDB = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+    /* Fix courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/LsWatch.db", myGlobals.dbPath) < 0) 
+      BufferTooShort();
+    LsDB = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
-  if(LsDB == NULL) {
-    traceEvent(CONST_TRACE_ERROR, 
-               "LASTSEEN: Unable to open LsWatch database - the plugin will be disabled");
-    setPluginStatus("Disabled - unable to open LsWatch database.");
-    disabled = 1;
-  } else {
-    setPluginStatus(NULL);
+    if(LsDB == NULL) {
+      traceEvent(CONST_TRACE_ERROR, 
+		 "LASTSEEN: Unable to open LsWatch database - the plugin will be disabled");
+      setPluginStatus("Disabled - unable to open LsWatch database.");
+      disabled = 1;
+    } else {
+      setPluginStatus(NULL);
+    }
+    return(LsPluginInfo);
   }
-  return(LsPluginInfo);
-}
 
-static void setPluginStatus(char * status)
-   {
-       if (LsPluginInfo->pluginStatusMessage != NULL)
-           free(LsPluginInfo->pluginStatusMessage);
-       if (status == NULL) {
-           LsPluginInfo->pluginStatusMessage = NULL;
-       } else {
-           LsPluginInfo->pluginStatusMessage = strdup(status);
-       }
-   }
+  static void setPluginStatus(char * status)
+    {
+      if (LsPluginInfo->pluginStatusMessage != NULL)
+	free(LsPluginInfo->pluginStatusMessage);
+      if (status == NULL) {
+	LsPluginInfo->pluginStatusMessage = NULL;
+      } else {
+	LsPluginInfo->pluginStatusMessage = strdup(status);
+      }
+    }

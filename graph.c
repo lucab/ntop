@@ -169,16 +169,15 @@ void drawPie(short width,
 */
 void drawBar(short width,
 	     short height,
-	     FILE* filepointer,            /* open file pointer, can be stdout */
+	     FILE* filepointer,  /* open file pointer, can be stdout */
 	     int   num_points,
-	     char  *labels[],              /* slice labels */
+	     char  *labels[],    /* slice labels */
 	     float data[]) {
   gdImagePtr im;
   int black, white, gray, colors[64], numColors, i, ngrid, base, padding;
   int center_x, center_y, vmargin, hmargin, xsize, ysize, xpos, ypos, dypix;
   float maxval, total, yscale, txtsz, txtht;
   float dydat, xmax, ymax, xmin, ymin;
-  char buf[32];
 
   im = gdImageCreate(width, height);
 
@@ -297,7 +296,7 @@ void drawArea(short width,
   float total, yscale, txtsz, txtht;
   float vmargin, hmargin, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
   float padding, ymax, ymin, xmax, xmin, gray;
-  char str[16], buf[32];
+  char str[16];
 
   im = gdImageCreate(width, height);
 

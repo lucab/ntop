@@ -3969,11 +3969,8 @@ void printNtopProblemReport(void) {
 #endif
   static char xvert[] = "JB6XF3PRQHNA7W5ECM8S9GLVY4TDKUZ2"; /* Scrambled just 'cause */
   time_t t;
-  struct pcap_stat pcapStats;
   unsigned int v, scramble, raw;
   int i, j;
-
-  memset(&pcapStats, 0, sizeof(struct pcap_stat));
 
   t = time(NULL);
 
@@ -4210,25 +4207,13 @@ void printNtopProblemReport(void) {
 
     }
 
-    if((myGlobals.device[i].pcapPtr != NULL) && 
-       (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0)) {
-      snprintf(buf, sizeof(buf), "          pcap stats: Received %u Dropped %u", 
-                                 pcapStats.ps_recv,
-                                 pcapStats.ps_drop);
-      sendString(buf);
-      if (pcapStats.ps_ifdrop > 0) {
-        snprintf(buf, sizeof(buf), ", ifDropped %u", pcapStats.ps_ifdrop);
-        sendString(buf);
-      }
-      sendString("\n");
-    }
-
     sendString("          Mfg: ____________________  Model: ____________________\n");
     sendString("          NIC Speed: 10/100/1000/Other  Bus: PCI ISA USB Firewire Other\n");
     sendString("          Location:  Public Internet / LAN / WAN\n");
     sendString("          Bandwidth: Dialup  DSL/CableModem  fT1  T1  10Mbps T3 100Mbps+\n");
     sendString("          # Hosts (machines): __________\n\n");
   }
+
   sendString("----------------------------------------------------------------------------\n");
   sendString("Log extract\n\n\n\n\n\n");
   sendString("----------------------------------------------------------------------------\n");
@@ -4237,6 +4222,7 @@ void printNtopProblemReport(void) {
   printNtopConfigInfo(TRUE);
   sendString("----------------------------------------------------------------------------\n");
 }
+
 /* **************************************** */
 
 /*

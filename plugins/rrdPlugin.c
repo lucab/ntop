@@ -68,7 +68,7 @@ int optind, opterr;
 
 static unsigned short initialized = 0, active = 0, dumpInterval, dumpDetail;
 static unsigned short dumpDays, dumpHours, dumpMonths;
-static char *hostsFilter;
+static char *hostsFilter = NULL;
 static Counter numTotalRRDs = 0;
 static unsigned long numRuns = 0, numRRDerrors = 0;
 static time_t start_tm, end_tm, rrdTime;
@@ -898,6 +898,7 @@ static void commonRRDinit(void) {
     dumpMatrix = atoi(value);
   }
 
+  if(hostsFilter != NULL) free(hostsFilter);
   if(fetchPrefsValue("rrd.hostsFilter", value, sizeof(value)) == -1) {
     storePrefsValue("rrd.hostsFilter", "");
     hostsFilter  = strdup("");

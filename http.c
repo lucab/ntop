@@ -1413,7 +1413,7 @@ static int returnHTTPPage(char* pageName,
     struct pcap_stat pcapStats;
     
     if(pcap_stats(myGlobals.device[myGlobals.actualReportDeviceId].pcapPtr, &pcapStats) >= 0) {
-      myGlobals.device[myGlobals.actualReportDeviceId].droppedByKernel += pcapStats.ps_drop;
+      incrementTrafficCounter(&myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts, pcapStats.ps_drop);
     }
   }
 

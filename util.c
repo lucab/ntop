@@ -1922,8 +1922,10 @@ void traceEvent(int eventTraceLevel, char* file,
         (myGlobals.logView != NULL)) {
       
 #ifdef CFG_MULTITHREADED
+#ifndef WIN32
       if(myGlobals.logViewMutex.isInitialized)
 	pthread_mutex_lock(&myGlobals.logViewMutex.mutex);
+#endif
 #endif
 
       if (myGlobals.logView[myGlobals.logViewNext] != NULL)
@@ -1934,8 +1936,10 @@ void traceEvent(int eventTraceLevel, char* file,
       myGlobals.logViewNext = (myGlobals.logViewNext + 1) % CONST_LOG_VIEW_BUFFER_SIZE;
 
 #ifdef CFG_MULTITHREADED
+	  #ifndef WIN32
       if(myGlobals.logViewMutex.isInitialized)
 	pthread_mutex_unlock(&myGlobals.logViewMutex.mutex);
+#endif
 #endif
 
     }

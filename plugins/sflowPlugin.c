@@ -2195,7 +2195,7 @@ static void termsFlowFunct(void) {
   traceEvent(CONST_TRACE_INFO, "SFLOW: Thanks for using sFlow");
 
 #ifdef CFG_MULTITHREADED
-  killThread(&sFlowThread);
+  if(threadActive) killThread(&sFlowThread);
 #endif
 
   if(myGlobals.sflowInSocket > 0)  closeNwSocket(&myGlobals.sflowInSocket);

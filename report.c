@@ -246,12 +246,12 @@ void printTrafficStatistics(void) {
 	BufferTooShort();
       sendString(buf);
 
-      if(myGlobals.device[myGlobals.actualReportDeviceId].droppedByKernel > 0) {
+      if(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;the&nbsp;kernel</th>"
 		    "<TD "TD_BG" COLSPAN=2 align=right>%s [%.2f %%]</td></TR>\n",
-		    getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedByKernel),
-		    (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedByKernel*100)
+		    getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value),
+		    (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
 		    /(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0)
 	  BufferTooShort();
 	sendString(buf);

@@ -185,7 +185,7 @@ static void freeHostSessions(HostTraffic *host, int theDevice) {
 /* **************************************** */
 
 void freeHostInfo(HostTraffic *host, int actualDeviceId) {
-  u_int j, i;
+  u_int i;
 
   if((host == NULL) || myGlobals.device[actualDeviceId].dummyDevice)
     return;

@@ -203,6 +203,15 @@ typedef struct conditionalVariable {
   CRITICAL_SECTION criticalSection;
 } ConditionalVariable;
 
+extern int  pthread_create(pthread_t *threadId, void* notUsed, void *(*__start_routine) (void *), char* userParm);
+extern void pthread_detach(pthread_t *threadId);
+extern int  pthread_mutex_init(pthread_mutex_t *mutex, char* notused);
+extern void pthread_mutex_destroy(pthread_mutex_t *mutex);
+extern int  pthread_mutex_lock(pthread_mutex_t *mutex);
+extern int  pthread_mutex_trylock(pthread_mutex_t *mutex);
+extern int  pthread_mutex_unlock(pthread_mutex_t *mutex);
+
+
 #endif /* WIN32 */
 
 typedef struct pthreadMutex {
@@ -707,16 +716,6 @@ typedef struct ntopInterface {
   char *filter;                  /* user defined filter expression (if any) */
 
   int fd;                        /* unique identifier (Unix file descriptor) */
-
-#if (0)
-  FILE *fdv;                     /* verbosity file descriptor */
-  int hashing;                   /* hashing while sniffing */
-  int ethv;                      /* print ethernet header */
-  int ipv;                       /* print IP header */
-  int tcpv;                      /* print TCP header */
-#endif
-
-  Counter droppedByKernel; /* Keep the count of dropped packets by all interfaces*/
 
   /*
    * The packets section
