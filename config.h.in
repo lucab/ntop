@@ -243,6 +243,9 @@
 /* Define to 1 if you have the `xml2' library (-lxml2). */
 #undef HAVE_LIBXML2
 
+/* Define to 1 if you have the `xnet' library (-lxnet). */
+#undef HAVE_LIBXNET
+
 /* Define to 1 if you have the `z' library (-lz). */
 #undef HAVE_LIBZ
 
@@ -337,17 +340,14 @@
 /* Define to 1 if you have the <openssl/x509.h> header file. */
 #undef HAVE_OPENSSL_X509_H
 
-/* Define to 1 if you have the `pcap_freecode' function. */
-#undef HAVE_PCAP_FREECODE
-
 /* Define to 1 if you have the <pcap.h> header file. */
 #undef HAVE_PCAP_H
 
-/* Define to 1 if you have the `pcap_open_dead' function. */
-#undef HAVE_PCAP_OPEN_DEAD
-
 /* Define to 1 if you have the <png.h> header file. */
 #undef HAVE_PNG_H
+
+/* pthread_atfork() exists */
+#undef HAVE_PTHREAD_ATFORK
 
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
@@ -357,9 +357,6 @@
 
 /* Define to 1 if you have the <pwd.h> header file. */
 #undef HAVE_PWD_H
-
-/* GNU readline library (-lreadline). */
-#undef HAVE_READLINE
 
 /* Define to 1 if you have the `regcomp' function. */
 #undef HAVE_REGCOMP

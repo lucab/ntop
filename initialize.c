@@ -840,7 +840,7 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 
 /* ************************************************************ */
 
-#ifdef CFG_MULTITHREADED
+#if defined(CFG_MULTITHREADED) && defined(HAVE_PTHREAD_ATFORK)
 void reinitMutexes (void) {
 
 /*
@@ -880,8 +880,10 @@ void initThreads(void) {
   int i;
 
 #ifdef CFG_MULTITHREADED
+ #ifdef HAVE_PTHREAD_ATFORK
   i = pthread_atfork(NULL, NULL, &reinitMutexes);
   traceEvent(CONST_TRACE_INFO, "NOTE: atfork() handler registered for mutexes, rc %d", i);
+ #endif
 
   /*
    * Create two variables (semaphores) used by functions in pbuf.c to queue packets

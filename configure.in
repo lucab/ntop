@@ -47,7 +47,7 @@ dnl>       into the stamp.
 dnl>
 AC_INIT([ntop],[2.2.3])
 AC_PREREQ([2.50])
-SCRIPTVER="v2.2.3.106-2003-07-04"
+SCRIPTVER="v2.2.3.107-2003-07-14"
 
 dnl>
 dnl> generate the config header
@@ -2279,6 +2279,24 @@ if test ".${ac_enable_tcpwrap}" = ".yes"; then
         echo
         HAS_WARNING="yes"
     fi
+fi
+
+dnl> Test for pthread_atfork()
+if test ".${ac_cv_header_pthread_h}" = ".yes"; then
+    AC_MSG_CHECKING([pthread_atfork])
+    AC_TRY_LINK([
+        #include "confdefs.h"
+        #include <pthread.h>],
+        [pthread_atfork(NULL, NULL, NULL);],
+        AC_DEFINE_UNQUOTED(HAVE_PTHREAD_ATFORK, 
+                                1, 
+                                [pthread_atfork() exists])
+        AC_MSG_RESULT(yes)
+        ac_has_pthread_atfork=yes,
+        AC_MSG_RESULT(no)
+        ac_has_pthread_atfork=no)
+else
+    ac_has_pthread_atfork=no
 fi
 
 echo
