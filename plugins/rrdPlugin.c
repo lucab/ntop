@@ -168,7 +168,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-12h\">last 12h</A> ]\n", url);  sendString(path);
   snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-6h\">last 6h</A> ]\n", url);  sendString(path);
   snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1h\">last hour</A> ]&nbsp;\n", url);  sendString(path);
-  
+
   sendString("</p>\n<p>\n<TABLE BORDER>\n");
 
   sendString("<TR><TH>Graph</TH><TH>Total</TH><TH>Average</TH></TR>\n");
@@ -209,7 +209,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
       /* printf("rsrcName: %s\n", rsrcName); */
 
-      if((strncmp(rsrcName, "pkt", 3) == 0) 
+      if((strncmp(rsrcName, "pkt", 3) == 0)
 	 || ((strlen(rsrcName) > 4) && (strcmp(&rsrcName[strlen(rsrcName)-4], "Pkts") == 0))) {
 	snprintf(path, sizeof(path), "%s Pkt</TD><TD ALIGN=RIGHT>%.1f Pkts/sec",
 		 formatPkts(total), (float)average);
@@ -367,45 +367,36 @@ void updateCounter(char *hostPath, char *key, Counter value) {
        But this would also make the next interval unknown.  My suggestion:
        insert an unknown at that time minus one second, enter the fetched
        value at that time.
-       
+
        cheers,
-       -- 
+       --
        __________________________________________________________________
        / alex@slot.hollandcasino.nl                  alex@ergens.op.het.net \
 
     */
 
     sprintf(cmd, "%u:u", myGlobals.actTime-10); /* u = undefined */
-    argv[argc++] = cmd;
-    
-    optind=0; /* reset gnu getopt */
-    opterr=0; /* no error messages */
-    rc = rrd_update(argc, argv);
-
-    if (rrd_test_error()) {
-      traceEvent(TRACE_WARNING, "rrd_update(%s) error: %s\n", path, rrd_get_error());
-      rrd_clear_error();
-    }
-  } else {  
+  } else {
     sprintf(cmd, "%u:%u", myGlobals.actTime, value);
-    argv[argc++] = cmd;
+  }
 
-    optind=0; /* reset gnu getopt */
-    opterr=0; /* no error messages */
-    rc = rrd_update(argc, argv);
+  argv[argc++] = cmd;
 
-    numTotalRRDs++;
+  optind=0; /* reset gnu getopt */
+  opterr=0; /* no error messages */
+  rc = rrd_update(argc, argv);
+  numTotalRRDs++;
 
-    if (rrd_test_error()) {
-      traceEvent(TRACE_WARNING, "rrd_update(%s) error: %s\n", path, rrd_get_error());
-      rrd_clear_error();
-    }
+  if (rrd_test_error()) {
+    traceEvent(TRACE_WARNING, "rrd_update(%s) error: %s\n", path, rrd_get_error());
+    rrd_clear_error();
+  }
 
 #ifdef DEBUG
-    if(rc != 0)
-      traceEvent(TRACE_WARNING, "rrd_update(%s, %u, %u)=%d", path, value, rc);
+  if(rc != 0)
+    traceEvent(TRACE_WARNING, "rrd_update(%s, %u, %u)=%d", path, value, rc);
 #endif
-  }
+
 }
 
 /* ******************************* */
