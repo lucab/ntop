@@ -131,7 +131,6 @@ static void resolveAddress(char* symAddr,
 #endif
     updateHostNameInfo(addr, data_data.dptr);
 #ifdef HAVE_MYSQL
-    traceEvent(TRACE_INFO, "DEBUG: mySQLupdateHostNameInfo");
     mySQLupdateHostNameInfo(addr, data_data.dptr);
 #endif
     free(data_data.dptr);
@@ -306,7 +305,6 @@ static void resolveAddress(char* symAddr,
 
   updateHostNameInfo(addr, symAddr);
 #ifdef HAVE_MYSQL
-  traceEvent(TRACE_INFO, "DEBUG: mySQLupdateHostNameInfo");
   mySQLupdateHostNameInfo(addr, data_data.dptr);
 #endif
 

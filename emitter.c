@@ -1229,15 +1229,13 @@ void dumpNtopHashIndexes(char* options) {
       
       if(numEntries > 0)
 	sendString(",\n");
-      else
-	sendString("\n");
 
       if(el->hostNumIpAddress[0] != '\0')
 	hostKey = el->hostNumIpAddress;
       else
 	hostKey = el->ethAddressString;
       
-      if(snprintf(buf, sizeof(buf), "'%d' => '%s'", idx, hostKey) < 0) 
+      if(snprintf(buf, sizeof(buf), "\t'%d' => '%s'", idx, hostKey) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
 
@@ -1245,7 +1243,7 @@ void dumpNtopHashIndexes(char* options) {
     }
   }
 
-  sendString(");\n");
+  sendString("\n);\n");
 }
 
 /* ********************************** */

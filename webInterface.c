@@ -210,7 +210,7 @@ char* makeHostLink(HostTraffic *el, short mode,
       if(el->hostNumIpAddress[0] != '\0')
 	strncpy(symIp, el->hostNumIpAddress, sizeof(symIp));
       else {
-	strncpy(symIp, el->ethAddressString, sizeof(symIp));
+ 	 strncpy(symIp, el->ethAddressString, sizeof(symIp)); 
 	usedEthAddress = 1;
       }
     } else if(tmpStr[0] != '\0') {
@@ -231,7 +231,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 	}
       }      
     } else {
-      strncpy(symIp, el->ethAddressString, sizeof(symIp));
+      strncpy(symIp, el->ethAddressString, sizeof(symIp)); 
       usedEthAddress = 1;
     }
     break;
@@ -266,9 +266,15 @@ char* makeHostLink(HostTraffic *el, short mode,
     traceEvent(TRACE_INFO, "->'%s/%s'\n", symIp, el->ethAddressString);
 #endif
   } else {
-    if(el->hostNumIpAddress[0] != '\0')
+    if(el->nbHostName != NULL) {
+      strncpy(symIp, el->nbHostName, sizeof(linkName));
+    } else if(el->ipxHostName != NULL) {
+      strncpy(symIp, el->ipxHostName, sizeof(linkName));
+    } 
+
+    if(el->hostNumIpAddress[0] != '\0') {
       tmpStr = el->hostNumIpAddress;
-    else {
+    } else {
       tmpStr = el->ethAddressString;
       /* tmpStr = symIp; */
     }
@@ -281,15 +287,21 @@ char* makeHostLink(HostTraffic *el, short mode,
     int i;    
     char tmpStr[256], *vendorInfo;
 
-    vendorInfo = getVendorInfo(el->ethAddress, 0);
-    if(vendorInfo[0] != '\0') {
-      sprintf(tmpStr, "%s%s", vendorInfo, &linkName[8]);    
-      strcpy(symIp, tmpStr); 
+    if(el->nbHostName != NULL) {
+      strncpy(symIp, el->nbHostName, sizeof(linkName));
+    } else if(el->ipxHostName != NULL) {
+      strncpy(symIp, el->ipxHostName, sizeof(linkName));      
+    } else {
+      vendorInfo = getVendorInfo(el->ethAddress, 0);
+      if(vendorInfo[0] != '\0') {
+	sprintf(tmpStr, "%s%s", vendorInfo, &linkName[8]);    
+	strcpy(symIp, tmpStr); 
+      }
+      
+      for(i=0; linkName[i] != '\0'; i++)
+	if(linkName[i] == ':')
+	  linkName[i] = '_';
     }
-
-    for(i=0; linkName[i] != '\0'; i++)
-      if(linkName[i] == ':')
-	linkName[i] = '_';
   }
 
   if(addCountryFlag == 0)

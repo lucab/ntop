@@ -213,11 +213,11 @@ static const u_char *p_save;
    idx = (u_int)((idx*3) % device[actualDeviceId].actualHashSize);
 
    /*
-   traceEvent(TRACE_INFO, "Searching for %s@%s",
-	      intoa(*hostIpAddress),
-	      etheraddr_string(ether_addr));
-
-   if(hostIpAddress->s_addr == 0)
+     traceEvent(TRACE_INFO, "Searching for %s@%s",
+     intoa(*hostIpAddress),
+     etheraddr_string(ether_addr));
+     
+     if(hostIpAddress->s_addr == 0)
      printf("Hello\n");
    */
  #ifdef DEBUG
@@ -734,10 +734,9 @@ void scanTimedoutTCPSessions(void) {
 	     * can now be purged.
 	     */
 	    sessionToPurge->magic = 0;
-
+	    
 	    notifyTCPSession(sessionToPurge);
 #ifdef HAVE_MYSQL
-	    traceEvent(TRACE_INFO, "DEBUG: mySQLnotifyTCPSession");
 	    mySQLnotifyTCPSession(sessionToPurge);
 #endif
 	    free(sessionToPurge); /* No inner pointers to free */
@@ -1342,7 +1341,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   HostTraffic *dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
   struct timeval tvstrct;
   u_int firstEmptySlot = NO_PEER;
-  char rcStr[64];
+  char rcStr[128];
   int len;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
@@ -1620,14 +1619,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       }
 #endif
 
-      if(packetDataLength >= 63)
-	len = 63;
+      if(packetDataLength >= sizeof(rcStr))
+	len = sizeof(rcStr);
       else
 	len = packetDataLength;
 
       if((sport == 80 /* HTTP */) && (theSession->bytesProtoRcvd == 0)) {
-	char rcStr[18];
-
 	strncpy(rcStr, packetData, 16);
 	rcStr[16] = '\0';
 
@@ -1941,7 +1938,49 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 #endif
 	  addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
 	} 
-      } 
+      } else if((sport == 139) || (dport == 139)) {
+	memset(rcStr, 0, sizeof(rcStr));
+	memcpy(rcStr, packetData, len);
+	
+	  if((rcStr[0] == 0x0) /* Message type: Session message */
+	     && (rcStr[8] == 0x73) /* SMB Command: SMBsesssetupX */) {
+	    int i;
+
+#ifdef DEBUG	  
+	    for(i=0; i<len; i++)
+	      printf("0x%X (%d)\n", rcStr[i], i);
+#endif
+
+	    if(sport == 139) {  
+	      /* Response */
+#ifdef DEBUG
+	      printf("OS: %s\n", &rcStr[45]);
+#endif  
+	      if(srcHost->osName == NULL)
+		srcHost->osName = strdup(&rcStr[45]);
+	    } else /* dport == 139 */ {
+	      /* Request */
+	      i = 89;
+
+	      if(srcHost->nbHostName == NULL) srcHost->nbHostName = strdup(&rcStr[i]);
+#ifdef DEBUG
+	      printf("Account Name: %s\n", &rcStr[i]);
+#endif
+	      while((rcStr[i] != 0) && (i < sizeof(rcStr))) i++;
+	      i++;
+#ifdef DEBUG
+	      printf("Domain: %s\n", &rcStr[i]);
+#endif
+	      if(srcHost->nbDomainName == NULL) srcHost->nbDomainName = strdup(&rcStr[i]);
+	      while((rcStr[i] != 0) && (i < sizeof(rcStr))) i++;
+	      i++;
+#ifdef DEBUG
+	      printf("OS: %s\n", &rcStr[i]);
+#endif
+	      if(srcHost->osName == NULL) srcHost->osName = strdup(&rcStr[i]);
+	    }
+	  }
+      }
     }
 
     /* ***************************************** */
@@ -4838,7 +4877,6 @@ void updateOSName(HostTraffic *el) {
       updateDBOSname(el);
 
 #ifdef HAVE_MYSQL
-      traceEvent(TRACE_INFO, "DEBUG: mySQLupdateDBOSname");
       mySQLupdateDBOSname(el);
 #endif
 

@@ -616,7 +616,8 @@ int sortHostFctn(const void *_a, const void *_b) {
 #ifdef MULTITHREADED
     accessMutex(&addressResolutionMutex, "sortHostFctn");
 #endif
-    rc = strcasecmp((*a)->hostSymIpAddress, (*b)->hostSymIpAddress);
+    rc = strcasecmp((*a)->hostSymIpAddress[0] != '\0' ? (*a)->hostSymIpAddress : (*a)->ethAddressString,
+		    (*b)->hostSymIpAddress[0] != '\0' ? (*b)->hostSymIpAddress : (*b)->ethAddressString);
 #ifdef MULTITHREADED
     releaseMutex(&addressResolutionMutex);
 #endif
@@ -781,6 +782,7 @@ int cmpFctn(const void *_a, const void *_b) {
 #ifdef MULTITHREADED
     accessMutex(&addressResolutionMutex, "cmpFctn");
 #endif
+
     if((*a)->hostSymIpAddress[0] != '\0') {
       char *name1, *name2;
 
@@ -1309,6 +1311,7 @@ int cmpMulticastFctn(const void *_a, const void *_b) {
 #ifdef MULTITHREADED
     accessMutex(&addressResolutionMutex, "cmpMulticastFctn");
 #endif
+
     rc = strcmp((*a)->hostSymIpAddress, /* Host name */
 		(*b)->hostSymIpAddress);
 #ifdef MULTITHREADED
@@ -1537,6 +1540,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 #ifdef MULTITHREADED
     accessMutex(&addressResolutionMutex, "cmpHostsFctn");
 #endif
+
     name_a = (*a)->hostSymIpAddress;
 
     if(name_a == NULL)

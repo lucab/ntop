@@ -54,7 +54,7 @@ int sslInitialized, sslPort;
 time_t nextLogTime;
 
 /* Flags */
-int isLsofPresent=1, isNmapPresent=1;
+int isLsofPresent, isNmapPresent;
 short capturePackets;
 short endNtop;
 

@@ -1022,7 +1022,7 @@ int deleteSem(sem_t *semId) {
 
 int checkCommand(char* commandName) {
 #ifdef WIN32
-  return(1);
+  return(0);
 #else
   FILE* fd = sec_popen(commandName, "r");
 

@@ -507,7 +507,6 @@ void updateDbHostsTraffic(int deviceToUpdate) {
 	/* traceEvent(TRACE_INFO, "1"); */
 	notifyHostCreation(el);
 #ifdef HAVE_MYSQL
-	traceEvent(TRACE_INFO, "DEBUG: mySQLnotifyHostCreation");
 	mySQLnotifyHostCreation(el);
 #endif
 	/* traceEvent(TRACE_INFO, "2"); */
@@ -516,7 +515,6 @@ void updateDbHostsTraffic(int deviceToUpdate) {
 	updateHostTraffic(el);
 	/* traceEvent(TRACE_INFO, "4"); */
 #ifdef HAVE_MYSQL
-	traceEvent(TRACE_INFO, "DEBUG: mySQLupdateHostTraffic");
 	mySQLupdateHostTraffic(el);
 #endif
 	/* traceEvent(TRACE_INFO, "5"); */

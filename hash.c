@@ -574,7 +574,6 @@ void resizeHostHash(int deviceToExtend, float multiplier) {
 	/* Session to purge */
 	notifyTCPSession(device[deviceToExtend].tcpSession[j]);
 #ifdef HAVE_MYSQL
-	traceEvent(TRACE_INFO, "DEBUG: mySQLnotifyTCPSession");
 	mySQLnotifyTCPSession(device[deviceToExtend].tcpSession[j]);
 #endif
 	free(device[deviceToExtend].tcpSession[j]); /* No inner pointers to free */
@@ -649,7 +648,6 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 
   updateHostTraffic(host);
 #ifdef HAVE_MYSQL
-  traceEvent(TRACE_INFO, "DEBUG: mySQLupdateHostTraffic");
   mySQLupdateHostTraffic(host);
 #endif
 

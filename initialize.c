@@ -927,7 +927,8 @@ void parseTrafficFilter(char *argv[], int optind) {
 		       "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
 		       expression, pcap_geterr(device[i].pcapPtr), device[i].name);
 	    exit(-1);
-	  }
+	  } else
+	    traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", expression, device[i].name);
 	}
       }
     }
