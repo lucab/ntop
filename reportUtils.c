@@ -1617,7 +1617,7 @@ void printHostTrafficStats(HostTraffic *el) {
 
     printSectionTitle("IP Protocol Distribution");
     sendString("<CENTER>\n"
-	     ""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
+	     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
 	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Received</TH></TR>\n");
 
@@ -1720,7 +1720,7 @@ void printHostContactedPeers(HostTraffic *el) {
 
       printSectionTitle("Last Contacted Peers");
       sendString("<CENTER>\n"
-		 "<TABLE BORDER=0><TR><TD "TD_BG" VALIGN=TOP>\n");
+		 "<TABLE BORDER=0 WIDTH=100%%><TR><TD "TD_BG" VALIGN=TOP>\n");
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
 	if(el->contactedSentPeersIndexes[i] != NO_PEER) {
@@ -1729,7 +1729,7 @@ void printHostContactedPeers(HostTraffic *el) {
 
 	  if(el1 != NULL) {
 	    if(numEntries == 0) {
-	      sendString(""TABLE_ON"<TABLE BORDER=1 VALIGN=TOP>"
+	      sendString(""TABLE_ON"<TABLE BORDER=1 VALIGN=TOP WIDTH=100%%>"
 			 "<TR><TH "TH_BG">Receiver Name</TH>"
 			 "<TH "TH_BG">Receiver Address</TH></TR>\n");
 	    }
@@ -1758,7 +1758,7 @@ void printHostContactedPeers(HostTraffic *el) {
 
 	  if(el1 != NULL) {
 	    if(numEntries == 0) {
-	      sendString(""TABLE_ON"<TABLE BORDER=1>"
+	      sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>"
 			 "<TR><TH "TH_BG">Sender Name</TH>"
 			 "<TH "TH_BG">Sender Address</TH></TR>\n");
 	    }
@@ -2784,7 +2784,7 @@ void printHostUsedServices(HostTraffic *el) {
   if(tot > 0) {
     printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Client&nbsp;Role");
     sendString("<CENTER>\n");
-    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>"
+    sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
 	       "<TH "TH_BG">&nbsp;</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Sent</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Sent</TH>"
@@ -2814,7 +2814,7 @@ void printHostUsedServices(HostTraffic *el) {
   if(tot > 0) {
     printSectionTitle("IP&nbsp;Service&nbsp;Stats:&nbsp;Server&nbsp;Role");
     sendString("<CENTER>\n");
-    sendString("<P>"TABLE_ON"<TABLE BORDER=1>\n<TR>"
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
 	       "<TH "TH_BG">&nbsp;</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Rcvd</TH>"
 	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Rcvd</TH>"

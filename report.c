@@ -760,7 +760,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 
       updateThpt();
 
-      sendString("</TABLE></TR><TR><TH "TH_BG">Throughput</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
+      sendString("</TABLE></TR><TR><TH "TH_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%%>");
       if(snprintf(buf2, sizeof(buf2), "<tr %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 	      "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 	      getRowColor(), formatThroughput(device[actualReportDeviceId].actualThpt),
@@ -1241,7 +1241,7 @@ void printAllSessionsHTML(char* host) {
       if(i == 0) {
 	printSectionTitle("IP&nbsp;Service/Port&nbsp;Usage\n");
 	sendString("<CENTER>\n");
-	sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>"
+	sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>"
 		   "<TH "TH_BG">IP&nbsp;Service</TH>"
 		   "<TH "TH_BG">Port</TH>"
 		   "<TH "TH_BG">#&nbsp;Client&nbsp;Sess.</TH>"
@@ -1690,7 +1690,7 @@ RETSIGTYPE printIpAccounting(int remoteToLocal, int sortedColumn,
     sendString("</TABLE>"TABLE_OFF"\n");
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
 	       "<TH "TH_BG">Total Traffic</TH><TH "TH_BG">Data Sent</TH>\n"
-	       "<TH "TH_BG">Data Received</TH><TH "TH_BG">Bandwidth</TH></TR>\n");
+	       "<TH "TH_BG">Data Received</TH><TH "TH_BG">Used Bandwidth</TH></TR>\n");
 
     totalBytes = totalBytesSent+totalBytesReceived;
 
@@ -2651,7 +2651,7 @@ void printThptStatsMatrix(int sortedColumn) {
   time_t tmpTime;
   struct tm t;
 
-  printHTMLheader("Throughput Statistics Matrix", 0);
+  printHTMLheader("Network Load Statistics Matrix", 0);
 
   switch(sortedColumn) {
   case 1:
@@ -2897,7 +2897,7 @@ void printThptStatsMatrix(int sortedColumn) {
 void printThptStats(int sortedColumn _UNUSED_) {
   char tmpBuf[128];
 
-  printHTMLheader("Throughput Statistics", 0);
+  printHTMLheader("Network Load Statistics", 0);
 
   if(device[actualReportDeviceId].numThptSamples == 0) {
     printNoDataYet();
@@ -3636,7 +3636,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
   printSectionTitle("Host Traffic Stats");
   sendString("<CENTER>\n");
-  sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>");
+  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=100%%>\n<TR>");
   sendString("<TH "TH_BG">Time</TH>");
   sendString("<TH "TH_BG">Tot. Traffic Sent</TH>");
   sendString("<TH "TH_BG">% Traffic Sent</TH>");

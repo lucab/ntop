@@ -76,7 +76,6 @@ typedef char int8_t;
 #ifndef _BSD_SOURCE
 #define _BSD_SOURCE
 #endif
-
 #endif /* linux || __linux__ */
 
 #ifdef __GNUC__
@@ -114,9 +113,7 @@ int getdomainname(char *name, size_t len);
 
 #include <limits.h>
 #include <float.h>
-
 #include <math.h>
-
 #include <sys/types.h>
 
 #ifndef WIN32
@@ -175,9 +172,6 @@ int getdomainname(char *name, size_t len);
 #  include <crypt.h>
 # endif
 #endif
-
-#endif /* ToBeRocked */
-
 
 /*
  * gdbm management
@@ -284,9 +278,7 @@ int getdomainname(char *name, size_t len);
 #define INT16SZ       2               /* for systems without 16-bit ints */
 #define INADDRSZ      4               /* IPv4 T_A */
 #define IN6ADDRSZ     16              /* IPv6 T_AAAA */
-#endif
-
-
+#endif /* INT16SZ */
 
 
 #if defined(HAVE_NET_ETHERNET_H)
@@ -353,9 +345,16 @@ int getdomainname(char *name, size_t len);
 # ifndef ETHERTYPE_LOOPBACK
 #  define ETHERTYPE_LOOPBACK  0x9000
 # endif
+#endif /* HAVE_ETHERTYPE_H */
+
+/*
+  Leave it here as some OS (e.g. RedHat 7.0)
+  do not define it 
+*/
+
 # ifndef ETHERTYPE_QNX
 #  define ETHERTYPE_QNX       0x8203
-#endif
+# endif
 
 #ifndef ETHERMTU
 #define ETHERMTU  1500

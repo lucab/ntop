@@ -67,7 +67,7 @@ void handleSigHup(int signalId _UNUSED_) {
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
-  int pcap_fd = pcap_fileno(device[0].pcapPtr);
+  int pcap_fd = pcap_fileno(device[i].pcapPtr);
   fd_set readMask;
   struct timeval timeout;
 
@@ -86,7 +86,7 @@ void* pcapDispatch(void *_i) {
       */
     };
     
-    pcap_fd = fileno(((struct mypcap *)(device[0].pcapPtr))->rfile);
+    pcap_fd = fileno(((struct mypcap *)(device[i].pcapPtr))->rfile);
   }
 
   for(;capturePackets == 1;) {
@@ -97,7 +97,7 @@ void* pcapDispatch(void *_i) {
     timeout.tv_usec = 0;
 
     if(select(pcap_fd+1, &readMask, NULL, NULL, &timeout) > 0) {
-      rc = pcap_dispatch(device[0].pcapPtr, 1, processPacket, NULL);
+      rc = pcap_dispatch(device[i].pcapPtr, 1, processPacket, NULL);
 
       if(rc == -1) {
 	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
