@@ -1,62 +1,83 @@
-<HTML>
-<BODY>
-<PRE>
-<!-- Manpage converted by man2html 3.0.1 -->
-       ntop - display top network users
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<!-- Converted to html 4.01 Transitional by Burton Strauss, Feb2002 -->
+<!-- Validated as HTML 4.01 Transitional by Burton Strauss, 26Feb2002 -->
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Window-target" content="_top">
+<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<meta name="description" content="ntop (http://www.ntop.org) status for a network.">
+<meta name="author" content="ntop">
+<meta name="generator" content="ntop v2.0">
+<link rel="stylesheet" type="text/css" href="style.css">
+<title>ntop man page</title>
+</head>
+<body>
+<h1><a href="http://www.ntop.org/" target="_top"><img border="0" src="ntop.gif"
+width="59" height="49" alt="ntop logo"></a>ntop Man Page</h1>
+
+<h2>SYNOPSIS</h2>
+
+<pre>
+       <b>ntop</b>  [<b>-c</b>]  [<b>-E</b>]  [<b>-r</b>  <i>refresh</i> <i>time</i>] [<b>-R</b> <i>filter</i> <i>rules</i>] [<b>-f</b>
+       <i>traffic</i> <i>dump</i> <i>file</i>] [<b>-n</b>] [<b>-N</b>] [<b>-M</b>] [<b>-q</b>] [<b>-p</b>] <i>TCP/UDP</i> <i>protoï¿½</i>
+       <i>cols</i>  <i>to</i>  <i>monitor</i>]  [<b>-i</b>  <i>interface</i>] [<b>-e</b> <i>num</i> <i>rows</i>] [<b>-w</b> <i>HTTP</i>
+       <i>IP:port</i>] [<b>-W</b> <i>HTTPS</i> <i>IP:port</i>] [<b>-d</b>] [<b>-S</b>value<b>]</b> [<b>-P</b> <i>dbpath]</i> [<b>-m</b>
+       <i>local</i> <i>subnet</i>] [<b>-a</b> <i>access</i> <i>log</i> <i>file</i> <i>path</i>] [<b>-b</b> <i>client:port</i> <i>DB</i>
+       <i>client</i>]  [<b>-g</b>  <i>client:port</i>  <i>NetFlow</i>  <i>Collector</i>]  [<b>-t</b>  <i>trace</i>
+       <i>level</i>]  [<b>-u</b>  <i>user</i>  <i>name</i>] [<b>-l</b> <i>dump</i> <i>file</i> <i>name</i>] [<b>-U</b> <i>mapper.pl</i>
+       <i>URL</i>] [<b>-F</b> <i>flow</i> <i>filter</i> <i>expression</i>] [<b>filter</b> <b>expression</b>]
 
 
-</PRE>
-<H2>SYNOPSIS</H2><PRE>
-       <B>ntop</B>  [<B>-c</B>]  [<B>-E</B>]  [<B>-r</B>  <I>refresh</I> <I>time</I>] [<B>-R</B> <I>filter</I> <I>rules</I>] [<B>-f</B>
-       <I>traffic</I> <I>dump</I> <I>file</I>] [<B>-n</B>] [<B>-N</B>] [<B>-M</B>] [<B>-q</B>] [<B>-p</B>] <I>TCP/UDP</I> <I>proto­</I>
-       <I>cols</I>  <I>to</I>  <I>monitor</I>]  [<B>-i</B>  <I>interface</I>] [<B>-e</B> <I>num</I> <I>rows</I>] [<B>-w</B> <I>HTTP</I>
-       <I>IP:port</I>] [<B>-W</B> <I>HTTPS</I> <I>IP:port</I>] [<B>-d</B>] [<B>-S</B>value<B>]</B> [<B>-P</B> <I>dbpath]</I> [<B>-m</B>
-       <I>local</I> <I>subnet</I>] [<B>-a</B> <I>access</I> <I>log</I> <I>file</I> <I>path</I>] [<B>-b</B> <I>client:port</I> <I>DB</I>
-       <I>client</I>]  [<B>-g</B>  <I>client:port</I>  <I>NetFlow</I>  <I>Collector</I>]  [<B>-t</B>  <I>trace</I>
-       <I>level</I>]  [<B>-u</B>  <I>user</I>  <I>name</I>] [<B>-l</B> <I>dump</I> <I>file</I> <I>name</I>] [<B>-U</B> <I>mapper.pl</I>
-       <I>URL</I>] [<B>-F</B> <I>flow</I> <I>filter</I> <I>expression</I>] [<B>filter</B> <B>expression</B>]
+</pre>
 
+<h2>DESCRIPTION</h2>
 
-</PRE>
-<H2>DESCRIPTION</H2><PRE>
-       <B>ntop</B> shows the current network usage. It displays  a  list
+<pre>
+       <b>ntop</b> shows the current network usage. It displays  a  list
        of  hosts that are currently using the network and reports
-       information concerning the (IP and non-IP) traffic  gener­
-       ated by each host.  <B>ntop</B> can be started either in a termi­
-       nal window (see <B>intop</B> ) or in  web  mode.  In  the  latter
+       information concerning the (IP and non-IP) traffic  generï¿½
+       ated by each host.  <b>ntop</b> can be started either in a termiï¿½
+       nal window (see <b>intop</b> ) or in  web  mode.  In  the  latter
        case, a web browser is needed to use the program.
 
 
 
 
-</PRE>
-<H2>COMMAND-LINE OPTIONS</H2><PRE>
-       <B>-c</B>
-        By  default  idle hosts are periodically purged from mem­
+</pre>
+
+<h2>COMMAND-LINE OPTIONS</h2>
+
+<pre>
+       <b>-c</b>
+        By  default  idle hosts are periodically purged from memï¿½
         ory. Use this flag  to  prevent  idle  hosts  from  being
-        purged  from memory. NOTE: if idle hosts are kept in mem­
+        purged  from memory. NOTE: if idle hosts are kept in memï¿½
         ory you can experience severe memory usage.
 
 
-       <B>-E</B>
+       <b>-E</b>
         By default ntop does not take advance of  lsof/nmap  even
         if  present. Use this flag if you want make ntop aware of
         such tools (if present).
 
 
-       <B>-R</B>
+       <b>-R</b>
         Specifies the filter rules  used  by  ntop  for  emitting
-        alerts  and  warnings when the traffic matches the speci­
+        alerts  and  warnings when the traffic matches the speciï¿½
         fied rules. Shall you need further details  about  filter
         rules, please refer to ntop-rules (8) man page.
 
 
-       <B>-r</B>
+       <b>-r</b>
         Specifies  the  delay (in seconds) between screen updates
         (the default is 3 seconds). If the -l flag  is  used,  it
         specifies  how  often entries are logged in the log file.
         Please note that if the delay is very short (1 second for
-        instance), ntop might not be able to process all the net­
+        instance), ntop might not be able to process all the netï¿½
         work traffic.
 
 
@@ -66,153 +87,153 @@
         read. This option is mostly used for debug purposes.
 
 
-       <B>-N</B>
+       <b>-N</b>
         Forces ntop not to use nmap (if it is installed).
 
 
-       <B>-M</B>
+       <b>-M</b>
         Forces  ntop  not  to  merge network interfaces together.
         This means that ntop will  collect  statistics  for  each
         interface and will not merge data together.
 
 
-       <B>-q</B>
+       <b>-q</b>
         Forces   ntop   to   create   a   file   ntop-suspicious-
-        pkts.XXX.pcap (XXX is the interface name) for  each  net­
+        pkts.XXX.pcap (XXX is the interface name) for  each  netï¿½
         work  interface  where are stored suspicious packets. The
         file is in pcap format (tcpdump).
 
 
-       <B>-n</B>
-        This causes <B>ntop</B> to show numeric IP addresses instead  of
+       <b>-n</b>
+        This causes <b>ntop</b> to show numeric IP addresses instead  of
         the  symbolic  names. This option can useful when the DNS
         is not present or quite slow.  You can toggle the address
-        format (numeric vs. symbolic) by pressing the <B>n</B> key while
-        <B>ntop</B> is running.
+        format (numeric vs. symbolic) by pressing the <b>n</b> key while
+        <b>ntop</b> is running.
 
 
-       <B>-p</B>
-        It is used to specify the  TCP/UDP  protocols  that  <B>ntop</B>
+       <b>-p</b>
+        It is used to specify the  TCP/UDP  protocols  that  <b>ntop</b>
         will  monitor.  The  format is &lt;label&gt;=&lt;protocol list&gt; [,
-        &lt;label&gt;=&lt;protocol list&gt;], where label is used to symboli­
-        cally identify the &lt;protocol list&gt;. The format of &lt;proto­
+        &lt;label&gt;=&lt;protocol list&gt;], where label is used to symboliï¿½
+        cally identify the &lt;protocol list&gt;. The format of &lt;protoï¿½
         col list&gt; is &lt;protocol&gt;[|&lt;protocol&gt;], where &lt;protocol&gt; is
-        either  a  valid  protocol specified inside the /etc/ser­
+        either  a  valid  protocol specified inside the /etc/serï¿½
         vices  file  or  a  numeric  port  range  (e.g.  80,   or
         6000-6500).  If  the  -p  flag  is  omitted the following
         default      value      is      used:       "FTP=ftp|ftp-
-        data,HTTP=http|www|https,DNS=name|domain,Telnet=tel­
+        data,HTTP=http|www|https,DNS=name|domain,Telnet=telï¿½
         net|login,NBios-IP=netbios-ns|netbios-dgm|netbios-
         ssn,Mail=pop-2|pop-3|kpop|smtp|imap|imap2,SNMP=snmp|snmp-
-        trap,NEWS=nntp,NFS=mount|pcnfs|bwnfs|nfs|nfsd-sta­
+        trap,NEWS=nntp,NFS=mount|pcnfs|bwnfs|nfs|nfsd-staï¿½
         tus,X11=6000-6010,SSH=ssh".  If  the  &lt;protocol  list&gt; is
-        very long you may store in a file  (for  instance  proto­
+        very long you may store in a file  (for  instance  protoï¿½
         col.list)  the  value  of the &lt;protocol list&gt; and specify
         the file name instead of the &lt;protocol  list&gt;  (in  above
         example you will invoke 'ntop -p protocol.list').
 
 
-        Specifies  the network interface used by <B>ntop</B> If multiple
+        Specifies  the network interface used by <b>ntop</b> If multiple
         interfaces are used (this feature is  available  only  if
         ntop  is  compiled  with  thread support) they have to be
-        separated with a comma. For instance -i "eth0,lo".  Traf­
+        separated with a comma. For instance -i "eth0,lo".  Trafï¿½
         fic  information obtained by all the interfaces is merged
         together as if the traffic would have  been  produced  by
         one interface. Use the -M flag for not merging traffic.
 
 
-       <B>-e</B>
-        Is  the  maximum number of HTML table rows that <B>ntop</B> will
+       <b>-e</b>
+        Is  the  maximum number of HTML table rows that <b>ntop</b> will
         display.
 
 
-       <B>-w</B>
-        <B>ntop</B> sports and embedded web server  so  that  users  can
+       <b>-w</b>
+        <b>ntop</b> sports and embedded web server  so  that  users  can
         attach  their  web  browsers  to  the  specified port and
         browse traffic information remotely. Supposing  to  start
-        <B>ntop</B>  at  the port <B>3000</B> (default port), the URL to access
+        <b>ntop</b>  at  the port <b>3000</b> (default port), the URL to access
         is http://hostname:3000/. Users and URLs to protect  with
         passwords  are  stored  in  a  database  file. By default
         user/URL administration are accessible  uniquely  by  the
-        user <B>admin</B> with password <B>admin</B> Passwords are stored in an
+        user <b>admin</b> with password <b>admin</b> Passwords are stored in an
         encrypted form into the database  for  further  security.
         Please  note  that  an HTTP server is NOT needed but it's
         embedded into the application. If -w is set to 0 the HTTP
-        port will not be enabled ('-w 0' is accepted only if <B>ntop</B>
-         has been compiled with HTTPS support and  <B>ntop</B>  has  not
+        port will not be enabled ('-w 0' is accepted only if <b>ntop</b>
+         has been compiled with HTTPS support and  <b>ntop</b>  has  not
         been  started with '-W 0' [see below]).  You can also use
         the IP:Port notation to bind ntop to  the  specified  IP-
-        Address, e.g.  <B>-w</B> <B>127.0.0.1:3000</B>
+        Address, e.g.  <b>-w</b> <b>127.0.0.1:3000</b>
 
 
-       <B>-W</B>
-        If  <B>ntop</B>  has  been  compiled  with  HTTPS  support  (via
+       <b>-W</b>
+        If  <b>ntop</b>  has  been  compiled  with  HTTPS  support  (via
         OpenSSL), this flag can be used to  set  the  HTTPS  port
-        (default <B>3001</B> ). If the user specifies '-W 0', HTTPS sup­
-        port is disabled. Some examples: 1.  <B>ntop</B> <B>-w</B>  <B>80</B>  <B>-W</B>  <B>443</B>
+        (default <b>3001</b> ). If the user specifies '-W 0', HTTPS supï¿½
+        port is disabled. Some examples: 1.  <b>ntop</b> <b>-w</b>  <b>80</b>  <b>-W</b>  <b>443</b>
         (both  HTTP  and HTTPS have been enabled at their default
-        ports) 2.  <B>ntop</B> <B>-w</B> <B>0</B> <B>-W</B> <B>443</B> (HTTP disabled, HTTPS enabled
-        at the default port).  You can also use the IP:Port nota­
-        tion to bind ntop to the specified IP-Address,  e.g.   <B>-w</B>
-        <B>127.0.0.1:3001</B>
+        ports) 2.  <b>ntop</b> <b>-w</b> <b>0</b> <b>-W</b> <b>443</b> (HTTP disabled, HTTPS enabled
+        at the default port).  You can also use the IP:Port notaï¿½
+        tion to bind ntop to the specified IP-Address,  e.g.   <b>-w</b>
+        <b>127.0.0.1:3001</b>
 
 
 
-       <B>-d</B>
+       <b>-d</b>
         This  flag  causes  ntop  to  become a daemon, i.e. it is
         started in background and detached from the terminal.
 
 
-       <B>-S</B>
+       <b>-S</b>
         store hosts, 1 = store all hosts, 2 =  store  only  local
         hosts.  This  flag allows ntop not to loose traffic stats
-        across multiple ntop sessions. Please note that  informa­
+        across multiple ntop sessions. Please note that  informaï¿½
         tion about TCP session is (obviously) lost.
 
 
-       <B>-P</B>
+       <b>-P</b>
         This  allows  to  specify  where db-files are searched or
         created (default "."). In addition DBPATH/html  is  added
         to the searchlist for the WEB-files
 
 
-       <B>-m</B>
-        This flag allows users to specify the subnets whose traf­
+       <b>-m</b>
+        This flag allows users to specify the subnets whose trafï¿½
         fic  is  considered  local.  The   format   is   &lt;network
-        address&gt;/&lt;#  subnet mask bits&gt;[,&lt;network address&gt;/&lt;# sub­
+        address&gt;/&lt;#  subnet mask bits&gt;[,&lt;network address&gt;/&lt;# subï¿½
         net        mask        bits&gt;].        For        instance
         "131.114.21.0/24,10.0.0.0/255.0.0.0".
 
 
-       <B>-a</B>
-        By   default   <B>ntop</B>   logs  HTTP  accesses  in  the  file
+       <b>-a</b>
+        By   default   <b>ntop</b>   logs  HTTP  accesses  in  the  file
         ntop.access.log in the current directory. Use  this  flag
         to  specify the path of the file where HTTP accesses will
         be logged. Each log entry is in  Apache-like  style.  The
-        only  difference  between Apache and <B>ntop</B> is that .B ntop
+        only  difference  between Apache and <b>ntop</b> is that .B ntop
         added a new column has been added. Such  column  contains
         the  time  (in milliseconds) that ntop needed in order to
         serve the request.
 
 
-       <B>-b</B>
-        Exports <B>ntop</B> traffic information into a SQL database. The
+       <b>-b</b>
+        Exports <b>ntop</b> traffic information into a SQL database. The
         flag  specifies  (in  http-like  host format) the address
         (IP:port) of a SQL client. The database/  directory  part
         of  ntop contains a few clients. Please use one of those.
 
 
-       <B>-g</B>
-        Exports <B>ntop</B> traffic  information  in  Cisco  NetFlow  V5
-        (http://www.cisco.com/warp/pub­
+       <b>-g</b>
+        Exports <b>ntop</b> traffic  information  in  Cisco  NetFlow  V5
+        (http://www.cisco.com/warp/pubï¿½
         lic/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm) format. The
         flag  specifies  (in  http-like  host format) the address
         (IP:port) of a NetFlow client such as ftp://ftp.net.ohio-
         state.edu/users/maf/cisco/.
 
 
-       <B>-u</B>
-        Specifies  the  user <B>ntop</B> should run as after it initial­
+       <b>-u</b>
+        Specifies  the  user <b>ntop</b> should run as after it initialï¿½
         izes. The value specified may be either a username  or  a
         numeric  user  id.  The group id used will be the primary
         group of the user specified.
@@ -220,14 +241,14 @@
         pcap format (useful for debug).
 
 
-       <B>-U</B>
+       <b>-U</b>
         It  specifies the UTR of the mapper.pl utility (it's part
         of the ntop  distribution  [see  www/Perl/mapper.pl]  for
         displaying host location.
 
 
-       <B>-t</B>
-        This flag specifies the level of <B>ntop</B> tracings on stdout.
+       <b>-t</b>
+        This flag specifies the level of <b>ntop</b> tracings on stdout.
         The trace level ranges between 0 (no trace) and  5  (full
         debug tracings). The default trace value is 3. The higher
         is the trace level  the  more  information  are  printed.
@@ -235,22 +256,22 @@
         both warnings and errors, and so on.
 
 
-       <B>-F</B>
-        It is used to specify network flows similar to more  pow­
+       <b>-F</b>
+        It is used to specify network flows similar to more  powï¿½
         erful  applications  such as NeTraMet. A flow is a stream
-        of captured packets that match a specified rule. The for­
+        of captured packets that match a specified rule. The forï¿½
         mat   is   &lt;flow-label&gt;='&lt;matching   expression&gt;'[,&lt;flow-
         label&gt;='&lt;matching expression&gt;'], where the label is  used
         to  symbolically  identify  the  flow  specified  by  the
         expression. The expression format  is  specified  in  the
-        appendix.  If an expression is specified, then the infor­
+        appendix.  If an expression is specified, then the inforï¿½
         mation concerning flows can  be  accessed  following  the
         HTML link named 'List NetFlows'.  For instance suppose to
-        define two flows with  the  following  expression  "Luca­
+        define two flows with  the  following  expression  "Lucaï¿½
         Hosts='host         jake.unipi.it         or         host
-        pisanino.unipi.it',GatewayRoutedPkts='gateway       gate­
+        pisanino.unipi.it',GatewayRoutedPkts='gateway       gateï¿½
         way.unipi.it'".  All  the  traffic sent/received by hosts
-        jake.unipi.it or pisanino.unipi.it is collected  by  <B>ntop</B>
+        jake.unipi.it or pisanino.unipi.it is collected  by  <b>ntop</b>
         and  added  to the LucaHosts flow, whereas all the packet
         routed by the gateway gateway.unipi.it are added  to  the
         GatewayRoutedPkts  flow.  If  the flows list is very long
@@ -262,28 +283,31 @@
 
 
 
-       <B>filter</B> <B>expression</B>
-        <B>ntop</B>  ,  similar  to  what  tcpdump does, allows users to
+       <b>filter</b> <b>expression</b>
+        <b>ntop</b>  ,  similar  to  what  tcpdump does, allows users to
         specify an expression that restricts the type of  traffic
-        handled  by  <B>ntop</B>  hence  to  select  only the traffic of
+        handled  by  <b>ntop</b>  hence  to  select  only the traffic of
         interest. For instance, suppose to be interested only  in
         the traffic generated/received by the host jake.unipi.it.
-        the <B>tcpdump</B> man page for further information  about  this
+        the <b>tcpdump</b> man page for further information  about  this
         topic.
 
 
 
 
-</PRE>
-<H2>WEB VIEWS</H2><PRE>
-       While <B>ntop</B> is running, multiple users can access the traf­
+</pre>
+
+<h2>WEB VIEWS</h2>
+
+<pre>
+       While <b>ntop</b> is running, multiple users can access the trafï¿½
        fic information using conventional web browsers. The  main
        HTML page, is divided is two frames. The left frame allows
        users to select the traffic view that will be displayed in
        the  right  frame. Available sections are: sort traffic by
-       data sent, sort traffic by data received, traffic  statis­
+       data sent, sort traffic by data received, traffic  statisï¿½
        tics,  active hosts list, remote to local (i.e. inside the
-       subnet defined for the network board from which  the  pro­
+       subnet defined for the network board from which  the  proï¿½
        gram is currently sniffing) IP traffic, local to remote IP
        traffic, local to local IP traffic,  list  of  active  TCP
        sessions, IP protocol distribution statistics, IP protocol
@@ -291,23 +315,32 @@
 
 
 
-</PRE>
-<H2>NOTES</H2><PRE>
-       <B>ntop</B> is based on the libpcap library that can be found  at
+</pre>
+
+<h2>NOTES</h2>
+
+<pre>
+       <b>ntop</b> is based on the libpcap library that can be found  at
        http://www.tcpdump.org/.  The  Win32  version makes use of
        libpcap  for   Win32   that   can   be   downloaded   from
        http://www.netgroup.polito.it/WinPcap/install/).
 
 
-</PRE>
-<H2>SEE ALSO</H2><PRE>
-       <B>intop(1)</B>,  <B>ntop-rules(8)</B>,  <B>top(1)</B>,  <B>ngrep(8)</B>,  <B>tcpdump(8)</B>.
-       <B>netramet</B>(http://www.auckland.ac.nz/net/Account­
+</pre>
+
+<h2>SEE ALSO</h2>
+
+<pre>
+       <b>intop(1)</b>,  <b>ntop-rules(8)</b>,  <b>top(1)</b>,  <b>ngrep(8)</b>,  <b>tcpdump(8)</b>.
+       <b>netramet</b>(http://www.auckland.ac.nz/net/Accountï¿½
        ing/ntm.Release.note.html).
 
 
-</PRE>
-<H2>AUTHOR</H2><PRE>
+</pre>
+
+<h2>AUTHOR</h2>
+
+<pre>
        Please   send   bug  reports  to  the  ntop  mailing  list
        &lt;ntop@ntop.org&gt;.    ntop's    author    is    Luca    Deri
        &lt;deri@ntop.org&gt;.
@@ -328,11 +361,11 @@
 
 
 
-</PRE>
-<HR>
-<ADDRESS>
-Man(1) output converted with
-<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
-</ADDRESS>
-</BODY>
-</HTML>
+</pre>
+
+<hr>
+<address>Man(1) output converted with <a href=
+"http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a></address>
+</body>
+</html>
+

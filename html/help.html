@@ -1,29 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
-<HEAD>
-<LINK REL=stylesheet HREF=/style.css type="text/css">
-</HEAD>
-<BODY BACKGROUND=/white_bg.gif BGCOLOR="#FFFFFF" LINK=blue VLINK=blue>
+<head>
+<!-- Converted to html 4.01 Transitional by Burton Strauss, Feb2002 -->
+<!-- Validated as HTML 4.01 Transitional by Burton Strauss, 26Feb2002 -->
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="Window-target" content="_top">
+<meta name="ROBOTS" content="NOINDEX,NOFOLLOW">
+<meta name="description" content="ntop (http://www.ntop.org) status for a network.">
+<meta name="author" content="ntop">
+<meta name="generator" content="ntop v2.0">
+<link rel="stylesheet" type="text/css" href="style.css">
+<title>ntop help information</title>
+</head>
+<body>
 
-<center><H1>ntop Error Codes</H1></center>
-<p>
-<hr>
-<p>
+<h1><a href="http://www.ntop.org/" target="_top"><img border="0" src="ntop.gif" width="59" height="49" alt="ntop logo"></a>
+ntop Error Codes</h1>
+
+<hr />
 <ol>
-<p><li><A NAME=#1><b>Wrong network mask or bridging enabled</b></A><br>
-ntop will report this problem for those hosts that apparently have a wrong netmask. ntop detects this problem when a host sends a packet to a broadcast address where the destination MAC address is not FF:FF:FF:FF:FF:FF. This could indicate that:
+<li><a name="#1"><b>Wrong network mask or bridging enabled</b></a><br>
+ntop will report this problem for those hosts that apparently have a wrong
+netmask. ntop detects this problem when a host sends a packet to a broadcast
+address where the destination MAC address is not FF:FF:FF:FF:FF:FF. This could
+indicate that: 
+
 <ul>
-<li> such host has a wrong netmask 
-<li>it is a bridge.
-</ul>
+<li>such host has a wrong netmask</li>
 
-<p><li><A NAME=#2><b>Duplicated MAC found for this IP address</b></A><br>
-ntop will report this problem for those hosts that for a single MAC address sport several IP addresses. This could indicate that:
+<li>it is a bridge.</li>
+</ul>
+</li>
+
+<li><a name="#2"><b>Duplicated MAC found for this IP address</b></a><br>
+ntop will report this problem for those hosts that for a single MAC address
+sport several IP addresses. This could indicate that: 
+
 <ul>
-<li> Someone is sending spoofed packets
-<li> A host has a wrong netmask hence it routes packets to the default gateway that routes them to destination. This is quite common on networks where the netmask has changed and some of the hosts still use the old netmask.
+<li>Someone is sending spoofed packets</li>
+
+<li>A host has a wrong netmask hence it routes packets to the default gateway
+that routes them to destination. This is quite common on networks where the
+netmask has changed and some of the hosts still use the old netmask.</li>
 </ul>
 
-</ul>
-<hr>
-
+</li>
+</ol>
+<hr />
 </body>
+</html>
