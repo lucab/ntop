@@ -243,9 +243,43 @@ ntop-cert.pem:
 	cat privkey.pem cert.pem > ntop-cert.pem
 	/bin/rm -f privkey.pem cert.pem
 
+install: install-recursive
+	@if test -f $(DESTDIR)/$(datadir)/ntop/warnuser; then \
+	  echo ""; \
+	  echo ""; \
+	  echo "************************************************************"; \
+	  echo "************************************************************"; \
+	  echo ""; \
+	  echo "  WARNING: This install created a directory for the ntop"; \
+	  echo "           files and databases:"; \
+	  echo ""; \
+	  echo "             $(DESTDIR)/$(datadir)/ntop"; \
+	  echo ""; \
+	  echo "           This directory MUST be owned by the user"; \
+	  echo "           which you are going to use to run ntop."; \
+	  echo ""; \
+	  echo "           The command you must issue is something like:"; \
+	  echo ""; \
+	  echo "           chown -R ntop.ntop $(DESTDIR)/$(datadir)/ntop"; \
+	  echo "     or    chown -R ntop:users $(DESTDIR)/$(datadir)/ntop"; \
+	  echo ""; \
+	  echo "           man chown to check the syntax for YOUR system"; \
+	  echo ""; \
+	  echo "************************************************************"; \
+	  echo "************************************************************"; \
+	  echo ""; \
+	  echo ""; \
+	  rm -f $(DESTDIR)/$(datadir)/ntop/warnuser; \
+	fi
+
 install-data-local:
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
-	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop;
+	@if ! test -d $(DESTDIR)/$(datadir)/ntop; then \
+	  $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop; \
+	  touch $(DESTDIR)/$(datadir)/ntop/warnuser; \
+	else \
+	  rm -f $(DESTDIR)/$(datadir)/ntop/warnuser; \
+	fi
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/html;
 	@for file in $(NTOPHTML); do \
           if test -d $$file; then \
