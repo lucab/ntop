@@ -429,7 +429,7 @@ extern void sendUDPflow(HostTraffic *srcHost, HostTraffic *dstHost,
 extern void sendTCPSessionFlow(IPSession *theSession, int actualDeviceId);
 
 /* globals-core.c */
-extern void initNtopGlobals();
+void initNtopGlobals(int argc, char * argv[]);
 
 /* sessions.c */
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)

@@ -25,7 +25,7 @@
 
 #ifndef MICRO_NTOP
 int maxNumLines = MAX_NUM_TABLE_ROWS;
-int sortSendMode=0;
+int sortSendMode = 0;
 short sortFilter;
 
 /* Threads */
@@ -38,7 +38,10 @@ int deny_severity  = LOG_WARNING;
 
 #endif /* MICRO_NTOP */
 
-int webPort, refreshRate, localAddrFlag, actualReportDeviceId;
+int webPort = NTOP_DEFAULT_WEB_PORT;
+int refreshRate = 0;
+int localAddrFlag = 1;
+int actualReportDeviceId;
 short screenNumber, columnSort;
 int sock, newSock;
 #ifdef HAVE_OPENSSL
