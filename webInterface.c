@@ -888,8 +888,7 @@ void switchNwInterface(int _interface) {
 
 	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s&nbsp;[id=%d]<br>\n",
-		      i+1, selected, myGlobals.device[i].humanFriendlyName, i);
-
+		      i+1, selected, myGlobals.device[i].humanFriendlyName, i);	  
 	sendString(buf);
       }
 
