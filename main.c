@@ -65,30 +65,6 @@ static int inet_aton(const char *cp, struct in_addr *addr)
 
 #endif
 
-void getIfSpeed(char* device)
-{
-  int rc = 0;
-  register int fd;
-  register struct sockaddr_in *sin;
-  struct lifreq ifr;
-
-  fd = socket(AF_INET, SOCK_DGRAM, 0);
-  if(fd < 0) {
-    traceEvent(TRACE_INFO, "socket error: %d", errno);
-    return(-1);
-  }
-  memset(&ifr, 0, sizeof(ifr));
-
-  strncpy(ifr.lifr_name, device, sizeof(ifr.lifr_name));
-  errno = 0;
-  rc = ioctl(fd, SIOCSLIFLNKINFO, (char*)&ifr);
-  printf("ioctl=%d [errno=%d]\n", rc, errno);
-  return(rc);
-}
-
-
-
-
 /* That's the meat */
 int main(int argc, char *argv[]) {
   int pflag, i, fd;
@@ -106,11 +82,7 @@ int main(int argc, char *argv[]) {
   char *cp, *localAddresses=NULL, *webAddr=NULL, *devices, *sslAddr=NULL;
   char flowSpecs[2048], rulesFile[128], ifStr[196], *theOpts;
   time_t lastTime;
-
   
-  getIfSpeed("iprb0");
-  return(0);
-
 #ifndef WIN32
   if (freopen("/dev/null", "w", stderr) == NULL) {
     traceEvent(TRACE_WARNING, 
@@ -166,7 +138,7 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "e:F:hr:p:l:nw:m:b:B:D:s:P:R:Sgt:a:W:12";
+  theOpts = "e:F:hr:p:i:l:nw:m:b:B:D:s:P:R:Sgt:a:W:12";
 #else
   theOpts = "Ide:f:F:hr:i:p:l:nNw:m:b:D:s:P:R:MSgt:a:u:W:12";
 #endif
@@ -245,12 +217,10 @@ int main(int argc, char *argv[]) {
 	  maxHashSize = 1024;
 	break;
 
-#ifndef WIN32
       case 'i':
 	stringSanityCheck(optarg);
 	devices = optarg;
 	break;
-#endif
 
       case 'p':
 	stringSanityCheck(optarg);
