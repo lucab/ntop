@@ -5,62 +5,99 @@
 .TP 1.2
 .B "\\$1 "
 ..
+.de It2
+.TP 1.2
+.B "\\$1 | \\$2"
+..
 .TH NTOP 8 "December 2001"
 .SH NAME
 ntop \- display top network users
 .SH SYNOPSIS
 .B ntop
-.RB [ -c ]
-.RB [ -E ]
-.RB [ -r
-.IR "refresh time" ]
-.RB [ -R
-.IR "filter rules" ]
-.RB [ -f
-.IR "traffic dump file" ]
-.RB [ -n ]
-.RB [ -N ]
-.RB [ -M ]
-.RB [ -q ]
-.RB [ -p ]
-.IR "TCP/UDP protocols to monitor" ]
-.RB [ -i 
-.IR interface ]
-.RB [ -e 
-.IR "num rows" ]
-.RB [ -w 
-.IR "HTTP IP:port" ]
-.RB [ -W
-.IR "HTTPS IP:port" ]
-.RB [ -d ]
-.RB [ -S value ]
-.RB [ -P 
-.IR dbpath]
-.RB [ -m 
-.IR "local subnet" ]
-.RB [ -a
-.IR "access log file path" ]
-.RB [ -b
-.IR "client:port DB client" ]
-.RB [ -g
-.IR "client:port NetFlow Collector" ]
-.RB [ -t
-.IR "trace level" ]
-.RB [ -A
-.IR "accuracy level" ]
-.RB [ -u
-.IR "user name" ]
-.RB [ -l
-.IR "dump file name" ]
-.RB [ -U
-.IR "mapper.pl URL" ]
-.RB [ -F 
-.IR "flow filter expression" ]
-.RB [ -k ]
-.RB [ -j ]
-.RB [ -K ]
-.RB [ -L ]
-.RB [ -B "filter expression" ]
+.RB [ -a | --access-log-path
+.IR <path> ]
+.RB [ -c | --sticky-hosts]
+.RB [ -f | --traffic-dump-file
+.IR file> ]
+.RB [ -g | --cisco-netflow-host
+.IR <host:port> ]
+.RB [ -h | --help ]
+.RB [ -j | --border-sniffer-mode ]
+.RB [ -k | --filter-expression-in-extra-frame ]
+.RB [ -l | --pcap-log 
+.IR <path> ]
+.RB [ -m | --local-subnets
+.IR <addresses> ]
+.RB [ -n | --numeric-ip-addresses ]
+.RB [ -p | --protocols
+.IR <list> ]
+.RB [ -q | --create-suspicious-packets ]
+.RB [ -r | --refresh-time 
+.IR <number> ]
+.RB [ -s | --max-hash-size 
+.IR <number> ]
+.RB [ -t | --trace-level 
+.IR <number> ]
+.RB [ -w | --http-server
+.IR <port> ]
+.RB [ -A | --accuracy-level
+.IR <number> ]
+.RB [ -B | --filter-expression
+.IR "expression" ]
+.RB [ -D | --domain 
+.IR <name> ]
+.RB [ -F | --flow-spec
+.IR <specs> ]
+.RB [ -M | --no-interface-merge ]
+.RB [ -N | --no-nmap ]
+.RB [ -P | --db-file-path
+.IR <path> ]
+.RB [ -R | --filter-rule
+.IR <file> ]
+.RB [ -S | --store-mode
+.IR <number> ]
+.RB [ -U | --mapper 
+.IR <URL> ]
+.RB [ -V | --version]
+.RB [ -1 | --no-throughput-update ]
+.RB [ -2 | --no-idle-hosts ]
+.RB [ --throughput-bar-chart ]
+.RB [ --no-admin-password-hint ]
+
+Not available on micro-ntop:
+
+.RB [ -e | --max-table-rows
+.IR <number> ]
+.BR
+
+Unix options:
+
+.RB [ -d | --daemon ]
+.RB [ -i | --interface
+.IR <name> ]
+.RB [ -u | --user 
+.IR <user> ]
+.RB [ -E | --enable-external-tools ]
+.RB [ -K | --enable-debug ]
+.RB [ -L | --enable-syslog ]
+
+Win32 option:
+
+.RB [ -i | --interface
+.IR <number> ]
+
+mySQL options:
+
+.RB [ -b | --sql-host
+.IR <host:port> ]
+.RB [ -v | --mysql-host
+.IR <username:password:dbName> ]
+
+openSSL option:
+
+.RB [ -W | --https-server
+.IR <port> ]
+
 .SH DESCRIPTION
 .B ntop
 shows the current network usage. It displays a list of hosts that are
@@ -76,33 +113,63 @@ program.
 .PP
 .SH "COMMAND\-LINE OPTIONS"
 
-.It -c
+.It2 -a --access-log-path
+By default 
+.B ntop
+logs HTTP accesses in the file ntop.access.log in the current directory. Use this flag to specify the path of the file where HTTP accesses will be logged. Each log entry is in Apache-like style. The only difference between Apache and 
+.B ntop
+is that .B ntop
+added a new column has been added. Such column contains the time (in milliseconds) that ntop needed in order to serve the request. 
+
+.It2 -b --sql-host
+Exports
+.B ntop
+traffic information into a SQL database. The flag specifies (in http-like host format) the address (IP:port) of a SQL client. The database/ directory part of ntop contains a few clients. Please use one of those.
+
+.It2 -c --sticky-hosts
 By default idle hosts are periodically purged from memory. Use this flag to prevent idle hosts from being purged from memory. NOTE: if idle hosts are kept in memory you can experience severe memory usage.
 
-.It -E
-By default ntop does not take advance of lsof/nmap even if present. Use this flag if you want make ntop aware of such tools (if present).
+.It2 -d --daemon
+This flag causes ntop to become a daemon, i.e. it is started in background and detached from the terminal.
 
-.It -R
-Specifies the filter rules used by ntop for emitting alerts and warnings when the traffic matches the specified rules. Shall you need further details about filter rules, please refer to ntop-rules (8) man page.
+.It2 -e --max-table-rows
+Is the maximum number of HTML table rows that
+.B ntop
+will display. 
 
-.It -r
-Specifies the delay (in seconds) between screen updates (the default is 3 seconds). If the -l flag is used, it specifies how often entries are logged in the log file. Please
-note that if the delay is very short (1 second for instance), ntop might not
-be able to process all the network traffic.
-
-.It -f
+.It2 -f --traffic-dump-file
 Specifies the file containing tcpdump captured traffic that has to be used by ntop. Note: if you specify -f ntop will not capture any traffic after the file has been read. This option is mostly used for debug purposes.
 
-.It -N
-Forces ntop not to use nmap (if it is installed).
+.It2 -g --cisco-netflow-host
+Exports
+.B ntop
+traffic information in Cisco NetFlow V5 (http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm) format. The flag specifies (in http-like host format) the address (IP:port) of a NetFlow client such as ftp://ftp.net.ohio-state.edu/users/maf/cisco/.
 
-.It -M
-Forces ntop not to merge network interfaces together. This means that ntop will collect statistics for each interface and will not merge data together.
+.It2 -h --help
+Print help information for 
+.B ntop
+, including usage.
 
-.It -q
-Forces ntop to create a file ntop-suspicious-pkts.XXX.pcap (XXX is the interface name) for each network interface where are stored suspicious packets. The file is in pcap format (tcpdump).
+.It2 -i --interface 
+Specifies the network interface used by
+.B ntop
+If multiple interfaces are used (this feature is available only if ntop is compiled with thread support) they have to be separated with a comma. For instance -i "eth0,lo". Traffic information obtained by all the interfaces is merged together as if the traffic would have been produced by one interface. Use the -M flag for not merging traffic.
 
-.It -n
+Win32 note: This is the number of the interface, not it's name. Use ??? to see a list of interfaces.
+
+.It2 -j --border-sniffer-mode
+When this flag is used, ntop is supposed to be installed on a line where traffic is mirrored from a switch or another network appliance.
+
+.It2 -k --filter-expression-in-extra-frame
+When this flag is used, the current filter expression is printed in an extra frame and thus always visible.
+
+.It2 -l --pcap-log
+Dumps the network traffic captured by ntop in a file in pcap format (useful for debug).
+
+.It2 -m --local-subnets
+This flag allows users to specify the subnets whose traffic is considered local. The format is <network address>/<# subnet mask bits>[,<network address>/<# subnet mask bits>]. For instance "131.114.21.0/24,10.0.0.0/255.0.0.0".
+
+.It2 -n --numeric-ip-addresses
 This causes
 .B ntop
 to show numeric IP addresses instead of the symbolic names. This option can useful 
@@ -113,7 +180,7 @@ key while
 .B ntop
 is running.
 
-.It -p
+.It2 -p --protocols
 It is used to specify the TCP/UDP protocols that
 .B ntop
 will monitor. The format is <label>=<protocol list> [, <label>=<protocol list>], where
@@ -122,19 +189,36 @@ is <protocol>[|<protocol>], where <protocol> is either a valid protocol specifie
 /etc/services file or a numeric port range (e.g. 80, or 6000-6500). If the -p flag is omitted the following 
 default value is used: "FTP=ftp|ftp-data,HTTP=http|www|https,DNS=name|domain,Telnet=telnet|login,NBios-IP=netbios-ns|netbios-dgm|netbios-ssn,Mail=pop-2|pop-3|kpop|smtp|imap|imap2,SNMP=snmp|snmp-trap,NEWS=nntp,NFS=mount|pcnfs|bwnfs|nfs|nfsd-status,X11=6000-6010,SSH=ssh". If the <protocol list> is very long you may store in a file (for instance protocol.list) the value of the <protocol list> and specify the file name instead of the <protocol list> (in above example you will invoke 'ntop -p protocol.list').
 
+.It2 -q --create-suspicious-packets
+Forces ntop to create a file ntop-suspicious-pkts.XXX.pcap (XXX is the interface name) for each network interface where are stored suspicious packets. The file is in pcap format (tcpdump).
 
-.It -i
-Specifies the network interface used by
+.It2 -r --refresh-time
+Specifies the delay (in seconds) between screen updates (the default is 3 seconds). If the -l flag is used, it specifies how often entries are logged in the log file. Please
+note that if the delay is very short (1 second for instance), ntop might not
+be able to process all the network traffic.
+
+.It2 -s --max-hash-size
+The maximum hash size can be adjusted to values below the default value of 32,768 if desired.  This will limit the maximum
+amount of memory
 .B ntop
-If multiple interfaces are used (this feature is available only if ntop is compiled with thread support) they have to be separated with a comma. For instance -i "eth0,lo". Traffic information obtained by all the interfaces is merged together as if the traffic would have been produced by one interface. Use the -M flag for not merging traffic.
-.
+will use.  The value must be greater than or equal to 64.
 
-.It -e 
-Is the maximum number of HTML table rows that
+.It2 -t --trace-level
+This flag specifies the level of
 .B ntop
-will display. 
+tracings on stdout. The trace level ranges between 0 (no trace) and 5 (full debug tracings). The default trace value is 3. The higher is the trace level the more information are printed. Trace level 1 is used to print errors only, level 2 for both warnings and errors, and so on. 
 
-.It -w 
+.It2 -u --user
+Specifies the user
+.B ntop
+should run as after it initializes. The value specified may be either a
+username or a numeric user id. The group id used will be the primary group of
+the user specified.
+
+.It2 -v --mysql-host
+Specifies the mySQL database connection information (user:password:database:host).
+
+.It2 -w --http-server
 .B ntop
 sports and embedded web server so that users can attach their web browsers to the specified port and browse 
 traffic information remotely. Supposing to start
@@ -160,93 +244,12 @@ You can also use the IP:Port notation to bind ntop to the specified IP-Address, 
 .B -w 127.0.0.1:3000
 .
 
-.It -W 
-If 
-.B ntop
-has been compiled with HTTPS support (via OpenSSL), this flag can be used to set the HTTPS port (default 
-.B 3001
-). If the user specifies '-W 0', HTTPS support is disabled. Some examples: 1. 
-.B ntop -w 80 -W 443 
-(both HTTP and HTTPS have been enabled at their default ports) 2. 
-.B ntop -w 0 -W 443 
-(HTTP disabled, HTTPS enabled at the default port).
-You can also use the IP:Port notation to bind ntop to the specified IP-Address, e.g.
-.B -w 127.0.0.1:3001
-.
-
-
-.It -d
-This flag causes ntop to become a daemon, i.e. it is started in background and detached from the terminal.
-
-.It -S value
-Use this flag for telling ntop to save information about host traffic on shutdown. Valid values are: 0 = don't store hosts, 1 = store all hosts, 2 = store only local hosts. This flag allows ntop not to loose traffic stats across multiple ntop sessions. Please note that information about TCP session is (obviously) lost.
-
-.It -P
-This allows to specify where db-files are searched or created (default "."). In addition DBPATH/html is added to the searchlist for the WEB-files
-
-.It -m
-This flag allows users to specify the subnets whose traffic is considered local. The format is <network address>/<# subnet mask bits>[,<network address>/<# subnet mask bits>]. For instance "131.114.21.0/24,10.0.0.0/255.0.0.0".
-
-.It -a
-By default 
-.B ntop
-logs HTTP accesses in the file ntop.access.log in the current directory. Use this flag to specify the path of the file where HTTP accesses will be logged. Each log entry is in Apache-like style. The only difference between Apache and 
-.B ntop
-is that .B ntop
-added a new column has been added. Such column contains the time (in milliseconds) that ntop needed in order to serve the request. 
-
-.It -b client:port
-Exports
-.B ntop
-traffic information into a SQL database. The flag specifies (in http-like host format) the address (IP:port) of a SQL client. The database/ directory part of ntop contains a few clients. Please use one of those.
-
-.It -g client:port
-Exports
-.B ntop
-traffic information in Cisco NetFlow V5 (http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm) format. The flag specifies (in http-like host format) the address (IP:port) of a NetFlow client such as ftp://ftp.net.ohio-state.edu/users/maf/cisco/.
-
-.It -u
-Specifies the user
-.B ntop
-should run as after it initializes. The value specified may be either a
-username or a numeric user id. The group id used will be the primary group of
-the user specified.
-
-.It -l
-Dumps the network traffic captured by ntop in a file in pcap format (useful for debug).
-
-.It -U
-It specifies the UTR of the mapper.pl utility (it's part of the ntop distribution [see www/Perl/mapper.pl]) for displaying host location. If you don't want to install a mapper use http://jake.ntop.org/cgi-bin/mapper.pl
-
-.It -t
-This flag specifies the level of
-.B ntop
-tracings on stdout. The trace level ranges between 0 (no trace) and 5 (full debug tracings). The default trace value is 3. The higher is the trace level the more information are printed. Trace level 1 is used to print errors only, level 2 for both warnings and errors, and so on. 
-
-.It -A
+.It2 -A --accuracy-level
 This flag specifies the level of
 .B ntop's
 traffic analysis accuracy. Level 2 (high accuracy) is full accuracy. Level 1 (medium accuracy): ntop filters out non-local traffic and disables protocol decoding. Level 0 (low accuracy): ntop acts as level 1 and also disables TCP session handling. This flag has to be used when the network is overloaded and ntop can't keep up with the current traffic.
 
-.It -F 
-It is used to specify network flows similar to more powerful applications such as NeTraMet. A flow is a stream of captured packets that match a specified rule. The format is <flow-label>='<matching expression>'[,<flow-label>='<matching expression>'], where the label is used to symbolically identify the flow specified by the expression. The expression format is specified in the appendix. If an expression is specified, then the information concerning flows can be accessed following the HTML link named 'List NetFlows'.
-For instance suppose to define two flows with the following expression "LucaHosts='host jake.unipi.it or host pisanino.unipi.it',GatewayRoutedPkts='gateway gateway.unipi.it'". All the traffic sent/received by hosts jake.unipi.it or pisanino.unipi.it is collected by
-.B ntop
-and added to the LucaHosts flow, whereas all the packet routed by the gateway gateway.unipi.it are added to the GatewayRoutedPkts flow. If the flows list is very long you may store in a file (for instance flows.list) the list of flows and specify the file name instead of the flows list (in above example you will invoke 'ntop -F flows.list').
-
-.It -k
-When this flag is used, the current filter expression is printed in an extra frame and thus always visible.
-
-.It -j
-When this flag is used, ntop is supposed to be installed on a line where traffic is mirrored from a switch or another network appliance.
-
-.It -K
-Use this flag for easying application debug (eg. fork() is not used etc.)
-
-.It -L
-Use this flag for using the syslog instead of stdout. Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
-
-.It -B "filter expression"
+.It2 -B --filter-expression
 .B ntop
 , similar to what tcpdump does, allows users to specify an expression
 that restricts the type of traffic handled by
@@ -260,6 +263,76 @@ or dst host jake.unipi.it'. See the
 .B tcpdump
 man page for further information about this topic.
 
+.It2 -D --domain
+This identifies the local domain suffix, e.g. ntop.org, if
+.B ntop
+is having difficulty determining it from the interface.
+
+.It2 -E --enable-external-tools
+By default ntop does not take advance of lsof/nmap even if present. Use this flag if you want make ntop aware of such tools (if present).
+
+.It2 -F --flow-spec
+It is used to specify network flows similar to more powerful applications such as NeTraMet. A flow is a stream of captured packets that match a specified rule. The format is <flow-label>='<matching expression>'[,<flow-label>='<matching expression>'], where the label is used to symbolically identify the flow specified by the expression. The expression format is specified in the appendix. If an expression is specified, then the information concerning flows can be accessed following the HTML link named 'List NetFlows'.
+For instance suppose to define two flows with the following expression "LucaHosts='host jake.unipi.it or host pisanino.unipi.it',GatewayRoutedPkts='gateway gateway.unipi.it'". All the traffic sent/received by hosts jake.unipi.it or pisanino.unipi.it is collected by
+.B ntop
+and added to the LucaHosts flow, whereas all the packet routed by the gateway gateway.unipi.it are added to the GatewayRoutedPkts flow. If the flows list is very long you may store in a file (for instance flows.list) the list of flows and specify the file name instead of the flows list (in above example you will invoke 'ntop -F flows.list').
+
+.It2 -K --enable-debug
+Use this flag to simplify application debug (eg. fork() is not used etc.)
+
+.It2 -L --enable-syslog
+Use this flag for using the syslog instead of stdout. Please note that if ntop (ever) forks a child, in any case the syslog will be used for this child.
+
+.It2 -M --no-interface-merge
+Forces ntop not to merge network interfaces together. This means that ntop will collect statistics for each interface and will not merge data together.
+
+.It2 -N --no-nmap
+Forces ntop not to use nmap (if it is installed).
+
+.It2 -P --db-file-path
+This allows to specify where db-files are searched or created (default "."). In addition DBPATH/html is added to the searchlist for the WEB-files
+
+.It2 -R --filter-rule
+Specifies the filter rules used by ntop for emitting alerts and warnings when the traffic matches the specified rules. Shall you need further details about filter rules, please refer to ntop-rules (8) man page.
+
+.It2 -S --store-mode
+Use this flag for telling ntop to save information about host traffic on shutdown. Valid values are: 0 = don't store hosts, 1 = store all hosts, 2 = store only local hosts. This flag allows ntop not to loose traffic stats across multiple ntop sessions. Please note that information about TCP session is (obviously) lost.
+
+.It2 -U --mapper
+It specifies the UTR of the mapper.pl utility (it's part of the ntop distribution [see www/Perl/mapper.pl]) for displaying host location. If you don't want to install a mapper use http://jake.ntop.org/cgi-bin/mapper.pl
+
+.It2 -V --version
+Prints 
+.B ntop 
+version information and then exits.
+
+.It2 -W --https-server
+If 
+.B ntop
+has been compiled with HTTPS support (via OpenSSL), this flag can be used to set the HTTPS port (default 
+.B 3001
+). If the user specifies '-W 0', HTTPS support is disabled. Some examples: 1. 
+.B ntop -w 80 -W 443 
+(both HTTP and HTTPS have been enabled at their default ports) 2. 
+.B ntop -w 0 -W 443 
+(HTTP disabled, HTTPS enabled at the default port).
+You can also use the IP:Port notation to bind ntop to the specified IP-Address, e.g.
+.B -w 127.0.0.1:3001
+.
+
+.It2 -1 --no-throughput-update
+Turns off the calculation by 
+.B ntop
+of the minute by minute throughput of the network(s).
+
+.It2 -2 --no-idle-hosts
+Turns off the periodic purging of idle hosts from the tables.
+
+.It --throughput-bar-chart
+Format the throughput charts with bars instead of as an area chart.
+
+.It --no-admin-password-hint
+Supppresses the hint about the (default) admin password in the dialog boxes.
 
 .SH "WEB VIEWS"
 While
@@ -268,19 +341,63 @@ is running, multiple users can access the traffic information using conventional
 
 .SH NOTES
 .B ntop
-is based on the libpcap library that can be found
-at http://www.tcpdump.org/. The Win32 version makes use of
-libpcap for Win32 that can be downloaded from http://www.netgroup.polito.it/WinPcap/install/).
+requires a number of external tools.  Other tools are optional, but add to the program's capabilities.
+
+
+Operating system header files and the Gnu gcc compiler and glibc libraries (http://www.gnu.org), including the glibc development libraries.  
+
+Required libraries include (see the output of ./configure for a fuller listing) Posix threads, ncrypt, readline and:
+
+.B libpcap
+from http://www.tcpdump.org/ (The Win32 version makes use of
+.B libpcap for Win32
+which may be downloaded from http://www.netgroup.polito.it/WinPcap/install/).
+
+.B gdb
+from http://www.gnu.org/software/gdbm/gdbm.html
+
+Optional libraries include:
+
+The 
+.B gdchart
+library, available at http://www.fred.net/brv/chart/.
 .
+
+The
+.B gd
+library, for the creation of gif files, available at http://www.boutell.com/gd/ (included with gdchart).
+.
+
+The
+.B libpng
+library, for the creation of png files, available at 
+.
+
+.B mySQL
+available at http://www.mysql.com/
+
+.B openSSL
+from the OpenSSL project, if an https:// server is desired, available at http://www.openssl.org.
+.
+
+The sflow Plugin is courtesy of and supported by InMon Corporation, http://www.inmon.com/sflowTools.htm.
+
+Options tools - which
+.B ntop
+will utilize if available - include
+.B nmap (http://www.insecure.org)
+and
+.B lsof (ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/README).
+
 .SH "SEE ALSO"
 .BR intop (1),
 .BR ntop-rules (8),
 .BR top (1),
-.BR ngrep (8),
 .BR tcpdump (8).
-.BR netramet (http://www.auckland.ac.nz/net/Accounting/ntm.Release.note.html).
 .
 .
 .SH AUTHOR
 Please send bug reports to the ntop mailing list <ntop@ntop.org>.
-ntop's author is Luca Deri and it can be reached at deri@ntop.org.
+ntop's author is Luca Deri and can be reached at deri@ntop.org.
+Tool locations are current as of February 2002 - please send email to report new locations or dead links.
+
