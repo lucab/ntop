@@ -1220,7 +1220,7 @@ typedef struct _SFSample {
 
 /* ********************************* */
 
-#define SFLOW_DEBUG(a) (myGlobals.device[a].sflowGlobals && myGlobals.device[a].sflowGlobals->sflowDebug)
+#define SFLOW_DEBUG(a) ((a <= myGlobals.numDevices) && myGlobals.device[a].sflowGlobals && myGlobals.device[a].sflowGlobals->sflowDebug)
 
 /* ********************************* */
 
