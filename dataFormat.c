@@ -136,7 +136,7 @@ char* formatSeconds(unsigned long sec, char* outStr, int outStrLen) {
     hour = (sec / 3600);
 
     if(hour > 0) {
-      if(hour > 24) {
+      if(hour >= 24) {
 	days = (hour / 24);
 	hour = hour % 24;
 	sec -= days*86400;
@@ -150,7 +150,7 @@ char* formatSeconds(unsigned long sec, char* outStr, int outStrLen) {
   if(min > 0) sec -= min*60;
 
   if(days > 0) {
-    if(snprintf(outStr, outStrLen, "%u day(s) %u:%02u:%02lu", days, hour, min, sec) < 0) 
+    if(snprintf(outStr, outStrLen, "%u day%s %u:%02u:%02lu", days, (days>1)?"s":"", hour, min, sec) < 0) 
      BufferTooShort();
   } else if(hour > 0) {
     if(snprintf(outStr, outStrLen, "%u:%02u:%02lu", hour, min, sec)  < 0) 

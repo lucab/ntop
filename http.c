@@ -574,7 +574,7 @@ void printHTMLtrailer(void) {
 
   sendString("\n<HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><B>\n");
 
-  if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s [%s]<br>\n",
+  if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s [ntop uptime: %s]<br>\n",
 	      ctime(&myGlobals.actTime), formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0)
     BufferTooShort();
   sendString(buf);
