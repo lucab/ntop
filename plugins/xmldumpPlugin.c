@@ -339,8 +339,10 @@ static void handleXmldumpHTTPrequest(char* url) {
 #endif
 
   if(strstr(url, ".xml") != NULL) {
+#ifdef MAKE_WITH_XMLDUMP
     /* this is an xxxxx.xml request - process it and return */
     dumpXML(url);
+#endif
     return;
   }
 
