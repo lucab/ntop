@@ -399,9 +399,9 @@ extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
                         char* userParm);
 extern void killThread(pthread_t *threadId);
 extern int createMutex(PthreadMutex *mutexId);
-extern void deleteMutex(PthreadMutex *mutexId);
 extern int _accessMutex(PthreadMutex *mutexId, char* where,
                         char* fileName, int fileLine);
+extern void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
 extern int _tryLockMutex(PthreadMutex *mutexId, char* where,
                          char* fileName, int fileLine);
 extern int _isMutexLocked(PthreadMutex *mutexId,
@@ -413,8 +413,9 @@ extern void deleteCondvar(ConditionalVariable *condvarId);
 extern int waitCondvar(ConditionalVariable *condvarId);
 extern int signalCondvar(ConditionalVariable *condvarId);
 #define accessMutex(a, b)  _accessMutex(a, b, __FILE__, __LINE__)
+#define deleteMutex(a)     _deleteMutex(a, __FILE__, __LINE__)
 #define tryLockMutex(a, b) _tryLockMutex(a, b, __FILE__, __LINE__)
-#define isMutexLocked(a) _isMutexLocked(a, __FILE__, __LINE__)
+#define isMutexLocked(a)   _isMutexLocked(a, __FILE__, __LINE__)
 #define releaseMutex(a)    _releaseMutex(a, __FILE__, __LINE__)
 #ifdef HAVE_SEMAPHORE_H
 extern int createSem(sem_t *semId, int initialValue);

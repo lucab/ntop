@@ -801,26 +801,6 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
     killThread(&handleWebConnectionsThreadId);
-
-    deleteMutex(&packetQueueMutex);
-    deleteMutex(&addressResolutionMutex);
-    deleteMutex(&hashResizeMutex);
-    deleteMutex(&hostsHashMutex);
-    deleteMutex(&graphMutex);
-    if(isLsofPresent)
-      deleteMutex(&lsofMutex);
-#ifdef USE_SEMAPHORES
-    deleteSem(&queueSem);
-#ifdef ASYNC_ADDRESS_RESOLUTION
-    deleteSem(&queueAddressSem);
-#endif
-#else
-    deleteCondvar(&queueCondvar);
-#ifdef ASYNC_ADDRESS_RESOLUTION
-    signalCondvar(&queueAddressCondvar);
-    deleteCondvar(&queueAddressCondvar);
-#endif
-#endif
   }
 
 #ifdef FULL_MEMORY_FREE
@@ -854,6 +834,26 @@ RETSIGTYPE cleanup(int signo) {
   
 #ifndef WIN32
   endservent();
+#endif
+
+  deleteMutex(&packetQueueMutex);
+  deleteMutex(&addressResolutionMutex);
+  deleteMutex(&hashResizeMutex);
+  deleteMutex(&hostsHashMutex);
+  deleteMutex(&graphMutex);
+  if(isLsofPresent)
+    deleteMutex(&lsofMutex);
+#ifdef USE_SEMAPHORES
+  deleteSem(&queueSem);
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  deleteSem(&queueAddressSem);
+#endif
+#else
+  deleteCondvar(&queueCondvar);
+#ifdef ASYNC_ADDRESS_RESOLUTION
+  signalCondvar(&queueAddressCondvar);
+  deleteCondvar(&queueAddressCondvar);
+#endif
 #endif
 
 #ifdef HAVE_GDBM_H

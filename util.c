@@ -887,6 +887,7 @@ int createMutex(PthreadMutex *mutexId) {
   rc = pthread_mutex_init(&(mutexId->mutex), NULL);
 
 #ifdef PTHREAD_MUTEX_ERRORCHECK_NP
+
   /* *************************************************
      There seems to be some problem with mutexes and some
      glibc versions. See
@@ -904,16 +905,33 @@ int createMutex(PthreadMutex *mutexId) {
      Andreas Pfaeller <a.pfaller@pop.gun.de>
 
      ************************************************* */
-  pthread_mutexattr_settype (&(mutexId->mutex), PTHREAD_MUTEX_ERRORCHECK_NP);
+
+  pthread_mutexattr_settype (&(mutexId->mutex), 
+			     PTHREAD_MUTEX_ERRORCHECK_NP);
+
 #endif /* PTHREAD_MUTEX_ERRORCHECK_NP */
+
+  mutexId->isInitialized = 1;
+
   return(rc);
 }
 
 /* ************************************ */
 
-void deleteMutex(PthreadMutex *mutexId) {
+void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
+
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR, 
+	       "ERROR: deleteMutex() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return;
+  }
+  
+
   pthread_mutex_unlock(&(mutexId->mutex));
   pthread_mutex_destroy(&(mutexId->mutex));
+
+  memset(mutexId, 0, sizeof(PthreadMutex));
 }
 
 /* ************************************ */
@@ -922,6 +940,13 @@ int _accessMutex(PthreadMutex *mutexId, char* where,
 		 char* fileName, int fileLine) {
   int rc;
 
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR, 
+	       "ERROR: accessMutex() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return(-1);
+  }
+  
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Locking 0x%X @ %s [%s:%d]\n",
 	     &(mutexId->mutex), where, fileName, fileLine);
@@ -955,6 +980,13 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 		  char* fileName, int fileLine) {
   int rc;
 
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR, 
+	       "ERROR: tryLockMutex() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return(-1);
+  }
+  
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Try to Lock 0x%X @ %s [%s:%d]\n",
 	     mutexId, where, fileName, fileLine);
@@ -989,6 +1021,13 @@ int _tryLockMutex(PthreadMutex *mutexId, char* where,
 int _isMutexLocked(PthreadMutex *mutexId, char* fileName, int fileLine) {
   int rc;
 
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR, 
+	       "ERROR: isMutexLocked() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return(-1);
+  }
+  
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Checking whether 0x%X is locked [%s:%d]\n",
 	     &(mutexId->mutex), fileName, fileLine);
@@ -1016,6 +1055,13 @@ int _releaseMutex(PthreadMutex *mutexId,
 		  char* fileName, int fileLine) {
   int rc;
 
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR, 
+	       "ERROR: releaseMutex() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return(-1);
+  }
+  
 #ifdef SEMAPHORE_DEBUG
   traceEvent(TRACE_INFO, "Unlocking 0x%X [%s:%d]\n",
 	     &(mutexId->mutex), fileName, fileLine);
@@ -1023,8 +1069,8 @@ int _releaseMutex(PthreadMutex *mutexId,
   rc = pthread_mutex_unlock(&(mutexId->mutex));
 
   if(rc != 0)
-    traceEvent(TRACE_ERROR, "ERROR: unlock failed 0x%X [%s:%d] (rc=%d)\n",
-	       &(mutexId->mutex), fileName, fileLine, rc);
+    traceEvent(TRACE_ERROR, "ERROR: unlock failed 0x%X [%s:%d]\n",
+	       &(mutexId->mutex), fileName, fileLine);
   else {
     time_t lockDuration = time(NULL) - mutexId->lockTime;
 
@@ -1719,9 +1765,10 @@ char* formatTime(time_t *theTime, short encodeString) {
   static short timeBufIdx=0;
   struct tm *locTime, myLocTime;
 
-  locTime = localtime_r(theTime, &locTime);
+  locTime = localtime_r(theTime, &myLocTime);
 
   timeBufIdx = (timeBufIdx+1)%2;
+
   if(encodeString)
     strftime(outStr[timeBufIdx], TIME_LEN, "%x&nbsp;%X", locTime);
   else

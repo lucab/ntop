@@ -165,7 +165,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   newSize = (int)(device[deviceToExtend].actualHashSize*multiplier);
   newSize = newSize - (newSize % 2); /* I want an even hash size */
 
-#ifdef PURGE_CONSERVATION
+#ifndef MULTITHREADED
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
   /* FIXME (DL): purgeIdleHosts() acts on actualDeviceId instead of deviceToExtend */
   if(newSize > maxHashSize) /* Hard Limit */ {
@@ -173,23 +173,8 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
     return;
   } else
     purgeIdleHosts(0, actualDeviceId); /* Delete only idle hosts */
-#endif
-
-#if defined(MULTITHREADED)
-  if(device[actualDeviceId].hostsno < 
-     (device[deviceToExtend].actualHashSize*HASH_EXTEND_THRESHOLD)) {
-    if(tryLockMutex(&hostsHashMutex, "resizeHostHash(processPacket)") != 0) {
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "The table is already locked: let's try later");
-#endif
-      return;
-    }
-  } else {
-#ifdef DEBUG
-    traceEvent(TRACE_INFO, "The table is too full: we must wait on the semaphore now");
-#endif
-    accessMutex(&hostsHashMutex, "resizeHostHash(processPacket)");
-  }
+#else
+  accessMutex(&hostsHashMutex, "resizeHostHash(processPacket)");
   accessMutex(&hashResizeMutex, "resizeHostHash");
 #endif
 
@@ -712,7 +697,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 
   /* *************************************** */
 
-#if defined(MULTITHREADED)
+#ifdef MULTITHREADED
   releaseMutex(&hashResizeMutex);
   releaseMutex(&hostsHashMutex);
 #endif
@@ -1011,30 +996,32 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
   /* ************************************* */
 
+  if(isLsofPresent) {
 #ifdef MULTITHREADED
-  accessMutex(&lsofMutex, "readLsofInfo-2");
+    accessMutex(&lsofMutex, "readLsofInfo-2");
 #endif
-  for(j=0; j<TOP_IP_PORT; j++) {
-    if(localPorts[j] != NULL) {
-      ProcessInfoList *scanner = localPorts[j];
+    for(j=0; j<TOP_IP_PORT; j++) {
+      if(localPorts[j] != NULL) {
+	ProcessInfoList *scanner = localPorts[j];
 
-      while(scanner != NULL) {
-	if(scanner->element != NULL) {
-	  int i;
+	while(scanner != NULL) {
+	  if(scanner->element != NULL) {
+	    int i;
 
-	  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-	    if(scanner->element->contactedIpPeersIndexes[i] == hostIdx)
-	      scanner->element->contactedIpPeersIndexes[i] = NO_PEER;
+	    for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+	      if(scanner->element->contactedIpPeersIndexes[i] == hostIdx)
+		scanner->element->contactedIpPeersIndexes[i] = NO_PEER;
+	    }
 	  }
-	}
 
-	scanner = scanner->next;
+	  scanner = scanner->next;
+	}
       }
     }
-  }
 #ifdef MULTITHREADED
-  releaseMutex(&lsofMutex);
+    releaseMutex(&lsofMutex);
 #endif
+  }
 
   if(host->icmpInfo     != NULL) free(host->icmpInfo);
   if(host->dnsStats     != NULL) free(host->dnsStats);
