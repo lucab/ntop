@@ -1434,7 +1434,7 @@ XML*/
                                      /*XML n refreshRate          Options    "-r | --refresh-time" */
   u_char disablePromiscuousMode;     /* 's' */
                                      /*XML b disablePromiscuousMode Options  "-s | --no-promiscuous" */
-  u_short traceLevel;                /* 't' */
+  short traceLevel;                  /* 't' */
                                      /*XML n traceLevel           Options    "-t | --trace-level" */
 #ifndef WIN32
   char * effectiveUserName;
