@@ -1152,14 +1152,11 @@ traceEvent(CONST_TRACE_INFO, "DEBUG_CMPFCTN: lookupHost(%s, %s, m%u, f%u, dev%d)
     }
 
 #ifdef HASH_DEBUG
-    if(0) {
-#endif
       traceEvent(CONST_TRACE_INFO, "HASH_DEBUG: Adding %s/%s [idx=%d][device=%d][actualHashSize=%d][#hosts=%d]",
 		 el->ethAddressString, el->hostNumIpAddress, idx, actualDeviceId,
 		 myGlobals.device[actualDeviceId].actualHashSize, myGlobals.device[actualDeviceId].hostsno);
-#ifdef HASH_DEBUG
-    }
 #endif
+
     setHostSerial(el);
   }
 

@@ -2659,6 +2659,24 @@ void processPacket(u_char *_deviceId,
 #endif
 	eth_type = ntohs(qType.protoType);
 	hlen += 4; /* Skip the 802.1q header */
+      } else if((ehdr.ether_dhost[0] == 0x01)    && (ehdr.ether_dhost[1] == 0x00)
+		&& (ehdr.ether_dhost[2] == 0x0C) && (ehdr.ether_dhost[3] == 0x00)
+		&& (ehdr.ether_dhost[4] == 0x00) && (ehdr.ether_dhost[5] == 0x00)) {
+	/*
+	  Cisco InterSwitch Link (ISL) Protocol
+
+	  This is basically the Cisco proprietary VLAN tagging (vs. the standard 802.1q)
+	  http://www.cisco.com/univercd/cc/td/doc/product/lan/trsrb/frames.htm
+	*/
+	IslHeader islHdr;
+
+	memcpy(&islHdr, p, sizeof(IslHeader));
+	vlanId = ntohs(islHdr.vlanId);
+	hlen = sizeof(IslHeader); /* Skip the ISL header */
+	memcpy(&ehdr, p+hlen, sizeof(struct ether_header));
+	hlen += sizeof(struct ether_header);
+	ether_src = ESRC(&ehdr), ether_dst = EDST(&ehdr);
+	eth_type = ntohs(ehdr.ether_type);
       }
     } /* switch(myGlobals.device[deviceId].datalink) */
 
@@ -3133,6 +3151,7 @@ void processPacket(u_char *_deviceId,
 	struct ether_arp arpHdr;
 	HostAddr addr;
 	TrafficCounter ctr;
+	char buf[32];
 
 	if(length > hlen)
 	  length -= hlen;
@@ -3182,11 +3201,30 @@ void processPacket(u_char *_deviceId,
 	      if(dstHost != NULL) incrementTrafficCounter(&dstHost->arpReplyPktsRcvd, 1);
 	      /* DO NOT ADD A break ABOVE ! */
 	    case ARPOP_REQUEST: /* ARP request */
-	      addr.hostFamily = AF_INET;
-	      memcpy(&addr.Ip4Address.s_addr, arpHdr.arp_spa, sizeof(struct in_addr));
-	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
-	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
-	      if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) incrementTrafficCounter(&srcHost->arpReqPktsSent, 1);
+	      if(srcHost != NULL) {
+		srcHost->hostIpAddress.hostFamily = AF_INET;
+		memcpy(&srcHost->hostIpAddress.Ip4Address.s_addr, arpHdr.arp_spa, sizeof(struct in_addr));
+		srcHost->hostIpAddress.Ip4Address.s_addr = ntohl(srcHost->hostIpAddress.Ip4Address.s_addr);
+		setHostSerial(srcHost);
+		strncpy(srcHost->hostNumIpAddress,			
+			_addrtostr(&srcHost->hostIpAddress, buf, sizeof(buf)),
+			sizeof(srcHost->hostNumIpAddress));
+		setResolvedName(srcHost, srcHost->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
+		
+		if(myGlobals.numericFlag == 0)
+		  ipaddr2str(srcHost->hostIpAddress, 1);
+
+		if(isPseudoLocalAddress(&srcHost->hostIpAddress, actualDeviceId)) {
+		  FD_SET(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
+		  FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
+		} else {
+		  FD_CLR(FLAG_SUBNET_LOCALHOST, &srcHost->flags);
+		  FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
+		}
+
+		if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) 
+		   incrementTrafficCounter(&srcHost->arpReqPktsSent, 1);
+	      }
 	    }
 	  }
 	  /* DO NOT ADD A break ABOVE ! */

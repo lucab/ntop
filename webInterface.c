@@ -447,6 +447,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   } else {
     /* Got it? Use it! */
     strncpy(symIp, el->hostResolvedName, sizeof(symIp));
+    strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
 #ifdef DEBUG_CMPFCTN
     snprintf(noteBuf, sizeof(noteBuf), "%s<!-- NONE:hRN(%d) -->",
              noteBuf, el->hostResolvedNameType);

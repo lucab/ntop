@@ -1583,6 +1583,17 @@ typedef struct fcHeader_align {
     u_int32_t parameter;
 } FcHeaderAlign;
 
+/* ******** Cisco ISL ************ */
+
+typedef struct islHeader {
+  u_char     dstEthAddress[LEN_ETHERNET_ADDRESS];
+  u_char     srcEthAddress[LEN_ETHERNET_ADDRESS];
+  u_int16_t  len;
+  u_int8_t   dap, ssap, control;
+  u_char     hsa[3];
+  u_int16_t  vlanId, idx, notUsed;
+} IslHeader;
+
 /* ******************************** */
 
 typedef struct serialCacheEntry {
