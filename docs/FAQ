@@ -2363,14 +2363,13 @@ A. It might, might, be possible as a soft limit - but it's got a lot of
 
 Q. Why does ntop drop packets?
 A. Short Answer: You need a faster processor.
-A. Long Answer:  There are two places packets drop "in" ntop.  One in the
-   kernel, one actually in ntop.
+A. Long Answer:  There are four places packets drop "in" ntop.  One in
+   the NIC, one in the OS kernel, one in the libpcap library and one 
+   actually in ntop.
 
-
-Q. In the kernel?
-A. Yes. First off, this is NOT controlled by ntop.  It's inside the network
-   card, the network card driver and, perhaps, libpcap.  All ntop does is
-   use pcap_stats:
+   First off, this is largely NOT controlled by ntop.  It's inside the network
+   card, the network card driver and libpcap.  All ntop does is use the stats
+   provided by libpcap, pcap_stats:
 
       "int pcap_stats() returns 0 and fills in a pcap_stat struct. The 
        values represent packet statistics from the start of the run to
@@ -2381,42 +2380,21 @@ A. Yes. First off, this is NOT controlled by ntop.  It's inside the network
 
    to get the value and reports it in report.c.
 
-   While there are LOTS of possible causes, if the kernel is *routinely*
-   dropping packets, it's almost certainly an interrupt/processor
-   speed/buffering issue.
+   It sounds great, but the reality is that the stats provided by libpcap
+   aren't very good!
 
-   A word of warning, though, you need to treat the pcap reported drops
-   with a grain of salt.  See this thread, for example:
-      http://www.tcpdump.org/lists/workers/2001/07/msg00018.html
-   and this msg:
-      http://www.mcabee.org/lists/snort-users/Jan-02/msg00771.html
 
-   There's a lot of other stuff about pcap problems, especially from
-   snort (another package that stresses libpcap) - 
-   STFW for "libpcap ps_drop".
+Q. How can packets be lost in the NIC?
+A. A NIC has a small buffer - modern cards have 8K, 12K, even more buffer 
+   space.  But if traffic comes in off the wire faster than the processes
+   are pulling it out of the NIC, well that buffer gets over-written and
+   packets get dropped.
 
-   Each time an interrupt occurs, the kernel processes it by moving the
-   data from the NIC to a kernel buffer, then re-enable interrupts.  
-   Actually, in Linux (and other OSes), the Kernel interrupt handler is
-   broken in half - called in Linux the top and bottom.  The bottom 
-   interrupt works with processor interrupts off to grab the data and 
-   buffer it and does only minimal processing as fast as possible so 
-   interrupts can be turned back on.  Then the top half is scheduled 
-   and processes as a Kernel process (high priority), but it is less 
-   time critical.
-
-   I think the call to pcap_stats reads the NIC's counters and compares
-   them to the Kernel.  So a temporary value > 0 just means that there were
-   - AT THE INSTANT OF THE pcap_stats call - packets queued in the NIC or
-   Kernel buffer(s).  This isn't a problem - some NICs with larger buffers
-   even boost performance by internally queuing a number of packets before
-   interrupting the OS.
-
-   However, if the kernel can't process the bottom half in time - because
-   there isn't enough memory and/or the processor isn't fast enough to
-   respond to the interrupt, you do have a problem.   The small buffer
-   in the NIC will overflow and packets are dropped (this is the ONE place
-   where a better NIC, with a larger buffer, MIGHT help).
+   Every time a packet comes in (or on some newer cards after a few packets
+   are recevied), the NIC interrupts the processor (CPU) to tell it to do
+   something.  This isn't a problem - some NICs with larger buffers
+   internally queuing a number of packets before interrupting the OS to
+   boost performance.
 
    Check ifconfig for this:
 
@@ -2440,8 +2418,88 @@ A. Yes. First off, this is NOT controlled by ntop.  It's inside the network
 
    Upgrade the Processor or NIC.
 
-Q. And in ntop?
-A. ntop runs multiple threads (we call them "NPS - Network Packet Sniffer"
+
+Q. How can packets can be lost in the kernel?
+A. Each time that interrupt occurs, the kernel processes it by moving
+   the data from the NIC to a kernel buffer, then re-enable interrupts.
+
+   Not really.
+
+   Actually, in Linux (and other OSes), the Kernel interrupt handler is
+   broken in half - called in Linux the top and bottom.  The bottom 
+   interrupt works with processor interrupts off to grab the data and 
+   buffer it and does only minimal processing as fast as possible so 
+   interrupts can be turned back on.  Then the top half is scheduled 
+   and processes as a Kernel process (high priority), but it is less 
+   time critical.
+
+   However, if the kernel can't process the bottom half in time - because
+   there isn't enough memory and/or the processor isn't fast enough to
+   respond to the interrupt, you do have a problem.   The small buffer
+   in the NIC will overflow and packets are dropped (this is the ONE place
+   where a better NIC, with a larger buffer, MIGHT help).
+
+   While there are LOTS of possible causes, if the kernel is *routinely*
+   dropping packets, it's almost certainly an interrupt/processor
+   speed/buffering issue.
+
+   So, I guess what I'm saying is that the dropped: count from ifconfig
+   might not be the NIC's fault - and that's why a faster processor is a
+   better choice than an expensive server class NIC.
+
+Q. But at least I can trust the reported counts, right?
+A. Nope. You need to treat the pcap reported drops with more than a few
+   grains of salt.  See this thread, for example:
+      http://www.tcpdump.org/lists/workers/2001/07/msg00018.html
+   and this msg:
+      http://www.mcabee.org/lists/snort-users/Jan-02/msg00771.html
+
+   There's a lot of other stuff about pcap problems, especially from
+   snort (another package that stresses libpcap) - 
+   STFW for "libpcap ps_drop".
+
+   See, the call to pcap_stats reads internal counters - maybe they come
+   from the NIC and maybe they're just maintained by the kernel.  That's a
+   function of how the low level NIC driver is written to handle certain 
+   calls from higher level drivers.  So it's a function of the specific
+   NIC card, something we try to hide from everyone, ntop included.
+
+   Ultimately, some piece of hardware or software SHOULD be counting packets
+   and dropped packets.
+
+   But, remember also, that - AT THE INSTANT OF THE pcap_stats call -
+   there can be packets queued in any of these buffers (NIC, kernel, libpcap).
+
+   Put the two together and I wouldn't trust 'em.
+
+   Want more fear?  Read the comments through out the libpcap code.  Like 
+   this gem from pcap-linux.c:
+
+    *  Get the statistics for the given packet capture handle.
+    *  Reports the number of dropped packets iff the kernel supports
+    *  the PACKET_STATISTICS "getsockopt()" argument (2.4 and later
+    *  kernels, and 2.2[.x] kernels with Alexey Kuznetzov's turbopacket
+    *  patches); otherwise, that information isn't available, and we lie
+    *  and report 0 as the count of dropped packets.
+
+   And this from pcap-bpf.c:
+
+    /*
+     * "ps_recv" counts packets handed to the filter, not packets
+     * that passed the filter.  This includes packets later dropped
+     * because we ran out of buffer space.
+     *
+     * "ps_drop" counts packets dropped inside the BPF device
+     * because we ran out of buffer space.  It doesn't count
+     * packets dropped by the interface driver.  It counts
+     * only packets that passed the filter.
+     *
+     * Both statistics include packets not yet read from the kernel
+     * by libpcap, and thus not yet seen by the application.
+     */
+
+Q. ntop drops packets?
+A. Sure. ntop runs multiple threads (we call them "NPS - Network Packet Sniffer"
    or something similar), one to handle each incomming device.  These operate
    much like the bottom-half interrupt - they accept the packet and queue it
    to another thread ("NPA - Network Packet Analyzer") for the analysis.
@@ -2472,6 +2530,16 @@ A. ntop runs multiple threads (we call them "NPS - Network Packet Sniffer"
    server class NIC is a good idea, but for workstations or network 
    monitors, etc. you just need something that can keep up with the network
    flow.)
+
+Q. So?
+A. So, remember - ntop drops packets, the kernel drops packets, libpcap drops
+   packets and none of 'em do it the same way.  Don't bet the farm on counting
+   every packet with absolute accuracy and use ntop the way it was meant to
+   be used - showing the overall usage and flows on the network.
+
+   Even if you're only processing 90% of the traffic, since the drops are
+   pretty random, it's a decent bet that if 90% of what you DO see is MP3s,
+   then 90% of the whole traffic flow is probably MP3s.
 
 
 Q. ntop stops capturing packets, except ARP and other broadcasts.  Why?
