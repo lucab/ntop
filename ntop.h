@@ -390,11 +390,6 @@ int getdomainname(char *name, size_t len);
 #include "pcap.h"
 
 /*
- * GD header file(s)
- */
-#include "graph.h"
-
-/*
  * ntop header file(s)
  */
 #include "regex.h"
@@ -1632,10 +1627,20 @@ typedef struct pppTunnelHeader {
 
 /* ******************************** */
 
+#ifdef _AIX
+#define AIX
+#endif
+
 #include "globals-core.h"
 
 #ifndef SEC_POPEN
 #define sec_popen(a,b) popen(a,b)
+#endif
+
+#ifdef HAVE_GDCHART
+#include "gdc.h"
+#include "gdchart.h"
+#include "gdcpie.h"
 #endif
 
 #endif /* NTOP_H */

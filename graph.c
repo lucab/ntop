@@ -25,20 +25,10 @@
   * (included by ntop.h)
   */
 
-#define GRAPH_H
-
 #include "ntop.h"
 #include "globals-report.h"
 
 #ifdef HAVE_GDCHART
-
-#if defined(_AIX) && !defined(MAXFLOAT) /* Needed by AIX */
-#define MAXFLOAT 1234567890
-#endif  MAXFLOAT
-
-#include "gdc.h"
-#include "gdchart.h"
-#include "gdcpie.h"
 
 static unsigned long clr[] = { 0x0000FF, 0x00FF00, 0xFF0000,
 			       0xFF4040L, 0x80FF80L, 0x8080FFL,

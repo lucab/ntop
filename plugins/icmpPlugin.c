@@ -23,7 +23,7 @@
 #include "globals-report.h"
 
 #ifdef HAVE_GDCHART
-extern int GDC_yaxis;
+extern char GDC_yaxis;
 extern char* GDC_ylabel_fmt;
 
 extern int out_graph(short gifwidth,

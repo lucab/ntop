@@ -22,6 +22,10 @@
 
 #include "ntop.h"
 
+#if defined(WIN32) || defined(HPUX) || defined(AIX)
+#define STATIC_PLUGIN /* This needs to be fixed */
+#endif
+
 #ifdef STATIC_PLUGIN
 extern PluginInfo* icmpPluginEntryFctn(void);
 extern PluginInfo* arpPluginEntryFctn(void);
@@ -161,7 +165,7 @@ int handlePluginHTTPRequest(char* url) {
 
 /* ******************* */
 
-#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(HPUX) || defined(AIX)
+#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H))
 static void loadPlugin(char* dirName, char* pluginName) {
   char pluginPath[256];
   char tmpBuf[BUF_SIZE];
@@ -384,32 +388,6 @@ void loadPlugins(void) {
 
 /* ******************* */
 
-/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
-
-void startPlugins(void) {
-  FlowFilterList *flows = flowsList;
-
-  traceEvent(TRACE_INFO, "Starting plugin threads (if any)...\n");
-
-  while(flows != NULL) {
-    if(flows->pluginStatus.pluginPtr != NULL) {
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "Starting plugin '%s'...\n",
-		 flows->pluginStatus.pluginPtr->pluginName);
-#endif
-      if(flows->pluginStatus.pluginPtr->startFunc != NULL) {
-	void (*startFunc)();
-
-	startFunc = (void(*)())flows->pluginStatus.pluginPtr-> startFunc;
-	startFunc();
-      }
-    }
-    flows = flows->next;
-  }
-}
-
-/* ******************* */
-
 void unloadPlugins(void) {
   FlowFilterList *flows = flowsList;
 
@@ -448,5 +426,31 @@ void unloadPlugins(void) {
 }
 
 #endif /* defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H) */
+
+/* ******************************* */
+
+/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
+
+void startPlugins(void) {
+  FlowFilterList *flows = flowsList;
+
+  traceEvent(TRACE_INFO, "Starting plugin threads (if any)...\n");
+
+  while(flows != NULL) {
+    if(flows->pluginStatus.pluginPtr != NULL) {
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "Starting plugin '%s'...\n",
+		 flows->pluginStatus.pluginPtr->pluginName);
+#endif
+      if(flows->pluginStatus.pluginPtr->startFunc != NULL) {
+	void (*startFunc)();
+
+	startFunc = (void(*)())flows->pluginStatus.pluginPtr-> startFunc;
+	startFunc();
+      }
+    }
+    flows = flows->next;
+  }
+}
 
 /* ************************************* */

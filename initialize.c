@@ -748,13 +748,13 @@ void initDeviceDatalink(void) {
   for(i=0; i<numDevices; i++) {
     switch(device[i].name[0]) {
     case 't': /* TokenRing */
-      datalink[i] = DLT_IEEE802;
+      device[i].datalink = DLT_IEEE802;
       break;
     case 'l': /* Loopback */
-      datalink[i] = DLT_NULL;
+       device[i].datalink = DLT_NULL;
       break;
     default:
-      datalink[i] = DLT_EN10MB; /* Ethernet */
+      device[i].datalink = DLT_EN10MB; /* Ethernet */
     }
   }
 #else
@@ -772,7 +772,7 @@ void initDeviceDatalink(void) {
     device[i].datalink = pcap_datalink(device[i].pcapPtr);
   }
 #endif
-
+#endif
 }
 
 /* ******************************* */
@@ -791,15 +791,14 @@ void parseTrafficFilter(char *argv[], int optind) {
 	if((pcap_compile(device[i].pcapPtr, &fcode, expression, 1,
 			 device[i].netmask.s_addr) < 0)
 	   || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
-	  traceEvent(TRACE_ERROR, "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
+	  traceEvent(TRACE_ERROR,
+		     "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
 		 expression, pcap_geterr(device[i].pcapPtr), device[i].name);
 	  exit(-1);
 	}
       }
     }
   }
-#endif
-
 }
 
 /* ******************************* */

@@ -22,15 +22,10 @@
 
 #include "ntop.h"
 
-typedef union {
-  int32_t al;
-  char ac;
-} align;
-
 /* Global */
 static char hex[] = "0123456789ABCDEF";
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(AIX)
 extern int h_errno; /* netdb.h */
 #endif
 
@@ -112,7 +107,7 @@ static void resolveAddress(char* symAddr,
 #ifdef MULTITHREADED
     /* accessMutex(&addressResolutionMutex, "resolveAddress-gethostbyaddr"); */
 #endif
-#ifndef WIN32
+#if !defined(WIN32) &&  !defined(AIX)
     h_errno = NETDB_SUCCESS;
 #endif
     hp = (struct hostent*)gethostbyaddr((char*)&theAddr, 4, AF_INET);
@@ -121,7 +116,7 @@ static void resolveAddress(char* symAddr,
 #endif
 
     if (
-#ifndef WIN32
+#if !defined(WIN32) &&  !defined(AIX)
 	(h_errno == NETDB_SUCCESS) &&
 #endif
 	(hp != NULL) && (hp->h_name != NULL)) {
@@ -1115,7 +1110,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
       len = strlen((char *)bp) + 1;
       memcpy(hostPtr->name, bp, len);
     }
-    bp += (((u_int32_t)bp) % sizeof(align));
+    bp += (((u_int32_t)bp) % sizeof(int32_t));
 
     if (bp + dlen >= &hostbuf[sizeof(hostbuf)]) {
       break;

@@ -450,3 +450,8 @@ extern char* getVendorInfo(u_char* ethAddress, short encodeString);
 extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
 extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
 extern void createVendorTable(void);
+
+#ifdef AIX
+extern int snprintf(char *str, size_t n, const char *fmt, ...);
+#endif
+
