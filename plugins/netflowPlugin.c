@@ -730,8 +730,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
     for(i=0; (!done) && (displ < bufferLen) && (i < numEntries); i++) {
       /* 1st byte */
-      switch(buffer[displ]) {
-      case 0:
+      if(buffer[displ] == 0) {
 	/* Template */
 #ifdef DEBUG_FLOWS
 	traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
@@ -811,19 +810,11 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	  done = 1;
 	  myGlobals.numNetFlowsV9BadTemplRcvd++;
 	}
-	break;
-      case 1:
+      } else {
 #ifdef DEBUG_FLOWS
 	traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
 #endif
 	foundRecord = 1;
-	break;
-      default:
-#ifdef DEBUG_FLOWS
-	traceEvent(CONST_TRACE_INFO, ">>>>> Received bad flow");
-#endif
-	myGlobals.numBadFlowPkts++;
-	break;
       }
 
       if(foundRecord) {
