@@ -192,7 +192,7 @@ char* myStrdup(char* theStr, int theLine, char* theFile) {
 
 /* *************************************** */
 
-void ResetLeaks() {
+void ResetLeaks(void) {
   MemoryBlock *theScan;
 
   theScan = theRoot;
@@ -207,7 +207,7 @@ void ResetLeaks() {
 
 /* *************************************** */
 
-unsigned int PrintMemoryBlocks() {
+unsigned int PrintMemoryBlocks(void) {
   MemoryBlock *theScan;
   int i = 0;
   unsigned int totMem = 0;
@@ -326,7 +326,7 @@ void myRemoveLeak(void* thePtr, int theLine, char* theFile) {
 
 /* *************************************** */
 
-void initLeaks() {
+void initLeaks(void) {
 #ifdef MULTITHREADED
   createMutex(&leaksMutex);
 #endif
@@ -334,7 +334,7 @@ void initLeaks() {
 
 /* *************************************** */
 
-void termLeaks() {
+void termLeaks(void) {
   PrintMemoryBlocks();
 #ifdef MULTITHREADED
   deleteMutex(&leaksMutex);

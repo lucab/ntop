@@ -623,7 +623,7 @@ static void updateHostSessionsList(u_int theHostIdx,
 
 /* ************************************ */
 
-void scanTimedoutTCPSessions() {
+void scanTimedoutTCPSessions(void) {
   u_int idx;
 
 #ifdef DEBUG

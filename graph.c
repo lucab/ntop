@@ -217,7 +217,7 @@ void ipProtoDistribPie(void) {
 
 /* ************************ */
 
-void interfaceTrafficPie() {
+void interfaceTrafficPie(void) {
   char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[MAX_NUM_DEVICES];
   int i, len, expl[] = { 0, 20, 30, 40, 50, 60 };
@@ -290,7 +290,7 @@ void interfaceTrafficPie() {
 
 /* ************************ */
 
-void pktCastDistribPie() {
+void pktCastDistribPie(void) {
   char tmpStr[256], fileName[64];
   float p[3];
   char	*lbl[] = { "", "", "" };
@@ -367,7 +367,7 @@ void pktCastDistribPie() {
 
 /* ************************ */
 
-void drawTrafficPie() {
+void drawTrafficPie(void) {
   char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   TrafficCounter ip, nonIp;
   float p[2];
@@ -584,7 +584,7 @@ void drawThptGraph(int sortedColumn) {
 
 /* ************************ */
 
-void drawGlobalProtoDistribution() {
+void drawGlobalProtoDistribution(void) {
   char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   TrafficCounter ip, nonIp;
   int len;
@@ -673,7 +673,7 @@ void drawGlobalProtoDistribution() {
 
 /* ************************ */
 
-void drawGlobalIpProtoDistribution() {
+void drawGlobalIpProtoDistribution(void) {
   char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   int len, i, idx=0, tmpfd;
   float p[256];

@@ -60,7 +60,7 @@ static time_t garbageTime;
 static IcmpPktInfo  icmpHostsList[ICMP_LIST_MAX_LEN+2];
 static unsigned int icmpListEntries;
 
-static void runICMPgarbageCollector();
+static void runICMPgarbageCollector(void);
 
 /* ****************************** */
 
@@ -631,7 +631,7 @@ static int sortICMPHostsInfo(const void *_a, const void *_b) {
 
 /* ******************************* */
 
-static void runICMPgarbageCollector() {
+static void runICMPgarbageCollector(void) {
   datum key_data;
   datum return_data;
   char tmpTime[32];
@@ -1214,7 +1214,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
 /* ****************************** */
 
-static void termIcmpFunct() {
+static void termIcmpFunct(void) {
   traceEvent(TRACE_INFO, "Thanks for using icmpWatch..."); fflush(stdout);
 
   if(icmpDB != NULL) {
@@ -1243,11 +1243,13 @@ static PluginInfo icmpPluginInfo[] = {
   }
 };
 
+/* ***************************************** */
+
 /* Plugin entry fctn */
 #ifdef STATIC_PLUGIN
-PluginInfo* icmpPluginEntryFctn() {
+PluginInfo* icmpPluginEntryFctn(void) {
 #else
-PluginInfo* PluginEntryFctn() {
+PluginInfo* PluginEntryFctn(void) {
 #endif
 	char tmpBuf[200];
 

@@ -584,7 +584,7 @@ static void addKeyIfMissing(char* key, char* value, int encryptValue) {
 
 /* *******************************/
 
-void addDefaultAdminUser() {
+void addDefaultAdminUser(void) {
   /* Add user 'admin/admin' if not existing */
   addKeyIfMissing("1admin", "admin", 1);
 

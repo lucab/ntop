@@ -703,7 +703,7 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
 
 /* ************************************ */
 
-void freeHostInstances() {
+void freeHostInstances(void) {
   u_int idx, i, max, num=0;
 
   if(mergeInterfaces)

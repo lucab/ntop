@@ -173,9 +173,9 @@ static PluginInfo rmonPluginInfo[] = {
 
 /* Plugin entry fctn */
 #ifdef STATIC_PLUGIN
-PluginInfo* rmonPluginEntryFctn() {
+PluginInfo* rmonPluginEntryFctn(void) {
 #else
-PluginInfo* PluginEntryFctn() {
+PluginInfo* PluginEntryFctn(void) {
 #endif
   
   traceEvent(TRACE_INFO, "Welcome to %s. (C) 2000 by Luca Deri.\n", 
@@ -619,8 +619,7 @@ static void init_rmon(void) {
  *   module extensions, and check out the examples in the examples
  *   and mibII directories.
  */
-unsigned char *
-var_rmon(struct variable *vp, 
+unsigned char* var_rmon(struct variable *vp, 
                 oid     *name, 
                 size_t  *length, 
                 int     exact, 
@@ -1034,8 +1033,8 @@ var_alarmTable(struct variable *vp,
     	    WriteMethod **write_method) {
   /* variables we may use later */
   static long long_ret;
-    static unsigned char string[SPRINT_MAX_LEN];
-    /* static unsigned char *new_string = 0, *old_string = 0; */
+  static unsigned char string[SPRINT_MAX_LEN];
+  /* static unsigned char *new_string = 0, *old_string = 0; */
   static oid objid[MAX_OID_LEN];
   static struct counter64 c64;
 

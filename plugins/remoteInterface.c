@@ -36,7 +36,7 @@ static pthread_t remIntTreadId;
 
 static int remIntSock, locIntSock;
 
-static void termRemIntFunct() {
+static void termRemIntFunct(void) {
   traceEvent(TRACE_INFO, "Thanks for using ntop Remote Interface..."); fflush(stdout);
 
   if(remIntSock > 0) {
@@ -352,9 +352,9 @@ static PluginInfo pluginInfo[] = {
 
 /* Plugin entry fctn */
 #ifdef STATIC_PLUGIN
-PluginInfo* remIntPluginEntryFctn() {
+PluginInfo* remIntPluginEntryFctn(void) {
 #else
-PluginInfo* PluginEntryFctn() {
+PluginInfo* PluginEntryFctn(void) {
 #endif
 
   remIntSock = 0;

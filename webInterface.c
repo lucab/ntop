@@ -34,7 +34,7 @@ void handleSingleWebConnection(fd_set *fdmask);
 
 /* **************************************** */
 
-void initializeWeb() {
+void initializeWeb(void) {
   columnSort = 0;
   addDefaultAdminUser();
   initAccessLog();
@@ -216,11 +216,11 @@ void execCGI(char* cgiName) {
    ;
  }
  
- void loadPlugins() {
+ void loadPlugins(void) {
    ;
  }
  
- void unloadPlugins() {
+ void unloadPlugins(void) {
    ;
  }
  
@@ -665,7 +665,7 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
 /* ******************************* */
 
-char* getRowColor() {
+char* getRowColor(void) {
   /* #define USE_COLOR */
 
 #ifdef USE_COLOR
@@ -683,7 +683,7 @@ char* getRowColor() {
 
 /* ******************************* */
 
-char* getActualRowColor() {
+char* getActualRowColor(void) {
   /* #define USE_COLOR */
 
 #ifdef USE_COLOR
@@ -747,7 +747,7 @@ void switchNwInterface(int _interface) {
 
 /* **************************************** */
 
-void usage() {
+void usage(void) {
   char buf[80];
 
   snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
@@ -810,7 +810,7 @@ void usage() {
 
 /* **************************************** */
 
-void shutdownNtop() {
+void shutdownNtop(void) {
   cleanup(0);
 
   termAccessLog();

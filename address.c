@@ -31,6 +31,19 @@ extern int h_errno; /* netdb.h */
 
 /* #define DNS_DEBUG */
 
+/* Forward */
+static u_int _ns_get16(const u_char *src);
+static int _ns_name_ntop(const u_char *src, 
+			 char *dst, size_t dstsiz);
+static int _dn_skipname(const u_char *ptr, const u_char *eom); /* forward */
+static int _ns_name_uncompress(const u_char *msg,
+			       const u_char *eom, const u_char *src,
+			       char *dst, size_t dstsiz);
+static int _ns_name_unpack(const u_char *msg,
+			  const u_char *eom, const u_char *src,
+			  u_char *dst, size_t dstsiz);
+
+
 /* ************************************ */
 
 static void resolveAddress(char* symAddr,
@@ -608,7 +621,7 @@ void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc, char *fdst)
 
 /* ************************************ */
 
-static u_int ns_get16(const u_char *src) {
+static u_int _ns_get16(const u_char *src) {
   u_int dst;
 
   NS_GET16(dst, src);
@@ -638,8 +651,8 @@ static int special(int ch) {
 
 /* ************************************ */
 
-static int ns_name_ntop(const u_char *src, 
-			char *dst, size_t dstsiz) {
+static int _ns_name_ntop(const u_char *src, 
+			 char *dst, size_t dstsiz) {
   const u_char *cp;
   char *dn, *eom;
   u_char c;
@@ -711,18 +724,11 @@ static int ns_name_ntop(const u_char *src,
 
 /* ************************************ */
 
-static int dn_skipname(const u_char *ptr, const u_char *eom); /* forward */
-static int ns_name_uncompress(const u_char *msg,
-			      const u_char *eom, const u_char *src,
-			      char *dst, size_t dstsiz);
-
-/* ************************************ */
-
-static char* res_skip_rr(char *cp, char *eom) {
+static char* _res_skip_rr(char *cp, char *eom) {
   int tmp;
   int dlen;
 
-  if ((tmp = dn_skipname((u_char *)cp, (u_char *)eom)) == -1)
+  if ((tmp = _dn_skipname((u_char *)cp, (u_char *)eom)) == -1)
     return (NULL);			/* compression error */
   cp += tmp;
   if ((cp + RRFIXEDSZ) > eom)
@@ -730,7 +736,7 @@ static char* res_skip_rr(char *cp, char *eom) {
   cp += INT16SZ;	/* 	type 	*/
   cp += INT16SZ;	/* 	class 	*/
   cp += INT32SZ;	/* 	ttl 	*/
-  dlen = ns_get16((u_char*)cp);
+  dlen = _ns_get16((u_char*)cp);
   cp += INT16SZ;	/* 	dlen 	*/
   cp += dlen;
   if (cp > eom)
@@ -742,7 +748,7 @@ static char* res_skip_rr(char *cp, char *eom) {
 
 static int dn_expand_(const u_char *msg, const u_char *eom, const u_char *src,
 		      char *dst, int dstsiz) {
-  int n = ns_name_uncompress(msg, eom, src, dst, (size_t)dstsiz);
+  int n = _ns_name_uncompress(msg, eom, src, dst, (size_t)dstsiz);
 
   if (n > 0 && dst[0] == '.')
     dst[0] = '\0';
@@ -751,7 +757,7 @@ static int dn_expand_(const u_char *msg, const u_char *eom, const u_char *src,
 
 /* ************************************ */
 
-static int ns_name_unpack(const u_char *msg,
+static int _ns_name_unpack(const u_char *msg,
 			  const u_char *eom, const u_char *src,
 			  u_char *dst, size_t dstsiz) {
   const u_char *srcp, *dstlim;
@@ -821,22 +827,22 @@ static int ns_name_unpack(const u_char *msg,
 
 /* ************************************ */
 
-static int ns_name_uncompress(const u_char *msg,
+static int _ns_name_uncompress(const u_char *msg,
 			      const u_char *eom, const u_char *src,
 			      char *dst, size_t dstsiz) {
   u_char tmp[NS_MAXCDNAME];
   int n;
 
-  if ((n = ns_name_unpack(msg, eom, src, tmp, sizeof tmp)) == -1)
+  if ((n = _ns_name_unpack(msg, eom, src, tmp, sizeof tmp)) == -1)
     return (-1);
-  if (ns_name_ntop(tmp, dst, dstsiz) == -1)
+  if (_ns_name_ntop(tmp, dst, dstsiz) == -1)
     return (-1);
   return (n);
 }
 
 /* ************************************ */
 
-static int ns_name_skip(const u_char **ptrptr, const u_char *eom) {
+static int _ns_name_skip(const u_char **ptrptr, const u_char *eom) {
   const u_char *cp;
   u_int n;
 
@@ -866,18 +872,17 @@ static int ns_name_skip(const u_char **ptrptr, const u_char *eom) {
 
 /* ************************************ */
 
-static int dn_skipname(const u_char *ptr,
-		       const u_char *eom) {
+static int _dn_skipname(const u_char *ptr, const u_char *eom) {
   const u_char *saveptr = ptr;
 
-  if (ns_name_skip(&ptr, eom) == -1)
+  if (_ns_name_skip(&ptr, eom) == -1)
     return (-1);
   return (ptr - saveptr);
 }
 
 /* ************************************ */
 
-static char* res_skip(char *msg, 
+static char* _res_skip(char *msg, 
 		      int numFieldsToSkip,
 		      char *eom) {
   char *cp;
@@ -897,7 +902,7 @@ static char* res_skip(char *msg,
   n = (int)ntohs((unsigned short int)hp->qdcount);
   if (n > 0) {
     while (--n >= 0 && cp < eom) {
-      tmp = dn_skipname((u_char *)cp, (u_char *)eom);
+      tmp = _dn_skipname((u_char *)cp, (u_char *)eom);
       if (tmp == -1) return(NULL);
       cp += tmp;
       cp += INT16SZ;	/* type 	*/
@@ -912,7 +917,7 @@ static char* res_skip(char *msg,
   n = (int)ntohs((unsigned short int)hp->ancount);
   if (n > 0) {
     while (--n >= 0 && cp < eom) {
-      cp = res_skip_rr(cp, eom);
+      cp = _res_skip_rr(cp, eom);
       if (cp == NULL) return(NULL);
     }
   }
@@ -924,7 +929,7 @@ static char* res_skip(char *msg,
   n = (int)ntohs((unsigned short int)hp->nscount);
   if (n > 0) {
     while (--n >= 0 && cp < eom) {
-      cp = res_skip_rr(cp, eom);
+      cp = _res_skip_rr(cp, eom);
       if (cp == NULL) return(NULL);
     }
   }
@@ -936,7 +941,7 @@ static char* res_skip(char *msg,
   n = (int)ntohs((unsigned short int)hp->arcount);
   if (n > 0) {
     while (--n >= 0 && cp < eom) {
-      cp = res_skip_rr(cp, eom);
+      cp = _res_skip_rr(cp, eom);
       if (cp == NULL) return(NULL);
     }
   }
@@ -944,7 +949,7 @@ static char* res_skip(char *msg,
   return(cp);
 }
 
-#define GetShort(cp)	ns_get16(cp); cp += INT16SZ;
+#define GetShort(cp)	_ns_get16(cp); cp += INT16SZ;
 
 /* ************************************ */
 
@@ -1016,7 +1021,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 
   /* Skip over question section. */
   while (qdcount-- > 0) {
-    n = dn_skipname(cp, eom);
+    n = _dn_skipname(cp, eom);
     if (n < 0)
       return(transactionId);
     cp += n + QFIXEDSZ;
@@ -1161,7 +1166,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
     }
   }
 
-  cp = (u_char *)res_skip((char *)&answer, 2, (char *)eom);
+  cp = (u_char *)_res_skip((char *)&answer, 2, (char *)eom);
 
   while (--nscount >= 0 && cp < eom) {
     /*

@@ -383,9 +383,9 @@ static PluginInfo arpPluginInfo[] = {
   
 /* Plugin entry fctn */
 #ifdef STATIC_PLUGIN
-PluginInfo* arpPluginEntryFctn() {
+PluginInfo* arpPluginEntryFctn(void) {
 #else
-PluginInfo* PluginEntryFctn() {
+PluginInfo* PluginEntryFctn(void) {
 #endif
   char tmpBuff[200];
 

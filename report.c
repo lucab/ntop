@@ -3625,8 +3625,8 @@ static void printSessions(IPSession *sessions[], u_short type) {
 
 }
 
-void printTCPSessions() { printSessions(tcpSession, IPPROTO_TCP); }
-void printUDPSessions() { printSessions(udpSession, IPPROTO_UDP); }
+void printTCPSessions(void) { printSessions(tcpSession, IPPROTO_TCP); }
+void printUDPSessions(void) { printSessions(udpSession, IPPROTO_UDP); }
 
 #endif /* DEBUG */
 
@@ -5486,7 +5486,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
 
 /* ************************ */
 
-void printLogHeader() {
+void printLogHeader(void) {
 
   if(logd != NULL) {
     int i;

@@ -43,7 +43,7 @@ extern PluginInfo* rmonPluginEntryFctn(void);
 
 #ifdef AIX
 
-char* dlerror() {
+static char* dlerror() {
   char *errMsg[768];
   static char tmpStr[256];
 
@@ -121,13 +121,9 @@ void notifyPluginsHashResize(int oldSize, int newSize, int* mappings) {
   while(flows != NULL)
     if((flows->pluginStatus.pluginPtr != NULL)
        && (flows->pluginStatus.activePlugin)
-       && (flows->pluginStatus.pluginPtr->resizeFunct != NULL)) {
-      void (*resizeFunc)(u_int, u_int, u_int*);
- 
-      resizeFunc = (void(*)(u_int, u_int, u_int*))flows->pluginStatus.pluginPtr->resizeFunct;
-
-      resizeFunc(oldSize, newSize, mappings);
-    } else
+       && (flows->pluginStatus.pluginPtr->resizeFunct != NULL))
+      flows->pluginStatus.pluginPtr->resizeFunct(oldSize, newSize, mappings);
+    else
       flows = flows->next;
 }
 
@@ -143,10 +139,7 @@ int handlePluginHTTPRequest(char* url) {
        && (flows->pluginStatus.pluginPtr->httpFunct != NULL)
        && (strncmp(flows->pluginStatus.pluginPtr->pluginURLname,
 		   url, strlen(flows->pluginStatus.pluginPtr->pluginURLname)) == 0)) {
-      void (*httpFunc)(char*);
       char *arg;
-
-      httpFunc = (void(*)(char*))flows->pluginStatus.pluginPtr->httpFunct;
 
       if(strlen(url) == strlen(flows->pluginStatus.pluginPtr->pluginURLname))
 	arg = "";
@@ -155,7 +148,7 @@ int handlePluginHTTPRequest(char* url) {
 
       /* traceEvent(TRACE_INFO, "Found %s [%s]\n", 
 	 flows->pluginStatus.pluginPtr->pluginURLname, arg); */
-      httpFunc(arg);
+      flows->pluginStatus.pluginPtr->httpFunct(arg);
       return(1);
     } else
       flows = flows->next;
@@ -399,12 +392,8 @@ void unloadPlugins(void) {
       traceEvent(TRACE_INFO, "Unloading plugin '%s'...\n",
 		 flows->pluginStatus.pluginPtr->pluginName);
 #endif
-      if(flows->pluginStatus.pluginPtr->termFunc != NULL) {
-	void (*termFunc)();
-
-	termFunc = (void(*)())flows->pluginStatus.pluginPtr-> termFunc;
-	termFunc();
-      }
+      if(flows->pluginStatus.pluginPtr->termFunc != NULL)
+	flows->pluginStatus.pluginPtr->termFunc();
 
 #ifdef HPUX /* Courtesy Rusetsky Dmitry <dimania@mail.ru> */
       shl_unload((shl_t)flows->pluginStatus.pluginPtr);
@@ -442,12 +431,8 @@ void startPlugins(void) {
       traceEvent(TRACE_INFO, "Starting plugin '%s'...\n",
 		 flows->pluginStatus.pluginPtr->pluginName);
 #endif
-      if(flows->pluginStatus.pluginPtr->startFunc != NULL) {
-	void (*startFunc)();
-
-	startFunc = (void(*)())flows->pluginStatus.pluginPtr-> startFunc;
-	startFunc();
-      }
+      if(flows->pluginStatus.pluginPtr->startFunc != NULL)
+	flows->pluginStatus.pluginPtr->startFunc();
     }
     flows = flows->next;
   }

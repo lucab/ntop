@@ -1036,13 +1036,13 @@ void trimString(char* str) {
 /* ************************* */
 
 #ifndef HAVE_GDBM_H
-static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen,
+static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_,
 			     char* thePw, int thePwLen) {
   return 1; /* Access granted - security is disabled */
 }
 #else
 static int checkHTTPpassword(char *theRequestedURL, 
-			     int theRequestedURLLen,
+			     int theRequestedURLLen _UNUSED_,
 			     char* thePw, int thePwLen) {
   char outBuffer[65], *user = NULL, users[BUF_SIZE];
   int i, rc;

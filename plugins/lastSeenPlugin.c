@@ -353,7 +353,7 @@ static void deletelastSeenURL( char *addr ) {
 
 }
 
-static void termLsFunct() {
+static void termLsFunct(void) {
   traceEvent(TRACE_INFO, "Thanks for using LsWatch..."); fflush(stdout);
     
   if(LsDB != NULL) {
@@ -391,9 +391,9 @@ static PluginInfo LsPluginInfo[] = {
   
 /* Plugin entry fctn */
 #ifdef STATIC_PLUGIN
-PluginInfo* lsPluginEntryFctn() {
+PluginInfo* lsPluginEntryFctn(void) {
 #else
-PluginInfo* PluginEntryFctn() {
+PluginInfo* PluginEntryFctn(void) {
 #endif
   char tmpBuf[200];
 

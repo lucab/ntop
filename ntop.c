@@ -506,7 +506,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 /* **************************************** */
 
 #ifdef MULTITHREADED
-void* periodicLsofLoop(void* notUsed) {
+void* periodicLsofLoop(void* notUsed _UNUSED_) {
   for(;;) {
     /*
       refresh process list each minute
