@@ -299,7 +299,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(isDHCPClient(el))
-    dynIp = "&nbsp;(dyn)"; 
+    dynIp = "&nbsp;<IMG SRC=/bulb.gif BORDER=0>&nbsp;"; 
   else { 
     if(isDHCPServer(el))
       dynIp = "&nbsp;<IMG SRC=/wheel.gif BORDER=0>&nbsp;"; 

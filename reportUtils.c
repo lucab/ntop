@@ -2736,7 +2736,7 @@ void checkHostProvidedServices(HostTraffic *el) {
     if(isNapsterClient(el))       sendString("Napster Client<br>");
 #endif
 
-    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client<br>");
+    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client&nbsp;<IMG SRC=/bulb.gif BORDER=0><br>");
     if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG SRC=/wheel.gif BORDER=0>&nbsp;<br>");
     sendString("</TD></TR>");
   }
