@@ -1857,6 +1857,7 @@ static int returnHTTPPage(char* pageName,
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
+#ifdef CFG_USE_GRAPHICS
     } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawThptGraph(sortedColumn);
@@ -1986,6 +1987,7 @@ static int returnHTTPPage(char* pageName,
 	printTrailer=0;
       }
     }
+#endif /* CFG_USE_GRAPHICS */
     } else if(strcmp(pageName, "Credits.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("Credits", BITFLAG_HTML_NO_REFRESH);
@@ -2239,9 +2241,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
   }
   fclose(fd);
 
-  if(unlink(compressedFilePath) != 0) {
-    traceEvent(CONST_TRACE_WARNING, "Unable to delete temporary file: %s", compressedFilePath);
-  }
+  unlink(compressedFilePath);
 }
 
 /* ************************* */
