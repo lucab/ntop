@@ -197,6 +197,9 @@ acinclude.m4: acinclude.m4.ntop libtool.m4.in
 # rules to handle nroff documentation
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
+ntop.8:
+	@echo ""
+
 ntop.txt: ntop.8
 	@echo ""
 	@echo "-----------------------------------------------"
