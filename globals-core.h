@@ -23,6 +23,9 @@
 
 /****** data declarations ***** */
 
+#ifndef _GLOBALS_CORE_H
+#define _GLOBALS_CORE_H
+
 /* globals-core.c */
 extern NtopGlobals myGlobals;
 #ifdef MAKE_WITH_SYSLOG
@@ -687,7 +690,9 @@ extern int h_errno; /* netdb.h */
 #endif
 
 #ifdef WIN32
+#ifndef __MINGW32__
 #define strncasecmp(a, b, c) strnicmp(a, b, c)
+#endif
 #define sleep(a /* sec */) waitForNextEvent(1000*a /* ms */)
 #else
 #define sleep(a)  ntop_sleep(a)
@@ -873,3 +878,4 @@ int getdomainname(char *name, size_t len);
 #define xstr(s) str(s)
 #define str(s) #s
 
+#endif /* _GLOBALS_CORE_H */

@@ -104,7 +104,7 @@ extern ULONG GetHostIPAddr();
     
 */
 
-#if defined(WIN32) && defined(__GNUC__)
+#if defined(WIN32) && defined(__GNUC__) && !defined(__MINGW32__)
 #define DIRENT_INCLUDED
 
 struct dirent
@@ -170,7 +170,7 @@ struct	ether_header {
 /************************************************************************/
 
 /* on mingw, tcp_seq is defined - Scott Renfro <scott@renfro.org> */
-#if defined (WIN32) && !defined (__GNUC__)
+#if defined (WIN32) && !defined (tcp_seq)
 typedef	u_int	tcp_seq;
 #endif
 

@@ -53,9 +53,15 @@ typedef unsigned short u_short;
 typedef unsigned int   u_int;
 typedef unsigned long  u_long;
 #endif
+#if !defined(HAVE_UINT8_T)
 typedef u_char  uint8_t;
+#endif
+#if !defined(HAVE_UINT16_T)
 typedef u_short uint16_t;
+#endif
+#if !defined(HAVE_UINT32_T)
 typedef u_int   uint32_t;
+#endif
 #endif /* WIN32 */
 
 #if !defined(HAVE_U_INT64_T)

@@ -136,11 +136,7 @@ int init_ssl(void) {
       BufferTooShort();
 
 #ifdef WIN32
-    i=0;
-    while(buf[i] != '\0') {
-      if(buf[i] == '/') buf[i] = '\\';
-      i++;
-    }
+    revertSlash(buf, 0);
 #endif
     if((fd = fopen(buf, "rb")) != NULL)
       break;

@@ -5116,7 +5116,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   if (rc != 0) {
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to connect socket: %s(%d)", strerror(errno), errno);
-    close(sock);
+    closesocket(sock);
     return 1;
   }
 #ifdef CHKVER_DEBUG
@@ -5239,7 +5239,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   if (rc < 0) {
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to send http request: %s(%d)", strerror(errno), errno);
-    close(sock);
+    closesocket(sock);
     return 1;
   }
 
@@ -5257,7 +5257,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
   if (rc < 0) {
     traceEvent(CONST_TRACE_ERROR,
 	       "CHKVER: Unable to receive http response: %s(%d)", strerror(errno), errno);
-    close(sock);
+    closesocket(sock);
     return 1;
   }
   if(rc >= bufLen) {
@@ -5265,7 +5265,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
 	       "CHKVER: Unable to receive entire http response (%d/%d)- skipping",
 	       rc,
 	       bufLen);
-    close(sock);
+    closesocket(sock);
     return 1;
   }
 

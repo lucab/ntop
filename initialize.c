@@ -1547,10 +1547,7 @@ void initDevices(char* devices) {
   if(devices == NULL) {
     /* Searching the default device */
 #ifdef WIN32
-    /*
-      Nothing to do as the previous #ifdef WIN32 branch
-      did the job already
-    */
+    (void)pcap_lookupdev(ebuf); /* Needed on Winpcap 3.1 */
 #else
     tmpDev = pcap_lookupdev(ebuf);
 
@@ -1587,7 +1584,8 @@ void initDevices(char* devices) {
 
         if(!warnedVirtual) {
           warnedVirtual = 1;
-          traceEvent(CONST_TRACE_WARNING, "Virtual device(s), e.g. %s, specified on -i | --interface parameter are ignored", tmpDev);
+          traceEvent(CONST_TRACE_WARNING, "Virtual device(s), e.g. %s, specified on "
+		     "-i | --interface parameter are ignored", tmpDev);
         }
 
  	nwInterface[0] = 0;
@@ -1615,18 +1613,18 @@ void initDevices(char* devices) {
         free(requestedDev);
       }
 #else /* WIN32 */
-	  if(isdigit(tmpDev[0])) {
-      if(atoi(tmpDev) < ifIdx) {
-	tmpDescr = intDescr[atoi(tmpDev)];
-	tmpDev   = intNames[atoi(tmpDev)];
+      if(isdigit(tmpDev[0])) {
+	if(atoi(tmpDev) < ifIdx) {
+	  tmpDescr = intDescr[atoi(tmpDev)];
+	  tmpDev   = intNames[atoi(tmpDev)];
+	} else {
+	  traceEvent(CONST_TRACE_FATALERROR, "Interface index '%d' is out of range [0..%d]", atoi(tmpDev), ifIdx);
+	  exit(-1);
+	}
       } else {
-	traceEvent(CONST_TRACE_FATALERROR, "Interface index '%d' is out of range [0..%d]", atoi(tmpDev), ifIdx);
-	exit(-1);
+	/* Nothing to do: the user has specified an interface name */
+	tmpDescr = NULL;
       }
-	  } else {
-		/* Nothing to do: the user has specified an interface name */
-		tmpDescr = NULL;
-	  }
 #endif
 
       for(intfc=0; intfc<myGlobals.numDevices; intfc++) {
