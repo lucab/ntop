@@ -1846,6 +1846,7 @@ XML*/
   int numChildren;
 
   /* NetFlow */
+  int netFlowAssumeFTP;
   /* Flow emission */
   u_char netFlowDebug;
   int netFlowOutSocket;
