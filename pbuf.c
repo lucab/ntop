@@ -2850,6 +2850,13 @@ void processPacket(u_char *_deviceId,
 	    if(EXTRACT_16BITS(&llc.ethertype[0]) == ETHERTYPE_IP) {
 	      /* encapsulated IP packet */
 	      processIpPkt(p, h, length, ether_src, ether_dst);
+	      /* 
+		 Patch below courtesy of 
+		 Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>
+	      */
+#ifdef MULTITHREADED
+	      releaseMutex(&hostsHashMutex);
+#endif
 	      return;
 	    }
 	  }

@@ -32,7 +32,7 @@
 #define _THREAD_SAFE
 
 #if defined(HAVE_CONFIG_H)
-# include "config.h"
+#include "config.h"
 #endif
 
 /*
@@ -74,16 +74,16 @@ typedef char int8_t;
  */
 #define __FAVOR_BSD
 #ifndef _BSD_SOURCE
-# define _BSD_SOURCE
+#define _BSD_SOURCE
 #endif
 
 #endif /* linux || __linux__ */
 
 #ifdef __GNUC__
-# define _UNUSED_ __attribute__((unused))
+#define _UNUSED_ __attribute__((unused))
 #else
-# define _UNUSED_
-# define __attribute__(a)
+#define _UNUSED_
+#define __attribute__(a)
 #endif
 
 /*
@@ -134,27 +134,27 @@ int getdomainname(char *name, size_t len);
 #endif
 
 #if defined(HAVE_SYS_SELECT_H)
-# include <sys/select.h>      /* AIX has it */
+#include <sys/select.h>      /* AIX has it */
 #endif
 
 #if defined(HAVE_SYS_LDR_H)
-# include <sys/ldr.h>         /* AIX has it */
+#include <sys/ldr.h>         /* AIX has it */
 #endif
 
 #if defined(HAVE_SYS_SOCKIO_H)
-# include <sys/sockio.h>
+#include <sys/sockio.h>
 #endif
 
 #if defined(HAVE_DL_H)
-# include <dl.h>              /* HPUX has it */
+#include <dl.h>              /* HPUX has it */
 #endif
 
 #if defined(HAVE_DIRENT_H)
-# include <dirent.h>
+#include <dirent.h>
 #endif
 
 #if defined(HAVE_DLFCN_H)
-# include <dlfcn.h>
+#include <dlfcn.h>
 #endif
 
 /* 
@@ -183,7 +183,7 @@ int getdomainname(char *name, size_t len);
  * gdbm management
  */
 #if defined(HAVE_GDBM_H)
-# include <gdbm.h>
+#include <gdbm.h>
 #endif
 
 
@@ -199,17 +199,19 @@ int getdomainname(char *name, size_t len);
 #endif
 
 #if defined(HAVE_SYS_SCHED_H)
-# include <sys/sched.h>
+#include <sys/sched.h>
 #endif
 
 #if defined(HAVE_SEMAPHORE_H)
-# include <semaphore.h>
+#include <semaphore.h>
+/* Courtesy of Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr> */
+#define USE_SEMAPHORES   1
 #else
-# undef USE_SEMAPHORES
+#undef USE_SEMAPHORES
 #endif
 
 #if defined(HAVE_PTHREAD_H)
-# include <pthread.h>
+#include <pthread.h>
 # if !defined(_THREAD_SAFE)
 #  define _THREAD_SAFE
 # endif
@@ -223,12 +225,12 @@ int getdomainname(char *name, size_t len);
 #endif
 
 #if defined(HAVE_OPENSSL)
-# include <openssl/rsa.h>
-# include <openssl/crypto.h>
-# include <openssl/x509.h>
-# include <openssl/pem.h>
-# include <openssl/ssl.h>
-# include <openssl/err.h>
+#include <openssl/rsa.h>
+#include <openssl/crypto.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 #endif /* HAVE_OPENSSL */
 
 
@@ -257,7 +259,7 @@ int getdomainname(char *name, size_t len);
 #endif
 
 #if defined(HAVE_NETINET_IF_ETHER_H)
-# include <netinet/if_ether.h>
+#include <netinet/if_ether.h>
 #endif
 
 # if defined(ETHER_HEADER_HAS_EA)
@@ -270,29 +272,29 @@ int getdomainname(char *name, size_t len);
 
 
 #if defined(HAVE_ARPA_NAMESER_H)
-# include <arpa/nameser.h>
+#include <arpa/nameser.h>
 #endif
 
 /*
  * Export from linux
  */
 #ifndef INT16SZ
-# define HFIXEDSZ      12              /* #/bytes of fixed data in header */
-# define INT32SZ       4               /* for systems without 32-bit ints */
-# define INT16SZ       2               /* for systems without 16-bit ints */
-# define INADDRSZ      4               /* IPv4 T_A */
-# define IN6ADDRSZ     16              /* IPv6 T_AAAA */
+#define HFIXEDSZ      12              /* #/bytes of fixed data in header */
+#define INT32SZ       4               /* for systems without 32-bit ints */
+#define INT16SZ       2               /* for systems without 16-bit ints */
+#define INADDRSZ      4               /* IPv4 T_A */
+#define IN6ADDRSZ     16              /* IPv6 T_AAAA */
 #endif
 
 
 
 
 #if defined(HAVE_NET_ETHERNET_H)
-# include <net/ethernet.h>
+#include <net/ethernet.h>
 #endif
 
 #if defined(HAVE_ETHERTYPE_H)
-# include <ethertype.h>
+#include <ethertype.h>
 #else
 # ifndef ETHERTYPE_IP
 #  define ETHERTYPE_IP        0x0800
@@ -356,13 +358,13 @@ int getdomainname(char *name, size_t len);
 #endif
 
 #ifndef ETHERMTU
-# define ETHERMTU  1500
+#define ETHERMTU  1500
 #endif
 
 #define UNKNOWN_MTU 1500
 
 #if defined(HAVE_IF_H)
-# include "if.h"              /* OSF1 has it */
+#include "if.h"              /* OSF1 has it */
 #endif
 
 /*
@@ -370,7 +372,7 @@ int getdomainname(char *name, size_t len);
  * "David Masterson" <David.Masterson@kla-tencor.com>
  */
 #if defined(HAVE_NET_BPF_H)
-# include <net/bpf.h>
+#include <net/bpf.h>
 #endif
 
 
@@ -380,8 +382,8 @@ int getdomainname(char *name, size_t len);
  */
 #if defined(HAVE_TCPD_H)
 
-# include <tcpd.h>
-# include <syslog.h>
+#include <tcpd.h>
+#include <syslog.h>
 # ifndef SYSLOG_FACILITY
 #  define SYSLOG_FACILITY LOG_DAEMON   /* default value, if not specified otherwise */
 # endif
@@ -406,21 +408,21 @@ int getdomainname(char *name, size_t len);
 
 
 #ifndef WIN32
-# define closesocket(a) close(a)
+#define closesocket(a) close(a)
 RETSIGTYPE (*setsignal(int, RETSIGTYPE (*)(int)))(int);
 #endif
 
 
 
 #if defined(WIN32)
-/*# include "ntop_win32.h"*/
-# define n_short short
-# define n_time time_t
+/*#include "ntop_win32.h"*/
+#define n_short short
+#define n_time time_t
 
-# define HAVE_GDBM_H
-# include <gdbmerrno.h>
+#define HAVE_GDBM_H
+#include <gdbmerrno.h>
 extern const char *gdbm_strerror (int);
-# define strncasecmp(a, b, c) strnicmp(a, b, c)
+#define strncasecmp(a, b, c) strnicmp(a, b, c)
 #endif
 
 #ifdef WIN32
@@ -490,9 +492,9 @@ typedef struct packetInformation {
 #else /* ! MULTITHREADED */
 
 #if defined(HAVE_OPENSSL)
-# define THREAD_MODE "ST (SSL)"
+#define THREAD_MODE "ST (SSL)"
 #else
-# define THREAD_MODE "ST"
+#define THREAD_MODE "ST"
 #endif
 
 /*
@@ -927,11 +929,11 @@ struct llc {
 /* ******************************* */
 
 #if !defined(min)
-# define min(a,b) ((a) > (b) ? (b) : (a))
+#define min(a,b) ((a) > (b) ? (b) : (a))
 #endif
 
 #if !defined(max)
-# define max(a,b) ((a) > (b) ? (a) : (b))
+#define max(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
 
@@ -942,11 +944,11 @@ struct llc {
  * Paul D. Smith <psmith@baynetworks.com>
  */
 #ifndef CLOCKS_PER_SEC
-# define CLOCKS_PER_SEC 1000000
+#define CLOCKS_PER_SEC 1000000
 #endif
 
 #ifndef NTOHL
-# define NTOHL(x)    (x) = ntohl(x)
+#define NTOHL(x)    (x) = ntohl(x)
 #endif
 
 #define DB_TIMEOUT_REFRESH_TIME      30 /* seconds */
@@ -1490,10 +1492,10 @@ typedef struct logMessage {
  * Courtesy of Kimmo Suominen <kim@tac.nyc.ny.us>
  */
 #ifndef ETHERTYPE_DN
-# define ETHERTYPE_DN           0x6003
+#define ETHERTYPE_DN           0x6003
 #endif
 #ifndef ETHERTYPE_ATALK
-# define ETHERTYPE_ATALK        0x809b
+#define ETHERTYPE_ATALK        0x809b
 #endif
 
 /* ******** Token Ring ************ */
