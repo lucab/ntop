@@ -4134,3 +4134,26 @@ char **buildargv (const char *input) {
 #endif /* HAVE_BUILDARGV */
 
 #endif /* WIN32*/ 
+
+#ifdef SHOW_NTOP_HEARTBEAT
+void _HEARTBEAT(int beatLevel, char* file, int line, char * format, ...) {
+  char buf[BUF_SIZE];
+  va_list va_ap;
+
+  myGlobals.heartbeatCounter++;
+
+  if ( (format != NULL) && (SHOW_NTOP_HEARTBEAT >= beatLevel) ) {
+      memset(buf, 0, BUF_SIZE);
+      va_start (va_ap, format);
+#if defined(WIN32)
+      /* Windows lacks vsnprintf */
+      vsprintf(buf, format, va_ap);
+#else /* WIN32 - vsnprintf */
+      vsnprintf(buf, BUF_SIZE-1, format, va_ap);
+#endif /* WIN32 - vsnprintf */
+      va_end (va_ap);
+
+      traceEvent(TRACE_INFO, "HEARTBEAT(%09u)[%s:%d]: %s\n", myGlobals.heartbeatCounter, file, line, buf);
+  }
+}
+#endif

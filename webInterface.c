@@ -1995,6 +1995,18 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   }
 #endif
+#ifdef SHOW_NTOP_HEARTBEAT
+  if (snprintf(buf, sizeof(buf), "%d", myGlobals.heartbeatCounter) < 0)
+      BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Heartbeat (counter)", buf);
+  sendString(texthtml("\n\n", "<tr><td colspan=\"2\">"));
+  sendString("Note: The value of the heartbeat counter is meaningless.  It's just incremented "
+             "in various places. On a busy network, it will grow quickly, on a quiet network "
+             "it will grow slowly.  If it STOPS being incremented, ntop is locked up. "
+             "If you suspect ntop is locked up, check the Mutexes at the end of this report - "
+             "a value in the 'blocked' column for more than a few seconds is a bad sign.");
+  sendString(texthtml("\n\n", "</td></tr>\n"));
+#endif
 
   /* *************************** */
 
@@ -3507,6 +3519,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 	traceEvent(TRACE_INFO, "DEBUG: select returned: %d\n", rc);
 #endif
 	if(rc > 0) {
+          HEARTBEAT(1, "handleWebConnections()", NULL);
 	  /* Now, handle the web connection ends up in SSL_Accept() */
 #ifdef USE_SSLWATCHDOG
 	  sslwatchdogDebug("->hSWC()", SSLWATCHDOG_PARENT, "");

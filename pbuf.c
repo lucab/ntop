@@ -1366,7 +1366,9 @@ void queuePacket(u_char * _deviceId,
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads (dequeue) to run */
 #endif
+    HEARTBEAT(0, "queuePacket(), sleep(1)...", NULL);
     sleep(1);
+    HEARTBEAT(0, "queuePacket(), sleep(1)...woke", NULL);
   } else {
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "About to queue packet... \n");
@@ -1452,6 +1454,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 	       myGlobals.packetQueueLen, myGlobals.maxPacketQueueLen);
 #endif
 
+    HEARTBEAT(9, "dequeuePacket()...processing...", NULL);
     myGlobals.actTime = time(NULL);
     processPacket((u_char*)((long)pktInfo.deviceId), &pktInfo.h, pktInfo.p);
   }

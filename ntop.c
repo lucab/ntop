@@ -105,6 +105,7 @@ void* pcapDispatch(void *_i) {
     if(select(pcap_fd+1, &readMask, NULL, NULL, NULL /* &timeout */ ) > 0) {
       /* printf("dispatch myGlobals.device %s\n", myGlobals.device[i].name);*/
       if(!myGlobals.capturePackets) return(NULL);
+      HEARTBEAT(2, "pcapDispatch()", NULL);
       rc = pcap_dispatch(myGlobals.device[i].pcapPtr, 1, processPacket, (u_char*)_i);
 
       if(rc == -1) {
@@ -138,6 +139,7 @@ void* pcapDispatch(void *_i) {
     } /* else
 	 traceEvent(TRACE_INFO, "1) %d\n", numPkts++);
       */
+    HEARTBEAT(2, "pcapDispatch()", NULL);
   }
 
   return(NULL);
@@ -629,9 +631,11 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
   for(;;) {
     int i;
 
+    HEARTBEAT(0, "scanIdleLoop(), sleep(60)...", NULL);
     sleep(60 /* do not change */);
 
     if(!myGlobals.capturePackets) break;
+    HEARTBEAT(0, "scanIdleLoop(), sleep(60)...woke", NULL);
     myGlobals.actTime = time(NULL);
 
     for(i=0; i<myGlobals.numDevices; i++)
@@ -663,6 +667,7 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
     if(!myGlobals.capturePackets) break;
 
     if(myGlobals.updateLsof) {
+    HEARTBEAT(0, "periodicLsofLoop()", NULL);
 #ifdef LSOF_DEBUG
       traceEvent(TRACE_INFO, "LSOF_DEBUG: Wait please: reading lsof information...\n");
 #endif
@@ -674,7 +679,9 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
       traceEvent(TRACE_INFO, "LSOF_DEBUG: Done with lsof.\n");
 #endif
     }
+    HEARTBEAT(0, "periodicLsofLoop(), sleep(60)...", NULL);
     sleep(60);
+    HEARTBEAT(0, "periodicLsofLoop(), sleep(60)...woke", NULL);
   }
   return(NULL);
 

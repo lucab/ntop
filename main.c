@@ -1063,8 +1063,11 @@ int main(int argc, char *argv[]) {
   pause();
 #endif
 
-  while(!myGlobals.endNtop)
+  while(!myGlobals.endNtop) {
+    HEARTBEAT(0, "main(), sleep(3000)...", NULL);
     sleep(3000);
+    HEARTBEAT(0, "main(), sleep(3000)...woke", NULL);
+  }
 
   return(0);
 }

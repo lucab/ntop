@@ -398,6 +398,13 @@ extern int getopt_long_only ();
 
 #endif /* HAVE_GETOPT_H */
 
+#ifdef SHOW_NTOP_HEARTBEAT
+    #define HEARTBEAT(a, b, ...)     _HEARTBEAT(a, __FILE__, __LINE__, b, __VA_ARGS__)
+    extern void _HEARTBEAT(int beatLevel, char* file, int line, char * format, ...);
+#else
+    #define HEARTBEAT(a, b, ...)     {}
+#endif
+ 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);
 extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);

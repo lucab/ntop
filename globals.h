@@ -492,6 +492,11 @@ typedef struct ntopGlobals {
 #endif
 
   u_char      resetHashNow; /* used for hash reset */
+
+#ifdef SHOW_NTOP_HEARTBEAT
+  u_long heartbeatCounter;
+#endif
+
 } NtopGlobals;
 
 

@@ -189,9 +189,9 @@
 /* #define PRINT_RETRANSMISSION_DATA */
 
 /* Define SHOW_NTOP_HEARTBEAT to see minimal status messages every cycle
- * from various timed processes
+ * from various timed processes. 0-some, 1-lots more, 2-every packet (pain)
  */
-/* #define SHOW_NTOP_HEARTBEAT */
+/* #define SHOW_NTOP_HEARTBEAT 0 */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                   includes                              */
