@@ -337,20 +337,21 @@ int dotted2bits(char *mask) {
 /* Example: "131.114.0.0/16,193.43.104.0/255.255.255.0" */
 
 void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
-			u_short *numNetworks, char *localAddresses, int localAddressesLen, int flagWhat) {
+			u_short *numNetworks, char *localAddresses,
+			int localAddressesLen, int flagWhat) {
   char *strtokState, *address;
   int  laBufferPosition = 0, laBufferUsed = 0, i;
 
+  if((addresses == NULL) || (addresses[0] == '\0'))
+    return;
+  
   traceEvent(CONST_TRACE_NOISY,
              "Processing %s parameter '%s'",
              flagWhat == CONST_HANDLEADDRESSLISTS_MAIN ? "-m | --local-subnets"  :
-                 flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
-                 flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" : "unknown",
+	     flagWhat == CONST_HANDLEADDRESSLISTS_RRD ? "RRD" :
+	     flagWhat == CONST_HANDLEADDRESSLISTS_NETFLOW ? "Netflow white/black list" : "unknown",
              addresses);
-
-  if(addresses == NULL)
-    return;
-
+  
   memset(localAddresses, 0, localAddressesLen);
 
   address = strtok_r(addresses, ",", &strtokState);

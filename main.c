@@ -1079,6 +1079,11 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  if((ifStr == NULL) || (ifStr[0] == '\0')) {
+    traceEvent(CONST_TRACE_FATALERROR, "FATAL ERROR: no interface has been selected. Quitting...");
+    exit(-1);
+  }
+
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
 
   /* ******************************* */

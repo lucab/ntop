@@ -2682,7 +2682,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
   sendString(texthtml("\n", 
                       "<CENTER>\n<P><HR><P>"TABLE_ON"<TABLE BORDER=1>\n"
-                      "<tr><th colspan=\"2\"" TH_BG ">Basic information</tr>\n"));
+                      "<tr><th colspan=2 "DARK_BG"" TH_BG ">Basic information</tr>\n"));
   printFeatureConfigInfo(textPrintFlag, "ntop version", version);
   printFeatureConfigInfo(textPrintFlag, "Built on", buildDate);
   printFeatureConfigInfo(textPrintFlag, "OS", osName);
@@ -2707,7 +2707,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.heartbeatCounter) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Heartbeat (counter)", buf);
-  sendString(texthtml("\n\n", "<tr><td colspan=\"2\">"));
+  sendString(texthtml("\n\n", "<tr><td colspan=2 "DARK_BG">"));
   sendString("Note: The value of the heartbeat counter is meaningless.  It's just incremented "
              "in various places. On a busy network, it will grow quickly, on a quiet network "
              "it will grow slowly.  If it STOPS being incremented, ntop is locked up. "
@@ -2719,7 +2719,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   /* *************************** */
 
   sendString(texthtml("\n\nCommand line\n\n", 
-                      "<tr><th colspan=\"2\">Command line</tr>\n"));
+                      "<tr><th colspan=2 "DARK_BG">Command line</tr>\n"));
 
   sendString(texthtml("Started as....",
                       "<TR><TH "TH_BG" ALIGN=left>Started as</TH><TD "TD_BG" ALIGN=right>"));
@@ -2986,7 +2986,7 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.disableStopcap == TRUE ? "Yes" : "No",
                            "No");
 
-  sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
+  sendString(texthtml("\n\n", "<tr><th colspan=2>"));
   sendString("Note: " CONST_REPORT_ITS_EFFECTIVE "   means that "
 	     "this is the value after ntop has processed the parameter.");
   sendString(texthtml("\n", "<br>\n"));
@@ -2997,7 +2997,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   /* *************************** */
 
   sendString(texthtml("\n\nRun time/Internal\n\n", 
-                      "<tr><th colspan=\"2\"" TH_BG ">Run time/Internal</tr>\n"));
+                      "<tr><th colspan=2 "DARK_BG"" TH_BG ">Run time/Internal</tr>\n"));
   
 #ifndef WIN32
   if(myGlobals.enableExternalTools) {
@@ -3167,7 +3167,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
-  sendString(texthtml("\n\nMemory allocation - data segment\n\n", "<tr><th colspan=\"2\">Memory allocation - data segment</th></tr>\n"));
+  sendString(texthtml("\n\nMemory allocation - data segment\n\n", "<tr><th colspan=2 "DARK_BG">Memory allocation - data segment</th></tr>\n"));
 
   memStats = mallinfo();
 
@@ -3197,7 +3197,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   if(memStats.uordblks + memStats.fordblks != memStats.arena)
     printFeatureConfigInfo(textPrintFlag, "WARNING:", "Used+Free != Allocated");
 
-  sendString(texthtml("\n\nMemory allocation - mmapped\n\n", "<tr><th colspan=\"2\">Memory allocation - mmapped</th></tr>\n"));
+  sendString(texthtml("\n\nMemory allocation - mmapped\n\n", "<tr><th colspan=2 "DARK_BG">Memory allocation - mmapped</th></tr>\n"));
 
   if(snprintf(buf, sizeof(buf), "%d", memStats.hblks) < 0)
     BufferTooShort();
@@ -3210,7 +3210,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 
   if(textPrintFlag == TRUE) {
-    sendString(texthtml("\n\nMemory Usage\n\n", "<tr><th colspan=\"2\">Memory Usage</th></tr>\n"));
+    sendString(texthtml("\n\nMemory Usage\n\n", "<tr><th colspan=2 "DARK_BG">Memory Usage</th></tr>\n"));
 
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadSize) < 0)
       BufferTooShort();
@@ -3257,7 +3257,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
   }
 
-  sendString(texthtml("\n\nHost Memory Cache\n\n", "<tr><th colspan=\"2\">Host Memory Cache</th></tr>\n"));
+  sendString(texthtml("\n\nHost Memory Cache\n\n", "<tr><th colspan=2 "DARK_BG">Host Memory Cache</th></tr>\n"));
 
   if(snprintf(buf, sizeof(buf), 
               "#define MAX_HOSTS_CACHE_LEN %d", MAX_HOSTS_CACHE_LEN) < 0)
@@ -3277,7 +3277,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
 
 #ifdef PARM_USE_SESSIONS_CACHE
-  sendString(texthtml("\n\nSession Memory Cache\n\n", "<tr><th colspan=\"2\">Session Memory Cache</th></tr>\n"));
+  sendString(texthtml("\n\nSession Memory Cache\n\n", "<tr><th colspan=2 "DARK_BG">Session Memory Cache</th></tr>\n"));
 
   if(snprintf(buf, sizeof(buf), 
               "#define MAX_SESSIONS_CACHE_LEN %d", MAX_SESSIONS_CACHE_LEN) < 0)
@@ -3298,7 +3298,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 
   if(textPrintFlag == TRUE) {
-    sendString(texthtml("\n\nMAC/IPX Hash tables\n\n", "<tr><th colspan=\"2\">MAC/IPX Hash Tables</th></tr>\n"));
+    sendString(texthtml("\n\nMAC/IPX Hash tables\n\n", "<tr><th colspan=2 "DARK_BG">MAC/IPX Hash Tables</th></tr>\n"));
 
     if(snprintf(buf, sizeof(buf), "%d", MAX_IPXSAP_NAME_HASH) < 0)
       BufferTooShort();
@@ -3317,7 +3317,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
 #ifdef CFG_MULTITHREADED
 
-  sendString(texthtml("\n\nPacket queue\n\n", "<tr><th colspan=\"2\">Packet queue</th></tr>\n"));
+  sendString(texthtml("\n\nPacket queue\n\n", "<tr><th colspan=2 "DARK_BG">Packet queue</th></tr>\n"));
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.packetQueueLen) < 0)
     BufferTooShort();
@@ -3330,7 +3330,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* **** */
 
-  sendString(texthtml("\n\nHost/Session counts - global\n\n", "<tr><th colspan=\"2\">Host/Session counts - global</th></tr>\n"));
+  sendString(texthtml("\n\nHost/Session counts - global\n\n", "<tr><th colspan=2 "DARK_BG">Host/Session counts - global</th></tr>\n"));
 
   printFeatureConfigInfo(textPrintFlag, "Purge idle hosts", 
 			 myGlobals.enableIdleHosts == 1 ? "Enabled" : "Disabled");
@@ -3369,7 +3369,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   for(i=0; i<myGlobals.numDevices; i++) {
     if(snprintf(buf, sizeof(buf), "\nHost/Session counts - Device %d (%s)\n", i, myGlobals.device[i].name) < 0)
       BufferTooShort();
-    if(snprintf(buf2, sizeof(buf2), "<tr><th colspan=\"2\">Host/Session counts - Device %d (%s)</th></tr>\n", i, myGlobals.device[i].name) < 0)
+    if(snprintf(buf2, sizeof(buf2), "<tr><th colspan=2 "DARK_BG">Host/Session counts - Device %d (%s)</th></tr>\n", i, myGlobals.device[i].name) < 0)
       BufferTooShort();
     sendString(texthtml(buf, buf2));
 
@@ -3404,7 +3404,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* **** */
 
-  sendString(texthtml("\n\nAddress Resolution\n\n", "<tr><th colspan=\"2\">Address Resolution</th></tr>\n"));
+  sendString(texthtml("\n\nAddress Resolution\n\n", "<tr><th colspan=2 "DARK_BG">Address Resolution</th></tr>\n"));
 
   sendString(texthtml("DNS sniffed:\n\n", "<tr><td align=\"center\">DNS sniffed</td>\n<td><table>\n"));
 
@@ -3645,7 +3645,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   /* **** */
 
 #if defined(CFG_MULTITHREADED)
-  sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread counts</th></tr>\n"));
+  sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=2 "DARK_BG">Thread counts</th></tr>\n"));
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numThreads) < 0)
     BufferTooShort();
@@ -3671,7 +3671,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       if(myGlobals.weDontWantToTalkWithYou[i].addr.s_addr != 0) {
 	if(++countBadGuys == 1) {
 	  sendString(texthtml("\n\nIP Address reject list\n\n",
-			      "<tr><th colspan=\"2\">IP Address reject list</th></tr>\n"));
+			      "<tr><th colspan=2 "DARK_BG">IP Address reject list</th></tr>\n"));
 	  sendString(texthtml("\nAddress ... Count ... Last Bad Access ... Lockout Expires\n",
 			      "<tr><th>Rejects</th>"
 			      "<td><table border=\"1\">"
@@ -3735,7 +3735,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   if(myGlobals.isLsofPresent) {
 
-    sendString(texthtml("\n\nlsof data\n\n", "<tr><th colspan=\"2\">lsof data</th></tr>\n"));
+    sendString(texthtml("\n\nlsof data\n\n", "<tr><th colspan=2 "DARK_BG">lsof data</th></tr>\n"));
 
     printFeatureConfigInfo(textPrintFlag, "Updating", myGlobals.updateLsof ? "Yes" : "No");
   
@@ -3746,7 +3746,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* **** */
 
-  sendString(texthtml("Directory (search) order\n\n", "<tr><th colspan=\"2\">Directory (search) order</th></tr>\n"));
+  sendString(texthtml("Directory (search) order\n\n", "<tr><th colspan=2 "DARK_BG">Directory (search) order</th></tr>\n"));
 
   bufLength = sizeof(buf);
   bufPosition = 0;
@@ -3801,7 +3801,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   /* *************************** *************************** */
 
 #ifndef WIN32
-  sendString(texthtml("\n\nCompile Time: ./configure\n\n", "<tr><th colspan=\"2\"" TH_BG ">Compile Time: ./configure</tr>\n"));
+  sendString(texthtml("\n\nCompile Time: ./configure\n\n", "<tr><th colspan=2 "DARK_BG"" TH_BG ">Compile Time: ./configure</tr>\n"));
   printFeatureConfigInfo(textPrintFlag, "./configure parameters", configure_parameters);
   printFeatureConfigInfo(textPrintFlag, "Built on (Host)", host_system_type);
   printFeatureConfigInfo(textPrintFlag, "Built for(Target)", target_system_type);
@@ -3824,7 +3824,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "GNU C (gcc) version", buf);
 
-  sendString(texthtml("\n\nInternationalization (i18n)\n\n", "<tr><th colspan=\"2\"" TH_BG ">Internationalization (i18n)</tr>\n"));
+  sendString(texthtml("\n\nInternationalization (i18n)\n\n", "<tr><th colspan=2 "DARK_BG"" TH_BG ">Internationalization (i18n)</tr>\n"));
 
   printFeatureConfigInfo(textPrintFlag, "i18n enabled",
 #ifdef MAKE_WITH_I18N
@@ -4072,7 +4072,8 @@ void printNtopProblemReport(void) {
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
   v += myGlobals.heartbeatCounter /* If we have it */ ;
 #ifdef PROBLEMREPORTID_DEBUG
-  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat", myGlobals.heartbeatCounter, myGlobals.heartbeatCounter, v);
+  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat", 
+	   myGlobals.heartbeatCounter, myGlobals.heartbeatCounter, v);
   sendString(buf2);
 #endif
 #endif
@@ -4087,7 +4088,9 @@ void printNtopProblemReport(void) {
 
   v += myGlobals.actTime - myGlobals.initialSniffTime;
 #ifdef PROBLEMREPORTID_DEBUG
-  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Elapsed", (myGlobals.actTime - myGlobals.initialSniffTime), (myGlobals.actTime - myGlobals.initialSniffTime), v);
+  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Elapsed",
+	   (myGlobals.actTime - myGlobals.initialSniffTime), 
+	   (myGlobals.actTime - myGlobals.initialSniffTime), v);
   sendString(buf2);
 #endif
 
@@ -4099,7 +4102,8 @@ void printNtopProblemReport(void) {
   snprintf(buf2, sizeof(buf2), "%-12s %48u %08x\n", "Bytes", raw, raw);
   sendString(buf2);
 #endif
-  /* Scramble the nibbles so we have some data high and some low.  Arbitrary: abcdefgh -> fhgdaecb */
+  /* Scramble the nibbles so we have some data high and some low. 
+     Arbitrary: abcdefgh -> fhgdaecb */
   scramble = (raw & 0xf0000000) >> 16 |
     (raw & 0x0f000000) >> 24 |
     (raw & 0x00f00000) >> 16 |
@@ -4110,7 +4114,8 @@ void printNtopProblemReport(void) {
     (raw & 0x0000000f) << 24;
   v ^= scramble;
 #ifdef PROBLEMREPORTID_DEBUG
-  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)", scramble, scramble, v);
+  snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)", 
+	   scramble, scramble, v);
   sendString(buf2);
 #endif
 
