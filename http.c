@@ -55,7 +55,7 @@ struct _HTTPstatus HTTPstatus[] = {
     { 304, "Not Modified", NULL },
     { 305, "Use Proxy", NULL },
     { 400, "Bad Request", "The specified request is invalid." },
-    { 401, "UnmyGlobals.authorized", "UnmyGlobals.authorized to access the document." },
+    { 401, "Unauthorized", "Unauthorized to access the document." },
     { 402, "Payment Required", NULL },
     { 403, "Forbidden", "Server refused to fulfill your request." },
     { 404, "Not Found", "The server cannot found the page requested." },
@@ -75,7 +75,7 @@ struct _HTTPstatus HTTPstatus[] = {
     { 502, "Bad Gateway", NULL },
     { 503, "Service Unavailable", NULL },
     { 504, "Gateway Time-out", NULL },
-    { 505, "HTTP Version not supported", "This server don't support the specified HTTP myGlobals.version." },
+    { 505, "HTTP Version not supported", "This server don't support the specified HTTP version." },
 };
 
 /*
@@ -231,7 +231,7 @@ static int readHTTPheader(char* theRequestedURL,
 	            (strncmp(&lineStr[idxChar-3], "1.1", 3) != 0)) {
 	    errorCode = HTTP_INVALID_VERSION;
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "Unsupported HTTP myGlobals.version.\n");
+	    traceEvent(TRACE_INFO, "Unsupported HTTP version.\n");
 #endif
 
 	  } else {
@@ -1416,7 +1416,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
 		 "Decnet<li>AppleTalk<li>Netbios<li>TCP/UDP<ul><li>FTP<li>"
 		 "HTTP<li>DNS<li>Telnet<li>SMTP/POP/IMAP<li>SNMP<li>\n");
       sendString("NFS<li>X11</ul></UL>\n<p>\n");
-      sendString("<b>ntop</b>'s myGlobals.author strongly believes in <A HREF=http://www.opensource.org/>\n");
+      sendString("<b>ntop</b>'s author strongly believes in <A HREF=http://www.opensource.org/>\n");
       sendString("open source software</A> and encourages everyone to modify, improve\n ");
       sendString("and extend <b>ntop</b> in the interest of the whole Internet community according\n");
       sendString("to the enclosed licence (see COPYING).<p>Problems, bugs, questions, ");
@@ -1588,16 +1588,16 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
       sendString("different from the initial one for several reasons. In particular it: <ul>\n");
       sendString("<li>is much more sophisticated <li>has both a command line and a web interface\n");
       sendString("<li>is capable of handling both IP and non IP protocols </ul> <p> Although it\n");
-      sendString("might not seem so, <b>ntop</b> has definitively more than an myGlobals.author.\n");
+      sendString("might not seem so, <b>ntop</b> has definitively more than an author.\n");
       sendString("<A HREF=\"mailto:stefano@ntop.org\">Stefano Suin</A> has contributed with ");
-      sendString("some code fragments to the myGlobals.version 1.0 of <b>ntop</b>\n");
+      sendString("some code fragments to the version 1.0 of <b>ntop</b>\n");
       sendString(". In addition, many other people downloaded this program, tested it,\n");
       sendString("joined the <A HREF=http://mailserver.unipi.it/lists/ntop/archive/>ntop mailing list</A>,\n");
       sendString("reported problems, changed it and improved significantly. This is because\n");
-      sendString("they have realised that <b>ntop</b> doesn't belong uniquely to its myGlobals.author, but\n");
+      sendString("they have realised that <b>ntop</b> doesn't belong uniquely to its author, but\n");
       sendString("to the whole Internet community. Their names are throught "
 		 "the <b>ntop</b> code.<p>");
-      sendString("The myGlobals.author would like to thank all these people who contributed to <b>ntop</b> and\n");
+      sendString("The author would like to thank all these people who contributed to <b>ntop</b> and\n");
       sendString("turned it into a first class network monitoring tool. Many thanks guys!<p>\n");
       sendString("</FONT><p>\n");
     } else if(strncmp(pageName, INFO_NTOP_HTML, strlen(INFO_NTOP_HTML)) == 0) {
