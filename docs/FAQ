@@ -72,11 +72,22 @@ A. ntop used to optionally store some data in a SQL database.  The code was
 
 
 Q2. The archive isn't indexed, so I can't search it.
-A. Use gmane: http://search.gmain.org (lists are called gmane.linux.ntop.general
-   and gmane.linux.ntop.devel) or use Google with the keyword ntop and the site 
-   option "site:listgateway.unipi.it" plus your query:
+A. Yes, but it's easy to search using search engines or mail archives.
+
+   Google: You need to restrict the search to the U of Pisa mail list
+   gateway, i.e.:
 
         site:listgateway.unipi.it ntop freebsd
+
+   Two 'mail archive' sites that I know of (as of March 2005) are:
+
+   gmane: http://search.gmane.org (our lists are renamed as gmane.linux.ntop.general
+   and gmane.linux.ntop.devel).
+
+   The Mail Archive:
+
+       http://www.mail-archive.com/ntop-dev@unipi.it/
+       http://www.mail-archive.com/ntop@unipi.it/
 
 
 Q3. ntop crashed and the last log message is "xxxxx".
@@ -104,6 +115,7 @@ A. There are lots of reasons - look for "Q. Why does ntop drop packets?" below.
    Short version, is that as long as it's random, the information you glean from ntop
    (32% of our usage is P2P Music) is still valid.  But you are probably understating
    any problems.
+
 
 Q6. The docs at ntop.org say ...
 A. Stop right there.  They're out of date (notice, for example, the man page is
@@ -1668,16 +1680,25 @@ Q. ntop is unable to open its database file.  Specifically:
      24/Jul/2003 15:15:23 Initializing IP services...
      <snip />
      24/Jul/2003 15:15:23 Initializing GDBM...
-     24/Jul/2003 15:15:23 Database '/var/ntop/addressCache.db' open failed: File
-         open error
+     24/Jul/2003 15:15:23  ***FATAL_ERROR*** open of ...name... failed: can't be writer
      24/Jul/2003 15:15:23 Possible solution: please use '-P <directory>'
 A. Multiple possible choices...
-    1. The directory /var/ntop doesn't exist.  Create it or, as the message
-       says, use the -P parameter to point ntop at another directory.
-    2. You many not have read/write rights in /var/ntop - if you're running in
-       non-promiscuous mode from a user other than root.
-    3. Another instance of ntop may already be running, so it has the file open
-       and locked.
+
+   * Another ntop already running
+
+   (Most common) You forgot the -P parameter, and ntop is using a default value that
+   doesn't exist.  Just as the message says, use the -P parameter to point ntop at 
+   the directory you want it to use.
+
+   * Some sort of file system problem (non-existent directory, permissions, etc.)
+
+   1. The directory shown doesn't exist.  Create it.
+
+   2. You many not have read/write rights in that directory.
+   This can occur if you run ntop both as root and (as recommended) as a non-root user.
+
+   3. Another instance of ntop may already be running, so it has the file open and locked.
+
 
 Q. What's inside the .db files and what's their format?
 A. The files are stored in GDBM format. You can dump their content using tools like
@@ -2399,6 +2420,9 @@ A. (These are the ones ntop monitors if the user does not supply a -p parameter)
    If you add protocols to /etc/services, you can refer to them by name on the
    -p parameter.
 
+   REMEMBER: You must define the list using the format illustrated in the ntop
+   man page.  Don't try to read /etc/services.  It will fail.
+
    The list changes over time as P2P protocols appear and disappear.  Check the
    cvs and diff ntop.c (around line 550 in void addDefaultProtocols() if you
    want the history.
@@ -3102,8 +3126,9 @@ Q. What does this log message (and others like it) mean?
    **WARNING** releaseMutex() call with an UN-LOCKED mutex [hash.c:559] last
                unlock [pid 22176, pbuf.c:2598]
 A. Those messages are part of an error check in our mutex handling routines.
-
-   Actually they pretty much mean what they say.
+   
+   If things are working properly, then these messages tell us things are 
+   really, really, really wrong.
 
    releaseMutex() call with an UN-LOCKED mutex means that the corresponding
    accessMutex() call never occured.
@@ -3111,91 +3136,48 @@ A. Those messages are part of an error check in our mutex handling routines.
    releaseMutex() call with an UN-INITIALIZED mutex means that the 
    access/release occured before the createMutex().
 
-   The file/line comments, [hash.c:559] last unlock [pid 22176, pbuf.c:2598],
-   tell you where the access/release was called from (e.g. hash.c @ 559) and
-   where the last recorded release was.
+   The file/line comments, e.g. [hash:559], tell you where the access/release 
+   was called from (e.g. hash.c @ 559) and where the last recorded release was.
 
    There are others, look in leaks.c for the entire set.
+
 
 Q. How serious are they?
 A. None of these stop ntop from processing, but they're indications of
    unprotected accesses to shared data areas, which could lead to lost counts.
 
-   Now understand that there's one set of conditions where I believe it doesn't
-   matter, and that's when there are multiple NICs and multiple processors.  
-   Under some circumstances - not well understood - gcc with the -O2 option 
-   reorders the executable code in such a way as to cause these messages.  
-   Those are spurious.
+   In the development cycle after 3.1 was released, I was able to track down
+   and fix the remaining cause of spurious messages (but I've thought this was
+   fixed before).
 
-   But for most users, these warning messages shouldn't be ignored if they occur
-   often.
-
-   The problem is that a POSIX mutex doesn't allow for additional data, 
-   such as we're using to track the access / release information.  So that 
-   data is, itself protected by a single global mutex.  You can't hold that
-   global mutex across an access call, or you'll deadlock ntop (either through
-   normal mutex processing or something called 'priority inversion').
-
-   So we use this pattern instead:
-
-      access(stateChangeMutex)
-        set state data
-      release(stateChangeMutex)
-
-      access(mutex) or release(mutex)
-
-      access(stateChangeMutex)
-        set state data
-      release(stateChangeMutex)
-
-   The problem is that these updates aren't atomic, so it's possible to have
-   the state data updated by another thread:
-
-      ---------thread A---------         ---------thread B---------
-      access(stateChangeMutex)
-        set state data
-                                         access(stateChangeMutex)
-                                         *****blocked****
-      release(stateChangeMutex)
-                                         (resumes)
-                                           set state data
-                                         release(stateChangeMutex)
-      access(mutex)
-      ****blocked****
-                                         release(mutex)
-      (resumes)
-                                         access(stateChangeMutex)
-                                           set state data
-                                         release(stateChangeMutex)
-      
-      access(stateChangeMutex)
-        set state data
-      release(stateChangeMutex)
-
-      Unfortunately, this is equally likely:
-
-      ---------thread A---------         ---------thread B---------
-      access(stateChangeMutex)
-        set state data
-                                         access(stateChangeMutex)
-                                         *****blocked****
-      release(stateChangeMutex)
-                                         (resumes)
-                                           set state data
-                                         release(stateChangeMutex)
-      access(mutex)
-      ****blocked****
-                                         release(mutex)
-      (resumes)
-      access(stateChangeMutex)
-        set state data
-      release(stateChangeMutex)
-                                         access(stateChangeMutex)
-                                           set state data
-                                         release(stateChangeMutex)
+   For most users, these warning messages shouldn't be ignored.
 
 
-   So at the end, you have an inaccurate picture in the state table.
+   The root of the problem is that POSIX mutexes are stupid and don't record
+   a lot of state information.  To debug things like deadlock, it's really,
+   really, nice to know where the mutex was locked from.
+
+   So ntop has added 'extra' information to the mutex data for recording this.
+   This added data is not protected by the mutex and could get out of sync.
+   So we lock a state change mutex whenever we are changing the state data.
+
+   BUT: You can't hold the state change mutex while waiting for the main mutex
+   or you deadlock.
+
+   So the 'access' call becomes this pattern (see utils.c):
+
+   lock(statechangemutex)
+     set state data
+
+     tryLock(mutex)
+     if(fails) {
+       unlock(statechangemutex)
+       lock(mutex)  <-- which may block, but does not hold the statechangemutex!
+       lock(statechangemutex)
+     }
+     set state data
+     unlock(statechangemutex)
+
 
 Q. Threads. ugh...
 A. There's a good set of articles on POSIX threads at
@@ -3311,7 +3293,7 @@ A. Oh yes it does... for http: connections
 
 
 Q. My filter doesn't work!  I'm running ntop like this:
-      /usr/local/bin/ntop -u nobody -L -d -E -w 3000 -S 2 \
+      /usr/local/bin/ntop -u nobody -L -d -E -w 3000 \
                       -m 192.168.10.0/24,xxx.xxx.xxx.xxx/32 \
                       -M -i eth0,eth1 \
                       (src net 192.168.10.0/24 or src host xxx.xxx.xxx.xxx ) \
@@ -5256,6 +5238,13 @@ A. ntop has special parameters under Win32
    Remember, ntop /i and ntop /d don't actually run the service - you need to
    start it.
 
+   REMEMBER: there are TWO ways to run ntop, one as a service, one 'interactively' (/c).
+
+   They are totally separate.  Just because you ran ntop w/ interactively with some parameter 
+   set, does not affect the stored parameter set for the service.
+
+   To change the stored parameters, reinstall the service vi /i.
+
 
 Q. How do I figure out what my network interface numbers are for the -I
    parameter?
@@ -6114,5 +6103,5 @@ $4 = {dptr = 0x0, dsize = 4}
 ==========================================================================
 ==========================================================================
 Original version Luca Deri, 1999-2001
-Updated Burton M. Strauss III 2002, 2003, 2004
+Updated Burton M. Strauss III 2002, 2003, 2004, 2005
 
