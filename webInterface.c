@@ -7769,7 +7769,7 @@ int printNtopLogReport(int printAsText) {
 /* *************************** */
 
 void printNtopProblemReport(void) {
-  char buf[LEN_MEDIUM_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER];
 #ifdef PROBLEMREPORTID_DEBUG
   char buf2[256];
 #endif
