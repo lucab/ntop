@@ -95,7 +95,6 @@ static struct option const long_options[] = {
   { "protocols",                        required_argument, NULL, 'p' },
   { "create-suspicious-packets",        no_argument,       NULL, 'q' },
   { "refresh-time",                     required_argument, NULL, 'r' },
-  { "max-hash-size",                    required_argument, NULL, 's' },
   { "trace-level",                      required_argument, NULL, 't' },
 
 #ifndef WIN32
@@ -360,9 +359,9 @@ static void parseOptions(int argc, char * argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:s:t:w:A:B:D:F:MP:R:S:U:VW:12";
+  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:t:w:A:B:D:F:MP:R:S:U:VW:12";
 #else
-  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:s:t:u:v:w:A:B:D:EF:IKLMNP:R:S:U:VW:12";
+  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:t:u:v:w:A:B:D:EF:IKLMNP:R:S:U:VW:12";
 #endif
   int opt;
 
