@@ -895,6 +895,21 @@ ntop.html: ntop.8
 	@echo "-----------------------------------------------"
 	@echo ""
 
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# rules to translate FAQ file to HTML
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+faq.html: docs/FAQ
+	@echo ""
+	@echo "-----------------------------------------------"
+	@echo "Converting $< to HTML format  .... Please wait"
+	@echo ""
+	@awk -f utils/faqtohtml.awk $< | sed 's/_//g' | sed 's/[ -~]//g' > html/faq.html
+	@cp -f html/faq.html faq.html
+	@echo "$@ done !"
+	@echo "-----------------------------------------------"
+	@echo ""
+
 ntop-cert.pem:
 	openssl req -new -x509 -sha1 -extensions v3_ca -nodes -days 365 -out cert.pem
 	cat privkey.pem cert.pem > ntop-cert.pem

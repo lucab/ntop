@@ -57,6 +57,7 @@ DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
               SUPPORT_NTOP.txt THANKS \
               ntop.8 ntop.txt ntop.html \
+              faq.html \
               ntop-cert.pem
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png html/*.css html/statsicons \
@@ -173,6 +174,21 @@ ntop.html: ntop.8
 	@echo ""
 	@groff -mandoc -Thtml $< | sed 's/_//g' | sed 's/[ -~]//g' > html/ntop.html
 	@cp -f html/ntop.html ntop.html
+	@echo "$@ done !"
+	@echo "-----------------------------------------------"
+	@echo ""
+
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# rules to translate FAQ file to HTML
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+faq.html: docs/FAQ
+	@echo ""
+	@echo "-----------------------------------------------"
+	@echo "Converting $< to HTML format  .... Please wait"
+	@echo ""
+	@awk -f utils/faqtohtml.awk $< | sed 's/_//g' | sed 's/[ -~]//g' > html/faq.html
+	@cp -f html/faq.html faq.html
 	@echo "$@ done !"
 	@echo "-----------------------------------------------"
 	@echo ""
