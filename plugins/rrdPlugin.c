@@ -1075,6 +1075,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     /* ****************************************************** */
 
     if(dumpHosts) {
+#ifdef CFG_MULTITHREADED
+      accessMutex(&myGlobals.hostsHashMutex, "dumpHosts");
+#endif
       for(i=1; i<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; i++) {
 	HostTraffic *el;
 
@@ -1193,6 +1196,9 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  }
 	}
       }
+#ifdef CFG_MULTITHREADED
+      accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
+#endif    
     }
 
     /* ************************** */

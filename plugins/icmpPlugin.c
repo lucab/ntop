@@ -138,14 +138,16 @@ static int sortICMPhosts(const void *_a, const void *_b) {
     break;
 
   default:
-#ifdef CFG_MULTITHREADED
+#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
+  if(myGlobals.numericFlag == 0) 
     accessMutex(&myGlobals.addressResolutionMutex, "addressResolution");
 #endif
 
     rc = strcasecmp((*a)->hostSymIpAddress, (*b)->hostSymIpAddress);
 
-#ifdef CFG_MULTITHREADED
-    releaseMutex(&myGlobals.addressResolutionMutex);
+#if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
+    if(myGlobals.numericFlag == 0) 
+      releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return(rc);
     break;

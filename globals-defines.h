@@ -1596,6 +1596,7 @@
  * Default port to use for sflow.
  */
 #define DEFAULT_SFLOW_COLLECTOR_PORT_STR    "6343"
+#define DEFAULT_SFLOW_COLLECTOR_PORT        atoi(DEFAULT_SFLOW_COLLECTOR_PORT_STR)
 
 /*
  *  Sampling rate - sflow samples every n-th packet

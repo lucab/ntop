@@ -1768,7 +1768,7 @@ static void initSflowInSocket() {
 
     myGlobals.sflowDest.sin_addr.s_addr = 0;
     myGlobals.sflowDest.sin_family      = AF_INET;
-    myGlobals.sflowDest.sin_port        = (int)htons(DEFAULT_SFLOW_COLLECTOR_PORT_STR);
+    myGlobals.sflowDest.sin_port        = (int)htons(DEFAULT_SFLOW_COLLECTOR_PORT);
 
     if(fetchPrefsValue("sflow.sflowDest", value, sizeof(value)) == -1)
       storePrefsValue("sflow.sflowDest", "");

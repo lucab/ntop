@@ -694,7 +694,7 @@ int main(int argc, char *argv[]) {
   mtrace();
 #endif
 
-  bufLen=0;
+  bufLen=1;
   for (i=0; i<argc; i++) {
      bufLen += 1 + strlen(argv[i]);
   }
