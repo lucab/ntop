@@ -1629,7 +1629,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    if ((el->fullDomainName == NULL)
 	       || (el->fullDomainName[0] == '\0')
 	       || (el->dotDomainName == NULL)
-	       || (el->hostSymIpAddress[0] == '\0')
+	       || (el->hostResolvedName[0] == '\0')
 	       || broadcastHost(el)
 	       ) {
 	      continue;

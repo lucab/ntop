@@ -1519,8 +1519,9 @@ static int initNetFlowFunct(void) {
   dummyHost->hostIp4Address.s_addr = 0x00112233;
   strncpy(dummyHost->hostNumIpAddress, "&nbsp;",
 	  sizeof(dummyHost->hostNumIpAddress));
-  strncpy(dummyHost->hostSymIpAddress, "white/black list dummy",
-	  sizeof(dummyHost->hostSymIpAddress));
+  strncpy(dummyHost->hostResolvedName, "white/black list dummy",
+	  sizeof(dummyHost->hostResolvedName));
+  dummyHost->hostResolvedNameType = FLAG_HOST_SYM_ADDR_TYPE_FAKE;
   strcpy(dummyHost->ethAddressString, "00:00:00:00:00:00");
   setEmptySerial(&dummyHost->hostSerial);
   dummyHost->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);

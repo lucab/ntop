@@ -85,9 +85,7 @@ static int sortICMPhostsHost(const void *_a, const void *_b) {
   HostTraffic **b = (HostTraffic **)_b;
   int rc;
 
-  accessAddrResMutex("addressResolution");
-  rc = strcasecmp((*a)->hostSymIpAddress, (*b)->hostSymIpAddress);
-  releaseAddrResMutex();
+  rc = cmpFctnResolvedName(a, b);
   return(rc);
 }
 
@@ -525,7 +523,9 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 
   sendString("<CENTER>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON" "DARK_BG">"
-              "<TH "TH_BG" rowspan=\"2\" valign=\"bottom\">%s?%s%d>Host %s</A></TH>\n"
+              "<TH "TH_BG" rowspan=\"2\" valign=\"bottom\">%s?%s%d>Host %s</A>"
+              CONST_ABOUT_SORTING_THIS_COL
+              "</TH>\n"
 	      "<TH "TH_BG" colspan=\"2\">Bytes</TH>\n"
               "<TH "TH_BG" colspan=\"11\">Sent/Recived by ICMP Type</TH>\n"
 	      "</TR>\n",
@@ -636,6 +636,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
     }
 
   sendString("</TABLE>\n<p></CENTER>\n");
+
 }
 
 /* ******************************* */
@@ -723,7 +724,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	    r[tot] += (float)(hosts[i]->icmpInfo->icmpMsgRcvd[j].value);
 	  }
 
-	  lbls[tot++] = hosts[i]->hostSymIpAddress;
+	  lbls[tot++] = hosts[i]->hostResolvedName;
 	}
       }
 
