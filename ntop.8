@@ -19,8 +19,6 @@ ntop \- display top network users
 .RB [ -c | --sticky-hosts]
 .RB [ -f | --traffic-dump-file
 .IR file> ]
-.RB [ -g | --cisco-netflow-host
-.IR <host:port> ]
 .RB [ -h | --help ]
 .RB [ -j | --border-sniffer-mode ]
 .RB [ -k | --filter-expression-in-extra-frame ]
@@ -137,11 +135,6 @@ will display.
 
 .It2 -f --traffic-dump-file
 Specifies the file containing tcpdump captured traffic that has to be used by ntop. Note: if you specify -f ntop will not capture any traffic after the file has been read. This option is mostly used for debug purposes.
-
-.It2 -g --cisco-netflow-host
-Exports
-.B ntop
-traffic information in Cisco NetFlow V5 (http://www.cisco.com/warp/public/cc/pd/iosw/ioft/neflct/tech/napps_wp.htm) format. The flag specifies (in http-like host format) the address (IP:port) of a NetFlow client such as ftp://ftp.net.ohio-state.edu/users/maf/cisco/.
 
 .It2 -h --help
 Print help information for 
