@@ -20,7 +20,9 @@ ____ Platform __________ _Version_ _ Thread Mode_ ___________ Hw _______________
   i?86-pc-solaris2.8?     |2.0.99RC2|     MT       | Generic i86pc i386                | ???
   i686-pc-linux-gnu       |2.0.99RC2|     MT       | Red Hat Linux 7.2                 | gcc 2.96-98
   i686-pc-linux-gnu       |2.0.99RC2|     MT       | UserMode Linux - RedHat 7.2       | gcc 2.96-98
-  i686-pc-linux-gnu       |2.0.99RC2|     MT       | Linux-from-Scratch (2.4.13 kernel)| gcc 2.95.2.1
+  i686-pc-linux-gnu  DUAL |2.0.99RC2|     MT       | Linux-from-Scratch (2.4.13 kernel)| gcc 2.95.2.1
+  i686-pc-linux-gnu  DUAL |2.0.99RC2|     MT       | SuSE Linux 8.0                    | gcc 2.95.3
+  i686-pc-linux-gnu       |2.0.99RC2|     MT       | SuSE Linux 7.3                    | gcc 2.95.3
 
 
 
