@@ -1395,6 +1395,9 @@ typedef struct ntopGlobals {
   int basentoppid;         /* Used for writing to /var/run/ntop.pid (or whatever) */
                            /*XML n basentoppid          Execenv          "" */
 
+  int childntoppid;        /* Zero unless we're in a child */
+                           /*XMLNOTE ignore this - transient */
+
 #ifdef MAKE_WITH_XMLDUMP
   char hostName[MAXHOSTNAMELEN];
                            /*XMLNOTE skip - it's in the header */

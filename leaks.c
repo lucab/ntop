@@ -46,6 +46,7 @@ typedef struct memoryBlock {
 static MemoryBlock *theRoot = NULL;
 static char tmpStr[255];
 static int traceAllocs = 0;
+static int glib23xMessageWritten = 0;
 #ifdef MEMORY_DEBUG
 static PthreadMutex leaksMutex;
 #endif
@@ -591,6 +592,20 @@ void ntop_safefree(void **ptr, char* file, int line) {
 	       file, line);
   } else {
 #ifndef USE_GC
+   /* **********DIAGNOSTIC**********
+      * Enable this code to look   *
+      * for potential glibc 2.3.x  *
+      * problems with free() in    *
+      * fork()ed child             *
+      ******************************
+      if (myGlobals.childntoppid != 0) {
+          traceEvent(CONST_TRACE_NOISY, "GLIBC23X: free in fork()ed child @ %s:%d", file, line);
+          if (glib23xMessageWritten == 0) {
+              traceEvent(CONST_TRACE_NOISY, "GLIBC23X: Please notify ntop-dev of NEW occurances");
+              glib23xMessageWritten = 1;
+          }
+      }
+      **********DIAGNOSTIC********** */
       free(*ptr);
 #endif
     *ptr = NULL;

@@ -3367,6 +3367,9 @@ void setHostFingerprint(HostTraffic *srcHost) {
      || (strlen(srcHost->fingerprint) < 28))
     return;
 
+  if(myGlobals.childntoppid != 0)
+    return; /* Reporting fork()ed child, don't update! */
+
   accessAddrResMutex("makeHostLink");
 
   snprintf(fingerprint, sizeof(fingerprint)-1, "%s", srcHost->fingerprint);

@@ -823,6 +823,35 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 
 /* ************************************************************ */
 
+#ifdef CFG_MULTITHREADED
+void ReinitMutexes (void) {
+
+/*
+ * Although the fork()ed child gets a copy of the storage for the mutexes,
+ * in fact, these are invalid copies and the mutex must be cleared and
+ * reinitialized.  Read man pthread_atfork for lots more...
+ *
+ * Note that once this reinit happens, THEY ARE NOT THE SAME MUTEX.
+ * They have the same 'name', but are different blocks of (unshared) storage.
+ *
+ * Although the ntop 2.2 code has the ILLUSION that the resources are protected
+ * they are not!  The code is wrong, but a real fix will have to be in 2.3...
+ * (BMS 06-2003, ntop 2.2c)
+ */
+  createMutex(&myGlobals.gdbmMutex);        /* data to synchronize thread access to db files */
+  createMutex(&myGlobals.tcpSessionsMutex); /* data to synchronize TCP sessions access */
+  createMutex(&myGlobals.purgePortsMutex);  /* data to synchronize port purge access */
+  createMutex(&myGlobals.packetQueueMutex);
+  createMutex(&myGlobals.hostsHashMutex);
+
+ #ifdef MAKE_ASYNC_ADDRESS_RESOLUTION
+  if(myGlobals.numericFlag == 0) {
+    createMutex(&myGlobals.addressResolutionMutex);
+  }
+ #endif
+}
+#endif /* CFG_MULTITHREADED */
+
 /*
  * Initialize all the threads used by ntop to:
  * a) sniff packets from NICs and push them in internal data structures
@@ -834,6 +863,9 @@ void initThreads(void) {
   int i;
 
 #ifdef CFG_MULTITHREADED
+
+  i = pthread_atfork(NULL, NULL, &ReinitMutexes);
+  traceEvent(CONST_TRACE_INFO, "NOTE: atfork() handler registered for mutexes, rc %d", i);
 
   /*
    * Create two variables (semaphores) used by functions in pbuf.c to queue packets

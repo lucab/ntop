@@ -1092,6 +1092,8 @@ static int checkURLsecurity(char *url) {
 /* ************************* */
 
 static RETSIGTYPE quitNow(int signo _UNUSED_) {
+  traceEvent(CONST_TRACE_ERROR, "http generation failed, alarm() tripped. Please report this to ntop-dev list!");
+  returnHTTPrequestTimedOut();
   exit(0);
 }
 
@@ -1530,6 +1532,12 @@ static int returnHTTPPage(char* pageName,
 	  compressFile = 0;
 	  return(0);
 	} else {
+
+          /* This is zero in the parent copy of the structure,
+             make it non-zero here so we can tell later on  (BMS 2003-06)
+           */
+          myGlobals.childntoppid = getpid();
+
 #ifdef MAKE_WITH_HTTPSIGTRAP
           signal(SIGSEGV, httpcleanup);
           signal(SIGHUP,  httpcleanup);
@@ -1540,7 +1548,6 @@ static int returnHTTPPage(char* pageName,
           signal(SIGFPE,  httpcleanup);
           signal(SIGKILL, httpcleanup);
           signal(SIGPIPE, httpcleanup);
-          signal(SIGALRM, httpcleanup);
           signal(SIGTERM, httpcleanup);
           signal(SIGUSR1, httpcleanup);
           signal(SIGUSR2, httpcleanup);
@@ -1568,7 +1575,7 @@ static int returnHTTPPage(char* pageName,
 	  if(myGlobals.webPort > 0) closeNwSocket(&myGlobals.sock);
 
 	  signal(SIGALRM, quitNow);
-	  alarm(120); /* Don't freeze */
+	  alarm(15); /* Don't freeze */
 	}
       }
     }
