@@ -1132,10 +1132,11 @@ AC_SUBST(DBFILE_DIR)
 dnl> temporary
 AC_DEFINE_UNQUOTED(RETSIGTYPE, void)
 
+dnl> To re-enable pep move the following line into the list below
+dnl> plugins/pep/Makefile
 AC_OUTPUT([
 Makefile
 plugins/Makefile
-dnl> plugins/pep/Makefile
 intop/Makefile
 ntop-config
 ], [
