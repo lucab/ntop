@@ -44,7 +44,8 @@ typedef struct LsHostNote {
   char note[50];
 } LsHostNote;
 
-static void handleLsPacket(const struct pcap_pkthdr *h _UNUSED_,
+static void handleLsPacket(u_char *_deviceId _UNUSED_, 
+			   const struct pcap_pkthdr *h _UNUSED_,
 			   const u_char *p) {
   struct ip ip;
   struct ether_header *ep;
@@ -232,7 +233,7 @@ static void handleLsHTTPrequest(char* url) {
     /* ================================================================== */
 
 
-    HostT = findHostByNumIP(intoa(tablehost[entry].HostIpAddress));
+    HostT = findHostByNumIP(intoa(tablehost[entry].HostIpAddress), actualReportDeviceId);
     if ( HostT )
       tmp = makeHostLink(HostT,LONG_FORMAT,0,0);
     else

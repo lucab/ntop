@@ -1345,7 +1345,7 @@ typedef struct ipGlobalSession {
 /* **************** Plugin **************** */
 
 typedef void(*VoidFunc)(void);
-typedef void(*PluginFunc)(const struct pcap_pkthdr *h, const u_char *p);
+typedef void(*PluginFunc)(u_char *_deviceId, const struct pcap_pkthdr *h, const u_char *p);
 typedef void(*HashResizePluginFunc)(u_int oldSize, u_int newSize, int* mappings);
 typedef void(*PluginHTTPFunc)(char* url);
 

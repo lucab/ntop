@@ -66,7 +66,7 @@ extern short screenNumber, columnSort;
 /* Threads */
 
 /* reportUtils.c */
-extern void formatUsageCounter(UsageCounter usageCtr, TrafficCounter maxValue);
+extern void formatUsageCounter(UsageCounter usageCtr, TrafficCounter maxValue, int actualDeviceId);
 extern void printTableDoubleEntry(char *buf, int bufLen,
 				  char *label, char* color,
 				  float totalS, float percentageS,
@@ -90,18 +90,18 @@ extern void getProtocolDataReceived(TrafficCounter *c, TrafficCounter *d,
 				    TrafficCounter *e,  HostTraffic *el);
 extern void printHostThtpShort(HostTraffic *el, short dataSent);
 extern int cmpHostsFctn(const void *_a, const void *_b);
-extern void printPacketStats(HostTraffic *el);
-extern void printHostTrafficStats(HostTraffic *el);
-extern void printHostFragmentStats(HostTraffic *el);
-extern void printTotalFragmentStats(HostTraffic *el);
-extern void printHostContactedPeers(HostTraffic *el);
+extern void printPacketStats(HostTraffic *el, int actualDeviceId);
+extern void printHostTrafficStats(HostTraffic *el, int actualDeviceId);
+extern void printHostFragmentStats(HostTraffic *el, int actualDeviceId);
+extern void printTotalFragmentStats(HostTraffic *el, int actualDeviceId);
+extern void printHostContactedPeers(HostTraffic *el, int actualDeviceId);
 extern char *getSessionState(IPSession *session);
-extern void printHostSessions(HostTraffic *el, u_int elIdx);
+extern void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId);
 extern u_short isHostHealthy(HostTraffic *el);
-extern void printHostDetailedInfo(HostTraffic *el);
+extern void printHostDetailedInfo(HostTraffic *el, int actualDeviceId);
 extern void printServiceStats(char* svcName, ServiceStats* ss,
 			      short printSentStats);
-extern void printHostUsedServices(HostTraffic *el);
+extern void printHostUsedServices(HostTraffic *el, int actualDeviceId);
 extern void printTableEntry(char *buf, int bufLen,
 			    char *label, char* color,
 			    float total, float percentage);
@@ -111,8 +111,8 @@ extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 					TrafficCounter tcSent, 
 					TrafficCounter tcRcvd);
 extern char* getNbNodeType(char nodeType);
-extern void dumpNtopHashes(char*);
-void dumpNtopHashIndexes(char* options);
+extern void dumpNtopHashes(char*, int actualDeviceId);
+void dumpNtopHashIndexes(char* options, int actualDeviceId);
 void dumpNtopTrafficInfo(char* options);
 
 /* report.c */
@@ -127,21 +127,21 @@ extern void addPageIndicator(char *url, u_int beginIdx,
 			     u_int numEntries, u_int linesPerPage,
 			     int revertOrder, int numCol);
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum);
-extern void printAllSessionsHTML(char* host);
-extern void printLocalRoutersList(void);
+extern void printAllSessionsHTML(char* host, int actualDeviceId);
+extern void printLocalRoutersList(int actualDeviceId);
 extern void printSession(IPSession *theSession, u_short sessionType,
                          u_short sessionCounter);
 extern void printIpAccounting(int remoteToLocal, int sortedColumn,
 			      int revertOrder, int pageNum);
 extern void printHTMLtrailer(void);
 extern void returnHTTPredirect(char* destination);
-extern void printActiveTCPSessions(void);
+extern void printActiveTCPSessions(int actualDeviceId);
 extern void printIpProtocolUsage(void);
 extern void printBar(char *buf, int bufLen, unsigned short percentage,
                      unsigned short maxPercentage, unsigned short ratio);
 extern void printIpProtocolDistribution(int mode, int revertOrder);
 extern void printProtoTraffic(void);
-extern void printProcessInfo(int processPid);
+extern void printProcessInfo(int processPid, int actualReportDeviceId);
 extern void printLsofData(int mode);
 extern void printIpTrafficMatrix(void);
 extern void printThptStatsMatrix(int sortedColumn);

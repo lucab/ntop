@@ -590,35 +590,35 @@ static void logHTTPaccess(int rc) {
 
 /* ************************* */
 
-static void returnHTTPbadRequest(void) {
+static void returnHTTPbadRequest() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_400);
 }
 
-static void returnHTTPaccessDenied(void) {
+static void returnHTTPaccessDenied() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_401 | HTTP_FLAG_NEED_AUTHENTICATION);
 }
 
-static void returnHTTPaccessForbidden(void) {
+static void returnHTTPaccessForbidden() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_403);
 }
 
-static void returnHTTPpageNotFound(void) {
+static void returnHTTPpageNotFound() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_404);
 }
 
-static void returnHTTPpageGone(void) {
+static void returnHTTPpageGone() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_410);
 }
 
-static void returnHTTPrequestTimedOut(void) {
+static void returnHTTPrequestTimedOut() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_408);
 }
 
-static void returnHTTPnotImplemented(void) {
+static void returnHTTPnotImplemented() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_501);
 }
 
-static void returnHTTPversionNotSupported(void) {
+static void returnHTTPversionNotSupported() {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_505);
 }
 
@@ -642,10 +642,12 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
   if(snprintf(buf, sizeof(buf), "Error %d", HTTPstatus[statusIdx].statusCode) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   printHTMLheader(buf, HTML_FLAG_NO_REFRESH | HTML_FLAG_NO_HEADING);
+
   if(snprintf(buf, sizeof(buf),
 	   "<H1>Error %d</H1>\n%s\n",
 	   HTTPstatus[statusIdx].statusCode, HTTPstatus[statusIdx].longDescription) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
+
   sendString(buf);
   if(strlen(httpRequestedURL) > 0) {
     if(snprintf(buf, sizeof(buf),
@@ -654,6 +656,7 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
+
   printHTMLtrailer();
 
   logHTTPaccess(HTTPstatus[statusIdx].statusCode);
@@ -1454,7 +1457,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
     } else if(strncmp(pageName, PROCESS_INFO_HTML, strlen(PROCESS_INFO_HTML)) == 0) {
       if(isLsofPresent) {
 	sendHTTPHeader(HTTP_TYPE_HTML, 0);
-	printProcessInfo(sortedColumn /* process PID */);
+	printProcessInfo(sortedColumn /* process PID */, actualReportDeviceId);
       } else {
 	returnHTTPpageGone();
 	printTrailer=0;
@@ -1484,7 +1487,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       printIpAccounting(LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
     } else if(strcmp(pageName, "NetNetstat.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printActiveTCPSessions();
+      printActiveTCPSessions(actualReportDeviceId);
     } else if(strncmp(pageName, STR_MULTICAST_STATS, strlen(STR_MULTICAST_STATS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printMulticastStats(sortedColumn, revertOrder, pageNum);
@@ -1511,7 +1514,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       printIpTrafficMatrix();
     } else if(strcmp(pageName, "localRoutersList.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printLocalRoutersList();
+      printLocalRoutersList(actualReportDeviceId);
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
@@ -1591,16 +1594,16 @@ static int returnHTTPPage(char* pageName, int postLen) {
       if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
 	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
-	  dumpNtopHashes(NULL);
+	  dumpNtopHashes(NULL, actualReportDeviceId);
 	else
-	  dumpNtopHashes(&questionMark[1]);
+	  dumpNtopHashes(&questionMark[1], actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_HOSTS_INDEXES_HTML, strlen(DUMP_HOSTS_INDEXES_HTML)) == 0) {
 	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
 	if((questionMark == NULL) || (questionMark[0] == '\0'))
-	  dumpNtopHashIndexes(NULL);
+	  dumpNtopHashIndexes(NULL, actualReportDeviceId);
 	else
-	  dumpNtopHashIndexes(&questionMark[1]);
+	  dumpNtopHashIndexes(&questionMark[1], actualReportDeviceId);
 	printTrailer = 0;
       } else if(strncmp(pageName, DUMP_TRAFFIC_DATA_HTML, strlen(DUMP_TRAFFIC_DATA_HTML)) == 0) {
 	sendHTTPHeader(HTTP_TYPE_TEXT, 0);
@@ -1625,7 +1628,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
 
 	strncpy(hostName, pageName, sizeof(hostName));
 	sendHTTPHeader(HTTP_TYPE_HTML, 0);
-	printAllSessionsHTML(hostName);
+	printAllSessionsHTML(hostName, actualReportDeviceId);
       }
 #endif /* !MICRO_NTOP */
       else {
@@ -1837,9 +1840,8 @@ void handleHTTPrequest(struct in_addr from) {
   if((rc = returnHTTPPage(&requestedURL[1], postLen)) == 0 ) {
     logHTTPaccess(200);
   } else if(rc == HTTP_FORBIDDEN_PAGE) {
-    returnHTTPaccessForbidden();
+    returnHTTPaccessForbidden(0);
   } else if(rc == HTTP_INVALID_PAGE) {
-    returnHTTPpageNotFound();
+    returnHTTPpageNotFound(0);
   }
 }
-

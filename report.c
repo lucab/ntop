@@ -1285,7 +1285,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
 /* ************************************ */
 
-void printAllSessionsHTML(char* host) {
+void printAllSessionsHTML(char* host, int actualDeviceId) {
   u_int idx, elIdx, i;
   HostTraffic *el=NULL;
   char buf[BUF_SIZE];
@@ -1314,11 +1314,11 @@ void printAllSessionsHTML(char* host) {
 
   /* ************************************ */
 
-  printHostDetailedInfo(el);
-  printHostTrafficStats(el);
-  printHostFragmentStats(el);
-  printHostContactedPeers(el);
-  printHostUsedServices(el);
+  printHostDetailedInfo(el, actualDeviceId);
+  printHostTrafficStats(el, actualDeviceId);
+  printHostFragmentStats(el, actualDeviceId);
+  printHostContactedPeers(el, actualDeviceId);
+  printHostUsedServices(el, actualDeviceId);
 
   /* ***************************************************** */
 
@@ -1412,12 +1412,12 @@ void printAllSessionsHTML(char* host) {
     sendString("</CENTER>\n");
   }
 
-  printHostSessions(el, elIdx);
+  printHostSessions(el, elIdx, actualDeviceId);
 }
 
 /* ************************************ */
 
-void printLocalRoutersList(void) {
+void printLocalRoutersList(int actualDeviceId) {
   char buf[BUF_SIZE];
   HostTraffic *el, *router;
   u_int idx, i, j, numEntries=0;
@@ -1838,7 +1838,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
 /* ********************************** */
 
-void printActiveTCPSessions(void) {
+void printActiveTCPSessions(int actualDeviceId) {
   int idx;
   char buf[BUF_SIZE];
   int numSessions;
@@ -2451,7 +2451,7 @@ void printProtoTraffic(void) {
 
 /* ************************ */
 
-void printProcessInfo(int processPid) {
+void printProcessInfo(int processPid, int actualDeviceId) {
   char buf[BUF_SIZE];
   int i, j, numEntries;
 

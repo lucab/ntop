@@ -28,9 +28,9 @@
 /* ************************************ */
 
 void formatUsageCounter(UsageCounter usageCtr,
-			TrafficCounter topValue
+			TrafficCounter topValue,
 			/* If this value != 0 then a percentage is printed */
-			) {
+			int actualDeviceId) {
   char buf[BUF_SIZE];
   int i, sendHeader=0;
 
@@ -44,10 +44,10 @@ void formatUsageCounter(UsageCounter usageCtr,
     float pctg;
 
     pctg = ((float)usageCtr.value/(float)topValue)*100;
-    
+
     if(pctg > 100) pctg = 100; /* This should not happen ! */
 
-    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;[%.0f&nbsp;%%]</TD>",
+    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s [%.0f %%]</TD>",
 		formatPkts(usageCtr.value), pctg) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
@@ -60,7 +60,7 @@ void formatUsageCounter(UsageCounter usageCtr,
       struct hostTraffic *el1;
 
       el1 = device[actualReportDeviceId].
-       hash_hostTraffic[checkSessionIdx(usageCtr.peersIndexes[i])];
+	hash_hostTraffic[checkSessionIdx(usageCtr.peersIndexes[i])];
 
       if(el1 != NULL) {
        if(!sendHeader) {
@@ -1583,7 +1583,7 @@ int cmpHostsFctn(const void *_a, const void *_b) {
 
 /* ************************************ */
 
-void printPacketStats(HostTraffic *el) {
+void printPacketStats(HostTraffic *el, int actualDeviceId) {
   char buf[BUF_SIZE];
   int headerSent = 0;
   char *tableHeader = "<center><TABLE BORDER=0><TR><TD>";
@@ -1607,22 +1607,22 @@ void printPacketStats(HostTraffic *el) {
 
       if((el->secHostPkts->synPktsSent.value+el->secHostPkts->synPktsRcvd.value) > 0) {
 	sendString("<TR><TH "TH_BG" ALIGN=LEFT>Attempted</TH>");
-	formatUsageCounter(el->secHostPkts->synPktsSent, 0);
-	formatUsageCounter(el->secHostPkts->synPktsRcvd, 0);
+	formatUsageCounter(el->secHostPkts->synPktsSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->synPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
       if((el->secHostPkts->establishedTCPConnSent.value+el->secHostPkts->establishedTCPConnRcvd.value) > 0) {
 	sendString("<TR><TH "TH_BG" ALIGN=LEFT>Established</TH>");
-	formatUsageCounter(el->secHostPkts->establishedTCPConnSent, el->secHostPkts->synPktsSent.value);
-	formatUsageCounter(el->secHostPkts->establishedTCPConnRcvd, el->secHostPkts->synPktsRcvd.value);
+	formatUsageCounter(el->secHostPkts->establishedTCPConnSent, el->secHostPkts->synPktsSent.value, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->establishedTCPConnRcvd, el->secHostPkts->synPktsRcvd.value, actualDeviceId);
 	sendString("</TR>\n");
       }
 
       if((el->secHostPkts->rejectedTCPConnSent.value+el->secHostPkts->rejectedTCPConnRcvd.value) > 0) {
 	sendString("<TR><TH "TH_BG" ALIGN=LEFT>Rejected</TH>");
-	formatUsageCounter(el->secHostPkts->rejectedTCPConnSent, el->secHostPkts->synPktsSent.value);
-	formatUsageCounter(el->secHostPkts->rejectedTCPConnRcvd, el->secHostPkts->synPktsRcvd.value);
+	formatUsageCounter(el->secHostPkts->rejectedTCPConnSent, el->secHostPkts->synPktsSent.value, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->rejectedTCPConnRcvd, el->secHostPkts->synPktsRcvd.value, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1651,8 +1651,8 @@ void printPacketStats(HostTraffic *el) {
 		    getRowColor()) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->synPktsSent, 0);
-	formatUsageCounter(el->secHostPkts->synPktsRcvd, 0);
+	formatUsageCounter(el->secHostPkts->synPktsSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->synPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1661,8 +1661,8 @@ void printPacketStats(HostTraffic *el) {
 		    getRowColor()) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->rstAckPktsSent, 0);
-	formatUsageCounter(el->secHostPkts->rstAckPktsRcvd, 0);
+	formatUsageCounter(el->secHostPkts->rstAckPktsSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->rstAckPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1670,8 +1670,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>RST</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->rstPktsSent, 0);
-	formatUsageCounter(el->secHostPkts->rstPktsRcvd, 0);
+	formatUsageCounter(el->secHostPkts->rstPktsSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->rstPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1679,8 +1679,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>SYN|FIN</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->synFinPktsSent, 0);
-	formatUsageCounter(el->secHostPkts->synFinPktsRcvd, 0);
+	formatUsageCounter(el->secHostPkts->synFinPktsSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->synFinPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1688,15 +1688,15 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>FIN|PUSH|URG</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->finPushUrgPktsSent, 0);
-	formatUsageCounter(el->secHostPkts->finPushUrgPktsRcvd, 0);
+	formatUsageCounter(el->secHostPkts->finPushUrgPktsSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->finPushUrgPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
       if((el->secHostPkts->nullPktsSent.value+el->secHostPkts->nullPktsRcvd.value) > 0) {
 	sendString("<TR><TH "TH_BG" ALIGN=LEFT>NULL</TH>");
-	formatUsageCounter(el->secHostPkts->nullPktsSent, 0);
-	formatUsageCounter(el->secHostPkts->nullPktsRcvd, 0);
+	formatUsageCounter(el->secHostPkts->nullPktsSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->nullPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1742,8 +1742,8 @@ void printPacketStats(HostTraffic *el) {
 		    getRowColor()) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->ackScanSent, 0);
-	formatUsageCounter(el->secHostPkts->ackScanRcvd, 0);
+	formatUsageCounter(el->secHostPkts->ackScanSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->ackScanRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1752,8 +1752,8 @@ void printPacketStats(HostTraffic *el) {
 		    getRowColor()) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->xmasScanSent, 0);
-	formatUsageCounter(el->secHostPkts->xmasScanRcvd, 0);
+	formatUsageCounter(el->secHostPkts->xmasScanSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->xmasScanRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1761,8 +1761,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>FIN Scan</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->finScanSent, 0);
-	formatUsageCounter(el->secHostPkts->finScanRcvd, 0);
+	formatUsageCounter(el->secHostPkts->finScanSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->finScanRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1770,8 +1770,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>NULL Scan</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->nullScanSent, 0);
-	formatUsageCounter(el->secHostPkts->nullScanRcvd, 0);
+	formatUsageCounter(el->secHostPkts->nullScanSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->nullScanRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1780,8 +1780,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>UDP Pkt to Closed Port</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->udpToClosedPortSent, 0);
-	formatUsageCounter(el->secHostPkts->udpToClosedPortRcvd, 0);
+	formatUsageCounter(el->secHostPkts->udpToClosedPortSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->udpToClosedPortRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1790,8 +1790,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>UDP Pkt Disgnostic Port</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->udpToDiagnosticPortSent, 0);
-	formatUsageCounter(el->secHostPkts->udpToDiagnosticPortRcvd, 0);
+	formatUsageCounter(el->secHostPkts->udpToDiagnosticPortSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->udpToDiagnosticPortRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1800,8 +1800,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>TCP Pkt Disgnostic Port</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->tcpToDiagnosticPortSent, 0);
-	formatUsageCounter(el->secHostPkts->tcpToDiagnosticPortRcvd, 0);
+	formatUsageCounter(el->secHostPkts->tcpToDiagnosticPortSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->tcpToDiagnosticPortRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1810,8 +1810,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Tiny Fragments</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->tinyFragmentSent, 0);
-	formatUsageCounter(el->secHostPkts->tinyFragmentRcvd, 0);
+	formatUsageCounter(el->secHostPkts->tinyFragmentSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->tinyFragmentRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1820,8 +1820,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>ICMP Fragments</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->icmpFragmentSent, 0);
-	formatUsageCounter(el->secHostPkts->icmpFragmentRcvd, 0);
+	formatUsageCounter(el->secHostPkts->icmpFragmentSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->icmpFragmentRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1830,8 +1830,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Overlapping Fragments</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->overlappingFragmentSent, 0);
-	formatUsageCounter(el->secHostPkts->overlappingFragmentRcvd, 0);
+	formatUsageCounter(el->secHostPkts->overlappingFragmentSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->overlappingFragmentRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1840,8 +1840,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Closed Empty TCP Conn.</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->closedEmptyTCPConnSent, 0);
-	formatUsageCounter(el->secHostPkts->closedEmptyTCPConnRcvd, 0);
+	formatUsageCounter(el->secHostPkts->closedEmptyTCPConnSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->closedEmptyTCPConnRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1850,8 +1850,8 @@ void printPacketStats(HostTraffic *el) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Malformed Pkts</TH>",
 		    getRowColor()) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
-	formatUsageCounter(el->secHostPkts->malformedPktsSent, 0);
-	formatUsageCounter(el->secHostPkts->malformedPktsRcvd, 0);
+	formatUsageCounter(el->secHostPkts->malformedPktsSent, 0, actualDeviceId);
+	formatUsageCounter(el->secHostPkts->malformedPktsRcvd, 0, actualDeviceId);
 	sendString("</TR>\n");
       }
 
@@ -1905,7 +1905,7 @@ void printPacketStats(HostTraffic *el) {
 
 /* ************************************ */
 
-void printHostFragmentStats(HostTraffic *el) {
+void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
   TrafficCounter totalSent, totalRcvd;
   char buf[BUF_SIZE];
 
@@ -2007,7 +2007,7 @@ void printHostFragmentStats(HostTraffic *el) {
 
 /* ************************************ */
 
-void printHostTrafficStats(HostTraffic *el) {
+void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   int i, a, b;
   TrafficCounter totalSent, totalRcvd;
   TrafficCounter actTotalSent, actTotalRcvd;
@@ -2031,7 +2031,7 @@ void printHostTrafficStats(HostTraffic *el) {
 
   printHostEvents(el, -1, -1);
   printHostHourlyTraffic(el);
-  printPacketStats(el);
+  printPacketStats(el, actualDeviceId);
 
   if((totalSent == 0) && (totalRcvd == 0))
     return;
@@ -2206,7 +2206,7 @@ void printHostTrafficStats(HostTraffic *el) {
 
 /* ************************************ */
 
-void printHostContactedPeers(HostTraffic *el) {
+void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
   u_int i;
   char buf[BUF_SIZE];
 
@@ -2297,21 +2297,21 @@ void printHostContactedPeers(HostTraffic *el) {
 char *getSessionState(IPSession *session) {
   switch (session->sessionState) {
   case STATE_SYN:
-    return("Sent&nbsp;Syn");
+    return("Sent Syn");
   case STATE_SYN_ACK:
-    return("Rcvd&nbsp;Syn/Ack");
+    return("Rcvd Syn/Ack");
   case STATE_ACTIVE:
     return("Active");
   case STATE_FIN1_ACK0:
-    return("Fin1&nbsp;Ack0");
+    return("Fin1 Ack0");
   case STATE_FIN1_ACK1:
-    return("Fin1&nbsp;Ack1");
+    return("Fin1 Ack1");
   case STATE_FIN2_ACK0:
-    return("Fin2&nbsp;Ack0");
+    return("Fin2 Ack0");
   case STATE_FIN2_ACK1:
-    return("Fin2&nbsp;Ack1");
+    return("Fin2 Ack1");
   case STATE_FIN2_ACK2:
-    return("Fin2&nbsp;Ack2");
+    return("Fin2 Ack2");
   case STATE_TIMEOUT:
     return("Timeout");
   case STATE_END:
@@ -2323,7 +2323,7 @@ char *getSessionState(IPSession *session) {
 
 /* ************************************ */
 
-void printHostSessions(HostTraffic *el, u_int elIdx) {
+void printHostSessions(HostTraffic *el, u_int elIdx, int actualDeviceId) {
   char buf[BUF_SIZE];
   IpGlobalSession *scanner=NULL;
   char *sessionType=NULL;
@@ -2400,7 +2400,7 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
       sendString(buf);
       numSessions++;
 
-      sendString("<TD "TD_BG"><UL>");
+      sendString("<TD "TD_BG"><UL>&nbsp;");
       for(i=0; i < MAX_NUM_CONTACTED_PEERS; i++) {
 	u_int theIdx = scanner->peers.peersIndexes[i];
 
@@ -2734,7 +2734,7 @@ void checkHostProvidedServices(HostTraffic *el) {
 
 /* ************************************ */
 
-void printHostDetailedInfo(HostTraffic *el) {
+void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   char buf[BUF_SIZE], buf1[64], sniffedName[MAXDNAME];
   float percentage;
   TrafficCounter total;
@@ -3495,7 +3495,7 @@ static void printNapsterStats(HostTraffic *el) {
 
 /* ************************************ */
 
-void printHostUsedServices(HostTraffic *el) {
+void printHostUsedServices(HostTraffic *el, int actualDeviceId) {
   TrafficCounter tot;
 
 #ifdef ENABLE_NAPSTER

@@ -54,7 +54,8 @@ void handleBootp(HostTraffic *srcHost,
 		 u_short sport,
 		 u_short dport,
 		 u_int packetDataLength,
-		 u_char* packetData) {
+		 u_char* packetData, 
+		 int actualDeviceId) {
   BootProtocol bootProto = { 0 };
   int len;
 
@@ -120,9 +121,10 @@ void handleBootp(HostTraffic *srcHost,
 	      This is the real address of the recipient because
 	      dstHost is a broadcast address
 	    */
-	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
+	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr), actualDeviceId);
 	    if(realDstHost == NULL) {
-	      u_int hostIdx = getHostInfo(/* &bootProto.bp_yiaddr */ NULL, bootProto.bp_chaddr, 0, 0);
+	      u_int hostIdx = getHostInfo(/* &bootProto.bp_yiaddr */ NULL, 
+					  bootProto.bp_chaddr, 0, 0, actualDeviceId);
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
 #endif
@@ -163,7 +165,7 @@ void handleBootp(HostTraffic *srcHost,
 		strncpy(realDstHost->hostNumIpAddress,
 			_intoa(realDstHost->hostIpAddress, buf, sizeof(buf)),
 			sizeof(realDstHost->hostNumIpAddress));
-		ipaddr2str(realDstHost->hostIpAddress);
+		ipaddr2str(realDstHost->hostIpAddress, actualDeviceId);
 		realDstHost->fullDomainName = realDstHost->dotDomainName = "";
 		if(isBroadcastAddress(&realDstHost->hostIpAddress))
 		  FD_SET(BROADCAST_HOST_FLAG, &realDstHost->flags);
@@ -195,7 +197,7 @@ void handleBootp(HostTraffic *srcHost,
 #endif
 		  /* *************** */
 
-		  hostIdx = findHostIdxByNumIP(hostIpAddress);
+		  hostIdx = findHostIdxByNumIP(hostIpAddress, actualDeviceId);
 		  if(hostIdx != NO_PEER) {
 		    incrementUsageCounter(&realDstHost->contactedRouters, hostIdx, actualDeviceId);
 
@@ -290,7 +292,7 @@ void handleBootp(HostTraffic *srcHost,
 		  idx += len;
 		  /* *************** */
 
-		  hostIdx = findHostIdxByNumIP(hostIpAddress);
+		  hostIdx = findHostIdxByNumIP(hostIpAddress, actualDeviceId);
 		  if(hostIdx != NO_PEER){
 		    trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
 		    if(trafficHost != NULL)
@@ -451,9 +453,10 @@ void handleBootp(HostTraffic *srcHost,
 	      This is the real address of the recipient because
 	      dstHost is a broadcast address
 	    */
-	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
+	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr), actualDeviceId);
 	    if(realClientHost == NULL) {
-	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr, 0, 0);
+	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, 
+					  bootProto.bp_chaddr, 0, 0, actualDeviceId);
 #ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
 #endif
@@ -557,9 +560,10 @@ u_int16_t processDNSPacket(const u_char *packetData,
   datum key_data, data_data;
   char tmpBuf[96];
   u_int16_t transactionId = 0;
-  int i, queryNameLength;
+  int i;
 
-  if((!enablePacketDecoding) || (packetData == NULL) /* packet too short ? */)
+  if(enablePacketDecoding
+     ||(packetData == NULL) /* packet too short ? */)
     return(transactionId);
 
   memset(&hostPtr, 0, sizeof(DNSHostInfo));
@@ -581,38 +585,65 @@ u_int16_t processDNSPacket(const u_char *packetData,
   }
 #endif
 
+  i = strlen(hostPtr.queryName);
+
   if((*isRequest) || (!*positiveReply))
     return(transactionId);
-  
-  if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
+  else if((i > 5) 
+  	  && (!*isRequest) && (*positiveReply)
+	  && (strncmp(&hostPtr.queryName[i-5], ".arpa", 5) == 0)) {
+    char *a, *b, *c, *d;
 
-  queryNameLength = strlen(hostPtr.queryName);
-  strtolower(hostPtr.queryName);
-  
-  if((queryNameLength > 5)
-     && (strncmp(&hostPtr.queryName[queryNameLength-5], ".arpa", 5) == 0))
+	/* Numeric => Symbolic */
+    d = strtok(hostPtr.queryName, ".");
+    c = strtok(NULL, ".");
+    b = strtok(NULL, ".");
+    a = strtok(NULL, ".");
+    sprintf(tmpBuf, "%s.%s.%s.%s", a, b, c, d);
+
+    if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
+    key_data.dptr = tmpBuf;
+    key_data.dsize = strlen(key_data.dptr)+1;
+    data_data.dptr = hostPtr.name;
+    data_data.dsize = strlen(data_data.dptr)+1;
+
+#ifdef DNS_SNIFF_DEBUG
+    traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
+#endif
+
+#ifdef MULTITHREADED
+    accessMutex(&gdbmMutex, "processDNSPacket");
+#endif
+    gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
+#ifdef MULTITHREADED
+    releaseMutex(&gdbmMutex);
+#endif
+
     return(transactionId);
-  
+  }
+
   for(i=0; i<MAXADDRS; i++) {
-    /* Symbolic => Numeric */
+  	/* Symbolic => Numeric */
 
     if(hostPtr.addrList[i] != 0) {
+      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
       hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
       key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
       key_data.dsize = strlen(key_data.dptr)+1;
       data_data.dptr = hostPtr.queryName;
-      data_data.dsize = queryNameLength+1;
+      data_data.dsize = strlen(data_data.dptr)+1;
+      for(i=0; i<strlen(data_data.dptr); i++)
+	data_data.dptr[i] = tolower(data_data.dptr[i]);
 
 #ifdef DNS_SNIFF_DEBUG
-      traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
+    traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
 #endif
 #ifdef MULTITHREADED
-      accessMutex(&gdbmMutex, "processDNSPacket");
+  accessMutex(&gdbmMutex, "processDNSPacket");
 #endif
-      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
       gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
 #ifdef MULTITHREADED
-      releaseMutex(&gdbmMutex);
+  releaseMutex(&gdbmMutex);
 #endif
     }
   }

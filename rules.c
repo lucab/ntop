@@ -799,7 +799,7 @@ void checkFilterChain(HostTraffic *srcHost,
 		      u_char isFragment,  /* 1 = fragment, 0 = packet */
 		      const u_char* bp,   /* pointer to packet content */
 		      FilterRuleChain *selectedChain,
-		      u_short packetType) {
+		      u_short packetType, int actualDeviceId) {
   FilterRuleChain *chainScanner = selectedChain;
   u_short numRun = 0;
   short icmp_type;
@@ -977,7 +977,7 @@ void checkFilterChain(HostTraffic *srcHost,
 	      dstHost, dstHostIdx,
 	      icmp_type,
 	      sport, dport, 
-	      length);
+	      length, actualDeviceId);
 
     chainScanner = chainScanner->nextRule;
   }

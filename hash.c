@@ -27,7 +27,8 @@ static u_char printedHashWarning = 0;
 
 u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 			    u_char *ether_addr,
-			    short* useIPAddressForSearching) {
+			    short* useIPAddressForSearching,
+			    int actualDeviceId) {
   u_int idx = 0;
  
   if(borderSnifferMode)  /* MAC addresses don't make sense here */
@@ -90,7 +91,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 	       (*useIPAddressForSearching), idx);
 #endif
 
-  return(idx);
+  return((u_int)(idx % device[actualDeviceId].actualHashSize));
 }
 
 /* ******************************* */
@@ -170,7 +171,7 @@ static int _mapUsageCounter(u_int *myMappings, int mappingSize,
 
 /* ******************************* */
 
-void resizeHostHash(int deviceToExtend, short hashAction) {
+void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
   u_int idx, *mappings;
   float multiplier;
   u_int i, j, newSize, mappingsSize;
@@ -267,12 +268,12 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
       
       idx = computeInitialHashIdx(hostIpAddress,
 				  device[deviceToExtend].hash_hostTraffic[i]->ethAddress,
-				  &numCmp);
+				  &numCmp, actualDeviceId);
       
       if(idx == NO_PEER) {
-	  /* Discard the host and continue */
-	  freeHostInfo(deviceToExtend, i, 0);
-	  continue;
+	/* Discard the host and continue */
+	freeHostInfo(deviceToExtend, i, 0, actualDeviceId);
+	continue;
       }
 
       idx = (u_int)(idx % newSize);
@@ -498,7 +499,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
       if((device[deviceToExtend].tcpSession[j]->initiatorIdx == NO_PEER)
 	 || (device[deviceToExtend].tcpSession[j]->remotePeerIdx == NO_PEER)) {
 	/* Session to purge */
-	notifyTCPSession(device[deviceToExtend].tcpSession[j]);
+	notifyTCPSession(device[deviceToExtend].tcpSession[j], actualDeviceId);
 #ifdef HAVE_MYSQL
 	mySQLnotifyTCPSession(device[deviceToExtend].tcpSession[j]);
 #endif
@@ -750,7 +751,8 @@ static void removeGlobalHostPeers(HostTraffic *el,
 
 /* **************************************** */
 
-void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
+void freeHostInfo(int theDevice, u_int hostIdx,
+		  u_short refreshHash, int actualDeviceId) {
   u_int j, i;
   HostTraffic *host;
   IpGlobalSession *nextElement, *element;
@@ -970,7 +972,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 
 /* ************************************ */
 
-void freeHostInstances(void) {
+void freeHostInstances(int actualDeviceId) {
   u_int idx, i, max, num=0;
 
   if(mergeInterfaces)
@@ -986,7 +988,7 @@ void freeHostInstances(void) {
     for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
       if(device[actualDeviceId].hash_hostTraffic[idx] != NULL) {
 	num++;
-	freeHostInfo(actualDeviceId, idx, 0);
+	freeHostInfo(actualDeviceId, idx, 0, actualDeviceId);
       }
     }
   }
@@ -1015,7 +1017,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 #ifdef MULTITHREADED
   accessMutex(&hostsHashMutex, "scanIdleLoop");
 #endif
-  purgeOldFragmentEntries(); /* let's do this too */
+  purgeOldFragmentEntries(actDevice); /* let's do this too */
 #ifdef MULTITHREADED
   releaseMutex(&hostsHashMutex);
 #endif
@@ -1043,7 +1045,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   /* Now free the entries */
   for(idx=1; idx<device[actDevice].actualHashSize; idx++) {
     if((idx != otherHostEntryIdx) && (theFlaggedHosts[idx] == 1)) {
-      freeHostInfo(actDevice, idx, 0);
+      freeHostInfo(actDevice, idx, 0, actDevice);
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Host (idx=%d) purged (%d hosts purged)",
 		 idx, numFreedBuckets);
@@ -1077,7 +1079,7 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 
 /* ******************************************** */
 
-int extendTcpSessionsHash() {
+int extendTcpSessionsHash(int actualDeviceId) {
   const short extensionFactor = 2;
   static short displayError = 1;
 

@@ -212,9 +212,9 @@ char* formatLatency(struct timeval tv, u_short sessionState) {
     */
     return("&nbsp;");
   } else {
-    static char latBuf[32];
+    static char latBuf[16];
     
-    snprintf(latBuf, sizeof(latBuf), "%.1f&nbsp;ms",
+    snprintf(latBuf, sizeof(latBuf), "%.1f ms",
 	    (float)(tv.tv_sec*1000+(float)tv.tv_usec/1000));
     return(latBuf);
   }

@@ -686,18 +686,22 @@ void* cleanupExpiredHostEntriesLoop(void* notUsed _UNUSED_) {
 void* scanIdleSessionsLoop(void* notUsed _UNUSED_) {
 
   for(;;) {
+    int i;
+    
     sleep(SESSION_SCAN_DELAY);
 
     if(!capturePackets) break;
     actTime = time(NULL);
 
+    for(i=0; i<numDevices; i++) {
 #ifdef MULTITHREADED
-    accessMutex(&hostsHashMutex, "scanIdleSessionsLoop-1");
+      accessMutex(&hostsHashMutex, "scanIdleSessionsLoop-1");
 #endif
-    scanTimedoutTCPSessions();
+      scanTimedoutTCPSessions(i);
 #ifdef MULTITHREADED
-    releaseMutex(&hostsHashMutex);
+      releaseMutex(&hostsHashMutex);
 #endif
+    }
 
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads to run */
@@ -705,16 +709,20 @@ void* scanIdleSessionsLoop(void* notUsed _UNUSED_) {
     sleep(1); /* leave some time to others */
 #endif
 
+    for(i=0; i<numDevices; i++) {
 #ifdef MULTITHREADED
-    accessMutex(&hostsHashMutex, "scanIdleSessionsLoop-2");
+      accessMutex(&hostsHashMutex, "scanIdleSessionsLoop-2");
 #endif
-    purgeOldFragmentEntries();
+      purgeOldFragmentEntries(i);
 #ifdef MULTITHREADED
-    releaseMutex(&hostsHashMutex);
+      releaseMutex(&hostsHashMutex);
 #endif
-
-    if(handleRules)
-      scanAllTcpExpiredRules();
+    }
+    
+    if(handleRules){
+      for(i=0; i<numDevices; i++)
+	scanAllTcpExpiredRules(i);
+    }
   }
 
   return(NULL);
@@ -904,7 +912,8 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
 /* #ifdef FULL_MEMORY_FREE */
-  freeHostInstances();
+  for(i=0; i<numDevices; i++)
+    freeHostInstances(i);
 /* #endif */
 
 #ifndef MICRO_NTOP

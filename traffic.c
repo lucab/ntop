@@ -166,250 +166,261 @@ static void updateThptStats(int deviceToUpdate,
 /* ******************************* */
 
 static void updateDeviceThpt(int deviceToUpdate) {
-  time_t timeDiff, timeMinDiff, timeHourDiff=0, totalTime;
-  u_int idx;
-  HostTraffic *el;
+    time_t timeDiff, timeMinDiff, timeHourDiff=0, totalTime;
+    u_int idx;
+    HostTraffic *el;
 
-  timeDiff = actTime-device[deviceToUpdate].lastThptUpdate;
+    timeDiff = actTime-device[deviceToUpdate].lastThptUpdate;
 
-  if(timeDiff > 10 /* secs */) {
-    u_int topSentIdx=NO_PEER, secondSentIdx=NO_PEER, thirdSentIdx=NO_PEER;
-    u_int topHourSentIdx=NO_PEER, secondHourSentIdx=NO_PEER, thirdHourSentIdx=NO_PEER;
-    u_int topRcvdIdx=NO_PEER, secondRcvdIdx=NO_PEER, thirdRcvdIdx=NO_PEER;
-    u_int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
-    short updateMinThpt, updateHourThpt;
+    if(timeDiff > 10 /* secs */) {
+	u_int topSentIdx=NO_PEER, secondSentIdx=NO_PEER, thirdSentIdx=NO_PEER;
+	u_int topHourSentIdx=NO_PEER, secondHourSentIdx=NO_PEER, thirdHourSentIdx=NO_PEER;
+	u_int topRcvdIdx=NO_PEER, secondRcvdIdx=NO_PEER, thirdRcvdIdx=NO_PEER;
+	u_int topHourRcvdIdx=NO_PEER, secondHourRcvdIdx=NO_PEER, thirdHourRcvdIdx=NO_PEER;
+	short updateMinThpt, updateHourThpt;
     
-    totalTime = actTime-initialSniffTime;
+	totalTime = actTime-initialSniffTime;
 
-    updateHourThpt = 0;
-    updateMinThpt = 0;
+	updateHourThpt = 0;
+	updateMinThpt = 0;
 
-    if((timeMinDiff = actTime-device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
-      updateMinThpt = 1;
-      device[deviceToUpdate].lastMinThptUpdate = actTime;
-      if((timeHourDiff = actTime-device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
-	updateHourThpt = 1;
-	device[deviceToUpdate].lastHourThptUpdate = actTime;
-      }
-    }
+	if((timeMinDiff = actTime-device[deviceToUpdate].lastMinThptUpdate) >= 60 /* 1 minute */) {
+	    updateMinThpt = 1;
+	    device[deviceToUpdate].lastMinThptUpdate = actTime;
+	    if((timeHourDiff = actTime-device[deviceToUpdate].lastHourThptUpdate) >= 60*60 /* 1 hour */) {
+		updateHourThpt = 1;
+		device[deviceToUpdate].lastHourThptUpdate = actTime;
+	    }
+	}
 
-    for(idx=1; idx<device[deviceToUpdate].actualHashSize; idx++) {
-      if((el = device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
+	for(idx=1; idx<device[deviceToUpdate].actualHashSize; idx++) {
+	    if((el = device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
+		if(broadcastHost(el))
+		    continue;
 
-	if(broadcastHost(el))
-	  continue;
+		el->actualRcvdThpt       = (float)(el->bytesRcvd-el->lastBytesRcvd)/timeDiff;
+		if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
+		if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
+		el->actualSentThpt       = (float)(el->bytesSent-el->lastBytesSent)/timeDiff;
+		el->lastBytesSent        = el->bytesSent;
+		el->lastBytesRcvd    = el->bytesRcvd;
 
-	el->actualRcvdThpt       = (float)(el->bytesRcvd-el->lastBytesRcvd)/timeDiff;
-	if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
-	if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
-	el->actualSentThpt       = (float)(el->bytesSent-el->lastBytesSent)/timeDiff;
-	el->lastBytesSent        = el->bytesSent;
-	el->lastBytesRcvd    = el->bytesRcvd;
+		/* ******************************** */
+
+		el->actualRcvdPktThpt    = (float)(el->pktRcvd-el->lastPktRcvd)/timeDiff;
+		if(el->peakRcvdPktThpt   < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
+		if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
+		el->actualSentPktThpt    = (float)(el->pktSent-el->lastPktSent)/timeDiff;
+		el->lastPktSent          = el->pktSent;
+		el->lastPktRcvd      = el->pktRcvd;
+
+		/* ******************************** */
+
+		if(updateMinThpt) {
+		    el->averageRcvdThpt    = ((float)el->bytesRcvd)/totalTime;
+		    el->averageSentThpt    = ((float)el->bytesSent)/totalTime;
+		    el->averageRcvdPktThpt = ((float)el->pktRcvd)/totalTime;
+		    el->averageSentPktThpt = ((float)el->pktSent)/totalTime;
+
+		    if((topSentIdx == NO_PEER) 
+		       || (device[deviceToUpdate].hash_hostTraffic[topSentIdx] == NULL)) {
+			topSentIdx = idx;
+		    } else {
+			if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[topSentIdx]->actualSentThpt) {
+			    secondSentIdx = topSentIdx;
+			    topSentIdx = idx;
+			} else {
+			    if((secondSentIdx == NO_PEER)
+			       || (device[deviceToUpdate].hash_hostTraffic[secondSentIdx] == NULL)) {
+				secondSentIdx = idx;
+			    } else {
+				if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[secondSentIdx]->actualSentThpt) {
+				    thirdSentIdx = secondSentIdx;
+				    secondSentIdx = idx;
+				} else {
+				    if((thirdSentIdx == NO_PEER)
+				       || (device[deviceToUpdate].hash_hostTraffic[thirdSentIdx] == NULL)) {
+					thirdSentIdx = idx;
+				    } else {
+					if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[thirdSentIdx]->actualSentThpt) {
+					    thirdSentIdx = idx;
+					}
+				    }
+				}
+			    }
+			}
+		    }
+
+		    if((topRcvdIdx == NO_PEER) 
+		       || (device[deviceToUpdate].hash_hostTraffic[topRcvdIdx] == NULL)) {
+			topRcvdIdx = idx;
+		    } else {
+			if(el->actualRcvdThpt > device[deviceToUpdate].hash_hostTraffic[topRcvdIdx]->actualRcvdThpt) {
+			    secondRcvdIdx = topRcvdIdx;
+			    topRcvdIdx = idx;
+			} else {
+			    if((secondRcvdIdx == NO_PEER)
+			       || (device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx] == NULL)) {
+				secondRcvdIdx = idx;
+			    } else {
+				if(el->actualRcvdThpt > device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt) {
+				    thirdRcvdIdx = secondRcvdIdx;
+				    secondRcvdIdx = idx;
+				} else {
+				    if((thirdRcvdIdx == NO_PEER)
+				       || (device[deviceToUpdate].hash_hostTraffic[thirdRcvdIdx] == NULL)) {
+					thirdRcvdIdx = idx;
+				    } else {
+					if(el->actualRcvdThpt > device[deviceToUpdate].
+					   hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt) {
+					    thirdRcvdIdx = idx;
+					}
+				    }
+				}
+			    }
+			}
+		    }
+
+		    if(updateHourThpt) {
+			el->lastHourRcvdThpt = (float)(el->bytesRcvd-el->lastHourBytesRcvd)/timeHourDiff;
+			el->lastHourSentThpt = (float)(el->bytesSent-el->lastHourBytesSent)/timeHourDiff;
+			el->lastHourBytesRcvd = el->bytesRcvd;
+			el->lastHourBytesSent = el->bytesSent;
+
+			if((topHourSentIdx == NO_PEER) 
+			   || (device[deviceToUpdate].hash_hostTraffic[topHourSentIdx] == NULL)) {
+			    topHourSentIdx = idx;
+			} else {
+			    if(el->lastHourSentThpt > device[deviceToUpdate].
+			       hash_hostTraffic[topHourSentIdx]->lastHourSentThpt) {
+				secondHourSentIdx = topHourSentIdx;
+				topHourSentIdx = idx;
+			    } else {
+				if((secondHourSentIdx == NO_PEER)
+				   || (device[deviceToUpdate].hash_hostTraffic[secondHourSentIdx] == NULL)) {
+				    secondHourSentIdx = idx;
+				} else {
+				    if(el->lastHourSentThpt > device[deviceToUpdate].
+				       hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt) {
+					thirdHourSentIdx = secondHourSentIdx;
+					secondHourSentIdx = idx;
+				    } else {
+					if((thirdHourSentIdx == NO_PEER)
+					   || (device[deviceToUpdate].hash_hostTraffic[thirdHourSentIdx] == NULL)) {
+					    thirdHourSentIdx = idx;
+					} else {
+					    if(el->lastHourSentThpt > device[deviceToUpdate].
+					       hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt) {
+						thirdHourSentIdx = idx;
+					    }
+					}
+				    }
+				}
+			    }
+			}
+
+			if((topHourRcvdIdx == NO_PEER) 
+			   || (device[deviceToUpdate].hash_hostTraffic[topHourRcvdIdx] == NULL)) {
+			    topHourRcvdIdx = idx;
+			} else {
+			    if(el->lastHourRcvdThpt > device[deviceToUpdate].
+			       hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt) {
+				secondHourRcvdIdx = topHourRcvdIdx;
+				topHourRcvdIdx = idx;
+			    } else {
+				if((secondHourRcvdIdx == NO_PEER)
+				   || (device[deviceToUpdate].hash_hostTraffic[secondHourRcvdIdx] == NULL)) {
+				    secondHourRcvdIdx = idx;
+				} else {
+				    if(el->lastHourRcvdThpt > device[deviceToUpdate].
+				       hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt) {
+					thirdHourRcvdIdx = secondHourRcvdIdx;
+					secondHourRcvdIdx = idx;
+				    } else {
+					if((thirdHourRcvdIdx == NO_PEER)
+					   || (device[deviceToUpdate].hash_hostTraffic[thirdHourRcvdIdx] == NULL)) {
+					    thirdHourRcvdIdx = idx;
+					} else {
+					    if(el->lastHourRcvdThpt > device[deviceToUpdate].
+					       hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt) {
+						thirdHourRcvdIdx = idx;
+					    }
+					}
+				    }
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
 
 	/* ******************************** */
 
-	el->actualRcvdPktThpt    = (float)(el->pktRcvd-el->lastPktRcvd)/timeDiff;
-	if(el->peakRcvdPktThpt   < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
-	if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
-	el->actualSentPktThpt    = (float)(el->pktSent-el->lastPktSent)/timeDiff;
-	el->lastPktSent          = el->pktSent;
-	el->lastPktRcvd      = el->pktRcvd;
+	device[deviceToUpdate].throughput =
+	    device[deviceToUpdate].ethernetBytes-device[deviceToUpdate].throughput;
+	device[deviceToUpdate].packetThroughput = device[deviceToUpdate].ethernetPkts-
+	    device[deviceToUpdate].lastNumEthernetPkts;
+	device[deviceToUpdate].lastNumEthernetPkts = device[deviceToUpdate].ethernetPkts;
 
-	/* ******************************** */
+	/* timeDiff++; */
+	device[deviceToUpdate].actualThpt = (float)device[deviceToUpdate].throughput/(float)timeDiff;
+	device[deviceToUpdate].actualPktsThpt = 
+	    (float)device[deviceToUpdate].packetThroughput/(float)timeDiff;
+
+	if(device[deviceToUpdate].actualThpt > device[deviceToUpdate].peakThroughput)
+	    device[deviceToUpdate].peakThroughput = device[deviceToUpdate].actualThpt;
+
+	if(device[deviceToUpdate].actualPktsThpt > device[deviceToUpdate].peakPacketThroughput)
+	    device[deviceToUpdate].peakPacketThroughput = device[deviceToUpdate].actualPktsThpt;
+
+	device[deviceToUpdate].throughput = device[deviceToUpdate].ethernetBytes;
+	device[deviceToUpdate].packetThroughput = device[deviceToUpdate].ethernetPkts;
 
 	if(updateMinThpt) {
-	  el->averageRcvdThpt    = ((float)el->bytesRcvd)/totalTime;
-	  el->averageSentThpt    = ((float)el->bytesSent)/totalTime;
-	  el->averageRcvdPktThpt = ((float)el->pktRcvd)/totalTime;
-	  el->averageSentPktThpt = ((float)el->pktSent)/totalTime;
-
-	  if(topSentIdx == NO_PEER) {
-	    topSentIdx = idx;
-	  } else {
-	    if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[topSentIdx]->actualSentThpt) {
-	      secondSentIdx = topSentIdx;
-	      topSentIdx = idx;
-	    } else {
-	      if(secondSentIdx == NO_PEER)
-		secondSentIdx = idx;
-	      else {
-		if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[secondSentIdx]->actualSentThpt) {
-		  thirdSentIdx = secondSentIdx;
-		  secondSentIdx = idx;
-		} else {
-		  if(thirdSentIdx == NO_PEER)
-		    thirdSentIdx = idx;
-		  else {
-		    if(el->actualSentThpt > device[deviceToUpdate].hash_hostTraffic[thirdSentIdx]->actualSentThpt) {
-		      thirdSentIdx = idx;
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
-
-	  if(topRcvdIdx == NO_PEER) {
-	    topRcvdIdx = idx;
-	  } else {
-	    if(el->actualRcvdThpt > device[deviceToUpdate].hash_hostTraffic[topRcvdIdx]->actualRcvdThpt) {
-	      secondRcvdIdx = topRcvdIdx;
-	      topRcvdIdx = idx;
-	    } else {
-	      if(secondRcvdIdx == NO_PEER)
-		secondRcvdIdx = idx;
-	      else {
-		if(el->actualRcvdThpt > device[deviceToUpdate].hash_hostTraffic[secondRcvdIdx]->actualRcvdThpt) {
-		  thirdRcvdIdx = secondRcvdIdx;
-		  secondRcvdIdx = idx;
-		} else {
-		  if(thirdRcvdIdx == NO_PEER)
-		    thirdRcvdIdx = idx;
-		  else {
-		    if(el->actualRcvdThpt > device[deviceToUpdate].
-		       hash_hostTraffic[thirdRcvdIdx]->actualRcvdThpt) {
-		      thirdRcvdIdx = idx;
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
-
-	  if(updateHourThpt) {
-	    el->lastHourRcvdThpt = (float)(el->bytesRcvd-el->lastHourBytesRcvd)/timeHourDiff;
-	    el->lastHourSentThpt = (float)(el->bytesSent-el->lastHourBytesSent)/timeHourDiff;
-	    el->lastHourBytesRcvd = el->bytesRcvd;
-	    el->lastHourBytesSent = el->bytesSent;
-
-	    if(topHourSentIdx == NO_PEER) {
-	      topHourSentIdx = idx;
-	    } else {
-	      if(el->lastHourSentThpt > device[deviceToUpdate].
-		 hash_hostTraffic[topHourSentIdx]->lastHourSentThpt) {
-		secondHourSentIdx = topHourSentIdx;
-		topHourSentIdx = idx;
-	      } else {
-		if(secondHourSentIdx == NO_PEER)
-		  secondHourSentIdx = idx;
-		else {
-		  if(el->lastHourSentThpt > device[deviceToUpdate].
-		     hash_hostTraffic[secondHourSentIdx]->lastHourSentThpt) {
-		    thirdHourSentIdx = secondHourSentIdx;
-		    secondHourSentIdx = idx;
-		  } else {
-		    if(thirdHourSentIdx == NO_PEER)
-		      thirdHourSentIdx = idx;
-		    else {
-		      if(el->lastHourSentThpt > device[deviceToUpdate].
-			 hash_hostTraffic[thirdHourSentIdx]->lastHourSentThpt) {
-			thirdHourSentIdx = idx;
-		      }
-		    }
-		  }
-		}
-	      }
-	    }
-
-	    if(topHourRcvdIdx == NO_PEER) {
-	      topHourRcvdIdx = idx;
-	    } else {
-	      if(el->lastHourRcvdThpt > device[deviceToUpdate].
-		 hash_hostTraffic[topHourRcvdIdx]->lastHourRcvdThpt) {
-		secondHourRcvdIdx = topHourRcvdIdx;
-		topHourRcvdIdx = idx;
-	      } else {
-		if(secondHourRcvdIdx == NO_PEER)
-		  secondHourRcvdIdx = idx;
-		else {
-		  if(el->lastHourRcvdThpt > device[deviceToUpdate].
-		     hash_hostTraffic[secondHourRcvdIdx]->lastHourRcvdThpt) {
-		    thirdHourRcvdIdx = secondHourRcvdIdx;
-		    secondHourRcvdIdx = idx;
-		  } else {
-		    if(thirdHourRcvdIdx == NO_PEER)
-		      thirdHourRcvdIdx = idx;
-		    else {
-		      if(el->lastHourRcvdThpt > device[deviceToUpdate].
-			 hash_hostTraffic[thirdHourRcvdIdx]->lastHourRcvdThpt) {
-			thirdHourRcvdIdx = idx;
-		      }
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
+	    device[deviceToUpdate].lastMinEthernetBytes = device[deviceToUpdate].ethernetBytes-
+		device[deviceToUpdate].lastMinEthernetBytes;
+	    device[deviceToUpdate].lastMinThpt = 
+		(float)(device[deviceToUpdate].lastMinEthernetBytes)/(float)timeMinDiff;
+	    device[deviceToUpdate].lastMinEthernetBytes = device[deviceToUpdate].ethernetBytes;
+	    /* ******************* */
+	    device[deviceToUpdate].lastMinEthernetPkts = device[deviceToUpdate].ethernetPkts-
+		device[deviceToUpdate].lastMinEthernetPkts;
+	    device[deviceToUpdate].lastMinPktsThpt = 
+		(float)device[deviceToUpdate].lastMinEthernetPkts/(float)timeMinDiff;
+	    device[deviceToUpdate].lastMinEthernetPkts = device[deviceToUpdate].ethernetPkts;
+	    device[deviceToUpdate].lastMinThptUpdate = actTime;
 	}
-      }
+
+	if((timeMinDiff = actTime-device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
+	    device[deviceToUpdate].lastFiveMinsEthernetBytes = 
+		device[deviceToUpdate].ethernetBytes - device[deviceToUpdate].lastFiveMinsEthernetBytes;
+	    device[deviceToUpdate].lastFiveMinsThptUpdate = timeMinDiff;
+	    device[deviceToUpdate].lastFiveMinsThpt = 
+		(float)device[deviceToUpdate].lastFiveMinsEthernetBytes/(float)device[deviceToUpdate].lastFiveMinsThptUpdate;
+	    device[deviceToUpdate].lastFiveMinsEthernetBytes = device[deviceToUpdate].ethernetBytes;
+	    /* ******************* */
+	    device[deviceToUpdate].lastFiveMinsEthernetPkts = 
+		device[deviceToUpdate].ethernetPkts - device[deviceToUpdate].lastFiveMinsEthernetPkts;
+	    device[deviceToUpdate].lastFiveMinsPktsThpt = 
+		(float)device[deviceToUpdate].lastFiveMinsEthernetPkts/(float)device[deviceToUpdate].lastFiveMinsThptUpdate;
+	    device[deviceToUpdate].lastFiveMinsEthernetPkts = device[deviceToUpdate].ethernetPkts;
+	    device[deviceToUpdate].lastFiveMinsThptUpdate = actTime;
+	}
+
+	if((updateMinThpt || updateHourThpt) 
+	   && ((topSentIdx        != NO_PEER) 
+	       || (topHourSentIdx != NO_PEER)
+	       || (topRcvdIdx     != NO_PEER)
+	       || (topHourRcvdIdx != NO_PEER)))
+	    updateThptStats(deviceToUpdate,
+			    topSentIdx, secondSentIdx, thirdSentIdx,
+			    topHourSentIdx, secondHourSentIdx, thirdHourSentIdx,
+			    topRcvdIdx, secondRcvdIdx, thirdRcvdIdx,
+			    topHourRcvdIdx, secondHourRcvdIdx, thirdHourRcvdIdx);
+
+	device[deviceToUpdate].lastThptUpdate = actTime;
     }
-
-    /* ******************************** */
-
-    device[deviceToUpdate].throughput =
-      device[deviceToUpdate].ethernetBytes-device[deviceToUpdate].throughput;
-    device[deviceToUpdate].packetThroughput = device[deviceToUpdate].ethernetPkts-
-      device[deviceToUpdate].lastNumEthernetPkts;
-    device[deviceToUpdate].lastNumEthernetPkts = device[deviceToUpdate].ethernetPkts;
-
-    /* timeDiff++; */
-    device[deviceToUpdate].actualThpt = (float)device[deviceToUpdate].throughput/(float)timeDiff;
-    device[deviceToUpdate].actualPktsThpt = 
-      (float)device[deviceToUpdate].packetThroughput/(float)timeDiff;
-
-    if(device[deviceToUpdate].actualThpt > device[deviceToUpdate].peakThroughput)
-      device[deviceToUpdate].peakThroughput = device[deviceToUpdate].actualThpt;
-
-    if(device[deviceToUpdate].actualPktsThpt > device[deviceToUpdate].peakPacketThroughput)
-      device[deviceToUpdate].peakPacketThroughput = device[deviceToUpdate].actualPktsThpt;
-
-    device[deviceToUpdate].throughput = device[deviceToUpdate].ethernetBytes;
-    device[deviceToUpdate].packetThroughput = device[deviceToUpdate].ethernetPkts;
-
-    if(updateMinThpt) {
-      device[deviceToUpdate].lastMinEthernetBytes = device[deviceToUpdate].ethernetBytes-
-	device[deviceToUpdate].lastMinEthernetBytes;
-      device[deviceToUpdate].lastMinThpt = 
-	(float)(device[deviceToUpdate].lastMinEthernetBytes)/(float)timeMinDiff;
-      device[deviceToUpdate].lastMinEthernetBytes = device[deviceToUpdate].ethernetBytes;
-      /* ******************* */
-      device[deviceToUpdate].lastMinEthernetPkts = device[deviceToUpdate].ethernetPkts-
-	device[deviceToUpdate].lastMinEthernetPkts;
-      device[deviceToUpdate].lastMinPktsThpt = 
-	(float)device[deviceToUpdate].lastMinEthernetPkts/(float)timeMinDiff;
-      device[deviceToUpdate].lastMinEthernetPkts = device[deviceToUpdate].ethernetPkts;
-      device[deviceToUpdate].lastMinThptUpdate = actTime;
-    }
-
-    if((timeMinDiff = actTime-device[deviceToUpdate].lastFiveMinsThptUpdate) > 300 /* 5 minutes */) {
-      device[deviceToUpdate].lastFiveMinsEthernetBytes = 
-	device[deviceToUpdate].ethernetBytes - device[deviceToUpdate].lastFiveMinsEthernetBytes;
-      device[deviceToUpdate].lastFiveMinsThptUpdate = timeMinDiff;
-      device[deviceToUpdate].lastFiveMinsThpt = 
-	(float)device[deviceToUpdate].lastFiveMinsEthernetBytes/(float)device[deviceToUpdate].lastFiveMinsThptUpdate;
-      device[deviceToUpdate].lastFiveMinsEthernetBytes = device[deviceToUpdate].ethernetBytes;
-      /* ******************* */
-      device[deviceToUpdate].lastFiveMinsEthernetPkts = 
-	device[deviceToUpdate].ethernetPkts - device[deviceToUpdate].lastFiveMinsEthernetPkts;
-      device[deviceToUpdate].lastFiveMinsPktsThpt = 
-	(float)device[deviceToUpdate].lastFiveMinsEthernetPkts/(float)device[deviceToUpdate].lastFiveMinsThptUpdate;
-      device[deviceToUpdate].lastFiveMinsEthernetPkts = device[deviceToUpdate].ethernetPkts;
-      device[deviceToUpdate].lastFiveMinsThptUpdate = actTime;
-    }
-
-    if((updateMinThpt || updateHourThpt) 
-       && ((topSentIdx        != NO_PEER) 
-	   || (topHourSentIdx != NO_PEER)
-	   || (topRcvdIdx     != NO_PEER)
-	   || (topHourRcvdIdx != NO_PEER)))
-      updateThptStats(deviceToUpdate,
-		      topSentIdx, secondSentIdx, thirdSentIdx,
-		      topHourSentIdx, secondHourSentIdx, thirdHourSentIdx,
-		      topRcvdIdx, secondRcvdIdx, thirdRcvdIdx,
-		      topHourRcvdIdx, secondHourRcvdIdx, thirdHourRcvdIdx);
-
-    device[deviceToUpdate].lastThptUpdate = actTime;
-  }
 }
 
 /* ******************************* */
@@ -471,7 +482,8 @@ void updateHostTrafficStatsThpt(int hourId) {
 
 void updateTrafficMatrix(HostTraffic *srcHost,
 			 HostTraffic *dstHost,
-			 TrafficCounter length) {
+			 TrafficCounter length, 
+			 int actualDeviceId) {
   if(subnetLocalHost(srcHost) && subnetLocalHost(dstHost)) {
     unsigned long a, b, id;    
 

@@ -245,7 +245,7 @@ static int checkFilter(char* theFilter,
 
 /* ********************************** */
 
-void dumpNtopHashes(char* options) {
+void dumpNtopHashes(char* options, int actualDeviceId) {
   char key[64], filter[128];
   unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE, j;
   HostTraffic *el;
@@ -690,7 +690,7 @@ void dumpNtopHashes(char* options) {
 
 /* ********************************** */
 
-void dumpNtopHashIndexes(char* options) {
+void dumpNtopHashIndexes(char* options, int actualDeviceId) {
   unsigned int idx, numEntries=0, lang=DEFAULT_LANGUAGE;
   HostTraffic *el;
 

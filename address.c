@@ -65,7 +65,8 @@ static int _ns_name_unpack(const u_char *msg,
 
 /* ************************************ */
 
-static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
+static void resolveAddress(struct in_addr *hostAddr, 
+			   short keepAddressNumeric, int actualDeviceId) {
   char symAddr[MAX_HOST_SYM_NAME_LEN];
   StoredAddress storedAddress;
   int addr, i;
@@ -125,7 +126,7 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
     } else
       strncpy(symAddr, retrievedAddress->symAddress, MAX_HOST_SYM_NAME_LEN);
 
-    updateHostNameInfo(addr, retrievedAddress->symAddress);
+    updateHostNameInfo(addr, retrievedAddress->symAddress, actualDeviceId);
     numResolvedOnCacheAddresses++;
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Leaving resolveAddress()");
@@ -296,7 +297,7 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
   data_data.dptr = (void*)&storedAddress;
   data_data.dsize = sizeof(storedAddress)+1;
 
-  updateHostNameInfo(addr, symAddr);
+  updateHostNameInfo(addr, symAddr, actualDeviceId);
 
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "resolveAddress-4");
@@ -455,7 +456,10 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 #endif
 
     if(addr.s_addr != 0x0) {
-      resolveAddress(&addr, 0);
+      int i;
+
+      for(i=0; i<numDevices; i++)
+	resolveAddress(&addr, 0, i);
 
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Resolved address %u\n", addr.s_addr);
@@ -516,7 +520,7 @@ char* intoa(struct in_addr addr) {
 
 /* This function automatically updated the instance name */
 
-void ipaddr2str(struct in_addr hostIpAddress) {
+void ipaddr2str(struct in_addr hostIpAddress, int actualDeviceId) {
   unsigned int addr = hostIpAddress.s_addr;
   char buf[32];
   char tmpBuf[32];
@@ -524,7 +528,7 @@ void ipaddr2str(struct in_addr hostIpAddress) {
   datum data_data;
 
   if((addr == INADDR_BROADCAST) || (addr == 0x0)) {
-    updateHostNameInfo(hostIpAddress.s_addr, _intoa(hostIpAddress, buf, sizeof(buf)));
+    updateHostNameInfo(hostIpAddress.s_addr, _intoa(hostIpAddress, buf, sizeof(buf)), actualDeviceId);
     return;
   }
 
@@ -554,7 +558,7 @@ void ipaddr2str(struct in_addr hostIpAddress) {
 #ifdef GDBM_DEBUG
     traceEvent(TRACE_INFO, "Fetched data (1): %s [%s]", retrievedAddress->symAddress, tmpBuf);
 #endif
-    updateHostNameInfo(hostIpAddress.s_addr, retrievedAddress->symAddress);
+    updateHostNameInfo(hostIpAddress.s_addr, retrievedAddress->symAddress, actualDeviceId);
     free(data_data.dptr);
   } else {
 #ifdef GDBM_DEBUG
@@ -1082,7 +1086,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
     return(transactionId);
   }
 
-  eom = (u_char *)(&answer+length);
+  eom = (u_char *)(ipPtr+length);
 
   qdcount = (int)ntohs((unsigned short int)answer.qb1.qdcount);
   ancount = (int)ntohs((unsigned short int)answer.qb1.ancount);
@@ -1164,17 +1168,18 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
        * E.g. : 89.10.67.213.in-addr.arpa
        *
        */
-      char *a, *b, *c, *d, dnsBuf[48], *strtokState;
+      char *a, *b, *c, *d, dnsBuf[48];
       int len;
       unsigned long theDNSaddr;
 
       len = strlen(bp); if(len >= (sizeof(dnsBuf)-1)) len = sizeof(dnsBuf)-2;
-      xstrncpy(dnsBuf, bp, len);
+      memset(dnsBuf, 0, sizeof(dnsBuf));
+      strncpy(dnsBuf, bp, len);
 
-      d = strtok_r(dnsBuf, ".", &strtokState);
-      c = strtok_r(NULL, ".", &strtokState);
-      b = strtok_r(NULL, ".", &strtokState);
-      a = strtok_r(NULL, ".", &strtokState);
+      d = strtok(dnsBuf, ".");
+      c = strtok(NULL, ".");
+      b = strtok(NULL, ".");
+      a = strtok(NULL, ".");
 
       if(a && b && c && d) {
 	theDNSaddr = htonl(atoi(a)*(256*256*256)+atoi(b)*(256*256)+atoi(c)*256+atoi(d));
@@ -1309,20 +1314,21 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 
 /* **************************************** */
 
-void checkSpoofing(u_int idxToCheck) {
+void checkSpoofing(u_int idxToCheck, int actualDeviceId) {
   u_int i;
   HostTraffic *el;
 
   for(i=1; i<device[actualDeviceId].actualHashSize; i++) {
-    if((i != idxToCheck)
+    if((i != idxToCheck) 
+       && (i != otherHostEntryIdx)
        && ((el = device[actualDeviceId].hash_hostTraffic[i]) != NULL)) {
       if((el->hostIpAddress.s_addr != 0x0)
+	 && (device[actualDeviceId].hash_hostTraffic[idxToCheck] != NULL)
 	 && (el->hostIpAddress.s_addr ==
 	     device[actualDeviceId].hash_hostTraffic[idxToCheck]->hostIpAddress.s_addr)) {
 	/* Spoofing detected */
 	FilterRule spoofing;
-
-
+	    
 	if((!hasDuplicatedMac(el))
 	   && (!hasDuplicatedMac(device[actualDeviceId].hash_hostTraffic[idxToCheck]))) {
 	  FD_SET(HOST_DUPLICATED_MAC, &device[actualDeviceId].hash_hostTraffic[idxToCheck]->flags);
@@ -1343,15 +1349,13 @@ void checkSpoofing(u_int idxToCheck) {
 		       el->hostNumIpAddress,
 		       device[actualDeviceId].hash_hostTraffic[idxToCheck]->ethAddressString,
 		       el->ethAddressString);
-	    dumpSuspiciousPacket();
+	    dumpSuspiciousPacket(actualDeviceId);
 	  }
 	}
       }
     }
   }
 }
-
-
 
 /* ****************************************** */
 
@@ -1389,7 +1393,7 @@ void cleanupHostEntries() {
 
     if(data_data.dptr != NULL) {
       if((data_data.dsize == (sizeof(StoredAddress)+1))
-	 && ((((StoredAddress*)data_data.dptr)->recordCreationTime+ADDRESS_PURGE_TIMEOUT) < actTime)) {
+	 || ((((StoredAddress*)data_data.dptr)->recordCreationTime+ADDRESS_PURGE_TIMEOUT) < actTime)) {
 	gdbm_delete(gdbm_file, key_data);
 #ifdef DEBUG
 	traceEvent(TRACE_INFO, "Deleted '%s' entry.\n", data_data.dptr);

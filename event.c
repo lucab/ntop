@@ -119,7 +119,7 @@ void emitEvent(FilterRule *rule,
 
 /* ****************************************** */
 
-static void scanExpiredRules(FilterRule *rule) {
+static void scanExpiredRules(FilterRule *rule, int actualDeviceId) {
   if((rule->numMatchedRules > 0) 
      && (rule->lastRuleCheck+MIN_SCAN_TIMEOUT < actTime)) {
     /* Let's check whether there are some expired rules */
@@ -181,7 +181,7 @@ static void scanExpiredRules(FilterRule *rule) {
 
 /* ****************************************** */
 
-void scanAllTcpExpiredRules(void) {
+void scanAllTcpExpiredRules(int actualDeviceId) {
   u_short i;
 
 #ifdef DEBUG
@@ -190,7 +190,7 @@ void scanAllTcpExpiredRules(void) {
 
   for(i=0; i<ruleSerialIdentifier; i++)
     if(filterRulesList[i] != NULL)
-      scanExpiredRules(filterRulesList[i]);
+      scanExpiredRules(filterRulesList[i], actualDeviceId);
 }
 
 /* ****************************************** */
@@ -203,14 +203,15 @@ void fireEvent(FilterRule *rule,
 	       short icmpType,
 	       u_short sport,
 	       u_short dport,
-	       u_int length _UNUSED_) {
+	       u_int length _UNUSED_,
+	       int actualDeviceId) {
   int i, rulesFound;
   
 #ifdef DEBUG
  traceEvent(TRACE_INFO, "fireTcpUdpEvent() called.\n");
 #endif
 
-  scanExpiredRules(rule);
+ scanExpiredRules(rule, actualDeviceId);
 
     /* This is not a rule 'per se' but it is used to clear
        other events if marked before */
@@ -456,7 +457,7 @@ void fireEvent(FilterRule *rule,
 
 /* **************************************** */
 
-void smurfAlert(u_int srcHostIdx, u_int dstHostIdx) {
+void smurfAlert(u_int srcHostIdx, u_int dstHostIdx, int actualDeviceId) {
   FilterRule smurfing;
 
   memset(&smurfing, 0, sizeof(FilterRule));
@@ -472,6 +473,6 @@ void smurfAlert(u_int srcHostIdx, u_int dstHostIdx) {
     traceEvent(TRACE_INFO, "WARNING: smurfing detected (%s->%s)\n",
 	       device[actualDeviceId].hash_hostTraffic[srcHostIdx]->hostSymIpAddress,
 	       device[actualDeviceId].hash_hostTraffic[dstHostIdx]->hostSymIpAddress);
-    dumpSuspiciousPacket();
+    dumpSuspiciousPacket(actualDeviceId);
   }
 }

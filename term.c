@@ -57,6 +57,6 @@ void termIPSessions(void) {
     device[j].numTcpSessions = 0;
     
     while (device[j].fragmentList != NULL)
-      deleteFragment(device[j].fragmentList);
+      deleteFragment(device[j].fragmentList, j);
   }
 }

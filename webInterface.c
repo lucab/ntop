@@ -33,7 +33,7 @@ static short alternateColor=0;
 #endif
 
 /* Forward */
-void handleSingleWebConnection(fd_set *fdmask);
+static void handleSingleWebConnection(fd_set *fdmask);
 
 #ifndef MICRO_NTOP
 
@@ -1103,7 +1103,7 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 
 /* ************************************* */
  
-void handleSingleWebConnection(fd_set *fdmask) {
+static void handleSingleWebConnection(fd_set *fdmask) {
   struct sockaddr_in from;
   int from_len = sizeof(from);
 

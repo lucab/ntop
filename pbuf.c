@@ -69,18 +69,16 @@ static void dumpHash(); /* Forward */
 
  /* ************************************ */
 
-u_int _checkSessionIdx(u_int idx, char* file, int line) {
-
+u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
   if(idx > device[actualDeviceId].actualHashSize)
     traceEvent(TRACE_ERROR,
-	       "Index error idx=%u @ [%s:%d]\n",
-	       idx, file, line);
+	       "Index error idx=%u @ [%s:%d]\n", idx, file, line);
   return(idx);
 }
 
 /* ******************************* */
 
-u_int findHostInfo(struct in_addr *hostIpAddress) {
+u_int findHostInfo(struct in_addr *hostIpAddress, int actualDeviceId) {
   u_int i;
 
   for(i=0; i<device[actualDeviceId].actualHashSize; i++)
@@ -97,7 +95,8 @@ u_int findHostInfo(struct in_addr *hostIpAddress) {
 u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char *ether_addr,
 		  u_char checkForMultihoming,
-		  u_char forceUsingIPaddress) {
+		  u_char forceUsingIPaddress,
+		  int actualDeviceId) {
   u_int idx, i, isMultihomed = 0, numRuns=0, initialIdx;
 #ifndef MULTITHREADED
   u_int run=0;
@@ -114,8 +113,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
     return(NO_PEER);
   }
 
-  idx = computeInitialHashIdx(hostIpAddress, ether_addr, &useIPAddressForSearching);
-  idx = (u_int)(idx % device[actualDeviceId].actualHashSize);
+  idx = computeInitialHashIdx(hostIpAddress, ether_addr, 
+			      &useIPAddressForSearching, actualDeviceId);
   initialIdx = idx;
 
 #ifdef DEBUG
@@ -170,7 +169,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 			  sizeof(el->hostNumIpAddress));
 
 		  if(numericFlag == 0)
-		    ipaddr2str(el->hostIpAddress);
+		    ipaddr2str(el->hostIpAddress, actualDeviceId);
 
 		  /* else el->hostSymIpAddress = el->hostNumIpAddress;
 		     The line below isn't necessary because (**) has
@@ -201,7 +200,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 			   "%s: [%s/%s] (spoofing detected?)",
 			   el->hostNumIpAddress,
 			   etheraddr_string(ether_addr), el->ethAddressString);
-		dumpSuspiciousPacket();
+		dumpSuspiciousPacket(actualDeviceId);
 	      }
 	    }
 	  }
@@ -271,8 +270,8 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       device[actualDeviceId].hostsno++;
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Adding idx=%d on device=%d\n",
-		 firstEmptySlot, actualDeviceId);
+      traceEvent(TRACE_INFO, "Adding idx=%d on device=%d [actualHashSize=%d]\n",
+		 firstEmptySlot, actualDeviceId, device[actualDeviceId].actualHashSize);
 #endif
 
       if(ether_addr != NULL) {
@@ -326,7 +325,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	  strncpy(el->hostSymIpAddress, el->hostNumIpAddress,
 		  MAX_HOST_SYM_NAME_LEN);
 
-
 	  if((el->hostIpAddress.s_addr != 0x0) /* 0.0.0.0 */
 	     && (el->hostIpAddress.s_addr != 0xFFFFFFFF) /* 255.255.255.255 */
 	     && isBroadcastAddress(&el->hostIpAddress)) {
@@ -353,7 +351,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 	  /* Trick to fill up the address cache */
 	  if(numericFlag == 0)
-	    ipaddr2str(el->hostIpAddress);
+	    ipaddr2str(el->hostIpAddress, actualDeviceId);
 	  else
 	    strncpy(el->hostSymIpAddress,
 		    el->hostNumIpAddress, MAX_HOST_SYM_NAME_LEN);
@@ -380,7 +378,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 #endif
 
 	el->lastSeen = actTime;
-	checkSpoofing(idx);
+	checkSpoofing(idx, actualDeviceId);
       }
     } else {
       /* The hashtable is full */
@@ -412,7 +410,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	    }
 
 	  hostToFree = device[actualDeviceId].hash_hostTraffic[candidate];
-	  freeHostInfo(actualDeviceId, candidate, 1);
+	  freeHostInfo(actualDeviceId, candidate, 1, actualDeviceId);
 	  idx = candidate; /* this is a hint for (**) */
 	}
 #endif
@@ -435,7 +433,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
   if(el != NULL) {
     el->lastSeen = actTime;
-
 
     if(setSpoofingFlag)
       FD_SET(HOST_DUPLICATED_MAC, &el->flags);
@@ -483,7 +480,7 @@ static void updateHostSessionsList(u_int theHostIdx,
 				   IPSession *theSession,
 				   u_short sessionType,
 				   u_char initiator,
-				   int role) {
+				   int role, int actualDeviceId) {
   /* This is a known port hence we're interested in */
   IpGlobalSession *scanner=NULL;
   HostTraffic *theHost, *theRemHost;
@@ -602,7 +599,7 @@ void allocateSecurityHostPkts(HostTraffic *srcHost) {
 
 /* ************************************ */
 
-void scanTimedoutTCPSessions(void) {
+void scanTimedoutTCPSessions(int actualDeviceId) {
   u_int idx, i;
 
 #ifdef DEBUG
@@ -643,19 +640,19 @@ void scanTimedoutTCPSessions(void) {
 	    if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
 	      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
 				     sessionToPurge->remotePeerIdx, sessionToPurge,
-				     IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE);
+				     IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE, actualDeviceId);
 	      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->sport,
 				     sessionToPurge->initiatorIdx, sessionToPurge,
-				     IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE);
+				     IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE, actualDeviceId);
 	    }
 	  } else { /* Client->Server */
 	    if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
 	      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
 				     sessionToPurge->initiatorIdx, sessionToPurge,
-				     IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE);
+				     IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE, actualDeviceId);
 	      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->dport,
 				     sessionToPurge->remotePeerIdx, sessionToPurge,
-				     IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE);
+				     IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE, actualDeviceId);
 	    }
 	  }
 
@@ -695,8 +692,8 @@ void scanTimedoutTCPSessions(void) {
 	   * can now be purged.
 	   */
 	  sessionToPurge->magic = 0;
-	  if(enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge);
-	  notifyTCPSession(sessionToPurge);
+	  if(enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge, actualDeviceId);
+	  notifyTCPSession(sessionToPurge, actualDeviceId);
 #ifdef HAVE_MYSQL
 	  mySQLnotifyTCPSession(sessionToPurge);
 #endif
@@ -832,7 +829,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 				u_int length,
 				struct tcphdr *tp,
 				u_int packetDataLength,
-				u_char* packetData) {
+				u_char* packetData,
+				int actualDeviceId) {
   u_int idx, initialIdx, i;
   IPSession *theSession = NULL;
   short flowDirection = CLIENT_TO_SERVER;
@@ -865,7 +863,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
     it would be filtered out by the (**) check
   */
   if(enablePacketDecoding && (tp == NULL /* UDP session */))
-    handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData);
+    handleBootp(srcHost, dstHost, sport, dport, packetDataLength, packetData, actualDeviceId);
 
   if(broadcastHost(srcHost) || broadcastHost(dstHost)) /* (**) */
     return(theSession);
@@ -1298,7 +1296,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 			 dstHost->hostSymIpAddress, dport,
 			 rcStr);
 
-	      dumpSuspiciousPacket();
+	      dumpSuspiciousPacket(actualDeviceId);
 	    }
 	  }
 
@@ -1410,7 +1408,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 			 srcHost->hostSymIpAddress, sport,
 			 dstHost->hostSymIpAddress, dport,
 			 rcStr);
-	      dumpSuspiciousPacket();
+	      dumpSuspiciousPacket(actualDeviceId);
 	    }
 	  } else if((sport != 21) && (sport != 25) && isInitialFtpData(rcStr)) {
 	    if(enableSuspiciousPacketDump) {
@@ -1419,7 +1417,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 			 dstHost->hostSymIpAddress, dport,
 			 srcHost->hostSymIpAddress, sport,
 			 rcStr);
-	      dumpSuspiciousPacket();
+	      dumpSuspiciousPacket(actualDeviceId);
 	    }
 	  } else if(((sport == 21) || (sport == 25)) && (!isInitialFtpData(rcStr))) {
 	    if(enableSuspiciousPacketDump) {
@@ -1428,7 +1426,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 			 dstHost->hostSymIpAddress, dport,
 			 srcHost->hostSymIpAddress, sport,
 			 rcStr);
-	      dumpSuspiciousPacket();
+	      dumpSuspiciousPacket(actualDeviceId);
 	    }
 	  } else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr)) {
 	    if(enableSuspiciousPacketDump) {
@@ -1437,7 +1435,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 			 dstHost->hostSymIpAddress, dport,
 			 srcHost->hostSymIpAddress, sport,
 			 rcStr);
-	      dumpSuspiciousPacket();
+	      dumpSuspiciousPacket(actualDeviceId);
 	    }
 	  } else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr))) {
 	    if(enableSuspiciousPacketDump) {
@@ -1446,7 +1444,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 			 dstHost->hostSymIpAddress, dport,
 			 srcHost->hostSymIpAddress, sport,
 			 rcStr);
-	      dumpSuspiciousPacket();
+	      dumpSuspiciousPacket(actualDeviceId);
 	    }
 	  }
 	} else if((theSession->bytesProtoRcvd == 0) && (len > 0)) {
@@ -1827,7 +1825,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		     srcHost->hostSymIpAddress, sport,
 		     dstHost->hostSymIpAddress, dport,
 		     srcHost->hostSymIpAddress);
-	  dumpSuspiciousPacket();
+	  dumpSuspiciousPacket(actualDeviceId);
 	}
       }
 
@@ -1859,7 +1857,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
 		     dstHost->hostSymIpAddress, dport,
 		     srcHost->hostSymIpAddress, sport);
-	  dumpSuspiciousPacket();
+	  dumpSuspiciousPacket(actualDeviceId);
 	}
       }
       /* Connection terminated */
@@ -1896,7 +1894,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       if(enableSuspiciousPacketDump) {
 	traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
 		   srcHost->hostSymIpAddress, sport);
-	dumpSuspiciousPacket();
+	dumpSuspiciousPacket(actualDeviceId);
       }
     }
 
@@ -1915,7 +1913,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress, dport,
 		     srcHost->hostSymIpAddress, sport);
-	  dumpSuspiciousPacket();
+	  dumpSuspiciousPacket(actualDeviceId);
 	}
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && (theSession->lastRem2InitiatorFlags[0] == (TH_FIN|TH_PUSH|TH_URG)))
@@ -1929,7 +1927,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
 		     dstHost->hostSymIpAddress, dport,
 		     srcHost->hostSymIpAddress, sport);
-	  dumpSuspiciousPacket();
+	  dumpSuspiciousPacket(actualDeviceId);
 	}
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && ((theSession->lastRem2InitiatorFlags[0] & TH_FIN) == TH_FIN))
@@ -1943,7 +1941,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
 		     dstHost->hostSymIpAddress, dport,
 		     srcHost->hostSymIpAddress, sport);
-	  dumpSuspiciousPacket();
+	  dumpSuspiciousPacket(actualDeviceId);
 	}
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && (theSession->lastRem2InitiatorFlags[0] == 0)
@@ -1959,7 +1957,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
 		     dstHost->hostSymIpAddress, dport,
 		     srcHost->hostSymIpAddress, sport);
-	  dumpSuspiciousPacket();
+	  dumpSuspiciousPacket(actualDeviceId);
 	}
       }
     }
@@ -2016,10 +2014,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     if(getPortByNum(sport, sessionType) != NULL) {
       updateHostSessionsList(srcHostIdx, sport, dstHostIdx, &tmpSession,
-			     sessionType, SERVER_TO_CLIENT, SERVER_ROLE);
+			     sessionType, SERVER_TO_CLIENT, SERVER_ROLE, actualDeviceId);
       tmpSession.bytesSent = 0, tmpSession.bytesRcvd = (TrafficCounter)length;
       updateHostSessionsList(dstHostIdx, sport, srcHostIdx, &tmpSession,
-			     sessionType, CLIENT_FROM_SERVER, CLIENT_ROLE);
+			     sessionType, CLIENT_FROM_SERVER, CLIENT_ROLE, actualDeviceId);
     } else {
       if(isLsofPresent) {
 #ifdef MULTITHREADED
@@ -2034,10 +2032,10 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
     if(getPortByNum(dport, sessionType) != NULL) {
       updateHostSessionsList(srcHostIdx, dport, dstHostIdx, &tmpSession,
-			     sessionType, CLIENT_TO_SERVER, CLIENT_ROLE);
+			     sessionType, CLIENT_TO_SERVER, CLIENT_ROLE, actualDeviceId);
       tmpSession.bytesSent = 0, tmpSession.bytesRcvd = (TrafficCounter)length;
       updateHostSessionsList(dstHostIdx, dport, srcHostIdx, &tmpSession,
-			     sessionType, SERVER_FROM_CLIENT, SERVER_ROLE);
+			     sessionType, SERVER_FROM_CLIENT, SERVER_ROLE, actualDeviceId);
     } else {
       if(isLsofPresent) {
 #if defined(MULTITHREADED)
@@ -2063,7 +2061,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       traceEvent(TRACE_WARNING, fmt,
 		 srcHost->hostSymIpAddress, sport,
 		 dstHost->hostSymIpAddress, dport);
-      dumpSuspiciousPacket();
+      dumpSuspiciousPacket(actualDeviceId);
     }
 
     if((dport == 7)
@@ -2100,7 +2098,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       traceEvent(TRACE_WARNING, fmt, packetDataLength,
 		 srcHost->hostSymIpAddress, sport,
 		 dstHost->hostSymIpAddress, dport);
-      dumpSuspiciousPacket();
+      dumpSuspiciousPacket(actualDeviceId);
     }
   }
 
@@ -2110,7 +2108,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 /* ************************************ */
 
 static void addLsofContactedPeers(ProcessInfo *process,
-				  u_int peerHostIdx) {
+				  u_int peerHostIdx, int actualDeviceId) {
   u_int i;
 
   if((process == NULL)
@@ -2132,7 +2130,8 @@ static void handleLsof(u_int srcHostIdx,
 		       u_short sport,
 		       u_int dstHostIdx,
 		       u_short dport,
-		       u_int length) {
+		       u_int length, 
+		       int actualDeviceId) {
   HostTraffic *srcHost, *dstHost;
 
 #ifdef MULTITHREADED
@@ -2149,7 +2148,7 @@ static void handleLsof(u_int srcHostIdx,
       while(scanner != NULL) {
 	scanner->element->bytesSent += length;
 	scanner->element->lastSeen   = actTime;
-	addLsofContactedPeers(scanner->element, dstHostIdx);
+	addLsofContactedPeers(scanner->element, dstHostIdx, actualDeviceId);
 	scanner = scanner->next;
       }
     }
@@ -2161,7 +2160,7 @@ static void handleLsof(u_int srcHostIdx,
       while(scanner != NULL) {
 	scanner->element->bytesRcvd += length;
 	scanner->element->lastSeen   = actTime;
-	addLsofContactedPeers(scanner->element, srcHostIdx);
+	addLsofContactedPeers(scanner->element, srcHostIdx, actualDeviceId);
 	scanner = scanner->next;
       }
     }
@@ -2182,7 +2181,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 				   u_int length,
 				   struct tcphdr *tp,
 				   u_int tcpDataLength,
-				   u_char* packetData) {
+				   u_char* packetData, 
+				   int actualDeviceId) {
   IPSession* theSession = NULL;
 
   if(
@@ -2201,11 +2201,12 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
 			       srcHostIdx, sport,
 			       dstHostIdx, dport,
 			       length, tp,
-			       tcpDataLength, packetData);
+			       tcpDataLength, packetData, 
+			       actualDeviceId);
   }
 
   if(isLsofPresent)
-    handleLsof(srcHostIdx, sport, dstHostIdx, dport, length);
+    handleLsof(srcHostIdx, sport, dstHostIdx, dport, length, actualDeviceId);
 
   return(theSession);
 }
@@ -2219,14 +2220,15 @@ static IPSession* handleUDPSession(const struct pcap_pkthdr *h,
 				   u_int dstHostIdx,
 				   u_short dport,
 				   u_int length,
-				   u_char* packetData) {
+				   u_char* packetData,
+				   int actualDeviceId) {
   IPSession* theSession = handleSession(h, fragmentedData, 0,
 					srcHostIdx, sport,
 					dstHostIdx, dport, length,
-					NULL, length, packetData);
+					NULL, length, packetData, actualDeviceId);
 
   if(isLsofPresent)
-    handleLsof(srcHostIdx, sport, dstHostIdx, dport, length);
+    handleLsof(srcHostIdx, sport, dstHostIdx, dport, length, actualDeviceId);
 
   return(theSession);
 }
@@ -2237,7 +2239,8 @@ static int handleIP(u_short port,
 		    u_int srcHostIdx,
 		    u_int dstHostIdx,
 		    u_int length,
-		    u_short isPassiveSession) {
+		    u_short isPassiveSession,
+		    int actualDeviceId) {
   int idx;
   HostTraffic *srcHost, *dstHost;
 
@@ -2312,7 +2315,7 @@ static int handleIP(u_short port,
 
 /* ************************************ */
 
-static void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
+static void addContactedPeers(u_int senderIdx, u_int receiverIdx, int actualDeviceId) {
   short i, found;
   HostTraffic *sender, *receiver;
 
@@ -2423,10 +2426,10 @@ static void dumpFragmentData(IpFragment *fragment) {
 
 /* ************************************ */
 
-
 static IpFragment *searchFragment(HostTraffic *srcHost,
 				  HostTraffic *dstHost,
-				  u_int fragmentId) {
+				  u_int fragmentId, 
+				  int actualDeviceId) {
   IpFragment *fragment = device[actualDeviceId].fragmentList;
 
   while ((fragment != NULL)
@@ -2440,7 +2443,7 @@ static IpFragment *searchFragment(HostTraffic *srcHost,
 
 /* ************************************ */
 
-void deleteFragment(IpFragment *fragment) {
+void deleteFragment(IpFragment *fragment, int actualDeviceId) {
 
   if (fragment->prev == NULL)
     device[actualDeviceId].fragmentList = fragment->next;
@@ -2457,7 +2460,8 @@ static void checkFragmentOverlap(u_int srcHostIdx,
                                  u_int dstHostIdx,
                                  IpFragment *fragment,
                                  u_int fragmentOffset,
-                                 u_int dataLength) {
+                                 u_int dataLength, 
+				 int actualDeviceId) {
   if (fragment->fragmentOrder == UNKNOWN_FRAGMENT_ORDER) {
     if(fragment->lastOffset > fragmentOffset)
       fragment->fragmentOrder = DECREASING_FRAGMENT_ORDER;
@@ -2480,7 +2484,7 @@ static void checkFragmentOverlap(u_int srcHostIdx,
                fragment->lastOffset);
 
       logMessage(buf, NTOP_WARNING_MSG);
-      dumpSuspiciousPacket();
+      dumpSuspiciousPacket(actualDeviceId);
     }
 
     allocateSecurityHostPkts(fragment->src); allocateSecurityHostPkts(fragment->dest);
@@ -2500,7 +2504,8 @@ static u_int handleFragment(HostTraffic *srcHost,
                             u_int fragmentId,
                             u_int off,
                             u_int packetLength,
-                            u_int dataLength) {
+                            u_int dataLength, 
+			    int actualDeviceId) {
   IpFragment *fragment;
   u_int fragmentOffset, length;
 
@@ -2509,7 +2514,7 @@ static u_int handleFragment(HostTraffic *srcHost,
 
   fragmentOffset = (off & 0x1FFF)*8;
 
-  fragment = searchFragment(srcHost, dstHost, fragmentId);
+  fragment = searchFragment(srcHost, dstHost, fragmentId, actualDeviceId);
 
   if (fragment == NULL) {
     /* new fragment */
@@ -2526,7 +2531,8 @@ static u_int handleFragment(HostTraffic *srcHost,
     fragment->prev = NULL;
     device[actualDeviceId].fragmentList = fragment;
   } else
-    checkFragmentOverlap(srcHostIdx, dstHostIdx, fragment, fragmentOffset, dataLength);
+    checkFragmentOverlap(srcHostIdx, dstHostIdx, fragment, 
+			 fragmentOffset, dataLength, actualDeviceId);
 
   fragment->lastOffset = fragmentOffset;
   fragment->totalPacketLength += packetLength;
@@ -2553,7 +2559,7 @@ static u_int handleFragment(HostTraffic *srcHost,
     *sport = fragment->sport;
     *dport = fragment->dport;
     length = fragment->totalPacketLength;
-    deleteFragment(fragment);
+    deleteFragment(fragment, actualDeviceId);
   } else {
     *sport = 0;
     *dport = 0;
@@ -2563,10 +2569,9 @@ static u_int handleFragment(HostTraffic *srcHost,
   return length;
 }
 
-
 /* ************************************ */
 
-void purgeOldFragmentEntries(void) {
+void purgeOldFragmentEntries(int actualDeviceId) {
   IpFragment *fragment, *next;
   u_int fragcnt=0, expcnt=0;
 
@@ -2580,7 +2585,7 @@ void purgeOldFragmentEntries(void) {
 #ifdef FRAGMENT_DEBUG
       dumpFragmentData(fragment);
 #endif
-      deleteFragment(fragment);
+      deleteFragment(fragment, actualDeviceId);
     }
     fragment=next;
   }
@@ -2597,7 +2602,7 @@ void purgeOldFragmentEntries(void) {
 
 static void checkNetworkRouter(HostTraffic *srcHost,
 			       HostTraffic *dstHost,
-			       u_char *ether_dst) {
+			       u_char *ether_dst, int actualDeviceId) {
   if((subnetLocalHost(srcHost) && (!subnetLocalHost(dstHost)) 
       && (!broadcastHost(dstHost)) && (!multicastHost(dstHost)))
      || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost)) 
@@ -2605,10 +2610,10 @@ static void checkNetworkRouter(HostTraffic *srcHost,
     u_int routerIdx, j;
     HostTraffic *router;
 
-    routerIdx = getHostInfo(NULL, ether_dst, 0, 0);
-
+    routerIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
+    
     router = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)];
-
+    
     if(((router->hostNumIpAddress[0] != '\0')
        && (broadcastHost(router)
 	   || multicastHost(router)
@@ -2645,8 +2650,8 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 /* ************************************ */
 
 static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
-                              TrafficCounter length) {
-
+                              TrafficCounter length, int actualDeviceId) {
+  
   HostTraffic *srcHost, *dstHost;
   unsigned short hourId;
   struct tm t, *thisTime;
@@ -2692,16 +2697,16 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
   dstHost->pktRcvd++;
 
   if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
-    addContactedPeers(srcHostIdx, dstHostIdx);
+    addContactedPeers(srcHostIdx, dstHostIdx, actualDeviceId);
 }
 
 /* ************************************ */
 
 void updateHostName(HostTraffic *el) {
+
   if((el->hostNumIpAddress[0] == '\0')
      || (el->hostSymIpAddress == NULL)
-     || strcmp(el->hostSymIpAddress,
-	       el->hostNumIpAddress) == 0) {
+     || strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
     int i;
 
     if(el->nbHostName != NULL) {
@@ -2728,7 +2733,8 @@ static void processIpPkt(const u_char *bp,
 			 const struct pcap_pkthdr *h,
 			 u_int length,
 			 u_char *ether_src,
-			 u_char *ether_dst) {
+			 u_char *ether_dst, 
+			 int actualDeviceId) {
   u_short sport, dport;
   struct ip ip;
   struct tcphdr tp;
@@ -2798,7 +2804,7 @@ static void processIpPkt(const u_char *bp,
      && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
     /* forceUsingIPaddress = 1; */
 
-    srcHostIdx = getHostInfo(NULL, ether_src, 0, 0);
+    srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
     srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
     if(srcHost != NULL) {
       if(enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
@@ -2806,7 +2812,7 @@ static void processIpPkt(const u_char *bp,
 
 	traceEvent(TRACE_WARNING, "Host %s has a wrong netmask",
 		   etheraddr_string(ether_src));
-	dumpSuspiciousPacket();
+	dumpSuspiciousPacket(actualDeviceId);
       }
       FD_SET(HOST_WRONG_NETMASK, &srcHost->flags);
     }
@@ -2816,7 +2822,7 @@ static void processIpPkt(const u_char *bp,
     IMPORTANT:
     do NOT change the order of the lines below (see isBroadcastAddress call)
   */
-  dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst, 1, 0);
+  dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst, 1, 0, actualDeviceId);
   dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
   srcHostIdx = getHostInfo(&ip.ip_src, ether_src,
@@ -2825,7 +2831,7 @@ static void processIpPkt(const u_char *bp,
 			     the destination address is a broadcast address
 			   */
 			   (!isBroadcastAddress(&dstHost->hostIpAddress)),
-			   forceUsingIPaddress);
+			   forceUsingIPaddress, actualDeviceId);
   srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 
   if(srcHost == NULL) {
@@ -2869,9 +2875,9 @@ static void processIpPkt(const u_char *bp,
     if((ip.ip_ttl > dstHost->maxTTL)) dstHost->maxTTL = ip.ip_ttl;
   }
 
-  if(!borderSnifferMode) checkNetworkRouter(srcHost, dstHost, ether_dst);
-  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)h->len);
-  updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length);
+  if(!borderSnifferMode) checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
+  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)h->len, actualDeviceId);
+  updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length, actualDeviceId);
 
   srcHost->ipBytesSent += length, dstHost->ipBytesRcvd += length;
 
@@ -2945,7 +2951,7 @@ static void processIpPkt(const u_char *bp,
 	traceEvent(TRACE_WARNING, "WARNING: Malformed TCP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
-	dumpSuspiciousPacket();
+	dumpSuspiciousPacket(actualDeviceId);
 
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHostIdx, actualDeviceId);
@@ -2984,7 +2990,7 @@ static void processIpPkt(const u_char *bp,
 			 IPPROTO_TCP,
 			 (u_char)(off & 0x3fff), /* 1 = fragment, 0 = packet */
 			 bp, /* pointer to packet content */
-			 tcpChain, TCP_RULE);
+			 tcpChain, TCP_RULE, actualDeviceId);
       }
 
       /*
@@ -2998,7 +3004,7 @@ static void processIpPkt(const u_char *bp,
 	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
 				&sport, &dport,
 				ntohs(ip.ip_id), off, length,
-				ntohs(ip.ip_len) - hlen);       
+				ntohs(ip.ip_len) - hlen, actualDeviceId);       
       }
       
       if((sport > 0) && (dport > 0)) {
@@ -3035,7 +3041,7 @@ static void processIpPkt(const u_char *bp,
 	theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
 				      srcHostIdx, sport, dstHostIdx,
 				      dport, length, &tp, tcpDataLength,
-				      theData);
+				      theData, actualDeviceId);
 	if(theSession == NULL)
 	  isPassiveSession = 0;
 	else
@@ -3054,11 +3060,11 @@ static void processIpPkt(const u_char *bp,
 	 * Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>
 	 */
 	if(dport < sport) {
-	  if(handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession) == -1)
-	    handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession);
+	  if(handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession, actualDeviceId) == -1)
+	    handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession, actualDeviceId);
 	} else {
-	  if(handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession) == -1)
-	    handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession);
+	  if(handleIP(sport, srcHostIdx, dstHostIdx, length, isPassiveSession, actualDeviceId) == -1)
+	    handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession, actualDeviceId);
 	}
       }
     }
@@ -3073,7 +3079,7 @@ static void processIpPkt(const u_char *bp,
 	traceEvent(TRACE_WARNING, "WARNING: Malformed UDP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
-	dumpSuspiciousPacket();
+	dumpSuspiciousPacket(actualDeviceId);
 
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHostIdx, actualDeviceId);
@@ -3095,8 +3101,8 @@ static void processIpPkt(const u_char *bp,
 	if(((sport == 53) || (dport == 53) /* domain */)
 	   && enablePacketDecoding
 	   && (bp != NULL) /* packet long enough */) {
-	  short isRequest, positiveReply;
-	  u_int16_t transactionId;
+	  short isRequest = 0, positiveReply = 0;
+	  u_int16_t transactionId = 0;
 
 	  /* The DNS chain will be checked here */
 	  transactionId = processDNSPacket(bp+hlen+sizeof(struct udphdr), 
@@ -3221,7 +3227,7 @@ static void processIpPkt(const u_char *bp,
 			 IPPROTO_UDP,
 			 (u_char)(off & 0x3fff), /* 1 = fragment, 0 = packet */
 			 bp, /* pointer to packet content */
-			 udpChain, UDP_RULE);
+			 udpChain, UDP_RULE, actualDeviceId);
       }
 
       /*
@@ -3235,9 +3241,8 @@ static void processIpPkt(const u_char *bp,
 	length = handleFragment(srcHost, srcHostIdx, dstHost, dstHostIdx,
 				&sport, &dport,
 				ntohs(ip.ip_id), off, length,
-				ntohs(ip.ip_len) - hlen);       
-      }
-      
+				ntohs(ip.ip_len) - hlen, actualDeviceId);       
+      }      
 
       if((sport > 0) && (dport > 0)) {
 	/* It might be that udpBytes is 0 when
@@ -3267,13 +3272,13 @@ static void processIpPkt(const u_char *bp,
 	  }
 	}
 
-	if(handleIP(dport, srcHostIdx, dstHostIdx, length, 0) == -1)
-	  handleIP(sport, srcHostIdx, dstHostIdx, length, 0);
+	if(handleIP(dport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId) == -1)
+	  handleIP(sport, srcHostIdx, dstHostIdx, length, 0, actualDeviceId);
 
 	handleUDPSession(h, (off & 0x3fff),
 			 srcHostIdx, sport, dstHostIdx,
 			 dport, udpDataLength,
-			 (u_char*)(bp+hlen+sizeof(struct udphdr)));
+			 (u_char*)(bp+hlen+sizeof(struct udphdr)), actualDeviceId);
 	sendUDPflow(srcHost, dstHost, sport, dport, length);
       }
     }
@@ -3287,7 +3292,7 @@ static void processIpPkt(const u_char *bp,
 	traceEvent(TRACE_WARNING, "WARNING: Malformed ICMP pkt %s->%s detected (packet too short)",
 		   srcHost->hostSymIpAddress,
 		   dstHost->hostSymIpAddress);
-	dumpSuspiciousPacket();
+	dumpSuspiciousPacket(actualDeviceId);
 
 	allocateSecurityHostPkts(srcHost); allocateSecurityHostPkts(dstHost);
 	incrementUsageCounter(&srcHost->secHostPkts->malformedPktsSent, dstHostIdx, actualDeviceId);
@@ -3310,7 +3315,7 @@ static void processIpPkt(const u_char *bp,
 	if(enableSuspiciousPacketDump) {
 	  traceEvent(TRACE_WARNING, fmt,
 		     srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
-	  dumpSuspiciousPacket();
+	  dumpSuspiciousPacket(actualDeviceId);
 	}
       }
 
@@ -3352,7 +3357,7 @@ static void processIpPkt(const u_char *bp,
 	case ICMP_TIMESTAMPREPLY:
 	case ICMP_SOURCE_QUENCH:
 	  if(enableSuspiciousPacketDump) {
-	    dumpSuspiciousPacket();
+	    dumpSuspiciousPacket(actualDeviceId);
 	  }
 	  break;
 	}
@@ -3396,11 +3401,11 @@ static void processIpPkt(const u_char *bp,
 			 IPPROTO_ICMP,
 			 0, /* 1 = fragment, 0 = packet */
 			 bp+hlen, /* pointer to packet content */
-			 icmpChain, ICMP_RULE);
+			 icmpChain, ICMP_RULE, actualDeviceId);
 
       if((icmpPkt.icmp_type == ICMP_ECHO)
 	 && (broadcastHost(dstHost) || multicastHost(dstHost)))
-	smurfAlert(srcHostIdx, dstHostIdx);
+	smurfAlert(srcHostIdx, dstHostIdx, actualDeviceId);
       else if(icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */) {
 	u_int16_t dport;
 	struct ip *oip = &icmpPkt.icmp_ip;
@@ -3467,7 +3472,7 @@ static void processIpPkt(const u_char *bp,
 	  incrementUsageCounter(&dstHost->secHostPkts->icmpAdminProhibitedRcvd, srcHostIdx, actualDeviceId);
 	  break;
 	}
-	if(enableSuspiciousPacketDump) dumpSuspiciousPacket();
+	if(enableSuspiciousPacketDump) dumpSuspiciousPacket(actualDeviceId);
       }
       sendICMPflow(srcHost, dstHost, length);
     }
@@ -3514,13 +3519,14 @@ static void processIpPkt(const u_char *bp,
 void queuePacket(u_char * _deviceId,
 		 const struct pcap_pkthdr *h,
 		 const u_char *p) {
-
-  /****************************
-   - If the queue is full then wait until a slot is freed
-   - If the queue is getting full then periodically wait
-     until a slot is freed
-  *****************************/
   int len;
+
+  /* ***************************     
+     - If the queue is full then wait until a slot is freed
+     
+     - If the queue is getting full then periodically wait
+     until a slot is freed
+     **************************** */
 
 #ifdef WIN32_DEMO
   static int numQueuedPackets=0;
@@ -3536,12 +3542,20 @@ void queuePacket(u_char * _deviceId,
 #endif
 
   if(packetQueueLen >= PACKET_QUEUE_LENGTH) {
+    int deviceId;
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]\n",
-	       packetQueueLen, maxPacketQueueLen);
+      traceEvent(TRACE_INFO, "Dropping packet!!! [packet queue=%d/max=%d]\n",
+		 packetQueueLen, maxPacketQueueLen);
 #endif
-    device[actualDeviceId].droppedPkts++;
-
+    
+#ifdef WIN32
+    deviceId = 0;
+#else
+    deviceId = (int)_deviceId;
+#endif
+    
+    device[getActualInterface(deviceId)].droppedPkts++;
+    
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads (dequeue) to run */
 #endif
@@ -3643,7 +3657,7 @@ void* dequeuePacket(void* notUsed _UNUSED_) {
 
 /* ************************************ */
 
-static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p) {
+static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int deviceId) {
   FlowFilterList *list = flowsList;
 
   while(list != NULL) {
@@ -3764,7 +3778,7 @@ static char* timestamp(const struct timeval* t, int fmt) {
 
 /* ************************************ */
 
-static void updateDevicePacketStats(u_int length) {
+static void updateDevicePacketStats(u_int length, int actualDeviceId) {
   if(length < 64) device[actualDeviceId].rcvdPktStats.upTo64++;
   else if(length < 128) device[actualDeviceId].rcvdPktStats.upTo128++;
   else if(length < 256) device[actualDeviceId].rcvdPktStats.upTo256++;
@@ -3783,7 +3797,7 @@ static void updateDevicePacketStats(u_int length) {
 
 /* ***************************************************** */
 
-void dumpSuspiciousPacket() {
+void dumpSuspiciousPacket(int actualDeviceId) {
   if(device[actualDeviceId].pcapErrDumper != NULL)
     pcap_dump((u_char*)device[actualDeviceId].pcapErrDumper, h_save, p_save);
 }
@@ -3812,13 +3826,14 @@ void processPacket(u_char *_deviceId,
   struct tokenRing_llc *trllc;
   FILE * fd;
   unsigned char ipxBuffer[128];
+  int deviceId, actualDeviceId;
 
 #ifdef DEBUG
-  static long numPkt=0;
-  traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
+  {
+      static long numPkt=0;
 
-  if(numPkt == 597)
-    traceEvent(TRACE_INFO, "Here we go!");  
+      traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
+  }
 #endif
 
   if(!capturePackets)
@@ -3846,9 +3861,13 @@ void processPacket(u_char *_deviceId,
   deviceId = (int)_deviceId;
 #endif
 
-  actualDeviceId = getActualInterface();
+  actualDeviceId = getActualInterface(deviceId);
 
-  updateDevicePacketStats(length);
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "deviceId=%d - actualDeviceId=%ld\n", deviceId, actualDeviceId);
+#endif
+
+  updateDevicePacketStats(length, actualDeviceId);
 
   device[actualDeviceId].ethernetPkts++;
   device[actualDeviceId].ethernetBytes += h->len;
@@ -3862,7 +3881,7 @@ void processPacket(u_char *_deviceId,
       traceEvent(TRACE_INFO, "Packet # %u too long (len = %u)!\n", 
 		 (unsigned int)device[deviceId].ethernetPkts, 
 		 (unsigned int)length);
-      dumpSuspiciousPacket();
+      dumpSuspiciousPacket(actualDeviceId);
     }
 
     /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
@@ -3871,10 +3890,10 @@ void processPacket(u_char *_deviceId,
   }
 
   if(device[actualDeviceId].hostsno > device[actualDeviceId].topHashThreshold)
-    resizeHostHash(actualDeviceId, EXTEND_HASH); /* Extend table */
+    resizeHostHash(actualDeviceId, EXTEND_HASH, actualDeviceId); /* Extend table */
   else if((device[actualDeviceId].actualHashSize != HASH_INITIAL_SIZE)
 	  && (device[actualDeviceId].hostsno < (device[actualDeviceId].topHashThreshold/2)))
-    resizeHostHash(actualDeviceId, RESIZE_HASH); /* Shrink table */
+    resizeHostHash(actualDeviceId, RESIZE_HASH, actualDeviceId); /* Shrink table */
 
 #ifdef MULTITHREADED
   accessMutex(&hostsHashMutex, "processPacket");
@@ -3885,11 +3904,6 @@ void processPacket(u_char *_deviceId,
 #endif
 
   hlen = (device[deviceId].datalink == DLT_NULL) ? NULL_HDRLEN : sizeof(struct ether_header);
-
-  /*
-    printf ("Datalink=%d, (hlen=%d)(caplen=%d)\n",
-    device[deviceId].datalink, hlen, caplen);
-  */
 
 #ifndef MULTITHREADED
   /*
@@ -3948,7 +3962,7 @@ void processPacket(u_char *_deviceId,
 
 	    if(EXTRACT_16BITS(&llc.ethertype[0]) == ETHERTYPE_IP) {
 	      /* encapsulated IP packet */
-	      processIpPkt(p, h, length, ether_src, ether_dst);
+	      processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId);
 	      /*
 		Patch below courtesy of
 		Fabrice Bellet <Fabrice.Bellet@creatis.insa-lyon.fr>
@@ -3991,7 +4005,7 @@ void processPacket(u_char *_deviceId,
     case DLT_RAW: /* RAW IP (no ethernet header) */
       length -= headerDisplacement; /* don't count PPP header */
       ether_src = ether_dst = NULL;
-      processIpPkt(p+headerDisplacement, h, length, NULL, NULL);
+      processIpPkt(p+headerDisplacement, h, length, NULL, NULL, actualDeviceId);
       break;
 
     case DLT_IEEE802: /* Token Ring */
@@ -4057,7 +4071,7 @@ void processPacket(u_char *_deviceId,
 	/* IPX */
 	IPXpacket ipxPkt;
 
-	srcHostIdx = getHostInfo(NULL, ether_src, 0, 0);
+	srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
@@ -4068,7 +4082,7 @@ void processPacket(u_char *_deviceId,
 	  srcHost->instanceInUse++;
 	}
 
-	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0);
+	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
@@ -4089,12 +4103,12 @@ void processPacket(u_char *_deviceId,
 	} else {
 	  srcHost->ipxSent += length, dstHost->ipxRcvd += length;
 	  device[actualDeviceId].ipxBytes += length;
-	  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length);
+	  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length, actualDeviceId);
 	}
       } else if((device[deviceId].datalink == DLT_IEEE802) && (eth_type < ETHERMTU)) {
 	trp = (struct tokenRing_header*)orig_p;
 	ether_src = (u_char*)trp->trn_shost, ether_dst = (u_char*)trp->trn_dhost;
-	srcHostIdx = getHostInfo(NULL, ether_src, 0, 0);
+	srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
@@ -4105,7 +4119,7 @@ void processPacket(u_char *_deviceId,
 	  srcHost->instanceInUse++;
 	}
 
-	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0);
+	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
@@ -4118,7 +4132,7 @@ void processPacket(u_char *_deviceId,
 
 	srcHost->otherSent += length;
 	dstHost->otherRcvd += length;
-	updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length);
+	updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length, actualDeviceId);
       } else if((device[deviceId].datalink != DLT_IEEE802)
 		&& (eth_type <= ETHERMTU) && (length > 3)) {
 	/* The code below has been taken from tcpdump */
@@ -4133,7 +4147,7 @@ void processPacket(u_char *_deviceId,
 	   && (p[sizeof(struct ether_header)+4] == 0x0)) {
 	  /* IPX */
 
-	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0);
+	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	  if(srcHost == NULL) {
 	    /* Sanity check */
@@ -4144,7 +4158,7 @@ void processPacket(u_char *_deviceId,
 	    srcHost->instanceInUse++;
 	  }
 
-	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0);
+	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 	  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	  if(dstHost == NULL) {
 	    /* Sanity check */
@@ -4159,13 +4173,18 @@ void processPacket(u_char *_deviceId,
 	  device[actualDeviceId].ipxBytes += length;
 	} else if(!borderSnifferMode) {
 	    /* MAC addresses are meaningful here */
-	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0);
-	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0);
+	  srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
+	  dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 
 	  if((srcHostIdx != NO_PEER) && (dstHostIdx != NO_PEER)) {
 	  srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	  dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 
+	  if((srcHost == NULL) || (dstHost == NULL)) {
+	    traceEvent(TRACE_INFO, "Sanity check failed (13) [Low memory?]");
+	    return;
+	  }
+	  
 	  p1 = (u_char*)(p+hlen);
 
 	  /* Watch out for possible alignment problems */
@@ -4409,14 +4428,14 @@ void processPacket(u_char *_deviceId,
 	    dstHost->otherRcvd += length;
 	    device[actualDeviceId].otherBytes += length;
 	  }
-	  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length);
+	  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length, actualDeviceId);
 	  }
 	}
       } else if(eth_type == ETHERTYPE_IP) {
 	if((device[deviceId].datalink == DLT_IEEE802) && (eth_type > ETHERMTU))
-	  processIpPkt(p, h, length, ether_src, ether_dst);
+	  processIpPkt(p, h, length, ether_src, ether_dst, actualDeviceId);
 	else
-	  processIpPkt(p+hlen, h, length, ether_src, ether_dst);
+	  processIpPkt(p+hlen, h, length, ether_src, ether_dst, actualDeviceId);
       } else  /* Non IP */ if(!borderSnifferMode) {
 	    /* MAC addresses are meaningful here */
 	struct ether_arp arpHdr;
@@ -4436,7 +4455,7 @@ void processPacket(u_char *_deviceId,
 	else
 	  length = 0;
 
-	srcHostIdx = getHostInfo(NULL, ether_src, 0, 0);
+	srcHostIdx = getHostInfo(NULL, ether_src, 0, 0, actualDeviceId);
 	srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	if(srcHost == NULL) {
 	  /* Sanity check */
@@ -4447,7 +4466,7 @@ void processPacket(u_char *_deviceId,
 	  srcHost->instanceInUse++;
 	}
 
-	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0);
+	dstHostIdx = getHostInfo(NULL, ether_dst, 0, 0, actualDeviceId);
 	dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	if(dstHost == NULL) {
 	  /* Sanity check */
@@ -4468,11 +4487,11 @@ void processPacket(u_char *_deviceId,
 	    case ARPOP_REPLY: /* ARP REPLY */
 	      memcpy(&addr.s_addr, arpHdr.arp_tpa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      dstHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_tha, 0, 0);
+	      dstHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_tha, 0, 0, actualDeviceId);
 	      dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0);
+	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
 	      srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	      if(srcHost != NULL) srcHost->arpReplyPktsSent++;
 	      if(dstHost != NULL) dstHost->arpReplyPktsRcvd++;
@@ -4480,7 +4499,7 @@ void processPacket(u_char *_deviceId,
 	    case ARPOP_REQUEST: /* ARP request */
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0);
+	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
 	      srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	      if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) srcHost->arpReqPktsSent++;
 	    }
@@ -4520,7 +4539,7 @@ void processPacket(u_char *_deviceId,
 	  break;
 	}
 
-	updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length);
+	updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length, actualDeviceId);
       }
     }
 
@@ -4530,7 +4549,7 @@ void processPacket(u_char *_deviceId,
   }
 
   if(flowsList != NULL) /* Handle flows last */
-    flowsProcess(h, p);
+    flowsProcess(h, p, deviceId);
 
 #ifdef MULTITHREADED
   releaseMutex(&hostsHashMutex);

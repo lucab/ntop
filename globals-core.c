@@ -124,8 +124,7 @@ time_t nextSessionTimeoutScan;
 struct timeval lastPktTime;
 
 /* NICs */
-int deviceId; /* Set by processPacket() */
-int numDevices, actualDeviceId;
+int numDevices;
 NtopInterface *device;
 
 /* Monitored Protocols */

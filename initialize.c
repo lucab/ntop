@@ -158,48 +158,48 @@ void initIPServices(void) {
    Function below courtesy of
    Eric Dumazet <dada1@cosmosbay.com>
 */
-static void resetDevice(int deviceId) {
+static void resetDevice(int devIdx) {
   int len;
   void *ptr;
   
-  device[deviceId].actualHashSize = topHashSize = HASH_INITIAL_SIZE;  
-  device[deviceId].hashThreshold = (unsigned int)(device[deviceId].actualHashSize*0.5);
-  device[deviceId].topHashThreshold = (unsigned int)(device[deviceId].actualHashSize*0.75);
+  device[devIdx].actualHashSize = topHashSize = HASH_INITIAL_SIZE;  
+  device[devIdx].hashThreshold = (unsigned int)(device[devIdx].actualHashSize*0.5);
+  device[devIdx].topHashThreshold = (unsigned int)(device[devIdx].actualHashSize*0.75);
 
   ptr = calloc(HASH_INITIAL_SIZE, sizeof(HostTraffic*));
-  device[deviceId].hash_hostTraffic = ptr;
+  device[devIdx].hash_hostTraffic = ptr;
   
-  device[deviceId].lastTotalPkts = device[deviceId].lastBroadcastPkts = 0;
-  device[deviceId].lastMulticastPkts = 0;
-  device[deviceId].lastEthernetBytes = device[deviceId].lastIpBytes = 0;
-  device[deviceId].lastNonIpBytes = 0;
+  device[devIdx].lastTotalPkts = device[devIdx].lastBroadcastPkts = 0;
+  device[devIdx].lastMulticastPkts = 0;
+  device[devIdx].lastEthernetBytes = device[devIdx].lastIpBytes = 0;
+  device[devIdx].lastNonIpBytes = 0;
 
-  device[deviceId].tcpBytes = device[deviceId].udpBytes = 0;
-  device[deviceId].icmpBytes = device[deviceId].dlcBytes = 0;
-  device[deviceId].ipxBytes = device[deviceId].netbiosBytes = 0;
-  device[deviceId].decnetBytes = device[deviceId].arpRarpBytes = 0;
-  device[deviceId].atalkBytes = device[deviceId].otherBytes = 0;
-  device[deviceId].otherIpBytes = 0;
+  device[devIdx].tcpBytes = device[devIdx].udpBytes = 0;
+  device[devIdx].icmpBytes = device[devIdx].dlcBytes = 0;
+  device[devIdx].ipxBytes = device[devIdx].netbiosBytes = 0;
+  device[devIdx].decnetBytes = device[devIdx].arpRarpBytes = 0;
+  device[devIdx].atalkBytes = device[devIdx].otherBytes = 0;
+  device[devIdx].otherIpBytes = 0;
 
-  device[deviceId].lastThptUpdate = device[deviceId].lastMinThptUpdate =
-    device[deviceId].lastHourThptUpdate = device[deviceId].lastFiveMinsThptUpdate = time(NULL);
-  device[deviceId].lastMinEthernetBytes = device[deviceId].lastFiveMinsEthernetBytes = 0;
-  memset(&device[deviceId].tcpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
-  memset(&device[deviceId].udpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
-  memset(&device[deviceId].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
-  memset(device[deviceId].last60MinutesThpt, 0, sizeof(device[deviceId].last60MinutesThpt));
-  memset(device[deviceId].last24HoursThpt, 0, sizeof(device[deviceId].last24HoursThpt));
-  memset(device[deviceId].last30daysThpt, 0, sizeof(device[deviceId].last30daysThpt));
-  device[deviceId].last60MinutesThptIdx=0, device[deviceId].last24HoursThptIdx=0,
-    device[deviceId].last30daysThptIdx=0;
-  device[deviceId].hostsno = 1; /* Broadcast entry */
+  device[devIdx].lastThptUpdate = device[devIdx].lastMinThptUpdate =
+    device[devIdx].lastHourThptUpdate = device[devIdx].lastFiveMinsThptUpdate = time(NULL);
+  device[devIdx].lastMinEthernetBytes = device[devIdx].lastFiveMinsEthernetBytes = 0;
+  memset(&device[devIdx].tcpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
+  memset(&device[devIdx].udpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
+  memset(&device[devIdx].icmpGlobalTrafficStats, 0, sizeof(SimpleProtoTrafficInfo));
+  memset(device[devIdx].last60MinutesThpt, 0, sizeof(device[devIdx].last60MinutesThpt));
+  memset(device[devIdx].last24HoursThpt, 0, sizeof(device[devIdx].last24HoursThpt));
+  memset(device[devIdx].last30daysThpt, 0, sizeof(device[devIdx].last30daysThpt));
+  device[devIdx].last60MinutesThptIdx=0, device[devIdx].last24HoursThptIdx=0,
+    device[devIdx].last30daysThptIdx=0;
+  device[devIdx].hostsno = 1; /* Broadcast entry */
 
   len = (size_t)numIpProtosToMonitor*sizeof(SimpleProtoTrafficInfo);
 
-  if(device[deviceId].ipProtoStats == NULL)
-    device[deviceId].ipProtoStats = (SimpleProtoTrafficInfo*)malloc(len);
+  if(device[devIdx].ipProtoStats == NULL)
+    device[devIdx].ipProtoStats = (SimpleProtoTrafficInfo*)malloc(len);
 
-  memset(device[deviceId].ipProtoStats, 0, len);
+  memset(device[devIdx].ipProtoStats, 0, len);
 }
 
 /* ******************************* */
@@ -373,7 +373,7 @@ void resetStats(void) {
 
     for(j=1; j<device[i].actualHashSize; j++)
       if(device[i].hash_hostTraffic[j] != NULL) {
-	freeHostInfo(i, j, 1);
+	freeHostInfo(i, j, 1, i);
 	device[i].hash_hostTraffic[j] = NULL;
       }
 
@@ -401,8 +401,6 @@ void resetStats(void) {
 /* ******************************* */
 
 int initGlobalValues(void) {
-  actualDeviceId = 0;
-
 #ifndef WIN32
   if((rFileName == NULL) && (geteuid() != 0)) {
     traceEvent(TRACE_INFO, "Sorry, you must be superuser in order to run ntop.\n");
@@ -594,8 +592,7 @@ int i;
    * (4) - SIH - Scan Idle Hosts - optional
    */
   if (enableIdleHosts && (rFileName == NULL)) {
-
-    if(!borderSnifferMode) {
+/* if(!borderSnifferMode) */ {
     createThread(&scanIdleThreadId, scanIdleLoop, NULL);
     traceEvent (TRACE_INFO, "Started thread (%ld) for idle hosts detection.\n",
 		scanIdleThreadId);
