@@ -13,3 +13,4 @@ docs/INSTALL
 docs/HACKING
 docs/KNOWN_BUGS
 docs/BUILD-NTOP.txt
+docs/BUILD-MinGW.txt
