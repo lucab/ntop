@@ -319,6 +319,9 @@
 /* Define to 1 if you have the <net/if.h> header file. */
 #undef HAVE_NET_IF_H
 
+/* Define to 1 if you have the <net/ppp_defs.h> header file. */
+#undef HAVE_NET_PPP_DEFS_H
+
 /* OPENSSL is available */
 #undef HAVE_OPENSSL
 
@@ -616,6 +619,9 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Define to 1 if the C compiler supports function prototypes. */
+#undef PROTOTYPES
+
 /* temporary definition */
 #undef RETSIGTYPE
 
@@ -648,6 +654,9 @@
 #ifndef __CHAR_UNSIGNED__
 # undef __CHAR_UNSIGNED__
 #endif
+
+/* Define like PROTOTYPES; this can be used by system headers. */
+#undef __PROTOTYPES
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const

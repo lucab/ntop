@@ -36,10 +36,6 @@ dnl> this file is processed via 'autoconf' to produce the 'configure' script
 dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl>
 
-dnl>  Note to enable debug,
-dnl>   export ac_debug=yes
-dnl>  Before running ./configure
-
 dnl>
 dnl> Initialization lines.
 dnl>   Note that the AC_INIT must, simply MUST be the first line.  
@@ -54,7 +50,7 @@ AC_INIT([ntop],[2.2.91])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.91.112-2003-08-19"
+SCRIPTVER="v2.2.91.113-2003-08-20"
 
 dnl>
 dnl> generate the config header
@@ -73,6 +69,41 @@ echo "  copyright (c) 1998-2003 Luca Deri <deri@ntop.org>"
 echo
 echo          "Configuration script version $SCRIPTVER"
 echo
+echo "************************************************************************"
+echo "*                                                                      *"
+echo "* NOTICE:  I know you're used to ignoring output from ./configure      *"
+echo "*                                                                      *"
+echo "*          ntop has a lot of complexity and interdependences.          *"
+echo "*                                                                      *"
+echo "*          Please, please AT LEAST read the stuff in these boxes!      *"
+echo "*                                                                      *"
+echo "*>>> The ACTION taken by ./configure is shown prefixed with '>>>'      *"
+echo "*                                                                      *"
+echo "*    If that ACTION is unacceptable,                                   *"
+echo "*??? Steps to take to fix the problem are shown, prefixed with '???'   *"
+echo "*                                                                      *"
+echo "************************************************************************"
+echo
+
+if test ".${NTOPAUTOREBUILD}" = "."; then
+    echo "NOTE: To developers:"
+    echo
+    echo "       If you have the Gnu auto* tools (automake, autoconf and libtool)"
+    echo "       installed, you may wish to enable the automatic regeneration of"
+    echo "       the configure scripts.  Do this before running ./configure:"
+    echo
+    echo "$ export NTOPAUTOREBUILD=yes"
+    echo
+fi
+if test ".${NTOPCONFIGDEBUG}" = "."; then
+    echo "NOTE:"
+    echo
+    echo "       To enable additional, debugging messages during the ./configure"
+    echo "       execution, do this before running ./configure:"
+    echo
+    echo "$ export NTOPCONFIGDEBUG=yes"
+    echo
+fi
 
 CONFIGURE_PARAMETERS=$*
 echo
@@ -91,34 +122,27 @@ AC_CONFIG_AUX_DIR(.)
 
 AM_INIT_AUTOMAKE()
 
-if test ".${ac_debug}" = ".yes"; then
-    echo "DEBUG: _INIT_AUTOMAKE:"
-    echo "       ACLOCAL    is $ACLOCAL"
-    echo "       AUTOCONF   is $AUTOCONF"
-    echo "       AUTOMAKE   is $AUTOMAKE"
-    echo "       AUTOHEADER is $AUTOHEADER"
-fi
-
-echo
-echo "*******************************************************************"
-echo "*                                                                 *"
-echo "* NOTICE:  I know you're used to ignoring output from ./configure *"
-echo "*                                                                 *"
-echo "*          ntop has a lot of complexity and interdependences.     *"
-echo "*                                                                 *"
-echo "*          Please, please AT LEAST read the stuff in these        *"
-echo "*          boxes!                                                 *"
-echo "*                                                                 *"
-echo "*>>> The ACTION taken is shown prefixed '>>>'                     *"
-echo "*                                                                 *"
-echo "*    If the ACTION is unacceptable,                               *"
-echo "*??? The REMEDIATION plan is shown prefixed with '???'            *"
-echo "*                                                                 *"
-echo "*******************************************************************"
-echo
+NTOPCONFIGDEBUG_SETTINGS([init automake])
 
 dnl> make NTOPDIR the default for the installation
 AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
+
+# Set constants and defaults
+MYRRD=`pwd`/myrrd
+SO_VERSION_PATCH=
+
+AS=
+CCLD=
+DEFS="-DHAVE_CONFIG_H"
+DLLTOOL=
+DYN_FLAGS=
+EXEEXT=
+INCS=
+LIBS=
+OBJDUMP=
+OBJEXT=o
+
+NTOPCONFIGDEBUG_SETTINGS([ntop defaults])
 
 # Checks for programs.
 
@@ -167,6 +191,8 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 
+NTOPCONFIGDEBUG_SETTINGS([After ac stuff])
+
 dnl> These blocks of code check to see if the various gnu auto* tools are installed.
 
 dnl> If a tool is NOT installed, the constant used to automatically invoke them
@@ -189,7 +215,7 @@ dnl> there's not much point in testing too hard for it.
 dnl> Note that to use our libtool, we have to add pwd to the path...
 dnl> TODO last vs first in path????
 export PATH=${PATH}:`pwd`
-if test ".${ac_debug}" = ".yes"; then
+if test ".${NTOPCONFIGDEBUG}" = ".yes"; then
     echo "DEBUG: PATH is now ${PATH}"
 fi
 
@@ -308,31 +334,11 @@ ACLOCALsave=
 
 AUTOMAKEsave="${AUTOMAKE}"
 AUTOMAKE=
+dnl> Tell the script (Mandrake?, Gentoo, et al) that we want 1.6...
+WANT_AUTOMAKE=1.6
 AC_CHECK_TOOL(AUTOMAKE, automake)
 
-if test "x${ac_cv_prog_ac_ct_AUTOMAKE}" != "x"; then
-
-    dnl> Check versions of automake: if we have it installed, it must be v1.6 or higher!
-
-    echo -n "  Checking automake version..."
-    automakeversion=`automake --version | grep ^automake | ${ac_cv_prog_AWK} '{ print $4 }'`
-    echo "${automakeversion}"
-    case "${automakeversion}" in
-        *1\.[[0-5]]*)
-            echo "******************************************************************"
-            echo "*"
-            echo "*ERROR: ntop requires automake version 1.6 or newer..."
-            echo "*"
-            echo "*  You are executing ${automakeversion}"
-            echo "*"
-            echo "*>>>   Unable to proceed with your request, aborting ./configure!"
-            echo "*"
-            NTOP_SUGGESTION([automake], [1.6.3], [163])
-            echo "*******************************************************************"
-            exit 1
-            ;;
-    esac
-else
+if test "x${ac_cv_prog_ac_ct_AUTOMAKE}" = "x"; then
     AUTOMAKE="${AUTOMAKEsave}"
     mv Makefile.in Makefile.in.tmp
     cat Makefile.in.tmp | sed -e "s|@AUTOMAKE@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
@@ -354,28 +360,7 @@ AUTOCONFsave="${AUTOCONF}"
 AUTOCONF=
 AC_CHECK_TOOL(AUTOCONF, autoconf)
 
-if test "x${ac_cv_prog_ac_ct_AUTOCONF}" != "x"; then
-
-    dnl> Check versions of autoconf: if we have it installed, it must be v2.50 or higher!
-    echo -n "  Checking autoconf version..."
-    autoconfversion=`autoconf --version | grep ^autoconf | ${ac_cv_prog_AWK} '{ print $4 }'`
-    echo "${autoconfversion}"
-    case "${autoconfversion}" in
-        *2\.[[0-4]]*)
-            echo "*******************************************************************"
-            echo ""
-            echo "*ERROR: ntop requires autoconf version 2.50 or newer..."
-            echo "*"
-            echo "*  You are executing ${autoconfversion}"
-            echo "*"
-            echo "*>>>   Unable to proceed with your request, aborting ./configure!"
-            echo "*"
-            NTOP_SUGGESTION([autoconf], [2,57], [257])
-            echo "*******************************************************************"
-            exit 1
-            ;;
-    esac
-else
+if test "x${ac_cv_prog_ac_ct_AUTOCONF}" = "x"; then
     AUTOCONF="${AUTOCONFsave}"
     mv Makefile.in Makefile.in.tmp
     cat Makefile.in.tmp | sed -e "s|@AUTOCONF@|${SHELL} `pwd`/missing --run echo|" > Makefile.in
@@ -389,152 +374,229 @@ dnl>    rm -f plugins/pep/Makefile.in.tmp
 fi
 AUTOCONFsave=
 
-dnl> Then check for a match with the scripts...
-dnl>
-dnl>      We know that all of the 1.6.x [1..3] versions of automake work ok
-dnl>      and the 2.5x [1..7] of autoconf work ok too.
-dnl>      So we could compress them to save a few recreations, but that's 
-dnl>      then got to be maintained.  So exact match or recreate...
-dnl>
-if test -f /tmp/autotoolversions; then
-     rm -f /tmp/autotoolversions
+if test ".${NTOPAUTOREBUILD}" = ".yes"; then
+
+  echo
+  echo "*******************************************************************"
+  echo "*"
+  echo "* Testing - AT YOUR REQUEST - to see if we should rebuild the"
+  echo "* generated files."
+  echo "*"
+
+  dnl> If we don't have automake or autoconf, fake the result as being 'equal'...
+  if test "x${ac_cv_prog_ac_ct_AUTOMAKE}" = "x" -o "x${ac_cv_prog_ac_ct_AUTOCONF}" = "x"; then
+
+    echo "*******************************************************************"
+    echo "*"
+    echo "* You MUST have the gnu Auto* tools installed on this host."
+    echo "*"
+    echo "* automake and/or autoconf are NOT installed.  Skipping these tests."
+    echo "*"
+    echo "*******************************************************************"
+    echo
+
+  else
+
+    echo "*"
+    echo "*******************************************************************"
+    echo
+
+    dnl> Check versions of automake: it must be v1.6 or higher!
+    echo -n "  Checking automake version..."
+
+    automakeversion=`automake --version | grep ^automake | ${ac_cv_prog_AWK} '{ print $4 }'`
+    echo "${automakeversion}"
+
+    case "${automakeversion}" in
+      *1\.[[0-5]]*)
+        echo "******************************************************************"
+        echo "*"
+        echo "*ERROR: ntop requires automake version 1.6 or newer..."
+        echo "*"
+        echo "*  You are executing ${automakeversion}"
+        echo "*"
+        echo "*>>>   Unable to proceed with your request, aborting ./configure!"
+        echo "*"
+        NTOP_SUGGESTION([automake], [1.6.3], [163])
+        echo "*******************************************************************"
+        exit 1
+        ;;
+    esac
+
+    dnl> Check versions of autoconf: it must be v2.50 or higher!
+    echo -n "  Checking autoconf version..."
+
+    autoconfversion=`autoconf --version | grep ^autoconf | ${ac_cv_prog_AWK} '{ print $4 }'`
+    echo "${autoconfversion}"
+
+    case "${autoconfversion}" in
+      *2\.[[0-4]]*)
+        echo "*******************************************************************"
+        echo ""
+        echo "*ERROR: ntop requires autoconf version 2.50 or newer..."
+        echo "*"
+        echo "*  You are executing ${autoconfversion}"
+        echo "*"
+        echo "*>>>   Unable to proceed with your request, aborting ./configure!"
+        echo "*"
+        NTOP_SUGGESTION([autoconf], [2,57], [257])
+        echo "*******************************************************************"
+        exit 1
+      ;;
+    esac
+
+    dnl> Now check for a match with the scripts...
+    dnl>
+    dnl>      We know that all of the 1.6.x [1..3] and 1.7.x ersions of automake work ok
+    dnl>      and the 2.5x [1..7] of autoconf work ok too.
+    dnl>      So we could compress them to save a few recreations, but that's
+    dnl>      then got to be maintained.  So exact match or recreate...
+    dnl>
+    if test -f /tmp/autotoolversions; then
+      rm -f /tmp/autotoolversions
+    fi
+    dnl> Make sure we have a file to compare against...
+    touch autotoolversions
+
+    automake --version | \
+    head -n 1 | \
+    ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }'  >/tmp/autotoolversions
+
+    autoconf --version | \
+    head -n 1 | \
+    ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+
+    case "${target}:${CC}" in
+      *-*-darwin*:* )
+        /usr/bin/glibtool --version | \
+        head -n 1  | \
+        ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+      ;;
+      * )
+        libtool --version | \
+        head -n 1  | \
+        ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
+      ;;
+    esac
+
+    diff autotoolversions /tmp/autotoolversions >/dev/null 2>/dev/null
+    rc=$?
+
+    if test ".${rc}" = ".1"; then
+      echo
+      echo "*******************************************************************"
+      echo "*"
+      echo "* WARNING: Auto* tools installed on this host differ from the ones"
+      echo "*          that the ntop distribution uses:"
+      echo "*"
+      echo "* This host:"
+      cat /tmp/autotoolversions
+      echo "*"
+      echo "* ntop distribution:"
+      cat autotoolversions
+      echo "*"
+      echo "*>>> Version conflicts may cause configure/compile/link problems."
+      echo "*"
+      echo "*>>> We are going to:"
+      echo "*>>>     1. delete the existing generated files"
+      echo "*>>>     2. use the auto* tools to recreate them"
+      echo "*                (if you do not have automake and autoconf installed,"
+      echo "*                 this will fail)"
+      echo "*                (if you do not have libtool installed, it will"
+      echo "*                 not give an error message, but will fail later)"
+      echo "*>>>     3. tell you to rerun ./configure"
+      echo "*"
+      echo "*    Please, tell the ntop-dev mailing list if there are problems..."
+      echo "*"
+      echo "*******************************************************************"
+      echo
+      echo "1. delete the existing generated files:"
+      for i in acinclude.m4 \
+               aclocal.m4 \
+               config.h.in \
+               Makefile.in \
+               configure \
+               Makefile; do
+          if test -f $i; then
+          echo "     .... $i"
+          rm -f $i
+          fi
+      done
+      echo "    done!"
+      echo
+      echo "2. use the auto* tools to recreate them:"
+      echo "    .... cat acinclude.m4.ntop libtool.m4.in > acinclude.m4"
+      cat acinclude.m4.ntop libtool.m4.in > acinclude.m4
+      rc=$?
+      if test ".${rc}" != ".0"; then
+          echo
+          echo "*******************************************************************"
+          echo "*"
+          echo "* ERROR: Unable to run cat acinclude.m4.ntop libtool.m4.in > acinclude.m4"
+          echo "*"
+          echo "*    We are going to give up."
+          echo "*"
+          echo "*>>> Please correct the problem and rerun"
+          echo "*"
+          echo "*******************************************************************"
+          echo
+          if test -f /tmp/autotoolversions; then
+              rm -f /tmp/autotoolversions
+          fi
+          exit 1
+      fi
+      for i in aclocal \
+               autoheader \
+               "automake --gnu --copy --add-missing" \
+               autoconf; do
+          echo "    .... $i"
+          $i
+          rc=$?
+          if test ".${rc}" != ".0"; then
+          echo
+          echo "*******************************************************************"
+          echo "*"
+          echo "* ERROR: Unable to run $i"
+          echo "*"
+          echo "*    We are going to give up."
+          echo "*"
+          echo "*>>> Please correct the problem with the auto* tools and rerun"
+          echo "*"
+          echo "*******************************************************************"
+          echo
+          if test -f /tmp/autotoolversions; then
+              rm -f /tmp/autotoolversions
+          fi
+          exit 1
+          fi
+      done
+
+      cp -f /tmp/autotoolversions autotoolversions
+
+      if test -f /tmp/autotoolversions; then
+          rm -f tmp/autotoolversions
+      fi
+
+      echo
+      echo "*******************************************************************"
+      echo "*                                                                 *"
+      echo "*   Now, rerun ./configure                                        *"
+      echo "*                                                                 *"
+      echo "*******************************************************************"
+      echo
+      exit 1
+
+    else
+
+      if test -f /tmp/autotoolversions; then
+          rm -f /tmp/autotoolversions
+      fi
+
+      echo "auto* tools are OK, continuing with ./configure"
+
+    fi
+  fi
 fi
-if test "x${ac_cv_prog_ac_ct_AUTOMAKE}" != "x"; then
-  automake --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }'  >/tmp/autotoolversions
-fi
-if test "x${ac_cv_prog_ac_ct_AUTOCONF}" != "x"; then
-  autoconf --version | head -n 1 | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
-fi
-case "${target}:${CC}" in
-    *-*-darwin*:* )
-    /usr/bin/glibtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
-    ;;
-    * )
-    libtool --version | head -n 1  | ${ac_cv_prog_AWK} '{ gsub(/\)/, "", $3); print "     " $3 " " $4 }' >>/tmp/autotoolversions
-    ;;
-esac
-
-
-dnl> Make sure we have a file to compare against...
-touch autotoolversions
-
-diff autotoolversions /tmp/autotoolversions >/dev/null 2>/dev/null 
-rc=$?
-
-dnl> If we don't have automake or autoconf, fake the result as being 'equal'...
-if test "x${ac_cv_prog_ac_ct_AUTOMAKE}" = "x" -o "x${ac_cv_prog_ac_ct_AUTOCONF}" = "x"; then
- rc=0
-fi
-
-dnl> if test ".${rc}" = ".1"; then
-dnl>     echo
-dnl>     echo "*******************************************************************"
-dnl>     echo "*"
-dnl>     echo "* WARNING: Auto* tools installed on this host differ from the ones"
-dnl>     echo "*          that the ntop distribution uses:"
-dnl>     echo "*"
-dnl>     echo "* This host:"
-dnl>     cat /tmp/autotoolversions
-dnl>     echo "*"
-dnl>     echo "* ntop distribution:"
-dnl>     cat autotoolversions
-dnl>     echo "*"
-dnl>     echo "*>>> Version conflicts may cause configure/compile/link problems."
-dnl>     echo "*"
-dnl>     echo "*>>> We are going to:"
-dnl>     echo "*>>>     1. delete the existing generated files"
-dnl>     echo "*>>>     2. use the auto* tools to recreate them"
-dnl>     echo "*                (if you do not have automake and autoconf installed,"
-dnl>     echo "*                 this will fail)"
-dnl>     echo "*                (if you do not have libtool installed, it will"
-dnl>     echo "*                 not give an error message, but will fail later)"
-dnl>     echo "*>>>     3. tell you to rerun ./configure"
-dnl>     echo "*"
-dnl>     echo "*    Please, tell the ntop-dev mailing list if there are problems..."
-dnl>     echo "*"
-dnl>     echo "*******************************************************************"
-dnl>     echo
-dnl>     echo "1. delete the existing generated files:"
-dnl>     for i in acinclude.m4 \
-dnl>              aclocal.m4 \
-dnl>              config.h.in \
-dnl>              Makefile.in \
-dnl>              configure \
-dnl>              Makefile; do
-dnl>         if test -f $i; then
-dnl>              echo "     .... $i"
-dnl>              rm -f $i
-dnl>         fi
-dnl>     done
-dnl>     echo "    done!"
-dnl>     echo
-dnl>     echo "2. use the auto* tools to recreate them:"
-dnl>     echo "    .... cat acinclude.m4.ntop libtool.m4.in > acinclude.m4"
-dnl>     cat acinclude.m4.ntop libtool.m4.in > acinclude.m4
-dnl>     rc=$?
-dnl>     if test ".${rc}" != ".0"; then
-dnl>         echo
-dnl>         echo "*******************************************************************"
-dnl>         echo "*"
-dnl>         echo "* ERROR: Unable to run cat acinclude.m4.ntop libtool.m4.in > acinclude.m4"
-dnl>         echo "*"
-dnl>         echo "*    We are going to give up."
-dnl>         echo "*"
-dnl>     echo "*>>> Please correct the problem and rerun"
-dnl>         echo "*"
-dnl>         echo "*******************************************************************"
-dnl>         echo
-dnl>         if test -f /tmp/autotoolversions; then
-dnl>             rm -f /tmp/autotoolversions
-dnl>         fi
-dnl>         exit 1
-dnl>     fi
-dnl>     for i in aclocal \
-dnl>              autoheader \
-dnl>              "automake --gnu --copy --add-missing" \
-dnl>              autoconf; do
-dnl>         echo "    .... $i"
-dnl>         $i
-dnl>         rc=$?
-dnl>         if test ".${rc}" != ".0"; then
-dnl>             echo
-dnl>             echo "*******************************************************************"
-dnl>             echo "*"
-dnl>             echo "* ERROR: Unable to run $i"
-dnl>             echo "*"
-dnl>             echo "*    We are going to give up."
-dnl>             echo "*"
-dnl>             echo "*>>> Please correct the problem with the auto* tools and rerun"
-dnl>             echo "*"
-dnl>             echo "*******************************************************************"
-dnl>             echo
-dnl>             if test -f /tmp/autotoolversions; then
-dnl>                 rm -f /tmp/autotoolversions
-dnl>             fi
-dnl>             exit 1
-dnl>         fi
-dnl>     done
-
-dnl>     cp -f /tmp/autotoolversions autotoolversions
-
-dnl>     if test -f /tmp/autotoolversions; then
-dnl>         rm -f tmp/autotoolversions
-dnl>     fi
-
-dnl>     echo
-dnl>     echo "*******************************************************************"
-dnl>     echo "*                                                                 *"
-dnl>     echo "*   Now, rerun ./configure                                        *"
-dnl>     echo "*                                                                 *"
-dnl>     echo "*******************************************************************"
-dnl>     echo
-dnl>     exit 1
-dnl> else
-dnl>     if test -f /tmp/autotoolversions; then
-dnl>         rm -f /tmp/autotoolversions
-dnl>     fi
-dnl>     echo "auto* tools are OK, continuing with ./configure"
-dnl> fi
 
 dnl> autoheader stuff...just ignore
 AH_TEMPLATE([HAVE_INT16_T],   [Define for int16 typedef])
@@ -797,19 +859,7 @@ if test ".${ac_enable_xmldump}" = ".yes"; then
 fi
 dnl> From here on out, we only use the _INCLUDE and _LIB except for locale and glibconfig
 
-# Set constants and defaults
-MYRRD=`pwd`/myrrd
-AS=
-CCLD=
-DEFS="-DHAVE_CONFIG_H"
-DLLTOOL=
-DYN_FLAGS=
-EXEEXT=
-INCS=
-LIBS=
-OBJDUMP=
-OBJEXT=o
-SO_VERSION_PATCH=
+NTOPCONFIGDEBUG_SETTINGS([After set libinc])
 
 dnl>
 dnl> Yes, we want to minimize the amount of work before we tell
@@ -838,17 +888,7 @@ if test ".${ac_cv_prog_cc_stdc}" = ".no"; then
     HAS_WARNING="yes"
 fi
 
-if test ".${ac_debug}" = ".yes"; then
-    echo "DEBUG: build         is '${build}'"
-    echo "       host          is '${host}'"
-    echo "       target        is '${target}'"
-    echo "       CC     starts as '${CC}'"
-    echo "     CPPFLAGS starts as '${CPPFLAGS}'"
-    echo "       CFLAGS starts as '${CFLAGS}'"
-    echo "      LDFLAGS starts as '${LDLAGS}'"
-    echo "         LIBS starts as '${LIBS}'"
-    echo "         INCS starts as '${INCS}'"
-fi
+NTOPCONFIGDEBUG_SETTINGS([After cc stdc test])
 
 echo
 echo "Checking for support status of ${target}, ${CC}..."
@@ -1295,14 +1335,7 @@ CFLAGS="${CFLAGS}"
 CPPFLAGS="${CPPFLAGS}"
 LDFLAGS="${LDFLAGS}"
 
-if test ".${ac_debug}" = ".yes"; then
-    echo "DEBUG: CC            is '${CC}')"
-    echo "     CPPFLAGS        is '${CPPFLAGS}')"
-    echo "       CFLAGS        is '${CFLAGS}')"
-    echo "      LDFLAGS        is '${LDFLAGS}')"
-    echo "         LIBS        is '${LIBS}')"
-    echo "         INCS        is '${INCS}')"
-fi
+NTOPCONFIGDEBUG_SETTINGS([After presets])
 
 echo
 echo "Critical library/include tests..."
@@ -1523,14 +1556,7 @@ if test ".${ac_cv_header_png_h}" != ".yes" ||
     exit 1 
 fi
 	
-if test ".${ac_debug}" = ".yes"; then
-    echo "DEBUG: CC            is '${CC}')"
-    echo "     CPPFLAGS        is '${CPPFLAGS}')"
-    echo "       CFLAGS        is '${CFLAGS}')"
-    echo "      LDFLAGS        is '${LDFLAGS}')"
-    echo "         LIBS        is '${LIBS}')"
-    echo "         INCS        is '${INCS}')"
-fi
+NTOPCONFIGDEBUG_SETTINGS([After criticals])
 
 dnl> Define the arguments we accept...
 dnl>
@@ -1906,14 +1932,7 @@ if test ".${ac_enable_xmldump}" = ".yes"; then
     fi
 fi
 
-if test ".${ac_debug}" = ".yes"; then
-    echo "DEBUG: CC            is '${CC}')"
-    echo "     CPPFLAGS        is '${CPPFLAGS}')"
-    echo "       CFLAGS        is '${CFLAGS}')"
-    echo "      LDFLAGS        is '${LDFLAGS}')"
-    echo "         LIBS        is '${LIBS}')"
-    echo "         INCS        is '${INCS}')"
-fi
+NTOPCONFIGDEBUG_SETTINGS([After libraries])
 
 echo
 echo "Testing headers and functions..."
@@ -1943,24 +1962,30 @@ AC_CHECK_HEADERS([net/ethernet.h])
 
 dnl> The failed recheck stuff below is courtesy of Chris Turbeville [turbo@verio.net]
 dnl> Chris developed this for Solaris 9, confirming work I had done earlier for FreeBSD
-AC_CHECK_HEADERS([net/if.h], [], [],
-[#ifdef HAVE_SYS_SOCKET_H
+AC_CHECK_HEADERS([net/if.h], [], [], [
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif])
-AC_CHECK_HEADERS([netinet/if_ether.h], [], [],
-[#ifdef HAVE_SYS_SOCKET_H
+AC_CHECK_HEADERS([netinet/if_ether.h], [], [], [
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
 #endif
 #ifdef HAVE_NET_IF_H
 #include <net/if.h>
 #endif])
 AC_CHECK_HEADERS([netinet/in_systm.h])
-AC_CHECK_HEADERS([netinet/ip.h], [], [],
-[#ifdef HAVE_NETINET_IN_H
+AC_CHECK_HEADERS([netinet/ip.h], [], [], [
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif])
-AC_CHECK_HEADERS([netinet/ip_icmp.h], [], [],
-[#ifdef HAVE_SYS_SOCKET_H
+AC_CHECK_HEADERS([netinet/ip_icmp.h], [], [], [
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
 #ifdef HAVE_NETINET_IN_H
@@ -1973,16 +1998,20 @@ AC_CHECK_HEADERS([netinet/ip_icmp.h], [], [],
 #include <netinet/ip.h>
 #endif])
 AC_CHECK_HEADERS([netinet/tcp.h])
-AC_CHECK_HEADERS([netinet/udp.h], [], [],
-[#ifdef HAVE_NETINET_IN_H
+AC_CHECK_HEADERS([netinet/udp.h], [], [], [
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif])
 dnl>  Note - if ethertype is missing, ntop.h has the critical #defines extracted...
 AC_CHECK_HEADERS([ethertype.h])
 AC_CHECK_HEADERS([net/ppp_defs.h])
-AC_CHECK_HEADERS([linux/if_pppox.h], [], [], 
-[#include <net/if.h>
-#include <netinet/if_ether.h>])
+AC_CHECK_HEADERS([linux/if_pppox.h], [], [], [
+#ifdef HAVE_NET_IF_H
+#include <net/if.h>
+#endif
+#ifdef HAVE_NETINET_IF_ETHER_H
+#include <netinet/if_ether.h>
+#endif])
 
 dnl> OpenSSL ... if not disabled...
 if test ".${ac_disable_openssl}" != ".yes"; then
@@ -2216,14 +2245,7 @@ case "${CC}" in
     fi
 esac
 
-if test ".${ac_debug}" = ".yes"; then
-    echo "DEBUG: CC            is '${CC}')"
-    echo "     CPPFLAGS        is '${CPPFLAGS}')"
-    echo "       CFLAGS        is '${CFLAGS}')"
-    echo "      LDFLAGS        is '${LDFLAGS}')"
-    echo "         LIBS        is '${LIBS}')"
-    echo "         INCS        is '${INCS}')"
-fi
+NTOPCONFIGDEBUG_SETTINGS([After all tests])
 
 echo
 echo "Now, let's check for problems with what we've found..."
@@ -2546,7 +2568,7 @@ if test ".${ac_enable_tcpwrap}" = ".yes"; then
         dnl>              ac_cv_tcpwrappers="yes",
         dnl>              ac_cv_tcpwrappers="no")
         dnl>  But, tcp wrappers has those silly global variables ...
-        if test ".${ac_debug}" = ".yes"; then
+        if test ".${NTOPCONFIGDEBUG}" = ".yes"; then
             echo "DEBUG:   tcp wrappers: Calling try_link"
         fi
         oLIBS="${LIBS}"
@@ -2557,13 +2579,13 @@ if test ".${ac_enable_tcpwrap}" = ".yes"; then
 
  struct request_info *req;
 ],[hosts_access (req)],
-                     if test ".${ac_debug}" = ".yes"; then
+                     if test ".${NTOPCONFIGDEBUG}" = ".yes"; then
                          echo "DEBUG:   tcp wrappers try_link: YES"
                      fi
                      AC_DEFINE(HAVE_LIBWRAP)
                      ac_cv_lib_wrap_hosts_access="yes"
                      ac_cv_tcpwrappers="yes",
-                     if test ".${ac_debug}" = ".yes"; then
+                     if test ".${NTOPCONFIGDEBUG}" = ".yes"; then
                          echo "DEBUG:   tcp wrappers try_link: NO"
                      fi
                      LIBS="${oLIBS}"
@@ -2571,7 +2593,7 @@ if test ".${ac_enable_tcpwrap}" = ".yes"; then
                      ac_cv_tcpwrappers="no")
 
     else
-        if test ".${ac_debug}" = ".yes"; then
+        if test ".${NTOPCONFIGDEBUG}" = ".yes"; then
             echo "DEBUG:   tcp wrappers: no tcpd.h"
         fi
         ac_cv_tcpwrappers="no"
@@ -2746,6 +2768,8 @@ INCS=`echo ${INCS} | ${ac_cv_prog_AWK} '{ \
     } \
     print "" \
 }'`
+
+NTOPCONFIGDEBUG_SETTINGS([final])
 
 echo
 echo "==================================================================="

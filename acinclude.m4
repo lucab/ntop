@@ -165,6 +165,46 @@ AC_DEFUN([NTOP_SUGGESTION],
     echo "*"
 # Finished expansion of NTOP_SUGGESTION()
 ])
+
+# NTOPCONFIGDEBUG_SETTINGS(where)
+# ----------------------------------------------
+AC_DEFUN([NTOPCONFIGDEBUG_SETTINGS],
+[dnl
+# Expansion of NTOPCONFIGDEBUG_SETTINGS()
+if test ".${NTOPCONFIGDEBUG}" = ".yes"; then
+    echo "DEBUG: $1"
+    echo "       AWK.................'${AWK}'"
+    echo "       AS..................'${AS}'"
+    echo "       ACLOCAL.............'${ACLOCAL}'"
+    echo "       AUTOCONF............'${AUTOCONF}'"
+    echo "       AUTOHEADER..........'${AUTOHEADER}'"
+    echo "       AUTOMAKE............'${AUTOMAKE}'"
+    echo "       CC..................'${CC}'"
+    echo "          gcc?.............'${GCC}'"
+    echo "       CCLD................'${CCLD}'"
+    echo "       CFLAGS..............'${CFLAGS}'"
+    echo "       CPP.................'${CPP}'"
+    echo "       CPPFLAGS............'${CPPFLAGS}'"
+    echo "       DEFS................'${DEFS}'"
+    echo "       DEPDIR..............'${DEPDIR}'"
+    echo "       DLLTOOL.............'${DLLTOOL}'"
+    echo "       DYN_FLAGS...........'${DYNFLAGS}'"
+    echo "       EXEEXT..............'${EXEEXT}'"
+    echo "       INCS................'${INCS}'"
+    echo "       LDFLAGS.............'${LDFLAGS}'"
+    echo "       LIBS................'${LIBS}'"
+    echo "       LN_S................'${LN_S}'"
+    echo "       MYRRD...............'${MYRRD}'"
+    echo "       OBJDUMP.............'${OBJDUMP}'"
+    echo "       OBJEXT..............'${OBJEXT}'"
+    echo "       RANLIB..............'${RANLIB}'"
+    echo "       SO_VERSION_PATCH....'${SO_VERSION_PATCH}'"
+    echo "       build...............'${build}'"
+    echo "       host................'${host}'"
+    echo "       target..............'${target}'"
+fi
+# Finished expansion of NTOPCONFIGDEBUG_SETTINGS()
+])
 ## libtool.m4 - Configure libtool for the target system. -*-Shell-script-*-
 ## Copyright (C) 1996-1999 Free Software Foundation, Inc.
 ## Originally by Gordon Matzigkeit <gord@gnu.ai.mit.edu>, 1996
