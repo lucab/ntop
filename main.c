@@ -138,9 +138,9 @@ int main(int argc, char *argv[]) {
   initIPServices();
 
 #ifdef WIN32
-  theOpts = "e:F:hr:p:i:nw:m:b:B:D:s:P:R:Sgt:a:W:12";
+  theOpts = "e:F:hr:p:i:nw:m:b:B:D:s:P:R:Sgt:a:W:12L";
 #else
-  theOpts = "Ide:f:F:hr:i:p:nNw:m:b:D:s:P:R:MSgt:a:u:W:12";
+  theOpts = "Ide:f:F:hr:i:p:nNw:m:b:D:s:P:R:MSgt:a:u:W:12L";
 #endif
   
   while((op = getopt(argc, argv, theOpts)) != EOF)
@@ -336,6 +336,15 @@ int main(int argc, char *argv[]) {
         }
         break;
 #endif /* WIN32 */
+
+	
+      case 'L':
+	/* 
+	   Persitent storage only for 'local' machines 
+	   Courtesy of Joel Crisp <jcrisp@dyn21-126.trilogy.com>
+	*/
+	usePersistentStorage = 2;
+	break;
 
       default:
 	usage();

@@ -891,7 +891,7 @@ void usage(void) {
 #ifndef WIN32
     traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
 #endif
-    traceEvent(TRACE_INFO, "    %s\n",   "[-S (store persistently host stats)]");
+    traceEvent(TRACE_INFO, "    %s\n",   "[-S <store mode> (store persistently host stats)]");
     traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");
 #ifdef HAVE_OPENSSL
     traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");

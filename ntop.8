@@ -31,7 +31,7 @@ ntop \- display top network users
 .RB [ -W
 .IR HTTPS port ]
 .RB [ -d ]
-.RB [ -S ]
+.RB [ -S value ]
 .RB [ -P 
 .IR dbpath]
 .RB [ -m 
@@ -152,8 +152,8 @@ has been compiled with HTTPS support (via OpenSSL), this flag can be used to set
 .It -d
 This flag causes ntop to become a daemon, i.e. it is started in background and detached from the terminal.
 
-.It -S
-Use this flag for telling ntop to save information about host traffic on shutdown. This allows ntop not to loose traffic stats across multiple ntop sessions. Please note that information about TCP session is (obviously) lost.
+.It -S value
+Use this flag for telling ntop to save information about host traffic on shutdown. Valid values are: 0 = don't store hosts, 1 = store all hosts, 2 = store only local hosts. This flag allows ntop not to loose traffic stats across multiple ntop sessions. Please note that information about TCP session is (obviously) lost.
 
 .It -P
 This allows to specify where db-files are searched or created (default "."). In addition DBPATH/html is added to the searchlist for the WEB-files

@@ -22,7 +22,7 @@
 #include "ntop.h"
 #include "globals-report.h"
 
-/* #define PRINT_ALL_ACTIVE_SESSIONS 1 */
+#define PRINT_ALL_ACTIVE_SESSIONS 1 
 
 #ifndef MICRO_NTOP
 
