@@ -264,10 +264,31 @@ void unloadPlugins(void) {
 
 /* ******************************* */
 
+static char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
+  int age;
+  
+  if(myGlobals.actTime - el->firstSeen > 60*60)
+    age = 60;
+  else if (myGlobals.actTime - el->firstSeen > 30*60)
+    age = 30;
+  else if (myGlobals.actTime - el->firstSeen > 15*60)
+    age = 15;
+  else if (myGlobals.actTime - el->firstSeen > 5*60)
+    age = 5;
+  else
+    age = 0;
+  
+  snprintf(buf, bufSize, "class=\"age%dmin\"", age);
+  
+  return(buf);
+}
+
+/* ******************************* */
+
 char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag) {
   static char buf[5][2*LEN_GENERAL_WORK_BUFFER];
-  char symIp[256], *tmpStr, linkName[256], flag[128];
+  char symIp[256], *tmpStr, linkName[256], flag[128], colorSpec[64];
   char *dynIp, *p2p;
   char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr;
   short specialMacAddress = 0;
@@ -432,17 +453,16 @@ char* makeHostLink(HostTraffic *el, short mode,
 
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
-		"<A HREF=\"/%s.html\">%s</A>%s%s%s%s%s%s%s%s%s</TH>%s",
-		linkName, symIp,
-		dynIp,
-		multihomed, gwStr, dnsStr,
+		"<A HREF=\"/%s.html\" %s>%s</A>%s%s%s%s%s%s%s%s%s</TH>%s",
+		linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
+		symIp,dynIp, multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr, userStr, p2p,
 		flag) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<A HREF=\"/%s.html\" NOWRAP>%s</A>"
+    if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<A HREF=\"/%s.html\" NOWRAP %s>%s</A>"
 		"%s%s%s%s%s%s%s%s%s%s",
-		linkName, symIp,
+		linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), symIp,
 		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr, userStr, p2p,
 		dynIp, flag) < 0)

@@ -274,41 +274,6 @@ void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
     free(host->portsUsage);
   }
 
-  if(myGlobals.enableSessionHandling) {
-    for(i=0; i<2; i++) {
-      if(i == 0)
-	element = host->tcpSessionList;
-      else
-	element = host->udpSessionList;
-
-      while(element != NULL) {
-	if(element->magic != CONST_MAGIC_NUMBER) {
-	  traceEvent(CONST_TRACE_ERROR, "===> Magic assertion failed (3) for host %s", host->hostNumIpAddress);
-	}
-
-	nextElement = element->next;
-	/*
-	  The 'peers' field shouldn't be a problem because an idle host
-	  isn't supposed to have any session
-	*/
-	free(element);
-	element = nextElement;
-      }
-    }
-
-    host->tcpSessionList = host->udpSessionList = NULL;
-
-    HEARTBEAT(1, "freeHostInfo() calling freeHostSessions(), mutex: [%s %s:%d]",   
-	      myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
-	      myGlobals.tcpSessionsMutex.lockFile,
-	      myGlobals.tcpSessionsMutex.lockLine);
-    freeHostSessions(host->hostTrafficBucket, actualDeviceId);
-    HEARTBEAT(1, "freeHostInfo() returned from freeHostSessions(), mutex: [%s %s:%d]",   
-	      myGlobals.tcpSessionsMutex.isLocked ? "Locked" : "Unlocked",
-	      myGlobals.tcpSessionsMutex.lockFile,
-	      myGlobals.tcpSessionsMutex.lockLine);
-  }
-
   if(myGlobals.enablePacketDecoding && (host->protocolInfo != NULL)) {
     if(host->protocolInfo->httpVirtualHosts != NULL) {
       VirtualHostList *list = host->protocolInfo->httpVirtualHosts;

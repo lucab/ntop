@@ -2209,12 +2209,10 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
 /* ********************************** */
 
-void printActiveTCPSessions(int actualDeviceId, int pageNum) {
+void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx, realNumSessions;
   char buf[LEN_GENERAL_WORK_BUFFER];
   int numSessions, printedSessions;
-
-  printHTMLheader("Active TCP Sessions", 0);
 
   if(!myGlobals.enableSessionHandling) {
     printNotAvailable();
@@ -2249,12 +2247,20 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 	}
 #endif
 
+	if(el
+	   && (session->initiatorIdx  != el->hostTrafficBucket)
+	   && (session->remotePeerIdx != el->hostTrafficBucket)) {
+	  session = session->next;
+	  continue;
+	}	
+
 	if((numSessions++) < pageNum*myGlobals.maxNumLines) {
 	  session = session->next;
 	  continue;
 	}
 
 	if(printedSessions == 0) {
+	  printHTMLheader("Active TCP Sessions", 0);
 	  sendString("<CENTER>\n");
 	  sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%\"><TR "TR_ON">"
 		     "<TH "TH_BG">Client</TH>"
@@ -2344,8 +2350,12 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum) {
 
     addPageIndicator("NetNetstat.html", pageNum,
 		     realNumSessions, myGlobals.maxNumLines, -1, 0);
-  } else
-    printFlagedWarning("<I>No Active TCP Sessions</I>");
+  } else {
+    if(el == NULL) {
+      printHTMLheader("Active TCP Sessions", 0);
+      printFlagedWarning("<I>No Active TCP Sessions</I>");
+    }
+  }
 }
 
 

@@ -1734,7 +1734,7 @@ static int returnHTTPPage(char* pageName,
       printIpAccounting(FLAG_LOCAL_TO_LOCAL_ACCOUNTING, sortedColumn, revertOrder, pageNum);
     } else if(strncmp(pageName, "NetNetstat.html", strlen("NetNetstat.html")) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
-      printActiveTCPSessions(myGlobals.actualReportDeviceId, pageNum);
+      printActiveTCPSessions(myGlobals.actualReportDeviceId, pageNum, NULL);
     } else if(strncmp(pageName, STR_MULTICAST_STATS, strlen(STR_MULTICAST_STATS)) == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printMulticastStats(sortedColumn, revertOrder, pageNum);

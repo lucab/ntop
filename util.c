@@ -1946,9 +1946,7 @@ void resetHostsVariables(HostTraffic* el) {
   el->nonIPTraffic = NULL;
   el->routedTraffic = NULL;
   el->portsUsage = NULL;
-  el->protoIPTrafficInfos = NULL;
-  el->tcpSessionList = NULL;
-  el->udpSessionList = NULL;
+  el->protoIPTrafficInfos = NULL;  
   el->icmpInfo = NULL;
   el->protocolInfo = NULL;
 

@@ -501,7 +501,6 @@ typedef struct hostTraffic {
   TrafficCounter   otherSent, otherRcvd;
   
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/rcvd by this host */
-  IpGlobalSession  *tcpSessionList, *udpSessionList; /* list of sessions initiated/rcvd by this host */
   Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   UsageCounter     contactedSentPeers;   /* peers that talked with this host */
   UsageCounter     contactedRcvdPeers;   /* peers that talked with this host */
