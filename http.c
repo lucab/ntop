@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2000 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
  *                          Portions by Stefano Suin <stefano@ntop.org>
  *
  *			    http://www.ntop.org/
@@ -204,7 +204,8 @@ static int readHTTPheader(char* theRequestedURL,
 	if(errorCode != 0) {
 	  ;  /* skip parsing after an error was detected */
 	} else if(numLine == 1) {
-	  strncpy(httpRequestedURL, lineStr, sizeof(httpRequestedURL)-1)[sizeof(httpRequestedURL)-1] = '\0';
+	  strncpy(httpRequestedURL, lineStr, 
+		  sizeof(httpRequestedURL)-1)[sizeof(httpRequestedURL)-1] = '\0';
 
 	  if(idxChar < 9) {
 	    errorCode = HTTP_INVALID_REQUEST;
@@ -235,8 +236,8 @@ static int readHTTPheader(char* theRequestedURL,
 	      tmpStr = &lineStr[5];
 /*
   HEAD method could be supported with some litle modifications...
-	    } else if((idxChar >= 4) && (strncmp(lineStr, "HEAD ", 5) == 0)) {
-	      tmpStr = &lineStr[5];
+  } else if((idxChar >= 4) && (strncmp(lineStr, "HEAD ", 5) == 0)) {
+  tmpStr = &lineStr[5];
 */
 	    } else {
 	      errorCode = HTTP_INVALID_METHOD;
@@ -244,13 +245,17 @@ static int readHTTPheader(char* theRequestedURL,
 	      traceEvent(TRACE_INFO, "Unrecognized method in request line.\n");
 #endif
 	    }
+
 	    if(tmpStr)
-	      strncpy(theRequestedURL, tmpStr, theRequestedURLLen-1)[theRequestedURLLen-1] = '\0';
+	      strncpy(theRequestedURL, tmpStr, 
+		      theRequestedURLLen-1)[theRequestedURLLen-1] = '\0';
 	  }
 
-	} else if((idxChar >= 21) && (strncasecmp(lineStr, "Authorization: Basic ", 21) == 0)) {
+	} else if((idxChar >= 21) 
+		  && (strncasecmp(lineStr, "Authorization: Basic ", 21) == 0)) {
 	  strncpy(thePw, &lineStr[21], thePwLen-1)[thePwLen-1] = '\0';
-	} else if((idxChar >= 16) && (strncasecmp(lineStr, "Content-Length: ", 16) == 0)) {
+	} else if((idxChar >= 16) 
+		  && (strncasecmp(lineStr, "Content-Length: ", 16) == 0)) {
 	  contentLen = atoi(&lineStr[16]);
 #ifdef DEBUG
 	  traceEvent(TRACE_INFO, "len=%d [%s/%s]\n", contentLen, lineStr, &lineStr[16]); 
@@ -463,11 +468,15 @@ void printHTMLheader(char *title,
   char buf[BUF_SIZE];
 
   sendString("<HTML>\n<HEAD>\n");
+
+  /*
   if(title != NULL) {
     if(snprintf(buf, BUF_SIZE, "<TITLE>%s</TITLE>\n", title) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
+  */
+
   if((headerFlags & HTML_FLAG_NO_REFRESH) == 0) {
     if(snprintf(buf, BUF_SIZE, "<META HTTP-EQUIV=REFRESH CONTENT=%d>\n", refreshRate) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -515,7 +524,7 @@ void printHTTPtrailer(void) {
       sendString(device[i].name);
     }
 
-  sendString("]\n<br>\n<address>&copy; 1998-2000 by <A HREF=mailto:deri@ntop.org>L. Deri</A>"
+  sendString("]\n<br>\n<address>&copy; 1998-2001 by <A HREF=mailto:deri@ntop.org>L. Deri</A>"
 	     "</H5></font></BODY></HTML>\n");
 }
 #endif
@@ -559,7 +568,7 @@ void printHTMLtrailer(void) {
 
   sendString(buf);
 
-  sendString("<BR>\n<ADDRESS>&copy; 1998-2000 by <A HREF=mailto:deri@ntop.org>L. Deri</A></ADDRESS>\n");
+  sendString("<BR>\n<ADDRESS>&copy; 1998-2001 by <A HREF=mailto:deri@ntop.org>L. Deri</A></ADDRESS>\n");
   sendString("</B></FONT>\n</BODY>\n</HTML>\n");
 }
 
@@ -1099,8 +1108,8 @@ static int returnHTTPPage(char* pageName, int postLen) {
     sendString("<li><a href=ntop.html target=area ALT=\"Man Page\">Man Page</a></li>\n");
     sendString("<li><a href=Credits.html target=area ALT=\"Credits\">Credits</a></li>\n");
     sendString("</ol>\n<center>\n<b>\n\n");
-    sendString("<pre>\n</pre>&copy; 1998-2000<br>by<br>"
-	       "<A HREF=\"http://jake.unipi.it/~deri/\" target=\"area\">"
+    sendString("<pre>\n</pre>&copy; 1998-2001<br>by<br>"
+	       "<A HREF=\"http://luca.ntop.org/\" target=\"area\">"
 	       "Luca Deri</A></FONT><pre>\n");
     sendString("</pre>\n</b>\n</center>\n</body>\n</html>\n");
     printTrailer=0;

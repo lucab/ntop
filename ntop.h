@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2000 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
  *                          Portions by Stefano Suin <stefano@ntop.org>
  *
  *                          http://www.ntop.org/
@@ -1349,7 +1349,7 @@ typedef struct icmpHostInfo {
 #define DEFAULT_TRACE_LEVEL          3
 #define DETAIL_TRACE_LEVEL           5
 
-#define DETAIL_ACCESS_LOG_FILE_PATH  DBFILE_DIR"/ntop.access.log"
+#define DETAIL_ACCESS_LOG_FILE_PATH  "ntop.access.log"
 
 /* *********************** */
 

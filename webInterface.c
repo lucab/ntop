@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2000 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
  *                          Portions by Stefano Suin <stefano@ntop.org>
  *
  *		 	    http://www.ntop.org/
@@ -785,7 +785,7 @@ void usage(void) {
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   traceEvent(TRACE_INFO, "%s\n", buf);
 
-  traceEvent(TRACE_INFO, "Copyright 1998-2000 by %s\n", author);
+  traceEvent(TRACE_INFO, "Copyright 1998-2001 by %s\n", author);
   traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
   if(snprintf(buf, sizeof(buf), "Written by %s.", author) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");

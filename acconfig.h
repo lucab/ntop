@@ -2,7 +2,7 @@
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  * Custom Ntop defines, the meat for 'autoconf'
  *
- * Copyright (c) 1998, 2000 Luca Deri <deri@ntop.org>
+ * Copyright (c) 1998-2001 Luca Deri <deri@ntop.org>
  * Updated 1Q 2000 Rocco Carbone <rocco@ntop.org>
  *
  * -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2000 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
  *                          Portions by Stefano Suin <stefano@ntop.org>
  *
  *  			    http://www.ntop.org/
@@ -2201,13 +2201,17 @@ void printProtoTraffic(void) {
   sendString("<CENTER>\n");
   sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR><TH "TH_BG" WIDTH=150>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=100>Data</TH><TH "TH_BG" WIDTH=250>Percentage</TH></TR>\n");
-  if(snprintf(buf, sizeof(buf), "<TH "TH_BG" WIDTH=150 ALIGN=LEFT>IP</TH><TD "TD_BG" WIDTH=100 ALIGN=RIGHT>%s"
-	  "&nbsp;(%.1f%%)</TD><TD "TD_BG" WIDTH=250>"
-	  "<TABLE BORDER=1 WIDTH=\"100%%\">", formatBytes(device[actualReportDeviceId].ipBytes, 1),
-	  100*((float)device[actualReportDeviceId].ipBytes/device[actualReportDeviceId].ethernetBytes)) < 0) 
+  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" WIDTH=150 ALIGN=LEFT>IP</TH>"
+	      "<TD "TD_BG" WIDTH=100 ALIGN=RIGHT>%s"
+	      "&nbsp;(%.1f%%)</TD><TD "TD_BG" WIDTH=250>"
+	      "<TABLE BORDER=1 WIDTH=\"100%%\">", 
+	      getRowColor(),
+	      formatBytes(device[actualReportDeviceId].ipBytes, 1),
+	      100*((float)device[actualReportDeviceId].ipBytes/
+		   device[actualReportDeviceId].ethernetBytes)) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-
+  
   printTableEntry(buf, sizeof(buf), "TCP", COLOR_1,
 		  (float)device[actualReportDeviceId].tcpBytes/1024,
 		  100*((float)device[actualReportDeviceId].tcpBytes/device[actualReportDeviceId].ipBytes));

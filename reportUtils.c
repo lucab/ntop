@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 1998-2000 Luca Deri <deri@ntop.org>
+ *  Copyright (C) 1998-2001 Luca Deri <deri@ntop.org>
  *                          Portions by Stefano Suin <stefano@ntop.org>
  *
  *  			    http://www.ntop.org/
@@ -2855,15 +2855,18 @@ void printTableEntry(char *buf, int bufLen,
   switch(int_perc) {
   case 0:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
-	    "<TD "TD_BG"  ALIGN=RIGHT WIDTH=100>%s</TD>"
-	    "<TD "TD_BG" WIDTH=250>&nbsp;</TD></TR>\n",
-	    getRowColor(), label, formatKBytes(total)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		"<TD "TD_BG"  ALIGN=RIGHT WIDTH=100>%s</TD>"
+		"<TD "TD_BG" WIDTH=250>&nbsp;</TD></TR>\n",
+		getRowColor(), label, formatKBytes(total)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
-	    "<TD "TD_BG"  ALIGN=RIGHT WIDTH=100>%s</TD>"
-	    "<TD ALIGN=CENTER WIDTH=250><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12></TD></TR>\n",
-	    getRowColor(), label, formatKBytes(total)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		"<TD "TD_BG"  ALIGN=RIGHT WIDTH=100>%s</TD>"
+		"<TD ALIGN=CENTER WIDTH=250><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12>"
+		"</TD></TR>\n",
+		getRowColor(), label, formatKBytes(total)) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   default:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
