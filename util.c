@@ -844,6 +844,7 @@ void killThread(pthread_t *threadId) {
 int createMutex(pthread_mutex_t *mutexId) {
   int rc = pthread_mutex_init(mutexId, NULL);
 
+#ifdef PTHREAD_MUTEX_ERRORCHECK_NP
   /* ************************************************* 
      There seems to be some problem with mutexes and some
      glibc versions. See
@@ -862,6 +863,7 @@ int createMutex(pthread_mutex_t *mutexId) {
 
      ************************************************* */
   pthread_mutexattr_settype (mutexId, PTHREAD_MUTEX_ERRORCHECK_NP);
+#endif /* PTHREAD_MUTEX_ERRORCHECK_NP */
   return(rc);
 }
 
