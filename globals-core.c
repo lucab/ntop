@@ -518,7 +518,7 @@ void initNtop(char *devices) {
   if (myGlobals.xmlFileOut) {
     traceEvent(CONST_TRACE_NOISY, "XMLDUMP: Removing old xml output file, %s", myGlobals.xmlFileOut);
     /* Delete the old one (if present) */
-    rc = unlink(myGlobals.xmlFileOut);
+    int rc = unlink(myGlobals.xmlFileOut);
     if ( (rc != 0) && (errno != ENOENT) ) {
       traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml output file, %s, failed, errno=%d",
 		 myGlobals.xmlFileOut, errno);
