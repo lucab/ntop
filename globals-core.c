@@ -127,7 +127,7 @@ void initNtopGlobals(int argc, char * argv[])
   myGlobals.useSyslog = 0;
 #endif
 
-  myGlobals.mergeInterfaces = 0;
+  myGlobals.mergeInterfaces = 1;     /* by default ntop will merge network interfaces */
   myGlobals.isNmapPresent = 0;
 
   if (! myGlobals.dbPath)
