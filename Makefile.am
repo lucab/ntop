@@ -55,7 +55,7 @@ MAINTAINERCLEANFILES = COPYING Makefile.in config.guess \
 
 SUBDIRS = . @PLUGINS@ @INTOP@
 
-DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
+DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
                MANIFESTO NEWS PORTING  \
                SUPPORT_NTOP.txt THANKS \
                ntop.8 ntop.txt ntop.html \
