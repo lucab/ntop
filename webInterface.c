@@ -7406,6 +7406,9 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #ifdef INITWEB_DEBUG
   char value[LEN_SMALL_WORK_BUFFER];
 #endif
+#if !(defined(INET6) && !defined(WIN32))
+  struct sockaddr_in sockIn;
+#endif
 
 #ifdef HAVE_FILEDESCRIPTORBUG
   int i;
@@ -7446,6 +7449,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   memset(&sockIn, 0, sizeof(sockIn));
   sockIn.sin_family = AF_INET;
   sockIn.sin_port   = (int)htons((unsigned short int)(*port));
+
 #ifndef WIN32
   if(addr) {
     if(!inet_aton(addr, &sockIn.sin_addr)) {
