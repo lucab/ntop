@@ -1011,6 +1011,8 @@ Optional Features:
   --enable-micro-ntop         compile a slim version of ntop default=disabled
   --enable-intop              enable intop (obsolete) command line version default=disabled
   --enable-ignoresigpipe      Ignore SIGPIPE errors default=do not ignore
+  --enable-i18n               Enable (limited) internationalization default=disabled
+  --enable-xmldump            Enable xml-based data dump default=disabled
   --enable-showoses           display OS Support information.
   --enable-iknowbetter        Override WILLFAIL
   --enable-automake171        Override automake 1.7.1 abort
@@ -1032,6 +1034,7 @@ Optional Packages:
   --with-tcpwrap              enable use of TCP Wrapper default=disabled
   --without-curses            disable use of curses default=enabled
   --without-readline          disable use of GNU readline default=enabled
+  +-External-source-locations:-------------------------------------------------+
   --with-pcap-root=DIR        LBNL pcap source tree located in DIR
   --with-gdbm-root=DIR        GNU gdbm source tree located in DIR
   --with-ossl-root=DIR        openSSL source tree located in DIR
@@ -1040,6 +1043,11 @@ Optional Packages:
   --with-libpng-root=DIR      PNGLIB source tree located in DIR
   --with-zlib-root=DIR        ZLIB source tree located in DIR
   --with-rrd-root=DIR         RRD located in DIR
+  --with-localedir=DIR        LOCALE files located in DIR (i18n)
+  --with-xml2-root=DIR        xml2 library source tree located in DIR
+  --with-glib-root=DIR        glib library source tree located in DIR
+  --with-glibconfig-root=DIR  glibconfig.h source in DIR
+  --with-gdome-root=DIR       gdome library source tree located in DIR
   +----------------------------------------------------------------------------+
   --with-gnu-ld           assume the C compiler uses GNU ld default=no
   --with-pic              try to use only PIC/non-PIC objects default=use both
@@ -2216,6 +2224,28 @@ else
   ac_enable_ignoresigpipe="no"
 fi;
 
+# Check whether --enable-i18n or --disable-i18n was given.
+if test "${enable_i18n+set}" = set; then
+  enableval="$enable_i18n"
+  ac_enable_i18n="yes"
+else
+  ac_enable_i18n="no"
+fi;
+
+# Check whether --enable-xmldump or --disable-xmldump was given.
+if test "${enable_xmldump+set}" = set; then
+  enableval="$enable_xmldump"
+  ac_enable_xmldump="yes"
+else
+  ac_enable_xmldump="no"
+fi;
+
+
+# Check whether --with-void or --without-void was given.
+if test "${with_void+set}" = set; then
+  withval="$with_void"
+
+fi;
 
 
 # Check whether --with-pcap-root or --without-pcap-root was given.
@@ -2287,6 +2317,51 @@ if test "${with_rrd_root+set}" = set; then
   RRD_ROOT="$withval"
 else
   RRD_ROOT=
+fi;
+
+
+# Check whether --with-localedir or --without-localedir was given.
+if test "${with_localedir+set}" = set; then
+  withval="$with_localedir"
+  LOCALEDIR="$withval"
+else
+  LOCALEDIR=
+fi;
+
+
+# Check whether --with-xml2-root or --without-xml2-root was given.
+if test "${with_xml2_root+set}" = set; then
+  withval="$with_xml2_root"
+  XML2_ROOT="$withval"
+else
+  XML2_ROOT=
+fi;
+
+
+# Check whether --with-glib-root or --without-glib-root was given.
+if test "${with_glib_root+set}" = set; then
+  withval="$with_glib_root"
+  GLIB_ROOT="$withval"
+else
+  GLIB_ROOT=
+fi;
+
+
+# Check whether --with-glibconfig-root or --without-glibconfig-root was given.
+if test "${with_glibconfig_root+set}" = set; then
+  withval="$with_glibconfig_root"
+  GLIBCONFIG_ROOT="$withval"
+else
+  GLIBCONFIG_ROOT=
+fi;
+
+
+# Check whether --with-gdome-root or --without-gdome-root was given.
+if test "${with_gdome_root+set}" = set; then
+  withval="$with_gdome_root"
+  GDOME_ROOT="$withval"
+else
+  GDOME_ROOT=
 fi;
 
 # Check whether --enable-showoses or --disable-showoses was given.
@@ -3595,10 +3670,14 @@ case "${target}:${CC}" in
         CFLAGS="-no-cpp-precomp $CFLAGS"
       ;;
 
-    *-*-freebsd4*:*gcc* )
+    *-*-freebsd[45]*:*gcc* )
         VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.2-RELEASE"
         VERIFIED2="2.1.51:2002-10-25:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE"
+        VERIFIED3="2.1.55:2003-01-19:Burton Strauss <burton@ntopsupport.com>:5.0-RELEASE"
         DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
+        if test ".${LOCALEDIR}" = "."; then
+            LOCALEDIR="/usr/share/locale"
+        fi
       ;;
 
     *-*-freebsd*:* )
@@ -3673,6 +3752,10 @@ case "${target}:${CC}" in
         DEFINEOS="";          STATUS="UNKNOWN"
       ;;
 esac
+
+if test ".${LOCALEDIR}" = "."; then
+    LOCALEDIR="/usr/lib/locale"
+fi
 
 CFLAGS="-D${DEFINEOS} ${CFLAGS}"
 
@@ -6521,7 +6604,7 @@ test "x$enable_libtool_lock" != xno && enable_libtool_lock=yes
 case $host in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6524 "configure"' > conftest.$ac_ext
+  echo '#line 6607 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7057,7 +7140,7 @@ chmod -w .
 save_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -o out/conftest2.$ac_objext"
 compiler_c_o=no
-if { (eval echo configure:7060: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>out/conftest.err; } && test -s out/conftest2.$ac_objext; then
+if { (eval echo configure:7143: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>out/conftest.err; } && test -s out/conftest2.$ac_objext; then
   # The compiler can only warn and ignore the option if not recognized
   # So say no if there are warnings
   if test -s out/conftest.err; then
@@ -8850,7 +8933,7 @@ else
     lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8853 "configure"
+#line 8936 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8948,7 +9031,7 @@ else
     lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8951 "configure"
+#line 9034 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10462,6 +10545,14 @@ else
 fi
 
 echo
+echo "XML Dump?"
+if test ".${ac_enable_xmldump}" = ".yes"; then
+    echo "    ...Requested if available."
+else
+    echo "    ...(Default) Disabled. Request via command line option --enable-xmldump."
+fi
+
+echo
 echo "TCP Wrappers?"
 if test ".${ac_enable_tcpwrap}" = ".yes"; then
     echo "    ...Requested via command line option --enable-tcpwrap"
@@ -10555,6 +10646,19 @@ _ACEOF
 else
     echo "    ...(Default) Disabled. Request via command line option --enable-ignoresigpipe"
     echo "                                    or run time option."
+fi
+
+echo
+echo "Internationalization (i18n)?"
+if test ".$ac_enable_i18n" = ".yes"; then
+    echo "    ...Requested via command line option --enable-i18n."
+
+cat >>confdefs.h <<_ACEOF
+#define MAKE_WITH_I18N 1
+_ACEOF
+
+else
+    echo "    ...(Default) Disabled. Request via command line option --enable-i18n"
 fi
 
 echo
@@ -13065,6 +13169,122 @@ done
 
 
 for ac_header in crypt.h pwd.h security/pam_appl.h shadow.h
+do
+as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+else
+  # Is the header compilable?
+echo "$as_me:$LINENO: checking $ac_header usability" >&5
+echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+$ac_includes_default
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_header_compiler=no
+fi
+rm -f conftest.$ac_objext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6
+
+# Is the header present?
+echo "$as_me:$LINENO: checking $ac_header presence" >&5
+echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+#include <$ac_header>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  egrep -v '^ *\+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc in
+  yes:no )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;};;
+  no:yes )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
+echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: $ac_header: check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;};;
+esac
+echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  eval "$as_ac_Header=$ac_header_preproc"
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+
+fi
+if test `eval echo '${'$as_ac_Header'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+
+
+
+for ac_header in locale.h langinfo.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then
@@ -16165,6 +16385,350 @@ fi
 done
 
 
+
+
+for ac_header in glib.h glibconfig.h
+do
+as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+else
+  # Is the header compilable?
+echo "$as_me:$LINENO: checking $ac_header usability" >&5
+echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+$ac_includes_default
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_header_compiler=no
+fi
+rm -f conftest.$ac_objext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6
+
+# Is the header present?
+echo "$as_me:$LINENO: checking $ac_header presence" >&5
+echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+#include <$ac_header>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  egrep -v '^ *\+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc in
+  yes:no )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;};;
+  no:yes )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
+echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: $ac_header: check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;};;
+esac
+echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  eval "$as_ac_Header=$ac_header_preproc"
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+
+fi
+if test `eval echo '${'$as_ac_Header'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+
+for ac_header in xmlversion.h
+do
+as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+else
+  # Is the header compilable?
+echo "$as_me:$LINENO: checking $ac_header usability" >&5
+echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+$ac_includes_default
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_header_compiler=no
+fi
+rm -f conftest.$ac_objext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6
+
+# Is the header present?
+echo "$as_me:$LINENO: checking $ac_header presence" >&5
+echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+#include <$ac_header>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  egrep -v '^ *\+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc in
+  yes:no )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;};;
+  no:yes )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
+echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: $ac_header: check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;};;
+esac
+echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  eval "$as_ac_Header=$ac_header_preproc"
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+
+fi
+if test `eval echo '${'$as_ac_Header'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+
+for ac_header in gdome.h
+do
+as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+else
+  # Is the header compilable?
+echo "$as_me:$LINENO: checking $ac_header usability" >&5
+echo $ECHO_N "checking $ac_header usability... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+$ac_includes_default
+#include <$ac_header>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_header_compiler=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_header_compiler=no
+fi
+rm -f conftest.$ac_objext conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_compiler" >&5
+echo "${ECHO_T}$ac_header_compiler" >&6
+
+# Is the header present?
+echo "$as_me:$LINENO: checking $ac_header presence" >&5
+echo $ECHO_N "checking $ac_header presence... $ECHO_C" >&6
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+#include <$ac_header>
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
+  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
+  ac_status=$?
+  egrep -v '^ *\+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } >/dev/null; then
+  if test -s conftest.err; then
+    ac_cpp_err=$ac_c_preproc_warn_flag
+  else
+    ac_cpp_err=
+  fi
+else
+  ac_cpp_err=yes
+fi
+if test -z "$ac_cpp_err"; then
+  ac_header_preproc=yes
+else
+  echo "$as_me: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.$ac_ext
+echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
+echo "${ECHO_T}$ac_header_preproc" >&6
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc in
+  yes:no )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
+echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;};;
+  no:yes )
+    { echo "$as_me:$LINENO: WARNING: $ac_header: present but cannot be compiled" >&5
+echo "$as_me: WARNING: $ac_header: present but cannot be compiled" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: check for missing prerequisite headers?" >&5
+echo "$as_me: WARNING: $ac_header: check for missing prerequisite headers?" >&2;}
+    { echo "$as_me:$LINENO: WARNING: $ac_header: proceeding with the preprocessor's result" >&5
+echo "$as_me: WARNING: $ac_header: proceeding with the preprocessor's result" >&2;};;
+esac
+echo "$as_me:$LINENO: checking for $ac_header" >&5
+echo $ECHO_N "checking for $ac_header... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Header+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  eval "$as_ac_Header=$ac_header_preproc"
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Header'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Header'}'`" >&6
+
+fi
+if test `eval echo '${'$as_ac_Header'}'` = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
+_ACEOF
+
+fi
+
+done
+
+
 echo
 echo "Testing for common typedefs and structures..."
 echo
@@ -18702,6 +19266,202 @@ echo "${ECHO_T}$ac_cv_lib_rrd_rrd_create" >&6
 if test $ac_cv_lib_rrd_rrd_create = yes; then
 
     RRDLIB="-lrrd"
+
+fi
+
+
+
+echo "$as_me:$LINENO: checking for g_date_julian in -lglib" >&5
+echo $ECHO_N "checking for g_date_julian in -lglib... $ECHO_C" >&6
+if test "${ac_cv_lib_glib_g_date_julian+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lglib  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char g_date_julian ();
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+g_date_julian ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_glib_g_date_julian=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_cv_lib_glib_g_date_julian=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_glib_g_date_julian" >&5
+echo "${ECHO_T}$ac_cv_lib_glib_g_date_julian" >&6
+if test $ac_cv_lib_glib_g_date_julian = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGLIB 1
+_ACEOF
+
+  LIBS="-lglib $LIBS"
+
+fi
+
+
+echo "$as_me:$LINENO: checking for xmlCheckVersion in -lxml2" >&5
+echo $ECHO_N "checking for xmlCheckVersion in -lxml2... $ECHO_C" >&6
+if test "${ac_cv_lib_xml2_xmlCheckVersion+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lxml2  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char xmlCheckVersion ();
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+xmlCheckVersion ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_xml2_xmlCheckVersion=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_cv_lib_xml2_xmlCheckVersion=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_xml2_xmlCheckVersion" >&5
+echo "${ECHO_T}$ac_cv_lib_xml2_xmlCheckVersion" >&6
+if test $ac_cv_lib_xml2_xmlCheckVersion = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBXML2 1
+_ACEOF
+
+  LIBS="-lxml2 $LIBS"
+
+fi
+
+
+echo "$as_me:$LINENO: checking for gdome_di_saveDocToFile in -lgdome" >&5
+echo $ECHO_N "checking for gdome_di_saveDocToFile in -lgdome... $ECHO_C" >&6
+if test "${ac_cv_lib_gdome_gdome_di_saveDocToFile+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgdome  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char gdome_di_saveDocToFile ();
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+gdome_di_saveDocToFile ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_gdome_gdome_di_saveDocToFile=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_cv_lib_gdome_gdome_di_saveDocToFile=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_gdome_gdome_di_saveDocToFile" >&5
+echo "${ECHO_T}$ac_cv_lib_gdome_gdome_di_saveDocToFile" >&6
+if test $ac_cv_lib_gdome_gdome_di_saveDocToFile = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGDOME 1
+_ACEOF
+
+  LIBS="-lgdome $LIBS"
 
 fi
 
@@ -26712,6 +27472,1242 @@ fi
     fi
 fi
 
+
+if test ".${GLIB_ROOT}" != "." &&
+   test ! -d ${GLIB_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-glib-root option."
+    echo "*"
+    echo "*>>> Continuing without the --with-glib-root option"
+    echo "*"
+    echo "*    ./configure may complete successfully or the xml dump"
+    echo "*    option may be disabled."
+    echo "*"
+    echo "*???     1. Correct the --with-glib-root value and rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    GLIB_ROOT=
+fi
+if test ".${GLIBCONFIG_ROOT}" != "." &&
+   test ! -d ${GLIBCONFIG_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-glibconfig-root option."
+    echo "*"
+    echo "*>>> Continuing without the --with-glibconfig-root option"
+    echo "*"
+    echo "*    ./configure may complete successfully or the xml dump"
+    echo "*    option may be disabled."
+    echo "*"
+    echo "*???     1. Correct the --with-glibconfig-root value and rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    GLIBCONFIG_ROOT=
+fi
+if test ".${XML2_ROOT}" != "." &&
+   test ! -d ${XML2_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-xml2-root option."
+    echo "*"
+    echo "*>>> Continuing without the --with-xml2-root option"
+    echo "*"
+    echo "*    ./configure may complete successfully or the xml dump"
+    echo "*    option may be disabled."
+    echo "*"
+    echo "*???     1. Correct the --with-xml2-root value and rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    XML2_ROOT=
+fi
+if test ".${GDOME_ROOT}" != "." &&
+   test ! -d ${GDOME_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-gdome-root option."
+    echo "*"
+    echo "*>>> Continuing without the --with-gdome-root option"
+    echo "*"
+    echo "*    ./configure may complete successfully or the xml dump"
+    echo "*    option may be disabled."
+    echo "*"
+    echo "*???     1. Correct the --with-gdome-root value and rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    GDOME_ROOT=
+fi
+
+if test ".${ac_enable_xmldump}" = ".yes"; then
+    echo "$as_me:$LINENO: checking for XML Dump" >&5
+echo $ECHO_N "checking for XML Dump... $ECHO_C" >&6
+
+      mass_xmldump_test_result="no"
+
+   if test ".${ac_debug}" = ".yes"; then
+       echo "DEBUG: XMLDump - mass test... _header_glib_h is ${ac_cv_header_glib_h}"
+       echo "                        _header_glibconfig_h is ${ac_cv_header_glibconfig_h}"
+       echo "                        _header_xmlversion_h is ${ac_cv_header_xmlversion_h}"
+       echo "                             _header_gdome_h is ${ac_cv_header_gdome_h}"
+       echo "                     _lib_glib_g_date_julian is ${ac_cv_lib_glib_g_date_julian}"
+       echo "                   _lib_glib12_g_date_julian is ${ac_cv_lib_glib12_g_date_julian}"
+       echo "                   _lib_xml2_xmlCheckVersion is ${ac_cv_lib_xml2_xmlCheckVersion}"
+       echo "           _lib_gdome_gdome_di_saveDocToFile is ${ac_cv_lib_gdome_gdome_di_saveDocToFile}"
+   fi
+
+   if test ".${ac_cv_header_glib_h}"                    = ".yes" &&
+      test ".${ac_cv_header_glibconfig_h}"              = ".yes" &&
+      test ".${ac_cv_header_xmlversion_h}"              = ".yes" &&
+      test ".${ac_cv_header_gdome_h}"                   = ".yes" &&
+      (test ".${ac_cv_lib_glib_g_date_julian}"          = ".yes" ||
+       test ".${ac_cv_lib_glib12_g_date_julian}"        = ".yes") &&
+      test ".${ac_cv_lib_xml2_xmlCheckVersion}"         = ".yes" &&
+      test ".${ac_cv_lib_gdome_gdome_di_saveDocToFile}" = ".yes"; then
+       mass_xmldump_test_result="yes"
+       if test ".${XML2_ROOT}" != "."; then
+           echo "$as_me:$LINENO: result: ok" >&5
+echo "${ECHO_T}ok" >&6
+           echo
+           echo "*******************************************************************"
+           echo "*"
+           echo "* NOTE:  You specified --with-xml2-root (and possibly --with-glib-root,"
+           echo "*        --with-glibconfig-root and/or --with-gdome-root)."
+           echo "*        However, a version was found in a standard location."
+           echo "*"
+           echo "*       Since this version will be used anyway,"
+           echo "*>>>    we've ignored your specified location."
+           echo "*"
+           echo "*******************************************************************"
+           echo
+           XML2_ROOT=
+           GLIB_ROOT=
+           GLIBCONFIG_ROOT=
+           GDOME_ROOT=
+       else
+           echo "$as_me:$LINENO: result: ok (standard location)" >&5
+echo "${ECHO_T}ok (standard location)" >&6
+       fi
+   elif test ".${XML2_ROOT}" = "."; then
+       echo "$as_me:$LINENO: result: not found in standard location, no --with-xml2-root, testing further..." >&5
+echo "${ECHO_T}not found in standard location, no --with-xml2-root, testing further..." >&6
+       echo "$as_me:$LINENO: checking for libxml2 headers" >&5
+echo $ECHO_N "checking for libxml2 headers... $ECHO_C" >&6
+       if test -d /usr &&
+          test -d /usr/include &&
+          test -r /usr/include/xmlversion.h; then
+           echo "$as_me:$LINENO: result: ok, xmlversion.h found in /usr/include" >&5
+echo "${ECHO_T}ok, xmlversion.h found in /usr/include" >&6
+           INCS="${INCS} -I/usr/include"
+           cat >>confdefs.h <<_ACEOF
+#define HAVE_XMLVERSION_H 1
+_ACEOF
+
+       elif test -d /usr &&
+            test -d /usr/local &&
+            test -d /usr/local/include &&
+            test -r /usr/local/include/xmlversion.h; then
+           echo "$as_me:$LINENO: result: ok, xmlversion.h found in /usr/local/include" >&5
+echo "${ECHO_T}ok, xmlversion.h found in /usr/local/include" >&6
+           INCS="${INCS} -I/usr/local/include"
+           cat >>confdefs.h <<_ACEOF
+#define HAVE_XMLVERSION_H 1
+_ACEOF
+
+       else
+           echo
+           echo "*******************************************************************"
+           echo "*"
+           echo "* ERROR:  1. We were unable to find the header xmlversion.h in the"
+           echo "*            standard location."
+           echo "*"
+           echo "*     and 2. You did not specify an alternate location"
+           echo "*            via --with-xml2-root."
+           echo "*"
+           echo "*     and 3. We also tested the following:"
+           echo "*"
+           echo "*                /usr/include"
+           echo "*                /usr/local/include"
+           echo "*"
+           echo "*>>> ./configure continues, xml dump will not be available."
+           echo "*"
+           echo "*???     1. Rerun ./configure with a corrected --with-xml2-root*"
+           echo "*???  or 2. Install libxml2 and rerun ./configure"
+           echo "*"
+           echo "*******************************************************************"
+           echo
+           ac_disable_xmldump="yes"
+       fi
+       if test ".${ac_disable_xmldump}" = ".yes"; then
+                      nop="yes"
+       else
+           echo "$as_me:$LINENO: checking for libxml2 library" >&5
+echo $ECHO_N "checking for libxml2 library... $ECHO_C" >&6
+           if test -d /usr &&
+              test -d /usr/lib &&
+              (test -r /usr/lib/libxml2.so ||
+               test -r /usr/lib/libxml2.a); then
+                              echo "$as_me:$LINENO: result: ok, library found in /usr/lib" >&5
+echo "${ECHO_T}ok, library found in /usr/lib" >&6
+               LIBS="${LIBS} -L/usr/lib -lxmldump"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBXML2 1
+_ACEOF
+
+           elif test -d /usr &&
+                test -d /usr/local &&
+                test -d /usr/local/lib &&
+                (test -r /usr/local/lib/libxml2.so ||
+                 test -r /usr/local/lib/libxml2.a); then
+               echo "$as_me:$LINENO: result: ok, library found in /usr/local/lib" >&5
+echo "${ECHO_T}ok, library found in /usr/local/lib" >&6
+               LIBS="${LIBS} -L/usr/local/lib -lxmldump"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBXML2 1
+_ACEOF
+
+           else
+               echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to compile a test program for libxml2."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-xml2-root."
+               echo "*"
+               echo "*     and 3. We were unable to find libxml2.so or libxml2.a"
+               echo "*            via a manual search of"
+               echo "*"
+               echo "*                /usr/lib"
+               echo "*                /usr/local/lib"
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Run ./buildAll.sh in ${XMLDUMP_DIRECTORY}"
+               echo "*???  or 2. Rerun ./configure with a corrected --with-xml2-root"
+               echo "*???  or 3. Install libxml2 and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+       fi
+   else
+       echo "$as_me:$LINENO: result: not found in standard location, testing further..." >&5
+echo "${ECHO_T}not found in standard location, testing further..." >&6
+
+
+       echo "$as_me:$LINENO: checking for xmlversion.h" >&5
+echo $ECHO_N "checking for xmlversion.h... $ECHO_C" >&6
+       XML2_ROOT=`(cd ${XML2_ROOT} && pwd)`
+       if test -d ${XML2_ROOT} &&
+          test -r ${XML2_ROOT}/xmlversion.h; then
+           echo "$as_me:$LINENO: result: ok, xmlversion.h found in ${XML2_ROOT}" >&5
+echo "${ECHO_T}ok, xmlversion.h found in ${XML2_ROOT}" >&6
+           INCS="${INCS} -I${XML2_ROOT}"
+           cat >>confdefs.h <<_ACEOF
+#define HAVE_XMLVERSION_H 1
+_ACEOF
+
+       elif test -d ${XML2_ROOT} &&
+          test -d ${XML2_ROOT}/include &&
+          test -r ${XML2_ROOT}/include/xmlversion.h; then
+           echo "$as_me:$LINENO: result: ok, xmlversion.h found in ${XML2_ROOT}/include" >&5
+echo "${ECHO_T}ok, xmlversion.h found in ${XML2_ROOT}/include" >&6
+           INCS="${INCS} -I${XML2_ROOT}/include"
+           cat >>confdefs.h <<_ACEOF
+#define HAVE_XMLVERSION_H 1
+_ACEOF
+
+       else
+           echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+           echo
+           echo "*******************************************************************"
+           echo "*"
+           echo "* ERROR:  1. We were unable to find the header xmlversion.h in the"
+           echo "*            standard location or the alternate location you"
+           echo "*            specified by --with-xml2-root."
+           echo "*"
+           echo "*>>> ./configure continues, xml dump will not be available."
+           echo "*"
+           echo "*???     1. Rerun ./configure with a corrected --with-xml2-root"
+           echo "*???  or 2. Install libxml2 and rerun ./configure"
+           echo "*"
+           echo "*******************************************************************"
+           echo
+           ac_disable_xmldump="yes"
+       fi
+       if test ".${ac_enable_xmldump}" = ".yes"; then
+           echo "$as_me:$LINENO: checking for libxml2 library" >&5
+echo $ECHO_N "checking for libxml2 library... $ECHO_C" >&6
+           oLIBS="${LIBS}"
+           # Expansion of NTOP_APPEND_LIBS(${XML2_ROOT}, )
+    case "${DEFINEOS}" in
+      DARWIN )
+          LIBS="$LIBS -L${XML2_ROOT} -L${XML2_ROOT}/lib"
+          ;;
+      * )
+          LIBS="$LIBS -L${XML2_ROOT}"
+          ;;
+    esac
+    if test "." != "."; then
+        LIBS="$LIBS -l"
+    fi
+# Finished expansion of NTOP_APPEND_LIBS()
+
+
+echo "$as_me:$LINENO: checking for xmlInitParser in -lxml2" >&5
+echo $ECHO_N "checking for xmlInitParser in -lxml2... $ECHO_C" >&6
+if test "${ac_cv_lib_xml2_xmlInitParser+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lxml2  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char xmlInitParser ();
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+xmlInitParser ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_xml2_xmlInitParser=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_cv_lib_xml2_xmlInitParser=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_xml2_xmlInitParser" >&5
+echo "${ECHO_T}$ac_cv_lib_xml2_xmlInitParser" >&6
+if test $ac_cv_lib_xml2_xmlInitParser = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBXML2 1
+_ACEOF
+
+  LIBS="-lxml2 $LIBS"
+
+else
+
+               echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+               LIBS="${oLIBS}"
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to compile a test program for"
+               echo "*            xmlInitParser() against -lxml2 in the standard"
+               echo "*            location nor in the alternate locations you"
+               echo "*            specified by --with-xml2-root."
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-gd-root"
+               echo "*???  or 2. Install libxml2 and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+
+fi
+
+       fi
+    fi
+
+    if test ".${ac_disable_xmldump}"       != ".yes" &&
+       test ".${mass_xmldump_test_result}" != ".yes"; then
+        echo "$as_me:$LINENO: checking for glib" >&5
+echo $ECHO_N "checking for glib... $ECHO_C" >&6
+
+       if test ".${ac_cv_header_glib_h}"                    = ".yes" &&
+          test ".${ac_cv_lib_glib_g_date_julian}"           = ".yes"; then
+           if test ".${GLIB_ROOT}" != "."; then
+               echo "$as_me:$LINENO: result: ok" >&5
+echo "${ECHO_T}ok" >&6
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* NOTE:  You specified (or implied) --with-glib-root.  However,"
+               echo "*        a version was found in a standard location."
+               echo "*"
+               echo "*       Since this version will be used anyway,"
+               echo "*>>>    we've ignored your specified location."
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               GLIB_ROOT=
+           else
+               echo "$as_me:$LINENO: result: ok (standard location)" >&5
+echo "${ECHO_T}ok (standard location)" >&6
+           fi
+       elif test ".${GLIB_ROOT}" = "."; then
+           echo "$as_me:$LINENO: result: not found in standard location, no --with-glib-root, testing further..." >&5
+echo "${ECHO_T}not found in standard location, no --with-glib-root, testing further..." >&6
+           echo "$as_me:$LINENO: checking for glib header" >&5
+echo $ECHO_N "checking for glib header... $ECHO_C" >&6
+           if test -d /usr &&
+              test -d /usr/include &&
+              test -r /usr/include/glib.h; then
+               echo "$as_me:$LINENO: result: ok, found in /usr/include" >&5
+echo "${ECHO_T}ok, found in /usr/include" >&6
+               INCS="${INCS} -I/usr/include"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GLIB_H 1
+_ACEOF
+
+           elif test -d /usr &&
+              test -d /usr/local &&
+              test -d /usr/local/include &&
+              test -r /usr/local/include/glib.h; then
+               echo "$as_me:$LINENO: result: ok, found in /usr/local/include" >&5
+echo "${ECHO_T}ok, found in /usr/local/include" >&6
+               INCS="${INCS} -I/usr/local/include"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GLIB_H 1
+_ACEOF
+
+           else
+               echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header glib.h in the"
+               echo "*            standard location."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-glib-root."
+               echo "*"
+               echo "*     and 3. We also tested the following:"
+               echo "*"
+               echo "*                /usr/include"
+               echo "*                /usr/local/include"
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-glib-root"
+               echo "*???  or 2. Install glib and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+           if test ".${ac_disable_xmldump}" = ".yes"; then
+               nop="yes"
+           else
+               echo "$as_me:$LINENO: checking for glib library" >&5
+echo $ECHO_N "checking for glib library... $ECHO_C" >&6
+               if test -d /usr &&
+                  test -d /usr/lib &&
+                  (test -r /usr/lib/libglib.so ||
+                   test -r /usr/lib/libglib.a); then
+                                      echo "$as_me:$LINENO: result: ok, found in /usr/lib" >&5
+echo "${ECHO_T}ok, found in /usr/lib" >&6
+                   LIBS="${LIBS} -L/usr/lib -lglib"
+                   cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGLIB 1
+_ACEOF
+
+               elif test -d /usr &&
+                  test -d /usr/local &&
+                  test -d /usr/local/lib &&
+                  (test -r /usr/local/lib/libglib.so ||
+                   test -r /usr/local/lib/libglib.a); then
+                   echo "$as_me:$LINENO: result: ok, found in /usr/local/lib" >&5
+echo "${ECHO_T}ok, found in /usr/local/lib" >&6
+                   LIBS="${LIBS} -L/usr/local/lib -lglib"
+                   cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGLIB 1
+_ACEOF
+
+               else
+                   echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+                   echo
+                   echo "*******************************************************************"
+                   echo "*"
+                   echo "* ERROR:  1. We were unable to compile a test program for"
+                   echo "*            g_date_julian() against -lglib."
+                   echo "*"
+                   echo "*     and 2. You did not specify an alternate location"
+                   echo "*            via --with-glib-root."
+                   echo "*"
+                   echo "*     and 3. We were unable to find libglib.so or libgd.a"
+                   echo "*            via a manual search of"
+                   echo "*"
+                   echo "*                /usr/lib"
+                   echo "*                /usr/local/lib"
+                   echo "*"
+                   echo "*>>> ./configure continues, xml dump will not be available."
+                   echo "*"
+                   echo "*???     1. Rerun ./configure with a corrected --with-glib-root"
+                   echo "*???  or 2. Install glib and rerun ./configure"
+                   echo "*"
+                   echo "*******************************************************************"
+                   echo
+                   ac_disable_xmldump="yes"
+               fi
+           fi
+       else
+           echo "$as_me:$LINENO: result: not found in standard location, testing further..." >&5
+echo "${ECHO_T}not found in standard location, testing further..." >&6
+
+           echo "$as_me:$LINENO: checking for glib library" >&5
+echo $ECHO_N "checking for glib library... $ECHO_C" >&6
+
+           GLIB_ROOT=`(cd ${GLIB_ROOT} && pwd)`
+           if test -d ${GLIB_ROOT} &&
+              test -r ${GLIB_ROOT}/glib.h; then
+               echo "$as_me:$LINENO: result: ok, glib.h found in ${GLIB_ROOT}" >&5
+echo "${ECHO_T}ok, glib.h found in ${GLIB_ROOT}" >&6
+               INCS="${INCS} -I${GLIB_ROOT}"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GLIB_H 1
+_ACEOF
+
+           elif test -d ${GLIB_ROOT} &&
+              test -d ${GLIB_ROOT}/include &&
+              test -r ${GLIB_ROOT}/include/glib.h; then
+               echo "$as_me:$LINENO: result: ok, glib.h found in ${GLIB_ROOT}/include" >&5
+echo "${ECHO_T}ok, glib.h found in ${GLIB_ROOT}/include" >&6
+               INCS="${INCS} -I${GLIB_ROOT}/include"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GLIB_H 1
+_ACEOF
+
+           elif test -d ${GLIB_ROOT} &&
+              test -d ${GLIB_ROOT}/include &&
+              test -d ${GLIB_ROOT}/include/glib20 &&
+              test -r ${GLIB_ROOT}/include/glib20/glib.h; then
+               echo "$as_me:$LINENO: result: ok, glib.h found in ${GLIB_ROOT}/include/glib20" >&5
+echo "${ECHO_T}ok, glib.h found in ${GLIB_ROOT}/include/glib20" >&6
+               INCS="${INCS} -I${GLIB_ROOT}/include/glib20"
+           elif test -d ${GLIB_ROOT} &&
+              test -d ${GLIB_ROOT}/include &&
+              test -d ${GLIB_ROOT}/include/glib-2.0 &&
+              test -r ${GLIB_ROOT}/include/glib-2.0/glib.h; then
+               echo "$as_me:$LINENO: result: ok, glib.h found in ${GLIB_ROOT}/include/glib-2.0" >&5
+echo "${ECHO_T}ok, glib.h found in ${GLIB_ROOT}/include/glib-2.0" >&6
+               INCS="${INCS} -I${GLIB_ROOT}/include/glib-2.0"
+           elif test -d ${GLIB_ROOT} &&
+              test -d ${GLIB_ROOT}/include &&
+              test -d ${GLIB_ROOT}/include/glib12 &&
+              test -r ${GLIB_ROOT}/include/glib12/glib.h; then
+               echo "$as_me:$LINENO: result: ok, glib.h found in ${GLIB_ROOT}/include/glib12" >&5
+echo "${ECHO_T}ok, glib.h found in ${GLIB_ROOT}/include/glib12" >&6
+               INCS="${INCS} -I${GLIB_ROOT}/include/glib12"
+           elif test -d ${GLIB_ROOT} &&
+              test -d ${GLIB_ROOT}/include &&
+              test -d ${GLIB_ROOT}/include/glib-1.2 &&
+              test -r ${GLIB_ROOT}/include/glib-1.2/glib.h; then
+               echo "$as_me:$LINENO: result: ok, glib.h found in ${GLIB_ROOT}/include/glib-1.2" >&5
+echo "${ECHO_T}ok, glib.h found in ${GLIB_ROOT}/include/glib-1.2" >&6
+               INCS="${INCS} -I${GLIB_ROOT}/include/glib-1.2"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GLIB_H 1
+_ACEOF
+
+           else
+               echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header glib.h in the"
+               echo "*            standard location or the alternate locations you"
+               echo "*            specified by --with-glib-root."
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-glib-root"
+               echo "*???  or 2. Install glib and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+
+           if test ".${ac_enable_xmldump}" = ".yes"; then
+               oLIBS="${LIBS}"
+               echo "$as_me:$LINENO: checking for glib library" >&5
+echo $ECHO_N "checking for glib library... $ECHO_C" >&6
+               echo ""
+               for subdir in "" /lib; do
+                 if test ".${ac_cv_lib_glib_g_date_to_struct_tm}" = ".yes"; then
+                    :;
+                 else
+                   echo "Checking ${GLIB_ROOT}${subdir}..."
+                   for libname in glib glib-2.0 glib20 glib-1.2 glib12; do
+                     if test ".${ac_cv_lib_glib_g_date_to_struct_tm}" = ".yes"; then
+                       :;
+                     else
+                       if test -d ${GLIB_ROOT}${subdir}; then
+                         # Expansion of NTOP_APPEND_LIBS(${GLIB_ROOT}${subdir}, )
+    case "${DEFINEOS}" in
+      DARWIN )
+          LIBS="$LIBS -L${GLIB_ROOT}${subdir} -L${GLIB_ROOT}${subdir}/lib"
+          ;;
+      * )
+          LIBS="$LIBS -L${GLIB_ROOT}${subdir}"
+          ;;
+    esac
+    if test "." != "."; then
+        LIBS="$LIBS -l"
+    fi
+# Finished expansion of NTOP_APPEND_LIBS()
+
+                         as_ac_Lib=`echo "ac_cv_lib_${libname}''_g_date_to_struct_tm" | $as_tr_sh`
+                         eval "$as_unset ${as_ac_Lib}"
+                         as_ac_Lib=`echo "ac_cv_lib_${libname}''_g_date_to_struct_tm" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for g_date_to_struct_tm in -l${libname}" >&5
+echo $ECHO_N "checking for g_date_to_struct_tm in -l${libname}... $ECHO_C" >&6
+if eval "test \"\${$as_ac_Lib+set}\" = set"; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-l${libname}  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char g_date_to_struct_tm ();
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+g_date_to_struct_tm ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  eval "$as_ac_Lib=yes"
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+eval "$as_ac_Lib=no"
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: `eval echo '${'$as_ac_Lib'}'`" >&5
+echo "${ECHO_T}`eval echo '${'$as_ac_Lib'}'`" >&6
+if test `eval echo '${'$as_ac_Lib'}'` = yes; then
+  ac_cv_lib_glib_g_date_to_struct_tm=yes
+else
+  LIBS="${oLIBS}"
+fi
+
+                       fi
+                     fi
+                   done
+                 fi
+               done
+               if test ".${ac_cv_lib_glib_g_date_to_struct_tm}" = ".yes"; then
+                   :;
+               else
+                   LIBS="${oLIBS}"
+                   echo
+                   echo "*******************************************************************"
+                   echo "*"
+                   echo "* ERROR:  1. We were unable to compile a test program for"
+                   echo "*            g_date_to_struct_tm() against -lglib in the standard"
+                   echo "*            location nor in the alternate locations you"
+                   echo "*            specified by --with-glib-root."
+                   echo "*"
+                   echo "*>>> ./configure continues, xml dump will not be available."
+                   echo "*"
+                   echo "*???     1. Rerun ./configure with a corrected --with-glib-root"
+                   echo "*???  or 2. Install glib and rerun ./configure"
+                   echo "*"
+                   echo "*******************************************************************"
+                   echo
+                   ac_disable_xmldump="yes"
+               fi
+           fi
+       fi
+    fi
+
+    if test ".${ac_disable_xmldump}"       != ".yes" &&
+       test ".${mass_xmldump_test_result}" != ".yes"; then
+        echo "$as_me:$LINENO: checking for glibconfig" >&5
+echo $ECHO_N "checking for glibconfig... $ECHO_C" >&6
+
+       if test ".${ac_cv_header_glibconfig_h}"                    = ".yes"; then
+           if test ".${GLIBCONFIG_ROOT}" != "."; then
+               echo "$as_me:$LINENO: result: ok" >&5
+echo "${ECHO_T}ok" >&6
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* NOTE:  You specified (or implied) --with-glibconfig-root.  However,"
+               echo "*        a version was found in a standard location."
+               echo "*"
+               echo "*       Since this version will be used anyway,"
+               echo "*>>>    we've ignored your specified location."
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               GLIBCONFIG_ROOT=
+           else
+               echo "$as_me:$LINENO: result: ok (standard location)" >&5
+echo "${ECHO_T}ok (standard location)" >&6
+           fi
+       elif test ".${GLIBCONFIG_ROOT}" = "."; then
+           echo "$as_me:$LINENO: result: not found in standard location, no --with-glibconfig-root, testing further..." >&5
+echo "${ECHO_T}not found in standard location, no --with-glibconfig-root, testing further..." >&6
+           echo "$as_me:$LINENO: checking for glibconfig header" >&5
+echo $ECHO_N "checking for glibconfig header... $ECHO_C" >&6
+           if test -d /usr &&
+              test -d /usr/include &&
+              test -r /usr/include/glibconfig.h; then
+               echo "$as_me:$LINENO: result: ok, found in /usr/include" >&5
+echo "${ECHO_T}ok, found in /usr/include" >&6
+               INCS="${INCS} -I/usr/include"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GLIBCONFIG_H 1
+_ACEOF
+
+           elif test -d /usr &&
+              test -d /usr/local &&
+              test -d /usr/local/include &&
+              test -r /usr/local/include/glibconfig.h; then
+               echo "$as_me:$LINENO: result: ok, found in /usr/local/include" >&5
+echo "${ECHO_T}ok, found in /usr/local/include" >&6
+               INCS="${INCS} -I/usr/local/include"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GLIBCONFIG_H 1
+_ACEOF
+
+           else
+               echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header glibconfig.h in the"
+               echo "*            standard location."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-glibconfig-root."
+               echo "*"
+               echo "*     and 3. We also tested the following:"
+               echo "*"
+               echo "*                /usr/include"
+               echo "*                /usr/local/include"
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-glibconfig-root"
+               echo "*???  or 2. Install glibconfig and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+       else
+           echo "$as_me:$LINENO: result: not found in standard location, testing further..." >&5
+echo "${ECHO_T}not found in standard location, testing further..." >&6
+
+           GLIBCONFIG_ROOT=`(cd ${GLIBCONFIG_ROOT} && pwd)`
+           if test -d ${GLIBCONFIG_ROOT} &&
+              test -r ${GLIBCONFIG_ROOT}/glibconfig.h; then
+               echo "$as_me:$LINENO: result: ok, glibconfig.h found in ${GLIBCONFIG_ROOT}" >&5
+echo "${ECHO_T}ok, glibconfig.h found in ${GLIBCONFIG_ROOT}" >&6
+               INCS="${INCS} -I${GLIBCONFIG_ROOT}"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GLIBCONFIG_H 1
+_ACEOF
+
+           elif test -d ${GLIBCONFIG_ROOT} &&
+              test -d ${GLIBCONFIG_ROOT}/include &&
+              test -r ${GLIBCONFIG_ROOT}/include/glibconfig.h; then
+               echo "$as_me:$LINENO: result: ok, glibconfig.h found in ${GLIBCONFIG_ROOT}/include" >&5
+echo "${ECHO_T}ok, glibconfig.h found in ${GLIBCONFIG_ROOT}/include" >&6
+               INCS="${INCS} -I${GLIBCONFIG_ROOT}/include"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GLIBCONFIG_H 1
+_ACEOF
+
+           else
+               echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header glibconfig.h in the"
+               echo "*            standard location or the alternate locations you"
+               echo "*            specified by --with-glibconfig-root."
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-glibconfig-root"
+               echo "*???  or 2. Install glibconfig and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+       fi
+    fi
+
+    if test ".${ac_disable_xmldump}"       != ".yes" &&
+       test ".${mass_xmldump_test_result}" != ".yes"; then
+        echo "$as_me:$LINENO: checking for libgdome" >&5
+echo $ECHO_N "checking for libgdome... $ECHO_C" >&6
+
+       if test ".${ac_cv_header_gdome_h}"                    = ".yes" &&
+          test ".${ac_cv_lib_gdome_gdome_di_saveDocToFile}"  = ".yes"; then
+           if test ".${GDOME_ROOT}" != "."; then
+               echo "$as_me:$LINENO: result: ok" >&5
+echo "${ECHO_T}ok" >&6
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* NOTE:  You specified (or implied) --with-gdome-root.  However,"
+               echo "*        a version was found in a standard location."
+               echo "*"
+               echo "*       Since this version will be used anyway,"
+               echo "*>>>    we've ignored your specified location."
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               GDOME_ROOT=
+           else
+               echo "$as_me:$LINENO: result: ok (standard location)" >&5
+echo "${ECHO_T}ok (standard location)" >&6
+           fi
+       elif test ".${GDOME_ROOT}" = "."; then
+           echo "$as_me:$LINENO: result: not found in standard location, no --with-gdome-root, testing further..." >&5
+echo "${ECHO_T}not found in standard location, no --with-gdome-root, testing further..." >&6
+           echo "$as_me:$LINENO: checking for libgdome header" >&5
+echo $ECHO_N "checking for libgdome header... $ECHO_C" >&6
+           if test -d /usr &&
+              test -d /usr/include &&
+              test -r /usr/include/gdome.h; then
+               echo "$as_me:$LINENO: result: ok, gdome.h found in /usr/include" >&5
+echo "${ECHO_T}ok, gdome.h found in /usr/include" >&6
+               INCS="${INCS} -I/usr/include"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GDOME_H 1
+_ACEOF
+
+           elif test -d /usr &&
+              test -d /usr/local &&
+              test -d /usr/local/include &&
+              test -r /usr/local/include/gdome.h; then
+               echo "$as_me:$LINENO: result: ok, gdome.h found in /usr/local/include" >&5
+echo "${ECHO_T}ok, gdome.h found in /usr/local/include" >&6
+               INCS="${INCS} -I/usr/local/include"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GDOME_H 1
+_ACEOF
+
+           else
+               echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header gdome.h in the"
+               echo "*            standard location."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-gdome-root."
+               echo "*"
+               echo "*     and 3. We also tested the following:"
+               echo "*"
+               echo "*                /usr/include"
+               echo "*                /usr/local/include"
+               echo "*"
+               echo "*>>> ./configure continues, charts will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-gdome-root"
+               echo "*???  or 2. Install libgdome and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+           if test ".${ac_disable_xmldump}" = ".yes"; then
+               nop="yes"
+           else
+               echo "$as_me:$LINENO: checking for libgdome library" >&5
+echo $ECHO_N "checking for libgdome library... $ECHO_C" >&6
+                if test -d /usr &&
+                   test -d /usr/lib &&
+                   (test -r /usr/lib/libgdome.so ||
+                    test -r /usr/lib/libgdome.a); then
+                                        LIBS="${LIBS} -L/usr/lib -lgdome"
+                    echo "$as_me:$LINENO: result: ok, found in /usr/lib" >&5
+echo "${ECHO_T}ok, found in /usr/lib" >&6
+                    cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGDOME 1
+_ACEOF
+
+                elif test -d /usr &&
+                     test -d /usr/local &&
+                     test -d /usr/local/lib &&
+                     (test -r /usr/local/lib/libgdome.so ||
+                      test -r /usr/local/lib/libgdome.a); then
+                    LIBS="${LIBS} -L/usr/local/lib -lgdome"
+                    echo "$as_me:$LINENO: result: ok, found in /usr/local/lib" >&5
+echo "${ECHO_T}ok, found in /usr/local/lib" >&6
+                    cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGDOME 1
+_ACEOF
+
+                else
+                    echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+                    echo
+                    echo "*******************************************************************"
+                    echo "*"
+                    echo "* ERROR:  1. We were unable to compile a test program for"
+                    echo "*            gdome_di_saveDocToFile() against -libgdome."
+                    echo "*"
+                    echo "*     and 2. You did not specify an alternate location"
+                    echo "*            via --with-gdome-root."
+                    echo "*"
+                    echo "*     and 3. We were unable to find libgdome.so or libgdome.a"
+                    echo "*            via a manual search of"
+                    echo "*"
+                    echo "*                /usr/lib"
+                    echo "*                /usr/local/lib"
+                    echo "*"
+                    echo "*>>> ./configure continues, xml dump will not be available."
+                    echo "*"
+                    echo "*???     1. Rerun ./configure with a corrected --with-gdome-root"
+                    echo "*???  or 2. Install libgdome and rerun ./configure"
+                    echo "*"
+                    echo "*******************************************************************"
+                    echo
+                    ac_disable_xmldump="yes"
+                fi
+            fi
+       else
+           echo "$as_me:$LINENO: result: not found in standard location, testing further..." >&5
+echo "${ECHO_T}not found in standard location, testing further..." >&6
+                      echo "$as_me:$LINENO: checking for libgdome header" >&5
+echo $ECHO_N "checking for libgdome header... $ECHO_C" >&6
+           GDOME_ROOT=`(cd ${GDOME_ROOT} && pwd)`
+           if test -d ${GDOME_ROOT} &&
+              test -r ${GDOME_ROOT}/gdome.h; then
+               echo "$as_me:$LINENO: result: ok, gdome.h found in ${GDOME_ROOT}" >&5
+echo "${ECHO_T}ok, gdome.h found in ${GDOME_ROOT}" >&6
+               INCS="${INCS} -I${GDOME_ROOT}"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GDOME_H 1
+_ACEOF
+
+           elif test -d ${GDOME_ROOT} &&
+              test -d ${GDOME_ROOT}/include &&
+              test -r ${GDOME_ROOT}/include/gdome.h; then
+               echo "$as_me:$LINENO: result: ok, gdome.h found in ${GDOME_ROOT}/include" >&5
+echo "${ECHO_T}ok, gdome.h found in ${GDOME_ROOT}/include" >&6
+               INCS="${INCS} -I${GDOME_ROOT}/include"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GDOME_H 1
+_ACEOF
+
+           elif test -d ${GDOME_ROOT} &&
+              test -d ${GDOME_ROOT}/include &&
+              test -d ${GDOME_ROOT}/include/libgdome &&
+              test -r ${GDOME_ROOT}/include/libgdome/gdome.h; then
+               echo "$as_me:$LINENO: result: ok, gdome.h found in ${GDOME_ROOT}/libgdome/include" >&5
+echo "${ECHO_T}ok, gdome.h found in ${GDOME_ROOT}/libgdome/include" >&6
+               INCS="${INCS} -I${GDOME_ROOT}/include/libgdome"
+               cat >>confdefs.h <<_ACEOF
+#define HAVE_GDOME_H 1
+_ACEOF
+
+           else
+               echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header gdome.h in the"
+               echo "*            standard location or the alternate location you"
+               echo "*            specified by --with-gdome-root."
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-gdome-root"
+               echo "*???  or 2. Install libgdome and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+           if test ".${ac_enable_xmldump}" = ".yes"; then
+               echo "$as_me:$LINENO: checking for libgdome library" >&5
+echo $ECHO_N "checking for libgdome library... $ECHO_C" >&6
+               oLIBS=${LIBS}
+               # Expansion of NTOP_APPEND_LIBS(${GDOME_ROOT}, )
+    case "${DEFINEOS}" in
+      DARWIN )
+          LIBS="$LIBS -L${GDOME_ROOT} -L${GDOME_ROOT}/lib"
+          ;;
+      * )
+          LIBS="$LIBS -L${GDOME_ROOT}"
+          ;;
+    esac
+    if test "." != "."; then
+        LIBS="$LIBS -l"
+    fi
+# Finished expansion of NTOP_APPEND_LIBS()
+
+
+echo "$as_me:$LINENO: checking for gdome_di_createDocumentType in -lgdome" >&5
+echo $ECHO_N "checking for gdome_di_createDocumentType in -lgdome... $ECHO_C" >&6
+if test "${ac_cv_lib_gdome_gdome_di_createDocumentType+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgdome  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char gdome_di_createDocumentType ();
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+gdome_di_createDocumentType ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_gdome_gdome_di_createDocumentType=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_cv_lib_gdome_gdome_di_createDocumentType=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_gdome_gdome_di_createDocumentType" >&5
+echo "${ECHO_T}$ac_cv_lib_gdome_gdome_di_createDocumentType" >&6
+if test $ac_cv_lib_gdome_gdome_di_createDocumentType = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGDOME 1
+_ACEOF
+
+  LIBS="-lgdome $LIBS"
+
+else
+
+                   LIBS=${oLIBS}
+                   # Expansion of NTOP_APPEND_LIBS(${GDOME_ROOT}/lib, )
+    case "${DEFINEOS}" in
+      DARWIN )
+          LIBS="$LIBS -L${GDOME_ROOT}/lib -L${GDOME_ROOT}/lib/lib"
+          ;;
+      * )
+          LIBS="$LIBS -L${GDOME_ROOT}/lib"
+          ;;
+    esac
+    if test "." != "."; then
+        LIBS="$LIBS -l"
+    fi
+# Finished expansion of NTOP_APPEND_LIBS()
+
+
+echo "$as_me:$LINENO: checking for gdome_di_createDocument in -lgdome" >&5
+echo $ECHO_N "checking for gdome_di_createDocument in -lgdome... $ECHO_C" >&6
+if test "${ac_cv_lib_gdome_gdome_di_createDocument+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgdome  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+#include "confdefs.h"
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char gdome_di_createDocument ();
+#ifdef F77_DUMMY_MAIN
+#  ifdef __cplusplus
+     extern "C"
+#  endif
+   int F77_DUMMY_MAIN() { return 1; }
+#endif
+int
+main ()
+{
+gdome_di_createDocument ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_gdome_gdome_di_createDocument=yes
+else
+  echo "$as_me: failed program was:" >&5
+cat conftest.$ac_ext >&5
+ac_cv_lib_gdome_gdome_di_createDocument=no
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_gdome_gdome_di_createDocument" >&5
+echo "${ECHO_T}$ac_cv_lib_gdome_gdome_di_createDocument" >&6
+if test $ac_cv_lib_gdome_gdome_di_createDocument = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBGDOME 1
+_ACEOF
+
+  LIBS="-lgdome $LIBS"
+
+else
+
+                       echo "$as_me:$LINENO: result: error" >&5
+echo "${ECHO_T}error" >&6
+                       LIBS=${oLIBS}
+                       echo
+                       echo "*******************************************************************"
+                       echo "*"
+                       echo "* ERROR:  1. We were unable to compile a test program for"
+                       echo "*            gdome_di_createDocumentType() against -lgdome in the"
+                       echo "*            standard location nor in the alternate location you"
+                       echo "*            specified by --with-gdome-root."
+                       echo "*"
+                       echo "*>>> ./configure continues, xml dump will not be available."
+                       echo "*"
+                       echo "*???     1. Rerun ./configure with a corrected --with-gdome-root"
+                       echo "*???  or 2. Install libgdome and rerun ./configure"
+                       echo "*"
+                       echo "*******************************************************************"
+                       echo
+                       ac_disable_xmldump="yes"
+
+fi
+
+
+fi
+
+           fi
+       fi
+    fi
+    if test ".${ac_enable_xmldump}" = ".yes"; then
+
+cat >>confdefs.h <<_ACEOF
+#define MAKE_WITH_XMLDUMP 1
+_ACEOF
+
+    fi
+fi
+
+
 if test ".${ac_enable_intop}" = ".yes"; then
     echo "$as_me:$LINENO: checking intop libraries" >&5
 echo $ECHO_N "checking intop libraries... $ECHO_C" >&6
@@ -28990,6 +30986,8 @@ echo ${CC} ${CFLAGS} ${DEFS} | sed -e 's/.*/char * compiler_cflags   = "&";/' >>
 echo ${INCS} | sed -e 's/.*/char * include_path    = "&";/' >> version.c
 echo ${LDFLAGS} ${LIBS} | sed -e 's/.*/char * system_libs    = "&";/' >> version.c
 echo ${prefix} | sed -e 's/.*/char * install_path   = "&";/' >> version.c
+echo "/*i18n*/" >>version.c
+echo ${LOCALEDIR} | sed -e 's/.*/char * locale_dir   = "&";/' >> version.c
 
 echo
 echo "-------------------------------------------------------------------"
@@ -29079,7 +31077,25 @@ echo "++"
 echo "++              Thanks for supporting ntop!"
 echo "++"
 echo "*"
-echo "* NEXT STEP:"
+echo "* NEXT STEP(S):"
+
+case "${target}:${CC}" in
+    *-*-freebsd5*:*gcc* )
+        echo "*"
+        echo "*FreeBSD5: You may encounter a problem building ntop for this OS,"
+        echo "*FreeBSD5: where the following messages are repeated many times:"
+        echo "*FreeBSD5: "
+        echo "*FreeBSD5:    expr: illegal option -- l"
+        echo "*FreeBSD5:    usage: expr -e expression"
+        echo "*FreeBSD5: "
+        echo "*FreeBSD5: To avoid this, according to the note on man expr,"
+        echo "*FreeBSD5: \"Compatibility with previous implementations\","
+        echo "*FreeBSD5: set the flag EXPR_COMPAT before typing make."
+        echo "*FreeBSD5: "
+        echo "*FreeBSD5: (Under bash, \$ export EXPR_COMPAT=Y will suffice.)"
+      ;;
+esac
+
 echo "*"
 echo "*    Building ntop requires GNU Make, so to build ntop, type"
 echo "*    'make' (or on *BSD and Solaris systems, 'gmake')"

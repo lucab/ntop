@@ -158,6 +158,12 @@ static struct option const long_options[] = {
   { "p3p-cp",                           required_argument, NULL, 137 },
   { "p3p-uri",                          required_argument, NULL, 138 },
 
+#ifdef MAKE_WITH_XMLDUMP
+  { "xmlfileout",                       required_argument, NULL, 139 },
+  { "xmlfilesnap",                      required_argument, NULL, 140 },
+  { "xmlfilein",                        required_argument, NULL, 141 },
+#endif
+
   {NULL, 0, NULL, 0}
 };
 
@@ -272,6 +278,12 @@ void usage (FILE * fp) {
 #endif
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);
+#endif
+
+#ifdef MAKE_WITH_XMLDUMP
+  fprintf(fp, "    [--xmlfileout]                                        File name for saving internal data during shutdown (xml)\n");
+  fprintf(fp, "    [--xmlfilesnap]                                       File name for snapshot internal data save (xml)\n");
+  fprintf(fp, "    [--xmlfilein]    ***FUTURE***                         File name to reload ntop internal data from (xml)\n");
 #endif
 
 #ifdef WIN32
@@ -643,6 +655,21 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.P3Puri = strdup(optarg);
       break;
 
+#ifdef MAKE_WITH_XMLDUMP
+      /* --xmlfilexxxx options - Burton M. Strauss III (Burton@ntopsupport.com) Jan2003 */
+    case 139: /* xmlfileout */
+      myGlobals.xmlFileOut = strdup(optarg);
+      break;
+
+    case 140: /* xmlfilesnap */
+      myGlobals.xmlFileSnap = strdup(optarg);
+      break;
+
+    case 141: /* xmlfilein */
+      myGlobals.xmlFileIn = strdup(optarg);
+      break;
+#endif
+
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);
 #ifdef DEBUG
@@ -931,6 +958,14 @@ int main(int argc, char *argv[]) {
   initWinsock32();
 #endif
 
+#ifdef MAKE_WITH_XMLDUMP
+  /* Here is where we place the divergent path for (FUTURE) xmlFileIn */
+  if (myGlobals.xmlFileIn != NULL) {
+      traceEvent(CONST_TRACE_INFO, "Processing xml input file, %s...\n", myGlobals.xmlFileIn);
+      traceEvent(CONST_TRACE_INFO, "SORRY, but that function does not yet exist... continuing normally...\n");
+   }
+#endif
+
   /*
    * Initialize memory and data for the protocols being monitored trying to access
    *
@@ -953,6 +988,27 @@ int main(int argc, char *argv[]) {
   if(myGlobals.daemonMode) {
     daemonize();
     traceEvent(CONST_TRACE_INFO, "ntop is now running daemonized...\n");
+  }
+#endif
+
+#ifdef MAKE_WITH_XMLDUMP
+  if (myGlobals.xmlFileOut) {
+      traceEvent(CONST_TRACE_INFO, "XMLDUMP: Removing old xml output file, %s\n", myGlobals.xmlFileOut);
+      /* Delete the old one (if present) */
+      rc = unlink(myGlobals.xmlFileOut);
+      if ( (rc != 0) && (errno != ENOENT) ) {
+          traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml output file, %s, failed, errno=%d\n",
+              myGlobals.xmlFileOut, errno);
+      }
+  }
+  if (myGlobals.xmlFileSnap) {
+      traceEvent(CONST_TRACE_INFO, "XMLDUMP: Removing old xml snapshot file, %s\n", myGlobals.xmlFileSnap);
+      /* Delete the old one (if present) */
+      rc = unlink(myGlobals.xmlFileSnap);
+      if ( (rc != 0) && (errno != ENOENT) ) {
+          traceEvent(CONST_TRACE_ERROR, "XMLDUMP: Removing old xml snapshot file, %s, failed, errno=%d\n",
+              myGlobals.xmlFileSnap, errno);
+      }
   }
 #endif
 

@@ -103,7 +103,7 @@
 /* #define PARM_DISABLE_GDC_WATCHDOG */
 
 /*
- * Controls whether to make a fork() call in http.c.
+ * Controls whether to make a fork() call in http.c and xmldump.c
  */
 #define PARM_FORK_CHILD_PROCESS
 
@@ -306,6 +306,18 @@
  #endif
 #endif
 
+/*
+ * This flag indicates that fork() is implemented with copy-on-write.
+ * This means that the set of tables reported on in xmldump.c (and other
+ * fork()ed processes) will be complete and unchanged as of the instant
+ * of the fork.
+ */
+#if defined(LINUX)
+ #define MAKE_WITH_FORK_COPYONWRITE
+#else /* WIN32 OPENBSD FREEBSD et al */
+ #undef MAKE_WITH_FORK_COPYONWRITE
+#endif
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* D E B U G  items                                                                */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -474,6 +486,13 @@
  */
 /* #define UNKNOWN_PACKET_DEBUG */
 
+/* XMLDUMP_DEBUG causes xmldump.c to output debug information.
+     define it as 0 for the minimal - enter/exit routine
+     define it as 1 a little more
+     define it as 2 to enable the trap, plus put out bunches of info lines...
+     define it as 3 ... even more stuff...
+ */
+#define XMLDUMP_DEBUG 1
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* SSLWATCHDOG - this crosses the line.                                            */
@@ -902,6 +921,38 @@
  #define CONST_SSL_CERTF_FILENAME           "ntop-cert.pem"
 #endif
 
+/*
+ * dumpXML.c constants...
+ *     <!DOCTYPE -name- SYSTEM \"-dtd-uri-\">
+ *
+ *  CONST_XML_DOCTYPE_NAME
+ *     Is the name used in the <!DOCTYPE> line.
+ *
+ *  CONST_XML_DTD_NAME
+ *     Is the name of the dtd in the <!DOCTYPE> line.
+ *
+ *  CONST_XML_TMP_NAME
+ *     Is the prefix for a unique temp name used to dump the generated xml
+ *
+ *  CONST_XML_VERSION
+ *     Is the value used in the <ntop_dump_header ... xml_version=n ...> tag.
+ *     This MUST be incremented for each major (incompatible) change in the xml formats
+ */
+#define CONST_XML_DOCTYPE_NAME              "ntop_dump"
+#define CONST_XML_DTD_NAME                  "ntopdump.dtd"
+#define CONST_XML_TMP_NAME                  "/tmp/ntopxml"
+#define CONST_XML_VERSION                   "0"
+
+/*
+ * Define the parm values for xmldump and the # of characters to test
+ *  (e.g. with a TEST_LEN of 3, interference and interface both work)
+ */
+#define CONST_XMLDUMP_TEST_LEN              3
+#define CONST_XMLDUMP_INVOKE                "invoke"
+#define CONST_XMLDUMP_VERSION               "version"
+#define CONST_XMLDUMP_INTERFACES            "interfaces"
+#define CONST_XMLDUMP_TOFILE                "tofile"
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Static - don't change unless you REALLY, REALLY, know what you are doing.
  */
@@ -915,6 +966,8 @@
 #define LEN_DATAFORMAT_BUFFER               24
 #define LEN_TIME_STAMP_BUFFER               2
 #define LEN_GENERAL_WORK_BUFFER             1024
+#define LEN_MEDIUM_WORK_BUFFER              64
+#define LEN_SMALL_WORK_BUFFER               16
 
 /*
  * Static buffer used for pcap error messages in initialize.c and ntop_win32.c.

@@ -669,6 +669,21 @@ void shutdownNtop(void) {
   printHTMLheader("ntop is shutting down...", BITFLAG_HTML_NO_REFRESH);
   closeNwSocket(&myGlobals.newSock);
   termAccessLog();
+
+#ifdef MAKE_WITH_XMLDUMP
+  if (myGlobals.xmlFileOut != NULL) {
+      int rc;
+
+      traceEvent(CONST_TRACE_INFO, "Saving ntop data (xml) to %s...\n", myGlobals.xmlFileOut);
+
+      /* Take the shutdown dump */
+      rc = dumpXML(1, NULL);
+      if (rc != 0) {
+          traceEvent(CONST_TRACE_ERROR, "ERROR: xml save, rc %d\n", rc);
+      }
+  }
+#endif
+
   cleanup(0);
 }
 
@@ -2226,6 +2241,18 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.P3Puri,
                            "none");
 
+#ifdef MAKE_WITH_XMLDUMP
+  printParameterConfigInfo(textPrintFlag, "--xmlfileout",
+                           myGlobals.xmlFileOut == NULL ? "(none)" : myGlobals.xmlFileOut,
+                           "(none)");
+  printParameterConfigInfo(textPrintFlag, "--xmlfilesnap",
+                           myGlobals.xmlFileSnap == NULL ? "(none)" : myGlobals.xmlFileSnap,
+                           "(none)");
+  printParameterConfigInfo(textPrintFlag, "--xmlfilein",
+                           myGlobals.xmlFileIn == NULL ? "(none)" : myGlobals.xmlFileIn,
+                           "(none)");
+#endif
+
   sendString(texthtml("\n\n", "<tr><th colspan=\"2\">"));
   sendString("Note: " CONST_REPORT_ITS_EFFECTIVE "   means that "
 	     "this is the value after ntop has processed the parameter.");
@@ -2319,6 +2346,12 @@ void printNtopConfigInfo(int textPrintFlag) {
   } else {
     printFeatureConfigInfo(textPrintFlag, "SSL Web server (https://)", "Not Active");
   }
+#endif
+
+  /* *************************** */
+
+#ifdef MAKE_WITH_XMLDUMP
+  printFeatureConfigInfo(textPrintFlag, "XML dump (dump.xml)", "Supported");
 #endif
 
   /* *************************** */

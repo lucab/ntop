@@ -129,6 +129,9 @@
 /* Define to 1 if you have the <gdc.h> header file. */
 #undef HAVE_GDC_H
 
+/* Define to 1 if you have the <gdome.h> header file. */
+#undef HAVE_GDOME_H
+
 /* Show we found gd.h and set INCS */
 #undef HAVE_GD_H
 
@@ -158,6 +161,12 @@
 
 /* Define to 1 if you have the `gettimeofday' function. */
 #undef HAVE_GETTIMEOFDAY
+
+/* Define to 1 if you have the <glibconfig.h> header file. */
+#undef HAVE_GLIBCONFIG_H
+
+/* Define to 1 if you have the <glib.h> header file. */
+#undef HAVE_GLIB_H
 
 /* Define to 1 if you have the <if.h> header file. */
 #undef HAVE_IF_H
@@ -210,6 +219,12 @@
 /* Define to 1 if you have the `gdbm' library (-lgdbm). */
 #undef HAVE_LIBGDBM
 
+/* Define to 1 if you have the `gdome' library (-lgdome). */
+#undef HAVE_LIBGDOME
+
+/* Define to 1 if you have the `glib' library (-lglib). */
+#undef HAVE_LIBGLIB
+
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
@@ -245,6 +260,9 @@
 
 /* Define for tcp wrappers (-lwrap) */
 #undef HAVE_LIBWRAP
+
+/* Define to 1 if you have the `xml2' library (-lxml2). */
+#undef HAVE_LIBXML2
 
 /* Define to 1 if you have the `z' library (-lz). */
 #undef HAVE_LIBZ
@@ -564,6 +582,9 @@
 /* Show we found x509.h and set INCS */
 #undef HAVE_X509_H
 
+/* Define to 1 if you have the <xmlversion.h> header file. */
+#undef HAVE_XMLVERSION_H
+
 /* Enable compression - zlib */
 #undef HAVE_ZLIB
 
@@ -588,6 +609,9 @@
 
 /* Enable SSL Watchdog */
 #undef MAKE_WITH_SSLWATCHDOG_COMPILETIME
+
+/* XML Dump is available */
+#undef MAKE_WITH_XMLDUMP
 
 /* Name of package */
 #undef PACKAGE

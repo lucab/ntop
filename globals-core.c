@@ -175,6 +175,12 @@ void initNtopGlobals(int argc, char * argv[]) {
 
   /* NB: we can't init rrdPath here, because initGdbm hasn't been run */
 
+#ifdef MAKE_WITH_XMLDUMP
+  myGlobals.xmlFileOut      = NULL;
+  myGlobals.xmlFileSnap     = NULL;
+  myGlobals.xmlFileIn       = NULL;
+#endif
+
   /* the table of enabled NICs */
   myGlobals.numDevices = 0;
   myGlobals.device = NULL;

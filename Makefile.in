@@ -104,17 +104,16 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DYN_FLAGS = @DYN_FLAGS@
+ECHO = @ECHO@
 INCS = @INCS@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 INTOP = @INTOP@
-LD = @LD@
 LIBCURSES = @LIBCURSES@
 LIBREADLINE = @LIBREADLINE@
 LIBTERMCAP = @LIBTERMCAP@
 LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
-NM = @NM@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
@@ -162,7 +161,9 @@ DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               ntop-cert.pem
 
 
-NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png html/*.css html/statsicons \
+NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
+           html/*.css html/*.dtd \
+           html/statsicons \
            html/statsicons/flags html/statsicons/os \
            html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
@@ -238,7 +239,8 @@ libntopreport_la_SOURCES = emitter.c \
                            http.c  \
                            report.c \
                            reportUtils.c \
-                           webInterface.c
+                           webInterface.c \
+                           xmldump.c
 
 
 libntopreport_la_DEPENDENCIES = config.h
@@ -259,7 +261,7 @@ am_libntop_la_OBJECTS = address.lo dataFormat.lo globals-core.lo hash.lo \
 	traffic.lo util.lo vendor.lo version.lo ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
-	http.lo report.lo reportUtils.lo webInterface.lo
+	http.lo report.lo reportUtils.lo webInterface.lo xmldump.lo
 libntopreport_la_OBJECTS = $(am_libntopreport_la_OBJECTS)
 EXTRA_PROGRAMS = ntops$(EXEEXT)
 bin_PROGRAMS = ntop$(EXEEXT)
@@ -293,7 +295,8 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/term.Plo ./$(DEPDIR)/traffic.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/util.Plo ./$(DEPDIR)/vendor.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/version.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/webInterface.Plo
+@AMDEP_TRUE@	./$(DEPDIR)/webInterface.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/xmldump.Plo
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) \
@@ -484,6 +487,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vendor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/webInterface.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmldump.Plo@am__quote@
 
 distclean-depend:
 	-rm -rf ./$(DEPDIR)
@@ -862,6 +866,17 @@ uninstall-man: uninstall-man8
 	uninstall-info-recursive uninstall-libLTLIBRARIES uninstall-man \
 	uninstall-man8 uninstall-recursive
 
+
+#
+# Special stuff for xml auto-generation of code from the "doc":
+#
+xmldump.$(OBJEXT): xml_g_cmdopt.inc
+
+xmldump.c: xml_*.inc globals-structtypes.h
+
+xml_*.inc: globals-structtypes.h
+	@echo "Processing globals-structtypes.h to make xml_*.inc..."
+	@awk -f utils/xmldump.awk globals-structtypes.h
 
 .PHONY: snapshot
 

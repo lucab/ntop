@@ -61,7 +61,9 @@ DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
               faq.html \
               ntop-cert.pem
 
-NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png html/*.css html/statsicons \
+NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
+           html/*.css html/*.dtd \
+           html/statsicons \
            html/statsicons/flags html/statsicons/os \
            html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
@@ -133,7 +135,8 @@ libntopreport_la_SOURCES = emitter.c \
                            http.c  \
                            report.c \
                            reportUtils.c \
-                           webInterface.c
+                           webInterface.c \
+                           xmldump.c
 
 
 libntopreport_la_DEPENDENCIES = config.h
@@ -141,6 +144,17 @@ libntopreport_la_LIBADD       =
 libntopreport_la_LDFLAGS      = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAGS@
 
 man_MANS = ntop.8
+
+#
+# Special stuff for xml auto-generation of code from the "doc":
+#
+xmldump.$(OBJEXT): xml_g_cmdopt.inc
+
+xmldump.c: xml_*.inc globals-structtypes.h
+
+xml_*.inc: globals-structtypes.h
+	@echo "Processing globals-structtypes.h to make xml_*.inc..."
+	@awk -f utils/xmldump.awk globals-structtypes.h
 
 .PHONY: snapshot
 

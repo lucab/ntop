@@ -274,6 +274,10 @@ extern void returnHTTPversionNotSupported();
 #define DUMP_NTOP_FLOWS_HTML            "dumpFlows.html"
 #define DUMP_NTOP_HOSTS_MATRIX_HTML     "dumpHostsMatrix.html"
 
+#ifdef MAKE_WITH_XMLDUMP
+ #define DUMP_NTOP_XML                  "dump.xml"
+#endif
+
 /* webInterface.c */
 extern void *handleWebConnections(void* notUsed);
 extern char *getRowColor(void);
@@ -298,3 +302,6 @@ extern void drawThptGraph(int sortedColumn);
 extern void drawGlobalProtoDistribution(void);
 extern void drawHostsDistanceGraph();
 extern void drawGlobalIpProtoDistribution(void);
+
+/* xmldump.c */
+extern int dumpXML(int dumpToFile, char * parms);

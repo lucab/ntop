@@ -365,6 +365,20 @@ void initCounters(void) {
 
   setDomainName();
 
+#ifdef MAKE_WITH_XMLDUMP
+  if (gethostname(myGlobals.hostName, MAXHOSTNAMELEN) != 0)
+      strncpy(myGlobals.hostName, "127.0.0.1", MAXHOSTNAMELEN);
+  else {
+     traceEvent(CONST_TRACE_INFO, "Note: On this system, gethostname() returned '%s'.\n", myGlobals.hostName);
+
+     if (strcmp(myGlobals.hostName, myGlobals.domainName) == 0) {
+         /* The returned hostName doesn't appear to have the domainName in it... */
+         traceEvent(CONST_TRACE_INFO, "Note: Appending the domain name, '%s'\n", myGlobals.domainName);
+         sprintf(myGlobals.hostName, "%s.%s", myGlobals.hostName, myGlobals.domainName);
+     }
+  }
+#endif
+
   memset(myGlobals.transTimeHash, 0, sizeof(myGlobals.transTimeHash));
   memset(myGlobals.dummyEthAddress, 0, LEN_ETHERNET_ADDRESS);
 

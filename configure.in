@@ -257,9 +257,16 @@ AC_ARG_ENABLE(i18n,
               ac_enable_i18n="yes",
               ac_enable_i18n="no")
 
+AC_ARG_ENABLE(xmldump,
+              [  --enable-xmldump            Enable xml-based data dump [default=disabled]],
+              ac_enable_xmldump="yes",
+              ac_enable_xmldump="no")
+
 dnl>
 dnl> Define the "WITH"s for package root directories ... deal with these later...
 dnl>
+AC_ARG_WITH(void,
+              [  +-External-source-locations:-------------------------------------------------+])
 
 AC_ARG_WITH(  pcap-root,
               [  --with-pcap-root=DIR        LBNL pcap source tree located in DIR],
@@ -305,6 +312,26 @@ AC_ARG_WITH(  localedir,
               [  --with-localedir=DIR        LOCALE files located in DIR (i18n)],
               LOCALEDIR="$withval",
               LOCALEDIR=)
+
+AC_ARG_WITH(  xml2-root,
+              [  --with-xml2-root=DIR        xml2 library source tree located in DIR],
+              XML2_ROOT="$withval",
+              XML2_ROOT=)
+
+AC_ARG_WITH(  glib-root,
+              [  --with-glib-root=DIR        glib library source tree located in DIR],
+              GLIB_ROOT="$withval",
+              GLIB_ROOT=)
+
+AC_ARG_WITH(  glibconfig-root,
+              [  --with-glibconfig-root=DIR  glibconfig.h source in DIR],
+              GLIBCONFIG_ROOT="$withval",
+              GLIBCONFIG_ROOT=)
+
+AC_ARG_WITH(  gdome-root,
+              [  --with-gdome-root=DIR       gdome library source tree located in DIR],
+              GDOME_ROOT="$withval",
+              GDOME_ROOT=)
 
 AC_ARG_ENABLE(showoses,
               [  --enable-showoses           display OS Support information.],
@@ -613,7 +640,7 @@ case "${target}:${CC}" in
     *-*-freebsd[[45]]*:*gcc* )
         VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.2-RELEASE"
         VERIFIED2="2.1.51:2002-10-25:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE"
-        VERIFIED2="2.1.55:2003-01-19:Burton Strauss <burton@ntopsupport.com>:5.0-RELEASE"
+        VERIFIED3="2.1.55:2003-01-19:Burton Strauss <burton@ntopsupport.com>:5.0-RELEASE"
         DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
         if test ".${LOCALEDIR}" = "."; then
             LOCALEDIR="/usr/share/locale"
@@ -955,6 +982,14 @@ else
 fi
 
 echo
+echo "XML Dump?"
+if test ".${ac_enable_xmldump}" = ".yes"; then
+    echo "    ...Requested if available."
+else
+    echo "    ...(Default) Disabled. Request via command line option --enable-xmldump."
+fi
+
+echo
 echo "TCP Wrappers?"
 if test ".${ac_enable_tcpwrap}" = ".yes"; then
     echo "    ...Requested via command line option --enable-tcpwrap"
@@ -1142,6 +1177,11 @@ AC_CHECK_HEADERS([alloca.h])
 dnl> Used only by plugins/rrdPlugin.c
 AC_CHECK_HEADERS(rrd.h)
 
+dnl> XML dump
+AC_CHECK_HEADERS(glib.h glibconfig.h)
+AC_CHECK_HEADERS(xmlversion.h)
+AC_CHECK_HEADERS(gdome.h)
+
 echo
 echo "Testing for common typedefs and structures..."
 echo
@@ -1234,6 +1274,11 @@ dnl> rrd
 AC_CHECK_LIB([rrd], [rrd_create], [
     RRDLIB="-lrrd"
 ])
+
+dnl> XML dump
+AC_CHECK_LIB([glib], [g_date_julian])
+AC_CHECK_LIB([xml2], [xmlCheckVersion])
+AC_CHECK_LIB([gdome], [gdome_di_saveDocToFile])
 
 echo
 echo "Testing for library functions..."
@@ -2864,6 +2909,796 @@ else
     fi
 fi
 
+dnl> XML Dump:
+
+if test ".${GLIB_ROOT}" != "." &&
+   test ! -d ${GLIB_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*" 
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-glib-root option."
+    echo "*" 
+    echo "*>>> Continuing without the --with-glib-root option"
+    echo "*" 
+    echo "*    ./configure may complete successfully or the xml dump"
+    echo "*    option may be disabled."
+    echo "*" 
+    echo "*???     1. Correct the --with-glib-root value and rerun ./configure"
+    echo "*" 
+    echo "*******************************************************************"
+    echo
+    GLIB_ROOT=
+fi 
+if test ".${GLIBCONFIG_ROOT}" != "." &&
+   test ! -d ${GLIBCONFIG_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*" 
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-glibconfig-root option."
+    echo "*" 
+    echo "*>>> Continuing without the --with-glibconfig-root option"
+    echo "*" 
+    echo "*    ./configure may complete successfully or the xml dump"
+    echo "*    option may be disabled."
+    echo "*" 
+    echo "*???     1. Correct the --with-glibconfig-root value and rerun ./configure"
+    echo "*" 
+    echo "*******************************************************************"
+    echo
+    GLIBCONFIG_ROOT=
+fi 
+if test ".${XML2_ROOT}" != "." &&
+   test ! -d ${XML2_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*" 
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-xml2-root option."
+    echo "*" 
+    echo "*>>> Continuing without the --with-xml2-root option"
+    echo "*" 
+    echo "*    ./configure may complete successfully or the xml dump"
+    echo "*    option may be disabled."
+    echo "*" 
+    echo "*???     1. Correct the --with-xml2-root value and rerun ./configure"
+    echo "*" 
+    echo "*******************************************************************"
+    echo
+    XML2_ROOT=
+fi 
+if test ".${GDOME_ROOT}" != "." &&
+   test ! -d ${GDOME_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*" 
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-gdome-root option."
+    echo "*" 
+    echo "*>>> Continuing without the --with-gdome-root option"
+    echo "*" 
+    echo "*    ./configure may complete successfully or the xml dump"
+    echo "*    option may be disabled."
+    echo "*" 
+    echo "*???     1. Correct the --with-gdome-root value and rerun ./configure"
+    echo "*" 
+    echo "*******************************************************************"
+    echo
+    GDOME_ROOT=
+fi 
+
+if test ".${ac_enable_xmldump}" = ".yes"; then
+    AC_MSG_CHECKING([for XML Dump])
+
+   dnl>  First the mass test - if ALL of it is found, we just push on...
+   mass_xmldump_test_result="no"
+
+   if test ".${ac_debug}" = ".yes"; then
+       echo "DEBUG: XMLDump - mass test... _header_glib_h is ${ac_cv_header_glib_h}"
+       echo "                        _header_glibconfig_h is ${ac_cv_header_glibconfig_h}"
+       echo "                        _header_xmlversion_h is ${ac_cv_header_xmlversion_h}"
+       echo "                             _header_gdome_h is ${ac_cv_header_gdome_h}"
+       echo "                     _lib_glib_g_date_julian is ${ac_cv_lib_glib_g_date_julian}"
+       echo "                   _lib_glib12_g_date_julian is ${ac_cv_lib_glib12_g_date_julian}"
+       echo "                   _lib_xml2_xmlCheckVersion is ${ac_cv_lib_xml2_xmlCheckVersion}"
+       echo "           _lib_gdome_gdome_di_saveDocToFile is ${ac_cv_lib_gdome_gdome_di_saveDocToFile}"
+   fi
+
+   if test ".${ac_cv_header_glib_h}"                    = ".yes" &&
+      test ".${ac_cv_header_glibconfig_h}"              = ".yes" &&
+      test ".${ac_cv_header_xmlversion_h}"              = ".yes" &&
+      test ".${ac_cv_header_gdome_h}"                   = ".yes" &&
+      (test ".${ac_cv_lib_glib_g_date_julian}"          = ".yes" ||
+       test ".${ac_cv_lib_glib12_g_date_julian}"        = ".yes") &&
+      test ".${ac_cv_lib_xml2_xmlCheckVersion}"         = ".yes" &&
+      test ".${ac_cv_lib_gdome_gdome_di_saveDocToFile}" = ".yes"; then
+       mass_xmldump_test_result="yes"
+       if test ".${XML2_ROOT}" != "."; then
+           AC_MSG_RESULT(ok)
+           echo
+           echo "*******************************************************************"
+           echo "*"
+           echo "* NOTE:  You specified --with-xml2-root (and possibly --with-glib-root,"
+           echo "*        --with-glibconfig-root and/or --with-gdome-root)."
+           echo "*        However, a version was found in a standard location."
+           echo "*"
+           echo "*       Since this version will be used anyway,"
+           echo "*>>>    we've ignored your specified location."
+           echo "*"
+           echo "*******************************************************************"
+           echo
+           XML2_ROOT=
+           GLIB_ROOT=
+           GLIBCONFIG_ROOT=
+           GDOME_ROOT=
+       else
+           AC_MSG_RESULT([ok (standard location)])
+       fi
+   elif test ".${XML2_ROOT}" = "."; then
+       AC_MSG_RESULT([not found in standard location, no --with-xml2-root, testing further...])
+       AC_MSG_CHECKING([for libxml2 headers])
+       if test -d /usr &&
+          test -d /usr/include &&
+          test -r /usr/include/xmlversion.h; then
+           AC_MSG_RESULT([ok, xmlversion.h found in /usr/include])
+           INCS="${INCS} -I/usr/include"
+           AC_DEFINE_UNQUOTED(HAVE_XMLVERSION_H, 1)
+       elif test -d /usr &&
+            test -d /usr/local &&
+            test -d /usr/local/include &&
+            test -r /usr/local/include/xmlversion.h; then
+           AC_MSG_RESULT([ok, xmlversion.h found in /usr/local/include])
+           INCS="${INCS} -I/usr/local/include"
+           AC_DEFINE_UNQUOTED(HAVE_XMLVERSION_H, 1)
+       else
+           echo
+           echo "*******************************************************************"
+           echo "*"
+           echo "* ERROR:  1. We were unable to find the header xmlversion.h in the"
+           echo "*            standard location."
+           echo "*"
+           echo "*     and 2. You did not specify an alternate location"
+           echo "*            via --with-xml2-root."
+           echo "*"
+           echo "*     and 3. We also tested the following:"
+           echo "*"
+           echo "*                /usr/include"
+           echo "*                /usr/local/include"
+           echo "*"
+           echo "*>>> ./configure continues, xml dump will not be available."
+           echo "*"
+           echo "*???     1. Rerun ./configure with a corrected --with-xml2-root*"
+           echo "*???  or 2. Install libxml2 and rerun ./configure"
+           echo "*"
+           echo "*******************************************************************"
+           echo
+           ac_disable_xmldump="yes"
+       fi
+       if test ".${ac_disable_xmldump}" = ".yes"; then
+           dnl> Skip further tests
+           nop="yes"
+       else
+           AC_MSG_CHECKING([for libxml2 library])
+           if test -d /usr &&
+              test -d /usr/lib &&
+              (test -r /usr/lib/libxml2.so ||
+               test -r /usr/lib/libxml2.a); then
+               dnl>  /usr/lib should be automatically tested for as part of ld.so.conf...
+               AC_MSG_RESULT([ok, library found in /usr/lib])
+               LIBS="${LIBS} -L/usr/lib -lxmldump"
+               AC_DEFINE_UNQUOTED(HAVE_LIBXML2, 1)
+           elif test -d /usr &&
+                test -d /usr/local &&
+                test -d /usr/local/lib &&
+                (test -r /usr/local/lib/libxml2.so ||
+                 test -r /usr/local/lib/libxml2.a); then
+               AC_MSG_RESULT([ok, library found in /usr/local/lib])
+               LIBS="${LIBS} -L/usr/local/lib -lxmldump"
+               AC_DEFINE_UNQUOTED(HAVE_LIBXML2, 1)
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to compile a test program for libxml2."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-xml2-root."
+               echo "*"
+               echo "*     and 3. We were unable to find libxml2.so or libxml2.a"
+               echo "*            via a manual search of"
+               echo "*"
+               echo "*                /usr/lib"
+               echo "*                /usr/local/lib"
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Run ./buildAll.sh in ${XMLDUMP_DIRECTORY}"
+               echo "*???  or 2. Rerun ./configure with a corrected --with-xml2-root"
+               echo "*???  or 3. Install libxml2 and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+       fi
+   else
+       AC_MSG_RESULT([not found in standard location, testing further...])
+
+       dnl> Can we find xmlversion.h and libxml2 where s/he told us?
+
+       AC_MSG_CHECKING([for xmlversion.h])
+       XML2_ROOT=`(cd ${XML2_ROOT} && pwd)`
+       if test -d ${XML2_ROOT} &&
+          test -r ${XML2_ROOT}/xmlversion.h; then
+           AC_MSG_RESULT([ok, xmlversion.h found in ${XML2_ROOT}])
+           INCS="${INCS} -I${XML2_ROOT}"
+           AC_DEFINE_UNQUOTED(HAVE_XMLVERSION_H, 1)
+       elif test -d ${XML2_ROOT} &&
+          test -d ${XML2_ROOT}/include &&
+          test -r ${XML2_ROOT}/include/xmlversion.h; then
+           AC_MSG_RESULT([ok, xmlversion.h found in ${XML2_ROOT}/include])
+           INCS="${INCS} -I${XML2_ROOT}/include"
+           AC_DEFINE_UNQUOTED(HAVE_XMLVERSION_H, 1)
+       else
+           AC_MSG_RESULT(error)
+           echo
+           echo "*******************************************************************"
+           echo "*"
+           echo "* ERROR:  1. We were unable to find the header xmlversion.h in the"
+           echo "*            standard location or the alternate location you"
+           echo "*            specified by --with-xml2-root."
+           echo "*"
+           echo "*>>> ./configure continues, xml dump will not be available."
+           echo "*"
+           echo "*???     1. Rerun ./configure with a corrected --with-xml2-root"
+           echo "*???  or 2. Install libxml2 and rerun ./configure"
+           echo "*"
+           echo "*******************************************************************"
+           echo
+           ac_disable_xmldump="yes"
+       fi
+       if test ".${ac_enable_xmldump}" = ".yes"; then
+           AC_MSG_CHECKING([for libxml2 library])
+           oLIBS="${LIBS}"
+           NTOP_APPEND_LIBS([${XML2_ROOT}])
+           AC_CHECK_LIB([xml2], [xmlInitParser], [], [
+               AC_MSG_RESULT(error)
+               LIBS="${oLIBS}"
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to compile a test program for"
+               echo "*            xmlInitParser() against -lxml2 in the standard"
+               echo "*            location nor in the alternate locations you"
+               echo "*            specified by --with-xml2-root."
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-gd-root"
+               echo "*???  or 2. Install libxml2 and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           ])
+       fi
+    fi
+
+    if test ".${ac_disable_xmldump}"       != ".yes" &&
+       test ".${mass_xmldump_test_result}" != ".yes"; then
+        AC_MSG_CHECKING([for glib])
+
+       if test ".${ac_cv_header_glib_h}"                    = ".yes" &&
+          test ".${ac_cv_lib_glib_g_date_julian}"           = ".yes"; then
+           if test ".${GLIB_ROOT}" != "."; then
+               AC_MSG_RESULT(ok)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* NOTE:  You specified (or implied) --with-glib-root.  However,"
+               echo "*        a version was found in a standard location."
+               echo "*"
+               echo "*       Since this version will be used anyway,"
+               echo "*>>>    we've ignored your specified location."
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               GLIB_ROOT=
+           else
+               AC_MSG_RESULT([ok (standard location)])
+           fi
+       elif test ".${GLIB_ROOT}" = "."; then
+           AC_MSG_RESULT([not found in standard location, no --with-glib-root, testing further...])
+           AC_MSG_CHECKING([for glib header])
+           if test -d /usr &&
+              test -d /usr/include &&
+              test -r /usr/include/glib.h; then
+               AC_MSG_RESULT([ok, found in /usr/include])
+               INCS="${INCS} -I/usr/include"
+               AC_DEFINE_UNQUOTED(HAVE_GLIB_H, 1)
+           elif test -d /usr &&
+              test -d /usr/local &&
+              test -d /usr/local/include &&
+              test -r /usr/local/include/glib.h; then
+               AC_MSG_RESULT([ok, found in /usr/local/include])
+               INCS="${INCS} -I/usr/local/include"
+               AC_DEFINE_UNQUOTED(HAVE_GLIB_H, 1)
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header glib.h in the"
+               echo "*            standard location."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-glib-root."
+               echo "*"
+               echo "*     and 3. We also tested the following:"
+               echo "*"
+               echo "*                /usr/include"
+               echo "*                /usr/local/include"
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-glib-root"
+               echo "*???  or 2. Install glib and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+           if test ".${ac_disable_xmldump}" = ".yes"; then
+               nop="yes"
+           else
+               AC_MSG_CHECKING([for glib library])
+               if test -d /usr &&
+                  test -d /usr/lib &&
+                  (test -r /usr/lib/libglib.so ||
+                   test -r /usr/lib/libglib.a); then
+                   dnl>  /usr/lib should be automatically tested for as part of ld.so.conf...
+                   AC_MSG_RESULT([ok, found in /usr/lib])
+                   LIBS="${LIBS} -L/usr/lib -lglib"
+                   AC_DEFINE_UNQUOTED(HAVE_LIBGLIB, 1)
+               elif test -d /usr &&
+                  test -d /usr/local &&
+                  test -d /usr/local/lib &&
+                  (test -r /usr/local/lib/libglib.so ||
+                   test -r /usr/local/lib/libglib.a); then
+                   AC_MSG_RESULT([ok, found in /usr/local/lib])
+                   LIBS="${LIBS} -L/usr/local/lib -lglib"
+                   AC_DEFINE_UNQUOTED(HAVE_LIBGLIB, 1)
+               else
+                   AC_MSG_RESULT(error)
+                   echo
+                   echo "*******************************************************************"
+                   echo "*"
+                   echo "* ERROR:  1. We were unable to compile a test program for"
+                   echo "*            g_date_julian() against -lglib."
+                   echo "*"
+                   echo "*     and 2. You did not specify an alternate location"
+                   echo "*            via --with-glib-root."
+                   echo "*"
+                   echo "*     and 3. We were unable to find libglib.so or libgd.a"
+                   echo "*            via a manual search of"
+                   echo "*"
+                   echo "*                /usr/lib"
+                   echo "*                /usr/local/lib"
+                   echo "*"
+                   echo "*>>> ./configure continues, xml dump will not be available."
+                   echo "*"
+                   echo "*???     1. Rerun ./configure with a corrected --with-glib-root"
+                   echo "*???  or 2. Install glib and rerun ./configure"
+                   echo "*"
+                   echo "*******************************************************************"
+                   echo
+                   ac_disable_xmldump="yes"
+               fi
+           fi
+       else
+           AC_MSG_RESULT([not found in standard location, testing further...])
+           dnl> Can we find glib.h and libgd where s/he told us?
+
+           AC_MSG_CHECKING([for glib library])
+
+           GLIB_ROOT=`(cd ${GLIB_ROOT} && pwd)`
+           if test -d ${GLIB_ROOT} &&
+              test -r ${GLIB_ROOT}/glib.h; then
+               AC_MSG_RESULT([ok, glib.h found in ${GLIB_ROOT}])
+               INCS="${INCS} -I${GLIB_ROOT}"
+               AC_DEFINE_UNQUOTED(HAVE_GLIB_H, 1)
+           elif test -d ${GLIB_ROOT} &&
+              test -d ${GLIB_ROOT}/include &&
+              test -r ${GLIB_ROOT}/include/glib.h; then
+               AC_MSG_RESULT([ok, glib.h found in ${GLIB_ROOT}/include])
+               INCS="${INCS} -I${GLIB_ROOT}/include"
+               AC_DEFINE_UNQUOTED(HAVE_GLIB_H, 1)
+           elif test -d ${GLIB_ROOT} &&
+              test -d ${GLIB_ROOT}/include &&
+              test -d ${GLIB_ROOT}/include/glib20 &&
+              test -r ${GLIB_ROOT}/include/glib20/glib.h; then
+               AC_MSG_RESULT([ok, glib.h found in ${GLIB_ROOT}/include/glib20])
+               INCS="${INCS} -I${GLIB_ROOT}/include/glib20"
+           elif test -d ${GLIB_ROOT} &&
+              test -d ${GLIB_ROOT}/include &&
+              test -d ${GLIB_ROOT}/include/glib-2.0 &&
+              test -r ${GLIB_ROOT}/include/glib-2.0/glib.h; then
+               AC_MSG_RESULT([ok, glib.h found in ${GLIB_ROOT}/include/glib-2.0])
+               INCS="${INCS} -I${GLIB_ROOT}/include/glib-2.0"
+           elif test -d ${GLIB_ROOT} &&
+              test -d ${GLIB_ROOT}/include &&
+              test -d ${GLIB_ROOT}/include/glib12 &&
+              test -r ${GLIB_ROOT}/include/glib12/glib.h; then
+               AC_MSG_RESULT([ok, glib.h found in ${GLIB_ROOT}/include/glib12])
+               INCS="${INCS} -I${GLIB_ROOT}/include/glib12"
+           elif test -d ${GLIB_ROOT} &&
+              test -d ${GLIB_ROOT}/include &&
+              test -d ${GLIB_ROOT}/include/glib-1.2 &&
+              test -r ${GLIB_ROOT}/include/glib-1.2/glib.h; then
+               AC_MSG_RESULT([ok, glib.h found in ${GLIB_ROOT}/include/glib-1.2])
+               INCS="${INCS} -I${GLIB_ROOT}/include/glib-1.2"
+               AC_DEFINE_UNQUOTED(HAVE_GLIB_H, 1)
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header glib.h in the"
+               echo "*            standard location or the alternate locations you"
+               echo "*            specified by --with-glib-root."
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-glib-root"
+               echo "*???  or 2. Install glib and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+
+           if test ".${ac_enable_xmldump}" = ".yes"; then
+               oLIBS="${LIBS}"
+               AC_MSG_CHECKING([for glib library])
+               echo ""
+               for subdir in "" /lib; do
+                 if test ".${ac_cv_lib_glib_g_date_to_struct_tm}" = ".yes"; then
+                    :;
+                 else
+                   echo "Checking ${GLIB_ROOT}${subdir}..."
+                   for libname in glib glib-2.0 glib20 glib-1.2 glib12; do
+                     if test ".${ac_cv_lib_glib_g_date_to_struct_tm}" = ".yes"; then
+                       :;
+                     else
+                       if test -d ${GLIB_ROOT}${subdir}; then
+                         NTOP_APPEND_LIBS([${GLIB_ROOT}${subdir}])
+                         as_ac_Lib=`echo "ac_cv_lib_${libname}''_g_date_to_struct_tm" | $as_tr_sh`
+                         eval "$as_unset ${as_ac_Lib}"
+                         AC_CHECK_LIB([${libname}], 
+                                      [g_date_to_struct_tm], 
+                                      [ac_cv_lib_glib_g_date_to_struct_tm=yes], 
+                                      [LIBS="${oLIBS}"])
+                       fi
+                     fi
+                   done
+                 fi
+               done
+               if test ".${ac_cv_lib_glib_g_date_to_struct_tm}" = ".yes"; then 
+                   :;
+               else
+                   LIBS="${oLIBS}"
+                   echo
+                   echo "*******************************************************************"
+                   echo "*"
+                   echo "* ERROR:  1. We were unable to compile a test program for"
+                   echo "*            g_date_to_struct_tm() against -lglib in the standard"
+                   echo "*            location nor in the alternate locations you"
+                   echo "*            specified by --with-glib-root."
+                   echo "*"
+                   echo "*>>> ./configure continues, xml dump will not be available."
+                   echo "*"
+                   echo "*???     1. Rerun ./configure with a corrected --with-glib-root"
+                   echo "*???  or 2. Install glib and rerun ./configure"       
+                   echo "*"
+                   echo "*******************************************************************"
+                   echo
+                   ac_disable_xmldump="yes"
+               fi
+           fi
+       fi
+    fi
+
+    if test ".${ac_disable_xmldump}"       != ".yes" &&
+       test ".${mass_xmldump_test_result}" != ".yes"; then
+        AC_MSG_CHECKING([for glibconfig])
+
+       if test ".${ac_cv_header_glibconfig_h}"                    = ".yes"; then
+           if test ".${GLIBCONFIG_ROOT}" != "."; then
+               AC_MSG_RESULT(ok)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* NOTE:  You specified (or implied) --with-glibconfig-root.  However,"
+               echo "*        a version was found in a standard location."
+               echo "*"
+               echo "*       Since this version will be used anyway,"
+               echo "*>>>    we've ignored your specified location."
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               GLIBCONFIG_ROOT=
+           else
+               AC_MSG_RESULT([ok (standard location)])
+           fi
+       elif test ".${GLIBCONFIG_ROOT}" = "."; then
+           AC_MSG_RESULT([not found in standard location, no --with-glibconfig-root, testing further...])
+           AC_MSG_CHECKING([for glibconfig header])
+           if test -d /usr &&
+              test -d /usr/include &&
+              test -r /usr/include/glibconfig.h; then
+               AC_MSG_RESULT([ok, found in /usr/include])
+               INCS="${INCS} -I/usr/include"
+               AC_DEFINE_UNQUOTED(HAVE_GLIBCONFIG_H, 1)
+           elif test -d /usr &&
+              test -d /usr/local &&
+              test -d /usr/local/include &&
+              test -r /usr/local/include/glibconfig.h; then
+               AC_MSG_RESULT([ok, found in /usr/local/include])
+               INCS="${INCS} -I/usr/local/include"
+               AC_DEFINE_UNQUOTED(HAVE_GLIBCONFIG_H, 1)
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header glibconfig.h in the"
+               echo "*            standard location."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-glibconfig-root."
+               echo "*"
+               echo "*     and 3. We also tested the following:"
+               echo "*"
+               echo "*                /usr/include"
+               echo "*                /usr/local/include"
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-glibconfig-root"
+               echo "*???  or 2. Install glibconfig and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+       else
+           AC_MSG_RESULT([not found in standard location, testing further...])
+           dnl> Can we find glibconfig.h where s/he told us?
+
+           GLIBCONFIG_ROOT=`(cd ${GLIBCONFIG_ROOT} && pwd)`
+           if test -d ${GLIBCONFIG_ROOT} &&
+              test -r ${GLIBCONFIG_ROOT}/glibconfig.h; then
+               AC_MSG_RESULT([ok, glibconfig.h found in ${GLIBCONFIG_ROOT}])
+               INCS="${INCS} -I${GLIBCONFIG_ROOT}"
+               AC_DEFINE_UNQUOTED(HAVE_GLIBCONFIG_H, 1)
+           elif test -d ${GLIBCONFIG_ROOT} &&
+              test -d ${GLIBCONFIG_ROOT}/include &&
+              test -r ${GLIBCONFIG_ROOT}/include/glibconfig.h; then
+               AC_MSG_RESULT([ok, glibconfig.h found in ${GLIBCONFIG_ROOT}/include])
+               INCS="${INCS} -I${GLIBCONFIG_ROOT}/include"
+               AC_DEFINE_UNQUOTED(HAVE_GLIBCONFIG_H, 1)
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header glibconfig.h in the"
+               echo "*            standard location or the alternate locations you"
+               echo "*            specified by --with-glibconfig-root."
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-glibconfig-root"
+               echo "*???  or 2. Install glibconfig and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+       fi
+    fi
+
+    if test ".${ac_disable_xmldump}"       != ".yes" &&
+       test ".${mass_xmldump_test_result}" != ".yes"; then
+        AC_MSG_CHECKING([for libgdome])
+
+       if test ".${ac_cv_header_gdome_h}"                    = ".yes" &&
+          test ".${ac_cv_lib_gdome_gdome_di_saveDocToFile}"  = ".yes"; then
+           if test ".${GDOME_ROOT}" != "."; then
+               AC_MSG_RESULT(ok)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* NOTE:  You specified (or implied) --with-gdome-root.  However,"
+               echo "*        a version was found in a standard location."
+               echo "*"
+               echo "*       Since this version will be used anyway,"
+               echo "*>>>    we've ignored your specified location."
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               GDOME_ROOT=
+           else
+               AC_MSG_RESULT([ok (standard location)])
+           fi
+       elif test ".${GDOME_ROOT}" = "."; then
+           AC_MSG_RESULT([not found in standard location, no --with-gdome-root, testing further...])
+           AC_MSG_CHECKING([for libgdome header])
+           if test -d /usr &&
+              test -d /usr/include &&
+              test -r /usr/include/gdome.h; then
+               AC_MSG_RESULT([ok, gdome.h found in /usr/include])
+               INCS="${INCS} -I/usr/include"
+               AC_DEFINE_UNQUOTED(HAVE_GDOME_H, 1)
+           elif test -d /usr &&
+              test -d /usr/local &&
+              test -d /usr/local/include &&
+              test -r /usr/local/include/gdome.h; then
+               AC_MSG_RESULT([ok, gdome.h found in /usr/local/include])
+               INCS="${INCS} -I/usr/local/include"
+               AC_DEFINE_UNQUOTED(HAVE_GDOME_H, 1)
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header gdome.h in the"
+               echo "*            standard location."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-gdome-root."
+               echo "*"
+               echo "*     and 3. We also tested the following:"
+               echo "*"
+               echo "*                /usr/include"
+               echo "*                /usr/local/include"
+               echo "*"
+               echo "*>>> ./configure continues, charts will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-gdome-root"
+               echo "*???  or 2. Install libgdome and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+           if test ".${ac_disable_xmldump}" = ".yes"; then
+               nop="yes"
+           else
+               AC_MSG_CHECKING([for libgdome library])
+                if test -d /usr &&
+                   test -d /usr/lib &&
+                   (test -r /usr/lib/libgdome.so ||
+                    test -r /usr/lib/libgdome.a); then
+                    dnl>  /usr/lib should be automatically tested for as part of ld.so.conf...
+                    LIBS="${LIBS} -L/usr/lib -lgdome"
+                    AC_MSG_RESULT([ok, found in /usr/lib])
+                    AC_DEFINE_UNQUOTED(HAVE_LIBGDOME, 1)
+                elif test -d /usr &&
+                     test -d /usr/local &&
+                     test -d /usr/local/lib &&
+                     (test -r /usr/local/lib/libgdome.so ||
+                      test -r /usr/local/lib/libgdome.a); then
+                    LIBS="${LIBS} -L/usr/local/lib -lgdome"
+                    AC_MSG_RESULT([ok, found in /usr/local/lib])
+                    AC_DEFINE_UNQUOTED(HAVE_LIBGDOME, 1)
+                else
+                    AC_MSG_RESULT(error)
+                    echo
+                    echo "*******************************************************************"
+                    echo "*"
+                    echo "* ERROR:  1. We were unable to compile a test program for"
+                    echo "*            gdome_di_saveDocToFile() against -libgdome."
+                    echo "*"
+                    echo "*     and 2. You did not specify an alternate location"
+                    echo "*            via --with-gdome-root."
+                    echo "*"
+                    echo "*     and 3. We were unable to find libgdome.so or libgdome.a"
+                    echo "*            via a manual search of"
+                    echo "*"
+                    echo "*                /usr/lib"
+                    echo "*                /usr/local/lib"
+                    echo "*"
+                    echo "*>>> ./configure continues, xml dump will not be available."
+                    echo "*"
+                    echo "*???     1. Rerun ./configure with a corrected --with-gdome-root"
+                    echo "*???  or 2. Install libgdome and rerun ./configure"
+                    echo "*"
+                    echo "*******************************************************************"
+                    echo
+                    ac_disable_xmldump="yes"
+                fi
+            fi
+       else
+           AC_MSG_RESULT([not found in standard location, testing further...])
+           dnl> Can we find gdome.h and libgd where s/he told us?
+           AC_MSG_CHECKING([for libgdome header])
+           GDOME_ROOT=`(cd ${GDOME_ROOT} && pwd)`
+           if test -d ${GDOME_ROOT} &&
+              test -r ${GDOME_ROOT}/gdome.h; then
+               AC_MSG_RESULT([ok, gdome.h found in ${GDOME_ROOT}])
+               INCS="${INCS} -I${GDOME_ROOT}"
+               AC_DEFINE_UNQUOTED(HAVE_GDOME_H, 1)
+           elif test -d ${GDOME_ROOT} &&
+              test -d ${GDOME_ROOT}/include &&
+              test -r ${GDOME_ROOT}/include/gdome.h; then
+               AC_MSG_RESULT([ok, gdome.h found in ${GDOME_ROOT}/include])
+               INCS="${INCS} -I${GDOME_ROOT}/include"
+               AC_DEFINE_UNQUOTED(HAVE_GDOME_H, 1)
+           elif test -d ${GDOME_ROOT} &&
+              test -d ${GDOME_ROOT}/include &&
+              test -d ${GDOME_ROOT}/include/libgdome &&
+              test -r ${GDOME_ROOT}/include/libgdome/gdome.h; then
+               AC_MSG_RESULT([ok, gdome.h found in ${GDOME_ROOT}/libgdome/include])
+               INCS="${INCS} -I${GDOME_ROOT}/include/libgdome"
+               AC_DEFINE_UNQUOTED(HAVE_GDOME_H, 1)
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header gdome.h in the"
+               echo "*            standard location or the alternate location you"
+               echo "*            specified by --with-gdome-root."
+               echo "*"
+               echo "*>>> ./configure continues, xml dump will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-gdome-root"
+               echo "*???  or 2. Install libgdome and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_xmldump="yes"
+           fi
+           if test ".${ac_enable_xmldump}" = ".yes"; then
+               AC_MSG_CHECKING([for libgdome library])
+               oLIBS=${LIBS}
+               NTOP_APPEND_LIBS([${GDOME_ROOT}])
+               AC_CHECK_LIB([gdome], [gdome_di_createDocumentType], [], [
+                   LIBS=${oLIBS}
+                   NTOP_APPEND_LIBS([${GDOME_ROOT}/lib])
+                   AC_CHECK_LIB([gdome], [gdome_di_createDocument], [], [
+                       AC_MSG_RESULT(error)
+                       LIBS=${oLIBS}
+                       echo
+                       echo "*******************************************************************"
+                       echo "*"
+                       echo "* ERROR:  1. We were unable to compile a test program for"
+                       echo "*            gdome_di_createDocumentType() against -lgdome in the"
+                       echo "*            standard location nor in the alternate location you"
+                       echo "*            specified by --with-gdome-root."
+                       echo "*"
+                       echo "*>>> ./configure continues, xml dump will not be available."
+                       echo "*"
+                       echo "*???     1. Rerun ./configure with a corrected --with-gdome-root"
+                       echo "*???  or 2. Install libgdome and rerun ./configure"
+                       echo "*"
+                       echo "*******************************************************************"
+                       echo
+                       ac_disable_xmldump="yes"
+                   ])
+               ])
+           fi
+       fi
+    fi
+    if test ".${ac_enable_xmldump}" = ".yes"; then
+        AC_DEFINE_UNQUOTED(MAKE_WITH_XMLDUMP, 1, [XML Dump is available])
+    fi
+fi
+
+
 if test ".${ac_enable_intop}" = ".yes"; then
     AC_MSG_CHECKING(intop libraries)
     AC_MSG_RESULT([])
@@ -3425,7 +4260,25 @@ echo "++"
 echo "++              Thanks for supporting ntop!"
 echo "++"
 echo "*"
-echo "* NEXT STEP:"
+echo "* NEXT STEP(S):"
+
+case "${target}:${CC}" in
+    *-*-freebsd5*:*gcc* )
+        echo "*"
+        echo "*FreeBSD5: You may encounter a problem building ntop for this OS,"
+        echo "*FreeBSD5: where the following messages are repeated many times:"
+        echo "*FreeBSD5: "
+        echo "*FreeBSD5:    expr: illegal option -- l"
+        echo "*FreeBSD5:    usage: expr [-e] expression"
+        echo "*FreeBSD5: "
+        echo "*FreeBSD5: To avoid this, according to the note on man expr," 
+        echo "*FreeBSD5: \"Compatibility with previous implementations\","
+        echo "*FreeBSD5: set the flag EXPR_COMPAT before typing make."
+        echo "*FreeBSD5: "
+        echo "*FreeBSD5: (Under bash, \$ export EXPR_COMPAT=Y will suffice.)"
+      ;;
+esac
+
 echo "*"
 echo "*    Building ntop requires GNU Make, so to build ntop, type"
 echo "*    'make' (or on *BSD and Solaris systems, 'gmake')"
