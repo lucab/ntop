@@ -1,6 +1,6 @@
-# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
-# Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -15,7 +15,7 @@
 # auto makefile for the top-level ntop program
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
-# Copyright (c) 1998, 2000 Luca Deri <deri@ntop.org>
+# Copyright (c) 1998-2002 Luca Deri <deri@ntop.org>
 # Updated 1Q 2000 Rocco Carbone <rocco@ntop.org>
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -137,8 +137,7 @@ CCLD = @CCLD@
 CORELIBS = @CORELIBS@
 MORELIBS = @MORELIBS@
 
-DISTCLEANFILES = logger.db ntop.db ntop_pw.db LsWatch.db 		 icmpWatch.db ntops ntopd ntop-config *~ *.log
-
+DISTCLEANFILES = *.db ntops ntopd ntop-config #* *~ *.log
 CLEANFILES = $(DISTCLEANFILES)
 
 # A list of all the files in the current directory which can be regenerated
@@ -542,7 +541,7 @@ maintainer-clean-recursive:
 	dot_seen=no; \
 	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
 	  rev="$$subdir $$rev"; \
-	  test "$$subdir" != "." || dot_seen=yes; \
+	  test "$$subdir" = "." && dot_seen=yes; \
 	done; \
 	test "$$dot_seen" = "no" && rev=". $$rev"; \
 	target=`echo $@ | sed s/-recursive//`; \
@@ -641,7 +640,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
