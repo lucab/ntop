@@ -323,8 +323,9 @@ dnl>
 echo
 echo "Step 3. Checking for special support for platform/compiler...."
 echo
-
+DYN_FLAGS=
 SO_VERSION_PATCH=
+MORESOURCES=
 
 case "$host:$CC" in
     *-ibm-aix4.1.*:gcc )
@@ -342,7 +343,6 @@ dnl>
 
 dnl>    To link against the getmsg system call you must import the /lib/pse.exp
         CCLD="cc -bI:/lib/pse.exp"
-
         ;;
 
     *-ibm-aix4.*:cc* )
@@ -352,7 +352,6 @@ dnl>    To link against the getmsg system call you must import the /lib/pse.exp
         # To link against the getmsg system call you must import the /lib/pse.exp
 dnl>        CFLAGS=
 dnl>        LDFLAGS="-bI:/lib/pse.exp $LDFLAGS"
-
         ;;
 
     *-sun-solaris2.5.1:* )
@@ -361,6 +360,12 @@ dnl>        LDFLAGS="-bI:/lib/pse.exp $LDFLAGS"
 
     *openbsd* )
         SO_VERSION_PATCH=.0.0
+        ;;
+
+    *darwin* )
+        CFLAGS="-no-cpp-precomp -DDARWIN $CFLAGS"
+	DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
+	MORESOURCES=" ntop_darwin.c"
         ;;
 
 dnl>    *-sun-solaris2*:cc )
@@ -633,11 +638,11 @@ dnl>
   READLIBS=$LIBCURSES
   case "$LIBCURSES" in
     *termcap*|*curses*)
-        ;;
+    ;;
     *)
-      AC_CHECK_LIB(termcap, tgetent, LIBTERMCAP="-ltermcap")
-      READLIBS="$READLIBS $LIBTERMCAP"
-        ;;
+    AC_CHECK_LIB(termcap, tgetent, LIBTERMCAP="-ltermcap")
+    READLIBS="$READLIBS $LIBTERMCAP"
+    ;;
   esac
 
   AC_CHECK_HEADERS(readline/readline.h)
@@ -764,8 +769,8 @@ else
        AC_MSG_RESULT([ You can download the latest source tarball at http://www.tcpdump.org/])
        AC_MSG_ERROR([ The LBL Packet Capture Library, libpcap, was not found! ])
      else
-	if test -r /usr/include/pcap/pcap.h; then	
-	       INCS="${INCS} -I/usr/include/pcap"	
+	if test -r /usr/include/pcap/pcap.h; then
+	       INCS="${INCS} -I/usr/include/pcap"
 	       PCAP_ROOT="standard installation"
 	else
        AC_MSG_RESULT([             *** FATAL ERROR ***             ])
@@ -1063,11 +1068,14 @@ AC_SUBST(LIBS)
 AC_SUBST(MORELIBS)
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
+AC_SUBST(DYN_FLAGS)
 AC_SUBST(CCLD)
 
 AC_SUBST(CORELIBS)
 AC_SUBST(MORELIBS)
 AC_SUBST(SNMPLIBS)
+
+AC_SUBST(MORESOURCES)
 
 if test ".$ac_disable_intop" = ".yes"; then
 INTOP=
@@ -1120,7 +1128,7 @@ dnl>)`
 DBFILE_DIR=/tmp
 AC_DEFINE_UNQUOTED(DBFILE_DIR,"$DBFILE_DIR", [Database file directory])
 AC_SUBST(DBFILE_DIR)
- 
+
 dnl> temporary
 AC_DEFINE_UNQUOTED(RETSIGTYPE, void)
 

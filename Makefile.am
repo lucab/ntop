@@ -125,11 +125,11 @@ libntop_la_SOURCES = address.c       dataFormat.c  event.c            \
                      regex.c         rules.c       sql.c              \
                      ssl.c           term.c        traffic.c          \
                      util.c          vendor.c      version.c          \
-                     vendortable.h
+                     vendortable.h @MORESOURCES@
 
 libntop_la_DEPENDENCIES = config.h
 libntop_la_LIBADD       = $(CORELIBS)
-libntop_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
+libntop_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic @DYN_FLAGS@
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = admin.c emitter.c \
@@ -143,7 +143,7 @@ libntopreport_la_SOURCES = admin.c emitter.c \
 
 libntopreport_la_DEPENDENCIES = config.h
 libntopreport_la_LIBADD       = $(MORELIBS)
-libntopreport_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
+libntopreport_la_LDFLAGS      = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic @DYN_FLAGS@
 
 man_MANS = ntop.8
 

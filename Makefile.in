@@ -99,6 +99,7 @@ CPP = @CPP@
 DATAFILE_DIR = @DATAFILE_DIR@
 DBFILE_DIR = @DBFILE_DIR@
 DLLTOOL = @DLLTOOL@
+DYN_FLAGS = @DYN_FLAGS@
 INTOP = @INTOP@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
@@ -107,6 +108,7 @@ LIBREADLINE = @LIBREADLINE@
 LIBTOOL = @LIBTOOL@
 LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
+MORESOURCES = @MORESOURCES@
 NM = @NM@
 NTOP_RELEASE = @NTOP_RELEASE@
 NTOP_VERSION_INFO = @NTOP_VERSION_INFO@
@@ -196,12 +198,12 @@ noinst_HEADERS = globals-core.h globals-report.h ntop.h regex.h rules.h
 lib_LTLIBRARIES = libntop.la libntopreport.la
 
 # core Archive, or the 'engine'
-libntop_la_SOURCES = address.c       dataFormat.c  event.c                                 globals-core.c  hash.c        initialize.c                            leaks.c         logger.c      mysql.c netflow.c                       ntop.c 	     pbuf.c        plugin.c      qsort.c                          regex.c         rules.c       sql.c                                   ssl.c           term.c        traffic.c                               util.c          vendor.c      version.c                               vendortable.h
+libntop_la_SOURCES = address.c       dataFormat.c  event.c                                 globals-core.c  hash.c        initialize.c                            leaks.c         logger.c      mysql.c netflow.c                       ntop.c 	     pbuf.c        plugin.c      qsort.c                          regex.c         rules.c       sql.c                                   ssl.c           term.c        traffic.c                               util.c          vendor.c      version.c                               vendortable.h @MORESOURCES@
 
 
 libntop_la_DEPENDENCIES = config.h
 libntop_la_LIBADD = $(CORELIBS)
-libntop_la_LDFLAGS = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
+libntop_la_LDFLAGS = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic @DYN_FLAGS@
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = admin.c emitter.c                            globals-report.c                            graph.c                            http.c                             report.c                            reportUtils.c                            webInterface.c
@@ -209,7 +211,7 @@ libntopreport_la_SOURCES = admin.c emitter.c                            globals-
 
 libntopreport_la_DEPENDENCIES = config.h
 libntopreport_la_LIBADD = $(MORELIBS)
-libntopreport_la_LDFLAGS = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic
+libntopreport_la_LDFLAGS = -version-info @NTOP_VERSION_INFO@ -release @NTOP_RELEASE@ -export-dynamic @DYN_FLAGS@
 
 man_MANS = ntop.8
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -248,7 +250,7 @@ HEADERS =  $(noinst_HEADERS)
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = tar
+TAR = gnutar
 GZIP_ENV = --best
 DEP_FILES =  .deps/address.P .deps/admin.P .deps/dataFormat.P \
 .deps/emitter.P .deps/event.P .deps/globals-core.P \
@@ -818,14 +820,14 @@ ntop.html: ntop.txt
 
 install-data-local:
 	@cp -p ntop-cert.pem $(bindir)/ntop-cert.pem
-	@$(top_srcdir)/mkinstalldirs $(libdir)/plugins;
-	@$(top_srcdir)/mkinstalldirs $(datadir)/ntop;
-	@$(top_srcdir)/mkinstalldirs $(datadir)/ntop/html;
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop;
+	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/html;
 	@for file in $(NTOPHTML); do \
           if test -d $$file; then \
-             $(top_srcdir)/mkinstalldirs $(datadir)/ntop/$$file; \
+             $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/$$file; \
            else \
-             cp -p $$file $(datadir)/ntop/$$file; \
+             cp -p $$file $(DESTDIR)/$(datadir)/ntop/$$file; \
           fi; \
         done
 

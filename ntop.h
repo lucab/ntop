@@ -1373,7 +1373,12 @@ typedef struct pluginStatus {
 } PluginStatus;
 
 #define PLUGIN_EXTENSION                  ".so"
+
+#ifdef DARWIN
 #define PLUGIN_ENTRY_FCTN_NAME "PluginEntryFctn"
+#else
+#define PLUGIN_ENTRY_FCTN_NAME "PluginEntryFctn"
+#endif
 
 /* Flow Filter List */
 typedef struct flowFilterList {
