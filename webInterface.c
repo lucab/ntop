@@ -1115,7 +1115,7 @@ void printNtopConfigInfo(int textPrintFlag) {
       if(snprintf(buf, sizeof(buf), "http://%s:%d", myGlobals.webAddr, myGlobals.webPort) < 0)
         BufferTooShort();
     } else {
-      if(snprintf(buf, sizeof(buf), "http://<any>:%d", myGlobals.webPort) < 0)
+      if(snprintf(buf, sizeof(buf), "http://&lt;any&gt;:%d", myGlobals.webPort) < 0)
         BufferTooShort();
     }
     printFeatureConfigInfo(textPrintFlag, "Web server URL", buf);
