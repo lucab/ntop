@@ -1888,7 +1888,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	  theSession->sessionState = STATE_FIN1_ACK0;
 	  break;
 	case STATE_FIN1_ACK0:
-	  theSession->sessionState = STATE_FIN1_ACK1;
+	  theSession->sessionState = STATE_FIN2_ACK1;
 	  break;
 	case STATE_FIN1_ACK1:
 	  theSession->sessionState = STATE_FIN2_ACK1;
