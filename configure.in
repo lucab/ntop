@@ -71,10 +71,6 @@ dnl> variables for autoconf
 dnl>
 
 dnl>
-dnl> By default ntop is NOT compiled with MySQL support (if any)
-ac_disable_mysql=yes
-
-dnl>
 dnl> By default ntop is compiled in multithread mode using
 dnl> async address resolution unless reset by command line options.
 ac_disable_multithread=no
@@ -296,11 +292,10 @@ dnl> for example to start a debugging session.
 dnl>
 AC_ARG_ENABLE(mt, [  --disable-mt            disable multithread support also if available [default=enabled]], ac_disable_multithread="yes", ac_disable_multithread="no")
 
-
 dnl>
 dnl> Give the user an option to compile without MySQL support
 dnl>
-AC_ARG_ENABLE(mysql, [  --disable-mysql         disable MySQL support also if available [default=enabled]], ac_disable_mysql="yes", ac_disable_mysql="no")
+AC_ARG_ENABLE(mysql, [  --enable-mysql         enable MySQL support also if available [default=disabled]], ac_mysql="yes", ac_mysql="no")
 
 dnl>
 dnl> Give the user an option to compile without the HTTPS support provided by OpenSSL.
@@ -437,83 +432,6 @@ AC_CHECK_HEADERS(sys/select.h sys/ldr.h sys/sockio.h dl.h dirent.h dlfcn.h)
 dnl> OPTIONAL security headers
 AC_CHECK_HEADERS(security/pam_appl.h shadow.h crypt.h)
 
-dnl>
-dnl> OPTIONAL MySQL library - check for mysql.h and mysqlclient.so
-dnl>
-
-if test ".$ac_disable_mysql" = ".no"; then
-        have_mysql=no
-        AC_CHECK_HEADERS(mysql/mysql.h, [
-                AC_MSG_CHECKING([for library for mySQL (client)])
-                _libs=${LIBS}
-                LIBS="${LIBS} -lmysqlclient"
-                AC_TRY_LINK([#include <mysql/mysql.h>], [
-MYSQL *mysql;
-mysql_shutdown(mysql);], [
-                AC_MSG_RESULT(yes)
-                have_mysql=yes], [
-
-                LIBS="${_libs} -L/usr/lib/mysql -lmysqlclient"
-                AC_TRY_LINK([#include <mysql/mysql.h>], [
-MYSQL *mysql;
-mysql_shutdown(mysql);], [
-                    AC_MSG_RESULT(yes - /usr/lib/mysql)
-                    have_mysql=yes], [
-
-                    have_mysql=no
-                    LIBS=${_libs}])])], [
-
-                have_mysql=no])
-
-        if test ".$have_mysql" = ".yes"; then
-                AC_DEFINE(HAVE_MYSQL)
-        else
-                AC_MSG_ERROR([could not find -lmysqlclient, rerun with --disable-mysql])
-        fi
-fi
-
-dnl> OPTIONAL curses headers
-if test ".$ac_disable_curses" = ".no"; then
-
-  if test -f "/usr/include/ncurses.h"; then
-    echo "checking for ncurses.h... yes"
-    AC_DEFINE(HAVE_NCURSES_H)
-  else
-    if test -f "/usr/include/curses.h"; then
-      echo "checking for curses.h... yes"
-      AC_DEFINE(HAVE_CURSES_H)
-    else
-      AC_MSG_WARN([It looks that you don't have (n)curses.h installed hence intop will *not* be built.])
-     ac_disable_intop=yes
-    fi
-  fi
-dnl>
-dnl> check for ip6 address used by sFlow...
-dnl>
-AC_CHECK_TYPEDEF(in6_addr, netinet/ip.h)
-
-fi
-
-dnl> OPTIONAL memory related headers
-AC_CHECK_HEADERS(alloca.h)
-
-dnl> OPTIONAL micro ntop
-if test ".$ac_micro_ntop" = ".yes"; then
-	AC_DEFINE(MICRO_NTOP)
-fi
-
-dnl> OPTIONAL thread headers
-if test ".$ac_disable_multithread" = ".no"; then
-  AC_CHECK_HEADERS(sched.h sys/sched.h semaphore.h pthread.h)
-fi
-
-dnl> MANDATORY universal headers for network programming code
-AC_HAVE_HEADERS(sys/socket.h netdb.h netinet/in.h arpa/inet.h net/if.h)
-AC_HAVE_HEADERS(netinet/in_systm.h netinet/ip.h netinet/ip_icmp.h netinet/udp.h netinet/tcp.h)
-
-dnl> OPTIONAL headers for network programming headers
-AC_CHECK_HEADERS(netinet/if_ether.h arpa/nameser.h net/ethernet.h ethertype.h if.h net/bpf.h)
-
 AC_MSG_CHECKING(if ether_header uses ether_addr structs)
 AC_CACHE_VAL(ac_cv_ether_header_has_ea,
     LBL_SAVE_CFLAGS="$CFLAGS"
@@ -538,6 +456,99 @@ AC_MSG_RESULT($ac_cv_ether_header_has_ea)
 if test $ac_cv_ether_header_has_ea = yes ; then
         AC_DEFINE(ETHER_HEADER_HAS_EA)
 fi
+
+
+dnl>
+dnl> check for ip6 address used by sFlow...
+dnl>
+AC_MSG_CHECKING(if in6_addr is defined)
+AC_CACHE_VAL(ac_cv_in6_addr_has_ea,
+    LBL_SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $V_INCLS"
+    AC_TRY_COMPILE([
+#       include <sys/types.h>
+#include <netinet/in_systm.h>
+#       include <sys/socket.h>
+#       include <netinet/ip.h>
+#       include <netinet/in.h>],
+        [struct in6_addr tmp;],
+        ac_cv_in6_addr_has_ea=yes,
+        ac_cv_in6_addr_has_ea=no)
+    CFLAGS="$LBL_SAVE_CFLAGS")
+AC_MSG_RESULT($ac_cv_in6_addr_has_ea)
+if test $ac_cv_in6_addr_has_ea = yes ; then
+        AC_DEFINE(HAVE_IN6_ADDR)
+fi
+
+
+dnl>
+dnl> OPTIONAL MySQL library - check for mysql.h and mysqlclient.so
+dnl>
+
+if test ".$ac_mysql" = ".yes"; then
+        have_mysql=no
+        AC_CHECK_HEADERS(mysql/mysql.h, [
+                AC_MSG_CHECKING([for library for mySQL (client)])
+                _libs=${LIBS}
+                LIBS="${LIBS} -lmysqlclient"
+                AC_TRY_LINK([#include <mysql/mysql.h>], [MYSQL *mysql; mysql_shutdown(mysql);], 
+		[ AC_MSG_RESULT(yes)   have_mysql=yes], [
+
+                LIBS="${_libs} -L/usr/lib/mysql -lmysqlclient"
+                AC_TRY_LINK([#include <mysql/mysql.h>], 
+		[MYSQL *mysql;mysql_shutdown(mysql);], [
+                    AC_MSG_RESULT(yes - /usr/lib/mysql)
+                    have_mysql=yes], [
+
+                    have_mysql=no
+                    LIBS=${_libs}])])], [
+
+                have_mysql=no])
+
+        if test ".$have_mysql" = ".yes"; then
+                AC_DEFINE(HAVE_MYSQL)
+        else
+                AC_MSG_ERROR([could not find -lmysqlclient, rerun without --enable-mysql])
+        fi
+fi
+
+dnl> OPTIONAL curses headers
+if test ".$ac_disable_curses" = ".no"; then
+
+  if test -f "/usr/include/ncurses.h"; then
+    echo "checking for ncurses.h... yes"
+    AC_DEFINE(HAVE_NCURSES_H)
+  else
+    if test -f "/usr/include/curses.h"; then
+      echo "checking for curses.h... yes"
+      AC_DEFINE(HAVE_CURSES_H)
+    else
+      AC_MSG_WARN([It looks that you don't have (n)curses.h installed hence intop will *not* be built.])
+     ac_disable_intop=yes
+    fi
+  fi
+fi
+
+
+dnl> OPTIONAL memory related headers
+AC_CHECK_HEADERS(alloca.h)
+
+dnl> OPTIONAL micro ntop
+if test ".$ac_micro_ntop" = ".yes"; then
+	AC_DEFINE(MICRO_NTOP)
+fi
+
+dnl> OPTIONAL thread headers
+if test ".$ac_disable_multithread" = ".no"; then
+  AC_CHECK_HEADERS(sched.h sys/sched.h semaphore.h pthread.h)
+fi
+
+dnl> MANDATORY universal headers for network programming code
+AC_HAVE_HEADERS(sys/socket.h netdb.h netinet/in.h arpa/inet.h net/if.h)
+AC_HAVE_HEADERS(netinet/in_systm.h netinet/ip.h netinet/ip_icmp.h netinet/udp.h netinet/tcp.h)
+
+dnl> OPTIONAL headers for network programming headers
+AC_CHECK_HEADERS(netinet/if_ether.h arpa/nameser.h net/ethernet.h ethertype.h if.h net/bpf.h)
 
 dnl> OPTIONAL syslog headers
 AC_CHECK_HEADERS(sys/syslog.h, [ac_sys_syslog_h="yes"], [ac_sys_syslog_h="no"])
