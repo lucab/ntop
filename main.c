@@ -507,7 +507,7 @@ int main(int argc, char *argv[]) {
   traceEvent(TRACE_INFO, "Sniffying...\n");
 
 #ifdef MEMORY_DEBUG
-  ResetLeaks();
+  resetLeaks();
 #endif
 
   /*

@@ -159,7 +159,7 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   float multiplier;
   u_int i, j, newSize, lastHashSize;
   struct hostTraffic **hash_hostTraffic;
-  short numCmp;
+  short numCmp = 0;
   struct ipGlobalSession *scanner=NULL;
 
   if(hashAction == EXTEND_HASH)
@@ -248,72 +248,70 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 
   for(j=1; j<newSize; j++)
     if(device[deviceToExtend].hash_hostTraffic[j] != NULL) {
+      HostTraffic *theHost = device[deviceToExtend].hash_hostTraffic[j];
 
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->contactedRouters);
+      mapUsageCounter(&theHost->contactedRouters);
 
       /* ********************************* */
 
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->contactedSentPeers);
-      mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->contactedRcvdPeers);
+      mapUsageCounter(&theHost->contactedSentPeers);
+      mapUsageCounter(&theHost->contactedRcvdPeers);
 
-      if(device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts != NULL) {
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->synPktsSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->rstPktsSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->rstAckPktsSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->synFinPktsSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->finPushUrgPktsSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->nullPktsSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->ackScanSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->xmasScanSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->finScanSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->nullScanSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->rejectedTCPConnSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->establishedTCPConnSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->udpToClosedPortSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->udpToDiagnosticPortSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->tcpToDiagnosticPortSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->tinyFragmentSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->icmpFragmentSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->overlappingFragmentSent);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->closedEmptyTCPConnSent);
+      if(theHost->securityHostPkts != NULL) {
+	mapUsageCounter(&theHost->securityHostPkts->synPktsSent);
+	mapUsageCounter(&theHost->securityHostPkts->rstPktsSent);
+	mapUsageCounter(&theHost->securityHostPkts->rstAckPktsSent);
+	mapUsageCounter(&theHost->securityHostPkts->synFinPktsSent);
+	mapUsageCounter(&theHost->securityHostPkts->finPushUrgPktsSent);
+	mapUsageCounter(&theHost->securityHostPkts->nullPktsSent);
+	mapUsageCounter(&theHost->securityHostPkts->ackScanSent);
+	mapUsageCounter(&theHost->securityHostPkts->xmasScanSent);
+	mapUsageCounter(&theHost->securityHostPkts->finScanSent);
+	mapUsageCounter(&theHost->securityHostPkts->nullScanSent);
+	mapUsageCounter(&theHost->securityHostPkts->rejectedTCPConnSent);
+	mapUsageCounter(&theHost->securityHostPkts->establishedTCPConnSent);
+	mapUsageCounter(&theHost->securityHostPkts->udpToClosedPortSent);
+	mapUsageCounter(&theHost->securityHostPkts->udpToDiagnosticPortSent);
+	mapUsageCounter(&theHost->securityHostPkts->tcpToDiagnosticPortSent);
+	mapUsageCounter(&theHost->securityHostPkts->tinyFragmentSent);
+	mapUsageCounter(&theHost->securityHostPkts->icmpFragmentSent);
+	mapUsageCounter(&theHost->securityHostPkts->overlappingFragmentSent);
+	mapUsageCounter(&theHost->securityHostPkts->closedEmptyTCPConnSent);
 
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->rstAckPktsRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->synFinPktsRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->finPushUrgPktsRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->nullPktsRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->ackScanRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->xmasScanRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->finScanRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->nullScanRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->rejectedTCPConnRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->establishedTCPConnRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->udpToClosedPortRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->udpToDiagnosticPortRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->tcpToDiagnosticPortRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->tinyFragmentRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->icmpFragmentRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->overlappingFragmentRcvd);
-	mapUsageCounter(&device[deviceToExtend].hash_hostTraffic[j]->securityHostPkts->closedEmptyTCPConnRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->rstAckPktsRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->synFinPktsRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->finPushUrgPktsRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->nullPktsRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->ackScanRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->xmasScanRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->finScanRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->nullScanRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->rejectedTCPConnRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->establishedTCPConnRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->udpToClosedPortRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->udpToDiagnosticPortRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->tcpToDiagnosticPortRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->tinyFragmentRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->icmpFragmentRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->overlappingFragmentRcvd);
+	mapUsageCounter(&theHost->securityHostPkts->closedEmptyTCPConnRcvd);
       }
 
       for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++) {
-	if(device[deviceToExtend].hash_hostTraffic[j]->portsUsage[i] == NULL)
+	if(theHost->portsUsage[i] == NULL)
 	  continue;
-
-	device[deviceToExtend].hash_hostTraffic[j]->portsUsage[i]->clientUsesLastPeer =
-	  mapIdx(device[deviceToExtend].
-		 hash_hostTraffic[j]->portsUsage[i]->clientUsesLastPeer);
-
-	device[deviceToExtend].hash_hostTraffic[j]->portsUsage[i]->serverUsesLastPeer =
-	  mapIdx(device[deviceToExtend].
-		 hash_hostTraffic[j]->portsUsage[i]->serverUsesLastPeer);
+	
+	theHost->portsUsage[i]->clientUsesLastPeer = mapIdx(theHost->portsUsage[i]->clientUsesLastPeer);
+	if(theHost->portsUsage[i]->clientUsesLastPeer == NO_PEER) theHost->portsUsage[i]->clientUses = 0;
+	theHost->portsUsage[i]->serverUsesLastPeer = mapIdx(theHost->portsUsage[i]->serverUsesLastPeer);
+	if(theHost->portsUsage[i]->serverUsesLastPeer == NO_PEER) theHost->portsUsage[i]->serverUses = 0;
       }
 
       for(i=0; i<2; i++) {
 	if(i == 0)
-	  scanner = device[deviceToExtend].hash_hostTraffic[j]->tcpSessionList;
+	  scanner = theHost->tcpSessionList;
 	else
-	  scanner = device[deviceToExtend].hash_hostTraffic[j]->udpSessionList;
+	  scanner = theHost->udpSessionList;
 	  
 	while(scanner != NULL) {
 	  mapUsageCounter(&scanner->peers);
@@ -440,10 +438,10 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 	 device[deviceToExtend].actualHashSize);
 
   for(j=1,i=0; j<device[deviceToExtend].actualHashSize; j++)
-    if(device[deviceToExtend].hash_hostTraffic[j] != NULL) {
+    if(theHost != NULL) {
       traceEvent(TRACE_INFO, "%s [%s] (idx=%d)\n",
-	     device[deviceToExtend].hash_hostTraffic[j]->hostNumIpAddress,
-	     device[deviceToExtend].hash_hostTraffic[j]->ethAddressString,
+	     theHost->hostNumIpAddress,
+	     theHost->ethAddressString,
 	     j);
       i++;
     }

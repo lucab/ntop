@@ -700,8 +700,17 @@ void scanTimedoutTCPSessions(void) {
   }
 }
 
- /* ************************************ */
+/* ************************************ */
 
+void PortUsage* allocatePortUsage() {
+  PortUsage *ptr;
+
+  ptr = (PortUsage*)malloc(sizeof(PortUsage));
+  memset(ptr, 0, sizeof(sizeof(PortUsage)));
+  ptr->clientUsesLastPeer = NO_PEER, ptr->serverUsesLastPeer = NO_PEER;
+}
+
+/* ************************************ */
  static void updateUsedPorts(HostTraffic *srcHost,
 			     u_int srcHostIdx,
 			     HostTraffic *dstHost,
@@ -714,20 +723,16 @@ void scanTimedoutTCPSessions(void) {
 
    if(srcHostIdx != broadcastEntryIdx) {
      if(sport < TOP_ASSIGNED_IP_PORTS) {
-       if(srcHost->portsUsage[sport] == NULL) {
-	 srcHost->portsUsage[sport] = (PortUsage*)malloc(sizeof(PortUsage));
-	 memset(srcHost->portsUsage[sport], 0, sizeof(PortUsage));
-       }
+       if(srcHost->portsUsage[sport] == NULL) 
+	 srcHost->portsUsage[sport] = allocatePortUsage();
 
        srcHost->portsUsage[sport]->serverTraffic += length;
        srcHost->portsUsage[sport]->serverUses++;
        srcHost->portsUsage[sport]->serverUsesLastPeer = dstHostIdx;
        
        if(dstHostIdx != broadcastEntryIdx) {
-	 if(dstHost->portsUsage[sport] == NULL) {
-	   dstHost->portsUsage[sport] = (PortUsage*)malloc(sizeof(PortUsage));
-	   memset(dstHost->portsUsage[sport], 0, sizeof(PortUsage));
-	 }
+	 if(dstHost->portsUsage[sport] == NULL)
+	   dstHost->portsUsage[sport] = allocatePortUsage();
 
 	 dstHost->portsUsage[sport]->clientTraffic += length;
 	 dstHost->portsUsage[sport]->clientUses++;
@@ -738,14 +743,11 @@ void scanTimedoutTCPSessions(void) {
 
    if(dstHostIdx != broadcastEntryIdx) {
      if(dport < TOP_ASSIGNED_IP_PORTS) {
-       if(srcHost->portsUsage[dport] == NULL) {
-	 srcHost->portsUsage[dport] = (PortUsage*)malloc(sizeof(PortUsage));
-	 memset(srcHost->portsUsage[dport], 0, sizeof(PortUsage));
-       }
-       if(dstHost->portsUsage[dport] == NULL) {
-	 dstHost->portsUsage[dport] = (PortUsage*)malloc(sizeof(PortUsage));
-	 memset(dstHost->portsUsage[dport], 0, sizeof(PortUsage));
-       }
+       if(srcHost->portsUsage[dport] == NULL)
+	 srcHost->portsUsage[dport] = allocatePortUsage();
+
+       if(dstHost->portsUsage[dport] == NULL)
+	 dstHost->portsUsage[dport] = allocatePortUsage();
 
        if(srcHostIdx != broadcastEntryIdx) {
 	 srcHost->portsUsage[dport]->clientTraffic += length;

@@ -196,7 +196,7 @@ char* myStrdup(char* theStr, int theLine, char* theFile) {
 
 /* *************************************** */
 
-void ResetLeaks(void) {
+void resetLeaks(void) {
   MemoryBlock *theScan;
 
   theScan = theRoot;

@@ -263,6 +263,9 @@ extern void startSniffer(void);
 extern void deviceSanityCheck(char* string);
 
 /* leaks.c */
+extern void initLeaks(void);
+extern void termLeaks(void);
+extern void resetLeaks(void);
 #ifdef MEMORY_DEBUG 
 #define malloc(a) ntop_malloc((unsigned int)a, __FILE__, __LINE__)
 #define strdup(a) ntop_strdup((char*)a, __FILE__, __LINE__)
