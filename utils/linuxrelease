@@ -13,6 +13,7 @@
 #              Gentoo 
 #              Slackware 8.1.01
 #              SuSE 7.1 7.2a 8.0ES 8.2
+#              LFS (Linux From Scratch)
 #
 
 #  Released under GPL...
@@ -74,6 +75,15 @@ case `uname -s` in
             echo "DEBUG03: /etc/xxxxx_version found ${releaseFile}"
         fi
     fi
+    # Not found?  Maybe there's a /etc/lfs-xxxxxx file
+    if test "x${releaseFile}" = "x"; then
+        releaseFile=`find /etc -type f -name "lfs-*" -maxdepth 1 2> /dev/null | \
+                     head -n 1`
+        if test "x${debug}" = "xY"; then
+            echo "DEBUG03: /etc/lfs-xxxxx found ${releaseFile}"
+        fi
+    fi
+    
     
     # Check for the 'standards' bodies id files...
     lsbFile=`find /etc -type f -name "lsb-release" -maxdepth 1 2> /dev/null | \
@@ -153,7 +163,7 @@ case `uname -s` in
         fi
     
         # Check if the file is readable for a release name?
-        if test -f ${releaseFile}; then
+        if test -s ${releaseFile}; then
     
             # Grab the full release name text
             fullrelease=`cat ${releaseFile} | \
@@ -199,10 +209,24 @@ case `uname -s` in
     
         else
     
-            # Can't grab the release name, so return unknown
-            release="unknown"
-            if test "x${debug}" = "xY"; then
-                echo "DEBUG17: File unreadable, release unknown"
+            # Can't grab the release name, so maybe it's in the filename?
+            release=`echo ${releaseFile} | \
+                   awk '{ i=index($0, "_"); \
+                           if (i == 0) { \
+                               i=index($0, "-") \
+                           }; \
+                           if (i == 0) { \
+                               print "" \
+                           } else \
+                               print tolower(substr($0, i+1)) \
+                        }'`
+
+            if test "x${release}" = "x"; then
+                # else return unknown
+                release="unknown"
+                if test "x${debug}" = "xY"; then
+                    echo "DEBUG17: File unreadable, release unknown"
+                fi
             fi
         fi
     fi
