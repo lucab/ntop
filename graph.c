@@ -56,11 +56,15 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 /**********************************************************/
 
 char* gdVersionGuess(void) {
-#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)
-
-#ifndef WIN32
-  void *gdPtr = NULL;
+#ifdef WIN32
+#if GD2_VERS == 2 /* GD 2.x detected */    
+    return("2.x");
+#else
+    return("1.8.x");
 #endif
+#else
+#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(DARWIN)
+  void *gdPtr = NULL;
 
   gdPtr = (void*)dlopen(CONST_LIBGD_SO, RTLD_NOW); /* Load the library */
 
@@ -93,9 +97,8 @@ char* gdVersionGuess(void) {
 #else
 
   return(NULL);
-
 #endif
-
+#endif
 }
 
 /* ************************************************** */

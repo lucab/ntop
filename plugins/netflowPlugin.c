@@ -406,12 +406,16 @@ static int setNetFlowOutSocket() {
     else if(value[0] != '\0') {
       myGlobals.netFlowDest.sin_addr.s_addr = inet_addr(value);
       if(myGlobals.netFlowDest.sin_addr.s_addr > 0)
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Exporting NetFlow's towards %s:%s",
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+		   "NETFLOW: Exporting NetFlow's towards %s:%s",
 		   value, DEFAULT_NETFLOW_PORT_STR);
       else
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Export disabled at user request");
+	traceEvent(CONST_TRACE_ALWAYSDISPLAY, 
+		   "NETFLOW: Export disabled at user request");
     }
-  } else return(0);
+  }
+
+  return(0);
 }
 
 /* ****************************** */
@@ -2473,8 +2477,7 @@ static void printNetFlowStatisticsSent(void) {
 /* ****************************** */
 
 static void handleNetflowHTTPrequest(char* url) {
-  char buf[512], buf1[32], buf2[32];
-  char workList[1024];
+  char buf[512], workList[1024];
   u_int i;
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);

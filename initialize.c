@@ -1481,15 +1481,14 @@ void initDevices(char* devices) {
     initDeviceDatalink(0);
 
     if(myGlobals.enableSuspiciousPacketDump) {
+      sprintf(myName, "%s/ntop-suspicious-pkts.%s.pcap",
+	      myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
 #ifdef WIN32
-        sprintf(myName, "%s\ntop-suspicious-pkts.%s.pcap",
-		myGlobals.pcapLogBasePath,
-		deviceId);
+	      myGlobals.device[0].humanFriendlyName
 #else
-        sprintf(myName, "%s/ntop-suspicious-pkts.%s.pcap",
-                myGlobals.pcapLogBasePath, /* Added by Ola Lundqvist <opal@debian.org> */
-                myGlobals.device[0].name);
+	      myGlobals.device[0].name
 #endif
+	      );
         myGlobals.device[0].pcapErrDumper = pcap_dump_open(myGlobals.device[0].pcapPtr, myName);
         
         if(myGlobals.device[0].pcapErrDumper == NULL)
