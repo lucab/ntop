@@ -1592,7 +1592,7 @@ void drawGlobalIpProtoDistribution(void) {
 
 #ifndef WIN32
   /* Unices */
-
+  
   if(myGlobals.newSock < 0)
     useFdOpen = 0;
   else
@@ -1606,7 +1606,7 @@ void drawGlobalIpProtoDistribution(void) {
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  drawBar(600, 250,	/* width/height */
+  drawBar(600, 500,	/* width/height */
 	  fd,		/* open file pointer */
 	  idx,		/* number of slices */
 	  lbl,		/* slice labels */
