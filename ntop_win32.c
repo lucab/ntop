@@ -35,9 +35,9 @@ char *buildDate;
 char _wdir[256];
 
 /*
-  extern char* myGlobals.device;
-  extern int datalink;
-  extern unsigned int localnet, netmask;
+extern char* myGlobals.device;
+extern int datalink;
+extern unsigned int localnet, netmask;
 */
 
 char* getNwBoardMacAddress(char *deviceName); /* forward */
@@ -133,9 +133,9 @@ void initWinsock32() {
 
 #ifdef WIN32_DEMO
   traceEvent(TRACE_INFO, "\n-----------------------------------------------------------");
-  traceEvent(TRACE_INFO, "WARNING: this application is a limited ntop version able to");
+  traceEvent(TRACE_INFO, "WARNING: this application is a limited ntop myGlobals.version able to");
   traceEvent(TRACE_INFO, "capture up to %d packets. If you are interested", MAX_NUM_PACKETS);
-  traceEvent(TRACE_INFO, "in the full version please have a look at the ntop");
+  traceEvent(TRACE_INFO, "in the full myGlobals.version please have a look at the ntop");
   traceEvent(TRACE_INFO, "home page http://www.ntop.org/.");
   traceEvent(TRACE_INFO, "-----------------------------------------------------------\n");
 #endif
@@ -200,7 +200,8 @@ ULONG GetHostIPAddr () {
 		     sizeof(SOCKADDR));
       if(nRet != SOCKET_ERROR)
 	/* Get local address */
-	getsockname(hSock, (LPSOCKADDR)&stLclAddr,
+	getsockname(hSock,
+		    (LPSOCKADDR)&stLclAddr,
 		    (int FAR*)&nAddrSize);
 
       closesocket(hSock);   /* we're done with the socket */
@@ -215,9 +216,9 @@ ULONG GetHostIPAddr () {
 
 /* **************************************
 
-WIN32 MULTITHREAD STUFF
+   	       WIN32 MULTITHREAD STUFF
 
-************************************** */
+   ************************************** */
 
 int createThread(pthread_t *threadId,
 		 void *(*__start_routine) (void *), char* userParm) {
@@ -561,7 +562,7 @@ u_int32_t inet_network(const char *cp) {
   return (val);
 }
 
-/* ************************************ */
+/* ************************************ */ 
 
 struct netent* getnetent() {
   char *p;
@@ -634,16 +635,16 @@ struct netent *getnetbyname(const char *name) {
 /* Find the first bit set in I.  */
 int ffs (int i) {
   static const unsigned char table[] =
-    {
-      0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
-      6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
-      7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-      7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-      8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
-    };
+  {
+    0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
+    6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+    7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+    7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+    8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+    8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+    8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+    8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+  };
   unsigned long int a;
   unsigned long int x = i & -i;
 
@@ -730,11 +731,11 @@ char* getpass(const char *prompt) {
 
 /* *************************************************************
 
-Windown NT/2K Service Registration Routines
+	Windown NT/2K Service Registration Routines
 
-Copyright© 2001 by Bill Giel/KC Multimedia and Design Group, Inc.
+	Copyright© 2001 by Bill Giel/KC Multimedia and Design Group, Inc.
 
-************************************************************* */
+   ************************************************************* */
 
 
 #ifdef __cplusplus
@@ -1230,7 +1231,8 @@ void installService(int argc, char **argv)
       }else{
 
 	//Create an argument string from the argument list
-	convertArgListToArgString((LPTSTR) szAppParameters,2, argc, argv);
+	// J. R. Duarte: modified it to store the full command line
+	convertArgListToArgString((LPTSTR) szAppParameters,0, argc, argv);
 	if(NULL == szAppParameters){
 	  _tprintf(TEXT("Could not create AppParameters string.\n"));
 	}
@@ -1345,9 +1347,33 @@ LPTSTR *_lpszArgv;
 HANDLE  hServerStopEvent = NULL;
 
 
-void* invokeNtop() {
+void* invokeNtop(LPTSTR szAppParameters) {
+  DWORD dwNewArgc, i;
+  LPTSTR *lpszNewArgv;
+  LPTSTR *lpszTmpArgv;
+
   // SetConsoleCtrlHandler(logoffHandler, TRUE);
-  ntop_main(_dwArgc, _lpszArgv);
+
+  // J. R. Duarte: convert the string argument back to argc & argv
+  lpszNewArgv = convertArgStringToArgList(lpszNewArgv, &dwNewArgc, szAppParameters);
+  
+  // J. R. Duarte: to handle removing the Windows-specific command
+  // line option when running from the command line or as a service
+  if (!stricmp(lpszNewArgv[1],"/c") || !stricmp(lpszNewArgv[1],"/i"))
+  {
+    lpszTmpArgv = lpszNewArgv;		// make a copy of argv
+
+    for(i=0; i < dwNewArgc ;i++)	{
+     if (i == 0)
+        lpszNewArgv[0] = lpszTmpArgv[0];
+     else if (i > 1)
+        lpszNewArgv[i - 1] = lpszTmpArgv[i];
+    }
+
+    dwNewArgc--;
+  }
+
+  ntop_main(dwNewArgc, lpszNewArgv);
   return(NULL);
 }
 
@@ -1357,6 +1383,7 @@ void* invokeNtop() {
 VOID ServiceStart (DWORD dwArgc, LPTSTR *lpszArgv)
 {
   pthread_t ntopThread;
+  TCHAR szAppParameters[8192];
 
   // Let the service control manager know that the service is
   // initializing.
@@ -1405,7 +1432,14 @@ VOID ServiceStart (DWORD dwArgc, LPTSTR *lpszArgv)
 
   /* traceEvent(TRACE_ERROR, "Wdir=%s", _wdir); */
 
-  createThread(&ntopThread, invokeNtop, NULL);
+  
+  // createThread(&ntopThread, invokeNtop, NULL);
+  // J. R. Duarte: Create an argument string from the argument list
+  convertArgListToArgString((LPTSTR) szAppParameters,0, dwArgc, lpszArgv);
+  if(NULL == szAppParameters){
+    _tprintf(TEXT("Could not create AppParameters string.\n"));
+  }
+  createThread(&ntopThread, invokeNtop, szAppParameters);
 
   // Wait for the stop event to be signalled.
   WaitForSingleObject(hServerStopEvent,INFINITE);
@@ -1429,7 +1463,7 @@ VOID ServiceStop() {
 
 void runService(int argc, char ** argv)
 {
-  DWORD dwArgc, argvIterator;
+  DWORD dwArgc;
   LPTSTR *lpszArgv;
 
 #ifdef UNICODE
@@ -1440,16 +1474,6 @@ void runService(int argc, char ** argv)
 #endif
 
   _tprintf(TEXT("Running %s.\n"), TEXT(SZSERVICEDISPLAYNAME));
-
-  /* Fix below courtesy of J.R. Duarte <jrduarte@partyvibe.com> */
-  for(argvIterator=0; argvIterator < argc ;argvIterator++)	{
-    if (argvIterator == 0)
-      lpszArgv[0] = argv[0];
-    else if (argvIterator > 1)
-      lpszArgv[argvIterator - 1] = argv[argvIterator];
-  }
-
-  dwArgc--;
 
   ServiceStart( dwArgc, lpszArgv);
 }
@@ -1470,7 +1494,7 @@ VOID AddToMessageLog(LPTSTR lpszMsg)
   LPCSTR   lpszStrings[1];
 #endif
 
-  if(!isWinNT()) {
+ if(!isWinNT()) {
     char *msg = (char*)lpszMsg;
     printf("%s", msg);
     if(msg[strlen(msg)-1] != '\n')
@@ -1667,18 +1691,24 @@ void main(int argc, char **argv)
   // members of the last entry are necessary to indicate the end of
   // the table;
   SERVICE_TABLE_ENTRY serviceTable[] =
-    {
-      { TEXT(SZSERVICENAME), (LPSERVICE_MAIN_FUNCTION)serviceMain },
-      { NULL, NULL }
-    };
+  {
+    { TEXT(SZSERVICENAME), (LPSERVICE_MAIN_FUNCTION)serviceMain },
+    { NULL, NULL }
+  };
+
+  TCHAR szAppParameters[8192];
 
   if(!isWinNT()) {
-    ntop_main(argc, argv);
+    convertArgListToArgString((LPTSTR) szAppParameters,0, argc, argv);
+    if(NULL == szAppParameters){
+      _tprintf(TEXT("Could not create AppParameters string.\n"));
+    }
+    invokeNtop(szAppParameters);
     return;
   }
 
-  // This app may be started with one of three arguments, -i, -r, and
-  // -c, or -?, followed by actual program arguments. These arguments
+  // This app may be started with one of three arguments, /i, /r, and
+  // /c, or /?, followed by actual program arguments. These arguments
   // indicate if the program is to be installed, removed, run as a
   // console application, or to display a usage message.
   if(argc > 1){
@@ -1794,21 +1824,22 @@ LPTSTR convertArgListToArgString(LPTSTR lpszTarget,
 }
 
 /* ********************************* */
+
 int spawnProcess(char* theProcess)
 {
-  STARTUPINFO startupInfo;
-  PROCESS_INFORMATION procInfo;
-  BOOL success;
-    
-  GetStartupInfo(&startupInfo);
-  success = CreateProcess(NULL,
-			  theProcess,
-			  NULL, NULL, FALSE,
-			  CREATE_NEW_CONSOLE,
-			  NULL, NULL, 
-			  &startupInfo, &procInfo);
-  if(!success)
-    return(-1);
-  else
-    return(0);
+    STARTUPINFO startupInfo;
+    PROCESS_INFORMATION procInfo;
+    BOOL success;
+
+    GetStartupInfo(&startupInfo);
+    success = CreateProcess(NULL,
+			theProcess,
+			NULL, NULL, FALSE,
+			CREATE_NEW_CONSOLE,
+			NULL, NULL, &startupInfo, &procInfo);
+
+    if(!success)
+	  return(-1);
+	else
+	  return(0);
 }
