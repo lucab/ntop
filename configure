@@ -6039,7 +6039,7 @@ echo "configure:6032: checking for GDchart (optional package)" >&5
        test -r $GDCHART_ROOT/zlib-1.1.4/libz.a; then
          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
 
-         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.1 -lpng -L$GDCHART_ROOT/zlib-1.1.4 -lz"
+         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.4 -lpng -L$GDCHART_ROOT/zlib-1.1.4 -lz"
          INCS="${INCS} -I$GDCHART_ROOT -I$GDCHART_ROOT/zlib-1.1.4"
 
          cat >> confdefs.h <<\EOF
@@ -6065,9 +6065,9 @@ EOF
        test -r ../gdchart0.94c/libgdchart.a &&
        test -r ../gdchart0.94c/gd-1.8.3/libgd.a &&
        test -r ../gdchart0.94c/gd-1.8.3/gd.h &&
-       test -r ../gdchart0.94c/gd-1.8.3/libpng-1.2.1/libpng.a &&
-       test -r ../gdchart0.94c/gd-1.8.3/libpng-1.2.1/gd.h; then
-	 MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.1 -lpng"
+       test -r ../gdchart0.94c/gd-1.8.3/libpng-1.2.4/libpng.a &&
+       test -r ../gdchart0.94c/gd-1.8.3/libpng-1.2.4/gd.h; then
+	 MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.4 -lpng"
 
          GDCHART_ROOT="../gdchart0.94c"
          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`

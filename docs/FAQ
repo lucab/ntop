@@ -1554,7 +1554,7 @@ A. You don't.
          building the libpng library. 
 
    The difference between makefile.gcc and makefile.linux in the scripts directory of 
-   libpng-1.2.1 is that makefile.gcc builds a static library, while makefile.linux 
+   libpng-1.2.4 is that makefile.gcc builds a static library, while makefile.linux 
    builds both the static (.a) and shared (.so) libraries. 
 
    Most people doing a manual build of the tools see ".linux" and use it, vs. the 
@@ -1575,6 +1575,7 @@ A. You don't.
    build libpng. 
 
    Best suggestion is to use buildAll.sh! 
+   (Updated 22Aug2002 - BMS - libpng-1.2.4)
 
 Q. What about Slackware
 A. Lorenzo had "Installation Notes For Slackware 8.0" available at 
@@ -1599,7 +1600,7 @@ A. On some (old) Linux distributions, the libpcap package is broken. Please remo
 
 Q. Bad things - I see the following messages: 
         libpng warning: Application was compiled with png.h from libpng-1.0.x 
-        libpng warning: Application is running with png.c from libpng-1.2.1 
+        libpng warning: Application is running with png.c from libpng-1.2.x 
         gd-png: fatal libpng error: Incompatible libpng version in application and library 
 A. You have a version problem with libpng. 
 
@@ -1623,11 +1624,12 @@ A. You have a version problem with libpng.
    3. (Slackware) Users have reported this error from an older header file in /usr/include. 
    Make sure to run "make install" in the libpng directory so that the latest files are in 
    the common library locations. You can do this with buildAll.sh, just navigate back down 
-   to the libpng-1.2.1 directory first.  
+   to the libpng-1.2.x directory first.  
 
    4. If you are building ntop on one machine and running on another, they may have
    different libpng.so versions.  Even if you think you are using the static linked
    version (buildAll.sh), be careful - see the entry (above) on "make install" for libpng.
+   (Updated 22Aug2002 - BMS - libpng-1.2.4)
 
 
 Win32 (MinGw)

@@ -26,7 +26,7 @@ Quick Instructions
 
    - cd gdchart0.94c/
    - ./configure
-   - cd gd-1.8.3/libpng-1.2.1
+   - cd gd-1.8.3/libpng-1.2.4
    - cp scripts/makefile.[make your choice] Makefile
    - make
    - cd ../../zlib-1.1.4/
@@ -84,7 +84,7 @@ Note: Following these instructions builds static linked versions of
 
       Note the limitations of this patch - it still doesn't handle 
       libpng (beyond assuming it's in the /etc/ld.so.conf locations as 
-      a .so or in gd-1.8.3/libpng-1.2.1), etc.
+      a .so or in gd-1.8.3/libpng-1.2.4), etc.
 
       This patch is NOT supported or guaranteed, use it as a starting point
       for your unique situation.  It's been MINIMALLY tested on RedHat Linux,
@@ -108,7 +108,7 @@ Note: Following these instructions builds static linked versions of
 +       test -r $GDCHART_ROOT/lib/libz.so; then
           GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
 -         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart
-          -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.1
+          -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.4
 -lpng -L$GDCHART_ROOT/zlib-1.1.4 -lz"
 -         INCS="${INCS} -I$GDCHART_ROOT -I$GDCHART_ROOT/zlib-1.1.4"
 +         MORELIBS="${MORELIBS} -L$GDCHART_ROOT/lib -lgdchart -lgd -lpng -lz"

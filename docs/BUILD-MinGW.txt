@@ -67,7 +67,7 @@ Steps
 
      3b) Build libpng
 
-         cd gdchart0.94c/gd-1.8.3/libpng-1.2.1
+         cd gdchart0.94c/gd-1.8.3/libpng-1.2.4
          make -f scripts/makefile.mingw
          cd ../../../
 

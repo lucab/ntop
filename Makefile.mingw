@@ -67,7 +67,7 @@ LDIRS = $(LIB_WPDPACK) \
 	-L../gdchart0.94c \
 	-L../gdchart0.94c/zlib-1.1.4 \
 	-L../gdchart0.94c/gd-1.8.3 \
-	-L../gdchart0.94c/gd-1.8.3/libpng-1.2.1
+	-L../gdchart0.94c/gd-1.8.3/libpng-1.2.4
 
 #
 # You shouldn't need to edit anything below here.
