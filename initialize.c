@@ -1125,34 +1125,29 @@ void initDeviceDatalink(void) {
 
 /* ******************************* */
 
-void parseTrafficFilter(char *argv[], int optind) {
-  /* Construct, compile and set filter */
-  if(optind > 0) {
-    currentFilterExpression = copy_argv(argv + optind);
-    if(currentFilterExpression != NULL) {
-      int i;
-      struct bpf_program fcode;
+void parseTrafficFilter(void) {
+  if(currentFilterExpression != NULL) {
+    int i;
+    struct bpf_program fcode;
 
-      for(i=0; i<numDevices; i++) {
-	if(!device[i].virtualDevice) {
-	  if((pcap_compile(device[i].pcapPtr, &fcode, currentFilterExpression, 1,
-			   device[i].netmask.s_addr) < 0)
-	     || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
-	    traceEvent(TRACE_ERROR,
-		   "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
-		   currentFilterExpression,
-		   pcap_geterr(device[i].pcapPtr), 
-	       device[i].name[0] == '0' ? "<pcap file>" : device[i].name);
-	    exit(-1);
-	  } else
-	    traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", 
-	      currentFilterExpression, device[i].name);
-	}
+    for(i=0; i<numDevices; i++) {
+      if(!device[i].virtualDevice) {
+	if((pcap_compile(device[i].pcapPtr, &fcode, currentFilterExpression, 1,
+			 device[i].netmask.s_addr) < 0)
+	   || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
+	  traceEvent(TRACE_ERROR,
+		     "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
+		     currentFilterExpression,
+		     pcap_geterr(device[i].pcapPtr), 
+		     device[i].name[0] == '0' ? "<pcap file>" : device[i].name);
+	  exit(-1);
+	} else
+	  traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", 
+		     currentFilterExpression, device[i].name);
       }
-    } else
+    }
+  } else
     currentFilterExpression = strdup("");	/* so that it isn't NULL! */
-  }  else
-  currentFilterExpression = strdup("");	/* so that it isn't NULL! */  
 }
 
 /* *************************** */

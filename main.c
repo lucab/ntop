@@ -95,6 +95,8 @@ int main(int argc, char *argv[]) {
   ntop_argc = argc;
   ntop_argv = argv;
 
+  currentFilterExpression = NULL;
+  
 #ifndef WIN32
   if (freopen("/dev/null", "w", stderr) == NULL) {
     traceEvent(TRACE_WARNING,
@@ -159,9 +161,9 @@ int main(int argc, char *argv[]) {
   }
 
 #ifdef WIN32
-  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:kA:j";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:kA:jB:";
 #else
-  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kKLA:j";
+  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kKLA:jB:";
 #endif
 
   while((op = getopt(argc, argv, theOpts)) != EOF) {
@@ -438,6 +440,12 @@ int main(int argc, char *argv[]) {
       useSyslog = 1;
       break;
 #endif
+      
+    case 'B':
+      stringSanityCheck(optarg);
+      currentFilterExpression = (char*)malloc(strlen(optarg)+1);
+      strcpy(currentFilterExpression, optarg);
+      break;
 
     default:
       usage();
@@ -552,7 +560,10 @@ int main(int argc, char *argv[]) {
   }
 
   initDeviceDatalink();
-  parseTrafficFilter(argv, optind);
+  if(currentFilterExpression != NULL)
+    parseTrafficFilter();
+  else
+     currentFilterExpression = strdup(""); /* so that it isn't NULL! */
 
   /* Handle flows (if any) */
   if(flowSpecs != NULL) {
