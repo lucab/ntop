@@ -77,8 +77,10 @@ EXTRA_DIST = Makefile.am Makefile.in \
 PLUGINSFILES   = `cat plugins/FILES`
 REMOTEAPIFILES = `cat remoteInterfaceAPI/FILES`
 INTOPFILES     = `cat intop/FILES`
+DATABASEFILES  = `cat database/FILES`
 
-THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) $(INTOPFILES)
+THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) \
+		       $(INTOPFILES) $(DATABASEFILES)
 
 #
 # This Makefile is responsible for creating:
