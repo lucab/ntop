@@ -63,12 +63,14 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_triplet = @host@
-DIST_COMMON = $(ETTER_PASSIVE) AUTHORS CONTENTS COPYING ChangeLog \
-	MANIFESTO NEWS PORTING SUPPORT_NTOP.txt THANKS html/faq.html \
-	ntop-cert.pem ntop.8 ntop.html ntop.txt oui.txt.gz \
-	p2c.opt.table.gz specialMAC.txt.gz
 bin_PROGRAMS = ntop$(EXEEXT)
 EXTRA_PROGRAMS = ntops$(EXEEXT) sntop$(EXEEXT)
+DIST_COMMON = README $(am__configure_deps) $(noinst_HEADERS) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(srcdir)/config.h.in $(top_srcdir)/configure \
+	$(top_srcdir)/myrrd/Makefile.in AUTHORS COPYING ChangeLog \
+	INSTALL NEWS THANKS config.guess config.sub depcomp install-sh \
+	ltconfig ltmain.sh missing mkinstalldirs
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -103,7 +105,7 @@ ntops_OBJECTS = $(am_ntops_OBJECTS)
 am__DEPENDENCIES_1 = libntopreport.la libntop.la
 am_sntop_OBJECTS = $(am__objects_1) icmpPlugin.$(OBJEXT) \
 	lastSeenPlugin.$(OBJEXT) netflowPlugin.$(OBJEXT) \
-	nfsPlugin.$(OBJEXT) pdaPlugin.$(OBJEXT) sflowPlugin.$(OBJEXT) \
+	snmpPlugin.$(OBJEXT) pdaPlugin.$(OBJEXT) sflowPlugin.$(OBJEXT) \
 	rrdPlugin.$(OBJEXT)
 sntop_OBJECTS = $(am_sntop_OBJECTS)
 binSCRIPT_INSTALL = $(INSTALL_SCRIPT)
@@ -124,14 +126,15 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/lastSeenPlugin.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/leaks.Plo ./$(DEPDIR)/main.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/netflowPlugin.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/nfsPlugin.Po ./$(DEPDIR)/ntop-admin.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ntop-main.Po ./$(DEPDIR)/ntop.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/ntop_darwin.Plo ./$(DEPDIR)/pbuf.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/pdaPlugin.Po ./$(DEPDIR)/plugin.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/prefs.Plo ./$(DEPDIR)/protocols.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/report.Plo ./$(DEPDIR)/reportUtils.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/ntop-admin.Po ./$(DEPDIR)/ntop-main.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ntop.Plo ./$(DEPDIR)/ntop_darwin.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/pbuf.Plo ./$(DEPDIR)/pdaPlugin.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/plugin.Plo ./$(DEPDIR)/prefs.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/protocols.Plo ./$(DEPDIR)/report.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/reportUtils.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/rrdPlugin.Po ./$(DEPDIR)/sessions.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/sflowPlugin.Po ./$(DEPDIR)/ssl.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/sflowPlugin.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/snmpPlugin.Po ./$(DEPDIR)/ssl.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/term.Plo ./$(DEPDIR)/traffic.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/util.Plo ./$(DEPDIR)/vendor.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/version.Plo \
@@ -323,21 +326,10 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
            html/statsicons/flags html/statsicons/os \
            html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
-EXTRA_DIST = Makefile.am Makefile.in \
-             acconfig.h acinclude.m4 acinclude.m4.ntop \
-             autogen.sh config.guess config.h.in config.sub \
-             configure configure.in \
-             install-sh libtool ltconfig ltmain.sh \
-             missing mkinstalldirs \
-             vt.sed
-
 WEBFILES = `cat www/FILES`
 PLUGINSFILES = `cat plugins/FILES`
 DATABASEFILES = `cat database/FILES`
 DOCSFILES = `cat docs/FILES`
-THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) \
-		       $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
-
 bin_SCRIPTS = 
 ntop_SOURCES = main.c admin.c
 ntop_DEPENDENCIES = libntopreport.la libntop.la
@@ -353,12 +345,12 @@ ntops_LDFLAGS = $(ntop_LDFLAGS) -static
 # Static ntop: everything is linked in
 #
 sntop_SOURCES = $(ntop_SOURCES) plugins/icmpPlugin.c plugins/lastSeenPlugin.c \
-		     plugins/netflowPlugin.c plugins/nfsPlugin.c plugins/pdaPlugin.c  \
+		     plugins/netflowPlugin.c plugins/snmpPlugin.c plugins/pdaPlugin.c  \
 		     plugins/sflowPlugin.c plugins/rrdPlugin.c
 
 sntop_DEPENDENCIES = $(ntop_DEPENDENCIES)
 sntop_LDADD = $(ntop_LDADD)
-sntop_LDFLAGS = $(ntop_LDFLAGS) -static
+sntop_LDFLAGS = $(ntop_LDFLAGS) -static @SNMP_LIBS@
 noinst_HEADERS = getopt.h globals-core.h globals-report.h ntop.h
 
 # all the Archives
@@ -569,7 +561,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/leaks.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netflowPlugin.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/nfsPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntop-admin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntop-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ntop.Plo@am__quote@
@@ -584,6 +575,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rrdPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sessions.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sflowPlugin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/snmpPlugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ssl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/term.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/traffic.Plo@am__quote@
@@ -736,29 +728,29 @@ netflowPlugin.lo: plugins/netflowPlugin.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o netflowPlugin.lo `test -f 'plugins/netflowPlugin.c' || echo '$(srcdir)/'`plugins/netflowPlugin.c
 
-nfsPlugin.o: plugins/nfsPlugin.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nfsPlugin.o -MD -MP -MF "$(DEPDIR)/nfsPlugin.Tpo" -c -o nfsPlugin.o `test -f 'plugins/nfsPlugin.c' || echo '$(srcdir)/'`plugins/nfsPlugin.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/nfsPlugin.Tpo" "$(DEPDIR)/nfsPlugin.Po"; else rm -f "$(DEPDIR)/nfsPlugin.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugins/nfsPlugin.c' object='nfsPlugin.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/nfsPlugin.Po' tmpdepfile='$(DEPDIR)/nfsPlugin.TPo' @AMDEPBACKSLASH@
+snmpPlugin.o: plugins/snmpPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT snmpPlugin.o -MD -MP -MF "$(DEPDIR)/snmpPlugin.Tpo" -c -o snmpPlugin.o `test -f 'plugins/snmpPlugin.c' || echo '$(srcdir)/'`plugins/snmpPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/snmpPlugin.Tpo" "$(DEPDIR)/snmpPlugin.Po"; else rm -f "$(DEPDIR)/snmpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugins/snmpPlugin.c' object='snmpPlugin.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/snmpPlugin.Po' tmpdepfile='$(DEPDIR)/snmpPlugin.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nfsPlugin.o `test -f 'plugins/nfsPlugin.c' || echo '$(srcdir)/'`plugins/nfsPlugin.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o snmpPlugin.o `test -f 'plugins/snmpPlugin.c' || echo '$(srcdir)/'`plugins/snmpPlugin.c
 
-nfsPlugin.obj: plugins/nfsPlugin.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nfsPlugin.obj -MD -MP -MF "$(DEPDIR)/nfsPlugin.Tpo" -c -o nfsPlugin.obj `if test -f 'plugins/nfsPlugin.c'; then $(CYGPATH_W) 'plugins/nfsPlugin.c'; else $(CYGPATH_W) '$(srcdir)/plugins/nfsPlugin.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/nfsPlugin.Tpo" "$(DEPDIR)/nfsPlugin.Po"; else rm -f "$(DEPDIR)/nfsPlugin.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugins/nfsPlugin.c' object='nfsPlugin.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/nfsPlugin.Po' tmpdepfile='$(DEPDIR)/nfsPlugin.TPo' @AMDEPBACKSLASH@
+snmpPlugin.obj: plugins/snmpPlugin.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT snmpPlugin.obj -MD -MP -MF "$(DEPDIR)/snmpPlugin.Tpo" -c -o snmpPlugin.obj `if test -f 'plugins/snmpPlugin.c'; then $(CYGPATH_W) 'plugins/snmpPlugin.c'; else $(CYGPATH_W) '$(srcdir)/plugins/snmpPlugin.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/snmpPlugin.Tpo" "$(DEPDIR)/snmpPlugin.Po"; else rm -f "$(DEPDIR)/snmpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugins/snmpPlugin.c' object='snmpPlugin.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/snmpPlugin.Po' tmpdepfile='$(DEPDIR)/snmpPlugin.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nfsPlugin.obj `if test -f 'plugins/nfsPlugin.c'; then $(CYGPATH_W) 'plugins/nfsPlugin.c'; else $(CYGPATH_W) '$(srcdir)/plugins/nfsPlugin.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o snmpPlugin.obj `if test -f 'plugins/snmpPlugin.c'; then $(CYGPATH_W) 'plugins/snmpPlugin.c'; else $(CYGPATH_W) '$(srcdir)/plugins/snmpPlugin.c'; fi`
 
-nfsPlugin.lo: plugins/nfsPlugin.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT nfsPlugin.lo -MD -MP -MF "$(DEPDIR)/nfsPlugin.Tpo" -c -o nfsPlugin.lo `test -f 'plugins/nfsPlugin.c' || echo '$(srcdir)/'`plugins/nfsPlugin.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/nfsPlugin.Tpo" "$(DEPDIR)/nfsPlugin.Plo"; else rm -f "$(DEPDIR)/nfsPlugin.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugins/nfsPlugin.c' object='nfsPlugin.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/nfsPlugin.Plo' tmpdepfile='$(DEPDIR)/nfsPlugin.TPlo' @AMDEPBACKSLASH@
+snmpPlugin.lo: plugins/snmpPlugin.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT snmpPlugin.lo -MD -MP -MF "$(DEPDIR)/snmpPlugin.Tpo" -c -o snmpPlugin.lo `test -f 'plugins/snmpPlugin.c' || echo '$(srcdir)/'`plugins/snmpPlugin.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/snmpPlugin.Tpo" "$(DEPDIR)/snmpPlugin.Plo"; else rm -f "$(DEPDIR)/snmpPlugin.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='plugins/snmpPlugin.c' object='snmpPlugin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	depfile='$(DEPDIR)/snmpPlugin.Plo' tmpdepfile='$(DEPDIR)/snmpPlugin.TPlo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o nfsPlugin.lo `test -f 'plugins/nfsPlugin.c' || echo '$(srcdir)/'`plugins/nfsPlugin.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o snmpPlugin.lo `test -f 'plugins/snmpPlugin.c' || echo '$(srcdir)/'`plugins/snmpPlugin.c
 
 pdaPlugin.o: plugins/pdaPlugin.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT pdaPlugin.o -MD -MP -MF "$(DEPDIR)/pdaPlugin.Tpo" -c -o pdaPlugin.o `test -f 'plugins/pdaPlugin.c' || echo '$(srcdir)/'`plugins/pdaPlugin.c; \
@@ -1006,7 +998,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/html $(distdir)/myrrd
+	$(mkdir_p) $(distdir)/myrrd
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

@@ -69,17 +69,6 @@ ETTER_PASSIVE_DOWNLOAD_FROM = "http://cvs.sourceforge.net/viewcvs.py/ettercap/et
 ETTER_PASSIVE_DOWNLOAD_PARMS = "rev=HEAD"
 
 
-DIST_COMMON =
-DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
-              MANIFESTO NEWS PORTING  \
-              SUPPORT_NTOP.txt THANKS \
-              ntop.8 ntop.txt ntop.html \
-              html/faq.html \
-              ntop-cert.pem \
-              p2c.opt.table.gz \
-              $(ETTER_PASSIVE) \
-              oui.txt.gz \
-              specialMAC.txt.gz
 
 NTOPDATA = ntop-cert.pem \
            p2c.opt.table.gz \
@@ -93,21 +82,10 @@ NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.p
            html/statsicons/flags html/statsicons/os \
            html/statsicons/flags/*.gif html/statsicons/os/*.gif
 
-EXTRA_DIST = Makefile.am Makefile.in \
-             acconfig.h acinclude.m4 acinclude.m4.ntop \
-             autogen.sh config.guess config.h.in config.sub \
-             configure configure.in \
-             install-sh libtool ltconfig ltmain.sh \
-             missing mkinstalldirs \
-             vt.sed
-
 WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`
 DATABASEFILES  = `cat database/FILES`
 DOCSFILES      = `cat docs/FILES`
-
-THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) \
-		       $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
 
 #
 # This Makefile is responsible for creating:
@@ -138,13 +116,12 @@ ntops_LDFLAGS      = $(ntop_LDFLAGS) -static
 # Static ntop: everything is linked in
 #
 sntop_SOURCES      = $(ntop_SOURCES) plugins/icmpPlugin.c plugins/lastSeenPlugin.c \
-		     plugins/netflowPlugin.c plugins/nfsPlugin.c plugins/pdaPlugin.c  \
+		     plugins/netflowPlugin.c plugins/snmpPlugin.c plugins/pdaPlugin.c  \
 		     plugins/sflowPlugin.c plugins/rrdPlugin.c
 
 sntop_DEPENDENCIES = $(ntop_DEPENDENCIES)
 sntop_LDADD        = $(ntop_LDADD)
-sntop_LDFLAGS      = $(ntop_LDFLAGS) -static
-
+sntop_LDFLAGS      = $(ntop_LDFLAGS) -static @SNMP_LIBS@
 noinst_HEADERS     =  getopt.h globals-core.h globals-report.h ntop.h
 
 # all the Archives
