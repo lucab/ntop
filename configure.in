@@ -1096,6 +1096,7 @@ fi
 dnl> pcap
 NTOP_RPT_LOC([LBL pcap], [${PCAP_LIB}], [${PCAP_INCLUDE}])
 AC_CHECK_LIB([pcap], [pcap_open_live])
+AC_CHECK_LIB([pcap], [pcap_open_dead], AC_DEFINE_UNQUOTED(HAVE_PCAP_OPEN_DEAD, 1, [libpcap has pcap_open_dead]))
 AC_CHECK_HEADERS([pcap.h])
 AC_MSG_CHECKING([for pcap])
 if test ".${ac_cv_header_pcap_h}" != ".yes" ||
@@ -1659,9 +1660,11 @@ dnl> Used for tcpwrappers
 AC_CHECK_HEADERS([tcpd.h])
 
 dnl> XML dump
+if test ".${ac_enable_xmldump}" = ".yes"; then
 AC_CHECK_HEADERS(glib.h glibconfig.h)
 AC_CHECK_HEADERS(xmlversion.h)
 AC_CHECK_HEADERS(gdome.h)
+fi
 
 AC_TYPE_PID_T
 dnl> Autoconf2: AC_CHECK_TYPE(pid_t, int)
