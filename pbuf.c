@@ -993,6 +993,12 @@ static void handleBootp(HostTraffic *srcHost,
 		      else {
 			hostLen = len;
 			len = strlen(tmpName);
+
+			if(len >= (MAX_HOST_SYM_NAME_LEN-1)) {
+			  tmpName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
+			  len--;
+			}
+
 			strncpy(realDstHost->hostSymIpAddress, tmpName,
 				len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
 				/*
@@ -1222,6 +1228,11 @@ static void handleBootp(HostTraffic *srcHost,
 #ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
 #endif
+		  if(len >= (MAX_HOST_SYM_NAME_LEN-1)) {
+		    bootProto.bp_vend[idx+MAX_HOST_SYM_NAME_LEN-2] = '\0';
+		    len--;
+		  }
+
 		  strncpy(realClientHost->hostSymIpAddress, &bootProto.bp_vend[idx],
 			  len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
 		  idx += len;
@@ -2036,8 +2047,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       if(h->ts.tv_sec > theSession->nwLatency.tv_sec) {
 	theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
-	if((h->ts.tv_usec-theSession->nwLatency.tv_usec) < 0) {
-	  theSession->nwLatency.tv_usec = 1000000-(h->ts.tv_usec-theSession->nwLatency.tv_usec);
+	if((h->ts.tv_usec - theSession->nwLatency.tv_usec) < 0) {
+	  theSession->nwLatency.tv_usec = 1000000 - (h->ts.tv_usec - theSession->nwLatency.tv_usec);
+	  if(theSession->nwLatency.tv_usec > 1000000) theSession->nwLatency.tv_usec = 1000000;
 	  theSession->nwLatency.tv_sec--;
 	} else
 	  theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
@@ -3151,8 +3163,8 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
 	    if(device[deviceId].hash_hostTraffic[i]->hostIpAddress.s_addr == hostIpAddress.s_addr) {
 	      if(device[deviceId].hash_hostTraffic[i]->hostSymIpAddress[0] == '\0') {
 		/* Not yet set */
-		if(strlen(hostPtr.queryName) >= MAX_HOST_SYM_NAME_LEN)
-		  hostPtr.queryName[MAX_HOST_SYM_NAME_LEN-1] = '\0';
+		if(strlen(hostPtr.queryName) >= (MAX_HOST_SYM_NAME_LEN-1))
+		  hostPtr.queryName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
 		strcpy(device[deviceId].hash_hostTraffic[i]->hostSymIpAddress, hostPtr.queryName);
 #ifdef DNS_SNIFF_DEBUG
 		traceEvent(TRACE_INFO, "Setting %s = %s",
@@ -3295,7 +3307,6 @@ void updateHostName(HostTraffic *el) {
       */
       memset(el->hostSymIpAddress, 0, sizeof(el->hostSymIpAddress));
       strcpy(el->hostSymIpAddress, el->nbHostName);
-
     } else if(el->ipxHostName != NULL)
       strcpy(el->hostSymIpAddress, el->ipxHostName);
     else if(el->atNodeName != NULL)
@@ -4910,6 +4921,7 @@ void processPacket(u_char *_deviceId,
 		    break;
 		  }
 
+		if(strlen(serverName) >= (MAX_HOST_SYM_NAME_LEN-1)) serverName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
 		srcHost->ipxHostName = strdup(serverName);
 		updateHostName(srcHost);
 	      }
@@ -4979,6 +4991,7 @@ void processPacket(u_char *_deviceId,
 		  memcpy(nodeName, &p1[6+displ], p1[5+displ]);
 		  nodeName[p1[5+displ]] = '\0';
 
+		  if(strlen(nodeName) >= (MAX_HOST_SYM_NAME_LEN-1)) nodeName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
 		  srcHost->atNodeName = strdup(nodeName);
 		  updateHostName(srcHost);
 

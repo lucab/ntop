@@ -1106,7 +1106,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
             if((el->hostSymIpAddress[0] == '\0') || strcmp(sniffedName, el->hostSymIpAddress)) {
 	      if((el->hostSymIpAddress[0] == '\0') 
 		 || (strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0)) {
-		if(strlen(sniffedName) >= MAX_HOST_SYM_NAME_LEN)
+		if(strlen(sniffedName) >= (MAX_HOST_SYM_NAME_LEN-1))
 		  sniffedName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
 		strcpy(el->hostSymIpAddress, sniffedName);
 	      } else
