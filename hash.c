@@ -389,6 +389,7 @@ void purgeIdleHosts(int actDevice) {
     lastPurgeTime[actDevice] = startTime;
 
   len = myGlobals.device[actDevice].hostsno/3;
+  if(len == 0) len = 8; /* minimal size */
   theFlaggedHosts = (HostTraffic**)malloc(sizeof(HostTraffic*)*len);
   purgeTime = startTime-PURGE_HOSTS_DELAY; /* Time used to decide whether a host need to be purged */
 

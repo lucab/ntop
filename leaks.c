@@ -430,8 +430,11 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   
 #ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
-    traceEvent(TRACE_WARNING, "WARNING: called malloc(%u) @ %s:%d", 
-	       sz, file, line);
+    traceEvent(TRACE_WARNING, "WARNING: called malloc(%u) @ %s:%d", sz, file, line);
+    if(sz == 0) sz = 8; /*
+			  8 bytes is the minimal size ntop can allocate
+			  for doing things that make sense
+			*/
   }
 #endif
 
