@@ -800,7 +800,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		    getRowColor(), 
 		    formatThroughput(device[actualReportDeviceId].ethernetBytes/(actTime-initialSniffTime)), 
 		    /* Bug below fixed courtesy of Eddy Lai <eddy@ModernTerminals.com> */
-		    formatThroughput(device[actualReportDeviceId].ethernetPkts/(actTime-initialSniffTime))) < 0) 
+		    device[actualReportDeviceId].ethernetPkts/(actTime-initialSniffTime)) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
       }
