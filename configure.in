@@ -128,6 +128,10 @@ dnl> Option to show where we're testing for openssl
 ac_enable_showopenssltests=no
 
 dnl>
+dnl> Option to show where we're testing for gdchart
+ac_enable_showgdcharttests=no
+
+dnl>
 dnl> Option to enable rrdtool support
 ac_enable_rrd=no
 
@@ -303,7 +307,13 @@ AC_ARG_WITH(gdbm-root, [  --with-gdbm-root=DIR    GNU gdbm source tree located i
 
 AC_ARG_WITH(ossl-root, [  --with-ossl-root=DIR    OpenSSL source tree located in DIR], OSSL_ROOT="$withval", OSSL_ROOT=)
 
-AC_ARG_WITH(gdchart-root, [  --with-gdchart-root=DIR GDChart source tree located in DIR], GDCHART_ROOT="$withval", GDCHART_ROOT="../gdchart0.94c")
+AC_ARG_WITH(gdchart-root, [  --with-gdchart-root=DIR GDChart source tree located in DIR], GDCHART_ROOT="$withval", GDCHART_ROOT=)
+
+AC_ARG_WITH(gd-root, [  --with-gd-root=DIR GD source tree located in DIR], GD_ROOT="$withval", GD_ROOT=)
+
+AC_ARG_WITH(libpng-root, [  --with-libpng-root=DIR LIBPNG source tree located in DIR], LIBPNG_ROOT="$withval", LIBPNG_ROOT=)
+
+AC_ARG_WITH(zlib-root, [  --with-zlib-root=DIR ZLIB source tree located in DIR], ZLIB_ROOT="$withval", ZLIB_ROOT=)
 
 AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
 
@@ -365,7 +375,12 @@ dnl>
 AC_ARG_ENABLE(showopenssltests, [  --enable-showopenssltests show tests for openssl libraries [default=disabled]], ac_enable_showopenssltests="yes")
 
 dnl>
-dnl> Give the user an option to show the openssl tests...
+dnl> Give the user an option to show the gdchart tests...
+dnl>
+AC_ARG_ENABLE(showgdcharttests, [  --enable-showgdcharttests show tests for gdchart libraries [default=disabled]], ac_enable_showgdcharttests="yes")
+
+dnl>
+dnl> Give the user an option for rrd support...
 dnl>
 AC_ARG_ENABLE(rrd, [  --enable-rrd Enable rrdtool support [default=disabled]], ac_enable_rrd="yes")
 
@@ -1044,61 +1059,253 @@ fi
 dnl>
 dnl> check for `gdchart' library by Bruce Verderaime [http://www.fred.net/brv/chart/]
 dnl> By default the configuration script will try to link against GDChart library.
-dnl> It looks if the the GDChart source code is available at the parent directory
 dnl>
-if test ".$ac_disable_gdchart" = ".no"; then
+dnl>  We support two configurations... using FOUR parameters:
+dnl>    --with-gdchart-root, --with-gd-root, --with-libpng-root and --with-zlib-root 
+dnl>
+dnl>  #1 -- with none of the parameters specified -- is in the ntop source 
+dnl>        tree (../gdchart0.94c and subdirectories)
+dnl>  #2 -- if at least one of the parameters is specified -- we look wherever you say.
+dnl>        In order to mirror existing behavior, for the three new parameters, 
+dnl>           we also check the --with-gdchart-root location and the ntop source tree.
+dnl>
+if test ".$ac_disable_gdchart" != ".no"; then
+  AC_MSG_WARN([GDchart support disabled via command line option!])
+else
   AC_MSG_CHECKING([for GDchart (optional package)])
+  AC_MSG_RESULT([])
 
+  if test ".${GDCHART_ROOT}${GD_ROOT}${LIBPNG_ROOT}${ZLIB_ROOT}" == "."; then
 dnl>
-dnl> user defined directory passed as option at configuration time
+dnl>  Case #1 -- ntop source tree!
 dnl>
-  if test ".${GDCHART_ROOT}" != .; then
-    if test -d $GDCHART_ROOT &&
-       test -r $GDCHART_ROOT/libgdchart.a &&
-       test -r $GDCHART_ROOT/gdc.h &&
-       test -r $GDCHART_ROOT/gd-1.8.3/libgd.a &&
-       test -r $GDCHART_ROOT/gd-1.8.3/gd.h &&
-       test -r $GDCHART_ROOT/zlib-1.1.4/libz.a; then
-         GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
+    if test ".$ac_enable_showgdcharttests" = ".yes"; then
+        AC_MSG_CHECKING([for gdchart in ntop source tree, ../gdchart0.94c])
+        AC_MSG_RESULT([])
+    fi
 
-         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.4 -lpng -L$GDCHART_ROOT/zlib-1.1.4 -lz"
-         INCS="${INCS} -I$GDCHART_ROOT -I$GDCHART_ROOT/zlib-1.1.4"
+    GDCHART_ROOT="../gdchart0.94c"
+    GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
 
-         AC_DEFINE(HAVE_GDCHART)
-	 AC_DEFINE(HAVE_ZLIB)
-         AC_MSG_RESULT([found in $GDCHART_ROOT])
+    if test -d ${GDCHART_ROOT} &&
+       test -r ${GDCHART_ROOT}/gdc.h &&
+       test -r ${GDCHART_ROOT}/libgdchart.a &&
+       test -d ${GDCHART_ROOT}/gd-1.8.3 &&
+       test -r ${GDCHART_ROOT}/gd-1.8.3/libgd.a &&
+       test -r ${GDCHART_ROOT}/gd-1.8.3/gd.h &&
+       test -d ${GDCHART_ROOT}/gd-1.8.3 &&
+       test -r ${GDCHART_ROOT}/gd-1.8.3/libpng-1.2.4/libpng.a &&
+       test -r ${GDCHART_ROOT}/gd-1.8.3/libpng-1.2.4/png.h &&
+       test -d ${GDCHART_ROOT}/zlib-1.1.4 &&
+       test -r ${GDCHART_ROOT}/zlib-1.1.4/libz.a; then
+         MORELIBS="${MORELIBS} -L${GDCHART_ROOT} -lgdchart -L${GDCHART_ROOT}/gd-1.8.3 -lgd -L${GDCHART_ROOT}/gd-1.8.3/libpng-1.2.4 -lpng"
+         INCS="${INCS} -I${GDCHART_ROOT}"
+         AC_MSG_RESULT([    Found in ntop source tree at ${GDCHART_ROOT}])
+         gdchartok="yes"
     else
-      AC_MSG_RESULT([not found in ${GDCHART_ROOT}])
-      AC_MSG_RESULT([ It looks that you don't have some files needed to use the GDChart library.])
-      AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
-      AC_MSG_RESULT([ When finished please re-run this program.])
-      AC_MSG_RESULT([ You can download the needed code using CVS from cvs.ntop.org ])
-      AC_MSG_WARN([ Some ntop's features will be disabled.])
+         AC_MSG_RESULT([    Not found in ntop source tree])
+         gdchartok="no"
+    fi
+
+  else
+
+dnl>
+dnl>  Case #2 -- wherever you say, boss...
+dnl>
+    gdchartok="yes"
+    if test ".$ac_enable_showgdcharttests" = ".yes"; then
+        AC_MSG_CHECKING([for gdchart in specified location(s)])
+        AC_MSG_RESULT([])
+    fi
+
+    NTOP_TREE_GDCHART="../gdchart0.94c"
+    NTOP_TREE_GDCHART=`cd ${NTOP_TREE_GDCHART} && pwd`
+dnl>
+dnl>     First, if gdchart isn't set, use the ntop source tree...
+dnl>
+    if test ".${GDCHART_ROOT}" == "."; then
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([    --with-gdchart-root= not set, using ../gdchart0.94c ])
+        fi
+         GDCHART_ROOT="${NTOP_TREE_GDCHART}"
     fi
 dnl>
-dnl> on place source tree under the same ntop's parent directory
+dnl>     Then, if any of the other parameters aren't set, copy the value from gdchart
 dnl>
-  else
-    if test -d ../gdchart0.94c &&
-       test -r ../gdchart0.94c/gdc.h &&
-       test -r ../gdchart0.94c/libgdchart.a &&
-       test -r ../gdchart0.94c/gd-1.8.3/libgd.a &&
-       test -r ../gdchart0.94c/gd-1.8.3/gd.h &&
-       test -r ../gdchart0.94c/gd-1.8.3/libpng-1.2.4/libpng.a &&
-       test -r ../gdchart0.94c/gd-1.8.3/libpng-1.2.4/gd.h; then
-	 MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.2.4 -lpng"
-
-         GDCHART_ROOT="../gdchart0.94c"
-         GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
-         INCS="${INCS} -I$GDCHART_ROOT"
-         AC_DEFINE(HAVE_GDCHART)
-         AC_MSG_RESULT([found in $GDCHART_ROOT])
+    if test ".${GD_ROOT}" == "."; then
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([    --with-gd-root= not set, using --with-gdchart-root value ])
+        fi
+        GD_ROOT="${GDCHART_ROOT}"
+    fi
+    if test ".${LIBPNG_ROOT}" == "."; then
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([    --with-libpng-root= not set, using --with-gdchart-root value ])
+        fi
+        LIBPNG_ROOT="${GDCHART_ROOT}"
+    fi
+    if test ".${ZLIB_ROOT}" == "."; then
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([    --with-zlib-root= not set, using --with-gdchart-root value ])
+        fi
+        ZLIB_ROOT="${GDCHART_ROOT}"
+    fi
+dnl>
+dnl>  Now test...
+dnl>
+    if test -d ${GDCHART_ROOT} &&
+       test -d ${GDCHART_ROOT}/lib &&
+       test -d ${GDCHART_ROOT}/include &&
+       ( test -r ${GDCHART_ROOT}/lib/libgdchart.so ||
+         test -r ${GDCHART_ROOT}/lib/libgdchart.a ) &&
+       test -r ${GDCHART_ROOT}/include/gdc.h; then
+        MORELIBS="${MORELIBS} -L${GDCHART_ROOT}/lib -lgdchart"
+        INCS="${INCS} -I${GDCHART_ROOT}/include"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libgdchart/gdc.h found in ${GDCHART_ROOT}/lib and .../include ])
+        fi     
+    elif test -d ${GDCHART_ROOT} &&
+       ( test -r ${GDCHART_ROOT}/libgdchart.so ||
+         test -r ${GDCHART_ROOT}/libgdchart.a ) &&
+       test -r ${GDCHART_ROOT}/gdc.h; then
+        MORELIBS="${MORELIBS} -L${GDCHART_ROOT} -lgdchart"
+        INCS="${INCS} -I${GDCHART_ROOT}"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libgdchart/gdc.h found in ${GDCHART_ROOT} ])
+        fi     
+    elif test -d ${NTOP_TREE_GDCHART} &&
+         test -r ${NTOP_TREE_GDCHART}/libgdchart.a &&
+         test -r ${NTOP_TREE_GDCHART}/gdc.h; then
+        MORELIBS="${MORELIBS} -L${NTOP_TREE_GDCHART} -lgdchart"
+        INCS="${INCS} -I${NTOP_TREE_GDCHART}"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libgdchart/gdc.h found in ntop source tree ])
+        fi
     else
-         AC_MSG_RESULT([not found])
+        gdchartok="no"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libgdchart/gdc.h not found relative to ${GDCHART_ROOT} ])
+        fi     
+    fi
+    if test -d ${GD_ROOT} &&
+       test -d ${GD_ROOT}/lib &&
+       test -d ${GD_ROOT}/include &&
+       ( test -r ${GD_ROOT}/lib/libgd.so ||
+         test -r ${GD_ROOT}/lib/libgd.a ) &&
+       test -r ${GD_ROOT}/include/gd.h; then
+        MORELIBS="${MORELIBS} -L${GD_ROOT}/lib -lgd"
+        INCS="${INCS} -I${GD_ROOT}/include"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libgd/gd.h found in ${GD_ROOT}/lib and .../include ])
+        fi
+    elif test -d ${GD_ROOT} &&
+       ( test -r ${GD_ROOT}/libgd.so ||
+         test -r ${GD_ROOT}/libgd.a ) &&
+       test -r ${GD_ROOT}/gd.h; then
+        MORELIBS="${MORELIBS} -L${GD_ROOT} -lgd"
+        INCS="${INCS} -I${GD_ROOT}"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libgd/gd.h found in ${GD_ROOT} ])
+        fi
+    elif test -d ${NTOP_TREE_GDCHART} &&
+         test -d ${NTOP_TREE_GDCHART}/gd-1.8.3 &&
+         test -r ${NTOP_TREE_GDCHART}/gd-1.8.3/libgd.a &&
+         test -r ${NTOP_TREE_GDCHART}/gd-1.8.3/gd.h; then
+        MORELIBS="${MORELIBS} -L${NTOP_TREE_GDCHART}/gd-1.8.3 -lgd"
+        INCS="${INCS} -I${NTOP_TREE_GDCHART}/gd-1.8.3"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libgd/gd.h found in ntop source tree ])
+        fi
+    else
+        gdchartok="no"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libgd/gd.h not found relative to ${GD_ROOT} ])
+        fi
+    fi
+
+    if test -d ${LIBPNG_ROOT} &&
+       test -d ${LIBPNG_ROOT}/lib &&
+       test -d ${LIBPNG_ROOT}/include &&
+       ( test -r ${LIBPNG_ROOT}/lib/libpng.so ||
+         test -r ${LIBPNG_ROOT}/lib/libpng.a ) &&
+       test -r ${LIBPNG_ROOT}/include/png.h; then
+        MORELIBS="${MORELIBS} -L${LIBPNG_ROOT}/lib -lpng"
+        INCS="${INCS} -I${LIBPNG_ROOT}/include"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libpng/png.h found in ${LIBPNG_ROOT}/lib and .../include ])
+        fi
+    elif test -d ${LIBPNG_ROOT} &&
+       ( test -r ${LIBPNG_ROOT}/libpng.so ||
+         test -r ${LIBPNG_ROOT}/libpng.a ) && 
+       test -r ${LIBPNG_ROOT}/png.h; then
+        MORELIBS="${MORELIBS} -L${LIBPNG_ROOT} -lpng"
+        INCS="${INCS} -I${LIBPNG_ROOT}"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then 
+            AC_MSG_RESULT([   libpng/png.h found in ${LIBPNG_ROOT} ])
+        fi
+    elif test -d ${NTOP_TREE_GDCHART} &&
+         test -d ${NTOP_TREE_GDCHART}/gd-1.8.3 &&
+         test -d ${NTOP_TREE_GDCHART}/gd-1.8.3/libpng-1.2.4 &&
+         test -r ${NTOP_TREE_GDCHART}/gd-1.8.3/libpng-1.2.4/libpng.a &&
+         test -r ${NTOP_TREE_GDCHART}/gd-1.8.3/libpng-1.2.4/png.h; then
+        MORELIBS="${MORELIBS} -L${NTOP_TREE_GDCHART}/gd-1.8.3/libpng-1.2.4 -lpng"
+        INCS="${INCS} -I${NTOP_TREE_GDCHART}/gd-1.8.3/libpng-1.2.4"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libpng/png.h found in ntop source tree ])
+        fi
+    else
+        gdchartok="no"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then 
+            AC_MSG_RESULT([   libpng/png.h not found relative to ${LIBPNG_ROOT} ])
+        fi
+    fi
+    if test -d ${ZLIB_ROOT} &&
+       test -d ${ZLIB_ROOT}/lib &&
+       test -d ${ZLIB_ROOT}/include &&
+       ( test -r ${ZLIB_ROOT}/lib/libz.so ||
+         test -r ${ZLIB_ROOT}/lib/libz.a ); then
+        MORELIBS="${MORELIBS} -L${ZLIB_ROOT}/lib -lpng"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libz found in ${ZLIB_ROOT}/lib ])
+        fi
+    elif test -d ${ZLIB_ROOT} &&
+       ( test -r ${ZLIB_ROOT}/libz.so ||
+         test -r ${ZLIB_ROOT}/libz.a ); then
+        MORELIBS="${MORELIBS} -L${ZLIB_ROOT} -lz"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libz found in ${ZLIB_ROOT} ])
+        fi
+    elif test -d ${NTOP_TREE_GDCHART} &&
+         test -d ${NTOP_TREE_GDCHART}/zlib-1.1.4 &&
+         test -r ${NTOP_TREE_GDCHART}/zlib-1.1.4/libz.a; then
+        MORELIBS="${MORELIBS} -L${NTOP_TREE_GDCHART}/zlib-1.1.4 -lz"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libz found in ntop source tree ])
+        fi
+    else
+        gdchartok="no"
+        if test ".$ac_enable_showgdcharttests" = ".yes"; then
+            AC_MSG_RESULT([   libz not found relative to ${ZLIB_ROOT} ])
+        fi
     fi
   fi
+fi
+
+if test ".$gdchartok" == ".no"; then
+    AC_MSG_RESULT([])
+    AC_MSG_RESULT([ It looks like you don't have some of the files needed to use the GDChart library.])
+    AC_MSG_RESULT([])
+    AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
+    AC_MSG_RESULT([ When finished please re-run this program.])
+    AC_MSG_RESULT([])
+    AC_MSG_RESULT([ You can download the needed code using CVS from cvs.ntop.org ])
+    AC_MSG_RESULT([])
+    AC_MSG_RESULT([ If the files are not in the ntop source tree, you will need to specify their ])
+    AC_MSG_RESULT([ location(s) using the --with-xxxxx-root parameters.])
+    AC_MSG_RESULT([])
+    AC_MSG_WARN([ Some of ntop's features will be disabled.])
 else
-  AC_MSG_WARN([GDchart support disabled via command line option!])
+    AC_DEFINE(HAVE_GDCHART)
 fi
 
 
