@@ -81,6 +81,7 @@ use POSIX qw(strftime);
 use NetAddr::IP;
 
 my $debug = 0;				# prints A LOT OF debug messages (MySQL queries)
+my $debug2 = 0;
 my $rawFlows = 0;			# shall we dump the raw flows into the 'flows' table (don't forget to create it first!)? 1 = true, 0 = false
 my $ignoreLocalTraffic = 1;		# shall we ignore traffic the host in our localnets have among each other? 1 = true, 0 = false
 
@@ -212,6 +213,7 @@ while(1) {
 					my $temp2=$_;
 					if (($fdst&0xffffff00)==$temp2) {
 						$inLocal = 1;		# destination ip is in our localnets list
+						if($debug2) { print "Lokaler Traffic: Von: ".num2ip($fsrc)." Nach: ".num2ip($fdst)."\n"; }
 					}
 				}
 				if(!$inLocal) {				# do the query if destionation ip is not in our localnets list
@@ -232,15 +234,16 @@ while(1) {
 					my $temp2=$_;
 					if (($fsrc&0xffffff00)==$temp2) {
 						$inLocal = 1;		# source ip is in our localnets list
+						if($debug2) { print "Lokaler Traffic: Von: ".num2ip($fsrc)." Nach: ".num2ip($fdst)."\n"; }
 					}
 				}
 				if(!$inLocal) {				# do the query if source ip is not in our localnets list
-					my $sql3="UPDATE traffic_$now_month SET bytesRcvd=bytesSent+$focts WHERE ip='".num2ip($fdst)."' AND date='$now_time';";
+					my $sql3="UPDATE traffic_$now_month SET bytesRcvd=bytesRcvd+$focts WHERE ip='".num2ip($fdst)."' AND date='$now_time';";
 					$dbh->do($sql3);
 					if($debug) { print $sql3."\n"; }
 				}
 			} else {
-				my $sql3="UPDATE traffic_$now_month SET bytesSent=bytesRcvd+$focts WHERE ip='".num2ip($fdst)."' AND date='$now_time';";
+				my $sql3="UPDATE traffic_$now_month SET bytesRcvd=bytesRcvd+$focts WHERE ip='".num2ip($fdst)."' AND date='$now_time';";
 				$dbh->do($sql3);
 				if($debug) { print $sql3."\n"; }
 			}
