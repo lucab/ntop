@@ -3,40 +3,37 @@ What's in the ntop distribution ?
 ---------------------------------
 
 1) ntop                 [. directory]
-This is the classic ntop application that runs only in web mode.
+All of the source for ntop is in this, root, directory of the distribution.
 
-2) intop                [intop/ directory]
-This is the interactive ntop application. It allows you to play with ntop from
-a text mode terminal instead of a web browser.  While the minimal changes have
-again been made so that it compiles and starts up... as of ntop v2.2 this remains
-unsupported.  Rocco has indicated he may be able to devote time to this going forward.
+2) rrd                  [myrrd/ directory]
+This is a frozen (stable) version of rrdtool which ntop statically links to.
 
-3) www
-How to extract data out of ntop using Perl/PHP/Python
+3) configureextra
+OS and distribution/release specific extensions for ./configure
 
-4) docs
-All the documentation that's fit to print! Please help us out and write more!
-
-5) plugins
+4) plugins
 ntop add ons, such as sflow, pda, etc.
 
-6) utils
+5)  html
+html files used by ntop, includes images
+
+6) docs
+All the documentation that's fit to print! Please help us out and write more!
+
+7) utils
 Little pieces of code that might be useful or are used in the preparation
 of data files and such.
 
-7) obsolete
-Unsupported, saved here for reference, or if somebody wanted to resurect them.
+8) www
+How to extract data out of ntop using Perl/PHP/Python
 
-8) packages
+9) packages
 Files used to build executable packages for MacOSX, RedHat and Suse environments.
 More a starting point than a finished output, due to tool differences, file layouts,
 etc.
 
    NOTE: The 'RedHat' files are older and NOT the ones used to create the
          .rpm files posted at SourceForge.
-
-9)  html
-html files used by ntop, includes images
 
 10) installer
 Files used to build executable packages for MacOSX.
@@ -52,3 +49,4 @@ Have fun!
 
 -----------------------------------
 Luca Deri <deri@ntop.org>, March 2001 / updated June 2002 / updated March 2003
+Burton - Updated Feb 2004
