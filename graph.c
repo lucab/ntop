@@ -1122,8 +1122,8 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
 void pktSizeDistribPie(void) {
   char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
-  float p[7];
-  char	*lbl[] = { "", "", "", "", "", "", "" };
+  float p[10];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "", "" };
   int num=0;
   FILE *fd;
   int useFdOpen = 0;
@@ -1204,8 +1204,8 @@ void pktSizeDistribPie(void) {
 
 void pktTTLDistribPie(void) {
   char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
-  float p[8];
-  char	*lbl[] = { "", "", "", "", "", "", "" };
+  float p[10];
+  char	*lbl[] = { "", "", "", "", "", "", "", "", "" };
   int num=0;
   FILE *fd;
   int useFdOpen = 0;
