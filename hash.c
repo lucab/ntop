@@ -429,9 +429,11 @@ void purgeIdleHosts(int actDevice) {
 #endif
 	  theFlaggedHosts[maxBucket++] = el;
 
-	  if(el->hostTrafficBucket != theIdx)
+	  if(el->hostTrafficBucket != theIdx) {
 	    traceEvent(TRACE_ERROR, "ERROR: Index mismatch (hostTrafficBucket=%d/theIdx=%d)",
 		       el->hostTrafficBucket, theIdx);
+	    el->hostTrafficBucket = theIdx; /* Error recovery */
+	  }
 
 	  myGlobals.device[actDevice].hash_hostTraffic[theIdx] = NULL; /* (*) */
 #ifdef MULTITHREADED
@@ -695,10 +697,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	list->idx = hostFound;
 
       myGlobals.device[actualDeviceId].insertIdx = list->idx + 1; /* NOTE: insertIdx can go beyond the list end */
-      myGlobals.device[actualDeviceId].hash_hostTraffic[list->idx] = el; /* Insert a new entry */
-      myGlobals.device[actualDeviceId].hostsno++;
       el->hostTrafficBucket = list->idx;
       el->hashListBucket    = idx;
+      myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket] = el; /* Insert a new entry */
+      myGlobals.device[actualDeviceId].hostsno++;
 
       if(ether_addr != NULL) {
 	if((hostIpAddress == NULL)

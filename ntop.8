@@ -55,8 +55,6 @@ ntop \- display top network users
 .RB [ -U | --mapper 
 .IR <URL> ]
 .RB [ -V | --version]
-.RB [ -1 | --no-throughput-update ]
-.RB [ -2 | --no-idle-hosts ]
 .RB [ --throughput-bar-chart ]
 .RB [ --no-admin-password-hint ]
 
@@ -303,14 +301,6 @@ has been compiled with HTTPS support (via OpenSSL), this flag can be used to set
 You can also use the IP:Port notation to bind ntop to the specified IP-Address, e.g.
 .B -w 127.0.0.1:3001
 .
-
-.It2 -1 --no-throughput-update
-Turns off the calculation by 
-.B ntop
-of the minute by minute throughput of the network(s).
-
-.It2 -2 --no-idle-hosts
-Turns off the periodic purging of idle hosts from the tables.
 
 .It --throughput-bar-chart
 Format the throughput charts with bars instead of as an area chart.

@@ -246,10 +246,6 @@ static void usage (FILE * fp) {
   fprintf(fp, "    [-W <port>      | --https-server <port>]              Web server (https:) port (or address:port) to listen on\n");
 #endif
 
-  fprintf(fp, "    [-1             | --no-throughput-update>] \n");
-  fprintf(fp, "    [-2             | --no-idle-hosts>] \n");
-
-
 #else /* !HAVE_GETOPT_LONG */
 
   fprintf(fp, "    [-a <path> path for ntop web server access log]\n");
@@ -327,9 +323,6 @@ static void usage (FILE * fp) {
   fprintf(fp, "    [-W <HTTPS port>]\n");
 #endif
 
-  fprintf(fp, "    [-1 <no throughput update>] \n");
-  fprintf(fp, "    [-2 <no purge of idle hosts>] \n");
-
 #endif /* HAVE_GETOPT_LONG */
 }
 
@@ -347,9 +340,9 @@ static int parseOptions(int argc, char* argv []) {
    * Please keep the array sorted
    */
 #ifdef WIN32
-  char * theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:A:B:D:F:MP:S:U:VW:12";
+  char* theOpts = "a:ce:f:g:hi:jkl:m:np:qr:st:w:A:B:D:F:MP:S:U:VW:";
 #else
-  char * theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:A:B:D:EF:IKLMNP:S:U:VW:12";
+  char* theOpts = "a:b:cde:f:g:hi:jkl:m:np:qr:st:u:v:w:A:B:D:EF:IKLMNP:S:U:VW:";
 #endif
   int opt;
 
@@ -607,10 +600,6 @@ static int parseOptions(int argc, char* argv []) {
 
       break;
 #endif
-
-    case '2': /* disable purging of idle hosts */
-      myGlobals.enableIdleHosts = 0;
-      break;
 
 #ifdef HAVE_GDCHART
     case 129:
