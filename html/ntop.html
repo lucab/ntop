@@ -1,7 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-<!-- Validated as HTML 4.01 Transitional by Burton Strauss, 06May2002 -->
+<!-- Manually updated with these headers from generated version by Burton Strauss, July 2002 -->
+<!-- Validated as HTML 4.01 Transitional by Burton Strauss, July 2002 -->
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta http-equiv="Expires" content="0">
 <meta http-equiv="Pragma" content="no-cache">
@@ -16,7 +17,7 @@
 </head>
 <BODY>
 <H1>NTOP</H1>
-Section: Maintenance Commands (8)<BR>Updated: May 2002<BR><A HREF="#index">Index</A>
+Section: Maintenance Commands (8)<BR>Updated: March 2002<BR><A HREF="#index">Index</A>
 <A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
 
 <A NAME="lbAB">&nbsp;</A>
@@ -202,7 +203,9 @@ By default
 logs HTTP accesses in the file ntop.access.log in the current directory. Use this flag to specify the path of the file where HTTP accesses will be logged. Each log entry is in Apache-like style. The only difference between Apache and 
 <B>ntop</B>
 
-is that .B ntop
+is that
+<B>ntop</B>
+
 added a new column has been added. Such column contains the time (in milliseconds) that ntop needed in order to serve the request. 
 <P>
 
@@ -302,6 +305,7 @@ be able to process all the network traffic.
 
 2 -s --no-promiscuous
 Use this flag for disabling interface promiscuous mode (i.e. the ability to capture ethernet frames regardless whether they are directed to the local ethernet card or to the ethernet broadcast address). Note that even if you use this flag, the interface could well be in  promiscuous mode as other applications can have enabled this functionality.
+*****NOTE: This is not functional in v2.0/2.1 of ntop.  It is a future place-holder ONLY. *****
 <P>
 
 2 -t --trace-level
@@ -327,7 +331,7 @@ Specifies the mySQL database connection information (user:password:database:host
 2 -w --http-server
 <B>ntop</B>
 
-sports and embedded web server so that users can attach their web browsers to the specified port and browse 
+sports an embedded web server so that users can attach their web browsers to the specified port and browse 
 traffic information remotely. Supposing to start
 <B>ntop</B>
 
@@ -355,6 +359,10 @@ needed but it's embedded into the application. If -w is set to 0 the HTTP port w
 has not been started with '-W 0' [see below]).
 You can also use the IP:Port notation to bind ntop to the specified IP-Address, e.g.
 <B>-w 127.0.0.1:3000</B>
+
+<P>
+
+2 -A --set-admin-password
 
 <P>
 
@@ -397,7 +405,10 @@ and added to the LucaHosts flow, whereas all the packet routed by the gateway ga
 <P>
 
 2 -K --enable-debug
-Use this flag to simplify application debug (eg. fork() is not used etc.)
+Use this flag to simplify application debug.  It does three things:
+1. Does not fork() on the &quot;read only&quot; html pages.
+2. Displays mutex values on the configuration (info.html) page.
+3. (If available - glibc/gcc) Activates an automated backtrace on application errors.
 <P>
 
 -L
@@ -546,7 +557,7 @@ and
 <A NAME="lbAI">&nbsp;</A>
 <H2>AUTHOR</H2>
 
-Please send bug reports to the ntop mailing list &lt;<A HREF="mailto:ntop-dev@ntop.org">ntop-dev@ntop.org</A>&gt; (subscription required due to spammers).
+Please send bug reports to the ntop mailing list &lt;<A HREF="mailto:ntop@ntop.org">ntop@ntop.org</A>&gt;.
 Please code patched to &lt;<A HREF="mailto:patch@ntop.org">patch@ntop.org</A>&gt;.
 ntop's author is Luca Deri and can be reached at <A HREF="mailto:deri@ntop.org">deri@ntop.org</A>.
 Tool locations are current as of February 2002 - please send email to report new locations or dead links.
@@ -568,6 +579,6 @@ Tool locations are current as of February 2002 - please send email to report new
 This document was created by
 <A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
 using the manual pages.<BR>
-Time: 20:52:58 GMT, May 07, 2002
+Time: 14:44:04 GMT, July 02, 2002
 </BODY>
 </HTML>
