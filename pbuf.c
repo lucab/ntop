@@ -553,24 +553,28 @@ static void processIpPkt(const u_char *bp,
 
   if(ip.ip_p == GRE_PROTOCOL_TYPE) {
     /*
-      Cisco GRE (Generic Routing Encapsulation)
-      Tunnels (RFC 1701, 1702)
+      Cisco GRE (Generic Routing Encapsulation) Tunnels (RFC 1701, 1702)
     */
     GreTunnel tunnel;
+    PPPTunnelHeader pppTHeader;
 
     memcpy(&tunnel, bp+hlen, sizeof(GreTunnel));
 
-    if(ntohs(tunnel.protocol) == PPP_PROTOCOL_TYPE) {
-      PPPTunnelHeader pppTHeader;
-
+    switch(ntohs(tunnel.protocol)) {
+    case PPP_PROTOCOL_TYPE:
       memcpy(&pppTHeader, bp+hlen+sizeof(GreTunnel), sizeof(PPPTunnelHeader));
-
-      if(ntohs(pppTHeader.protocol) == 0x21 /* IP */) {
-
+      
+      if(ntohs(pppTHeader.protocol) == 0x21 /* IP */) {	
 	memcpy(&ip, bp+hlen+sizeof(GreTunnel)+sizeof(PPPTunnelHeader), sizeof(struct ip));
 	hlen = (u_int)ip.ip_hl * 4;
 	ether_src = NULL, ether_dst = NULL;
       }
+      break;
+    case ETHERTYPE_IP:
+      memcpy(&ip, bp+hlen+4, sizeof(struct ip));
+      hlen = (u_int)ip.ip_hl * 4;
+      ether_src = NULL, ether_dst = NULL;      
+      break;
     }
   }
 
