@@ -1695,7 +1695,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	  sendString(buf);
 #endif
 
-	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</A></TD>",
+	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</A></TD>",
 		      formatSeconds(el->lastSeen - el->firstSeen)) < 0)
 	    BufferTooShort();
 	  sendString(buf);
