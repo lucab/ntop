@@ -1964,7 +1964,7 @@ void printNtopConfigInfo(int textPrintFlag) {
  {
    char pid[16];
 
-   sprintf(pid, "%d", getpid());
+   sprintf(pid, "%d", getppid());
    printFeatureConfigInfo(textPrintFlag, "Process Id", pid);
  }
 #endif
