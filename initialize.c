@@ -486,6 +486,7 @@ void initThreads(int enableDBsupport) {
   createMutex(&graphMutex);
   createThread(&dequeueThreadId, dequeuePacket, NULL);
   createThread(&thptUpdateThreadId, updateThptLoop, NULL);
+  createThread(&hostTrafficStatsThreadId, updateHostTrafficStatsThptLoop, NULL);
   createThread(&scanIdleThreadId, scanIdleLoop, NULL);
   if(enableDBsupport)
     createThread(&dbUpdateThreadId, updateDBHostsTrafficLoop, NULL);

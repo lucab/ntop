@@ -1259,6 +1259,8 @@ typedef struct hostTraffic
   float          actualRcvdPktThpt, averageRcvdPktThpt, peakRcvdPktThpt,
                  actualSentPktThpt, averageSentPktThpt, peakSentPktThpt;
   unsigned short actBandwidthUsage;
+  TrafficCounter lastCounterBytesSent, last24HoursBytesSent[25], lastDayBytesSent,
+                 lastCounterBytesRcvd, last24HoursBytesRcvd[25], lastDayBytesRcvd;
 
   /* IP */
   PortUsage      *portsUsage[TOP_ASSIGNED_IP_PORTS];

@@ -415,21 +415,58 @@ void* updateThptLoop(void* notUsed _UNUSED_) {
     /* Don't update Thpt if the traffic is high */
     /* if(packetQueueLen < (PACKET_QUEUE_LENGTH/3)) */ {
       actTime = time(NULL);
-#ifdef MULTITHREADED
       accessMutex(&hostsHashMutex,"updateThptLoop");
-#endif
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Updating throughput\n");
 #endif
       updateThpt(); /* Update Throughput */
-#ifdef MULTITHREADED
       releaseMutex(&hostsHashMutex);
-#endif
     }
   }
   return(NULL);
 
 }
+#endif
+
+/* **************************************** */
+
+#ifdef MULTITHREADED
+void* updateHostTrafficStatsThptLoop(void* notUsed _UNUSED_) {
+  time_t nextUpdate = actTime+3600;
+  int hourId;
+  char theDate[8];
+  struct tm t;
+
+  for(;;) {
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Sleeping for 60 seconds\n");
+#endif
+
+    if(!capturePackets) break; /* Before */
+    
+    sleep(60);
+
+    if(!capturePackets) break; /* After */
+
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "Trying to update host traffic stats");
+#endif
+
+      actTime = time(NULL);
+      accessMutex(&hostsHashMutex, "updateHostTrafficStatsThptLoop");
+#ifdef DEBUG
+      traceEvent(TRACE_INFO, "Updating host traffic stats\n");
+#endif
+      strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
+      hourId = atoi(theDate);
+      updateHostTrafficStatsThpt(hourId); /* Update Throughput */
+      releaseMutex(&hostsHashMutex);
+      nextUpdate = actTime+3600;
+  }
+
+  return(NULL);
+}
+#endif
 
 /* **************************************** */
 
@@ -532,8 +569,6 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
 }
 #endif
 
-#endif
-
 /* **************************************** */
 
 #ifndef MULTITHREADED
@@ -605,6 +640,7 @@ RETSIGTYPE cleanup(int signo) {
   if(signo != -1) { /* the user pressed the 'q' key */
     killThread(&dequeueThreadId);
     killThread(&thptUpdateThreadId);
+    killThread(&hostTrafficStatsThreadId);
     killThread(&scanIdleThreadId);
     if(enableDBsupport)
       killThread(&dbUpdateThreadId);

@@ -179,7 +179,7 @@ static void updateDeviceThpt(int deviceToUpdate) {
       }
     }
 
-    for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
+    for(idx=1; idx<device[deviceToUpdate].actualHashSize; idx++) {
       if((el = device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
 
 	if(broadcastHost(el))
@@ -391,6 +391,43 @@ void updateThpt(void) {
   }
 }
 
+/* ******************************* */
+
+static void updateHostsDeviceThpt(int deviceToUpdate, int hourId) {
+  u_int idx;
+  HostTraffic *el;
+
+    for(idx=1; idx<device[deviceToUpdate].actualHashSize; idx++) {
+      if((el = device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
+
+	if(broadcastHost(el))
+	  continue;
+
+	el->last24HoursBytesSent[hourId] = el->bytesSent - el->lastCounterBytesSent,
+	  el->lastCounterBytesSent = el->bytesSent;
+	el->last24HoursBytesRcvd[hourId] = el->bytesReceived - el->lastCounterBytesRcvd,
+	  el->lastCounterBytesRcvd = el->bytesReceived;
+
+	if(hourId == 0) {
+	  el->lastDayBytesSent = el->bytesSent;
+	  el->lastDayBytesRcvd = el->bytesReceived;
+	}
+      }
+    }
+}
+
+/* ******************************* */
+
+void updateHostTrafficStatsThpt(int hourId) {
+  int i;
+
+  if(mergeInterfaces)
+    updateHostsDeviceThpt(0, hourId);
+  else {
+    for(i=0; i<numDevices; i++)
+      updateHostsDeviceThpt(i, hourId);  
+  }
+}
 
 /* ******************************* */
 
@@ -417,7 +454,7 @@ void updateDbHostsTraffic(int deviceToUpdate) {
   traceEvent(TRACE_INFO, "updateDbHostsTraffic()\n");
 #endif
 
-  for(i=0; i<device[actualDeviceId].actualHashSize; i++) {
+  for(i=0; i<device[deviceToUpdate].actualHashSize; i++) {
     el = device[deviceToUpdate].hash_hostTraffic[i]; /* (**) */
 
     if((el != NULL)
@@ -440,3 +477,4 @@ void updateDbHostsTraffic(int deviceToUpdate) {
     }
   }
 }
+

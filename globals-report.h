@@ -98,3 +98,38 @@ extern char *getActualRowColor(void);
 extern void switchNwInterface(int _interface);
 extern void usage(void);
 extern void shutdownNtop(void);
+extern void printHostHourlyTraffic(HostTraffic *el);
+
+#ifdef HAVE_GDCHART
+
+#ifndef _GLOBALS_REPORT_C_
+#define GDC_LIB
+#endif
+
+#include "gdc.h"
+#include "gdchart.h"
+
+/*
+  Fix courtesy of  
+  Michael Wescott <wescott@crosstor.com>
+*/
+#ifndef _GLOBALS_CORE_C_
+#undef clrallocate
+#undef clrshdallocate
+#endif
+
+#include "gdcpie.h"
+
+
+extern char GDC_yaxis;
+extern char* GDC_ylabel_fmt;
+
+extern int out_graph(short gifwidth,
+		     short gifheight,
+		     FILE  *gif_fptr,
+		     GDC_CHART_T type,
+		     int  num_points,
+		     char *xlbl[],
+		     int  num_sets,
+		     ... );
+#endif

@@ -58,7 +58,7 @@ extern pthread_mutex_t packetQueueMutex, hostsHashMutex, graphMutex;
 extern pthread_mutex_t lsofMutex, addressResolutionMutex, hashResizeMutex;
 extern pthread_t dequeueThreadId, handleWebConnectionsThreadId;
 extern pthread_t thptUpdateThreadId, scanIdleThreadId, logFileLoopThreadId;
-extern pthread_t dbUpdateThreadId, lsofThreadId;
+extern pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
 #ifdef HAVE_GDBM_H
 extern pthread_mutex_t gdbmMutex;
 #endif
@@ -286,6 +286,7 @@ extern void handleProtocols(char *protos);
 extern void addDefaultProtocols(void);
 extern int mapGlobalToLocalIdx(int port);
 extern void *updateThptLoop(void *notUsed);
+extern void* updateHostTrafficStatsThptLoop(void* notUsed);
 extern void *updateDBHostsTrafficLoop(void* notUsed);
 extern void *scanIdleLoop(void *notUsed);
 extern void *periodicLsofLoop(void *notUsed);
@@ -368,6 +369,7 @@ extern void updateThpt(void);
 extern void updateTrafficMatrix(HostTraffic *srcHost, HostTraffic *dstHost,
                                 TrafficCounter length);
 extern void updateDbHostsTraffic(int deviceToUpdate);
+extern void updateHostTrafficStatsThpt(int hourId);
 
 /* util.c */
 extern FILE *sec_popen(char *cmd, const char *type);

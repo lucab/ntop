@@ -2452,7 +2452,7 @@ static void printHostTrafficStats(HostTraffic *el) {
   actTotalReceived = el->tcpReceivedLocally+el->tcpReceivedFromRemote;
 
   printHostEvents(el, -1, -1);
-
+  printHostHourlyTraffic(el);
   printTCPflagsStats(el);
 
   if((el->tcpSentLocally+el->tcpSentRemotely+
@@ -5931,5 +5931,79 @@ void printNtopConfigInfo(void) {
   sendString("</TABLE>\n");
 }
 
+/* *********************************** */
 
+void printHostHourlyTraffic(HostTraffic *el) {
+  char buf[BUF_SIZE];
+  int i;
+  TrafficCounter tc;
+  float pctg;
+
+  sendString("<P><H1>Traffic Stats</H1><P>\n<TABLE BORDER=1>\n<TR>");
+  sendString("<TH></TH>");
+  sendString("<TH>Midnight- 1AM</TH>");
+  sendString("<TH>1AM - 2AM</TH>");
+  sendString("<TH>2AM - 3AM</TH>");
+  sendString("<TH>3AM - 4AM</TH>");
+  sendString("<TH>4AM - 5AM</TH>");
+  sendString("<TH>5AM - 6AM</TH>");
+  sendString("<TH>6AM - 7AM</TH>");
+  sendString("<TH>7AM - 8AM</TH>");
+  sendString("<TH>8AM - 9AM</TH>");
+  sendString("<TH>9AM - 10AM</TH>");
+  sendString("<TH>10AM - 11AM</TH>");
+  sendString("<TH>11AM - Noon</TH>");
+  sendString("<TH>Noon - 1PM</TH>");
+  sendString("<TH>1PM - 2PM</TH>");
+  sendString("<TH>2PM - 3PM</TH>");
+  sendString("<TH>3PM - 4PM</TH>");
+  sendString("<TH>4PM - 5PM</TH>");
+  sendString("<TH>5PM - 6PM</TH>");
+  sendString("<TH>6PM - 7PM</TH>");
+  sendString("<TH>7PM - 8PM</TH>");
+  sendString("<TH>8PM - 9PM</TH>");
+  sendString("<TH>9PM - 10PM</TH>");
+  sendString("<TH>10PM - 11PM</TH>");
+  sendString("<TH>11PM - Midnight</TH></TR>");
+
+  sendString("<TR><TH>Tot. Traffic Sent</TH>");
+  for(i=0; i<24; i++) {
+    sprintf(buf, "<TD>%s</TD>", formatBytes(el->last24HoursBytesSent[i], 0));
+    sendString(buf);
+  }
+  sendString("</TR>");
+
+  tc = el->bytesSent - el->lastDayBytesSent;
+  sendString("<TR><TH>% Traffic Sent</TH>");
+  for(i=0; i<24; i++) {
+    if(tc > 0)
+      pctg = (float)(el->last24HoursBytesSent[i]*100)/(float)tc;
+    else
+      pctg = 0;
+    sprintf(buf, "<TD>%.2f</TD>", pctg);
+    sendString(buf);
+  }
+  sendString("</TR>");
+
+  sendString("<TR><TH>Tot. Traffic Rcvd</TH>");
+  for(i=0; i<24; i++) {
+    sprintf(buf, "<TD>%s</TD>", formatBytes(el->last24HoursBytesRcvd[i], 0));
+    sendString(buf);
+  }
+  sendString("</TR>");
+
+  tc = el->bytesReceived - el->lastDayBytesRcvd;
+  sendString("<TR><TH>% Traffic Rcvd</TH>");
+  for(i=0; i<24; i++) {
+    if(tc > 0)
+      pctg = (float)(el->last24HoursBytesRcvd[i]*100)/(float)tc;
+    else
+      pctg = 0;
+    sprintf(buf, "<TD>%.2f</TD>", pctg);
+    sendString(buf);
+  }
+  sendString("</TR>");
+
+  sendString("</TABLE>\n");
+}
 
