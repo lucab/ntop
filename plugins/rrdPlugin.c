@@ -51,16 +51,7 @@ patch courtesy of Dominique Karg <dk@ipsoluciones.com>
 2.4     General cleanup
 */
 
-static const char *rrd_subdirs[] =
-  { "graphics",    /* graphics sub directory - must be first */
-    "flows",
-    "interfaces",
-  };
-
-#include "ntop.h"
-#include "globals-report.h"
-
-#include <rrd.h>
+#include "rrdPlugin.h"
 
 static void setPluginStatus(char * status);
 #ifdef CFG_MULTITHREADED
