@@ -1010,14 +1010,17 @@ static char* _res_skip(char *msg,
 #define GetShort(cp)	_ns_get16(cp); cp += INT16SZ;
 
 /* ************************************ */
+/* 
+   This function needs to be rewritten from scratch
+   as it does not check boundaries (see ** below)
+*/
 
 u_int16_t handleDNSpacket(const u_char *ipPtr,
-		     u_short displ,
-		     DNSHostInfo *hostPtr,
-		     short n,
-		     short *isRequest,
-		     short *positiveReply) {
-  querybuf answer;
+			  DNSHostInfo *hostPtr,
+			  short length,
+			  short *isRequest,
+			  short *positiveReply) {
+  querybuf      answer;
   u_char	*cp;
   char		**aliasPtr;
   u_char	*eom, *bp;
@@ -1034,13 +1037,13 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   short     addr_list_idx=0;
   char		printedAnswers = FALSE;
   char *host_aliases[MAXALIASES];
-  int   host_aliases_len[MAXALIASES];
+  int   host_aliases_len[MAXALIASES], n;
   u_char  hostbuf[MAXDNAME];
   char *addr_list[MAXADDRS + 1];
   u_int16_t transactionId, flags;
 
   /* Never forget to copy the buffer !!!!! */
-  cp = (u_char*)(ipPtr+displ);
+  cp = (u_char*)(ipPtr);
   memcpy(&transactionId, cp, 2); transactionId = ntohs(transactionId);
   memcpy(&flags, &cp[2], 2); flags = ntohs(flags);
 
@@ -1053,23 +1056,23 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "id=0x%X - flags=0x%X\n", transactionId, flags);
 #endif
-
-  memcpy(&answer, ipPtr+displ, sizeof(answer));
+  
+  memset(&answer, 0, sizeof(answer));
+  memcpy(&answer, ipPtr, length);
 
   *isRequest = (short)!(flags & 0x8000);
   *positiveReply = (short)!(flags & 0x0002);
 
-  if (answer.qb1.rcode != NOERROR) {
+  if(answer.qb1.rcode != NOERROR) {
     return(transactionId);
   }
 
-  eom = (u_char *)&answer+n;
+  eom = (u_char *)(ipPtr+length);
 
   qdcount = (int)ntohs((unsigned short int)answer.qb1.qdcount);
   ancount = (int)ntohs((unsigned short int)answer.qb1.ancount);
   arcount = (int)ntohs((unsigned short int)answer.qb1.arcount);
   nscount = (int)ntohs((unsigned short int)answer.qb1.nscount);
-
 
   /*
    * If there are no answer, n.s. or additional records
@@ -1289,6 +1292,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   return(transactionId);
 }
 
+
 /* **************************************** */
 
 void checkSpoofing(u_int idxToCheck) {
@@ -1390,3 +1394,4 @@ void cleanupHostEntries() {
     free(key_data.dptr);
   }
 }
+

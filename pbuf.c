@@ -117,7 +117,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   idx = (u_int)(idx % device[actualDeviceId].actualHashSize);
   initialIdx = idx;
 
-#ifndef DEBUG
+#ifdef DEBUG
   if(strcmp(etheraddr_string(ether_addr), "00:D0:B7:19:C0:4C") == 0) {
     traceEvent(TRACE_INFO, "INFO: here we go [initialIdx=%d]", initialIdx);
     dumpHash();
@@ -416,7 +416,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       goto HASH_SLOT_FOUND;
     }
   } else {
-#ifndef DEBUG
+#ifdef DEBUG
     if((numRuns*2) > device[actualDeviceId].actualHashSize) {
       traceEvent(TRACE_ERROR, "Num Runs: %d/%d [idx=%d][initialIdx=%d]", 
 		 numRuns, device[actualDeviceId].actualHashSize, 
@@ -3092,7 +3092,8 @@ static void processIpPkt(const u_char *bp,
 	  u_int16_t transactionId;
 
 	  /* The DNS chain will be checked here */
-	  transactionId = processDNSPacket(bp, udpDataLength, hlen, &isRequest, &positiveReply);
+	  transactionId = processDNSPacket(bp+hlen+sizeof(struct udphdr), 
+					   udpDataLength, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
 	  traceEvent(TRACE_INFO, "%s:%d->%s:%d [request: %d][positive reply: %d]\n",
@@ -3502,7 +3503,6 @@ static void processIpPkt(const u_char *bp,
 /* ************************************ */
 
 #ifdef MULTITHREADED
-
 void queuePacket(u_char * _deviceId,
 		 const struct pcap_pkthdr *h,
 		 const u_char *p) {
@@ -3550,7 +3550,7 @@ void queuePacket(u_char * _deviceId,
     if(len >= DEFAULT_SNAPLEN) len = DEFAULT_SNAPLEN-1;
     memcpy(packetQueue[packetQueueHead].p, p, len);
     packetQueue[packetQueueHead].h.caplen = len;
-    packetQueue[packetQueueHead].deviceId = (unsigned short)_deviceId;
+    packetQueue[packetQueueHead].deviceId = _deviceId;
     packetQueueHead = (packetQueueHead+1) % PACKET_QUEUE_LENGTH;
     packetQueueLen++;
     if(packetQueueLen > maxPacketQueueLen)
@@ -3805,7 +3805,7 @@ void processPacket(u_char *_deviceId,
   FILE * fd;
   unsigned char ipxBuffer[128];
 
-#ifndef DEBUG
+#ifdef DEBUG
   static long numPkt=0;
   traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
 
@@ -4676,7 +4676,7 @@ void _incrementUsageCounter(UsageCounter *counter,
 
 /* ************************************ */
 
-#ifndef DEBUG
+#ifdef DEBUG
 /* Debug only */
 static void dumpHash() {
   int i;

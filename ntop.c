@@ -95,9 +95,11 @@ void handleSigHup(int signalId _UNUSED_) {
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
-  int pcap_fd = pcap_fileno(device[i].pcapPtr);
+  int pcap_fd;
   fd_set readMask;
   struct timeval timeout;
+  
+  pcap_fd = pcap_fileno(device[i].pcapPtr);
 
   if((pcap_fd == -1) && (rFileName != NULL)) {
     /*
@@ -127,7 +129,7 @@ void* pcapDispatch(void *_i) {
     if(select(pcap_fd+1, &readMask, NULL, NULL, &timeout) > 0) {
       /* printf("dispatch device %s\n", device[i].name);*/
       if(!capturePackets) return(NULL);
-      rc = pcap_dispatch(device[i].pcapPtr, 1, processPacket, (u_char*) _i);
+      rc = pcap_dispatch(device[i].pcapPtr, 1, processPacket, (u_char*)_i);
 
       if(rc == -1) {
 	traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
@@ -146,13 +148,13 @@ void* pcapDispatch(void *_i) {
 
   return(NULL);
 }
-#else
+#else /* WIN32 */
 void* pcapDispatch(void *_i) {
   int rc;
   int i = (int)_i;
 
   for(;capturePackets == 1;) {
-    rc = pcap_dispatch(device[i].pcapPtr, 1, queuePacket, (u_char*) _i);
+    rc = pcap_dispatch(device[i].pcapPtr, 1, queuePacket, (u_char*)_i);
     if(rc == -1) {
       traceEvent(TRACE_ERROR, "Error while reading packets: %s.\n",
 		 pcap_geterr(device[i].pcapPtr));

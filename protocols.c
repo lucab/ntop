@@ -45,6 +45,8 @@
 static int numNapsterSvr = 0, napsterSvrInsertIdx = 0;
 #endif
 
+/* #define DNS_SNIFF_DEBUG */
+
 /* ************************************************ */
 
 void handleBootp(HostTraffic *srcHost,
@@ -546,15 +548,13 @@ void handleBootp(HostTraffic *srcHost,
 /* ************************************ */
 
 u_int16_t processDNSPacket(const u_char *packetData, 
-			   u_int length, u_int hlen,
+			   u_int length, 
 			   short *isRequest, 
 			   short *positiveReply) {
   DNSHostInfo hostPtr;
   struct in_addr hostIpAddress;
-#ifdef HAVE_GDBM_H
   datum key_data, data_data;
   char tmpBuf[96];
-#endif
   u_int16_t transactionId = 0;
   int i;
 
@@ -564,85 +564,85 @@ u_int16_t processDNSPacket(const u_char *packetData,
 
   memset(&hostPtr, 0, sizeof(DNSHostInfo));
 
-  transactionId = handleDNSpacket(packetData, (u_short)(hlen+sizeof(struct udphdr)),
-				  &hostPtr, (short)(length-(hlen+sizeof(struct udphdr))),
+  transactionId = handleDNSpacket(packetData, &hostPtr, length,
 				  isRequest, positiveReply);
 
+#ifdef DNS_SNIFF_DEBUG
   if((hostPtr.queryType == T_A)
      && (hostPtr.queryName[0] != '\0')
      && (hostPtr.addrList[0] != '\0')) {
-#ifdef DNS_SNIFF_DEBUG
     traceEvent(TRACE_INFO, "DNS %s for %s type %d\n", *isRequest ? "request" : "reply",
 	       hostPtr.queryName, hostPtr.queryType);
-#endif
 
     for(i=0; i<MAXALIASES; i++)
       if(hostPtr.aliases[i][0] != '\0') {
-#ifdef DNS_SNIFF_DEBUG
 	traceEvent(TRACE_INFO, "%s is alias of %s\n", hostPtr.aliases[i], hostPtr.name);
-#endif
       }
   }
-
-  i = strlen(hostPtr.queryName);
-  if((i > 5)
-     && (strncmp(&hostPtr.queryName[i-5], ".arpa", 5) == 0))
-    return(transactionId);
-
-#ifdef HAVE_GDBM_H
-  data_data.dptr = hostPtr.queryName;
-  data_data.dsize = strlen(data_data.dptr)+1;
-  for(i=0; i<strlen(hostPtr.queryName); i++)
-    hostPtr.queryName[i] = tolower(hostPtr.queryName[i]);
 #endif
 
+  i = strlen(hostPtr.queryName);
+
+  if((*isRequest) || (!*positiveReply))
+    return(transactionId);
+  else if((i > 5) 
+  	  && (!*isRequest) && (*positiveReply)
+	  && (strncmp(&hostPtr.queryName[i-5], ".arpa", 5) == 0)) {
+    char *a, *b, *c, *d;
+
+	/* Numeric => Symbolic */
+    d = strtok(hostPtr.queryName, ".");
+    c = strtok(NULL, ".");
+    b = strtok(NULL, ".");
+    a = strtok(NULL, ".");
+    sprintf(tmpBuf, "%s.%s.%s.%s", a, b, c, d);
+
+    if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
+    key_data.dptr = tmpBuf;
+    key_data.dsize = strlen(key_data.dptr)+1;
+    data_data.dptr = hostPtr.name;
+    data_data.dsize = strlen(data_data.dptr)+1;
+
+#ifdef DNS_SNIFF_DEBUG
+    traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
+#endif
+
+#ifdef MULTITHREADED
+    accessMutex(&gdbmMutex, "processDNSPacket");
+#endif
+    gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
+#ifdef MULTITHREADED
+    releaseMutex(&gdbmMutex);
+#endif
+
+    return(transactionId);
+  }
+
+  for(i=0; i<MAXADDRS; i++) {
+  	/* Symbolic => Numeric */
+
+    if(hostPtr.addrList[i] != 0) {
+      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
+      hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
+      key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
+      key_data.dsize = strlen(key_data.dptr)+1;
+      data_data.dptr = hostPtr.queryName;
+      data_data.dsize = strlen(data_data.dptr)+1;
+      for(i=0; i<strlen(data_data.dptr); i++)
+	data_data.dptr[i] = tolower(data_data.dptr[i]);
+
+#ifdef DNS_SNIFF_DEBUG
+    traceEvent(TRACE_INFO, "Sniffed DNS response: %s = %s", key_data.dptr, data_data.dptr);
+#endif
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "processDNSPacket");
 #endif
-
-  for(i=0; i<MAXADDRS; i++) {
-    if(hostPtr.addrList[i] != 0) {
-      hostIpAddress.s_addr = ntohl(hostPtr.addrList[i]);
-#ifdef HAVE_GDBM_H
-      key_data.dptr = _intoa(hostIpAddress, tmpBuf , sizeof(tmpBuf));
-      key_data.dsize = strlen(key_data.dptr)+1;
-      if(gdbm_file == NULL) return(-1); /* ntop is quitting... */
-
-      data_data = gdbm_fetch(gdbm_file, key_data);
-      if(data_data.dptr == NULL) {
-#ifdef DNS_SNIFF_DEBUG
-	traceEvent(TRACE_INFO, "%s <-> %s",
-		   hostPtr.queryName, intoa(hostIpAddress));
-#endif
-	gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
-
-	/* Update host */
-	for(i=1; i<device[deviceId].actualHashSize; i++) {
-	  if(device[deviceId].hash_hostTraffic[i] != NULL) {
-	    if(device[deviceId].hash_hostTraffic[i]->hostIpAddress.s_addr == hostIpAddress.s_addr) {
-	      if(device[deviceId].hash_hostTraffic[i]->hostSymIpAddress[0] == '\0') {
-		/* Not yet set */
-		if(strlen(hostPtr.queryName) >= (MAX_HOST_SYM_NAME_LEN-1))
-		  hostPtr.queryName[MAX_HOST_SYM_NAME_LEN-2] = '\0';
-		strcpy(device[deviceId].hash_hostTraffic[i]->hostSymIpAddress, hostPtr.queryName);
-#ifdef DNS_SNIFF_DEBUG
-		traceEvent(TRACE_INFO, "Setting %s = %s",
-			   device[deviceId].hash_hostTraffic[i]->hostNumIpAddress, hostPtr.queryName);
-#endif
-	      }
-	      break;
-	    }
-	  }
-	}
-      } else
-	free(data_data.dptr);
-#endif
-    }
-  }
-
+      gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE);
 #ifdef MULTITHREADED
   releaseMutex(&gdbmMutex);
 #endif
+    }
+  }
 
   return(transactionId);
 }

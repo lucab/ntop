@@ -240,7 +240,7 @@ int createThread(pthread_t *threadId,
   (*threadId) = CreateThread(NULL, /* no security attributes */
 			     0,            /* use default stack size */
 			     (LPTHREAD_START_ROUTINE)__start_routine, /* thread function */
-			     NULL, /* argument to thread function */
+			     userParm,     /* argument to thread function */
 			     0,            /* use default creation flags */
 			     &dwThreadId); /* returns the thread identifier */
 
