@@ -1400,6 +1400,20 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
       }
     }
   }
+
+  /* Read remaining data (if any) */
+  while(1) {
+    FD_ZERO(&mask);
+    FD_SET(sockFd, &mask);
+
+    if(select(sockFd+1, &mask, 0, 0, &wait_time) == 0) {
+      break; /* Timeout */
+    }
+
+    if(fgets(line, 383, fd) == NULL)
+      break;
+    /* else printf("Garbage: '%s'\n",  line); */
+  }
   pclose(fd);
 
   memset(staticOsName, 0, sizeof(staticOsName));
