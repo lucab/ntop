@@ -2050,7 +2050,7 @@ static void processIpPkt(const u_char *bp,
   }
 
   checkNetworkRouter(srcHost, dstHost, ether_dst);
-  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)length);
+  updatePacketCount(srcHostIdx, dstHostIdx, (TrafficCounter)h->len);
   updateTrafficMatrix(srcHost, dstHost, (TrafficCounter)length);
 
   if(subnetPseudoLocalHost(srcHost)) {

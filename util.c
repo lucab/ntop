@@ -752,7 +752,8 @@ void handleFlowsSpecs(char* flows) {
             }
             
             newFlow->flowName = strdup(flowName);
-            newFlow->pluginStatus.activePlugin=1;
+            newFlow->pluginStatus.activePlugin = 1;
+            newFlow->pluginStatus.pluginPtr = NULL; /* added by Jacques Le Rest <jlerest@ifremer.fr> */
             newFlow->next = flowsList;
             flowsList = newFlow;
           }
