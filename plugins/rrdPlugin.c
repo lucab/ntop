@@ -1028,8 +1028,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   int purgeCountFiles, purgeCountUnlink, purgeCountErrors;
   int cycleCount=0;
 
-#ifdef RRD_DEBUG
+#ifdef CFG_MULTITHREADED
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: rrd thread (%ld) started...\n", rrdThread);
+#else
+ #ifdef RRD_DEBUG
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrdMainLoop()");
+ #endif
 #endif
 
   if (initialized == 0)
@@ -1042,7 +1046,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   /* Show we're running */
   active = 1;
 
-  for(;myGlobals.capturePackets == 1;) {
+  for(;myGlobals.capturePackets != FLAG_NTOPSTATE_TERM;) {
     char *hostKey;
     int i, j;
     Counter numRRDs = numTotalRRDs;
@@ -1359,6 +1363,16 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	       (unsigned long)(numTotalRRDs-numRRDs), (unsigned long)numTotalRRDs);
 #endif
 
+    /*
+     * If it's FLAG_NTOPSTATE_STOPCAP, and we're still running, then this
+     * is the 1st pass.  We just updated our data to save the counts, now
+     * we kill the thread...
+     */
+    if (myGlobals.capturePackets == FLAG_NTOPSTATE_STOPCAP) {
+        traceEvent(CONST_TRACE_INFO, "RRD: STOPCAP, ending rrd thread.\n");
+        break;
+    }
+
     /* If we're reusing, every 5th cycle (25m), purge the old graphics */
     if ( (!myGlobals.reuseRRDgraphics) || (cycleCount % 5 != 0) ) {
       continue;
@@ -1410,8 +1424,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     }
   }
 
-#ifdef RRD_DEBUG
+#ifdef CFG_MULTITHREADED
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: rrd thread (%ld) terminated...\n", rrdThread);
+#else
+ #ifdef RRD_DEBUG
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: rrdMainLoop() terminated.");
+ #endif
 #endif
 
   return(0);

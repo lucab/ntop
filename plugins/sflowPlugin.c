@@ -1682,10 +1682,10 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 #endif
 
 #ifdef CFG_MULTITHREADED
-  if(debug) traceEvent(CONST_TRACE_INFO, "Started thread (%ld) for sFlow.\n", sFlowThread);
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: sFlow thread (%ld) started...\n", sFlowThread);
 #endif
 
-  for(;myGlobals.capturePackets == 1;) {
+  for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     FD_ZERO(&sFlowMask);
     FD_SET(myGlobals.sflowInSocket, &sFlowMask);
 
@@ -1717,6 +1717,7 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 
 #ifdef CFG_MULTITHREADED
   threadActive = 0;
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: sFlow thread (%ld) terminated...\n", sFlowThread);
 #endif
   return(0);
 }

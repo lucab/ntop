@@ -380,10 +380,10 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   if(!(myGlobals.netFlowInSocket > 0)) return(NULL);
   traceEvent(CONST_TRACE_INFO, "Welcome to NetFlow: listening on UDP port %d...", myGlobals.netFlowInPort);
 #ifdef CFG_MULTITHREADED
- traceEvent(CONST_TRACE_INFO, "Started thread (%ld) for NetFlow.\n", netFlowThread);
+ traceEvent(CONST_TRACE_INFO, "THREADMGMT: netFlow thread (%ld) started...\n", netFlowThread);
 #endif
 
-  for(;myGlobals.capturePackets == 1;) {
+  for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     FD_ZERO(&netflowMask);
     FD_SET(myGlobals.netFlowInSocket, &netflowMask);
 
@@ -425,8 +425,9 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 
 #ifdef CFG_MULTITHREADED
   threadActive = 0;
+  traceEvent(CONST_TRACE_INFO, "THREADMGMT: netFlow thread (%ld) terminated...\n", netFlowThread);
 #endif
-  return(0);
+  return(NULL); 
 }
 
 /* ****************************** */
