@@ -137,7 +137,7 @@ Contributors for ntop 3.0:
                 of the MADYNES Research Time (Managing DYnamic NEtworks and Services),
                 http://madynes.loria.fr/.
 
-         FibreChannel and iSCSI - code contributed by Dinesh G Dutt <ddutt at cisco.com>
+         FibreChannel and SCSI - code contributed by Dinesh G Dutt <ddutt at cisco.com>
                 of Cisco.
 
          -x/-X memory limit options - Gianluca Insolvibile <g.insolvibile at cpr.it>

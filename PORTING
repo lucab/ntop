@@ -14,6 +14,160 @@
 
   The history of success.
 
+
+  Ntop 3.0 (actually 2.2.99 or 3.0pre1 as listed) was executed by users on the following 
+  platforms:
+
+____ Platform ________________ _Version_ Thread ___________ OS/Hw ____________________ Compiler
+
+i?86-*-freebsd4.5             ! 3.0pre1 !   MT    ! 4.5                               ! 2.95
+i?86-*-freebsd4.7             ! 3.0pre1 !   MT    ! 4.7                               ! 2.95
+i?86-*-freebsd4.7             ! 3.0pre1 !   MT    ! 4.9                               ! 2.95
+i?86-*-freebsd4.8             ! 3.0pre1 !   MT    ! 4.8                               ! 2.95
+i?86-*-freebsd4.9             ! 3.0pre1 !   MT    ! 4.9                               ! 2.95
+i?86-*-freebsd5.0             ! 2.2.99  !   MT    ! 5.0                               ! 3.2.1
+i?86-*-freebsd5.1             ! 3.0pre1 !   MT    ! 5.1                               ! 3.2.2
+alpha-*-freebsd5.2            ! 3.0pre1 !   MT    ! 5.2                               ! 3.3.3
+i?86-*-freebsd5.2             ! 3.0pre1 !   MT    ! 5.2                               ! 3.3.3
+
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! 2.4.18                            ! 2.96.0
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! 2.4.20                            ! 3.2.2
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! 2.4.22                            ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! 2.4.23                            ! 3.3.2
+alphaev68-*-linux-gnu         ! 2.2.99  !   MT    ! 2.4.24                            ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! altlinux 2.4.20                   ! 3.3.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! altlinux 2.6.2                    ! 3.3.3
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! arch 0.6 2.6.2                    ! 3.3.2
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! aurox 9.2 2.4.20                  ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! cle 7.3 2.4.21                    ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! cobalt 6.0 2.2.16C37_III          ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! conectiva 8 2.4.18                ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 2.4.17                     ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 2.4.19                     ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 2.4.20                     ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 2.4.22                     ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 2.4.23                     ! 3.3.3
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! debian nbox 2.4.23                ! 3.0.4
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 2.4.24                     ! 3.3.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 2.4.25                     ! 3.3.3
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! debian 2.6.0                      ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 2.6.2                      ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 2.6.3                      ! 3.3.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 3.0 2.2.19                 ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 3.0 2.4.18                 ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 3.0 2.4.20                 ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 3.0 2.4.22                 ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! debian 3.0 2.4.24                 ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! fedora 1 2.4.20                   ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! fedora 1 2.4.22                   ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! fedora 1 2.4.24                   ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! fedora 1 2.6.1                    ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! fedora 1 2.6.2                    ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! fedora 1 2.6.3                    ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! fedora 1.90 2.6.1                 ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! gentoo 1.4.3.10 2.4.20            ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! gentoo 1.4.3.10 2.4.23_pre8       ! 3.2.3
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! gentoo 1.4.3.10 2.6.1             ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! gentoo 1.4.3.13 2.6.1             ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! gentoo 1.4.3.13 2.6.2             ! 3.3.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! imap 2.0 2.4.17                   ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! Linux 2.4.20                      ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! Linux 2.4.23                      ! 3.3.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! Linux 2.6.2                       ! 3.3.2
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! mandrake 7.2 2.2.19               ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! mandrake 8.2 2.4.18               ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! mandrake 9.0 2.4.19               ! 3.2.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! mandrake 9.1 2.4.21               ! 3.2.2
+powerpc-*-linux-gnu           ! 3.0pre1 !   MT    ! mandrake 9.1 2.4.21               ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! mandrake 9.2 2.4.21               ! 3.3.1
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! mandrake 9.2 2.4.22               ! 3.3.1
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! mandrake 9.2 2.4.24               ! 3.3.1
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! mandrake 9.2 2.4.25               ! 3.3.1
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! mandrake 10.0 2.6.1               ! 3.3.2
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! redhat 2.1AS 2.4.9                ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 3 2.4.21                   ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 3.5beta 2.4.20             ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 6.1 2.2.12                 ! 2.91
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 6.2 2.2.16                 ! 2.91
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 6.2 2.2.25                 ! 2.91
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 6.2 2.4.23                 ! 3.2.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 7.1 2.4.19                 ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 7.1 2.4.24                 ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 7.2 2.4.17                 ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 7.2 2.4.20                 ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 7.2 2.4.21                 ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 7.2 2.4.7                  ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 7.2 2.4.9                  ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 7.3 2.4.18                 ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 7.3 2.4.20                 ! 2.96.0
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! redhat 7.3 2.4.22                 ! 2.96.0
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! redhat 7.3 2.4.23                 ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 7.3 2.4.24                 ! 2.96.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 8.0 2.4.18                 ! 3.2.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 8.0 2.4.19                 ! 3.2.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 8.0 2.4.20                 ! 3.2.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 8.0 2.4.22                 ! 3.2.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 8.0 2.4.24                 ! 3.2.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 8.0 2.4.7                  ! 3.2.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.4.18                   ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.4.19                   ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.4.20                   ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.4.21                   ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.4.22                   ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.4.23                   ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.4.24                   ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.4.25                   ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.6.1                    ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.6.2                    ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! redhat 9 2.6.3                    ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 7.0.0 2.6.2             ! 2.95
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! slackware 7.1.0 2.4.17            ! 2.91
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 7.1.0 2.4.23            ! 2.91
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 8.0.0 2.2.19            ! 2.95
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! slackware 8.0.0 2.4.20            ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 8.0.0 2.4.21            ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 8.0.47 2.4.24           ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 8.1 2.4.18              ! 2.95
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! slackware 8.1 2.4.25              ! 3.3.1
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.0.0 2.4.20            ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.0.0 2.4.22            ! 3.2.2
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! slackware 9.0.0 2.4.24            ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.0.0 2.4.25            ! 3.2.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.0.0 2.6.2             ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.0.0 2.6.3             ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.0-beta 2.4.21         ! 3.2.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.1.0 2.4.21            ! 3.3.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.1.0 2.4.22            ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.1.0 2.4.23            ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.1.0 2.4.24            ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.1.0 2.4.25            ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.1.0 2.6.2             ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.1.0 2.6.3             ! 3.3.2
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! slackware 9.1 2.4.24              ! 3.2.3
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! suse 6.3 2.4.24                   ! 2.91
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! suse 6.4 2.2.15                   ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! suse 7.1 2.2.18                   ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! suse 7.1 2.4.19                   ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! suse 7.3 2.4.16                   ! 2.95
+i?86-*-linux-gnu              ! 2.2.99  !   MT    ! suse 8.0 2.4.18                   ! 2.95
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! suse 8.2 2.4.20                   ! 3.3.0
+i?86-*-linux-gnu              ! 3.0pre1 !   MT    ! suse 9.0 2.4.21                   ! 3.3.1
+powerpc-*-linux-gnu           ! 3.0pre1 !   MT    ! yellowdog 3.0 2.4.20              ! 3.2.2
+powerpc-*-linux-gnu           ! 3.0pre1 !   MT    ! yellowdog 3.0 2.4.22              ! 3.2.2
+
+powerpc-apple-darwin6.8       ! 3.0pre1 !   MT    ! 6.8                               ! 3.1.0
+powerpc-apple-darwin7.2.0     ! 3.0pre1 !   MT    ! 7.2.0                             ! 3.3.0
+
+sparc-*-solaris2.8            ! 3.0pre1 !   MT    ! 8                                 ! 3.3.2
+sparc-*-solaris2.9            ! 3.0pre1 !   MT    ! 9                                 ! 3.3.0
+i?86-*-solaris2.9             ! 3.0pre1 !   MT    ! 9                                 ! 2.95
+
+WinNT/2K/XP                   ! 3.0pre1 !   MT    ! Windows Win32                     ! 
+
+
+
+
+
   Ntop 2.2 (actually 2.1.92 or as listed) was successfully tested on the following platforms:
 
 ____ Platform ________________ _Version_ Thread ___________ OS/Hw _________________ Compiler

@@ -19,10 +19,24 @@
 
   The file NEWS contains a chronology of releases and major milestone versions.
 
- 2.3                            
+ 3.0 (was going to be 2.3)      
  =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
  (Apply Usual-caveats)
+
+ Biggies --
+         IPv6 - code contributed by Olivier Festor <Olivier.Festor at loria.fr> and
+                Abdelkader Lahmadi <Abdelkader.Lahmadi at loria.fr>
+                of the MADYNES Research Time (Managing DYnamic NEtworks and Services),
+                http://madynes.loria.fr/.
+
+         FibreChannel and SCSI - code contributed by Dinesh G Dutt <ddutt at cisco.com>
+                of Cisco.
+
+         -x/-X memory limit options - Gianluca Insolvibile <g.insolvibile at cpr.it>
+
+         All | Local | Remote selections - Luigi Iotti <luigi at iotti.biz>
+
 
  Lots of minor bug fixes for stability, proper/better function, more error
  checking, etc.
@@ -33,22 +47,26 @@
       - Win32 (Visual C++ 6.0, MinGW no longer works after 2.1.3)
       - Solaris 8/9 (i86 and sparc)
 
-      - FreeBSD (4.8 and 5.1)
-            NOTE: At present, there is a deadlock problem in all 
-                  versions of FreeBSD and ntop does not work. 
+      - FreeBSD (4.x and 5.2)
+                  The web server will deadlock (actually just run incredibly slowly)
+                  unless the --set-pcap-nonblocking option is given at run time.
 
-                  We are investigating this and hope to have
-                  it resolved shortly after the 2.3 release.
+                  Lots of credit for wrassling this aligator go to Michal Meloun 
+                  <meloun at miracle.cz> and Stanley Hopcroft <Stanley.Hopcroft at 
+                  IPAustralia.Gov.AU>
 
       - NetBSD (Single Threaded only)
 
-      - OpenBSD, HP-UX and AIX have some left-over coding/configure 
+      - OpenBSD 3.4 (and ONLY 3.4) work thanks to lots of effort by 
+                  Julien Touche <julien.touche at lycos.com>
+
+      - HP-UX and AIX have some left-over coding/configure 
         support, but do not work or have not been tested.
 
  Another significant update to ./configure
    * auto* tools (automake and autoconf) are no longer required.
    * Distributed scripts built with:
-         automake 1.6.1
+         automake 1.6.3
          Autoconf 2.57
          libtool 1.4.2
    * Most OS/Distribution/Release specific configuration is in the 
