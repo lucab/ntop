@@ -606,7 +606,8 @@ void printTrafficStatistics(void) {
 
   /* RRD */
   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-  snprintf(buf, sizeof(buf), "%s/interfaces/%s", myGlobals.rrdPath,
+  snprintf(buf, sizeof(buf), "%s/interfaces/%s", 
+	   myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName);
   
   if((i = stat(buf, &statbuf)) == 0) {

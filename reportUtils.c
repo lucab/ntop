@@ -1106,6 +1106,16 @@ int cmpFctn(const void *_a, const void *_b) {
     traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (3)");
     return(0);
   }
+  if((*a == NULL) && (*b != NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (4)");
+    return(1);
+  } else if((*a != NULL) && (*b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (5)");
+    return(-1);
+  } else if((*a == NULL) && (*b == NULL)) {
+    traceEvent(CONST_TRACE_WARNING, "cmpFctn() error (6)");
+    return(0);
+  }
 
   if(myGlobals.columnSort == FLAG_HOST_DUMMY_IDX) {
     int rc;
@@ -3690,7 +3700,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     struct stat statbuf;
 
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-    snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s", myGlobals.rrdPath,
+    snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
+	     myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
              dotToSlash(el->hostNumIpAddress));
 
