@@ -113,8 +113,20 @@ static const char *rrd_colors[] = {
   "#208352",
   "#FF1493",
   "#FFD700",
-  "#d5aad5"
+  "#d5aad5",
+  "#99ff33",
+  "#ffcc99",
+  "#0033cc",
+  "#ffcc00",
+  "#33cccc",
+  "#339966",
+  "#ff3333",
+  "#ff0066",
+  "#cc3333",
+  "#9900ff",
+  "#006666"
 };
+#define CONST_NUM_BAR_COLORS                (sizeof(rrd_colors)/sizeof(rrd_colors[0]))
 
 static const char *rrd_summary_packets[] = { 
   "ethernetPkts",

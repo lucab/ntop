@@ -65,7 +65,7 @@ static PthreadMutex rrdMutex;
 int optind, opterr;
 #endif
 
-static unsigned short initialized = 0, active = 0, dumpInterval, dumpDetail;
+static unsigned short initialized = 0, active = 0, colorWarn = 0, graphErrCount = 0, dumpInterval, dumpDetail;
 static unsigned short dumpDays, dumpHours, dumpMonths, dumpDelay;
 static char *hostsFilter = NULL;
 static Counter numRRDUpdates = 0, numTotalRRDUpdates = 0;
@@ -595,6 +595,9 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 	traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
 #endif
 
+      if(++graphErrCount < 50) 
+        traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
+
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader("RRD Graph", NULL, 0);
       safe_snprintf(__FILE__, __LINE__, path, sizeof(path),
@@ -708,6 +711,14 @@ void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, 
     }
 
     if(entryId >= MAX_NUM_ENTRIES) break;
+
+    if(entryId >= CONST_NUM_BAR_COLORS) {
+      if(colorWarn == 0) {
+        traceEvent(CONST_TRACE_WARNING, "RRD: Number of defined bar colors less than max entries.  Some graph(s) truncated");
+        colorWarn = 1;
+      }
+      break;
+    }
   }
 
 #if 0
@@ -739,6 +750,9 @@ void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, 
     for (x = 0; x < argc; x++)
       traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
 #endif
+
+    if(++graphErrCount < 50) 
+      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("RRD Graph Summary", NULL, 0);
@@ -906,6 +920,14 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
     }
 
     if(entryId >= MAX_NUM_ENTRIES) break;
+
+    if(entryId >= CONST_NUM_BAR_COLORS) {
+      if(colorWarn == 0) {
+        traceEvent(CONST_TRACE_ERROR, "RRD: Number of defined bar colors less than max entries.  Graphs may be truncated");
+        colorWarn = 1;
+      }
+      break;
+    }
   }
 
 #if 0
@@ -937,6 +959,9 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
     for (x = 0; x < argc; x++)
       traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
 #endif
+
+    if(++graphErrCount < 50) 
+      traceEvent(CONST_TRACE_ERROR, "RRD: rrd_graph() call failed, rc %d, %s", rc, rrd_get_error());
 
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
     printHTMLheader("RRD Graph Summary", NULL, 0);
@@ -1412,6 +1437,9 @@ static void commonRRDinit(void) {
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     DirPerms %04o", myGlobals.rrdDirectoryPermissions);
 #endif
 #endif /* RRD_DEBUG */
+
+  if (MAX_NUM_ENTRIES > CONST_NUM_BAR_COLORS)
+    traceEvent(CONST_TRACE_WARNING, "RRD: Too few colors defined in rrd_colors - graphs could be truncated");
 
   initialized = 1;
 }
