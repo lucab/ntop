@@ -533,6 +533,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
     traceEvent (TRACE_INFO, "Thread %d for DB Update started.\n", dbUpdateThreadId);
   }
 
+  numResolvedWithDNSAddresses = numKeptNumericAddresses = numResolvedOnCacheAddresses = 0;
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(numericFlag == 0) {
     memset(addressQueue, 0, sizeof(addressQueue));

@@ -101,6 +101,7 @@ static void resolveAddress(char* symAddr,
 
     updateHostNameInfo(addr, data_data.dptr);
     free(data_data.dptr);
+    numResolvedOnCacheAddresses++;
     return;
   } else {
 #ifdef GDBM_DEBUG
@@ -157,10 +158,15 @@ static void resolveAddress(char* symAddr,
 	}
       }
       res = tmpBuf;
-    } else
+      numResolvedWithDNSAddresses++;
+    } else {
+      numKeptNumericAddresses++;
       res = _intoa(*hostAddr, tmpBuf , sizeof(tmpBuf));
-  } else
+    }
+  } else {
+    numKeptNumericAddresses++;
     res = _intoa(*hostAddr, tmpBuf, sizeof(tmpBuf));
+  }
 
 #ifdef MULTITHREADED
   accessMutex(&addressResolutionMutex, "resolveAddress-3");

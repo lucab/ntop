@@ -80,6 +80,8 @@ extern TrafficCounter droppedAddresses;
 extern pthread_mutex_t addressQueueMutex;
 #endif
 #endif
+extern u_long numResolvedWithDNSAddresses, numKeptNumericAddresses, 
+  numResolvedOnCacheAddresses;
 
 /* Database */
 #ifdef HAVE_GDBM_H

@@ -113,6 +113,7 @@ u_int addressQueueLen, maxAddressQueueLen;
 u_int addressQueueHead, addressQueueTail;
 struct hnamemem *addressQueue[ADDRESS_QUEUE_LENGTH+1];
 #endif
+u_long numResolvedWithDNSAddresses, numKeptNumericAddresses, numResolvedOnCacheAddresses;
 #ifndef HAVE_GDBM_H
 struct hnamemem* hnametable[HASHNAMESIZE];
 #endif

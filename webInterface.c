@@ -944,6 +944,33 @@ void printNtopConfigInfo(void) {
    releaseMutex(&addressQueueMutex);
 #endif
 
+   /* **** */
+   
+#if defined(MULTITHREADED)
+   accessMutex(&addressQueueMutex, "NumQueuedAddresses");
+#endif
+   
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Addresses Resolved with DNS</TH>"
+	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", numResolvedWithDNSAddresses) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Addresses Kept Numeric</TH>"
+	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", numKeptNumericAddresses) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Addresses Found on Cache</TH>"
+	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", numResolvedOnCacheAddresses) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+
+#if defined(MULTITHREADED)
+   releaseMutex(&addressQueueMutex);
+#endif
+
+   /* **** */
+
 #if defined(MULTITHREADED)
    if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Active Threads</TH>"
 	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", numThreads) < 0) 
