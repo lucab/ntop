@@ -714,6 +714,41 @@ typedef struct fcNameServerCache {
     struct fcNameServerCache *next;
 } FcNameServerCacheEntry;
 
+typedef struct fcScsiCounters {
+  /* FC-Specific stuff */
+  FcAddress        hostFcAddress;
+  short            vsanId;           /* VLAN Id (0 if not set) */
+  char             hostNumFcAddress[LEN_FC_ADDRESS_DISPLAY];
+
+  /* FC/SCSI Info */
+  wwn_t            pWWN, nWWN;
+  u_short          fcRecvSize, scsiTarget, lunsGt256;
+  u_char           reportedLuns[MAX_LUNS_SUPPORTED];
+  u_char           devType;
+  char             vendorId[SCSI_VENDOR_ID_LEN];
+  char             productId[SCSI_VENDOR_ID_LEN];
+  char             productRev[4];
+  ScsiLunTrafficInfo *activeLuns[MAX_LUNS_SUPPORTED];
+  time_t           lastOnlineTime, lastOfflineTime;
+  TrafficCounter   numOffline;
+
+  /* FC Counters */
+  TrafficCounter   class2Sent, class2Rcvd, class3Sent, class3Rcvd;
+  TrafficCounter   classFSent, classFRcvd;
+  TrafficCounter   fcBytesSent, fcBytesRcvd;
+  TrafficCounter   fcFcpBytesSent, fcFcpBytesRcvd;
+  TrafficCounter   fcFiconBytesSent, fcFiconBytesRcvd;
+  TrafficCounter   fcIpfcBytesSent, fcIpfcBytesRcvd;
+  TrafficCounter   fcElsBytesSent, fcElsBytesRcvd;
+  TrafficCounter   fcDnsBytesSent, fcDnsBytesRcvd;
+  TrafficCounter   fcSwilsBytesSent, fcSwilsBytesRcvd;
+  TrafficCounter   otherFcBytesSent, otherFcBytesRcvd;
+  TrafficCounter   fcRscnsRcvd;
+
+  /* SCSI Counters */
+  TrafficCounter   scsiReadBytes, scsiWriteBytes, scsiOtherBytes;
+} FcScsiCounters;
+
 /* **************************** */
 
 #define hostIp4Address hostIpAddress.Ip4Address
@@ -741,12 +776,7 @@ typedef struct hostTraffic {
   short            hostResolvedNameType;
   u_short          minTTL, maxTTL; /* IP TTL (Time-To-Live) */
   struct timeval   minLatency, maxLatency;
-
-    /* FC-Specific stuff */
-  FcAddress        hostFcAddress;
-  short            vsanId;           /* VLAN Id (0 if not set) */
-  char             hostNumFcAddress[LEN_FC_ADDRESS_DISPLAY];
-
+  
   NonIPTraffic     *nonIPTraffic;
   NonIpProtoTrafficInfo *nonIpProtoTrafficInfos; /* Info about further non IP protos */
 
@@ -799,33 +829,8 @@ typedef struct hostTraffic {
   ShortProtoTrafficInfo *ipProtosList;        /* List of myGlobals.numIpProtosList entries */
   ProtoTrafficInfo      *protoIPTrafficInfos; /* Info about IP traffic generated/rcvd by this host */
 
-  /* FC/SCSI Info */
-  wwn_t            pWWN, nWWN;
-  u_short          fcRecvSize, scsiTarget, lunsGt256;
-  u_char           reportedLuns[MAX_LUNS_SUPPORTED];
-  u_char           devType;
-  char             vendorId[SCSI_VENDOR_ID_LEN];
-  char             productId[SCSI_VENDOR_ID_LEN];
-  char             productRev[4];
-  ScsiLunTrafficInfo *activeLuns[MAX_LUNS_SUPPORTED];
-  time_t           lastOnlineTime, lastOfflineTime;
-  TrafficCounter   numOffline;
-
-  /* FC Counters */
-  TrafficCounter   class2Sent, class2Rcvd, class3Sent, class3Rcvd;
-  TrafficCounter   classFSent, classFRcvd;
-  TrafficCounter   fcBytesSent, fcBytesRcvd;
-  TrafficCounter   fcFcpBytesSent, fcFcpBytesRcvd;
-  TrafficCounter   fcFiconBytesSent, fcFiconBytesRcvd;
-  TrafficCounter   fcIpfcBytesSent, fcIpfcBytesRcvd;
-  TrafficCounter   fcElsBytesSent, fcElsBytesRcvd;
-  TrafficCounter   fcDnsBytesSent, fcDnsBytesRcvd;
-  TrafficCounter   fcSwilsBytesSent, fcSwilsBytesRcvd;
-  TrafficCounter   otherFcBytesSent, otherFcBytesRcvd;
-  TrafficCounter   fcRscnsRcvd;
-
-  /* SCSI Counters */
-  TrafficCounter   scsiReadBytes, scsiWriteBytes, scsiOtherBytes;
+  /* Fiber Channel/SCSI */
+  FcScsiCounters   *fcCounters;
 
   /* Non IP */
   TrafficCounter   stpSent, stpRcvd; /* Spanning Tree */
@@ -995,6 +1000,7 @@ typedef struct ntopIfaceaddr{
     NtopIfaceAddrInet6 inet6;
   }af;
 } NtopIfaceAddr;
+
 /* ************************************* */
 
 typedef struct ntopInterface {

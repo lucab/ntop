@@ -2295,8 +2295,8 @@ static int returnHTTPPage(char* pageName,
 		   || (strcmp(el->ethAddressString, hostName) == 0))) {
 	      break;
 	    } else {
-	      if((el->hostNumFcAddress != NULL) &&
-		 strcmp(el->hostNumFcAddress, hostName) == 0)
+	      if((el->fcCounters->hostNumFcAddress != NULL) &&
+		 strcmp(el->fcCounters->hostNumFcAddress, hostName) == 0)
 		break;
 	    }
 	  }
@@ -2346,8 +2346,8 @@ static int returnHTTPPage(char* pageName,
 		   || (strcmp(el->ethAddressString, hostName) == 0)))
 	      break;
 	  } else {
-	    if((el->hostNumFcAddress != NULL) &&
-	       strcmp(el->hostNumFcAddress, hostName) == 0)
+	    if((el->fcCounters->hostNumFcAddress != NULL) &&
+	       strcmp(el->fcCounters->hostNumFcAddress, hostName) == 0)
 	      break;
 	  }
         }
@@ -2424,8 +2424,8 @@ static int returnHTTPPage(char* pageName,
 	  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
 	      el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
 	    if(isFcHost(el)) {
-              if((el->hostNumFcAddress != NULL) &&
-		 strcmp(el->hostNumFcAddress, hostName) == 0)
+              if((el->fcCounters->hostNumFcAddress != NULL) &&
+		 strcmp(el->fcCounters->hostNumFcAddress, hostName) == 0)
 		break;
 	    } else {
 	      if((el != myGlobals.broadcastEntry)

@@ -54,9 +54,9 @@ int fillFcHostInfo (const u_char *bp, HostTraffic *srcHost)
 {
   assert (bp != NULL);
 
-  srcHost->fcRecvSize = ntohs ((u_short)bp[10] & 0xFFF);
-  memcpy (srcHost->pWWN.str, &bp[20], LEN_WWN_ADDRESS);
-  memcpy (srcHost->nWWN.str, &bp[28], LEN_WWN_ADDRESS);
+  srcHost->fcCounters->fcRecvSize = ntohs ((u_short)bp[10] & 0xFFF);
+  memcpy (srcHost->fcCounters->pWWN.str, &bp[20], LEN_WWN_ADDRESS);
+  memcpy (srcHost->fcCounters->nWWN.str, &bp[28], LEN_WWN_ADDRESS);
 
   return (0);
 }
@@ -103,6 +103,21 @@ int isRscn (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd)
 
 /* **************************************** */
 
+HostTraffic *allocFcScsiCounters(HostTraffic *host) {
+  if(host->fcCounters == NULL) {
+    host->fcCounters = malloc(sizeof(FcScsiCounters));
+    if(host->fcCounters == NULL) 
+      return(NULL); /* Out of memory */
+    
+    memset(host->fcCounters, 0, sizeof(FcScsiCounters));
+    host->fcCounters->vsanId = -1;
+  }
+
+  return(host);
+}
+
+/* **************************************** */
+
 int fillFcpInfo (const u_char *bp, HostTraffic *srcHost, HostTraffic *dstHost)
 {
   int offset = 0;
@@ -118,13 +133,16 @@ int fillFcpInfo (const u_char *bp, HostTraffic *srcHost, HostTraffic *dstHost)
 
   fcpDl = ntohl (*(u_int32_t *)&bp[offset+28]);
 
+  if(allocFcScsiCounters(srcHost) == NULL) return;
+  if(allocFcScsiCounters(dstHost) == NULL) return;
+
   if (bp[offset+11] & 0x1) {
-    incrementTrafficCounter (&srcHost->scsiWriteBytes, fcpDl);
-    incrementTrafficCounter (&dstHost->scsiWriteBytes, fcpDl);
+    incrementTrafficCounter (&srcHost->fcCounters->scsiWriteBytes, fcpDl);
+    incrementTrafficCounter (&dstHost->fcCounters->scsiWriteBytes, fcpDl);
   }
   else if (bp[offset+11] & 0x2) {
-    incrementTrafficCounter (&srcHost->scsiReadBytes, fcpDl);
-    incrementTrafficCounter (&dstHost->scsiReadBytes, fcpDl);
+    incrementTrafficCounter (&srcHost->fcCounters->scsiReadBytes, fcpDl);
+    incrementTrafficCounter (&dstHost->fcCounters->scsiReadBytes, fcpDl);
   }
 
   return (0);

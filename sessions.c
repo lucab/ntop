@@ -2319,10 +2319,10 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
         }
         
         if (theSession->initiator == srcHost) {
-            hostLunStats = dstHost->activeLuns[lun];
+	  hostLunStats = dstHost->fcCounters->activeLuns[lun];
         }
         else {
-            hostLunStats = srcHost->activeLuns[lun];
+            hostLunStats = srcHost->fcCounters->activeLuns[lun];
         }
 
         if (hostLunStats == NULL) {
@@ -2343,9 +2343,9 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
         
     switch (rCtl) {
     case FCP_IU_CMD:
-        srcHost->devType = SCSI_DEV_INITIATOR;
-        if (dstHost->devType == SCSI_DEV_UNINIT) {
-            dstHost->devType = myGlobals.scsiDefaultDevType;
+      srcHost->fcCounters->devType = SCSI_DEV_INITIATOR;
+      if (dstHost->fcCounters->devType == SCSI_DEV_UNINIT) {
+            dstHost->fcCounters->devType = myGlobals.scsiDefaultDevType;
         }
         
         if (bp[0] != 0) {
@@ -2353,7 +2353,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
             if (bp[2] != 0) {
                 traceEvent (CONST_TRACE_WARNING, "Have a multi-level LUN for %s,"
                             "so stats can be tracked for this LUN.\n",
-                            dstHost->hostNumFcAddress);
+                            dstHost->fcCounters->hostNumFcAddress);
                 if (isXchgOrig) {
                     incrementTrafficCounter (&theSession->unknownLunBytesSent,
                                              length);
@@ -2375,7 +2375,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
         if (lun > MAX_LUNS_SUPPORTED) {
             traceEvent (CONST_TRACE_WARNING, "Cannot track LUNs > %d (for %s),"
                         "so stats can be tracked for this LUN.\n",
-                        MAX_LUNS_SUPPORTED, dstHost->hostNumFcAddress);
+                        MAX_LUNS_SUPPORTED, dstHost->fcCounters->hostNumFcAddress);
             if (isXchgOrig) {
                 incrementTrafficCounter (&theSession->unknownLunBytesSent,
                                          length);
@@ -2392,7 +2392,7 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
             theSession->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
             if (theSession->activeLuns[lun] == NULL) {
                 traceEvent (CONST_TRACE_ERROR, "Unable to allocate LUN for %d:%s\n",
-                            lun, dstHost->hostNumFcAddress);
+                            lun, dstHost->fcCounters->hostNumFcAddress);
                 if (isXchgOrig) {
                     incrementTrafficCounter (&theSession->unknownLunBytesSent,
                                              length);
@@ -2417,12 +2417,12 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
 
         /* Also allocate LUN stats structure in the host data structure */
         if (theSession->initiator == srcHost) {
-            if (dstHost->activeLuns[lun] == NULL) {
-                dstHost->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
+            if (dstHost->fcCounters->activeLuns[lun] == NULL) {
+                dstHost->fcCounters->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo));
                 
-                if (dstHost->activeLuns[lun] == NULL) {
+                if (dstHost->fcCounters->activeLuns[lun] == NULL) {
                     traceEvent (CONST_TRACE_ERROR, "Unable to allocate host LUN for %d:%s\n",
-                                lun, dstHost->hostNumFcAddress);
+                                lun, dstHost->fcCounters->hostNumFcAddress);
                     if (isXchgOrig) {
                         incrementTrafficCounter (&theSession->unknownLunBytesSent,
                                                  length);
@@ -2433,21 +2433,21 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
                     }
                     return;
                 }
-                memset ((char *)dstHost->activeLuns[lun], 0,
+                memset ((char *)dstHost->fcCounters->activeLuns[lun], 0,
                         sizeof (ScsiLunTrafficInfo));
-                dstHost->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
-                dstHost->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
-                dstHost->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
-                dstHost->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
+                dstHost->fcCounters->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
+                dstHost->fcCounters->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
+                dstHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
+                dstHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
             }
-            hostLunStats = dstHost->activeLuns[lun];
+            hostLunStats = dstHost->fcCounters->activeLuns[lun];
         }
         else {
-            if (srcHost->activeLuns[lun] == NULL) {
-                srcHost->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo)); 
-                if (srcHost->activeLuns[lun] == NULL) {
+            if (srcHost->fcCounters->activeLuns[lun] == NULL) {
+                srcHost->fcCounters->activeLuns[lun] = (ScsiLunTrafficInfo *)malloc (sizeof (ScsiLunTrafficInfo)); 
+                if (srcHost->fcCounters->activeLuns[lun] == NULL) {
                     traceEvent (CONST_TRACE_ERROR, "Unable to allocate host LUN for %d:%s\n",
-                                lun, srcHost->hostNumFcAddress);
+                                lun, srcHost->fcCounters->hostNumFcAddress);
                     if (isXchgOrig) {
                         incrementTrafficCounter (&theSession->unknownLunBytesSent,
                                                  length);
@@ -2458,13 +2458,13 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
                     }
                     return;
                 }
-                memset ((char *)srcHost->activeLuns[lun], 0, sizeof (ScsiLunTrafficInfo));
-                srcHost->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
-                srcHost->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
-                srcHost->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
-                srcHost->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
+                memset ((char *)srcHost->fcCounters->activeLuns[lun], 0, sizeof (ScsiLunTrafficInfo));
+                srcHost->fcCounters->activeLuns[lun]->firstSeen.tv_sec = h->ts.tv_sec;
+                srcHost->fcCounters->activeLuns[lun]->firstSeen.tv_usec = h->ts.tv_usec;
+                srcHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_sec = h->ts.tv_sec;
+                srcHost->fcCounters->activeLuns[lun]->lastIopsTime.tv_usec = h->ts.tv_usec;
             }
-            hostLunStats = srcHost->activeLuns[lun];
+            hostLunStats = srcHost->fcCounters->activeLuns[lun];
         }
 
         lunStats = theSession->activeLuns[lun];
@@ -2646,17 +2646,17 @@ static void processScsiPkt(const struct pcap_pkthdr *h,
                     hostLunStats->invalidLun = TRUE;
                 }
                 else {
-                    srcHost->devType = bp[0]&0x1F;
+		  srcHost->fcCounters->devType = bp[0]&0x1F;
                 }
 
                 if (length >= 24+8) {
-                    strncpy (srcHost->vendorId, &bp[8], 8);
+                    strncpy (srcHost->fcCounters->vendorId, &bp[8], 8);
                 }
                 if (length >= 24+8+16) {
-                    strncpy (srcHost->productId, &bp[16], 16);
+                    strncpy (srcHost->fcCounters->productId, &bp[16], 16);
                 }
                 if (length >= 24+8+16+4) {
-                    strncpy (srcHost->productRev, &bp[32], 4);
+                    strncpy (srcHost->fcCounters->productRev, &bp[32], 4);
                 }
             }
             break;
@@ -2879,11 +2879,11 @@ static void processSwRscn (const u_char *bp, u_short vsanId, int actualDeviceId)
         if ((affectedHost = lookupFcHost (&affectedId, vsanId,
                                           actualDeviceId)) != NULL) {
             if (event == FC_SW_RSCN_PORT_ONLINE) {
-                affectedHost->lastOnlineTime = myGlobals.actTime;
+	      affectedHost->fcCounters->lastOnlineTime = myGlobals.actTime;
             }
             else if (event == FC_SW_RSCN_PORT_OFFLINE) {
-                affectedHost->lastOfflineTime = myGlobals.actTime;
-                incrementTrafficCounter (&affectedHost->numOffline, 1);
+	      affectedHost->fcCounters->lastOfflineTime = myGlobals.actTime;
+                incrementTrafficCounter (&affectedHost->fcCounters->numOffline, 1);
             }
         }
     }
@@ -2914,9 +2914,9 @@ FCSession* handleFcSession (const struct pcap_pkthdr *h,
         return(NULL);
     }
 
-    if ((srcHost->vsanId > MAX_VSANS) || (dstHost->vsanId > MAX_VSANS)) {
+    if ((srcHost->fcCounters->vsanId > MAX_VSANS) || (dstHost->fcCounters->vsanId > MAX_VSANS)) {
         traceEvent (CONST_TRACE_WARNING, "Not following session for invalid"
-                    " VSAN pair %d:%d", srcHost->vsanId, dstHost->vsanId);
+                    " VSAN pair %d:%d", srcHost->fcCounters->vsanId, dstHost->fcCounters->vsanId);
         return (NULL);
     }
 
@@ -2924,9 +2924,9 @@ FCSession* handleFcSession (const struct pcap_pkthdr *h,
      * The hash key has to be calculated such that its value has to be the same
      * regardless of the flow direction.
      */
-    idx = (u_int)(((*(u_int32_t *)&srcHost->hostFcAddress) +
-                   (*(u_int32_t *)&dstHost->hostFcAddress)) +
-                  srcHost->vsanId + dstHost->vsanId);
+    idx = (u_int)(((*(u_int32_t *)&srcHost->fcCounters->hostFcAddress) +
+                   (*(u_int32_t *)&dstHost->fcCounters->hostFcAddress)) +
+                  srcHost->fcCounters->vsanId + dstHost->fcCounters->vsanId);
 
     idx %= MAX_TOT_NUM_SESSIONS;
 
@@ -2989,13 +2989,13 @@ FCSession* handleFcSession (const struct pcap_pkthdr *h,
 
       theSession->magic = CONST_MAGIC_NUMBER;
 
-      theSession->initiatorAddr = srcHost->hostFcAddress;
-      theSession->remotePeerAddr = dstHost->hostFcAddress;
+      theSession->initiatorAddr = srcHost->fcCounters->hostFcAddress;
+      theSession->remotePeerAddr = dstHost->fcCounters->hostFcAddress;
 
 #ifdef SESSION_TRACE_DEBUG
       traceEvent(CONST_TRACE_INFO, "SESSION_TRACE_DEBUG: New FC session [%s] <-> [%s] (# sessions = %d)",
-		 dstHost->hostNumFcAddress,
-		 srcHost->hostNumFcAddress,
+		 dstHost->fcCounters->hostNumFcAddress,
+		 srcHost->fcCounters->hostNumFcAddress,
 		 myGlobals.device[actualDeviceId].numFcSessions);
 #endif
 
@@ -3104,7 +3104,7 @@ FCSession* handleFcSession (const struct pcap_pkthdr *h,
             incrementTrafficCounter (&theSession->fcSwilsBytesRcvd, length);
         }
         
-        hash = getFcFabricElementHash (srcHost->vsanId, actualDeviceId);
+        hash = getFcFabricElementHash (srcHost->fcCounters->vsanId, actualDeviceId);
         if (hash == NULL) {
             break;
         }
@@ -3137,7 +3137,7 @@ FCSession* handleFcSession (const struct pcap_pkthdr *h,
             case FC_SWILS_RSCN:
                 incrementTrafficCounter (&hash->rscnBytes, length);
                 incrementTrafficCounter (&hash->rscnPkts, 1);
-                processSwRscn (bp, srcHost->vsanId, actualDeviceId);
+                processSwRscn (bp, srcHost->fcCounters->vsanId, actualDeviceId);
                 break;
             case FC_SWILS_DRLIR:
             case FC_SWILS_DSCN:

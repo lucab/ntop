@@ -552,19 +552,19 @@ unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
 #endif
     }
     else {
-        if (host->vsanId) {
-	  hash ^= host->vsanId;
-	  hash ^= host->hostFcAddress.domain;
-	  hash ^= host->hostFcAddress.area;
-	  hash ^= host->hostFcAddress.port;
-	  if(snprintf(tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x.%x", host->vsanId, 
-		      host->hostFcAddress.domain, host->hostFcAddress.area,
-		      host->hostFcAddress.port, hash) < 0)
+        if (host->fcCounters->vsanId) {
+	  hash ^= host->fcCounters->vsanId;
+	  hash ^= host->fcCounters->hostFcAddress.domain;
+	  hash ^= host->fcCounters->hostFcAddress.area;
+	  hash ^= host->fcCounters->hostFcAddress.port;
+	  if(snprintf(tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x.%x", host->fcCounters->vsanId, 
+		      host->fcCounters->hostFcAddress.domain, host->fcCounters->hostFcAddress.area,
+		      host->fcCounters->hostFcAddress.port, hash) < 0)
 	    BufferTooShort();
         } else {
 	  if(snprintf (tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x",
-		       host->hostFcAddress.domain, host->hostFcAddress.area,
-		       host->hostFcAddress.port, host) < 0)
+		       host->fcCounters->hostFcAddress.domain, host->fcCounters->hostFcAddress.area,
+		       host->fcCounters->hostFcAddress.port, host) < 0)
 	    BufferTooShort();
         }
         str = tmpBuf;
@@ -633,8 +633,8 @@ void updateFcTrafficMatrix(HostTraffic *srcHost,
     if ((myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[a] != NULL) &&
 	(myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[a] != srcHost)) {
       traceEvent (CONST_TRACE_WARNING, "Unable to resolve conflict in matrix host hash for %s with %s\n",
-		  myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[a]->hostNumFcAddress,
-		  srcHost->hostNumFcAddress);
+		  myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[a]->fcCounters->hostNumFcAddress,
+		  srcHost->fcCounters->hostNumFcAddress);
       myGlobals.fcMatrixHashUnresCollisions++;
       return;
     }
@@ -647,8 +647,8 @@ void updateFcTrafficMatrix(HostTraffic *srcHost,
     if ((myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[b] != NULL) &&
 	(myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[b] != dstHost)) {
       traceEvent (CONST_TRACE_WARNING, "Unable to resolve conflict in matrix host hash for %s with %s\n",
-		  myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[b]->hostNumFcAddress,
-		  dstHost->hostNumFcAddress);
+		  myGlobals.device[actualDeviceId].fcTrafficMatrixHosts[b]->fcCounters->hostNumFcAddress,
+		  dstHost->fcCounters->hostNumFcAddress);
       myGlobals.fcMatrixHashUnresCollisions++;
       return;
     }
@@ -660,7 +660,7 @@ void updateFcTrafficMatrix(HostTraffic *srcHost,
   id = a*myGlobals.device[actualDeviceId].numHosts+b;
   if (myGlobals.device[actualDeviceId].fcTrafficMatrix[id] == NULL) {
     myGlobals.device[actualDeviceId].fcTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
-    myGlobals.device[actualDeviceId].fcTrafficMatrix[id]->vsanId = srcHost->vsanId;
+    myGlobals.device[actualDeviceId].fcTrafficMatrix[id]->vsanId = srcHost->fcCounters->vsanId;
   }
     
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcTrafficMatrix[id]->bytesSent, length.value);
@@ -669,7 +669,7 @@ void updateFcTrafficMatrix(HostTraffic *srcHost,
   id = b*myGlobals.device[actualDeviceId].numHosts+a;
   if(myGlobals.device[actualDeviceId].fcTrafficMatrix[id] == NULL) {
     myGlobals.device[actualDeviceId].fcTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
-    myGlobals.device[actualDeviceId].fcTrafficMatrix[id]->vsanId = dstHost->vsanId;
+    myGlobals.device[actualDeviceId].fcTrafficMatrix[id]->vsanId = dstHost->fcCounters->vsanId;
   }
     
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcTrafficMatrix[id]->bytesRcvd, length.value);

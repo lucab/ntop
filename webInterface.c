@@ -313,7 +313,7 @@ void unloadPlugins(void) {
 
 /* ******************************* */
 
-static char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
+char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
   int age;
 
   /* return(""); */
@@ -444,13 +444,13 @@ char* makeHostLink(HostTraffic *el, short mode,
                     el->ethAddressString) < 0)
           BufferTooShort();
         strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
-    } else if(el->hostNumFcAddress[0] != '\0') {
-      strncpy(symIp, el->hostNumFcAddress, sizeof(symIp));
+    } else if(el->fcCounters->hostNumFcAddress[0] != '\0') {
+      strncpy(symIp, el->fcCounters->hostNumFcAddress, sizeof(symIp));
 #ifndef CMPFCTN_DEBUG
       if(myGlobals.debugMode == 1)
 #endif
         if(snprintf(noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:FC(%s) -->",
-                    el->hostNumFcAddress) < 0)
+                    el->fcCounters->hostNumFcAddress) < 0)
           BufferTooShort();
         strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
     } else if(el->nonIPTraffic) {    
@@ -702,26 +702,26 @@ char* getHostName(HostTraffic *el, short cutName, char *buf, int bufLen) {
   tmpStr = el->hostResolvedName;
 
   if (el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
-      if (el->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
+    if (el->fcCounters->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
           if (el->hostResolvedName[0] != '\0') {
               setResolvedName(el, buf, FLAG_HOST_SYM_ADDR_TYPE_FC);
           }
-          else if (el->pWWN.str[0] != 0) {
+          else if (el->fcCounters->pWWN.str[0] != 0) {
               if(snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
-                        el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2], el->pWWN.str[3],
-                        el->pWWN.str[4], el->pWWN.str[5], el->pWWN.str[6], el->pWWN.str[7]) < 0)
+                        el->fcCounters->pWWN.str[0], el->fcCounters->pWWN.str[1], el->fcCounters->pWWN.str[2], el->fcCounters->pWWN.str[3],
+                        el->fcCounters->pWWN.str[4], el->fcCounters->pWWN.str[5], el->fcCounters->pWWN.str[6], el->fcCounters->pWWN.str[7]) < 0)
                 BufferTooShort();
           }
-          else if (el->hostNumFcAddress[0] != '\0') {
-              strncpy (buf, el->hostNumFcAddress, LEN_FC_ADDRESS_DISPLAY);
+          else if (el->fcCounters->hostNumFcAddress[0] != '\0') {
+              strncpy (buf, el->fcCounters->hostNumFcAddress, LEN_FC_ADDRESS_DISPLAY);
           }
           else {
               strcpy (buf, "");
           }
       }
       else {
-          if (el->hostNumFcAddress[0] != '\0') {
-              strncpy (buf, el->hostNumFcAddress, LEN_FC_ADDRESS_DISPLAY);
+          if (el->fcCounters->hostNumFcAddress[0] != '\0') {
+              strncpy (buf, el->fcCounters->hostNumFcAddress, LEN_FC_ADDRESS_DISPLAY);
           }
       }
   }
@@ -8377,217 +8377,4 @@ int handlePluginHTTPRequest(char* url) {
   return(0); /* Plugin not found */
 }
 
-/* ******************* */
-
-char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
-                      short compactWWN, char *buf, int buflen) {
-    char *tmpStr, tmpbuf[64], colorSpec[64], *linkStr;
-    char noLink = FALSE;        /* don't create link for certain spl addr */
-    char *devTypeStr, *vendorStr, *vendorName;
-
-    if(el == NULL) {
-        traceEvent (CONST_TRACE_ERROR, "makeFcHostLink: Received NULL el\n");
-        return("&nbsp;");
-    }
-
-    accessAddrResMutex("makeHostLink");
-    tmpStr = NULL;
-    devTypeStr = "";
-    vendorStr = "";
-
-    if (!cutName) {
-        if (strncmp (el->hostNumFcAddress, "ff.ff.fd", strlen ("ff.ff.fd")) == 0) {
-            tmpStr = "Fabric Controller";
-            noLink = TRUE;
-        }
-        else if (strncmp (el->hostNumFcAddress, "ff.fc", strlen ("ff.fc")) == 0) {
-            if(snprintf (tmpbuf, 64, "Domain Controller for %s", &el->hostNumFcAddress[6]) < 0)
-              BufferTooShort();
-            tmpStr = tmpbuf;
-            noLink = TRUE;
-        }
-        else if (strncmp (el->hostNumFcAddress, "ff.ff.fe", sizeof ("ff.ff.fe")) == 0) {
-            tmpStr = "F_Port Server";
-            noLink = TRUE;
-        }
-        else if (strncmp (el->hostNumFcAddress, "ff.ff.fc", sizeof ("ff.ff.fc")) == 0) {
-            tmpStr = "Directory Server";
-            noLink = TRUE;
-        }
-        else if (strncmp (el->hostNumFcAddress, "00.00.00", strlen ("00.00.00")) == 0) {
-            tmpStr = el->hostNumFcAddress;
-            noLink = TRUE;
-        }
-        else {
-            /* Introduce maybe a picture or string based on HBA's vendor */
-            if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC) &&
-               (el->hostResolvedName[0] != '\0')) {
-                tmpStr = el->hostResolvedName;
-            }
-            else if (el->pWWN.str[0] != '\0') {
-                if (!compactWWN) {
-                    strncpy (tmpbuf, fcwwn_to_str (el->pWWN.str),
-                             LEN_WWN_ADDRESS_DISPLAY);
-                }
-                else {
-                    if(snprintf (tmpbuf, sizeof(tmpbuf),
-                                 "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
-                                 el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2],
-                                 el->pWWN.str[3], el->pWWN.str[4], el->pWWN.str[5],
-                                 el->pWWN.str[6], el->pWWN.str[7]) < 0)
-                      BufferTooShort();
-                }
-                tmpStr = tmpbuf;
-            }
-            else {
-                tmpStr = el->hostNumFcAddress;
-            }
-            
-            if (strncmp (el->hostNumFcAddress, "ff", 2) == 0)
-                noLink = TRUE;
-
-            linkStr = el->hostNumFcAddress;
-        }
-    }
-    else {
-        if (el->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
-            if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC) &&
-               (el->hostResolvedName[0] != '\0')) {
-                tmpStr = el->hostResolvedName;
-            }
-            else if (el->pWWN.str[0] != '\0') {
-                if (!compactWWN) {
-                    strncpy (tmpbuf, fcwwn_to_str (el->pWWN.str),
-                             LEN_WWN_ADDRESS_DISPLAY);
-                }
-                else {
-                    if(snprintf (tmpbuf, sizeof(tmpbuf),
-                                 "%02X:%02X:%02X:%02X:<br>%02X:%02X:%02X:%02X",
-                                 el->pWWN.str[0], el->pWWN.str[1], el->pWWN.str[2],
-                                 el->pWWN.str[3], el->pWWN.str[4], el->pWWN.str[5],
-                                 el->pWWN.str[6], el->pWWN.str[7]) < 0)
-                      BufferTooShort();
-                }
-                tmpStr = tmpbuf;
-            }
-            else {
-                tmpStr = el->hostNumFcAddress;
-            }
-        }
-        else {
-            tmpStr = el->hostNumFcAddress;
-        }
-
-        linkStr = el->hostNumFcAddress;
-
-        if (strncmp (el->hostNumFcAddress, "ff", 2) == 0)
-            noLink = TRUE;
-    }
-
-    if (el->hostFcAddress.domain && (el->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN)) {
-        if (el->devType == SCSI_DEV_INITIATOR) {
-            devTypeStr = "&nbsp;" CONST_IMG_SCSI_INITIATOR;
-        }
-        else if (el->devType == SCSI_DEV_BLOCK) {
-            devTypeStr = "&nbsp;" CONST_IMG_SCSI_DISK;
-        }
-        else {
-            devTypeStr = "";
-        }
-
-        vendorName = getVendorInfo(&el->pWWN.str[2], 1);
-        if (vendorName[0] != '\0') {
-            if (!strncasecmp (vendorName, "EMULEX CORPORATION",
-                              strlen ("EMULEX CORPORATION"))) {
-                vendorStr = "&nbsp;" CONST_IMG_FC_VEN_EMULEX;
-            }
-            else if (!strcasecmp (vendorName, "JNI Corporation")) {
-                vendorStr = "&nbsp;" CONST_IMG_FC_VEN_JNI;
-            }
-            else if (!strcasecmp (vendorName, "BROCADE COMMUNICATIONS SYSTEMS, Inc.")) {
-                vendorStr = "&nbsp;" CONST_IMG_FC_VEN_BROCADE;
-            }
-            else if (!strncmp (vendorName, "EMC", strlen ("EMC"))) {
-                vendorStr = "&nbsp;" CONST_IMG_FC_VEN_EMC;
-            }
-            else if (!strcasecmp (vendorName, "SEAGATE TECHNOLOGY")) {
-                vendorStr = "&nbsp;" CONST_IMG_FC_VEN_SEAGATE;
-            }
-            else {
-                vendorStr = "";
-            }
-        }
-        else {
-            vendorStr = "";
-        }
-    }
-    else {
-        devTypeStr = "";
-        vendorStr = "";
-    }
-
-    if (mode == FLAG_HOSTLINK_HTML_FORMAT) {
-        if (noLink) {
-            if(snprintf(buf, buflen,
-                        "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s&nbsp;" CONST_IMG_FIBRECHANNEL_SWITCH "</TH>",
-                        tmpStr) < 0)
-                BufferTooShort();
-        }
-        else {
-            if (snprintf (buf, buflen, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
-                          "<A HREF=\"/%s-%d.html\" onMouseOver=\"window.status='"
-                          "%s';return true\" onMouseOut=\"window.status=''"
-                          ";return true\">%s%s%s</A></TH>", linkStr, el->vsanId,
-                          el->hostNumFcAddress, tmpStr, devTypeStr, vendorStr) < 0)
-                BufferTooShort();
-        }
-    }
-    else if (mode == FLAG_HOSTLINK_TEXT_FORMAT) {
-        if (noLink) {
-            if (snprintf(buf, buflen, "%s", tmpStr) < 0)
-                BufferTooShort();
-        }
-        else {
-            if (snprintf(buf, buflen, 
-                         "<A HREF=\"/%s-%d.html\" %s NOWRAP "
-                         "onMouseOver=\"window.status='%s';return true\" "
-                         "onMouseOut=\"window.status='';return true\">%s</A>",
-                         linkStr, el->vsanId,
-                         makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)),
-                         el->hostNumFcAddress, tmpStr) < 0)
-                BufferTooShort();
-        }
-    }
-    else {
-        if (snprintf(buf, buflen, "%s", tmpStr) < 0)
-            BufferTooShort();
-    }
-
-    releaseAddrResMutex ();
-    return(buf);
-}
-
-/* ******************************* */
-
-char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen) {
-    accessAddrResMutex("makeHostLink");
-
-    if (vsanId) {
-      if (snprintf (buf, buflen, 
-               "%s<a href=\"" CONST_VSAN_DETAIL_HTML "?vsan=%d\">%d</a>%s",
-               (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "<th " TH_BG " align=\"right\" NOWRAP>" : "",
-               vsanId, vsanId, 
-               (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "</th>" : "") < 0)
-      BufferTooShort ();
-    } else {
-      if (snprintf (buf, buflen, 
-               "%s<a href=\"" CONST_VSAN_DETAIL_HTML "\">-</a>%s",
-               (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "<th " TH_BG " align=\"right\" NOWRAP>" : "",
-               (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "</th>" : "") < 0)
-      BufferTooShort ();
-    }
-
-    releaseAddrResMutex ();
-    return (buf);
-}
 

@@ -1864,21 +1864,21 @@ void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent) {
   TrafficCounter traffic, totalFcTraffic, diffTraffic;
   char *lblstouse[] = { "SCSI", "FICON", "ELS", "NS", "IP/FC", "Others"};
   Counter protoTrafficSent[] = {
-      theHost->fcFcpBytesSent.value,
-      theHost->fcFiconBytesSent.value,
-      theHost->fcElsBytesSent.value,
-      theHost->fcDnsBytesSent.value,
-      theHost->fcIpfcBytesSent.value,
-      theHost->otherFcBytesSent.value,
+      theHost->fcCounters->fcFcpBytesSent.value,
+      theHost->fcCounters->fcFiconBytesSent.value,
+      theHost->fcCounters->fcElsBytesSent.value,
+      theHost->fcCounters->fcDnsBytesSent.value,
+      theHost->fcCounters->fcIpfcBytesSent.value,
+      theHost->fcCounters->otherFcBytesSent.value,
   };
 
   Counter protoTrafficRcvd[] = {
-      theHost->fcFcpBytesRcvd.value,
-      theHost->fcFiconBytesRcvd.value,
-      theHost->fcElsBytesRcvd.value,
-      theHost->fcDnsBytesRcvd.value,
-      theHost->fcIpfcBytesRcvd.value,
-      theHost->otherFcBytesRcvd.value,
+      theHost->fcCounters->fcFcpBytesRcvd.value,
+      theHost->fcCounters->fcFiconBytesRcvd.value,
+      theHost->fcCounters->fcElsBytesRcvd.value,
+      theHost->fcCounters->fcDnsBytesRcvd.value,
+      theHost->fcCounters->fcIpfcBytesRcvd.value,
+      theHost->fcCounters->otherFcBytesRcvd.value,
   };
   int useFdOpen = 0;
 
@@ -1886,9 +1886,9 @@ void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent) {
   diffTraffic.value = 0;
 
   if(dataSent)
-      totalFcTraffic.value = theHost->fcBytesSent.value;
+      totalFcTraffic.value = theHost->fcCounters->fcBytesSent.value;
   else
-      totalFcTraffic.value = theHost->fcBytesRcvd.value;
+      totalFcTraffic.value = theHost->fcCounters->fcBytesRcvd.value;
   
   if(totalFcTraffic.value > 0) {
       for (i = 0; i < 6; i++) {
@@ -2132,9 +2132,9 @@ void drawLunStatsBytesDistribution (HostTraffic *el) {
   memset(sortedLunTbl, 0, sizeof (sortedLunTbl));
 
   for (lun=0, numEntries=0; lun < MAX_LUNS_SUPPORTED; lun++) {
-      if ((lunStats = el->activeLuns[lun]) != NULL) {
+    if ((lunStats = el->fcCounters->activeLuns[lun]) != NULL) {
           sortedLunTbl[numEntries].lun = lun;
-          sortedLunTbl[numEntries++].stats = el->activeLuns[lun];
+          sortedLunTbl[numEntries++].stats = el->fcCounters->activeLuns[lun];
       }
   }
 
@@ -2200,9 +2200,9 @@ void drawLunStatsPktsDistribution (HostTraffic *el) {
   memset(sortedLunTbl, 0, sizeof (sortedLunTbl));
 
   for (lun=0, numEntries=0; lun < MAX_LUNS_SUPPORTED; lun++) {
-      if ((lunStats = el->activeLuns[lun]) != NULL) {
+      if ((lunStats = el->fcCounters->activeLuns[lun]) != NULL) {
           sortedLunTbl[numEntries].lun = lun;
-          sortedLunTbl[numEntries++].stats = el->activeLuns[lun];
+          sortedLunTbl[numEntries++].stats = el->fcCounters->activeLuns[lun];
       }
   }
 

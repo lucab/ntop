@@ -368,12 +368,16 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
     
   freeHostSessions(host, actualDeviceId);
 
-  if(host->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
+  if(host->fcCounters != NULL) {
+    if(host->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
       for (i = 0; i < MAX_LUNS_SUPPORTED; i++) {
-          if(host->activeLuns[i] != NULL) {
-              free (host->activeLuns[i]);
-          }
+	if(host->fcCounters->activeLuns[i] != NULL) {
+	  free(host->fcCounters->activeLuns[i]);
+	}
       }
+    }
+
+    free(host->fcCounters);
   }
 
   myGlobals.device[actualDeviceId].hostsno--;
@@ -710,7 +714,7 @@ void purgeIdleHosts(int actDevice) {
                     || (!subnetPseudoLocalHost(el))))      /* Purge remote
                                                             * hosts only */
                || ((el->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
-                   (el->hostNumFcAddress[0] == '\0')))
+                   (el->fcCounters->hostNumFcAddress[0] == '\0')))
             ) {
 	  /* Host selected for deletion */
 	  theFlaggedHosts[numHosts++] = el;
@@ -806,12 +810,12 @@ void setHostSerial(HostTraffic *el) {
     return;
 
   if(isFcHost(el)) {
-    if(el->hostNumFcAddress[0] != '\0') {
+    if(el->fcCounters->hostNumFcAddress[0] != '\0') {
       el->hostSerial.serialType = SERIAL_FC;
-      el->hostSerial.value.fcSerial.fcAddress.domain = el->hostFcAddress.domain;
-      el->hostSerial.value.fcSerial.fcAddress.area = el->hostFcAddress.area;
-      el->hostSerial.value.fcSerial.fcAddress.port = el->hostFcAddress.port;
-      el->hostSerial.value.fcSerial.vsanId = el->vsanId;
+      el->hostSerial.value.fcSerial.fcAddress.domain = el->fcCounters->hostFcAddress.domain;
+      el->hostSerial.value.fcSerial.fcAddress.area = el->fcCounters->hostFcAddress.area;
+      el->hostSerial.value.fcSerial.fcAddress.port = el->fcCounters->hostFcAddress.port;
+      el->hostSerial.value.fcSerial.vsanId = el->fcCounters->vsanId;
     }
     else
       traceEvent (CONST_TRACE_ERROR, "setHostSerial: Received NULL FC Address entry");
@@ -1269,7 +1273,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
                        idx, el->hostTrafficBucket);
         }
       
-        if(memcmp ((u_int8_t *)&(el->hostFcAddress), hostFcAddress, LEN_FC_ADDRESS) == 0) {
+        if(memcmp ((u_int8_t *)&(el->fcCounters->hostFcAddress), hostFcAddress, LEN_FC_ADDRESS) == 0) {
             hostFound = 1;
             break;
         }
@@ -1314,8 +1318,10 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
         
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
+
+    if(allocFcScsiCounters(el) == NULL) return;
     el->l2Family = FLAG_HOST_TRAFFIC_AF_FC;
-    el->devType = SCSI_DEV_UNINIT;
+    el->fcCounters->devType = SCSI_DEV_UNINIT;
     el->magic = CONST_MAGIC_NUMBER;
     el->hostTrafficBucket = idx;
       
@@ -1325,20 +1331,21 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     myGlobals.device[actualDeviceId].hash_hostTraffic[el->hostTrafficBucket] = el;  /* Insert a new entry */
     myGlobals.device[actualDeviceId].hostsno++;
 
-    el->hostFcAddress.domain = hostFcAddress->domain;
-    el->hostFcAddress.area = hostFcAddress->area;
-    el->hostFcAddress.port = hostFcAddress->port;
-    if(snprintf(el->hostNumFcAddress, sizeof(el->hostNumFcAddress), "%02x.%02x.%02x", hostFcAddress->domain,
+    el->fcCounters->hostFcAddress.domain = hostFcAddress->domain;
+    el->fcCounters->hostFcAddress.area = hostFcAddress->area;
+    el->fcCounters->hostFcAddress.port = hostFcAddress->port;
+    if(snprintf(el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress),
+		"%02x.%02x.%02x", hostFcAddress->domain,
              hostFcAddress->area, hostFcAddress->port) < 0)
       BufferTooShort();
     /* TBD: Resolve FC_ID to WWN */
-    el->vsanId = vsanId;
+    el->fcCounters->vsanId = vsanId;
 
     /* If there is a cache entry, use it */
-    if((fcnsEntry = findFcHostNSCacheEntry (&el->hostFcAddress, vsanId)) != NULL) {
+    if((fcnsEntry = findFcHostNSCacheEntry (&el->fcCounters->hostFcAddress, vsanId)) != NULL) {
         setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC);
-        memcpy (el->pWWN.str, fcnsEntry->pWWN.str, LEN_WWN_ADDRESS);
-        memcpy (el->nWWN.str, fcnsEntry->nWWN.str, LEN_WWN_ADDRESS);
+        memcpy (el->fcCounters->pWWN.str, fcnsEntry->pWWN.str, LEN_WWN_ADDRESS);
+        memcpy (el->fcCounters->nWWN.str, fcnsEntry->nWWN.str, LEN_WWN_ADDRESS);
     }
     
 #ifdef HASH_DEBUG

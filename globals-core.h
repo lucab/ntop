@@ -160,6 +160,9 @@ extern char* formatPkts(Counter pktNr, char *outStr, int outStrLen);
 extern char* formatTime(time_t *theTime, char *outStr, int outStrLen);
 extern void clearUserUrlList(void);
 
+/* fcUtils.c */
+extern HostTraffic* allocFcScsiCounters(HostTraffic *host);
+
 /* hash.c */
 extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);

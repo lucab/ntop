@@ -238,7 +238,7 @@ static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
 			      int actualDeviceId) {
   if((sender == NULL) || (receiver == NULL) || (sender == receiver)) {
     if ((sender != NULL) && (sender->l2Family == FLAG_HOST_TRAFFIC_AF_FC) &&
-	(strncasecmp (sender->hostNumFcAddress, FC_FAB_CTLR_ADDR,
+	(strncasecmp (sender->fcCounters->hostNumFcAddress, FC_FAB_CTLR_ADDR,
 		      strlen (FC_FAB_CTLR_ADDR)) == 0)) {
       /* This is normal. Return without warning */
       return;
@@ -248,15 +248,10 @@ static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
     return;
   }
 
-  if ((sender->hostNumFcAddress[0] != '\0') && (receiver->hostNumFcAddress[0] != '\0')) {
-    sender->totContactedSentPeers += incrementUsageCounter(&sender->contactedSentPeers,
-							   receiver, actualDeviceId);
-    receiver->totContactedRcvdPeers += incrementUsageCounter(&receiver->contactedRcvdPeers,
-							     sender, actualDeviceId);
-  } else if((sender != myGlobals.otherHostEntry) && (receiver != myGlobals.otherHostEntry)) {
+  if((sender != myGlobals.otherHostEntry) && (receiver != myGlobals.otherHostEntry)) {
     /* The statements below have no effect if the serial has been already computed */
     setHostSerial(sender); setHostSerial(receiver);
-
+    
     sender->totContactedSentPeers   += incrementUsageCounter(&sender->contactedSentPeers, receiver, actualDeviceId);
     receiver->totContactedRcvdPeers += incrementUsageCounter(&receiver->contactedRcvdPeers, sender, actualDeviceId);
   }
@@ -570,7 +565,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
            * S_ID == D_ID.
            */
           if (srcHost->l2Family == FLAG_HOST_TRAFFIC_AF_FC) {
-              if (strncasecmp (srcHost->hostNumFcAddress, FC_FAB_CTLR_ADDR,
+              if (strncasecmp (srcHost->fcCounters->hostNumFcAddress, FC_FAB_CTLR_ADDR,
                                strlen (FC_FAB_CTLR_ADDR)) != 0) {
                   return;
               }
@@ -3490,7 +3485,10 @@ static void processFcPkt(const u_char *bp,
         return;
     }
 
-    if (strncasecmp (dstHost->hostNumFcAddress, FC_BROADCAST_ADDR,
+    if(allocFcScsiCounters(srcHost) == NULL) return;
+    if(allocFcScsiCounters(dstHost) == NULL) return;
+
+    if (strncasecmp (dstHost->fcCounters->hostNumFcAddress, FC_BROADCAST_ADDR,
                      strlen (FC_BROADCAST_ADDR)) == 0) {
         incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBroadcastPkts, 1);
         incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBroadcastBytes, fcFrameLen);
@@ -3505,23 +3503,23 @@ static void processFcPkt(const u_char *bp,
     updateTrafficMatrix (srcHost, dstHost, ctr, actualDeviceId);
 #endif
 
-    incrementTrafficCounter(&srcHost->fcBytesSent, fcFrameLen);
-    incrementTrafficCounter(&dstHost->fcBytesRcvd, fcFrameLen);
+    incrementTrafficCounter(&srcHost->fcCounters->fcBytesSent, fcFrameLen);
+    incrementTrafficCounter(&dstHost->fcCounters->fcBytesRcvd, fcFrameLen);
 
     /* Class-Based Stats */
     if ((sof == MDSHDR_SOFi3) || (sof == MDSHDR_SOFn3)) {
-        incrementTrafficCounter (&srcHost->class3Sent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->class3Rcvd, fcFrameLen);
+      incrementTrafficCounter (&srcHost->fcCounters->class3Sent, fcFrameLen);
+        incrementTrafficCounter (&dstHost->fcCounters->class3Rcvd, fcFrameLen);
         incrementTrafficCounter (&myGlobals.device[actualDeviceId].class2Bytes, fcFrameLen);
     }
     else if ((sof == MDSHDR_SOFi2) || (sof == MDSHDR_SOFn2)) {
-        incrementTrafficCounter (&srcHost->class2Sent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->class2Rcvd, fcFrameLen);
+        incrementTrafficCounter (&srcHost->fcCounters->class2Sent, fcFrameLen);
+        incrementTrafficCounter (&dstHost->fcCounters->class2Rcvd, fcFrameLen);
         incrementTrafficCounter (&myGlobals.device[actualDeviceId].class3Bytes, fcFrameLen);
     }
     else if (sof == MDSHDR_SOFf) {
-        incrementTrafficCounter (&srcHost->classFSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->classFRcvd, fcFrameLen);
+        incrementTrafficCounter (&srcHost->fcCounters->classFSent, fcFrameLen);
+        incrementTrafficCounter (&dstHost->fcCounters->classFRcvd, fcFrameLen);
         incrementTrafficCounter (&myGlobals.device[actualDeviceId].classFBytes, fcFrameLen);
     }
 
@@ -3540,18 +3538,18 @@ static void processFcPkt(const u_char *bp,
     switch (protocol) {
     case FC_FTYPE_SWILS:
     case FC_FTYPE_SWILS_RSP:
-        incrementTrafficCounter (&srcHost->fcSwilsBytesSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcSwilsBytesRcvd, fcFrameLen);
+        incrementTrafficCounter (&srcHost->fcCounters->fcSwilsBytesSent, fcFrameLen);
+        incrementTrafficCounter (&dstHost->fcCounters->fcSwilsBytesRcvd, fcFrameLen);
         incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcSwilsBytes, fcFrameLen);
         break;
     case FC_FTYPE_IP:
-        incrementTrafficCounter (&srcHost->fcIpfcBytesSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcIpfcBytesRcvd, fcFrameLen);
+        incrementTrafficCounter (&srcHost->fcCounters->fcIpfcBytesSent, fcFrameLen);
+        incrementTrafficCounter (&dstHost->fcCounters->fcIpfcBytesRcvd, fcFrameLen);
         incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcIpfcBytes, fcFrameLen);
         break;
     case FC_FTYPE_SCSI:
-        incrementTrafficCounter (&srcHost->fcFcpBytesSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcFcpBytesRcvd, fcFrameLen);
+        incrementTrafficCounter (&srcHost->fcCounters->fcFcpBytesSent, fcFrameLen);
+        incrementTrafficCounter (&dstHost->fcCounters->fcFcpBytesRcvd, fcFrameLen);
         incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcFcpBytes, fcFrameLen);
 
         if ((fchdr.r_ctl & 0xF) == FCP_IU_CMD) {
@@ -3563,13 +3561,13 @@ static void processFcPkt(const u_char *bp,
         if (isPlogi (fchdr.r_ctl, fchdr.type, bp[offset+24])) {
             fillFcHostInfo (&bp[offset+24], srcHost);
         }
-        incrementTrafficCounter (&srcHost->fcElsBytesSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcElsBytesRcvd, fcFrameLen);
+        incrementTrafficCounter (&srcHost->fcCounters->fcElsBytesSent, fcFrameLen);
+        incrementTrafficCounter (&dstHost->fcCounters->fcElsBytesRcvd, fcFrameLen);
         incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcElsBytes, fcFrameLen);
 
         /* Count RSCNs separately */
         if (isRscn (fchdr.r_ctl, fchdr.type, bp[offset+24])) {
-            incrementTrafficCounter (&dstHost->fcRscnsRcvd, fcFrameLen);
+            incrementTrafficCounter (&dstHost->fcCounters->fcRscnsRcvd, fcFrameLen);
         }
 
         break;
@@ -3586,24 +3584,24 @@ static void processFcPkt(const u_char *bp,
              */
             switch(nsOpcode) {
             case FCDNS_RNN_ID:
-                strncpy (srcHost->nWWN.str, &bp[offset+24+16+4], LEN_WWN_ADDRESS);
-                break;
+	      strncpy (srcHost->fcCounters->nWWN.str, &bp[offset+24+16+4], LEN_WWN_ADDRESS);
+	      break;
             }
 
-            incrementTrafficCounter (&srcHost->fcDnsBytesSent, fcFrameLen);
-            incrementTrafficCounter (&dstHost->fcDnsBytesRcvd, fcFrameLen);
+            incrementTrafficCounter (&srcHost->fcCounters->fcDnsBytesSent, fcFrameLen);
+            incrementTrafficCounter (&dstHost->fcCounters->fcDnsBytesRcvd, fcFrameLen);
             incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcDnsBytes, fcFrameLen);
 
         }
         else {
-            incrementTrafficCounter (&srcHost->otherFcBytesSent, fcFrameLen);
-            incrementTrafficCounter (&dstHost->otherFcBytesRcvd, fcFrameLen);
+	  incrementTrafficCounter (&srcHost->fcCounters->otherFcBytesSent, fcFrameLen);
+            incrementTrafficCounter (&dstHost->fcCounters->otherFcBytesRcvd, fcFrameLen);
             incrementTrafficCounter (&myGlobals.device[actualDeviceId].otherFcBytes, fcFrameLen);
         }
         break;
     case FC_FTYPE_SBCCS:
-        incrementTrafficCounter (&srcHost->fcFiconBytesSent, fcFrameLen);
-        incrementTrafficCounter (&dstHost->fcFiconBytesRcvd, fcFrameLen);
+        incrementTrafficCounter (&srcHost->fcCounters->fcFiconBytesSent, fcFrameLen);
+        incrementTrafficCounter (&dstHost->fcCounters->fcFiconBytesRcvd, fcFrameLen);
         incrementTrafficCounter (&myGlobals.device[actualDeviceId].fcFiconBytes, fcFrameLen);
         break;
     case FC_FTYPE_LINKDATA:
@@ -3612,8 +3610,8 @@ static void processFcPkt(const u_char *bp,
     case FC_FTYPE_BLS:
     default:
         incrementTrafficCounter(&myGlobals.device[actualDeviceId].otherFcBytes, fcFrameLen);
-        incrementTrafficCounter(&srcHost->otherFcBytesSent, fcFrameLen);
-        incrementTrafficCounter(&dstHost->otherFcBytesRcvd, fcFrameLen);
+        incrementTrafficCounter(&srcHost->fcCounters->otherFcBytesSent, fcFrameLen);
+        incrementTrafficCounter(&dstHost->fcCounters->otherFcBytesRcvd, fcFrameLen);
         break;
     }
 

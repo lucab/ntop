@@ -2380,8 +2380,9 @@ void resetHostsVariables(HostTraffic* el) {
   el->icmpInfo = NULL;
   if (el->protocolInfo != NULL)        free(el->protocolInfo);
   el->protocolInfo = NULL;
+  if(el->fcCounters != NULL) free(el->fcCounters);
+  el->fcCounters = NULL;
 
-  el->vsanId = -1;
   resetUsageCounter(&el->contactedSentPeers);
   resetUsageCounter(&el->contactedRcvdPeers);
   resetUsageCounter(&el->contactedRouters);
@@ -3664,7 +3665,7 @@ u_int numActiveSenders(u_int deviceId) {
       el != NULL; el = getNextHost(deviceId, el)) {
     if(broadcastHost(el) || (el->pktSent.value == 0))
       continue;
-    else if (isFcHost (el) && (el->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
+    else if (isFcHost (el) && (el->fcCounters->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
       continue;
     else
       numSenders++;
@@ -4688,7 +4689,7 @@ u_int numActiveNxPorts (u_int deviceId) {
 
   for(el=getFirstHost(deviceId);
       el != NULL; el = getNextHost(deviceId, el)) {
-    if (isFcHost (el) && (el->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
+    if (isFcHost (el) && (el->fcCounters->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
       continue;
     else
       numSenders++;

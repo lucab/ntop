@@ -186,11 +186,12 @@
 #define FC_SW_RSCN_PORT_ONLINE   0x10
 #define FC_SW_RSCN_PORT_OFFLINE  0x20
 
+
 #define CMP_FC_PORT(a,b) \
-        if ((a->hostFcAddress.domain == 0xFF) ||                                        \
-            (b->hostFcAddress.domain == 0xFF)) {                                        \
+        if ((a->fcCounters->hostFcAddress.domain == 0xFF) ||                                        \
+            (b->fcCounters->hostFcAddress.domain == 0xFF)) {                                        \
             /* Always compare FC_IDs for reserved FC_IDs */                             \
-            rc = memcmp (&a->hostFcAddress, &b->hostFcAddress, LEN_FC_ADDRESS);         \
+            rc = memcmp (&a->fcCounters->hostFcAddress, &b->fcCounters->hostFcAddress, LEN_FC_ADDRESS);         \
         }                                                                               \
         else {                                                                          \
             /* Sort such that entries with alias names show up together, then           \
@@ -209,16 +210,16 @@
                      (b->hostResolvedName[0] == '\0')) {                                  \
                 rc = -1;        /* Named entries float to top */                        \
             }                                                                           \
-            else if ((a->pWWN.str[0] != '\0') &&                                        \
-                     (b->pWWN.str[0] != '\0')) {                                        \
-                rc = memcmp (a->pWWN.str, b->pWWN.str, LEN_WWN_ADDRESS);                \
+            else if ((a->fcCounters->pWWN.str[0] != '\0') &&                                        \
+                     (b->fcCounters->pWWN.str[0] != '\0')) {                                        \
+                rc = memcmp (a->fcCounters->pWWN.str, b->fcCounters->pWWN.str, LEN_WWN_ADDRESS);                \
             }                                                                           \
-            else if ((a->pWWN.str[0] == '\0') &&                                        \
-                     (b->pWWN.str[0] != '\0')) {                                        \
+            else if ((a->fcCounters->pWWN.str[0] == '\0') &&                                        \
+                     (b->fcCounters->pWWN.str[0] != '\0')) {                                        \
                 rc = 1;  /* pWWN entries float above FC_ID only entries */              \
             }                                                                           \
-            else if ((a->pWWN.str[0] != '\0') &&                                        \
-                     (b->pWWN.str[0] == '\0')) {                                        \
+            else if ((a->fcCounters->pWWN.str[0] != '\0') &&                                        \
+                     (b->fcCounters->pWWN.str[0] == '\0')) {                                        \
                 rc = -1;                                                                \
             }                                                                           \
             else {                                                                      \
@@ -229,3 +230,4 @@
 
 
 #endif
+

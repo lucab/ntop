@@ -263,7 +263,7 @@ libntop_la_LDFLAGS = $(AM_LDFLAGS) -release $(VERSION) -export-dynamic @DYN_FLAG
 
 # Archive for http representation, or the 'viewer'
 libntopreport_la_SOURCES = emitter.c       globals-report.c  graph.c \
-                           http.c          \
+                           fcReport.c      http.c          \
                            report.c        reportUtils.c     ssl.c   \
                            webInterface.c
 
@@ -297,7 +297,8 @@ am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo fcUtils.lo \
 	ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
-	http.lo report.lo reportUtils.lo ssl.lo webInterface.lo
+	fcReport.lo http.lo report.lo reportUtils.lo ssl.lo \
+	webInterface.lo
 libntopreport_la_OBJECTS = $(am_libntopreport_la_OBJECTS)
 EXTRA_PROGRAMS = ntops$(EXEEXT) sntop$(EXEEXT)
 bin_PROGRAMS = ntop$(EXEEXT)
@@ -322,8 +323,9 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/address.Plo ./$(DEPDIR)/admin.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/argv.Plo ./$(DEPDIR)/dataFormat.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/emitter.Plo ./$(DEPDIR)/fcUtils.Plo \
-@AMDEP_TRUE@	./$(DEPDIR)/getopt.Plo ./$(DEPDIR)/getopt1.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/emitter.Plo ./$(DEPDIR)/fcReport.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/fcUtils.Plo ./$(DEPDIR)/getopt.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/getopt1.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/globals-core.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/globals-report.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/graph.Plo ./$(DEPDIR)/hash.Plo \
@@ -523,6 +525,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/argv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dataFormat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emitter.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fcReport.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fcUtils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getopt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getopt1.Plo@am__quote@
