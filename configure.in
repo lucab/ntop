@@ -54,7 +54,7 @@ AC_INIT([ntop],[2.2.91])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.91.111-2003-08-18"
+SCRIPTVER="v2.2.91.112-2003-08-19"
 
 dnl>
 dnl> generate the config header
@@ -1940,15 +1940,46 @@ AC_CHECK_HEADERS([netinet/in.h])
 AC_CHECK_HEADERS([arpa/inet.h arpa/nameser.h])
 AC_CHECK_HEADERS([net/bpf.h])
 AC_CHECK_HEADERS([net/ethernet.h])
-AC_CHECK_HEADERS([net/if.h])
-AC_CHECK_HEADERS([netinet/if_ether.h])
+
+dnl> The failed recheck stuff below is courtesy of Chris Turbeville [turbo@verio.net]
+dnl> Chris developed this for Solaris 9, confirming work I had done earlier for FreeBSD
+AC_CHECK_HEADERS([net/if.h], [], [],
+[#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif])
+AC_CHECK_HEADERS([netinet/if_ether.h], [], [],
+[#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#ifdef HAVE_NET_IF_H
+#include <net/if.h>
+#endif])
 AC_CHECK_HEADERS([netinet/in_systm.h])
-AC_CHECK_HEADERS([netinet/ip.h])
-AC_CHECK_HEADERS([netinet/ip_icmp.h])
+AC_CHECK_HEADERS([netinet/ip.h], [], [],
+[#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif])
+AC_CHECK_HEADERS([netinet/ip_icmp.h], [], [],
+[#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#ifdef HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
+#ifdef HAVE_NETINET_IP_H
+#include <netinet/ip.h>
+#endif])
 AC_CHECK_HEADERS([netinet/tcp.h])
-AC_CHECK_HEADERS([netinet/udp.h])
+AC_CHECK_HEADERS([netinet/udp.h], [], [],
+[#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif])
 dnl>  Note - if ethertype is missing, ntop.h has the critical #defines extracted...
 AC_CHECK_HEADERS([ethertype.h])
+AC_CHECK_HEADERS([net/ppp_defs.h])
 AC_CHECK_HEADERS([linux/if_pppox.h], [], [], 
 [#include <net/if.h>
 #include <netinet/if_ether.h>])
