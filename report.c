@@ -2342,21 +2342,22 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
       theAnchor[0] = htmlAnchor1;
     }
 
-    snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=0>\n<TR><TH "TH_BG" NOWRAP>%s1>Host%s</A></TH>"
-	    "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
-	    "</TH><TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
-	    "<TH "TH_BG">%s3>MAC&nbsp;Address%s</A></TH>"
-	    "<TH "TH_BG">%s6>Other&nbsp;Name(s)%s</A></TH>"
-	    "<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
-	    "<TH "TH_BG">%s5>Nw&nbsp;Board&nbsp;Vendor%s</A></TH>"
-	    "</TR>\n",
-	    theAnchor[1], arrow[1],
-	    theAnchor[0], arrow[0],
-	    theAnchor[2], arrow[2],
-	    theAnchor[3], arrow[3],
-	    theAnchor[6], arrow[6],
-	    theAnchor[4], arrow[4],
-	    theAnchor[5], arrow[5]);
+    snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=0>\n<TR>"
+	     "<TH "TH_BG" NOWRAP>%s1>Host%s</A></TH>"
+	     "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
+	     "</TH><TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
+	     "<TH "TH_BG">%s3>MAC&nbsp;Address%s</A></TH>"
+	     "<TH "TH_BG">%s6>Other&nbsp;Name(s)%s</A></TH>"
+	     "<TH "TH_BG">%s4>Sent&nbsp;Bandwidth%s</A></TH>"
+	     "<TH "TH_BG">%s5>Nw&nbsp;Board&nbsp;Vendor%s</A></TH>"
+	     "</TR>\n",
+	     theAnchor[1], arrow[1],
+	     theAnchor[0], arrow[0],
+	     theAnchor[2], arrow[2],
+	     theAnchor[3], arrow[3],
+	     theAnchor[6], arrow[6],
+	     theAnchor[4], arrow[4],
+	     theAnchor[5], arrow[5]);
     sendString(buf);
 
     for(idx=0; idx<numEntries; idx++) {
@@ -2383,11 +2384,11 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	    tmpName3 = separator;
 
 	  snprintf(buf, sizeof(buf), "<TR %s>"
-		  "%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
-		  getRowColor(),
-		  makeHostLink(el, LONG_FORMAT, 0, 1),
-		  tmpName1, tmpName3);
+		   "%s<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		   "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+		   getRowColor(),
+		   makeHostLink(el, LONG_FORMAT, 0, 1),
+		   tmpName1, tmpName3);
 	  sendString(buf);
 
 	  sendString("<TD "TD_BG"  ALIGN=RIGHT>");
@@ -2396,15 +2397,15 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 
 	    if(el->nbHostName && el->nbDomainName) {
 	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
-		      el->nbHostName, el->nbDomainName);
+		       el->nbHostName, el->nbDomainName);
 	      sendString(buf);
 	      numAddresses++;
-		} else {
+	    } else if(el->nbHostName) {
 	      snprintf(buf, sizeof(buf), "%s&nbsp;[%s]", getOSFlag("Windows", 0),
-		      el->nbHostName);
+		       el->nbHostName);
 	      sendString(buf);
 	      numAddresses++;
-		}
+	    }
 
 	    if(el->atNetwork) {
 	      char *nodeName = el->atNodeName;
@@ -2413,7 +2414,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	      if(nodeName == NULL) nodeName = "";
 
 	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%d.%d]", getOSFlag("Mac", 0),
-		      nodeName, el->atNetwork, el->atNode);
+		       nodeName, el->atNetwork, el->atNode);
 	      sendString(buf);
 	      numAddresses++;
 	    }
@@ -2421,25 +2422,23 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	    if(el->ipxHostName) {
 	      if(numAddresses > 0) sendString("/");
 	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Novell", 0),
-		      el->ipxHostName, getSAPInfo(el->ipxNodeType, 1));
+		       el->ipxHostName, getSAPInfo(el->ipxNodeType, 1));
 	      sendString(buf);
 	      numAddresses++;
 	    }
 	  }
 
 	  sendString("&nbsp;</TD>");
-
 	  printBar(buf, sizeof(buf), el->actBandwidthUsage, maxBandwidthUsage, 3);
-
-	  snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>", tmpName2); sendString(buf);
-
+	  snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>", tmpName2); 
+	  sendString(buf);
 	  sendString("</TR>\n");
 	}
       }
 
       /* Avoid huge tables */
       if(printedEntries++ > maxNumLines)
-		break;
+	break;
     }
 
     sendString("</TABLE>"TABLE_OFF"<P>\n");
