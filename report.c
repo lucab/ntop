@@ -1365,7 +1365,7 @@ void printHostsTraffic(int reportTypeReq,
   struct tm t;
   HostTraffic *el;
   HostTraffic** tmpTable;
-  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER*2], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   float sentPercent=0, rcvdPercent=0, totPercent=0;
   Counter totIpBytesSent=0, totIpBytesRcvd=0, totIpBytes=0;
   Counter totEthBytesSent=0, totEthBytesRcvd=0, totEthBytes=0;
