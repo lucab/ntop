@@ -2265,6 +2265,48 @@ typedef struct single_flow_ver5_rec {
   struct flow_ver5_rec flowRecord[V5FLOWS_PER_PAK+1 /* safe against buffer overflows */];
 } NetFlow5Record;
 
+#define FLOW_VERSION_7		 7
+#define V7FLOWS_PER_PAK		28
+
+struct flow_ver7_hdr {
+  u_int16_t version;         /* Current version=7*/
+  u_int16_t count;           /* The number of records in PDU. */
+  u_int32_t sysUptime;       /* Current time in msecs since router booted */
+  u_int32_t unix_secs;       /* Current seconds since 0000 UTC 1970 */
+  u_int32_t unix_nsecs;      /* Residual nanoseconds since 0000 UTC 1970 */
+  u_int32_t flow_sequence;   /* Sequence number of total flows seen */
+  u_int32_t reserved;
+};
+
+ struct flow_ver7_rec {
+   u_int32_t srcaddr;    /* Source IP Address */
+   u_int32_t dstaddr;    /* Destination IP Address */
+   u_int32_t nexthop;    /* Next hop router's IP Address */
+   u_int16_t input;      /* Input interface index */
+   u_int16_t output;     /* Output interface index */
+   u_int32_t dPkts;      /* Packets sent in Duration */
+   u_int32_t dOctets;    /* Octets sent in Duration */
+   u_int32_t First;      /* SysUptime at start of flow */
+   u_int32_t Last;       /* and of last packet of the flow */
+   u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+   u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+   u_int8_t flags;       /* Shortcut mode(dest only,src only,full flows*/
+   u_int8_t tcp_flags;   /* Cumulative OR of tcp flags */
+   u_int8_t prot;        /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+   u_int8_t tos;         /* IP Type-of-Service */
+   u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+   u_int16_t src_as;     /* source peer/origin Autonomous System */
+   u_int8_t dst_mask;    /* destination route's mask bits */
+   u_int8_t src_mask;    /* source route's mask bits */
+   u_int16_t pad2;       /* pad to word boundary */
+   u_int32_t router_sc;  /* Router which is shortcut by switch */
+};
+
+typedef struct single_flow_ver7_rec {
+  struct flow_ver7_hdr flowHeader;
+  struct flow_ver7_rec flowRecord[V7FLOWS_PER_PAK+1 /* safe against buffer overflows */];
+} NetFlow7Record;
+
 /* **************************** */
 
 #ifndef WNOHANG

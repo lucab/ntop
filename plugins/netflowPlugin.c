@@ -99,10 +99,43 @@ void setNetFlowOutSocket() {
 
 /* ****************************** */
 
-static void dissectFlow(NetFlow5Record *theRecord) {
+static void dissectFlow(char *buffer, int bufferLen) {
+  NetFlow5Record the5Record;
+  NetFlow7Record the7Record;
 
-  if(theRecord->flowHeader.version == htons(5)) {
-    int i, numFlows = ntohs(theRecord->flowHeader.count);
+  memcpy(&the5Record, buffer, bufferLen > sizeof(the5Record) ? sizeof(the5Record): bufferLen);
+  memcpy(&the7Record, buffer, bufferLen > sizeof(the7Record) ? sizeof(the7Record): bufferLen);
+  
+  /*
+    Convert V7 flows into V5 flows in order to make ntop
+    able to handle V7 flows.
+
+    Courtesy of Bernd Ziller <bziller@ba-stuttgart.de>
+  */
+  if(the7Record.flowHeader.version == htons(7)) {
+    int numFlows = ntohs(the7Record.flowHeader.count);
+    int i, j;
+    
+    if(numFlows > V7FLOWS_PER_PAK) numFlows = V7FLOWS_PER_PAK;
+    
+    the5Record.flowHeader.version = htons(5);
+    the5Record.flowHeader.count = htons(numFlows);
+    /* rest of flowHeader will not be used */
+    
+    for(j=i=0; i<numFlows; i++) {
+      the5Record.flowRecord[i].srcaddr = the7Record.flowRecord[i].srcaddr;
+      the5Record.flowRecord[i].dstaddr = the7Record.flowRecord[i].dstaddr;
+      the5Record.flowRecord[i].srcport = the7Record.flowRecord[i].srcport;
+      the5Record.flowRecord[i].dstport = the7Record.flowRecord[i].dstport;
+      the5Record.flowRecord[i].dPkts   = the7Record.flowRecord[i].dPkts;
+      the5Record.flowRecord[i].dOctets = the7Record.flowRecord[i].dOctets;
+      the5Record.flowRecord[i].prot    = the7Record.flowRecord[i].prot;
+      /* rest of flowRecord will not be used */
+    }
+  }
+  
+  if(the5Record.flowHeader.version == htons(5)) {
+    int i, numFlows = ntohs(the5Record.flowHeader.count);
 
     if(numFlows > V5FLOWS_PER_PAK) numFlows = V5FLOWS_PER_PAK;
 
@@ -122,38 +155,38 @@ static void dissectFlow(NetFlow5Record *theRecord) {
 
       myGlobals.numNetFlowsRcvd++;
 
-      numPkts  = ntohl(theRecord->flowRecord[i].dPkts);
-      len      = ntohl(theRecord->flowRecord[i].dOctets);
+      numPkts  = ntohl(the5Record.flowRecord[i].dPkts);
+      len      = ntohl(the5Record.flowRecord[i].dOctets);
 
       if((numPkts == 0) || (len == 0) /* Bad flow (zero lenght) */
 	 || (numPkts > len))          /* Bad flow (more packets than bytes) */
 	 continue;
 
-      a.s_addr = ntohl(theRecord->flowRecord[i].srcaddr);
-      b.s_addr = ntohl(theRecord->flowRecord[i].dstaddr);
-      sport = ntohs(theRecord->flowRecord[i].srcport);
-      dport = ntohs(theRecord->flowRecord[i].dstport);
+      a.s_addr = ntohl(the5Record.flowRecord[i].srcaddr);
+      b.s_addr = ntohl(the5Record.flowRecord[i].dstaddr);
+      sport    = ntohs(the5Record.flowRecord[i].srcport);
+      dport    = ntohs(the5Record.flowRecord[i].dstport);
 
       if(myGlobals.netFlowDebug) {
 	theFlags[0] = '\0';
 
-	if(theRecord->flowRecord[i].tcp_flags & TH_SYN)  strcat(theFlags, "SYN ");
-	if(theRecord->flowRecord[i].tcp_flags & TH_FIN)  strcat(theFlags, "FIN ");
-	if(theRecord->flowRecord[i].tcp_flags & TH_RST)  strcat(theFlags, "RST ");
-	if(theRecord->flowRecord[i].tcp_flags & TH_ACK)  strcat(theFlags, "ACK ");
-	if(theRecord->flowRecord[i].tcp_flags & TH_PUSH) strcat(theFlags, "PUSH");
+	if(the5Record.flowRecord[i].tcp_flags & TH_SYN)  strcat(theFlags, "SYN ");
+	if(the5Record.flowRecord[i].tcp_flags & TH_FIN)  strcat(theFlags, "FIN ");
+	if(the5Record.flowRecord[i].tcp_flags & TH_RST)  strcat(theFlags, "RST ");
+	if(the5Record.flowRecord[i].tcp_flags & TH_ACK)  strcat(theFlags, "ACK ");
+	if(the5Record.flowRecord[i].tcp_flags & TH_PUSH) strcat(theFlags, "PUSH");
 
 	traceEvent(TRACE_INFO, "%2d) %s:%d <-> %s:%d pkt=%u/len=%u sAS=%d/dAS=%d flags=[%s] (proto=%d)",
 		   i+1,
 		   _intoa(a, buf, sizeof(buf)), sport,
 		   _intoa(b, buf1, sizeof(buf1)), dport,
-		   ntohl(theRecord->flowRecord[i].dPkts), len,
-		   ntohs(theRecord->flowRecord[i].src_as),
-		   ntohs(theRecord->flowRecord[i].dst_as),
-		   theFlags, theRecord->flowRecord[i].prot);
+		   ntohl(the5Record.flowRecord[i].dPkts), len,
+		   ntohs(the5Record.flowRecord[i].src_as),
+		   ntohs(the5Record.flowRecord[i].dst_as),
+		   theFlags, the5Record.flowRecord[i].prot);
       }
 
-      /* traceEvent(TRACE_INFO, "a=%u", theRecord->flowRecord[i].srcaddr); */
+      /* traceEvent(TRACE_INFO, "a=%u", the5Record.flowRecord[i].srcaddr); */
 
       actualDeviceId = myGlobals.netFlowDeviceId;
 
@@ -186,7 +219,7 @@ static void dissectFlow(NetFlow5Record *theRecord) {
       srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;
       srcHost->ipBytesSent.value += len,     dstHost->ipBytesRcvd.value += len;
 
-      srcAS = ntohs(theRecord->flowRecord[i].src_as), dstAS = ntohs(theRecord->flowRecord[i].dst_as);
+      srcAS = ntohs(the5Record.flowRecord[i].src_as), dstAS = ntohs(the5Record.flowRecord[i].dst_as);
       if(srcAS != 0) srcHost->hostAS = srcAS;
       if(dstAS != 0) dstHost->hostAS = dstAS;
 
@@ -231,7 +264,7 @@ static void dissectFlow(NetFlow5Record *theRecord) {
 	}
       }
 
-      switch(theRecord->flowRecord[i].prot) {
+      switch(the5Record.flowRecord[i].prot) {
       case 1: /* ICMP */
 	myGlobals.device[actualDeviceId].icmpBytes.value += len;
 	srcHost->icmpSent.value += len, dstHost->icmpRcvd.value += len;
@@ -323,7 +356,7 @@ static void dissectFlow(NetFlow5Record *theRecord) {
       /* releaseMutex(&myGlobals.hostsHashMutex); */
 #endif
     }
-  } else
+  }  else
     myGlobals.numBadFlowsVersionsRcvd++;
 }
 
@@ -359,7 +392,6 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 		 rc,  myGlobals.netFlowDeviceId);
 
       if(rc > 0) {
-	NetFlow5Record theRecord;
 	int i;
 
 	myGlobals.numNetFlowsPktsRcvd++;
@@ -377,8 +409,7 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	  }
 	}
 
-	memcpy(&theRecord, buffer, rc > sizeof(theRecord) ? sizeof(theRecord): rc);
-	dissectFlow(&theRecord);
+	dissectFlow(buffer, rc);
       }
     } else {
       traceEvent(TRACE_INFO, "NetFlow thread is terminating...");
@@ -697,15 +728,13 @@ static void handleNetFlowPacket(u_char *_deviceId,
 
 	if(ip.ip_p == IPPROTO_UDP) {
 	  if(plen > (hlen+sizeof(struct udphdr))) {
-	    NetFlow5Record theRecord;
 	    char* rawSample    = (void*)(p+sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 
-	    memcpy(&theRecord, rawSample, rawSampleLen > sizeof(theRecord) ? sizeof(theRecord) : rawSampleLen);
 #ifdef DEBUG_FLOWS
 	    /* traceEvent(TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src)); */
 #endif
-	    dissectFlow(&theRecord);
+	    dissectFlow(rawSample, rawSampleLen);
 	  }
 	}
       }
