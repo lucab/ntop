@@ -3991,6 +3991,7 @@ void printNtopProblemReport(void) {
 #endif
   static char xvert[] = "JB6XF3PRQHNA7W5ECM8S9GLVY4TDKUZ2"; /* Scrambled just 'cause */
   time_t t;
+  struct pcap_stat pcapStats;
   unsigned int v, scramble, raw;
   int i, j;
 
@@ -4209,6 +4210,7 @@ void printNtopProblemReport(void) {
 	snprintf(buf, sizeof(buf), "     Dropped:   %10u\n", myGlobals.device[i].droppedPkts.value);
 	sendString(buf);
       }
+
       if(myGlobals.device[i].ethernetPkts.value > 0) {
 	snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n", myGlobals.device[i].ethernetPkts.value);
 	sendString(buf);
@@ -4225,6 +4227,19 @@ void printNtopProblemReport(void) {
 	snprintf(buf, sizeof(buf), "     IP:        %10u\n", myGlobals.device[i].ipPkts.value);
 	sendString(buf);
       }
+
+    }
+
+    if(pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0) {
+      snprintf(buf, sizeof(buf), "          pcap stats: Received %u Dropped %u", 
+                                 pcapStats.ps_recv,
+                                 pcapStats.ps_drop);
+      sendString(buf);
+      if (pcapStats.ps_ifdrop > 0) {
+        snprintf(buf, sizeof(buf), ", ifDropped %u", pcapStats.ps_ifdrop);
+        sendString(buf);
+      }
+      sendString("\n");
     }
 
     sendString("          Mfg: ____________________  Model: ____________________\n");
