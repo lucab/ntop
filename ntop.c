@@ -396,7 +396,7 @@ void createPortHash() {
 
 void handleProtocols(char *protos) {
   char *proto, *buffer=NULL, *strtokState, *bufferCurrent, *bufferWork;
-  FILE *fd = fopen(protos, "rb");
+  FILE *fd;
 
   /* protos is either
      1) a list in the form proto=port[|port][,...]
@@ -406,6 +406,11 @@ void handleProtocols(char *protos) {
      Also, ignore standard Linux comments...
   */
 
+  if (! protos || ! protos[0])
+    return;
+
+  fd = fopen(protos, "rb");
+
   if(fd == NULL) {
     traceEvent(TRACE_INFO, "Processing protocol list: '%s'", protos);
     proto = strtok_r(protos, ",", &strtokState);
@@ -413,6 +418,7 @@ void handleProtocols(char *protos) {
     struct stat buf;
 
     if(stat(protos, &buf) != 0) {
+      fclose(fd);
       traceEvent(TRACE_ERROR, "Error while stat() of %s\n", protos);
       return;
     }

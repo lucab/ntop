@@ -482,8 +482,13 @@ int dotted2bits(char *mask) {
 /* Example: "131.114.0.0/16,193.43.104.0/255.255.255.0" */
 
 void handleLocalAddresses(char* addresses) {
-  char *strtokState, *address = strtok_r(addresses, ",", &strtokState);
+  char *strtokState, *address;
   int i;
+
+  if (! addresses)
+    return;
+
+  address = strtok_r(addresses, ",", &strtokState);
 
   while(address != NULL) {
     char *mask = strchr(address, '/');
@@ -587,7 +592,12 @@ void handleLocalAddresses(char* addresses) {
 
     address = strtok_r(NULL, ",", &strtokState);
   }
+
+  /* Not used anymore */  
+  free(myGlobals.localAddresses);
+  myGlobals.localAddresses = NULL;
 }
+
 
 /* ********************************* */
 
@@ -721,8 +731,13 @@ int32_t gmt2local(time_t t) {
 
 /* Example: "flow1='host jake',flow2='dst host born2run'" */
 void handleFlowsSpecs(char* flows) {
-  FILE *fd = fopen(flows, "rb");
+  FILE *fd;
   char *flow, *buffer=NULL, *strtokState;;
+
+  if (! flows || ! flows[0])
+    return;
+
+  fd = fopen(flows, "rb");
 
   if(fd == NULL)
     flow = strtok_r(flows, ",", &strtokState);
@@ -731,7 +746,12 @@ void handleFlowsSpecs(char* flows) {
     int len, i;
 
     if(stat(flows, &buf) != 0) {
+      fclose(fd);
       traceEvent(TRACE_INFO, "Error while stat() of %s\n", flows);
+
+      /* Not used anymore */  
+      free(myGlobals.flowSpecs);
+      myGlobals.flowSpecs = NULL;
       return;
     }
 
@@ -803,6 +823,10 @@ void handleFlowsSpecs(char* flows) {
                 traceEvent(TRACE_WARNING, "Wrong flow specification \"%s\" (syntax error). "
 			   "It has been ignored.\n", flowSpec);
                 free(newFlow);
+
+		/* Not used anymore */  
+		free(myGlobals.flowSpecs);
+		myGlobals.flowSpecs = NULL;
                 return;
               }
             }
@@ -822,6 +846,10 @@ void handleFlowsSpecs(char* flows) {
 
   if(buffer != NULL)
     free(buffer);
+
+  /* Not used anymore */  
+  free(myGlobals.flowSpecs);
+  myGlobals.flowSpecs = NULL;
 }
 
 /* ********************************* */

@@ -808,11 +808,10 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-  if(myGlobals.localAddresses != NULL) {
-    handleLocalAddresses(myGlobals.localAddresses);
-    free(myGlobals.localAddresses);
+  /* Handle local addresses (if any) */
+  handleLocalAddresses(myGlobals.localAddresses),
+    free(myGlobals.localAddresses),
     myGlobals.localAddresses = NULL;
-  }
 
   initDeviceDatalink();
 
@@ -822,18 +821,16 @@ int main(int argc, char *argv[]) {
     myGlobals.currentFilterExpression = strdup(""); /* so that it isn't NULL! */
 
   /* Handle flows (if any) */
-  if(myGlobals.flowSpecs != NULL) {
-    if(myGlobals.flowSpecs[0] != '\0')
-      handleFlowsSpecs(myGlobals.flowSpecs);
-    free(myGlobals.flowSpecs);
-  }
+  handleFlowsSpecs(myGlobals.flowSpecs),
+    free(myGlobals.flowSpecs),
+    myGlobals.flowSpecs = NULL;
+
 
   /* Patch courtesy of Burton M. Strauss III <BStrauss3@attbi.com> */
-  if(myGlobals.protoSpecs != NULL) {
-    if(myGlobals.protoSpecs[0] != '\0')
-      handleProtocols(myGlobals.protoSpecs);
-    free(myGlobals.protoSpecs);
-  }
+  handleProtocols(myGlobals.protoSpecs),
+    free(myGlobals.protoSpecs),
+    myGlobals.protoSpecs = NULL;
+
 
   /*
     Moved from initialize.c (postCommandLineArgumentsInitialization) so that we
