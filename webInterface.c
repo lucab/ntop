@@ -182,6 +182,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   static char buf[5][384];
   char symIp[256], *tmpStr, linkName[256], flag[128];
   char *blinkOn, *blinkOff, *dynIp;
+  char *multihomed, *gwStr, *dnsStr, *printStr;
   short specialMacAddress = 0;
   static short bufIdx=0;
   short usedEthAddress=0;
@@ -318,19 +319,24 @@ char* makeHostLink(HostTraffic *el, short mode,
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
 
-  if(isDHCPClient(el))
-    dynIp = "&nbsp;(dyn)";
-  else
-    dynIp = "";
-
+  if(isDHCPClient(el)) dynIp = "&nbsp;(dyn)"; else dynIp = "";
+  if(el->hostIpAddresses[1].s_addr != 0x0) multihomed = "(M.homed)"; else multihomed = "";
+  if(gatewayHost(el)) gwStr = "(Gw)"; else gwStr = "";
+  if(nameServerHost(el)) dnsStr = "(DNS)"; else dnsStr = "";
+  if(isPrinter(el)) printStr = "(Print)"; else printStr = "";
+  
   if(mode == LONG_FORMAT) {
-    if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT>%s"
-		"<A HREF=\"/%s.html\">%s%s</A>%s</TH>%s",
-		blinkOn, linkName, symIp, dynIp, blinkOff, flag) < 0) 
+    if(snprintf(buf[bufIdx], 384, "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s"
+		"<A HREF=\"/%s.html\">%s%s %s%s%s%s</A>%s</TH>%s",
+		blinkOn, linkName, symIp, dynIp, 
+		multihomed, gwStr, dnsStr, printStr,
+		blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   } else {
-    if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\">%s%s</A>%s%s",
-		blinkOn, linkName, symIp, dynIp, blinkOff, flag) < 0) 
+    if(snprintf(buf[bufIdx], 384, "%s<A HREF=\"/%s.html\" NOWRAP>%s%s %s%s%s%s</A>%s%s",
+		blinkOn, linkName, symIp, 
+		multihomed, gwStr, dnsStr, printStr,
+		dynIp, blinkOff, flag) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
   }
   

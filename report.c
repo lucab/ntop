@@ -1114,20 +1114,32 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	    traceEvent(TRACE_ERROR, "Buffer overflow!");
 	  sendString(buf);
 
-	  sendString("<TD "TD_BG" ALIGN=RIGHT>");
+	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
 	  if(el->nbHostName || el->atNetwork || el->ipxHostName) {
 	    short numAddresses = 0;
 
 	    if(el->nbHostName && el->nbDomainName) {
 	      
 	      if(el->nbAccountName) {
-		if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag("Windows", 0),
-			    el->nbAccountName, el->nbHostName, el->nbDomainName) < 0)
+		if(el->nbDomainName != NULL) {
+		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag("Windows", 0),
+			      el->nbAccountName, el->nbHostName, el->nbDomainName) < 0)
 		 traceEvent(TRACE_ERROR, "Buffer overflow!");
+		} else {
+		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s", getOSFlag("Windows", 0),
+			      el->nbAccountName, el->nbHostName) < 0)
+		    traceEvent(TRACE_ERROR, "Buffer overflow!");
+		}
 	      } else {
-		if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
-			    el->nbHostName, el->nbDomainName) < 0)
-		 traceEvent(TRACE_ERROR, "Buffer overflow!");
+		if(el->nbDomainName != NULL) {
+		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
+			      el->nbHostName, el->nbDomainName) < 0)
+		    traceEvent(TRACE_ERROR, "Buffer overflow!");
+		} else {
+		  if(snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag("Windows", 0),
+			      el->nbHostName) < 0)
+		    traceEvent(TRACE_ERROR, "Buffer overflow!");
+		}
 	      }
 	      sendString(buf);
 	      numAddresses++;

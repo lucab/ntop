@@ -111,6 +111,11 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	lbl[num++] = "IPX";
       }
 
+      if(theHost->dlcSent > 0) {
+	p[num] = (float)((100*theHost->dlcSent)/totTraffic);
+	lbl[num++] = "IPX";
+      }
+
       if(theHost->osiSent > 0) {
 	p[num] = (float)((100*theHost->osiSent)/totTraffic);
 	lbl[num++] = "OSI";
@@ -181,6 +186,11 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       if(theHost->ipxReceived > 0) {
 	p[num] = (float)((100*theHost->ipxReceived)/totTraffic);
 	lbl[num++] = "IPX";
+      }
+
+      if(theHost->dlcReceived > 0) {
+	p[num] = (float)((100*theHost->dlcReceived)/totTraffic);
+	lbl[num++] = "DLC";
       }
 
       if(theHost->osiReceived > 0) {
@@ -759,7 +769,6 @@ void drawThptGraph(int sortedColumn) {
   char  *lbls[60];
   FILE *fd;
   time_t tmpTime;
-  unsigned long  sc[2] = { 0xFF0000, 0x8080FF };
   float graphData[60], maxBytesPerSecond;
 #ifdef HAVE_LOCALTIME_R
   struct tm t;
@@ -773,7 +782,7 @@ void drawThptGraph(int sortedColumn) {
 
   GDC_BGColor   = 0xFFFFFFL;                  /* backgound color (white) */
   GDC_LineColor = 0x000000L;                  /* line color      (black) */
-  GDC_SetColor  = &(sc[0]);                   /* assign set colors */
+  GDC_SetColor  = &(clr[0]);                   /* assign set colors */
   GDC_ytitle = "Throughput";
   GDC_yaxis=1;
   GDC_ylabel_fmt = "%d Bps";
@@ -922,7 +931,6 @@ void drawGlobalProtoDistribution(void) {
   TrafficCounter ip, nonIp;
   int len, totLen;
   float p[256]; /* Fix courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-  unsigned long sc = 0xC8C8FF;
   char	*lbl[16];
   FILE *fd;
   int idx = 0;
@@ -969,7 +977,7 @@ void drawGlobalProtoDistribution(void) {
 
   GDC_LineColor = 0x000000L;
   GDC_BGColor   = 0xFFFFFFL;
-  GDC_SetColor  = &sc;
+  GDC_SetColor  = &(clr[0]);
   GDC_yaxis=0;
   GDC_requested_ymin = 0;
   GDC_title = "";
@@ -1008,8 +1016,7 @@ void drawGlobalIpProtoDistribution(void) {
   char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   int len, i, idx=0;
   float p[256];
-  unsigned long sc = 0xC8C8FF;
-  char	*lbl[256];
+  char *lbl[256];
   FILE *fd;
 
   p[numIpProtosToMonitor] = 0;
@@ -1034,7 +1041,7 @@ void drawGlobalIpProtoDistribution(void) {
 
   GDC_LineColor = 0x000000L;
   GDC_BGColor   = 0xFFFFFFL;
-  GDC_SetColor  = &sc;
+  GDC_SetColor  = &(clr[0]);
   GDC_yaxis=0;
   GDC_title = "";
 

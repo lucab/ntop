@@ -1083,9 +1083,11 @@ int _releaseMutex(PthreadMutex *mutexId,
 	mutexId->maxLockedDurationUnlockLine = fileLine;
       }
 
-      traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
-		 &(mutexId->mutex), fileName, fileLine,
-		 mutexId->maxLockedDuration);
+      if(mutexId->maxLockedDuration > 0) {
+	traceEvent(TRACE_INFO, "INFO: semaphore 0x%X [%s:%d] locked for %d secs\n",
+		   &(mutexId->mutex), fileName, fileLine,
+		   mutexId->maxLockedDuration);
+      }
    }
 
     /* traceEvent(TRACE_ERROR, "UNLOCKED 0x%X", &(mutexId->mutex));  */

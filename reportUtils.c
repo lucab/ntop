@@ -1908,13 +1908,16 @@ void printHostTrafficStats(HostTraffic *el) {
   printHostHourlyTraffic(el);
   printPacketStats(el);
 
+  /*
   if((el->tcpSentLocally+el->tcpSentRemotely+
       el->tcpReceivedLocally+el->tcpReceivedFromRemote+
       el->udpSentLocally+el->udpSentRemotely+
       el->udpReceivedLocally+el->udpReceivedFromRemote) == 0)
     return;
+  */
 
-    printSectionTitle("IP Protocol Distribution");
+    printSectionTitle("Protocol Distribution");
+
     sendString("<CENTER>\n"
 	     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
 	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
@@ -2001,6 +2004,52 @@ void printHostTrafficStats(HostTraffic *el) {
 /*#endif */
 
 #ifdef HAVE_GDCHART
+  {
+    totalSent = el->tcpSentLocally+el->tcpSentRemotely+
+      el->udpSentLocally+el->udpSentRemotely+
+      el->icmpSent+el->ospfSent+el->igmpSent+el->stpSent+
+      el->ipxSent+el->osiSent+el->dlcSent+
+      el->arp_rarpSent+el->decnetSent+el->appletalkSent+
+      el->netbiosSent+el->qnxSent+el->otherSent;
+
+    totalReceived = el->tcpReceivedLocally+el->tcpReceivedFromRemote+
+      el->udpReceivedLocally+el->udpReceivedFromRemote+
+      el->icmpReceived+el->ospfReceived+el->igmpReceived+el->stpReceived+
+      el->ipxReceived+el->osiReceived+el->dlcReceived+
+      el->arp_rarpReceived+el->decnetReceived+el->appletalkReceived+
+      el->netbiosReceived+el->qnxReceived+el->otherReceived;
+
+    if((totalSent > 0) || (totalReceived > 0)) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
+		  getRowColor()) < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      sendString(buf);
+
+      if(totalSent > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1></TD>",
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      } else {
+	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
+      }
+
+      if(totalReceived > 0) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"></TD>", 
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
+      } else {
+	sendString("<TD "TH_BG" ALIGN=RIGHT COLSPAN=2>&nbsp;</TD>");
+      }
+
+
+      sendString("</TD></TR>");
+    }
+
+#if 0
   if(((el->tcpSentLocally+el->tcpSentRemotely+
        el->udpSentLocally+el->udpSentRemotely+
        el->icmpSent+el->ospfSent+el->igmpSent+el->stpSent
@@ -2023,6 +2072,9 @@ void printHostTrafficStats(HostTraffic *el) {
 		el->hostNumIpAddress) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
+  }
+#endif
+
   }
 #endif
 
@@ -2773,9 +2825,9 @@ void printHostDetailedInfo(HostTraffic *el) {
     }
   }
 
-  if((el->nbHostName != NULL) && (el->nbDomainName != NULL)) {
-    
+  if((el->nbHostName != NULL) && (el->nbDomainName != NULL)) {  
     if(el->nbAccountName) {
+      if(el->nbDomainName != NULL) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
 		  "%s@%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
 		  getRowColor(), "NetBios&nbsp;Name",
@@ -2783,7 +2835,17 @@ void printHostDetailedInfo(HostTraffic *el) {
 		  getNbNodeType(el->nbNodeType),
 		  el->nbDescr ? el->nbDescr : "") < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      } else {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+		  "%s@%s (%s) %s</TD></TR>\n",
+		  getRowColor(), "NetBios&nbsp;Name",
+		  el->nbAccountName, el->nbHostName,
+		  getNbNodeType(el->nbNodeType),
+		  el->nbDescr ? el->nbDescr : "") < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      }
     } else {
+      if(el->nbDomainName != NULL) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
 		  "%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
 		  getRowColor(), "NetBios&nbsp;Name",
@@ -2791,6 +2853,15 @@ void printHostDetailedInfo(HostTraffic *el) {
 		  getNbNodeType(el->nbNodeType),
 		  el->nbDescr ? el->nbDescr : "") < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      } else {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+		  "%s (%s) %s</TD></TR>\n",
+		  getRowColor(), "NetBios&nbsp;Name",
+		  el->nbHostName, 
+		  getNbNodeType(el->nbNodeType),
+		  el->nbDescr ? el->nbDescr : "") < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+      }
     }
     
     sendString(buf);

@@ -269,9 +269,19 @@ int createMutex(PthreadMutex *mutexId) {
 
 /* ************************************ */
 
-void deleteMutex(PthreadMutex *mutexId) {
+void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
+ 
+  if(!mutexId->isInitialized) {
+    traceEvent(TRACE_ERROR, 
+	       "ERROR: deleteMutex() call with a NULL mutex [%s:%d]\n",
+	       fileName, fileLine);
+    return;
+  }
+  
   ReleaseMutex(mutexId->mutex);
   CloseHandle(mutexId->mutex);
+
+  memset(mutexId, 0, sizeof(PthreadMutex));
 }
 
 /* ************************************ */

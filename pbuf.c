@@ -4654,13 +4654,13 @@ void processPacket(u_char *_deviceId,
 		     && llcHeader.dsap == LLCSAP_NETBIOS) {
 	    /* Netbios */
 	    srcHost->netbiosSent += length;
-	    dstHost->netbiosReceived += length;
+	    dstHost->netbiosReceived += length; 
 	    device[actualDeviceId].netbiosBytes += length;
 	  } else if ((sap_type == 0xF0) || (sap_type == 0xB4)
 		     || (sap_type == 0xC4) || (sap_type == 0xF8)) {
 	    /* DLC (protocol used for printers) */
 	    srcHost->dlcSent += length;
-	    dstHost->dlcReceived += length;
+	    dstHost->dlcReceived += length; FD_SET(HOST_TYPE_PRINTER, &dstHost->flags);
 	    device[actualDeviceId].dlcBytes += length;
 	  } else if (sap_type == 0xAA) {
 	    u_int16_t snapType;
