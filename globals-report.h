@@ -272,9 +272,9 @@ extern int printNtopLogReport(int printAsText);
 extern void *handleWebConnections(void* notUsed);
 extern char *getRowColor(void);
 extern char *makeHostLink(HostTraffic *el, short mode,
-                          short cutName, short addCountryFlag);
-
-extern char *getHostName(HostTraffic *el, short cutName);
+                          short cutName, short addCountryFlag,
+			  char *buf, int bufLen);
+extern char *getHostName(HostTraffic *el, short cutName, char *buf, int bufLen);
 
 /* graph.c */
 extern void sendGraphFile(char* fileName, int doNotUnlink);

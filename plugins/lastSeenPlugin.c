@@ -127,7 +127,7 @@ static int SortLS(const void *_a, const void *_b) {
 /* ============================================================== */
 
 static void handleLsHTTPrequest(char* url) {
-  char tmpStr[LEN_GENERAL_WORK_BUFFER];
+  char tmpStr[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   char tmpTime[25], postData[128];
   char *no_info = "<TH "TH_BG">-NO INFO-</TH>",*tmp, *no_note ="-";
   datum ret_data,key_data, content;
@@ -223,8 +223,9 @@ static void handleLsHTTPrequest(char* url) {
 
     addrcpy(&addr, &tablehost[entry].HostIpAddress);
     HostT = findHostByNumIP(addr, myGlobals.actualReportDeviceId);
-    if ( HostT )
-      tmp = makeHostLink(HostT,FLAG_HOSTLINK_HTML_FORMAT,0,0);
+    if(HostT)
+      tmp = makeHostLink(HostT, FLAG_HOSTLINK_HTML_FORMAT, 
+			 0, 0, hostLinkBuf, sizeof(hostLinkBuf));
     else
       tmp = no_info;
 

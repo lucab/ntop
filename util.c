@@ -3216,10 +3216,8 @@ char* getPortByNum(int port, int type) {
 
 /* ******************************* */
 
-char* getAllPortByNum(int port) {
+char* getAllPortByNum(int port, char *outBuf, int outBufLen) {
   char* rsp;
-  static char staticBuffer[2][16];
-  static short portBufIdx=0;
 
   rsp = getPortByNumber(myGlobals.tcpSvc, port); /* Try TCP first... */
   if(rsp == NULL)
@@ -3228,10 +3226,9 @@ char* getAllPortByNum(int port) {
   if(rsp != NULL)
     return(rsp);
   else {
-    portBufIdx = (short)((portBufIdx+1)%2);
-    if(snprintf(staticBuffer[portBufIdx], 16, "%d", port) < 0)
+    if(snprintf(outBuf, outBufLen, "%d", port) < 0)
       BufferTooShort();
-    return(staticBuffer[portBufIdx]);
+    return(outBuf);
   }
 }
 

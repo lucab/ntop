@@ -79,9 +79,8 @@ static int cmpPdaFctn(const void *_a, const void *_b) {
 
 static void printHtmlIndex(void) {
   int i;
-  char linkName[256];
-  Counter diff;
-    
+  char linkName[256], formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  Counter diff;    
   u_int idx, numEntries=0;
   HostTraffic *el;
   HostTraffic* tmpTable[MAX_PDA_HOST_TABLE];
@@ -131,7 +130,7 @@ static void printHtmlIndex(void) {
     if(idx == 5) break;
 
     el = tmpTable[idx];
-    tmpName = getHostName(el, 0); 
+    tmpName = getHostName(el, 0, hostLinkBuf, sizeof(hostLinkBuf)); 
     tmpName = el->hostNumIpAddress;
     strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
     
@@ -147,7 +146,7 @@ static void printHtmlIndex(void) {
 		"<tr><td><a href=\"/%s.html\">%s</a></td>"
 		"<td>%s</td></tr>\n",
 		linkName, tmpName,      
-		formatBytes(el->bytesSent.value, 1)) < 0) 
+		formatBytes(el->bytesSent.value, 1, formatBuf, sizeof(formatBuf))) < 0) 
       BufferTooShort();
     sendString(buf);
   }
@@ -167,7 +166,7 @@ static void printHtmlIndex(void) {
     if(idx == 5) break;
 
     el = tmpTable[idx];
-    tmpName = getHostName(el, 0); 
+    tmpName = getHostName(el, 0, hostLinkBuf, sizeof(hostLinkBuf)); 
     tmpName = el->hostNumIpAddress;
     strncpy(linkName, el->hostNumIpAddress, sizeof(linkName));
 
@@ -182,7 +181,7 @@ static void printHtmlIndex(void) {
 		"<tr><td><a href=\"/%s.html\">%s</a></td>"
 		"<td>%s</td></tr>\n",
 		linkName, tmpName,  
-		formatBytes(el->bytesRcvd.value, 1)) < 0) 
+		formatBytes(el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf))) < 0) 
       BufferTooShort();
     sendString(buf);
   }
@@ -200,7 +199,7 @@ static void printHtmlIndex(void) {
 
   if(snprintf(buf, sizeof(buf),"<tr><td>Sampling Time</td>"
 	      "<td>%s</td></tr>\n",
-	      formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime)) < 0) 
+	      formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0) 
     BufferTooShort();
   sendString(buf);
 
@@ -218,19 +217,19 @@ static void printHtmlIndex(void) {
     myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value = 1;
     
   if(snprintf(buf, sizeof(buf),"<tr><td>Total</td><td>%s</td></tr>\n",
-	      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value)) < 0) 
+	      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf, sizeof(formatBuf))) < 0) 
     BufferTooShort();
   sendString(buf);
 
   if(snprintf(buf, sizeof(buf),"<tr><td>Unicast</td>"
 	      "<td>%s [%.1f%%]</td></tr>\n", 
-	      formatPkts(unicastPkts),
+	      formatPkts(unicastPkts, formatBuf, sizeof(formatBuf)),
 	      (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0) 
     BufferTooShort();
   sendString(buf);
   if(snprintf(buf, sizeof(buf),"<tr><td>Broadcast</td>"
 	      "<td>%s [%.1f%%]</td></tr>\n", 
-	      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value),
+	      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value, formatBuf, sizeof(formatBuf)),
 	      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)
 	      /(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0) 
     BufferTooShort();
@@ -239,7 +238,7 @@ static void printHtmlIndex(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value > 0) {
     if(snprintf(buf, sizeof(buf),"<tr><td>Multicast</td>"
 		"<td>%s [%.1f%%]</td></tr>\n", 
-		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value),
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf)),
 		(float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)
 		/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0) 
       BufferTooShort();

@@ -1281,7 +1281,7 @@ static int initNetFlowFunct(void) {
 /* ****************************** */
 
 static void handleNetflowHTTPrequest(char* url) {
-  char buf[512], buf1[32], buf2[32];
+  char buf[512], buf1[32], buf2[32], formatBuf[32];
   char workList[1024];
   u_int i, numEnabled = 0, totFlows;
   struct in_addr theDest;
@@ -1608,7 +1608,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
 	if(snprintf(buf, sizeof(buf), "%s [%s pkts]<br>\n",
 		    _intoa(probeList[i].probeAddr, buf, sizeof(buf)),
-		    formatPkts(probeList[i].pkts)) < 0)
+		    formatPkts(probeList[i].pkts, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
       }
@@ -1616,19 +1616,19 @@ static void handleNetflowHTTPrequest(char* url) {
       sendString("</TD></TR>\n");
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Pkts Received</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numNetFlowsPktsRcvd)) < 0)
+		  formatPkts(myGlobals.numNetFlowsPktsRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Pkts with bad version</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numBadNetFlowsVersionsRcvd)) < 0)
+		  formatPkts(myGlobals.numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Pkts processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd)) < 0)
+		  formatPkts(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -1644,26 +1644,26 @@ static void handleNetflowHTTPrequest(char* url) {
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V5 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numNetFlowsV5Rcvd)) < 0)
+		  formatPkts(myGlobals.numNetFlowsV5Rcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V7 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numNetFlowsV7Rcvd)) < 0)
+		  formatPkts(myGlobals.numNetFlowsV7Rcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V9 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numNetFlowsV9Rcvd)) < 0)
+		  formatPkts(myGlobals.numNetFlowsV9Rcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(myGlobals.numNetFlowsV9TemplRcvd) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Total V9 Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		    formatPkts(myGlobals.numNetFlowsV9TemplRcvd)) < 0)
+		    formatPkts(myGlobals.numNetFlowsV9TemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	   BufferTooShort();
 	sendString(buf);
       }
@@ -1671,7 +1671,7 @@ static void handleNetflowHTTPrequest(char* url) {
       if(myGlobals.numNetFlowsV9BadTemplRcvd) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Bad V9 Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		    formatPkts(myGlobals.numNetFlowsV9BadTemplRcvd)) < 0)
+		    formatPkts(myGlobals.numNetFlowsV9BadTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
       }
@@ -1680,7 +1680,7 @@ static void handleNetflowHTTPrequest(char* url) {
       if(myGlobals.numNetFlowsV9UnknTemplRcvd) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V9 Flows with Unknown Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		    formatPkts(myGlobals.numNetFlowsV9UnknTemplRcvd)) < 0)
+		    formatPkts(myGlobals.numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
       }
@@ -1688,31 +1688,31 @@ static void handleNetflowHTTPrequest(char* url) {
       sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Discarded Flows</TH></TR>\n");
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Zero Packet Count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numBadFlowPkts)) < 0)
+		  formatPkts(myGlobals.numBadFlowPkts, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Zero Byte Count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numBadFlowBytes)) < 0)
+		  formatPkts(myGlobals.numBadFlowBytes, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Bad Data</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numBadFlowReality)) < 0)
+		  formatPkts(myGlobals.numBadFlowReality, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Unknown Template</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numNetFlowsV9UnknTemplRcvd)) < 0)
+		  formatPkts(myGlobals.numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Tot Num Flows Processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numNetFlowsProcessed)) < 0)
+		  formatPkts(myGlobals.numNetFlowsProcessed, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -1729,12 +1729,12 @@ static void handleNetflowHTTPrequest(char* url) {
 	sendString("<TR><TH ALIGN=\"LEFT\">Rejected - Black list</TH>");
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    formatPkts(myGlobals.numSrcNetFlowsEntryFailedBlackList)) < 0)
+		    formatPkts(myGlobals.numSrcNetFlowsEntryFailedBlackList, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    formatPkts(myGlobals.numDstNetFlowsEntryFailedBlackList)) < 0)
+		    formatPkts(myGlobals.numDstNetFlowsEntryFailedBlackList, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	sendString("</TR>\n");
@@ -1742,12 +1742,12 @@ static void handleNetflowHTTPrequest(char* url) {
 	sendString("<TR><TH ALIGN=\"LEFT\">Rejected - White list</TH>");
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    formatPkts(myGlobals.numSrcNetFlowsEntryFailedWhiteList)) < 0)
+		    formatPkts(myGlobals.numSrcNetFlowsEntryFailedWhiteList, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    formatPkts(myGlobals.numDstNetFlowsEntryFailedWhiteList)) < 0)
+		    formatPkts(myGlobals.numDstNetFlowsEntryFailedWhiteList, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	sendString("</TR>\n");
@@ -1755,12 +1755,12 @@ static void handleNetflowHTTPrequest(char* url) {
 	sendString("<TR><TH ALIGN=\"LEFT\">Accepted</TH>");
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    formatPkts(myGlobals.numSrcNetFlowsEntryAccepted)) < 0)
+		    formatPkts(myGlobals.numSrcNetFlowsEntryAccepted, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		    formatPkts(myGlobals.numDstNetFlowsEntryAccepted)) < 0)
+		    formatPkts(myGlobals.numDstNetFlowsEntryAccepted, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	sendString("</TR>\n");
@@ -1770,14 +1770,14 @@ static void handleNetflowHTTPrequest(char* url) {
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		    formatPkts(myGlobals.numSrcNetFlowsEntryFailedBlackList +
 			       myGlobals.numSrcNetFlowsEntryFailedWhiteList +
-			       myGlobals.numSrcNetFlowsEntryAccepted)) < 0)
+			       myGlobals.numSrcNetFlowsEntryAccepted, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		    formatPkts(myGlobals.numDstNetFlowsEntryFailedBlackList +
 			       myGlobals.numDstNetFlowsEntryFailedWhiteList +
-			       myGlobals.numDstNetFlowsEntryAccepted)) < 0)
+			       myGlobals.numDstNetFlowsEntryAccepted, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	sendString("</TR>\n");
@@ -1857,7 +1857,7 @@ static void handleNetflowHTTPrequest(char* url) {
                   "<TR><TH colspan=2 ALIGN=\"LEFT\">Port(s) zero (not tcp/ip)</TH>\n"
 		  "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
 		  flowIgnoredZeroPort,
-		  formatBytes(flowIgnoredZeroPortBytes, 1)
+		  formatBytes(flowIgnoredZeroPortBytes, 1, formatBuf, sizeof(formatBuf))
 		  ) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -1874,7 +1874,7 @@ static void handleNetflowHTTPrequest(char* url) {
                   "<TR><TH colspan=2 ALIGN=\"LEFT\">Unrecognized port <= 1023</TH>\n"
 		  "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
 		  flowIgnoredLowPort,
-		  formatBytes(flowIgnoredLowPortBytes, 1)
+		  formatBytes(flowIgnoredLowPortBytes, 1, formatBuf, sizeof(formatBuf))
 		  ) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -1883,7 +1883,7 @@ static void handleNetflowHTTPrequest(char* url) {
                   "<TR><TH colspan=2 ALIGN=\"LEFT\">Unrecognized port > 1023</TH>\n"
 		  "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
 		  flowIgnoredHighPort,
-		  formatBytes(flowIgnoredHighPortBytes, 1)
+		  formatBytes(flowIgnoredHighPortBytes, 1, formatBuf, sizeof(formatBuf))
 		  ) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -1894,7 +1894,7 @@ static void handleNetflowHTTPrequest(char* url) {
                   "<TR><TH colspan=2 ALIGN=\"LEFT\">Counted</TH>\n"
 		  "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
 		  flowProcessed,
-		  formatBytes(flowProcessedBytes, 1)
+		  formatBytes(flowProcessedBytes, 1, formatBuf, sizeof(formatBuf))
 		  ) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -1904,7 +1904,7 @@ static void handleNetflowHTTPrequest(char* url) {
                     "<TR><TH colspan=2 ALIGN=\"LEFT\">Assumed ftpdata</TH>\n"
 		    "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
 		    flowAssumedFtpData,
-		    formatBytes(flowAssumedFtpDataBytes, 1)
+		    formatBytes(flowAssumedFtpDataBytes, 1, formatBuf, sizeof(formatBuf))
 		    ) < 0)
 	  BufferTooShort();
         sendString(buf);
@@ -1963,7 +1963,7 @@ static void handleNetflowHTTPrequest(char* url) {
       sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Sent Flows</TH></TR>\n");
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT COLSPAN=3># Exported Flows</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numNetFlowsPktsSent)) < 0)
+		  formatPkts(myGlobals.numNetFlowsPktsSent, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
     }

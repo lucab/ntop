@@ -550,7 +550,7 @@ void printHTMLheader(char *title, int  headerFlags) {
 /* ************************* */
 
 void printHTMLtrailer(void) {
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32];
   int i, len, numRealDevices = 0;
 
 
@@ -575,7 +575,7 @@ void printHTMLtrailer(void) {
   sendString("\n<HR>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\" SIZE=-1><B>\n");
 
   if(snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Report created on %s [%s]<br>\n",
-	      ctime(&myGlobals.actTime), formatSeconds(time(NULL)-myGlobals.initialSniffTime)) < 0)
+	      ctime(&myGlobals.actTime), formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -655,8 +655,7 @@ void termAccessLog(void) {
 
 /* ************************* */
 
-static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
-			  u_int gzipBytesSent) {
+static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent) {
  char theDate[48], myUser[64], buf[24];
  struct timeval loggingAt;
  unsigned long msSpent;

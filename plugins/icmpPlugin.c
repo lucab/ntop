@@ -153,12 +153,13 @@ static int sortICMPhosts(const void *_a, const void *_b) {
  /* ******************************* */
 
 static void formatSentRcvd(Counter sent, Counter rcvd) {
-  char buf[128];
+  char buf[128], formatBuf[32], formatBuf1[32];
   
   if (sent + rcvd == 0) {
     strcpy(buf, "<TD "TD_BG" ALIGN=center>&nbsp;</TD>");
   } else if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s/%s</TD>",
-		     formatPkts(sent), formatPkts(rcvd)) < 0)
+		     formatPkts(sent, formatBuf, sizeof(formatBuf)),
+		     formatPkts(rcvd, formatBuf1, sizeof(formatBuf1))) < 0)
     BufferTooShort();
   sendString(buf);
 }
@@ -166,7 +167,7 @@ static void formatSentRcvd(Counter sent, Counter rcvd) {
 /* ******************************* */
 
 static void handleIcmpWatchHTTPrequest(char* url) {
-  char buf[1024], fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX";
+  char buf[1024], fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX", formatBuf[32];
   char *sign = "-";
   char *pluginName = "<A HREF=/plugins/icmpWatch";
   u_int i, revertOrder=0, num, printedEntries, tot = 0;
@@ -335,6 +336,7 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   for(i=0, printedEntries=0; i<num; i++)
     if(hosts[i] != NULL) {
       int idx;
+      char hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
 
       if(revertOrder)
 	idx = num-i-1;
@@ -343,17 +345,18 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s> %s",
 		  getRowColor(),
-		  makeHostLink(hosts[idx], FLAG_HOSTLINK_HTML_FORMAT, 0, 0)) < 0) 
+		  makeHostLink(hosts[idx], FLAG_HOSTLINK_HTML_FORMAT, 0, 0,
+			       hostLinkBuf, sizeof(hostLinkBuf))) < 0) 
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>", 
-		  formatBytes(hosts[idx]->icmpSent.value, 1)) < 0)
+		  formatBytes(hosts[idx]->icmpSent.value, 1, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
       
       if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>", 
-		  formatBytes(hosts[idx]->icmpRcvd.value, 1)) < 0)
+		  formatBytes(hosts[idx]->icmpRcvd.value, 1, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 

@@ -472,7 +472,7 @@ static float timeval_subtract (struct timeval x, struct timeval y) {
 
 void purgeIdleHosts(int actDevice) {
   u_int idx, numFreedBuckets=0, numHosts = 0;
-  time_t startTime = time(NULL), purgeTime;
+  time_t startTime = time(NULL), noSessionPurgeTime, withSessionPurgeTime;
   static time_t lastPurgeTime[MAX_NUM_DEVICES];
   static char firstRun = 1;
   HostTraffic **theFlaggedHosts = NULL;
@@ -499,7 +499,9 @@ void purgeIdleHosts(int actDevice) {
   theFlaggedHosts = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
   memset(theFlaggedHosts, 0, maxHosts*sizeof(HostTraffic*));
 
-  purgeTime = startTime-30 /*PARM_HOST_PURGE_MINIMUM_IDLE <<== */; /* Time used to decide whether a host need to be purged */
+  /* Time used to decide whether a host need to be purged */
+  noSessionPurgeTime   = startTime-PARM_HOST_PURGE_MINIMUM_IDLE; 
+  withSessionPurgeTime = startTime-PARM_HOST_PURGE_MAXIMUM_IDLE;
 
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
@@ -527,10 +529,11 @@ void purgeIdleHosts(int actDevice) {
 
       while(el) {
 	if((el->refCount == 0) 
-	   && (el->lastSeen < purgeTime) 
+	   && (   ((el->numHostSessions == 0) && (el->lastSeen < noSessionPurgeTime))
+	       || ((el->numHostSessions > 0)  && (el->lastSeen < withSessionPurgeTime)))
 	   && (!broadcastHost(el))
 	   && ((!myGlobals.stickyHosts)
-	       || (el->hostNumIpAddress[0] == '\0') /* Purge MAC addresses too */
+	       || (el->hostNumIpAddress[0] == '\0')  /* Purge MAC addresses too */
 	       || (!subnetPseudoLocalHost(el)))      /* Purge remote hosts only */
 	   ) {
 	  /* Host selected for deletion */
@@ -570,6 +573,10 @@ void purgeIdleHosts(int actDevice) {
   hashSanityCheck();
 #endif
 
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.purgeMutex);
+#endif
+
   traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: FINISHED selection, %d [out of %d] hosts selected",
 	     numHosts, scannedHosts);
 
@@ -579,7 +586,6 @@ void purgeIdleHosts(int actDevice) {
     traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Purging host %d [last seen=%d]... %s",
 	       idx, theFlaggedHosts[idx]->lastSeen, theFlaggedHosts[idx]->hostSymIpAddress);
 #endif
-
     freeHostInfo(theFlaggedHosts[idx], actDevice);
     numFreedBuckets++;
 #ifdef MAKE_WITH_SCHED_YIELD
@@ -588,9 +594,6 @@ void purgeIdleHosts(int actDevice) {
   }
 
   free(theFlaggedHosts);
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.purgeMutex);
-#endif
 
   if(myGlobals.enableSessionHandling)
     scanTimedoutTCPSessions(actDevice); /* let's check timedout sessions too */

@@ -51,8 +51,6 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 #define MIN_SLICE_PERCENTAGE 0.1 /* % */
 #define BOX_SIZE               7
 
-
-
 static void drawLegend(gdImagePtr im,
 		       short width,
 		       short height,
@@ -227,7 +225,8 @@ void drawBar(short width,
 
   // make y-axis text label from height of grid line (in data units)
   for (i = 0; i <= (ngrid + 1); i++) {
-    char *theStr = formatBytes(i * dydat, 0); // make label text
+    char buf[32];
+    char *theStr = formatBytes(i * dydat, 0, buf, sizeof(buf)); // make label text
 
     txtsz = gdFontSmall->w*strlen(theStr); // pixel-width of label
     txtht = gdFontSmall->h; // pixel-height of label
@@ -357,7 +356,8 @@ void drawArea(short width,
 	xpos = hmargin - txtsz; if(xpos < 1) xpos = 1;
 	gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), str, black);
       } else {
-	char *theStr = formatThroughput(i * dydat, 0);
+	char buf[32];
+	char *theStr = formatThroughput(i * dydat, 0, buf, sizeof(buf));
 
 	/* traceEvent(CONST_TRACE_INFO, "%u/%s", i * dydat, theStr); */
 
@@ -442,7 +442,6 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
   int len;
   char tmpStr[256];
   int bufSize=sizeof(tmpStr)-1, totLen = 0;
-
 
   if((fd = fopen(fileName, "rb")) != NULL) {
 

@@ -179,7 +179,7 @@ void addPageIndicator(char *url, u_int pageNum,
 void printTrafficStatistics(void) {
   Counter unicastPkts, avgPktLen;
   int i;
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32];
   struct stat statbuf;
   struct pcap_stat pcapStat;
 
@@ -224,7 +224,7 @@ void printTrafficStatistics(void) {
 	sendString("<TD "TD_BG" ALIGN=RIGHT nowrap>&nbsp;");
 	if(myGlobals.device[i].deviceSpeed > 0) {
 	  /* The speed is known */
-	  sendString(formatAdapterSpeed(myGlobals.device[i].deviceSpeed));
+	  sendString(formatAdapterSpeed(myGlobals.device[i].deviceSpeed, formatBuf, sizeof(formatBuf)));
 	} else
 	  sendString("&nbsp;");
 	sendString("</TD>");
@@ -297,7 +297,7 @@ void printTrafficStatistics(void) {
   if(snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" align=left>Sampling Since</TH>"
 	      "<TD "TD_BG" ALIGN=RIGHT>%s [%s]</TD></TR>\n",
 	      ctime(&myGlobals.initialSniffTime),
-	      formatSeconds(time(NULL)-myGlobals.initialSniffTime)) < 0)
+	      formatSeconds(time(NULL)-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -349,21 +349,21 @@ void printTrafficStatistics(void) {
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Received&nbsp;(libpcap)</th>"
 		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
 		    getRowColor(),
-                    formatPkts((Counter)pcapStat.ps_recv)) < 0)
+                    formatPkts((Counter)pcapStat.ps_recv, formatBuf, sizeof(formatBuf))) < 0)
           BufferTooShort();
         sendString(buf);
         if(snprintf(buf, sizeof(buf),
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Less:&nbsp;Dropped&nbsp;(libpcap)</th>"
 		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
 		    getRowColor(),
-                    formatPkts((Counter)pcapStat.ps_drop)) < 0)
+                    formatPkts((Counter)pcapStat.ps_drop, formatBuf, sizeof(formatBuf))) < 0)
           BufferTooShort();
         sendString(buf);
         if(snprintf(buf, sizeof(buf),
 		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Gives:&nbsp;Given&nbsp;to&nbsp;ntop</th>"
 		    "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
 		    getRowColor(),
-                    formatPkts((Counter)(pcapStat.ps_recv-pcapStat.ps_drop))) < 0)
+                    formatPkts((Counter)(pcapStat.ps_recv-pcapStat.ps_drop), formatBuf, sizeof(formatBuf))) < 0)
           BufferTooShort();
         sendString(buf);
       }
@@ -392,18 +392,18 @@ void printTrafficStatistics(void) {
     if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON" %s><TH "TH_BG" align=left>Total&nbsp;Received&nbsp;by&nbsp;ntop</th>"
 		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value)) < 0)
+		getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value,
+					  formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON" %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;ntop</th>"
-                    "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
-
-		    getRowColor(),
-		    (float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
-		    /(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value,
-                    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value)) < 0)
+		"<TR "TR_ON" %s><TH "TH_BG" align=left>Dropped&nbsp;by&nbsp;ntop</th>"
+		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",		
+		getRowColor(),
+		(float)(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value*100)
+		/(float)myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value,
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].droppedPkts.value, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -419,9 +419,9 @@ void printTrafficStatistics(void) {
     */
 
     if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON" %s><TH "TH_BG" align=left>Total packets processed</th>"
-		  "<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
-		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value)) < 0)
+		"<TR "TR_ON" %s><TH "TH_BG" align=left>Total packets processed</th>"
+		"<TD "TD_BG" COLSPAN=2 align=right>%s</td></TR>\n",
+		getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -429,13 +429,13 @@ void printTrafficStatistics(void) {
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		getRowColor(), (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].
 		ethernetPkts.value,
-		formatPkts(unicastPkts)) < 0) BufferTooShort();
+		formatPkts(unicastPkts, formatBuf, sizeof(formatBuf))) < 0) BufferTooShort();
     sendString(buf);
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Broadcast</th>"
 		"<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)/
 		(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)) < 0)
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -443,7 +443,7 @@ void printTrafficStatistics(void) {
 		  "<TD "TD_BG" align=right>%.1f%%</td><TD "TD_BG" align=right>%s</td></TR>\n",
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -461,7 +461,7 @@ void printTrafficStatistics(void) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Shortest</th>"
 		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
 		  getRowColor(),
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.shortest.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.shortest.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
       avgPktLen = (96*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value
@@ -472,13 +472,13 @@ void printTrafficStatistics(void) {
 	(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value+1);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Average&nbsp;Size</th>"
 		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
-		  getRowColor(), formatPkts(avgPktLen)) < 0)
+		  getRowColor(), formatPkts(avgPktLen, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Longest</th>"
 		  "<TD "TD_BG" align=right colspan=2>%s bytes</td></TR>\n",
 		  getRowColor(), formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].
-					    rcvdPktStats.longest.value)) < 0)
+					    rcvdPktStats.longest.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -487,7 +487,7 @@ void printTrafficStatistics(void) {
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo64.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo64.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>&lt;&nbsp;128&nbsp;bytes</th>"
@@ -495,7 +495,7 @@ void printTrafficStatistics(void) {
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo128.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo128.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>&lt;&nbsp;256&nbsp;bytes</th>"
@@ -503,7 +503,7 @@ void printTrafficStatistics(void) {
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo256.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo256.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>&lt;&nbsp;512&nbsp;bytes</th>"
@@ -511,7 +511,7 @@ void printTrafficStatistics(void) {
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo512.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo512.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>&lt;&nbsp;1024&nbsp;bytes</th>"
@@ -519,7 +519,7 @@ void printTrafficStatistics(void) {
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo1024.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1024.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>&lt;&nbsp;1518&nbsp;bytes</th>"
@@ -527,7 +527,7 @@ void printTrafficStatistics(void) {
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.upTo1518.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.upTo1518.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>&gt;&nbsp;1518&nbsp;bytes</th>"
@@ -535,7 +535,7 @@ void printTrafficStatistics(void) {
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.above1518.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.above1518.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -550,7 +550,7 @@ void printTrafficStatistics(void) {
 		  getRowColor(), myGlobals.mtuSize[myGlobals.device[myGlobals.actualReportDeviceId].datalink],
 		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.tooLong.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -559,7 +559,7 @@ void printTrafficStatistics(void) {
 		  getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					 rcvdPktStats.badChecksum.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum.value)) < 0)
+		  formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktStats.badChecksum.value, formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
     }
@@ -570,15 +570,15 @@ void printTrafficStatistics(void) {
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Total</th>"
 		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
 		getRowColor(),
-		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value, 1),
-		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value)) < 0)
+		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value, 1, formatBuf, sizeof(formatBuf)),
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>IP Traffic</th>"
 		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
-		getRowColor(), formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1),
-		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value)) < 0)
+		getRowColor(), formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1, formatBuf, sizeof(formatBuf)),
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipPkts.value, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -586,7 +586,7 @@ void printTrafficStatistics(void) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Fragmented IP Traffic</th>"
 		  "<TD "TD_BG" align=right COLSPAN=2>%s [%.1f%%]</td></TR>\n",
 		  getRowColor(),
-		  formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes.value, 1),
+		  formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes.value, 1, formatBuf, sizeof(formatBuf)),
 		  (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].fragmentedIpBytes.value)/
 		  (float)myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value) < 0)
 	BufferTooShort();
@@ -603,7 +603,7 @@ void printTrafficStatistics(void) {
 
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Non IP Traffic</th>"
 		"<TD "TD_BG" align=right COLSPAN=2>%s</td></TR>\n",
-		getRowColor(), formatBytes(dummyCounter, 1)) < 0)
+		getRowColor(), formatBytes(dummyCounter, 1, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -639,7 +639,7 @@ void printTrafficStatistics(void) {
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo32.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value)) < 0)
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>32 &lt; TTL &lt; 64</th>"
@@ -647,7 +647,7 @@ void printTrafficStatistics(void) {
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo64.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value)) < 0)
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>64 &lt; TTL &lt; 96</th>"
@@ -655,7 +655,7 @@ void printTrafficStatistics(void) {
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo96.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value)) < 0)
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo96.value, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>96 &lt; TTL &lt; 128</th>"
@@ -663,7 +663,7 @@ void printTrafficStatistics(void) {
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo128.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value)) < 0)
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo128.value, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>128 &lt; TTL &lt; 160</th>"
@@ -671,7 +671,7 @@ void printTrafficStatistics(void) {
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo160.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value)) < 0)
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo160.value, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>160 &lt; TTL &lt; 192</th>"
@@ -679,7 +679,7 @@ void printTrafficStatistics(void) {
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo192.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value)) < 0)
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>192 &lt; TTL &lt; 224</th>"
@@ -687,7 +687,7 @@ void printTrafficStatistics(void) {
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo224.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value)) < 0)
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>224 &lt; TTL &lt; 256</th>"
@@ -695,7 +695,7 @@ void printTrafficStatistics(void) {
 		    getRowColor(), (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].
 					   rcvdPktTTLStats.upTo255.value)/
 		    (float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value,
-		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value)) < 0)
+		    formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 
@@ -722,14 +722,14 @@ void printTrafficStatistics(void) {
       sendString("<TR><TH "TH_BG" ALIGN=LEFT>Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt, 1),
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt, 1, formatBuf, sizeof(formatBuf)),
 		  myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt, 1) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Last Minute</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt, 1),
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt, 1, formatBuf, sizeof(formatBuf)),
 		  myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt, 1) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -737,7 +737,7 @@ void printTrafficStatistics(void) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Last 5 Minutes</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt, 1),
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt, 1, formatBuf, sizeof(formatBuf)),
 		  myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt, 1) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -745,7 +745,7 @@ void printTrafficStatistics(void) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Peak</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput, 1),
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput, 1, formatBuf, sizeof(formatBuf)),
 		  myGlobals.device[myGlobals.actualReportDeviceId].peakPacketThroughput) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -755,7 +755,7 @@ void printTrafficStatistics(void) {
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		  getRowColor(),
 		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/
-				   (myGlobals.actTime-myGlobals.initialSniffTime+1), 1),
+				   (myGlobals.actTime-myGlobals.initialSniffTime+1), 1, formatBuf, sizeof(formatBuf)),
 		  /* Bug below fixed courtesy of Eddy Lai <eddy@ModernTerminals.com> */
 		  ((float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value/
 		   (float)(myGlobals.actTime-myGlobals.initialSniffTime+1))) < 0)
@@ -805,12 +805,15 @@ void printHostsTraffic(int reportType,
   struct tm t;
   HostTraffic *el;
   HostTraffic** tmpTable;
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   float sentPercent=0, rcvdPercent=0, totPercent=0;
   Counter totIpBytesSent=0, totIpBytesRcvd=0, totIpBytes=0;
   Counter totEthBytesSent=0, totEthBytesRcvd=0, totEthBytes=0;
   ProtocolsList *protoList;
-  
+  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32],
+    formatBuf4[32], formatBuf5[32], formatBuf6[32], formatBuf7[32],
+    formatBuf8[32], formatBuf9[32];
+
   strftime(theDate, 8, "%H", localtime_r(&myGlobals.actTime, &t));
   hourId = atoi(theDate);
 
@@ -1014,7 +1017,9 @@ void printHostsTraffic(int reportType,
 	   Courtesy of Rainer Tammer <rainer.tammer@spg.schulergroup.com>
 	*/
 
-	strncpy(webHostName, makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1), sizeof(webHostName));
+	strncpy(webHostName, makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, 
+					  hostLinkBuf, sizeof(hostLinkBuf)),
+		sizeof(webHostName));
 
 	switch(reportType) {
 	case SORT_DATA_RECEIVED_PROTOS:
@@ -1026,17 +1031,17 @@ void printHostsTraffic(int reportType,
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 		      getRowColor(), webHostName,
-		      formatBytes(el->bytesRcvd.value, 1),
+		      formatBytes(el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
 		      rcvdPercent, myGlobals.separator,
-		      formatBytes(el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1),
-		      formatBytes(el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1),
-		      formatBytes(el->icmpRcvd.value, 1),
-		      formatBytes(el->icmp6Rcvd.value, 1),
-		      formatBytes(el->dlcRcvd.value, 1),
-		      formatBytes(el->ipxRcvd.value, 1),
-		      formatBytes(el->decnetRcvd.value, 1),
-		      formatBytes(el->arp_rarpRcvd.value, 1),
-		      formatBytes(el->appletalkRcvd.value, 1)
+		      formatBytes(el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1, formatBuf1, sizeof(formatBuf1)),
+		      formatBytes(el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
+		      formatBytes(el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+		      formatBytes(el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
+		      formatBytes(el->dlcRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
+		      formatBytes(el->ipxRcvd.value, 1, formatBuf6, sizeof(formatBuf6)),
+		      formatBytes(el->decnetRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
+		      formatBytes(el->arp_rarpRcvd.value, 1, formatBuf8, sizeof(formatBuf8)),
+		      formatBytes(el->appletalkRcvd.value, 1, formatBuf9, sizeof(formatBuf9))
 		      ) < 0) BufferTooShort();
 	  sendString(buf);
 
@@ -1045,23 +1050,24 @@ void printHostsTraffic(int reportType,
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      formatBytes(el->netbiosRcvd.value, 1),
-		      formatBytes(el->osiRcvd.value, 1),
-		      formatBytes(el->ipv6Rcvd.value, 1),
-		      formatBytes(el->stpRcvd.value, 1)) < 0) BufferTooShort();
+		      formatBytes(el->netbiosRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
+		      formatBytes(el->osiRcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
+		      formatBytes(el->ipv6Rcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+		      formatBytes(el->stpRcvd.value, 1, formatBuf4, sizeof(formatBuf4))) < 0) BufferTooShort();
 	  sendString(buf);
 
 	  protoList = myGlobals.ipProtosList, idx1=0;
 	  while(protoList != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			formatBytes(el->ipProtosList[idx1].rcvd.value, 1)) < 0) BufferTooShort();
+			formatBytes(el->ipProtosList[idx1].rcvd.value, 1,
+				    formatBuf, sizeof(formatBuf))) < 0) BufferTooShort();
 	    sendString(buf);
 
 	    idx1++, protoList = protoList->next;
 	  }
 
 	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      formatBytes(el->otherRcvd.value, 1)) < 0) BufferTooShort();
+		      formatBytes(el->otherRcvd.value, 1, formatBuf, sizeof(formatBuf))) < 0) BufferTooShort();
 	  sendString(buf);
 	  break;
 	case SORT_DATA_SENT_PROTOS:
@@ -1073,16 +1079,16 @@ void printHostsTraffic(int reportType,
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 		      getRowColor(), webHostName,
-		      formatBytes(el->bytesSent.value, 1), sentPercent, myGlobals.separator,
-		      formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value, 1),
-		      formatBytes(el->udpSentLoc.value+el->udpSentRem.value, 1),
-		      formatBytes(el->icmpSent.value, 1),
-		      formatBytes(el->icmp6Sent.value, 1),
-		      formatBytes(el->dlcSent.value, 1),
-		      formatBytes(el->ipxSent.value, 1),
-		      formatBytes(el->decnetSent.value, 1),
-		      formatBytes(el->arp_rarpSent.value, 1),
-		      formatBytes(el->appletalkSent.value, 1)
+		      formatBytes(el->bytesSent.value, 1, formatBuf, sizeof(formatBuf)), sentPercent, myGlobals.separator,
+		      formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value, 1, formatBuf1, sizeof(formatBuf1)),
+		      formatBytes(el->udpSentLoc.value+el->udpSentRem.value, 1, formatBuf2, sizeof(formatBuf2)),
+		      formatBytes(el->icmpSent.value, 1, formatBuf3, sizeof(formatBuf3)),
+		      formatBytes(el->icmp6Sent.value, 1, formatBuf4, sizeof(formatBuf4)),
+		      formatBytes(el->dlcSent.value, 1, formatBuf5, sizeof(formatBuf5)),
+		      formatBytes(el->ipxSent.value, 1, formatBuf6, sizeof(formatBuf6)),
+		      formatBytes(el->decnetSent.value, 1, formatBuf7, sizeof(formatBuf7)),
+		      formatBytes(el->arp_rarpSent.value, 1, formatBuf8, sizeof(formatBuf8)),
+		      formatBytes(el->appletalkSent.value, 1, formatBuf9, sizeof(formatBuf9))
 		      ) < 0) BufferTooShort();
 
 	  sendString(buf);
@@ -1092,17 +1098,17 @@ void printHostsTraffic(int reportType,
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      formatBytes(el->netbiosSent.value, 1),
-		      formatBytes(el->osiSent.value, 1),
-		      formatBytes(el->ipv6Sent.value, 1),
-		      formatBytes(el->stpSent.value, 1)) < 0) BufferTooShort();
-
+		      formatBytes(el->netbiosSent.value, 1, formatBuf, sizeof(formatBuf)),
+		      formatBytes(el->osiSent.value, 1, formatBuf1, sizeof(formatBuf1)),
+		      formatBytes(el->ipv6Sent.value, 1, formatBuf2, sizeof(formatBuf2)),
+		      formatBytes(el->stpSent.value, 1, formatBuf3, sizeof(formatBuf3))) < 0) BufferTooShort();
 	  sendString(buf);
 
 	  protoList = myGlobals.ipProtosList, idx1=0;
 	  while(protoList != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			formatBytes(el->ipProtosList[idx1].sent.value, 1)) < 0) BufferTooShort();
+			formatBytes(el->ipProtosList[idx1].sent.value, 1, 
+				    formatBuf, sizeof(formatBuf))) < 0) BufferTooShort();
 	    sendString(buf);
 
 	    idx1++, protoList = protoList->next;
@@ -1110,7 +1116,7 @@ void printHostsTraffic(int reportType,
 
 	  if(snprintf(buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      formatBytes(el->otherSent.value, 1)
+		      formatBytes(el->otherSent.value, 1, formatBuf, sizeof(formatBuf))
 		      ) < 0) BufferTooShort();
 	  sendString(buf);
 	  break;
@@ -1123,19 +1129,19 @@ void printHostsTraffic(int reportType,
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
                       getRowColor(), webHostName,
-                      formatBytes(el->bytesSent.value+el->bytesRcvd.value, 1),
+                      formatBytes(el->bytesSent.value+el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
 		      totPercent, myGlobals.separator,
                       formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value+
-                                  el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1),
+                                  el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1, formatBuf1, sizeof(formatBuf1)),
                       formatBytes(el->udpSentLoc.value+el->udpSentRem.value+
-                                  el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1),
-                      formatBytes(el->icmpSent.value+el->icmpRcvd.value, 1),
-		      formatBytes(el->icmp6Sent.value+el->icmp6Rcvd.value, 1),
-                      formatBytes(el->dlcSent.value+el->dlcRcvd.value, 1),
-                      formatBytes(el->ipxSent.value+el->ipxRcvd.value, 1),
-                      formatBytes(el->decnetSent.value+el->decnetRcvd.value, 1),
-                      formatBytes(el->arp_rarpSent.value+el->arp_rarpRcvd.value, 1),
-                      formatBytes(el->appletalkSent.value+el->appletalkRcvd.value, 1)
+                                  el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
+                      formatBytes(el->icmpSent.value+el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+		      formatBytes(el->icmp6Sent.value+el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
+                      formatBytes(el->dlcSent.value+el->dlcRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
+                      formatBytes(el->ipxSent.value+el->ipxRcvd.value, 1, formatBuf6, sizeof(formatBuf6)),
+                      formatBytes(el->decnetSent.value+el->decnetRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
+                      formatBytes(el->arp_rarpSent.value+el->arp_rarpRcvd.value, 1, formatBuf8, sizeof(formatBuf8)),
+                      formatBytes(el->appletalkSent.value+el->appletalkRcvd.value, 1, formatBuf9, sizeof(formatBuf9))
                       ) < 0) BufferTooShort();
 
           sendString(buf);
@@ -1145,17 +1151,17 @@ void printHostsTraffic(int reportType,
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-                      formatBytes(el->netbiosSent.value+el->netbiosRcvd.value, 1),
-                      formatBytes(el->osiSent.value+el->osiRcvd.value, 1),
-                      formatBytes(el->ipv6Sent.value+el->ipv6Rcvd.value, 1),
-                      formatBytes(el->stpSent.value+el->stpRcvd.value, 1)) < 0) BufferTooShort();
+                      formatBytes(el->netbiosSent.value+el->netbiosRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+                      formatBytes(el->osiSent.value+el->osiRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
+                      formatBytes(el->ipv6Sent.value+el->ipv6Rcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
+                      formatBytes(el->stpSent.value+el->stpRcvd.value, 1, formatBuf3, sizeof(formatBuf3))) < 0) BufferTooShort();
           sendString(buf);
 
 	  protoList = myGlobals.ipProtosList, idx1=0;
 	  while(protoList != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			formatBytes(el->ipProtosList[idx1].sent.value
-				    +el->ipProtosList[idx1].rcvd.value, 1)) < 0) BufferTooShort();
+				    +el->ipProtosList[idx1].rcvd.value, 1, formatBuf, sizeof(formatBuf))) < 0) BufferTooShort();
 	    sendString(buf);
 
 	    idx1++, protoList = protoList->next;
@@ -1163,7 +1169,7 @@ void printHostsTraffic(int reportType,
 
           if(snprintf(buf, sizeof(buf),
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-                      formatBytes(el->otherSent.value+el->otherRcvd.value, 1)
+                      formatBytes(el->otherSent.value+el->otherRcvd.value, 1, formatBuf, sizeof(formatBuf))
                       ) < 0) BufferTooShort();
           sendString(buf);
 
@@ -1175,7 +1181,8 @@ void printHostsTraffic(int reportType,
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
 			getRowColor(), webHostName,
-			formatBytes(el->ipBytesRcvd.value, 1), rcvdPercent, myGlobals.separator) < 0)
+			formatBytes(el->ipBytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+			rcvdPercent, myGlobals.separator) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 
@@ -1184,7 +1191,8 @@ void printHostsTraffic(int reportType,
 		el->protoIPTrafficInfos[i].rcvdFromRem.value;
 	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			  formatBytes(el->protoIPTrafficInfos[i].rcvdLoc.value+
-				      el->protoIPTrafficInfos[i].rcvdFromRem.value, 1)) < 0)
+				      el->protoIPTrafficInfos[i].rcvdFromRem.value, 1,
+				      formatBuf, sizeof(formatBuf))) < 0)
 		BufferTooShort();
 	      sendString(buf);
 	    }
@@ -1195,7 +1203,7 @@ void printHostsTraffic(int reportType,
 	    else
 	      totalIPTraffic = 0;
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			formatBytes(totalIPTraffic, 1)) < 0)
+			formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -1207,7 +1215,8 @@ void printHostsTraffic(int reportType,
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
 			getRowColor(), webHostName,
-			formatBytes(el->ipBytesSent.value, 1), sentPercent, myGlobals.separator) < 0)
+			formatBytes(el->ipBytesSent.value, 1, formatBuf, sizeof(formatBuf)),
+			sentPercent, myGlobals.separator) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 
@@ -1216,7 +1225,8 @@ void printHostsTraffic(int reportType,
 		el->protoIPTrafficInfos[i].sentRem.value;
 	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			  formatBytes(el->protoIPTrafficInfos[i].sentLoc.value+
-				      el->protoIPTrafficInfos[i].sentRem.value, 1)) < 0)
+				      el->protoIPTrafficInfos[i].sentRem.value, 1,
+				      formatBuf, sizeof(formatBuf))) < 0)
 		BufferTooShort();
 	      sendString(buf);
 	    }
@@ -1227,7 +1237,7 @@ void printHostsTraffic(int reportType,
 	    else
 	      totalIPTraffic = 0;
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			formatBytes(totalIPTraffic, 1)) < 0)
+			formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -1239,7 +1249,7 @@ void printHostsTraffic(int reportType,
             if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
                         "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
                         getRowColor(), webHostName,
-                        formatBytes(el->ipBytesSent.value+el->ipBytesRcvd.value, 1),
+                        formatBytes(el->ipBytesSent.value+el->ipBytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
 			totPercent, myGlobals.separator) < 0)
               BufferTooShort();
             sendString(buf);
@@ -1253,7 +1263,8 @@ void printHostsTraffic(int reportType,
                           formatBytes(el->protoIPTrafficInfos[i].sentLoc.value+
                                       el->protoIPTrafficInfos[i].rcvdLoc.value+
                                       el->protoIPTrafficInfos[i].sentRem.value+
-                                      el->protoIPTrafficInfos[i].rcvdFromRem.value, 1)) < 0)
+                                      el->protoIPTrafficInfos[i].rcvdFromRem.value, 1,
+				      formatBuf, sizeof(formatBuf))) < 0)
                 BufferTooShort();
               sendString(buf);
             }
@@ -1264,7 +1275,7 @@ void printHostsTraffic(int reportType,
             else
               totalIPTraffic = 0;
             if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-                        formatBytes(totalIPTraffic, 1)) < 0)
+                        formatBytes(totalIPTraffic, 1, formatBuf, sizeof(formatBuf))) < 0)
               BufferTooShort();
             sendString(buf);
           }
@@ -1279,9 +1290,9 @@ void printHostsTraffic(int reportType,
 			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
 			getRowColor(), webHostName,
-			formatThroughput(el->actualRcvdThpt, 1),
-			formatThroughput(el->averageRcvdThpt, 1),
-			formatThroughput(el->peakRcvdThpt, 1),
+			formatThroughput(el->actualRcvdThpt, 1, formatBuf, sizeof(formatBuf)),
+			formatThroughput(el->averageRcvdThpt, 1, formatBuf1, sizeof(formatBuf1)),
+			formatThroughput(el->peakRcvdThpt, 1, formatBuf2, sizeof(formatBuf2)),
 			el->actualRcvdPktThpt,
 			el->averageRcvdPktThpt,
 			el->peakRcvdPktThpt, 1) < 0)
@@ -1299,9 +1310,9 @@ void printHostsTraffic(int reportType,
                         "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
                         "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
                         getRowColor(), webHostName,
-                        formatThroughput(el->actualSentThpt, 1),
-                        formatThroughput(el->averageSentThpt, 1),
-                        formatThroughput(el->peakSentThpt, 1),
+                        formatThroughput(el->actualSentThpt, 1, formatBuf, sizeof(formatBuf)),
+                        formatThroughput(el->averageSentThpt, 1, formatBuf1, sizeof(formatBuf1)),
+                        formatThroughput(el->peakSentThpt, 1, formatBuf2, sizeof(formatBuf2)),
                         el->actualSentPktThpt,
                         el->averageSentPktThpt,
                         el->peakSentPktThpt) < 0)
@@ -1319,9 +1330,9 @@ void printHostsTraffic(int reportType,
                         "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
                         "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
                         getRowColor(), webHostName,
-                        formatThroughput(el->actualTThpt, 1),
-                        formatThroughput(el->averageTThpt, 1),
-                        formatThroughput(el->peakTThpt, 1),
+                        formatThroughput(el->actualTThpt, 1, formatBuf, sizeof(formatBuf)),
+                        formatThroughput(el->averageTThpt, 1, formatBuf1, sizeof(formatBuf1)),
+                        formatThroughput(el->peakTThpt, 1, formatBuf2, sizeof(formatBuf2)),
                         el->actualTPktThpt,
                         el->averageTPktThpt,
                         el->peakTPktThpt) < 0)
@@ -1393,7 +1404,8 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
   HostTraffic *el;
   HostTraffic** tmpTable;
   char buf[LEN_GENERAL_WORK_BUFFER], *sign, *theAnchor[6], *arrow[6], *arrowGif;
-  char htmlAnchor[64], htmlAnchor1[64];
+  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32];
+  char htmlAnchor[64], htmlAnchor1[64], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
 
   memset(buf, 0, sizeof(buf));
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
@@ -1507,11 +1519,11 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		    "</TR>\n",
-		    getRowColor(), makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1),
-		    formatPkts(el->pktMulticastSent.value),
-		    formatBytes(el->bytesMulticastSent.value, 1),
-		    formatPkts(el->pktMulticastRcvd.value),
-		    formatBytes(el->bytesMulticastRcvd.value, 1)) < 0) BufferTooShort();
+		    getRowColor(), makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, hostLinkBuf, sizeof(hostLinkBuf)),
+		    formatPkts(el->pktMulticastSent.value, formatBuf, sizeof(formatBuf)),
+		    formatBytes(el->bytesMulticastSent.value, 1, formatBuf1, sizeof(formatBuf1)),
+		    formatPkts(el->pktMulticastRcvd.value, formatBuf2, sizeof(formatBuf2)),
+		    formatBytes(el->bytesMulticastRcvd.value, 1, formatBuf3, sizeof(formatBuf3))) < 0) BufferTooShort();
 
 	sendString(buf);
 
@@ -1547,6 +1559,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
   HostTraffic** tmpTable;
   char buf[2*LEN_GENERAL_WORK_BUFFER], *arrowGif, *sign, *arrow[NUM_ANCHORS+1], *theAnchor[NUM_ANCHORS+1], osBuf[128];
   char htmlAnchor[64], htmlAnchor1[64];
+  char formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
 
   memset(buf, 0, sizeof(buf));
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
@@ -1721,7 +1734,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	  BufferTooShort();
 	sendString(buf);
 
-	sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1));
+	sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, hostLinkBuf, sizeof(hostLinkBuf)));
 
 	if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
 	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -1890,7 +1903,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 #endif
 
 	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</A></TD>",
-		    formatSeconds(el->lastSeen - el->firstSeen)) < 0)
+		    formatSeconds(el->lastSeen - el->firstSeen, formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 
@@ -1929,6 +1942,8 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
   HostTraffic *el=NULL;
   char buf[LEN_GENERAL_WORK_BUFFER];
   u_short found = 0;
+  char formatBuf[32], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  int portBufLen;
 
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
@@ -1965,7 +1980,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
   if(el->portsUsage != NULL) {
     for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
       if(el->portsUsage[idx] != NULL) {
-	char *svc = getAllPortByNum(idx);
+	char *svc = getAllPortByNum(idx, portBuf, portBufLen);
 	char webHostName[LEN_GENERAL_WORK_BUFFER];
 	HostTraffic *peerHost;
 
@@ -2008,12 +2023,14 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
 	    strncpy(webHostName, "&nbsp;", sizeof(webHostName));
 	  } else
-	    strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0), sizeof(webHostName));
+	    strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0, 
+					      0, hostLinkBuf, sizeof(hostLinkBuf)),
+		    sizeof(webHostName));
 
 	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
 		      "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
 		      el->portsUsage[idx]->clientUses,
-		      formatBytes(el->portsUsage[idx]->clientTraffic.value, 1),
+		      formatBytes(el->portsUsage[idx]->clientTraffic.value, 1, formatBuf, sizeof(formatBuf)),
 		      webHostName) < 0) BufferTooShort();
 	  sendString(buf);
 	} else
@@ -2031,12 +2048,13 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
 	    strncpy(webHostName, "&nbsp;", sizeof(webHostName));
 	  } else
-	    strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0), sizeof(webHostName));
+	    strncpy(webHostName, makeHostLink(peerHost, FLAG_HOSTLINK_TEXT_FORMAT, 0, 
+					      0, hostLinkBuf, sizeof(hostLinkBuf)), sizeof(webHostName));
 
 	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
 		      "<TD "TD_BG" ALIGN=CENTER>%s</TD></TR>",
 		      el->portsUsage[idx]->serverUses,
-		      formatBytes(el->portsUsage[idx]->serverTraffic.value, 1),
+		      formatBytes(el->portsUsage[idx]->serverTraffic.value, 1, formatBuf, sizeof(formatBuf)),
 		      webHostName) < 0) BufferTooShort();
 	  sendString(buf);
 	} else
@@ -2069,7 +2087,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
       if(el->otherIpPortsSent[idx] >= 0) {
 	if(snprintf(buf, sizeof(buf), "<LI><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
 		    el->otherIpPortsSent[idx],
-		    getAllPortByNum(el->otherIpPortsSent[idx])) < 0)
+		    getAllPortByNum(el->otherIpPortsSent[idx], portBuf, portBufLen)) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	numPrinted++;
@@ -2083,7 +2101,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
       if(el->otherIpPortsRcvd[idx] >= 0) {
 	if(snprintf(buf, sizeof(buf), "<li><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
 		    el->otherIpPortsRcvd[idx],
-		    getAllPortByNum(el->otherIpPortsRcvd[idx])) < 0)
+		    getAllPortByNum(el->otherIpPortsRcvd[idx], portBuf, portBufLen)) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	numPrinted++;
@@ -2113,7 +2131,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
       if(el->recentlyUsedClientPorts[idx] >= 0) {
 	if(snprintf(buf, sizeof(buf), "<li><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
 		    el->recentlyUsedClientPorts[idx],
-		    getAllPortByNum(el->recentlyUsedClientPorts[idx])) < 0)
+		    getAllPortByNum(el->recentlyUsedClientPorts[idx], portBuf, portBufLen)) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	numPrinted++;
@@ -2128,7 +2146,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
       if(el->recentlyUsedServerPorts[idx] >= 0) {
 	if(snprintf(buf, sizeof(buf), "<LI><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
 		    el->recentlyUsedServerPorts[idx],
-		    getAllPortByNum(el->recentlyUsedServerPorts[idx])) < 0)
+		    getAllPortByNum(el->recentlyUsedServerPorts[idx], portBuf, portBufLen)) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	numPrinted++;
@@ -2175,10 +2193,11 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 /* ************************************ */
 
 void printLocalRoutersList(int actualDeviceId) {
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   HostTraffic *el, *router;
   u_int i, j, numEntries=0;
   HostSerial routerList[MAX_NUM_ROUTERS];
+  char formatBuf[32];
 
   printHTMLheader("Local Subnet Routers", 0);
 
@@ -2223,7 +2242,8 @@ void printLocalRoutersList(int actualDeviceId) {
       if((router = quickHostLink(routerList[i], myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=left>%s</TH><TD "TD_BG" ALIGN=LEFT><UL>\n",
 		    getRowColor(),
-		    makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0)) < 0) BufferTooShort();
+		    makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, 
+				 hostLinkBuf, sizeof(hostLinkBuf))) < 0) BufferTooShort();
 	sendString(buf);
 
 
@@ -2233,7 +2253,8 @@ void printLocalRoutersList(int actualDeviceId) {
 	    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
 	      if(cmpSerial(&el->contactedRouters.peersSerials[j], &routerList[i])) {
 		if(snprintf(buf, sizeof(buf), "<LI>%s</LI>\n",
-			    makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0)) < 0)
+			    makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
+					 hostLinkBuf, sizeof(hostLinkBuf))) < 0)
 		  BufferTooShort();
 		sendString(buf);
 		break;
@@ -2263,8 +2284,10 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   Counter totalBytesSent, totalBytesRcvd, totalBytes, a=0, b=0;
   float sentpct, rcvdpct;
   time_t timeDiff = time(NULL)-myGlobals.initialSniffTime;
-  char *arrowGif, *arrow[48], *theAnchor[48];
+  char *arrowGif, *arrow[48], *theAnchor[48], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   char htmlAnchor[64], htmlAnchor1[64];
+  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], 
+    formatBuf4[32], formatBuf5[32], formatBuf6[32];
 
   if(revertOrder) {
     sign = "";
@@ -2451,11 +2474,11 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 		    "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD></TR>\n",
 		    getRowColor(),
-		    makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+		    makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		    tmpName1,
-		    formatBytes(a, 1),
+		    formatBytes(a, 1, formatBuf, sizeof(formatBuf)),
 		    sentpct, myGlobals.separator,
-		    formatBytes(b, 1),
+		    formatBytes(b, 1, formatBuf1, sizeof(formatBuf1)),
 		    rcvdpct, myGlobals.separator) < 0)
 	  BufferTooShort();
 	sendString(buf);
@@ -2491,10 +2514,10 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		formatBytes(totalBytes, 1),
-		formatBytes(totalBytesSent, 1),
-		formatBytes(totalBytesRcvd, 1),
-		formatThroughput((float)(totalBytes/timeDiff), 1)) < 0)
+		formatBytes(totalBytes, 1, formatBuf, sizeof(formatBuf)),
+		formatBytes(totalBytesSent, 1, formatBuf1, sizeof(formatBuf1)),
+		formatBytes(totalBytesRcvd, 1, formatBuf2, sizeof(formatBuf2)),
+		formatThroughput((float)(totalBytes/timeDiff), 1, formatBuf3, sizeof(formatBuf3))) < 0)
       BufferTooShort();
 
     sendString(buf);
@@ -2513,8 +2536,13 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
 void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
   int idx;
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], hostLinkBuf[LEN_GENERAL_WORK_BUFFER], 
+    hostLinkBuf1[LEN_GENERAL_WORK_BUFFER];
   int numSessions, printedSessions;
+  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], 
+    formatBuf4[32], formatBuf5[32], formatBuf6[32];
+  char portBuf[32];
+  int portBufLen;
 
   if(!myGlobals.enableSessionHandling) {
     printNotAvailable("-z or --disable-sessions");
@@ -2619,18 +2647,18 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 #endif
 		    "</TR>\n",
 		    getRowColor(),
-		    makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0),
+		    makeHostLink(session->initiator, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		    sport,
 		    session->isP2P == 1 ? "&nbsp&lt;P2P&gt;" : "",
-		    makeHostLink(session->remotePeer, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0),
+		    makeHostLink(session->remotePeer, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf1, sizeof(hostLinkBuf1)),
 		    dport,
-		    formatBytes(dataSent, 1),
-		    formatBytes(dataRcvd, 1),
-		    formatTime(&(session->firstSeen), 1),
-		    formatTime(&(session->lastSeen), 1),
-                    formatSeconds(session->lastSeen-session->firstSeen),
-                    formatSeconds(myGlobals.actTime-session->lastSeen),
-		    formatLatency(session->nwLatency, session->sessionState)
+		    formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
+		    formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1)),
+		    formatTime(&(session->firstSeen), 1, formatBuf2, sizeof(formatBuf2)),
+		    formatTime(&(session->lastSeen), 1, formatBuf3, sizeof(formatBuf3)),
+                    formatSeconds(session->lastSeen-session->firstSeen, formatBuf4, sizeof(formatBuf4)),
+                    formatSeconds(myGlobals.actTime-session->lastSeen, formatBuf5, sizeof(formatBuf5)),
+		    formatLatency(session->nwLatency, session->sessionState, formatBuf6, sizeof(formatBuf6))
 #ifdef PARM_PRINT_ALL_SESSIONS
 		    , getSessionState(session)
 #endif
@@ -2671,8 +2699,9 @@ void printIpProtocolUsage(void) {
   HostTraffic **hosts, *el;
   u_short clientPorts[MAX_ASSIGNED_IP_PORTS], serverPorts[MAX_ASSIGNED_IP_PORTS];
   u_int j, idx1, hostsNum=0, numPorts=0, maxHosts;
-  char buf[LEN_GENERAL_WORK_BUFFER];
-
+  char buf[LEN_GENERAL_WORK_BUFFER], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  int portBufLen;
+  
   printHTMLheader("TCP/UDP Protocol Subnet Usage", 0);
 
   memset(clientPorts, 0, sizeof(clientPorts));
@@ -2716,7 +2745,8 @@ void printIpProtocolUsage(void) {
   for(j=0; j<MAX_ASSIGNED_IP_PORTS; j++)
     if((clientPorts[j] > 0) || (serverPorts[j] > 0)) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=CENTER>%d</TD>"
-		  "<TD "TD_BG">\n", getRowColor(), getAllPortByNum(j), j) < 0) BufferTooShort();
+		  "<TD "TD_BG">\n", getRowColor(), 
+		  getAllPortByNum(j, portBuf, portBufLen), j) < 0) BufferTooShort();
       sendString(buf);
 
       if(clientPorts[j] > 0) {
@@ -2726,7 +2756,7 @@ void printIpProtocolUsage(void) {
 	     && (hosts[idx1]->portsUsage[j] != NULL) /* added 04.03.00 Ralf Amandi */
 	     && (hosts[idx1]->portsUsage[j]->clientUses > 0)) {
 	    if(snprintf(buf, sizeof(buf), "<li>%s\n",
-			makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0)) < 0)
+			makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -2743,7 +2773,7 @@ void printIpProtocolUsage(void) {
 	     && (hosts[idx1]->portsUsage[j] != NULL) /* added 04.03.00 Ralf Amandi */
 	     && (hosts[idx1]->portsUsage[j]->serverUses > 0)) {
 	    if(snprintf(buf, sizeof(buf), "<li>%s\n",
-			makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0)) < 0)
+			makeHostLink(hosts[idx1], FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -2865,6 +2895,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
   char buf[2*LEN_GENERAL_WORK_BUFFER], *sign;
   float total, partialTotal, remainingTraffic;
   float percentage;
+  char formatBuf[32], formatBuf1[32], formatBuf2[32];
 
   if(revertOrder)
     sign = "";
@@ -3189,7 +3220,9 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
 	  for(i=0; i<idx; i++) {
 	    if(ipPorts[i] != NULL) {
-	      char *symPort = getAllPortByNum(ipPorts[i]->port);
+	      char portBuf[32];
+	      int portBufLen;
+	      char *symPort = getAllPortByNum(ipPorts[i]->port, portBuf, portBufLen);
 
 	      if(symPort == NULL) symPort = "";
 
@@ -3201,9 +3234,9 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 			  "</TR>\n",
 			  getRowColor(),
 			  ipPorts[i]->port, symPort, ipPorts[i]->port,
-			  formatBytes(ipPorts[i]->sent+ipPorts[i]->rcvd, 1),
-			  formatBytes(ipPorts[i]->sent, 1),
-			  formatBytes(ipPorts[i]->rcvd, 1)
+			  formatBytes(ipPorts[i]->sent+ipPorts[i]->rcvd, 1, formatBuf, sizeof(formatBuf)),
+			  formatBytes(ipPorts[i]->sent, 1, formatBuf1, sizeof(formatBuf1)),
+			  formatBytes(ipPorts[i]->rcvd, 1, formatBuf2, sizeof(formatBuf2))
 			  ) < 0) BufferTooShort();
 	      sendString(buf);
 	    }
@@ -3231,7 +3264,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
 void printProtoTraffic(void) {
   float total, perc;
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32];
 
   total = myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/1024; /* total is expressed in KBytes.value */
 
@@ -3251,7 +3284,8 @@ void printProtoTraffic(void) {
 	      "</td><td align=right WIDTH=50>%.1f%%</TD><TD "TD_BG" WIDTH=200>"
 	      "<TABLE BORDER=1 WIDTH=\"100%%\">",
 	      getRowColor(),
-	      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1),
+	      formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value, 1,
+			  formatBuf, sizeof(formatBuf)),
 	      perc) < 0)
     BufferTooShort();
   sendString(buf);
@@ -3347,7 +3381,7 @@ void printProtoTraffic(void) {
 
 void printIpTrafficMatrix(void) {
   int i, j, numEntries=0, numConsecutiveEmptyCells;
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   short *activeHosts;
   Counter minTraffic=(Counter)LONG_MAX, maxTraffic=0, avgTraffic;
   Counter avgTrafficLow, avgTrafficHigh, tmpCounter;
@@ -3385,7 +3419,8 @@ void printIpTrafficMatrix(void) {
       }
 
       if(snprintf(buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER><SMALL>%s</SMALL></TH>",
-		  getHostName(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i], 1)) < 0)
+		  getHostName(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i], 
+			      1, hostLinkBuf, sizeof(hostLinkBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
     }
@@ -3430,7 +3465,7 @@ void printIpTrafficMatrix(void) {
       sendString(buf);
       
       sendString(makeHostLink(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i],
-			      FLAG_HOSTLINK_TEXT_FORMAT, 1, 0));
+			      FLAG_HOSTLINK_TEXT_FORMAT, 1, 0, hostLinkBuf, sizeof(hostLinkBuf)));
       sendString("</SMALL></TH>");
 
       for(j=0; j<myGlobals.device[myGlobals.actualReportDeviceId].numHosts; j++) {
@@ -3460,7 +3495,7 @@ void printIpTrafficMatrix(void) {
 			"\"window.status='';return true\"><SMALL>%s</SMALL></A></TH>\n",
 			calculateCellColor(tmpCounter, avgTrafficLow, avgTrafficHigh),
 			buildHTMLBrowserWindowsLabel(i, j),
-			formatBytes(tmpCounter, 1)) < 0)
+			formatBytes(tmpCounter, 1, formatBuf, sizeof(formatBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3490,7 +3525,8 @@ void printIpTrafficMatrix(void) {
 
 void printThptStatsMatrix(int sortedColumn) {
   int i, dataSent;
-  char label[32], label1[32], buf[LEN_GENERAL_WORK_BUFFER];
+  char label[32], label1[32], buf[LEN_GENERAL_WORK_BUFFER], 
+    formatBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
   time_t tmpTime;
   struct tm t;
   HostTraffic *el;
@@ -3520,7 +3556,8 @@ void printThptStatsMatrix(int sortedColumn) {
 		  "<TABLE BORDER=1 WIDTH=100%%>",
 		  getRowColor(), label1, label,
 		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				   last60MinutesThpt[i].trafficValue, 1)) < 0)
+				   last60MinutesThpt[i].trafficValue, 1, 
+				   formatBuf, sizeof(formatBuf))) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -3534,9 +3571,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].topHostSentSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].topSentTraffic.value, 1)) < 0)
+				       last60MinutesThpt[i].topSentTraffic.value, 1,
+				       formatBuf, sizeof(formatBuf))) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3548,9 +3586,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].secondHostSentSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].secondSentTraffic.value, 1)) < 0)
+				       last60MinutesThpt[i].secondSentTraffic.value, 1,
+				       formatBuf, sizeof(formatBuf))) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3562,9 +3601,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].thirdHostSentSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].thirdSentTraffic.value, 1)) < 0)
+				       last60MinutesThpt[i].thirdSentTraffic.value, 1,
+				       formatBuf, sizeof(formatBuf))) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3584,9 +3624,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].topHostRcvdSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].topRcvdTraffic.value, 1)) < 0)
+				       last60MinutesThpt[i].topRcvdTraffic.value, 1, 
+				       formatBuf, sizeof(formatBuf))) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3598,9 +3639,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].secondHostRcvdSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].secondRcvdTraffic.value, 1)) < 0)
+				       last60MinutesThpt[i].secondRcvdTraffic.value, 1, 
+				       formatBuf, sizeof(formatBuf))) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3612,9 +3654,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].
 			       last60MinutesThpt[i].thirdHostRcvdSerial, myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].thirdRcvdTraffic.value, 1)) < 0)
+				       last60MinutesThpt[i].thirdRcvdTraffic.value, 1,
+				       formatBuf, sizeof(formatBuf))) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3652,7 +3695,8 @@ void printThptStatsMatrix(int sortedColumn) {
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>",
 		    getRowColor(), label, label1,
 		    formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				     last24HoursThpt[i].trafficValue, 1)) < 0)
+				     last24HoursThpt[i].trafficValue, 1, 
+				     formatBuf, sizeof(formatBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 
@@ -3664,9 +3708,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostSentSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].topSentTraffic.value, 1)) < 0)
+					 last24HoursThpt[i].topSentTraffic.value, 1,
+					 formatBuf, sizeof(formatBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3678,9 +3723,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostSentSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].secondSentTraffic.value, 1)) < 0)
+					 last24HoursThpt[i].secondSentTraffic.value, 1, 
+					 formatBuf, sizeof(formatBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3692,9 +3738,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostSentSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].thirdSentTraffic.value, 1)) < 0)
+					 last24HoursThpt[i].thirdSentTraffic.value, 1,
+					 formatBuf, sizeof(formatBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3713,9 +3760,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].topHostRcvdSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].topRcvdTraffic.value, 1)) < 0)
+					 last24HoursThpt[i].topRcvdTraffic.value, 1,
+					 formatBuf, sizeof(formatBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3727,9 +3775,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].secondHostRcvdSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].secondRcvdTraffic.value, 1)) < 0)
+					 last24HoursThpt[i].secondRcvdTraffic.value, 1, 
+					 formatBuf, sizeof(formatBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3741,9 +3790,10 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if((el = quickHostLink(myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].thirdHostRcvdSerial,
 				 myGlobals.actualReportDeviceId, &tmpEl)) != NULL) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
+			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].thirdRcvdTraffic.value, 1)) < 0)
+					 last24HoursThpt[i].thirdRcvdTraffic.value, 1, 
+					 formatBuf, sizeof(formatBuf))) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3764,7 +3814,7 @@ void printThptStatsMatrix(int sortedColumn) {
 /* ************************ */
 
 void printThptStats(int sortedColumn _UNUSED_) {
-  char tmpBuf[128];
+  char tmpBuf[128], formatBuf[32], formatBuf1[32];
 
   printHTMLheader("Network Load Statistics", 0);
 
@@ -3786,8 +3836,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 #endif
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
-	      formatTimeStamp(0, 0, 0),
-	      formatTimeStamp(0, 0, 60)) < 0) BufferTooShort();
+	      formatTimeStamp(0, 0, 0, formatBuf, sizeof(formatBuf)),
+	      formatTimeStamp(0, 0, 60, formatBuf1, sizeof(formatBuf1))) < 0) BufferTooShort();
 
   sendString(tmpBuf);
 
@@ -3797,8 +3847,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
 	       "<IMG SRC=\"thptGraph"CHART_FORMAT"?col=2\"></A><BR>\n");
 #endif
     if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
-		formatTimeStamp(0, 0, 0),
-		formatTimeStamp(0, 24, 0)) < 0) BufferTooShort();
+		formatTimeStamp(0, 0, 0, formatBuf, sizeof(formatBuf)),
+		formatTimeStamp(0, 24, 0, formatBuf1, sizeof(formatBuf1))) < 0) BufferTooShort();
 
     sendString(tmpBuf);
 
@@ -3806,8 +3856,8 @@ void printThptStats(int sortedColumn _UNUSED_) {
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
       sendString("<P><IMG SRC=\"thptGraph"CHART_FORMAT"?col=3\"><BR>\n");
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
-		  formatTimeStamp(0, 0, 0),
-		  formatTimeStamp(30, 0, 0)) < 0)
+		  formatTimeStamp(0, 0, 0, formatBuf, sizeof(formatBuf)),
+		  formatTimeStamp(30, 0, 0, formatBuf1, sizeof(formatBuf1))) < 0)
 	BufferTooShort();
       sendString(tmpBuf);
     }
@@ -3887,8 +3937,12 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   HostTraffic *el;
   char buf[LEN_GENERAL_WORK_BUFFER];
   DomainStats **stats, *tmpStats, *statsEntry;
-  char htmlAnchor[2*LEN_GENERAL_WORK_BUFFER], htmlAnchor1[2*LEN_GENERAL_WORK_BUFFER], *sign, *arrowGif, *arrow[48], *theAnchor[48];
+  char htmlAnchor[2*LEN_GENERAL_WORK_BUFFER], htmlAnchor1[2*LEN_GENERAL_WORK_BUFFER], 
+    *sign, *arrowGif, *arrow[48], *theAnchor[48];
   Counter totBytesSent=0, totBytesRcvd=0;
+  char formatBuf[32], formatBuf1[32], formatBuf2[32], formatBuf3[32], formatBuf4[32], 
+    formatBuf5[32], formatBuf6[32], formatBuf7[32], formatBuf8[32], formatBuf9[32], 
+    hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
 
   maxHosts = myGlobals.device[myGlobals.actualReportDeviceId].hostsno; /* save it as it can change */
   len = sizeof(DomainStats)*maxHosts;
@@ -4201,7 +4255,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 	 && (strcmp(&tmpBuf[blankId+1], domainName) == 0))
 	tmpBuf[blankId] = '\0';
 
-      hostLink = makeHostLink(statsEntry->domainHost, FLAG_HOSTLINK_TEXT_FORMAT, 1, 0);
+      hostLink = makeHostLink(statsEntry->domainHost, FLAG_HOSTLINK_TEXT_FORMAT, 1,
+			      0, hostLinkBuf, sizeof(hostLinkBuf));
 
       len = strlen(hostLink); if(len >= sizeof(htmlAnchor)) len = sizeof(htmlAnchor)-1;
       strncpy(htmlAnchor, hostLink, len);
@@ -4216,18 +4271,18 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		getRowColor(), htmlAnchor,
 		getHostCountryIconURL(statsEntry->domainHost),
-		formatBytes(statsEntry->bytesSent.value, 1),
+		formatBytes(statsEntry->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
 		(100*((float)statsEntry->bytesSent.value/(float)totBytesSent)),
-		formatBytes(statsEntry->bytesRcvd.value, 1),
+		formatBytes(statsEntry->bytesRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
 		(100*((float)statsEntry->bytesRcvd.value/(float)totBytesRcvd)),
-		formatBytes(statsEntry->tcpSent.value, 1),
-		formatBytes(statsEntry->tcpRcvd.value, 1),
-		formatBytes(statsEntry->udpSent.value, 1),
-		formatBytes(statsEntry->udpRcvd.value, 1),
-		formatBytes(statsEntry->icmpSent.value, 1),
-		formatBytes(statsEntry->icmpRcvd.value, 1),
-		formatBytes(statsEntry->icmp6Sent.value, 1),
-		formatBytes(statsEntry->icmp6Rcvd.value, 1)
+		formatBytes(statsEntry->tcpSent.value, 1, formatBuf2, sizeof(formatBuf2)),
+		formatBytes(statsEntry->tcpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+		formatBytes(statsEntry->udpSent.value, 1, formatBuf4, sizeof(formatBuf4)),
+		formatBytes(statsEntry->udpRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
+		formatBytes(statsEntry->icmpSent.value, 1, formatBuf6, sizeof(formatBuf6)),
+		formatBytes(statsEntry->icmpRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
+		formatBytes(statsEntry->icmp6Sent.value, 1, formatBuf8, sizeof(formatBuf8)),
+		formatBytes(statsEntry->icmp6Rcvd.value, 1, formatBuf9, sizeof(formatBuf9))
 		) < 0) BufferTooShort();
     sendString(buf);
 
@@ -4277,6 +4332,7 @@ void listNetFlows(void) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   int numEntries=0;
   FlowFilterList *list = myGlobals.flowsList;
+  char formatBuf[32], formatBuf1[32];
 
   printHTMLheader(NULL, 0);
 
@@ -4293,8 +4349,8 @@ void listNetFlows(void) {
 	if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>%s"
 		    "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		    getRowColor(), list->flowName,
-		    formatPkts(list->packets.value),
-		    formatBytes(list->bytes.value, 1)) < 0) BufferTooShort();
+		    formatPkts(list->packets.value, formatBuf, sizeof(formatBuf)),
+		    formatBytes(list->bytes.value, 1, formatBuf1, sizeof(formatBuf1))) < 0) BufferTooShort();
 	sendString(buf);
 
 	numEntries++;
@@ -4422,6 +4478,7 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
   HostTraffic **tmpTable, *el;
   char buf[LEN_GENERAL_WORK_BUFFER];
   float marcoRcvd = 0, marcoSent = 0;
+  char formatBuf[32], formatBuf1[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
 
   maxHosts = ifName->hostsno; /* save it as it can change */
   tmpTable = (HostTraffic**)malloc(maxHosts*sizeof(HostTraffic*));
@@ -4478,7 +4535,8 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 	if(i > 0) {
 	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      formatBytes(dataSent, 1), formatBytes(dataRcvd, 1)) < 0)
+		      formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf))
+		      , formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1))) < 0)
 	    BufferTooShort();
 
 	  sendString(buf);
@@ -4504,13 +4562,15 @@ static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
 	lastId = el->hostAS;
       }
 
-      sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0));
+      sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, 
+			      hostLinkBuf, sizeof(hostLinkBuf)));
       sendString("<br>\n");
     }
 
     if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		formatBytes(dataSent, 1), formatBytes(dataRcvd, 1)) < 0)
+		formatBytes(dataSent, 1, formatBuf, sizeof(formatBuf)),
+		formatBytes(dataRcvd, 1, formatBuf1, sizeof(formatBuf1))) < 0)
       BufferTooShort();
     
     sendString(buf);
@@ -4574,8 +4634,10 @@ void showPortTraffic(u_short portNr) {
   char buf[LEN_GENERAL_WORK_BUFFER], *str;
   int numRecords = 0, firstRun = 1;
   HostTraffic *el;
+  char portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
+  int portBufLen;
 
-  str = getAllPortByNum(portNr);
+  str = getAllPortByNum(portNr, portBuf, portBufLen);
 
   if((str[0] == '?') || (atoi(str) == portNr)) {
     if(snprintf(buf, sizeof(buf), "Recent Users of Port %u", portNr) < 0)
@@ -4598,7 +4660,7 @@ void showPortTraffic(u_short portNr) {
       }
 
       sendString("\n<LI> ");
-      sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0));
+      sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)));
       numRecords++;
     }
 
@@ -4628,7 +4690,7 @@ void showPortTraffic(u_short portNr) {
       }
 
       sendString("\n<LI> ");
-      sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0));
+      sendString(makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)));
       numRecords++;
     }
 

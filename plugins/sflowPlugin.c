@@ -1631,7 +1631,7 @@ static void setSflowInSocket() {
 /* ****************************** */
 
 static void handlesFlowHTTPrequest(char* url) {
-  char buf[1024], buf1[32], buf2[32];
+  char buf[1024], buf1[32], buf2[32], formatBuf[32];
   float percentage, err;
   struct in_addr theDest;
   int i;
@@ -1759,7 +1759,7 @@ static void handlesFlowHTTPrequest(char* url) {
 
   if(snprintf(buf, sizeof(buf),
 	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT># Samples</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-	      formatPkts((Counter)myGlobals.numSamplesReceived)) < 0)
+	      formatPkts((Counter)myGlobals.numSamplesReceived, formatBuf, sizeof(formatBuf))) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -1782,7 +1782,7 @@ static void handlesFlowHTTPrequest(char* url) {
 
     if(snprintf(buf, sizeof(buf), "%s [%s pkts]\n",
 		_intoa(probeList[i].probeAddr, buf, sizeof(buf)),
-		formatPkts(probeList[i].pkts)) < 0)
+		formatPkts(probeList[i].pkts, formatBuf, sizeof(formatBuf))) < 0)
       BufferTooShort();
     sendString(buf);
   }

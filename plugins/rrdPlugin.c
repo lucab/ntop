@@ -294,7 +294,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
 
 static void listResource(char *rrdPath, char *rrdTitle,
 			 char *startTime, char* endTime) {
-  char path[512], url[256];
+  char path[512], url[256], formatBuf[32];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
   int numEntries = 0;
@@ -380,9 +380,9 @@ static void listResource(char *rrdPath, char *rrdTitle,
       } else {
 	if((strncmp(rsrcName, "pkt", 3) == 0)
 	   || ((strlen(rsrcName) > 4) && (strcmp(&rsrcName[strlen(rsrcName)-4], "Pkts") == 0))) {
-	  snprintf(path, sizeof(path), "%s Pkt</TD>", formatPkts(total));
+	  snprintf(path, sizeof(path), "%s Pkt</TD>", formatPkts(total, formatBuf, sizeof(formatBuf)));
 	} else {
-	  snprintf(path, sizeof(path), "%s", formatBytes(total, 1));
+	  snprintf(path, sizeof(path), "%s", formatBytes(total, 1, formatBuf, sizeof(formatBuf)));
 	}
 	sendString(path);
       }

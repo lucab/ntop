@@ -21,44 +21,39 @@
 #include "ntop.h"
 
 
-char* formatKBytes(float numKBytes) {
-  static char outStr[LEN_DATAFORMAT_BUFFER][32];
-  static short bufIdx=0;
+/* ****************************************** */
 
+char* formatKBytes(float numKBytes, char *outStr, int outStrLen) {
   if(numKBytes < 0) return(""); /* It shouldn't happen */
 
-  bufIdx = (bufIdx+1)%LEN_DATAFORMAT_BUFFER;
-
   if(numKBytes < 1024) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sKB", numKBytes, myGlobals.separator) < 0) 
+    if(snprintf(outStr, outStrLen, "%.1f%sKB", numKBytes, myGlobals.separator) < 0) 
      BufferTooShort();
   } else {
     float tmpKBytes = numKBytes/1024;
 
     if(tmpKBytes < 1024) {
-      if(snprintf(outStr[bufIdx], 32, "%.1f%sMB",  tmpKBytes, myGlobals.separator) < 0) 
+      if(snprintf(outStr, outStrLen, "%.1f%sMB",  tmpKBytes, myGlobals.separator) < 0) 
 	BufferTooShort();
     } else {
       float tmpGBytes = tmpKBytes/1024;
 
       if(tmpGBytes < 1024) {
-	if(snprintf(outStr[bufIdx], 32, "%.1f%sGB", tmpGBytes, myGlobals.separator)  < 0) 
+	if(snprintf(outStr, outStrLen, "%.1f%sGB", tmpGBytes, myGlobals.separator)  < 0) 
 	 BufferTooShort();
       } else {
-	if(snprintf(outStr[bufIdx], 32, "%.1f%sTB", ((float)(tmpGBytes)/1024), myGlobals.separator) < 0) 
+	if(snprintf(outStr, outStrLen, "%.1f%sTB", ((float)(tmpGBytes)/1024), myGlobals.separator) < 0) 
 	 BufferTooShort();
       }
     }
   }
 
-  return(outStr[bufIdx]);
+  return(outStr);
 }
 
 /* ******************************* */
 
-char* formatBytes(Counter numBytes, short encodeString) {
-  static char outStr[LEN_DATAFORMAT_BUFFER][32];
-  static short bufIdx=0;
+char* formatBytes(Counter numBytes, short encodeString, char* outStr, int outStrLen) {
   char* locSeparator;
 
   if(encodeString)
@@ -66,87 +61,76 @@ char* formatBytes(Counter numBytes, short encodeString) {
   else
     locSeparator = " ";
 
-  bufIdx = (bufIdx+1)%LEN_DATAFORMAT_BUFFER;
-
   if(numBytes == 0) {
     return("0"); /* return("&nbsp;"); */
   } else if(numBytes < 1024) {
-    if(snprintf(outStr[bufIdx], 32, "%lu", (unsigned long)numBytes) < 0) 
+    if(snprintf(outStr, outStrLen, "%lu", (unsigned long)numBytes) < 0) 
      BufferTooShort();
   } else if (numBytes < 1048576) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sKB",
+    if(snprintf(outStr, outStrLen, "%.1f%sKB",
 		((float)(numBytes)/1024), locSeparator) < 0) 
      BufferTooShort();
   } else {
     float tmpMBytes = ((float)numBytes)/1048576;
 
     if(tmpMBytes < 1024) {
-      if(snprintf(outStr[bufIdx], 32, "%.1f%sMB",
+      if(snprintf(outStr, outStrLen, "%.1f%sMB",
 	      tmpMBytes, locSeparator) < 0) 
 	BufferTooShort();
     } else {
       tmpMBytes /= 1024;
 
       if(tmpMBytes < 1024) {
-	if(snprintf(outStr[bufIdx], 32, "%.1f%sGB", tmpMBytes, locSeparator) < 0) 
+	if(snprintf(outStr, outStrLen, "%.1f%sGB", tmpMBytes, locSeparator) < 0) 
 	 BufferTooShort();
       } else {
-	if(snprintf(outStr[bufIdx], 32, "%.1f%sTB",
+	if(snprintf(outStr, outStrLen, "%.1f%sTB",
 		((float)(tmpMBytes)/1024), locSeparator) < 0)
 	 BufferTooShort();
       }
     }
   }
 
-  return(outStr[bufIdx]);
+  return(outStr);
 }
 
 /* ******************************* */
 
-char* formatAdapterSpeed(Counter numBits) {
-  static char outStr[LEN_DATAFORMAT_BUFFER][32];
-  static short bufIdx=0;
-
-  bufIdx = (bufIdx+1)%LEN_DATAFORMAT_BUFFER;
-
+char* formatAdapterSpeed(Counter numBits, char* outStr, int outStrLen) {
   if(numBits == 0) {
     return("0"); /* return("&nbsp;"); */
   } else if(numBits < 1000) {
-    if(snprintf(outStr[bufIdx], 32, "%lu", (unsigned long)numBits) < 0) 
+    if(snprintf(outStr, outStrLen, "%lu", (unsigned long)numBits) < 0) 
      BufferTooShort();
   } else if(numBits < 1000000) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f Kb", (float)(numBits)/1000) < 0) 
+    if(snprintf(outStr, outStrLen, "%.1f Kb", (float)(numBits)/1000) < 0) 
      BufferTooShort();
   } else {
     float tmpMBytes = ((float)numBits)/1000000;
 
     if(tmpMBytes < 1000) {
-      if(snprintf(outStr[bufIdx], 32, "%.1f Mb", tmpMBytes) < 0) 
+      if(snprintf(outStr, outStrLen, "%.1f Mb", tmpMBytes) < 0) 
 	BufferTooShort();
     } else {
       tmpMBytes /= 1000;
 
       if(tmpMBytes < 1000) {
-	if(snprintf(outStr[bufIdx], 32, "%.1f Gb", tmpMBytes) < 0) 
+	if(snprintf(outStr, outStrLen, "%.1f Gb", tmpMBytes) < 0) 
 	 BufferTooShort();
       } else {
-	if(snprintf(outStr[bufIdx], 32, "%.1f Tb", ((float)(tmpMBytes)/1000)) < 0)
+	if(snprintf(outStr, outStrLen, "%.1f Tb", ((float)(tmpMBytes)/1000)) < 0)
 	 BufferTooShort();
       }
     }
   }
 
-  return(outStr[bufIdx]);
+  return(outStr);
 }
 
 /* ******************************* */
 
-char* formatSeconds(unsigned long sec) {
-  static char outStr[5][32];
-  static short bufIdx=0;
+char* formatSeconds(unsigned long sec, char* outStr, int outStrLen) {
   unsigned int hour=0, min=0, days=0;
-
-  bufIdx = (bufIdx+1)%5;
 
   if(sec >= 3600) {
     hour = (sec / 3600);
@@ -166,51 +150,45 @@ char* formatSeconds(unsigned long sec) {
   if(min > 0) sec -= min*60;
 
   if(days > 0) {
-    if(snprintf(outStr[bufIdx], 32, "%u day(s) %u:%02u:%02lu", days, hour, min, sec) < 0) 
+    if(snprintf(outStr, outStrLen, "%u day(s) %u:%02u:%02lu", days, hour, min, sec) < 0) 
      BufferTooShort();
   } else if(hour > 0) {
-    if(snprintf(outStr[bufIdx], 32, "%u:%02u:%02lu", hour, min, sec)  < 0) 
+    if(snprintf(outStr, outStrLen, "%u:%02u:%02lu", hour, min, sec)  < 0) 
      BufferTooShort();
   } else if(min > 0) {
-    if(snprintf(outStr[bufIdx], 32, "%u:%02lu", min, sec) < 0) 
+    if(snprintf(outStr, outStrLen, "%u:%02lu", min, sec) < 0) 
      BufferTooShort();
   } else {
-    if(snprintf(outStr[bufIdx], 32, "%lu sec", sec) < 0)
+    if(snprintf(outStr, outStrLen, "%lu sec", sec) < 0)
      BufferTooShort();
   }
 
-  return(outStr[bufIdx]);
+  return(outStr);
 }
 
 /* ******************************* */
 
-char* formatMicroSeconds(unsigned long microsec) {
-  static char outStr[5][32];
-  static short bufIdx=0;
+char* formatMicroSeconds(unsigned long microsec, 
+			 char* outStr, int outStrLen) {
   float f = ((float)microsec)/1000;
 
-  bufIdx = (bufIdx+1)%5;
-
   if(f < 1000) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f ms", f) < 0) 
+    if(snprintf(outStr, outStrLen, "%.1f ms", f) < 0) 
      BufferTooShort();
   } else {
-    if(snprintf(outStr[bufIdx], 32, "%.1f sec", (f/1000))  < 0) 
+    if(snprintf(outStr, outStrLen, "%.1f sec", (f/1000))  < 0) 
      BufferTooShort();
   } 
-  return(outStr[bufIdx]);
+  return(outStr);
 }
 
 /* ******************************* */
 
-char* formatThroughput(float numBytes /* <=== Bytes/second */, u_char htmlFormat) {
-  static char outStr[5][32];
-  static short bufIdx=0;
+char* formatThroughput(float numBytes /* <=== Bytes/second */, u_char htmlFormat,
+		       char* outStr, int outStrLen) {
   float numBits;
   int divider = 1000;   /* As SNMP does instead of using 1024 ntop divides for 1000 */
   char *separator;
-
-  bufIdx = (bufIdx+1)%5;
 
   if(htmlFormat)
     separator = myGlobals.separator;
@@ -224,27 +202,26 @@ char* formatThroughput(float numBytes /* <=== Bytes/second */, u_char htmlFormat
     numBits = 0; /* Avoid very small decimal values */
   
   if (numBits < divider) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sbps", numBits, separator) < 0) 
+    if(snprintf(outStr, outStrLen, "%.1f%sbps", numBits, separator) < 0) 
      BufferTooShort();
   } else if (numBits < (divider*divider)) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sKbps", ((float)(numBits)/divider), separator) < 0) 
+    if(snprintf(outStr, outStrLen, "%.1f%sKbps", ((float)(numBits)/divider), separator) < 0) 
      BufferTooShort();
   } else {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sMbps", ((float)(numBits)/1048576), separator) < 0) 
+    if(snprintf(outStr, outStrLen, "%.1f%sMbps", ((float)(numBits)/1048576), separator) < 0) 
      BufferTooShort();
   }
 
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "%.2f = %s", numBytes, outStr[bufIdx]);
+  traceEvent(CONST_TRACE_INFO, "%.2f = %s", numBytes, outStr);
 #endif
 
-  return(outStr[bufIdx]);
+  return(outStr);
 }
 
 /* ******************************* */
 
-char* formatLatency(struct timeval tv, u_short sessionState) {
-  
+char* formatLatency(struct timeval tv, u_short sessionState, char* outStr, int outStrLen) {  
   if(((tv.tv_sec == 0) && (tv.tv_usec == 0)) 
      || (sessionState < FLAG_STATE_ACTIVE) 
      /* Patch courtesy of  
@@ -256,11 +233,9 @@ char* formatLatency(struct timeval tv, u_short sessionState) {
     */
     return("&nbsp;");
   } else {
-    static char latBuf[32];
-    
-    snprintf(latBuf, sizeof(latBuf), "%.1f&nbsp;ms",
+    snprintf(outStr, outStrLen, "%.1f&nbsp;ms",
 	    (float)(tv.tv_sec*1000+(float)tv.tv_usec/1000));
-    return(latBuf);
+    return(outStr);
   }
 }
 
@@ -268,7 +243,7 @@ char* formatLatency(struct timeval tv, u_short sessionState) {
 
 char* formatTimeStamp(unsigned int ndays,
 		      unsigned int nhours,
-		      unsigned int nminutes) {
+		      unsigned int nminutes, char* outStr, int outStrLen) {
   time_t theTime;
 
   /* printf("%u - %u - %u\n", ndays, nhours, nminutes); */
@@ -278,30 +253,21 @@ char* formatTimeStamp(unsigned int ndays,
      && (nminutes == 0))
     return("now");
   else {
-    static char timeBuffer[LEN_TIME_STAMP_BUFFER][32];
-    static short bufIdx=0;
-
-    bufIdx = (bufIdx+1)%LEN_TIME_STAMP_BUFFER;
     theTime = myGlobals.actTime-(ndays*86400)-(nhours*3600)-(nminutes*60);
-    strncpy(timeBuffer[bufIdx], ctime(&theTime), 32);
-    timeBuffer[bufIdx][strlen(timeBuffer[bufIdx])-1] = '\0'; /* Remove trailer '\n' */
-    return(timeBuffer[bufIdx]);
+    strncpy(outStr, ctime(&theTime), outStrLen);
+    outStr[outStrLen-1] = '\0'; /* Remove trailer '\n' */
+    return(outStr);
   }
 }
 
 /* ************************ */
 
-char* formatPkts(Counter pktNr) {
-  static short bufIdx=0;
-  static char staticBuffer[8][32];
-
-  bufIdx = (bufIdx+1)%8;
-
+char* formatPkts(Counter pktNr, char* outStr, int outStrLen) {
   if(pktNr < 1000) {
-    if(snprintf(staticBuffer[bufIdx], 32, "%lu", (unsigned long)pktNr) < 0) 
+    if(snprintf(outStr, outStrLen, "%lu", (unsigned long)pktNr) < 0) 
      BufferTooShort();
   } else if(pktNr < 1000000) {
-    if(snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu",
+    if(snprintf(outStr, outStrLen, "%lu,%03lu",
 	    (unsigned long)(pktNr/1000),
 	    ((unsigned long)pktNr)%1000) < 0) 
      BufferTooShort();
@@ -310,7 +276,7 @@ char* formatPkts(Counter pktNr) {
     a = (unsigned long)(pktNr/1000000);
     b = (unsigned long)((pktNr-a*1000000)/1000);
     c = ((unsigned long)pktNr)%1000;
-    if(snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu,%03lu", a, b, c) < 0) 
+    if(snprintf(outStr, outStrLen, "%lu,%03lu,%03lu", a, b, c) < 0) 
      BufferTooShort();
   } else {
     unsigned long a, b, c, a1, a2;
@@ -319,30 +285,26 @@ char* formatPkts(Counter pktNr) {
     a2 = a % 1000;
     b = (unsigned long)((pktNr-a*1000000)/1000);
     c = ((unsigned long)pktNr)%1000;
-    if(snprintf(staticBuffer[bufIdx], 32, "%lu,%03lu,%03lu,%03lu", a1, a2, b, c) < 0) 
+    if(snprintf(outStr, outStrLen, "%lu,%03lu,%03lu,%03lu", a1, a2, b, c) < 0) 
      BufferTooShort();
   }
 
-  return(staticBuffer[bufIdx]);
+  return(outStr);
 }
 
 /* ************************************ */
 
-char* formatTime(time_t *theTime, short encodeString) {
-  static char outStr[2][LEN_TIMEFORMAT_BUFFER];
-  static short timeBufIdx=0;
+char* formatTime(time_t *theTime, short encodeString, char* outStr, int outStrLen) {
   struct tm *locTime;
   struct tm myLocTime;
 
   locTime = localtime_r(theTime, &myLocTime);
 
-  timeBufIdx = (timeBufIdx+1)%2;
-
   if(encodeString)
-    strftime(outStr[timeBufIdx], LEN_TIMEFORMAT_BUFFER, "%x&nbsp;%X", locTime);
+    strftime(outStr, outStrLen, "%x&nbsp;%X", locTime);
   else
-    strftime(outStr[timeBufIdx], LEN_TIMEFORMAT_BUFFER, "%x %X", locTime);
+    strftime(outStr, outStrLen, "%x %X", locTime);
 
-  return(outStr[timeBufIdx]);
+  return(outStr);
 }
 
