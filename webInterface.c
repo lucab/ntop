@@ -2657,7 +2657,9 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigNum(textPrintFlag, "MAX_SESSIONS_CACHE_LEN", MAX_SESSIONS_CACHE_LEN);
 
+#ifdef HAVE_OPENSSL
   printFeatureConfigNum(textPrintFlag, "MAX_SSL_CONNECTIONS", MAX_SSL_CONNECTIONS);
+#endif
 
   printFeatureConfigNum(textPrintFlag, "NAME_MAX", NAME_MAX);
 
@@ -2700,8 +2702,9 @@ void printNtopConfigHInfo(int textPrintFlag) {
                          "no"
 #endif
                          );
-
+#ifdef HAVE_OPENSSL
   printFeatureConfigNum(textPrintFlag, "PARM_SSLWATCHDOG_WAITWOKE_LIMIT", PARM_SSLWATCHDOG_WAITWOKE_LIMIT);
+#endif
 
   printFeatureConfigInfo(textPrintFlag, "PARM_USE_CGI",
 #ifdef PARM_USE_CGI
