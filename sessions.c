@@ -473,7 +473,7 @@ void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
 /* #define DEBUG */
 
 void scanTimedoutTCPSessions(int actualDeviceId) {
-  u_int _idx, freeSessionCount =0;
+  u_int _idx, freeSessionCount=0, purgeLimit = myGlobals.device[actualDeviceId].numTcpSessions/2;;
   static u_int idx = 0;
     
   /* Patch below courtesy of "Kouprie, Robbert" <R.Kouprie@DTO.TUDelft.NL> */
@@ -492,7 +492,7 @@ void scanTimedoutTCPSessions(int actualDeviceId) {
     
     idx = (idx + 1) % MAX_TOT_NUM_SESSIONS;
 
-    if(freeSessionCount > MAX_NUM_PURGED_SESSIONS) break;
+    if(freeSessionCount > purgeLimit) break;
 
     prevSession = theSession = myGlobals.device[actualDeviceId].tcpSession[idx];
 
@@ -668,33 +668,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	flowDirection = FLAG_SERVER_TO_CLIENT;
 	break;
       } else {
-	/* Delete the session if too old */
-	if(((theSession->lastSeen+PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES) < myGlobals.actTime)
-	   || ((theSession->lastSeen+PARM_SESSION_PURGE_MINIMUM_IDLE) < myGlobals.actTime)
-	   /* Purge sessions that are not yet active and that have not completed
-	      the 3-way handshave within 1 minute */
-	   || ((theSession->sessionState < FLAG_STATE_ACTIVE) 
-	       && ((theSession->lastSeen+60) < myGlobals.actTime))
-	   /* Purge active sessions where one of the two peers has not sent any data
-	      (it might be that ntop has created the session bucket because it has
-	      thought that the session was already started) since 120 seconds */
-	   || ((theSession->sessionState >= FLAG_STATE_ACTIVE)
-	       && ((theSession->bytesSent.value == 0) || (theSession->bytesRcvd.value == 0))
-	       && ((theSession->lastSeen+120) < myGlobals.actTime))) {
-	  IPSession *nextSession = theSession->next;
-
-	  if(myGlobals.device[actualDeviceId].tcpSession[idx] == theSession) {
-	    myGlobals.device[actualDeviceId].tcpSession[idx] = nextSession;
-	    prevSession = myGlobals.device[actualDeviceId].tcpSession[idx];
-	  } else
-	    prevSession->next = nextSession;
-
-	  freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);
-	  theSession = prevSession;
-	} else {
-	  prevSession = theSession;
-	  theSession  = theSession->next;
-	}
+	prevSession = theSession;
+	theSession  = theSession->next;
       }
     } /* while */
 
