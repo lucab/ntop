@@ -399,7 +399,7 @@ void unloadPlugins(void) {
 
 /* ******************************* */
 
-/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
+/* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 
 void startPlugins(void) {
   FlowFilterList *flows = myGlobals.flowsList;

@@ -601,7 +601,7 @@ int main(int argc, char *argv[]) {
 
   /*
     Code fragment below courtesy of
-    Andreas Pfaller <a.pfaller@pop.gun.de>
+    Andreas Pfaller <apfaller@yahoo.com.au>
   */
 
 #ifndef WIN32
@@ -653,8 +653,6 @@ int main(int argc, char *argv[]) {
       handleProtocols(protoSpecs);
     free(protoSpecs);
   }
-
-
   
   /* 
      Moved from initialize.c (postCommandLineArgumentsInitialization) so that we

@@ -204,7 +204,7 @@ char* formatLatency(struct timeval tv, u_short sessionState) {
   if(((tv.tv_sec == 0) && (tv.tv_usec == 0)) 
      || (sessionState < STATE_ACTIVE) 
      /* Patch courtesy of  
-	Andreas Pfaller <a.pfaller@pop.gun.de>
+	Andreas Pfaller <apfaller@yahoo.com.au>
      */) {
     /* 
        Latency not computed (the session was initiated

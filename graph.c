@@ -1108,7 +1108,7 @@ void drawThptGraph(int sortedColumn) {
 void drawGlobalProtoDistribution(void) {
   char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   TrafficCounter ip, nonIp;
-  float p[256]; /* Fix courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+  float p[256]; /* Fix courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
   char	*lbl[16];
   FILE *fd;
   int idx = 0;

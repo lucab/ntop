@@ -2292,7 +2292,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 
 /* ************************************ */
 
-/* Function below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+/* Function below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 
 char *getSessionState(IPSession *session) {
   switch (session->sessionState) {

@@ -109,7 +109,7 @@ void initIPServices(void) {
 	  char name[64], proto[16];
 	  int numPort;
 
-	  /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+	  /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 	  if (3 == sscanf(tmpLine, "%63[^ \t] %d/%15s", name, &numPort, proto)) {
 	    /* traceEvent(TRACE_INFO, "'%s' - '%s' - '%d'\n", name, proto, numPort); */
 
@@ -468,7 +468,7 @@ void initGdbm(void) {
 
   traceEvent(TRACE_INFO, "Initializing GDBM...");
 
-  /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
+  /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/myGlobals.addressCache.db", myGlobals.dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
 
@@ -487,7 +487,7 @@ void initGdbm(void) {
   exit(-1);
  }
 
-  /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
+  /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", myGlobals.dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
 

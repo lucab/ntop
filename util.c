@@ -84,7 +84,7 @@ static u_int32_t networks[MAX_NUM_NETWORKS][3];
 /*
  * secure popen by Thomas Biege <thomas@suse.de>
  *
- * Fixes by Andreas Pfaller <a.pfaller@pop.gun.de>
+ * Fixes by Andreas Pfaller <apfaller@yahoo.com.au>
  */
 #define __SEC_POPEN_TOKEN " "
 
@@ -957,7 +957,7 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
      as checked mutexes dont have the error or use a corrected
      glibc (Suse offers a patched myGlobals.version for their system).
 
-     Andreas Pfaeller <a.pfaller@pop.gun.de>
+     Andreas Pfaeller <apfaller@yahoo.com.au>
 
      ************************************************* */
 
@@ -1389,7 +1389,7 @@ void readLsofInfo(void) {
 
     /*traceEvent(TRACE_INFO, "%s\n", line); */
 
-    /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+    /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
     if(3 != sscanf(line, "%31[^ \t] %d %31[^ \t]", command, &pid, user))
       continue;
 
@@ -2121,13 +2121,13 @@ time_t getTimeMapping(u_int16_t transactionId,
 
   /* ****************************************
 
-    As  Andreas Pfaller <a.pfaller@pop.gun.de>
-    pointed out, the hash code needs to be optimised.
-    Actually the hash is scanned completely
-    if (unlikely but possible) the searched entry
-    is not present into the table.
-
-  **************************************** */
+     As  Andreas Pfaller <apfaller@yahoo.com.au>
+     pointed out, the hash code needs to be optimised.
+     Actually the hash is scanned completely
+     if (unlikely but possible) the searched entry
+     is not present into the table.
+     
+     **************************************** */
 
   for(i=0; i<NUM_TRANSACTION_ENTRIES; i++) {
     if(myGlobals.transTimeHash[idx].transactionId == transactionId) {
@@ -2240,7 +2240,7 @@ char* _strncpy(char *dest, const char *src, size_t n) {
 
 /* ******************************************** */
 
-/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+/* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 #ifndef HAVE_STRTOK_R
 /* Reentrant string tokenizer.  Generic myGlobals.version.
 
@@ -2293,7 +2293,7 @@ char *strtok_r(char *s, const char *delim, char **save_ptr) {
 
 /* ********************************** */
 
-/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+/* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 
 int getSniffedDNSName(char *hostNumIpAddress, 
 		      char *name, int maxNameLen) {

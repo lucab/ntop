@@ -1451,7 +1451,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
 	sendString(buf);
 
 	if(el->portsUsage[idx]->clientUses > 0) {
-	  /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+	  /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 
 	  if(el->portsUsage[idx]->clientUsesLastPeer == NO_PEER)
 	    peerHost = NULL;
@@ -3646,7 +3646,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     theAnchor[14] = htmlAnchor1;
   }
 
-  /* Split below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+  /* Split below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
   sendString("<CENTER>\n");
   if(snprintf(buf, sizeof(buf),
           ""TABLE_ON"<TABLE BORDER=1><TR>"

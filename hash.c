@@ -878,7 +878,7 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash, int actualD
   /*
     Check whether there are hosts that have the host being
     purged as peer. Fixes courtesy of
-    Andreas Pfaller <a.pfaller@pop.gun.de>.
+    Andreas Pfaller <apfaller@yahoo.com.au>.
   */
 
   if(refreshHash) {

@@ -25,7 +25,7 @@
    On some systems these defines make reentrant library
    routines available.
 
-   Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
+   Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>.
 */
 #define _REENTRANT
 #define _THREAD_SAFE

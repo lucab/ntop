@@ -224,7 +224,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 	   See also -- 2 --.
 
-	   Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>.
+	   Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>.
 
 	   ************************ */
 
@@ -563,7 +563,7 @@ static void updateHostSessionsList(u_int theHostIdx,
       connection. For server initiated connections like
       standard (not passive) ftp-data it was OK.
 
-      Andreas Pfaller <a.pfaller@pop.gun.de>
+      Andreas Pfaller <apfaller@yahoo.com.au>
     */
 
     if((initiator == SERVER_TO_CLIENT)
@@ -986,7 +986,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		 (myGlobals.device[actualDeviceId].numTotSessions*AVERAGE_BUCKET_FILL));
 #endif
 
-      /* MULTIPLY_FACTORY courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+      /* MULTIPLY_FACTORY courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
       if(myGlobals.device[actualDeviceId].numTcpSessions >
 	 (myGlobals.device[actualDeviceId].numTotSessions*AVERAGE_BUCKET_FILL)) {
 	/* If possible this table will be enlarged */
@@ -2440,7 +2440,7 @@ static void addContactedPeers(u_int senderIdx, u_int receiverIdx, int actualDevi
 /* *****************************************
  *
  * Fragment handling code courtesy of
- * Andreas Pfaller <a.pfaller@pop.gun.de>
+ * Andreas Pfaller <apfaller@yahoo.com.au>
  *
  * NOTE:
  * the code below has a small (neglictable) limitation
@@ -2522,7 +2522,7 @@ void deleteFragment(IpFragment *fragment, int actualDeviceId) {
 
 /* ************************************ */
 
-/* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+/* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
 static void checkFragmentOverlap(u_int srcHostIdx,
                                  u_int dstHostIdx,
                                  IpFragment *fragment,
@@ -3144,7 +3144,7 @@ static void processIpPkt(const u_char *bp,
 	 * be counted as nntp traffic in all directions by this heuristic
 	 * and not as nntp in one direction and nfs in the return direction.
 	 *
-	 * Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>
+	 * Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>
 	 */
 	if(dport < sport) {
 	  if(handleIP(dport, srcHostIdx, dstHostIdx, length, isPassiveSession, actualDeviceId) == -1)
@@ -3995,7 +3995,7 @@ void processPacket(u_char *_deviceId,
       dumpSuspiciousPacket(actualDeviceId);
     }
 
-    /* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+    /* Fix below courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
     length = myGlobals.mtuSize[myGlobals.device[deviceId].datalink];
     myGlobals.device[actualDeviceId].rcvdPktStats.tooLong++;
   }
