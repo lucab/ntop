@@ -431,8 +431,13 @@ int getdomainname(char *name, size_t len);
 #include <netinet/if_ether.h>
 #endif
 
-#define ESRC(ep) ((ep)->ether_shost)
-#define EDST(ep) ((ep)->ether_dhost)
+#ifdef ETHER_HEADER_HAS_EA
+#  define ESRC(ep) ((ep)->ether_shost.ether_addr_octet)
+#  define EDST(ep) ((ep)->ether_dhost.ether_addr_octet)
+#else
+#  define ESRC(ep) ((ep)->ether_shost)
+#  define EDST(ep) ((ep)->ether_dhost)
+#endif
 
 #if defined(HAVE_ARPA_NAMESER_H)
 #include <arpa/nameser.h>
