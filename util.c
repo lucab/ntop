@@ -2515,6 +2515,7 @@ void traceEvent(int eventTraceLevel, char* file,
     char buf[LEN_GENERAL_WORK_BUFFER];
     char bufMsg[LEN_GENERAL_WORK_BUFFER];
     char bufMsgID[LEN_MEDIUM_WORK_BUFFER];
+    char bufLineID[LEN_MEDIUM_WORK_BUFFER];
 
     int beginFileIdx=0;
     char *mFile = NULL;
@@ -2527,8 +2528,10 @@ void traceEvent(int eventTraceLevel, char* file,
 
     /* The file/line or 'MSGID' tag, depends on logExtra */
     memset(bufMsgID, 0, sizeof(bufMsgID));
-    if(myGlobals.logExtra) {
+
+    if(myGlobals.traceLevel > CONST_NOISY_TRACE_LEVEL) {
       mFile = strdup(file);
+
       for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
 	if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
 #if defined(WIN32)
@@ -2537,21 +2540,25 @@ void traceEvent(int eventTraceLevel, char* file,
 	if(mFile[beginFileIdx-1] == '/') break;   /* Start after / (!Win32) */
 #endif
       }
-      if(myGlobals.logExtra == CONST_EXTRA_TRACE_FILELINE)
-        if(snprintf(bufMsgID, sizeof(bufMsgID), "[%s:%d]", &mFile[beginFileIdx], line) < 0)
-          BufferTooShort();
-      else {
+
+      if(myGlobals.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
         unsigned int messageid = 0;
         int i;
+
+        if(snprintf(bufLineID, sizeof(bufLineID), "[%s:%d] ", &mFile[beginFileIdx], line) < 0)
+          BufferTooShort();
+	
         /* Hash the message format into an id */
         for (i=0; i<=strlen(format); i++) {
 	  messageid = (messageid << 1) ^ max(0,format[i]-32);
         }
+	
         /* 1st chars of file name for uniqueness */
         messageid += (file[0]-32) * 256 + file[1]-32;
-        if(snprintf(bufMsgID, sizeof(bufMsgID), " [MSGID%07d]", (messageid & 0x8fffff)) < 0)
+        if(snprintf(bufMsgID, sizeof(bufMsgID), "[MSGID%07d]", (messageid & 0x8fffff)) < 0)
           BufferTooShort();
       }
+      
       free(mFile);
     }
 
@@ -2566,13 +2573,14 @@ void traceEvent(int eventTraceLevel, char* file,
      */
     memset(buf, 0, sizeof(buf));
     if(snprintf(buf, sizeof(buf), "%s %s %s%s%s",
-	     bufTime,
-             myGlobals.logExtra == CONST_EXTRA_TRACE_FILELINE ? bufMsgID : "",
-	     eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
-	     eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
-	     eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
-	     bufMsg,
-             myGlobals.logExtra == CONST_EXTRA_TRACE_MSGID ? bufMsgID : "") < 0)
+		bufTime,
+		(myGlobals.traceLevel >= CONST_DETAIL_TRACE_LEVEL) ? bufMsgID : "",
+		(myGlobals.traceLevel > CONST_DETAIL_TRACE_LEVEL) ? bufLineID : "",
+		eventTraceLevel == CONST_FATALERROR_TRACE_LEVEL  ? "**FATAL_ERROR** " :
+		eventTraceLevel == CONST_ERROR_TRACE_LEVEL   ? "**ERROR** " :
+		eventTraceLevel == CONST_WARNING_TRACE_LEVEL ? "**WARNING** " : "",
+		bufMsg
+		) < 0)
       BufferTooShort();
 
     /* Finished preparing message fields */

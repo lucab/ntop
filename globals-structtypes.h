@@ -1636,8 +1636,6 @@ typedef struct ntopGlobals {
 
   u_char disableStopcap;             /* '142' */
 
-  short logExtra;                    /* '143' */
-
   u_char disableInstantSessionPurge; /* '144' */
   u_char noFc;                       /* '145' */
   char noInvalidLunDisplay;          /* '146' */
@@ -1907,7 +1905,7 @@ typedef struct ntopGlobals {
   u_short netFlowInPort;
   struct in_addr netFlowIfAddress, netFlowIfMask;
   char *netFlowWhiteList, *netFlowBlackList;
-  u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsSent, numNetFlowsV5Rcvd;
+  u_long numNetFlowsPktsRcvd, numNetFlowsV5Rcvd;
   u_long numNetFlowsV1Rcvd, numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed, numNetFlowsRcvd;
   u_long numBadNetFlowsVersionsRcvd, numBadFlowPkts, numBadFlowBytes, numBadFlowReality;
   u_long numSrcNetFlowsEntryFailedBlackList, numSrcNetFlowsEntryFailedWhiteList,

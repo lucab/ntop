@@ -149,7 +149,6 @@ static struct option const long_options[] = {
 #endif
 
   { "disable-stopcap",                  no_argument,       NULL, 142 },
-  { "log-extra",                        required_argument, NULL, 143 },
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
 
@@ -275,7 +274,6 @@ void usage(FILE * fp) {
 #endif
   fprintf(fp, "    [--disable-stopcap]                                   %sCapture packets even if there's no memory left\n", newLine);
   fprintf(fp, "    [--fc-only]                                           %sDisplay only Fibre Channel statistics\n", newLine);
-  fprintf(fp, "    [--log-extra <level>]                                 %sAdd extra information to log messages\n", newLine);
   fprintf(fp, "    [--no-fc]                                             %sDisable processing & Display of Fibre Channel\n", newLine);
   fprintf(fp, "    [--no-invalid-lun]                                    %sDon't display Invalid LUN information\n", newLine);
   fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
@@ -473,11 +471,8 @@ static int parseOptions(int argc, char* argv []) {
 
     case 't':
       /* Trace Level Initialization */
-      myGlobals.traceLevel = min(max(1, atoi(optarg)), CONST_DETAIL_TRACE_LEVEL);
+      myGlobals.traceLevel = min(max(1, atoi(optarg)), CONST_VERY_DETAIL_TRACE_LEVEL);
       /* DETAILED is NOISY + FileLine stamp, unless already set */
-      if((myGlobals.traceLevel >= CONST_DETAIL_TRACE_LEVEL) && 
-         (myGlobals.logExtra == 0))
-          myGlobals.logExtra = CONST_EXTRA_TRACE_FILELINE;
       break;
 
 #ifndef WIN32
@@ -722,10 +717,6 @@ static int parseOptions(int argc, char* argv []) {
 
     case 142: /* disable-stopcap */
       myGlobals.disableStopcap = TRUE;
-      break;
-
-    case 143: /* log-extra */
-      myGlobals.logExtra = min(max(0, atoi(optarg)), CONST_EXTRA_TRACE_MSGID);
       break;
 
     case 144: /* disable-instantsessionpurge */

@@ -5806,12 +5806,6 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.printFcOnly == TRUE ? "Yes" : "No",
                            "No");
   
-  if(snprintf(buf, sizeof(buf), "%s%d",
-	      myGlobals.logExtra == 0 ? CONST_REPORT_ITS_DEFAULT : "",
-	      myGlobals.logExtra) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "--log-extra", buf);
-
   printParameterConfigInfo(textPrintFlag, "--no-fc",
                            myGlobals.noFc == TRUE ? "Yes" : "No",
                            "No");

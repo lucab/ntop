@@ -1436,6 +1436,7 @@
      *   DETAILED is NOISY + EXTRA FILELINE
      */
 #define CONST_DETAIL_TRACE_LEVEL            5
+#define CONST_VERY_DETAIL_TRACE_LEVEL       6
 
 #define CONST_EXTRA_TRACE_FILELINE          1
 #define CONST_EXTRA_TRACE_MSGID             2

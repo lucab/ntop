@@ -69,8 +69,6 @@ ntop \- display top network users
 .RB [ --disable-schedyield ]
 .RB [ --disable-stopcap ]
 .RB [ --disable-mutexextrainfo ]
-.RB [ --log-extra
-.IR <number> ]
 .RB [ --skip-version-check ]
 .RB [ --w3c ]
 
@@ -557,7 +555,7 @@ level 3 displays error, warning and informational messages.
 Trace level 4 is called 'noisy' and it is - generating many messages about the internal
 functioning of 
 .B ntop.
-Trace level 5 is 'noisy' plus --log-extra 1, i.e. all possible messages, with a 
+Trace level 5 and above are 'noisy' plus extra logs, i.e. all possible messages, with a 
 file:line tag prepended to every message.
 
 .It2 -u --user
@@ -917,17 +915,6 @@ The default of stopcap enabled makes the web interface available albeit with sta
 content until 
 .B ntop
 is shutdown.
-
-.It --log-extra
-This optional parameter controls the addition of more information to each log message.
-Both choices are useful in different ways, for debugging and for using log watching
-and filtering packages.
-
-Setting 1 adds a [file:line] to the beginning of the log message.
-Setting 2 adds a [MSGIDnnnnnnn] tag at the end of the log message.
-The nnnnnnn value should be unique number for every message and should be stable across 
-.B ntop
-releases.  
 
 .It --pcap_setnonblock
 On some platforms, the select() call 
