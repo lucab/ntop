@@ -945,7 +945,6 @@ RETSIGTYPE cleanup(int signo) {
       free(myGlobals.device[i].tcpSession);
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.tcpSessionsMutex);
-    deleteMutex(&myGlobals.tcpSessionsMutex);
 #endif
 
     free(myGlobals.device[i].name);
@@ -970,6 +969,10 @@ RETSIGTYPE cleanup(int signo) {
   }
 
   free(myGlobals.device);
+
+#ifdef MULTITHREADED
+    deleteMutex(&myGlobals.tcpSessionsMutex);
+#endif
 
 #ifdef WIN32
   termWinsock32();
@@ -1018,6 +1021,10 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef MTRACE
   muntrace();
 #endif
+
+  traceEvent(TRACE_INFO, "===================================\n");
+  traceEvent(TRACE_INFO, "        ntop is shutdown...        \n");
+  traceEvent(TRACE_INFO, "===================================\n");
 
   exit(0);
 }
