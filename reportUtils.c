@@ -743,7 +743,7 @@ int cmpProcesses(const void *_a, const void *_b) {
 int cmpFctn(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
-  TrafficCounter a_=0, b_=0;
+  TrafficCounter a_=0, b_=0, a_val, b_val;
   float fa_=0, fb_=0;
   short floatCompare=0, columnProtoId;
 
@@ -772,8 +772,6 @@ int cmpFctn(const void *_a, const void *_b) {
       name1 = (*a)->hostSymIpAddress;
       name2 = (*b)->hostSymIpAddress;
 
-      if(name1[0] == '*') name1++;
-      if(name2[0] == '*') name2++;
       rc = strcasecmp(name1, name2);
     } else
       rc = strcasecmp((*a)->ethAddressString, (*b)->ethAddressString);
@@ -866,8 +864,8 @@ int cmpFctn(const void *_a, const void *_b) {
     break;
   case 1: /* STR_SORT_DATA_RECEIVED_IP */
     columnProtoId = myGlobals.columnSort - 1;
-    if(columnProtoId <= myGlobals.numIpProtosToMonitor) {
-      if(columnProtoId == 0) {
+    if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
+      if(columnProtoId <= 0) {
 #ifdef ENABLE_NAPSTER
 	if((*a)->napsterStats == NULL)
 	  a_ = 0;
@@ -886,26 +884,23 @@ int cmpFctn(const void *_a, const void *_b) {
 	b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc+(*b)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem;
       }
     } else {
-      int i;
+      a_ = (*a)->ipBytesRcvd, b_ = (*b)->ipBytesRcvd;
+      
+      if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
+	/* other IP */
+	int i;
+	
+	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	  a_val = ((*a)->protoIPTrafficInfos[i].rcvdLoc
+		   +(*a)->protoIPTrafficInfos[i].rcvdFromRem);
+	  b_val = ((*b)->protoIPTrafficInfos[i].rcvdLoc
+		   +(*b)->protoIPTrafficInfos[i].rcvdFromRem);
 
-      a_ = 0, b_ = 0;
-
-      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	a_ += (*a)->protoIPTrafficInfos[i].rcvdLoc
-	  +(*a)->protoIPTrafficInfos[i].rcvdFromRem;
-	b_ += (*b)->protoIPTrafficInfos[i].rcvdLoc
-	  +(*b)->protoIPTrafficInfos[i].rcvdFromRem;
+	  /* Better be safe... */
+	  if(a_ > a_val) a_ -= a_val; else a_ = 0;
+	  if(b_ > b_val) b_ -= b_val; else b_ = 0;
+	}
       }
-
-      if((*a)->bytesRcvd > a_)
-	a_ = (*a)->bytesRcvd-a_;
-      else
-	a_ = 0;
-
-      if((*b)->bytesRcvd > b_)
-	b_ = (*b)->bytesRcvd-b_;
-      else
-	b_ = 0;
     }
     break;
   case 2: /* STR_SORT_DATA_RECEIVED_THPT */
@@ -971,8 +966,8 @@ int cmpFctn(const void *_a, const void *_b) {
     break;
   case 6: /* STR_SORT_DATA_SENT_IP */
     columnProtoId = myGlobals.columnSort - 1;
-    if(columnProtoId <= myGlobals.numIpProtosToMonitor) {
-      if(columnProtoId == 0) {
+    if((columnProtoId != -1) && (columnProtoId <= myGlobals.numIpProtosToMonitor)) {
+      if(columnProtoId <= 0) {
 #ifdef ENABLE_NAPSTER
 	if((*a)->napsterStats == NULL)
 	  a_ = 0;
@@ -993,26 +988,23 @@ int cmpFctn(const void *_a, const void *_b) {
 	  +(*b)->protoIPTrafficInfos[columnProtoId-1].sentRem;
       }
     } else {
-      int i;
+      a_ = (*a)->ipBytesSent, b_ = (*b)->ipBytesSent;
 
-      a_ = 0, b_ = 0;
-
-      for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	a_ += (*a)->protoIPTrafficInfos[i].sentLoc
-	  +(*a)->protoIPTrafficInfos[i].sentRem;
-	b_ += (*b)->protoIPTrafficInfos[i].sentLoc
-	  +(*b)->protoIPTrafficInfos[i].sentRem;
+      if(myGlobals.numIpProtosToMonitor == (columnProtoId-1)) {
+	/* other IP */
+	int i;
+	
+	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+	  a_val = ((*a)->protoIPTrafficInfos[i].sentLoc
+		   +(*a)->protoIPTrafficInfos[i].sentRem);
+	  b_val = ((*b)->protoIPTrafficInfos[i].sentLoc
+		   +(*b)->protoIPTrafficInfos[i].sentRem);
+	  
+	  /* Better be safe... */
+	  if(a_ > a_val) a_ -= a_val; else a_ = 0;
+	  if(b_ > b_val) b_ -= b_val; else b_ = 0;
+	}
       }
-
-      if((*a)->bytesSent > a_)
-	a_ = (*a)->bytesSent-a_;
-      else
-	a_ = 0;
-
-      if((*b)->bytesSent > b_)
-	b_ = (*b)->bytesSent-b_;
-      else
-	b_ = 0;
     }
     break;
   case 7: /* STR_SORT_DATA_SENT_THPT */
@@ -1023,6 +1015,11 @@ int cmpFctn(const void *_a, const void *_b) {
     break;
   }
 
+  /*
+  traceEvent(TRACE_INFO, "%s=%u - %s=%u",
+	     (*a)->hostSymIpAddress, (unsigned long)a_,
+	     (*b)->hostSymIpAddress, (unsigned long)b_);
+  */
   if(floatCompare == 0) {
     if(a_ < b_) {
       return(1);

@@ -643,8 +643,8 @@ void printHostsTraffic(int reportType,
         0 STR_SORT_DATA_RECEIVED_PROTOS
         1 STR_SORT_DATA_RECEIVED_IP
         2 STR_SORT_DATA_RECEIVED_THPT
-       3 STR_SORT_DATA_RCVD_HOST_TRAFFIC
-       4 STR_SORT_DATA_SENT_HOST_TRAFFIC
+	3 STR_SORT_DATA_RCVD_HOST_TRAFFIC
+	4 STR_SORT_DATA_SENT_HOST_TRAFFIC
         5 STR_SORT_DATA_SENT_PROTOS
         6 STR_SORT_DATA_SENT_IP
         7 STR_SORT_DATA_SENT_THPT
@@ -657,7 +657,7 @@ void printHostsTraffic(int reportType,
 #endif
 
     myGlobals.reportKind = reportType;
-    if(myGlobals.columnSort == 0) myGlobals.reportKind = 0;
+    /* if(myGlobals.columnSort == 0) myGlobals.reportKind = 0;*/
 
     quicksort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFctn);
 
@@ -770,7 +770,7 @@ void printHostsTraffic(int reportType,
 	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
 			getRowColor(), webHostName,
-			formatBytes(el->bytesRcvd, 1), rcvdPercent, myGlobals.separator) < 0)
+			formatBytes(el->ipBytesRcvd, 1), rcvdPercent, myGlobals.separator) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 
@@ -796,15 +796,8 @@ void printHostsTraffic(int reportType,
 	    }
 
 	    /* Rounding may cause troubles */
-	    if(el->bytesRcvd > totalIPTraffic)
-	      totalIPTraffic = (el->tcpRcvdLoc
-				+el->tcpRcvdFromRem
-				+el->udpRcvdLoc
-				+el->udpRcvdFromRem
-				+el->icmpRcvd
-				+el->ospfRcvd
-				+el->igmpRcvd)
-		-totalIPTraffic;
+	    if(el->ipBytesRcvd > totalIPTraffic)
+	      totalIPTraffic = el->ipBytesRcvd - totalIPTraffic;
 	    else
 	      totalIPTraffic = 0;
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
@@ -820,7 +813,7 @@ void printHostsTraffic(int reportType,
 	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
 			getRowColor(), webHostName,
-			formatBytes(el->bytesSent, 1), sentPercent, myGlobals.separator) < 0)
+			formatBytes(el->ipBytesSent, 1), sentPercent, myGlobals.separator) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 
@@ -846,15 +839,8 @@ void printHostsTraffic(int reportType,
 	    }
 
 	    /* Rounding may cause troubles */
-	    if(el->bytesSent > totalIPTraffic)
-	      totalIPTraffic = (el->tcpSentLoc
-				+el->tcpSentRem
-				+el->udpSentLoc
-				+el->udpSentRem
-				+el->icmpSent
-				+el->ospfSent
-				+el->igmpSent)
-		-totalIPTraffic;
+	    if(el->ipBytesSent > totalIPTraffic)
+	      totalIPTraffic = el->ipBytesSent - totalIPTraffic;
 	    else
 	      totalIPTraffic = 0;
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
