@@ -452,14 +452,8 @@ void printHeader(int reportType, int revertOrder, u_int column,
   memset(buf, 0, sizeof(buf));
 
   switch(reportType) {
-  case SORT_DATA_RECEIVED_PROTOS:   url = CONST_SORT_DATA_RECEIVED_PROTOS_HTML;   break;
-  case SORT_DATA_RECEIVED_IP:       url = CONST_SORT_DATA_RECEIVED_IP_HTML;       break;
-  case SORT_DATA_RECEIVED_THPT:     url = CONST_SORT_DATA_RECEIVED_THPT_HTML;     break;
   case SORT_DATA_RCVD_HOST_TRAFFIC: url = CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML; break;
   case SORT_DATA_SENT_HOST_TRAFFIC: url = CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML; break;
-  case SORT_DATA_SENT_PROTOS:       url = CONST_SORT_DATA_SENT_PROTOS_HTML;       break;
-  case SORT_DATA_SENT_IP:           url = CONST_SORT_DATA_SENT_IP_HTML;           break;
-  case SORT_DATA_SENT_THPT:         url = CONST_SORT_DATA_SENT_THPT_HTML;         break;
   case TRAFFIC_STATS:               url = CONST_TRAFFIC_STATS_HTML;               break;
   case SORT_DATA_PROTOS:            url = CONST_SORT_DATA_PROTOS_HTML;            break;
   case SORT_DATA_IP:                url = CONST_SORT_DATA_IP_HTML;                break;
@@ -531,22 +525,22 @@ void printHeader(int reportType, int revertOrder, u_int column,
     case SORT_DATA_SENT_PROTOS:
     case SORT_DATA_RECEIVED_PROTOS:
       url0 = CONST_SORT_DATA_PROTOS_HTML;
-      url1 = CONST_SORT_DATA_SENT_PROTOS_HTML;
-      url2 = CONST_SORT_DATA_RECEIVED_PROTOS_HTML;
+      url1 = CONST_SORT_DATA_PROTOS_HTML;
+      url2 = CONST_SORT_DATA_PROTOS_HTML;
       break;
     case SORT_DATA_IP:  
     case SORT_DATA_SENT_IP:
     case SORT_DATA_RECEIVED_IP:
       url0 = CONST_SORT_DATA_IP_HTML;
-      url1 = CONST_SORT_DATA_SENT_IP_HTML;
-      url2 = CONST_SORT_DATA_RECEIVED_IP_HTML;
+      url1 = CONST_SORT_DATA_IP_HTML;
+      url2 = CONST_SORT_DATA_IP_HTML;
       break;
     case SORT_DATA_THPT: 
     case SORT_DATA_SENT_THPT:
     case SORT_DATA_RECEIVED_THPT:
       url0 = CONST_SORT_DATA_THPT_HTML;
-      url1 = CONST_SORT_DATA_SENT_THPT_HTML;
-      url2 = CONST_SORT_DATA_RECEIVED_THPT_HTML;
+      url1 = CONST_SORT_DATA_THPT_HTML;
+      url2 = CONST_SORT_DATA_THPT_HTML;
       break;
     case SORT_DATA_HOST_TRAFFIC:
     case SORT_DATA_SENT_HOST_TRAFFIC:

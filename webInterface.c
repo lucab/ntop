@@ -3888,40 +3888,10 @@ void printNtopConfigHInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_RCVD_HOST_TRAFFIC_HTML", "undefined");
 #endif
 
-#ifdef CONST_SORT_DATA_RECEIVED_IP_HTML
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_RECEIVED_IP_HTML", CONST_SORT_DATA_RECEIVED_IP_HTML);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_RECEIVED_IP_HTML", "undefined");
-#endif
-
-#ifdef CONST_SORT_DATA_RECEIVED_PROTOS_HTML
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_RECEIVED_PROTOS_HTML", CONST_SORT_DATA_RECEIVED_PROTOS_HTML);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_RECEIVED_PROTOS_HTML", "undefined");
-#endif
-
-#ifdef CONST_SORT_DATA_RECEIVED_THPT_HTML
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_RECEIVED_THPT_HTML", CONST_SORT_DATA_RECEIVED_THPT_HTML);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_RECEIVED_THPT_HTML", "undefined");
-#endif
-
 #ifdef CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML
   printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML", CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML);
 #else
   printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_SENT_HOST_TRAFFIC_HTML", "undefined");
-#endif
-
-#ifdef CONST_SORT_DATA_SENT_IP_HTML
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_SENT_IP_HTML", CONST_SORT_DATA_SENT_IP_HTML);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_SENT_IP_HTML", "undefined");
-#endif
-
-#ifdef CONST_SORT_DATA_SENT_PROTOS_HTML
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_SENT_PROTOS_HTML", CONST_SORT_DATA_SENT_PROTOS_HTML);
-#else
-  printFeatureConfigInfo(textPrintFlag, "CONST_SORT_DATA_SENT_PROTOS_HTML", "undefined");
 #endif
 
 #ifdef CONST_SORT_DATA_SENT_THPT_HTML

@@ -50,6 +50,8 @@ struct id_rdiscovery {
 
 static void termIcmpFunct(void);
 static void handleIcmpWatchHTTPrequest(char* url);
+static void printICMPdata(int icmpColumnSort, u_int revertOrder, u_int num, HostTraffic **hosts);
+
 
 /* ******************************
    *     Plugin data block      *
@@ -472,10 +474,8 @@ static void formatSentRcvd(Counter sent, Counter rcvd) {
 
 /* ******************************* */
 
-void printICMPdata(int icmpColumnSort,
-                   u_int revertOrder,
-                   u_int num,
-                   HostTraffic **hosts) {
+static void printICMPdata(int icmpColumnSort, u_int revertOrder,
+                   u_int num, HostTraffic **hosts) {
 
   char buf[1024], formatBuf[32];
   char *pluginName = "<A HREF=/plugins/icmpWatch";
