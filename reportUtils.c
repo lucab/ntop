@@ -2971,7 +2971,7 @@ static void printNapsterStats(HostTraffic *el) {
 
   printSectionTitle("Napster Stats");
 
-  sendString(""TABLE_ON"<TABLE BORDER=1>\n");
+  sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
   sendString("<TR><TH "TH_BG" ALIGN=LEFT># Connections Requested</TH><TD ALIGN=RIGHT>");
   sendString(formatPkts(el->napsterStats->numConnectionsRequested));
   sendString("</TD></TR>\n");
@@ -2997,7 +2997,7 @@ static void printNapsterStats(HostTraffic *el) {
   sendString(formatBytes(el->napsterStats->bytesRcvd, 1));
   sendString("</TD></TR>\n");
 
-  sendString("</TABLE>"TABLE_OFF"\n");
+  sendString("</TABLE>"TABLE_OFF"</CENTER>\n");
 }
 
 /* ************************************ */
