@@ -68,13 +68,13 @@
 
 .ThemeOfficeMainItem
 {
-	padding: 4px 1px 4px 1px;
+	padding: 4px 5px 4px 5px;
 	border: 0;
 }
 
 td.ThemeOfficeMainItemHover,td.ThemeOfficeMainItemActive
 {
-	padding:	0px;
+	padding:	0px 4px 0px 4px;
 	border-top:	1px solid #30559C;
 	border-right:	1px solid #30559C;
 	border-left:	1px solid #30559C;
