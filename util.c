@@ -1957,17 +1957,8 @@ FILE* getNewRandomFile(char* fileName, int len) {
   fd = fopen(fileName, "wb");
 #endif
 
-  if(fd == NULL) {
-#ifndef linux
-    traceEvent(TRACE_WARNING, "Unable to create temp. file (%s). "
-	       "Using tmpnam() now...", fileName);
-    tmpnam(fileName);
-    fd = fopen(fileName, "wb");
-#endif
-    if(fd == NULL) {
-      traceEvent(TRACE_ERROR, "tmpnam(%s) failed.", fileName);
-    }
-  }
+  if(fd == NULL)
+    traceEvent(TRACE_WARNING, "Unable to create temp. file (%s). ", fileName);
 
   return(fd);
 }
