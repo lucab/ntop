@@ -558,7 +558,7 @@ void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
   static u_short lastHourId=0;
   u_short hourId;
   struct tm t, *thisTime;
-  
+
   if((srcHost == NULL) || (dstHost == NULL)) {
     traceEvent(CONST_TRACE_ERROR, "NULL host detected");
     return;
@@ -1178,13 +1178,22 @@ static void processIpPkt(const u_char *bp,
 
       /* Sanity check */
       if(tcpUdpLen >= (tp.th_off * 4)) {
+	int diff;
+
 	/* Real lenght if we captured the full packet */
 	tcpDataLength = tcpUdpLen - (tp.th_off * 4);
 
 	/* Actual lenght scaled with caplen */
-	tcpDataLength = h->caplen - (h->len - tcpDataLength);
+	diff = h->caplen - (h->len - tcpDataLength);
 
-	theData = (u_char*)(bp+hlen+(tp.th_off * 4));
+	if(diff > 0) {
+	  tcpDataLength = diff;
+	  theData = (u_char*)(bp+hlen+(tp.th_off * 4));
+	} else {
+	  tcpDataLength = 0;
+	  theData = NULL;
+	}
+
       } else {
 	tcpDataLength = 0;
 	theData = NULL;
@@ -2141,7 +2150,7 @@ void queuePacket(u_char *_deviceId,
         memcpy(myGlobals.packetQueue[myGlobals.packetQueueHead].p, p, len);
         myGlobals.packetQueue[myGlobals.packetQueueHead].h.caplen = len;
     }
-    
+
     myGlobals.packetQueue[myGlobals.packetQueueHead].deviceId = (int)((void*)_deviceId);
     myGlobals.packetQueueHead = (myGlobals.packetQueueHead+1) % CONST_PACKET_QUEUE_LENGTH;
     myGlobals.packetQueueLen++;
@@ -2492,7 +2501,7 @@ void processPacket(u_char *_deviceId,
   if (!myGlobals.initialSniffTime && (myGlobals.rFileName != NULL)) {
       myGlobals.initialSniffTime = h->ts.tv_sec;
   }
-  
+
   memcpy(&myGlobals.lastPktTime, &h->ts, sizeof(myGlobals.lastPktTime));
 
   if(caplen >= hlen) {
@@ -2833,8 +2842,8 @@ void processPacket(u_char *_deviceId,
 	       && (llcHeader.ctl.snap_ether.snap_orgcode[2] == 0xc) /* 0x00000C = Cisco */
 	       && (llcHeader.ctl.snap_ether.snap_ethertype[0] == 0x20)
 	       && (llcHeader.ctl.snap_ether.snap_ethertype[1] == 0x00) /* 0x2000 Cisco Discovery Protocol */
-	       ) { 	      
-	      if(srcHost->fingerprint == NULL) 
+	       ) {
+	      if(srcHost->fingerprint == NULL)
 		srcHost->fingerprint = strdup(":Cisco");
 	    }
 
@@ -3199,11 +3208,11 @@ void processPacket(u_char *_deviceId,
 		memcpy(&srcHost->hostIpAddress.Ip4Address.s_addr, arpHdr.arp_spa, sizeof(struct in_addr));
 		srcHost->hostIpAddress.Ip4Address.s_addr = ntohl(srcHost->hostIpAddress.Ip4Address.s_addr);
 		setHostSerial(srcHost);
-		strncpy(srcHost->hostNumIpAddress,			
+		strncpy(srcHost->hostNumIpAddress,
 			_addrtostr(&srcHost->hostIpAddress, buf, sizeof(buf)),
 			sizeof(srcHost->hostNumIpAddress));
 		setResolvedName(srcHost, srcHost->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
-		
+
 		if(myGlobals.numericFlag == 0)
 		  ipaddr2str(srcHost->hostIpAddress, 1);
 
@@ -3215,7 +3224,7 @@ void processPacket(u_char *_deviceId,
 		  FD_CLR(FLAG_SUBNET_PSEUDO_LOCALHOST, &srcHost->flags);
 		}
 
-		if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) 
+		if((arpOp == ARPOP_REQUEST) && (srcHost != NULL))
 		   incrementTrafficCounter(&srcHost->arpReqPktsSent, 1);
 	      }
 	    }
@@ -3370,7 +3379,7 @@ static void processFcPkt(const u_char *bp,
         }
         else {
             fcFrameLen = payload_len - 6; /* Brdwlk hdr + trlr */
-            /* Skip Brdwlk header & trlr & CRC incl payload len */ 
+            /* Skip Brdwlk header & trlr & CRC incl payload len */
             payload_len -= (FC_HDR_SIZE + 6); /* TBD: Handle optional headers */
         }
     }
@@ -3384,7 +3393,7 @@ static void processFcPkt(const u_char *bp,
         sof = bp[offset+1] & 0x0F;
         fcFrameLen = ntohs ((*(u_int16_t *)&bp[offset+3]) & 0x1FFF);
         vsanId = ntohs ((*(u_int16_t *)&bp[offset+14]) & 0x0FFF);
-#endif        
+#endif
         eof = bp[offset+MDSHDR_HEADER_SIZE+fcFrameLen-MDSHDR_TRAILER_SIZE];
 
         offset += MDSHDR_HEADER_SIZE;
@@ -3401,7 +3410,7 @@ static void processFcPkt(const u_char *bp,
 #else
     memcpy (&srcFcAddr, &hdrBytes[5], 3);
     memcpy (&dstFcAddr, &hdrBytes[1], 3);
-#endif     
+#endif
     isFirstFrame = ((sof == MDSHDR_SOFi2) || (sof == MDSHDR_SOFi3) ||
                     ((sof == MDSHDR_SOFf) && (fchdr.seq_cnt == 0)));
     isLastFrame  = (eof != MDSHDR_EOFn);
@@ -3451,15 +3460,15 @@ static void processFcPkt(const u_char *bp,
         incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBroadcastPkts, 1);
         incrementTrafficCounter(&myGlobals.device[actualDeviceId].fcBroadcastBytes, fcFrameLen);
     }
-    
+
     updateFcDevicePacketStats(fcFrameLen, actualDeviceId);
 
     ctr.value = fcFrameLen;
     updatePacketCount(srcHost, NULL, dstHost, NULL, ctr, 1, actualDeviceId);
 
-#ifdef NOT_YET    
+#ifdef NOT_YET
     updateTrafficMatrix (srcHost, dstHost, ctr, actualDeviceId);
-#endif    
+#endif
 
     incrementTrafficCounter(&srcHost->fcBytesSent, fcFrameLen);
     incrementTrafficCounter(&dstHost->fcBytesRcvd, fcFrameLen);
@@ -3482,7 +3491,7 @@ static void processFcPkt(const u_char *bp,
     }
 
     isFragment = isFirstFrame && !(isLastFrame);
-    
+
     if (isFragment) {
         incrementTrafficCounter(&myGlobals.device[actualDeviceId].fragmentedFcBytes, fcFrameLen);
     }
@@ -3492,7 +3501,7 @@ static void processFcPkt(const u_char *bp,
     if (protocol <= FC_FTYPE_UNDEF) {
         proto = fcProtocolStrings[protocol];
     }
-    
+
     switch (protocol) {
     case FC_FTYPE_SWILS:
     case FC_FTYPE_SWILS_RSP:
@@ -3580,7 +3589,7 @@ static void processFcPkt(const u_char *bp,
                                protocol, fchdr.r_ctl, fcFrameLen);
 
     /* Update Session stats */
-    handleFcSession (h, FALSE, srcHost, dstHost, fcFrameLen, payload_len, 
+    handleFcSession (h, FALSE, srcHost, dstHost, fcFrameLen, payload_len,
                      ntohs(fchdr.oxid), ntohs (fchdr.rxid), protocol,
                      fchdr.r_ctl, isXchgOrig, &bp[offset+24], actualDeviceId);
 }
