@@ -371,18 +371,12 @@ extern void unescape(char *dest, int destLen, char *url);
 extern void updateElementHash(ElementHash **list, u_short srcId, u_short dstId, 
 			      u_int32_t numPkts, u_int32_t numBytes);
 extern void allocateElementHash(int deviceId, u_short hashType);
-extern void handleFlowsSpecs();
-extern void initPassiveSessions();
-extern void termPassiveSessions();
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);
 extern char* getSAPInfo(u_int16_t sapInfo, short encodeString);
 extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
 extern void createVendorTable(void);
-extern void handleFlowsSpecs();
-extern void initPassiveSessions();
-extern void termPassiveSessions();
 
 #if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
