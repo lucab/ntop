@@ -1,12 +1,22 @@
+dnl> TODOs
+
+dnl>   should use STDC_HEADERS instead of __STDC__
+dnl>   delete SNMP from webInterface.c
+dnl>   Cleanup MULTITHREAD and ASYNC_ADDRESS_RESOLUTION
+dnl>   Cleanup HAVE_SYS_SYSLOG_H to match pattern in test program!
+dnl>   Cleanup NEED_GETDOMAINNAME from webInterface.c
+dnl>   Cleanup HAVE_REGEX to use the value set by AC_CHECK_LIB
+dnl>   Cleanup Autoconf2 (obsolete Autoconf1 macros still in use)
+dnl>   Solaris 8 -- libgcc_s -- need test
+
+dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+dnl>
+dnl> Copyright (c) 1998 - 2002 Luca Deri <deri@ntop.org>
+dnl> Written Oct2002 by Burton M. Strauss III <burton@ntopsupport.com>
+dnl>     (Loosely based on the earlier ntop version)
 dnl>
 dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-dnl> this file is processed via 'autoconf' to produce the 'configure' script
-dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl>
-dnl> Copyright (c) 1998 - 2000 Luca Deri <deri@ntop.org>
-dnl> Updated 1Q 2000 Rocco Carbone <rocco@ntop.org>
-dnl>
-dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl> This program is free software; you can redistribute it and/or modify
 dnl> it under the terms of the GNU General Public License as published by
 dnl> the Free Software Foundation; either version 2 of the License, or
@@ -22,456 +32,2781 @@ dnl> along with this program; if not, write to the Free Software
 dnl> Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 dnl>
 
-
 dnl>
-dnl> standard Autoconf prolog
-dnl>
-AC_PREREQ(2.13)
-AC_REVISION([1.0])
-
-dnl>
-dnl> look for an unique ntop's source file in the distribution
-dnl> and perform initialization steps, such as loading the cache
-dnl>
-AC_INIT(ntop.c)
-echo
-
-CONFIGURE_PARAMETERS=$*
-
-dnl>
-dnl> version and name of the game
-dnl>
-NTOP_MAJOR_VERSION=2
-NTOP_MINOR_VERSION=1
-NTOP_MICRO_VERSION=52
-NTOP_INTERFACE_AGE=0
-NTOP_BINARY_AGE=0
-NTOP_VERSION=$NTOP_MAJOR_VERSION.$NTOP_MINOR_VERSION.$NTOP_MICRO_VERSION
-NTOP_VERSION_EXTRA=""
-
-dnl>
-dnl> standard libtool versioning
-dnl>
-LT_RELEASE=$NTOP_MAJOR_VERSION.$NTOP_MINOR_VERSION
-LT_CURRENT=`expr $NTOP_MICRO_VERSION - $NTOP_INTERFACE_AGE`
-LT_REVISION=$NTOP_INTERFACE_AGE
-LT_AGE=`expr $NTOP_BINARY_AGE - $NTOP_INTERFACE_AGE`
-
-NTOP_VERSION_INFO=$LT_CURRENT:$LT_REVISION:$LT_AGE
-NTOP_RELEASE=$LT_RELEASE
-
-AC_SUBST(NTOP_VERSION_INFO)
-AC_SUBST(SO_VERSION_PATCH)
-AC_SUBST(NTOP_RELEASE)
-
-
-PACKAGE=ntop
-VERSION=$NTOP_VERSION
-
-
-echo
-echo "Welcome to $PACKAGE, Version $VERSION"
-echo "[Copyright (c) 1998-2002 Luca Deri <deri@ntop.org>]"
-echo
-
-dnl>
-dnl> variables for autoconf
+dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+dnl> this file is processed via 'autoconf' to produce the 'configure' script
+dnl> -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 dnl>
 
 dnl>
-dnl> By default ntop is compiled in multithread mode using
-dnl> async address resolution unless reset by command line options.
-ac_disable_multithread=no
-ac_disable_async_resolution=no
-multithread_mode=yes
-
+dnl> Initialization lines.
+dnl>   Note that the AC_INIT must, simply MUST be the first line.  
+dnl>   Anything before it is ignored in autoconf 2.5x (and beyond?)
 dnl>
-dnl> By default the configuration script will try to link against OpenSSL library, if available.
-dnl> The choice to disable this feature is left to the user.
-ac_disable_openssl=no
-
+dnl>   Edit the version # in the AC_INIT line to roll the version.
+dnl>   Edit NTOP_VERSION_EXTRA to put something extra (e.g. SourceForge rpm version"
+dnl>       into the stamp.
 dnl>
-dnl> By default the configuration script will try to link against GNU readline (and curses) library, if available.
-dnl> The choice to disable this feature is left to the user.
-ac_disable_readline=no
-ac_disable_curses=no
-
-dnl>
-dnl> By default the configuration script will try to link against GDChart library, if available.
-dnl> The choice to disable this feature is left to the user.
-ac_disable_gdchart=no
-
-dnl>
-dnl> By default the configuration script will not try to link against the TCP wrapper library, if available.
-dnl> The choice to enable this feature is left to the user.
-ac_enable_tcpwrap=no
-
-dnl>
-dnl> By default, do NOT ignore sigpipe
-dnl>
-ac_ignore_sigpipe=no
-
-dnl>
-dnl> By default the configuration script will try to compile all the plugins in its own directory.
-dnl> The choice to disable this feature is left to the user.
-PLUGINS=plugins
-ac_disable_plugins=no
-
-dnl>
-dnl> By default the configuration script will try to compile the interactive 'intop' program in its own directory.
-dnl> The choice to disable this feature is left to the user.
-INTOP=intop
-ac_disable_intop=no
-
-dnl>
-dnl> Option to show where we're testing for openssl
-ac_enable_showopenssltests=no
-
-dnl>
-dnl> Option to show where we're testing for gdchart
-ac_enable_showgdcharttests=no
-
-dnl>
-dnl> By default only enable SSLv2.  This allows for v3.
-dnl> The choice to enable this feature is left to the user.
-ac_enable_sslv3=no
-
-dnl>
-dnl> canonicalize the host, target, and build system types
-dnl>
-AC_CANONICAL_SYSTEM
-echo
-
-dnl>
-dnl> perform program name transformation
-dnl>
-AC_ARG_PROGRAM
-
-dnl>
-dnl> initialize the macro package
-dnl> and check for working GNU auto``stuff''
-dnl>
-AM_INIT_AUTOMAKE(ntop, $VERSION, lderi)
-echo
-
-dnl>
-dnl> initialize the libtool macro package to
-dnl> automatically include dependencies of:
-dnl> ranlib, ar, gcc, cc, ld, nm, ln
-dnl>
-
-dnl>
-dnl> checks for UNIX variants
-dnl>
-dnl> quoted from a public mailing list
-dnl>
-dnl> "Believe me, I'm all too aware of the nightmare of shared libraries
-dnl>  on the various systems.  My comment about AIX stems from two things.
-dnl>  One, guess what the extension for shared libs is on AIX.  ".a"  Guess
-dnl>  what the static lib extension is.  ".a"  What dipshit was buttsnorkeling
-dnl>  himself coming up with *that* brilliant idea?  And two, even if you
-dnl>  do build a shared library, they fail to work 99% of the time.
-dnl>  *cough* Perl *cough*  So as a development platform, I hate AIX with
-dnl>  a passion.  Give me Solaris and HP-UX any day."
-dnl>
-dnl>  Michael Jennings  <mej@eterm.org>  http://www.eterm.org
-dnl>  Software Engineer, VA Linux Systems Author, Eterm (www.eterm.org)
-dnl>
-
-dnl> case "$host" in
-dnl>    AIX is ___really___ incompatible with libtooland shared libraries, so....
-dnl>    disable the shared flag to no
-dnl>
-dnl>     *-ibm-aix* )
-dnl>         enable_shared=no
-dnl>         enable_static=yes
-dnl>         ;;
-dnl> 
-dnl>     * )
-dnl>         enable_shared=yes
-dnl>         enable_static=yes
-dnl>         ;;
-dnl> esac
-
-dnl>
-dnl> checks for required development tools
-dnl>
-
-echo
-echo "Step 1. Looking for required development tools...."
-echo
-
-dnl> AM_DISABLE_SHARED
-AM_ENABLE_SHARED
-AM_PROG_LIBTOOL
-echo
-
-dnl> set default loader
-CCLD=$CC
-
-AM_PROG_CC_STDC
-AC_PROG_CPP
-AC_SET_MAKE
-AC_PROG_INSTALL
-
-dnl>
-dnl> you can also check for debugging and optimization
-dnl>
-dnl>AC_CHECK_DEBUGGING
-dnl>AC_CHECK_OPTIMIZE
-
-dnl>
-dnl> set reasonable defaults here
-dnl>
-DEFS="-DHAVE_CONFIG_H"
-CFLAGS="-g $CFLAGS"
-
-dnl> Does the compiler like -Wall and -pedantic? [Borrowed from rrdtool]
-if test "x$GCC" = "xyes"; then
-  oCFLAGS=$CFLAGS
-  CFLAGS="$CFLAGS  -Wshadow -Wpointer-arith -Wmissing-prototypes -Wmissing-declarations -Wnested-externs"
-  AC_CACHE_CHECK(if we can use GCC-specific compiler options, rd_cv_gcc_opt,
-                [AC_TRY_COMPILE( , return 0 ,
-                    rd_cv_gcc_opt=yes,
-                    rd_cv_gcc_opt=no )
-               ]
-        )
-  if test $rd_cv_gcc_opt = no; then
-         CFLAGS=$oCFLAGS
-  fi
-fi
-
-dnl> add pic flag in any case this makes sure all our code is relocatable
-CFLAGS="$CFLAGS "`grep pic_flag= libtool | sed -e 's/.*pic_flag=//' -e 's/"//g'`
-
-dnl> Test endianness
-AC_TRY_RUN([
-
-int main()
-{
-        short s = 1;
-        short* ptr = &s;
-        unsigned char c = *((char*)ptr);
-        return c;       
-}
-
-]
-, [ AC_DEFINE_UNQUOTED(NTOP_BIG_ENDIAN, 1, [ntop built for big endian machine]) ]
-, [ AC_DEFINE_UNQUOTED(NTOP_LITTLE_ENDIAN, 1,  [ntop built for little endian machine]) ]
-, [ AC_DEFINE_UNQUOTED(NTOP_BIG_ENDIAN, 1, [ntop built for big endian machine]) ]
-)
-
-dnl>
-dnl> force configure to use current directory
-dnl>
-AC_CONFIG_AUX_DIR(.)
-
-dnl>
-dnl> make NTOPDIR the default for the installation
-dnl>
-AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
-
+AC_INIT([ntop],[2.1.51])
+AC_PREREQ([2.50])
+SCRIPTVER="vBETA-2002-10-21"
 
 dnl>
 dnl> generate the config header
 dnl>
 umask 002
-AM_CONFIG_HEADER(config.h)
+AM_CONFIG_HEADER([config.h])
 
+NTOP_VERSION_EXTRA=""
 
-dnl>
-dnl> Yup!  Avoid to initialize maintainer mode.
-dnl> This is a pain if you have SUBDIRS.
-dnl>
-dnl> AM_MAINTAINER_MODE
+GDCHART_DIRECTORY="gdchart0.94c"
+GD_DIRECTORY="gd-1.8.3"
+LIBPNG_DIRECTORY="libpng-1.2.4"
+ZLIB_DIRECTORY="zlib-1.1.4"
 
-echo
-echo "Step 2. Processing user options...."
-echo
-
-AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
-
-AC_ARG_WITH(pcap-root, [  --with-pcap-root=DIR    LBNL pcap source tree located in DIR], PCAP_ROOT="$withval", PCAP_ROOT=)
-
-AC_ARG_WITH(gdbm-root, [  --with-gdbm-root=DIR    GNU gdbm source tree located in DIR], GDBM_ROOT="$withval", GDBM_ROOT=)
-
-AC_ARG_WITH(ossl-root, [  --with-ossl-root=DIR    OpenSSL source tree located in DIR], OSSL_ROOT="$withval", OSSL_ROOT=)
-
-AC_ARG_WITH(gdchart-root, [  --with-gdchart-root=DIR GDChart source tree located in DIR], GDCHART_ROOT="$withval", GDCHART_ROOT=)
-
-AC_ARG_WITH(gd-root, [  --with-gd-root=DIR GD source tree located in DIR], GD_ROOT="$withval", GD_ROOT=)
-
-AC_ARG_WITH(libpng-root, [  --with-libpng-root=DIR LIBPNG source tree located in DIR], LIBPNG_ROOT="$withval", LIBPNG_ROOT=)
-
-AC_ARG_WITH(zlib-root, [  --with-zlib-root=DIR ZLIB source tree located in DIR], ZLIB_ROOT="$withval", ZLIB_ROOT=)
-
-AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
-
-dnl>
-dnl> Give the user an option to compile a micro version of ntop
-dnl> for embedded systems
-dnl>
-AC_ARG_ENABLE(micro-ntop, [  --enable-micro-ntop     compile a slim version of ntop [default=disabled]], ac_micro_ntop="yes", ac_micro_ntop="no")
-
-dnl>
-dnl> Give the user an option to compile without multithread support,
-dnl> for example to start a debugging session.
-dnl>
-AC_ARG_ENABLE(mt, [  --disable-mt            disable multithread support also if available [default=enabled]], ac_disable_multithread="yes", ac_disable_multithread="no")
-
-dnl>
-dnl> Give the user an option to compile without the HTTPS support provided by OpenSSL.
-dnl>
-AC_ARG_ENABLE(ssl, [  --disable-ssl           disable HTPPS support also if OpenSSL is available [default=enabled]], ac_disable_openssl="yes", ac_disable_openssl="no")
-
-dnl>
-dnl> Give the user an option to compile without the GNU readline support.
-dnl>
-AC_ARG_ENABLE(readline, [  --disable-readline      disable GNU readline support also if available [default=enabled]], ac_disable_readline="yes", ac_disable_readline="no")
-
-dnl>
-dnl> Give the user an option to compile without the curses support.
-dnl>
-AC_ARG_ENABLE(curses, [  --disable-curses        disable curses support also if available [default=enabled]], ac_disable_curses="yes", ac_disable_curses="no")
-
-dnl>
-dnl> Give the user an option to compile without the GDChart support.
-dnl>
-AC_ARG_ENABLE(gdchart, [  --disable-gdchart       disable GDChart support also if available [default=enabled]], ac_disable_gdchart="yes", ac_disable_gdchart="no")
-
-dnl>
-dnl> Give the user an option to compile with the TCP Wrapper support.
-dnl>
-AC_ARG_ENABLE(tcpwrap, [  --enable-tcpwrap        enable TCP Wrap support if available [default=disabled]], ac_enable_tcpwrap="yes")
-
-dnl>
-dnl> Give the user an option to RUN with SIGPIPE ignored
-dnl>
-AC_ARG_ENABLE(ignoresigpipe, [  --enable-ignoresigpipe  Ignore SIGPIPE errors [default=do not ignore]], ac_enable_ignoresigpipe="yes", ac_enable_ignoresigpipe="no")
-
-dnl>
-dnl> Give the user an option to RUN with the SSL Watchdog (EXPERIMENTAL)
-dnl>
-AC_ARG_ENABLE(sslwatchdog, [  --enable-sslwatchdog    Watchdog for ssl hangups (Netscape 6.2.2) [default=disabled]], ac_enable_sslwatchdog="yes", ac_enable_sslwatchdog="no")
-
-dnl>
-dnl> Give the user an option to compile with sslv3 support.
-dnl>
-AC_ARG_ENABLE(sslv3, [  --enable-sslv3          enable ssl v3 support if available [default=disabled]], ac_enable_sslv3="yes")
-
-dnl>
-dnl> Give the user an option to show the openssl tests...
-dnl>
-AC_ARG_ENABLE(showopenssltests, [  --enable-showopenssltests show tests for openssl libraries [default=disabled]], ac_enable_showopenssltests="yes")
-
-dnl>
-dnl> Give the user an option to show the gdchart tests...
-dnl>
-AC_ARG_ENABLE(showgdcharttests, [  --enable-showgdcharttests show tests for gdchart libraries [default=disabled]], ac_enable_showgdcharttests="yes")
-
-AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
-
-dnl>
-dnl> Give the user an option to avoid to compile all the plugins.
-dnl>
-AC_ARG_ENABLE(plugins, [  --disable-plugins       disable compilation of plugins, also if they are available [default=disabled]], ac_disable_plugins="yes")
-
-dnl>
-dnl> Give the user an option to avoid to compile the interactive version.
-dnl>
-AC_ARG_ENABLE(intop, [  --disable-intop         disable compilation of intop [default=enabled]], ac_disable_intop="yes")
-
-
-dnl>
-dnl>
-dnl> checks for special support for platform/compiler
-dnl> $CC, $CFLAGS, $LDFLAGS and $LIBS are my friends
-dnl>
+dnl> order matters...
+LIBPNG_DIRECTORY=`(cd ../${GDCHART_DIRECTORY}/${GD_DIRECTORY}/${LIBPNG_DIRECTORY} && pwd)`
+GD_DIRECTORY=`(cd ../${GDCHART_DIRECTORY}/${GD_DIRECTORY} && pwd)`
+ZLIB_DIRECTORY=`(cd ../${GDCHART_DIRECTORY}/${ZLIB_DIRECTORY} && pwd)`
+GDCHART_DIRECTORY=`(cd ../${GDCHART_DIRECTORY} && pwd)`
 
 echo
-echo "Step 3. Checking for special support for platform/compiler...."
+echo "Welcome to $PACKAGE_NAME, Version $PACKAGE_VERSION $NTOP_VERSION_EXTRA"
+echo "  copyright (c) 1998-2002 Luca Deri <deri@ntop.org>"
 echo
+echo          "Configuration script version $SCRIPTVER"
+echo
+
+CONFIGURE_PARAMETERS=$*
+echo
+echo "Configuring ${PACKAGE_NAME} according to your request(s):"
+echo "   ./configure ${CONFIGURE_PARAMETERS}"
+echo
+
+dnl> autoheader stuff...just ignore
+AH_TEMPLATE([HAVE_INT16_T],   [Define for int16 typedef])
+AH_TEMPLATE([HAVE_INT32_T],   [Define for int32 typedef])
+AH_TEMPLATE([HAVE_INT64_T],   [Define for int64 typedef])
+AH_TEMPLATE([HAVE_INT8_T],    [Define for int8 typedef])
+AH_TEMPLATE([HAVE_UINT64_T],  [Define for unsigned int 64 typedef])
+AH_TEMPLATE([HAVE_U_INT16_T], [Define for unsigned int 16 typedef])
+AH_TEMPLATE([HAVE_U_INT32_T], [Define for unsigned int 32 typedef])
+AH_TEMPLATE([HAVE_U_INT64_T], [Define for unsigned int 64 typedef])
+AH_TEMPLATE([HAVE_U_INT8_T],  [Define for unsigned int 8 typedef])
+AH_TEMPLATE([HAVE_LIBWRAP],   [Define for tcp wrappers (-lwrap)])
+dnl> end autoheader stuff
+
+echo "*******************************************************************"
+echo "*                                                                 *"
+echo "* NOTICE:  I know you're used to ignoring output from ./configure *"
+echo "*                                                                 *"
+echo "*          ntop has a lot of complexity and interdependences.     *"
+echo "*                                                                 *"
+echo "*          Please, please AT LEAST read the stuff in these        *"
+echo "*          boxes!                                                 *"
+echo "*                                                                 *"
+echo "*>>> The ACTION taken is shown prefixed '>>>'                     *"
+echo "*                                                                 *"
+echo "*    If the ACTION is unacceptable,                               *"
+echo "*??? The REMEDIATION plan is shown prefixed with '???'            *"
+echo "*                                                                 *"
+echo "*******************************************************************"
+echo
+
+dnl> Basic sanity check ... does ntop.c exist?
+AC_CONFIG_SRCDIR([ntop.c])
+
+dnl> force configure to use current directory
+AC_CONFIG_AUX_DIR(.)
+
+dnl> This has to be here due to some odd dependency...
+AC_CANONICAL_TARGET
+
+AM_INIT_AUTOMAKE([${PACKAGE_NAME}], [${PACKAGE_VERSION}])
+
+dnl> early since we need it for --enable-showoses
+AC_PROG_AWK
+
+AC_ARG_ENABLE(void,
+              [  +--ntop-specific:------------------------------------------------------------+])
+AC_ARG_WITH(void,
+              [  +--external-packages:--------------------------------------------------------+])
+
+AC_ARG_ENABLE(configuredebug,
+              [  --enable-configuredebug     display debug information during ./configure],
+              ac_debug="yes"
+              echo "DEBUG: Enabled"
+              echo "    PNG:  ${LIBPNG_DIRECTORY}"
+              echo "    GD:   ${GD_DIRECTORY}"
+              echo "    ZLIB: ${ZLIB_DIRECTORY}"
+              echo " GDCHART: ${GDCHART_DIRECTORY}",
+              ac_debug="no")
+
+AC_ARG_ENABLE(mt,
+              [  --disable-mt                disable multithread support [default=enabled]],
+              ac_disable_multithread="yes",
+              ac_disable_multithread="no")
+
+AC_ARG_WITH(ssl,
+              [  --disable-ssl               disable HTPPS support [default=enabled]],
+              ac_disable_openssl="yes",
+              ac_disable_openssl="no")
+
+AC_ARG_ENABLE(sslv3,
+              [  --enable-sslv3              enable ssl v3 support [default=disabled]],
+              ac_enable_sslv3="yes",
+              ac_enable_sslv3="no")
+
+AC_ARG_ENABLE(sslwatchdog,
+              [  --enable-sslwatchdog        enable Watchdog for ssl hangups [default=disabled]],
+              ac_enable_sslwatchdog="yes",
+              ac_enable_sslwatchdog="no")
+
+AC_ARG_WITH(gdchart,
+              [  --disable-gdchart           disable use of GDChart [default=enabled]],
+              ac_disable_gdchart="yes",
+              ac_disable_gdchart="no")
+
+AC_ARG_WITH(tcpwrap,
+              [  --enable-tcpwrap            enable use of TCP Wrapper [default=disabled]],
+              ac_enable_tcpwrap="yes",
+              ac_enable_tcpwrap="no")
+
+AC_ARG_ENABLE(plugins,
+              [  --disable-plugins           disable compilation of plugins [default=enabled]],
+              ac_disable_plugins="yes",
+              ac_disable_plugins="no")
+
+AC_ARG_ENABLE(micro-ntop,
+              [  --enable-micro-ntop         compile a slim version of ntop [default=disabled]],
+              ac_micro_ntop="yes",
+              ac_micro_ntop="no")
+
+AC_ARG_ENABLE(intop,
+              [  --enable-intop              enable intop (obsolete) command line version [default=disabled]],
+              ac_enable_intop="yes",
+              ac_enable_intop="no")
+
+AC_ARG_WITH(curses,
+              [  --disable-curses            disable use of curses [default=enabled]],
+              ac_disable_curses="yes",
+              ac_disable_curses="no")
+
+AC_ARG_WITH(readline,
+              [  --disable-readline          disable use of GNU readline [default=enabled]],
+              ac_disable_readline="yes",
+              ac_disable_readline="no")
+
+AC_ARG_ENABLE(ignoresigpipe,
+              [  --enable-ignoresigpipe      Ignore SIGPIPE errors [default=do not ignore]],
+              ac_enable_ignoresigpipe="yes",
+              ac_enable_ignoresigpipe="no")
+
+dnl>
+dnl> Define the "WITH"s for package root directories ... deal with these later...
+dnl>
+
+AC_ARG_WITH(  pcap-root,
+              [  --with-pcap-root=DIR        LBNL pcap source tree located in DIR],
+              PCAP_ROOT="$withval",
+              PCAP_ROOT=)
+
+AC_ARG_WITH(  gdbm-root,
+              [  --with-gdbm-root=DIR        GNU gdbm source tree located in DIR],
+              GDBM_ROOT="$withval",
+              GDBM_ROOT=)
+
+AC_ARG_WITH(  ossl-root,
+              [  --with-ossl-root=DIR        openSSL source tree located in DIR],
+              OSSL_ROOT="$withval",
+              OSSL_ROOT=)
+
+AC_ARG_WITH(  gdchart-root,
+              [  --with-gdchart-root=DIR     GDChart source tree located in DIR],
+              GDCHART_ROOT="$withval",
+              GDCHART_ROOT=)
+
+AC_ARG_WITH(  gd-root,
+              [  --with-gd-root=DIR          GD source tree located in DIR],
+              GD_ROOT="$withval",
+              GD_ROOT=)
+
+AC_ARG_WITH(  libpng-root,
+              [  --with-libpng-root=DIR      PNGLIB source tree located in DIR],
+              LIBPNG_ROOT="$withval",
+              LIBPNG_ROOT=)
+
+AC_ARG_WITH(  zlib-root,
+              [  --with-zlib-root=DIR        ZLIB source tree located in DIR],
+              ZLIB_ROOT="$withval",
+              ZLIB_ROOT=)
+
+AC_ARG_ENABLE(showoses,
+              [  --enable-showoses           display OS Support information.],
+              [echo
+               echo  "Showing OS support information... one second"
+               echo
+               if test ".${ac_cv_prog_AWK}" = "."; then
+                   echo "  Sorry, unable to honor your request - no awk appears to be available"
+                   echo
+                   exit 1
+               fi
+               if test ! -r configure.in; then
+                   echo "  Sorry, unable to find the configure.in script in this directory."
+                   exit 1
+               fi
+               if test ! -r utils/showoses.awk; then
+                   echo "  Sorry, unable to find the showoses.awk script in the utils/ directory."
+                   exit 1
+               fi
+               ${ac_cv_prog_AWK} -f utils/showoses.awk configure.in
+               echo
+               exit 0
+])
+
+AC_ARG_ENABLE(iknowbetter,
+              [  --enable-iknowbetter        Override WILLFAIL],
+              ac_willfailoverride="yes",
+              ac_willfailoverride="no")
+
+AC_ARG_ENABLE(void,
+              [  +----------------------------------------------------------------------------+])
+AC_ARG_WITH(void,
+              [  +----------------------------------------------------------------------------+])
+
+# Set constants and defaults
+AS=
+CCLD=
+DEFS="-DHAVE_CONFIG_H"
+DLLTOOL=
 DYN_FLAGS=
+EXEEXT=
+INCS=
+INTOP=
+LIBCURSES=
+LIBREADLINE=
+LIBTERMCAP=
+OBJDUMP=
+OBJEXT=o
+RRDLIB=
 SO_VERSION_PATCH=
-MORESOURCES=
-MOREOBJECTS=
 
-case "$host:$CC" in
-    *-ibm-aix4.1.*:gcc )
+dnl>
+dnl> Yes, we want to minimize the amount of work before we tell
+dnl> the user we can't compile for this host, but this has to
+dnl> to preceed the OS stuff so $CC is set.
+dnl>
 
-dnl>    on my RS/6000 system I was really unable to link using gcc, so I switched
-dnl>    to native AIX XL C Compiler. I don't know how to link with gcc.
+echo
+echo "Checking C compiler program and features..."
+echo 
+AM_PROG_CC_STDC
+if test ".${ac_cv_prog_cc_stdc}" = ".no"; then
+    echo 
+    echo "*******************************************************************"
+    echo "*"
+    echo "* WARNING: Attempting to configure for non ANSI standard C."
+    echo "*"
+    echo "*>>> This is unsupported."
+    echo "*>>> It will probably fail."
+    echo "*"
+    echo "*    You are welcome to try - but please, keep the ntop-dev"
+    echo "*    mailing list updated with your successes or failures..."
+    echo "*"
+    echo "*******************************************************************"
+    echo
+fi
+
+if test ".${ac_debug}" = ".yes"; then
+    echo "DEBUG:   CC starts as '${CC}')"
+    echo "DEBUG:   CFLAGS as    '${CFLAGS}')"
+fi
+
+echo
+echo "Checking for support status of ${target}, ${CC}..."
+echo 
 dnl>
-dnl>    Moreover I needed a local copy of the libgcc.a because the
-dnl>    linker refused to create a binary from the installed archive.
-dnl>    Again, I don't know why.
+dnl> How does this work?
 dnl>
+dnl> First off, we split up the target:cc stuff and tag each version we know
+dnl> about with a couple of paramters.
+dnl>
+dnl>    DEFINEOS becomes the -DOS_xxxxx value
+dnl>    STATUS   tells us which of the text blocks to print
+dnl>    REMEDIATE1/2 and NOTE1/2 are extra blocks of text we can print
+dnl>
+dnl>    VERIFIEDn="ntop:yyyy-mm-dd:name <email>:osversion";
+dnl>    VNOTES  ="";
+dnl>
+
+dnl> Really pervasive settings (CC, CFLAGS) go here.
+dnl> The rest should be the second case $target, after we've done most 
+dnl> of the common tests.
+
+if test ".${ac_debug}" = ".yes"; then
+    echo "DEBUG: build        is '${build}'"
+    echo "       host         is '${host}'"
+    echo "       target       is '${target}'"
+    echo "       CC           is '${CC}'"
+fi
+
+case "${target}:${CC}" in
+    *-*-mingw32*:gcc* )
+        DEFINEOS="MINGW";     STATUS="SUPPORTED";
+      ;;
+
+    *-*-cygwin*:* )
+        VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com:any"
+        VNOTES  ="Assumed to fail - ntop has never supported cygwin"
+        REMEDIATE1="Use MinGW and the special makefiles instead."
+        DEFINEOS="CYGWIN";    STATUS="WILLFAIL"
+      ;;
+
+    *-*-linux*:gcc* )
+        VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com:RedHat7.2 w/ updates"
+        VERIFIED2="2.1.51:2002-10-24:Peter Sinoros-Szabo Peter <sini@cs.bme.hu>:Suse i686, 2.4.18-4GB-SMP"
+        DEFINEOS="LINUX";     STATUS="SUPPORTED"
+      ;;
+
+    *-*-solaris2.9*:* )
+        NOTE1="Supported: Solaris 8 for both sparc and i86"
+        DEFINEOS="SOLARIS";   STATUS="UNTESTED"
+      ;;
+
+    *-*-solaris2.8*:* )
+        VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com:Solaris 8 i86"
+        NOTE1="Requires various gnu tools from SunFreeware.com"
+        DEFINEOS="SOLARIS";   STATUS="SUPPORTED"
+      ;;
+
+    *-*-solaris2.5*:* )
+        NOTE1="Trying Solaris 2.5 configuration stuff from ntop 2.1."
+        DEFINEOS="SOLARIS";   STATUS="UNTESTED"
+      ;;
+
+    *-*-solaris*:* )
+        DEFINEOS="SOLARIS";   STATUS="UNTESTED"
+      ;;
+
+    *-*-darwin*:* )
+        VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com>:MAC OS X 10.1 (Darwin)"
+        VERIFIED2="2.1.51:2002-10-22:Luca Deri:MAC OS X 10.2 (Jaguar)"
+        NOTE1="'Darwin 5.5' is the kernel of the os known as MAC OS X 10.1"
+        NOTE2="'Darwin 6.1' is the kernel of the os known as MAC OS X 10.2 (Jaguar)"
+        DEFINEOS="DARWIN";    STATUS="SUPPORTED"
+
+        CFLAGS="-no-cpp-precomp $CFLAGS"
+      ;;
+
+    *-*-freebsd4*:gcc* )
+        VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com>:FreeBSD-4.6.2-RELEASE"
+        VERIFIED2="2.1.51:2002-10-25:Stanley Hopcroft <anwsmh@IPAustralia.Gov.AU>:4.7-RELEASE"
+        DEFINEOS="FREEBSD";   STATUS="SUPPORTED"
+      ;;
+
+    *-*-freebsd*:* )
+        DEFINEOS="FREEBSD";   STATUS="UNTESTED"
+      ;;
+
+    *-*-openbsd3.1*:gcc* )
+        DEFINEOS="OPENBSD";   STATUS="WILLFAIL"
+      ;;
+
+    *-*-openbsd*:* )
+        DEFINEOS="OPENBSD";   STATUS="UNTESTED"
+      ;;
+
+    *-*-netbsd*1.5*:gcc* )
+        VERIFIED1="2.1.51:2002-10-23:Burton Strauss <burton@ntopsupport.com:1.5.3 w/ updated auto* tools"
+        NOTE1="Single Threaded only."
+        DEFINEOS="NETBSD"
+        if test ".${ac_disable_multithread}" = ".yes"; then
+            STATUS="SUPPORTED"
+        else
+            STATUS="WILLFAIL"
+            NOTE2="With ANY of the threads packages, you are on your own!"
+        fi
+      ;;
+
+    *-*-netbsd*:* )
+        DEFINEOS="NETBSD";    STATUS="UNTESTED"
+      ;;
+
+    *-*-hpux11*:gcc* )
+        DEFINEOS="HPUX";      STATUS="SUPPORTED"
+      ;;
+
+    *-*-hpux10*:gcc* )
+        NOTE1="Single Threaded only."
+        DEFINEOS="HPUX"
+        if test ".${ac_disable_multithread}" = ".yes"; then
+            STATUS="UNTESTED"
+        else
+            STATUS="WILLFAIL"
+        fi
+      ;;
+
+    *-*-aix5l*:gcc* )
+        NOTE1="Guessing that AIX5L is like Linux."
+        DEFINEOS="AIX";       STATUS="UNTESTED"
+      ;;
+
+    *-*-aix[45]*:gcc* )
+        NOTE1="Trying configuration stuff from ntop 1.3 for AIX 4.1/4.2."
+        DEFINEOS="AIX";       STATUS="UNTESTED"
+
+        dnl> These are so pervasive, they MUST be here...
         GCCLIB=`gcc -print-libgcc-file-name`
         cp $GCCLIB .
         LIBS="-L. -lgcc ${LIBS}"
-
-dnl>    To link against the getmsg system call you must import the /lib/pse.exp
         CCLD="cc -bI:/lib/pse.exp"
-        ;;
+      ;;
 
-    *-ibm-aix4.*:cc* )
+    *-*-aix4*:* )
+        REMEDIATE1="Install gcc."
+        DEFINEOS="AIX";       STATUS="WILLFAIL"
+      ;;
 
-        echo "Oh no!  *cough* AIX *cough* without GCC!  Me poor!"
+    *-*-aix*:* )
+        DEFINEOS="AIX";       STATUS="UNTESTED"
+      ;;
 
-        # To link against the getmsg system call you must import the /lib/pse.exp
-dnl>        CFLAGS=
-dnl>        LDFLAGS="-bI:/lib/pse.exp $LDFLAGS"
-        ;;
-
-    *-sun-solaris2.5.1:* )
-        AC_DEFINE_UNQUOTED(NEED_INET_ATON, 1, [Solaris 2.5.1: Define if you need a private implementation of inet_aton (solaris 2.5.1 doesn't have it).])
-        ;;
-
-    *openbsd* )
-        SO_VERSION_PATCH=.0.0
-        ;;
-
-    *darwin* )
-        CFLAGS="-no-cpp-precomp -DDARWIN $CFLAGS"
-	DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
-        ;;
-
-    *hpux*)
-	CFLAGS="-DHPUX ${CFLAGS}"
-	;;
-
-dnl>    *-sun-solaris2*:cc )
-dnl>        # shut-up harmless warnings caused by do-while macros on Solaris
-dnl>        test ".$ac_cv_prog_gcc" = ".no" && CFLAGS="$CFLAGS -w"
-dnl>        ;;
+    * )
+        DEFINEOS="";          STATUS="UNKNOWN"
+      ;;
 esac
 
-
-dnl>
-dnl> checks for system header files
-dnl>
+dnl> Leave this: it causes showoses to print it's footer
+dnl> showoses TERMS
 
 echo
-echo "Step 4. Looking for both required and optional system headers...."
+echo "*******************************************************************"
+echo "*"
+
+case "${STATUS}" in
+
+    SUPPORTED)
+        echo "* NOTE: Building ntop for a supported platform"
+        echo "*       This means we expect ntop to work without major issues"
+        echo "*"
+        echo "*            '${target}'"
+        if test ".${NOTE1}" != "."; then
+            echo "*"
+            echo "*    ${NOTE1}"
+        fi
+        if test ".${NOTE2}" != "."; then
+            echo "*    ${NOTE2}"
+        fi
+        ;;
+
+    UNTESTED)
+        echo "* NOTE: Building ntop for an untested platform"
+        echo "*"
+        echo "*            '${target}'"
+        echo "*"
+        echo "*      Untested means that:"
+        echo "*"
+        echo "*           1. A previous version of this OS is supported."
+        echo "*        or 2. This version of this OS was supported by a"
+        echo "*              previous version of ntop."
+        echo "*"
+        echo "*     ./configure applies the same configuration options,"
+        echo "*     special parameters, etc. as for the prior release."
+        echo "*"
+        echo "*             For OS .0 releases that is probably a bad bet..."
+        echo "*"
+        echo "*  It could just be that you are compiling an older version"
+        echo "*  of ntop on a new OS release - check the http://www.ntop.org"
+        echo "*  site for an update."
+        if test ".${NOTE1}" != "."; then
+            echo "*"
+            echo "*    ${NOTE1}"
+        fi
+        if test ".${NOTE2}" != "."; then
+            echo "*    ${NOTE2}"
+        fi
+        ;;
+
+    WILLFAIL)
+        echo "* ERROR: Attempting to build ntop for an unsupported platform"
+        echo "*"
+        echo "*            '${target}'"
+        echo "*"
+        echo "*>>> This is unsupported."
+        echo "*>>> It will almost certainly fail"
+        echo "*           (that is why it is listed as 'unsupported' - doh!)"
+        if test ".${REMEDIATE1}" != "."; then
+            echo "*"
+            echo "*??? ${REMEDIATE1}"
+        fi
+        if test ".${REMEDIATE2}" != "."; then
+            echo "*??? ${REMEDIATE2}"
+        fi
+        if test ".${ac_willfailoverride}" = ".yes"; then
+            echo "*"
+            echo "*   But... you think you know better (or are testing things)"
+            echo "*          so let us rock and roll..."
+        fi
+        ;;
+
+    *)
+        echo "* ERROR: Attempting to build ntop for an unknown platform"
+        echo "*"
+        echo "*            '${target}'"
+        echo "*"
+        echo "*>>> This is unsupported."
+        echo "*>>> It will probably fail."
+        echo "*"
+        echo "*    Of course, you are certainly welcome to try ntop on this platform..."
+        ;;
+esac
+
+echo "*"
+echo "*    Please keep the ntop-dev mailing list updated with any"
+echo "*    successes you have or problems you encounter..."
+ echo "*"
+
+if test ".${VERIFIED1}" != "."; then
+    echo "*   Support for this platform was most recently verified for"
+    echo "*"
+    echo $VERIFIED1 | awk -f utils/verified.awk
+    if test ".${VERIFIED2}" != "."; then
+        echo $VERIFIED2 | awk -f utils/verified.awk
+    fi
+    if test ".${VERIFIED3}" != "."; then
+        echo $VERIFIED3 | awk -f utils/verified.awk
+    fi
+    if test ".${VERIFIED4}" != "."; then
+        echo $VERIFIED4 | awk -f utils/verified.awk
+    fi
+    if test ".${VNOTES}" != "."; then
+        echo "*    ${VNOTES}"
+    fi
+else
+    echo "*   Support is unverified..."
+fi
+echo "*"
+echo "*******************************************************************"
 echo
 
+dnl> Leave this: it causes showoses to stop
+dnl> showoses END
+
+case "${STATUS}" in
+    WILLFAIL)
+          if test ".${ac_willfailoverride}" != ".yes"; then
+              exit 1
+          fi
+      ;;
+esac
+
+dnl>
+dnl>  Here so we stop processing ASAP after printing above
+dnl>
+AC_ARG_ENABLE(test,
+              [  --enable-test                Test platform and stop],
+              exit 0)
+
+echo
+echo "Initializing..."
+echo
+# Checks for programs.
+AC_PROG_CXX
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+
+AC_PROG_LIBTOOL
+
+dnl> make NTOPDIR the default for the installation
+AC_PREFIX_DEFAULT(${NTOPDIR:-/usr/local})
+
+echo
+echo "Test the compiler and setup CFLAGS..."
+echo
+case "$CFLAGS" in
+    *-g* )
+        ;;
+    * )
+        CFLAGS="$CFLAGS -g"
+        AC_MSG_CHECKING([if compiler accepts -g (debugging information)])
+        oCFLAGS=$CFLAGS
+        CFLAGS="-g $CFLAGS"
+        AC_TRY_COMPILE( ,
+                       return 0 ,
+                       AC_MSG_RESULT(yes),
+                       CFLAGS="${oCFLAGS}"
+                       AC_MSG_RESULT(no)
+                      )
+        ;;
+esac
+
+AC_MSG_CHECKING([if compiler accepts -W (warning flags)])
+oCFLAGS=$CFLAGS
+CFLAGS="$CFLAGS -Wshadow -Wpointer-arith -Wmissing-prototypes -Wmissing-declarations -Wnested-externs"
+AC_TRY_COMPILE( ,
+               return 0 ,
+               AC_MSG_RESULT(yes),
+               CFLAGS="${oCFLAGS}"
+               AC_MSG_RESULT(no)
+              )
+
+dnl> add pic flag in any case this makes sure all our code is relocatable
+CFLAGS="$CFLAGS "`grep pic_flag= libtool | head -n1 | sed -e 's/.*pic_flag=//' -e 's/"//g'`
+
+dnl> Specific compiler feature tests
+AC_C_CONST
+AC_C_VOLATILE
+AC_C_INLINE
+AC_C_CHAR_UNSIGNED
+AC_C_LONG_DOUBLE  
+
+if test ".${ac_debug}" = ".yes"; then
+    echo "DEBUG: After compiler tests, CFLAGS is '${CFLAGS}'"
+fi
+
+AC_C_BIGENDIAN([AC_DEFINE_UNQUOTED(NTOP_BIG_ENDIAN, 1, [ntop built for big endian machine])],
+               [AC_DEFINE_UNQUOTED(NTOP_LITTLE_ENDIAN, 1,  [ntop built for little endian machine])],
+               [AC_DEFINE_UNQUOTED(NTOP_UNKNOWN_ENDIAN, 1, [ntop built for unknown machine])])
+
+dnl> Define the arguments we accept...
+dnl>
+dnl>   In this version of the configure file, we use AC_ARG_WITH for whole external
+dnl>   programs and AC_ARG_ENABLE for features of ntop itself.  Since they're the
+dnl>   same as to processing, we don't separate them here.
+dnl>
+dnl>   And it keeps them together in the ./configure --help output
+dnl>
+dnl>   Remember, there shouldn't be any processing in these... that's below when
+dnl>   we test for libraries.  It's ok to set values via AC_DEFINE_UNQUOTED().
+
+echo
+echo "-------------------------------------------------------------------"
+echo
+echo "   **Handling your --enable and --disable requests**"
+echo
+
+echo
+echo "Multithread?"
+if test ".${ac_disable_multithread}" = ".yes"; then
+    echo "    ...Disabled via command line option --disable-mt"
+    multithread_mode="disabled (Single Threaded) via --disable-mt"
+else
+    echo "    ...(Default) Requested if available. Disable via command line option --disable-mt."
+fi
+
+echo
+echo "SSL?"
+if test ".${ac_disable_openssl}" = ".yes"; then
+    echo "    ...Disabled via command line option --disable-ssl"
+else
+    echo "    ...(Default) Requested if available. Disable via command line option --disable-ssl."
+    echo "  sslv3?"
+    if test ".${ac_enable_sslv3}" = ".yes"; then
+        echo "    ...Requested if available AT RUN TIME."
+        AC_DEFINE_UNQUOTED(SUPPORT_SSLV3, 1, [Support SSLv3 if available])
+    else
+        echo "    ...(Default) Disabled. Request via command line option --enable-sslv3"
+    fi
+    if test ".${ac_enable_sslwatchdog}" = ".yes"; then
+        echo "    ...Requested via command line option --enable-sslwatchdog"
+        AC_DEFINE_UNQUOTED(USE_SSLWATCHDOG, 1, [Enable SSL Watchdog])
+    else
+        echo "    ...(Default) Disabled. Request via command line option  --enable-sslwatchdog"
+        echo "                                    or run time option."
+    fi
+fi
+
+echo
+echo "GDChart?"
+if test ".${ac_disable_gdchart}" = ".yes"; then
+    echo "    ...Disabled via command line option --disable-gdchart"
+else
+    echo "    ...(Default) Requested if available. Disable via command line option --disable-gdchart."
+fi
+
+echo
+echo "TCP Wrappers?"
+if test ".${ac_enable_tcpwrap}" = ".yes"; then
+    echo "    ...Requested via command line option --enable-tcpwrap"
+else
+    echo "    ...(Default) Disabled. Request via command line option --enable-tcpwrap."
+fi
+
+echo
+echo "Plugins?"
+PLUGINS=
+if test ".${ac_disable_plugins}" = ".yes"; then
+    echo "    ...Disabled via command line option --disable-plugins"
+else
+    PLUGINS=plugins
+    echo "    ...(Default) Requested. Disable via command line option --disable-plugins."
+fi
+
+echo
+echo "Micro ntop?"
+if test ".${ac_micro_ntop}" = ".yes"; then
+    echo "    ...Requested via command line option --enable-micro-ntop."
+    AC_DEFINE_UNQUOTED(MICRO_NTOP, 1, [Define to build micro ntop])
+else
+    echo "    ...(Default) Disabled. Request via command line option --enable-micro-ntop."
+fi
+
+echo
+echo "intop (obsolete, but it will not die!)?"
+if test ".${ac_enable_intop}" != ".yes"; then
+    echo "    ...(Default) Disabled. Request via command line option --enable-intop."
+else
+    echo "    ...Requested via command line option --enable-intop."
+    echo
+    echo "*******************************************************************"
+    echo "*******************************************************************"
+    echo "*******************************************************************"
+    echo "*******************************************************************"
+    echo "*******************************************************************"
+    echo "*******************************************************************"
+    echo "*"
+    echo "* WARNING:  1. intop is UNSUPPORTED."
+    echo "*"
+    echo "*        We make the bare minimum of source changes so that intop"
+    echo "*        compiles and starts up, and even that is subject to"
+    echo "*        change."
+    echo "*"
+    echo "*        If it works FOR YOU, great."
+    echo "*"
+    echo "*        If it doesn't work FOR YOU, don't bother asking about"
+    echo "*        support."
+    echo "*"
+    echo "*???     1. Use the web interface"
+    echo "*"
+    echo "*******************************************************************"
+    echo "*******************************************************************"
+    echo "*******************************************************************"
+    echo "*******************************************************************"
+    echo "*******************************************************************"
+    echo "*******************************************************************"
+    echo
+
+    echo "  curses?"
+    if test ".${ac_disable_curses}" = ".yes"; then
+        echo "    ...Disabled via command line option --disable-curses."
+    else
+        echo "    ...(Default) Requested if available. Disable via command line option --disable-curses."
+    fi
+
+    echo "  GNU readline?"
+    if test ".${ac_disable_readline}" != ".yes"; then
+        echo "    ...Disabled via command line option --disable-readline."
+    else
+        echo "    ...(Default) Requested if available. Disable via command line option --disable-readline."
+    fi
+fi
+
+
+echo
+echo "Ignore SIGPIPE?"
+if test ".$ac_enable_ignoresigpipe" = ".yes"; then
+    echo "    ...Requested via command line option --enable-ignoresigpipe."
+    AC_DEFINE_UNQUOTED(YES_IGNORE_SIGPIPE, 1, [Define for IGNORE of SIGPIPE])
+else
+    echo "    ...(Default) Disabled. Request via command line option --enable-ignoresigpipe"
+    echo "                                    or run time option."
+fi
+
+echo
+echo "Testing for headers..."
+echo
+echo "  Note: We do ALL the tests here, then trap problems below!"
+echo
 AC_HEADER_STDC
-dnl> AC_HEADER_TIME
+AC_HEADER_DIRENT
+AC_HEADER_SYS_WAIT
+AC_HEADER_TIME 
 
-dnl> MANDATORY general purpose headers
-AC_HAVE_HEADERS(pwd.h stdio.h errno.h stdlib.h unistd.h string.h signal.h fcntl.h dnl
-                sys/types.h sys/time.h sys/wait.h sys/stat.h sys/ioctl sys/un.h)
+# This set is tested for by AC_HEADER_STDC, above...
+dnl>AC_CHECK_HEADERS([float.h stddef.h stdlib.h string.h])
 
-dnl> OPTIONAL general purpose headers
-AC_CHECK_HEADERS(sys/select.h sys/ldr.h sys/sockio.h dl.h dirent.h dlfcn.h)
+# Standard c stuff - must have
+AC_CHECK_HEADERS([errno.h fcntl.h limits.h unistd.h])
+AC_CHECK_HEADERS([stdio.h strings.h])
+AC_CHECK_HEADERS([sys/ioctl.h sys/socket.h sys/time.h sys/types.h])
 
-dnl> OPTIONAL security headers
-AC_CHECK_HEADERS(security/pam_appl.h shadow.h crypt.h)
+# Network
+AC_CHECK_HEADERS([netdb.h])
+AC_CHECK_HEADERS([netinet/in.h])
+AC_CHECK_HEADERS([arpa/inet.h arpa/nameser.h])
+AC_CHECK_HEADERS([net/bpf.h])
+AC_CHECK_HEADERS([net/ethernet.h])
+AC_CHECK_HEADERS([net/if.h])
+AC_CHECK_HEADERS([netinet/if_ether.h])
+AC_CHECK_HEADERS([netinet/in_systm.h])
+AC_CHECK_HEADERS([netinet/ip.h])
+AC_CHECK_HEADERS([netinet/ip_icmp.h])
+AC_CHECK_HEADERS([netinet/tcp.h])
+AC_CHECK_HEADERS([netinet/udp.h])
+dnl>  Note - if ethertype is missing, ntop.h has the critical #defines extracted...
+AC_CHECK_HEADERS([ethertype.h])
+AC_CHECK_HEADERS([pcap.h])
 
-AC_MSG_CHECKING(if ether_header uses ether_addr structs)
-AC_CACHE_VAL(ac_cv_ether_header_has_ea,
-    LBL_SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $V_INCLS"
+dnl> Security related
+AC_CHECK_HEADERS([crypt.h pwd.h security/pam_appl.h shadow.h])
+
+## Other
+AC_CHECK_HEADERS([dirent.h])
+AC_CHECK_HEADERS([dlfcn.h dl.h])
+AC_CHECK_HEADERS([gdbm.h])
+AC_CHECK_HEADERS([if.h])
+AC_CHECK_HEADERS([inttypes.h])
+AC_CHECK_HEADERS([memory.h])
+AC_CHECK_HEADERS([sys/ldr.h])
+AC_CHECK_HEADERS([sys/select.h])
+AC_CHECK_HEADERS([sys/sockio.h])
+AC_CHECK_HEADERS([sys/stat.h])
+AC_CHECK_HEADERS([sys/un.h])
+AC_CHECK_HEADERS([sys/wait.h])
+AC_CHECK_HEADERS([zlib.h])
+
+dnl> syslog
+AC_CHECK_HEADERS([sys/syslog.h syslog.h])
+
+dnl> Openssl
+AC_CHECK_HEADERS([openssl/rsa.h openssl/crypto.h openssl/x509.h openssl/pem.h openssl/ssl.h openssl/err.h])
+
+dnl> Multithreading...  
+dnl>    pthread.h is required, 
+dnl>    sched.h or sys/sched.h are optional, but improves performance
+dnl>    semaphore.h is also optional
+AC_CHECK_HEADERS([semaphore.h])
+AC_CHECK_HEADERS([sched.h sys/sched.h])
+AC_CHECK_HEADERS([pthread.h])
+
+dnl> Optional, used for -L parameter
+AC_CHECK_HEADERS([sys/syslog.h syslog.h])
+
+dnl> GDChart
+AC_CHECK_HEADERS([gdc.h gd.h png.h])
+
+dnl> Used for tcpwrappers
+AC_CHECK_HEADERS([tcpd.h])
+
+dnl> Used only by intop
+AC_CHECK_HEADERS([readline/readline.h])
+AC_CHECK_HEADERS([curses.h ncurses.h])
+
+dnl> Used only by regex.c
+dnl>   Note: stack allocation, not encouraged for use...
+AC_CHECK_HEADERS([alloca.h])
+
+dnl> Used only by plugins/rrdPlugin.c
+AC_CHECK_HEADERS(rrd.h)
+
+echo
+echo "Testing for common typedefs and structures..."
+echo
+echo "  Again: We do ALL the tests here, then trap problems below!"
+echo
+AC_TYPE_PID_T
+dnl> Autoconf2: AC_CHECK_TYPE(pid_t, int)
+AC_TYPE_SIZE_T
+dnl> Autoconf2: AC_CHECK_TYPE(size_t, unsigned)
+AC_HEADER_TIME
+AC_STRUCT_TM
+AC_STRUCT_TIMEZONE 
+
+echo
+echo "Testing for typedefs..."
+echo
+echo "  Again: We do ALL the tests here, then trap problems below!"
+echo
+AC_CHECK_TYPEDEF(u_int64_t, sys/types.h)
+AC_CHECK_TYPEDEF(uint64_t, sys/types.h)
+AC_CHECK_TYPEDEF(u_int32_t, sys/types.h)
+AC_CHECK_TYPEDEF(u_int16_t, sys/types.h)
+AC_CHECK_TYPEDEF(u_int8_t, sys/types.h)
+AC_CHECK_TYPEDEF(int64_t, sys/types.h)
+AC_CHECK_TYPEDEF(int32_t, sys/types.h)
+AC_CHECK_TYPEDEF(int16_t, sys/types.h)
+AC_CHECK_TYPEDEF(int8_t, sys/types.h)
+
+echo
+echo "Testing for system libraries..."
+echo
+echo "  Again: We do ALL the tests here, then trap problems below!"
+echo
+AC_CHECK_LIB([c], [crypt], , [AC_CHECK_LIB([crypt], [crypt])])
+AC_CHECK_LIB([c], [backtrace])
+AC_CHECK_LIB([c], [getopt_long])
+AC_CHECK_LIB([c], [gethostbyaddr_r], , [
+    AC_CHECK_LIB([nsl], [gethostbyaddr_r])
+])
+dnl> Plugin load routine...
+dnl>    Most systems... special cases in the platform specific...
+AC_CHECK_LIB([c], [dlopen], , [AC_CHECK_LIB([dl], [dlopen])])
+
+AC_CHECK_LIB([crypto], [SSLeay_version])
+AC_CHECK_LIB([gdbm], [gdbm_open])
+AC_CHECK_LIB([pcap], [pcap_open_live])
+AC_CHECK_LIB([ssl], [SSL_accept])
+AC_CHECK_LIB([z], [zlibVersion])
+
+dnl> GDChart uses functions from math library,
+dnl> so make sure we link against the math library if needed
+dnl> Check for both sin and ceil - some implementations split them
+AC_CHECK_LIB([c], [sin], ,  [AC_CHECK_LIB([m], [sin])])
+AC_CHECK_LIB([c], [ceil], , [AC_CHECK_LIB([m], [ceil])])
+dnl> As much as I would like to say:
+dnl> AC_CHECK_LIB([gdchart], [GDC_out_pie])
+dnl> Here, the blasted gdchart library won't work for a simple compile.
+dnl> So, if you have the gdc.h header, that will have to do.
+
+AC_CHECK_LIB([gd], [gdImageDestroy])
+AC_CHECK_LIB([png], [png_read_info])
+
+dnl> Networking libraries
+AC_CHECK_LIB([nsl], [gethostname], , [AC_CHECK_LIB([nsl], [gethostbyname])])
+AC_CHECK_LIB([socket], [accept])
+AC_CHECK_LIB([resolv], [inet_aton])
+
+dnl> Multithreading libraries
+AC_CHECK_LIB(pthread, pthread_create, , [
+    AC_CHECK_LIB(pthreads, pthread_create, , [
+        AC_CHECK_LIB(c_r, pthread_create)
+    ])
+])
+AC_CHECK_LIB(posix4, sem_init)
+
+dnl> regex.c
+AC_CHECK_LIB([c], 
+             [re_search],
+             AC_DEFINE_UNQUOTED(HAVE_REGEX, 
+                                1, 
+                                [regex lib is defined inside -lc for regex.c]))
+
+dnl> TCP Wrappers
+dnl>  This is a problem - the test sets HAVE_LIBWRAP, which is the flag in ntop
+dnl>  But we haven't processed --enable-tcpwrap yet. So we dummy this out until
+dnl>  such time as we can fix the internal flag in ntop...
+dnl>AC_CHECK_LIB([wrap], [hosts_access])
+
+dnl> rrd
+AC_CHECK_LIB([rrd], [rrd_create], [
+    RRDLIB="-lrrd"
+])
+
+echo
+echo "Testing for library functions..."
+echo
+echo "  Again: We do ALL the tests here, then trap problems below!"
+echo
+
+AC_FUNC_ALLOCA
+
+AC_FUNC_FORK
+AC_PROG_GCC_TRADITIONAL
+AC_FUNC_MALLOC
+AC_FUNC_MEMCMP
+AC_FUNC_SETVBUF_REVERSED
+AC_TYPE_SIGNAL
+AC_FUNC_STAT
+AC_FUNC_STRFTIME
+AC_FUNC_VPRINTF
+
+AC_CHECK_FUNCS([alarm])
+AC_CHECK_FUNCS([ctime_r])
+AC_CHECK_FUNCS([endpwent])
+AC_CHECK_FUNCS([gethostbyaddr gethostbyname gethostname])
+dnl> Note, we've already tested for gethostbyaddr_r to find it's library, above.
+dnl>      This test is to get HAVE_GETHOSTBYADDR_R set...
+AC_CHECK_FUNCS([gethostbyaddr_r])
+AC_CHECK_FUNCS([getipnodebyaddr])
+AC_CHECK_FUNCS([getpass])
+AC_CHECK_FUNCS([gettimeofday])
+AC_CHECK_FUNCS([inet_ntoa])
+AC_CHECK_FUNCS([localtime_r])
+AC_CHECK_FUNCS([memchr memset])
+AC_CHECK_FUNCS([putenv])
+AC_CHECK_FUNCS([re_comp regcomp])
+AC_CHECK_FUNCS([select socket])
+AC_CHECK_FUNCS([snprintf])
+AC_CHECK_FUNCS([sqrt])
+AC_CHECK_FUNCS([strcasecmp strncasecmp])
+AC_CHECK_FUNCS([strchr strrchr])
+AC_CHECK_FUNCS([strcspn])
+AC_CHECK_FUNCS([strdup])
+AC_CHECK_FUNCS([strerror])
+AC_CHECK_FUNCS([strpbrk])
+AC_CHECK_FUNCS([strspn])
+AC_CHECK_FUNCS([strstr])
+AC_CHECK_FUNCS([strtoul])
+AC_CHECK_FUNCS([uname])
+
+dnl> Test for strtok_r (we have our own defn if it's not available)C_CHECK_FUNCS([strtok_r])
+AC_CHECK_FUNCS([strtok_r])
+dnl> Following used by regex.c only
+AC_CHECK_FUNCS([bzero])
+
+echo
+echo "-------------------------------------------------------------------"
+echo "-------------------------------------------------------------------"
+echo "-------------------------------------------------------------------"
+echo
+echo " Platform specific:"
+echo "     Tests for libraries, headers, etc."
+echo "     and flags / #define items" 
+echo
+
+dnl> This should mirror the first case on $target $CC (above), 
+dnl> but remember that $CC might have been modified since then..
+
+dnl> Skipping cases is, I guess, ok, but remember that you might have
+dnl> been grabbed by an earlier target, above (e.g. 
+
+case "${target}:${CC}" in
+
+    *-*-solaris2.5*:* )
+        AC_DEFINE_UNQUOTED(NEED_INET_ATON,
+                           1,
+                           [Solaris 2.5: private implementation of inet_aton])
+        AC_DEFINE_UNQUOTED(NEED_GETDOMAINNAME,
+                           1,
+                           [OS lacks getdomainname function.])
+      ;;
+
+    *-*-darwin5.5*:* )
+        DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
+      ;;
+
+    *-*-openbsd*:* )
+        SO_VERSION_PATCH=.0.0
+      ;;
+
+    *-*-aix[45]*:gcc* )
+        AC_DEFINE_UNQUOTED(NEED_GETDOMAINNAME,
+                           1,
+                           [OS lacks getdomainname function.])
+
+        dnl> plugin load function unique to AIX
+        dnl> TODO (note that c is probably the WRONG library
+        AC_CHECK_LIB([c], [open])
+      ;;
+
+    *-*-hpux11*:* )
+        dnl> plugin load function unique to HPUX
+        AC_CHECK_LIB([dld], [shl_load])
+
+        dnl> thread library
+        dnl> test for their "special" function and library with the non-standard names
+        AC_CHECK_LIB(pthread, __pthread_create_system)
+        AC_CHECK_LIB(posix4, sem_init, , [AC_CHECK_LIB(rt, sem_init)])
+      ;;
+
+    *-*-hpux10*:*)
+        dnl> plugin load function unique to HPUX
+        AC_CHECK_LIB([dld], [shl_load])
+
+        dnl> thread library
+        dnl> test for their "special" function and library with the non-standard names
+        AC_CHECK_LIB(pthread, __pthread_create_system)
+        AC_CHECK_LIB(rt, sem_init)
+      ;;
+
+    * )
+      ;;
+esac
+
+echo
+echo "-------------------------------------------------------------------"
+echo "-------------------------------------------------------------------"
+echo "-------------------------------------------------------------------"
+echo
+echo "Now, let's check for problems with what we've found..."
+echo
+echo "-------------------------------------------------------------------"
+echo
+AC_MSG_CHECKING([for required C headers])
+if test ".${ac_cv_header_errno_h}"      = ".no" ||
+   test ".${ac_cv_header_fcntl_h}"      = ".no" ||
+   test ".${ac_cv_header_float_h}"      = ".no" ||
+   test ".${ac_cv_header_limits_h}"     = ".no" ||
+   test ".${ac_cv_header_stddef_h}"     = ".no" ||
+   test ".${ac_cv_header_stdlib_h}"     = ".no" ||
+   test ".${ac_cv_header_stdio_h}"      = ".no" ||
+   test ".${ac_cv_header_string_h}"     = ".no" ||
+   test ".${ac_cv_header_strings_h}"    = ".no" ||
+   test ".${ac_cv_header_unistd_h}"     = ".no" ||
+   test ".${ac_cv_header_sys_ioctl_h}"  = ".no" ||
+   test ".${ac_cv_header_sys_socket_h}" = ".no" ||
+   test ".${ac_cv_header_sys_time_h}"   = ".no" ||
+   test ".${ac_cv_header_sys_types_h}"  = ".no"; then
+    AC_MSG_RESULT(error)
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: Basic c library routines are missing."
+    echo "*"
+    if test ".${ac_cv_header_errno_h}"      = ".no" ; then 
+        echo "*   ** errno.h"
+    fi
+    if test ".${ac_cv_header_fcntl_h}"      = ".no" ; then 
+        echo "*   ** fcntl.h"
+    fi
+    if test ".${ac_cv_header_float_h}"      = ".no" ; then 
+        echo "*   ** float.h"
+    fi
+    if test ".${ac_cv_header_limits_h}"     = ".no" ; then 
+        echo "*   ** limits.h"
+    fi
+    if test ".${ac_cv_header_stddef_h}"     = ".no" ; then 
+        echo "*   ** stddef.h"
+    fi
+    if test ".${ac_cv_header_stdlib_h}"     = ".no" ; then 
+        echo "*   ** stdlib.h"
+    fi
+    if test ".${ac_cv_header_stdio_h}"      = ".no" ; then 
+        echo "*   ** stdio.h"
+    fi
+    if test ".${ac_cv_header_string_h}"     = ".no" ; then 
+        echo "*   ** string.h"
+    fi
+    if test ".${ac_cv_header_strings_h}"    = ".no" ; then 
+        echo "*   ** strings.h"
+    fi
+    if test ".${ac_cv_header_unistd_h}"     = ".no" ; then 
+        echo "*   ** unistd.h"
+    fi
+    if test ".${ac_cv_header_sys_ioctl_h}"  = ".no" ; then 
+        echo "*   ** sys/ioctl.h"
+    fi
+    if test ".${ac_cv_header_sys_socket_h}" = ".no" ; then 
+        echo "*   ** sys/socket.h"
+    fi
+    if test ".${ac_cv_header_sys_time_h}"   = ".no" ; then 
+        echo "*   ** sys/time.h"
+    fi
+    if test ".${ac_cv_header_sys_types_h}"  = ".no" ; then 
+        echo "*   ** sys/types.h"
+    fi
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???     1. Install the necessary c compiler libraries/headers"
+    echo "*??? and 2. Rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    AC_MSG_ERROR(Unable to continue... aborting ./configure)
+else
+    AC_MSG_RESULT(ok)
+fi
+  
+AC_MSG_CHECKING([for required libraries])
+AC_MSG_RESULT([])
+
+AC_MSG_CHECKING([    for crypt])
+if (test ".${ac_cv_lib_c_crypt}" != ".yes" &&
+    test ".${ac_cv_lib_crypt_crypt}" != ".yes"); then
+    AC_MSG_RESULT(error)
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: Basic c library routines are missing."
+    echo "*"
+    if test ".${ac_cv_header_crypt_h}" != ".yes" ; then
+        echo "*   ** crypt.h  --optional"
+    fi
+    if test ".${ac_cv_lib_c_crypt}" != ".yes" ||
+       test ".${ac_cv_lib_crypt_crypt}" != ".yes"; then
+        if test ".${ac_cv_lib_c_crypt}" != ".yes" ; then
+            echo "*   ** crypt() in -lc"
+        fi
+        if test ".${ac_cv_lib_crypt_crypt}" != ".yes" ; then
+            echo "*   ** crypt() in -lcrypt"
+        fi
+    fi
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???     1. Install the necessary c compiler libraries/headers"
+    echo "*??? and 2. Rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    AC_MSG_ERROR(Unable to continue... aborting ./configure)
+else
+    AC_MSG_RESULT(ok)
+fi
+
+AC_MSG_CHECKING([  for dynamic load module])
+if test ".${DEFINEOS}" = ".DARWIN"; then
+   AC_MSG_RESULT(skipping - ntop emulates function in ntop_darwin.c)
+elif test ".${ac_cv_lib_dl_dlopen}"    != ".yes" &&
+     test ".${ac_cv_lib_c_dlopen}"     != ".yes" &&
+     test ".${ac_cv_lib_c_load}"       != ".yes" &&
+     test ".${ac_cv_lib_dld_shl_load}" != ".yes"; then
+    AC_MSG_RESULT(error)
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR: Basic c library routines are missing."
+    echo "*"
+    case "$target" in
+      *-hpux* )
+          echo "*   ** shl_load() in -ldld   (HPUX specific)"  
+          ;;
+      *-aix* )
+          echo "*   ** load() in -lc         (IBM AIX specific)"  
+          ;;
+      * )
+          echo "*   ** dlopen() in -ldl or -lc"
+          ;;
+    esac
+    echo "*"
+    echo "*>>> No way to proceed."
+    echo "*"
+    echo "*???     1. Install the necessary c compiler libraries/headers"
+    echo "*??? and 2. Rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    AC_MSG_ERROR(Unable to continue... aborting ./configure)
+else
+    AC_MSG_RESULT(ok)
+fi
+
+NTOP_TEST_MUSTHAVE(pcap, pcap.h, pcap_open, pcap_version, PCAP)
+NTOP_TEST_MUSTHAVE(gdbm, gdbm.h, gdbm_close, gdbm_version, GDBM)
+
+echo
+echo "-------------------------------------------------------------------"
+echo
+echo "   **Testing Optional libraries and headers**"
+echo
+
+dnl> Multithreaded:
+if test ".${ac_disable_multithread}" != ".yes"; then
+    AC_MSG_CHECKING([for Multithreading])
+
+    case "$target" in
+      dnl> HPUX 11, deal with their "special" (retarded) library with the non-standard name
+      *-hpux11* )
+        if test ".${ac_cv_header_pthread_h}"                    != ".yes" ||
+           test ".${ac_cv_lib_pthread___pthread_create_system}" != ".yes" ||
+           (test ".${ac_cv_lib_posix4_sem_init}"                != ".yes" &&
+            test ".${ac_cv_lib_rt_sem_init}"                    != ".yes") then
+            AC_MSG_RESULT(error)
+            dnl> Missing a library?  Can't multithread...
+            ac_disable_multithread="yes"
+            echo
+            echo "*******************************************************************"
+            echo "*                                                           HPUX11*"
+            echo "*"
+            echo "* WARNING:  1. We are unable to find a header/library required"
+            echo "*              to support multi-threading."
+            echo "*"
+            echo "*>>>    ntop will be build single threaded."
+            echo "*       This is only minimally supported."
+            echo "*"
+            echo "*    Missing:"
+            echo "*"
+            if test ".${ac_cv_header_pthread_h}" != ".yes"; then
+                echo "*   ** HEADER: pthread.h"
+            fi
+            if test ".${ac_cv_lib_pthread___pthread_create_system}" != ".yes"; then
+                echo "*   ** FUNCTION: __pthread_create_system() in -lpthread"
+            fi
+            if test ".${ac_cv_lib_posix4_sem_init}"       != ".yes" ||
+               test ".${ac_cv_lib_rt_sem_init}"           != ".yes"; then
+                echo "*   ** FUNCTION: sem_init() in"
+                if test ".${ac_cv_lib_posix4_sem_init}"       != ".yes"; then
+                    echo "*                                 -lposix4"
+                fi
+                if test ".${ac_cv_lib_rt_sem_init}"           != ".yes";then
+                    echo "*                                 -lrt"
+                fi
+            fi
+            echo "*"
+            echo "*???     1. Install the necessary headers and libraries."
+            echo "*??? and 2. rerun ./configure"
+            echo "*"
+            echo "*******************************************************************"
+            echo
+        fi
+        ;;
+      * )
+        if test ".${ac_cv_header_pthread_h}"             != ".yes" ||
+           (test ".${ac_cv_lib_pthread_pthread_create}"  != ".yes" &&
+            test ".${ac_cv_lib_pthreads_pthread_create}" != ".yes" &&
+            test ".${ac_cv_lib_c_r_pthread_create}"      != ".yes"); then
+            AC_MSG_RESULT(error)
+            ac_disable_multithread="yes"
+            echo
+            echo "*******************************************************************"
+            echo "*"
+            echo "* WARNING:  1. We are unable to find a header/library required"
+            echo "*              to support multi-threading."
+            echo "*"
+            echo "*>>>    ntop will be build single threaded."
+            echo "*       This is only minimally supported."
+            echo "*"
+            echo "*    Missing:"
+            echo "*"
+            if test ".${ac_cv_header_pthread_h}" != ".yes"; then
+                echo "*   ** HEADER: pthread.h"
+            fi
+            if test ".${ac_cv_lib_pthread_pthread_create}"  != ".yes" &&
+               test ".${ac_cv_lib_pthreads_pthread_create}" != ".yes" &&
+               test ".${ac_cv_lib_c_r_pthread_create}"      != ".yes"; then
+                echo "*   ** FUNCTION: pthread_create() in"
+                if test ".${ac_cv_lib_pthread_pthread_create}" != ".yes"; then
+                    echo "*                                 -lpthread"
+                fi
+                if test ".${ac_cv_lib_pthreads_pthread_create}" != ".yes"; then
+                    echo "*                                 -lpthreads"
+                fi
+                if test ".${ac_cv_lib_c_r_pthread_create}" != ".yes";then
+                    echo "*                                 -lc_r"
+                fi
+            fi
+            echo "*"
+            echo "*???     1. Install the necessary headers and libraries."
+            echo "*??? and 2. rerun ./configure"
+            echo "*"
+            echo "*******************************************************************"
+            echo
+        fi
+        ;;
+    esac
+
+    if test ".${ac_disable_multithread}" != ".yes"; then
+        AC_MSG_RESULT(ok)
+        AC_DEFINE_UNQUOTED(MULTITHREADED,            1, [Enable/disable multithread support])
+        AC_DEFINE_UNQUOTED(ASYNC_ADDRESS_RESOLUTION, 1, [Enable/disable address resolution])
+        multithread_mode="enabled"
+    else
+        multithread_mode="disabled (Single Threaded)"
+    fi
+fi
+
+dnl> tcp wrappers:
+
+if test ".${ac_enable_tcpwrap}" = ".yes"; then
+    AC_MSG_CHECKING([for tcp wrappers])
+
+    if test ".${ac_cv_header_tcpd_h}" = ".yes"; then
+        dnl> Oh how I wish I could just say:
+        dnl> AC_CHECK_LIB([wrap], [hosts_access],
+        dnl>              ac_cv_tcpwrappers="yes",
+        dnl>              ac_cv_tcpwrappers="no")
+        dnl>  But, tcp wrappers has those silly global variables ...
+        if test ".${ac_debug}" = ".yes"; then
+            echo "DEBUG:   tcp wrappers: Calling try_link"
+        fi
+        oLIBS="${LIBS}"
+        LIBS="${LIBS} -lwrap"
+        AC_TRY_LINK([#include <tcpd.h>
+ int allow_severity = 0;
+ int deny_severity  = 0;
+
+ struct request_info *req;
+],[hosts_access (req)],
+                     if test ".${ac_debug}" = ".yes"; then
+                         echo "DEBUG:   tcp wrappers try_link: YES"
+                     fi
+                     AC_DEFINE(HAVE_LIBWRAP)
+                     ac_cv_lib_wrap_hosts_access="yes"
+                     ac_cv_tcpwrappers="yes",
+                     if test ".${ac_debug}" = ".yes"; then
+                         echo "DEBUG:   tcp wrappers try_link: NO"
+                     fi
+                     LIBS="${oLIBS}"
+                     ac_cv_lib_wrap_hosts_access="no"
+                     ac_cv_tcpwrappers="no")
+
+    else
+        if test ".${ac_debug}" = ".yes"; then
+            echo "DEBUG:   tcp wrappers: no tcpd.h"
+        fi
+        ac_cv_tcpwrappers="no"
+    fi
+
+    if test ".${ac_cv_tcpwrappers}" = ".yes"; then
+        AC_MSG_RESULT(ok)
+    else
+        AC_MSG_RESULT(error)
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* WARNING:  1. You requested tcp wrappers via the"
+        echo "*              --enable-tcpwrap options."
+        echo "*"
+        echo "*       and 2. We were unable to find tcpd.h and/or the -lwrap"
+        echo "*              library."
+        echo "*"
+        echo "*>>> Continuing without tcp wrappers"
+        echo "*"
+        echo "*???     1. Install the tcp wrappers library/header and rerun"
+        echo "*           ./configure"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+    fi
+fi
+
+dnl> openSSL:
+
+if test ".${ac_disable_openssl}" != ".yes"; then
+
+    if test ".${OSSL_ROOT}" != "." &&
+       test ! -d ${OSSL_ROOT}; then
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* ERROR:    1. You specified a non-existent directory for the"
+        echo "*              --with-ossl-root option."
+        echo "*"
+        echo "*>>> Continuing without the --with-ossl-root option"
+        echo "*"
+        echo "*    ./configure may complete successfully or the openSSL"
+        echo "*    option may be disabled."
+        echo "*"
+        echo "*???     1. Correct the --with-ossl-root value and rerun ./configure"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+        OSSL_ROOT=
+    fi
+
+    AC_MSG_CHECKING([for openSSL])
+
+    if test ".${ac_cv_lib_crypto_SSLeay_version}" = ".yes" &&
+       test ".${ac_cv_lib_ssl_SSL_accept}"        = ".yes" &&
+       test ".${ac_cv_header_openssl_crypto_h}"   = ".yes" &&
+       test ".${ac_cv_header_openssl_rsa_h}"      = ".yes" &&
+       test ".${ac_cv_header_openssl_x509_h}"     = ".yes" &&
+       test ".${ac_cv_header_openssl_pem_h}"      = ".yes" &&
+       test ".${ac_cv_header_openssl_ssl_h}"      = ".yes" &&
+       test ".${ac_cv_header_openssl_err_h}"      = ".yes"; then
+        AC_DEFINE_UNQUOTED([HAVE_OPENSSL], 1, [Enable openssl])
+        if test ".${OSSL_ROOT}" != "."; then
+            AC_MSG_RESULT(ok)
+            echo
+            echo "*******************************************************************"
+            echo "*"
+            echo "* NOTE:  You specified --with-ossl-root."
+            echo "*        However, a version was found in a standard location."
+            echo "*"
+            echo "*       Since this version will be used anyway,"
+            echo "*>>>    we've ignored your specified location."
+            echo "*"
+            echo "*******************************************************************"
+            echo
+            OSSL_ROOT=
+        else
+            AC_MSG_RESULT([ok (found in standard location)])
+        fi
+    elif test ".${OSSL_ROOT}" = "."; then
+        AC_MSG_RESULT([not found in standard location, no --with-ossl-root, testing further...])
+        AC_MSG_CHECKING([for header files])
+
+dnl> _OPENSSL_TESTS is a macro that makes no sense by itself, it just drops the
+dnl> last test line and the various actions if true...
+
+        if test -d /usr                        &&
+            NTOP_OPENSSL_TESTS([/usr/include])
+        elif test -d /usr                      &&
+             test -d /usr/include              &&
+            NTOP_OPENSSL_TESTS([/usr/include/openssl])
+        elif test -d /usr                      &&
+             test -d /usr/include              &&
+            NTOP_OPENSSL_TESTS([/usr/include/ssl])
+        elif test -d /usr                      &&
+             test -d /usr/local                &&
+            NTOP_OPENSSL_TESTS([/usr/local/include])
+        elif test -d /usr                      &&
+             test -d /usr/local                &&
+             test -d /usr/local/include        &&
+            NTOP_OPENSSL_TESTS([/usr/local/include/openssl])
+        elif test -d /usr                      &&
+             test -d /usr/local                &&
+             test -d /usr/local/include        &&
+            NTOP_OPENSSL_TESTS([/usr/local/include/ssl])
+        else
+            AC_MSG_RESULT(error)
+            echo
+            echo "*******************************************************************"
+            echo "*"
+            echo "* WARNING:  1. We were unable to find the openSSL header files"
+            echo "*              in the standard location."
+            echo "*"
+            echo "*       and 2. You did not specify an alternate location"
+            echo "*              via --with-ossl-root."
+            echo "*"
+            echo "*       and 3. We also tested the following:"
+            echo "*"
+            echo "*                /usr/include"
+            echo "*                /usr/include/openssl"
+            echo "*                /usr/include/ssl"
+            echo "*                /usr/local/include"
+            echo "*                /usr/local/include/openssl"
+            echo "*                /usr/local/include/ssl"
+            echo "*"
+            echo "*>>> Continuing without openSSL (i.e. no https://)"
+            echo "*"
+            echo "*???     1. Rerun ./configure with a corrected --with-ossl-root"
+            echo "*???  or 2. Install openSSL and rerun ./configure"
+            echo "*"
+            echo "*******************************************************************"
+            echo
+            ac_disable_openssl="yes"
+        fi
+        if test ".${ac_disable_openssl}" != ".yes"; then
+            ac_disable_openssl="yes"
+            dnl> nop to skip the 2nd part tests...
+        else
+            AC_MSG_CHECKING([for openSSL libraries])
+            if test -d /usr &&
+               test -d /usr/lib &&
+               (test -r /usr/lib/libssl.so ||
+                test -r /usr/lib/libssl.a); then
+                AC_MSG_RESULT([ok, found in /usr/lib])
+                LIBS="${LIBS} -L/usr/lib -lssl"
+                dnl>  /usr/lib should be automatically tested for as part of ld.so.conf...
+                AC_DEFINE_UNQUOTED(HAVE_OPENSSL, 1, [Show we found -lssl and set LIBS])
+            elif test -d /usr &&
+                 test -d /usr/local &&
+                 test -d /usr/local/lib &&
+                 (test -r /usr/local/lib/libssl.so ||
+                  test -r /usr/local/lib/libssl.a); then
+                AC_MSG_RESULT([ok, found in /usr/local/lib])
+                LIBS="${LIBS} -L/usr/local/lib -lssl"
+                AC_DEFINE_UNQUOTED(HAVE_OPENSSL, 1, [Show we found -lssl and set LIBS])
+            else
+                AC_MSG_RESULT(error)
+                echo
+                echo "*******************************************************************"
+                echo "*"
+                echo "* ERROR:  1. We were unable to compile a test program for"
+                echo "*            SSL_accept() against -lssl."
+                echo "*"
+                echo "*     and 2. You did not specify an alternate location"
+                echo "*            via --with-ossl-root."
+                echo "*"
+                echo "*     and 3. We were unable to find libssl.so or libssl.a"
+                echo "*            via a manual search of"
+                echo "*"
+                echo "*                /usr/lib"
+                echo "*                /usr/local/lib"
+                echo "*"
+                echo "*>>> Continuing without zlib."
+                echo "*       (http requests will not be compressed for transmission)."
+                echo "*"
+                echo "*???     1. Rerun ./configure with a corrected --with-zlib-root"
+                echo "*???  or 2. Install zlib and rerun ./configure"
+                echo "*"
+                echo "*******************************************************************"
+                echo
+                ac_disable_openssl="yes"
+            fi
+        fi
+    else
+        AC_MSG_RESULT([not found in standard location, testing further...])
+
+        dnl> Can we find ossl.h and the libs where s/he told us?
+
+        AC_MSG_CHECKING([for openSSL libraries])
+
+        OSSL_ROOT=`(cd ${OSSL_ROOT} && pwd)`
+        oLIBS=${LIBS}
+        LIBS="${oLIBS} -L ${OSSL_ROOT}"
+        AC_CHECK_LIB([ssl], [SSL_accept])
+        AC_CHECK_LIB([crypto], [SSLeay_version])
+        if test ".${ac_cv_lib_crypto_SSLeay_version}" != ".yes" ||
+           test ".${ac_cv_lib_ssl_SSL_accept}"        != ".yes"; then
+            LIBS="${oLIBS} -L ${OSSL_ROOT}/lib"
+            AC_CHECK_LIB([ssl], [SSL_accept])
+            AC_CHECK_LIB([crypto], [SSLeay_version])
+            if test ".${ac_cv_lib_crypto_SSLeay_version}" != ".yes" ||
+               test ".${ac_cv_lib_ssl_SSL_accept}"        != ".yes"; then
+                LIBS="${oLIBS} -L ${OSSL_ROOT}/lib/openssl"
+                AC_CHECK_LIB([ssl], [SSL_accept])
+                AC_CHECK_LIB([crypto], [SSLeay_version])
+                if test ".${ac_cv_lib_crypto_SSLeay_version}" != ".yes" ||
+                   test ".${ac_cv_lib_ssl_SSL_accept}"        != ".yes"; then
+                    AC_MSG_RESULT([error, library not found under ${OSSL_ROOT}])
+                else
+                    AC_MSG_RESULT([ok library found in ${OSSL_ROOT}/lib/openssl])
+                    AC_DEFINE_UNQUOTED([HAVE_OPENSSL], 1, [Enable openssl])
+                fi
+            else
+                AC_MSG_RESULT([ok library found in ${OSSL_ROOT}/lib])
+                AC_DEFINE_UNQUOTED([HAVE_OPENSSL], 1, [Enable openssl])
+            fi
+        else
+            AC_MSG_RESULT([ok library found in ${OSSL_ROOT}])
+            AC_DEFINE_UNQUOTED([HAVE_OPENSSL], 1, [Enable openssl])
+        fi
+        if test ".${ac_cv_lib_crypto_SSLeay_version}" != ".yes" ||
+           test ".${ac_cv_lib_ssl_SSL_accept}"        != ".yes"; then
+            AC_MSG_RESULT([error, libraries not found under ${OSSL_ROOT}])
+            LIBS=${oLIBS}
+            echo
+            echo "*******************************************************************"
+            echo "*"
+            echo "* WARNING:  1. You specified --with-ossl-root, however"
+            echo "*              we were unable to find the routines SSL_accept()"
+            echo "*              in -lssl and/or SSLeay_version() in -lcrypto"
+            echo "*              at that location."
+            echo "*"
+            echo "*>>> Continuing without openSSL (i.e. no https://)"
+            echo "*"
+            echo "*???     1. Rerun ./configure with a corrected --with-ossl-root"
+            echo "*???  or 2. Install openSSL and rerun ./configure"
+            echo "*"
+            echo "*******************************************************************"
+            echo
+            ac_disable_openssl="yes"
+        else
+            AC_MSG_CHECKING([for openSSL headers])
+            if 
+                NTOP_OPENSSL_TESTS([${OSSL_ROOT}])
+            elif test -d ${OSSL_ROOT}                  &&
+                NTOP_OPENSSL_TESTS([${OSSL_ROOT}/include])
+            elif test -d ${OSSL_ROOT}                          &&
+                 test -d ${OSSL_ROOT}/include                  &&
+                NTOP_OPENSSL_TESTS([${OSSL_ROOT}/include/openssl])
+            elif test -d ${OSSL_ROOT}                      &&
+                 test -d ${OSSL_ROOT}/include              &&
+                NTOP_OPENSSL_TESTS([${OSSL_ROOT}/include/ssl])
+            else
+                AC_MSG_RESULT([error, headers not found under ${OSSL_ROOT}])
+                echo
+                echo "*******************************************************************"
+                echo "*"
+                echo "* WARNING:  1. You specified --with-ossl-root, however"
+                echo "*              we were unable to find the header files (ssl.h,"
+                echo "*              err.h, pem.h, x509.h, rsa.h and/or crypto.h)."
+                echo "*"
+                echo "*>>> Continuing without openSSL (i.e. no https://)"
+                echo "*"
+                echo "*???     1. Rerun ./configure with a corrected --with-ossl-root"
+                echo "*???  or 2. Install openSSL and rerun ./configure"
+                echo "*"
+                echo "*******************************************************************"
+                echo
+                ac_disable_openssl="yes"
+            fi
+        fi
+    fi
+fi
+
+dnl> GDChart:
+
+if test ".${GDCHART_ROOT}" != "." &&
+   test ! -d ${GDCHART_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-gdchart-root option."
+    echo "*"
+    echo "*>>> Continuing without the --with-gdchart-root option"
+    echo "*"
+    echo "*    ./configure may complete successfully or the GDChart"
+    echo "*    option may be disabled."
+    echo "*"
+    echo "*???     1. Correct the --with-gdchart-root value and rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+    GDCHART_ROOT=
+fi
+if test ".${GD_ROOT}" != "." &&
+   test ! -d ${GD_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*" 
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-gd-root option."
+    echo "*" 
+    echo "*>>> Continuing without the --with-gd-root option"
+    echo "*" 
+    echo "*    ./configure may complete successfully or the GDChart"
+    echo "*    option may be disabled."
+    echo "*" 
+    echo "*???     1. Correct the --with-gd-root value and rerun ./configure"
+    echo "*" 
+    echo "*******************************************************************"
+    echo
+    GD_ROOT=
+fi 
+if test ".${LIBPNG_ROOT}" != "." &&
+   test ! -d ${LIBPNG_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*" 
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-png-root option."
+    echo "*" 
+    echo "*>>> Continuing without the --with-png-root option"
+    echo "*" 
+    echo "*    ./configure may complete successfully or the GDChart"
+    echo "*    option may be disabled."
+    echo "*" 
+    echo "*???     1. Correct the --with-png-root value and rerun ./configure"
+    echo "*" 
+    echo "*******************************************************************"
+    echo
+    LIBPNG_ROOT=
+fi 
+if test ".${ZLIB_ROOT}" != "." &&
+   test ! -d ${ZLIB_ROOT}; then
+    echo
+    echo "*******************************************************************"
+    echo "*" 
+    echo "* ERROR:    1. You specified a non-existent directory for the"
+    echo "*              --with-zlib-root option."
+    echo "*" 
+    echo "*>>> Continuing without the --with-zlib-root option"
+    echo "*" 
+    echo "*    ./configure may complete successfully or the GDChart"
+    echo "*    option may be disabled."
+    echo "*" 
+    echo "*???     1. Correct the --with-zlib-root value and rerun ./configure"
+    echo "*" 
+    echo "*******************************************************************"
+    echo
+    ZLIB_ROOT=
+fi 
+
+dnl> First off, let's cheat.  
+dnl> If you specify GDCHART_ROOT and not GD_ROOT, LIBPNG_ROOT and/or ZLIB_ROOT,
+dnl> We'll set them to GDCHART_ROOT.
+if test ".${GDCHART_ROOT}" != "."; then
+    if test ".${ac_debug}" = ".yes"; then
+        echo "DEBUG:   _ROOT: Setting GD_ LIBPNG_ and/or ZLIB_ to GDCHART_ROOT if not already set"
+    fi
+    if test ".${GD_ROOT}" = "."; then
+        GD_ROOT="${GDCHART_ROOT}"
+        if test ".${ac_debug}" = ".yes"; then
+            echo "DEBUG:       GD_ROOT now ${GD_ROOT}"
+        fi
+    fi
+    if test ".${LIBPNG_ROOT}" = "."; then
+        LIBPNG_ROOT="${GDCHART_ROOT}"
+        if test ".${ac_debug}" = ".yes"; then
+            echo "DEBUG:       LIBPNG_ROOT now ${LIBPNG_ROOT}"
+        fi
+    fi
+    if test ".${ZLIB_ROOT}" = "."; then
+        ZLIB_ROOT="${GDCHART_ROOT}"
+        if test ".${ac_debug}" = ".yes"; then
+            echo "DEBUG:       ZLIB_ROOT now ${ZLIB_ROOT}"
+        fi
+    fi
+fi
+
+if test ".${ac_disable_gdchart}" != ".yes"; then
+    AC_MSG_CHECKING([for GDChart])
+
+    if test ".${ac_debug}" = ".yes"; then
+        echo "DEBUG: GDChart - checking for the math libraries..."
+    fi
+    if (test ".${ac_cv_lib_c_ceil}" != ".yes" && 
+        test ".${ac_cv_lib_m_ceil}" != ".yes") ||
+       (test ".${ac_cv_lib_c_sin}" != ".yes" && 
+        test ".${ac_cv_lib_m_sin}" != ".yes"); then
+        AC_MSG_RESULT([error])
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* WARNING:  1. You requested GDChart.  However, we were unable to"
+        echo "*              find one of the necessary math functions, sin()"
+        echo "*              and/or ceil() in -lc or -lm."
+        echo "*"
+        echo "*>>> Continuing without GDChart"
+        echo "*"
+        echo "*???     1. Install the requred functions and rerun ./configure"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+        ac_disable_gdchart="yes"
+    fi
+
+    if test ".${ac_disable_gdchart}" != ".yes"; then
+
+       dnl> Remember, we can not do a AC_CHECK_LIB, so we can also not:
+       dnl>   test ".${ac_cv_lib_gdchart_GDC_out_pie}"        = ".yes"
+
+       dnl>  First the mass test - if ALL of it is found, we just push on...
+       mass_gdchart_test_result="no"
+
+       if test ".${ac_debug}" = ".yes"; then
+           echo "DEBUG: GDChart - mass test... _header_gdc_h is ${ac_cv_header_gdc_h}"
+           echo "                              _header_gd_h  is ${ac_cv_header_gd_h}"
+           echo "                              _header_png_h is ${ac_cv_header_png_h}"
+           echo "                     _lib_gd_gdImageDestroy is ${ac_cv_lib_gd_gdImageDestroy}"
+           echo "                     _lib_png_png_read_info is ${ac_cv_lib_png_png_read_info}"
+       fi
+
+       if test ".${ac_cv_header_gdc_h}"                   = ".yes" &&
+          test ".${ac_cv_header_gd_h}"                    = ".yes" &&
+          test ".${ac_cv_header_png_h}"                   = ".yes" &&
+          test ".${ac_cv_lib_gd_gdImageDestroy}"          = ".yes" &&
+          test ".${ac_cv_lib_png_png_read_info}"          = ".yes"; then
+           mass_gdchart_test_result="yes"
+           dnl> Add this because it is not done in the non-existant AC_CHECK_LIB
+           LIBS="${LIBS} -lgdchart -lgd -lpng"
+           AC_DEFINE_UNQUOTED([HAVE_GDCHART], 1, [Enable GDChart])
+           if test ".${GDCHART_ROOT}" != "."; then
+               AC_MSG_RESULT(ok)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* NOTE:  You specified --with-gdchart-root."
+               echo "*        (and possibly --with-gd-root and/or --with-libpng-root)"
+               echo "*        However, a version was found in a standard location."
+               echo "*"
+               echo "*       Since this version will be used anyway,"
+               echo "*>>>    we've ignored your specified location."
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               GDCHART_ROOT=
+               GD_ROOT=
+               LIBPNG_ROOT=
+           else
+               AC_MSG_RESULT([ok (standard location)])
+           fi
+       elif test ".${GDCHART_ROOT}" = "."; then
+           AC_MSG_RESULT([not found in standard location, no --with-gdchart-root, testing further...])
+           AC_MSG_CHECKING([for GDChart headers])
+           if test -d /usr &&
+              test -d /usr/include &&
+              test -r /usr/include/gdchart.h; then
+               AC_MSG_RESULT([ok, gdchart.h found in /usr/include])
+               INCS="${INCS} -I/usr/include"
+               AC_DEFINE_UNQUOTED(HAVE_GDCHART_H, 1, [Show we found gdchart.h and set INCS])
+           elif test -d /usr &&
+                test -d /usr/local &&
+                test -d /usr/local/include &&
+                test -r /usr/local/include/gdchart.h; then
+               AC_MSG_RESULT([ok, gdchart.h found in /usr/local/include])
+               INCS="${INCS} -I/usr/local/include"
+               AC_DEFINE_UNQUOTED(HAVE_GDCHART_H, 1, [Show we found gdchart.h and set INCS])
+           elif test -d ${GDCHART_DIRECTORY} &&
+                test -r ${GDCHART_DIRECTORY}/gdchart.h; then
+               AC_MSG_RESULT([ok, gdchart.h found in ${GDCHART_DIRECTORY}])
+               INCS="${INCS} -I${GDCHART_DIRECTORY}"
+               AC_DEFINE_UNQUOTED(HAVE_GDCHART_H, 1, [Show we found gdchart.h and set INCS])
+           else
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header gdchart.h in the"
+               echo "*            standard location."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-gdchart-root."
+               echo "*"
+               echo "*     and 3. We also tested the following:"
+               echo "*"
+               echo "*                /usr/include"
+               echo "*                /usr/local/include"
+               echo "*                ${GDCHART_DIRECTORY} (ntop source tree)"
+               echo "*"
+               echo "*>>> ./configure continues, charts will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-gdchart-root*"
+               echo "*???  or 2. Install GDChart and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_gdchart="yes"
+           fi
+           if test ".${ac_disable_gdchart}" = ".yes"; then
+               dnl> Skip further tests
+               nop="yes"
+           else
+               AC_MSG_CHECKING([for GDChart library])
+               if test -d /usr &&
+                  test -d /usr/lib &&
+                  (test -r /usr/lib/libgdchart.so ||
+                   test -r /usr/lib/libgdchart.a); then
+                   AC_MSG_RESULT([ok, library found in /usr/lib])
+                   LIBS="${LIBS} -L/usr/lib -lgdchart"
+                   dnl>  /usr/lib should be automatically tested for as part of ld.so.conf...
+                   AC_DEFINE_UNQUOTED([HAVE_GDCHART], 1, [Enable GDChart])
+               elif test -d /usr &&
+                    test -d /usr/local &&
+                    test -d /usr/local/lib &&
+                    (test -r /usr/local/lib/libgdchart.so ||
+                     test -r /usr/local/lib/libgdchart.a); then
+                   AC_MSG_RESULT([ok, library found in /usr/local/lib])
+                   LIBS="${LIBS} -L/usr/local/lib -lgdchart"
+                   AC_DEFINE_UNQUOTED([HAVE_GDCHART], 1, [Enable GDChart])
+               elif test -d ${GDCHART_DIRECTORY} &&
+                    (test -r ${GDCHART_DIRECTORY}/libgdchart.so ||
+                     test -r ${GDCHART_DIRECTORY}/libgdchart.a); then
+                   AC_MSG_RESULT([ok, library found in ${GDCHART_DIRECTORY}])
+                   LIBS="${LIBS} -L${GDCHART_DIRECTORY} -lgdchart"
+                   AC_DEFINE_UNQUOTED([HAVE_GDCHART], 1, [Enable GDChart])
+               else
+                   AC_MSG_RESULT(error)
+                   echo
+                   echo "*******************************************************************"
+                   echo "*"
+                   echo "* ERROR:  1. We are pretending that were are unable to compile a"
+                   echo "*            test program for GDC_out_pie() against -lgdchart."
+                   echo "*            (in reality, we skip the compile test because gdchart"
+                   echo "*             does not support the kind of simple compile test"
+                   echo "*             done in a configure file, and we looked for the"
+                   echo "*             library by name. libgdchart.?? was not found.)"
+                   echo "*"
+                   echo "*     and 2. You did not specify an alternate location"
+                   echo "*            via --with-gdchart-root."
+                   echo "*"
+                   echo "*     and 3. We were unable to find libgdchart.so or libgdchart.a"
+                   echo "*            via a manual search of"
+                   echo "*"
+                   echo "*                /usr/lib"
+                   echo "*                /usr/local/lib"
+                   echo "*                ${GDCHART_DIRECTORY} (ntop source tree)"
+                   echo "*"
+                   echo "*>>> ./configure continues, charts will not be available."
+                   echo "*"
+                   echo "*???     1. Run ./buildAll.sh in ${GDCHART_DIRECTORY}"
+                   echo "*???  or 2. Rerun ./configure with a corrected --with-gdchart-root"
+                   echo "*???  or 3. Install GDChart and rerun ./configure"
+                   echo "*"
+                   echo "*******************************************************************"
+                   echo
+                   ac_disable_gdchart="yes"
+               fi
+           fi
+       else
+           AC_MSG_RESULT([not found in standard location, testing further...])
+
+           dnl> Can we find gdchart.h and libgdchart where s/he told us?
+
+           AC_MSG_CHECKING([for gdchart.h])
+           GDCHART_ROOT=`(cd ${GDCHART_ROOT} && pwd)`
+           if test -d ${GDCHART_ROOT} &&
+              test -r ${GDCHART_ROOT}/gdchart.h; then
+               AC_MSG_RESULT([ok, gdchart.h found in ${GDCHART_ROOT}])
+               INCS="${INCS} -I${GDCHART_ROOT}"
+               AC_DEFINE_UNQUOTED(HAVE_GDCHART_H, 1, [Show we found gdchart.h and set INCS])
+           elif test -d ${GDCHART_ROOT} &&
+              test -d ${GDCHART_ROOT}/include &&
+              test -r ${GDCHART_ROOT}/include/gdchart.h; then
+               AC_MSG_RESULT([ok, gdchart.h found in ${GDCHART_ROOT}/include])
+               INCS="${INCS} -I${GDCHART_ROOT}/include"
+               AC_DEFINE_UNQUOTED(HAVE_GDCHART_H, 1, [Show we found gdchart.h and set INCS])
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header gdchart.h in the"
+               echo "*            standard location or the alternate location you"
+               echo "*            specified by --with-gdchart-root."
+               echo "*"
+               echo "*>>> ./configure continues, charts will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-gdchart-root"
+               echo "*???  or 2. Install gdchart and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_gdchart="yes"
+           fi
+           if test ".${ac_disable_gdchart}" != ".yes"; then
+               AC_MSG_CHECKING([for gdchart library])
+               dnl> We can't actually use AC_CHECK_LIB for gdchart, so we just assume it's ok...
+               NTOP_APPEND_LIBS([${GDCHART_ROOT}], [gdchart])
+               AC_MSG_RESULT([ok, library assumed to exist in ${GDCHART_ROOT}])
+               AC_DEFINE_UNQUOTED([HAVE_GDCHART], 1, [Enable GDChart])
+           fi
+       fi
+    fi
+
+    if test ".${ac_disable_gdchart}"       != ".yes" &&
+       test ".${mass_gdchart_test_result}" != ".yes"; then
+        AC_MSG_CHECKING([for gd])
+
+       if test ".${ac_cv_header_gd_h}"                    = ".yes" &&
+          test ".${ac_cv_lib_gd_gdImageDestroy}"          = ".yes"; then
+           AC_DEFINE_UNQUOTED([HAVE_GD], 1, [Enable GD])
+           if test ".${GD_ROOT}" != "."; then
+               AC_MSG_RESULT(ok)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* NOTE:  You specified (or implied) --with-gd-root.  However,"
+               echo "*        a version was found in a standard location."
+               echo "*"
+               echo "*       Since this version will be used anyway,"
+               echo "*>>>    we've ignored your specified location."
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               GD_ROOT=
+           else
+               AC_MSG_RESULT([ok (standard location)])
+           fi
+       elif test ".${GD_ROOT}" = "."; then
+           AC_MSG_RESULT([not found in standard location, no --with-gd-root, testing further...])
+           AC_MSG_CHECKING([for gd header])
+           if test -d /usr &&
+              test -d /usr/include &&
+              test -r /usr/include/gd.h; then
+               AC_MSG_RESULT([ok, found in /usr/include])
+               INCS="${INCS} -I/usr/include"
+               AC_DEFINE_UNQUOTED(HAVE_GD_H, 1, [Show we found gd.h and set INCS])
+           elif test -d /usr &&
+              test -d /usr/local &&
+              test -d /usr/local/include &&
+              test -r /usr/local/include/gd.h; then
+               AC_MSG_RESULT([ok, found in /usr/local/include])
+               INCS="${INCS} -I/usr/local/include"
+               AC_DEFINE_UNQUOTED(HAVE_GD_H, 1, [Show we found gd.h and set INCS])
+           elif test -d ${GDCHART_DIRECTORY} &&
+                test -d ${GD_DIRECTORY} &&
+                test -r ${GD_DIRECTORY}/gd.h; then
+               AC_MSG_RESULT([ok, found in ${GD_DIRECTORY}])
+               INCS="${INCS} -I${GD_DIRECTORY}"
+               AC_DEFINE_UNQUOTED(HAVE_GD_H, 1, [Show we found gd.h and set INCS])
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header gd.h in the"
+               echo "*            standard location."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-gd-root (or implied one"
+               echo "*            via --with-gdchart-root)."
+               echo "*"
+               echo "*     and 3. We also tested the following:"
+               echo "*"
+               echo "*                /usr/include"
+               echo "*                /usr/local/include"
+               echo "*                ${GD_DIRECTORY} (ntop source tree)"
+               echo "*"
+               echo "*>>> ./configure continues, charts will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-gd-root"
+               echo "*???  or 2. Install gd and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_gdchart="yes"
+           fi
+           if test ".${ac_disable_gdchart}" = ".yes"; then
+               nop="yes"
+           else
+               AC_MSG_CHECKING([for gd library])
+               if test -d /usr &&
+                  test -d /usr/lib &&
+                  (test -r /usr/lib/libgd.so ||
+                   test -r /usr/lib/libgd.a); then
+                   AC_MSG_RESULT([ok, found in /usr/lib])
+                   LIBS="${LIBS} -L/usr/lib -lgd"
+                   dnl>  /usr/lib should be automatically tested for as part of ld.so.conf...
+                   AC_DEFINE_UNQUOTED([HAVE_GD], 1, [Enable GD])
+               elif test -d /usr &&
+                  test -d /usr/local &&
+                  test -d /usr/local/lib &&
+                  (test -r /usr/local/lib/libgd.so ||
+                   test -r /usr/local/lib/libgd.a); then
+                   AC_MSG_RESULT([ok, found in /usr/local/lib])
+                   LIBS="${LIBS} -L/usr/local/lib -lgd"
+                   AC_DEFINE_UNQUOTED([HAVE_GD], 1, [Enable GD])
+               elif test -d ${GDCHART_DIRECTORY} &&
+                  test -d ${GD_DIRECTORY} &&
+                  (test -r ${GD_DIRECTORY}/libgd.so ||
+                   test -r ${GD_DIRECTORY}/libgd.a); then
+                   AC_MSG_RESULT([ok, found in ${GD_DIRECTORY}])
+                   LIBS="${LIBS} -L${GD_DIRECTORY} -lgd"
+                   AC_DEFINE_UNQUOTED([HAVE_GD], 1, [Enable GD])
+               else
+                   AC_MSG_RESULT(error)
+                   echo
+                   echo "*******************************************************************"
+                   echo "*"
+                   echo "* ERROR:  1. We were unable to compile a test program for"
+                   echo "*            gdImageDestroy() against -lgd."
+                   echo "*"
+                   echo "*     and 2. You did not specify an alternate location"
+                   echo "*            via --with-gd-root or imply one via"
+                   echo "*            --with-gdchart-root."
+                   echo "*"
+                   echo "*     and 3. We were unable to find libgd.so or libgd.a"
+                   echo "*            via a manual search of"
+                   echo "*"
+                   echo "*                /usr/lib"
+                   echo "*                /usr/local/lib"
+                   echo "*                ${GD_DIRECTORY} (ntop source tree)"
+                   echo "*"
+                   echo "*>>> ./configure continues, charts will not be available."
+                   echo "*"
+                   echo "*???     1. Run ./buildAll.sh in ${GDCHART_DIRECTORY}"
+                   echo "*???  or 2. Rerun ./configure with a corrected --with-gd-root"
+                   echo "*???  or 3. Install gd and rerun ./configure"
+                   echo "*"
+                   echo "*******************************************************************"
+                   echo
+                   ac_disable_gdchart="yes"
+               fi
+           fi
+       else
+           AC_MSG_RESULT([not found in standard location, testing further...])
+           dnl> Can we find gd.h and libgd where s/he told us?
+
+           AC_MSG_CHECKING([for gd library])
+
+           GD_ROOT=`(cd ${GD_ROOT} && pwd)`
+           if test -d ${GD_ROOT} &&
+              test -r ${GD_ROOT}/gd.h; then
+               AC_MSG_RESULT([ok, gd.h found in ${GD_ROOT}])
+               INCS="${INCS} -I${GD_ROOT}"
+               AC_DEFINE_UNQUOTED(HAVE_GD_H, 1, [Show we found gd.h and set INCS])
+           elif test -d ${GD_ROOT} &&
+              test -d ${GD_ROOT}/include &&
+              test -r ${GD_ROOT}/include/gd.h; then
+               AC_MSG_RESULT([ok, gd.h found in ${GD_ROOT}/include])
+               INCS="${INCS} -I${GD_ROOT}/include"
+               AC_DEFINE_UNQUOTED(HAVE_GD_H, 1, [Show we found gd.h and set INCS])
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header gd.h in the"
+               echo "*            standard location or the alternate locations you"
+               echo "*            specified by --with-gd-root and/or"
+               echo "*            --with-gdchart-root."
+               echo "*"
+               echo "*>>> ./configure continues, charts will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-gd-root"
+               echo "*???  or 2. Install gd and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_gdchart="yes"
+           fi
+           
+           if test ".${ac_disable_gdchart}" != ".yes"; then
+                AC_MSG_CHECKING([for gd library])
+                oLIBS="${LIBS}"
+                NTOP_APPEND_LIBS([${GD_ROOT}])
+                AC_CHECK_LIB([gd], [gdImageDestroy], [
+                    AC_MSG_RESULT(ok)
+                    AC_DEFINE_UNQUOTED([HAVE_GD], 1, [Enable GD])
+                ], [
+                    AC_MSG_RESULT(error)
+                    LIBS="${oLIBS}"
+                    echo
+                    echo "*******************************************************************"
+                    echo "*"
+                    echo "* ERROR:  1. We were unable to compile a test program for"
+                    echo "*            gdImageDestroy() against -lgd in the standard"
+                    echo "*            location nor in the alternate locations you"
+                    echo "*            specified by --with-gd-root and/or"
+                    echo "*            --with-gdchart-root."
+                    echo "*"
+                    echo "*>>> ./configure continues, charts will not be available."
+                    echo "*"
+                    echo "*???     1. Rerun ./configure with a corrected --with-gd-root"
+                    echo "*???  or 2. Install gd and rerun ./configure"
+                    echo "*"
+                    echo "*******************************************************************"
+                    echo
+                    ac_disable_gdchart="yes"
+                ])
+            fi
+       fi
+    fi
+
+    if test ".${ac_disable_gdchart}"       != ".yes" &&
+       test ".${mass_gdchart_test_result}" != ".yes"; then
+        AC_MSG_CHECKING([for libpng])
+
+       if test ".${ac_cv_header_png_h}"                    = ".yes" &&
+          test ".${ac_cv_lib_png_png_read_info}"           = ".yes"; then
+           if test ".${LIBPNG_ROOT}" != "."; then
+               AC_MSG_RESULT(ok)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* NOTE:  You specified (or implied) --with-libpng-root.  However,"
+               echo "*        a version was found in a standard location."
+               echo "*"
+               echo "*       Since this version will be used anyway,"
+               echo "*>>>    we've ignored your specified location."
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               LIBPNG_ROOT=
+           else
+               AC_MSG_RESULT([ok (standard location)])
+           fi
+       elif test ".${LIBPNG_ROOT}" = "."; then
+           AC_MSG_RESULT([not found in standard location, no --with-libpng-root, testing further...])
+           AC_MSG_CHECKING([for libpng header])
+           if test -d /usr &&
+              test -d /usr/include &&
+              test -r /usr/include/png.h; then
+               AC_MSG_RESULT([ok, png.h found in /usr/include])
+               INCS="${INCS} -I/usr/include"
+               AC_DEFINE_UNQUOTED(HAVE_PNG_H, 1, [Show we found png.h and set INCS])
+           elif test -d /usr &&
+              test -d /usr/local &&
+              test -d /usr/local/include &&
+              test -r /usr/local/include/png.h; then
+               AC_MSG_RESULT([ok, png.h found in /usr/local/include])
+               INCS="${INCS} -I/usr/local/include"
+               AC_DEFINE_UNQUOTED(HAVE_PNG_H, 1, [Show we found png.h and set INCS])
+           elif test -d ${GDCHART_DIRECTORY} &&
+                test -d ${GD_DIRECTORY} &&
+                test -d ${LIBPNG_DIRECTORY} &&
+                test -r ${LIBPNG_DIRECTORY}/png.h; then
+               AC_MSG_RESULT([ok, png.h found in ${LIBPNG_DIRECTORY}])
+               INCS="${INCS} -I${LIBPNG_DIRECTORY}"
+               AC_DEFINE_UNQUOTED(HAVE_PNG_H, 1, [Show we found png.h and set INCS])
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header png.h in the"
+               echo "*            standard location."
+               echo "*"
+               echo "*     and 2. You did not specify an alternate location"
+               echo "*            via --with-libpng-root (or implied one"
+               echo "*            via --with-gdchart-root)."
+               echo "*"
+               echo "*     and 3. We also tested the following:"
+               echo "*"
+               echo "*                /usr/include"
+               echo "*                /usr/local/include"
+               echo "*                ${LIBPNG_DIRECTORY}"
+               echo "*"
+               echo "*>>> ./configure continues, charts will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-libpng-root"
+               echo "*???  or 2. Install libpng and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_gdchart="yes"
+           fi
+           if test ".${ac_disable_gdchart}" = ".yes"; then
+               nop="yes"
+           else
+               AC_MSG_CHECKING([for libpng library])
+                if test -d /usr &&
+                   test -d /usr/lib &&
+                   (test -r /usr/lib/libpng.so ||
+                    test -r /usr/lib/libpng.a); then
+                    LIBS="${LIBS} -L/usr/lib -lpng"
+                    AC_MSG_RESULT([ok, found in /usr/lib])
+                    dnl>  /usr/lib should be automatically tested for as part of ld.so.conf...
+                    AC_DEFINE_UNQUOTED([HAVE_PNG], 1, [Enable libpng])
+                elif test -d /usr &&
+                     test -d /usr/local &&
+                     test -d /usr/local/lib &&
+                     (test -r /usr/local/lib/libpng.so ||
+                      test -r /usr/local/lib/libpng.a); then
+                    LIBS="${LIBS} -L/usr/local/lib -lpng"
+                    AC_MSG_RESULT([ok, found in /usr/local/lib])
+                    AC_DEFINE_UNQUOTED([HAVE_PNG], 1, [Enable libpng])
+                elif test -d ${GDCHART_DIRECTORY} &&
+                   test -d ${GD_DIRECTORY} &&
+                   test -d ${LIBPNG_DIRECTORY} &&
+                   (test -r ${LIBPNG_DIRECTORY}/libpng.so ||
+                    test -r ${LIBPNG_DIRECTORY}/libpng.a); then
+                    LIBS="${LIBS} -L${LIBPNG_DIRECTORY} -lpng"
+                    AC_MSG_RESULT([ok, found in ${LIBPNG_DIRECTORY}])
+                    AC_DEFINE_UNQUOTED([HAVE_PNG], 1, [Enable libpng])
+                else
+                    AC_MSG_RESULT(error)
+                    echo
+                    echo "*******************************************************************"
+                    echo "*"
+                    echo "* ERROR:  1. We were unable to compile a test program for"
+                    echo "*            png_read_info() against -libpng."
+                    echo "*"
+                    echo "*     and 2. You did not specify an alternate location"
+                    echo "*            via --with-libpng-root or imply one via"
+                    echo "*            --with-gdchart-root."
+                    echo "*"
+                    echo "*     and 3. We were unable to find libpng.so or libpng.a"
+                    echo "*            via a manual search of"
+                    echo "*"
+                    echo "*                /usr/lib"
+                    echo "*                /usr/local/lib"
+                    echo "*                ${LIBPNG_DIRECTORY}"
+                    echo "*                                         (ntop source tree)"
+                    echo "*"
+                    echo "*>>> ./configure continues, charts will not be available."
+                    echo "*"
+                    echo "*???     1. Run ./buildAll.sh in ${GDCHART_DIRECTORY}"
+                    echo "*???  or 2. Rerun ./configure with a corrected --with-libpng-root"
+                    echo "*???  or 3. Install gd and rerun ./configure"
+                    echo "*"
+                    echo "*******************************************************************"
+                    echo
+                    ac_disable_gdchart="yes"
+                fi
+            fi
+       else
+           AC_MSG_RESULT([not found in standard location, testing further...])
+           dnl> Can we find png.h and libgd where s/he told us?
+           AC_MSG_CHECKING([for libpng header])
+           LIBPNG_ROOT=`(cd ${LIBPNG_ROOT} && pwd)`
+           if test -d ${LIBPNG_ROOT} &&
+              test -r ${LIBPNG_ROOT}/png.h; then
+               AC_MSG_RESULT([ok, png.h found in ${LIBPNG_ROOT}])
+               INCS="${INCS} -I${LIBPNG_ROOT}"
+               AC_DEFINE_UNQUOTED(HAVE_PNG_H, 1, [Show we found png.h and set INCS])
+           elif test -d ${LIBPNG_ROOT} &&
+              test -d ${LIBPNG_ROOT}/include &&
+              test -r ${LIBPNG_ROOT}/include/png.h; then
+               AC_MSG_RESULT([ok, png.h found in ${LIBPNG_ROOT}/include])
+               INCS="${INCS} -I${LIBPNG_ROOT}/include"
+               AC_DEFINE_UNQUOTED(HAVE_PNG_H, 1, [Show we found png.h and set INCS])
+           else
+               AC_MSG_RESULT(error)
+               echo
+               echo "*******************************************************************"
+               echo "*"
+               echo "* ERROR:  1. We were unable to find the header png.h in the"
+               echo "*            standard location or the alternate locations you"
+               echo "*            specified by --with-libpng-root and/or"
+               echo "*            --with-gdchart-root."
+               echo "*"
+               echo "*>>> ./configure continues, charts will not be available."
+               echo "*"
+               echo "*???     1. Rerun ./configure with a corrected --with-libpng-root"
+               echo "*???  or 2. Install gd and rerun ./configure"
+               echo "*"
+               echo "*******************************************************************"
+               echo
+               ac_disable_gdchart="yes"
+           fi
+           if test ".${ac_disable_gdchart}" != ".yes"; then
+               AC_MSG_CHECKING([for libpng library])
+                oLIBS=${LIBS}
+                NTOP_APPEND_LIBS([${LIBPNG_ROOT}])
+                AC_CHECK_LIB([png], [png_read_info], [
+                    AC_MSG_RESULT(ok)
+                    AC_DEFINE_UNQUOTED([HAVE_PNG], 1, [Enable libpng])
+                ], [
+                    AC_MSG_RESULT(error)
+                    LIBS=${oLIBS}
+                    echo
+                    echo "*******************************************************************"
+                    echo "*"
+                    echo "* ERROR:  1. We were unable to compile a test program for"
+                    echo "*            png_read_info() against -lpng in the standard"
+                    echo "*            location nor in the alternate locations you"
+                    echo "*            specified by --with-libpng-root and/or"
+                    echo "*            --with-gdchart-root."
+                    echo "*"
+                    echo "*>>> ./configure continues, charts will not be available."
+                    echo "*"
+                    echo "*???     1. Rerun ./configure with a corrected --with-libpng-root"
+                    echo "*???  or 2. Install gd and rerun ./configure"
+                    echo "*"
+                    echo "*******************************************************************"
+                    echo
+                    ac_disable_gdchart="yes"
+                ])
+            fi
+       fi
+    fi
+    if test ".${ac_disable_gdchart}" != ".yes"; then
+        AC_DEFINE_UNQUOTED(HAVE_GDCHART, 1, [GDChart is available])
+    fi
+fi
+
+AC_MSG_CHECKING([zlib])
+
+if test ".${ac_cv_lib_z_zlibVersion}" = ".yes" &&
+   test ".${ac_cv_header_zlib_h}" = ".yes"; then
+    AC_DEFINE_UNQUOTED(HAVE_ZLIB, 1, [Show we found -lz and zlib.h and set INCS])
+    if test ".${ZLIB_ROOT}" != "."; then
+        AC_MSG_RESULT(ok)
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* NOTE:  You specified --with-zlib-root."
+        echo "*        However, a version was found in a standard location."
+        echo "*"
+        echo "*       Since this version will be used anyway,"
+        echo "*>>>    we've ignored your specified location."
+        echo "*"
+        echo "*******************************************************************"
+        echo
+    else
+        AC_MSG_RESULT([ok (standard location)])
+    fi
+    ZLIB_ROOT=
+elif test ".${ZLIB_ROOT}" = "."; then
+    AC_MSG_RESULT([not found in standard location, no --with-zlib-root, testing further...])
+
+    if test -d /usr &&
+       test -d /usr/include &&
+       test -r /usr/include/zlib.h; then
+         AC_MSG_RESULT([ok, zlib.h found in /usr/include])
+         INCS="${INCS} -I/usr/include"
+         AC_DEFINE_UNQUOTED(HAVE_ZLIB_H, 1, [Show we found zlib.h and set INCS])
+    elif test -d /usr &&
+       test -d /usr/local &&
+       test -d /usr/local/include &&
+       test -r /usr/local/include/zlib.h; then
+         AC_MSG_RESULT([ok, zlib.h found in /usr/local/include])
+         INCS="${INCS} -I/usr/local/include"
+         AC_DEFINE_UNQUOTED(HAVE_ZLIB_H, 1, [Show we found zlib.h and set INCS])
+    elif test -d ${GDCHART_DIRECTORY} &&
+         test -d ${ZLIB_DIRECTORY} &&
+         test -r ${ZLIB_DIRECTORY}/zlib.h; then
+         AC_MSG_RESULT([ok, zlib.h found in ${ZLIB_DIRECTORY}])
+         INCS="${INCS} -I${ZLIB_DIRECTORY}"
+         AC_DEFINE_UNQUOTED(HAVE_ZLIB_H, 1, [Show we found zlib.h and set INCS])
+    else
+        AC_MSG_RESULT(error)
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* ERROR:  1. We were unable to find the header zlib.h in the"
+        echo "*            standard location."
+        echo "*"
+        echo "*     and 2. You did not specify an alternate location"
+        echo "*            via --with-zlib-root."
+        echo "*"
+        echo "*     and 3. We also tested the following:"
+        echo "*"
+        echo "*                /usr/include"
+        echo "*                /usr/local/include"
+        echo "*                ${ZLIB_DIRECTORY} (ntop source tree)"
+        echo "*"
+        echo "*>>> Continuing without zlib."
+        echo "*       (http requests will not be compressed for transmission)."
+        echo "*"
+        echo "*???     1. Rerun ./configure with a corrected --with-zlib-root"
+        echo "*???  or 2. Install zlib and rerun ./configure"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+        ZLIB_ROOT=
+    fi
+    if test ".${ZLIB_ROOT}" = "."; then
+        dnl> nop to skip the 2nd part tests...
+        nop="yes"
+    else
+        AC_MSG_CHECKING([for zlib library])
+         if test -d /usr &&
+            test -d /usr/lib &&
+            (test -r /usr/lib/libz.so ||
+             test -r /usr/lib/libz.a); then
+             AC_MSG_RESULT([ok, found in /usr/lib])
+             LIBS="${LIBS} -L/usr/lib -lz"
+             dnl>  /usr/lib should be automatically tested for as part of ld.so.conf...
+             AC_DEFINE_UNQUOTED([HAVE_ZLIB], 1, [Enable compression - zlib])
+         elif test -d /usr &&
+            test -d /usr/local &&
+            test -d /usr/local/lib &&
+            (test -r /usr/local/lib/libz.so ||
+             test -r /usr/local/lib/libz.a); then
+             LIBS="${LIBS} -L/usr/local/lib -lz"
+             AC_MSG_RESULT([ok, found in /usr/local/lib])
+             AC_DEFINE_UNQUOTED([HAVE_ZLIB], 1, [Enable compression - zlib])
+         elif test -d ${GDCHART_DIRECTORY} &&
+              test -d ${ZLIB_DIRECTORY} &&
+              (test -r ${ZLIB_DIRECTORY}/libz.so ||
+               test -r ${ZLIB_DIRECTORY}/libz.a); then
+             LIBS="${LIBS} -L${ZLIB_DIRECTORY} -lz"
+             AC_MSG_RESULT([ok, found in ${ZLIB_DIRECTORY}])
+             AC_DEFINE_UNQUOTED([HAVE_ZLIB], 1, [Enable compression - zlib])
+         else
+             AC_MSG_RESULT(error)
+             echo
+             echo "*******************************************************************"
+             echo "*"
+             echo "* ERROR:  1. We were unable to compile a test program for"
+             echo "*            zlibVersion() against -lz."
+             echo "*"
+             echo "*     and 2. You did not specify an alternate location"
+             echo "*            via --with-zlib-root."
+             echo "*"
+             echo "*     and 3. We were unable to find libz.so or libz.a"
+             echo "*            via a manual search of"
+             echo "*"
+             echo "*                /usr/lib"
+             echo "*                /usr/local/lib"
+             echo "*                ${ZLIB_DIRECTORY} (ntop source tree)"
+             echo "*"
+             echo "*>>> Continuing without zlib."
+             echo "*       (http requests will not be compressed for transmission)."
+             echo "*"
+             echo "*???     1. Rerun ./configure with a corrected --with-zlib-root"
+             echo "*???  or 2. Install zlib and rerun ./configure"
+             echo "*"
+             echo "*******************************************************************"
+             echo
+             ZLIB_ROOT=
+         fi
+    fi
+else
+    AC_MSG_RESULT([not found in standard location, testing further...])
+    dnl> Can we find zlib.h and libz where s/he told us?
+    ZLIB_ROOT=`(cd ${ZLIB_ROOT} && pwd)`
+    if test -d ${ZLIB_ROOT} &&
+       test -r ${ZLIB_ROOT}/zlib.h; then
+        AC_MSG_RESULT([ok, zlib.h found in ${ZLIB_ROOT}])
+        INCS="${INCS} -I${ZLIB_ROOT}"
+        AC_DEFINE_UNQUOTED(HAVE_ZLIB_H, 1, [Show we found zlib.h and set INCS])
+    elif test -d ${ZLIB_ROOT} &&
+       test -d ${ZLIB_ROOT}/include &&
+       test -r ${ZLIB_ROOT}/include/zlib.h; then
+        AC_MSG_RESULT([ok, zlib.h found in ${ZLIB_ROOT}/include])
+        INCS="${INCS} -I${ZLIB_ROOT}/include"
+        AC_DEFINE_UNQUOTED(HAVE_ZLIB_H, 1, [Show we found zlib.h and set INCS])
+    else
+        AC_MSG_RESULT(error)
+        echo
+        echo "*******************************************************************"
+        echo "*"
+        echo "* WARNING:  1. You specified --with-zlib-root, however"
+        echo "*              we were unable to find the header file (zlib.h)."
+        echo "*"
+        echo "*>>> Continuing without zlib."
+        echo "*       (http requests will not be compressed for transmission)."
+        echo "*"
+        echo "*???     1. Rerun ./configure with a corrected --with-zlib-root"
+        echo "*???  or 2. Install zlib and rerun ./configure"
+        echo "*"
+        echo "*******************************************************************"
+        echo
+        ZLIB_ROOT=
+    fi
+    if test ".${ZLIB_ROOT}" != "."; then
+        AC_MSG_CHECKING([for zlib library])
+        oLIBS=${LIBS}
+        NTOP_APPEND_LIBS([${ZLIB_ROOT}])
+        AC_CHECK_LIB([z], [gzopen], [
+            AC_MSG_RESULT([ok, library found in ${ZLIB_ROOT}])
+            AC_DEFINE_UNQUOTED([HAVE_ZLIB], 1, [Enable compression - zlib])
+        ], [
+            AC_MSG_RESULT(error)
+            LIBS=${oLIBS}
+            echo
+            echo "*******************************************************************"
+            echo "*"
+            echo "* WARNING:  1. You specified --with-zlib-root, however"
+            echo "*              we were unable to find the routine gzopen()"
+            echo "*              in -lz at that location."
+            echo "*"
+            echo "*>>> Continuing without zlib."
+            echo "*       (http requests will not be compressed for transmission)."
+            echo "*"
+            echo "*???     1. Rerun ./configure with a corrected --with-zlib-root"
+            echo "*???  or 2. Install zlib and rerun ./configure"
+            echo "*"
+            echo "*******************************************************************"
+            echo
+        ])
+    fi
+fi
+
+if test ".${ac_enable_intop}" = ".yes"; then
+    AC_MSG_CHECKING(intop libraries)
+    AC_MSG_RESULT([])
+    if test ".${ac_disable_curses}" = ".yes"; then
+        AC_CHECK_LIB(ncurses, initscr, 
+            AC_MSG_CHECKING(for ncurses)
+            AC_MSG_RESULT(ok)
+            LIBCURSES="-lncurses", 
+            AC_MSG_CHECKING(for ncurses)
+            AC_MSG_RESULT([disabled - missing ncurses.h.])
+            ac_enable_intop=no
+        )
+    else
+        AC_CHECK_LIB(ncurses, initscr, 
+                     AC_MSG_CHECKING(for ncurses)
+                     AC_MSG_RESULT(ok)
+                     LIBCURSES="-lncurses", 
+                     AC_MSG_CHECKING(for ncurses)
+                     AC_MSG_RESULT(missing)
+                     AC_CHECK_LIB(curses, initscr, 
+                                   AC_MSG_CHECKING(for curses)
+                                   AC_MSG_RESULT(ok)
+                                   LIBCURSES="-lcurses",
+                                   AC_MSG_CHECKING(for curses)
+                                   AC_MSG_RESULT([disabled - missing (n)curses.h.])
+                                   ac_enable_intop=no)
+        )
+    fi
+
+    if test ".${ac_enable_intop}" = ".yes"; then
+
+        AC_MSG_CHECKING([for intop])
+        AC_MSG_RESULT(ok)
+        INTOP=intop
+
+        if test ".${ac_disable_readline}" != ".yes"; then
+            READLIBS="${LIBCURSES}"
+            case "${LIBCURSES}" in
+                *termcap*|*curses*)
+                    ;;
+                *)
+                    AC_CHECK_LIB(termcap, tgetent, [
+                        LIBTERMCAP="-ltermcap"
+                        READLIBS="${READLIBS} ${LIBTERMCAP}"
+                        AC_MSG_RESULT([         ...using ${READLIBS}])
+                    ])
+                    ;;
+             esac
+
+             AC_CHECK_LIB(readline, readline, [
+                 LIBREADLINE="-lreadline ${LIBTERMCAP}"
+                 AC_DEFINE_UNQUOTED(HAVE_READLINE, 1, [GNU readline library (-lreadline).])
+                        AC_MSG_RESULT([         ...using ${LIBREADLINE}])
+             ], ,${READLIBS})
+        fi
+    fi
+fi
+
+AC_MSG_CHECKING([for rrd])
+if test ".${ac_cv_lib_rrd_rrd_create}" != ".yes"; then
+    AC_MSG_RESULT(error)
+dnl> TODO Um... how do we enforce this?
+    echo
+    echo "*******************************************************************"
+    echo "*"
+    echo "* WARNING:  1. librrd has not been found."
+    echo "*"
+    echo "*>>>    The rrdPlugin will not be built."
+    echo "*"
+    echo "*???     1. Install RRDtool from http://www.rrdtool.org/"
+    echo "*??? and 2. rerun ./configure"
+    echo "*"
+    echo "*******************************************************************"
+    echo
+else
+    AC_MSG_RESULT(ok)
+fi
+
+echo
+echo "-------------------------------------------------------------------"
+echo "-------------------------------------------------------------------"
+echo "-------------------------------------------------------------------"
+
+echo
+echo "Miscelaneous settings..."
+echo
+
+echo "  Directories:"
+echo "    Default prefix is     ${ac_default_prefix}"
+
+DATAFILE_DIR=$datadir/ntop
+DATAFILE_DIR=`(
+    test "x$prefix" = xNONE && prefix=${ac_default_prefix}
+    eval echo "$DATAFILE_DIR"
+)`
+AC_DEFINE_UNQUOTED(DATAFILE_DIR,"$DATAFILE_DIR", [Data file directory])
+echo "    Data files are in     $DATAFILE_DIR"
+
+CONFIGFILE_DIR=$sysconfdir/ntop
+CONFIGFILE_DIR=`(
+    test "x$prefix" = xNONE && prefix=${ac_default_prefix}
+    eval echo "$CONFIGFILE_DIR"
+)`
+AC_DEFINE_UNQUOTED(CONFIGFILE_DIR,"$CONFIGFILE_DIR", [Configuration file directory])
+echo "    Config files are in   $CONFIGFILE_DIR"
+
+RUN_DIR=$localstatedir/ntop
+RUN_DIR=`(
+    test "x$prefix" = xNONE && prefix=${ac_default_prefix}
+    eval echo "$RUN_DIR"
+)`
+AC_DEFINE_UNQUOTED(RUN_DIR,"$RUN_DIR", [Run files directory])
+echo "    Run directory is      $RUN_DIR"
+
+PLUGIN_DIR=$libdir/ntop/plugins
+PLUGIN_DIR=`(
+  test "x$prefix" = xNONE && prefix=${ac_default_prefix}
+  test "x$exec_prefix" = xNONE && exec_prefix=${prefix}
+  eval echo "$PLUGIN_DIR"
+)`
+AC_DEFINE_UNQUOTED(PLUGIN_DIR,"$PLUGIN_DIR", [Plugin installation directory])
+echo "    Plugin files are in   $PLUGIN_DIR"
+
+DBFILE_DIR=$localstatedir/ntop
+DBFILE_DIR=`(
+  test "x$prefix" = xNONE && prefix=${ac_default_prefix}
+  eval echo "$DBFILE_DIR"
+)`
+AC_DEFINE_UNQUOTED(DBFILE_DIR,"$DBFILE_DIR", [Database file directory])
+echo "    Database files are in $DBFILE_DIR"
+echo
+
+dnl>
+dnl> GNU gcc backtrace?
+dnl>
+    AC_MSG_CHECKING([for gcc backtrace])
+    if test ".${ac_cv_lib_c_backtrace}" = ".yes"; then
+        AC_MSG_RESULT([found - automatic SIGSEGV backtrace enabled via -K])
+        AC_DEFINE_UNQUOTED(HAVE_BACKTRACE, 1, [backtrace() is available])
+    else
+        AC_MSG_RESULT([not found])
+    fi
+
+dnl>
+dnl> getopt_long?
+dnl>
+    AC_MSG_CHECKING([for gcc getopt_long])
+    if test ".${ac_cv_lib_c_getopt_long}" = ".yes"; then
+        AC_MSG_RESULT([found - long command line options are enabled])
+        AC_DEFINE_UNQUOTED(HAVE_GETOPT_LONG, 1, [getopt_long() is available])
+    else
+        AC_MSG_RESULT([not found - long command line options are disabled])
+    fi
+
+dnl>
+dnl> Test for facilitynames
+dnl>
+    if test ".${ac_cv_header_sys_syslog_h}" = ".yes" ||
+       test ".${ac_cv_header_syslog_h}"     = ".yes" ; then
+        AC_MSG_CHECKING([for facilitynames - define SYSLOG_NAMES option])
+        AC_TRY_COMPILE([
+            #include "confdefs.h"
+            #include <stdarg.h>
+            #include <stdio.h>
+            #define SYSLOG_NAMES
+            #if defined(HAVE_SYS_SYSLOG_H)
+            #include <sys/syslog.h>
+            #elif defined(HAVE_SYSLOG_H)
+            #include <syslog.h>
+            #endif],
+            [void * x = (void*) &(facilitynames[0]);],
+            AC_MSG_RESULT(available)
+            AC_DEFINE_UNQUOTED(HAVE_FACILITYNAMES, 
+                               1, 
+                               [glibc syslog.h or sys/syslog.h with facilitynames[] option]),
+            AC_MSG_RESULT(unavailable))
+    fi
+
+dnl>
+dnl> Test ether_header has ea
+dnl>
+    AC_MSG_CHECKING([if ether_header uses ether_addr structs])
     AC_TRY_COMPILE([
 #       include <sys/types.h>
 #       if __STDC__
@@ -485,1105 +2820,94 @@ AC_CACHE_VAL(ac_cv_ether_header_has_ea,
 #       include <netinet/if_ether.h>],
         [u_int i =
              sizeof(((struct ether_header *)0)->ether_dhost.ether_addr_octet)],
-        ac_cv_ether_header_has_ea=yes,
-        ac_cv_ether_header_has_ea=no)
-    CFLAGS="$LBL_SAVE_CFLAGS")
-AC_MSG_RESULT($ac_cv_ether_header_has_ea)
-if test $ac_cv_ether_header_has_ea = yes ; then
-        AC_DEFINE_UNQUOTED(ETHER_HEADER_HAS_EA, 1, [Define if the ether_header uses ether_addr structs.])
-fi
-
+        [AC_MSG_RESULT(yes)
+         AC_DEFINE_UNQUOTED(ETHER_HEADER_HAS_EA, 
+                            1, 
+                            [ether_header uses ether_addr structs])],
+        [AC_MSG_RESULT(no)])
 
 dnl>
 dnl> check for ip6 address used by sFlow...
 dnl>
-AC_MSG_CHECKING(if in6_addr is defined)
-AC_CACHE_VAL(ac_cv_in6_addr_has_ea,
-    LBL_SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $V_INCLS"
-    AC_TRY_COMPILE([
+    if test "${ac_disable_plugins}" != ".yes"; then
+        AC_MSG_CHECKING([if in6_addr is defined for sFlowPlugin])
+        AC_TRY_COMPILE([
 #       include <sys/types.h>
 #       include <netinet/in.h>
 #       include <netinet/in_systm.h>
 #       include <sys/socket.h>
-#       include <netinet/ip.h>],
-        [struct in6_addr tmp;],
-        ac_cv_in6_addr_has_ea=yes,
-        ac_cv_in6_addr_has_ea=no)
-    CFLAGS="$LBL_SAVE_CFLAGS")
-AC_MSG_RESULT($ac_cv_in6_addr_has_ea)
-if test $ac_cv_in6_addr_has_ea = yes ; then
-        AC_DEFINE_UNQUOTED(HAVE_IN6_ADDR, 1, [Define for sFlowPlugin.c to define in6_addr for environments that don't have it...])
-fi
-
-
-dnl> OPTIONAL curses headers
-if test ".$ac_disable_curses" = ".no"; then
-
-  if test -f "/usr/include/ncurses.h"; then
-    echo "checking for ncurses.h... yes"
-    AC_DEFINE_UNQUOTED(HAVE_NCURSES_H, 1, [ Define if you have the ncurses.h header file])
-  else
-    if test -f "/usr/include/curses.h"; then
-      echo "checking for curses.h... yes"
-      AC_DEFINE_UNQUOTED(HAVE_CURSES_H, 1, [ Define if you have the curses.h header file])
-    else
-      AC_MSG_WARN([It looks that you don't have (n)curses.h installed hence intop will *not* be built.])
-     ac_disable_intop=yes
+#       include <netinet/ip.h>
+            ],
+            [struct in6_addr tmp;],
+            [AC_MSG_RESULT(yes)
+             AC_DEFINE_UNQUOTED(HAVE_IN6_ADDR, 
+                                1, 
+                                [For sFlowPlugin.c to define in6_addr for environments without it.])],
+            [AC_MSG_RESULT(no)])
     fi
-  fi
-fi
-
-
-dnl> OPTIONAL memory related headers
-AC_CHECK_HEADERS(alloca.h)
-
-dnl> OPTIONAL micro ntop
-if test ".$ac_micro_ntop" = ".yes"; then
-	AC_DEFINE_UNQUOTED(MICRO_NTOP, 1, [Define if you want to build micro ntop.])
-fi
-
-dnl> OPTIONAL thread headers
-if test ".$ac_disable_multithread" = ".no"; then
-  AC_CHECK_HEADERS(sched.h sys/sched.h semaphore.h pthread.h)
-fi
-
-dnl> MANDATORY universal headers for network programming code
-AC_HAVE_HEADERS(sys/socket.h netdb.h netinet/in.h arpa/inet.h net/if.h)
-AC_HAVE_HEADERS(netinet/in_systm.h netinet/ip.h netinet/ip_icmp.h netinet/udp.h netinet/tcp.h)
-
-dnl> OPTIONAL headers for network programming headers
-AC_CHECK_HEADERS(netinet/if_ether.h arpa/nameser.h net/ethernet.h ethertype.h if.h net/bpf.h)
-
-dnl> OPTIONAL syslog headers
-AC_CHECK_HEADERS(sys/syslog.h, [ac_sys_syslog_h="yes"], [ac_sys_syslog_h="no"])
-AC_CHECK_HEADERS(syslog.h, [ac_syslog_h="yes"], [ac_syslog_h="no"])
-
-dnl> Test for facilitynames
-AC_MSG_CHECKING([glibc facilitynames in sys/syslog.h or syslog.h])
-if test $ac_sys_syslog_h = yes ||
-   test $ac_syslog_h = yes ; then
-    AC_TRY_COMPILE([
-        #include "confdefs.h"
-        #include <stdarg.h>
-        #include <stdio.h>
-        #define SYSLOG_NAMES
-        #if defined(HAVE_SYS_SYSLOG_H)
-        #include <sys/syslog.h>
-        #elif defined(HAVE_SYSLOG_H)
-        #include <syslog.h>
-        #endif],
-        [void * x = (void*) &(facilitynames[0]);],
-        AC_MSG_RESULT(yes)
-        ac_has_facilitynames=yes,
-        AC_MSG_RESULT(no)
-        ac_has_facilitynames=no)
-else
-    AC_MSG_RESULT(no)
-    ac_has_facilitynames=no
-fi
-if test $ac_has_facilitynames = yes ; then
-    AC_DEFINE_UNQUOTED(HAVE_FACILITYNAMES, 1, [Define if you have a glibc syslog.h or sys/syslog.h with facilitynames[] option])
-fi
-
-dnl> OPTIONAL UCD-SNMP
-dnl> AC_HAVE_HEADERS(ucd-snmp/ucd-snmp-agent-includes.h)
-
 
 dnl>
-dnl> check whether we've to define essential typedefs
-dnl> u_int32_t u_int16_t u_int8_t
-dnl> int32_t   int16_t   int8_t
-AC_CHECK_TYPE(u_int8_t,  AC_DEFINE_UNQUOTED(HAVE_INT8_T,   1, [dummy]))
-AC_CHECK_TYPE(uint8_t,   AC_DEFINE_UNQUOTED(HAVE_UINT8_T,  1, [dummy]))
-AC_CHECK_TYPE(u_int16_t, AC_DEFINE_UNQUOTED(HAVE_INT16_T,  1, [dummy]))
-AC_CHECK_TYPE(uint16_t,  AC_DEFINE_UNQUOTED(HAVE_UINT16_T, 1, [dummy]))
-AC_CHECK_TYPE(u_int32_t, AC_DEFINE_UNQUOTED(HAVE_INT32_T,  1, [dummy]))
-AC_CHECK_TYPE(uint32_t,  AC_DEFINE_UNQUOTED(HAVE_UINT32_T, 1, [dummy]))
-AC_CHECK_TYPE(u_int64_t, AC_DEFINE_UNQUOTED(HAVE_INT64_T,  1, [dummy]))
-AC_CHECK_TYPE(uint64_t,  AC_DEFINE_UNQUOTED(HAVE_UINT64_T, 1, [dummy]))
+dnl> Temporary
+dnl>
+    AC_DEFINE_UNQUOTED(RETSIGTYPE, void, [temporary definition])
 
 dnl>
-dnl> check for reentrant library routines
+dnl> Finish up...
 dnl>
-AC_CHECK_FUNCS(strtok_r)
-AC_CHECK_FUNCS(localtime_r)
-AC_CHECK_FUNCS(ctime_r)
-AC_CHECK_FUNCS(snprintf)
-AC_CHECK_FUNCS(getipnodebyaddr)
-AC_CHECK_FUNCS(gethostbyaddr_r)
-AC_CHECK_LIB(c, gethostbyaddr_r, AC_DEFINE_UNQUOTED(HAVE_GETHOSTBYADDR_R, 1, [Define if you have gethostbyaddr_r]), 
-AC_CHECK_LIB(nsl, gethostbyaddr_r, AC_DEFINE_UNQUOTED(HAVE_GETHOSTBYADDR_R, 1, [Define if you have gethostbyaddr_r])) )
+if test ".${CCLD}" = "."; then
+    CCLD=${CC}
+fi
 
-dnl> Check for additional functions
-AC_CHECK_FUNCS(strsep)
-
+echo "-------------------------------------------------------------------"
+echo "==================================================================="
+echo "-------------------------------------------------------------------"
 echo
-echo "Step 5. Looking for required system libraries...."
+echo "Creating files..."
 echo
-
-
-dnl>
-dnl> check for `dlopen' in -ldl (MANDATORY)
-dnl>
-AC_CHECK_LIB(dl, dlopen)
-
-dnl>
-dnl> check for `backtrace' in -lc
-dnl>
-AC_CHECK_LIB(c, backtrace, AC_DEFINE_UNQUOTED(HAVE_BACKTRACE, 1, [Define if you have backtrace]))
-
-dnl>
-dnl> check for `crypt' in -lc or -lcrypt (MANDATORY)
-dnl>
-AC_CHECK_FUNC(crypt, , AC_CHECK_LIB(c, crypt, ,
-  [AC_CHECK_LIB(crypt, crypt, MORELIBS="$MORELIBS -lcrypt",
-    AC_MSG_ERROR(you need the crypt library to build ntop), $MORELIBS)]))
-
-AC_CHECK_LIB(kstat, kstat_lookup)
-AC_CHECK_LIB(c, getopt_long, AC_DEFINE_UNQUOTED(HAVE_GETOPT_LONG, 1, [Define if you have getopt_long.]))
-
-dnl>
-dnl> GDChart uses functions from math library,
-dnl> so make sure we link against the math library if needed
-dnl>
-dnl> check for `sin' in -lm or -lc (MANDATORY)
-dnl> check for `ceil' in -lm or -lc (MANDATORY)
-dnl>
-if test ".$ac_disable_gdchart" = ".no"; then
-  AC_CHECK_LIB(c, sin, ,  [AC_CHECK_LIB(m, sin,  , AC_MSG_ERROR([Fatal: sin() not found.]), $MORELIBS)], $MORELIBS)
-  AC_CHECK_LIB(c, ceil, , [AC_CHECK_LIB(m, ceil, , AC_MSG_ERROR([Fatal: ceil() not found.]), $MORELIBS)], $MORELIBS)
-fi
-
-dnl>
-dnl> Ignore SIGPIPE?
-dnl>
-if test ".$ac_enable_ignoresigpipe" = ".yes"; then
-  AC_DEFINE_UNQUOTED(YES_IGNORE_SIGPIPE, 1, [Define for IGNORE of SIGPIPE])
-fi
-
-dnl>
-dnl> Networking libraries
-dnl>
-dnl> check for `gethostname' or `gethostbyname' in -lnsl
-dnl> and then check for `accept' in -lsocket
-dnl> and then check for `inet_aton' in -lresolv
-dnl>
-AC_CHECK_LIB(nsl, gethostname)
-if test ".`echo $LIBS | grep nsl`" = .; then
-    AC_CHECK_LIB(nsl, gethostbyname)
-fi
-AC_CHECK_LIB(socket, accept)
-AC_CHECK_LIB(resolv, inet_aton)
-
-dnl> both Solaris and AIX lack definition of `getdomainname'
-case "$host" in
-    *-sun-solaris2* )
-        AC_DEFINE_UNQUOTED(NEED_GETDOMAINNAME, 1, [Solaris 2: OS lacks the getdomainname(2) function.])
-        ;;
-    *-ibm-aix4.[12].* )
-        AC_DEFINE_UNQUOTED(NEED_GETDOMAINNAME, 1, [AIX 4.1, 4.2: OS lacks the getdomainname(2) function.])
-        ;;
-esac
-
-dnl>
-dnl> TCP Wrappers library
-dnl> check for tcpd.h header and `hosts_access' in -lwrap
-dnl>
-dnl>  Replacement code shamelessly ripped off from openLDAP (BMS, 6-2002)
-dnl>
-
-
- dnl ----------------------------------------------------------------
-if test ".$ac_enable_tcpwrap" = ".yes"; then
-	have_wrappers=no
-	AC_CHECK_HEADERS(tcpd.h, [
-                AC_MSG_CHECKING([TCP Wrapper support requested, via command line option, checking for library])
-		_libs=${LIBS}
-		LIBS="${LIBS} -lwrap"
-		AC_TRY_LINK([#include <tcpd.h>
- int allow_severity = 0;
- int deny_severity  = 0;
-
-struct request_info *req;], [
-		hosts_access(req)], [
-		AC_MSG_RESULT(yes)
-		have_wrappers=yes
-		LIBS=${_libs}], [
-
-		# try with -lnsl
-		LIBS="${LIBS} -lnsl"
-		AC_TRY_LINK([#include <tcpd.h>
-int allow_severity = 0;
-int deny_severity  = 0;
-
-struct request_info *req;], [
-		hosts_access(req)], [
-
-		AC_MSG_RESULT(yes)
-		have_wrappers=yes
-		LIBS="${_libs} -lnsl"], [
-
-		AC_MSG_RESULT(no)
-		have_wrappers=no
-		LIBS=${_libs}])],
-
-		have_wrappers=no)])
- 
-	if test ".$have_wrappers" = ".yes"; then
-		AC_DEFINE_UNQUOTED(HAVE_TCPD_H, 1,  [Define if you have the TCP Wrap library (-lwrap) and headers.])
-                AC_DEFINE_UNQUOTED(HAVE_LIBWRAP, 1, [Define if you have the TCP Wrap library (-lwrap) and headers.])
-                MORELIBS="$MORELIBS -lwrap"
- 	else
-		AC_MSG_ERROR([could not find -lwrap. rerun without --enable-tcpwrap])
- 	fi
-fi
- 
-
-dnl>
-dnl> (n)curses Library (optional)
-dnl> check for `initscr' in -lncurses or in -lcurses
-dnl>
-dnl> Do not perform any check for the curses library,
-dnl> if the user decided to compile without curses support.
-dnl>
-LIBCURSES=
-if test ".$ac_disable_curses" = ".no"; then
-  AC_CHECK_LIB(ncurses, initscr, LIBCURSES="-lncurses")
-  if test ".`echo $LIBCURSES | grep curses`" = .; then
-      AC_CHECK_LIB(curses, initscr, LIBCURSES="-lcurses", ac_disable_intop=yes)
-  fi
-else
-  AC_MSG_WARN([Curses support disabled via command line option!])
- ac_disable_intop=yes
-fi
-
-
-dnl>
-dnl> Thread Library (optional)
-dnl> check for `pthread_create' in -lpthread
-dnl>
-dnl> Do not perform any check for the thread library,
-dnl> if the user decided to compile without multithread support.
-dnl>
-if test ".$ac_disable_multithread" = ".no"; then
-  AC_CHECK_LIB(pthread, pthread_create)
-  if test ".`echo $LIBS | grep pthread`" != .; then
-dnl>
-dnl> check for `sem_init' in -lposix4
-dnl>
-     AC_CHECK_LIB(posix4, sem_init)
-     AC_DEFINE_UNQUOTED(MULTITHREADED, 1, [Enable/disable multithread support])
-     AC_DEFINE_UNQUOTED(ASYNC_ADDRESS_RESOLUTION, 1, [Enable/disable address resolution])
-  else
- AC_CHECK_LIB(pthreads, pthread_create)
-  if test ".`echo $LIBS | grep pthread`" != .; then
-dnl>
-dnl> check for `sem_init' in -lposix4
-dnl>
-     AC_CHECK_LIB(posix4, sem_init)
-     AC_DEFINE_UNQUOTED(MULTITHREADED, 1, [Enable/disable multithread support])
-     AC_DEFINE_UNQUOTED(ASYNC_ADDRESS_RESOLUTION, 1, [Enable/disable address resolution])
-  else
-     AC_CHECK_LIB(c_r, pthread_create)
-     if test ".`echo $LIBS | grep c_r`" != .; then
-     AC_DEFINE(MULTITHREADED,  1, [Enable/disable multithread support])
-     AC_DEFINE(ASYNC_ADDRESS_RESOLUTION, 1, [Enable/disable address resolution])
-    else
-     multithread_mode=no
-    fi
-  fi
-fi
-else
-  AC_MSG_WARN([Multithread support disabled via command line option!])
-  multithread_mode=no
-fi
-
-dnl>
-dnl> GNU ReadLine Library (optional)
-dnl> check for `readline' in -lreadline
-dnl>  AC_MSG_CHECKING([for GNU readline Library (optional package)])
-dnl>
-LIBREADLINE=
-LIBTERMCAP=
-if test ".$ac_disable_readline" = ".no"; then
-
-dnl>
-dnl> Make sure we link termcap with readline if we aren't already
-dnl> linking curses or termcap
-dnl>
-  READLIBS=$LIBCURSES
-  case "$LIBCURSES" in
-    *termcap*|*curses*)
-    ;;
-    *)
-    AC_CHECK_LIB(termcap, tgetent, LIBTERMCAP="-ltermcap")
-    READLIBS="$READLIBS $LIBTERMCAP"
-    ;;
-  esac
-
-  AC_CHECK_HEADERS(readline/readline.h)
-  AC_CHECK_LIB(readline, readline, LIBREADLINE="-lreadline", ,$READLIBS)
-  if test "$LIBREADLINE" != "" ; then
-    AC_DEFINE_UNQUOTED(HAVE_READLINE, 1, [Define if you have the GNU readline library (-lreadline).])
-    LIBREADLINE="$LIBREADLINE $LIBTERMCAP"
-  fi
-fi
-
-
-echo
-echo "Step 6. Looking for required GPLed libraries...."
-echo
-
-dnl>
-dnl> Packet Capture Library by Lawrence Berkeley National Laboratory - Network Research Group
-dnl>
-
-dnl> order as follow
-dnl> 1. user defined libpcap development tree
-dnl> 2. standard installation in /usr/lib and /usr/include respectively
-dnl> 3. default package installation in /usr/local/lib and /usr/local/include respectively
-
-AC_MSG_CHECKING([for LBL Packet Capture Library (required package)])
-dnl> Dummy to prevent word wrap
-AC_MSG_RESULT([])
-
-dnl>
-dnl> user defined directory passed as option at configuration time
-dnl>
-if test ".${PCAP_ROOT}" != .; then
-  if test -d ${PCAP_ROOT} &&
-     test -r ${PCAP_ROOT}/libpcap.a &&
-     test -r ${PCAP_ROOT}/pcap.h; then
-       PCAP_ROOT=`cd ${PCAP_ROOT} && pwd`
-       CORELIBS="${CORELIBS} -L${PCAP_ROOT} -lpcap"
-       INCS="${INCS} -I${PCAP_ROOT}"
-       AC_MSG_RESULT([    found in ${PCAP_ROOT}])
-  elif test -d ${PCAP_ROOT} &&
-       test -d ${PCAP_ROOT}/lib &&
-       test -d ${PCAP_ROOT}/include &&
-       test -r ${PCAP_ROOT}/lib/libpcap.a &&
-       test -r ${PCAP_ROOT}/include/pcap.h; then
-         PCAP_ROOT=`cd ${PCAP_ROOT} && pwd`
-         CORELIBS="${CORELIBS} -L${PCAP_ROOT}/lib -lpcap"
-         INCS="${INCS} -I${PCAP_ROOT}/include"
-         AC_MSG_RESULT([    found in $PCAP_ROOT/lib and .../include])
-  elif test -d ${PCAP_ROOT} &&
-       test -d ${PCAP_ROOT}/lib &&
-       test -d ${PCAP_ROOT}/include &&
-       test -d ${PCAP_ROOT}/include/pcap &&
-       test -r ${PCAP_ROOT}/lib/libpcap.a &&
-       test -r ${PCAP_ROOT}/include/pcap/pcap.h; then
-         PCAP_ROOT=`cd ${PCAP_ROOT} && pwd`
-         CORELIBS="${CORELIBS} -L${PCAP_ROOT}/lib -lpcap"
-         INCS="${INCS} -I${PCAP_ROOT}/include/pcap"
-         AC_MSG_RESULT([    found in $PCAP_ROOT/lib and .../include/pcap])
-  else
-    AC_MSG_RESULT([    not found in ${PCAP_ROOT}])
-    AC_MSG_RESULT([             *** FATAL ERROR ***             ])
-    AC_MSG_RESULT([ It looks that you don't have some files needed to use the pcap library.])
-    AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
-    AC_MSG_RESULT([ When finished please re-run this program.])
-    AC_MSG_RESULT([ You can download the latest source tarball at http://www.tcpdump.org])
-    AC_MSG_ERROR([ The LBL Packet Capture Library development tree seems corrupted or incomplete!])
-  fi
-dnl>
-dnl> Older default installation 
-dnl>
-elif test -d /usr/local &&
-     test -r /usr/local/lib/libpcap.a &&
-     test -r /usr/local/include/pcap.h; then
-       PCAP_ROOT="/usr/local"
-       CORELIBS="${CORELIBS} -L$PCAP_ROOT/lib -lpcap"
-       INCS="${INCS} -I$PCAP_ROOT/include"
-       AC_MSG_RESULT([    found in ${PCAP_ROOT}/lib and ${PCAP_ROOT}/include])
-dnl>
-dnl> installation used by most packagers
-dnl>
-elif test -r /usr/lib/libpcap.a &&
-     test -r /usr/include/pcap.h; then
-       PCAP_ROOT="standard installation (/usr/lib and /usr/include)"
-       CORELIBS="${CORELIBS} -lpcap"
-       AC_MSG_RESULT([    found in $PCAP_ROOT])
-dnl>
-dnl> unusual and more complex installation used by some packagers
-dnl> (e.g. Red Hat Linux)
-dnl>
-elif test -r /usr/lib/libpcap.a &&
-     test -r /usr/include/pcap/pcap.h; then
-       PCAP_ROOT="semi-standard installation (/usr/lib and /usr/include/pcap)"
-       CORELIBS="${CORELIBS} -lpcap"
-       INCS="${INCS} -I/usr/include/pcap"
-       AC_MSG_RESULT([    found in $PCAP_ROOT])
-else
-     AC_CHECK_LIB(pcap, pcap_lookupdev)
-     if test "$ac_tr_lib" != "HAVE_LIBPCAP"; then
-       AC_MSG_RESULT([    not found!])
-       AC_MSG_RESULT([             *** FATAL ERROR ***             ])
-       AC_MSG_RESULT([ It looks that you don't have the libpcap distribution installed.])
-       AC_MSG_RESULT([ Download, compile and, optionally, install it.])
-       AC_MSG_RESULT([ When finished please re-run this program.])
-       AC_MSG_RESULT([ You can download the latest source tarball at http://www.tcpdump.org/])
-       AC_MSG_ERROR([ The LBL Packet Capture Library, libpcap, was not found! ])
-     else
-	if test -r /usr/include/pcap/pcap.h; then
-	       INCS="${INCS} -I/usr/include/pcap"
-	       PCAP_ROOT="standard installation (ld.so.conf and /usr/include/pcap)"
-	else
-       AC_MSG_RESULT([             *** FATAL ERROR ***             ])
-       AC_MSG_RESULT([ It looks that you don't have the libpcap distribution installed.])
-       AC_MSG_RESULT([ Download, compile and, optionally, install it.])
-       AC_MSG_RESULT([ When finished please re-run this program.])
-       AC_MSG_RESULT([ You can download the latest source tarball at http://www.tcpdump.org/])
-       AC_MSG_ERROR([ The LBL Packet Capture Library, libpcap, was not found! ])
-	fi
-     fi
-fi
-
-dnl>
-dnl> If your gdbm header file and library are installed somewhere strange
-dnl>
-
-dnl>
-dnl> The GNU database manager gdbm (MANDATORY)
-dnl> check for `gdbm_open' in -lgdbm
-dnl>
-dnl> order as follow
-dnl> 1. user defined gdbm development tree
-dnl> 2. standard installation in /usr/lib and /usr/include respectively
-dnl> 3. default package installation in /usr/local/lib and /usr/local/include respectively
-dnl> 4. gdbm development tree under the same ntop's root source directory or in a subdir
-
-if test ".${GDBM_ROOT}" != .; then
-  AC_MSG_CHECKING([for the GNU Database Manager Library gdbm (required package)])
-  if test -d $GDBM_ROOT &&
-     test -r $GDBM_ROOT/libgdbm.a &&
-     test -r $GDBM_ROOT/gdbm.h; then
-       GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
-       CORELIBS="${CORELIBS} -L$GDBM_ROOT -lgdbm"
-       INCS="${INCS} -I$GDBM_ROOT"
-       AC_DEFINE_UNQUOTED(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
-       AC_MSG_RESULT([found in $GDBM_ROOT])
-  elif test -d $GDBM_ROOT &&
-     test -d $GDBM_ROOT/lib &&
-     test -d $GDBM_ROOT/include &&
-     test -r $GDBM_ROOT/lib/libgdbm.a &&
-     test -r $GDBM_ROOT/include/gdbm.h; then
-       GDBM_ROOT=`cd ${GDBM_ROOT} && pwd`
-       CORELIBS="${CORELIBS} -L$GDBM_ROOT/lib -lgdbm"
-       INCS="${INCS} -I$GDBM_ROOT/include"
-       AC_DEFINE_UNQUOTED(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
-       AC_MSG_RESULT([])
-       AC_MSG_RESULT([     found in $GDBM_ROOT/lib and .../include])
-  else
-    AC_MSG_RESULT([not found in ${GDBM_ROOT}])
-    AC_MSG_RESULT([             *** FATAL ERROR ***             ])
-    AC_MSG_RESULT([ It looks that you don't have some files needed to use the gdbm library.])
-    AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
-    AC_MSG_RESULT([ When finished please re-run this program.])
-    AC_MSG_RESULT([ You can download the latest source tarball at http://www.gnu.org/software/gdbm/gdbm.html])
-    AC_MSG_ERROR([ The GNU Gdbm Library development tree seems corrupted or incomplete!])
-  fi
-else
-  AC_HAVE_HEADERS(gdbm.h)
-  AC_CHECK_LIB(gdbm, gdbm_open, CORELIBS="$CORELIBS -lgdbm")
-fi
-
-
-if test ".`echo $CORELIBS | grep gdbm`" = .; then
-  if test -d /usr/local &&
-     test -r /usr/local/lib/libgdbm.a &&
-     test -r /usr/local/include/gdbm.h; then
-       GDBM_ROOT="/usr/local"
-       CORELIBS="${CORELIBS} -L$GDBM_ROOT/lib -lgdbm"
-       INCS="${INCS} -I$GDBM_ROOT/include"
-       AC_DEFINE_UNQUOTED(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
-       AC_MSG_RESULT([found in $GDBM_ROOT])
-  elif test -r /usr/lib/libgdbm.a &&
-       test -r /usr/include/gdbm.h; then
-         GDBM_ROOT="/usr"
-         CORELIBS="${CORELIBS} -lgdbm"
-         AC_DEFINE_UNQUOTED(HAVE_GDBM_H, 1, [Define if you have the <gdbm.h> header file.])
-         AC_MSG_RESULT([found in $GDBM_ROOT])
-  else
-       AC_CHECK_LIB(gdbm, gdbm_close)
-       if test "$ac_tr_lib" != "HAVE_LIBGDBM"; then
-         AC_MSG_RESULT([             *** FATAL ERROR ***             ])
-         AC_MSG_RESULT([ It looks that you don't have the libgdbm distribution installed.])
-         AC_MSG_RESULT([ Download, compile and, optionally, install it.])
-         AC_MSG_RESULT([ When finished please re-run this program.])
-         AC_MSG_RESULT([ You can download the latest source tarball at http://www.gnu.org/software/gdbm/gdbm.html])
-         AC_MSG_ERROR([ The GNU Gdbm Library development tree seems corrupted or incomplete!])
-       else
-         GDBM_ROOT="standard installation"
-       fi
-  fi
-fi
-
-dnl>
-dnl> check for installed optional libraries
-dnl>
-
-echo
-echo "Step 7. Looking for optional GPLed libraries...."
-echo
-
-
-AC_CHECK_LIB(rrd, rrd_create, AC_DEFINE_UNQUOTED(HAVE_LIBRRD, 1, [Define if you have the RRDtool library]))
-if test "$ac_cv_lib_rrd_rrd_create" = "yes"; then
-   AC_CHECK_HEADERS(rrd.h)
-   RRDLIB="-lrrd"
-else
-AC_MSG_RESULT([ NOTE: librrd has not been found: the rrdPlugin will not be built])
-AC_MSG_RESULT([       You can download RRDtool from http://www.rrdtool.org/])
-fi
-
-AC_CHECK_LIB(c, re_search, AC_DEFINE_UNQUOTED(HAVE_REGEX, 1, [Define if you have the regex lib defined inside libc]))
-AC_CHECK_LIB(z, gzopen, AC_DEFINE_UNQUOTED(HAVE_ZLIB, 1, [Define if you have the zlib]))
-
-if test "$ac_cv_lib_z_gzopen" = "yes"; then
-   AC_CHECK_HEADERS(zlib.h)
-   MORELIBS="$MORELIBS -lz"
-fi
-
-
-dnl>
-dnl> check for `gdchart' library by Bruce Verderaime [http://www.fred.net/brv/chart/]
-dnl> By default the configuration script will try to link against GDChart library.
-dnl>
-dnl>  We support two configurations... using FOUR parameters:
-dnl>    --with-gdchart-root, --with-gd-root, --with-libpng-root and --with-zlib-root 
-dnl>
-dnl>  #1 -- with none of the parameters specified -- is in the ntop source 
-dnl>        tree (../gdchart0.94c and subdirectories)
-dnl>  #2 -- if at least one of the parameters is specified -- we look wherever you say.
-dnl>        In order to mirror existing behavior, for the three new parameters, 
-dnl>           we also check the --with-gdchart-root location and the ntop source tree.
-dnl>
-if test ".$ac_disable_gdchart" != ".no"; then
-  AC_MSG_WARN([GDchart support disabled via command line option!])
-else
-  AC_MSG_CHECKING([for GDchart (optional package)])
-  AC_MSG_RESULT([])
-
-  if test ".${GDCHART_ROOT}${GD_ROOT}${LIBPNG_ROOT}${ZLIB_ROOT}" = "."; then
-dnl>
-dnl>  Case #1 -- ntop source tree!
-dnl>
-    if test ".$ac_enable_showgdcharttests" = ".yes"; then
-        AC_MSG_CHECKING([for gdchart in ntop source tree, ../gdchart0.94c])
-        AC_MSG_RESULT([])
-    fi
-
-    GDCHART_ROOT="../gdchart0.94c"
-    GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
-
-    if test -d ${GDCHART_ROOT} &&
-       test -r ${GDCHART_ROOT}/gdc.h &&
-       test -r ${GDCHART_ROOT}/libgdchart.a &&
-       test -d ${GDCHART_ROOT}/gd-1.8.3 &&
-       test -r ${GDCHART_ROOT}/gd-1.8.3/libgd.a &&
-       test -r ${GDCHART_ROOT}/gd-1.8.3/gd.h &&
-       test -d ${GDCHART_ROOT}/gd-1.8.3 &&
-       test -r ${GDCHART_ROOT}/gd-1.8.3/libpng-1.2.4/libpng.a &&
-       test -r ${GDCHART_ROOT}/gd-1.8.3/libpng-1.2.4/png.h &&
-       test -d ${GDCHART_ROOT}/zlib-1.1.4 &&
-       test -r ${GDCHART_ROOT}/zlib-1.1.4/libz.a; then
-         MORELIBS="${MORELIBS} -L${GDCHART_ROOT} -lgdchart -L${GDCHART_ROOT}/gd-1.8.3 -lgd -L${GDCHART_ROOT}/gd-1.8.3/libpng-1.2.4 -lpng -L${GDCHART_ROOT}/zlib-1.1.4 -lz"
-         INCS="${INCS} -I${GDCHART_ROOT}"
-         AC_MSG_RESULT([    Found in ntop source tree at ${GDCHART_ROOT}])
-         gdchartok="yes"
-    else
-         AC_MSG_RESULT([    Not found in ntop source tree])
-         gdchartok="no"
-    fi
-
-  else
-
-dnl>
-dnl>  Case #2 -- wherever you say, boss...
-dnl>
-    gdchartok="yes"
-    if test ".$ac_enable_showgdcharttests" = ".yes"; then
-        AC_MSG_CHECKING([for gdchart in specified location(s)])
-        AC_MSG_RESULT([])
-    fi
-
-    NTOP_TREE_GDCHART="../gdchart0.94c"
-    NTOP_TREE_GDCHART=`cd ${NTOP_TREE_GDCHART} && pwd`
-dnl>
-dnl>     First, if gdchart isn't set, use the ntop source tree...
-dnl>
-    if test ".${GDCHART_ROOT}" = "."; then
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([    --with-gdchart-root= not set, using ../gdchart0.94c ])
-        fi
-         GDCHART_ROOT="${NTOP_TREE_GDCHART}"
-    fi
-dnl>
-dnl>     Then, if any of the other parameters aren't set, copy the value from gdchart
-dnl>
-    if test ".${GD_ROOT}" = "."; then
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([    --with-gd-root= not set, using --with-gdchart-root value ])
-        fi
-        GD_ROOT="${GDCHART_ROOT}"
-    fi
-    if test ".${LIBPNG_ROOT}" = "."; then
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([    --with-libpng-root= not set, using --with-gdchart-root value ])
-        fi
-        LIBPNG_ROOT="${GDCHART_ROOT}"
-    fi
-    if test ".${ZLIB_ROOT}" = "."; then
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([    --with-zlib-root= not set, using --with-gdchart-root value ])
-        fi
-        ZLIB_ROOT="${GDCHART_ROOT}"
-    fi
-dnl>
-dnl>  Now test...
-dnl>
-    if test -d ${GDCHART_ROOT} &&
-       test -d ${GDCHART_ROOT}/lib &&
-       test -d ${GDCHART_ROOT}/include &&
-       ( test -r ${GDCHART_ROOT}/lib/libgdchart.so ||
-         test -r ${GDCHART_ROOT}/lib/libgdchart.a ) &&
-       test -r ${GDCHART_ROOT}/include/gdc.h; then
-        MORELIBS="${MORELIBS} -L${GDCHART_ROOT}/lib -lgdchart"
-        INCS="${INCS} -I${GDCHART_ROOT}/include"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libgdchart/gdc.h found in ${GDCHART_ROOT}/lib and .../include ])
-        fi     
-    elif test -d ${GDCHART_ROOT} &&
-       ( test -r ${GDCHART_ROOT}/libgdchart.so ||
-         test -r ${GDCHART_ROOT}/libgdchart.a ) &&
-       test -r ${GDCHART_ROOT}/gdc.h; then
-        MORELIBS="${MORELIBS} -L${GDCHART_ROOT} -lgdchart"
-        INCS="${INCS} -I${GDCHART_ROOT}"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libgdchart/gdc.h found in ${GDCHART_ROOT} ])
-        fi     
-    elif test -d ${NTOP_TREE_GDCHART} &&
-         test -r ${NTOP_TREE_GDCHART}/libgdchart.a &&
-         test -r ${NTOP_TREE_GDCHART}/gdc.h; then
-        MORELIBS="${MORELIBS} -L${NTOP_TREE_GDCHART} -lgdchart"
-        INCS="${INCS} -I${NTOP_TREE_GDCHART}"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libgdchart/gdc.h found in ntop source tree ])
-        fi
-    else
-        gdchartok="no"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libgdchart/gdc.h not found relative to ${GDCHART_ROOT} ])
-        fi     
-    fi
-    if test -d ${GD_ROOT} &&
-       test -d ${GD_ROOT}/lib &&
-       test -d ${GD_ROOT}/include &&
-       ( test -r ${GD_ROOT}/lib/libgd.so ||
-         test -r ${GD_ROOT}/lib/libgd.a ) &&
-       test -r ${GD_ROOT}/include/gd.h; then
-        MORELIBS="${MORELIBS} -L${GD_ROOT}/lib -lgd"
-        INCS="${INCS} -I${GD_ROOT}/include"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libgd/gd.h found in ${GD_ROOT}/lib and .../include ])
-        fi
-    elif test -d ${GD_ROOT} &&
-       ( test -r ${GD_ROOT}/libgd.so ||
-         test -r ${GD_ROOT}/libgd.a ) &&
-       test -r ${GD_ROOT}/gd.h; then
-        MORELIBS="${MORELIBS} -L${GD_ROOT} -lgd"
-        INCS="${INCS} -I${GD_ROOT}"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libgd/gd.h found in ${GD_ROOT} ])
-        fi
-    elif test -d ${NTOP_TREE_GDCHART} &&
-         test -d ${NTOP_TREE_GDCHART}/gd-1.8.3 &&
-         test -r ${NTOP_TREE_GDCHART}/gd-1.8.3/libgd.a &&
-         test -r ${NTOP_TREE_GDCHART}/gd-1.8.3/gd.h; then
-        MORELIBS="${MORELIBS} -L${NTOP_TREE_GDCHART}/gd-1.8.3 -lgd"
-        INCS="${INCS} -I${NTOP_TREE_GDCHART}/gd-1.8.3"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libgd/gd.h found in ntop source tree ])
-        fi
-    else
-        gdchartok="no"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libgd/gd.h not found relative to ${GD_ROOT} ])
-        fi
-    fi
-
-    if test -d ${LIBPNG_ROOT} &&
-       test -d ${LIBPNG_ROOT}/lib &&
-       test -d ${LIBPNG_ROOT}/include &&
-       ( test -r ${LIBPNG_ROOT}/lib/libpng.so ||
-         test -r ${LIBPNG_ROOT}/lib/libpng.a ) &&
-       test -r ${LIBPNG_ROOT}/include/png.h; then
-        MORELIBS="${MORELIBS} -L${LIBPNG_ROOT}/lib -lpng"
-        INCS="${INCS} -I${LIBPNG_ROOT}/include"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libpng/png.h found in ${LIBPNG_ROOT}/lib and .../include ])
-        fi
-    elif test -d ${LIBPNG_ROOT} &&
-       ( test -r ${LIBPNG_ROOT}/libpng.so ||
-         test -r ${LIBPNG_ROOT}/libpng.a ) && 
-       test -r ${LIBPNG_ROOT}/png.h; then
-        MORELIBS="${MORELIBS} -L${LIBPNG_ROOT} -lpng"
-        INCS="${INCS} -I${LIBPNG_ROOT}"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then 
-            AC_MSG_RESULT([   libpng/png.h found in ${LIBPNG_ROOT} ])
-        fi
-    elif test -d ${NTOP_TREE_GDCHART} &&
-         test -d ${NTOP_TREE_GDCHART}/gd-1.8.3 &&
-         test -d ${NTOP_TREE_GDCHART}/gd-1.8.3/libpng-1.2.4 &&
-         test -r ${NTOP_TREE_GDCHART}/gd-1.8.3/libpng-1.2.4/libpng.a &&
-         test -r ${NTOP_TREE_GDCHART}/gd-1.8.3/libpng-1.2.4/png.h; then
-        MORELIBS="${MORELIBS} -L${NTOP_TREE_GDCHART}/gd-1.8.3/libpng-1.2.4 -lpng"
-        INCS="${INCS} -I${NTOP_TREE_GDCHART}/gd-1.8.3/libpng-1.2.4"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libpng/png.h found in ntop source tree ])
-        fi
-    else
-        gdchartok="no"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then 
-            AC_MSG_RESULT([   libpng/png.h not found relative to ${LIBPNG_ROOT} ])
-        fi
-    fi
-    if test -d ${ZLIB_ROOT} &&
-       test -d ${ZLIB_ROOT}/lib &&
-       test -d ${ZLIB_ROOT}/include &&
-       ( test -r ${ZLIB_ROOT}/lib/libz.so ||
-         test -r ${ZLIB_ROOT}/lib/libz.a ); then
-        MORELIBS="${MORELIBS} -L${ZLIB_ROOT}/lib -lpng"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libz found in ${ZLIB_ROOT}/lib ])
-        fi
-    elif test -d ${ZLIB_ROOT} &&
-       ( test -r ${ZLIB_ROOT}/libz.so ||
-         test -r ${ZLIB_ROOT}/libz.a ); then
-        MORELIBS="${MORELIBS} -L${ZLIB_ROOT} -lz"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libz found in ${ZLIB_ROOT} ])
-        fi
-    elif test -d ${NTOP_TREE_GDCHART} &&
-         test -d ${NTOP_TREE_GDCHART}/zlib-1.1.4 &&
-         test -r ${NTOP_TREE_GDCHART}/zlib-1.1.4/libz.a; then
-        MORELIBS="${MORELIBS} -L${NTOP_TREE_GDCHART}/zlib-1.1.4 -lz"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libz found in ntop source tree ])
-        fi
-    else
-        gdchartok="no"
-        if test ".$ac_enable_showgdcharttests" = ".yes"; then
-            AC_MSG_RESULT([   libz not found relative to ${ZLIB_ROOT} ])
-        fi
-    fi
-  fi
-fi
-
-if test ".$gdchartok" = ".no"; then
-    AC_MSG_RESULT([])
-    AC_MSG_RESULT([ It looks like you don't have some of the files needed to use the GDChart library.])
-    AC_MSG_RESULT([])
-    AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
-    AC_MSG_RESULT([ When finished please re-run this program.])
-    AC_MSG_RESULT([])
-    AC_MSG_RESULT([ You can download the needed code using CVS from cvs.ntop.org ])
-    AC_MSG_RESULT([])
-    AC_MSG_RESULT([ If the files are not in the ntop source tree, you will need to specify their ])
-    AC_MSG_RESULT([ location(s) using the --with-xxxxx-root parameters.])
-    AC_MSG_RESULT([])
-    AC_MSG_WARN([ Some of ntop's features will be disabled.])
-else
-    AC_DEFINE_UNQUOTED(HAVE_GDCHART, 1, [Define if you have the gdchart library from Bruce Verderaime [http://www.fred.net/brv/chart/].])
-fi
-
-
-
-dnl>
-dnl> OpenSSL by Open SLL Project
-dnl>
-dnl>  First a macro to encapsulate the tests
-dnl>    Args: 1 - libssl location
-dnl>          2 - ssl.h location
-dnl>
-
-AC_DEFUN(ntop_testopenssl, [
-    if test ".$ac_enable_showopenssltests" = ".yes"; then
-        AC_MSG_CHECKING([for libxxx.a in $1 and ssl.h in $2])
-    fi
-    if test -d $1 &&
-       test -r $1/libssl.a &&
-       test -r $1/libcrypto.a &&
-       test -d $2 &&
-       test -r $2/ssl.h; then
-         if test ".$ac_enable_showopenssltests" = ".yes"; then
-             AC_MSG_CHECKING([test program])
-         fi
-         OSSL_ROOT=`cd $1 && pwd`
-         _MORELIBS="${MORELIBS}"
-         _INCS="${INCS}"
-         MORELIBS="${MORELIBS} -L$1 -lssl -lcrypto"
-         INCS="${INCS} -I$2"
-         AC_TRY_COMPILE([
-#include <openssl/rsa.h>
-#include <openssl/crypto.h>
-#include <openssl/x509.h>
-#include <openssl/pem.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-             unsigned long l;
-             char buf[200];],
-             [ERR_error_string_n(l, buf, sizeof(buf));],
-             ac_cv_has_openssl=yes,
-             ac_cv_has_openssl=no)
-         if test ".$ac_cv_has_openssl" = ".yes"; then
-             if test ".$ac_enable_showopenssltests" = ".yes"; then
-                 AC_MSG_RESULT([OK])
-             else
-                 AC_MSG_RESULT([found in $1 and $2])
-             fi
-             AC_DEFINE_UNQUOTED(HAVE_OPENSSL, 1, [Define if you have the OPENSSL Toolkit (-lssl) by Open SSL Project.])
-         else
-             AC_MSG_RESULT([ERROR: older version])
-             MORELIBS="${_MORELIBS}"
-             INCS="${_INCS}"
-         fi
-    else
-        if test ".$ac_enable_showopenssltests" = ".yes"; then
-            AC_MSG_RESULT([not found])
-        fi
-        ac_cv_has_openssl=no
-    fi
-])
-
-dnl>
-dnl> Do not perform any check for the OpenSSL library,
-dnl> if the user decided to compile without HTTPS support.
-dnl>
-if test ".$ac_disable_openssl" = ".no"; then
-  if test ".$ac_enable_showopenssltests" = ".yes"; then
-      AC_MSG_RESULT([Checking for OpenSSL Library by Open SLL Project (optional package)...])
-  else
-      AC_MSG_CHECKING([Checking for OpenSSL Library by Open SLL Project (optional package)...])
-  fi
- 
-dnl> Test order as follow
-dnl>
-dnl>     Where the user tells us to check
-dnl>         we test the specific directory, then (if necessary)
-dnl>                       .../lib and .../include, then (if necessary)
-dnl>                       .../lib and .../include/openssl
-dnl> OR:
-dnl>     standard installation in /usr/lib and /usr/include
-dnl>     Various semi-standard installations in /usr, /usr/local, with and without openssl or ssl
-dnl>     Last: openssl development under the same root (i.e. in parallel with ntop and gdchart)
-
-  if test  ".${OSSL_ROOT}" != .; then
-      ntop_testopenssl(${OSSL_ROOT}, ${OSSL_ROOT})
-      if test ".$ac_cv_has_openssl" = ".no"; then
-	  ntop_testopenssl(${OSSL_ROOT}/lib, ${OSSL_ROOT}/include)
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl(${OSSL_ROOT}/lib, ${OSSL_ROOT}/include/openssl)
-      fi
-  else
-      ntop_testopenssl("/usr/lib", "/usr/include")
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("/usr/lib/ssl", "/usr/include/ssl")
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("/usr/lib", "/usr/include/openssl")
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("/usr/lib/openssl", "/usr/include/openssl")
-      fi
-
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("/usr/local/lib/ssl", "/usr/local/include/ssl")
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("/usr/local/lib/openssl", "/usr/local/include/openssl")
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("/usr/local/lib", "/usr/local/include/openssl")
-      fi
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("/usr/local/lib", "/usr/local/include")
-      fi
-
-      if test ".$ac_cv_has_openssl" = ".no"; then
-          ntop_testopenssl("../openssl", "../openssl")
-      fi
-  fi
-  if test ".$ac_cv_has_openssl" = ".no"; then
-      AC_MSG_WARN([ The Open SSL Library development tree seems corrupted or incomplete!])
-      AC_MSG_RESULT([ Download, compile and, optionally, install it.])
-      AC_MSG_RESULT([ When finished please re-run this program.])
-      AC_MSG_WARN([ You can download the latest source tarball at http://www.openssl.org/])
-      AC_MSG_WARN([ HTTPS disabled!])
-      if test ".$ac_enable_sslv3" = ".yes"; then
-          AC_MSG_WARN([--enable-sslv3 irrelevant, ignored!])
-      fi
-      if test ".$ac_enable_sslwatchdog" = ".yes"; then
-          AC_MSG_ERROR([SSL Watchdog requires openSSL. rerun without --disable-openssl])
-      fi
-  else  dnl> Yes, we have openSSL...
-      dnl>
-      dnl> Enable SSL v3
-      dnl>
-      if test ".$ac_enable_sslv3" = ".yes"; then
-         AC_DEFINE_UNQUOTED(SUPPORT_SSLV3, 1, [Define if you want support for SSL v3])
-      fi
-      dnl>
-      dnl> Enable SSL Watchdog?
-      dnl>
-      if test ".$ac_enable_sslwatchdog" = ".yes"; then
-         AC_DEFINE_UNQUOTED(USE_SSLWATCHDOG, 1, [Define if you want the SSL Watchdog compiled in (vs. runtime --use-sslwatchdog)])
-      fi
-  fi
-else
-  AC_MSG_WARN([HTTPS support disabled via command line option!])
-  if test ".$ac_enable_sslv3" = ".yes"; then
-      AC_MSG_WARN([--enable-sslv3 irrelevant, ignored!])
-  fi
-  if test ".$ac_enable_sslwatchdog" = ".yes"; then
-      AC_MSG_WARN([--enable-ssl-watchdog irrelevant, ignored!])
-      ac_enable_sslwatchdog = "no"
-  fi
-fi
-
-if test ".$ac_enable_sslwatchdog" = ".yes"; then
-  if test ".$ac_disable_multithread" = ".yes"; then
-      AC_MSG_ERROR([SSL Watchdog requires Multithreading. rerun without --disable-multithread])
-  fi
-fi
-
-dnl>
-dnl> check for `UCD-SNMP' library by University of California [http://ucd-snmp.ucdavis.edu]
-dnl>
-dnl>AC_CHECK_LIB(ucdagent, register_mib, [AC_DEFINE(HAVE_SNMP, 1, [Define if your host supports SNMP]) SNMPLIBS="-lsnmp -lucdagent -lucdmibs"], , -lsnmp -lucdagent -lucdmibs $LIBS $MORELIBS)
-
-
-echo
-echo "Step 8. Creating various ntop develpment tools...."
-echo
-
-dnl>
-dnl> Do not walk in the plugins/ subdir if the user decided he/she does not need any plugin.
-dnl>
-if test "$ac_disable_plugins" = yes; then
-  PLUGINS=''
-  AC_MSG_WARN([compilation of ntop's plugins disabled via command line option!])
-fi
-
-
-
-echo
-echo "Step 9. Semi-Automatic files generation...."
-echo
-
-AC_SUBST(VERSION)
-
+AC_SUBST(AS)
+AC_SUBST(CCLD)
+AC_SUBST(CONFIGFILE_DIR)
+AC_SUBST(DATAFILE_DIR)
+AC_SUBST(DBFILE_DIR)
+AC_SUBST(DEFS)
+AC_SUBST(DLLTOOL)
+AC_SUBST(DYN_FLAGS)
+AC_SUBST(EXEEXT)
+AC_SUBST(INCS)
+AC_SUBST(INTOP)
 AC_SUBST(LIBCURSES)
 AC_SUBST(LIBREADLINE)
-AC_SUBST(SNMPLIBS)
-
-AC_SUBST(INCS)
-AC_SUBST(LIBS)
-AC_SUBST(MORELIBS)
-AC_SUBST(CFLAGS)
-AC_SUBST(LDFLAGS)
-AC_SUBST(DYN_FLAGS)
-AC_SUBST(CCLD)
-
-AC_SUBST(CORELIBS)
-AC_SUBST(MOREOBJECTS)
-AC_SUBST(SNMPLIBS)
-
-AC_SUBST(MORESOURCES)
-AC_SUBST(MORELIBS)
+AC_SUBST(LIBTERMCAP)
+AC_SUBST(LIBTOOL_DEPS)
+AC_SUBST(NTOP_VERSION_EXTRA)
+AC_SUBST(OBJDUMP)
+AC_SUBST(OBJEXT)
+AC_SUBST(PLUGIN_DIR)
+AC_SUBST(PLUGINS)
 AC_SUBST(RRDLIB)
+AC_SUBST(RUN_DIR)
+AC_SUBST(SCRIPTVER)
+AC_SUBST(SO_VERSION_PATCH)
 
-if test ".$ac_disable_intop" = ".yes"; then
-INTOP=
+AC_CONFIG_FILES([Makefile])
+
+if test ".${ac_enable_intop}" = ".yes"; then
+    AC_CONFIG_FILES([intop/Makefile])
 fi
 
-AC_SUBST(INTOP)
-AC_SUBST(PLUGINS)
+if test ".${ac_disable_plugins}" != ".yes"; then
+    AC_CONFIG_FILES([plugins/Makefile])
+fi
 
-dnl>
-dnl> ntops directories
-dnl>
-DATAFILE_DIR=$datadir/ntop
-DATAFILE_DIR=`(
-    test "x$prefix" = xNONE && prefix=$ac_default_prefix
-    eval echo "$DATAFILE_DIR"
-)`
-AC_DEFINE_UNQUOTED(DATAFILE_DIR,"$DATAFILE_DIR", [Data file directory])
-AC_SUBST(DATAFILE_DIR)
+AC_OUTPUT
 
-CONFIGFILE_DIR=$sysconfdir/ntop
-CONFIGFILE_DIR=`(
-    test "x$prefix" = xNONE && prefix=$ac_default_prefix
-    eval echo "$CONFIGFILE_DIR"
-)`
-AC_DEFINE_UNQUOTED(CONFIGFILE_DIR,"$CONFIGFILE_DIR", [Configuration file directory])
-AC_SUBST(CONFIGFILE_DIR)
-
-RUN_DIR=$localstatedir/ntop
-RUN_DIR=`(
-    test "x$prefix" = xNONE && prefix=$ac_default_prefix
-    eval echo "$RUN_DIR"
-)`
-AC_DEFINE_UNQUOTED(RUN_DIR,"$RUN_DIR", [Run files directory])
-AC_SUBST(RUN_DIR)
-
-PLUGIN_DIR=$libdir/ntop/plugins
-PLUGIN_DIR=`(
-  test "x$prefix" = xNONE && prefix=$ac_default_prefix
-  test "x$exec_prefix" = xNONE && exec_prefix=${prefix}
-  eval echo "$PLUGIN_DIR"
-)`
-AC_DEFINE_UNQUOTED(PLUGIN_DIR,"$PLUGIN_DIR", [Plugin installation directory])
-AC_SUBST(PLUGIN_DIR)
-
-DBFILE_DIR=$localstatedir/ntop
-DBFILE_DIR=`(
-  test "x$prefix" = xNONE && prefix=$ac_default_prefix
-  eval echo "$DBFILE_DIR"
-)`
-AC_DEFINE_UNQUOTED(DBFILE_DIR,"$DBFILE_DIR", [Database file directory])
-AC_SUBST(DBFILE_DIR)
-
-dnl> temporary
-AC_DEFINE_UNQUOTED(RETSIGTYPE, void, [temporary definition])
-OBJEXT=o
-AC_SUBST(OBJEXT)
-EXEEXT=
-AC_SUBST(EXEEXT)
-
-dnl> To re-enable pep move the following line into the list below
-dnl> plugins/pep/Makefile
-AC_OUTPUT([
-Makefile
-plugins/Makefile
-intop/Makefile
-ntop-config
-], [
-case "$CONFIG_FILES" in
- *ntop-config*)
-    chmod +x ntop-config
-    ;;
-esac])
-
-dnl>
-dnl> versioning
-dnl>
-echo "creating version.c"
+echo
+echo "-------------------------------------------------------------------"
+echo
+echo "   Creating version.c..."
+echo
 /bin/rm -f version.c
-echo $NTOP_VERSION $NTOP_VERSION_EXTRA  | sed -e 's/.*/char * version   = "&";/' > version.c
+echo $PACKAGE_VERSION $NTOP_VERSION_EXTRA  | sed -e 's/.*/char * version   = "&";/' > version.c
 ./config.guess | sed -e 's/.*/char * osName    = "&";/' >> version.c
 echo "char * author    = \"Luca Deri <deri@ntop.org>\";" >> version.c
 date +"%D %r" | sed -e 's/.*/char * buildDate = "&";/' >> version.c
@@ -1593,45 +2917,99 @@ echo ${target} | sed -e 's/.*/char * target_system_type   = "&";/' >> version.c
 echo ${CC} ${CFLAGS} ${DEFS} | sed -e 's/.*/char * compiler_cflags   = "&";/' >> version.c
 echo ${INCS} | sed -e 's/.*/char * include_path    = "&";/' >> version.c
 echo ${LDFLAGS} ${LIBS} | sed -e 's/.*/char * system_libs    = "&";/' >> version.c
-echo ${CORELIBS} | sed -e 's/.*/char * core_libs   = "&";/' >> version.c
-echo ${MORELIBS} ${SNMPLIBS} | sed -e 's/.*/char * additional_libs   = "&";/' >> version.c
 echo ${prefix} | sed -e 's/.*/char * install_path   = "&";/' >> version.c
 
-echo "
-
-This is your $PACKAGE $VERSION configuration:
-
-Host System Type  : ${host}
-Compiler (cflags) : ${CC} ${CFLAGS} ${DEFS}
-Include path      : ${INCS}
-System Libs       : ${LDFLAGS} ${LIBS}
-Core Libs         : ${CORELIBS}
-Additional Libs   : ${MORELIBS} ${SNMPLIBS}
-LBL pcap in       : ${PCAP_ROOT}
-GNU gdbm in       : ${GDBM_ROOT}
-MultiThread mode  : ${multithread_mode}
-Install path      : ${prefix}
-
-Now type 'make' or 'gmake' (GNU make) on *BSD and Solaris
-systems to build $PACKAGE $VERSION.
-"
-
 echo
-echo
-echo "================================================="
-echo
-echo "If you like ntop, please do not forget to support"
-echo "its development. See SUPPORT_NTOP.txt for more"
-echo "information. Thanks for supporting ntop!"
-echo
-echo "================================================="
-echo
+echo "-------------------------------------------------------------------"
 
 dnl> MacOSX needs patched versions of some configure-related files
-case "$host:$CC" in
+
+case "${host}" in
     *darwin* )
-	cp packages/MacOSX/lt* .
-	;;
+	echo "Welcome to OSX"
+        cp packages/MacOSX/lt* .
+	rm -f libtool
+	ln -s  /usr/bin/glibtool libtool
+        ;;
 esac
+
+echo "==================================================================="
+echo "-------------------------------------------------------------------"
+echo
+echo "(optional) packages are in:"
+echo
+if test ".${PCAP_ROOT}" = "."; then
+    echo "LBL pcap in       : standard system headers and libraries"
+else
+    echo "LBL pcap in       : ${PCAP_ROOT}"
+fi
+if test ".${GDBM_ROOT}" = "."; then
+    echo "GNU gdbm in       : standard system headers and libraries"
+else
+    echo "GNU gdbm in       : ${GDBM_ROOT}"
+fi
+if test ".${OSSL_ROOT}" = "."; then
+    echo "openSSL in        : standard system headers and libraries"
+else
+    echo "openSSL in        : ${OSSL_ROOT}"
+fi
+if test ".${GDCHART_ROOT}" = "."; then
+    echo "GDChart in        : standard system headers and libraries"
+else
+    echo "GDChart in        : ${GDCHART_ROOT}"
+fi
+if test ".${GD_ROOT}" = "."; then
+    echo "  GD in           : standard system headers and libraries"
+else
+    echo "  GD in           : ${GD_ROOT}"
+fi
+if test ".${LIBPNG_ROOT}" = "."; then
+    echo "  libpng in       : standard system headers and libraries"
+else
+    echo "  libpng in       : ${LIBPNG_ROOT}"
+fi
+if test ".${ZLIB_ROOT}" = "."; then
+    echo "zlib in           : standard system headers and libraries"
+else
+    echo "zlib in           : ${ZLIB_ROOT}"
+fi
+echo
+echo "This is your $PACKAGE $VERSION configuration:"
+echo
+echo "Host System Type  : ${host}"
+if test ".${build_alias}" != .; then
+    echo "                        Note: --build=${build_alias} specified"
+fi
+echo "Compiler (cflags) : ${CC} ${CFLAGS}"
+echo "Defines           :     ${DEFS}"
+echo "Loader (ldflags)  : ${LDFLAGS}"
+echo "Include path      : ${INCS}"
+echo "System Libs       : ${LIBS}"
+echo "MultiThread mode  : ${multithread_mode}"
+echo "Install path      : ${prefix}"
+echo 
+echo "*******************************************************************"
+echo "*"
+echo "* NOTE: ./configure is now complete!"
+echo "*"
+echo "*       All of the obviously FATAL errors would cause you to"
+echo "*       abort before this point, so while you SHOULD scroll"
+echo "*       back and check for error/warning/note messages,"
+echo "*       you probably will not..."
+echo "*"
+echo "++"
+echo "++    If you like ntop, please do not forget to support its"
+echo "++    development. See SUPPORT_NTOP.txt for more information."
+echo "++"
+echo "++              Thanks for supporting ntop!"
+echo "++"
+echo "*"
+echo "* NEXT STEP:"
+echo "*"
+echo "*    Building ntop requires GNU Make, so to build ntop, type"
+echo "*    'make' (or on *BSD and Solaris systems, 'gmake')"
+echo "*"
+echo "*******************************************************************"
+echo
 
 exit 0
