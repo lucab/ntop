@@ -83,9 +83,10 @@ extern char* intop(struct in6_addr *addr);
 extern char* _intoa(struct in_addr addr, char* buf, u_short bufLen);
 extern char* intoa(struct in_addr addr);
 extern char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen);
+extern char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen);
 extern char * addrtostr(HostAddr *addr);
 extern int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer);
-extern void ipaddr2str(HostAddr hostIpAddress, int actualDeviceId);
+extern void ipaddr2str(HostAddr hostIpAddress, int actualDeviceId, int updateHost);
 extern char* etheraddr_string(const u_char *ep, char *buf);
 extern char* llcsap_string(u_char sap);
 extern void extract_fddi_addrs(struct fddi_header *fddip, char *fsrc,
@@ -242,8 +243,6 @@ extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 		    u_short p2pSessionIdx, int actualDeviceId);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
-extern void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost, TrafficCounter length,
-			      Counter pktCount, int actualDeviceId);
 extern void updateHostName(HostTraffic *el);
 extern void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length);
 extern void incrementUnknownProto(HostTraffic *host, int direction, u_int16_t eth_type,

@@ -629,12 +629,14 @@ void setHostSerial(HostTraffic *el) {
   }
 }
 
+/* ********************************************************* */
+
 /*
   Searches a host and returns it. If the host is not
   present in the hash a new bucket is created
 */
 HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
-			u_char checkForMultihoming,    u_char forceUsingIPaddress,
+			u_char checkForMultihoming, u_char forceUsingIPaddress,
 			int actualDeviceId) {
   u_int idx, isMultihomed = 0;
 #ifndef CFG_MULTITHREADED
@@ -696,13 +698,13 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 
 	    if(el->hostNumIpAddress[0] == '\0') {
 	      /* This entry didn't have IP fields set: let's set them now */
-	      addrcpy(&el->hostIpAddress,hostIpAddress);
+	      addrcpy(&el->hostIpAddress, hostIpAddress);
 	      strncpy(el->hostNumIpAddress,
 		      _addrtostr(hostIpAddress, buf, sizeof(buf)),
 		      sizeof(el->hostNumIpAddress));
 
 	      if(myGlobals.numericFlag == 0)
-		ipaddr2str(el->hostIpAddress, actualDeviceId);
+		ipaddr2str(el->hostIpAddress, actualDeviceId, 1);
 
 	      /* else el->hostSymIpAddress = el->hostNumIpAddress;
 		 The line below isn't necessary because (**) has
@@ -932,7 +934,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 
       /* Trick to fill up the address cache */
       if(myGlobals.numericFlag == 0)
-	ipaddr2str(el->hostIpAddress, actualDeviceId);
+	ipaddr2str(el->hostIpAddress, actualDeviceId, 1);
       else
 	strncpy(el->hostSymIpAddress, el->hostNumIpAddress, MAX_LEN_SYM_HOST_NAME-1);
     } else {

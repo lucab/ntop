@@ -173,25 +173,50 @@ int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
 
 /* ************************************ */
 
-static void addContactedPeers(HostTraffic *sender, HostTraffic *receiver,
+static void addContactedPeers(HostTraffic *sender, HostAddr *srcAddr,
+			      HostTraffic *receiver, HostAddr *dstAddr,
 			      int actualDeviceId) {
   if((sender == NULL) || (receiver == NULL) || (sender == receiver)) {
-    if((sender != NULL)
-       && ((sender == myGlobals.broadcastEntry) || (sender == myGlobals.otherHostEntry)))
-      return; /* This is not a problem */
-    traceEvent(CONST_TRACE_ERROR, "Sanity check failed @ addContactedPeers (0x%X, 0x%X)",
+    traceEvent(CONST_TRACE_ERROR,
+	       "Sanity check failed @ addContactedPeers (0x%X, 0x%X)",
 	       sender, receiver);
     return;
   }
 
-  if(/* (!broadcastHost(sender)) && */
-     (sender != myGlobals.otherHostEntry)
-     /* && (!broadcastHost(receiver)) */
-     && (receiver != myGlobals.otherHostEntry)) {
-    sender->totContactedSentPeers += incrementUsageCounter(&sender->contactedSentPeers,
-							   receiver, actualDeviceId);
-    receiver->totContactedRcvdPeers += incrementUsageCounter(&receiver->contactedRcvdPeers,
-							     sender, actualDeviceId);
+  if(sender != myGlobals.otherHostEntry) {
+    HostTraffic *elPtr, el;
+
+    if(receiver != myGlobals.otherHostEntry)
+      elPtr = receiver;
+    else {
+      elPtr = &el;
+      memset(elPtr, 0, sizeof(HostTraffic));
+      addrcpy(&elPtr->hostIpAddress, dstAddr);
+      if(myGlobals.numericFlag == 0)
+	ipaddr2str(elPtr->hostIpAddress, actualDeviceId, 0);
+      elPtr->hostNumIpAddress[0] = '1'; /* Trick */
+      setHostSerial(elPtr);
+    }
+
+    sender->totContactedSentPeers += incrementUsageCounter(&sender->contactedSentPeers, elPtr, actualDeviceId);
+  }
+
+  if(receiver != myGlobals.otherHostEntry) {
+    HostTraffic *elPtr, el;
+
+    if(sender != myGlobals.otherHostEntry)
+      elPtr = sender;
+    else {
+      elPtr = &el;
+      memset(elPtr, 0, sizeof(HostTraffic));
+      addrcpy(&elPtr->hostIpAddress, srcAddr);
+      if(myGlobals.numericFlag == 0)
+	ipaddr2str(elPtr->hostIpAddress, actualDeviceId, 0);
+      elPtr->hostNumIpAddress[0] = '1'; /* Trick */
+      setHostSerial(elPtr);
+    }
+
+    receiver->totContactedRcvdPeers += incrementUsageCounter(&receiver->contactedRcvdPeers, elPtr, actualDeviceId);
   }
 }
 
@@ -483,8 +508,10 @@ static void resetHourTraffic(u_short hourId) {
 
 /* ************************************ */
 
-void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
-		       TrafficCounter length, Counter numPkts, int actualDeviceId) {
+static void updatePacketCount(HostTraffic *srcHost, HostAddr *srcAddr,
+			      HostTraffic *dstHost, HostAddr *dstAddr,
+			      TrafficCounter length, Counter numPkts,
+			      int actualDeviceId) {
   static u_short lastHourId=0;
   u_short hourId;
   struct tm t, *thisTime;
@@ -494,10 +521,8 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
     return;
   }
 
-  if((srcHost == dstHost)
-     || ((srcHost == myGlobals.otherHostEntry)
-	 && (dstHost == myGlobals.otherHostEntry)))
-    return;
+  if(srcHost == dstHost)
+    return; /* There's something strange... */
 
   thisTime = localtime_r(&myGlobals.actTime, &t);
   hourId = thisTime->tm_hour % 24 /* just in case... */;;
@@ -507,41 +532,49 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
     lastHourId = hourId;
   }
 
-  incrementTrafficCounter(&srcHost->pktSent, numPkts);
-  incrementTrafficCounter(&srcHost->pktSentSession, numPkts);
+  if(srcHost != myGlobals.otherHostEntry) {
+    incrementTrafficCounter(&srcHost->pktSent, numPkts);
+    incrementTrafficCounter(&srcHost->pktSentSession, numPkts);
+    if(srcHost->trafficDistribution == NULL) srcHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
+    incrementTrafficCounter(&srcHost->trafficDistribution->last24HoursBytesSent[hourId], length.value);
+    incrementTrafficCounter(&srcHost->bytesSent, length.value);
+    incrementTrafficCounter(&srcHost->bytesSentSession, length.value);
+  }
 
-  if(srcHost->trafficDistribution == NULL) srcHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
-  if(dstHost->trafficDistribution == NULL) dstHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
-  incrementTrafficCounter(&srcHost->trafficDistribution->last24HoursBytesSent[hourId], length.value);
-  incrementTrafficCounter(&dstHost->trafficDistribution->last24HoursBytesRcvd[hourId], length.value);
+  if(dstHost != myGlobals.otherHostEntry) {
+    if(dstHost->trafficDistribution == NULL) dstHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
+    incrementTrafficCounter(&dstHost->trafficDistribution->last24HoursBytesRcvd[hourId], length.value);
+    incrementTrafficCounter(&dstHost->bytesRcvd, length.value);
+    incrementTrafficCounter(&dstHost->bytesRcvdSession, length.value);
+    incrementTrafficCounter(&dstHost->pktRcvd, numPkts);
+    incrementTrafficCounter(&dstHost->pktRcvdSession, numPkts);
+  }
 
   if(broadcastHost(dstHost)) {
-    incrementTrafficCounter(&srcHost->pktBroadcastSent, numPkts);
-    incrementTrafficCounter(&srcHost->bytesBroadcastSent, length.value);
+    if(srcHost != myGlobals.otherHostEntry) {
+      incrementTrafficCounter(&srcHost->pktBroadcastSent, numPkts);
+      incrementTrafficCounter(&srcHost->bytesBroadcastSent, length.value);
+    }
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].broadcastPkts, numPkts);
   } else if(isMulticastAddress(&(dstHost->hostIpAddress))) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "%s->%s",
 	       srcHost->hostSymIpAddress, dstHost->hostSymIpAddress);
 #endif
-    incrementTrafficCounter(&srcHost->pktMulticastSent, numPkts);
-    incrementTrafficCounter(&srcHost->bytesMulticastSent, length.value);
-    incrementTrafficCounter(&dstHost->pktMulticastRcvd, numPkts);
-    incrementTrafficCounter(&dstHost->bytesMulticastRcvd, length.value);
+    if(srcHost != myGlobals.otherHostEntry) {
+      incrementTrafficCounter(&srcHost->pktMulticastSent, numPkts);
+      incrementTrafficCounter(&srcHost->bytesMulticastSent, length.value);
+    }
+
+    if(dstHost != myGlobals.otherHostEntry) {
+      incrementTrafficCounter(&dstHost->pktMulticastRcvd, numPkts);
+      incrementTrafficCounter(&dstHost->bytesMulticastRcvd, length.value);
+    }
     incrementTrafficCounter(&myGlobals.device[actualDeviceId].multicastPkts, numPkts);
   }
 
-  incrementTrafficCounter(&srcHost->bytesSent, length.value);
-  incrementTrafficCounter(&srcHost->bytesSentSession, length.value);
-  if(dstHost != NULL) {
-      incrementTrafficCounter(&dstHost->bytesRcvd, length.value);
-      incrementTrafficCounter(&dstHost->bytesRcvdSession, length.value);
-      incrementTrafficCounter(&dstHost->pktRcvd, numPkts);
-      incrementTrafficCounter(&dstHost->pktRcvdSession, numPkts);
-  }
-
   if((dstHost != NULL) /*&& (!broadcastHost(dstHost))*/)
-    addContactedPeers(srcHost, dstHost, actualDeviceId);
+    addContactedPeers(srcHost, srcAddr, dstHost, dstAddr, actualDeviceId);
 }
 
 /* ************************************ */
@@ -940,7 +973,8 @@ static void processIpPkt(const u_char *bp,
     }
 
   ctr.value = h->len;
-  updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
+  updatePacketCount(srcHost, &srcAddr, dstHost, &dstAddr,
+		    ctr, 1, actualDeviceId);
 
   if((!myGlobals.dontTrustMACaddr) && (!myGlobals.device[actualDeviceId].dummyDevice)) {
     checkNetworkRouter(srcHost, dstHost, ether_dst, actualDeviceId);
@@ -1886,7 +1920,7 @@ static void processIpPkt(const u_char *bp,
       sendICMPflow(srcHost, dstHost, ntohs(ip6->ip6_plen), actualDeviceId);
     }
     break;
-    
+
 #endif
   default:
     if(srcHost->ipProtosList != NULL) {
@@ -2574,7 +2608,12 @@ void processPacket(u_char *_deviceId,
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 
 	  ctr.value = length;
-	  updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
+	  /*
+	    Even if this is IPX (i.e. no IP) the hostIpAddress field is
+	    fine because it is not used in this special case and I need
+	    a placeholder here.
+	  */
+	  updatePacketCount(srcHost, &srcHost->hostIpAddress, dstHost, &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
 	}
       } else if((myGlobals.device[deviceId].datalink == DLT_IEEE802) && (eth_type < ETHERMTU)) {
 	TrafficCounter ctr;
@@ -2613,7 +2652,13 @@ void processPacket(u_char *_deviceId,
 
 	ctr.value = length;
 
-	updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
+	/*
+	  Even if this is probably not IP the hostIpAddress field is
+	  fine because it is not used in this special case and I need
+	  a placeholder here.
+	*/
+	updatePacketCount(srcHost, &srcHost->hostIpAddress, dstHost,
+			  &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
       } else if((myGlobals.device[deviceId].datalink != DLT_IEEE802)
 		&& (eth_type <= ETHERMTU) && (length > 3)) {
 	/* The code below has been taken from tcpdump */
@@ -2939,7 +2984,13 @@ void processPacket(u_char *_deviceId,
 	    }
 
 	    ctr.value = length;
-	    updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
+	    /*
+	      Even if this is not IP the hostIpAddress field is
+	      fine because it is not used in this special case and I need
+	      a placeholder here.
+	    */
+	    updatePacketCount(srcHost, &srcHost->hostIpAddress, dstHost,
+			      &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
 	  }
 	}
       } else if((eth_type == ETHERTYPE_IP) || (eth_type == ETHERTYPE_IPv6)) {
@@ -3062,7 +3113,13 @@ void processPacket(u_char *_deviceId,
 	}
 
 	ctr.value = length;
-	updatePacketCount(srcHost, dstHost, ctr, 1, actualDeviceId);
+	/*
+	  Even if this is not IP the hostIpAddress field is
+	  fine because it is not used in this special case and I need
+	  a placeholder here.
+	*/
+	updatePacketCount(srcHost, &srcHost->hostIpAddress, dstHost,
+			  &dstHost->hostIpAddress, ctr, 1, actualDeviceId);
       }
     }
   } else {

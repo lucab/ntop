@@ -598,6 +598,10 @@
  */
 #define MAX_NUM_BAD_IP_ADDRESSES            3
 
+
+/* Maximum number of queued addresses waiting to be resolved */
+#define MAX_NUM_QUEUED_ADDRESSES          4096
+
 /*
  * Number of (optional) "AR - Address Resolution" threads,
  *    i.e. dequeueAddressThreadId[] and numDequeueThreads in myGlobals.

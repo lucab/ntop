@@ -1943,7 +1943,6 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   u_short found = 0;
   char formatBuf[32], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-  int portBufLen;
 
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
@@ -1980,7 +1979,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
   if(el->portsUsage != NULL) {
     for(idx=1; idx<MAX_ASSIGNED_IP_PORTS /* 1024 */; idx++) {
       if(el->portsUsage[idx] != NULL) {
-	char *svc = getAllPortByNum(idx, portBuf, portBufLen);
+	char *svc = getAllPortByNum(idx, portBuf, sizeof(portBuf));
 	char webHostName[LEN_GENERAL_WORK_BUFFER];
 	HostTraffic *peerHost;
 
@@ -2087,7 +2086,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
       if(el->otherIpPortsSent[idx] >= 0) {
 	if(snprintf(buf, sizeof(buf), "<LI><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
 		    el->otherIpPortsSent[idx],
-		    getAllPortByNum(el->otherIpPortsSent[idx], portBuf, portBufLen)) < 0)
+		    getAllPortByNum(el->otherIpPortsSent[idx], portBuf, sizeof(portBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	numPrinted++;
@@ -2101,7 +2100,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
       if(el->otherIpPortsRcvd[idx] >= 0) {
 	if(snprintf(buf, sizeof(buf), "<li><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
 		    el->otherIpPortsRcvd[idx],
-		    getAllPortByNum(el->otherIpPortsRcvd[idx], portBuf, portBufLen)) < 0)
+		    getAllPortByNum(el->otherIpPortsRcvd[idx], portBuf, sizeof(portBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	numPrinted++;
@@ -2131,7 +2130,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
       if(el->recentlyUsedClientPorts[idx] >= 0) {
 	if(snprintf(buf, sizeof(buf), "<li><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
 		    el->recentlyUsedClientPorts[idx],
-		    getAllPortByNum(el->recentlyUsedClientPorts[idx], portBuf, portBufLen)) < 0)
+		    getAllPortByNum(el->recentlyUsedClientPorts[idx], portBuf, sizeof(portBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	numPrinted++;
@@ -2146,7 +2145,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId) {
       if(el->recentlyUsedServerPorts[idx] >= 0) {
 	if(snprintf(buf, sizeof(buf), "<LI><A HREF=\""SHOW_PORT_TRAFFIC"?port=%d\">%s</A>\n",
 		    el->recentlyUsedServerPorts[idx],
-		    getAllPortByNum(el->recentlyUsedServerPorts[idx], portBuf, portBufLen)) < 0)
+		    getAllPortByNum(el->recentlyUsedServerPorts[idx], portBuf, sizeof(portBuf))) < 0)
 	  BufferTooShort();
 	sendString(buf);
 	numPrinted++;
@@ -2746,7 +2745,7 @@ void printIpProtocolUsage(void) {
     if((clientPorts[j] > 0) || (serverPorts[j] > 0)) {
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=CENTER>%d</TD>"
 		  "<TD "TD_BG">\n", getRowColor(), 
-		  getAllPortByNum(j, portBuf, portBufLen), j) < 0) BufferTooShort();
+		  getAllPortByNum(j, portBuf, sizeof(portBuf)), j) < 0) BufferTooShort();
       sendString(buf);
 
       if(clientPorts[j] > 0) {
@@ -3222,7 +3221,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 	    if(ipPorts[i] != NULL) {
 	      char portBuf[32];
 	      int portBufLen;
-	      char *symPort = getAllPortByNum(ipPorts[i]->port, portBuf, portBufLen);
+	      char *symPort = getAllPortByNum(ipPorts[i]->port, portBuf, sizeof(portBuf));
 
 	      if(symPort == NULL) symPort = "";
 
@@ -4635,9 +4634,8 @@ void showPortTraffic(u_short portNr) {
   int numRecords = 0, firstRun = 1;
   HostTraffic *el;
   char portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
-  int portBufLen;
 
-  str = getAllPortByNum(portNr, portBuf, portBufLen);
+  str = getAllPortByNum(portNr, portBuf, sizeof(portBuf));
 
   if((str[0] == '?') || (atoi(str) == portNr)) {
     if(snprintf(buf, sizeof(buf), "Recent Users of Port %u", portNr) < 0)

@@ -102,21 +102,9 @@ static void resolveAddress(HostAddr *hostAddr,
   traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Entering resolveAddress()");
 #endif
 
-  if (hostAddr->hostFamily == AF_INET){
-    if(snprintf(keyBuf, sizeof(keyBuf), "%u",hostAddr->Ip4Address.s_addr) < 0)
-      BufferTooShort();
-  }
-#ifdef INET6
-  else if (hostAddr->hostFamily == AF_INET6){
-    if (_intop(&hostAddr->Ip6Address, keyBuf,INET6_ADDRSTRLEN) == NULL)
-      BufferTooShort();
-  }
-#endif
-
-  key_data.dptr = keyBuf;
+  key_data.dptr = _addrtonum(hostAddr, tmpBuf, sizeof(tmpBuf));
   key_data.dsize = strlen(keyBuf)+1;
   
-
   if(myGlobals.dnsCacheFile == NULL) {
 #ifdef DNS_DEBUG
     traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress(), dnsCacheFile NULL");
@@ -473,13 +461,31 @@ static void resolveAddress(HostAddr *hostAddr,
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
 
-static void queueAddress(HostAddr elem) {
+static void queueAddress(HostAddr elem, int forceResolution) {
   datum key_data, data_data;
   char tmpBuf[47];
   int rc;
 
-  if(myGlobals.trackOnlyLocalHosts && (!_pseudoLocalAddress(&elem)))
+  if((!forceResolution)
+     && myGlobals.trackOnlyLocalHosts 
+     && (!_pseudoLocalAddress(&elem)))
     return;
+
+  /*
+    The address queue is far too long. This is usefult for
+    avoiding problems due to DOS applications
+  */
+  if(myGlobals.addressQueuedCurrent > MAX_NUM_QUEUED_ADDRESSES) {
+    static char shownMsg = 0;
+
+    if(!shownMsg) {
+      shownMsg = 1;
+      traceEvent(CONST_TRACE_INFO, "Address resolution queue is full [%d slots]. Addresses in excess won't be resolved.", 
+		 myGlobals.addressQueuedCurrent);
+      traceEvent(CONST_TRACE_INFO, "Addresses in excess won't be resolved.");      
+    }
+    return;
+  }
 
   /* Fix - Burton Strauss (BStrauss@acm.org) 2002-04-04
            Make sure tmpBuf has a value and
@@ -487,12 +493,12 @@ static void queueAddress(HostAddr elem) {
            Incidentally, speed this up by eliminating the fetch/store sequence in favor of
            a single store.
   */
-  if (elem.hostFamily == AF_INET){
+  if (elem.hostFamily == AF_INET) {
     key_data.dptr = (void*)&elem.Ip4Address.s_addr;
     key_data.dsize = 4;
   }
 #ifdef INET6
-  else if (elem.hostFamily == AF_INET6){
+  else if (elem.hostFamily == AF_INET6) {
     key_data.dptr = (void*)&elem.Ip6Address.s6_addr;
     key_data.dsize = 16;
   }
@@ -505,14 +511,13 @@ static void queueAddress(HostAddr elem) {
   rc = gdbm_store(myGlobals.addressQueueFile, key_data, data_data, GDBM_INSERT);
 
   if (rc == 0) {
-      myGlobals.addressQueuedCurrent++;
-      myGlobals.addressQueuedCount++;
-      if (myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
-	myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
-
+    myGlobals.addressQueuedCurrent++, myGlobals.addressQueuedCount++;
+    if (myGlobals.addressQueuedCurrent > myGlobals.addressQueuedMax)
+      myGlobals.addressQueuedMax = myGlobals.addressQueuedCurrent;
+    
 #ifdef DNS_DEBUG
-   traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Queued address '%s' [addr queue=%d/max=%d]",
-	      tmpBuf, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Queued address '%s' [addr queue=%d/max=%d]",
+	       tmpBuf, myGlobals.addressQueuedCurrent, myGlobals.addressQueuedMax);
 #endif
   } else {
     /* rc = 1 is duplicate key, which is fine.  Other codes are problems... */
@@ -523,8 +528,8 @@ static void queueAddress(HostAddr elem) {
     } else {
       myGlobals.addressQueuedDup++;
 #ifdef DNS_DEBUG
-        traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Duplicate queue of address '%s' ignored",
-                           tmpBuf);
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Duplicate queue of address '%s' ignored",
+		 tmpBuf);
 #endif
     }
   }
@@ -572,13 +577,13 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
     while(data_data.dptr != NULL) {
       int size = data_data.dsize;
       if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return(NULL);
-      if (size == sizeof(struct in_addr)){
+      if (size == sizeof(struct in_addr)) {
 	/*addrput(AF_INET, &addr, data_data.dptr);*/
 	addr.hostFamily = AF_INET;
 	memcpy(&addr.Ip4Address.s_addr, data_data.dptr, size);
       }
 #ifdef INET6
-      else if (size == sizeof(struct in6_addr)){
+      else if (size == sizeof(struct in6_addr)) {
 	addr.hostFamily = AF_INET6;
 	memcpy(&addr.Ip6Address.s6_addr, data_data.dptr, size);
       }
@@ -617,7 +622,7 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 
 /* ************************************ */
 
-char* _intop(struct in6_addr *addr,char *buf, u_short buflen) {  
+char* _intop(struct in6_addr *addr, char *buf, u_short buflen) {  
   return (char *)inet_ntop(AF_INET6, addr, buf, buflen); 
 }
 
@@ -676,10 +681,10 @@ char* intoa(struct in_addr addr) {
 
 /* ************************************ */
 
-char* addrtostr(HostAddr *addr){
+char* addrtostr(HostAddr *addr) {
   if (addr == NULL)
     return NULL;
-  switch(addr->hostFamily){
+  switch(addr->hostFamily) {
   case AF_INET:
     return(char *)(intoa(addr->Ip4Address));
 #ifdef INET6
@@ -692,10 +697,10 @@ char* addrtostr(HostAddr *addr){
 
 /* ************************************ */
 
-char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen){
+char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen) {
   if (addr == NULL)
     return NULL;
-  switch(addr->hostFamily){
+  switch(addr->hostFamily) {
   case AF_INET:
     return (_intoa(addr->Ip4Address,buf,bufLen));
 #ifdef INET6
@@ -704,6 +709,31 @@ char * _addrtostr(HostAddr *addr, char* buf, u_short bufLen){
 #endif
   default: return("???");
   }
+}
+
+/* ************************************ */
+
+char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen) {
+
+  if((addr == NULL) || (buf == NULL))
+    return NULL;
+
+  switch(addr->hostFamily) {
+  case AF_INET:
+    if(snprintf(buf, bufLen, "%u", addr->Ip4Address.s_addr) < 0)
+      BufferTooShort();
+    break;
+#ifdef INET6
+  case AF_INET6:
+    if(_intop(&addr->Ip6Address, buf, bufLen) == NULL)
+      BufferTooShort();
+    break;
+#endif
+  default:
+    return("???");
+  }
+
+  return(buf);
 }
 
 /* ******************************* */
@@ -725,10 +755,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer) {
     return(0);
   }
      
-  if( _addrtostr(&hostIpAddress,tmpBuf, sizeof(tmpBuf)) < 0)
-    BufferTooShort();
-  
-  key_data.dptr = tmpBuf;
+  key_data.dptr = _addrtonum(&hostIpAddress,tmpBuf, sizeof(tmpBuf));
   key_data.dsize = strlen(key_data.dptr)+1;
   
   if(myGlobals.dnsCacheFile == NULL) return(0); /* ntop is quitting... */
@@ -784,16 +811,16 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer) {
 
 /* This function automatically updates the instance name */
 
-void ipaddr2str(HostAddr hostIpAddress, int actualDeviceId) {
+void ipaddr2str(HostAddr hostIpAddress, int actualDeviceId, int updateHost) {
   char buf[MAX_LEN_SYM_HOST_NAME+1];
 
   myGlobals.numipaddr2strCalls++;
 
   if(fetchAddressFromCache(hostIpAddress, buf)  && (buf[0] != '\0')) {
-      updateHostNameInfo(hostIpAddress, buf);
+    if(updateHost) updateHostNameInfo(hostIpAddress, buf);
   } else {
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
-    queueAddress(hostIpAddress);
+    queueAddress(hostIpAddress, !updateHost);
 #else
     resolveAddress(&hostIpAddress, 0, actualDeviceId);
 #endif
