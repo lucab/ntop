@@ -513,7 +513,7 @@ void ipaddr2str(struct in_addr hostIpAddress) {
   datum key_data;
   datum data_data;
 #endif
-
+  
   if((addr == INADDR_BROADCAST) || (addr == 0x0)) {
     updateHostNameInfo(hostIpAddress.s_addr, _intoa(hostIpAddress, buf, sizeof(buf)));
     return;
@@ -521,9 +521,10 @@ void ipaddr2str(struct in_addr hostIpAddress) {
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%u", (unsigned) hostIpAddress.s_addr) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
+ 
   key_data.dptr = tmpBuf;
   key_data.dsize = strlen(key_data.dptr)+1;
-
+  
 #ifdef MULTITHREADED
   accessMutex(&gdbmMutex, "ipaddr2str");
 #endif
@@ -545,7 +546,12 @@ void ipaddr2str(struct in_addr hostIpAddress) {
 #ifdef GDBM_DEBUG
     traceEvent(TRACE_INFO, "Unable to retrieve %s\n", tmpBuf);
 #endif
+
+#ifndef MULTITHREADED
+    resolveAddress(&hostIpAddress, 0);
+#else
     queueAddress(hostIpAddress);
+#endif
   }
 }
 

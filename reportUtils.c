@@ -3205,9 +3205,10 @@ void printHostDetailedInfo(HostTraffic *el) {
      && (!multicastHost(el))
      && (mapperURL[0] > 0)) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	    "<IMG SRC=\"%s?host=%s\" WIDTH=320 HEIGHT=200></TD></TR>\n",
-	    getRowColor(),
-	    "Host Location", mapperURL, el->hostNumIpAddress) < 0) 
+		"<IMG SRC=\"%s?host=%s\" WIDTH=320 HEIGHT=200></TD></TR>\n",
+		getRowColor(),
+		"Host Physical Location",
+		mapperURL, el->hostNumIpAddress) < 0) 
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
   }
