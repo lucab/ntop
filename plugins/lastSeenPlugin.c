@@ -30,8 +30,6 @@ static void deletelastSeenURL( char *addr );
 
 /* ****************************** */
 
-extern int newSock;
-
 static GDBM_FILE LsDB;
 static int disabled = 0;
 
@@ -151,7 +149,7 @@ static void handleLsHTTPrequest(char* url) {
   printHTMLheader(NULL, 0);
 
   if ( url && strncmp(url,"P",1)==0 ) {
-    entry = recv(newSock, &postData[0],127,0); 
+    entry = recv(myGlobals.newSock, &postData[0],127,0); 
     postData[entry] = '\0';
     addNotes( url+1, &postData[6]);	
     char_ip.s_addr = strtoul(url+1, NULL, 10);
