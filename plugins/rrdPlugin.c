@@ -565,7 +565,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 /* ******************************************* */
 
 #define MAX_NUM_ENTRIES   32
-#define MAX_BUF_LEN       96
+#define MAX_BUF_LEN       128
 
 void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
@@ -672,7 +672,8 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
 #endif
 
     if(stat(path, &statbuf) == 0) {
-      if(snprintf(buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path) < 0) BufferTooShort(); argv[argc++] = buf[entryId];
+      if(snprintf(buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path) < 0)
+	BufferTooShort(); argv[argc++] = buf[entryId];
       if(snprintf(buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
 		  entryId, rrd_colors[entryId], rrds[i]) < 0) BufferTooShort(); argv[argc++] = buf1[entryId];
       entryId++;
