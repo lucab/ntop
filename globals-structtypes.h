@@ -1591,7 +1591,7 @@ XML*/
 /*XMLSECTIONEND */
 
   /* Database */
-  GDBM_FILE dnsCacheFile, pwFile, hostsInfoFile, addressQueueFile, prefsFile, macPrefixFile;
+  GDBM_FILE dnsCacheFile, pwFile, addressQueueFile, prefsFile, macPrefixFile;
 
   /* the table of broadcast entries */
   HostTraffic *broadcastEntry;

@@ -893,6 +893,12 @@
 #define CONST_UNKNOWN_MTU                   1500
 
 /*
+ * Maximum age of the dnsCache.db file before it will be recreated upon ntop
+ * restart.
+ */
+#define CONST_DNSCACHE_PERMITTED_AGE        15*60
+
+/*
  * OS Fingerprint file, from ettercap (http://ettercap.sourceforge.net/)
  */
 #define CONST_OSFINGERPRINT_FILE            "etter.passive.os.fp.gz"

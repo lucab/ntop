@@ -790,7 +790,10 @@ void resetStats(int deviceId) {
 
 void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
 		    int doUnlink, struct stat *statbuf) {
-  char tmpBuf[200];
+  char tmpBuf[200], theDate[48];
+  time_t        st_time, now;
+  struct tm t;
+  int d;
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
   /* directory is used by intop to specify where to open the files.
@@ -799,40 +802,71 @@ void initSingleGdbm(GDBM_FILE *database, char *dbName, char *directory,
   */
 
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/%s",
-	       directory != NULL ? directory : myGlobals.dbPath,
-	       dbName) < 0)
-     BufferTooShort();
+	      directory != NULL ? directory : myGlobals.dbPath,
+	      dbName) < 0)
+    BufferTooShort();
 
-   if(doUnlink == TRUE) {
-     unlink(tmpBuf); /* Delete the old one (if present) */
-   }
+  if(statbuf) {
+    if(stat(tmpBuf, statbuf) == 0) {
+      /* File already exists */
+      if((doUnlink != TRUE) && (doUnlink != FALSE)) {
 
-   if(statbuf) {
-     if(stat(tmpBuf, statbuf) == 0) {
-       /* File already exists */
-     } else {
-       memset(statbuf, 0, sizeof(struct stat));
-     }
-   }
+	traceEvent(CONST_TRACE_INFO, "Checking age of database %s", tmpBuf);
 
-   traceEvent(CONST_TRACE_NOISY, "%s database '%s'",
-	      doUnlink == TRUE ? "Creating" : "Opening",
-	      tmpBuf);
-   *database = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+	/* Some systems or mounts don't maintain atime so fox 'em */
+	if (statbuf->st_atime > 0)
+	  st_time = statbuf->st_atime;
+	else
+	  st_time = 0;
+	if((statbuf->st_mtime) && (statbuf->st_mtime > st_time))
+	  st_time = statbuf->st_mtime;
+	if((statbuf->st_ctime) && (statbuf->st_ctime > st_time))
+	  st_time = statbuf->st_ctime;
 
-   if(*database == NULL) {
-       traceEvent(CONST_TRACE_FATALERROR, "....open of %s failed: %s",
-		  tmpBuf,
+	/* Use universal format: 01 Jan 2003 hh:mm:ss */
+	strftime(theDate, sizeof(theDate)-1, "%d %b %Y %H:%M:%S", localtime_r(&st_time, &t));
+	theDate[sizeof(theDate)-1] = '\0';
+	now  = time(NULL);
+	traceEvent(CONST_TRACE_NOISY,
+		   "...last create/modify/access was %s, %d second(s) ago",
+		   theDate,
+		   d = difftime(now, st_time));
+
+	if(d > CONST_DNSCACHE_PERMITTED_AGE) {
+	  traceEvent(CONST_TRACE_INFO, "...older, will recreate it");
+	  doUnlink = TRUE;
+	} else {
+	  traceEvent(CONST_TRACE_INFO, "...new enough, will not recreate it");
+	  doUnlink = FALSE; /* New enough */
+	}
+      }
+    } else {
+      memset(statbuf, 0, sizeof(struct stat));
+    }
+  }
+
+  if(doUnlink == TRUE)
+    unlink(tmpBuf); /* Delete the old one (if present) */
+
+  traceEvent(CONST_TRACE_NOISY, "%s database '%s'",
+	     doUnlink == TRUE ? "Creating" : "Opening",
+	     tmpBuf);
+  *database = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
+
+  if(*database == NULL) {
+    traceEvent(CONST_TRACE_FATALERROR, "....open of %s failed: %s",
+	       tmpBuf,
 #if defined(WIN32) && defined(__GNUC__)
-		  "unknown gdbm errno"
+	       "unknown gdbm errno"
 #else
-		  gdbm_strerror(gdbm_errno)
+	       gdbm_strerror(gdbm_errno)
 #endif
-	   );
+	       );
        
-       if(directory == NULL) {
-	   traceEvent(CONST_TRACE_FATALERROR, "Possible solution: please use '-P <directory>'");
-       }
+    if(directory == NULL) {
+      traceEvent(CONST_TRACE_FATALERROR, 
+		 "Possible solution: please use '-P <directory>'");
+    }
 
     exit(-1);
   }

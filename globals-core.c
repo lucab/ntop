@@ -98,9 +98,8 @@ void initGdbm(char *prefDirectory,  /* Directory with persistent files */
   initSingleGdbm(&myGlobals.pwFile,           "ntop_pw.db",      prefDirectory,  FALSE, NULL);
 
   if(initPrefsOnly) return;
-  initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, FALSE,  NULL);
-  initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, FALSE,  NULL);
-  initSingleGdbm(&myGlobals.hostsInfoFile,    "hostsInfo.db",    spoolDirectory, FALSE, NULL);
+  initSingleGdbm(&myGlobals.addressQueueFile, "addressQueue.db", spoolDirectory, TRUE,  NULL);
+  initSingleGdbm(&myGlobals.dnsCacheFile,     "dnsCache.db",     spoolDirectory, -1,    NULL);
   initSingleGdbm(&myGlobals.macPrefixFile,    "macPrefix.db",    spoolDirectory, FALSE,  &statbuf);
   createVendorTable(&statbuf);
 }
@@ -224,7 +223,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* Databases */
   myGlobals.dnsCacheFile = NULL;
   myGlobals.pwFile = NULL;
-  myGlobals.hostsInfoFile = NULL;
   myGlobals.addressQueueFile = NULL;
 
   /* the table of broadcast entries */
