@@ -1511,6 +1511,11 @@ static void handlesflowHTTPrequest(char* url) {
   
   sendString("<CENTER>\n<HR>\n");
   
+  if((!initialized)|| (numSamplesReceived == 0)) {
+    printNoDataYet();
+    return;
+  } 
+
   percentage = (lastSample-initialPool)/numSamplesReceived;
   err = 196 * sqrt((float)(1/(float)numSamplesReceived));
 
@@ -1518,29 +1523,28 @@ static void handlesflowHTTPrequest(char* url) {
     traceEvent(TRACE_INFO, "[%.2f \%][Error <= %.2f\%]", percentage, err);  
   }
   
-  if(!initialized) {
-     printNoDataYet();
-  } else {
-    sendString("<TABLE BORDER>\n");
+  sendString("<TABLE BORDER>\n");
 
-    if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT># Samples</TH><TD ALIGN=RIGHT>%u</TD></TR>\n", 
-		numSamplesReceived) < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+  if(snprintf(buf, sizeof(buf), 
+	      "<TR><TH ALIGN=LEFT># Samples</TH><TD ALIGN=RIGHT>%u</TD></TR>\n", 
+	      numSamplesReceived) < 0)
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
     
-    if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Data Scale</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n", 
-		percentage) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+  if(snprintf(buf, sizeof(buf), 
+	      "<TR><TH ALIGN=LEFT>Data Scale</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n", 
+	      percentage) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
     
-    if(snprintf(buf, sizeof(buf), "<TR><TH ALIGN=LEFT>Estimated Error</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n", 
-		err) < 0) 
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
+  if(snprintf(buf, sizeof(buf), 
+	      "<TR><TH ALIGN=LEFT>Estimated Error</TH><TD ALIGN=RIGHT>%.2f %%</TD></TR>\n", 
+	      err) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+  sendString(buf);
     
-    sendString("</TABLE>\n"); 
-    sendString("<p></CENTER>\n");
-  }
+  sendString("</TABLE>\n"); 
+  sendString("<p></CENTER>\n");  
 
   printHTMLtrailer();  
 }
