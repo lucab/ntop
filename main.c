@@ -103,7 +103,7 @@ static struct option const long_options[] = {
 
   { "http-server",                      required_argument, NULL, 'w' },
   { "disable-sessions",                 no_argument,       NULL, 'z' },
-  { "set-admin-password",               optional_argument, NULL, 'A' },
+  { "set-admin-password",               optional_argument, NULL, 135 },
   { "filter-expression",                required_argument, NULL, 'B' },
   { "large-network",                    no_argument,       NULL, 'C' },
   { "domain",                           required_argument, NULL, 'D' },
@@ -222,8 +222,8 @@ void usage (FILE * fp) {
 
   fprintf(fp, "    [-w <port>      | --http-server <port>]               Web server (http:) port (or address:port) to listen on\n");
   fprintf(fp, "    [-z             | --disable-sessions]                 Disable TCP session tracking\n");
-  fprintf(fp, "    [-A               --set-admin-password=<pass>]        Ask admin user password and exit\n");
-  fprintf(fp, "                                                          Set password for the admin user to <pass>\n");
+  fprintf(fp, "    [-A                                                   Ask admin user password and exit\n");
+  fprintf(fp, "    [                 --set-admin-password=<pass>]        Set password for the admin user to <pass>\n");
   fprintf(fp, "    [-B <filter>]   | --filter-expression                 Packet filter expression, like tcpdump\n");
   fprintf(fp, "    [-C             | --large-network                     Ntop will be used to analyze a large network (hint)\n");
   fprintf(fp, "    [-D <name>      | --domain <name>]                    Internet domain name\n");
