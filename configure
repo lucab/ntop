@@ -9556,9 +9556,9 @@ fi
 echo
 echo "TCP Wrappers?"
 if test ".${ac_enable_tcpwrap}" = ".yes"; then
-    echo "    ...Requested via ./configure command line option --enable-tcpwrap"
+    echo "    ...Requested via ./configure command line option --with-tcpwrap"
 else
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-tcpwrap."
+    echo "    ...(Default) Disabled. Request via ./configure command line option --with-tcpwrap."
 fi
 
 echo

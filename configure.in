@@ -1663,9 +1663,9 @@ fi
 echo
 echo "TCP Wrappers?"
 if test ".${ac_enable_tcpwrap}" = ".yes"; then
-    echo "    ...Requested via ./configure command line option --enable-tcpwrap"
+    echo "    ...Requested via ./configure command line option --with-tcpwrap"
 else
-    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-tcpwrap."
+    echo "    ...(Default) Disabled. Request via ./configure command line option --with-tcpwrap."
 fi
 
 echo
@@ -2173,7 +2173,7 @@ AC_CHECK_LIB([c],
 
 dnl> TCP Wrappers
 dnl>  This is a problem - the test sets HAVE_LIBWRAP, which is the flag in ntop
-dnl>  But we haven't processed --enable-tcpwrap yet. So we dummy this out until
+dnl>  But we haven't processed --with-tcpwrap yet. So we dummy this out until
 dnl>  such time as we can fix the internal flag in ntop...
 dnl>AC_CHECK_LIB([wrap], [hosts_access])
 
