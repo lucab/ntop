@@ -2500,6 +2500,7 @@ void handleHTTPrequest(struct in_addr from) {
 	       requestedURL, rc, _intoa(from, tmpStr, sizeof(tmpStr)));
 
 #if defined(MAX_NUM_BAD_IP_ADDRESSES) && (MAX_NUM_BAD_IP_ADDRESSES > 0)
+  {
    /* Note if the size of the table is zero, we simply nullify all of this
       code (why bother wasting the work effort
           Burton M. Strauss III <Burton@ntopsupport.com>, June 2002
@@ -2529,6 +2530,7 @@ void handleHTTPrequest(struct in_addr from) {
       myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].lastBadAccess = myGlobals.actTime;
       myGlobals.weDontWantToTalkWithYou[MAX_NUM_BAD_IP_ADDRESSES-1].count = 1;
     }
+  }
 #endif
 
     returnHTTPaccessForbidden();
