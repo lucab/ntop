@@ -812,17 +812,17 @@ static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
     if(mutexId->lockAttemptLine > 0) {
         if(snprintf(buf, sizeof(buf),
                     "Mutex %s, is %s.\n"
-                    "     locked: %u times, last was %s:%d\n"
-                    "     Blocked: at %s:%d\n",
-                    "     unlocked: %u times, last was %s:%d\n"
+                    "     locked: %u times, last was %s:%d(%d)\n"
+                    "     Blocked: at %s:%d%(d)\n",
+                    "     unlocked: %u times, last was %s:%d(%d)\n"
                     "     longest: %d sec from %s:%d\n",
                     mutexName,
                     mutexId->isLocked ? "locked" : "unlocked",
                     mutexId->numLocks,
-                    mutexId->lockFile, mutexId->lockLine,
-                    mutexId->lockAttemptFile, mutexId->lockAttemptLine,
+                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+                    mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
                     mutexId->numReleases,
-                    mutexId->unlockFile, mutexId->unlockLine,
+                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
                     mutexId->maxLockedDuration,
                     mutexId->maxLockedDurationUnlockFile,
                     mutexId->maxLockedDurationUnlockLine) < 0)
@@ -830,15 +830,15 @@ static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
     } else {
         if(snprintf(buf, sizeof(buf),
                     "Mutex %s, is %s.\n"
-                    "     locked: %u times, last was %s:%d\n"
-                    "     unlocked: %u times, last was %s:%d\n"
+                    "     locked: %u times, last was %s:%d(%d)\n"
+                    "     unlocked: %u times, last was %s:%d(%d)\n"
                     "     longest: %d sec from %s:%d\n",
                     mutexName,
                     mutexId->isLocked ? "locked" : "unlocked",
                     mutexId->numLocks,
-                    mutexId->lockFile, mutexId->lockLine,
+                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
                     mutexId->numReleases,
-                    mutexId->unlockFile, mutexId->unlockLine,
+                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
                     mutexId->maxLockedDuration,
                     mutexId->maxLockedDurationUnlockFile,
                     mutexId->maxLockedDurationUnlockLine) < 0)
@@ -848,16 +848,16 @@ static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
     if (mutexId->lockAttemptLine > 0) {
         if(snprintf(buf, sizeof(buf),
                     "<TR><TH "TH_BG" ALIGN=left>%s</TH><TD ALIGN=CENTER>%s</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d</TD>"
+                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
+                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
+                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
                     "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=LEFT>%u</TD>"
                     "<TD ALIGN=RIGHT>%d sec [%s:%d]</TD></TR>",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=red>locked</FONT>" : "unlocked",
-                    mutexId->lockFile, mutexId->lockLine,
-                    mutexId->lockAttemptFile, mutexId->lockAttemptLine,
-                    mutexId->unlockFile, mutexId->unlockLine,
+                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+                    mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
+                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
                     mutexId->numLocks, mutexId->numReleases,
                     mutexId->maxLockedDuration,
         	    mutexId->maxLockedDurationUnlockFile,
@@ -866,15 +866,15 @@ static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
     } else {
         if(snprintf(buf, sizeof(buf),
                     "<TR><TH "TH_BG" ALIGN=left>%s</TH><TD ALIGN=CENTER>%s</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d</TD>"
+                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
                     "<TD ALIGN=RIGHT>&nbsp;</TD>"
-                    "<TD ALIGN=RIGHT>%s:%d</TD>"
+                    "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
                     "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=LEFT>%u</TD>"
                     "<TD ALIGN=RIGHT>%d sec [%s:%d]</TD></TR>",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=red>locked</FONT>" : "unlocked",
-                    mutexId->lockFile, mutexId->lockLine,
-                    mutexId->unlockFile, mutexId->unlockLine,
+                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
                     mutexId->numLocks, mutexId->numReleases,
                     mutexId->maxLockedDuration,
         	    mutexId->maxLockedDurationUnlockFile,

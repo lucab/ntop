@@ -940,8 +940,10 @@ typedef struct pthreadMutex {
   char   isLocked, isInitialized;
   char   lockFile[64];
   int    lockLine;
+  pid_t  lockPid;
   char   unlockFile[64];
   int    unlockLine;
+  pid_t  unlockPid;
   u_int  numLocks, numReleases;
 
   time_t lockTime;
@@ -952,6 +954,7 @@ typedef struct pthreadMutex {
   char   where[64];
   char   lockAttemptFile[64];
   int    lockAttemptLine;
+  pid_t  lockAttemptPid;
 } PthreadMutex;
 
 typedef struct packetInformation {
