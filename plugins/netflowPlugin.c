@@ -35,11 +35,15 @@ static ProbeInfo probeList[MAX_NUM_PROBES];
 
 static u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], blackNetworks[MAX_NUM_NETWORKS][3];
 static u_short numWhiteNets, numBlackNets;
-static u_int32_t flowIgnoredInHandleIP, flowIgnoredZeroPort, flowIgnoredNETFLOW;
+static u_int32_t flowIgnoredZeroPort, flowIgnoredNETFLOW, flowProcessed;
+static Counter flowIgnoredZeroPortBytes, flowProcessedBytes;
 static u_int flowIgnored[MAX_NUM_IGNOREDFLOWS][6]; /* src, sport, dst, dport, count, bytes */
 static u_short nextFlowIgnored;
 static HostTraffic *dummyHost;
 static u_int dummyHostIdx;
+
+static u_int32_t flowIgnoredLowPort, flowIgnoredHighPort, flowAssumedFtpData;
+static Counter flowIgnoredLowPortBytes, flowIgnoredHighPortBytes, flowAssumedFtpDataBytes;
 
 /* Forward */
 static void setNetFlowInSocket();
@@ -419,26 +423,79 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
       if((sport != 0) && (dport != 0)) {
 	if(dport < sport) {
-	  if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1)
+	  if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
 	    if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
-              flowIgnoredInHandleIP++;
-              ignoreFlow(&nextFlowIgnored,
+              if((dport == myGlobals.netFlowInPort) || (sport == myGlobals.netFlowInPort)) {
+                  flowIgnoredNETFLOW++;
+              } else if(min(sport, dport) <= 1023) {
+                  flowIgnoredLowPort++;
+                  flowIgnoredLowPortBytes += len;
+                  ignoreFlow(&nextFlowIgnored,
                          ntohl(the5Record.flowRecord[i].srcaddr), sport,
                          ntohl(the5Record.flowRecord[i].dstaddr), dport,
                          len);
+              } else if(myGlobals.netFlowAssumeFTP) {
+                  /* If the user wants (via a run-time parm), as a last resort
+                   * we assume it's ftp-data traffic
+                   */
+                  handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
+                  flowAssumedFtpData++;
+                  flowAssumedFtpDataBytes += len; 
+              } else {
+                  flowIgnoredHighPort++;
+                  flowIgnoredHighPortBytes += len;
+                  ignoreFlow(&nextFlowIgnored,
+                         ntohl(the5Record.flowRecord[i].srcaddr), sport,
+                         ntohl(the5Record.flowRecord[i].dstaddr), dport,
+                         len);
+              }
+            } else { 
+              flowProcessed++;
+              flowProcessedBytes += len;
             }
+          } else { 
+            flowProcessed++;
+            flowProcessedBytes += len;
+          }
 	} else {
-	  if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1)
+	  if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
 	    if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
-              flowIgnoredInHandleIP++;
-              ignoreFlow(&nextFlowIgnored,
+              if((dport == myGlobals.netFlowInPort) || (sport == myGlobals.netFlowInPort)) {
+                  flowIgnoredNETFLOW++;
+              } else if(min(sport, dport) <= 1023) {
+                  flowIgnoredLowPort++;
+                  flowIgnoredLowPortBytes += len;
+                  ignoreFlow(&nextFlowIgnored,
                          ntohl(the5Record.flowRecord[i].srcaddr), sport,
                          ntohl(the5Record.flowRecord[i].dstaddr), dport,
                          len);
+              } else if(myGlobals.netFlowAssumeFTP) {
+                  /* If the user wants (via a run-time parm), as a last resort
+                   * we assume it's ftp-data traffic
+                   */
+                  handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
+                  flowAssumedFtpData++;
+                  flowAssumedFtpDataBytes += len;    
+              } else {
+                  flowIgnoredHighPort++;
+                  flowIgnoredHighPortBytes += len;
+                  ignoreFlow(&nextFlowIgnored,
+                         ntohl(the5Record.flowRecord[i].srcaddr), sport,
+                         ntohl(the5Record.flowRecord[i].dstaddr), dport,
+                         len);
+              }
+            } else { 
+              flowProcessed++;
+              flowProcessedBytes += len;
             }
+          } else { 
+            flowProcessed++;
+            flowProcessedBytes += len;
+          }
 	}
       } else {
         flowIgnoredZeroPort++;
+        flowIgnoredZeroPortBytes += len;
         ignoreFlow(&nextFlowIgnored,
                    ntohl(the5Record.flowRecord[i].srcaddr), sport,
                    ntohl(the5Record.flowRecord[i].dstaddr), dport,
@@ -765,6 +822,12 @@ static int initNetFlowFunct(void) {
   else
     myGlobals.netFlowAggregation = atoi(value);
 
+  if(fetchPrefsValue("netFlow.netFlowAssumeFTP", value, sizeof(value)) == -1) {
+    storePrefsValue("netFlow.netFlowAssumeFTP", "0" /* no */);
+    myGlobals.netFlowAssumeFTP = 0;
+  } else
+    myGlobals.netFlowAssumeFTP = atoi(value);
+
 #ifdef CFG_MULTITHREADED
   accessMutex(&whiteblackListMutex, "initNetFlowFunct()w");
 #endif
@@ -880,6 +943,9 @@ static void handleNetflowHTTPrequest(char* url) {
       } else if(strcmp(device, "netFlowAggregation") == 0) {
 	myGlobals.netFlowAggregation = atoi(value);
 	storePrefsValue("netFlow.netFlowAggregation", value);
+      } else if(strcmp(device, "netFlowAssumeFTP") == 0) {
+	myGlobals.netFlowAssumeFTP = atoi(value);
+	storePrefsValue("netFlow.netFlowAssumeFTP", value);
       } else if(strcmp(device, "ifNetMask") == 0) {
 	int a, b, c, d, a1, b1, c1, d1;
 
@@ -1074,6 +1140,30 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("<tr><th colspan=4 "DARK_BG">General Options</th></tr>");
 
+  sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Assume FTP</TH><TD "TD_BG" align=left>"
+	     "<FORM ACTION=/plugins/NetFlow METHOD=GET>");
+  if(myGlobals.netFlowAssumeFTP) {
+    sendString("<INPUT TYPE=radio NAME=netFlowAssumeFTP VALUE=1 CHECKED>Yes");
+    sendString("<INPUT TYPE=radio NAME=netFlowAssumeFTP VALUE=0>No");
+  } else {
+    sendString("<INPUT TYPE=radio NAME=netFlowAssumeFTP VALUE=1>Yes");
+    sendString("<INPUT TYPE=radio NAME=netFlowAssumeFTP VALUE=0 CHECKED>No");
+  }
+  sendString("</TD><td>");
+  sendString("<p>When ntop sees netflow data it only sees the port numbers and\n");
+  sendString("so it can not monitor the ftp control channel to detect which\n");
+  sendString("ports are being used for ftp data.\n");
+  sendString("This option tells ntop to assume that data from an unknown high (&gt;1023)\n");
+  sendString("port to an unknown high port should be treated as FTP data.</p>\n");
+  sendString("<p><b>For most situations this is not a good assumption</b> - for example,\n");
+  sendString("peer-to-peer traffic also is high port to high port.\n");
+  sendString("However, in limited situations, this option enables you to obtain a more\n");
+  sendString("correct view of your traffic.\n");
+  sendString("<em>Use this only if you understand your data flows.</em></p>\n");
+  sendString("<p><b>NOTE</b>:&nbsp;This option takes effect IMMEDIATELY.</p></td>\n");
+
+  sendString("<td><INPUT TYPE=submit VALUE=Set></form></td></TR>\n");
+
   sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Debug</TH><TD "TD_BG" align=left COLSPAN=2>"
 	     "<FORM ACTION=/plugins/NetFlow METHOD=GET>");
   if(myGlobals.netFlowDebug) {
@@ -1084,8 +1174,8 @@ static void handleNetflowHTTPrequest(char* url) {
     sendString("<INPUT TYPE=radio NAME=debug VALUE=1>On");
     sendString("<INPUT TYPE=radio NAME=debug VALUE=0 CHECKED>Off");
   }
-
   sendString("</TD><td><INPUT TYPE=submit VALUE=Set></form></td></TR>\n");
+
   sendString("</table></tr>\n");
 
   sendString("<tr><td><pre>\n\n</pre>"
@@ -1133,7 +1223,7 @@ static void handleNetflowHTTPrequest(char* url) {
     sendString("<hr>\n");
     printHTMLheader("Incoming Flow Statistics", 0);
     sendString("<TABLE BORDER>\n");
-    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Flow Statistics</TH></TR>\n");
+    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Received Flows</TH></TR>\n");
 
     if(myGlobals.numNetFlowsPktsRcvd > 0) {
       sendString("<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Flow Senders</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>");
@@ -1184,6 +1274,7 @@ static void handleNetflowHTTPrequest(char* url) {
 	BufferTooShort();
       sendString(buf);
 
+    sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Discarded Flows</TH></TR>\n");
       if(snprintf(buf, sizeof(buf),
 		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Less: # Flows with zero packet count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowPkts)) < 0)
@@ -1341,25 +1432,65 @@ static void handleNetflowHTTPrequest(char* url) {
       sendString("</TD></TR>\n");
 #endif
 
-      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Ignored Flows</TH></TR>\n");
+      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Less: Ignored Flows</TH></TR>\n");
 
       if(snprintf(buf, sizeof(buf),
-                  "<TR><TH colspan=2 ALIGN=\"LEFT\">Zero Port</TH>\n"
-                      "<TD colspan=2 ALIGN=\"RIGHT\">%u</TD></TR>\n",
-                      flowIgnoredZeroPort
+                  "<TR><TH colspan=2 ALIGN=\"LEFT\">Port(s) zero (not tcp/ip)</TH>\n"
+                      "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
+                      flowIgnoredZeroPort,
+                      formatBytes(flowIgnoredZeroPortBytes, 1)
         ) < 0)
           BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-                  "<TR><TH colspan=2 ALIGN=\"LEFT\">in handleIP()</TH>\n"
-                      "<TD colspan=2 ALIGN=\"RIGHT\">%u</TD></TR>\n",
-                      flowIgnoredInHandleIP
+                  "<TR><TH colspan=2 ALIGN=\"LEFT\">Are netFlow</TH>\n"
+                      "<TD ALIGN=\"RIGHT\">%u</TD><TD>&nbsp;</TD></TR>\n",
+                  flowIgnoredNETFLOW
         ) < 0)
           BufferTooShort();
       sendString(buf);
 
-      sendString("<TR><TH COLSPAN=4 ALIGN=\"CENTER\" "DARK_BG">Most Recent Discarded Flows</th></tr>\n");
+      if(snprintf(buf, sizeof(buf),
+                  "<TR><TH colspan=2 ALIGN=\"LEFT\">unrecognized port <= 1023</TH>\n"
+                      "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
+                      flowIgnoredLowPort,
+                      formatBytes(flowIgnoredLowPortBytes, 1)
+        ) < 0)
+          BufferTooShort();
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf),
+                  "<TR><TH colspan=2 ALIGN=\"LEFT\">unrecognized port > 1023</TH>\n"
+                      "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
+                      flowIgnoredHighPort,
+                      formatBytes(flowIgnoredHighPortBytes, 1)
+        ) < 0)
+          BufferTooShort();
+      sendString(buf);
+
+      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Gives: Counted Flows</TH></TR>\n");
+
+      if(snprintf(buf, sizeof(buf),
+                  "<TR><TH colspan=2 ALIGN=\"LEFT\">Counted</TH>\n"
+                      "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
+                      flowProcessed,
+                      formatBytes(flowProcessedBytes, 1)
+        ) < 0)
+          BufferTooShort();
+      sendString(buf);
+
+      if((flowAssumedFtpData>0) || (myGlobals.netFlowAssumeFTP)) {
+        if(snprintf(buf, sizeof(buf),
+                    "<TR><TH colspan=2 ALIGN=\"LEFT\">Assumed ftpdata</TH>\n"
+                        "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
+                        flowAssumedFtpData,
+                        formatBytes(flowAssumedFtpDataBytes, 1)
+          ) < 0)
+            BufferTooShort();
+        sendString(buf);
+      }
+      sendString("<TR><TH COLSPAN=4 ALIGN=\"CENTER\" "DARK_BG">Most Recent Ignored Flows</th></tr>\n");
       sendString("<TR><TH COLSPAN=2>Flow</TH><TH>Bytes</TH><TH># Consecutive<br>Counts</TH></TR>\n");
       for (i=nextFlowIgnored; i<nextFlowIgnored+MAX_NUM_IGNOREDFLOWS; i++) {
           if ((flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
@@ -1511,7 +1642,7 @@ static PluginInfo netflowPluginInfo[] = {
     "This plugin is used to setup, activate and deactivate ntop's NetFlow support.<br>"
       "ntop can both collect and receive NetFlow data. Received NetFlow data is "
       "reported as a separate 'NIC' in the regular ntop reports.",
-    "2.3", /* version */
+    "2.3.1", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
