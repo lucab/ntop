@@ -2229,9 +2229,9 @@ sendString(texthtml("\n\nAddress counts\n\n", "<tr><th colspan=\"2\">Address cou
 
 /* **** */
 
-sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread counts</th></tr>\n"));
-
 #if defined(MULTITHREADED)
+  sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=\"2\">Thread counts</th></tr>\n"));
+
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numThreads) < 0)
       BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Active", buf);
