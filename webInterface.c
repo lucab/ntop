@@ -2679,37 +2679,113 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   /* **** */
 
-  sendString(texthtml("\n\nAddress counts\n\n", "<tr><th colspan=\"2\">Address counts</th></tr>\n"));
+  sendString(texthtml("\n\nAddress Resolution\n\n", "<tr><th colspan=\"2\">Address Resolution</th></tr>\n"));
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffedCount) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "DNS responses sniffed", buf);
 
 #if defined(CFG_MULTITHREADED) && defined(MAKE_ASYNC_ADDRESS_RESOLUTION)
+
+  if (textPrintFlag != TRUE) {
+    sendString("<tr><td align=\"center\">Queued</td>\n<td><table>\n");
+  }
+
   if(myGlobals.numericFlag == 0) {
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueueCount) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Total Queued", buf);
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueueLen) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
     if(snprintf(buf, sizeof(buf), "%d", myGlobals.maxAddressQueueLen) < 0)
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Maximum Queued", buf);
-    if(snprintf(buf, sizeof(buf), "%d", myGlobals.addressQueueCount) < 0)
-      BufferTooShort();
-    printFeatureConfigInfo(textPrintFlag, "Total Queued", buf);
   }
+  if (textPrintFlag != TRUE) {
+    sendString("</table></td></tr>\n");
+  }
+
 #endif
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedWithDNSAddresses) < 0)
-    BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Resolved with DNS", buf);
+  if (textPrintFlag != TRUE) {
+    sendString("<tr><td align=\"center\">resolveAddress()</td>\n<td><table>\n");
+  }
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numKeptNumericAddresses) < 0)
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveAddressCalls) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Kept Numeric", buf);
+  printFeatureConfigInfo(textPrintFlag, "Total calls", buf);
+
+#ifdef PARM_USE_HOST
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedFromHostAddresses) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "  less 'Resolved from hosts file'", buf);
+#endif
 
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedOnCacheAddresses) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "Found in Cache", buf);
+  printFeatureConfigInfo(textPrintFlag, "  less 'Found in ntop cache'", buf);
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.dnsSniffedCount) < 0)
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolveNoCacheDB) < 0)
     BufferTooShort();
-  printFeatureConfigInfo(textPrintFlag, "DNS responses sniffed", buf);
+  printFeatureConfigInfo(textPrintFlag, "  less 'Error: No cache database'", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", (myGlobals.numResolveAddressCalls
+#ifdef PARM_USE_HOST
+                                       - myGlobals.numResolvedFromHostAddresses
+#endif
+                                       - myGlobals.numResolvedOnCacheAddresses
+                                       - myGlobals.numResolveNoCacheDB)) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Gives: # gethost (DNS lookup) calls", buf);
+
+  if ((myGlobals.numResolveAddressCalls
+#ifdef PARM_USE_HOST
+        - myGlobals.numResolvedFromHostAddresses
+#endif
+        - myGlobals.numResolvedOnCacheAddresses
+        - myGlobals.numResolveNoCacheDB) != myGlobals.numAttemptingResolutionWithDNS) {
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.numAttemptingResolutionWithDNS) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "    ERROR: actual count does not match!", buf);
+  }
+
+  if (textPrintFlag != TRUE) {
+    sendString("</table></td></tr>\n");
+    sendString("<tr><td align=\"center\">DNS lookup calls</td>\n<td><table>\n");
+  }
+ 
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numResolvedWithDNSAddresses) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Success: Resolved", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorHostNotFound) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Error: HOST_NOT_FOUND", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorNoData) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Error: NO_DATA", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorNoRecovery) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Error: NO_RECOVERY", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorTryAgain) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Error: TRY_AGAIN", buf);
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDNSErrorOther) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Error: Other error", buf);
+
+  if (textPrintFlag != TRUE) {
+    sendString("</table></td></tr>\n");
+  }
+
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.numKeptNumericAddresses) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "Host addresses kept numeric", buf);
 
   /* **** */
 

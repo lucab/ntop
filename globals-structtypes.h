@@ -1700,7 +1700,20 @@ XML*/
   u_int addressQueueLen, maxAddressQueueLen;
 #endif
 
-  u_long numResolvedWithDNSAddresses, numKeptNumericAddresses, numResolvedOnCacheAddresses;
+  u_long numResolveAddressCalls,
+         numResolveNoCacheDB,
+#ifdef PARM_USE_HOST
+         numResolvedFromHostAddresses,
+#endif
+         numAttemptingResolutionWithDNS,
+         numResolvedWithDNSAddresses, 
+         numDNSErrorHostNotFound,
+         numDNSErrorNoData,
+         numDNSErrorNoRecovery,
+         numDNSErrorTryAgain,
+         numDNSErrorOther,
+         numKeptNumericAddresses,
+         numResolvedOnCacheAddresses;
 
   /* Misc */
   char *separator;         /* html separator */

@@ -87,8 +87,10 @@ static void resolveAddress(struct in_addr *hostAddr,
 
   if(myGlobals.capturePackets != FLAG_NTOPSTATE_RUN) return;
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "Entering resolveAddress()");
+  myGlobals.numResolveAddressCalls++;
+
+#ifdef DNS_DEBUG
+  traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Entering resolveAddress()");
 #endif
   addr = hostAddr->s_addr;
 
@@ -99,9 +101,10 @@ static void resolveAddress(struct in_addr *hostAddr,
   key_data.dsize = strlen(keyBuf)+1;
 
   if(myGlobals.gdbm_file == NULL) {
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Leaving resolveAddress()");
+#ifdef DNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress(), gdbm_file NULL");
 #endif
+    myGlobals.numResolveNoCacheDB++;
     return; /* ntop is quitting... */
   }
 
@@ -121,7 +124,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 
     retrievedAddress = (StoredAddress*)data_data.dptr;
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS-DEBUG: Fetched data (2): '%s' [%s]\n",
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Fetched data from cache: '%s' [%s]\n",
 	       retrievedAddress->symAddress, keyBuf);
 #endif
 
@@ -137,10 +140,10 @@ static void resolveAddress(struct in_addr *hostAddr,
 
     updateHostNameInfo(addr, retrievedAddress->symAddress, actualDeviceId);
     myGlobals.numResolvedOnCacheAddresses++;
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Leaving resolveAddress()");
-#endif
     free(data_data.dptr);
+#ifdef DNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress() - resolved from cache");
+#endif
     return;
   } else {
 #ifdef GDBM_DEBUG
@@ -161,7 +164,7 @@ static void resolveAddress(struct in_addr *hostAddr,
 #endif
 
 #ifdef DNS_DEBUG
-    traceEvent(CONST_TRACE_INFO, "DNS-DEBUG: Resolving %s...", intoa(*hostAddr));
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolving %s...", intoa(*hostAddr));
 #endif
 
     theAddr.s_addr = ntohl(hostAddr->s_addr); /* big/little endian crap */
@@ -214,43 +217,70 @@ static void resolveAddress(struct in_addr *hostAddr,
 
       if((len > 0) && (i > 0) && (tmpBuf[i] == ' ')) {
 	res = &tmpBuf[i+1];
-	myGlobals.numResolvedWithDNSAddresses++;
+	myGlobals.numResolvedFromHostAddresses++;
       } else {
 	res = _intoa(*hostAddr, tmpBuf, sizeof(tmpBuf));
 	myGlobals.numKeptNumericAddresses++;
       }
 
 #ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS-DEBUG: Resolved to %s.", res);
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved to %s from hosts file.", res);
 #endif
     }
 #else /* PARM_USE_HOST */
+
+    myGlobals.numAttemptingResolutionWithDNS++;
 
 #ifdef HAVE_GETIPNODEBYADDR
     hp  = getipnodebyaddr((const void*)&theAddr,
 			  sizeof(struct in_addr), AF_INET,
 			  &error_num);
+#ifdef DNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called getipnodebyaddr(): RC=%d 0x%X [%s]", 
+               error_num,
+	       hp, hp != NULL ? (char*)hp->h_name : "");
+#endif
+
 #else /* default */
 #if defined(HAVE_GETHOSTBYADDR_R) && !defined(LINUX)
     /* Linux seems to ha some problems with gethostbyaddr_r */
 #ifdef SOLARIS
     hp = gethostbyaddr_r((const char*)&theAddr, sizeof(struct in_addr), 
-			 AF_INET, &_hp, buffer,
-			 sizeof(buffer), &h_errnop);
-#else
-    hp = gethostbyaddr_r((const char*)&theAddr, sizeof(struct in_addr), AF_INET,
-			 &_hp, buffer, sizeof(buffer), &__hp, &h_errnop);
-#endif
-#else
-    hp = (struct hostent*)gethostbyaddr((char*)&theAddr, sizeof(struct in_addr), AF_INET);
-#endif
-#endif
-    
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Called gethostbyaddr(): 0x%X [%s]", 
+			 AF_INET,
+                         &_hp,
+                         buffer, sizeof(buffer),
+                         &h_errnop);
+#ifdef DNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr_r(): RC=%d 0x%X [%s]", 
+               h_errnop,
 	       hp, hp != NULL ? (char*)hp->h_name : "");
 #endif
 
+#else
+    hp = gethostbyaddr_r((const char*)&theAddr, sizeof(struct in_addr),
+                         AF_INET,
+                         &_hp,
+                         buffer, sizeof(buffer),
+                         &__hp,
+                         &h_errnop);
+#ifdef DNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr_r(): RC=%d 0x%X [%s]", 
+               h_errnop,
+	       hp, hp != NULL ? (char*)hp->h_name : "");
+#endif
+
+#endif
+#else
+    hp = (struct hostent*)gethostbyaddr((char*)&theAddr, sizeof(struct in_addr), AF_INET);
+#ifdef DNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Called gethostbyaddr(): RC=%d 0x%X [%s]", 
+               h_errno,
+	       hp, hp != NULL ? (char*)hp->h_name : "");
+#endif
+
+#endif
+#endif
+    
     if (
 #ifdef HAVE_NETDB_H
 	(h_errno == NETDB_SUCCESS) &&
@@ -259,7 +289,7 @@ static void resolveAddress(struct in_addr *hostAddr,
       char *dotp = (char*)hp->h_name;
 
 #ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS-DEBUG: Resolved to %s.", dotp);
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Resolved to %s.", dotp);
 #endif
       strncpy(tmpBuf, dotp, sizeof(tmpBuf));
 
@@ -283,16 +313,50 @@ static void resolveAddress(struct in_addr *hostAddr,
       myGlobals.numResolvedWithDNSAddresses++;
     } else {
       myGlobals.numKeptNumericAddresses++;
+      /* Failed, but why? */
+      switch (
+#ifdef HAVE_NETDB_H
+              h_errno
+#elif HAVE_GETIPNODEBYADDR
+              error_num
+#else
+              h_errnop
+#endif
+             ) {
+        case HOST_NOT_FOUND:
+            myGlobals.numDNSErrorHostNotFound++;
+            break;
+        case NO_DATA:
+            myGlobals.numDNSErrorNoData++;
+            break;
+        case NO_RECOVERY:
+            myGlobals.numDNSErrorNoRecovery++;
+            break;
+        case TRY_AGAIN:
+            myGlobals.numDNSErrorTryAgain++;
+            break;
+        default:
+            myGlobals.numDNSErrorOther++;
+            traceEvent(CONST_TRACE_ERROR, "DNS: gethost... call, returned unknown error code, %d\n",
+#ifdef HAVE_NETDB_H
+                  h_errno
+#elif HAVE_GETIPNODEBYADDR
+                  error_num
+#else
+                  h_errnop
+#endif
+            );
+      }
       res = _intoa(*hostAddr, tmpBuf , sizeof(tmpBuf));
 #ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS-DEBUG: Unable to resolve %s", res);
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Unable to resolve %s", res);
 #endif
     }
 #endif /* PARM_USE_HOST */
   } else {
     myGlobals.numKeptNumericAddresses++;
 #ifdef DNS_DEBUG
-      traceEvent(CONST_TRACE_INFO, "DNS-DEBUG: Unable to resolve %s", res);
+      traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Unable to resolve %s", res);
 #endif
     res = _intoa(*hostAddr, tmpBuf, sizeof(tmpBuf));
   }
@@ -325,8 +389,8 @@ static void resolveAddress(struct in_addr *hostAddr,
   updateHostNameInfo(addr, symAddr, actualDeviceId);
 
   if(myGlobals.gdbm_file == NULL) {
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "Leaving resolveAddress()");
+#ifdef DNS_DEBUG
+    traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving resolveAddress()");
 #endif
     return; /* ntop is quitting... */
   }
@@ -347,8 +411,8 @@ static void resolveAddress(struct in_addr *hostAddr,
   releaseMutex(&myGlobals.gdbmMutex);
 #endif
 
-#ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "Leaving Resolveaddress()");
+#ifdef DNS_DEBUG
+  traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Leaving Resolveaddress()");
 #endif
 }
 
