@@ -48,7 +48,7 @@ void showUsers(void) {
     if(key_data.dptr[0] == '1') /* 1 = user */{
 
       if(numUsers == 0) {
-	sendString("<CENTER>"TABLE_ON"<TABLE BORDER=0>\n");
+	sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
 	sendString("<TR><TH "TH_BG">Users</TH><TH "TH_BG">Actions</TH></TR>\n");
       }
 	
@@ -304,7 +304,7 @@ void showURLs(void) {
 
     if(key_data.dptr[0] == '2') { /* 2 = URL */
       if(numUsers == 0) {
-	sendString("<CENTER>"TABLE_ON"<TABLE BORDER=0>\n");
+	sendString("<CENTER>"TABLE_ON"<TABLE BORDER=1>\n");
 	sendString("<TR><TH "TH_BG">URLs</TH><TH "TH_BG">Actions</TH></TR>\n");
       }
 	

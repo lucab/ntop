@@ -1,0 +1,2645 @@
+/*
+ *  Copyright (C) 1998-2000 Luca Deri <deri@ntop.org>
+ *                          Portions by Stefano Suin <stefano@ntop.org>
+ *
+ *  			  Centro SERRA, University of Pisa
+ *  			  http://www.ntop.org/
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+#include "ntop.h"
+#include "globals-report.h"
+
+/* ************************************ */
+
+void formatUsageCounter(UsageCounter usageCtr) {
+  char buf[BUF_SIZE];
+  int i, sendHeader=0;
+
+  snprintf(buf, sizeof(buf), "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+         formatPkts(usageCtr.value));
+  sendString(buf);
+
+  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+    if(usageCtr.peersIndexes[i] != NO_PEER) {
+      struct hostTraffic *el1;
+
+      el1 = device[actualReportDeviceId].
+       hash_hostTraffic[checkSessionIdx(usageCtr.peersIndexes[i])];
+
+      if(el1 != NULL) {
+       if(!sendHeader) {
+         sendString("<TD "TD_BG"  ALIGN=LEFT><ul>");
+         sendHeader = 1;
+       }
+       sendString("\n<li>");
+       sendString(makeHostLink(el1, 0, 0, 0));
+      }
+    }
+
+  if(sendHeader)
+    sendString("</ul></TD>\n");
+  else
+    sendString("<TD "TD_BG">&nbsp;</TD>\n");
+}
+
+/* ********************************** */
+
+void printTableDoubleEntry(char *buf, int bufLen,
+			   char *label, char* color,
+			   float totalS, float percentageS,
+			   float totalR, float percentageR) {
+  int int_perc;
+
+  if((totalS == 0) && (totalR == 0)) return;
+  int_perc = (int)percentageS;
+
+  /* This shouldn't happen */
+  if(int_perc < 0) {
+    int_perc = 0;
+    percentageS = 0;
+  } else if(int_perc > 100) {
+    int_perc = 100;
+    percentageS = 100;
+  }
+
+  switch(int_perc) {
+  case 0:
+    snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
+           "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
+           "<TD WIDTH=100 "TD_BG">&nbsp;</TD>\n",
+           getRowColor(), label, formatKBytes(totalS));
+    break;
+  case 100:
+    snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
+           "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
+           "<TD WIDTH=100><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=100 HEIGHT=12></TD>\n",
+           getRowColor(), label, formatKBytes(totalS));
+    break;
+  default:
+    snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
+	     "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
+	     "<TD WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
+	     "<TR><TD><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12></TD>"
+	     "<TD "TD_BG"  ALIGN=CENTER WIDTH=\"%d\">"
+	     "<P>&nbsp;</TD></TR></TABLE></TD>\n",
+	     getRowColor(), label, formatKBytes(totalS),
+	     (100*int_perc)/100, (100*(100-int_perc))/100);
+  }
+
+  sendString(buf);
+
+  /* ************************ */
+
+  if(totalR == 0) percentageR = 0;
+
+  int_perc = (int)percentageR;
+
+  /* This shouldn't happen */
+  if(int_perc < 0) {
+    int_perc = 0;
+    percentageR = 0;
+  } else if(int_perc > 100) {
+    int_perc = 100;
+    percentageS = 100;
+  }
+
+  switch(int_perc) {
+  case 0:
+    snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD><TD WIDTH=100 "TD_BG">&nbsp;</TD></TR>\n",
+           formatKBytes(totalR));
+    break;
+  case 100:
+    snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
+           "<TD WIDTH=100><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=\"100\" HEIGHT=12></TD></TR>\n",
+           formatKBytes(totalR));
+    break;
+  default:
+    snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
+           "<TD  WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
+           "<TR><TD><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
+           "</TD><TD "TD_BG"  ALIGN=CENTER WIDTH=\"%d\">"
+           "<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
+           formatKBytes(totalR),
+           (100*int_perc)/100, (100*(100-int_perc))/100);
+  }
+
+  sendString(buf);
+}
+
+/* ********************************** */
+
+void printTableEntryPercentage(char *buf, int bufLen,
+			       char *label, char* label_1,
+			       char* label_2, float total,
+			       float percentage) {
+  int int_perc = (int)percentage;
+
+  /* This shouldn't happen */
+  if(int_perc < 0)
+    int_perc = 0;
+  else if(int_perc > 100)
+    int_perc = 100;
+
+  switch(int_perc) {
+  case 0:
+    if(total == -1)
+      snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+             "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+             getRowColor(), label, COLOR_2, label_2);
+    else
+      snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+             "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+             getRowColor(), label, formatKBytes(total), COLOR_2, label_2);
+    break;
+  case 100:
+    if(total == -1)
+      snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+             "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+             getRowColor(), label, COLOR_1, label_1);
+    else
+      snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+             "<TD ALIGN=CENTER BGCOLOR=\"%s\">%s&nbsp;(100&nbsp;%%)</TD></TR>\n",
+             getRowColor(), label, formatKBytes(total), COLOR_1, label_1);
+    break;
+  default:
+    if(total == -1)
+      snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+             "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+             "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
+             getRowColor(), label,
+             int_perc, COLOR_1,
+             label_1, percentage, (100-int_perc), COLOR_2,
+             label_2, (100-percentage));
+    else
+      snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+             "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
+             "<TR><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD><TD ALIGN=CENTER WIDTH=\"%d%%\" BGCOLOR=\"%s\">"
+             "<P>%s&nbsp;(%.1f&nbsp;%%)</TD></TR></TABLE></TD></TR>\n",
+             getRowColor(), label, formatKBytes(total),
+             int_perc, COLOR_1,
+             label_1, percentage, (100-int_perc), COLOR_2,
+             label_2, (100-percentage));
+  }
+
+  sendString(buf);
+}
+
+/* ******************************* */
+
+void printHeader(int reportType, int revertOrder, u_int column) {
+  char buf[BUF_SIZE];
+  char *sign, *arrowGif, *arrow[48], *theAnchor[48];
+  int i;
+  char htmlAnchor[64], htmlAnchor1[64];
+
+  /* printf("->%d<-\n",screenNumber); */
+
+  if(revertOrder) {
+    sign = "";
+    arrowGif = "&nbsp;<IMG SRC=arrow_up.gif BORDER=0>";
+  } else {
+    sign = "-";
+    arrowGif = "&nbsp;<IMG SRC=arrow_down.gif BORDER=0>";
+  }
+
+  memset(buf, 0, sizeof(buf));
+
+  printHTTPheader();
+
+  if(sortSendMode) {
+    if(sortSendMode == 1)
+      sendString("<CENTER><P><H1>Network Traffic: Data Sent</H1><P>\n");
+    else {
+      sendString("<CENTER><P><H1>Host Information</H1><P>\n");
+      return;
+    }
+
+    if((reportType == 0) || (reportType == 1)) {
+      if(reportType == 0) {
+	snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_SORT_DATA_SENT_PROTOS, sign);
+	snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_SORT_DATA_SENT_PROTOS);
+      } else {
+	snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_SORT_DATA_SENT_IP, sign);
+	snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_SORT_DATA_SENT_IP);
+      }
+    } else if(reportType == 2) {
+      snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   STR_SORT_DATA_SENT_THPT, sign);
+      snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",   STR_SORT_DATA_SENT_THPT);
+    } else if(reportType == 3) {
+      snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   STR_SORT_DATA_SENT_HOST_TRAFFIC, sign);
+      snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",   STR_SORT_DATA_SENT_HOST_TRAFFIC);
+    }
+
+    if((reportType == 0) || (reportType == 1)) {
+      if(abs(column) == HOST_DUMMY_IDX_VALUE)
+	{ arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
+      else { arrow[0] = ""; theAnchor[0] = htmlAnchor1; }
+      if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
+	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
+      else { arrow[1] = "";  theAnchor[1] = htmlAnchor1;}
+      if(abs(column) == 0)
+	{ arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
+      else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
+      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
+	      "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
+	      "<TH "TH_BG" COLSPAN=2>%s0>Sent%s</A></TH>\n",
+	      theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2]);
+    } else {
+      if(abs(column) == HOST_DUMMY_IDX_VALUE)
+	{ arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
+      else { arrow[0] = ""; theAnchor[0] = htmlAnchor1; }
+      if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
+	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
+      else { arrow[1] = ""; theAnchor[1] = htmlAnchor1; }
+      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
+	      "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
+	      theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
+    }
+
+    sendString(buf);
+  } else {
+    sendString("<CENTER><P><H1>Network Traffic: Data Received</H1><P>\n");
+
+    if((reportType == 0) || (reportType == 1)) {
+      if(reportType == 0) {
+	snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_SORT_DATA_RECEIVED_PROTOS, sign);
+	snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_SORT_DATA_RECEIVED_PROTOS);
+      } else {
+	snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s", STR_SORT_DATA_RECEIVED_IP, sign);
+	snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?", STR_SORT_DATA_RECEIVED_IP);
+      }
+    } else if(reportType == 2) {
+      snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   STR_SORT_DATA_RECEIVED_THPT, sign);
+      snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",   STR_SORT_DATA_RECEIVED_THPT);
+    } else if(reportType == 3) {
+      snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?%s",   STR_SORT_DATA_RCVD_HOST_TRAFFIC, sign);
+      snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?",   STR_SORT_DATA_RCVD_HOST_TRAFFIC);
+    }
+
+    if((reportType == 0) || (reportType == 1)) {
+      if(abs(column) == HOST_DUMMY_IDX_VALUE)
+	{ arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
+      else { arrow[0] = ""; theAnchor[0] = htmlAnchor1; }
+      if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
+	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
+      else { arrow[1] = "";  theAnchor[1] = htmlAnchor1;}
+      if(abs(column) == 0)
+	{ arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
+      else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
+      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
+	      "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
+	      "<TH "TH_BG" COLSPAN=2>%s0>Received%s</A></TH>\n",
+	      theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2]);
+    } else {
+      if(abs(column) == HOST_DUMMY_IDX_VALUE)
+	{ arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
+      else { arrow[0] = ""; theAnchor[0] = htmlAnchor1; }
+      if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
+	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor; }
+      else { arrow[1] = ""; theAnchor[1] = htmlAnchor1;}
+      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
+	      "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
+	      theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
+    }
+    sendString(buf);
+  }
+
+  if(reportType == 0) {
+    if(abs(column) == 1)
+      { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
+    else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
+    if(abs(column) == 2)
+      { arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
+    else { arrow[1] = "";  theAnchor[1] = htmlAnchor1;}
+    if(abs(column) == 3)
+      { arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
+    else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
+    if(abs(column) == 4)
+      { arrow[3] = arrowGif; theAnchor[3] = htmlAnchor;  }
+    else { arrow[3] = ""; theAnchor[3] = htmlAnchor1; }
+    if(abs(column) == 5)
+      { arrow[4] = arrowGif; theAnchor[4] = htmlAnchor;  }
+    else { arrow[4] = ""; theAnchor[4] = htmlAnchor1;  }
+    if(abs(column) == 6)
+      { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor;  }
+    else { arrow[5] = ""; theAnchor[5] = htmlAnchor1;  }
+    if(abs(column) == 7)
+      { arrow[6] = arrowGif; theAnchor[6] = htmlAnchor1;  }
+    else { arrow[6] = ""; theAnchor[6] = htmlAnchor; }
+    if(abs(column) == 8)
+      { arrow[7] = arrowGif; theAnchor[7] = htmlAnchor;  }
+    else { arrow[7] = ""; theAnchor[7] = htmlAnchor1;  }
+    if(abs(column) == 9)
+      { arrow[8] = arrowGif; theAnchor[8] = htmlAnchor;  }
+    else { arrow[8] = ""; theAnchor[8] = htmlAnchor1; }
+    if(abs(column) == 10)
+      { arrow[9] = arrowGif; theAnchor[9] = htmlAnchor;  }
+    else { arrow[9] = ""; theAnchor[9] = htmlAnchor1; }
+    if(abs(column) == 11)
+      { arrow[10] = arrowGif; theAnchor[10] = htmlAnchor;  }
+    else { arrow[10] = "";  theAnchor[10] = htmlAnchor1;}
+    if(abs(column) == 12)
+      { arrow[11] = arrowGif; theAnchor[11] = htmlAnchor;  }
+    else { arrow[11] = "";theAnchor[11] = htmlAnchor1; }
+    if(abs(column) == 13)
+      { arrow[12] = arrowGif; theAnchor[12] = htmlAnchor;  }
+    else { arrow[12] = "";  theAnchor[12] = htmlAnchor1;  }
+    if(abs(column) == 14)
+      { arrow[13] = arrowGif; theAnchor[13] = htmlAnchor;  }
+    else { arrow[13] = "";  theAnchor[13] = htmlAnchor1;  }
+
+    snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s1>TCP%s</A></TH><TH "TH_BG">%s2>UDP%s</A></TH><TH "TH_BG">%s3>ICMP%s</A></TH>"
+	    "<TH "TH_BG">%s4>DLC%s</A></TH><TH "TH_BG">%s5>IPX%s</A></TH><TH "TH_BG">%s6>Decnet%s</A></TH>"
+	     "<TH "TH_BG">%s7>(R)ARP%s</A></TH><TH "TH_BG">%s8>AppleTalk%s</A></TH>",
+	    theAnchor[0], arrow[0], theAnchor[1], arrow[1],
+	    theAnchor[2], arrow[2], theAnchor[3], arrow[3],
+	    theAnchor[4], arrow[4], theAnchor[5], arrow[5],
+	    theAnchor[6], arrow[6], theAnchor[7], arrow[7]);    
+    sendString(buf);
+    snprintf(buf, BUF_SIZE, 
+	    "<TH "TH_BG">%s9>OSPF%s</A></TH><TH "TH_BG">%s10>NetBios%s</A></TH><TH "TH_BG">%s11>IGMP%s</A></TH>"
+	    "<TH "TH_BG">%s12>OSI%s</A></TH><TH "TH_BG">%s13>QNX%s</A></TH><TH "TH_BG">%s14>Other%s</A></TH>",
+	     theAnchor[8], arrow[8], theAnchor[9], arrow[9],
+	     theAnchor[10], arrow[10], theAnchor[11], arrow[11],
+	     theAnchor[12], arrow[12], theAnchor[13], arrow[13]);
+    sendString(buf);
+  } else if(reportType == 1) {
+    int soFar=1;
+
+    for(i=0; i<numIpProtosToMonitor; i++) {
+      if(abs(column) == soFar) {
+	arrow[0] = arrowGif;
+	theAnchor[0] = htmlAnchor;
+      } else {
+	arrow[0] = "";
+	theAnchor[0] = htmlAnchor1;
+      }
+      snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>%s%s</A></TH>",
+	      theAnchor[0], i+1, protoIPTrafficInfos[i], arrow[0]);
+      sendString(buf);
+      soFar++;
+    }
+
+    if(abs(column) == soFar) {
+      arrow[0] = arrowGif; theAnchor[0] = htmlAnchor;
+    } else {
+      arrow[0] = "";  theAnchor[0] = htmlAnchor1;
+    }
+    snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>Other&nbsp;IP%s</A></TH>", theAnchor[0], i+1, arrow[0]);
+    sendString(buf);
+  } else if(reportType == 2) {
+    updateThpt();
+    if(abs(column) == 1) { arrow[0] = arrowGif; theAnchor[0] = htmlAnchor; }
+    else { arrow[0] = ""; theAnchor[0] = htmlAnchor1;  }
+    if(abs(column) == 2) { arrow[1] = arrowGif; theAnchor[1] = htmlAnchor; }
+    else { arrow[1] = ""; theAnchor[1] = htmlAnchor1; }
+    if(abs(column) == 3) { arrow[2] = arrowGif; theAnchor[2] = htmlAnchor; }
+    else { arrow[2] = "";  theAnchor[2] = htmlAnchor1;}
+    if(abs(column) == 4) { arrow[3] = arrowGif; theAnchor[3] = htmlAnchor; }
+    else { arrow[3] = "";  theAnchor[3] = htmlAnchor1;}
+    if(abs(column) == 5) { arrow[4] = arrowGif; theAnchor[4] = htmlAnchor; }
+    else { arrow[4] = "";  theAnchor[4] = htmlAnchor1;}
+    if(abs(column) == 6) { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor; }
+    else { arrow[5] = "";  theAnchor[5] = htmlAnchor1;}
+
+    snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s1>Actual Thpt%s</A></TH><TH "TH_BG">%s2>Avg Thpt%s</A></TH>"
+	     "<TH "TH_BG">%s3>Peak Thpt%s</A></TH>"
+	    "<TH "TH_BG">%s4>Actual Pkt Thpt%s</A></TH><TH "TH_BG">%s5>Avg Pkt Thpt%s</A></TH>"
+	     "<TH "TH_BG">%s6>Peak Pkt Thpt%s</A></TH>",
+	    theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2],
+	    theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]);
+    sendString(buf);
+  } else if(reportType == 3) {
+    sendString("<TH "TH_BG">0<br>AM</TH><TH "TH_BG">1<br>AM</TH><TH "TH_BG">2<br>AM</TH><TH "TH_BG">3<br>AM</TH>"
+	       "<TH "TH_BG">4<br>AM</TH><TH "TH_BG">5<br>AM</TH><TH "TH_BG">6<br>AM</TH>"
+	       "<TH "TH_BG">7<br>AM</TH><TH "TH_BG">8<br>AM</TH><TH "TH_BG">9<br>AM</TH>"
+	       "<TH "TH_BG">10<br>AM</TH><TH "TH_BG">11<br>AM</TH><TH "TH_BG">12<br>AM</TH>\n");
+    sendString("<TH "TH_BG">1<br>PM</TH><TH "TH_BG">2<br>PM</TH><TH "TH_BG">3<br>PM</TH>"
+	       "<TH "TH_BG">4<br>PM</TH><TH "TH_BG">5<br>PM</TH><TH "TH_BG">6<br>PM</TH>"
+	       "<TH "TH_BG">7<br>PM</TH><TH "TH_BG">8<br>PM</TH><TH "TH_BG">9<br>PM</TH>"
+	       "<TH "TH_BG">10<br>PM</TH><TH "TH_BG">11<br>PM</TH>\n");    
+  }
+  sendString("</TR>\n");
+}
+
+/* ******************************* */
+
+char* getOSFlag(char* osName, int showOsName) {
+  static char tmpStr[96], *flagImg;
+
+  if(strstr(osName, "Windows") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/windows.gif>";
+  else if(strstr(osName, "IRIX") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/irix.gif>";
+  else if(strstr(osName, "Linux") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/linux.gif>";
+  else if(strstr(osName, "SunOS") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/sun.gif>";
+  else if(strstr(osName, "Solaris") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/sun.gif>";
+  else if(strstr(osName, "HP/JETdirect") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>";
+  else if(strstr(osName, "Mac") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/mac.gif>";
+  else if(strstr(osName, "Novell") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/novell.gif>";
+  else if(strstr(osName, "BSD") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>";
+  else if(strstr(osName, "HP-UX") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>";
+  else if(strstr(osName, "AIX") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/aix.gif>";
+  else if(strstr(osName, "Berkeley") != NULL)
+    flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>";
+  else
+    flagImg = NULL;
+
+  if(!showOsName) {
+    if(flagImg != NULL)
+      strncpy(tmpStr, flagImg, sizeof(tmpStr));
+    else
+      strncpy(tmpStr, "", sizeof(tmpStr));
+  } else {
+    if(flagImg != NULL)
+      snprintf(tmpStr, sizeof(tmpStr), "%s&nbsp;[%s]", flagImg, osName);
+    else
+      strncpy(tmpStr, osName, sizeof(tmpStr));
+  }
+
+  return(tmpStr);
+}
+
+/* ******************************* */
+
+int sortHostFctn(const void *_a, const void *_b) {
+  HostTraffic **a = (HostTraffic **)_a;
+  HostTraffic **b = (HostTraffic **)_b;
+  int rc;
+  char *nameA, *nameB, nameA_str[32], nameB_str[32];
+
+  if((a == NULL) && (b != NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING (1)\n");
+    return(1);
+  } else if((a != NULL) && (b == NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING (2)\n");
+    return(-1);
+  } else if((a == NULL) && (b == NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING (3)\n");
+    return(0);
+  }
+
+  switch(columnSort) {
+  case 1:
+#ifdef MULTITHREADED
+    accessMutex(&addressResolutionMutex, "sortHostFctn");
+#endif
+    rc = strcasecmp((*a)->hostSymIpAddress, (*b)->hostSymIpAddress);
+#ifdef MULTITHREADED
+    releaseMutex(&addressResolutionMutex);
+#endif
+    return(rc);
+    break;
+  case 2:
+    if((*a)->hostIpAddress.s_addr > (*b)->hostIpAddress.s_addr)
+      return(1);
+    else if((*a)->hostIpAddress.s_addr < (*b)->hostIpAddress.s_addr)
+      return(-1);
+    else
+      return(0);
+    /* return(strcasecmp((*a)->hostNumIpAddress, (*b)->hostNumIpAddress)); */
+    break;
+  case 3:
+    return(strcasecmp((*a)->ethAddressString, (*b)->ethAddressString));
+    break;
+  case 5:
+    return(strcasecmp(getVendorInfo((*a)->ethAddress, 0),
+		      getVendorInfo((*b)->ethAddress, 0)));
+    break;
+  case 6:
+    if((*a)->nbHostName != NULL)
+      nameA = (*a)->nbHostName;
+    else if((*a)->atNodeName != NULL)
+      nameA = (*a)->atNodeName;
+    else if((*a)->atNetwork != 0) {
+      snprintf(nameA_str, sizeof(nameA_str), "%d.%d", (*a)->atNetwork, (*a)->atNode);
+      nameA = nameA_str;
+    } else if((*a)->ipxHostName != NULL)
+      nameA = (*a)->ipxHostName;
+    else
+      nameA = "";
+
+    if((*b)->nbHostName != NULL)
+      nameB = (*b)->nbHostName;
+    else if((*b)->atNodeName != NULL)
+      nameB = (*b)->atNodeName;
+    else if((*a)->atNetwork != 0) {
+      snprintf(nameB_str, sizeof(nameB_str), "%d.%d", (*b)->atNetwork, (*b)->atNode);
+      nameB = nameB_str;
+    } else if((*b)->ipxHostName != NULL)
+      nameB = (*b)->ipxHostName;
+    else
+      nameB = "";
+
+    return(strcasecmp(nameA, nameB));
+    break;
+  case 4:
+  default:
+    if((*a)->actBandwidthUsage < (*b)->actBandwidthUsage)
+      return(1);
+    else if ((*a)->actBandwidthUsage > (*b)->actBandwidthUsage)
+      return(-1);
+    else
+      return(0);
+    break;
+  }
+}
+
+/* ******************************* */
+
+int cmpUsersTraffic(const void *_a, const void *_b) {
+  UsersTraffic **a = (UsersTraffic **)_a;
+  UsersTraffic **b = (UsersTraffic **)_b;
+  TrafficCounter sum_a, sum_b;
+
+  if((a == NULL) && (b != NULL)) {
+    return(1);
+  } else if((a != NULL) && (b == NULL)) {
+    return(-1);
+  } else if((a == NULL) && (b == NULL)) {
+    return(0);
+  }
+
+  sum_a = (*a)->bytesSent + (*a)->bytesReceived;
+  sum_b = (*b)->bytesSent + (*b)->bytesReceived;
+
+  if(sum_a > sum_b)
+    return(-1);
+  else if (sum_a == sum_b)
+    return(0);
+  else
+    return(1);
+}
+
+/* ******************************* */
+
+int cmpProcesses(const void *_a, const void *_b) {
+  ProcessInfo **a = (ProcessInfo **)_a;
+  ProcessInfo **b = (ProcessInfo **)_b;
+
+  if((a == NULL) && (b != NULL)) {
+    return(1);
+  } else if((a != NULL) && (b == NULL)) {
+    return(-1);
+  } else if((a == NULL) && (b == NULL)) {
+    return(0);
+  }
+
+  switch(columnSort) {
+  case 2: /* PID */
+    if((*a)->pid == (*b)->pid)
+      return(0);
+    else if((*a)->pid < (*b)->pid)
+      return(1);
+    else return(-1);
+    break;
+  case 3: /* User */
+    return(strcasecmp((*a)->user, (*b)->user));
+    break;
+  case 4: /* Sent */
+    if((*a)->bytesSent == (*b)->bytesSent)
+      return(0);
+    else if((*a)->bytesSent < (*b)->bytesSent)
+      return(1);
+    else return(-1);
+    break;
+  case 5: /* Rcvd */
+    if((*a)->bytesReceived == (*b)->bytesReceived)
+      return(0);
+    else if((*a)->bytesReceived < (*b)->bytesReceived)
+      return(1);
+    else return(-1);
+    break;
+  default: /* Process name */
+    return(strcasecmp((*a)->command, (*b)->command));
+  }
+}
+
+/* ******************************* */
+
+int cmpFctn(const void *_a, const void *_b) {
+  HostTraffic **a = (HostTraffic **)_a;
+  HostTraffic **b = (HostTraffic **)_b;
+  TrafficCounter a_=0, b_=0;
+  float fa_=0, fb_=0;
+  int idx;
+  short oldColumnSort, floatCompare=0;
+
+  if((a == NULL) && (b != NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING (1)\n");
+    return(1);
+  } else if((a != NULL) && (b == NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING (2)\n");
+    return(-1);
+  } else if((a == NULL) && (b == NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING (3)\n");
+    return(0);
+  }
+
+  if(columnSort == HOST_DUMMY_IDX_VALUE) {
+    int rc;
+
+    /* Host name */
+#ifdef MULTITHREADED
+    accessMutex(&addressResolutionMutex, "cmpFctn");
+#endif
+    if((*a)->hostSymIpAddress[0] != '\0')
+      rc = strcasecmp((*a)->hostSymIpAddress, (*b)->hostSymIpAddress);
+    else
+      rc = strcasecmp((*a)->ethAddressString, (*b)->ethAddressString);
+
+#ifdef MULTITHREADED
+    releaseMutex(&addressResolutionMutex);
+#endif
+    return(rc);
+  } else if(columnSort == DOMAIN_DUMMY_IDX_VALUE) {
+    int rc;
+
+    fillDomainName(*a); fillDomainName(*b);
+
+#ifdef DEBUG
+    traceEvent(TRACE_INFO, "%s='%s'/'%s' - %s='%s'/'%s'\n",
+	   (*a)->hostSymIpAddress,
+	   (*a)->dotDomainName, (*a)->fullDomainName,
+	   (*b)->hostSymIpAddress,
+	   (*b)->dotDomainName, (*b)->fullDomainName
+	   );
+#endif
+    rc = strcasecmp((*a)->dotDomainName, (*b)->dotDomainName);
+    if(rc == 0)
+      return(strcasecmp((*a)->fullDomainName, (*b)->fullDomainName));
+    else
+      return rc;
+  }
+
+  oldColumnSort = columnSort;
+
+  if(screenNumber == DUMMY_IDX_VALUE) {
+    /* dirty trick */
+    idx = columnSort-1;
+    if(idx == -1) {
+      idx = 0;
+      columnSort = 0;
+    } else
+      columnSort = 1;
+  } else
+    idx = (screenNumber-MAX_NUM_PROTOS_SCREENS)*3;
+
+#ifdef DEBUG
+  traceEvent(TRACE_INFO, "idx=%d/columnSort=%d/sortSendMode=%d/screenNumber=%d/numIpProtosToMonitor=%d\n",
+	 idx, columnSort, sortSendMode, screenNumber, numIpProtosToMonitor);
+#endif
+
+  switch(columnSort) {
+  case 0:
+    if(sortSendMode) {
+      a_ = (*a)->bytesSent, b_ = (*b)->bytesSent;
+    } else {
+      a_ = (*a)->bytesReceived, b_ = (*b)->bytesReceived;
+    }
+    break;
+  case 1:
+    if(sortSendMode) {
+      switch(screenNumber)
+	{
+	case 0:
+	  a_ = (*a)->tcpSentLocally+(*a)->tcpSentRemotely;
+	  b_ = (*b)->tcpSentLocally+(*b)->tcpSentRemotely;
+	  break;
+	case 1:
+	  a_ = (*a)->dlcSent, b_ = (*b)->dlcSent;
+	  break;
+	case 2:
+	  a_ = (*a)->arp_rarpSent, b_ = (*b)->arp_rarpSent;
+	  break;
+	case 3:
+	  a_ = (*a)->netbiosSent, b_ = (*b)->netbiosSent;
+	  break;
+	case MAX_NUM_PROTOS_SCREENS:
+	  fa_ = (*a)->actualSentThpt, fb_ = (*b)->actualSentThpt, floatCompare = 1;
+	  break;
+	default:
+	  if(idx < numIpProtosToMonitor) {
+	    a_ = (*a)->protoIPTrafficInfos[idx].sentLocally
+	      +(*a)->protoIPTrafficInfos[idx].sentRemotely;
+	    b_ = (*b)->protoIPTrafficInfos[idx].sentLocally
+	      +(*b)->protoIPTrafficInfos[idx].sentRemotely;
+	  } else {
+	    int i;
+
+	    a_ = 0, b_ = 0;
+
+	    for(i=0; i<numIpProtosToMonitor; i++) {
+	      a_ += (*a)->protoIPTrafficInfos[i].sentLocally
+		+(*a)->protoIPTrafficInfos[i].sentRemotely;
+	      b_ += (*b)->protoIPTrafficInfos[i].sentLocally
+		+(*b)->protoIPTrafficInfos[i].sentRemotely;
+	    }
+
+	    if((*a)->bytesSent > a_)
+	      a_ = (*a)->bytesSent-a_;
+	    else
+	      a_ = 0;
+
+	    if((*b)->bytesSent > b_)
+	      b_ = (*b)->bytesSent-b_;
+	    else
+	      b_ = 0;
+	  }
+	}
+    } else {
+      switch(screenNumber)
+	{
+	case 0:
+	  a_ = (*a)->tcpReceivedLocally+(*a)->tcpReceivedFromRemote;
+	  b_ = (*b)->tcpReceivedLocally+(*b)->tcpReceivedFromRemote;
+	  break;
+	case 1:
+	  a_ = (*a)->dlcReceived, b_ = (*b)->dlcReceived;
+	  break;
+	case 2:
+	  a_ = (*a)->arp_rarpReceived, b_ = (*b)->arp_rarpReceived;
+	  break;
+	case 3:
+	  a_ = (*a)->netbiosReceived, b_ = (*b)->netbiosReceived;
+	  break;
+	case MAX_NUM_PROTOS_SCREENS:
+	  fa_ = (*a)->actualRcvdThpt,
+	    fb_ = (*b)->actualRcvdThpt, floatCompare = 1;
+	  break;
+	default:
+	  if(idx < numIpProtosToMonitor) {
+	    a_ = (*a)->protoIPTrafficInfos[idx].receivedLocally
+	      +(*a)->protoIPTrafficInfos[idx].receivedFromRemote;
+	    b_ = (*b)->protoIPTrafficInfos[idx].receivedLocally
+	      +(*b)->protoIPTrafficInfos[idx].receivedFromRemote;
+	  } else {
+	    int i;
+
+	    a_ = 0, b_ = 0;
+
+	    for(i=0; i<numIpProtosToMonitor; i++) {
+	      a_ += (*a)->protoIPTrafficInfos[i].receivedLocally
+		+(*a)->protoIPTrafficInfos[i].receivedFromRemote;
+	      b_ += (*b)->protoIPTrafficInfos[i].receivedLocally
+		+(*b)->protoIPTrafficInfos[i].receivedFromRemote;
+	    }
+
+	    if((*a)->bytesReceived > a_)
+	      a_ = (*a)->bytesReceived-a_;
+	    else
+	      a_ = 0;
+
+	    if((*b)->bytesReceived > b_)
+	      b_ = (*b)->bytesReceived-b_;
+	    else
+	      b_ = 0;
+
+	    /*
+	      traceEvent(TRACE_INFO, "=>%d (%s)<=>%d (%s)<=\n",
+	      (int)a_, (*a)->hostSymIpAddress,
+	      (int)b_, (*b)->hostSymIpAddress);
+	    */
+	  }
+	}
+    }
+    break;
+  case 2:
+    if(sortSendMode) {
+      switch(screenNumber)
+	{
+	case 0:
+	  a_ = (*a)->udpSentLocally +(*a)->udpSentRemotely;
+	  b_ = (*b)->udpSentLocally +(*b)->udpSentRemotely;
+	  break;
+	case 1:
+	  a_ = (*a)->ipxSent, b_ = (*b)->ipxSent;
+	  break;
+	case 2:
+	  a_ = (*a)->appletalkSent, b_ = (*b)->appletalkSent;
+	  break;
+	case 3:
+	  a_ = (*a)->igmpSent, b_ = (*b)->igmpSent;
+	  break;
+	case MAX_NUM_PROTOS_SCREENS:
+	  fa_ = (*a)->averageSentThpt,
+	    fb_ = (*b)->averageSentThpt, floatCompare = 1;
+	  break;
+	default:
+	  if(++idx < numIpProtosToMonitor) {
+	    a_ = (*a)->protoIPTrafficInfos[idx].sentLocally
+	      +(*a)->protoIPTrafficInfos[idx].sentRemotely;
+	    b_ = (*b)->protoIPTrafficInfos[idx].sentLocally
+	      +(*b)->protoIPTrafficInfos[idx].sentRemotely;
+	  } else {
+	    int i;
+
+	    a_ = 0, b_ = 0;
+
+	    for(i=0; i<numIpProtosToMonitor; i++) {
+	      a_ += (*a)->protoIPTrafficInfos[i].sentLocally
+		+(*a)->protoIPTrafficInfos[i].sentRemotely;
+	      b_ += (*b)->protoIPTrafficInfos[i].sentLocally
+		+(*b)->protoIPTrafficInfos[i].sentRemotely;
+	    }
+
+	    if((*a)->bytesSent > a_)
+	      a_ = (*a)->bytesSent-a_;
+	    else
+	      a_ = 0;
+
+	    if((*b)->bytesSent > b_)
+	      b_ = (*b)->bytesSent-b_;
+	    else
+	      b_ = 0;
+	  }
+	}
+    } else {
+      switch(screenNumber)
+	{
+	case 0:
+	  a_ = (*a)->udpReceivedLocally +(*a)->udpReceivedFromRemote;
+	  b_ = (*b)->udpReceivedLocally +(*b)->udpReceivedFromRemote;
+	  break;
+	case 1:
+	  a_ = (*a)->ipxReceived, b_ = (*b)->ipxReceived;
+	  break;
+	case 2:
+	  a_ = (*a)->appletalkReceived, b_ = (*b)->appletalkReceived;
+	  break;
+	case 3:
+	  a_ = (*a)->igmpReceived, b_ = (*b)->igmpReceived;
+	  break;
+	case MAX_NUM_PROTOS_SCREENS:
+	  fa_ = (*a)->averageRcvdThpt,
+	    fb_ = (*b)->averageRcvdThpt, floatCompare = 1;
+	  break;
+	default:
+	  if(++idx < numIpProtosToMonitor) {
+	    a_ = (*a)->protoIPTrafficInfos[idx].receivedLocally
+	      +(*a)->protoIPTrafficInfos[idx].receivedFromRemote;
+	    b_ = (*b)->protoIPTrafficInfos[idx].receivedLocally
+	      +(*b)->protoIPTrafficInfos[idx].receivedFromRemote;
+	  } else {
+	    int i;
+
+	    a_ = 0, b_ = 0;
+
+	    for(i=0; i<numIpProtosToMonitor; i++) {
+	      a_ += (*a)->protoIPTrafficInfos[i].receivedLocally
+		+(*a)->protoIPTrafficInfos[i].receivedFromRemote;
+	      b_ += (*b)->protoIPTrafficInfos[i].receivedLocally
+		+(*b)->protoIPTrafficInfos[i].receivedFromRemote;
+	    }
+
+	    if((*a)->bytesReceived > a_)
+	      a_ = (*a)->bytesReceived-a_;
+	    else
+	      a_ = 0;
+
+	    if((*b)->bytesReceived > b_)
+	      b_ = (*b)->bytesReceived-b_;
+	    else
+	      b_ = 0;
+	  }
+	}
+    }
+    break;
+  case 3:
+    if(sortSendMode) {
+      switch(screenNumber)
+	{
+	case 0:
+	  a_ = (*a)->icmpSent, b_ = (*b)->icmpSent;
+	  break;
+	case 1:
+	  a_ = (*a)->decnetSent, b_ = (*b)->decnetSent;
+	  break;
+	case 2:
+	  a_ = (*a)->ospfSent, b_ = (*b)->ospfSent;
+	  break;
+	case 3:
+	  a_ = (*a)->osiSent, b_ = (*b)->osiSent;
+	  break;
+	case 4:
+	  a_ = (*a)->qnxSent, b_ = (*b)->qnxSent;
+	  break;
+	case 5: /* MAX_NUM_PROTOS_SCREENS: */
+	  fa_ = (*a)->peakSentThpt,
+	    fb_ = (*b)->peakSentThpt, floatCompare = 1;
+	  break;
+	default:
+	  idx+=2;
+	  if(idx < numIpProtosToMonitor) {
+	    a_ = (*a)->protoIPTrafficInfos[idx].sentLocally
+	      +(*a)->protoIPTrafficInfos[idx].sentRemotely;
+	    b_ = (*b)->protoIPTrafficInfos[idx].sentLocally
+	      +(*b)->protoIPTrafficInfos[idx].sentRemotely;
+	  } else {
+	    int i;
+
+	    a_ = 0, b_ = 0;
+
+	    for(i=0; i<numIpProtosToMonitor; i++) {
+	      a_ += (*a)->protoIPTrafficInfos[i].sentLocally
+		+(*a)->protoIPTrafficInfos[i].sentRemotely;
+	      b_ += (*b)->protoIPTrafficInfos[i].sentLocally
+		+(*b)->protoIPTrafficInfos[i].sentRemotely;
+	    }
+
+	    if((*a)->bytesSent > a_)
+	      a_ = (*a)->bytesSent-a_;
+	    else
+	      a_ = 0;
+
+	    if((*b)->bytesSent > b_)
+	      b_ = (*b)->bytesSent-b_;
+	    else
+	      b_ = 0;
+	  }
+	}
+    } else {
+      switch(screenNumber)
+	{
+	case 0:
+	  a_ = (*a)->icmpReceived, b_ = (*b)->icmpReceived;
+	  break;
+	case 1:
+	  a_ = (*a)->decnetReceived, b_ = (*b)->decnetReceived;
+	  break;
+	case 2:
+	  a_ = (*a)->ospfReceived, b_ = (*b)->ospfReceived;
+	  break;
+	case 3:
+	  a_ = (*a)->osiReceived, b_ = (*b)->osiReceived;
+	  break;
+	case MAX_NUM_PROTOS_SCREENS:
+	  fa_ = (*a)->peakRcvdThpt,
+	    fb_ = (*b)->peakRcvdThpt, floatCompare = 1;
+	  break;
+	default:
+	  idx+=2;
+	  if(idx < numIpProtosToMonitor) {
+	    a_ = (*a)->protoIPTrafficInfos[idx].receivedLocally
+	      +(*a)->protoIPTrafficInfos[idx].receivedFromRemote;
+	    b_ = (*b)->protoIPTrafficInfos[idx].receivedLocally
+	      +(*b)->protoIPTrafficInfos[idx].receivedFromRemote;
+	  } else {
+	    int i;
+
+	    a_ = 0, b_ = 0;
+
+	    for(i=0; i<numIpProtosToMonitor; i++) {
+	      a_ += (*a)->protoIPTrafficInfos[i].receivedLocally
+		+(*a)->protoIPTrafficInfos[i].receivedFromRemote;
+	      b_ += (*b)->protoIPTrafficInfos[i].receivedLocally
+		+(*b)->protoIPTrafficInfos[i].receivedFromRemote;
+	    }
+
+	    if((*a)->bytesReceived > a_)
+	      a_ = (*a)->bytesReceived-a_;
+	    else
+	      a_ = 0;
+
+	    if((*b)->bytesReceived > b_)
+	      b_ = (*b)->bytesReceived-b_;
+	    else
+	      b_ = 0;
+	  }
+	}
+      break;
+    }
+    break;
+  case 4:
+    if(sortSendMode)
+      switch(screenNumber) {
+      case 0:
+	a_ = (*a)->qnxSent, b_ = (*b)->qnxSent;
+	break;
+      default:
+	fa_ = (*a)->actualSentPktThpt, fb_ = (*b)->actualSentPktThpt, floatCompare = 1;
+	break;
+      }
+    else
+      switch(screenNumber) {
+      case 0:
+	a_ = (*a)->qnxReceived, b_ = (*b)->qnxReceived;
+	break;
+      case MAX_NUM_PROTOS_SCREENS:
+	fa_ = (*a)->actualRcvdPktThpt, fb_ = (*b)->actualRcvdPktThpt, floatCompare = 1;
+	break;
+      }
+    break;
+  case 5:
+    if(sortSendMode)
+      switch(screenNumber) {
+      case 0:
+	a_ = (*a)->otherSent, b_ = (*b)->otherSent;
+	break;
+      case MAX_NUM_PROTOS_SCREENS:
+	fa_ = (*a)->averageSentPktThpt, fb_ = (*b)->averageSentPktThpt, floatCompare = 1;
+	break;
+      }
+    break;
+  case 6:
+    if(sortSendMode)
+      fa_ = (*a)->peakSentPktThpt, fb_ = (*b)->peakSentPktThpt, floatCompare = 1;
+    else
+      fa_ = (*a)->peakRcvdPktThpt, fb_ = (*b)->peakRcvdPktThpt, floatCompare = 1;
+  }
+
+  columnSort = oldColumnSort;
+
+  if(floatCompare == 0) {
+    if(a_ < b_) {
+      return(1);
+    } else if (a_ > b_) {
+      return(-1);
+    } else {
+      return(0);
+    }
+  } else {
+    if(fa_ < fb_) {
+      return(1);
+    } else if (fa_ > fb_) {
+      return(-1);
+    } else {
+      return(0);
+    }
+  }
+}
+
+/* ******************************* */
+
+int cmpMulticastFctn(const void *_a, const void *_b) {
+  HostTraffic **a = (HostTraffic **)_a;
+  HostTraffic **b = (HostTraffic **)_b;
+  int rc;
+
+  if((a == NULL) && (b != NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING (1)\n");
+    return(1);
+  } else if((a != NULL) && (b == NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING (2)\n");
+    return(-1);
+  } else if((a == NULL) && (b == NULL)) {
+    traceEvent(TRACE_WARNING, "WARNING (3)\n");
+    return(0);
+  }
+
+  switch(columnSort) {
+  case 2:
+    if((*a)->pktMulticastSent < (*b)->pktMulticastSent)
+      return(1);
+    else if ((*a)->pktMulticastSent > (*b)->pktMulticastSent)
+      return(-1);
+    else
+      return(0);
+    break; /* NOTREACHED */
+  case 3:
+    if((*a)->bytesMulticastSent < (*b)->bytesMulticastSent)
+      return(1);
+    else if ((*a)->bytesMulticastSent > (*b)->bytesMulticastSent)
+      return(-1);
+    else
+      return(0);
+    break; /* NOTREACHED */
+  case 4:
+    if((*a)->pktMulticastRcvd < (*b)->pktMulticastRcvd)
+      return(1);
+    else if ((*a)->pktMulticastRcvd > (*b)->pktMulticastRcvd)
+      return(-1);
+    else
+      return(0);
+    break; /* NOTREACHED */
+  case 5:
+    if((*a)->bytesMulticastRcvd < (*b)->bytesMulticastRcvd)
+      return(1);
+    else if ((*a)->bytesMulticastRcvd > (*b)->bytesMulticastRcvd)
+      return(-1);
+    else
+      return(0);
+    break; /* NOTREACHED */
+
+  default:
+#ifdef MULTITHREADED
+    accessMutex(&addressResolutionMutex, "cmpMulticastFctn");
+#endif
+    rc = strcmp((*a)->hostSymIpAddress, /* Host name */
+		(*b)->hostSymIpAddress);
+#ifdef MULTITHREADED
+    releaseMutex(&addressResolutionMutex);
+#endif
+    return(rc);
+  }
+}
+
+/* ******************************* */
+
+void getProtocolDataSent(TrafficCounter *c,
+			 TrafficCounter *d,
+			 TrafficCounter *e,
+			 HostTraffic *el) {
+  int idx;
+
+  switch(screenNumber) {
+  case 0:
+    (*c) = el->tcpSentLocally + el->tcpSentRemotely;
+    (*d) = el->udpSentLocally + el->udpSentRemotely;
+    (*e) = el->icmpSent;
+    break;
+  case 1:
+    (*c) = el->dlcSent;
+    (*d) = el->ipxSent;
+    (*e) = el->decnetSent;
+    break;
+  case 2:
+    (*c) = el->arp_rarpSent;
+    (*d) = el->appletalkSent;
+    (*e) = el->ospfSent;
+    break;
+  case 3:
+    (*c) = el->netbiosSent;
+    (*d) = el->igmpSent;
+    (*e) = el->osiSent;
+    break;
+  case 4:
+    (*c) = el->qnxSent;
+    (*d) = el->otherSent;
+    (*e) = 0;
+    break;
+  default:
+    idx = (screenNumber-MAX_NUM_PROTOS_SCREENS)*3;
+    if(idx < numIpProtosToMonitor)
+      (*c) = el->protoIPTrafficInfos[idx].sentLocally
+	+ el->protoIPTrafficInfos[idx].sentRemotely;
+    else
+      (*c) = 0;
+
+    ++idx;
+    if(idx < numIpProtosToMonitor)
+      (*d) = el->protoIPTrafficInfos[idx].sentLocally
+	+ el->protoIPTrafficInfos[idx].sentRemotely;
+    else
+      (*d) = 0;
+
+    ++idx;
+    if(idx < numIpProtosToMonitor)
+      (*e) = el->protoIPTrafficInfos[idx].sentLocally
+	+ el->protoIPTrafficInfos[idx].sentRemotely;
+    else
+      (*e) = 0;
+  }
+}
+/* ******************************* */
+
+void getProtocolDataReceived(TrafficCounter *c,
+			     TrafficCounter *d,
+			     TrafficCounter *e,
+			     HostTraffic *el) {
+  int idx;
+
+  switch(screenNumber) {
+  case 0:
+    (*c) = el->tcpReceivedLocally + el->tcpReceivedFromRemote;
+    (*d) = el->udpReceivedLocally + el->udpReceivedFromRemote;
+    (*e) = el->icmpReceived;
+    break;
+  case 1:
+    (*c) = el->dlcReceived;
+    (*d) = el->ipxReceived;
+    (*e) = el->decnetReceived;
+    break;
+  case 2:
+    (*c) = el->arp_rarpReceived;
+    (*d) = el->appletalkReceived;
+    (*e) = el->ospfReceived;
+    break;
+  case 3:
+    (*c) = el->netbiosReceived;
+    (*d) = el->igmpReceived;
+    (*e) = el->osiReceived;
+    break;
+  case 4:
+    (*c) = el->qnxReceived;
+    (*d) = el->otherReceived;
+    (*e) = 0;
+    break;
+  default:
+    idx = (screenNumber-MAX_NUM_PROTOS_SCREENS)*3;
+    if(idx < numIpProtosToMonitor)
+      (*c) = el->protoIPTrafficInfos[idx].receivedLocally
+	+ el->protoIPTrafficInfos[idx].receivedFromRemote;
+    else
+      (*c) = 0;
+
+    ++idx;
+    if(idx < numIpProtosToMonitor)
+      (*d) = el->protoIPTrafficInfos[idx].receivedLocally
+	+ el->protoIPTrafficInfos[idx].receivedFromRemote;
+    else
+      (*d) = 0;
+
+    ++idx;
+    if(idx < numIpProtosToMonitor)
+      (*e) = el->protoIPTrafficInfos[idx].receivedLocally
+	+ el->protoIPTrafficInfos[idx].receivedFromRemote;
+    else
+      (*e) = 0;
+  }
+}
+
+/* ******************************* */
+
+void printHostThtpShort(HostTraffic *el, short dataSent) {
+  int i;
+  TrafficCounter tc;
+  char buf[64];
+
+  for(i=0, tc=0; i<24; i++) {
+    if(dataSent)
+      tc += el->last24HoursBytesSent[i];
+    else
+      tc += el->last24HoursBytesRcvd[i];  
+  }
+  
+  for(i=0; i<24; i++) {
+    float pctg;
+
+    if(tc > 0) {
+      if(dataSent)
+	pctg = (float)(el->last24HoursBytesSent[i]*100)/(float)tc;
+      else
+	pctg = (float)(el->last24HoursBytesRcvd[i]*100)/(float)tc;
+    } else
+      pctg = 0;
+
+    snprintf(buf, sizeof(buf), "<TD ALIGN=RIGHT BGCOLOR=%s>&nbsp;</TD>",
+	     getBgPctgColor(pctg));
+    sendString(buf);
+  }
+}
+
+/* ******************************* */
+
+int cmpHostsFctn(const void *_a, const void *_b) {
+  struct hostTraffic **a = (struct hostTraffic **)_a;
+  struct hostTraffic **b = (struct hostTraffic **)_b;
+  char *name_a, *name_b;
+  TrafficCounter a_=0, b_=0;
+  int rc;
+
+  switch(columnSort) {
+  case 2: /* IP Address */
+    if((*a)->hostIpAddress.s_addr > (*b)->hostIpAddress.s_addr)
+      return(1);
+    else if((*a)->hostIpAddress.s_addr < (*b)->hostIpAddress.s_addr)
+      return(-1);
+    else
+      return(0);
+    break;
+
+  case 3: /* Data Sent */
+    switch(sortFilter) {
+    case REMOTE_TO_LOCAL_ACCOUNTING:
+      a_ = (*a)->bytesSentLocally;
+      b_ = (*b)->bytesSentLocally;
+      break;
+    case LOCAL_TO_REMOTE_ACCOUNTING:
+      a_ = (*a)->bytesSentRemotely;
+      b_ = (*b)->bytesSentRemotely;
+      break;
+    case LOCAL_TO_LOCAL_ACCOUNTING:
+      a_ = (*a)->bytesSentLocally;
+      b_ = (*b)->bytesSentLocally;
+      break;
+    }
+    if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
+    break;
+
+  case 4: /* Data Rcvd */
+    switch(sortFilter) {
+    case REMOTE_TO_LOCAL_ACCOUNTING:
+      a_ = (*a)->bytesReceivedFromRemote;
+      b_ = (*b)->bytesReceivedFromRemote;
+      break;
+    case LOCAL_TO_REMOTE_ACCOUNTING:
+      a_ = (*a)->bytesReceivedFromRemote;
+      b_ = (*b)->bytesReceivedFromRemote;
+      break;
+    case LOCAL_TO_LOCAL_ACCOUNTING:
+      a_ = (*a)->bytesReceivedLocally;
+      b_ = (*b)->bytesReceivedLocally;
+      break;
+    }
+    if(a_ < b_) return(1); else if (a_ > b_) return(-1); else return(0);
+    break;
+
+  default: /* Host Name */
+#ifdef MULTITHREADED
+    accessMutex(&addressResolutionMutex, "cmpHostsFctn");
+#endif
+    name_a = (*a)->hostSymIpAddress;
+
+    if(name_a == NULL)
+      traceEvent(TRACE_WARNING, "Warning\n");
+    if((name_a == NULL) || (strcmp(name_a, "0.0.0.0") == 0)) {
+      name_a = (*a)->hostNumIpAddress;
+      if((name_a == NULL) || (name_a[0] == '\0'))
+	name_a = (*a)->ethAddressString;
+    }
+
+    name_b = (*b)->hostSymIpAddress;
+
+    if(name_b == NULL)
+      traceEvent(TRACE_WARNING, "Warning\n");
+    if((name_b == NULL) || (strcmp(name_b, "0.0.0.0") == 0)) {
+      name_b = (*b)->hostNumIpAddress;
+      if((name_b == NULL) || (name_b[0] == '\0'))
+	name_b = (*b)->ethAddressString;
+    }
+
+#ifdef MULTITHREADED
+    releaseMutex(&addressResolutionMutex);
+#endif
+
+    rc = strcasecmp(name_a, name_b); /* case insensitive */
+
+    return(rc);
+  }
+}
+
+/* ************************************ */
+
+void printTCPflagsStats(HostTraffic *el) {
+  char buf[BUF_SIZE];
+
+  if(((el->tcpSentLocally+el->tcpSentRemotely+
+       el->tcpReceivedLocally+el->tcpReceivedFromRemote) == 0)
+     || ((el->synPktsSent.value+el->synPktsRcvd.value
+	  +el->rstPktsSent.value+el->rstPktsRcvd.value
+	  +el->synFinPktsSent.value+el->synFinPktsRcvd.value
+	  +el->finPushUrgPktsSent.value+el->finPushUrgPktsRcvd.value
+	  +el->nullPktsSent.value+el->nullPktsRcvd.value) == 0))
+    return;
+
+  sendString("<P><H1>TCP Packets Stats</H1><P>\n"
+	     ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">Flags</TH>"
+	     "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Sent</TH>"
+	     "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Received</TH></TR>\n");
+
+  if((el->synPktsSent.value+el->synPktsRcvd.value) > 0) {
+
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>SYN</TH>", getRowColor());
+    sendString(buf);
+    formatUsageCounter(el->synPktsSent);
+    formatUsageCounter(el->synPktsRcvd);
+    sendString("</TR>\n");
+  }
+
+  if((el->rstPktsSent.value+el->rstPktsRcvd.value) > 0) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>RST</TH>", getRowColor());
+    sendString(buf);
+    formatUsageCounter(el->rstPktsSent);
+    formatUsageCounter(el->rstPktsRcvd);
+    sendString("</TR>\n");
+  }
+
+  if((el->synFinPktsSent.value+el->synFinPktsRcvd.value) > 0) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>SYN|FIN</TH>", getRowColor());
+    sendString(buf);
+    formatUsageCounter(el->synFinPktsSent);
+    formatUsageCounter(el->synFinPktsRcvd);
+    sendString("</TR>\n");
+  }
+
+  if((el->finPushUrgPktsSent.value+el->finPushUrgPktsRcvd.value) > 0) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>FIN|PUSH|URG</TH>", getRowColor());
+    sendString(buf);
+    formatUsageCounter(el->finPushUrgPktsSent);
+    formatUsageCounter(el->finPushUrgPktsRcvd);
+    sendString("</TR>\n");
+  }
+
+  if((el->nullPktsSent.value+el->nullPktsRcvd.value) > 0) {
+    sendString("<TR><TH "TH_BG" ALIGN=LEFT>NULL</TH>");
+    formatUsageCounter(el->nullPktsSent);
+    formatUsageCounter(el->nullPktsRcvd);
+    sendString("</TR>\n");
+  }
+  sendString("</TABLE>"TABLE_OFF"<P>\n");
+}
+
+/* ************************************ */
+
+void printHostTrafficStats(HostTraffic *el) {
+  TrafficCounter totalSent, totalReceived;
+  TrafficCounter actTotalSent, actTotalReceived;
+  char buf[BUF_SIZE];
+
+  totalSent = el->tcpSentLocally+el->tcpSentRemotely+el->udpSentLocally+el->udpSentRemotely;
+  totalSent += el->icmpSent+el->ospfSent+el->igmpSent+el->ipxSent+el->dlcSent+el->arp_rarpSent;
+  totalSent +=  el->decnetSent+el->appletalkSent+el->netbiosSent+
+    el->osiSent+el->qnxSent+el->otherSent;
+
+  totalReceived = el->tcpReceivedLocally+el->tcpReceivedFromRemote;
+  totalReceived += el->udpReceivedLocally+el->udpReceivedFromRemote;
+  totalReceived += el->icmpReceived+el->ospfReceived+el->igmpReceived;
+  totalReceived += el->ipxReceived+el->dlcReceived+el->arp_rarpReceived;
+  totalReceived += el->decnetReceived+el->appletalkReceived;
+  totalReceived +=  el->osiReceived+el->netbiosReceived+el->qnxReceived+el->otherReceived;
+
+  actTotalSent = el->tcpSentLocally+el->tcpSentRemotely;
+  actTotalReceived = el->tcpReceivedLocally+el->tcpReceivedFromRemote;
+
+  printHostEvents(el, -1, -1);
+  printHostHourlyTraffic(el);
+  printTCPflagsStats(el);
+
+  if((el->tcpSentLocally+el->tcpSentRemotely+
+      el->tcpReceivedLocally+el->tcpReceivedFromRemote+
+      el->udpSentLocally+el->udpSentRemotely+
+      el->udpReceivedLocally+el->udpReceivedFromRemote) == 0)
+    return;
+
+  sendString("<P><H1>IP Protocol Distribution</H1><P>\n"
+	     ""TABLE_ON"<TABLE BORDER=1 WIDTH=500><TR><TH "TH_BG" WIDTH=100>Protocol</TH>"
+	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Sent</TH>"
+	     "<TH "TH_BG" WIDTH=200 COLSPAN=2>Data&nbsp;Received</TH></TR>\n");
+
+  printTableDoubleEntry(buf, sizeof(buf), "TCP", COLOR_1, (float)actTotalSent/1024,
+			100*((float)SD(actTotalSent, totalSent)),
+			(float)actTotalReceived/1024,
+			100*((float)SD(actTotalReceived, totalReceived)));
+
+  actTotalSent = el->udpSentLocally+el->udpSentRemotely;
+  actTotalReceived = el->udpReceivedLocally+el->udpReceivedFromRemote;
+
+/*#if 0 */
+  printTableDoubleEntry(buf, sizeof(buf), "UDP", COLOR_1, (float)actTotalSent/1024,
+			100*((float)SD(actTotalSent, totalSent)),
+			(float)actTotalReceived/1024,
+			100*((float)SD(actTotalReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "ICMP", COLOR_1, (float)el->icmpSent/1024,
+			100*((float)SD(el->icmpSent, totalSent)),
+			(float)el->icmpReceived/1024,
+			100*((float)SD(el->icmpReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "(R)ARP", COLOR_1, (float)el->arp_rarpSent/1024,
+			100*((float)SD(el->arp_rarpSent, totalSent)),
+			(float)el->arp_rarpReceived/1024,
+			100*((float)SD(el->arp_rarpReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "DLC", COLOR_1, (float)el->dlcSent/1024,
+			100*((float)SD(el->dlcSent, totalSent)),
+			(float)el->dlcReceived/1024,
+			100*((float)SD(el->dlcReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "IPX", COLOR_1, (float)el->ipxSent/1024,
+			100*((float)SD(el->ipxSent, totalSent)),
+			(float)el->ipxReceived/1024,
+			100*((float)SD(el->ipxReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "Decnet", COLOR_1, (float)el->decnetSent/1024,
+			100*((float)SD(el->decnetSent, totalSent)),
+			(float)el->decnetReceived/1024,
+			100*((float)SD(el->decnetReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "AppleTalk", COLOR_1, (float)el->appletalkSent/1024,
+			100*((float)SD(el->appletalkSent, totalSent)),
+			(float)el->appletalkReceived/1024,
+			100*((float)SD(el->appletalkReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "OSPF", COLOR_1, (float)el->ospfSent/1024,
+			100*((float)SD(el->ospfSent, totalSent)),
+			(float)el->ospfReceived/1024,
+			100*((float)SD(el->ospfReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "NetBios", COLOR_1, (float)el->netbiosSent/1024,
+			100*((float)SD(el->netbiosSent, totalSent)),
+			(float)el->netbiosReceived/1024,
+			100*((float)SD(el->netbiosReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "IGMP", COLOR_1, (float)el->igmpSent/1024,
+			100*((float)SD(el->igmpSent, totalSent)),
+			(float)el->igmpReceived/1024,
+			100*((float)SD(el->igmpReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "OSI", COLOR_1, (float)el->osiSent/1024,
+			100*((float)SD(el->osiSent, totalSent)),
+			(float)el->osiReceived/1024,
+			100*((float)SD(el->osiReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "QNX", COLOR_1, (float)el->qnxSent/1024,
+			100*((float)SD(el->qnxSent, totalSent)),
+			(float)el->qnxReceived/1024,
+			100*((float)SD(el->qnxReceived, totalReceived)));
+
+  printTableDoubleEntry(buf, sizeof(buf), "Other", COLOR_1, (float)el->otherSent/1024,
+			100*((float)SD(el->otherSent, totalSent)),
+			(float)el->otherReceived/1024,
+			100*((float)SD(el->otherReceived, totalReceived)));
+/*#endif */
+  sendString("</TABLE>"TABLE_OFF"<P>\n");
+}
+
+/* ************************************ */
+
+void printHostContactedPeers(HostTraffic *el) {
+  u_int numEntries, i;
+  char buf[BUF_SIZE];
+
+  if((el->pktSent != 0) || (el->pktReceived != 0)) {
+    int ok =0;
+
+    for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+      if((el->contactedSentPeersIndexes[i] != NO_PEER)
+	 || (el->contactedRcvdPeersIndexes[i] != NO_PEER)) {
+	ok = 1;
+	break;
+      }
+
+    if(ok) {
+      struct hostTraffic *el1;
+
+      sendString("<P><H1>Last Contacted Peers</H1>\n"
+		 "<TABLE BORDER=0><TR><TD "TD_BG" VALIGN=TOP>\n");
+
+      for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+	if(el->contactedSentPeersIndexes[i] != NO_PEER) {
+	  el1 = device[actualReportDeviceId].hash_hostTraffic[
+		       checkSessionIdx(el->contactedSentPeersIndexes[i])];
+
+	  if(el1 != NULL) {
+	    if(numEntries == 0) {
+	      sendString(""TABLE_ON"<TABLE BORDER=1 VALIGN=TOP>"
+			 "<TR><TH "TH_BG">Receiver Name</TH>"
+			 "<TH "TH_BG">Receiver Address</TH></TR>\n");
+	    }
+
+	    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		    "<TD "TD_BG"  ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
+		    getRowColor(),
+		    makeHostLink(el1, 0, 0, 0),
+		    el1->hostNumIpAddress);
+
+	    sendString(buf);
+	    numEntries++;
+	  }
+	}
+
+      if(numEntries > 0)
+	sendString("</TABLE>"TABLE_OFF"</TD><TD "TD_BG" VALIGN=TOP>\n");
+      else
+	sendString("&nbsp;</TD><TD "TD_BG">\n");
+
+      /* ***************************************************** */
+      for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+	if(el->contactedRcvdPeersIndexes[i] != NO_PEER) {
+	  el1 = device[actualReportDeviceId].hash_hostTraffic[
+                       checkSessionIdx(el->contactedRcvdPeersIndexes[i])];
+
+	  if(el1 != NULL) {
+	    if(numEntries == 0) {
+	      sendString(""TABLE_ON"<TABLE BORDER=1>"
+			 "<TR><TH "TH_BG">Sender Name</TH>"
+			 "<TH "TH_BG">Sender Address</TH></TR>\n");
+	    }
+
+	    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		     "<TD "TD_BG"  ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
+		    getRowColor(),
+		    makeHostLink(el1, 0, 0, 0),
+		    el1->hostNumIpAddress);
+
+	    sendString(buf);
+	    numEntries++;
+	  }
+	}
+
+      if(numEntries > 0)
+	sendString("</TABLE>"TABLE_OFF"\n");
+
+      sendString("</TD></TR></TABLE><P>\n");
+    } /* ok */
+  }
+}
+
+/* ************************************ */
+
+/* Function below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+
+char *getSessionState(IPSession *session) {
+  switch (session->sessionState) {
+  case STATE_ACTIVE:
+    return("Active");
+  case STATE_FIN1_ACK0:
+    return("Fin1 Ack0");
+  case STATE_FIN1_ACK1:
+    return("Fin1 Ack1");
+  case STATE_FIN2_ACK0:
+    return("Fin2 Ack0");
+  case STATE_FIN2_ACK1:
+    return("Fin2 Ack1");
+  case STATE_FIN2_ACK2:
+    return("Fin2 Ack2");
+  case STATE_TIMEOUT:
+    return("Timeout");
+  case STATE_END:
+    return("End");
+  }
+
+ return("*Unknown*");
+}
+
+/* ************************************ */
+
+void printHostSessions(HostTraffic *el, u_int elIdx) {
+  char buf[BUF_SIZE];
+  struct ipGlobalSession *scanner=NULL;
+  u_int scanIdx;
+  char *sessionType=NULL;
+  u_short numSessions;
+  u_int idx, i;
+  static char _sport[8], _dport[8];
+
+  if((el->tcpSessionList != NULL) || (el->udpSessionList != NULL)) {
+    sendString("<P><H1>IP Session History</H1><P>\n");
+  }
+
+  for(scanIdx=0; scanIdx<2; scanIdx++)
+    {
+      switch(scanIdx) {
+      case 0:
+	scanner = el->tcpSessionList;
+	sessionType = "TCP";
+	break;
+      case 1:
+	scanner = el->udpSessionList;
+	sessionType = "UDP";
+	break;
+      }
+
+      numSessions = 0;
+
+      while(scanner != NULL) {
+	char *whoswho, *svc=NULL, tmpSvc[16];
+
+	if(scanner->initiator == CLIENT_ROLE)
+	  whoswho= "client";
+	else
+	  whoswho= "server";
+
+	switch(scanIdx) {
+	case 0:
+	  svc = getPortByNum((int)(scanner->port), IPPROTO_TCP);
+	  break;
+	case 1:
+	  svc = getPortByNum((int)(scanner->port), IPPROTO_UDP);
+	  break;
+	}
+
+	if(svc == NULL) {
+	  snprintf(tmpSvc, sizeof(tmpSvc), "%d", (int)(scanner->port));
+	  svc = tmpSvc;
+	}
+
+	if(numSessions == 0) {
+	  snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
+		  "<TH "TH_BG" COLSPAN=2>%s&nbsp;Service</TH>"
+		  "<TH "TH_BG">Role</TH><TH "TH_BG">"
+		  "#&nbsp;Sessions</TH>"
+		  "<TH "TH_BG">Bytes&nbsp;Sent</TH>"
+		  "<TH "TH_BG">Bytes&nbsp;Rcvd</TH>"
+		  "<TH "TH_BG">Last&nbsp;Seen</TH>"
+		  "<TH "TH_BG">First&nbsp;Seen</TH>"
+		  "<TH "TH_BG">Peers</TH></TR>\n",
+		  sessionType);
+	  sendString(buf);
+	}
+
+	snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=RIGHT>%s</TH><TD "TD_BG"  ALIGN=CENTER>%d</TD>"
+		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%d"
+		"</TD><TD "TD_BG"  ALIGN=CENTER>%s</TD>"
+		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG">"
+		"%s</TD><TD "TD_BG">%s</TD>\n",
+		getRowColor(), svc, scanner->port, whoswho,
+		(int)scanner->sessionCounter,
+		formatBytes(scanner->bytesSent, 1),
+		formatBytes(scanner->bytesReceived, 1),
+		formatTime(&(scanner->lastSeen), 1),
+		formatTime(&(scanner->firstSeen), 1)
+		);
+	sendString(buf);
+	numSessions++;
+
+	sendString("<TD "TD_BG"><UL>");
+	for(i=0; i < MAX_NUM_SESSION_PEERS; i++) {
+	  if((scanner->peersIdx[i] != NO_PEER)
+	     && (device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(scanner->peersIdx[i])] != NULL)) {
+	    HostTraffic *host = device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(scanner->peersIdx[i])];
+
+
+	    if(host != NULL) {
+#ifdef MULTITHREADED
+	      accessMutex(&addressResolutionMutex, "printSession");
+#endif
+	      if(host->hostNumIpAddress[0] == '&')
+		snprintf(buf, sizeof(buf), "<LI>%s\n", host->hostSymIpAddress);
+	      else
+		snprintf(buf, sizeof(buf), "<LI><A HREF=%s.html>%s</A>\n",
+			host->hostNumIpAddress,
+			host->hostSymIpAddress);
+
+#ifdef MULTITHREADED
+	      releaseMutex(&addressResolutionMutex);
+#endif
+	      sendString(buf);
+	    }
+	  }
+	}
+	sendString("</UL></TR>\n");
+
+	scanner = (IpGlobalSession*)(scanner->next);
+      }
+
+      if(numSessions > 0)
+	sendString("</TABLE>"TABLE_OFF"<P>\n");
+    }  /* while */
+
+
+  /* Now print currently established TCP sessions (if any) */
+  for(idx=1, numSessions=0; idx<HASHNAMESIZE; idx++)
+    if((tcpSession[idx] != NULL)
+       && ((tcpSession[idx]->initiatorIdx == elIdx)
+	   || (tcpSession[idx]->remotePeerIdx == elIdx))
+#ifndef PRINT_ALL_ACTIVE_SESSIONS
+       && (tcpSession[idx]->sessionState == STATE_ACTIVE)
+#endif
+       ) {
+      char *sport, *dport, *remotePeer;
+      TrafficCounter dataSent, dataReceived, retrDataSent, retrDataRcvd;
+      TrafficCounter fragDataSent, fragDataRcvd;
+      int retrSentPercentage, retrRcvdPercentage;
+      char fragStrSent[64], fragStrRcvd[64];
+
+      if(numSessions == 0) {
+	sendString("<P><H1>Active TCP Sessions</H1><P>\n");
+	sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+		   "<TH "TH_BG">Local&nbsp;Port</TH>"
+		   "<TH "TH_BG">Remote&nbsp;Peer:Port</TH>"
+		   "<TH "TH_BG">Data&nbsp;Sent</TH>"
+#ifdef PRINT_RETRANSMISSION_DATA
+		   "<TH "TH_BG">Retran.&nbsp;Data&nbsp;Sent</TH>"
+#endif
+		   "<TH "TH_BG">Data&nbsp;Rcvd</TH>"
+#ifdef PRINT_RETRANSMISSION_DATA
+		   "<TH "TH_BG">Retran.&nbsp;Data&nbsp;Rcvd</TH>"
+#endif
+		   "<TH "TH_BG">Window&nbsp;Size</TH>"
+		   "<TH "TH_BG">Active&nbsp;Since</TH>"
+		   "<TH "TH_BG">Last&nbsp;Seen</TH>"
+		   "<TH "TH_BG">Duration</TH>"
+#ifdef PRINT_ALL_ACTIVE_SESSIONS
+		   "<TH "TH_BG">State</TH>"
+#endif
+		   "</TR>\n");
+      }
+
+      if(tcpSession[idx]->initiatorIdx == elIdx) {
+	sport = getPortByNum(tcpSession[idx]->sport, IPPROTO_TCP);
+	dport = getPortByNum(tcpSession[idx]->dport, IPPROTO_TCP);
+	if(sport == NULL) {
+	  snprintf(_sport, sizeof(_sport), "%d", tcpSession[idx]->sport); sport = _sport;
+	}
+
+	if(dport == NULL) {
+	  snprintf(_dport, sizeof(_dport), "%d", tcpSession[idx]->dport); dport = _dport;
+	}
+	remotePeer = makeHostLink(device[actualReportDeviceId].
+				  hash_hostTraffic[checkSessionIdx(tcpSession[idx]->remotePeerIdx)],
+				  SHORT_FORMAT, 0, 0);
+	dataSent = tcpSession[idx]->bytesSent;
+	dataReceived = tcpSession[idx]->bytesReceived;
+	retrDataSent = tcpSession[idx]->bytesRetranI2R;
+	retrDataRcvd = tcpSession[idx]->bytesRetranR2I;
+	fragDataSent = tcpSession[idx]->bytesFragmentedSent;
+	fragDataRcvd = tcpSession[idx]->bytesFragmentedReceived;
+      } else {
+	/* Responder */
+	sport = getPortByNum(tcpSession[idx]->dport, IPPROTO_TCP);
+	dport = getPortByNum(tcpSession[idx]->sport, IPPROTO_TCP);
+	if(sport == NULL) {
+	  snprintf(_sport, sizeof(_sport), "%d", tcpSession[idx]->dport); sport = _sport;
+	}
+
+	if(dport == NULL) {
+	  snprintf(_dport, sizeof(_dport), "%d", tcpSession[idx]->sport); dport = _dport;
+	}
+
+	remotePeer = makeHostLink(device[actualReportDeviceId].
+				  hash_hostTraffic[checkSessionIdx(tcpSession[idx]->initiatorIdx)],
+				  SHORT_FORMAT, 0, 0);
+	dataSent = tcpSession[idx]->bytesReceived;
+	dataReceived = tcpSession[idx]->bytesSent;
+	retrDataSent = tcpSession[idx]->bytesRetranR2I;
+	retrDataRcvd = tcpSession[idx]->bytesRetranI2R;
+	fragDataSent = tcpSession[idx]->bytesFragmentedReceived;
+	fragDataRcvd = tcpSession[idx]->bytesFragmentedSent;
+      }
+
+      /* Sanity check */
+      if((actTime < tcpSession[idx]->firstSeen)
+	 || (tcpSession[idx]->firstSeen == 0))
+	tcpSession[idx]->firstSeen = actTime;
+
+      retrSentPercentage = (int)((float)(retrDataSent*100))/((float)(dataSent+1));
+      retrRcvdPercentage = (int)((float)(retrDataRcvd*100))/((float)(dataReceived+1));
+
+      if(fragDataSent == 0)
+	fragStrSent[0] = '\0';
+      else
+	snprintf(fragStrSent, sizeof(fragStrSent), "(%.1f fragmented)",
+		 (int)((float)(fragDataSent*100))/((float)(dataSent+1)));
+
+      if(fragDataRcvd == 0)
+	fragStrRcvd[0] = '\0';
+      else
+	snprintf(fragStrRcvd, sizeof(fragStrRcvd), "(%.1f fragmented)",
+		 (int)((float)(fragDataRcvd*100))/((float)(dataReceived+1)));
+
+      snprintf(buf, sizeof(buf), "<TR %s>"
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s:%s</TD>"
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
+#ifdef PRINT_RETRANSMISSION_DATA
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
+#endif
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
+#ifdef PRINT_RETRANSMISSION_DATA
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
+#endif
+	       , getRowColor(),
+	       sport,
+	       remotePeer, dport,
+	       formatBytes(dataSent, 1), fragStrSent,
+#ifdef PRINT_RETRANSMISSION_DATA
+	       formatBytes(retrDataSent, 1),
+	       retrSentPercentage,
+#endif
+	       formatBytes(dataReceived, 1), fragStrRcvd
+#ifdef PRINT_RETRANSMISSION_DATA
+	       , formatBytes(retrDataRcvd, 1),
+	       retrRcvdPercentage
+#endif
+	       );
+
+      sendString(buf);
+
+      snprintf(buf, sizeof(buf),
+	      "<TD "TD_BG"  ALIGN=CENTER NOWRAP>%d:%d</TD>"
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+	      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+#ifdef PRINT_ALL_ACTIVE_SESSIONS
+	      "<TD "TD_BG"  ALIGN=CENTER>%s</TD>"
+#endif
+	      "</TR>\n",
+	       tcpSession[idx]->minWindow, tcpSession[idx]->maxWindow,
+	       formatTime(&(tcpSession[idx]->firstSeen), 1),
+	       formatTime(&(tcpSession[idx]->lastSeen), 1),
+	       formatSeconds(actTime-tcpSession[idx]->firstSeen)
+#ifdef PRINT_ALL_ACTIVE_SESSIONS
+	       , getSessionState(tcpSession[idx])
+#endif
+	       );
+
+      sendString(buf);
+
+      numSessions++;
+    }
+
+  if(numSessions > 0)
+    sendString("</TABLE>"TABLE_OFF"<P>\n");
+}
+
+/* ************************************ */
+
+void printHostDetailedInfo(HostTraffic *el) {
+  char buf[BUF_SIZE];
+  float percentage;
+  int printedHeader, i;
+
+#ifdef MULTITHREADED
+  accessMutex(&addressResolutionMutex, "printAllSessionsHTML");
+#endif
+
+  if(el->hostSymIpAddress[0] == '\0')
+    snprintf(buf, sizeof(buf), "<center><P><H1>Info about"
+	    " %s</H1><P>\n",
+	    el->ethAddressString);
+  else
+    snprintf(buf, sizeof(buf), "<center><P><H1>Info about"
+	     " <A HREF=http://%s/>%s</A></H1><P>\n",
+	     el->hostNumIpAddress, el->hostSymIpAddress);
+
+#ifdef MULTITHREADED
+  releaseMutex(&addressResolutionMutex);
+#endif
+
+  sendString(buf);
+
+  sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n");
+
+  if(el->hostNumIpAddress[0] != '\0') {
+    char *countryIcon, *hostType;
+
+#ifdef MULTITHREADED
+    accessMutex(&addressResolutionMutex, "printAllSessions-2");
+#endif
+
+    /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
+    if(strcmp(el->hostNumIpAddress, el->hostSymIpAddress) != 0) {
+#ifdef MULTITHREADED
+      releaseMutex(&addressResolutionMutex);
+#endif
+      countryIcon = getHostCountryIconURL(el);
+    } else {
+#ifdef MULTITHREADED
+      releaseMutex(&addressResolutionMutex);
+#endif
+      countryIcon = "";
+    }
+
+    if(broadcastHost(el)) hostType = "broadcast";
+    else if(multicastHost(el)) hostType = "multicast";
+    else hostType = "unicast";
+
+    if(el->hostIpAddresses[1].s_addr == 0x0) {
+      snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s]",
+	      getRowColor(),
+	      "IP&nbsp;Address",
+	      el->hostNumIpAddress,
+	      countryIcon, hostType);
+      sendString(buf);
+    } else {
+      int i;
+
+      snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT><ol>",
+	      getRowColor(), "IP&nbsp;Address");
+      sendString(buf);
+
+      for(i=0; i<MAX_MULTIHOMING_ADDRESSES; i++) {
+	if(el->hostIpAddresses[i].s_addr != 0x0) {
+	  snprintf(buf, sizeof(buf), "<LI>%s", _intoa(el->hostIpAddresses[i], buf, sizeof(buf)));
+	  sendString(buf);
+	} else
+	  break;
+      }
+
+      snprintf(buf, sizeof(buf), "</ol><br>%s&nbsp;[%s - multihomed]", countryIcon, hostType);
+      sendString(buf);
+    }
+
+    if(subnetLocalHost(el)
+       && FD_ISSET((unsigned long)(el->hostIpAddress.s_addr) % 256 /* C-class */,
+		   &ipTrafficMatrixPromiscHosts)) {
+      /* Promiscuous mode */
+      sendString("&nbsp;<BLINK><B><FONT COLOR=#FF0000>[Promiscuous Mode Host]</FONT>"
+		 "</B></BLINK>");
+      sendString("</TD></TR>\n");
+    }
+  }
+
+  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	  "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[%s]</TD></TR>\n",
+	   getRowColor(),
+	   "First/Last&nbsp;Seen",
+           formatTime(&(el->firstSeen), 1),
+           formatTime(&(el->lastSeen), 1),
+	   formatSeconds(el->lastSeen - el->firstSeen));
+  sendString(buf);
+
+  if(el->fullDomainName && (el->fullDomainName[0] != '\0')) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	    "%s</TD></TR>\n",
+	    getRowColor(),
+	    "Domain", el->fullDomainName);
+    sendString(buf);
+  }
+
+  if((el->ethAddressString[0] != '\0')
+     && strcmp(el->ethAddressString, "00:00:00:00:00:00")
+     && strcmp(el->ethAddressString, "00:01:02:03:04:05") /* dummy address */) {
+    char *vendorName;
+
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	    "%s%s</TD></TR>\n",
+	    getRowColor(), "MAC&nbsp;Address",
+	    el->ethAddressString, separator /* it avoids empty cells not to be rendered */);
+    sendString(buf);
+
+    vendorName = getVendorInfo(el->ethAddress, 1);
+    if(vendorName[0] != '\0') {
+      snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	      "%s%s</TD></TR>\n",
+	      getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
+	      vendorName,
+	      separator /* it avoids empty cells not to be rendered */);
+      sendString(buf);
+    }
+  }
+
+  if(el->hostNumIpAddress[0] != '\0') {
+    updateOSName(el);
+
+    if((el->osName != NULL) && (el->osName[0] != '\0')) {
+      snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	      "%s%s</TD></TR>\n",
+	      getRowColor(), "OS&nbsp;Name",
+	      getOSFlag(el->osName, 1), separator /* it avoids empty cells not to be rendered */);
+      sendString(buf);
+    }
+  }
+
+  if((el->nbHostName != NULL) && (el->nbDomainName != NULL)) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	    "%s&nbsp;[domain %s] (%s)</TD></TR>\n",
+	    getRowColor(), "NetBios&nbsp;Name",
+	    el->nbHostName, el->nbDomainName, getNbNodeType(el->nbNodeType));
+    sendString(buf);
+  } else if(el->nbHostName != NULL) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	     "%s&nbsp;(%s)</TD></TR>\n",
+	     getRowColor(), "NetBios&nbsp;Name",
+	     el->nbHostName, getNbNodeType(el->nbNodeType));
+    sendString(buf);
+  }
+
+  if(el->atNetwork != 0) {
+    char *nodeName = el->atNodeName;
+
+    if(nodeName == NULL) nodeName = "";
+
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	    "%s&nbsp;\n",
+	    getRowColor(), "AppleTalk&nbsp;Name",
+	    nodeName);
+    sendString(buf);
+
+    if(el->atNodeType[0] != NULL) {
+      int i;
+      
+      sendString("(");
+      for(i=0; i<MAX_NODE_TYPES; i++)
+	if(el->atNodeType[i] == NULL)
+	  break;
+	else {
+	  if(i > 0) sendString("/");
+	  sendString(el->atNodeType[i]);
+	}
+      
+      sendString(")&nbsp;");
+    }
+
+    snprintf(buf, sizeof(buf), "[%d.%d]</TD></TR>\n",
+	     el->atNetwork, el->atNode);    
+    sendString(buf);
+  }
+
+  if(el->ipxHostName != NULL) {
+    int i;
+    
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	     "%s&nbsp;[",
+	     getRowColor(), "IPX&nbsp;Name",
+	     el->ipxHostName);
+    sendString(buf);
+    
+    for(i=0; i<el->numIpxNodeTypes; i++) {
+      if(i>0) sendString("/");
+      sendString(getSAPInfo(el->ipxNodeType[i], 1));
+    }
+
+    sendString("]</TD></TR>\n");
+  }
+
+  if(!multicastHost(el)) {
+    if(subnetPseudoLocalHost(el))
+      snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	      "%s</TD></TR>\n", getRowColor(),
+	      "Host&nbsp;Location",
+	      "Local (inside specified/local subnet)");
+    else
+      snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	      "%s</TD></TR>\n", getRowColor(),
+	      "Host&nbsp;Location",
+	      "Remote (outside specified/local subnet)");
+    sendString(buf);
+  }
+
+  if(el->minTTL > 0) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	    "%d:%d&nbsp;hops</TD></TR>\n",
+	    getRowColor(), "IP&nbsp;TTL&nbsp;(Time to Live)",
+	    el->minTTL, el->maxTTL);
+    sendString(buf);
+  }
+
+  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	  "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
+	  getRowColor(), "Total&nbsp;Data&nbsp;Sent",
+	  formatBytes(el->bytesSent, 1), formatPkts(el->pktSent),
+	  formatPkts(el->pktDuplicatedAckSent),
+	  (int)(((float)el->pktDuplicatedAckSent*100)/(float)(el->pktSent+1))
+	  );
+  sendString(buf);
+
+  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	  "%s Pkts</TD></TR>\n",
+	  getRowColor(), "Broadcast&nbsp;Pkts&nbsp;Sent",
+	  formatPkts(el->pktBroadcastSent));
+  sendString(buf);
+
+  if((el->pktMulticastSent > 0) || (el->pktMulticastRcvd > 0)) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	    "Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;-"
+	    "&nbsp;Rcvd&nbsp;%s/%s&nbsp;Pkts</TD></TR>\n",
+	    getRowColor(), "Multicast&nbsp;Traffic",
+	    formatBytes(el->bytesMulticastSent, 1),
+	    formatPkts(el->pktMulticastSent),
+	    formatBytes(el->bytesMulticastRcvd, 1),
+	    formatPkts(el->pktMulticastRcvd)
+	    );
+    sendString(buf);
+  }
+
+  if(el->bytesSent == 0)
+    percentage = 0;
+  else
+    percentage = 100 - (((float)el->bytesSentRemotely*100)/el->bytesSent);
+
+  if(el->hostNumIpAddress[0] != '\0') {
+    printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Sent&nbsp;Stats",
+			      "Local", "Remote", -1, percentage);
+  }
+
+  snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	  "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
+	  getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
+	  formatBytes(el->bytesReceived, 1), formatPkts(el->pktReceived),
+	  formatPkts(el->pktDuplicatedAckRcvd),
+	  (int)((float)(el->pktDuplicatedAckRcvd*100)/(float)(el->pktReceived+1)));
+  sendString(buf);
+
+  if(el->bytesReceived == 0)
+    percentage = 0;
+  else
+    percentage = 100 - (((float)el->bytesReceivedFromRemote*100)/el->bytesReceived);
+
+  if(el->hostNumIpAddress[0] != '\0')
+    printTableEntryPercentage(buf, sizeof(buf), "Data&nbsp;Received&nbsp;Stats",
+			      "Local", "Remote", -1, percentage);
+
+  /* ******************** */
+
+  printedHeader=0;
+  for(i=0; i<MAX_NUM_HOST_ROUTERS; i++) {
+    if(el->contactedRouters[i] != NO_PEER) {
+      int routerIdx = el->contactedRouters[i];
+
+      if(!printedHeader) {
+	snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
+		"Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG"  ALIGN=RIGHT>\n", getRowColor());
+	sendString(buf);
+      }
+      printedHeader++;
+
+      if(printedHeader > 1) sendString("<BR>");
+
+      snprintf(buf, sizeof(buf), "%s\n",
+	      makeHostLink(device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(routerIdx)],
+			   SHORT_FORMAT, 0, 0));
+      sendString(buf);
+    }
+  }
+
+  if(gatewayHost(el) 
+     || nameServerHost(el)
+     || isSMTPhost(el)
+     || isPOPhost(el)
+     || isIMAPhost(el)
+     || isDirectoryHost(el)
+     || isFTPhost(el)
+     || isHTTPhost(el)
+     || isWINShost(el)
+     ) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>",
+	    getRowColor(),
+	    "Provided&nbsp;Services");
+    sendString(buf);
+
+    if(nameServerHost(el))     sendString("Name Server<br>");
+    if(gatewayHost(el))        sendString("Gateway<br>");
+    if(isSMTPhost(el))         sendString("SMTP Server<br>");
+    if(isPOPhost(el))          sendString("POP Server<br>");
+    if(isIMAPhost(el))         sendString("IMAP Server<br>");
+    if(isDirectoryHost(el))    sendString("Directory Server<br>");
+    if(isFTPhost(el))          sendString("FTP Server<br>");
+    if(isHTTPhost(el))         sendString("HTTP Server<br>");
+    if(isWINShost(el))         sendString("WINS Server<br>");
+
+    sendString("</TD></TR>");
+  }
+
+  /* **************************** */
+
+  if(isServer(el)
+     || isWorkstation(el)
+     || isPrinter(el)
+     || isBridgeHost(el)) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>",
+	    getRowColor(),
+	    "Host Type");
+    sendString(buf);
+
+    if(isServer(el))           sendString("Server<br>");
+    if(isWorkstation(el))      sendString("Workstation<br>");
+    if(isPrinter(el))          sendString("Printer<br>");
+    if(isBridgeHost(el))       sendString("Bridge");
+    sendString("</TD></TR>");
+  }
+
+  /* **************************** */
+  /*
+    Fix courtesy of
+    Albert Chin-A-Young <china@thewrittenword.com>
+  */
+  if(printedHeader > 1)
+    sendString("</OL></TD></TR>\n");
+
+  sendString("</TABLE>"TABLE_OFF"<P>\n");
+}
+
+/* ************************************ */
+
+void printServiceStats(char* svcName, ServiceStats* ss,
+		       short printSentStats) {
+  char buf[BUF_SIZE];
+  TrafficCounter tot, tot1;
+  float f1, f2, f3, f4;
+
+  if(ss != NULL) {
+    if(printSentStats) {
+      tot = ss->numLocalReqSent+ss->numRemoteReqSent;
+
+      if(tot == 0)
+	f1 = f2 = 0;
+      else {
+	f1 = (ss->numLocalReqSent*100)/tot;
+	f2 = (ss->numRemoteReqSent*100)/tot;
+      }
+
+      tot1 = ss->numPositiveReplRcvd+ss->numNegativeReplRcvd;
+      if(tot1 == 0)
+	f3 = f4 = 0;
+      else {
+	f3 = (ss->numPositiveReplRcvd*100)/tot1;
+	f4 = (ss->numNegativeReplRcvd*100)/tot1;
+      }
+
+      if((tot > 0) || (tot1 > 0)) {
+	snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG">%s</TH><TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG"  ALIGN=CENTER>%s - %s</TD><TD "TD_BG"  ALIGN=CENTER>%s - %s</TD>"
+		"</TR>\n",
+		getRowColor(), svcName,
+		formatPkts(ss->numLocalReqSent), f1,
+		formatPkts(ss->numRemoteReqSent), f2,
+		formatPkts(ss->numPositiveReplRcvd), f3,
+		formatPkts(ss->numNegativeReplRcvd), f4,
+		formatMicroSeconds(ss->fastestMicrosecLocalReqMade),
+		formatMicroSeconds(ss->slowestMicrosecLocalReqMade),
+		formatMicroSeconds(ss->fastestMicrosecRemoteReqMade),
+		formatMicroSeconds(ss->slowestMicrosecRemoteReqMade)
+		);
+	sendString(buf);
+      }
+    } else {
+      tot = ss->numLocalReqRcvd+ss->numRemoteReqRcvd;
+
+      if(tot == 0)
+	f1 = f2 = 0;
+      else {
+	f1 = (ss->numLocalReqRcvd*100)/tot;
+	f2 = (ss->numRemoteReqRcvd*100)/tot;
+      }
+
+      tot1 = ss->numPositiveReplSent+ss->numNegativeReplSent;
+      if(tot1 == 0)
+	f3 = f4 = 0;
+      else {
+	f3 = (ss->numPositiveReplSent*100)/tot1;
+	f4 = (ss->numNegativeReplSent*100)/tot1;
+      }
+
+      if((tot > 0) || (tot1 > 0)) {
+	snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG">%s</TH><TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%.1f%%</TD>"
+		"<TD "TD_BG"  ALIGN=CENTER>%s - %s</TD><TD "TD_BG"  ALIGN=CENTER>%s - %s</TD>"
+		"</TR>\n",
+		getRowColor(), svcName,
+		formatPkts(ss->numLocalReqRcvd), f1,
+		formatPkts(ss->numRemoteReqRcvd), f2,
+		formatPkts(ss->numPositiveReplSent), f3,
+		formatPkts(ss->numNegativeReplSent), f4,
+		formatMicroSeconds(ss->fastestMicrosecLocalReqServed),
+		formatMicroSeconds(ss->slowestMicrosecLocalReqServed),
+		formatMicroSeconds(ss->fastestMicrosecRemoteReqServed),
+		formatMicroSeconds(ss->slowestMicrosecRemoteReqServed)
+		);
+	sendString(buf);
+      }
+    }
+  }
+}
+
+/* ************************************ */
+
+void printHostUsedServices(HostTraffic *el) {
+  TrafficCounter tot;
+
+  if((el->dnsStats == NULL)
+     && (el->httpStats == NULL))
+    return;
+
+
+  tot = 0;
+
+  if(el->dnsStats)
+    tot += el->dnsStats->numLocalReqSent+el->dnsStats->numRemoteReqSent;
+
+  if(el->httpStats)
+    tot += el->httpStats->numLocalReqSent+el->httpStats->numRemoteReqSent;
+
+  if(tot > 0) {
+    sendString("<P><H1>IP&nbsp;Service&nbsp;Stats:&nbsp;Client&nbsp;Role</H1><P>\n");
+
+    sendString(""TABLE_ON"<TABLE BORDER=1>\n<TR>"
+	       "<TH "TH_BG">&nbsp;</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Sent</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Sent</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Pos.&nbsp;Reply&nbsp;Rcvd</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Neg.&nbsp;Reply&nbsp;Rcvd</TH>"
+	       "<TH "TH_BG">Local&nbsp;RndTrip</TH>"
+	       "<TH "TH_BG">Remote&nbsp;RndTrip</TH>"
+	       "</TR>\n");
+
+    if(el->dnsStats) printServiceStats("DNS", el->dnsStats, 1);
+    if(el->httpStats) printServiceStats("HTTP", el->httpStats, 1);
+
+    sendString("</TABLE>"TABLE_OFF"\n");
+  }
+
+  /* ************ */
+
+  tot = 0;
+
+  if(el->dnsStats)
+    tot += el->dnsStats->numLocalReqRcvd+el->dnsStats->numRemoteReqRcvd;
+
+  if(el->httpStats)
+    tot += el->httpStats->numLocalReqRcvd+el->httpStats->numRemoteReqRcvd;
+
+  if(tot > 0) {
+    sendString("<P><H1>IP&nbsp;Service&nbsp;Stats:&nbsp;Server&nbsp;Role</H1><P>\n");
+
+    sendString("<P>"TABLE_ON"<TABLE BORDER=1>\n<TR>"
+	       "<TH "TH_BG">&nbsp;</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Loc.&nbsp;Req.&nbsp;Rcvd</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Rem.&nbsp;Req.&nbsp;Rcvd</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Pos.&nbsp;Reply&nbsp;Sent</TH>"
+	       "<TH "TH_BG" COLSPAN=2>#&nbsp;Neg.&nbsp;Reply&nbsp;Sent</TH>"
+	       "<TH "TH_BG">Local&nbsp;RndTrip</TH>"
+	       "<TH "TH_BG">Remote&nbsp;RndTrip</TH>"
+	       "</TR>\n");
+
+    if(el->dnsStats) printServiceStats("DNS", el->dnsStats, 0);
+    if(el->httpStats) printServiceStats("HTTP", el->httpStats, 0);
+
+    sendString("</TABLE>"TABLE_OFF"\n");
+  }
+}
+
+/* ********************************** */
+
+void printTableEntry(char *buf, int bufLen,
+		     char *label, char* color,
+		     float total, float percentage) {
+  int int_perc;
+
+  if(total == 0) return;
+
+  int_perc = (int)percentage;
+
+  /* This shouldn't happen */
+  if(int_perc < 0) {
+    int_perc = 0;
+    percentage = 0;
+  } else if(int_perc > 100) {
+    int_perc = 100;
+    percentage = 100;
+  }
+
+  switch(int_perc) {
+  case 0:
+    snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
+	    "<TD "TD_BG"  ALIGN=RIGHT WIDTH=100>%s</TD>"
+	    "<TD "TD_BG" WIDTH=250>&nbsp;</TD></TR>\n",
+	    getRowColor(), label, formatKBytes(total));
+    break;
+  case 100:
+    snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
+	    "<TD "TD_BG"  ALIGN=RIGHT WIDTH=100>%s</TD>"
+	    "<TD ALIGN=CENTER WIDTH=250><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12></TD></TR>\n",
+	    getRowColor(), label, formatKBytes(total));
+    break;
+  default:
+    snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
+	    "<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
+	    "<TD "TD_BG" WIDTH=250><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"250\">"
+	    "<TR><TD><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
+	    "</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
+	    "<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
+	    getRowColor(), label, formatKBytes(total),
+	    (250*int_perc)/100, (250*(100-int_perc))/100, getActualRowColor());
+  }
+
+  sendString(buf);
+}
+
+/* ************************ */
+
+char* buildHTMLBrowserWindowsLabel(int i, int j) {
+  static char buf[BUF_SIZE];
+
+#ifdef MULTITHREADED
+  accessMutex(&addressResolutionMutex, "buildHTMLBrowserWindowsLabel");
+#endif
+
+  if((ipTrafficMatrix[i][j].bytesSent == 0)
+     && (ipTrafficMatrix[i][j].bytesReceived == 0))
+    buf[0]='\0';
+  else if ((ipTrafficMatrix[i][j].bytesSent > 0)
+	   && (ipTrafficMatrix[i][j].bytesReceived == 0))
+    snprintf(buf, sizeof(buf), "(%s->%s)=%s", ipTrafficMatrixHosts[i]->hostSymIpAddress,
+	     ipTrafficMatrixHosts[j]->hostSymIpAddress,
+	     formatBytes(ipTrafficMatrix[i][j].bytesSent, 1));
+  else if ((ipTrafficMatrix[i][j].bytesSent == 0)
+	   &&  (ipTrafficMatrix[i][j].bytesReceived > 0))
+    snprintf(buf, sizeof(buf), "(%s->%s)=%s", ipTrafficMatrixHosts[j]->hostSymIpAddress,
+	     ipTrafficMatrixHosts[i]->hostSymIpAddress,
+	     formatBytes(ipTrafficMatrix[i][j].bytesReceived, 1));
+  else
+    snprintf(buf, sizeof(buf), "(%s->%s)=%s, (%s->%s)=%s",
+	     ipTrafficMatrixHosts[i]->hostSymIpAddress,
+	     ipTrafficMatrixHosts[j]->hostSymIpAddress,
+	     formatBytes(ipTrafficMatrix[i][j].bytesSent, 1),
+	     ipTrafficMatrixHosts[j]->hostSymIpAddress,
+	     ipTrafficMatrixHosts[i]->hostSymIpAddress,
+	     formatBytes(ipTrafficMatrix[i][j].bytesReceived, 1));
+
+#ifdef MULTITHREADED
+  releaseMutex(&addressResolutionMutex);
+#endif
+
+  return(buf);
+}
+
+/* ************************ */
+
+int cmpEventsFctn(const void *_a, const void *_b) {
+  EventMsg **a = (EventMsg**)_a;
+  EventMsg **b = (EventMsg**)_b;
+
+  switch(columnSort) {
+  case 0: /* Event Time */
+    if((*a)->eventTime > (*b)->eventTime)
+      return(-1);
+    else if((*a)->eventTime < (*b)->eventTime)
+      return(1);
+    else
+      return(0);
+    break;
+  case 1: /* Severity */
+    if((*a)->severity > (*b)->severity)
+      return(-1);
+    else if((*a)->severity < (*b)->severity)
+      return(1);
+    else
+      return(0);
+    break;
+  case 2: /* Rule Id */
+    if((*a)->ruleId > (*b)->ruleId)
+      return(-1);
+    else if((*a)->ruleId < (*b)->ruleId)
+      return(1);
+    else
+      return(0);
+    break;
+  }
+
+  return(0);
+}
+
+/* *********************************** */
+
+char* getBgPctgColor(float pctg) {
+  if(pctg == 0)
+    return("");
+  else if(pctg <= 25)  /* < 25%       */
+    return("BGCOLOR=#C6EEF7"); /* 25% <=> 75% */
+  else if(pctg <= 75)
+    return("BGCOLOR=#C6EFC8"); /* > 75%       */
+  else
+    return("BGCOLOR=#FF3118");
+}
+
+/* *********************************** */
+
+void printHostHourlyTrafficEntry(HostTraffic *el, int i,
+			    TrafficCounter tcSent, 
+			    TrafficCounter tcRcvd) {
+  float pctg;
+  char buf[BUF_SIZE];
+
+  snprintf(buf, BUF_SIZE, "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>",
+	   formatBytes(el->last24HoursBytesSent[i], 0));
+  sendString(buf);
+  if(tcSent > 0)
+    pctg = (float)(el->last24HoursBytesSent[i]*100)/(float)tcSent;
+  else
+    pctg = 0;
+  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT %s>%.1f %%</TD>", 
+	   getBgPctgColor(pctg), pctg);
+  sendString(buf);
+  snprintf(buf, BUF_SIZE, "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>", 
+	   formatBytes(el->last24HoursBytesRcvd[i], 0));
+  sendString(buf);
+  if(tcRcvd > 0)
+    pctg = (float)(el->last24HoursBytesRcvd[i]*100)/(float)tcRcvd;
+  else
+    pctg = 0;
+
+  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT %s>%.1f %%</TD></TR>", 
+	   getBgPctgColor(pctg), pctg);
+  sendString(buf);
+}
+
+/* ************************************ */
+
+char* getNbNodeType(char nodeType) {
+
+  switch(nodeType) {
+  case 0x0:
+    return("Workstation");
+  case 0x20:
+  default:
+    return("Server");
+  }
+
+  return(""); /* NOTREACHED */
+}
+
+

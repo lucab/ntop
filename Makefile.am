@@ -133,6 +133,7 @@ libntopreport_la_SOURCES = admin.c \
                            graph.c \
                            http.c  \
                            report.c \
+                           reportUtils.c \
                            webInterface.c
 
 

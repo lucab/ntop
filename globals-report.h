@@ -41,8 +41,20 @@
 #define TD_BG     ""
 #endif
 
+/*
+  Courtesy of
+  Peter Marquardt <wwwutz@mpimg-berlin-dahlem.mpg.de>
+*/
+#define SD(a,b) ((b)?((float)a)/(b):0)
+
+/* #define PRINT_PKTS                 */
+/* #define PRINT_ALL_ACTIVE_SESSIONS  */
+/* #define PRINT_RETRANSMISSION_DATA  */
+
 extern int maxNumLines, idleFlag, percentMode, localAddrFlag, refreshRate;
 extern int webPort, actualReportDeviceId;
+extern int sortSendMode;
+extern short sortFilter;
 
 extern int sock, newSock;
 #ifdef HAVE_OPENSSL
@@ -55,6 +67,54 @@ extern short screenNumber, columnSort;
 #ifdef MULTITHREADED
 extern pthread_t logFileLoopThreadId;
 #endif
+
+/* reportUtils.c */
+extern void formatUsageCounter(UsageCounter usageCtr);
+extern void printTableDoubleEntry(char *buf, int bufLen,
+				  char *label, char* color,
+				  float totalS, float percentageS,
+				  float totalR, float percentageR);
+extern void printTableEntryPercentage(char *buf, int bufLen,
+				      char *label, char* label_1,
+				      char* label_2, float total,
+				      float percentage);
+extern void printHeader(int reportType, int revertOrder, u_int column);
+extern char* getOSFlag(char* osName, int showOsName);
+extern int sortHostFctn(const void *_a, const void *_b);
+extern int cmpUsersTraffic(const void *_a, const void *_b);
+extern int cmpProcesses(const void *_a, const void *_b);
+extern int cmpFctn(const void *_a, const void *_b);
+extern int cmpMulticastFctn(const void *_a, const void *_b);
+extern void getProtocolDataSent(TrafficCounter *c,
+				TrafficCounter *d,
+				TrafficCounter *e,
+				HostTraffic *el);
+extern void getProtocolDataReceived(TrafficCounter *c,
+				    TrafficCounter *d,
+				    TrafficCounter *e,
+				    HostTraffic *el);
+extern void printHostThtpShort(HostTraffic *el, short dataSent);
+extern int cmpHostsFctn(const void *_a, const void *_b);
+extern void printTCPflagsStats(HostTraffic *el);
+extern void printHostTrafficStats(HostTraffic *el);
+extern void printHostContactedPeers(HostTraffic *el);
+extern char *getSessionState(IPSession *session);
+extern void printHostSessions(HostTraffic *el, u_int elIdx);
+extern void printHostDetailedInfo(HostTraffic *el);
+extern void printServiceStats(char* svcName, ServiceStats* ss,
+			      short printSentStats);
+extern void printHostUsedServices(HostTraffic *el);
+extern void printTableEntry(char *buf, int bufLen,
+			    char *label, char* color,
+			    float total, float percentage);
+extern char* buildHTMLBrowserWindowsLabel(int i, int j);
+extern int cmpEventsFctn(const void *_a, const void *_b);
+extern char* getBgPctgColor(float pctg);
+extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
+					TrafficCounter tcSent, 
+					TrafficCounter tcRcvd);
+extern char* getNbNodeType(char nodeType);
+
 
 /* report.c */
 extern void initReports(void);
