@@ -121,6 +121,12 @@ void drawPie(short width,
   radius = height/3;
   begDeg = 0;
 
+  gdImageArc(im, center_x, center_y, 2*radius, 2*radius, 0, 360, black);
+  radiant = begDeg-90; radiant /= 360; radiant *= 2*M_PI;
+  x = center_x+(radius)*cos(radiant);
+  y = center_y+(radius)*sin(radiant);
+  gdImageLine(im, center_x, center_y, x,y, black);
+
   for(i=0; i<num_points; i++) {
     displ = (360*data[i])/total;
 
@@ -137,15 +143,19 @@ void drawPie(short width,
     x = center_x+(radius)*cos(radiant);
     y = center_y+(radius)*sin(radiant);
     gdImageArc(im, center_x, center_y, 2*radius, 2*radius,
-	       begDeg+270, endDeg+270, colors[i]);
-    gdImageLine(im, center_x, center_y, x,y, colors[i]);
-    /* printf("Line [%d][%d]->[%d][%d]\n", center_x, center_y, x,y); */
+	       begDeg+270, endDeg+270, black);
+    gdImageLine(im, center_x, center_y, x,y, black);
+
+    begDeg = (begDeg+endDeg)/2;
+    radiant = begDeg-90; radiant /= 360; radiant *= 2*M_PI;
+    x = center_x+(radius/2)*cos(radiant);
+    y = center_y+(radius/2)*sin(radiant);
+    gdImageFillToBorder(im, x, y, black, colors[i]);
 #endif
 
     begDeg = endDeg;
   }
 
-  gdImageArc(im, center_x, center_y, 2*radius, 2*radius, 0, 360, black);
   drawLegend(im, width, height, num_points, labels, data, colors, black);
   gdImagePng(im, filepointer);
   gdImageDestroy(im);
@@ -296,7 +306,7 @@ void drawArea(short width,
   for(i=0, total=0; i<num_points; i++) {
     total += data[i];
     if(data[i] > maxval) maxval =  data[i];
-    /* printf("%d) %.1f\n", i, data[i]); */
+    printf("%d) %.1f\n", i, data[i]);
   }
 
   center_x = width/2, center_y = height/2;
@@ -333,7 +343,8 @@ void drawArea(short width,
     xpos = hmargin - txtsz; 
     if(xpos < 1) xpos = 1;
     
-    if(maxval > 0) gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), str, black); 
+    if(maxval > 0)
+      gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), str, black); 
 
     if (!(i == 0) && !(i > ngrid)) {
       gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray); 
@@ -365,9 +376,8 @@ void drawArea(short width,
 	points[3].x = xmax; points[3].y = ymin;
       }
 
-      if((points[0].x == points[0].x) && (points[1].x == points[1].x)
-	 && (points[0].y == points[0].y) && (points[1].y == points[1].y))
-	continue;
+      if((points[0].x == points[1].x) && (points[0].y == points[1].y))
+      	continue;
 
       gdImageFilledPolygon(im, points, 4, colors[0]); 
 
