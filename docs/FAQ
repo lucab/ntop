@@ -1659,11 +1659,21 @@ Running
 -------
 Q. ntop -i1 ... doesn't work
 A. ntop has special parameters under Win32
-     ntop /c <normal parms>  runs ntop with the parameters
-	 ntop /i <parameters> installs ntop as a service to run with those parameters
+
+         Under win32 there are TWO COMPLETELY SEPARATE TYPES OF PARAMETERS.
+
+     There are the parameters to the win32 stub AND there are parameters to ntop itself.
+
+     AFTER THE win32 parameters are the ntop parameters in the standard (Unix) -xxx format.
+
+         ntop /c <normal parms>  runs ntop INTERACTIVELY with the specified ntop parameters
+
+	 ntop /i <parameters> installs ntop as a service to run with the specified parameters
+
 	 ntop /d deletes the ntop service
 
    Remember, ntop /i and ntop /d don't actually run the service - you need to start it.
+   (Updated 26Aug2002 - BMS)
 
 Q. Where does ntop look for html (and gif) files under Win32?
 A. ntop looks in two places. The first is the current directory and the second is 
