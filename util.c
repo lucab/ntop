@@ -6529,17 +6529,15 @@ float timeval_subtract (struct timeval x, struct timeval y) {
 
 void freePortsUsage(PortUsage *ports) {
   PortUsage *act, *next;
-
+  
   if(ports == NULL) return;
-
-    act = ports;
-    while(act) {
-      next = act->next;
-      free(act);
-      act = next;
-    }
-
-    free(ports);
+  
+  act = ports;
+  while(act) {
+    next = act->next;
+    free(act);
+    act = next;
+  } 
 }
 
 /* ************************************ */
