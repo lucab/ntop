@@ -85,14 +85,14 @@ void printTableDoubleEntry(char *buf, int bufLen,
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
            "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
-           "<TD WIDTH=100><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=100 HEIGHT=12></TD>\n",
+           "<TD WIDTH=100><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=100 HEIGHT=12></TD>\n",
            getRowColor(), label, formatKBytes(totalS)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   default:
     if(snprintf(buf, bufLen, "<TR %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT>%s</TH>"
 	     "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
 	     "<TD WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
-	     "<TR><TD><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12></TD>"
+	     "<TR><TD><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12></TD>"
 	     "<TD "TD_BG"  ALIGN=CENTER WIDTH=\"%d\">"
 	     "<P>&nbsp;</TD></TR></TABLE></TD>\n",
 	     getRowColor(), label, formatKBytes(totalS),
@@ -123,13 +123,13 @@ void printTableDoubleEntry(char *buf, int bufLen,
     break;
   case 100:
     if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		"<TD WIDTH=100><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=\"100\" HEIGHT=12></TD></TR>\n",
+		"<TD WIDTH=100><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"100\" HEIGHT=12></TD></TR>\n",
 		formatKBytes(totalR)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   default:
     if(snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG"  ALIGN=RIGHT>%s</TD>"
            "<TD  WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
-           "<TR><TD><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
+           "<TR><TD><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
            "</TD><TD "TD_BG"  ALIGN=CENTER WIDTH=\"%d\">"
            "<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
            formatKBytes(totalR),
@@ -1373,6 +1373,19 @@ void getProtocolDataReceived(TrafficCounter *c,
     else
       (*e) = 0;
   }
+}
+
+/* *********************************** */
+
+static char* getBgPctgColor(float pctg) {
+  if(pctg == 0)
+    return("");
+  else if(pctg <= 25)          /* < 25%       */
+    return("BGCOLOR=#C6EEF7"); /* 25% <=> 75% */
+  else if(pctg <= 75)
+    return("BGCOLOR=#C6EFC8"); /* > 75%       */
+  else
+    return("BGCOLOR=#FF3118");
 }
 
 /* ******************************* */
@@ -2689,14 +2702,14 @@ void printTableEntry(char *buf, int bufLen,
   case 100:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
 	    "<TD "TD_BG"  ALIGN=RIGHT WIDTH=100>%s</TD>"
-	    "<TD ALIGN=CENTER WIDTH=250><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12></TD></TR>\n",
+	    "<TD ALIGN=CENTER WIDTH=250><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"250\" HEIGHT=12></TD></TR>\n",
 	    getRowColor(), label, formatKBytes(total)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     break;
   default:
     if(snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT WIDTH=150>%s</TH>"
 	    "<TD "TD_BG" ALIGN=RIGHT WIDTH=100>%s</TD>"
 	    "<TD "TD_BG" WIDTH=250><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"250\">"
-	    "<TR><TD><IMG ALIGN=ABSMIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
+	    "<TR><TD><IMG ALIGN=MIDDLE SRC=/gauge.jpg WIDTH=\"%d\" HEIGHT=12>"
 	    "</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\" %s>"
 	    "<P>&nbsp;</TD></TR></TABLE></TD></TR>\n",
 	    getRowColor(), label, formatKBytes(total),
@@ -2783,19 +2796,6 @@ int cmpEventsFctn(const void *_a, const void *_b) {
   }
 
   return(0);
-}
-
-/* *********************************** */
-
-char* getBgPctgColor(float pctg) {
-  if(pctg == 0)
-    return("");
-  else if(pctg <= 25)  /* < 25%       */
-    return("BGCOLOR=#C6EEF7"); /* 25% <=> 75% */
-  else if(pctg <= 75)
-    return("BGCOLOR=#C6EFC8"); /* > 75%       */
-  else
-    return("BGCOLOR=#FF3118");
 }
 
 /* *********************************** */

@@ -641,7 +641,7 @@ char* getCountryIconURL(char* domainName) {
       return("&nbsp;");
 
     if(snprintf(flagBuf, sizeof(flagBuf), 
-	     "<IMG ALIGN=ABSMIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
+	     "<IMG ALIGN=MIDDLE SRC=/statsicons/flags/%s.gif BORDER=0>",
 	     domainName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
     return(flagBuf);

@@ -54,14 +54,14 @@ void showUsers(void) {
       if(strcmp(key_data.dptr, "1admin") == 0) {
 	if(snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 		"&nbsp;%s</TH><TD "TD_BG"><A HREF=/modifyUser?%s>"
-		"<IMG SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
+		"<IMG SRC=/modifyUser.gif BORDER=0 align=middle></A>"
 		"&nbsp;</TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       } else {
 	if(snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 		"&nbsp;%s</TH><TD "TD_BG"><A HREF=/modifyUser?%s>"
-		"<IMG SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
-		"&nbsp;<A HREF=/deleteUser?%s><IMG SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
+		"<IMG SRC=/modifyUser.gif BORDER=0 align=middle></A>"
+		"&nbsp;<A HREF=/deleteUser?%s><IMG SRC=/deleteUser.gif BORDER=0 align=middle>"
 		"</A></TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr, 
 		key_data.dptr) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -308,8 +308,8 @@ void showURLs(void) {
 	
       if(snprintf(buf, BUF_SIZE, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 	      "&nbsp;'%s*'</TH><TD "TD_BG"><A HREF=/modifyURL?%s>"
-	      "<IMG SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
-	      "&nbsp;<A HREF=/deleteURL?%s><IMG SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
+	      "<IMG SRC=/modifyUser.gif BORDER=0 align=middle></A>"
+	      "&nbsp;<A HREF=/deleteURL?%s><IMG SRC=/deleteUser.gif BORDER=0 align=middle>"
 	      "</A></TD></TR></TH></TR>\n", &key_data.dptr[1], key_data.dptr, 
 	      key_data.dptr) < 0) 
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
