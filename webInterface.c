@@ -3462,9 +3462,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 	sslwatchdogDebug("ENDloop", SSLWATCHDOG_BOTH, "");
 #endif
       }
-#endif /* MULTITHREADED */
 
       traceEvent(TRACE_INFO, "Terminating Web connections...");
+
+#endif /* MULTITHREADED */
 
       return(NULL);
     }
