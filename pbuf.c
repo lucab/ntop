@@ -820,10 +820,12 @@ static void handleBootp(HostTraffic *srcHost,
   case 67: /* BOOTP/DHCP server */
     FD_SET(HOST_SVC_DHCP_SERVER, &srcHost->flags);
 
+#ifdef DHCP_DEBUG
     traceEvent(TRACE_INFO, "%s:%d->%s:%d",
 	       srcHost->hostNumIpAddress, sport,
 	       dstHost->hostNumIpAddress, dport);
-	
+#endif
+
     if(packetData != NULL) {
       char buf[32];
 
@@ -849,9 +851,10 @@ static void handleBootp(HostTraffic *srcHost,
 	   && (dummyMac != 0) /* MAC address <> 00:00:00:..:00 */
 	   ) {
 	  NTOHL(bootProto.bp_yiaddr.s_addr);
+#ifdef DHCP_DEBUG
 	  traceEvent(TRACE_INFO, "%s@%s",
 		     intoa(bootProto.bp_yiaddr), etheraddr_string(bootProto.bp_chaddr));
-
+#endif
 	  /* Let's check whether this is a DHCP packet [DHCP magic cookie] */
 	  if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
 	     && (bootProto.bp_vend[2] == 0x53) && (bootProto.bp_vend[3] == 0x63)) {
@@ -873,12 +876,16 @@ static void handleBootp(HostTraffic *srcHost,
 	    realDstHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
 	    if(realDstHost == NULL) {
 	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr);
+#ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
+#endif
 	      realDstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];	      
 	    } else {
+#ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "<<=>> %s (%d)", 
 			 realDstHost->hostSymIpAddress,
 			 broadcastHost(realDstHost));
+#endif
 	    }
 
 	    if(realDstHost != NULL) {
@@ -899,9 +906,11 @@ static void handleBootp(HostTraffic *srcHost,
 
 	      if(realDstHost->hostIpAddress.s_addr != bootProto.bp_yiaddr.s_addr) {
 		/* The host address has changed */
+#ifdef DHCP_DEBUG
 		traceEvent(TRACE_INFO, "DHCP host address changed: %s->%s", 
 			   intoa(realDstHost->hostIpAddress), 
 			   _intoa(bootProto.bp_yiaddr, buf, sizeof(buf)));
+#endif
 		realDstHost->dhcpStats->previousIpAddress.s_addr = realDstHost->hostIpAddress.s_addr;
 		realDstHost->hostIpAddress.s_addr = bootProto.bp_yiaddr.s_addr;
 		strncpy(realDstHost->hostNumIpAddress,
@@ -927,15 +936,18 @@ static void handleBootp(HostTraffic *srcHost,
 		  len = bootProto.bp_vend[idx++];
 		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
 		  NTOHL(hostIpAddress.s_addr);
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Netmask: %s", intoa(hostIpAddress));
+#endif
 		  idx += len;
 		  break;
 		case 3: /* Gateway */
 		  len = bootProto.bp_vend[idx++];
 		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
 		  NTOHL(hostIpAddress.s_addr);
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Gateway: %s", _intoa(hostIpAddress, buf, sizeof(buf)));
-		  
+#endif 
 		  /* *************** */
 		  
 		  hostIdx = findHostIdxByNumIP(hostIpAddress);
@@ -959,13 +971,16 @@ static void handleBootp(HostTraffic *srcHost,
 		  break;
 		case 12: /* Host name */
 		  len = bootProto.bp_vend[idx++];
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
+#endif
 		  idx += len;
 		  break;
 		case 15: /* Domain name */
 		  len = bootProto.bp_vend[idx++];
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Domain name: %s", &bootProto.bp_vend[idx]);
-
+#endif
 		  if(strcmp(realDstHost->hostSymIpAddress, realDstHost->hostNumIpAddress)) {
 		    if(strcmp(&realDstHost->hostSymIpAddress[strlen(realDstHost->hostSymIpAddress)-len],
 			      &bootProto.bp_vend[idx]) != 0) {
@@ -994,23 +1009,29 @@ static void handleBootp(HostTraffic *srcHost,
 		  break;
 		case 19: /* IP Forwarding */
 		  len = bootProto.bp_vend[idx++];
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "IP Forwarding: %s", bootProto.bp_vend[idx]);
+#endif
 		  idx += len;
 		  break;
 		case 28: /* Broadcast Address */
 		  len = bootProto.bp_vend[idx++];
 		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
 		  NTOHL(hostIpAddress.s_addr);
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Broadcast Address: %s", 
 			     intoa(hostIpAddress));
+#endif
 		  idx += len;
 		  break;
 		case 44: /* WINS server */
 		  len = bootProto.bp_vend[idx++];
 		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
 		  NTOHL(hostIpAddress.s_addr);
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "WINS server: %s", 
 			     intoa(hostIpAddress));
+#endif
 		  idx += len;
 		  /* *************** */
 		  
@@ -1029,15 +1050,18 @@ static void handleBootp(HostTraffic *srcHost,
 		  if(len == 4) {
 		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
 		    NTOHL(tmpUlong);
+#ifdef DHCP_DEBUG
 		    traceEvent(TRACE_INFO, "Lease time: %u", tmpUlong);
+#endif
 		    realDstHost->dhcpStats->leaseTime = actTime+tmpUlong;
 		  }
 		  idx += len;
 		  break;
 		case 53: /* DHCP Message Type */
 		  len = bootProto.bp_vend[idx++];
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "DHCP Message Type: %d", bootProto.bp_vend[idx]);
-		  
+#endif  
 		  switch((int)bootProto.bp_vend[idx]) {
 		  case DHCP_DISCOVER_MSG:
 		    realDstHost->dhcpStats->dhcpMsgRcvd[DHCP_DISCOVER_MSG]++;
@@ -1084,7 +1108,9 @@ static void handleBootp(HostTraffic *srcHost,
 		  if(len == 4) {
 		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
 		    NTOHL(tmpUlong);
+#ifdef DHCP_DEBUG
 		    traceEvent(TRACE_INFO, "Renewal time: %u", tmpUlong);
+#endif
 		    realDstHost->dhcpStats->renewalTime = actTime+tmpUlong;
 		  }
 		  idx += len;
@@ -1094,7 +1120,9 @@ static void handleBootp(HostTraffic *srcHost,
 		  if(len == 4) {
 		    memcpy(&tmpUlong, &bootProto.bp_vend[idx], len);
 		    NTOHL(tmpUlong);
+#ifdef DHCP_DEBUG
 		    traceEvent(TRACE_INFO, "Rebinding time: %u", tmpUlong);
+#endif
 		  }
 		  idx += len;
 		  break;
@@ -1102,7 +1130,9 @@ static void handleBootp(HostTraffic *srcHost,
 		  len = bootProto.bp_vend[idx++];
 		  memcpy(&hostIpAddress.s_addr, &bootProto.bp_vend[idx], len);
 		  NTOHL(hostIpAddress.s_addr);
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "NIS+ domain: %s", intoa(hostIpAddress));
+#endif
 		  idx += len;
 		  break;
 		default:
@@ -1145,9 +1175,9 @@ static void handleBootp(HostTraffic *srcHost,
 	memcpy(&dummyMac, bootProto.bp_chaddr, sizeof(u_long));
 	if((dummyMac != 0) /* MAC address <> 00:00:00:..:00 */) {
 	  NTOHL(bootProto.bp_yiaddr.s_addr);
-	  traceEvent(TRACE_INFO, "%s",
-		     etheraddr_string(bootProto.bp_chaddr));
-
+#ifdef DHCP_DEBUG
+	  traceEvent(TRACE_INFO, "%s", etheraddr_string(bootProto.bp_chaddr));
+#endif
 	  /* Let's check whether this is a DHCP packet [DHCP magic cookie] */
 	  if((bootProto.bp_vend[0] == 0x63)    && (bootProto.bp_vend[1] == 0x82)
 	     && (bootProto.bp_vend[2] == 0x53) && (bootProto.bp_vend[3] == 0x63)) {
@@ -1169,12 +1199,16 @@ static void handleBootp(HostTraffic *srcHost,
 	    realClientHost = findHostByMAC(etheraddr_string(bootProto.bp_chaddr));
 	    if(realClientHost == NULL) {
 	      u_int hostIdx = getHostInfo(/*&bootProto.bp_yiaddr*/ NULL, bootProto.bp_chaddr);
+#ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "=>> %d", hostIdx);
+#endif
 	      realClientHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];    
 	    } else {
+#ifdef DHCP_DEBUG
 	      traceEvent(TRACE_INFO, "<<=>> %s (%d)", 
 			 realClientHost->hostSymIpAddress,
 			 broadcastHost(realClientHost));
+#endif
 	    }
 	      
 	    if(realClientHost != NULL) {
@@ -1192,14 +1226,18 @@ static void handleBootp(HostTraffic *srcHost,
 		switch(optionId) { /* RFC 2132 */
 		case 12: /* Host name */
 		  len = bootProto.bp_vend[idx++];
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "Host name: %s", &bootProto.bp_vend[idx]);
+#endif
 		  strncpy(realClientHost->hostSymIpAddress, &bootProto.bp_vend[idx], 
 			  len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
 		  idx += len;
 		  break;
 		case 53: /* DHCP Message Type */
 		  len = bootProto.bp_vend[idx++];
+#ifdef DHCP_DEBUG
 		  traceEvent(TRACE_INFO, "DHCP Message Type: %d", bootProto.bp_vend[idx]);
+#endif
 		  switch((int)bootProto.bp_vend[idx]) {
 		  case DHCP_DISCOVER_MSG:
 		    realClientHost->dhcpStats->dhcpMsgSent[DHCP_DISCOVER_MSG]++;
