@@ -410,7 +410,7 @@ void printTrafficStatistics() {
 
     /* ****************** */
 
-    sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG">Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
+    sendString("</TABLE>"TABLE_OFF"</TR><TR><TH "TH_BG" ALIGN=LEFT>Traffic</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
     if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Total</th>"
 		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
 		getRowColor(),
@@ -564,7 +564,7 @@ void printTrafficStatistics() {
 	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo192.value +
 	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo224.value +
 	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo255.value) > 0) {
-      sendString("<TR><TH "TH_BG">Remote Hosts Distance</TH><TD "TH_BG">"
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT>Remote Hosts Distance</TH><TD "TH_BG">"
 		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
     }
 #endif /* HAVE_GDCHART */
@@ -574,7 +574,7 @@ void printTrafficStatistics() {
     if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       updateThpt();
 
-      sendString("<TR><TH "TH_BG">Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT>Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt),
@@ -618,6 +618,8 @@ void printTrafficStatistics() {
       sendString(buf);
     }
   }
+
+  sendString("</TABLE>"TABLE_OFF"</TR>\n");
       
   /* RRD */ 
   /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
@@ -634,7 +636,6 @@ void printTrafficStatistics() {
     sendString(buf);    
   } 
 
-  sendString("</TABLE>"TABLE_OFF"</TR>\n");
   sendString("</TABLE></CENTER>\n");
 }
 

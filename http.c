@@ -1364,7 +1364,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
        * then force the default
        */
       if (myGlobals.useSyslog == NTOP_SYSLOG_NONE) {
-	char messageSent = 0;
+	static char messageSent = 0;
 
 	if(!messageSent) {
 	  messageSent = 1;

@@ -501,9 +501,9 @@ void handleLocalAddresses(char* addresses) {
 
 /* ********************************* */
 
-static unsigned short __pseudoLocalAddress(struct in_addr *addr,
-					   u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
-					   u_short numNetworks) {
+unsigned short __pseudoLocalAddress(struct in_addr *addr,
+				    u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
+				    u_short numNetworks) {
   int i;
 
   for(i=0; i<numNetworks; i++) {

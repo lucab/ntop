@@ -585,6 +585,16 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
     createdCounter = 1;
   }
 
+#ifdef RRD_DEBUG > 0
+  argc = 0;
+  argv[argc++] = "rrd_last";
+  argv[argc++] = path;
+
+  if(rrd_last(argc, argv) >= rrdTime) {
+    traceEvent(TRACE_INFO, "RRD_DEBUG: WARNING rrd_update not performed (RRD already updated)");
+  }
+#endif
+
   argc = 0;
   argv[argc++] = "rrd_update";
   argv[argc++] = path;
@@ -1070,7 +1080,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     HEARTBEAT(0, "rrdMainLoop(), sleep(%d)...woke", sleep_tm);
 
     numRuns++;
-    rrdTime =  myGlobals.actTime;
+    rrdTime =  time(NULL);
 
     /* ****************************************************** */
 
