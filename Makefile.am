@@ -223,11 +223,19 @@ install-data-local:
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop;
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/html;
-	@for file in $(NTOPHTML) $(NTOPDATA); do \
+	@for file in $(NTOPHTML); do \
           if test -d $$file; then \
              $(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/$$file; \
            else \
              cp -p $$file $(DESTDIR)/$(datadir)/ntop/$$file; \
+          fi; \
+        done
+	@$(top_srcdir)/mkinstalldirs $(CFG_CONFIGFILE_DIR);
+	@for file in $(NTOPDATA); do \
+          if test -d $$file; then \
+             $(top_srcdir)/mkinstalldirs $(CFG_CONFIGFILE_DIR)/$$file; \
+           else \
+             cp -p $$file $(CFG_CONFIGFILE_DIR)/$$file; \
           fi; \
         done
 
