@@ -1227,7 +1227,7 @@ static void setPluginStatus(char * status);
 static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
 		       u_int dstAddr, u_short dport, Counter len, int deviceId);
 static int initsFlowFunct(void);
-static void termsFlowFunct(void);
+static void termsFlowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */);
 static void termsFlowDevice(int deviceId);
 static void initsFlowDevice(int deviceId);
 #ifdef DEBUG_FLOWS
@@ -4137,7 +4137,7 @@ static void termsFlowDevice(int deviceId) {
 
 /* **************************************** */
 
-static void termsFlowFunct(void) {
+static void termsFlowFunct(u_char termNtop /* 0=term plugin, 1=term ntop */) {
   char value[128];
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Terminating sFlow");
