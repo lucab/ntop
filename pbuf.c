@@ -1559,7 +1559,7 @@ void processPacket(u_char *_deviceId,
   struct tokenRing_llc *trllc;
   FILE * fd;
   unsigned char ipxBuffer[128];
-  int deviceId, actualDeviceId;
+  int deviceId, actualDeviceId, vlanId=-1;
 
 
 #ifdef MEMORY_DEBUG
@@ -1655,7 +1655,7 @@ void processPacket(u_char *_deviceId,
   /*
    * Show a hash character for each packet captured
    */
-  if (fd && myGlobals.device[deviceId].hashing) {
+  if(fd && myGlobals.device[deviceId].hashing) {
     fprintf (fd, "#");
     fflush(fd);
   }
@@ -1792,6 +1792,17 @@ void processPacket(u_char *_deviceId,
 	frame.
       */
       ether_src = ESRC(&ehdr), ether_dst = EDST(&ehdr);
+
+      if(eth_type == ETHERTYPE_802_1Q) /* VLAN */ {
+	Ether80211q qType;
+	
+	memcpy(&qType, p+sizeof(struct ether_header), sizeof(Ether80211q));
+	vlanId = ntohs(qType.vlanId) & 0xFFF;
+#ifdef DEBUG
+	traceEvent(TRACE_INFO, "VLAN Id: %d", vlanId);
+#endif
+	eth_type = ntohs(qType.protoType);
+      }
     } /* switch(myGlobals.device[deviceId].datalink) */
 
 #if PACKET_DEBUG
@@ -2152,7 +2163,8 @@ void processPacket(u_char *_deviceId,
 	    } else {
 	      /* Unknown Protocol */
 #ifdef UNKNOWN_PACKET_DEBUG
-	      traceEvent(TRACE_INFO, "UNKNOWN_PACKET_DEBUG: [%u] [%x] %s %s > %s\n", (u_short)sap_type,(u_short)sap_type,
+	      traceEvent(TRACE_INFO, "UNKNOWN_PACKET_DEBUG: [%u] [%x] %s %s > %s\n", 
+			 (u_short)sap_type,(u_short)sap_type,
 			 etheraddr_string(ether_src),
 			 llcsap_string(llcHeader.ssap & ~LLC_GSAP),
 			 etheraddr_string(ether_dst));

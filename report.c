@@ -69,11 +69,16 @@ int reportValues(time_t *lastTime) {
 void addPageIndicator(char *url, u_int pageNum,
 		      u_int numEntries, u_int linesPerPage,
 		      int revertOrder, int numCol) {
-  char buf[BUF_SIZE/2], prevBuf[BUF_SIZE/2], nextBuf[BUF_SIZE/2], shortBuf[16];
+  char buf[BUF_SIZE/2], prevBuf[BUF_SIZE/2], nextBuf[BUF_SIZE/2], shortBuf[16], separator;
   int numPages = (numEntries+myGlobals.maxNumLines-1)/myGlobals.maxNumLines;
   int actPage  = pageNum+1;
-
+  
   if(numPages <= 1) return;
+
+  if(strchr(url, '?') != NULL)
+    separator = '&';
+  else
+    separator = '?';
 
   if(revertOrder == -1)
     shortBuf[0] = '\0';
@@ -85,19 +90,19 @@ void addPageIndicator(char *url, u_int pageNum,
 
   if(pageNum >= 1) {
     if(snprintf(prevBuf, sizeof(prevBuf),
-		"<A HREF=\"%s?page=0&col=%s\"><IMG SRC=/fback.gif BORDER=0 ALIGN=vmiddle ALT=\"Back to first page\"></A> "
-		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/back.gif BORDER=0 ALIGN=vmiddle ALT=\"Prior page\"></A>",
-		url, shortBuf, url, pageNum-1, shortBuf) < 0)
+		"<A HREF=\"%s%cpage=0&col=%s\"><IMG SRC=/fback.gif BORDER=0 ALIGN=vmiddle ALT=\"Back to first page\"></A> "
+		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/back.gif BORDER=0 ALIGN=vmiddle ALT=\"Prior page\"></A>",
+		url, separator, shortBuf, url, separator, pageNum-1, shortBuf) < 0)
       BufferTooShort();
   } else
     prevBuf[0] = '\0';
 
   if(actPage < numPages) {
     if(snprintf(nextBuf, sizeof(nextBuf),
-		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 ALIGN=vmiddle ALT=\"Next Page\"></A> "
-		"<A HREF=\"%s?page=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 ALIGN=vmiddle ALT=\"Forward to last page\"></A>",
-		url, pageNum+1, shortBuf,
-		url, numPages-1, shortBuf) < 0)
+		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/forward.gif BORDER=0 ALIGN=vmiddle ALT=\"Next Page\"></A> "
+		"<A HREF=\"%s%cpage=%d&col=%s\"><IMG SRC=/fforward.gif BORDER=0 ALIGN=vmiddle ALT=\"Forward to last page\"></A>",
+		url, separator, pageNum+1, shortBuf,
+		url, separator, numPages-1, shortBuf) < 0)
       BufferTooShort();
   }  else
     nextBuf[0] = '\0';
@@ -3833,7 +3838,16 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
   sendString("</TABLE>"TABLE_OFF"</HTML>\n");
   sendString("</CENTER>\n");
 
-  addPageIndicator(STR_DOMAIN_STATS, pageNum, numEntries, myGlobals.maxNumLines,
+  if(domainName != NULL) {
+    if(snprintf(buf, sizeof(buf), "%s?dom=%s", DOMAIN_INFO_HTML, domainName) < 0) 
+      BufferTooShort();
+  } else {
+    if(snprintf(buf, sizeof(buf), "%s", STR_DOMAIN_STATS) < 0) 
+      BufferTooShort();
+  }
+
+  addPageIndicator(buf, pageNum, numEntries,
+		   myGlobals.maxNumLines,
 		   revertOrder, abs(sortedColumn));
 
  free(tmpStats); free(stats);

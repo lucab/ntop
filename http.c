@@ -905,7 +905,7 @@ static int checkURLsecurity(char *url) {
   /* a % - Unicode?  We kill this off 1st because some of the gcc functions interpret unicode "for" us */
 
   if(((token = strstr(workURL, "%")) > 0) && (strncmp(token, "%3A" /* : */, 3))) {
-      traceEvent(TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request\n");
+      traceEvent(TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request (url=%s)\n", workURL);
       /* Explicitly, we're updating the real URL, not the copy, so it's not used anywhere in ntop */
       url[0] = '\0'; 
       return(1);

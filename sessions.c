@@ -176,7 +176,7 @@ static void updateFileList(char *fileName, HostTraffic *theRemHost) {
 
 /* ************************************ */
 
-static void updateHostUsers(char *userName, HostTraffic *theHost) {
+static void updateHostUsers(char *userName, int userType, HostTraffic *theHost) {
 
   if(isSMTPhost(theHost)) {
     /*
@@ -213,6 +213,7 @@ static void updateHostUsers(char *userName, HostTraffic *theHost) {
 
     while(list != NULL) {
       if(strcmp(list->userName, userName) == 0) {
+	FD_SET(userType, &list->userFlags);
 	return; /* Nothing to do: this user is known */
       } else {
 	list = list->next;
@@ -224,6 +225,8 @@ static void updateHostUsers(char *userName, HostTraffic *theHost) {
       list = (UserList*)malloc(sizeof(UserList));
       list->userName = strdup(userName);
       list->next = theHost->userList;
+      FD_ZERO(&list->userFlags);
+      FD_SET(userType, &list->userFlags);
       theHost->userList = list;
     }
   }
@@ -876,7 +879,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  free(rcStr);
 	}
 
-      } else if((dport == 1214 /* Kazaa */) /* && (packetDataLength > 0) */) {
+      } else if((dport == 1214 /* Kazaa */) && (packetDataLength > 0)) {
 	if(theSession->bytesProtoSent == 0) {
 	  char *rcStr;
 	  char *strtokState, *row;
@@ -904,7 +907,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 		  unescape(tmpStr, sizeof(tmpStr), &file[begin]);
 
-#ifndef P2P_DEBUG
+#ifdef P2P_DEBUG
 		  traceEvent(TRACE_INFO, "Kazaa: %s->%s [%s]\n",
 			     srcHost->hostNumIpAddress,
 			     dstHost->hostNumIpAddress,
@@ -921,16 +924,54 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		if(strlen(user) > 48)
 		  user[48] = '\0';
 		  
-#ifdef P2P_DEBUG
-		traceEvent(TRACE_INFO, "DEBUG: USER='%s'\n", user);
-#endif
+		/* traceEvent(TRACE_INFO, "DEBUG: USER='%s'\n", user); */
 
-		updateHostUsers(user, srcHost);
+		updateHostUsers(user, P2P_USER, srcHost);
 	      }
 	      
 	      row = strtok_r(NULL, "\n", &strtokState);
 	    }
 
+	    /* printf("==>\n\n%s\n\n", rcStr); */	  
+
+	    free(rcStr);
+	  }
+	}
+      } else if(((dport == 6346) || (dport == 6347) || (dport == 6348)) /* Gnutella */
+		&& (packetDataLength > 0)) {
+	if(theSession->bytesProtoSent == 0) {
+	  char *rcStr;
+	  char *strtokState, *row;
+	  char *theStr = "GET /get/";
+
+	  rcStr = (char*)malloc(packetDataLength+1);
+	  strncpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength] = '\0';
+
+	  if(strncmp(rcStr, theStr, strlen(theStr)) == 0) {
+	    char tmpStr[256], *strtokState1, *file;
+	    int i, begin=0;
+	    
+	    row = strtok_r(rcStr, "\n", &strtokState);	    	    
+	    file = &row[strlen(theStr)+1];
+	    if(strlen(file) > 10) file[strlen(file)-10] = '\0';
+	    
+	    for(i=0; file[i] != '\0'; i++) {
+	      if(file[i] == '/') begin = i;
+	    }
+	    
+	    begin++;
+	    
+	    unescape(tmpStr, sizeof(tmpStr), &file[begin]);
+	    
+#ifdef P2P_DEBUG
+	      traceEvent(TRACE_INFO, "Gnutella: %s->%s [%s]\n",
+			 srcHost->hostNumIpAddress,
+			 dstHost->hostNumIpAddress,
+			 tmpStr);
+#endif  
+	      updateFileList(tmpStr, srcHost);
+	    	     
 	    /* printf("==>\n\n%s\n\n", rcStr); */	  
 
 	    free(rcStr);
@@ -968,9 +1009,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	      i++;
 	    }
 	    if(sport == 25)
-	      updateHostUsers(&rcStr[beginIdx], dstHost);
+	      updateHostUsers(&rcStr[beginIdx], SMTP_USER, dstHost);
 	    else
-	      updateHostUsers(&rcStr[beginIdx], srcHost);
+	      updateHostUsers(&rcStr[beginIdx], SMTP_USER, srcHost);
 
 #ifdef SMTP_DEBUG
 	    printf("SMTP_DEBUG: %s:%d->%s:%d [%s]\n",
@@ -999,9 +1040,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  if((strncmp(rcStr, "USER ", 5) == 0) && strcmp(&rcStr[5], "anonymous")) {
 	    if(sport == 21)
-	      updateHostUsers(&rcStr[5], dstHost);
+	      updateHostUsers(&rcStr[5], FTP_USER, dstHost);
 	    else
-	      updateHostUsers(&rcStr[5], srcHost);
+	      updateHostUsers(&rcStr[5], FTP_USER, srcHost);
 
 #ifdef FTP_DEBUG
 	    printf("FTP_DEBUG: %s:%d->%s:%d [%s]\n",
@@ -1037,9 +1078,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  if(strncmp(rcStr, "USER ", 5) == 0) {
 	    if(iscntrl(rcStr[strlen(rcStr)-1])) rcStr[strlen(rcStr)-1] = '\0';
 	    if((sport == 109) || (sport == 110))
-	      updateHostUsers(&rcStr[5], dstHost);
+	      updateHostUsers(&rcStr[5], POP_USER, dstHost);
 	    else
-	      updateHostUsers(&rcStr[5], srcHost);
+	      updateHostUsers(&rcStr[5], POP_USER, srcHost);
 
 #ifdef POP_DEBUG
 	    printf("POP_DEBUG: %s->%s [%s]\n",
@@ -1079,9 +1120,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    }
 
 	    if(sport == 143)
-	      updateHostUsers(&rcStr[9], dstHost);
+	      updateHostUsers(&rcStr[9], IMAP_USER, dstHost);
 	    else
-	      updateHostUsers(&rcStr[9], srcHost);
+	      updateHostUsers(&rcStr[9], IMAP_USER, srcHost);
 
 #ifdef IMAP_DEBUG
 	    printf("IMAP_DEBUG: %s:%d->%s:%d [%s]\n",

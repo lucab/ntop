@@ -326,9 +326,9 @@ void unloadPlugins(void) {
 
 char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag) {
-  static char buf[5][BUF_SIZE];
+  static char buf[5][2*BUF_SIZE];
   char symIp[256], *tmpStr, linkName[256], flag[128];
-  char *dynIp;
+  char *dynIp, *p2p;
   char *multihomed, *gwStr, *dnsStr, *printStr, *smtpStr, *healthStr = "", *userStr;
   short specialMacAddress = 0;
   static short bufIdx=0;
@@ -473,12 +473,13 @@ char* makeHostLink(HostTraffic *el, short mode,
       dynIp = "";
   }
 
-  if(isMultihomed(el))   multihomed = "&nbsp;<IMG ALT=Multihomed SRC=/multihomed.gif BORDER=0>"; else multihomed = "";
-  if(gatewayHost(el))    gwStr = "&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>"; else gwStr = "";
-  if(nameServerHost(el)) dnsStr = "&nbsp;<IMG ALT=\"DNS\" SRC=/dns.gif BORDER=0>"; else dnsStr = "";
-  if(isPrinter(el))      printStr = "&nbsp;<IMG ALT=Printer SRC=/printer.gif BORDER=0>"; else printStr = "";
-  if(isSMTPhost(el))     smtpStr = "&nbsp;<IMG ALT=\"Mail (SMTP)\" SRC=/mail.gif BORDER=0>"; else smtpStr = "";
-  if(el->userList != NULL)     userStr = "&nbsp;<IMG ALT=Users SRC=/users.gif BORDER=0>"; else userStr = "";
+  if(isMultihomed(el))     multihomed = "&nbsp;<IMG ALT=Multihomed SRC=/multihomed.gif BORDER=0>"; else multihomed = "";
+  if(gatewayHost(el))      gwStr = "&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>"; else gwStr = "";
+  if(nameServerHost(el))   dnsStr = "&nbsp;<IMG ALT=\"DNS\" SRC=/dns.gif BORDER=0>"; else dnsStr = "";
+  if(isPrinter(el))        printStr = "&nbsp;<IMG ALT=Printer SRC=/printer.gif BORDER=0>"; else printStr = "";
+  if(isSMTPhost(el))       smtpStr = "&nbsp;<IMG ALT=\"Mail (SMTP)\" SRC=/mail.gif BORDER=0>"; else smtpStr = "";
+  if(el->userList != NULL) userStr = "&nbsp;<IMG ALT=Users SRC=/users.gif BORDER=0>"; else userStr = "";
+  if(el->fileList != NULL) p2p = "&nbsp;<IMG ALT=P2P SRC=/p2p.gif BORDER=0>"; else p2p = "";
 
   switch(isHostHealthy(el)) {
   case 0: /* OK */
@@ -498,20 +499,20 @@ char* makeHostLink(HostTraffic *el, short mode,
       linkName[i] = '_';
 
   if(mode == LONG_FORMAT) {
-    if(snprintf(buf[bufIdx], BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
-		"<A HREF=\"/%s.html\">%s</A>%s%s%s%s%s%s%s%s</TH>%s",
+    if(snprintf(buf[bufIdx], 2*BUF_SIZE, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
+		"<A HREF=\"/%s.html\">%s</A>%s%s%s%s%s%s%s%s%s</TH>%s",
 		linkName, symIp, /* el->numUses, */
 		dynIp,
 		multihomed, gwStr, dnsStr,
-		printStr, smtpStr, healthStr, userStr,
+		printStr, smtpStr, healthStr, userStr, p2p,
 		flag) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(buf[bufIdx], BUF_SIZE, "<A HREF=\"/%s.html\" NOWRAP>%s</A>"
-		"%s%s%s%s%s%s%s%s%s",
+    if(snprintf(buf[bufIdx], 2*BUF_SIZE, "<A HREF=\"/%s.html\" NOWRAP>%s</A>"
+		"%s%s%s%s%s%s%s%s%s%s",
 		linkName, symIp, /* el->numUses, */
 		multihomed, gwStr, dnsStr,
-		printStr, smtpStr, healthStr, userStr,
+		printStr, smtpStr, healthStr, userStr, p2p,
 		dynIp, flag) < 0)
       BufferTooShort();    
   }

@@ -522,8 +522,17 @@ int getdomainname(char *name, size_t len);
 #define ETHERTYPE_QNX       0x8203
 #endif
 #ifndef ETHERTYPE_IPv6
-#define ETHERTYPE_IPv6        0x86DD
+#define ETHERTYPE_IPv6      0x86DD
 #endif
+
+#ifndef ETHERTYPE_802_1Q
+#define ETHERTYPE_802_1Q     0x8100
+#endif
+
+typedef struct ether80211q {
+  u_int16_t vlanId;
+  u_int16_t protoType;
+} Ether80211q;
 
 #ifndef ETHERMTU
 #define ETHERMTU  1500
@@ -1798,6 +1807,14 @@ typedef struct portUsage {
 
 /* *********************** */
 
+#define POP_USER            1
+#define IMAP_USER           2
+#define SMTP_USER           3
+#define P2P_USER            4
+#define FTP_USER            5
+
+/* *********************** */
+
 /* Appletalk Datagram Delivery Protocol */
 typedef struct atDDPheader {
   u_int16_t       datagramLength, ddpChecksum;
@@ -1925,6 +1942,7 @@ typedef struct virtualHostList {
 
 typedef struct userList {
   char *userName;
+  fd_set userFlags;
   struct userList *next;
 } UserList;
 
@@ -2061,7 +2079,7 @@ typedef struct domainStats {
 /* **************************** */
 
 typedef struct usersTraffic {
-  char* userName;
+  char*  userName;
   TrafficCounter bytesSent, bytesRcvd;
 } UsersTraffic;
 

@@ -3217,10 +3217,17 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString(buf);
 
     while(list != NULL) {
-      if(snprintf(buf, sizeof(buf), "%s<BR>\n", list->userName) < 0)
+      if(snprintf(buf, sizeof(buf), "%s&nbsp;[", list->userName) < 0)
 	BufferTooShort();
       sendString(buf);
 
+      if(FD_ISSET(POP_USER, &(list->userFlags))) sendString("&nbsp;POP&nbsp;");
+      if(FD_ISSET(IMAP_USER, &(list->userFlags))) sendString("&nbsp;IMAP&nbsp;");
+      if(FD_ISSET(SMTP_USER, &(list->userFlags))) sendString("&nbsp;SMTP&nbsp;");
+      if(FD_ISSET(P2P_USER, &(list->userFlags))) sendString("&nbsp;P2P&nbsp;");
+      if(FD_ISSET(FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
+
+      sendString("]<br>\n");
       list = list->next;
     }
 
