@@ -110,7 +110,7 @@ DLLTOOL = @DLLTOOL@
 DYN_FLAGS = @DYN_FLAGS@
 INCS = @INCS@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-INTOP = @INTOP@
+NTCSH = @NTCSH@
 LD = @LD@
 LIBCURSES = @LIBCURSES@
 LIBREADLINE = @LIBREADLINE@
@@ -157,7 +157,7 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
                        stamp-h.in
 
 
-SUBDIRS = . @PLUGINS@ @INTOP@
+SUBDIRS = . @PLUGINS@ @NTCSH@
 
 ETTER_PASSIVE = etter.passive.os.fp
 
@@ -198,12 +198,11 @@ EXTRA_DIST = Makefile.am Makefile.in \
 
 WEBFILES = `cat www/FILES`
 PLUGINSFILES = `cat plugins/FILES`
-INTOPFILES = `cat intop/FILES`
 DATABASEFILES = `cat database/FILES`
 DOCSFILES = `cat docs/FILES`
 
 THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) \
-		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
+		       $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
 
 
 #
@@ -250,6 +249,7 @@ lib_LTLIBRARIES = libntop.la libntopreport.la
 
 # core Archive, or the 'engine'
 libntop_la_SOURCES = address.c       dataFormat.c  \
+                     getopt.c        getopt1.c     getopt.h  argv.c   \
                      globals-core.c  hash.c        initialize.c       \
                      leaks.c         netflow.c  \
                      ntop.c 	     pbuf.c        protocols.c        \
@@ -287,10 +287,11 @@ CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(lib_LTLIBRARIES)
 
-am_libntop_la_OBJECTS = address.lo dataFormat.lo globals-core.lo hash.lo \
-	initialize.lo leaks.lo netflow.lo ntop.lo pbuf.lo protocols.lo \
-	plugin.lo qsort.lo regex.lo sessions.lo ssl.lo term.lo \
-	traffic.lo util.lo vendor.lo version.lo ntop_darwin.lo
+am_libntop_la_OBJECTS = address.lo dataFormat.lo getopt.lo getopt1.lo \
+	argv.lo globals-core.lo hash.lo initialize.lo leaks.lo \
+	netflow.lo ntop.lo pbuf.lo protocols.lo plugin.lo qsort.lo \
+	regex.lo sessions.lo ssl.lo term.lo traffic.lo util.lo \
+	vendor.lo version.lo ntop_darwin.lo
 libntop_la_OBJECTS = $(am_libntop_la_OBJECTS)
 am_libntopreport_la_OBJECTS = emitter.lo globals-report.lo graph.lo \
 	http.lo report.lo reportUtils.lo webInterface.lo xmldump.lo
@@ -317,7 +318,9 @@ LDFLAGS = @LDFLAGS@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/address.Plo ./$(DEPDIR)/admin.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dataFormat.Plo ./$(DEPDIR)/emitter.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/argv.Plo ./$(DEPDIR)/dataFormat.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/emitter.Plo ./$(DEPDIR)/getopt.Plo \
+@AMDEP_TRUE@	./$(DEPDIR)/getopt1.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/globals-core.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/globals-report.Plo \
 @AMDEP_TRUE@	./$(DEPDIR)/graph.Plo ./$(DEPDIR)/hash.Plo \
@@ -362,10 +365,10 @@ RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
 DIST_COMMON = README $(ETTER_PASSIVE) $(noinst_HEADERS) AUTHORS \
 	CONTENTS COPYING ChangeLog INSTALL MANIFESTO Makefile.am \
 	Makefile.in NEWS PORTING SUPPORT_NTOP.txt THANKS \ acinclude.m4 \
-	aclocal.m4 compile config.guess config.h.in config.sub \
-	configure configure.in depcomp faq.html install-sh ltconfig \
-	ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html \
-	ntop.txt oui.txt p2c.opt.table specialMAC.txt\
+	aclocal.m4 config.guess config.h.in config.sub configure \
+	configure.in depcomp faq.html install-sh ltconfig ltmain.sh \
+	missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html ntop.txt \
+	oui.txt p2c.opt.table specialMAC.txt\
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES) $(sntop_SOURCES)
 
@@ -515,8 +518,11 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/address.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/admin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/argv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dataFormat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/emitter.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getopt.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/getopt1.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/globals-core.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/globals-report.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/graph.Plo@am__quote@

@@ -59,7 +59,7 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
                        stamp-h.in
 
 
-SUBDIRS = . @PLUGINS@ @INTOP@
+SUBDIRS = . @PLUGINS@ @NTCSH@
 
 ETTER_PASSIVE = etter.passive.os.fp
 
@@ -97,12 +97,11 @@ EXTRA_DIST = Makefile.am Makefile.in \
 
 WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`
-INTOPFILES     = `cat intop/FILES`
 DATABASEFILES  = `cat database/FILES`
 DOCSFILES      = `cat docs/FILES`
 
 THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) \
-		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
+		       $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
 
 #
 # This Makefile is responsible for creating:
@@ -147,6 +146,7 @@ lib_LTLIBRARIES    = libntop.la libntopreport.la
 
 # core Archive, or the 'engine'
 libntop_la_SOURCES = address.c       dataFormat.c  \
+                     getopt.c        getopt1.c     getopt.h  argv.c   \
                      globals-core.c  hash.c        initialize.c       \
                      leaks.c         netflow.c  \
                      ntop.c 	     pbuf.c        protocols.c        \
