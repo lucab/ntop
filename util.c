@@ -535,7 +535,7 @@ unsigned short in6_isMulticastAddress(struct in6_addr *addr) {
 #ifdef INET6
 unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId) {
   if(deviceId >= myGlobals.numDevices) {
-    traceEvent(CONST_TRACE_WARNING, "WARNING: Index %u out of range [0..%u] - address treated as remote",
+    traceEvent(CONST_TRACE_WARNING, "Index %u out of range [0..%u] - address treated as remote",
 	       deviceId, myGlobals.numDevices);
     return(0);
   }
@@ -2899,8 +2899,9 @@ void fillDomainName(HostTraffic *el) {
   u_int i;
   char *ip2cc;
 
-  if(theDomainHasBeenComputed(el)
-     || (el->hostSymIpAddress    == NULL)
+  if(theDomainHasBeenComputed(el))
+    return;
+  if((el->hostSymIpAddress    == NULL)
      || (el->hostSymIpAddress[0] == '\0')) {
     el->fullDomainName = strdup("");
     return;
