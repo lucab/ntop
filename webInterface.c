@@ -308,7 +308,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(el == NULL)
     return("&nbsp;");
 
-  if(broadcastHost(el)
+  if((broadcastHost(el) && (el->hostIpAddress.s_addr == 0))
      || (el->hostSerial == myGlobals.broadcastEntryIdx)
      || ((el->hostIpAddress.s_addr == 0) && (el->ethAddressString[0] == '\0'))) {
     if(mode == FLAG_HOSTLINK_HTML_FORMAT) 
