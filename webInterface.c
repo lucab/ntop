@@ -1103,13 +1103,11 @@ void printNtopConfigHInfo(int textPrintFlag) {
   sendString(texthtml("\n\nCompile Time: globals-define.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-define.h</tr>\n"));
 
-#ifdef CFG_USE_GRAPHICS
   if(snprintf(buf, sizeof(buf), 
               "globals-report.h: #define CHART_FORMAT \"%s\"",
               CHART_FORMAT) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Chart Format", buf);
-#endif
 
   sendString(texthtml("\n\nCompile Time: config.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: config.h</tr>\n"));
@@ -1447,22 +1445,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_LIBDLD",
 #ifdef HAVE_LIBDLD
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "CFG_USE_GRAPHICS",
-#ifdef CFG_USE_GRAPHICS
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_LIBGDBM",
-#ifdef HAVE_LIBGDBM
                          "yes"
 #else
                          "no"
@@ -1831,22 +1813,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
   printFeatureConfigInfo(textPrintFlag, "HAVE_REGEX",
 #ifdef HAVE_REGEX
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_RRD",
-#ifdef HAVE_RRD
-                         "yes"
-#else
-                         "no"
-#endif
-                         );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_RRD_H",
-#ifdef HAVE_RRD_H
                          "yes"
 #else
                          "no"
@@ -2982,12 +2948,6 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.dynamicPurgeLimits == 1 ? "Yes" : "No",
                            "No");
 
-#ifdef HAVE_RRD
-  printParameterConfigInfo(textPrintFlag, "--reuse-rrd-graphics",
-                           myGlobals.reuseRRDgraphics == 1 ? "Yes" : "No",
-                           "No");
-#endif
-
   printParameterConfigInfo(textPrintFlag, "--p3p-cp",
                            ((myGlobals.P3Pcp == NULL) ||
                             (myGlobals.P3Pcp[0] == '\0')) ? "none" :
@@ -3410,6 +3370,9 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
     printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
 
+    if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].hashListMaxLookups) < 0)
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "Max host lookup", buf);
 
     if(myGlobals.enableSessionHandling) {
       if(snprintf(buf, sizeof(buf), "%s", formatPkts(myGlobals.device[i].numTcpSessions)) < 0)

@@ -488,12 +488,10 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   incrementTrafficCounter(&srcHost->pktSent, numPkts);
   incrementTrafficCounter(&srcHost->pktSentSession, numPkts);
 
-  if(!myGlobals.largeNetwork) {
-    if(srcHost->trafficDistribution == NULL) srcHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
-    if(dstHost->trafficDistribution == NULL) dstHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
-    incrementTrafficCounter(&srcHost->trafficDistribution->last24HoursBytesSent[hourId], length.value);
-    incrementTrafficCounter(&dstHost->trafficDistribution->last24HoursBytesRcvd[hourId], length.value);
-  }
+  if(srcHost->trafficDistribution == NULL) srcHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
+  if(dstHost->trafficDistribution == NULL) dstHost->trafficDistribution = calloc(1, sizeof(TrafficDistribution));
+  incrementTrafficCounter(&srcHost->trafficDistribution->last24HoursBytesSent[hourId], length.value);
+  incrementTrafficCounter(&dstHost->trafficDistribution->last24HoursBytesRcvd[hourId], length.value);
 
   if(broadcastHost(dstHost)) {
     incrementTrafficCounter(&srcHost->pktBroadcastSent, numPkts);
