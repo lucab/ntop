@@ -215,7 +215,7 @@ void initIPServices(void) {
 static void initIPCountryTable(void) {
   int idx;
   
-  traceEvent(CONST_TRACE_INFO, "IP2CC: Looking for IP address <->> Country code mapping file\n");
+  traceEvent(CONST_TRACE_INFO, "IP2CC: Looking for IP address <-> Country code mapping file\n");
 
   myGlobals.ipCountryCount = 0;
   if((myGlobals.countryFlagHead=malloc(sizeof(IPNode))) == NULL) {

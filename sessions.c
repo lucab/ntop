@@ -254,7 +254,10 @@ void updateUsedPorts(HostTraffic *srcHost,
 
   /* traceEvent(CONST_TRACE_INFO, "%d\n", length); */
 
-  if(srcHost == dstHost) return;
+  if((srcHost == dstHost) 
+     || broadcastHost(srcHost) 
+     || broadcastHost(dstHost)) 
+    return;
 
   /* Now let's update the list of ports recently used by the hosts */
   if(sport > dport) {

@@ -2173,7 +2173,9 @@ static void compressAndSendData(u_int *gzipBytesSent) {
   int len;
   char tmpStr[256];
 
+  gzseek(compressFileFd, 1L, SEEK_CUR); /* add one zero byte */
   gzclose(compressFileFd);
+
   compressFile = 0; /* Stop compression */
   fd = fopen(compressedFilePath, "rb");
 

@@ -230,7 +230,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.webPort = DEFAULT_NTOP_WEB_PORT;
 
   /* Termination flags */
-  myGlobals.capturePackets = 1;    /* By default data are collected into internal variables */
+  myGlobals.capturePackets = FLAG_NTOPSTATE_RUN;    /* By default data are collected into internal variables */
   myGlobals.endNtop = 0;
 
   myGlobals.processes = NULL;
