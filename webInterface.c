@@ -1336,22 +1336,6 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
-  printFeatureConfigInfo(textPrintFlag, "HAVE_MYSQL",
-#ifdef HAVE_MYSQL
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
-  printFeatureConfigInfo(textPrintFlag, "HAVE_MYSQL_MYSQL_H",
-#ifdef HAVE_MYSQL_MYSQL_H
-			 "present"
-#else
-			 "absent"
-#endif
-			 );
-
   printFeatureConfigInfo(textPrintFlag, "HAVE_NCURSES_H",
 #ifdef HAVE_NCURSES_H
 			 "present"
@@ -1997,7 +1981,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   printParameterConfigInfo(textPrintFlag, "-b | --disable-decoders",
                            myGlobals.enablePacketDecoding == 1 ? "No" : "Yes",
-                           "No");
+                           NTOP_DEFAULT_PACKET_DECODING == 1 ? "No" : "Yes");
 
   printParameterConfigInfo(textPrintFlag, "-c | --sticky-hosts",
                            myGlobals.stickyHosts == 1 ? "Yes" : "No",
@@ -2023,11 +2007,11 @@ void printNtopConfigInfo(int textPrintFlag) {
 
   printParameterConfigInfo(textPrintFlag, "-g | --track-local-hosts",
                            myGlobals.trackOnlyLocalHosts == 1 ? "Track local hosts only" : "Track all hosts",
-                           NTOP_DEFAULT_TRAFFICDUMP_FILENAME);
+                           NTOP_DEFAULT_TRACK_ONLY_LOCAL == 1 ? "Track local hosts only" : "Track all hosts");
 
   printParameterConfigInfo(textPrintFlag, "-o | --no-mac",
-                           myGlobals.dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
-                           myGlobals.dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses");
+		  myGlobals.dontTrustMACaddr == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses",
+                           NTOP_DEFAULT_DONT_TRUST_MAC_ADDR == 1 ? "Don't trust MAC Addresses" : "Trust MAC Addresses");
 
   printParameterConfigInfo(textPrintFlag, "-i | --interface" REPORT_ITS_EFFECTIVE,
                            myGlobals.devices,
@@ -2094,23 +2078,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "-u | --user", buf);
 #endif
 
-#ifdef HAVE_MYSQL
-  if (myGlobals.enableDBsupport == 1) {
-    if (snprintf(buf, sizeof(buf), "%sActive - server %s,%sdatabase %s,%suser %s",
-		 myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "",
-		 myGlobals.mySQLhostName,
-		 (textPrintFlag == TRUE ? " " : "<br>"),
-		 myGlobals.mySQLdatabase,
-		 (textPrintFlag == TRUE ? " " : "<br>"),
-		 myGlobals.mySQLuser) < 0)
-      BufferTooShort();
-  } else {
-    if (snprintf(buf, sizeof(buf), "%sInactive",
-		 myGlobals.enableDBsupport == NTOP_DEFAULT_DB_SUPPORT ? REPORT_ITS_DEFAULT : "") < 0)
-      BufferTooShort();
-  }
-#endif
-
   printParameterConfigInfo(textPrintFlag, "-z | --disable-sessions",
                            myGlobals.enableSessionHandling == 1 ? "No" : "Yes",
                            "No");
@@ -2132,6 +2099,10 @@ void printNtopConfigInfo(int textPrintFlag) {
       BufferTooShort();
   }
   printFeatureConfigInfo(textPrintFlag, "-w | --http-server", buf);
+
+  printParameterConfigInfo(textPrintFlag, "-z | --disable-sessions",
+                           myGlobals.enableSessionHandling == 1 ? "Enabled" : "Disabled",
+                           NTOP_DEFAULT_ENABLE_SESSIONHANDLE == 1 ? "Enabled" : "Disabled");
 
   printParameterConfigInfo(textPrintFlag, "-B | --filter-expression",
                            ((myGlobals.currentFilterExpression == NULL) ||
@@ -2360,8 +2331,6 @@ void printNtopConfigInfo(int textPrintFlag) {
 #ifdef HAVE_ZLIB
   printFeatureConfigInfo(textPrintFlag, "zlib version", ZLIB_VERSION);
 #endif
-
-  printFeatureConfigInfo(textPrintFlag, "TCP Session Handling", myGlobals.enableSessionHandling == 1 ? "Enabled" : "Disabled");
 
   printFeatureConfigInfo(textPrintFlag, "Protocol Decoders",    myGlobals.enablePacketDecoding == 1 ? "Enabled" : "Disabled");
 

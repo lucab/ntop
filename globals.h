@@ -43,24 +43,27 @@
 #define NTOP_DEFAULT_ACCESSFILE  "ntop.last"
 
 #define NTOP_DEFAULT_ACCESS_LOG_PATH      NULL      /* -a */
-#define NTOP_DEFAULT_DB_SUPPORT           0         /* -b */
+#define NTOP_DEFAULT_PACKET_DECODING      1         /* -b */
                                                         /* access log disabled by default */
 #define NTOP_DEFAULT_STICKY_HOSTS         0         /* -c */
 #define NTOP_DEFAULT_DAEMON_MODE          0         /* -d */
 
 #define NTOP_DEFAULT_TRAFFICDUMP_FILENAME NULL      /* -f */
-
+#define NTOP_DEFAULT_TRACK_ONLY_LOCAL     0         /* -g */
 #define NTOP_DEFAULT_DEVICES              NULL      /* -i */
 #define NTOP_DEFAULT_BORDER_SNIFFER_MODE  0         /* -j */
 #define NTOP_DEFAULT_FILTER_IN_FRAME      0         /* -k */
 #define NTOP_DEFAULT_PCAP_LOG_FILENAME    NULL      /* -l */
 #define NTOP_DEFAULT_LOCAL_SUBNETS        NULL      /* -m */
 #define NTOP_DEFAULT_NUMERIC_IP_ADDRESSES 0         /* -n */
+#define NTOP_DEFAULT_DONT_TRUST_MAC_ADDR  0         /* -o */
 #define NTOP_DEFAULT_SUSPICIOUS_PKT_DUMP  0         /* -q */
 #define NTOP_DEFAULT_DISABLE_PROMISCUOUS  0         /* -s */
 
 #define NTOP_DEFAULT_WEB_ADDR             NULL      /* -w */ /* e.g. all interfaces & addresses */
 #define NTOP_DEFAULT_WEB_PORT             3000
+
+#define NTOP_DEFAULT_ENABLE_SESSIONHANDLE 1         /* -z */
 
 #define NTOP_DEFAULT_FILTER_EXPRESSION    NULL      /* -B */
 
@@ -93,7 +96,6 @@
 #define MAX_NUM_BAD_IP_ADDRESSES         3
 #define NTOP_DEFAULT_BAD_ACCESS_TIMEOUT  5*60  /* 5 minutes */
 
-#define NTOP_DEFAULT_DONT_TRUST_MAC_ADDR 0
 
 /*
  * Other sizes and limits...
@@ -178,9 +180,10 @@ typedef struct ntopGlobals {
   int maxNumLines;                   /* 'e' */
 #endif
   char *rFileName;                   /* 'f' */
+  u_char trackOnlyLocalHosts;        /* 'g' */
   char *devices;                     /* 'i' */
   short borderSnifferMode;           /* 'j' */
-  short dontTrustMACaddr;            /* internal */
+  short dontTrustMACaddr;            /* 'o' */
   int filterExpressionInExtraFrame;  /* 'k' */
   char *pcapLog;                     /* 'l' */
   int numericFlag;                   /* 'n' */
@@ -230,7 +233,6 @@ typedef struct ntopGlobals {
   u_char enableSessionHandling;
   u_char enablePacketDecoding;
   u_char enableFragmentHandling;
-  u_char trackOnlyLocalHosts;
 
   /* Search paths */
   char **dataFileDirs;
