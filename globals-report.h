@@ -18,7 +18,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
 #ifndef _GRAPH_C_
 #define GDC_LIB
 #endif
@@ -174,7 +174,7 @@ extern void sslwatchdogSighandler(int signum);
 extern void* sslwatchdogChildThread(void* notUsed _UNUSED_);
 #endif
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
 #ifndef _GLOBALS_REPORT_C_
 #define GDC_LIB
 #endif

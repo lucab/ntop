@@ -132,7 +132,7 @@ static struct option const long_options[] = {
    * (since op is unsigned this is fine)
    *  add corresponding case nnn: below
    */
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   { "throughput-bar-chart",             no_argument,       NULL, 129 },
 #endif
 #if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
@@ -267,7 +267,7 @@ void usage (FILE * fp) {
   fprintf(fp, "    [-W <port>      | --https-server <port>]              %sWeb server (https:) port (or address:port) to listen on\n", newLine);
 #endif
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   fprintf(fp, "    [--throughput-bar-chart]                              %sUse BAR chart for graphs\n", newLine);
 #endif
 
@@ -552,7 +552,7 @@ static int parseOptions(int argc, char* argv []) {
       break;
 #endif
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
     case 129:
       myGlobals.throughput_chart_type = GDC_BAR;
       break;

@@ -1990,7 +1990,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   char buf[LEN_GENERAL_WORK_BUFFER];
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   char linkName[LEN_GENERAL_WORK_BUFFER/2];
   int i;
 #endif
@@ -2023,7 +2023,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->icmpFragmentsRcvd.value/1024,
 			100*((float)SD(el->icmpFragmentsRcvd.value, totalRcvd)));
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   {
     if((totalSent > 0) || (totalRcvd > 0)) {
       if(snprintf(buf, sizeof(buf),
@@ -2110,7 +2110,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   Counter actTotalSent, actTotalRcvd;
   char buf[LEN_GENERAL_WORK_BUFFER];
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   char linkName[LEN_GENERAL_WORK_BUFFER/2];
   int i;
 #endif
@@ -2222,7 +2222,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 			(float)el->otherRcvd.value/1024,
 			100*((float)SD(el->otherRcvd.value, totalRcvd)));
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   {
     totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+
       el->udpSentLoc.value+el->udpSentRem.value+

@@ -120,7 +120,7 @@
 /* Show we found gdbm.h and set INCS */
 #undef HAVE_GDBM_H
 
-/* GDChart is available */
+/* Enable GDChart */
 #undef HAVE_GDCHART
 
 /* Show we found gdchart.h and set INCS */
@@ -357,6 +357,9 @@
 
 /* Show we found -lpcap and set LIBS */
 #undef HAVE_PCAP
+
+/* Define to 1 if you have the `pcap_freecode' function. */
+#undef HAVE_PCAP_FREECODE
 
 /* Show we found pcap.h and set INCS */
 #undef HAVE_PCAP_H
@@ -607,6 +610,9 @@
 /* Define to build micro ntop */
 #undef MAKE_MICRO_NTOP
 
+/* GDChart is available */
+#undef MAKE_WITH_GDCHART
+
 /* Define for internationalization */
 #undef MAKE_WITH_I18N
 
@@ -621,6 +627,9 @@
 
 /* XML Dump is available */
 #undef MAKE_WITH_XMLDUMP
+
+/* zlib is available */
+#undef MAKE_WITH_ZLIB
 
 /* Name of package */
 #undef PACKAGE

@@ -1154,9 +1154,6 @@ AC_CHECK_HEADERS([zlib.h])
 AC_CHECK_HEADERS([malloc.h])
 AC_CHECK_HEADERS([sys/resource.h])
 
-dnl> syslog
-AC_CHECK_HEADERS([sys/syslog.h syslog.h])
-
 dnl> Openssl
 AC_CHECK_HEADERS([openssl/rsa.h openssl/crypto.h openssl/x509.h openssl/pem.h openssl/ssl.h openssl/err.h])
 
@@ -1250,7 +1247,7 @@ AC_CHECK_LIB([c], [ceil], , [AC_CHECK_LIB([m], [ceil])])
 dnl> As much as I would like to say:
 dnl> AC_CHECK_LIB([gdchart], [GDC_out_pie])
 dnl> Here, the blasted gdchart library won't work for a simple compile.
-dnl> So, if you have the gdc.h header, that will have to do.
+dnl> So, if you have the gdc.h header (tested above), that will have to do.
 
 AC_CHECK_LIB([gd], [gdImageDestroy])
 AC_CHECK_LIB([png], [png_read_info])
@@ -2742,12 +2739,13 @@ if test ".${ac_disable_gdchart}" != ".yes"; then
        fi
     fi
     if test ".${ac_disable_gdchart}" != ".yes"; then
-        AC_DEFINE_UNQUOTED(HAVE_GDCHART, 1, [GDChart is available])
+        AC_DEFINE_UNQUOTED(MAKE_WITH_GDCHART, 1, [GDChart is available])
     fi
 fi
 
 AC_MSG_CHECKING([zlib])
 
+ac_disable_zlib="no"
 if test ".${ac_cv_lib_z_zlibVersion}" = ".yes" &&
    test ".${ac_cv_header_zlib_h}" = ".yes"; then
     AC_DEFINE_UNQUOTED(HAVE_ZLIB, 1, [Show we found -lz and zlib.h and set INCS])
@@ -2769,7 +2767,6 @@ if test ".${ac_cv_lib_z_zlibVersion}" = ".yes" &&
     fi
     ZLIB_ROOT=
 elif test ".${ZLIB_ROOT}" = "."; then
-    ac_disable_zlib="no"
     AC_MSG_RESULT([not found in standard location, no --with-zlib-root, testing further...])
 
     if test -d /usr &&
@@ -2873,6 +2870,7 @@ elif test ".${ZLIB_ROOT}" = "."; then
              echo "*"
              echo "*******************************************************************"
              echo
+             ac_disable_zlib="yes"
              ZLIB_ROOT=
          fi
     fi
@@ -2907,6 +2905,7 @@ else
         echo "*"
         echo "*******************************************************************"
         echo
+        ac_disable_zlib="yes"
         ZLIB_ROOT=
     fi
     if test ".${ZLIB_ROOT}" != "."; then
@@ -2934,8 +2933,12 @@ else
             echo "*"
             echo "*******************************************************************"
             echo
+            ac_disable_zlib="yes"
         ])
     fi
+fi
+if test ".${ac_disable_zlib}" != ".yes"; then
+    AC_DEFINE_UNQUOTED(MAKE_WITH_ZLIB, 1, [zlib is available])
 fi
 
 dnl> XML Dump:

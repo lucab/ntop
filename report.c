@@ -223,7 +223,7 @@ void printTrafficStatistics() {
     Counter dummyCounter;
     sendString("<TR><TH "TH_BG" align=left>Packets</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
     if(myGlobals.mergeInterfaces && (myGlobals.numDevices > 1)) {
       int numRealDevices=0;
 
@@ -309,7 +309,7 @@ void printTrafficStatistics() {
       sendString(buf);
     }
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
     if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
       sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=pktCastDistribPie"CHART_FORMAT"></TH></TR>\n");
@@ -401,7 +401,7 @@ void printTrafficStatistics() {
 	BufferTooShort();
       sendString(buf);
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value > 0)
 	sendString("<TR "TR_ON" BGCOLOR=white><TH "TH_BG" ALIGN=CENTER COLSPAN=3>"
 		   "<IMG SRC=pktSizeDistribPie"CHART_FORMAT"></TH></TR>\n");
@@ -469,7 +469,7 @@ void printTrafficStatistics() {
       BufferTooShort();
     sendString(buf);
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
     if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value > 0)
       sendString("<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
 		 "<IMG SRC=ipTrafficPie"CHART_FORMAT"></TH></TR>\n");
@@ -561,7 +561,7 @@ void printTrafficStatistics() {
 	  BufferTooShort();
 	sendString(buf);
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
 	sendString("<TR "TR_ON"><TH BGCOLOR=white COLSPAN=3>"
 		   "<IMG SRC=pktTTLDistribPie"CHART_FORMAT"></TH></TR>\n");
 #endif
@@ -572,7 +572,7 @@ void printTrafficStatistics() {
 
     /* ************************ */
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
     if(myGlobals.enableSessionHandling
        && (myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo32.value +
 	   myGlobals.device[myGlobals.actualReportDeviceId].rcvdPktTTLStats.upTo64.value +
@@ -585,7 +585,7 @@ void printTrafficStatistics() {
       sendString("<TR><TH "TH_BG" ALIGN=LEFT>Remote Hosts Distance</TH><TD "TH_BG" ALIGN=CENTER>"
 		 "<IMG SRC=hostsDistanceChart"CHART_FORMAT"></TD></TR>\n");
     }
-#endif /* HAVE_GDCHART */
+#endif /* MAKE_WITH_GDCHART */
 
     /* ********************* */
 
@@ -2587,7 +2587,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
  if(mode == FLAG_HOSTLINK_TEXT_FORMAT) {
    printSectionTitle("IP Protocol Distribution");
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
    sendString("<CENTER><IMG SRC=ipProtoDistribPie"CHART_FORMAT"><p>\n</CENTER>\n");
 #endif
 
@@ -2855,7 +2855,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 			CONST_COLOR_1, remainingTraffic, percentage);
       }
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
       if(numProtosFound > 0)
 	sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER>"
 		   "<IMG SRC=drawGlobalIpProtoDistribution"CHART_FORMAT"></TD></TR>\n");
@@ -3022,7 +3022,7 @@ void printProtoTraffic(void) {
 		  100*((float)myGlobals.device[myGlobals.actualReportDeviceId].otherBytes.value/
 		       myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value));
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   sendString("<TR "TR_ON"><TD "TD_BG" COLSPAN=4 ALIGN=CENTER>"
 	     "<IMG SRC=drawGlobalProtoDistribution"CHART_FORMAT"></TD></TR>\n");
 #endif
@@ -3719,7 +3719,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
   sendString("<CENTER>\n");
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
    sendString("<A HREF=\"thptStatsMatrix.html?col=1\" BORDER=0>"
 	      "<IMG SRC=\"thptGraph"CHART_FORMAT"?col=1\"></A><BR>\n");
    if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
@@ -3736,7 +3736,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
    sendString(tmpBuf);
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 60) {
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
     sendString("<P><A HREF=\"thptStatsMatrix.html?col=2\" BORDER=0>"
 	       "<IMG SRC=\"thptGraph"CHART_FORMAT"?col=2\"></A><BR>\n");
     if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
@@ -3751,7 +3751,7 @@ void printThptStats(int sortedColumn _UNUSED_) {
 
     sendString(tmpBuf);
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
       sendString("<P><IMG SRC=\"thptGraph"CHART_FORMAT"?col=3\"><BR>\n");
       if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",

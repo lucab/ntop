@@ -211,8 +211,8 @@
   #define HAVE_GDBM_H
  #endif
 
- #ifndef HAVE_GDCHART
-  #define HAVE_GDCHART
+ #ifndef MAKE_WITH_GDCHART
+  #define MAKE_WITH_GDCHART
  #endif
 
  #ifndef CFG_MULTITHREADED
@@ -297,6 +297,33 @@
 #undef MAKE_WITH_SEMAPHORES
 #endif
 
+/*
+ * Do we have the stuff we need for gdchart?
+ *    ./configure sets MAKE_WITH_GDCHART - that's the reliable one.
+ *    But it's possible we have some of the others set (say we found libpng).
+ *    Unset them so we don't build partial code
+ */
+#ifndef MAKE_WITH_GDCHART
+ #undef HAVE_GDCHART_H
+ #undef HAVE_GDC_H 
+ #undef HAVE_GD_H
+ #undef HAVE_PNG_H
+ #undef HAVE_GD
+ #undef HAVE_PNG
+#endif
+
+/*
+ * Do we have the stuff we need for XMLDUMP?
+ *   ./configure sets MAKE_WITH_XMLDUMP - that's the reliable one
+ */
+#ifndef MAKE_WITH_XMLDUMP
+ #undef HAVE_XMLVERSION_H
+ #undef HAVE_LIBXML2
+ #undef HAVE_GLIB_H
+ #undef HAVE_GLIBCONFIG_H
+ #undef HAVE_GDOME_H
+ #undef HAVE_LIBGDOME
+#endif
 /*
  * Do we have the stuff we need for i18n?
  */

@@ -352,6 +352,7 @@ ntop.h
 #include <zlib.h>
 #else
 #undef HAVE_ZLIB
+#undef MAKE_WITH_ZLIB
 #endif
 
 /*

@@ -1173,7 +1173,7 @@ void printNtopConfigHInfo(int textPrintFlag) {
   sendString(texthtml("\n\nCompile Time: globals-define.h\n\n",
                       "<tr><th colspan=\"2\"" TH_BG ">Compile Time: globals-define.h</tr>\n"));
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   if(snprintf(buf, sizeof(buf), 
               "globals-report.h: #define CHART_FORMAT \"%s\"",
               CHART_FORMAT) < 0)
@@ -1303,12 +1303,12 @@ void printNtopConfigHInfo(int textPrintFlag) {
 			 );
 
   printFeatureConfigInfo(textPrintFlag, 
-                         texthtml("HAVE_GDCHART",
-                                  "<A HREF=\"" HTML_GDCHART_URL "\" title=\"" CONST_HTML_GDCHART_URL_ALT "\">HAVE_GDCHART</A>"),
-#ifdef HAVE_GDCHART
-			 "present"
+                         texthtml("MAKE_WITH_GDCHART",
+                                  "<A HREF=\"" HTML_GDCHART_URL "\" title=\"" CONST_HTML_GDCHART_URL_ALT "\">MAKE_WITH_GDCHART</A>"),
+#ifdef MAKE_WITH_GDCHART
+			 "yes"
 #else
-			 "absent"
+			 "no"
 #endif
 			 );
 
@@ -1869,8 +1869,18 @@ void printNtopConfigHInfo(int textPrintFlag) {
 			 );
 
   printFeatureConfigInfo(textPrintFlag, 
-                         texthtml("HAVE_ZLIB (HTTP gzip compression)",
-                                  "HAVE_ZLIB<br>&nbsp;&nbsp;&nbsp;HTTP gzip compression"),
+                         texthtml("MAKE_WITH_ZLIB (HTTP gzip compression)",
+                                  "MAKE_WITH_ZLIB<br>&nbsp;&nbsp;&nbsp;HTTP gzip compression"),
+#ifdef MAKE_WITH_ZLIB
+			 "yes"
+#else
+			 "no"
+#endif
+			 );
+
+  printFeatureConfigInfo(textPrintFlag, 
+                         texthtml("HAVE_ZLIB",
+                                  "HAVE_ZLIB"),
 #ifdef HAVE_ZLIB
 			 "present"
 #else
@@ -2232,7 +2242,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "-W | --https-server", buf);
 #endif
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   printParameterConfigInfo(textPrintFlag, "--throughput-chart-type",
                            myGlobals.throughput_chart_type == GDC_AREA ? "Area" : "Bar",
                            DEFAULT_NTOP_CHART_TYPE == GDC_AREA ? "Area" : "Bar");
@@ -2380,7 +2390,7 @@ void printNtopConfigInfo(int textPrintFlag) {
   printFeatureConfigInfo(textPrintFlag, "OpenSSL Version", (char*)SSLeay_version(0));
 #endif
 
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
   printFeatureConfigInfo(textPrintFlag, "zlib version", (char*)zlibVersion());
 #endif
 

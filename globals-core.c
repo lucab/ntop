@@ -143,7 +143,7 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* note that by default ntop will merge network interfaces */
   myGlobals.mapperURL = DEFAULT_NTOP_MAPPER_URL;
 
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
   myGlobals.throughput_chart_type = DEFAULT_NTOP_CHART_TYPE;
 #endif
 

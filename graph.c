@@ -26,7 +26,7 @@
 #include "ntop.h"
 
 #ifndef MAKE_MICRO_NTOP
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
 
 #define _GRAPH_C_
 #include "globals-report.h"
@@ -1676,5 +1676,5 @@ void drawHostsDistanceGraph() {
 void gdImageWBMP() {; }
 #endif
 
-#endif /* HAVE_GDCHART */
+#endif /* MAKE_WITH_GDCHART */
 #endif /* MAKE_MICRO_NTOP   */

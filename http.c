@@ -139,7 +139,7 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipByt
 static void returnHTTPspecialStatusCode(int statusIdx);
 static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_, char* thePw, int thePwLen);
 
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
 static char compressedFilePath[256];
 static short compressFile = 0, acceptGzEncoding;
 static FILE *compressFileFd=NULL;
@@ -320,7 +320,7 @@ static int readHTTPheader(char* theRequestedURL,
 	} else if((idxChar >= 21)
 		  && (strncasecmp(lineStr, "Authorization: Basic ", 21) == 0)) {
 	  strncpy(thePw, &lineStr[21], thePwLen-1)[thePwLen-1] = '\0';
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
 	} else if((idxChar >= 17)
 		  && (strncasecmp(lineStr, "Accept-Encoding: ", 17) == 0)) {
 	  if(strstr(&lineStr[17], "gzip"))
@@ -446,7 +446,7 @@ void sendStringLen(char *theString, unsigned int len) {
   if(len == 0)
     return; /* Nothing to send */
   else {
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
     if(compressFile) {
       if(compressFileFd == NULL) {
 #ifdef WIN32
@@ -464,7 +464,7 @@ void sendStringLen(char *theString, unsigned int len) {
       }
       return;
     }
-#endif /* HAVE_ZLIB */
+#endif /* MAKE_WITH_ZLIB */
   }
 
   bytesSent = 0;
@@ -695,7 +695,7 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
       BufferTooShort();
    }
 
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
    if(gzipBytesSent > 0)
      fprintf(myGlobals.accessLogFd, "%s -%s- [%s %s] - \"%s\" %d %u/%u %lu\n",
 	     _intoa(*requestFrom, buf, sizeof(buf)),
@@ -794,7 +794,7 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
 /* *******************************/
 
 void returnHTTPredirect(char* destination) {
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
   compressFile = acceptGzEncoding = 0;
 #endif
 
@@ -813,7 +813,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
   time_t  theTime = myGlobals.actTime - (time_t)myGlobals.thisZone;
   struct tm t;
 
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
   compressFile = 0;
 #endif
 
@@ -913,7 +913,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 #endif
   }
 
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
   if(mimeType == MIME_TYPE_CHART_FORMAT) {
     compressFile = 0;
     if(myGlobals.newSock < 0 /* SSL */) acceptGzEncoding = 0;
@@ -1306,7 +1306,7 @@ static int returnHTTPPage(char* pageName,
 
     sendHTTPHeader(mimeType, BITFLAG_HTTP_IS_CACHEABLE | BITFLAG_HTTP_MORE_FIELDS);
 
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
     compressFile = 0; /* Don't move this */
 #endif
 
@@ -1502,7 +1502,7 @@ static int returnHTTPPage(char* pageName,
 	if(childpid) {
 	  /* father process */
 	  myGlobals.numChildren++;
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
 	  compressFile = 0;
 #endif
 	  return(0);
@@ -1808,7 +1808,7 @@ static int returnHTTPPage(char* pageName,
     } else if(strcmp(pageName, "ipProtoUsage.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printIpProtocolUsage();
-#ifdef HAVE_GDCHART
+#ifdef MAKE_WITH_GDCHART
     } else if(strncmp(pageName, "thptGraph", strlen("thptGraph")) == 0) {
       sendHTTPHeader(MIME_TYPE_CHART_FORMAT, 0);
       drawThptGraph(sortedColumn);
@@ -1943,7 +1943,7 @@ static int returnHTTPPage(char* pageName,
 	printTrailer=0;
       }
     }
-#endif /*  HAVE_GDCHART */
+#endif /*  MAKE_WITH_GDCHART */
     } else if(strcmp(pageName, "Credits.html") == 0) {
       sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
       printHTMLheader("Credits", BITFLAG_HTML_NO_REFRESH);
@@ -2050,7 +2050,7 @@ static int returnHTTPPage(char* pageName,
   if(*usedFork) {
     u_int gzipBytesSent = 0;
 
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
     if(compressFile)
       compressAndSendData(&gzipBytesSent);
 #endif
@@ -2175,7 +2175,7 @@ static int checkHTTPpassword(char *theRequestedURL,
 
 /* ************************* */
 
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
 static void compressAndSendData(u_int *gzipBytesSent) {
   FILE *fd;
   int len;
@@ -2205,7 +2205,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
   fseek(fd, 0, SEEK_SET);
   sendString(tmpStr);
 
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
   if(gzipBytesSent != NULL)
     (*gzipBytesSent) = len;
 #endif
@@ -2219,7 +2219,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
   unlink(compressedFilePath);
 }
-#endif /* HAVE_ZLIB */
+#endif /* MAKE_WITH_ZLIB */
 
 /* ************************* */
 
@@ -2278,7 +2278,7 @@ void handleHTTPrequest(struct in_addr from) {
 
   httpBytesSent = 0;
 
-#ifdef HAVE_ZLIB
+#ifdef MAKE_WITH_ZLIB
   compressFile = 0;
   compressFileFd = NULL;
   acceptGzEncoding = 0;
@@ -2404,7 +2404,7 @@ void handleHTTPrequest(struct in_addr from) {
 #endif
   
   if(rc == 0) {
-#if defined(HAVE_ZLIB)
+#if defined(MAKE_WITH_ZLIB)
     if(compressFile)
       compressAndSendData(&gzipBytesSent);
     else
