@@ -368,6 +368,9 @@ extern void storePrefsValue(char *key, char *value);
 extern int guessHops(HostTraffic *el);
 extern int ntop_sleep(int secs);
 extern void unescape(char *dest, int destLen, char *url);
+extern void updateElementList(ElementList *list, u_short srcId, u_short dstId, 
+			      u_int32_t numPkts, u_int32_t numBytes);
+extern void dumpElementList(ElementList *theList);
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

@@ -388,7 +388,7 @@ void handleLocalAddresses(char* addresses) {
 
       network     = ((a & 0xff) << 24) + ((b & 0xff) << 16) + ((c & 0xff) << 8) + (d & 0xff);
       /* Special case the /32 mask - yeah, we could probably do it with some fancy
-         u long long stuff, but this is simpler...  
+         u long long stuff, but this is simpler...
          Burton Strauss <Burton@ntopsupport.com> Jun2002
        */
       if (bits == 32) {
@@ -464,8 +464,8 @@ void handleLocalAddresses(char* addresses) {
           c = (int) ((network >>  8) & 0xff);
           d = (int) ((network >>  0) & 0xff);
 
-          if ((laBufferUsed = snprintf(&localAddresses[laBufferPosition], 
-                                      laBufferLength, 
+          if ((laBufferUsed = snprintf(&localAddresses[laBufferPosition],
+                                      laBufferLength,
                                       "%s%d.%d.%d.%d/%d",
                                       numLocalNets == 0 ? "" : ", ",
                                       a, b, c, d,
@@ -842,7 +842,7 @@ int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine) {
 
   if (rc != 0) {
     traceEvent(TRACE_ERROR,
-               "ERROR: createMutex() call returned %d(%d) [%s:%d]\n", 
+               "ERROR: createMutex() call returned %d(%d) [%s:%d]\n",
                rc, errno, fileName, fileLine);
   } else {
 
@@ -1195,7 +1195,7 @@ int createSem(sem_t *semId, int initialValue) {
 void waitSem(sem_t *semId) {
   int rc = sem_wait(semId);
 
-  if(rc != 0) 
+  if(rc != 0)
     traceEvent(TRACE_INFO, "waitSem failed [errno=%d]", errno);
 }
 
@@ -1209,8 +1209,8 @@ int incrementSem(sem_t *semId) {
 /* NOTE: As of 2.0.99RC2, this was determined to be dead code.
  *        It has been retained in the source for future use.
  *
- *        WARNING: The other semaphore routines - e.g. increment, 
- *                 wait and delete ARE referenced?! 
+ *        WARNING: The other semaphore routines - e.g. increment,
+ *                 wait and delete ARE referenced?!
  *             Enabling semaphors will probably cause bugs!
  */
 
@@ -2479,7 +2479,7 @@ void fillDomainName(HostTraffic *el) {
     return;
 
 #ifdef MULTITHREADED
-  if(myGlobals.numericFlag == 0) 
+  if(myGlobals.numericFlag == 0)
     accessMutex(&myGlobals.addressResolutionMutex, "fillDomainName");
 #endif
 
@@ -2490,7 +2490,7 @@ void fillDomainName(HostTraffic *el) {
     /* NOTE: theDomainHasBeenComputed(el) = 0 */
     el->fullDomainName = el->dotDomainName = "";
 #ifdef MULTITHREADED
-    if(myGlobals.numericFlag == 0) 
+    if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return;
@@ -2536,7 +2536,7 @@ void fillDomainName(HostTraffic *el) {
     }
 
 #ifdef MULTITHREADED
-    if(myGlobals.numericFlag == 0) 
+    if(myGlobals.numericFlag == 0)
       releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
     return;
@@ -2559,7 +2559,7 @@ void fillDomainName(HostTraffic *el) {
   /* traceEvent(TRACE_INFO, "'%s'\n", el->domainName); */
 
 #ifdef MULTITHREADED
-  if(myGlobals.numericFlag == 0) 
+  if(myGlobals.numericFlag == 0)
     releaseMutex(&myGlobals.addressResolutionMutex);
 #endif
 }
@@ -3234,7 +3234,7 @@ int guessHops(HostTraffic *el) {
 
 int ntop_sleep(int secs) {
   int unsleptTime = secs;
-  
+
   while((unsleptTime = sleep(unsleptTime)) > 0)
     ;
 
@@ -3248,7 +3248,7 @@ void unescape(char *dest, int destLen, char *url) {
   int i, len, at;
   unsigned int val;
   char hex[3] = {0};
- 
+
   len = strlen(url);
   at = 0;
   memset(dest, 0, destLen);
@@ -3260,13 +3260,13 @@ void unescape(char *dest, int destLen, char *url) {
       hex[2] = 0;
       sscanf(hex, "%02x", &val);
       i += 2;
- 
+
       dest[at++] = val & 0xFF;
     } else if(url[i] == '+') {
       dest[at++] = ' ';
     } else
       dest[at++] = url[i];
-  }  
+  }
 }
 
 /* ******************************** */
@@ -3281,3 +3281,135 @@ void resetTrafficCounter(TrafficCounter *ctr) {
   ctr->value = 0, ctr->modified = 0;
 }
 
+/* ******************************** */
+
+static void updateElementListItem(ElementList *theList, u_short dstId,
+			   u_int32_t numPkts, u_int32_t numBytes) {
+  ElementList *list = theList;
+
+  while(list != NULL) {
+    if(list->id == dstId) {
+      break;
+    } else
+      list = list->next;
+  }
+
+  if(list == NULL) {
+    list = (ElementList*)malloc(sizeof(ElementList));
+    memset(list, 0, sizeof(ElementList));
+    list->id = dstId;
+    list->down = theList->next;
+    theList->next = list;
+  }
+
+  incrementTrafficCounter(&list->bytes, numBytes),
+    incrementTrafficCounter(&list->pkts, numPkts);
+}
+
+/* ******************************** */
+
+void updateElementList(ElementList *theList,
+		       u_short srcId, u_short dstId,
+		       u_int32_t numPkts, u_int32_t numBytes) {
+  ElementList *list = theList;
+
+  while(list != NULL) {
+    if(list->id == srcId) {
+      updateElementListItem(list, dstId, numPkts, numBytes);
+      return;
+    } else
+      list = list->down;
+  }
+
+  if(list == NULL) {
+    list = (ElementList*)malloc(sizeof(ElementList));
+    memset(list, 0, sizeof(ElementList));
+    list->id = srcId;
+    list->down = theList->down;
+    theList->down = list;
+    updateElementListItem(list, dstId, numPkts, numBytes);
+  }
+
+}
+
+/* ******************************** */
+
+#define MAX_ENTRY     (u_short)-1
+
+void dumpElementList(ElementList *theList) {
+  u_char entries[MAX_ENTRY];
+  char buf[BUF_SIZE];
+  ElementList *list = theList;
+  int i, j;
+
+  memset(entries, 0, sizeof(char));
+
+  while(list != NULL) {
+    if(list->id < MAX_ENTRY)
+      entries[list->id] = 1;
+
+    list = list->down;
+  }
+
+  sendString("<TABLE BORDER>\n<TR>\n");
+  for(i=0; i<MAX_ENTRY; i++) {
+    if(entries[i] == 1) {
+      if(snprintf(buf, sizeof(buf), "<TH>%d</TH>", i) < 0)
+	BufferTooShort();
+      sendString(buf);
+    }
+  }
+  sendString("</TR>\n");
+
+  /* ****************** */
+
+  for(i=0; i<MAX_ENTRY; i++) {
+    if(entries[i] == 1) {
+      list = theList;
+      
+      while(list != NULL) {
+	if(list->id == i) 
+	  break;
+	else
+	  list = list->down;
+      }
+      
+      if(list == NULL) continue;
+
+      if(snprintf(buf, sizeof(buf), "<TR><TH>%d</TH>", list->id) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      for(j=0; j<MAX_ENTRY; j++) {
+	if(entries[j] == 1) {
+	  if(j == list->id)
+	    sendString("<TD>&nbsp;</TD>\n");
+	  else {
+	    ElementList *subList = list;
+	    u_char found = 0;
+
+	    while(subList != NULL) {
+	      if(subList->id == j) {
+		if(snprintf(buf, sizeof(buf), "<TD>%s/%s</TD>",
+			    formatPkts(subList->pkts.value),
+			    formatBytes(subList->bytes.value, 1)) < 0)
+		  BufferTooShort();
+		sendString(buf);
+		found = 1;
+		break;
+	      } else
+		subList = subList->next;
+	    }
+
+	    if(!found)
+	      sendString("<TD>&nbsp;</TD>\n");
+	  }
+	}
+      }
+
+      sendString("</TR>\n");
+    }
+  }
+
+  sendString("</TR>\n</TABLE>\n");
+}

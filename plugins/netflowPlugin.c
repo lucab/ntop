@@ -28,7 +28,7 @@ static pthread_t netFlowThread;
 static int threadActive;
 #endif
 
-/* #define DEBUG_FLOWS */
+/* #define DEBUG_FLOWS  */
 
 static ProbeInfo probeList[MAX_NUM_PROBES];
 
@@ -179,7 +179,7 @@ static void dissectFlow(NetFlow5Record *theRecord) {
       if((srcHost == NULL) || (dstHost == NULL)) continue;
 
       srcHost->lastSeen = dstHost->lastSeen = myGlobals.actTime;
-      srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value += numPkts;
+      srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value     += numPkts;
       srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;
       srcHost->ipBytesSent.value += len,     dstHost->ipBytesRcvd.value += len;
       
@@ -187,8 +187,14 @@ static void dissectFlow(NetFlow5Record *theRecord) {
       if(srcAS != 0) srcHost->hostAS = srcAS;
       if(dstAS != 0) dstHost->hostAS = dstAS;
 
+      if(myGlobals.device[actualDeviceId].asList == NULL) {
+	myGlobals.device[actualDeviceId].asList = (ElementList*)malloc(sizeof(ElementList));
+	memset(myGlobals.device[actualDeviceId].asList, 0, sizeof(ElementList));	
+      }
+      updateElementList(myGlobals.device[actualDeviceId].asList, srcAS, dstAS, numPkts, len);
+
 #ifdef DEBUG_FLOWS
-      traceEvent(TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS);
+      /* traceEvent(TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS); */
 #endif
 
       if((sport != 0) && (dport != 0)) {
@@ -562,6 +568,10 @@ static void handleNetflowHTTPrequest(char* url) {
 
   sendString("<p></CENTER>\n");  
   sendString("<p><H5>NetFlow is a trademark of <A HREF=http://www.cisco.com/>Cisco Systems</A>.</H5>\n");  
+
+#ifdef DEBUG_FLOWS
+#endif
+  dumpElementList(myGlobals.device[0].asList);
   printHTMLtrailer();
 }
 
@@ -623,7 +633,7 @@ static void handleNetFlowPacket(u_char *_deviceId,
 
 	    memcpy(&theRecord, rawSample, rawSampleLen > sizeof(theRecord) ? sizeof(theRecord) : rawSampleLen);	
 #ifdef DEBUG_FLOWS
-	    traceEvent(TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src));
+	    /* traceEvent(TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src)); */
 #endif
 	    dissectFlow(&theRecord);
 	  }

@@ -948,7 +948,6 @@ typedef struct hash_list {
 #define HASH_LIST_SIZE    ((u_int16_t)-1) /* Static hash size */
 #endif
 
-
 #define PACKET_QUEUE_LENGTH     2048
 #define ADDRESS_QUEUE_LENGTH    512
 
@@ -962,6 +961,29 @@ typedef struct trafficCounter {
   Counter value;
   u_char modified;
 } TrafficCounter;
+
+/* *****************************
+
+   # -> next -> next -> next -> NULL
+   |
+   V down
+   # -> next -> next -> next -> NULL
+   |
+   V
+   # -> next -> next -> next -> NULL
+   |
+   V
+   # -> next -> next -> next -> NULL
+
+   ***************************** */
+
+typedef struct elementList {
+  u_short id;
+  TrafficCounter bytes, pkts;
+  struct elementList *down;
+  struct elementList *next;
+} ElementList;
+
 
 #define PCAP_NW_INTERFACE         "pcap file"
 #define MAX_NUM_CONTACTED_PEERS   8
@@ -1239,6 +1261,8 @@ typedef struct ntopInterface {
   struct hostTraffic **hash_hostTraffic;
   u_int16_t  insertIdx;
   HashList** hashList;
+
+  ElementList *asList;
 
   /* ************************** */
 
