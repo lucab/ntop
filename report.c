@@ -1592,8 +1592,6 @@ void printLocalRoutersList(int actualDeviceId) {
 
 /* ************************************ */
 
-#endif /* DEBUG */
-
 /* ************************************ */
 
 void printIpAccounting(int remoteToLocal, int sortedColumn,
