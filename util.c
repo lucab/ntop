@@ -49,7 +49,7 @@ static pthread_mutex_t stateChangeMutex;
 static SessionInfo *passiveSessions;
 static u_short passiveSessionsLen;
 
-static char *versionSite[]   = { 
+static char *versionSite[]   = {
   CONST_VERSIONCHECK_SITE,
   CONST_VERSIONCHECK_BACKUP_SITE,
   NULL };
@@ -140,7 +140,7 @@ HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualD
 	  return(el);
 	}
       }
-    } 
+    }
   }
 
 #ifdef DEBUG
@@ -159,13 +159,13 @@ HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualD
 
 HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
   if(theSerial.serialType == SERIAL_IPV4 || theSerial.serialType == SERIAL_IPV6) {
-    return(findHostByNumIP(theSerial.value.ipSerial.ipAddress, 
+    return(findHostByNumIP(theSerial.value.ipSerial.ipAddress,
 			   theSerial.value.ipSerial.vlanId,
 			   actualDeviceId));
   } else {
     /* MAC */
     return(findHostByMAC(theSerial.value.ethSerial.ethAddress,
-			 theSerial.value.ethSerial.vlanId, 
+			 theSerial.value.ethSerial.vlanId,
 			 actualDeviceId));
   }
 }
@@ -185,9 +185,9 @@ HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId) {
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
-    if((el->ethAddress[0] != '\0') 
+    if((el->ethAddress[0] != '\0')
        && (!strncmp(el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS))) {
-      if((vlanId > 0) && (el->vlanId != vlanId)) 
+      if((vlanId > 0) && (el->vlanId != vlanId))
 	continue;
       else
 	return(el);
@@ -1089,7 +1089,7 @@ void handleLocalAddresses(char* addresses) {
 
   /* Not used anymore */
   if(myGlobals.localAddresses != NULL) free(myGlobals.localAddresses);
-  
+
   if(localAddresses[0]  != '\0')
     myGlobals.localAddresses = strdup(localAddresses);
 }
@@ -2565,18 +2565,18 @@ void traceEvent(int eventTraceLevel, char* file,
 
         if(snprintf(bufLineID, sizeof(bufLineID), "[%s:%d] ", &mFile[beginFileIdx], line) < 0)
           BufferTooShort();
-	
+
         /* Hash the message format into an id */
         for (i=0; i<=strlen(format); i++) {
 	  messageid = (messageid << 1) ^ max(0,format[i]-32);
         }
-	
+
         /* 1st chars of file name for uniqueness */
         messageid += (file[0]-32) * 256 + file[1]-32;
         if(snprintf(bufMsgID, sizeof(bufMsgID), "[MSGID%07d]", (messageid & 0x8fffff)) < 0)
           BufferTooShort();
       }
-      
+
       free(mFile);
     }
 
@@ -3927,7 +3927,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
       char line[384];
       char *b, *d, *ptr;
       int numLoaded=0;
-      while(readInputFile(fd, NULL, FALSE, compressedFormat, 0, 
+      while(readInputFile(fd, NULL, FALSE, compressedFormat, 0,
             line, sizeof(line), &numLoaded) == 0) {
 
 	if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
@@ -3981,7 +3981,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
       } /* while ! eof */
   }
 #ifdef FINGERPRINT_DEBUG
-    else 
+    else
       traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: Unable to open file");
 #endif
 
@@ -3992,7 +3992,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
     srcHost->fingerprint[0] = ':', srcHost->fingerprint[1] = '\0';
   }
 #ifdef FINGERPRINT_DEBUG
-    else 
+    else
       traceEvent(CONST_TRACE_INFO, "FINGERPRINT_DEBUG: match! %s", srcHost->fingerprint);
 #endif
 
@@ -4937,7 +4937,7 @@ void displayPrivacyNotice(void) {
     cNV2N("3.0rc2",  299999002);
     cNV2N("3.0rc14", 299999014);
     cNV2N("3.0",     300000000);
-#endif    
+#endif
 }
 
 /* ********************************** */
@@ -5246,7 +5246,7 @@ int retrieveVersionFile(char *versSite, char *versionFile, char *buf, int bufLen
    * remember, buf/bufLen better be big enough to handle the whole response
    */
   memset(buf, 0, bufLen);
-  rc = recv(sock, buf, bufLen, 
+  rc = recv(sock, buf, bufLen,
 #ifdef WIN32
 	  0
 #else
@@ -5472,28 +5472,28 @@ void* checkVersion(void* notUsed _UNUSED_) {
    * and avoid making this logic any more complex!
    */
   char buf[LEN_CHECKVERSION_BUFFER];
-  int rc=0, idx = 0;  
+  int rc=0, idx = 0;
 
   displayPrivacyNotice();
 
   for(idx = 0; versionSite[idx] != NULL; idx++) {
     traceEvent(CONST_TRACE_ALWAYSDISPLAY,
 	       "CHKVER: Checking current ntop version at %s/%s", versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
-  
+
 #ifdef CHKVER_DEBUG
     traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", versionSite[idx], CONST_VERSIONCHECK_DOCUMENT);
 #endif
 
     memset(buf, 0, sizeof(buf));
-  
+
     rc = retrieveVersionFile(versionSite[idx], CONST_VERSIONCHECK_DOCUMENT, buf, sizeof(buf));
-    
+
     if(rc == 0) break;
   }
 
   if (rc == 0) {
     rc = processVersionFile(buf, min(sizeof(buf), strlen(buf)));
-    
+
     if (rc == 0) {
       traceEvent(CONST_TRACE_INFO,
 		 "CHKVER: This version of ntop is %s", reportNtopVersionCheck());
@@ -5523,7 +5523,7 @@ int readInputFile(FILE* fd,
                     int* recordsRead) {
 
   /*
-   * This is a common routine to return the records from a data file, compressed or 
+   * This is a common routine to return the records from a data file, compressed or
    * not, which was checked for via checkForInputFile.
    *
    *    It returns -1 if an eof occured or zero otherwise.
@@ -5551,10 +5551,10 @@ int readInputFile(FILE* fd,
   }
 
   /* Either EOF or forceClose */
-  if(logTag != NULL) 
+  if(logTag != NULL)
     traceEvent(CONST_TRACE_NOISY, "%s: Closing file", logTag);
 
-  if(fd != NULL) 
+  if(fd != NULL)
 #ifdef MAKE_WITH_ZLIB
     if(compressedFormat)
       gzclose(fd);
@@ -5654,7 +5654,7 @@ FILE* checkForInputFile(char* logTag,
         compareTime = max(checkStat.st_ctime, checkStat.st_mtime);
         if(logTag != NULL) {
           memset(bufTime, 0, sizeof(bufTime));
-          strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC, 
+          strftime(bufTime, sizeof(bufTime), CONST_LOCALE_TIMESPEC,
                    localtime_r(&compareTime, &t));
           traceEvent(CONST_TRACE_NOISY, "%s: Input file created/last modified %s", logTag, bufTime);
         }
@@ -5702,10 +5702,10 @@ void urlFixupFromRFC1945Inplace(char* url) {
       url[i] = ':';
 
 }
- 
+
 void urlFixupToRFC1945Inplace(char* url) {
 
-/* Do an in-place fixup of an internal name to a RFC1945 URL, 
+/* Do an in-place fixup of an internal name to a RFC1945 URL,
    that is convert :s to _s
  */
   int i;
@@ -5724,7 +5724,7 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
   if(updateValue[0] == '\0') return;
 
   /* Do not update 0 -> DNS */
-  if((updateType == FLAG_HOST_SYM_ADDR_TYPE_NAME) && 
+  if((updateType == FLAG_HOST_SYM_ADDR_TYPE_NAME) &&
      (el->hostResolvedNameType == 0))
     return;
 
@@ -5734,7 +5734,7 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
 #ifdef CMPFCTN_DEBUG
     if(myGlobals.debugMode == 1)
       traceEvent(CONST_TRACE_INFO,
-                 "CMPFCTN_DEBUG: setResolvedName(0x%08x) %d %s -> %d %s - %s(%d)", 
+                 "CMPFCTN_DEBUG: setResolvedName(0x%08x) %d %s -> %d %s - %s(%d)",
                  el,
                  el->hostResolvedNameType,
                  el->hostResolvedName,
@@ -5804,17 +5804,17 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 
        2A. Check the hostResolvedNameType fields for both A and B.
 
-           2A1. If they are identical, we perform the approprate 
-                apples to apples compare.  
+           2A1. If they are identical, we perform the approprate
+                apples to apples compare.
 
                     For example using hostNumIpAddress for a meaningful
                     IP address sort (where 9.0.0.0 < 10.0.0.0).
 
-           2A2. If the hostResolvedNameType fields are NOT identical, we 
+           2A2. If the hostResolvedNameType fields are NOT identical, we
                 do the sort on the hostResolvedNameType field itself.
 
 
-             2A1+2A2 means that we sort all of the NAMES alphabetically, 
+             2A1+2A2 means that we sort all of the NAMES alphabetically,
              followed by all of the IP addresses sorted NUMERICALLY, followed by...
 
     3A. If precisely ONE of the hostResolvedName fields is NULL or precisely ONE
@@ -5878,8 +5878,8 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
           /* 2A1 */
 
              /* Remember, order of the cases is important don't change
-              * But also remember, we're comparing only the values of the 
-              * same type stored in hostResolvedName so MOST can be 
+              * But also remember, we're comparing only the values of the
+              * same type stored in hostResolvedName so MOST can be
               * a straight string compare.
               */
 
@@ -5897,7 +5897,7 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 #endif
           } else if((*a)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_MAC) {
               /*
-               * Remember - the MAC value in hostResolvedName, is proabably the 
+               * Remember - the MAC value in hostResolvedName, is proabably the
                * translated MAC, e.g. 3COM CORPORATION:E2:DB:06 and not the
                * 48bit value.  But, if we don't recognize the vendor, then it's the
                * 17 character form (xx:xx:xx:xx:xx:xx).  The special case is to
@@ -5928,8 +5928,8 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
               }
           } else if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FC) &&
                     ((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_FAKE)) {
-            /* For most of the rest of the tests, we just compare the names we 
-             * have - since they're always the same type, a strncasecmp test 
+            /* For most of the rest of the tests, we just compare the names we
+             * have - since they're always the same type, a strncasecmp test
              * IS meaningful.
              */
             name1 = (*a)->hostResolvedName;
@@ -5968,7 +5968,7 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
       if(((*a)->hostResolvedNameType != FLAG_HOST_SYM_ADDR_TYPE_NONE) &&
          ((*b)->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NONE)) {
         /* a not NULL so return a<b */
-        rc = -1; 
+        rc = -1;
 #ifdef CMPFCTN_DEBUG
         strncpy(debugCmpFctn, "3A-a!", sizeof(debugCmpFctn));
 #endif
@@ -5985,14 +5985,14 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
         memset(&nullEthAddress, 0, LEN_ETHERNET_ADDRESS);
 
         /* Do we have a non 0.0.0.0 IP?  Yes: Compare it */
-        if(!addrnull(&(*a)->hostIpAddress) && 
+        if(!addrnull(&(*a)->hostIpAddress) &&
            !addrnull(&(*b)->hostIpAddress)) {
           rc = addrcmp(&((*a)->hostIpAddress), &((*b)->hostIpAddress));
 #ifdef CMPFCTN_DEBUG
           strncpy(debugCmpFctn, "3B-IP", sizeof(debugCmpFctn));
 #endif
 
-        } else if((memcmp((*a)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0) && 
+        } else if((memcmp((*a)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0) &&
                   (memcmp((*b)->ethAddress, nullEthAddress, LEN_ETHERNET_ADDRESS) != 0)) {
           /* We have a non zero MAC - compare it */
           rc = memcmp(((*a)->ethAddress), ((*b)->ethAddress), LEN_ETHERNET_ADDRESS);
@@ -6001,7 +6001,7 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 #endif
 //TODO FC??
         } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic != NULL)) {
-          /* Neither a nor b are null, so we can compare the fields in nonIPTraffic... 
+          /* Neither a nor b are null, so we can compare the fields in nonIPTraffic...
            *  NetBIOS, IPX then Appletalk, if we have 'em */
           if(((*a)->nonIPTraffic->nbHostName != NULL) &&
              ((*b)->nonIPTraffic->nbHostName != NULL)) {
@@ -6035,7 +6035,7 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 #endif
         } else if(((*a)->nonIPTraffic != NULL) && ((*b)->nonIPTraffic == NULL)) {
           /* b null, a not so return a>b */
-          rc=1; 
+          rc=1;
 #ifdef CMPFCTN_DEBUG
           strncpy(debugCmpFctn, "3B-a!", sizeof(debugCmpFctn));
 #endif
@@ -6054,7 +6054,7 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
     traceEvent(CONST_TRACE_INFO, "CMPFCTN_DEBUG: cmpFctn(): %s rc=%d", debugCmpFctn, rc);
 #endif
 
-    return(rc); 
+    return(rc);
 }
 
 /* ********************************************* */
@@ -6064,7 +6064,7 @@ int cmpFctnResolvedName(const void *_a, const void *_b) {
 
 int cmpFctnLocationName(const void *_a, const void *_b) {
 
-/* This function takes two HostTraffic entries and performs a 
+/* This function takes two HostTraffic entries and performs a
    standardized compare of the location, either the ip2ccValue field
    or the fallback dnsTLDValue fields, handling unvalued
    situations to provide a stable comparison.
@@ -6121,3 +6121,68 @@ int cmpFctnLocationName(const void *_a, const void *_b) {
 }
 
 /* ************************************ */
+
+static char x2c(char *what) {
+  char digit;
+
+  digit = (what[0] >= 'A' ? ((what[0] & 0xdf) - 'A')+10 : (what[0] - '0'));
+  digit *= 16;
+  digit += (what[1] >= 'A' ? ((what[1] & 0xdf) - 'A')+10 : (what[1] - '0'));
+  return(digit);
+}
+
+/* ******************************* */
+
+void unescape_url(char *url) {
+  int x,y;
+
+  for(x=0, y=0; url[y]; ++x, ++y) {
+    if((url[x] = url[y]) == '%') {
+      url[x] = x2c(&url[y+1]);
+      y += 2;
+    } else if(url[x] == '+')
+      url[x] = ' ';
+  }
+
+  url[x] = '\0';
+}
+
+/* ******************************************* */
+
+#ifdef WIN32
+void revertSlash(char *str, int mode) {
+  int i;
+
+  for(i=0; str[i] != '\0'; i++)
+    switch(mode) {
+    case 0:
+      if(str[i] == '/') str[i] = '\\';
+      break;
+    case 1:
+      if(str[i] == '\\') str[i] = '/';
+      break;
+    }
+}
+
+/* ******************************************* */
+
+void revertDoubleColumn(char *str) {
+  int i, j;
+  char str1[512];
+
+  for(i=0, j=0; str[i] != '\0'; i++) {
+    if(str[i] == ':') {
+      str1[j++] = '\\';
+      str1[j++] = str[i];
+    } else {
+      str1[j++] = str[i];
+    }
+  }
+
+  str1[j] = '\0';
+  strcpy(str, str1);
+}
+
+#endif
+
+/* ******************************************* */

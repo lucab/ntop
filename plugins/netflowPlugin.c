@@ -284,7 +284,6 @@ static Counter flowIgnoredZeroPortBytes, flowProcessedBytes;
 static u_int flowIgnored[MAX_NUM_IGNOREDFLOWS][6]; /* src, sport, dst, dport, count, bytes */
 static u_short nextFlowIgnored;
 static HostTraffic *dummyHost;
-static u_int dummyHostIdx;
 
 /* ********************************* */
 
@@ -1218,7 +1217,6 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
 	if(bufferLen > (displ+sizeof(V9FlowSet))) {
 	  FlowSetV9 *cursor = templates;
-	  u_char found = 0;
 
 	  memcpy(&fs, &buffer[displ], sizeof(V9FlowSet));
 
@@ -1406,9 +1404,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	    if(numRecords >= CONST_V5FLOWS_PER_PAK) break;
 
 	    while(flowLen > 0) {
-	      u_int8_t t8;
-	      u_int16_t t16, len, templateId;
-	      u_int32_t t32;
+	      u_int16_t len, templateId;
 
 	      memcpy(&templateId, &rcvdBuf[bufBegin], 2); bufBegin += 2; flowLen -= 2; templateId = ntohs(templateId);
 	      memcpy(&len, &rcvdBuf[bufBegin], 2); bufBegin += 2; flowLen -= 2; len = ntohs(len);
@@ -1647,8 +1643,8 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 /* ****************************** */
 
 static int initNetFlowFunct(void) {
-  int i, a, b, c, d, a1, b1, c1, d1, rc;
-  char key[256], value[1024], workList[1024];
+  int a, b, c, d, a1, b1, c1, d1, rc;
+  char value[1024], workList[1024];
 
   setPluginStatus(NULL);
 
@@ -1778,8 +1774,6 @@ static int initNetFlowFunct(void) {
 
 static void printNetFlowConfiguration(void) {
   char buf[512], buf1[32], buf2[32];
-  u_int i, numEnabled=0;
-  struct in_addr theDest;
 
   sendString("<center><table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n");
   sendString("<tr><th colspan=\"4\" "DARK_BG">Incoming Flows</th></tr>\n");
@@ -2583,8 +2577,7 @@ static void printNetFlowStatisticsRcvd(void) {
 /* ****************************** */
 
 static void handleNetflowHTTPrequest(char* url) {
-  char buf[512], workList[1024];
-  u_int i;
+  char workList[1024];
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
 

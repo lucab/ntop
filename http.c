@@ -1115,7 +1115,7 @@ static int checkURLsecurity(char *url) {
   /* Still got a % - maybe it's Unicode?  Somethings fishy... */
   if(strstr(url, "%") != NULL) {
       traceEvent(CONST_TRACE_INFO,
-                 "URL security(1): Found percent in decoded URL...DANGER...rejecting request");
+                 "URL security(1): Found percent in decoded URL...DANGER...rejecting request (%s)", url);
 
       /* Explicitly, update so it's not used anywhere else in ntop */
       url[0] = '*'; url[1] = 'd'; url[2] = 'a'; url[3] = 'n'; url[4] = 'g'; url[5] = 'e'; url[6] = 'r'; url[7] = '*'; 
@@ -1523,7 +1523,7 @@ static int returnHTTPPage(char* pageName,
 
   *usedFork = 0;
 
-#ifdef URL_DEBUG
+#ifndef URL_DEBUG
   traceEvent(CONST_TRACE_INFO, "URL_DEBUG: Page: '%s'", pageName);
 #endif
 
@@ -1624,8 +1624,8 @@ static int returnHTTPPage(char* pageName,
    *   Note that pageURI is a duplicate of pageName, but drops any parameters...
    */
 
-  pageURI=strdup(pageName);
-  token = strchr(pageURI, '?');
+  pageURI = strdup(pageName);
+  token   = strchr(pageURI, '?');
   if(token != NULL) token[0] = '\0';
   
 #ifdef MAKE_WITH_I18N
@@ -1755,8 +1755,10 @@ static int returnHTTPPage(char* pageName,
 
   /* **************** */
 
-  /* Revert to the full requested pageName, as these strncasecmp strcasecmp
-   * check the fronts only */
+  /* 
+   Revert to the full requested pageName, as these strncasecmp strcasecmp
+   check the fronts only 
+  */
   free(pageURI);
  
   if(strncasecmp(pageName, CONST_PLUGINS_HEADER, strlen(CONST_PLUGINS_HEADER)) == 0) {
@@ -2867,7 +2869,7 @@ static void compressAndSendData(u_int *gzipBytesSent) {
 
 void handleHTTPrequest(HostAddr from) {
   int skipLeading, postLen, usedFork = 0;
-  char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256];
+  char requestedURL[MAX_LEN_URL], pw[64], agent[256], referer[256], *requestedURLCopy=NULL;
   int rc, i;
   struct timeval httpRequestedAt;
   u_int gzipBytesSent = 0;
@@ -2985,7 +2987,10 @@ void handleHTTPrequest(HostAddr from) {
      We need to check whether the URL is invalid, i.e. it contains '..' or
      similar chars that can be used for reading system files
   */
-  if((rc = checkURLsecurity(requestedURL)) != 0) {
+
+  requestedURLCopy = strdup(requestedURL);
+
+  if((rc = checkURLsecurity(requestedURLCopy)) != 0) {
     traceEvent(CONST_TRACE_ERROR, "URL security: '%s' rejected (code=%d)(client=%s)",
 	       requestedURL, rc, _addrtostr(&from, tmpStr, sizeof(tmpStr)));
 
@@ -3024,8 +3029,11 @@ void handleHTTPrequest(HostAddr from) {
 #endif
 
     returnHTTPaccessForbidden();
+    free(requestedURLCopy);
     return;
   }
+
+  free(requestedURLCopy);
 
   /*
     Fix courtesy of

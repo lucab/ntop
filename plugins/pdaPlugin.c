@@ -73,12 +73,6 @@ static void printHtmlNotFoundError(void) {
 
 /* ********************** */
 
-static void printHtmlNoDataYet(void) {
-  
-}
-
-/* ********************** */
-
 static int cmpPdaFctnSent(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;

@@ -80,9 +80,6 @@ static u_short dumpPermissions;
 
 static Counter rrdGraphicRequests=0;
 
-static DIR * workDir;
-static struct dirent *workDirent;
-
 #ifdef RRD_DEBUG
 char startTimeBuf[32], endTimeBuf[32], fileTimeBuf[32];
 #endif
@@ -142,42 +139,6 @@ static void calfree (void) {
     }
   }
 }
-
-/* ******************************************* */
-
-#ifdef WIN32
-void revertSlash(char *str, int mode) {
-  int i;
-
-  for(i=0; str[i] != '\0'; i++)
-    switch(mode) {
-    case 0:
-      if(str[i] == '/') str[i] = '\\';
-      break;
-    case 1:
-      if(str[i] == '\\') str[i] = '/';
-      break;
-    }
-}
-
-void revertDoubleColumn(char *str) {
-  int i, j;
-  char str1[512];
-
-  for(i=0, j=0; str[i] != '\0'; i++) {
-    if(str[i] == ':') {
-      str1[j++] = '\\';
-      str1[j++] = str[i];
-    } else {
-      str1[j++] = str[i];
-    }
-  }
-
-  str1[j] = '\0';
-  strcpy(str, str1);
-}
-
-#endif
 
 /* ******************************************* */
 
@@ -307,7 +268,6 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
   (*average) = (float)(*total)/(float)(end-start);
   return(0);
 }
-
 
 /* ******************************************* */
 
@@ -888,31 +848,6 @@ void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter) {
     updateCounter(hostPath, key, counter->value);
     counter->modified = 0;
   }
-}
-
-/* ******************************* */
-
-char x2c(char *what) {
-  char digit;
-
-  digit = (what[0] >= 'A' ? ((what[0] & 0xdf) - 'A')+10 : (what[0] - '0'));
-  digit *= 16;
-  digit += (what[1] >= 'A' ? ((what[1] & 0xdf) - 'A')+10 : (what[1] - '0'));
-  return(digit);
-}
-
-/* ******************************* */
-
-void unescape_url(char *url) {
-  register int x,y;
-
-  for(x=0,y=0;url[y];++x,++y) {
-    if((url[x] = url[y]) == '%') {
-      url[x] = x2c(&url[y+1]);
-      y+=2;
-    }
-  }
-  url[x] = '\0';
 }
 
 /* ******************************* */
@@ -1630,7 +1565,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   for(;myGlobals.capturePackets != FLAG_NTOPSTATE_TERM;) {
     char *hostKey;
     int i, j;
-    Counter numRRDs = numTotalRRDs;
 
 #if RRD_DEBUG >= 1
     char endTime[32];

@@ -1042,9 +1042,11 @@
  * Optional: Set a default font for the rrd generated graphs
  *   Courtesy of Chris Turbeville
  */
-/* #define CONST_RRD_DEFAULT_FONT_SIZE      "8"
-/* #define CONST_RRD_DEFAULT_FONT_PATH      "/usr/openwin/lib/X11/fonts/TrueType/"
-/* #define CONST_RRD_DEFAULT_FONT_NAME      "ArialNarrow-Bold.ttf"
+/*
+ #define CONST_RRD_DEFAULT_FONT_SIZE      "8"
+ #define CONST_RRD_DEFAULT_FONT_PATH      "/usr/openwin/lib/X11/fonts/TrueType/"
+ #define CONST_RRD_DEFAULT_FONT_NAME      "ArialNarrow-Bold.ttf"
+*/
 
 /*
  * How many dummy files to create for the HAVE_FILEDESCRIPTORBUG fix

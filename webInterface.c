@@ -8336,48 +8336,54 @@ static void handleSingleWebConnection(fd_set *fdmask) {
 /* ******************* */
 
 int handlePluginHTTPRequest(char* url) {
-    FlowFilterList *flows = myGlobals.flowsList;
+  FlowFilterList *flows = myGlobals.flowsList;
 
-    while(flows != NULL)
-	if((flows->pluginStatus.pluginPtr != NULL)
-	   && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)
-	   && (flows->pluginStatus.pluginPtr->httpFunct != NULL)
-	   && (strncmp(flows->pluginStatus.pluginPtr->pluginURLname,
-		       url, strlen(flows->pluginStatus.pluginPtr->pluginURLname)) == 0)) {
-	    char *arg;
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "handlePluginHTTPRequest(%s)", url);
+#endif
 
-	    /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-	    if((!flows->pluginStatus.activePlugin) &&
-	       (!flows->pluginStatus.pluginPtr->inactiveSetup) ) {
-		char buf[LEN_GENERAL_WORK_BUFFER], name[32];
+  while(flows != NULL)
+    if((flows->pluginStatus.pluginPtr != NULL)
+       && (flows->pluginStatus.pluginPtr->pluginURLname != NULL)
+       && (flows->pluginStatus.pluginPtr->httpFunct != NULL)
+       && (strncmp(flows->pluginStatus.pluginPtr->pluginURLname,
+		   url, strlen(flows->pluginStatus.pluginPtr->pluginURLname)) == 0)) {
+      char *arg;
 
-		sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
-		strncpy(name, flows->pluginStatus.pluginPtr->pluginURLname, sizeof(name));
-		name[sizeof(name)-1] = '\0'; /* just in case pluginURLname is too long... */
-		if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))
-		    name[strlen(name)-6] = '\0';
-		if(snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name) < 0)
-		    BufferTooShort();
-		printHTMLheader(buf, NULL, BITFLAG_HTML_NO_REFRESH);
-		printFlagedWarning("<I>This plugin is currently inactive.</I>");
-		printHTMLtrailer();
-		return(1);
-	    }
+      /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+      if((!flows->pluginStatus.activePlugin) &&
+	 (!flows->pluginStatus.pluginPtr->inactiveSetup) ) {
+	char buf[LEN_GENERAL_WORK_BUFFER], name[32];
 
-	    if(strlen(url) == strlen(flows->pluginStatus.pluginPtr->pluginURLname))
-		arg = "";
-	    else
-		arg = &url[strlen(flows->pluginStatus.pluginPtr->pluginURLname)+1];
+	sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+	strncpy(name, flows->pluginStatus.pluginPtr->pluginURLname, sizeof(name));
+	name[sizeof(name)-1] = '\0'; /* just in case pluginURLname is too long... */
+	if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))
+	  name[strlen(name)-6] = '\0';
+	if(snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name) < 0)
+	  BufferTooShort();
+	printHTMLheader(buf, NULL, BITFLAG_HTML_NO_REFRESH);
+	printFlagedWarning("<I>This plugin is currently inactive.</I>");
+	printHTMLtrailer();
+	return(1);
+      }
 
-	    /* traceEvent(CONST_TRACE_INFO, "Found %s [%s]",
-	       flows->pluginStatus.pluginPtr->pluginURLname, arg); */
-	    flows->pluginStatus.pluginPtr->httpFunct(arg);
-	    return(1);
-	} else
-	    flows = flows->next;
+      if(strlen(url) == strlen(flows->pluginStatus.pluginPtr->pluginURLname))
+	arg = "";
+      else
+	arg = &url[strlen(flows->pluginStatus.pluginPtr->pluginURLname)+1];
 
-    return(0); /* Plugin not found */
+      /* traceEvent(CONST_TRACE_INFO, "Found %s [%s]",
+	 flows->pluginStatus.pluginPtr->pluginURLname, arg); */
+      flows->pluginStatus.pluginPtr->httpFunct(arg);
+      return(1);
+    } else
+      flows = flows->next;
+
+  return(0); /* Plugin not found */
 }
+
+/* ******************* */
 
 char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
                       short compactWWN, char *buf, int buflen) {

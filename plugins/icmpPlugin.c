@@ -118,7 +118,6 @@ static int sortICMPhostsRcvd(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsRcvd() (1)");
@@ -142,7 +141,6 @@ static int sortICMPhostsEcho(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsEcho() (1)");
@@ -169,7 +167,6 @@ static int sortICMPhostsReply(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsReply() (1)");
@@ -196,7 +193,6 @@ static int sortICMPhostsUnreach(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsUnreach() (1)");
@@ -223,7 +219,6 @@ static int sortICMPhostsRedirect(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsRedirect() (1)");
@@ -250,7 +245,6 @@ static int sortICMPhostsAdvert(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsAdvert() (1)");
@@ -277,7 +271,6 @@ static int sortICMPhostsTimeout(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsTimeout() (1)");
@@ -304,7 +297,6 @@ static int sortICMPhostsBadParam(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsBadParam() (1)");
@@ -331,7 +323,6 @@ static int sortICMPhostsQuench(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsQuench() (1)");
@@ -358,7 +349,6 @@ static int sortICMPhostsTimestamp(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsTimestamp() (1)");
@@ -389,7 +379,6 @@ static int sortICMPhostsInfo(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsInfo() (1)");
@@ -420,7 +409,6 @@ static int sortICMPhostsNetmask(const void *_a, const void *_b) {
   HostTraffic **a = (HostTraffic **)_a;
   HostTraffic **b = (HostTraffic **)_b;
   Counter n1, n2;
-  int rc;
 
   if(((*a) == NULL) && ((*b) != NULL)) {
     traceEvent(CONST_TRACE_WARNING, "sortICMPhostsNetmask() (1)");
@@ -640,7 +628,6 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 /* ******************************* */
 
 static void handleIcmpWatchHTTPrequest(char* url) {
-  char fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX";
   u_int i, revertOrder=0, num, tot = 0;
   int icmpId=-1;
   HostTraffic **hosts;
@@ -696,7 +683,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 #ifndef EMBEDDED
 #ifdef CFG_USE_GRAPHICS
     if(strncmp(url, "chart", strlen("chart")) == 0) {
-      unsigned long  sc[2] = { 0xf08080L, 0x4682b4L }; /* see clr[] in graph.c */
 
       /* Avoid to draw too many entries */
       if(num > myGlobals.maxNumLines) num = myGlobals.maxNumLines;

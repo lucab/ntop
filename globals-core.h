@@ -94,6 +94,9 @@ extern void _setResolvedName(HostTraffic *el, char *updateValue, short updateTyp
 
 extern int cmpFctnResolvedName(const void *_a, const void *_b);
 extern int cmpFctnLocationName(const void *_a, const void *_b);
+extern void unescape_url(char *url);
+extern void revertSlash(char *str, int mode);
+extern void revertDoubleColumn(char *str);
 
 /****** function declarations ***** */
 
