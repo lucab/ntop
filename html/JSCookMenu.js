@@ -858,7 +858,7 @@ function cmGetXAt (obj, elm)
 	}
 	if (obj == elm)
 		return x;
-	return cmGetX (elm) - x;
+	return x - cmGetX (elm);
 }
 
 function cmGetY (obj)
@@ -902,7 +902,7 @@ function cmGetYAt (obj, elm)
 
 	if (obj == elm)
 		return y;
-	return cmGetY (elm) - y;
+	return y - cmGetY (elm);
 }
 
 //
