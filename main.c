@@ -294,7 +294,6 @@ static void checkUserIdentity(int userSpecified) {
    * set user to be as inoffensive as possible
    */
   if(!setSpecifiedUser()) {
-
     if(userSpecified) {
       /* User located */
       if((myGlobals.userId != 0) || (myGlobals.groupId != 0)) {
@@ -748,8 +747,6 @@ static int parseOptions(int argc, char* argv []) {
   */
 
   if(!userSpecified) {
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "getuid(): %d", getuid());
-    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "geteuid(): %d", geteuid());
     if(getuid() == 0) {
       /* We're root */
       char *user;
@@ -780,17 +777,12 @@ static int parseOptions(int argc, char* argv []) {
     myGlobals.userId  = getuid();
     myGlobals.groupId = getgid();
 
+    traceEvent(CONST_TRACE_WARNING, "You need root capabilities to capture network packets.");
+
     if(strcmp(pw->pw_passwd, "x") == 0) {
 #ifdef HAVE_SHADOW_H
       /* Use shadow passwords */
       struct spwd *spw;
-
-      if(setuid(0) || setuid(0)) {
-	traceEvent(CONST_TRACE_ERROR, "Sorry I'm unable to become root. Please check whether this application");
-	traceEvent(CONST_TRACE_ERROR, "has the sticky bit set and the owner is root:root. Otherwise");
-	traceEvent(CONST_TRACE_ERROR, "please run ntop as root.");
-	exit(-1);
-      }
 
       spw = getspnam("root");
       if(spw == NULL) {
@@ -810,7 +802,20 @@ static int parseOptions(int argc, char* argv []) {
     encrypted = crypt(theRootPw, correct);
 
     if(strcmp(encrypted, correct) == 0) {
-      /* traceEvent(CONST_TRACE_INFO, "Root pw is OK"); */
+      traceEvent(CONST_TRACE_INFO, "The root password is correct");
+
+      if(setuid(0) || setgid(0)) {
+	traceEvent(CONST_TRACE_ERROR, "Sorry I'm unable to become root. Please check whether this application");
+	traceEvent(CONST_TRACE_ERROR, "has the sticky bit set and the owner is %s. Otherwise",
+#ifdef DARWIN
+		   "root:wheel"
+#else
+		   "root:root"
+#endif
+		   );
+	traceEvent(CONST_TRACE_ERROR, "please run ntop as root.");
+	exit(-1);
+      }
     } else {
       traceEvent(CONST_TRACE_ERROR, "The specified root password is not correct.");
       traceEvent(CONST_TRACE_ERROR, "Sorry, %s uses network interface(s) in promiscuous mode, "
@@ -1079,7 +1084,6 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Listening on [%s]", ifStr);
 
   /* ******************************* */
-
   checkUserIdentity(userSpecified);
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Loading Plugins");

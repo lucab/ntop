@@ -983,8 +983,12 @@ void addDevice(char* deviceName, char* deviceDescr) {
 	myGlobals.device[deviceId].deviceSpeed = adapter.LinkSpeed;
       } else
 	PacketCloseAdapter((LPTSTR)myGlobals.device[deviceId].name);
+#else
+    if(setuid(0) == -1) {
+      traceEvent(CONST_TRACE_FATALERROR, "Unable to become root");
+    }
 #endif
-    
+
       myGlobals.device[deviceId].pcapPtr =
 	pcap_open_live(myGlobals.device[deviceId].name,
 		       myGlobals.enablePacketDecoding == 0 ? 68 : DEFAULT_SNAPLEN, 
