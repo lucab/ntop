@@ -1361,6 +1361,10 @@ static int returnHTTPPage(char* pageName, int postLen) {
   } else if(strncmp(pageName, INFO_NTOP_HTML, strlen(INFO_NTOP_HTML)) == 0) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printNtopConfigInfo();
+  } else if(strncmp(pageName, DUMP_DATA_HTML, strlen(DUMP_DATA_HTML)) == 0) {
+    sendHTTPHeader(HTTP_TYPE_HTML, 0);
+    dumpNtopHashes();
+    printTrailer=0;
   } else if(strlen(pageName) > 5) {
     int i;
     char hostName[32];

@@ -122,7 +122,7 @@ extern void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 					TrafficCounter tcSent, 
 					TrafficCounter tcRcvd);
 extern char* getNbNodeType(char nodeType);
-
+extern void dumpNtopHashes();
 
 /* report.c */
 extern void initReports(void);
@@ -250,6 +250,8 @@ extern FILE* getNewRandomFile(char* fileName, int len);
 #define STR_SORT_DATA_RCVD_HOST_TRAFFIC "dataRcvdHostTraffic.html"
 #define STR_SORT_DATA_SENT_HOST_TRAFFIC "dataSentHostTraffic.html"
 #define SWITCH_NIC_HTML                 "switch.html"
+#define DUMP_DATA_HTML                  "dumpData.html"
+
 
 /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
 #define RESET_STATS_HTML              "resetStats.html"
