@@ -158,7 +158,7 @@ struct myicmphdr
 };
 
 
-#ifdef SFT_NEED_IN6ADDR
+#ifndef HAVE_IN6_ADDR
 struct in6_addr
 {
   union
@@ -171,7 +171,7 @@ struct in6_addr
 #define s6_addr16 in6_u.u6_addr16
 #define s6_addr32 in6_u.u6_addr32
 };
-#endif /* SFT_NEED_IN6ADDR */
+#endif /* HAVE_IN6_ADDR */
 
 #ifdef WIN32
 struct in6_addr {
