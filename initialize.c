@@ -1006,11 +1006,7 @@ void initDevices(char* devices) {
     tmpDevice->virtualDevice = 1;
     tmpDevice->datalink = DLT_EN10MB;
     tmpDevice->name = strdup("none (dummy device)");
-#ifdef HAVE_PCAP_OPEN_DEAD
     tmpDevice->pcapPtr = pcap_open_dead(DLT_EN10MB, 100);
-#else
-    tmpDevice->pcapPtr = NULL;
-#endif
     myGlobals.device = tmpDevice;
     myGlobals.numDevices = 1;
     traceEvent(CONST_TRACE_INFO, "-i none, so initialized only a dummy device");
@@ -1582,7 +1578,7 @@ void parseTrafficFilter(void) {
     struct bpf_program fcode;
 
     for(i=0; i<myGlobals.numDevices; i++) {
-      if(!myGlobals.device[i].virtualDevice) {
+      if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
 	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
 			 myGlobals.device[i].netmask.s_addr) < 0)
 	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {

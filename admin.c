@@ -584,7 +584,7 @@ int doChangeFilter(int len) {
 #endif
 
     for(i=0; i<myGlobals.numDevices; i++) {
-      if((!myGlobals.device[i].virtualDevice)&&(err==NULL)) {
+      if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice) && (err==NULL)) {
 	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
 			myGlobals.device[i].netmask.s_addr) < 0)
 	   || (pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {
@@ -660,7 +660,7 @@ int doChangeFilter(int len) {
     if(myGlobals.currentFilterExpression!=NULL) free(myGlobals.currentFilterExpression);
     myGlobals.currentFilterExpression = currentFilterExpressionSav;
     for(i=0; i<myGlobals.numDevices; i++) {      /* restore old filter expression */
-      if((!myGlobals.device[i].virtualDevice)&&(err==NULL)) {
+      if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice) && (err==NULL)) {
 	if((pcap_compile(myGlobals.device[i].pcapPtr, &fcode, myGlobals.currentFilterExpression, 1,
 			myGlobals.device[i].netmask.s_addr) < 0)) {
 	  if((pcap_setfilter(myGlobals.device[i].pcapPtr, &fcode) < 0)) {

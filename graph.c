@@ -1046,7 +1046,7 @@ void interfaceTrafficPie(void) {
   totPkts.value = 0;
 
   for(i=0; i<myGlobals.numDevices; i++)
-    if(!myGlobals.device[i].virtualDevice) {
+    if(myGlobals.device[i].pcapPtr && (!myGlobals.device[i].virtualDevice)) {
       if (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStat) >= 0) {
 	p[i] = (float)pcapStat.ps_recv;
 	totPkts.value += pcapStat.ps_recv;
