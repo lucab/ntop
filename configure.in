@@ -3757,6 +3757,7 @@ if test ".${ac_cv_header_rrd_h}"        = ".yes" &&
         echo "*        a version was found in a standard location."
         echo "*"
         echo "*       Since this version will be used anyway,"
+        echo "*>>>    we've ignored your specified location."
         echo "*"
         echo "*******************************************************************"
         echo

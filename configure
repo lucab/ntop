@@ -29067,6 +29067,7 @@ echo "${ECHO_T}ok" >&6
         echo "*        a version was found in a standard location."
         echo "*"
         echo "*       Since this version will be used anyway,"
+        echo "*>>>    we've ignored your specified location."
         echo "*"
         echo "*******************************************************************"
         echo
