@@ -4,7 +4,7 @@
  HAS_ERROR=
  HAS_WARNING=
  
--NTOP_VERSION_EXTRA=" SourceForge .tgz"
+-NTOP_VERSION_EXTRA=""
 +NTOP_VERSION_EXTRA="SourceForge RPM"
  
  echo
@@ -15,7 +15,7 @@
  HAS_ERROR=
  HAS_WARNING=
  
--NTOP_VERSION_EXTRA=" SourceForge .tgz"
+-NTOP_VERSION_EXTRA=""
 +NTOP_VERSION_EXTRA="SourceForge RPM"
  
  echo

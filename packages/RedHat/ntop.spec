@@ -2,16 +2,17 @@
 
 Summary: ntop shows the network usage
 Name: ntop
-Version: 3.0rc1
+Version: 3.1
 Release: 0
-Source: ntop-3.0rc1.tgz
+Source: ntop-3.1.tgz
 Source1: ntop.init
 Source2: ntop.logrotate
 Source3: ntop.conf.sample
 Source4: 1STRUN.txt
 Source5: FAQ
 Patch1: version.patch
-#Patch2: makefile_am.patch
+Patch2: cfgdbfile.patch
+#Patch3: makefile_am.patch
 Copyright: GPL
 Group: Applications/System
 BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, autoconf, automake, binutils, openssl, openssl-devel, gdbm, gdbm-devel, libpcap, zlib-devel, glib-devel
@@ -28,37 +29,7 @@ extracted from the web server in formats suitable for manipulation in perl or ph
 
 See 1STRUN.txt for the 1st time startup procedure!  See FAQ for answers to questions.
 
-ntop 3.0rc1 is a TEST release, from the ntop cvs tree at cvs.ntop.org.
-Our intention is to release this or something much like it as ntop 3.0
-in a short period of time.
-
-There are no major changes 3.0pre2... minor stuff:
-
-  * A few minor tweaks of things found by Valgrind
-  * Luca's changes on how ntop reports dropped packets
-  * Minor mods to the m4 macros so that the newest auto* tools don't choke
-  * force_runtime added to version.c from configureextra
-  * optional remote fingerprint page restored
-  * make listlibclean and libclean options
-  * Capture length problem, and Solaris 9's hate for ehdr.ether_dhost were fixed
-  * Locale info added to info.html and textinfo.html
-
-docs/FAQ has been extensively re-written!
-
-For those upgrading from 2.2, note:
-
-   gdchart is gone - replaced by a small, focused, internal graphics creator,
-   graph.c.  We still use the gd library.
-
-   This version is compiled with a frozen, captive version of rrdtool, called
-   myrrd. It is compiled and linked automatically.
-
-   The so-called 'large population model' for rrd data files is now standard.
-   There is a script at SourceForge in the user contributed area to help
-   convert - but backup your data FIRST.
-
-   The netflow Plugin no longer acts as a probe (that is sending netflow
-   packets to another device).
+ntop 3.1 is a STABLE, PRODUCTION release.
 
 This version is compiled WITH SSLv3.
 
@@ -68,14 +39,12 @@ This version is compiled WITH --enable-i18n.
 
 SSLWATCHDOG is not compiled but may be selected at run time.
 
-Note that the command line version, intop, is gone.
-
-This version is compiled on a Pentium III, under RedHat 9.0.
+This version is compiled on a Pentium 4, under Fedora Core 2.
 
 YOU MUST SETUP A PASSWORD BEFORE RUNNING NTOP - see 1STRUN.txt in /usr/share/doc/ntop-<release>
 
 Please send problem reports (using the automatically generated form if at all possible)
-(Click on the 'bug' icon on the About tab) to the ntop mailing list.
+(Click on the 'bug' icon in the About menu) to the ntop mailing list.
 
 %prep
 %setup -q -c ${NAME}${VERSION}
@@ -83,10 +52,9 @@ Please send problem reports (using the automatically generated form if at all po
 %build
 unset RPM_OPT_FLAGS
 %undefine optflags 
-# Adjust the .tgz format to what we expect for build...
-mv ntop-3.0rc1 ntop
 # Patches
 patch -p0 < ../../SOURCES/version.patch
+patch -p0 < ../../SOURCES/cfgdbfile.patch
 #patch -p0 < ../../SOURCES/makefile_am.patch
 cd ntop
 # Now, configure and build ntop
@@ -222,8 +190,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/plugins
 %{_libdir}/libntop*
 %{_libdir}/lib*Plugin*
+%{_libdir}/libmyrrd*
 
 %changelog
+* Mon Dec 20 2004 Burton M. Strauss III <burton@ntopsupport.com>
+- v3.1 - Production Release
+
+* Mon Dec 13 2004 Burton M. Strauss III <burton@ntopsupport.com>
+- v3.1rc1 - TEST release for 3.1
+
 * Thu Mar 18 2004 Burton M. Strauss III <burton@ntopsupport.com>
 - v3.0rc1 - TEST release for 3.0
 
