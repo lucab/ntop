@@ -54,7 +54,7 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
                        ntop-config stamp-h.in
 
 
-SUBDIRS = . @PLUGINS@ @INTOP@ @REMOTEINTERFACE@
+SUBDIRS = . @PLUGINS@ @INTOP@
 
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               MANIFESTO NEWS PORTING  \
@@ -77,12 +77,11 @@ EXTRA_DIST = Makefile.am Makefile.in \
 
 WEBFILES       = `cat www/FILES`
 PLUGINSFILES   = `cat plugins/FILES`
-REMOTEAPIFILES = `cat remoteInterfaceAPI/FILES`
 INTOPFILES     = `cat intop/FILES`
 DATABASEFILES  = `cat database/FILES`
 DOCSFILES      = `cat docs/FILES`
 
-THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) \
+THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) \
 		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
 
 #

@@ -140,7 +140,7 @@ CLEANFILES = $(DISTCLEANFILES)
 MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess                        config.h.in config.sub configure install-sh                        ltconfig ltmain.sh missing mkinstalldirs                        ntop-config stamp-h.in
 
 
-SUBDIRS = . @PLUGINS@ @INTOP@ @REMOTEINTERFACE@
+SUBDIRS = . @PLUGINS@ @INTOP@
 
 DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog               MANIFESTO NEWS PORTING                SUPPORT_NTOP.txt               THANKS               ntop.8 ntop.txt ntop.html               ntop-cert.pem ntop-rules.8 rules.sample
 
@@ -153,12 +153,11 @@ EXTRA_DIST = Makefile.am Makefile.in              acconfig.h acinclude.m4 acincl
 
 WEBFILES = `cat www/FILES`
 PLUGINSFILES = `cat plugins/FILES`
-REMOTEAPIFILES = `cat remoteInterfaceAPI/FILES`
 INTOPFILES = `cat intop/FILES`
 DATABASEFILES = `cat database/FILES`
 DOCSFILES = `cat docs/FILES`
 
-THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) $(REMOTEAPIFILES) 		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
+THINGS_TO_DISTRIBUTE = $(DISTFILES) $(NTOPHTML) $(PLUGINSFILES) 		       $(INTOPFILES) $(DATABASEFILES) $(DOCSFILES) $(WEBFILES)
 
 
 #
