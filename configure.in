@@ -481,9 +481,7 @@ if test $ac_cv_ether_header_has_ea = yes ; then
 fi
 
 dnl> OPTIONAL tcp wrapper headers
-if test ".$ac_enable_tcpwrap" = ".yes"; then
- AC_CHECK_HEADERS(tcpd.h syslog.h)
-fi
+AC_CHECK_HEADERS(tcpd.h syslog.h sys/syslog.h)
 
 dnl> OPTIONAL UCD-SNMP
 dnl> AC_HAVE_HEADERS(ucd-snmp/ucd-snmp-agent-includes.h)
