@@ -817,6 +817,7 @@ if test ".${GDBM_ROOT}" != .; then
     AC_MSG_ERROR([ The GNU Gdbm Library development tree seems corrupted or incomplete!])
   fi
 else
+  AC_HAVE_HEADERS(gdbm.h)
   AC_CHECK_LIB(gdbm, gdbm_open, CORELIBS="$CORELIBS -lgdbm")
 fi
 
