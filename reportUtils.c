@@ -7194,23 +7194,23 @@ void printVsanProtocolStats (FcFabricElementHash *hash, int actualDeviceId)
 /* ************************************ */
 
 void printPluginTrailer(char *left, char *middle) {
-  sendString("<br>\n<hr>\n<br>\n<table border=\"0\" width=\"100%\"><tr><td width=\"20%\">");
+  sendString("<br>\n<hr>\n<br>\n<table border=\"0\" width=\"100%\"><tr>");
 
   if(left != NULL) {
-    sendString("[ <a href=\"../" CONST_PLUGINS_HEADER);
+    sendString("<td width=\"20%\">[ <a href=\"../" CONST_PLUGINS_HEADER);
     sendString(left);
     sendString("\">Refresh this data</a> ]");
+    sendString("&nbsp;</td>\n");  /* So there's at least something in to cell */
   }
-  sendString("&nbsp;");  /* So there's at least something in to cell */
 
-  sendString("</td>\n<td align=\"center\">");
+  sendString("<td align=\"left\">");
 
   sendString("&nbsp;");
   if(middle != NULL) 
     sendString(middle);
   sendString("&nbsp;");
 
-  sendString("</td>\n<td width=\"20%\" align=\"right\">"
+  sendString("</td>\n<td align=\"right\">"
              "&nbsp;[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]"
              "</td></tr></table>\n<br>\n");
 }

@@ -1546,7 +1546,7 @@ static void printNetFlowConfiguration(void) {
              "<p>Any option not indicated as taking effect immediately will require you "
              "to recycle (inactivate and then activate) the netFlow plugin in order "
              "for the change to take affect.</p>\n"
-             "<table width=\"100%\" border=\"1\" "TABLE_DEFAULTS">\n"
+             "<table width=\"80%\" border=\"1\" "TABLE_DEFAULTS">\n"
              "<tr><th colspan=\"2\" "DARK_BG">Item</th>\n"
              "<th "DARK_BG">Description</th>\n"
              "<th "DARK_BG">Action</th></tr>\n");
@@ -1579,7 +1579,7 @@ static void printNetFlowConfiguration(void) {
     BufferTooShort();
   sendString(buf);
   sendString("\"></p>\n"
-             "<p><input type=\"submit\" value=\"set\"></p>\n"
+             "<p><input type=\"submit\" value=\"Set\"></p>\n"
              "</form>\n</td>\n"
              "</tr>\n");
 
@@ -1611,7 +1611,7 @@ static void printNetFlowConfiguration(void) {
     BufferTooShort();
   sendString(buf);
   sendString("\"></p>\n"
-             "<p><input type=\"submit\" value=\"set\"></p>\n"
+             "<p><input type=\"submit\" value=\"Set\"></p>\n"
              "</form>\n</td>\n"
              "</tr>\n");
 
@@ -1685,7 +1685,7 @@ static void printNetFlowConfiguration(void) {
 
   sendString("</SELECT>\n");
   sendString("</p>\n"
-             "<p><input type=\"submit\" value=\"set\"></p>\n"
+             "<p><input type=\"submit\" value=\"Set\"></p>\n"
              "</form>\n</td>\n"
              "</tr>\n");
 
@@ -1706,7 +1706,7 @@ static void printNetFlowConfiguration(void) {
     BufferTooShort();
   sendString(buf);
   sendString("\"></p>\n"
-             "<p><input type=\"submit\" value=\"set\"></p>\n"
+             "<p><input type=\"submit\" value=\"Set\"></p>\n"
              "</form>\n</td>\n"
              "</tr>\n");
 
@@ -1726,7 +1726,7 @@ static void printNetFlowConfiguration(void) {
     BufferTooShort();
   sendString(buf);
   sendString("\"></p>\n"
-             "<p><input type=\"submit\" value=\"set\"></p>\n"
+             "<p><input type=\"submit\" value=\"Set\"></p>\n"
              "</form>\n</td>\n"
              "</tr>\n");
 
@@ -1775,7 +1775,7 @@ static void printNetFlowConfiguration(void) {
   for(i=0; i<myGlobals.numDevices; i++) {
     if(!myGlobals.device[i].virtualDevice) {
       if(snprintf(buf, sizeof(buf), 
-                  "<p>%s&nbsp;<a href=\"/" CONST_PLUGINS_HEADER "%s?%s=%s\">%s</a></p>\n",
+                  "<p>%s&nbsp;[ <a href=\"/" CONST_PLUGINS_HEADER "%s?%s=%s\">%s</a> ]</p>\n",
 		  myGlobals.device[i].name,
                   netflowPluginInfo->pluginURLname,
                   myGlobals.device[i].name,
@@ -1812,7 +1812,7 @@ static void printNetFlowConfiguration(void) {
   theDest.s_addr = ntohl(myGlobals.netFlowDest.sin_addr.s_addr);
   sendString(_intoa(theDest, buf, sizeof(buf)));
   sendString("\">&nbsp;:2055</p>\n"
-             "<p><input type=\"submit\" value=\"set\"></p>\n"
+             "<p><input type=\"submit\" value=\"Set\"></p>\n"
              "</form>\n</td>\n"
              "</tr>\n");
 
@@ -1855,7 +1855,7 @@ static void printNetFlowConfiguration(void) {
     sendString("<input type=\"radio\" name=\"netFlowAssumeFTP\" value=\"1\">Yes\n"
                "<input type=\"radio\" name=\"netFlowAssumeFTP\" value=\"0\" checked>No\n");
   }
-  sendString("</p>\n<p><input type=\"submit\" value=\"set\"></p>\n"
+  sendString("</p>\n<p><input type=\"submit\" value=\"Set\"></p>\n"
              "</form>\n</td>\n"
              "</tr>\n");
 
@@ -1881,7 +1881,7 @@ static void printNetFlowConfiguration(void) {
     sendString("<input type=\"radio\" name=\"debug\" value=\"0\" checked>Off");
   }
 
-  sendString("</p>\n<p><input type=\"submit\" value=\"set\"></p>\n"
+  sendString("</p>\n<p><input type=\"submit\" value=\"Set\"></p>\n"
              "</form>\n</td>\n"
              "</tr>\n");
 
@@ -2686,12 +2686,11 @@ static void handleNetflowHTTPrequest(char* url) {
              "<td width=\"10%\">&nbsp;</td>\n</tr>\n</table>\n");
 
   printPluginTrailer(((myGlobals.numNetFlowsPktsRcvd > 0) || (myGlobals.numNetFlowsPktsSent > 0)) ?
-                         netflowPluginInfo->pluginURLname :
-                         NULL,
-                     "NetFlow is a trademark of "
-                     "<a href=\"http://www.cisco.com/\" "
+		     netflowPluginInfo->pluginURLname :
+		     NULL,
+                     "NetFlow is a trademark of <a href=\"http://www.cisco.com/\" "
                      "title=\"Cisco home page\">Cisco Systems</a>");
-
+  
   printHTMLtrailer();
 }
 
