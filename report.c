@@ -1117,9 +1117,16 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	    short numAddresses = 0;
 
 	    if(el->nbHostName && el->nbDomainName) {
-	      if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
-			  el->nbHostName, el->nbDomainName) < 0)
+	      
+	      if(el->nbAccountName) {
+		if(snprintf(buf, sizeof(buf), "%s&nbsp;%s@%s&nbsp;[%s]", getOSFlag("Windows", 0),
+			    el->nbAccountName, el->nbHostName, el->nbDomainName) < 0)
 		 traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      } else {
+		if(snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Windows", 0),
+			    el->nbHostName, el->nbDomainName) < 0)
+		 traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      }
 	      sendString(buf);
 	      numAddresses++;
 	    } else if(el->nbHostName) {

@@ -1264,7 +1264,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   HostTraffic *dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
   struct timeval tvstrct;
   u_int firstEmptySlot = NO_PEER;
-  char rcStr[128];
+  u_char rcStr[256];
   int len = 0;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
@@ -1904,9 +1904,24 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	memset(rcStr, 0, sizeof(rcStr));
 	memcpy(rcStr, packetData, len);
 
-	if((rcStr[0] == 0x0) /* Message type: Session message */
-	     && (rcStr[8] == 0x73) /* SMB Command: SMBsesssetupX */) {
-	    int i;
+	if(rcStr[0] == 0x81) /* Session request */ {
+	  char decodedStr[64];
+	  int pos;
+
+	  pos = 5;	  
+	  decodeNBstring(&rcStr[5], decodedStr);
+	  
+	  if((decodedStr[0] != '\0') && (dstHost->nbHostName == NULL))
+	    dstHost->nbHostName = strdup(decodedStr); /* dst before src */
+	  
+	  pos = 5+(2*strlen(decodedStr))+2;
+	  decodeNBstring(&rcStr[pos], decodedStr);
+	  
+	  if((decodedStr[0] != '\0') && (srcHost->nbHostName == NULL))
+	    srcHost->nbHostName = strdup(decodedStr);	  
+	} else if((rcStr[0] == 0x0) /* Message type: Session message */
+		  && (rcStr[8] == 0x73) /* SMB Command: SMBsesssetupX */) {
+	  int i;
 
 #ifdef DEBUG
 	    for(i=0; i<len; i++)
@@ -1922,9 +1937,13 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		srcHost->osName = strdup(&rcStr[45]);
 	    } else /* dport == 139 */ {
 	      /* Request */
-	      i = 89;
+	      char len;
 
-	      if(srcHost->nbHostName == NULL) srcHost->nbHostName = strdup(&rcStr[i]);
+	      len = rcStr[51]+rcStr[53]; /* ANSI and UNICODE pw length */
+
+	      i = 65+len;
+
+	      if(srcHost->nbAccountName == NULL) srcHost->nbAccountName = strdup(&rcStr[i]);
 #ifdef DEBUG
 	      printf("Account Name: %s\n", &rcStr[i]);
 #endif

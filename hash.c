@@ -912,15 +912,16 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
 #endif
 
   if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
-  if(host->nbHostName != NULL)   free(host->nbHostName);
-  if(host->nbDomainName != NULL) free(host->nbDomainName);
-  if(host->nbDescr != NULL)      free(host->nbDescr);
-  if(host->atNodeName != NULL)   free(host->atNodeName);
+  if(host->nbHostName != NULL)          free(host->nbHostName);
+  if(host->nbAccountName != NULL)       free(host->nbAccountName);
+  if(host->nbDomainName != NULL)        free(host->nbDomainName);
+  if(host->nbDescr != NULL)             free(host->nbDescr);
+  if(host->atNodeName != NULL)          free(host->atNodeName);
   for(i=0; i<MAX_NODE_TYPES; i++)
     if(host->atNodeType[i] != NULL)
       free(host->atNodeType[i]);
-  if(host->atNodeName != NULL)   free(host->atNodeName);
-  if(host->ipxHostName != NULL)  free(host->ipxHostName);
+  if(host->atNodeName != NULL)          free(host->atNodeName);
+  if(host->ipxHostName != NULL)         free(host->ipxHostName);
 
   if(host->osName != NULL)
     free(host->osName);
@@ -1146,8 +1147,10 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
     for(idx=1; idx<device[actDevice].actualHashSize; idx++) {
       if(flaggedHosts[idx] == 1) {
 	freeHostInfo(actDevice, idx, 0);
+#ifdef DEBUG
 	traceEvent(TRACE_INFO, "Host (idx=%d) purged (%d hosts purged)",
 		   idx, numFreedBuckets);
+#endif
 	numFreedBuckets++;
       }
 

@@ -432,6 +432,7 @@ extern int checkCommand(char* commandName);
 extern void readLsofInfo(void);
 extern void readNepedInfo(void);
 extern char *getHostOS(char* ipAddr, int port, char* additionalInfo);
+extern char* decodeNBstring(char* theString, char *theBuffer);
 extern void closeNwSocket(int *sockId);
 extern char *savestr(const char *str);
 extern int name_interpret(char *in, char *out);

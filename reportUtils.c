@@ -566,7 +566,7 @@ char* getOSFlag(char* osName, int showOsName) {
     flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/mac.gif>";
   else if(strstr(osName, "Novell") != NULL)
     flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/novell.gif>";
-  else if(strstr(osName, "BSD") != NULL)
+  else if((strstr(osName, "BSD") != NULL) || (strstr(osName, "Unix") != NULL))
     flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/bsd.gif>";
   else if(strstr(osName, "HP-UX") != NULL)
     flagImg = "<IMG ALIGN=MIDDLE SRC=/statsicons/os/hp.gif>";
@@ -2774,13 +2774,25 @@ void printHostDetailedInfo(HostTraffic *el) {
   }
 
   if((el->nbHostName != NULL) && (el->nbDomainName != NULL)) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-		"%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
-		getRowColor(), "NetBios&nbsp;Name",
-		el->nbHostName, el->nbDomainName,
-		getNbNodeType(el->nbNodeType),
-		el->nbDescr ? el->nbDescr : "") < 0)
-      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    
+    if(el->nbAccountName) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+		  "%s@%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
+		  getRowColor(), "NetBios&nbsp;Name",
+		  el->nbAccountName, el->nbHostName, el->nbDomainName,
+		  getNbNodeType(el->nbNodeType),
+		  el->nbDescr ? el->nbDescr : "") < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+    } else {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+		  "%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
+		  getRowColor(), "NetBios&nbsp;Name",
+		  el->nbHostName, el->nbDomainName,
+		  getNbNodeType(el->nbNodeType),
+		  el->nbDescr ? el->nbDescr : "") < 0)
+	traceEvent(TRACE_ERROR, "Buffer overflow!");
+    }
+    
     sendString(buf);
   } else if(el->nbHostName != NULL) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"

@@ -269,11 +269,14 @@ char* makeHostLink(HostTraffic *el, short mode,
     traceEvent(TRACE_INFO, "->'%s/%s'\n", symIp, el->ethAddressString);
 #endif
   } else {
-    if(el->nbHostName != NULL) {
-      strncpy(symIp, el->nbHostName, sizeof(linkName));
-    } else if(el->ipxHostName != NULL) {
-      strncpy(symIp, el->ipxHostName, sizeof(linkName));
-    } 
+
+    if (usedEthAddress) {
+      if(el->nbHostName != NULL) {
+	strncpy(symIp, el->nbHostName, sizeof(linkName));
+      } else if(el->ipxHostName != NULL) {
+	strncpy(symIp, el->ipxHostName, sizeof(linkName));
+      } 
+    }
 
     if(el->hostNumIpAddress[0] != '\0') {
       tmpStr = el->hostNumIpAddress;

@@ -1443,6 +1443,33 @@ RETSIGTYPE (*setsignal (int sig, RETSIGTYPE (*func)(int)))(int)
 
 /* ************************************ */
 
+char* decodeNBstring(char* theString, char *theBuffer) {  
+  int i=0, j = 0, len=strlen(theString);
+  
+  while((i<len) && (theString[i] != '\0')) {
+    char encodedChar, decodedChar;
+      
+    encodedChar =  theString[i++];
+    if((encodedChar < 'A') || (encodedChar > 'Z')) break; /* Wrong character */
+    
+    encodedChar -= 'A';
+    decodedChar = encodedChar << 4;
+    
+    encodedChar =  theString[i++];
+    if((encodedChar < 'A') || (encodedChar > 'Z')) break; /* Wrong character */
+    
+    encodedChar -= 'A';
+    decodedChar |= encodedChar;
+    
+    theBuffer[j++] = decodedChar;
+  }
+  
+  theBuffer[j] = '\0';
+  return(theBuffer);
+}
+
+/* ************************************ */
+
 char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 #ifdef WIN32
   return(NULL);
