@@ -921,10 +921,11 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifndef WIN32
-  pause();
+  /* pause(); */
 #endif
+
   while(!myGlobals.endNtop)
-    sleep(30);
+    sleep(3000);
 
   return(0);
 }
