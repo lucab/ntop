@@ -1276,6 +1276,13 @@ if test ".${LOCALEDIR}" = "."; then
     LOCALEDIR="/usr/lib/locale"
 fi
 
+dnl> Add /usr/local/
+CFLAGS="${CFLAGS} -I/usr/local/include"
+CPPFLAGS="${CPPFLAGS} -I/usr/local/include"
+LDFLAGS="${LDFLAGS} -L/usr/local/lib"
+
+
+
 echo
 echo "Test the compiler and setup CFLAGS..."
 echo
