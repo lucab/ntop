@@ -1210,10 +1210,12 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	row = strtok_r(rcStr, "\n", &strtokState);
 
 	while(row != NULL) {
-	  if(strncmp(row, "User-Agent:", 11) == 0) {
+	  int len = strlen(row);
+	  
+	  if((len > 12) && (strncmp(row, "User-Agent:", 11) == 0)) {
 	    char *token, *tokState, *browser = NULL, *os = NULL;
 
-	    row[strlen(row)-1] = '\0';
+	    row[len-1] = '\0';
 
 	    /*
 	      Mozilla/4.0 (compatible; MSIE 5.01; Windows 98)
@@ -1267,10 +1269,10 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 	      }
 	    }
 	    break;
-	  }	else if(strncmp(row, "Host:", 5) == 0) {
+	  } else if((len > 6) && (strncmp(row, "Host:", 5) == 0)) {
 	    char *host;
 
-	    row[strlen(row)-1] = '\0';
+	    row[len-1] = '\0';
 
 	    host = &row[6];
 	    if(strlen(host) > 48)
