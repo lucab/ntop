@@ -286,7 +286,9 @@ void drawArea(short width,
 	      FILE* filepointer,            /* open file pointer, can be stdout */
 	      int   num_points,
 	      char  *labels[],              /* slice labels */
-	      float data[]) {
+	      float data[],
+	      char *xtitle,
+	      char *ytitle) {
   gdImagePtr im;
   int black, white, colors[64], numColors, i, maxval=0;
   int center_x, center_y, base;
@@ -331,8 +333,6 @@ void drawArea(short width,
   dypix = ysize / (ngrid + 1); // pixels between grid lines
 
   for (i = 0; i <= (ngrid + 1); i++) { 
-    char str[16];
-
     // height of grid line in units of data
     ydat = i * dydat; 
     snprintf(str, sizeof(str), "%.1f", ydat);
@@ -384,8 +384,11 @@ void drawArea(short width,
       gdImageFilledRectangle(im, points[0].x-1, points[0].y-1, points[0].x+1, points[0].y+1, black); 
       gdImageFilledRectangle(im, points[3].x-1, points[3].y-1, points[3].x+1, points[3].y+1, black); 
       gdImageLine(im, points[0].x, points[0].y, points[3].x, points[3].y, black); 
-      snprintf(str, sizeof(str), "%5s",labels[i]);
-      gdImageStringUp(im, gdFontSmall, points[0].x-gdFontSmall->w, height-2, str, black);
+
+      if((i % 2) == 0) {
+	snprintf(str, sizeof(str), "%5s",labels[i]);
+	gdImageStringUp(im, gdFontSmall, points[0].x-gdFontSmall->w, height-2, str, black);
+      }
 
       // x labels
       txtsz = gdFontSmall->w * strlen(labels[i]); 
@@ -398,6 +401,15 @@ void drawArea(short width,
 
   // plot frame
   gdImageRectangle(im, hmargin, vmargin/2, hmargin + xsize, vmargin/2 + ysize, black); 
+
+  if(xtitle) {
+    gdImageString(im, gdFontSmall, (width/2)-(strlen(xtitle)*gdFontSmall->w)/2,
+		  height-gdFontSmall->h-2, xtitle, black);
+  }
+
+  if(ytitle) {
+    gdImageString(im, gdFontSmall, 5, 2, ytitle, black);
+  }
 
   /* ************************* */
 
@@ -1365,7 +1377,7 @@ void drawThptGraph(int sortedColumn) {
 	     fd,          /* open FILE pointer       */
 	     60,          /* num points per data set */
 	     (char**)lbls,        /* X labels array of char* */
-	     graphData);  /* dataset 1   */
+	     graphData, NULL, "Throughput");  /* dataset 1   */
     break;
   case 2: /* 24 Hours */
     for(i=0; i<24; i++) {
@@ -1397,7 +1409,7 @@ void drawThptGraph(int sortedColumn) {
 	     fd,/* open FILE pointer       */
 	     24,/* num points per data set */
 	     lbls,          /* X labels array of char* */
-	     graphData);    /* dataset 1   */
+	     graphData, NULL, "Throughput");    /* dataset 1   */
     break;
   case 3: /* 30 Days */
     for(i=0; i<30; i++) {
@@ -1429,7 +1441,7 @@ void drawThptGraph(int sortedColumn) {
 	     fd,    /* open FILE pointer       */
 	     30,    /* num points per data set */
 	     lbls,  /* X labels array of char* */
-	     graphData);        /* dataset 1   */
+	     graphData, NULL, "Throughput");        /* dataset 1   */
     break;
   }
 
@@ -1623,7 +1635,7 @@ int drawHostsDistanceGraph(int checkOnly) {
 	   fd,          /* open FILE pointer       */
 	   30,          /* num points per data set */
 	   lbls,        /* X labels array of char* */
-	   graphData);  /* dataset 1   */
+	   graphData, "Hops (TTL)", "Number of Hosts");  /* dataset 1   */
 
   fclose(fd);
 

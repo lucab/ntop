@@ -1672,11 +1672,11 @@ static void flowsProcess(const struct pcap_pkthdr *h, const u_char *p, int devic
       incrementTrafficCounter(&list->bytes, h->len);
       incrementTrafficCounter(&list->packets, 1);
       if(list->pluginStatus.pluginPtr != NULL) {
-	void(*pluginFunc)(u_char*, const struct pcap_pkthdr*, const u_char*);
+	void(*pluginFunct)(u_char*, const struct pcap_pkthdr*, const u_char*);
 
-	pluginFunc = (void(*)(u_char *_deviceId, const struct pcap_pkthdr*,
-			      const u_char*))list->pluginStatus.pluginPtr->pluginFunc;
-	pluginFunc((u_char*)&deviceId, h, p);
+	pluginFunct = (void(*)(u_char *_deviceId, const struct pcap_pkthdr*,
+			      const u_char*))list->pluginStatus.pluginPtr->pluginFunct;
+	pluginFunct((u_char*)&deviceId, h, p);
 #ifdef DEBUG
 	printf("Match on %s for '%s'\n", myGlobals.device[deviceId].name,
 	       list->flowName);

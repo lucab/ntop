@@ -297,7 +297,8 @@ extern void drawGlobalIpProtoDistribution(void);
 extern void drawBar(short width, short height, FILE* filepointer,
 		    int   num_points, char  *labels[], float data[]);
 extern void drawArea(short width, short height, FILE* filepointer,
-		     int   num_points, char  *labels[], float data[]);
+		     int   num_points, char  *labels[], float data[],
+		     char *xtitle, char *ytitle);
 extern void drawPie(short width, short height, FILE* filepointer,
 		    int   num_points, char  *labels[], float data[]);
 
