@@ -725,6 +725,16 @@ typedef struct ssl_connection {
 
 #endif /* HAVE_OPENSSL */
 
+/*
+ * This constant defines the size of the _mtuSize and _headerSize arrays (globals-core.c)
+ * It needs to be at least as large as the largest value defined in bpf.h.  Remember, your
+ * version of bpf.h isn't always everyone else's version.  For the latest & greatest (?)
+ * see: http://cvs.tcpdump.org/cgi-bin/cvsweb/libpcap/bpf/net/bpf.h
+ *    Last sync: Sep2002, BStrauss
+ */
+
+#define DLT_ARRAY_MAXIMUM    123
+
 /* ********************************************* */
 
 #ifndef PACKETSZ /* Missing declarations */

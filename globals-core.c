@@ -41,44 +41,8 @@ char *version, *osName, *author, *buildDate,
             *install_path;
 #endif
 
-static u_short _mtuSize[] = {
-  8232,   	/* no link-layer encapsulation */
-  /* 1500 + 14 bytes header
-     Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
-  1500+sizeof(struct ether_header),   /* Ethernet (10Mb) */
-  UNKNOWN_MTU,  /* Experimental Ethernet (3Mb) */
-  UNKNOWN_MTU,  /* Amateur Radio AX.25 */
-  17914,	/* Proteon ProNET Token Ring */
-  UNKNOWN_MTU,  /* Chaos */
-  4096+sizeof(struct tokenRing_header),	        /* IEEE 802 Networks */
-  UNKNOWN_MTU,  /* ARCNET */
-  UNKNOWN_MTU,  /* Serial Line IP */
-  UNKNOWN_MTU,  /* Point-to-point Protocol */
-  4470,	        /* FDDI - Courtesy of Richard Parvass <Richard.Parvass@ReckittBenckiser.com> */
-  9180,         /* LLC/SNAP encapsulated atm */
-  UNKNOWN_MTU,  /* raw IP */
-  UNKNOWN_MTU,  /* BSD/OS Serial Line IP */
-  UNKNOWN_MTU	/* BSD/OS Point-to-point Protocol */
-};
-
-
-static u_short _headerSize[] = {
-  NULL_HDRLEN,  /* no link-layer encapsulation */
-  sizeof(struct ether_header),	        /* Ethernet (10Mb) */
-  UNKNOWN_MTU,  /* Experimental Ethernet (3Mb) */
-  UNKNOWN_MTU,  /* Amateur Rdio AX.25 */
-  sizeof(struct tokenRing_header),	/* Proteon ProNET Token Ring */
-  UNKNOWN_MTU,  /* Chaos */
-  1492,	        /* IEEE 802 Networks */
-  UNKNOWN_MTU,  /* ARCNET */
-  UNKNOWN_MTU,  /* Serial Line IP */
-  PPP_HDRLEN,   /* Point-to-point Protocol */
-  sizeof(struct fddi_header),	        /* FDDI */
-  0,            /* LLC/SNAP encapsulated atm */
-  0,            /* raw IP */
-  UNKNOWN_MTU,  /* BSD/OS Serial Line IP */
-  UNKNOWN_MTU	/* BSD/OS Point-to-point Protocol */
-};
+static u_short _mtuSize[DLT_ARRAY_MAXIMUM];
+static u_short _headerSize[DLT_ARRAY_MAXIMUM];
 
 #ifdef WIN32
 extern char _wdir[];
@@ -288,6 +252,92 @@ void initNtopGlobals(int argc, char * argv[]) {
     memset(&myGlobals.transTimeHash[i], 0, sizeof(TransactionTime));
 
   myGlobals.dummyEthAddress[0] = '\0';
+
+      /*
+       *  Setup the mtu and header size tables. 
+       *
+       *  We set only the ones we specifically know... anything else will 
+       *  get mtu=UNKNOWN_MTU, header=0
+       *
+       *     If mtuSize is wrong, the only problem will be 1) erroneous-/mis-classification 
+       *     of packets as "too long", 2) the suspicious packet file, if one, may have
+       *     extra or missing entries, and 3) an erroneous line in the report.
+       *
+       *     If headerSize is wrong, the only problem will be in nfsPlugin.c, but this may
+       *     cause problems, as it uses the value to strip off the header so it can analyze
+       *     the nfs packet.
+       *
+       *  Remember that for most protocols, mtu isn't fixed - it's set by the routers
+       *  and can be tuned by the sysadmin, isp, et al for "best results".
+       *
+       *  These do need to be periodically resynced with tcpdump.org and with user experience.
+       *
+       *  History:
+       *      15Sep2002 - BStrauss
+       *
+       */
+
+  { int ii;
+    for (ii=0; ii<DLT_ARRAY_MAXIMUM; ii++) {
+        _mtuSize[ii]    = UNKNOWN_MTU;
+        _headerSize[ii] = 0;
+    }
+  }
+
+  _mtuSize[DLT_NULL] = 8232                                    /* no link-layer encapsulation */;
+  _headerSize[DLT_NULL] = NULL_HDRLEN;
+
+      /* 1500 + 14 bytes header Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
+  _mtuSize[DLT_EN10MB] = 1500+sizeof(struct ether_header)      /* Ethernet (10Mb) */;
+  _headerSize[DLT_EN10MB] = sizeof(struct ether_header);
+
+  _mtuSize[DLT_PRONET] = 17914                                 /* Proteon ProNET Token Ring */;
+  _headerSize[DLT_PRONET] = sizeof(struct tokenRing_header);
+
+  _mtuSize[DLT_IEEE802] = 4096+sizeof(struct tokenRing_header) /* IEEE 802 Networks */;
+  _headerSize[DLT_IEEE802] = 1492;       /* NOTE: This has to be wrong... */
+
+  /* _mtuSize[DLT_PPP] = ?                                        Point-to-point Protocol */
+  _headerSize[DLT_PPP] = PPP_HDRLEN;
+
+      /* Courtesy of Richard Parvass <Richard.Parvass@ReckittBenckiser.com> */
+  _mtuSize[DLT_FDDI] = 4470                                    /* FDDI */;
+  _headerSize[DLT_FDDI] = sizeof(struct fddi_header);
+
+  _mtuSize[DLT_ATM_RFC1483] = 9180                             /* LLC/SNAP encapsulated atm */;
+  _headerSize[DLT_ATM_RFC1483] = 0;
+
+  /* _mtuSize[DLT_RAW] = ?                                        raw IP */
+  _headerSize[DLT_RAW] = 0;
+
+  /* Others defined in bpf.h at tcpdump.org as of the resync - it would be NICE
+      to have values for these... */
+
+  /* _mtuSize[DLT_EN3MB] = ?                                    Experimental Ethernet (3Mb) */
+  /* _mtuSize[DLT_AX25] = ?                                     Amateur Radio AX.25 */
+  /* _mtuSize[DLT_CHAOS] = ?                                    Chaos */
+  /* _mtuSize[DLT_ARCNET] = ?                                   ARCNET */
+  /* _mtuSize[DLT_SLIP] = ?                                     Serial Line IP */
+  /* _mtuSize[DLT_SLIP_BSDOS] = ?                               BSD/OS Serial Line IP */
+  /* _mtuSize[DLT_PPP_BSDOS] = ?                                BSD/OS Point-to-point Protocol */
+  /* _mtuSize[DLT_ATM_CLIP] = ?                                 Linux Classical-IP over ATM */
+  /* _mtuSize[DLT_PPP_SERIAL] = ?                               PPP over serial with HDLC encapsulation */
+  /* _mtuSize[DLT_PPP_ETHER] = ?                                PPP over Ethernet */
+  /* _mtuSize[DLT_C_HDLC] = ?                                   Cisco HDLC */
+  /* _mtuSize[DLT_IEEE802_11] = ?                               IEEE 802.11 wireless */
+  /* _mtuSize[DLT_FRELAY] = ?                                   */
+  /* _mtuSize[DLT_LOOP] = ?                                     */
+  /* _mtuSize[DLT_LINUX_SLL] = ?                                */
+  /* _mtuSize[DLT_LTALK] = ?                                    */
+  /* _mtuSize[DLT_ECONET] = ?                                   */
+  /* _mtuSize[DLT_IPFILTER] = ?                                 */
+  /* _mtuSize[DLT_PFLOG] = ?                                    */
+  /* _mtuSize[DLT_CISCO_IOS] = ?                                */
+  /* _mtuSize[DLT_PRISM_HEADER] = ?                             */
+  /* _mtuSize[DLT_AIRONET_HEADER] = ?                           */
+  /* _mtuSize[DLT_HHDLC] = ?                                    */
+  /* _mtuSize[DLT_IP_OVER_FC] = ?                               */
+  /* _mtuSize[DLT_SUNATM] = ?                                   Solaris+SunATM */
 
   myGlobals.mtuSize        = _mtuSize;
   myGlobals.headerSize     = _headerSize;

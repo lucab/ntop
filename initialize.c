@@ -1126,36 +1126,75 @@ void initDeviceDatalink(void) {
       switch(myGlobals.device[i].name[0]) {
       case 't': /* TokenRing */
 	myGlobals.device[i].datalink = DLT_IEEE802;
+        traceEvent(TRACE_INFO, "Device %d(%s) is \"t...\", treating as DLT_IEEE802 (TokenRing)\n", 
+                               i,
+                               myGlobals.device[i].name);
 	break;
       case 'l': /* Loopback */
 	myGlobals.device[i].datalink = DLT_NULL;
+        traceEvent(TRACE_INFO, "Device %d(%s) is loopback, treating as DLT_NULL\n", 
+                               i,
+                               myGlobals.device[i].name);
 	break;
       default:
 	myGlobals.device[i].datalink = DLT_EN10MB; /* Ethernet */
+        traceEvent(TRACE_INFO, "Device %d(%s), treating as DLT_EN10MB (Ethernet)\n", 
+                               i,
+                               myGlobals.device[i].name);
       }
     }
   }
-#else
+#else /* Not AIX */
 
+  for(i=0; i<myGlobals.numDevices; i++)
+    if(!myGlobals.device[i].virtualDevice) {
 #if defined(__FreeBSD__)
-  for(i=0; i<myGlobals.numDevices; i++)
-    if(!myGlobals.device[i].virtualDevice) {
-      if(strncmp(myGlobals.device[i].name, "tun", 3) == 0)
+      if(strncmp(myGlobals.device[i].name, "tun", 3) == 0) {
 	myGlobals.device[i].datalink = DLT_PPP;
-      else
-	myGlobals.device[i].datalink = pcap_datalink(myGlobals.device[i].pcapPtr);
-    }
-
-#else
-  for(i=0; i<myGlobals.numDevices; i++)
-    if(!myGlobals.device[i].virtualDevice) {
-      myGlobals.device[i].datalink = pcap_datalink(myGlobals.device[i].pcapPtr);
+        traceEvent(TRACE_INFO, "Device %d(%s) is \"tun\", treating as DLT_PPP\n", 
+                               i,
+                               myGlobals.device[i].name);
+#else /* Not FreeBSD */
       if((myGlobals.device[i].name[0] == 'l') /* loopback check */
-	 && (myGlobals.device[i].name[1] == 'o'))
+	 && (myGlobals.device[i].name[1] == 'o')) {
 	myGlobals.device[i].datalink = DLT_NULL;
+        traceEvent(TRACE_INFO, "Device %d(%s) is loopback, treating as DLT_NULL\n", 
+                               i,
+                               myGlobals.device[i].name);
+#endif /* FreeBSD */
+      } else {
+	myGlobals.device[i].datalink = pcap_datalink(myGlobals.device[i].pcapPtr);
+        if (myGlobals.device[i].datalink > DLT_ARRAY_MAXIMUM) {
+            traceEvent(TRACE_WARNING, "WARNING: Device %d(%s) DLT_ value, %d, exceeds highest known value. " \
+                                      "Processing continues OK. " \
+                                      "Please report this to the ntop-dev list.\n",
+                                      i,
+                                      myGlobals.device[i].name,
+                                      myGlobals.device[i].datalink);
+        } else {
+            traceEvent(TRACE_INFO, "Device %d(%s) DLT_ is %d, assuming mtu %d, header %d\n", 
+                                   i,
+                                   myGlobals.device[i].name,
+                                   myGlobals.device[i].datalink,
+                                   myGlobals.mtuSize[myGlobals.device[i].datalink],
+                                   myGlobals.headerSize[myGlobals.device[i].datalink]);
+            if ( (myGlobals.mtuSize[myGlobals.device[i].datalink] == 0) ||
+                 (myGlobals.mtuSize[myGlobals.device[i].datalink] == UNKNOWN_MTU) ) {
+                traceEvent(TRACE_INFO, "WARNING: MTU value for DLT_  %d, is zero or unknown. " \
+                                          "Processing continues OK. " \
+                                          "Please report your MTU values (e.g. ifconfig) to the ntop-dev list.\n",
+                                          myGlobals.device[i].datalink);
+            }
+            if (myGlobals.headerSize[myGlobals.device[i].datalink] == 0) {
+                traceEvent(TRACE_INFO, "NOTE: Header value for DLT_  %d, is zero. " \
+                                          "Processing continues OK - don't use the nfs plugin. " \
+                                          "Please report this to the ntop-dev list.\n",
+                                          myGlobals.device[i].datalink);
+            }
+        }
+      }
     }
-#endif
-#endif
+#endif /* AIX */
 }
 
 /* ******************************* */

@@ -1638,7 +1638,8 @@ void processPacket(u_char *_deviceId,
   if(myGlobals.device[actualDeviceId].pcapDumper != NULL)
     pcap_dump((u_char*)myGlobals.device[actualDeviceId].pcapDumper, h, p);
 
-  if(length > myGlobals.mtuSize[myGlobals.device[deviceId].datalink]) {
+  if ( (myGlobals.device[deviceId].datalink < DLT_ARRAY_MAXIMUM) &&
+       (length > myGlobals.mtuSize[myGlobals.device[deviceId].datalink]) ) {
     /* Sanity check */
     if(myGlobals.enableSuspiciousPacketDump) {
       traceEvent(TRACE_INFO, "Packet # %u too long (len = %u)!\n",
