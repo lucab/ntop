@@ -132,6 +132,9 @@ static struct option const long_options[] = {
 
   { "set-admin-password",               optional_argument, NULL, 135 },
 
+  { "p3p-cp",                           required_argument, NULL, 137 },
+  { "p3p-uri",                          required_argument, NULL, 138 },
+
 #ifdef MAKE_WITH_XMLDUMP
   { "xmlfileout",                       required_argument, NULL, 139 },
   { "xmlfilesnap",                      required_argument, NULL, 140 },
@@ -243,6 +246,9 @@ void usage (FILE * fp) {
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);
 #endif
+
+  fprintf(fp, "    [--p3p-cp]                                            %sSet return value for p3p compact policy, header\n", newLine);
+  fprintf(fp, "    [--p3p-uri]                                           %sSet return value for p3p policyref header\n", newLine);
 
 #ifdef MAKE_WITH_XMLDUMP
   fprintf(fp, "    [--xmlfileout]                                        %sFile name for saving internal data during shutdown (xml)\n", newLine);
@@ -1074,6 +1080,12 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Initializing ntop");
 
   reportValues(&lastTime);
+
+  if(myGlobals.P3Pcp != NULL)
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "P3P: Compact Policy is '%s'", myGlobals.P3Pcp);
+
+  if(myGlobals.P3Puri != NULL)
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "P3P: Policy reference uri is '%s'", myGlobals.P3Puri);
 
   initNtop(myGlobals.devices);
 
