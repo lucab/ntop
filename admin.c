@@ -169,7 +169,6 @@ void doAddUser(int _len) {
   if(_len <= 0) {
     err = "ERROR: both user and password must be non empty fields.";
   } else {
-
     while(len > 0)
       {
 #ifdef HAVE_OPENSSL
@@ -253,15 +252,10 @@ void doAddUser(int _len) {
 #endif 
       if(gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE) != 0)
 	err = "FATAL ERROR: unable to add the new user.";
-
 #ifdef MULTITHREADED
       releaseMutex(&gdbmMutex);
 #endif 
     }
-
-#ifdef MULTITHREADED
-    releaseMutex(&gdbmMutex);
-#endif 
   }
 
   if(err != NULL) {
