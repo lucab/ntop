@@ -3471,6 +3471,12 @@ void printNtopConfigInfo(int textPrintFlag) {
     }
 #endif
 
+#ifndef WIN32
+  if(snprintf(buf, sizeof(buf), "%d", (int)myGlobals.webServerRequestQueueLength) < 0)
+    BufferTooShort();
+  printFeatureConfigInfo(textPrintFlag, "WebServer Request Queue", buf);
+#endif
+
   if(snprintf(buf, sizeof(buf), "%d", myGlobals.numDevices) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "Devices (Network Interfaces)", buf);
@@ -4861,11 +4867,12 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #endif
 
   errno = 0;
-  rc = listen(*sock, 2);
+  rc = listen(*sock, myGlobals.webServerRequestQueueLength);
   if((rc < 0) || (errno != 0)) {
-    traceEvent(CONST_TRACE_FATALERROR, "WEB:%s listen(%d, 2) error %s(%d)",
+    traceEvent(CONST_TRACE_FATALERROR, "WEB:%s listen(%d, %d) error %s(%d)",
                sslOrNot,
                *sock,
+               myGlobals.webServerRequestQueueLength,
                strerror(errno), errno);
     closeNwSocket(&myGlobals.sock);
     exit(-1);

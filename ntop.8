@@ -85,6 +85,8 @@ Unix options:
 .RB [ -L ]
 .RB [ -use-syslog=
 .IR <facility> ]
+.RB [ --webserver-queue
+.IR <number> ]
 
 Windows option:
 
@@ -944,6 +946,14 @@ mean the Broad category "Admin" and the detailed item "Switch NIC" on that Admin
 requires a number of external tools and libraries to operate.
 Certain other tools are optional, but add to the program's capabilities.
 
+.It --webserver-queue
+Specifies the maximum number of web server requests for the tcp/ip stack to retain in
+it's queue awaiting delivery to the
+.B ntop
+web server.  Requests in excess of this queue may be dropped (allowing for retransmission) or
+rejected at the tcp/ip stack level, depending upon the OS.
+Whatever happens, happens at the OS level, without any information being delivered to 
+.B ntop
 
 Required libraries include:
 

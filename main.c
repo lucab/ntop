@@ -149,6 +149,10 @@ static struct option const long_options[] = {
   { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
   { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
 
+#ifndef WIN32
+  { "webserver-queue",                  required_argument, NULL, 146 },
+#endif
+
   {NULL, 0, NULL, 0}
 };
 
@@ -277,6 +281,10 @@ void usage (FILE * fp) {
   fprintf(fp, "    [--disable-instantsessionpurge                        %sDisable instant FIN session purge\n", newLine);
 
   fprintf(fp, "    [--disable-mutexextrainfo                             %sDisable extra mutex info\n", newLine);
+
+#ifdef WIN32
+  fprintf(fp, "    [--webserver-queue                                    %sSet size of listen() queue\n", newLine);
+#endif
 
 #ifdef WIN32
   printAvailableInterfaces();
@@ -715,6 +723,13 @@ static int parseOptions(int argc, char* argv []) {
     case 145: /* disable-mutexextrainfo */
       myGlobals.disableMutexExtraInfo = TRUE;
       break;
+
+#ifndef WIN32
+    case 146: /* webserver-queue */
+      myGlobals.webServerRequestQueueLength =
+          min(max(MIN_WEBSERVER_REQUEST_QUEUE_LEN, atoi(optarg)), MAX_WEBSERVER_REQUEST_QUEUE_LEN);
+      break;
+#endif
 
     default:
       printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);

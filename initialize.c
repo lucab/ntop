@@ -496,6 +496,9 @@ void initCounters(void) {
 
   myGlobals.numHandledSIGPIPEerrors = 0;
   myGlobals.numHandledHTTPrequests = 0;
+#ifndef WIN32
+  myGlobals.webServerRequestQueueLength = DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN;
+#endif
 
   myGlobals.hostsCacheLen = 0;
   myGlobals.hostsCacheLenMax = 0;

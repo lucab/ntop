@@ -1989,7 +1989,9 @@ typedef struct ntopGlobals {
 #ifdef MAKE_WITH_SSLWATCHDOG
   unsigned long numHTTPSrequestTimeouts;
 #endif
+#ifndef WIN32
   u_short webServerRequestQueueLength;
+#endif
 
   /* webInterface.c */
 #ifdef HAVE_FILEDESCRIPTORBUG

@@ -933,6 +933,20 @@
 #endif
 
 /*
+ * Items which affect the listen() call in webInterface.c.  Making this larger
+ * allows the tcp/ip stack to queue more requests for the ntop web server
+ * before it starts dropping them.  See man listen.
+ */
+#define DEFAULT_WEBSERVER_REQUEST_QUEUE_LEN 5
+
+#define MIN_WEBSERVER_REQUEST_QUEUE_LEN     2
+/*
+ * Be aware that some OSes have limits on how large this can be and
+ * will silently ignore larger values...
+ */
+#define MAX_WEBSERVER_REQUEST_QUEUE_LEN     20
+
+/*
  * dumpXML.c constants...
  *     <!DOCTYPE -name- SYSTEM \"-dtd-uri-\">
  *

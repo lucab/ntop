@@ -14,18 +14,18 @@ NTOP(8)                                                                NTOP(8)
        [1mcious-packets[22m]   [[1m-r[22m|[1m--refresh-time   [4m[22m<number>[24m]   [[1m-s[22m|[1m--no-promiscuous[22m]
        [[1m-t[22m|[1m--trace-level  [4m[22m<number>[24m]  [[1m-x  [4m[22m<max_num_hash_entries>[24m]  [[1m-w[22m|[1m--http-[0m
        [1mserver [4m[22m<port>[24m] [[1m-z[22m|[1m--disable-sessions[22m]  [[1m-A[22m|[1m--set-admin-password  [4m[22mpass-[0m
-       [4mword[24m]    [[1m-B[22m|[1m--filter-expression   [4m[22mexpression[24m]   [[1m-D[22m|[1m--domain   [4m[22m<name>[24m]
-       [[1m-F[22m|[1m--flow-spec  [4m[22m<specs>[24m]   [[1m-M[22m|[1m--no-interface-merge[22m]   [[1m-O[22m|[1m----output-[0m
-       [1mpacket-path[22m]  [[1m-P[22m|[1m--db-file-path  [4m[22m<path>[24m] [[1m-Q[22m|[1m--spool-file-path [4m[22m<path>[24m]
-       [[1m-R[22m|[1m--filter-rule [4m[22m<file>[24m] [4m<number>[24m] [[1m-U[22m|[1m--mapper [4m[22m<URL>[24m]  [[1m-V[22m|[1m--version][0m
-       [[1m-X  [4m[22m<max_num_TCP_sessions>[24m] [[1m--disable-stopcap[22m] [[1m--log-extra [4m[22m<number>[24m]
-       [[1m--disable-instantsessionpurge[22m]   [[1m--disable-schedyield[22m]    [[1m--disable-[0m
-       [1mmutexextrainfo[22m]
+       [4mword[24m]    [[1m-B[22m|[1m--filter-expression    [4m[22mexpression[24m]    [[1m-C    [4m[22m<config[24mmode>[4m][0m
+       [[1m-D[22m|[1m--domain [4m[22m<name>[24m] [[1m-F[22m|[1m--flow-spec [4m[22m<specs>[24m] [[1m-M[22m|[1m--no-interface-merge[22m]
+       [[1m-O[22m|[1m----output-packet-path[22m]   [[1m-P[22m|[1m--db-file-path  [4m[22m<path>[24m]  [[1m-Q[22m|[1m--spool-[0m
+       [1mfile-path  [4m[22m<path>[24m]  [[1m-R[22m|[1m--filter-rule  [4m[22m<file>[24m]  [4m<number>[24m]  [[1m-U[22m|[1m--mapper[0m
+       [4m<URL>[24m]  [[1m-V[22m|[1m--version]  [22m[[1m-X [4m[22m<max_num_TCP_sessions>[24m] [[1m--disable-stopcap[22m]
+       [[1m--log-extra  [4m[22m<number>[24m]   [[1m--disable-instantsessionpurge[22m]   [[1m--disable-[0m
+       [1mschedyield[22m] [[1m--disable-mutexextrainfo[22m]
 
        Unix options:
 
        [[1m-d[22m|[1m--daemon[22m]  [[1m-i[22m|[1m--interface [4m[22m<name>[24m] [[1m-u[22m|[1m--user [4m[22m<user>[24m] [[1m-K[22m|[1m--enable-[0m
-       [1mdebug[22m] [[1m-L[22m] [[1m-use-syslog= [4m[22m<facility>[24m]
+       [1mdebug[22m] [[1m-L[22m] [[1m-use-syslog= [4m[22m<facility>[24m] [[1m--webserver-queue [4m[22m<number>[24m]
 
        Windows option:
 
@@ -570,6 +570,22 @@ NTOP(8)                                                                NTOP(8)
         tion and the best quick guide to BPF filters currently available.
 
 
+
+       [1m-C |[0m
+        This  instruments ntop to be used in two configurations: host and net-
+        work mode. In  host  mode  (default)  ntop  works  as  usual:  the  IP
+        addresses  received  are  those  of  real  hosts.  In host mode the IP
+        addresses received are those of  the  C-class  network  to  which  the
+        address  belongs.  Using ntop in network mode is extremely useful when
+        installed in a traffic exchange (e.g. in the middle of  the  Internet)
+        whereas  the  host  mode  should be used when ntop is installed on the
+        edge of a network (e.g. inside a company). The network  mode  signifi-
+        cantly reduces the amount of work ntop has to perform and it has to be
+        used whenever ntop is used to find out how the network  traffic  flows
+        and not to pin-point specific hosts.
+
+
+
        [1m-D | --domain[0m
         This  identifies  the  local  domain suffix, e.g. ntop.org.  It may be
         necessary, if [1mntop [22mis having difficulty determining it from the inter-
@@ -591,8 +607,8 @@ NTOP(8)                                                                NTOP(8)
         Flows'.
 
         For instance define two flows  with  the  following  expression  [1mLuca-[0m
-        [1mHosts='host              jake.unipi.it             or             host[0m
-        [1mpisanino.unipi.it',GatewayRoutedPkts='gateway gateway.unipi.it' .[0m
+        [1mHosts='host  jake.unipi.it  or host pisanino.unipi.it',GatewayRoutedP-[0m
+        [1mkts='gateway gateway.unipi.it' .[0m
 
         All   the   traffic   sent/received   by   hosts   jake.unipi.it    or
         pisanino.unipi.it  is  collected  by  [1mntop  [22mand added to the LucaHosts
@@ -812,52 +828,60 @@ NTOP(8)                                                                NTOP(8)
        ties.
 
 
-       Required libraries include:
+       [1m--webserver-queue[0m
+        Specifies the maximum number of web server  requests  for  the  tcp/ip
+        stack  to  retain  in  it's  queue  awaiting  delivery to the [1mntop [22mweb
+        server.  Requests in excess of this queue may be dropped (allowing for
+        retransmission)  or rejected at the tcp/ip stack level, depending upon
+        the OS.  Whatever happens, happens at the OS level, without any infor-
+        mation being delivered to [1mntop[0m
 
-       [1mlibpcap [22mfrom http://www.tcpdump.org/
+        Required libraries include:
 
-       The Windows version makes use of [1mWinPcap [22m(libpcap  for  Windows)  which
-       may be downloaded from http://winpcap.polito.it/install/default.htm.
+        [1mlibpcap [22mfrom http://www.tcpdump.org/
 
-       WARNING: The 2.x releases of [1mWinPcap [22mwill NOT support SMP machines.
+        The  Windows  version makes use of [1mWinPcap [22m(libpcap for Windows) which
+        may be downloaded from http://winpcap.polito.it/install/default.htm.
 
-       [1mgdbm [22mfrom http://www.gnu.org/software/gdbm/gdbm.html
+        WARNING: The 2.x releases of [1mWinPcap [22mwill NOT support SMP machines.
 
-       [1mntop  [22mrequires a POSIX threads library. Although a single-threaded ver-
-       sion of [1mntop [22mcan be built from the source if requested during ./config-
-       ure, it is not recommended for more than trivial usage.
+        [1mgdbm [22mfrom http://www.gnu.org/software/gdbm/gdbm.html
 
-       The   [1mgd   [22mlibrary,  for  the  creation  of  png  files,  available  at
-       http://www.boutell.com/gd/.  [1mntop [22msupports both gd 1.X and 2.X
+        [1mntop [22mrequires a POSIX threads library. Although a single-threaded ver-
+        sion  of  [1mntop [22mcan be built from the source if requested during ./con-
+        figure, it is not recommended for more than trivial usage.
 
-       The [1mlibpng [22mlibrary,  for  the  creation  of  png  files,  available  at
-       http://www.libpng.org/pub/png/libpng.html.    [1mntop  [22msupports  both  the
-       1.0.x series and the 1.2.x series of libpng, but  cautions  users  that
-       there  are  incompatibilities  if you compile with one and run with the
-       other.  Please read the discussion in  docs/FAQ  before  reporting  ANY
-       problem with libpng.
+        The  [1mgd  [22mlibrary,  for  the  creation  of  png  files,  available   at
+        http://www.boutell.com/gd/.  [1mntop [22msupports both gd 1.X and 2.X
 
-       (if  an  https://  server  is desired) [1mopenSSL [22mfrom the OpenSSL project
-       available at http://www.openssl.org.
+        The  [1mlibpng  [22mlibrary,  for  the  creation  of  png files, available at
+        http://www.libpng.org/pub/png/libpng.html.   [1mntop  [22msupports  both  the
+        1.0.x  series  and the 1.2.x series of libpng, but cautions users that
+        there are incompatibilities if you compile with one and run  with  the
+        other.   Please  read  the discussion in docs/FAQ before reporting ANY
+        problem with libpng.
 
-       The [1mrrdtool [22mlibrary is required by the  rrd  plugin.   rrdtool  creates
-       'Round-Robin  databases'  which  are used to store and graph historical
-       data in a format that permits long duration retention  without  growing
-       larger   over   time.    The   rrdtool   home   page   is   http://peo-
-       ple.ee.ethz.ch/~oetiker/webtools/rrdtool/
+        (if an https:// server is desired) [1mopenSSL [22mfrom  the  OpenSSL  project
+        available at http://www.openssl.org.
 
-       [1mntop [22mincludes a patched and frozen version of  rrdtool  1.0.42  in  the
-       myrrd/  directory.   Users of [1mntop [22mv2.3 should not need to specifically
-       install rrdtool.
+        The  [1mrrdtool  [22mlibrary  is required by the rrd plugin.  rrdtool creates
+        'Round-Robin databases' which are used to store and  graph  historical
+        data  in a format that permits long duration retention without growing
+        larger  over   time.    The   rrdtool   home   page   is   http://peo-
+        ple.ee.ethz.ch/~oetiker/webtools/rrdtool/
 
-       The [1msflow [22mPlugin is courtesy of and  supported  by  InMon  Corporation,
-       http://www.inmon.com/sflowTools.htm.
+        [1mntop  [22mincludes  a  patched and frozen version of rrdtool 1.0.42 in the
+        myrrd/ directory.  Users of [1mntop [22mv2.3 should not need to  specifically
+        install rrdtool.
 
-       There  are other optional libraries.  See the output of ./configure for
-       a fuller listing.
+        The  [1msflow  [22mPlugin  is courtesy of and supported by InMon Corporation,
+        http://www.inmon.com/sflowTools.htm.
 
-       Tool locations are current as of July  2003  -  please  send  email  to
-       report new locations or dead links.
+        There are other optional libraries.  See the output of ./configure for
+        a fuller listing.
+
+        Tool  locations  are  current  as  of July 2003 - please send email to
+        report new locations or dead links.
 
 
 [1mSEE ALSO[0m
@@ -865,10 +889,10 @@ NTOP(8)                                                                NTOP(8)
 
 
 [1mUSER SUPPORT[0m
-       Please  send  bug  reports  to the ntop-dev <ntop-dev@ntop.org> mailing
+       Please send bug reports to  the  ntop-dev  <ntop-dev@ntop.org>  mailing
        list. The ntop <ntop@ntop.org> mailing list is used for discussing ntop
        usage issues. In order to post messages on the lists a (free) subscrip-
-       tion is required in order to limit/avoid spam. Please  do  NOT  contact
+       tion  is  required  in order to limit/avoid spam. Please do NOT contact
        the author directly unless this is a personal question.
 
        Commercial support is available under request. Please see the ntop site
@@ -878,7 +902,7 @@ NTOP(8)                                                                NTOP(8)
 
 
 [1mAUTHOR[0m
-       ntop's author is Luca Deri (http://luca.ntop.org/) who can  be  reached
+       ntop's  author  is Luca Deri (http://luca.ntop.org/) who can be reached
        at <deri@ntop.org>.
 
 
@@ -887,11 +911,11 @@ NTOP(8)                                                                NTOP(8)
 
 
 [1mACKNOWLEDGMENTS[0m
-       The  author  acknowledges  the  Centro Serra of the University of Pisa,
+       The author acknowledges the Centro Serra of  the  University  of  Pisa,
        Italy (http://www-serra.unipi.it/) for hosting the ntop sites (both web
        and mailing lists), and Burton Strauss <burton@ntopsupport.com> for his
-       help  and  user  assistance.  Many  thanks  to   Stefano   Suin   <ste-
-       fano@ntop.org>  and  Rocco Carbone <rocco@ntop.org> for contributing to
+       help   and   user   assistance.  Many  thanks  to  Stefano  Suin  <ste-
+       fano@ntop.org> and Rocco Carbone <rocco@ntop.org> for  contributing  to
        the project.
 
 
