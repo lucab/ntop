@@ -912,7 +912,7 @@ static RETSIGTYPE quitNow(int signo _UNUSED_) {
 static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpRequestedAt, int *usedFork) {
   char *questionMark = strchr(pageName, '?');
   int sortedColumn = 0, printTrailer=1, idx;
-  int errorCode=0, pageNum = 0;
+  int errorCode=0, pageNum = 0, found=0;
   struct stat statbuf;
   FILE *fd = NULL;
   char tmpStr[512];
@@ -970,23 +970,34 @@ static int returnHTTPPage(char* pageName, int postLen, struct timeval *httpReque
     strncpy(pageName, STR_INDEX_HTML, sizeof(STR_INDEX_HTML));
 
   /* Search in the local directory first... */
-  for(idx=0; myGlobals.dataFileDirs[idx] != NULL; idx++) {
-    if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s", myGlobals.dataFileDirs[idx], pageName) < 0)
-      BufferOverflow();
+  for(idx=0; (!found) && (myGlobals.dataFileDirs[idx] != NULL); idx++) {
+      int j;
 
+      for(j=0; j<=myGlobals.borderSnifferMode; j++) {
+	  if(myGlobals.borderSnifferMode && (j == 0)) {
+	      if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s.j", myGlobals.dataFileDirs[idx], pageName) < 0)
+		  BufferOverflow();
+	  } else {
+	      if(snprintf(tmpStr, sizeof(tmpStr), "%s/html/%s", myGlobals.dataFileDirs[idx], pageName) < 0)
+		  BufferOverflow();
+	  }
 #ifdef WIN32
-    i=0;
-    while(tmpStr[i] != '\0') {
-      if(tmpStr[i] == '/') tmpStr[i] = '\\';
-      i++;
-    }
+	  i=0;
+	  while(tmpStr[i] != '\0') {
+	      if(tmpStr[i] == '/') tmpStr[i] = '\\';
+	      i++;
+	  }
 #endif
 
-    if(stat(tmpStr, &statbuf) == 0) {
-      if((fd = fopen(tmpStr, "rb")) != NULL)
-        break;
-      traceEvent(TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
-    }
+	  if(stat(tmpStr, &statbuf) == 0) {
+	      if((fd = fopen(tmpStr, "rb")) != NULL) {
+		  found = 1;
+		  break;
+	      }
+	
+	      traceEvent(TRACE_ERROR, "Cannot open file '%s', ignored...\n", tmpStr);
+	  }
+      }
   }
 
 #ifdef DEBUG
