@@ -1253,7 +1253,7 @@ static void handleHTTPSession(const struct pcap_pkthdr *h,
 #endif
 
 	      if(srcHost->fingerprint == NULL) {
-		char buffer[64], *delimiter;
+		char buffer[128], *delimiter;
 
 		safe_snprintf(__FILE__, __LINE__, buffer, sizeof(buffer), ":%s", os);
 		    
@@ -2224,8 +2224,8 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
         } else
             prevSession->next = theSession->next;
 
-#if 0
-        theSession->sessionState = FLAG_STATE_END;
+#if 1
+        theSession->sessionState = FLAG_STATE_END; /* Session freed by scanTimedoutTCPSessions */
 #else
         freeSession(theSession, actualDeviceId, 1, 1 /* lock purgeMutex */);
 #endif

@@ -270,15 +270,8 @@ int main(int argc, char *argv[]) {
   char *cmdLineBuffer, *readBuffer, *readBufferWork;
   FILE *fd;
   struct stat fileStat;
-
-
-  if(0) {
-    Counter c = 1410065408;
-    formatPkts(c, ifStr, sizeof(ifStr));
-    printf("%llu\n", c);
-    return(0);
-  }
-  
+  int effective_argc;
+  char **effective_argv;
 
   /* printf("Wait please: ntop is coming up...\n"); */
 
@@ -424,20 +417,30 @@ int main(int argc, char *argv[]) {
       cmdLineBuffer[strlen(cmdLineBuffer)-1] = '\0';
   }
 
+  effective_argv = buildargv(cmdLineBuffer); /* Build a new argv[] from the string */
+
+ /* count effective_argv[] */
+  effective_argc = 0;
+  while (effective_argv[effective_argc] != NULL) {
+      effective_argc++;
+  }
+#ifdef PARAM_DEBUG
+  for(i=0; i<effective_argc; i++) {
+      printf("PARAM_DEBUG:    %3d. '%s'\n", i, effective_argv[i]);
+  }
+#endif
+
   /*
    * Initialize all global run-time parameters to reasonable values
    */
-  initNtopGlobals(argc, argv);
-
-  free(cmdLineBuffer);
-  free(readBuffer);
+  initNtopGlobals(effective_argc, effective_argv);
 
   /*
    * Parse command line options to the application via standard system calls
    * Command-line options take precedence over saved preferences. 
    */
-  loadPrefs(argc, argv);
-  userSpecified = parseOptions(argc, argv);
+  loadPrefs(effective_argc, effective_argv);
+  userSpecified = parseOptions(effective_argc, effective_argv);
 
   myGlobals.capturePackets = verifyOptions();
 
@@ -450,10 +453,12 @@ int main(int argc, char *argv[]) {
   reportValues(&lastTime);
 
   if(myGlobals.runningPref.P3Pcp != NULL)
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "P3P: Compact Policy is '%s'", myGlobals.runningPref.P3Pcp);
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "P3P: Compact Policy is '%s'",
+		 myGlobals.runningPref.P3Pcp);
 
   if(myGlobals.runningPref.P3Puri != NULL)
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "P3P: Policy reference uri is '%s'", myGlobals.runningPref.P3Puri);
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "P3P: Policy reference uri is '%s'",
+		 myGlobals.runningPref.P3Puri);
 
   if (!myGlobals.runningPref.printIpOnly && (myGlobals.runningPref.fcNSCacheFile != NULL)) {
       processFcNSCacheFile (myGlobals.runningPref.fcNSCacheFile);
@@ -567,6 +572,9 @@ int main(int argc, char *argv[]) {
     HEARTBEAT(0, "main(), sleep()...woke", NULL);
   }
 #endif
+
+  free(cmdLineBuffer);
+  free(readBuffer);
 
   return(0);
 }

@@ -60,6 +60,10 @@ static char *versionSite[]   = {
 static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
   u_int idx;
 
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.hostsHashMutex, "_getFirstHost");
+#endif
+
   for(idx=beginIdx; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
     HostTraffic *el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
@@ -69,10 +73,16 @@ static HostTraffic* _getFirstHost(u_int actualDeviceId, u_int beginIdx) {
 		   CONST_MAGIC_NUMBER, el->magic, actualDeviceId);
       }
 
+#ifdef CFG_MULTITHREADED
+      releaseMutex(&myGlobals.hostsHashMutex);
+#endif
       return(el);
     }
   }
 
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.hostsHashMutex);
+#endif
   return(NULL);
 }
 
@@ -87,16 +97,26 @@ HostTraffic* getFirstHost(u_int actualDeviceId) {
 HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
   if(host == NULL) return(NULL);
 
+#ifdef CFG_MULTITHREADED
+  accessMutex(&myGlobals.hostsHashMutex, "getNextHost");
+#endif
+
   if(host->next != NULL) {
     if(host->next->magic != CONST_MAGIC_NUMBER) {
       traceEvent(CONST_TRACE_WARNING, "Error: bad magic number (expected=%d/real=%d)",
 		 CONST_MAGIC_NUMBER, host->next->magic);
     }
 
+#ifdef CFG_MULTITHREADED
+    releaseMutex(&myGlobals.hostsHashMutex);
+#endif
     return(host->next);
   } else {
     u_int nextIdx = host->hostTrafficBucket+1;
 
+#ifdef CFG_MULTITHREADED
+    releaseMutex(&myGlobals.hostsHashMutex);
+#endif
     if(nextIdx < myGlobals.device[actualDeviceId].actualHashSize)
       return(_getFirstHost(actualDeviceId, nextIdx));
     else
@@ -2565,32 +2585,34 @@ void traceEvent(int eventTraceLevel, char* file,
     if(myGlobals.runningPref.traceLevel > CONST_NOISY_TRACE_LEVEL) {
       mFile = strdup(file);
 
-      for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
-	if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
+      if(mFile) {
+	for(beginFileIdx=strlen(mFile)-1; beginFileIdx>0; beginFileIdx--) {
+	  if(mFile[beginFileIdx] == '.') mFile[beginFileIdx] = '\0'; /* Strip off .c */
 #if defined(WIN32)
-	if(mFile[beginFileIdx-1] == '\\') break;  /* Start after \ (Win32)  */
+	  if(mFile[beginFileIdx-1] == '\\') break;  /* Start after \ (Win32)  */
 #else
-	if(mFile[beginFileIdx-1] == '/') break;   /* Start after / (!Win32) */
+	  if(mFile[beginFileIdx-1] == '/') break;   /* Start after / (!Win32) */
 #endif
+	}
+
+	if(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
+	  unsigned int messageid = 0;
+	  int i;
+
+	  safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[%s:%d] ", &mFile[beginFileIdx], line);
+
+	  /* Hash the message format into an id */
+	  for (i=0; i<=strlen(format); i++) {
+	    messageid = (messageid << 1) ^ max(0,format[i]-32);
+	  }
+
+	  /* 1st chars of file name for uniqueness */
+	  messageid += (file[0]-32) * 256 + file[1]-32;
+	  safe_snprintf(__FILE__, __LINE__, bufMsgID, sizeof(bufMsgID), "[MSGID%07d]", (messageid & 0x8fffff));
+	}
+
+	free(mFile);
       }
-
-      if(myGlobals.runningPref.traceLevel >= CONST_DETAIL_TRACE_LEVEL) {
-        unsigned int messageid = 0;
-        int i;
-
-        safe_snprintf(__FILE__, __LINE__, bufLineID, sizeof(bufLineID), "[%s:%d] ", &mFile[beginFileIdx], line);
-
-        /* Hash the message format into an id */
-        for (i=0; i<=strlen(format); i++) {
-	  messageid = (messageid << 1) ^ max(0,format[i]-32);
-        }
-
-        /* 1st chars of file name for uniqueness */
-        messageid += (file[0]-32) * 256 + file[1]-32;
-        safe_snprintf(__FILE__, __LINE__, bufMsgID, sizeof(bufMsgID), "[MSGID%07d]", (messageid & 0x8fffff));
-      }
-
-      free(mFile);
     }
 
     /* Now we use the variable functions to 'print' the user's message */

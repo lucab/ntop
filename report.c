@@ -2070,22 +2070,23 @@ void printMulticastStats(int sortedColumn /* ignored so far */,
 	arrow[i] = "", theAnchor[i] = htmlAnchor1;
     
     sendString("<CENTER>\n");
-    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">%s0>Host%s</A></TH>\n"
-		"<TH "TH_BG">%s1>Domain%s</A></TH>"
-		"<TH "TH_BG">%s2>Pkts Sent%s</A></TH>"
-		"<TH "TH_BG">%s3>Data Sent%s</A></TH>"
-		"<TH "TH_BG">%s4>Pkts Rcvd%s</A></TH>"
-		"<TH "TH_BG">%s5>Data Rcvd%s</A></TH>"
-		"</TR>\n",
-		theAnchor[0], arrow[0],
-		theAnchor[1], arrow[1],
-		theAnchor[2], arrow[2],
-		theAnchor[3], arrow[3],
-		theAnchor[4], arrow[4],
-		theAnchor[5], arrow[5]
-		);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG"><TH "TH_BG">%s0>Host%s</A></TH>\n"
+		  "<TH "TH_BG">%s1>Domain%s</A></TH>"
+		  "<TH "TH_BG">%s2>Pkts Sent%s</A></TH>"
+		  "<TH "TH_BG">%s3>Data Sent%s</A></TH>"
+		  "<TH "TH_BG">%s4>Pkts Rcvd%s</A></TH>"
+		  "<TH "TH_BG">%s5>Data Rcvd%s</A></TH>"
+		  "</TR>\n",
+		  theAnchor[0], arrow[0],
+		  theAnchor[1], arrow[1],
+		  theAnchor[2], arrow[2],
+		  theAnchor[3], arrow[3],
+		  theAnchor[4], arrow[4],
+		  theAnchor[5], arrow[5]
+		  );
     sendString(buf);
-
+    
     qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpMulticastFctn);
 
     for(idx=pageNum*myGlobals.runningPref.maxNumLines; idx<numEntries; idx++) {
