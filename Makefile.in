@@ -224,7 +224,7 @@ CPPFLAGS = @CPPFLAGS@
 libntop_la_OBJECTS =  address.lo dataFormat.lo event.lo globals-core.lo \
 hash.lo initialize.lo leaks.lo logger.lo mysql.lo netflow.lo ntop.lo \
 pbuf.lo plugin.lo qsort.lo regex.lo rules.lo sql.lo ssl.lo term.lo \
-traffic.lo util.lo vendor.lo version.lo
+traffic.lo util.lo vendor.lo version.lo @MOREOBJECTS@
 libntopreport_la_OBJECTS =  admin.lo emitter.lo globals-report.lo \
 graph.lo http.lo report.lo reportUtils.lo webInterface.lo
 PROGRAMS =  $(bin_PROGRAMS)

@@ -326,6 +326,7 @@ echo
 DYN_FLAGS=
 SO_VERSION_PATCH=
 MORESOURCES=
+MOREOBJECTS=
 
 case "$host:$CC" in
     *-ibm-aix4.1.*:gcc )
@@ -366,6 +367,7 @@ dnl>        LDFLAGS="-bI:/lib/pse.exp $LDFLAGS"
         CFLAGS="-no-cpp-precomp -DDARWIN $CFLAGS"
 	DYN_FLAGS="-bundle -flat_namespace -undefined suppress $DYN_FLAGS"
 	MORESOURCES=" ntop_darwin.c"
+	MOREOBJECTS=" ntop_darwin.o"
         ;;
 
 dnl>    *-sun-solaris2*:cc )
@@ -1072,10 +1074,11 @@ AC_SUBST(DYN_FLAGS)
 AC_SUBST(CCLD)
 
 AC_SUBST(CORELIBS)
-AC_SUBST(MORELIBS)
+AC_SUBST(MOREOBJECTS)
 AC_SUBST(SNMPLIBS)
 
 AC_SUBST(MORESOURCES)
+AC_SUBST(MORELIBS)
 
 if test ".$ac_disable_intop" = ".yes"; then
 INTOP=
