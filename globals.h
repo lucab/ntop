@@ -100,7 +100,7 @@
  */
 #define LSOF_URL        "http://freshmeat.net/projects/lsof/"
 #define LSOF_URL_ALT    "lsof home page at freshmeat.net"
-#define NMAP_URL        "http://www.insecure.org/nmap/>nmap"
+#define NMAP_URL        "http://www.insecure.org/nmap"
 #define NMAP_URL_ALT    "nmap home page at insecure.org"
 #define GDCHART_URL     "http://www.fred.net/brv/chart/"
 #define GDCHART_URL_ALT "GDChart home page"
