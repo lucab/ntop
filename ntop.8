@@ -10,7 +10,7 @@
 ntop \- display top network users
 .SH SYNOPSIS
 .B ntop
-.RB [ -I ]
+.RB [ -c ]
 .RB [ -r
 .IR "refresh time" ]
 .RB [ -R
@@ -60,10 +60,8 @@ program.
 .PP
 .SH "COMMAND\-LINE OPTIONS"
 
-.It -I
-This flag is obsolete: it used to start ntop in interactive mode.
-.B intop
-provides you a character based interface.
+.It -c
+By default idle hosts are periodically purged from memory. Use this flag to prevent idle hosts from being purged from memory. NOTE: if idle hosts are kept in memory you can experience severe memory usage.
 
 .It -R
 Specifies the filter rules used by ntop for emitting alerts and warnings when the traffic matches the specified rules. Shall you need further details about filter rules, please refer to ntop-rules (8) man page.
