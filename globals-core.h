@@ -244,6 +244,7 @@ extern void updateDbHostsTraffic(int deviceToUpdate);
 extern int isInitialHttpData(char* packetData);
 extern int isInitialSshData(char* packetData);
 extern int isInitialFtpData(char* packetData);
+extern void updateDeviceThpt(int deviceToUpdate);
 
 /* util.c */
 extern HostTraffic* findHostByNumIP(char* numIPaddr, int actualDeviceId);

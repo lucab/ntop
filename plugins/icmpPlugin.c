@@ -356,7 +356,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 
   for(i=0, printedEntries=0; i<num; i++)
     if(hosts[i] != NULL) {
-      unsigned long tot;
       int idx;
 
       if(revertOrder)

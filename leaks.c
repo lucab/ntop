@@ -520,6 +520,7 @@ char* ntop_safestrdup(char *ptr, char* file, int line) {
   
   if(ptr == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: strdup of NULL pointer @ %s:%d", file, line);
+	return(strdup(""));
   } else {
     char* theOut;
     int len = strlen(ptr);
