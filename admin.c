@@ -1412,6 +1412,8 @@ void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr)
     sendString (buf);
 }
 
+/* ***************************************************** */
+
 void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 {
     char buf[1024];

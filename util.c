@@ -3707,7 +3707,10 @@ static void processStrPref (char *key, char *value, char **globalVar,
         if (*globalVar)
             free (*globalVar);
 
-        *globalVar = strdup (value);
+	if((value == NULL) || (value[0] == '\0'))
+	  *globalVar = NULL;
+	else
+	  *globalVar = strdup (value);
     }
 }
 
@@ -3753,6 +3756,8 @@ bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref)
 {
     bool startCap = FALSE;
     char buf[16], *tmpStr = NULL;
+
+    if(value == NULL) value = ""; /* Safer */
     
     if (strcmp(key, NTOP_PREF_DEVICES) == 0) {
         if ((pref->devices != NULL) &&

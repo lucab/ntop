@@ -622,7 +622,7 @@ void initCounters(void) {
       if( (dirList[iLang]->d_type == DT_DIR) ||
 	  (dirList[iLang]->d_type == DT_LNK) ) {
 	tmpStr = i18n_xvert_locale2common(dirList[iLang]->d_name);
-
+	
 	if(!strcmp(myGlobals.defaultLanguage, tmpStr)) {
 	  /* skip default language */
 	  traceEvent(CONST_TRACE_NOISY,
@@ -1357,20 +1357,34 @@ void addDevice(char* deviceName, char* deviceDescr) {
       mallocLen += strlen(myGlobals.device[i].name) + 2;
   }
   workDevices = malloc(mallocLen);
-  memset(workDevices, 0, mallocLen);
+  if(workDevices == NULL)
+    return;
+  else
+    memset(workDevices, 0, mallocLen);
 
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].name != NULL) {
+      int hasSpace;
+
       if(i>0) 
         strncat(workDevices, ", ", (sizeof(workDevices) - strlen(workDevices) - 1));
+
+      if(myGlobals.device[i].name[strlen(myGlobals.device[i].name)-1] == ' ')
+	hasSpace = 1;
+      else
+	hasSpace = 0;
+      
       strncat(workDevices,
               myGlobals.device[i].name,
-              (sizeof(workDevices) - strlen(workDevices) - 1));
+              (sizeof(workDevices) - strlen(workDevices) - hasSpace));
     }
   }
   
-  if(myGlobals.runningPref.devices != NULL) free(myGlobals.runningPref.devices);
-  myGlobals.runningPref.devices = workDevices;
+  if(myGlobals.runningPref.devices != NULL) 
+    free(myGlobals.runningPref.devices);
+
+  myGlobals.runningPref.devices = strdup(workDevices);
+  free(workDevices);
 
   /* ********************************************** */
 
@@ -1455,7 +1469,8 @@ void initDevices(char* devices) {
     myGlobals.device[0].pcapPtr  = pcap_open_offline(myGlobals.runningPref.rFileName, ebuf);
     
     if(myGlobals.device[0].pcapPtr == NULL) {
-      traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(): '%s'", ebuf);
+      traceEvent(CONST_TRACE_ERROR, "pcap_open_offline(%s): '%s'", 
+		 myGlobals.runningPref.rFileName, ebuf);
       return;
     }
 

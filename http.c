@@ -144,6 +144,7 @@ static int returnHTTPPage(char* pageName,
                           char *referer, int isPostMethod);
 #endif
 
+static int generateNewInternalPages(char* pageName);
 static int decodeString(char *bufcoded, unsigned char *bufplain, int outbufsize);
 static void logHTTPaccess(int rc, struct timeval *httpRequestedAt, u_int gzipBytesSent);
 static void returnHTTPspecialStatusCode(int statusIdx, char *additionalText);
@@ -1488,7 +1489,7 @@ int generateInternalPages(char* pageName) {
 
 /* **************************************** */
 
-int generateNewInternalPages(char* pageName) {
+static int generateNewInternalPages(char* pageName) {
   if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
       printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
@@ -1510,6 +1511,37 @@ int generateNewInternalPages(char* pageName) {
       sendString("    </noframes>\n");
       sendString("</frameset>\n");
       sendString("</html>\n");
+      return 0;
+    }
+
+  if(strcasecmp(pageName, CONST_INDEX_INNER_HTML) == 0) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+      printHTMLheader("Welcome to ntop!", NULL, BITFLAG_HTML_NO_REFRESH | BITFLAG_HTML_NO_BODY);
+     
+      sendString("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\">\n<html>\n<head>\n"
+		 "<meta http-equiv=\"Expires\" content=\"0\">\n"
+		 "<meta http-equiv=\"Pragma\" content=\"no-cache\">\n"
+		 "<meta http-equiv=\"Content-Style-Type\" content=\"text/css\">\n"
+		 "<meta http-equiv=\"Window-target\" content=\"_top\">\n"
+		 "<meta name=\"ROBOTS\" content=\"NOINDEX,NOFOLLOW\">\n"
+		 "<meta name=\"description\" content=\"ntop (http://www.ntop.org) status for a network.\">\n"
+		 "<meta name=\"author\" content=\"ntop\">\n"
+		 "<meta name=\"generator\" content=\"ntop v3.0\">\n"
+		 "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\">\n"
+		 "<title>ntop frameset inner index</title>\n"
+		 "</head>\n"
+		 "<frameset rows=\"40,1*\" framespacing=\"0\" border=\"0\" frameborder=\"0\" title=\"ntop contents area\">\n"
+		 "<frame src=\"index_left.html\" marginwidth=\"0\" marginheight=\"0\" title=\"ntop display selection area\">\n");
+
+      if (myGlobals.capturePackets == FLAG_NTOPSTATE_NOTINIT)
+	sendString("    <frame src=\"" CONST_CONFIG_NTOP_HTML "\" name=\"area\" "
+		   "marginwidth=\"0\" marginheight=\"0\">\n");
+      else
+	sendString("    <frame src=\"" CONST_TRAFFIC_STATS_HTML "\" name=\"area\" "
+		   "marginwidth=\"0\" marginheight=\"0\">\n");
+
+      sendString("<noframes>\n<body>\n<p>We're sorry, but ntop requires a browser which supports frames.</p>\n"
+		 "</body>\n</noframes>\n</frameset>\n</html>");
       return 0;
     }
 
@@ -1688,6 +1720,7 @@ int generateNewInternalPages(char* pageName) {
 
 /* **************************************** */
 
+#if 0
 int generateNew1InternalPages(char* pageName) {
   if(strcasecmp(pageName, CONST_INDEX_HTML) == 0) {
     sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
@@ -1878,6 +1911,7 @@ int generateNew1InternalPages(char* pageName) {
     }
     return 1; /* Not in this bunch, boss */
 }
+#endif
 
 /* **************************************** */
 

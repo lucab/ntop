@@ -1099,6 +1099,7 @@
 #define CONST_HOSTS_INFO_HTML               "hostsInfo.html"
 #define CONST_HOST_SORT_NOTE_HTML           "hostSortNote.html"
 #define CONST_INDEX_HTML                    "index.html"
+#define CONST_INDEX_INNER_HTML              "index_inner.html"
 #define CONST_INFO_NTOP_HTML                "info.html"
 #define CONST_CONFIG_NTOP_HTML              "configNtop.html"
 #define CONST_PIE_INTERFACE_DIST            "interfaceTrafficPie"
