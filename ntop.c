@@ -670,8 +670,6 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
 
 void* cleanupExpiredHostEntriesLoop(void* notUsed _UNUSED_) {
   for(;;) {
-    int i;
-
     sleep(PURGE_ADDRESS_TIMEOUT);
     if(!capturePackets) break;
     actTime = time(NULL);    

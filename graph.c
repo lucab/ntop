@@ -40,21 +40,38 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 
 /* ************************ */
 
+static void sendGraphFile(char* fileName) {
+  FILE *fd;
+  int len;
+  char tmpStr[256];
+  
+  if((fd = fopen(fileName, "rb")) != NULL) {
+    for(;;) {
+      len = fread(tmpStr, sizeof(char), sizeof(tmpStr)-1, fd);
+      if(len <= 0) break;
+      sendStringLen(tmpStr, len);
+    }
+    
+    fclose(fd);
+  }
+  
+  unlink(fileName);
+}
+
+
+/* ************************ */
+
 void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
 		   "", "", "", "", "", "", "", "", "", "" };
-  int len, num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 
-			     45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
+  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 
+			45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95 };
   FILE *fd;
   TrafficCounter totTraffic;
 
   fd = getNewRandomFile(fileName, NAME_MAX);
-
-#ifdef MULTITHREADED
-    accessMutex(&graphMutex, "pktHostTrafficDistrib");
-#endif
 
   if(dataSent) {
     totTraffic = theHost->tcpSentLocally+theHost->tcpSentRemotely+
@@ -230,12 +247,13 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     }
 
     if(num == 0) {
-#ifdef MULTITHREADED
-      releaseMutex(&graphMutex);
-#endif
       unlink(fileName);
       return; /* TODO: this has to be handled better */
     }
+
+#ifdef MULTITHREADED
+    accessMutex(&graphMutex, "pktHostTrafficDistrib");
+#endif
 
     GDCPIE_LineColor = 0x000000L;
     GDCPIE_explode   = expl;    /* default: NULL - no explosion */
@@ -258,28 +276,18 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     releaseMutex(&graphMutex);
 #endif
 
-    if((fd = fopen(fileName, "rb")) != NULL) {
-      for(;;) {
-	len = fread(tmpStr, sizeof(char), 255, fd);
-	if(len <= 0) break;
-	sendStringLen(tmpStr, len);
-      }
-
-      fclose(fd);
-    }
-
-    unlink(fileName);
+    sendGraphFile(fileName);
   }
 }
 
 /* ************************ */
 
 void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "", 
 		   "", "", "", "", "", "", "", "", "", "" };
-  int i, len, num=0, expl[20];
+  int i, num=0, expl[20];
   FILE *fd;
   TrafficCounter traffic, totalIPTraffic;
 
@@ -287,10 +295,6 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     return;
   
   fd = getNewRandomFile(fileName, NAME_MAX);
-
-#ifdef MULTITHREADED
-  accessMutex(&graphMutex, "pktHostTrafficDistrib");
-#endif
 
 #ifdef ENABLE_NAPSTER
   if(theHost->napsterStats == NULL)
@@ -358,18 +362,19 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   } 
 
   if(num == 0) {
-#ifdef MULTITHREADED
-    releaseMutex(&graphMutex);
-#endif    
     unlink(fileName);
     return; /* TODO: this has to be handled better */
   }
 
-  GDCPIE_LineColor = 0x000000L;
-  GDCPIE_explode   = expl;    /* default: NULL - no explosion */
-  GDCPIE_Color     = clr;
-  GDCPIE_BGColor   = 0xFFFFFFL;
-  GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
+#ifdef MULTITHREADED
+  accessMutex(&graphMutex, "pktHostTrafficDistrib");
+#endif
+
+  GDCPIE_LineColor      = 0x000000L;
+  GDCPIE_explode        = expl;    /* default: NULL - no explosion */
+  GDCPIE_Color          = clr;
+  GDCPIE_BGColor        = 0xFFFFFFL;
+  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
     
   GDC_out_pie(250,			/* width */
@@ -386,26 +391,16 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   releaseMutex(&graphMutex);
 #endif
 
-  if((fd = fopen(fileName, "rb")) != NULL) {
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), 255, fd);
-      if(len <= 0) break;
-      sendStringLen(tmpStr, len);
-    }
-
-    fclose(fd);
-  }
-
-  unlink(fileName);
+  sendGraphFile(fileName);
 }
 
 /* ********************************** */
 
 void pktSizeDistribPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[7];
   char	*lbl[] = { "", "", "", "", "", "", "" };
-  int len, num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
+  int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
   FILE *fd;
 
   fd = getNewRandomFile(fileName, NAME_MAX);
@@ -453,16 +448,16 @@ void pktSizeDistribPie(void) {
   };
 
 
-  GDCPIE_LineColor = 0x000000L;
-  GDCPIE_explode   = expl;    /* default: NULL - no explosion */
-  GDCPIE_Color     = clr;
-  GDCPIE_BGColor   = 0xFFFFFFL;
-  GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
-  GDCPIE_percent_labels = GDCPIE_PCT_NONE;
-
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "pktSizeDistrib");
 #endif
+
+  GDCPIE_LineColor      = 0x000000L;
+  GDCPIE_explode        = expl;    /* default: NULL - no explosion */
+  GDCPIE_Color          = clr;
+  GDCPIE_BGColor        = 0xFFFFFFL;
+  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
+  GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
   GDC_out_pie(250,			/* width */
 	      250,			/* height */
@@ -478,26 +473,16 @@ void pktSizeDistribPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  if((fd = fopen(fileName, "rb")) != NULL) {
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), 255, fd);
-      if(len <= 0) break;
-      sendStringLen(tmpStr, len);
-    }
-
-    fclose(fd);
-  }
-
-  unlink(fileName);
+  sendGraphFile(fileName);
 }
 
 /* ************************ */
 
 void ipProtoDistribPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };
-  int len, num=0, expl[] = { 0, 20, 30 };
+  int num=0, expl[] = { 0, 20, 30 };
   FILE *fd;
 
   fd = getNewRandomFile(fileName, NAME_MAX);
@@ -524,11 +509,11 @@ void ipProtoDistribPie(void) {
   accessMutex(&graphMutex, "ipProtoDistribPie");
 #endif
 
-  GDCPIE_LineColor = 0x000000L;
-  GDCPIE_explode   = expl;    /* default: NULL - no explosion */
-  GDCPIE_Color     = clr;
-  GDCPIE_BGColor   = 0xFFFFFFL;
-  GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
+  GDCPIE_LineColor      = 0x000000L;
+  GDCPIE_explode        = expl;    /* default: NULL - no explosion */
+  GDCPIE_Color          = clr;
+  GDCPIE_BGColor        = 0xFFFFFFL;
+  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
   GDC_out_pie(250,			/* width */
@@ -545,25 +530,15 @@ void ipProtoDistribPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  if((fd = fopen(fileName, "rb")) != NULL) {
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), 255, fd);
-      if(len <= 0) break;
-      sendStringLen(tmpStr, len);
-    }
-
-    fclose(fd);
-  }
-
-  unlink(fileName);
+  sendGraphFile(fileName);
 }
 
 /* ************************ */
 
 void interfaceTrafficPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   float p[MAX_NUM_DEVICES];
-  int i, len, expl[MAX_NUM_DEVICES];
+  int i, expl[MAX_NUM_DEVICES];
   FILE *fd;
   TrafficCounter totPkts=0;
   struct pcap_stat stat;
@@ -596,11 +571,11 @@ void interfaceTrafficPie(void) {
   accessMutex(&graphMutex, "interfaceTrafficPie");
 #endif
 
-  GDCPIE_LineColor = 0x000000L;
-  GDCPIE_explode   = expl;
-  GDCPIE_Color     = clr;
-  GDCPIE_BGColor   = 0xFFFFFFL;
-  GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
+  GDCPIE_LineColor      = 0x000000L;
+  GDCPIE_explode        = expl;
+  GDCPIE_Color          = clr;
+  GDCPIE_BGColor        = 0xFFFFFFL;
+  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_RIGHT;
 
   GDC_out_pie(250,	/* width */
@@ -617,26 +592,16 @@ void interfaceTrafficPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  if((fd = fopen(fileName, "rb")) != NULL) {
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), 255, fd);
-      if(len <= 0) break;
-      sendStringLen(tmpStr, len);
-    }
-     
-    fclose(fd);
-  }
-
-  unlink(fileName);
+  sendGraphFile(fileName);
 }
 
 /* ************************ */
 
 void pktCastDistribPie(void) {
-  char tmpStr[256], fileName[64] = "/tmp/graph-XXXXXX";
+  char fileName[64] = "/tmp/graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "", "", "" };
-  int len, num=0, expl[] = { 0, 20, 30 };
+  int num=0, expl[] = { 0, 20, 30 };
   FILE *fd;
   TrafficCounter unicastPkts;
 
@@ -673,11 +638,11 @@ void pktCastDistribPie(void) {
   accessMutex(&graphMutex, "pktCastDistribPie");
 #endif
 
-  GDCPIE_LineColor = 0x000000L;
-  GDCPIE_explode   = expl;    /* default: NULL - no explosion */
-  GDCPIE_Color     = clr;
-  GDCPIE_BGColor   = 0xFFFFFFL;
-  GDCPIE_EdgeColor = 0x000000L;	/* default is GDCPIE_NOCOLOR */
+  GDCPIE_LineColor      = 0x000000L;
+  GDCPIE_explode        = expl;    /* default: NULL - no explosion */
+  GDCPIE_Color          = clr;
+  GDCPIE_BGColor        = 0xFFFFFFL;
+  GDCPIE_EdgeColor      = 0x000000L;	/* default is GDCPIE_NOCOLOR */
   GDCPIE_percent_labels = GDCPIE_PCT_NONE;
 
   GDC_out_pie(250,			/* width */
@@ -694,27 +659,17 @@ void pktCastDistribPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  if((fd = fopen(fileName, "rb")) != NULL) {
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), 255, fd);
-      if(len <= 0) break;
-      sendStringLen(tmpStr, len);
-    }
-
-    fclose(fd);
-  }
-
-  unlink(fileName);
+  sendGraphFile(fileName);
 }
 
 /* ************************ */
 
 void drawTrafficPie(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   TrafficCounter ip, nonIp;
   float p[2];
   char	*lbl[] = { "IP", "Non IP" };
-  int num=0, len, expl[] = { 5, 5 };
+  int num=0, expl[] = { 5, 5 };
   FILE *fd;
 
   fd = getNewRandomFile(fileName, NAME_MAX);
@@ -752,23 +707,13 @@ void drawTrafficPie(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  if((fd = fopen(fileName, "rb")) != NULL) {
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), 255, fd);
-      if(len <= 0) break;
-      sendStringLen(tmpStr, len);
-    }
-
-    fclose(fd);
-  }
-
-  unlink(fileName);
+  sendGraphFile(fileName);
 }
 
 /* ************************ */
 
 void drawThptGraph(int sortedColumn) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   int i, len;
   char  labels[60][32];
   char  *lbls[60];
@@ -777,20 +722,20 @@ void drawThptGraph(int sortedColumn) {
   float graphData[60], maxBytesPerSecond;
   struct tm t;
 
+  memset(graphData, 0, sizeof(graphData));
+
+  fd = getNewRandomFile(fileName, NAME_MAX);
+  
 #ifdef MULTITHREADED
   accessMutex(&graphMutex, "drawThptGraph");
 #endif
 
-  memset(graphData, 0, sizeof(graphData));
-
-  GDC_BGColor   = 0xFFFFFFL;                  /* backgound color (white) */
-  GDC_LineColor = 0x000000L;                  /* line color      (black) */
-  GDC_SetColor  = &(clr[0]);                   /* assign set colors */
-  GDC_ytitle = "Throughput";
-  GDC_yaxis=1;
+  GDC_BGColor    = 0xFFFFFFL;                  /* backgound color (white) */
+  GDC_LineColor  = 0x000000L;                  /* line color      (black) */
+  GDC_SetColor   = &(clr[0]);                   /* assign set colors */
+  GDC_ytitle     = "Throughput";
+  GDC_yaxis      = 1;
   GDC_ylabel_fmt = "%d Bps";
-
-  fd = getNewRandomFile(fileName, NAME_MAX);
 
   switch(sortedColumn) {
   case 1: /* 60 Minutes */
@@ -913,26 +858,16 @@ void drawThptGraph(int sortedColumn) {
   releaseMutex(&graphMutex);
 #endif
 
-  if((fd = fopen(fileName, "rb")) != NULL) {
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), 255, fd);
-      if(len <= 0) break;
-      sendStringLen(tmpStr, len);
-    }
-
-    fclose(fd);
-  }
-
-  unlink(fileName);
+  sendGraphFile(fileName);
 }
 
 
 /* ************************ */
 
 void drawGlobalProtoDistribution(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
   TrafficCounter ip, nonIp;
-  int len, totLen;
+  int totLen;
   float p[256]; /* Fix courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
   char	*lbl[16];
   FILE *fd;
@@ -978,12 +913,12 @@ void drawGlobalProtoDistribution(void) {
   accessMutex(&graphMutex, "drawGlobalProtoDistribution");
 #endif
 
-  GDC_LineColor = 0x000000L;
-  GDC_BGColor   = 0xFFFFFFL;
-  GDC_SetColor  = &(clr[0]);
-  GDC_yaxis=0;
+  GDC_LineColor      = 0x000000L;
+  GDC_BGColor        = 0xFFFFFFL;
+  GDC_SetColor       = &(clr[0]);
+  GDC_yaxis          = 0;
   GDC_requested_ymin = 0;
-  GDC_title = "";
+  GDC_title          = "";
 
   out_graph(600, 250,	/* width/height */
 	    fd,	        /* open file pointer */
@@ -999,25 +934,14 @@ void drawGlobalProtoDistribution(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  if((fd = fopen(fileName, "rb")) != NULL) {
-    for(totLen=0;;) {
-      len = fread(tmpStr, sizeof(char), 255, fd);
-      if(len <= 0) break;
-      totLen += len;
-      sendStringLen(tmpStr, len);
-    }
-
-    fclose(fd);
-  }
-
-  unlink(fileName);
+  sendGraphFile(fileName);
 }
 
 /* ************************ */
 
 void drawGlobalIpProtoDistribution(void) {
-  char tmpStr[256], fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
-  int len, i, idx=0;
+  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  int i, idx=0;
   float p[256];
   char *lbl[256];
   FILE *fd;
@@ -1045,8 +969,8 @@ void drawGlobalIpProtoDistribution(void) {
   GDC_LineColor = 0x000000L;
   GDC_BGColor   = 0xFFFFFFL;
   GDC_SetColor  = &(clr[0]);
-  GDC_yaxis=0;
-  GDC_title = "";
+  GDC_yaxis     = 0;
+  GDC_title     = "";
 
   out_graph(600, 250,		/* width/height */
 	    fd,			/* open file pointer */
@@ -1062,15 +986,7 @@ void drawGlobalIpProtoDistribution(void) {
   releaseMutex(&graphMutex);
 #endif
 
-  if((fd = fopen(fileName, "rb")) != NULL) {
-    for(;;) {
-      len = fread(tmpStr, sizeof(char), 255, fd);
-      if(len <= 0) break;
-      sendStringLen(tmpStr, len);
-    }
-    fclose(fd);
-  }
-  unlink(fileName);
+  sendGraphFile(fileName);
 }
 
 #endif /* HAVE_GDCHART */

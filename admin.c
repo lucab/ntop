@@ -584,7 +584,7 @@ void doAddURL(int len) {
 
 /* *******************************/
 
-/* Courtesy of Michael Weidel <m.weidel@gmx.de> */
+/* Courtesy of Michael Weidel <michael.weidel@gmx.de> */
 
 int doChangeFilter(int len) {
   int i,idx,badChar=0;
@@ -657,7 +657,17 @@ int doChangeFilter(int len) {
   sendHTTPHeader(HTTP_TYPE_HTML, 0);
 
   if(filterExpressionInExtraFrame) {
-    printHTMLheader("", 0);
+    sendString("<HTML>\n<HEAD>\n");
+    sendString("<LINK REL=stylesheet HREF=/style.css type=\"text/css\">\n");
+    sendString("<SCRIPT TYPE=\"text/javascript\">\n");
+    sendString("<!--\nfunction UpdateFrame(URI,F) {\n");
+    sendString("  Frame=eval(\"parent.\"+F);\n");
+    sendString("  Frame.location.href = URI;\n");
+    sendString("}\n//-->\n</SCRIPT>");
+    sendString("</HEAD>\n");
+    sendString("<BODY ONLOAD=\"UpdateFrame('"FILTER_INFO_HTML"','filterinfo')\" ");
+    sendString("BACKGROUND=/white_bg.gif BGCOLOR=\"#FFFFFF\" LINK=blue VLINK=blue>\n");
+    printSectionTitle("Change kernel (libpcap) filter expression");
   } else {
     printHTMLheader("changing kernel (libpcap) filter expression", HTML_FLAG_NO_REFRESH);
     sendString("<P><HR></P>\n<P><CENTER>");
@@ -674,9 +684,14 @@ int doChangeFilter(int len) {
       sendString(buf);
     } else sendString("<B>Kernel (libpcap) filtering disabled.</B></FONT>\n");
 
-    if(filterExpressionInExtraFrame)
+    if(filterExpressionInExtraFrame) {
+      sendString("<NOSCRIPT>\n<P>You've got JavaScript disabled. Therefore ");
+      sendString("your extra frame with the filter expression isn't updated ");
+      sendString("automatically. No problem, you can update it here ");
+      sendString("<A HREF=\""FILTER_INFO_HTML"\" target=\"filterinfo\">");
+      sendString("manually</A>.</NOSCRIPT></P>");
       sendString("</BODY>\n</HTML>\n");
-    else {
+    } else {
       sendString("</CENTER></P>\n");
       /* sendString("<P><CENTER>The statistics are also reset.</CENTER></P>\n"); */
       printHTMLtrailer();
@@ -698,6 +713,7 @@ int doChangeFilter(int len) {
 	}
       }
     }
+
     printFlagedWarning(err);
     if(filterExpressionInExtraFrame) sendString("</BODY>\n</HTML>\n");
     else printHTMLtrailer();
@@ -707,7 +723,7 @@ int doChangeFilter(int len) {
 
 /* ******************************* */
 
-/* Courtesy of Michael Weidel <m.weidel@gmx.de> */
+/* Courtesy of Michael Weidel <michael.weidel@gmx.de> */
 
 void changeFilter(void) {
   char buf[BUF_SIZE];
@@ -715,7 +731,7 @@ void changeFilter(void) {
   printHTMLheader("Change kernel (libpcap) filter expression", HTML_FLAG_NO_REFRESH);
   sendString("<BR><HR><P>\n");
   sendString("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=5>\n<TR>\n");
-  sendString("<TH ALIGN=center>old filter expression:&nbsp;</TH><TD ALIGN=left>");
+  sendString("<TH "TH_BG" ALIGN=center>Old Filter Expression:&nbsp;</TH><TD ALIGN=left>");
   if(snprintf(buf, sizeof(buf), "<B>%s",
 	     currentFilterExpression) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -723,9 +739,8 @@ void changeFilter(void) {
   if(*currentFilterExpression=='\0') sendString("&lt;No filter defined&gt;");
   sendString("</B><BR>\n</TD>\n</TR>\n");
   
-  sendString("<FORM METHOD=POST ACTION=/doChangeFilter");
-  if(filterExpressionInExtraFrame) sendString(" target=\"filterinfo\"");
-  sendString(">\n<TR>\n<TH ALIGN=center>new filter expression:&nbsp;</TH>");
+  sendString("<FORM METHOD=POST ACTION=/doChangeFilter>\n");
+  sendString("<TR>\n<TH "TH_BG" ALIGN=center>New Filter Expression:&nbsp;</TH>");
   sendString("<TD ALIGN=left><INPUT TYPE=text NAME=filter SIZE=40>\n");
   sendString("</TD>\n</TR>\n</TABLE>\n<CENTER>");
   sendString("<INPUT TYPE=submit VALUE=\"Change Filter\">&nbsp;&nbsp;&nbsp;");
@@ -736,8 +751,8 @@ void changeFilter(void) {
   sendString("like the ones you pass to tcpdump.<BR>\n");
   sendString("If \"new filter expression\" is left empty, no filtering is performed.<BR>\n");
   sendString("If you want the statistics to be reset, you have to do that manually ");
-  sendString("with <A HREF=\"resetStats.html\">\"Reset Stats\"</A>. \n");
-  sendString("Be careful: That can take quite a long time!");
+  sendString("with <A HREF=\"resetStats.html\">Reset Stats</A>.<BR>\n");
+  sendString("<B>Be careful</B>: That can take quite a long time!");
   sendString("<BR><B></FONT>\n");
 }
 
