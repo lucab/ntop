@@ -225,12 +225,9 @@ void resetDevice(int devIdx) {
   ptr = calloc(HASH_INITIAL_SIZE, sizeof(HostTraffic*));
   myGlobals.device[devIdx].hash_hostTraffic = ptr;
 
-  if(myGlobals.largeNetwork)
-    myGlobals.hashListSize = HASH_LIST_SIZE;
-  else
-    myGlobals.hashListSize = 2*HASH_LIST_SIZE;
-
+  myGlobals.hashListSize = HASH_LIST_SIZE;
   len = sizeof(struct HashList*)*myGlobals.hashListSize;
+  /* printf("sizeof(u_int16_t)=%d /size=%u/len=%d\n", sizeof(u_int16_t), myGlobals.hashListSize, len); */
   myGlobals.device[devIdx].hashList = (HashList**)malloc(len);
   memset(myGlobals.device[devIdx].hashList, 0, len);
   myGlobals.device[devIdx].insertIdx = 0;

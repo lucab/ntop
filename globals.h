@@ -250,7 +250,7 @@ typedef struct ntopGlobals {
   /* Other flags (these could set via command line options one day) */
   u_char enableFragmentHandling;
 
-  u_int hashListSize;
+  u_int16_t hashListSize; /* Please don't change the type */
 
   /* Search paths */
   char **dataFileDirs;
