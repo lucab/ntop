@@ -65,6 +65,10 @@ static int inet_aton(const char *cp, struct in_addr *addr)
 
 #endif /* CFG_NEED_INET_ATON */
 
+#ifdef HAVE_FILEDESCRIPTORBUG
+static int tempFilesCreated=0;
+#endif
+
 /* ************************************* */
 
 #if !defined(WIN32) && defined(PARM_USE_CGI)
@@ -4677,7 +4681,8 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
    *   - burn some file descriptors so the socket() call doesn't get a dirty one.
    *   - it's not pretty, but it works...
    */
-
+  if(tempFilesCreated == 0) {
+    tempFilesCreated = 1;
     myGlobals.tempFpid=getpid();
     traceEvent(CONST_TRACE_INFO, "FILEDESCRIPTORBUG: Work-around activated");
     for(i=0; i<CONST_FILEDESCRIPTORBUG_COUNT; i++) {
@@ -4699,6 +4704,7 @@ void initSocket(int isSSL, int *port, int *sock, char *addr) {
                    i, myGlobals.tempFname[i], myGlobals.tempF[i]);
       }
     }
+  }
 #endif /* FILEDESCRIPTORBUG */
 
     errno = 0;
