@@ -163,6 +163,7 @@ extern char* printSSLError(int errorId);
 extern void sendHTTPHeader(int mimeType, int headerFlags);
 
 /* report.c */
+extern void printBandwidthFooter(void);
 extern void initReports(void);
 extern int reportValues(time_t *lastTime);
 extern void addPageIndicator(char *url, u_int beginIdx,

@@ -3008,7 +3008,8 @@ void handleHTTPrequest(HostAddr from) {
 
 #else
   rc =  returnHTTPPage(&requestedURL[1], postLen,
-		       &from, &httpRequestedAt, &usedFork, agent);
+		       &from, &httpRequestedAt, &usedFork,
+		       agent, referer);
 #endif
 
 #ifdef CFG_MULTITHREADED
