@@ -3439,7 +3439,12 @@ static void processIpPkt(const u_char *bp,
   case IPPROTO_TCP:
     proto = "TCP";
     memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
-    tcpDataLength = tcpUdpLen - (tp.th_off * 4);
+    
+    /* Sanity check */
+    if(tcpUdpLen >= (tp.th_off * 4))
+      tcpDataLength = tcpUdpLen - (tp.th_off * 4);
+    else
+      tcpDataLength = 0;
 
     device[actualDeviceId].tcpBytes += tcpUdpLen;
 
@@ -3537,7 +3542,12 @@ static void processIpPkt(const u_char *bp,
 
   case IPPROTO_UDP:
     proto = "UDP";
-    udpDataLength = tcpUdpLen - sizeof(struct udphdr);
+
+    /* Sanity check */
+    if(tcpUdpLen > sizeof(struct udphdr))
+      udpDataLength = tcpUdpLen - sizeof(struct udphdr);
+    else
+      udpDataLength = 0;
 
     device[actualDeviceId].udpBytes += tcpUdpLen;
 

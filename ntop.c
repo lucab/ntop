@@ -836,6 +836,7 @@ RETSIGTYPE cleanup(int signo) {
   endservent();
 #endif
 
+#ifdef MULTITHREADED
   deleteMutex(&packetQueueMutex);
   deleteMutex(&addressResolutionMutex);
   deleteMutex(&hashResizeMutex);
@@ -853,6 +854,7 @@ RETSIGTYPE cleanup(int signo) {
 #ifdef ASYNC_ADDRESS_RESOLUTION
   signalCondvar(&queueAddressCondvar);
   deleteCondvar(&queueAddressCondvar);
+#endif
 #endif
 #endif
 
