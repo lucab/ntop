@@ -1102,7 +1102,7 @@ dnl>
        test -r ${GDCHART_ROOT}/gd-1.8.3/libpng-1.2.4/png.h &&
        test -d ${GDCHART_ROOT}/zlib-1.1.4 &&
        test -r ${GDCHART_ROOT}/zlib-1.1.4/libz.a; then
-         MORELIBS="${MORELIBS} -L${GDCHART_ROOT} -lgdchart -L${GDCHART_ROOT}/gd-1.8.3 -lgd -L${GDCHART_ROOT}/gd-1.8.3/libpng-1.2.4 -lpng"
+         MORELIBS="${MORELIBS} -L${GDCHART_ROOT} -lgdchart -L${GDCHART_ROOT}/gd-1.8.3 -lgd -L${GDCHART_ROOT}/gd-1.8.3/libpng-1.2.4 -lpng -L${GDCHART_ROOT}/zlib-1.1.4 -lz"
          INCS="${INCS} -I${GDCHART_ROOT}"
          AC_MSG_RESULT([    Found in ntop source tree at ${GDCHART_ROOT}])
          gdchartok="yes"
