@@ -61,8 +61,11 @@ MAINTAINERCLEANFILES = COPYING Makefile.in aclocal.m4 config.guess \
 
 SUBDIRS = myrrd . @PLUGINS@
 
-ETTER_PASSIVE_DOWNLOAD = etter.passive.os.fp
-ETTER_PASSIVE = $(ETTER_PASSIVE_DOWNLOAD).gz
+ETTER_PASSIVE_FILE = etter.passive.os.fp
+ETTER_PASSIVE = $(ETTER_PASSIVE_FILE).gz
+ETTER_PASSIVE_DOWNLOAD_FROM = "http://cvs.sourceforge.net/viewcvs.py/ettercap/ettercap"
+ETTER_PASSIVE_DOWNLOAD_PARMS = "rev=HEAD"
+
 
 DIST_COMMON =
 DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
@@ -380,7 +383,7 @@ dnetter:
 	  mv $(ETTER_PASSIVE) $(ETTER_PASSIVE).old; \
 	fi;
 	@for file in $(ETTER_PASSIVE) $(ETTER_PASSIVE).gz \
-		$(ETTER_PASSIVE_DOWNLOAD) $(ETTER_PASSIVE_DOWNLOAD).gz; do \
+		$(ETTER_PASSIVE_FILE) $(ETTER_PASSIVE_FILE).gz; do \
           if test -f $$file; then \
 	     echo "...Deleting prior file, $$file..."; \
              rm -rf $$file; \
@@ -388,11 +391,11 @@ dnetter:
         done
 	@echo ""
 	@echo "...Downloading new file..."
-	@wget -O $(ETTER_PASSIVE_DOWNLOAD) \
-	          http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/~checkout~/ettercap/ettercap/$(ETTER_PASSIVE_DOWNLOAD)?rev=HEAD\&content-type=text/plain
+	@wget -O $(ETTER_PASSIVE_FILE) \
+		$(ETTER_PASSIVE_DOWNLOAD_FROM)/$(ETTER_PASSIVE_FILE)?$(ETTER_PASSIVE_DOWNLOAD_PARMS)
 	@echo ""
 	@echo "gziping downloaded file..."
-	@gzip $(ETTER_PASSIVE_DOWNLOAD)
+	@gzip $(ETTER_PASSIVE_FILE)
 	@echo ""
 	@echo ""
 	@if test -f $(ETTER_PASSIVE).old; then \
