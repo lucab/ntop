@@ -156,10 +156,24 @@ static int sortICMPhosts(const void *_a, const void *_b) {
   }
 }
 
+ /* ******************************* */
+
+static void formatSentRcvd(TrafficCounter sent, TrafficCounter rcvd) {
+  
+  char buf[128];
+  
+  if (sent + rcvd == 0) {
+    strcpy(buf, "<TD ALIGN=center>&nbsp;</TD>");
+  } else if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
+		     formatPkts(sent), formatPkts(rcvd)) < 0)
+    BufferOverflow();
+  sendString(buf);
+}
+
 /* ******************************* */
 
 static void handleIcmpWatchHTTPrequest(char* url) {
-  char buf[1024], anchor[256], fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX";
+  char buf[1024], fileName[NAME_MAX] = "/tmp/ntop-icmpPlugin-XXXXXX";
   char *sign = "-";
   char *pluginName = "<A HREF=/plugins/icmpWatch";
   u_int i, revertOrder=0, num;
@@ -327,7 +341,6 @@ static void handleIcmpWatchHTTPrequest(char* url) {
   for(i=0; i<num; i++)
     if(hosts[i] != NULL) {
       unsigned long tot;
-      char *postAnchor;
       int idx;
 
       if(revertOrder)
@@ -341,153 +354,42 @@ static void handleIcmpWatchHTTPrequest(char* url) {
 	BufferOverflow();
       sendString(buf);
 
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
-		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHO])),
-		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHO]))) < 0) 
-	BufferOverflow();
-      sendString(buf);
 
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s/%s</TD>",
-		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY])),
-		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY]))) < 0)
-	BufferOverflow();
-      sendString(buf);
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHO]),
+		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHO]));
+ 
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY]),
+		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY]));
 
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_UNREACH]),
+		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_UNREACH]));
 
-      tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_UNREACH]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_UNREACH];
-      anchor[0] = '\0';
-      postAnchor = "";
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_REDIRECT]),
+		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT]));
 
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>",
-		  anchor,
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgSent[ICMP_UNREACH]),
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgRcvd[ICMP_UNREACH]),
-		  postAnchor) < 0) 
-	BufferOverflow();
-      sendString(buf);
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]),
+		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT]));
 
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]),
+		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED]));
 
-      tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_REDIRECT]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT];
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]),
+		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB]));
 
-      anchor[0] = '\0';
-      postAnchor = "";
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_MASKREPLY]),
+                      (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY]));
 
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgSent[ICMP_REDIRECT]),
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgRcvd[ICMP_REDIRECT]),
-		  postAnchor) < 0) BufferOverflow();
-      sendString(buf);
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]),
+		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH]));
+      
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY]),
+		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY]));
 
-      tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT];
-      anchor[0] = '\0';
-      postAnchor = "";
-
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgSent[ICMP_ROUTERADVERT]),
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgRcvd[ICMP_ROUTERADVERT]),
-		  postAnchor) < 0) BufferOverflow();
-      sendString(buf);
-
-      tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMXCEED]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED];
-      anchor[0] = '\0';
-      postAnchor = "";
-
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgSent[ICMP_TIMXCEED]),
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgRcvd[ICMP_TIMXCEED]),
-		  postAnchor) < 0) BufferOverflow();
-      sendString(buf);
-
-      tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_PARAMPROB]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB];
-      anchor[0] = '\0';
-      postAnchor = "";
-
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgSent[ICMP_PARAMPROB]),
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgRcvd[ICMP_PARAMPROB]),
-		  postAnchor) < 0) BufferOverflow();
-      sendString(buf);
-
-      tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_MASKREQ]+
-	hosts[idx]->icmpInfo->icmpMsgSent[ICMP_MASKREPLY]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY];
-
-      anchor[0] = '\0';
-      postAnchor = "";
-
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
-		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
-					      icmpMsgSent[ICMP_MASKREQ]+
-					      hosts[idx]->icmpInfo->icmpMsgSent[ICMP_MASKREPLY])),
-		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
-					      icmpMsgRcvd[ICMP_MASKREQ]+
-					      hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY])),
-		  postAnchor) < 0) BufferOverflow();
-      sendString(buf);
-
-      tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH];
-      anchor[0] = '\0';
-      postAnchor = "";
-
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgSent[ICMP_SOURCE_QUENCH]),
-		  formatPkts((TrafficCounter)hosts[idx]->icmpInfo->
-			     icmpMsgRcvd[ICMP_SOURCE_QUENCH]),
-		  postAnchor) < 0) BufferOverflow();
-      sendString(buf);
-
-      tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP]+
-	hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY];
-      anchor[0] = '\0';
-      postAnchor = "";
-
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
-		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
-					      icmpMsgSent[ICMP_TIMESTAMP]+
-					      hosts[idx]->icmpInfo->icmpMsgSent[ICMP_TIMESTAMPREPLY])),
-		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
-					      icmpMsgRcvd[ICMP_TIMESTAMP]+
-					      hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMPREPLY])),
-		  postAnchor) < 0) BufferOverflow();
-      sendString(buf);
-
-      tot=hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]+
-	hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST]+
-	hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY];
-      anchor[0] = '\0';
-      postAnchor = "";
-
-      if(snprintf(buf, sizeof(buf), "<TD ALIGN=center>%s%s/%s%s</TD>", anchor,
-		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
-					      icmpMsgSent[ICMP_INFO_REQUEST]+
-					      hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY])),
-		  formatPkts((TrafficCounter)(hosts[idx]->icmpInfo->
-					      icmpMsgRcvd[ICMP_INFO_REQUEST]+
-					      hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY])),
-		  postAnchor) < 0) BufferOverflow();
-      sendString(buf);
-
+      formatSentRcvd((TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST]
+				      +hosts[idx]->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY]),
+		     (TrafficCounter)(hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST]
+				      +hosts[idx]->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY]));
+      
       sendString("</TR>\n");
     }
 

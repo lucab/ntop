@@ -699,7 +699,7 @@ var_etherStatsTable(struct variable *vp,
 
     case ETHERSTATSDROPEVENTS:
       
-        long_ret = (long)(device[ifNum].droppedPackets);
+        long_ret = (long)(device[ifNum].droppedPkts);
         return (unsigned char *) &long_ret;
 
     case ETHERSTATSOCTETS:
