@@ -497,6 +497,7 @@ void updateHostSessionsList(u_int theHostIdx,
 
   if((theHostIdx == broadcastEntryIdx)
      || (remotePeerIdx == broadcastEntryIdx)
+     || (remotePeerIdx == NO_PEER)
      || (device[actualDeviceId].hash_hostTraffic[checkSessionIdx(remotePeerIdx)] == NULL)
      )
     return;

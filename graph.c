@@ -27,15 +27,14 @@
 
 #define GRAPH_H
 
+#include "ntop.h"
+#include "globals-report.h"
+
 #ifdef HAVE_GDCHART
 
 #if defined(_AIX) && !defined(MAXFLOAT) /* Needed by AIX */
 #define MAXFLOAT 1234567890
 #endif  MAXFLOAT
-
-
-#include "ntop.h"
-#include "globals-report.h"
 
 #include "gdc.h"
 #include "gdchart.h"
