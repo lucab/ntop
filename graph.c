@@ -295,15 +295,17 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
       totalIPTraffic += theHost->protoIPTrafficInfos[i].receivedLocally+
 	theHost->protoIPTrafficInfos[i].receivedFromRemote;
 
-  if(dataSent) {
-    if(theHost->napsterStats->bytesSent > 0) {
-      p[num] = (float)((100*theHost->napsterStats->bytesSent)/totalIPTraffic);
-      lbl[num++] = "Napster";
-    }
-  } else {
-    if(theHost->napsterStats->bytesRcvd > 0) {
-      p[num] = (float)((100*theHost->napsterStats->bytesRcvd)/totalIPTraffic);
-      lbl[num++] = "Napster";
+  if(theHost->napsterStats != NULL) {
+    if(dataSent) {
+      if(theHost->napsterStats->bytesSent > 0) {
+	p[num] = (float)((100*theHost->napsterStats->bytesSent)/totalIPTraffic);
+	lbl[num++] = "Napster";
+      }
+    } else {
+      if(theHost->napsterStats->bytesRcvd > 0) {
+	p[num] = (float)((100*theHost->napsterStats->bytesRcvd)/totalIPTraffic);
+	lbl[num++] = "Napster";
+      }
     }
   }
 
