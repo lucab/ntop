@@ -1611,7 +1611,7 @@ static IPSession* handleTCPSession(const struct pcap_pkthdr *h,
   int len = 0;
 
 #ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.tcpSessionsMutex, "handleSession");
+  accessMutex(&myGlobals.tcpSessionsMutex, "handleTCPSession");
 #endif
 
   idx = computeIdx(&srcHost->hostIpAddress,&dstHost->hostIpAddress, sport, dport);
@@ -2343,9 +2343,8 @@ IPSession* handleSession(const struct pcap_pkthdr *h,
 
   if(tp == NULL)
     sessionType = IPPROTO_UDP;
-  else {
-    sessionType = IPPROTO_TCP;
-  }
+  else
+    sessionType = IPPROTO_TCP;  
 
 #ifdef SESSION_TRACE_DEBUG
   {

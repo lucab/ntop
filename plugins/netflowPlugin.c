@@ -1,5 +1,5 @@
 /*
- *  Copyright(C) 2002-04 Luca Deri <deri@ntop.org>
+ *  Copyright(C) 2002-05 Luca Deri <deri@ntop.org>
  *
  *  		       http://www.ntop.org/
  *
@@ -50,6 +50,33 @@ static void printNetFlowStatisticsRcvd(int deviceId);
 static void printNetFlowConfiguration(int deviceId);
 static int createNetFlowDevice(int netFlowDeviceId);
 static int mapNetFlowDeviceToNtopDevice(int deviceId);
+
+struct generic_netflow_record {
+  /* v5 */
+  u_int32_t srcaddr;    /* Source IP Address */
+  u_int32_t dstaddr;    /* Destination IP Address */
+  u_int32_t nexthop;    /* Next hop router's IP Address */
+  u_int16_t input;      /* Input interface index */
+  u_int16_t output;     /* Output interface index */
+  u_int32_t dPkts;      /* Packets sent in Duration (milliseconds between 1st
+			   & last packet in this flow)*/
+  u_int32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st
+			   & last packet in  this flow)*/
+  u_int32_t First;      /* SysUptime at start of flow */
+  u_int32_t Last;       /* and of last packet of the flow */
+  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
+  u_int8_t  tcp_flags;  /* Cumulative OR of tcp flags */
+  u_int8_t  prot;       /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
+  u_int8_t  tos;        /* IP Type-of-Service */
+  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
+  u_int16_t src_as;     /* source peer/origin Autonomous System */
+  u_int8_t  dst_mask;   /* destination route's mask bits */
+  u_int8_t  src_mask;   /* source route's mask bits */
+
+  /* nFlow Extensions */
+  u_int32_t nw_latency_sec, nw_latency_usec;
+};
 
 /* ****************************** */
 
@@ -256,10 +283,10 @@ static int setNetFlowInSocket(int deviceId) {
 
 /* *************************** */
 
-static int handleV5Flow(time_t recordActTime,
-			time_t recordSysUpTime,
-			struct flow_ver5_rec *record,
-			int deviceId) {
+static int handleGenericFlow(time_t recordActTime,
+			     time_t recordSysUpTime,
+			     struct generic_netflow_record *record,
+			     int deviceId) {
   int actualDeviceId;
   Counter len;
   char theFlags[256];
@@ -649,6 +676,21 @@ static int handleV5Flow(time_t recordActTime,
       session->firstSeen = timeDiff;
 
     session->lastSeen = recordActTime;
+    
+    record->nw_latency_sec = ntohl(record->nw_latency_sec),
+      record->nw_latency_usec = ntohl(record->nw_latency_usec);
+    if(record->nw_latency_sec || record->nw_latency_usec) {
+
+      /*
+	traceEvent(CONST_TRACE_INFO, "DEBUG: Nw Latency=%d.%d [%s:%d -> %s:%d]",
+		 record->nw_latency_sec, record->nw_latency_usec,
+		 srcHost->hostNumIpAddress, sport,
+		 dstHost->hostNumIpAddress, dport);
+      */
+
+      session->nwLatency.tv_sec = record->nw_latency_sec, 
+	session->nwLatency.tv_usec = record->nw_latency_usec;
+    }
   }
 
 #ifdef CFG_MULTITHREADED
@@ -664,6 +706,7 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
   NetFlow5Record the5Record;
   int flowVersion;
   time_t recordActTime = 0, recordSysUpTime = 0;
+  struct generic_netflow_record record;
 
 #ifdef DEBUG
   char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
@@ -825,8 +868,13 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	  }
 
 	  if(len > template.flowsetLen) {
-	    traceEvent(CONST_TRACE_WARNING, "Template %d has wrong size [actual=%d/expected=%d]: skipped",
-		       template.templateId, len, template.flowsetLen);
+	    static u_short lastBadTemplate = 0;
+
+	    if(template.templateId != lastBadTemplate) {
+	      traceEvent(CONST_TRACE_WARNING, "Template %d has wrong size [actual=%d/expected=%d]: skipped",
+			 template.templateId, len, template.flowsetLen);
+	      lastBadTemplate = template.templateId;
+	    }
 	    myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9BadTemplRcvd++;
 	  } else {
 	    while(cursor != NULL) {
@@ -899,7 +947,6 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 	    /* Template found */
 	    int fieldId;
 	    V9TemplateField *fields = cursor->fields;
-	    struct flow_ver5_rec record;
 
             /* initialize to zero */
 	    record.src_as = 0;
@@ -917,6 +964,9 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow pdu [displ=%d][template=%d]",
 			   displ, fs.templateId);
 #endif
+	      
+	      /* Defaults */
+	      record.nw_latency_sec = record.nw_latency_usec = htonl(0);
 
 	      for(fieldId=0; fieldId<cursor->templateInfo.fieldCount; fieldId++) {
 		switch(ntohs(fields[fieldId].fieldType)) {
@@ -971,13 +1021,16 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
 		case 17: /* DST_AS */
 		  memcpy(&record.dst_as, &buffer[displ], 2); displ += 2;
 		  break;
-		case 16: /* SRC_AS */
-		  memcpy(&record.src_as, &buffer[displ], 2); displ += 2;
+		case 92: /* NW_LATENCY_SEC */
+		  memcpy(&record.nw_latency_sec, &buffer[displ], 4); displ += 4;
+		  break;
+		case 93: /* NW_LATENCY_USEC */
+		  memcpy(&record.nw_latency_usec, &buffer[displ], 4); displ += 4;
 		  break;
 		}
 	      }
 
-	      handleV5Flow(recordActTime, recordSysUpTime, &record, deviceId);
+	      handleGenericFlow(recordActTime, recordSysUpTime, &record, deviceId);
 	      myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd++;
 	    }
 	  } else {
@@ -1008,8 +1061,32 @@ static void dissectFlow(char *buffer, int bufferLen, int deviceId) {
     accessMutex(&myGlobals.device[deviceId].netflowGlobals->whiteblackListMutex, "flowPacket");
 #endif
 
-    for(i=0; i<numFlows; i++)
-      handleV5Flow(recordActTime, recordSysUpTime, &the5Record.flowRecord[i], deviceId);
+    /*
+      Reset the record so that fields that are not contained
+      into v5 records are set to zero
+    */
+    record.nw_latency_sec = record.nw_latency_usec = htonl(0);
+
+    for(i=0; i<numFlows; i++) {
+      record.srcaddr = the5Record.flowRecord[i].srcaddr;
+      record.dstaddr = the5Record.flowRecord[i].dstaddr;
+      record.nexthop = the5Record.flowRecord[i].nexthop;
+      record.input = the5Record.flowRecord[i].input;
+      record.output = the5Record.flowRecord[i].output;
+      record.dPkts = the5Record.flowRecord[i].dPkts;
+      record.dOctets = the5Record.flowRecord[i].dOctets;
+      record.First = the5Record.flowRecord[i].First;
+      record.Last = the5Record.flowRecord[i].Last;
+      record.srcport = the5Record.flowRecord[i].srcport;
+      record.dstport = the5Record.flowRecord[i].dstport;
+      record.tcp_flags = the5Record.flowRecord[i].tcp_flags;
+      record.prot = the5Record.flowRecord[i].prot;
+      record.dst_as = the5Record.flowRecord[i].dst_as;
+      record.src_as = the5Record.flowRecord[i].src_as;
+      record.dst_mask = the5Record.flowRecord[i].dst_mask;
+      record.src_mask = the5Record.flowRecord[i].src_mask;
+      handleGenericFlow(recordActTime, recordSysUpTime, &record, deviceId);
+    }
 
     if(flowVersion == 5) /* Skip converted V1/V7 flows */
       myGlobals.device[deviceId].netflowGlobals->numNetFlowsV5Rcvd += numFlows;
@@ -2675,7 +2752,7 @@ PluginInfo* netflowPluginEntryFctn(void)
      PluginInfo* PluginEntryFctn(void)
 #endif
 {
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Welcome to %s.(C) 2002-04 by Luca Deri",
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Welcome to %s.(C) 2002-05 by Luca Deri",
 	     netflowPluginInfo->pluginName);
 
   return(netflowPluginInfo);

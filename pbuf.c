@@ -3006,12 +3006,13 @@ void processPacket(u_char *_deviceId,
 
 	  if((srcHost != NULL) && (dstHost != NULL)) {
 	    TrafficCounter ctr;
+	    int llcLen;
 
 	    if(vlanId != -1) { srcHost->vlanId = vlanId; dstHost->vlanId = vlanId; }
 	    p1 = (u_char*)(p+hlen);
 
 	    /* Watch out for possible alignment problems */
-	    memcpy(&llcHeader, (char*)p1, min(length, sizeof(llcHeader)));
+	    memcpy(&llcHeader, (char*)p1, (llcLen = min(length, sizeof(llcHeader))));
 
 	    sap_type = llcHeader.ssap & ~CONST_LLC_GSAP;
 	    llcsap_string(sap_type);
@@ -3023,8 +3024,76 @@ void processPacket(u_char *_deviceId,
 	       && (llcHeader.ctl.snap_ether.snap_ethertype[0] == 0x20)
 	       && (llcHeader.ctl.snap_ether.snap_ethertype[1] == 0x00) /* 0x2000 Cisco Discovery Protocol */
 	       ) {
-	      if(srcHost->fingerprint == NULL)
-		srcHost->fingerprint = strdup(":Cisco");
+	      u_char *cdp;
+	      int cdp_idx = 0;
+	      
+	      cdp = (u_char*)(p+hlen+llcLen);
+
+	      if(cdp[cdp_idx] == 0x02) {
+		/* CDP v2 */
+		
+		struct cdp_element {
+		  u_int16_t cdp_type;
+		  u_int16_t cdp_len;
+		  u_char cdp_content[255];
+		};
+				
+		cdp_idx = 4;
+		while(cdp_idx < length) {
+		  struct cdp_element *element = (struct cdp_element*)&cdp[cdp_idx];
+		  
+		  switch(ntohs(element->cdp_type)) {
+		  case 0x0001: /* Device Id */
+		    if((srcHost->hostResolvedName[0] == '\0') || (strcmp(srcHost->hostResolvedName, srcHost->hostNumIpAddress))) {
+		      u_short tmpStrLen = min(ntohs(element->cdp_len)-4, MAX_LEN_SYM_HOST_NAME-1);
+		      strncpy(srcHost->hostResolvedName, element->cdp_content, tmpStrLen);
+		      srcHost->hostResolvedName[tmpStrLen] = '\0';
+		    }
+		    break;
+		  case 0x0002: /* Addresses */
+		    break;
+		  case 0x0003: /* Port Id */
+		    break;
+		  case 0x0004: /* Capabilities */
+		    break;
+		  case 0x0005: /* Sw Version */
+		    if(srcHost->description == NULL) {
+		      char *tmpStr;
+		      u_short tmpStrLen = min(ntohs(element->cdp_len)-4, 255)+1;
+
+		      tmpStr = (char*)malloc(tmpStrLen);
+		      memcpy(tmpStr, element->cdp_content, tmpStrLen-2);
+		      tmpStr[tmpStrLen-1] = '\0';
+		      srcHost->description = tmpStr;
+		    }
+		    break;
+		  case 0x0006: /* Platform */
+		    if(srcHost->fingerprint == NULL) {
+		      char *tmpStr;
+		      u_short tmpStrLen = min(ntohs(element->cdp_len)-4, 64)+2;
+
+		      tmpStr = (char*)malloc(tmpStrLen);
+		      tmpStr[0] = ':';
+		      memcpy(&tmpStr[1], element->cdp_content, tmpStrLen-2);
+		      tmpStr[tmpStrLen-1] = '\0';
+		      srcHost->fingerprint = tmpStr;
+		      srcHost->hwModel = strdup(&tmpStr[1]);
+		    }
+		    break;
+		  case 0x0008: /* Cluster Management */
+		    break;
+		  case 0x0009: /* VTP Management Domain */
+		    break;
+		  }
+
+		  cdp_idx += ntohs(element->cdp_len);
+		}
+
+
+		if(srcHost->fingerprint == NULL)
+		  srcHost->fingerprint = strdup(":Cisco"); /* Default */
+
+	      }	      
 	    }
 
 	    if(sap_type != 0x42 /* !STP */) {

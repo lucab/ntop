@@ -487,17 +487,20 @@ char* makeHostLink(HostTraffic *el, short mode,
           break;
       }
 
-    if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME) &&
-       (el->ethAddressString[0] != '\0')) {
-      strncpy(linkName, addrtostr(&(el->hostIpAddress)), sizeof(linkName));
-    }
-    if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_MAC) &&
-       (symIp[2] != ':') &&
-       (el->ethAddressString[0] != '\0')) {
+    if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_NAME) && (el->ethAddressString[0] != '\0')) {
+	strncpy(linkName, addrtostr(&(el->hostIpAddress)), sizeof(linkName));
+    } else if((el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_MAC) &&
+	      (symIp[2] != ':') && (el->ethAddressString[0] != '\0')) {
       /* MAC address, one which has already been fixed up with the vendor string -
          set the alt tag */
-      safe_snprintf(__FILE__, __LINE__, titleBuf, sizeof(titleBuf), "%s Actual MAC address is %s",
-               titleBuf, el->ethAddressString);
+
+      if(el->hostResolvedName[0] != '\0') 
+	safe_snprintf(__FILE__, __LINE__, titleBuf, sizeof(titleBuf), "%s %s",
+		      titleBuf, el->hostResolvedName);
+      else
+	safe_snprintf(__FILE__, __LINE__, titleBuf, sizeof(titleBuf), "%s Actual MAC address is %s",
+		      titleBuf, el->ethAddressString);
+
       /* Un 'fix' the linkName so it goes back to the native page */
       strncpy(linkName, el->ethAddressString, sizeof(linkName));
     }

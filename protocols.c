@@ -916,8 +916,6 @@ void handleNetbios(HostTraffic *srcHost,
 #ifdef DEBUG
 	  printf("OS: %s\n", &data[i]);
 #endif
-
-
 	  if(srcHost->fingerprint == NULL) {
 	    char buffer[64];
 

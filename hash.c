@@ -480,6 +480,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   host->dnsDomainValue = NULL;
   if(host->dnsTLDValue != NULL) free(host->dnsTLDValue);
   host->dnsTLDValue = NULL;
+  if(host->description != NULL) free(host->description);
+  if(host->hwModel != NULL) free(host->hwModel);
   if(host->ip2ccValue != NULL) free(host->ip2ccValue);
   host->ip2ccValue = NULL;
 

@@ -1209,7 +1209,7 @@ static void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
 /* ******************************* */
 
 void updateCounter(char *hostPath, char *key, Counter value) {
-  traceEvent(CONST_TRACE_INFO, "updateCounter: [%s][%s]", hostPath, key);
+  /* traceEvent(CONST_TRACE_INFO, "updateCounter: [%s][%s]", hostPath, key); */
   updateRRD(hostPath, key, value, 1);
 }
 

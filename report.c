@@ -3230,20 +3230,16 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
     formatBuf4[32], formatBuf5[32], formatBuf6[32];
 
   if(!myGlobals.runningPref.enableSessionHandling) {
-    if(el == NULL)
-      printHTMLheader("Active TCP Sessions", NULL, 0);
-    else
-      printSectionTitle("Active TCP Sessions");
+    if(el != NULL) return;
+    printHTMLheader("Active TCP Sessions", NULL, 0);
     printNotAvailable("-z or --disable-sessions");
     return;
   }
   
   if((myGlobals.device[actualDeviceId].tcpSession == NULL) ||
      (myGlobals.device[actualDeviceId].numTcpSessions == 0)) {
-    if(el == NULL)
-      printHTMLheader("Active TCP Sessions", NULL, 0);
-    else
-      printSectionTitle("Active TCP Sessions");
+    if(el != NULL) return;    
+    printHTMLheader("Active TCP Sessions", NULL, 0);
     printNoDataYet();
     return;
   }
@@ -3384,11 +3380,12 @@ void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el) {
 
     printFooterHostLink();
   } else {
-    if(el == NULL)
+    if(el == NULL) {
+      printHTMLheader("Active TCP Sessions", NULL, 0);
       printFlagedWarning("<I>No Active TCP Sessions</I>");
+    }
   }
 }
-
 
 /* ********************************** */
 
@@ -5670,5 +5667,3 @@ void printFcHostsTraffic(int reportType,
     myGlobals.lastRefreshTime = myGlobals.actTime;
     free(tmpTable);
 }
-
-

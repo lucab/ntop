@@ -774,7 +774,7 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, i
   flagImg = NULL;
 
   for(i=0; osInfos[i].link != NULL; i++) {
-    if(strstr(theOsName, osInfos[i].name) != NULL) {
+    if(strcasestr(theOsName, osInfos[i].name) != NULL) {
       flagImg = osInfos[i].link;
       break;
     }
@@ -3811,6 +3811,20 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		  "Host&nbsp;Location",
 		  "Remote (outside specified/local subnet)");
     }
+    sendString(buf);
+  }
+
+  if(el->hwModel) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "%s</TD></TR>\n", getRowColor(), "Hardware Model", el->hwModel);
+    sendString(buf);
+  }
+
+  if(el->description) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
+		  "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "%s</TD></TR>\n", getRowColor(), "Description", el->description);
     sendString(buf);
   }
 
