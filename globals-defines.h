@@ -989,8 +989,8 @@
  * This is the URL to request the latest version information
  */
 //TEMP [ switch sites ?]
-#define CONST_VERSIONCHECK_SITE             "www.burtonstrauss.com"
-#define CONST_VERSIONCHECK_BACKUP_SITE      "www.ntop.org"
+#define CONST_VERSIONCHECK_SITE             "version.ntop.org"
+#define CONST_VERSIONCHECK_BACKUP_SITE      "www.burtonstrauss.com"
 #define CONST_VERSIONCHECK_DOCUMENT         "version.xml"
 #define CONST_VERSIONCHECK_URL              CONST_VERSIONCHECK_SITE "/" CONST_VERSIONCHECK_DOCUMENT
 
