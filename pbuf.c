@@ -88,7 +88,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		  u_char checkForMultihoming,
 		  u_char forceUsingIPaddress,
 		  int actualDeviceId) {
-  u_int idx, i, isMultihomed = 0, numRuns=0, initialIdx, numFreedHosts = 0;
+  u_int idx, i, isMultihomed = 0, numRuns=0, initialIdx, inIdx=0, numFreedHosts = 0;
 #ifndef MULTITHREADED
   u_int run=0;
 #endif
@@ -104,15 +104,19 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
     return(NO_PEER);
   }
 
-  idx = computeInitialHashIdx(hostIpAddress, ether_addr, 
-			      &useIPAddressForSearching, actualDeviceId);
+  inIdx = idx = computeInitialHashIdx(hostIpAddress, ether_addr, 
+				      &useIPAddressForSearching, actualDeviceId);
+
+  idx = idx % myGlobals.device[actualDeviceId].actualHashSize;
   initialIdx = idx;
 
 #ifdef DEBUG
+  /*
   if(strcmp(etheraddr_string(ether_addr), "00:D0:B7:19:C0:4C") == 0) {
     traceEvent(TRACE_INFO, "INFO: here we go [initialIdx=%d]", initialIdx);
     dumpHash();
   }
+  */
 #endif
 
 #ifdef DEBUG
@@ -280,11 +284,6 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       idx = firstEmptySlot;
       myGlobals.device[actualDeviceId].hostsno++;
 
-#ifdef DEBUG
-      traceEvent(TRACE_INFO, "Adding idx=%d on device=%d [actualHashSize=%d]\n",
-		 firstEmptySlot, actualDeviceId, myGlobals.device[actualDeviceId].actualHashSize);
-#endif
-
       if(ether_addr != NULL) {
 	if((hostIpAddress == NULL)
 	   || ((hostIpAddress != NULL)
@@ -391,6 +390,13 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 	el->lastSeen = myGlobals.actTime;
 	checkSpoofing(idx, actualDeviceId);
       }
+
+#ifdef HASH_DEBUG
+      traceEvent(TRACE_INFO, "Adding %s/%s [idx=%d][initialIdx=%d][realInIdx=%d][device=%d][actualHashSize=%d]\n",
+		 el->ethAddressString, el->hostNumIpAddress,
+		 firstEmptySlot, initialIdx, (inIdx % 32768), actualDeviceId, 
+		 myGlobals.device[actualDeviceId].actualHashSize);
+#endif
     } else {
       /* The hashtable is full */
 #ifndef MULTITHREADED
@@ -434,7 +440,11 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
   } else {
 #ifdef HASH_DEBUG
     if((numRuns*2) > myGlobals.device[actualDeviceId].actualHashSize) {
-      traceEvent(TRACE_ERROR, "Num Runs: %d/%d [idx=%d][initialIdx=%d]", 
+      traceEvent(TRACE_ERROR, "Searching for %s/%s [UseIp=%d]",
+		 el->ethAddressString, el->hostNumIpAddress,
+		 useIPAddressForSearching);
+
+      traceEvent(TRACE_ERROR, "Num Runs: %d/%d [found@idx=%d][initialIdx=%d]", 
 		 numRuns, myGlobals.device[actualDeviceId].actualHashSize, 
 		 idx, initialIdx);
       dumpHash();

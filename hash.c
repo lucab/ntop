@@ -93,7 +93,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 	       (*useIPAddressForSearching), idx);
 #endif
 
-  return((u_int)(idx % myGlobals.device[actualDeviceId].actualHashSize));
+  return((u_int)idx);
 }
 
 /* ******************************* */
@@ -249,55 +249,68 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
     hash_hostTraffic[myGlobals.otherHostEntryIdx];
   mappings[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntryIdx;
 
-  for(i=1; i<myGlobals.device[deviceToExtend].actualHashSize; i++)
+  for(i=1; i<myGlobals.device[deviceToExtend].actualHashSize; i++) {
+    int numFreedHosts = 0;
+
     if((i != myGlobals.otherHostEntryIdx) 
        && (myGlobals.device[deviceToExtend].hash_hostTraffic[i] != NULL)) {
-      struct in_addr *hostIpAddress;
-      short numCmp = 0;
-
-      /*
-	This is very important as computeInitialHashIdx() behaves
-	*very* differently when the first argument is NULL. As 
-	hash_hostTraffic[i]->hostIpAddress is never NULL at best its value
-	is 0x0 so the pointer to hash_hostTraffic[i]->hostIpAddress is never
-	NULL even if the value is 0x0. For this reason the variable
-	hostIpAddress has been added.
-      */
-
-      if((myGlobals.device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress.s_addr == 0x0)
-	 && (myGlobals.device[deviceToExtend].hash_hostTraffic[i]->hostSymIpAddress[0] != '0')) /* 0.0.0.0 */
+      if((!myGlobals.stickyHosts)
+	 && (numFreedHosts < 7) /* Don't free too many buckets per run ! */
+	 && ((myGlobals.device[deviceToExtend].hash_hostTraffic[i]->lastSeen+
+	      IDLE_HOST_PURGE_TIMEOUT) < myGlobals.actTime)) {
+	freeHostInfo(deviceToExtend, i, 0, deviceToExtend);
+      } else {
+	struct in_addr *hostIpAddress;
+	short numCmp = 0;
+	u_int initialIdx;
+	
+	/*
+	  This is very important as computeInitialHashIdx() behaves
+	  *very* differently when the first argument is NULL. As 
+	  hash_hostTraffic[i]->hostIpAddress is never NULL at best its value
+	  is 0x0 so the pointer to hash_hostTraffic[i]->hostIpAddress is never
+	  NULL even if the value is 0x0. For this reason the variable
+	  hostIpAddress has been added.
+	*/
+	
+	if((myGlobals.device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress.s_addr == 0x0)
+	   && (myGlobals.device[deviceToExtend].hash_hostTraffic[i]->hostSymIpAddress[0] != '0')) /* 0.0.0.0 */
 	  hostIpAddress = NULL;
-      else
+	else
 	  hostIpAddress = &myGlobals.device[deviceToExtend].hash_hostTraffic[i]->hostIpAddress;
       
-      idx = computeInitialHashIdx(hostIpAddress,
-				  myGlobals.device[deviceToExtend].hash_hostTraffic[i]->ethAddress,
-				  &numCmp, actualDeviceId);
-      
-      if(idx == NO_PEER) {
-	/* Discard the host and continue */
-	freeHostInfo(deviceToExtend, i, 0, actualDeviceId);
-	continue;
-      }
+	initialIdx = idx = computeInitialHashIdx(hostIpAddress,
+						 myGlobals.device[deviceToExtend].hash_hostTraffic[i]->ethAddress,
+						 &numCmp, actualDeviceId);
 
-      idx = (u_int)(idx % newSize);
+	if(idx == NO_PEER) {
+	  /* Discard the host and continue */
+	  freeHostInfo(deviceToExtend, i, 0, actualDeviceId);
+	  continue;
+	}
+
+	idx = (u_int)(idx % newSize);
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Searching from slot %d [size=%d]\n", idx, newSize);
+	traceEvent(TRACE_INFO, "Searching from slot %d [size=%d]\n", idx, newSize);
 #endif
 
-      for(j=1; j<newSize; j++) {
-	if(hash_hostTraffic[idx] == NULL) {
-	  hash_hostTraffic[idx] = myGlobals.device[deviceToExtend].hash_hostTraffic[i];
-	  mappings[i] = idx;
+	for(j=1; j<newSize; j++) {
+	  if(hash_hostTraffic[idx] == NULL) {
+	    hash_hostTraffic[idx] = myGlobals.device[deviceToExtend].hash_hostTraffic[i];
+	    mappings[i] = idx;
 #ifdef MAPPING_DEBUG
-	  traceEvent(TRACE_INFO, "Adding mapping %d -> %d\n", i, idx);
+	    traceEvent(TRACE_INFO, "Rehash %s/%s [oldIdx=%d][newIdx=%d][initialIdx=%d][dev=%d][actualHashSize=%d]\n",
+		       hash_hostTraffic[idx]->ethAddressString, hash_hostTraffic[idx]->hostNumIpAddress,
+		       i, j, (initialIdx % 32768), deviceToExtend, newSize);
 #endif
-	  break;
-	} else
-	  idx = (idx+1) % newSize;
+	    break;
+	  } else
+	    idx = (idx+1) % newSize;
+	}
       }
     }
+  } /* for */
 
   free(myGlobals.device[deviceToExtend].hash_hostTraffic);
   myGlobals.device[deviceToExtend].hash_hostTraffic = hash_hostTraffic;
