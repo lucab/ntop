@@ -110,16 +110,16 @@ void updateUsedPorts(HostTraffic *srcHost,
   if(sport > dport) {
     clientPort = sport, serverPort = dport;
     
-    if(srcHost->hashListBucket != myGlobals.otherHostEntryIdx)
+    if(srcHost->hostTrafficBucket != myGlobals.otherHostEntryIdx)
       updatePortList(srcHost, clientPort, 0);
-    if(dstHost->hashListBucket != myGlobals.otherHostEntryIdx)
+    if(dstHost->hostTrafficBucket != myGlobals.otherHostEntryIdx)
       updatePortList(dstHost, 0, serverPort);
   } else {
     clientPort = dport, serverPort = sport;
 
-    if(srcHost->hashListBucket != myGlobals.otherHostEntryIdx)
+    if(srcHost->hostTrafficBucket != myGlobals.otherHostEntryIdx)
       updatePortList(srcHost, 0, serverPort);
-    if(dstHost->hashListBucket != myGlobals.otherHostEntryIdx)
+    if(dstHost->hostTrafficBucket != myGlobals.otherHostEntryIdx)
       updatePortList(dstHost, clientPort, 0);
   }
 
@@ -132,46 +132,46 @@ void updateUsedPorts(HostTraffic *srcHost,
     if(srcHost->portsUsage[sport] == NULL) srcHost->portsUsage[sport] = allocatePortUsage();
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Adding svr peer %u", dstHost->hashListBucket);
+    traceEvent(TRACE_INFO, "Adding svr peer %u", dstHost->hostTrafficBucket);
 #endif
 
     srcHost->portsUsage[sport]->serverTraffic += length;
     srcHost->portsUsage[sport]->serverUses++;
-    srcHost->portsUsage[sport]->serverUsesLastPeer = dstHost->hashListBucket;
+    srcHost->portsUsage[sport]->serverUsesLastPeer = dstHost->hostTrafficBucket;
 
     if(dstHost->portsUsage[sport] == NULL)
       dstHost->portsUsage[sport] = allocatePortUsage();
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Adding client peer %u", dstHost->hashListBucket);
+    traceEvent(TRACE_INFO, "Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
     dstHost->portsUsage[sport]->clientTraffic += length;
     dstHost->portsUsage[sport]->clientUses++;
-    dstHost->portsUsage[sport]->clientUsesLastPeer = srcHost->hashListBucket;
+    dstHost->portsUsage[sport]->clientUsesLastPeer = srcHost->hostTrafficBucket;
   }
 
   if(dport < TOP_ASSIGNED_IP_PORTS) {
     if(srcHost->portsUsage[dport] == NULL) srcHost->portsUsage[dport] = allocatePortUsage();
 
 #ifdef DEBUG      
-    traceEvent(TRACE_INFO, "Adding client peer %u", dstHost->hashListBucket);
+    traceEvent(TRACE_INFO, "Adding client peer %u", dstHost->hostTrafficBucket);
 #endif
 
     srcHost->portsUsage[dport]->clientTraffic += length;
     srcHost->portsUsage[dport]->clientUses++;
-    srcHost->portsUsage[dport]->clientUsesLastPeer = dstHost->hashListBucket;
+    srcHost->portsUsage[dport]->clientUsesLastPeer = dstHost->hostTrafficBucket;
       
     if(dstHost->portsUsage[dport] == NULL)
       dstHost->portsUsage[dport] = allocatePortUsage();
 
 #ifdef DEBUG
-    traceEvent(TRACE_INFO, "Adding svr peer %u", srcHost->hashListBucket);
+    traceEvent(TRACE_INFO, "Adding svr peer %u", srcHost->hostTrafficBucket);
 #endif
 
     dstHost->portsUsage[dport]->serverTraffic += length;
     dstHost->portsUsage[dport]->serverUses++;
-    dstHost->portsUsage[dport]->serverUsesLastPeer = srcHost->hashListBucket;
+    dstHost->portsUsage[dport]->serverUsesLastPeer = srcHost->hostTrafficBucket;
   }
 }
 

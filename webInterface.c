@@ -403,11 +403,11 @@ char* makeHostLink(HostTraffic *el, short mode,
       dynIp = "";
   }
 
-  if(isMultihomed(el))   multihomed = "&nbsp;<IMG ALT=\"Multihomed host\" SRC=/multihomed.gif BORDER=0>"; else multihomed = "";
+  if(isMultihomed(el))   multihomed = "&nbsp;<IMG ALT=Multihomed SRC=/multihomed.gif BORDER=0>"; else multihomed = "";
   if(gatewayHost(el))    gwStr = "&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>"; else gwStr = "";
-  if(nameServerHost(el)) dnsStr = "&nbsp;<IMG ALT=\"DNS Server\" SRC=/dns.gif BORDER=0>"; else dnsStr = "";
+  if(nameServerHost(el)) dnsStr = "&nbsp;<IMG ALT=\"DNS\" SRC=/dns.gif BORDER=0>"; else dnsStr = "";
   if(isPrinter(el))      printStr = "&nbsp;<IMG ALT=Printer SRC=/printer.gif BORDER=0>"; else printStr = "";
-  if(isSMTPhost(el))     smtpStr = "&nbsp;<IMG ALT=\"Mail Server (SMTP)\" SRC=/mail.gif BORDER=0>"; else smtpStr = "";
+  if(isSMTPhost(el))     smtpStr = "&nbsp;<IMG ALT=\"Mail (SMTP)\" SRC=/mail.gif BORDER=0>"; else smtpStr = "";
 
   switch(isHostHealthy(el)) {
   case 0: /* OK */
@@ -437,7 +437,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		multihomed, gwStr, dnsStr,
 		printStr, smtpStr, healthStr,
 		dynIp, blinkOff, flag) < 0)
-      BufferTooShort();
+      BufferTooShort();    
   }
 
   return(buf[bufIdx]);
@@ -913,7 +913,7 @@ void printNtopConfigInfo(void) {
 #ifdef MEMORY_DEBUG
   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Allocated Memory</TH>"
 	      "<TD "TD_BG"  align=right>%s</TD></TR>\n",
-	      formatBytes(allocatedMemory, 0)) < 0)
+	      formatBytes(myGlobals.allocatedMemory, 0)) < 0)
     BufferTooShort();
   sendString(buf);
 #endif

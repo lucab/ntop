@@ -837,9 +837,19 @@ RETSIGTYPE cleanup(int signo) {
 #endif
 
 /* #ifdef FULL_MEMORY_FREE */
-  for(i=0; i<myGlobals.numDevices; i++)
+  for(i=0; i<myGlobals.numDevices; i++) {
     freeHostInstances(i);
+
+    freeHostInfo(i, myGlobals.broadcastEntry, i);
+    if(myGlobals.otherHostEntry != NULL) 
+      freeHostInfo(i, myGlobals.otherHostEntry, i);  
+  }
+
 /* #endif */
+
+  for(i=0; i<myGlobals.hostsCacheLen; i++)
+    free(myGlobals.hostsCache[i]);
+  myGlobals.hostsCacheLen = 0;  
 
 #ifndef MICRO_NTOP
   unloadPlugins();

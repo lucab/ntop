@@ -340,7 +340,7 @@ static void usage (FILE * fp) {
 static int parseOptions(int argc, char* argv []) {
   int userSpecified = 0;
 #ifdef WIN32
-  int optind=0;  
+  int optind=0;
 #endif
 
   /*
@@ -440,7 +440,7 @@ static int parseOptions(int argc, char* argv []) {
       myGlobals.enableSuspiciousPacketDump = 1;
       break;
 
-    case 's': 
+    case 's':
       myGlobals.disablePromiscuousMode = 1;
       break;
 
@@ -626,13 +626,13 @@ static int parseOptions(int argc, char* argv []) {
 #endif
       usage(stdout);
       exit(-1);
-    }    
+    }
   }
 
   return(userSpecified);
 }
 
-
+/* ************************************ */
 
 /* That's the meat */
 int main(int argc, char *argv[]) {
@@ -685,17 +685,13 @@ int main(int argc, char *argv[]) {
    * Perform here all the initialization steps required by the ntop engine to run
    */
 
-#ifdef MEMORY_DEBUG
-  initLeaks();
-#endif
-
 #ifdef WIN32
   initWinsock32();
 #endif
 
   /*
    * Initialize memory and data for the protocols being monitored trying to access
-   * 
+   *
    */
   initIPServices();
 
@@ -709,15 +705,15 @@ int main(int argc, char *argv[]) {
   reportValues(&lastTime);
 #endif /* MICRO_NTOP */
 
-  initGdbm();  
+  initGdbm(NULL);
 
 #ifndef WIN32
   if(myGlobals.daemonMode)
     daemonize();
-#endif  
+#endif
 
   /*
-   * initialize memory and data 
+   * initialize memory and data
    */
   initDevices(myGlobals.devices);
 

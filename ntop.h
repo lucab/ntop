@@ -25,6 +25,9 @@
 #ifndef NTOP_H
 #define NTOP_H
 
+/* #define MEMORY_DEBUG  */
+
+
 /*
    On some systems these defines make reentrant library
    routines available.
@@ -1668,7 +1671,8 @@ typedef struct storedAddress {
 
 /* Host Traffic */
 typedef struct hostTraffic {
-  u_int            hashListBucket;
+  u_short          hostTrafficBucket /* Index in the **hash_hostTraffic list */;
+  u_short          hashListBucket /* Index in the **hash_hostTraffic list */;
   u_int16_t        numUses;
   HostSerial       hostSerial;
   struct in_addr   hostIpAddress;

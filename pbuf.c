@@ -173,17 +173,17 @@ static void addContactedPeers(HostTraffic *sender,
 
   if((sender == NULL) 
      || (receiver == NULL)
-     || (sender->hashListBucket == receiver->hashListBucket)) {
+     || (sender->hostTrafficBucket == receiver->hostTrafficBucket)) {
     traceEvent(TRACE_ERROR, "Sanity check failed @ addContactedPeers");
     return;
   }
 
-  if((!broadcastHost(sender))  && (sender->hashListBucket != myGlobals.otherHostEntryIdx)) {
-    incrementUsageCounter(&sender->contactedSentPeers, receiver->hashListBucket, actualDeviceId);
+  if((!broadcastHost(sender))  && (sender->hostTrafficBucket != myGlobals.otherHostEntryIdx)) {
+    incrementUsageCounter(&sender->contactedSentPeers, receiver->hostTrafficBucket, actualDeviceId);
   }
 
-  if((!broadcastHost(receiver)) && (receiver->hashListBucket != myGlobals.otherHostEntryIdx)) {
-    incrementUsageCounter(&receiver->contactedRcvdPeers, sender->hashListBucket, actualDeviceId);
+  if((!broadcastHost(receiver)) && (receiver->hostTrafficBucket != myGlobals.otherHostEntryIdx)) {
+    incrementUsageCounter(&receiver->contactedRcvdPeers, sender->hostTrafficBucket, actualDeviceId);
   }
 }
 
@@ -472,8 +472,8 @@ static void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
   }
   
   if((srcHost == dstHost)
-     || ((srcHost->hashListBucket == myGlobals.otherHostEntryIdx)
-	 && (dstHost->hashListBucket == myGlobals.otherHostEntryIdx)))
+     || ((srcHost->hostTrafficBucket == myGlobals.otherHostEntryIdx)
+	 && (dstHost->hostTrafficBucket == myGlobals.otherHostEntryIdx)))
     return;
 
   thisTime = localtime_r(&myGlobals.actTime, &t);
@@ -1630,11 +1630,18 @@ void processPacket(u_char *_deviceId,
   unsigned char ipxBuffer[128];
   int deviceId, actualDeviceId;
 
-#ifdef DEBUG
+
+#ifdef MEMORY_DEBUG
   {
       static long numPkt=0;
 
-      traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt++, length);
+      /* traceEvent(TRACE_INFO, "%ld (%ld)\n", numPkt, length); */
+
+      if(numPkt == 10000) {
+	cleanup(2);
+      } else
+	numPkt++;
+
 
       /* 
       if(numPkt=100000) {

@@ -21,10 +21,6 @@ typedef struct memoryBlock {
 static MemoryBlock *theRoot = NULL;
 static char tmpStr[255];
 
-#ifdef MULTITHREADED
-static PthreadMutex leaksMutex;
-#endif
-
 unsigned int PrintMemoryBlocks(); /* Forward declaration */
 
 /* *************************************** */
@@ -33,7 +29,7 @@ void* myMalloc(size_t theSize, int theLine, char* theFile) {
   MemoryBlock *tmpBlock;
 
 #if defined(MULTITHREADED)
-  accessMutex(&leaksMutex, "myMalloc");
+  accessMutex(&myGlobals.leaksMutex, "myMalloc");
 #endif
 
   tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
@@ -43,7 +39,7 @@ void* myMalloc(size_t theSize, int theLine, char* theFile) {
 	    theFile, theLine);
 
 #if defined(MULTITHREADED)
-    releaseMutex(&leaksMutex);
+    releaseMutex(&myGlobals.leaksMutex);
 #endif
     return(NULL);
   }
@@ -59,7 +55,7 @@ void* myMalloc(size_t theSize, int theLine, char* theFile) {
     traceEvent(TRACE_WARNING, "Malloc error (not enough memory): %s, %d (size = %d)\n", 
 	    theFile, theLine, (int)theSize);
 #if defined(MULTITHREADED)
-    releaseMutex(&leaksMutex);
+    releaseMutex(&myGlobals.leaksMutex);
 #endif
     return(NULL);
   }
@@ -71,7 +67,7 @@ void* myMalloc(size_t theSize, int theLine, char* theFile) {
   theRoot = tmpBlock;
 
 #if defined(MULTITHREADED)
-  releaseMutex(&leaksMutex);
+  releaseMutex(&myGlobals.leaksMutex);
 #endif
 
   return(tmpBlock->memoryLocation);
@@ -95,7 +91,7 @@ void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
   MemoryBlock *theScan, *lastPtr, *theNewPtr;
   
 #if defined(MULTITHREADED)
-  accessMutex(&leaksMutex, "myRealloc");
+  accessMutex(&myGlobals.leaksMutex, "myRealloc");
 #endif
 
   theScan = theRoot;
@@ -105,12 +101,13 @@ void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
     theScan = theScan->nextBlock;
   }
 
+#if defined(MULTITHREADED)
+    releaseMutex(&myGlobals.leaksMutex);
+#endif
+
   if(theScan == NULL) {
     traceEvent(TRACE_WARNING, "Realloc error (Ptr %p NOT allocated): %s, %d\n", 
 	    thePtr, theFile, theLine);
-#if defined(MULTITHREADED)
-    releaseMutex(&leaksMutex);
-#endif
     return(NULL);
   } else {    
     theNewPtr = myMalloc(theSize, theLine, theFile);
@@ -131,7 +128,7 @@ void* myRealloc(void* thePtr, size_t theSize, int theLine, char* theFile) {
     free(theScan);     
 
 #if defined(MULTITHREADED)
-    releaseMutex(&leaksMutex);
+    releaseMutex(&myGlobals.leaksMutex);
 #endif
 
     return(theNewPtr);
@@ -144,7 +141,7 @@ void myFree(void **thePtr, int theLine, char* theFile) {
   MemoryBlock *theScan, *lastPtr;
   
 #if defined(MULTITHREADED)
-  accessMutex(&leaksMutex, "myFree");
+  accessMutex(&myGlobals.leaksMutex, "myFree");
 #endif
 
   theScan = theRoot;
@@ -158,7 +155,7 @@ void myFree(void **thePtr, int theLine, char* theFile) {
     traceEvent(TRACE_WARNING, "Free error (Ptr %p NOT allocated): %s, %d\n", 
 	       *thePtr, theFile, theLine);
 #if defined(MULTITHREADED)
-    releaseMutex(&leaksMutex);
+    releaseMutex(&myGlobals.leaksMutex);
 #endif
     return;
   } else {
@@ -177,7 +174,7 @@ void myFree(void **thePtr, int theLine, char* theFile) {
   }
 
 #if defined(MULTITHREADED)
-  releaseMutex(&leaksMutex);
+  releaseMutex(&myGlobals.leaksMutex);
 #endif
 }
 
@@ -333,7 +330,7 @@ void myRemoveLeak(void* thePtr, int theLine, char* theFile) {
 
 void initLeaks(void) {
 #ifdef MULTITHREADED
-  createMutex(&leaksMutex);
+  createMutex(&myGlobals.leaksMutex);
 #endif
 }
 
@@ -342,7 +339,7 @@ void initLeaks(void) {
 void termLeaks(void) {
   PrintMemoryBlocks();
 #ifdef MULTITHREADED
-  deleteMutex(&leaksMutex);
+  deleteMutex(&myGlobals.leaksMutex);
 #endif
 }
 

@@ -76,6 +76,7 @@ static char *_dataFileDirs[]   = { ".", DATAFILE_DIR, NULL };
 static char *_pluginDirs[]     = { "./plugins", PLUGIN_DIR, NULL };
 static char *_configFileDirs[] = { ".", CONFIGFILE_DIR, "/etc", NULL };
 
+/* ************************************ */
 
 /*
  * Initialize all global run-time parameters to default (reasonable!!!) values
@@ -266,4 +267,8 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.netFlowInSocket = -1;  
   myGlobals.netFlowOutSocket = -1;  
   myGlobals.globalFlowSequence = myGlobals.globalFlowPktCount = 0;
+
+#ifdef MEMORY_DEBUG
+  initLeaks();
+#endif 
 }

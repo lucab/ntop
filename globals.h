@@ -188,6 +188,9 @@ typedef struct ntopGlobals {
   PthreadMutex gdbmMutex;
   PthreadMutex hashResizeMutex;
   PthreadMutex graphMutex;
+#ifdef MEMORY_DEBUG 
+  PthreadMutex leaksMutex;
+#endif
 
   pthread_t handleWebConnectionsThreadId;
 

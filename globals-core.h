@@ -99,7 +99,7 @@ extern void resetDevice(int devIdx);
 extern void initCounters();
 extern void resetStats(void);
 extern int initGlobalValues(void);
-extern void initGdbm();
+extern void initGdbm(char *directory);
 extern void initThreads();
 extern void initApps(void);
 extern void initDevices(char* devices);

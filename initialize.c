@@ -457,16 +457,21 @@ int initGlobalValues(void) {
 
 /* ******************************* */
 
-void initGdbm() {
+void initGdbm(char *directory) {
   char tmpBuf[200];
 #ifdef FALLBACK
   int firstTime=1;
 #endif
 
+  /* directory is used my intop to specify where to open the files.
+     If called with NULL, use the myGlobals.dbPath value instead
+     (Minor fix for intop - Burton Strauss (BStrauss@acm.org) - Apr2002)
+  */  
   traceEvent(TRACE_INFO, "Initializing GDBM...");
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", myGlobals.dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", 
+	      directory != NULL ? directory : myGlobals.dbPath) < 0)
     BufferTooShort();
 
   unlink(tmpBuf); /* Delete the old one (if present) */
@@ -481,13 +486,15 @@ void initGdbm() {
 	       tmpBuf, gdbm_strerror(gdbm_errno));
 #endif
 
-    traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
+    if(directory == NULL) {
+      traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
+    }
     exit(-1);
   }
 
   /* ************************************************ */
 
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/serialCache.db", myGlobals.dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/serialCache.db", directory != NULL ? directory : myGlobals.dbPath) < 0)
     BufferTooShort();
 
   unlink(tmpBuf); /* Delete the old one (if present) */
@@ -506,7 +513,7 @@ void initGdbm() {
 
   /* ************************************************ */
 
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/prefsCache.db", myGlobals.dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/prefsCache.db", directory != NULL ? directory : myGlobals.dbPath) < 0)
     BufferTooShort();
 
   myGlobals.prefsFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
@@ -525,7 +532,7 @@ void initGdbm() {
   /* ************************************************ */
 
   /* Courtesy of Andreas Pfaller <apfaller@yahoo.com.au>. */
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", myGlobals.dbPath) < 0)
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/dnsCache.db", directory != NULL ? directory : myGlobals.dbPath) < 0)
     BufferTooShort();
 
   myGlobals.gdbm_file = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
@@ -543,7 +550,7 @@ void initGdbm() {
 #endif
     exit(-1);
   } else {
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", myGlobals.dbPath) < 0)
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/ntop_pw.db", directory != NULL ? directory : myGlobals.dbPath) < 0)
       BufferTooShort();
     myGlobals.pwFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
@@ -552,7 +559,7 @@ void initGdbm() {
       exit(-1);
     }
 
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", myGlobals.dbPath) < 0)
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/hostsInfo.db", directory != NULL ? directory : myGlobals.dbPath) < 0)
       BufferTooShort();
     myGlobals.hostsInfoFile = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
