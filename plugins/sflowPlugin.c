@@ -1404,6 +1404,73 @@ static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport
 
 /* =============================================================== */
 
+static void handleSflowSample(SFSample *sample, int deviceId) {
+  struct pcap_pkthdr pkthdr;
+  bool oldVal = myGlobals.runningPref.disableMutexExtraInfo;
+
+  pkthdr.ts.tv_sec = time(NULL);
+  pkthdr.ts.tv_usec = 0;
+  pkthdr.caplen = sample->headerLen;
+  pkthdr.len = sample->sampledPacketSize;
+
+  /* Needed to avoid silly (for sFlow) warning */
+  myGlobals.runningPref.disableMutexExtraInfo = 1;
+  queuePacket((u_char*)deviceId, &pkthdr, sample->header); /* Pass the packet to ntop */
+  myGlobals.runningPref.disableMutexExtraInfo = oldVal;
+  myGlobals.device[deviceId].samplingRate = sample->meanSkipCount;
+
+  /* Save flows on disk (debug) */
+#ifdef DEBUG_FLOWS
+  if(1) {
+#define TCPDUMP_MAGIC 0xa1b2c3d4  /* from libpcap-0.5: savefile.c */
+#define DLT_EN10MB	1	  /* from libpcap-0.5: net/bpf.h */
+#define PCAP_VERSION_MAJOR 2      /* from libpcap-0.5: pcap.h */
+#define PCAP_VERSION_MINOR 4      /* from libpcap-0.5: pcap.h */
+
+    static FILE *fd = NULL;
+    char buf[2048];
+    int bytes = 0;
+    struct pcap_file_header hdr;
+
+    if(fd == NULL) {
+      fd = fopen("/tmp/sflowpackets.pcap", "w+");
+
+      memset(&hdr, 0, sizeof(hdr));
+      hdr.magic = TCPDUMP_MAGIC;
+      hdr.version_major = PCAP_VERSION_MAJOR;
+      hdr.version_minor = PCAP_VERSION_MINOR;
+      hdr.thiszone = 0;
+      hdr.snaplen = 128;
+      hdr.sigfigs = 0;
+      hdr.linktype = DLT_EN10MB;
+      if (fwrite((char *)&hdr, sizeof(hdr), 1, fd) != 1) {
+	fprintf(stderr, "failed to write tcpdump header: %s\n", strerror(errno));
+	exit(-1);
+      }
+
+      fflush(fd);
+    }
+
+    /* Save packet */
+    // prepare the whole thing in a buffer first, in case we are piping the output
+    // to another process and the reader expects it all to appear at once...
+    memcpy(buf, &pkthdr, sizeof(pkthdr));
+
+    bytes = sizeof(hdr);
+    memcpy(buf+bytes, sample->header, sample->headerLen);
+    bytes += sample->headerLen;
+
+    if(fwrite(buf, bytes, 1, fd) != 1) {
+      fprintf(stderr, "writePcapPacket: packet write failed: %s\n", strerror(errno));
+      exit(-3);
+    }
+    fflush(fd);
+  }
+#endif
+}
+
+/* =============================================================== */
+
 /* Forward */
 void SFABORT(SFSample *s, int r);
 int printHex(const u_char *a, int len, u_char *buf, int bufLen, int marker, int bytesPerOutputLine);
@@ -2420,8 +2487,6 @@ static void readFlowSample(SFSample *sample, int expanded, int deviceId)
 {
   u_int32_t num_elements, sampleLength, actualSampleLength;
   u_char *sampleStart;
-  struct pcap_pkthdr pkthdr;
-  bool oldVal = myGlobals.runningPref.disableMutexExtraInfo;
 
   if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "sampleType FLOWSAMPLE\n");
   sampleLength = getData32(sample, deviceId);
@@ -2504,65 +2569,7 @@ static void readFlowSample(SFSample *sample, int expanded, int deviceId)
     }
   }
 
-  lengthCheck(sample, "flow_sample", sampleStart, sampleLength);
-
-  pkthdr.ts.tv_sec = time(NULL);
-  pkthdr.ts.tv_usec = 0;
-  pkthdr.caplen = sample->headerLen;
-  pkthdr.len = sample->sampledPacketSize;
-
-  /* Needed to avoid silly (for sFlow) warning */
-  myGlobals.runningPref.disableMutexExtraInfo = 1;
-  queuePacket((u_char*)deviceId, &pkthdr, sample->header); /* Pass the packet to ntop */
-  myGlobals.runningPref.disableMutexExtraInfo = oldVal;
-  myGlobals.device[deviceId].samplingRate = sample->meanSkipCount;
-
-  /* Save flows on disk (debug) */
-  if(0) {
-#define TCPDUMP_MAGIC 0xa1b2c3d4  /* from libpcap-0.5: savefile.c */
-#define DLT_EN10MB	1	  /* from libpcap-0.5: net/bpf.h */
-#define PCAP_VERSION_MAJOR 2      /* from libpcap-0.5: pcap.h */
-#define PCAP_VERSION_MINOR 4      /* from libpcap-0.5: pcap.h */
-
-    static FILE *fd = NULL;
-    char buf[2048];
-    int bytes = 0;
-    struct pcap_file_header hdr;
-
-    if(fd == NULL) {
-      fd = fopen("/tmp/sflowpackets.pcap", "w+");
-
-      memset(&hdr, 0, sizeof(hdr));
-      hdr.magic = TCPDUMP_MAGIC;
-      hdr.version_major = PCAP_VERSION_MAJOR;
-      hdr.version_minor = PCAP_VERSION_MINOR;
-      hdr.thiszone = 0;
-      hdr.snaplen = 128;
-      hdr.sigfigs = 0;
-      hdr.linktype = DLT_EN10MB;
-      if (fwrite((char *)&hdr, sizeof(hdr), 1, fd) != 1) {
-	fprintf(stderr, "failed to write tcpdump header: %s\n", strerror(errno));
-	exit(-1);
-      }
-
-      fflush(fd);
-    }
-
-    /* Save packet */
-    // prepare the whole thing in a buffer first, in case we are piping the output
-    // to another process and the reader expects it all to appear at once...
-    memcpy(buf, &pkthdr, sizeof(pkthdr));
-
-    bytes = sizeof(hdr);
-    memcpy(buf+bytes, sample->header, sample->headerLen);
-    bytes += sample->headerLen;
-
-    if(fwrite(buf, bytes, 1, fd) != 1) {
-      fprintf(stderr, "writePcapPacket: packet write failed: %s\n", strerror(errno));
-      exit(-3);
-    }
-    fflush(fd);
-  }
+  lengthCheck(sample, "flow_sample", sampleStart, sampleLength);  
 }
 
 /*_________________---------------------------__________________
@@ -2879,15 +2886,18 @@ static void readSFlowDatagram(SFSample *sample, int deviceId)
 	case SFLCOUNTERS_SAMPLE_EXPANDED: readCountersSample(sample, YES, deviceId); break;
 	default: skipTLVRecord(sample, sample->sampleType, "sample", deviceId); break;
 	}
-      }
-      else {
+      } else {
 	switch(sample->sampleType) {
 	case FLOWSAMPLE: readFlowSample_v2v4(sample, deviceId); break;
 	case COUNTERSSAMPLE: readCountersSample_v2v4(sample, deviceId); break;
 	default: receiveError(sample, "unexpected sample type", YES); break;
 	}
       }
+     
       if(SFLOW_DEBUG(deviceId)) traceEvent(CONST_TRACE_INFO, "endSample   ----------------------\n");
+
+      if(sample->sampleType == SFLFLOW_SAMPLE)
+	handleSflowSample(sample, deviceId);      
     }
   }
 }
@@ -3872,43 +3882,157 @@ static int mapsFlowDeviceToNtopDevice(int sflowDeviceId) {
 /* ****************************** */
 
 static char *ifType(u_int32_t ifType) {
+  static char buf[8];
+
   switch(ifType) {
-    case 1: return("other");
-    case 2: return("regular1822");
-    case 3: return("hdh1822");
-    case 4: return("ddn-x25");
-    case 5: return("rfc877-x25");
-    case 6: return("ethernet");
-    case 7: return("iso88023-csmacd");
-    case 8: return("iso88024-tokenBus");
-    case 9: return("iso88025-tokenRing");
-    case 10: return("iso88026-man");
-    case 11: return("starLan");
-    case 12: return("proteon-10Mbit");
-    case 13: return("proteon-80Mbit");
-    case 14: return("hyperchannel");
-    case 15: return("fddi");
-    case 16: return("lapb");
-    case 17: return("sdlc");
-    case 18: return("ds1");
-    case 19: return("e1");
-    case 20: return("basicISDN");
-    case 21: return("primaryISDN");
-    case 22: return("propPointToPointSerial");
-    case 23: return("ppp");
-    case 24: return("softwareLoopback");
-    case 25: return("eon");
-    case 26: return("ethernet-3Mbit");
-    case 27: return("nsip");
-    case 28: return("slip");
-    case 29: return("ultra");
-    case 30: return("ds3");
-    case 31: return("sip");
-    case 32: return("frame-relay");
-  default: return("?");
+  case 1: return("other");
+  case 2: return("regular1822");
+  case 3: return("hdh1822");
+  case 4: return("ddn-x25");
+  case 5: return("rfc877-x25");
+  case 6: return("ethernet");
+  case 7: return("iso88023-csmacd");
+  case 8: return("iso88024-tokenBus");
+  case 9: return("iso88025-tokenRing");
+  case 10: return("iso88026-man");
+  case 11: return("starLan");
+  case 12: return("proteon-10Mbit");
+  case 13: return("proteon-80Mbit");
+  case 14: return("hyperchannel");
+  case 15: return("fddi");
+  case 16: return("lapb");
+  case 17: return("sdlc");
+  case 18: return("ds1");
+  case 19: return("e1");
+  case 20: return("basicISDN");
+  case 21: return("primaryISDN");
+  case 22: return("propPointToPointSerial");
+  case 23: return("ppp");
+  case 24: return("softwareLoopback");
+  case 25: return("eon");
+  case 26: return("ethernet-3Mbit");
+  case 27: return("nsip");
+  case 28: return("slip");
+  case 29: return("ultra");
+  case 30: return("ds3");
+  case 31: return("sip");
+  case 32: return("frame-relay");
+  case 33: return("rs232");
+  case 34: return("para");
+  case 35: return("arcnet");
+  case 36: return("arcnetPlus");
+  case 37: return("atm");
+  case 38: return("miox25");
+  case 39: return("sonet");
+  case 40: return("x25ple");
+  case 41: return("iso88022llc");
+  case 42: return("localTalk");
+  case 43: return("smdsDxi");
+  case 44: return("frameRelayService");
+  case 45: return("v35");
+  case 46: return("hssi");
+  case 47: return("hippi");
+  case 48: return("modem");
+  case 49: return("aal5");
+  case 50: return("sonetPath");
+  case 51: return("sonetVT");
+  case 52: return("smdsIcip");
+  case 53: return("propVirtual");
+  case 54: return("propMultiplexor");
+  case 55: return("100BaseVG");
+  case 56: return("Fibre Channel");
+  case 57: return("HIPPI Interface");
+  case 58: return("Obsolete for FrameRelay");
+  case 59: return("ATM Emulation of 802.3 LAN");
+  case 60: return("ATM Emulation of 802.5 LAN");
+  case 61: return("ATM Emulation of a Circuit");
+  case 62: return("FastEthernet (100BaseT)");
+  case 63: return("ISDN &amp; X.25");
+  case 64: return("CCITT V.11/X.21");
+  case 65: return("CCITT V.36");
+  case 66: return("CCITT G703 at 64Kbps");
+  case 67: return("Obsolete G702 see DS1-MIB");
+  case 68: return("SNA QLLC");
+  case 69: return("Full Duplex Fast Ethernet (100BaseFX)");
+  case 70: return("Channel");
+  case 71: return("Radio Spread Spectrum (802.11)");
+  case 72: return("IBM System 360/370 OEMI Channel");
+  case 73: return("IBM Enterprise Systems Connection");
+  case 74: return("Data Link Switching");
+  case 75: return("ISDN S/T Interface");
+  case 76: return("ISDN U Interface");
+  case 77: return("Link Access Protocol D (LAPD)");
+  case 78: return("IP Switching Opjects");
+  case 79: return("Remote Source Route Bridging");
+  case 80: return("ATM Logical Port");
+  case 81: return("AT&amp;T DS0 Point (64 Kbps)");
+  case 82: return("AT&amp;T Group of DS0 on a single DS1");
+  case 83: return("BiSync Protocol (BSC)");
+  case 84: return("Asynchronous Protocol");
+  case 85: return("Combat Net Radio");
+  case 86: return("ISO 802.5r DTR");
+  case 87: return("Ext Pos Loc Report Sys");
+  case 88: return("Apple Talk Remote Access Protocol");
+  case 89: return("Proprietary Connectionless Protocol");
+  case 90: return("CCITT-ITU X.29 PAD Protocol");
+  case 91: return("CCITT-ITU X.3 PAD Facility");
+  case 92: return("MultiProtocol Connection over Frame/Relay");
+  case 93: return("CCITT-ITU X213");
+  case 94: return("Asymetric Digitial Subscriber Loop (ADSL)");
+  case 95: return("Rate-Adapt Digital Subscriber Loop (RDSL)");
+  case 96: return("Symetric Digitial Subscriber Loop (SDSL)");
+  case 97: return("Very High Speed Digitial Subscriber Loop (HDSL)");
+  case 98: return("ISO 802.5 CRFP");
+  case 99: return("Myricom Myrinet");
+  case 100: return("Voice recEive and transMit (voiceEM)");
+  case 101: return("Voice Foreign eXchange Office (voiceFXO)");
+  case 102: return("Voice Foreign eXchange Station (voiceFXS)");
+  case 103: return("Voice Encapulation");
+  case 104: return("Voice Over IP Encapulation");
+  case 105: return("ATM DXI");
+  case 106: return("ATM FUNI");
+  case 107: return("ATM IMA");
+  case 108: return("PPP Multilink Bundle");
+  case 109: return("IBM IP over CDLC");
+  case 110: return("IBM Common Link Access to Workstation");
+  case 111: return("IBM Stack to Stack");
+  case 112: return("IBM Virtual IP Address (VIPA)");
+  case 113: return("IBM Multi-Protocol Channel Support");
+  case 114: return("IBM IP over ATM");
+  case 115: return("ISO 802.5j Fiber Token Ring");
+  case 116: return("IBM Twinaxial Data Link Control (TDLC)");
+  case 117: return("Gigabit Ethernet");
+  case 118: return("Higher Data Link Control (HDLC)");
+  case 119: return("Link Access Protocol F (LAPF)");
+  case 120: return("CCITT V.37");
+  case 121: return("CCITT X.25 Multi-Link Protocol");
+  case 122: return("CCITT X.25 Hunt Group");
+  case 123: return("Transp HDLC");
+  case 124: return("Interleave Channel");
+  case 125: return("Fast Channel");
+  case 126: return("IP (for APPN HPR in IP Networks)");
+  case 127: return("CATV MAC Layer");
+  case 128: return("CATV Downstream Interface");
+  case 129: return("CATV Upstream Interface");
+  case 130: return("Avalon Parallel Processor");
+  case 131: return("Encapsulation Interface");
+  case 132: return("Coffee Pot");
+  case 133: return("Circuit Emulation Service");
+  case 134: return("ATM Sub Interface");
+  case 135: return("Layer 2 Virtual LAN using 802.1Q");
+  case 136: return("Layer 3 Virtual LAN using IP");
+  case 137: return("Layer 3 Virtual LAN using IPX");
+  case 138: return("IP Over Power Lines");
+  case 139: return("Multi-Media Mail over IP");
+  case 140: return("Dynamic synchronous Transfer Mode (DTM)");
+  case 141: return("Data Communications Network");
+  case 142: return("IP Forwarding Interface");
+  case 162: return("Cisco Express Forwarding Interface");
+  default: 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", ifType);
+    return(buf);
   }
 }
-
 
 /* ****************************** */
 
@@ -4210,14 +4334,14 @@ static void handlesFlowHTTPrequest(char* _url) {
 	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%s</td>",
 			ifType(interface->ifType)); sendString(buf);
 
-	  if(interface->ifType == 6 /* ethernet */) {
+	  if(interface->ifSpeed >= 10000000) {
 	    u_int speed = interface->ifSpeed / 1000000;
 	    
 	    if(speed < 1000)
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u Mbit</td>",
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u&nbsp;Mbit</td>",
 			    speed);
 	    else
-	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u Gbit</td>",
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<td align=center>%u&nbsp;Gbit</td>",
 			    speed/1000);
 
 	    sendString(buf);
@@ -4256,14 +4380,14 @@ static void handlesFlowHTTPrequest(char* _url) {
 			"interfaces/%s/sFlow/%d&title=Interface%%20Id%%20%d\">"
 			"<IMG SRC=/graph.gif BORDER=0></A></td></tr>",
 			myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-			deviceId, deviceId,
+			i, i,
 			formatPkts(interface->ifInUnknownProtos, formatBuf, sizeof(formatBuf))); 
 	  sendString(buf);
 	}
       }
 
       if(headerSent) sendString("</table><p><table><tr><td>Note: Counters are represented as "
-				"</td><td align=center>input value<br>output value</td></tr></table><center><p>\n");
+				"</td><td align=center>input value<br>output value</td></tr></table></center><p>\n");
 
       /* ****************************
        * Print statistics           *

@@ -369,6 +369,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<I>(1) Unable to read directory %s</I>", path);
     traceEvent(CONST_TRACE_INFO, "RRD: %s", buf);
     printFlagedWarning(buf);
+    sendString("</CENTER>");
     printHTMLtrailer();
     return;
   }
@@ -402,6 +403,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   if(directoryPointer == NULL) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<I> (2) Unable to read directory %s</I>", path);
     printFlagedWarning(buf);
+    sendString("</CENTER>");
     printHTMLtrailer();
     return;
   }
