@@ -1255,6 +1255,7 @@ typedef struct icmpHostInfo {
 #define HASH_INITIAL_SIZE         32
 #define MAX_MULTIHOMING_ADDRESSES 16
 #define MAX_HOST_SYM_NAME_LEN     64
+#define MAX_NODE_TYPES             8
 
 /* Host Traffic */
 typedef struct hostTraffic
@@ -1279,11 +1280,11 @@ typedef struct hostTraffic
   /* AppleTalk*/
   u_short        atNetwork;
   u_char         atNode;
-  char           *atNodeName;
+  char           *atNodeName, *atNodeType[MAX_NODE_TYPES];
 
   /* IPX */
   char           *ipxHostName;
-  u_short        ipxNodeType;
+  u_short        numIpxNodeTypes, ipxNodeType[MAX_NODE_TYPES];
 
   fd_set         flags;
   TrafficCounter pktSent, pktReceived,

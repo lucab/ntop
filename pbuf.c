@@ -2993,13 +2993,12 @@ void processPacket(u_char *_deviceId,
 	    || (sap_type == 0x42)) {
 	  /* IPX */
 	  unsigned char ipxBuffer[128];
-
+	  
 	  /* IPX packet beginning */
-
 	  if(length > 128)
-	    memcpy(ipxBuffer, p1+3, 128);
+	    memcpy(ipxBuffer, p1, 128);
 	  else
-	    memcpy(ipxBuffer, p1+3, length);
+	    memcpy(ipxBuffer, p1, length);
 
 	  if((ipxBuffer[16] == 0x04)    /* SAP (Service Advertising Protocol) (byte 0) */
 	     && (ipxBuffer[17] == 0x52) /* SAP (Service Advertising Protocol) (byte 1) */
@@ -3007,7 +3006,7 @@ void processPacket(u_char *_deviceId,
 	     && (ipxBuffer[31] == 0x02) /* SAP Response (byte 1) */) {
 	    u_int16_t serverType;
 	    char serverName[56];
-	    int i;
+	    int i, found;
 
 	    memcpy(&serverType, &ipxBuffer[32], 2);
 
@@ -3020,12 +3019,23 @@ void processPacket(u_char *_deviceId,
 		break;
 	      }
 
-	    srcHost->ipxNodeType = serverType;
+	    for(i=0, found=0; i<srcHost->numIpxNodeTypes; i++)
+	      if(srcHost->ipxNodeType[i] == serverType) {
+		found = 1;
+		break;
+	      }
+	    
+	    if((!found) && (srcHost->numIpxNodeTypes < MAX_NODE_TYPES)) {
+	      srcHost->ipxNodeType[srcHost->numIpxNodeTypes] = serverType;
+	      srcHost->numIpxNodeTypes++;
+	    }
+
 	    if(srcHost->ipxHostName == NULL) {
 	      srcHost->ipxHostName = strdup(serverName);
 	    }
 #ifdef DEBUG
-	    traceEvent(TRACE_INFO, "%s [%s][%x]\n", serverName, getSAPInfo(serverType, 0), serverType);
+	    traceEvent(TRACE_INFO, "%s [%s][%x]\n", serverName, 
+		       getSAPInfo(serverType, 0), serverType);
 #endif
 	  }
 
@@ -3053,16 +3063,16 @@ void processPacket(u_char *_deviceId,
 	  srcHost->atNetwork = ntohs(ddpHeader.srcNet), srcHost->atNode = ddpHeader.srcNode;
 	  dstHost->atNetwork = ntohs(ddpHeader.dstNet), dstHost->atNode = ddpHeader.dstNode;
 
-	  if(ddpHeader.ddpType == 2) { /* Appletalk NBP */
-
+	  if(ddpHeader.ddpType == 2) {
+	    /* Appletalk NBP (name Binding Protocol) */
 	    AtNBPheader nbpHeader;
-	    int numTuples;
+	    int numTuples, i;
 
 	    p1 = (u_char*)(p1+13);
 	    memcpy(&nbpHeader, (char*)p1, sizeof(AtNBPheader));
 	    numTuples = nbpHeader.function & 0x0F;
 
-	    if((nbpHeader.function == 0x31) && (numTuples == 1)) {
+	    if((nbpHeader.function == 0x21) && (numTuples == 1)) {
 	      char nodeName[256];
 
 	      p1 = (u_char*)(p1+2);
@@ -3071,9 +3081,20 @@ void processPacket(u_char *_deviceId,
 	      nodeName[p1[5]] = '\0';
 
 	      srcHost->atNodeName = strdup(nodeName);
-	    }
-	  }
 
+	      memcpy(nodeName, &p1[7+p1[5]], p1[6+p1[5]]);
+	      nodeName[p1[6+p1[5]]] = '\0';
+	      
+	      for(i=0; i<MAX_NODE_TYPES; i++)
+		if((srcHost->atNodeType[i] == NULL) 
+		   || (strcmp(srcHost->atNodeType[i], nodeName) == 0))
+		  break;
+
+	      if(srcHost->atNodeType[i] == NULL) 
+		srcHost->atNodeType[i] = strdup(nodeName);
+	    }
+	  } 
+	  
 	  srcHost->appletalkSent += length;
 	  dstHost->appletalkReceived += length;
 	  device[actualDeviceId].atalkBytes += length;

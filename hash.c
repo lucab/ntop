@@ -523,6 +523,10 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
   if(host->nbHostName != NULL)   free(host->nbHostName);
   if(host->nbDomainName != NULL) free(host->nbDomainName);
   if(host->atNodeName != NULL)   free(host->atNodeName);
+  for(i=0; i<MAX_NODE_TYPES; i++)
+    if(host->atNodeType[i] != NULL)   
+      free(host->atNodeType[i]);
+  if(host->atNodeName != NULL)   free(host->atNodeName);
   if(host->ipxHostName != NULL)  free(host->ipxHostName);
 
   if(host->osName != NULL)

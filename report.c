@@ -2401,7 +2401,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	      sendString(buf);
 	      numAddresses++;
 	    } else if(el->nbHostName) {
-	      snprintf(buf, sizeof(buf), "%s&nbsp;[%s]", getOSFlag("Windows", 0),
+	      snprintf(buf, sizeof(buf), "%s&nbsp;%s", getOSFlag("Windows", 0),
 		       el->nbHostName);
 	      sendString(buf);
 	      numAddresses++;
@@ -2412,18 +2412,47 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 
 	      if(numAddresses > 0) sendString("/");
 	      if(nodeName == NULL) nodeName = "";
+	      
+	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;", 
+		       getOSFlag("Mac", 0), nodeName);
+	      sendString(buf);
 
-	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%d.%d]", getOSFlag("Mac", 0),
-		       nodeName, el->atNetwork, el->atNode);
+	      if(el->atNodeType[0] != NULL) {
+		int i;
+		
+		sendString("(");
+		for(i=0; i<MAX_NODE_TYPES; i++)
+		  if(el->atNodeType[i] == NULL)
+		    break;
+		  else {
+		    if(i > 0) sendString("/");
+		    sendString(el->atNodeType[i]);
+		  }
+		
+		sendString(")&nbsp;");
+	      }
+	      
+	      snprintf(buf, sizeof(buf), "[%d.%d]", 
+		       el->atNetwork, el->atNode);
 	      sendString(buf);
 	      numAddresses++;
 	    }
 
 	    if(el->ipxHostName) {
+	      int i;
+	      
 	      if(numAddresses > 0) sendString("/");
-	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[%s]", getOSFlag("Novell", 0),
-		       el->ipxHostName, getSAPInfo(el->ipxNodeType, 1));
+	      snprintf(buf, sizeof(buf), "%s&nbsp;%s&nbsp;[", 
+		       getOSFlag("Novell", 0),
+		       el->ipxHostName);
 	      sendString(buf);
+
+	      for(i=0; i<el->numIpxNodeTypes; i++) {
+		if(i>0) sendString("/");
+		sendString(getSAPInfo(el->ipxNodeType[i], 1));
+	      }
+
+	      sendString("]");
 	      numAddresses++;
 	    }
 	  }
@@ -3161,6 +3190,12 @@ static void printHostDetailedInfo(HostTraffic *el) {
 	    getRowColor(), "NetBios&nbsp;Name",
 	    el->nbHostName, el->nbDomainName, getNbNodeType(el->nbNodeType));
     sendString(buf);
+  } else if(el->nbHostName != NULL) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
+	     "%s&nbsp;(%s)</TD></TR>\n",
+	     getRowColor(), "NetBios&nbsp;Name",
+	     el->nbHostName, getNbNodeType(el->nbNodeType));
+    sendString(buf);
   }
 
   if(el->atNetwork != 0) {
@@ -3169,19 +3204,46 @@ static void printHostDetailedInfo(HostTraffic *el) {
     if(nodeName == NULL) nodeName = "";
 
     snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	    "%s&nbsp;[%d.%d]</TD></TR>\n",
+	    "%s&nbsp;\n",
 	    getRowColor(), "AppleTalk&nbsp;Name",
-	    nodeName, el->atNetwork, el->atNode);
+	    nodeName);
+    sendString(buf);
 
+    if(el->atNodeType[0] != NULL) {
+      int i;
+      
+      sendString("(");
+      for(i=0; i<MAX_NODE_TYPES; i++)
+	if(el->atNodeType[i] == NULL)
+	  break;
+	else {
+	  if(i > 0) sendString("/");
+	  sendString(el->atNodeType[i]);
+	}
+      
+      sendString(")&nbsp;");
+    }
+
+    snprintf(buf, sizeof(buf), "[%d.%d]</TD></TR>\n",
+	     el->atNetwork, el->atNode);    
     sendString(buf);
   }
 
   if(el->ipxHostName != NULL) {
+    int i;
+    
     snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>"
-	    "%s&nbsp;[%s]</TD></TR>\n",
-	    getRowColor(), "IPX&nbsp;Name",
-	    el->ipxHostName, getSAPInfo(el->ipxNodeType, 1));
+	     "%s&nbsp;[",
+	     getRowColor(), "IPX&nbsp;Name",
+	     el->ipxHostName);
     sendString(buf);
+    
+    for(i=0; i<el->numIpxNodeTypes; i++) {
+      if(i>0) sendString("/");
+      sendString(getSAPInfo(el->ipxNodeType[i], 1));
+    }
+
+    sendString("]</TD></TR>\n");
   }
 
   if(!multicastHost(el)) {

@@ -1639,7 +1639,9 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
     el->nbHostName = NULL;
     el->nbDomainName = NULL;
     el->atNodeName = NULL;
+    memset(el->atNodeType, 0, sizeof(el->atNodeType));
     el->ipxHostName = NULL;
+    el->numIpxNodeTypes = 0;
     memset(el->portsUsage, 0, sizeof(el->portsUsage));
     el->protoIPTrafficInfos = NULL;
     el->tcpSessionList = NULL;

@@ -399,6 +399,8 @@ void initGdbm(void) {
   if(gdbm_file == NULL) {
     traceEvent(TRACE_ERROR, "Database '%s' open failed: %s\n", 
 	       tmpBuf, gdbm_strerror(gdbm_errno));
+
+#ifdef FALLBACK
     if(firstTime) {
       firstTime = 0;
       strcpy(dbPath, "/tmp");
@@ -407,6 +409,9 @@ void initGdbm(void) {
       traceEvent(TRACE_ERROR, "Fallback solution: reverting to /tmp for the database directory\n");
       goto RETRY_INIT_GDBM;
     } else
+#else
+      traceEvent(TRACE_ERROR, "Possible solution: please use '-P <directory>'\n");
+#endif
       exit(-1);
   } else {
     /* Let's remove from the database entries that were not
@@ -415,7 +420,7 @@ void initGdbm(void) {
     datum data_data, key_data, return_data = gdbm_firstkey (gdbm_file);
     u_int numDbEntries = 0;
 
-    while (return_data.dptr != NULL) {
+    while(return_data.dptr != NULL) {
       numDbEntries++;
       key_data = return_data;
       return_data = gdbm_nextkey(gdbm_file, key_data);
