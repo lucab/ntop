@@ -1800,6 +1800,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);
+	    dumpSuspiciousPacket();
 	  }
 
 	  free(rcStr);
@@ -1866,36 +1867,42 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	  if((dport != 80)
 	     && (dport != 3000  /* ntop  */)
 	     && (dport != 3128  /* squid */)
-	     && isInitialHttpData(rcStr))
+	     && isInitialHttpData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: HTTP detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       srcHost->hostSymIpAddress, sport,
 		       dstHost->hostSymIpAddress, dport,
 		       rcStr);
-	  else if((sport != 21) && (sport != 25) && isInitialFtpData(rcStr))
+	    dumpSuspiciousPacket();
+	  } else if((sport != 21) && (sport != 25) && isInitialFtpData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: FTP/SMTP detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	  else if(((sport == 21) || (sport == 25)) && (!isInitialFtpData(rcStr)))
+	    dumpSuspiciousPacket();
+	  } else if(((sport == 21) || (sport == 25)) && (!isInitialFtpData(rcStr))) {
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no FTP/SMTP) detected (trojan?) "
 		       "at port %d %s:%d -> %s:%d [%s]\n", sport,
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	  else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr))
+	    dumpSuspiciousPacket();
+	  } else if((sport != 22) && (dport != 22) &&  isInitialSshData(rcStr)) {
 	    traceEvent(TRACE_WARNING, "WARNING: SSH detected at wrong port (trojan?) "
 		       "%s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
-	  else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr)))
+	    dumpSuspiciousPacket();
+	  } else if(((sport == 22) || (dport == 22)) && (!isInitialSshData(rcStr))) {
 	    traceEvent(TRACE_WARNING, "WARNING:  unknown protocol (no SSH) detected (trojan?) "
 		       "at port 22 %s:%d -> %s:%d [%s]\n",
 		       dstHost->hostSymIpAddress, dport,
 		       srcHost->hostSymIpAddress, sport,
 		       rcStr);
+	    dumpSuspiciousPacket();
+	  }
 	} else if(theSession->bytesProtoRcvd == 0) {
 	  /* Uncomment when necessary
 	    memset(rcStr, 0, sizeof(rcStr));
@@ -2247,6 +2254,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed ACK scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
+	dumpSuspiciousPacket();
       }
       /* Connection terminated */
       incrementUsageCounter(&srcHost->securityHostPkts.rstPktsSent, dstHostIdx);
@@ -2280,6 +2288,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
        && (sport == dport) && (tp->th_flags == TH_SYN)) {
       traceEvent(TRACE_WARNING, "WARNING: detected Land Attack against host %s:%d",
 		 srcHost->hostSymIpAddress, sport);
+      dumpSuspiciousPacket();
     }
 
     if(tp->th_flags == (TH_RST|TH_ACK)) {
@@ -2304,6 +2313,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed XMAS scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
+	dumpSuspiciousPacket();
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && ((theSession->lastRemote2InitiatorFlags[0] & TH_FIN) == TH_FIN))
 		|| ((theSession->initiatorIdx == dstHostIdx)
@@ -2314,6 +2324,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed FIN scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
+	dumpSuspiciousPacket();
       } else if(((theSession->initiatorIdx == srcHostIdx)
 		 && (theSession->lastRemote2InitiatorFlags[0] == 0)
 		 && (theSession->bytesReceived > 0))
@@ -2326,6 +2337,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	traceEvent(TRACE_WARNING, "WARNING: host [%s:%d] performed NULL scan of host [%s:%d]",
 		   dstHost->hostSymIpAddress, dport,
 		   srcHost->hostSymIpAddress, sport);
+	dumpSuspiciousPacket();
       }
     }
 
@@ -2412,7 +2424,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
   return(theSession);
 }
-
 /* ************************************ */
 
 static void addLsofContactedPeers(ProcessInfo *process,
