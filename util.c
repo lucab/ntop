@@ -403,8 +403,16 @@ void handleLocalAddresses(char* addresses) {
       }
 
       network     = ((a & 0xff) << 24) + ((b & 0xff) << 16) + ((c & 0xff) << 8) + (d & 0xff);
-      networkMask = 0xffffffff >> bits;
-      networkMask = ~networkMask;
+      /* Special case the /32 mask - yeah, we could probably do it with some fancy
+         u long long stuff, but this is simpler...  
+         Burton Strauss <Burton@ntopsupport.com> Jun2002
+       */
+      if (bits == 32) {
+          networkMask = 0xffffffff;
+      } else {
+          networkMask = 0xffffffff >> bits;
+          networkMask = ~networkMask;
+      }
 
 #ifdef DEBUG
       traceEvent(TRACE_INFO, "Nw=%08X - Mask: %08X [%08X]\n",
