@@ -1,0 +1,28 @@
+#!/bin/sh
+
+echo "        Setting Slackware specific flag values"
+# Hmm, don't think so...
+# CPPFLAGS="-DHAVE_FILEDESCRIPTORBUG ${CPPFLAGS}"
+
+# XML Dump plugin stuff... leeched from Burton
+#  Note - this assumes you've installed the packages that include:
+#         glib, glib-devel, libxml2, libxml2-devel
+#         and the gdome2 and gdome2-devel from http://gdome2.cs.unibo.it/
+if test -f /usr/lib/libglib.so; then
+  LDFLAGS="${LDFLAGS} -lglib"
+fi
+if test -d /usr/include/libxml2/libxml; then
+  CPPFLAGS="${CPPFLAGS} -I/usr/include/libxml2/libxml"
+fi
+if test -d /usr/include/glib-1.2; then
+  CPPFLAGS="${CPPFLAGS} -I/usr/include/glib-1.2"
+fi
+if test -d /usr/lib/glib-1.2/include; then
+  CPPFLAGS="${CPPFLAGS} -I/usr/lib/glib-1.2/include"
+fi
+if test -d /usr/include/libgdome; then
+  CPPFLAGS="${CPPFLAGS} -I/usr/include/libgdome"
+fi
+if test -d /usr/lib/glib/include; then
+  CPPFLAGS="${CPPFLAGS} -I/usr/lib/glib/include"
+fi
