@@ -23,10 +23,11 @@
  /* ************************************ */
 
 u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line) {
-  if(idx > myGlobals.device[actualDeviceId].actualHashSize)
-    traceEvent(TRACE_ERROR,
-	       "Index error idx=%u @ [%s:%d]\n", idx, file, line);
-  return(idx);
+  if(idx > myGlobals.device[actualDeviceId].actualHashSize) {
+    traceEvent(TRACE_ERROR, "Index error idx=%u @ [%s:%d]\n", idx, file, line);
+    return(0); /* Last resort */
+  } else 
+    return(idx);
 }
 
 /* ************************************ */
@@ -241,67 +242,73 @@ static void updateHostSessionsList(u_int theHostIdx,
 
 void freeSession(IPSession *sessionToPurge, int actualDeviceId) {
   /* Session to purge */
-  if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
-    if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
-      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
-			     sessionToPurge->remotePeerIdx, sessionToPurge,
-			     IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE, actualDeviceId);
-      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->sport,
-			     sessionToPurge->initiatorIdx, sessionToPurge,
-			     IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE, actualDeviceId);
+
+  if((sessionToPurge->initiatorIdx < myGlobals.device[actualDeviceId].actualHashSize)
+     && (sessionToPurge->remotePeerIdx < myGlobals.device[actualDeviceId].actualHashSize)) {
+    /* The session seems to be formally ok */
+
+    if(sessionToPurge->sport < sessionToPurge->dport) { /* Server->Client */
+      if(getPortByNum(sessionToPurge->sport, IPPROTO_TCP) != NULL) {
+	updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->sport,
+			       sessionToPurge->remotePeerIdx, sessionToPurge,
+			       IPPROTO_TCP, SERVER_TO_CLIENT, SERVER_ROLE, actualDeviceId);
+	updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->sport,
+			       sessionToPurge->initiatorIdx, sessionToPurge,
+			       IPPROTO_TCP, CLIENT_FROM_SERVER, CLIENT_ROLE, actualDeviceId);
+      }
+    } else { /* Client->Server */
+      if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
+	updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
+			       sessionToPurge->initiatorIdx, sessionToPurge,
+			       IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE, actualDeviceId);
+	updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->dport,
+			       sessionToPurge->remotePeerIdx, sessionToPurge,
+			       IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE, actualDeviceId);
+      }
     }
-  } else { /* Client->Server */
-    if(getPortByNum(sessionToPurge->dport, IPPROTO_TCP) != NULL) {
-      updateHostSessionsList(sessionToPurge->remotePeerIdx, sessionToPurge->dport,
-			     sessionToPurge->initiatorIdx, sessionToPurge,
-			     IPPROTO_TCP, SERVER_FROM_CLIENT, SERVER_ROLE, actualDeviceId);
-      updateHostSessionsList(sessionToPurge->initiatorIdx, sessionToPurge->dport,
-			     sessionToPurge->remotePeerIdx, sessionToPurge,
-			     IPPROTO_TCP, CLIENT_TO_SERVER, CLIENT_ROLE, actualDeviceId);
+
+    if(((sessionToPurge->bytesProtoSent == 0)
+	|| (sessionToPurge->bytesProtoRcvd == 0))
+       && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
+       /* "Valid" TCP session used to skip faked sessions (e.g. portscans
+	  with one faked packet + 1 response [RST usually]) */
+       ) {
+      HostTraffic *theHost, *theRemHost;
+      char *fmt = "WARNING: detected TCP connection with no data exchanged "
+	"[%s:%d] -> [%s:%d] (pktSent=%d/pktRcvd=%d) (network mapping attempt?)";
+
+      theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
+      theRemHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
+
+      if((theHost != NULL) && (theRemHost != NULL)) {
+
+	allocateSecurityHostPkts(theHost);
+	incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent,
+			      sessionToPurge->remotePeerIdx, actualDeviceId);
+	allocateSecurityHostPkts(theRemHost);
+	incrementUsageCounter(&theRemHost->secHostPkts->closedEmptyTCPConnRcvd,
+			      sessionToPurge->initiatorIdx, actualDeviceId);
+
+	if(myGlobals.enableSuspiciousPacketDump)
+	  traceEvent(TRACE_WARNING, fmt,
+		     theHost->hostSymIpAddress, sessionToPurge->sport,
+		     theRemHost->hostSymIpAddress, sessionToPurge->dport,
+		     sessionToPurge->pktSent, sessionToPurge->pktRcvd);
+      }
     }
+
+    if(myGlobals.enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge, actualDeviceId);
+    notifyTCPSession(sessionToPurge, actualDeviceId);
+#ifdef HAVE_MYSQL
+    mySQLnotifyTCPSession(sessionToPurge, actualDeviceId);
+#endif
   }
-
-  if(((sessionToPurge->bytesProtoSent == 0)
-      || (sessionToPurge->bytesProtoRcvd == 0))
-     && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
-     /* "Valid" TCP session used to skip faked sessions (e.g. portscans
-	with one faked packet + 1 response [RST usually]) */
-     ) {
-    HostTraffic *theHost, *theRemHost;
-    char *fmt = "WARNING: detected TCP connection with no data exchanged "
-      "[%s:%d] -> [%s:%d] (pktSent=%d/pktRcvd=%d) (network mapping attempt?)";
-
-    theHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->initiatorIdx)];
-    theRemHost = myGlobals.device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sessionToPurge->remotePeerIdx)];
-
-    if((theHost != NULL) && (theRemHost != NULL)) {
-
-      allocateSecurityHostPkts(theHost);
-      incrementUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent,
-			    sessionToPurge->remotePeerIdx, actualDeviceId);
-      allocateSecurityHostPkts(theRemHost);
-      incrementUsageCounter(&theRemHost->secHostPkts->closedEmptyTCPConnRcvd,
-			    sessionToPurge->initiatorIdx, actualDeviceId);
-
-      if(myGlobals.enableSuspiciousPacketDump)
-	traceEvent(TRACE_WARNING, fmt,
-		   theHost->hostSymIpAddress, sessionToPurge->sport,
-		   theRemHost->hostSymIpAddress, sessionToPurge->dport,
-		   sessionToPurge->pktSent, sessionToPurge->pktRcvd);
-    }
-  }
-
 
   /*
    * Having updated the session information, 'theSession'
    * can now be purged.
    */
   sessionToPurge->magic = 0;
-  if(myGlobals.enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge, actualDeviceId);
-  notifyTCPSession(sessionToPurge, actualDeviceId);
-#ifdef HAVE_MYSQL
-  mySQLnotifyTCPSession(sessionToPurge, actualDeviceId);
-#endif
   myGlobals.numTerminatedSessions++;
 
   myGlobals.device[actualDeviceId].numTcpSessions--;
