@@ -767,60 +767,60 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 	       statusIdx);
 #endif
   }
-  if(snprintf(tmpStr, sizeof(tmpStr), "HTTP/1.0 %d %s\n",
+  if(snprintf(tmpStr, sizeof(tmpStr), "HTTP/1.0 %d %s\r\n",
                    HTTPstatus[statusIdx].statusCode, HTTPstatus[statusIdx].reasonPhrase) < 0)
       BufferTooShort();
   sendString(tmpStr);
 
   strftime(theDate, sizeof(theDate)-1, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
   theDate[sizeof(theDate)-1] = '\0';
-  if(snprintf(tmpStr, sizeof(tmpStr), "Date: %s\n", theDate) < 0)
+  if(snprintf(tmpStr, sizeof(tmpStr), "Date: %s\r\n", theDate) < 0)
       BufferTooShort();
   sendString(tmpStr);
 
   if(headerFlags & HTTP_FLAG_IS_CACHEABLE) {
-    sendString("Cache-Control: max-age=3600, must-revalidate, public\n");
+    sendString("Cache-Control: max-age=3600, must-revalidate, public\r\n");
   } else if((headerFlags & HTTP_FLAG_NO_CACHE_CONTROL) == 0) {
-    sendString("Cache-Control: no-cache\n");
-    sendString("Expires: 0\n");
+    sendString("Cache-Control: no-cache\r\n");
+    sendString("Expires: 0\r\n");
   }
 
   if((headerFlags & HTTP_FLAG_KEEP_OPEN) == 0) {
     sendString("Connection: close\n");
   }
 
-  if(snprintf(tmpStr, sizeof(tmpStr), "Server: ntop/%s (%s)\n", version, osName) < 0)
+  if(snprintf(tmpStr, sizeof(tmpStr), "Server: ntop/%s (%s)\r\n", version, osName) < 0)
       BufferTooShort();
   sendString(tmpStr);
 
   if(headerFlags & HTTP_FLAG_NEED_AUTHENTICATION) {
-      sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server;\"\n");
+      sendString("WWW-Authenticate: Basic realm=\"ntop HTTP server;\"\r\n");
   }
 
   switch(mimeType) {
     case HTTP_TYPE_HTML:
-      sendString("Content-Type: text/html\n");
+      sendString("Content-Type: text/html\r\n");
       break;
     case HTTP_TYPE_GIF:
-      sendString("Content-Type: image/gif\n");
+      sendString("Content-Type: image/gif\r\n");
       break;
     case HTTP_TYPE_JPEG:
-      sendString("Content-Type: image/jpeg\n");
+      sendString("Content-Type: image/jpeg\r\n");
       break;
     case HTTP_TYPE_PNG:
-      sendString("Content-Type: image/png\n");
+      sendString("Content-Type: image/png\r\n");
       break;
     case HTTP_TYPE_CSS:
-      sendString("Content-Type: text/css\n");
+      sendString("Content-Type: text/css\r\n");
       break;
     case HTTP_TYPE_TEXT:
-      sendString("Content-Type: text/plain\n");
+      sendString("Content-Type: text/plain\r\n");
       break;
     case HTTP_TYPE_ICO:
-      sendString("Content-Type: application/octet-stream\n");
+      sendString("Content-Type: application/octet-stream\r\n");
       break;
     case HTTP_TYPE_JS:
-      sendString("Content-Type: text/javascript\n");
+      sendString("Content-Type: text/javascript\r\n");
       break;
     case HTTP_TYPE_NONE:
       break;
@@ -841,7 +841,7 @@ void sendHTTPHeader(int mimeType, int headerFlags) {
 #endif
 
   if((headerFlags & HTTP_FLAG_MORE_FIELDS) == 0) {
-    sendString("\n");
+    sendString("\r\n");
   }
 }
 
@@ -1157,7 +1157,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
         theTime = statbuf.st_mtime - myGlobals.thisZone;
         strftime(theDate, sizeof(theDate)-1, "%a, %d %b %Y %H:%M:%S GMT", localtime_r(&theTime, &t));
         theDate[sizeof(theDate)-1] = '\0';
-        if(snprintf(tmpStr, sizeof(tmpStr), "Last-Modified: %s\n", theDate) < 0)
+        if(snprintf(tmpStr, sizeof(tmpStr), "Last-Modified: %s\r\n", theDate) < 0)
 	  BufferTooShort();
         sendString(tmpStr);
     }
@@ -1165,12 +1165,12 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
     sendString("Accept-Ranges: bytes\n");
 
     fseek(fd, 0, SEEK_END);
-    if(snprintf(tmpStr, sizeof(tmpStr), "Content-Length: %d\n", (len = ftell(fd))) < 0)
+    if(snprintf(tmpStr, sizeof(tmpStr), "Content-Length: %d\r\n", (len = ftell(fd))) < 0)
       BufferTooShort();
     fseek(fd, 0, SEEK_SET);
     sendString(tmpStr);
 
-    sendString("\n");	/* mark the end of HTTP header */
+    sendString("\r\n");	/* mark the end of HTTP header */
 
     for(;;) {
       len = fread(tmpStr, sizeof(char), 255, fd);
@@ -1340,7 +1340,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
   if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
     int rc;
 
-    sendString("HTTP/1.0 200 OK\n");
+    sendString("HTTP/1.0 200 OK\r\n");
     rc = execCGI(&pageName[strlen(CGI_HEADER)]);
 
     if(rc != 0) {
@@ -1664,7 +1664,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
       idx = 3;
       theHost = &pageName[strlen("hostIPTrafficDistrib")+1];
     }
-
+    
     if(strlen(theHost) <= strlen(CHART_FORMAT)) {
       printNoDataYet();
     } else {
@@ -1686,7 +1686,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	if(hostName[i] == '_')
 	  hostName[i] = ':';
 
-      /* printf("HostName: '%s'\n", hostName); */
+      /* printf("HostName: '%s'\r\n", hostName); */
 
       for(elIdx=1; elIdx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; elIdx++) {
 	el = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[elIdx];
@@ -1975,9 +1975,9 @@ static void compressAndSendData(u_int *gzipBytesSent) {
     return;
   }
 
-  sendString("Content-Encoding: gzip\n");
+  sendString("Content-Encoding: gzip\r\n");
   fseek(fd, 0, SEEK_END);
-  if(snprintf(tmpStr, sizeof(tmpStr), "Content-Length: %d\n\n", (len = ftell(fd))) < 0)
+  if(snprintf(tmpStr, sizeof(tmpStr), "Content-Length: %d\r\n\r\n", (len = ftell(fd))) < 0)
     BufferTooShort();
   fseek(fd, 0, SEEK_SET);
   sendString(tmpStr);
