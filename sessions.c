@@ -1506,7 +1506,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	theSession->nwLatency.tv_sec = h->ts.tv_sec-theSession->nwLatency.tv_sec;
 
 	if((h->ts.tv_usec - theSession->nwLatency.tv_usec) < 0) {
-	  theSession->nwLatency.tv_usec = 1000000 - (h->ts.tv_usec - theSession->nwLatency.tv_usec);
+	  theSession->nwLatency.tv_usec = 1000000 + h->ts.tv_usec - theSession->nwLatency.tv_usec;
 	  if(theSession->nwLatency.tv_usec > 1000000) theSession->nwLatency.tv_usec = 1000000;
 	  theSession->nwLatency.tv_sec--;
 	} else
