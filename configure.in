@@ -1122,7 +1122,7 @@ GNU gdbm in       : ${GDBM_ROOT}
 MultiThread mode  : ${multithread_mode}
 Install path      : ${prefix}
 
-Now type 'make' or 'gmake' (on *BSD systems) to build $PACKAGE $VERSION
+Now type 'make' or 'gmake' (GNU make) on *BSD and Solaris systems to build $PACKAGE $VERSION
 "
 
 echo
