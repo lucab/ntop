@@ -1844,7 +1844,7 @@ typedef struct portUsage {
 #define theDomainHasBeenComputed(a) FD_ISSET(THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG, &(a->flags))
 #define subnetLocalHost(a)          ((a != NULL) && FD_ISSET(SUBNET_LOCALHOST_FLAG, &(a->flags)))
 #define privateIPAddress(a)         ((a != NULL) && FD_ISSET(PRIVATE_IP_ADDRESS, &(a->flags)))
-#define broadcastHost(a)            ((a != NULL) && FD_ISSET(BROADCAST_HOST_FLAG, &(a->flags)))
+#define broadcastHost(a)            ((a != NULL) && ((a->hostTrafficBucket == myGlobals.broadcastEntryIdx) || FD_ISSET(BROADCAST_HOST_FLAG, &(a->flags))))
 #define multicastHost(a)            ((a != NULL) && FD_ISSET(MULTICAST_HOST_FLAG, &(a->flags)))
 #define gatewayHost(a)              ((a != NULL) && FD_ISSET(GATEWAY_HOST_FLAG, &(a->flags)))
 #define nameServerHost(a)           ((a != NULL) && FD_ISSET(NAME_SERVER_HOST_FLAG, &(a->flags)))

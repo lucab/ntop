@@ -124,12 +124,12 @@ static void addContactedPeers(HostTraffic *sender, HostTraffic *receiver,
     return;
   }
   
-  if((!broadcastHost(sender))  && (sender->hostTrafficBucket != myGlobals.otherHostEntryIdx)) {
+  if((!broadcastHost(sender))   
+     && (sender->hostTrafficBucket != myGlobals.otherHostEntryIdx)
+     && !broadcastHost(receiver)
+     && (receiver->hostTrafficBucket != myGlobals.otherHostEntryIdx)) {
     sender->totContactedSentPeers += incrementUsageCounter(&sender->contactedSentPeers, 
 							   receiver->hostTrafficBucket, actualDeviceId);
-  }
-  
-  if((!broadcastHost(receiver)) && (receiver->hostTrafficBucket != myGlobals.otherHostEntryIdx)) {
     receiver->totContactedRcvdPeers += incrementUsageCounter(&receiver->contactedRcvdPeers, 
 							     sender->hostTrafficBucket, actualDeviceId);
   }
