@@ -3389,8 +3389,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 	if (rc != 0)
 	  traceEvent(TRACE_ERROR, "Error, SIGPIPE handler set, sigaddset() = %d, gave %p\n", rc, nset);
 
-#if !defined(DEBUG) && !defined(DARWIN)
+#ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
+#endif
+#ifdef DEBUG
 	traceEvent(TRACE_ERROR, "DEBUG: Note: SIGPIPE handler set (was), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
 #endif
 
@@ -3400,8 +3402,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 	  traceEvent(TRACE_ERROR, "Error, SIGPIPE handler set, pthread_setsigmask(SIG_UNBLOCK, %x, %x) returned %d\n", nset, oset, rc);
 #endif
 
-#if !defined(DEBUG) && !defined(DARWIN)
+#ifndef DARWIN
 	rc = pthread_sigmask(SIG_UNBLOCK, NULL, oset);
+#endif
+#ifdef DEBUG
 	traceEvent(TRACE_INFO, "DEBUG: Note, SIGPIPE handler set (is), pthread_setsigmask(-, NULL, %x) returned %d\n", oset, rc);
 #endif
 
