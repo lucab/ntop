@@ -62,14 +62,8 @@ int reportValues(time_t *lastTime) {
   else if(refreshRate < MIN_REFRESH_TIME)
     refreshRate = MIN_REFRESH_TIME;
 
-  /* Patch below courtesy of Nicolai Petri <nicolai@petri.cc> */
-#ifndef WIN32
-#ifdef __FreeBSD__
-  (void)setsignal(SIGPIPE, SIG_IGN);
-#else //__FreeBSD__
   (void)setsignal(SIGPIPE, ignoreSignal);
-#endif // __FreeBSD__
-#endif
+  (void)setsignal(SIGABRT, ignoreSignal);
 
   return(0);
 }
@@ -798,7 +792,7 @@ RETSIGTYPE printHostsTraffic(int signumber_ignored,
 		    getRowColor(), 
 		    formatThroughput(device[actualReportDeviceId].ethernetBytes/(actTime-initialSniffTime)), 
 		    /* Bug below fixed courtesy of Eddy Lai <eddy@ModernTerminals.com> */
-		    formatThroughput(device[actualReportDeviceId].ethernetPkts/(actTime-initialSniffTime))) < 0) 
+		    ((float)device[actualReportDeviceId].ethernetPkts/(float)(actTime-initialSniffTime))) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf2);
       }

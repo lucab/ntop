@@ -1287,10 +1287,7 @@ typedef struct {
 #define LOCAL_TO_REMOTE_ACCOUNTING   2
 #define LOCAL_TO_LOCAL_ACCOUNTING    3
 
-#define MAX_NUM_HANDLED_IP_PROTOCOLS      32
-
 #define MAX_NUM_PROTOS_SCREENS 5
-
 #define MAX_HOST_NAME_LEN 26
 
 struct enamemem {

@@ -53,7 +53,7 @@ void initIPServices(void) {
 
   traceEvent(TRACE_INFO, "Initializing IP services...");
 
-  memset(protoIPTrafficInfos, 0, sizeof(protoIPTrafficInfos));
+  protoIPTrafficInfos = NULL;
   ipPortMapper = (int*)malloc(sizeof(int)*TOP_IP_PORT);
 
 #ifdef WIN32

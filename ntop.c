@@ -346,14 +346,6 @@ static void handleProtocolList(char* protoName,
   traceEvent(TRACE_INFO, "%s - %s\n", protoName, protocolList);
 #endif
 
-  if(numIpProtosToMonitor == MAX_NUM_HANDLED_IP_PROTOCOLS) {
-    /* MAX_NUM_HANDLED_IP_PROTOCOLS is defined in ntop.h: increase it! */
-    traceEvent(TRACE_WARNING, "WARNING: Unable to handle '%s'. "
-	       "You've reached the max number\n"
-	       "of handled IP protocols.\n", protoName);
-    return;
-  }
-
   /* The trick below is used to avoid to modify static
      memory like in the case where this function is
      called by addDefaultProtocols()
@@ -371,6 +363,11 @@ static void handleProtocolList(char* protoName,
   }
 
   if(increment == 1) {
+    if(numIpProtosToMonitor == 0)
+      protoIPTrafficInfos = (char**)malloc(sizeof(char*));
+    else
+      protoIPTrafficInfos = (char**)realloc(protoIPTrafficInfos, sizeof(char*)*(numIpProtosToMonitor+1));
+
     protoIPTrafficInfos[numIpProtosToMonitor] = strdup(protoName);
     numIpProtosToMonitor++;
 #ifdef DEBUG

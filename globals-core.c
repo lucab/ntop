@@ -135,7 +135,7 @@ int numDevices, actualDeviceId;
 ntopInterface_t *device;
 
 /* Monitored Protocols */
-char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS];
+char **protoIPTrafficInfos;
 u_short numIpProtosToMonitor, numIpPortsToHandle;
 int *ipPortMapper, numActServices;
 ServiceEntry **udpSvc, **tcpSvc;

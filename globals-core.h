@@ -133,7 +133,7 @@ extern int numDevices, actualDeviceId;
 extern ntopInterface_t *device;
 
 /* Monitored Protocols */
-extern char *protoIPTrafficInfos[MAX_NUM_HANDLED_IP_PROTOCOLS]; /* array 0-numIpProtosToMonitor */
+extern char **protoIPTrafficInfos;
 extern u_short numIpProtosToMonitor, numIpPortsToHandle;
 extern int *ipPortMapper, numActServices;
 extern ServiceEntry **udpSvc, **tcpSvc;
