@@ -4886,13 +4886,26 @@ void printHostsStats(int fingerprintRemote) {
 
 #ifdef CFG_MULTITHREADED
 void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName) {
-  char buf[LEN_GENERAL_WORK_BUFFER], buf2[64];
+  char buf[LEN_GENERAL_WORK_BUFFER], bufAttempt[64], bufLock[64], bufUnlock[64];
   struct tm t;
 
   if(mutexId->numLocks == 0) /* Mutex never used */
     return;
-  memset(buf2, 0, sizeof(buf2));
-  strftime(buf2, sizeof(buf2), CONST_LOCALE_TIMESPEC, localtime_r(&mutexId->lockTime, &t));
+  memset(bufAttempt, 0, sizeof(bufAttempt));
+  if(mutexId->attempt.time.tv_sec > 0) {
+    strftime(bufAttempt, sizeof(bufAttempt), CONST_LOCALE_TIMESPEC, localtime_r(&mutexId->attempt.time.tv_sec, &t));
+    strncat(bufAttempt, "<br>\n", (sizeof(bufAttempt) - strlen(bufAttempt) - 1));
+  }
+  memset(bufLock, 0, sizeof(bufLock));
+  if(mutexId->lock.time.tv_sec > 0) {
+    strftime(bufLock, sizeof(bufLock), CONST_LOCALE_TIMESPEC, localtime_r(&mutexId->lock.time.tv_sec, &t));
+    strncat(bufLock, "<br>\n", (sizeof(bufLock) - strlen(bufLock) - 1));
+  }
+  memset(bufUnlock, 0, sizeof(bufUnlock));
+  if(mutexId->unlock.time.tv_sec > 0) {
+    strftime(bufUnlock, sizeof(bufUnlock), CONST_LOCALE_TIMESPEC, localtime_r(&mutexId->unlock.time.tv_sec, &t));
+    strncat(bufUnlock, "<br>\n", (sizeof(bufUnlock) - strlen(bufUnlock) - 1));
+  }
   if(textPrintFlag == TRUE) {
     if(myGlobals.runningPref.disableMutexExtraInfo) {
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
@@ -4900,88 +4913,84 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
                     mutexName, mutexId->isLocked ? "locked" : "unlocked",
                     mutexId->numLocks);
         sendString(buf);
-    } else if(mutexId->lockAttemptLine > 0) {
+    } else if(mutexId->attempt.line > 0) {
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "Mutex %s is %s.\n"
-                    "     locked: %u times, last was at %s %s:%d(%d)\n"
-                    "     blocked: at %s:%d(%d)\n",
+                    "     locked: %u times, last was at %s %s:%d(%d %u)\n"
+                    "     blocked: at %s:%d(%d %u)\n",
                     mutexName, mutexId->isLocked ? "locked" : "unlocked",
                     mutexId->numLocks,
-                    buf2,
-                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
-                    mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid);
+                    bufLock,
+                    mutexId->lock.file, mutexId->lock.line, mutexId->lock.pid, mutexId->lock.thread,
+                    mutexId->attempt.file, mutexId->attempt.line, mutexId->attempt.pid, mutexId->attempt.thread);
 		    sendString(buf);
 
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                    "     unlocked: %u times, last was %s:%d(%d)\n"
-                    "     longest: %d sec from %s:%d\n",
-                    mutexId->numReleases, mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
-                    mutexId->maxLockedDuration, mutexId->maxLockedDurationUnlockFile,
-		    mutexId->maxLockedDurationUnlockLine);
+                    "     unlocked: %u times, last was %s:%d(%d %u)\n"
+                    "     longest: %.6f sec from %s:%d\n",
+                    mutexId->numReleases, mutexId->unlock.file, mutexId->unlock.line, mutexId->unlock.pid, mutexId->unlock.thread,
+                    mutexId->maxLockedDuration, mutexId->max.file,
+		    mutexId->max.line);
+        sendString(buf);
     } else {
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "Mutex %s, is %s.\n"
-                    "     locked: %u times, last was at %s %s:%d(%d)\n"
-                    "     unlocked: %u times, last was %s:%d(%d)\n"
-                    "     longest: %d sec from %s:%d\n",
+                    "     locked: %u times, last was at %s %s:%d(%d %u)\n"
+                    "     unlocked: %u times, last was at %s %s:%d(%d %u)\n"
+                    "     longest: %.6f sec from %s:%d\n",
                     mutexName,
                     mutexId->isLocked ? "locked" : "unlocked",
                     mutexId->numLocks,
-                    buf2,
-                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
+                    bufLock,
+                    mutexId->lock.file, mutexId->lock.line, mutexId->lock.pid, mutexId->lock.thread,
                     mutexId->numReleases,
-                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
+                    bufUnlock,
+                    mutexId->unlock.file, mutexId->unlock.line, mutexId->unlock.pid, mutexId->unlock.thread,
                     mutexId->maxLockedDuration,
-                    mutexId->maxLockedDurationUnlockFile,
-                    mutexId->maxLockedDurationUnlockLine);
+                    mutexId->max.file,
+                    mutexId->max.line);
+        sendString(buf);
     }
   } else {
-    if(myGlobals.runningPref.disableMutexExtraInfo) {
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                  "<tr><th align=\"left\">%s</th>\n<td align=\"center\">%s</td>\n",
+                  mutexName,
+                  mutexId->isLocked ? "<font color=\"RED\">locked</font>" : "unlocked");
+    sendString(buf);
+
+    if(!myGlobals.runningPref.disableMutexExtraInfo) {
+
+      if(mutexId->attempt.line == 0) {
+        sendString("<td>&nbsp;</TD>\n");
+      } else {
         safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-                    "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
-                    "<TD ALIGN=RIGHT colspan=3>%u</TD><TD ALIGN=RIGHT>%u</TD></TR>\n",
-                    mutexName,
-                    mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
-                    mutexId->numLocks, mutexId->numReleases);
-    } else if (mutexId->lockAttemptLine > 0) {
+                      "<td align=\"right\">%s, %s:%d p:%d t:%u</td>\n",
+                      bufAttempt,
+                      mutexId->attempt.file, mutexId->attempt.line, mutexId->attempt.pid, mutexId->attempt.thread);
+        sendString(buf);
+      }
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		      "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
-		      "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s:%d</TD><TD ALIGN=RIGHT>%d</TD>"
-		      "<TD ALIGN=RIGHT>%s:%d</TD><TD ALIGN=RIGHT>%d</TD>"
-		      "<TD ALIGN=RIGHT>%s:%d</TD><TD ALIGN=RIGHT>%d</TD>"
-		      "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=RIGHT>%u</TD>"
-		      "<TD ALIGN=RIGHT>%d sec</TD><TD ALIGN=RIGHT>%s:%d</TD></TR>\n",
-		      mutexName,
-		      mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
-		      buf2,
-		      mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
-		      mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid,
-		      mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
-		      mutexId->numLocks, mutexId->numReleases,
-		      mutexId->maxLockedDuration,
-		      mutexId->maxLockedDurationUnlockFile,
-		      mutexId->maxLockedDurationUnlockLine);
-    } else {
+                    "<td align=\"right\">%s %s:%d p:%d t:%u</td>\n",
+                    bufLock,
+                    mutexId->lock.file, mutexId->lock.line, mutexId->lock.pid, mutexId->lock.thread);
+      sendString(buf);
       safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		    "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
-		    "<TD ALIGN=RIGHT>%s</TD><TD ALIGN=RIGHT>%s:%d</TD><TD ALIGN=RIGHT>%d</TD></TD>"
-		    "<TD ALIGN=RIGHT>&nbsp;</TD>"
-		    "<TD ALIGN=RIGHT>%s:%d</TD><TD ALIGN=RIGHT>%d</TD></TD>"
-		    "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=RIGHT>%u</TD>"
-		    "<TD ALIGN=RIGHT>%d sec</TD><TD ALIGN=RIGHT>%s:%d</TD></TR>\n",
-                    mutexName,
-                    mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
-                    buf2,
-                    mutexId->lockFile, mutexId->lockLine, mutexId->lockPid,
-                    mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
-                    mutexId->numLocks, mutexId->numReleases,
-                    mutexId->maxLockedDuration,
-                    mutexId->maxLockedDurationUnlockFile,
-                    mutexId->maxLockedDurationUnlockLine);
+                    "<td align=\"right\">%s %s:%d p:%d t:%u</td>\n",
+                    bufUnlock,
+                    mutexId->unlock.file, mutexId->unlock.line, mutexId->unlock.pid, mutexId->unlock.thread);
+      sendString(buf);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                    "<td align=\"right\">%.6f seconds %s:%d</td>\n",
+		    mutexId->maxLockedDuration, mutexId->max.file, mutexId->max.line);
+      sendString(buf);
+
     }
+
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
+                  "<td align=\"right\">%u / %u</td></tr>\n",
+                  mutexId->numLocks, mutexId->numReleases);
+    sendString(buf);
   }
-  
-  sendString(buf);
 }
 #endif
 

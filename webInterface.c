@@ -6362,23 +6362,18 @@ void printHostColorCode(int textPrintFlag, int isInfo) {
 
 #ifdef CFG_MULTITHREADED
 void printMutexStatusReport(int textPrintFlag) {
-  if(myGlobals.runningPref.disableMutexExtraInfo) {
-    sendString(texthtml("\nMutexes:\n\n",
-			  "<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
-			  "<TR><TH "TH_BG" "DARK_BG">Mutex Name</TH>"
-			  "<TH "TH_BG" "DARK_BG">State</TH>"
-			  "<TH COLSPAN=3 "TH_BG" "DARK_BG"># Locks/Releases</TH>"));
-  } else {
-    sendString(texthtml("\nMutexes:\n\n",
-			  "<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n"
-			  "<TR><TH "TH_BG" "DARK_BG">Mutex Name</TH>"
-			  "<TH "TH_BG" "DARK_BG">State</TH>"
-			  "<TH COLSPAN=3 "TH_BG" "DARK_BG">Last Lock</TH>"
-			  "<TH "TH_BG" "DARK_BG">Blocked</TH>"
-			  "<TH COLSPAN=2 "TH_BG" "DARK_BG">Last UnLock</TH>"
-			  "<TH COLSPAN=2 "TH_BG" "DARK_BG"># Locks/Releases</TH>"
-			  "<TH COLSPAN=2 "TH_BG" "DARK_BG">Max Lock</TH></TR>"));
+  sendString(texthtml("\nMutexes:\n\n",
+                      "<p>"TABLE_ON"<table border=\"1\" "TABLE_DEFAULTS">\n"
+                      "<tr><th "TH_BG" "DARK_BG">Mutex Name</th>\n"
+                      "<th "TH_BG" "DARK_BG">State</th>\n"));
+  if(!myGlobals.runningPref.disableMutexExtraInfo) {
+    sendString(texthtml("",
+                        "<th "TH_BG" "DARK_BG">Attempt</th>\n"
+                        "<th "TH_BG" "DARK_BG">Lock</th>\n"
+                        "<th "TH_BG" "DARK_BG">UnLock</th>\n"
+                        "<th "TH_BG" "DARK_BG">Max Lock</th>\n"));
   }
+  sendString(texthtml("", "<th "TH_BG" "DARK_BG"># Locks/Releases</th>"));
 
   printMutexStatus(textPrintFlag, &myGlobals.gdbmMutex, "gdbmMutex");
   printMutexStatus(textPrintFlag, &myGlobals.packetProcessMutex, "packetProcessMutex");
@@ -6395,7 +6390,7 @@ void printMutexStatusReport(int textPrintFlag) {
   printMutexStatus(textPrintFlag, &myGlobals.purgePortsMutex,  "purgePortsMutex");
   printMutexStatus(textPrintFlag, &myGlobals.securityItemsMutex,  "securityItemsMutex");
 
-  sendString(texthtml("\n\n", "</TABLE>"TABLE_OFF"\n"));
+  sendString(texthtml("\n\n", "</table>"TABLE_OFF"</p>\n"));
 }
 
 #endif

@@ -333,27 +333,23 @@ extern int  pthread_mutex_unlock(pthread_mutex_t *mutex);
 
 #endif /* WIN32 */
 
+typedef struct holder {
+  struct timeval time;
+  pid_t  pid;
+  pthread_t thread;
+  int    line;
+  char   file[5];
+} Holder;
+
 typedef struct pthreadMutex {
-  pthread_mutex_t mutex;
-  pthread_t lockThread;
+  pthread_mutex_t mutex, statedatamutex;
   char   isLocked, isInitialized;
-  char   lockFile[64];
-  int    lockLine;
-  pid_t  lockPid;
-  char   unlockFile[64];
-  int    unlockLine;
-  pid_t  unlockPid;
   u_int  numLocks, numReleases;
-
-  time_t lockTime;
-  char   maxLockedDurationUnlockFile[64];
-  int    maxLockedDurationUnlockLine;
-  int    maxLockedDuration;
-
-  char   where[64];
-  char   lockAttemptFile[64];
-  int    lockAttemptLine;
-  pid_t  lockAttemptPid;
+  Holder attempt,
+         lock,
+         unlock,
+         max;
+  float  maxLockedDuration;
 } PthreadMutex;
 
 typedef struct packetInformation {

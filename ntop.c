@@ -40,12 +40,12 @@ static unsigned long long setNonBlockingSleepCount;
 #ifdef CFG_MULTITHREADED
 static void printMutexInfo(PthreadMutex *mutexId, char *mutexName) {
 
-  traceEvent(CONST_TRACE_INFO, "%s is %s (last lock %s:%d) [max lock time %s:%d (%d sec)]",
+  traceEvent(CONST_TRACE_INFO, "%s is %s (last lock %s:%d) [max lock time %s:%d (%.6f sec)]",
 	     mutexName,
 	     mutexId->isLocked ? "*locked*" : "unlocked",
-	     mutexId->lockFile, mutexId->lockLine,
-	     mutexId->maxLockedDurationUnlockFile,
-	     mutexId->maxLockedDurationUnlockLine,
+	     mutexId->lock.file, mutexId->lock.line,
+	     mutexId->max.file,
+	     mutexId->max.line,
 	     mutexId->maxLockedDuration);
 }
 #endif

@@ -463,30 +463,34 @@ extern int getLocalHostAddress(struct in_addr *hostIpAddress, char* device);
 extern NtopIfaceAddr * getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device);
 extern void fillDomainName(HostTraffic *el);
 #ifdef CFG_MULTITHREADED
-extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *),
-                        char* userParm);
+extern int createThread(pthread_t *threadId, void *(*__start_routine) (void *), char* userParm);
 extern int killThread(pthread_t *threadId);
-extern int _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
-extern int _accessMutex(PthreadMutex *mutexId, char* where,
-                        char* fileName, int fileLine);
-extern void _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
-extern int _tryLockMutex(PthreadMutex *mutexId, char* where,
-                         char* fileName, int fileLine);
-extern int _isMutexLocked(PthreadMutex *mutexId,
-                         char* fileName, int fileLine);
-extern int _releaseMutex(PthreadMutex *mutexId,
-                         char* fileName, int fileLine);
+
+extern int   _createMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
+extern int   _accessMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLine);
+extern void  _deleteMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
+extern int  _tryLockMutex(PthreadMutex *mutexId, char* where, char* fileName, int fileLine);
+extern int  _releaseMutex(PthreadMutex *mutexId, char* fileName, int fileLine);
+#define createMutex(a)     _createMutex(a, __FILE__, __LINE__)
+#define accessMutex(a, b)  _accessMutex(a, b, __FILE__, __LINE__)
+#define deleteMutex(a)     _deleteMutex(a, __FILE__, __LINE__)
+#define tryLockMutex(a, b) _tryLockMutex(a, b, __FILE__, __LINE__)
+#define releaseMutex(a)    _releaseMutex(a, __FILE__, __LINE__)
+
+#define setHolder(a) { \
+                       if(fileName != NULL) { strncpy(a.file, fileName, sizeof(a.file)-1); a.file[sizeof(a.file)-1]='\0'; } else \
+                                            { memset(&(a), 0, sizeof(a)); } \
+                       a.line = fileLine; \
+                       a.pid = getpid(); \
+                       a.thread = pthread_self(); \
+                       gettimeofday(&(a.time), NULL) ; \
+                     }
+
 extern int createCondvar(ConditionalVariable *condvarId);
 extern void deleteCondvar(ConditionalVariable *condvarId);
 extern int waitCondvar(ConditionalVariable *condvarId);
 extern int timedwaitCondvar(ConditionalVariable *condvarId, struct timespec *expiration);
 extern int signalCondvar(ConditionalVariable *condvarId);
-#define createMutex(a)     _createMutex(a, __FILE__, __LINE__)
-#define accessMutex(a, b)  _accessMutex(a, b, __FILE__, __LINE__)
-#define deleteMutex(a)     _deleteMutex(a, __FILE__, __LINE__)
-#define tryLockMutex(a, b) _tryLockMutex(a, b, __FILE__, __LINE__)
-#define isMutexLocked(a)   _isMutexLocked(a, __FILE__, __LINE__)
-#define releaseMutex(a)    _releaseMutex(a, __FILE__, __LINE__)
 #ifdef HAVE_SEMAPHORE_H
 extern int createSem(sem_t *semId, int initialValue);
 extern void waitSem(sem_t *semId);
