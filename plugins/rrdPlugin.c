@@ -704,6 +704,14 @@ static void commonRRDinit(void) {
     dumpInterval = atoi(value);
   }
 
+
+  if(fetchPrefsValue("rrd.dumpFlows", value, sizeof(value)) == -1) {
+    storePrefsValue("rrd.dumpFlows", "0");
+    dumpFlows = 0;
+  } else {
+    dumpFlows = atoi(value);
+  }
+
   if(fetchPrefsValue("rrd.dumpHosts", value, sizeof(value)) == -1) {
     storePrefsValue("rrd.dumpHosts", "0");
     dumpHosts = 0;
