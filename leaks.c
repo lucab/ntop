@@ -378,11 +378,27 @@ void ntop_free(void *ptr, char* file, int line) {
 
 #else /* MEMORY_DEBUG */
 
+#undef malloc /* just to be safe */
+void* ntop_safemalloc(unsigned int sz, char* file, int line) {
+  void *thePtr;
+  
+  if((sz == 0) || (sz > 32768)) {
+    traceEvent(TRACE_WARNING, "WARNING: called malloc(%u) @ %s:%d", 
+	       sz, file, line);
+  }
+
+  thePtr = malloc(sz);
+  memset(thePtr, 0xff, sz); /* Fill it with garbage */
+  return(thePtr);
+}
+
+/* ****************************************** */
+
 #undef free /* just to be safe */
 void ntop_safefree(void **ptr, char* file, int line) {
 
   if((ptr == NULL) || (*ptr == NULL)) {
-    traceEvent(TRACE_WARNING, "free of NULL pointer @ %s:%d", 
+    traceEvent(TRACE_WARNING, "WARNING: free of NULL pointer @ %s:%d", 
 	       file, line);
   } else {
     free(*ptr);

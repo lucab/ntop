@@ -853,9 +853,11 @@ void checkFilterChain(HostTraffic *srcHost,
 	  /* This comparison doesn't make sense here */
 	  continue;
 	else if((packetType == TCP_RULE) 
-		&& ((srcHost->portsUsage[sport] == NULL) 
+		&& ((srcHost->portsUsage == NULL) 
+		    || (srcHost->portsUsage[sport] == NULL) 
 		    || (srcHost->portsUsage[sport]->clientUses == 0))
-		&& ((srcHost->portsUsage[sport] == NULL) 
+		&& ((srcHost->portsUsage == NULL) 
+		    || (srcHost->portsUsage[sport] == NULL) 
 		    || (srcHost->portsUsage[sport]->serverUses == 0)))
 	  continue;
 	break;
@@ -863,7 +865,10 @@ void checkFilterChain(HostTraffic *srcHost,
 	if(broadcastHost(srcHost) || multicastHost(srcHost)) 
 	  /* This comparison doesn't make sense here */
 	  continue;
-	else if((packetType == TCP_RULE) && (srcHost->portsUsage[sport] != NULL))
+	else if((packetType == TCP_RULE) 
+		&& (srcHost->portsUsage != NULL)
+		&& (srcHost->portsUsage[sport] != NULL)
+		)
 	  continue;
 	break;
       default:
@@ -910,14 +915,19 @@ void checkFilterChain(HostTraffic *srcHost,
 	break;
       case USED_PORT:
 	if((packetType == TCP_RULE) 
-	   && ((srcHost->portsUsage[sport] == NULL) 
+	   && ((srcHost->portsUsage == NULL) 
+	       || (srcHost->portsUsage[sport] == NULL) 
 	       || (srcHost->portsUsage[sport]->clientUses == 0))
-	   && ((srcHost->portsUsage[sport] == NULL) 
+	   && ((srcHost->portsUsage == NULL) 
+	       || (srcHost->portsUsage[sport] == NULL) 
 	       || (srcHost->portsUsage[sport]->serverUses == 0)))
 	  continue;
 	break;
       case NOT_USED_PORT:
-	if((packetType == TCP_RULE) && (srcHost->portsUsage[sport] != NULL))
+	if((packetType == TCP_RULE) 
+	   && (srcHost->portsUsage != NULL)
+	   && (srcHost->portsUsage[sport] != NULL)
+	   )
 	  continue;
 	break;
       default:

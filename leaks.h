@@ -18,14 +18,6 @@ extern void  myAddXMPLeak(void*, int, char*);
 extern unsigned int PrintMemoryBlocks(void);
 extern void ResetLeaks(void);
 
-/*
-#define malloc(a)     myMalloc((size_t)(a), __LINE__, __FILE__)
-#define calloc(a, b)  myCalloc((size_t)(a), (size_t)(b), __LINE__, __FILE__)
-#define realloc(a, b) myRealloc((void*)(a), (size_t)(b), __LINE__, __FILE__)
-#define free(a)       myFree((void*)(a), __LINE__, __FILE__)
-#define strdup(a)     myStrdup((char*)(a), __LINE__, __FILE__)
-*/
-
 #endif
 
 

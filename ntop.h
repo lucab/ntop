@@ -1683,7 +1683,8 @@ typedef struct hostTraffic {
   TrafficCounter   qnxSent, qnxReceived;
   TrafficCounter   otherSent, otherReceived;
   ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/received by this host */
-  IpGlobalSession  *tcpSessionList, *udpSessionList; /* list of sessions initiated/received by this host */
+  IpGlobalSession  *tcpSessionList,
+                   *udpSessionList; /* list of sessions initiated/received by this host */
   UsageCounter     contactedSentPeers; /* peers that talked with this host */
   UsageCounter     contactedRcvdPeers; /* peers that talked with this host */
   UsageCounter     contactedRouters; /* routers contacted by this host */

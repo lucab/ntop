@@ -1331,8 +1331,7 @@ void printAllSessionsHTML(char* host) {
       if(el->portsUsage[idx]->clientUses > 0) {
 	/* Fix below courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
 	peerHost = device[actualReportDeviceId].
-	  hash_hostTraffic[
-			   checkSessionIdx(el->portsUsage[idx]->clientUsesLastPeer)];
+	  hash_hostTraffic[checkSessionIdx(el->portsUsage[idx]->clientUsesLastPeer)];
 
 	if(peerHost == NULL) {
 	  /* Courtesy of Roberto De Luca <deluca@tandar.cnea.gov.ar> */
@@ -1341,10 +1340,10 @@ void printAllSessionsHTML(char* host) {
 	  strncpy(webHostName, makeHostLink(peerHost, SHORT_FORMAT, 0, 0), sizeof(webHostName));
 
 	if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER>%d/%s</TD>"
-		"<TD "TD_BG" ALIGN=CENTER>%s</TD>",
-		el->portsUsage[idx]->clientUses,
-		formatBytes(el->portsUsage[idx]->clientTraffic, 1),
-		webHostName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+		    "<TD "TD_BG" ALIGN=CENTER>%s</TD>",
+		    el->portsUsage[idx]->clientUses,
+		    formatBytes(el->portsUsage[idx]->clientTraffic, 1),
+		    webHostName) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 	sendString(buf);
       } else
 	sendString("<TD "TD_BG">&nbsp;</TD><TD "TD_BG">&nbsp;</TD>");
@@ -1946,10 +1945,12 @@ void printIpProtocolUsage(void) {
       if(clientPorts[j] > 0) {
 	sendString("<UL>");
 	for(idx1=0; idx1<hostsNum; idx1++)
-	  if((hosts[idx1]->portsUsage[j] != NULL)
+	  if((hosts[idx1]->portsUsage != NULL)
 	     && (hosts[idx1]->portsUsage[j] != NULL) /* added 04.03.00 Ralf Amandi */
 	     && (hosts[idx1]->portsUsage[j]->clientUses > 0)) {
-	    if(snprintf(buf, sizeof(buf), "<li>%s\n", makeHostLink(hosts[idx1], SHORT_FORMAT, 1, 0)) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	    if(snprintf(buf, sizeof(buf), "<li>%s\n",
+			makeHostLink(hosts[idx1], SHORT_FORMAT, 1, 0)) < 0) 
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }
 	sendString("</UL>");
@@ -1964,7 +1965,8 @@ void printIpProtocolUsage(void) {
 	  if((hosts[idx1]->portsUsage != NULL)
 	     && (hosts[idx1]->portsUsage[j] != NULL) /* added 04.03.00 Ralf Amandi */
 	     && (hosts[idx1]->portsUsage[j]->serverUses > 0)) {
-	    if(snprintf(buf, sizeof(buf), "<li>%s\n", makeHostLink(hosts[idx1], SHORT_FORMAT, 1, 0)) < 0) 
+	    if(snprintf(buf, sizeof(buf), "<li>%s\n", 
+			makeHostLink(hosts[idx1], SHORT_FORMAT, 1, 0)) < 0) 
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
 	  }

@@ -310,11 +310,16 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
 		 hash_hostTraffic[j]->portsUsage[i]->serverUsesLastPeer);
       }
 
-      scanner = device[deviceToExtend].hash_hostTraffic[j]->tcpSessionList;
-
-      while(scanner != NULL) {
-	mapUsageCounter(&scanner->peers);
-	scanner = (IpGlobalSession*)(scanner->next);
+      for(i=0; i<2; i++) {
+	if(i == 0)
+	  scanner = device[deviceToExtend].hash_hostTraffic[j]->tcpSessionList;
+	else
+	  scanner = device[deviceToExtend].hash_hostTraffic[j]->udpSessionList;
+	  
+	while(scanner != NULL) {
+	  mapUsageCounter(&scanner->peers);
+	  scanner = (IpGlobalSession*)(scanner->next);
+	}
       }
     }
 
@@ -522,7 +527,10 @@ static void removeGlobalHostPeers(HostTraffic *el,
   if(!capturePackets) return;
 
   if(el->tcpSessionList != NULL)
-    purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, &el->tcpSessionList);
+    purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, el->tcpSessionList);
+
+  if(el->udpSessionList != NULL)
+    purgeIdleHostSessions(flaggedHosts, flaggedHostsLen, el->udpSessionList);
 
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedSentPeers);
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRcvdPeers);
@@ -720,16 +728,21 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
     free(host->portsUsage);
   }
 
-  element = host->tcpSessionList;
-
-  while(element != NULL) {
-    nextElement = element->next;
-    /*
-      The 'peers' field shouldn't be a problem because an idle host
-      isn't supposed to have any session
-    */
-    free(element);
-    element = nextElement;
+  for(i=0; i<2; i++) {
+    if(i == 0)
+      element = host->tcpSessionList;
+    else
+      element = host->udpSessionList;
+    
+    while(element != NULL) {
+      nextElement = element->next;
+      /*
+	The 'peers' field shouldn't be a problem because an idle host
+	isn't supposed to have any session
+      */
+      free(element);
+      element = nextElement;
+    }
   }
 
   freeHostSessions(hostIdx, theDevice);

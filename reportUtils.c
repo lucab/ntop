@@ -2252,297 +2252,313 @@ void printHostSessions(HostTraffic *el, u_int elIdx) {
   IpGlobalSession *scanner=NULL;
   char *sessionType=NULL;
   u_short numSessions;
-  u_int idx, i;
+  u_int idx, i, sessionIdx;
   static char _sport[8], _dport[8];
 
-  if(el->tcpSessionList != NULL) {
-    printSectionTitle("IP Session History");
-  }
-
-  scanner = el->tcpSessionList;
-  sessionType = "TCP";
-
-  numSessions = 0;
-
-  while(scanner != NULL) {
-    char *whoswho, *svc=NULL, tmpSvc[16];
-
-    if(scanner->initiator == CLIENT_ROLE)
-      whoswho= "client";
-    else
-      whoswho= "server";
-
-    svc = getPortByNum((int)(scanner->port), IPPROTO_TCP);
-
-    if(svc == NULL) {
-      if(snprintf(tmpSvc, sizeof(tmpSvc), "%d", (int)(scanner->port)) < 0)
-	traceEvent(TRACE_ERROR, "Buffer overflow!");
-      svc = tmpSvc;
-    }
-
-    if(numSessions == 0) {
-      sendString("<CENTER>\n");
-      if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
-		  "<TH "TH_BG" COLSPAN=2>%s&nbsp;Service</TH>"
-		  "<TH "TH_BG">Role</TH><TH "TH_BG">"
-		  "#&nbsp;Sessions</TH>"
-		  "<TH "TH_BG">Bytes&nbsp;Sent</TH>"
-		  "<TH "TH_BG">Bytes&nbsp;Rcvd</TH>"
-		  "<TH "TH_BG">Last&nbsp;Seen</TH>"
-		  "<TH "TH_BG">First&nbsp;Seen</TH>"
-		  "<TH "TH_BG">Peers</TH></TR>\n",
-		  sessionType) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-      sendString(buf);
-    }
-
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=RIGHT>%s</TH>"
-		"<TD "TD_BG"  ALIGN=CENTER>%d</TD>"
-		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%d"
-		"</TD><TD "TD_BG"  ALIGN=CENTER>%s</TD>"
-		"<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG">"
-		"%s</TD><TD "TD_BG">%s</TD>\n",
-		getRowColor(), svc, scanner->port, whoswho,
-		(int)scanner->sessionCounter,
-		formatBytes(scanner->bytesSent, 1),
-		formatBytes(scanner->bytesReceived, 1),
-		formatTime(&(scanner->lastSeen), 1),
-		formatTime(&(scanner->firstSeen), 1)
-		) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-    sendString(buf);
-    numSessions++;
-
-    sendString("<TD "TD_BG"><UL>");
-    for(i=0; i < MAX_NUM_CONTACTED_PEERS; i++) {
-      u_int theIdx = scanner->peers.peersIndexes[i];
-
-      if((theIdx != NO_PEER)
-	 && (device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)] != NULL)) {
-	HostTraffic *host = device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)];
-
-	if(host != NULL) {
-#ifdef MULTITHREADED
-	  accessMutex(&addressResolutionMutex, "printSession");
-#endif
-	  if(host->hostNumIpAddress[0] == '&') {
-	    if(snprintf(buf, sizeof(buf), "<LI>%s\n", host->hostSymIpAddress) < 0)
-	      traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  } else {
-	    if(snprintf(buf, sizeof(buf), "<LI><A HREF=%s.html>%s</A>\n",
-			host->hostNumIpAddress, host->hostSymIpAddress) < 0)
-	      traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  }
-#ifdef MULTITHREADED
-	  releaseMutex(&addressResolutionMutex);
-#endif
-	  sendString(buf);
-	}
+  for(sessionIdx=0; sessionIdx<2; sessionIdx++) {
+    if(sessionIdx == 0) {
+      if(el->tcpSessionList != NULL) {
+	printSectionTitle("IP Session History");
       }
-    }
-    sendString("</UL></TR>\n");
+      
+      scanner = el->tcpSessionList;
+      sessionType = "TCP";
+    } else {
+      if(el->udpSessionList != NULL) {
+	printSectionTitle("IP Session History");
+      }
+      
+      scanner = el->udpSessionList;
+      sessionType = "UDP";
+    } 
 
-    scanner = (IpGlobalSession*)(scanner->next);
-  }
+    numSessions = 0;
 
-  if(numSessions > 0) {
-    sendString("</TABLE>"TABLE_OFF"<P>\n");
-    sendString("</CENTER>\n");
-  }
+    while(scanner != NULL) {
+      char *whoswho, *svc=NULL, tmpSvc[16];
 
-  /* Now print currently established TCP sessions (if any) */
-  for(idx=1, numSessions=0; idx<device[actualReportDeviceId].numTotSessions; idx++)
-    if((device[actualReportDeviceId].tcpSession[idx] != NULL)
-       && ((device[actualReportDeviceId].tcpSession[idx]->initiatorIdx == elIdx)
-	   || (device[actualReportDeviceId].tcpSession[idx]->remotePeerIdx == elIdx))
-#ifndef PRINT_ALL_ACTIVE_SESSIONS
-       && (device[actualReportDeviceId].tcpSession[idx]->sessionState == STATE_ACTIVE)
-#endif
-       ) {
-      char *sport, *dport, *remotePeer;
-      TrafficCounter dataSent, dataReceived, retrDataSent, retrDataRcvd;
-      TrafficCounter fragDataSent, fragDataRcvd;
-      int retrSentPercentage, retrRcvdPercentage;
-      char fragStrSent[64], fragStrRcvd[64], *moreSessionInfo;
+      if(scanner->initiator == CLIENT_ROLE)
+	whoswho= "client";
+      else
+	whoswho= "server";
 
-      if(device[actualReportDeviceId].
-	 tcpSession[idx]->remotePeerIdx == NO_PEER) /* This should not happen */
-	continue;
+      if(sessionIdx == 0)
+	svc = getPortByNum((int)(scanner->port), IPPROTO_TCP);
+      else
+	svc = getPortByNum((int)(scanner->port), IPPROTO_UDP);
+
+      if(svc == NULL) {
+	if(snprintf(tmpSvc, sizeof(tmpSvc), "%d", (int)(scanner->port)) < 0)
+	  traceEvent(TRACE_ERROR, "Buffer overflow!");
+	svc = tmpSvc;
+      }
 
       if(numSessions == 0) {
-	printSectionTitle("Active TCP Sessions");
-        sendString("<CENTER>\n");
-	sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
-		   "<TH "TH_BG">Local&nbsp;Port</TH>"
-		   "<TH "TH_BG">Remote&nbsp;Peer:Port</TH>"
-		   "<TH "TH_BG">Data&nbsp;Sent</TH>"
-#ifdef PRINT_RETRANSMISSION_DATA
-		   "<TH "TH_BG">Retran.&nbsp;Data&nbsp;Sent</TH>"
-#endif
-		   "<TH "TH_BG">Data&nbsp;Rcvd</TH>"
-#ifdef PRINT_RETRANSMISSION_DATA
-		   "<TH "TH_BG">Retran.&nbsp;Data&nbsp;Rcvd</TH>"
-#endif
-		   "<TH "TH_BG">Window&nbsp;Size</TH>"
-		   "<TH "TH_BG">Active&nbsp;Since</TH>"
-		   "<TH "TH_BG">Last&nbsp;Seen</TH>"
-		   "<TH "TH_BG">Duration</TH>"
-		   "<TH "TH_BG">Latency</TH>"
-#ifdef PRINT_ALL_ACTIVE_SESSIONS
-		   "<TH "TH_BG">State</TH>"
-#endif
-		   "</TR>\n");
+	sendString("<CENTER>\n");
+	if(snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
+		    "<TH "TH_BG" COLSPAN=2>%s&nbsp;Service</TH>"
+		    "<TH "TH_BG">Role</TH><TH "TH_BG">"
+		    "#&nbsp;Sessions</TH>"
+		    "<TH "TH_BG">Bytes&nbsp;Sent</TH>"
+		    "<TH "TH_BG">Bytes&nbsp;Rcvd</TH>"
+		    "<TH "TH_BG">Last&nbsp;Seen</TH>"
+		    "<TH "TH_BG">First&nbsp;Seen</TH>"
+		    "<TH "TH_BG">Peers</TH></TR>\n",
+		    sessionType) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+	sendString(buf);
       }
 
-      if(device[actualReportDeviceId].tcpSession[idx]->initiatorIdx == elIdx) {
-	sport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->sport, IPPROTO_TCP);
-	dport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->dport, IPPROTO_TCP);
-	if(sport == NULL) {
-	  if(snprintf(_sport, sizeof(_sport), "%d",
-		      device[actualReportDeviceId].tcpSession[idx]->sport) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sport = _sport;
-	}
-
-	if(dport == NULL) {
-	  if(snprintf(_dport, sizeof(_dport), "%d",
-		      device[actualReportDeviceId].tcpSession[idx]->dport) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  dport = _dport;
-	}
-	remotePeer = makeHostLink(device[actualReportDeviceId].
-				  hash_hostTraffic[checkSessionIdx(device[actualReportDeviceId].
-								   tcpSession[idx]->remotePeerIdx)],
-				  SHORT_FORMAT, 0, 0);
-	dataSent     = device[actualReportDeviceId].tcpSession[idx]->bytesSent;
-	dataReceived = device[actualReportDeviceId].tcpSession[idx]->bytesReceived;
-	retrDataSent = device[actualReportDeviceId].tcpSession[idx]->bytesRetranI2R;
-	retrDataRcvd = device[actualReportDeviceId].tcpSession[idx]->bytesRetranR2I;
-	fragDataSent = device[actualReportDeviceId].tcpSession[idx]->bytesFragmentedSent;
-	fragDataRcvd = device[actualReportDeviceId].tcpSession[idx]->bytesFragmentedReceived;
-      } else {
-	/* Responder */
-	sport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->dport, IPPROTO_TCP);
-	dport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->sport, IPPROTO_TCP);
-	if(sport == NULL) {
-	  if(snprintf(_sport, sizeof(_sport), "%d",
-		      device[actualReportDeviceId].tcpSession[idx]->dport) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  sport = _sport;
-	}
-
-	if(dport == NULL) {
-	  if(snprintf(_dport, sizeof(_dport), "%d",
-		      device[actualReportDeviceId].tcpSession[idx]->sport) < 0)
-	    traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  dport = _dport;
-	}
-
-	remotePeer = makeHostLink(device[actualReportDeviceId].
-				  hash_hostTraffic[checkSessionIdx(device[actualReportDeviceId].
-								   tcpSession[idx]->initiatorIdx)],
-				  SHORT_FORMAT, 0, 0);
-	dataSent     = device[actualReportDeviceId].tcpSession[idx]->bytesReceived;
-	dataReceived = device[actualReportDeviceId].tcpSession[idx]->bytesSent;
-	retrDataSent = device[actualReportDeviceId].tcpSession[idx]->bytesRetranR2I;
-	retrDataRcvd = device[actualReportDeviceId].tcpSession[idx]->bytesRetranI2R;
-	fragDataSent = device[actualReportDeviceId].tcpSession[idx]->bytesFragmentedReceived;
-	fragDataRcvd = device[actualReportDeviceId].tcpSession[idx]->bytesFragmentedSent;
-      }
-
-      /* Sanity check */
-      if((actTime < device[actualReportDeviceId].tcpSession[idx]->firstSeen)
-	 || (device[actualReportDeviceId].tcpSession[idx]->firstSeen == 0))
-	device[actualReportDeviceId].tcpSession[idx]->firstSeen = actTime;
-
-      retrSentPercentage = (int)((float)(retrDataSent*100))/((float)(dataSent+1));
-      retrRcvdPercentage = (int)((float)(retrDataRcvd*100))/((float)(dataReceived+1));
-
-      if(fragDataSent == 0)
-	fragStrSent[0] = '\0';
-      else {
-	if(snprintf(fragStrSent, sizeof(fragStrSent), "(%.1f fragmented)",
-		    (int)((float)(fragDataSent*100))/((float)(dataSent+1))) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-      }
-      if(fragDataRcvd == 0)
-	fragStrRcvd[0] = '\0';
-      else {
-	if(snprintf(fragStrRcvd, sizeof(fragStrRcvd), "(%.1f fragmented)",
-		    (int)((float)(fragDataRcvd*100))/((float)(dataReceived+1))) < 0)
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-      }
-
-#ifndef ENABLE_NAPSTER
-      moreSessionInfo = "";
-#else
-      if(device[actualReportDeviceId].tcpSession[idx]->napsterSession)
-	moreSessionInfo = "&nbsp;[Napster]";
-      else
-	moreSessionInfo = "";
-#endif
-
-      if(device[actualReportDeviceId].tcpSession[idx]->passiveFtpSession)
-	moreSessionInfo = "&nbsp;[FTP]";
-      else
-	moreSessionInfo = "";
-
-      if(snprintf(buf, sizeof(buf), "<TR %s>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s%s</TD>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s:%s</TD>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
-#ifdef PRINT_RETRANSMISSION_DATA
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
-#endif
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
-#ifdef PRINT_RETRANSMISSION_DATA
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
-#endif
-		  , getRowColor(),
-		  sport, moreSessionInfo,
-		  remotePeer, dport,
-		  formatBytes(dataSent, 1), fragStrSent,
-#ifdef PRINT_RETRANSMISSION_DATA
-		  formatBytes(retrDataSent, 1),
-		  retrSentPercentage,
-#endif
-		  formatBytes(dataReceived, 1), fragStrRcvd
-#ifdef PRINT_RETRANSMISSION_DATA
-		  , formatBytes(retrDataRcvd, 1),
-		  retrRcvdPercentage
-#endif
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=RIGHT>%s</TH>"
+		  "<TD "TD_BG"  ALIGN=CENTER>%d</TD>"
+		  "<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG"  ALIGN=CENTER>%d"
+		  "</TD><TD "TD_BG"  ALIGN=CENTER>%s</TD>"
+		  "<TD "TD_BG"  ALIGN=CENTER>%s</TD><TD "TD_BG">"
+		  "%s</TD><TD "TD_BG">%s</TD>\n",
+		  getRowColor(), svc, scanner->port, whoswho,
+		  (int)scanner->sessionCounter,
+		  formatBytes(scanner->bytesSent, 1),
+		  formatBytes(scanner->bytesReceived, 1),
+		  formatTime(&(scanner->lastSeen), 1),
+		  formatTime(&(scanner->firstSeen), 1)
 		  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-
       sendString(buf);
-
-      if(snprintf(buf, sizeof(buf),
-		  "<TD "TD_BG"  ALIGN=CENTER NOWRAP>%d:%d</TD>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-		  "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
-#ifdef PRINT_ALL_ACTIVE_SESSIONS
-		  "<TD "TD_BG"  ALIGN=CENTER>%s</TD>"
-#endif
-		  "</TR>\n",
-		  device[actualReportDeviceId].tcpSession[idx]->minWindow,
-		  device[actualReportDeviceId].tcpSession[idx]->maxWindow,
-		  formatTime(&(device[actualReportDeviceId].tcpSession[idx]->firstSeen), 1),
-		  formatTime(&(device[actualReportDeviceId].tcpSession[idx]->lastSeen), 1),
-		  formatSeconds(actTime-device[actualReportDeviceId].tcpSession[idx]->firstSeen),
-		  formatLatency(device[actualReportDeviceId].tcpSession[idx]->nwLatency,
-				device[actualReportDeviceId].tcpSession[idx]->sessionState)
-#ifdef PRINT_ALL_ACTIVE_SESSIONS
-		  , getSessionState(device[actualReportDeviceId].tcpSession[idx])
-#endif
-		  ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-      sendString(buf);
-
       numSessions++;
+
+      sendString("<TD "TD_BG"><UL>");
+      for(i=0; i < MAX_NUM_CONTACTED_PEERS; i++) {
+	u_int theIdx = scanner->peers.peersIndexes[i];
+
+	if((theIdx != NO_PEER)
+	   && (device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)] != NULL)) {
+	  HostTraffic *host = device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theIdx)];
+
+	  if(host != NULL) {
+#ifdef MULTITHREADED
+	    accessMutex(&addressResolutionMutex, "printSession");
+#endif
+	    if(host->hostNumIpAddress[0] == '&') {
+	      if(snprintf(buf, sizeof(buf), "<LI>%s\n", host->hostSymIpAddress) < 0)
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	    } else {
+	      if(snprintf(buf, sizeof(buf), "<LI><A HREF=%s.html>%s</A>\n",
+			  host->hostNumIpAddress, host->hostSymIpAddress) < 0)
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	    }
+#ifdef MULTITHREADED
+	    releaseMutex(&addressResolutionMutex);
+#endif
+	    sendString(buf);
+	  }
+	}
+      }
+      sendString("</UL></TR>\n");
+
+      scanner = (IpGlobalSession*)(scanner->next);
     }
 
-  if(numSessions > 0) {
-    sendString("</TABLE>"TABLE_OFF"<P>\n");
-    sendString("</CENTER>\n");
+    if(numSessions > 0) {
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
+    }
+
+    if(sessionIdx == 0) {
+      /* Now print currently established TCP sessions (if any) */
+      for(idx=1, numSessions=0; idx<device[actualReportDeviceId].numTotSessions; idx++)
+	if((device[actualReportDeviceId].tcpSession[idx] != NULL)
+	   && ((device[actualReportDeviceId].tcpSession[idx]->initiatorIdx == elIdx)
+	       || (device[actualReportDeviceId].tcpSession[idx]->remotePeerIdx == elIdx))
+#ifndef PRINT_ALL_ACTIVE_SESSIONS
+	   && (device[actualReportDeviceId].tcpSession[idx]->sessionState == STATE_ACTIVE)
+#endif
+	   ) {
+	  char *sport, *dport, *remotePeer;
+	  TrafficCounter dataSent, dataReceived, retrDataSent, retrDataRcvd;
+	  TrafficCounter fragDataSent, fragDataRcvd;
+	  int retrSentPercentage, retrRcvdPercentage;
+	  char fragStrSent[64], fragStrRcvd[64], *moreSessionInfo;
+
+	  if(device[actualReportDeviceId].
+	     tcpSession[idx]->remotePeerIdx == NO_PEER) /* This should not happen */
+	    continue;
+
+	  if(numSessions == 0) {
+	    printSectionTitle("Active TCP Sessions");
+	    sendString("<CENTER>\n");
+	    sendString(""TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\"><TR>"
+		       "<TH "TH_BG">Local&nbsp;Port</TH>"
+		       "<TH "TH_BG">Remote&nbsp;Peer:Port</TH>"
+		       "<TH "TH_BG">Data&nbsp;Sent</TH>"
+#ifdef PRINT_RETRANSMISSION_DATA
+		       "<TH "TH_BG">Retran.&nbsp;Data&nbsp;Sent</TH>"
+#endif
+		       "<TH "TH_BG">Data&nbsp;Rcvd</TH>"
+#ifdef PRINT_RETRANSMISSION_DATA
+		       "<TH "TH_BG">Retran.&nbsp;Data&nbsp;Rcvd</TH>"
+#endif
+		       "<TH "TH_BG">Window&nbsp;Size</TH>"
+		       "<TH "TH_BG">Active&nbsp;Since</TH>"
+		       "<TH "TH_BG">Last&nbsp;Seen</TH>"
+		       "<TH "TH_BG">Duration</TH>"
+		       "<TH "TH_BG">Latency</TH>"
+#ifdef PRINT_ALL_ACTIVE_SESSIONS
+		       "<TH "TH_BG">State</TH>"
+#endif
+		       "</TR>\n");
+	  }
+
+	  if(device[actualReportDeviceId].tcpSession[idx]->initiatorIdx == elIdx) {
+	    sport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->sport, IPPROTO_TCP);
+	    dport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->dport, IPPROTO_TCP);
+	    if(sport == NULL) {
+	      if(snprintf(_sport, sizeof(_sport), "%d",
+			  device[actualReportDeviceId].tcpSession[idx]->sport) < 0)
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      sport = _sport;
+	    }
+
+	    if(dport == NULL) {
+	      if(snprintf(_dport, sizeof(_dport), "%d",
+			  device[actualReportDeviceId].tcpSession[idx]->dport) < 0)
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      dport = _dport;
+	    }
+	    remotePeer = makeHostLink(device[actualReportDeviceId].
+				      hash_hostTraffic[checkSessionIdx(device[actualReportDeviceId].
+								       tcpSession[idx]->remotePeerIdx)],
+				      SHORT_FORMAT, 0, 0);
+	    dataSent     = device[actualReportDeviceId].tcpSession[idx]->bytesSent;
+	    dataReceived = device[actualReportDeviceId].tcpSession[idx]->bytesReceived;
+	    retrDataSent = device[actualReportDeviceId].tcpSession[idx]->bytesRetranI2R;
+	    retrDataRcvd = device[actualReportDeviceId].tcpSession[idx]->bytesRetranR2I;
+	    fragDataSent = device[actualReportDeviceId].tcpSession[idx]->bytesFragmentedSent;
+	    fragDataRcvd = device[actualReportDeviceId].tcpSession[idx]->bytesFragmentedReceived;
+	  } else {
+	    /* Responder */
+	    sport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->dport, IPPROTO_TCP);
+	    dport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->sport, IPPROTO_TCP);
+	    if(sport == NULL) {
+	      if(snprintf(_sport, sizeof(_sport), "%d",
+			  device[actualReportDeviceId].tcpSession[idx]->dport) < 0)
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      sport = _sport;
+	    }
+
+	    if(dport == NULL) {
+	      if(snprintf(_dport, sizeof(_dport), "%d",
+			  device[actualReportDeviceId].tcpSession[idx]->sport) < 0)
+		traceEvent(TRACE_ERROR, "Buffer overflow!");
+	      dport = _dport;
+	    }
+
+	    remotePeer = makeHostLink(device[actualReportDeviceId].
+				      hash_hostTraffic[checkSessionIdx(device[actualReportDeviceId].
+								       tcpSession[idx]->initiatorIdx)],
+				      SHORT_FORMAT, 0, 0);
+	    dataSent     = device[actualReportDeviceId].tcpSession[idx]->bytesReceived;
+	    dataReceived = device[actualReportDeviceId].tcpSession[idx]->bytesSent;
+	    retrDataSent = device[actualReportDeviceId].tcpSession[idx]->bytesRetranR2I;
+	    retrDataRcvd = device[actualReportDeviceId].tcpSession[idx]->bytesRetranI2R;
+	    fragDataSent = device[actualReportDeviceId].tcpSession[idx]->bytesFragmentedReceived;
+	    fragDataRcvd = device[actualReportDeviceId].tcpSession[idx]->bytesFragmentedSent;
+	  }
+
+	  /* Sanity check */
+	  if((actTime < device[actualReportDeviceId].tcpSession[idx]->firstSeen)
+	     || (device[actualReportDeviceId].tcpSession[idx]->firstSeen == 0))
+	    device[actualReportDeviceId].tcpSession[idx]->firstSeen = actTime;
+
+	  retrSentPercentage = (int)((float)(retrDataSent*100))/((float)(dataSent+1));
+	  retrRcvdPercentage = (int)((float)(retrDataRcvd*100))/((float)(dataReceived+1));
+
+	  if(fragDataSent == 0)
+	    fragStrSent[0] = '\0';
+	  else {
+	    if(snprintf(fragStrSent, sizeof(fragStrSent), "(%.1f fragmented)",
+			(int)((float)(fragDataSent*100))/((float)(dataSent+1))) < 0)
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  }
+	  if(fragDataRcvd == 0)
+	    fragStrRcvd[0] = '\0';
+	  else {
+	    if(snprintf(fragStrRcvd, sizeof(fragStrRcvd), "(%.1f fragmented)",
+			(int)((float)(fragDataRcvd*100))/((float)(dataReceived+1))) < 0)
+	      traceEvent(TRACE_ERROR, "Buffer overflow!");
+	  }
+
+#ifndef ENABLE_NAPSTER
+	  moreSessionInfo = "";
+#else
+	  if(device[actualReportDeviceId].tcpSession[idx]->napsterSession)
+	    moreSessionInfo = "&nbsp;[Napster]";
+	  else
+	    moreSessionInfo = "";
+#endif
+
+	  if(device[actualReportDeviceId].tcpSession[idx]->passiveFtpSession)
+	    moreSessionInfo = "&nbsp;[FTP]";
+	  else
+	    moreSessionInfo = "";
+
+	  if(snprintf(buf, sizeof(buf), "<TR %s>"
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s%s</TD>"
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s:%s</TD>"
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
+#ifdef PRINT_RETRANSMISSION_DATA
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
+#endif
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s %s</TD>"
+#ifdef PRINT_RETRANSMISSION_DATA
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s [%d%%]</TD>"
+#endif
+		      , getRowColor(),
+		      sport, moreSessionInfo,
+		      remotePeer, dport,
+		      formatBytes(dataSent, 1), fragStrSent,
+#ifdef PRINT_RETRANSMISSION_DATA
+		      formatBytes(retrDataSent, 1),
+		      retrSentPercentage,
+#endif
+		      formatBytes(dataReceived, 1), fragStrRcvd
+#ifdef PRINT_RETRANSMISSION_DATA
+		      , formatBytes(retrDataRcvd, 1),
+		      retrRcvdPercentage
+#endif
+		      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+	  sendString(buf);
+
+	  if(snprintf(buf, sizeof(buf),
+		      "<TD "TD_BG"  ALIGN=CENTER NOWRAP>%d:%d</TD>"
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+		      "<TD "TD_BG"  ALIGN=RIGHT>%s</TD>"
+#ifdef PRINT_ALL_ACTIVE_SESSIONS
+		      "<TD "TD_BG"  ALIGN=CENTER>%s</TD>"
+#endif
+		      "</TR>\n",
+		      device[actualReportDeviceId].tcpSession[idx]->minWindow,
+		      device[actualReportDeviceId].tcpSession[idx]->maxWindow,
+		      formatTime(&(device[actualReportDeviceId].tcpSession[idx]->firstSeen), 1),
+		      formatTime(&(device[actualReportDeviceId].tcpSession[idx]->lastSeen), 1),
+		      formatSeconds(actTime-device[actualReportDeviceId].tcpSession[idx]->firstSeen),
+		      formatLatency(device[actualReportDeviceId].tcpSession[idx]->nwLatency,
+				    device[actualReportDeviceId].tcpSession[idx]->sessionState)
+#ifdef PRINT_ALL_ACTIVE_SESSIONS
+		      , getSessionState(device[actualReportDeviceId].tcpSession[idx])
+#endif
+		      ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+
+	  sendString(buf);
+
+	  numSessions++;
+	}
+
+      if(numSessions > 0) {
+	sendString("</TABLE>"TABLE_OFF"<P>\n");
+	sendString("</CENTER>\n");
+      }
+    }
   }
 }
 
