@@ -175,6 +175,7 @@ typedef struct ntopGlobals {
   /* command line options */
 
   char *accessLogPath;               /* 'a' */
+  u_char enablePacketDecoding;       /* 'b' */
   u_char stickyHosts;                /* 'c' */
   int daemonMode;                    /* 'd' */
 #ifndef MICRO_NTOP
@@ -183,7 +184,6 @@ typedef struct ntopGlobals {
   char *rFileName;                   /* 'f' */
   u_char trackOnlyLocalHosts;        /* 'g' */
   char *devices;                     /* 'i' */
-  short borderSnifferMode;           /* 'j' */
   short dontTrustMACaddr;            /* 'o' */
   int filterExpressionInExtraFrame;  /* 'k' */
   char *pcapLog;                     /* 'l' */
@@ -194,6 +194,7 @@ typedef struct ntopGlobals {
   u_short traceLevel;                /* 't' */
   char *webAddr;                     /* 'w' */
   int webPort;
+  u_char enableSessionHandling;      /* 'z' */
 
 
   char *currentFilterExpression;     /* 'B' */
@@ -231,8 +232,6 @@ typedef struct ntopGlobals {
 #endif
 
   /* Other flags (these could set via command line options one day) */
-  u_char enableSessionHandling;
-  u_char enablePacketDecoding;
   u_char enableFragmentHandling;
 
   /* Search paths */
