@@ -819,28 +819,28 @@ void checkFilterChain(HostTraffic *srcHost,
     case ANY_ADDRESS: /* Anything fits */
       break;
     case BROADCAST_ADDRESS:
-      if(!broadcastHost(srcHost)) continue;
-      break;
-    case MULTICAST_ADDRESS:
-      if(!multicastHost(srcHost)) continue;
-      break;
-    case GATEWAY_ADDRESS:
-      if(!gatewayHost(srcHost)) continue;
-      break;
-    case DNS_ADDRESS:
-      if(!dnsHost(srcHost)) continue;
-      break;
-    case NOT_BROADCAST_ADDRESS:
       if(broadcastHost(srcHost)) continue;
       break;
-    case NOT_MULTICAST_ADDRESS:
+    case MULTICAST_ADDRESS:
       if(multicastHost(srcHost)) continue;
       break;
-    case NOT_GATEWAY_ADDRESS:
+    case GATEWAY_ADDRESS:
       if(gatewayHost(srcHost)) continue;
       break;
+    case DNS_ADDRESS:
+      if(nameServerHost(srcHost)) continue;
+      break;
+    case NOT_BROADCAST_ADDRESS:
+      if(!broadcastHost(srcHost)) continue;
+      break;
+    case NOT_MULTICAST_ADDRESS:
+      if(!multicastHost(srcHost)) continue;
+      break;
+    case NOT_GATEWAY_ADDRESS:
+      if(!gatewayHost(srcHost)) continue;
+      break;
     case NOT_DNS_ADDRESS:
-      if(dnsHost(srcHost)) continue;
+      if(!nameServerHost(srcHost)) continue;
       break;      
     }
 
@@ -879,28 +879,28 @@ void checkFilterChain(HostTraffic *srcHost,
     case ANY_ADDRESS: /* Anything fits */
       break;
     case BROADCAST_ADDRESS:
-      if(!broadcastHost(dstHost)) continue;
-      break;
-    case MULTICAST_ADDRESS:
-      if(!multicastHost(dstHost)) continue;
-      break;
-    case GATEWAY_ADDRESS:
-      if(!gatewayHost(dstHost)) continue;
-      break;
-    case DNS_ADDRESS:
-      if(!dnsHost(dstHost)) continue;
-      break;
-    case NOT_BROADCAST_ADDRESS:
       if(broadcastHost(dstHost)) continue;
       break;
-    case NOT_MULTICAST_ADDRESS:
+    case MULTICAST_ADDRESS:
       if(multicastHost(dstHost)) continue;
       break;
-    case NOT_GATEWAY_ADDRESS:
+    case GATEWAY_ADDRESS:
       if(gatewayHost(dstHost)) continue;
       break;
+    case DNS_ADDRESS:
+      if(nameServerHost(dstHost)) continue;
+      break;
+    case NOT_BROADCAST_ADDRESS:
+      if(!broadcastHost(dstHost)) continue;
+      break;
+    case NOT_MULTICAST_ADDRESS:
+      if(!multicastHost(dstHost)) continue;
+      break;
+    case NOT_GATEWAY_ADDRESS:
+      if(!gatewayHost(dstHost)) continue;
+      break;
     case NOT_DNS_ADDRESS:
-      if(dnsHost(dstHost)) continue;
+      if(!nameServerHost(dstHost)) continue;
       break;      
     }
 

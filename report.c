@@ -3345,17 +3345,53 @@ static void printHostDetailedInfo(HostTraffic *el) {
     }
   }
 
-  if(gatewayHost(el) || dnsHost(el)) {
+  if(gatewayHost(el) 
+     || nameServerHost(el)
+     || isSMTPhost(el)
+     || isPOPhost(el)
+     || isIMAPhost(el)
+     || isDirectoryHost(el)
+     || isFTPhost(el)
+     || isHTTPhost(el)
+     || isWINShost(el)
+     ) {
     snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>",
 	    getRowColor(),
 	    "Provided&nbsp;Services");
     sendString(buf);
 
-    if(dnsHost(el)) sendString("&nbsp;DNS&nbsp;");
-    if(gatewayHost(el)) sendString("&nbsp;Gateway&nbsp;");
+    if(nameServerHost(el))     sendString("Name Server<br>");
+    if(gatewayHost(el))        sendString("Gateway<br>");
+    if(isSMTPhost(el))         sendString("SMTP Server<br>");
+    if(isPOPhost(el))          sendString("POP Server<br>");
+    if(isIMAPhost(el))         sendString("IMAP Server<br>");
+    if(isDirectoryHost(el))    sendString("Directory Server<br>");
+    if(isFTPhost(el))          sendString("FTP Server<br>");
+    if(isHTTPhost(el))         sendString("HTTP Server<br>");
+    if(isWINShost(el))         sendString("WINS Server<br>");
+
     sendString("</TD></TR>");
   }
 
+  /* **************************** */
+
+  if(isServer(el)
+     || isWorkstation(el)
+     || isPrinter(el)
+     || isBridgeHost(el)) {
+    snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>",
+	    getRowColor(),
+	    "Host Type");
+    sendString(buf);
+
+    if(isServer(el))           sendString("Server<br>");
+    if(isWorkstation(el))      sendString("Workstation<br>");
+    if(isPrinter(el))          sendString("Printer<br>");
+    if(isBridgeHost(el))       sendString("Bridge");
+    sendString("</TD></TR>");
+  }
+
+  /* **************************** */
   /*
     Fix courtesy of
     Albert Chin-A-Young <china@thewrittenword.com>

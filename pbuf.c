@@ -2216,7 +2216,7 @@ static void processIpPkt(const u_char *bp,
 #endif
 
 	/* The DNS chain will be checked here */
-	FD_SET(DNS_HOST_FLAG, &srcHost->flags);
+	FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
 	transactionId = processDNSPacket(bp, length, hlen, &isRequest, &positiveReply);
 
 #ifdef DNS_SNIFF_DEBUG
@@ -2318,49 +2318,49 @@ static void processIpPkt(const u_char *bp,
         name = ((char*)bp+hlen+22);
         nodeType = name_interpret(name,nbName);
         srcHost->nbNodeType = (char)nodeType;
-		switch(nodeType) {
-		  case 0x0:  /* Workstation */
-				FD_SET(HOST_TYPE_WORKSTATION, &srcHost->flags);
-		  case 0x20: /* Server */
-				FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
-		  }
+	switch(nodeType) {
+	case 0x0:  /* Workstation */
+	  FD_SET(HOST_TYPE_WORKSTATION, &srcHost->flags);
+	case 0x20: /* Server */
+	  FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+	}
 
         for(i=0; nbName[i] != '\0'; i++)
-			if(nbName[i] == ' ') { nbName[i] = '\0'; break; }
+	  if(nbName[i] == ' ') { nbName[i] = '\0'; break; }
         
-		if(srcHost->nbHostName == NULL)
-			srcHost->nbHostName = strdup(nbName);
+	if(srcHost->nbHostName == NULL)
+	  srcHost->nbHostName = strdup(nbName);
 
         name = ((char*)bp+hlen+22+34);
 
         nodeType = name_interpret(name, domain);
         for(i=0; domain[i] != '\0'; i++)
-			if(domain[i] == ' ') { domain[i] = '\0'; break; }
+	  if(domain[i] == ' ') { domain[i] = '\0'; break; }
 
-		switch(nodeType) {
-		case 0x1E: /* Domain */
-			if(srcHost->nbDomainName == NULL) {
-				if(strcmp(domain, "__MSBROWSE__") && strncmp(&domain[2], "__", 2)) {
-				  srcHost->nbDomainName = strdup(domain);
-	#ifdef DEBUG
-				  printf("[%x] %s@'%s' (len=%d)\n", nodeType, nbName, domain, strlen(domain));
-	#endif
-				}
-			}
-			break;
+	switch(nodeType) {
+	case 0x1E: /* Domain */
+	  if(srcHost->nbDomainName == NULL) {
+	    if(strcmp(domain, "__MSBROWSE__") && strncmp(&domain[2], "__", 2)) {
+	      srcHost->nbDomainName = strdup(domain);
+#ifdef DEBUG
+	      printf("[%x] %s@'%s' (len=%d)\n", nodeType, nbName, domain, strlen(domain));
+#endif
+	    }
+	  }
+	  break;
 
-		case 0x0:  /* Workstation */
-		case 0x20: /* Server */
-	        if(dstHost->nbHostName == NULL) dstHost->nbHostName = strdup(domain);
-			dstHost->nbNodeType = (char)nodeType;
-			switch(nodeType) {
-			case 0x0:  /* Workstation */
-				FD_SET(HOST_TYPE_WORKSTATION, &dstHost->flags);
-			case 0x20: /* Server */
-				FD_SET(HOST_TYPE_SERVER, &dstHost->flags);
-			}
-			break;
-		}
+	case 0x0:  /* Workstation */
+	case 0x20: /* Server */
+	  if(dstHost->nbHostName == NULL) dstHost->nbHostName = strdup(domain);
+	  dstHost->nbNodeType = (char)nodeType;
+	  switch(nodeType) {
+	  case 0x0:  /* Workstation */
+	    FD_SET(HOST_TYPE_WORKSTATION, &dstHost->flags);
+	  case 0x20: /* Server */
+	    FD_SET(HOST_TYPE_SERVER, &dstHost->flags);
+	  }
+	  break;
+	}
       }
     }
 
@@ -3028,6 +3028,52 @@ void processPacket(u_char *_deviceId,
 	    if((!found) && (srcHost->numIpxNodeTypes < MAX_NODE_TYPES)) {
 	      srcHost->ipxNodeType[srcHost->numIpxNodeTypes] = serverType;
 	      srcHost->numIpxNodeTypes++;
+
+	      switch(serverType) {
+	      case 0x0007: /* Print server */
+	      case 0x0003: /* Print Queue */
+	      case 0x8002: /* Intel NetPort Print Server */
+	      case 0x030c: /* HP LaserJet / Quick Silver */
+		FD_SET(HOST_TYPE_PRINTER, &srcHost->flags);
+		break;
+
+	      case 0x0027: /* TCP/IP gateway */
+	      case 0x0021: /* NAS SNA gateway */
+	      case 0x055d: /* Attachmate SNA gateway */
+		FD_SET(GATEWAY_HOST_FLAG, &srcHost->flags);
+		break;
+
+	      case 0x0004: /* File server */
+	      case 0x0005: /* Job server */
+	      case 0x0008: /* Archive server */
+	      case 0x0009: /* Archive server */
+	      case 0x002e: /* Archive Server Dynamic SAP */
+	      case 0x0098: /* NetWare access server */
+	      case 0x009a: /* Named Pipes server */
+	      case 0x0111: /* Test server */
+	      case 0x03e1: /* UnixWare Application Server */
+	      case 0x0810: /* ELAN License Server Demo */
+		FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+		break;
+
+	      case 0x0278: /* NetWare Directory server */
+		FD_SET(HOST_SVC_DIRECTORY, &srcHost->flags);
+		break;
+
+	      case 0x0024: /* Remote bridge */
+	      case 0x0026: /* Bridge server */
+		FD_SET(HOST_SVC_BRIDGE, &srcHost->flags);
+		break;
+
+	      case 0x0640: /* NT Server-RPC/GW for NW/Win95 User Level Sec */
+	      case 0x064e: /* NT Server-IIS */
+		FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
+		break;
+
+	      case 0x0133: /* NetWare Name Service */
+		FD_SET(NAME_SERVER_HOST_FLAG, &srcHost->flags);
+		break;	       
+	      }
 	    }
 
 	    if(srcHost->ipxHostName == NULL) {

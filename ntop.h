@@ -1156,21 +1156,22 @@ typedef struct portUsage
 #define BROADCAST_HOST_FLAG               4 /* indicates whether this is a broadcast address */
 #define MULTICAST_HOST_FLAG               5 /* indicates whether this is a multicast address */
 #define GATEWAY_HOST_FLAG                 6 /* indicates whether this is used as a gateway */
-#define DNS_HOST_FLAG                     7 /* indicates whether this is used as a DNS */
+#define NAME_SERVER_HOST_FLAG             7 /* indicates whether this is used as a name server (e.g. DNS) */
 #define SUBNET_PSEUDO_LOCALHOST_FLAG      8 /* indicates whether the host is local
                       					       (with respect to the specified subnets) */
 /* Host Type */
 #define HOST_TYPE_SERVER				  9
-#define HOST_TYPE_WORKSTATION			 10
+#define HOST_TYPE_WORKSTATION			         10
 #define HOST_TYPE_PRINTER				 11
 /* Host provided services */
 #define HOST_SVC_SMTP					 12
 #define HOST_SVC_POP					 13
 #define HOST_SVC_IMAP					 14
-#define HOST_SVC_LDAP					 15
+#define HOST_SVC_DIRECTORY				 15 /* e.g.IMAP, Novell Directory server */
 #define HOST_SVC_FTP					 16
 #define HOST_SVC_HTTP					 17
 #define HOST_SVC_WINS					 18
+#define HOST_SVC_BRIDGE					 19
 
 /* Macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG, &(a->flags))
@@ -1178,19 +1179,21 @@ typedef struct portUsage
 #define broadcastHost(a)            ((a != NULL) && FD_ISSET(BROADCAST_HOST_FLAG, &(a->flags)))
 #define multicastHost(a)            ((a != NULL) && FD_ISSET(MULTICAST_HOST_FLAG, &(a->flags)))
 #define gatewayHost(a)              ((a != NULL) && FD_ISSET(GATEWAY_HOST_FLAG, &(a->flags)))
-#define dnsHost(a)                  ((a != NULL) && FD_ISSET(DNS_HOST_FLAG, &(a->flags)))
+#define nameServerHost(a)           ((a != NULL) && FD_ISSET(NAME_SERVER_HOST_FLAG, &(a->flags)))
 #define subnetPseudoLocalHost(a)    ((a != NULL) && FD_ISSET(SUBNET_PSEUDO_LOCALHOST_FLAG, &(a->flags)))
 
-#define isServer(a)				    ((a != NULL) && FD_ISSET(HOST_TYPE_SERVER, &(a->flags)))
-#define isWorkstation(a)			((a != NULL) && FD_ISSET(HOST_TYPE_WORKSTATION, &(a->flags)))
-#define isPrinter(a)				((a != NULL) && FD_ISSET(HOST_TYPE_PRINTER, &(a->flags)))
-#define isSMTP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_SMTP, &(a->flags)))
-#define isPOP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_POP, &(a->flags)))
-#define isIMAP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_IMAP, &(a->flags)))
-#define isLDAP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_LDAP, &(a->flags)))
-#define isFTP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_FTP, &(a->flags)))
-#define isHTTP(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_HTTP, &(a->flags)))
-#define isWINS(a)				    ((a != NULL) && FD_ISSET(HOST_SVC_WINS, &(a->flags)))
+#define isServer(a)		    ((a != NULL) && FD_ISSET(HOST_TYPE_SERVER, &(a->flags)))
+#define isWorkstation(a)	    ((a != NULL) && FD_ISSET(HOST_TYPE_WORKSTATION, &(a->flags)))
+#define isPrinter(a)		    ((a != NULL) && FD_ISSET(HOST_TYPE_PRINTER, &(a->flags)))
+
+#define isSMTPhost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_SMTP, &(a->flags)))
+#define isPOPhost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_POP, &(a->flags)))
+#define isIMAPhost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_IMAP, &(a->flags)))
+#define isDirectoryHost(a)	    ((a != NULL) && FD_ISSET(HOST_SVC_DIRECTORY, &(a->flags)))
+#define isFTPhost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_FTP, &(a->flags)))
+#define isHTTPhost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_HTTP, &(a->flags)))
+#define isWINShost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_WINS, &(a->flags)))
+#define isBridgeHost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_BRIDGE, &(a->flags)))
 
 
 /* *********************** */
