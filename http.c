@@ -33,6 +33,7 @@
       unsafe         = CTL | SP | <"> | "#" | "%" | "<" | ">"
 
       DO NOT put % here - it's special cased - it's too dangerous to handle the same...
+      We allow "/" - most browsers do
 
       Courtesy of "Burton M. Strauss III" <bstrauss@acm.org>
 */
@@ -40,7 +41,7 @@
                                   "\010\011\012\013\014\015\016" \
                                   "\020\021\022\023\024\025\026" \
                                   "\030\031\032\033\034\035\036" \
-                                  " \"#;<>@\177"
+                                  " \"#&+:;<=>?@\177"
 
 struct _HTTPstatus {
     int statusCode;
@@ -91,7 +92,7 @@ struct _HTTPstatus HTTPstatus[] = {
     { 502, "Bad Gateway", NULL },
     { 503, "Service Unavailable", NULL },
     { 504, "Gateway Time-out", NULL },
-    { 505, "HTTP Version not supported", "This server don't support the specified HTTP version." },
+    { 505, "HTTP Version not supported", "This server doesn't support the specified HTTP version." },
 };
 
 /*
@@ -875,54 +876,55 @@ static int checkURLsecurity(char *url) {
     return(2);
   }
 
+   workURL = strdup(url);
+ 
+   /* Strip off parameters */
+   token = strchr(workURL, '?');
+   if(token != NULL) {
+     token[0] = '\0';
+   }
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "URL security: Testing '%s'...\n", url);
+  traceEvent(TRACE_INFO, "URL security: Testing '%s'...\n", workURL);
 #endif
 
   /* a % - Unicode?  We kill this off 1st because some of the gcc functions interpret unicode "for" us */
-  /*
-    if(strstr(url, "%") > 0) {
-    traceEvent(TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request\n");
-    url[0] = '\0';
-    return(1);
-    }
-  */
 
-  /* a double slash? */
-  if(strstr(url, "%%") > 0) {
-    traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found %% in URL...rejecting request\n");
-    return(2);
+  if(strstr(workURL, "%") > 0) {
+      traceEvent(TRACE_ERROR, "URL security(1): ERROR: Found percent in URL...DANGER...rejecting request\n");
+      /* Explicitly, we're updating the real URL, not the copy, so it's not used anywhere in ntop */
+      url[0] = '\0'; 
+      return(1);
   }
 
   /* a double slash? */
-  if(strstr(url, "//") > 0) {
+  if(strstr(workURL, "//") > 0) {
     traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found // in URL...rejecting request\n");
     return(2);
   }
 
   /* a double &? */
-  if(strstr(url, "&&") > 0) {
+  if(strstr(workURL, "&&") > 0) {
     traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found && in URL...rejecting request\n");
     return(2);
   }
 
   /* a double ?? */
-  if(strstr(url, "??") > 0) {
+  if(strstr(workURL, "??") > 0) {
     traceEvent(TRACE_ERROR, "URL security(2): ERROR: Found ?? in URL...rejecting request\n");
     return(2);
   }
 
   /* a double dot? */
-  if(strstr(url, "..") > 0) {
+  if(strstr(workURL, "..") > 0) {
     traceEvent(TRACE_ERROR, "URL security(3): ERROR: Found .. in URL...rejecting request\n");
     return(3);
   }
 
   /* Prohibited characters? */
-  if((len = strcspn(url, URL_PROHIBITED_CHARACTERS)) < strlen(url)) {
+  if((len = strcspn(workURL, URL_PROHIBITED_CHARACTERS)) < strlen(workURL)) {
     traceEvent(TRACE_ERROR, "URL security(4): ERROR: Prohibited character(s) [%c]"
-	       " in URL... rejecting request\n", url[len]);
+	       " in URL... rejecting request\n", workURL[len]);
     return(4);
   }
 
@@ -940,13 +942,6 @@ static int checkURLsecurity(char *url) {
   */
 
   countSections = countOKnumeric = countOKextension = 0;
-  workURL = strdup(url);
-
-  /* Strip off parameters */
-  token = strchr(workURL, '?');
-  if(token != NULL) {
-    token[0] = '\0';
-  }
 
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "URL security: NOTE: Tokenizing '%s'...\n", workURL);
