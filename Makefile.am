@@ -118,13 +118,13 @@ noinst_HEADERS     = globals-core.h globals-report.h ntop.h regex.h rules.h
 lib_LTLIBRARIES    = libntop.la libntopreport.la
 
 # core Archive, or the 'engine'
-libntop_la_SOURCES = address.c       dataFormat.c  event.c           \
-                     globals-core.c  hash.c        initialize.c      \
-                     leaks.c         logger.c      mysql.c ntop.c    \
-                     pbuf.c          plugin.c      qsort.c           \
-                     regex.c         rules.c       sql.c             \
-                     ssl.c           term.c        traffic.c         \
-                     util.c          vendor.c      version.c         \
+libntop_la_SOURCES = address.c       dataFormat.c  event.c            \
+                     globals-core.c  hash.c        initialize.c       \
+                     leaks.c         logger.c      mysql.c netflow.c  \
+                     ntop.c 	     pbuf.c        plugin.c      qsort.c     \
+                     regex.c         rules.c       sql.c              \
+                     ssl.c           term.c        traffic.c          \
+                     util.c          vendor.c      version.c          \
                      vendortable.h
 
 libntop_la_DEPENDENCIES = config.h
