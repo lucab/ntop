@@ -1875,7 +1875,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     if(dumpDomains) {
 
       DomainStats **stats, *tmpStats, *statsEntry;
-      u_int maxHosts, len = 0;
+      u_int maxHosts = 0;
       Counter totBytesSent = 0;
       Counter totBytesRcvd = 0;
       HostTraffic *el;
@@ -1886,18 +1886,19 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 
 	/* save this as it may change */
 	maxHosts = myGlobals.device[devIdx].hostsno;
-	len = sizeof(DomainStats)*maxHosts;
-	tmpStats = (DomainStats*)mallocAndInitWithReportWarn(len, "rrdMainLoop");
+	tmpStats = (DomainStats*)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats), "rrdMainLoop");
+
 	if (tmpStats == NULL) {
           traceEvent(CONST_TRACE_WARNING, "RRD: Out of memory, skipping domain RRD dumps");
 	  continue;
 	}
 
-	len = sizeof(DomainStats**)*maxHosts;
-	stats = (DomainStats**)mallocAndInitWithReportWarn(len, "rrdMainLoop(2)");
+	stats = (DomainStats**)mallocAndInitWithReportWarn(maxHosts*sizeof(DomainStats*),"rrdMainLoop(2)");
 	
 	if (stats == NULL) {
-          traceEvent(CONST_TRACE_WARNING, "RRD: Out of memory, skipping domain RRD dumps");
+	  traceEvent(CONST_TRACE_WARNING, "RRD: Out of memory, skipping domain RRD dumps");
+	  /* before continuing, also free the block of memory allocated a few lines up */
+	  if (tmpStats != NULL) free(tmpStats);
 	  continue;
 	}
 	
