@@ -74,10 +74,7 @@ if($content eq "") {
 
     if(!$debug) { $content1 = get($URL1); }
 
-    print "Content-type: image/gif\n";
-    print "Cache-Control: no-cache\n";
-    print "Expires: 0\n\n";
-    #print $content."\n";
+    print "Content-type: image/gif\n\n";
     print $content1."\n";
 
     if($debug) {
