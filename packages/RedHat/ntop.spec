@@ -2,21 +2,20 @@
 
 Summary: ntop shows the network usage
 Name: ntop
-Version: 2.1.92
+Version: 3.0pre1
 Release: 0
-Source: ntop-2.1.92.tgz
+Source: ntop-3.0pre1.tgz
 Source1: ntop.init
 Source2: ntop.logrotate
 Source3: ntop.conf.sample
 Source4: 1STRUN.txt
 Source5: FAQ
-Source6: BUILD-NTOP.txt
 Patch1: version.patch
-Patch2: makefile_am.patch
+#Patch2: makefile_am.patch
 Copyright: GPL
 Group: Applications/System
-BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, autoconf, automake, binutils, openssl, openssl-devel, gdbm, gdbm-devel, libpcap, rrdtool, gdome2, libxml2-devel, zlib-devel, glib-devel
-Requires: glibc, openssl, gdbm, libpcap, chkconfig, rrdtool, libxml2, gdome2
+BuildPrereq: glibc, glibc-devel, gcc, cpp, gawk, autoconf, automake, binutils, openssl, openssl-devel, gdbm, gdbm-devel, libpcap, zlib-devel, glib-devel
+Requires: glibc, openssl, gdbm, libpcap, chkconfig
 
 Buildroot: %{_tmppath}/%{name}-root
 Prereq: /sbin/chkconfig, /sbin/ldconfig
@@ -27,35 +26,43 @@ various networking hosts and protocols. ntop is primarily accessed via a built-i
 web interface. Optionally, data may be stored into a database for analysis or 
 extracted from the web server in formats suitable for manipulation in perl or php.
 
-See 1STRUN.txt for the 1st time startup procedure!  See FAQ for answers to questions
-and BUILD-NTOP.txt for howto build from source.
+See 1STRUN.txt for the 1st time startup procedure!  See FAQ for answers to questions.
 
-ntop 2.1.92 is a RELEASE CANDIDATE release, from the ntop cvs tree at cvs.ntop.org. 
-This is designed to allow wide-spread testing before the 2.2 release.
+ntop 3.0pre1 is a TEST release, from the ntop cvs tree at cvs.ntop.org.
+Our intention is to release this or something much like it as ntop 3.0
+in a short period of time.
 
-This version is compiled with rrdtool.  It assumes that the associated rrdtool rpm has been
-installed and that rrdtool is installed in /usr.  Note that SOME rrdtool packages do not
-have the librrd.so, only a librrd.a, which may cause problems between the older version
-of gd included with rrdtool and the gd-1.8.3 that ntop uses.
+At this time, docs/FAQ has been extensively re-written, but ChangeLog and
+PORTING have not.
+
+For those upgrading from 2.2, note:
+
+   gdchart is gone - replaced by a small, focused, internal graphics creator,
+   graph.c.  We still use the gd library.
+
+   This version is compiled with a frozen, captive version of rrdtool, called
+   myrrd. It is compiled and linked automatically.
+
+   The so-called 'large population model' for rrd data files is now standard.
+   There is a script at SourceForge in the user contributed area to help
+   convert - but backup your data FIRST.
 
 This version is compiled WITH SSLv3.
 
-This version is compiled WITH --enable-xmldump (dump.xml handler)
+This version is compiled WITHOUT --enable-xmldump (dump.xml handler)
 
 This version is compiled WITH --enable-i18n.
 
-IgnoreSIGPIPE and SSLWATCHDOG are not compiled but may be selected at run times.
+SSLWATCHDOG is not compiled but may be selected at run time.
 
-Note that the command line version, intop, is unsupported. And is NOT included in
-this rpm - if you want it you will have to build from source!
+Note that the command line version, intop, is gone.
 
-This version is compiled on a Pentium III, under RedHat 7.3 using User Mode Linux.
-(Note that updated autoconf 2.53 and automake 1.6.3 from RedHat 8.0 are required)
+This version is compiled on a Pentium III, under RedHat 9.0.
 
 YOU MUST SETUP A PASSWORD BEFORE RUNNING NTOP - see 1STRUN.txt in /usr/share/doc/ntop-<release>
 
-Please send problem reports (using the automatically generated form if at all possible) (Click
-on the 'bug' icon on the About tab) to the ntop mailing list.
+Please send problem reports (using the automatically generated form if at all possible)
+(Click on the 'bug' icon on the About tab) to the ntop mailing list.
 
 %prep
 %setup -q -c ${NAME}${VERSION}
@@ -64,27 +71,17 @@ on the 'bug' icon on the About tab) to the ntop mailing list.
 unset RPM_OPT_FLAGS
 %undefine optflags 
 # Adjust the .tgz format to what we expect for build...
-mv ntop-2.1.92/* .
+mv ntop-3.0pre1 ntop
 # Patches
 patch -p0 < ../../SOURCES/version.patch
-patch -p0 < ../../SOURCES/makefile_am.patch
-# First, build static libraries - use the new buildAll script
-cd gdchart0.94c
-./buildAll.sh
-#
-cd ../ntop
+#patch -p0 < ../../SOURCES/makefile_am.patch
+cd ntop
 # Now, configure and build ntop
 # %automake
 # %autoconf
 %configure --enable-optimize  --bindir=%{_bindir} --datadir=%{ntoproot}/share \
-     --with-pcap-include=/usr/include/pcap \
      --enable-sslv3 \
-     --enable-i18n \
-     --enable-xmldump \
-           --with-xml2-include=/usr/include/libxml2/libxml \
-           --with-glib-include=/usr/include/glib-1.2       \
-           --with-glibconfig-root=/usr/lib/glib/include    \
-           --with-gdome-include=/usr/include/libgdome
+     --enable-i18n
 make faq.html
 make ntop.txt
 make ntop.html
@@ -100,10 +97,14 @@ mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d \
 make install DESTDIR=$RPM_BUILD_ROOT
 make install-data-local DESTDIR=$RPM_BUILD_ROOT
 
-mv -f $RPM_BUILD_ROOT/usr/bin/i386-redhat-linux-ntop \
-      $RPM_BUILD_ROOT/usr/bin/ntop
-mv -f $RPM_BUILD_ROOT/usr/share/man/man8/i386-redhat-linux-ntop.8 \
-      $RPM_BUILD_ROOT/usr/share/man/man8/ntop.8
+if test -f $RPM_BUILD_ROOT/usr/bin/i386-redhat-linux-ntop; then
+    mv -f $RPM_BUILD_ROOT/usr/bin/i386-redhat-linux-ntop \
+          $RPM_BUILD_ROOT/usr/bin/ntop
+fi
+if test -f $RPM_BUILD_ROOT/usr/share/man/man8/i386-redhat-linux-ntop.8; then
+    mv -f $RPM_BUILD_ROOT/usr/share/man/man8/i386-redhat-linux-ntop.8 \
+          $RPM_BUILD_ROOT/usr/share/man/man8/ntop.8
+fi
 
 install -c -m0755 %{SOURCE1} $RPM_BUILD_ROOT/etc/rc.d/init.d/ntop
 install -c -m0644 %{SOURCE2} $RPM_BUILD_ROOT/etc/logrotate.d/ntop
@@ -123,7 +124,7 @@ fi
 %post
 echo "***********************************************************************"
 mkdir /usr/share/ntop/rrd
-chown ntop.ntop /usr/share/ntop/rrd
+chown ntop:ntop /usr/share/ntop
 echo "***********************************************************************"
 if test -f /etc/init.d/ntop; then
     /sbin/chkconfig --add  ntop
@@ -184,6 +185,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc ntop/MANIFESTO
 %doc ntop/COPYING
 %doc ntop/ChangeLog
+%doc ntop/docs/BUILD-NTOP.txt
 %doc ntop/docs/FAQ
 %doc ntop/docs/HACKING
 %doc ntop/docs/KNOWN_BUGS
@@ -206,9 +208,24 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/ntop
 %{_libdir}/plugins
 %{_libdir}/libntop*
-%{_libdir}/libicmpPlugin*
+%{_libdir}/lib*Plugin*
 
 %changelog
+* Mon Feb 16 2004 Burton M. Strauss III <burton@ntopsupport.com>
+- v3.0pre1 - TEST release for 3.0
+
+* Wed Sep 03 2003 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.2.94 - TEST release for 2.3
+
+* Fri Aug 22 2003 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.2.93 - TEST release for 2.3
+
+* Mon Jul  4 2003 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.2c   - Released - bug fixes incl backport from 2.2.2/2.2.3
+
+* Mon Apr 14 2003 Burton M. Strauss III <burton@ntopsupport.com>
+- v2.2    - Released!
+
 * Thu Apr 10 2003 Burton M. Strauss III <burton@ntopsupport.com>
 - v2.1.92 - Of major note is the rewrite of the ./configure system
             should be more accurate, more informative and not
