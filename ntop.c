@@ -70,8 +70,6 @@ void handleSigHup(int signalId _UNUSED_) {
   traceEvent(TRACE_INFO, "========================================");
 #endif /* MULTITHREADED */
 
-  resetStats();
-  traceEvent(TRACE_INFO, "Caught sighup: statistics have been reset.\n");
   (void)setsignal(SIGHUP,  handleSigHup);
 }
 
