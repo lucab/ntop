@@ -334,8 +334,7 @@ void addURL(char* url) {
   printHTMLheader("Manage ntop URLs", HTML_FLAG_NO_REFRESH);
   sendString("<P><HR><P>\n");
 
-
-  if((url != NULL) && ((strlen(url) < 2) || (url[0] != '2'))) {
+  if((url != NULL) && ((strlen(url) < 1) || (url[0] != '2'))) {
     printFlagedWarning("<I>The specified URL is invalid.</I>");
 
   } else {
@@ -347,7 +346,8 @@ void addURL(char* url) {
       sendString("<TR>\n<TH ALIGN=right VALIGN=top><B>URL</B>:&nbsp;</TH>");
     else
       sendString("<TR>\n<TH ALIGN=right VALIGN=middle><B>URL</B>:&nbsp;</TH>");
-    sendString("<TD ALIGN=left><TT>http://&lt;<I>ntop host</I>&gt;:&lt;<I>ntop port</I>&gt;/</TT>");
+    sendString("<TD ALIGN=left><TT>http://&lt;"
+	       "<I>ntop host</I>&gt;:&lt;<I>ntop port</I>&gt;/</TT>");
     if(url != NULL) {
       decodeWebFormURL(url);
       if(snprintf(tmpStr, sizeof(tmpStr),
@@ -449,7 +449,7 @@ void deleteURL(char* url) {
   if(url == NULL) {
     returnHTTPredirect("showURLs.html");
     return;
-  } else if((strlen(url) < 2) || (url[0] != '2')) {
+  } else if((strlen(url) < 1) || (url[0] != '2')) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printHTMLheader("Delete ntop URL", HTML_FLAG_NO_REFRESH);
     sendString("<P><HR><P>\n");
@@ -489,83 +489,83 @@ void deleteURL(char* url) {
 
 void doAddURL(int len) {
   char *err=NULL;
+  char postData[256], *key, *url=NULL, *users=NULL, authorizedUsers[256];
+  int i, idx, alen=0, badChar=0;
 
-  if(len <= 0) {
-    err = "ERROR: both url and users must be non empty fields.";
-  } else {
-    char postData[256], *key, *url=NULL, *users=NULL, authorizedUsers[256];
-    int i, idx, alen=0, badChar=0;
+  /*
+    Authorization fix
+    courtesy of David Brown <david@caldera.com>
+  */
 
-    if((idx = readHTTPpostData(len, postData, sizeof(postData))) < 0)
-      return; /* FIXME (DL): an HTTP error code should be sent here */
+  if((idx = readHTTPpostData(len, postData, sizeof(postData))) < 0)
+    return; /* FIXME (DL): an HTTP error code should be sent here */
 
-    memset(authorizedUsers, 0, sizeof(authorizedUsers));
-    for(i=0,key=postData; i<=idx; i++) {
-      if((i==idx) || (postData[i] == '&')) {
-	if(users != NULL) {
-	  decodeWebFormURL(users);
-	  if(snprintf(&authorizedUsers[alen], sizeof(authorizedUsers)-alen,
-		   "%susers=%s", (alen>0) ? "&" : "", users) < 0) 
+  memset(authorizedUsers, 0, sizeof(authorizedUsers));
+  for(i=0,key=postData; i<=idx; i++) {
+    if((i==idx) || (postData[i] == '&')) {
+      if(users != NULL) {
+	decodeWebFormURL(users);
+	if(snprintf(&authorizedUsers[alen], sizeof(authorizedUsers)-alen,
+		    "%susers=%s", (alen>0) ? "&" : "", users) < 0) 
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-	  alen = strlen(authorizedUsers);
-	  users = NULL;
-	}
-	if(i==idx) break;
-	postData[i] = '\0';
-	key = &postData[i+1];
-      } else if((key != NULL) && (postData[i] == '=')) {
-	postData[i] = '\0';
-	if(strcmp(key, "url") == 0) {
-	  url = &postData[i+1];
-	} else if(strcmp(key, "users") == 0) {
-	  users = &postData[i+1];
-	}
-        key = NULL;
+	alen = strlen(authorizedUsers);
+	users = NULL;
+      }
+      if(i==idx) break;
+      postData[i] = '\0';
+      key = &postData[i+1];
+    } else if((key != NULL) && (postData[i] == '=')) {
+      postData[i] = '\0';
+      if(strcmp(key, "url") == 0) {
+	url = &postData[i+1];
+      } else if(strcmp(key, "users") == 0) {
+	users = &postData[i+1];
+      }
+      key = NULL;
+    }
+  }
+  if(url != NULL) {
+    decodeWebFormURL(url);
+    for(i=0; i<strlen(url); i++) {
+      if(!(isalpha(url[i]) || isdigit(url[i]) || (strchr("/-_?", url[i]) != NULL))) {
+	badChar = 1;
+	break;
       }
     }
-    if(url != NULL) {
-      decodeWebFormURL(url);
-      for(i=0; i<strlen(url); i++) {
-	if(!(isalpha(url[i]) || isdigit(url[i]) || (strchr("/-_?", url[i]) != NULL))) {
-	  badChar = 1;
-	  break;
-	}
-      }
-    }
+  }
 
 #if 0
-    printf("URL: '%s' - users: '%s'\n", url?url:"(not given)", strlen(authorizedUsers)>0?authorizedUsers:"(not given)"); 
-    fflush(stdout);
+  printf("URL: '%s' - users: '%s'\n", url?url:"(not given)", strlen(authorizedUsers)>0?authorizedUsers:"(not given)"); 
+  fflush(stdout);
 #endif
 
-    if((url == NULL) || (url[0] == '\0') || (authorizedUsers[0] == '\0')) {
-      err = "ERROR: both url and users must be non empty fields.";
-    } else if(badChar) {
-      err = "ERROR: the specified URL contains invalid characters.";
-    } else {
-      char tmpBuf[64];
-      datum data_data, key_data;
+  if(authorizedUsers[0] == '\0') {
+    err = "ERROR: user must be a non empty field.";
+  } else if(badChar) {
+    err = "ERROR: the specified URL contains invalid characters.";
+  } else {
+    char tmpBuf[64];
+    datum data_data, key_data;
 
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "2%s", url) < 0) 
-	  traceEvent(TRACE_ERROR, "Buffer overflow!");
-      key_data.dptr = tmpBuf;
-      key_data.dsize = strlen(tmpBuf)+1;
-      data_data.dptr = authorizedUsers;
-      data_data.dsize = strlen(authorizedUsers)+1;
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "2%s", url) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    key_data.dptr = tmpBuf;
+    key_data.dsize = strlen(tmpBuf)+1;
+    data_data.dptr = authorizedUsers;
+    data_data.dsize = strlen(authorizedUsers)+1;
     
 #ifdef MULTITHREADED
-      accessMutex(&gdbmMutex, "doAddURL");
+    accessMutex(&gdbmMutex, "doAddURL");
 #endif 
-      if(gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE) != 0)
-	err = "FATAL ERROR: unable to add the new URL.";
-#ifdef MULTITHREADED
-      releaseMutex(&gdbmMutex);
-#endif 
-    }
+    if(gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE) != 0)
+      err = "FATAL ERROR: unable to add the new URL.";
 #ifdef MULTITHREADED
     releaseMutex(&gdbmMutex);
 #endif 
   }
+#ifdef MULTITHREADED
+  releaseMutex(&gdbmMutex);
+#endif 
 
   if(err != NULL) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
