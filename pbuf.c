@@ -705,8 +705,7 @@ void scanTimedoutTCPSessions(void) {
 static PortUsage* allocatePortUsage(void) {
   PortUsage *ptr;
 
-  ptr = (PortUsage*)malloc(sizeof(PortUsage));
-  memset(ptr, 0, sizeof(sizeof(PortUsage)));
+  ptr = (PortUsage*)calloc(1, sizeof(PortUsage));
   ptr->clientUsesLastPeer = NO_PEER, ptr->serverUsesLastPeer = NO_PEER;
 
   return(ptr);
@@ -746,18 +745,18 @@ static void updateUsedPorts(HostTraffic *srcHost,
 
   if(dstHostIdx != broadcastEntryIdx) {
     if(dport < TOP_ASSIGNED_IP_PORTS) {
-      if(srcHost->portsUsage[dport] == NULL)
-	srcHost->portsUsage[dport] = allocatePortUsage();
-
-      if(dstHost->portsUsage[dport] == NULL)
-	dstHost->portsUsage[dport] = allocatePortUsage();
-
       if(srcHostIdx != broadcastEntryIdx) {
+	if(srcHost->portsUsage[dport] == NULL)
+	  srcHost->portsUsage[dport] = allocatePortUsage();
+	
 	srcHost->portsUsage[dport]->clientTraffic += length;
 	srcHost->portsUsage[dport]->clientUses++;
 	srcHost->portsUsage[dport]->clientUsesLastPeer = dstHostIdx;
       }
 
+      if(dstHost->portsUsage[dport] == NULL)
+	dstHost->portsUsage[dport] = allocatePortUsage();
+      
       dstHost->portsUsage[dport]->serverTraffic += length;
       dstHost->portsUsage[dport]->serverUses++;
       dstHost->portsUsage[dport]->serverUsesLastPeer = srcHostIdx;
