@@ -500,6 +500,7 @@ AC_CHECK_FUNC(crypt, , AC_CHECK_LIB(c, crypt, ,
   [AC_CHECK_LIB(crypt, crypt, MORELIBS="$MORELIBS -lcrypt",
     AC_MSG_ERROR(you need the crypt library to build ntop), $MORELIBS)]))
 
+AC_CHECK_LIB(kstat, kstat_lookup)
 
 dnl>
 dnl> GDChart uses functions from math library,
@@ -1002,11 +1003,10 @@ else
   AC_MSG_WARN([HTTPS support disabled via command line option!])
 fi
 
-
 dnl>
 dnl> check for `UCD-SNMP' library by University of California [http://ucd-snmp.ucdavis.edu]
 dnl>
-AC_CHECK_LIB(ucdagent, register_mib, SNMPLIBS="-lsnmp -lucdagent -lucdmibs", , -lsnmp -lucdmibs)
+AC_CHECK_LIB(ucdagent, register_mib, [AC_DEFINE(HAVE_SNMP) SNMPLIBS="-lsnmp -lucdagent -lucdmibs"], , -lsnmp -lucdagent -lucdmibs $LIBS $MORELIBS)
 
 
 echo

@@ -54,11 +54,17 @@
 /* Define if you have the gdchart library from Bruce Verderaime [http://www.fred.net/brv/chart/]. */
 #undef HAVE_GDCHART
 
+/* Define if your host supports SNMP  */
+#undef HAVE_SNMP
+
 /* Define if you have the ctime_r function.  */
 #undef HAVE_CTIME_R
 
 /* Define if you have the localtime_r function.  */
 #undef HAVE_LOCALTIME_R
+
+/* Define if you have the snprintf function.  */
+#undef HAVE_SNPRINTF
 
 /* Define if you have the strtok_r function.  */
 #undef HAVE_STRTOK_R
@@ -213,11 +219,17 @@
 /* Define if you have the c library (-lc).  */
 #undef HAVE_LIBC
 
+/* Define if you have the c_r library (-lc_r).  */
+#undef HAVE_LIBC_R
+
 /* Define if you have the dl library (-ldl).  */
 #undef HAVE_LIBDL
 
 /* Define if you have the gdbm library (-lgdbm).  */
 #undef HAVE_LIBGDBM
+
+/* Define if you have the kstat library (-lkstat).  */
+#undef HAVE_LIBKSTAT
 
 /* Define if you have the nsl library (-lnsl).  */
 #undef HAVE_LIBNSL

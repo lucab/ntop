@@ -91,5 +91,8 @@
 #undef CONFIGFILE_DIR
 #undef DBFILE_DIR
 
+/* Define if your host supports SNMP  */
+#undef HAVE_SNMP
+
 
 #endif /* _CONFIG_H_ */
