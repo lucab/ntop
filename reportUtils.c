@@ -2918,6 +2918,7 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) {
   int type;
   FcNameServerCacheEntry *fcnsEntry;
+  FcScsiCounters *tmp;
 
   if(cmpSerial(&theSerial, &myGlobals.broadcastEntry->hostSerial)) {
     memcpy(el, myGlobals.broadcastEntry, sizeof(HostTraffic));
@@ -2927,7 +2928,9 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     return(0);
   }
 
+  tmp = el->fcCounters;
   memset(el, 0, sizeof(HostTraffic));
+  el->fcCounters = tmp;
   copySerial(&el->hostSerial, &theSerial);
 
   if((theSerial.serialType == SERIAL_IPV4) ||
