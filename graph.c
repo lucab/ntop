@@ -52,7 +52,8 @@ void sendGraphFile(char* fileName) {
     }
 
     fclose(fd);
-  }
+  } else 
+    traceEvent(TRACE_WARNING, "WARNING: unable to open file %s", fileName);
 
   unlink(fileName);
 }

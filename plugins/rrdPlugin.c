@@ -53,7 +53,15 @@ pthread_t rrdThread;
 static u_short dumpFlows, dumpHosts, dumpInterfaces, dumpMatrix;
 /* #define DEBUG */
 
-
+/* forward */
+int sumCounter(char *rrdPath, char *rrdFilePath,
+	       char *startTime, char* endTime, Counter *total, float *average);
+void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
+		  char *startTime, char* endTime);
+void updateCounter(char *hostPath, char *key, Counter value);
+void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter);
+char x2c(char *what);
+void unescape_url(char *url);
 
 /* ****************************************************** */
 
@@ -245,7 +253,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
   int argc = 0, rc, x, y;
 
   sprintf(path, "%s/rrd/%s%s.rrd", myGlobals.dbPath, rrdPath, rrdName);
-  sprintf(fname, "%s/rrd/%s%s.gif", myGlobals.dbPath, rrdPath, rrdName);
+  sprintf(fname, "%s/%s.gif", myGlobals.dbPath, rrdName);
 
   if(stat(path, &statbuf) == 0) {
     char startStr[32], counterStr[64];
@@ -253,6 +261,8 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     argv[argc++] = "rrd_graph";
     argv[argc++] = fname;
     argv[argc++] = "--lazy";
+    argv[argc++] = "--imgformat";
+    argv[argc++] = "PNG";
     argv[argc++] = "--start";
     argv[argc++] = startTime;
     argv[argc++] = "--end";
@@ -274,8 +284,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
     calfree();
 
     if(rc == 0) {
-      /* traceEvent(TRACE_WARNING, "x=%d/y=%d", x, y); */
-      sendHTTPHeader(HTTP_TYPE_GIF, 0);
+      sendHTTPHeader(HTTP_TYPE_PNG, 0);
       sendGraphFile(fname);
     } else {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
@@ -388,8 +397,14 @@ void updateCounter(char *hostPath, char *key, Counter value) {
   numTotalRRDs++;
 
   if (rrd_test_error()) {
+    int x;
+
     traceEvent(TRACE_WARNING, "rrd_update(%s) error: %s\n", path, rrd_get_error());
     rrd_clear_error();
+
+    traceEvent(TRACE_INFO, "RRD call stack:");
+    for	(x = 0; x < argc; x++)
+      traceEvent(TRACE_INFO, "argv[%d]: %s", x, argv[x]);
   }
 
 #ifdef DEBUG
@@ -397,6 +412,15 @@ void updateCounter(char *hostPath, char *key, Counter value) {
     traceEvent(TRACE_WARNING, "rrd_update(%s, %u, %u)=%d", path, value, rc);
 #endif
 
+}
+
+/* ******************************* */
+
+void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter) {
+  if(counter->modified) {
+    updateCounter(hostPath, key, counter->value);
+    counter->modified = 0;
+  }
 }
 
 /* ******************************* */
@@ -434,7 +458,7 @@ static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
     rrdKey[64], rrdName[64], rrdTitle[64], startTime[32], endTime[32];
   u_char action = ACTION_NONE;
-
+  int _dumpFlows=0, _dumpHosts=0, _dumpInterfaces=0, _dumpMatrix=0;
 
   if((url != NULL) && (url[0] != '\0')) {
     unescape_url(url);
@@ -496,18 +520,18 @@ static void handleRRDHTTPrequest(char* url) {
 	  hostsFilter = strdup(value);
 	  storePrefsValue("rrd.hostsFilter", hostsFilter);
 	} else if(strcmp(key, "dumpFlows") == 0) {
-	  dumpFlows = 1;
+	  _dumpFlows = 1;
 	} else if(strcmp(key, "dumpDetail") == 0) {
 	  dumpDetail = atoi(value);
 	  if(dumpDetail > DETAIL_HIGH) dumpDetail = DETAIL_HIGH;
 	  snprintf(buf, sizeof(buf), "%d", dumpDetail);
 	  storePrefsValue("rrd.dumpDetail", buf);
 	} else if(strcmp(key, "dumpHosts") == 0) {
-	  dumpHosts = 1;
+	  _dumpHosts = 1;
 	} else if(strcmp(key, "dumpInterfaces") == 0) {
-	  dumpInterfaces = 1;
+	  _dumpInterfaces = 1;
 	} else if(strcmp(key, "dumpMatrix") == 0) {
-	  dumpMatrix = 1;
+	  _dumpMatrix = 1;
 	}
       }
 
@@ -516,6 +540,8 @@ static void handleRRDHTTPrequest(char* url) {
 
     if(action == ACTION_NONE) {
       /* traceEvent(TRACE_INFO, "dumpFlows=%d", dumpFlows); */
+      dumpFlows=_dumpFlows, dumpHosts=_dumpHosts,
+	dumpInterfaces=_dumpInterfaces, dumpMatrix=_dumpMatrix;
       sprintf(buf, "%d", dumpFlows);      storePrefsValue("rrd.dumpFlows", buf);
       sprintf(buf, "%d", dumpHosts);      storePrefsValue("rrd.dumpHosts", buf);
       sprintf(buf, "%d", dumpInterfaces); storePrefsValue("rrd.dumpInterfaces", buf);
@@ -538,7 +564,7 @@ static void handleRRDHTTPrequest(char* url) {
 
   sendString("<CENTER>\n");
   sendString("<TABLE BORDER>\n");
-  sendString("<TR><TH>Dump Interval</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+  sendString("<TR><TH ALIGN=LEFT>Dump Interval</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
 	     "<INPUT NAME=interval SIZE=5 VALUE=");
 
   if(snprintf(buf, sizeof(buf), "%d", (int)dumpInterval) < 0)
@@ -547,7 +573,7 @@ static void handleRRDHTTPrequest(char* url) {
 
   sendString("> seconds<br>It specifies how often data is stored permanently.</TD></tr>\n");
 
-  sendString("<TR><TH>Data to Dump</TH><TD>");
+  sendString("<TR><TH ALIGN=LEFT>Data to Dump</TH><TD>");
 
   if(snprintf(buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpFlows VALUE=1 %s> Flows<br>\n",
 	      dumpFlows ? "CHECKED" : "" ) < 0)
@@ -572,7 +598,7 @@ static void handleRRDHTTPrequest(char* url) {
   sendString("</TD></tr>\n");
 
   if(dumpHosts) {
-    sendString("<TR><TH>Hosts Filter</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
+    sendString("<TR><TH ALIGN=LEFT>Hosts Filter</TH><TD><FORM ACTION=/plugins/rrdPlugin METHOD=GET>"
 	       "<INPUT NAME=hostsFilter VALUE=\"");
 
     sendString(hostsFilter);
@@ -583,11 +609,7 @@ static void handleRRDHTTPrequest(char* url) {
 	       "be stored on disk</TD></tr>\n");
   }
 
-  sendString("<TR><TH>RRD Files Path</TH><TD>");
-  sendString(myGlobals.dbPath);
-  sendString("/rrd/</TD></TR>\n");
-
-  sendString("<TR><TH>RRD Detail</TH><TD>");
+  sendString("<TR><TH ALIGN=LEFT>RRD Detail</TH><TD>");
   if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=dumpDetail VALUE=%d %s>Low\n",
 	      DETAIL_LOW, (dumpDetail == DETAIL_LOW) ? "CHECKED" : "") < 0)
     BufferTooShort();
@@ -603,6 +625,15 @@ static void handleRRDHTTPrequest(char* url) {
     BufferTooShort();
   sendString(buf);
   sendString("</TD></TR>\n");
+
+  sendString("<TR><TH ALIGN=LEFT>RRD Files Path</TH><TD>");
+  sendString(myGlobals.dbPath);
+  sendString("/rrd/</TD></TR>\n");
+
+  sendString("<TR><TH ALIGN=LEFT>RRD Updates</TH><TD>");
+  if(snprintf(buf, sizeof(buf), "%lu RRD files updated</TD></TR>\n", (unsigned long)numTotalRRDs) < 0)
+    BufferTooShort();
+  sendString(buf);
 
   sendString("<TD COLSPAN=2 ALIGN=center><INPUT TYPE=submit VALUE=Set></td></FORM></tr>\n");
   sendString("</TABLE>\n<p></CENTER>\n");
@@ -641,15 +672,15 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   }
 
   if(fetchPrefsValue("rrd.dumpFlows", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpFlows", "1");
-    dumpFlows = 1;
+    storePrefsValue("rrd.dumpFlows", "0");
+    dumpFlows = 0;
   } else {
     dumpFlows = atoi(value);
   }
 
   if(fetchPrefsValue("rrd.dumpHosts", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpHosts", "1");
-    dumpHosts = 1;
+    storePrefsValue("rrd.dumpHosts", "0");
+    dumpHosts = 0;
   } else {
     dumpHosts = atoi(value);
   }
@@ -662,8 +693,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   }
 
   if(fetchPrefsValue("rrd.dumpMatrix", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpMatrix", "1");
-    dumpMatrix = 1;
+    storePrefsValue("rrd.dumpMatrix", "0");
+    dumpMatrix = 0;
   } else {
     dumpMatrix = atoi(value);
   }
@@ -676,8 +707,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
   }
 
   if(fetchPrefsValue("rrd.dumpDetail", value, sizeof(value)) == -1) {
-    storePrefsValue("rrd.dumpDetail", "1" /* DETAIL_MEDIUM */);
-    dumpDetail = DETAIL_MEDIUM;
+    storePrefsValue("rrd.dumpDetail", "2" /* DETAIL_HIGH */);
+    dumpDetail = DETAIL_HIGH;
   } else {
     dumpDetail  = atoi(value);
   }
@@ -738,71 +769,71 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  sprintf(filePath, "mkdir -p %s", rrdPath);
 	  system(filePath);
 
-	  updateCounter(rrdPath, "pktSent", el->pktSent.value);
-	  updateCounter(rrdPath, "pktRcvd", el->pktRcvd.value);
-	  updateCounter(rrdPath, "bytesSent", el->bytesSent.value);
-	  updateCounter(rrdPath, "bytesRcvd", el->bytesRcvd.value);
+	  updateTrafficCounter(rrdPath, "pktSent", &el->pktSent);
+	  updateTrafficCounter(rrdPath, "pktRcvd", &el->pktRcvd);
+	  updateTrafficCounter(rrdPath, "bytesSent", &el->bytesSent);
+	  updateTrafficCounter(rrdPath, "bytesRcvd", &el->bytesRcvd);
 
 
 	  if(dumpDetail >= DETAIL_MEDIUM) {
-	    updateCounter(rrdPath, "pktDuplicatedAckSent", el->pktDuplicatedAckSent.value);
-	    updateCounter(rrdPath, "pktDuplicatedAckRcvd", el->pktDuplicatedAckRcvd.value);
-	    updateCounter(rrdPath, "pktBroadcastSent", el->pktBroadcastSent.value);
-	    updateCounter(rrdPath, "bytesBroadcastSent", el->bytesBroadcastSent.value);
-	    updateCounter(rrdPath, "pktMulticastSent", el->pktMulticastSent.value);
-	    updateCounter(rrdPath, "bytesMulticastSent", el->bytesMulticastSent.value);
-	    updateCounter(rrdPath, "pktMulticastRcvd", el->pktMulticastRcvd.value);
-	    updateCounter(rrdPath, "bytesMulticastRcvd", el->bytesMulticastRcvd.value);
+	    updateTrafficCounter(rrdPath, "pktDuplicatedAckSent", &el->pktDuplicatedAckSent);
+	    updateTrafficCounter(rrdPath, "pktDuplicatedAckRcvd", &el->pktDuplicatedAckRcvd);
+	    updateTrafficCounter(rrdPath, "pktBroadcastSent", &el->pktBroadcastSent);
+	    updateTrafficCounter(rrdPath, "bytesBroadcastSent", &el->bytesBroadcastSent);
+	    updateTrafficCounter(rrdPath, "pktMulticastSent", &el->pktMulticastSent);
+	    updateTrafficCounter(rrdPath, "bytesMulticastSent", &el->bytesMulticastSent);
+	    updateTrafficCounter(rrdPath, "pktMulticastRcvd", &el->pktMulticastRcvd);
+	    updateTrafficCounter(rrdPath, "bytesMulticastRcvd", &el->bytesMulticastRcvd);
 
-	    updateCounter(rrdPath, "bytesSentLoc", el->bytesSentLoc.value);
-	    updateCounter(rrdPath, "bytesSentRem", el->bytesSentRem.value);
-	    updateCounter(rrdPath, "bytesRcvdLoc", el->bytesRcvdLoc.value);
-	    updateCounter(rrdPath, "bytesRcvdFromRem", el->bytesRcvdFromRem.value);
-	    updateCounter(rrdPath, "ipBytesSent", el->ipBytesSent.value);
-	    updateCounter(rrdPath, "ipBytesRcvd", el->ipBytesRcvd.value);
-	    updateCounter(rrdPath, "tcpSentLoc", el->tcpSentLoc.value);
-	    updateCounter(rrdPath, "tcpSentRem", el->tcpSentRem.value);
-	    updateCounter(rrdPath, "udpSentLoc", el->udpSentLoc.value);
-	    updateCounter(rrdPath, "udpSentRem", el->udpSentRem.value);
-	    updateCounter(rrdPath, "icmpSent", el->icmpSent.value);
-	    updateCounter(rrdPath, "ospfSent", el->ospfSent.value);
-	    updateCounter(rrdPath, "igmpSent", el->igmpSent.value);
-	    updateCounter(rrdPath, "tcpRcvdLoc", el->tcpRcvdLoc.value);
-	    updateCounter(rrdPath, "tcpRcvdFromRem", el->tcpRcvdFromRem.value);
-	    updateCounter(rrdPath, "udpRcvdLoc", el->udpRcvdLoc.value);
-	    updateCounter(rrdPath, "udpRcvdFromRem", el->udpRcvdFromRem.value);
-	    updateCounter(rrdPath, "icmpRcvd", el->icmpRcvd.value);
-	    updateCounter(rrdPath, "ospfRcvd", el->ospfRcvd.value);
-	    updateCounter(rrdPath, "igmpRcvd", el->igmpRcvd.value);
-	    updateCounter(rrdPath, "tcpFragmentsSent", el->tcpFragmentsSent.value);
-	    updateCounter(rrdPath, "tcpFragmentsRcvd", el->tcpFragmentsRcvd.value);
-	    updateCounter(rrdPath, "udpFragmentsSent", el->udpFragmentsSent.value);
-	    updateCounter(rrdPath, "udpFragmentsRcvd", el->udpFragmentsRcvd.value);
-	    updateCounter(rrdPath, "icmpFragmentsSent", el->icmpFragmentsSent.value);
-	    updateCounter(rrdPath, "icmpFragmentsRcvd", el->icmpFragmentsRcvd.value);
-	    updateCounter(rrdPath, "stpSent", el->stpSent.value);
-	    updateCounter(rrdPath, "stpRcvd", el->stpRcvd.value);
-	    updateCounter(rrdPath, "ipxSent", el->ipxSent.value);
-	    updateCounter(rrdPath, "ipxRcvd", el->ipxRcvd.value);
-	    updateCounter(rrdPath, "osiSent", el->osiSent.value);
-	    updateCounter(rrdPath, "osiRcvd", el->osiRcvd.value);
-	    updateCounter(rrdPath, "dlcSent", el->dlcSent.value);
-	    updateCounter(rrdPath, "dlcRcvd", el->dlcRcvd.value);
-	    updateCounter(rrdPath, "arp_rarpSent", el->arp_rarpSent.value);
-	    updateCounter(rrdPath, "arp_rarpRcvd", el->arp_rarpRcvd.value);
-	    updateCounter(rrdPath, "arpReqPktsSent", el->arpReqPktsSent.value);
-	    updateCounter(rrdPath, "arpReplyPktsSent", el->arpReplyPktsSent.value);
-	    updateCounter(rrdPath, "arpReplyPktsRcvd", el->arpReplyPktsRcvd.value);
-	    updateCounter(rrdPath, "decnetSent", el->decnetSent.value);
-	    updateCounter(rrdPath, "decnetRcvd", el->decnetRcvd.value);
-	    updateCounter(rrdPath, "appletalkSent", el->appletalkSent.value);
-	    updateCounter(rrdPath, "appletalkRcvd", el->appletalkRcvd.value);
-	    updateCounter(rrdPath, "netbiosSent", el->netbiosSent.value);
-	    updateCounter(rrdPath, "netbiosRcvd", el->netbiosRcvd.value);
-	    updateCounter(rrdPath, "qnxSent", el->qnxSent.value);
-	    updateCounter(rrdPath, "qnxRcvd", el->qnxRcvd.value);
-	    updateCounter(rrdPath, "otherSent", el->otherSent.value);
-	    updateCounter(rrdPath, "otherRcvd", el->otherRcvd.value);
+	    updateTrafficCounter(rrdPath, "bytesSentLoc", &el->bytesSentLoc);
+	    updateTrafficCounter(rrdPath, "bytesSentRem", &el->bytesSentRem);
+	    updateTrafficCounter(rrdPath, "bytesRcvdLoc", &el->bytesRcvdLoc);
+	    updateTrafficCounter(rrdPath, "bytesRcvdFromRem", &el->bytesRcvdFromRem);
+	    updateTrafficCounter(rrdPath, "ipBytesSent", &el->ipBytesSent);
+	    updateTrafficCounter(rrdPath, "ipBytesRcvd", &el->ipBytesRcvd);
+	    updateTrafficCounter(rrdPath, "tcpSentLoc", &el->tcpSentLoc);
+	    updateTrafficCounter(rrdPath, "tcpSentRem", &el->tcpSentRem);
+	    updateTrafficCounter(rrdPath, "udpSentLoc", &el->udpSentLoc);
+	    updateTrafficCounter(rrdPath, "udpSentRem", &el->udpSentRem);
+	    updateTrafficCounter(rrdPath, "icmpSent", &el->icmpSent);
+	    updateTrafficCounter(rrdPath, "ospfSent", &el->ospfSent);
+	    updateTrafficCounter(rrdPath, "igmpSent", &el->igmpSent);
+	    updateTrafficCounter(rrdPath, "tcpRcvdLoc", &el->tcpRcvdLoc);
+	    updateTrafficCounter(rrdPath, "tcpRcvdFromRem", &el->tcpRcvdFromRem);
+	    updateTrafficCounter(rrdPath, "udpRcvdLoc", &el->udpRcvdLoc);
+	    updateTrafficCounter(rrdPath, "udpRcvdFromRem", &el->udpRcvdFromRem);
+	    updateTrafficCounter(rrdPath, "icmpRcvd", &el->icmpRcvd);
+	    updateTrafficCounter(rrdPath, "ospfRcvd", &el->ospfRcvd);
+	    updateTrafficCounter(rrdPath, "igmpRcvd", &el->igmpRcvd);
+	    updateTrafficCounter(rrdPath, "tcpFragmentsSent", &el->tcpFragmentsSent);
+	    updateTrafficCounter(rrdPath, "tcpFragmentsRcvd", &el->tcpFragmentsRcvd);
+	    updateTrafficCounter(rrdPath, "udpFragmentsSent", &el->udpFragmentsSent);
+	    updateTrafficCounter(rrdPath, "udpFragmentsRcvd", &el->udpFragmentsRcvd);
+	    updateTrafficCounter(rrdPath, "icmpFragmentsSent", &el->icmpFragmentsSent);
+	    updateTrafficCounter(rrdPath, "icmpFragmentsRcvd", &el->icmpFragmentsRcvd);
+	    updateTrafficCounter(rrdPath, "stpSent", &el->stpSent);
+	    updateTrafficCounter(rrdPath, "stpRcvd", &el->stpRcvd);
+	    updateTrafficCounter(rrdPath, "ipxSent", &el->ipxSent);
+	    updateTrafficCounter(rrdPath, "ipxRcvd", &el->ipxRcvd);
+	    updateTrafficCounter(rrdPath, "osiSent", &el->osiSent);
+	    updateTrafficCounter(rrdPath, "osiRcvd", &el->osiRcvd);
+	    updateTrafficCounter(rrdPath, "dlcSent", &el->dlcSent);
+	    updateTrafficCounter(rrdPath, "dlcRcvd", &el->dlcRcvd);
+	    updateTrafficCounter(rrdPath, "arp_rarpSent", &el->arp_rarpSent);
+	    updateTrafficCounter(rrdPath, "arp_rarpRcvd", &el->arp_rarpRcvd);
+	    updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->arpReqPktsSent);
+	    updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->arpReplyPktsSent);
+	    updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->arpReplyPktsRcvd);
+	    updateTrafficCounter(rrdPath, "decnetSent", &el->decnetSent);
+	    updateTrafficCounter(rrdPath, "decnetRcvd", &el->decnetRcvd);
+	    updateTrafficCounter(rrdPath, "appletalkSent", &el->appletalkSent);
+	    updateTrafficCounter(rrdPath, "appletalkRcvd", &el->appletalkRcvd);
+	    updateTrafficCounter(rrdPath, "netbiosSent", &el->netbiosSent);
+	    updateTrafficCounter(rrdPath, "netbiosRcvd", &el->netbiosRcvd);
+	    updateTrafficCounter(rrdPath, "qnxSent", &el->qnxSent);
+	    updateTrafficCounter(rrdPath, "qnxRcvd", &el->qnxRcvd);
+	    updateTrafficCounter(rrdPath, "otherSent", &el->otherSent);
+	    updateTrafficCounter(rrdPath, "otherRcvd", &el->otherRcvd);
 	  }
 
 	  if(dumpDetail == DETAIL_HIGH) {
@@ -857,7 +888,6 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	sprintf(rrdPath, "%s/rrd/interfaces/%s/", myGlobals.dbPath,  myGlobals.device[i].name);
 	sprintf(filePath, "mkdir -p %s", rrdPath);
 	system(filePath);
-
 
 	updateCounter(rrdPath, "ethernetPkts", myGlobals.device[i].ethernetPkts.value);
 	updateCounter(rrdPath, "broadcastPkts", myGlobals.device[i].broadcastPkts.value);
@@ -1006,10 +1036,10 @@ static void handleRRDHTTPrequest(char* url) {
 static PluginInfo rrdPluginInfo[] = {
   { "rrdPlugin",
     "This plugin handles RRD packets",
-    "1.0.2", /* version */
+    "1.0.3", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "rrdPlugin", /* http://<host>:<port>/plugins/rrdPlugin */
-    0, /* Active */
+    1, /* Active */
     initRrdFunct, /* TermFunc   */
     termRrdFunct, /* TermFunc   */
     NULL, /* PluginFunc */

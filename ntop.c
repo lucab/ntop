@@ -201,7 +201,7 @@ void daemonize(void) {
       }
 
       traceEvent(TRACE_INFO, "Bye bye: I'm becoming a daemon...\n");
-      detachFromTerminal();
+      detachFromTerminal(1);
     } else { /* father */
       exit(0);
     }
@@ -210,7 +210,7 @@ void daemonize(void) {
 
 /* **************************************** */
 
-void detachFromTerminal(void) {
+void detachFromTerminal(int doChdir) {
 #ifndef MULTITHREADED
   alarm(120); /* Don't freeze */
 #endif
@@ -225,7 +225,7 @@ void detachFromTerminal(void) {
   }
 #endif
 
-  chdir("/");
+  if(doChdir) chdir("/");
   setsid();  /* detach from the terminal */
 
   fclose(stdin);

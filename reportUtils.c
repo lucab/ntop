@@ -3418,16 +3418,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s"
-#ifdef HAVE_RRD_H
-	      " <A HREF=javascript:popUp(\"/plugins/rrdPlugin?action=graph&key=hosts/%s/&name=pktSent&title=pktSent\")>"
-	      "<IMG BORDER=0 SRC=/graph.gif></A>"
-#endif
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	      getRowColor(), "Total&nbsp;Data&nbsp;Sent",
-#ifdef HAVE_RRD_H
-	      el->hostNumIpAddress,
-#endif
 	      formatBytes(el->bytesSent.value, 1), formatPkts(el->pktSent.value),
 	      formatPkts(el->pktDuplicatedAckSent.value),
 	      (int)(((float)el->pktDuplicatedAckSent.value*100)/(float)(el->pktSent.value+1))
@@ -3490,16 +3483,9 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s"
-#ifdef HAVE_RRD_H
-	      " <A HREF=javascript:popUp(\"/plugins/rrdPlugin?action=graph&key=hosts/%s/&name=pktRcvd&title=pktRcvd\")>"
-	      "<IMG BORDER=0 SRC=/graph.gif></A>"
-#endif
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	      getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
-#ifdef HAVE_RRD_H
-	      el->hostNumIpAddress,
-#endif
 	      formatBytes(el->bytesRcvd.value, 1), formatPkts(el->pktRcvd.value),
 	      formatPkts(el->pktDuplicatedAckRcvd.value),
 	      (int)((float)(el->pktDuplicatedAckRcvd.value*100)/(float)(el->pktRcvd.value+1))) < 0)
@@ -3627,16 +3613,21 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
   }
 
-#ifdef HAVE_RRD_H
+  /* RRD */
   if(el->hostNumIpAddress[0] != '\0') {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"[ <A HREF=\"/plugins/rrdPlugin?action=list&key=hosts/%s&title=host %s\">Show</A> ]</TD></TR>\n",
-		getRowColor(), "RRD Stats", el->hostNumIpAddress,
-		el->hostSymIpAddress[0] != '\0' ? el->hostSymIpAddress : el->hostNumIpAddress) < 0)
-      BufferTooShort();
-    sendString(buf);
+    struct stat statbuf;
+    
+    snprintf(buf, sizeof(buf), "%s/rrd/hosts/%s/", myGlobals.dbPath, el->hostNumIpAddress);
+    
+    if(stat(buf, &statbuf) == 0) {
+      if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		  "[ <A HREF=\"/plugins/rrdPlugin?action=list&key=hosts/%s&title=host %s\"><IMG BORDER=0 SRC=/graph.gif></A> ]</TD></TR>\n",
+		  getRowColor(), "RRD Stats", el->hostNumIpAddress,
+		  el->hostSymIpAddress[0] != '\0' ? el->hostSymIpAddress : el->hostNumIpAddress) < 0)
+	BufferTooShort();
+      sendString(buf);
+    }
   }
-#endif
 
   if(haveTrafficHistory()) {
     if(el->hostNumIpAddress[0] != '\0') {

@@ -171,7 +171,7 @@ extern void *pcapDispatch(void *_i);
 extern RETSIGTYPE handleDiedChild(int);
 extern RETSIGTYPE dontFreeze(int signo);
 extern void daemonize(void);
-extern void detachFromTerminal(void);
+extern void detachFromTerminal(int);
 extern void handleProtocols();
 extern void addDefaultProtocols(void);
 extern int mapGlobalToLocalIdx(int port);

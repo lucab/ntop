@@ -125,6 +125,7 @@ void printTrafficStatistics() {
   int i;
   char buf[BUF_SIZE];
   struct pcap_stat pcapStats;
+  struct stat statbuf;
 
   unicastPkts = 0;
   printHTMLheader("Global Traffic Statistics", 0);
@@ -619,10 +620,25 @@ void printTrafficStatistics() {
 		((float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value/(float)(myGlobals.actTime-myGlobals.initialSniffTime))) < 0)
       BufferTooShort();
     sendString(buf);
-
   }
+  
+  sendString("</TABLE>"TABLE_OFF"</TR>\n");
 
-  sendString("</TABLE>"TABLE_OFF"</TR></TABLE></CENTER>\n");
+  /* RRD */
+  snprintf(buf, sizeof(buf), "%s/rrd/interfaces/%s/", myGlobals.dbPath, 
+	   myGlobals.device[myGlobals.actualReportDeviceId].name);
+
+  if((i = stat(buf, &statbuf)) == 0) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+		"[ <A HREF=\"/plugins/rrdPlugin?action=list&key=interfaces/%s&title=interface %s\">"
+		"<IMG BORDER=0 SRC=/graph.gif></A> ]</TD></TR>\n",
+		getRowColor(), "RRD Stats", myGlobals.device[myGlobals.actualReportDeviceId].name, 
+		myGlobals.device[myGlobals.actualReportDeviceId].name) < 0)
+      BufferTooShort();
+    sendString(buf);    
+  } 
+
+  sendString("</TABLE></CENTER>\n");
 }
 
 /* ******************************* */

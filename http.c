@@ -1317,7 +1317,7 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 #endif
 	  return(0);
 	} else {
-	  detachFromTerminal();
+	  detachFromTerminal(0);
 
 	  /* Close inherited sockets */
 #ifdef HAVE_OPENSSL
