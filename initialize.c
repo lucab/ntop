@@ -369,7 +369,7 @@ void resetStats(void) {
 
     for(j=1; j<myGlobals.device[i].actualHashSize; j++)
       if(myGlobals.device[i].hash_hostTraffic[j] != NULL) {
-	freeHostInfo(i, myGlobals.device[i].hash_hostTraffic[j], 1, i);
+	freeHostInfo(i, myGlobals.device[i].hash_hostTraffic[j], i);
 	myGlobals.device[i].hash_hostTraffic[j] = NULL;
       }
 

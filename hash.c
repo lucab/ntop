@@ -133,7 +133,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 
 /* **************************************** */
 
-void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDeviceId) {
+void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId) {
   u_int j, i;
   IpGlobalSession *nextElement, *element;
 
@@ -141,7 +141,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
     return;
 
 #ifdef DEBUG
-  traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)", host->hostNumIpAddress, hostIdx);
+  traceEvent(TRACE_INFO, "Entering freeHostInfo(%s, %u)", host->hostNumIpAddress, host->hashListBucket);
 #endif
 
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
@@ -154,7 +154,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
 
 #ifdef FREE_HOST_INFO
   traceEvent(TRACE_INFO, "Deleted a hash_hostTraffic entry [slotId=%d/%s]\n",
-	     hostIdx, host->hostSymIpAddress);
+	     host->hashListBucket, host->hostSymIpAddress);
 #endif
 
   if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
@@ -178,7 +178,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
   for(i=0; i<myGlobals.numProcesses; i++) {
     if(myGlobals.processes[i] != NULL) {
       for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++)
-	if(myGlobals.processes[i]->contactedIpPeersIndexes[j] == hostIdx)
+	if(myGlobals.processes[i]->contactedIpPeersIndexes[j] == host->hashListBucket)
 	  myGlobals.processes[i]->contactedIpPeersIndexes[j] = NO_PEER;
     }
   }
@@ -218,7 +218,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
 
   host->tcpSessionList = host->udpSessionList = NULL;
 
-  freeHostSessions(hostIdx, actualDeviceId);
+  freeHostSessions(host->hashListBucket, actualDeviceId);
 
   /* ************************************* */
 
@@ -235,7 +235,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
 	    int i;
 
 	    for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-	      if(scanner->element->contactedIpPeersIndexes[i] == hostIdx)
+	      if(scanner->element->contactedIpPeersIndexes[i] == host->hashListBucket)
 		scanner->element->contactedIpPeersIndexes[i] = NO_PEER;
 	    }
 	  }
@@ -268,7 +268,7 @@ void freeHostInfo(int theDevice, HostTraffic *host, u_int hostIdx, int actualDev
       storeHostTrafficInstance(host);
   }
 
-  purgeHostIdx(theDevice, hostIdx);
+  purgeHostIdx(theDevice, host->hashListBucket);
 
   /*
     Do not free the host pointer but add it to
@@ -308,8 +308,7 @@ void freeHostInstances(int actualDeviceId) {
     for(idx=1; idx<myGlobals.device[actualDeviceId].actualHashSize; idx++) {
       if(myGlobals.device[actualDeviceId].hash_hostTraffic[idx] != NULL) {
 	num++;
-	freeHostInfo(actualDeviceId, myGlobals.device[actualDeviceId].hash_hostTraffic[idx],
-		     idx, actualDeviceId);
+	freeHostInfo(actualDeviceId, myGlobals.device[actualDeviceId].hash_hostTraffic[idx], actualDeviceId);
 	myGlobals.device[actualDeviceId].hash_hostTraffic[idx] = NULL;
 #ifdef HAVE_SCHED_H
 	sched_yield(); /* Allow other threads to run */
@@ -415,7 +414,7 @@ void purgeIdleHosts(int actDevice) {
 	       idx, theFlaggedHosts[idx]->hostSymIpAddress, numFreedBuckets);
 #endif
 
-    freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
+    freeHostInfo(actDevice, theFlaggedHosts[idx], actDevice);
     numFreedBuckets++;
 #ifdef HAVE_SCHED_H
     sched_yield(); /* Allow other threads to run */
@@ -807,7 +806,7 @@ void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
 
   if(checkedIdx == hostIdx)
     if((el = myGlobals.device[actualDeviceId].hash_hostTraffic[checkedIdx]) != NULL) {
-      if(el->hashListBucket < HASH_LIST_SIZE) {
+      if(el->hashListBucket < myGlobals.device[actualDeviceId].actualHashSize) {
 	HashList *list, *prevList;
 
 	if((list = myGlobals.device[actualDeviceId].hashList[el->hashListBucket]) != NULL) {
@@ -835,11 +834,14 @@ void purgeHostIdx(int actualDeviceId, u_int hostIdx) {
 	    free(list);
 	  }
 	}
+      } else {
+	traceEvent(TRACE_ERROR, "ERROR: %d is out of range [0..%d]",  el->hashListBucket,
+		   myGlobals.device[actualDeviceId].actualHashSize-1);
       }
-    }
 
-  if(!allRight)
-    traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed",  actualDeviceId, hostIdx);
+      if(!allRight)
+	traceEvent(TRACE_ERROR, "ERROR: purgeHostIdx(%d,%d) failed",  actualDeviceId, hostIdx);
+    }
 }
 
 /* ************************************ */

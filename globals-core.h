@@ -71,8 +71,7 @@ extern int retrieveHost(HostSerial theSerial, HostTraffic *el);
 extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
                                    u_char *ether_addr,
                                    short* useIPAddressForSearching, int actualDeviceId);
-extern void freeHostInfo(int theDevice, HostTraffic *host, 
-			 u_int hostIdx, int actualDeviceId);
+extern void freeHostInfo(int theDevice, HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
 extern void purgeHostIdx(int theDevice, u_int hostIdx);
