@@ -463,23 +463,23 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(isDHCPClient(el))
-    dynIp = "&nbsp;<IMG ALT=\"DHCP Client\" SRC=/bulb.gif BORDER=0>&nbsp;";
+    dynIp = "&nbsp;<IMG ALT=\"DHCP Client\" SRC=\"/bulb.gif\" BORDER=0>&nbsp;";
   else {
     if(isDHCPServer(el))
-      dynIp = "&nbsp;<IMG ALT=\"DHCP Server\" SRC=/antenna.gif BORDER=0>&nbsp;";
+      dynIp = "&nbsp;<IMG ALT=\"DHCP Server\" SRC=\"/antenna.gif\" BORDER=0>&nbsp;";
     else
       dynIp = "";
   }
 
-  if(isMultihomed(el))     multihomed = "&nbsp;<IMG ALT=Multihomed SRC=/multihomed.gif BORDER=0>"; else multihomed = "";
-  if(isBridgeHost(el))     brStr = "&nbsp;<IMG ALT=Bridge SRC=/bridge.gif BORDER=0>"; else brStr = "";
-  if(gatewayHost(el))      gwStr = "&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>"; else gwStr = "";
-  if(nameServerHost(el))   dnsStr = "&nbsp;<IMG ALT=\"DNS\" SRC=/dns.gif BORDER=0>"; else dnsStr = "";
-  if(isPrinter(el))        printStr = "&nbsp;<IMG ALT=Printer SRC=/printer.gif BORDER=0>"; else printStr = "";
-  if(isSMTPhost(el))       smtpStr = "&nbsp;<IMG ALT=\"Mail (SMTP)\" SRC=/mail.gif BORDER=0>"; else smtpStr = "";
+  if(isMultihomed(el))     multihomed = "&nbsp;<IMG ALT=Multihomed SRC=\"/multihomed.gif\"\" BORDER=0>"; else multihomed = "";
+  if(isBridgeHost(el))     brStr = "&nbsp;<IMG ALT=Bridge SRC=\"/bridge.gif\" BORDER=0>"; else brStr = "";
+  if(gatewayHost(el))      gwStr = "&nbsp;<IMG ALT=Router SRC=\"/router.gif\" BORDER=0>"; else gwStr = "";
+  if(nameServerHost(el))   dnsStr = "&nbsp;<IMG ALT=\"DNS\" SRC=\"/dns.gif\" BORDER=0>"; else dnsStr = "";
+  if(isPrinter(el))        printStr = "&nbsp;<IMG ALT=Printer SRC=\"/printer.gif\" BORDER=0>"; else printStr = "";
+  if(isSMTPhost(el))       smtpStr = "&nbsp;<IMG ALT=\"Mail (SMTP)\" SRC=\"/mail.gif\" BORDER=0>"; else smtpStr = "";
   if(el->protocolInfo != NULL) {
-    if(el->protocolInfo->userList != NULL) userStr = "&nbsp;<IMG ALT=Users SRC=/users.gif BORDER=0>"; else userStr = "";
-    if(el->protocolInfo->fileList != NULL) p2p = "&nbsp;<IMG ALT=P2P SRC=/p2p.gif BORDER=0>"; else p2p = "";
+    if(el->protocolInfo->userList != NULL) userStr = "&nbsp;<IMG ALT=Users SRC=\"/users.gif\" BORDER=0>"; else userStr = "";
+    if(el->protocolInfo->fileList != NULL) p2p = "&nbsp;<IMG ALT=P2P SRC=\"/p2p.gif\" BORDER=0>"; else p2p = "";
   } else {
     userStr = "";
     p2p = "";
@@ -490,10 +490,10 @@ char* makeHostLink(HostTraffic *el, short mode,
     healthStr = "";
     break;
   case 1: /* Warning */
-    healthStr = "<IMG ALT=\"Medium Risk\" SRC=/Risk_medium.gif BORDER=0>";
+    healthStr = "<IMG ALT=\"Medium Risk\" SRC=\"/Risk_medium.gif\" BORDER=0>";
     break;
   case 2: /* Error */
-    healthStr = "<IMG ALT=\"High Risk\" SRC=/Risk_high.gif BORDER=0>";
+    healthStr = "<IMG ALT=\"High Risk\" SRC=\"/Risk_high.gif\" BORDER=0>";
     break;
   }
 

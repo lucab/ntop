@@ -3027,21 +3027,21 @@ void checkHostProvidedServices(HostTraffic *el) {
     if(isServer(el))           sendString("Server<BR>\n");
     if(isWorkstation(el))      sendString("Workstation<BR>\n");
     if(isMasterBrowser(el))    sendString("Master Browser<BR>\n");
-    if(isPrinter(el))          sendString("Printer&nbsp;<IMG ALT=Printer SRC=printer.gif BORDER=0><BR>\n");
-    if(isBridgeHost(el))       sendString("Layer-2 Switch/Bridge <IMG ALT=Bridge SRC=/bridge.gif BORDER=0><BR>\n");
+    if(isPrinter(el))          sendString("Printer&nbsp;<IMG ALT=Printer SRC=\"/printer.gif\" BORDER=0><BR>\n");
+    if(isBridgeHost(el))       sendString("Layer-2 Switch/Bridge <IMG ALT=Bridge SRC=\"/bridge.gif\" BORDER=0><BR>\n");
 
-    if(nameServerHost(el))     sendString("&nbsp;<IMG ALT=\"DNS Server\" SRC=/dns.gif BORDER=0>&nbsp;Name Server<BR>\n");
-    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG ALT=Router SRC=/router.gif BORDER=0>&nbsp;<BR>\n");
-    if(isSMTPhost(el))         sendString("SMTP Server&nbsp;<IMG ALT=\"Mail Server (SMTP)\"  SRC=/mail.gif BORDER=0>&nbsp;<BR>\n");
+    if(nameServerHost(el))     sendString("&nbsp;<IMG ALT=\"DNS Server\" SRC=\"/dns.gif\" BORDER=0>&nbsp;Name Server<BR>\n");
+    if(gatewayHost(el))        sendString("Gateway&nbsp;<IMG ALT=Router SRC=\"/router.gif\" BORDER=0>&nbsp;<BR>\n");
+    if(isSMTPhost(el))         sendString("SMTP Server&nbsp;<IMG ALT=\"Mail Server (SMTP)\"  SRC=\"/mail.gif\" BORDER=0>&nbsp;<BR>\n");
     if(isPOPhost(el))          sendString("POP Server<BR>\n");
     if(isIMAPhost(el))         sendString("IMAP Server<BR>\n");
     if(isDirectoryHost(el))    sendString("Directory Server<BR>\n");
     if(isFTPhost(el))          sendString("FTP Server<BR>\n");
-    if(isHTTPhost(el))         sendString("HTTP Server&nbsp;<IMG ALT=\"HTTP Server\" SRC=/web.gif BORDER=0><BR>\n");
+    if(isHTTPhost(el))         sendString("HTTP Server&nbsp;<IMG ALT=\"HTTP Server\" SRC=\"/web.gif\" BORDER=0><BR>\n");
     if(isWINShost(el))         sendString("WINS Server<BR>\n");
 
-    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client&nbsp;<IMG ALT=\"DHCP Client\" SRC=/bulb.gif BORDER=0><BR>\n");
-    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=/antenna.gif BORDER=0>&nbsp;<BR>\n");
+    if(isDHCPClient(el))          sendString("BOOTP/DHCP Client&nbsp;<IMG ALT=\"DHCP Client\" SRC=\"/bulb.gif\" BORDER=0><BR>\n");
+    if(isDHCPServer(el))          sendString("BOOTP/DHCP Server&nbsp;<IMG ALT=\"DHCP Server\" SRC=\"/antenna.gif\" BORDER=0>&nbsp;<BR>\n");
     sendString("</TD></TR>");
   }
 }
