@@ -163,7 +163,7 @@ extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
 extern void setHostSerial(HostTraffic *el);
-HostTraffic * lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
+HostTraffic * lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, int vlanId,
 			 u_char checkForMultihoming, u_char forceUsingIPaddress, int actualDeviceId);
 
 HostTraffic * lookupFcHost (FcAddress *fcAddress, u_short vsanId,

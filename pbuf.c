@@ -493,15 +493,13 @@ void purgeOldFragmentEntries(int actualDeviceId) {
 
 /* ************************************ */
 
-static void checkNetworkRouter(HostTraffic *srcHost,
-			       HostTraffic *dstHost,
+static void checkNetworkRouter(HostTraffic *srcHost, HostTraffic *dstHost,
 			       u_char *ether_dst, int actualDeviceId) {
-
   if((subnetLocalHost(srcHost) && (!subnetLocalHost(dstHost))
       && (!broadcastHost(dstHost)) && (!multicastHost(dstHost)))
      || (subnetLocalHost(dstHost) && (!subnetLocalHost(srcHost))
 	 && (!broadcastHost(srcHost)) && (!multicastHost(srcHost)))) {
-    HostTraffic *router = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
+    HostTraffic *router = lookupHost(NULL, ether_dst, srcHost->vlanId, 0, 0, actualDeviceId);
 
     if(router == NULL) return;
 
@@ -956,7 +954,7 @@ static void processIpPkt(const u_char *bp,
        && (memcmp(ether_dst, ethBroadcast, 6) != 0)) {
       /* forceUsingIPaddress = 1; */
 
-      srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
+      srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
       if(srcHost != NULL) {
 	if(vlanId != -1) srcHost->vlanId = vlanId;
 	if(myGlobals.enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
@@ -979,14 +977,14 @@ static void processIpPkt(const u_char *bp,
     IMPORTANT:
     do NOT change the order of the lines below (see isBroadcastAddress call)
   */
-  dstHost = lookupHost(&dstAddr, ether_dst, 1 , 0 ,actualDeviceId);
+  dstHost = lookupHost(&dstAddr, ether_dst, vlanId, 1 , 0 ,actualDeviceId);
   if(dstHost == NULL) {
     /* Sanity check */
     if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (2) [Low memory?]");
     lowMemoryMsgShown = 1;
     return;
   }
-  srcHost = lookupHost(&srcAddr, ether_src,
+  srcHost = lookupHost(&srcAddr, ether_src, vlanId,
 		       /*
 			 Don't check for multihoming when
 			 the destination address is a broadcast address
@@ -1938,7 +1936,7 @@ static void processIpPkt(const u_char *bp,
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote, length);
 
       if(icmp6Pkt.icmp6_type == ND_ROUTER_ADVERT) {
-	HostTraffic *router = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
+	HostTraffic *router = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
 	if(router != NULL) FD_SET(FLAG_GATEWAY_HOST, &router->flags);
       }
 
@@ -2479,7 +2477,6 @@ void processPacket(u_char *_deviceId,
 
   updateDevicePacketStats(length, actualDeviceId);
 
-
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetPkts, 1);
   incrementTrafficCounter(&myGlobals.device[actualDeviceId].ethernetBytes, h->len);
 
@@ -2713,7 +2710,7 @@ void processPacket(u_char *_deviceId,
 	/* IPX */
 	IPXpacket ipxPkt;
 
-	srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
+	srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (5) [Low memory?]");
@@ -2724,7 +2721,7 @@ void processPacket(u_char *_deviceId,
 	  return;
 	}
 
-	dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
+	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (6) [Low memory?]");
@@ -2764,7 +2761,7 @@ void processPacket(u_char *_deviceId,
 
 	trp = (struct tokenRing_header*)orig_p;
 	ether_src = (u_char*)trp->trn_shost, ether_dst = (u_char*)trp->trn_dhost;
-	srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
+	srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (7) [Low memory?]");
@@ -2775,7 +2772,7 @@ void processPacket(u_char *_deviceId,
 	  return;
 	}
 
-	dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
+	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (8) [Low memory?]");
@@ -2818,7 +2815,7 @@ void processPacket(u_char *_deviceId,
 	   && (p[sizeof(struct ether_header)+4] == 0x0)) {
 	  /* IPX */
 
-	  srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
+	  srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
 	  if(srcHost == NULL) {
 	    /* Sanity check */
 	    if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (9) [Low memory?]");
@@ -2829,7 +2826,7 @@ void processPacket(u_char *_deviceId,
 	    return;
 	  }
 
-	  dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
+	  dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
 	  if(dstHost == NULL) {
 	    /* Sanity check */
 	    if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (10) [Low memory?]");
@@ -2845,9 +2842,9 @@ void processPacket(u_char *_deviceId,
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].ipxBytes, length);
 	} else if(!myGlobals.dontTrustMACaddr) {
 	  /* MAC addresses are meaningful here */
-	  srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
-	  dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
-
+	  srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
+	  dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
+	  
 	  if((srcHost != NULL) && (dstHost != NULL)) {
 	    TrafficCounter ctr;
 
@@ -3184,7 +3181,7 @@ void processPacket(u_char *_deviceId,
 	else
 	  length = 0;
 
-	srcHost = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
+	srcHost = lookupHost(NULL, ether_src, vlanId, 0, 0, actualDeviceId);
 	if(srcHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (11) [Low memory?]");
@@ -3195,7 +3192,7 @@ void processPacket(u_char *_deviceId,
 	  return;
 	}
 
-	dstHost = lookupHost(NULL, ether_dst, 0, 0, actualDeviceId);
+	dstHost = lookupHost(NULL, ether_dst, vlanId, 0, 0, actualDeviceId);
 	if(dstHost == NULL) {
 	  /* Sanity check */
 	  if(!lowMemoryMsgShown) traceEvent(CONST_TRACE_ERROR, "Sanity check failed (12) [Low memory?]");
@@ -3219,10 +3216,10 @@ void processPacket(u_char *_deviceId,
 	      addr.hostFamily = AF_INET;
 	      memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_tpa, sizeof(struct in_addr));
 	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
-	      dstHost = lookupHost(&addr, (u_char*)&arpHdr.arp_tha, 0, 0, actualDeviceId);
+	      dstHost = lookupHost(&addr, (u_char*)&arpHdr.arp_tha, vlanId, 0, 0, actualDeviceId);
 	      memcpy(&addr.Ip4Address.s_addr, &arpHdr.arp_spa, sizeof(struct in_addr));
 	      addr.Ip4Address.s_addr = ntohl(addr.Ip4Address.s_addr);
-	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, 0, 0, actualDeviceId);
+	      srcHost = lookupHost(&addr, (u_char*)&arpHdr.arp_sha, vlanId, 0, 0, actualDeviceId);
 	      if(srcHost != NULL) incrementTrafficCounter(&srcHost->arpReplyPktsSent, 1);
 	      if(dstHost != NULL) incrementTrafficCounter(&dstHost->arpReplyPktsRcvd, 1);
 	      /* DO NOT ADD A break ABOVE ! */

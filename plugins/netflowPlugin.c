@@ -764,12 +764,12 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
   addrput(AF_INET,&addr1,&b);
   addrput(AF_INET,&addr2,&a);
   if(!skipDST)
-    dstHost = lookupHost(&addr1, NULL, 0, 1, myGlobals.netFlowDeviceId);
+    dstHost = lookupHost(&addr1, NULL, -1 /* no VLAN */, 0, 1, myGlobals.netFlowDeviceId);
   else
     dstHost = dummyHost;
 
   if(!skipSRC)
-    srcHost = lookupHost(&addr2, NULL, 0, 1, myGlobals.netFlowDeviceId);
+    srcHost = lookupHost(&addr2, NULL, -1 /* no VLAN */, 0, 1, myGlobals.netFlowDeviceId);
   else
     srcHost = dummyHost;
 

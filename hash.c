@@ -838,7 +838,7 @@ void setHostSerial(HostTraffic *el) {
   Searches a host and returns it. If the host is not
   present in the hash a new bucket is created
 */
-HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
+HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, int vlanId,
 			u_char checkForMultihoming, u_char forceUsingIPaddress,
 			int actualDeviceId) {
   u_int idx, isMultihomed = 0;
@@ -860,10 +860,10 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
   }
 
 #ifdef DEBUG 
-  traceEvent(CONST_TRACE_NOISY, "DEBUG: lookupHost(%s, %s, m%u, f%u, dev%d)",
+  traceEvent(CONST_TRACE_NOISY, "DEBUG: lookupHost(%s, %s, m=%u, f=%u, dev=%d, vlan=%d)",
              addrtostr(hostIpAddress),
              etheraddr_string(ether_addr, buf),
-             checkForMultihoming, forceUsingIPaddress, actualDeviceId);
+             checkForMultihoming, forceUsingIPaddress, actualDeviceId, vlanId);
 #endif
 
 #ifdef HASH_DEBUG
@@ -898,63 +898,65 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 		 idx, el->hostTrafficBucket);
     }
 
-    if(useIPAddressForSearching == 0) {
-      /* compare with the ethernet-address then the IP address */
-      if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
-	if((hostIpAddress != NULL) && 
-	   (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
-	  if((!isMultihomed) && checkForMultihoming) {
-	    /* This is a local address hence this is a potential multihomed host. */
+    if(vlanId == el->vlanId) {
+      if(useIPAddressForSearching == 0) {
+	/* compare with the ethernet-address then the IP address */
+	if(memcmp(el->ethAddress, ether_addr, LEN_ETHERNET_ADDRESS) == 0) {
+	  if((hostIpAddress != NULL) && 
+	     (hostIpAddress->hostFamily == el->hostIpAddress.hostFamily)) {
+	    if((!isMultihomed) && checkForMultihoming) {
+	      /* This is a local address hence this is a potential multihomed host. */
 
-	    if(!(addrnull(&el->hostIpAddress))
-	       && (addrcmp(&el->hostIpAddress,hostIpAddress) != 0)) {
-	      isMultihomed = 1;
-	      FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
-	    } else {
-              updateIPinfo = 1;
-            }
+	      if(!(addrnull(&el->hostIpAddress))
+		 && (addrcmp(&el->hostIpAddress,hostIpAddress) != 0)) {
+		isMultihomed = 1;
+		FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);
+	      } else {
+		updateIPinfo = 1;
+	      }
+	    }
+	    hostFound = 1;
+	    break;	
+	  } else if(hostIpAddress == NULL){  /* Only Mac Addresses */
+	    hostFound = 1;
+	    break;
+	  } else { /* MAC match found and we have the IP - need to update... */
+	    updateIPinfo = 1;
+	    hostFound = 1;
+	    break;
 	  }
-	  hostFound = 1;
-	  break;	
-	} else if(hostIpAddress == NULL){  /* Only Mac Addresses */
+	} else if((hostIpAddress != NULL)
+		  && (addrcmp(&el->hostIpAddress, hostIpAddress) == 0)) {
+	  /* Spoofing or duplicated MAC address:
+	     two hosts with the same IP address and different MAC
+	     addresses
+	  */
+
+	  if(!hasDuplicatedMac(el)) {
+	    FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
+
+	    if(myGlobals.enableSuspiciousPacketDump) {
+	      char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
+
+	      traceEvent(CONST_TRACE_WARNING,
+			 "Two MAC addresses found for the same IP address "
+			 "%s: [%s/%s] (spoofing detected?)",
+			 el->hostNumIpAddress,
+			 etheraddr_string(ether_addr, etherbuf), el->ethAddressString);
+	      dumpSuspiciousPacket(actualDeviceId);
+	    }
+	  }
+
+	  setSpoofingFlag = 1;
 	  hostFound = 1;
 	  break;
-	} else { /* MAC match found and we have the IP - need to update... */
-          updateIPinfo = 1;
-	  hostFound = 1;
-	  break;
-        }
-      } else if((hostIpAddress != NULL)
-		&& (addrcmp(&el->hostIpAddress, hostIpAddress) == 0)) {
-	/* Spoofing or duplicated MAC address:
-	   two hosts with the same IP address and different MAC
-	   addresses
-	*/
-
-	if(!hasDuplicatedMac(el)) {
-	  FD_SET(FLAG_HOST_DUPLICATED_MAC, &el->flags);
-
-	  if(myGlobals.enableSuspiciousPacketDump) {
-	    char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
-
-	    traceEvent(CONST_TRACE_WARNING,
-		       "Two MAC addresses found for the same IP address "
-		       "%s: [%s/%s] (spoofing detected?)",
-		       el->hostNumIpAddress,
-		       etheraddr_string(ether_addr, etherbuf), el->ethAddressString);
-	    dumpSuspiciousPacket(actualDeviceId);
-	  }
 	}
-
-	setSpoofingFlag = 1;
-	hostFound = 1;
-	break;
-      }
-    } else {
-      /* -o | --no-mac (or netFlow, which doesn't have MACs) - compare with only the IP address */
-      if(addrcmp(&el->hostIpAddress, hostIpAddress) == 0) {
-	hostFound = 1;
-	break;
+      } else {
+	/* -o | --no-mac (or netFlow, which doesn't have MACs) - compare with only the IP address */
+	if(addrcmp(&el->hostIpAddress, hostIpAddress) == 0) {
+	  hostFound = 1;
+	  break;
+	}
       }
     }
 
@@ -1016,6 +1018,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr,
 
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
+    el->vlanId = vlanId;
 
     resetHostsVariables(el);
 
