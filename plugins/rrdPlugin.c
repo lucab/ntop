@@ -91,6 +91,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
 	       char *startTime, char* endTime, Counter *total, float *average);
 void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle, char *startTime, char* endTime, char* rrdPrefix);
 void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
+void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char* rrdPrefix);
 void updateCounter(char *hostPath, char *key, Counter value);
 void updateGauge(char *hostPath, char *key, Counter value);
 void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter);
@@ -303,7 +304,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
 
 static void listResource(char *rrdPath, char *rrdTitle,
 			 char *startTime, char* endTime) {
-  char path[512], url[256], formatBuf[32];
+  char path[512], url[256], formatBuf[32], hasNetFlow, buf[256];
   DIR* directoryPointer=NULL;
   struct dirent* dp;
   int numEntries = 0, i, min, max;
@@ -316,39 +317,29 @@ static void listResource(char *rrdPath, char *rrdTitle,
   revertSlash(path, 0);
 #endif
 
-  directoryPointer = opendir(path);
+  safe_snprintf(buf, sizeof(buf), "Info about %s", rrdTitle);
 
-  if(directoryPointer == NULL) {
-    char buf[256];
-    safe_snprintf(buf, sizeof(buf), "<I>Unable to read directory %s</I>", path);
-    printFlagedWarning(buf);
-    printHTMLtrailer();
-    return;
-  }
-
-  safe_snprintf(path, sizeof(path), "Info about %s", rrdTitle);
-
-  printHTMLheader(path, NULL, 0);
+  printHTMLheader(buf, NULL, 0);
   sendString("<CENTER>\n<p ALIGN=right>\n");
 
   safe_snprintf(url, sizeof(url),
               "/plugins/rrdPlugin?action=list&key=%s&title=%s&end=now",
               rrdPath, rrdTitle);
 
-  safe_snprintf(path, sizeof(path), "<b>View:</b> [ <A HREF=\"%s&start=now-1y\">year</A> ]", url);
-    sendString(path);
-  safe_snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1m\">month</A> ]", url);
-    sendString(path);
-  safe_snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1w\">week</A> ]", url);
-    sendString(path);
-  safe_snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1d\">day</A> ]", url);
-    sendString(path);
-  safe_snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-12h\">last 12h</A> ]\n", url);
-    sendString(path);
-  safe_snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-6h\">last 6h</A> ]\n", url);
-    sendString(path);
-  safe_snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1h\">last hour</A> ]&nbsp;\n", url);
-    sendString(path);
+  safe_snprintf(buf, sizeof(buf), "<b>View:</b> [ <A HREF=\"%s&start=now-1y\">year</A> ]", url);
+    sendString(buf);
+  safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1m\">month</A> ]", url);
+    sendString(buf);
+  safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1w\">week</A> ]", url);
+    sendString(buf);
+  safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1d\">day</A> ]", url);
+    sendString(buf);
+  safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"%s&start=now-12h\">last 12h</A> ]\n", url);
+    sendString(buf);
+  safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"%s&start=now-6h\">last 6h</A> ]\n", url);
+    sendString(buf);
+  safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"%s&start=now-1h\">last hour</A> ]&nbsp;\n", url);
+    sendString(buf);
 
   sendString("</p>\n<p>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
@@ -362,13 +353,54 @@ static void listResource(char *rrdPath, char *rrdTitle,
    
   for(i=min; i<=max; i++) {
     sendString("<TR><TD COLSPAN=2 ALIGN=CENTER>");
-    safe_snprintf(path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary"
+    safe_snprintf(buf, sizeof(buf), "<IMG SRC=\"/plugins/rrdPlugin?action=graphSummary"
 		"&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
 		i, rrdPath, startTime, endTime);
-    sendString(path);
+    sendString(buf);
+  }
+
+  directoryPointer = opendir(path);
+
+  if(directoryPointer == NULL) {
+    safe_snprintf(buf, sizeof(buf), "<I>(1) Unable to read directory %s</I>", path);
+    traceEvent(CONST_TRACE_INFO, "RRD: %s", buf);
+    printFlagedWarning(buf);
+    printHTMLtrailer();
+    return;
+  }
+
+  hasNetFlow = 0;
+  while((dp = readdir(directoryPointer)) != NULL) {
+    if(strncmp(dp->d_name, "NF_", 3) == 0) {
+      hasNetFlow = 1;
+      break;
+    }
+  } /* while */
+
+  closedir(directoryPointer);
+
+  if(hasNetFlow) {
+    sendString("<TR><TH "DARK_BG" COLSPAN=2>NetFlow Detail</TH></TR>\n");
+    
+    for(i=0; i<=2; i++) {
+      sendString("<TR><TD COLSPAN=2 ALIGN=CENTER>");
+      safe_snprintf(buf, sizeof(buf), "<IMG SRC=\"/plugins/rrdPlugin?action=netflowSummary"
+		    "&graphId=%d&key=%s/&start=%s&end=%s\"></TD></TR>\n",
+		    i, rrdPath, startTime, endTime);
+      sendString(buf);
+    }    
   }
 
   sendString("<TR><TH "DARK_BG">Traffic Counter Detail</TH><TH "DARK_BG">Total</TH></TR>\n");
+
+  directoryPointer = opendir(path);
+
+  if(directoryPointer == NULL) {
+    safe_snprintf(buf, sizeof(buf), "<I> (2) Unable to read directory %s</I>", path);
+    printFlagedWarning(buf);
+    printHTMLtrailer();
+    return;
+  }
 
   while((dp = readdir(directoryPointer)) != NULL) {
     char *rsrcName;
@@ -376,8 +408,8 @@ static void listResource(char *rrdPath, char *rrdTitle,
     float  average;
     int rc, isGauge;
 
-    if(dp->d_name[0] == '.')
-      continue;
+    if(dp->d_name[0] == '.') continue;
+    else if(strncmp(dp->d_name, "NF_", 3) == 0) continue;
     else if(strlen(dp->d_name) < strlen(CONST_RRD_EXTENSION)+3)
       continue;
 
@@ -400,8 +432,9 @@ static void listResource(char *rrdPath, char *rrdTitle,
 
       sendString("<TR><TD>\n");
 
-      safe_snprintf(path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?action=graph&key=%s/&name=%s&title=%s&start=%s&end=%s\"><P>\n",
-	       rrdPath, rsrcName, rsrcName, startTime, endTime);
+      safe_snprintf(path, sizeof(path), "<IMG SRC=\"/plugins/rrdPlugin?"
+		    "action=graph&key=%s/&name=%s&title=%s&start=%s&end=%s\"><P>\n",
+		    rrdPath, rsrcName, rsrcName, startTime, endTime);
       sendString(path);
 
       sendString("</TD><TD ALIGN=RIGHT>\n");
@@ -434,7 +467,8 @@ static void listResource(char *rrdPath, char *rrdTitle,
   }
 
   sendString("</CENTER>");
-  sendString("<br><b>NOTE: total and average values are NOT absolute but calculated on the specified time interval.</b>\n");
+  sendString("<br><b>NOTE: total and average values are NOT absolute but "
+	     "calculated on the specified time interval.</b>\n");
 
   printHTMLtrailer();
 }
@@ -576,6 +610,144 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 #define MAX_NUM_ENTRIES   32
 #define MAX_BUF_LEN       128
 
+void netflowSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
+  char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
+  char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN],
+    buf2[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf3[MAX_NUM_ENTRIES][MAX_BUF_LEN],
+    buf4[MAX_NUM_ENTRIES][MAX_BUF_LEN], buf5[MAX_NUM_ENTRIES][MAX_BUF_LEN];
+  char fname[384], *label;
+  char **rrds = NULL, ipRRDs[MAX_NUM_ENTRIES][MAX_BUF_LEN], *myRRDs[MAX_NUM_ENTRIES];
+  int argc = 0, rc, x, y, i, entryId=0;
+  DIR* directoryPointer;
+
+  path[0] = '\0';
+
+  switch(graphId) {
+  case 0: rrds = (char**)rrd_summary_new_flows; label = "Flows"; break;
+  case 1: rrds = (char**)rrd_summary_new_nf_flows; label = "Flows"; break;
+  case 2: rrds = (char**)rrd_summary_new_nf_flows_size; label = "Bytes"; break;
+  }
+
+  /* startTime[4] skips the 'now-' */
+  safe_snprintf(fname, sizeof(fname), "%s/%s/%s-%s%d%s",
+	  myGlobals.rrdPath, rrd_subdirs[0], 
+	      startTime, rrdPrefix, graphId,
+	      CHART_FORMAT);
+
+#ifdef WIN32
+  revertSlash(fname, 0);
+#endif
+
+  if(rrds == NULL) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printHTMLheader("RRD Graph Summary", NULL, 0);
+    printFlagedWarning("<I>Error while building graph of the requested file "
+		       "(unknown RRD files)</I>");
+    return;
+  }
+
+  rrdGraphicRequests++;
+  argv[argc++] = "rrd_graph";
+  argv[argc++] = fname;
+  argv[argc++] = "--lazy";
+  argv[argc++] = "--imgformat";
+  argv[argc++] = "PNG";
+  argv[argc++] = "--vertical-label";
+  argv[argc++] = label;
+  argv[argc++] = "--start";
+  argv[argc++] = startTime;
+  argv[argc++] = "--end";
+  argv[argc++] = endTime;
+#ifdef CONST_RRD_DEFAULT_FONT_NAME
+  argv[argc++] = "--font";
+#ifdef CONST_RRD_DEFAULT_FONT_PATH
+  argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" \
+    CONST_RRD_DEFAULT_FONT_PATH CONST_RRD_DEFAULT_FONT_NAME;
+#else
+  argv[argc++] = "DEFAULT:" CONST_RRD_DEFAULT_FONT_SIZE ":" CONST_RRD_DEFAULT_FONT_NAME;
+#endif
+#endif
+#ifdef WIN32
+  revertDoubleColumn(path);
+#endif
+
+  for(i=0, entryId=0; rrds[i] != NULL; i++) {
+    struct stat statbuf;
+
+    safe_snprintf(path, sizeof(path), "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrds[i]);
+
+#ifdef WIN32
+    revertSlash(path, 0);
+#endif
+
+    if(stat(path, &statbuf) == 0) {
+      safe_snprintf(buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path); 
+      argv[argc++] = buf[entryId];
+
+      safe_snprintf(buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
+		  entryId, rrd_colors[entryId], &rrds[i][3]); 
+      argv[argc++] = buf1[entryId];
+
+
+      safe_snprintf(buf2[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":AVERAGE:Avg\\: %3.1lf%s");
+      argv[argc++] = buf2[entryId];
+
+      safe_snprintf(buf3[entryId], MAX_BUF_LEN, "GPRINT:ctr%d%s", entryId, ":LAST:Current\\: %3.1lf%s\\n");
+      argv[argc++] = buf3[entryId];
+
+
+      entryId++;
+    }
+
+    if(entryId >= MAX_NUM_ENTRIES) break;
+  }
+
+#if 0
+  printf("\n");
+  for(i=0; i<argc; i++)
+    printf("RRD_DEBUG: [%d][%s]\n", i, argv[i]);
+  printf("\n");
+#endif
+
+#ifdef CFG_MULTITHREADED
+  accessMutex(&rrdMutex, "rrd_graph");
+#endif
+  optind=0; /* reset gnu getopt */
+  opterr=0; /* no error messages */
+
+  fillupArgv(argc, sizeof(argv)/sizeof(char*), argv);
+  rrd_clear_error();
+  addRrdDelay();
+  rc = rrd_graph(argc, argv, &calcpr, &x, &y);
+
+  calfree();
+
+  if(rc == 0) {
+    sendHTTPHeader(FLAG_HTTP_TYPE_PNG, 0, 1);
+    sendGraphFile(fname, 0);
+    unlink(fname);
+  } else {
+#if RRD_DEBUG >= 3
+    for (x = 0; x < argc; x++)
+      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: argv[%d] = %s", x, argv[x]);
+#endif
+
+    sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0, 1);
+    printHTMLheader("RRD Graph Summary", NULL, 0);
+    safe_snprintf(path, sizeof(path),
+		"<I>Error while building graph of the requested file. %s</I>",
+		rrd_get_error());
+    printFlagedWarning(path);
+    rrd_clear_error();
+  }
+
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&rrdMutex);
+#endif
+}
+
+/* ******************************* */
+
 void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, char *rrdPrefix) {
   char path[512], *argv[3*MAX_NUM_ENTRIES], buf[MAX_NUM_ENTRIES][MAX_BUF_LEN];
   char buf1[MAX_NUM_ENTRIES][MAX_BUF_LEN], fname[384], *label;
@@ -584,6 +756,7 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
   DIR* directoryPointer;
 
   path[0] = '\0', label = "";
+
 
   switch(graphId) {
   case 0: rrds = (char**)rrd_summary_packets; label = "Packets/sec"; break;
@@ -682,9 +855,11 @@ void graphSummary(char *rrdPath, int graphId, char *startTime, char* endTime, ch
 #endif
 
     if(stat(path, &statbuf) == 0) {
-      safe_snprintf(buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path); argv[argc++] = buf[entryId];
+      safe_snprintf(buf[entryId], MAX_BUF_LEN, "DEF:ctr%d=%s:counter:AVERAGE", entryId, path); 
+      argv[argc++] = buf[entryId];
       safe_snprintf(buf1[entryId], MAX_BUF_LEN, "%s:ctr%d%s:%s", entryId == 0 ? "AREA" : "STACK",
-		  entryId, rrd_colors[entryId], rrds[i]); argv[argc++] = buf1[entryId];
+		  entryId, rrd_colors[entryId], rrds[i]); 
+      argv[argc++] = buf1[entryId];
       entryId++;
     }
 
@@ -1017,6 +1192,7 @@ void updateCounter(char *hostPath, char *key, Counter value) {
 /* ******************************* */
 
 void updateGauge(char *hostPath, char *key, Counter value) {
+  /* traceEvent(CONST_TRACE_INFO, "RRD: %s = %u", key, (unsigned long)value); */
   updateRRD(hostPath, key, value, 0);
 }
 
@@ -1270,6 +1446,7 @@ static void handleRRDHTTPrequest(char* url) {
 	if(strcmp(key, "action") == 0) {
 	  if(strcmp(value, "graph") == 0)     action = FLAG_RRD_ACTION_GRAPH;
 	  else if(strcmp(value, "graphSummary") == 0) action = FLAG_RRD_ACTION_GRAPH_SUMMARY;
+	  else if(strcmp(value, "netflowSummary") == 0) action = FLAG_RRD_ACTION_NF_SUMMARY;
 	  else if(strcmp(value, "list") == 0) action = FLAG_RRD_ACTION_LIST;
 	} else if(strcmp(key, "key") == 0) {
 	  int len = strlen(value), i;
@@ -1446,6 +1623,9 @@ static void handleRRDHTTPrequest(char* url) {
     return;
   } else if(action == FLAG_RRD_ACTION_GRAPH_SUMMARY) {
     graphSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
+    return;
+  } else if(action == FLAG_RRD_ACTION_NF_SUMMARY) {
+    netflowSummary(rrdKey, graphId, startTime, endTime, rrdPrefix);
     return;
   } else if(action == FLAG_RRD_ACTION_LIST) {
     listResource(rrdKey, rrdTitle, startTime, endTime);
@@ -2137,37 +2317,44 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	updateCounter(rrdPath, "ipBytes",       myGlobals.device[devIdx].ipBytes.value);
 
 	if(myGlobals.device[devIdx].netflowGlobals != NULL) {
-	  updateCounter(rrdPath, "numFlowPkts", myGlobals.device[devIdx].netflowGlobals->numNetFlowsPktsRcvd);
-	  updateCounter(rrdPath, "numFlows", myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd);
-	  updateCounter(rrdPath, "numDiscardedFlows", 
+	  updateCounter(rrdPath, "NF_numFlowPkts", myGlobals.device[devIdx].netflowGlobals->numNetFlowsPktsRcvd);
+	  updateCounter(rrdPath, "NF_numFlows", myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd);
+	  updateCounter(rrdPath, "NF_numDiscardedFlows", 
 			myGlobals.device[devIdx].netflowGlobals->numBadFlowPkts+
 			myGlobals.device[devIdx].netflowGlobals->numBadFlowBytes+
 			myGlobals.device[devIdx].netflowGlobals->numBadFlowReality+
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsV9UnknTemplRcvd);
+	  
+	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd > 0)
+	    updateGauge(rrdPath, "NF_avgTcpNewFlowSize", 
+			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize/
+			myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
 
-	  updateGauge(rrdPath, "averageTcpNetFlowSize", 
-		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsTCPSize/
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
-	  updateGauge(rrdPath, "averageUdpNetFlowSize", 
-		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize/
-		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
-	  updateGauge(rrdPath, "averageIcmpNetFlowSize", 
+	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd > 0)
+	    updateGauge(rrdPath, "NF_avgUdpNewFlowSize", 
+			myGlobals.device[devIdx].netflowGlobals->totalNetFlowsUDPSize/
+			myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
+
+	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd > 0)
+	    updateGauge(rrdPath, "NF_avgICMPNewFlowSize", 
 		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsICMPSize/
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd);
-	  updateGauge(rrdPath, "averageOtherNetFlowSize", 
+
+	  if(myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd > 0)
+	    updateGauge(rrdPath, "NF_avgOtherFlowSize", 
 		      myGlobals.device[devIdx].netflowGlobals->totalNetFlowsOtherSize/
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd);
 
-	  updateGauge(rrdPath, "numTcpNetFlows", 
+	  updateGauge(rrdPath, "NF_newTcpNetFlows", 
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsTCPRcvd);
-	  updateGauge(rrdPath, "numUdpNetFlows", 
+	  updateGauge(rrdPath, "NF_newUdpNetFlows", 
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsUDPRcvd);
-	  updateGauge(rrdPath, "numIcmpNetFlows", 
+	  updateGauge(rrdPath, "NF_newIcmpNetFlows", 
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsICMPRcvd);
-	  updateGauge(rrdPath, "numOtherNetFlows", 
+	  updateGauge(rrdPath, "NF_newOtherNetFlows", 
 		      myGlobals.device[devIdx].netflowGlobals->numNetFlowsOtherRcvd);
 
-	  updateGauge(rrdPath, "numNetFlows", 
+	  updateGauge(rrdPath, "NF_numNetFlows", 
 			myGlobals.device[devIdx].netflowGlobals->numNetFlowsRcvd-
 			myGlobals.device[devIdx].netflowGlobals->lastNumNetFlowsRcvd);
 

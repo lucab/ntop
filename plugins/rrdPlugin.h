@@ -35,6 +35,7 @@
 #define FLAG_RRD_ACTION_GRAPH               1
 #define FLAG_RRD_ACTION_LIST                2
 #define FLAG_RRD_ACTION_GRAPH_SUMMARY       3
+#define FLAG_RRD_ACTION_NF_SUMMARY          4
 
 #define CONST_RRD_PERMISSIONS_PRIVATE       0
 #define CONST_RRD_PERMISSIONS_GROUP         1
@@ -120,6 +121,28 @@ static const char *rrd_summary_packets[] = {
   "broadcastPkts",
   "multicastPkts",
   "badChecksumPkts",
+  NULL
+};
+
+static const char *rrd_summary_new_flows[] = { 
+  "NF_numFlows",
+  "NF_numDiscardedFlows",
+  NULL
+};
+
+static const char *rrd_summary_new_nf_flows[] = { 
+  "NF_newTcpNetFlows",
+  "NF_newUdpNetFlows",
+  "NF_newIcmpNetFlows",
+  "NF_newOtherNetFlows",
+  NULL
+};
+
+static const char *rrd_summary_new_nf_flows_size[] = { 
+  "NF_avgTcpNewFlowSize",
+  "NF_avgUdpNewFlowSize",
+  "NF_avgICMPNewFlowSize",
+  "NF_avgOtherNewFlowSize",
   NULL
 };
 
