@@ -4690,76 +4690,6 @@ FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId
  * even slightly understandable...
  */
 
-void displayPrivacyNotice(void) {
-        if(myGlobals.firstVersionCheckDone == FALSE) {
-          myGlobals.firstVersionCheckDone = TRUE;
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: **********************PRIVACY**NOTICE**********************");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * ntop instances may record individually identifiable     *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * information on a remote system as part of the version   *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * check.                                                  *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: *                                                         *");
-          if(myGlobals.skipVersionCheck == TRUE) {
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * You have requested - via the --skip-version-check       *");
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * option that this check be skipped and so no             *");
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * individually identifiable information will be recorded. *");
-          } else {
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * You may request - via the --skip-version-check option   *");
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * that this check be skipped and that no individually     *");
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * identifiable information be recorded.                   *");
-          }
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: *                                                         *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * In general, we ask you to permit this check because it  *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * benefits both the users and developers of ntop.         *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: *                                                         *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * Review the man ntop page for more information.          *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: *                                                         *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: **********************PRIVACY**NOTICE**********************");
-
-#ifdef CHKVER_DEBUG
-/* This is here so it's only executed ONCE... */
-          #define cNV2N(a, b) traceEvent(CONST_TRACE_INFO, /
-                                         "CHKVER_DEBUG: cNV2N %-10s -> %10u expected %10u", /
-                                         a, convertNtopVersionToNumber(a), b)
-          cNV2N("1.3",    103000000);
-          cNV2N("2.1",    201000000);
-          cNV2N("2.1.1",  201000001);
-          cNV2N("2.1.2",  201000002);
-          cNV2N("2.1.3",  201000003);
-          cNV2N("2.1.50", 201050000);
-          cNV2N("2.1.90", 201090000);
-          cNV2N("2.2",    202000000);
-          cNV2N("2.2a",   202000100);
-          cNV2N("2.2b",   202000200);
-          cNV2N("2.2c",   202000300);
-          cNV2N("2.2.50", 202050000);
-          cNV2N("2.2.90", 202090000);
-          cNV2N("3.0pre1",299998001);
-          cNV2N("3.0rc1", 299999001);
-          cNV2N("3.0rc2", 299999002);
-          cNV2N("3.0",    300000000);
-#endif
-
-        }
-}
-
 unsigned int convertNtopVersionToNumber(char *versionString) {
   /* This one is purely an arbitrary conversion.
    *
@@ -4826,7 +4756,79 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
       y=x;
       x=0;
     }
+#ifdef CHKVER_DEBUG
+    traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: %s is n%d m%d y%d l%d x%d prerc%d f=%d",
+               versionString, n, m, y, l, x, prerc, f);
+#endif
     return n*100000000 + m*1000000 + y*1000 + l*100 + x - 1000*prerc;
+}
+
+void displayPrivacyNotice(void) {
+        if(myGlobals.firstVersionCheckDone == FALSE) {
+          myGlobals.firstVersionCheckDone = TRUE;
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: **********************PRIVACY**NOTICE**********************");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * ntop instances may record individually identifiable     *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * information on a remote system as part of the version   *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * check.                                                  *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: *                                                         *");
+          if(myGlobals.skipVersionCheck == TRUE) {
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * You have requested - via the --skip-version-check       *");
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * option that this check be skipped and so no             *");
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * individually identifiable information will be recorded. *");
+          } else {
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * You may request - via the --skip-version-check option   *");
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * that this check be skipped and that no individually     *");
+            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * identifiable information be recorded.                   *");
+          }
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: *                                                         *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * In general, we ask you to permit this check because it  *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * benefits both the users and developers of ntop.         *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: *                                                         *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: * Review the man ntop page for more information.          *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: *                                                         *");
+          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+                     "CHKVER: **********************PRIVACY**NOTICE**********************");
+
+#ifdef CHKVER_DEBUG
+// This is here so it's only executed ONCE...
+          #define cNV2N(a, b) traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: cNV2N %-10s -> %10u expected %10u", a, convertNtopVersionToNumber(a), b)
+          cNV2N("1.3",    103000000);
+          cNV2N("2.1",    201000000);
+          cNV2N("2.1.1",  201000001);
+          cNV2N("2.1.2",  201000002);
+          cNV2N("2.1.3",  201000003);
+          cNV2N("2.1.50", 201050000);
+          cNV2N("2.1.90", 201090000);
+          cNV2N("2.2",    202000000);
+          cNV2N("2.2a",   202000100);
+          cNV2N("2.2b",   202000200);
+          cNV2N("2.2c",   202000300);
+          cNV2N("2.2.50", 202050000);
+          cNV2N("2.2.90", 202090000);
+          cNV2N("3.0pre1",299998001);
+          cNV2N("3.0rc1", 299999001);
+          cNV2N("3.0rc2", 299999002);
+          cNV2N("3.0",    300000000);
+#endif
+
+        }
 }
 
 /* Externally exposed function to turn the code into words... */
