@@ -422,7 +422,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 	  sprintf(symIp, "%s%s", vendorInfo, &linkName[8]);
 	}
       }
-    }
+    }    
   }
 
   if(addCountryFlag == 0)
@@ -472,19 +472,23 @@ char* makeHostLink(HostTraffic *el, short mode,
     if(linkName[i] == ':')
       linkName[i] = '_';
 
+  if(strstr(symIp, ":"))
+    usedEthAddress = 1;
+
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
-		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s</TH>%s",
-		linkName, "" /*makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec))*/, symIp, 
-		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)), dynIp, multihomed, gwStr, dnsStr,
-		printStr, smtpStr, healthStr, userStr, p2p,
-		flag) < 0)
+		"<A HREF=\"/%s.html\" %s>%s</A> %s%s%s%s%s%s%s%s%s%s%s</TH>%s",
+		linkName, "", symIp, 
+		getOSFlag(el, NULL, 0, osBuf, sizeof(osBuf)), dynIp, multihomed, 
+		usedEthAddress ? "<IMG SRC=/card.gif BORDER=0>" : "", 
+		gwStr, dnsStr, printStr, smtpStr, healthStr, userStr, p2p, flag) < 0)
       BufferTooShort();
   } else {
     if(snprintf(buf[bufIdx], 2*LEN_GENERAL_WORK_BUFFER, "<A HREF=\"/%s.html\" %s NOWRAP>%s</A>"
-		"%s%s%s%s%s%s%s%s%s%s",
+		"%s%s%s%s%s%s%s%s%s%s%s",
 		linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), symIp, 
-		multihomed, gwStr, dnsStr,
+		multihomed, 
+		usedEthAddress ? "<IMG SRC=/card.gif BORDER=0>" : "", gwStr, dnsStr,
 		printStr, smtpStr, healthStr, userStr, p2p,
 		dynIp, flag) < 0)
       BufferTooShort();    

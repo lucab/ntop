@@ -962,7 +962,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       } else {
 	/* el->hostNumIpAddress == "" */
 	if(symEthName[0] != '\0') {
-	  if(snprintf(buf, sizeof(buf), "%s%s <IMG SRC=/card.gif BORDER=0>", symEthName, &el->ethAddressString[8]) < 0)
+	  if(snprintf(buf, sizeof(buf), "%s%s", symEthName, &el->ethAddressString[8]) < 0)
 	    BufferTooShort();
 
 	  buf[MAX_LEN_SYM_HOST_NAME-1] = '\0';

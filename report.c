@@ -1497,26 +1497,26 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	    }
 	  }
 
+	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor()) < 0)
+	    BufferTooShort();
+	  sendString(buf);
+
+	  sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1));
+	  
 	  if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
-	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
-			"%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			getRowColor(),
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1),
 			tmpName1, tmpName3) < 0)
 	      BufferTooShort();
 	  } else {
-	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
-			"%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			getRowColor(),
-			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1),
+	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			tmpName1) < 0)
 	      BufferTooShort();
 	  }
 	  sendString(buf);
 
 	  sendString("<TD "TD_BG" ALIGN=RIGHT NOWRAP>");
-
+	  
 	  if(el->nonIPTraffic && displaySniffedName) {
 	    short numAddresses = 0;
 
