@@ -241,7 +241,19 @@ case `uname -s` in
     fi
     distro=`uname -s`
     release=`uname -r`
-    kernel=`uname -i`
+    kernel=`uname -i 2> /dev/null`
+    rc=$?
+    if test "x${rc}" != "x0"; then
+        fullkernel=`uname -v | awk '{ print $NF }'`
+        kernel=`echo ${fullkernel} | \
+                awk '{ i=index($0, "/"); \
+                       while(i>0) { \
+                           $0 = substr($0, i+1); \
+                           i=index($0, "/"); \
+                       }; \
+                       print $0 }'`
+    fi
+
     fullrelease="${distro} ${release}"
     lsbrelease="Not Linux - not LSB compliant"
     unitedrelease="Not Linux - not UnitedLinux compliant"
@@ -291,4 +303,3 @@ case "${1}" in
     echo ${distro} ${release} ${kernel}
     ;;
 esac
-
