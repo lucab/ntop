@@ -1,0 +1,48 @@
+#!/bin/sh
+
+echo "        Setting HP-UX specific flag values"
+
+
+. configureextra/functions
+
+# Test for plugin load function unique to HPUX
+test_library dld     shl_load
+
+# Test for thread function unique to HPUX
+test_library pthread __pthread_create_system
+
+test_library posix4  sem_init
+if (! test $ce_status); then
+    test_library rt sem_init
+fi
+
+case "${target}" in
+    *-*-hpux10* )
+        NOTE1="If it works at all, it works Single Threaded only."
+        if test ".${ac_disable_multithread}" = ".yes"; then
+            STATUS="UNTESTED"
+        else
+            STATUS="WILLFAIL"
+        fi
+     ;;
+esac
+
+echo
+echo "*******************************************************************"
+echo "*"
+echo "* WARNING:    ntop does not presently offer any support for HP-UX"
+echo "*"
+echo "*             None of ntop's authors have access to any HP-UX"
+echo "*             platform(s) so this is not expected to change."
+echo "*"
+echo "*             These settings are taken from old ntop versions"
+echo "*             are are here to serve as a basis for providing"
+echo "*             HP-UX support if somebody wanted to attempt the"
+echo "*             work."
+echo "*"
+echo "*>>> Continuing, but you have been warned"
+echo "*"
+echo "*******************************************************************"
+echo
+
+HAS_WARNING="yes"

@@ -1,0 +1,99 @@
+#!/bin/sh
+
+# We can't use the AC_ macros here 
+# (no expansion is provided, these are shell scripts, remember?)
+
+# But, we don't usually test the results of the expansion either...
+
+# So we have a function which is an abreviated version of the expansion
+# that would occur if we did this in configure.in 
+
+# Invoke: test_library(-lname, functionname)
+
+function test_library()
+{
+
+    ce_status=0
+
+    # In case this isn't from ./configure, set the key items to 'reasonable'
+    # defaults
+
+    if test ".$CC" = "."; then
+      CC=gcc
+    fi
+    if test ".$ac_ext" = "."; then
+      ac_ext=c
+    fi
+    if test ".$ac_objext" = "."; then
+      ac_objext=o
+    fi
+    if test ".$ac_exeext" = "."; then
+      ac_exeext=
+    fi
+    if test ".$ac_link" = "."; then
+      ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS'
+    fi
+    
+    echo ""
+    echo -n "checking for $2 in -l$1..."
+    ac_check_lib_save_LIBS=$LIBS
+    LIBS="-l$1  $LIBS"
+    
+    cat >conftest.$ac_ext <<_ACEOF
+// Test program from configureextra/HPUX
+    
+/* begin confdefs.h.  */
+_ACEOF
+    
+    if test -f confdefs.h; then 
+        cat confdefs.h >>conftest.$ac_ext
+    fi
+    
+    cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char $2 ();
+int
+main ()
+{
+$2 ();
+  ;
+  return 0;
+}
+_ACEOF
+    rm -f conftest.$ac_objext conftest$ac_exeext conftest.msg
+    eval $ac_link 2> conftest.msg
+    ce_status=$?
+    if (! test $ce_status); then
+      ac_try='test -s conftest$ac_exeext'
+      eval $ac_try
+      ce_status=$?
+    fi
+    if (! test $ce_status); then
+      echo "ok"
+      ac_cv_lib_dld_shl_load=yes
+      cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBDLD 1
+_ACEOF
+    
+    else
+      echo "failed, message(s) are:"
+      echo ""
+      cat conftest.msg
+      echo ""
+      if test ".${ac_debug}" = ".yes"; then
+          echo "test program was:"
+          echo ""
+          sed 's/^/| /' conftest.$ac_ext
+          echo ""
+      fi
+      ac_cv_lib_dld_shl_load=no
+      LIBS=$ac_check_lib_save_LIBS
+    fi
+    
+    rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext conftest.msg
+    
+    echo ""
+}

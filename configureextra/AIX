@@ -1,0 +1,27 @@
+#!/bin/sh
+
+echo "        Setting IBM AIX specific flag values"
+
+GCCLIB=`gcc -print-libgcc-file-name
+cp -f $GCCLIB .
+LDFLAGS="-L. -lgcc ${LDFLAGS}"
+CCLD="cc -bI:/lib/pse.exp"
+
+echo
+echo "*******************************************************************"
+echo "*"
+echo "* WARNING:    ntop does not presently offer any support for AIX"
+echo "*"
+echo "*             None of ntop's authors have access to any AIX"
+echo "*             platform(s) so this is not expected to change"
+echo "*"
+echo "*             These settings are taken from old ntop versions"
+echo "*             are are here to serve as a basis for providing"
+echo "*             AIX support if somebody wanted to attempt the"
+echo "*             work."
+echo "*"
+echo "*>>> Continuing, but you have been warned"
+echo "*"
+echo "*******************************************************************"
+echo
+

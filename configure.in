@@ -54,7 +54,7 @@ AC_INIT([ntop],[2.2.91])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.91.109-2003-08-14"
+SCRIPTVER="v2.2.91.110-2003-08-16"
 
 dnl>
 dnl> generate the config header
@@ -1013,36 +1013,21 @@ case "${target}:${CC}" in
         AC_CHECK_LIB(rt, sem_init)
       ;;
 
-    *-*-aix5l*:gcc* )
-        NOTE1="Guessing that AIX5L is like Linux."
-        DEFINEOS="AIX";       STATUS="UNTESTED"
-      ;;
-
-    *-*-aix[[45]]*:gcc* )
-        NOTE1="Trying configuration stuff from ntop 1.3 for AIX 4.1/4.2."
-        DEFINEOS="AIX";       STATUS="UNTESTED"
-
-        dnl> These are so pervasive, they MUST be here...
-        GCCLIB=`gcc -print-libgcc-file-name`
-        cp $GCCLIB .
-        LDFLAGS="-L. -lgcc ${LDFLAGS}"
-        CCLD="cc -bI:/lib/pse.exp"
-        AC_DEFINE_UNQUOTED(CFG_NEED_GETDOMAINNAME,
-                           1,
-                           [OS lacks getdomainname function.])
-
-        dnl> plugin load function unique to AIX
-        dnl> TODO (note that c is probably the WRONG library
-        AC_CHECK_LIB([c], [open])
-      ;;
-
-    *-*-aix4*:* )
-        REMEDIATE1="Install gcc."
-        DEFINEOS="AIX";       STATUS="WILLFAIL"
-      ;;
-
     *-*-aix*:* )
         DEFINEOS="AIX";       STATUS="UNTESTED"
+
+        NOTE1="Unsupported/untested, but trying configuration stuff from ntop 1.3."
+
+        case "${target}:${CC}" in
+            *-*-aix[[45]]*:gcc* )
+                AC_DEFINE_UNQUOTED(CFG_NEED_GETDOMAINNAME,
+                                   1,
+                                   [OS lacks getdomainname function.])
+
+                dnl> plugin load function unique to AIX
+                AC_CHECK_LIB([c], [open])
+              ;;
+        esac
       ;;
 
     * )

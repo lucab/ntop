@@ -1339,7 +1339,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v2.2.91.109-2003-08-14"
+SCRIPTVER="v2.2.91.110-2003-08-16"
 
 umask 002
 # Add the stamp file to the list of files AC keeps track of,
@@ -6686,19 +6686,13 @@ fi
 
       ;;
 
-    *-*-aix5l*:gcc* )
-        NOTE1="Guessing that AIX5L is like Linux."
-        DEFINEOS="AIX";       STATUS="UNTESTED"
-      ;;
-
-    *-*-aix[45]*:gcc* )
-        NOTE1="Trying configuration stuff from ntop 1.3 for AIX 4.1/4.2."
+    *-*-aix*:* )
         DEFINEOS="AIX";       STATUS="UNTESTED"
 
-                GCCLIB=`gcc -print-libgcc-file-name`
-        cp $GCCLIB .
-        LDFLAGS="-L. -lgcc ${LDFLAGS}"
-        CCLD="cc -bI:/lib/pse.exp"
+        NOTE1="Unsupported/untested, but trying configuration stuff from ntop 1.3."
+
+        case "${target}:${CC}" in
+            *-*-aix[45]*:gcc* )
 
 cat >>confdefs.h <<_ACEOF
 #define CFG_NEED_GETDOMAINNAME 1
@@ -6769,15 +6763,8 @@ _ACEOF
 
 fi
 
-      ;;
-
-    *-*-aix4*:* )
-        REMEDIATE1="Install gcc."
-        DEFINEOS="AIX";       STATUS="WILLFAIL"
-      ;;
-
-    *-*-aix*:* )
-        DEFINEOS="AIX";       STATUS="UNTESTED"
+              ;;
+        esac
       ;;
 
     * )
