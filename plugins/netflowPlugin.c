@@ -29,6 +29,13 @@ static int threadActive;
 static PthreadMutex whiteblackListMutex;
 #endif
 
+#ifdef HAVE_FILEDESCRIPTORBUG
+static int tempNFFilesCreated=0;
+static int  tempNFF[CONST_FILEDESCRIPTORBUG_COUNT],
+            tempNFFpid;
+static char tempNFFname[CONST_FILEDESCRIPTORBUG_COUNT][LEN_MEDIUM_WORK_BUFFER];
+#endif
+
 /* #define DEBUG_FLOWS  */
 
 static ProbeInfo probeList[MAX_NUM_PROBES];
@@ -46,13 +53,82 @@ static u_int32_t flowIgnoredLowPort, flowIgnoredHighPort, flowAssumedFtpData;
 static Counter flowIgnoredLowPortBytes, flowIgnoredHighPortBytes, flowAssumedFtpDataBytes;
 
 /* Forward */
-static void setNetFlowInSocket();
-static void setNetFlowOutSocket();
+static int setNetFlowInSocket();
+static int setNetFlowOutSocket();
 static void setNetFlowInterfaceMatrix();
 static void freeNetFlowMatrixMemory();
 static void setPluginStatus(char * status);
 static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport,
 		       u_int dstAddr, u_short dport, Counter len);
+
+/* ****************************** */
+
+#ifdef HAVE_FILEDESCRIPTORBUG
+
+  /* Burton - Aug2003
+   *   Work-around for file descriptor bug (FreeBSD PR51535 et al)
+   *   - burn some file descriptors so the socket() call doesn't get a dirty one.
+   *   - it's not pretty, but it works...
+   */
+
+void wasteFileDescriptors(void) {
+  int i;
+
+  if(tempNFFilesCreated == 0) {
+    tempNFFilesCreated = 1;
+    tempNFFpid=getpid();
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: FILEDESCRIPTORBUG: Work-around activated");
+    for(i=0; i<CONST_FILEDESCRIPTORBUG_COUNT; i++) {
+      tempNFF[i]=0;
+      memset(&tempNFFname[i], 0, LEN_MEDIUM_WORK_BUFFER);
+
+      if(snprintf(tempNFFname[i], LEN_MEDIUM_WORK_BUFFER, "/tmp/ntop-nf-%09u-%d", tempNFFpid, i) < 0)
+        BufferTooShort();
+      traceEvent(CONST_TRACE_NOISY, "NETFLOW: FILEDESCRIPTORBUG: Creating %d, '%s'", i, tempNFFname[i]);
+      errno = 0;
+      tempNFF[i]=open(tempNFFname[i], O_CREAT|O_TRUNC|O_RDWR);
+      if(errno != 0) {
+        traceEvent(CONST_TRACE_ERROR,
+                   "NETFLOW: FILEDESCRIPTORBUG: Unable to create file - may cause problems later - '%s'(%d)",
+                   strerror(errno), errno);
+      } else {
+        traceEvent(CONST_TRACE_NOISY,
+                   "NETFLOW: FILEDESCRIPTORBUG: Created file %d - '%s'(%d)",
+                   i, tempNFFname[i], tempNFF[i]);
+      }
+    }
+  }
+}
+
+void unwasteFileDescriptors(void) {
+  int i;
+
+  /* Close and delete the temporary - junk - files */
+  traceEvent(CONST_TRACE_INFO, "NETFLOW: FILEDESCRIPTORBUG: Bug work-around cleanup");
+  for(i=CONST_FILEDESCRIPTORBUG_COUNT-1; i>=0; i--) {
+    if(tempNFF[i] >= 0) {
+      traceEvent(CONST_TRACE_NOISY, "NETFLOW: FILEDESCRIPTORBUG: Removing %d, '%s'(%d)", i, tempNFFname[i], tempNFF[i]);
+      if(close(tempNFF[i])) {
+        traceEvent(CONST_TRACE_ERROR,
+                   "NETFLOW: FILEDESCRIPTORBUG: Unable to close file %d - '%s'(%d)",
+                   i,
+                   strerror(errno), errno);
+      } else {
+        if(unlink(tempNFFname[i]))
+          traceEvent(CONST_TRACE_ERROR,
+                     "NETFLOW: FILEDESCRIPTORBUG: Unable to delete file '%s' - '%s'(%d)",
+                     tempNFFname[i],
+                     strerror(errno), errno);
+        else
+          traceEvent(CONST_TRACE_NOISY,
+                     "NETFLOW: FILEDESCRIPTORBUG: Removed file '%s'",
+                     tempNFFname[i]);
+      }
+    }
+  }
+}
+
+#endif
 
 /* ****************************** */
 
@@ -102,7 +178,7 @@ static void setNetFlowInterfaceMatrix() {
 
 /* ************************************** */
 
-static void setNetFlowInSocket() {
+static int setNetFlowInSocket() {
   struct sockaddr_in sockIn;
   int sockopt = 1, i;
 
@@ -112,7 +188,17 @@ static void setNetFlowInSocket() {
   }
 
   if(myGlobals.netFlowInPort > 0) {
+    errno = 0;
     myGlobals.netFlowInSocket = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if((myGlobals.netFlowInSocket <= 0) || (errno != 0) ) {
+      traceEvent(CONST_TRACE_INFO, "NETFLOW: Unable to create a socket - returned %d, error is '%s'(%d)",
+                myGlobals.netFlowInSocket, strerror(errno), errno);
+      setPluginStatus("Disabled - Unable to create listening socket.");
+      return(-1);
+    }
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: Created a socket (%d)", myGlobals.netFlowInSocket);
+
 
     setsockopt(myGlobals.netFlowInSocket, SOL_SOCKET, SO_REUSEADDR,(char *)&sockopt, sizeof(sockopt));
 
@@ -125,7 +211,7 @@ static void setNetFlowInSocket() {
 		 myGlobals.netFlowInPort);
       closeNwSocket(&myGlobals.netFlowInSocket);
       myGlobals.netFlowInSocket = 0;
-      return;
+      return(0);
     }
 
     traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Collector listening on port %d",
@@ -143,7 +229,7 @@ static void setNetFlowInSocket() {
       if(myGlobals.device[myGlobals.netFlowDeviceId].dummyDevice == 1) {
         if(myGlobals.device[myGlobals.netFlowDeviceId].activeDevice == 1) {
           traceEvent(CONST_TRACE_ERROR, NETFLOW_DEVICE_NAME " is already active - request ignored");
-          return;
+          return(0);
         }
         traceEvent(CONST_TRACE_INFO,
                    NETFLOW_DEVICE_NAME " reusing existing device, %d",
@@ -158,16 +244,27 @@ static void setNetFlowInSocket() {
   }
 
   myGlobals.mergeInterfaces = 0; /* Use different devices */
+
+  return(0);
 }
 
 /* *************************** */
 
-static void setNetFlowOutSocket() {
+static int setNetFlowOutSocket() {
   if(myGlobals.netFlowOutSocket <= 0) {
     char value[256];
     int sockopt = 1;
 
     myGlobals.netFlowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if((myGlobals.netFlowOutSocket <= 0) || (errno != 0) ) {
+      traceEvent(CONST_TRACE_INFO, "NETFLOW: Unable to create a socket - returned %d, error is '%s'(%d)",
+                myGlobals.netFlowOutSocket, strerror(errno), errno);
+      setPluginStatus("Disabled - Unable to create sending socket.");
+      return(-1);
+    }
+    traceEvent(CONST_TRACE_INFO, "NETFLOW: Created a socket (%d)", myGlobals.netFlowOutSocket);
+
     setsockopt(myGlobals.netFlowOutSocket, SOL_SOCKET, SO_REUSEADDR,
 	      (char *)&sockopt, sizeof(sockopt));
 
@@ -881,8 +978,12 @@ static int initNetFlowFunct(void) {
 #endif
   traceEvent(CONST_TRACE_INFO, "NETFLOW: Black list initialized to '%s'", myGlobals.netFlowBlackList);
 
-  setNetFlowInSocket();
-  setNetFlowOutSocket();
+#ifdef HAVE_FILEDESCRIPTORBUG
+  wasteFileDescriptors();
+#endif
+ 
+  if(setNetFlowInSocket() != 0)  return(-1);
+  if(setNetFlowOutSocket() != 0) return(-1);
 
   if(fetchPrefsValue("netFlow.debug", value, sizeof(value)) == -1) {
     storePrefsValue("netFlow.debug", "0");
@@ -1600,6 +1701,10 @@ static void termNetflowFunct(void) {
     myGlobals.device[myGlobals.netFlowDeviceId].activeDevice = 0;
   }
 
+#ifdef HAVE_FILEDESCRIPTORBUG
+  unwasteFileDescriptors();
+#endif
+ 
   traceEvent(CONST_TRACE_INFO, "NETFLOW: Thanks for using ntop NetFlow");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Done");
   fflush(stdout);
