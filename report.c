@@ -336,6 +336,10 @@ void printTrafficStatistics(void) {
         sendString(buf);
       }
 
+      /* The lines below need to be rewritten as the pcap_stats() function
+	 does not return cumulative values hence the ps_drop value is not
+	 valid
+      /*
       if((pcapStat.ps_recv-pcapStat.ps_drop) != 
          myGlobals.device[myGlobals.actualReportDeviceId].receivedPkts.value) {
         if(snprintf(buf, sizeof(buf),
@@ -350,6 +354,7 @@ void printTrafficStatistics(void) {
           BufferTooShort();
         sendString(buf);
       }
+      */
     }
 
     if(snprintf(buf, sizeof(buf),

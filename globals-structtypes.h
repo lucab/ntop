@@ -1319,28 +1319,6 @@ typedef struct flow_ver9_templateids {
   char      *templateDescr;
 } V9TemplateId;
 
-
-struct flow_ver9_flowset257 {
-  u_int32_t Last;       /* and of last packet of the flow */
-  u_int32_t First;      /* SysUptime at start of flow */
-  u_int32_t dOctets;    /* Octets sent in Duration (milliseconds between 1st & last packet in  this flow)*/
-  u_int32_t dPkts;      /* Packets sent in Duration (milliseconds between 1st & last packet in this flow)*/
-  u_int16_t input;      /* Input interface index */
-  u_int16_t output;     /* Output interface index */
-  u_int32_t srcaddr;    /* Source IP Address */
-  u_int32_t dstaddr;    /* Destination IP Address */
-  u_int8_t prot;        /* IP protocol, e.g., 6=TCP, 17=UDP, etc... */
-  u_int8_t tos;         /* IP Type-of-Service */
-  u_int16_t srcport;    /* TCP/UDP source port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  u_int16_t dstport;    /* TCP/UDP destination port number (.e.g, FTP, Telnet, etc.,or equivalent) */
-  u_int32_t nexthop;    /* Next hop router's IP Address */
-  u_int8_t dst_mask;    /* destination route's mask bits */
-  u_int8_t src_mask;    /* source route's mask bits */
-  u_int8_t tcp_flags;   /* Cumulative OR of tcp flags */
-  u_int16_t dst_as;     /* dst peer/origin Autonomous System */
-  u_int16_t src_as;     /* source peer/origin Autonomous System */
-};
-
 /* ******** Token Ring ************ */
 
 #if defined(WIN32) && !defined (__GNUC__)
@@ -1930,12 +1908,14 @@ typedef struct ntopGlobals {
   AggregationType netFlowAggregation;
   int netFlowInSocket, netFlowDeviceId;
   u_short netFlowInPort;
-  u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsRcvd, numNetFlowsProcessed;
+  u_long numNetFlowsPktsRcvd, numNetFlowsPktsSent, numNetFlowsV5Rcvd;
+  u_long numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed;
   u_long numBadNetFlowsVersionsRcvd, numBadFlowPkts, numBadFlowBytes, numBadFlowReality;
   u_long numSrcNetFlowsEntryFailedBlackList, numSrcNetFlowsEntryFailedWhiteList,
     numSrcNetFlowsEntryAccepted,
     numDstNetFlowsEntryFailedBlackList, numDstNetFlowsEntryFailedWhiteList,
     numDstNetFlowsEntryAccepted;
+  u_long numNetFlowsV9TemplRcvd, numNetFlowsV9BadTemplRcvd, numNetFlowsV9UnknTemplRcvd;
 
   /* sFlow */
   int sflowOutSocket, sflowInSocket, sflowDeviceId;

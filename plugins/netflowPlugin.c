@@ -49,6 +49,17 @@ static u_short nextFlowIgnored;
 static HostTraffic *dummyHost;
 static u_int dummyHostIdx;
 
+/* ********************************* */
+
+typedef struct flowSetV9 {
+  V9Template templateInfo;
+  V9TemplateField *fields;
+  struct flowSetV9 *next;
+} FlowSetV9;
+static FlowSetV9 *templates = NULL;
+
+/* ********************************* */
+
 static u_int32_t flowIgnoredLowPort, flowIgnoredHighPort, flowAssumedFtpData;
 static Counter flowIgnoredLowPortBytes, flowIgnoredHighPortBytes, flowAssumedFtpDataBytes;
 
@@ -324,8 +335,6 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
   u_short sport, dport, proto;
   TrafficCounter ctr;
   int skipSRC=0, skipDST=0;
-
-  myGlobals.numNetFlowsRcvd++;
 
   numPkts  = ntohl(record->dPkts);
   len      =(Counter)ntohl(record->dOctets);
@@ -723,25 +732,97 @@ static void dissectFlow(char *buffer, int bufferLen) {
       /* 1st byte */
       switch(buffer[displ]) {
       case 0:
-#ifdef DEBUG
-	printf("Found FlowTemplate\n");
+	/* Template */
+#ifdef DEBUG_FLOWS
+	traceEvent(CONST_TRACE_INFO, "Found Template [displ=%d]", displ);
 #endif
 
+	myGlobals.numNetFlowsV9TemplRcvd++;
+
 	if(bufferLen > (displ+sizeof(V9Template))) {
+	  FlowSetV9 *cursor = templates;
+	  u_char found = 0;
+	  u_short len = sizeof(V9Template);
+	  int fieldId;
+
 	  memcpy(&template, &buffer[displ], sizeof(V9Template));
+
+	  template.templateId = ntohs(template.templateId);
+	  template.fieldCount = ntohs(template.fieldCount);
+	  template.flowsetLen = ntohs(template.flowsetLen);
+
+#ifdef DEBUG_FLOWS
+	  traceEvent(CONST_TRACE_INFO, "Template [id=%d] fields: %d",
+		     template.templateId, template.fieldCount);
+#endif
+
+	  /* Check the template before to handle it */
+	  for(fieldId=0; (fieldId<template.fieldCount)
+		&& (len < template.flowsetLen); fieldId++) {
+	    V9FlowSet *set = (V9FlowSet*)&buffer[displ+sizeof(V9Template)+fieldId*sizeof(V9FlowSet)];
+
+	    len += htons(set->flowsetLen);
+#ifdef DEBUG_FLOWS
+	    traceEvent(CONST_TRACE_INFO, "[%d] fieldLen=%d/len=%d",
+		       1+fieldId, htons(set->flowsetLen), len);
+#endif
+	  }
+
+	  if(len > template.flowsetLen) {
+	    traceEvent(CONST_TRACE_WARNING, "Template %d has wrong size [actual=%d/expected=%d]: skipped",
+		       template.templateId, len, template.flowsetLen);
+	    myGlobals.numNetFlowsV9BadTemplRcvd++;
+	  } else {
+	    while(cursor != NULL) {
+	      if(cursor->templateInfo.templateId == template.templateId) {
+		found = 1;
+		break;
+	      } else
+		cursor = cursor->next;
+	    }
+
+	    if(found) {
+#ifdef DEBUG_FLOWS
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Redefined existing template [id=%d]\n", template.templateId);
+#endif
+
+	      free(cursor->fields);
+	    } else {
+#ifdef DEBUG_FLOWS
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Found new flow template definition [id=%d]\n", template.templateId);
+#endif
+
+	      cursor = (FlowSetV9*)malloc(sizeof(FlowSetV9));
+	      cursor->next = templates;
+	      templates = cursor;
+	    }
+
+	    memcpy(&cursor->templateInfo, &buffer[displ], sizeof(V9Template));
+	    cursor->templateInfo.flowsetLen = ntohs(cursor->templateInfo.flowsetLen);
+	    cursor->templateInfo.templateId = ntohs(cursor->templateInfo.templateId);
+	    cursor->templateInfo.fieldCount = ntohs(cursor->templateInfo.fieldCount);
+	    cursor->fields = (V9TemplateField*)malloc(cursor->templateInfo.flowsetLen-sizeof(V9Template));
+	    memcpy(cursor->fields, &buffer[displ+sizeof(V9Template)], cursor->templateInfo.flowsetLen-sizeof(V9Template));
+	  }
+
 	  /* Skip template definition */
-	  displ += sizeof(template.flowsetLen);
-	} else
+	  displ += template.flowsetLen;
+	} else {
 	  done = 1;
+	  myGlobals.numNetFlowsV9BadTemplRcvd++;
+	}
 	break;
       case 1:
-#ifdef DEBUG
-	printf("Found FlowRecord\n");
+#ifdef DEBUG_FLOWS
+	traceEvent(CONST_TRACE_INFO, "Found FlowSet [displ=%d]", displ);
 #endif
 	foundRecord = 1;
 	break;
       default:
-	myGlobals.numBadNetFlowsVersionsRcvd++;
+#ifdef DEBUG_FLOWS
+	traceEvent(CONST_TRACE_INFO, ">>>>> Received bad flow");
+#endif
+	myGlobals.numBadFlowPkts++;
 	break;
       }
 
@@ -749,58 +830,106 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	V9FlowSet fs;
 
 	if(bufferLen > (displ+sizeof(V9FlowSet))) {
-	  memcpy(&fs, &buffer[sizeof(V9FlowHeader)], sizeof(V9FlowSet));
+	  FlowSetV9 *cursor = templates;
+	  u_char found = 0;
+
+	  memcpy(&fs, &buffer[displ], sizeof(V9FlowSet));
 
 	  fs.flowsetLen = ntohs(fs.flowsetLen);
 	  fs.templateId = ntohs(fs.templateId);
 
-	  switch(fs.templateId) {
-	    /* case 256: */
-	  case 257: /* Default Cisco Template */
-	    if(1 || (((fs.flowsetLen-sizeof(V9FlowSet)) % sizeof(struct flow_ver9_flowset257)) == 0)) {
-	      struct flow_ver9_flowset257 flow;
-	      struct flow_ver5_rec record;
+	  while(cursor != NULL) {
+	    if(cursor->templateInfo.templateId == fs.templateId) {
+	      break;
+	    } else
+	      cursor = cursor->next;
+	  }
 
-	      displ += sizeof(V9FlowSet);
+	  myGlobals.numNetFlowsV9Rcvd++;
 
-	      while(displ < bufferLen) {
-		/* traceEvent(CONST_TRACE_INFO, "Displ: %d", displ); */
+	  if(cursor != NULL) {
+	    /* Template found */
+	    int fieldId;
+	    V9TemplateField *fields = cursor->fields;
+	    struct flow_ver5_rec record;
 
-		memcpy(&flow, &buffer[displ], sizeof(flow));
+#ifdef DEBUG_FLOWS
+	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with known template %d", fs.templateId);
+#endif
 
-		/* Flow format conversion */
-		record.Last = flow.Last;
-		record.First = flow.First;
-		record.dOctets = flow.dOctets;
-		record.dPkts = flow.dPkts;
-		record.input = flow.input;
-		record.output = flow.output;
-		record.srcaddr = flow.srcaddr;
-		record.dstaddr = flow.dstaddr;
-		record.prot = flow.prot;
-		record.tos = flow.tos;
-		record.srcport = flow.srcport;
-		record.dstport = flow.dstport;
-		record.nexthop = flow.nexthop;
-		record.dst_mask = flow.dst_mask;
-		record.src_mask = flow.src_mask;
-		record.tcp_flags = flow.tcp_flags;
-		record.dst_as = flow.dst_as;
-		record.src_as = flow.src_as;
+	    displ += sizeof(V9FlowSet);
 
-		handleV5Flow(&record);
-		displ += 45; /* Note: 45 != sizeof(flow) due to roundings */
+	    while(displ < fs.flowsetLen) {
+#ifdef DEBUG_FLOWS
+	      traceEvent(CONST_TRACE_INFO, ">>>>> Dissecting flow pdu [displ=%d][template=%d]",
+			 displ, fs.templateId);
+#endif
+
+	      for(fieldId=0; fieldId<cursor->templateInfo.fieldCount; fieldId++) {
+		switch(ntohs(fields[fieldId].fieldType)) {
+		case 21: /* LAST_SWITCHED */
+		  memcpy(&record.Last, &buffer[displ], 4); displ += 4;
+		  break;
+		case 22: /* FIRST SWITCHED */
+		  memcpy(&record.First, &buffer[displ], 4); displ += 4;
+		  break;
+		case 1: /* BYTES */
+		  memcpy(&record.dOctets, &buffer[displ], 4); displ += 4;
+		  break;
+		case 2: /* PKTS */
+		  memcpy(&record.dPkts, &buffer[displ], 4); displ += 4;
+		  break;
+		case 10: /* INPUT SNMP */
+		  memcpy(&record.input, &buffer[displ], 2); displ += 2;
+		  break;
+		case 14: /* OUTPUT SNMP */
+		  memcpy(&record.output, &buffer[displ], 2); displ += 2;
+		  break;
+		case 8: /* IP_SRC_ADDR */
+		  memcpy(&record.srcaddr, &buffer[displ], 4); displ += 4;
+		  break;
+		case 12: /* IP_DST_ADDR */
+		  memcpy(&record.dstaddr, &buffer[displ], 4); displ += 4;
+		  break;
+		case 4: /* PROT */
+		  memcpy(&record.prot, &buffer[displ], 1); displ += 1;
+		  break;
+		case 5: /* TOS */
+		  memcpy(&record.tos, &buffer[displ], 1); displ += 1;
+		  break;
+		case 7: /* L4_SRC_PORT */
+		  memcpy(&record.srcport, &buffer[displ], 2); displ += 2;
+		  break;
+		case 11: /* L4_DST_PORT */
+		  memcpy(&record.dstport, &buffer[displ], 2); displ += 2;
+		  break;
+		case 15: /* IP_NEXT_HOP */
+		  memcpy(&record.nexthop, &buffer[displ], 4); displ += 4;
+		  break;
+		case 13: /* DST_MASK */
+		  memcpy(&record.dst_mask, &buffer[displ], 1); displ += 1;
+		  break;
+		case 9: /* SRC_MASK */
+		  memcpy(&record.src_mask, &buffer[displ], 1); displ += 1;
+		  break;
+		case 6: /* TCP_FLAGS */
+		  memcpy(&record.tcp_flags, &buffer[displ], 1); displ += 1;
+		  break;
+		case 17: /* DST_AS */
+		  memcpy(&record.dst_as, &buffer[displ], 2); displ += 2;
+		  break;
+		case 16: /* SRC_AS */
+		  memcpy(&record.dst_as, &buffer[displ], 2); displ += 2;
+		  break;
+		}
 	      }
-	    } else {
-	      /* Bad template length */
-	      traceEvent(CONST_TRACE_WARNING, "Bad flowset length len=%d", fs.flowsetLen);
+	      handleV5Flow(&record);
 	    }
-	    break;
-	  default:
-	    /* Unknown template */
-	    traceEvent(CONST_TRACE_WARNING, "Unknown template id %d", fs.templateId);
-	    displ += fs.flowsetLen;
-	    break;
+	  } else {
+#ifdef DEBUG_FLOWS
+	    traceEvent(CONST_TRACE_INFO, ">>>>> Rcvd flow with UNKNOWN template %d", fs.templateId);
+#endif
+	    myGlobals.numNetFlowsV9UnknTemplRcvd++;
 	  }
 	}
       }
@@ -821,7 +950,13 @@ static void dissectFlow(char *buffer, int bufferLen) {
     accessMutex(&whiteblackListMutex, "flowPacket");
 #endif
 
-    for(i=0; i<numFlows; i++) handleV5Flow(&the5Record.flowRecord[i]);
+    for(i=0; i<numFlows; i++)
+      handleV5Flow(&the5Record.flowRecord[i]);
+
+    if(the7Record.flowHeader.version == htons(7))
+      myGlobals.numNetFlowsV7Rcvd += numFlows;
+    else
+      myGlobals.numNetFlowsV5Rcvd += numFlows;
 
 #ifdef CFG_MULTITHREADED
     releaseMutex(&whiteblackListMutex);
@@ -1148,7 +1283,7 @@ static int initNetFlowFunct(void) {
 static void handleNetflowHTTPrequest(char* url) {
   char buf[512], buf1[32], buf2[32];
   char workList[1024];
-  int i, numEnabled = 0;
+  u_int i, numEnabled = 0, totFlows;
   struct in_addr theDest;
 
   sendHTTPHeader(FLAG_HTTP_TYPE_HTML, 0);
@@ -1470,59 +1605,103 @@ static void handleNetflowHTTPrequest(char* url) {
 
       sendString("</TD></TR>\n");
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Gives: # Pkts Received</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Pkts Received</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsPktsRcvd)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Less: # Pkts with bad version</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Pkts with bad version</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadNetFlowsVersionsRcvd)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Gives: # Pkts processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Pkts processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd)) < 0)
 	BufferTooShort();
       sendString(buf);
 
-      if(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd > 0) {
+      totFlows = myGlobals.numNetFlowsV5Rcvd + myGlobals.numNetFlowsV7Rcvd + myGlobals.numNetFlowsV9Rcvd - myGlobals.numBadNetFlowsVersionsRcvd;
+      if(totFlows > 0) {
 	if(snprintf(buf, sizeof(buf),
-		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT># Flows per packet(avg)</TH>"
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Average Num Flows per Packet</TH>"
 		    "<TD colspan=2 "TD_BG" ALIGN=RIGHT>%.1f</TD></TR>\n",
-		    (float) myGlobals.numNetFlowsRcvd /
-		    (float)(myGlobals.numNetFlowsPktsRcvd - myGlobals.numBadNetFlowsVersionsRcvd)
-		    ) < 0)
+		    (float)totFlows/(float)myGlobals.numNetFlowsPktsRcvd) < 0)
 	  BufferTooShort();
 	sendString(buf);
       }
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT># Flows received</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-		  formatPkts(myGlobals.numNetFlowsRcvd)) < 0)
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V5 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  formatPkts(myGlobals.numNetFlowsV5Rcvd)) < 0)
 	BufferTooShort();
       sendString(buf);
 
+      if(snprintf(buf, sizeof(buf),
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V7 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  formatPkts(myGlobals.numNetFlowsV7Rcvd)) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf),
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V9 Flows Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  formatPkts(myGlobals.numNetFlowsV9Rcvd)) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      if(myGlobals.numNetFlowsV9TemplRcvd) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Total V9 Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    formatPkts(myGlobals.numNetFlowsV9TemplRcvd)) < 0)
+	   BufferTooShort();
+	sendString(buf);
+      }
+
+      if(myGlobals.numNetFlowsV9BadTemplRcvd) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Bad V9 Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    formatPkts(myGlobals.numNetFlowsV9BadTemplRcvd)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
+
+
+      if(myGlobals.numNetFlowsV9UnknTemplRcvd) {
+	if(snprintf(buf, sizeof(buf),
+		    "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num V9 Flows with Unknown Templates Rcvd</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		    formatPkts(myGlobals.numNetFlowsV9UnknTemplRcvd)) < 0)
+	  BufferTooShort();
+	sendString(buf);
+      }
+
       sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=4 "DARK_BG">Discarded Flows</TH></TR>\n");
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Less: # Flows with zero packet count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Zero Packet Count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowPkts)) < 0)
 	BufferTooShort();
       sendString(buf);
+
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Less: # Flows with zero byte count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Zero Byte Count</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowBytes)) < 0)
 	BufferTooShort();
       sendString(buf);
+
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Less: # Flows with bad data</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Bad Data</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numBadFlowReality)) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Gives: # Flows processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Num Flows with Unknown Template</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
+		  formatPkts(myGlobals.numNetFlowsV9UnknTemplRcvd)) < 0)
+	BufferTooShort();
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf),
+		  "<TR "TR_ON"><TH colspan=2 "TH_BG" ALIGN=LEFT>Tot Num Flows Processed</TH><TD colspan=2 "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  formatPkts(myGlobals.numNetFlowsProcessed)) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -1674,7 +1853,7 @@ static void handleNetflowHTTPrequest(char* url) {
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-                  "<TR><TH colspan=2 ALIGN=\"LEFT\">Are netFlow</TH>\n"
+                  "<TR><TH colspan=2 ALIGN=\"LEFT\">Ignored Flows</TH>\n"
 		  "<TD ALIGN=\"RIGHT\">%u</TD><TD>&nbsp;</TD></TR>\n",
                   flowIgnoredNETFLOW
 		  ) < 0)
@@ -1682,7 +1861,7 @@ static void handleNetflowHTTPrequest(char* url) {
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-                  "<TR><TH colspan=2 ALIGN=\"LEFT\">unrecognized port <= 1023</TH>\n"
+                  "<TR><TH colspan=2 ALIGN=\"LEFT\">Unrecognized port <= 1023</TH>\n"
 		  "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
 		  flowIgnoredLowPort,
 		  formatBytes(flowIgnoredLowPortBytes, 1)
@@ -1691,7 +1870,7 @@ static void handleNetflowHTTPrequest(char* url) {
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf),
-                  "<TR><TH colspan=2 ALIGN=\"LEFT\">unrecognized port > 1023</TH>\n"
+                  "<TR><TH colspan=2 ALIGN=\"LEFT\">Unrecognized port > 1023</TH>\n"
 		  "<TD ALIGN=\"RIGHT\">%u</TD><TD ALIGN=\"RIGHT\">%s</TD></TR>\n",
 		  flowIgnoredHighPort,
 		  formatBytes(flowIgnoredHighPortBytes, 1)
@@ -1781,7 +1960,7 @@ static void handleNetflowHTTPrequest(char* url) {
 
     sendString("</TABLE>\n");
 
-    sendString("<P>Click <A HREF=\"/plugins/NetFlow\">here</A> to refresh this data.</CENTER></P>\n");
+    sendString("<P>[ Click <A HREF=\"/plugins/NetFlow\">here</A> to refresh this data. ]</CENTER></P>\n");
   }
 
 
@@ -1815,6 +1994,14 @@ static void termNetflowFunct(void) {
   unwasteFileDescriptors();
 #endif
 
+  while(templates != NULL) {
+    FlowSetV9 *temp = templates->next;
+
+    free(templates->fields);
+    free(templates);
+    templates = temp;
+  }
+
   traceEvent(CONST_TRACE_INFO, "NETFLOW: Thanks for using ntop NetFlow");
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "NETFLOW: Done");
   fflush(stdout);
@@ -1839,6 +2026,10 @@ static void handleNetFlowPacket(u_char *_deviceId,
     u_int8_t flags = 0;
     struct ip ip;
 
+#ifdef DEBUG_FLOWS
+    traceEvent(CONST_TRACE_INFO, "Rcvd packet to dissect [caplen=%d][len=%d]", caplen, length);
+#endif
+
     if(caplen >= sizeof(struct ether_header)) {
       memcpy(&ehdr, p, sizeof(struct ether_header));
       eth_type = ntohs(ehdr.ether_type);
@@ -1847,23 +2038,36 @@ static void handleNetFlowPacket(u_char *_deviceId,
 	u_int plen, hlen;
 	u_short sport, dport;
 
+#ifdef DEBUG_FLOWS
+    traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect");
+#endif
+
 	memcpy(&ip, p+sizeof(struct ether_header), sizeof(struct ip));
 	hlen =(u_int)ip.ip_hl * 4;
 	NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
 	plen = length-sizeof(struct ether_header);
 
-	if(ip.ip_p == IPPROTO_UDP) {
+#ifdef DEBUG_FLOWS
+	traceEvent(CONST_TRACE_INFO, "Rcvd IP packet to dissect [sender=%s][proto=%d][len=%d][hlen=%d]",
+		   intoa(ip.ip_src) , ntohs(ip.ip_p), plen, hlen);
+#endif
+
+	if(ntohs(ip.ip_p) == IPPROTO_UDP) {
 	  if(plen >(hlen+sizeof(struct udphdr))) {
 	    char* rawSample    =(void*)(p+sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 
 #ifdef DEBUG_FLOWS
-	    /* traceEvent(CONST_TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src)); */
+	    traceEvent(CONST_TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src));
 #endif
 	    dissectFlow(rawSample, rawSampleLen);
 	  }
 	}
+      } else {
+#ifdef DEBUG_FLOWS
+	traceEvent(CONST_TRACE_INFO, "Rcvd non-IP [0x%04X] packet to dissect", eth_type);
+#endif
       }
     }
   }
@@ -1876,9 +2080,9 @@ static void handleNetFlowPacket(u_char *_deviceId,
 static PluginInfo netflowPluginInfo[] = {
   { "NetFlow",
     "This plugin is used to setup, activate and deactivate ntop's NetFlow support.<br>"
-    "ntop can both collect and receive NetFlow data. Received NetFlow data is "
+    "ntop can both collect and receive NetFlow V5/V7/V9 data. Received NetFlow data is "
     "reported as a separate 'NIC' in the regular ntop reports.",
-    "2.3.1", /* version */
+    "3.0", /* version */
     "<A HREF=http://luca.ntop.org/>L.Deri</A>",
     "NetFlow", /* http://<host>:<port>/plugins/NetFlow */
     0, /* Active by default */
@@ -1892,7 +2096,7 @@ static PluginInfo netflowPluginInfo[] = {
 #endif
     handleNetflowHTTPrequest,
 #ifdef DEBUG_FLOWS
-    "udp and port 9995",
+    "udp and (port 2055 or port 9995)",
 #else
     NULL, /* no capture */
 #endif
