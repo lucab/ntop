@@ -47,6 +47,7 @@ ntop \- display top network users
 .IR <specs> ]
 .RB [ -M | --no-interface-merge ]
 .RB [ -N | --no-nmap ]
+.RB [ -O | ----output-packet-path ]
 .RB [ -P | --db-file-path
 .IR <path> ]
 .RB [ -R | --filter-rule
@@ -277,6 +278,10 @@ Forces ntop not to merge network interfaces together. This means that ntop will 
 
 .It2 -N --no-nmap
 Forces ntop not to use nmap (if it is installed).
+
+.It2 -O --output-packet-path
+Base path for the ntop-suspicious-pkts.XXX.pcap and normal packet log file (tcpdump). If the base
+path is a directory you have to append a / to the string for this to work fine.
 
 .It2 -P --db-file-path
 This allows to specify where db-files are searched or created (default "."). In addition DBPATH/html is added to the searchlist for the WEB-files
