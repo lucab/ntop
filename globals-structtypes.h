@@ -484,6 +484,19 @@ typedef struct securityDeviceProbes {
   TrafficCounter icmpAdminProhibited;
 } SecurityDeviceProbes;
 
+typedef struct sapType {
+  u_char dsap, ssap;
+} SapType;
+
+typedef struct unknownProto {
+  u_char protoType; /* 0=notUsed, 1=Ethernet, 2=SAP, 3=IP */
+  union {
+    u_int16_t ethType;
+    SapType   sapType;
+    u_int16_t ipType;
+  } proto;
+} UnknownProto;
+
 typedef struct nonIPTraffic {
   /* NetBIOS */
   char             nbNodeType, *nbHostName, *nbAccountName, *nbDomainName, *nbDescr;
@@ -496,6 +509,19 @@ typedef struct nonIPTraffic {
   /* IPX */
   char             *ipxHostName;
   u_short          numIpxNodeTypes, ipxNodeType[MAX_NODE_TYPES];
+
+  /* Non IP */
+  TrafficCounter   stpSent, stpRcvd; /* Spanning Tree */
+  TrafficCounter   ipxSent, ipxRcvd;
+  TrafficCounter   osiSent, osiRcvd;
+  TrafficCounter   dlcSent, dlcRcvd;
+  TrafficCounter   arp_rarpSent, arp_rarpRcvd;
+  TrafficCounter   arpReqPktsSent, arpReplyPktsSent, arpReplyPktsRcvd;
+  TrafficCounter   decnetSent, decnetRcvd;
+  TrafficCounter   appletalkSent, appletalkRcvd;
+  TrafficCounter   netbiosSent, netbiosRcvd;
+  TrafficCounter   otherSent, otherRcvd; /* Other traffic we cannot classify */
+  UnknownProto     *unknownProtoSent, *unknownProtoRcvd; /* List of MAX_NUM_UNKNOWN_PROTOS elements */
 } NonIPTraffic;
 
 typedef struct trafficDistribution {
@@ -537,19 +563,6 @@ typedef struct macInfo {
   u_char isSpecial;
   char   vendorName[MAX_LEN_VENDOR_NAME];
 } MACInfo;
-
-typedef struct sapType {
-  u_char dsap, ssap;
-} SapType;
-
-typedef struct unknownProto {
-  u_char protoType; /* 0=notUsed, 1=Ethernet, 2=SAP, 3=IP */
-  union {
-    u_int16_t ethType;
-    SapType   sapType;
-    u_int16_t ipType;
-  } proto;
-} UnknownProto;
 
 typedef struct serviceStats {
   TrafficCounter numLocalReqSent, numRemReqSent;
@@ -809,11 +822,11 @@ typedef struct hostTraffic {
   /* Don't change the recentl... to unsigned ! */
   int              recentlyUsedClientPorts[MAX_NUM_RECENT_PORTS], recentlyUsedServerPorts[MAX_NUM_RECENT_PORTS];
   int              otherIpPortsRcvd[MAX_NUM_RECENT_PORTS], otherIpPortsSent[MAX_NUM_RECENT_PORTS];
-  TrafficCounter   ipBytesSent, ipBytesRcvd;
+  TrafficCounter   ipBytesSent, ipBytesRcvd, ipv6Sent, ipv6Rcvd;
   TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc, udpSentRem, icmpSent,icmp6Sent;
   TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc, udpRcvdFromRem, icmpRcvd,
                    icmp6Rcvd;
-
+ 
   TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
     udpFragmentsSent,  udpFragmentsRcvd,
     icmpFragmentsSent, icmpFragmentsRcvd,
@@ -831,20 +844,6 @@ typedef struct hostTraffic {
 
   /* Fiber Channel/SCSI */
   FcScsiCounters   *fcCounters;
-
-  /* Non IP */
-  TrafficCounter   stpSent, stpRcvd; /* Spanning Tree */
-  TrafficCounter   ipxSent, ipxRcvd;
-  TrafficCounter   osiSent, osiRcvd;
-  TrafficCounter   dlcSent, dlcRcvd;
-  TrafficCounter   arp_rarpSent, arp_rarpRcvd;
-  TrafficCounter   arpReqPktsSent, arpReplyPktsSent, arpReplyPktsRcvd;
-  TrafficCounter   decnetSent, decnetRcvd;
-  TrafficCounter   appletalkSent, appletalkRcvd;
-  TrafficCounter   netbiosSent, netbiosRcvd;
-  TrafficCounter   ipv6Sent, ipv6Rcvd;
-  TrafficCounter   otherSent, otherRcvd; /* Other traffic we cannot classify */
-  UnknownProto     *unknownProtoSent, *unknownProtoRcvd; /* List of MAX_NUM_UNKNOWN_PROTOS elements */
 
   Counter          totContactedSentPeers, totContactedRcvdPeers; /* # of different contacted peers */
   UsageCounter     contactedSentPeers;   /* peers that talked with this host */

@@ -1092,34 +1092,43 @@ int cmpFctn(const void *_a, const void *_b) {
       a_ = (*a)->icmp6Rcvd.value, b_ = (*b)->icmp6Rcvd.value;
       break;
     case 5:
-      a_ = (*a)->dlcRcvd.value, b_ = (*b)->dlcRcvd.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->dlcRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->dlcRcvd.value;
       break;
     case 6:
-      a_ = (*a)->ipxRcvd.value, b_ = (*b)->ipxRcvd.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->ipxRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->ipxRcvd.value;
       break;
     case 7:
-      a_ = (*a)->decnetRcvd.value, b_ = (*b)->decnetRcvd.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->decnetRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->decnetRcvd.value;
       break;
     case 8:
-      a_ = (*a)->arp_rarpRcvd.value, b_ = (*b)->arp_rarpRcvd.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->arp_rarpRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->arp_rarpRcvd.value;
       break;
     case 9:
-      a_ = (*a)->appletalkRcvd.value, b_ = (*b)->appletalkRcvd.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->appletalkRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->appletalkRcvd.value;
       break;
     case 11:
-      a_ = (*a)->netbiosRcvd.value, b_ = (*b)->netbiosRcvd.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->netbiosRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->netbiosRcvd.value;
       break;
     case 13:
-      a_ = (*a)->osiRcvd.value, b_ = (*b)->osiRcvd.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->osiRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->osiRcvd.value;
       break;
     case 14:
       a_ = (*a)->ipv6Rcvd.value, b_ = (*b)->ipv6Rcvd.value;
       break;
     case 15:
-      a_ = (*a)->stpRcvd.value, b_ = (*b)->stpRcvd.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->stpRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->stpRcvd.value;
       break;
     case 16:
-      a_ = (*a)->otherRcvd.value, b_ = (*b)->otherRcvd.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->otherRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->otherRcvd.value;
       break;
     default:
       if((myGlobals.columnSort >= BASE_PROTOS_IDX)
@@ -1208,34 +1217,43 @@ int cmpFctn(const void *_a, const void *_b) {
       a_ = (*a)->icmp6Sent.value, b_ = (*b)->icmp6Sent.value;
       break;
     case 5:
-      a_ = (*a)->dlcSent.value, b_ = (*b)->dlcSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->dlcSent.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->dlcSent.value;
       break;
     case 6:
-      a_ = (*a)->ipxSent.value, b_ = (*b)->ipxSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->ipxSent.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->ipxSent.value;
       break;
     case 7:
-      a_ = (*a)->decnetSent.value, b_ = (*b)->decnetSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->decnetSent.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->decnetSent.value;
       break;
     case 8:
-      a_ = (*a)->arp_rarpSent.value, b_ = (*b)->arp_rarpSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->arp_rarpSent.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->arp_rarpSent.value;
       break;
     case 9:
-      a_ = (*a)->appletalkSent.value, b_ = (*b)->appletalkSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->appletalkSent.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->appletalkSent.value;
       break;
     case 11:
-      a_ = (*a)->netbiosSent.value, b_ = (*b)->netbiosSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->netbiosSent.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->netbiosSent.value;
       break;
     case 13:
-      a_ = (*a)->osiSent.value, b_ = (*b)->osiSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->osiSent.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->osiSent.value;
       break;
     case 14:
       a_ = (*a)->ipv6Sent.value, b_ = (*b)->ipv6Sent.value;
       break;
     case 15:
-      a_ = (*a)->stpSent.value, b_ = (*b)->stpSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->stpSent.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->stpSent.value;
       break;
     case 16:
-      a_ = (*a)->otherSent.value, b_ = (*b)->otherSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->otherSent.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->otherSent.value;
       break;
     default:
       if((myGlobals.columnSort >= BASE_PROTOS_IDX)
@@ -1326,37 +1344,43 @@ int cmpFctn(const void *_a, const void *_b) {
       a_ = (*a)->icmp6Rcvd.value+(*a)->icmp6Sent.value, b_ = (*b)->icmp6Rcvd.value+(*b)->icmp6Sent.value;
       break;
     case 5:
-      a_ = (*a)->dlcRcvd.value+(*a)->dlcSent.value, b_ = (*b)->dlcRcvd.value+(*b)->dlcSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->stpSent.value+(*a)->nonIPTraffic->stpRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->stpSent.value+(*b)->nonIPTraffic->stpRcvd.value;
       break;
     case 6:
-      a_ = (*a)->ipxRcvd.value+(*a)->ipxSent.value, b_ = (*b)->ipxRcvd.value+(*b)->ipxSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->ipxSent.value+(*a)->nonIPTraffic->ipxRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->ipxSent.value+(*b)->nonIPTraffic->ipxRcvd.value;
       break;
     case 7:
-      a_ = (*a)->decnetRcvd.value+(*a)->decnetSent.value, b_ = (*b)->decnetRcvd.value+(*b)->decnetSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->decnetSent.value+(*a)->nonIPTraffic->decnetRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->decnetSent.value+(*b)->nonIPTraffic->decnetRcvd.value;
       break;
     case 8:
-      a_ = (*a)->arp_rarpRcvd.value+(*a)->arp_rarpSent.value;
-      b_ = (*b)->arp_rarpRcvd.value+(*b)->arp_rarpSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->arp_rarpSent.value+(*a)->nonIPTraffic->arp_rarpRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->arp_rarpSent.value+(*b)->nonIPTraffic->arp_rarpRcvd.value;
       break;
     case 9:
-      a_ = (*a)->appletalkRcvd.value+(*a)->appletalkSent.value;
-      b_ = (*b)->appletalkRcvd.value+(*b)->appletalkSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->appletalkSent.value+(*a)->nonIPTraffic->appletalkRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->appletalkSent.value+(*b)->nonIPTraffic->appletalkRcvd.value;
       break;
     case 11:
-      a_ = (*a)->netbiosRcvd.value+(*a)->netbiosSent.value;
-      b_ = (*b)->netbiosRcvd.value+(*b)->netbiosSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->netbiosSent.value+(*a)->nonIPTraffic->netbiosRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->netbiosSent.value+(*b)->nonIPTraffic->netbiosRcvd.value;
       break;
     case 13:
-      a_ = (*a)->osiRcvd.value+(*a)->osiSent.value, b_ = (*b)->osiRcvd.value+(*b)->osiSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->osiSent.value+(*a)->nonIPTraffic->osiRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->osiSent.value+(*b)->nonIPTraffic->osiRcvd.value;
       break;
     case 14:
       a_ = (*a)->ipv6Rcvd.value+(*a)->ipv6Sent.value, b_ = (*b)->ipv6Rcvd.value+(*b)->ipv6Sent.value;
       break;
     case 15:
-      a_ = (*a)->stpRcvd.value+(*a)->stpSent.value, b_ = (*b)->stpRcvd.value+(*b)->stpSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->stpSent.value+(*a)->nonIPTraffic->stpRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->stpSent.value+(*b)->nonIPTraffic->stpRcvd.value;
       break;
     case 16:
-      a_ = (*a)->otherRcvd.value+(*a)->otherSent.value, b_ = (*b)->otherRcvd.value+(*b)->otherSent.value;
+      a_ = (*a)->nonIPTraffic == NULL ? 0 : (*a)->nonIPTraffic->otherSent.value+(*a)->nonIPTraffic->otherRcvd.value;
+      b_ = (*b)->nonIPTraffic == NULL ? 0 : (*b)->nonIPTraffic->otherSent.value+(*b)->nonIPTraffic->otherRcvd.value;
       break;
     default:
       if((myGlobals.columnSort >= BASE_PROTOS_IDX)
@@ -1982,41 +2006,43 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
     }
   }
 
-  if(el->arpReqPktsSent.value+el->arpReplyPktsSent.value+el->arpReplyPktsRcvd.value > 0) {
-    if(!headerSent) {
-      printSectionTitle("Packet Statistics");
-      sendString(tableHeader);
-      headerSent = 1;
+  if(el->nonIPTraffic) {
+    if(el->nonIPTraffic->arpReqPktsSent.value+el->nonIPTraffic->arpReplyPktsSent.value+el->nonIPTraffic->arpReplyPktsRcvd.value > 0) {
+      if(!headerSent) {
+	printSectionTitle("Packet Statistics");
+	sendString(tableHeader);
+	headerSent = 1;
+      }
+
+      sendString("<CENTER>\n"
+		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%><TR "TR_ON" "DARK_BG">"
+		 "<TH "TH_BG">ARP</TH>"
+		 "<TH "TH_BG">Packet</TH>"
+		 "</TR>\n");
+
+      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Request Sent</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		    getRowColor(),
+		    formatPkts(el->nonIPTraffic->arpReqPktsSent.value, formatBuf, sizeof(formatBuf)));
+      sendString(buf);
+
+      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Reply Rcvd</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s (%.1f %%)</TD></TR>",
+		    getRowColor(),
+		    formatPkts(el->nonIPTraffic->arpReplyPktsRcvd.value, formatBuf, sizeof(formatBuf)),
+		    ((el->nonIPTraffic->arpReqPktsSent.value > 0) ?
+		     (float)((el->nonIPTraffic->arpReplyPktsRcvd.value*100)/(float)el->nonIPTraffic->arpReqPktsSent.value) : 0));
+      sendString(buf);
+
+      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Reply Sent</TH>"
+		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
+		    getRowColor(),
+		    formatPkts(el->nonIPTraffic->arpReplyPktsSent.value, formatBuf, sizeof(formatBuf)));
+      sendString(buf);
+
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
     }
-
-    sendString("<CENTER>\n"
-	       ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%><TR "TR_ON" "DARK_BG">"
-	       "<TH "TH_BG">ARP</TH>"
-	       "<TH "TH_BG">Packet</TH>"
-	       "</TR>\n");
-
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Request Sent</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-		getRowColor(),
-		formatPkts(el->arpReqPktsSent.value, formatBuf, sizeof(formatBuf)));
-    sendString(buf);
-
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Reply Rcvd</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s (%.1f %%)</TD></TR>",
-		getRowColor(),
-		formatPkts(el->arpReplyPktsRcvd.value, formatBuf, sizeof(formatBuf)),
-		((el->arpReqPktsSent.value > 0) ?
-		(float)((el->arpReplyPktsRcvd.value*100)/(float)el->arpReqPktsSent.value) : 0));
-    sendString(buf);
-
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Reply Sent</TH>"
-		"<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
-		getRowColor(),
-		formatPkts(el->arpReplyPktsSent.value, formatBuf, sizeof(formatBuf)));
-    sendString(buf);
-
-    sendString("</TABLE>"TABLE_OFF"<P>\n");
-    sendString("</CENTER>\n");
   }
 
   if(headerSent) { sendString("</TD></TR></TABLE>"TABLE_OFF"</CENTER>"); }
@@ -2267,17 +2293,21 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   ProtocolsList *protoList;
 
   totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value;
-  totalSent += el->icmpSent.value+el->icmp6Sent.value+el->ipxSent.value+el->dlcSent.value+el->arp_rarpSent.value;
-  totalSent +=  el->decnetSent.value+el->appletalkSent.value+el->netbiosSent.value+
-    el->osiSent.value+el->ipv6Sent.value+el->stpSent.value+el->otherSent.value;
+  totalSent += el->icmpSent.value+el->icmp6Sent.value+el->ipv6Sent.value;
 
+  if(el->nonIPTraffic != NULL)
+    totalSent += el->nonIPTraffic->ipxSent.value+el->nonIPTraffic->dlcSent.value+el->nonIPTraffic->arp_rarpSent.value +
+      el->nonIPTraffic->decnetSent.value+el->nonIPTraffic->appletalkSent.value+el->nonIPTraffic->netbiosSent.value+
+      el->nonIPTraffic->osiSent.value+el->nonIPTraffic->stpSent.value+el->nonIPTraffic->otherSent.value;
+  
   totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value;
   totalRcvd += el->udpRcvdLoc.value+el->udpRcvdFromRem.value;
-  totalRcvd += el->icmpRcvd.value+el->icmp6Rcvd.value;
-  totalRcvd += el->ipxRcvd.value+el->dlcRcvd.value+el->arp_rarpRcvd.value;
-  totalRcvd += el->decnetRcvd.value+el->appletalkRcvd.value;
-  totalRcvd += el->osiRcvd.value+el->netbiosRcvd.value+el->ipv6Rcvd.value
-    +el->stpRcvd.value+el->otherRcvd.value;
+  totalRcvd += el->icmpRcvd.value+el->icmp6Rcvd.value+el->ipv6Rcvd.value;
+
+  if(el->nonIPTraffic != NULL)
+    totalRcvd += el->nonIPTraffic->ipxRcvd.value+el->nonIPTraffic->dlcRcvd.value+el->nonIPTraffic->arp_rarpRcvd.value +
+      el->nonIPTraffic->decnetRcvd.value+el->nonIPTraffic->appletalkRcvd.value +
+      el->nonIPTraffic->osiRcvd.value+el->nonIPTraffic->netbiosRcvd.value+el->nonIPTraffic->stpRcvd.value+el->nonIPTraffic->otherRcvd.value;
 
   protoList = myGlobals.ipProtosList;
   idx = 0;
@@ -2327,51 +2357,58 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
                         (float)el->icmp6Rcvd.value/1024,
                         100*((float)SD(el->icmp6Rcvd.value, totalRcvd)));
 
-  printTableDoubleEntry(buf, sizeof(buf), "(R)ARP", CONST_COLOR_1, (float)el->arp_rarpSent.value/1024,
-			100*((float)SD(el->arp_rarpSent.value, totalSent)),
-			(float)el->arp_rarpRcvd.value/1024,
-			100*((float)SD(el->arp_rarpRcvd.value, totalRcvd)));
-
-  printTableDoubleEntry(buf, sizeof(buf), "DLC", CONST_COLOR_1, (float)el->dlcSent.value/1024,
-			100*((float)SD(el->dlcSent.value, totalSent)),
-			(float)el->dlcRcvd.value/1024,
-			100*((float)SD(el->dlcRcvd.value, totalRcvd)));
-
-  printTableDoubleEntry(buf, sizeof(buf), "IPX", CONST_COLOR_1, (float)el->ipxSent.value/1024,
-			100*((float)SD(el->ipxSent.value, totalSent)),
-			(float)el->ipxRcvd.value/1024,
-			100*((float)SD(el->ipxRcvd.value, totalRcvd)));
-
-  printTableDoubleEntry(buf, sizeof(buf), "Decnet", CONST_COLOR_1, (float)el->decnetSent.value/1024,
-			100*((float)SD(el->decnetSent.value, totalSent)),
-			(float)el->decnetRcvd.value/1024,
-			100*((float)SD(el->decnetRcvd.value, totalRcvd)));
-
-  printTableDoubleEntry(buf, sizeof(buf), "AppleTalk", CONST_COLOR_1, (float)el->appletalkSent.value/1024,
-			100*((float)SD(el->appletalkSent.value, totalSent)),
-			(float)el->appletalkRcvd.value/1024,
-			100*((float)SD(el->appletalkRcvd.value, totalRcvd)));
-
-  printTableDoubleEntry(buf, sizeof(buf), "NetBios", CONST_COLOR_1, (float)el->netbiosSent.value/1024,
-			100*((float)SD(el->netbiosSent.value, totalSent)),
-			(float)el->netbiosRcvd.value/1024,
-			100*((float)SD(el->netbiosRcvd.value, totalRcvd)));
-
-  printTableDoubleEntry(buf, sizeof(buf), "OSI", CONST_COLOR_1, (float)el->osiSent.value/1024,
-			100*((float)SD(el->osiSent.value, totalSent)),
-			(float)el->osiRcvd.value/1024,
-			100*((float)SD(el->osiRcvd.value, totalRcvd)));
-
   printTableDoubleEntry(buf, sizeof(buf), "IPv6", CONST_COLOR_1, (float)el->ipv6Sent.value/1024,
 			100*((float)SD(el->ipv6Sent.value, totalSent)),
 			(float)el->ipv6Rcvd.value/1024,
 			100*((float)SD(el->ipv6Rcvd.value, totalRcvd)));
 
-  printTableDoubleEntry(buf, sizeof(buf), "STP", CONST_COLOR_1, (float)el->stpSent.value/1024,
-			100*((float)SD(el->stpSent.value, totalSent)),
-			(float)el->stpRcvd.value/1024,
-			100*((float)SD(el->stpRcvd.value, totalRcvd)));
+  if(el->nonIPTraffic != NULL) {
+    printTableDoubleEntry(buf, sizeof(buf), "(R)ARP", CONST_COLOR_1, (float)el->nonIPTraffic->arp_rarpSent.value/1024,
+			  100*((float)SD(el->nonIPTraffic->arp_rarpSent.value, totalSent)),
+			  (float)el->nonIPTraffic->arp_rarpRcvd.value/1024,
+			  100*((float)SD(el->nonIPTraffic->arp_rarpRcvd.value, totalRcvd)));
 
+    printTableDoubleEntry(buf, sizeof(buf), "DLC", CONST_COLOR_1, (float)el->nonIPTraffic->dlcSent.value/1024,
+			  100*((float)SD(el->nonIPTraffic->dlcSent.value, totalSent)),
+			  (float)el->nonIPTraffic->dlcRcvd.value/1024,
+			  100*((float)SD(el->nonIPTraffic->dlcRcvd.value, totalRcvd)));
+
+    printTableDoubleEntry(buf, sizeof(buf), "IPX", CONST_COLOR_1, (float)el->nonIPTraffic->ipxSent.value/1024,
+			  100*((float)SD(el->nonIPTraffic->ipxSent.value, totalSent)),
+			  (float)el->nonIPTraffic->ipxRcvd.value/1024,
+			  100*((float)SD(el->nonIPTraffic->ipxRcvd.value, totalRcvd)));
+
+    printTableDoubleEntry(buf, sizeof(buf), "Decnet", CONST_COLOR_1, (float)el->nonIPTraffic->decnetSent.value/1024,
+			  100*((float)SD(el->nonIPTraffic->decnetSent.value, totalSent)),
+			  (float)el->nonIPTraffic->decnetRcvd.value/1024,
+			  100*((float)SD(el->nonIPTraffic->decnetRcvd.value, totalRcvd)));
+
+    printTableDoubleEntry(buf, sizeof(buf), "AppleTalk", CONST_COLOR_1, (float)el->nonIPTraffic->appletalkSent.value/1024,
+			  100*((float)SD(el->nonIPTraffic->appletalkSent.value, totalSent)),
+			  (float)el->nonIPTraffic->appletalkRcvd.value/1024,
+			  100*((float)SD(el->nonIPTraffic->appletalkRcvd.value, totalRcvd)));
+
+    printTableDoubleEntry(buf, sizeof(buf), "NetBios", CONST_COLOR_1, (float)el->nonIPTraffic->netbiosSent.value/1024,
+			  100*((float)SD(el->nonIPTraffic->netbiosSent.value, totalSent)),
+			  (float)el->nonIPTraffic->netbiosRcvd.value/1024,
+			  100*((float)SD(el->nonIPTraffic->netbiosRcvd.value, totalRcvd)));
+
+    printTableDoubleEntry(buf, sizeof(buf), "OSI", CONST_COLOR_1, (float)el->nonIPTraffic->osiSent.value/1024,
+			  100*((float)SD(el->nonIPTraffic->osiSent.value, totalSent)),
+			  (float)el->nonIPTraffic->osiRcvd.value/1024,
+			  100*((float)SD(el->nonIPTraffic->osiRcvd.value, totalRcvd)));
+
+    printTableDoubleEntry(buf, sizeof(buf), "STP", CONST_COLOR_1, (float)el->nonIPTraffic->stpSent.value/1024,
+			  100*((float)SD(el->nonIPTraffic->stpSent.value, totalSent)),
+			  (float)el->nonIPTraffic->stpRcvd.value/1024,
+			  100*((float)SD(el->nonIPTraffic->stpRcvd.value, totalRcvd)));
+
+    printTableDoubleEntry(buf, sizeof(buf), "Other (Non IP)", CONST_COLOR_1, (float)el->nonIPTraffic->otherSent.value/1024,
+			  100*((float)SD(el->nonIPTraffic->otherSent.value, totalSent)),
+			  (float)el->nonIPTraffic->otherRcvd.value/1024,
+			  100*((float)SD(el->nonIPTraffic->otherRcvd.value, totalRcvd)));
+  }
+  
   {
     protoList = myGlobals.ipProtosList;
     idx = 0;
@@ -2386,25 +2423,26 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
     }
   }
 
-  printTableDoubleEntry(buf, sizeof(buf), "Other (Non IP)", CONST_COLOR_1, (float)el->otherSent.value/1024,
-			100*((float)SD(el->otherSent.value, totalSent)),
-			(float)el->otherRcvd.value/1024,
-			100*((float)SD(el->otherRcvd.value, totalRcvd)));
-
   {
     totalSent = el->tcpSentLoc.value+el->tcpSentRem.value+
       el->udpSentLoc.value+el->udpSentRem.value+
-      el->icmpSent.value+el->icmp6Sent.value+el->stpSent.value+
-      el->ipxSent.value+el->osiSent.value+el->dlcSent.value+
-      el->arp_rarpSent.value+el->decnetSent.value+el->appletalkSent.value+
-      el->netbiosSent.value+el->ipv6Sent.value+el->otherSent.value;
+      el->icmpSent.value+el->icmp6Sent.value+el->ipv6Sent.value;
 
     totalRcvd = el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+
       el->udpRcvdLoc.value+el->udpRcvdFromRem.value+
-      el->icmpRcvd.value+el->icmp6Rcvd.value+el->stpRcvd.value+
-      el->ipxRcvd.value+el->osiRcvd.value+el->dlcRcvd.value+
-      el->arp_rarpRcvd.value+el->decnetRcvd.value+el->appletalkRcvd.value+
-      el->netbiosRcvd.value+el->ipv6Rcvd.value+el->otherRcvd.value;
+      el->icmpRcvd.value+el->icmp6Rcvd.value+el->ipv6Rcvd.value;
+
+    if(el->nonIPTraffic) {
+      totalSent += el->nonIPTraffic->stpSent.value+
+	el->nonIPTraffic->ipxSent.value+el->nonIPTraffic->osiSent.value+el->nonIPTraffic->dlcSent.value+
+	el->nonIPTraffic->arp_rarpSent.value+el->nonIPTraffic->decnetSent.value+el->nonIPTraffic->appletalkSent.value+
+	el->nonIPTraffic->netbiosSent.value+el->nonIPTraffic->otherSent.value;
+      
+      totalRcvd += el->nonIPTraffic->stpRcvd.value+
+	el->nonIPTraffic->ipxRcvd.value+el->nonIPTraffic->osiRcvd.value+el->nonIPTraffic->dlcRcvd.value+
+	el->nonIPTraffic->arp_rarpRcvd.value+el->nonIPTraffic->decnetRcvd.value+el->nonIPTraffic->appletalkRcvd.value+
+	el->nonIPTraffic->netbiosRcvd.value+el->nonIPTraffic->otherRcvd.value;
+    }
 
     protoList = myGlobals.ipProtosList;
     idx = 0;
@@ -2508,9 +2546,11 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       printTableDoubleEntry(buf, sizeof(buf), sap2name(nonIp->protocolId, buf1, sizeof(buf1)),
 			    CONST_COLOR_1, (float)nonIp->sentBytes.value/1024,
-			    100*((float)SD(nonIp->sentBytes.value, el->otherSent.value)),
+			    100*((float)SD(nonIp->sentBytes.value, 
+					   el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->otherSent.value)),
 			    (float)nonIp->rcvdBytes.value/1024,
-			    100*((float)SD(nonIp->rcvdBytes.value, el->otherRcvd.value)));
+			    100*((float)SD(nonIp->rcvdBytes.value, 
+					   el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->otherRcvd.value)));
 
       nonIp = nonIp->next;
     }
@@ -2521,34 +2561,36 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
  /* ************************************** */
 
-  if(el->unknownProtoSent || el->unknownProtoRcvd) {
-    printSectionTitle("Unknown Protocols");
+  if(el->nonIPTraffic != NULL) {
+    if(el->nonIPTraffic->unknownProtoSent || el->nonIPTraffic->unknownProtoRcvd) {
+      printSectionTitle("Unknown Protocols");
 
-    sendString("<CENTER>\n"
-	       ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "DARK_BG">"
-	       "<TH "TH_BG" WIDTH=200>Data&nbsp;Sent</TH>"
-	       "<TH "TH_BG" WIDTH=200>Data&nbsp;Rcvd</TH></TR>\n");
+      sendString("<CENTER>\n"
+		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "DARK_BG">"
+		 "<TH "TH_BG" WIDTH=200>Data&nbsp;Sent</TH>"
+		 "<TH "TH_BG" WIDTH=200>Data&nbsp;Rcvd</TH></TR>\n");
 
-    if(el->unknownProtoSent == NULL) {
-      sendString("<TR><TH "TH_BG">&nbsp;</TH>");
-    } else {
-      sendString("<TR><TH "TH_BG" ALIGN=LEFT>");
-      for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
-	printUnknownProto(el->unknownProtoSent[i]);
-      sendString("&nbsp;</TH>");
+      if(el->nonIPTraffic->unknownProtoSent == NULL) {
+	sendString("<TR><TH "TH_BG">&nbsp;</TH>");
+      } else {
+	sendString("<TR><TH "TH_BG" ALIGN=LEFT>");
+	for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
+	  printUnknownProto(el->nonIPTraffic->unknownProtoSent[i]);
+	sendString("&nbsp;</TH>");
+      }
+
+      if(el->nonIPTraffic->unknownProtoRcvd == NULL) {
+	sendString("<TH "TH_BG">&nbsp;</TH></TR>");
+      } else {
+	sendString("<TH "TH_BG" ALIGN=LEFT>");
+	for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
+	  printUnknownProto(el->nonIPTraffic->unknownProtoRcvd[i]);
+	sendString("&nbsp;</TH></TR>");
+      }
+
+      sendString("</TABLE>"TABLE_OFF"<P>\n");
+      sendString("</CENTER>\n");
     }
-
-    if(el->unknownProtoRcvd == NULL) {
-      sendString("<TH "TH_BG">&nbsp;</TH></TR>");
-    } else {
-      sendString("<TH "TH_BG" ALIGN=LEFT>");
-      for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
-	printUnknownProto(el->unknownProtoRcvd[i]);
-      sendString("&nbsp;</TH></TR>");
-    }
-
-    sendString("</TABLE>"TABLE_OFF"<P>\n");
-    sendString("</CENTER>\n");
   }
 }
 

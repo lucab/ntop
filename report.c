@@ -1274,137 +1274,145 @@ void printHostsTraffic(int reportTypeReq,
 	switch(reportType) {
 	case SORT_DATA_RECEIVED_PROTOS:
 	  safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      getRowColor(), webHostName,
-		      formatBytes(el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
-		      rcvdPercent, myGlobals.separator,
-		      formatBytes(el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1, formatBuf1, sizeof(formatBuf1)),
-		      formatBytes(el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
-		      formatBytes(el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
-		      formatBytes(el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
-		      formatBytes(el->dlcRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
-		      formatBytes(el->ipxRcvd.value, 1, formatBuf6, sizeof(formatBuf6)),
-		      formatBytes(el->decnetRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
-		      formatBytes(el->arp_rarpRcvd.value, 1, formatBuf8, sizeof(formatBuf8)),
-		      formatBytes(el->appletalkRcvd.value, 1, formatBuf9, sizeof(formatBuf9))
-		      );
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			getRowColor(), webHostName,
+			formatBytes(el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+			rcvdPercent, myGlobals.separator,
+			formatBytes(el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+			formatBytes(el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxRcvd.value, 1, formatBuf6, sizeof(formatBuf6)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpRcvd.value, 1, formatBuf8, sizeof(formatBuf8)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkRcvd.value, 1, formatBuf9, sizeof(formatBuf9))
+			);
 	  sendString(buf);
 
 	  safe_snprintf(buf, sizeof(buf),
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      formatBytes(el->netbiosRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
-		      formatBytes(el->osiRcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
-		      formatBytes(el->ipv6Rcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
-		      formatBytes(el->stpRcvd.value, 1, formatBuf4, sizeof(formatBuf4)));
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiRcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->ipv6Rcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpRcvd.value, 1, formatBuf4, sizeof(formatBuf4)));
 	  sendString(buf);
 
 	  protoList = myGlobals.ipProtosList, idx1=0;
 	  while(protoList != NULL) {
 	    safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			formatBytes(el->ipProtosList[idx1].rcvd.value, 1,
-				    formatBuf, sizeof(formatBuf)));
+			  formatBytes(el->ipProtosList[idx1].rcvd.value, 1,
+				      formatBuf, sizeof(formatBuf)));
 	    sendString(buf);
 
 	    idx1++, protoList = protoList->next;
 	  }
 
 	  safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      formatBytes(el->otherRcvd.value, 1, formatBuf, sizeof(formatBuf)));
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->otherRcvd.value, 1, formatBuf, sizeof(formatBuf)));
 	  sendString(buf);
 	  break;
 	case SORT_DATA_SENT_PROTOS:
 	  safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      getRowColor(), webHostName,
-		      formatBytes(el->bytesSent.value, 1, formatBuf, sizeof(formatBuf)), sentPercent, myGlobals.separator,
-		      formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value, 1, formatBuf1, sizeof(formatBuf1)),
-		      formatBytes(el->udpSentLoc.value+el->udpSentRem.value, 1, formatBuf2, sizeof(formatBuf2)),
-		      formatBytes(el->icmpSent.value, 1, formatBuf3, sizeof(formatBuf3)),
-		      formatBytes(el->icmp6Sent.value, 1, formatBuf4, sizeof(formatBuf4)),
-		      formatBytes(el->dlcSent.value, 1, formatBuf5, sizeof(formatBuf5)),
-		      formatBytes(el->ipxSent.value, 1, formatBuf6, sizeof(formatBuf6)),
-		      formatBytes(el->decnetSent.value, 1, formatBuf7, sizeof(formatBuf7)),
-		      formatBytes(el->arp_rarpSent.value, 1, formatBuf8, sizeof(formatBuf8)),
-		      formatBytes(el->appletalkSent.value, 1, formatBuf9, sizeof(formatBuf9))
-		      );
-
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			getRowColor(), webHostName,
+			formatBytes(el->bytesSent.value, 1, formatBuf, sizeof(formatBuf)), sentPercent, myGlobals.separator,
+			formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->udpSentLoc.value+el->udpSentRem.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->icmpSent.value, 1, formatBuf3, sizeof(formatBuf3)),
+			formatBytes(el->icmp6Sent.value, 1, formatBuf4, sizeof(formatBuf4)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcSent.value, 1, formatBuf5, sizeof(formatBuf5)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxSent.value, 1, formatBuf6, sizeof(formatBuf6)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetSent.value, 1, formatBuf7, sizeof(formatBuf7)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpSent.value, 1, formatBuf8, sizeof(formatBuf8)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkSent.value, 1, formatBuf9, sizeof(formatBuf9))
+			);
+	  
 	  sendString(buf);
-
+	  
 	  safe_snprintf(buf, sizeof(buf),
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      formatBytes(el->netbiosSent.value, 1, formatBuf, sizeof(formatBuf)),
-		      formatBytes(el->osiSent.value, 1, formatBuf1, sizeof(formatBuf1)),
-		      formatBytes(el->ipv6Sent.value, 1, formatBuf2, sizeof(formatBuf2)),
-		      formatBytes(el->stpSent.value, 1, formatBuf3, sizeof(formatBuf3)));
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosSent.value, 1, formatBuf, sizeof(formatBuf)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiSent.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->ipv6Sent.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpSent.value, 1, formatBuf3, sizeof(formatBuf3)));
 	  sendString(buf);
 
 	  protoList = myGlobals.ipProtosList, idx1=0;
 	  while(protoList != NULL) {
 	    safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			formatBytes(el->ipProtosList[idx1].sent.value, 1, 
-				    formatBuf, sizeof(formatBuf)));
+			  formatBytes(el->ipProtosList[idx1].sent.value, 1, 
+				      formatBuf, sizeof(formatBuf)));
 	    sendString(buf);
 
 	    idx1++, protoList = protoList->next;
 	  }
 
 	  safe_snprintf(buf, sizeof(buf),
-		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-		      formatBytes(el->otherSent.value, 1, formatBuf, sizeof(formatBuf))
-		      );
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->otherSent.value, 1, formatBuf, sizeof(formatBuf))
+			);
 	  sendString(buf);
 	  break;
         case SORT_DATA_PROTOS:
           safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>%s"
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-                      getRowColor(), webHostName,
-                      formatBytes(el->bytesSent.value+el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
-		      totPercent, myGlobals.separator,
-                      formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value+
-                                  el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1, formatBuf1, sizeof(formatBuf1)),
-                      formatBytes(el->udpSentLoc.value+el->udpSentRem.value+
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>""<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			getRowColor(), webHostName,
+			formatBytes(el->bytesSent.value+el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
+			totPercent, myGlobals.separator,
+			formatBytes(el->tcpSentLoc.value+el->tcpSentRem.value+
+				    el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value, 1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->udpSentLoc.value+el->udpSentRem.value+
                                   el->udpRcvdLoc.value+el->udpRcvdFromRem.value, 1, formatBuf2, sizeof(formatBuf2)),
-                      formatBytes(el->icmpSent.value+el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
-		      formatBytes(el->icmp6Sent.value+el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
-                      formatBytes(el->dlcSent.value+el->dlcRcvd.value, 1, formatBuf5, sizeof(formatBuf5)),
-                      formatBytes(el->ipxSent.value+el->ipxRcvd.value, 1, formatBuf6, sizeof(formatBuf6)),
-                      formatBytes(el->decnetSent.value+el->decnetRcvd.value, 1, formatBuf7, sizeof(formatBuf7)),
-                      formatBytes(el->arp_rarpSent.value+el->arp_rarpRcvd.value, 1, formatBuf8, sizeof(formatBuf8)),
-                      formatBytes(el->appletalkSent.value+el->appletalkRcvd.value, 1, formatBuf9, sizeof(formatBuf9))
-                      );
+			formatBytes(el->icmpSent.value+el->icmpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)),
+			formatBytes(el->icmp6Sent.value+el->icmp6Rcvd.value, 1, formatBuf4, sizeof(formatBuf4)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->dlcSent.value+el->nonIPTraffic->dlcRcvd.value, 
+				    1, formatBuf5, sizeof(formatBuf5)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->ipxSent.value+el->nonIPTraffic->ipxRcvd.value, 
+				    1, formatBuf6, sizeof(formatBuf6)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->decnetSent.value+el->nonIPTraffic->decnetRcvd.value, 
+				    1, formatBuf7, sizeof(formatBuf7)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->arp_rarpSent.value+el->nonIPTraffic->arp_rarpRcvd.value, 
+				    1, formatBuf8, sizeof(formatBuf8)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->appletalkSent.value+el->nonIPTraffic->appletalkRcvd.value, 
+				    1, formatBuf9, sizeof(formatBuf9))
+			);
 
           sendString(buf);
 
           safe_snprintf(buf, sizeof(buf),
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
-                      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-                      formatBytes(el->netbiosSent.value+el->netbiosRcvd.value, 1, formatBuf, sizeof(formatBuf)),
-                      formatBytes(el->osiSent.value+el->osiRcvd.value, 1, formatBuf1, sizeof(formatBuf1)),
-                      formatBytes(el->ipv6Sent.value+el->ipv6Rcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
-                      formatBytes(el->stpSent.value+el->stpRcvd.value, 1, formatBuf3, sizeof(formatBuf3)));
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->netbiosSent.value+el->nonIPTraffic->netbiosRcvd.value, 
+				    1, formatBuf, sizeof(formatBuf)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->osiSent.value+el->nonIPTraffic->osiRcvd.value, 
+				    1, formatBuf1, sizeof(formatBuf1)),
+			formatBytes(el->ipv6Sent.value+el->ipv6Rcvd.value, 1, formatBuf2, sizeof(formatBuf2)),
+			formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->stpSent.value+el->nonIPTraffic->stpRcvd.value, 
+				    1, formatBuf3, sizeof(formatBuf3)));
           sendString(buf);
 
 	  protoList = myGlobals.ipProtosList, idx1=0;
@@ -1419,8 +1427,9 @@ void printHostsTraffic(int reportTypeReq,
 
           safe_snprintf(buf, sizeof(buf),
                       "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-                      formatBytes(el->otherSent.value+el->otherRcvd.value, 1, formatBuf, sizeof(formatBuf))
-                      );
+                      formatBytes(el->nonIPTraffic == NULL ? 0 : el->nonIPTraffic->otherSent.value+el->nonIPTraffic->otherRcvd.value,
+				  1, formatBuf, sizeof(formatBuf))
+			);
           sendString(buf);
 
           break;

@@ -1977,29 +1977,32 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx)
             updateTrafficCounter(rrdPath, "udpFragmentsRcvd", &el->udpFragmentsRcvd);
             updateTrafficCounter(rrdPath, "icmpFragmentsSent", &el->icmpFragmentsSent);
             updateTrafficCounter(rrdPath, "icmpFragmentsRcvd", &el->icmpFragmentsRcvd);
-            updateTrafficCounter(rrdPath, "stpSent", &el->stpSent);
-            updateTrafficCounter(rrdPath, "stpRcvd", &el->stpRcvd);
-            updateTrafficCounter(rrdPath, "ipxSent", &el->ipxSent);
-            updateTrafficCounter(rrdPath, "ipxRcvd", &el->ipxRcvd);
-            updateTrafficCounter(rrdPath, "osiSent", &el->osiSent);
-            updateTrafficCounter(rrdPath, "osiRcvd", &el->osiRcvd);
-            updateTrafficCounter(rrdPath, "dlcSent", &el->dlcSent);
-            updateTrafficCounter(rrdPath, "dlcRcvd", &el->dlcRcvd);
-            updateTrafficCounter(rrdPath, "arp_rarpSent", &el->arp_rarpSent);
-            updateTrafficCounter(rrdPath, "arp_rarpRcvd", &el->arp_rarpRcvd);
-            updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->arpReqPktsSent);
-            updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->arpReplyPktsSent);
-            updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->arpReplyPktsRcvd);
-            updateTrafficCounter(rrdPath, "decnetSent", &el->decnetSent);
-            updateTrafficCounter(rrdPath, "decnetRcvd", &el->decnetRcvd);
-            updateTrafficCounter(rrdPath, "appletalkSent", &el->appletalkSent);
-            updateTrafficCounter(rrdPath, "appletalkRcvd", &el->appletalkRcvd);
-            updateTrafficCounter(rrdPath, "netbiosSent", &el->netbiosSent);
-            updateTrafficCounter(rrdPath, "netbiosRcvd", &el->netbiosRcvd);
             updateTrafficCounter(rrdPath, "ipv6Sent", &el->ipv6Sent);
             updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd);
-            updateTrafficCounter(rrdPath, "otherSent", &el->otherSent);
-            updateTrafficCounter(rrdPath, "otherRcvd", &el->otherRcvd);
+
+	    if(el->nonIPTraffic) {
+	      updateTrafficCounter(rrdPath, "stpSent", &el->nonIPTraffic->stpSent);
+	      updateTrafficCounter(rrdPath, "stpRcvd", &el->nonIPTraffic->stpRcvd);
+	      updateTrafficCounter(rrdPath, "ipxSent", &el->nonIPTraffic->ipxSent);
+	      updateTrafficCounter(rrdPath, "ipxRcvd", &el->nonIPTraffic->ipxRcvd);
+	      updateTrafficCounter(rrdPath, "osiSent", &el->nonIPTraffic->osiSent);
+	      updateTrafficCounter(rrdPath, "osiRcvd", &el->nonIPTraffic->osiRcvd);
+	      updateTrafficCounter(rrdPath, "dlcSent", &el->nonIPTraffic->dlcSent);
+	      updateTrafficCounter(rrdPath, "dlcRcvd", &el->nonIPTraffic->dlcRcvd);
+	      updateTrafficCounter(rrdPath, "arp_rarpSent", &el->nonIPTraffic->arp_rarpSent);
+	      updateTrafficCounter(rrdPath, "arp_rarpRcvd", &el->nonIPTraffic->arp_rarpRcvd);
+	      updateTrafficCounter(rrdPath, "arpReqPktsSent", &el->nonIPTraffic->arpReqPktsSent);
+	      updateTrafficCounter(rrdPath, "arpReplyPktsSent", &el->nonIPTraffic->arpReplyPktsSent);
+	      updateTrafficCounter(rrdPath, "arpReplyPktsRcvd", &el->nonIPTraffic->arpReplyPktsRcvd);
+	      updateTrafficCounter(rrdPath, "decnetSent", &el->nonIPTraffic->decnetSent);
+	      updateTrafficCounter(rrdPath, "decnetRcvd", &el->nonIPTraffic->decnetRcvd);
+	      updateTrafficCounter(rrdPath, "appletalkSent", &el->nonIPTraffic->appletalkSent);
+	      updateTrafficCounter(rrdPath, "appletalkRcvd", &el->nonIPTraffic->appletalkRcvd);
+	      updateTrafficCounter(rrdPath, "netbiosSent", &el->nonIPTraffic->netbiosSent);
+	      updateTrafficCounter(rrdPath, "netbiosRcvd", &el->nonIPTraffic->netbiosRcvd);
+	      updateTrafficCounter(rrdPath, "otherSent", &el->nonIPTraffic->otherSent);
+	      updateTrafficCounter(rrdPath, "otherRcvd", &el->nonIPTraffic->otherRcvd);
+	    }
 
             protoList = myGlobals.ipProtosList, idx=0;
             while(protoList != NULL) {

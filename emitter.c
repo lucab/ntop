@@ -738,7 +738,12 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
       wrtLlongItm(fDescr, lang, "\t", "ipBytesSent", el->ipBytesSent, ',', numEntries);
     if(checkFilter(filter, "ipBytesRcvd"))
       wrtLlongItm(fDescr, lang, "\t", "ipBytesRcvd", el->ipBytesRcvd, ',', numEntries);
-
+    
+    if(checkFilter(filter, "ipv6Sent"))
+      wrtLlongItm(fDescr, lang, "\t", "ipv6Sent", el->ipv6Sent, ',', numEntries);
+    if(checkFilter(filter, "ipv6Rcvd"))
+      wrtLlongItm(fDescr, lang, "\t", "ipv6Rcvd", el->ipv6Rcvd, ',', numEntries);
+    
     ctr.value = el->tcpSentLoc.value+el->tcpSentRem.value;
     if(checkFilter(filter, "tcpBytesSent"))
       wrtLlongItm(fDescr, lang, "\t", "tcpBytesSent", ctr, ',', numEntries);
@@ -792,54 +797,52 @@ void dumpNtopHashes(FILE *fDescr, char* options, int actualDeviceId) {
 	wrtLlongItm(fDescr, lang, "\t", "icmpFragmentsRcvd", el->icmpFragmentsRcvd, ',', numEntries);
 
       /* ***************************** */
+      
+      if(el->nonIPTraffic != NULL) {
+	if(checkFilter(filter, "stpSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "stpSent", el->nonIPTraffic->stpSent, ',', numEntries);
+	if(checkFilter(filter, "stpRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "stpRcvd", el->nonIPTraffic->stpRcvd, ',', numEntries);
+	if(checkFilter(filter, "ipxSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "ipxSent", el->nonIPTraffic->ipxSent, ',', numEntries);
+	if(checkFilter(filter, "ipxRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "ipxRcvd", el->nonIPTraffic->ipxRcvd, ',', numEntries);
+	if(checkFilter(filter, "osiSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "osiSent", el->nonIPTraffic->osiSent, ',', numEntries);
+	if(checkFilter(filter, "osiRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "osiRcvd", el->nonIPTraffic->osiRcvd, ',', numEntries);
+	if(checkFilter(filter, "dlcSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "dlcSent", el->nonIPTraffic->dlcSent, ',', numEntries);
+	if(checkFilter(filter, "dlcRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "dlcRcvd", el->nonIPTraffic->dlcRcvd, ',', numEntries);
 
-      if(checkFilter(filter, "stpSent"))
-	wrtLlongItm(fDescr, lang, "\t", "stpSent",        el->stpSent, ',', numEntries);
-      if(checkFilter(filter, "stpRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "stpRcvd",    el->stpRcvd, ',', numEntries);
-      if(checkFilter(filter, "ipxSent"))
-	wrtLlongItm(fDescr, lang, "\t", "ipxSent",        el->ipxSent, ',', numEntries);
-      if(checkFilter(filter, "ipxRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "ipxRcvd",    el->ipxRcvd, ',', numEntries);
-      if(checkFilter(filter, "osiSent"))
-	wrtLlongItm(fDescr, lang, "\t", "osiSent",        el->osiSent, ',', numEntries);
-      if(checkFilter(filter, "osiRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "osiRcvd",    el->osiRcvd, ',', numEntries);
-      if(checkFilter(filter, "dlcSent"))
-	wrtLlongItm(fDescr, lang, "\t", "dlcSent",        el->dlcSent, ',', numEntries);
-      if(checkFilter(filter, "dlcRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "dlcRcvd",    el->dlcRcvd, ',', numEntries);
-
-      if(checkFilter(filter, "arp_rarpSent"))
-	wrtLlongItm(fDescr, lang, "\t", "arp_rarpSent",   el->arp_rarpSent, ',', numEntries);
-      if(checkFilter(filter, "arp_rarpRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "arp_rarpRcvd", el->arp_rarpRcvd, ',', numEntries);
-      if(checkFilter(filter, "arpReqPktsSent"))
-	wrtLlongItm(fDescr, lang, "\t", "arpReqPktsSent", el->arpReqPktsSent, ',', numEntries);
-      if(checkFilter(filter, "arpReplyPktsSent"))
-	wrtLlongItm(fDescr, lang, "\t", "arpReplyPktsSent", el->arpReplyPktsSent, ',', numEntries);
-      if(checkFilter(filter, "arpReplyPktsRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "arpReplyPktsRcvd", el->arpReplyPktsRcvd, ',', numEntries);
-      if(checkFilter(filter, "decnetSent"))
-	wrtLlongItm(fDescr, lang, "\t", "decnetSent",     el->decnetSent, ',', numEntries);
-      if(checkFilter(filter, "decnetRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "decnetRcvd", el->decnetRcvd, ',', numEntries);
-      if(checkFilter(filter, "appletalkSent"))
-	wrtLlongItm(fDescr, lang, "\t", "appletalkSent",  el->appletalkSent, ',', numEntries);
-      if(checkFilter(filter, "appletalkRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "appletalkRcvd",el->appletalkRcvd, ',', numEntries);
-      if(checkFilter(filter, "netbiosSent"))
-	wrtLlongItm(fDescr, lang, "\t", "netbiosSent",    el->netbiosSent, ',', numEntries);
-      if(checkFilter(filter, "netbiosRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "netbiosRcvd", el->netbiosRcvd, ',', numEntries);
-      if(checkFilter(filter, "ipv6Sent"))
-	wrtLlongItm(fDescr, lang, "\t", "ipv6Sent",        el->ipv6Sent, ',', numEntries);
-      if(checkFilter(filter, "ipv6Rcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "ipv6Rcvd",    el->ipv6Rcvd, ',', numEntries);
-      if(checkFilter(filter, "otherSent"))
-	wrtLlongItm(fDescr, lang, "\t", "otherSent",      el->otherSent, ',', numEntries);
-      if(checkFilter(filter, "otherRcvd"))
-	wrtLlongItm(fDescr, lang, "\t", "otherRcvd",  el->otherRcvd, ',', numEntries);
+	if(checkFilter(filter, "arp_rarpSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "arp_rarpSent",el->nonIPTraffic->arp_rarpSent, ',', numEntries);
+	if(checkFilter(filter, "arp_rarpRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "arp_rarpRcvd", el->nonIPTraffic->arp_rarpRcvd, ',', numEntries);
+	if(checkFilter(filter, "arpReqPktsSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "arpReqPktsSent", el->nonIPTraffic->arpReqPktsSent, ',', numEntries);
+	if(checkFilter(filter, "arpReplyPktsSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "arpReplyPktsSent", el->nonIPTraffic->arpReplyPktsSent, ',', numEntries);
+	if(checkFilter(filter, "arpReplyPktsRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "arpReplyPktsRcvd", el->nonIPTraffic->arpReplyPktsRcvd, ',', numEntries);
+	if(checkFilter(filter, "decnetSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "decnetSent", el->nonIPTraffic->decnetSent, ',', numEntries);
+	if(checkFilter(filter, "decnetRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "decnetRcvd", el->nonIPTraffic->decnetRcvd, ',', numEntries);
+	if(checkFilter(filter, "appletalkSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "appletalkSent", el->nonIPTraffic->appletalkSent, ',', numEntries);
+	if(checkFilter(filter, "appletalkRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "appletalkRcvd", el->nonIPTraffic->appletalkRcvd, ',', numEntries);
+	if(checkFilter(filter, "netbiosSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "netbiosSent", el->nonIPTraffic->netbiosSent, ',', numEntries);
+	if(checkFilter(filter, "netbiosRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "netbiosRcvd", el->nonIPTraffic->netbiosRcvd, ',', numEntries);
+	if(checkFilter(filter, "otherSent"))
+	  wrtLlongItm(fDescr, lang, "\t", "otherSent", el->nonIPTraffic->otherSent, ',', numEntries);
+	if(checkFilter(filter, "otherRcvd"))
+	  wrtLlongItm(fDescr, lang, "\t", "otherRcvd", el->nonIPTraffic->otherRcvd, ',', numEntries);
+      }
 
       /* ********************************* */
 

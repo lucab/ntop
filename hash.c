@@ -383,8 +383,6 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
   myGlobals.device[actualDeviceId].hostsno--;
 
   if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
-  if(host->unknownProtoSent   != NULL)  free(host->unknownProtoSent);
-  if(host->unknownProtoRcvd   != NULL)  free(host->unknownProtoRcvd);
   if(host->ipProtosList       != NULL)  free(host->ipProtosList);
 
   if(host->nonIPTraffic) {
@@ -397,6 +395,8 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
       if(host->nonIPTraffic->atNodeType[i] != NULL) free(host->nonIPTraffic->atNodeType[i]);
     if(host->nonIPTraffic->atNodeName != NULL)          free(host->nonIPTraffic->atNodeName);
     if(host->nonIPTraffic->ipxHostName != NULL)         free(host->nonIPTraffic->ipxHostName);
+    if(host->nonIPTraffic->unknownProtoSent   != NULL)  free(host->nonIPTraffic->unknownProtoSent);
+    if(host->nonIPTraffic->unknownProtoRcvd   != NULL)  free(host->nonIPTraffic->unknownProtoRcvd);
     free(host->nonIPTraffic);
   }
 

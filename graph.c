@@ -532,10 +532,13 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   if(dataSent) {
     totTraffic.value = theHost->tcpSentLoc.value+theHost->tcpSentRem.value+
       theHost->udpSentLoc.value+theHost->udpSentRem.value+
-      theHost->icmpSent.value+theHost->stpSent.value
-      +theHost->ipxSent.value+theHost->osiSent.value+theHost->dlcSent.value+
-      theHost->arp_rarpSent.value+theHost->decnetSent.value+theHost->appletalkSent.value+
-      theHost->netbiosSent.value+theHost->ipv6Sent.value+theHost->otherSent.value;
+      theHost->icmpSent.value+theHost->ipv6Sent.value;
+    
+    if(theHost->nonIPTraffic != NULL)
+      totTraffic.value += theHost->nonIPTraffic->stpSent.value+
+	theHost->nonIPTraffic->ipxSent.value+theHost->nonIPTraffic->osiSent.value+theHost->nonIPTraffic->dlcSent.value+
+	theHost->nonIPTraffic->arp_rarpSent.value+theHost->nonIPTraffic->decnetSent.value+theHost->nonIPTraffic->appletalkSent.value+
+	theHost->nonIPTraffic->netbiosSent.value+theHost->nonIPTraffic->otherSent.value;
 
     idx = 0;
     while(protoList != NULL) {
@@ -545,11 +548,14 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   } else {
     totTraffic.value = theHost->tcpRcvdLoc.value+theHost->tcpRcvdFromRem.value+
       theHost->udpRcvdLoc.value+theHost->udpRcvdFromRem.value+
-      theHost->icmpRcvd.value+theHost->stpRcvd.value
-      +theHost->ipxRcvd.value+theHost->osiRcvd.value+theHost->dlcRcvd.value+
-      theHost->arp_rarpRcvd.value+theHost->decnetRcvd.value+theHost->appletalkRcvd.value+
-      theHost->netbiosRcvd.value+theHost->ipv6Rcvd.value+theHost->otherRcvd.value;
+      theHost->icmpRcvd.value+theHost->ipv6Rcvd.value;
 
+    if(theHost->nonIPTraffic != NULL)
+      totTraffic.value += theHost->nonIPTraffic->stpRcvd.value
+	+theHost->nonIPTraffic->ipxRcvd.value+theHost->nonIPTraffic->osiRcvd.value+theHost->nonIPTraffic->dlcRcvd.value+
+	theHost->nonIPTraffic->arp_rarpRcvd.value+theHost->nonIPTraffic->decnetRcvd.value+theHost->nonIPTraffic->appletalkRcvd.value+
+	theHost->nonIPTraffic->netbiosRcvd.value+theHost->nonIPTraffic->otherRcvd.value;
+    
     idx = 0;
     while(protoList != NULL) {
       totTraffic.value += theHost->ipProtosList[idx].rcvd.value;
@@ -576,54 +582,56 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";
       }
 
-      if(theHost->stpSent.value > 0) {
-	p[num] = (float)((100*theHost->stpSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
-      }
-
-      if(theHost->ipxSent.value > 0) {
-	p[num] = (float)((100*theHost->ipxSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPX";
-      }
-
-      if(theHost->dlcSent.value > 0) {
-	p[num] = (float)((100*theHost->dlcSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
-      }
-
-      if(theHost->osiSent.value > 0) {
-	p[num] = (float)((100*theHost->osiSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSI";
-      }
-
-      if(theHost->arp_rarpSent.value > 0) {
-	p[num] = (float)((100*theHost->arp_rarpSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
-      }
-
-      if(theHost->decnetSent.value > 0) {
-	p[num] = (float)((100*theHost->decnetSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DECNET";
-      }
-
-      if(theHost->appletalkSent.value > 0) {
-	p[num] = (float)((100*theHost->appletalkSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "AppleTalk";
-      }
-
-      if(theHost->netbiosSent.value > 0) {
-	p[num] = (float)((100*theHost->netbiosSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "NetBios";
-      }
-
       if(theHost->ipv6Sent.value > 0) {
 	p[num] = (float)((100*theHost->ipv6Sent.value)/totTraffic.value);
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPv6";
       }
 
-      if(theHost->otherSent.value > 0) {
-	p[num] = (float)((100*theHost->otherSent.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "Other";
+      if(theHost->nonIPTraffic != NULL) {
+	if(theHost->nonIPTraffic->stpSent.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->stpSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
+	}
+
+	if(theHost->nonIPTraffic->ipxSent.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->ipxSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPX";
+	}
+
+	if(theHost->nonIPTraffic->dlcSent.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->dlcSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
+	}
+
+	if(theHost->nonIPTraffic->osiSent.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->osiSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSI";
+	}
+
+	if(theHost->nonIPTraffic->arp_rarpSent.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->arp_rarpSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
+	}
+
+	if(theHost->nonIPTraffic->decnetSent.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->decnetSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DECNET";
+	}
+
+	if(theHost->nonIPTraffic->appletalkSent.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->appletalkSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "AppleTalk";
+	}
+
+	if(theHost->nonIPTraffic->netbiosSent.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->netbiosSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "NetBios";
+	}
+
+	if(theHost->nonIPTraffic->otherSent.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->otherSent.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "Other";
+	}
       }
     } else {
       if(theHost->tcpRcvdLoc.value+theHost->tcpRcvdFromRem.value > 0) {
@@ -640,47 +648,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
       if(theHost->icmpRcvd.value > 0) {
 	p[num] = (float)((100*theHost->icmpRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";
-      }
-
-      if(theHost->stpRcvd.value > 0) {
-	p[num] = (float)((100*theHost->stpRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
-      }
-
-      if(theHost->ipxRcvd.value > 0) {
-	p[num] = (float)((100*theHost->ipxRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPX";
-      }
-
-      if(theHost->dlcRcvd.value > 0) {
-	p[num] = (float)((100*theHost->dlcRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
-      }
-
-      if(theHost->osiRcvd.value > 0) {
-	p[num] = (float)((100*theHost->osiRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSI";
-      }
-
-      if(theHost->arp_rarpRcvd.value > 0) {
-	p[num] = (float)((100*theHost->arp_rarpRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
-      }
-
-      if(theHost->decnetRcvd.value > 0) {
-	p[num] = (float)((100*theHost->decnetRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DECNET";
-      }
-
-      if(theHost->appletalkRcvd.value > 0) {
-	p[num] = (float)((100*theHost->appletalkRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "AppleTalk";
-      }
-
-      if(theHost->netbiosRcvd.value > 0) {
-	p[num] = (float)((100*theHost->netbiosRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "NetBios";
+	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "ICMP";     
       }
 
       if(theHost->ipv6Rcvd.value > 0) {
@@ -688,11 +656,53 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPv6";
       }
 
-      if(theHost->otherRcvd.value > 0) {
-	p[num] = (float)((100*theHost->otherRcvd.value)/totTraffic.value);
-	if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "Other";
+      if(theHost->nonIPTraffic != NULL) {
+	if(theHost->nonIPTraffic->stpRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->stpRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "STP";
+	}
+
+	if(theHost->nonIPTraffic->ipxRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->ipxRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "IPX";
+	}
+
+	if(theHost->nonIPTraffic->dlcRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->dlcRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DLC";
+	}
+
+	if(theHost->nonIPTraffic->osiRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->osiRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "OSI";
+	}
+
+	if(theHost->nonIPTraffic->arp_rarpRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->arp_rarpRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "(R)ARP";
+	}
+
+	if(theHost->nonIPTraffic->decnetRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->decnetRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "DECNET";
+	}
+
+	if(theHost->nonIPTraffic->appletalkRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->appletalkRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "AppleTalk";
+	}
+
+	if(theHost->nonIPTraffic->netbiosRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->netbiosRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "NetBios";
+	}
+
+	if(theHost->nonIPTraffic->otherRcvd.value > 0) {
+	  p[num] = (float)((100*theHost->nonIPTraffic->otherRcvd.value)/totTraffic.value);
+	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = "Other";
+	}
       }
-    }
+  }
 
     idx = 0; protoList = myGlobals.ipProtosList;
     while(protoList != NULL) {
