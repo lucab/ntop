@@ -483,9 +483,11 @@ void sendStringLen(char *theString, unsigned int len) {
     if(compressFile) {
       if(compressFileFd == NULL) {
 #ifdef WIN32
-	sprintf(compressedFilePath, "gzip-%d.ntop", fileSerial++);
+	if(snprintf(compressedFilePath, sizeof(compressedFilePath), "gzip-%d.ntop", fileSerial++) < 0)
+          BufferTooShort();
 #else
-	sprintf(compressedFilePath, "/tmp/gzip-%d.ntop", getpid());
+	if(snprintf(compressedFilePath, sizeof(compressedFilePath), "/tmp/ntop-gzip-%d", getpid()) < 0)
+          BufferTooShort();
 #endif
 	
 	compressFileFd = gzopen(compressedFilePath, "wb");

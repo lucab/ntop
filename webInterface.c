@@ -5496,12 +5496,15 @@ void printNtopConfigInfo(int textPrintFlag) {
     char pid[16];
 
     if(myGlobals.daemonMode == 1) {
-      sprintf(pid, "%d", myGlobals.basentoppid);
+      if(snprintf(pid, sizeof(pid), "%d", myGlobals.basentoppid) < 0)
+        BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "ntop Process Id", pid);
-      sprintf(pid, "%d", getppid());
+      if(snprintf(pid, sizeof(pid), "%d", getppid()) < 0)
+        BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "http Process Id", pid);
     } else {
-      sprintf(pid, "%d", getppid());
+      if(snprintf(pid, sizeof(pid), "%d", getppid()) < 0)
+        BufferTooShort();
       printFeatureConfigInfo(textPrintFlag, "Process Id", pid);
     }
 

@@ -525,7 +525,7 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
 /* ************************ */
 
 void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
@@ -755,7 +755,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 /* ************************ */
 
 void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
@@ -840,7 +840,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 /* ************************ */
 
 void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[24];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "",
@@ -973,7 +973,7 @@ void hostTimeTrafficDistribution(HostTraffic *theHost, short dataSent) {
 /* ************************ */
 
 void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[20];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
@@ -1037,7 +1037,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
 /* ************************ */
 
 void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[MAX_NUM_PROTOS];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
@@ -1121,7 +1121,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 /* ********************************** */
 
 void pktSizeDistribPie(void) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[7];
   char	*lbl[] = { "", "", "", "", "", "", "" };
   int num=0;
@@ -1203,7 +1203,7 @@ void pktSizeDistribPie(void) {
 /* ********************************** */
 
 void pktTTLDistribPie(void) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[8];
   char	*lbl[] = { "", "", "", "", "", "", "" };
   int num=0;
@@ -1290,7 +1290,7 @@ void pktTTLDistribPie(void) {
 /* ************************ */
 
 void ipProtoDistribPie(void) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "Loc", "Rem->Loc", "Loc->Rem" };
   int num=0;
@@ -1347,7 +1347,7 @@ void ipProtoDistribPie(void) {
 /* ************************ */
 
 void interfaceTrafficPie(void) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[MAX_NUM_DEVICES];
   int i;
   FILE *fd;
@@ -1409,7 +1409,7 @@ void interfaceTrafficPie(void) {
 /* ************************ */
 
 void pktCastDistribPie(void) {
-  char fileName[64] = "/tmp/graph-XXXXXX";
+  char fileName[64] = "/tmp/ntop-graph-XXXXXX";
   float p[3];
   char	*lbl[] = { "", "", "" };
   int num=0, useFdOpen = 0;
@@ -1474,7 +1474,7 @@ void pktCastDistribPie(void) {
 /* ************************ */
 
 void drawTrafficPie(void) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   TrafficCounter ip;
   float p[2];
   char	*lbl[] = { "IP", "Non IP" };
@@ -1524,7 +1524,7 @@ void drawTrafficPie(void) {
 /* ************************ */
 
 void drawThptGraph(int sortedColumn) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int i, len;
   char  labels[60][32];
   char  *lbls[60];
@@ -1633,7 +1633,7 @@ void drawThptGraph(int sortedColumn) {
 /* ************************ */
 
 void drawGlobalProtoDistribution(void) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   TrafficCounter ip;
   float p[256]; /* Fix courtesy of Andreas Pfaller <apfaller@yahoo.com.au> */
   char	*lbl[16];
@@ -1720,7 +1720,7 @@ void drawGlobalProtoDistribution(void) {
 /* ************************ */
 
 void drawGlobalIpProtoDistribution(void) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int i, idx=0, idx1 = 0, maxNumDisplayProto = 13;
   float p[256];
   char *lbl[256];
@@ -1794,7 +1794,7 @@ void drawGlobalIpProtoDistribution(void) {
 /* ******************************** */
 
 int drawHostsDistanceGraph(int checkOnly) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int i, j, numPoints=0;
   char  *lbls[32], labels[32][8];
   FILE *fd;
@@ -1859,7 +1859,7 @@ int drawHostsDistanceGraph(int checkOnly) {
 /* ************************ */
 
 void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[MAX_NUM_PROTOS];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "",
 		   "", "", "", "", "", "", "", "", "", "" };
@@ -1953,7 +1953,7 @@ void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent) {
 /* ********************************** */
 
 void fcPktSizeDistribPie(void) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   float p[10];
   char	*lbl[] = { "", "", "", "", "", "", "", "", "", ""};
   int num=0;
@@ -2046,7 +2046,7 @@ void fcPktSizeDistribPie(void) {
 /* ******************************** */
 
 void drawGlobalFcProtoDistribution(void) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int idx=0;
   float p[256];
   char *lbl[256];
@@ -2119,7 +2119,7 @@ void drawGlobalFcProtoDistribution(void) {
 }
 
 void drawLunStatsBytesDistribution (HostTraffic *el) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int lun, numEntries, idx=0;
   float p[MAX_LUNS_GRAPHED+1];
   char *lbl[MAX_LUNS_GRAPHED+1];
@@ -2187,7 +2187,7 @@ void drawLunStatsBytesDistribution (HostTraffic *el) {
 }
 
 void drawLunStatsPktsDistribution (HostTraffic *el) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int lun, numEntries, idx=0;
   float p[MAX_LUNS_GRAPHED+1];
   char *lbl[MAX_LUNS_GRAPHED+1];
@@ -2256,7 +2256,7 @@ void drawLunStatsPktsDistribution (HostTraffic *el) {
 }
 
 void drawVsanStatsBytesDistribution (int deviceId) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int numVsans, idx=0, i, j;
   float p[MAX_VSANS_GRAPHED+1];
   char *lbl[MAX_VSANS_GRAPHED+1];
@@ -2337,7 +2337,7 @@ void drawVsanStatsBytesDistribution (int deviceId) {
 }
 
 void drawVsanStatsPktsDistribution (int deviceId) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int numVsans, idx=0, i, j;
   float p[MAX_VSANS_GRAPHED+1];
   char *lbl[MAX_VSANS_GRAPHED+1];
@@ -2417,7 +2417,7 @@ void drawVsanStatsPktsDistribution (int deviceId) {
 }
 
 void drawVsanSwilsProtoDistribution(u_short vsanId) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int idx=0;
   FcFabricElementHash *hash;
   float p[256];
@@ -2500,7 +2500,7 @@ void drawVsanSwilsProtoDistribution(u_short vsanId) {
 }
 
 void drawVsanDomainTrafficDistribution(u_short vsanId, u_char dataSent) {
-  char fileName[NAME_MAX] = "/tmp/graph-XXXXXX";
+  char fileName[NAME_MAX] = "/tmp/ntop-graph-XXXXXX";
   int i, idx=0, numEntries = 0;
   FcFabricElementHash *hash;
   float p[MAX_VSANS_GRAPHED+1];

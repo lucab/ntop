@@ -1541,7 +1541,8 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		} else {
 			sscanf(&tmpStr[27], "%d,%d,%d,%d,%d,%d", &a, &b, &c, &d, &e, &f);
 		}
-	    sprintf(tmpStr, "%d.%d.%d.%d", a, b, c, d);
+	    if(snprintf(tmpStr, sizeof(tmpStr), "%d.%d.%d.%d", a, b, c, d) < 0)
+              BufferTooShort();
 
 #ifdef FTP_DEBUG
 	    traceEvent(CONST_TRACE_INFO, "FTP_DEBUG: (%d) [%d.%d.%d.%d:%d]",

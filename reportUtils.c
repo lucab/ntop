@@ -2942,8 +2942,9 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     memcpy ((u_int8_t *)&el->hostFcAddress,
             (u_int8_t *)&theSerial.value.fcSerial.fcAddress,
             LEN_FC_ADDRESS);
-    sprintf (el->hostNumFcAddress, "%02x.%02x.%02x", el->hostFcAddress.domain,
-             el->hostFcAddress.area, el->hostFcAddress.port);
+    if(snprintf (el->hostNumFcAddress, sizeof(el->hostNumFcAddress), "%02x.%02x.%02x", el->hostFcAddress.domain,
+             el->hostFcAddress.area, el->hostFcAddress.port) < 0)
+      BufferTooShort();
     setResolvedName(el, el->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FC);
 //TODO ? FC_NUM????
     el->vsanId = theSerial.value.fcSerial.vsanId;
@@ -6913,13 +6914,15 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
             theAnchor[4] = htmlAnchor1;
         }
 
+        /* Added by Ola Lundqvist <opal@debian.org> */
+        if(snprintf(pcapFilename, sizeof(pcapFilename),
 #ifdef WIN32        
-        sprintf(pcapFilename, "file:%s/ntop-suspicious-pkts.none.pcap",
-                myGlobals.pcapLogBasePath); /* Added by Ola Lundqvist <opal@debian.org> */
+                "file:%s\ntop-suspicious-pkts.none.pcap",
 #else
-        sprintf(pcapFilename, "file://%s/ntop-suspicious-pkts.none.pcap",
-                myGlobals.pcapLogBasePath); /* Added by Ola Lundqvist <opal@debian.org> */
+                "file://%s/ntop-suspicious-pkts.none.pcap",
 #endif        
+                myGlobals.pcapLogBasePath) < 0)
+          BufferTooShort();
         
         sendString("<CENTER>\n");
         if (snprintf(buf, sizeof (buf),

@@ -1399,7 +1399,7 @@
  */
 #define CONST_XML_DOCTYPE_NAME              "ntop_dump"
 #define CONST_XML_DTD_NAME                  "ntopdump.dtd"
-#define CONST_XML_TMP_NAME                  "/tmp/ntopxml"
+#define CONST_XML_TMP_NAME                  "/tmp/ntop-xml"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *  These are just useful things, shorthand, etc.  Don't change 'em

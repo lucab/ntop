@@ -2831,8 +2831,9 @@ FILE* getNewRandomFile(char* fileName, int len) {
   char tmpFileName[NAME_MAX];
 
   strcpy(tmpFileName, fileName);
-  sprintf(fileName, "%s-%lu", tmpFileName,
-          myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]);
+  if(snprintf(fileName, sizeof(fileName), "%s-%lu", tmpFileName,
+          myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]) < 0)
+    BufferTooShort();
   fd = fopen(fileName, "wb");
 #endif /* 0 */
 #else
@@ -3398,7 +3399,8 @@ char* mapIcmpType(int icmpType) {
   case 17: return("MASKREQ");
   case 18: return("MASKREPLY");
   default:
-    sprintf(icmpString, "%d", icmpType);
+    if(snprintf(icmpString, sizeof(icmpString), "%d", icmpType) < 0)
+      BufferTooShort();
     return(icmpString);
   }
 }
@@ -4393,11 +4395,12 @@ void saveNtopPid(void) {
   FILE *fd;
 
   myGlobals.basentoppid = getpid();
-  sprintf(pidFileName, "%s/%s",
+  if(snprintf(pidFileName, sizeof(pidFileName), "%s/%s",
           getuid() ?
 	  /* We're not root */ myGlobals.dbPath :
 	  /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
-          DEFAULT_NTOP_PIDFILE);
+          DEFAULT_NTOP_PIDFILE) < 0)
+    BufferTooShort();
   fd = fopen(pidFileName, "wb");
 
   if(fd == NULL) {
@@ -4415,11 +4418,12 @@ void removeNtopPid(void) {
   char pidFileName[NAME_MAX];
   int rc;
 
-  sprintf(pidFileName, "%s/%s",
+  if(snprintf(pidFileName, sizeof(pidFileName), "%s/%s",
           getuid() ?
 	  /* We're not root */ myGlobals.dbPath :
 	  /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
-          DEFAULT_NTOP_PIDFILE);
+          DEFAULT_NTOP_PIDFILE) < 0)
+    BufferTooShort();
   rc = unlink(pidFileName);
   if (rc == 0) {
     traceEvent(CONST_TRACE_INFO, "TERM: Removed pid file (%s)", pidFileName);

@@ -1328,8 +1328,9 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     el->hostFcAddress.domain = hostFcAddress->domain;
     el->hostFcAddress.area = hostFcAddress->area;
     el->hostFcAddress.port = hostFcAddress->port;
-    sprintf (el->hostNumFcAddress, "%02x.%02x.%02x", hostFcAddress->domain,
-             hostFcAddress->area, hostFcAddress->port);
+    if(snprintf(el->hostNumFcAddress, sizeof(el->hostNumFcAddress), "%02x.%02x.%02x", hostFcAddress->domain,
+             hostFcAddress->area, hostFcAddress->port) < 0)
+      BufferTooShort();
     /* TBD: Resolve FC_ID to WWN */
     el->vsanId = vsanId;
 

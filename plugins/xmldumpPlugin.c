@@ -1794,8 +1794,9 @@ int dumpXML_writeout(void) {
 
     /* Create a unique temp name and have gdome dump the generated xml to it */
 
-    sprintf(tmpFileName, "%s-%lu", CONST_XML_TMP_NAME,
-            myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]);
+    if(snprintf(tmpFileName, sizeof(tmpFileName), "%s-%lu", CONST_XML_TMP_NAME,
+            myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]) < 0)
+      BufferTooShort();
 #ifdef XMLDUMP_DEBUG
     traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Dumping dom to temp file, '%s'", tmpFileName);
 #endif

@@ -651,7 +651,8 @@ static u_long *readExtendedSwitch(SFSample *sample, u_long *datap, u_char *endPt
 static char *IP_to_a(u_long ipaddr, char *buf)
 {
   u_char *ip = (u_char *)&ipaddr;
-  sprintf(buf, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+  if(snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]) < 0)
+    BufferTooShort();
   return buf;
 }
 

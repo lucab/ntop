@@ -2168,7 +2168,8 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	  } else
 	    i = 0;
 
-	  sprintf(shortBuf, "%d", i % 256);
+	  if(snprintf(shortBuf, sizeof(shortBuf), "%d", i % 256) < 0)
+            BufferTooShort();
 
 	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>&nbsp;%s</TD>",
 		      (i == 0) ? "" : shortBuf) < 0)

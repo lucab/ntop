@@ -1285,11 +1285,11 @@ static void processIpPkt(const u_char *bp,
 		    }
 		}
 
-	      if(WS == -1) sprintf(WSS, "WS");
+	      if(WS == -1) if(snprintf(WSS, sizeof(WSS), "WS") < 0) BufferTooShort();
 	      else if(snprintf(WSS, sizeof(WSS), "%02d", WS) < 0)
                 BufferTooShort();
 
-	      if(MSS == -1) sprintf(_MSS, "_MSS");
+	      if(MSS == -1) if(snprintf(_MSS, sizeof(_MSS), "_MSS") < 0) BufferTooShort();
 	      else if(snprintf(_MSS, sizeof(_MSS), "%04X", MSS) < 0)
                 BufferTooShort();
 
