@@ -257,7 +257,8 @@ void printHeader(int reportType, int revertOrder, u_int column) {
       if(abs(column) == 0)
 	{ arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
       else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
-      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
+      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
+	       "<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
 	      "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
 	      "<TH "TH_BG" COLSPAN=2>%s0>Sent%s</A></TH>\n",
 	      theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2]);
@@ -268,7 +269,8 @@ void printHeader(int reportType, int revertOrder, u_int column) {
       if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
 	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor;  }
       else { arrow[1] = ""; theAnchor[1] = htmlAnchor1; }
-      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
+      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
+	       "<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
 	      "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
 	      theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
     }
@@ -303,7 +305,8 @@ void printHeader(int reportType, int revertOrder, u_int column) {
       if(abs(column) == 0)
 	{ arrow[2] = arrowGif; theAnchor[2] = htmlAnchor;  }
       else { arrow[2] = ""; theAnchor[2] = htmlAnchor1; }
-      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
+      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
+	       "<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>\n"
 	      "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
 	      "<TH "TH_BG" COLSPAN=2>%s0>Received%s</A></TH>\n",
 	      theAnchor[0], arrow[0], theAnchor[1], arrow[1], theAnchor[2], arrow[2]);
@@ -314,7 +317,8 @@ void printHeader(int reportType, int revertOrder, u_int column) {
       if(abs(column) == DOMAIN_DUMMY_IDX_VALUE)
 	{ arrow[1] = arrowGif; theAnchor[1] = htmlAnchor; }
       else { arrow[1] = ""; theAnchor[1] = htmlAnchor1;}
-      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR><TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
+      snprintf(buf, BUF_SIZE, ""TABLE_ON"<TABLE BORDER=1><TR>"
+	       "<TH "TH_BG">%s"HOST_DUMMY_IDX_STR">Host%s</A></TH>"
 	      "<TH "TH_BG">%s"DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>\n\n",
 	      theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
     }
@@ -365,8 +369,10 @@ void printHeader(int reportType, int revertOrder, u_int column) {
       { arrow[13] = arrowGif; theAnchor[13] = htmlAnchor;  }
     else { arrow[13] = "";  theAnchor[13] = htmlAnchor1;  }
 
-    snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s1>TCP%s</A></TH><TH "TH_BG">%s2>UDP%s</A></TH><TH "TH_BG">%s3>ICMP%s</A></TH>"
-	    "<TH "TH_BG">%s4>DLC%s</A></TH><TH "TH_BG">%s5>IPX%s</A></TH><TH "TH_BG">%s6>Decnet%s</A></TH>"
+    snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s1>TCP%s</A></TH>"
+	     "<TH "TH_BG">%s2>UDP%s</A></TH><TH "TH_BG">%s3>ICMP%s</A></TH>"
+	    "<TH "TH_BG">%s4>DLC%s</A></TH><TH "TH_BG">%s5>IPX%s</A>"
+	     "</TH><TH "TH_BG">%s6>Decnet%s</A></TH>"
 	     "<TH "TH_BG">%s7>(R)ARP%s</A></TH><TH "TH_BG">%s8>AppleTalk%s</A></TH>",
 	    theAnchor[0], arrow[0], theAnchor[1], arrow[1],
 	    theAnchor[2], arrow[2], theAnchor[3], arrow[3],
@@ -374,8 +380,10 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	    theAnchor[6], arrow[6], theAnchor[7], arrow[7]);    
     sendString(buf);
     snprintf(buf, BUF_SIZE, 
-	    "<TH "TH_BG">%s9>OSPF%s</A></TH><TH "TH_BG">%s10>NetBios%s</A></TH><TH "TH_BG">%s11>IGMP%s</A></TH>"
-	    "<TH "TH_BG">%s12>OSI%s</A></TH><TH "TH_BG">%s13>QNX%s</A></TH><TH "TH_BG">%s14>Other%s</A></TH>",
+	    "<TH "TH_BG">%s9>OSPF%s</A></TH><TH "TH_BG">%s10>NetBios%s</A>"
+	     "</TH><TH "TH_BG">%s11>IGMP%s</A></TH>"
+	    "<TH "TH_BG">%s12>OSI%s</A></TH><TH "TH_BG">%s13>QNX%s</A>"
+	     "</TH><TH "TH_BG">%s14>Other%s</A></TH>",
 	     theAnchor[8], arrow[8], theAnchor[9], arrow[9],
 	     theAnchor[10], arrow[10], theAnchor[11], arrow[11],
 	     theAnchor[12], arrow[12], theAnchor[13], arrow[13]);
@@ -402,7 +410,8 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     } else {
       arrow[0] = "";  theAnchor[0] = htmlAnchor1;
     }
-    snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>Other&nbsp;IP%s</A></TH>", theAnchor[0], i+1, arrow[0]);
+    snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s%d>Other&nbsp;IP%s</A></TH>", 
+	     theAnchor[0], i+1, arrow[0]);
     sendString(buf);
   } else if(reportType == 2) {
     updateThpt();
@@ -419,7 +428,8 @@ void printHeader(int reportType, int revertOrder, u_int column) {
     if(abs(column) == 6) { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor; }
     else { arrow[5] = "";  theAnchor[5] = htmlAnchor1;}
 
-    snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s1>Actual Thpt%s</A></TH><TH "TH_BG">%s2>Avg Thpt%s</A></TH>"
+    snprintf(buf, BUF_SIZE, "<TH "TH_BG">%s1>Actual Thpt%s</A></TH>"
+	     "<TH "TH_BG">%s2>Avg Thpt%s</A></TH>"
 	     "<TH "TH_BG">%s3>Peak Thpt%s</A></TH>"
 	    "<TH "TH_BG">%s4>Actual Pkt Thpt%s</A></TH><TH "TH_BG">%s5>Avg Pkt Thpt%s</A></TH>"
 	     "<TH "TH_BG">%s6>Peak Pkt Thpt%s</A></TH>",
@@ -427,7 +437,8 @@ void printHeader(int reportType, int revertOrder, u_int column) {
 	    theAnchor[3], arrow[3], theAnchor[4], arrow[4], theAnchor[5], arrow[5]);
     sendString(buf);
   } else if(reportType == 3) {
-    sendString("<TH "TH_BG">0<br>AM</TH><TH "TH_BG">1<br>AM</TH><TH "TH_BG">2<br>AM</TH><TH "TH_BG">3<br>AM</TH>"
+    sendString("<TH "TH_BG">0<br>AM</TH><TH "TH_BG">1<br>AM</TH>"
+	       "<TH "TH_BG">2<br>AM</TH><TH "TH_BG">3<br>AM</TH>"
 	       "<TH "TH_BG">4<br>AM</TH><TH "TH_BG">5<br>AM</TH><TH "TH_BG">6<br>AM</TH>"
 	       "<TH "TH_BG">7<br>AM</TH><TH "TH_BG">8<br>AM</TH><TH "TH_BG">9<br>AM</TH>"
 	       "<TH "TH_BG">10<br>AM</TH><TH "TH_BG">11<br>AM</TH><TH "TH_BG">12<br>AM</TH>\n");

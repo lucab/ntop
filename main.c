@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 
   webPort = NTOP_DEFAULT_WEB_PORT;
 #ifdef HAVE_OPENSSL
-  sslPort = webPort+1;
+  sslPort = 0; /* Disabled: it can enabled using -W <SSL port> */
 #endif
 
   usePersistentStorage = 0;
@@ -352,10 +352,15 @@ int main(int argc, char *argv[]) {
     traceEvent(TRACE_ERROR, "FATAL ERROR: -w can't be set to 0.\n");
     exit(-1);
 #endif
-  }
-
+  } 
 
   /* ***************************** */
+
+#ifdef HAVE_OPENSSL
+  if(sslPort == 0)
+    traceEvent(TRACE_INFO, "SSL is present but https is disabled: "
+	       "use -W <https port> for enabling it\n");
+#endif
 
   initGlobalValues();
   reportValues(&lastTime);
