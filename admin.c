@@ -952,9 +952,9 @@ static void addKeyIfMissing(char* key, char* value,
       while(pw1[0] == '\0') {
         thePw = getpass(userQuestion);
 #ifdef WIN32
-        if ( (isWinNT()) || (strlen(thePw) > 5) ) {
+        if ( (isWinNT()) || (strlen(thePw) >= 5) ) {
 #else
-        if (strlen(thePw) > 5) {
+        if (strlen(thePw) >= 5) {
 #endif
           if(strlen(thePw) > (sizeof(pw1)-1)) thePw[sizeof(pw1)-1] = '\0';
           strcpy(pw1, thePw);
@@ -970,7 +970,7 @@ static void addKeyIfMissing(char* key, char* value,
             sleep(1); /* It avoids message loops */
           }
         } else {
-	  printf("Password too short (6 characters or more). Please try again.\n");
+	  printf("Password too short (5 characters or more). Please try again.\n");
 	}
       }
 
