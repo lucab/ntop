@@ -279,12 +279,12 @@ void usage (FILE * fp) {
 #endif
 
 #ifdef MAKE_WITH_XMLDUMP
-  fprintf(fp, "    [--xmlfileout]                                        File name for saving internal data during shutdown (xml)\n");
-  fprintf(fp, "    [--xmlfilesnap]                                       File name for snapshot internal data save (xml)\n");
-  fprintf(fp, "    [--xmlfilein]    ***FUTURE***                         File name to reload ntop internal data from (xml)\n");
+  fprintf(fp, "    [--xmlfileout]                                        %sFile name for saving internal data during shutdown (xml)\n", newLine);
+  fprintf(fp, "    [--xmlfilesnap]                                       %sFile name for snapshot internal data save (xml)\n", newLine);
+  fprintf(fp, "    [--xmlfilein]    ***FUTURE***                         %sFile name to reload ntop internal data from (xml)\n", newLine);
 #endif
 
-  fprintf(fp, "    [--disable-stopcap                                    Disable 'STOPCAP' mode\n");
+  fprintf(fp, "    [--disable-stopcap                                    %sDisable 'STOPCAP' mode\n", newLine);
 
 #ifdef WIN32
   printAvailableInterfaces();

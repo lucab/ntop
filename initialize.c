@@ -936,7 +936,6 @@ void initThreads(void) {
  * Initialize helper applications (e.g. ntop uses 'lsof' to list open connections)
  */
 void initApps(void) {
-
   if(myGlobals.isLsofPresent) {
 
 #ifdef CFG_MULTITHREADED
@@ -1027,11 +1026,11 @@ void initDevices(char* devices) {
 
 	  if(ifIdx < 32) {
 	    strcpy(intNames[ifIdx], ifName);
-		strcpy(intDescr[ifIdx], ifName);
+	    strcpy(intDescr[ifIdx], ifName);
 	    if(defaultIdx == -1) {
 	      if(strncmp(intNames[ifIdx], "PPP", 3) /* Avoid to use the PPP interface */
 		 && strncmp(intNames[ifIdx], "ICSHARE", 6)) { /* Avoid to use the internet sharing interface */
-			defaultIdx = ifIdx;
+		defaultIdx = ifIdx;
 	      }
 	    }
 	  }
@@ -1043,7 +1042,7 @@ void initDevices(char* devices) {
     }
 
     tmpDev   = intNames[defaultIdx];
-	tmpDescr = intDescr[defaultIdx];
+    tmpDescr = intDescr[defaultIdx];
   } else {
     /* WinNT/2K */
     static char tmpString[128];
@@ -1070,18 +1069,20 @@ void initDevices(char* devices) {
       tmpDescr = ifDescr;
       ifDescr += strlen(ifDescr)+1;
 
-	  openParent = strstr(tmpDescr, "(");
-	  if(openParent != NULL) openParent[0] = '\0';
-	  if(tmpDescr[strlen(tmpDescr)-1] == ' ') tmpDescr[strlen(tmpDescr)-1] = '\0';
+      openParent = strstr(tmpDescr, "(");
+      if(openParent != NULL) openParent[0] = '\0';
+      if((defaultIdx == -1) && strstr(tmpDescr, "NdisWan")) continue; /* Skip Interface */
+      if(tmpDescr[strlen(tmpDescr)-1] == ' ') tmpDescr[strlen(tmpDescr)-1] = '\0';
       strcpy(intDescr[ifIdx], tmpDescr);
       strcpy(intNames[ifIdx++], tmpString);
-
+      
       defaultIdx = 0;
     }
+    
     if(defaultIdx != -1) {
       tmpDev   = intNames[defaultIdx]; /* Default */
-	  tmpDescr = intDescr[defaultIdx];
-	}
+      tmpDescr = intDescr[defaultIdx];
+    }
   }
 #endif
 
@@ -1144,13 +1145,13 @@ void initDevices(char* devices) {
  	}
       }
 #else /* WIN32 */
-    if(atoi(tmpDev) < ifIdx) {
-	  tmpDescr = intDescr[atoi(tmpDev)];
-      tmpDev   = intNames[atoi(tmpDev)];
-    } else {
-      traceEvent(CONST_TRACE_INFO, "Interface index '%d' is out of range [0..%d]", atoi(tmpDev), ifIdx);
-      exit(-1);
-    }
+      if(atoi(tmpDev) < ifIdx) {
+	tmpDescr = intDescr[atoi(tmpDev)];
+	tmpDev   = intNames[atoi(tmpDev)];
+      } else {
+	traceEvent(CONST_TRACE_INFO, "Interface index '%d' is out of range [0..%d]", atoi(tmpDev), ifIdx);
+	exit(-1);
+      }
 
 #endif
 
@@ -1160,8 +1161,8 @@ void initDevices(char* devices) {
 
       /* Fix courtesy of Marius <marius@tbs.co.za> */
       if(myGlobals.numDevices > 0) {
-		memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*myGlobals.numDevices);
-		free(myGlobals.device);
+	memcpy(tmpDevice, myGlobals.device, sizeof(NtopInterface)*myGlobals.numDevices);
+	free(myGlobals.device);
       }
 
       myGlobals.device = tmpDevice;
