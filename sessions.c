@@ -245,7 +245,13 @@ void freeSession(IPSession *sessionToPurge, int actualDeviceId,
   }
 #endif
 
-  free(sessionToPurge); /* No inner pointers to free */
+  /* Memory recycle */
+  if(myGlobals.sessionsCacheLen < (MAX_SESSIONS_CACHE_LEN-1)) {
+    myGlobals.sessionsCache[myGlobals.sessionsCacheLen++] = sessionToPurge;
+  } else {
+    /* No room left: it's time to free the bucket */
+    free(sessionToPurge); /* No inner pointers to free */
+  }
 }
 
 /* ************************************ */
@@ -471,7 +477,16 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	 ntop to store sessions as needed 
       */
       /* There's enough space left in the hashtable */
-      theSession = (IPSession*)malloc(sizeof(IPSession));
+      if(myGlobals.sessionsCacheLen > 0) {
+	theSession = myGlobals.sessionsCache[--myGlobals.sessionsCacheLen];
+	/*
+	  traceEvent(TRACE_INFO, "Fetched session from pointers cache (len=%d)",
+	  (int)myGlobals.sessionsCacheLen);
+	*/
+      } else {	
+	theSession = (IPSession*)malloc(sizeof(IPSession));
+      }
+      
       memset(theSession, 0, sizeof(IPSession));
       addedNewEntry = 1;
 
