@@ -32,10 +32,11 @@ static u_char threadsInitialized = 0;
  * calculate the domain name for this host
  */
 static void setDomainName(void) {
-  char *p;
   int len;
 
 #ifndef WIN32
+  char *p;
+
   /*
    * The name of the local domain is now calculated properly
    * Kimmo Suominen <kim@tac.nyc.ny.us>
@@ -1255,9 +1256,8 @@ void startSniffer(void) {
 /* ***************************** */
 
 u_int createDummyInterface(char *ifName) {
-  u_int i, j, mallocLen, deviceId;
+  u_int mallocLen, deviceId;
   NtopInterface *tmpDevice;
-  char *tmpDev;
 
   deviceId = myGlobals.numDevices;    
   mallocLen = sizeof(NtopInterface)*(myGlobals.numDevices+1);
