@@ -30,7 +30,7 @@ progname=`echo "$0" | sed 's%^.*/%%'`
 
 # Constants
 PACKAGE=ntop
-VERSION=2.0
+VERSION=2.1
 
 
 GNU_OR_DIE=1

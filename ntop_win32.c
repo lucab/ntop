@@ -119,9 +119,9 @@ void initWinsock32() {
     exit(-1);
   }
 
-  version = "2.0.99rc3";
+  version = "2.1";
   author  = "Luca Deri <deri@ntop.org>";
-  buildDate = "05/07/2002";
+  buildDate = "11/07/2002";
 
   if(!isWinNT())
     strcpy(_wdir, ".");
