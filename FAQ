@@ -100,3 +100,156 @@ Q. AIX: I've linked ntop against the special libcap library that's
 A: Please configure dlpi.conf int the /etc dir using the command
    strload -f /etc/dlpi.conf.
    (Courtesy of Chuck Toman <ctoman@Park-Ohio.com>).
+
+Q. I have a problem on AIX. What shall I do?
+A. Read below.
+   =============================================================
+From Ciaran.Deignan@bull.net Wed Oct  4 17:07:02 2000
+Date: Tue, 3 Oct 2000 10:29:52 +0200 (DFT)
+From: Ciaran.Deignan@bull.net
+To: Karandeep Singh <kdsingh@ichips.intel.com>
+Subject: Re: ntop problems
+
+On Mon, 2 Oct 2000, Karandeep Singh wrote:
+
+> Question I have for you is that if I run "strload -f /etc/dlpi.conf"
+> and create special files in /dev/dlpi, do I then have to reboot?
+> If not then this will work very well for us on our other servers.
+
+you don;t need to reboot, but you do need to execute the command each
+time you *do* reboot....
+
+there's always something...
+
+Ciaran
+
++-------------------------------------------------------------------------+
+Ciaran Deignan                                Tel: (France) 04 76 29 79 92
+BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
+
+Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
+PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
++-------------------------------------------------------------------------+
+
+
+From Ciaran.Deignan@bull.net Wed Oct  4 17:07:02 2000
+Date: Mon, 2 Oct 2000 12:00:18 +0200 (DFT)
+From: Ciaran.Deignan@bull.net
+To: Karandeep Singh <kdsingh@ichips.intel.com>
+Cc: l.deri@tecsiel.it
+Subject: Re: ntop problems
+
+On Tue, 26 Sep 2000, Karandeep Singh wrote:
+
+> Hi,
+> I installed "successfully" ntop from Bull site and now when I run
+> it am getting following errors. Any help would be appreciated.
+> 
+>  -KD
+> 
+> <pdxfs30 157> # ntop
+> 26/Sep/2000:17:13:01 ntop v.1.3.2 ST (SSL) [powerpc-ibm-aix4.3.2.0] (08/11/00 07:04:32 PM build)
+> 26/Sep/2000:17:13:01 Listening on [en2]
+> 26/Sep/2000:17:13:01 Copyright 1998-2000 by Luca Deri <deri@ntop.org>
+> 26/Sep/2000:17:13:01 Get the freshest ntop from http://www.ntop.org/
+> 26/Sep/2000:17:13:01 Initialising...
+> 26/Sep/2000:17:13:01 /dev/dlpi/en2: No such file or directory
+
+Anyway, what you've missed (and what I've failed to find a convient way
+to communicate) is the command
+        # strload -f /etc/dlpi.conf
+which will create the special files in /dev/dlpi...
+
+This information is given in the mailing-list archives, each time libpcap
+is repackaged:
+        http://www-frec.bull.com/download/Updates.txt
+
+
+> <pdxfs30 158> # intop
+
+> exec(): 0509-036 Cannot load program intop because of the following errors:
+>         0509-150   Dependent module /usr/local/lib/libreadline.a(libreadline.so) could not be loaded.
+>         0509-152   Member libreadline.so is not found in archive 
+
+intop has a dependence on freeware.gnu.readline.rte
+(gnu.readline-4.1.0.1.exe), but intop doesn't work anyway :(
+
+Sorry for the complexity,
+Ciaran
+
++-------------------------------------------------------------------------+
+Ciaran Deignan                                Tel: (France) 04 76 29 79 92
+BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
+
+Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
+PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
++-------------------------------------------------------------------------+
+
+
+From Ciaran.Deignan@bull.net Wed Oct  4 17:07:02 2000
+Date: Mon, 18 Sep 2000 10:00:41 +0200 (DFT)
+From: Ciaran.Deignan@bull.net
+To: Bill Kurland <bill@shakespeare-nyc.com>
+Subject: Re: Freeware:ntop-1.3.2.0
+
+On Sun, 17 Sep 2000, Bill Kurland wrote:
+
+> I have tried installing ntop-1.3.2 on three different rs6000's running
+> AIX 4.3.3 with the same result and was hoping you might be kind enough
+> to help me discover my error.
+
+Humm... I don't have a /dev/ent* or /dev/en* on my system either. You live
+and learn.
+
+Anyway, what you've missed (and what I've failed to find a convient way
+to communicate) is the command
+        # strload -f /etc/dlpi.conf
+which will create the special files in /dev/dlpi...
+
+This information is given in the mailing-list archives, each time libpcap
+is repackaged:
+        http://www-frec.bull.com/download/Updates.txt
+
+Hope this helps
+Ciaran
+
++-------------------------------------------------------------------------+
+Ciaran Deignan                                Tel: (France) 04 76 29 79 92
+BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
+
+Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
+PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
++-------------------------------------------------------------------------+
+
+
+From Ciaran.Deignan@bull.net Wed Oct  4 17:07:03 2000
+Date: Wed, 6 Sep 2000 11:49:07 +0200 (DFT)
+From: Ciaran.Deignan@bull.net
+To: ry1481@csag.sbc.com
+Subject: Re: NMAP on AIX 
+
+On Tue, 5 Sep 2000 ry1481@csag.sbc.com wrote:
+
+>   I am receiving the message "/dev/dlpi/en0 does not exist. The
+>   ethernet adapter en0 is configured but there is no /dev/dlpi/en0
+>   directory or file.  Any suggestions would be appreciated.
+
+as stated in the Updates log ( http://www-frec.bull.com/docs/downlist.htm )
+
+        This distribution uses the "dlpi" interface. If the dlpi
+        stream drivers are not loaded, the command
+                # strload -f /etc/dlpi.conf
+        should be executed after every reboot.
+
+have fun
+Ciaran
+
++-------------------------------------------------------------------------+
+Ciaran Deignan                                Tel: (France) 04 76 29 79 92
+BULL XS-BU (http://www-frec.bull.com)                 HA and Consolidation
+
+Mail to: Ciaran.Deignan@bull.net                        Bullcom: 229 79 92
+PGP: B1 78 FB 88 FD 86 58 A8  89 7B 22 8C D0 E8 71 FC       Fax: 229 75 18
++-------------------------------------------------------------------------+
+
+==========================================================================
