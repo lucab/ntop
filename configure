@@ -5070,14 +5070,14 @@ EOF
       echo "configure: warning:  Some ntop's features will be disabled." 1>&2
     fi
   else
-    if test -d ../gdchart0.94b &&
-       test -r ../gdchart0.94b/gdc.h &&
-       test -r ../gdchart0.94b/libgdchart.a &&
-       test -r ../gdchart0.94b/gd-1.8.3/libgd.a &&
-       test -r ../gdchart0.94b/gd-1.8.3/gd.h
-       test -r ../gdchart0.94b/gd-1.8.3/libpng-1.0.8/libpng.a &&
-       test -r ../gdchart0.94b/gd-1.8.3/libpng-1.0.8/gd.h; then
-         GDCHART_ROOT="../gdchart0.94b"
+    if test -d ../gdchart0.94c &&
+       test -r ../gdchart0.94c/gdc.h &&
+       test -r ../gdchart0.94c/libgdchart.a &&
+       test -r ../gdchart0.94c/gd-1.8.3/libgd.a &&
+       test -r ../gdchart0.94c/gd-1.8.3/gd.h &&
+       test -r ../gdchart0.94c/gd-1.8.3/libpng-1.0.8/libpng.a &&
+       test -r ../gdchart0.94c/gd-1.8.3/libpng-1.0.8/gd.h; then
+         GDCHART_ROOT="../gdchart0.94c"
          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
          MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.0.8 -lpng"
          INCS="${INCS} -I$GDCHART_ROOT"
