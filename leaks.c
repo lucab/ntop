@@ -60,7 +60,7 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lock
   MemoryBlock *tmpBlock;
 
 #if defined(CFG_MULTITHREADED)
-  if(lockMutex) accessMutex(&leaksMutex, "myMalloc");
+  if(lockMutex) accessMutex(&leaksMutex, "storePtr");
 #endif
 
   tmpBlock = (MemoryBlock*)malloc(sizeof(MemoryBlock));
@@ -80,9 +80,11 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lock
       
   safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%s:%d.", theFile, theLine);
 
-  if(traceAllocs) traceEvent(CONST_TRACE_INFO, "malloc(%d):%s  [tot=%u]", ptrLen, tmpStr, myGlobals.allocatedMemory);
+  if(traceAllocs)
+    traceEvent(CONST_TRACE_INFO, "malloc(%d):%s  [tot=%u]", ptrLen, tmpStr, myGlobals.allocatedMemory);
 
-  safe_snprintf(__FILE__, __LINE__, tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr);
+  safe_snprintf(__FILE__, __LINE__, tmpBlock->programLocation, sizeof(tmpBlock->programLocation), 
+		"%s", tmpStr);
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
 #if defined(CFG_MULTITHREADED)
@@ -377,8 +379,10 @@ void termLeaks(void) {
 void* ntop_malloc(unsigned int sz, char* file, int line) {
 
 #ifdef DEBUG
+  char formatBuffer[32];
   traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%d) [%s] @ %s:%d", 
-	     sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
+	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
+			     formatBuffer, sizeof(formatBuffer)), file, line);
 #endif
 
   return(myMalloc(sz, line, file, 1));
@@ -388,8 +392,10 @@ void* ntop_malloc(unsigned int sz, char* file, int line) {
 
 void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: calloc(%d,%d) [%s] @ %s:%d",
-	     c, sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
+  char formatBuffer[32];
+  traceEvent(CONST_TRACE_INFO, "DEBUG: calloc(%d) [%s] @ %s:%d", 
+	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
+			     formatBuffer, sizeof(formatBuffer)), file, line);
 #endif
   return(myCalloc(c, sz, line, file));
 }
@@ -398,8 +404,10 @@ void* ntop_calloc(unsigned int c, unsigned int sz, char* file, int line) {
 
 void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {  
 #ifdef DEBUG
-  traceEvent(CONST_TRACE_INFO, "DEBUG: realloc(%p,%d) [%s] @ %s:%d",
-	     ptr, sz, formatBytes(myGlobals.allocatedMemory, 0), file, line);
+  char formatBuffer[32];
+  traceEvent(CONST_TRACE_INFO, "DEBUG: realloc(%d) [%s] @ %s:%d", 
+	     sz, formatBytes(myGlobals.allocatedMemory, 0, 
+			     formatBuffer, sizeof(formatBuffer)), file, line);
 #endif  
   return(myRealloc(ptr, sz, line, file));
 }
@@ -408,8 +416,10 @@ void* ntop_realloc(void* ptr, unsigned int sz, char* file, int line) {
 
 char* ntop_strdup(char *str, char* file, int line) {
 #ifdef DEBUG
+  char formatBuffer[32];
   traceEvent(CONST_TRACE_INFO, "DEBUG: strdup(%s) [%s] @ %s:%d", str, 
-	     formatBytes(myGlobals.allocatedMemory, 0), file, line);
+	     formatBytes(myGlobals.allocatedMemory, 0,
+			 formatBuffer, sizeof(formatBuffer)), file, line);
 #endif
   return(myStrdup(str, line, file));
 }
@@ -418,8 +428,10 @@ char* ntop_strdup(char *str, char* file, int line) {
 
 void ntop_free(void **ptr, char* file, int line) {
 #ifdef DEBUG
+  char formatBuffer[32];
   traceEvent(CONST_TRACE_INFO, "DEBUG: free(%x) [%s] @ %s:%d", ptr, 
-	     formatBytes(myGlobals.allocatedMemory, 0), file, line);
+	     formatBytes(myGlobals.allocatedMemory, 0,
+			 formatBuffer, sizeof(formatBuffer)), file, line);
 #endif
   myFree(ptr, line, file);
 }
@@ -475,7 +487,11 @@ datum ntop_gdbm_fetch(GDBM_FILE g, datum d, char* theFile, int theLine) {
 
 void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   void *thePtr;
-  
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "DEBUG: malloc(%d) @ %s:%d", sz, file, line);
+#endif
+
 #ifdef DEBUG
   if((sz == 0) || (sz > 32768)) {
     traceEvent(CONST_TRACE_INFO, "DEBUG: called malloc(%u) @ %s:%d", sz, file, line);
@@ -495,8 +511,8 @@ void* ntop_safemalloc(unsigned int sz, char* file, int line) {
   if(thePtr == NULL) {
     traceEvent(CONST_TRACE_FATALERROR, "malloc(%d) @ %s:%d returned NULL [no more memory?]",
 	       sz, file, line);
-    if ( (myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
-         (myGlobals.disableStopcap != TRUE) ) {
+    if ((myGlobals.capturePackets == FLAG_NTOPSTATE_RUN) &&
+	(myGlobals.disableStopcap != TRUE)) {
       traceEvent(CONST_TRACE_WARNING, "ntop packet capture STOPPED");
       traceEvent(CONST_TRACE_INFO, "NOTE: ntop web server remains up");
       traceEvent(CONST_TRACE_INFO, "NOTE: Shutdown gracefully and restart with more memory");
@@ -584,6 +600,10 @@ void* ntop_saferealloc(void* ptr, unsigned int sz, char* file, int line) {
 
 #undef free /* just to be safe */
 void ntop_safefree(void **ptr, char* file, int line) {
+
+#ifdef DEBUG
+  printf("DEBUG: free(%x) @ %s:%d\n", *ptr, file, line);
+#endif
 
   if((ptr == NULL) || (*ptr == NULL)) {
     traceEvent(CONST_TRACE_WARNING, "free of NULL pointer @ %s:%d", 

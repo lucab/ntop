@@ -2380,7 +2380,14 @@ void resetHostsVariables(HostTraffic* el) {
   el->routedTraffic = NULL;
   if (el->portsUsage != NULL)          free(el->portsUsage);
   el->portsUsage = NULL;
-  if (el->protoIPTrafficInfos != NULL) free(el->protoIPTrafficInfos);
+  if (el->protoIPTrafficInfos != NULL) {
+    int i;
+    
+    for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
+      if(el->protoIPTrafficInfos[i]) free(el->protoIPTrafficInfos[i]);
+
+      free(el->protoIPTrafficInfos);
+  }
   el->protoIPTrafficInfos = NULL;
   if (el->icmpInfo != NULL)            free(el->icmpInfo);
   el->icmpInfo = NULL;

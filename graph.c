@@ -542,7 +542,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     idx = 0;
     while(protoList != NULL) {
-      totTraffic.value += theHost->ipProtosList[idx].sent.value;
+      if(theHost->ipProtosList[idx] != NULL) 
+	totTraffic.value += theHost->ipProtosList[idx]->sent.value;
       idx++, protoList = protoList->next;
     }
   } else {
@@ -558,7 +559,8 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     
     idx = 0;
     while(protoList != NULL) {
-      totTraffic.value += theHost->ipProtosList[idx].rcvd.value;
+      if(theHost->ipProtosList[idx] != NULL) 
+	totTraffic.value += theHost->ipProtosList[idx]->rcvd.value;
       idx++, protoList = protoList->next;
     }
   }
@@ -706,15 +708,17 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
     idx = 0; protoList = myGlobals.ipProtosList;
     while(protoList != NULL) {
-      if(dataSent) {
-	if(theHost->ipProtosList[idx].sent.value > 0) {
-	  p[num] = (float)((100*theHost->ipProtosList[idx].sent.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = protoList->protocolName;
-	}
-      } else {
-	if(theHost->ipProtosList[idx].rcvd.value > 0) {
-	  p[num] = (float)((100*theHost->ipProtosList[idx].rcvd.value)/totTraffic.value);
-	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = protoList->protocolName;
+      if(theHost->ipProtosList[idx] != NULL) {
+	if(dataSent) {
+	  if(theHost->ipProtosList[idx]->sent.value > 0) {
+	    p[num] = (float)((100*theHost->ipProtosList[idx]->sent.value)/totTraffic.value);
+	    if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = protoList->protocolName;
+	  }
+	} else {
+	  if(theHost->ipProtosList[idx]->rcvd.value > 0) {
+	    p[num] = (float)((100*theHost->ipProtosList[idx]->rcvd.value)/totTraffic.value);
+	    if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = protoList->protocolName;
+	  }
 	}
       }
 
@@ -1065,11 +1069,14 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
   if(totalIPTraffic.value > 0) {
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-      if(dataSent)
-	traffic.value = theHost->protoIPTrafficInfos[i].sentLoc.value+theHost->protoIPTrafficInfos[i].sentRem.value;
-      else
-	traffic.value = theHost->protoIPTrafficInfos[i].rcvdLoc.value+theHost->protoIPTrafficInfos[i].rcvdFromRem.value;
-
+      if(theHost->protoIPTrafficInfos[i]) {
+	if(dataSent)
+	  traffic.value = theHost->protoIPTrafficInfos[i]->sentLoc.value+theHost->protoIPTrafficInfos[i]->sentRem.value;
+	else
+	  traffic.value = theHost->protoIPTrafficInfos[i]->rcvdLoc.value+theHost->protoIPTrafficInfos[i]->rcvdFromRem.value;
+      } else
+	traffic.value = 0;
+      
       if(traffic.value > 0) {
 	p[num] = (float)((100*traffic.value)/totalIPTraffic.value);
 	diffTraffic.value += traffic.value;
@@ -1685,7 +1692,6 @@ void drawGlobalProtoDistribution(void) {
     int idx1 = 0;
 
     while(protoList != NULL) {
-
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value > 0) {
 	p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
 	lbl[idx] = protoList->protocolName; idx++;

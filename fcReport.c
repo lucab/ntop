@@ -489,10 +489,17 @@ int cmpFcFctn(const void *_a, const void *_b)
       if(columnProtoId <= 0) {
 	a_ = b_ = 0;
       } else {
-	a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc.value+
-	  (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem.value;
-	b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc.value+
-	  (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem.value;
+	if((*a)->protoIPTrafficInfos[columnProtoId-1] != NULL)
+	  a_ = (*a)->protoIPTrafficInfos[columnProtoId-1]->rcvdLoc.value+
+	    (*a)->protoIPTrafficInfos[columnProtoId-1]->rcvdFromRem.value;
+	else
+	  a_ = 0;
+
+	if((*b)->protoIPTrafficInfos[columnProtoId-1] != NULL)
+	  b_ = (*b)->protoIPTrafficInfos[columnProtoId-1]->rcvdLoc.value+
+	    (*b)->protoIPTrafficInfos[columnProtoId-1]->rcvdFromRem.value;
+	else 
+	  b_ = 0;
       }
     } else {
       a_ = (*a)->ipBytesRcvd.value, b_ = (*b)->ipBytesRcvd.value;
@@ -502,10 +509,17 @@ int cmpFcFctn(const void *_a, const void *_b)
 	int i;
 
 	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	  a_val = ((*a)->protoIPTrafficInfos[i].rcvdLoc.value
-		   +(*a)->protoIPTrafficInfos[i].rcvdFromRem.value);
-	  b_val = ((*b)->protoIPTrafficInfos[i].rcvdLoc.value
-		   +(*b)->protoIPTrafficInfos[i].rcvdFromRem.value);
+	  if((*a)->protoIPTrafficInfos[i] != NULL)
+	    a_val = ((*a)->protoIPTrafficInfos[i]->rcvdLoc.value
+		     +(*a)->protoIPTrafficInfos[i]->rcvdFromRem.value);
+	  else
+	    a_val = 0;
+
+	  if((*b)->protoIPTrafficInfos[i] != NULL)
+	    b_val = ((*b)->protoIPTrafficInfos[i]->rcvdLoc.value
+		     +(*b)->protoIPTrafficInfos[i]->rcvdFromRem.value);
+	  else
+	    b_val = 0;
 
 	  /* Better be safe... */
 	  if(a_ > a_val) a_ -= a_val; else a_ = 0;
@@ -578,10 +592,16 @@ int cmpFcFctn(const void *_a, const void *_b)
       if(columnProtoId <= 0) {
 	a_ = b_ = 0;
       } else {
-	a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].sentLoc.value
-	  +(*a)->protoIPTrafficInfos[columnProtoId-1].sentRem.value;
-	b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].sentLoc.value
-	  +(*b)->protoIPTrafficInfos[columnProtoId-1].sentRem.value;
+	if((*a)->protoIPTrafficInfos[columnProtoId-1] != NULL)
+	  a_ = (*a)->protoIPTrafficInfos[columnProtoId-1]->sentLoc.value
+	    +(*a)->protoIPTrafficInfos[columnProtoId-1]->sentRem.value;
+	else
+	  a_ = 0;
+	if((*b)->protoIPTrafficInfos[columnProtoId-1] != NULL)
+	  b_ = (*b)->protoIPTrafficInfos[columnProtoId-1]->sentLoc.value
+	    +(*b)->protoIPTrafficInfos[columnProtoId-1]->sentRem.value;
+	else
+	  b_ = 0;
       }
     } else {
       a_ = (*a)->ipBytesSent.value, b_ = (*b)->ipBytesSent.value;
@@ -591,10 +611,17 @@ int cmpFcFctn(const void *_a, const void *_b)
 	int i;
 
 	for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-	  a_val = ((*a)->protoIPTrafficInfos[i].sentLoc.value
-		   +(*a)->protoIPTrafficInfos[i].sentRem.value);
-	  b_val = ((*b)->protoIPTrafficInfos[i].sentLoc.value
-		   +(*b)->protoIPTrafficInfos[i].sentRem.value);
+	  if((*a)->protoIPTrafficInfos[i] != NULL)
+	    a_val = ((*a)->protoIPTrafficInfos[i]->sentLoc.value
+		     +(*a)->protoIPTrafficInfos[i]->sentRem.value);
+	  else
+	    a_val = 0;
+
+	  if((*b)->protoIPTrafficInfos[i] != NULL)
+	    b_val = ((*b)->protoIPTrafficInfos[i]->sentLoc.value
+		     +(*b)->protoIPTrafficInfos[i]->sentRem.value);
+	  else
+	    b_val = 0;
 
 	  /* Better be safe... */
 	  if(a_ > a_val) a_ -= a_val; else a_ = 0;
@@ -666,14 +693,21 @@ int cmpFcFctn(const void *_a, const void *_b)
       if(columnProtoId <= 0) {
         a_ = b_ = 0;
       } else {
-        a_ = (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc.value+
-          (*a)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem.value+
-          (*a)->protoIPTrafficInfos[columnProtoId-1].sentLoc.value+
-          (*a)->protoIPTrafficInfos[columnProtoId-1].sentRem.value;
-        b_ = (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdLoc.value+
-          (*b)->protoIPTrafficInfos[columnProtoId-1].rcvdFromRem.value+
-          (*b)->protoIPTrafficInfos[columnProtoId-1].sentLoc.value+
-          (*b)->protoIPTrafficInfos[columnProtoId-1].sentRem.value;
+	if((*a)->protoIPTrafficInfos[columnProtoId-1] != NULL)
+	  a_ = (*a)->protoIPTrafficInfos[columnProtoId-1]->rcvdLoc.value+
+	    (*a)->protoIPTrafficInfos[columnProtoId-1]->rcvdFromRem.value+
+	    (*a)->protoIPTrafficInfos[columnProtoId-1]->sentLoc.value+
+	    (*a)->protoIPTrafficInfos[columnProtoId-1]->sentRem.value;
+	else
+	  a_ = 0;
+
+	if((*b)->protoIPTrafficInfos[columnProtoId-1] != NULL)
+	  b_ = (*b)->protoIPTrafficInfos[columnProtoId-1]->rcvdLoc.value+
+	    (*b)->protoIPTrafficInfos[columnProtoId-1]->rcvdFromRem.value+
+	    (*b)->protoIPTrafficInfos[columnProtoId-1]->sentLoc.value+
+	    (*b)->protoIPTrafficInfos[columnProtoId-1]->sentRem.value;
+	else
+	  b_ = 0;
       }
     } else {
       a_ = (*a)->ipBytesRcvd.value+(*a)->ipBytesSent.value;
@@ -684,15 +718,21 @@ int cmpFcFctn(const void *_a, const void *_b)
         int i;
 
         for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
-          a_val = ((*a)->protoIPTrafficInfos[i].rcvdLoc.value
-                   +(*a)->protoIPTrafficInfos[i].rcvdFromRem.value
-                   +(*a)->protoIPTrafficInfos[i].sentLoc.value
-                   +(*a)->protoIPTrafficInfos[i].sentRem.value);
-          b_val = ((*b)->protoIPTrafficInfos[i].rcvdLoc.value
-                   +(*b)->protoIPTrafficInfos[i].rcvdFromRem.value
-                   +(*b)->protoIPTrafficInfos[i].sentLoc.value
-                   +(*b)->protoIPTrafficInfos[i].sentRem.value);
+	  if((*a)->protoIPTrafficInfos[i] != NULL)
+	    a_val = ((*a)->protoIPTrafficInfos[i]->rcvdLoc.value
+		     +(*a)->protoIPTrafficInfos[i]->rcvdFromRem.value
+		     +(*a)->protoIPTrafficInfos[i]->sentLoc.value
+		     +(*a)->protoIPTrafficInfos[i]->sentRem.value);
+	  else
+	    a_val = 0;
 
+	  if((*b)->protoIPTrafficInfos[i] != NULL)
+	    b_val = ((*b)->protoIPTrafficInfos[i]->rcvdLoc.value
+		     +(*b)->protoIPTrafficInfos[i]->rcvdFromRem.value
+		     +(*b)->protoIPTrafficInfos[i]->sentLoc.value
+		     +(*b)->protoIPTrafficInfos[i]->sentRem.value);
+	  else
+	    b_val = 0;
           /* Better be safe... */
           if(a_ > a_val) a_ -= a_val; else a_ = 0;
           if(b_ > b_val) b_ -= b_val; else b_ = 0;

@@ -418,7 +418,6 @@ typedef struct ttlStats {
 
 typedef struct simpleProtoTrafficInfo {
   TrafficCounter local, local2remote, remote, remote2local;
-  TrafficCounter lastLocal, lastLocal2remote, lastRem, lastRem2local;
 } SimpleProtoTrafficInfo;
 
 /* *********************** */
@@ -837,8 +836,8 @@ typedef struct hostTraffic {
   SecurityHostProbes *secHostPkts;
   IcmpHostInfo       *icmpInfo;
 
-  ShortProtoTrafficInfo *ipProtosList;        /* List of myGlobals.numIpProtosList entries */
-  ProtoTrafficInfo      *protoIPTrafficInfos; /* Info about IP traffic generated/rcvd by this host */
+  ShortProtoTrafficInfo **ipProtosList;        /* List of myGlobals.numIpProtosList entries */
+  ProtoTrafficInfo      **protoIPTrafficInfos; /* Info about IP traffic generated/rcvd by this host */
 
   /* Fiber Channel/SCSI */
   FcScsiCounters   *fcCounters;

@@ -382,8 +382,21 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
 
   myGlobals.device[actualDeviceId].hostsno--;
 
-  if(host->protoIPTrafficInfos != NULL) free(host->protoIPTrafficInfos);
-  if(host->ipProtosList       != NULL)  free(host->ipProtosList);
+  if(host->protoIPTrafficInfos != NULL) {
+    for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
+      if(host->protoIPTrafficInfos[i] != NULL) 
+	free(host->protoIPTrafficInfos[i]);
+    
+    free(host->protoIPTrafficInfos);
+  }
+
+  if(host->ipProtosList != NULL) {
+    for(i=0; i<myGlobals.numIpProtosList; i++)
+      if(host->ipProtosList[i] != NULL) 
+	free(host->ipProtosList[i]);
+    
+    free(host->ipProtosList);
+  }
 
   if(host->nonIPTraffic) {
     if(host->nonIPTraffic->nbHostName != NULL)          free(host->nonIPTraffic->nbHostName);
@@ -1019,12 +1032,12 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
 
     el->portsUsage = (PortUsage**)calloc(sizeof(PortUsage*), MAX_ASSIGNED_IP_PORTS);
 
-    len = (size_t)myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo);
-    if((el->ipProtosList = (ShortProtoTrafficInfo*)malloc(len)) == NULL) return(NULL);
+    len = (size_t)myGlobals.numIpProtosList*sizeof(ShortProtoTrafficInfo**);
+    if((el->ipProtosList = (ShortProtoTrafficInfo**)malloc(len)) == NULL) return(NULL);
     memset(el->ipProtosList, 0, len);
-
-    len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
-    if((el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len)) == NULL) return(NULL);
+    
+    len = (size_t)myGlobals.numIpProtosToMonitor*sizeof(ProtoTrafficInfo**);
+    if((el->protoIPTrafficInfos = (ProtoTrafficInfo**)malloc(len)) == NULL) return(NULL);
     memset(el->protoIPTrafficInfos, 0, len);
 
     el->magic = CONST_MAGIC_NUMBER;
@@ -1300,8 +1313,8 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     } else
 #endif
     {
-        if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) 
-            return(NULL);
+      if((el = (HostTraffic*)malloc(sizeof(HostTraffic))) == NULL) 
+	return(NULL);
     }
         
     memset(el, 0, sizeof(HostTraffic));

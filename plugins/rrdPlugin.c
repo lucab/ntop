@@ -2007,11 +2007,13 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
       protoList = myGlobals.ipProtosList, idx=0;
       while(protoList != NULL) {
 	char buf[64];
-
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sSent", protoList->protocolName);
-	updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx].sent);
-	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sRcvd", protoList->protocolName);
-	updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx].rcvd);
+	
+	if(el->ipProtosList[idx] != NULL) {
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sSent", protoList->protocolName);
+	  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->sent);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sRcvd", protoList->protocolName);
+	  updateTrafficCounter(rrdPath, buf, &el->ipProtosList[idx]->rcvd);
+	}
 	idx++, protoList = protoList->next;
       }
     }
@@ -2031,21 +2033,26 @@ static void rrdUpdateIPHostStats (HostTraffic *el, int devIdx) {
 		      adjHostName
 		      );
 
-	for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
-	  char key[128];
-	  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sSentBytes",
-			myGlobals.protoIPTrafficInfos[j]);
-	  updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].sentLoc.value+
-			el->protoIPTrafficInfos[j].sentRem.value);
+	if(el->protoIPTrafficInfos[j]) {
+	  for(j=0; j<myGlobals.numIpProtosToMonitor; j++) {
+	    char key[128];
 
-	  safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sRcvdBytes",
-			myGlobals.protoIPTrafficInfos[j]);
-	  updateCounter(rrdPath, key, el->protoIPTrafficInfos[j].rcvdLoc.value+
-			el->protoIPTrafficInfos[j].rcvdFromRem.value);
+	    if(el->protoIPTrafficInfos[j] != NULL) {
+	      safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sSentBytes",
+			    myGlobals.protoIPTrafficInfos[j]);
+	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->sentLoc.value+
+			    el->protoIPTrafficInfos[j]->sentRem.value);
+	    
+	      safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "%sRcvdBytes",
+			    myGlobals.protoIPTrafficInfos[j]);
+	      updateCounter(rrdPath, key, el->protoIPTrafficInfos[j]->rcvdLoc.value+
+			    el->protoIPTrafficInfos[j]->rcvdFromRem.value);
+	    }
+	  }
 	}
       }
     }
-
+    
     if(adjHostName != NULL)
       free(adjHostName);
   }
