@@ -76,6 +76,8 @@ static u_short numLocalNets=0, passiveSessionsLen;
 /* [0]=network, [1]=mask, [2]=broadcast */
 static u_int32_t networks[MAX_NUM_NETWORKS][3];
 
+void resetHostTraffic(HostTraffic *el); /* Forward */
+
 /*
  * secure popen by Thomas Biege <thomas@suse.de>
  *
@@ -1879,11 +1881,9 @@ static void resetHostsVariables(HostTraffic* el) {
 #endif
   el->dhcpStats = NULL;
 
-  memset(el->contactedSentPeersIndexes, 0, sizeof(el->contactedSentPeersIndexes));
-  el->contactedSentPeersIdx = 0;
-  memset(el->contactedRcvdPeersIndexes, 0, sizeof(el->contactedRcvdPeersIndexes));
-  el->contactedRcvdPeersIdx = 0;
-  memset(el->contactedRouters, 0, sizeof(el->contactedRouters));
+  resetHostTraffic(&el->contactedSentPeers);
+  resetHostTraffic(&el->contactedRcvdPeers);
+  resetHostTraffic(&el->contactedRouters);
 }
 
 /* ************************************ */
@@ -2699,3 +2699,81 @@ void addPortHashEntry(ServiceEntry **theSvc, int port, char* name) {
 }
 
 /* ******************************* */
+
+void resetUsageCounter(UsageCounter *counter) {
+  int i;
+  
+  counter->value = 0;
+
+  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
+    counter->peersIndexes[i] = NO_PEER;
+}
+
+/* ************************************ */
+
+/*
+  This function has to be used to reset (i.e. initialize to
+  empty values in the correct range) HostTraffic
+  instances.
+*/
+
+void resetHostTraffic(HostTraffic *el) {
+
+  FD_ZERO(&(el->flags));
+
+  resetUsageCounter(&el->contactedSentPeers);
+
+  resetUsageCounter(&el->securityHostPkts.synPktsSent);
+  resetUsageCounter(&el->securityHostPkts.rstPktsSent);
+  resetUsageCounter(&el->securityHostPkts.rstAckPktsSent);
+  resetUsageCounter(&el->securityHostPkts.synFinPktsSent);
+  resetUsageCounter(&el->securityHostPkts.finPushUrgPktsSent);
+  resetUsageCounter(&el->securityHostPkts.nullPktsSent);
+  resetUsageCounter(&el->securityHostPkts.ackScanSent);
+  resetUsageCounter(&el->securityHostPkts.xmasScanSent);
+  resetUsageCounter(&el->securityHostPkts.finScanSent);
+  resetUsageCounter(&el->securityHostPkts.nullScanSent);
+  resetUsageCounter(&el->securityHostPkts.rejectedTCPConnSent);
+  resetUsageCounter(&el->securityHostPkts.establishedTCPConnSent);
+  resetUsageCounter(&el->securityHostPkts.udpToClosedPortSent);
+  resetUsageCounter(&el->securityHostPkts.udpToDiagnosticPortSent);
+  resetUsageCounter(&el->securityHostPkts.tcpToDiagnosticPortSent);
+  resetUsageCounter(&el->securityHostPkts.tinyFragmentSent);
+  resetUsageCounter(&el->securityHostPkts.icmpFragmentSent);
+  resetUsageCounter(&el->securityHostPkts.overlappingFragmentSent);
+  resetUsageCounter(&el->securityHostPkts.closedEmptyTCPConnSent);
+  resetUsageCounter(&el->securityHostPkts.icmpPortUnreachSent);
+  resetUsageCounter(&el->securityHostPkts.icmpHostNetUnreachSent);
+  resetUsageCounter(&el->securityHostPkts.icmpProtocolUnreachSent);
+  resetUsageCounter(&el->securityHostPkts.icmpAdminProhibitedSent);
+
+  /* ************* */
+
+  resetUsageCounter(&el->contactedRcvdPeers);
+
+  resetUsageCounter(&el->securityHostPkts.synPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts.rstPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts.rstAckPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts.synFinPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts.finPushUrgPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts.nullPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts.ackScanRcvd);
+  resetUsageCounter(&el->securityHostPkts.xmasScanRcvd);
+  resetUsageCounter(&el->securityHostPkts.finScanRcvd);
+  resetUsageCounter(&el->securityHostPkts.nullScanRcvd);
+  resetUsageCounter(&el->securityHostPkts.rejectedTCPConnRcvd);
+  resetUsageCounter(&el->securityHostPkts.establishedTCPConnRcvd);
+  resetUsageCounter(&el->securityHostPkts.udpToClosedPortRcvd);
+  resetUsageCounter(&el->securityHostPkts.udpToDiagnosticPortRcvd);
+  resetUsageCounter(&el->securityHostPkts.tcpToDiagnosticPortRcvd);
+  resetUsageCounter(&el->securityHostPkts.tinyFragmentRcvd);
+  resetUsageCounter(&el->securityHostPkts.icmpFragmentRcvd);
+  resetUsageCounter(&el->securityHostPkts.overlappingFragmentRcvd);
+  resetUsageCounter(&el->securityHostPkts.closedEmptyTCPConnRcvd);
+  resetUsageCounter(&el->securityHostPkts.icmpPortUnreachRcvd);
+  resetUsageCounter(&el->securityHostPkts.icmpHostNetUnreachRcvd);
+  resetUsageCounter(&el->securityHostPkts.icmpProtocolUnreachRcvd);
+  resetUsageCounter(&el->securityHostPkts.icmpAdminProhibitedRcvd);
+
+  resetUsageCounter(&el->contactedRouters); 
+}

@@ -95,7 +95,7 @@ static u_char ethBroadcast[] = { 255, 255, 255, 255, 255, 255 };
  /* ******************************* */
 
 u_int getHostInfo(struct in_addr *hostIpAddress,
-		  u_char *ether_addr, 
+		  u_char *ether_addr,
 		  u_char checkForMultihoming,
 		  u_char forceUsingIPaddress) {
    u_int idx, i;
@@ -138,10 +138,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 	     if(checkForMultihoming) {
 	       /*
-		 This is a local address hence this is 
+		 This is a local address hence this is
 		 a potential multihomed host.
 	       */
-	       
+
 	       for(i=0; i<MAX_MULTIHOMING_ADDRESSES; i++) {
 		 if(el->hostIpAddresses[i].s_addr == 0x0) {
 		   el->hostIpAddresses[i].s_addr = hostIpAddress->s_addr;
@@ -176,17 +176,17 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 		   && (el->hostIpAddress.s_addr == hostIpAddress->s_addr)) {
 	   /* Spoofing or duplicated MAC address:
 	      two hosts with the same IP address and different MAC
-	      addresses 
+	      addresses
 	   */
 
 	   setSpoofingFlag = 1;
-	   
+
 	   if(!hasDuplicatedMac(el)) {
 	     FD_SET(HOST_DUPLICATED_MAC, &el->flags);
 
-	     if(enableSuspiciousPacketDump) {	       
-	       traceEvent(TRACE_WARNING, 
-			  "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)", 
+	     if(enableSuspiciousPacketDump) {
+	       traceEvent(TRACE_WARNING,
+			  "Two MAC addresses found for the same IP address %s: [%s/%s] (spoofing detected?)",
 			  el->hostNumIpAddress,
 			  etheraddr_string(ether_addr), el->ethAddressString);
 	       dumpSuspiciousPacket();
@@ -242,44 +242,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
        }
 
        len = (size_t)numIpProtosToMonitor*sizeof(ProtoTrafficInfo);
-
-       FD_ZERO(&(el->flags));
-       for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
-	 el->contactedSentPeersIndexes[i] = NO_PEER;
-	 el->contactedRcvdPeersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.synPktsSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.rstPktsSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.rstAckPktsSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.synFinPktsSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.finPushUrgPktsSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.nullPktsSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.ackScanSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.xmasScanSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.finScanSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.nullScanSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.rejectedTCPConnSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.establishedTCPConnSent.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.udpToClosedPortSent.peersIndexes[i] = NO_PEER;
-	 /* ************* */
-	 el->securityHostPkts.synPktsRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.rstAckPktsRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.rstPktsRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.synFinPktsRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.finPushUrgPktsRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.nullPktsRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.ackScanRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.xmasScanRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.finScanRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.nullScanRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.rejectedTCPConnRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.establishedTCPConnRcvd.peersIndexes[i] = NO_PEER;
-	 el->securityHostPkts.udpToClosedPortRcvd.peersIndexes[i] = NO_PEER;
-       }
-       for(i=0; i<MAX_NUM_HOST_ROUTERS; i++) el->contactedRouters[i] = NO_PEER;
-
-       /* NOTE: el->nextDBupdate = 0 */
        el->protoIPTrafficInfos = (ProtoTrafficInfo*)malloc(len);
-       memset(el->protoIPTrafficInfos, 0, len);
+       memset(protoIPTrafficInfos, 0, len);
+
+       resetHostTraffic(el);
        device[actualDeviceId].hash_hostTraffic[firstEmptySlot] = el; /* Insert a new entry */
        idx = firstEmptySlot;
        device[actualDeviceId].hostsno++;
@@ -427,7 +393,7 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
      if(setSpoofingFlag)
        FD_SET(HOST_DUPLICATED_MAC, &el->flags);
- 
+
 #ifdef DEBUG
      traceEvent(TRACE_INFO, "getHostInfo(idx=%d/actualDeviceId=%d) [%s/%s/%s/%d/%d]\n",
 		idx, actualDeviceId,
@@ -600,15 +566,16 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
    }
  }
 
- /* ************************************ */
+/* ************************************ */
+
 #define incrementUsageCounter(a, b, c) _incrementUsageCounter(a, b, c, __FILE__, __LINE__)
 
-static void _incrementUsageCounter(UsageCounter *counter, 
+static void _incrementUsageCounter(UsageCounter *counter,
 				  u_int peerIdx, int deviceId, char* file, int line) {
    u_int i, found=0;
 
    if((peerIdx >= device[deviceId].actualHashSize) && (peerIdx != NO_PEER)) {
-     traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d", 
+     traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d",
 		peerIdx, device[deviceId].actualHashSize, file, line);
      return;
    }
@@ -691,7 +658,7 @@ void scanTimedoutTCPSessions(void) {
 	      }
 	    }
 
-	    if(((sessionToPurge->bytesProtoSent == 0) 
+	    if(((sessionToPurge->bytesProtoSent == 0)
 		|| (sessionToPurge->bytesProtoRcvd == 0))
 	       && ((sessionToPurge->nwLatency.tv_sec != 0) || (sessionToPurge->nwLatency.tv_usec != 0))
 	      /* "Valid" TCP session used to skip faked sessions (e.g. portscans
@@ -943,14 +910,7 @@ void scanTimedoutTCPSessions(void) {
 
 		   hostIdx = findHostIdxByNumIP(hostIpAddress);
 		   if(hostIdx != NO_PEER) {
-		     for(j=0; j<MAX_NUM_HOST_ROUTERS; j++) {
-		       if(realDstHost->contactedRouters[j] == hostIdx)
-			 return;
-		       else if(realDstHost->contactedRouters[j] == NO_PEER) {
-			 realDstHost->contactedRouters[j] = hostIdx;
-			 break;
-		       }
-		     }
+		     incrementUsageCounter(&realDstHost->contactedRouters, hostIdx, actualDeviceId);
 
 		     trafficHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(hostIdx)];
 		     if(trafficHost != NULL)
@@ -978,7 +938,7 @@ void scanTimedoutTCPSessions(void) {
 				  tmpDomainName[MAX_HOST_SYM_NAME_LEN];
 		     int hostLen, i;
 
-			 memset(tmpHostName, 0, sizeof(tmpHostName));
+		     memset(tmpHostName, 0, sizeof(tmpHostName));
 		     strncpy(tmpHostName, realDstHost->hostSymIpAddress, MAX_HOST_SYM_NAME_LEN);
 		     for(i=0; i<strlen(tmpHostName); i++)
 		       if(tmpHostName[i] == '.')
@@ -1964,17 +1924,17 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    char decodedStr[64];
 	    int pos;
 
-	    pos = 5;	  
+	    pos = 5;
 	    decodeNBstring(&rcStr[5], decodedStr);
-	  
+
 	    if((decodedStr[0] != '\0') && (dstHost->nbHostName == NULL))
 	      dstHost->nbHostName = strdup(decodedStr); /* dst before src */
-	  
+
 	    pos = 5+(2*strlen(decodedStr))+2;
 	    decodeNBstring(&rcStr[pos], decodedStr);
-	  
+
 	    if((decodedStr[0] != '\0') && (srcHost->nbHostName == NULL))
-	      srcHost->nbHostName = strdup(decodedStr);	  
+	      srcHost->nbHostName = strdup(decodedStr);
 	  } else if((rcStr[0] == 0x0) /* Message type: Session message */
 		    && (rcStr[8] == 0x73) /* SMB Command: SMBsesssetupX */) {
 	    int i;
@@ -2050,11 +2010,11 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	theSession->nwLatency.tv_sec--;
       } else
 	theSession->nwLatency.tv_usec = h->ts.tv_usec-theSession->nwLatency.tv_usec;
-      
+
       theSession->nwLatency.tv_sec /= 2;
       theSession->nwLatency.tv_usec /= 2;
       theSession->sessionState = STATE_ACTIVE;
-      
+
       incrementUsageCounter(&srcHost->securityHostPkts.establishedTCPConnSent, dstHostIdx, actualDeviceId);
       incrementUsageCounter(&dstHost->securityHostPkts.establishedTCPConnRcvd, srcHostIdx, actualDeviceId);
       device[actualDeviceId].numEstablishedTCPConnections++;
@@ -2063,12 +2023,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		  || (theSession->sessionState == STATE_SYN_ACK))) {
       /*
 	We might have lost a packet so:
-	- we cannot calculate latency 
+	- we cannot calculate latency
 	- we don't set the state to initialized
       */
 
       theSession->nwLatency.tv_sec = theSession->nwLatency.tv_usec = 0;
-      theSession->sessionState = STATE_ACTIVE; 
+      theSession->sessionState = STATE_ACTIVE;
 
       /*
 	ntop has no way to know who started the connection
@@ -2157,7 +2117,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 		     srcHost->hostSymIpAddress,
 		     dstHost->hostSymIpAddress);
 #endif
-	} else if((packetData[1] == 0x0) 
+	} else if((packetData[1] == 0x0)
 		  && (packetData[2] == 0xCC) && (packetData[3] == 0x00)) {
 	  char tmpBuf[64], *remoteHost, *remotePort, *strtokState;
 
@@ -2165,12 +2125,12 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  srcHost->napsterStats->numDownloadsRequested++,
 	    dstHost->napsterStats->numDownloadsServed++;
-	  
+
 	  /*
 	    LEN 00 CC 00 <remote user name>
 	    <remote user IP> <remote user port> <payload>
 	  */
-	  
+
 	  memcpy(tmpBuf, &packetData[4], (packetDataLength<64) ? packetDataLength : 63);
 	  strtok_r(tmpBuf, " ", &strtokState); /* remote user */
 	  if((remoteHost = strtok_r(NULL, " ", &strtokState)) != NULL) {
@@ -2800,20 +2760,17 @@ static void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
   if(senderIdx != broadcastEntryIdx) {
     if(sender != NULL) {
       for(found=0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	if(sender->contactedSentPeersIndexes[i] != NO_PEER) {
-	  if((sender->contactedSentPeersIndexes[i] == receiverIdx)
+	if(sender->contactedSentPeers.peersIndexes[i] != NO_PEER) {
+	  if((sender->contactedSentPeers.peersIndexes[i] == receiverIdx)
 	     || (((receiverIdx == broadcastEntryIdx) || broadcastHost(receiver))
-		 && broadcastHost(device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sender->contactedSentPeersIndexes[i])]))) {
+		 && broadcastHost(device[actualDeviceId].hash_hostTraffic[checkSessionIdx(sender->contactedSentPeers.peersIndexes[i])]))) {
 	    found = 1;
 	    break;
 	  }
 	}
 
-      if(found == 0) {
-	sender->contactedSentPeersIndexes[sender->contactedSentPeersIdx] = receiverIdx;
-	sender->contactedSentPeersIdx = (sender->contactedSentPeersIdx+1)
-	  % MAX_NUM_CONTACTED_PEERS;
-      }
+      if(found == 0)
+	incrementUsageCounter(&sender->contactedSentPeers, receiverIdx, actualDeviceId);
     }
   }
 
@@ -2821,21 +2778,18 @@ static void addContactedPeers(u_int senderIdx, u_int receiverIdx) {
   if(receiverIdx != broadcastEntryIdx) {
     if(receiver != NULL) {
       for(found=0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	if(receiver->contactedRcvdPeersIndexes[i] != NO_PEER) {
-	  if((receiver->contactedRcvdPeersIndexes[i] == senderIdx)
+	if(receiver->contactedRcvdPeers.peersIndexes[i] != NO_PEER) {
+	  if((receiver->contactedRcvdPeers.peersIndexes[i] == senderIdx)
 	     || (((senderIdx == broadcastEntryIdx) || broadcastHost(sender))
 		 && broadcastHost(device[actualDeviceId].
-				  hash_hostTraffic[checkSessionIdx(receiver->contactedRcvdPeersIndexes[i])]))) {
+				  hash_hostTraffic[checkSessionIdx(receiver->contactedRcvdPeers.peersIndexes[i])]))) {
 	    found = 1;
 	    break;
 	  }
 	}
 
-      if(found == 0) {
-	receiver->contactedRcvdPeersIndexes[receiver->contactedRcvdPeersIdx] = senderIdx;
-	receiver->contactedRcvdPeersIdx = (receiver->contactedRcvdPeersIdx+1)
-	  % MAX_NUM_CONTACTED_PEERS;
-      }
+      if(found == 0)
+	incrementUsageCounter(&receiver->contactedRcvdPeers, senderIdx, actualDeviceId);
     }
   }
 }
@@ -2937,7 +2891,7 @@ static void checkFragmentOverlap(u_int srcHostIdx,
     else
       fragment->fragmentOrder = INCREASING_FRAGMENT_ORDER;
   }
-  
+
   if ( (fragment->fragmentOrder == INCREASING_FRAGMENT_ORDER
         && fragment->lastOffset+fragment->lastDataLength > fragmentOffset)
        ||
@@ -2960,7 +2914,7 @@ static void checkFragmentOverlap(u_int srcHostIdx,
     incrementUsageCounter(&fragment->dest->securityHostPkts.overlappingFragmentRcvd, srcHostIdx, actualDeviceId);
   }
 }
-                                
+
 /* ************************************ */
 static u_int handleFragment(HostTraffic *srcHost,
 			    u_int srcHostIdx,
@@ -2995,7 +2949,7 @@ static u_int handleFragment(HostTraffic *srcHost,
     device[actualDeviceId].fragmentList = fragment;
   } else
     checkFragmentOverlap(srcHostIdx, dstHostIdx, fragment, fragmentOffset, dataLength);
- 
+
   fragment->lastOffset = fragmentOffset;
   fragment->totalPacketLength += packetLength;
   fragment->totalDataLength += dataLength;
@@ -3079,14 +3033,14 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
   transactionId = handleDNSpacket(bp, (u_short)(hlen+sizeof(struct udphdr)),
 				  &hostPtr, (short)(length-(hlen+sizeof(struct udphdr))),
 				  isRequest, positiveReply);
-  
+
   if((hostPtr.queryType == T_A)
-     && hostPtr.queryName[0] 
+     && hostPtr.queryName[0]
      && hostPtr.addrList[0]) {
     int i;
 
 #ifdef DNS_SNIFF_DEBUG
-    traceEvent(TRACE_INFO, "DNS %s for %s type %d\n", *isRequest ? "request" : "reply", 
+    traceEvent(TRACE_INFO, "DNS %s for %s type %d\n", *isRequest ? "request" : "reply",
 	       hostPtr.queryName, hostPtr.queryType);
 #endif
 
@@ -3097,7 +3051,7 @@ static u_int16_t processDNSPacket(const u_char *bp, u_int length, u_int hlen,
 #endif
       }
   }
-  
+
 #ifdef HAVE_GDBM_H
   data_data.dptr = hostPtr.queryName;
   data_data.dsize = strlen(data_data.dptr)+1;
@@ -3154,11 +3108,11 @@ static void checkNetworkRouter(HostTraffic *srcHost,
        )
       return;
 
-    for(j=0; j<MAX_NUM_HOST_ROUTERS; j++) {
-      if(srcHost->contactedRouters[j] == routerIdx)
+    for(j=0; j<MAX_NUM_CONTACTED_PEERS; j++) {
+      if(srcHost->contactedRouters.peersIndexes[j] == routerIdx)
 	return;
-      else if(srcHost->contactedRouters[j] == NO_PEER) {
-	srcHost->contactedRouters[j] = routerIdx;
+      else if(srcHost->contactedRouters.peersIndexes[j] == NO_PEER) {
+	srcHost->contactedRouters.peersIndexes[j] = routerIdx;
 	break;
       }
     }
@@ -3276,7 +3230,7 @@ static void processIpPkt(const u_char *bp,
   char *proto;
   u_int srcHostIdx, dstHostIdx;
   HostTraffic *srcHost=NULL, *dstHost=NULL;
-  u_char etherAddrSrc[ETHERNET_ADDRESS_LEN+1], 
+  u_char etherAddrSrc[ETHERNET_ADDRESS_LEN+1],
          etherAddrDst[ETHERNET_ADDRESS_LEN+1], forceUsingIPaddress = 0;
   struct timeval tvstrct;
 
@@ -3325,7 +3279,7 @@ static void processIpPkt(const u_char *bp,
     etherAddrDst[ETHERNET_ADDRESS_LEN] = '\0';
     ether_dst = etherAddrDst;
   }
-  
+
   NTOHL(ip.ip_dst.s_addr); NTOHL(ip.ip_src.s_addr);
 
   /* Sanity check: check for wrong netmask */
@@ -3335,7 +3289,7 @@ static void processIpPkt(const u_char *bp,
     srcHostIdx = getHostInfo(NULL, ether_src, 0, 0);
     srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
     if(srcHost != NULL) {
-      if(enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {	
+      if(enableSuspiciousPacketDump && (!hasWrongNetmask(srcHost))) {
 	/* Dump the first packet only */
 
 	traceEvent(TRACE_WARNING, "Host %s has a wrong netmask",
@@ -3352,9 +3306,9 @@ static void processIpPkt(const u_char *bp,
   */
   dstHostIdx = getHostInfo(&ip.ip_dst, ether_dst, 1, 0);
   dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
-  
-  srcHostIdx = getHostInfo(&ip.ip_src, ether_src, 
-			   /* 
+
+  srcHostIdx = getHostInfo(&ip.ip_src, ether_src,
+			   /*
 			      Don't check for multihoming when
 			      the destination address is a broadcast address
 			   */
@@ -3450,7 +3404,7 @@ static void processIpPkt(const u_char *bp,
   case IPPROTO_TCP:
     proto = "TCP";
     memcpy(&tp, bp+hlen, sizeof(struct tcphdr));
-    
+
     /* Sanity check */
     if(tcpUdpLen >= (tp.th_off * 4))
       tcpDataLength = tcpUdpLen - (tp.th_off * 4);
@@ -3707,7 +3661,7 @@ static void processIpPkt(const u_char *bp,
 	      p += (*p)+1;
 	      displ++;
 	    }
-	  
+
 	    if(displ < udpDataLen)
 	      offset = ((char*)p - (char*)data) + 1;
 	    else
@@ -4362,7 +4316,7 @@ void processPacket(u_char *_deviceId,
     memcpy(&addr.s_addr,
 	   hostAddr->h_addr_list[0],
 	   hostAddr->h_length);
-    
+
     printf("isPseudoLocalAddress=%d\n", isPseudoLocalAddress(&addr));
     printf("isBroadcastAddress=%d\n",   isBroadcastAddress(&addr));
   }
@@ -4565,8 +4519,8 @@ void processPacket(u_char *_deviceId,
 
     default:
       eth_type = ntohs(ehdr.ether_type);
-      /* 
-	 NOTE:	 
+      /*
+	 NOTE:
 	 eth_type is a 32 bit integer (eg. 0x0800). If the first
 	 byte is NOT null (08 in the example below) then this is
 	 a Ethernet II frame, otherwise is a IEEE 802.3 Ethernet
@@ -4825,7 +4779,7 @@ void processPacket(u_char *_deviceId,
 		     && llcHeader.dsap == LLCSAP_NETBIOS) {
 	    /* Netbios */
 	    srcHost->netbiosSent += length;
-	    dstHost->netbiosReceived += length; 
+	    dstHost->netbiosReceived += length;
 	    device[actualDeviceId].netbiosBytes += length;
 	  } else if ((sap_type == 0xF0) || (sap_type == 0xB4)
 		     || (sap_type == 0xC4) || (sap_type == 0xF8)) {
@@ -5139,7 +5093,7 @@ void updateOSName(HostTraffic *el) {
 
 #ifdef MULTITHREADED
       accessMutex(&gdbmMutex, "updateOSName");
-#endif 
+#endif
       if(gdbm_store(gdbm_file, key_data, data_data, GDBM_REPLACE) != 0)
 	printf("Error while adding osName for '%s'\n.\n", el->hostNumIpAddress);
       else {

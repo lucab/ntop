@@ -473,6 +473,7 @@ extern char *getPortByNum(int port, int type);
 extern char *getAllPortByNum(int port);
 extern int getAllPortByName(char* portName);
 extern void addPortHashEntry(ServiceEntry **theSvc, int port, char* name);
+extern void resetUsageCounter(UsageCounter *counter);
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);

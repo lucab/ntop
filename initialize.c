@@ -508,7 +508,7 @@ void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
 
 #ifdef MULTITHREADED
   packetQueueLen = maxPacketQueueLen = packetQueueHead = packetQueueTail = 0;
-  device[actualDeviceId].droppedPackets = 0;
+
 #ifdef USE_SEMAPHORES
   createSem(&queueSem, 0);
 #ifdef ASYNC_ADDRESS_RESOLUTION
@@ -831,7 +831,7 @@ void initDevices(char* devices) {
 /* ******************************* */
 
 static void initRules(char *rulesFile) {
-  if(rulesFile[0] != '\0') {
+  if((rulesFile[0] != NULL) && (rulesFile[0] != '\0')) {
     char tmpBuf[200];
 
     traceEvent(TRACE_INFO, "Parsing ntop rules...");

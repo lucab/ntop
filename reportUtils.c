@@ -2126,8 +2126,8 @@ void printHostContactedPeers(HostTraffic *el) {
     int ok =0;
 
     for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-      if((el->contactedSentPeersIndexes[i] != NO_PEER)
-	 || (el->contactedRcvdPeersIndexes[i] != NO_PEER)) {
+      if((el->contactedSentPeers.peersIndexes[i] != NO_PEER)
+	 || (el->contactedRcvdPeers.peersIndexes[i] != NO_PEER)) {
 	ok = 1;
 	break;
       }
@@ -2140,9 +2140,9 @@ void printHostContactedPeers(HostTraffic *el) {
 		 "<TABLE BORDER=0 WIDTH=100%%><TR><TD "TD_BG" VALIGN=TOP>\n");
 
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	if(el->contactedSentPeersIndexes[i] != NO_PEER) {
+	if(el->contactedSentPeers.peersIndexes[i] != NO_PEER) {
 	  el1 = device[actualReportDeviceId].hash_hostTraffic[
-		       checkSessionIdx(el->contactedSentPeersIndexes[i])];
+		       checkSessionIdx(el->contactedSentPeers.peersIndexes[i])];
 
 	  if(el1 != NULL) {
 	    if(numEntries == 0) {
@@ -2169,9 +2169,9 @@ void printHostContactedPeers(HostTraffic *el) {
 
       /* ***************************************************** */
       for(numEntries = 0, i=0; i<MAX_NUM_CONTACTED_PEERS; i++)
-	if(el->contactedRcvdPeersIndexes[i] != NO_PEER) {
+	if(el->contactedRcvdPeers.peersIndexes[i] != NO_PEER) {
 	  el1 = device[actualReportDeviceId].hash_hostTraffic[
-                       checkSessionIdx(el->contactedRcvdPeersIndexes[i])];
+                       checkSessionIdx(el->contactedRcvdPeers.peersIndexes[i])];
 
 	  if(el1 != NULL) {
 	    if(numEntries == 0) {
@@ -3074,9 +3074,9 @@ void printHostDetailedInfo(HostTraffic *el) {
   /* ******************** */
 
   printedHeader=0;
-  for(i=0; i<MAX_NUM_HOST_ROUTERS; i++) {
-    if(el->contactedRouters[i] != NO_PEER) {
-      int routerIdx = el->contactedRouters[i];
+  for(i=0; i<MAX_NUM_CONTACTED_PEERS; i++) {
+    if(el->contactedRouters.peersIndexes[i] != NO_PEER) {
+      int routerIdx = el->contactedRouters.peersIndexes[i];
 
       if(!printedHeader) {
 	if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
