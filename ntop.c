@@ -977,6 +977,8 @@ RETSIGTYPE cleanup(int signo) {
     */
     if(myGlobals.device[i].pcapPtr != NULL)
       free(myGlobals.device[i].pcapPtr);
+
+    free(myGlobals.device[i].hashList);
   }
 
   free(myGlobals.device);
