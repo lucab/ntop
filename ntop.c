@@ -207,7 +207,7 @@ void detachFromTerminal(int doChdir) {
   umask (0);
 
   /*
-   * Use linebuffered stdout
+   * Use line buffered stdout
    */
   /* setlinebuf (stdout); */
   setvbuf(stdout, (char *)NULL, _IOLBF, 0);

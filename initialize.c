@@ -1090,6 +1090,8 @@ void addDevice(char* deviceName, char* deviceDescr) {
   char *workDevices = NULL;
   char myName[80], *column = NULL;
   char ebuf[CONST_SIZE_PCAP_ERR_BUF];
+
+  ebuf[0] = '\0';
   
   if(deviceName == NULL) {
     traceEvent(CONST_TRACE_WARNING, "Attempt to add a NULL device");

@@ -60,7 +60,7 @@ void showUsers(void) {
                       "&nbsp;</td></tr></th></tr>\n",
                       &key_data.dptr[1], CONST_MODIFY_USERS, key_data.dptr);
       } else{
-	char ebuf[128];
+	char ebuf[256];
 	encodeWebFormURL(key_data.dptr, ebuf, sizeof(ebuf));
 
 	safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
@@ -317,7 +317,7 @@ if(err != NULL) {
 
 void showURLs(void) {
   u_int numUsers=0;
-  char buf[LEN_GENERAL_WORK_BUFFER], ebuf[128];
+  char buf[LEN_GENERAL_WORK_BUFFER], ebuf[256];
   datum key_data, return_data;
 
   printHTMLheader("Restricted ntop URLs", NULL, BITFLAG_HTML_NO_REFRESH);

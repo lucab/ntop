@@ -426,14 +426,16 @@ void printAvailableInterfaces() {
   int i, numInterfaces = 0;
   pcap_if_t *devpointer;
 
+  ebuf[0] = '\0';
+
   printf("\nAvailable interfaces (-i <interface index>):\n");
 
   if(pcap_findalldevs(&devpointer, ebuf) < 0) {
-	;
+    ;
   } else {
-	  for (i = 0; devpointer != 0; i++) {
-	  printf("   [index=%d] %s\n             (%s)\n",
-			numInterfaces++, devpointer->description, devpointer->name);
+    for (i = 0; devpointer != 0; i++) {
+      printf("   [index=%d] %s\n             (%s)\n",
+	     numInterfaces++, devpointer->description, devpointer->name);
 
       devpointer = devpointer->next;
     } /* for */
