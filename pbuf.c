@@ -220,8 +220,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 
 	    numFreedHosts++;
 
-	    traceEvent(TRACE_INFO, "Freed host %s (idx=%d)",
-		       el->hostNumIpAddress, idx);
+#ifdef DEBUG
+	    traceEvent(TRACE_INFO, "Freed host %s (idx=%d)", el->hostNumIpAddress, idx);
+#endif
 	  }
 	} else {
 	  /* ************************

@@ -523,6 +523,9 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
 	  prevSession->next = nextSession;
 	}
 
+	if(prevSession == theSession)
+	  prevSession = myGlobals.device[deviceToExtend].tcpSession[j];
+
 	freeSession(theSession, actualDeviceId);
       } else
 	prevSession = prevSession->next;
@@ -587,6 +590,9 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
        } else {
 	 prevSession->next = nextSession;
        }
+
+	if(prevSession == theSession)
+	  prevSession = myGlobals.device[theDevice].tcpSession[i];
        
         freeSession(theSession, theDevice);
       } else
