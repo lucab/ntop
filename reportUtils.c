@@ -2451,7 +2451,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
     if(el->unknownProtoSent == NULL) {
       sendString("<TR><TH "TH_BG">&nbsp;</TH>");
     } else {
-      sendString("<TR><TH "TH_BG">");
+      sendString("<TR><TH "TH_BG" ALIGN=LEFT>");
       for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
 	printUnknownProto(el->unknownProtoSent[i]);
       sendString("&nbsp;</TH>");
@@ -2460,7 +2460,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
     if(el->unknownProtoRcvd == NULL) {
       sendString("<TH "TH_BG">&nbsp;</TH></TR>");
     } else {
-      sendString("<TH "TH_BG">");
+      sendString("<TH "TH_BG" ALIGN=LEFT>");
       for(i=0; i<MAX_NUM_UNKNOWN_PROTOS; i++)
 	printUnknownProto(el->unknownProtoRcvd[i]);
       sendString("&nbsp;</TH></TR>");
@@ -3387,14 +3387,12 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(el->fullDomainName && (el->fullDomainName[0] != '\0')) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"%s</TD></TR>\n",
-		getRowColor(),
+		"%s</TD></TR>\n", getRowColor(),
 		"Domain", el->fullDomainName) < 0) BufferTooShort();
     sendString(buf);
   }
 
-  if((!myGlobals.dontTrustMACaddr)
-     && (el->ethAddressString[0] != '\0')
+  if((el->ethAddressString[0] != '\0')
      && strcmp(el->ethAddressString, "00:00:00:00:00:00")
      && strcmp(el->ethAddressString, "00:01:02:03:04:05") /* dummy address */) {
     char *vendorName;

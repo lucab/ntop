@@ -1960,9 +1960,8 @@ static void processIpPkt(const u_char *bp,
 	  incrementTrafficCounter(&myGlobals.device[actualDeviceId].icmpGlobalTrafficStats.remote, length);
 
       if(icmp6Pkt.icmp6_type == ND_ROUTER_ADVERT) {
-	HostTraffic *router;
-	router = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
-	FD_SET(FLAG_GATEWAY_HOST, &router->flags);
+	HostTraffic *router = lookupHost(NULL, ether_src, 0, 0, actualDeviceId);
+	if(router != NULL) FD_SET(FLAG_GATEWAY_HOST, &router->flags);
       }
 
       if(icmp6Pkt.icmp6_type == ICMP6_DST_UNREACH /* Destination Unreachable */) {

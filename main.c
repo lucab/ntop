@@ -1165,8 +1165,6 @@ int main(int argc, char *argv[]) {
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2004 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
 
-  checkVersion();
-
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Initializing ntop");
 
   reportValues(&lastTime);
@@ -1182,25 +1180,6 @@ int main(int argc, char *argv[]) {
   }
   
   initNtop(myGlobals.devices);
-
-  /*
-   * Read previously stored values
-   */
-  {
-    char value[32];
-
-    if(fetchPrefsValue("globals.displayPolicy", value, sizeof(value)) == -1) {
-      myGlobals.hostsDisplayPolicy = showAllHosts /* 0 */;
-      storePrefsValue("globals.displayPolicy", "0");
-    } else {
-      myGlobals.hostsDisplayPolicy = atoi(value);
-    
-      /* Out of range check */
-      if((myGlobals.hostsDisplayPolicy < showAllHosts) 
-	 || (myGlobals.hostsDisplayPolicy > showOnlyRemoteHosts))
-	myGlobals.hostsDisplayPolicy = showAllHosts;
-    }
-  }  
 
   /* ******************************* */
 
@@ -1233,6 +1212,8 @@ int main(int argc, char *argv[]) {
 
   checkUserIdentity(userSpecified);
 
+  /* ******************************* */
+
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Loading Plugins");
   loadPlugins();
   traceEvent(CONST_TRACE_NOISY, "Starting Plugins");
@@ -1251,10 +1232,6 @@ int main(int argc, char *argv[]) {
   if(!myGlobals.webInterfaceDisabled)
     initWeb();
 
-  addNewIpProtocolToHandle("IGMP", 2, 0 /* no proto */);
-  addNewIpProtocolToHandle("OSPF", 89, 0 /* no proto */);
-  addNewIpProtocolToHandle("IPSEC", 50, 51);
-
   /*
    * In multithread mode, a separate thread handles packet sniffing
    */
@@ -1267,14 +1244,13 @@ int main(int argc, char *argv[]) {
 #ifndef WIN32
 
   while(!myGlobals.endNtop) {
-
     HEARTBEAT(0, "main(), sleep()...", NULL);
     sleep(10);
 
     /* Periodic recheck of the version status */
     if((myGlobals.checkVersionStatusAgain > 0) && 
        (time(NULL) > myGlobals.checkVersionStatusAgain))
-        checkVersion();
+      checkVersion(NULL);
 
     HEARTBEAT(0, "main(), sleep()...woke", NULL);
   }

@@ -73,7 +73,7 @@ extern void setEmptySerial(HostSerial *a);
 extern int ntop_sched_yield(char *file, int line);
 #endif
 extern char *reportNtopVersionCheck(void);
-extern void checkVersion(void);
+extern void* checkVersion(void*);
 extern unsigned int convertNtopVersionToNumber(char *versionString);
 extern void displayPrivacyNotice(void);
 extern char *reportNtopVersionCheck(void);
@@ -81,7 +81,6 @@ extern void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen, char *ti
 extern void extractAndAppend(char *userAgent, int userAgentLen, char *title, char *input);
 extern int retrieveVersionFile(char *versionSite, char *versionFile, char *buf, int bufLen);
 extern int processVersionFile(char *buf, int bufLen);
-extern void checkVersion(void);
 
 
 /****** function declarations ***** */

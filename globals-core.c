@@ -181,7 +181,6 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
   myGlobals.maxNumHashEntries = myGlobals.maxNumSessions = (u_int)-1;
   myGlobals.skipVersionCheck = FALSE;
-  myGlobals.firstVersionCheckDone = FALSE;
   myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCHECKED;
   myGlobals.checkVersionStatusAgain = 0;
   
@@ -539,8 +538,12 @@ void initNtopGlobals(int argc, char * argv[]) {
 /* ********************************* */
 
 void initNtop(char *devices) {
+  char value[32];
+
   initIPServices();
+
   handleProtocols();
+
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();
 
@@ -647,6 +650,31 @@ void initNtop(char *devices) {
 
 #ifndef WIN32
   saveNtopPid();
+#endif
+
+  addNewIpProtocolToHandle("IGMP", 2, 0 /* no proto */);
+  addNewIpProtocolToHandle("OSPF", 89, 0 /* no proto */);
+  addNewIpProtocolToHandle("IPSEC", 50, 51);
+
+  if(fetchPrefsValue("globals.displayPolicy", value, sizeof(value)) == -1) {
+    myGlobals.hostsDisplayPolicy = showAllHosts /* 0 */;
+    storePrefsValue("globals.displayPolicy", "0");
+  } else {
+    myGlobals.hostsDisplayPolicy = atoi(value);
+    
+    /* Out of range check */
+    if((myGlobals.hostsDisplayPolicy < showAllHosts) 
+       || (myGlobals.hostsDisplayPolicy > showOnlyRemoteHosts))
+      myGlobals.hostsDisplayPolicy = showAllHosts;
+  }
+
+#ifdef CFG_MULTITHREADED
+  {
+    pthread_t myThreadId;
+    createThread(&myThreadId, checkVersion, NULL);
+  }
+#else
+  checkVersion(NULL);
 #endif
 }
 

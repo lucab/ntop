@@ -362,8 +362,7 @@ static char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
 char* getVendorInfo(u_char* ethAddress, short encodeString) {
   char* ret;
 
-  if(myGlobals.dontTrustMACaddr
-     || (memcmp(ethAddress, myGlobals.otherHostEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0))
+  if(memcmp(ethAddress, myGlobals.otherHostEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0)
     return("");
 
   ret = getMACInfo(1, ethAddress, encodeString);

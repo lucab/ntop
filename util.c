@@ -185,14 +185,14 @@ unsigned long in6_hash(struct in6_addr *addr) {
   return
     (addr->s6_addr[13]      ) | (addr->s6_addr[15] << 8) |
     (addr->s6_addr[14] << 16) | (addr->s6_addr[11] << 24);
-  
-} 
+
+}
 #endif
 
 /* *************************************** */
 
 unsigned short computeIdx(HostAddr *srcAddr, HostAddr *dstAddr, int sport, int dport) {
-  
+
   unsigned short idx;
   if (srcAddr->hostFamily != dstAddr->hostFamily)
     return -1;
@@ -260,7 +260,7 @@ unsigned short addrcmp(HostAddr *addr1, HostAddr *addr2) {
       return (1);
     else if (addr1->Ip4Address.s_addr < addr2->Ip4Address.s_addr)
       return (-1);
-    else 
+    else
       return (0);
     /*return (addr1->Ip4Address.s_addr != addr2->Ip4Address.s_addr);*/
 
@@ -270,7 +270,7 @@ unsigned short addrcmp(HostAddr *addr1, HostAddr *addr2) {
       return (1);
     else if (memcmp(&addr1->Ip6Address,&addr2->Ip6Address,sizeof(struct in6_addr)) <0)
       return (-1);
-    else 
+    else
       return (0);
     break;
 #endif
@@ -281,7 +281,7 @@ unsigned short addrcmp(HostAddr *addr1, HostAddr *addr2) {
 
 /* ****************************************** */
 
-HostAddr *addrcpy(HostAddr *dst, HostAddr *src) {  
+HostAddr *addrcpy(HostAddr *dst, HostAddr *src) {
   dst->hostFamily = src->hostFamily;
   switch (src->hostFamily){
   case AF_INET:
@@ -298,7 +298,7 @@ HostAddr *addrcpy(HostAddr *dst, HostAddr *src) {
 
 /* ****************************************** */
 
-int addrinit(HostAddr *addr) {  
+int addrinit(HostAddr *addr) {
   addr->hostFamily = AF_INET;
   addr->Ip4Address.s_addr = 0;
   return(0);
@@ -308,7 +308,7 @@ int addrinit(HostAddr *addr) {
 
 unsigned short addrget(HostAddr *Haddr,void *addr, int *family , int *size) {
   struct in_addr v4addr;
-  
+
   *family = Haddr->hostFamily;
   switch(Haddr->hostFamily){
   case AF_INET:
@@ -357,7 +357,7 @@ unsigned short addrnull(HostAddr *addr) {
 #endif
   default:
     return(1);
-  }    
+  }
 }
 
 /* ****************************************** */
@@ -368,7 +368,7 @@ unsigned short addrfull(HostAddr *addr) {
     return (addr->Ip4Address.s_addr == 0xffffffff);
 #ifdef INET6
   case AF_INET6:
-	return(0);
+    return(0);
 #endif
   default: return 0;
   }
@@ -380,9 +380,9 @@ unsigned short addrfull(HostAddr *addr) {
 unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int size) {
   int found = 0;
   NtopIfaceAddr *it;
-  
+
   for (it = addrs ; it != NULL; it = it->next){
-    if (size == 0) 
+    if (size == 0)
       size = it->af.inet6.prefixlen / 8;
 #if DEBUG
     {
@@ -398,7 +398,7 @@ unsigned short prefixlookup(struct in6_addr *addr, NtopIfaceAddr *addrs, int siz
     }
   }
 
-  return found; 
+  return found;
 }
 #endif
 
@@ -451,8 +451,8 @@ NtopIfaceAddr *getLocalHostAddressv6(NtopIfaceAddr *addrs, char* device) {
   traceEvent(CONST_TRACE_INFO, "DEBUG: Local address is: %s\n", intop(hostAddress));
 #endif
   return addrs;
-    
- oops:    
+
+ oops:
   return NULL;
 }
 #endif
@@ -536,10 +536,10 @@ unsigned short in6_isMulticastAddress(struct in6_addr *addr) {
 unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId) {
   if(deviceId >= myGlobals.numDevices) {
     traceEvent(CONST_TRACE_WARNING, "WARNING: Index %u out of range [0..%u] - address treated as remote",
-	       deviceId, myGlobals.numDevices); 
+	       deviceId, myGlobals.numDevices);
     return(0);
   }
-  
+
   if(addrlookup(addr,myGlobals.device[deviceId].v6Addrs) == 1) {
 #ifdef ADDRESS_DEBUG
     traceEvent(CONST_TRACE_INFO, "ADDRESS_DEBUG: %s is local\n", intop(addr));
@@ -549,7 +549,7 @@ unsigned short in6_isLocalAddress(struct in6_addr *addr, u_int deviceId) {
 
   if(myGlobals.trackOnlyLocalHosts)
     return(0);
-  
+
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "DEBUG: %s is %s\n", intop(addr));
 #endif
@@ -1060,11 +1060,11 @@ void handleLocalAddresses(char* addresses) {
 #ifdef INET6
 unsigned short in6_pseudoLocalAddress(struct in6_addr *addr) {
   int i;
- 
+
   for(i=0; i<myGlobals.numDevices; i++) {
     if (prefixlookup(addr,myGlobals.device[i].v6Addrs,0) == 1)
       return (1);
-      
+
   }
   return(0);
 }
@@ -1204,7 +1204,7 @@ unsigned short in_isPseudoLocalAddress(struct in_addr *addr, u_int deviceId) {
   */
 
 #ifdef ADDRESS_DEBUG
-  traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s [deviceId=%d] is remote", 
+  traceEvent(CONST_TRACE_WARNING, "ADDRESS_DEBUG: %s [deviceId=%d] is remote",
 	     intoa(*addr), deviceId);
 #endif
 
@@ -1292,7 +1292,7 @@ unsigned short _pseudoLocalAddress(HostAddr *addr) {
     return (in6_pseudoLocalAddress(&addr->Ip6Address));
 #endif
   default: return(0);
-  } 
+  }
 }
 
 /* ********************************* */
@@ -1579,7 +1579,7 @@ int killThread(pthread_t *threadId) {
   if(rc != 0)
     traceEvent(CONST_TRACE_NOISY, "killThread(0x%x), rc = %s(%d)",
 	       threadId, strerror(rc), rc);
-  
+
   myGlobals.numThreads--;
   return(rc);
 }
@@ -2782,7 +2782,7 @@ FILE* getNewRandomFile(char* fileName, int len) {
   char tmpFileName[NAME_MAX];
 
   strcpy(tmpFileName, fileName);
-  sprintf(fileName, "%s-%lu", tmpFileName, 
+  sprintf(fileName, "%s-%lu", tmpFileName,
           myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]);
   fd = fopen(fileName, "wb");
 #endif /* 0 */
@@ -2903,7 +2903,7 @@ void fillDomainName(HostTraffic *el) {
   if(el->dotDomainName != NULL) free(el->dotDomainName);
 
   ip2cc = ip2CountryCode(el->hostIpAddress);
-  
+
   if(ip2cc == NULL) {
     /* We are unable to associate a domain with an IP address. */
     el->dotDomainName = strdup("");
@@ -3615,12 +3615,12 @@ u_int numActiveSenders(u_int deviceId) {
 
   for(el=getFirstHost(deviceId);
       el != NULL; el = getNextHost(deviceId, el)) {
-      if(broadcastHost(el) || (el->pktSent.value == 0))
-          continue;
-      else if (isFcHost (el) && (el->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
-          continue;
-      else
-          numSenders++;
+    if(broadcastHost(el) || (el->pktSent.value == 0))
+      continue;
+    else if (isFcHost (el) && (el->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
+      continue;
+    else
+      numSenders++;
   }
 
   return(numSenders);
@@ -3629,22 +3629,22 @@ u_int numActiveSenders(u_int deviceId) {
 /* *************************************************** */
 u_int numActiveVsans(u_int deviceId)
 {
-    u_int numVsans = 0, i;
-    FcFabricElementHash **theHash;
+  u_int numVsans = 0, i;
+  FcFabricElementHash **theHash;
 
-    if ((theHash = myGlobals.device[deviceId].vsanHash) == NULL) {
-        return (numVsans);
-    }
-
-    for (i=0; i<MAX_ELEMENT_HASH; i++) {
-        if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
-           (theHash[i]->vsanId < MAX_USER_VSAN)) {
-            if (theHash[i]->totBytes.value)
-                numVsans++;
-        }
-    }
-
+  if ((theHash = myGlobals.device[deviceId].vsanHash) == NULL) {
     return (numVsans);
+  }
+
+  for (i=0; i<MAX_ELEMENT_HASH; i++) {
+    if((theHash[i] != NULL) && (theHash[i]->vsanId < MAX_HASHDUMP_ENTRY) &&
+       (theHash[i]->vsanId < MAX_USER_VSAN)) {
+      if (theHash[i]->totBytes.value)
+	numVsans++;
+    }
+  }
+
+  return (numVsans);
 }
 
 
@@ -3707,7 +3707,7 @@ char *ip2CountryCode(HostAddr ip) {
   int i, b;
   char *cc = "";
   u_int32_t addr;
-  
+
   if (ip.hostFamily == AF_INET6)
     return NULL;
   addr  = ip.Ip4Address.s_addr;
@@ -4220,14 +4220,14 @@ u_short ip2AS(HostAddr ip) {
   int i, b;
   u_short as=0;
   u_int32_t addr;
-  
+
   if (ip.hostFamily == AF_INET6)
     return 0;
-  
+
   addr = ip.Ip4Address.s_addr;
-  
+
   p = myGlobals.asHead;
-  
+
   i=0;
   while(p!=NULL) {
     if(p->node.as !=0 )
@@ -4241,7 +4241,7 @@ u_short ip2AS(HostAddr ip) {
 #ifdef DEBUG
   {
     char buf[64];
-  
+
     traceEvent(CONST_TRACE_INFO, "%s: %d AS", _intoa(&addr, buf, sizeof(buf)), as);
   }
 #endif
@@ -4339,7 +4339,7 @@ void saveNtopPid(void) {
 
   myGlobals.basentoppid = getpid();
   sprintf(pidFileName, "%s/%s",
-          getuid() ? 
+          getuid() ?
 	  /* We're not root */ myGlobals.dbPath :
 	  /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
           DEFAULT_NTOP_PIDFILE);
@@ -4360,8 +4360,8 @@ void removeNtopPid(void) {
   char pidFileName[NAME_MAX];
   int rc;
 
-  sprintf(pidFileName, "%s/%s", 
-          getuid() ? 
+  sprintf(pidFileName, "%s/%s",
+          getuid() ?
 	  /* We're not root */ myGlobals.dbPath :
 	  /* We are root */ DEFAULT_NTOP_PID_DIRECTORY,
           DEFAULT_NTOP_PIDFILE);
@@ -4392,13 +4392,13 @@ bytestring_to_str(const u_int8_t *ad, u_int32_t len, char punct) {
      such a string is perfectly legitimate ANSI C nonwithstanding, the 17th
      '\0' byte in the string nonwithstanding. */
   static const char hex_digits[16] =
-      { '0', '1', '2', '3', '4', '5', '6', '7',
-        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    { '0', '1', '2', '3', '4', '5', '6', '7',
+      '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
   if (len < 0) {
-      return "";
+    return "";
   }
-  
+
   len--;
 
   if (cur == &str[0][0]) {
@@ -4428,19 +4428,19 @@ bytestring_to_str(const u_int8_t *ad, u_int32_t len, char punct) {
 char *
 fc_to_str(const u_int8_t *ad)
 {
-    return bytestring_to_str (ad, 3, '.');
+  return bytestring_to_str (ad, 3, '.');
 }
 
 char *
 fcwwn_to_str (const u_int8_t *ad)
 {
-    u_int8_t zero_wwn[LEN_WWN_ADDRESS] = {0,0,0,0,0,0,0,0};
-        
-    if (!memcmp (ad, zero_wwn, LEN_WWN_ADDRESS)) {
-        return ("N/A");
-    }
-    
-    return bytestring_to_str (ad, 8, ':');
+  u_int8_t zero_wwn[LEN_WWN_ADDRESS] = {0,0,0,0,0,0,0,0};
+
+  if (!memcmp (ad, zero_wwn, LEN_WWN_ADDRESS)) {
+    return ("N/A");
+  }
+
+  return bytestring_to_str (ad, 8, ':');
 }
 
 /* ************************************ */
@@ -4484,128 +4484,128 @@ extern char *crypt (__const char *__key, __const char *__salt) {
 
 static const char *
 inet_ntop4(src, dst, size)
-        const u_char *src;
-        char *dst;
-        size_t size;
+     const u_char *src;
+     char *dst;
+     size_t size;
 {
-        static const char fmt[] = "%u.%u.%u.%u";
-        char tmp[sizeof "255.255.255.255"];
-        int nprinted;
-                                                                                                                  
-        nprinted = snprintf(tmp, sizeof(tmp), fmt, src[0], src[1], src[2], src[3]);
-        if (nprinted < 0)
-                return (NULL);  /* we assume "errno" was set by "snprintf()" */
-        if ((size_t)nprinted > size) {
-                errno = ENOSPC;
-                return (NULL);
-        }
-        strcpy(dst, tmp);
-        return (dst);
+  static const char fmt[] = "%u.%u.%u.%u";
+  char tmp[sizeof "255.255.255.255"];
+  int nprinted;
+
+  nprinted = snprintf(tmp, sizeof(tmp), fmt, src[0], src[1], src[2], src[3]);
+  if (nprinted < 0)
+    return (NULL);  /* we assume "errno" was set by "snprintf()" */
+  if ((size_t)nprinted > size) {
+    errno = ENOSPC;
+    return (NULL);
+  }
+  strcpy(dst, tmp);
+  return (dst);
 }
 
 #define NS_IN6ADDRSZ 16
 
 static const char *inet_ntop6(const u_char *src, char *dst, size_t size) {
-        /*
-         * Note that int32_t and int16_t need only be "at least" large enough
-         * to contain a value of the specified size.  On some systems, like
-         * Crays, there is no such thing as an integer variable with 16 bits.
-         * Keep this in mind if you think this function should have been coded
-         * to use pointer overlays.  All the world's not a VAX.
-         */
-        char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], *tp;
-        struct { int base, len; } best, cur;
-        u_int words[NS_IN6ADDRSZ / NS_INT16SZ];
-        int i;
-                                                                                                                  
-        /*
-         * Preprocess:
-         *      Copy the input (bytewise) array into a wordwise array.
-         *      Find the longest run of 0x00's in src[] for :: shorthanding.
-         */
-        memset(words, '\0', sizeof words);
-        for (i = 0; i < NS_IN6ADDRSZ; i++)
-                words[i / 2] |= (src[i] << ((1 - (i % 2)) << 3));
-        best.base = -1;
-        cur.base = -1;
-        for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
-                if (words[i] == 0) {
-                        if (cur.base == -1)
-                                cur.base = i, cur.len = 1;
-                        else
-                                cur.len++;
-                } else {
-                        if (cur.base != -1) {
-                                if (best.base == -1 || cur.len > best.len)
-                                        best = cur;
-                                cur.base = -1;
-                        }
-                }
-        }
-        if (cur.base != -1) {
+  /*
+   * Note that int32_t and int16_t need only be "at least" large enough
+   * to contain a value of the specified size.  On some systems, like
+   * Crays, there is no such thing as an integer variable with 16 bits.
+   * Keep this in mind if you think this function should have been coded
+   * to use pointer overlays.  All the world's not a VAX.
+   */
+  char tmp[sizeof "ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255"], *tp;
+  struct { int base, len; } best, cur;
+  u_int words[NS_IN6ADDRSZ / NS_INT16SZ];
+  int i;
 
-                if (best.base == -1 || cur.len > best.len)
-                        best = cur;
-        }
-        if (best.base != -1 && best.len < 2)
-                best.base = -1;
-                                                                                                                  
-        /*
-         * Format the result.
-         */
-        tp = tmp;
-        for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
-                /* Are we inside the best run of 0x00's? */
-                if (best.base != -1 && i >= best.base &&
-                    i < (best.base + best.len)) {
-                        if (i == best.base)
-                                *tp++ = ':';
-                        continue;
-                }
-                /* Are we following an initial run of 0x00s or any real hex? */
-                if (i != 0)
-                        *tp++ = ':';
-                /* Is this address an encapsulated IPv4? */
-                if (i == 6 && best.base == 0 &&
-                    (best.len == 6 || (best.len == 5 && words[5] == 0xffff))) {
-                        if (!inet_ntop4(src+12, tp, sizeof tmp - (tp - tmp)))
-                                return (NULL);
-                        tp += strlen(tp);
-                        break;
-                }
-                tp += sprintf(tp, "%x", words[i]);
-        }
-        /* Was it a trailing run of 0x00's? */
-        if (best.base != -1 && (best.base + best.len) ==
-            (NS_IN6ADDRSZ / NS_INT16SZ))
-                *tp++ = ':';
-        *tp++ = '\0';
-                                                                                                                  
-        /*
-         * Check for overflow, copy, and we're done.
-         */
-        if ((size_t)(tp - tmp) > size) {
-                errno = ENOSPC;
-                return (NULL);
-        }
-        strcpy(dst, tmp);
-        return (dst);
+  /*
+   * Preprocess:
+   *      Copy the input (bytewise) array into a wordwise array.
+   *      Find the longest run of 0x00's in src[] for :: shorthanding.
+   */
+  memset(words, '\0', sizeof words);
+  for (i = 0; i < NS_IN6ADDRSZ; i++)
+    words[i / 2] |= (src[i] << ((1 - (i % 2)) << 3));
+  best.base = -1;
+  cur.base = -1;
+  for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
+    if (words[i] == 0) {
+      if (cur.base == -1)
+	cur.base = i, cur.len = 1;
+      else
+	cur.len++;
+    } else {
+      if (cur.base != -1) {
+	if (best.base == -1 || cur.len > best.len)
+	  best = cur;
+	cur.base = -1;
+      }
+    }
+  }
+  if (cur.base != -1) {
+
+    if (best.base == -1 || cur.len > best.len)
+      best = cur;
+  }
+  if (best.base != -1 && best.len < 2)
+    best.base = -1;
+
+  /*
+   * Format the result.
+   */
+  tp = tmp;
+  for (i = 0; i < (NS_IN6ADDRSZ / NS_INT16SZ); i++) {
+    /* Are we inside the best run of 0x00's? */
+    if (best.base != -1 && i >= best.base &&
+	i < (best.base + best.len)) {
+      if (i == best.base)
+	*tp++ = ':';
+      continue;
+    }
+    /* Are we following an initial run of 0x00s or any real hex? */
+    if (i != 0)
+      *tp++ = ':';
+    /* Is this address an encapsulated IPv4? */
+    if (i == 6 && best.base == 0 &&
+	(best.len == 6 || (best.len == 5 && words[5] == 0xffff))) {
+      if (!inet_ntop4(src+12, tp, sizeof tmp - (tp - tmp)))
+	return (NULL);
+      tp += strlen(tp);
+      break;
+    }
+    tp += sprintf(tp, "%x", words[i]);
+  }
+  /* Was it a trailing run of 0x00's? */
+  if (best.base != -1 && (best.base + best.len) ==
+      (NS_IN6ADDRSZ / NS_INT16SZ))
+    *tp++ = ':';
+  *tp++ = '\0';
+
+  /*
+   * Check for overflow, copy, and we're done.
+   */
+  if ((size_t)(tp - tmp) > size) {
+    errno = ENOSPC;
+    return (NULL);
+  }
+  strcpy(dst, tmp);
+  return (dst);
 }
 
 const char *inet_ntop(int af, const void *src, char *dst, size_t size) {
-        switch (af) {
-        case AF_INET:
-                return (inet_ntop4(src, dst, size));
-        case AF_INET6:
-                return (inet_ntop6(src, dst, size));
-        default:
-                errno = -1;
-                return (NULL);
-        }
-        /* NOTREACHED */
+  switch (af) {
+  case AF_INET:
+    return (inet_ntop4(src, dst, size));
+  case AF_INET6:
+    return (inet_ntop6(src, dst, size));
+  default:
+    errno = -1;
+    return (NULL);
+  }
+  /* NOTREACHED */
 }
 
-#endif                                                   
+#endif
 
 /* *************************************************** */
 
@@ -4615,10 +4615,10 @@ u_int numActiveNxPorts (u_int deviceId) {
 
   for(el=getFirstHost(deviceId);
       el != NULL; el = getNextHost(deviceId, el)) {
-      if (isFcHost (el) && (el->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
-          continue;
-      else
-          numSenders++;
+    if (isFcHost (el) && (el->hostFcAddress.domain == FC_ID_SYSTEM_DOMAIN))
+      continue;
+    else
+      numSenders++;
   }
 
   return(numSenders);
@@ -4650,22 +4650,22 @@ HostTraffic* findHostByFcAddr(FcAddress *fcAddr, u_short vsanId, u_int actualDev
 /* *************************************** */
 
 FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId) {
-    FcNameServerCacheEntry *entry = NULL;
-    HostTraffic *el = NULL;
-    u_int hashIdx = hashFcHost(fcAddr, vsanId, &el, -1);
+  FcNameServerCacheEntry *entry = NULL;
+  HostTraffic *el = NULL;
+  u_int hashIdx = hashFcHost(fcAddr, vsanId, &el, -1);
 
-    entry = myGlobals.fcnsCacheHash[hashIdx];
+  entry = myGlobals.fcnsCacheHash[hashIdx];
 
-    while (entry != NULL) {
-        if ((entry->vsanId == vsanId) &&
-            (memcmp ((u_int8_t *)fcAddr, (u_int8_t *)&entry->fcAddress,
-                     LEN_FC_ADDRESS) == 0))
-            return (entry);
+  while (entry != NULL) {
+    if ((entry->vsanId == vsanId) &&
+	(memcmp ((u_int8_t *)fcAddr, (u_int8_t *)&entry->fcAddress,
+		 LEN_FC_ADDRESS) == 0))
+      return (entry);
 
-        entry = entry->next;
-    }
+    entry = entry->next;
+  }
 
-    return (NULL);
+  return (NULL);
 }
 
 /* ************************************ */
@@ -4728,113 +4728,114 @@ unsigned int convertNtopVersionToNumber(char *versionString) {
    * n.m.x -> nmmyyy0xx  (if x>=50 yyy=x else xx=x)
    * n.ml  -> nmm000l00 (where a=1, b=2, etc.)
    */
-    unsigned int f, n=0, m=0, x=0, y=0, c=0, prerc=0;
-    unsigned char l=0;
+  unsigned int f, n=0, m=0, x=0, y=0, c=0, prerc=0;
+  unsigned char l=0;
 
-    if (versionString == NULL) {
-      return 999999999;
-    }
+  if (versionString == NULL) {
+    return 999999999;
+  }
 
-    f = sscanf(versionString, "%u.%upre%u", &n, &m, &x);
+  f = sscanf(versionString, "%u.%upre%u", &n, &m, &x);
+  if(f>=3) {
+    prerc=2;
+  } else {
+    f = sscanf(versionString, "%u.%urc%u", &n, &m, &x);
     if(f>=3) {
-      prerc=2;
+      prerc=1;
     } else {
-      f = sscanf(versionString, "%u.%urc%u", &n, &m, &x);
+      f = sscanf(versionString, "%u.%u%[a-z].%u", &n, &m, &l, &x);
       if(f>=3) {
-        prerc=1;
+	if(l>0)
+	  l = tolower(l) - 'a' + 1;
       } else {
-        f = sscanf(versionString, "%u.%u%[a-z].%u", &n, &m, &l, &x);
-        if(f>=3) {
-          if(l>0)
-            l = tolower(l) - 'a' + 1;
-        } else {
-          l = 0;
-          f = sscanf(versionString, "%u.%u.%u", &n, &m, &x);
-          if (f<=0) { 
-            return 999999999;
-          }
-        }
+	l = 0;
+	f = sscanf(versionString, "%u.%u.%u", &n, &m, &x);
+	if (f<=0) {
+	  return 999999999;
+	}
       }
     }
-    if (x>=50) {
-      y=x;
-      x=0;
-    }
+  }
+  if (x>=50) {
+    y=x;
+    x=0;
+  }
 #ifdef CHKVER_DEBUG
-    traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: %s is n%u m%u y%u l%u x%u prerc%u f=%u",
-               versionString, n, m, y, l, x, prerc, f);
+  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: %s is n%u m%u y%u l%u x%u prerc%u f=%u",
+	     versionString, n, m, y, l, x, prerc, f);
 #endif
-    return n*100000000 + m*1000000 + y*1000 + l*100 + x - 1000*prerc;
+  return n*100000000 + m*1000000 + y*1000 + l*100 + x - 1000*prerc;
 }
 
 /* ********************************** */
 
 void displayPrivacyNotice(void) {
-        if(myGlobals.firstVersionCheckDone == FALSE) {
-          myGlobals.firstVersionCheckDone = TRUE;
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: **********************PRIVACY**NOTICE**********************");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * ntop instances may record individually identifiable     *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * information on a remote system as part of the version   *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * check.                                                  *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: *                                                         *");
-          if(myGlobals.skipVersionCheck == TRUE) {
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * You have requested - via the --skip-version-check       *");
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * option that this check be skipped and so no             *");
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * individually identifiable information will be recorded. *");
-          } else {
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * You may request - via the --skip-version-check option   *");
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * that this check be skipped and that no individually     *");
-            traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * identifiable information be recorded.                   *");
-          }
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: *                                                         *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * In general, we ask you to permit this check because it  *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * benefits both the users and developers of ntop.         *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: *                                                         *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: * Review the man ntop page for more information.          *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: *                                                         *");
-          traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                     "CHKVER: **********************PRIVACY**NOTICE**********************");
+  char value[8];
+
+  if(fetchPrefsValue("globals.displayPrivacyNotice", value, sizeof(value)) == -1) {
+    storePrefsValue("globals.displayPrivacyNotice", "1");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: **********************PRIVACY**NOTICE**********************");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: * ntop instances may record individually identifiable     *");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: * information on a remote system as part of the version   *");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: * check.                                                  *");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: *                                                         *");
+    if(myGlobals.skipVersionCheck == TRUE) {
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+		 "CHKVER: * You have requested - via the --skip-version-check       *");
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+		 "CHKVER: * option that this check be skipped and so no             *");
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+		 "CHKVER: * individually identifiable information will be recorded. *");
+    } else {
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+		 "CHKVER: * You may request - via the --skip-version-check option   *");
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+		 "CHKVER: * that this check be skipped and that no individually     *");
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+		 "CHKVER: * identifiable information be recorded.                   *");
+    }
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: *                                                         *");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: * In general, we ask you to permit this check because it  *");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: * benefits both the users and developers of ntop.         *");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: *                                                         *");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: * Review the man ntop page for more information.          *");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: *                                                         *");
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	       "CHKVER: **********************PRIVACY**NOTICE**********************");
 
 #ifdef CHKVER_DEBUG
-// This is here so it's only executed ONCE...
-          #define cNV2N(a, b) traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: cNV2N %-10s -> %10u expected %10u", a, convertNtopVersionToNumber(a), b)
-          cNV2N("1.3",    103000000);
-          cNV2N("2.1",    201000000);
-          cNV2N("2.1.1",  201000001);
-          cNV2N("2.1.2",  201000002);
-          cNV2N("2.1.3",  201000003);
-          cNV2N("2.1.50", 201050000);
-          cNV2N("2.1.90", 201090000);
-          cNV2N("2.2",    202000000);
-          cNV2N("2.2a",   202000100);
-          cNV2N("2.2b",   202000200);
-          cNV2N("2.2c",   202000300);
-          cNV2N("2.2.50", 202050000);
-          cNV2N("2.2.90", 202090000);
-          cNV2N("3.0pre1",299998001);
-          cNV2N("3.0rc1", 299999001);
-          cNV2N("3.0rc2", 299999002);
-          cNV2N("3.0",    300000000);
-#endif
-
-        }
+    // This is here so it's only executed ONCE...
+#define cNV2N(a, b) traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: cNV2N %-10s -> %10u expected %10u", a, convertNtopVersionToNumber(a), b)
+    cNV2N("1.3",    103000000);
+    cNV2N("2.1",    201000000);
+    cNV2N("2.1.1",  201000001);
+    cNV2N("2.1.2",  201000002);
+    cNV2N("2.1.3",  201000003);
+    cNV2N("2.1.50", 201050000);
+    cNV2N("2.1.90", 201090000);
+    cNV2N("2.2",    202000000);
+    cNV2N("2.2a",   202000100);
+    cNV2N("2.2b",   202000200);
+    cNV2N("2.2c",   202000300);
+    cNV2N("2.2.50", 202050000);
+    cNV2N("2.2.90", 202090000);
+    cNV2N("3.0pre1",299998001);
+    cNV2N("3.0rc1", 299999001);
+    cNV2N("3.0rc2", 299999002);
+    cNV2N("3.0",    300000000);
+#endif    
+  }
 }
 
 /* ********************************** */
@@ -4842,24 +4843,24 @@ void displayPrivacyNotice(void) {
 /* Externally exposed function to turn the code into words... */
 char *reportNtopVersionCheck(void) {
   switch(myGlobals.checkVersionStatus) {
-    case FLAG_CHECKVERSION_NOTCHECKED:
-        return "was not checked";
-    case FLAG_CHECKVERSION_OBSOLETE:
-        return "an OBSOLETE and UNSUPPORTED version - please upgrade";
-    case FLAG_CHECKVERSION_UNSUPPORTED:
-        return "an UNSUPPORTED version - please upgrade";
-    case FLAG_CHECKVERSION_NOTCURRENT:
-        return "a minimally supported but OLDER version - please upgrade";
-    case FLAG_CHECKVERSION_CURRENT:
-        return "the CURRENT stable version";
-    case FLAG_CHECKVERSION_OLDDEVELOPMENT:
-        return "an unsupported old DEVELOPMENT version - upgrade";
-    case FLAG_CHECKVERSION_DEVELOPMENT:
-        return "the current DEVELOPMENT version - Expect the unexpected!";
-    case FLAG_CHECKVERSION_NEWDEVELOPMENT:
-        return "a new DEVELOPMENT version - Be careful!";
-    default:
-        return "is UNKNOWN...";
+  case FLAG_CHECKVERSION_NOTCHECKED:
+    return "was not checked";
+  case FLAG_CHECKVERSION_OBSOLETE:
+    return "an OBSOLETE and UNSUPPORTED version - please upgrade";
+  case FLAG_CHECKVERSION_UNSUPPORTED:
+    return "an UNSUPPORTED version - please upgrade";
+  case FLAG_CHECKVERSION_NOTCURRENT:
+    return "a minimally supported but OLDER version - please upgrade";
+  case FLAG_CHECKVERSION_CURRENT:
+    return "the CURRENT stable version";
+  case FLAG_CHECKVERSION_OLDDEVELOPMENT:
+    return "an unsupported old DEVELOPMENT version - upgrade";
+  case FLAG_CHECKVERSION_DEVELOPMENT:
+    return "the current DEVELOPMENT version - Expect the unexpected!";
+  case FLAG_CHECKVERSION_NEWDEVELOPMENT:
+    return "a new DEVELOPMENT version - Be careful!";
+  default:
+    return "is UNKNOWN...";
   }
 }
 
@@ -4879,532 +4880,533 @@ char *reportNtopVersionCheck(void) {
 
 void tokenizeCleanupAndAppend(char *userAgent, int userAgentLen,
 			      char *title, char *input) {
-        char *work, *token;
-        int i, j, tCount=0;
+  char *work, *token;
+  int i, j, tCount=0;
 
-        work=strdup(input);
+  work=strdup(input);
 
-        strncat(userAgent, " ", (userAgentLen - strlen(userAgent)));
-        strncat(userAgent, title, (userAgentLen - strlen(userAgent)));
-        strncat(userAgent, "(", (userAgentLen - strlen(userAgent)));
+  strncat(userAgent, " ", (userAgentLen - strlen(userAgent)));
+  strncat(userAgent, title, (userAgentLen - strlen(userAgent)));
+  strncat(userAgent, "(", (userAgentLen - strlen(userAgent)));
 
-        token = strtok(work, " \t\n");
-        while (token != NULL) {
+  token = strtok(work, " \t\n");
+  while (token != NULL) {
 
-            /* No -? then it's a data value - skip */
-            if(token[0] != '-') {
-                token = strtok(NULL, " \t\n");
-                continue;
-            }
+    /* No -? then it's a data value - skip */
+    if(token[0] != '-') {
+      token = strtok(NULL, " \t\n");
+      continue;
+    }
 
-            /* Skip -s, end at = */
-            for(j=i=0; i<strlen(token); i++) {
-              if(token[i] == '=') {
-                token[j++] = token[i]; /* we preserve the = so we know it was used,
-                                          but drop the data value */
-                break;
-              } else if(token[i] != '-')
-                token[j++] = token[i];
-            }
-            token[j]='\0';
+    /* Skip -s, end at = */
+    for(j=i=0; i<strlen(token); i++) {
+      if(token[i] == '=') {
+	token[j++] = token[i]; /* we preserve the = so we know it was used,
+				  but drop the data value */
+	break;
+      } else if(token[i] != '-')
+	token[j++] = token[i];
+    }
+    token[j]='\0';
 
-            if(strncmp(token, "without", strlen("without")) == 0)
-                token += strlen("without");
-            if(strncmp(token, "with", strlen("with")) == 0)
-                token += strlen("with");
-            if(strncmp(token, "disable", strlen("disable")) == 0)
-                token += strlen("disable");
-            if(strncmp(token, "enable", strlen("enable")) == 0)
-                token += strlen("enable");
+    if(strncmp(token, "without", strlen("without")) == 0)
+      token += strlen("without");
+    if(strncmp(token, "with", strlen("with")) == 0)
+      token += strlen("with");
+    if(strncmp(token, "disable", strlen("disable")) == 0)
+      token += strlen("disable");
+    if(strncmp(token, "enable", strlen("enable")) == 0)
+      token += strlen("enable");
 
-            if((strncmp(token, "prefix", strlen("prefix")) != 0) &&
-               (strncmp(token, "sysconfdir", strlen("sysconfdir")) != 0) &&
-               (strncmp(token, "norecursion", strlen("norecursion")) != 0)) {
-                if(++tCount > 1)
-                  strncat(userAgent, "; ", (userAgentLen - strlen(userAgent)));
-                strncat(userAgent, token, (userAgentLen - strlen(userAgent)));
-            }
+    if((strncmp(token, "prefix", strlen("prefix")) != 0) &&
+       (strncmp(token, "sysconfdir", strlen("sysconfdir")) != 0) &&
+       (strncmp(token, "norecursion", strlen("norecursion")) != 0)) {
+      if(++tCount > 1)
+	strncat(userAgent, "; ", (userAgentLen - strlen(userAgent)));
+      strncat(userAgent, token, (userAgentLen - strlen(userAgent)));
+    }
 
-            token = strtok(NULL, " \t\n");
-        }
-        strncat(userAgent, ")", (userAgentLen - strlen(userAgent)));
+    token = strtok(NULL, " \t\n");
+  }
+  strncat(userAgent, ")", (userAgentLen - strlen(userAgent)));
 
-        free(work);
+  free(work);
 }
 
 /* ********************************** */
 
-void extractAndAppend(char *userAgent, int userAgentLen, 
+void extractAndAppend(char *userAgent, int userAgentLen,
 		      char *title, char *input) {
-char *work;
-int i, j, dFlag=FALSE;
+  char *work;
+  int i, j, dFlag=FALSE;
 
-        work=strdup(input);
+  work=strdup(input);
 
-        for(j=i=0; i<strlen(work); i++) {
-            if (dFlag == TRUE) {
-                if((work[i] == ' ') ||
-                   (work[i] == ',') ) {
-                    break;
-                }
-                work[j++]=work[i];
-            } else if (isdigit(work[i])) {
-              dFlag = TRUE;
-              work[j++]=work[i];
-            }
-        }
-        work[j]='\0';
+  for(j=i=0; i<strlen(work); i++) {
+    if (dFlag == TRUE) {
+      if((work[i] == ' ') ||
+	 (work[i] == ',') ) {
+	break;
+      }
+      work[j++]=work[i];
+    } else if (isdigit(work[i])) {
+      dFlag = TRUE;
+      work[j++]=work[i];
+    }
+  }
+  work[j]='\0';
 
-        strncat(userAgent, " ", (userAgentLen - strlen(userAgent)));
-        strncat(userAgent, title, (userAgentLen - strlen(userAgent)));
-        strncat(userAgent, "/", (userAgentLen - strlen(userAgent)));
-        strncat(userAgent, work, (userAgentLen - strlen(userAgent)));
+  strncat(userAgent, " ", (userAgentLen - strlen(userAgent)));
+  strncat(userAgent, title, (userAgentLen - strlen(userAgent)));
+  strncat(userAgent, "/", (userAgentLen - strlen(userAgent)));
+  strncat(userAgent, work, (userAgentLen - strlen(userAgent)));
 
-        free(work);
-        return;
+  free(work);
+  return;
 }
 
 /* ********************************** */
 
 /* ===== ===== retrieve url ===== ===== */
-int retrieveVersionFile(char *versionSite, char *versionFile, 
+int retrieveVersionFile(char *versionSite, char *versionFile,
 			char *buf, int bufLen) {
-        struct hostent *hptr;
-        char *userAgent, *space;
-        int rc, sock;
-        struct sockaddr_in addr;
+  struct hostent *hptr;
+  char *userAgent, *space;
+  int rc, sock;
+  struct sockaddr_in addr;
 #ifdef HAVE_SYS_UTSNAME_H
-        struct utsname unameData;
+  struct utsname unameData;
 #endif
 
-        /* Establish the connection */
-        hptr = gethostbyname(versionSite);
-        if (!hptr) {
-            traceEvent(CONST_TRACE_ERROR, "CHKVER: Unable to resolve site");
-            return 1; 
-        }
+  /* Establish the connection */
+  hptr = gethostbyname(versionSite);
+  if (!hptr) {
+    traceEvent(CONST_TRACE_ERROR, "CHKVER: Unable to resolve site");
+    return 1;
+  }
 #ifdef CHKVER_DEBUG
-        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Site resolved to %u.%u.%u.%u",
-                   (hptr->h_addr)[0] & 0xff,
-                   (hptr->h_addr)[1] & 0xff,
-                   (hptr->h_addr)[2] & 0xff,
-                   (hptr->h_addr)[3] & 0xff);
+  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Site resolved to %u.%u.%u.%u",
+	     (hptr->h_addr)[0] & 0xff,
+	     (hptr->h_addr)[1] & 0xff,
+	     (hptr->h_addr)[2] & 0xff,
+	     (hptr->h_addr)[3] & 0xff);
 #endif
 
-        /* Create socket for http GET */
-	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        if (sock < 0) {
-            traceEvent(CONST_TRACE_ERROR,
-                       "CHKVER: Unable to create socket: %s(%d)", strerror(errno), errno);
-            return 1;
-        }
+  /* Create socket for http GET */
+  sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if (sock < 0) {
+    traceEvent(CONST_TRACE_ERROR,
+	       "CHKVER: Unable to create socket: %s(%d)", strerror(errno), errno);
+    return 1;
+  }
 #ifdef CHKVER_DEBUG
-        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Socket is %d", sock);
+  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Socket is %d", sock);
 #endif
 
-        memset(&addr, 0, sizeof(addr));
-        addr.sin_family = AF_INET;
-        addr.sin_port   = htons(80);
-        memcpy((char *) &addr.sin_addr.s_addr, hptr->h_addr_list[0], hptr->h_length);
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port   = htons(80);
+  memcpy((char *) &addr.sin_addr.s_addr, hptr->h_addr_list[0], hptr->h_length);
 
-        /* Connect the socket to the remote host.  */
-        rc = connect(sock, (struct sockaddr*)&addr, (socklen_t) sizeof(addr));
-        if (rc != 0) {
-            traceEvent(CONST_TRACE_ERROR,
-                       "CHKVER: Unable to connect socket: %s(%d)", strerror(errno), errno);
-            close(sock);
-            return 1;
-        }
+  /* Connect the socket to the remote host.  */
+  rc = connect(sock, (struct sockaddr*)&addr, (socklen_t) sizeof(addr));
+  if (rc != 0) {
+    traceEvent(CONST_TRACE_ERROR,
+	       "CHKVER: Unable to connect socket: %s(%d)", strerror(errno), errno);
+    close(sock);
+    return 1;
+  }
 #ifdef CHKVER_DEBUG
-        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Connected");
+  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Connected");
 #endif
 
-        userAgent=malloc(LEN_GENERAL_WORK_BUFFER);
-        memset(userAgent, 0, LEN_GENERAL_WORK_BUFFER);
-        if(snprintf(userAgent, LEN_GENERAL_WORK_BUFFER, "ntop/%s", version) < 0)
-          BufferTooShort();
+  userAgent=malloc(LEN_GENERAL_WORK_BUFFER);
+  memset(userAgent, 0, LEN_GENERAL_WORK_BUFFER);
+  if(snprintf(userAgent, LEN_GENERAL_WORK_BUFFER, "ntop/%s", version) < 0)
+    BufferTooShort();
 
-        /* Convert any spaces in the version to +s
-         *   e.g. 2.2.98 0300 -> 2.2.98+0300
-         */
-        while ((space=strchr(userAgent, ' ')) != NULL) {
-            space[0]='+';
-        }
+  /* Convert any spaces in the version to +s
+   *   e.g. 2.2.98 0300 -> 2.2.98+0300
+   */
+  while ((space=strchr(userAgent, ' ')) != NULL) {
+    space[0]='+';
+  }
 
-        strncat(userAgent, " host/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-        strncat(userAgent, osName, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  strncat(userAgent, " host/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  strncat(userAgent, osName, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
 
-        if((distro != NULL) && (strcmp(distro, "") != 0)) {
-          strncat(userAgent, " distro/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-          strncat(userAgent, distro, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-        }
-          
-        if((release != NULL) && (strcmp(release, "") != 0) && (strcmp(release, "unknown") != 0)) {
-          strncat(userAgent, " release/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-          strncat(userAgent, release, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-        }
-          
+  if((distro != NULL) && (strcmp(distro, "") != 0)) {
+    strncat(userAgent, " distro/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    strncat(userAgent, distro, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  }
+
+  if((release != NULL) && (strcmp(release, "") != 0) && (strcmp(release, "unknown") != 0)) {
+    strncat(userAgent, " release/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    strncat(userAgent, release, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  }
+
 #ifdef HAVE_SYS_UTSNAME_H
-        if (uname(&unameData) == 0) {
-          strncat(userAgent, " kernrlse/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-          strncat(userAgent, unameData.release, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-        }
+  if (uname(&unameData) == 0) {
+    strncat(userAgent, " kernrlse/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    strncat(userAgent, unameData.release, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  }
 #endif
 
 #ifdef __GNUC__
-        /* Macros to kludge around stringing of parameters */
-        #define xstr(s) str(s)
-        #define str(s) #s
+  /* Macros to kludge around stringing of parameters */
+#define xstr(s) str(s)
+#define str(s) #s
 
 #if defined(__GNUC_PATCHLEVEL__)
-        #define GCC_VERSION __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__
+#define GCC_VERSION __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__
 #else
-        #define GCC_VERSION __GNUC__.__GNUC_MINOR__
+#define GCC_VERSION __GNUC__.__GNUC_MINOR__
 #endif
-        strncat(userAgent, " GCC/" xstr(GCC_VERSION) , (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  strncat(userAgent, " GCC/" xstr(GCC_VERSION) , (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
 
-        #undef str
-        #undef xstr
+#undef str
+#undef xstr
 #endif
 
-        tokenizeCleanupAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "config", configure_parameters);
-        tokenizeCleanupAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "run", myGlobals.startedAs);
+  tokenizeCleanupAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "config", configure_parameters);
+  tokenizeCleanupAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "run", myGlobals.startedAs);
 
 #ifdef HAVE_PCAP_LIB_VERSION
-        extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "libpcap", (char*)pcap_lib_version());
+  extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "libpcap", (char*)pcap_lib_version());
 #endif
 
 #if defined(WIN32) && defined(__GNUC__)
   /* on mingw, gdbm_version not exported by library */
 #else
-        extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "gdbm", gdbm_version);
+  extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "gdbm", gdbm_version);
 #endif
 
 #ifdef HAVE_OPENSSL
-        extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "openssl", (char*)SSLeay_version(0));
+  extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "openssl", (char*)SSLeay_version(0));
 #endif
 
-        extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "zlib", (char*)zlibVersion());
+  extractAndAppend(userAgent, LEN_GENERAL_WORK_BUFFER, "zlib", (char*)zlibVersion());
 
-        /* Special case for webPort+sslPort... */
-        strncat(userAgent, " access/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  /* Special case for webPort+sslPort... */
+  strncat(userAgent, " access/", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
 #ifdef HAVE_OPENSSL
-        if (myGlobals.sslPort != 0) {
-            if(myGlobals.webPort != 0)
-                strncat(userAgent, "both", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-            else
-                strncat(userAgent, "https", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-        } else
+  if (myGlobals.sslPort != 0) {
+    if(myGlobals.webPort != 0)
+      strncat(userAgent, "both", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    else
+      strncat(userAgent, "https", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  } else
 #endif
-        if(myGlobals.webPort != 0)
-            strncat(userAgent, "http", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-        else
-            strncat(userAgent, "none", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-      
-        /* Special case for interfaces */
-        strncat(userAgent, " interfaces(", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-        if(myGlobals.devices != NULL) { 
-            strncat(userAgent, myGlobals.devices, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-        } else {
-            strncat(userAgent, "null", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
-        }
-        strncat(userAgent, ")", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    if(myGlobals.webPort != 0)
+      strncat(userAgent, "http", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+    else
+      strncat(userAgent, "none", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
 
-        if(snprintf(buf, bufLen, "GET /%s HTTP/1.0\r\n"
-                                 "Host: %s\r\n"
-                                 "User-Agent: %s\r\n"
-                                 "Accept: %s\r\n"
-                                 "\r\n",
-                    versionFile,
-                    versionSite, 
-                    userAgent,
-                    CONST_HTTP_ACCEPT_ALL) < 0) 
-          BufferTooShort();
+  /* Special case for interfaces */
+  strncat(userAgent, " interfaces(", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  if(myGlobals.devices != NULL) {
+    strncat(userAgent, myGlobals.devices, (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  } else {
+    strncat(userAgent, "null", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
+  }
+  strncat(userAgent, ")", (LEN_GENERAL_WORK_BUFFER - strlen(userAgent)));
 
-        free(userAgent);
+  if(snprintf(buf, bufLen, "GET /%s HTTP/1.0\r\n"
+	      "Host: %s\r\n"
+	      "User-Agent: %s\r\n"
+	      "Accept: %s\r\n"
+	      "\r\n",
+	      versionFile,
+	      versionSite,
+	      userAgent,
+	      CONST_HTTP_ACCEPT_ALL) < 0)
+    BufferTooShort();
 
-        /* Send the request to server.  */
-        traceEvent(CONST_TRACE_NOISY, "CHKVER: Sending request: %s", buf);
-        rc = send(sock, buf, strlen(buf), 0);
-        if (rc < 0) {
-            traceEvent(CONST_TRACE_ERROR,
-                       "CHKVER: Unable to send http request: %s(%d)", strerror(errno), errno);
-            close(sock);
-            return 1;
-        }
+  free(userAgent);
 
-        /* Pickup the response - 
-         * remember, buf/bufLen better be big enough to handle the whole response
-         */
-        memset(buf, 0, bufLen);
-        rc = recv(sock, buf, bufLen, MSG_WAITALL);
-        if (rc < 0) {
-            traceEvent(CONST_TRACE_ERROR,
-                       "CHKVER: Unable to receive http response: %s(%d)", strerror(errno), errno);
-            close(sock);
-            return 1;
-        }
-        if(rc >= bufLen) {
-            traceEvent(CONST_TRACE_ERROR,
-                       "CHKVER: Unable to receive entire http response (%d/%d)- skipping",
-                       rc,
-                       bufLen);
-            close(sock);
-            return 1;
-        }
+  /* Send the request to server.  */
+  traceEvent(CONST_TRACE_NOISY, "CHKVER: Sending request: %s", buf);
+  rc = send(sock, buf, strlen(buf), 0);
+  if (rc < 0) {
+    traceEvent(CONST_TRACE_ERROR,
+	       "CHKVER: Unable to send http request: %s(%d)", strerror(errno), errno);
+    close(sock);
+    return 1;
+  }
+
+  /* Pickup the response -
+   * remember, buf/bufLen better be big enough to handle the whole response
+   */
+  memset(buf, 0, bufLen);
+  rc = recv(sock, buf, bufLen, MSG_WAITALL);
+  if (rc < 0) {
+    traceEvent(CONST_TRACE_ERROR,
+	       "CHKVER: Unable to receive http response: %s(%d)", strerror(errno), errno);
+    close(sock);
+    return 1;
+  }
+  if(rc >= bufLen) {
+    traceEvent(CONST_TRACE_ERROR,
+	       "CHKVER: Unable to receive entire http response (%d/%d)- skipping",
+	       rc,
+	       bufLen);
+    close(sock);
+    return 1;
+  }
 
 #ifdef CHKVER_DEBUG
-        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Received %d bytes '%s'", rc, buf);
+  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: Received %d bytes '%s'", rc, buf);
 #endif
 
-        return 0;
+  return 0;
 }
 
 /* ********************************** */
 
 int processVersionFile(char *buf, int bufLen) {
-        /* Process the returned data
-         *   We march through the big buffer, 
-         *   with hdr pointing at a C string for each header
-         *   and next pointing at the next character we pick up with.
-         */
+  /* Process the returned data
+   *   We march through the big buffer,
+   *   with hdr pointing at a C string for each header
+   *   and next pointing at the next character we pick up with.
+   */
 
-        int i, j, k, rc, hcount=0;
-        unsigned int sNumber, dNumber, uNumber, oNumber, vNumber;
-        char *hdr, *next, *site, *date, *development, *stable, *unsupported, *obsolete;
+  int i, j, k, rc, hcount=0;
+  unsigned int sNumber, dNumber, uNumber, oNumber, vNumber;
+  char *hdr, *next, *site, *date, *development, *stable, *unsupported, *obsolete;
 
-        next=hdr=buf;
-        while (1) {
+  next=hdr=buf;
+  while (1) {
 
-            ++hcount;
-            hdr=next;
+    ++hcount;
+    hdr=next;
 
-            for (i=0; 1; i++) {
-                if (--bufLen <= 0) {
-                    traceEvent(CONST_TRACE_ERROR, "CHKVER: Past end processing http response");
-                    return;
-                }
-                /* Cleanup whitespace */
-                if (hdr[i] == '\r' ||
-                    hdr[i] == '\f' ||
-                    hdr[i] == '\v') {
-                    hdr[i] = ' ';
-                    continue;
-                }
-                if(hdr[i] == '\n') {
-                  hdr[i]=' ';
+    for (i=0; 1; i++) {
+      if (--bufLen <= 0) {
+	traceEvent(CONST_TRACE_ERROR, "CHKVER: Past end processing http response");
+	return;
+      }
+      /* Cleanup whitespace */
+      if (hdr[i] == '\r' ||
+	  hdr[i] == '\f' ||
+	  hdr[i] == '\v') {
+	hdr[i] = ' ';
+	continue;
+      }
+      if(hdr[i] == '\n') {
+	hdr[i]=' ';
 
-                  /* Check for header continuation (not allowed on the 1st header)
-                   * by looking at the character ahead.
-                   */
-                  if((hcount > 1) &&
-                     (hdr[i+1] == '\t' || hdr[i+1] == ' ')) {
-                      continue;
-                  }
+	/* Check for header continuation (not allowed on the 1st header)
+	 * by looking at the character ahead.
+	 */
+	if((hcount > 1) &&
+	   (hdr[i+1] == '\t' || hdr[i+1] == ' ')) {
+	  continue;
+	}
 
-                  /* Otherwise, set next... */
-                  next=&(hdr[i+1]);
+	/* Otherwise, set next... */
+	next=&(hdr[i+1]);
 
-                  /* Clear trailing whitespace... */
-                  hdr[i--]='\0';
-                  while((i>=0) && (hdr[i]==' ')) hdr[i--]='\0';
- 
-                  break;
-                }
-            }
+	/* Clear trailing whitespace... */
+	hdr[i--]='\0';
+	while((i>=0) && (hdr[i]==' ')) hdr[i--]='\0';
 
-#ifdef CHKVER_DEBUG
-            traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: %3d. (%3d) '%s'", hcount, strlen(hdr), hdr);
-#endif
-
-            /* Check for rc line.  */
-            if (hcount == 1) {
-                /* Parse the first line of server response */
-                if (hdr[0] == '\0') {
-                    traceEvent(CONST_TRACE_ERROR, "CHKVER: http response: Nothing");
-                    return 1;
-                }
-                /*
-                 * Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
-                 */
-                rc=-1;
-                while(hdr[0] != '\0') {
-                    if(hdr[0] == ' ')
-                        rc=0;
-                    else if(rc == 0)
-                        break;
-                    hdr++;
-                }
-                while((hdr[0] != '\0') &&
-                      (hdr[0] != ' ')) {
-                    rc = 10*rc + hdr[0] - '0';
-                    hdr++;
-                }
-                if(rc != 200) {
-                    traceEvent(CONST_TRACE_WARNING,
-                               "CHKVER: http response: %d - skipping check", rc);
-                    return 1;
-                }
-                traceEvent(CONST_TRACE_NOISY, "CHKVER: http response: %d", rc);
-            }
-
-            /* Empty?  Done with the headers...  */
-            if (hdr[0] == '\0') {
-                break;
-            }
-        }
+	break;
+      }
+    }
 
 #ifdef CHKVER_DEBUG
-        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: raw version file is %s", next);
+    traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: %3d. (%3d) '%s'", hcount, strlen(hdr), hdr);
 #endif
 
-        /* Cleanup whitespace */
-        for (j=i=0; i<strlen(next); i++) {
-                if(next[i] == '<' &&
-                   next[i+1] == '!' &&
-                   next[i+2] == '-' &&
-                   next[i+3] == '-') {
-                    for(k=i+4; k<strlen(next)-3; k++) {
-                        if(next[k] == '-' &&
-                           next[k+1] == '-' &&
-                           next[k+2] == '>') {
-                            i=k+2;
-                            break;
-                        }
-                    }
-                    if(k<strlen(next)-3)
-                        continue;
-                    /* Otherwise, we never found the close... so we ignore the 'comment' */
-                }
-                if(next[i] == '\n' ||
-                   next[i] == '\r' ||
-                   next[i] == '\f' ||
-                   next[i] == '\v' ||
-                   next[i] == '\t' ||
-                   next[i] == ' ') {
-                } else {
-                   next[j++] = next[i];
-                } 
-        }
-        next[j]='\0';
+    /* Check for rc line.  */
+    if (hcount == 1) {
+      /* Parse the first line of server response */
+      if (hdr[0] == '\0') {
+	traceEvent(CONST_TRACE_ERROR, "CHKVER: http response: Nothing");
+	return 1;
+      }
+      /*
+       * Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+       */
+      rc=-1;
+      while(hdr[0] != '\0') {
+	if(hdr[0] == ' ')
+	  rc=0;
+	else if(rc == 0)
+	  break;
+	hdr++;
+      }
+      while((hdr[0] != '\0') &&
+	    (hdr[0] != ' ')) {
+	rc = 10*rc + hdr[0] - '0';
+	hdr++;
+      }
+      if(rc != 200) {
+	traceEvent(CONST_TRACE_WARNING,
+		   "CHKVER: http response: %d - skipping check", rc);
+	return 1;
+      }
+      traceEvent(CONST_TRACE_NOISY, "CHKVER: http response: %d", rc);
+    }
+
+    /* Empty?  Done with the headers...  */
+    if (hdr[0] == '\0') {
+      break;
+    }
+  }
 
 #ifdef CHKVER_DEBUG
-        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: cleaned version file is %s", next);
+  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: raw version file is %s", next);
 #endif
 
-/* parse - in reverse order so we can do it cheesy using \0s */
-       xmlextract(development);
-       xmlextract(stable);
-       xmlextract(unsupported);
-       xmlextract(obsolete);
-       xmlextract(date);
-       xmlextract(site);
+  /* Cleanup whitespace */
+  for (j=i=0; i<strlen(next); i++) {
+    if(next[i] == '<' &&
+       next[i+1] == '!' &&
+       next[i+2] == '-' &&
+       next[i+3] == '-') {
+      for(k=i+4; k<strlen(next)-3; k++) {
+	if(next[k] == '-' &&
+	   next[k+1] == '-' &&
+	   next[k+2] == '>') {
+	  i=k+2;
+	  break;
+	}
+      }
+      if(k<strlen(next)-3)
+	continue;
+      /* Otherwise, we never found the close... so we ignore the 'comment' */
+    }
+    if(next[i] == '\n' ||
+       next[i] == '\r' ||
+       next[i] == '\f' ||
+       next[i] == '\v' ||
+       next[i] == '\t' ||
+       next[i] == ' ') {
+    } else {
+      next[j++] = next[i];
+    }
+  }
+  next[j]='\0';
 
-       vNumber = convertNtopVersionToNumber(version);
-       oNumber = convertNtopVersionToNumber(obsolete);
-       uNumber = convertNtopVersionToNumber(unsupported);
-       sNumber = convertNtopVersionToNumber(stable);
-       dNumber = convertNtopVersionToNumber(development);
-       if((oNumber == 999999999) ||
-          (uNumber == 999999999) ||
-          (sNumber == 999999999) ||
-          (dNumber == 999999999) ||
-          (vNumber == 999999999) ||
-          (oNumber >  uNumber)   ||
-          (uNumber >  sNumber)   ||
-          (sNumber >  dNumber)) {
-           traceEvent(CONST_TRACE_WARNING,
-                      "CHKVER: version file INVALID - ignoring version check");
-           traceEvent(CONST_TRACE_WARNING,
-                      "CHKVER: Please report to ntop mailing list, codes (%u,%u,%u,%u,%u)",
-                      oNumber, uNumber, sNumber, dNumber, vNumber);
-           return 1;
-       }
+#ifdef CHKVER_DEBUG
+  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: cleaned version file is %s", next);
+#endif
 
-       traceEvent(CONST_TRACE_INFO, "CHKVER: Version file is from '%s'", site);
-       traceEvent(CONST_TRACE_INFO, "CHKVER: as of date is '%s'", date);
+  /* parse - in reverse order so we can do it cheesy using \0s */
+  xmlextract(development);
+  xmlextract(stable);
+  xmlextract(unsupported);
+  xmlextract(obsolete);
+  xmlextract(date);
+  xmlextract(site);
 
-       traceEvent(CONST_TRACE_NOISY, "CHKVER: obsolete is    '%-10s' (%9u)", obsolete,    oNumber);
-       traceEvent(CONST_TRACE_NOISY, "CHKVER: unsupported is '%-10s' (%9u)", unsupported, uNumber);
-       traceEvent(CONST_TRACE_NOISY, "CHKVER: stable is      '%-10s' (%9u)", stable,      sNumber);
-       traceEvent(CONST_TRACE_NOISY, "CHKVER: development is '%-10s' (%9u)", development, dNumber);
-       traceEvent(CONST_TRACE_NOISY, "CHKVER: version is     '%-10s' (%9u)", version,     vNumber);
+  vNumber = convertNtopVersionToNumber(version);
+  oNumber = convertNtopVersionToNumber(obsolete);
+  uNumber = convertNtopVersionToNumber(unsupported);
+  sNumber = convertNtopVersionToNumber(stable);
+  dNumber = convertNtopVersionToNumber(development);
+  if((oNumber == 999999999) ||
+     (uNumber == 999999999) ||
+     (sNumber == 999999999) ||
+     (dNumber == 999999999) ||
+     (vNumber == 999999999) ||
+     (oNumber >  uNumber)   ||
+     (uNumber >  sNumber)   ||
+     (sNumber >  dNumber)) {
+    traceEvent(CONST_TRACE_WARNING,
+	       "CHKVER: version file INVALID - ignoring version check");
+    traceEvent(CONST_TRACE_WARNING,
+	       "CHKVER: Please report to ntop mailing list, codes (%u,%u,%u,%u,%u)",
+	       oNumber, uNumber, sNumber, dNumber, vNumber);
+    return 1;
+  }
 
-/* Check values - set status flag */
-       if(vNumber < oNumber) {
-           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_OBSOLETE;
-       } else if(vNumber < uNumber) {
-           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_UNSUPPORTED;
-       } else if(vNumber < sNumber) { 
-           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCURRENT;
-       } else if(vNumber == sNumber) { 
-           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_CURRENT;
-       } else if(vNumber < dNumber) { 
-           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_OLDDEVELOPMENT;
-       } else if(vNumber == dNumber) { 
-           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_DEVELOPMENT;
-       } else {
-           myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NEWDEVELOPMENT;
-       }
+  traceEvent(CONST_TRACE_INFO, "CHKVER: Version file is from '%s'", site);
+  traceEvent(CONST_TRACE_INFO, "CHKVER: as of date is '%s'", date);
 
-        return 0;
+  traceEvent(CONST_TRACE_NOISY, "CHKVER: obsolete is    '%-10s' (%9u)", obsolete,    oNumber);
+  traceEvent(CONST_TRACE_NOISY, "CHKVER: unsupported is '%-10s' (%9u)", unsupported, uNumber);
+  traceEvent(CONST_TRACE_NOISY, "CHKVER: stable is      '%-10s' (%9u)", stable,      sNumber);
+  traceEvent(CONST_TRACE_NOISY, "CHKVER: development is '%-10s' (%9u)", development, dNumber);
+  traceEvent(CONST_TRACE_NOISY, "CHKVER: version is     '%-10s' (%9u)", version,     vNumber);
+
+  /* Check values - set status flag */
+  if(vNumber < oNumber) {
+    myGlobals.checkVersionStatus = FLAG_CHECKVERSION_OBSOLETE;
+  } else if(vNumber < uNumber) {
+    myGlobals.checkVersionStatus = FLAG_CHECKVERSION_UNSUPPORTED;
+  } else if(vNumber < sNumber) {
+    myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NOTCURRENT;
+  } else if(vNumber == sNumber) {
+    myGlobals.checkVersionStatus = FLAG_CHECKVERSION_CURRENT;
+  } else if(vNumber < dNumber) {
+    myGlobals.checkVersionStatus = FLAG_CHECKVERSION_OLDDEVELOPMENT;
+  } else if(vNumber == dNumber) {
+    myGlobals.checkVersionStatus = FLAG_CHECKVERSION_DEVELOPMENT;
+  } else {
+    myGlobals.checkVersionStatus = FLAG_CHECKVERSION_NEWDEVELOPMENT;
+  }
+
+  return 0;
 }
 
 /* ********************************** */
 
-void checkVersion(void) {
-        /* The work buffer is a big boy so we can eat the entire XML file all at once
-         * and avoid making this logic any more complex!
-         */
-        char *buf;
-        int bufLen = LEN_CHECKVERSION_BUFFER;
+void* checkVersion(void* notUsed _UNUSED_) {
+  /* The work buffer is a big boy so we can eat the entire XML file all at once
+   * and avoid making this logic any more complex!
+   */
+  char *buf;
+  int bufLen = LEN_CHECKVERSION_BUFFER;
 
-        char *versionSite, *versionFile;
-        int rc=0;
+  char *versionSite, *versionFile;
+  int rc=0;
 
-        displayPrivacyNotice();
+  displayPrivacyNotice();
 
-        if(myGlobals.skipVersionCheck == TRUE)
-          return;
-        
-        /* make a working copy */
-        versionSite=strdup(CONST_VERSIONCHECK_URL);
+  if(myGlobals.skipVersionCheck == TRUE)
+    return;
 
-        traceEvent(CONST_TRACE_ALWAYSDISPLAY,
-                   "CHKVER: Checking current ntop version at %s",
-                   versionSite);
+  /* make a working copy */
+  versionSite=strdup(CONST_VERSIONCHECK_URL);
 
-        /* then split url into site / file */
-        versionFile=strchr(versionSite, '/');
-        versionFile[0]='\0';
-        versionFile++;
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY,
+	     "CHKVER: Checking current ntop version at %s",
+	     versionSite);
+
+  /* then split url into site / file */
+  versionFile=strchr(versionSite, '/');
+  versionFile[0]='\0';
+  versionFile++;
 #ifdef CHKVER_DEBUG
-        traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", versionSite, versionFile);
+  traceEvent(CONST_TRACE_INFO, "CHKVER_DEBUG: '%s' '%s'", versionSite, versionFile);
 #endif
 
-        buf = malloc(bufLen);
-        memset(buf, 0, bufLen);
+  buf = malloc(bufLen);
+  memset(buf, 0, bufLen);
 
-        rc = retrieveVersionFile(versionSite, versionFile, buf, bufLen);
-        free(versionSite);
+  rc = retrieveVersionFile(versionSite, versionFile, buf, bufLen);
+  free(versionSite);
 
-        if (rc == 0) {
-            rc = processVersionFile(buf, min(bufLen, strlen(buf)));
-        }
+  if (rc == 0) {
+    rc = processVersionFile(buf, min(bufLen, strlen(buf)));
+  }
 
-        if (rc == 0) {
-            traceEvent(CONST_TRACE_INFO,
-                       "CHKVER: This version of ntop is %s", reportNtopVersionCheck());
-        }
+  if (rc == 0) {
+    traceEvent(CONST_TRACE_INFO,
+	       "CHKVER: This version of ntop is %s", reportNtopVersionCheck());
+  }
 
-        free(buf);
+  free(buf);
 
-        if(myGlobals.checkVersionStatus != FLAG_CHECKVERSION_NEWDEVELOPMENT)
-          /* If it was new development at the 1st check, it's not magically going
-           * to become anything else... so don't report a recheck time
-           */
-          myGlobals.checkVersionStatusAgain = time(NULL) + CONST_VERSIONRECHECK_INTERVAL;
-        else
-          myGlobals.checkVersionStatusAgain = 0;
+  if(myGlobals.checkVersionStatus != FLAG_CHECKVERSION_NEWDEVELOPMENT)
+    /* If it was new development at the 1st check, it's not magically going
+     * to become anything else... so don't report a recheck time
+     */
+    myGlobals.checkVersionStatusAgain = time(NULL) + CONST_VERSIONRECHECK_INTERVAL;
+  else
+    myGlobals.checkVersionStatusAgain = 0;
+
+  return(NULL);
 }
-

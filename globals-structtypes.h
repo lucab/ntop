@@ -2251,7 +2251,6 @@ typedef struct ntopGlobals {
   /* Misc */
   char *separator;         /* html separator */
   volatile unsigned long numHandledSIGPIPEerrors;
-  u_short firstVersionCheckDone;
   u_short checkVersionStatus;
   time_t checkVersionStatusAgain;
 

@@ -1595,7 +1595,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
       theAnchor[0] = htmlAnchor1;
     }
 
-    if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
+    if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
       if(snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1>\n<TR "TR_ON" "DARK_BG">"
 		  "<TH "TH_BG">%s1>Host%s</A></TH>"
 		  "<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR">Domain%s</A></TH>"
@@ -1663,7 +1663,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
 	  tmpName1 = myGlobals.separator;
 
-	if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
+	if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
 	  tmpName2 = getVendorInfo(el->ethAddress, 1);
 	  if(tmpName2[0] == '\0')
 	    tmpName2 = myGlobals.separator;
@@ -1705,7 +1705,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
 	sendString(makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 1, hostLinkBuf, sizeof(hostLinkBuf)));
 
-	if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
+	if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
 	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		      "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 		      tmpName1, tmpName3) < 0)
@@ -1831,7 +1831,7 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 	sendString("&nbsp;</TD>");
 	printBar(buf, sizeof(buf), el->actBandwidthUsage, maxBandwidthUsage, 3);
 
-	if(!(myGlobals.dontTrustMACaddr || myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice)) {
+	if(!myGlobals.device[myGlobals.actualReportDeviceId].dummyDevice) {
 	  if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</TD>", tmpName2) < 0)
 	    BufferTooShort();
 	  sendString(buf);
@@ -4159,7 +4159,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
   int i, hourId;
   char theDate[8], macAddr[24];
   struct tm t;
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], *targetStr;
 
   if(el->trafficDistribution == NULL) return;
 
@@ -4232,20 +4232,21 @@ void printHostHourlyTraffic(HostTraffic *el) {
   sendString("<TR><TH "TH_BG">Total</TH>\n");
   
   snprintf(macAddr, sizeof(macAddr), "%s", el->ethAddressString);
-  for(i=0; i<strlen(macAddr); i++)
-    if(macAddr[i] == ':') macAddr[i] = '_';
+  targetStr = el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress;
+
+  for(i=0; i<strlen(targetStr); i++) if(targetStr[i] == ':') targetStr[i] = '_';
   
   if(tcSent > 0) {
     if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG"><IMG SRC=\"/hostTimeTrafficDistribution-%s"CHART_FORMAT"?1\"</TD>\n",
-                el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress) < 0)
+                targetStr) < 0)
       BufferTooShort();
     sendString(buf);   
   } else
-    sendString("<TD COLSPAN=2 "TD_BG">&nbsp;</TD>\n");
+       sendString("<TD COLSPAN=2 "TD_BG">&nbsp;</TD>\n");
 
   if(tcRcvd > 0) {
     if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG"><IMG SRC=\"/hostTimeTrafficDistribution-%s"CHART_FORMAT"\"</TD>\n",
-                el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress) < 0)
+                targetStr) < 0)
       BufferTooShort();
     sendString(buf);   
   } else
