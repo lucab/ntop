@@ -5933,26 +5933,45 @@ void printNtopConfigInfo(void) {
 
 /* *********************************** */
 
+static char* getBgPctgColor(float pctg) {
+
+  if(pctg == 0)
+    return("#FFFFFF");
+  else if(pctg <=25)
+    return("#5555FF");
+  else if(pctg <=75)
+    return("#55FF55");
+  else 
+    return("#FF5555");
+}
+
+/* *********************************** */
+
 static printHostHourlyTrafficEntry(HostTraffic *el, int i,
 				   TrafficCounter tcSent, TrafficCounter tcRcvd) {
   float pctg;
   char buf[BUF_SIZE];
 
-  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT>%s</TD>", formatBytes(el->last24HoursBytesSent[i], 0));
+  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT>%s</TD>",
+	   formatBytes(el->last24HoursBytesSent[i], 0));
   sendString(buf);
   if(tcSent > 0)
     pctg = (float)(el->last24HoursBytesSent[i]*100)/(float)tcSent;
   else
     pctg = 0;
-  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT>%.2f %%</TD>", pctg);
+  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT BGCOLOR=%s>%.1f %%</TD>", 
+	   getBgPctgColor(pctg), pctg);
   sendString(buf);
-  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT>%s</TD>", formatBytes(el->last24HoursBytesRcvd[i], 0));
+  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT>%s</TD>", 
+	   formatBytes(el->last24HoursBytesRcvd[i], 0));
   sendString(buf);
   if(tcRcvd > 0)
     pctg = (float)(el->last24HoursBytesRcvd[i]*100)/(float)tcRcvd;
   else
     pctg = 0;
-  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT>%.2f %%</TD></TR>", pctg);
+
+  snprintf(buf, BUF_SIZE, "<TD ALIGN=RIGHT BGCOLOR=%s>%.1f %%</TD></TR>", 
+	   getBgPctgColor(pctg), pctg);
   sendString(buf);
 }
 
@@ -5960,16 +5979,25 @@ static printHostHourlyTrafficEntry(HostTraffic *el, int i,
 
 void printHostHourlyTraffic(HostTraffic *el) {
   TrafficCounter tcSent, tcRcvd;
+  int i, hourId;
+  char theDate[8];
+  struct tm t;
+  
+  strftime(theDate, 8, "%H", localtime_r(&actTime, &t));  
+  hourId = atoi(theDate);
+  updateHostThpt(el, hourId, 0);
 
-  sendString("<P><H1>Traffic Stats</H1><P>\n<TABLE BORDER=1>\n<TR>");
+  sendString("<P><H1>Host Traffic Stats</H1><P>\n<TABLE BORDER=1>\n<TR>");
   sendString("<TH NOWRAP>Time</TH>");
   sendString("<TH NOWRAP>Tot. Traffic Sent</TH>");
   sendString("<TH NOWRAP>% Traffic Sent</TH>");
   sendString("<TH NOWRAP>Tot. Traffic Rcvd</TH>");
   sendString("<TH NOWRAP>% Traffic Rcvd</TH></TR>");
 
-  tcSent = el->bytesSent - el->lastDayBytesSent;
-  tcRcvd = el->bytesReceived - el->lastDayBytesRcvd;
+  for(i=0, tcSent=0, tcRcvd=0; i<24; i++) {
+    tcSent += el->last24HoursBytesSent[i];
+    tcRcvd += el->last24HoursBytesRcvd[i];  
+  }
 
   sendString("<TR><TH NOWRAP ALIGN=LEFT>Midnight - 1AM</TH>");
   printHostHourlyTrafficEntry(el, 0, tcSent, tcRcvd);

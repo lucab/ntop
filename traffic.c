@@ -393,27 +393,35 @@ void updateThpt(void) {
 
 /* ******************************* */
 
+void updateHostThpt(HostTraffic *el, int hourId, int fullUpdate) {
+  if(broadcastHost(el))
+    return;
+
+  el->last24HoursBytesSent[hourId] = el->bytesSent - el->lastCounterBytesSent;
+  el->last24HoursBytesRcvd[hourId] = el->bytesReceived - el->lastCounterBytesRcvd;
+  
+  if(fullUpdate) {
+    el->lastCounterBytesSent = el->bytesSent;
+    el->lastCounterBytesRcvd = el->bytesReceived;
+
+    if(hourId == 0) {
+      el->lastDayBytesSent = el->bytesSent;
+      el->lastDayBytesRcvd = el->bytesReceived;
+    }
+  }
+}
+
+/* ******************************* */
+
 static void updateHostsDeviceThpt(int deviceToUpdate, int hourId) {
   u_int idx;
   HostTraffic *el;
-
-    for(idx=1; idx<device[deviceToUpdate].actualHashSize; idx++) {
-      if((el = device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
-
-	if(broadcastHost(el))
-	  continue;
-
-	el->last24HoursBytesSent[hourId] = el->bytesSent - el->lastCounterBytesSent,
-	  el->lastCounterBytesSent = el->bytesSent;
-	el->last24HoursBytesRcvd[hourId] = el->bytesReceived - el->lastCounterBytesRcvd,
-	  el->lastCounterBytesRcvd = el->bytesReceived;
-
-	if(hourId == 0) {
-	  el->lastDayBytesSent = el->bytesSent;
-	  el->lastDayBytesRcvd = el->bytesReceived;
-	}
-      }
+  
+  for(idx=1; idx<device[deviceToUpdate].actualHashSize; idx++) {
+    if((el = device[deviceToUpdate].hash_hostTraffic[idx]) != NULL) {
+      updateHostThpt(el, hourId, 1);
     }
+  }
 }
 
 /* ******************************* */
