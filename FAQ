@@ -85,3 +85,18 @@ A. On some Linux distributions, the libpcap package is broken. Please
    remove it, get the source, build libpcap and install it
    (both the library and the include files). The rebuild ntop from
    scratch.
+
+
+Q. AIX: I've linked ntop against the special libcap library that's
+   available on the ntop sire. Unfortunately ntop doesn't work. It
+   fails with the following error:
+   # ./ntop
+   06/Oct/2000:10:25:55 ntop v.1.3.2 ST (SSL) [powerpc-ibm-aix4.3.2.0]
+   06/Oct/2000:10:25:55 Listening on [en0]
+   06/Oct/2000:10:25:55 Copyright 1998-2000 by Luca Deri <deri@ntop.org>
+   06/Oct/2000:10:25:55 Get the freshest ntop from http://www.ntop.org/
+   06/Oct/2000:10:25:55 Initialising...
+   06/Oct/2000:10:25:55 /dev/dlpi/en0: No such file or directory
+A: Please configure dlpi.conf int the /etc dir using the command
+   strload -f /etc/dlpi.conf.
+   (Courtesy of Chuck Toman <ctoman@Park-Ohio.com>).
