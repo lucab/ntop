@@ -985,83 +985,6 @@ void addDefaultAdminUser(void) {
 
 /* ************************************ */
 
-/*
- * Initialize all preferences to their default values
- */
-void initUserPrefs (UserPref *pref)
-{
-  pref->accessLogFile = DEFAULT_NTOP_ACCESS_LOG_FILE;
-  pref->enablePacketDecoding   = DEFAULT_NTOP_PACKET_DECODING;
-  pref->stickyHosts = DEFAULT_NTOP_STICKY_HOSTS;
-  pref->daemonMode = DEFAULT_NTOP_DAEMON_MODE;
-  pref->rFileName = DEFAULT_NTOP_TRAFFICDUMP_FILENAME;
-  pref->trackOnlyLocalHosts    = DEFAULT_NTOP_TRACK_ONLY_LOCAL;
-  pref->devices = DEFAULT_NTOP_DEVICES;
-  pref->enableOtherPacketDump = DEFAULT_NTOP_OTHER_PKT_DUMP;
-  pref->filterExpressionInExtraFrame = DEFAULT_NTOP_FILTER_IN_FRAME;
-  pref->pcapLog = DEFAULT_NTOP_PCAP_LOG_FILENAME;
-  pref->localAddresses = DEFAULT_NTOP_LOCAL_SUBNETS;
-  pref->numericFlag = DEFAULT_NTOP_NUMERIC_IP_ADDRESSES;
-  pref->dontTrustMACaddr = DEFAULT_NTOP_DONT_TRUST_MAC_ADDR;
-  pref->protoSpecs = DEFAULT_NTOP_PROTO_SPECS;
-  pref->enableSuspiciousPacketDump = DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP;
-  pref->refreshRate = DEFAULT_NTOP_AUTOREFRESH_INTERVAL;
-  pref->disablePromiscuousMode = DEFAULT_NTOP_DISABLE_PROMISCUOUS;
-  pref->traceLevel = DEFAULT_TRACE_LEVEL;
-  pref->maxNumHashEntries = pref->maxNumSessions = (u_int)-1;
-  pref->webAddr = DEFAULT_NTOP_WEB_ADDR;
-  pref->webPort = DEFAULT_NTOP_WEB_PORT;
-  pref->ipv4or6 = DEFAULT_NTOP_FAMILY;
-  pref->enableSessionHandling  = DEFAULT_NTOP_ENABLE_SESSIONHANDLE;
-  pref->currentFilterExpression = DEFAULT_NTOP_FILTER_EXPRESSION;
-  strncpy((char *) &pref->domainName, DEFAULT_NTOP_DOMAIN_NAME, sizeof(pref->domainName));
-  pref->flowSpecs = DEFAULT_NTOP_FLOW_SPECS;
-  pref->debugMode = DEFAULT_NTOP_DEBUG_MODE;
-#ifndef WIN32
-  pref->useSyslog = DEFAULT_NTOP_SYSLOG;
-#endif
-  pref->mergeInterfaces = DEFAULT_NTOP_MERGE_INTERFACES;
-#ifdef WIN32
-  pref->pcapLogBasePath = strdup(_wdir);     /* a NULL pointer will
-                                                        * break the logic */
-#else
-  pref->pcapLogBasePath = strdup(CFG_DBFILE_DIR);
-#endif
-  pref->spoolPath       = strdup("");              /* a NULL pointer will break the logic */
-  pref->fcNSCacheFile   = DEFAULT_NTOP_FCNS_FILE;
-  /* note that by default ntop will merge network interfaces */
-  pref->mapperURL = DEFAULT_NTOP_MAPPER_URL;
-#ifdef HAVE_OPENSSL
-  pref->sslAddr = DEFAULT_NTOP_WEB_ADDR;
-  pref->sslPort = DEFAULT_NTOP_WEB_PORT;
-#endif
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-   pref->useSSLwatchdog = 0;
-#endif
-
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-   pref->disableSchedYield = DEFAULT_NTOP_SCHED_YIELD;
-#endif
-
-   pref->w3c = DEFAULT_NTOP_W3C;
-   pref->P3Pcp = DEFAULT_NTOP_P3PCP;
-   pref->P3Puri = DEFAULT_NTOP_P3PURI;
-
-#if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-   pref->setNonBlocking = DEFAULT_NTOP_SETNONBLOCK;
-#endif
-   pref->disableStopcap = DEFAULT_NTOP_DISABLE_STOPCAP;
-   pref->disableInstantSessionPurge = DEFAULT_NTOP_DISABLE_IS_PURGE;
-   pref->printIpOnly = DEFAULT_NTOP_PRINTIPONLY;
-   pref->printFcOnly = DEFAULT_NTOP_PRINTFCONLY;
-   pref->noInvalidLunDisplay = DEFAULT_NTOP_NO_INVLUN_DISPLAY;
-   pref->disableMutexExtraInfo = DEFAULT_NTOP_DISABLE_MUTEXINFO;
-
-   pref->skipVersionCheck = DEFAULT_NTOP_SKIP_VERSION_CHECK;
-}
-
-/* *******************************/
-
 #define NTOP_SAVE_PREFS     "SP"
 #define NTOP_RESTORE_DEF    "RD"
 #define CONFIG_STR_ENTRY(bg,title,name,size,configvalue,descr) \
@@ -1539,9 +1462,9 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 		      "Flow is a stream of captured packets that match a specified rule");
 
     CONFIG_STR_ENTRY (DARK_BG, "Local Subnet Address (-m)",
-		      NTOP_PREF_LOCALADDR, 15,
+		      NTOP_PREF_LOCALADDR, 50,
 		      pref->localAddresses,
-		      "Local subnets in ntop reports. Mandatory for packet capture files");
+		      "Local subnets in ntop reports (use , to separate them). Mandatory for packet capture files");
 
     CONFIG_STR_ENTRY (DARK_BG, "Spool File Path (-Q)", NTOP_PREF_SPOOLPATH, 50,
 		      pref->spoolPath,
@@ -1578,13 +1501,13 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
 
     sendString("<TR><TD ALIGN=LEFT "DARK_BG">Show Menus For</TD><TD>");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<INPUT TYPE=radio NAME=%s  VALUE=%d %s>IP\n",
+		  "<INPUT TYPE=radio NAME=%s  VALUE=%d %s>IP<br>\n",
 		  NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_IPONLY,
 		  (pref->printIpOnly) ? "CHECKED" : "");
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>FC\n",
+		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>FC<br>\n",
 		  NTOP_PREF_PRINT_FCORIP, NTOP_PREF_VALUE_PRINT_FCONLY,
 		  (pref->printFcOnly) ? "CHECKED" : "");
     sendString(buf);
@@ -1616,13 +1539,13 @@ void handleNtopConfig (char* url, UserPrefDisplayPage configScr, int postLen)
   case showPrefIPPref:
     sendString("<TR><TD ALIGN=LEFT "DARK_BG">Use IPv4 or IPv6 (-4/-6)</TD><TD>");
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v4\n",
+		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v4<br>\n",
 		  NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET,
 		  (pref->ipv4or6 == AF_INET) ? "CHECKED" : "");
     sendString(buf);
 
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
-		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v6\n",
+		  "<INPUT TYPE=radio NAME=%s VALUE=%d %s>v6<br>\n",
 		  NTOP_PREF_IPV4V6, NTOP_PREF_VALUE_AF_INET6,
 		  (pref->ipv4or6 == AF_INET6) ? "CHECKED" : "");
     sendString(buf);

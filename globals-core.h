@@ -146,8 +146,7 @@ extern int doChangeFilter(int len);
 extern void changeFilter(void);
 extern void setAdminPassword(char* pass);
 extern void addDefaultAdminUser(void);
-extern void initUserPrefs (UserPref *pref);
-extern void printNtopConfigHeader (char *url, UserPrefDisplayPage configScr);
+extern void printNtopConfigHeader(char *url, UserPrefDisplayPage configScr);
 
 /* dataFormat.c */
 extern char* formatKBytes(float numKBytes, char *outStr, int outStrLen);
@@ -169,7 +168,7 @@ extern HostTraffic* allocFcScsiCounters(HostTraffic *host);
 /* hash.c */
 extern u_int hashHost(HostAddr *hostIpAddress,  u_char *ether_addr,
 		      short* useIPAddressForSearching, HostTraffic **el, int actualDeviceId);
-extern u_int hashFcHost (FcAddress *fcAddress, u_short vsanId,
+extern u_int hashFcHost(FcAddress *fcAddress, u_short vsanId,
                          HostTraffic **el, int actualDeviceId);
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
@@ -178,7 +177,7 @@ extern void setHostSerial(HostTraffic *el);
 HostTraffic * lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanId,
 			 u_char checkForMultihoming, u_char forceUsingIPaddress, int actualDeviceId);
 
-HostTraffic * lookupFcHost (FcAddress *fcAddress, u_short vsanId,
+HostTraffic * lookupFcHost(FcAddress *fcAddress, u_short vsanId,
                             int actualDeviceId);
 /* initialize.c */
 extern void initIPServices(void);
@@ -186,7 +185,7 @@ extern void resetDevice(int devIdx);
 extern void createDeviceIpProtosList(int devIdx);
 extern void initCounters(void);
 extern void resetStats(int);
-extern void reinitMutexes (void);
+extern void reinitMutexes(void);
 extern void initThreads(void);
 extern void initApps(void);
 extern void initDevices(char* devices);
@@ -349,7 +348,8 @@ extern void term_ssl(void);
 #endif
 
 /* main.c */
-extern void usage (FILE * fp);
+extern void usage(FILE * fp);
+extern void welcome(FILE * fp);
 
 /* term.c */
 extern void termIPServices(void);
@@ -369,14 +369,16 @@ extern int isInitialFtpData(char* packetData);
 extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
 
 /* prefs.c */
+extern void loadPrefs(int argc, char* argv[]);
+extern int parseOptions(int argc, char* argv[]);
 extern int fetchPrefsValue(char *key, char *value, int valueLen);
 extern void storePrefsValue(char *key, char *value);
 extern void delPrefsValue(char *key);
-extern void processStrPref (char *key, char *value, char **globalVar, bool savePref);
-extern void processIntPref (char *key, char *value, int *globalVar, bool savePref);
-extern void processBoolPref (char *key, bool value, bool *globalVar, bool savePref);
-extern bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref);
-
+extern void processStrPref(char *key, char *value, char **globalVar, bool savePref);
+extern void processIntPref(char *key, char *value, int *globalVar, bool savePref);
+extern void processBoolPref(char *key, bool value, bool *globalVar, bool savePref);
+extern bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref);
+extern void initUserPrefs(UserPref *pref);
 
 /* util.c */
 extern void setEmptySerial(HostSerial *a);
@@ -393,10 +395,10 @@ extern HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host);
 extern HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualDeviceId);
 extern HostTraffic* findHostBySerial(HostSerial serial, u_int actualDeviceId);
 extern HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId);
-extern HostTraffic* findHostByFcAddress (FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId);
-extern FcNameServerCacheEntry *findFcHostNSCacheEntry (FcAddress *fcAddr, u_short vsanId);
+extern HostTraffic* findHostByFcAddress(FcAddress *fcAddr, u_short vsanId, u_int actualDeviceId);
+extern FcNameServerCacheEntry *findFcHostNSCacheEntry(FcAddress *fcAddr, u_short vsanId);
 extern char* fc_to_str(const u_int8_t *ad);
-extern char* fcwwn_to_str (const u_int8_t *ad);
+extern char* fcwwn_to_str(const u_int8_t *ad);
 #ifdef INET6
 extern unsigned long in6_hash(struct in6_addr *addr);
 extern int in6_isglobal(struct in6_addr *addr);
@@ -493,7 +495,7 @@ extern void resetHostsVariables(HostTraffic* el);
 extern HostTraffic *resurrectHostTrafficInstance(char *key);
 extern u_short in_cksum(const u_short *addr, int len, u_short csum);
 extern void addTimeMapping(u_int16_t transactionId, struct timeval theTime);
-extern long delta_time (struct timeval * now, struct timeval * before);
+extern long delta_time(struct timeval * now, struct timeval * before);
 extern time_t getTimeMapping(u_int16_t transactionId,
                              struct timeval theTime);
 extern void traceEvent(int eventTraceLevel, char* file,
@@ -566,7 +568,7 @@ extern int emptySerial(HostSerial *a);
 extern int cmpSerial(HostSerial *a, HostSerial *b);
 extern int copySerial(HostSerial *a, HostSerial *b);
 extern void addPortToList(HostTraffic *host, int *thePorts /* 0...MAX_NUM_RECENT_PORTS */, u_short thePort);
-extern bool processNtopPref (char *key, char *value, bool savePref, UserPref *pref);
+extern bool processNtopPref(char *key, char *value, bool savePref, UserPref *pref);
 #ifndef WIN32
 extern void saveNtopPid(void);
 extern void removeNtopPid(void);
@@ -607,10 +609,10 @@ extern int snprintf(char *str, size_t n, const char *fmt, ...);
 /* Conditional utility functions - code in util.c, activated if it's not already in some library */
 
 #ifdef HAVE_GETOPT_H
-extern int getopt_long (int ___argc, char *const *___argv,
+extern int getopt_long(int ___argc, char *const *___argv,
                         const char *__shortopts,
                         const struct option *__longopts, int *__longind);
-extern int getopt_long_only ();
+extern int getopt_long_only();
 #endif /* HAVE_GETOPT_H */
 
 #ifndef HAVE_BUILDARGV
@@ -626,11 +628,11 @@ extern unsigned short isOKtoSave(u_int32_t addr,
 				 u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], 
 				 u_int32_t blackNetworks[MAX_NUM_NETWORKS][3],
 				 u_short numWhiteNets, u_short numBlackNets);
-extern float timeval_subtract (struct timeval x, struct timeval y);
+extern float timeval_subtract(struct timeval x, struct timeval y);
 
 
 /* Formatting for %.2f ... */
-#define xvertDOT00MB(v) (((float)(v)/(float)(1024.0*1024.0))+0.005)
+#define xvertDOT00MB(v)(((float)(v)/(float)(1024.0*1024.0))+0.005)
 #define xvertDOT00KB(v) (((float)(v)/(float)(1024.0))+0.005)
 
 /* vendor.c */
@@ -643,7 +645,7 @@ extern void createVendorTable(struct stat *statbuf);
 #define checkSessionIdx(a) _checkSessionIdx(a, actualDeviceId, __FILE__, __LINE__)
 extern u_int _checkSessionIdx(u_int idx, int actualDeviceId, char* file, int line);
 extern void freeSession(IPSession *sessionToPurge, int actualDeviceId, u_char allocateMemoryIfNeeded, u_char lockMutex);
-extern void freeFcSession (FCSession *sessionToPurge, int actualDeviceId,
+extern void freeFcSession(FCSession *sessionToPurge, int actualDeviceId,
                            u_char allocateMemoryIfNeeded, u_char lockMutex);
 extern void scanTimedoutTCPSessions(int actualDeviceId);
 extern void updateUsedPorts(HostTraffic *srcHost, HostTraffic *dstHost,
@@ -659,7 +661,7 @@ extern IPSession* handleSession(const struct pcap_pkthdr *h,
 
 extern void handlePluginSessionTermination(IPSession *sessionToPurge, int actualDeviceId);
 
-extern FCSession* handleFcSession (const struct pcap_pkthdr *h,
+extern FCSession* handleFcSession(const struct pcap_pkthdr *h,
                                    u_short fragmentedData,
                                    HostTraffic *srcHost, HostTraffic *dstHost,
                                    u_int length, u_int payload_len, u_short oxid,
@@ -668,17 +670,17 @@ extern FCSession* handleFcSession (const struct pcap_pkthdr *h,
                                    int actualDeviceId);
 
 /* fcUtils.c */
-extern int isFlogiAcc (FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
-extern int fillFcHostInfo (const u_char *bp, HostTraffic *srcHost);
-extern int isPlogi (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
-extern int isLogout (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
-extern int isRscn (u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
-extern int fillFcpInfo (const u_char *bp, HostTraffic *srcHost,
+extern int isFlogiAcc(FcAddress *fcAddress, u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
+extern int fillFcHostInfo(const u_char *bp, HostTraffic *srcHost);
+extern int isPlogi(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
+extern int isLogout(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
+extern int isRscn(u_int8_t r_ctl, u_int8_t type, u_int8_t cmd);
+extern int fillFcpInfo(const u_char *bp, HostTraffic *srcHost,
                         HostTraffic *dstHost);
-extern FcFabricElementHash *getFcFabricElementHash (u_short vsanId,
+extern FcFabricElementHash *getFcFabricElementHash(u_short vsanId,
                                              int actualDeviceId);
-extern int isValidFcNxPort (FcAddress *fcAddress);
-extern int updateFcFabricElementHash (FcFabricElementHash **theHash, u_short vsanId,
+extern int isValidFcNxPort(FcAddress *fcAddress);
+extern int updateFcFabricElementHash(FcFabricElementHash **theHash, u_short vsanId,
                                       const u_char *bp, FcAddress *srcAddr,
                                       FcAddress *dstAddr,
                                       u_short protocol, u_char r_ctl,

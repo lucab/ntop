@@ -26,156 +26,13 @@
 #include "scsiUtils.h"
 
 /*
-  Ntop options list
-  -- converted to getopts_long, Burton M. Strauss III (BStrauss@acm.org)
-  -- if getopt_long isn't provided by the compiler (glibc), we have our own version in util.c
-*/
-
-extern char *optarg;
-
-static char __free__ []   =
-"  This program is free software; you can redistribute it and/or modify\n\
-  it under the terms of the GNU General Public License as published by\n\
-  the Free Software Foundation; either version 2 of the License, or\n\
-  (at your option) any later version.";
-static char __notice__ [] =
-"  This program is distributed in the hope that it will be useful,\n\
-  but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
-  GNU General Public License for more details.";
-
-static char __see__ []    =
-"  You should have received a copy of the GNU General Public License\n\
-  along with this program. If not, write to the Free Software\n\
-  Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.";
-
-
-  /*
-   * Please keep the array sorted;
-   * However, locating the preferences file and userID are done only via the
-   * command line and processing of the configured preference (via the web) is
-   * dependent on the values of user ('u') and location of the preference file
-   * ('P' option) and so these are processed separately.
-   */
-#ifdef WIN32
-static char*  short_options = "4:6:a:bce:f:ghi:jkl:m:nop:qr:st:w:x:zAB:BD:F:MN:O:P:Q:S:U:VX:W:";
-#elif defined(MAKE_WITH_SYSLOG)
-static char*  short_options = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKLMN:O:P:Q:S:U:VX:W:";
-#else
-static char*  short_options = "4:6:a:bcde:f:ghi:jkl:m:nop:qr:st:u:w:x:zAB:D:F:IKMN:O:P:Q:S:U:VX:W:";
-#endif
-
-static struct option const long_options[] = {
-  { "ipv4",                             no_argument,       NULL, '4' },
-  { "ipv6",                             no_argument,       NULL, '6' },
-  { "access-log-file",                  required_argument, NULL, 'a' },
-  { "disable-decoders",                 no_argument,       NULL, 'b' },
-  { "sticky-hosts",                     no_argument,       NULL, 'c' },
-
-#ifndef WIN32
-  { "daemon",                           no_argument,       NULL, 'd' },
-#endif
-  { "max-table-rows",                   required_argument, NULL, 'e' },
-  { "traffic-dump-file",                required_argument, NULL, 'f' },
-  { "track-local-hosts",                no_argument,       NULL, 'g' },
-  { "help",                             no_argument,       NULL, 'h' },
-  { "interface",                        required_argument, NULL, 'i' },
-  { "create-other-packets",             no_argument,       NULL, 'j' },
-  { "pcap-log",                         required_argument, NULL, 'l' },
-  { "local-subnets",                    required_argument, NULL, 'm' },
-  { "numeric-ip-addresses",             no_argument,       NULL, 'n' },
-  { "no-mac",                           no_argument,       NULL, 'o' },
-  { "filter-expression-in-extra-frame", no_argument,       NULL, 'k' },
-
-
-  { "protocols",                        required_argument, NULL, 'p' },
-  { "create-suspicious-packets",        no_argument,       NULL, 'q' },
-  { "refresh-time",                     required_argument, NULL, 'r' },
-  { "no-promiscuous",                   no_argument,       NULL, 's' },
-  { "trace-level",                      required_argument, NULL, 't' },
-
-#ifndef WIN32
-  { "user",                             required_argument, NULL, 'u' },
-#endif
-
-  { "http-server",                      required_argument, NULL, 'w' },
-  { "disable-sessions",                 no_argument,       NULL, 'z' },
-  { "filter-expression",                required_argument, NULL, 'B' },
-  { "domain",                           required_argument, NULL, 'D' },
-
-  { "flow-spec",                        required_argument, NULL, 'F' },
-
-#ifndef WIN32
-  { "debug",                            no_argument,       NULL, 'K' },
-#endif
-
-  { "no-interface-merge",               no_argument,       NULL, 'M' },
-
-  { "wwn-map",                          required_argument, NULL, 'N' },
-  
-  { "output-packet-path",               required_argument, NULL, 'O' },
-  { "db-file-path",                     required_argument, NULL, 'P' },
-  { "spool-file-path",                  required_argument, NULL, 'Q' },
-  { "mapper",                           required_argument, NULL, 'U' },
-  { "version",                          no_argument,       0,    'V' },
-
-#ifdef HAVE_OPENSSL
-  { "https-server",                     required_argument, NULL, 'W' },
-#endif
-
-  /*
-   * long ONLY options - put these here with numeric arguments,
-   *  over 127 (i.e. > ascii max char)
-   * (since op is unsigned this is fine)
-   *  add corresponding case nnn: below
-   */
-#if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
-  { "use-syslog",                       optional_argument, NULL, 131 },
-#endif
-
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-  { "ssl-watchdog",                     no_argument,       NULL, 133 },
-#endif
-
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-  { "disable-schedyield",               optional_argument, NULL, 134 },
-#endif
-
-  { "set-admin-password",               optional_argument, NULL, 135 },
-
-  { "w3c",                              no_argument,       NULL, 136 },
-
-  { "p3p-cp",                           required_argument, NULL, 137 },
-  { "p3p-uri",                          required_argument, NULL, 138 },
-
-#ifndef WIN32
-  { "set-pcap-nonblocking",             no_argument,       NULL, 139 },
-#endif
-
-  { "disable-stopcap",                  no_argument,       NULL, 142 },
-  { "disable-instantsessionpurge",      no_argument,       NULL, 144 },
-  { "disable-mutexextrainfo",           no_argument,       NULL, 145 },
-
-  { "fc-only",                          no_argument,       NULL, 147 },
-  { "no-fc",                            no_argument,       0, 148 },
-  { "no-invalid-lun",                   no_argument,       0, 149 },
-
-  { "skip-version-check",               no_argument,       NULL, 150 },
-
-  {NULL, 0, NULL, 0}
-};
-
-/* Forward */
-static void loadPrefs(int argc, char* argv []);
-
-/*
  * Hello World! This is ntop speaking...
  */
-static void welcome (FILE * fp)
+void welcome (FILE * fp)
 {
-  fprintf (fp, "%s v.%s %s (configured on %s, built on %s)\n",
+  fprintf (fp, "Welcome to %s v.%s %s\n[Configured on %s, built on %s]\n",
 	   myGlobals.program_name, version, THREAD_MODE, configureDate, buildDate);
-
+  
   fprintf (fp, "Copyright 1998-2004 by %s.\n", author);
   fprintf (fp, "Get the freshest ntop from http://www.ntop.org/\n");
 }
@@ -193,16 +50,22 @@ void usage(FILE * fp) {
 
   welcome(fp);
 
-  fprintf(fp, "\nUsage: %s [OPTION]\n", myGlobals.program_name);
-
+  fprintf(fp, "\nUsage: %s [OPTION]\n\n", myGlobals.program_name);
+  fprintf(fp, "Basic options:\n");
   fprintf(fp, "    [-h             | --help]                             %sDisplay this help and exit\n", newLine);
 #ifndef WIN32
   fprintf(fp, "    [-u <user>      | --user <user>]                      %sUserid/name to run ntop under (see man page)\n", newLine);
 #endif /* WIN32 */
   fprintf(fp, "    [-t <number>    | --trace-level <number>]             %sTrace level [0-6]\n", newLine);
   fprintf(fp, "    [-P <path>      | --db-file-path <path>]              %sPath for ntop internal database files\n", newLine);
+  fprintf(fp, "    [-Q <path>      | --spool-file-path <path>]           %sPath for ntop spool files\n", newLine);
+  fprintf(fp, "    [-w <port>      | --http-server <port>]               %sWeb server (http:) port (or address:port) to listen on\n", newLine);
+#ifdef HAVE_OPENSSL
+  fprintf(fp, "    [-W <port>      | --https-server <port>]              %sWeb server (https:) port (or address:port) to listen on\n", newLine);
+#endif
 
-#if 0
+
+  fprintf(fp, "\nAdvanced options:\n");
   fprintf(fp, "    [-4             | --ipv4]                             %sUse IPv4 connections\n",newLine);
   fprintf(fp, "    [-6             | --ipv6]                             %sUse IPv6 connections\n",newLine);
   fprintf(fp, "    [-a <file>      | --access-log-file <file>]           %sFile for ntop web server access log\n", newLine);
@@ -237,7 +100,6 @@ void usage(FILE * fp) {
 
   fprintf(fp, "    [-x <max num hash entries> ]                          %sMax num. hash entries ntop can handle (default %u)\n", 
 	  newLine, myGlobals.runningPref.maxNumHashEntries);
-  fprintf(fp, "    [-w <port>      | --http-server <port>]               %sWeb server (http:) port (or address:port) to listen on\n", newLine);
   fprintf(fp, "    [-z             | --disable-sessions]                 %sDisable TCP session tracking\n", newLine);
   fprintf(fp, "    [-A]                                                  %sAsk admin user password and exit\n", newLine);
   fprintf(fp, "    [               | --set-admin-password=<pass>]        %sSet password for the admin user to <pass>\n", newLine);
@@ -266,10 +128,6 @@ void usage(FILE * fp) {
   fprintf(fp, "    [-X <max num TCP sessions> ]                          %sMax num. TCP sessions ntop can handle (default %u)\n", 
 	  newLine, myGlobals.runningPref.maxNumSessions);
 
-#ifdef HAVE_OPENSSL
-  fprintf(fp, "    [-W <port>      | --https-server <port>]              %sWeb server (https:) port (or address:port) to listen on\n", newLine);
-#endif
-
 /*  Please keep long-only options alphabetically ordered */
 
   fprintf(fp, "    [--disable-instantsessionpurge]                       %sDisable instant FIN session purge\n", newLine);
@@ -290,594 +148,18 @@ void usage(FILE * fp) {
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
   fprintf(fp, "    [--ssl-watchdog]                                      %sUse ssl watchdog (NS6 problem)\n", newLine);
 #endif
-#endif /* #if 0 */
 
  fprintf(fp, "\n"
 	 "NOTE\n"
-	 "You can configure further ntop options via the web\n"
-	 "interface [Menu Admin -> Config]\n\n");
+	 "    * You can configure further ntop options via the web\n"
+	 "      interface [Menu Admin -> Config].\n"
+	 "    * The command line options are not permanent, i.e. they\n"
+	 "      are not persistent across ntop initializations.\n"
+	 "\n");
   
 #ifdef WIN32
   printAvailableInterfaces();
 #endif
-}
-
-/* ******************************** */
-
-static void loadPrefs(int argc, char* argv []) {
-  datum key, nextkey;
-  char buf[1024];
-  int opt_index, opt;
-#ifndef WIN32
-  bool userSpecified = FALSE;
-#endif
-  
-  traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
-  opt_index = 0, optind = 0;
-  while ((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering loadPrefs()");
-#endif
-    switch (opt) {
-    case 'h':                                /* help */
-      usage(stdout);
-      exit(0);
-
-#ifndef WIN32
-    case 'u':
-      stringSanityCheck(optarg);
-      myGlobals.effectiveUserName = strdup(optarg);
-      if(strOnlyDigits(optarg))
-	myGlobals.userId = atoi(optarg);
-      else {
-	struct passwd *pw;
-	pw = getpwnam(optarg);
-	if(pw == NULL) {
-	  printf("FATAL ERROR: Unknown user %s.\n", optarg);
-	  exit(-1);
-	}
-	myGlobals.userId = pw->pw_uid;
-	myGlobals.groupId = pw->pw_gid;
-	endpwent();
-      }
-      userSpecified = TRUE;
-      break;
-#endif /* WIN32 */
-
-    case 't':
-      /* Trace Level Initialization */
-      myGlobals.runningPref.traceLevel = min(max(1, atoi(optarg)),
-					     CONST_VERY_DETAIL_TRACE_LEVEL);
-      /* DETAILED is NOISY + FileLine stamp, unless already set */
-      break;
-	  
-    case 'P':
-      stringSanityCheck(optarg);
-      if(myGlobals.dbPath != NULL)
-	free(myGlobals.dbPath);
-
-      myGlobals.dbPath = strdup(optarg);
-      break;
-    }
-  }
-
-  /* ******************************* */
-
-  /* open/create all the databases */
-  initGdbm(NULL, NULL, 1);
-    
-  if(myGlobals.prefsFile == NULL) {
-#ifdef DEBUG
-    traceEvent(CONST_TRACE_INFO, "DEBUG: No preferences file to read from()");
-#endif
-    return;
-  }
-
-  /* Read preferences and store them in memory */
-  key = gdbm_firstkey (myGlobals.prefsFile);
-  while (key.dptr) {
-    if (fetchPrefsValue (key.dptr, buf, sizeof (buf)) == 0) {
-      processNtopPref (key.dptr, buf, FALSE, &myGlobals.runningPref);
-    }
-      
-    nextkey = gdbm_nextkey (myGlobals.prefsFile, key);
-    free (key.dptr);
-    key = nextkey;
-  }
-
-  myGlobals.savedPref = myGlobals.runningPref;
-}
-
-/* ***************************************************** */
-
-/*
- * Parse the command line options
- */
-static int parseOptions(int argc, char* argv []) {
-  int setAdminPw = 0, opt, userSpecified = 0;
-  int opt_index;
-  char *adminPw = NULL;
-
-  /* * * * * * * * * * */
-
-  for(opt_index=0; opt_index<argc; opt_index++)
-    traceEvent(CONST_TRACE_NOISY, "PARAM_DEBUG: argv[%d]: %s", opt_index, argv[opt_index]);
-
-  /*
-   * Parse command line options to the application via standard system calls
-   */
-  traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
-  opt_index = 0, optind = 0;
-  while((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
-#ifdef PARAM_DEBUG
-    traceEvent(CONST_TRACE_INFO, "PARAM_DEBUG: getopt(%d/%c/%s)", opt, opt, optarg);
-#endif
-
-    switch (opt) {
-    case '4':
-      myGlobals.runningPref.ipv4or6 = AF_INET;
-      break;
-    case '6':
-      myGlobals.runningPref.ipv4or6 = AF_INET6;
-      break;
-    case 'a': /* ntop access log path */
-      stringSanityCheck(optarg);
-      myGlobals.runningPref.accessLogFile = strdup(optarg);
-      break;
-
-    case 'b': /* Disable protocol decoders */
-      myGlobals.runningPref.enablePacketDecoding = 0;
-      break;
-
-      /* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
-    case 'c': /* Sticky hosts = hosts that are not purged when idle */
-      myGlobals.runningPref.stickyHosts = 1;
-      break;
-
-#ifndef WIN32
-    case 'd':
-      myGlobals.runningPref.daemonMode = 1;
-      break;
-#endif
-
-    case 'e':
-      myGlobals.runningPref.maxNumLines = atoi(optarg);
-      break;
-
-    case 'f':
-      myGlobals.runningPref.rFileName = strdup(optarg);
-      break;
-
-    case 'g':
-      myGlobals.runningPref.trackOnlyLocalHosts    = 1;
-      break;
-
-    case 'h':                                /* help */
-      usage(stdout);
-      exit(0);
-      
-    case 'i': /* More than one interface may be specified in a comma separated list */
-#ifndef WIN32
-      stringSanityCheck(optarg);
-#endif
-      myGlobals.runningPref.devices = strdup(optarg);
-      break;
-
-    case 'j':                          /* save other (unknown) packets in a file */
-      myGlobals.runningPref.enableOtherPacketDump = 1;
-      break;
-
-    case 'k':                  /* update info of used kernel filter expression in extra frame */
-      myGlobals.runningPref.filterExpressionInExtraFrame = 1;
-      break;
-
-    case 'l':
-      stringSanityCheck(optarg);
-      myGlobals.runningPref.pcapLog = strdup(optarg);
-      break;
-
-    case 'm':
-      stringSanityCheck(optarg);
-      myGlobals.runningPref.localAddresses = strdup(optarg);
-      break;
-
-    case 'n':
-      myGlobals.runningPref.numericFlag = 1;
-      break;
-
-    case 'o':                          /* Do not trust MAC addresses */
-      myGlobals.runningPref.dontTrustMACaddr = 1;
-      break;
-
-    case 'p':                     /* the TCP/UDP protocols being monitored */
-      stringSanityCheck(optarg);
-      myGlobals.runningPref.protoSpecs = strdup(optarg);
-      break;
-
-    case 'q': /* save suspicious packets in a file in pcap (tcpdump) format */
-      myGlobals.runningPref.enableSuspiciousPacketDump = 1;
-      break;
-
-    case 'r':
-      if(!isdigit(optarg[0])) {
-	printf("FATAL ERROR: flag -r expects a numeric argument.\n");
-	exit(-1);
-      }
-      myGlobals.runningPref.refreshRate = atoi(optarg);
-      break;
-
-    case 's':
-      myGlobals.runningPref.disablePromiscuousMode = 1;
-      break;
-
-    case 't':
-      /* Trace Level Initialization */
-      myGlobals.runningPref.traceLevel = min(max(1, atoi(optarg)),
-                                             CONST_VERY_DETAIL_TRACE_LEVEL);
-      /* DETAILED is NOISY + FileLine stamp, unless already set */
-      break;
-
-#ifndef WIN32
-    case 'u':
-      stringSanityCheck(optarg);
-      myGlobals.effectiveUserName = strdup(optarg);
-      if(strOnlyDigits(optarg))
-	myGlobals.userId = atoi(optarg);
-      else {
-	struct passwd *pw;
-	pw = getpwnam(optarg);
-	if(pw == NULL) {
-	  printf("FATAL ERROR: Unknown user %s.\n", optarg);
-	  exit(-1);
-	}
-	myGlobals.userId = pw->pw_uid;
-	myGlobals.groupId = pw->pw_gid;
-	endpwent();
-      }
-      userSpecified = 1;
-      break;
-#endif /* WIN32 */
-
-    case 'w':
-      stringSanityCheck(optarg);
-      if(!isdigit(optarg[0])) {
-	printf("FATAL ERROR: flag -w expects a numeric argument.\n");
-	exit(-1);
-      }
-
-      /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
-      if((myGlobals.runningPref.webAddr = strchr(optarg,':'))) {
-	/* DS: Search for : to find xxx.xxx.xxx.xxx:port */
-	/* This code is to be able to bind to a particular interface */
-	*myGlobals.runningPref.webAddr = '\0';
-	myGlobals.runningPref.webPort = atoi(myGlobals.runningPref.webAddr+1);
-	myGlobals.runningPref.webAddr = optarg;
-      } else
-	myGlobals.runningPref.webPort = atoi(optarg);
-      break;
-
-    case 'x':
-      myGlobals.runningPref.maxNumHashEntries = atoi(optarg);
-      break;
-
-    case 'z':
-      myGlobals.runningPref.enableSessionHandling = 0;
-      break;
-
-    case 'A':
-      setAdminPw = 1;
-      break;
-
-    case 'B':
-      stringSanityCheck(optarg);
-      myGlobals.runningPref.currentFilterExpression = strdup(optarg);
-      break;
-
-    case 'D':                                        /* domain */
-      stringSanityCheck(optarg);
-      strncpy(myGlobals.runningPref.domainName, optarg, MAXHOSTNAMELEN);
-      break;
-
-    case 'F':
-      stringSanityCheck(optarg);
-      myGlobals.runningPref.flowSpecs = strdup(optarg);
-      break;
-
-#ifndef WIN32
-    case 'K':
-      myGlobals.runningPref.debugMode = 1;
-      break;
-#endif
-
-#if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
-    case 'L':
-      myGlobals.runningPref.useSyslog = DEFAULT_SYSLOG_FACILITY;
-      break;
-#endif
-
-    case 'M':
-      myGlobals.runningPref.mergeInterfaces = 0;
-      break;
-
-    case 'N':
-      stringSanityCheck(optarg);
-      if (myGlobals.runningPref.fcNSCacheFile != NULL)
-	free (myGlobals.runningPref.fcNSCacheFile);
-      myGlobals.runningPref.fcNSCacheFile = strdup (optarg);
-      break;
-
-    case 'O': /* pcap log path - Ola Lundqvist <opal@debian.org> */
-      stringSanityCheck(optarg);
-      if(myGlobals.runningPref.pcapLogBasePath != NULL)
-	free(myGlobals.runningPref.pcapLogBasePath);
-      myGlobals.runningPref.pcapLogBasePath = strdup(optarg);
-      break;
-      
-    case 'P':
-      stringSanityCheck(optarg);
-      if(myGlobals.dbPath != NULL)
-	free(myGlobals.dbPath);
-      
-      myGlobals.dbPath = strdup(optarg);
-      break;
-      
-    case 'Q': /* Spool Path (ntop's spool directory) */
-      stringSanityCheck(optarg);
-      if(myGlobals.runningPref.spoolPath != NULL)
-	free(myGlobals.runningPref.spoolPath);
-      myGlobals.runningPref.spoolPath = strdup(optarg);
-      break;
-
-    case 'U': /* host:port - a good mapper is at http://jake.ntop.org/cgi-bin/mapper.pl */
-      stringSanityCheck(optarg);
-      myGlobals.runningPref.mapperURL = strdup(optarg);
-      break;
-
-    case 'V': /* version */
-      welcome(stdout);
-      fprintf(stdout, "\n");
-      fprintf(stdout, "%s\n\n", __free__);
-      fprintf(stdout, "%s\n\n", __notice__);
-      fprintf(stdout, "%s\n\n", __see__);
-      exit(0);
-
-    case 'X':
-      myGlobals.runningPref.maxNumSessions = atoi(optarg);
-      break;
-
-#ifdef HAVE_OPENSSL
-    case 'W':
-      stringSanityCheck(optarg);
-      if(!isdigit(optarg[0])) {
-	printf("FATAL ERROR: flag -W expects a numeric argument.\n");
-	exit(-1);
-      }
-
-      /*
-	lets swipe the same address binding code from -w above
-	Curtis Doty <Curtis@GreenKey.net>
-      */
-      if((myGlobals.runningPref.sslAddr = strchr(optarg,':'))) {
-	*myGlobals.runningPref.sslAddr = '\0';
-	myGlobals.runningPref.sslPort = atoi(myGlobals.runningPref.sslAddr+1);
-	myGlobals.runningPref.sslAddr = optarg;
-      } else {
-	myGlobals.runningPref.sslPort = atoi(optarg);
-      }
-
-      break;
-#endif
-
-#if !defined(WIN32) && defined(MAKE_WITH_SYSLOG)
-    case 131:
-      /*
-       * Burton Strauss (BStrauss@acm.org) allow --use-syslog <facility>
-       *
-       *   Note that the = is REQUIRED for optional-argument to work...
-       *        If you don't have it, getopt invokes this case with optind=nil
-       *        and throws away the argument.
-       *         (While it's visable in the next entry of argv[], that's just to complex to code
-       *          for all the possible cases).
-       *
-       *   Also, if short_options uses L: then there MUST be an argument. (L:: is an extension)
-       *
-       *   Accordingly the case 'L'/131 was split and:
-       *     -L sets myGlobals.useSyslog to the default facility (DEFAULT_SYSLOG_FACILITY in ntop.h)
-       *     --use-syslog requires a facility parameter (see /usr/include/sys/syslog.h)
-       */
-      if (optarg) {
-	int i;
-
-	stringSanityCheck(optarg);
-
-	for (i=0; myFacilityNames[i].c_name != NULL; i++) {
-	  if (strcmp(optarg, myFacilityNames[i].c_name) == 0) {
-	    break;
-	  }
-	}
-
-	if (myFacilityNames[i].c_name == NULL) {
-	  printf("WARNING: --use-syslog=unknown log facility('%s'), using default value\n",
-		 optarg);
-	  myGlobals.runningPref.useSyslog = DEFAULT_SYSLOG_FACILITY;
-	} else {
-	  myGlobals.runningPref.useSyslog = myFacilityNames[i].c_val;
-	}
-      } else {
-	printf("NOTE: --use-syslog, no facility specified, using default value.  Did you forget the =?\n");
-	myGlobals.runningPref.useSyslog = DEFAULT_SYSLOG_FACILITY;
-      }
-      break;
-#endif
-
-#ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
-    case 133:
-      /* Burton M. Strauss III - Jun 2002 */
-      myGlobals.runningPref.useSSLwatchdog = 1;
-      break;
-#endif
-
-#if defined(CFG_MULTITHREADED) && defined(MAKE_WITH_SCHED_YIELD)
-    case 134: /* disable-schedyield */
-      myGlobals.runningPref.disableSchedYield = TRUE;
-      break;
-#endif
-
-    case 135:
-      /* Dennis Schoen (dennis@cns.dnsalias.org) allow --set-admin-password=<password> */
-      if (optarg) {
-        stringSanityCheck(optarg);	
-	adminPw = strdup(optarg);
-      } else {
-	printf("NOTE: --set-admin-password requested, no password.  Did you forget the =?\n");
-      }
-      
-      setAdminPw = 1;      
-      break;
-
-    case 136:
-      myGlobals.runningPref.w3c = TRUE;
-      break;
-
-    case 137:
-      stringSanityCheck(optarg);
-      if(myGlobals.runningPref.P3Pcp != NULL)
-	free(myGlobals.runningPref.P3Pcp);
-      myGlobals.runningPref.P3Pcp = strdup(optarg);
-      break;
-
-    case 138:
-      stringSanityCheck(optarg);
-      if(myGlobals.runningPref.P3Puri != NULL)
-	free(myGlobals.runningPref.P3Puri);
-      myGlobals.runningPref.P3Puri = strdup(optarg);
-      break;
-
-#ifndef WIN32
-    case 139:
-#ifdef HAVE_PCAP_SETNONBLOCK
-      myGlobals.runningPref.setNonBlocking = TRUE;
-#else
-      printf("FATAL ERROR: --set-pcap-nonblocking invalid - pcap_setnonblock() unavailable\n");
-      exit(-1);
-#endif
-      break;
-#endif
-
-    case 142: /* disable-stopcap */
-      myGlobals.runningPref.disableStopcap = TRUE;
-      break;
-
-    case 144: /* disable-instantsessionpurge */
-      myGlobals.runningPref.disableInstantSessionPurge = TRUE;
-      break;
-
-    case 145: /* disable-mutexextrainfo */
-      myGlobals.runningPref.disableMutexExtraInfo = TRUE;
-      break;
-
-    case 147:
-      myGlobals.runningPref.printFcOnly = TRUE;
-      myGlobals.runningPref.stickyHosts = TRUE;
-      break;
-      
-    case 148:
-      myGlobals.runningPref.printIpOnly = TRUE;
-      break;
-
-    case 149:
-      myGlobals.runningPref.noInvalidLunDisplay = TRUE;
-      break;
-
-    case 150:
-      myGlobals.runningPref.skipVersionCheck = TRUE;
-      break;
-
-    default:
-      printf("FATAL ERROR: unknown ntop option, '%c'\n", opt);
-#ifdef DEBUG
-      if(opt != '?')
-	printf("             getopt return value is '%c', %d\n", opt, opt);
-#endif
-      usage(stdout);
-      exit(-1);
-    }
-  }
-
-  /* *********************** */
-
-  if(setAdminPw) {
-    setAdminPassword(adminPw);
-    termGdbm();
-    exit(0);
-  }
-
-#ifndef WIN32
-  /* Handle any unrecognized options, such as a nested @filename */
-  if(optind < argc) {
-    int i;
-
-    printf("FATAL ERROR: Unrecognized/unprocessed ntop options...\n     ");
-    for(i=optind; i<argc; i++) {
-      printf(" %s", argv[i]);
-    }
-    printf("\n\nrun %s --help for usage information\n\n", argv[0]);
-    printf("    Common problems:\n");
-    printf("        -B \"filter expressions\" (quotes are required)\n");
-    printf("        --use-syslog=facilty (the = is required)\n\n");
-    exit(-1);
-  }
-#endif /* WIN32 */
-
-
-  /*  Note that for these critical messages we use both
-   *  printf() and traceEvent() - gotta get the message out
-   */
-
-  /*
-   * check for valid parameters
-   */
-
-
-  /* If not set we set it to the same directory of dbPath */
-  if(myGlobals.runningPref.spoolPath[0] == '\0') {
-    free(myGlobals.runningPref.spoolPath);
-    myGlobals.runningPref.spoolPath = strdup(myGlobals.dbPath);
-  }
-
-#ifndef WIN32
-  /*
-    The user has not specified the uid using the -u flag.
-    We try to locate a user with no privileges
-  */
-
-  if(!userSpecified) {
-    struct passwd *pw = NULL;
-        
-    if(getuid() == 0) {
-      /* We're root */
-      char *user;
-
-      pw = getpwnam(user = "nobody");
-      if(pw == NULL) pw = getpwnam(user = "anonymous");
-     
-      if(pw != NULL) {
-	myGlobals.userId  = pw->pw_uid;
-	myGlobals.groupId = pw->pw_gid;
-	myGlobals.effectiveUserName = strdup(user);
-	traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop will be started as user %s", user);
-      }
-    }
-      
-    if(pw == NULL) {
-      myGlobals.userId  = getuid();
-      myGlobals.groupId = getgid();
-    }
-  }
-#endif   
-
-  
-  return(userSpecified);
 }
 
 /* *********************************** */
@@ -983,10 +265,6 @@ int ntop_main(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
 #endif
   int i, rc, userSpecified;
-#ifndef WIN32
-  int effective_argc;
-  char **effective_argv;
-#endif
   char ifStr[196] = {0};
   time_t lastTime;
   char *cmdLineBuffer, *readBuffer, *readBufferWork;
@@ -1140,64 +418,33 @@ int main(int argc, char *argv[]) {
     }
   }
 
-#ifdef PARAM_DEBUG
-  printf("PARAM_DEBUG: effective cmd line: '%s'\n", cmdLineBuffer);
-#endif
-
   /* Strip trailing spaces */
   while((strlen(cmdLineBuffer) > 1) && 
         (cmdLineBuffer[strlen(cmdLineBuffer)-1] == ' ')) {
       cmdLineBuffer[strlen(cmdLineBuffer)-1] = '\0';
   }
 
-#ifndef WIN32
-  effective_argv = buildargv(cmdLineBuffer); /* Build a new argv[] from the string */
-
- /* count effective_argv[] */
-  effective_argc = 0;
-  while (effective_argv[effective_argc] != NULL) {
-      effective_argc++;
-  }
-#ifdef PARAM_DEBUG
-  for(i=0; i<effective_argc; i++) {
-      printf("PARAM_DEBUG:    %3d. '%s'\n", i, effective_argv[i]);
-  }
-#endif
   /*
    * Initialize all global run-time parameters to reasonable values
    */
-  initNtopGlobals(effective_argc, effective_argv);
-#else
   initNtopGlobals(argc, argv);
-#endif
 
   free(cmdLineBuffer);
   free(readBuffer);
 
-  /* Above here, the -L value wasn't set, so we use printf(). */
-  /* Below here, we use our traceEvent() function to print or log as requested. */
-
- 
   /*
    * Parse command line options to the application via standard system calls
    * Command-line options take precedence over saved preferences. 
    */
-#ifndef WIN32
-  loadPrefs(effective_argc, effective_argv);
-  userSpecified = parseOptions(effective_argc, effective_argv);
-#else
   loadPrefs(argc, argv);
   userSpecified = parseOptions(argc, argv);
-#endif
 
-  myGlobals.capturePackets = verifyOptions ();
+  myGlobals.capturePackets = verifyOptions();
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "ntop v.%s %s", version, THREAD_MODE);
-  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.",
-	     configureDate, buildDate);
+  traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Configured on %s, built on %s.", configureDate, buildDate);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Copyright 1998-2004 by %s", author);
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Get the freshest ntop from http://www.ntop.org/");
-
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "Initializing ntop");
 
   reportValues(&lastTime);
@@ -1319,10 +566,6 @@ int main(int argc, char *argv[]) {
 
     HEARTBEAT(0, "main(), sleep()...woke", NULL);
   }
-#endif
-
-#ifndef WIN32
-  freeargv(effective_argv);
 #endif
 
   return(0);
