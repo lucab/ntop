@@ -44,12 +44,14 @@ INCLUDES = -I.. @INCS@
 #
 noinst_PROGRAMS = icmpPlugin.so lastSeenPlugin.so \
                   netflowPlugin.so nfsPlugin.so  \
+                  pdaPlugin.so  \
 		  sflowPlugin.so
 #		  rrdPlugin.so
 #		  rmonPlugin.so wapPlugin.so
 
 lib_LTLIBRARIES = libicmpPlugin.la liblastSeenPlugin.la \
                   libnetflowPlugin.la  libnfsPlugin.la  \
+                  libpdaPlugin.la  \
 		  libsflowPlugin.la
 #		  librrdPlugin.la
 #		  librmonPlugin.la libwapPlugin.la
@@ -59,6 +61,9 @@ libicmpPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 #librrdPlugin_la_SOURCES = rrdPlugin.c
 #librrdPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
+
+libpdaPlugin_la_SOURCES = pdaPlugin.c
+libpdaPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
 
 libsflowPlugin_la_SOURCES = sflowPlugin.c
 libsflowPlugin_la_LDFLAGS = -shared -version-info @NTOP_VERSION_INFO@ @DYN_FLAGS@
@@ -96,6 +101,12 @@ icmpPlugin.so: .libs/libicmpPlugin.so@SO_VERSION_PATCH@
 
 #rrdPlugin.so: .libs/librrdPlugin.so@SO_VERSION_PATCH@
 #	@ln -s .libs/librrdPlugin.so rrdPlugin.so
+
+.libs/libpdaPlugin.so@SO_VERSION_PATCH@:
+	cc -bundle -flat_namespace -undefined suppress -o .libs/libpdaPlugin.so@SO_VERSION_PATCH@ pdaPlugin.o
+
+pdaPlugin.so: .libs/libpdaPlugin.so@SO_VERSION_PATCH@
+	@ln -s .libs/libpdaPlugin.so pdaPlugin.so
 
 .libs/libsflowPlugin.so@SO_VERSION_PATCH@:
 	cc -bundle -flat_namespace -undefined suppress -o .libs/libsflowPlugin.so@SO_VERSION_PATCH@ sflowPlugin.o
