@@ -1390,6 +1390,7 @@
 #define BITFLAG_SMTP_USER                   3
 #define BITFLAG_P2P_USER                    4
 #define BITFLAG_FTP_USER                    5
+#define BITFLAG_MESSENGER_USER              6
 
 #define BITFLAG_P2P_UPLOAD_MODE             1
 #define BITFLAG_P2P_DOWNLOAD_MODE           2

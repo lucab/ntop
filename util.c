@@ -4133,8 +4133,6 @@ void setHostFingerprint(HostTraffic *srcHost) {
   int S, N, D, T, done = 0, idx;
   char fingerprint[32];
   char *strtokState;
-
-  /* return; */
   
   if((srcHost->fingerprint == NULL)       /* No fingerprint yet    */
      || (srcHost->fingerprint[0] == ':')  /* OS already calculated */
@@ -4165,7 +4163,7 @@ void setHostFingerprint(HostTraffic *srcHost) {
       char line[384];
       char *b, *d, *ptr;
 
-      while((!done) && fgets(line, sizeof(line), fd)) {
+      while((!done) && fgets(line, sizeof(line)-1, fd)) {
 	if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
 	line[strlen(line)-1] = '\0';
 
@@ -4200,14 +4198,13 @@ void setHostFingerprint(HostTraffic *srcHost) {
 	ptr = strtok_r(NULL, ":", &strtokState); if(ptr == NULL) continue;
 	if(strcmp(ptr, flags)) continue;
 
-	free(srcHost->fingerprint);
-	srcHost->fingerprint = strdup(&line[28]); /* Set the host OS */
+	/* NOTE
+	   strlen(srcHost->fingerprint) is 29 as the fingerprint length is so
+	   Example: 0212:_MSS:80:WS:0:1:0:0:A:LT
+	*/
 
-#if 0
-	snprintf(srcHost->fingerprint, sizeof(srcHost->fingerprint)-1, "%s", &line[28]);
-	traceEvent(CONST_TRACE_INFO, "[%s] -> [%s]\n", 
-		   srcHost->hostNumIpAddress, srcHost->fingerprint);
-#endif
+	snprintf(srcHost->fingerprint, strlen(srcHost->fingerprint)-1, "%s", &line[28]);
+	/* traceEvent(CONST_TRACE_INFO, "[%s] -> [%s]\n", srcHost->hostNumIpAddress, srcHost->fingerprint);*/
 	done = 1;
       }
 

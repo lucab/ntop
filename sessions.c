@@ -1117,6 +1117,35 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	  free(rcStr);
 	}
+      } else if(((sport == 1863) ||(dport == 1863)) /* MS Messenger */
+		&& (packetDataLength > 0)) {
+	  char *strtokState, *row;
+	  
+	  rcStr = (char*)malloc(packetDataLength+1);
+	  memcpy(rcStr, packetData, packetDataLength);
+	  rcStr[packetDataLength] = '\0';
+	  
+	  if((dport == 1863) && (strncmp(rcStr, "USR 6 TWN I ", 12) == 0)) {
+	    row = strtok(&rcStr[12], "\n\r");
+	    if(strstr(row, "@")) {
+	      /* traceEvent(CONST_TRACE_INFO, "User='%s'@[%s/%s]", row, srcHost->hostSymIpAddress, srcHost->hostNumIpAddress); */
+	      updateHostUsers(row, BITFLAG_MESSENGER_USER, srcHost);
+	    }
+	  } else if((dport == 1863) && (strncmp(rcStr, "ANS 1 ", 6) == 0)) {
+	    row = strtok(&rcStr[6], " \n\r");
+	    if(strstr(row, "@")) {
+	      /* traceEvent(CONST_TRACE_INFO, "User='%s'@[%s/%s]", row, srcHost->hostSymIpAddress, srcHost->hostNumIpAddress); */
+	      updateHostUsers(row, BITFLAG_MESSENGER_USER, srcHost);
+	    }
+	  } else if((dport == 1863) && (strncmp(rcStr, "MSG ", 4) == 0)) {
+	    row = strtok(&rcStr[4], " ");
+	    if(strstr(row, "@")) {
+	      /* traceEvent(CONST_TRACE_INFO, "User='%s' [%s]@[%s->%s]", row, rcStr, srcHost->hostSymIpAddress, dstHost->hostSymIpAddress); */
+	      updateHostUsers(row, BITFLAG_MESSENGER_USER, srcHost);
+	    }
+
+	  free(rcStr);
+	}
       } else if(((sport == 25 /* SMTP */)  || (dport == 25 /* SMTP */))
 		&& (theSession->sessionState == FLAG_STATE_ACTIVE)) {
 	if(sport == 25)
@@ -2001,8 +2030,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 /* ************************************ */
 
 #ifndef WIN32
-static void addLsofContactedPeers(ProcessInfo *process,
-				  u_int peerHostIdx, int actualDeviceId) {
+static void addLsofContactedPeers(ProcessInfo *process, u_int peerHostIdx, int actualDeviceId) {
   u_int i;
 
   if((process == NULL)

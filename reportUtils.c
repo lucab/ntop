@@ -2671,6 +2671,29 @@ static void checkHostHealthness(HostTraffic *el) {
 
 /* ************************************ */
 
+static void printUserList(HostTraffic *el) {
+  char buf[LEN_GENERAL_WORK_BUFFER];
+  UserList *list = el->protocolInfo->userList;
+  
+  while(list != NULL) {
+    if(snprintf(buf, sizeof(buf), "%s&nbsp;[", list->userName) < 0)
+      BufferTooShort();
+    sendString(buf);
+    
+    if(FD_ISSET(BITFLAG_POP_USER, &(list->userFlags))) sendString("&nbsp;POP&nbsp;");
+    if(FD_ISSET(BITFLAG_IMAP_USER, &(list->userFlags))) sendString("&nbsp;IMAP&nbsp;");
+    if(FD_ISSET(BITFLAG_SMTP_USER, &(list->userFlags))) sendString("&nbsp;SMTP&nbsp;");
+    if(FD_ISSET(BITFLAG_P2P_USER, &(list->userFlags))) sendString("&nbsp;P2P&nbsp;");
+    if(FD_ISSET(BITFLAG_FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
+    if(FD_ISSET(BITFLAG_MESSENGER_USER, &(list->userFlags))) sendString("&nbsp;MSG&nbsp;");
+    
+    sendString("]<br>\n");
+    list = list->next;
+  }
+}
+
+/* ************************************ */
+
 void checkHostProvidedServices(HostTraffic *el) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 
@@ -3047,7 +3070,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   if(el->hostNumIpAddress[0] != '\0') {
     setHostFingerprint(el);
 
-    if((el->fingerprint != NULL) && (el->fingerprint[0] == ':')) {
+    if((el->fingerprint != NULL) && (el->fingerprint[0] == ':') && (strlen(el->fingerprint) > 2)) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "OS&nbsp;Name",
@@ -3335,7 +3358,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   /* **************************** */
 
   if((el->protocolInfo) && (el->protocolInfo->userList != NULL)) {
-    UserList *list = el->protocolInfo->userList;
+
 
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>"
 		"Known&nbsp;Users&nbsp;<IMG ALT=Users SRC=/users.gif BORDER=0></TH><TD "TD_BG" ALIGN=RIGHT>\n",
@@ -3343,22 +3366,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       BufferTooShort();
     sendString(buf);
 
-    while(list != NULL) {
-      if(snprintf(buf, sizeof(buf), "%s&nbsp;[", list->userName) < 0)
-	BufferTooShort();
-      sendString(buf);
-
-      if(FD_ISSET(BITFLAG_POP_USER, &(list->userFlags))) sendString("&nbsp;POP&nbsp;");
-      if(FD_ISSET(BITFLAG_IMAP_USER, &(list->userFlags))) sendString("&nbsp;IMAP&nbsp;");
-      if(FD_ISSET(BITFLAG_SMTP_USER, &(list->userFlags))) sendString("&nbsp;SMTP&nbsp;");
-      if(FD_ISSET(BITFLAG_P2P_USER, &(list->userFlags))) sendString("&nbsp;P2P&nbsp;");
-      if(FD_ISSET(BITFLAG_FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
-
-      sendString("]<br>\n");
-      list = list->next;
-    }
-
-    sendString("</TD></TR>\n");
+    printUserList(el);
+    sendString("<br>\n</TD></TR>\n");
   }
 
   /* **************************** */
@@ -3949,6 +3958,7 @@ void printLocalHostsStats() {
       if(el->fingerprint == NULL)   continue;
       if(el->fingerprint[0] != ':') setHostFingerprint(el);
       if(el->fingerprint[0] != ':') continue;
+      if(strlen(el->fingerprint) < 3) continue; /* Too short */
       tmpTable[numEntries++] = el;
 
       for(i=0; i<MAX_NUM_OS; i++) {
@@ -4004,24 +4014,9 @@ void printLocalHostsStats() {
 	  else {
 	    if(strcmp(theOSs[i].name, &el->fingerprint[1]) == 0) {
 	      if((el->protocolInfo != NULL) && (el->protocolInfo->userList != NULL)) {
-		UserList *list = el->protocolInfo->userList;
 		sendString("<TD ALIGN=LEFT>");
-
-		while(list != NULL) {
-		  if(snprintf(buf, sizeof(buf), "<li>%s&nbsp;[", list->userName) < 0)
-		    BufferTooShort();
-		  sendString(buf);
-		  
-		  if(FD_ISSET(BITFLAG_POP_USER, &(list->userFlags))) sendString("&nbsp;POP&nbsp;");
-		  if(FD_ISSET(BITFLAG_IMAP_USER, &(list->userFlags))) sendString("&nbsp;IMAP&nbsp;");
-		  if(FD_ISSET(BITFLAG_SMTP_USER, &(list->userFlags))) sendString("&nbsp;SMTP&nbsp;");
-		  if(FD_ISSET(BITFLAG_P2P_USER, &(list->userFlags))) sendString("&nbsp;P2P&nbsp;");
-		  if(FD_ISSET(BITFLAG_FTP_USER, &(list->userFlags))) sendString("&nbsp;FTP&nbsp;");
-		  
-		  sendString("]<br>\n");
-		  list = list->next;
-		}
-		sendString("</TD>");
+		printUserList(el);
+		sendString("<br>\n</TD>");
 
 	      } else
 		sendString("<TD ALIGN=CENTER>X</TD>");
