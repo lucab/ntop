@@ -3948,6 +3948,8 @@ int ntop_gdbm_delete(GDBM_FILE g, datum d) {
 datum ntop_gdbm_firstkey(GDBM_FILE g) {
   datum theData;
 
+  memset(&theData, 0, sizeof(theData));
+
 #ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_firstkey");
@@ -3984,6 +3986,8 @@ void ntop_gdbm_close(GDBM_FILE g) {
 datum ntop_gdbm_nextkey(GDBM_FILE g, datum d) {
   datum theData;
 
+  memset(&theData, 0, sizeof(theData));
+
 #ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
     accessMutex(&myGlobals.gdbmMutex, "ntop_gdbm_nextkey");
@@ -4003,6 +4007,8 @@ datum ntop_gdbm_nextkey(GDBM_FILE g, datum d) {
 
 datum ntop_gdbm_fetch(GDBM_FILE g, datum d) {
   datum theData;
+
+  memset(&theData, 0, sizeof(theData));
 
 #ifdef CFG_MULTITHREADED
   if(myGlobals.gdbmMutex.isInitialized == 1) /* Mutex not yet initialized ? */
@@ -5520,7 +5526,7 @@ FILE* checkForInputFile(char* logTag,
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
 
 #ifdef MAKE_WITH_ZLIB
-      compressedFormat = 1;
+      *compressedFormat = 1;
       snprintf(tmpFile, sizeof(tmpFile), "%s/%s.gz", myGlobals.configFileDirs[idx], fileName);
       if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
       fd = gzopen(tmpFile, "r");
@@ -5528,7 +5534,7 @@ FILE* checkForInputFile(char* logTag,
 #endif
 
       if(fd == NULL) {
-	compressedFormat = 0;
+	*compressedFormat = 0;
 	snprintf(tmpFile, sizeof(tmpFile), "%s/%s", myGlobals.configFileDirs[idx], fileName);
         if(logTag != NULL) traceEvent(CONST_TRACE_NOISY, "%s: Checking '%s'", logTag, tmpFile);
 	fd = fopen(tmpFile, "r");
@@ -5558,7 +5564,7 @@ FILE* checkForInputFile(char* logTag,
                        "%s: File '%s' does not need to be reloaded",
                        logTag, tmpFile);
 #ifdef MAKE_WITH_ZLIB
-          if(compressedFormat)
+          if(*compressedFormat)
             gzclose(fd);
           else
 #endif

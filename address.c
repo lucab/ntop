@@ -102,6 +102,8 @@ static void resolveAddress(HostAddr *hostAddr,
   traceEvent(CONST_TRACE_INFO, "DNS_DEBUG: Entering resolveAddress()");
 #endif
 
+  memset(&tmpBuf, 0, sizeof(tmpBuf));
+
   key_data.dptr = _addrtonum(hostAddr, tmpBuf, sizeof(tmpBuf));
   key_data.dsize = sizeof(keyBuf)+1;
   

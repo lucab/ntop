@@ -216,8 +216,6 @@ static void initIPCountryTable(void) {
   char buf[LEN_GENERAL_WORK_BUFFER];
   FILE* fd;
 
-  traceEvent(CONST_TRACE_INFO, "IP2CC: Looking for IP address <-> Country code mapping file");
-
   myGlobals.ipCountryCount = 0;
   if((myGlobals.countryFlagHead = malloc(sizeof(IPNode))) == NULL) {
     traceEvent(CONST_TRACE_FATALERROR, "IP2CC: Unable to allocate table memory. Quitting...");
@@ -521,7 +519,6 @@ void initCounters(void) {
    * Check if the ettercap passive file exists - warn if not.
    *   Note we're only checking here, so we forceClose...
    */
-traceEvent(CONST_TRACE_NOISY, "TEMP: checkForInputFile()");
   fd=checkForInputFile("OSFP",
                        "OS fingerprint table",
                        CONST_OSFINGERPRINT_FILE,

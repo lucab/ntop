@@ -73,7 +73,7 @@ char* gdVersionGuess(void) {
 #endif
   }
 
-#define test_gd_function(a, b)   if((void*)dlsym(gdPtr, a) != NULL) return(b);
+#define test_gd_function(a, b)   if((void*)dlsym(gdPtr, a) != NULL) { dlclose(gdPtr); return(b); }
 
   test_gd_function("gdImageCreateFromPngPtr", "2.0.21+");
   test_gd_function("gdFontCacheSetup", "2.0.16-2.0.20");
@@ -85,6 +85,8 @@ char* gdVersionGuess(void) {
   test_gd_function("gdImageCreateFromJpeg", "1.8.4");
 
 #undef test_gd_function
+
+  dlclose(gdPtr);
 
   return("1.8.3 or below");
 

@@ -588,6 +588,10 @@ void purgeIdleHosts(int actDevice) {
 
   if(myGlobals.rFileName != NULL) return;
 
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: purgeIdleHosts() invoked");
+#endif
+
   if(firstRun) {
     firstRun = 0;
     memset(lastPurgeTime, 0, sizeof(lastPurgeTime));
@@ -608,6 +612,10 @@ void purgeIdleHosts(int actDevice) {
   noSessionPurgeTime   = startTime-PARM_HOST_PURGE_MINIMUM_IDLE_NOACTVSES; 
   withSessionPurgeTime = startTime-PARM_HOST_PURGE_MINIMUM_IDLE_ACTVSES;
 
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: Beginning noS < %d, wS < %d", noSessionPurgeTime, withSessionPurgeTime);
+#endif
+
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "purgeIdleHosts");
 #endif
@@ -617,7 +625,13 @@ void purgeIdleHosts(int actDevice) {
 #endif
 
 #ifdef CFG_MULTITHREADED
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: accessMutex(purgeMutex)...calling");
+#endif
   accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: accessMutex(purgeMutex)...locked");
+#endif
 #endif
 
 #ifdef HASH_DEBUG
@@ -683,7 +697,13 @@ void purgeIdleHosts(int actDevice) {
 #endif
 
 #ifdef CFG_MULTITHREADED
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: releaseMutex(purgeMutex)...calling");
+#endif
   releaseMutex(&myGlobals.purgeMutex);
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: releaseMutex(purgeMutex)...released");
+#endif
 #endif
 
   traceEvent(CONST_TRACE_NOISY, "IDLE_PURGE: FINISHED selection, %d [out of %d] hosts selected",

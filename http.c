@@ -2985,7 +2985,13 @@ void handleHTTPrequest(HostAddr from) {
   }
 
 #ifdef CFG_MULTITHREADED
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...calling");
+#endif
   accessMutex(&myGlobals.purgeMutex, "returnHTTPPage");
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() accessMutex(purgeMutex)...locked");
+#endif
 #endif
 
 #ifdef MAKE_WITH_I18N
@@ -3015,7 +3021,13 @@ void handleHTTPrequest(HostAddr from) {
 #endif
 
 #ifdef CFG_MULTITHREADED
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() releaseMutex(purgeMutex)...calling");
+#endif
   releaseMutex(&myGlobals.purgeMutex);
+#ifdef IDLE_PURGE_DEBUG
+  traceEvent(CONST_TRACE_INFO, "IDLE_PURGE_DEBUG: handleHTTPrequest() releaseMutex(purgeMutex)...released");
+#endif
 #endif
 
   

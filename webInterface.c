@@ -7398,16 +7398,22 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   hints.ai_flags = AI_PASSIVE;
   hints.ai_socktype = SOCK_STREAM;
   snprintf(strport,sizeof(strport),"%d",*port);
-  if(getaddrinfo(addr,strport,&hints,&aitop) !=0)
-    traceEvent(CONST_TRACE_INFO,"getaddrinfo: fatal error\n");
-  for (ai = aitop; ai; ai = ai->ai_next) {
-    if(ai->ai_family != AF_INET && ai->ai_family != AF_INET6)
-      continue;
-    if(getnameinfo(ai->ai_addr, ai->ai_addrlen, ntop,sizeof(ntop),
-		    strport, sizeof(strport), NI_NUMERICHOST|NI_NUMERICSERV) != 0){
-      traceEvent(CONST_TRACE_INFO,"getnameinfo: fatal error\n");
-    }else
-      break;
+  if((rc = getaddrinfo(addr,strport,&hints,&aitop)) !=0) {
+    traceEvent(CONST_TRACE_ERROR, "INITWEB: getaddrinfo() error %s(%d)", gai_strerror(rc), rc);
+    traceEvent(CONST_TRACE_ERROR, "INITWEB: Unable to convert address '%s' - "
+               "not binding to a particular interface", addr);
+  } else {
+    for (ai = aitop; ai; ai = ai->ai_next) {
+      if(ai->ai_family != AF_INET && ai->ai_family != AF_INET6)
+        continue;
+      if(getnameinfo(ai->ai_addr, ai->ai_addrlen, ntop,sizeof(ntop),
+                     strport, sizeof(strport), NI_NUMERICHOST|NI_NUMERICSERV) != 0){
+        traceEvent(CONST_TRACE_ERROR, "INITWEB: getnameinfo() error %s(%d)", gai_strerror(errno), errno);
+        traceEvent(CONST_TRACE_ERROR, "INITWEB: Unable to convert address '%s' - "
+                   "not binding to a particular interface", addr);
+      }else
+        break;
+    }
   }
 #else
   memset(&sockIn, 0, sizeof(sockIn));
@@ -7516,6 +7522,8 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   errno = 0;
 #if defined(INET6) && !defined(WIN32)
   rc = bind(*sock, ai->ai_addr, ai->ai_addrlen);
+  if(aitop != NULL)
+    freeaddrinfo(aitop);
 #else
   rc = bind(*sock, (struct sockaddr *)&sockIn, sizeof(sockIn));
 #endif
