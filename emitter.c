@@ -655,7 +655,8 @@ void dumpNtopHashes(char* options) {
     }
   }
 
-  endWriteKey(lang,"",' ');
+  if(numEntries > 0) endWriteKey(lang,"",' ');
+
   endWriteArray(lang);
 
   if(filterPattern.fastmap)
@@ -696,6 +697,7 @@ void dumpNtopHashIndexes(char* options) {
       tmpStr = strtok_r(NULL, "&", &strtokState);
     }
   }
+
   initWriteArray(lang);
 
   for(idx=1; idx<device[actualDeviceId].actualHashSize; idx++) {
@@ -970,7 +972,7 @@ void dumpNtopTrafficInfo(char* options) {
     num++;
   }
 
-  endWriteKey(lang,"",' ');
+  if(num > 0) endWriteKey(lang,"",' ');
   endWriteArray(lang);
 
   if(filterPattern.fastmap)
