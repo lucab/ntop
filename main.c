@@ -308,13 +308,12 @@ static void loadPrefs(int argc, char* argv []) {
   datum key, nextkey;
   char buf[1024];
   int opt_index, opt;
-#ifdef WIN32
-  int optind=0;
-#else
+#ifndef WIN32
   bool userSpecified = FALSE;
 #endif
   
   traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
+  opt_index = 0, optind = 0;
   while ((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "DEBUG:DEBUG:  Entering loadPrefs()");
@@ -398,13 +397,9 @@ static int parseOptions(int argc, char* argv []) {
   int setAdminPw = 0, opt, userSpecified = 0;
   int opt_index;
   char *adminPw = NULL;
-#ifdef WIN32
-  int optind;
-#endif
 
   /* * * * * * * * * * */
 
-  optind = 0; /* required to reparse command line after loadPrefs() */
   for(opt_index=0; opt_index<argc; opt_index++)
     traceEvent(CONST_TRACE_NOISY, "PARAM_DEBUG: argv[%d]: %s", opt_index, argv[opt_index]);
 
@@ -412,6 +407,7 @@ static int parseOptions(int argc, char* argv []) {
    * Parse command line options to the application via standard system calls
    */
   traceEvent(CONST_TRACE_NOISY, "NOTE: Calling getopt_long to process parameters");
+  opt_index = 0, optind = 0;
   while((opt = getopt_long(argc, argv, short_options, long_options, &opt_index)) != EOF) {
 #ifdef PARAM_DEBUG
     traceEvent(CONST_TRACE_INFO, "PARAM_DEBUG: getopt(%d/%c/%s)", opt, opt, optarg);
