@@ -115,7 +115,6 @@ LIBTOOL = @LIBTOOL@
 LIBTOOL_DEPS = @LIBTOOL_DEPS@
 LN_S = @LN_S@
 NM = @NM@
-NTCSH = @NTCSH@
 NTOP_VERSION_EXTRA = @NTOP_VERSION_EXTRA@
 OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
@@ -274,7 +273,7 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = myrrd/Makefile ntcsh/Makefile
+CONFIG_CLEAN_FILES = myrrd/Makefile
 LTLIBRARIES = $(lib_LTLIBRARIES)
 
 am_libntop_la_OBJECTS = address.lo argv.lo dataFormat.lo getopt.lo \
@@ -400,8 +399,6 @@ $(srcdir)/config.h.in:  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 distclean-hdr:
 	-rm -f config.h stamp-h1
 myrrd/Makefile: $(top_builddir)/config.status $(top_srcdir)/myrrd/Makefile.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-ntcsh/Makefile: $(top_builddir)/config.status $(top_srcdir)/ntcsh/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 libLTLIBRARIES_INSTALL = $(INSTALL)
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
@@ -899,7 +896,7 @@ distcleancheck_listfiles = find . -type f -print
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkinstalldirs) $(distdir)/myrrd $(distdir)/ntcsh
+	$(mkinstalldirs) $(distdir)/myrrd
 	@list='$(DISTFILES)'; for file in $$list; do \
 	  if test -f $$file || test -d $$file; then d=.; else d=$(srcdir); fi; \
 	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
