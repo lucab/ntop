@@ -15,7 +15,323 @@
 
 
   This is the list of all changes to this ntop source tree.
-  The file NEWS contains a list of user-visible and/or major changes.
+  The file NEWS contains a chronology of releases and major milestone versions.
+
+          ____    __
+         |___ \  / |
+           __) | | |
+          / __/_ | |
+ =-=-=-  |____(_)|_|   =-=-=-=-=-=-=-=-=-=-=-=-=
+
+     (With the caveat that this is based almost exclusively on 
+      my manual reading of the source diffs, here is what's changed 
+      in ntop between 2.0 and 2.1...
+
+      The dividing line between major and minor is arbitrary and my 
+      own choices.
+
+      The order is arbitrary
+
+      -----Burton)
+
+      Major items
+      
+       1. zlib updated to v1.1.4
+
+       2. libpng update to v1.2.1
+
+       3. intop is largely unsupported.  It compiles, but was not tested in v2.1.
+
+       4. rmonPlugin moved to /obsolete directory (i.e. no longer supported)
+
+       5. wapPlugin moved to /obsolete directory (i.e. no longer supported)
+
+       6. sflowPlugin added
+
+       7. netflowPlugin added
+
+       8. pdaPlugin added
+
+       9. myGlobals - a huge # of global items were moved into a single 
+          myGlobals.xxxx structure (New header file is globals.h, removed 
+          from ntop.h, globals-core.h and globals-report.h) (See 
+          initNtopGlobals() in globals-core.c for much of the initialization).
+
+      10. Generated charts are returned via the http:// stream instead of 
+          returning the name of a temporary file.
+
+      11. The erroneous message "Buffer overflow!" has been replaced by a 
+          BufferTooShort() macro, which gives an appropriate message.
+
+      12. Rules removed - ntop-rules.8, event.c, rules.c, rules.h and rules.sample 
+          moved to /obsolete
+
+      12a. An /obsolete directory was added for code no longer supported or
+          even minimally maintained, but perhaps of historical interest.
+
+      13. Documentation (ntop.8, ntop.txt and ntop.html) updated to reflect 
+          command line parameter changes.
+
+      14. Long options (e.g. --trace-level) added, along with ./configure tests
+          for getopt_long.  Most parallel existing short options, but a few are 
+          unique to long options or (--use-syslog= and --set-admin-password=) 
+          are different from their corresponding short options.
+
+      15. Code and ./configure test added to correctly handle endianness 
+          (NTOP_BIG_ENDIAN and/or NTOP_LITTLE_ENDIAN parameters).
+
+      16. ntop can now return http:// responses using zlib compression 
+          (HAVE_ZLIB). Test for -lz (specifically gzopen) added to ./configure.
+
+      17. (except for WIN32) ntop now prompts the user to set the admin password 
+          on the 1st run, vs. having a fixed (known) value.
+
+      18. XML output added to dump reports (emitter.c).
+
+      19. A huge number of Segmentation Fault problems were removed by a total 
+          rewrite of the hashing routines, including elimination of the shrinkage
+          capability.  Ntop's pattern of expansion of the hash table was modified 
+          to better reflect real-world usage (see note on textinfo.html page).  
+          Includes things like eliminating notifyPluginsHashResize().
+
+      20. URLsecurity updated to handle the RFC1945 set of invalid characters.
+      
+      21. -j (also --border-sniffer-mode) ****
+               -j is used when you are starting ntop on a mirrored 
+               interface where you cannot trust MAC addresses. 
+
+               Note that:
+
+               1. -j usually requires you to specify the local network 
+                  (-m) as a mirrored interface might have a 
+                  wrong/ip-less/private IP address.
+
+               2. -j disables some features as TCP session tracking etc.
+          
+             In future versions -j will disappear and it will be replaced
+             with more granlar flags for better controlling all these options.
+      
+      22. -A (accuracy level) switch removed.  Code remains in initialize.c 
+          in initGlobalValues() if somebody needs to manually enable this.
+
+      23. ntop will not let itself implicitly run as root.  To run as root, 
+          with all the risks that entails, you must explicitly give the 
+          -u root command line parameter.
+
+      24. netflow.c (the code that creates and sends netflow packets from 
+          ntop to another collector) was re-written to support multiple 
+          flows per packet.
+
+      25. A change to the logic allows the protocol file (-p option) to span multiple 
+          lines and ignore comments (anything after a #) in it.
+
+      26. (MinGW) ntop now runs as a Windows service.  ntop /i installs it, ntop /r 
+          deletes it, ntop /c runs immediately.  
+
+          For /i and /c, follow them with a normal ntop parameter set, e.g. -i1 -w 3000...
+
+      27. Reporting logic was reworked to fix up a bunch of sorting errors.
+
+      28. "Service/Port Usage" and "Recently Used Ports" added to host report.
+
+      29. syslog(..) call fix - corrected a security issue discussed on BugTraq.
+
+      30. Improved ntop's calls to cgi routines.
+
+      31. Fixed http:// and https:// handlers so that -w ip:port and -W ip:port bind 
+          only to the selected address.
+      
+      
+      
+      Minor items
+      
+       1. gdchart0.94c - buildAll.sh updated to build the subordinate products for Sun 
+          and Mac OS X.
+
+       2. Definition of mySQL/postgres table IPtraffic (in database\mySQLdefs.txt and 
+          database\pg_SQLdefs.txt) updated to match code.
+
+       3. docs\ files added:  BUG_REPORT and 1STRUN.txt
+
+       4. html files updated to be both W3C HTML4.01 compliant 
+
+          (most of them, for those that aren't a w3c alternate file is provided) 
+
+          and to support both older browsers and style sheets. Makes for messy html, but
+          it does pass the standards check at w3c.org!
+
+       5. Temporary file names for charts are now randomly named 
+          (except under WIN32 which uses the socket #)
+
+       6. make ntop.html updated so it works and creates BOTH copies, ntop.html 
+          and html/ntop.html.
+
+       7. make install-data-local updated to add $(DESTDIR) for rpm creation.
+
+       8. www/Perl/mapper.pl updated for new URL and query format.
+
+       9. Bytes Sent & Bytes Rcvd added to icmp Plugin report.
+
+      10. Logging of suspicious packets in logger.db (not the storing of packets 
+          themselves, but the message: "Detected overlapping packet fragment [xx->xx]: 
+                                        fragment id=#, actual offset=#, previous offset=#"
+          was removed, logger.c moved to /obsolete.
+
+      11. vendortable.h updated to an early June 2002 IEEE file.
+
+      12. If available (gcc only), and if the -K command line is set, ntop will automatically 
+          generate a backtrace (stack trace) upon a segnetation fault.
+
+      13. IBM AIX configuration (enable_shared=no, enable_static=yes) removed.  
+          AM_ENABLE_SHARED made default for all configurations.
+
+      14. Option descriptions for ./configure --help make clearer.
+
+      15. Test for gethostbyaddr_r added to ./configure and code which uses the right 
+          version is in address.c.
+
+      16. pep Plugin is not compiled by default.  Requires change to configure.am to 
+          re-enable.
+
+      17. ltmain.sh updated for Darwin (MAC OS X).
+
+      18. Session specific code moved out of pbuf.c (and other places) into new file, 
+          sessions.c.
+
+      19. Threading problem resolved in address.c, resolveAddress() function.
+
+      20. cleanupHostEntries() thread now sleeps until specified interval elapses 
+          (caused 100% cpu usage problem).
+
+      21. Napster specific coding removed.
+
+      22. --throughput-bar-chart option added to allow for BAR vs. AREA charts.
+
+      23. Packet TTL pie chart (pktTTLDistribPie()) added to Global Traffic Statistics
+          report.
+
+      24. info.html improved and textinfo.html (suitable for bug reports) added.
+
+      25. getHostInfo() moved from pbuf.c to hash.c
+
+      26. ntop generates titles, ALT tags on images, etc. on the html pages.
+
+      27. favicon.ico added.
+
+      28. hostsDistanceChart added to Global Traffic Statistics (based on ttl).
+      
+      29. hostTrafficDistrib, hostFragmentDistrib, hostTotalFragmentDistrib and 
+          hostIPTrafficDistrib charts added.
+      
+      30. dumpFlows.html added.
+      
+      31. Ring buffer (size MAX_NUM_BAD_IP_ADDRESSES) added of addresses which 
+          have sent us bad requests (URLsecurity).
+
+          Any request from that IP is ignored for five minutes or until the ring
+          buffer wraps around.
+  
+          Note that this is NOT a security issue, we're just choosing to stop
+          wasting processing cycles for bad guys early in the process instead
+          of after finding another bad URL.  That is a string of bad ones won't
+          get anything MORE out of ntop - either a 404 or no response, depending
+          on the ring buffer.  Don't like it?  There is a #define constant to
+          turn it off.
+
+      32. HTS - Host Traffic Statistics thread removed.
+
+      33. TU - Throughput Update (optional) thread removed.
+
+      34. SIH - Scan Idle Hosts (optional) 2nd thread (scanIdleSessionsLoop) removed.
+
+      35. DNSAR - DNS Address Resolution (optional) thread permits multiple instances 
+          (MAX_NUM_DEQUEUE_THREADS). ntop ships with this set to 1 and larger values 
+          may not have been well tested.
+
+      36. ntop always creates at least one device (a dummy) so that it won't crash 
+          if there are no interfaces.  This is most common when using sFlow/netFlow 
+          without local monitoring.
+
+      37. myGlobals.pcapLogBasePath (DBFILE_DIR) added to (optional) pcaplog and 
+          ntop-suspicious-pkts output file names.
+
+      38. Default protocol list (if no -p option) changed to:
+
+            FTP:        ftp|ftp-data|
+            HTTP:       http|www|https|3128|
+            DNS:        name|domain|
+            Telnet:     telnet|login|
+            NBios-IP:   netbios-ns|netbios-dgm|netbios-ssn|
+            Mail:       pop-2|pop-3|pop3|kpop|smtp|imap|imap2|
+            DHCP/BOOTP: 67-68|
+            SNMP:       snmp|snmp-trap|
+            NNTP:       nntp|
+            NFS:        mount|pcnfs|bwnfs|nfsd|nfsd-status|
+            X11:        6000-6010|
+            SSH:        22|
+            Gnutella:   6346|6347|6348|
+            Morpheus:   1214|
+            WinMX:      6699|7730|
+            Audiogalaxy: 41000-41900|
+
+      39. scanTimedoutTCPSessions() moved from pbuf.c to sessions.c.
+
+      40. updateOSName() moved from pbuf.c to util.c
+
+      41. Improvements in handling bootp/dhcp packets.
+
+      42. DNS sniffing igores .arpa responses.
+
+      43. A number of longer reports are now paged with prev/next first/last buttons.
+
+      44. "Local Subnet Routers" are reported only if we're trusting the MAC 
+          address (i.e. not border sniffer mode).
+
+      45. Debug logic, printSession(), printSessions() and printTCPSessions() removed.
+
+      46. A "Remote Traffic" section was added to the "IP Protocol Distribution" report.
+          If ntop is sitting on a backbone or wan link with lots of traffic remote to 
+          remote, this can be interesting.  For most users it's useless. (I'm allowed to
+          dis it, it's my own code -----Burton)
+
+      47. A lot of minor name cleanup for consistency (i.e. Rcvd everywhere instead of 
+          some being Received).
+
+      48. ICMP statistics ("ICMP Traffic") added to "Info about host" report.
+
+      49. Whois link to http://www.radb.net/cgi-bin/radb/whois.cgi added to "Info about 
+          host" report.
+      
+      50. Host Traffic History added.
+      
+      51. If SSL is compiled in, but there is no -W command line parameter, an 
+          informational message is printed during startup.
+
+      52. Peak throughput calculation - fixed a one period lag, vs. average.
+
+      53. Added error messages for allocation and mutexes - to make future 
+          troubleshooting easier.
+
+      54. Fix trace level handler so values other than 3 work.
+
+      55. updateOSName(), _incrementUsageCounter(),  moved from pbuf.c to util.c. 
+
+      56. Added routines to store plugin settings/preferences in a database 
+          between runS.
+
+      57. Fixed up ntop "sleep" routine to handle interrupts.
+
+      58. Added note to "Switch NIC" to explain: Note that the netFlow and 
+          sFlow plugins - if enabled - force -M to be set (i.e. they disable 
+          interface merging).
+
+      59. Moved usage() from webInterface.c to main.c
+
+      60. Hash table extend sizing now parameterized AND explained in ntop.h
+
+      61. --no-admin-password-hint option was removed in favor of NO predictable
+          default and with the -A option to make it cleaner to set the default.
+
 
           ____    ___
   POST   |___ \  / _ \
