@@ -351,7 +351,8 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
   int argc = 0, rc, x, y;
 
   sprintf(path, "%s/%s%s.rrd", myGlobals.rrdPath, rrdPath, rrdName);
-  sprintf(fname, "%s/%s/%s%s.%s", myGlobals.rrdPath, rrd_subdirs[0], rrdPrefix, rrdName,
+  /* startTime[4] skips the 'now-' */
+  sprintf(fname, "%s/%s/%s-%s%s.%s", myGlobals.rrdPath, rrd_subdirs[0], &startTime[4], rrdPrefix, rrdName,
 #ifdef WIN32
                        "gif"
 #else
