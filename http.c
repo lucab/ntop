@@ -647,6 +647,11 @@ void printHTMLheader(char *title, char *htmlTitle, int headerFlags) {
   sendString("		[null,'VLAN Info','/vlanList.html',null,null],\n");
   sendString("		[null,'Network Flows','/NetFlows.html',null,null],\n");
   sendString("		],\n");
+  sendString("  [null,'All Protocols',null,null,null,\n");
+  sendString("          [null,'Traffic','/sortDataProtos.html',null,null],\n");
+  sendString("          [null,'Throughput','/sortDataThpt.html',null,null],\n");
+  sendString("          [null,'Activity','/dataHostTraffic.html',null,null],\n");
+  sendString("          ],\n");
   sendString("	[null,'IP',null,null,null,\n");
   sendString("		[null,'Summary',null,null,null,\n");
   sendString("				[null,'Traffic','/sortDataIP.html',null,null],\n");
