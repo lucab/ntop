@@ -5726,9 +5726,8 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
   /* Only update if this is a MORE important type */
   if(updateType > el->hostResolvedNameType) {
 
-#ifndef CMPFCTN_DEBUG
+#ifdef CMPFCTN_DEBUG
     if(myGlobals.debugMode == 1)
-#endif
       traceEvent(CONST_TRACE_INFO,
                  "CMPFCTN_DEBUG: setResolvedName(0x%08x) %d %s -> %d %s - %s(%d)", 
                  el,
@@ -5737,6 +5736,7 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
                  updateType,
                  updateValue,
                  file, line);
+#endif
 
     strncpy(el->hostResolvedName, updateValue, MAX_LEN_SYM_HOST_NAME-1);
     // el->hostResolvedName[MAX_LEN_SYM_HOST_NAME-1] = '\0';

@@ -150,7 +150,16 @@ char* formatSeconds(unsigned long sec, char* outStr, int outStrLen) {
   if(min > 0) sec -= min*60;
 
   if(days > 0) {
-    if(snprintf(outStr, outStrLen, "%u day%s %u:%02u:%02lu", days, (days>1)?"s":"", hour, min, sec) < 0) 
+    char yearStr[32];
+
+    if(days > 365) {
+      snprintf(yearStr, sizeof(yearStr), "%d years, ", days/365);
+      days %= 365;
+    } else
+      yearStr[0] = '\0';
+
+    if(snprintf(outStr, outStrLen, "%s%u day%s %u:%02u:%02lu", 
+		yearStr, days, (days>1)?"s":"", hour, min, sec) < 0) 
      BufferTooShort();
   } else if(hour > 0) {
     if(snprintf(outStr, outStrLen, "%u:%02u:%02lu", hour, min, sec)  < 0) 

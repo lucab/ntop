@@ -1015,6 +1015,18 @@ static void processIpPkt(const u_char *bp,
   }
 #endif
 
+  /* ****************** */
+  {
+    struct pcap_pkthdr h;
+    struct tcphdr tp;
+
+    h.ts.tv_sec = myGlobals.actTime, h.ts.tv_usec = 0;
+    tp.th_sport = htons(sport), tp.th_dport = htons(dport);
+    tp.th_flags = TH_ACK|TH_PUSH;
+    handleTCPSession(&h, 0, 0, srcHost, sport, dstHost, dport, 64899, &tp, 0, NULL, actualDeviceId);
+  }
+
+
 #ifdef INET6
   if(ip6) {
     updateDevicePacketTTLStats(ip6->ip6_hlim, actualDeviceId);

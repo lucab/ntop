@@ -583,7 +583,9 @@ static void ignoreFlow(u_short* theNextFlowIgnored, u_int srcAddr, u_short sport
 
 /* ****************************** */
 
-static int handleV5Flow(struct flow_ver5_rec *record)  {
+static int handleV5Flow(time_t recordActTime, 
+			time_t recordSysUpTime,
+			struct flow_ver5_rec *record) {
   int actualDeviceId;
   Counter len;
   char theFlags[256];
@@ -595,6 +597,10 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
   u_short sport, dport, proto;
   TrafficCounter ctr;
   int skipSRC=0, skipDST=0;
+  struct pcap_pkthdr h;
+  struct tcphdr tp;
+  IPSession *session = NULL;
+  time_t firstSeen, lastSeen;
 
   myGlobals.numNetFlowsRcvd++;
 
@@ -616,6 +622,13 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
     myGlobals.numBadFlowReality++;
     return(0);
   }
+  
+  firstSeen = ntohl(record->First);
+  lastSeen  = ntohl(record->Last);
+
+  /* Sanity check */
+  if(firstSeen > lastSeen)
+    firstSeen = lastSeen;
 
   myGlobals.numNetFlowsProcessed++;
 
@@ -775,7 +788,10 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
 
   if((srcHost == NULL) ||(dstHost == NULL)) return(0);
 
-  srcHost->lastSeen = dstHost->lastSeen = myGlobals.actTime;
+  recordActTime   = ntohl(recordActTime);
+  recordSysUpTime = ntohl(recordSysUpTime);
+
+  srcHost->lastSeen = dstHost->lastSeen = recordActTime;
   /* Commented out ... already done in updatePacketCount()                         */
   /* srcHost->pktSent.value     += numPkts, dstHost->pktRcvd.value     += numPkts; */
   /* srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;     */
@@ -895,6 +911,8 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
     }
   }
 
+  h.ts.tv_sec = recordActTime, h.ts.tv_usec = 0;
+
   switch(proto) {
   case 1: /* ICMP */
     myGlobals.device[actualDeviceId].icmpBytes.value += len;
@@ -929,6 +947,10 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].tcpGlobalTrafficStats.remote, len);
       }
     }
+
+    tp.th_sport = htons(sport), tp.th_dport = htons(dport);
+    tp.th_flags = record->tcp_flags;
+    session = handleTCPSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, &tp, 0, NULL, actualDeviceId);
     break;
 
   case 17: /* UDP */
@@ -958,9 +980,27 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
 	incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpGlobalTrafficStats.remote, len);
       }
     }
+    
+    session = handleTCPSession(&h, 0, 0, srcHost, sport, dstHost, dport, len, NULL, 0, NULL, actualDeviceId);
     break;
   }
 
+  if(session) {
+    time_t timeDiff = recordActTime - (lastSeen - firstSeen);
+    
+#ifdef DEBUG
+    traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [diff=%d][recordActTime=%d][last-first=%d]",
+	       srcHost->hostNumIpAddress, sport,
+	       dstHost->hostNumIpAddress, dport,
+	       timeDiff, recordActTime, (lastSeen - firstSeen));
+#endif
+    
+    if(session->firstSeen > timeDiff)
+      session->firstSeen = timeDiff;
+    
+    session->lastSeen = recordActTime;
+  }
+  
 #ifdef CFG_MULTITHREADED
   /* releaseMutex(&myGlobals.hostsHashMutex); */
 #endif
@@ -973,6 +1013,7 @@ static int handleV5Flow(struct flow_ver5_rec *record)  {
 static void dissectFlow(char *buffer, int bufferLen) {
   NetFlow5Record the5Record;
   int flowVersion;
+  time_t recordActTime = 0, recordSysUpTime = 0;
 
 #ifdef DEBUG
   char buf[LEN_SMALL_WORK_BUFFER], buf1[LEN_SMALL_WORK_BUFFER];
@@ -1001,11 +1042,15 @@ static void dissectFlow(char *buffer, int bufferLen) {
       numFlows = ntohs(the1Record.flowHeader.count);
       if(numFlows > CONST_V1FLOWS_PER_PAK) numFlows = CONST_V1FLOWS_PER_PAK;
       myGlobals.numNetFlowsV1Rcvd += numFlows;
+      recordActTime   = the1Record.flowHeader.unix_secs;
+      recordSysUpTime = the1Record.flowHeader.sysUptime;
     } else {
       memcpy(&the7Record, buffer, bufferLen > sizeof(the7Record) ? sizeof(the7Record): bufferLen);
       numFlows = ntohs(the7Record.flowHeader.count);
       if(numFlows > CONST_V7FLOWS_PER_PAK) numFlows = CONST_V7FLOWS_PER_PAK;
       myGlobals.numNetFlowsV7Rcvd += numFlows;
+      recordActTime   = the7Record.flowHeader.unix_secs;
+      recordSysUpTime = the7Record.flowHeader.sysUptime;
     }
 
 #ifdef DEBUG_FLOWS
@@ -1014,6 +1059,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
     the5Record.flowHeader.version = htons(5);
     the5Record.flowHeader.count = htons(numFlows);
+
     /* rest of flowHeader will not be used */
 
     for(j=i=0; i<numFlows; i++) {
@@ -1074,6 +1120,9 @@ static void dissectFlow(char *buffer, int bufferLen) {
     u_short numEntries = ntohs(the5Record.flowHeader.count), displ = sizeof(V9FlowHeader);
     V9Template template;
     int i;
+
+    recordActTime = the5Record.flowHeader.unix_secs;
+    recordSysUpTime = the5Record.flowHeader.sysUptime;
 
     for(i=0; (!done) && (displ < bufferLen) && (i < numEntries); i++) {
       /* 1st byte */
@@ -1261,7 +1310,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 		  break;
 		}
 	      }
-	      handleV5Flow(&record);
+	      handleV5Flow(recordActTime, recordSysUpTime, &record);
 	    }
 	  } else {
 #ifdef DEBUG_FLOWS
@@ -1275,6 +1324,9 @@ static void dissectFlow(char *buffer, int bufferLen) {
   } else if(the5Record.flowHeader.version == htons(5)) {
     int i, numFlows = ntohs(the5Record.flowHeader.count);
 
+    recordActTime   = the5Record.flowHeader.unix_secs;
+    recordSysUpTime = the5Record.flowHeader.sysUptime;
+
     if(numFlows > CONST_V5FLOWS_PER_PAK) numFlows = CONST_V5FLOWS_PER_PAK;
 
 #ifdef DEBUG_FLOWS
@@ -1287,7 +1339,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
 #endif
 
     for(i=0; i<numFlows; i++)
-      handleV5Flow(&the5Record.flowRecord[i]);
+      handleV5Flow(recordActTime, recordSysUpTime, &the5Record.flowRecord[i]);
 
     if(flowVersion == 5) /* Skip converted V1/V7 flows */
       myGlobals.numNetFlowsV5Rcvd += numFlows;
@@ -1412,7 +1464,8 @@ static void dissectFlow(char *buffer, int bufferLen) {
 	    numRecords++;
 	  }
 
-	  for(i=0; i<numRecords; i++) handleV5Flow(&the5Record.flowRecord[i]);
+	  for(i=0; i<numRecords; i++) 
+	    handleV5Flow(recordActTime, recordSysUpTime, &the5Record.flowRecord[i]);
 	  myGlobals.numNflowFlowsRcvd++;
 	}
       } else {

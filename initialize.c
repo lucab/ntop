@@ -1918,5 +1918,11 @@ u_int createDummyInterface(char *ifName) {
   }
 #endif 
 
+  if(myGlobals.enableSessionHandling) {
+    int len = sizeof(IPSession*)*MAX_TOT_NUM_SESSIONS;
+    myGlobals.device[deviceId].tcpSession = (IPSession**)malloc(len);
+    memset(myGlobals.device[deviceId].tcpSession, 0, len);
+  }
+
   return(deviceId);
 }

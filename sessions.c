@@ -584,7 +584,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   u_char *rcStr, tmpStr[256];
   int len = 0;
 
-  if(!myGlobals.enableSessionHandling)
+  if((!myGlobals.enableSessionHandling) || (myGlobals.device[actualDeviceId].tcpSession == NULL))
     return(NULL);
 
   if((srcHost == NULL) || (dstHost == NULL)) {
@@ -621,9 +621,20 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
   {
     char buf[32], buf1[32];
 
-    traceEvent(CONST_TRACE_INFO, "DEBUG: %s:%d -> %s:%d [idx=%d]",
+    traceEvent(CONST_TRACE_INFO, "DEBUG: [%s] %s:%d -> %s:%d [idx=%d]",
+	       sessionType == IPPROTO_UDP ? "UDP" : "TCP",
 	       _addrtostr(&srcHost->hostIpAddress, buf, sizeof(buf)), sport,
 	       _addrtostr(&dstHost->hostIpAddress, buf1, sizeof(buf1)), dport, idx);
+
+    if(tp) {
+      printf("DEBUG: [%d]", tp->th_flags);
+      if(tp->th_flags & TH_ACK) printf("ACK ");
+      if(tp->th_flags & TH_SYN) printf("SYN ");
+      if(tp->th_flags & TH_FIN) printf("FIN ");
+      if(tp->th_flags & TH_RST) printf("RST ");
+      if(tp->th_flags & TH_PUSH) printf("PUSH");
+      printf("\n");
+    }
   }
 #endif
 
@@ -1071,8 +1082,9 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	    /* printf("==>\n\n%s\n\n", rcStr); */
 	  }
 	  free(rcStr);
-	} else if((theSession->bytesProtoSent.value > 0)
-		  || (theSession->bytesProtoSent.value < 32)) {
+	} else if(((theSession->bytesProtoSent.value > 0)
+		  || (theSession->bytesProtoSent.value < 32))
+		  && (packetDataLength > 0)) {
 	  char *strtokState, *row;
 
 	  rcStr = (char*)malloc(packetDataLength+1);
@@ -1084,7 +1096,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 
 	    while(row != NULL) {
 	      char *str = "X-KazaaTag: 4=";
-
 
 	      if(strncmp(row, str, strlen(str)) == 0) {
 		char *file = &row[strlen(str)];
@@ -1563,13 +1574,6 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
       theSession->maxWindow = tcpWin;
 
 #ifdef DEBUG
-    printf("DEBUG: [%d]", tp->th_flags);
-    if(tp->th_flags & TH_ACK) printf("ACK ");
-    if(tp->th_flags & TH_SYN) printf("SYN ");
-    if(tp->th_flags & TH_FIN) printf("FIN ");
-    if(tp->th_flags & TH_RST) printf("RST ");
-    if(tp->th_flags & TH_PUSH) printf("PUSH");
-    printf("\n");
     printf("DEBUG: sessionsState=%d\n", theSession->sessionState);
 #endif
 
