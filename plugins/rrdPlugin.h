@@ -292,9 +292,10 @@ static const char *rrd_summary_packet_sizes[] = {
 };
 
 static const char *rrd_summary_local_remote_ip_bytes[] = {
-  "ipLocalBytes",
+  "ipLocalToLocalBytes",
   "ipLocalToRemoteBytes",
   "ipRemoteToLocalBytes",
+  "ipRemoteToRemoteBytes",
   NULL
 };
 
