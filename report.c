@@ -787,7 +787,7 @@ void printTrafficStatistics(int revertOrder) {
 		"<TD "TD_BG" align=right COLSPAN=2>%s [%s Pkts]</td></TR>\n",
 		getRowColor(),
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value, 1, formatBuf, sizeof(formatBuf)),
-		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf, sizeof(formatBuf))) < 0)
+		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf1, sizeof(formatBuf1))) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -2295,7 +2295,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
     vlanId = vsanId = atoi(&tok[1]);
     *tok = '\0';
   }
-  
+
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
     if(((strcmp(el->hostNumIpAddress, host) == 0) || (strcmp(el->ethAddressString, host) == 0))
@@ -2346,6 +2346,7 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
       printHostUsedServices(el, actualDeviceId);
   }
   else if (foundFcHost) {
+      
       printFcHostHeader (el, url, revertOrder, sortedColumn, hostInfoPage);
       switch (hostInfoPage) {
       case showHostMainPage:
@@ -5070,6 +5071,8 @@ void printFcHostsTraffic(int reportType,
       case SORT_FC_ACTIVITY:
         if(snprintf(buf, sizeof(buf), "FibreChannel Activity") < 0)
           BufferTooShort();
+        myGlobals.reportKind = SORT_DATA_HOST_TRAFFIC;
+        showLocalityMode = 0;
         break;
       case SORT_FC_DATA:
         if(snprintf(buf, sizeof(buf), "FibreChannel Traffic: ") < 0)
@@ -5089,12 +5092,18 @@ void printFcHostsTraffic(int reportType,
       switch(showLocalityMode) {
         case showSentReceived:
           strncat(buf, "Data Sent+Received", sizeof(buf) - strlen(buf) - 1);
+          myGlobals.reportKind = (reportType == SORT_FC_DATA) ?
+              SORT_DATA_PROTOS : SORT_DATA_THPT;
           break;
         case showOnlySent:
           strncat(buf, "Data Sent", sizeof(buf) - strlen(buf) - 1);
+          myGlobals.reportKind = (reportType == SORT_FC_DATA) ?
+              SORT_DATA_SENT_PROTOS : SORT_DATA_SENT_THPT;
           break;
         case showOnlyReceived:
           strncat(buf, "Data Received", sizeof(buf) - strlen(buf) - 1);
+          myGlobals.reportKind = (reportType == SORT_FC_DATA) ?
+              SORT_DATA_RECEIVED_PROTOS : SORT_DATA_RECEIVED_THPT;
           break;
       }
     }
@@ -5175,9 +5184,6 @@ void printFcHostsTraffic(int reportType,
     traceEvent(CONST_TRACE_INFO, "FC_DEBUG: reportType=%d/sortedColumn=%d/myGlobals.columnSort=%d",
 	       reportType, sortedColumn, myGlobals.columnSort);
 #endif
-
-    myGlobals.reportKind = reportType;
-    /* if(myGlobals.columnSort == 0) myGlobals.reportKind = 0;*/
 
     qsort(tmpTable, numEntries, sizeof(HostTraffic*), cmpFcFctn);
 
@@ -5373,7 +5379,7 @@ void printFcHostsTraffic(int reportType,
                         webHostName) < 0)
               BufferTooShort();
             sendString(buf);
-            printHostThtpShort(el, reportType, hourId);
+            printHostThtpShort(el, myGlobals.reportKind, hourId);
             buf[0]='\0';
             break;
         }
