@@ -4315,6 +4315,30 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int p
     if(numEntries >= maxHosts) break;
   } /* for(;;) */
 
+#ifndef EMBEDDED
+  /* RRDs for domains */
+  if (domainName != NULL) {
+    struct stat statbufDomain;
+
+    /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
+    snprintf(buf, sizeof(buf), "%s/interfaces/%s/domains/%s", 
+	   myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
+	   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,domainName);
+  
+    if((i = stat(buf, &statbufDomain)) == 0) {
+      if(snprintf(buf, sizeof(buf), 
+                "<center>Show domain-wide traffic charts&nbsp;"
+		"[ <a href=\"/" CONST_PLUGINS_HEADER "rrdPlugin?action=list&key=interfaces/%s/domains/%s&title=Domain%%20%s\">"
+		"<img border=\"0\" src=\"/graph.gif\" alt=\"Domain wide rrd statistics\"></a> ]"
+                "</center>\n<br>\n",
+		myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
+		domainName,domainName) < 0)
+        BufferTooShort();
+      sendString(buf);
+    }
+  }
+#endif
+
   if(numEntries == 0) {
     printNoDataYet();
     free(tmpStats); free(stats);

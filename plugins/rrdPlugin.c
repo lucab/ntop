@@ -78,7 +78,7 @@ static time_t start_tm, end_tm, rrdTime;
 pthread_t rrdThread;
 #endif
 
-static u_short dumpFlows, dumpHosts, dumpInterfaces, dumpMatrix, shownCreate=0;
+static u_short dumpDomains, dumpFlows, dumpHosts, dumpInterfaces, dumpMatrix, shownCreate=0;
 #ifndef WIN32
 static u_short dumpPermissions;
 #endif
@@ -905,6 +905,13 @@ static void commonRRDinit(void) {
     dumpMonths = atoi(value);
   }
 
+  if(fetchPrefsValue("rrd.dataDumpDomains", value, sizeof(value)) == -1) {
+    storePrefsValue("rrd.dataDumpDomains", "0");
+    dumpDomains = 0;
+  } else {
+    dumpDomains = atoi(value);
+  }
+
   if(fetchPrefsValue("rrd.dataDumpFlows", value, sizeof(value)) == -1) {
     storePrefsValue("rrd.dataDumpFlows", "0");
     dumpFlows = 0;
@@ -986,6 +993,7 @@ static void commonRRDinit(void) {
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHours %d hours by %d seconds", dumpHours, dumpInterval);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDays %d days by hour", dumpDays);
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpMonths %d months by day", dumpMonths);
+  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpDomains %s", dumpDomains == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpFlows %s", dumpFlows == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpHosts %s", dumpHosts == 0 ? "no" : "yes");
   traceEvent(CONST_TRACE_INFO, "RRD_DEBUG:     dumpInterfaces %s", dumpInterfaces == 0 ? "no" : "yes");
@@ -1010,7 +1018,7 @@ static void handleRRDHTTPrequest(char* url) {
   char buf[1024], *strtokState, *mainState, *urlPiece,
     rrdKey[64], rrdName[64], rrdTitle[64], startTime[32], endTime[32], rrdPrefix[32];
   u_char action = FLAG_RRD_ACTION_NONE;
-  int _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpMatrix, _dumpDetail, _dumpInterval, _dumpHours, _dumpDays, _dumpMonths;
+  int _dumpDomains, _dumpFlows, _dumpHosts, _dumpInterfaces, _dumpMatrix, _dumpDetail, _dumpInterval, _dumpHours, _dumpDays, _dumpMonths;
   char * _hostsFilter;
 #ifndef WIN32
   int _dumpPermissions;
@@ -1020,6 +1028,7 @@ static void handleRRDHTTPrequest(char* url) {
     commonRRDinit();
 
   /* Initial values - remember, for checkboxes these need to be OFF (there's no html UNCHECKED option) */
+  _dumpDomains=0;
   _dumpFlows=0;
   _dumpHosts=0;
   _dumpInterfaces=0;
@@ -1122,6 +1131,8 @@ static void handleRRDHTTPrequest(char* url) {
 	  myGlobals.rrdPath  = (char*)malloc(vlen);
 	  unescape(myGlobals.rrdPath, vlen, value);
 	  storePrefsValue("rrd.rrdPath", myGlobals.rrdPath);
+	} else if(strcmp(key, "dumpDomains") == 0) {
+	  _dumpDomains = 1;
 	} else if(strcmp(key, "dumpFlows") == 0) {
 	  _dumpFlows = 1;
 	} else if(strcmp(key, "dumpDetail") == 0) {
@@ -1155,6 +1166,7 @@ static void handleRRDHTTPrequest(char* url) {
       dumpDays = _dumpDays;
       dumpMonths = _dumpMonths;
       /* traceEvent(CONST_TRACE_INFO, "RRD: dumpFlows=%d", dumpFlows); */
+      dumpDomains=_dumpDomains;
       dumpFlows=_dumpFlows;
       dumpHosts=_dumpHosts;
       dumpInterfaces=_dumpInterfaces;
@@ -1168,6 +1180,7 @@ static void handleRRDHTTPrequest(char* url) {
       snprintf(buf, sizeof(buf), "%d", dumpHours);      storePrefsValue("rrd.dataDumpHours", buf);
       snprintf(buf, sizeof(buf), "%d", dumpDays);       storePrefsValue("rrd.dataDumpDays", buf);
       snprintf(buf, sizeof(buf), "%d", dumpMonths);     storePrefsValue("rrd.dataDumpMonths", buf);
+      snprintf(buf, sizeof(buf), "%d", dumpDomains);    storePrefsValue("rrd.dataDumpDomains", buf);
       snprintf(buf, sizeof(buf), "%d", dumpFlows);      storePrefsValue("rrd.dataDumpFlows", buf);
       snprintf(buf, sizeof(buf), "%d", dumpHosts);      storePrefsValue("rrd.dataDumpHosts", buf);
       snprintf(buf, sizeof(buf), "%d", dumpInterfaces); storePrefsValue("rrd.dataDumpInterfaces", buf);
@@ -1246,6 +1259,11 @@ static void handleRRDHTTPrequest(char* url) {
 	     "Changes to the above values will ONLY affect NEW rrds</TD></TR>");
 
   sendString("<TR><TH ALIGN=LEFT "DARK_BG">Data to Dump</TH><TD>");
+
+  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpDomains VALUE=1 %s> Domains<br>\n",
+	      dumpDomains ? "CHECKED" : "" ) < 0)
+    BufferTooShort();
+  sendString(buf);
 
   if(snprintf(buf, sizeof(buf), "<INPUT TYPE=checkbox NAME=dumpFlows VALUE=1 %s> Flows<br>\n",
 	      dumpFlows ? "CHECKED" : "" ) < 0)
@@ -1546,6 +1564,123 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
     numLocalNets = 0;
     snprintf(rrdPath, sizeof(rrdPath), "%s", hostsFilter); /* It avoids strtok to blanks into hostsFilter */
     handleAddressLists(rrdPath, networks, &numLocalNets, value, sizeof(value), CONST_HANDLEADDRESSLISTS_RRD);
+
+    /* ****************************************************** */
+
+    DomainStats **stats, *tmpStats, *statsEntry;
+    u_int maxHosts, len = 0;
+    Counter totBytesSent = 0;
+    Counter totBytesRcvd = 0;
+
+    if(dumpDomains) {
+      for(devIdx=0; devIdx<myGlobals.numDevices; devIdx++) {
+
+	// save this as it may change
+	maxHosts = myGlobals.device[devIdx].hostsno;
+	len = sizeof(DomainStats)*maxHosts;
+	tmpStats = (DomainStats*)malloc(len);
+	memset(tmpStats, 0, len);
+
+	len = sizeof(DomainStats**)*maxHosts;
+	stats = (DomainStats**)malloc(len);
+	memset(stats, 0, len);
+
+        HostTraffic *el;
+	u_int numEntries = 0;
+
+	// walk through all hosts, getting their domain names and counting stats
+	for (el = getFirstHost(devIdx);
+	  el != NULL; el = getNextHost(devIdx, el)) {
+
+	    fillDomainName(el);
+
+	    // if we didn't get a domain name, bail out
+	    if ((el->fullDomainName == NULL)
+	       || (el->fullDomainName[0] == '\0')
+	       || (el->dotDomainName == NULL)
+	       || (el->hostSymIpAddress[0] == '\0')
+	       || broadcastHost(el)
+	       ) {
+	      continue;
+	    }
+
+            u_short keyValue=0;
+
+	    for(keyValue=0, idx=0; el->fullDomainName[idx] != '\0'; idx++)
+	      keyValue += (idx+1)*(u_short)el->fullDomainName[idx];
+
+	    keyValue %= maxHosts;
+
+	    while((stats[keyValue] != NULL)
+	      && (strcasecmp(stats[keyValue]->domainHost->fullDomainName,
+	      el->fullDomainName) != 0))
+		keyValue = (keyValue+1) % myGlobals.device[devIdx].actualHashSize;
+
+	    // if we just start counting for this domain...
+	    if(stats[keyValue] != NULL)
+	      statsEntry = stats[keyValue];
+	    else {
+	      statsEntry = &tmpStats[numEntries++];
+	      memset(statsEntry, 0, sizeof(DomainStats));
+	      statsEntry->domainHost = el;
+	      stats[keyValue] = statsEntry;
+#if RRD_DEBUG >= 2
+	      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG [%d] %s/%s", numEntries, el->fullDomainName, el->dotDomainName);
+#endif
+	    }
+
+	    // count this host's stats in the domain stats
+	    totBytesSent += el->bytesSent.value;
+	    statsEntry->bytesSent.value += el->bytesSent.value;
+	    statsEntry->bytesRcvd.value += el->bytesRcvd.value;
+	    totBytesRcvd          += el->bytesRcvd.value;
+	    statsEntry->tcpSent.value   += el->tcpSentLoc.value + el->tcpSentRem.value;
+	    statsEntry->udpSent.value   += el->udpSentLoc.value + el->udpSentRem.value;
+	    statsEntry->icmpSent.value  += el->icmpSent.value;
+	    statsEntry->icmp6Sent.value  += el->icmp6Sent.value;
+	    statsEntry->tcpRcvd.value   += el->tcpRcvdLoc.value + el->tcpRcvdFromRem.value;
+	    statsEntry->udpRcvd.value   += el->udpRcvdLoc.value + el->udpRcvdFromRem.value;
+	    statsEntry->icmpRcvd.value  += el->icmpRcvd.value;
+	    statsEntry->icmp6Rcvd.value  += el->icmp6Rcvd.value;
+
+	    if(numEntries >= maxHosts) break;
+	}
+
+	// if we didn't find a single domain, continue with the next interface
+	if (numEntries == 0) {
+	    free(tmpStats); free(stats);
+	    continue;
+	}
+
+	// insert all domain data for this interface into the RRDs
+	for (idx=0; idx < numEntries; idx++) {
+	    statsEntry = &tmpStats[idx];
+
+	    snprintf(rrdPath, sizeof(rrdPath), "%s/interfaces/%s/domains/%s/",
+		myGlobals.rrdPath, myGlobals.device[devIdx].humanFriendlyName,
+		statsEntry->domainHost->fullDomainName);
+	    mkdir_p(rrdPath);
+
+#if RRD_DEBUG >= 2
+	    traceEvent(CONST_TRACE_INFO, "RRD: Updating %s", rrdPath);
+#endif
+	    updateCounter(rrdPath, "bytesSent", statsEntry->bytesSent.value);
+	    updateCounter(rrdPath, "bytesRcvd", statsEntry->bytesRcvd.value);
+
+	    updateCounter(rrdPath, "tcpSent", statsEntry->tcpSent.value);
+	    updateCounter(rrdPath, "udpSent", statsEntry->udpSent.value);
+	    updateCounter(rrdPath, "icmpSent", statsEntry->icmpSent.value);
+	    updateCounter(rrdPath, "icmp6Sent", statsEntry->icmp6Sent.value);
+
+	    updateCounter(rrdPath, "tcpRcvd", statsEntry->tcpRcvd.value);
+	    updateCounter(rrdPath, "udpRcvd", statsEntry->udpRcvd.value);
+	    updateCounter(rrdPath, "icmpRcvd", statsEntry->icmpRcvd.value);
+	    updateCounter(rrdPath, "icmp6Rcvd", statsEntry->icmp6Rcvd.value);
+	}
+
+	free(tmpStats); free(stats);
+      }
+    }
 
     /* ****************************************************** */
 
