@@ -1500,11 +1500,9 @@
  * Flags for rrd plugin settings...
  */
 #define FLAG_RRD_DETAIL_LOW                 0
-#define FLAG_RRD_DETAIL_LOW_STR             "0"
 #define FLAG_RRD_DETAIL_MEDIUM              1
-#define FLAG_RRD_DETAIL_MEDIUM_STR          "1"
 #define FLAG_RRD_DETAIL_HIGH                2
-#define FLAG_RRD_DETAIL_HIGH_STR            "2"
+#define CONST_RRD_DETIL_DEFAULT             FLAG_RRD_DETAIL_HIGH
 
 #define FLAG_RRD_ACTION_NONE                0
 #define FLAG_RRD_ACTION_GRAPH               1
