@@ -1364,7 +1364,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-SCRIPTVER="v3.1.003-2005-01-19"
+SCRIPTVER="v3.1.004-2005-04-02"
 
 umask 002
           ac_config_headers="$ac_config_headers config.h"
@@ -30822,6 +30822,7 @@ echo "char * buildDate    = buildDateIs;" >> version.c
 echo $CONFIGURE_PARAMETERS | sed -e 's/.*/char * configure_parameters   = "&";/' >> version.c
 echo ${host} | sed -e 's/.*/char * host_system_type   = "&";/' >> version.c
 echo ${target} | sed -e 's/.*/char * target_system_type   = "&";/' >> version.c
+echo ${CPP} ${CPPFLAGS} | sed -e 's/.*/char * compiler_cppflags   = "&";/' >> version.c
 echo ${CC} ${CFLAGS} ${DEFS} | sed -e 's/.*/char * compiler_cflags   = "&";/' >> version.c
 echo ${INCS} | sed -e 's/.*/char * include_path    = "&";/' >> version.c
 echo ${LDFLAGS} ${LIBS} | sed -e 's/.*/char * system_libs    = "&";/' >> version.c

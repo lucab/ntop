@@ -7586,6 +7586,7 @@ static void printNtopConfigInfoData(int textPrintFlag, UserPref *pref) {
 			 configure_parameters[0] == '\0' ? "&nbsp;" : configure_parameters);
   printFeatureConfigInfo(textPrintFlag, "Built on (Host)", host_system_type);
   printFeatureConfigInfo(textPrintFlag, "Built for(Target)", target_system_type);
+  printFeatureConfigInfo(textPrintFlag, "preprocessor (CPPFLAGS)", compiler_cppflags);
   printFeatureConfigInfo(textPrintFlag, "compiler (CFLAGS)", compiler_cflags);
   printFeatureConfigInfo(textPrintFlag, "include path", include_path);
   printFeatureConfigInfo(textPrintFlag, "system libraries", system_libs);
