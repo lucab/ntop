@@ -20,9 +20,9 @@ cwdata="ftp://ftp.cw.net/pub/rr/split/cw.db.in.gz"
 echo ""
 echo "  Destination: ${dest}, work directory: ${work}"
 echo ""
-echo "  Clean up work directory..."
-echo ""
 if test -d $work; then
+  echo "  Clean up old work directory..."
+  echo ""
   rm -rf $work
 fi
 
@@ -43,7 +43,7 @@ if test "x${manual}" != "x"; then
         echo ""
         echo "    Copying manual additions to p2c data from ${manual}"
         echo ""
-        cp ${manual} ${work}/0_p2cmanual.data
+        cp ${manual} ${work}/zzz_p2cmanual.data
     else
         echo "    Not found ... continuing ..."
     fi
@@ -77,7 +77,7 @@ wget -O ripealt.data.gz $ripealt
 echo ""
 echo "  Processing alternate RIPE data..."
 echo ""
-zcat ripealt.data.gz | ./inetnum2countryalloc > 1_ripealt.data
+zcat ripealt.data.gz | ./inetnum2countryalloc > zz_ripealt.data
 
 echo ""
 echo "  Downloading alternate APNIC data..."
@@ -87,7 +87,7 @@ wget -O apnicalt.data.gz $apnicalt
 echo ""
 echo "  Processing alternate APNIC data..."
 echo ""
-zcat apnicalt.data.gz | ./inetnum2countryalloc > 1_apnicalt.data
+zcat apnicalt.data.gz | ./inetnum2countryalloc > zz_apnicalt.data
 
 echo ""
 echo "  Downloading Cable and Wireless data..."
@@ -97,7 +97,7 @@ wget -O cwdata.data.gz $cwdata
 echo ""
 echo "  Processing Cable and Wireless data..."
 echo ""
-zcat cwdata.data.gz | ./inetnum2countryalloc > 2_cwdata.data
+zcat cwdata.data.gz | ./inetnum2countryalloc > z_cwdata.data
 
 echo ""
 echo "  Checking data..."
