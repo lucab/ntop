@@ -1292,6 +1292,23 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 #endif
     returnHTTPpageNotFound();
     printTrailer=0;
+#ifndef WIN32
+  } else if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
+    int rc;
+      
+#ifdef MULTITHREADED
+    releaseMutex(&myGlobals.hashResizeMutex);
+#endif
+
+      sendString("HTTP/1.0 200 OK\n");
+      rc = execCGI(&pageName[strlen(CGI_HEADER)]);
+
+      if(rc != 0) {
+	returnHTTPpageNotFound();
+      }
+
+      return(0);
+#endif
   } else {
 #if defined(FORK_CHILD_PROCESS) && (!defined(WIN32))
     int childpid;
@@ -1335,16 +1352,6 @@ static int returnHTTPPage(char* pageName, int postLen, struct in_addr *from,
 	}
       }
     }
-#endif
-
-#ifndef WIN32
-#ifdef  USE_CGI
-    if(strncmp(pageName, CGI_HEADER, strlen(CGI_HEADER)) == 0) {
-      sendString("HTTP/1.0 200 OK\n");
-      execCGI(&pageName[strlen(CGI_HEADER)]);
-      return(0);
-    }
-#endif /* USE_CGI */
 #endif
 
     if(strcmp(pageName, STR_INDEX_HTML) == 0) {

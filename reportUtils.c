@@ -1826,6 +1826,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       el->protoIPTrafficInfos[i].rcvdFromRem;
   }
 
+#ifdef HAVE_GDCHART
   if((a > 0) && (b > 0)) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>"
 		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1>"
@@ -1838,6 +1839,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       BufferOverflow();
     sendString(buf);
   }
+#endif
 
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");
@@ -3443,5 +3445,4 @@ void printSectionTitle(char *text) {
  	   "</CENTER>\n", text);
   sendString(buf);
 }
-
 

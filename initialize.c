@@ -1231,6 +1231,7 @@ void initSignals(void) {
   setsignal(SIGHUP,  handleSigHup);
   setsignal(SIGPIPE, ignoreThisSignal);
   setsignal(SIGABRT, ignoreThisSignal);
+  setsignal(SIGSEGV, cleanup);
 #endif
 }
 

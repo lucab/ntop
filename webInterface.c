@@ -63,8 +63,7 @@ static int inet_aton(const char *cp, struct in_addr *addr)
 /* ************************************* */
 
 #ifndef WIN32
-#ifdef  USE_CGI
-void execCGI(char* cgiName) {
+int execCGI(char* cgiName) {
   char* userName = "nobody", line[384], buf[512];
   struct passwd * newUser = NULL;
   FILE *fd;
@@ -72,7 +71,7 @@ void execCGI(char* cgiName) {
 
   if(!(newUser = getpwnam(userName))) {
     traceEvent(TRACE_WARNING, "WARNING: unable to find user %s\n", userName);
-    return;
+    return(-1);
   } else {
     setgid(newUser->pw_gid);
     setuid(newUser->pw_uid);
@@ -91,14 +90,14 @@ void execCGI(char* cgiName) {
   putenv("REQUEST_METHOD=GET");
   if(num == 0) putenv("QUERY_STRING=");
 
-  if(snprintf(line, sizeof(line), "/usr/bin/perl %s/cgi/%s", getenv("PWD"), cgiName) < 0)
+  if(snprintf(line, sizeof(line), "%s/cgi/%s", getenv("PWD"), cgiName) < 0)
     BufferOverflow();
 
-  traceEvent(TRACE_INFO, "Executing '%s'", line);
+  traceEvent(TRACE_INFO, "Executing CGI '%s'", line);
 
   if((fd = popen(line, "r")) == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: unable to exec %s\n", cgiName);
-    return;
+    return(-1);
   } else {
     while(!feof(fd)) {
       num = fread(line, 1, 383, fd);
@@ -107,9 +106,11 @@ void execCGI(char* cgiName) {
     }
     pclose(fd);
   }
-  traceEvent(TRACE_INFO, "Execution completed.");
+
+  traceEvent(TRACE_INFO, "CGI execution completed.");
+
+  return(0);
 }
-#endif /* USE_CGI */
 #endif
 
 /* **************************************** */

@@ -141,7 +141,7 @@ extern void printNtopConfigInfo(void);
 extern void updateHostThpt(HostTraffic *el, int hourId, int fullUpdate);
 
 /* webInterface.c */
-extern void execCGI(char* cgiName);
+extern int execCGI(char* cgiName);
 extern void showPluginsList(char* pluginName);
 /* CHECK ME: loadPlugins() and unloadPlugins() should not be in webInterface.c */
 extern void initWeb();

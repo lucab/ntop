@@ -817,6 +817,33 @@ RETSIGTYPE cleanup(int signo) {
   struct pcap_stat stat;
   int i;
 
+#ifdef HAVE_BACKTRACE
+  if (signo == SIGSEGV) {
+    void *array[20];
+    size_t size;
+    char **strings;
+    size_t i;
+
+    /* Don't double fault... */
+    setsignal(SIGSEGV, SIG_DFL);
+
+    /* Grab the backtrace before we do much else... but only print it if we are in debug mode */
+    size = backtrace(array, 20);
+    strings = (char**)backtrace_symbols(array, size);
+
+    traceEvent(TRACE_ERROR, "\n\n\n*****ntop error: Signal(%d)\n", signo);
+    printf("\n\n\n*****ntop error: Signal(%d)\n", signo);
+
+      traceEvent(TRACE_ERROR, "\n     backtrace is:\n");
+      printf("\n     backtrace is:\n");
+      /* Ignore the 0th entry, that's our cleanup() */
+      for (i=1; i<size; i++) {
+	traceEvent(TRACE_ERROR, "          %2d. %s\n", i, strings[i]);
+	printf("          %2d. %s\n", i, strings[i]);
+      }
+  }
+#endif /* HAVE_BACKTRACE */
+
   if(unloaded)
     return;
   else
