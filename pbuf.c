@@ -938,7 +938,7 @@ static void processIpPkt(const u_char *bp,
 	  }
 	}
 
-	if(nonFullyRemoteSession) {
+	if((!myGlobals.borderSnifferMode) || nonFullyRemoteSession) {
 	  theSession = handleTCPSession(h, (off & 0x3fff), tp.th_win,
 					srcHostIdx, sport, dstHostIdx,
 					dport, length, &tp, tcpDataLength,
