@@ -2290,9 +2290,10 @@ void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
        && (el->vlanId == vlanId)) {
       found = 1;
       break;
-    } else if((strncmp(fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress),
-		       host, LEN_FC_ADDRESS_DISPLAY) == 0) &&
-	      ((el->fcCounters->vsanId == vsanId) || (vsanId == 0))) {
+    } else if((el->fcCounters != NULL)
+	      && ((strncmp(fc_to_str ((u_int8_t *)&el->fcCounters->hostFcAddress),
+			   host, LEN_FC_ADDRESS_DISPLAY) == 0) &&
+		  ((el->fcCounters->vsanId == vsanId) || (vsanId == 0)))) {
       found = 1;
       foundFcHost = 1;
       break;
