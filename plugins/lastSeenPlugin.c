@@ -117,7 +117,7 @@ static void handleLsPacket(u_char *_deviceId,
   HostI.HostIpAddress.addr._hostIp4Address = ip.ip_src;
   HostI.LastUpdated = myGlobals.actTime;
 
-  safe_snprintf(tmpStr, sizeof(tmpStr), "%u", (unsigned) ip.ip_src.s_addr);
+  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%u", (unsigned) ip.ip_src.s_addr);
   key_data.dptr = tmpStr; key_data.dsize = strlen(key_data.dptr)+1;
   data_data.dptr = (char *)&HostI;
   data_data.dsize = sizeof(HostI)+1;
@@ -182,7 +182,7 @@ static void processHTMLrequest(char* url) {
     postData[entry] = '\0';
     addNotes( url+1, &postData[6]);	
     char_ip.s_addr = strtoul(url+1, NULL, 10);
-    safe_snprintf(tmpStr, sizeof(tmpStr), "<p><i>OK! Added comments for %s.</i></p>\n",
+    safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "<p><i>OK! Added comments for %s.</i></p>\n",
 		intoa(char_ip));
     sendString(tmpStr);
     return;
@@ -224,7 +224,7 @@ static void processHTMLrequest(char* url) {
 
     /* Getting notes from the DN */
 
-    safe_snprintf(tmpStr, sizeof(tmpStr), "N_%u", (unsigned)tablehost[entry].HostIpAddress.Ip4Address.s_addr);
+    safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "N_%u", (unsigned)tablehost[entry].HostIpAddress.Ip4Address.s_addr);
 
     key_data.dptr = tmpStr;
     key_data.dsize = strlen(key_data.dptr)+1;
@@ -248,7 +248,7 @@ static void processHTMLrequest(char* url) {
     localtime_r(&tablehost[entry].LastUpdated, &loctime);
     strftime(tmpTime, sizeof(tmpTime), CONST_LOCALE_TIMESPEC, &loctime);
 
-    safe_snprintf(tmpStr, sizeof(tmpStr), "<TR "TR_ON" %s>%s"
+    safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "<TR "TR_ON" %s>%s"
 		"<TH "TH_BG" ALIGN=LEFT>&nbsp;&nbsp;%s&nbsp;&nbsp</TH>"
 		"<TH "TH_BG">&nbsp;&nbsp;%s&nbsp;&nbsp</TH><TH "TH_BG">%s</TH><TH "TH_BG">"
 		"<A HREF=\"/plugins/LastSeen?D%u\">Del</A>&nbsp;&nbsp;&nbsp;"
@@ -264,7 +264,7 @@ static void processHTMLrequest(char* url) {
     entry--;
   }
   sendString("</TABLE></CENTER><p>\n");
-  safe_snprintf(tmpStr, sizeof(tmpStr), 
+  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
 	      "<CENTER><b>%u</b> host displayed</CENTER><br>",
 	      num_hosts);
   sendString(tmpStr);
@@ -310,7 +310,7 @@ static void addNotes(char *addr, char *PostNotes) {
 
   strncpy(HostN.note,PostNotes, sizeof(HostN.note));
 
-  safe_snprintf(tmpStr, sizeof(tmpStr), "N_%s",addr);
+  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "N_%s",addr);
 
   key_data.dptr = tmpStr;
   key_data.dsize = strlen(key_data.dptr)+1;
@@ -335,7 +335,7 @@ static void NotesURL(char *addr, char *ip_addr) {
     return;
   }
 
-  safe_snprintf(tmpStr, sizeof(tmpStr), "N_%s",addr);
+  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "N_%s",addr);
   key_data.dptr = tmpStr;
   key_data.dsize = strlen(key_data.dptr)+1;
 
@@ -345,12 +345,12 @@ static void NotesURL(char *addr, char *ip_addr) {
   //sendString("<title>Manage Notes</title>\n");
   //sendString("</head><BODY COLOR=#FFFFFF><FONT FACE=Helvetica>\n");
 
-  safe_snprintf(tmp, sizeof(tmp), "<H2><CENTER>Notes for %s</CENTER></H2>\n<p><p>\n",ip_addr);
+  safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "<H2><CENTER>Notes for %s</CENTER></H2>\n<p><p>\n",ip_addr);
   sendString(tmp);
-  safe_snprintf(tmp, sizeof(tmp), "<FORM METHOD=POST ACTION=\"/plugins/LastSeen?P%s\">\n",addr);
+  safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "<FORM METHOD=POST ACTION=\"/plugins/LastSeen?P%s\">\n",addr);
   sendString(tmp);
   if (content.dptr) {
-    safe_snprintf(tmp, sizeof(tmp), "<INPUT TYPE=text NAME=Notes SIZE=49 VALUE=\"%s\">\n",
+    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "<INPUT TYPE=text NAME=Notes SIZE=49 VALUE=\"%s\">\n",
 		content.dptr);
     sendString(tmp);
     free(content.dptr);
@@ -368,7 +368,7 @@ static void deletelastSeenURL( char *addr ) {
 
   if(disabled) return;
 
-  safe_snprintf(tmpStr, sizeof(tmpStr), "N_%s",addr);
+  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "N_%s",addr);
 
   key_data.dptr = addr;
   key_data.dsize = strlen(key_data.dptr)+1;
@@ -410,7 +410,7 @@ PluginInfo* lsPluginEntryFctn(void) {
 	       LsPluginInfo->pluginName);
   
     /* Fix courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
-    safe_snprintf(tmpBuf, sizeof(tmpBuf), "%s/LsWatch.db", myGlobals.dbPath);
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s/LsWatch.db", myGlobals.dbPath);
     LsDB = gdbm_open (tmpBuf, 0, GDBM_WRCREAT, 00664, NULL);
 
     if(LsDB == NULL) {

@@ -57,32 +57,32 @@ static char* dlerror() {
 	return("Too many errors, rest skipped");
 	break;
       case 2:
-	safe_snprintf(tmpStr, sizeof(tmpStr), "Can't load library [%s]", errName); 
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Can't load library [%s]", errName); 
 	break;
       case 3:
-	safe_snprintf(tmpStr, sizeof(tmpStr), "Can't find symbol in library [%s]", errName); 
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Can't find symbol in library [%s]", errName); 
 	break;
       case 4:
 	return("Rld data offset or symbol index out of range or bad relocation type");
 	break;
       case 5:
-	safe_snprintf(tmpStr, sizeof(tmpStr), "File not valid, executable xcoff [%s]", errName);
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "File not valid, executable xcoff [%s]", errName);
 	return(tmpStr);
 	break;
       case 6:
-	safe_snprintf(tmpStr, sizeof(tmpStr), "The errno associated with the failure if not ENOEXEC,"
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "The errno associated with the failure if not ENOEXEC,"
 		" it indicates the underlying error, such as no memory [%s][errno=%d]", 
 		errName, errno);
 	return(tmpStr);
 	break;
       case 7:
-	safe_snprintf(tmpStr, sizeof(tmpStr), 
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), 
 		    "Member requested from a file which is not an archive or does not"
 		    "contain the member [%s]", errName);
 	return(tmpStr);
 	break;
       case 8:
-	safe_snprintf(tmpStr, sizeof(tmpStr), "Symbol type mismatch [%s]", errName);
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Symbol type mismatch [%s]", errName);
 	return(tmpStr);
 	break;
       case 9:
@@ -95,7 +95,7 @@ static char* dlerror() {
 	return("Insufficient permission to add entries to a loader domain");
 	break;
       default:
-	safe_snprintf(tmpStr, sizeof(tmpStr), "Unknown error [%d]", errCode);
+	safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "Unknown error [%d]", errCode);
 	return(tmpStr);
       }
     }
@@ -129,7 +129,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 #endif
   FlowFilterList *newFlow;
 
-  safe_snprintf(pluginPath, sizeof(pluginPath), "%s/%s", dirName != NULL ? dirName : ".", pluginName);
+  safe_snprintf(__FILE__, __LINE__, pluginPath, sizeof(pluginPath), "%s/%s", dirName != NULL ? dirName : ".", pluginName);
 
   traceEvent(CONST_TRACE_NOISY, "Loading plugin '%s'", pluginPath);
 
@@ -266,7 +266,7 @@ static void loadPlugin(char* dirName, char* pluginName) {
 #endif
     newFlow->pluginStatus.pluginPtr       = pluginInfo;
 
-    safe_snprintf(key, sizeof(key), "pluginStatus.%s", pluginInfo->pluginName);
+    safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "pluginStatus.%s", pluginInfo->pluginName);
 
     if(fetchPrefsValue(key, value, sizeof(value)) == -1) {
       storePrefsValue(key, pluginInfo->activeByDefault ? "1" : "0");
@@ -300,7 +300,7 @@ void loadPlugins(void) {
   
 #ifndef MAKE_STATIC_PLUGIN
   for(idx=0; myGlobals.pluginDirs[idx] != NULL; idx++) {
-    safe_snprintf(dirPath, sizeof(dirPath), "%s", myGlobals.pluginDirs[idx]);
+    safe_snprintf(__FILE__, __LINE__, dirPath, sizeof(dirPath), "%s", myGlobals.pluginDirs[idx]);
 
     directoryPointer = opendir(dirPath);
 

@@ -59,7 +59,7 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
             tmpStr = "Fabric<br>Controller";
             noLink = TRUE;
         } else if(strncmp (el->fcCounters->hostNumFcAddress, "ff.fc", strlen ("ff.fc")) == 0) {
-	  safe_snprintf(tmpbuf, 64, "Domain Controller<br>for %s", &el->fcCounters->hostNumFcAddress[6]);
+	  safe_snprintf(__FILE__, __LINE__, tmpbuf, 64, "Domain Controller<br>for %s", &el->fcCounters->hostNumFcAddress[6]);
 	  tmpStr = tmpbuf;
 	  noLink = TRUE;
         } else if(strncmp (el->fcCounters->hostNumFcAddress, "ff.ff.fe", sizeof ("ff.ff.fe")) == 0) {
@@ -74,7 +74,7 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
         } else {
 	  /* Introduce maybe a picture or string based on HBA's vendor */
 	  if(el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
-	    safe_snprintf(tmpbuf, sizeof (tmpbuf), "%.12s<br>%.12s",
+	    safe_snprintf(__FILE__, __LINE__, tmpbuf, sizeof (tmpbuf), "%.12s<br>%.12s",
 			  el->hostResolvedName, &el->hostResolvedName[12]);
 	    tmpStr = tmpbuf;
 	  } else
@@ -88,7 +88,7 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
     } else {
       if(el->fcCounters->hostFcAddress.domain != FC_ID_SYSTEM_DOMAIN) {
 	if(el->hostResolvedNameType == FLAG_HOST_SYM_ADDR_TYPE_FC_WWN) {
-	  safe_snprintf(tmpbuf, sizeof (tmpbuf), "%.12s<br>%.12s",
+	  safe_snprintf(__FILE__, __LINE__, tmpbuf, sizeof (tmpbuf), "%.12s<br>%.12s",
 			 el->hostResolvedName, &el->hostResolvedName[12]);
 	  tmpStr = tmpbuf;
 	} else
@@ -144,12 +144,12 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
 
     if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
         if(noLink) {
-            safe_snprintf(buf, buflen,
+            safe_snprintf(__FILE__, __LINE__, buf, buflen,
                         "<TH "TH_BG" ALIGN=LEFT NOWRAP>%s-%d&nbsp;</TH>",
                           tmpStr, el->fcCounters->vsanId);
         }
         else {
-            safe_snprintf(buf, buflen, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
+            safe_snprintf(__FILE__, __LINE__, buf, buflen, "<TH "TH_BG" ALIGN=LEFT NOWRAP>"
                           "<A HREF=\"/%s-%d.html\" onMouseOver=\"window.status='"
                           "%s';return true\" onMouseOut=\"window.status=''"
                           ";return true\">%s%s%s</A></TH>", linkStr, el->fcCounters->vsanId,
@@ -158,10 +158,10 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
     }
     else if(mode == FLAG_HOSTLINK_TEXT_FORMAT) {
         if(noLink) {
-            safe_snprintf(buf, buflen, "%s-%d", tmpStr, el->fcCounters->vsanId);
+            safe_snprintf(__FILE__, __LINE__, buf, buflen, "%s-%d", tmpStr, el->fcCounters->vsanId);
         }
         else {
-            safe_snprintf(buf, buflen, 
+            safe_snprintf(__FILE__, __LINE__, buf, buflen, 
                          "<A HREF=\"/%s-%d.html\" %s NOWRAP "
                          "onMouseOver=\"window.status='%s';return true\" "
                          "onMouseOut=\"window.status='';return true\">%s</A>",
@@ -171,7 +171,7 @@ char* makeFcHostLink (HostTraffic *el, short mode, short cutName,
         }
     }
     else {
-        safe_snprintf(buf, buflen, "%s-%d", tmpStr, el->fcCounters->vsanId);
+        safe_snprintf(__FILE__, __LINE__, buf, buflen, "%s-%d", tmpStr, el->fcCounters->vsanId);
     }
 
     releaseAddrResMutex ();
@@ -184,13 +184,13 @@ char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen) {
     accessAddrResMutex("makeHostLink");
 
     if(vsanId) {
-      safe_snprintf(buf, buflen, 
+      safe_snprintf(__FILE__, __LINE__, buf, buflen, 
                "%s<a href=\"" CONST_VSAN_DETAIL_HTML "?vsan=%d\">%d</a>%s",
                (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "<th " TH_BG " align=\"right\" NOWRAP>" : "",
                vsanId, vsanId, 
                (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "</th>" : "");
     } else {
-      safe_snprintf(buf, buflen, 
+      safe_snprintf(__FILE__, __LINE__, buf, buflen, 
                "%s<a href=\"" CONST_VSAN_DETAIL_HTML "\">-</a>%s",
                (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "<th " TH_BG " align=\"right\" NOWRAP>" : "",
                (mode == FLAG_HOSTLINK_HTML_FORMAT) ? "</th>" : "");
@@ -207,7 +207,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   char buf[LEN_GENERAL_WORK_BUFFER];
   char theLink[256];
 
-  safe_snprintf(theLink, sizeof(theLink),
+  safe_snprintf(__FILE__, __LINE__, theLink, sizeof(theLink),
               "/%s.html?col=%s%d&showF=",
               url, 
               revertOrder ? "-" : "",
@@ -217,7 +217,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostLunStats:
     if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
           (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[<B>LUN Statistics</B> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -232,7 +232,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostLunGraphs:
       if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
           (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <B>LUN Graphs</B> ]&nbsp;"
@@ -247,7 +247,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostScsiSessionBytes:
       if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
           (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -259,7 +259,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
       }
       else {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <B>SCSI Session(Bytes)</B> ]&nbsp;"
                    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
@@ -272,7 +272,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostScsiSessionTimes:
       if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
           (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A>]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -284,7 +284,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
       }
       else {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A>]&nbsp;"
                    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
                    "[ <B>SCSI Session(Times)</B> ]&nbsp;"
@@ -297,7 +297,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostScsiSessionStatus:
       if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
           (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -309,7 +309,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
       }
       else {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
                    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
@@ -322,7 +322,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostScsiSessionTMInfo:
       if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
           (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -334,7 +334,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
       }
       else {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
                    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
@@ -347,7 +347,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   case showHostFcSessions:
       if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
           (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
                    "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -359,7 +359,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
       }
       else {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=LEFT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=LEFT>"
 		      "[ <A HREF=%s0>Main Page</A> ]&nbsp;"
 		      "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
 		      "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
@@ -373,7 +373,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
   default:
       if((el->fcCounters->devType != SCSI_DEV_INITIATOR) &&
           (el->fcCounters->devType != SCSI_DEV_UNINIT)) {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
                    "[<B>Main&nbsp;Page</B> ]&nbsp;"
                    "[ <A HREF=%s1>LUN Statistics</A> ]&nbsp;"
                    "[ <A HREF=%s2>LUN Graphs</A> ]&nbsp;"
@@ -385,7 +385,7 @@ void printFcHostHeader (HostTraffic *el, char *url, int revertOrder,
                    theLink, theLink, theLink, theLink, theLink, theLink, theLink);
       }
       else {
-          safe_snprintf(buf, sizeof(buf), "<P ALIGN=RIGHT>"
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<P ALIGN=RIGHT>"
                    "[<B>Main&nbsp;Page</B> ]&nbsp;"
                    "[ <A HREF=%s3>SCSI Session(Bytes)</A> ]&nbsp;"
                    "[ <A HREF=%s4>SCSI Session(Times)</A> ]&nbsp;"
@@ -1401,7 +1401,7 @@ void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       totalRcvd = el->fcCounters->fcBytesRcvd.value;
 
     if((totalSent > 0) || (totalRcvd > 0)) {
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>",
 		  getRowColor());
       sendString(buf);
 
@@ -1410,7 +1410,7 @@ void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       } 
 
       if(totalSent > 0) {
-	safe_snprintf(buf, sizeof(buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		    "<IMG SRC=hostFcTrafficDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Traffic Distribution for %s\"></TD>",
                     linkName,
@@ -1421,7 +1421,7 @@ void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if(totalRcvd > 0) {
-	safe_snprintf(buf, sizeof(buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><IMG SRC=hostFcTrafficDistrib-"
 		    "%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s\"></TD>",
 		    linkName,
@@ -1436,12 +1436,12 @@ void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 #ifdef NOT_YET
       if((el->fcCounters->fcFcpBytesSent.value + el->fcCounters->fcElsBytesSent.value + el->fcCounters->fcDnsBytesSent.value + el->otherFcBytesSent.value)
          > 0) {
-          safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Traffic Distribution</TH>",
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Traffic Distribution</TH>",
                       getRowColor());
           sendString(buf);
 
           if((el->fcCounters->fcFcpBytesSent.value + el->fcCounters->fcElsBytesSent.value + el->fcCounters->fcDnsBytesSent.value + el->otherFcBytesSent.value) > 0) { 
-              safe_snprintf(buf, sizeof(buf),
+              safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                           "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 			  "<IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Traffic Distribution for %s\"></TD>",
                           fc_to_str(&el->fcCounters->hostFcAddress), fc_to_str (&el->fcCounters->hostFcAddress));
@@ -1450,7 +1450,7 @@ void printFcHostTrafficStats(HostTraffic *el, int actualDeviceId) {
               sendString("<TD "TD_BG" COLSPAN=2 WIDTH=250>&nbsp;</TD>");
 
           if((el->fcCounters->fcFcpBytesRcvd.value + el->fcCounters->fcElsBytesRcvd.value + el->fcCounters->fcDnsBytesRcvd.value + el->otherFcBytesRcvd.value) > 0) { 
-              safe_snprintf(buf, sizeof(buf),
+              safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                           "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><IMG SRC=hostIPTrafficDistrib-"
                           "%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s\"></TD></TR>",
                           fc_to_str(&el->fcCounters->hostFcAddress), fc_to_str (&el->fcCounters->hostFcAddress));
@@ -1516,7 +1516,7 @@ void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId)
                                        "<TH "TH_BG" "DARK_BG">Address</TH></TR>\n");
                         }
             
-                        safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+                        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
                                     "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
                                     getRowColor(),
                                     makeFcHostLink(el2,
@@ -1550,7 +1550,7 @@ void printFcHostContactedPeers(HostTraffic *el, int actualDeviceId)
                                        "<TH "TH_BG" "DARK_BG">Address</TH></TR>\n");
                         }
 
-                        safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+                        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
                                     "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
                                     getRowColor(),
                                     makeFcHostLink(el2,
@@ -1597,7 +1597,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
 
     buf1[0]=0;
 
-    safe_snprintf(buf, sizeof(buf), "Info about %s\n", el->hostResolvedName);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about %s\n", el->hostResolvedName);
 
     releaseAddrResMutex();
     printHTMLheader(buf, 0, 0);
@@ -1607,21 +1607,21 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     accessAddrResMutex("printAllSessions-2");
 
     if(el->fcCounters->vsanId) {
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                     "%d%s</TD></TR>\n",
                     getRowColor(), "VSAN",
                     el->fcCounters->vsanId,
                     myGlobals.separator /* it avoids empty cells not to be rendered */);
     }
     else {
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                     "N/A%s</TD></TR>\n",
                     getRowColor(), "VSAN",
                     myGlobals.separator /* it avoids empty cells not to be rendered */);
     }
     sendString(buf);
   
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                 "%s%s</TD></TR>\n",
                 getRowColor(), "FC_ID",
                 el->fcCounters->hostNumFcAddress,
@@ -1629,7 +1629,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     sendString(buf);
 
     if(el->fcCounters->pWWN.str[0] != '\0') {
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                     "%s%s</TD></TR>\n",
                     getRowColor(), "Port&nbsp;WWN",
                     fcwwn_to_str ((u_int8_t *)&el->fcCounters->pWWN), 
@@ -1638,7 +1638,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     }
     
     if(el->fcCounters->nWWN.str[0] != '\0') {
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                     "%s%s</TD></TR>\n",
                     getRowColor(), "Node&nbsp;WWN",
                     fcwwn_to_str ((u_int8_t *)&el->fcCounters->nWWN), 
@@ -1648,7 +1648,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     
     vendorName = getVendorInfo(&el->fcCounters->pWWN.str[2], 1);
     if(vendorName[0] != '\0') {
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                     "%s%s</TD></TR>\n",
                     getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
                     vendorName,
@@ -1662,7 +1662,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     sendString("<CENTER>\n");
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>"
                 "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[%s]</TD></TR>\n",
                 getRowColor(),
@@ -1674,14 +1674,14 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     sendString(buf);
 
     if(el->fcCounters->numOffline.value) {
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                      "%s%s</TD></TR>\n",
                      getRowColor(), "Number&nbsp;Of&nbsp;Times&nbsp;Offline",
                      formatPkts(el->fcCounters->numOffline.value, formatBuf, sizeof (formatBuf)),
                      myGlobals.separator /* it avoids empty cells not to be rendered */);
         sendString (buf);
         
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                      "%s%s</TD></TR>\n",
                      getRowColor(), "Last&nbsp;Offline&nbsp;Time",
                      formatTime(&el->fcCounters->lastOfflineTime, formatBuf, sizeof (formatBuf)),
@@ -1689,7 +1689,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
         sendString (buf);
 
         if(el->fcCounters->lastOnlineTime) {
-            safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                          "%s%s</TD></TR>\n",
                          getRowColor(), "Last&nbsp;Online&nbsp;Time",
                          formatTime(&el->fcCounters->lastOnlineTime, formatBuf, sizeof (formatBuf)),
@@ -1704,13 +1704,13 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     sendString("<CENTER>\n");
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
                   "<TD "TD_BG" ALIGN=RIGHT>%d&nbsp;</TD></TR>\n",
                   getRowColor(), "MTU", el->fcCounters->fcRecvSize);
     sendString(buf);
                 
     if(el->fcCounters->devType != SCSI_DEV_UNINIT) {
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                     "%s%s</TD></TR>\n",
                     getRowColor(), "SCSI&nbsp;Device&nbsp;Type",
                     el->fcCounters->devType == SCSI_DEV_BLOCK ? "Target, Block" :
@@ -1725,7 +1725,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
         (el->fcCounters->devType != SCSI_DEV_INITIATOR)) {
 
       if(el->fcCounters->vendorId[0] != '\0') {
-            safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                         "%s%s</TD></TR>\n",
                         getRowColor(), "Device&nbsp;Vendor",
                         el->fcCounters->vendorId,
@@ -1734,7 +1734,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
         }
 
       if(el->fcCounters->productId[0] != '\0') {
-            safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                         "%s%s</TD></TR>\n",
                         getRowColor(), "Product&nbsp;Name",
                         el->fcCounters->productId,
@@ -1743,7 +1743,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
         }
 
       if(el->fcCounters->productRev[0] != '\0') {
-            safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                         "%s%s</TD></TR>\n",
                         getRowColor(), "Product&nbsp;Revision",
                         el->fcCounters->productRev,
@@ -1758,7 +1758,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
     sendString("<CENTER>\n");
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
                 "</TH><TD "TD_BG" ALIGN=RIGHT>"
                 "%s/%s Pkts</TD></TR>\n",
                 getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
@@ -1768,7 +1768,7 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
                            sizeof (formatBuf1)));
     sendString(buf);
 
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
                 "</TH><TD "TD_BG" ALIGN=RIGHT>"
                 "%s/%s Pkts</TD></TR>\n",
                 getRowColor(), "Total&nbsp;Data&nbsp;Sent",
@@ -1818,17 +1818,17 @@ void printFcHostDetailedInfo(HostTraffic *el, int actualDeviceId)
         struct stat statbuf;
         char key[128];
         
-        safe_snprintf(key, sizeof (key), "%s-%d",
+        safe_snprintf(__FILE__, __LINE__, key, sizeof (key), "%s-%d",
                        el->fcCounters->hostNumFcAddress, el->fcCounters->vsanId);
         
         /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-        safe_snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
                       myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
                       myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
                       dotToSlash(key));
         
         if(stat(buf, &statbuf) == 0) {
-            safe_snprintf(buf, sizeof(buf),
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                           "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
                           "<TD "TD_BG" ALIGN=\"right\">"
                           "[ <a href=\"/" CONST_PLUGINS_HEADER 
@@ -1901,13 +1901,13 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
         qsort(sortedLunTbl, numEntries, sizeof(LunStatsSortedEntry), cmpLunFctn);
 
         /* Need to add info about page in Hosts Info mode */
-        safe_snprintf(htmlAnchor, sizeof(htmlAnchor),
+        safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
                     "<A HREF=/%s.html?showF=%d&page=%d&col=%s", url,
                     showHostLunStats, pageNum, sign);
-        safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1),
+        safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
                     "<A HREF=/%s.html?showF=%d&page=%d&col=", url,
                     showHostLunStats, pageNum);
-        safe_snprintf(pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
+        safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
                       url, showHostLunStats);
 
         if(abs(myGlobals.columnSort) == 1) {
@@ -1944,18 +1944,18 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
 
         /* Added by Ola Lundqvist <opal@debian.org> */
 #ifdef WIN32        
-        safe_snprintf(pcapFilename, sizeof(pcapFilename),
+        safe_snprintf(__FILE__, __LINE__, pcapFilename, sizeof(pcapFilename),
                 "file:%s\ntop-suspicious-pkts.none.pcap",
                 myGlobals.pcapLogBasePath);
 
 #else
-        safe_snprintf(pcapFilename, sizeof(pcapFilename),
+        safe_snprintf(__FILE__, __LINE__, pcapFilename, sizeof(pcapFilename),
                 "file://%s/ntop-suspicious-pkts.none.pcap",
                 myGlobals.pcapLogBasePath);
 #endif
         
         sendString("<CENTER>\n");
-        safe_snprintf(buf, sizeof (buf),
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
                      ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%%><TR "TR_ON">"
                      "<TH "TH_BG" >%s1>LUN%s</A></TH>"
                      "<TH "TH_BG" COLSPAN=2>Total&nbsp;Bytes</TH>"
@@ -1971,7 +1971,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
 
         sendString(buf);
 
-        safe_snprintf(buf, sizeof (buf),
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
                      "<TR "TR_ON" %s>"
                      "<TH "TH_BG"><br></TH>"
                      "<TH "TH_BG">%s2>Sent%s</A></TH>"
@@ -2010,7 +2010,7 @@ void printScsiLunStats (HostTraffic *el, int actualDeviceId, int sortedColumn,
             duration = entry->stats->lastSeen.tv_sec-entry->stats->firstSeen.tv_sec;
             
             if(entry != NULL) {
-                safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
                             "<TD "TD_BG" ALIGN=RIGHT>%d</TD>"
                             "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                             "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -2084,7 +2084,7 @@ void printScsiLunGraphs (HostTraffic *el, int actualDeviceId)
     
     printSectionTitle("LUN Traffic (Total Bytes)");
     
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
                 "<IMG SRC=\"" CONST_BAR_LUNSTATS_DIST "-%s" CHART_FORMAT "?1 "
                 "ALT=\"LUN Traffic (Total Bytes) %s\"></TH></TR>",
@@ -2093,7 +2093,7 @@ void printScsiLunGraphs (HostTraffic *el, int actualDeviceId)
     
     printSectionTitle("LUN Traffic (Total Frames)");
     
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
                 "<IMG SRC=drawLunStatsPktsDistribution-%s"CHART_FORMAT"?1 ALT=\"LUN Frames Statistics "
                 "LUN Traffic (Total Frames) %s\"></TH></TR>",
@@ -2116,10 +2116,10 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
     buf1[0]=0;
 
     if(vsanId) {
-        safe_snprintf(buf, sizeof(buf), "Info about VSAN %d\n", vsanId);
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about VSAN %d\n", vsanId);
     }
     else {
-        safe_snprintf(buf, sizeof(buf), "Info about VSAN\n");
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about VSAN\n");
     }
 
     releaseAddrResMutex();
@@ -2158,7 +2158,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
     accessAddrResMutex("printAllSessions-2");
 
     if(hash->principalSwitch.str[0] != '\0') {
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                     "%s%s</TD></TR>\n",
                     getRowColor(), "Principal&nbsp;Switch",
                     fcwwn_to_str (&hash->principalSwitch.str[0]), 
@@ -2167,7 +2167,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
 
         vendorName = getVendorInfo(&hash->principalSwitch.str[2], 1);
         if(vendorName[0] != '\0') {
-            safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                         "%s%s</TD></TR>\n",
                         getRowColor(), "Principal&nbsp;Switch&nbsp;Vendor",
                         vendorName,
@@ -2177,7 +2177,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
     }
 
     if(hash->fabricConfStartTime) {
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                      "%s%s</TD></TR>\n",
                      getRowColor(), "Last&nbsp;Fabric&nbsp;Configuration&nbsp;Started&nbsp;At",
                      formatTime(&hash->fabricConfStartTime, formatBuf,
@@ -2187,7 +2187,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
     }
 
     if(hash->zoneConfStartTime) {
-        safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
                      "%s%s</TD></TR>\n",
                      getRowColor(), "Last&nbsp;Zone&nbsp;Configuration&nbsp;Started&nbsp;At",
                      formatTime(&hash->zoneConfStartTime, formatBuf,
@@ -2210,7 +2210,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
         while ((i > 0) && (domListEntry != NULL)) {
             if(domListEntry->recordType == 1 /* TBD: Change 01 to meaningful
                                                * define */) {
-                safe_snprintf(buf, sizeof (buf), "<TR "TR_ON" %s><TD "TD_BG" align=right>%x</TD>"
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf), "<TR "TR_ON" %s><TD "TD_BG" align=right>%x</TD>"
                               "<TD "TD_BG" align=right>%s</TD><TD "TD_BG" align=right>%s</TD>"
                               "<TD "TD_BG" align=right>%s</TD><TD "TD_BG" align=right>%s</TD>",
                               getRowColor(), domListEntry->domainId,
@@ -2233,7 +2233,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
         for (i = 1; i < MAX_FC_DOMAINS; i++) {
             if((hash->domainStats[i].sentBytes.value != 0) ||
                 (hash->domainStats[i].rcvdBytes.value != 0)) {
-                safe_snprintf(buf, sizeof (buf), "<TR "TR_ON" %s><TD "TD_BG" align=right>%x</td>"
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf), "<TR "TR_ON" %s><TD "TD_BG" align=right>%x</td>"
                               "<TD "TD_BG" align=right>%s</TD><TD "TD_BG" align=right>%s</TD>"
                               "<TD "TD_BG" align=right>%s</TD><TD "TD_BG" align=right>%s</TD>",
                               getRowColor(), i, "N/A", "N/A",
@@ -2255,7 +2255,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
                 
     /* **************************** */
     printSectionTitle("Top Domain Traffic Distribution (Sent)");
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
                 "<IMG SRC=" CONST_BAR_VSAN_TRAF_DIST_SENT "-%d"CHART_FORMAT"?1 "
                 "ALT=\"VSAN Domain Traffic Distribution for VSAN %d\"></TH></TR>",
@@ -2263,7 +2263,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
     sendString(buf);
 
     printSectionTitle("Top Domain Traffic Distribution (Received)");
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
                 "<IMG SRC=" CONST_BAR_VSAN_TRAF_DIST_RCVD "-%d"CHART_FORMAT"?1 "
                 "ALT=\"VSAN Domain Traffic Distribution for VSAN %d\"></TH></TR>",
@@ -2276,7 +2276,7 @@ void printVsanDetailedInfo (u_int vsanId, int actualDeviceId)
     printFcTrafficMatrix (vsanId, TRUE);
 
     printSectionTitle("Control Traffic Distribution");
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
                 "<IMG SRC=" CONST_PIE_VSAN_CNTL_TRAF_DIST "-%d"CHART_FORMAT"?1 ALT=\"VSAN Control "
                 "Traffic Protocol Distribution for VSAN %d\"></TH></TR>",
@@ -2298,12 +2298,12 @@ static char* formatFcElementData (FcFabricElementHash *hash, u_char printBytes, 
         return("&nbsp;");
 
     if(printBytes) {
-        safe_snprintf(buf, bufLen, "%s",
+        safe_snprintf(__FILE__, __LINE__, buf, bufLen, "%s",
                     formatBytes(hash->totBytes.value, 1, formatBuf,
                                 sizeof (formatBuf)));
     }
     else {
-        safe_snprintf(buf, bufLen, "%s",
+        safe_snprintf(__FILE__, __LINE__, buf, bufLen, "%s",
                     formatPkts(hash->totPkts.value, formatBuf,
                                sizeof (formatBuf)));
     }
@@ -2366,7 +2366,7 @@ void dumpFcFabricElementHash (FcFabricElementHash **theHash, char* label,
 
     for(i=0; i<MAX_HASHDUMP_ENTRY; i++) {
         if(entries[i] == 1) {
-            safe_snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" ALIGN=LEFT NOWRAP>%s\">%d</a></TH>\n"
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR><TH "TH_BG" ALIGN=LEFT NOWRAP>%s\">%d</a></TH>\n"
                         "<TD>%s</TD>\n<TD>%s</TD>\n<TD>%s</TD>\n<TD>%s</TD>\n",
                         makeVsanLink (i, FLAG_HOSTLINK_TEXT_FORMAT, vsanBuf, sizeof (vsanBuf)), i,
                         fcwwn_to_str ((u_int8_t *)&theHash[i]->principalSwitch.str),
@@ -2536,9 +2536,9 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
     qsort(tmpTable, numEntries, sizeof(struct hostTraffic*), sortHostFctn);
 
-    safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s",
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s",
                 CONST_FC_HOSTS_INFO_HTML, sign);
-    safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=",
                 CONST_FC_HOSTS_INFO_HTML);
 
     for(i=1; i<=9; i++) {
@@ -2559,7 +2559,7 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
         theAnchor[0] = htmlAnchor1;
     }
 
-    safe_snprintf(buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<CENTER>"TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                  "<TH "TH_BG" "DARK_BG">%s3>VSAN%s</A></TH>"
                  "<TH "TH_BG" "DARK_BG">%s1>FC_Port%s</A></TH>"
                  "</TH><TH "TH_BG" "DARK_BG">%s2>FC&nbsp;Address%s</A></TH>\n"
@@ -2602,10 +2602,10 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
                        el->hostResolvedName, el->hostNumIpAddress);
 #endif
     
-            safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor());
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>", getRowColor());
             sendString(buf);
 
-            safe_snprintf(buf, sizeof (buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
                           makeVsanLink (el->fcCounters->vsanId, 0,
                                         vsanBuf, sizeof (vsanBuf)));
             sendString (buf);
@@ -2613,16 +2613,16 @@ void printFcHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
             sendString(makeFcHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0,
                                       hostLinkBuf, sizeof (hostLinkBuf)));
     
-            safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
                         tmpName1);
             sendString(buf);
 
             printBar(buf, sizeof(buf), el->actBandwidthUsageS, el->actBandwidthUsageR, maxBandwidthUsage, 3);
 
-            safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>", tmpName2);
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>", tmpName2);
             sendString(buf);
 
-            safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</A></TD>",
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT NOWRAP>%s</A></TD>",
                         formatSeconds(el->lastSeen - el->firstSeen,
                                       formatBuf, sizeof (formatBuf)));
             sendString(buf);
@@ -2709,9 +2709,9 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
     myGlobals.columnSort = sortedColumn;
     qsort(tmpTable, numEntries, sizeof(struct hostTraffic*), cmpHostsFctn);
 
-    safe_snprintf(htmlAnchor, sizeof(htmlAnchor),
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
                 "<a href=\"" CONST_FC_TRAFFIC_HTML "?col=%s", sign);
-    safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1),
+    safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
                 "<a href=\"" CONST_FC_TRAFFIC_HTML "?col=");
 
     for (i = 1; i < 6; i++) {
@@ -2725,7 +2725,7 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
         }
     }
     sendString("<CENTER>\n");
-    safe_snprintf(buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR "TR_ON">"
                 "<TH "TH_BG" "DARK_BG">%s5\">VSAN%s</a></TH>"
                 "<TH "TH_BG" "DARK_BG">%s1\">FC_Port%s</a></TH>"
                 "<TH "TH_BG" "DARK_BG">%s2\">FC_ID%s</a></TH>\n"
@@ -2764,7 +2764,7 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
             else
                 rcvdpct = (100*(float)b)/totalBytesRcvd;
 
-            safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
                         "%s"
                         "%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                         "</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>"
@@ -2798,7 +2798,7 @@ void printFcAccounting(int remoteToLocal, int sortedColumn,
 
     totalBytes = totalBytesSent+totalBytesRcvd;
 
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON">"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON">"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
                 formatBytes(totalBytes, 1, formatBuf[0], 32),
@@ -2919,25 +2919,25 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
 
         if(el == NULL) {
             if(strcmp (url, CONST_SCSI_BYTES_HTML) == 0) {
-                safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign);
-                safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url);
-                safe_snprintf(pageUrl, sizeof (pageUrl), "%s", url);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url);
+                safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s", url);
             }
             else {
-                safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign);
-                safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url);
-                safe_snprintf(pageUrl, sizeof (pageUrl), "%s.html", url);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url);
+                safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s.html", url);
             }
         }
         else {
             /* Need to add info about page in Hosts Info mode */
-            safe_snprintf(htmlAnchor, sizeof(htmlAnchor),
+            safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
                         "<A HREF=/%s.html?showF=%d&page=%d&col=%s", url, 
                         showHostScsiSessionBytes, pageNum, sign);
-            safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1),
+            safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
                         "<A HREF=/%s.html?showF=%d&page=%d&col=", url,
                         showHostScsiSessionBytes, pageNum);
-            safe_snprintf(pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
+            safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
                           url, showHostScsiSessionBytes);
         }
 
@@ -2997,7 +2997,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
             
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
-                safe_snprintf(buf, sizeof (buf),
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
                              ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\"><TR "TR_ON">"
                              "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s1>VSAN%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s2>Initiator%s</A></TH>"
@@ -3015,7 +3015,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
                              theAnchor[3], arrow[3]);
                 sendString (buf);
         
-                safe_snprintf(buf, sizeof (buf),
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
                              "<TR "TR_ON" %s>"
                              "<TH "TH_BG" "DARK_BG">%s4>Sent%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG">%s5>Rcvd%s</A></TH>"
@@ -3055,7 +3055,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
                 dataRcvd = entry->stats->bytesRcvd.value;
                 
                 /* Sanity check */
-                safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
                             "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                             "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                             "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -3109,7 +3109,7 @@ int printScsiSessionBytes (int actualDeviceId, int sortedColumn, int revertOrder
                 session = (FCSession *)entry->stats;
                 
                 /* Sanity check */
-                safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
                             "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                             "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                             "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -3274,25 +3274,25 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
 
         if(el == NULL) {
             if(strcmp (url, CONST_SCSI_TIMES_HTML) == 0) {
-                safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign);
-                safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url);
-                safe_snprintf(pageUrl, sizeof (pageUrl), "%s", url);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url);
+                safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s", url);
             }
             else {
-                safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign);
-                safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url);
-                safe_snprintf(pageUrl, sizeof (pageUrl), "%s.html", url);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url);
+                safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s.html", url);
             }
         }
         else {
             /* Need to add info about page in Hosts Info mode */
-            safe_snprintf(htmlAnchor, sizeof(htmlAnchor),
+            safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
                         "<A HREF=/%s.html?showF=%d&page=%d&col=%s", url, 
                         showHostScsiSessionTimes, pageNum, sign);
-            safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1),
+            safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
                         "<A HREF=/%s.html?showF=%d&page=%d&col=", url,
                         showHostScsiSessionTimes, pageNum);
-            safe_snprintf(pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
+            safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
                           url, showHostScsiSessionTimes);
         }
 
@@ -3349,7 +3349,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
 
-                safe_snprintf(buf, sizeof (buf),
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
                              ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\"><TR "TR_ON">"
                              "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s1>VSAN%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s2>Initiator%s</A></TH>"
@@ -3369,7 +3369,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
                              theAnchor[27], arrow[27]);
                 sendString (buf);
 
-                safe_snprintf(buf, sizeof (buf),
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
                              "<TR "TR_ON" %s>"
                              "<TH "TH_BG" "DARK_BG">%s18>Min%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG">%s19>Max%s</A></TH>"
@@ -3395,7 +3395,7 @@ int printScsiSessionTimes (int actualDeviceId, int sortedColumn, int revertOrder
             }
             
             /* Sanity check */
-            safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
                         "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                         "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                         "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -3558,25 +3558,25 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
 
     if(el == NULL) {
       if(strcmp (url, CONST_SCSI_STATUS_HTML) == 0) {
-	safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign);
-	safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url);
-	safe_snprintf(pageUrl, sizeof (pageUrl), "%s", url);
+	safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign);
+	safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url);
+	safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s", url);
       }
       else {
-	safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign);
-	safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url);
-	safe_snprintf(pageUrl, sizeof (pageUrl), "%s.html", url);
+	safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign);
+	safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url);
+	safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s.html", url);
       }
     }
     else {
       /* Need to add info about page in Hosts Info mode */
-      safe_snprintf(htmlAnchor, sizeof(htmlAnchor),
+      safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
 		  "<A HREF=/%s.html?showF=%d&page=%d&col=%s", url, 
 		  showHostScsiSessionStatus, pageNum, sign);
-      safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1),
+      safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
 		  "<A HREF=/%s.html?showF=%d&page=%d&col=", url,
 		  showHostScsiSessionStatus, pageNum);
-      safe_snprintf(pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
+      safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
 		    url, showHostScsiSessionStatus);
     }
 
@@ -3631,7 +3631,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
             
       if(printedSessions == 0) {
 	sendString("<CENTER>\n");
-	safe_snprintf(buf, sizeof (buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
 		     ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\"><TR "TR_ON">"
 		     "<TH "TH_BG" "DARK_BG">%s1>VSAN%s</A></TH>"
 		     "<TH "TH_BG" "DARK_BG">%s2>Initiator%s</A></TH>"
@@ -3657,7 +3657,7 @@ int printScsiSessionStatusInfo(int actualDeviceId, int sortedColumn,
       }
             
       /* Sanity check */
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -3800,25 +3800,25 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
 
         if(el == NULL) {
             if(strcmp (url, CONST_SCSI_TM_HTML) == 0) {
-                safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign);
-                safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url);
-                safe_snprintf(pageUrl, sizeof (pageUrl), "%s", url);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url);
+                safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s", url);
             }
             else {
-                safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign);
-                safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url);
-                safe_snprintf(pageUrl, sizeof (pageUrl), "%s.html", url);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign);
+                safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url);
+                safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s.html", url);
             }
         }
         else {
             /* Need to add info about page in Hosts Info mode */
-            safe_snprintf(htmlAnchor, sizeof(htmlAnchor),
+            safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
                         "<A HREF=/%s.html?showF=%d&page=%d&col=%s", url, 
                         showHostScsiSessionTMInfo, pageNum, sign);
-            safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1),
+            safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
                         "<A HREF=/%s.html?showF=%d&page=%d&col=", url,
                         showHostScsiSessionTMInfo, pageNum);
-            safe_snprintf(pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
+            safe_snprintf(__FILE__, __LINE__, pageUrl, sizeof (pageUrl), "%s.html?showF=%d",
                           url, showHostScsiSessionTMInfo);
         }
 
@@ -3874,7 +3874,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
             
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
-                safe_snprintf(buf, sizeof (buf),
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
                              ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\"><TR "TR_ON">"
                              "<TH "TH_BG" "DARK_BG">%s1>VSAN%s</A></TH>"
                              "<TH "TH_BG" "DARK_BG">%s2>Initiator%s</A></TH>"
@@ -3902,7 +3902,7 @@ int printScsiSessionTmInfo (int actualDeviceId, int sortedColumn,
             }
             
             /* Sanity check */
-            safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
                         "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                         "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                         "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -4038,11 +4038,11 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
     qsort (tmpTable, numSessions, sizeof (FCSession **), cmpFcSessionsFctn);
 
     if(strcmp (url, CONST_FC_SESSIONS_HTML) == 0) {
-        safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign);
-        safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url);
+        safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s?col=%s", url, sign);
+        safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s?col=", url);
     } else {
-        safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign);
-        safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url);
+        safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=/%s.html?col=%s", url, sign);
+        safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=/%s.html?col=", url);
     }
 
     for (i = 1; i < 21; i++) {
@@ -4084,7 +4084,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
             
             if(printedSessions == 0) {
                 sendString("<CENTER>\n");
-                safe_snprintf(buf, sizeof (buf),
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
                               ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%%\"><TR "TR_ON">"
                               "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s1>VSAN%s</A></TH>\n"
                               "<TH "TH_BG" "DARK_BG" ROWSPAN=2>%s2>Sender%s</A></TH>\n"
@@ -4106,7 +4106,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
                               theAnchor[19], arrow[19]);                
                 sendString (buf);
                 
-                safe_snprintf(buf, sizeof (buf),
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
                               "<TR "TR_ON">"
                               "<TH "TH_BG" "DARK_BG">%s4>Sent%s</A></TH>\n"
                               "<TH "TH_BG" "DARK_BG">%s5>Rcvd%s</A></TH>\n"
@@ -4126,7 +4126,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
                               theAnchor[11], arrow[11]);
                 sendString(buf);
 
-                safe_snprintf(buf, sizeof (buf),
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof (buf),
                               "<TH "TH_BG" "DARK_BG">%s12>Sent%s</A></TH>\n"
                               "<TH "TH_BG" "DARK_BG">%s13>Rcvd%s</A></TH>\n"
                               "<TH "TH_BG" "DARK_BG">%s14>Sent%s</A></TH>\n"
@@ -4148,7 +4148,7 @@ void printFCSessions (int actualDeviceId, int sortedColumn, int revertOrder,
             duration = session->lastSeen.tv_sec - session->firstSeen.tv_sec;
             
             /* Sanity check */
-            safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s>"
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s>"
                           "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                           "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
                           "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -4360,10 +4360,10 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
   /* Print a matrix, using just what the row/column header says: From -> To */
   /* This is different from IP which prints a total */
   if(vsanId) {
-      safe_snprintf(buf, sizeof(buf), "FibreChannel Traffic Matrix For VSAN %d", vsanId);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "FibreChannel Traffic Matrix For VSAN %d", vsanId);
   }
   else {
-      safe_snprintf(buf, sizeof(buf), "FibreChannel Traffic Matrix For VSAN");
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "FibreChannel Traffic Matrix For VSAN");
   }
   
   printHTMLheader(buf, 0);
@@ -4408,7 +4408,7 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
                              "&nbsp;&nbsp;From<br>&nbsp;y<br></SMALL></TH>\n");
           }
 
-          safe_snprintf(buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER><SMALL>%s</SMALL></TH>",
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TH "TH_BG" ALIGN=CENTER><SMALL>%s</SMALL></TH>",
                       getHostName(myGlobals.device[myGlobals.actualReportDeviceId].fcTrafficMatrixHosts[i], 1));
           sendString(buf);
       }
@@ -4454,7 +4454,7 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
     if(activeHosts[i] == 1) {
       numConsecutiveEmptyCells=0;
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT><SMALL>%s</SMALL></TH>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT><SMALL>%s</SMALL></TH>",
 		  getRowColor(), makeFcHostLink(myGlobals.device[myGlobals.actualReportDeviceId].fcTrafficMatrixHosts[i],
                                                 FLAG_HOSTLINK_TEXT_FORMAT, 1, 1));
       sendString(buf);
@@ -4472,7 +4472,7 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
                 numConsecutiveEmptyCells++;
             else {
                 if(numConsecutiveEmptyCells > 0) {
-                    safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" COLSPAN=%d>&nbsp;</TD>\n",
+                    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" COLSPAN=%d>&nbsp;</TD>\n",
                                 numConsecutiveEmptyCells);
                     sendString(buf);
                     numConsecutiveEmptyCells = 0;
@@ -4485,7 +4485,7 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
                     tmpCounter = myGlobals.device[myGlobals.actualReportDeviceId].fcTrafficMatrix[idx]->bytesRcvd.value;
                 }
                 /* Fix below courtesy of Danijel Doriae <danijel.doric@industrogradnja.tel.hr> */
-                safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER %s>"
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER %s>"
                             "<SMALL>%s</SMALL></A></TH>\n",
                             calculateCellColor(tmpCounter, avgTrafficLow, avgTrafficHigh),
                             formatBytes(tmpCounter, 1));
@@ -4495,7 +4495,7 @@ void printFcTrafficMatrix (u_short vsanId, u_char sent)
       }
 
       if(numConsecutiveEmptyCells > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" COLSPAN=%d>&nbsp;</TD>\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" COLSPAN=%d>&nbsp;</TD>\n",
 		    numConsecutiveEmptyCells);
 	sendString(buf);
 	numConsecutiveEmptyCells = 0;
@@ -4573,7 +4573,7 @@ void drawVsanStatsGraph (unsigned int deviceId)
 
     for (i = numVsans-1, j = 0; i >= 0; i--, j++) {
         if(tmpTable[i] != NULL) {
-            safe_snprintf(vsanLabel, sizeof (vsanLabel), "%s",
+            safe_snprintf(__FILE__, __LINE__, vsanLabel, sizeof (vsanLabel), "%s",
                       makeVsanLink (tmpTable[i]->vsanId, 0, vsanBuf, sizeof (vsanBuf)));
             printTableEntry (buf, sizeof (buf), vsanLabel, CONST_COLOR_1,
                              (float) tmpTable[i]->totBytes.value/1024,
@@ -4588,14 +4588,14 @@ void drawVsanStatsGraph (unsigned int deviceId)
     sendString("</TABLE>"TABLE_OFF"<P>\n");
     
     printSectionTitle ("VSAN Traffic (Bytes)");
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
                 "<IMG SRC=drawVsanStatsBytesDistribution"CHART_FORMAT"?1 ALT=\"VSAN Bytes Statistics "
                 "VSAN Traffic (Total Bytes)\"></TH></TR>" );
     sendString(buf);
     
     printSectionTitle ("VSAN Traffic (Frames)");
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<TR "TR_ON" BGCOLOR=white><TH BGCOLOR=white ALIGN=CENTER COLSPAN=3>"
                 "<IMG SRC=drawVsanStatsPktsDistribution"CHART_FORMAT"?1 ALT=\"VSAN Frames Statistics "
                 "VSAN Traffic (Total Frames)\"></TH></TR>");

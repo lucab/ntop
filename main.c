@@ -944,7 +944,7 @@ int main(int argc, char *argv[]) {
   readBuffer = (char*)malloc(LEN_FGETS_BUFFER) /* big just to be safe */;
   memset(readBuffer, 0, LEN_FGETS_BUFFER);
 
-  safe_snprintf(cmdLineBuffer, LEN_CMDLINE_BUFFER, "%s ", argv[0]);
+  safe_snprintf(__FILE__, __LINE__, cmdLineBuffer, LEN_CMDLINE_BUFFER, "%s ", argv[0]);
 
   /*
    * Prepend FORCE_RUNTIME_PARM from configureextra 
@@ -1147,7 +1147,7 @@ int main(int argc, char *argv[]) {
     for (i=0; i<myGlobals.numDevices; i++) {
       char tmpBuf[64];
 
-      safe_snprintf(tmpBuf, sizeof(tmpBuf), "%s%s", 
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s%s", 
                   (i>0) ? "," : "",
                   (myGlobals.device[i].humanFriendlyName != NULL) ?
                       myGlobals.device[i].humanFriendlyName :

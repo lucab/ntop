@@ -52,7 +52,7 @@ void showUsers(void) {
       }
 
       if(strcmp(key_data.dptr, "1admin") == 0) {
-	safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER,
+	safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
                       "<tr><th "TH_BG" align=\"left\"><img src=\"/user.gif\">"
 		      "&nbsp;%s</th><td "TD_BG"><a href=\"/%s?%s\">"
                       "<img alt=\"Modify User\" src=\"/modifyUser.gif\" "
@@ -63,7 +63,7 @@ void showUsers(void) {
 	char ebuf[128];
 	encodeWebFormURL(key_data.dptr, ebuf, sizeof(ebuf));
 
-	safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER,
+	safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
                       "<tr><th "TH_BG" align=\"left\"><img src=\"/user.gif\">"
                       "&nbsp;%s</tg><td "TD_BG"><a href=\"/%s?%s\">"
                       "<img alt=\"Modify User\" src=\"/modifyUser.gif\" border=\"0\" "
@@ -139,7 +139,7 @@ void addUser(char* user) {
     sendString("<TR>\n<TH ALIGN=right>User:&nbsp;</TH><TD ALIGN=left>");
     if(user != NULL) {
       decodeWebFormURL(user);
-      safe_snprintf(tmpStr, sizeof(tmpStr),
+      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 		  "<INPUT TYPE=hidden NAME=user SIZE=20 VALUE=\"%s\"><B>%s</B>\n",
 		  &user[1], &user[1]);
       sendString(tmpStr);
@@ -153,7 +153,7 @@ void addUser(char* user) {
 	       "<TD ALIGN=left><INPUT TYPE=password NAME=pw1 SIZE=20></TD></TR>\n");
     sendString("</TABLE>"TABLE_OFF"\n");
 
-    safe_snprintf(tmpStr, sizeof(tmpStr),
+    safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 		"<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset VALUE=Reset>\n",
 		(user != NULL) ? "Modify User" : "Add User");
     sendString(tmpStr);
@@ -261,7 +261,7 @@ void doAddUser(int len) {
 #endif
       datum data_data, key_data;
 
-      safe_snprintf(tmpBuf, sizeof(tmpBuf), "1%s", user);
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "1%s", user);
       key_data.dptr = tmpBuf;
       key_data.dsize = strlen(tmpBuf)+1;
 #ifdef WIN32
@@ -286,7 +286,7 @@ void doAddUser(int len) {
       /* If we have the routine, store the crypt type too */
       {
         char cgf[LEN_MEDIUM_WORK_BUFFER];
-        safe_snprintf(tmpBuf, sizeof(tmpBuf), "3%s", user);
+        safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "3%s", user);
         key_data.dptr = tmpBuf;
         key_data.dsize = strlen(tmpBuf)+1;
         strncpy(cgf, (char*)crypt_get_format(),  sizeof(cgf));
@@ -337,7 +337,7 @@ void showURLs(void) {
       }
 
       encodeWebFormURL(key_data.dptr, ebuf, sizeof(ebuf));
-      safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
+      safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TR><TH "TH_BG" ALIGN=LEFT><IMG SRC=/user.gif>"
 	      "&nbsp;'%s*'</TH><TD "TD_BG"><A HREF=/%s?%s>"
 		  "<IMG ALT=\"Modify URL\" SRC=/modifyUser.gif BORDER=0 align=absmiddle></A>"
 		  "&nbsp;<A HREF=/%s?%s><IMG ALT=\"Delete URL\" SRC=/deleteUser.gif BORDER=0 align=absmiddle>"
@@ -384,7 +384,7 @@ void addURL(char* url) {
 	       "<I>ntop host</I>&gt;:&lt;<I>ntop port</I>&gt;/</TT>");
     if(url != NULL) {
       decodeWebFormURL(url);
-      safe_snprintf(tmpStr, sizeof(tmpStr),
+      safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 	       "<INPUT TYPE=hidden NAME=url SIZE=20 VALUE=\"%s\">"
 	       "<B>%s</B>&nbsp;<B>*</B>  [Initial URL string]",
 	       &url[1], &url[1]);
@@ -434,7 +434,7 @@ void addURL(char* url) {
 	/* Make sure that at least a user is selected */
 	if((numUsers == 0) && (authorisedUser[0] == NULL)) found = 1;
 
-        safe_snprintf(tmpStr, sizeof(tmpStr),
+        safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 		    "<option value=%s %s>%s</option>",
 		    key_data.dptr, found ? "SELECTED" : "", &key_data.dptr[1]);
         sendString(tmpStr);
@@ -458,7 +458,7 @@ void addURL(char* url) {
 		 "entry matches all the pages begining with the specified string.</B>\n"
 		 "</DIV>\n</BLOCKQUOTE>\n");
 
-    safe_snprintf(tmpStr, sizeof(tmpStr),
+    safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr),
 	     "<INPUT TYPE=submit VALUE=\"%s\">&nbsp;&nbsp;&nbsp;<INPUT TYPE=reset VALUE=Reset>\n",
 	     (url != NULL) ? "Modify URL" : "Add URL");
     sendString(tmpStr);
@@ -530,7 +530,7 @@ void doAddURL(int len) {
     if((i==idx) || (postData[i] == '&')) {
       if(users != NULL) {
 	decodeWebFormURL(users);
-	safe_snprintf(&authorizedUsers[alen], sizeof(authorizedUsers)-alen,
+	safe_snprintf(__FILE__, __LINE__, &authorizedUsers[alen], sizeof(authorizedUsers)-alen,
 		    "%susers=%s", (alen>0) ? "&" : "", users);
 	alen = strlen(authorizedUsers);
 	users = NULL;
@@ -571,7 +571,7 @@ void doAddURL(int len) {
     char tmpBuf[64];
     datum data_data, key_data;
 
-    safe_snprintf(tmpBuf, sizeof(tmpBuf), "2%s", url);
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "2%s", url);
     key_data.dptr = tmpBuf;
     key_data.dsize = strlen(tmpBuf)+1;
     data_data.dptr = authorizedUsers;
@@ -689,7 +689,7 @@ int doChangeFilter(int len) {
 
   if(err == NULL) {
     if(*myGlobals.currentFilterExpression != '\0'){
-      safe_snprintf(buf, sizeof(buf),
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<B>Filter changed to <I>%s</I>.</B></FONT>\n",
 		 myGlobals.currentFilterExpression);
       sendString(buf);
@@ -747,7 +747,7 @@ void changeFilter(void) {
   sendString("<BR><HR><P><center>\n");
   sendString("<TABLE BORDER=1 "TABLE_DEFAULTS">\n<TR>\n");
   sendString("<TH "TH_BG" ALIGN=center>Old Filter Expression:&nbsp;</TH><TD ALIGN=left>");
-  safe_snprintf(buf, sizeof(buf), "<B>%s",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<B>%s",
 	     myGlobals.currentFilterExpression);
   sendString(buf);
   if(*myGlobals.currentFilterExpression == '\0') sendString("&lt;No filter defined&gt;");
@@ -790,7 +790,7 @@ static void sendMenuFooter(int itm1Idx, int itm2Idx) {
 
   sendString("<CENTER>\n");
   sendString("<FONT FACE=\"Helvetica, Arial, Sans Serif\">\n");
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 	     "[ <A HREF=/%s>%s</A> ]&nbsp;[ <A HREF=/%s>%s</A> ]\n",
 	     menuItem[itm1Idx].anchor, menuItem[itm1Idx].text,
 	     menuItem[itm2Idx].anchor, menuItem[itm2Idx].text);

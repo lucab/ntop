@@ -223,7 +223,7 @@ static void resolveAddress(HostAddr *hostAddr, short keepAddressNumeric) {
 	cwd = "/usr/bin/host";
       else (hostAddr->hostFamily == AF_INET6)
 	cwd = "/usr/bin/host -t aaaa";
-      safe_snprintf(buffer, sizeof(buffer),
+      safe_snprintf(__FILE__, __LINE__, buffer, sizeof(buffer),
 		  "%s %s",
 		  cwd,theAddr);
       
@@ -551,7 +551,7 @@ static void queueAddress(HostAddr elem, int forceResolution) {
   }
 #endif
 
-  safe_snprintf(dataBuf, sizeof(dataBuf), "%s", addrtostr(&elem));
+  safe_snprintf(__FILE__, __LINE__, dataBuf, sizeof(dataBuf), "%s", addrtostr(&elem));
   data_data.dptr = dataBuf;
   data_data.dsize = strlen(dataBuf)+1;
 
@@ -767,7 +767,7 @@ char * _addrtonum(HostAddr *addr, char* buf, u_short bufLen) {
 
   switch(addr->hostFamily) {
   case AF_INET:
-    safe_snprintf(buf, bufLen, "%u", addr->Ip4Address.s_addr);
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "%u", addr->Ip4Address.s_addr);
     break;
 #ifdef INET6
   case AF_INET6:
@@ -824,7 +824,7 @@ int fetchAddressFromCache(HostAddr hostIpAddress, char *buffer, int *type) {
 
     if (myGlobals.actTime - retrievedAddress->recordCreationTime < CONST_DNSCACHE_LIFETIME) {
         myGlobals.numFetchAddressFromCacheCallsOK++;
-        safe_snprintf(buffer, MAX_LEN_SYM_HOST_NAME, "%s", retrievedAddress->symAddress);
+        safe_snprintf(__FILE__, __LINE__, buffer, MAX_LEN_SYM_HOST_NAME, "%s", retrievedAddress->symAddress);
     } else {
         myGlobals.numFetchAddressFromCacheCallsSTALE++;
         buffer[0] = '\0';

@@ -78,11 +78,11 @@ static void storePtr(void* ptr, int ptrLen, int theLine, char* theFile, int lock
   tmpBlock->alreadyTraced    = 0;
   myGlobals.allocatedMemory += tmpBlock->blockSize;
       
-  safe_snprintf(tmpStr, sizeof(tmpStr), "%s:%d.", theFile, theLine);
+  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "%s:%d.", theFile, theLine);
 
   if(traceAllocs) traceEvent(CONST_TRACE_INFO, "malloc(%d):%s  [tot=%u]", ptrLen, tmpStr, myGlobals.allocatedMemory);
 
-  safe_snprintf(tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr);
+  safe_snprintf(__FILE__, __LINE__, tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr);
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
 #if defined(CFG_MULTITHREADED)
@@ -319,8 +319,8 @@ void myAddLeak(void* thePtr, int theLine, char* theFile) {
   
   tmpBlock->blockSize = 0;
   tmpBlock->memoryLocation = thePtr;
-  safe_snprintf(tmpStr, sizeof(tmpStr), "file %s, line %d.", theFile, theLine);
-  safe_snprintf(tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr);
+  safe_snprintf(__FILE__, __LINE__, tmpStr, sizeof(tmpStr), "file %s, line %d.", theFile, theLine);
+  safe_snprintf(__FILE__, __LINE__, tmpBlock->programLocation, sizeof(tmpBlock->programLocation), "%s", tmpStr);
   tmpBlock->nextBlock = theRoot;
   theRoot = tmpBlock;
 }

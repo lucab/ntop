@@ -92,7 +92,7 @@ int execCGI(char* cgiName) {
   for(num=0, i=0; cgiName[i] != '\0'; i++)
     if(cgiName[i] == '?') {
       cgiName[i] = '\0';
-      safe_snprintf(buf, sizeof(buf), "QUERY_STRING=%s", &cgiName[i+1]);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "QUERY_STRING=%s", &cgiName[i+1]);
       putenv(buf);
       num = 1;
       break;
@@ -101,7 +101,7 @@ int execCGI(char* cgiName) {
   putenv("REQUEST_METHOD=GET");
 
   if(num == 0) {
-    safe_snprintf(line, sizeof(line), "QUERY_STRING=%s", getenv("PWD"));
+    safe_snprintf(__FILE__, __LINE__, line, sizeof(line), "QUERY_STRING=%s", getenv("PWD"));
     putenv(line); /* PWD */
 #ifdef DEBUG
     traceEvent(CONST_TRACE_INFO, "NOTE: CGI %s", line);
@@ -110,7 +110,7 @@ int execCGI(char* cgiName) {
 
   putenv("WD="CFG_DATAFILE_DIR);
 
-  safe_snprintf(line, sizeof(line), "%s/cgi/%s", CFG_DATAFILE_DIR, cgiName);
+  safe_snprintf(__FILE__, __LINE__, line, sizeof(line), "%s/cgi/%s", CFG_DATAFILE_DIR, cgiName);
   
 #ifdef DEBUG
   traceEvent(CONST_TRACE_INFO, "Executing CGI '%s'", line);
@@ -201,7 +201,7 @@ void showPluginsList(char* pluginName) {
 
 	flows->pluginStatus.activePlugin = newPluginStatus;
 
-	safe_snprintf(key, sizeof(key), "pluginStatus.%s", 
+	safe_snprintf(__FILE__, __LINE__, key, sizeof(key), "pluginStatus.%s", 
 		    flows->pluginStatus.pluginPtr->pluginName);
 
 	storePrefsValue(key, newPluginStatus ? "1" : "0");
@@ -219,10 +219,10 @@ void showPluginsList(char* pluginName) {
 	doPrintHeader = 1;
       }
 
-      safe_snprintf(tmpBuf1, sizeof(tmpBuf1), "<A HREF=\"/plugins/%s\" title=\"Invoke plugin\">%s</A>",
+      safe_snprintf(__FILE__, __LINE__, tmpBuf1, sizeof(tmpBuf1), "<A HREF=\"/plugins/%s\" title=\"Invoke plugin\">%s</A>",
 		  flows->pluginStatus.pluginPtr->pluginURLname, flows->pluginStatus.pluginPtr->pluginURLname);
 
-      safe_snprintf(tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT %s>",
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT %s>",
 		  getRowColor(),
                   flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ?
                       "rowspan=\"2\"" :
@@ -232,33 +232,33 @@ void showPluginsList(char* pluginName) {
       if(flows->pluginStatus.pluginPtr->inactiveSetup) {
           sendString("&nbsp;</TH>\n");
       } else {
-          safe_snprintf(tmpBuf, sizeof(tmpBuf), "%s</TH>\n",
+          safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s</TH>\n",
                       flows->pluginStatus.activePlugin ?
                           tmpBuf1 : flows->pluginStatus.pluginPtr->pluginURLname);
           sendString(tmpBuf);
       } 
 
-      safe_snprintf(tmpBuf, sizeof(tmpBuf), "<TH "TH_BG" ALIGN=LEFT %s>",
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TH "TH_BG" ALIGN=LEFT %s>",
                   flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL ?
                       "rowspan=\"2\"" :
                       "");
       sendString(tmpBuf);
 
       if(flows->pluginStatus.pluginPtr->inactiveSetup) {
-          safe_snprintf(tmpBuf, sizeof(tmpBuf), "%s</TH>\n", tmpBuf1);
+          safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s</TH>\n", tmpBuf1);
           sendString(tmpBuf);
       } else {
           sendString("&nbsp;</TH>\n");
       } 
 
       if(flows->pluginStatus.pluginPtr->pluginStatusMessage != NULL) {
-	safe_snprintf(tmpBuf, sizeof(tmpBuf), "<TD colspan=\"4\"><font COLOR=\"#FF0000\">%s</font></TD></TR>\n<TR "TR_ON" %s>\n",
+	safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TD colspan=\"4\"><font COLOR=\"#FF0000\">%s</font></TD></TR>\n<TR "TR_ON" %s>\n",
 		    flows->pluginStatus.pluginPtr->pluginStatusMessage,
 		    getRowColor());
 	sendString(tmpBuf);
       }
 
-      safe_snprintf(tmpBuf, sizeof(tmpBuf), "<TD "TD_BG" ALIGN=LEFT>%s</TD>\n"
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "<TD "TD_BG" ALIGN=LEFT>%s</TD>\n"
 		  "<TD "TD_BG" ALIGN=CENTER>%s</TD>\n"
 		  "<TD "TD_BG" ALIGN=LEFT>%s</TD>\n"
 		  "<TD "TD_BG" ALIGN=CENTER><A HREF=\"" CONST_SHOW_PLUGINS_HTML "?%s=%d\">%s</A></TD>"
@@ -318,7 +318,7 @@ char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
   else
     age = 0;
   
-  safe_snprintf(buf, bufSize, "class=\"age%dmin\"", age);
+  safe_snprintf(__FILE__, __LINE__, buf, bufSize, "class=\"age%dmin\"", age);
   
   return(buf);
 }
@@ -373,13 +373,13 @@ char* makeHostLink(HostTraffic *el, short mode,
       fmt = "%s%s";
 
     if(broadcastHost(el)) {
-      safe_snprintf(buf, bufLen, fmt, "", "broadcast");
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, fmt, "", "broadcast");
     } else if(el == myGlobals.otherHostEntry) {
-      safe_snprintf(buf, bufLen, fmt, "", el->hostResolvedName);
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, fmt, "", el->hostResolvedName);
     } else {
-      safe_snprintf(commentBuf, sizeof(commentBuf),
+      safe_snprintf(__FILE__, __LINE__, commentBuf, sizeof(commentBuf),
                   "<!-- unknown %d lt NONE -->", el->hostResolvedNameType);
-      safe_snprintf(buf, bufLen, fmt, commentBuf, el->hostResolvedName);
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, fmt, commentBuf, el->hostResolvedName);
     }
 
     return(buf);
@@ -417,7 +417,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 #ifndef CMPFCTN_DEBUG
       if(myGlobals.debugMode == 1)
 #endif
-        safe_snprintf(noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:NumIpAddr(%s) -->",
+        safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:NumIpAddr(%s) -->",
                     el->hostNumIpAddress);
         strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
     } else if(el->ethAddressString[0] != '\0') {
@@ -427,7 +427,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 #ifndef CMPFCTN_DEBUG
       if(myGlobals.debugMode == 1)
 #endif
-        safe_snprintf(noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:MAC(%s) -->",
+        safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:MAC(%s) -->",
                     el->ethAddressString);
         strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
     } else if(el->fcCounters->hostNumFcAddress[0] != '\0') {
@@ -435,7 +435,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 #ifndef CMPFCTN_DEBUG
       if(myGlobals.debugMode == 1)
 #endif
-        safe_snprintf(noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:FC(%s) -->",
+        safe_snprintf(__FILE__, __LINE__, noteBufAppend, sizeof(noteBufAppend), "<!-- NONE:FC(%s) -->",
                     el->fcCounters->hostNumFcAddress);
         strncat(noteBuf, noteBufAppend, (sizeof(noteBuf) - strlen(noteBuf) - 1));
     } else if(el->nonIPTraffic) {    
@@ -500,7 +500,7 @@ char* makeHostLink(HostTraffic *el, short mode,
        (el->ethAddressString[0] != '\0')) {
       /* MAC address, one which has already been fixed up with the vendor string -
          set the alt tag */
-      safe_snprintf(titleBuf, sizeof(titleBuf), "%s Actual MAC address is %s",
+      safe_snprintf(__FILE__, __LINE__, titleBuf, sizeof(titleBuf), "%s Actual MAC address is %s",
                titleBuf, el->ethAddressString);
       /* Un 'fix' the linkName so it goes back to the native page */
       strncpy(linkName, el->ethAddressString, sizeof(linkName));
@@ -526,14 +526,14 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(symIp[strlen(symIp)-1] == ']') /* "... [MAC]" */ {
     usedEthAddress = 1;
     strncpy(symIp, el->ethAddressString, sizeof(symIp));
-    safe_snprintf(noteBuf, sizeof(noteBuf), "%s<!-- [MAC] -->", noteBuf);
+    safe_snprintf(__FILE__, __LINE__, noteBuf, sizeof(noteBuf), "%s<!-- [MAC] -->", noteBuf);
   }
 
   /* Do we add a 2nd column for the flag??? */
   if(addCountryFlag == 0)
     flag[0] = '\0';
   else {
-    safe_snprintf(flag, sizeof(flag), "<td "TD_BG" align=\"center\">%s</td>",
+    safe_snprintf(__FILE__, __LINE__, flag, sizeof(flag), "<td "TD_BG" align=\"center\">%s</td>",
                 getHostCountryIconURL(el));
   }
 
@@ -598,7 +598,7 @@ char* makeHostLink(HostTraffic *el, short mode,
   }
 
   if(linkName[0] == '\0') {
-    safe_snprintf(noteBuf, sizeof(noteBuf), "%s<!-- EmptyLink -->", noteBuf);
+    safe_snprintf(__FILE__, __LINE__, noteBuf, sizeof(noteBuf), "%s<!-- EmptyLink -->", noteBuf);
   }
 
   /* Fixup ethernet addresses for RFC1945 compliance (: is bad, _ is good) */
@@ -612,8 +612,8 @@ char* makeHostLink(HostTraffic *el, short mode,
 
     vendorInfo = getVendorInfo(el->ethAddress, 0);
     if(vendorInfo[0] != '\0') {
-      safe_snprintf(symIp, sizeof(symIp), "%s%s", vendorInfo, &el->ethAddressString[8]);
-      safe_snprintf(titleBuf, sizeof(titleBuf),
+      safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "%s%s", vendorInfo, &el->ethAddressString[8]);
+      safe_snprintf(__FILE__, __LINE__, titleBuf, sizeof(titleBuf),
                   "%s Actual MAC address is %s",
                   titleBuf, el->ethAddressString);
     }
@@ -623,23 +623,23 @@ char* makeHostLink(HostTraffic *el, short mode,
   if(symIp[2] == ':') {
     char *symEthName = getSpecialMacInfo(el, (short)(!myGlobals.separator[0]));  
     if((symEthName != NULL) && (symEthName[0] != '\0'))
-      safe_snprintf(symIp, sizeof(symIp), "%s%s", symEthName, &el->ethAddressString[8]);
+      safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "%s%s", symEthName, &el->ethAddressString[8]);
     usedEthAddress = 1;
   }
 
   if(el->vlanId > 0) {
     char tmp[256];
 
-    safe_snprintf(vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
-    safe_snprintf(tmp, sizeof(tmp), "%s (vlan %d)", symIp, el->vlanId);
-    safe_snprintf(symIp, sizeof(symIp), "%s", tmp);
+    safe_snprintf(__FILE__, __LINE__, vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
+    safe_snprintf(__FILE__, __LINE__, tmp, sizeof(tmp), "%s (vlan %d)", symIp, el->vlanId);
+    safe_snprintf(__FILE__, __LINE__, symIp, sizeof(symIp), "%s", tmp);
   } else {
     vlanStr[0] = '\0';
   }
 
   /* Make the hostlink */
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
-    safe_snprintf(buf, bufLen, "<th "TH_BG" align=\"left\" nowrap width=\"250\">\n"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<th "TH_BG" align=\"left\" nowrap width=\"250\">\n"
 		"<a href=\"/%s%s.html\" %s%s%s>%s%s</a>\n"
                 "%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>%s\n",
                 linkName, vlanStr,
@@ -652,7 +652,7 @@ char* makeHostLink(HostTraffic *el, short mode,
 		gwStr, brStr, dnsStr, 
                 printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag);
   } else {
-    safe_snprintf(buf, bufLen, "<a href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<a href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
                 "%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
                 linkName, vlanStr,
 		makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), 
@@ -750,12 +750,12 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
   if(el->ip2ccValue != NULL) {
     if(rc != 0) {
-      safe_snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif",
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
                   el->ip2ccValue);
       rc = stat(path, &buf);
     }
     if(rc != 0) {
-      safe_snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
                   CFG_DATAFILE_DIR, el->ip2ccValue);
       rc = stat(path, &buf);
     }
@@ -767,12 +767,12 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
   if(rc != 0) {
     if(el->dnsTLDValue != NULL) {
-      safe_snprintf(path, sizeof(path), "./html/statsicons/flags/%s.gif",
+      safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "./html/statsicons/flags/%s.gif",
                   el->dnsTLDValue);
       rc = stat(path, &buf);
   
       if(rc != 0) {
-        safe_snprintf(path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
+        safe_snprintf(__FILE__, __LINE__, path, sizeof(path), "%s/html/statsicons/flags/%s.gif",
                     CFG_DATAFILE_DIR, el->dnsTLDValue);
         rc = stat(path, &buf);
       }
@@ -788,11 +788,11 @@ char* getHostCountryIconURL(HostTraffic *el) {
 
   if(rc != 0) {
     /* Nothing worked... */
-    safe_snprintf(flagBuf, sizeof(flagBuf), "&nbsp;<!-- No flag for %s or %s -->",
+    safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf), "&nbsp;<!-- No flag for %s or %s -->",
                 el->ip2ccValue != NULL  ? el->ip2ccValue  : "null",
                 el->dnsTLDValue != NULL ? el->dnsTLDValue : "null");
   } else {
-    safe_snprintf(flagBuf, sizeof(flagBuf),
+    safe_snprintf(__FILE__, __LINE__, flagBuf, sizeof(flagBuf),
                 "<img alt=\"Flag for %s code %s %s\" align=\"middle\" "
                 "src=\"/statsicons/flags/%s.gif\" border=\"0\">",
                 strlen(img) == 2 ? "ISO 3166" : "gTLD",
@@ -844,7 +844,7 @@ void switchNwInterface(int _interface) {
   printHTMLheader("Network Interface Switch", NULL, BITFLAG_HTML_NO_REFRESH);
   sendString("<HR>\n");
 
-  safe_snprintf(buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\">Note that "
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\">Note that "
 	      "the NetFlow and sFlow plugins - if enabled - force -M to be set (i.e. "
 	      "they disable interface merging).</font></p>\n");
   sendString(buf);
@@ -852,15 +852,15 @@ void switchNwInterface(int _interface) {
   sendString("<P>\n<FONT FACE=\"Helvetica, Arial, Sans Serif\"><B>\n");
   
   if(myGlobals.mergeInterfaces) {
-    safe_snprintf(buf, sizeof(buf), "Sorry, but you cannot switch among different interfaces "
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, but you cannot switch among different interfaces "
                 "unless the -M command line switch is specified at run time.");
     sendString(buf);
   } else if((mwInterface != -1) &&
 	    ((mwInterface >= myGlobals.numDevices) || myGlobals.device[mwInterface].virtualDevice)) {
-    safe_snprintf(buf, sizeof(buf), "Sorry, invalid interface selected.");
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, invalid interface selected.");
     sendString(buf);
   } else if(myGlobals.numDevices == 1) {
-    safe_snprintf(buf, sizeof(buf), "Sorry, you are currently capturing traffic from only a "
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sorry, you are currently capturing traffic from only a "
 		"single interface [%s].<br><br>"
                 "</b> This interface switch feature is meaningful only when your ntop "
                 "instance captures traffic from multiple interfaces. You must specify "
@@ -871,11 +871,11 @@ void switchNwInterface(int _interface) {
     char value[8];
     
     myGlobals.actualReportDeviceId = (mwInterface)%myGlobals.numDevices;
-    safe_snprintf(buf, sizeof(buf), "The current interface is now [%s].",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "The current interface is now [%s].",
 		myGlobals.device[myGlobals.actualReportDeviceId].name);
     sendString(buf);
     
-    safe_snprintf(value, sizeof(value), "%d", myGlobals.actualReportDeviceId);
+    safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", myGlobals.actualReportDeviceId);
     storePrefsValue("actualReportDeviceId", value);
   } else {
     sendString("Available Network Interfaces:</B><P>\n<FORM ACTION=" CONST_SWITCH_NIC_HTML ">\n");
@@ -887,7 +887,7 @@ void switchNwInterface(int _interface) {
 	else
 	  selected = "";
 
-	safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=interface VALUE=%d %s>&nbsp;%s<br>\n",
 		    i+1, selected, myGlobals.device[i].humanFriendlyName);
 
 	sendString(buf);
@@ -919,7 +919,7 @@ static void printFeatureConfigNum(int textPrintFlag, char* feature, int value) {
   sendString(texthtml("", "<TR><TH "TH_BG" ALIGN=\"left\" width=\"250\">"));
   sendString(feature);
   sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
-  safe_snprintf(tmpBuf, sizeof(tmpBuf), "%d", value);
+  safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%d", value);
   sendString(tmpBuf);
   sendString(texthtml("\n", "</TD></TR>\n"));
 }
@@ -934,7 +934,7 @@ static void printFeatureConfigInfo(int textPrintFlag, char* feature, char* statu
   if((status == NULL) || (status[0] == '\0')) {
     sendString("(nil)");
   } else {
-    safe_snprintf(tmpBuf, sizeof(tmpBuf), "%s", status);
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%s", status);
     tmpStr = strtok_r(tmpBuf, "\n", &strtokState);
     while(tmpStr != NULL) {
       sendString(tmpStr);
@@ -960,14 +960,14 @@ static void printFeatureConfigInfo3ColInt(int textPrintFlag,
   sendString(feature);
   sendString(texthtml(".....", "</TH><TD "TD_BG" ALIGN=\"right\">"));
   if (flag1) {
-    safe_snprintf(tmpBuf, sizeof(tmpBuf), "%d", count1);
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%d", count1);
     sendString(tmpBuf);
   } else {
     sendString("-");
   }
   sendString(texthtml(".....", "</TD><TD "TD_BG" ALIGN=\"right\">"));
   if (flag2) {
-    safe_snprintf(tmpBuf, sizeof(tmpBuf), "%d", count2);
+    safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof(tmpBuf), "%d", count2);
     sendString(tmpBuf);
   } else {
     sendString("-");
@@ -5317,10 +5317,10 @@ void printNtopConfigHInfo(int textPrintFlag) {
 
       printFeatureConfigInfo(textPrintFlag, "RRD path", myGlobals.rrdPath);
 #ifndef WIN32
-      safe_snprintf(buf, sizeof(buf),
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "%04o", myGlobals.rrdDirectoryPermissions);
       printFeatureConfigInfo(textPrintFlag, "New directory permissions", buf);
-      safe_snprintf(buf, sizeof(buf),
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "%04o", myGlobals.rrdUmask);
       printFeatureConfigInfo(textPrintFlag, "New file umask", buf);
 #endif
@@ -5444,19 +5444,19 @@ void printNtopConfigInfo(int textPrintFlag) {
     char pid[16];
 
     if(myGlobals.daemonMode == 1) {
-      safe_snprintf(pid, sizeof(pid), "%d", myGlobals.basentoppid);
+      safe_snprintf(__FILE__, __LINE__, pid, sizeof(pid), "%d", myGlobals.basentoppid);
       printFeatureConfigInfo(textPrintFlag, "ntop Process Id", pid);
-      safe_snprintf(pid, sizeof(pid), "%d", getppid());
+      safe_snprintf(__FILE__, __LINE__, pid, sizeof(pid), "%d", getppid());
       printFeatureConfigInfo(textPrintFlag, "http Process Id", pid);
     } else {
-      safe_snprintf(pid, sizeof(pid), "%d", getppid());
+      safe_snprintf(__FILE__, __LINE__, pid, sizeof(pid), "%d", getppid());
       printFeatureConfigInfo(textPrintFlag, "Process Id", pid);
     }
 
   }
 #endif
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.heartbeatCounter);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.heartbeatCounter);
   printFeatureConfigInfo(textPrintFlag, "Heartbeat (counter)", buf);
   sendString(texthtml("\n\n", "<tr><td colspan=2 "DARK_BG">"));
   sendString("Note: The value of the heartbeat counter is meaningless.  It's just incremented "
@@ -5505,7 +5505,7 @@ void printNtopConfigInfo(int textPrintFlag) {
                            strcmp(myGlobals.program_name, "ntopd") == 0 ? "Yes" : DEFAULT_NTOP_DAEMON_MODE);
 #endif
 
-  safe_snprintf(buf, sizeof(buf), "%s%d",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%d",
 	      myGlobals.maxNumLines == CONST_NUM_TABLE_ROWS_PER_PAGE ? CONST_REPORT_ITS_DEFAULT : "",
 	      myGlobals.maxNumLines);
   printFeatureConfigInfo(textPrintFlag, "-e | --max-table-rows", buf);
@@ -5539,7 +5539,7 @@ void printNtopConfigInfo(int textPrintFlag) {
 			     myGlobals.pcapLog,
 			     DEFAULT_NTOP_PCAP_LOG_FILENAME);
   } else {
-    safe_snprintf(buf, sizeof(buf), "%s/%s.&lt;device&gt;.pcap",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s.&lt;device&gt;.pcap",
 		myGlobals.pcapLogBasePath,
 		myGlobals.pcapLog);
     printParameterConfigInfo(textPrintFlag, "-l | --pcap-log" CONST_REPORT_ITS_EFFECTIVE,
@@ -5565,7 +5565,7 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.enableSuspiciousPacketDump == 1 ? "Enabled" : "Disabled",
                            DEFAULT_NTOP_SUSPICIOUS_PKT_DUMP == 1 ? "Enabled" : "Disabled");
 
-  safe_snprintf(buf, sizeof(buf), "%s%d",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%d",
 	      myGlobals.refreshRate == DEFAULT_NTOP_AUTOREFRESH_INTERVAL ? CONST_REPORT_ITS_DEFAULT : "",
 	      myGlobals.refreshRate);
   printFeatureConfigInfo(textPrintFlag, "-r | --refresh-time", buf);
@@ -5574,13 +5574,13 @@ void printNtopConfigInfo(int textPrintFlag) {
                            myGlobals.disablePromiscuousMode == 1 ? "Yes" : "No",
                            DEFAULT_NTOP_DISABLE_PROMISCUOUS == 1 ? "Yes" : "No");
 
-  safe_snprintf(buf, sizeof(buf), "%s%d",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%d",
 	      myGlobals.traceLevel == DEFAULT_TRACE_LEVEL ? CONST_REPORT_ITS_DEFAULT : "",
 	      myGlobals.traceLevel);
   printFeatureConfigInfo(textPrintFlag, "-t | --trace-level", buf);
 
 #ifndef WIN32
-  safe_snprintf(buf, sizeof(buf), "%s (uid=%d, gid=%d)",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s (uid=%d, gid=%d)",
 	      myGlobals.effectiveUserName,
 	      myGlobals.userId,
 	      myGlobals.groupId);
@@ -5590,13 +5590,13 @@ void printNtopConfigInfo(int textPrintFlag) {
   if(myGlobals.webPort == 0) {
     strcpy(buf, "Inactive");
   } else if(myGlobals.webAddr != 0) {
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"%sActive, address %s, port %d",
 		( (myGlobals.webAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.webPort == DEFAULT_NTOP_WEB_PORT) ) ? CONST_REPORT_ITS_DEFAULT : "",
 		myGlobals.webAddr,
 		myGlobals.webPort);
   } else {
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"%sActive, all interfaces, port %d",
 		((myGlobals.webAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.webPort == DEFAULT_NTOP_WEB_PORT) )
 		? CONST_REPORT_ITS_DEFAULT : "", myGlobals.webPort);
@@ -5680,12 +5680,12 @@ void printNtopConfigInfo(int textPrintFlag) {
   } else if(myGlobals.sslPort == 0) {
     strcpy(buf, "Inactive");
   } else if(myGlobals.sslAddr != 0) {
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"%sActive, address %s, port %d",
 		( (myGlobals.sslAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.sslPort == DEFAULT_NTOP_WEB_PORT) ) 
 		? CONST_REPORT_ITS_DEFAULT : "", myGlobals.sslAddr,myGlobals.sslPort);
   } else {
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"%sActive, all interfaces, port %d",
 		( (myGlobals.sslAddr == DEFAULT_NTOP_WEB_ADDR) && (myGlobals.sslPort == DEFAULT_NTOP_WEB_PORT) ) 
 		? CONST_REPORT_ITS_DEFAULT : "", myGlobals.sslPort);
@@ -5776,9 +5776,9 @@ void printNtopConfigInfo(int textPrintFlag) {
   
   if(myGlobals.webPort != 0) {
     if(myGlobals.webAddr != 0) {
-      safe_snprintf(buf, sizeof(buf), "http://%s:%d", myGlobals.webAddr, myGlobals.webPort);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://%s:%d", myGlobals.webAddr, myGlobals.webPort);
     } else {
-      safe_snprintf(buf, sizeof(buf), "http://any:%d", myGlobals.webPort);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "http://any:%d", myGlobals.webPort);
     }
     printFeatureConfigInfo(textPrintFlag, "Web server URL", buf);
   } else {
@@ -5788,9 +5788,9 @@ void printNtopConfigInfo(int textPrintFlag) {
 #ifdef HAVE_OPENSSL
   if(myGlobals.sslPort != 0) {
     if(myGlobals.sslAddr != 0) {
-      safe_snprintf(buf, sizeof(buf), "https://%s:%d", myGlobals.sslAddr, myGlobals.sslPort);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://%s:%d", myGlobals.sslAddr, myGlobals.sslPort);
     } else {
-      safe_snprintf(buf, sizeof(buf), "https://any:%d", myGlobals.sslPort);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "https://any:%d", myGlobals.sslPort);
     }
     printFeatureConfigInfo(textPrintFlag, "SSL Web server URL", buf);
   } else {
@@ -5836,30 +5836,30 @@ if(myGlobals.gdVersionGuessValue != NULL)
   printFeatureConfigInfo(textPrintFlag, "Fragment Handling", myGlobals.enableFragmentHandling == 1 ? "Enabled" : "Disabled");
   printFeatureConfigInfo(textPrintFlag, "Tracking only local hosts", myGlobals.trackOnlyLocalHosts == 1 ? "Yes" : "No");
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numIpProtosToMonitor);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numIpProtosToMonitor);
   printFeatureConfigInfo(textPrintFlag, "# IP Protocols Being Monitored", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numActServices);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numActServices);
   printFeatureConfigInfo(textPrintFlag, "# Protocol slots", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.ipPortMapper.numElements);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipPortMapper.numElements);
   printFeatureConfigInfo(textPrintFlag, "# IP Ports Being Monitored", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.ipPortMapper.numSlots);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipPortMapper.numSlots);
   printFeatureConfigInfo(textPrintFlag, "# IP Ports slots", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.webServerRequestQueueLength);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.webServerRequestQueueLength);
   printFeatureConfigInfo(textPrintFlag, "WebServer Request Queue", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numDevices);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numDevices);
   printFeatureConfigInfo(textPrintFlag, "Devices (Network Interfaces)", buf);
 
   printFeatureConfigInfo(textPrintFlag, "Domain name (short)", myGlobals.shortDomainName);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.ipCountryCount);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipCountryCount);
   printFeatureConfigInfo(textPrintFlag, "IP to country flag table (entries)", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup);
   printFeatureConfigInfo(textPrintFlag, "Total Hash Collisions (Vendor/Special) (lookup)", buf);
 
   /* ******************** */
@@ -5871,21 +5871,21 @@ if(myGlobals.gdVersionGuessValue != NULL)
     addr1.s_addr = myGlobals.localNetworks[i][CONST_NETWORK_ENTRY];
     addr2.s_addr = myGlobals.localNetworks[i][CONST_NETMASK_ENTRY];
     
-    safe_snprintf(buf1, sizeof(buf1), "%s/%s [all devices]\n", 
+    safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "%s/%s [all devices]\n", 
 		_intoa(addr1, buf1, sizeof(buf1)),
 		_intoa(addr2, buf2, sizeof(buf2)));
     
-    safe_snprintf(buf, sizeof(buf), "%s%s", buf, buf1);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%s", buf, buf1);
   }
  
   for(i=0; i<myGlobals.numDevices; i++) {
     if(myGlobals.device[i].activeDevice) {
       char buf1[128], buf3[64];
-      safe_snprintf(buf1, sizeof(buf1), "%s/%s [device %s]\n",
+      safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "%s/%s [device %s]\n",
 		  _intoa(myGlobals.device[i].network, buf2, sizeof(buf2)),
 		  _intoa(myGlobals.device[i].netmask, buf3, sizeof(buf3)),
 		  myGlobals.device[i].humanFriendlyName);
-      safe_snprintf(buf, sizeof(buf), "%s%s", buf, buf1);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%s", buf, buf1);
     }
   }
 
@@ -6015,7 +6015,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
                           "</td>\n"
                       "</table>\n</td></tr>\n"));
 
-  safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numHandledSIGPIPEerrors);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numHandledSIGPIPEerrors);
   printFeatureConfigInfo(textPrintFlag, "# Handled SIGPIPE Errors", buf);
 
 #ifdef MAKE_WITH_SSLWATCHDOG
@@ -6023,7 +6023,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
   if(myGlobals.useSSLwatchdog == 1)
 #endif
     {
-      safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numHTTPSrequestTimeouts);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numHTTPSrequestTimeouts);
       printFeatureConfigInfo(textPrintFlag, "# HTTPS Request Timeouts", buf);
     }
 #endif
@@ -6035,20 +6035,20 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
 #ifdef HAVE_SYS_RESOURCE_H
   getrlimit(RLIMIT_DATA, &rlim);
-  safe_snprintf(buf, sizeof(buf), "%d", (int)rlim.rlim_cur);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)rlim.rlim_cur);
   printFeatureConfigInfo(textPrintFlag, "arena limit, getrlimit(RLIMIT_DATA, ...)", buf);
 #endif
 
-  safe_snprintf(buf, sizeof(buf), "%d", memStats.ordblks);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.ordblks);
   printFeatureConfigInfo(textPrintFlag, "Allocated blocks (ordblks)", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", memStats.arena);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.arena);
   printFeatureConfigInfo(textPrintFlag, "Allocated (arena)", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", memStats.uordblks);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.uordblks);
   printFeatureConfigInfo(textPrintFlag, "Used (uordblks)", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", memStats.fordblks);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.fordblks);
   printFeatureConfigInfo(textPrintFlag, "Free (fordblks)", buf);
 
   if(memStats.uordblks + memStats.fordblks != memStats.arena)
@@ -6056,10 +6056,10 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   sendString(texthtml("\n\nMemory allocation - mmapped\n\n", "<tr><th colspan=2 "DARK_BG">Memory allocation - mmapped</th></tr>\n"));
 
-  safe_snprintf(buf, sizeof(buf), "%d", memStats.hblks);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.hblks);
   printFeatureConfigInfo(textPrintFlag, "Allocated blocks (hblks)", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", memStats.hblkhd);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.hblkhd);
   printFeatureConfigInfo(textPrintFlag, "Allocated bytes (hblkhd)", buf);
 
 #endif
@@ -6067,39 +6067,39 @@ if(myGlobals.gdVersionGuessValue != NULL)
   if(textPrintFlag == TRUE) {
     sendString(texthtml("\n\nMemory Usage\n\n", "<tr><th colspan=2 "DARK_BG">Memory Usage</th></tr>\n"));
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadSize);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadSize);
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (bytes)", buf);
   
-    safe_snprintf(buf, sizeof(buf), "%d (%.1f MB)", myGlobals.ipCountryMem, (float)myGlobals.ipCountryMem/(1024.0*1024.0));
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d (%.1f MB)", myGlobals.ipCountryMem, (float)myGlobals.ipCountryMem/(1024.0*1024.0));
     printFeatureConfigInfo(textPrintFlag, "IP to country flag table (bytes)", buf);
 
     if(myGlobals.ipCountryCount > 0) {
-      safe_snprintf(buf, sizeof(buf), "%.1f", (float)myGlobals.ipCountryMem/myGlobals.ipCountryCount);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1f", (float)myGlobals.ipCountryMem/myGlobals.ipCountryCount);
       printFeatureConfigInfo(textPrintFlag, "Bytes per entry", buf);
     }
 
-    safe_snprintf(buf, sizeof(buf), "%d (%.1f MB)", myGlobals.asMem, (float)myGlobals.asMem/(1024.0*1024.0));
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d (%.1f MB)", myGlobals.asMem, (float)myGlobals.asMem/(1024.0*1024.0));
     printFeatureConfigInfo(textPrintFlag, "IP to AS (Autonomous System) number table (bytes)", buf);
 
 #if defined(HAVE_MALLINFO_MALLOC_H) && defined(HAVE_MALLOC_H) && defined(__GNUC__)
 
-    safe_snprintf(buf, sizeof(buf), "%d", memStats.arena + memStats.hblkhd);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", memStats.arena + memStats.hblkhd);
     printFeatureConfigInfo(textPrintFlag, "Current memory usage", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.baseMemoryUsage);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.baseMemoryUsage);
     printFeatureConfigInfo(textPrintFlag, "Base memory usage", buf);
 
     for(i=0; i<myGlobals.numDevices; i++)
       totalHostsMonitored += myGlobals.device[i].hostsno;
 
     if(totalHostsMonitored > 0) {
-      safe_snprintf(buf, sizeof(buf), "%d = (%d + %d)", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d = (%d + %d)", 
 		  totalHostsMonitored + myGlobals.hostsCacheLen,
 		  totalHostsMonitored,
 		  myGlobals.hostsCacheLen);
       printFeatureConfigInfo(textPrintFlag, "Hosts stored (active+cache)", buf);
 
-      safe_snprintf(buf, sizeof(buf), "%.1fKB", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%.1fKB", 
 		  ((float)(memStats.arena + memStats.hblkhd - myGlobals.baseMemoryUsage) /
 		   (float)(totalHostsMonitored + myGlobals.hostsCacheLen) /
 		   1024.0 + 0.05));
@@ -6110,46 +6110,46 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   sendString(texthtml("\n\nHost Memory Cache\n\n", "<tr><th colspan=2 "DARK_BG">Host Memory Cache</th></tr>\n"));
 
-  safe_snprintf(buf, sizeof(buf), 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
               "#define MAX_HOSTS_CACHE_LEN %d", MAX_HOSTS_CACHE_LEN);
   printFeatureConfigInfo(textPrintFlag, "Limit", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.hostsCacheLen);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hostsCacheLen);
   printFeatureConfigInfo(textPrintFlag, "Current Size", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.hostsCacheLenMax);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hostsCacheLenMax);
   printFeatureConfigInfo(textPrintFlag, "Maximum Size", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.hostsCacheReused);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hostsCacheReused);
   printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
 
 #ifdef PARM_USE_SESSIONS_CACHE
   sendString(texthtml("\n\nSession Memory Cache\n\n", "<tr><th colspan=2 "DARK_BG">Session Memory Cache</th></tr>\n"));
 
-  safe_snprintf(buf, sizeof(buf), 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
               "#define MAX_SESSIONS_CACHE_LEN %d", MAX_SESSIONS_CACHE_LEN);
   printFeatureConfigInfo(textPrintFlag, "Limit", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.sessionsCacheLen);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.sessionsCacheLen);
   printFeatureConfigInfo(textPrintFlag, "Current Size", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.sessionsCacheLenMax);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.sessionsCacheLenMax);
   printFeatureConfigInfo(textPrintFlag, "Maximum Size", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.sessionsCacheReused);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.sessionsCacheReused);
   printFeatureConfigInfo(textPrintFlag, "# Entries Reused", buf);
 #endif
 
   if(textPrintFlag == TRUE) {
     sendString(texthtml("\n\nMAC/IPX Hash tables\n\n", "<tr><th colspan=2 "DARK_BG">MAC/IPX Hash Tables</th></tr>\n"));
 
-    safe_snprintf(buf, sizeof(buf), "%d", MAX_IPXSAP_NAME_HASH);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", MAX_IPXSAP_NAME_HASH);
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Size (entries)", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadCollisions);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.ipxsapHashLoadCollisions);
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Collisions (load)", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.hashCollisionsLookup);
     printFeatureConfigInfo(textPrintFlag, "IPX/SAP Hash Collisions (use)", buf);
   }
 
@@ -6158,32 +6158,32 @@ if(myGlobals.gdVersionGuessValue != NULL)
   sendString(texthtml("\n\nPackets\n\n", "<tr><th colspan=2 "DARK_BG">Packets</th></tr>\n"));
 
 #ifdef CFG_MULTITHREADED
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPackets);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.receivedPackets);
   printFeatureConfigInfo(textPrintFlag, "Received", buf);
 #endif
 
 #ifdef CFG_MULTITHREADED
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPacketsProcessed);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.receivedPacketsProcessed);
   printFeatureConfigInfo(textPrintFlag, "Processed Immediately", buf);
 #endif
 
 #ifdef CFG_MULTITHREADED
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPacketsQueued);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.receivedPacketsQueued);
   printFeatureConfigInfo(textPrintFlag, "Queued", buf);
 
   if(myGlobals.receivedPacketsLostQ > 0) {
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.receivedPacketsLostQ);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.receivedPacketsLostQ);
     printFeatureConfigInfo(textPrintFlag, "Lost in ntop queue", buf);
   }
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.packetQueueLen);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.packetQueueLen);
   printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.maxPacketQueueLen);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.maxPacketQueueLen);
   printFeatureConfigInfo(textPrintFlag, "Maximum Queue", buf);
 
 #if !defined(WIN32) && defined(HAVE_PCAP_SETNONBLOCK)
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.setNonBlockingSleepCount);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.setNonBlockingSleepCount);
   printFeatureConfigInfo(textPrintFlag, "--set-pcap-nonblocking sleep count", buf);
 #endif
 
@@ -6194,18 +6194,18 @@ if(myGlobals.gdVersionGuessValue != NULL)
   sendString(texthtml("\n\nHost/Session counts - global\n\n",
 		      "<tr><th colspan=2 "DARK_BG">Host/Session counts - global</th></tr>\n"));
 
-  safe_snprintf(buf, sizeof(buf), "%u", (unsigned int)myGlobals.numPurgedHosts);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", (unsigned int)myGlobals.numPurgedHosts);
   printFeatureConfigInfo(textPrintFlag, "Purged Hosts", buf);
 
 #ifdef MAX_HOSTS_PURGE_PER_CYCLE
   if(textPrintFlag == TRUE) {
-    safe_snprintf(buf, sizeof(buf), "%d", MAX_HOSTS_PURGE_PER_CYCLE);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", MAX_HOSTS_PURGE_PER_CYCLE);
     printFeatureConfigInfo(textPrintFlag, "MAX_HOSTS_PURGE_PER_CYCLE", buf);
   }
 #endif
 
   if(myGlobals.enableSessionHandling) {
-    safe_snprintf(buf, sizeof(buf), "%s",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
 	formatPkts(myGlobals.numTerminatedSessions, buf2, sizeof(buf2)));
     printFeatureConfigInfo(textPrintFlag, "Terminated Sessions", buf);
   }
@@ -6213,18 +6213,18 @@ if(myGlobals.gdVersionGuessValue != NULL)
   /* **** */
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    safe_snprintf(buf, sizeof(buf), "\nHost/Session counts - Device %d (%s)\n", i, myGlobals.device[i].name);
-    safe_snprintf(buf2, sizeof(buf2), "<tr><th colspan=2 "DARK_BG">Host/Session counts - Device %d (%s)</th></tr>\n",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "\nHost/Session counts - Device %d (%s)\n", i, myGlobals.device[i].name);
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "<tr><th colspan=2 "DARK_BG">Host/Session counts - Device %d (%s)</th></tr>\n",
 		i, myGlobals.device[i].name);
     sendString(texthtml(buf, buf2));
     
     printFeatureConfigInfo(textPrintFlag, "Hash Bucket Size",
 			   formatBytes(sizeof(HostTraffic), 0, buf, sizeof(buf)));
     
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].actualHashSize);
     printFeatureConfigInfo(textPrintFlag, "Actual Hash Size", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.device[i].hostsno);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.device[i].hostsno);
     printFeatureConfigInfo(textPrintFlag, "Stored hosts", buf);
     
       for(idx=0; idx<myGlobals.device[i].actualHashSize; idx++) {
@@ -6244,23 +6244,23 @@ if(myGlobals.gdVersionGuessValue != NULL)
 	}
       }      
       
-      safe_snprintf(buf, sizeof(buf), "[min %u][max %u][avg %.1f]", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[min %u][max %u][avg %.1f]", 
 		  minLen, maxLen, (float)totBuckets/(float)nonEmptyBuckets);
       printFeatureConfigInfo(textPrintFlag, "Bucket List Length", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.device[i].hashListMaxLookups);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[i].hashListMaxLookups);
     printFeatureConfigInfo(textPrintFlag, "Max host lookup", buf);
 
     if(myGlobals.enableSessionHandling) {
-      safe_snprintf(buf, sizeof(buf), "%s",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
 		  formatBytes(sizeof(IPSession), 0, buf2, sizeof(buf2)));
       printFeatureConfigInfo(textPrintFlag, "Session Bucket Size", buf);
     
-      safe_snprintf(buf, sizeof(buf), "%s",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
 		  formatPkts(myGlobals.device[i].numTcpSessions, buf2, sizeof(buf2)));
       printFeatureConfigInfo(textPrintFlag, "Sessions", buf);
       
-      safe_snprintf(buf, sizeof(buf), "%s", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", 
 		  formatPkts(myGlobals.device[i].maxNumTcpSessions, buf2, sizeof(buf2)));
       printFeatureConfigInfo(textPrintFlag, "Max Num. Sessions", buf);
     }
@@ -6272,27 +6272,27 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
   sendString(texthtml("DNS Sniffed:\n\n", "<tr><th TH "TH_BG" ALIGN=LEFT>DNS Sniffed</th>\n<td><table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
 
-  safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffCount);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffCount);
   printFeatureConfigInfo(textPrintFlag, "DNS Packets sniffed", buf);
 
   if(textPrintFlag == TRUE) {
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffRequestCount);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffRequestCount);
     printFeatureConfigInfo(textPrintFlag, "  less 'requests'", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffFailedCount);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffFailedCount);
     printFeatureConfigInfo(textPrintFlag, "  less 'failed'", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffARPACount);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffARPACount);
     printFeatureConfigInfo(textPrintFlag, "  less 'reverse dns' (in-addr.arpa)", buf);
   }
 
-  safe_snprintf(buf, sizeof(buf), "%d", (int)(myGlobals.dnsSniffCount
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)(myGlobals.dnsSniffCount
 					    - myGlobals.dnsSniffRequestCount
 					    - myGlobals.dnsSniffFailedCount
 					    - myGlobals.dnsSniffARPACount));
   printFeatureConfigInfo(textPrintFlag, "DNS Packets processed", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffStoredInCache);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsSniffStoredInCache);
   printFeatureConfigInfo(textPrintFlag, "Stored in cache (includes aliases)", buf);
 
   if(textPrintFlag != TRUE) {
@@ -6302,25 +6302,25 @@ if(myGlobals.gdVersionGuessValue != NULL)
   if(textPrintFlag == TRUE) {
     sendString("\n\nIP to name - ipaddr2str():\n\n");
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numipaddr2strCalls);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numipaddr2strCalls);
     printFeatureConfigInfo(textPrintFlag, "Total calls", buf);
 
     if(myGlobals.numipaddr2strCalls != myGlobals.numFetchAddressFromCacheCalls) {
-      safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCalls);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCalls);
       printFeatureConfigInfo(textPrintFlag, "ERROR: cache fetch attempts != ipaddr2str() calls", buf);
     }
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCallsOK);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCallsOK);
     printFeatureConfigInfo(textPrintFlag, "....OK", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)(myGlobals.numipaddr2strCalls
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)(myGlobals.numipaddr2strCalls
 					      - myGlobals.numFetchAddressFromCacheCallsOK));
     printFeatureConfigInfo(textPrintFlag, "....Total not found", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCallsFAIL);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCallsFAIL);
     printFeatureConfigInfo(textPrintFlag, "........Not found in cache", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCallsSTALE);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numFetchAddressFromCacheCallsSTALE);
     printFeatureConfigInfo(textPrintFlag, "........Too old in cache", buf);
   }
 
@@ -6329,16 +6329,16 @@ if(myGlobals.gdVersionGuessValue != NULL)
   if(myGlobals.numericFlag == 0) {
     sendString(texthtml("\n\nQueued - dequeueAddress():\n\n", "<tr><TH "TH_BG" ALIGN=LEFT>Queued</th>\n<td><table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedCount);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedCount);
     printFeatureConfigInfo(textPrintFlag, "Total Queued", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedDup);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedDup);
     printFeatureConfigInfo(textPrintFlag, "Not queued (duplicate)", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedMax);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedMax);
     printFeatureConfigInfo(textPrintFlag, "Maximum Queued", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedCurrent);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.addressQueuedCurrent);
     printFeatureConfigInfo(textPrintFlag, "Current Queue", buf);
 
     if(textPrintFlag != TRUE) {
@@ -6351,27 +6351,27 @@ if(myGlobals.gdVersionGuessValue != NULL)
   if(textPrintFlag == TRUE) {
     sendString("\n\nResolved - resolveAddress():\n\n");
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numResolveAddressCalls);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numResolveAddressCalls);
     printFeatureConfigInfo(textPrintFlag, "Addresses to resolve", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numResolveNoCacheDB);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numResolveNoCacheDB);
     printFeatureConfigInfo(textPrintFlag, "....less 'Error: No cache database'", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numResolvedFromCache);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numResolvedFromCache);
     printFeatureConfigInfo(textPrintFlag, "....less 'Found in ntop cache'", buf);
 
 #ifdef PARM_USE_HOST
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numResolvedFromHostAddresses);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numResolvedFromHostAddresses);
     printFeatureConfigInfo(textPrintFlag, "....less 'Resolved from /usr/bin/host'", buf);
 #endif
 
 #ifdef PARM_USE_HOST
-    safe_snprintf(buf, sizeof(buf), "%d", (int)(myGlobals.numResolveAddressCalls
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)(myGlobals.numResolveAddressCalls
 					 - myGlobals.numResolvedFromHostAddresses
 					 - myGlobals.numResolveNoCacheDB
 					 - myGlobals.numResolvedFromCache));
 #else
-    safe_snprintf(buf, sizeof(buf), "%d", (int)(myGlobals.numResolveAddressCalls
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)(myGlobals.numResolveAddressCalls
 					 - myGlobals.numResolveNoCacheDB
 					 - myGlobals.numResolvedFromCache));
 #endif
@@ -6384,20 +6384,20 @@ if(myGlobals.gdVersionGuessValue != NULL)
 #endif
 	- myGlobals.numResolveNoCacheDB
 	- myGlobals.numResolvedFromCache) != myGlobals.numAttemptingResolutionWithDNS) {
-      safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numAttemptingResolutionWithDNS);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numAttemptingResolutionWithDNS);
       printFeatureConfigInfo(textPrintFlag, "    ERROR: actual count does not match!", buf);
     }
   }
 
   sendString(texthtml("\n\nDNS Lookup Calls:\n\n", "<tr><TH "TH_BG" ALIGN=LEFT>DNS Lookup Calls</th>\n<td><table BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n"));
 
-  safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numAttemptingResolutionWithDNS);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numAttemptingResolutionWithDNS);
   printFeatureConfigInfo(textPrintFlag, "DNS resolution attempts", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numResolvedWithDNSAddresses);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numResolvedWithDNSAddresses);
   printFeatureConfigInfo(textPrintFlag, "....Success: Resolved", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", (int)(myGlobals.numDNSErrorHostNotFound
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)(myGlobals.numDNSErrorHostNotFound
 					    + myGlobals.numDNSErrorNoData
 					    + myGlobals.numDNSErrorNoRecovery
 					    + myGlobals.numDNSErrorTryAgain
@@ -6405,26 +6405,26 @@ if(myGlobals.gdVersionGuessValue != NULL)
   printFeatureConfigInfo(textPrintFlag, "....Failed", buf);
 
   if(textPrintFlag == TRUE) {
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorHostNotFound);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorHostNotFound);
     printFeatureConfigInfo(textPrintFlag, "........HOST_NOT_FOUND", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorNoData);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorNoData);
     printFeatureConfigInfo(textPrintFlag, "........NO_DATA", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorNoRecovery);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorNoRecovery);
     printFeatureConfigInfo(textPrintFlag, "........NO_RECOVERY", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorTryAgain);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorTryAgain);
     printFeatureConfigInfo(textPrintFlag, "........TRY_AGAIN (don't store)", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorOther);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numDNSErrorOther);
     printFeatureConfigInfo(textPrintFlag, "........Other error (don't store)", buf);
   }
 
-  safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.dnsCacheStoredLookup);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.dnsCacheStoredLookup);
   printFeatureConfigInfo(textPrintFlag, "DNS lookups stored in cache", buf);
 
-  safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numKeptNumericAddresses);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numKeptNumericAddresses);
   printFeatureConfigInfo(textPrintFlag, "Host addresses kept numeric", buf);
 
 
@@ -6441,31 +6441,31 @@ if(myGlobals.gdVersionGuessValue != NULL)
   if(textPrintFlag == TRUE) {
     sendString("\n\nVendor Lookup Table\n\n");
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numVendorLookupRead);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numVendorLookupRead);
     printFeatureConfigInfo(textPrintFlag, "Input lines read", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", (int)myGlobals.numVendorLookupAdded);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", (int)myGlobals.numVendorLookupAdded);
     printFeatureConfigInfo(textPrintFlag, "Records added total", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupAddedSpecial);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numVendorLookupAddedSpecial);
     printFeatureConfigInfo(textPrintFlag, ".....includes special records", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupCalls);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numVendorLookupCalls);
     printFeatureConfigInfo(textPrintFlag, "getVendorInfo() calls", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupSpecialCalls);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numVendorLookupSpecialCalls);
     printFeatureConfigInfo(textPrintFlag, "getSpecialVendorInfo() calls", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFound48bit);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numVendorLookupFound48bit);
     printFeatureConfigInfo(textPrintFlag, "Found 48bit (xx:xx:xx:xx:xx:xx) match", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFound24bit);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numVendorLookupFound24bit);
     printFeatureConfigInfo(textPrintFlag, "Found 24bit (xx:xx:xx) match", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFoundMulticast);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numVendorLookupFoundMulticast);
     printFeatureConfigInfo(textPrintFlag, "Found multicast bit set", buf);
 
-    safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numVendorLookupFoundLAA);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numVendorLookupFoundLAA);
     printFeatureConfigInfo(textPrintFlag, "Found LAA (Locally assigned address) bit set", buf);
 
   }
@@ -6475,11 +6475,11 @@ if(myGlobals.gdVersionGuessValue != NULL)
 #if defined(CFG_MULTITHREADED)
   sendString(texthtml("\n\nThread counts\n\n", "<tr><th colspan=2 "DARK_BG">Thread counts</th></tr>\n"));
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numThreads);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numThreads);
   printFeatureConfigInfo(textPrintFlag, "Active", buf);
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numDequeueThreads);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numDequeueThreads);
   printFeatureConfigInfo(textPrintFlag, "Dequeue", buf);
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.numChildren);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.numChildren);
   printFeatureConfigInfo(textPrintFlag, "Children (active)", buf);
 #endif
 
@@ -6504,9 +6504,9 @@ if(myGlobals.gdVersionGuessValue != NULL)
 			      "<th>Last Bad Access</th><th>Lockout Expires</th></tr>"));
 	}
       
-	safe_snprintf(buf, sizeof(buf), "%s", 
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s", 
 		    _addrtostr(&myGlobals.weDontWantToTalkWithYou[i].addr, buf3, sizeof(buf3)));
-	safe_snprintf(buf2, sizeof(buf2), "%d", myGlobals.weDontWantToTalkWithYou[i].count);
+	safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%d", myGlobals.weDontWantToTalkWithYou[i].count);
 	strftime(buf3, sizeof(buf3), CONST_LOCALE_TIMESPEC, 
 		 localtime_r(&myGlobals.weDontWantToTalkWithYou[i].lastBadAccess, &t));
 	lockoutExpires = myGlobals.weDontWantToTalkWithYou[i].lastBadAccess + 
@@ -6539,7 +6539,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
     if(countBadGuys > 0) {  
       sendString(texthtml("\n", "</table></td>\n"));
 
-      safe_snprintf(buf, sizeof(buf), "%d", PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", PARM_WEDONTWANTTOTALKWITHYOU_INTERVAL);
       printFeatureConfigInfo(textPrintFlag, "Reject duration (seconds)", buf);
   
       strftime(buf, sizeof(buf), CONST_LOCALE_TIMESPEC, localtime_r(&myGlobals.actTime, &t));
@@ -6565,7 +6565,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
   bufUsed = 0;
 
   for(i=0; myGlobals.dataFileDirs[i] != NULL; i++) {
-    bufUsed = safe_snprintf(&buf[bufPosition],
+    bufUsed = safe_snprintf(__FILE__, __LINE__, &buf[bufPosition],
 			   bufLength,
 			   "%s%s\n",
 			   i > 0 ? "                " : "",
@@ -6583,7 +6583,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
   bufUsed = 0;
 
   for(i=0; myGlobals.configFileDirs[i] != NULL; i++) {
-    bufUsed = safe_snprintf(&buf[bufPosition],
+    bufUsed = safe_snprintf(__FILE__, __LINE__, &buf[bufPosition],
 			   bufLength,
 			   "%s%s\n",
 			   i > 0 ? "                  " : "",
@@ -6601,7 +6601,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
   bufUsed = 0;
 
   for(i=0; myGlobals.pluginDirs[i] != NULL; i++) {
-    bufUsed = safe_snprintf(&buf[bufPosition],
+    bufUsed = safe_snprintf(__FILE__, __LINE__, &buf[bufPosition],
 			   bufLength, "%s%s\n",
 			   i > 0 ? "             " : "",
 			   myGlobals.pluginDirs[i]);
@@ -6632,7 +6632,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
  #else
   #define PATCHLEVEL 0
  #endif
-  safe_snprintf(buf, sizeof(buf), "%s (%d.%d.%d)",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s (%d.%d.%d)",
 	      __VERSION__, 
               __GNUC__, 
               __GNUC_MINOR__, 
@@ -6642,7 +6642,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
 #if defined(HAVE_SYS_UTSNAME_H) && defined(HAVE_UNAME)
   if (uname(&unameData) == 0) {
-    safe_snprintf(buf, sizeof(buf), "sysname(%s) release(%s) version(%s) machine(%s)",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "sysname(%s) release(%s) version(%s) machine(%s)",
                          unameData.sysname,
                          unameData.release,
                          unameData.version,
@@ -6668,24 +6668,24 @@ if(myGlobals.gdVersionGuessValue != NULL)
   }
 
   if(textPrintFlag == TRUE) {
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"globals-defines.h: #define MAX_LANGUAGES_REQUESTED %d",
 		MAX_LANGUAGES_REQUESTED);
     printFeatureConfigInfo(textPrintFlag, "Languages - per request (Accept-Language:)", buf);
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		"globals-defines.h: #define MAX_LANGUAGES_SUPPORTED %d",
 		MAX_LANGUAGES_SUPPORTED);
     printFeatureConfigInfo(textPrintFlag, "Languages supported - maximum", buf);
   }
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.maxSupportedLanguages + 1);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.maxSupportedLanguages + 1);
   printFeatureConfigInfo(textPrintFlag, "Languages supported - actual ", buf);
 
   printFeatureConfigInfo(textPrintFlag, "Default language", myGlobals.defaultLanguage);
 
   for(i=0; i< myGlobals.maxSupportedLanguages; i++) {
-    safe_snprintf(buf, sizeof(buf), "Additional language %d", i+1);
-    safe_snprintf(buf2, sizeof(buf2), "'%s', time format '%s'", 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Additional language %d", i+1);
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "'%s', time format '%s'", 
 		myGlobals.supportedLanguages[i],
 		myGlobals.strftimeFormat[i]);
     printFeatureConfigInfo(textPrintFlag, buf, buf2);
@@ -6701,7 +6701,7 @@ if(myGlobals.gdVersionGuessValue != NULL)
 
     localeInfo = localeconv();
     if (localeInfo != NULL) {
-      safe_snprintf(buf, sizeof(buf), "1%s000%s00", 
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "1%s000%s00", 
                   localeInfo->thousands_sep,
                   localeInfo->decimal_point);
       printFeatureConfigInfo(textPrintFlag, "Numeric format", buf);
@@ -6783,7 +6783,7 @@ int printNtopLogReport(int printAsText) {
     if(!printAsText) {
       printHTMLheader("ntop Log", NULL, BITFLAG_HTTP_NO_CACHE_CONTROL);
       sendString("<HR>");
-      safe_snprintf(buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\"><center>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<p><font face=\"Helvetica, Arial, Sans Serif\"><center>"
                 "This is a rolling display of upto the last %d ntop log messages "
                 "of priority INFO or higher.  Click on the \"log\" option, above, to refresh."
                 "</center></font></p>", CONST_LOG_VIEW_BUFFER_SIZE);
@@ -6920,7 +6920,7 @@ void printNtopProblemReport(void) {
   v = 0;
 
 #ifdef PROBLEMREPORTID_DEBUG
-  safe_snprintf(buf2, sizeof(buf2),
+  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2),
               "%-12s %48s %8s %8s\n",
               "Item", "Raw value", "Hex", "v value");
   sendString(buf2);
@@ -6929,7 +6929,7 @@ void printNtopProblemReport(void) {
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
   v += myGlobals.heartbeatCounter /* If we have it */ ;
 #ifdef PROBLEMREPORTID_DEBUG
-  safe_snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat", 
+  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Heartbeat", 
 	      myGlobals.heartbeatCounter, myGlobals.heartbeatCounter, v);
   sendString(buf2);
 #endif
@@ -6939,13 +6939,13 @@ void printNtopProblemReport(void) {
 #ifdef PROBLEMREPORTID_DEBUG
   strftime(buf, sizeof(buf)-1, CONST_LOCALE_TIMESPEC, gmtime(&t));
   buf[sizeof(buf)-1] = '\0';
-  safe_snprintf(buf2, sizeof(buf2), "%-12s %48s %08x %08x\n", "Date/Time", buf, t, v);
+  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%-12s %48s %08x %08x\n", "Date/Time", buf, t, v);
   sendString(buf2);
 #endif
 
   v += myGlobals.actTime - myGlobals.initialSniffTime;
 #ifdef PROBLEMREPORTID_DEBUG
-  safe_snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Elapsed",
+  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Elapsed",
 	   (myGlobals.actTime - myGlobals.initialSniffTime), 
 	   (myGlobals.actTime - myGlobals.initialSniffTime), v);
   sendString(buf2);
@@ -6956,7 +6956,7 @@ void printNtopProblemReport(void) {
     raw += (unsigned int) (myGlobals.device[i].ethernetBytes.value);
 
 #ifdef PROBLEMREPORTID_DEBUG
-  safe_snprintf(buf2, sizeof(buf2), "%-12s %48u %08x\n", "Bytes", raw, raw);
+  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%-12s %48u %08x\n", "Bytes", raw, raw);
   sendString(buf2);
 #endif
   /* Scramble the nibbles so we have some data high and some low. 
@@ -6971,7 +6971,7 @@ void printNtopProblemReport(void) {
     (raw & 0x0000000f) << 24;
   v ^= scramble;
 #ifdef PROBLEMREPORTID_DEBUG
-  safe_snprintf(buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)", 
+  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%-12s %48u %08x %08x\n", "Bytes(scramble)", 
 	   scramble, scramble, v);
   sendString(buf2);
 #endif
@@ -6983,7 +6983,7 @@ void printNtopProblemReport(void) {
     v = v / (sizeof(xvert) - 1);
     buf[i] = xvert[j];   
 #ifdef PROBLEMREPORTID_DEBUG
-    safe_snprintf(buf2, sizeof(buf2), "(%2d", j);
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "(%2d", j);
     sendString(buf2);
 #endif
     i++;
@@ -6999,7 +6999,7 @@ void printNtopProblemReport(void) {
   sendString("Summary\n\n\n\n\n\n");
 #if defined(HAVE_SYS_UTSNAME_H) && defined(HAVE_UNAME)
   if (uname(&unameData) == 0) {
-    safe_snprintf(buf, sizeof(buf), "sysname(%s) release(%s) version(%s) machine(%s)",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "sysname(%s) release(%s) version(%s) machine(%s)",
                          unameData.sysname,
                          unameData.release,
                          unameData.version,
@@ -7021,21 +7021,21 @@ void printNtopProblemReport(void) {
   sendString("\nPackets\n");
 
 #ifdef CFG_MULTITHREADED
-  safe_snprintf(buf, sizeof(buf), "Received:  %10u\n", myGlobals.receivedPackets);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Received:  %10u\n", myGlobals.receivedPackets);
   sendString(buf);
-  safe_snprintf(buf, sizeof(buf), "Processed: %10u (immediately)\n",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Processed: %10u (immediately)\n",
               myGlobals.receivedPacketsProcessed);
   sendString(buf);
 #endif
 
 #ifdef CFG_MULTITHREADED
-  safe_snprintf(buf, sizeof(buf), "Queued:    %10u\n",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Queued:    %10u\n",
               myGlobals.receivedPacketsQueued);
   sendString(buf);
-  safe_snprintf(buf, sizeof(buf), "Lost:      %10u (queue full)\n",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Lost:      %10u (queue full)\n",
               myGlobals.receivedPacketsLostQ);
   sendString(buf);
-  safe_snprintf(buf, sizeof(buf), "Queue:     Current: %u Maximum: %u\n",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Queue:     Current: %u Maximum: %u\n",
               myGlobals.packetQueueLen,
               myGlobals.maxPacketQueueLen);
   sendString(buf);
@@ -7046,32 +7046,32 @@ void printNtopProblemReport(void) {
   if(myGlobals.mergeInterfaces == 1) {
     sendString("Merged packet counts:\n");
     if(myGlobals.device[0].receivedPkts.value > 0) {
-      safe_snprintf(buf, sizeof(buf), "     Received:  %10u\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Received:  %10u\n",
                   myGlobals.device[0].receivedPkts.value);
       sendString(buf);
     }
     if(myGlobals.device[0].droppedPkts.value > 0) {
-      safe_snprintf(buf, sizeof(buf), "     Dropped:   %10u\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Dropped:   %10u\n",
                   myGlobals.device[0].droppedPkts.value);
       sendString(buf);
     }
     if(myGlobals.device[0].ethernetPkts.value > 0) {
-      safe_snprintf(buf, sizeof(buf), "     Ethernet:  %10u\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Ethernet:  %10u\n",
                   myGlobals.device[0].ethernetPkts.value);
       sendString(buf);
     }
     if(myGlobals.device[0].broadcastPkts.value > 0) {
-      safe_snprintf(buf, sizeof(buf), "     Broadcast: %10u\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Broadcast: %10u\n",
                   myGlobals.device[0].broadcastPkts.value);
       sendString(buf);
     }
     if(myGlobals.device[0].multicastPkts.value > 0) {
-      safe_snprintf(buf, sizeof(buf), "     Multicast: %10u\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Multicast: %10u\n",
                   myGlobals.device[0].multicastPkts.value);
       sendString(buf);
     }
     if(myGlobals.device[0].ipPkts.value > 0) {
-      safe_snprintf(buf, sizeof(buf), "     IP:        %10u\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     IP:        %10u\n",
                   myGlobals.device[0].ipPkts.value);
       sendString(buf);
     }
@@ -7079,7 +7079,7 @@ void printNtopProblemReport(void) {
   }
 
   for(i=0; i<myGlobals.numDevices; i++) {
-    safe_snprintf(buf, sizeof(buf), "     Network Interface %2d ", i);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Network Interface %2d ", i);
     sendString(buf);
     if(myGlobals.device[0].dummyDevice)
       sendString(" (dummy)");
@@ -7112,45 +7112,45 @@ void printNtopProblemReport(void) {
 #ifndef WIN32 
     if((myGlobals.device[i].pcapPtr != NULL) && 
        (pcap_stats(myGlobals.device[i].pcapPtr, &pcapStats) >= 0)) {
-      safe_snprintf(buf, sizeof(buf), "     Received (pcap):%10u\n", pcapStats.ps_recv);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Received (pcap):%10u\n", pcapStats.ps_recv);
       sendString(buf);
       if(pcapStats.ps_ifdrop > 0) {
-        safe_snprintf(buf, sizeof(buf), "     Dropped (NIC):  %10u\n", pcapStats.ps_ifdrop);
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Dropped (NIC):  %10u\n", pcapStats.ps_ifdrop);
         sendString(buf);
       }
-      safe_snprintf(buf, sizeof(buf), "     Dropped (pcap): %10u\n", pcapStats.ps_drop);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Dropped (pcap): %10u\n", pcapStats.ps_drop);
       sendString(buf);
     }
 #endif
 
     if(myGlobals.mergeInterfaces == 0) {
       if(myGlobals.device[i].receivedPkts.value > 0) {
-	safe_snprintf(buf, sizeof(buf), "     Received:       %10u\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Received:       %10u\n",
                      myGlobals.device[i].receivedPkts.value);
 	sendString(buf);
       }
       if(myGlobals.device[i].droppedPkts.value > 0) {
-	safe_snprintf(buf, sizeof(buf), "     Dropped (ntop): %10u\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Dropped (ntop): %10u\n",
                      myGlobals.device[i].droppedPkts.value);
 	sendString(buf);
       }
       if(myGlobals.device[i].ethernetPkts.value > 0) {
-	safe_snprintf(buf, sizeof(buf), "     Ethernet:       %10u\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Ethernet:       %10u\n",
                      myGlobals.device[i].ethernetPkts.value);
 	sendString(buf);
       }
       if(myGlobals.device[i].broadcastPkts.value > 0) {
-	safe_snprintf(buf, sizeof(buf), "     Broadcast:      %10u\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Broadcast:      %10u\n",
                      myGlobals.device[i].broadcastPkts.value);
 	sendString(buf);
       }
       if(myGlobals.device[i].multicastPkts.value > 0) {
-	safe_snprintf(buf, sizeof(buf), "     Multicast:      %10u\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     Multicast:      %10u\n",
                      myGlobals.device[i].multicastPkts.value);
 	sendString(buf);
       }
       if(myGlobals.device[i].ipPkts.value > 0) {
-	safe_snprintf(buf, sizeof(buf), "     IP:             %10u\n",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "     IP:             %10u\n",
                     myGlobals.device[i].ipPkts.value);
 	sendString(buf);
       }
@@ -7214,7 +7214,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   hints.ai_family = ipv4or6;
   hints.ai_flags = AI_PASSIVE;
   hints.ai_socktype = SOCK_STREAM;
-  safe_snprintf(strport,sizeof(strport),"%d",*port);
+  safe_snprintf(__FILE__, __LINE__, strport,sizeof(strport),"%d",*port);
   if((rc = getaddrinfo(addr,strport,&hints,&aitop)) !=0) {
     traceEvent(CONST_TRACE_ERROR, "INITWEB: getaddrinfo() error %s(%d)", gai_strerror(rc), rc);
     traceEvent(CONST_TRACE_ERROR, "INITWEB: Unable to convert address '%s' - "
@@ -7255,7 +7255,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #endif
 
 #ifdef INITWEB_DEBUG
-  safe_snprintf(value, sizeof(value), "%d.%d.%d.%d", \
+  safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d.%d.%d.%d", \
                (int) ((sockIn.sin_addr.s_addr >> 24) & 0xff), \
                (int) ((sockIn.sin_addr.s_addr >> 16) & 0xff), \
                (int) ((sockIn.sin_addr.s_addr >>  8) & 0xff), \
@@ -7279,7 +7279,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
       myGlobals.tempF[i]=0;
       memset(&myGlobals.tempFname[i], 0, LEN_MEDIUM_WORK_BUFFER);
 
-      safe_snprintf(myGlobals.tempFname[i], LEN_MEDIUM_WORK_BUFFER, "/tmp/ntop-%09u-%d", myGlobals.tempFpid, i);
+      safe_snprintf(__FILE__, __LINE__, myGlobals.tempFname[i], LEN_MEDIUM_WORK_BUFFER, "/tmp/ntop-%09u-%d", myGlobals.tempFpid, i);
       traceEvent(CONST_TRACE_NOISY, "FILEDESCRIPTORBUG: Creating %d, '%s'", i, myGlobals.tempFname[i]);
       errno = 0;
       myGlobals.tempF[i]=open(myGlobals.tempFname[i], O_CREAT|O_TRUNC|O_RDWR);
@@ -8147,7 +8147,7 @@ int handlePluginHTTPRequest(char* url) {
 	name[sizeof(name)-1] = '\0'; /* just in case pluginURLname is too long... */
 	if((strlen(name) > 6) && (strcasecmp(&name[strlen(name)-6], "plugin") == 0))
 	  name[strlen(name)-6] = '\0';
-	safe_snprintf(buf, sizeof(buf),"Status for the \"%s\" Plugin", name);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),"Status for the \"%s\" Plugin", name);
 	printHTMLheader(buf, NULL, BITFLAG_HTML_NO_REFRESH);
 	printFlagedWarning("<I>This plugin is currently inactive.</I>");
 	printHTMLtrailer();

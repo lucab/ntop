@@ -651,7 +651,7 @@ static u_long *readExtendedSwitch(SFSample *sample, u_long *datap, u_char *endPt
 static char *IP_to_a(u_long ipaddr, char *buf)
 {
   u_char *ip = (u_char *)&ipaddr;
-  safe_snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
   return buf;
 }
 
@@ -1619,7 +1619,7 @@ static void handlesFlowHTTPrequest(char* url) {
 	     "Local UDP Port</td> "
 	     "<td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");
 
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.sflowGlobals.sflowInPort);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.sflowGlobals.sflowInPort);
   sendString(buf);
 
   sendString("><br>[default port is "DEFAULT_SFLOW_COLLECTOR_PORT_STR"]"
@@ -1629,7 +1629,7 @@ static void handlesFlowHTTPrequest(char* url) {
     sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Virtual sFlow Interface</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
 	       "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
 
-    safe_snprintf(buf, sizeof(buf), "%s/%s",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s",
 		_intoa(myGlobals.sflowGlobals.sflowIfAddress, buf1, sizeof(buf1)),
 		_intoa(myGlobals.sflowGlobals.sflowIfMask, buf2, sizeof(buf2)));
     sendString(buf);
@@ -1692,17 +1692,17 @@ static void handlesFlowHTTPrequest(char* url) {
   sendString("<CENTER>\n<TABLE BORDER>\n");
   sendString("<TR "TR_ON" "DARK_BG"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Flow Statistics</TH></TR>\n");
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG"># Samples</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 	      formatPkts((Counter)myGlobals.sflowGlobals.numSamplesReceived, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Data Scale</TH><TD "TD_BG" ALIGN=RIGHT>%.2f %%</TD></TR>\n",
 	      percentage);
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Estimated Error</TH><TD "TD_BG" ALIGN=RIGHT>%.2f %%</TD></TR>\n",
 	      err);
   sendString(buf);
@@ -1712,7 +1712,7 @@ static void handlesFlowHTTPrequest(char* url) {
   for(i=0; i<MAX_NUM_PROBES; i++) {
     if(probeList[i].probeAddr.s_addr == 0) break;
 
-    safe_snprintf(buf, sizeof(buf), "%s [%s pkts]\n",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s [%s pkts]\n",
 		_intoa(probeList[i].probeAddr, buf, sizeof(buf)),
 		formatPkts(probeList[i].pkts, formatBuf, sizeof(formatBuf)));
     sendString(buf);

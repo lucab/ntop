@@ -569,7 +569,7 @@ void createVendorTable(struct stat *dbStat) {
        if((line[0] == '\0') || (line[0] == '#') || (strlen(line) < 30)) continue;
        line[strlen(line)-1] = '\0';
 
-       safe_snprintf(lineKey, sizeof(lineKey), "%d", numEntries++);
+       safe_snprintf(__FILE__, __LINE__, lineKey, sizeof(lineKey), "%d", numEntries++);
        memset(&key_data, 0, sizeof(key_data));
        key_data.dptr   = lineKey; key_data.dsize  = strlen(key_data.dptr);
        

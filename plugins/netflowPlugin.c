@@ -95,10 +95,10 @@ static char* nfValue(int deviceId, char *name, int appendDeviceId) {
   static char buf[64];
 
   if(appendDeviceId) {
-    safe_snprintf(buf, sizeof(buf), "netflow.%d.%s",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "netflow.%d.%s",
 		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId, name);
   } else {
-    safe_snprintf(buf, sizeof(buf), "netflow.%s", name);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "netflow.%s", name);
   }
 
 #ifdef DEBUG
@@ -129,7 +129,7 @@ static void wasteFileDescriptors(int deviceId) {
       myGlobals.device[deviceId].netflowGlobals->tempNFF[i]=0;
       memset(&myGlobals.device[deviceId].netflowGlobals->tempNFFname[i], 0, LEN_MEDIUM_WORK_BUFFER);
 
-      safe_snprintf(myGlobals.device[deviceId].netflowGlobals->tempNFFname[i], LEN_MEDIUM_WORK_BUFFER, 
+      safe_snprintf(__FILE__, __LINE__, myGlobals.device[deviceId].netflowGlobals->tempNFFname[i], LEN_MEDIUM_WORK_BUFFER, 
 		  "/tmp/ntop-nf-%d-%09u-%d", deviceId, 
 		  myGlobals.device[deviceId].netflowGlobals->tempNFFpid, i);
       traceEvent(CONST_TRACE_NOISY, "NETFLOW: FILEDESCRIPTORBUG: Creating %d, '%s'", i, 
@@ -1542,12 +1542,12 @@ static void printNetFlowDeviceConfiguration(void) {
 
     dev = strtok_r(value, ",", &strtokState);
     while(dev != NULL) {
-      safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s.%s\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s.%s\n",
 		  dev, i == 0 ? "CHECKED" : "", NETFLOW_DEVICE_NAME, dev);
       sendString(buf);
 
       if(pluginActive) {
-	safe_snprintf(buf, sizeof(buf), "[ <A HREF=/plugins/%s?device=-%s>Delete</A> ]",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=/plugins/%s?device=-%s>Delete</A> ]",
 		    netflowPluginInfo->pluginURLname, dev);
 	sendString(buf);
       }
@@ -1589,7 +1589,7 @@ static void printNetFlowConfiguration(int deviceId) {
 
   sendString("<tr><th colspan=2 "DARK_BG">NetFlow Device</th><td align=right colspan=2>");
 
-  safe_snprintf(buf, sizeof(buf), "%s.%d [ <A HREF=\"/plugins/%s\"/>List</A> ]",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s.%d [ <A HREF=\"/plugins/%s\"/>List</A> ]",
 	      NETFLOW_DEVICE_NAME, myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId,
 	      netflowPluginInfo->pluginName);
   sendString(buf);
@@ -1606,12 +1606,12 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n<p>");
 
-  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
 	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"port\" size=\"5\" value=\"");
-  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
   sendString(buf);
 
   sendString("\"> [ Use a port value of 0 to disable collection ] "
@@ -1643,12 +1643,12 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n");
 
-  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
 	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString(" <input name=\"ifNetMask\" size=\"32\" value=\"");
-  safe_snprintf(buf, sizeof(buf), "%s/%s",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s",
 	      _intoa(myGlobals.device[deviceId].netflowGlobals->netFlowIfAddress, buf1, sizeof(buf1)),
 	      _intoa(myGlobals.device[deviceId].netflowGlobals->netFlowIfMask, buf2, sizeof(buf2)));
   sendString(buf);
@@ -1675,37 +1675,37 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n");
 
-  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
 	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<p><SELECT NAME=netFlowAggregation>");
 
-  safe_snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
               noAggregation,
               (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == noAggregation) ? " SELECTED" : "",
               "None (no aggregation)");
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
               portAggregation,
               (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == portAggregation) ? " SELECTED" : "",
               "TCP/UDP Port");
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
               hostAggregation,
               (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == hostAggregation) ? " SELECTED" : "",
               "Host");
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
               protocolAggregation,
               (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == protocolAggregation) ? " SELECTED" : "",
               "Protocol (TCP, UDP, ICMP)");
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
               asAggregation,
               (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == asAggregation) ? " SELECTED" : "",
               "AS");
@@ -1747,12 +1747,12 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n");
 
-  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
 	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"whiteList\" size=\"60\" value=\"");
-  safe_snprintf(buf, sizeof(buf), "%s",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
               myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList == NULL ? " " : myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList);
   sendString(buf);
   sendString("\"> <input type=\"submit\" value=\"Set White List\"></p>\n</form>\n"
@@ -1765,12 +1765,12 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>");
 
-  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
 	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"blackList\" size=\"60\" value=\"");
-  safe_snprintf(buf, sizeof(buf), "%s",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s",
               myGlobals.device[deviceId].netflowGlobals->netFlowBlackList == NULL ? " " : myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
   sendString(buf);
   sendString("\"> <input type=\"submit\" value=\"Set Black List\"></p>\n</form>\n"
@@ -1810,7 +1810,7 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n<p>");
 
-  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
 	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
@@ -1845,7 +1845,7 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n<p>");
 
-  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
 	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
@@ -1894,14 +1894,14 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
   for(i=0; i<MAX_NUM_PROBES; i++) {
     if(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr.s_addr == 0) break;
 
-    safe_snprintf(buf, sizeof(buf), "%s [%s pkts]<br>\n",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s [%s pkts]<br>\n",
                 _intoa(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr, buf, sizeof(buf)),
                 formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
   sendString("&nbsp;</td>\n</tr>\n");
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -1909,7 +1909,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets with Bad Version</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -1917,7 +1917,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets Processed</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -1926,7 +1926,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                          myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Valid Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -1943,7 +1943,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       myGlobals.device[deviceId].netflowGlobals->numBadFlowReality +
       myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd;
 
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Average Number of Flows per Packet</th>\n"
                 "<td " TD_BG " align=\"right\">%.1f</td>\n"
@@ -1952,7 +1952,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
     sendString(buf);
   }
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of V1 Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -1960,7 +1960,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV1Rcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of V5 Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -1968,7 +1968,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV5Rcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of V7 Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -1976,7 +1976,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV7Rcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of V9 Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -1985,7 +1985,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
   sendString(buf);
 
   if(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9TemplRcvd) {
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Total V9 Templates Received</th>\n"
                 "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -1995,7 +1995,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
   }
 
   if(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9BadTemplRcvd) {
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Bad V9 Templates Received</th>\n"
                 "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -2005,7 +2005,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
   }
 
   if(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd) {
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Number of V9 Flows with Unknown Templates Received</th>\n"
                 "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -2019,7 +2019,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
              "<th colspan=\"2\" "DARK_BG">Discarded Flows</th>\n"
              "</tr>\n");
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Zero Packet Count</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -2028,7 +2028,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Zero Byte Count</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -2037,7 +2037,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Bad Data</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -2046,7 +2046,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Unknown Template</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -2055,7 +2055,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 			 formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Total Number of Flows Processed</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
@@ -2078,7 +2078,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                "<th " DARK_BG">Source / Destination</th>\n"
                "</tr>\n");
 
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - Black list</th>\n"
                 "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
@@ -2089,7 +2089,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                            formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
 
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - White list</th>\n"
                 "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
@@ -2100,7 +2100,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                            formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
 
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Accepted</th>\n"
                 "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
@@ -2111,7 +2111,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                            formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
 
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
 		"<th " TH_BG " align=\"left\" "DARK_BG ">Total</th>\n"
                 "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
@@ -2144,7 +2144,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                "Hostmask<br>\n");
 
     for(i=0; i<numWhiteNets; i++) {
-      safe_snprintf(buf, sizeof(buf),
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
                   "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
                   i,
@@ -2183,7 +2183,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                "Hostmask<br>\n");
 
     for(i=0; i<numBlackNets; i++) {
-      safe_snprintf(buf, sizeof(buf),
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
                   "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
                   i,
@@ -2224,7 +2224,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
              "</table></th>\n"
              "</tr>\n");
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Port(s) zero (not tcp/ip)</th>\n"
               "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2236,7 +2236,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredZeroPortBytes, 1, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">netFlow port</th>\n"
               "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2248,7 +2248,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredNetFlowBytes, 1, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Unrecognized port &lt;= 1023</th>\n"
               "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2260,7 +2260,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredLowPortBytes, 1, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Unrecognized port &gt; 1023</th>\n"
               "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2284,7 +2284,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
              "</table></th>\n"
              "</tr>\n");
 
-  safe_snprintf(buf, sizeof(buf),
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Processed</th>\n"
               "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2298,7 +2298,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 
 
   if((myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpData>0) || (myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP)) {
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Assumed ftpdat</th>\n"
                 "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2327,21 +2327,21 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       if ((myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
 	  (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] != 0) ) {
 	if(myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1) {
-	  safe_snprintf(buf1, sizeof(buf1), "(%d) ", myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
+	  safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "(%d) ", myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
 	} else {
-	  safe_snprintf(buf1, sizeof(buf1), "&nbsp;");
+	  safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), "&nbsp;");
 	}
 	if (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) {
-	  safe_snprintf(buf2, sizeof(buf2), "%.1fGB",
+	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%.1fGB",
 		      (float)myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0));
 	} else if (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) {
-	  safe_snprintf(buf2, sizeof(buf2), "%.1fMB",
+	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%.1fMB",
 		      (float)myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0));
 	} else {
-	  safe_snprintf(buf2, sizeof(buf2), "%u",
+	  safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%u",
 		      myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]);
 	}
-	safe_snprintf(buf, sizeof(buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<tr><td align=\"right\">%d.%d.%d.%d:%d</td>"
 		    "<td align=\"left\">-> %d.%d.%d.%d:%d</td>"
 		    "<td align=\"right\">%s</td>"
@@ -2373,7 +2373,7 @@ static int createNetFlowDevice(int netFlowDeviceId) {
 
   traceEvent(CONST_TRACE_INFO, "NETFLOW: createNetFlowDevice(%d)", netFlowDeviceId);
 
-  safe_snprintf(buf, sizeof(buf), "%s.%d", NETFLOW_DEVICE_NAME, netFlowDeviceId);
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s.%d", NETFLOW_DEVICE_NAME, netFlowDeviceId);
   deviceId = createDummyInterface(buf);
 
   if(deviceId != -1) {
@@ -2662,7 +2662,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 
       if(deviceId == 0) deviceId = 2;
 
-      safe_snprintf(buf, sizeof(buf), "%s,%d", value1, deviceId);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s,%d", value1, deviceId);
 
       traceEvent(CONST_TRACE_INFO, "NETFLOW: knownDevices=%s", buf);
       storePrefsValue(nfValue(deviceId, "knownDevices", 0), buf);

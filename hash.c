@@ -513,7 +513,7 @@ void freeHostInfo(HostTraffic *host, int actualDeviceId) {
       char xbuf[1024];
       int ii;
       memset(xbuf, 0, sizeof(xbuf));
-      safe_snprintf(xbuf, sizeof(xbuf), 
+      safe_snprintf(__FILE__, __LINE__, xbuf, sizeof(xbuf), 
                   "TEMP: free of host (0x%08x) magic(%u) not cleared:", host, host->magic);
       ii=strlen(xbuf);
       if(host->dnsDomainValue != NULL)
@@ -1167,7 +1167,7 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
       /* This is a new entry and hostIpAddress was NOT set.  Fill in MAC address, if we have it */
       if(symEthName[0] != '\0') {
         /* This is a local address so we have the MAC address */
-	safe_snprintf(buf, sizeof(buf), "%s%s", symEthName, &el->ethAddressString[8]);
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s%s", symEthName, &el->ethAddressString[8]);
 
 	buf[MAX_LEN_SYM_HOST_NAME-1] = '\0';
         setResolvedName(el, buf, FLAG_HOST_SYM_ADDR_TYPE_MAC);
@@ -1322,7 +1322,7 @@ HostTraffic *lookupFcHost (FcAddress *hostFcAddress, u_short vsanId,
     el->fcCounters->hostFcAddress.domain = hostFcAddress->domain;
     el->fcCounters->hostFcAddress.area = hostFcAddress->area;
     el->fcCounters->hostFcAddress.port = hostFcAddress->port;
-    safe_snprintf(el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress),
+    safe_snprintf(__FILE__, __LINE__, el->fcCounters->hostNumFcAddress, sizeof(el->fcCounters->hostNumFcAddress),
                   fc_to_str ((u_int8_t *)hostFcAddress));
     /* TBD: Resolve FC_ID to WWN */
     el->fcCounters->vsanId = vsanId;

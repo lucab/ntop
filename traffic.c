@@ -573,11 +573,11 @@ unsigned int matrixHostHash(HostTraffic *host, int actualDeviceId, int rehash) {
       hash ^= host->fcCounters->hostFcAddress.domain;
       hash ^= host->fcCounters->hostFcAddress.area;
       hash ^= host->fcCounters->hostFcAddress.port;
-      safe_snprintf(tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x.%x", host->fcCounters->vsanId, 
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x.%x", host->fcCounters->vsanId, 
 		  host->fcCounters->hostFcAddress.domain, host->fcCounters->hostFcAddress.area,
 		  host->fcCounters->hostFcAddress.port, hash);
     } else {
-      safe_snprintf(tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x",
+      safe_snprintf(__FILE__, __LINE__, tmpBuf, sizeof (tmpBuf), "%x.%x.%x.%x",
 		   host->fcCounters->hostFcAddress.domain, host->fcCounters->hostFcAddress.area,
 		   host->fcCounters->hostFcAddress.port, host);
     }

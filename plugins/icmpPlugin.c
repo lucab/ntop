@@ -477,7 +477,7 @@ static void formatSentRcvd(Counter sent, Counter rcvd) {
 
   if (sent + rcvd == 0) {
     strcpy(buf, "<TD "TD_BG" ALIGN=center>&nbsp;</TD>");
-  } else safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s/%s</TD>",
+  } else safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s/%s</TD>",
 		     formatPkts(sent, formatBuf, sizeof(formatBuf)),
 		     formatPkts(rcvd, formatBuf1, sizeof(formatBuf1)));
   sendString(buf);
@@ -509,7 +509,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
     if(abs(icmpColumnSort) == i) arrow[i] = arrowGif; else arrow[i] = "";
 
   sendString("<CENTER>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
-  safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" "DARK_BG">"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" "DARK_BG">"
               "<TH "TH_BG" rowspan=\"2\" valign=\"bottom\">%s?%s%d>Host %s</A></TH>\n"
 	      "<TH "TH_BG" colspan=\"2\">Bytes</TH>\n"
               "<TH "TH_BG" colspan=\"11\">Sent/Recived by ICMP Type</TH>\n"
@@ -517,7 +517,7 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
 	      pluginName, sign, CONST_ICMP_SORT_HOST, arrow[CONST_ICMP_SORT_HOST]);
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" "DARK_BG">"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" "DARK_BG">"
 	      "<TH "TH_BG">%s?%s%d>Sent %s</A></TH>\n"
 	      "<TH "TH_BG">%s?%s%d>Rcvd %s</A></TH>\n"
 	      "<TH "TH_BG">%s?%s%d>Echo<br>Request %s</A></TH>\n"
@@ -559,17 +559,17 @@ static void printICMPdata(int icmpColumnSort, u_int revertOrder,
       else
 	idx = i;
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s> %s",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s> %s",
 		  getRowColor(),
 		  makeHostLink(hosts[idx], FLAG_HOSTLINK_HTML_FORMAT, 0, 0,
 			       hostLinkBuf, sizeof(hostLinkBuf)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>",
 		  formatBytes(hosts[idx]->icmpSent.value, 1, formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=center>%s</TD>",
 		  formatBytes(hosts[idx]->icmpRcvd.value, 1, formatBuf, sizeof(formatBuf)));
       sendString(buf);
 

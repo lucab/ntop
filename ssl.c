@@ -96,7 +96,7 @@ int init_ssl(void) {
     RAND_add(configure_parameters, strlen(configure_parameters), (double)4.0);
 
     gettimeofday(&TOD, NULL);
-    safe_snprintf(buf, sizeof(buf), "%d%u%u%x%x%x", 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d%u%u%x%x%x", 
                     getpid(),
                     TOD.tv_sec,
                     TOD.tv_usec,
@@ -111,7 +111,7 @@ int init_ssl(void) {
     } else {
         while((dp = readdir(directoryPointer)) != NULL) {
             if (dp->d_name[0] != '.') {
-                safe_snprintf(buf, sizeof(buf), "%s/%s", myGlobals.dbPath, dp->d_name);
+                safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s", myGlobals.dbPath, dp->d_name);
                 if (stat(buf, &fStat) == 0) {
                     RAND_add(&fStat, sizeof(fStat), (double)16.0);
                 }
@@ -130,7 +130,7 @@ int init_ssl(void) {
   }
 
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
-    safe_snprintf(buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[idx], CONST_SSL_CERTF_FILENAME);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[idx], CONST_SSL_CERTF_FILENAME);
 
 #ifdef WIN32
     revertSlash(buf, 0);

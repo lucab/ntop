@@ -78,7 +78,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 
   if(topValue == 0) {
     /* No percentage is printed */
-    safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 		formatPkts(usageCtr.value.value, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   } else {
@@ -88,7 +88,7 @@ void formatUsageCounter(UsageCounter usageCtr,
 
     if(pctg > 100) pctg = 100; /* This should not happen ! */
 
-    safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;[%.0f&nbsp;%%]</TD>",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;[%.0f&nbsp;%%]</TD>",
 		formatPkts(usageCtr.value.value, formatBuf, sizeof(formatBuf)), pctg);
     sendString(buf);
   }
@@ -139,19 +139,19 @@ void printTableDoubleEntry(char *buf, int bufLen,
 
   switch(int_perc) {
   case 0:
-    safe_snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
            "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
            "<TD WIDTH=100 "TD_BG">&nbsp;</TD>\n",
            getRowColor(), label, formatKBytes(totalS, formatBuf, sizeof(formatBuf)));
     break;
   case 100:
-    safe_snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		"<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD WIDTH=100><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=100 HEIGHT=12></TD>\n",
 		getRowColor(), label, formatKBytes(totalS, formatBuf, sizeof(formatBuf)));
     break;
   default:
-    safe_snprintf(buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH WIDTH=100 "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		"<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
 		"<TR "TR_ON"><TD><IMG  ALT=\"%d%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=\"%d\" HEIGHT=12></TD>"
@@ -179,17 +179,17 @@ void printTableDoubleEntry(char *buf, int bufLen,
 
   switch(int_perc) {
   case 0:
-    safe_snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD WIDTH=100 "TD_BG">&nbsp;</TD></TR>\n",
 		formatKBytes(totalR, formatBuf, sizeof(formatBuf)));
     break;
   case 100:
-    safe_snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD WIDTH=100><IMG ALIGN=MIDDLE ALT=\"100\" SRC=\"/gauge.jpg\" WIDTH=\"100\" HEIGHT=12></TD></TR>\n",
 		formatKBytes(totalR, formatBuf, sizeof(formatBuf)));
     break;
   default:
-    safe_snprintf(buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TD WIDTH=100 "TD_BG" ALIGN=RIGHT>%s</TD>"
 		"<TD  WIDTH=100 "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100\">"
 		"<TR "TR_ON"><TD><IMG ALT=\"%d%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=\"%d\" HEIGHT=12>"
 		"</TD><TD "TD_BG" ALIGN=CENTER WIDTH=\"%d\">"
@@ -220,7 +220,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
   switch(int_perc) {
   case 0:
     if(total == -1) {
-      safe_snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		  "<TR>"
 		  "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 0&nbsp;%%</TD>"
@@ -233,7 +233,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
 		  CONST_COLOR_2,
 		  CONST_COLOR_2, label_2);
     } else {
-      safe_snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		  "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		  "<TR>"
@@ -251,7 +251,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
     break;
   case 100:
     if(total == -1) {
-      safe_snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
              "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
              "<TR>"
              "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s 100&nbsp;%%</TD>"
@@ -264,7 +264,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
              CONST_COLOR_1,
              CONST_COLOR_2, label_2);
     } else {
-      safe_snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		  "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		  "<TR>"
@@ -281,7 +281,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
     break;
   default:
     if(total == -1) {
-      safe_snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
              "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
              "<TR>"
              "<TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD>"
@@ -296,7 +296,7 @@ void printTableEntryPercentage(char *buf, int bufLen,
              (100-int_perc), CONST_COLOR_2,
              CONST_COLOR_2, label_2, (100-percentage));
     } else {
-      safe_snprintf(buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
+      safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 		  "<TD "TD_BG"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=\"100%%\">"
 		  "<TR><TD ALIGN=LEFT WIDTH=\"10%%\" BGCOLOR=\"%s\">%s %.1f&nbsp;%%</TD>"
 		  "<TD><TABLE BORDER=1 CELLPADDING=1 CELLSPACING=0 WIDTH=\"100%%\"><TR>"
@@ -326,7 +326,7 @@ void printFooterHostLink(void) {
 static void printFooterTrafficPct(void) {
     char buf[LEN_GENERAL_WORK_BUFFER];
 
-    safe_snprintf(buf, sizeof(buf),
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                  "<P><TABLE BORDER=0 "TABLE_DEFAULTS">"
                    "<TR>"
                      "<TD COLSPAN=4>The percentage value is - for a given host - the traffic for that host "
@@ -451,10 +451,10 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_HOST_TRAFFIC:      url = CONST_SORT_DATA_HOST_TRAFFIC_HTML;      break;
   }
 
-  safe_snprintf(htmlAnchor, sizeof(htmlAnchor),
+  safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor),
               "<A HREF=\"/%s?showH=%d&amp;showL=%d&amp;col=%s",
               url, showHostsMode, showLocalityMode, sign);
-  safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1),
+  safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1),
               "<A HREF=\"/%s?showH=%d&amp;showL=%d&amp;col=",
               url, showHostsMode, showLocalityMode);
 
@@ -474,34 +474,34 @@ void printHeader(int reportType, int revertOrder, u_int column,
     arrow[2] = "", theAnchor[2] = htmlAnchor1;
 
   if((vlanId > 0) && (vlanId < MAX_VLAN))
-    safe_snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&amp;vlan=%d&amp;showL=%d&amp;showH=", url,
+    safe_snprintf(__FILE__, __LINE__, theLink, sizeof(theLink), "/%s?col=%s%d&amp;vlan=%d&amp;showL=%d&amp;showH=", url,
 		  revertOrder ? "-" : "", column, vlanId, showLocalityMode);
   else
-    safe_snprintf(theLink, sizeof(theLink), "/%s?col=%s%d&amp;showL=%d&amp;showH=", url,
+    safe_snprintf(__FILE__, __LINE__, theLink, sizeof(theLink), "/%s?col=%s%d&amp;showL=%d&amp;showH=", url,
 		  revertOrder ? "-" : "", column, showLocalityMode);
 
-  safe_snprintf(theVlanLink, sizeof(theVlanLink), "/%s?col=%s%d&amp;showL=%d&amp;showH=%d", url,
+  safe_snprintf(__FILE__, __LINE__, theVlanLink, sizeof(theVlanLink), "/%s?col=%s%d&amp;showL=%d&amp;showH=%d", url,
 	   revertOrder ? "-" : "", column, showLocalityMode, showHostsMode);
 
   sendString("<CENTER><TABLE WIDTH=100%% BORDER=0 "TABLE_DEFAULTS"><TR><TD ALIGN=LEFT>");
   
   switch(showHostsMode) {
   case showOnlyLocalHosts:
-    safe_snprintf(buf, sizeof(buf), 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
               "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
               "[<B> Local Only </B>]&nbsp;"
               "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;",
               theLink, theLink);
     break;
   case showOnlyRemoteHosts:
-    safe_snprintf(buf, sizeof(buf), 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 	     "<b>Hosts:</b> [ <A HREF=\"%s0\">All</A> ]&nbsp;"
 	     "[ <A HREF=\"%s1\">Local Only</A> ]&nbsp;"
 	     "[<B> Remote Only </B>]&nbsp;",
 	     theLink, theLink);
     break;
   default:
-    safe_snprintf(buf, sizeof(buf), 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
 	     "<b>Hosts:</b> [<B> All </B>]&nbsp;"
 	     "[ <A HREF=\"%s1\">Local Only</A> ]&nbsp;"
 	     "[ <A HREF=\"%s2\">Remote Only</A> ]&nbsp;",
@@ -519,17 +519,17 @@ void printHeader(int reportType, int revertOrder, u_int column,
     for(i=0; i<MAX_VLAN; i++)
       if(vlanList[i] == 1) {
 	if(i == vlanId)
-	  safe_snprintf(buf, sizeof(buf), "[ <b>%d</b> ] ", i), found = 1;
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>%d</b> ] ", i), found = 1;
 	else
-	  safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"%s&vlan=%d\">%d</A> ] ", theVlanLink, i, i);
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s&vlan=%d\">%d</A> ] ", theVlanLink, i, i);
 	
 	sendString(buf);
       }
 
     if(!found)
-      safe_snprintf(buf, sizeof(buf), "[ <b>All</b> ] ");
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <b>All</b> ] ");
     else
-      safe_snprintf(buf, sizeof(buf), "[ <A HREF=\"%s\">All</A> ] ", theVlanLink);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[ <A HREF=\"%s\">All</A> ] ", theVlanLink);
 
     sendString(buf);
   }
@@ -539,7 +539,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   if(reportType != TRAFFIC_STATS) {
     switch(showLocalityMode) {
     case showSentReceived:
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=right>"
   	     "<b>Data:</b> [<b> All </b>]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;",
@@ -547,7 +547,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   	     url, revertOrder ? "-" : "", column, showHostsMode);
       break;
     case showOnlySent:
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=right>"
   	     "<b>Data:</b> [ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
   	     "[<b> Sent Only </b>]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=2\">Received Only</a> ]&nbsp;",
@@ -555,7 +555,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   	     url, revertOrder ? "-" : "", column, showHostsMode);
       break;
     default:
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=right>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=right>"
   	     "<b>Data:</b> [ <a href=\"%s?col=%s%d&showH=%d&showL=0\">All</a> ]&nbsp;"
   	     "[ <a href=\"%s?col=%s%d&showH=%d&showL=1\">Sent Only</a> ]&nbsp;"
   	     "[<b> Received Only </b>]&nbsp;",
@@ -573,7 +573,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_SENT_PROTOS:
   case SORT_DATA_PROTOS:
     sendString("<CENTER>\n");
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
 		"<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
@@ -584,7 +584,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
     for(i=0; i<=15; i++)
       if(abs(column) == i+1)  { arrow[i] = arrowGif; theAnchor[i] = htmlAnchor; } else { arrow[i] = ""; theAnchor[i] = htmlAnchor1;  }
 
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1\">TCP%s</A></TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1\">TCP%s</A></TH>"
 		"<TH "TH_BG">%s2\">UDP%s</A></TH><TH "TH_BG">%s3\">ICMP%s</A></TH>""<TH "TH_BG">%s4\">ICMPv6%s</A></TH>"
 		"<TH "TH_BG">%s5\">DLC%s</A></TH><TH "TH_BG">%s6\">IPX%s</A>"
 		"</TH><TH "TH_BG">%s7\">Decnet%s</A></TH>"
@@ -596,7 +596,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 		theAnchor[7], arrow[7], theAnchor[8], arrow[8]);
     sendString(buf);
 
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER,
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
 		"<TH "TH_BG">%s11\">NetBios%s</A></TH>"
 		"<TH "TH_BG">%s13\">OSI%s</A></TH>"
 		"<TH "TH_BG">%s14\">IPv6%s</A></TH>"
@@ -618,7 +618,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 	theAnchor[BASE_PROTOS_IDX+idx] = htmlAnchor1;
       }
 
-      safe_snprintf(buf, sizeof(buf), "<TH "TH_BG">%s%d\">%s%s</A></TH>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TH "TH_BG">%s%d\">%s%s</A></TH>",
 		  theAnchor[BASE_PROTOS_IDX+idx], BASE_PROTOS_IDX+idx,
 		  protoList->protocolName, arrow[BASE_PROTOS_IDX+idx]);
       sendString(buf);
@@ -626,7 +626,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
       idx++, protoList = protoList->next;
     }
 
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER,
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
 		"<TH "TH_BG">%s16\">Other%s</A></TH>",
 		theAnchor[15], arrow[15]);
     sendString(buf);
@@ -636,7 +636,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_SENT_IP:
   case SORT_DATA_IP:
     sendString("<CENTER>\n");
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>\n"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>"
 		"<TH "TH_BG" COLSPAN=2>%s0\">Data%s</A></TH>\n",
@@ -659,7 +659,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
 	arrow[0] = "";
 	theAnchor[0] = htmlAnchor1;
       }
-      safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d\">%s%s</A></TH>",
+      safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d\">%s%s</A></TH>",
 		  theAnchor[0], i+2, myGlobals.protoIPTrafficInfos[i], arrow[0]);
       sendString(buf);
       soFar++;
@@ -670,7 +670,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
     } else {
       arrow[0] = "";  theAnchor[0] = htmlAnchor1;
     }
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d\">Other&nbsp;IP%s</A></TH>",
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s%d\">Other&nbsp;IP%s</A></TH>",
 		theAnchor[0], i+2, arrow[0]);
     sendString(buf);
     break;
@@ -679,7 +679,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_SENT_HOST_TRAFFIC:
   case SORT_DATA_HOST_TRAFFIC:
     sendString("<CENTER>\n");
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "DARK_BG">"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "DARK_BG">"
 		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
@@ -687,7 +687,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
     j = hourId;
     for (i = 0; i < 24; i++) {
         j = j % 24;
-        safe_snprintf(buf, sizeof(buf), "<TH "TH_BG">%s</TH>\n", hours[j]);
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TH "TH_BG">%s</TH>\n", hours[j]);
         sendString (buf);
         if (!j) {
             j = 23;
@@ -701,7 +701,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
   case SORT_DATA_SENT_THPT:
   case SORT_DATA_THPT:
     sendString("<CENTER>\n");
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		"<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
 		"<TH "TH_BG" ROWSPAN=\"2\">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
@@ -721,11 +721,11 @@ void printHeader(int reportType, int revertOrder, u_int column,
     if(abs(column) == 6) { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor; }
     else { arrow[5] = "";  theAnchor[5] = htmlAnchor1;}
 
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" COLSPAN=\"3\" ALIGN=CENTER>Data</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" COLSPAN=\"3\" ALIGN=CENTER>Data</TH>"
 		"<TH "TH_BG" COLSPAN=\"3\" ALIGN=CENTER>Packets</TH>"
 		"</TR><TR "TR_ON" "DARK_BG">");
     sendString(buf);
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1\">Current%s</A></TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG">%s1\">Current%s</A></TH>"
 		"<TH "TH_BG">%s2\">Avg%s</A></TH>"
 		"<TH "TH_BG">%s3\">Peak%s</A></TH>"
 		"<TH "TH_BG">%s4\">Current%s</A></TH><TH "TH_BG">%s5\">Avg%s</A></TH>"
@@ -736,7 +736,7 @@ void printHeader(int reportType, int revertOrder, u_int column,
     break;
   case TRAFFIC_STATS:
     sendString("<CENTER>\n");
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON" "DARK_BG">"
 		"<TH "TH_BG">%s"FLAG_HOST_DUMMY_IDX_STR"\">Host%s</A></TH>"
 		"<TH "TH_BG">%s"FLAG_DOMAIN_DUMMY_IDX_STR"\">Domain%s</A></TH>\n\n",
 		theAnchor[0], arrow[0], theAnchor[1], arrow[1]);
@@ -782,14 +782,14 @@ char* getOSFlag(HostTraffic *el, char *elOsName, int showOsName, char *tmpStr, i
 
   if(!showOsName) {
     if(flagImg != NULL) {
-      safe_snprintf(tmpStr, tmpStrLen, "%s", flagImg);
+      safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen, "%s", flagImg);
     } else
       tmpStr[0] = '\0';
   } else {
     if(flagImg != NULL) {
-      safe_snprintf(tmpStr, tmpStrLen, "%s&nbsp;[%s]", flagImg, theOsName);
+      safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen, "%s&nbsp;[%s]", flagImg, theOsName);
     } else {
-      safe_snprintf(tmpStr, tmpStrLen, "%s", theOsName);
+      safe_snprintf(__FILE__, __LINE__, tmpStr, tmpStrLen, "%s", theOsName);
     }
   }
 
@@ -873,7 +873,7 @@ int sortHostFctn(const void *_a, const void *_b) {
     else if((*a)->nonIPTraffic->atNodeName != NULL)
       nameA = (*a)->nonIPTraffic->atNodeName;
     else if((*a)->nonIPTraffic->atNetwork != 0) {
-      safe_snprintf(nameA_str, sizeof(nameA_str), "%d.%d",
+      safe_snprintf(__FILE__, __LINE__, nameA_str, sizeof(nameA_str), "%d.%d",
 		  (*a)->nonIPTraffic->atNetwork, (*a)->nonIPTraffic->atNode);
       nameA = nameA_str;
     } else if((*a)->nonIPTraffic->ipxHostName != NULL)
@@ -890,7 +890,7 @@ int sortHostFctn(const void *_a, const void *_b) {
     else if((*b)->nonIPTraffic->atNodeName != NULL)
       nameB = (*b)->nonIPTraffic->atNodeName;
     else if((*b)->nonIPTraffic->atNetwork != 0) {
-      safe_snprintf(nameB_str, sizeof(nameB_str), "%d.%d",
+      safe_snprintf(__FILE__, __LINE__, nameB_str, sizeof(nameB_str), "%d.%d",
 		  (*b)->nonIPTraffic->atNetwork, (*b)->nonIPTraffic->atNode);
       nameB = nameB_str;
     } else if((*b)->nonIPTraffic->ipxHostName != NULL)
@@ -1650,7 +1650,7 @@ void printHostThtpShort(HostTraffic *el, int reportType, u_int hourId)
       }
     }
 
-    safe_snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT %s>&nbsp;</TD>",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT %s>&nbsp;</TD>",
 		getBgPctgColor(pctg));
     sendString(buf);
     if (!j) {
@@ -1817,7 +1817,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		 "<TH "TH_BG" COLSPAN=2>Pkts&nbsp;Rcvd</TH></TR>\n");
 
       if((el->secHostPkts->synPktsSent.value.value+el->secHostPkts->synPktsRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">SYN</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">SYN</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->synPktsSent, 0, actualDeviceId);
@@ -1826,7 +1826,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if((el->secHostPkts->rstAckPktsSent.value.value+el->secHostPkts->rstAckPktsRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">RST|ACK</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">RST|ACK</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->rstAckPktsSent, 0, actualDeviceId);
@@ -1835,7 +1835,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if((el->secHostPkts->rstPktsSent.value.value+el->secHostPkts->rstPktsRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">RST</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">RST</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->rstPktsSent, 0, actualDeviceId);
@@ -1844,7 +1844,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if((el->secHostPkts->synFinPktsSent.value.value+el->secHostPkts->synFinPktsRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">SYN|FIN</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">SYN|FIN</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->synFinPktsSent, 0, actualDeviceId);
@@ -1853,7 +1853,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if((el->secHostPkts->finPushUrgPktsSent.value.value+el->secHostPkts->finPushUrgPktsRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">FIN|PUSH|URG</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">FIN|PUSH|URG</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->finPushUrgPktsSent, 0, actualDeviceId);
@@ -1910,7 +1910,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		 "</TR>\n");
 
       if((el->secHostPkts->ackXmasFinSynNullScanSent.value.value+el->secHostPkts->ackXmasFinSynNullScanRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ACK/XMAS/SYN/FIN/NULL Scan</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ACK/XMAS/SYN/FIN/NULL Scan</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->ackXmasFinSynNullScanSent, 0, actualDeviceId);
@@ -1920,7 +1920,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->udpToClosedPortSent.value.value+
 	  el->secHostPkts->udpToClosedPortRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">UDP Pkt to Closed Port</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">UDP Pkt to Closed Port</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->udpToClosedPortSent, 0, actualDeviceId);
@@ -1930,7 +1930,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->udpToDiagnosticPortSent.value.value+
 	  el->secHostPkts->udpToDiagnosticPortRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">UDP Pkt Disgnostic Port</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">UDP Pkt Disgnostic Port</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->udpToDiagnosticPortSent, 0, actualDeviceId);
@@ -1940,7 +1940,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->tcpToDiagnosticPortSent.value.value+
 	  el->secHostPkts->tcpToDiagnosticPortRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">TCP Pkt Disgnostic Port</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">TCP Pkt Disgnostic Port</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->tcpToDiagnosticPortSent, 0, actualDeviceId);
@@ -1950,7 +1950,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->tinyFragmentSent.value.value+
 	  el->secHostPkts->tinyFragmentRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Tiny Fragments</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Tiny Fragments</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->tinyFragmentSent, 0, actualDeviceId);
@@ -1960,7 +1960,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->icmpFragmentSent.value.value+
 	  el->secHostPkts->icmpFragmentRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Fragments</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Fragments</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpFragmentSent, 0, actualDeviceId);
@@ -1970,7 +1970,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->overlappingFragmentSent.value.value+
 	  el->secHostPkts->overlappingFragmentRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Overlapping Fragments</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Overlapping Fragments</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->overlappingFragmentSent, 0, actualDeviceId);
@@ -1980,7 +1980,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->closedEmptyTCPConnSent.value.value+
 	  el->secHostPkts->closedEmptyTCPConnRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Closed Empty TCP Conn.</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Closed Empty TCP Conn.</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->closedEmptyTCPConnSent, 0, actualDeviceId);
@@ -1991,7 +1991,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->icmpPortUnreachSent.value.value+
 	  el->secHostPkts->icmpPortUnreachRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Port Unreachable</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Port Unreachable</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpPortUnreachSent, 0, actualDeviceId);
@@ -2001,7 +2001,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->icmpHostNetUnreachSent.value.value+
 	  el->secHostPkts->icmpHostNetUnreachRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Net Unreachable</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Net Unreachable</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpHostNetUnreachSent, 0, actualDeviceId);
@@ -2011,7 +2011,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->icmpProtocolUnreachSent.value.value+
 	  el->secHostPkts->icmpProtocolUnreachRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Protocol Unreachable</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Protocol Unreachable</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpProtocolUnreachSent, 0, actualDeviceId);
@@ -2021,7 +2021,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->icmpAdminProhibitedSent.value.value+
 	  el->secHostPkts->icmpAdminProhibitedRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Administratively Prohibited</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">ICMP Administratively Prohibited</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->icmpAdminProhibitedSent, 0, actualDeviceId);
@@ -2031,7 +2031,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->secHostPkts->malformedPktsSent.value.value+
 	  el->secHostPkts->malformedPktsRcvd.value.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Malformed Pkts</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Malformed Pkts</TH>",
 		    getRowColor());
 	sendString(buf);
 	formatUsageCounter(el->secHostPkts->malformedPktsSent, 0, actualDeviceId);
@@ -2058,13 +2058,13 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		 "<TH "TH_BG">Packet</TH>"
 		 "</TR>\n");
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Request Sent</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Request Sent</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		    getRowColor(),
 		    formatPkts(el->nonIPTraffic->arpReqPktsSent.value, formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Reply Rcvd</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Reply Rcvd</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s (%.1f %%)</TD></TR>",
 		    getRowColor(),
 		    formatPkts(el->nonIPTraffic->arpReplyPktsRcvd.value, formatBuf, sizeof(formatBuf)),
@@ -2072,7 +2072,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 		     (float)((el->nonIPTraffic->arpReplyPktsRcvd.value*100)/(float)el->nonIPTraffic->arpReqPktsSent.value) : 0));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Reply Sent</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Reply Sent</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		    getRowColor(),
 		    formatPkts(el->nonIPTraffic->arpReplyPktsSent.value, formatBuf, sizeof(formatBuf)));
@@ -2123,7 +2123,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
   {
     if((totalSent > 0) || (totalRcvd > 0)) {
-      safe_snprintf(buf, sizeof(buf),
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>Fragment Distribution</TH>",
 		  getRowColor());
       sendString(buf);
@@ -2138,12 +2138,12 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       urlFixupToRFC1945Inplace(linkName);
 
       if(el->vlanId > 0) {
-	safe_snprintf(vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
+	safe_snprintf(__FILE__, __LINE__, vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
       } else
 	vlanStr[0] = '\0';
       
      if(totalSent > 0) {
-	safe_snprintf(buf, sizeof(buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		    "<IMG SRC=hostFragmentDistrib-%s%s"CHART_FORMAT"?1 ALT=\"Sent Fragment Distribution for %s%s\"></TD>",
 		    linkName, vlanStr, 
@@ -2154,7 +2154,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if(totalRcvd > 0) {
-	safe_snprintf(buf, sizeof(buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		    "<IMG SRC=hostFragmentDistrib-%s%s"CHART_FORMAT" ALT=\"Received Fragment Distribution for %s%s\"></TD>",
 		    linkName, vlanStr,
@@ -2168,13 +2168,13 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 
       /* ***************************************** */
 
-      safe_snprintf(buf, sizeof(buf),
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		  "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT>IP Fragment Distribution</TH>",
 		  getRowColor());
       sendString(buf);
 
       if(totalSent > 0) {
-	safe_snprintf(buf, sizeof(buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		    "<IMG SRC=hostTotalFragmentDistrib-%s%s"CHART_FORMAT"?1 ALT=\"Sent IP Fragment Distribution for %s%s\"></TD>",
 		    linkName, vlanStr,
@@ -2185,7 +2185,7 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if(totalRcvd > 0) {
-	safe_snprintf(buf, sizeof(buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		    "<IMG SRC=hostTotalFragmentDistrib-%s%s"CHART_FORMAT" ALT=\"Received IP Fragment Distribution for %s%s\"></TD>",
 		    linkName, vlanStr, 
@@ -2208,89 +2208,89 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
 static char* sap2name(u_int16_t proto, char *sap, int sap_len) {
   switch(proto) {
   case SAP_NULL:
-    safe_snprintf(sap, sap_len, "NULL LSAP");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "NULL LSAP");
     break;
   case SAP_LLC_SLMGMT:
-    safe_snprintf(sap, sap_len, "LLC Sub-Layer Management");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "LLC Sub-Layer Management");
     break;
   case SAP_SNA_PATHCTRL:
-    safe_snprintf(sap, sap_len, "SNA Path Control");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "SNA Path Control");
     break;
   case SAP_IP:
-    safe_snprintf(sap, sap_len, "TCP/IP");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "TCP/IP");
     break;
   case SAP_SNA1:
-    safe_snprintf(sap, sap_len, "SNA");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "SNA");
     break;
   case SAP_SNA2:
-    safe_snprintf(sap, sap_len, "SNA");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "SNA");
     break;
   case SAP_PROWAY_NM_INIT:
-    safe_snprintf(sap, sap_len, "PROWAY (IEC955) Network Management and Initialization");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "PROWAY (IEC955) Network Management and Initialization");
     break;
   case SAP_TI:
-    safe_snprintf(sap, sap_len, "Texas Instruments");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "Texas Instruments");
     break;
   case SAP_BPDU:
-    safe_snprintf(sap, sap_len, "Spanning Tree BPDU");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "Spanning Tree BPDU");
     break;
   case SAP_RS511:
-    safe_snprintf(sap, sap_len, "EIA RS-511 Manufacturing Message Service");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "EIA RS-511 Manufacturing Message Service");
     break;
   case SAP_X25:
-    safe_snprintf(sap, sap_len, "ISO 8208 (X.25 over 802.2)");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "ISO 8208 (X.25 over 802.2)");
     break;
   case 0x7F:
-    safe_snprintf(sap, sap_len, "ISO 802.2");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "ISO 802.2");
     break;
   case SAP_XNS:
-    safe_snprintf(sap, sap_len, "XNS");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "XNS");
     break;
   case SAP_BACNET:
-    safe_snprintf(sap, sap_len, "BACnet");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "BACnet");
     break;
   case SAP_NESTAR:
-    safe_snprintf(sap, sap_len, "Nestar");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "Nestar");
     break;
   case SAP_PROWAY_ASLM:
-    safe_snprintf(sap, sap_len, "PROWAY (IEC955) Active Station List Maintenance");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "PROWAY (IEC955) Active Station List Maintenance");
     break;
   case SAP_ARP:
-    safe_snprintf(sap, sap_len, "ARP");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "ARP");
     break;
   case SAP_SNAP:
-    safe_snprintf(sap, sap_len, "SNAP");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "SNAP");
     break;
   case SAP_VINES1:
   case SAP_VINES2:
-    safe_snprintf(sap, sap_len, "Banyan Vines");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "Banyan Vines");
     break;
   case SAP_NETWARE:
-    safe_snprintf(sap, sap_len, "NetWare");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "NetWare");
     break;
   case SAP_NETBIOS:
-    safe_snprintf(sap, sap_len, "NetBIOS");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "NetBIOS");
     break;
   case SAP_IBMNM:
-    safe_snprintf(sap, sap_len, "IBM Net Management");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "IBM Net Management");
     break;
   case SAP_HPEXT:
-    safe_snprintf(sap, sap_len, "HP Extended LLC");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "HP Extended LLC");
     break;
   case SAP_UB:
-    safe_snprintf(sap, sap_len, "Ungermann-Bass");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "Ungermann-Bass");
     break;
   case SAP_RPL:
-    safe_snprintf(sap, sap_len, "Remote Program Load");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "Remote Program Load");
     break;
   case SAP_OSINL:
-    safe_snprintf(sap, sap_len, "ISO Network Layer");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "ISO Network Layer");
     break;
   case SAP_GLOBAL:
-    safe_snprintf(sap, sap_len, "Global LSAP");
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "Global LSAP");
     break;
   default:
-    safe_snprintf(sap, sap_len, "0x%X", proto);
+    safe_snprintf(__FILE__, __LINE__, sap, sap_len, "0x%X", proto);
     break;
   }
 
@@ -2304,14 +2304,14 @@ static void printUnknownProto(UnknownProto proto) {
 
   switch(proto.protoType) {
   case 1:
-    safe_snprintf(buf, sizeof(buf), "<li>Ethernet Type: 0x%04X\n", proto.proto.ethType);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>Ethernet Type: 0x%04X\n", proto.proto.ethType);
     break;
   case 2:
-    safe_snprintf(buf, sizeof(buf), "<li>SAP: DSAP=0x%02X/SSAP=0x%02X\n",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>SAP: DSAP=0x%02X/SSAP=0x%02X\n",
 	     proto.proto.sapType.dsap, proto.proto.sapType.ssap);
     break;
   case 3:
-    safe_snprintf(buf, sizeof(buf), "<li>IP Protocol: 0x%d\n", proto.proto.ipType);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<li>IP Protocol: 0x%d\n", proto.proto.ipType);
     break;
   default:
     return;
@@ -2492,7 +2492,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
     }
 
     if((totalSent > 0) || (totalRcvd > 0)) {
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Protocol Distribution</TH>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Protocol Distribution</TH>",
 		  getRowColor());
       sendString(buf);
 
@@ -2506,12 +2506,12 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       urlFixupToRFC1945Inplace(linkName);
 
      if(el->vlanId > 0) {
-	safe_snprintf(vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
+	safe_snprintf(__FILE__, __LINE__, vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
       } else
 	vlanStr[0] = '\0';
 
      if(totalSent > 0) {
-	safe_snprintf(buf, sizeof(buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		    "<IMG SRC=\"hostTrafficDistrib-%s%s"CHART_FORMAT"?1\" "
 		    "ALT=\"Sent Traffic Distribution for %s%s\"></TD>",
@@ -2523,7 +2523,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       }
 
       if(totalRcvd > 0) {
-	safe_snprintf(buf, sizeof(buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><IMG SRC=hostTrafficDistrib-"
 		    "%s%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s%s\"></TD>",
 		    linkName, vlanStr,
@@ -2537,12 +2537,12 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 
       if((el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value
 	  +el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+el->udpRcvdLoc.value+el->udpRcvdFromRem.value) > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">IP Distribution</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">IP Distribution</TH>",
 		    getRowColor());
 	sendString(buf);
 
 	if((el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value) > 0) {
-	  safe_snprintf(buf, sizeof(buf),
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
 		      "<IMG SRC=\"hostIPTrafficDistrib-%s%s"CHART_FORMAT"?1\" ALT=\"Sent IP Traffic Distribution for %s%s\"></TD>",
 		      linkName, vlanStr, el->hostNumIpAddress, vlanStr);
@@ -2551,7 +2551,7 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	  sendString("<TD "TD_BG" COLSPAN=2 WIDTH=250>&nbsp;</TD>");
 
 	if((el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+el->udpRcvdLoc.value+el->udpRcvdFromRem.value) > 0) {
-	  safe_snprintf(buf, sizeof(buf),
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><IMG SRC=hostIPTrafficDistrib-"
 		      "%s%s"CHART_FORMAT" ALT=\"Received IP Traffic Distribution for %s%s\"></TD></TR>",
 		      linkName, vlanStr, el->hostNumIpAddress, vlanStr);
@@ -2645,7 +2645,7 @@ void printIcmpv6Stats(HostTraffic *el) {
              "<TH "TH_BG" ALIGN=LEFT>Pkt&nbsp;Rcvd</TH></TR>\n");
 
   if(el->icmpInfo->icmpMsgSent[ICMP6_ECHO_REQUEST].value+el->icmpInfo->icmpMsgRcvd[ICMP6_ECHO_REQUEST].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Request</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Request</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
                 formatPkts(el->icmpInfo->icmpMsgSent[ICMP6_ECHO_REQUEST].value, formatBuf, sizeof(formatBuf)),
                 formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP6_ECHO_REQUEST].value, formatBuf1, sizeof(formatBuf1)));
@@ -2653,7 +2653,7 @@ void printIcmpv6Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP6_ECHO_REPLY].value+el->icmpInfo->icmpMsgRcvd[ICMP6_ECHO_REPLY].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Reply</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Reply</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
                 formatPkts(el->icmpInfo->icmpMsgSent[ICMP6_ECHO_REPLY].value, formatBuf, sizeof(formatBuf)),
                 formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP6_ECHO_REPLY].value, formatBuf1, sizeof(formatBuf1)));
@@ -2661,7 +2661,7 @@ void printIcmpv6Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP6_DST_UNREACH].value+el->icmpInfo->icmpMsgRcvd[ICMP6_DST_UNREACH].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Unreach</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Unreach</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
                 formatPkts(el->icmpInfo->icmpMsgSent[ICMP6_DST_UNREACH].value, formatBuf, sizeof(formatBuf)),
                 formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP6_DST_UNREACH].value, formatBuf1, sizeof(formatBuf1)));
@@ -2669,7 +2669,7 @@ void printIcmpv6Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ND_REDIRECT].value+el->icmpInfo->icmpMsgRcvd[ND_REDIRECT].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Redirect</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Redirect</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
                 formatPkts(el->icmpInfo->icmpMsgSent[ND_REDIRECT].value, formatBuf, sizeof(formatBuf)),
                 formatPkts(el->icmpInfo->icmpMsgRcvd[ND_REDIRECT].value, formatBuf1, sizeof(formatBuf1)));
@@ -2677,7 +2677,7 @@ void printIcmpv6Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ND_ROUTER_ADVERT].value+el->icmpInfo->icmpMsgRcvd[ND_ROUTER_ADVERT].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router Advertisement</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router Advertisement</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
                 formatPkts(el->icmpInfo->icmpMsgSent[ND_ROUTER_ADVERT].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ND_ROUTER_ADVERT].value, formatBuf1, sizeof(formatBuf1)));
@@ -2685,7 +2685,7 @@ void printIcmpv6Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ND_ROUTER_SOLICIT].value+el->icmpInfo->icmpMsgRcvd[ND_ROUTER_SOLICIT].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router solicitation</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router solicitation</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
                 formatPkts(el->icmpInfo->icmpMsgSent[ND_ROUTER_SOLICIT].value, formatBuf, sizeof(formatBuf)),
                 formatPkts(el->icmpInfo->icmpMsgRcvd[ND_ROUTER_SOLICIT].value, formatBuf1, sizeof(formatBuf1)));
@@ -2693,7 +2693,7 @@ void printIcmpv6Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_SOLICIT].value+el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_SOLICIT].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Neighbor solicitation</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Neighbor solicitation</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
                 formatPkts(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_SOLICIT].value, formatBuf, sizeof(formatBuf)),
                 formatPkts(el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_SOLICIT].value, formatBuf1, sizeof(formatBuf1)));
@@ -2701,7 +2701,7 @@ void printIcmpv6Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_ADVERT].value+el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_ADVERT].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Neighbor advertisment</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Neighbor advertisment</TH>"
                 "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
                 formatPkts(el->icmpInfo->icmpMsgSent[ND_NEIGHBOR_ADVERT].value, formatBuf, sizeof(formatBuf)),
                 formatPkts(el->icmpInfo->icmpMsgRcvd[ND_NEIGHBOR_ADVERT].value, formatBuf1, sizeof(formatBuf1)));
@@ -2724,7 +2724,7 @@ void printIcmpv4Stats(HostTraffic *el) {
 	     "<TH "TH_BG" ALIGN=LEFT>Pkt&nbsp;Rcvd</TH></TR>\n");
 
   if(el->icmpInfo->icmpMsgSent[ICMP_ECHO].value+el->icmpInfo->icmpMsgRcvd[ICMP_ECHO].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Request</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Request</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHO].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHO].value, formatBuf1, sizeof(formatBuf1)));
@@ -2732,7 +2732,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY].value+el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Reply</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Echo Reply</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ECHOREPLY].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ECHOREPLY].value, formatBuf1, sizeof(formatBuf1)));
@@ -2740,7 +2740,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP_UNREACH].value+el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Unreach</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Unreach</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_UNREACH].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_UNREACH].value, formatBuf1, sizeof(formatBuf1)));
@@ -2748,7 +2748,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP_REDIRECT].value+el->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Redirect</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Redirect</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_REDIRECT].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_REDIRECT].value, formatBuf1, sizeof(formatBuf1)));
@@ -2756,7 +2756,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
    if(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value+el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router Advertisement</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Router Advertisement</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_ROUTERADVERT].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_ROUTERADVERT].value, formatBuf1, sizeof(formatBuf1)));
@@ -2764,7 +2764,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
    if(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value+el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Time Exceeded</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Time Exceeded</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMXCEED].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMXCEED].value, formatBuf1, sizeof(formatBuf1)));
@@ -2772,7 +2772,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB].value+el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Parameter Problem</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Parameter Problem</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_PARAMPROB].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_PARAMPROB].value, formatBuf1, sizeof(formatBuf1)));
@@ -2780,7 +2780,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP_MASKREQ].value+el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Network Mask Request</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Network Mask Request</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREQ].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREQ].value, formatBuf1, sizeof(formatBuf1)));
@@ -2788,7 +2788,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY].value+el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Network Mask Reply</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Network Mask Reply</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_MASKREPLY].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_MASKREPLY].value, formatBuf1, sizeof(formatBuf1)));
@@ -2796,7 +2796,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH].value+el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Source Quench</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Source Quench</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_SOURCE_QUENCH].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_SOURCE_QUENCH].value, formatBuf1, sizeof(formatBuf1)));
@@ -2804,7 +2804,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP].value+el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Timestamp</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Timestamp</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_TIMESTAMP].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_TIMESTAMP].value, formatBuf1, sizeof(formatBuf1)));
@@ -2812,7 +2812,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST].value+el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Info Request</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Info Request</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REQUEST].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REQUEST].value, formatBuf1, sizeof(formatBuf1)));
@@ -2820,7 +2820,7 @@ void printIcmpv4Stats(HostTraffic *el) {
   }
 
   if(el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY].value+el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY].value > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Info Reply</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT>Info Reply</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>",
 		formatPkts(el->icmpInfo->icmpMsgSent[ICMP_INFO_REPLY].value, formatBuf, sizeof(formatBuf)),
 		formatPkts(el->icmpInfo->icmpMsgRcvd[ICMP_INFO_REPLY].value, formatBuf1, sizeof(formatBuf1)));
@@ -2864,7 +2864,7 @@ void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId) {
 	       "<TH "TH_BG">Sent</TH><TH "TH_BG">Rcvd</TH></TR>\n");
 
     while(list != NULL) {
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD>"
 		  "<TD "TD_BG" ALIGN=CENTER>%s&nbsp;</TD></TR>\n",
 		  getRowColor(), list->virtualHostName,
@@ -3013,7 +3013,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 				 "<TH "TH_BG">IP Address</TH></TR>\n");
 		  }
 
-		  safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+		  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 			      "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
 			      getRowColor(), makeHostLink(el2, 0, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 			      el2->hostNumIpAddress);
@@ -3024,7 +3024,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	  }
 
       if(numEntries > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Total Contacts</TH>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Total Contacts</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT "DARK_BG">%lu</TD></TR>\n",
 		    getRowColor(), (unsigned long)el->totContactedSentPeers);
        sendString(buf);
@@ -3048,7 +3048,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 			   "<TH "TH_BG">IP Address</TH></TR>\n");
 	      }
 
-	      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+	      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 			  "<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;</TD></TR>\n",
 			  getRowColor(), makeHostLink(el2, 0, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)),
 			  el2->hostNumIpAddress);
@@ -3059,7 +3059,7 @@ void printHostContactedPeers(HostTraffic *el, int actualDeviceId) {
 	  }
 
       if(numEntries > 0) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Total Contacts</TH>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Total Contacts</TH>"
 		    "<TD "TD_BG" ALIGN=RIGHT "DARK_BG">%lu</TD></TR>\n",
 		    getRowColor(), (unsigned long)el->totContactedRcvdPeers);
 	sendString(buf);
@@ -3190,7 +3190,7 @@ static void checkHostHealthness(HostTraffic *el) {
 	     || (el->secHostPkts->icmpProtocolUnreachRcvd.value.value > 0)
 	     || (el->secHostPkts->icmpAdminProhibitedRcvd.value.value > 0)
 	     || (el->secHostPkts->malformedPktsRcvd.value.value > 0)))) {
-    safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s "
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s "
 		CONST_IMG_HIGH_RISK 
 		CONST_IMG_MEDIUM_RISK 
                 CONST_IMG_LOW_RISK 
@@ -3271,7 +3271,7 @@ static void printUserList(HostTraffic *el) {
   while(list != NULL) {
     if(num > 0) sendString("<br>");
 
-    safe_snprintf(buf, sizeof(buf), "%s&nbsp;[", list->userName);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s&nbsp;[", list->userName);
     sendString(buf);
 
     if(FD_ISSET(BITFLAG_POP_USER, &(list->userFlags))) sendString("&nbsp;POP&nbsp;");
@@ -3306,7 +3306,7 @@ void checkHostProvidedServices(HostTraffic *el) {
      || isWINShost(el)
      || isDHCPClient(el) || isDHCPServer(el)
      ) {
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>", getRowColor(), "Host Type");
     sendString(buf);
 
@@ -3352,19 +3352,19 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   buf1[0]=0;
   if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName))) {
     if(el->hostResolvedName[0] == '\0' || strcmp(sniffedName, el->hostResolvedName))
-      safe_snprintf(buf1, sizeof(buf1), " (%s)", sniffedName);
+      safe_snprintf(__FILE__, __LINE__, buf1, sizeof(buf1), " (%s)", sniffedName);
   }
 
   if((el->hostResolvedName[0] != '\0') && (strcmp(el->hostResolvedName, el->hostNumIpAddress))) {
-    safe_snprintf(buf, sizeof(buf), "Info about "
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s/\" TARGET=\"_blank\" "
                 "TITLE=\"Link to web server on host, IF available\">%s %s</A>\n",
                 el->hostResolvedName,
 		el->hostResolvedName, buf1);
 
-    safe_snprintf(buf2, sizeof(buf2), "Info about %s", el->hostResolvedName);
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", el->hostResolvedName);
   } else if(el->hostNumIpAddress[0] != '\0') {
-    safe_snprintf(buf, sizeof(buf), "Info about "
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about "
 		" <A HREF=\"http://%s%s%s/\" TARGET=\"_blank\" "
                 "TITLE=\"Link to web server on host, if available\">%s %s</A>\n",
                 el->hostIpAddress.hostFamily == AF_INET6 ? "[" : "",
@@ -3372,11 +3372,11 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
                 el->hostIpAddress.hostFamily == AF_INET6 ? "]" : "",
 		el->hostNumIpAddress, buf1);
 
-    safe_snprintf(buf2, sizeof(buf2), "Info about %s", el->hostNumIpAddress);
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", el->hostNumIpAddress);
   } else {
-    safe_snprintf(buf, sizeof(buf), "Info about %s", el->ethAddressString);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Info about %s", el->ethAddressString);
 
-    safe_snprintf(buf2, sizeof(buf2), "Info about %s", el->ethAddressString);
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "Info about %s", el->ethAddressString);
   }
 
   releaseAddrResMutex();
@@ -3404,7 +3404,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     else
       multihomed = "";
 
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT>%s&nbsp;%s&nbsp;[%s%s%s%s]",
 		getRowColor(),
 		"IP&nbsp;Address",
@@ -3415,7 +3415,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     sendString("</TD></TR>\n");
 
     if(isMultihomed(el) && (!broadcastHost(el))) {
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD ALIGN=RIGHT>&nbsp;<OL>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD ALIGN=RIGHT>&nbsp;<OL>",
 		  getRowColor(), "Multihomed Addresses");
       sendString(buf);
 
@@ -3423,7 +3423,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	  theHost != NULL; theHost = getNextHost(actualDeviceId, theHost)) {
 	if((theHost != el)
 	   && (memcmp(theHost->ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS) == 0)) {
-	  safe_snprintf(buf, sizeof(buf), "<LI><A HREF=/%s.html>%s</A>",
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<LI><A HREF=/%s.html>%s</A>",
 		      theHost->hostNumIpAddress, theHost->hostNumIpAddress);
 	  sendString(buf);
 	}
@@ -3433,95 +3433,95 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
 
     if((el->protocolInfo != NULL) && (el->protocolInfo->dhcpStats != NULL)) {
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>",
 		  getRowColor(), "DHCP Information");
       sendString(buf);
 
       sendString("<TD "TD_BG"><TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=100%>\n");
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "DHCP Server",
 		  _intoa(el->protocolInfo->dhcpStats->dhcpServerIpAddress, buf1, sizeof(buf1)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n", getRowColor(), "Previous IP Address",
 		  _intoa(el->protocolInfo->dhcpStats->previousIpAddress, buf1, sizeof(buf1)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "Address Assigned on",
 		  formatTime(&(el->protocolInfo->dhcpStats->assignTime), formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "To be Renewed Before",
 		  formatTime(&(el->protocolInfo->dhcpStats->renewalTime), formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2>%s</TD></TR>\n",
 		  getRowColor(), "Lease Ends on",
 		  formatTime(&(el->protocolInfo->dhcpStats->leaseTime), formatBuf, sizeof(formatBuf)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">DHCP Packets</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">DHCP Packets</TH>"
 		  "<TH "TH_BG" ALIGN=CENTER "DARK_BG">Sent</TH><TH "TH_BG" ALIGN=RIGHT "DARK_BG">Rcvd</TH></TR>\n",
 		  getRowColor());
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Discover",
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_DISCOVER_MSG].value, formatBuf, sizeof(formatBuf)),
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_DISCOVER_MSG].value, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Offer",
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_OFFER_MSG].value, formatBuf, sizeof(formatBuf)),
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_OFFER_MSG].value, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Request",
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_REQUEST_MSG].value, formatBuf, sizeof(formatBuf)),
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_REQUEST_MSG].value, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Decline",
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_DECLINE_MSG].value, formatBuf, sizeof(formatBuf)),
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_DECLINE_MSG].value, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Ack",
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_ACK_MSG].value, formatBuf, sizeof(formatBuf)),
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_ACK_MSG].value, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Nack",
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_NACK_MSG].value, formatBuf, sizeof(formatBuf)),
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_NACK_MSG].value, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Release",
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_RELEASE_MSG].value, formatBuf, sizeof(formatBuf)),
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgRcvd[FLAG_DHCP_RELEASE_MSG].value, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Inform",
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_INFORM_MSG].value, formatBuf, sizeof(formatBuf)),
@@ -3529,7 +3529,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString(buf);
 
 
-      safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		  getRowColor(), "DHCP Unknown Msg",
 		  formatPkts(el->protocolInfo->dhcpStats->dhcpMsgSent[FLAG_DHCP_UNKNOWN_MSG].value, formatBuf, sizeof(formatBuf)),
@@ -3540,7 +3540,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
   }
 
-  safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 	      "<TD "TD_BG" ALIGN=RIGHT>"
 	      "%s&nbsp;&nbsp;-&nbsp;&nbsp;%s&nbsp;[%s]</TD></TR>\n",
 	      getRowColor(),
@@ -3551,14 +3551,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   sendString(buf);
 
   if(el->hostAS != 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"<A HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A></TD></TR>\n",
 		getRowColor(), "Autonomous System", el->hostAS, el->hostAS);
     sendString(buf);
   }
 
   if(el->dnsDomainValue && (el->dnsDomainValue[0] != '\0')) {
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s</TD></TR>\n", getRowColor(),
 		"Domain", el->dnsDomainValue);
     sendString(buf);
@@ -3577,7 +3577,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       strcpy(symLink, symMacAddr);
       urlFixupToRFC1945Inplace(symLink);
 
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "<A HREF=%s.html>%s</A>%s</TD></TR>\n",
 		  getRowColor(), "Main Host MAC Address",
 		  symLink, symMacAddr,
@@ -3585,7 +3585,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       sendString(buf);
 
     } else {
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "MAC&nbsp;Address <IMG ALT=\"Network Interface Card (NIC)\" SRC=/card.gif BORDER=0 "TABLE_DEFAULTS">",
 		  el->ethAddressString,
@@ -3595,7 +3595,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
     vendorName = getVendorInfo(el->ethAddress, 1);
     if(vendorName[0] != '\0') {
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT NOWRAP>%s%s</TD></TR>\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT NOWRAP>%s%s</TD></TR>\n",
 		  getRowColor(), "Nw&nbsp;Board&nbsp;Vendor",
 		  vendorName,
 		  myGlobals.separator /* it avoids empty cells not to be rendered */);
@@ -3619,12 +3619,12 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     urlFixupToRFC1945Inplace(symLink);
 
     if(!myGlobals.dontTrustMACaddr) {
-      safe_snprintf(shortBuf, sizeof(shortBuf), "<A HREF=%s.html>%s</A>", symLink, symMacAddr);
+      safe_snprintf(__FILE__, __LINE__, shortBuf, sizeof(shortBuf), "<A HREF=%s.html>%s</A>", symLink, symMacAddr);
     } else {
       strcpy(shortBuf, symMacAddr);
     }
 
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s"
 		"%s</TD></TR>\n",
 		getRowColor(),
@@ -3638,7 +3638,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     setHostFingerprint(el);
 
     if((el->fingerprint != NULL) && (el->fingerprint[0] == ':') && (strlen(el->fingerprint) > 2)) {
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s%s</TD></TR>\n",
 		  getRowColor(), "OS&nbsp;Name",
 		  getOSFlag(el, NULL, 1, osBuf, sizeof(osBuf)),
@@ -3648,13 +3648,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if((as = getHostAS(el)) != 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d</TD></TR>\n", getRowColor(), "Origin&nbsp;AS", as);
     sendString(buf);
   }
 
   if(el->vlanId != -1) {
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d</TD></TR>\n", getRowColor(), "VLAN&nbsp;Id", el->vlanId);
       sendString(buf);
   }
@@ -3663,14 +3663,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     if((el->nonIPTraffic->nbHostName != NULL) || (el->nonIPTraffic->nbDomainName != NULL)) {
       if(el->nonIPTraffic->nbAccountName) {
 	if(el->nonIPTraffic->nbDomainName != NULL) {
-	  safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		      "%s@%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
 		      getRowColor(), "NetBios&nbsp;Name",
 		      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName, el->nonIPTraffic->nbDomainName,
 		      getNbNodeType(el->nonIPTraffic->nbNodeType),
 		      el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "");
 	} else {
-	  safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		      "%s@%s (%s) %s</TD></TR>\n",
 		      getRowColor(), "NetBios&nbsp;Name",
 		      el->nonIPTraffic->nbAccountName, el->nonIPTraffic->nbHostName,
@@ -3679,7 +3679,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	}
       } else {
 	if(el->nonIPTraffic->nbDomainName != NULL) {
-	  safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		      "%s&nbsp;[domain %s] (%s) %s</TD></TR>\n",
 		      getRowColor(), "NetBios&nbsp;Name",
 		      el->nonIPTraffic->nbHostName != NULL ? el->nonIPTraffic->nbHostName : "",
@@ -3687,7 +3687,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 		      getNbNodeType(el->nonIPTraffic->nbNodeType),
 		      el->nonIPTraffic->nbDescr ? el->nonIPTraffic->nbDescr : "");
 	} else {
-	  safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		      "%s (%s) %s</TD></TR>\n",
 		      getRowColor(), "NetBios&nbsp;Name",
 		      el->nonIPTraffic->nbHostName,
@@ -3698,7 +3698,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
       sendString(buf);
     } else if(el->nonIPTraffic->nbHostName != NULL) {
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s&nbsp;(%s) %s</TD></TR>\n",
 		  getRowColor(), "NetBios&nbsp;Name",
 		  el->nonIPTraffic->nbHostName, getNbNodeType(el->nonIPTraffic->nbNodeType),
@@ -3711,7 +3711,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
       if(nodeName == NULL) nodeName = "";
 
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s&nbsp;\n",
 		  getRowColor(), "AppleTalk&nbsp;Name",
 		  nodeName);
@@ -3730,13 +3730,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	sendString(")&nbsp;");
       }
 
-      safe_snprintf(buf, sizeof(buf), "[%d.%d]</TD></TR>\n",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "[%d.%d]</TD></TR>\n",
 		  el->nonIPTraffic->atNetwork, el->nonIPTraffic->atNode);
       sendString(buf);
     }
 
     if(el->nonIPTraffic->ipxHostName != NULL) {
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH>"
 		  "<TD "TD_BG" ALIGN=RIGHT>"
 		  "%s&nbsp;[", getRowColor(), "IPX&nbsp;Name",
 		  el->nonIPTraffic->ipxHostName);
@@ -3753,12 +3753,12 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(!multicastHost(el)) {
     if(subnetPseudoLocalHost(el)) {
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
 		  "Local (inside specified/local subnet)");
     } else {
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "%s</TD></TR>\n", getRowColor(),
 		  "Host&nbsp;Location",
 		  "Remote (outside specified/local subnet)");
@@ -3767,14 +3767,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if(el->minTTL > 0) {
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%d:%d&nbsp;[~%d&nbsp;hop(s)]</TD></TR>\n",
 		getRowColor(), "IP&nbsp;TTL&nbsp;(Time to Live)",
 		el->minTTL, el->maxTTL, guessHops(el));
     sendString(buf);
   }
 
-  safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	      getRowColor(), "Total&nbsp;Data&nbsp;Sent",
@@ -3785,14 +3785,14 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 	      );
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s Pkts</TD></TR>\n",
 	      getRowColor(), "Broadcast&nbsp;Pkts&nbsp;Sent",
 	      formatPkts(el->pktBroadcastSent.value, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   if(el->routedTraffic != NULL) {
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"%s/%s Pkts</TD></TR>\n",
 		getRowColor(), "Routed Traffic",
 		formatBytes(el->routedTraffic->routedBytes.value, 1, formatBuf, sizeof(formatBuf)),
@@ -3801,19 +3801,19 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   }
 
   if((el->pktMulticastSent.value > 0) || (el->pktMulticastRcvd.value > 0)) {
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>",
 		getRowColor(), "Multicast&nbsp;Traffic");
     sendString(buf);
 
     if(el->pktMulticastSent.value > 0) {
-      safe_snprintf(buf, sizeof(buf), "Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "Sent&nbsp;%s/%s&nbsp;Pkts&nbsp;",
 		  formatBytes(el->bytesMulticastSent.value, 1, formatBuf, sizeof(formatBuf)),
 		  formatPkts(el->pktMulticastSent.value, formatBuf1, sizeof(formatBuf1)));
       sendString(buf);
     }
 
     if(el->pktMulticastRcvd.value > 0) {      
-      safe_snprintf(buf, sizeof(buf), "%sRcvd&nbsp;%s/%s&nbsp;Pkts",
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%sRcvd&nbsp;%s/%s&nbsp;Pkts",
 		    (el->pktMulticastSent.value > 0) ? " - " : "",
 		    formatBytes(el->bytesMulticastRcvd.value, 1, formatBuf, sizeof(formatBuf)),
 		    formatPkts(el->pktMulticastRcvd.value, formatBuf1, sizeof(formatBuf1)));
@@ -3839,7 +3839,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
     }
   }
 
-  safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s"
 	      "</TH><TD "TD_BG" ALIGN=RIGHT>"
 	      "%s/%s Pkts/%s Retran. Pkts [%d%%]</TD></TR>\n",
 	      getRowColor(), "Total&nbsp;Data&nbsp;Rcvd",
@@ -3890,7 +3890,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
 	if(router != NULL) {
 	  if(!printedHeader) {
-	    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
+	    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
 			"Used&nbsp;Subnet&nbsp;Routers</TH><TD "TD_BG" ALIGN=RIGHT>\n",
 			getRowColor());
 	    sendString(buf);
@@ -3899,7 +3899,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
 	  if(printedHeader > 1) sendString("<BR>");
 
-	  safe_snprintf(buf, sizeof(buf), "%s\n",
+	  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s\n",
 		      makeHostLink(router, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
 				   hostLinkBuf, sizeof(hostLinkBuf)));
 	  sendString(buf);
@@ -3920,7 +3920,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   /* **************************** */
 
   if((el->protocolInfo) && (el->protocolInfo->userList != NULL)) {
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">"
 		"Known&nbsp;Users&nbsp;" CONST_IMG_HAS_USERS "</TH><TD "TD_BG" ALIGN=RIGHT>\n",
 		getRowColor());
     sendString(buf);
@@ -3935,13 +3935,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
      && (!subnetPseudoLocalHost(el))
      && (!multicastHost(el))
      && (!privateIPAddress(el))) {
-    safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		"[ <A HREF=\"http://www.radb.net/cgi-bin/radb/whois.cgi?obj=%s\">Whois</A> ]</TD></TR>\n",
 		getRowColor(), "Further Host Information", el->hostNumIpAddress);
     sendString(buf);
 
     if(myGlobals.mapperURL) {
-      safe_snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">%s</TH><TD "TD_BG" ALIGN=RIGHT>"
 		  "<IMG SRC=\"%s?host=%s\" alt=\"map of host location\" WIDTH=320 HEIGHT=200></TD></TR>\n",
 		  getRowColor(),
 		  "Host Physical Location",
@@ -3962,13 +3962,13 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
       key = el->hostNumIpAddress;
 
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
-    safe_snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
 	     myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
 	     dotToSlash(key));
 
     if(stat(buf, &statbuf) == 0) {
-      safe_snprintf(buf, sizeof(buf),
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<TR %s><TH "TH_BG" ALIGN=LEFT "DARK_BG">Historical Data</TH>\n"
                   "<TD "TD_BG" ALIGN=\"right\">"
                   "[ <a href=\"/" CONST_PLUGINS_HEADER 
@@ -4020,7 +4020,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
       }
 
       if((tot > 0) || (tot1 > 0)) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG">%s</TH>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" "DARK_BG">%s</TH>"
 		    "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
 		    "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
 		    "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
@@ -4058,7 +4058,7 @@ void printServiceStats(char* svcName, ServiceStats* ss,
       }
 
       if((tot > 0) || (tot1 > 0)) {
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG">%s</TH>"
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG">%s</TH>"
                 "<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
 		"<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
 		"<TD "TD_BG" ALIGN=CENTER>%s</TD><TD "TD_BG" ALIGN=CENTER>%.1f%%</TD>"
@@ -4172,20 +4172,20 @@ void printTableEntry(char *buf, int bufLen,
 
   switch(int_perc) {
   case 0:
-    safe_snprintf(buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>0%%</TD>"
 		"<TD "TD_BG" WIDTH=200>&nbsp;</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)));
     break;
   case 100:
-    safe_snprintf(buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>100%%</TD>"
 		"<TD ALIGN=CENTER WIDTH=200><IMG ALT=\"100%%\" ALIGN=MIDDLE SRC=\"/gauge.jpg\" WIDTH=200 HEIGHT=12>"
 		"</TD></TR>\n",
 		getRowColor(), label, formatKBytes(total, formatBuf, sizeof(formatBuf)));
     break;
   default:
-    safe_snprintf(buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, bufLen, "<TR "TR_ON" %s><TH "TH_BG" ALIGN=LEFT WIDTH=150 "DARK_BG">%s</TH>"
 		"<TD "TD_BG" ALIGN=RIGHT WIDTH=50>%s</TD><TD "TD_BG" ALIGN=RIGHT WIDTH=50>%d%%</TD>"
 		"<TD "TD_BG" WIDTH=200><TABLE BORDER=0 "TABLE_DEFAULTS" CELLPADDING=0 CELLSPACING=0 WIDTH=200>"
 		"<TR "TR_ON"><TD><IMG ALIGN=MIDDLE ALT=\"%d%%\" SRC=\"/gauge.jpg\" WIDTH=\"%d\" HEIGHT=12>"
@@ -4214,20 +4214,20 @@ char* buildHTMLBrowserWindowsLabel(int i, int j, u_short forIpTraffic) {
     buf[0]='\0';
   else if ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value > 0)
 	   && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value == 0)) {
-    safe_snprintf(buf, sizeof(buf), "(%s->%s)=%s/%s Pkts",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "(%s->%s)=%s/%s Pkts",
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostResolvedName,
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostResolvedName,
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
 		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->pktsSent.value, formatBuf1, sizeof(formatBuf1)));
   } else if ((myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value == 0)
 	     && (myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value > 0)) {
-    safe_snprintf(buf, sizeof(buf), "(%s->%s)=%s/%s Pkts",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "(%s->%s)=%s/%s Pkts",
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostResolvedName,
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostResolvedName,
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)),
 		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->pktsRcvd.value, formatBuf1, sizeof(formatBuf1)));
   } else {
-    safe_snprintf(buf, sizeof(buf), "(%s->%s)=%s/%s Pkts, (%s->%s)=%s/%s Pkts",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "(%s->%s)=%s/%s Pkts, (%s->%s)=%s/%s Pkts",
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostResolvedName,
 		myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostResolvedName,
 		formatBytes(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent.value, 1, formatBuf, sizeof(formatBuf)),
@@ -4251,7 +4251,7 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
 
   if(el->trafficDistribution == NULL) return;
 
-  safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+  safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 	      formatBytes(el->trafficDistribution->last24HoursBytesSent[i].value, 0, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
@@ -4260,11 +4260,11 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
   else
     pctg = 0;
 
-  safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TD ALIGN=RIGHT %s>%.1f %%</TD>",
+  safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TD ALIGN=RIGHT %s>%.1f %%</TD>",
 	   getBgPctgColor(pctg), pctg);
   sendString(buf);
 
-  safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
+  safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 	   formatBytes(el->trafficDistribution->last24HoursBytesRcvd[i].value, 0, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
@@ -4273,7 +4273,7 @@ void printHostHourlyTrafficEntry(HostTraffic *el, int i,
   else
     pctg = 0;
 
-  safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TD ALIGN=RIGHT %s>%.1f %%</TD></TR>",
+  safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TD ALIGN=RIGHT %s>%.1f %%</TD></TR>",
 	      getBgPctgColor(pctg), pctg);
   sendString(buf);
 }
@@ -4298,7 +4298,7 @@ char* getNbNodeType(char nodeType) {
 void printFlagedWarning(char *text) {
   char buf[LEN_GENERAL_WORK_BUFFER];
 
-  safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER,
+  safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER,
  	   "<center>\n"
  	   "<p><img alt=\"Warning\" src=\"/warning.gif\"></p>\n"
  	   "<p><font color=\"#FF0000\" size=\"+1\">%s</font></p>\n"
@@ -4389,7 +4389,7 @@ void printHostsCharacterization(void) {
 	  headerSent = 1;
 	}
 
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH ALIGN=LEFT>%s</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH ALIGN=LEFT>%s</TH>",
 		    getRowColor(),
 		    makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0,
 				 hostLinkBuf, sizeof(hostLinkBuf)));
@@ -4416,7 +4416,7 @@ void printHostsCharacterization(void) {
   } else {
     sendString("<TR><TH>Total</TH>");
     if(unhealthy > 0) {
-      safe_snprintf(buf, sizeof(buf),
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                   "<TD ALIGN=CENTER>%d [%.1f %%]</TD>",
                   unhealthy, (float)(unhealthy*100)/(float)totHosts);
       sendString(buf);
@@ -4424,47 +4424,47 @@ void printHostsCharacterization(void) {
       sendString("<TD>&nbsp;</TD>");
 
     if(a > 0) {
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", a);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", a);
       sendString(buf);
     } else
       sendString("<TD>&nbsp;</TD>");
     if(b > 0) {
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", b);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", b);
       sendString(buf);
     } else
       sendString("<TD>&nbsp;</TD>");
     if(c > 0) {
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", c);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", c);
       sendString(buf);
     } else
       sendString("<TD>&nbsp;</TD>");
     if(d > 0) {
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", d);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", d);
       sendString(buf);
     } else
       sendString("<TD>&nbsp;</TD>");
     if(e > 0) {
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", e);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", e);
       sendString(buf);
     } else
       sendString("<TD>&nbsp;</TD>");
     if(f > 0) {
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", f);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", f);
       sendString(buf);
     } else
       sendString("<TD>&nbsp;</TD>");
     if(g > 0) {
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", g);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", g);
       sendString(buf);
     } else
       sendString("<TD>&nbsp;</TD>");
     if(h > 0) {
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", h);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", h);
       sendString(buf);
     } else
       sendString("<TD>&nbsp;</TD>");
     if(i > 0) {
-      safe_snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", i);
+      safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TD ALIGN=CENTER>%d</TD>", i);
       sendString(buf);
     } else
       sendString("<TD>&nbsp;</TD>");
@@ -4486,7 +4486,7 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
 
   printSectionTitle("Statistics");
 
-  safe_snprintf(buf, sizeof(buf), 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
               "<center>\n<table border=1 "TABLE_DEFAULTS">\n"
               "<tr><th colspan=\"2\"><i>Scanned</i></th></tr>\n"
               "<tr><td>Hosts</td><td align=\"right\">%d</td></tr>\n"
@@ -4501,13 +4501,13 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
   sendString(buf);
 
   if(fingerprintRemote != TRUE) {
-    safe_snprintf(buf, sizeof(buf), 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
                 "<tr><td>Remote</td><td align=\"right\">%d</td></tr>\n",
                 countRemote);
     sendString(buf);
   }
 
-  safe_snprintf(buf, sizeof(buf), 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
               "<tr><td>Non IP host</td><td align=\"right\">%d</td></tr>\n"
               "<tr><th colspan=\"2\"><i>Gives:</i></th></tr>\n"
               "<tr><td>Possible to report</td><td align=\"right\">%d</td></tr>\n",
@@ -4516,13 +4516,13 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
                            - countRemote - countNotIP);
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf), 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
               "<tr><td>Less: Can not resolve<sup>*</sup></td>"
                   "<td align=\"right\">%d</td></tr>\n",
               countCantResolve);
   sendString(buf);
 
-  safe_snprintf(buf, sizeof(buf), 
+  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
               "<tr><td>Less: Unknown Fingerprint<sup>**</sup></td>"
                   "<td align=\"right\">%d</td></tr>\n",
               countUnknownFP);
@@ -4553,7 +4553,7 @@ static void printFingerprintCounts(int countScanned, int countWithoutFP, int cou
 
   if(unknownFPs[0] != '\0') {
     unknownFPs[0]=' ';
-    safe_snprintf(buf, sizeof(buf), 
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), 
               "<li>Are:</i>&nbsp;%s%s</li>\n",
               unknownFPs,
               unknownFPsEtc == 1 ? " ..." : "");
@@ -4741,7 +4741,7 @@ void printHostsStats(int fingerprintRemote) {
 	if((tmpName1[0] == '\0') || (strcmp(tmpName1, "0.0.0.0") == 0))
 	  tmpName1 = myGlobals.separator;
 
-	safe_snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH ALIGN=LEFT>%s</TH>",
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TR "TR_ON" %s><TH ALIGN=LEFT>%s</TH>",
 		    getRowColor(),
 		    makeHostLink(el, FLAG_HOSTLINK_TEXT_FORMAT, 0, 0, hostLinkBuf, sizeof(hostLinkBuf)));
 	sendString(buf);
@@ -4757,7 +4757,7 @@ void printHostsStats(int fingerprintRemote) {
 		sendString("<br>\n</TD>");
 	      } else {
 		if((el->nonIPTraffic != NULL) && (el->nonIPTraffic->nbDomainName != NULL)) {
-		  safe_snprintf(buf, sizeof(buf),
+		  safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                               "<TD ALIGN=CENTER>[ %s ]</TD>",
                               el->nonIPTraffic->nbDomainName);
 		  sendString(buf);
@@ -4784,7 +4784,7 @@ void printHostsStats(int fingerprintRemote) {
 
   for(i=0; i<MAX_NUM_OS; i++) {
      if(theOSs[i].name != NULL) {
-	safe_snprintf(buf, sizeof(buf),
+	safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "<tr><th align=\"left\">%s</th>\n"
                     "<td align=\"right\">%d</td></tr>\n", 
                     theOSs[i].name, theOSs[i].num);
@@ -4817,13 +4817,13 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
   strftime(buf2, sizeof(buf2), CONST_LOCALE_TIMESPEC, localtime_r(&mutexId->lockTime, &t));
   if(textPrintFlag == TRUE) {
     if(myGlobals.disableMutexExtraInfo) {
-        safe_snprintf(buf, sizeof(buf),
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "Mutex %s is %s, locked: %u times.\n",
                     mutexName, mutexId->isLocked ? "locked" : "unlocked",
                     mutexId->numLocks);
         sendString(buf);
     } else if(mutexId->lockAttemptLine > 0) {
-        safe_snprintf(buf, sizeof(buf),
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "Mutex %s is %s.\n"
                     "     locked: %u times, last was at %s %s:%d(%d)\n"
                     "     blocked: at %s:%d(%d)\n",
@@ -4834,14 +4834,14 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
                     mutexId->lockAttemptFile, mutexId->lockAttemptLine, mutexId->lockAttemptPid);
 		    sendString(buf);
 
-        safe_snprintf(buf, sizeof(buf),
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "     unlocked: %u times, last was %s:%d(%d)\n"
                     "     longest: %d sec from %s:%d\n",
                     mutexId->numReleases, mutexId->unlockFile, mutexId->unlockLine, mutexId->unlockPid,
                     mutexId->maxLockedDuration, mutexId->maxLockedDurationUnlockFile,
 		    mutexId->maxLockedDurationUnlockLine);
     } else {
-        safe_snprintf(buf, sizeof(buf),
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "Mutex %s, is %s.\n"
                     "     locked: %u times, last was at %s %s:%d(%d)\n"
                     "     unlocked: %u times, last was %s:%d(%d)\n"
@@ -4859,14 +4859,14 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
     }
   } else {
     if(myGlobals.disableMutexExtraInfo) {
-        safe_snprintf(buf, sizeof(buf),
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
                     "<TD ALIGN=RIGHT>%u</TD><TD ALIGN=RIGHT>%u</TD></TR>\n",
                     mutexName,
                     mutexId->isLocked ? "<FONT COLOR=\"RED\">locked</FONT>" : "unlocked",
                     mutexId->numLocks, mutexId->numReleases);
     } else if (mutexId->lockAttemptLine > 0) {
-        safe_snprintf(buf, sizeof(buf),
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
                     "<TD ALIGN=RIGHT>at %s %s:%d(%d)</TD>"
                     "<TD ALIGN=RIGHT>%s:%d(%d)</TD>"
@@ -4884,7 +4884,7 @@ void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName)
                     mutexId->maxLockedDurationUnlockFile,
                     mutexId->maxLockedDurationUnlockLine);
     } else {
-        safe_snprintf(buf, sizeof(buf),
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf),
                     "<TR><TH ALIGN=LEFT>%s</TH><TD ALIGN=CENTER>%s</TD>"
                     "<TD ALIGN=RIGHT>at %s %s:%d(%d)</TD>"
                     "<TD ALIGN=RIGHT>&nbsp;</TD>"
@@ -4929,8 +4929,8 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
 
   memset(buf, 0, sizeof(buf));
 
-  safe_snprintf(htmlAnchor, sizeof(htmlAnchor), "<A HREF=\"%s?col=%s", url, sign);
-  safe_snprintf(htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=\"%s?col=",  url);
+  safe_snprintf(__FILE__, __LINE__, htmlAnchor, sizeof(htmlAnchor), "<A HREF=\"%s?col=%s", url, sign);
+  safe_snprintf(__FILE__, __LINE__, htmlAnchor1, sizeof(htmlAnchor1), "<A HREF=\"%s?col=",  url);
 
   if(abs(column) == FLAG_HOST_DUMMY_IDX) {
     arrow[0] = arrowGif; theAnchor[0] = htmlAnchor;
@@ -4953,7 +4953,7 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
   switch(reportType) {
   case SORT_FC_DATA:
     sendString("<CENTER>\n");
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>\n"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>\n"
 		"<TH "TH_BG" COLSPAN=2 "DARK_BG">%s0\">Total Bytes%s</A></TH>\n",
@@ -4982,7 +4982,7 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
     if(abs(column) == 7)
       { arrow[6] = arrowGif; theAnchor[6] = htmlAnchor1;  }
 
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" "DARK_BG">%s1\">SCSI%s</A></TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" "DARK_BG">%s1\">SCSI%s</A></TH>"
                 "<TH "TH_BG" "DARK_BG">%s2\">ELS%s</A></TH><TH "TH_BG" "DARK_BG">%s3\">NS%s</A></TH>"
                 "<TH "TH_BG" "DARK_BG">%s4\">IP/FC%s</A><TH "TH_BG" "DARK_BG">%s5\">SWILS%s</A></TH>"
                 "<TH "TH_BG" "DARK_BG">%s6\">Other%s</A></TH>",
@@ -4994,7 +4994,7 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
 
   case SORT_FC_ACTIVITY:
     sendString("<CENTER>\n");
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR >"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR >"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>\n",
 		theAnchor[1], arrow[1], theAnchor[0], arrow[0]);
@@ -5002,7 +5002,7 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
     j = hourId;
     for (i = 0; i < 24; i++) {
         j = j % 24;
-        safe_snprintf(buf, sizeof(buf), "<TH "TH_BG" "DARK_BG">%s</TH>\n", hours[j]);
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<TH "TH_BG" "DARK_BG">%s</TH>\n", hours[j]);
         sendString (buf);
         if (!j) {
             j = 23;
@@ -5014,7 +5014,7 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
     break;
   case SORT_FC_THPT:
     sendString("<CENTER>\n");
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
 		"<TH "TH_BG" ROWSPAN=\"2\" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>"
 		"<TH "TH_BG" ROWSPAN=\"2\" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>",
 		theAnchor[1], arrow[1], theAnchor[0], arrow[0]);
@@ -5033,11 +5033,11 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
     if(abs(column) == 6) { arrow[5] = arrowGif; theAnchor[5] = htmlAnchor; }
     else { arrow[5] = "";  theAnchor[5] = htmlAnchor1;}
 
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\" "DARK_BG">Bytes</TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\" "DARK_BG">Bytes</TH>"
 	    "<TH "TH_BG" COLSPAN=\"3\" ALIGN=\"CENTER\" "DARK_BG">Packets</TH>"
             "</TR><TR "TR_ON">");
     sendString(buf);
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" "DARK_BG">%s1\">Current%s</A></TH>"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "<TH "TH_BG" "DARK_BG">%s1\">Current%s</A></TH>"
 	     "<TH "TH_BG" "DARK_BG">%s2\">Avg%s</A></TH>"
 	     "<TH "TH_BG" "DARK_BG">%s3\">Peak%s</A></TH>"
 	    "<TH "TH_BG" "DARK_BG">%s4\">Current%s</A></TH><TH "TH_BG" "DARK_BG">%s5\">Avg%s</A></TH>"
@@ -5047,11 +5047,11 @@ void printFcHeader(int reportType, int revertOrder, u_int column, u_int hourId, 
     sendString(buf);
     break;
   default:
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, 
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, 
                 "<CENTER><p>ERROR: reportType=%d</p>\n",
                 reportType);
     sendString(buf);
-    safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
+    safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS"><TR "TR_ON">"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_DOMAIN_DUMMY_IDX_STR "\">VSAN%s</A></TH>"
 		"<TH "TH_BG" "DARK_BG">%s" FLAG_HOST_DUMMY_IDX_STR "\">FC_Port%s</A></TH>",
 		theAnchor[1], arrow[1], theAnchor[0], arrow[0]);

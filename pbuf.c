@@ -363,7 +363,7 @@ static void checkFragmentOverlap(HostTraffic *srcHost,
        && fragment->lastOffset < fragmentOffset+dataLength)) {
     if(myGlobals.enableSuspiciousPacketDump) {
       char buf[LEN_GENERAL_WORK_BUFFER];
-      safe_snprintf(buf, LEN_GENERAL_WORK_BUFFER, "Detected overlapping packet fragment [%s->%s]: "
+      safe_snprintf(__FILE__, __LINE__, buf, LEN_GENERAL_WORK_BUFFER, "Detected overlapping packet fragment [%s->%s]: "
                "fragment id=%d, actual offset=%d, previous offset=%d\n",
                fragment->src->hostResolvedName,
                fragment->dest->hostResolvedName,
@@ -1286,13 +1286,13 @@ static void processIpPkt(const u_char *bp,
 		    }
 		}
 
-	      if(WS == -1) { safe_snprintf(WSS, sizeof(WSS), "WS"); }
-	      else { safe_snprintf(WSS, sizeof(WSS), "%02d", WS); }
+	      if(WS == -1) { safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "WS"); }
+	      else { safe_snprintf(__FILE__, __LINE__, WSS, sizeof(WSS), "%02d", WS); }
 	      
-	      if(MSS == -1) { safe_snprintf(_MSS, sizeof(_MSS), "_MSS"); }
-	      else { safe_snprintf(_MSS, sizeof(_MSS), "%04X", MSS); }
+	      if(MSS == -1) { safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "_MSS"); }
+	      else { safe_snprintf(__FILE__, __LINE__, _MSS, sizeof(_MSS), "%04X", MSS); }
 
-	      safe_snprintf(fingerprint, sizeof(fingerprint),
+	      safe_snprintf(__FILE__, __LINE__, fingerprint, sizeof(fingerprint),
 		       "%04X:%s:%02X:%s:%d:%d:%d:%d:%c:%02X",
 		       WIN, _MSS, ttl = TTL_PREDICTOR(ip.ip_ttl), WSS , S, N, D, T,
 		       (tcp->th_flags & TH_ACK) ? 'A' : 'S', tcpUdpLen);

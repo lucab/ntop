@@ -193,11 +193,12 @@ extern void initSignals(void);
 extern void startSniffer(void);
 extern void deviceSanityCheck(char* string);
 
-#define safe_snprintf(...) _safe_snprintf(__FILE__, __LINE__, __VA_ARGS__)
-extern int _safe_snprintf(char* file, int line,
+
+extern int safe_snprintf(char* file, int line,
                           char* buf, size_t sizeofbuf,
                           char* format, ...);
-#define safe_strncat(...) _safe_strncat(__FILE__, __LINE__, __VA_ARGS__)
+
+#define safe_strncat(a, b, c) _safe_strncat(__FILE__, __LINE__, a, b, c)
 extern int _safe_strncat(char* file, int line,
                          char* dest, size_t sizeofdest,
                          char* src);

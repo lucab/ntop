@@ -309,26 +309,26 @@ static int initXmldump(void) {
     if(strcmp(hostName, myGlobals.domainName) == 0) {
       /* The returned hostName doesn't appear to have the domainName in it... */
       traceEvent(CONST_TRACE_NOISY, "Appending the domain name, '%s'", myGlobals.domainName);
-      safe_snprintf(hostName, sizeof(hostName), "%s.%s", hostName, myGlobals.domainName);
+      safe_snprintf(__FILE__, __LINE__, hostName, sizeof(hostName), "%s.%s", hostName, myGlobals.domainName);
     }
   }
 
   if(fetchPrefsValue("xmldump.versioncheader", value, sizeof(value)) == -1) {
-    safe_snprintf(value, sizeof(value), "%d", TRUE);
+    safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", TRUE);
     storePrefsValue("xmldump.versioncheader", value);
     dumpVersioncHeader = TRUE;
   } else {
     dumpVersioncHeader = atoi(value);
   }
   if(fetchPrefsValue("xmldump.invoke", value, sizeof(value)) == -1) {
-    safe_snprintf(value, sizeof(value), "%d", TRUE);
+    safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", TRUE);
     storePrefsValue("xmldump.invoke", value);
     dumpInvoke = TRUE;
   } else {
     dumpInvoke = atoi(value);
   }
   if(fetchPrefsValue("xmldump.interfaces", value, sizeof(value)) == -1) {
-    safe_snprintf(value, sizeof(value), "%d", TRUE);
+    safe_snprintf(__FILE__, __LINE__, value, sizeof(value), "%d", TRUE);
     storePrefsValue("xmldump.interfaces", value);
     dumpInterfaces = TRUE;
   } else {
@@ -394,15 +394,15 @@ static void handleXmldumpHTTPrequest(char* url) {
       if(value && key) {
         if(strcmp(key, "versioncheader") == 0) {
           dumpVersioncHeader = atoi(value);
-          safe_snprintf(buf, sizeof(buf), "%d", dumpVersioncHeader);
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpVersioncHeader);
           storePrefsValue("xmldump.versioncheader", buf);
         } else if(strcmp(key, "invoke") == 0) {
           dumpInvoke = atoi(value);
-          safe_snprintf(buf, sizeof(buf), "%d", dumpInvoke);
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInvoke);
           storePrefsValue("xmldump.invoke", buf);
         } else if(strcmp(key, "interfaces") == 0) {
           dumpInterfaces = atoi(value);
-          safe_snprintf(buf, sizeof(buf), "%d", dumpInterfaces);
+          safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", dumpInterfaces);
           storePrefsValue("xmldump.interfaces", buf);
         }
       }
@@ -426,7 +426,7 @@ static void handleXmldumpHTTPrequest(char* url) {
              CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>"
              "<table border=\"0\"" TABLE_DEFAULTS " width=\"100%\"><tr><th align=\"left\">");
 
-  safe_snprintf(buf,
+  safe_snprintf(__FILE__, __LINE__, buf,
               sizeof(buf),
               "<input TYPE=\"radio\" NAME=\"versioncheader\" VALUE=%d%s>%s<br>\n",
               1,
@@ -434,7 +434,7 @@ static void handleXmldumpHTTPrequest(char* url) {
               "Yes");
   sendString(buf);
   sendString("</th></tr>\n<tr><th align=\"left\">");
-  safe_snprintf(buf,
+  safe_snprintf(__FILE__, __LINE__, buf,
               sizeof(buf),
               "<input TYPE=\"radio\" NAME=\"versioncheader\" VALUE=%d%s>%s<br>\n",
               0,
@@ -452,7 +452,7 @@ static void handleXmldumpHTTPrequest(char* url) {
              CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>"
              "<table border=\"0\"" TABLE_DEFAULTS " width=\"100%\"><tr><th align=\"left\">");
 
-  safe_snprintf(buf,
+  safe_snprintf(__FILE__, __LINE__, buf,
               sizeof(buf),
               "<input TYPE=\"radio\" NAME=\"invoke\" VALUE=%d%s>%s<br>\n",
               1,
@@ -460,7 +460,7 @@ static void handleXmldumpHTTPrequest(char* url) {
               "Yes");
   sendString(buf);
   sendString("</th></tr>\n<tr><th align=\"left\">");
-  safe_snprintf(buf,
+  safe_snprintf(__FILE__, __LINE__, buf,
               sizeof(buf),
               "<input TYPE=\"radio\" NAME=\"invoke\" VALUE=%d%s>%s<br>\n",
               0,
@@ -478,7 +478,7 @@ static void handleXmldumpHTTPrequest(char* url) {
              CONST_PLUGINS_HEADER CONST_XMLDUMP_PLUGIN_NAME "\" method=get>"
              "<table border=\"0\"" TABLE_DEFAULTS " width=\"100%\"><tr><th align=\"left\">");
 
-  safe_snprintf(buf,
+  safe_snprintf(__FILE__, __LINE__, buf,
               sizeof(buf),
               "<input TYPE=\"radio\" NAME=\"interfaces\" VALUE=%d%s>%s<br>\n",
               1,
@@ -486,7 +486,7 @@ static void handleXmldumpHTTPrequest(char* url) {
               "Yes");
   sendString(buf);
   sendString("</th></tr>\n<tr><th align=\"left\">");
-  safe_snprintf(buf,
+  safe_snprintf(__FILE__, __LINE__, buf,
               sizeof(buf),
               "<input TYPE=\"radio\" NAME=\"interfaces\" VALUE=%d%s>%s<br>\n",
               0,
@@ -699,7 +699,7 @@ GdomeElement * _newxml(char * filename, int linenum,
 /* WARNING: The following DO NOT return a value! */
 
 #define newxml_simplehex(parent, name, hexvar, description) {\
-    safe_snprintf(buf, sizeof(buf), "0x%x", hexvar); \
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "0x%x", hexvar); \
     newxml(GDOME_ELEMENT_NODE, parent, name, \
                                "value", buf, \
                                "description", description); \
@@ -709,7 +709,7 @@ GdomeElement * _newxml(char * filename, int linenum,
     newxml_simplehex(parent, name, hexvar, description)
 
 #define newxml_simplestringindex(parent, name, stringvar, description, index) { \
-    safe_snprintf(buf, sizeof(buf), "%d", index); \
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d", index); \
     newxml(GDOME_ELEMENT_NODE, parent, name, \
                                "index", buf, \
                                "value", stringvar, \
@@ -717,14 +717,14 @@ GdomeElement * _newxml(char * filename, int linenum,
 }
 
 #define newxml_simplenumeric(parent, name, numericvar, description, format) {\
-    safe_snprintf(buf, sizeof(buf), format, numericvar); \
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), format, numericvar); \
     newxml(GDOME_ELEMENT_NODE, parent, name, \
                                "value", buf, \
                                "description", description); \
 }
 
 #define newxml_namednumeric(parent, name, numericvar, description, format, fieldname) { \
-    safe_snprintf(buf, sizeof(buf), format, numericvar); \
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), format, numericvar); \
     newxml(GDOME_ELEMENT_NODE, parent, name, \
                                fieldname, buf, \
                                "description", description); \
@@ -902,8 +902,8 @@ GdomeElement * newxml_virtualhostlist(GdomeElement * parent,
         newxml_simplenumeric(parent, name, hostserial_var, description, "%u")
 
 #define newxml_hostserial_index(parent, name, hostserial_var, index_var, description) \
-    safe_snprintf(buf, sizeof(buf), "%u", hostserial_var); \
-    safe_snprintf(buf2, sizeof(buf2), "%d", index_var); \
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%u", hostserial_var); \
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%d", index_var); \
     newxml(GDOME_ELEMENT_NODE, parent, name, \
                                "index", buf2, \
                                "value", buf, \
@@ -911,48 +911,48 @@ GdomeElement * newxml_virtualhostlist(GdomeElement * parent,
 }
 
 #define newxml_in_addr(parent, name, in_addr_var, description) { \
-    safe_snprintf(buf, sizeof(buf), "%d.%d.%d.%d", \
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%d.%d.%d.%d", \
                  (int) ((in_addr_var.s_addr >> 24) & 0xff), \
                  (int) ((in_addr_var.s_addr >> 16) & 0xff), \
                  (int) ((in_addr_var.s_addr >>  8) & 0xff), \
                  (int) ((in_addr_var.s_addr >>  0) & 0xff)); \
-    safe_snprintf(buf2, sizeof(buf2), "%u", in_addr_var.s_addr); \
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%u", in_addr_var.s_addr); \
     newxml(GDOME_ELEMENT_NODE, parent, name, "value", buf2, "interpreted", buf, "description", description); \
 }
 
 #define newxml_time_t(parent, name, time_t_var, description) { \
     memcpy(&buf, ctime(&time_t_var), sizeof("Wed Jun 30 21:49:08 1993\n")-1); \
     buf[sizeof("Wed Jun 30 21:49:08 1993\n")-2] = '\0'; \
-    safe_snprintf(buf2, sizeof(buf2), "%d", time_t_var); \
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%d", time_t_var); \
     newxml(GDOME_ELEMENT_NODE, parent, name, "value", buf2, "interpreted", buf, "description", description); \
 }
 
 #define newxml_timeval(parent, name, timeval_var, description) { \
     memcpy(&buf, ctime(&timeval_var.tv_sec), sizeof("Wed Jun 30 21:49:08 1993\n")-1); \
     buf[sizeof("Wed Jun 30 21:49:08 1993\n")-2] = '\0'; \
-    safe_snprintf(buf2, sizeof(buf2), "%s 0.%06d", buf, timeval_var.tv_usec); \
-    safe_snprintf(buf3, sizeof(buf3), "%d.%06d", timeval_var.tv_sec, timeval_var.tv_usec); \
+    safe_snprintf(__FILE__, __LINE__, buf2, sizeof(buf2), "%s 0.%06d", buf, timeval_var.tv_usec); \
+    safe_snprintf(__FILE__, __LINE__, buf3, sizeof(buf3), "%d.%06d", timeval_var.tv_sec, timeval_var.tv_usec); \
     newxml(GDOME_ELEMENT_NODE, parent, name, "value", buf3, "interpreted", buf2, "description", description); \
 }
 
 #ifdef WIN32
     #define newxml_counter(parent, name, counter_var, description) { \
-        safe_snprintf(buf, sizeof(buf), "%f", counter_var); \
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%f", counter_var); \
         newxml(GDOME_ELEMENT_NODE, parent, name, "value", buf, "description", description); \
     }
     #define newxml_trafficcounter(parent, name, trafficcounter_var, description) { \
-        safe_snprintf(buf, sizeof(buf), "%f", trafficcounter_var.value); \
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%f", trafficcounter_var.value); \
         newxml(GDOME_ELEMENT_NODE, parent, name, "value", buf, \
                "modified", trafficcounter_var.modified ? "true" : "false", \
                "description", description); \
     }
 #else
     #define newxml_counter(parent, name, counter_var, description) { \
-        safe_snprintf(buf, sizeof(buf), "%llu", counter_var); \
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%llu", counter_var); \
         newxml(GDOME_ELEMENT_NODE, parent, name, "value", buf, "description", description); \
     }
     #define newxml_trafficcounter(parent, name, trafficcounter_var, description) { \
-        safe_snprintf(buf, sizeof(buf), "%llu", trafficcounter_var.value); \
+        safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%llu", trafficcounter_var.value); \
         newxml(GDOME_ELEMENT_NODE, parent, name, "value", buf, \
                "modified", trafficcounter_var.modified ? "true" : "false", \
                "description", description); \
@@ -1766,7 +1766,7 @@ int dumpXML_writeout(void) {
 
     /* Create a unique temp name and have gdome dump the generated xml to it */
 
-    safe_snprintf(tmpFileName, sizeof(tmpFileName), "%s-%lu", CONST_XML_TMP_NAME,
+    safe_snprintf(__FILE__, __LINE__, tmpFileName, sizeof(tmpFileName), "%s-%lu", CONST_XML_TMP_NAME,
             myGlobals.numHandledRequests[0]+myGlobals.numHandledRequests[1]);
 #ifdef XMLDUMP_DEBUG
     traceEvent(CONST_TRACE_INFO, "XMLDUMP_DEBUG: Dumping dom to temp file, '%s'", tmpFileName);
@@ -1800,7 +1800,7 @@ int dumpXML_writeout(void) {
         sendStringLen(tmpStr, (doctypeHeader-tmpStr));
 
         if (strncmp(doctypeHeader, "<!DOCTYPE", sizeof("<!DOCTYPE")) != 0) {
-            safe_snprintf(buf, sizeof(buf), "<!DOCTYPE %s SYSTEM \"%s\">\n",
+            safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "<!DOCTYPE %s SYSTEM \"%s\">\n",
                                            CONST_XML_DOCTYPE_NAME,
                                            dtdURI);
             sendString(buf);
@@ -1872,7 +1872,7 @@ static int dumpXML(char * url) {
      *  flat out doesn't work)
      */
 /* TODO Schema? */
-    safe_snprintf(buf, sizeof(buf), "%s://%s:%d/%s",
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s://%s:%d/%s",
                                    myGlobals.webPort != 0 ? "http" :
                                                             (myGlobals.sslPort != 0 ? "https" :
                                                                                       "file"),
@@ -1891,7 +1891,7 @@ static int dumpXML(char * url) {
 
     rc = sigaction(SIGSEGV, &xml_new_act, &xml_old_act);
 #ifdef DEBUG
-    safe_snprintf(buf, sizeof(buf), "OTHER(%d)", rc);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "OTHER(%d)", rc);
     traceEvent(CONST_TRACE_INFO, "DEBUG: set - sigaction(SIGSEGV,,) rc = %s",
             (rc == 0      ? "OK"     :
             (rc == EINVAL ? "EINVAL" :
@@ -2009,7 +2009,7 @@ static int dumpXML(char * url) {
 
     rc = sigaction(SIGSEGV, &xml_old_act, NULL);
 #ifdef DEBUG
-    safe_snprintf(buf, sizeof(buf), "OTHER(%d)", rc);
+    safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "OTHER(%d)", rc);
     traceEvent(CONST_TRACE_INFO, "DEBUG: Restore - sigaction(SIGSEGV,,) rc = %s, SIGSEGV count %d",
             (rc == 0      ? "OK"     :
             (rc == EINVAL ? "EINVAL" :

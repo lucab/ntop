@@ -560,9 +560,6 @@ void          rewinddir(DIR *);
 
 /*****************************************************************/
 
-#define traceEventTemp(fmt, ...) traceEvent(CONST_TRACE_INFO, "TEMP: %05d " fmt, __LINE__, __VA_ARGS__)
-
-
 #ifdef INET6
 #include "iface.h"
 #endif
