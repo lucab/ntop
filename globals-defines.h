@@ -908,6 +908,11 @@
 #define MAX_NUM_PROBES                      16
 
 /*
+ * Number of entries in flowIgnored[] in netFlowPlugin.c
+ */ 
+#define MAX_NUM_IGNOREDFLOWS                32
+
+/*
  * This is used in URL security to put an upper limit on the URL we're willing to
  * deal with - it's then used in http.c as the size of a couple of static work buffers.
  */
@@ -1293,6 +1298,9 @@
 
 #define CONST_FLOW_VERSION_7		    7
 #define CONST_V7FLOWS_PER_PAK		    28
+
+/* This is 'ftp-data' from /etc/services */
+#define CONST_FTPDATA                       20
 
 /*
  * sFlow header constants (what version of pcap are we claiming to be)...

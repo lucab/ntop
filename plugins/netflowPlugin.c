@@ -35,6 +35,13 @@ static ProbeInfo probeList[MAX_NUM_PROBES];
 
 static u_int32_t whiteNetworks[MAX_NUM_NETWORKS][3], blackNetworks[MAX_NUM_NETWORKS][3];
 static u_short numWhiteNets, numBlackNets;
+static u_int32_t flowIgnoredInHandleIP, flowIgnoredZeroPort, flowIgnoredNETFLOW;
+static u_int flowIgnored[MAX_NUM_IGNOREDFLOWS][6]; /* src, sport, dst, dport, count, bytes */
+static u_short nextFlowIgnored;
+
+#ifdef MAKE_WITH_FTPDATA_ASSUMED
+static u_int32_t flowIgnoredLowPort, flowAssumedFtpData;
+#endif
 
 /* Forward */
 static void setNetFlowInSocket();
@@ -158,6 +165,30 @@ static void setNetFlowOutSocket() {
 }
 
 /* ****************************** */
+void ignoreFlow(u_short* nextFlowIgnored, u_int srcAddr, u_short sport,
+                                         u_int dstAddr, u_short dport,
+                Counter len) {
+    u_short lastFlowIgnored;
+
+    lastFlowIgnored = (*nextFlowIgnored-1+MAX_NUM_IGNOREDFLOWS) % MAX_NUM_IGNOREDFLOWS;
+    if ( (flowIgnored[lastFlowIgnored][0] == srcAddr) &&
+         (flowIgnored[lastFlowIgnored][1] == sport) &&
+         (flowIgnored[lastFlowIgnored][2] == dstAddr) &&
+         (flowIgnored[lastFlowIgnored][3] == dport) ) {
+        flowIgnored[lastFlowIgnored][4]++;
+        flowIgnored[lastFlowIgnored][5] += len;
+    } else {
+        flowIgnored[*nextFlowIgnored][0] = srcAddr;
+        flowIgnored[*nextFlowIgnored][1] = sport;
+        flowIgnored[*nextFlowIgnored][2] = dstAddr;
+        flowIgnored[*nextFlowIgnored][3] = dport;
+        flowIgnored[*nextFlowIgnored][4] = 1;
+        flowIgnored[*nextFlowIgnored][5] = len;
+        *nextFlowIgnored = (*nextFlowIgnored + 1) % MAX_NUM_IGNOREDFLOWS;
+    }
+}
+
+/* ****************************** */
 
 static void dissectFlow(char *buffer, int bufferLen) {
   NetFlow5Record the5Record;
@@ -254,7 +285,7 @@ static void dissectFlow(char *buffer, int bufferLen) {
       sport    = ntohs(the5Record.flowRecord[i].srcport);
       dport    = ntohs(the5Record.flowRecord[i].dstport);
 
-      if(myGlobals.netFlowDebug) {
+        if(myGlobals.netFlowDebug) {
 	theFlags[0] = '\0';
 
 	if(the5Record.flowRecord[i].tcp_flags & TH_SYN)  strcat(theFlags, "SYN ");
@@ -375,11 +406,57 @@ static void dissectFlow(char *buffer, int bufferLen) {
       if((sport != 0) &&(dport != 0)) {
 	if(dport < sport) {
 	  if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1)
-	    handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId);
+	    if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
+              flowIgnoredInHandleIP++;
+              ignoreFlow(&nextFlowIgnored, 
+                         ntohl(the5Record.flowRecord[i].srcaddr), sport,
+                         ntohl(the5Record.flowRecord[i].dstaddr), dport,
+                         len);
+
+#ifdef MAKE_WITH_FTPDATA_ASSUMED
+              /*
+               * As a last resort, user selectable, we assume it's ftp-data traffic
+               */
+              if((dport == myGlobals.netFlowInPort) || (sport == myGlobals.netFlowInPort))
+                  flowIgnoredNETFLOW++;
+              else if(min(sport, dport) > 1023) {
+	          handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
+                  flowAssumedFtpData++;
+              } else
+                  flowIgnoredLowPort++;
+#endif
+
+            }
 	} else {
 	  if(handleIP(sport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1)
-	    handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId);
+	    if(handleIP(dport, srcHost, dstHost, len, 0, 0, actualDeviceId) == -1) {
+              flowIgnoredInHandleIP++;
+              ignoreFlow(&nextFlowIgnored,
+                         ntohl(the5Record.flowRecord[i].srcaddr), sport,
+                         ntohl(the5Record.flowRecord[i].dstaddr), dport,
+                         len);
+
+#ifdef MAKE_WITH_FTPDATA_ASSUMED
+              /*
+               * As a last resort, user selectable, we assume it's ftp-data traffic
+               */
+              if((dport == myGlobals.netFlowInPort) || (sport == myGlobals.netFlowInPort))
+                  flowIgnoredNETFLOW++;
+              else if(min(sport, dport) > 1023) {
+                  handleIP((u_short)CONST_FTPDATA, srcHost, dstHost, len, 0, 0, actualDeviceId);
+                  flowAssumedFtpData++;
+              } else
+                  flowIgnoredLowPort++;
+#endif
+
+            }
 	}
+      } else {
+        flowIgnoredZeroPort++;
+        ignoreFlow(&nextFlowIgnored, 
+                   ntohl(the5Record.flowRecord[i].srcaddr), sport,
+                   ntohl(the5Record.flowRecord[i].dstaddr), dport,
+                   len);
       }
 
       ctr.value = len;
@@ -599,6 +676,9 @@ static int initNetFlowFunct(void) {
   setPluginStatus("Disabled - requires POSIX thread support.");
   return(-1);
 #endif
+
+  memset(flowIgnored, 0, sizeof(flowIgnored));
+  nextFlowIgnored = 0;
 
   if(fetchPrefsValue("netFlow.netFlowInPort", value, sizeof(value)) == -1)
     storePrefsValue("netFlow.netFlowInPort", "0");
@@ -1168,6 +1248,94 @@ static void handleNetflowHTTPrequest(char* url) {
       }
       sendString("</TD></TR>\n");
 #endif
+
+      sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=CENTER COLSPAN=2>Ignored Flows</TH></TR>\n");
+
+      if(snprintf(buf, sizeof(buf),
+                  "<TR><TH ALIGN=\"LEFT\">port zero</TH>\n"
+                      "<TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
+                      flowIgnoredZeroPort
+        ) < 0)
+          BufferTooShort();
+      sendString(buf);
+ 
+      if(snprintf(buf, sizeof(buf),
+                  "<TR><TH ALIGN=\"LEFT\">in handleIP()</TH>\n"
+                      "<TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
+                      flowIgnoredInHandleIP
+        ) < 0)
+          BufferTooShort();
+      sendString(buf);
+
+#ifdef MAKE_WITH_FTPDATA_ASSUMED
+      if(snprintf(buf, sizeof(buf),
+                  "<TR><TH ALIGN=\"LEFT\">&nbsp;&nbsp;less: netFlow</TH>\n"
+                      "<TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
+                  flowIgnoredNETFLOW
+        ) < 0)
+          BufferTooShort();
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf),
+                  "<TR><TH ALIGN=\"LEFT\">&nbsp;&nbsp;less: port <= 1023</TH>\n"
+                      "<TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
+                      flowIgnoredLowPort
+        ) < 0)
+          BufferTooShort();
+      sendString(buf);
+
+      if(snprintf(buf, sizeof(buf),
+                  "<TR><TH ALIGN=\"LEFT\">Gives: Assumed ftpdata</TH>\n"
+                      "<TD ALIGN=\"RIGHT\">%u</TD></TR>\n",
+                      flowAssumedFtpData
+        ) < 0)
+          BufferTooShort();
+      sendString(buf);
+#endif
+
+      sendString("<TR><TD COLSPAN=\"2\" ALIGN=\"CENTER\">Most recent problem flows<br>"
+                                                        "(n) is consecutive count<br>"
+                                                        "{n} is bytes</TD></TR>\n");
+
+      for (i=nextFlowIgnored; i<nextFlowIgnored+MAX_NUM_IGNOREDFLOWS; i++) {
+          if ((flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
+              (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] != 0) ) {
+             if(flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1) {
+                 snprintf(buf1, sizeof(buf1), "(%d) ", flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
+             } else {
+                 buf1[0]='\0';
+             }
+             if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) { 
+                 snprintf(buf2, sizeof(buf2), "%.1fGB", 
+                          (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0));
+             } else if (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) { 
+                 snprintf(buf2, sizeof(buf2), "%.1fMB", 
+                          (float)flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0));
+             } else {
+                 snprintf(buf2, sizeof(buf2), "%u", 
+                          flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]);
+             }
+             if(snprintf(buf, sizeof(buf),
+                         "<TR><TD COLSPAN=\"2\" ALIGN=\"RIGHT\">"
+                             "%s%d.%d.%d.%d:%d -> %d.%d.%d.%d:%d {%s}</TD>"
+                         "</TR>\n",
+                         buf1,
+                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 24) & 0xff,
+                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >> 16) & 0xff,
+                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] >>  8) & 0xff,
+                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0]      ) & 0xff,
+                         flowIgnored[i%MAX_NUM_IGNOREDFLOWS][1],
+                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 24) & 0xff,
+                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >> 16) & 0xff,
+                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >>  8) & 0xff,
+                         (flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2]      ) & 0xff,
+                         flowIgnored[i%MAX_NUM_IGNOREDFLOWS][3],
+                         buf2
+               ) < 0)
+                 BufferTooShort();
+             sendString(buf);
+          }
+      }
 
 #ifdef CFG_MULTITHREADED
       if(whiteblackListMutex.isLocked) {

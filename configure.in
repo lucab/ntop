@@ -507,6 +507,11 @@ AC_ARG_ENABLE(largerrdpop,
               ac_enable_largerrdpop="yes",
               ac_enable_largerrdpop="no")
 
+AC_ARG_ENABLE(netflowassumeftpdata,
+              [  --enable-netflowassumeftpdata  Enable assumption that unknown ports for netflow data are ftp-data [[default=disabled]]],
+              ac_enable_netflowassumeftpdata="yes",
+              ac_enable_netflowassumeftpdata="no")
+
 dnl>
 dnl> Define the "WITH"s for package root directories ... deal with these later...
 dnl>
@@ -1106,6 +1111,15 @@ if test ".${ac_enable_largerrdpop}" = ".yes"; then
     AC_DEFINE_UNQUOTED(MAKE_WITH_LARGERRDPOP, 1, [Support LARGE # of RRDs])
 else
     echo "    ...(Default) Disabled. Request via ./configure command line option --enable-largerrdpop."
+fi
+
+echo
+echo "Assume netFlow data with unknown port >1023 is ftp-data?"
+if test ".${ac_enable_netflowassumeftpdata}" = ".yes"; then
+    echo "    ...Requested."
+    AC_DEFINE_UNQUOTED(MAKE_WITH_FTPDATA_ASSUMED, 1, [Assume unknown netflow ports >1023 represent ftp-data])
+else
+    echo "    ...(Default) Disabled. Request via ./configure command line option --enable-netflow-assume-ftpdata."
 fi
 
 echo

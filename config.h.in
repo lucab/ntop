@@ -409,6 +409,9 @@
 /* Define to 1 if you have the <sched.h> header file. */
 #undef HAVE_SCHED_H
 
+/* Define to 1 if you have the `sched_yield' function. */
+#undef HAVE_SCHED_YIELD
+
 /* Define to 1 if you have the <security/pam_appl.h> header file. */
 #undef HAVE_SECURITY_PAM_APPL_H
 
@@ -610,6 +613,12 @@
 /* Define to build micro ntop */
 #undef MAKE_MICRO_NTOP
 
+/* Statically build plugins into sntop */
+#undef MAKE_STATIC_PLUGIN
+
+/* Assume unknown netflow ports >1023 represent ftp-data */
+#undef MAKE_WITH_FTPDATA_ASSUMED
+
 /* GDChart is available */
 #undef MAKE_WITH_GDCHART
 
@@ -652,6 +661,9 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Define to 1 if the C compiler supports function prototypes. */
+#undef PROTOTYPES
+
 /* temporary definition */
 #undef RETSIGTYPE
 
@@ -684,6 +696,9 @@
 #ifndef __CHAR_UNSIGNED__
 # undef __CHAR_UNSIGNED__
 #endif
+
+/* Define like PROTOTYPES; this can be used by system headers. */
+#undef __PROTOTYPES
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
