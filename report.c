@@ -1170,7 +1170,7 @@ RETSIGTYPE printHostsInfo(int sortedColumn, int revertOrder) {
 	      sendString(buf);
 
 	      for(i=0; i<el->numIpxNodeTypes; i++) {
-		if(i>0) 
+		if(i == 0) 
 		  sendString("[");
 		else
 		  sendString("/");

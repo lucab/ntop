@@ -427,6 +427,7 @@ extern int decrementSem(sem_t *semId);
 extern int deleteSem(sem_t *semId);
 #endif /* HAVE_SEMAPHORE_H */
 #endif /* MULTITHREADED */
+extern void setNBnodeNameType(HostTraffic *theHost, char nodeType, char* nbName);
 
 extern void stringSanityCheck(char* string);
 extern int checkCommand(char* commandName);

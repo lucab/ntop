@@ -2778,17 +2778,19 @@ void printHostDetailedInfo(HostTraffic *el) {
 
   if(isServer(el)
      || isWorkstation(el)
+     || isMasterBrowser(el)
      || isPrinter(el)
      || isBridgeHost(el)
      || isNapsterRedirector(el) || isNapsterServer(el) || isNapsterClient(el)
      || isDHCPClient(el)        || isDHCPServer(el)
      ) {
-    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG"  ALIGN=RIGHT>",
-	    getRowColor(),
-	    "Host Type") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH>"
+		"<TD "TD_BG"  ALIGN=RIGHT>", getRowColor(),
+		"Host Type") < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
     if(isServer(el))              sendString("Server<br>");
+    if(isMasterBrowser(el))       sendString("Master Browser<br>");
     if(isWorkstation(el))         sendString("Workstation<br>");
     if(isPrinter(el))             sendString("Printer<br>");
     if(isBridgeHost(el))          sendString("Bridge<br>");

@@ -1382,7 +1382,7 @@ typedef struct portUsage {
 #define HOST_SVC_NAPSTER_CLIENT			         22
 #define HOST_SVC_DHCP_CLIENT			         23
 #define HOST_SVC_DHCP_SERVER			         24
-
+#define HOST_TYPE_MASTER_BROWSER			 25
 
 /* Macros */
 #define theDomainHasBeenComputed(a) FD_ISSET(THE_DOMAIN_HAS_BEEN_COMPUTED_FLAG, &(a->flags))
@@ -1395,6 +1395,7 @@ typedef struct portUsage {
 
 #define isServer(a)		    ((a != NULL) && FD_ISSET(HOST_TYPE_SERVER, &(a->flags)))
 #define isWorkstation(a)	    ((a != NULL) && FD_ISSET(HOST_TYPE_WORKSTATION, &(a->flags)))
+#define isMasterBrowser(a)	    ((a != NULL) && FD_ISSET(HOST_TYPE_MASTER_BROWSER, &(a->flags)))
 #define isPrinter(a)		    ((a != NULL) && FD_ISSET(HOST_TYPE_PRINTER, &(a->flags)))
 
 #define isSMTPhost(a)		    ((a != NULL) && FD_ISSET(HOST_SVC_SMTP, &(a->flags)))

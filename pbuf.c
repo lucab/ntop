@@ -621,6 +621,8 @@
    if((i<MAX_NUM_SESSION_PEERS)
       && (((scanner->peersIdx[i] != NO_PEER)
 	   && (scanner->peersIdx[i] != remotePeerIdx)
+	   && (device[actualDeviceId].hash_hostTraffic[checkSessionIdx(scanner->peersIdx[i])] != NULL)
+	   && (device[actualDeviceId].hash_hostTraffic[remotePeerIdx] != NULL)
 	   && (strcmp(device[actualDeviceId].
 		      hash_hostTraffic[checkSessionIdx(scanner->peersIdx[i])]->hostNumIpAddress,
 		      device[actualDeviceId].
@@ -1652,7 +1654,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 	if(theSession->bytesProtoSent == 0) {
 	  char *rcStr;
 
-	  rcStr = (char*)malloc(packetDataLength+1);	  
+	  rcStr = (char*)malloc(packetDataLength+1);
 	  strncpy(rcStr, packetData, packetDataLength);
 	  rcStr[packetDataLength] = '\0';
 
@@ -1665,7 +1667,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 	  if(isInitialHttpData(rcStr)) {
 	    char *strtokState, *row;
-	    
+
 	    u_int16_t transactionId = (u_int16_t)(srcHost->hostIpAddress.s_addr+
 						  3*dstHost->hostIpAddress.s_addr
 						  +5*sport+7*dport);
@@ -1694,11 +1696,11 @@ static void handleSession(const struct pcap_pkthdr *h,
 	      dstHost->httpStats->numRemoteReqRcvd++;
 
 	    row = strtok_r(rcStr, "\n", &strtokState);
-	    
+
 	    while(row != NULL) {
 	      if(strncmp(row, "User-Agent:", 11) == 0) {
 		char *token, *tokState, *browser = NULL, *os = NULL;
-		
+
 		row[strlen(row)-1] = '\0';
 
 		/*
@@ -1711,7 +1713,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 #endif
 		browser = token = strtok_r(&row[12], "(", &tokState);
 		if(token == NULL) break; else token = strtok_r(NULL, ";", &tokState);
-		if(token == NULL) break; 
+		if(token == NULL) break;
 
 		if(strcmp(token, "compatible") == 0) {
 		  browser = token = strtok_r(NULL, ";", &tokState);
@@ -1721,9 +1723,9 @@ static void handleSession(const struct pcap_pkthdr *h,
 
 		  tok1 = strtok_r(NULL, ";", &tokState);
 		  tok2 = strtok_r(NULL, ")", &tokState);
-		  
+
 		  if(tok2 == NULL) os = token; else  os = tok2;
-		}	
+		}
 
 #ifdef DEBUG
 		if(browser != NULL) {
@@ -1731,7 +1733,7 @@ static void handleSession(const struct pcap_pkthdr *h,
 		  printf("Browser='%s'\n", browser);
 		}
 #endif
-		
+
 		if(os != NULL) {
 		  trimString(os);
 #ifdef DEBUG
@@ -3041,7 +3043,7 @@ static void updatePacketCount(u_int srcHostIdx, u_int dstHostIdx,
 
 /* ************************************ */
 
-static void updateHostName(HostTraffic *el) {
+void updateHostName(HostTraffic *el) {
   if((el->hostNumIpAddress[0] == '\0')
      || (el->hostSymIpAddress == NULL)
      || strcmp(el->hostSymIpAddress,
@@ -3097,8 +3099,8 @@ static void processIpPkt(const u_char *bp,
 
   if(ip.ip_p == GRE_PROTOCOL_TYPE) {
     /*
-       Cisco GRE (Generic Routing Encapsulation)
-       Tunnels (RFC 1701, 1702)
+      Cisco GRE (Generic Routing Encapsulation)
+      Tunnels (RFC 1701, 1702)
     */
     GreTunnel tunnel;
 
@@ -3448,103 +3450,64 @@ static void processIpPkt(const u_char *bp,
       } else if((dport == 138 /*  NETBIOS */)
                 && ((srcHost->nbHostName == NULL)
                     || (srcHost->nbDomainName == NULL))) {
-        char *name, nbName[64], domain[64];
+        char *name, nbName[64], domain[64], *data;
         int nodeType, i, udpDataLen;
-	char *data = (char*)bp + (hlen + sizeof(struct udphdr));
+	char *tmpdata = (char*)bp + (hlen + sizeof(struct udphdr));
 	u_char *p;
 	int offset;
 
-	udpDataLen =  length - (hlen + sizeof(struct udphdr));
+	udpDataLen = length - (hlen + sizeof(struct udphdr));
+
+	data = (char*)malloc(udpDataLen);
+	memcpy(data, tmpdata, udpDataLen);
 
         name = data + 14;
  	p = (u_char*)name;
-         if ((*p & 0xC0) == 0xC0) {
-           name = data + (p[1] + 255 * (p[0] & ~0xC0));
+	if ((*p & 0xC0) == 0xC0) {
+	  name = data + (p[1] + 255 * (p[0] & ~0xC0));
  	  offset = 2;
  	} else {
  	  while (*p) p += (*p)+1;
  	  offset = ((char*)p - (char*)data) + 1;
  	}
-         nodeType = name_interpret(name, nbName);
 
-        srcHost->nbNodeType = (char)nodeType;
-	/* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-  	switch(nodeType) {
-  	case 0x0:  /* Workstation */
-  	case 0x20: /* Server */
-           srcHost->nbNodeType = (char)nodeType;
- 	  if(srcHost->nbHostName == NULL)
- 	    srcHost->nbHostName = strdup(nbName);
-	  updateHostName(srcHost);
- 	  switch(nodeType) {
- 	  case 0x0:  /* Workstation */
- 	    FD_SET(HOST_TYPE_WORKSTATION, &srcHost->flags);
- 	  case 0x20: /* Server */
-	    FD_SET(HOST_TYPE_SERVER, &srcHost->flags);
- 	  }
-  	}
+	nodeType = name_interpret(name, nbName);
+	setNBnodeNameType(srcHost, (char)nodeType, nbName);
 
  	name = data + offset;
  	p = (u_char*)name;
-         if ((*p & 0xC0) == 0xC0)
-           name = ((char*)bp+hlen+8 + (p[1] + 255 * (p[0] & ~0xC0)));
-          nodeType = name_interpret(name, domain);
+	if ((*p & 0xC0) == 0xC0)
+	  name = ((char*)bp+hlen+8 + (p[1] + 255 * (p[0] & ~0xC0)));
+	nodeType = name_interpret(name, domain);
 
         for(i=0; domain[i] != '\0'; i++)
 	  if(domain[i] == ' ') { domain[i] = '\0'; break; }
 
-	switch(nodeType) {
-	case 0x1E: /* Domain */
-	  if(srcHost->nbDomainName == NULL) {
-	    if(strcmp(domain, "__MSBROWSE__") && strncmp(&domain[2], "__", 2)) {
-	      srcHost->nbDomainName = strdup(domain);
-#ifdef DEBUG
-	      printf("[%x] %s@'%s' (len=%d)\n", nodeType, nbName, domain, strlen(domain));
-#endif
-	    }
-	  }
-	  break;
-#if 0   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
-	case 0x0:  /* Workstation */
-	case 0x20: /* Server */
-	  if(dstHost->nbHostName == NULL) dstHost->nbHostName = strdup(domain);
-	  updateHostName(dstHost);
-	  dstHost->nbNodeType = (char)nodeType;
-	  switch(nodeType) {
-	  case 0x0:  /* Workstation */
-	    FD_SET(HOST_TYPE_WORKSTATION, &dstHost->flags);
-	  case 0x20: /* Server */
-	    FD_SET(HOST_TYPE_SERVER, &dstHost->flags);
-	  }
-	  break;
-#endif
-	}
+	setNBnodeNameType(dstHost, (char)nodeType, domain);
 
 	if(udpDataLen > 200) {
-	  char tmpBuffer[256];
-	  int remainingLength;
+	  char *tmpBuffer = &data[151];
 
 	  /*
-	     We'll check if this this is
-	     a browser announcments so we can
-	     know more about this host
+	    We'll check if this this is
+	    a browser announcments so we can
+	    know more about this host
 	  */
-
-	  remainingLength = udpDataLen-151;
-
-	  if(remainingLength > sizeof(tmpBuffer))
-	    remainingLength = sizeof(tmpBuffer);
-
-	  memcpy(tmpBuffer, &data[151], remainingLength);
 
 	  if(strcmp(tmpBuffer, "\\MAILSLOT\\BROWSE") == 0) {
 	    /* Good: this looks like a browser announcement */
+	    int bytesRemaining = udpDataLen-151;
 
-	    if(tmpBuffer[49] != '\0') {
+	    if(((tmpBuffer[17] == 0x0F /* Local Master Announcement*/)
+		|| (tmpBuffer[17] == 0x01 /* Host Announcement*/))
+	       && (tmpBuffer[49] != '\0')) {
 
 	      if(srcHost->nbDescr != NULL)
 		free(srcHost->nbDescr);
 
+	      if(tmpBuffer[17] == 0x0F) 
+		FD_SET(HOST_TYPE_MASTER_BROWSER, &srcHost->flags);
+	      
 	      srcHost->nbDescr = strdup(&tmpBuffer[49]);
 #ifdef DEBUG
 	      traceEvent(TRACE_INFO, "Computer Info: '%s'", srcHost->nbDescr);
@@ -3552,6 +3515,8 @@ static void processIpPkt(const u_char *bp,
 	    }
 	  }
 	}
+
+	free(data);
       } else if((sport == 7) || (dport == 7) /* echo */) {
 	char *fmt = "WARNING: host [%s] sent a UDP packet to host [%s:echo] (network mapping attempt?)";
 
@@ -3631,7 +3596,7 @@ static void processIpPkt(const u_char *bp,
 
       handleUDPSession(h, (off & 0x3fff),
 		       srcHostIdx, sport, dstHostIdx,
-		       dport, udpDataLength, 
+		       dport, udpDataLength,
 		       (u_char*)(bp+hlen+sizeof(struct udphdr)));
     }
     break;
@@ -3695,12 +3660,12 @@ static void processIpPkt(const u_char *bp,
 	break;
       }
     } else if((icmpPkt.icmp_type == ICMP_DEST_UNREACHABLE /* Destination Unreachable */)
-	    && (icmpPkt.icmp_code == ICMP_UNREACH_FILTER_PROHIB /* Administratively Prohibited */))
+	      && (icmpPkt.icmp_code == ICMP_UNREACH_FILTER_PROHIB /* Administratively Prohibited */))
       traceEvent(TRACE_INFO, /* See http://www.packetfactory.net/firewalk/ */
 		 "Host [%s] sent ICMP Administratively Prohibited packet to host [%s]"
 		 " (Firewalking scan attempt?)",
 		 dstHost->hostSymIpAddress, srcHost->hostSymIpAddress);
-   break;
+    break;
 
   case IPPROTO_OSPF:
     proto = "OSPF";

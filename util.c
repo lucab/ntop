@@ -74,7 +74,7 @@ static u_int32_t networks[MAX_NUM_NETWORKS][3];
 /*
  * secure popen by Thomas Biege <thomas@suse.de>
  *
- * Fixes by Andreas Pfaller <a.pfaller@pop.gun.de> 
+ * Fixes by Andreas Pfaller <a.pfaller@pop.gun.de>
  */
 #define __SEC_POPEN_TOKEN " "
 
@@ -94,7 +94,7 @@ FILE *sec_popen(char *cmd, const char *type) {
 
   if((cmdcpy = strdup(cmd)) == NULL)
     return(NULL);
-  
+
   argv = NULL;
   if((ptr = strtok_r(cmdcpy, __SEC_POPEN_TOKEN, &strtokState)) == NULL) {
     free(cmdcpy);
@@ -123,7 +123,7 @@ FILE *sec_popen(char *cmd, const char *type) {
       break;
     }
   }
-  
+
   free(cmdcpy);
 
   if(type[0] == 'r')
@@ -160,16 +160,16 @@ FILE *sec_popen(char *cmd, const char *type) {
 	dup2(STDOUT_FILENO, STDERR_FILENO);
       } else {
 	close(pfd[1]);  /* close writing end, we don't need it */
-	
+
 	if(pfd[0] != STDIN_FILENO)
 	  dup2(pfd[0], STDOUT_FILENO); /* redirect stdin to reading end of pipe */
       }
-      
+
       if(strchr(argv[0], '/') == NULL)
 	execvp(argv[0], argv);  /* search in $PATH */
       else
 	execv(argv[0], argv);
-      
+
       close(pfd[0]);
       close(pfd[1]);
       return(NULL); /* exec failed.. ooops! */
@@ -498,7 +498,7 @@ void handleLocalAddresses(char* addresses) {
       networkMask = ~networkMask;
 
 #ifdef DEBUG
-      traceEvent(TRACE_INFO "Nw=%08X - Mask: %08X [%08X]\n", 
+      traceEvent(TRACE_INFO "Nw=%08X - Mask: %08X [%08X]\n",
 		 network, networkMask, (network & networkMask));
 #endif
       if((networkMask >= 0xFFFFFF00) /* Courtesy of Roy-Magne Mo <romo@interpost.no> */
@@ -649,7 +649,7 @@ int32_t gmt2local(time_t t) {
 
   gmt = gmtime(&t);
   localtime_r(&t, &loc);
-  
+
   dt = (loc.tm_hour - gmt->tm_hour)*60*60+
     (loc.tm_min - gmt->tm_min)*60;
 
@@ -724,28 +724,28 @@ void handleFlowsSpecs(char* flows) {
       else {
 	flowSpec[len-1] = '\0';
         flowSpec++;
-        
+
         rc = pcap_compile(device[0].pcapPtr, &fcode, flowSpec, 1, device[0].netmask.s_addr);
-        
+
         if(rc < 0)
           traceEvent(TRACE_INFO, "Wrong flow specification \"%s\" (syntax error). "
                      "It has been ignored.\n", flowSpec);
         else {
           FlowFilterList *newFlow;
-          
+
           newFlow = (FlowFilterList*)calloc(1, sizeof(FlowFilterList));
-          
+
           if(newFlow == NULL) {
             traceEvent(TRACE_INFO, "Fatal error: not enough memory. Bye!\n");
             if(buffer != NULL) free(buffer);
             exit(-1);
           } else {
             int i;
-            
+
             for(i=0; i<numDevices; i++) {
               rc = pcap_compile(device[i].pcapPtr, &newFlow->fcode[i],
                                 flowSpec, 1, device[i].netmask.s_addr);
-              
+
               if(rc < 0) {
                 traceEvent(TRACE_WARNING, "Wrong flow specification \"%s\" (syntax error). "
 			   "It has been ignored.\n", flowSpec);
@@ -753,7 +753,7 @@ void handleFlowsSpecs(char* flows) {
                 return;
               }
             }
-            
+
             newFlow->flowName = strdup(flowName);
             newFlow->pluginStatus.activePlugin = 1;
             newFlow->pluginStatus.pluginPtr = NULL; /* added by Jacques Le Rest <jlerest@ifremer.fr> */
@@ -851,20 +851,20 @@ int createMutex(pthread_mutex_t *mutexId) {
   int rc = pthread_mutex_init(mutexId, NULL);
 
 #ifdef PTHREAD_MUTEX_ERRORCHECK_NP
-  /* ************************************************* 
+  /* *************************************************
      There seems to be some problem with mutexes and some
      glibc versions. See
-     
+
      http://sdb.suse.de/sdb/de/html/aj_pthread7.0.html
-     
+
      (in German but an english version is probably available on their
      international web site). Suggested workaround is either to use
-     
+
      pthread_mutexattr_settype (&mutattr, PTHREAD_MUTEX_ERRORCHECK_NP);
-     
+
      as checked mutexes dont have the error or use a corrected
      glibc (Suse offers a patched version for their system).
-     
+
      Andreas Pfaeller <a.pfaller@pop.gun.de>
 
      ************************************************* */
@@ -901,10 +901,10 @@ int _tryLockMutex(pthread_mutex_t *mutexId, char* where,
 	     mutexId, where, fileName, fileLine);
   fflush(stdout);
 #endif
-  
-  /* 
+
+  /*
      Return code:
-     
+
      0:    lock succesful
      EBUSY (mutex already locked)
   */
@@ -1335,11 +1335,11 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
 #endif
 
   /* 548 is the AFP (Apple Filing Protocol) */
- if(snprintf(line, sizeof(line), "nmap -p 23,21,80,138,139,548 -O %s", ipAddr) < 0) 
+ if(snprintf(line, sizeof(line), "nmap -p 23,21,80,138,139,548 -O %s", ipAddr) < 0)
    traceEvent(TRACE_ERROR, "Buffer overflow!");
 
   fd = sec_popen(line, "r");
-  
+
 #define OS_GUESS   "Remote operating system guess: "
 #define OS_GUESS_1 "Remote OS guesses: "
 #define OS_GUESS_2 "OS: "
@@ -1367,7 +1367,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
     len = strlen(operatingSystem);
     if ((operatingSystem[len-1] == '\n') || (operatingSystem[len-1] == '\r'))
       operatingSystem[len-1] = '\0';	/* strip NL or CR from end-of-line */
- 
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "'%s'\n", line);
 #endif
@@ -1378,17 +1378,17 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
       break;
     }
 
-    /* Patches below courtesy of 
+    /* Patches below courtesy of
        Valeri V. Parchine <valeri@com-con.com> */
 
-    if((!found) && 
+    if((!found) &&
        (strncmp(operatingSystem, OS_GUESS_1, strlen(OS_GUESS_1)) == 0)) {
       operatingSystem = &operatingSystem[strlen(OS_GUESS_1)];
       found = 1;
       break;
     }
 
-    if((!found) && 
+    if((!found) &&
        (strncmp(operatingSystem, OS_GUESS_2, strlen(OS_GUESS_2)) == 0)) {
       operatingSystem = &operatingSystem[strlen(OS_GUESS_2)];
       found = 1;
@@ -1431,13 +1431,13 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
      traceEvent(TRACE_INFO, "OS is: '%s'\n", operatingSystem);
 #endif
    }
- 
+
   /* Read remaining data (if any) */
   while(1) {
     FD_ZERO(&mask);
     FD_SET(sockFd, &mask);
     wait_time.tv_sec = PIPE_READ_TIMEOUT; wait_time.tv_usec = 0;
-    
+
     if(select(sockFd+1, &mask, 0, 0, &wait_time) == 0) {
       break; /* Timeout */
     }
@@ -1445,7 +1445,7 @@ char* getHostOS(char* ipAddr, int port _UNUSED_, char* additionalInfo) {
     if(fgets(line, sizeof(line)-1, fd) == NULL)
       break;
 #ifdef DEBUG
-    else printf("Garbage: '%s'\n",  line); 
+    else printf("Garbage: '%s'\n",  line);
 #endif
   }
   pclose(fd);
@@ -1534,7 +1534,7 @@ int name_interpret(char *in, char *out) {
   /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
   /* Trim trailing whitespace from the returned string */
   for(out--; out>=b && *out==' '; out--) *out = '\0';
-  
+
   return(ret);
 }
 
@@ -1656,7 +1656,7 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
 
     if(data_data.dsize != sizeof(HostTraffic)) {
 #ifdef STORAGE_DEBUG
-      traceEvent(TRACE_INFO, 
+      traceEvent(TRACE_INFO,
 		 "Wrong size for '%s'[size=%d, expected=%d]. Deleted.\n",
 		 key, data_data.dsize, sizeof(HostTraffic));
 #endif
@@ -1695,7 +1695,7 @@ HostTraffic* resurrectHostTrafficInstance(char *key) {
     el->udpSessionList = NULL;
     el->nextDBupdate = 0;
     el->icmpInfo = NULL;
-    el->dnsStats = NULL;    
+    el->dnsStats = NULL;
     el->httpStats = NULL;
     el->napsterStats = NULL;
     el->dhcpStats = NULL;
@@ -1825,7 +1825,7 @@ time_t getTimeMapping(u_int16_t transactionId,
 #endif
 
   /* ****************************************
-  
+
     As  Andreas Pfaller <a.pfaller@pop.gun.de>
     pointed out, the hash code needs to be optimised.
     Actually the hash is scanned completely
@@ -1844,10 +1844,10 @@ time_t getTimeMapping(u_int16_t transactionId,
 #endif
       return(msDiff);
     }
-    
+
     idx = (idx+1) % NUM_TRANSACTION_ENTRIES;
   }
-  
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "getTimeMapping(0x%X) [not found]\n", transactionId);
 #endif
@@ -1876,7 +1876,7 @@ void traceEvent(int eventTraceLevel, char* file,
     }
 
     vprintf(format, va_ap);
-    
+
     if(format[strlen(format)-1] != '\n')
       printf("\n");
 
@@ -1902,7 +1902,7 @@ char*_strncpy(char *dest, const char *src, size_t n) {
 /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
 #ifndef HAVE_LOCALTIME_R
 struct tm *localtime_r(const time_t *t, struct tm *tp) {
-  /* 
+  /*
      This is a temporary placeholder for systems that don't
      have a reentrant localtime() function.
      THIS VERSION IS NOT REENTRANT!
@@ -1913,7 +1913,7 @@ struct tm *localtime_r(const time_t *t, struct tm *tp) {
 #endif
 
 /* ******************************************** */
- 
+
 /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
 #ifndef HAVE_STRTOK_R
 /* Reentrant string tokenizer.  Generic version.
@@ -1964,7 +1964,7 @@ char *strtok_r(char *s, const char *delim, char **save_ptr) {
   return token;
 }
 #endif
- 
+
 /* ********************************** */
 
 /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de> */
@@ -1973,13 +1973,13 @@ int strOnlyDigits(const char *s) {
 
   if((*s) == '\0')
     return 0;
-  
+
   while ((*s) != '\0') {
     if(!isdigit(*s))
       return 0;
     s++;
   }
-  
+
   return 1;
 }
 
@@ -2021,7 +2021,7 @@ FILE* getNewRandomFile(char* fileName, int len) {
 /*
   Function added in order to catch invalid
   strings passed on the command line.
-  
+
   Thanks to Bailleux Christophe <cb@grolier.fr> for
   pointing out the finger at the problem.
 */
@@ -2037,12 +2037,12 @@ void stringSanityCheck(char* string) {
       break;
     }
   }
-  
+
   if(j == 0) {
-    traceEvent(TRACE_ERROR, "FATAL ERROR: Invalid string '%s' specified.", 
+    traceEvent(TRACE_ERROR, "FATAL ERROR: Invalid string '%s' specified.",
 	       string);
     exit(-1);
-  }  
+  }
 }
 
 /* ****************************************************** */
@@ -2050,7 +2050,7 @@ void stringSanityCheck(char* string) {
 /*
   Function added in order to catch invalid (too long)
   device names specified on the command line.
-  
+
   Thanks to Bailleux Christophe <cb@grolier.fr> for
   pointing out the finger at the problem.
 */
@@ -2074,7 +2074,7 @@ void deviceSanityCheck(char* string) {
   if(j == 0) {
     traceEvent(TRACE_ERROR, "FATAL ERROR: Invalid device specified.");
     exit(-1);
-  }  
+  }
 }
 
 /* ****************************************************** */
@@ -2083,7 +2083,7 @@ void deviceSanityCheck(char* string) {
 int snprintf(char *string, size_t maxlen, const char *format, ...) {
   int ret=0;
   va_list args;
-  
+
   va_start(args, format);
   vsprintf(string,format,args);
   va_end(args);
@@ -2188,7 +2188,7 @@ void fillDomainName(HostTraffic *el) {
 void trimString(char* str) {
   int len = strlen(str), i, idx;
   char *out = (char *) malloc(sizeof(char) * (len+1));
-  
+
   if(out == NULL) {
     str = NULL;
     return;
@@ -2216,4 +2216,45 @@ void trimString(char* str) {
   free(out);
 }
 
+/* *******************************/
+
+void setNBnodeNameType(HostTraffic *theHost,
+		       char nodeType, char* nbName) {
+  theHost->nbNodeType = (char)nodeType;
+  /* Courtesy of Roberto F. De Luca <deluca@tandar.cnea.gov.ar> */
+
+  switch(nodeType) {
+  case 0x0:  /* Workstation */
+  case 0x20: /* Server */
+  case 0x1B: /* Master Browser */
+  case 0x1E: /* Domain */
+
+    theHost->nbNodeType = (char)nodeType;
+
+    if(nodeType != 0x1E /* Domain */) {
+      if(theHost->nbHostName == NULL) {
+	theHost->nbHostName = strdup(nbName);
+       	updateHostName(theHost);
+#ifdef DEBUG
+	printf("nbHostName=%s [0x%X]\n", nbName, nodeType);
+#endif
+      }
+    } else {
+      if(theHost->nbDomainName == NULL) {
+	if(strcmp(nbName, "__MSBROWSE__") && strncmp(&nbName[2], "__", 2)) {
+	  theHost->nbDomainName = strdup(nbName);
+	}
+      }
+
+      switch(nodeType) {
+      case 0x0:  /* Workstation */
+	FD_SET(HOST_TYPE_WORKSTATION, &theHost->flags);
+      case 0x20: /* Server */
+	FD_SET(HOST_TYPE_SERVER, &theHost->flags);
+      case 0x1B: /* Master Browser */
+	FD_SET(HOST_TYPE_MASTER_BROWSER, &theHost->flags);
+      }
+    }
+  }
+}
 
