@@ -127,15 +127,15 @@ static int _mapIdx(u_int* mappings, u_int idx,
 	       idx, fileName, fileLine);
 #endif
     return(NO_PEER);
-  } else if(mappings[idx] == NO_PEER) {
-    traceEvent(TRACE_WARNING,
-	       "Mapping failed for index %d [%s:%d]",
-	       idx, fileName, fileLine);
-    return(NO_PEER);
   } else if(idx >= lastHashSize) {
     traceEvent(TRACE_WARNING,
 	       "Index %d out of range (0...%d) [%s:%d]",
 	       idx, lastHashSize, fileName, fileLine);
+    return(NO_PEER);
+  } else if(mappings[idx] == NO_PEER) {
+    traceEvent(TRACE_WARNING,
+	       "Mapping failed for index %d [%s:%d]",
+	       idx, fileName, fileLine);
     return(NO_PEER);
   } else {
 #ifdef DEBUG
