@@ -700,14 +700,48 @@ int main(int argc, char *argv[]) {
   if (snprintf(cmdLineBuffer, LINE_BUFFERS_LENGTH, "%s ", argv[0]) < 0)
       BufferTooShort();
 
-  /* Now we process the parameter list, looking for a @filename */
+  /* Now we process the parameter list, looking for a @filename 
+   *   We have to special case a few things --- since the OS processing removes "s
+   *     --filter-expression "host a.b.c.d" becomes
+   *     --filter-expression host a.b.c.d 
+   *     --filter-expression="host a.b.c.d" becomes
+   *     --filter-expression=host a.b.c.d
+   *   This causes --filter-expression "host" and a bogus "a.b.c.d"
+   */
   for (i=1; i<argc; i++) {
       if (argv[i][0] != '@') {
-          if (strlen(cmdLineBuffer) + strlen(argv[i]) + 2 < LINE_BUFFERS_LENGTH) {
-              strcat(cmdLineBuffer, argv[i]);
-              strcat(cmdLineBuffer, " ");
+#ifdef PARAM_DEBUG
+          printf("PARAM_DEBUG: Parameter %3d is '%s'\n", i, argv[i]);
+#endif
+          readBufferWork = strchr(argv[i], '=');
+          if (readBufferWork != NULL) {
+              if (strlen(cmdLineBuffer) + strlen(argv[i]) + 5 >= LINE_BUFFERS_LENGTH) {
+                  BufferTooShort();
+              } else {
+                  readBufferWork[0] = '\0';
+                  strcat(cmdLineBuffer, argv[i]);
+                  strcat(cmdLineBuffer, "=\"");
+                  strcat(cmdLineBuffer, &readBufferWork[1]);
+                  strcat(cmdLineBuffer, "\" ");
+              }
           } else {
-              BufferTooShort();
+              readBufferWork = strchr(argv[i], ' ');
+              if (readBufferWork != NULL) {
+                  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 4 < LINE_BUFFERS_LENGTH) {
+                      strcat(cmdLineBuffer, "\"");
+                      strcat(cmdLineBuffer, argv[i]);
+                      strcat(cmdLineBuffer, "\" ");
+                  } else {
+                      BufferTooShort();
+                  }
+              } else {
+                  if (strlen(cmdLineBuffer) + strlen(argv[i]) + 2 < LINE_BUFFERS_LENGTH) {
+                      strcat(cmdLineBuffer, argv[i]);
+                      strcat(cmdLineBuffer, " ");
+                  } else {
+                      BufferTooShort();
+                  }
+              }
           }
       } else {
 
