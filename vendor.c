@@ -285,19 +285,13 @@ char* getSAPInfo(u_int16_t sapInfo, short encodeString) {
 /* *********************************** */
 
 char* getSpecialMacInfo(HostTraffic* el, short encodeString) {
-#ifdef HAVE_GDBM_H
   datum key_data, data_data;
   static char tmpBuf[96];
-#endif
   char* ret = getMacInfo(specialMacHash, el->ethAddress, 
 			 SHORTHASHNAMESIZE, encodeString);
 
   if((ret != NULL) && (ret[0] != '\0'))
-    return(ret);
-  
-#ifndef HAVE_GDBM_H
-  return("");
-#else
+    return(ret); 
 
   /* Search the specified MAC address into 'ntop.db' */
   strncpy(tmpBuf, el->ethAddressString, sizeof(tmpBuf));
@@ -324,8 +318,6 @@ char* getSpecialMacInfo(HostTraffic* el, short encodeString) {
     return(tmpBuf);
   } else
     return("");
-
-#endif /* HAVE_GDBM_H */
 }
 
 /* *********************************** */

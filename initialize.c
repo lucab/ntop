@@ -471,8 +471,6 @@ void initGdbm(void) {
 
   traceEvent(TRACE_INFO, "Initializing GDBM...");
 
-#ifdef HAVE_GDBM_H
-
   /* Courtesy of Andreas Pfaller <a.pfaller@pop.gun.de>. */
   if(snprintf(tmpBuf, sizeof(tmpBuf), "%s/addressCache.db", dbPath) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
@@ -534,18 +532,15 @@ void initGdbm(void) {
     traceEvent(TRACE_INFO, "The ntop.db database contains %d entries.\n", numDbEntries);
 #endif
   }
-#endif /* GDBM */
 }
 
 /* ******************************* */
 
 void initThreads(int enableThUpdate, int enableIdleHosts, int enableDBsupport) {
 int i;
-#ifdef HAVE_GDBM_H
 #ifdef MULTITHREADED
   numThreads = 0;
   createMutex(&gdbmMutex);
-#endif
 #endif
 
 #ifdef MULTITHREADED
@@ -985,7 +980,7 @@ void initLibpcap(char* rulesFile, int numDevices) {
     }
   } else {
     device[0].pcapPtr = pcap_open_offline(rFileName, ebuf);
-    device[0].name[0] = '\0';
+    strcpy(device[0].name, "pcap-file");
     numDevices = 1;
 
     if(device[0].pcapPtr == NULL) {
@@ -1125,29 +1120,34 @@ void initDeviceDatalink(void) {
 
 /* ******************************* */
 
-void parseTrafficFilter(void) {
-  if(currentFilterExpression != NULL) {
-    int i;
-    struct bpf_program fcode;
+void parseTrafficFilter(char *argv[], int optind) {
+  /* Construct, compile and set filter */
+  if(optind > 0) {
+    currentFilterExpression = copy_argv(argv + optind);
+    if(currentFilterExpression != NULL) {
+      int i;
+      struct bpf_program fcode;
 
-    for(i=0; i<numDevices; i++) {
-      if(!device[i].virtualDevice) {
-	if((pcap_compile(device[i].pcapPtr, &fcode, currentFilterExpression, 1,
-			 device[i].netmask.s_addr) < 0)
-	   || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
-	  traceEvent(TRACE_ERROR,
-		     "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
-		     currentFilterExpression,
-		     pcap_geterr(device[i].pcapPtr), 
-		     device[i].name[0] == '0' ? "<pcap file>" : device[i].name);
-	  exit(-1);
-	} else
-	  traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", 
-		     currentFilterExpression, device[i].name);
+      for(i=0; i<numDevices; i++) {
+	if(!device[i].virtualDevice) {
+	  if((pcap_compile(device[i].pcapPtr, &fcode, currentFilterExpression, 1,
+			   device[i].netmask.s_addr) < 0)
+	     || (pcap_setfilter(device[i].pcapPtr, &fcode) < 0)) {
+	    traceEvent(TRACE_ERROR,
+		   "FATAL ERROR: wrong filter '%s' (%s) on interface %s\n",
+		   currentFilterExpression,
+		   pcap_geterr(device[i].pcapPtr), 
+	       device[i].name[0] == '0' ? "<pcap file>" : device[i].name);
+	    exit(-1);
+	  } else
+	    traceEvent(TRACE_INFO, "Set filter \"%s\" on device %s.", 
+	      currentFilterExpression, device[i].name);
+	}
       }
-    }
-  } else
+    } else
     currentFilterExpression = strdup("");	/* so that it isn't NULL! */
+  }  else
+  currentFilterExpression = strdup("");	/* so that it isn't NULL! */  
 }
 
 /* *************************** */

@@ -13,7 +13,7 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
+ *  You should have rcvd a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
@@ -712,7 +712,7 @@ typedef struct packetStats {
 
 typedef struct simpleProtoTrafficInfo {
   TrafficCounter local, local2remote, remote, remote2local;
-  TrafficCounter lastLocal, lastLocal2remote, lastRemote, lastRemote2local;
+  TrafficCounter lastLocal, lastLocal2remote, lastRem, lastRem2local;
 } SimpleProtoTrafficInfo;
 
 /* *********************** */
@@ -811,7 +811,7 @@ struct ipSession;
 struct hostTraffic;
 
 typedef struct trafficEntry {
-  TrafficCounter bytesSent, bytesReceived;
+  TrafficCounter bytesSent, bytesRcvd;
 } TrafficEntry;
 
 typedef struct serviceEntry {
@@ -950,7 +950,7 @@ typedef struct processInfo {
   char *command, *user;
   time_t firstSeen, lastSeen;
   int pid;
-  TrafficCounter bytesSent, bytesReceived;
+  TrafficCounter bytesSent, bytesRcvd;
   /* peers that talked with this process */
   u_int contactedIpPeersIndexes[MAX_NUM_CONTACTED_PEERS];
   u_int contactedIpPeersIdx;
@@ -1322,8 +1322,8 @@ struct enamemem {
 };
 
 typedef struct protoTrafficInfo {
-  TrafficCounter sentLocally, sentRemotely;
-  TrafficCounter receivedLocally, receivedFromRemote;
+  TrafficCounter sentLoc, sentRem;
+  TrafficCounter rcvdLoc, rcvdFromRem;
 } ProtoTrafficInfo;
 
 typedef struct ipGlobalSession {
@@ -1334,8 +1334,8 @@ typedef struct ipGlobalSession {
   time_t lastSeen;                 /* time when the session has been closed    */
   u_short sessionCounter;          /* # of sessions we've observed             */
   TrafficCounter bytesSent;        /* # bytes sent     (peer -> initiator)     */
-  TrafficCounter bytesReceived;    /* # bytes received (peer -> initiator)     */
-  TrafficCounter bytesFragmentedSent, bytesFragmentedReceived; /* IP Fragments */
+  TrafficCounter bytesRcvd;    /* # bytes rcvd (peer -> initiator)     */
+  TrafficCounter bytesFragmentedSent, bytesFragmentedRcvd; /* IP Fragments */
   UsageCounter peers;              /* session peers */
   struct ipGlobalSession  *next;   /* next element (linked list)               */
 } IpGlobalSession;
@@ -1410,17 +1410,17 @@ typedef struct ipSession {
   time_t lastSeen;                  /* time when the session has been closed    */
   u_long pktSent, pktRcvd;
   TrafficCounter bytesSent;         /* # bytes sent (initiator -> peer) [IP]    */
-  TrafficCounter bytesReceived;     /* # bytes received (peer -> initiator)[IP] */
+  TrafficCounter bytesRcvd;     /* # bytes rcvd (peer -> initiator)[IP] */
   TrafficCounter bytesProtoSent;    /* # bytes sent (Protocol [e.g. HTTP])      */
   TrafficCounter bytesProtoRcvd;    /* # bytes rcvd (Protocol [e.g. HTTP])      */
   TrafficCounter bytesFragmentedSent;     /* IP Fragments                       */
-  TrafficCounter bytesFragmentedReceived; /* IP Fragments                       */
+  TrafficCounter bytesFragmentedRcvd; /* IP Fragments                       */
   u_int minWindow, maxWindow;       /* TCP window size                          */
   struct timeval nwLatency;         /* Network Latency                          */
-  u_short numFin;                   /* # FIN pkts received                      */
-  u_short numFinAcked;              /* # ACK pkts received                      */
-  tcp_seq lastAckIdI2R;             /* ID of the last ACK received              */
-  tcp_seq lastAckIdR2I;             /* ID of the last ACK received              */
+  u_short numFin;                   /* # FIN pkts rcvd                      */
+  u_short numFinAcked;              /* # ACK pkts rcvd                      */
+  tcp_seq lastAckIdI2R;             /* ID of the last ACK rcvd              */
+  tcp_seq lastAckIdR2I;             /* ID of the last ACK rcvd              */
   u_short numDuplicatedAckI2R;      /* # duplicated ACKs                        */
   u_short numDuplicatedAckR2I;      /* # duplicated ACKs                        */
   TrafficCounter bytesRetranI2R;    /* # bytes retransmitted (due to duplicated ACKs) */
@@ -1429,8 +1429,8 @@ typedef struct ipSession {
   TrafficCounter lastFlags;         /* flags of the last TCP packet             */
   u_int32_t lastCSAck, lastSCAck;   /* they store the last ACK ids C->S/S->C    */
   u_int32_t lastCSFin, lastSCFin;   /* they store the last FIN ids C->S/S->C    */
-  u_char lastInitiator2RemoteFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
-  u_char lastRemote2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
+  u_char lastInitiator2RemFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
+  u_char lastRem2InitiatorFlags[MAX_NUM_STORED_FLAGS]; /* TCP flags          */
   u_char sessionState;              /* actual session state                     */
 #ifdef ENABLE_NAPSTER
   u_char  napsterSession;           /* checked if this is a Napster session     */
@@ -1561,14 +1561,14 @@ typedef struct atNBPheader {
 /* *********************** */
 
 typedef struct serviceStats {
-  TrafficCounter numLocalReqSent, numRemoteReqSent;
+  TrafficCounter numLocalReqSent, numRemReqSent;
   TrafficCounter numPositiveReplSent, numNegativeReplSent;
-  TrafficCounter numLocalReqRcvd, numRemoteReqRcvd;
+  TrafficCounter numLocalReqRcvd, numRemReqRcvd;
   TrafficCounter numPositiveReplRcvd, numNegativeReplRcvd;
   time_t fastestMicrosecLocalReqMade, slowestMicrosecLocalReqMade;
   time_t fastestMicrosecLocalReqServed, slowestMicrosecLocalReqServed;
-  time_t fastestMicrosecRemoteReqMade, slowestMicrosecRemoteReqMade;
-  time_t fastestMicrosecRemoteReqServed, slowestMicrosecRemoteReqServed;
+  time_t fastestMicrosecRemReqMade, slowestMicrosecRemReqMade;
+  time_t fastestMicrosecRemReqServed, slowestMicrosecRemReqServed;
 } ServiceStats;
 
 /* *********************** */
@@ -1650,7 +1650,7 @@ typedef struct storedAddress {
 typedef struct hostTraffic {
   struct in_addr   hostIpAddress;
   time_t           firstSeen;
-  time_t           lastSeen; /* time when this host has sent/received some data  */
+  time_t           lastSeen; /* time when this host has sent/rcvd some data  */
   time_t           nextDBupdate; /* next time when the DB entry
 				  for this host will be updated */
   u_char           ethAddress[ETHERNET_ADDRESS_LEN];
@@ -1674,16 +1674,16 @@ typedef struct hostTraffic {
   u_short          numIpxNodeTypes, ipxNodeType[MAX_NODE_TYPES];
 
   fd_set           flags;
-  TrafficCounter   pktSent, pktReceived,
+  TrafficCounter   pktSent, pktRcvd,
                    pktDuplicatedAckSent, pktDuplicatedAckRcvd;
-  TrafficCounter   lastPktSent, lastPktReceived;
+  TrafficCounter   lastPktSent, lastPktRcvd;
   TrafficCounter   pktBroadcastSent, bytesBroadcastSent;
   TrafficCounter   pktMulticastSent, bytesMulticastSent,
                    pktMulticastRcvd, bytesMulticastRcvd;
   TrafficCounter   lastBytesSent, lastHourBytesSent,
-                   bytesSent, bytesSentLocally, bytesSentRemotely;
-  TrafficCounter   lastBytesReceived, lastHourBytesReceived, bytesReceived,
-                   bytesReceivedLocally, bytesReceivedFromRemote;
+                   bytesSent, bytesSentLoc, bytesSentRem;
+  TrafficCounter   lastBytesRcvd, lastHourBytesRcvd, bytesRcvd,
+                   bytesRcvdLoc, bytesRcvdFromRem;
   float            actualRcvdThpt, lastHourRcvdThpt, averageRcvdThpt, peakRcvdThpt,
                    actualSentThpt, lastHourSentThpt, averageSentThpt, peakSentThpt;
   float            actualRcvdPktThpt, averageRcvdPktThpt, peakRcvdPktThpt,
@@ -1696,35 +1696,35 @@ typedef struct hostTraffic {
 
   /* IP */
   PortUsage        **portsUsage; /* 0...TOP_ASSIGNED_IP_PORTS */
-  TrafficCounter   ipBytesSent, ipBytesReceived;
-  TrafficCounter   tcpSentLocally, tcpSentRemotely, udpSentLocally,
-                   udpSentRemotely, icmpSent, ospfSent, igmpSent;
-  TrafficCounter   tcpReceivedLocally, tcpReceivedFromRemote, udpReceivedLocally,
-                   udpReceivedFromRemote, icmpReceived, ospfReceived, igmpReceived;
+  TrafficCounter   ipBytesSent, ipBytesRcvd;
+  TrafficCounter   tcpSentLoc, tcpSentRem, udpSentLoc,
+                   udpSentRem, icmpSent, ospfSent, igmpSent;
+  TrafficCounter   tcpRcvdLoc, tcpRcvdFromRem, udpRcvdLoc,
+                   udpRcvdFromRem, icmpRcvd, ospfRcvd, igmpRcvd;
 
-  TrafficCounter   tcpFragmentsSent,  tcpFragmentsReceived,
-                   udpFragmentsSent,  udpFragmentsReceived,
-                   icmpFragmentsSent, icmpFragmentsReceived;
+  TrafficCounter   tcpFragmentsSent,  tcpFragmentsRcvd,
+                   udpFragmentsSent,  udpFragmentsRcvd,
+                   icmpFragmentsSent, icmpFragmentsRcvd;
     
   /* Interesting Packets */  
-  SecurityHostProbes *securityHostPkts;  
+  SecurityHostProbes *secHostPkts;  
 
   /* non IP */
   IcmpHostInfo     *icmpInfo;
-  TrafficCounter   stpSent, stpReceived; /* Spanning Tree */
-  TrafficCounter   ipxSent, ipxReceived;
-  TrafficCounter   osiSent, osiReceived;
-  TrafficCounter   dlcSent, dlcReceived;
-  TrafficCounter   arp_rarpSent, arp_rarpReceived;
+  TrafficCounter   stpSent, stpRcvd; /* Spanning Tree */
+  TrafficCounter   ipxSent, ipxRcvd;
+  TrafficCounter   osiSent, osiRcvd;
+  TrafficCounter   dlcSent, dlcRcvd;
+  TrafficCounter   arp_rarpSent, arp_rarpRcvd;
   TrafficCounter   arpReqPktsSent, arpReplyPktsSent, arpReplyPktsRcvd;
-  TrafficCounter   decnetSent, decnetReceived;
-  TrafficCounter   appletalkSent, appletalkReceived;
-  TrafficCounter   netbiosSent, netbiosReceived;
-  TrafficCounter   qnxSent, qnxReceived;
-  TrafficCounter   otherSent, otherReceived;
-  ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/received by this host */
+  TrafficCounter   decnetSent, decnetRcvd;
+  TrafficCounter   appletalkSent, appletalkRcvd;
+  TrafficCounter   netbiosSent, netbiosRcvd;
+  TrafficCounter   qnxSent, qnxRcvd;
+  TrafficCounter   otherSent, otherRcvd;
+  ProtoTrafficInfo *protoIPTrafficInfos; /* info about IP traffic generated/rcvd by this host */
   IpGlobalSession  *tcpSessionList,
-                   *udpSessionList; /* list of sessions initiated/received by this host */
+                   *udpSessionList; /* list of sessions initiated/rcvd by this host */
   UsageCounter     contactedSentPeers; /* peers that talked with this host */
   UsageCounter     contactedRcvdPeers; /* peers that talked with this host */
   UsageCounter     contactedRouters; /* routers contacted by this host */
@@ -1759,7 +1759,7 @@ typedef struct domainStats {
 
 typedef struct usersTraffic {
   char* userName;
-  TrafficCounter bytesSent, bytesReceived;
+  TrafficCounter bytesSent, bytesRcvd;
 } UsersTraffic;
 
 /* **************************** */

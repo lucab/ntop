@@ -1325,9 +1325,9 @@ static int returnHTTPPage(char* pageName, int postLen) {
 		 "Thpt Stats</a></li>\n");
       sendString("<li><a href="HOSTS_INFO_HTML" target=area ALT=\"Hosts Information\">"
 		 "Hosts Info</a></li>\n");
-      sendString("<li><a href="IP_R_2_L_HTML" target=area ALT=\"Remote to Local IP Traffic\">"
+      sendString("<li><a href="IP_R_2_L_HTML" target=area ALT=\"Rem to Local IP Traffic\">"
 		 "R-&gt;L IP Traffic</a></li>\n");
-      sendString("<li><a href="IP_L_2_R_HTML" target=area ALT=\"Local to Remote IP Traffic\">"
+      sendString("<li><a href="IP_L_2_R_HTML" target=area ALT=\"Local to Rem IP Traffic\">"
 		 "L-&gt;R IP Traffic</a></li>\n");
       sendString("<li><a href="IP_L_2_L_HTML" target=area ALT=\"Local IP Traffic\">"
 		 "L&lt;-&gt;L IP Traffic</a></li>\n");
@@ -1490,12 +1490,12 @@ static int returnHTTPPage(char* pageName, int postLen) {
       printMulticastStats(sortedColumn, revertOrder, pageNum);
     } else if(strncmp(pageName, STR_DOMAIN_STATS, strlen(STR_DOMAIN_STATS)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
-      printDomainStats(NULL, abs(sortedColumn), revertOrder);
+      printDomainStats(NULL, abs(sortedColumn), revertOrder, pageNum);
     } else if(strncmp(pageName, DOMAIN_INFO_HTML, strlen(DOMAIN_INFO_HTML)) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       if(questionMark == NULL) questionMark = "";
       pageName[strlen(pageName)-5-strlen(questionMark)] = '\0';
-      printDomainStats(&pageName[strlen(DOMAIN_INFO_HTML)+1], abs(sortedColumn), revertOrder);
+      printDomainStats(&pageName[strlen(DOMAIN_INFO_HTML)+1], abs(sortedColumn), revertOrder, pageNum);
     } else if(strcmp(pageName, TRAFFIC_STATS_HTML) == 0) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printHostsTraffic(2, 0, 0, revertOrder, pageNum, TRAFFIC_STATS_HTML);
@@ -1657,12 +1657,6 @@ static int returnHTTPPage(char* pageName, int postLen) {
 
 /* ************************* */
 
-#ifndef HAVE_GDBM_H
-static int checkHTTPpassword(char *theRequestedURL, int theRequestedURLLen _UNUSED_,
-			     char* thePw, int thePwLen) {
-  return 1; /* Access granted - security is disabled */
-}
-#else
 static int checkHTTPpassword(char *theRequestedURL,
 			     int theRequestedURLLen _UNUSED_,
 			     char* thePw, int thePwLen) {
@@ -1768,8 +1762,6 @@ static int checkHTTPpassword(char *theRequestedURL,
   releaseMutex(&gdbmMutex);
 #endif
   return(rc);
-
-#endif /* HAVE_GDBM_H */
 }
 
 #if 0 /* this is not used anymore */

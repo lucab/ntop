@@ -199,28 +199,28 @@ static void updateDeviceThpt(int deviceToUpdate) {
 	if(broadcastHost(el))
 	  continue;
 
-	el->actualRcvdThpt       = (float)(el->bytesReceived-el->lastBytesReceived)/timeDiff;
+	el->actualRcvdThpt       = (float)(el->bytesRcvd-el->lastBytesRcvd)/timeDiff;
 	if(el->peakRcvdThpt      < el->actualRcvdThpt) el->peakRcvdThpt = el->actualRcvdThpt;
 	if(el->peakSentThpt      < el->actualSentThpt) el->peakSentThpt = el->actualSentThpt;
 	el->actualSentThpt       = (float)(el->bytesSent-el->lastBytesSent)/timeDiff;
 	el->lastBytesSent        = el->bytesSent;
-	el->lastBytesReceived    = el->bytesReceived;
+	el->lastBytesRcvd    = el->bytesRcvd;
 
 	/* ******************************** */
 
-	el->actualRcvdPktThpt    = (float)(el->pktReceived-el->lastPktReceived)/timeDiff;
+	el->actualRcvdPktThpt    = (float)(el->pktRcvd-el->lastPktRcvd)/timeDiff;
 	if(el->peakRcvdPktThpt   < el->actualRcvdPktThpt) el->peakRcvdPktThpt = el->actualRcvdPktThpt;
 	if(el->peakSentPktThpt   < el->actualSentPktThpt) el->peakSentPktThpt = el->actualSentPktThpt;
 	el->actualSentPktThpt    = (float)(el->pktSent-el->lastPktSent)/timeDiff;
 	el->lastPktSent          = el->pktSent;
-	el->lastPktReceived      = el->pktReceived;
+	el->lastPktRcvd      = el->pktRcvd;
 
 	/* ******************************** */
 
 	if(updateMinThpt) {
-	  el->averageRcvdThpt    = ((float)el->bytesReceived)/totalTime;
+	  el->averageRcvdThpt    = ((float)el->bytesRcvd)/totalTime;
 	  el->averageSentThpt    = ((float)el->bytesSent)/totalTime;
-	  el->averageRcvdPktThpt = ((float)el->pktReceived)/totalTime;
+	  el->averageRcvdPktThpt = ((float)el->pktRcvd)/totalTime;
 	  el->averageSentPktThpt = ((float)el->pktSent)/totalTime;
 
 	  if(topSentIdx == NO_PEER) {
@@ -277,9 +277,9 @@ static void updateDeviceThpt(int deviceToUpdate) {
 	  }
 
 	  if(updateHourThpt) {
-	    el->lastHourRcvdThpt = (float)(el->bytesReceived-el->lastHourBytesReceived)/timeHourDiff;
+	    el->lastHourRcvdThpt = (float)(el->bytesRcvd-el->lastHourBytesRcvd)/timeHourDiff;
 	    el->lastHourSentThpt = (float)(el->bytesSent-el->lastHourBytesSent)/timeHourDiff;
-	    el->lastHourBytesReceived = el->bytesReceived;
+	    el->lastHourBytesRcvd = el->bytesRcvd;
 	    el->lastHourBytesSent = el->bytesSent;
 
 	    if(topHourSentIdx == NO_PEER) {
@@ -433,11 +433,11 @@ static void updateHostThpt(HostTraffic *el, int hourId) {
     return;
   
   el->lastCounterBytesSent = el->bytesSent;
-  el->lastCounterBytesRcvd = el->bytesReceived;
+  el->lastCounterBytesRcvd = el->bytesRcvd;
 
   if(hourId == 0) {
     el->lastDayBytesSent = el->bytesSent;
-      el->lastDayBytesRcvd = el->bytesReceived;
+      el->lastDayBytesRcvd = el->bytesRcvd;
   }
 }
 
@@ -489,7 +489,7 @@ void updateTrafficMatrix(HostTraffic *srcHost,
     id = b*device[actualDeviceId].numHosts+a;
     if(device[actualDeviceId].ipTrafficMatrix[id] == NULL)
       device[actualDeviceId].ipTrafficMatrix[id] = (TrafficEntry*)calloc(1, sizeof(TrafficEntry));
-    device[actualDeviceId].ipTrafficMatrix[id]->bytesReceived += length;
+    device[actualDeviceId].ipTrafficMatrix[id]->bytesRcvd += length;
   }
 }
 

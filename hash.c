@@ -313,56 +313,56 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
       mapUsageCounter(&theHost->contactedSentPeers);
       mapUsageCounter(&theHost->contactedRcvdPeers);
 
-      if(theHost->securityHostPkts != NULL) {
-	mapUsageCounter(&theHost->securityHostPkts->synPktsSent);
-	mapUsageCounter(&theHost->securityHostPkts->rstPktsSent);
-	mapUsageCounter(&theHost->securityHostPkts->rstAckPktsSent);
-	mapUsageCounter(&theHost->securityHostPkts->synFinPktsSent);
-	mapUsageCounter(&theHost->securityHostPkts->finPushUrgPktsSent);
-	mapUsageCounter(&theHost->securityHostPkts->nullPktsSent);
-	mapUsageCounter(&theHost->securityHostPkts->ackScanSent);
-	mapUsageCounter(&theHost->securityHostPkts->xmasScanSent);
-	mapUsageCounter(&theHost->securityHostPkts->finScanSent);
-	mapUsageCounter(&theHost->securityHostPkts->nullScanSent);
-	mapUsageCounter(&theHost->securityHostPkts->rejectedTCPConnSent);
-	mapUsageCounter(&theHost->securityHostPkts->establishedTCPConnSent);
-	mapUsageCounter(&theHost->securityHostPkts->udpToClosedPortSent);
-	mapUsageCounter(&theHost->securityHostPkts->udpToDiagnosticPortSent);
-	mapUsageCounter(&theHost->securityHostPkts->tcpToDiagnosticPortSent);
-	mapUsageCounter(&theHost->securityHostPkts->tinyFragmentSent);
-	mapUsageCounter(&theHost->securityHostPkts->icmpFragmentSent);
-	mapUsageCounter(&theHost->securityHostPkts->overlappingFragmentSent);
-	mapUsageCounter(&theHost->securityHostPkts->closedEmptyTCPConnSent);
-	mapUsageCounter(&theHost->securityHostPkts->icmpPortUnreachSent);
-	mapUsageCounter(&theHost->securityHostPkts->icmpHostNetUnreachSent);
-	mapUsageCounter(&theHost->securityHostPkts->icmpProtocolUnreachSent);
-	mapUsageCounter(&theHost->securityHostPkts->icmpAdminProhibitedSent);
-	mapUsageCounter(&theHost->securityHostPkts->malformedPktsSent);
+      if(theHost->secHostPkts != NULL) {
+	mapUsageCounter(&theHost->secHostPkts->synPktsSent);
+	mapUsageCounter(&theHost->secHostPkts->rstPktsSent);
+	mapUsageCounter(&theHost->secHostPkts->rstAckPktsSent);
+	mapUsageCounter(&theHost->secHostPkts->synFinPktsSent);
+	mapUsageCounter(&theHost->secHostPkts->finPushUrgPktsSent);
+	mapUsageCounter(&theHost->secHostPkts->nullPktsSent);
+	mapUsageCounter(&theHost->secHostPkts->ackScanSent);
+	mapUsageCounter(&theHost->secHostPkts->xmasScanSent);
+	mapUsageCounter(&theHost->secHostPkts->finScanSent);
+	mapUsageCounter(&theHost->secHostPkts->nullScanSent);
+	mapUsageCounter(&theHost->secHostPkts->rejectedTCPConnSent);
+	mapUsageCounter(&theHost->secHostPkts->establishedTCPConnSent);
+	mapUsageCounter(&theHost->secHostPkts->udpToClosedPortSent);
+	mapUsageCounter(&theHost->secHostPkts->udpToDiagnosticPortSent);
+	mapUsageCounter(&theHost->secHostPkts->tcpToDiagnosticPortSent);
+	mapUsageCounter(&theHost->secHostPkts->tinyFragmentSent);
+	mapUsageCounter(&theHost->secHostPkts->icmpFragmentSent);
+	mapUsageCounter(&theHost->secHostPkts->overlappingFragmentSent);
+	mapUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnSent);
+	mapUsageCounter(&theHost->secHostPkts->icmpPortUnreachSent);
+	mapUsageCounter(&theHost->secHostPkts->icmpHostNetUnreachSent);
+	mapUsageCounter(&theHost->secHostPkts->icmpProtocolUnreachSent);
+	mapUsageCounter(&theHost->secHostPkts->icmpAdminProhibitedSent);
+	mapUsageCounter(&theHost->secHostPkts->malformedPktsSent);
 
-	mapUsageCounter(&theHost->securityHostPkts->synPktsRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->rstPktsRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->rstAckPktsRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->synFinPktsRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->finPushUrgPktsRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->nullPktsRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->ackScanRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->xmasScanRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->finScanRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->nullScanRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->rejectedTCPConnRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->establishedTCPConnRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->udpToClosedPortRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->udpToDiagnosticPortRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->tcpToDiagnosticPortRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->tinyFragmentRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->icmpFragmentRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->overlappingFragmentRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->closedEmptyTCPConnRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->icmpPortUnreachRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->icmpHostNetUnreachRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->icmpProtocolUnreachRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->icmpAdminProhibitedRcvd);
-	mapUsageCounter(&theHost->securityHostPkts->malformedPktsRcvd);
+	mapUsageCounter(&theHost->secHostPkts->synPktsRcvd);
+	mapUsageCounter(&theHost->secHostPkts->rstPktsRcvd);
+	mapUsageCounter(&theHost->secHostPkts->rstAckPktsRcvd);
+	mapUsageCounter(&theHost->secHostPkts->synFinPktsRcvd);
+	mapUsageCounter(&theHost->secHostPkts->finPushUrgPktsRcvd);
+	mapUsageCounter(&theHost->secHostPkts->nullPktsRcvd);
+	mapUsageCounter(&theHost->secHostPkts->ackScanRcvd);
+	mapUsageCounter(&theHost->secHostPkts->xmasScanRcvd);
+	mapUsageCounter(&theHost->secHostPkts->finScanRcvd);
+	mapUsageCounter(&theHost->secHostPkts->nullScanRcvd);
+	mapUsageCounter(&theHost->secHostPkts->rejectedTCPConnRcvd);
+	mapUsageCounter(&theHost->secHostPkts->establishedTCPConnRcvd);
+	mapUsageCounter(&theHost->secHostPkts->udpToClosedPortRcvd);
+	mapUsageCounter(&theHost->secHostPkts->udpToDiagnosticPortRcvd);
+	mapUsageCounter(&theHost->secHostPkts->tcpToDiagnosticPortRcvd);
+	mapUsageCounter(&theHost->secHostPkts->tinyFragmentRcvd);
+	mapUsageCounter(&theHost->secHostPkts->icmpFragmentRcvd);
+	mapUsageCounter(&theHost->secHostPkts->overlappingFragmentRcvd);
+	mapUsageCounter(&theHost->secHostPkts->closedEmptyTCPConnRcvd);
+	mapUsageCounter(&theHost->secHostPkts->icmpPortUnreachRcvd);
+	mapUsageCounter(&theHost->secHostPkts->icmpHostNetUnreachRcvd);
+	mapUsageCounter(&theHost->secHostPkts->icmpProtocolUnreachRcvd);
+	mapUsageCounter(&theHost->secHostPkts->icmpAdminProhibitedRcvd);
+	mapUsageCounter(&theHost->secHostPkts->malformedPktsRcvd);
       }
 
       for(i=0; i<TOP_ASSIGNED_IP_PORTS; i++) {
@@ -686,56 +686,56 @@ static void removeGlobalHostPeers(HostTraffic *el,
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedSentPeers);
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRcvdPeers);
 
-  if(el->securityHostPkts != NULL) {
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstAckPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synFinPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->finPushUrgPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->nullPktsSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->ackScanSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->xmasScanSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->finScanSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->nullScanSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rejectedTCPConnSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->establishedTCPConnSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->udpToClosedPortSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->udpToDiagnosticPortSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->tcpToDiagnosticPortSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->tinyFragmentSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpFragmentSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->overlappingFragmentSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->closedEmptyTCPConnSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpPortUnreachSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpHostNetUnreachSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpProtocolUnreachSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpAdminProhibitedSent);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->malformedPktsSent);
+  if(el->secHostPkts != NULL) {
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->synPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rstPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rstAckPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->synFinPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->finPushUrgPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->nullPktsSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->ackScanSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->xmasScanSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->finScanSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->nullScanSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rejectedTCPConnSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->establishedTCPConnSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->udpToClosedPortSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->udpToDiagnosticPortSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->tcpToDiagnosticPortSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->tinyFragmentSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpFragmentSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->overlappingFragmentSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->closedEmptyTCPConnSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpPortUnreachSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpHostNetUnreachSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpProtocolUnreachSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpAdminProhibitedSent);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->malformedPktsSent);
 
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rstAckPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->synFinPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->finPushUrgPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->nullPktsRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->ackScanRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->xmasScanRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->finScanRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->nullScanRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->rejectedTCPConnRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->establishedTCPConnRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->udpToClosedPortRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->udpToDiagnosticPortRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->tcpToDiagnosticPortRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->tinyFragmentRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpFragmentRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->overlappingFragmentRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->closedEmptyTCPConnRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpPortUnreachRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpHostNetUnreachRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpProtocolUnreachRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->icmpAdminProhibitedRcvd);
-    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->securityHostPkts->malformedPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->synPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rstPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rstAckPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->synFinPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->finPushUrgPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->nullPktsRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->ackScanRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->xmasScanRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->finScanRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->nullScanRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->rejectedTCPConnRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->establishedTCPConnRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->udpToClosedPortRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->udpToDiagnosticPortRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->tcpToDiagnosticPortRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->tinyFragmentRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpFragmentRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->overlappingFragmentRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->closedEmptyTCPConnRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpPortUnreachRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpHostNetUnreachRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpProtocolUnreachRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->icmpAdminProhibitedRcvd);
+    checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->secHostPkts->malformedPktsRcvd);
   }
 
   checkUsageCounter(flaggedHosts, flaggedHostsLen, &el->contactedRouters);
@@ -793,9 +793,9 @@ void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash) {
   if(host->atNodeName != NULL)          free(host->atNodeName);
   if(host->ipxHostName != NULL)         free(host->ipxHostName);
 
-  if(host->securityHostPkts != NULL) {
-    free(host->securityHostPkts);
-    host->securityHostPkts = NULL; /* just to be safe in case of persistent storage */
+  if(host->secHostPkts != NULL) {
+    free(host->secHostPkts);
+    host->secHostPkts = NULL; /* just to be safe in case of persistent storage */
   }
 
   if(host->osName != NULL)

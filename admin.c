@@ -25,16 +25,13 @@
 #ifndef MICRO_NTOP
 
 /* Forward */
-#ifdef HAVE_GDBM_H
 static void sendMenuFooter(int itm1Idx, int itm2Idx);
 static void encodeWebFormURL(char *in, char *buf, int buflen);
 static void decodeWebFormURL(char *buf);
 static int readHTTPpostData(int len, char *buf, int buflen);
-#endif
 
 /* *******************************/
 
-#ifdef HAVE_GDBM_H
 void showUsers(void) {
   u_int numUsers=0;
   char buf[BUF_SIZE], ebuf[128];
@@ -898,8 +895,6 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
 
   return (idx);
 }
-
-#endif /* HAVE_GDBM_H */
 #endif /* MICRO_NTOP */
 
 /* *******************************/

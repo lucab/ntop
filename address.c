@@ -73,10 +73,8 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
   char* res;
   char keyBuf[16];
   char tmpBuf[96];
-#ifdef HAVE_GDBM_H
   datum key_data;
   datum data_data;
-#endif
 
   if(!capturePackets) return;
 
@@ -85,7 +83,6 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
 #endif
   addr = hostAddr->s_addr;
 
-#ifdef HAVE_GDBM_H
   if(snprintf(keyBuf, sizeof(keyBuf), "%u", addr) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   key_data.dptr = keyBuf;
@@ -146,7 +143,6 @@ static void resolveAddress(struct in_addr *hostAddr, short keepAddressNumeric) {
     /* It might be that the size of the retieved data is wrong */
     if(data_data.dptr != NULL) free(data_data.dptr);
   }
-#endif
 
   if((!keepAddressNumeric) && capturePackets) {
     struct in_addr theAddr;
@@ -440,7 +436,8 @@ void* dequeueAddress(void* notUsed _UNUSED_) {
 
   if(data_data.dptr != NULL) {
       addressQueueLen--;
-      addr.s_addr = strtoul(data_data.dptr, (char**)NULL, 10);
+
+      addr.s_addr = (unsigned long)atoll(data_data.dptr);
 
 #ifdef DNS_DEBUG
       traceEvent(TRACE_INFO, "Dequeued address... [%u][key=%s] (#addr=%d)\n",
@@ -522,11 +519,9 @@ char* intoa(struct in_addr addr) {
 void ipaddr2str(struct in_addr hostIpAddress) {
   unsigned int addr = hostIpAddress.s_addr;
   char buf[32];
-#ifdef HAVE_GDBM_H
   char tmpBuf[32];
   datum key_data;
   datum data_data;
-#endif
 
   if((addr == INADDR_BROADCAST) || (addr == 0x0)) {
     updateHostNameInfo(hostIpAddress.s_addr, _intoa(hostIpAddress, buf, sizeof(buf)));

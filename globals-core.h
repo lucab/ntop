@@ -263,7 +263,7 @@ extern void initApps(void);
 extern void initDevices(char* devices);
 extern void initLibpcap(char* rulesFile, int numDevices);
 extern void initDeviceDatalink(void);
-extern void parseTrafficFilter(void);
+extern void parseTrafficFilter(char *argv[], int optind);
 extern void initSignals(void);
 extern void startSniffer(void);
 extern void deviceSanityCheck(char* string);

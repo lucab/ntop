@@ -71,32 +71,32 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
   TrafficCounter totTraffic;
 
   if(dataSent) {
-    totTraffic = theHost->tcpSentLocally+theHost->tcpSentRemotely+
-      theHost->udpSentLocally+theHost->udpSentRemotely+
+    totTraffic = theHost->tcpSentLoc+theHost->tcpSentRem+
+      theHost->udpSentLoc+theHost->udpSentRem+
       theHost->icmpSent+theHost->ospfSent+theHost->igmpSent+theHost->stpSent
       +theHost->ipxSent+theHost->osiSent+theHost->dlcSent+
       theHost->arp_rarpSent+theHost->decnetSent+theHost->appletalkSent+
       theHost->netbiosSent+theHost->qnxSent+theHost->otherSent;
   } else {
-    totTraffic = theHost->tcpReceivedLocally+theHost->tcpReceivedFromRemote+
-      theHost->udpReceivedLocally+theHost->udpReceivedFromRemote+
-      theHost->icmpReceived+theHost->ospfReceived+theHost->igmpReceived+theHost->stpReceived
-      +theHost->ipxReceived+theHost->osiReceived+theHost->dlcReceived+
-      theHost->arp_rarpReceived+theHost->decnetReceived+theHost->appletalkReceived+
-      theHost->netbiosReceived+theHost->qnxReceived+theHost->otherReceived;
+    totTraffic = theHost->tcpRcvdLoc+theHost->tcpRcvdFromRem+
+      theHost->udpRcvdLoc+theHost->udpRcvdFromRem+
+      theHost->icmpRcvd+theHost->ospfRcvd+theHost->igmpRcvd+theHost->stpRcvd
+      +theHost->ipxRcvd+theHost->osiRcvd+theHost->dlcRcvd+
+      theHost->arp_rarpRcvd+theHost->decnetRcvd+theHost->appletalkRcvd+
+      theHost->netbiosRcvd+theHost->qnxRcvd+theHost->otherRcvd;
   }
 
   if(totTraffic > 0) {
     if(dataSent) {
-      if(theHost->tcpSentLocally+theHost->tcpSentRemotely > 0) {
-	p[num] = (float)((100*(theHost->tcpSentLocally+
-			       theHost->tcpSentRemotely))/totTraffic);
+      if(theHost->tcpSentLoc+theHost->tcpSentRem > 0) {
+	p[num] = (float)((100*(theHost->tcpSentLoc+
+			       theHost->tcpSentRem))/totTraffic);
 	lbl[num++] = "TCP";
       }
 
-      if(theHost->udpSentLocally+theHost->udpSentRemotely > 0) {
-	p[num] = (float)((100*(theHost->udpSentLocally+
-			       theHost->udpSentRemotely))/totTraffic);
+      if(theHost->udpSentLoc+theHost->udpSentRem > 0) {
+	p[num] = (float)((100*(theHost->udpSentLoc+
+			       theHost->udpSentRem))/totTraffic);
 	lbl[num++] = "UDP";
       }
 
@@ -165,80 +165,80 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	lbl[num++] = "Other";
       }
     } else {
-      if(theHost->tcpReceivedLocally+theHost->tcpReceivedFromRemote > 0) {
-	p[num] = (float)((100*(theHost->tcpReceivedLocally+
-			       theHost->tcpReceivedFromRemote))/totTraffic);
+      if(theHost->tcpRcvdLoc+theHost->tcpRcvdFromRem > 0) {
+	p[num] = (float)((100*(theHost->tcpRcvdLoc+
+			       theHost->tcpRcvdFromRem))/totTraffic);
 	lbl[num++] = "TCP";
       }
 
-      if(theHost->udpReceivedLocally+theHost->udpReceivedFromRemote > 0) {
-	p[num] = (float)((100*(theHost->udpReceivedLocally+
-			       theHost->udpReceivedFromRemote))/totTraffic);
+      if(theHost->udpRcvdLoc+theHost->udpRcvdFromRem > 0) {
+	p[num] = (float)((100*(theHost->udpRcvdLoc+
+			       theHost->udpRcvdFromRem))/totTraffic);
 	lbl[num++] = "UDP";
       }
 
-      if(theHost->icmpReceived > 0) {
-	p[num] = (float)((100*theHost->icmpReceived)/totTraffic);
+      if(theHost->icmpRcvd > 0) {
+	p[num] = (float)((100*theHost->icmpRcvd)/totTraffic);
 	lbl[num++] = "ICMP";
       }
 
-      if(theHost->ospfReceived > 0) {
-	p[num] = (float)((100*theHost->ospfReceived)/totTraffic);
+      if(theHost->ospfRcvd > 0) {
+	p[num] = (float)((100*theHost->ospfRcvd)/totTraffic);
 	lbl[num++] = "OSPF";
       }
 
-      if(theHost->igmpReceived > 0) {
-	p[num] = (float)((100*theHost->igmpReceived)/totTraffic);
+      if(theHost->igmpRcvd > 0) {
+	p[num] = (float)((100*theHost->igmpRcvd)/totTraffic);
 	lbl[num++] = "IGMP";
       }
 
-      if(theHost->stpReceived > 0) {
-	p[num] = (float)((100*theHost->stpReceived)/totTraffic);
+      if(theHost->stpRcvd > 0) {
+	p[num] = (float)((100*theHost->stpRcvd)/totTraffic);
 	lbl[num++] = "STP";
       }
 
-      if(theHost->ipxReceived > 0) {
-	p[num] = (float)((100*theHost->ipxReceived)/totTraffic);
+      if(theHost->ipxRcvd > 0) {
+	p[num] = (float)((100*theHost->ipxRcvd)/totTraffic);
 	lbl[num++] = "IPX";
       }
 
-      if(theHost->dlcReceived > 0) {
-	p[num] = (float)((100*theHost->dlcReceived)/totTraffic);
+      if(theHost->dlcRcvd > 0) {
+	p[num] = (float)((100*theHost->dlcRcvd)/totTraffic);
 	lbl[num++] = "DLC";
       }
 
-      if(theHost->osiReceived > 0) {
-	p[num] = (float)((100*theHost->osiReceived)/totTraffic);
+      if(theHost->osiRcvd > 0) {
+	p[num] = (float)((100*theHost->osiRcvd)/totTraffic);
 	lbl[num++] = "OSI";
       }
 
-      if(theHost->arp_rarpReceived > 0) {
-	p[num] = (float)((100*theHost->arp_rarpReceived)/totTraffic);
+      if(theHost->arp_rarpRcvd > 0) {
+	p[num] = (float)((100*theHost->arp_rarpRcvd)/totTraffic);
 	lbl[num++] = "(R)ARP";
       }
 
-      if(theHost->decnetReceived > 0) {
-	p[num] = (float)((100*theHost->decnetReceived)/totTraffic);
+      if(theHost->decnetRcvd > 0) {
+	p[num] = (float)((100*theHost->decnetRcvd)/totTraffic);
 	lbl[num++] = "DECNET";
       }
 
-      if(theHost->appletalkReceived > 0) {
-	p[num] = (float)((100*theHost->appletalkReceived)/totTraffic);
+      if(theHost->appletalkRcvd > 0) {
+	p[num] = (float)((100*theHost->appletalkRcvd)/totTraffic);
 	lbl[num++] = "AppleTalk";
       }
 
-      if(theHost->netbiosReceived > 0) {
-	p[num] = (float)((100*theHost->netbiosReceived)/totTraffic);
+      if(theHost->netbiosRcvd > 0) {
+	p[num] = (float)((100*theHost->netbiosRcvd)/totTraffic);
 	lbl[num++] = "NetBios";
       }
 
-      if(theHost->qnxReceived > 0) {
-	p[num] = (float)((100*theHost->qnxReceived)/totTraffic);
+      if(theHost->qnxRcvd > 0) {
+	p[num] = (float)((100*theHost->qnxRcvd)/totTraffic);
 	lbl[num++] = "QNX";
       }
 
-      if(theHost->otherReceived > 0) {
-	p[num] = (float)((100*theHost->otherReceived)/totTraffic);
+      if(theHost->otherRcvd > 0) {
+	p[num] = (float)((100*theHost->otherRcvd)/totTraffic);
 	lbl[num++] = "Other";
       }
     }
@@ -294,7 +294,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
   if(dataSent)
     totTraffic = theHost->tcpFragmentsSent+theHost->udpFragmentsSent+theHost->icmpFragmentsSent;
   else
-    totTraffic = theHost->tcpFragmentsReceived+theHost->udpFragmentsReceived+theHost->icmpFragmentsReceived;
+    totTraffic = theHost->tcpFragmentsRcvd+theHost->udpFragmentsRcvd+theHost->icmpFragmentsRcvd;
 
   if(totTraffic > 0) {
     if(dataSent) {
@@ -313,18 +313,18 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
 	lbl[num++] = "ICMP";
       }
     } else {
-      if(theHost->tcpFragmentsReceived > 0) {
-	p[num] = (float)((100*(theHost->tcpFragmentsReceived))/totTraffic);
+      if(theHost->tcpFragmentsRcvd > 0) {
+	p[num] = (float)((100*(theHost->tcpFragmentsRcvd))/totTraffic);
 	lbl[num++] = "TCP";
       }
 
-      if(theHost->udpFragmentsReceived > 0) {
-	p[num] = (float)((100*(theHost->udpFragmentsReceived))/totTraffic);
+      if(theHost->udpFragmentsRcvd > 0) {
+	p[num] = (float)((100*(theHost->udpFragmentsRcvd))/totTraffic);
 	lbl[num++] = "UDP";
       }
 
-      if(theHost->icmpFragmentsReceived > 0) {
-	p[num] = (float)((100*(theHost->icmpFragmentsReceived))/totTraffic);
+      if(theHost->icmpFragmentsRcvd > 0) {
+	p[num] = (float)((100*(theHost->icmpFragmentsRcvd))/totTraffic);
 	lbl[num++] = "ICMP";
       }
     }
@@ -382,9 +382,9 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     totFragmentedTraffic = theHost->tcpFragmentsSent+theHost->udpFragmentsSent
       +theHost->icmpFragmentsSent;
   } else {
-    totTraffic = theHost->ipBytesReceived;
-    totFragmentedTraffic = theHost->tcpFragmentsReceived+theHost->udpFragmentsReceived
-      +theHost->icmpFragmentsReceived;
+    totTraffic = theHost->ipBytesRcvd;
+    totFragmentedTraffic = theHost->tcpFragmentsRcvd+theHost->udpFragmentsRcvd
+      +theHost->icmpFragmentsRcvd;
   }
 
   if(totTraffic > 0) {
@@ -461,11 +461,11 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 
   for(i=0; i<numIpProtosToMonitor; i++)
     if(dataSent)
-      totalIPTraffic += theHost->protoIPTrafficInfos[i].sentLocally+
-	theHost->protoIPTrafficInfos[i].sentRemotely;
+      totalIPTraffic += theHost->protoIPTrafficInfos[i].sentLoc+
+	theHost->protoIPTrafficInfos[i].sentRem;
     else
-      totalIPTraffic += theHost->protoIPTrafficInfos[i].receivedLocally+
-	theHost->protoIPTrafficInfos[i].receivedFromRemote;
+      totalIPTraffic += theHost->protoIPTrafficInfos[i].rcvdLoc+
+	theHost->protoIPTrafficInfos[i].rcvdFromRem;
 
 #ifdef ENABLE_NAPSTER
   if(theHost->napsterStats != NULL) {
@@ -486,11 +486,11 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   if(totalIPTraffic > 0) {
     for(i=0; i<numIpProtosToMonitor; i++) {
       if(dataSent)
-	traffic = theHost->protoIPTrafficInfos[i].sentLocally+
-	  theHost->protoIPTrafficInfos[i].sentRemotely;
+	traffic = theHost->protoIPTrafficInfos[i].sentLoc+
+	  theHost->protoIPTrafficInfos[i].sentRem;
       else
-	traffic = theHost->protoIPTrafficInfos[i].receivedLocally+
-	  theHost->protoIPTrafficInfos[i].receivedFromRemote;
+	traffic = theHost->protoIPTrafficInfos[i].rcvdLoc+
+	  theHost->protoIPTrafficInfos[i].rcvdFromRem;
 
       if(traffic > 0) {
 	p[num] = (float)((100*traffic)/totalIPTraffic);

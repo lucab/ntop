@@ -81,22 +81,22 @@ void addPageIndicator(char *url, u_int pageNum,
       
   if(pageNum >= 1) {
     if(snprintf(prevBuf, sizeof(prevBuf), 
-		"<A HREF=\"%s?page=0&col=%s\">&lt;&lt;</A> "
-		"<A HREF=\"%s?page=%d&col=%s\">&lt;</A>",
+		"<A HREF=\"%s?page=0&col=%s\">[«]</A> "
+		"<A HREF=\"%s?page=%d&col=%s\">[&lt;]</A>",
 		url, shortBuf, url, pageNum-1, shortBuf) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");    
   } else
-    prevBuf[0] = '\0';
+    strcpy(prevBuf, "<FONT color=#999999>[«]</FONT>");
   
   if(actPage < numPages) {
     if(snprintf(nextBuf, sizeof(nextBuf), 
-		"<A HREF=\"%s?page=%d&col=%s\">&gt;</A> "
-		"<A HREF=\"%s?page=%d&col=%s\">&gt;&gt;</A>", 
+		"<A HREF=\"%s?page=%d&col=%s\">[&gt;]</A> "
+		"<A HREF=\"%s?page=%d&col=%s\">[»]</A>", 
 		url, pageNum+1, shortBuf, 
 		url, numPages-1, shortBuf) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");    
   } else
-    nextBuf[0] = '\0';  
+    strcpy(nextBuf, "<FONT color=#999999>[»]</FONT>");
   
   if(snprintf(buf, sizeof(buf), "<P><B> %s [ %d / %d ] %s</B>",
 	      prevBuf, actPage, numPages, nextBuf) < 0)
@@ -147,7 +147,7 @@ void printHostsTraffic(int sortSendMode,
 	&& ((el = device[actualReportDeviceId].hash_hostTraffic[idx]) != NULL)
        && (broadcastHost(el) == 0)) {
       if((sortSendMode && (el->bytesSent > 0))
-	 || ((!sortSendMode) && (el->bytesReceived > 0))) {
+	 || ((!sortSendMode) && (el->bytesRcvd > 0))) {
 	if((reportType == 1) && (el->hostNumIpAddress[0] == '\0')) continue;
 	tmpTable[numEntries++]=el;
       }
@@ -195,12 +195,12 @@ void printHostsTraffic(int sortSendMode,
 
       if(el != NULL) {
 	sentPercent = (100*(float)el->bytesSent)/device[actualReportDeviceId].ethernetBytes;
-	rcvdPercent = (100*(float)el->bytesReceived)/device[actualReportDeviceId].ethernetBytes;
+	rcvdPercent = (100*(float)el->bytesRcvd)/device[actualReportDeviceId].ethernetBytes;
 
-	a = el->bytesReceived, b = el->bytesSent;
+	a = el->bytesRcvd, b = el->bytesSent;
 
 	if(!sortSendMode)
-	  getProtocolDataReceived(&c, &d, &e, el);
+	  getProtocolDataRcvd(&c, &d, &e, el);
 	else
 	  getProtocolDataSent(&c, &d, &e, el);
 
@@ -221,8 +221,8 @@ void printHostsTraffic(int sortSendMode,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			getRowColor(), webHostName,
 			formatBytes(el->bytesSent, 1), sentPercent, separator,
-			formatBytes(el->tcpSentLocally+el->tcpSentRemotely, 1),
-			formatBytes(el->udpSentLocally+el->udpSentRemotely, 1),
+			formatBytes(el->tcpSentLoc+el->tcpSentRem, 1),
+			formatBytes(el->udpSentLoc+el->udpSentRem, 1),
 			formatBytes(el->icmpSent, 1),
 			formatBytes(el->dlcSent, 1),
 			formatBytes(el->ipxSent, 1),
@@ -273,21 +273,21 @@ void printHostsTraffic(int sortSendMode,
 #endif
 
 	    for(i=0; i<numIpProtosToMonitor; i++) {
-	      totalIPTraffic += el->protoIPTrafficInfos[i].sentLocally+
-		el->protoIPTrafficInfos[i].sentRemotely;
+	      totalIPTraffic += el->protoIPTrafficInfos[i].sentLoc+
+		el->protoIPTrafficInfos[i].sentRem;
 	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(el->protoIPTrafficInfos[i].sentLocally+
-				      el->protoIPTrafficInfos[i].sentRemotely, 1)) < 0)
+			  formatBytes(el->protoIPTrafficInfos[i].sentLoc+
+				      el->protoIPTrafficInfos[i].sentRem, 1)) < 0)
 		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	    }
 
 	    /* Rounding may cause troubles */
 	    if(el->bytesSent > totalIPTraffic)
-	      totalIPTraffic = (el->tcpSentLocally
-				+el->tcpSentRemotely
-				+el->udpSentLocally
-				+el->udpSentRemotely
+	      totalIPTraffic = (el->tcpSentLoc
+				+el->tcpSentRem
+				+el->udpSentLoc
+				+el->udpSentRem
 				+el->icmpSent
 				+el->ospfSent
 				+el->igmpSent)
@@ -331,15 +331,15 @@ void printHostsTraffic(int sortSendMode,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%s</TD>",
 			getRowColor(), webHostName,
-			formatBytes(el->bytesReceived, 1), rcvdPercent, separator,
-			formatBytes(el->tcpReceivedLocally+el->tcpReceivedFromRemote, 1),
-			formatBytes(el->udpReceivedLocally+el->udpReceivedFromRemote, 1),
-			formatBytes(el->icmpReceived, 1),
-			formatBytes(el->dlcReceived, 1),
-			formatBytes(el->ipxReceived, 1),
-			formatBytes(el->decnetReceived, 1),
-			formatBytes(el->arp_rarpReceived, 1),
-			formatBytes(el->appletalkReceived, 1)
+			formatBytes(el->bytesRcvd, 1), rcvdPercent, separator,
+			formatBytes(el->tcpRcvdLoc+el->tcpRcvdFromRem, 1),
+			formatBytes(el->udpRcvdLoc+el->udpRcvdFromRem, 1),
+			formatBytes(el->icmpRcvd, 1),
+			formatBytes(el->dlcRcvd, 1),
+			formatBytes(el->ipxRcvd, 1),
+			formatBytes(el->decnetRcvd, 1),
+			formatBytes(el->arp_rarpRcvd, 1),
+			formatBytes(el->appletalkRcvd, 1)
 			) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	    sendString(buf);
@@ -351,13 +351,13 @@ void printHostsTraffic(int sortSendMode,
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			formatBytes(el->ospfReceived, 1),
-			formatBytes(el->netbiosReceived, 1),
-			formatBytes(el->igmpReceived, 1),
-			formatBytes(el->osiReceived, 1),
-			formatBytes(el->qnxReceived, 1),
-			formatBytes(el->stpReceived, 1),
-			formatBytes(el->otherReceived, 1)
+			formatBytes(el->ospfRcvd, 1),
+			formatBytes(el->netbiosRcvd, 1),
+			formatBytes(el->igmpRcvd, 1),
+			formatBytes(el->osiRcvd, 1),
+			formatBytes(el->qnxRcvd, 1),
+			formatBytes(el->stpRcvd, 1),
+			formatBytes(el->otherRcvd, 1)
 			) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
 
 	    sendString(buf);
@@ -367,7 +367,7 @@ void printHostsTraffic(int sortSendMode,
 	    if(snprintf(buf, sizeof(buf), "<TR %s>%s"
 			"<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=RIGHT>%.1f%s%%</TD>",
 			getRowColor(), webHostName,
-			formatBytes(el->bytesReceived, 1),
+			formatBytes(el->bytesRcvd, 1),
 			rcvdPercent, separator) < 0)
 	      traceEvent(TRACE_ERROR, "Buffer overflow!");
 	    sendString(buf);
@@ -384,24 +384,24 @@ void printHostsTraffic(int sortSendMode,
 #endif
 
 	    for(i=0; i<numIpProtosToMonitor; i++) {
-	      totalIPTraffic += el->protoIPTrafficInfos[i].receivedLocally+
-		el->protoIPTrafficInfos[i].receivedFromRemote;
+	      totalIPTraffic += el->protoIPTrafficInfos[i].rcvdLoc+
+		el->protoIPTrafficInfos[i].rcvdFromRem;
 	      if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
-			  formatBytes(el->protoIPTrafficInfos[i].receivedLocally+
-				      el->protoIPTrafficInfos[i].receivedFromRemote, 1)) < 0)
+			  formatBytes(el->protoIPTrafficInfos[i].rcvdLoc+
+				      el->protoIPTrafficInfos[i].rcvdFromRem, 1)) < 0)
 		traceEvent(TRACE_ERROR, "Buffer overflow!");
 	      sendString(buf);
 	    }
 
 	    /* Rounding may cause troubles */
-	    if(el->bytesReceived > totalIPTraffic)
-	      totalIPTraffic = (el->tcpReceivedLocally
-				+el->tcpReceivedFromRemote
-				+el->udpReceivedLocally
-				+el->udpReceivedFromRemote
-				+el->icmpReceived
-				+el->ospfReceived
-				+el->igmpReceived)-totalIPTraffic;
+	    if(el->bytesRcvd > totalIPTraffic)
+	      totalIPTraffic = (el->tcpRcvdLoc
+				+el->tcpRcvdFromRem
+				+el->udpRcvdLoc
+				+el->udpRcvdFromRem
+				+el->icmpRcvd
+				+el->ospfRcvd
+				+el->igmpRcvd)-totalIPTraffic;
 	    else
 	      totalIPTraffic = 0;
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</TD>",
@@ -1537,7 +1537,7 @@ void printSession(IPSession *theSession, u_short sessionType,
 	  direction,
 	  device[actualReportDeviceId].hash_hostTraffic[checkSessionIdx(theSession->remotePeerIdx)]->hostSymIpAddress, _dport,
 	  (unsigned long)theSession->bytesSent,
-	  (unsigned long)theSession->bytesReceived);
+	  (unsigned long)theSession->bytesRcvd);
 #ifdef MULTITHREADED
   releaseMutex(&addressResolutionMutex);
 #endif
@@ -1587,7 +1587,7 @@ static void printSessions(IPSession *sessions[], u_short type) {
 		hash_hostTraffic[checkSessionIdx(sessions[idx]->remotePeerIdx)]->hostSymIpAddress,
 		_dport,
 		(unsigned long)sessions[idx]->bytesSent,
-		(unsigned long)sessions[idx]->bytesReceived);
+		(unsigned long)sessions[idx]->bytesRcvd);
 #ifdef MULTITHREADED
 	releaseMutex(&addressResolutionMutex);
 #endif
@@ -1610,7 +1610,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   int printedEntries=0;
   HostTraffic *el, **tmpTable;
   char buf[BUF_SIZE], *str=NULL, *sign, *title=NULL;
-  TrafficCounter totalBytesSent, totalBytesReceived, totalBytes, a=0, b=0;
+  TrafficCounter totalBytesSent, totalBytesRcvd, totalBytes, a=0, b=0;
   float sentpct, rcvdpct;
   time_t timeDiff = time(NULL)-initialSniffTime;
   char *arrowGif, *arrow[48], *theAnchor[48];
@@ -1624,7 +1624,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
     arrowGif = "&nbsp;<IMG ALT=\"Ascending order, click to reverse\" SRC=arrow_down.gif BORDER=0>";
   }
 
-  totalBytesSent=0, totalBytesReceived=0;
+  totalBytesSent=0, totalBytesRcvd=0;
   tmpTable = (HostTraffic**)malloc(device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
   memset(tmpTable, 0, device[actualReportDeviceId].actualHashSize*sizeof(HostTraffic*));
 
@@ -1639,28 +1639,28 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
       switch(remoteToLocal) {
       case REMOTE_TO_LOCAL_ACCOUNTING:
 	if(!subnetPseudoLocalHost(el)) {
-	  if((el->bytesSentLocally > 0) || (el->bytesReceivedLocally > 0)) {
+	  if((el->bytesSentLoc > 0) || (el->bytesRcvdLoc > 0)) {
 	    tmpTable[numEntries++]=el;
-	    totalBytesSent += el->bytesSentLocally;
-	    totalBytesReceived += el->bytesReceivedLocally;
+	    totalBytesSent += el->bytesSentLoc;
+	    totalBytesRcvd += el->bytesRcvdLoc;
 	  }
 	}
 	break;
       case LOCAL_TO_REMOTE_ACCOUNTING:
 	if(subnetPseudoLocalHost(el)) {
-	  if((el->bytesSentRemotely > 0) || (el->bytesReceivedFromRemote > 0)) {
+	  if((el->bytesSentRem > 0) || (el->bytesRcvdFromRem > 0)) {
 	    tmpTable[numEntries++]=el;
-	    totalBytesSent += el->bytesSentRemotely;
-	    totalBytesReceived += el->bytesReceivedFromRemote;
+	    totalBytesSent += el->bytesSentRem;
+	    totalBytesRcvd += el->bytesRcvdFromRem;
 	  }
 	}
 	break;
       case LOCAL_TO_LOCAL_ACCOUNTING:
 	if(subnetPseudoLocalHost(el)) {
-	  if((el->bytesSentLocally > 0) || (el->bytesReceivedLocally > 0)) {
+	  if((el->bytesSentLoc > 0) || (el->bytesRcvdLoc > 0)) {
 	    tmpTable[numEntries++]=el;
-	    totalBytesSent += el->bytesSentLocally;
-	    totalBytesReceived += el->bytesReceivedLocally;
+	    totalBytesSent += el->bytesSentLoc;
+	    totalBytesRcvd += el->bytesRcvdLoc;
 	  }
 	}
 	break;
@@ -1670,11 +1670,11 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
   switch(remoteToLocal) {
   case REMOTE_TO_LOCAL_ACCOUNTING:
     str = IP_R_2_L_HTML;
-    title = "Remote to Local IP Traffic";
+    title = "Rem to Local IP Traffic";
     break;
   case LOCAL_TO_REMOTE_ACCOUNTING:
     str = IP_L_2_R_HTML;
-    title = "Local to Remote IP Traffic";
+    title = "Local to Rem IP Traffic";
     break;
   case LOCAL_TO_LOCAL_ACCOUNTING:
     str = IP_L_2_L_HTML;
@@ -1731,7 +1731,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 	    "%s1>Host%s</A></TH>"
 	    "<TH "TH_BG">%s2>IP&nbsp;Address%s</A></TH>\n"
 	    "<TH "TH_BG" COLSPAN=2>%s3>Data&nbsp;Sent%s</A></TH>"
-	    "<TH "TH_BG" COLSPAN=2>%s4>Data&nbsp;Received%s</A></TH></TR>\n",
+	    "<TH "TH_BG" COLSPAN=2>%s4>Data&nbsp;Rcvd%s</A></TH></TR>\n",
 	    theAnchor[1], arrow[1],
 	    theAnchor[2], arrow[2], theAnchor[3], arrow[3],
 	    theAnchor[4], arrow[4]) < 0)
@@ -1753,16 +1753,16 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
 	switch(remoteToLocal) {
 	case REMOTE_TO_LOCAL_ACCOUNTING:
-	  a = el->bytesSentLocally;
-	  b = el->bytesReceivedLocally;
+	  a = el->bytesSentLoc;
+	  b = el->bytesRcvdLoc;
 	  break;
 	case LOCAL_TO_REMOTE_ACCOUNTING:
-	  a = el->bytesSentRemotely;
-	  b = el->bytesReceivedFromRemote;
+	  a = el->bytesSentRem;
+	  b = el->bytesRcvdFromRem;
 	  break;
 	case LOCAL_TO_LOCAL_ACCOUNTING:
-	  a = el->bytesSentLocally;
-	  b = el->bytesReceivedLocally;
+	  a = el->bytesSentLoc;
+	  b = el->bytesRcvdLoc;
 	  break;
 	}
 
@@ -1774,7 +1774,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 	if(b < 100)  /* Avoid very small decimal values */
 	  rcvdpct = 0;
 	else
-	  rcvdpct = (100*(float)b)/totalBytesReceived;
+	  rcvdpct = (100*(float)b)/totalBytesRcvd;
 
 	if(snprintf(buf, sizeof(buf), "<TR %s>"
 		"%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>"
@@ -1803,13 +1803,13 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 
     sendString("<P>"TABLE_ON"<TABLE BORDER=1 WIDTH=\"100%%\">\n<TR>"
 	       "<TH "TH_BG">Total Traffic</TH><TH "TH_BG">Data Sent</TH>\n"
-	       "<TH "TH_BG">Data Received</TH><TH "TH_BG">Used Bandwidth</TH></TR>\n");
+	       "<TH "TH_BG">Data Rcvd</TH><TH "TH_BG">Used Bandwidth</TH></TR>\n");
 
-    totalBytes = totalBytesSent+totalBytesReceived;
+    totalBytes = totalBytesSent+totalBytesRcvd;
 
     /* In this case the total traffic is just half and
        the following statement holds:
-       totalBytesSent == totalBytesReceived
+       totalBytesSent == totalBytesRcvd
 
        Courtesy of Jac Engel <jacengel@home.nl>
     */
@@ -1823,7 +1823,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 		"<TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
 		formatBytes(totalBytes, 1),
 		formatBytes(totalBytesSent, 1),
-		formatBytes(totalBytesReceived, 1),
+		formatBytes(totalBytesRcvd, 1),
 		formatThroughput((float)(totalBytes/timeDiff))) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
 
@@ -1858,7 +1858,7 @@ void printActiveTCPSessions(void) {
        ) {
 
       char *sport, *dport;
-      TrafficCounter dataSent, dataReceived;
+      TrafficCounter dataSent, dataRcvd;
 
       if(numSessions == 0) {
 	sendString("<CENTER>\n");
@@ -1880,7 +1880,7 @@ void printActiveTCPSessions(void) {
       sport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->sport, IPPROTO_TCP);
       dport = getPortByNum(device[actualReportDeviceId].tcpSession[idx]->dport, IPPROTO_TCP);
       dataSent = device[actualReportDeviceId].tcpSession[idx]->bytesSent;
-      dataReceived = device[actualReportDeviceId].tcpSession[idx]->bytesReceived;
+      dataRcvd = device[actualReportDeviceId].tcpSession[idx]->bytesRcvd;
 
       if(sport == NULL) {
 	static char _sport[8];
@@ -1926,7 +1926,7 @@ void printActiveTCPSessions(void) {
 			       SHORT_FORMAT, 0, 0),
 		  dport,
 		  formatBytes(dataSent, 1),
-		  formatBytes(dataReceived, 1),
+		  formatBytes(dataRcvd, 1),
 		  formatTime(&(device[actualReportDeviceId].tcpSession[idx]->firstSeen), 1),
 		  formatTime(&(device[actualReportDeviceId].tcpSession[idx]->lastSeen), 1),
 		  formatSeconds(actTime-device[actualReportDeviceId].tcpSession[idx]->firstSeen),
@@ -2200,7 +2200,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
     total = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.remote2local+
 		    device[actualReportDeviceId].udpGlobalTrafficStats.remote2local)/1024;
 
-    printSectionTitle("Remote to Local Traffic");
+    printSectionTitle("Rem to Local Traffic");
 
     if(total == 0)
       printNoDataYet();
@@ -2252,7 +2252,7 @@ void printIpProtocolDistribution(int mode, int revertOrder) {
 
     /* ********************************************************** */
 
-    printSectionTitle("Local to Remote Traffic");
+    printSectionTitle("Local to Rem Traffic");
 
     total = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
 		    device[actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;
@@ -2522,7 +2522,7 @@ void printProcessInfo(int processPid) {
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
   if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=RIGHT>%s</T></TR>\n",
-	      formatBytes(processes[i]->bytesReceived, 1)) < 0)
+	      formatBytes(processes[i]->bytesRcvd, 1)) < 0)
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
 
@@ -2625,11 +2625,11 @@ void printLsofData(int mode) {
 	    processesList[i]->pid,
 	    processesList[i]->user,
 	    formatBytes((TrafficCounter)processesList[i]->bytesSent, 1),
-	    formatBytes((TrafficCounter)processesList[i]->bytesReceived, 1)) < 0)
+	    formatBytes((TrafficCounter)processesList[i]->bytesRcvd, 1)) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
 
-    if((processesList[i]->bytesSent > 0) || (processesList[i]->bytesReceived > 0)) {
+    if((processesList[i]->bytesSent > 0) || (processesList[i]->bytesRcvd > 0)) {
       for(j=0, found=0; j<numUsers; j++)
 	if(strcmp(usersTraffic[j].userName, processesList[i]->user) == 0) {
 	  found = 1;
@@ -2639,11 +2639,11 @@ void printLsofData(int mode) {
       if(!found) {
 	usersTraffic[numUsers].userName = processesList[i]->user;
 	usersTrafficList[numUsers++] = &usersTraffic[numUsers];
-	usersTraffic[j].bytesSent = usersTraffic[j].bytesReceived = 0;
+	usersTraffic[j].bytesSent = usersTraffic[j].bytesRcvd = 0;
       }
 
       usersTraffic[j].bytesSent     += processesList[i]->bytesSent;
-      usersTraffic[j].bytesReceived += processesList[i]->bytesReceived;
+      usersTraffic[j].bytesRcvd += processesList[i]->bytesRcvd;
     }
   }
 
@@ -2701,7 +2701,7 @@ void printLsofData(int mode) {
 		  getRowColor(),
 		  usersTrafficList[i]->userName,
 		  formatBytes((TrafficCounter)(usersTrafficList[i]->bytesSent+
-					       usersTrafficList[i]->bytesReceived), 1)) < 0)
+					       usersTrafficList[i]->bytesRcvd), 1)) < 0)
 	traceEvent(TRACE_ERROR, "Buffer overflow!");
       sendString(buf);
     }
@@ -2750,7 +2750,7 @@ void printIpTrafficMatrix(void) {
       if(((device[actualReportDeviceId].ipTrafficMatrix[id] != NULL)
 	  && (device[actualReportDeviceId].ipTrafficMatrix[id]->bytesSent != 0))
 	 || ((device[actualReportDeviceId].ipTrafficMatrix[id] != NULL)
-	     && (device[actualReportDeviceId].ipTrafficMatrix[id]->bytesReceived != 0))) {
+	     && (device[actualReportDeviceId].ipTrafficMatrix[id]->bytesRcvd != 0))) {
 	activeHosts[i] = 1;
 	numEntries++;
 	break;
@@ -2786,15 +2786,15 @@ void printIpTrafficMatrix(void) {
 
       if(((device[actualReportDeviceId].ipTrafficMatrix[idx] != NULL)
 	 && ((device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent != 0)
-	     || (device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived != 0)))) {
+	     || (device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd != 0)))) {
 	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent)
 	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent;
-	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived)
-	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived;
+	if(minTraffic > device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd)
+	  minTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd;
 	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent)
 	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent;
-	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived)
-	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived;
+	if(maxTraffic < device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd)
+	  maxTraffic = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd;
       }
     }
 
@@ -2832,7 +2832,7 @@ void printIpTrafficMatrix(void) {
 	    }
 
 	    tmpCounter = device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent+
-	      device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesReceived;
+	      device[actualReportDeviceId].ipTrafficMatrix[idx]->bytesRcvd;
 	    /* Fix below courtesy of Danijel Doriae <danijel.doric@industrogradnja.tel.hr> */
 	    if(snprintf(buf, sizeof(buf), "<TD "TD_BG" ALIGN=CENTER %s>"
 			"<A HREF=# onMouseOver=\"window.status='"
@@ -3293,8 +3293,8 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
 /* ****************************************** */
 
 /* if domainName == NULL -> print all domains */
-void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
-  u_int idx, tmpIdx, numEntries=0, len;
+void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int pageNum) {
+  u_int idx, tmpIdx, numEntries=0, printedEntries=0, len;
   u_short keyValue=0;
   HostTraffic *el;
   char buf[BUF_SIZE];
@@ -3374,18 +3374,18 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
 
     totBytesSent          += el->bytesSent;
     statsEntry->bytesSent += el->bytesSent;
-    statsEntry->bytesRcvd += el->bytesReceived;
-    totBytesRcvd          += el->bytesReceived;
-    statsEntry->tcpSent   += el->tcpSentLocally + el->tcpSentRemotely;
-    statsEntry->udpSent   += el->udpSentLocally + el->udpSentRemotely;
+    statsEntry->bytesRcvd += el->bytesRcvd;
+    totBytesRcvd          += el->bytesRcvd;
+    statsEntry->tcpSent   += el->tcpSentLoc + el->tcpSentRem;
+    statsEntry->udpSent   += el->udpSentLoc + el->udpSentRem;
     statsEntry->icmpSent  += el->icmpSent;
     statsEntry->ospfSent  += el->ospfSent;
     statsEntry->igmpSent  += el->igmpSent;
-    statsEntry->tcpRcvd   += el->tcpReceivedLocally + el->tcpReceivedFromRemote;
-    statsEntry->udpRcvd   += el->udpReceivedLocally + el->udpReceivedFromRemote;
-    statsEntry->icmpRcvd  += el->icmpReceived;
-    statsEntry->ospfRcvd  += el->ospfReceived;
-    statsEntry->igmpRcvd  += el->igmpReceived;
+    statsEntry->tcpRcvd   += el->tcpRcvdLoc + el->tcpRcvdFromRem;
+    statsEntry->udpRcvd   += el->udpRcvdLoc + el->udpRcvdFromRem;
+    statsEntry->icmpRcvd  += el->icmpRcvd;
+    statsEntry->ospfRcvd  += el->ospfRcvd;
+    statsEntry->igmpRcvd  += el->igmpRcvd;
   } /* for(;;) */
 
   if((domainName == NULL) || (numEntries == 0)) {
@@ -3590,7 +3590,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
 
   sendString(buf);
 
-  for(idx=0; idx<numEntries; idx++) {
+  for(idx=pageNum*maxNumLines; idx<numEntries; idx++) {
     if(revertOrder)
       statsEntry = &tmpStats[numEntries-idx-1];
     else
@@ -3652,11 +3652,19 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
 	    formatBytes(statsEntry->igmpRcvd, 1)
 	    ) < 0) traceEvent(TRACE_ERROR, "Buffer overflow!");
     sendString(buf);
+
+    /* Avoid huge tables */
+    if(printedEntries++ > maxNumLines)
+      break;
   }
 
   sendString("</TABLE>"TABLE_OFF"</HTML>\n");
   sendString("</CENTER>\n");
-  free(tmpStats); free(stats);
+ 
+  addPageIndicator(STR_DOMAIN_STATS, pageNum, numEntries, maxNumLines, 
+		   revertOrder, abs(sortedColumn));   
+
+ free(tmpStats); free(stats);
 }
 
 /* ************************* */

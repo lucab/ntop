@@ -146,7 +146,7 @@ extern void printLsofData(int mode);
 extern void printIpTrafficMatrix(void);
 extern void printThptStatsMatrix(int sortedColumn);
 extern void printThptStats(int sortedColumn);
-extern void printDomainStats(char* domainName, int sortedColumn, int revertOrder);
+extern void printDomainStats(char* domainName, int sortedColumn, int revertOrder, int pageNum);
 extern void printNoDataYet(void);
 extern void printNotAvailable(void);
 extern void listNetFlows(void);

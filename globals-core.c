@@ -72,9 +72,7 @@ pthread_t dequeueThreadId, handleWebConnectionsThreadId;
 pthread_t thptUpdateThreadId, scanIdleThreadId, scanIdleSessionsThreadId;
 pthread_t hostTrafficStatsThreadId, dbUpdateThreadId, lsofThreadId;
 pthread_t purgeAddressThreadId;
-#ifdef HAVE_GDBM_H
 PthreadMutex gdbmMutex;
-#endif /* HAVE_GDBM_H */
 #ifdef USE_SEMAPHORES
 sem_t queueSem;
 #ifdef ASYNC_ADDRESS_RESOLUTION
@@ -93,9 +91,7 @@ TrafficCounter droppedAddresses;
 #endif
 
 /* Database */
-#ifdef HAVE_GDBM_H
 GDBM_FILE gdbm_file, pwFile, eventFile, hostsInfoFile, addressCache;
-#endif
 
 /* lsof support */
 u_short updateLsof;

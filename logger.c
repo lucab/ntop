@@ -21,25 +21,20 @@
 
 #include "ntop.h"
 
-#ifdef HAVE_GDBM_H
 static GDBM_FILE logDB;
-#endif
 
 /* *************************** */
 
 void initLogger(void) {
-#ifdef HAVE_GDBM_H
   char tmpBuff[200];
   if(snprintf(tmpBuff, sizeof(tmpBuff), "%s/logger.db",dbPath) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   logDB = gdbm_open (tmpBuff, 0, GDBM_NEWDB, 00664, NULL);
-#endif
 }
 
 /* *************************** */
 
 void termLogger(void) {
-#ifdef HAVE_GDBM_H
   if(logDB != NULL) {
 #ifdef MULTITHREADED
     accessMutex(&gdbmMutex, "termLogger");
@@ -50,11 +45,9 @@ void termLogger(void) {
 #endif
     logDB = NULL;
   }
-#endif
 }
 
 /* *************************** */
-#ifdef HAVE_GDBM_H
 void logMessage(char* message, u_short severity) {
   LogMessage msg;
   int len;
@@ -85,9 +78,3 @@ void logMessage(char* message, u_short severity) {
   releaseMutex(&gdbmMutex);
 #endif 
 }
-#else
-void logMessage(char* message, u_short severity) {
-  traceEvent(TRACE_INFO,"%s [severity %d]\n", message, severity);
-}
-#endif
-
