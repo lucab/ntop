@@ -1924,8 +1924,7 @@ static IPSession* handleSession(const struct pcap_pkthdr *h,
 	                           inet_addr(rcStr), a, b, c, d, (e*256+f));
 #endif
 	  addPassiveSessionInfo(htonl((unsigned long)inet_addr(rcStr)), (e*256+f));
-	} else
-	  traceEvent(TRACE_INFO, "??: %s", rcStr);	
+	} 
       } 
     }
 

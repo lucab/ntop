@@ -217,6 +217,13 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       }      
     }
 
+    if(num == 0) {
+#ifdef MULTITHREADED
+      releaseMutex(&graphMutex);
+#endif
+      return; /* TODO: this has to be handled better */
+    }
+
     GDCPIE_LineColor = 0x000000L;
     GDCPIE_explode   = expl;    /* default: NULL - no explosion */
     GDCPIE_Color     = clr;
@@ -270,7 +277,14 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   accessMutex(&graphMutex, "pktHostTrafficDistrib");
 #endif
 
-  totalIPTraffic = 0;
+  if(theHost->napsterStats == NULL)
+    totalIPTraffic = 0;
+  else {
+    if(dataSent)
+      totalIPTraffic = theHost->napsterStats->bytesSent;
+    else
+      totalIPTraffic = theHost->napsterStats->bytesRcvd;
+  }
 
   for(i=0; i<numIpProtosToMonitor; i++) 
     if(dataSent)
@@ -279,6 +293,18 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     else
       totalIPTraffic += theHost->protoIPTrafficInfos[i].receivedLocally+
 	theHost->protoIPTrafficInfos[i].receivedFromRemote;
+
+  if(dataSent) {
+    if(theHost->napsterStats->bytesSent > 0) {
+      p[num] = (float)((100*theHost->napsterStats->bytesSent)/totalIPTraffic);
+      lbl[num++] = "Napster";
+    }
+  } else {
+    if(theHost->napsterStats->bytesRcvd > 0) {
+      p[num] = (float)((100*theHost->napsterStats->bytesRcvd)/totalIPTraffic);
+      lbl[num++] = "Napster";
+    }
+  }
 
   if(totalIPTraffic > 0) {
     for(i=0; i<numIpProtosToMonitor; i++) {
@@ -296,6 +322,13 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
  
       if(num >= 20) break; /* Too much stuff */
    }
+  } 
+
+  if(num == 0) {
+#ifdef MULTITHREADED
+    releaseMutex(&graphMutex);
+#endif    
+    return; /* TODO: this has to be handled better */
   }
 
   GDCPIE_LineColor = 0x000000L;

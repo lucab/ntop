@@ -1802,6 +1802,7 @@ void printPacketStats(HostTraffic *el) {
 /* ************************************ */
 
 void printHostTrafficStats(HostTraffic *el) {
+  int i, a, b;
   TrafficCounter totalSent, totalReceived;
   TrafficCounter actTotalSent, actTotalReceived;
   char buf[BUF_SIZE];
@@ -1918,29 +1919,54 @@ void printHostTrafficStats(HostTraffic *el) {
 			100*((float)SD(el->otherReceived, totalReceived)));
 /*#endif */
 
-  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>"
-	      "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1>"
-	      "</TD>"
-	      "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT">"
-	      "</TD></TR>",
-	      getRowColor(), 
-	      el->hostNumIpAddress,
-	      el->hostNumIpAddress) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
+  if(((el->tcpSentLocally+el->tcpSentRemotely+
+       el->udpSentLocally+el->udpSentRemotely+
+       el->icmpSent+el->ospfSent+el->igmpSent+el->stpSent
+       +el->ipxSent+el->osiSent+el->dlcSent+
+       el->arp_rarpSent+el->decnetSent+el->appletalkSent+
+       el->netbiosSent+el->qnxSent+el->otherSent) > 0)
+     && ((el->tcpReceivedLocally+el->tcpReceivedFromRemote+ 
+      el->udpReceivedLocally+el->udpReceivedFromRemote+
+      el->icmpReceived+el->ospfReceived+el->igmpReceived+el->stpReceived
+      +el->ipxReceived+el->osiReceived+el->dlcReceived+
+      el->arp_rarpReceived+el->decnetReceived+el->appletalkReceived+
+	  el->netbiosReceived+el->qnxReceived+el->otherReceived) > 0)) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>Protocol Distribution</TH>"
+		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT"?1>"
+		"</TD>"
+		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostTrafficDistrib-%s"CHART_FORMAT">"
+		"</TD></TR>",
+		getRowColor(), 
+		el->hostNumIpAddress,
+		el->hostNumIpAddress) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  }
   
- 
-  if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>"
-	      "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1>"
-	      "</TD>"
-	      "<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT">"
-	      "</TD></TR>",
-	      getRowColor(), 
-	      el->hostNumIpAddress,
-	      el->hostNumIpAddress) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  sendString(buf);
-  
+  if(el->napsterStats == NULL)
+    a =0, b = 0;
+  else
+    a = el->napsterStats->bytesSent, b = el->napsterStats->bytesRcvd;
+
+  for(i=0; i<numIpProtosToMonitor; i++) {
+    a += el->protoIPTrafficInfos[i].sentLocally+
+      el->protoIPTrafficInfos[i].sentRemotely;
+    b += el->protoIPTrafficInfos[i].receivedLocally+
+      el->protoIPTrafficInfos[i].receivedFromRemote;
+  }
+
+  if((a > 0) && (b > 0)) {
+    if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>IP Distribution</TH>"
+		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT"?1>"
+		"</TD>"
+		"<TD "TH_BG" ALIGN=RIGHT COLSPAN=2><IMG SRC=hostIPTrafficDistrib-%s"CHART_FORMAT">"
+		"</TD></TR>",
+		getRowColor(), 
+		el->hostNumIpAddress,
+		el->hostNumIpAddress) < 0) 
+      traceEvent(TRACE_ERROR, "Buffer overflow!");
+    sendString(buf);
+  }
  
   sendString("</TABLE>"TABLE_OFF"<P>\n");
   sendString("</CENTER>\n");
