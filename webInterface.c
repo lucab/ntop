@@ -742,8 +742,8 @@ static void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
 	        mutexId->isLocked ? "<FONT COLOR=red>locked</FONT>" : "unlocked",
 	        mutexId->numLocks,
 	        mutexId->lockFile, mutexId->lockLine,
-	        mutexId->unlockFile, mutexId->unlockLine,
 	        mutexId->numReleases,
+		mutexId->unlockFile, mutexId->unlockLine,
 	        mutexId->maxLockedDuration,
 	        mutexId->maxLockedDurationUnlockFile,
 	        mutexId->maxLockedDurationUnlockLine) < 0)
