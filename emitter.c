@@ -1014,73 +1014,73 @@ void dumpNtopHashes(char* options) {
     }
 
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"synPkts", el->securityHostPkts.synPktsSent) < 0)
+		"synPktsSent", el->securityHostPkts.synPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"synPkts", el->securityHostPkts.synPktsRcvd) < 0)
+		"synPktsRcvd", el->securityHostPkts.synPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"rstPkts", el->securityHostPkts.rstPktsSent) < 0)
+		"rstPktsSent", el->securityHostPkts.rstPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"rstPkts", el->securityHostPkts.rstPktsRcvd) < 0)
+		"rstPktsRcvd", el->securityHostPkts.rstPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"rstAckPkts", el->securityHostPkts.rstAckPktsSent) < 0)
+		"rstAckPktsSent", el->securityHostPkts.rstAckPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"rstAckPkts", el->securityHostPkts.rstAckPktsRcvd) < 0)
+		"rstAckPktsRcvd", el->securityHostPkts.rstAckPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"synFinPkts", el->securityHostPkts.synFinPktsSent) < 0)
+		"synFinPktsSent", el->securityHostPkts.synFinPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"synFinPkts", el->securityHostPkts.synFinPktsRcvd) < 0)
+		"synFinPktsRcvd", el->securityHostPkts.synFinPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
 
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"finPushUrgPkts", el->securityHostPkts.finPushUrgPktsSent) < 0)
+		"finPushUrgPktsSent", el->securityHostPkts.finPushUrgPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"finPushUrgPkts", el->securityHostPkts.finPushUrgPktsRcvd) < 0)
+		"finPushUrgPktsRcvd", el->securityHostPkts.finPushUrgPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
     
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"nullPkts", el->securityHostPkts.nullPktsSent) < 0)
+		"nullPktsSent", el->securityHostPkts.nullPktsSent) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
    
     if(snprintf(buf, sizeof(buf), "\t\t'%s' => '%lu',\n",
-		"nullPkts", el->securityHostPkts.nullPktsRcvd) < 0)
+		"nullPktsRcvd", el->securityHostPkts.nullPktsRcvd) < 0)
       traceEvent(TRACE_ERROR, "Buffer overflow!");
     else
       sendString(buf);
