@@ -145,6 +145,7 @@ extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mut
 /* http.c */
 extern void printHTMLtrailer(void);
 extern void returnHTTPredirect(char* destination);
+extern int generateInternalPages(char* pageName);
 void returnHTTPpageNotFound(void);
 
 extern void sendStringLen(char *theString, unsigned int len);
@@ -306,6 +307,7 @@ extern char *makeVsanLink (u_short vsanId, short mode, char *buf, int buflen);
 extern char *getHostName(HostTraffic *el, short cutName, char *buf, int bufLen);
 
 /* graph.c */
+extern char* gdVersionGuess(void);
 extern void sendGraphFile(char* fileName, int doNotUnlink);
 extern void hostTrafficDistrib(HostTraffic *theHost, short dataSent);
 extern void hostFcTrafficDistrib(HostTraffic *theHost, short dataSent);

@@ -333,7 +333,7 @@ static void listResource(char *rrdPath, char *rrdTitle,
   snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-6h\">last 6h</A> ]\n", url);  sendString(path);
   snprintf(path, sizeof(path), "[ <A HREF=\"%s&start=now-1h\">last hour</A> ]&nbsp;\n", url);  sendString(path);
 
-  sendString("</p>\n<p>\n<TABLE BORDER>\n");
+  sendString("</p>\n<p>\n<TABLE BORDER=1 "TABLE_DEFAULTS">\n");
 
   sendString("<TR><TH "DARK_BG">Graph</TH><TH "DARK_BG">Total</TH></TR>\n");
 

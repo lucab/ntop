@@ -48,6 +48,56 @@ static unsigned long clr[] = { 0xf08080L, 0x4682b4L, 0x66cdaaL,
 
 /* ******************************************************************* */
 
+/**********************************************************/
+/* Guess at the version of gd from various breadcrumbs in */
+/* the library (only things checkable at run-time, since  */
+/* just because it was compiled against a version doesn't */
+/* mean that's what it's running on...)                   */
+/**********************************************************/
+
+char* gdVersionGuess(void) {
+#if (defined(HAVE_DIRENT_H) && defined(HAVE_DLFCN_H)) || defined(WIN32) || defined(DARWIN)
+
+#ifndef WIN32
+  void *gdPtr = NULL;
+#endif
+
+  gdPtr = (void*)dlopen(CONST_LIBGD_SO, RTLD_NOW); /* Load the library */
+
+  if(gdPtr == NULL) {
+    traceEvent(CONST_TRACE_WARNING, "GDVERCHK: Unable to load gd, message is '%s'", dlerror());
+#if GD2_VERS == 2 /* GD 2.x detected */    
+    return("2.x");
+#else
+    return("1.8.x");
+#endif
+  }
+
+#define test_gd_function(a, b)   if((void*)dlsym(gdPtr, a) != NULL) return(b);
+
+  test_gd_function("gdImageCreateFromPngPtr", "2.0.21+");
+  test_gd_function("gdFontCacheSetup", "2.0.16-2.0.20");
+  test_gd_function("gdImageSetClip", "2.0.12-2.0.15");
+  test_gd_function("gdImageCopyRotated", "2.0.8-2.0.11");
+  test_gd_function("gdImageStringFTEx", "2.0.5-2.0.7");
+  test_gd_function("gdFreeFontCache", "2.0.4");
+  test_gd_function("gdImageCreateTrueColor", "2.0.0-2.0.3");
+  test_gd_function("gdImageCreateFromJpeg", "1.8.4");
+
+#undef test_gd_function
+
+  return("1.8.3 or below");
+
+#else
+
+  return(NULL);
+
+#endif
+
+}
+
+/* ************************************************** */
+
 #define MIN_SLICE_PERCENTAGE 0.1 /* % */
 #define BOX_SIZE               7
 

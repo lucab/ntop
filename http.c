@@ -495,7 +495,7 @@ void sendStringLen(char *theString, unsigned int len) {
 	int err;
         char* gzErrorMsg;
 
-        gzErrorMsg = gzerror(compressFileFd, &err);
+        gzErrorMsg = (char*)gzerror(compressFileFd, &err);
         if(err == Z_ERRNO)
           traceEvent(CONST_TRACE_WARNING, "gzwrite file error %s(%d)", errno, strerror(errno));
         else 
