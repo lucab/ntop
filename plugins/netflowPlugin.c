@@ -25,6 +25,7 @@
 
 #ifdef MULTITHREADED
 static pthread_t netFlowThread;
+static int threadActive;
 #endif
 
 /* ****************************** */
@@ -105,6 +106,8 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 #ifndef DEBUG
   traceEvent(TRACE_INFO, "netflowMainLoop()");
 #endif
+
+  if(!(myGlobals.netFlowInSocket > 0)) return;
 
   for(;myGlobals.capturePackets == 1;) {
     FD_ZERO(&netflowMask);
@@ -246,9 +249,13 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 	  }
 	}
       }
+    } else {
+      traceEvent(TRACE_INFO, "NetFlow thread is terminating...");
+      break;
     }
   }
 
+  threadActive = 0;
   return(0);
 }
 
@@ -258,6 +265,7 @@ static void initNetFlowFunct(void) {
   int i;
   char key[32], value[32];
 
+  threadActive = 0;
   if(fetchPrefsValue("netFlow.netFlowInPort", value, sizeof(value)) == -1)
     storePrefsValue("netFlow.netFlowInPort", "0");
   else
@@ -292,7 +300,7 @@ static void initNetFlowFunct(void) {
     }
 
 #ifdef MULTITHREADED
-  if(myGlobals.netFlowInPort != 0) {
+  if((myGlobals.netFlowInPort != 0) && (!threadActive)) {
     /* This plugin works only with threads */
     createThread(&netFlowThread, netflowMainLoop, NULL);
   }

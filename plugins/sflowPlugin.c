@@ -101,6 +101,7 @@ static int debug = 0;
 
 #ifdef MULTITHREADED
 pthread_t sFlowThread;
+static int threadActive;
 #endif
 
 /* #define DEBUG */
@@ -1624,6 +1625,8 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
   SFSample sample;
   struct sockaddr_in fromHost;
 
+  if(!(myGlobals.sflowInSocket > 0)) return;
+
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "sFlowMainLoop()");
 #endif
@@ -1652,9 +1655,13 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
       } else {
 	if(debug) traceEvent(TRACE_INFO, "rawSampleLen: rc=%d", rc);
       }
+    } else {
+      traceEvent(TRACE_INFO, "sFlow thread is terminating...");
+      break;
     }
   }
 
+  threadActive = 0;
   return(0);
 }
 
@@ -1669,7 +1676,7 @@ static void initSflowInSocket() {
     closeNwSocket(&myGlobals.sflowInSocket);
   }
 
-  if(myGlobals.sflowInPort != 0) {
+  if(myGlobals.sflowInPort > 0) {
     myGlobals.sflowInSocket = socket(AF_INET, SOCK_DGRAM, 0);
     setsockopt(myGlobals.sflowInSocket, SOL_SOCKET, SO_REUSEADDR,
 	       (char *)&sockopt, sizeof(sockopt));
@@ -1690,7 +1697,7 @@ static void initSflowInSocket() {
 	       myGlobals.sflowInPort);
   }
 
-  if((myGlobals.sflowInSocket != 0) && (myGlobals.sflowDeviceId == 0))
+  if((myGlobals.sflowInSocket > 0) && (myGlobals.sflowDeviceId == 0))
     myGlobals.sflowDeviceId = createDummyInterface("sFlow-device");
 
   myGlobals.mergeInterfaces = 0; /* Use different devices */
@@ -1715,6 +1722,12 @@ static void initSflowInSocket() {
 
     myGlobals.numSamplesToGo = atoi(INM_DEFAULT_SAMPLING_RATE);
   }
+
+#ifdef MULTITHREADED
+  /* This plugin works only with threads */
+  if((!threadActive) && (myGlobals.sflowInSocket > 0))
+    createThread(&sFlowThread, sFlowMainLoop, NULL);
+#endif 
 }
 
 /* ****************************** */
@@ -1861,6 +1874,7 @@ static void handleSflowPacket(u_char *_deviceId,
 static void initsFlowFunct(void) {
   char value[32];
 
+  threadActive = 0;
   myGlobals.sflowInSocket = 0, debug = 0;
   myGlobals.numSamplesReceived = 0,
     myGlobals.initialPool = 0,
@@ -1873,14 +1887,11 @@ static void initsFlowFunct(void) {
 
   initSflowInSocket();
 
-#ifdef MULTITHREADED
-  /* This plugin works only with threads */
-  createThread(&sFlowThread, sFlowMainLoop, NULL);
-#endif
-
   /* http://www.inmon.com/ */
-    traceEvent(TRACE_INFO, "Welcome to sFlow: listening on UDP port %d...",
-	       myGlobals.sflowInPort);
+    
+    if(myGlobals.sflowInPort > 0) 
+      traceEvent(TRACE_INFO, "Welcome to sFlow: listening on UDP port %d...",
+		 myGlobals.sflowInPort);
     fflush(stdout);
 }
 
