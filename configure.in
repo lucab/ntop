@@ -992,6 +992,7 @@ case "${target}:${CC}" in
     *-*-darwin*:* )
         VERIFIED1="2.1.51:2002-10-21:Burton Strauss <burton@ntopsupport.com>:MAC OS X 10.1 (Darwin)"
         VERIFIED2="2.1.90:2003-03-28:Luca Deri:MAC OS X 10.2 (Jaguar)"
+	VERIFIED3="2.2.96:2003-10-29:Luca Deri:MAC OS X 10.3 (Panther)"
         NOTE1="'Darwin 5.5' is the kernel of the os known as MAC OS X 10.1"
         NOTE2="'Darwin 6.1' is the kernel of the os known as MAC OS X 10.2 (Jaguar)"
         DEFINEOS="DARWIN";    STATUS="SUPPORTED"

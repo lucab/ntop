@@ -1209,7 +1209,7 @@ u_int16_t handleDNSpacket(const u_char *ipPtr,
   *isRequest = (short)!(flags & 0x8000);
   *positiveReply = (short)!(flags & 0x0002);
 
-  if(answer.qb1.rcode != NOERROR) {
+  if(answer.qb1.rcode != 0 /* NOERROR */) {
     return(transactionId);
   }
 
