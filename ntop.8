@@ -9,7 +9,7 @@
 .TP 1.2
 .B "\\$1 | \\$2"
 ..
-.TH NTOP 8 "July 2003 (ntop 2.2.3)"
+.TH NTOP 8 "September 2003 (ntop 2.3)"
 .SH NAME
 ntop \- display top network users
 .SH SYNOPSIS
@@ -76,11 +76,10 @@ Unix options:
 .IR <user> ]
 .RB [ -K | --enable-debug ]
 .RB [ -L ]
-.RB [ -use-syslog
+.RB [ -use-syslog=
 .IR <facility> ]
-.RB [ --ignore-sigpipe ]
 
-Win32 option:
+Windows option:
 
 .RB [ -i | --interface
 .IR <number|name> ]
@@ -101,6 +100,13 @@ collector/display program. A web browser is needed to access the information cap
 .B ntop
 program. 
 
+.B ntop
+is a hybrid layer 2 / layer 3 network monitor, that is by default it uses the layer 2 Media
+Access Control (MAC) addresses AND the layer 3 tcp/ip addresses.
+.B ntop
+is capable of associating the two, so that ip and non-ip traffic (e.g. arp, rarp) are combined
+for a complete picture of network activity.
+
 .PP
 .SH "COMMAND\-LINE OPTIONS"
 
@@ -113,7 +119,7 @@ command line.
 behaves as if all of the text had simply been typed directly on the command line.
 For example, if the command line is "-t 3 @d -u ntop" and file d contains 
 just the line '-d', then the effective command line is -t 3 -d -u ntop.  
-Multiple @s are permitted.
+Multiple @s are permitted. Nested @s (an @ inside the file) are not permitted.
 
 Remember, most 
 .B ntop 
@@ -126,104 +132,283 @@ given: --trace-level 2 --trace-level 3 will run as --trace-level 3.
 .It2 -a --access-log-path
 By default 
 .B ntop
-does not maintain an http log. Use this flag to specify the path of the file where HTTP 
-accesses will be logged. Each log entry is in Apache-like style. 
+does not maintain a log of HTTP requests to the internal web server. 
+Use this parameter to request logging and to specify the location of the file where these
+HTTP requests are logged.
+
+Each log entry is in Apache-like style. 
 The only difference between Apache and 
 .B ntop
-is that an additional column has been added which has the time (in milliseconds) that 
+logs is that an additional column has been added which has the time (in milliseconds) that 
 .B ntop 
-needed in order to serve the request. 
+needed to serve the request.
+Log entries look like this:
+
+.nf
+192.168.1.1 - - [04/Sep/2003:20:38:55 -0500] - "GET / HTTP/1.1" 200 1489 4
+192.168.1.1 - - [04/Sep/2003:20:38:55 -0500] - "GET /index_top.html HTTP/1.1" 200 1854 4
+192.168.1.1 - - [04/Sep/2003:20:38:55 -0500] - "GET /index_inner.html HTTP/1.1" 200 1441 7
+192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - "GET /index_left.html HTTP/1.1" 200 1356 4
+192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - "GET /home_.html HTTP/1.1" 200 154/617 9
+192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - "GET /home.html HTTP/1.1" 200 1100/3195 10
+192.168.1.1 - - [04/Sep/2003:20:38:56 -0500] - "GET /About.html HTTP/1.1" 200 2010 10
+.fi 
+
+Although this parameter is called a 'path', it is actually the complete
+file name of the access log. 
 
 .It2 -b --disable-decoders
-This flag disables protocol decoders (e.g. DNS, NetBIOS). 
-Use it for better performance or if you feel 
+This parameter disables protocol decoders.
+
+Protocol decoders examine and collect information about layer 2 protocols such as 
+NetBIOS or Netware SAP, as well as about specific tcp/ip (layer 3) protocols, such as 
+DNS, http and ftp.
+
+This support is specifically coded for each protocol and is different from the 
+capability to count raw information (packets and bytes) by protocol specified by the 
+-p | --protocols parameter, below.
+
+Decoding protocols is a significant consumer of resources. If the
 .B ntop
-has problem handling some protocols.
+host is underpowered or monitoring a very busy network, you may wish to disable
+protocol decoding via this parameter.
+It may also be appropriate to use this parameter if you believe that 
+.B ntop
+has problems handling some protocols that occur on your network.
+
+Even if decoding is disabled, ftp-data traffic is still decoded to look for
+passive ftp port commands.
 
 .It2 -c --sticky-hosts
+Use this parameter to prevent idle hosts from being purged from memory. 
+
 By default idle hosts are periodically purged from memory. 
-Use this flag to prevent idle hosts from being purged from memory. 
-NOTE: if idle hosts are kept in memory you can experience severe memory usage.
+An idle host is identified when no packets from or to that host have been 
+monitored for the period of time defined by the value of
+PARM_HOST_PURGE_MINIMUM_IDLE in globals-defines.h.
+
+If you use this option, all hosts - active and idle - are retained in
+memory for the duration of the 
+.B ntop
+run.  
+
+P2P users, port scans, popular web servers and other activity will cause
+.B ntop
+to record data about a large number of hosts.
+On an active network, this will consume a significant - and always growing -
+amount of memory.
+It is strongly recommended that you use a filtering expression to limit the 
+hosts which are stored if you use --sticky-hosts.
+
+The idle purge is a statistical one - a random selection of the eligible
+hosts will be purged during each cycle.  Thus it is possible on a busy system
+for an idle host to remain in the
+.B ntop
+tables and appear 'active' for some considerable time after it is truly idle.
 
 .It2 -d --daemon
-This flag causes ntop to become a daemon, i.e. it is started in background and runs 
-detached from the terminal.
+This parameter causes ntop to become a daemon, i.e. a task which runs in the 
+background without connection to a specific terminal.
+To use
+.B ntop
+other than as a casual monitoring tool, you probably will want to use
+this option.
+
+.B WARNING:
+If you are running as a daemon, the messages from
+.B ntop 
+will be 'printed' on to stdout and thus dropped.
+You probably don't want to do this.  
+So remember to also use the -L or --use-syslog options to save the
+messages into the system log.
 
 .It2 -e --max-table-rows
-Is the maximum number of HTML table rows that
+This defines the maximum number of lines that
 .B ntop
-will display. 
+will display on each generated HTML page. If there are more lines to be
+displayed than this setting permits, only part of the data will be displayed.
+There will be page forward/back arrows placed at the bottom of the page
+for navigation between pages.
 
 .It2 -f --traffic-dump-file
-Specifies the file containing tcpdump captured traffic that has to be used by ntop. 
-NOTE: if you specify -f ntop will not capture any traffic after the file has been read. 
+By default,
+.B ntop
+captures traffic from network interface cards (NICs) or from netFlow/sFlow
+probes.  However, 
+.B ntop
+can also read data from a file - typically a tcpdump capture or the output from
+one of the
+.B ntop
+packet capture options.
+
+if you specify -f,
+.B ntop
+will not capture any traffic from NICs during or after the file has been read.
+netFlow/sFlow capture - if enabled - would still be active.
+
 This option is mostly used for debug purposes.
 
 .It2 -g --track-local-hosts
-Use this flag to tell
+By default,
+.B ntop
+tracks all hosts that it sees from packets captured on the various NICs.
+Use this parameter to tell
 .B ntop 
-that you do care only about local hosts (use -m to specify local nets). 
-This flag is useful on large networks or those that see many hosts,
-(e.g. a border router or gateway), yet only the local ones need to be tracked.
+to capture data only about local hosts.  Local hosts are defined based on
+the addresses of the NICs and those networks identified as local via the
+-m | --local-subnets parameter.
+
+This parameter is useful on large networks or those that see many hosts,
+(e.g. a border router or gateway), where information about remote hosts is
+not desired/required to be tracked.
 
 .It2 -h --help
 Print help information for 
-.B ntop
-, including usage.
+.B ntop,
+including usage and parameters.
 
 .It2 -i --interface 
-Specifies the network interface used by
+Specifies the network interface or interfaces to be used by
 .B ntop
+for network monitoring.
 
 If multiple interfaces are used (this feature is available only if ntop is compiled with 
 thread support) their names must be separated with a comma. For instance -i "eth0,lo".
 
-By default, traffic information obtained by all the interfaces is merged together as if 
-the traffic were seen by only one interface. 
-Use the -M flag to keep traffic separate by interface.
+If not specified, the default is the first Ethernet device, e.g. eth0.  The specific 
+device that is 'first' is highly system dependent.  Especially on systems where the
+device name reflects the driver name instead of the type of interface.
 
-Win32 note: This is can be either the number of the interface or its name. 
+By default, traffic information obtained by all the interfaces is merged together as if 
+the traffic was seen by only one interface. 
+Use the -M parameter to keep traffic separate by interface.
+
+Under Windows, the parameter value is either the number of the interface or its name, e.g.
+{6252C14C-44C9-49D9-BF59-B2DC18C7B811}. 
 Run 
 .B ntop
 -h to see a list of interface name-number mappings (at the end of the help information).
 
 .It2 -k --filter-expression-in-extra-frame
-When this flag is used, the current filter expression is printed in an extra frame and 
-thus always visible.
+When this parameter is used, the current filter expression is displayed in an extra frame
+and thus is always visible.  This extra frame contains other information, including the 
+report creation date,
+.B ntop
+version information and the active interfaces.
 
 .It2 -l --pcap-log
-Dumps the network traffic captured by ntop in a file in pcap format (useful for debug).
+This parameter causes a dump file to be created of the network traffic captured by 
+.B ntop
+in tcpdump (pcap) format.  This file is useful for debug, and may be read back into 
+.B ntop
+by the -f | --traffic-dump-file parameter.  The dump is made after processing any
+filter expression (
+.b ntop
+never even sees filtered packets).
+
+The output file will be named 
+.I <path>/<log>.<device>.pcap
+(Windows: 
+.I <path>/<log>.pcap
+), where <path> is defined by the -O | --output-packet-path parameter and <log> is 
+defined by this -l | --pcap-log parameter.
 
 .It2 -m --local-subnets
-This flag allows users to specify the subnets whose traffic is considered local. 
-The format is <network address>/<# subnet mask bits>[,<network address>/<# subnet mask bits>]. 
-Both netmasks and CIDR notation may be used, for instance "131.114.21.0/24,10.0.0.0/255.0.0.0".
+.B ntop
+determines the ip addresses and netmasks for each active interface.  Any traffic on
+those networks is considered local.  This parameter allows the user to define additional
+networks and subnetworks whose traffic is also considered local in
+.B ntop
+reports. All other hosts are considered remote.
+
+Commas separate multiple network values.
+Both netmask and CIDR notation may be used, even mixed together, for instance
+"131.114.21.0/24,10.0.0.0/255.0.0.0".
+
+The local subnet - as defined by the interface address(es) - is/are always local
+and do not need to be specified.  If you do give the same value as a NIC's local
+address, a harmless warning message is issued.
 
 .It2 -n --numeric-ip-addresses
-This causes
+By default,
 .B ntop
-to show numeric IP addresses instead of the symbolic names. This option can useful 
-when the DNS is not present or quite slow.
+resolves IP addresses using a combination of active (explicit) DNS queries and 
+passive sniffing.  Sniffing of DNS responses occurs when
+.B ntop
+receives a network packet containing the response to some other user's DNS query.
+.B ntop
+captures this information and enters it into 
+.B ntop's
+DNS cache, in expectation of shortly seeing traffic addressed to that host. This way
+.B ntop
+significantly reduces the number of DNS queries it makes.
+
+This parameter causes
+.B ntop
+to skip DNS resolution, showing only numeric IP addresses instead of the symbolic
+names.
+This option can useful when the DNS is not present or quite slow.
 
 .It2 -o --no-mac
-Specifies the user
 .B ntop
-should not trust MAC addresses but just IP addresses. 
-This option is useful whenever ntop is started on an interface where MAC addresses cannot 
-be really trusted (e.g. port/VLAN mirror).
+is a hybrid layer 2/3 network monitor.  That is, it uses both the lower level, physical
+device address - the MAC (Media Access Control) address - and the higher level,
+logical, tcp/ip address (the familiar www.ntop.org or 131.114.21.9 address).  
+This allows 
+.B ntop 
+to link the logical addresses to a physical machine with multiple addresses
+(This occurs with virtual hosts or additional addresses assigned to the interface, etc.)
+to present consolidated reporting.
 
-Be aware that information which is dependent upon the MAC addresses (such as IPX) will not 
-be collected nor displayed.
+This parameter specifies that
+.B ntop
+should not trust the MAC addresses but just use the IP addresses. 
+
+Normally, since the MAC address must be globally unique, the dual nature of
+.B ntop 
+is a benefit and provides far better information about the network than is available via
+a pure layer 2 or pure layer 3 monitor.
+
+Under certain circumstances - whenever 
+.B ntop
+is started on an interface where MAC addresses cannot be really trusted - you may
+require this option.
+
+Situations which may require this option include port/VLAN mirror, some cases with
+switches and spanning tree protocol, and (reportedly) some specific models of Ethernet
+switches which re-write MAC addresses of the packets they process.
+Normally, you discover that this option is necessary when you observe that hosts seem
+to change their addresses or information about different machines get lumped together.
+
+Note that with this option, information which is dependent upon the MAC 
+addresses (non tcp/ip protocols like IPX) will not be collected nor displayed.
 
 .It2 -p --protocols
-It is used to specify the TCP/UDP protocols that
+This parameter is used to specify the TCP/UDP protocols that
 .B ntop
 will monitor. The format is <label>=<protocol list> [, <label>=<protocol list>], where
 label is used to symbolically identify the <protocol list>. The format of <protocol list>
 is <protocol>[|<protocol>], where <protocol> is either a valid protocol specified inside the
 /etc/services file or a numeric port range (e.g. 80, or 6000-6500). 
-If the -p flag is omitted the following default value is used: 
 
+A simple example is --protocols="HTTP=http|www|https|3128,FTP=ftp|ftp-data", which
+reduces the protocols displayed on the "IP" pages to three:
+
+.nf
+Host                      Domain Data          HTTP   FTP   Other IP
+ns2.attbi.com             <flag>  954 63.9 %      0     0        954
+64.124.83.112.akamai.com  <flag>  240 16.1 %    240     0          0
+64.124.83.99.akamai.com   <flag>  240 16.1 %    240     0          0
+toolbarqueries.google.com <flag>   60 4.0 %      60     0          0
+.fi
+
+If the <protocol list> is very long you may store it in a file (for instance protocol.list).
+To do so, specify the file name instead of the <protocol list> on the command line.  e.g.
+.B ntop -p protocol.list
+
+If the -p parameter is omitted the following default value is used: 
+
+.nf
   FTP=ftp|ftp-data
   HTTP=http|www|https|3128     3128 is Squid, the HTTP cache
   DNS=name|domain
@@ -248,78 +433,166 @@ If the -p flag is omitted the following default value is used:
   Instant Messenger
   -----------------
   Messenger=1863|5000|5001|5190-5193
+.fi
 
-If the <protocol list> is very long you may store it in a file (for instance protocol.list).
-To do so, specify the file name instead of the <protocol list> on the command line.  e.g.
-.B ntop 
--p protocol.list instead of 
-.B ntop 
--p FTP=ftp|ftp-data,HTTP=http|www|https|3128 ...
+NOTE: To resolve protocol names to port numbers, they must be specified in
+the system file used to list tcp/udp protocols and ports, which is typically
+/etc/services file.  You will have to match the names in that file, exactly.  
+Missing or unspecified (non-standard) ports must be specified by number, such
+as 3128 in our examples above.
+
+If you have a file named /etc/protocols, don't get confused by it, as that's
+the Ethernet protocol numbers, which are not what you're looking for.
 
 .It2 -q --create-suspicious-packets
-Forces ntop to create a file ntop-suspicious-pkts.XXX.pcap (XXX is the interface name) file.
-One file is created for each network interface where suspicious packets are found.
-The file is in pcap format (tcpdump).
+This parameter tells 
+.B ntop 
+to create a dump file of suspicious packets.
+
+There are many, many, things that cause a packet to be labeled as 'suspicious', including:
+
+.nf
+  Detected ICMP fragment
+  Detected Land Attack against host
+  Detected overlapping/tiny packet fragment
+  Detected traffic on a diagnostic port
+  Host performed ACK/FIN/NULL scan
+  Host rejected TCP session
+  HTTP/FTP/SMTP/SSH detected at wrong port
+  Malformed TCP/UDP/ICMP packet (packet too short)
+  Packet # %u too long
+  Received a ICMP protocol Unreachable from host
+  Sent ICMP Administratively Prohibited packet to host
+  Smurf packet detected for host
+  TCP connection with no data exchanged
+  TCP session reset without completing 3-way handshake
+  Two MAC addresses found for the same IP address
+  UDP data to a closed port
+  Unknown protocol (no HTTP/FTP/SMTP/SSH) detected (on port 80/21/25/22)
+  Unusual ICMP options
+.fi
+
+When this parameter is used, one file is created for each network interface where 
+suspicious packets are found. The file is in tcpdump (pcap) format and is named
+<path>/ntop-suspicious-pkts.<device>.pcap, where <path> is defined by the 
+-O | --output-packet-path parameter.
 
 .It2 -r --refresh-time
-Specifies the delay (in seconds) between screen updates (the default is 3 seconds). 
+Specifies the delay (in seconds) between automatic screen updates for those
+generated HTML pages which support them.  This parameter allows you to leave
+your browser window open and have it always displaying nearly real-time data from
+.B ntop.
 
-Please note that if the delay is very short (1 second for instance), ntop might not
-be able to process all the network traffic.
+The default is 3 seconds.  Please note that if the delay is very short (1 second 
+for instance), 
+.B ntop 
+might not be able to process all of the network traffic.
 
 .It2 -s --no-promiscuous
-Use this flag for preventing 
+Use this parameter to prevent 
 .b ntop
 from setting the interface(s) into promiscuous mode.
 
+An interface in promiscuous mode will accept ALL Ethernet frames, regardless of
+whether they directed (addressed) to the specific network interface (NIC) or not.
+This is an essential part of enabling
 .B ntop
-must probably still be started as root, since the libpcap function on most systems
-require it to capture raw packets.
+to monitor an entire network.  (Without promiscuous mode, 
+.B ntop
+will only see traffic directed to the specific host it is running on, plus
+broadcast traffic such as the arp and dhcp protocols.
 
-This eliminates the ability of capturing ethernet frames regardless of whether they 
-are directed to the local ethernet card or to the ethernet broadcast address.
+Even if you use this parameter, the interface could well be in promiscuous mode if
+another application enabled it.
 
-Even if you use this flag, the interface could well be in  promiscuous mode as other 
-applications may have enabled it.
+.B ntop
+passes this setting on to libpcap, the packet capture library.  On many systems, 
+a non-promiscuous open of the network interface will fail, 
+since the libpcap function on most systems require it to capture raw packets
+(
+.B ntop
+captures raw packets so that we may view and analyze the layer 2 - MAC - information).
+
+Thus on most systems,
+.B ntop
+must probably still be started as root, and this option is largely ornamental.  If
+it fails, you will see a ***FATALERROR*** message referring to pcap_open_live() and
+then an information message, "Sorry, but on this system, even with -s, it appears 
+that ntop must be started as root".
 
 .It2 -t --trace-level
-This flag specifies the level of
+This parameter specifies the 'information' level of messages that you wish
 .B ntop
-tracings on stdout. The trace level ranges between 0 (no trace) and 5 (full debug tracings). 
-The default trace value is 3. The higher is the trace level the more information are printed. 
-Trace level 1 is used to print errors only, level 2 for both warnings and errors, and so on.
+to display (on stdout or to the log).
+The higher the trace level number the more information that is displayed.
+The trace level ranges between 0 (no trace) and 5 (full debug tracings).
 
-Trace level 4 is called 'noisy' and it is.  It also enables a tag on every
-message, which may be useful for log watchers.
+The default trace value is 3. 
 
-Trace level 5 is 'noisy' plus --log-extra 1, i.e. with a file:line tag on every message.
+Trace level 0 is not quite zero messages. Fatal errors and certain startup/shutdown
+messages are always displayed.
+Trace level 1 is used to display errors only, level 2 for both errors and warnings, and
+level 3 displays error, warning and informational messages.
+
+Trace level 4 is called 'noisy' and it is - generating many messages about the internal
+functioning of 
+.B ntop.
+Trace level 5 is 'noisy' plus --log-extra 1, i.e. all possible messages, with a 
+file:line tag prepended to every message.
 
 .It2 -u --user
 Specifies the user
 .B ntop
-should run as after it initializes. The value specified may be either a
-username or a numeric user id. The group id used will be the primary group of
-the user specified.  
+should run as after it initializes.
+
+.B ntop
+must normally be started as root so that it has sufficient privileges to open the
+network interfaces in promiscuous mode and to receive raw frames.
+See the discussion of -s | --no-promiscuous above, if you wish to try starting
+.B ntop
+as a non-root user.
+
+Shortly after starting up, 
+.B ntop
+becomes the user you specify here, which normally has substantially reduced privileges,
+such as no login shell.  This is the userid which owns
+.B ntop's
+database and output files.
+
+The value specified may be either a username or a numeric user id.
+The group id used will be the primary group of the user specified.
+
 If this parameter is not specified, ntop will try to switch first to 'nobody' and then 
 to 'anonymous' before giving up.
 
-.It2 -w --http-server
+NOTE: This should not be root unless you really understand the security risks. In order
+to prevent this by accident, the only way to run 
 .B ntop
-offers an embedded web server so that users can attach their web browsers to the
-program and browse traffic information remotely.
-This parameter specifies the port (and optionally the address (i.e. interface))
+as root is to explicitly specify -u root.
+.B Don't do it.
+
+.It2 -w --http-server
+.It2 -W --https-server
+.B ntop
+offers an embedded web server to present the information that has been so painstakingly
+gathered. 
+An external HTTP server is NOT required NOR supported.  The
+.B ntop
+web server is embedded into the application.
+These parameters specify the port (and optionally the address (i.e. interface))
 of the
 .B ntop
 web server.
+
 For example, if started with -w 3000 (the default port), the URL to access 
 .B ntop
 is http://hostname:3000/.  If started with a full specification, e.g. -w 192.168.1.1:3000,
 .B ntop
 listens on only that address/port combination.
 
-If -w is set to 0 the HTTP port will not be enabled ('-w 0' is accepted only if 
-.B ntop
-has been compiled with HTTPS support and has not been started with '-W 0' [see below]).
+If -w is set to 0 the web server will not listen for http:// connections.
+
+-W operates similarly, but controls the port for the https:// connections.
 
 Some examples:
 
@@ -332,51 +605,82 @@ Both HTTP and HTTPS have been enabled on their most common ports.
 .B ntop -w 0 -W 443 
 HTTP disabled, HTTPS enabled on the common port.
 
-An external HTTP server is NOT required NOR supported.  The
+Certain sensitive, configuration pages of the
 .B ntop
-web server is embedded into the application.
-
-By default user/URL administration are password protected and are accessible initially
-only user 
+web server are protected by a userid/password.  By default, these are the
+user/URL administration, filter, shutdown and reset stats are password protected
+ and are accessible initially only to user 
 .B admin
 with a password set during the first run of 
-.B ntop
-.
+.B ntop.
 
 Users can modify/add/delete users/URLs using ntop itself - see the Admin tab.
 
 The passwords, userids and URLs to protect with passwords are stored in a database file.
-Passwords are stored in an encrypted form in the database for further security. 
+Passwords are stored in an encrypted form in the database for further security.  Best
+practices call for securing that database so that only the 
+.B ntop
+user can read it.
+
+There is a discussion in docs/FAQ about further securing the
+.B ntop
+environment.
 
 .It2 -z --disable-sessions
-This flag disables TCP session tracking. 
+This parameter disables TCP session tracking. 
 Use it for better performance or when you don't really need/care to track sessions.
 
 .It2 -A --set-admin-password
-This flag is used to start 
+This parameter is used to start 
 .B ntop
-, set the admin password and quit. It is quite useful for installers that may need 
+, set the admin password and quit. It is quite useful for installers that need 
 to automatically set the password for the admin user.
 
 -A and --set-admin-password (without a value) will prompt the user for the password.
 
-You may set a specific value using --set-admin-password=value.  
-.B The = is REQUIRED!
+You may also use this parameter to set a specific value using --set-admin-password=value.  
+.B The = is REQUIRED and no spaces are permitted!
+
+If you attempt to run
+.B ntop
+as a daemon without setting a password, a FATAL ERROR message is generated and
+.B ntop
+stops.
 
 .It2 -B --filter-expression
+Filters allows the user to restrict the traffic seen by
 .B ntop
-, similar to what tcpdump does (and using the same BPF - Berkeley Packet Filter syntax), 
-this allows the user to specify an expression which restricts the traffic seen by
+on just about any imaginable item.
+
+The filter expression is set at run time by this parameter, but it may be
+changed during the
 .B ntop
-You may use this to select only the traffic of interest. For instance, suppose you
+run on the Admin | Change Filter web page.
+
+The basic format is
+.B -B "filter"
+, where the quotes are 
+.B REQUIRED
+.
+
+The syntax of the filter expression uses the same BPF (Berkeley Packet Filter) 
+expressions used by other packages such as tcpdump
+
+For instance, suppose you
 are interested only in the traffic generated/received by the host jake.unipi.it. 
 .B ntop
-can then be started with the following filter: 'ntop -B "src host jake.unipi.it 
-or dst host jake.unipi.it"'. i
+can then be started with the following filter: 
+
+.B ntop -B "src host jake.unipi.it or dst host jake.unipi.it"
+
+or in shorthand:
+
+.B ntop -B "host jake.unipi.it or host jake.unipi.it"
 
 See the 'expression' section of the
 .B tcpdump
-man page for further information about BPF filters.
+man page - usually available at http://www.tcpdump.org/tcpdump_man.html - for 
+further information and the best quick guide to BPF filters currently available.
 
 .It2 -D --domain
 This identifies the local domain suffix, e.g. ntop.org.  It may be necessary, if
@@ -404,54 +708,128 @@ file (for instance flows.list) and specify the file name instead of the actual f
 (in the above example, this would be 'ntop -F flows.list').
 
 .It2 -K --enable-debug
-Use this flag to simplify application debug.  It does three things:
+Use this parameter to simplify application debug.  It does three things:
 1. Does not fork() on the "read only" html pages.
 2. Displays mutex values on the configuration (info.html) page.
 3. (If available - glibc/gcc) Activates an automated backtrace on application errors.
 
 .It2 -L --use-syslog=facility
-Use this flag for using the syslog instead of stdout. 
-Please note that if ntop (ever) forks a child, regardless of this setting, the syslog 
-will be used for this child.
-The (optional) parameter value indicates the facility (e.g. daemon, security) to be used for 
-logging, using --use-syslog=facility. 
-.B The = is REQUIRED!
+Use this parameter to send log messages to the system log instead of stdout.
+
+-L and the simple form --use-syslog use the default log facility, defined as 
+LOG_DAEMON in the #define symbol DEFAULT_SYSLOG_FACILITY in globals-defines.h.
+
+The complex form, --use-syslog=facility will set the log facility to whatever
+value (e.g. local3, security) you specify.
+.B The = is REQUIRED and no spaces are allowed!
+
+This setting applies both to
+.B ntop
+and to any child fork()ed for reporting.  If this parameter is not specified, any
+fork()ed child will use the default value and will log it's messages to the
+system log (this occurs because the fork()ed child must give up it's access
+to the parents stdout).
+
+Because various systems do not make the permissible names available, we have
+a table at the end of globals-core.c.  Look for myFacilityNames.
 
 .It2 -M --no-interface-merge
-Forces 
+By default,
 .B ntop 
+merges the data collected from all of the interfaces (NICs) it is monitoring into a
+single set of counters. 
+
+If you have a simple network, say a small LAN with a connection to the internet, 
+merging data is good as it gives you a better picture of the whole network.
+For larger, more complex networks, this may not be desirable.
+You may also have other reasons for wishing to monitor each interface separately,
+for example DMZ vs. LAN traffic.
+
+This option instructs
+.B ntop
 not to merge network interfaces together. This means that 
 .B ntop 
-will collect statistics for each interface and report them separately - see Admin | Switch NIC
-to select which interface to report.
+will collect statistics for each interface and report them separately.
 
-Note that the netFlow and sFlow plugins will force the setting of -M.
+Only ONE interface may be reported on at a time - use the
+.B Admin | Switch NIC 
+option on the web server to select which interface to report upon.
+
+Note that activating either the netFlow and/or sFlow plugins will force the
+setting of -M.  Once enabled, you cannot go back.
 
 .It2 -O --output-packet-path
-Base path for the ntop-suspicious-pkts.XXX.pcap and normal packet log file (in tcpdump format). 
-If the base path is a directory you have to append a / to the string for this to work.
+This parameter defines the base path for the ntop-suspicious-pkts.XXX.pcap and 
+normal packet dump files.
+
+If this parameter is not specified, the default value is the config.h parameter
+CFG_DBFILE_DIR, which is set during ./configure from the --localstatedir= parameter.
+If --localstatedir is not specified, it defaults to the --prefix value plus /var
+(e.g. /usr/local/var).
+
+Be aware that this may not be what you expect when running
+.B ntop
+as a daemon or Windows service. Setting an explicit and absolute path value is
+.B STRONGLY
+recommended if you use this facility.
 
 .It2 -P --db-file-path
-This specifies where 
-.B ntop
-db and preferences files are created.
-
-Note that the default, "." may not be what you expect when running
-.B ntop
-as a daemon or Win32 service.  Setting an explicit value is 
-.B STRONGLY
-recommended. 
-
 .It2 -Q --spool-file-path
-This specifies where 
+These parameters specify where 
 .B ntop
-spool db files are created. If not specified is set to the same value of the
-db file path (see option above).
+stores database files.
+
+There are two types, 'temporary' - that is ones which need not be retained
+from
+.B ntop
+run to
+.B ntop
+run, and 'permanent', which must be retained (or recreated).
+
+The 'permanent' databases are the preferences, "prefsCache.db" and the password
+file, "ntop_pw.db".  These are stored in the -P | --db-file-path specified location.
+
+Certain plugins use the -P | --db-file-path specified location for their database
+("LsWatch.db") or (as a default value) for files (.../rrd/...).
+
+The 'temporary' databases are the address queue, "addressQueue.db", the cached DNS
+resolutions, "dnsCache.db" and the MAC prefix (vendor table), "macPrefix.db".
+
+If only -P | --db-file-path is specified, it is used for both types of databases.
+
+The directories named must allow read/write and
+file creation by the
+.B ntop
+user.  For security, nobody else should have even read access to these files.
+
+Note that the default value is the config.h parameter CFG_DBFILE_DIR.
+This is set during ./configure from the --localstatedir= parameter.
+If --localstatedir is not specified, it defaults to the --prefix value plus /var
+(e.g. /usr/local/var).
+
+This may not be what you expect when running
+.B ntop
+as a daemon or Windows service.
+
+Note that on versions of
+.B ntop
+prior to 2.3, these parameters defaulted to "." (the current working directory, e.g.
+the value returned by the pwd command) and caused havoc as it was different when
+.B ntop
+was run from the command line, vs. run via cron, vs. run from an initialization
+script.
+
+Setting an explicit and absolute path value is
+.B STRONGLY
+recommended.
 
 .It2 -U --mapper
 Specifies the URL of the mapper.pl utility.
+
+If provided, 
 .B ntop
-creates a hyperlink to this URL by appending ?host=xxxxx and creates a clickable button.
+creates a clickable hyperlink on the 'Info about host xxxxxx' page to this URL by appending 
+?host=xxxxx.
 Any type of host lookup could be performed, but this is intended to lookup the geographical
 location of the host.
 
@@ -465,13 +843,7 @@ Prints
 version information and then exits.
 
 .It2 -W --https-server
-If 
-.B ntop
-has been compiled with HTTPS support (via OpenSSL), this flag can be used to set the 
-HTTPS port and address.  
-If the user specifies '-W 0', HTTPS support is disabled.  This is the default (disabled).
-
-For more information, see the -w parameter above.
+(See the joint documentation with the -w parameter, above)
 
 .It --disable-stopcap
 Return 
@@ -483,15 +855,19 @@ content until
 is shutdown.
 
 .It --log-extra
-Setting 1 adds a [file:line] to the beginning of every log message.
-Setting 2 adds a [MSGIDnnnnnnn] tag at the end of every log message.
+This optional parameter controls the addition of more information to each log message.
+Both choices are useful in different ways, for debugging and for using log watching
+and filtering packages.
+
+Setting 1 adds a [file:line] to the beginning of the log message.
+Setting 2 adds a [MSGIDnnnnnnn] tag at the end of the log message.
 The nnnnnnn value should be unique number for every message and should be stable across 
 .B ntop
-releases.  Both are useful for debugging and for using log watching and filtering packages.
+releases.  
 
 .It --disable-instantsessionpurge
 .B ntop
-sets completed sessions and 'timed out' and then purges them almost instantly, which is
+sets completed sessions as 'timed out' and then purge them almost instantly, which is
 not the behavior you might expect from the discussions about purge timeouts.  This switch
 makes ntop respect the timeouts for completed sessions.  It is NOT the default because
 a busy web server may have 100s or 1000s of completed sessions and this would significantly
@@ -502,7 +878,7 @@ uses.
 .It --disable-schedyield
 .B ntop
 uses sched_yield() calls for better interactive performance.  Under some situations, primarily
-under RedHat Linux 8, this can deadlock, causing the 
+under RedHat Linux 8.0, this can deadlock, causing the 
 .B ntop
 web server to stop responding, although
 .B ntop
@@ -513,17 +889,30 @@ these calls, IF you are seeing deadlocks.
 .SH "WEB VIEWS"
 While
 .B ntop
-is running, multiple users can access the traffic information using conventional web browsers.
-The main HTML page is divided is three frames. 
-The top frame is a familiar tabbed navigation bar, containing items such as 'Total', 'Sent'
+is running, multiple users can access the traffic information using their web browsers.
+.B ntop
+does not generate 'fancy' or 'complex' html, although it does use frame, shallowly nested
+tables and makes minimal use of Cascading Style Sheets.
+
+We do not expect problems with any current web browser, but
+our ability to test less common ones is very limited.
+
+The main HTML page is divided into three frames. Beginning with release 2.3, the menus have
+been compacted to small text selections stacked on top of each other.
+
+The top frame is a 'tabbed' navigation bar, containing broad items such as 'Total', 'Sent'
 and 'IP Protos'.
-The left frame allows users to select the specific traffic view from among those for 
-the tab.  The resulting data will be displayed in the right frame. 
+The middle frame is the detailed navigation or menu bar, containing the items relevant to
+the top selection, for example "IP" traffic statistics from a "Totals" menu.
+The resulting data is displayed in the bottom frame. 
+
+In documentation and this man page, when we refer to a page such as Admin | Switch NIC, we
+mean the Broad category "Admin" and the detailed item "Switch NIC" on that Admin menu.
 
 .SH NOTES
 .B ntop
-requires a number of external tools.
-Other tools are optional, but add to the program's capabilities.
+requires a number of external tools and libraries to operate.
+Certain other tools are optional, but add to the program's capabilities.
 
 
 Required libraries include:
@@ -531,12 +920,14 @@ Required libraries include:
 .B libpcap
 from http://www.tcpdump.org/ 
 
-The Win32 version makes use of
-.B libpcap for Win32
-which may be downloaded from http://winpcap.polito.it/install/default.htm).
-WARNING: The 2.x series of 
-.B libpcap for Win32
-releases will NOT support SMP machines.
+The Windows version makes use of
+.B WinPcap
+(libpcap for Windows) which may be downloaded from 
+http://winpcap.polito.it/install/default.htm.
+
+WARNING: The 2.x releases of
+.B WinPcap
+will NOT support SMP machines.
 .
 
 .B gdbm
@@ -550,17 +941,20 @@ can be built from the source if requested during ./configure, it is not
 recommended for more than trivial usage.
 .
 
-
-Optional libraries include:
-
 The
 .B gd
-library, for the creation of gif files, available at
-http://www.boutell.com/gd/. ntop supports both gd 1.X and 2.X
+library, for the creation of png files, available at
+http://www.boutell.com/gd/. 
+.B ntop 
+supports both gd 1.X and 2.X
 
 The
 .B libpng
 library, for the creation of png files, available at http://www.libpng.org/pub/png/libpng.html.
+.B ntop
+supports both the 1.0.x series and the 1.2.x series of libpng, but cautions users that there
+are incompatibilities if you compile with one and run with the other.  Please read the
+discussion in docs/FAQ before reporting ANY problem with libpng.
 
 (if an https:// server is desired)
 .B openSSL
@@ -569,9 +963,16 @@ from the OpenSSL project available at http://www.openssl.org.
 
 The
 .B rrdtool
-is required by the rrd plugin (included in the myrrd/ directory).  rrdtool creates 'Round-Robin databases' which are used
-to hold and graph historical data.  The rrdtool home page is 
-http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
+library is required by the rrd plugin.  rrdtool creates 'Round-Robin databases' which are
+used to store and graph historical data in a format that permits long duration retention
+without growing larger over time.
+The rrdtool home page is http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
+
+.B ntop
+includes a patched and frozen version of rrdtool 1.0.42 in the myrrd/ directory.  Users of
+.B ntop 
+v2.3 should not need to specifically install rrdtool.
+.
 
 The 
 .B sflow
@@ -579,22 +980,6 @@ Plugin is courtesy of and supported by InMon Corporation, http://www.inmon.com/s
 .
 
 There are other optional libraries.  See the output of ./configure for a fuller listing. 
-.
-
-An optional tool, which
-.B ntop
-will utilize if available, is
-.B lsof
-available from ftp://vic.cc.purdue.edu/pub/tools/unix/lsof/README.
-
-lsof is used to present a remote view of the open files on the 
-.B ntop
-host.
-
-Note that lsof must be configured suid root to enable it's use.
-.B The user is cautioned to fully understand the security implications of this setting before enabling it.
-.B ntop
-will function quite properly without the lsof tool.
 .
 
 Tool locations are current as of July 2003 - please send email to 
