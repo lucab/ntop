@@ -1,0 +1,305 @@
+#!/bin/sh
+
+#
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#                          http://www.ntop.org
+#
+# Copyright (C) 2003 Burton M Strauss III <Burton@ntopsupport.com>
+#
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#
+
+echo "AutoConfigureNtop - v1.0 - 2003-08-28"
+
+xml=
+debug=
+
+if test ".${1}" = ".--help"; then
+    echo
+    echo "Usage:"
+    echo
+    echo "./AutoConfigureNtop ignore1 ignore2 ignore3 ignore4 ignore5"
+    echo
+    echo "    Where ignoreN is something to exclude from the check "
+    echo "    for include and lib files:"
+    echo
+    echo "        ^/usr to mean 'begins with /usr'"
+    echo "        =/usr to mean 'exactly /usr'"
+    echo "        usr means a part of a name, anywhere"
+    echo
+    echo " Default exclude list is =/usr/lib =/usr/include"
+    echo "                         =/usr/local/lib =/usr/local/include"
+    echo "                         ^/usr/src/"
+    echo "            + =s on everything in /etc/ld.so.conf"
+    echo
+    echo " Suggested execution is ./AutoConfigureNtop src"
+    echo
+    exit 0
+fi
+
+if test ".${1}" = ".--debug"; then
+    debug="y"
+    shift
+fi
+
+if test ".${1}" = ".--xml"; then
+    xml="y"
+    shift
+fi
+
+#
+# Create the awk program we use to strip things
+#
+if test -r /tmp/AutoConfigureNtop.awk; then
+    rm -f /tmp/AutoConfigureNtop.awk
+fi
+
+
+echo "BEGIN {" >> /tmp/AutoConfigureNtop.awk
+echo " o=\"\"; f=ARGC-1; for(i=ARGC-1; i>0; i--) { s[i]=ARGV[i]; ARGV[i]=\"\" }" >> /tmp/AutoConfigureNtop.awk
+echo "s[++f]=\"=/usr/lib\"" >> /tmp/AutoConfigureNtop.awk
+echo "s[++f]=\"=/usr/include\"" >> /tmp/AutoConfigureNtop.awk
+echo "s[++f]=\"=/usr/local/lib\"" >> /tmp/AutoConfigureNtop.awk
+echo "s[++f]=\"=/usr/local/include\"" >> /tmp/AutoConfigureNtop.awk
+echo "s[++f]=\"^/usr/src\"" >> /tmp/AutoConfigureNtop.awk
+echo "while (getline < \"/etc/ld.so.conf\" > 0) { s[++f] = \"=\" \$1} " >> /tmp/AutoConfigureNtop.awk
+if test ".${debug}" = ".y"; then
+    echo "print \"DEBUG: stop list is:\"" >>/tmp/AutoConfigureNtop.awk
+    echo "for(i=1; i<=f; i++) { printf(\"%3d. %s\\n\", i, s[i]) }" >>/tmp/AutoConfigureNtop.awk
+fi
+echo "}" >> /tmp/AutoConfigureNtop.awk
+echo "o==\"\" {" >> /tmp/AutoConfigureNtop.awk
+if test ".${debug}" = ".y"; then
+    echo "print \"DEBUG: testing '\" \$1 \"'\"" >>/tmp/AutoConfigureNtop.awk
+fi
+echo "sub(/\/[A-Za-z0-9\._]*\$/,\"\", \$1);" >> /tmp/AutoConfigureNtop.awk
+if test ".${debug}" = ".y"; then
+    echo "print \"DEBUG: becomes '\" \$1 \"'\"" >>/tmp/AutoConfigureNtop.awk
+fi
+echo "  for(i=1; i<=f; i++) {" >> /tmp/AutoConfigureNtop.awk
+echo "    if (s[i] != \"\") {" >> /tmp/AutoConfigureNtop.awk
+echo "      if (substr(s[i],1,1) == \"^\") {" >> /tmp/AutoConfigureNtop.awk
+echo "        if (index(\$1, substr(s[i],2)) == 1) {" >> /tmp/AutoConfigureNtop.awk
+if test ".${debug}" = ".y"; then
+                  echo "print \"DEBUG: ignored, stoplist prefix '\" substr(s[i], 2) \"'\"" >>/tmp/AutoConfigureNtop.awk
+fi
+echo "            \$1=\"\"; break }" >> /tmp/AutoConfigureNtop.awk
+echo "      } if (substr(s[i],1,1) == \"=\") {" >> /tmp/AutoConfigureNtop.awk
+echo "        if (\$1 == substr(s[i],2)) { " >> /tmp/AutoConfigureNtop.awk
+if test ".${debug}" = ".y"; then
+                  echo "print \"DEBUG: ignored, stoplist exact '\" substr(s[i], 2) \"'\"" >>/tmp/AutoConfigureNtop.awk
+fi
+echo "            \$1=\"\"; break }" >> /tmp/AutoConfigureNtop.awk
+echo "      } else {" >> /tmp/AutoConfigureNtop.awk
+echo "        if (index(\$1, s[i]) > 0) { " >> /tmp/AutoConfigureNtop.awk
+if test ".${debug}" = ".y"; then
+                  echo "print \"DEBUG: ignored, stoplist anywhere '\" s[i] \"'\"" >>/tmp/AutoConfigureNtop.awk
+fi
+echo "            \$1=\"\"; break }" >> /tmp/AutoConfigureNtop.awk
+echo "      }" >> /tmp/AutoConfigureNtop.awk
+echo "    }" >> /tmp/AutoConfigureNtop.awk
+echo "  }" >> /tmp/AutoConfigureNtop.awk
+echo "  if (\$1 != \"\") { o=\$1 }" >> /tmp/AutoConfigureNtop.awk
+echo "}" >> /tmp/AutoConfigureNtop.awk
+echo "END { print o }" >> /tmp/AutoConfigureNtop.awk
+
+echo
+echo "This script will attempt to find all of the pieces and parts that ntop wants"
+echo " for ./configure.  If the prefix I use below is ok, all you *should* need"
+echo " to do is cut and paste.  But, hey, this is a cheap and ugly little piece"
+echo " of code, so you might want to think about it first."
+echo
+echo "    ( And drop the last \\ if there is one)"
+if test ".${1}" != "."; then
+    echo
+    echo "Based on your input, I will ignore places containing $@"
+fi
+echo
+
+echo "./configure \\"
+
+pcap=`locate pcap.h | grep '\/pcap\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+libpcap=`locate libpcap.so | grep '\/libpcap\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+if test ".${debug}" = ".y"; then
+    echo "Debug:  pcap.h -> ${pcap}, libpcap.so -> ${libpcap}"
+fi
+
+if test ".${pcap}" = ".${libpcap}"; then
+    if test ".${pcap}" != "."; then
+        echo "  --with-pcap-root=${pcap}  \\"
+    fi
+else
+    if test ".${pcap}" != "."; then
+        echo "  --with-pcap-include=${pcap}  \\"
+    fi
+    if test ".${libpcap}" != "."; then
+        echo "  --with-pcap-lib=${libpcap}  \\"
+    fi
+fi
+
+
+gdbm=`locate gdbm.h | grep '\/gdbm\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+libgdbm=`locate libgdbm.so | grep '\/libgdbm\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+if test ".${debug}" = ".y"; then
+    echo "Debug:  gdbm.h -> ${gdbm}, libgdbm.so -> ${libgdbm}"
+fi
+
+if test ".${gdbm}" = ".${libgdbm}"; then
+    if test ".${gdbm}" != "."; then
+        echo "  --with-gdbm-root=${gdbm}  \\"
+    fi
+else
+    if test ".${gdbm}" != "."; then
+        echo "  --with-gdbm-include=${gdbm}  \\"
+    fi
+    if test ".${libgdbm}" != "."; then
+        echo "  --with-gdbm-lib=${libgdbm}  \\"
+    fi
+fi
+
+ossl=`locate ssl.h | grep '\/ssl\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+libossl=`locate libssl.so | grep '\/libssl\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+if test ".${debug}" = ".y"; then
+    echo "Debug:  ssl.h -> ${ossl}, libssl.so -> ${libossl}"
+fi
+
+if test ".${ossl}" = ".${libssl}"; then
+    if test ".${ossl}" != "."; then
+        echo "  --with-ossl-root=${ossl}  \\"
+    fi
+else
+    if test ".${ossl}" != "."; then
+        echo "  --with-ossl-include=${ossl}  \\"
+    fi
+    if test ".${libossl}" != "."; then
+        echo "  --with-ossl-lib=${libssl}  \\"
+    fi
+fi
+
+zlib=`locate zlib.h | grep '\/zlib\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+libzlib=`locate libz.so | grep '/\libz\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+if test ".${zlib}" = ".${libzlib}"; then
+    if test ".${zlib}" != "."; then 
+        echo "  --with-zlib-root=${zlib}  \\"
+    fi
+else
+    if test ".${zlib}" != "."; then
+        echo "  --with-zlib-include=${zlib}  \\"
+    fi
+    if test ".${libzlib}" != "."; then
+        echo "  --with-zlib-lib=${libzlib}  \\"
+    fi
+fi
+
+gd=`locate gd.h | grep '/gd\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+libgd=`locate libgd.so | grep '\/libgd\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+if test ".${gd}" = ".${libgd}"; then
+    if test ".${gd}" != "."; then
+        echo "  --with-gd-root=${gd}  \\"
+    fi
+else
+    if test ".${gd}" != "."; then
+        echo "  --with-gd-include=${gd}  \\"
+    fi
+    if test ".${libgd}" != "."; then
+        echo "  --with-gd-lib=${libgd}  \\"
+    fi
+fi
+
+png=`locate png.h | grep '\/png\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+libpng=`locate libpng.so | grep '\/libpng\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+if test ".${png}" = ".${libpng}"; then
+    if test ".${png}" != "."; then
+        echo "  --with-png-root=${png}  \\"
+    fi
+else
+    if test ".${png}" != "."; then
+        echo "  --with-png-include=${png}  \\"
+    fi
+    if test ".${libpng}" != "."; then
+        echo "  --with-png-lib=${libpng}  \\"
+    fi
+fi
+
+if test ".${xml}" = ".y"; then
+  xml2=`locate xmlversion.h | grep '\/xmlversion\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+  libxml2=`locate libxml2.so | grep '\/libpng\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+  if test ".${xml2}" = ".${libxml2}"; then
+      if test ".${xml2}" != "."; then
+          echo "  --with-xml2-root=${xml2}  \\"
+      fi
+  else
+      if test ".${xml2}" != "."; then
+          echo "  --with-xml2-include=${xml2}  \\"
+      fi
+      if test ".${libxml2}" != "."; then
+          echo "  --with-xml2-lib=${libxml2}  \\"
+      fi
+  fi
+
+  gdome=`locate gdome.h | grep '\/gdome\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+  libgdome=`locate libgdome.so | grep '\/libgdome\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+  if test ".${gdome}" = ".${libgdome}"; then
+      if test ".${gdome}" != "."; then
+          echo "  --with-gdome-root=${gdome}  \\"
+      fi
+  else
+      if test ".${gdome}" != "."; then
+          echo "  --with-gdome-include=${gdome}  \\"
+      fi
+      if test ".${libgdome}" != "."; then
+          echo "  --with-gdome-lib=${libgdome}  \\"
+      fi
+  fi
+
+  glib=`locate glib.h | grep '\/glib\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+  libglib=`locate libglib.so | grep '\/libglib\.so$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+  if test ".${glib}" = ".${libglib}"; then
+      if test ".${glib}" != "."; then
+          echo "  --with-glib-root=${glib}  \\"
+      fi
+  else
+      if test ".${glib}" != "."; then
+          echo "  --with-glib-include=${glib}  \\"
+      fi
+      if test ".${libglib}" != "."; then
+          echo "  --with-glib-lib=${libglib}  \\"
+      fi
+  fi
+
+  glibconfig=`locate glibconfig.h | grep '\/glibconfig\.h$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+  if test ".${glibconfig}" != "."; then
+      echo "  --with-glibconfig-root=${glib}  \\"
+  fi
+
+  locale=`locate en_US | grep '\/en_US$' | awk -f /tmp/AutoConfigureNtop.awk $@`
+
+  if test ".${locale}" != "."; then
+      echo "  --with-localedir=${locale}"
+  fi
+fi
+
