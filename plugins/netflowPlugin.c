@@ -550,6 +550,71 @@ static void dissectFlow(char *buffer, int bufferLen) {
 
 #ifdef CFG_MULTITHREADED
 
+ #ifdef MAKE_WITH_NETFLOWSIGTRAP
+RETSIGTYPE netflowcleanup(int signo) {
+  static int msgSent = 0;
+  int i;
+  void *array[20];
+  size_t size;
+  char **strings;
+
+  if(msgSent<10) {
+    traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: caught signal %d %s", signo,
+               signo == SIGHUP ? "SIGHUP" :
+               signo == SIGINT ? "SIGINT" :
+               signo == SIGQUIT ? "SIGQUIT" :
+               signo == SIGILL ? "SIGILL" :
+               signo == SIGABRT ? "SIGABRT" :
+               signo == SIGFPE ? "SIGFPE" :
+               signo == SIGKILL ? "SIGKILL" :
+               signo == SIGSEGV ? "SIGSEGV" :
+               signo == SIGPIPE ? "SIGPIPE" :
+               signo == SIGALRM ? "SIGALRM" :
+               signo == SIGTERM ? "SIGTERM" :
+               signo == SIGUSR1 ? "SIGUSR1" :
+               signo == SIGUSR2 ? "SIGUSR2" :
+               signo == SIGCHLD ? "SIGCHLD" :
+  #ifdef SIGCONT
+               signo == SIGCONT ? "SIGCONT" :
+  #endif
+  #ifdef SIGSTOP
+               signo == SIGSTOP ? "SIGSTOP" :
+  #endif
+  #ifdef SIGBUS
+               signo == SIGBUS ? "SIGBUS" :
+  #endif
+  #ifdef SIGSYS
+               signo == SIGSYS ? "SIGSYS"
+  #endif
+               : "other");
+    msgSent++;
+  }
+
+  #ifdef HAVE_BACKTRACE
+  /* Don't double fault... */
+  /* signal(signo, SIG_DFL); */
+
+  /* Grab the backtrace before we do much else... */
+  size = backtrace(array, 20);
+  strings = (char**)backtrace_symbols(array, size);
+
+  traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: BACKTRACE:     backtrace is:\n");
+  if (size < 2) {
+    traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: BACKTRACE:         **unavailable!\n");
+  } else {
+    /* Ignore the 0th entry, that's our cleanup() */
+    for (i=1; i<size; i++) {
+      traceEvent(CONST_TRACE_FATALERROR, "NETFLOW: BACKTRACE:          %2d. %s\n", i, strings[i]);
+    }
+  }
+  #endif /* HAVE_BACKTRACE */
+
+  exit(0);
+}
+ #endif /* MAKE_WITH_NETFLOWSIGTRAP */
+
+/* ****************************** */
+
 static void* netflowMainLoop(void* notUsed _UNUSED_) {
   fd_set netflowMask;
   int rc, len;
@@ -557,6 +622,35 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
   struct sockaddr_in fromHost;
 
   if(!(myGlobals.netFlowInSocket > 0)) return(NULL);
+
+#ifdef MAKE_WITH_NETFLOWSIGTRAP
+  signal(SIGSEGV, netflowcleanup);
+  signal(SIGHUP,  netflowcleanup);
+  signal(SIGINT,  netflowcleanup);
+  signal(SIGQUIT, netflowcleanup);
+  signal(SIGILL,  netflowcleanup);
+  signal(SIGABRT, netflowcleanup);
+  signal(SIGFPE,  netflowcleanup);
+  signal(SIGKILL, netflowcleanup);
+  signal(SIGPIPE, netflowcleanup);
+  signal(SIGALRM, netflowcleanup);
+  signal(SIGTERM, netflowcleanup);
+  signal(SIGUSR1, netflowcleanup);
+  signal(SIGUSR2, netflowcleanup);
+  signal(SIGCHLD, netflowcleanup);
+#ifdef SIGCONT
+  signal(SIGCONT, netflowcleanup);
+#endif
+#ifdef SIGSTOP
+  signal(SIGSTOP, netflowcleanup);
+#endif
+#ifdef SIGBUS
+  signal(SIGBUS,  netflowcleanup);
+#endif
+#ifdef SIGSYS
+  signal(SIGSYS,  netflowcleanup);
+#endif
+#endif /* MAKE_WITH_NETFLOWSIGTRAP */
 
   if(myGlobals.netFlowDeviceId != -1)
     myGlobals.device[myGlobals.netFlowDeviceId].activeDevice = 1;

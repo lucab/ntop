@@ -335,6 +335,13 @@
 /* #define MAKE_WITH_RRDSIGTRAP */
 
 /*
+ * This flag turns on a signal trap in netflowPlugin.c.  If you're seeing
+ * netflow simply and silently die, this might catch the signal and log
+ * it for analysis.
+ */
+/* #define MAKE_WITH_NETFLOWSIGTRAP */
+
+/*
  * This flag turns on a signal trap in webInterface.c and in http.c for
  * the children.  If you're seeing pages simply and silently die, this
  * might catch the signal and log it for analysis.
