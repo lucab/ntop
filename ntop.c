@@ -592,7 +592,6 @@ int mapGlobalToLocalIdx(int port) {
 /* **************************************** */
 
 static void purgeIpPorts(int theDevice) {
-  char *marker;
   HostTraffic *el;
   int i;
 
@@ -603,59 +602,23 @@ static void purgeIpPorts(int theDevice) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].numHosts == 0) return;
 
 #ifdef CFG_MULTITHREADED
-  accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
-#endif
-
-  /* **********************************
-     Marker used to be defined ad char marker[MAX_IP_PORT];
-     Unfortunately under FreeBSD this caused a core dump.
-     Probably because the amount of memory allocated on the
-     heap was too much. With dynamic memory allocation
-     the problem is gone.
-
-     ********************************** */
-
-  marker = (char*)calloc(1, MAX_IP_PORT);
-
-  for(el=getFirstHost(theDevice); 
-      el != NULL; el = getNextHost(theDevice, el)) {
-    int k;
-    
-    for(k=0; k<MAX_NUM_RECENT_PORTS; k++) {
-      marker[el->recentlyUsedServerPorts[k]] = 1;
-      marker[el->recentlyUsedClientPorts[k]] = 1;
-    }
-  }
-
-
-#ifdef CFG_MULTITHREADED
-  releaseMutex(&myGlobals.purgeMutex);
+  accessMutex(&myGlobals.purgePortsMutex, "purgeIpPorts");
 #endif
   
-  /* 
-     I know that this semaphore has been designed for other tasks
-     however it allows me to save memory/time... 
-  */  
   for(i=1; i<MAX_IP_PORT; i++) {
-#ifdef CFG_MULTITHREADED
-    accessMutex(&myGlobals.purgePortsMutex, "purgeIpPorts");
-#endif
-    if((marker[i] == 0) && (myGlobals.device[theDevice].ipPorts[i] != NULL)) {
+    if(myGlobals.device[theDevice].ipPorts[i] != NULL) {
       free(myGlobals.device[theDevice].ipPorts[i]);
       myGlobals.device[theDevice].ipPorts[i] = NULL;
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "Purging ipPorts(%d)", i);
-#endif
     }
-#ifdef CFG_MULTITHREADED
-	releaseMutex(&myGlobals.purgePortsMutex);
-#ifdef MAKE_WITH_SCHED_YIELD
-	sched_yield(); /* Allow other threads to run */
-#endif
-#endif
   }
   
-  free(marker);
+#ifdef CFG_MULTITHREADED
+  releaseMutex(&myGlobals.purgePortsMutex);
+#endif
+
+#ifdef DEBUG
+  traceEvent(CONST_TRACE_INFO, "purgeIpPorts(%d) completed", theDevice);
+#endif  
 }
 
 /* **************************************** */
