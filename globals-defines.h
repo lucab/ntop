@@ -1565,9 +1565,9 @@
 #define CONST_IMG_HAS_P2P              "<img src=\"/p2p.gif\" border=\"0\" alt=\"P2P Server\">"
 #define CONST_IMG_HAS_USERS            "<img src=\"/users.gif\" border=\"0\" alt=\"Users\">"
 
-#define CONST_IMG_HIGH_RISK            "<img src=\"/Risk_high.gif\" border=\"0\" alt=\"High Risk\">"
-#define CONST_IMG_MEDIUM_RISK          "<img src=\"/Risk_medium.gif\" border=\"0\" alt=\"Medium Risk\">"
-#define CONST_IMG_LOW_RISK             "<img src=\"/Risk_low.gif\" border=\"0\" alt=\"Low Risk\">"
+#define CONST_IMG_HIGH_RISK            " <img src=\"/Risk_high.gif\" border=\"0\" alt=\"High Risk\">"
+#define CONST_IMG_MEDIUM_RISK          " <img src=\"/Risk_medium.gif\" border=\"0\" alt=\"Medium Risk\">"
+#define CONST_IMG_LOW_RISK             " <img src=\"/Risk_low.gif\" border=\"0\" alt=\"Low Risk\">"
 
 #define CONST_IMG_NIC_CARD             "<img src=\"/card.gif\" border=\"0\" alt=\"Network Card\">"
 

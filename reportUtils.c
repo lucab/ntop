@@ -3342,7 +3342,7 @@ void checkHostProvidedServices(HostTraffic *el) {
 
     if(nameServerHost(el))     sendString("Name Server&nbsp;" CONST_IMG_DNS_SERVER "<BR>\n");
     if(isNtpServer(el))        sendString("NTP Server&nbsp;" CONST_IMG_NTP_SERVER "<BR>\n");
-    if(gatewayHost(el))        sendString("Gateway/Router&nbsp;" CONST_IMG_ROUTER "<BR>\n");
+    if(gatewayHost(el))        sendString("<A HREF="CONST_LOCAL_ROUTERS_LIST_HTML">Gateway/Router</A>&nbsp;" CONST_IMG_ROUTER "<BR>\n");
     if(isSMTPhost(el))         sendString("SMTP (Mail) Server&nbsp;" CONST_IMG_SMTP_SERVER "<BR>\n");
     if(isPOPhost(el))          sendString("POP Server&nbsp;" CONST_IMG_POP_SERVER "<BR>\n");
     if(isIMAPhost(el))         sendString("IMAP Server&nbsp;" CONST_IMG_IMAP_SERVER "<BR>\n");
