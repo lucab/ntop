@@ -639,7 +639,7 @@ void commonRRDinit(void) {
   /* **************************** */
 
   if(fetchPrefsValue("rrd.dataDumpInterval", value, sizeof(value)) == -1) {
-    sprintf(value, "%s", RRD_DEFAULT_INTERVAL);
+    sprintf(value, "%d", RRD_DEFAULT_INTERVAL);
     storePrefsValue("rrd.dataDumpInterval", value);
     dumpInterval = RRD_DEFAULT_INTERVAL;
   } else {
