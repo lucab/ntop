@@ -727,9 +727,10 @@ void printHostsTraffic(int reportType,
       break;
     }
 
+#ifdef DEBUG
     traceEvent(TRACE_INFO, "totIpBytesSent=%u, totIpBytesRcvd=%u", 
 	       totIpBytesSent, totIpBytesRcvd);
-
+#endif
 
     for(idx=pageNum*myGlobals.maxNumLines; idx<numEntries; idx++) {
       int i;
