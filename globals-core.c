@@ -509,6 +509,7 @@ void initNtopGlobals(int argc, char * argv[]) {
 
 void initNtop(char *devices) {
 
+  initIPServices();
   handleProtocols();
   if(myGlobals.numIpProtosToMonitor == 0)
     addDefaultProtocols();
@@ -520,15 +521,6 @@ void initNtop(char *devices) {
 
   if(myGlobals.enableSessionHandling)
     initPassiveSessions();
-
-  /* ********************************** */
-
-  /*
-   * Initialize memory and data for the protocols being monitored trying to access
-   *
-   */
-
-  initIPServices();
 
   /* ********************************** */
 
