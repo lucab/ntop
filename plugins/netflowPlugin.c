@@ -246,21 +246,21 @@ static void* netflowMainLoop(void* notUsed _UNUSED_) {
 		incrementUsageCounter(&srcHost->secHostPkts->terminatedTCPConnSent.value, dstHostIdx, actualDeviceId);
 		incrementUsageCounter(&dstHost->secHostPkts->terminatedTCPConnRcvd.value, srcHostIdx, actualDeviceId);
 	      */
-	      incrementCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
+	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].numEstablishedTCPConnections, 1);
 	      updateUsedPorts(srcHost, dstHost, sport, dport, len);
       
 	      break;
 	    case 17: /* UDP */
-	      incrementCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
+	      incrementTrafficCounter(&myGlobals.device[actualDeviceId].udpBytes, len);
 	      if(subnetPseudoLocalHost(dstHost))
-		incrementCounter(&srcHost->udpSentLoc, len);
+		incrementTrafficCounter(&srcHost->udpSentLoc, len);
 	      else
-		incrementCounter(&srcHost->udpSentRem, len);
+		incrementTrafficCounter(&srcHost->udpSentRem, len);
 
 	      if(subnetPseudoLocalHost(srcHost))
-		incrementCounter(&dstHost->udpRcvdLoc, len);
+		incrementTrafficCounter(&dstHost->udpRcvdLoc, len);
 	      else
-		incrementCounter(&dstHost->udpRcvdFromRem, len);
+		incrementTrafficCounter(&dstHost->udpRcvdFromRem, len);
 	      break;
 	    }
 
