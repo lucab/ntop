@@ -3027,24 +3027,24 @@ int _incrementUsageCounter(UsageCounter *counter,
 	     peerIdx, file, line);
 #endif
 
-  if(peerIdx == NO_PEER) return;
+  if(peerIdx == NO_PEER) return(0);
 
   if(peerIdx >= myGlobals.device[actualDeviceId].actualHashSize) {
     traceEvent(TRACE_WARNING, "WARNING: Index %u out of range [0..%u] @ %s:%d",
 	       peerIdx, myGlobals.device[actualDeviceId].actualHashSize-1, file, line);
-    return;
+    return(0);
   }
 
   if((peerIdx == myGlobals.broadcastEntryIdx)
      || (peerIdx == myGlobals.otherHostEntryIdx)) {
-    return;
+    return(0);
   }
 
  if((theHost = myGlobals.device[actualDeviceId].
      hash_hostTraffic[checkSessionIdx(peerIdx)]) == NULL) {
     traceEvent(TRACE_WARNING, "WARNING: wrong Index %u @ %s:%d",
 	       peerIdx, file, line);
-    return;
+    return(0);
  }
 
  counter->value.value++;

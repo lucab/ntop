@@ -106,7 +106,7 @@ u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
 #define MUTEX_FHS_MASK         (max(0, min(65535, (1 << MUTEX_FHS_GRANULARITY) - 1)))
 
 static void freeHostSessions(u_int hostIdx, int theDevice) {
-  int i, rc, eCount=0, mutexLocked = 0; 
+  int i, eCount=0, mutexLocked = 0; 
 
   for(i=0; i<myGlobals.device[theDevice].numTotSessions; i++) {
     IPSession *prevSession, *nextSession, *theSession;

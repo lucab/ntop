@@ -555,7 +555,6 @@ static int parseOptions(int argc, char* argv []) {
        *     --use-syslog requires a facility parameter (see /usr/include/sys/syslog.h)
        */
       if (optarg) {
-	
 	stringSanityCheck(optarg);
 	
 	for (i=0; myFacilityNames[i].c_name != NULL; i++) {
@@ -673,8 +672,10 @@ int ntop_main(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
 #endif
   int i, j, rc, userSpecified, bufLen;
+#ifndef WIN32
   int effective_argc;
   char **effective_argv;
+#endif
   char ifStr[196] = {0};
   time_t lastTime;
   char *startedAs, *cmdLineBuffer, *readBuffer, *readBufferWork;
@@ -773,7 +774,7 @@ int main(int argc, char *argv[]) {
               } else {
                   printf("ERROR: %d in stat(%s, ...)\n", errno, &argv[i][1]);
               }
-              return;
+              return(-1);
           }
 
 #ifdef PARAM_DEBUG
@@ -783,7 +784,7 @@ int main(int argc, char *argv[]) {
           fd = fopen(&argv[i][1], "rb");
           if (fd == NULL) {
               printf("ERROR: Unable to open parameter file '%s' (%d)...\n", &argv[i][1], errno);
-              return;
+              return(-1);
           }
 
           printf("   Processing file %s for parameters...\n", &argv[i][1]);
