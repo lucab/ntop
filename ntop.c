@@ -505,8 +505,8 @@ void* updateThptLoop(void* notUsed _UNUSED_) {
       releaseMutex(&hostsHashMutex);
     }
   }
-  return(NULL);
 
+  return(NULL);
 }
 #endif
 
@@ -632,9 +632,9 @@ void* scanIdleSessionsLoop(void* notUsed _UNUSED_) {
 #endif
 
 #ifdef HAVE_SCHED_H
-      sched_yield(); /* Allow other threads to run */
+    sched_yield(); /* Allow other threads to run */
 #else
-      sleep(1); /* leave some time to others */
+    sleep(1); /* leave some time to others */
 #endif
 
 #ifdef MULTITHREADED

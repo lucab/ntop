@@ -385,7 +385,7 @@ static const u_char *p_save;
 	   }
 
 	 hostToFree = device[actualDeviceId].hash_hostTraffic[candidate];
-	 freeHostInfo(actualDeviceId, candidate);
+	 freeHostInfo(actualDeviceId, candidate, 1);
 	 idx = candidate; /* this is a hint for (**) */
        }
 #endif

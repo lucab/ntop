@@ -353,7 +353,7 @@ void resetStats(void) {
 
     for(j=1; j<device[i].actualHashSize; j++)
       if(device[i].hash_hostTraffic[j] != NULL) {
-	freeHostInfo(i, j);
+	freeHostInfo(i, j, 1);
 	device[i].hash_hostTraffic[j] = NULL;
       }
 

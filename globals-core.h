@@ -227,7 +227,7 @@ extern u_int computeInitialHashIdx(struct in_addr *hostIpAddress,
                                    u_char *ether_addr,
                                    short* useIPAddressForSearching);
 extern void resizeHostHash(int deviceToExtend, short action);
-extern void freeHostInfo(int theDevice, u_int hostIdx);
+extern void freeHostInfo(int theDevice, u_int hostIdx, u_short refreshHash);
 extern void freeHostInstances(void);
 extern void purgeIdleHosts(int ignoreIdleTime, int devId);
 extern int extendTcpSessionsHash();
