@@ -34,85 +34,84 @@ static void hostHashSanityCheck(HostTraffic *host);
 u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
 	       short* useIPAddressForSearching, HostTraffic **el,
 	       int actualDeviceId) {
-    u_int idx = 0;
+  u_int idx = 0;
 
-    *el = NULL;
+  *el = NULL;
 
-    if(myGlobals.dontTrustMACaddr)  /* MAC addresses don't make sense here */
-	(*useIPAddressForSearching) = 1;
+  if(myGlobals.dontTrustMACaddr)  /* MAC addresses don't make sense here */
+    (*useIPAddressForSearching) = 1;
 
-    if(((*useIPAddressForSearching) == 1)
-       || ((ether_addr == NULL)
-	   && (hostIpAddress != NULL))) {
-	if(myGlobals.trackOnlyLocalHosts
-	   && (!isLocalAddress(hostIpAddress, actualDeviceId))
-	   && (!_pseudoLocalAddress(hostIpAddress))) {
-	    *el = myGlobals.otherHostEntry;
-	    return(OTHER_HOSTS_ENTRY);
-	} else
-	    idx = hostIpAddress->s_addr;
+  if((*useIPAddressForSearching) && (hostIpAddress == NULL)) {
+#if 0
+    traceEvent(CONST_TRACE_WARNING, "Index calculation problem (hostIpAddress=%x, ether_addr=%x)",
+	       hostIpAddress, ether_addr);
+#endif
+    return(FLAG_NO_PEER);
+  }
+  
+  if(((*useIPAddressForSearching) == 1)
+     || ((ether_addr == NULL) && (hostIpAddress != NULL))) {
+    if(myGlobals.trackOnlyLocalHosts
+       && (!isLocalAddress(hostIpAddress, actualDeviceId))
+       && (!_pseudoLocalAddress(hostIpAddress))) {
+      *el = myGlobals.otherHostEntry;
+      return(OTHER_HOSTS_ENTRY);
+    } else
+      idx = hostIpAddress->s_addr;
 
-	(*useIPAddressForSearching) = 1;
-    } else if(memcmp(ether_addr, myGlobals.broadcastEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0) {
-	*el = myGlobals.broadcastEntry;
-	return(BROADCAST_HOSTS_ENTRY);
-    } else if(hostIpAddress == NULL) {
-	memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
-	(*useIPAddressForSearching) = 0;
-    } else if ((hostIpAddress->s_addr == 0x0)
-	       || (hostIpAddress->s_addr == 0x1)) {
-	if(myGlobals.trackOnlyLocalHosts) {
-	    *el = myGlobals.otherHostEntry;
-	    return(OTHER_HOSTS_ENTRY);
-	} else
-	    idx = hostIpAddress->s_addr;
-
-	(*useIPAddressForSearching) = 1;
-    } else if(isBroadcastAddress(hostIpAddress)) {
-	*el = myGlobals.broadcastEntry;
-	return(BROADCAST_HOSTS_ENTRY);
-    } else if(isPseudoLocalAddress(hostIpAddress, actualDeviceId)) {
-	memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
-	(*useIPAddressForSearching) = 0;
+    (*useIPAddressForSearching) = 1;
+  } else if(memcmp(ether_addr, myGlobals.broadcastEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0) {
+    *el = myGlobals.broadcastEntry;
+    return(BROADCAST_HOSTS_ENTRY);
+  } else if(hostIpAddress == NULL) {
+    memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
+    (*useIPAddressForSearching) = 0;
+  } else if(isBroadcastAddress(hostIpAddress)) {
+    *el = myGlobals.broadcastEntry;
+    return(BROADCAST_HOSTS_ENTRY);
+  } else if(isPseudoLocalAddress(hostIpAddress, actualDeviceId)) {
+    memcpy(&idx, &ether_addr[LEN_ETHERNET_ADDRESS-sizeof(u_int)], sizeof(u_int));
+    (*useIPAddressForSearching) = 0;
+  } else {
+    if(hostIpAddress != NULL) {
+      if(myGlobals.trackOnlyLocalHosts 
+	 && (!isPseudoLocalAddress(hostIpAddress, actualDeviceId))) {
+	*el = myGlobals.otherHostEntry;
+	return(OTHER_HOSTS_ENTRY);
+      } else
+	idx = hostIpAddress->s_addr;
     } else {
-	if(hostIpAddress != NULL) {
-	    if(myGlobals.trackOnlyLocalHosts && (!isPseudoLocalAddress(hostIpAddress, actualDeviceId))) {
-		*el = myGlobals.otherHostEntry;
-		return(OTHER_HOSTS_ENTRY);
-	    } else
-		idx = hostIpAddress->s_addr;
-	} else {
-	    idx = FLAG_NO_PEER;
-	    traceEvent(CONST_TRACE_WARNING, "Index calculation problem");
-	}
-
-	(*useIPAddressForSearching) = 1;
+      idx = FLAG_NO_PEER;
+      traceEvent(CONST_TRACE_WARNING, "Index calculation problem (1)");
     }
 
-    idx = idx % myGlobals.device[actualDeviceId].actualHashSize;
+    (*useIPAddressForSearching) = 1;
+  }
 
-    /* Skip reserved entries */
-    if((idx == BROADCAST_HOSTS_ENTRY) || (idx == OTHER_HOSTS_ENTRY))
-	idx = FIRST_HOSTS_ENTRY;
+  idx = idx % myGlobals.device[actualDeviceId].actualHashSize;
+
+  /* Skip reserved entries */
+  if((idx == BROADCAST_HOSTS_ENTRY) || (idx == OTHER_HOSTS_ENTRY))
+    idx = FIRST_HOSTS_ENTRY;
 
 #ifdef DEBUG
-    if(hostIpAddress != NULL) {
-	char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
+  if(hostIpAddress != NULL) {
+    char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
-	traceEvent(CONST_TRACE_INFO, "hashHost(%s/%s/%d) = %u\n",
-		   intoa(*hostIpAddress),
-		   etheraddr_string(ether_addr, buf),
-		   (*useIPAddressForSearching), idx);
-    } else {
-	char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
+    traceEvent(CONST_TRACE_INFO, "hashHost(%s/%s/%d) = %u\n",
+	       intoa(*hostIpAddress),
+	       etheraddr_string(ether_addr, buf),
+	       (*useIPAddressForSearching), idx);
+  } else {
+    char buf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
-	traceEvent(CONST_TRACE_INFO, "hashHost(%s/%d) = %u\n",
-		   etheraddr_string(ether_addr, buf),
-		   (*useIPAddressForSearching), idx);
-    }
+    traceEvent(CONST_TRACE_INFO, "hashHost(%s/%d) = %u\n",
+	       etheraddr_string(ether_addr, buf),
+	       (*useIPAddressForSearching), idx);
+  }
 #endif
 
-    return(idx);
+  return(idx);
 }
 
 /* ************************************ */
@@ -651,9 +650,11 @@ HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
 		   &el, actualDeviceId);
 
     if(el != NULL) 
-	return(el); /* Found */
+      return(el); /* Found */
+    else if(idx == FLAG_NO_PEER)
+      return(NULL);
     else
-	el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
     while(el != NULL) {
 	if(el->magic != CONST_MAGIC_NUMBER) {

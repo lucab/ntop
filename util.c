@@ -105,10 +105,12 @@ HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId)
   u_int idx = hashHost(&hostIpAddress, NULL, &dummyShort, &el, actualDeviceId);
 
   if(el != NULL)
-      return(el); /* Found */
+    return(el); /* Found */
+  else if(idx == FLAG_NO_PEER)
+    return(NULL);
   else
-      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
-
+    el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+  
   for(; el != NULL; el = el->next) {
     if((el->hostNumIpAddress != NULL) && (el->hostIpAddress.s_addr == hostIpAddress.s_addr))
       return(el);
@@ -136,15 +138,17 @@ HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId) {
   u_int idx = hashHost(NULL, macAddr, &dummyShort, &el, actualDeviceId);
 
   if(el != NULL)
-      return(el); /* Found */
+    return(el); /* Found */
+  else if(idx == FLAG_NO_PEER)
+    return(NULL);
   else
-      el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
-
+    el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
+  
   for(; el != NULL; el = el->next) {
-      if((el->ethAddress[0] != '\0') && (!strncmp(el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)))
-	  return(el);
+    if((el->ethAddress[0] != '\0') && (!strncmp(el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)))
+      return(el);
   }
-
+  
   return(NULL);
 }
 
