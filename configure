@@ -2662,15 +2662,15 @@ case "$host:$CC" in
         cp $GCCLIB .
         LIBS="-L. -lgcc ${LIBS}"
 
+        CFLAGS=
         CCLD="cc -bI:/lib/pse.exp"
-
         ;;
 
     *-ibm-aix4.*:cc* )
 
-        echo "Oh no!  *cough* AIX *cough* without GCC!  Me poor!"
-
         # To link against the getmsg system call you must import the /lib/pse.exp
+        CFLAGS=-g
+        LDFLAGS="-bI:/lib/pse.exp $LDFLAGS"
 
         ;;
 
@@ -5064,6 +5064,10 @@ echo
 
 
 
+
+
+
+
 DATAFILE_DIR=$datadir/ntop
 DATAFILE_DIR=`(
     test "x$prefix" = xNONE && prefix=$ac_default_prefix
@@ -5301,6 +5305,9 @@ s%@CORELIBS@%$CORELIBS%g
 s%@PLUGINS@%$PLUGINS%g
 s%@INTOP@%$INTOP%g
 s%@REMOTEINTERFACE@%$REMOTEINTERFACE%g
+s%@AS@%$AS%g
+s%@DLLTOOL@%$DLLTOOL%g
+s%@OBJDUMP@%$OBJDUMP%g
 s%@DATAFILE_DIR@%$DATAFILE_DIR%g
 s%@CONFIGFILE_DIR@%$CONFIGFILE_DIR%g
 s%@PLUGIN_DIR@%$PLUGIN_DIR%g
