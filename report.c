@@ -4042,9 +4042,9 @@ void printThptStats(int sortedColumn _UNUSED_) {
 	     "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=1\" alt=\"Current Hour throughput chart\"></A><BR>\n");
 #endif
 
-  if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
-	      formatTimeStamp(0, 0, 0, formatBuf, sizeof(formatBuf)),
-	      formatTimeStamp(0, 0, 60, formatBuf1, sizeof(formatBuf1))) < 0) BufferTooShort();
+  if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
+	      formatTimeStamp(0, 0, 60, formatBuf, sizeof(formatBuf)),
+	      formatTimeStamp(0, 0,  0, formatBuf1, sizeof(formatBuf1))) < 0) BufferTooShort();
 
   sendString(tmpBuf);
 
@@ -4053,18 +4053,18 @@ void printThptStats(int sortedColumn _UNUSED_) {
     sendString("<P><A HREF=\"" CONST_THPT_STATS_MATRIX_HTML "?col=2\" BORDER=0>"
 	       "<IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=2\" alt=\"Current Day throughput chart\"></A><BR>\n");
 #endif
-    if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
-		formatTimeStamp(0, 0, 0, formatBuf, sizeof(formatBuf)),
-		formatTimeStamp(0, 24, 0, formatBuf1, sizeof(formatBuf1))) < 0) BufferTooShort();
+    if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
+		formatTimeStamp(0, 24, 0, formatBuf, sizeof(formatBuf)),
+		formatTimeStamp(0,  0, 0, formatBuf1, sizeof(formatBuf1))) < 0) BufferTooShort();
 
     sendString(tmpBuf);
 
 #ifndef EMBEDDED
     if(myGlobals.device[myGlobals.actualReportDeviceId].numThptSamples > 1440 /* 60 * 24 */) {
       sendString("<P><IMG SRC=\"" CONST_THROUGHPUT_GRAPH CHART_FORMAT "?col=3\" alt=\"Current 30day throughput chart><BR>\n");
-      if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s - %s]</H4>",
-		  formatTimeStamp(0, 0, 0, formatBuf, sizeof(formatBuf)),
-		  formatTimeStamp(30, 0, 0, formatBuf1, sizeof(formatBuf1))) < 0)
+      if(snprintf(tmpBuf, sizeof(tmpBuf), "<H4>Time [ %s through %s]</H4>",
+		  formatTimeStamp(30, 0, 0, formatBuf, sizeof(formatBuf)),
+		  formatTimeStamp( 0, 0, 0, formatBuf1, sizeof(formatBuf1))) < 0)
 	BufferTooShort();
       sendString(tmpBuf);
     }
