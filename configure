@@ -2403,7 +2403,7 @@ if test "${with_gdchart_root+set}" = set; then
   withval="$with_gdchart_root"
   GDCHART_ROOT="$withval"
 else
-  GDCHART_ROOT=
+  GDCHART_ROOT="../gdchart0.94c"
 fi
 
 
@@ -5050,10 +5050,11 @@ echo "configure:5048: checking for GDchart (optional package)" >&5
     if test -d $GDCHART_ROOT &&
        test -r $GDCHART_ROOT/libgdchart.a &&
        test -r $GDCHART_ROOT/gdc.h &&
-       test -r $GDCHART_ROOT/gd1.3/libgd.a &&
-       test -r $GDCHART_ROOT/gd1.3/gd.h; then
+       test -r $GDCHART_ROOT/gd-1.8.3/libgd.a &&
+       test -r $GDCHART_ROOT/gd-1.8.3/gd.h &&
+       test -r $GDCHART_ROOT/zlib-1.1.3/libz.a; then
          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
-         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd1.3 -lgd"
+         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.0.8 -lpng -L$GDCHART_ROOT/zlib-1.1.3 -lz"
          INCS="${INCS} -I$GDCHART_ROOT"
          cat >> confdefs.h <<\EOF
 #define HAVE_GDCHART 1
@@ -5065,18 +5066,20 @@ EOF
       echo "$ac_t"" It looks that you don't have some files needed to use the GDChart library." 1>&6
       echo "$ac_t"" Please check the source tree, compile and, optionally, install the software." 1>&6
       echo "$ac_t"" When finished please re-run this program." 1>&6
-      echo "$ac_t"" You can download the latest source tarball at http://www.fred.net/brv/chart/" 1>&6
+      echo "$ac_t"" You can download the needed code using CVS from cvs.ntop.org " 1>&6
       echo "configure: warning:  Some ntop's features will be disabled." 1>&2
     fi
   else
     if test -d ../gdchart0.94b &&
        test -r ../gdchart0.94b/gdc.h &&
        test -r ../gdchart0.94b/libgdchart.a &&
-       test -r ../gdchart0.94b/gd1.3/libgd.a &&
-       test -r ../gdchart0.94b/gd1.3/gd.h; then
+       test -r ../gdchart0.94b/gd-1.8.3/libgd.a &&
+       test -r ../gdchart0.94b/gd-1.8.3/gd.h
+       test -r ../gdchart0.94b/gd-1.8.3/libpng-1.0.8/libpng.a &&
+       test -r ../gdchart0.94b/gd-1.8.3/libpng-1.0.8/gd.h; then
          GDCHART_ROOT="../gdchart0.94b"
          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
-         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd1.3 -lgd"
+         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.0.8 -lpng"
          INCS="${INCS} -I$GDCHART_ROOT"
          cat >> confdefs.h <<\EOF
 #define HAVE_GDCHART 1
@@ -5096,7 +5099,7 @@ fi
 
 if test ".$ac_disable_openssl" = ".no"; then
   echo $ac_n "checking for OpenSSL Library by Open SLL Project (optional package)""... $ac_c" 1>&6
-echo "configure:5100: checking for OpenSSL Library by Open SLL Project (optional package)" >&5
+echo "configure:5103: checking for OpenSSL Library by Open SLL Project (optional package)" >&5
   if test ".${OSSL_ROOT}" != .; then
     if test -d $OSSL_ROOT &&
        test -r $OSSL_ROOT/libssl.a &&
@@ -5189,7 +5192,7 @@ fi
 
 
 echo $ac_n "checking for register_mib in -lucdagent""... $ac_c" 1>&6
-echo "configure:5193: checking for register_mib in -lucdagent" >&5
+echo "configure:5196: checking for register_mib in -lucdagent" >&5
 ac_lib_var=`echo ucdagent'_'register_mib | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -5197,7 +5200,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lucdagent -lsnmp -lucdmibs $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 5201 "configure"
+#line 5204 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -5208,7 +5211,7 @@ int main() {
 register_mib()
 ; return 0; }
 EOF
-if { (eval echo configure:5212: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5215: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else

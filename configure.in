@@ -257,7 +257,7 @@ AC_ARG_WITH(gdbm-root, [  --with-gdbm-root=DIR    GNU gdbm source tree located i
 
 AC_ARG_WITH(ossl-root, [  --with-ossl-root=DIR    OpenSSL source tree located in DIR], OSSL_ROOT="$withval", OSSL_ROOT=)
 
-AC_ARG_WITH(gdchart-root, [  --with-gdchart-root=DIR GDChart source tree located in DIR], GDCHART_ROOT="$withval", GDCHART_ROOT=)
+AC_ARG_WITH(gdchart-root, [  --with-gdchart-root=DIR GDChart source tree located in DIR], GDCHART_ROOT="$withval", GDCHART_ROOT="../gdchart0.94c")
 
 AC_ARG_WITH(void, [  +----------------------------------------------------------------------------+])
 
@@ -872,10 +872,11 @@ dnl>
     if test -d $GDCHART_ROOT &&
        test -r $GDCHART_ROOT/libgdchart.a &&
        test -r $GDCHART_ROOT/gdc.h &&
-       test -r $GDCHART_ROOT/gd1.3/libgd.a &&
-       test -r $GDCHART_ROOT/gd1.3/gd.h; then
+       test -r $GDCHART_ROOT/gd-1.8.3/libgd.a &&
+       test -r $GDCHART_ROOT/gd-1.8.3/gd.h &&
+       test -r $GDCHART_ROOT/zlib-1.1.3/libz.a; then
          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
-         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd1.3 -lgd"
+         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.0.8 -lpng -L$GDCHART_ROOT/zlib-1.1.3 -lz"
          INCS="${INCS} -I$GDCHART_ROOT"
          AC_DEFINE(HAVE_GDCHART)
          AC_MSG_RESULT([found in $GDCHART_ROOT])
@@ -884,7 +885,7 @@ dnl>
       AC_MSG_RESULT([ It looks that you don't have some files needed to use the GDChart library.])
       AC_MSG_RESULT([ Please check the source tree, compile and, optionally, install the software.])
       AC_MSG_RESULT([ When finished please re-run this program.])
-      AC_MSG_RESULT([ You can download the latest source tarball at http://www.fred.net/brv/chart/])
+      AC_MSG_RESULT([ You can download the needed code using CVS from cvs.ntop.org ])
       AC_MSG_WARN([ Some ntop's features will be disabled.])
     fi
 dnl>
@@ -894,11 +895,13 @@ dnl>
     if test -d ../gdchart0.94b &&
        test -r ../gdchart0.94b/gdc.h &&
        test -r ../gdchart0.94b/libgdchart.a &&
-       test -r ../gdchart0.94b/gd1.3/libgd.a &&
-       test -r ../gdchart0.94b/gd1.3/gd.h; then
+       test -r ../gdchart0.94b/gd-1.8.3/libgd.a &&
+       test -r ../gdchart0.94b/gd-1.8.3/gd.h
+       test -r ../gdchart0.94b/gd-1.8.3/libpng-1.0.8/libpng.a &&
+       test -r ../gdchart0.94b/gd-1.8.3/libpng-1.0.8/gd.h; then
          GDCHART_ROOT="../gdchart0.94b"
          GDCHART_ROOT=`cd ${GDCHART_ROOT} && pwd`
-         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd1.3 -lgd"
+         MORELIBS="${MORELIBS} -L$GDCHART_ROOT -lgdchart -L$GDCHART_ROOT/gd-1.8.3 -lgd -L$GDCHART_ROOT/gd-1.8.3/libpng-1.0.8 -lpng"
          INCS="${INCS} -I$GDCHART_ROOT"
          AC_DEFINE(HAVE_GDCHART)
          AC_MSG_RESULT([found in $GDCHART_ROOT])
