@@ -533,6 +533,8 @@ void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
   u_short updateTime = DEFAULT_DB_UPDATE_TIME; /* This should be user configurable */
 
   for(;;) {
+    int i;
+    
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "Sleeping for %d seconds\n", updateTime);
 #endif
@@ -541,8 +543,16 @@ void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
 
     if(!capturePackets) break;
 
-    /* CHECK ME: Parmeter to updateDbHostsTraffic */ 
-    updateDbHostsTraffic(0);
+    for(i=0; i<numDevices; i++) 
+      if(!device[i].virtualDevice) {
+#ifdef MULTITHREADED
+	accessMutex(&hostsHashMutex, "updateDbHostsTraffic");
+#endif /* MULTITHREADED */
+	updateDbHostsTraffic(i);
+#ifdef MULTITHREADED
+	releaseMutex(&hostsHashMutex);
+#endif /* MULTITHREADED */
+      }
   }
   return(NULL);
 

@@ -3663,6 +3663,48 @@ static void processIpPkt(const u_char *bp,
     srcHost->icmpSent += length;
     dstHost->icmpReceived += length;
 
+    /* ************************************************************* */
+
+    if(icmpPkt.icmp_type <= ICMP_MAXTYPE) {
+      if(srcHost->icmpInfo == NULL) {
+	srcHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo));
+	memset(srcHost->icmpInfo, 0, sizeof(IcmpHostInfo));
+      }
+
+      srcHost->icmpInfo->icmpMsgSent[icmpPkt.icmp_type]++;
+
+      if(dstHost->icmpInfo == NULL) {
+	dstHost->icmpInfo = (IcmpHostInfo*)malloc(sizeof(IcmpHostInfo));
+	memset(dstHost->icmpInfo, 0, sizeof(IcmpHostInfo));
+      }
+
+      dstHost->icmpInfo->icmpMsgRcvd[icmpPkt.icmp_type]++;
+      
+      switch (icmpPkt.icmp_type) {
+      case ICMP_ECHOREPLY:
+      case ICMP_ECHO:
+	/* Do not log anything */
+	break;
+
+      case ICMP_UNREACH:
+      case ICMP_REDIRECT:
+      case ICMP_ROUTERADVERT:
+      case ICMP_TIMXCEED:
+      case ICMP_PARAMPROB:
+      case ICMP_MASKREPLY:
+      case ICMP_MASKREQ:
+      case ICMP_INFO_REQUEST:
+      case ICMP_INFO_REPLY:
+      case ICMP_TIMESTAMP:
+      case ICMP_TIMESTAMPREPLY:
+      case ICMP_SOURCE_QUENCH:
+	dumpSuspiciousPacket();
+	break;
+      }
+    }
+
+    /* ************************************************************* */
+
     if(subnetPseudoLocalHost(srcHost))
       if(subnetPseudoLocalHost(dstHost))
 	device[actualDeviceId].icmpGlobalTrafficStats.local += length;

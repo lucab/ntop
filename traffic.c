@@ -490,8 +490,8 @@ void updateDbHostsTraffic(int deviceToUpdate) {
   u_int i;
   HostTraffic *el;
 
-#ifdef DEBUG
-  traceEvent(TRACE_INFO, "updateDbHostsTraffic()\n");
+#ifndef DEBUG
+  traceEvent(TRACE_INFO, "updateDbHostsTraffic(device=%d)", deviceToUpdate);
 #endif
 
   for(i=0; i<device[deviceToUpdate].actualHashSize; i++) {
@@ -504,19 +504,26 @@ void updateDbHostsTraffic(int deviceToUpdate) {
       el->instanceInUse++;
 
       if(el->nextDBupdate == 0) {
+	/* traceEvent(TRACE_INFO, "1"); */
 	notifyHostCreation(el);
 #ifdef HAVE_MYSQL
 	traceEvent(TRACE_INFO, "DEBUG: mySQLnotifyHostCreation");
 	mySQLnotifyHostCreation(el);
 #endif
+	/* traceEvent(TRACE_INFO, "2"); */
       } else if(el->nextDBupdate < actTime) {
+	/* traceEvent(TRACE_INFO, "3"); */
 	updateHostTraffic(el);
+	/* traceEvent(TRACE_INFO, "4"); */
 #ifdef HAVE_MYSQL
 	traceEvent(TRACE_INFO, "DEBUG: mySQLupdateHostTraffic");
 	mySQLupdateHostTraffic(el);
 #endif
+	/* traceEvent(TRACE_INFO, "5"); */
 	if(el->osName == NULL) {
+	  /* traceEvent(TRACE_INFO, "6"); */
 	  updateOSName(el);
+	  /* traceEvent(TRACE_INFO, "7"); */
 	}
       }
 
