@@ -64,26 +64,26 @@ static void drawLegend(gdImagePtr im,
   float total;
   char str[32];
 #endif
-  
+
   edge_x = (width*.75)+10;
   edge_y = (height/10);
 
 #ifdef SHOW_PERCENTAGE
-   for(i=0, total=0; i<num_points; i++)
+  for(i=0, total=0; i<num_points; i++)
     total += data[i];
 #endif
 
-   for(i=0; i<num_points; i++) {    
-     gdImageFilledRectangle(im, edge_x, edge_y, edge_x+BOX_SIZE, edge_y+BOX_SIZE, colors[i]);
-     gdImageRectangle(im, edge_x-1, edge_y-1, edge_x+BOX_SIZE+1, edge_y+BOX_SIZE+1, labelColor);
+  for(i=0; i<num_points; i++) {
+    gdImageFilledRectangle(im, edge_x, edge_y, edge_x+BOX_SIZE, edge_y+BOX_SIZE, colors[i]);
+    gdImageRectangle(im, edge_x-1, edge_y-1, edge_x+BOX_SIZE+1, edge_y+BOX_SIZE+1, labelColor);
 #ifdef SHOW_PERCENTAGE
-     snprintf(str, sizeof(str), "%s(%.1f%%)", labels[i], (data[i]*100)/total);
-     gdImageString(im, gdFontSmall, edge_x+BOX_SIZE+5, edge_y-5, str, labelColor);
+    snprintf(str, sizeof(str), "%s(%.1f%%)", labels[i], (data[i]*100)/total);
+    gdImageString(im, gdFontSmall, edge_x+BOX_SIZE+5, edge_y-5, str, labelColor);
 #else
-     gdImageString(im, gdFontSmall, edge_x+BOX_SIZE+5, edge_y-3, labels[i], labelColor);
+    gdImageString(im, gdFontSmall, edge_x+BOX_SIZE+5, edge_y-3, labels[i], labelColor);
 #endif
-     edge_y += gdFontSmall->h*1.5;
-   }  
+    edge_y += gdFontSmall->h*1.5;
+  }
 }
 
 /* ************************ */
@@ -93,18 +93,18 @@ void drawPie(short width,
 	     FILE* filepointer,            /* open file pointer, can be stdout */
 	     int   num_points,
 	     char  *labels[],              /* slice labels */
-	     float data[] ) { 
+	     float data[] ) {
   gdImagePtr im;
   int black, white, colors[64], numColors, i;
   int center_x, center_y, radius, begDeg, endDeg, x, y;
   float total;
   int displ;
   float radiant;
-  
+
   im = gdImageCreate(width, height);
 
   white = gdImageColorAllocate(im, 255, 255, 255); /* bg color */
-  black = gdImageColorAllocate(im, 0, 0, 0);	
+  black = gdImageColorAllocate(im, 0, 0, 0);
   numColors = sizeof(clr)/sizeof(unsigned long);
   for(i=0; i<numColors; i++) {
     colors[i] = gdImageColorAllocate(im, clr[i]>>16, clr[i]>>8, clr[i]&0x0000FF);
@@ -113,7 +113,7 @@ void drawPie(short width,
   /* ******************************* */
   for(i=0, total=0; i<num_points; i++)
     total += data[i];
-  
+
   center_x = width/3, center_y = height/2;
   radius = height/3;
   begDeg = 0;
@@ -172,18 +172,19 @@ void drawBar(short width,
 	     FILE* filepointer,            /* open file pointer, can be stdout */
 	     int   num_points,
 	     char  *labels[],              /* slice labels */
-	     float data[]) { 
+	     float data[]) {
   gdImagePtr im;
   int black, white, gray, colors[64], numColors, i, ngrid, base, padding;
   int center_x, center_y, vmargin, hmargin, xsize, ysize, xpos, ypos, dypix;
   float maxval, total, yscale, txtsz, txtht;
   float dydat, xmax, ymax, xmin, ymin;
+  char buf[32];
 
   im = gdImageCreate(width, height);
 
   white = gdImageColorAllocate(im, 255, 255, 255); /* bg color */
-  black = gdImageColorAllocate(im, 0, 0, 0);	
-  gray = gdImageColorAllocate(im, 200, 200, 200);	
+  black = gdImageColorAllocate(im, 0, 0, 0);
+  gray = gdImageColorAllocate(im, 200, 200, 200);
   numColors = sizeof(clr)/sizeof(unsigned long);
   for(i=0; i<numColors; i++) {
     colors[i] = gdImageColorAllocate(im, clr[i]>>16, clr[i]>>8, clr[i]&0x0000FF);
@@ -204,20 +205,20 @@ void drawBar(short width,
 
   vmargin = 20; // top (bottom) vertical margin for title (x-labels)
   hmargin = 60; // left horizontal margin for y-labels
-  
+
   base = floor((((width*.75)) - hmargin) / num_points); // distance between columns
-  
+
   ysize = height - 2 * vmargin; // y-size of plot
   xsize = num_points * base; // x-size of plot
-  
+
   // y labels and grid lines
   ngrid = 4; // number of grid lines
-  
+
   dydat = maxval / ngrid; // data units between grid lines
   dypix = ysize / (ngrid + 1); // pixels between grid lines
 
   // make y-axis text label from height of grid line (in data units)
-  for (i = 0; i <= (ngrid + 1); i++) { 
+  for (i = 0; i <= (ngrid + 1); i++) {
     char *theStr = formatBytes(i * dydat, 0); // make label text
 
     txtsz = gdFontSmall->w*strlen(theStr); // pixel-width of label
@@ -225,51 +226,51 @@ void drawBar(short width,
 
     // height of grid line in pixels
     ypos = vmargin + ysize - (i*dypix);
-    xpos = hmargin - 10 - txtsz; 
+    xpos = hmargin - 10 - txtsz;
     if(xpos < 1) xpos = 1;
-    
-    gdImageString(im, gdFontSmall, xpos, ypos - (int)(txtht/2), theStr, black); 
+
+    gdImageString(im, gdFontSmall, xpos, ypos - (int)(txtht/2), theStr, black);
 
     if (!(i == 0) && !(i > ngrid)) {
-      gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray); 
+      gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray);
     }
-  } 
- 
+  }
+
   // columns and x labels
   padding = 3; // half of spacing between columns
   yscale = (float)ysize/((ngrid+1) * dydat); // pixels per data unit
 
-  for (i = 0; i<num_points; i++) { 
+  for (i = 0; i<num_points; i++) {
     // vertical columns
-    ymax = vmargin + ysize; 
+    ymax = vmargin + ysize;
 
     if(ymax > (int)(data[i]*yscale)) {
-      ymin = ymax - (int)(data[i]*yscale); 
+      ymin = ymax - (int)(data[i]*yscale);
       if(ymin < vmargin) ymin = vmargin;
     }
     else
       ymin = vmargin;
 
-    xmax = hmargin + (i+1)*base - padding; 
-    xmin = hmargin + i*base + padding; 
+    xmax = hmargin + (i+1)*base - padding;
+    xmin = hmargin + i*base + padding;
 
     if((xmax-xmin) > 100) {
       xmax = xmin+100;
     }
 
-    gdImageFilledRectangle(im, xmin, ymin, xmax, ymax, colors[i]); 
-    gdImageRectangle(im, xmin, ymin, xmax, ymax, black); 
+    gdImageFilledRectangle(im, xmin, ymin, xmax, ymax, colors[i]);
+    gdImageRectangle(im, xmin, ymin, xmax, ymax, black);
 
     // x labels
-    txtsz = gdFontSmall->w * strlen(labels[i]); 
+    txtsz = gdFontSmall->w * strlen(labels[i]);
 
-    xpos = xmin + (int)((base - txtsz) / 2); 
-    if(xmin > xpos) xpos = xmin; else xmin = xpos; 
+    xpos = xmin + (int)((base - txtsz) / 2);
+    if(xmin > xpos) xpos = xmin; else xmin = xpos;
     ypos = ymax + 3; // distance from x axis
-  } 
+  }
 
   // plot frame
-  gdImageRectangle(im, hmargin, vmargin, hmargin + xsize, vmargin + ysize, black); 
+  gdImageRectangle(im, hmargin, vmargin, hmargin + xsize, vmargin + ysize, black);
 
   /* ************************* */
 
@@ -287,7 +288,8 @@ void drawArea(short width,
 	      char  *labels[],              /* slice labels */
 	      float data[],
 	      char *xtitle,
-	      char *ytitle) {
+	      char *ytitle,
+	      u_short formatYlabels) {
   gdImagePtr im;
   int black, white, colors[64], numColors, i;
   float maxval=0;
@@ -295,13 +297,13 @@ void drawArea(short width,
   float total, yscale, txtsz, txtht;
   float vmargin, hmargin, xsize, ysize, ngrid, dydat, dypix, ydat, xpos, ypos;
   float padding, ymax, ymin, xmax, xmin, gray;
-  char str[16];
+  char str[16], buf[32];
 
   im = gdImageCreate(width, height);
 
   white = gdImageColorAllocate(im, 255, 255, 255); /* bg color */
-  black = gdImageColorAllocate(im, 0, 0, 0);	
-  gray = gdImageColorAllocate(im, 200, 200, 200);	
+  black = gdImageColorAllocate(im, 0, 0, 0);
+  gray = gdImageColorAllocate(im, 200, 200, 200);
   numColors = sizeof(clr)/sizeof(unsigned long);
   for(i=0; i<numColors; i++) {
     colors[i] = gdImageColorAllocate(im, clr[i]>>16, clr[i]>>8, clr[i]&0x0000FF);
@@ -318,56 +320,65 @@ void drawArea(short width,
   /* ************************* */
 
   vmargin = 40; // top (bottom) vertical margin for title (x-labels)
-  hmargin = 38; // left horizontal margin for y-labels
-  
-  base = (int)((width - hmargin) / num_points); // distance between columns
-  
+  hmargin = 60; // left horizontal margin for y-labels
+
+  base = (int)((width - hmargin) / (1+num_points)); // distance between columns
+
   xsize = num_points * base; // x-size of plot
   ysize = height - (1.5 * vmargin); // y-size of plot
 
   /* printf("x-size=%.1f/y-size=%.1f\n", xsize, ysize); */
   // y labels and grid lines
   ngrid = 4; // number of grid lines
-  
+
   dydat = maxval / ngrid; // data units between grid lines
   dypix = ysize / (ngrid + 1); // pixels between grid lines
 
-  for (i = 0; i <= (ngrid + 1); i++) { 
+  for (i = 0; i <= (ngrid + 1); i++) {
     // height of grid line in units of data
-    ydat = i * dydat; 
+    ydat = i * dydat;
     snprintf(str, sizeof(str), "%.1f", ydat);
 
     // height of grid line in pixels
-    ypos = vmargin/2 + ysize - (int)(i*dypix); 
+    ypos = vmargin/2 + ysize - (int)(i*dypix);
+    txtht = gdFontSmall->h;
 
-    txtsz = gdFontSmall->w*strlen(str); // pixel-width of label
-    txtht = gdFontSmall->h; // pixel-height of label
+    if(maxval > 0) {
+      if(!formatYlabels) {
+	txtsz = gdFontSmall->w*strlen(str); 
+	xpos = hmargin - txtsz; if(xpos < 1) xpos = 1;
+	gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), str, black);
+      } else {
+	char *theStr = formatThroughput(i * dydat, 0);
 
-    xpos = hmargin - txtsz; 
-    if(xpos < 1) xpos = 1;
-    
-    if(maxval > 0) gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), str, black); 
+	/* traceEvent(CONST_TRACE_INFO, "%u/%s", i * dydat, theStr); */
+
+	txtsz = gdFontSmall->w*strlen(theStr);
+	xpos = hmargin - txtsz; if(xpos < 1) xpos = 1;
+	gdImageString(im, gdFontSmall, xpos-5, ypos - (int)(txtht/2), theStr, black);	
+      }
+    }
 
     if (!(i == 0) && !(i > ngrid)) {
-      gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray); 
+      gdImageLine(im, hmargin, ypos, hmargin + xsize, ypos, gray);
     }
-  } 
- 
+  }
+
   // columns and x labels
   padding = 0; // half of spacing between columns
   yscale = (float)ysize / ((ngrid+1) * dydat); // pixels per data unit
 
   if(maxval > 0) {
-	 gdPoint points[5];
+    gdPoint points[5];
 
-	memset(points, 0, sizeof(points));
+    memset(points, 0, sizeof(points));
 
     for (i = 0; i<num_points; i++) {
       // vertical columns
-      ymax = vmargin/2 + ysize; 
-      ymin = ymax - (int)(data[i]*yscale); 
-      xmax = hmargin + (i+1)*base - padding; 
-      xmin = hmargin + i*base + padding; 
+      ymax = vmargin/2 + ysize;
+      ymin = ymax - (int)(data[i]*yscale);
+      xmax = hmargin + (i+1)*base - padding;
+      xmin = hmargin + i*base + padding;
 
       if(i == 0) {
 	points[0].x = xmin; points[0].y = ymin;
@@ -383,10 +394,10 @@ void drawArea(short width,
 
       points[4].x = points[0].x; points[4].y = points[0].y;
 
-      gdImageFilledPolygon(im, points, 5, colors[0]); 
-      gdImageFilledRectangle(im, points[0].x-1, points[0].y-1, points[0].x+1, points[0].y+1, black); 
-      gdImageFilledRectangle(im, points[3].x-1, points[3].y-1, points[3].x+1, points[3].y+1, black); 
-      gdImageLine(im, points[0].x, points[0].y, points[3].x, points[3].y, black); 
+      gdImageFilledPolygon(im, points, 5, colors[0]);
+      gdImageFilledRectangle(im, points[0].x-1, points[0].y-1, points[0].x+1, points[0].y+1, black);
+      gdImageFilledRectangle(im, points[3].x-1, points[3].y-1, points[3].x+1, points[3].y+1, black);
+      gdImageLine(im, points[0].x, points[0].y, points[3].x, points[3].y, black);
 
       if((i % 2) == 0) {
 	snprintf(str, sizeof(str), "%5s",labels[i]);
@@ -394,27 +405,23 @@ void drawArea(short width,
       }
 
       // x labels
-      txtsz = gdFontSmall->w * strlen(labels[i]); 
+      txtsz = gdFontSmall->w * strlen(labels[i]);
 
-      xpos = xmin + (int)((base - txtsz) / 2); 
-      if(xmin > xpos) xpos = xmin; else xmin = xpos; 
+      xpos = xmin + (int)((base - txtsz) / 2);
+      if(xmin > xpos) xpos = xmin; else xmin = xpos;
       ypos = ymax + 3; // distance from x axis
     }
-  } 
+  }
 
   // plot frame
-  gdImageRectangle(im, hmargin, vmargin/2, hmargin + xsize, vmargin/2 + ysize, black); 
+  gdImageRectangle(im, hmargin, vmargin/2, hmargin + xsize, vmargin/2 + ysize, black);
 
-  if(xtitle) {
+  if(xtitle)
     gdImageString(im, gdFontSmall, (width/2)-(strlen(xtitle)*gdFontSmall->w)/2,
 		  height-gdFontSmall->h-2, xtitle, black);
-  }
 
-  if(ytitle) {
+  if(ytitle)
     gdImageString(im, gdFontSmall, 5, 2, ytitle, black);
-  }
-
-  /* ************************* */
 
   gdImagePng(im, filepointer);
   gdImageDestroy(im);
@@ -439,7 +446,7 @@ void sendGraphFile(char* fileName, int doNotUnlink) {
       if(len <= 0) break;
     }
     fclose(fd);
-  } else 
+  } else
     traceEvent(CONST_TRACE_WARNING, "Unable to open file %s - graphic not sent", fileName);
 
   if (doNotUnlink == 0) {
@@ -625,7 +632,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       }
     }
 
-    idx = 0; protoList = myGlobals.ipProtosList;  
+    idx = 0; protoList = myGlobals.ipProtosList;
     while(protoList != NULL) {
       if(dataSent) {
 	if(theHost->ipProtosList[idx].sent.value > 0) {
@@ -637,7 +644,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	  p[num] = (float)((100*theHost->ipProtosList[idx].rcvd.value)/totTraffic.value);
 	  if(p[num] > MIN_SLICE_PERCENTAGE) lbl[num++] = protoList->protocolName;
 	}
-      }     
+      }
 
       idx++, protoList = protoList->next;
     }
@@ -654,11 +661,11 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
       useFdOpen = 0;
     else
       useFdOpen = 1;
-  
+
     if(useFdOpen)
       fd = fdopen(abs(myGlobals.newSock), "ab");
     else
-      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
     fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -739,11 +746,11 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
       useFdOpen = 0;
     else
       useFdOpen = 1;
-  
+
     if(useFdOpen)
       fd = fdopen(abs(myGlobals.newSock), "ab");
     else
-      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
     fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -803,11 +810,11 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
       useFdOpen = 0;
     else
       useFdOpen = 1;
-  
+
     if(useFdOpen)
       fd = fdopen(abs(myGlobals.newSock), "ab");
     else
-      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+      fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
     fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -850,7 +857,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     totalIPTraffic.value = theHost->ipBytesSent.value;
   else
     totalIPTraffic.value = theHost->ipBytesRcvd.value;
-  
+
   if(totalIPTraffic.value > 0) {
     for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
       if(dataSent)
@@ -886,11 +893,11 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -970,11 +977,11 @@ void pktSizeDistribPie(void) {
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -1057,11 +1064,11 @@ void pktTTLDistribPie(void) {
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -1114,11 +1121,11 @@ void ipProtoDistribPie(void) {
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -1177,11 +1184,11 @@ void interfaceTrafficPie(void) {
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -1242,12 +1249,12 @@ void pktCastDistribPie(void) {
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
-#else   
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
+#else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
@@ -1278,7 +1285,7 @@ void drawTrafficPie(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value == 0) return;
 
   ip.value = myGlobals.device[myGlobals.actualReportDeviceId].ipBytes.value;
-  
+
   p[0] = ip.value*100/myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value; num++;
   p[1] = 100-p[0];
 
@@ -1292,11 +1299,11 @@ void drawTrafficPie(void) {
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -1307,7 +1314,7 @@ void drawTrafficPie(void) {
 	  num,			/* number of slices */
 	  lbl,			/* slice labels */
 	  p);			/* data array */
-  
+
   fclose(fd);
 
   if(!useFdOpen)
@@ -1336,11 +1343,11 @@ void drawThptGraph(int sortedColumn) {
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -1360,7 +1367,7 @@ void drawThptGraph(int sortedColumn) {
     }
 
     for(maxBytesPerSecond=0, i=0; i<len; i++) {
-      graphData[59-i] = myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].trafficValue*8 /* I want bits here */;
+      graphData[59-i] = myGlobals.device[myGlobals.actualReportDeviceId].last60MinutesThpt[i].trafficValue;
       if(graphData[59-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[59-i];
     }
 
@@ -1372,11 +1379,12 @@ void drawThptGraph(int sortedColumn) {
 	graphData[59-i] /= 1024;
     }
 
-    drawArea(600, 300,    /* width, height           */
-	     fd,          /* open FILE pointer       */
-	     60,          /* num points per data set */
+    drawArea(600, 300,            /* width, height           */
+	     fd,                  /* open FILE pointer       */
+	     60,                  /* num points per data set */
 	     (char**)lbls,        /* X labels array of char* */
-	     graphData, NULL, "Throughput");  /* dataset 1   */
+	     graphData, NULL,     /* dataset 1   */
+	     "Throughput", 1);
     break;
   case 2: /* 24 Hours */
     for(i=0; i<24; i++) {
@@ -1392,7 +1400,7 @@ void drawThptGraph(int sortedColumn) {
     }
 
     for(maxBytesPerSecond=0, i=0; i<len; i++) {
-      graphData[23-i] = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue*8 /* I want bits here */;
+      graphData[23-i] = myGlobals.device[myGlobals.actualReportDeviceId].last24HoursThpt[i].trafficValue;
       if(graphData[23-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[23-i];
     }
 
@@ -1405,10 +1413,11 @@ void drawThptGraph(int sortedColumn) {
     }
 
     drawArea(600, 300,      /* width, height           */
-	     fd,/* open FILE pointer       */
-	     24,/* num points per data set */
+	     fd,            /* open FILE pointer       */
+	     24,            /* num points per data set */
 	     lbls,          /* X labels array of char* */
-	     graphData, NULL, "Throughput");    /* dataset 1   */
+	     graphData, NULL,    /* dataset 1   */
+	     "Throughput", 1);
     break;
   case 3: /* 30 Days */
     for(i=0; i<30; i++) {
@@ -1424,7 +1433,7 @@ void drawThptGraph(int sortedColumn) {
     }
 
     for(maxBytesPerSecond=0, i=0; i<len; i++) {
-      graphData[29-i] = myGlobals.device[myGlobals.actualReportDeviceId].last30daysThpt[i]*8 /* I want bits here */;
+      graphData[29-i] = myGlobals.device[myGlobals.actualReportDeviceId].last30daysThpt[i];
       if(graphData[29-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[29-i];
     }
 
@@ -1437,10 +1446,11 @@ void drawThptGraph(int sortedColumn) {
     }
 
     drawArea(600, 300,          /* width, height           */
-	     fd,    /* open FILE pointer       */
-	     30,    /* num points per data set */
-	     lbls,  /* X labels array of char* */
-	     graphData, NULL, "Throughput");        /* dataset 1   */
+	     fd,                /* open FILE pointer       */
+	     30,                /* num points per data set */
+	     lbls,              /* X labels array of char* */
+	     graphData, NULL,
+	     "Throughput", 1);
     break;
   }
 
@@ -1494,16 +1504,16 @@ void drawGlobalProtoDistribution(void) {
 
 
   {
-    ProtocolsList *protoList = myGlobals.ipProtosList;    
+    ProtocolsList *protoList = myGlobals.ipProtosList;
     int idx1 = 0;
-    
+
     while(protoList != NULL) {
- 
+
       if(myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value > 0) {
-	p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value; 
-	lbl[idx] = protoList->protocolName; idx++; 
+	p[idx] = myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
+	lbl[idx] = protoList->protocolName; idx++;
       }
-      
+
       idx1++, protoList = protoList->next;
     }
   }
@@ -1516,11 +1526,11 @@ void drawGlobalProtoDistribution(void) {
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -1556,7 +1566,7 @@ void drawGlobalIpProtoDistribution(void) {
       total -= (float)myGlobals.device[myGlobals.actualReportDeviceId].ipProtosList[idx1].value;
     else
       total = 0;
-    
+
     idx1++, protoList = protoList->next;
   }
 
@@ -1572,7 +1582,7 @@ void drawGlobalIpProtoDistribution(void) {
     }
   }
 
-  /*  Add a bar for the Other TCP/UDP based protocols 
+  /*  Add a bar for the Other TCP/UDP based protocols
       Courtesy of Robbert Kouprie <r.kouprie@dto.tudelft.nl>
   */
   if (total > partialTotal) {
@@ -1583,21 +1593,21 @@ void drawGlobalIpProtoDistribution(void) {
 
 #ifndef WIN32
   /* Unices */
-  
+
   if(myGlobals.newSock < 0)
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
 
-  drawBar(600, 350,	/* width/height */
+  drawBar(600, 300,	/* width/height */
 	  fd,		/* open file pointer */
 	  idx,		/* number of slices */
 	  lbl,		/* slice labels */
@@ -1628,7 +1638,7 @@ int drawHostsDistanceGraph(int checkOnly) {
     graphData[i] = 0;
   }
 
-  for(el=getFirstHost(myGlobals.actualReportDeviceId); 
+  for(el=getFirstHost(myGlobals.actualReportDeviceId);
       el != NULL; el = getNextHost(myGlobals.actualReportDeviceId, el)) {
     if(!subnetPseudoLocalHost(el)) {
       j = guessHops(el);
@@ -1649,11 +1659,11 @@ int drawHostsDistanceGraph(int checkOnly) {
     useFdOpen = 0;
   else
     useFdOpen = 1;
-  
+
   if(useFdOpen)
     fd = fdopen(abs(myGlobals.newSock), "ab");
   else
-    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */  
+    fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #else
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 #endif
@@ -1662,7 +1672,8 @@ int drawHostsDistanceGraph(int checkOnly) {
 	   fd,          /* open FILE pointer       */
 	   30,          /* num points per data set */
 	   lbls,        /* X labels array of char* */
-	   graphData, "Hops (TTL)", "Number of Hosts");  /* dataset 1   */
+	   graphData, "Hops (TTL)",
+	   "Number of Hosts", 0);
 
   fclose(fd);
 

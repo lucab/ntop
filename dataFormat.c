@@ -203,14 +203,20 @@ char* formatMicroSeconds(unsigned long microsec) {
 
 /* ******************************* */
 
-char* formatThroughput(float numBytes /* <=== Bytes/second */) {
+char* formatThroughput(float numBytes /* <=== Bytes/second */, u_char htmlFormat) {
   static char outStr[5][32];
   static short bufIdx=0;
   float numBits;
-  static int divider = 1000;   /* As SNMP does instead of using 1024
-				  ntop divides for 1000 */
+  int divider = 1000;   /* As SNMP does instead of using 1024 ntop divides for 1000 */
+  char *separator;
+
   bufIdx = (bufIdx+1)%5;
 
+  if(htmlFormat)
+    separator = myGlobals.separator;
+  else
+    separator = " ";
+  
   if(numBytes < 0) numBytes = 0; /* Sanity check */
   numBits = numBytes*8;
 
@@ -218,13 +224,13 @@ char* formatThroughput(float numBytes /* <=== Bytes/second */) {
     numBits = 0; /* Avoid very small decimal values */
   
   if (numBits < divider) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sbps", numBits, myGlobals.separator) < 0) 
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sbps", numBits, separator) < 0) 
      BufferTooShort();
   } else if (numBits < (divider*divider)) {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sKbps", ((float)(numBits)/divider), myGlobals.separator) < 0) 
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sKbps", ((float)(numBits)/divider), separator) < 0) 
      BufferTooShort();
   } else {
-    if(snprintf(outStr[bufIdx], 32, "%.1f%sMbps", ((float)(numBits)/1048576), myGlobals.separator) < 0) 
+    if(snprintf(outStr[bufIdx], 32, "%.1f%sMbps", ((float)(numBits)/1048576), separator) < 0) 
      BufferTooShort();
   }
 
@@ -319,3 +325,24 @@ char* formatPkts(Counter pktNr) {
 
   return(staticBuffer[bufIdx]);
 }
+
+/* ************************************ */
+
+char* formatTime(time_t *theTime, short encodeString) {
+  static char outStr[2][LEN_TIMEFORMAT_BUFFER];
+  static short timeBufIdx=0;
+  struct tm *locTime;
+  struct tm myLocTime;
+
+  locTime = localtime_r(theTime, &myLocTime);
+
+  timeBufIdx = (timeBufIdx+1)%2;
+
+  if(encodeString)
+    strftime(outStr[timeBufIdx], LEN_TIMEFORMAT_BUFFER, "%x&nbsp;%X", locTime);
+  else
+    strftime(outStr[timeBufIdx], LEN_TIMEFORMAT_BUFFER, "%x %X", locTime);
+
+  return(outStr[timeBufIdx]);
+}
+

@@ -1931,26 +1931,6 @@ char* getNwInterfaceType(int i) {
 
 /* ************************************ */
 
-char* formatTime(time_t *theTime, short encodeString) {
-  static char outStr[2][LEN_TIMEFORMAT_BUFFER];
-  static short timeBufIdx=0;
-  struct tm *locTime;
-  struct tm myLocTime;
-
-  locTime = localtime_r(theTime, &myLocTime);
-
-  timeBufIdx = (timeBufIdx+1)%2;
-
-  if(encodeString)
-    strftime(outStr[timeBufIdx], LEN_TIMEFORMAT_BUFFER, "%x&nbsp;%X", locTime);
-  else
-    strftime(outStr[timeBufIdx], LEN_TIMEFORMAT_BUFFER, "%x %X", locTime);
-
-  return(outStr[timeBufIdx]);
-}
-
-/* ************************************ */
-
 int getActualInterface(u_int deviceId) {
   if(myGlobals.mergeInterfaces) {
     return(myGlobals.device[0].dummyDevice == 0 ? 0 : deviceId);

@@ -112,10 +112,11 @@ extern char* formatAdapterSpeed(Counter numBits);
 extern char* formatLatency(struct timeval tv, u_short sessionState);
 extern char* formatSeconds(unsigned long sec);
 extern char* formatMicroSeconds(unsigned long microsec);
-extern char* formatThroughput(float numBytes);
+extern char* formatThroughput(float numBytes, u_char htmlFormat);
 extern char* formatTimeStamp(unsigned int ndays, unsigned int nhours,
                              unsigned int nminutes);
 extern char* formatPkts(Counter pktNr);
+extern char *formatTime(time_t *theTime, short encodeString);
 
 /* hash.c */
 extern u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
@@ -388,7 +389,7 @@ extern char *savestr(const char *str);
 extern int name_interpret(char *in, char *out, int in_len);
 
 extern char *getNwInterfaceType(int i);
-extern char *formatTime(time_t *theTime, short encodeString);
+
 extern int getActualInterface(u_int);
 extern void storeHostTrafficInstance(HostTraffic *el);
 extern void resetHostsVariables(HostTraffic* el);

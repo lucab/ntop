@@ -290,7 +290,7 @@ extern void drawBar(short width, short height, FILE* filepointer,
 		    int   num_points, char  *labels[], float data[]);
 extern void drawArea(short width, short height, FILE* filepointer,
 		     int   num_points, char  *labels[], float data[],
-		     char *xtitle, char *ytitle);
+		     char *xtitle, char *ytitle, u_short formatYlabels);
 extern void drawPie(short width, short height, FILE* filepointer,
 		    int   num_points, char  *labels[], float data[]);
 

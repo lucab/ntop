@@ -569,30 +569,30 @@ void printTrafficStatistics(void) {
       sendString("<TR><TH "TH_BG" ALIGN=LEFT>Network Load</TH><TD "TH_BG">\n<TABLE BORDER=1 WIDTH=100%>");
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Actual</th><TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt),
-		  myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt) < 0)
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].actualThpt, 1),
+		  myGlobals.device[myGlobals.actualReportDeviceId].actualPktsThpt, 1) < 0)
 	BufferTooShort();
       sendString(buf);
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Last Minute</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt),
-		  myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt) < 0)
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastMinThpt, 1),
+		  myGlobals.device[myGlobals.actualReportDeviceId].lastMinPktsThpt, 1) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Last 5 Minutes</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt),
-		  myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt) < 0)
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsThpt, 1),
+		  myGlobals.device[myGlobals.actualReportDeviceId].lastFiveMinsPktsThpt, 1) < 0)
 	BufferTooShort();
       sendString(buf);
 
       if(snprintf(buf, sizeof(buf), "<TR "TR_ON" %s><TH "TH_BG" align=left>Peak</th>"
 		  "<TD "TD_BG" align=right>%s</td>"
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
-		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput),
+		  getRowColor(), formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].peakThroughput, 1),
 		  myGlobals.device[myGlobals.actualReportDeviceId].peakPacketThroughput) < 0)
 	BufferTooShort();
       sendString(buf);
@@ -602,7 +602,7 @@ void printTrafficStatistics(void) {
 		  "<TD "TD_BG" align=right>%.1f&nbsp;Pkts/sec</td></TR>\n",
 		  getRowColor(),
 		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].ethernetBytes.value/
-				   (myGlobals.actTime-myGlobals.initialSniffTime)),
+				   (myGlobals.actTime-myGlobals.initialSniffTime), 1),
 		  /* Bug below fixed courtesy of Eddy Lai <eddy@ModernTerminals.com> */
 		  ((float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value/
 		   (float)(myGlobals.actTime-myGlobals.initialSniffTime))) < 0)
@@ -1118,12 +1118,12 @@ void printHostsTraffic(int reportType,
 			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
 			"<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
 			getRowColor(), webHostName,
-			formatThroughput(el->actualRcvdThpt),
-			formatThroughput(el->averageRcvdThpt),
-			formatThroughput(el->peakRcvdThpt),
+			formatThroughput(el->actualRcvdThpt, 1),
+			formatThroughput(el->averageRcvdThpt, 1),
+			formatThroughput(el->peakRcvdThpt, 1),
 			el->actualRcvdPktThpt,
 			el->averageRcvdPktThpt,
-			el->peakRcvdPktThpt) < 0)
+			el->peakRcvdPktThpt, 1) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -1138,9 +1138,9 @@ void printHostsTraffic(int reportType,
                         "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
                         "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
                         getRowColor(), webHostName,
-                        formatThroughput(el->actualSentThpt),
-                        formatThroughput(el->averageSentThpt),
-                        formatThroughput(el->peakSentThpt),
+                        formatThroughput(el->actualSentThpt, 1),
+                        formatThroughput(el->averageSentThpt, 1),
+                        formatThroughput(el->peakSentThpt, 1),
                         el->actualSentPktThpt,
                         el->averageSentPktThpt,
                         el->peakSentPktThpt) < 0)
@@ -1158,9 +1158,9 @@ void printHostsTraffic(int reportType,
                         "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>"
                         "<TD "TD_BG" ALIGN=RIGHT>%.1f&nbsp;Pkts/sec</TD>",
                         getRowColor(), webHostName,
-                        formatThroughput(el->actualTThpt),
-                        formatThroughput(el->averageTThpt),
-                        formatThroughput(el->peakTThpt),
+                        formatThroughput(el->actualTThpt, 1),
+                        formatThroughput(el->averageTThpt, 1),
+                        formatThroughput(el->peakTThpt, 1),
                         el->actualTPktThpt,
                         el->averageTPktThpt,
                         el->peakTPktThpt) < 0)
@@ -2285,7 +2285,7 @@ void printIpAccounting(int remoteToLocal, int sortedColumn,
 		formatBytes(totalBytes, 1),
 		formatBytes(totalBytesSent, 1),
 		formatBytes(totalBytesRcvd, 1),
-		formatThroughput((float)(totalBytes/timeDiff))) < 0)
+		formatThroughput((float)(totalBytes/timeDiff), 1)) < 0)
       BufferTooShort();
 
     sendString(buf);
@@ -3559,7 +3559,7 @@ void printThptStatsMatrix(int sortedColumn) {
 		  "<TABLE BORDER=1 WIDTH=100%%>",
 		  getRowColor(), label1, label,
 		  formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				   last60MinutesThpt[i].trafficValue)) < 0)
+				   last60MinutesThpt[i].trafficValue, 1)) < 0)
 	BufferTooShort();
       sendString(buf);
 
@@ -3575,7 +3575,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].topSentTraffic.value)) < 0)
+				       last60MinutesThpt[i].topSentTraffic.value, 1)) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3589,7 +3589,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].secondSentTraffic.value)) < 0)
+				       last60MinutesThpt[i].secondSentTraffic.value, 1)) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3603,7 +3603,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].thirdSentTraffic.value)) < 0)
+				       last60MinutesThpt[i].thirdSentTraffic.value, 1)) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3625,7 +3625,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].topRcvdTraffic.value)) < 0)
+				       last60MinutesThpt[i].topRcvdTraffic.value, 1)) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3639,7 +3639,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].secondRcvdTraffic.value)) < 0)
+				       last60MinutesThpt[i].secondRcvdTraffic.value, 1)) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3653,7 +3653,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	  if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 		      makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 		      formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				       last60MinutesThpt[i].thirdRcvdTraffic.value)) < 0)
+				       last60MinutesThpt[i].thirdRcvdTraffic.value, 1)) < 0)
 	    BufferTooShort();
 	  sendString(buf); dataSent = 1;
 	}
@@ -3691,7 +3691,7 @@ void printThptStatsMatrix(int sortedColumn) {
 		    "<TD "TD_BG" ALIGN=RIGHT>%s</TD><TD "TD_BG" ALIGN=LEFT>"TABLE_ON"<TABLE BORDER=1>",
 		    getRowColor(), label, label1,
 		    formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-				     last24HoursThpt[i].trafficValue)) < 0)
+				     last24HoursThpt[i].trafficValue, 1)) < 0)
 	  BufferTooShort();
 	sendString(buf);
 
@@ -3705,7 +3705,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].topSentTraffic.value)) < 0)
+					 last24HoursThpt[i].topSentTraffic.value, 1)) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3719,7 +3719,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].secondSentTraffic.value)) < 0)
+					 last24HoursThpt[i].secondSentTraffic.value, 1)) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3733,7 +3733,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].thirdSentTraffic.value)) < 0)
+					 last24HoursThpt[i].thirdSentTraffic.value, 1)) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3754,7 +3754,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].topRcvdTraffic.value)) < 0)
+					 last24HoursThpt[i].topRcvdTraffic.value, 1)) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3768,7 +3768,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].secondRcvdTraffic.value)) < 0)
+					 last24HoursThpt[i].secondRcvdTraffic.value, 1)) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
@@ -3782,7 +3782,7 @@ void printThptStatsMatrix(int sortedColumn) {
 	    if(snprintf(buf, sizeof(buf), "<TR "TR_ON">%s<TD "TD_BG" ALIGN=RIGHT>%s</TD>\n",
 			makeHostLink(el, FLAG_HOSTLINK_HTML_FORMAT, 0, 0),
 			formatThroughput(myGlobals.device[myGlobals.actualReportDeviceId].
-					 last24HoursThpt[i].thirdRcvdTraffic.value)) < 0)
+					 last24HoursThpt[i].thirdRcvdTraffic.value, 1)) < 0)
 	      BufferTooShort();
 	    sendString(buf);
 	  }
