@@ -82,6 +82,17 @@ static void updateDeviceHostNameInfo(HostAddr addr, char* symbolic, int actualDe
 
 /* ************************************ */
 
+static int validDNSChar(char c) {  
+  if((c == '-') || (c == '_') || (c == '.')) return(1);
+  if((c >= '0') && (c <= '9')) return(1);
+  if((c >= 'a') && (c <= 'z')) return(1);
+  if((c >= 'A') && (c <= 'Z')) return(1);
+
+  return(0);
+}
+
+/* ************************************ */
+
 static int validDNSName(char *name) {
   int i, len;
 
@@ -91,8 +102,7 @@ static int validDNSName(char *name) {
     len = strlen(name);
   
   for(i=0; i<len; i++)
-    if(!(isalnum(name[i]) || (name[i] == '-') 
-	 || (name[i] == '_') || (name[i] == '.')))
+    if(!validDNSChar(name[i]))
       return(0);
   
   return(1);
