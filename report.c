@@ -72,15 +72,15 @@ void initReports(void) {
   /* Corrections on stored value */
   if(myGlobals.mergeInterfaces) {
     traceEvent(CONST_TRACE_NOISY,
-               "WEB: Merging interfaces, reporting device forced to 0");
+               "INITWEB: Merging interfaces, reporting device forced to 0");
     storePrefsValue("actualReportDeviceId", "0");
   } else if(fetchPrefsValue("actualReportDeviceId", value, sizeof(value)) == -1) {
     traceEvent(CONST_TRACE_NOISY,
-               "WEB: Reporting device not set, defaulting to 0");
+               "INITWEB: Reporting device not set, defaulting to 0");
     storePrefsValue("actualReportDeviceId", "0");
   } else if(atoi(value) >= myGlobals.numDevices) {
     traceEvent(CONST_TRACE_WARNING, 
-               "WEB: Reporting device (%d) invalid (> max, %d), defaulting to 0");
+               "INITWEB: Reporting device (%d) invalid (> max, %d), defaulting to 0");
     storePrefsValue("actualReportDeviceId", "0");
   }
   
@@ -94,7 +94,7 @@ void initReports(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) {
     /* Bad idea, set to 1st non-virtual device */
     traceEvent(CONST_TRACE_WARNING,
-               "WEB: Reporting device (%d) invalid (virtual), using 1st non-virtual device");
+               "INITWEB: Reporting device (%d) invalid (virtual), using 1st non-virtual device");
     for(i=0; i<myGlobals.numDevices; i++) {
       if(!myGlobals.device[i].virtualDevice) {
         myGlobals.actualReportDeviceId = i;

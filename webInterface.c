@@ -7416,11 +7416,11 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #ifndef WIN32
   if(addr) {
     if(!inet_aton(addr, &sockIn.sin_addr)) {
-      traceEvent(CONST_TRACE_ERROR, "WEB: Unable to convert address '%s' - "
+      traceEvent(CONST_TRACE_ERROR, "INITWEB: Unable to convert address '%s' - "
                  "not binding to a particular interface", addr);
       sockIn.sin_addr.s_addr = INADDR_ANY;
     } else {
-      traceEvent(CONST_TRACE_INFO, "WEB: Converted address '%s' - "
+      traceEvent(CONST_TRACE_INFO, "INITWEB: Converted address '%s' - "
                  "binding to the specific interface", addr);
     }
   } else {
@@ -7489,13 +7489,13 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 	if((*sock <= 0) || (errno != 0))
 #endif
 	  {
-	    traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to create a new%s socket - returned %d, error is '%s'(%d)",
+	    traceEvent(CONST_TRACE_FATALERROR, "INITWEB: Unable to create a new%s socket - returned %d, error is '%s'(%d)",
 		       sslOrNot, *sock, strerror(errno), errno);
 	    exit(-1);
 	  }
       }
     }
-    traceEvent(CONST_TRACE_NOISY, "WEB: Created a new%s socket (%d)", sslOrNot, *sock);
+    traceEvent(CONST_TRACE_NOISY, "INITWEB: Created a new%s socket (%d)", sslOrNot, *sock);
     
 #ifdef INITWEB_DEBUG
   traceEvent(CONST_TRACE_INFO, "INITWEB_DEBUG:%s setsockopt(%d, SOL_SOCKET, SO_REUSEADDR ...",
@@ -7505,7 +7505,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   errno = 0;
   rc = setsockopt(*sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
   if((rc < 0) || (errno != 0)) {
-    traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to set%s socket options - '%s'(%d)",
+    traceEvent(CONST_TRACE_FATALERROR, "INITWEB: Unable to set%s socket options - '%s'(%d)",
                sslOrNot, strerror(errno), errno);
     exit(-1);
   }
@@ -7521,7 +7521,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 #endif
   if((rc < 0) || (errno != 0)) {
     traceEvent(CONST_TRACE_FATALERROR,
-               "WEB:%s binding problem - '%s'(%d)",
+               "INITWEB:%s binding problem - '%s'(%d)",
                sslOrNot, strerror(errno), errno);
     traceEvent(CONST_TRACE_INFO, "Check if another instance of ntop is running"); 
     closeNwSocket(&myGlobals.sock);
@@ -7535,7 +7535,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
   errno = 0;
   rc = listen(*sock, myGlobals.webServerRequestQueueLength);
   if((rc < 0) || (errno != 0)) {
-    traceEvent(CONST_TRACE_FATALERROR, "WEB:%s listen(%d, %d) error %s(%d)",
+    traceEvent(CONST_TRACE_FATALERROR, "INITWEB:%s listen(%d, %d) error %s(%d)",
                sslOrNot,
                *sock,
                myGlobals.webServerRequestQueueLength,
@@ -7544,7 +7544,7 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
     exit(-1);
   }
 
-  traceEvent(CONST_TRACE_INFO, "Initialized%s socket, port %d, address %s",
+  traceEvent(CONST_TRACE_INFO, "INITWEB: Initialized%s socket, port %d, address %s",
              sslOrNot,
              *port,
              addr == NULL ? "(any)" : addr);
@@ -7560,22 +7560,22 @@ void initSocket(int isSSL, int ipv4or6, int *port, int *sock, char *addr) {
 
 void initWeb(void) {
 
-  traceEvent(CONST_TRACE_INFO, "WEB: Initializing web server");
+  traceEvent(CONST_TRACE_INFO, "INITWEB: Initializing web server");
 
   myGlobals.columnSort = 0;
   addDefaultAdminUser();
   initAccessLog();
 
-  traceEvent(CONST_TRACE_INFO, "WEB: Initializing tcp/ip socket connections for web server");
+  traceEvent(CONST_TRACE_INFO, "INITWEB: Initializing tcp/ip socket connections for web server");
 
   if(myGlobals.webPort > 0) {
     initSocket(FALSE, myGlobals.ipv4or6, &myGlobals.webPort, &myGlobals.sock, myGlobals.webAddr);
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     if(myGlobals.webAddr)
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTP connections on %s port %d",
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "INITWEB: Waiting for HTTP connections on %s port %d",
 		 myGlobals.webAddr, myGlobals.webPort);
     else
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTP connections on port %d",
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "INITWEB: Waiting for HTTP connections on port %d",
 		 myGlobals.webPort);
   }
 
@@ -7583,16 +7583,16 @@ void initWeb(void) {
   if((myGlobals.sslInitialized) && (myGlobals.sslPort > 0)) {
     initSocket(TRUE, myGlobals.ipv4or6, &myGlobals.sslPort, &myGlobals.sock_ssl, myGlobals.sslAddr);
     if(myGlobals.sslAddr)
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTPS (SSL) connections on %s port %d",
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "INITWEB: Waiting for HTTPS (SSL) connections on %s port %d",
 		 myGlobals.sslAddr, myGlobals.sslPort);
     else
-      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTPS (SSL) connections on port %d",
+      traceEvent(CONST_TRACE_ALWAYSDISPLAY, "INITWEB: Waiting for HTTPS (SSL) connections on port %d",
 		 myGlobals.sslPort);
   }
 #endif
 
 #ifdef CFG_MULTITHREADED
-  traceEvent(CONST_TRACE_INFO, "WEB: Starting web server");
+  traceEvent(CONST_TRACE_INFO, "INITWEB: Starting web server");
   createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for web server",
 	     myGlobals.handleWebConnectionsThreadId);
@@ -7604,7 +7604,7 @@ void initWeb(void) {
     {
       int rc;
 
-      traceEvent(CONST_TRACE_INFO, "WEB: Starting https:// watchdog");
+      traceEvent(CONST_TRACE_INFO, "INITWEB: Starting https:// watchdog");
 
 #ifdef SSLWATCHDOG_DEBUG
       traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: ****S*S*L*W*A*T*C*H*D*O*G*********STARTING");
@@ -7640,7 +7640,7 @@ void initWeb(void) {
 
 #endif /* CFG_MULTITHREADED */
 
-  traceEvent(CONST_TRACE_NOISY, "WEB: Server started... continuing with initialization");
+  traceEvent(CONST_TRACE_NOISY, "INITWEB: Server started... continuing with initialization");
 }
 
 
@@ -8112,6 +8112,8 @@ void* handleWebConnections(void* notUsed _UNUSED_) {
 #endif
 
     memcpy(&mask_copy, &mask, sizeof(fd_set));
+
+    traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: ntop's web server is now processing requests");
 
 #ifndef CFG_MULTITHREADED
     /* select returns immediately */
