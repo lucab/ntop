@@ -176,11 +176,6 @@ if [ $# != 0 ]
           rm -f intop/Makefile
           rm -f intop/Makefile.in
 
-          rm -f remoteInterfaceAPI/Makefile
-          rm -f remoteInterfaceAPI/Makefile.in
-          rm -f remoteInterfaceAPI/CPP/Makefile
-          rm -f remoteInterfaceAPI/CPP/Makefile.in
-
           exit 1
         ;;
 
