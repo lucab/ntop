@@ -4180,12 +4180,14 @@ void processPacket(u_char *_deviceId,
      device[deviceId].datalink, hlen, caplen);
   */
 
+#ifdef PURGE_CONSERVATION
   /*
    * Let's check whether it's time to free up
    * some space before to continue....
    */
   if(device[actualDeviceId].hostsno > device[actualDeviceId].topHashThreshold)
     purgeIdleHosts(0 /* Delete only idle hosts */, actualDeviceId);
+#endif
 
   memcpy(&lastPktTime, &h->ts, sizeof(lastPktTime));
 

@@ -170,8 +170,11 @@ void resizeHostHash(int deviceToExtend, short hashAction) {
   if(newSize > maxHashSize) /* Hard Limit */ {
     purgeIdleHosts(1, actualDeviceId);
     return;
-  } else
+  } 
+#ifdef PURGE_CONSERVATION
+  else
     purgeIdleHosts(0, actualDeviceId); /* Delete only idle hosts */
+#endif
 
 #if defined(MULTITHREADED)
   if(device[actualDeviceId].hostsno < (device[deviceToExtend].actualHashSize*HASH_EXTEND_THRESHOLD)) {
@@ -1104,8 +1107,14 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
   idx = 1;
   
   while(goOn
-	&& (device[actDevice].hostsno > device[actDevice].hashThreshold)
-	&& (numFreedBuckets < MIN_NUM_FREED_BUCKETS)) {
+	&& (device[actDevice].hostsno > device[actDevice].hashThreshold)) {
+    
+    if(ignoreIdleTime) {
+      /* Ween to urgently free stuff: we've done this and it's enough */
+      if(numFreedBuckets > MIN_NUM_FREED_BUCKETS)
+	break;
+    }
+
 #ifdef MULTITHREADED
     accessMutex(&hostsHashMutex, "scanIdleLoop");
 #endif
@@ -1126,7 +1135,8 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
 	if(freeEntry) {
 	  /* updateHostTraffic(device[actDevice].hash_hostTraffic[idx]); */
 	  freeHostInfo(actDevice, idx);
-	  traceEvent(TRACE_INFO, "Host purged (%d hosts purged)", numFreedBuckets);
+	  traceEvent(TRACE_INFO, "Host (idx=%d) purged (%d hosts purged)",
+		     idx, numFreedBuckets);
 	  numFreedBuckets++;
 	} 
       }
@@ -1137,6 +1147,14 @@ void purgeIdleHosts(int ignoreIdleTime, int actDevice) {
     releaseMutex(&hostsHashMutex);
 #endif
     idx++;
+
+    if(freeEntry) {
+#ifdef HAVE_SCHED_H
+      sched_yield(); /* Allow other threads to run */
+#else
+      sleep(1); /* leave some time to others */
+#endif
+    }
   }
 
   traceEvent(TRACE_INFO, "Purging completed (%d sec).", (time(NULL)-startTime));
