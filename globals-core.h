@@ -98,8 +98,8 @@ extern void _setResolvedName(HostTraffic *el, char *updateValue, short updateTyp
 extern int cmpFctnResolvedName(const void *_a, const void *_b);
 extern int cmpFctnLocationName(const void *_a, const void *_b);
 extern void unescape_url(char *url);
-extern void revertSlash(char *str, int mode);
-extern void revertDoubleColumn(char *str);
+extern void revertSlashIfWIN32(char *str, int mode);
+extern void revertDoubleColumnIfWIN32(char *str);
 extern void checkUserIdentity(int userSpecified);
 
 #ifndef WIN32
@@ -199,7 +199,6 @@ extern void initDeviceDatalink(int);
 extern void parseTrafficFilter(void);
 extern void initSignals(void);
 extern void startSniffer(void);
-extern void deviceSanityCheck(char* string);
 
 
 extern int safe_snprintf(char* file, int line,
@@ -505,6 +504,9 @@ extern FILE* getNewRandomFile(char* fileName, int len);
 extern void stringSanityCheck(char* string, char* parm);
 extern void uriSanityCheck(char* string, char* parm, int allowParms);
 extern void pathSanityCheck(char* string, char* parm);
+extern int fileSanityCheck(char* string, char* parm, int nonFatal);
+extern int ipSanityCheck(char* string, char* parm, int nonFatal);
+extern void deviceSanityCheck(char* string);
 extern int checkCommand(char* commandName);
 extern void setHostFingerprint(HostTraffic *srcHost);
 extern char* decodeNBstring(char* theString, char *theBuffer);
@@ -556,6 +558,7 @@ extern char *xstrncpy(char *dest, const char *src, size_t n);
 extern int guessHops(HostTraffic *el);
 extern unsigned int ntop_sleep(unsigned int secs);
 extern void unescape(char *dest, int destLen, char *url);
+extern void escape(char *dest, int destLen, char *in);
 
 extern void allocateElementHash(int deviceId, u_short hashType);
 
@@ -657,7 +660,7 @@ extern float timeval_subtract(struct timeval x, struct timeval y);
 extern void freePortsUsage(PortUsage *ports);
 extern PortUsage* getPortsUsage(HostTraffic *el, u_int portIdx, int createIfNecessary);
 extern char* vlan2name(int vlanId, char *buf, int buf_len);
-extern void mkdir_p(char *path, int permission);
+extern void mkdir_p(char *tag, char *path, int permission);
 
 /* Formatting for %.2f ... */
 #define xvertDOT00MB(v)(((float)(v)/(float)(1024.0*1024.0))+0.005)

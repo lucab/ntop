@@ -2930,7 +2930,7 @@ void uriSanityCheck(char* string, char* parm, int allowParms) {
 void pathSanityCheck(char* string, char* parm) {
   int i, j, k;
 
-  static char fnChar[256];
+  static char paChar[256];
 
 // Common:
 //     Upper and lower case letters:  A - Z and a - z  
@@ -2951,6 +2951,74 @@ void pathSanityCheck(char* string, char* parm) {
   }
 
   /* one time load of table */
+  if(paChar['a'] != 1) {
+    memset(&paChar, 0, sizeof(paChar));
+    for(i='0'; i<='9'; i++) paChar[i]=1;
+    for(i='A'; i<='Z'; i++) paChar[i]=1;
+    for(i='a'; i<='z'; i++) paChar[i]=1;
+    paChar['.']=1;
+    paChar['_']=1;
+    paChar['-']=1;
+#ifdef WIN32
+    paChar[' ']=1;
+    paChar['\\']=1;
+    paChar[':']=1;
+#else
+    paChar[',']=1;
+    paChar['/']=1;
+#endif
+  }
+
+  k=0;
+#ifdef WIN32
+  /* Strip "ed string for test */
+  if((string[0] != '"') || (string[strlen(string)-1] != '"') )
+    k=1;
+#endif
+
+  for(i=k, j=1; i<strlen(string)-k; i++) {
+    if(paChar[string[i]] == 0) {
+      string[i]='.';
+      j = 0;
+    }
+  }
+
+  if(j == 0) {
+    if(strlen(string) > 40) string[40] = '\0';
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid path/filename specified for option %s", parm);
+    traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
+    exit(-1);
+  }
+
+}
+
+/* ************************** */
+
+int fileSanityCheck(char* string, char* parm, int nonFatal) {
+  int i, j, k;
+
+  static char fnChar[256];
+
+// Common:
+//     Upper and lower case letters:  A - Z and a - z  
+//     Numbers  0 - 9  
+//     Period, underscore, hyphen  . _ -  
+
+// Unix:
+//     Comma
+
+// Win
+//     Colon, quotes, space
+
+  if(string == NULL)  {
+
+    if(nonFatal == 1) return(-1);
+
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) filename specified for option %s", parm);
+    exit(-1);
+  }
+
+  /* one time load of table */
   if(fnChar['a'] != 1) {
     memset(&fnChar, 0, sizeof(fnChar));
     for(i='0'; i<='9'; i++) fnChar[i]=1;
@@ -2961,11 +3029,9 @@ void pathSanityCheck(char* string, char* parm) {
     fnChar['-']=1;
 #ifdef WIN32
     fnChar[' ']=1;
-    fnChar['\\']=1;
     fnChar[':']=1;
 #else
     fnChar[',']=1;
-    fnChar['/']=1;
 #endif
   }
 
@@ -2985,12 +3051,70 @@ void pathSanityCheck(char* string, char* parm) {
 
   if(j == 0) {
     if(strlen(string) > 40) string[40] = '\0';
-    traceEvent(CONST_TRACE_FATALERROR, "Invalid path/filename specified for option %s", parm);
+
+    if(nonFatal == -1) return(-1);
+
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid filename specified for option %s", parm);
     traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
     exit(-1);
   }
 
 }
+
+/* ************************** */
+
+int ipSanityCheck(char* string, char* parm, int nonFatal) {
+  int i, j, rc = 0;
+
+  static char ipChar[256];
+
+// Common:
+//     Numbers  0 - 9
+//     .
+//
+// INET6
+//     Upper and lower case letters:  A - Z and a - z  
+//     :
+
+  if(string == NULL)  {
+
+    if(nonFatal == 1) return(-1);
+
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid (empty) path specified for option %s", parm);
+    exit(-1);
+  }
+
+  /* one time load of table */
+  if(ipChar['0'] != 1) {
+    memset(&ipChar, 0, sizeof(ipChar));
+    for(i='0'; i<='9'; i++) ipChar[i]=1;
+    ipChar['.']=1;
+#ifdef INET6
+    for(i='A'; i<='Z'; i++) ipChar[i]=1;
+    for(i='a'; i<='z'; i++) ipChar[i]=1;
+    ipChar[':']=1;
+#endif
+  }
+
+  for(i=0, j=1; i<strlen(string); i++) {
+    if(ipChar[string[i]] == 0) {
+      string[i]='x';
+      j = 0;
+    }
+  }
+
+  if(j == 0) {
+    if(strlen(string) > 40) string[40] = '\0';
+
+    if(nonFatal == 1) return(-1);
+
+    traceEvent(CONST_TRACE_FATALERROR, "Invalid ip address specified for option %s", parm);
+    traceEvent(CONST_TRACE_INFO, "Sanitized value is '%s'", string);
+    exit(-1);
+  }
+
+}
+
 
 
 /* ****************************************************** */
@@ -3742,6 +3866,26 @@ void unescape(char *dest, int destLen, char *url) {
       dest[at++] = ' ';
     } else
       dest[at++] = url[i];
+  }
+}
+
+/* ******************************** */
+
+void escape(char *dest, int destLen, char *src) {
+  int srcIdx, destIdx, len;
+
+  memset(dest, 0, destLen);
+  len = strlen(src);
+  for (srcIdx = 0, destIdx = 0; srcIdx < len && destIdx < destLen; src++) {
+    switch (src[srcIdx]) {
+      case ' ':
+        dest[destIdx++] = '%';
+        dest[destIdx++] = '2';
+        dest[destIdx++] = '0';
+        break;
+      default:
+        dest[destIdx++] = src[srcIdx];
+    }
   }
 }
 
@@ -6296,8 +6440,8 @@ void unescape_url(char *url) {
 
 /* ******************************************* */
 
+void revertSlashIfWIN32(char *str, int mode) {
 #ifdef WIN32
-void revertSlash(char *str, int mode) {
   int i;
 
   for(i=0; str[i] != '\0'; i++)
@@ -6310,11 +6454,13 @@ void revertSlash(char *str, int mode) {
       if(str[i] == '\\') str[i] = '/';
       break;
     }
+#endif
 }
 
 /* ******************************************* */
 
-void revertDoubleColumn(char *str) {
+void revertDoubleColumnIfWIN32(char *str) {
+#ifdef WIN32
   int i, j;
   char str1[512];
 
@@ -6329,9 +6475,9 @@ void revertDoubleColumn(char *str) {
 
   str1[j] = '\0';
   strcpy(str, str1);
+#endif
 }
 
-#endif
 
 /* ******************************************* */
 
@@ -6420,24 +6566,23 @@ char* vlan2name(int vlanId, char *buf, int buf_len) {
 
 /* ******************************************* */
 
-void mkdir_p(char *path, int permission) {
+void mkdir_p(char *tag, char *path, int permission) {
   int i, rc;
 
   if(path == NULL) {
-    traceEvent(CONST_TRACE_NOISY, "RRD: mkdir(null) skipped");
+    traceEvent(CONST_TRACE_ERROR, "%s: mkdir(null) skipped", tag);
     return;
   }
 
-#ifdef WIN32
-  revertSlash(path, 0);
-#endif
+  revertSlashIfWIN32(path, 0);
 
   /* Start at 1 to skip the root */
   for(i=1; path[i] != '\0'; i++)
     if(path[i] == CONST_PATH_SEP) {
       path[i] = '\0';
 #if RRD_DEBUG >= 3
-      traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
+      if(strcmp(tag, "RRD") == 0)
+        traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
 #endif
       rc = _mkdir(path, permission);
       if((rc != 0) && (errno != EEXIST) )
@@ -6449,11 +6594,13 @@ void mkdir_p(char *path, int permission) {
     }
 
 #if RRD_DEBUG >= 2
-  traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
+  if(strcmp(tag, "RRD") == 0)
+    traceEvent(CONST_TRACE_INFO, "RRD_DEBUG: calling mkdir(%s)", path);
 #endif
   _mkdir(path, permission);
   if((rc != 0) && (errno != EEXIST) )
-    traceEvent(CONST_TRACE_WARNING, "RRD: %s, error %d %s",
+    traceEvent(CONST_TRACE_WARNING, "%s: mkdir(%s), error %d %s",
+               tag,
 	       path,
 	       errno,
 	       strerror(errno));

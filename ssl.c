@@ -132,9 +132,8 @@ int init_ssl(void) {
   for(idx=0; myGlobals.configFileDirs[idx] != NULL; idx++) {
     safe_snprintf(__FILE__, __LINE__, buf, sizeof(buf), "%s/%s", myGlobals.configFileDirs[idx], CONST_SSL_CERTF_FILENAME);
 
-#ifdef WIN32
-    revertSlash(buf, 0);
-#endif
+    revertSlashIfWIN32(buf, 0);
+
     if((fd = fopen(buf, "rb")) != NULL)
       break;
   }

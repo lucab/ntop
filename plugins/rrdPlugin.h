@@ -36,6 +36,7 @@
 #define FLAG_RRD_ACTION_LIST                2
 #define FLAG_RRD_ACTION_GRAPH_SUMMARY       3
 #define FLAG_RRD_ACTION_NF_SUMMARY          4
+#define FLAG_RRD_ACTION_ARBITRARY           5
 
 #define CONST_RRD_PERMISSIONS_PRIVATE       0
 #define CONST_RRD_PERMISSIONS_GROUP         1
@@ -62,7 +63,89 @@
 #define DEFAULT_RRD_MONTHS                  36   /* months of day by day data (default) */
 #define DEFAULT_RRD_DUMP_DELAY              10   /* ms (default) */
 
+/* ****************************************************** */
 
+/*
+ * Names for the arbitrary graph creation 
+ *    - remember to keep the RRDREQUEST_ values unique in their 1st character
+ */
+#define CONST_ARBITRARY_RRDREQUEST          "arbreq"
+#define CONST_ARBITRARY_RRDREQUEST_GRAPHME  "graph"
+#define CONST_ARBITRARY_RRDREQUEST_SHOWME   "show"
+#define CONST_ARBITRARY_RRDREQUEST_FETCHME  "fetch"
+#define CONST_ARBITRARY_RRDREQUEST_FETCHMECSV "cvsfetch"
+#define CONST_ARBITRARY_INTERFACE           "arbiface"
+#define CONST_ARBITRARY_IP                  "arbip"
+#define CONST_ARBITRARY_FILE                "arbfile"
+
+/* If you add a new major rrd file, it should be added to this list
+ */
+static char *rrdNames[] = {
+                "arpRarpBytes",
+                "atalkBytes",
+                "badChecksumPkts",
+                "broadcastPkts",
+                "bytes",
+                "bytesRcvd",
+                "bytesSent",
+                "decnetBytes",
+                "dlcBytes",
+                "droppedPkts",
+                "egpBytes",
+                "ethernetBytes",
+                "ethernetPkts",
+                "fragmentedIpBytes",
+                "icmp6Rcvd",
+                "icmp6Sent",
+                "icmpBytes",
+                "icmpRcvd",
+                "icmpSent",
+                "ifInBroadcastPkts",
+                "ifInDiscards",
+                "ifInErrors",
+                "ifInMulticastPkts",
+                "ifInOctets",
+                "ifInUcastPkts",
+                "ifInUnknownProtos",
+                "ifOutBroadcastPkts",
+                "ifOutDiscards",
+                "ifOutErrors",
+                "ifOutMulticastPkts",
+                "ifOutOctets",
+                "ifOutUcastPkts",
+                "ipBytes",
+                "ipv6Bytes",
+                "ipxBytes",
+                "multicastPkts",
+                "netbiosBytes",
+                "NF_numDiscardedFlows",
+                "NF_numFlowPkts",
+                "NF_numFlows",
+                "osiBytes",
+                "otherBytes",
+                "otherIpBytes",
+                "packets",
+                "pkts",
+                "stpBytes",
+                "tcpBytes",
+                "tcpRcvd",
+                "tcpSent",
+                "tooLongPkts",
+                "totContactedRcvdPeers",
+                "totContactedSentPeers",
+                "udpBytes",
+                "udpRcvd",
+                "udpSent",
+                "upTo1024Pkts",
+                "upTo128Pkts",
+                "upTo1518Pkts",
+                "upTo256Pkts",
+                "upTo512Pkts",
+                "upTo64Pkts",
+                NULL
+};
+
+/* ****************************************************** */
 /*
  * This flag turns on a signal trap in rrdPlugin.c.  If you're seeing
  * rrd simply and silently die, this might catch the signal and log
@@ -70,8 +153,8 @@
  */
 /* #define MAKE_WITH_RRDSIGTRAP */
 
-/* RRD_DEBUG controls debug messages in rrdPlugin.c.  Define it for some messages
- * or set it to 1 for more, 2 for lots of detail or 3 for huge (every rrd call)
+/* RRD_DEBUG controls debug messages in rrdPlugin.c.  See the definition in globals-defines.h,
+ * where you really should set it, so the util.c calls get enabled.
  */
 /* #define RRD_DEBUG */
 

@@ -727,7 +727,7 @@ static void dumpFlow(char *buffer, int bufferLen, int deviceId) {
       safe_snprintf(__FILE__, __LINE__, nfDumpPath, sizeof(nfDumpPath), "%s/interfaces/%s/",
 		    myGlobals.device[deviceId].netflowGlobals->dumpPath,
 		    myGlobals.device[deviceId].humanFriendlyName);
-      mkdir_p(nfDumpPath, 0700 /* CONST_RRD_D_PERMISSIONS_PRIVATE */);
+      mkdir_p("NETFLOW", nfDumpPath, 0700 /* CONST_RRD_D_PERMISSIONS_PRIVATE */);
 
       safe_snprintf(__FILE__, __LINE__, nfDumpPath, sizeof(nfDumpPath), "%s/interfaces/%s/%u.flow",
 		    myGlobals.device[deviceId].netflowGlobals->dumpPath,
