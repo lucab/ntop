@@ -742,7 +742,7 @@ static void freeHostSessions(u_int hostIdx, int theDevice) {
 static void freeHostPeers(HostTraffic *el, u_int hostIdx) {
   int j;
   
-#ifdef DEBUG
+#ifndef DEBUG
   traceEvent(TRACE_INFO, "Entering freeHostPeers(0x%X, %u)", el, hostIdx);
 #endif
 
@@ -872,7 +872,7 @@ static void freeHostPeers(HostTraffic *el, u_int hostIdx) {
       }
     }
 
-#ifdef DEBUG
+#ifndef DEBUG
   traceEvent(TRACE_INFO, "Leaving freeHostPeers()");
 #endif
 }
@@ -1049,6 +1049,8 @@ void freeHostInfo(int theDevice, u_int hostIdx) {
     nextIdxToFree = (nextIdxToFree+1) % FREE_LIST_LEN;
   } else
     freeHostList[freeListLen++] = host;
+
+  numPurgedHosts++;
 }
 
 /* ************************************ */

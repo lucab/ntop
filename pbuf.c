@@ -680,12 +680,12 @@ void scanTimedoutTCPSessions(void) {
 	     * can now be purged.
 	     */
 	    sessionToPurge->magic = 0;
-
 	    if(enableNetFlowSupport) sendTCPSessionFlow(sessionToPurge);
 	    notifyTCPSession(sessionToPurge);
 #ifdef HAVE_MYSQL
 	    mySQLnotifyTCPSession(sessionToPurge);
 #endif
+	    numTerminatedSessions++;
 	    free(sessionToPurge); /* No inner pointers to free */
 	  }
       }

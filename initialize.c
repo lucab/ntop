@@ -213,6 +213,8 @@ void initCounters(int _mergeInterfaces) {
   int len, i;
   static HostTraffic broadcastEntry;
 
+  numPurgedHosts = numTerminatedSessions = 0;
+
   mergeInterfaces = _mergeInterfaces;
 
   /* (void)setsignal(SIGWINCH, windowSizeChanged);  */

@@ -124,6 +124,7 @@ struct hnamemem* hnametable[HASHNAMESIZE];
 /* Misc */
 char *separator = "&nbsp;";
 int32_t thisZone; /* seconds offset from gmt to local time */
+u_long numPurgedHosts, numTerminatedSessions;
 
 /* Time */
 time_t actTime, initialSniffTime, lastRefreshTime;

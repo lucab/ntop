@@ -692,7 +692,8 @@ void printNtopConfigInfo(void) {
 	      (int)device[actualReportDeviceId].actualHashSize) < 0) 
     traceEvent(TRACE_ERROR, "Buffer overflow!");
   sendString(buf);
-  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Stored Hash Hosts</TH>"
+
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Stored Hash Hosts</TH>"
 	      "<TD "TD_BG"  align=right>%d [%d %%]</TD></TR>\n",
 	      (int)device[actualReportDeviceId].hostsno,
 	      (((int)device[actualReportDeviceId].hostsno*100)/
@@ -700,16 +701,28 @@ void printNtopConfigInfo(void) {
     traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
 
+  if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Purged Hash Hosts</TH>"
+	      "<TD "TD_BG"  align=right>%u</TD></TR>\n",
+	      numPurgedHosts) < 0) 
+    traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
 
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. TCP Sessions</TH>"
-	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", 
+
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># TCP Sessions</TH>"
+	       "<TD "TD_BG"  align=right>%u</TD></TR>\n", 
 	       device[actualReportDeviceId].numTcpSessions) < 0) 
+     traceEvent(TRACE_ERROR, "Buffer overflow!");
+   sendString(buf);
+
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Terminated TCP Sessions</TH>"
+	       "<TD "TD_BG"  align=right>%u</TD></TR>\n", 
+	       numTerminatedSessions) < 0) 
      traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
 
 #if defined(MULTITHREADED) && defined(ASYNC_ADDRESS_RESOLUTION)
    accessMutex(&addressQueueMutex, "NumQueuedAddresses");
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Queued Addresses</TH>"
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Queued Addresses</TH>"
 	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", addressQueueLen) < 0) 
      traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
@@ -722,23 +735,23 @@ void printNtopConfigInfo(void) {
    accessMutex(&addressQueueMutex, "NumQueuedAddresses");
 #endif
    
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Addresses Resolved with DNS</TH>"
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Resolved with DNS</TH>"
 	       "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numResolvedWithDNSAddresses) < 0) 
      traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
 
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Addresses Kept Numeric</TH>"
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Kept Numeric</TH>"
 	       "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numKeptNumericAddresses) < 0) 
      traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
 
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Addresses Found on Cache</TH>"
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Addresses Found on Cache</TH>"
 	       "<TD "TD_BG"  align=right>%ld</TD></TR>\n", numResolvedOnCacheAddresses) < 0) 
      traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
 
 #if defined(MULTITHREADED)
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Dropped Addresses</TH>"
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Dropped Addresses</TH>"
 	       "<TD "TD_BG"  align=right>%ld</TD></TR>\n", droppedAddresses) < 0) 
      traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);
@@ -751,7 +764,7 @@ void printNtopConfigInfo(void) {
    /* **** */
 
 #if defined(MULTITHREADED)
-   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left>Num. Active Threads</TH>"
+   if(snprintf(buf, sizeof(buf), "<TR><TH "TH_BG" align=left># Active Threads</TH>"
 	       "<TD "TD_BG"  align=right>%d</TD></TR>\n", numThreads) < 0) 
      traceEvent(TRACE_ERROR, "Buffer overflow!");
    sendString(buf);

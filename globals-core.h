@@ -120,6 +120,7 @@ extern struct hnamemem* hnametable[HASHNAMESIZE];
 /* Misc */
 extern char *separator;
 extern int32_t thisZone; /* seconds offset from gmt to local time */
+extern u_long numPurgedHosts, numTerminatedSessions;
 
 /* Time */
 extern time_t actTime, initialSniffTime, lastRefreshTime;
