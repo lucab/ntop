@@ -624,18 +624,8 @@
    if(found == -1)
      found = scanner->lastPeer; /* (*) */
 
-   if(((scanner->peersIdx[found] != NO_PEER)
-       && (scanner->peersIdx[found] != remotePeerIdx)
-       && (device[actualDeviceId].hash_hostTraffic[checkSessionIdx(scanner->peersIdx[found])] != NULL)
-       && (device[actualDeviceId].hash_hostTraffic[remotePeerIdx] != NULL)
-       && (strcmp(device[actualDeviceId].
-		  hash_hostTraffic[checkSessionIdx(scanner->peersIdx[found])]->hostNumIpAddress,
-		  device[actualDeviceId].
-		  hash_hostTraffic[checkSessionIdx(remotePeerIdx)]->hostNumIpAddress)))
-      || (scanner->peersIdx[found] == NO_PEER)) {
-     scanner->peersIdx[scanner->lastPeer] = remotePeerIdx; /* Note found == scanner->lastPeer (*) */
-     scanner->lastPeer = (scanner->lastPeer+1) % MAX_NUM_SESSION_PEERS;
-   }
+   scanner->peersIdx[scanner->lastPeer] = remotePeerIdx; /* Note found == scanner->lastPeer (*) */
+   scanner->lastPeer = (scanner->lastPeer+1) % MAX_NUM_SESSION_PEERS;
    
    switch(sessionType) {
    case IPPROTO_TCP:
