@@ -105,7 +105,7 @@ HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host) {
 
 /* ************************************ */
 
-HostTraffic* findHostByNumIP(HostAddr hostIpAddress, u_int actualDeviceId) {
+HostTraffic* findHostByNumIP(HostAddr hostIpAddress, short vlanId, u_int actualDeviceId) {
   HostTraffic *el;
   short dummyShort=1;
   u_int idx = hashHost(&hostIpAddress, NULL, &dummyShort, &el, actualDeviceId);
@@ -118,8 +118,10 @@ HostTraffic* findHostByNumIP(HostAddr hostIpAddress, u_int actualDeviceId) {
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
-    if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress,&hostIpAddress) == 0))
+    if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress,&hostIpAddress) == 0)) {
+      if((vlanId > 0) && (el->vlanId != vlanId)) continue;
       return(el);
+    }
   }
 
   if(el == NULL) {
@@ -133,10 +135,13 @@ HostTraffic* findHostByNumIP(HostAddr hostIpAddress, u_int actualDeviceId) {
       el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
       for(; el != NULL; el = el->next) {
-	if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress,&hostIpAddress) == 0))
+	if((el->hostNumIpAddress != NULL) && (addrcmp(&el->hostIpAddress,&hostIpAddress) == 0)) {
+	  if((vlanId > 0) && (el->vlanId != vlanId)) continue;
 	  return(el);
+	}
       }
-    }  }
+    } 
+  }
 
 #ifdef DEBUG
   {
@@ -154,16 +159,20 @@ HostTraffic* findHostByNumIP(HostAddr hostIpAddress, u_int actualDeviceId) {
 
 HostTraffic* findHostBySerial(HostSerial theSerial, u_int actualDeviceId) {
   if(theSerial.serialType == SERIAL_IPV4 || theSerial.serialType == SERIAL_IPV6) {
-    return(findHostByNumIP(theSerial.value.ipAddress, actualDeviceId));
+    return(findHostByNumIP(theSerial.value.ipSerial.ipAddress, 
+			   theSerial.value.ipSerial.vlanId,
+			   actualDeviceId));
   } else {
     /* MAC */
-    return(findHostByMAC(theSerial.value.ethAddress, actualDeviceId));
+    return(findHostByMAC(theSerial.value.ethSerial.ethAddress,
+			 theSerial.value.ethSerial.vlanId, 
+			 actualDeviceId));
   }
 }
 
 /* ************************************ */
 
-HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId) {
+HostTraffic* findHostByMAC(char* macAddr, short vlanId, u_int actualDeviceId) {
   HostTraffic *el;
   short dummyShort = 0;
   u_int idx = hashHost(NULL, macAddr, &dummyShort, &el, actualDeviceId);
@@ -176,8 +185,13 @@ HostTraffic* findHostByMAC(char* macAddr, u_int actualDeviceId) {
     el = myGlobals.device[actualDeviceId].hash_hostTraffic[idx];
 
   for(; el != NULL; el = el->next) {
-    if((el->ethAddress[0] != '\0') && (!strncmp(el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS)))
-      return(el);
+    if((el->ethAddress[0] != '\0') 
+       && (!strncmp(el->ethAddress, macAddr, LEN_ETHERNET_ADDRESS))) {
+      if((vlanId > 0) && (el->vlanId != vlanId)) 
+	continue;
+      else
+	return(el);
+    }
   }
 
   return(NULL);
@@ -190,7 +204,6 @@ unsigned long in6_hash(struct in6_addr *addr) {
   return
     (addr->s6_addr[13]      ) | (addr->s6_addr[15] << 8) |
     (addr->s6_addr[14] << 16) | (addr->s6_addr[11] << 24);
-
 }
 #endif
 

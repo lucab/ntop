@@ -340,7 +340,7 @@ static char* makeHostAgeStyleSpec(HostTraffic *el, char *buf, int bufSize) {
 char* makeHostLink(HostTraffic *el, short mode,
 		   short cutName, short addCountryFlag,
                    char *buf, int bufLen) {
-  char symIp[256], linkName[256], flag[256], colorSpec[64];
+  char symIp[256], linkName[256], flag[256], colorSpec[64], vlanStr[8];
   char osBuf[128], titleBuf[256], noteBuf[256], noteBufAppend[64];
   char *dhcpBootpStr, *p2pStr, *multihomedStr, *gwStr, *brStr, *dnsStr, *printStr,
        *smtpStr, *healthStr, *userStr, *httpStr, *ntpStr;
@@ -633,8 +633,7 @@ char* makeHostLink(HostTraffic *el, short mode,
         BufferTooShort();
       if(snprintf(titleBuf, sizeof(titleBuf),
                   "%s Actual MAC address is %s",
-                  titleBuf,
-                  el->ethAddressString) < 0)
+                  titleBuf, el->ethAddressString) < 0)
         BufferTooShort();
     }
   }    
@@ -648,13 +647,22 @@ char* makeHostLink(HostTraffic *el, short mode,
     usedEthAddress = 1;
   }
 
+  if(el->vlanId > 0) {
+    char tmp[256];
+
+    snprintf(vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
+    snprintf(tmp, sizeof(tmp), "%s@%d", symIp, el->vlanId);
+     snprintf(symIp, sizeof(symIp), "%s", tmp);
+  } else {
+    vlanStr[0] = '\0';
+  }
 
   /* Make the hostlink */
   if(mode == FLAG_HOSTLINK_HTML_FORMAT) {
     if(snprintf(buf, bufLen, "<th "TH_BG" align=\"left\" nowrap width=\"250\">\n"
-		"<a href=\"/%s.html\" %s%s%s>%s%s</a>\n"
+		"<a href=\"/%s%s.html\" %s%s%s>%s%s</a>\n"
                 "%s%s%s%s%s%s%s%s%s%s%s%s%s%s</th>%s\n",
-                linkName, 
+                linkName, vlanStr,
                 titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
                 symIp, 
 		noteBuf,
@@ -665,9 +673,10 @@ char* makeHostLink(HostTraffic *el, short mode,
                 printStr, smtpStr, httpStr, ntpStr, healthStr, userStr, p2pStr, flag) < 0)
       BufferTooShort();
   } else {
-    if(snprintf(buf, bufLen, "<a href=\"/%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
+    if(snprintf(buf, bufLen, "<a href=\"/%s%s.html\" %s nowrap width=\"250\" %s%s%s>%s%s</a>\n"
                 "%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
-                linkName, makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), 
+                linkName, vlanStr,
+		makeHostAgeStyleSpec(el, colorSpec, sizeof(colorSpec)), 
                 titleBuf[0] != '\0' ? "title=\"" : "", titleBuf, titleBuf[0] != '\0' ? "\"" : "",
                 symIp, 
 		noteBuf,

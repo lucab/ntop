@@ -801,7 +801,6 @@ void purgeIdleHosts(int actDevice) {
 /* **************************************************** */
 
 void setHostSerial(HostTraffic *el) {
-
   /* Nothing to do */
   if(el->hostSerial.serialType != SERIAL_NONE)
     return;
@@ -814,21 +813,22 @@ void setHostSerial(HostTraffic *el) {
       el->hostSerial.value.fcSerial.fcAddress.port = el->hostFcAddress.port;
       el->hostSerial.value.fcSerial.vsanId = el->vsanId;
     }
-    else {
-      traceEvent (CONST_TRACE_ERROR, "setHostSerial: Received NULL FC"
-		  "Address entry");
-    }
+    else
+      traceEvent (CONST_TRACE_ERROR, "setHostSerial: Received NULL FC Address entry");
   }
   else if(el->hostNumIpAddress[0] == '\0') {
     el->hostSerial.serialType = SERIAL_MAC;
-    memcpy(&el->hostSerial.value.ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS);
+    memcpy(&el->hostSerial.value.ethSerial.ethAddress, el->ethAddress, LEN_ETHERNET_ADDRESS);
+    el->hostSerial.value.ethSerial.vlanId = el->vlanId;
   } else {
     if(el->hostIpAddress.hostFamily == AF_INET){
       el->hostSerial.serialType = SERIAL_IPV4;
-    }else if(el->hostIpAddress.hostFamily == AF_INET6){
+    } else if(el->hostIpAddress.hostFamily == AF_INET6){
       el->hostSerial.serialType = SERIAL_IPV6;
     }
-    addrcpy(&el->hostSerial.value.ipAddress, &el->hostIpAddress);
+
+    addrcpy(&el->hostSerial.value.ipSerial.ipAddress, &el->hostIpAddress);
+    el->hostSerial.value.ipSerial.vlanId = el->vlanId;
   }
 }
 
@@ -838,7 +838,7 @@ void setHostSerial(HostTraffic *el) {
   Searches a host and returns it. If the host is not
   present in the hash a new bucket is created
 */
-HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, int vlanId,
+HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanId,
 			u_char checkForMultihoming, u_char forceUsingIPaddress,
 			int actualDeviceId) {
   u_int idx, isMultihomed = 0;
@@ -1018,9 +1018,9 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, int vlanId,
 
     memset(el, 0, sizeof(HostTraffic));
     el->firstSeen = myGlobals.actTime;
-    el->vlanId = vlanId;
 
     resetHostsVariables(el);
+    el->vlanId = vlanId;
 
     if(isMultihomed)
       FD_SET(FLAG_HOST_TYPE_MULTIHOMED, &el->flags);

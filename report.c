@@ -2240,10 +2240,10 @@ void printHostsInfo(int sortedColumn, int revertOrder, int pageNum) {
 
 /* ************************************ */
 
-void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
-                           int revertOrder, int pageNum, char *url,
-                           int hostInfoPage) {
-  u_int idx, i;
+void printAllSessionsHTML(char* host, int actualDeviceId, int sortedColumn,
+			  int revertOrder, int pageNum, char *url,
+			  int hostInfoPage) {
+  u_int idx, i, vlanId = -1;
   HostTraffic *el=NULL;
   char buf[LEN_GENERAL_WORK_BUFFER];
   char formatBuf[32], portBuf[32], hostLinkBuf[LEN_GENERAL_WORK_BUFFER];
@@ -2252,26 +2252,26 @@ void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
           vsanId = 0;
   char *tok;
 
-  if ((tok = strchr (host, '-')) != NULL) {
-      vsanId = atoi (&tok[1]);
-      *tok = '\0';
+  if((tok = strchr(host, '-')) != NULL) {
+    vlanId = vsanId = atoi(&tok[1]);
+    *tok = '\0';
   }
   
   for(el=getFirstHost(actualDeviceId);
       el != NULL; el = getNextHost(actualDeviceId, el)) {
-      if((strcmp(el->hostNumIpAddress, host) == 0)
-         || (strcmp(el->ethAddressString, host) == 0)) {
-          found = 1;
-          break;
-      }
-      else if ((strncmp (fc_to_str ((u_int8_t *)&el->hostFcAddress),
-                         host, LEN_FC_ADDRESS_DISPLAY) == 0) &&
-               ((el->vsanId == vsanId) || (vsanId == 0))) {
-          found = 1;
-          foundFcHost = 1;
-          break;
-      }
+    if(((strcmp(el->hostNumIpAddress, host) == 0) || (strcmp(el->ethAddressString, host) == 0))
+       && (el->vlanId == vlanId)) {
+      found = 1;
+      break;
+    } else if((strncmp(fc_to_str ((u_int8_t *)&el->hostFcAddress),
+		       host, LEN_FC_ADDRESS_DISPLAY) == 0) &&
+	      ((el->vsanId == vsanId) || (vsanId == 0))) {
+      found = 1;
+      foundFcHost = 1;
+      break;
+    }
   }
+
   /* Dennis Schoen (dennis@cns.dnsalias.org)
    *
    * send 404 if we cannot generate the requested page
@@ -2553,8 +2553,10 @@ void printAllSessionsHTML (char* host, int actualDeviceId, int sortedColumn,
 	BufferTooShort();
       sendString(buf);
 
-      if(FD_ISSET(BITFLAG_P2P_UPLOAD_MODE, &list->fileFlags))   sendString("<IMG SRC=/upload.gif ALT=Upload VALIGN=MIDDLE>&nbsp;");
-      if(FD_ISSET(BITFLAG_P2P_DOWNLOAD_MODE, &list->fileFlags)) sendString("<IMG SRC=/download.gif ALT=Download VALIGN=MIDDLE>&nbsp;");
+      if(FD_ISSET(BITFLAG_P2P_UPLOAD_MODE, &list->fileFlags))   
+	sendString("<IMG SRC=/upload.gif ALT=Upload VALIGN=MIDDLE>&nbsp;");
+      if(FD_ISSET(BITFLAG_P2P_DOWNLOAD_MODE, &list->fileFlags)) 
+	sendString("<IMG SRC=/download.gif ALT=Download VALIGN=MIDDLE>&nbsp;");
 
       list = list->next;
     }
@@ -4635,7 +4637,7 @@ void listNetFlows(void) {
 void printHostHourlyTraffic(HostTraffic *el) {
   Counter tcSent, tcRcvd;
   int i, hourId, j;
-  char theDate[8], macAddr[24];
+  char theDate[8], macAddr[24], vlanStr[32];
   struct tm t;
   char buf[LEN_GENERAL_WORK_BUFFER], *targetStr;
   char hours[][24] = {"12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM",
@@ -4687,33 +4689,39 @@ void printHostHourlyTraffic(HostTraffic *el) {
   sendString("<TR><TH "TH_BG" "DARK_BG">Total</TH>\n");
 
   if (isFcHost (el)) {
-      targetStr = el->hostNumFcAddress;
+    targetStr = el->hostNumFcAddress;
   }
   else {
-      if(snprintf(macAddr, sizeof(macAddr), "%s", el->ethAddressString) < 0)
-        BufferTooShort();
-      targetStr = el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress;
+    if(snprintf(macAddr, sizeof(macAddr), "%s", el->ethAddressString) < 0)
+      BufferTooShort();
+    targetStr = el->hostNumIpAddress[0] == '\0' ?  macAddr : el->hostNumIpAddress;
   }
-
+  
   urlFixupToRFC1945Inplace(targetStr);
   
+  if(el->vlanId > 0) {
+    snprintf(vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
+  } else
+    vlanStr[0] = '\0';
+
   if(tcSent > 0) {
-    if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
-                                  "<IMG SRC=\"/hostTimeTrafficDistribution-%s"CHART_FORMAT"?1\""
-                                    " alt=\"hostTraffic sent distribution chart\">"
-                                  "</TD>\n",
-                targetStr) < 0)
+    if(snprintf(buf, sizeof(buf),
+		"<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
+		"<IMG SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"?1\""
+		" alt=\"hostTraffic sent distribution chart\">"
+		"</TD>\n",
+                targetStr, vlanStr) < 0)
       BufferTooShort();
     sendString(buf);   
   } else
-       sendString("<TD COLSPAN=2 "TD_BG">&nbsp;</TD>\n");
-
+    sendString("<TD COLSPAN=2 "TD_BG">&nbsp;</TD>\n");
+  
   if(tcRcvd > 0) {
     if(snprintf(buf, sizeof(buf), "<TD ALIGN=CENTER COLSPAN=2 "TD_BG" BGCOLOR=white>"
-                                  "<IMG SRC=\"/hostTimeTrafficDistribution-%s"CHART_FORMAT"\""
-                                    " alt=\"hostTraffic rcvd distribution chart\">"
-                                  "</TD>\n",
-                targetStr) < 0)
+		"<IMG SRC=\"/hostTimeTrafficDistribution-%s%s"CHART_FORMAT"\""
+		" alt=\"hostTraffic rcvd distribution chart\">"
+		"</TD>\n",
+                targetStr, vlanStr) < 0)
       BufferTooShort();
     sendString(buf);   
   } else

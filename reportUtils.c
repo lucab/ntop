@@ -1743,7 +1743,8 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
       if(!headerSent) { printSectionTitle("Packet Statistics"); sendString(tableHeader); headerSent = 1; }
 
       sendString("<CENTER>\n"
-		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\"><TR "TR_ON" "DARK_BG"><TH "TH_BG">TCP Connections</TH>"
+		 ""TABLE_ON"<TABLE BORDER=1 "TABLE_DEFAULTS" WIDTH=\"100%\">"
+		 "<TR "TR_ON" "DARK_BG"><TH "TH_BG">TCP Connections</TH>"
 		 "<TH "TH_BG" COLSPAN=2>Directed to</TH>"
 		 "<TH "TH_BG" COLSPAN=2>Rcvd From</TH></TR>\n");
 
@@ -2074,7 +2075,7 @@ void printPacketStats(HostTraffic *el, int actualDeviceId) {
 void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   char buf[LEN_GENERAL_WORK_BUFFER];
-  char linkName[LEN_GENERAL_WORK_BUFFER/2];
+  char linkName[LEN_GENERAL_WORK_BUFFER/2], vlanStr[32];
   int i;
 
   totalSent = el->tcpFragmentsSent.value + el->udpFragmentsSent.value + el->icmpFragmentsSent.value;
@@ -2122,11 +2123,17 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       /* For Ethernet and IPv6 addresses */
       urlFixupToRFC1945Inplace(linkName);
 
-      if(totalSent > 0) {
+      if(el->vlanId > 0) {
+	snprintf(vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
+      } else
+	vlanStr[0] = '\0';
+      
+     if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "<IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent Fragment Distribution for %s\"></TD>",
-		    linkName, el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<IMG SRC=hostFragmentDistrib-%s%s"CHART_FORMAT"?1 ALT=\"Sent Fragment Distribution for %s%s\"></TD>",
+		    linkName, vlanStr, 
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -2136,8 +2143,9 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalRcvd > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "<IMG SRC=hostFragmentDistrib-%s"CHART_FORMAT" ALT=\"Received Fragment Distribution for %s\"></TD>",
-		    linkName, el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<IMG SRC=hostFragmentDistrib-%s%s"CHART_FORMAT" ALT=\"Received Fragment Distribution for %s%s\"></TD>",
+		    linkName, vlanStr,
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -2157,8 +2165,9 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "<IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT"?1 ALT=\"Sent IP Fragment Distribution for %s\"></TD>",
-		    linkName, el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<IMG SRC=hostTotalFragmentDistrib-%s%s"CHART_FORMAT"?1 ALT=\"Sent IP Fragment Distribution for %s%s\"></TD>",
+		    linkName, vlanStr,
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -2168,8 +2177,9 @@ void printHostFragmentStats(HostTraffic *el, int actualDeviceId) {
       if(totalRcvd > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "<IMG SRC=hostTotalFragmentDistrib-%s"CHART_FORMAT" ALT=\"Received IP Fragment Distribution for %s\"></TD>",
-		    linkName, el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<IMG SRC=hostTotalFragmentDistrib-%s%s"CHART_FORMAT" ALT=\"Received IP Fragment Distribution for %s%s\"></TD>",
+		    linkName, vlanStr, 
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -2337,7 +2347,7 @@ static void printUnknownProto(UnknownProto proto) {
 void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
   Counter totalSent, totalRcvd;
   Counter actTotalSent, actTotalRcvd;
-  char buf[LEN_GENERAL_WORK_BUFFER];
+  char buf[LEN_GENERAL_WORK_BUFFER], vlanStr[32];
   char linkName[LEN_GENERAL_WORK_BUFFER/2];
   int i, idx;
   ProtocolsList *protoList;
@@ -2506,13 +2516,18 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       /* For Ethernet and Ipv6 addresses */
       urlFixupToRFC1945Inplace(linkName);
 
-      if(totalSent > 0) {
+     if(el->vlanId > 0) {
+	snprintf(vlanStr, sizeof(vlanStr), "-%d", el->vlanId);
+      } else
+	vlanStr[0] = '\0';
+
+     if(totalSent > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD WIDTH=250 "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		    "<IMG SRC=\"hostTrafficDistrib-%s"CHART_FORMAT"?1\" "
-		    "ALT=\"Sent Traffic Distribution for %s\"></TD>",
-                    linkName,
-                    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "<IMG SRC=\"hostTrafficDistrib-%s%s"CHART_FORMAT"?1\" "
+		    "ALT=\"Sent Traffic Distribution for %s%s\"></TD>",
+                    linkName, vlanStr,
+                    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -2522,9 +2537,9 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
       if(totalRcvd > 0) {
 	if(snprintf(buf, sizeof(buf),
 		    "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><IMG SRC=hostTrafficDistrib-"
-		    "%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s\"></TD>",
-		    linkName,
-		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress) < 0)
+		    "%s%s"CHART_FORMAT" ALT=\"Received Traffic Distribution for %s%s\"></TD>",
+		    linkName, vlanStr,
+		    el->hostNumIpAddress[0] == '\0' ?  el->ethAddressString : el->hostNumIpAddress, vlanStr) < 0)
 	  BufferTooShort();
 	sendString(buf);
       } else {
@@ -2543,8 +2558,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	if((el->tcpSentLoc.value+el->tcpSentRem.value+el->udpSentLoc.value+el->udpSentRem.value) > 0) {
 	  if(snprintf(buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white>"
-		      "<IMG SRC=\"hostIPTrafficDistrib-%s"CHART_FORMAT"?1\" ALT=\"Sent IP Traffic Distribution for %s\"></TD>",
-		      linkName, el->hostNumIpAddress) < 0)
+		      "<IMG SRC=\"hostIPTrafficDistrib-%s%s"CHART_FORMAT"?1\" ALT=\"Sent IP Traffic Distribution for %s%s\"></TD>",
+		      linkName, vlanStr, el->hostNumIpAddress, vlanStr) < 0)
 	    BufferTooShort();
 	  sendString(buf);
 	} else
@@ -2553,8 +2568,8 @@ void printHostTrafficStats(HostTraffic *el, int actualDeviceId) {
 	if((el->tcpRcvdLoc.value+el->tcpRcvdFromRem.value+el->udpRcvdLoc.value+el->udpRcvdFromRem.value) > 0) {
 	  if(snprintf(buf, sizeof(buf),
 		      "<TD "TD_BG" ALIGN=RIGHT COLSPAN=2 BGCOLOR=white><IMG SRC=hostIPTrafficDistrib-"
-		      "%s"CHART_FORMAT" ALT=\"Received IP Traffic Distribution for %s\"></TD></TR>",
-		      linkName, el->hostNumIpAddress) < 0)
+		      "%s%s"CHART_FORMAT" ALT=\"Received IP Traffic Distribution for %s%s\"></TD></TR>",
+		      linkName, vlanStr, el->hostNumIpAddress, vlanStr) < 0)
 	    BufferTooShort();
 	  sendString(buf);
 	} else
@@ -2922,7 +2937,9 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
     char sniffedName[MAXDNAME];
     char buf[LEN_GENERAL_WORK_BUFFER];
 
-    addrcpy(&el->hostIpAddress,&theSerial.value.ipAddress);
+    addrcpy(&el->hostIpAddress,&theSerial.value.ipSerial.ipAddress);
+    el->vlanId = theSerial.value.ipSerial.vlanId;
+
     strncpy(el->hostNumIpAddress,
 	    _addrtostr(&el->hostIpAddress, buf, sizeof(buf)),
 	    sizeof(el->hostNumIpAddress));
@@ -2946,7 +2963,8 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
              el->hostFcAddress.area, el->hostFcAddress.port) < 0)
       BufferTooShort();
     setResolvedName(el, el->hostNumFcAddress, FLAG_HOST_SYM_ADDR_TYPE_FC);
-//TODO ? FC_NUM????
+    
+    /* TODO ? FC_NUM???? */
     el->vsanId = theSerial.value.fcSerial.vsanId;
     
     fcnsEntry = findFcHostNSCacheEntry (&el->hostFcAddress, el->vsanId);
@@ -2954,14 +2972,14 @@ HostTraffic* quickHostLink(HostSerial theSerial, int deviceId, HostTraffic *el) 
         setResolvedName(el, fcnsEntry->alias, FLAG_HOST_SYM_ADDR_TYPE_FC);
         memcpy ((u_int8_t *)el->pWWN.str, (u_int8_t *)fcnsEntry->pWWN.str,
                 LEN_WWN_ADDRESS);
-    }
-    
+    }    
   } else {
     /* MAC */
     char *ethAddr;
     char etherbuf[LEN_ETHERNET_ADDRESS_DISPLAY];
 
-    memcpy(el->ethAddress, theSerial.value.ethAddress, LEN_ETHERNET_ADDRESS);
+    memcpy(el->ethAddress, theSerial.value.ethSerial.ethAddress, LEN_ETHERNET_ADDRESS);
+    el->vlanId = theSerial.value.ethSerial.vlanId;
     ethAddr = etheraddr_string(el->ethAddress, etherbuf);
     strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
     if (el->hostIpAddress.hostFamily == AF_INET)
