@@ -155,7 +155,7 @@ static void updateFileList(char *fileName, HostTraffic *theRemHost) {
     if(list == NULL) {      
       list = (FileList*)malloc(sizeof(FileList));
       list->fileName = strdup(fileName);
-      
+      list->next = NULL; 
       if(numEntries >= MAX_NUM_LIST_ENTRIES) {
 	FileList *ptr = theRemHost->fileList->next;
 
