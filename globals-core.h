@@ -125,7 +125,6 @@ extern void printHTMLheader(char *title, int  headerFlags);
 extern void initIPServices(void);
 extern void initCounters(int _mergeInterfaces);
 extern void resetStats(void);
-extern int initGlobalValues(void);
 extern void postCommandLineArgumentsInitialization(time_t *lastTime);
 extern void initGdbm(void);
 extern void initThreads();

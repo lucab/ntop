@@ -760,11 +760,6 @@ int main(int argc, char *argv[]) {
   init_ssl();
 #endif
 
-  /*
-   *
-   */
-  initGlobalValues();
-
 #ifndef MICRO_NTOP
   reportValues(&lastTime);
 #endif /* MICRO_NTOP */

@@ -390,74 +390,6 @@ void resetStats(void) {
 #endif
 }
 
-
-/* ******************************* */
-
-int initGlobalValues(void) {
-
-  memset(&myGlobals, 0, sizeof(myGlobals));
-
-  myGlobals.enableDBsupport = 0;
-  myGlobals.enableThUpdate = 1;
-  myGlobals.enableIdleHosts = 1;
-  myGlobals.localAddresses = NULL;
-  myGlobals.protoSpecs = NULL;
-#ifndef WIN32
-  myGlobals.userId = 0;
-  myGlobals.groupId = 0;
-#endif
-  myGlobals.webAddr = NULL;
-  myGlobals.flowSpecs = NULL;
-  myGlobals.rulesFile = NULL;
-  myGlobals.sslAddr = NULL;
-
-#ifndef MICRO_NTOP  
-  myGlobals.maxNumLines = MAX_NUM_TABLE_ROWS;
-  myGlobals.sortSendMode = 0;
-  
-  /* TCP Wrappers */
-#ifdef HAVE_LIBWRAP
-  myGlobals.allow_severity = LOG_INFO;
-  myGlobals.deny_severity  = LOG_WARNING;
-#endif /* HAVE_LIBWRAP */
-  
-#endif /* MICRO_NTOP */
-  
-  myGlobals.webPort = NTOP_DEFAULT_WEB_PORT;
-  myGlobals.refreshRate = 0;
-  myGlobals.localAddrFlag = 1;
-
-  switch(myGlobals.accuracyLevel) {
-  case HIGH_ACCURACY_LEVEL:
-    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 1, myGlobals.trackOnlyLocalHosts = 0;
-    break;
-  case MEDIUM_ACCURACY_LEVEL:
-    myGlobals.enableSessionHandling = 1, myGlobals.enablePacketDecoding = 0, myGlobals.enableFragmentHandling = myGlobals.trackOnlyLocalHosts = 1;
-    break;
-  case LOW_ACCURACY_LEVEL:
-    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0, myGlobals.trackOnlyLocalHosts = 1;
-    break;
-  }
-
-  if(myGlobals.borderSnifferMode) {
-    /* Override everything that has been set before */
-    myGlobals.enableSessionHandling = myGlobals.enablePacketDecoding = myGlobals.enableFragmentHandling = 0;
-#ifdef MULTITHREADED
-    myGlobals.numDequeueThreads = MAX_NUM_DEQUEUE_THREADS;
-#endif
-    myGlobals.trackOnlyLocalHosts = 1;
-
-    myGlobals.enableSessionHandling = 1; /* ==> Luca's test <== */
-  } else {
-#ifdef MULTITHREADED
-    myGlobals.numDequeueThreads = 1;
-#endif
-  }
-
-  return(0);
-}
-
-
 /* ******************************* */
 
 void postCommandLineArgumentsInitialization(time_t *lastTime _UNUSED_) {
@@ -642,7 +574,6 @@ void initThreads() {
 
 #ifdef ASYNC_ADDRESS_RESOLUTION
   if(myGlobals.numericFlag == 0) {
-
     createMutex(&myGlobals.addressResolutionMutex);
 
     /*
@@ -655,7 +586,7 @@ void initThreads() {
     }
 
     /*
-     * Create the thread (7) - Purge idle host - optional
+     * Create the thread (7) - Purge idle host
      */
     createThread(&myGlobals.purgeAddressThreadId, cleanupExpiredHostEntriesLoop, NULL);
     traceEvent(TRACE_INFO, "Started thread (%ld) for address purge.", myGlobals.purgeAddressThreadId);
