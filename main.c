@@ -101,7 +101,6 @@ static struct option const long_options[] = {
 
   { "http-server",                      required_argument, NULL, 'w' },
   { "disable-sessions",                 no_argument,       NULL, 'z' },
-  { "set-admin-password",               optional_argument, NULL, 135 },
   { "filter-expression",                required_argument, NULL, 'B' },
   { "large-network",                    no_argument,       NULL, 'C' },
   { "domain",                           required_argument, NULL, 'D' },
@@ -152,6 +151,7 @@ static struct option const long_options[] = {
 #endif /* PARM_SSLWATCHDOG */
 
   { "dynamic-purge-limits",             no_argument,       NULL, 134 },
+  { "set-admin-password",               optional_argument, NULL, 135 },
 
   {NULL, 0, NULL, 0}
 };

@@ -675,6 +675,8 @@ static void handleNetflowHTTPrequest(char* url) {
 #ifdef DEBUG_FLOWS
 #endif
 
+  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
+
   printHTMLtrailer();
 }
 

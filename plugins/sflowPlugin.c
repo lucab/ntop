@@ -1638,6 +1638,7 @@ static void handlesFlowHTTPrequest(char* url) {
 
   if((myGlobals.sflowInSocket == 0)
      || (myGlobals.numSamplesReceived == 0)) {
+  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
     printHTMLtrailer();
     return;
   }
@@ -1684,6 +1685,8 @@ static void handlesFlowHTTPrequest(char* url) {
 
   sendString("</TD></TR>\n</TABLE>\n</CENTER>\n");
   sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A></H5>\n");
+
+  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
 
   printHTMLtrailer();
 }

@@ -85,7 +85,13 @@ static void handleLsPacket(u_char *_deviceId _UNUSED_,
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.gdbmMutex, "handleLSPackage");
 #endif 
-  gdbm_store(LsDB, key_data, data_data, GDBM_REPLACE);	
+
+  /* Test for disabled inside the protection of the mutex, also, so that if
+   * we disabled the plugin since the test above, we don't seg fault
+   */
+  if (!disabled )
+      gdbm_store(LsDB, key_data, data_data, GDBM_REPLACE);
+
 #ifdef MULTITHREADED
   releaseMutex(&myGlobals.gdbmMutex);
 #endif 
@@ -135,6 +141,7 @@ static void handleLsHTTPrequest(char* url) {
     sendHTTPHeader(HTTP_TYPE_HTML, 0);
     printHTMLheader("Status for the \"lastSeen\" Plugin", HTML_FLAG_NO_REFRESH);
     printFlagedWarning("<I>This plugin is disabled.<I>");
+    sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
     printHTMLtrailer();
     return;
   }
@@ -157,6 +164,7 @@ static void handleLsHTTPrequest(char* url) {
 		intoa(char_ip)) < 0) BufferTooShort();
     printSectionTitle(tmpStr);
     sendString("<br><A HREF=/plugins/LastSeen>Reload</A>");
+    sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
     printHTMLtrailer();
     return;
   }
@@ -260,6 +268,7 @@ static void handleLsHTTPrequest(char* url) {
 	   "<hr><CENTER><b>%u</b> host(s) collected.</CENTER><br>",
 	   num_hosts) < 0) BufferTooShort();
   sendString(tmpStr);
+  sendString("<p><center>Return to <a href=\"../" STR_SHOW_PLUGINS "\">plugins</a> menu</center></p>\n");
   printHTMLtrailer();
 }
 
@@ -373,6 +382,7 @@ static void termLsFunct(void) {
     accessMutex(&myGlobals.gdbmMutex, "termLsFunct");
 #endif 
     gdbm_close(LsDB);
+    disabled = 1;
 #ifdef MULTITHREADED
     releaseMutex(&myGlobals.gdbmMutex);
 #endif 

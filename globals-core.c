@@ -127,6 +127,16 @@ void initNtopGlobals(int argc, char * argv[]) {
   myGlobals.throughput_chart_type = NTOP_DEFAULT_CHART_TYPE;
 #endif
 
+#ifndef YES_IGNORE_SIGPIPE
+   myGlobals.ignoreSIGPIPE = 0;
+#endif
+
+#ifdef PARM_SSLWATCHDOG
+   myGlobals.useSSLwatchdog = 0;
+#endif
+
+  myGlobals.dynamicPurgeLimits = 0;
+
   /* Other flags (to be set via command line options one day) */
   myGlobals.enableFragmentHandling = 1;
 
