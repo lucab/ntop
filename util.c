@@ -531,7 +531,7 @@ unsigned short __pseudoLocalAddress(struct in_addr *addr,
 /* ********************************* */
 
 unsigned short _pseudoLocalAddress(struct in_addr *addr) {
-  __pseudoLocalAddress(addr, networks, numLocalNets);
+  return(__pseudoLocalAddress(addr, networks, numLocalNets));
 }
 
 /* ********************************* */
