@@ -2927,9 +2927,13 @@ static int cmpStatsFctn(const void *_a, const void *_b) {
   case 13: a_ = a->igmpRcvd , b_ = b->igmpRcvd;  break;
   default:
   case 0:
-    if(domainSort)
+    if(domainSort) {
+      /*
+	if((a->domainHost == NULL) || (a->domainHost->fullDomainName == NULL)) printf("A is NULL!\n");
+	if((b->domainHost == NULL) || (b->domainHost->fullDomainName == NULL)) printf("B is NULL!\n");
+      */
       return(strcasecmp(a->domainHost->fullDomainName, b->domainHost->fullDomainName));
-    else {
+    } else {
 #ifdef MULTITHREADED
       accessMutex(&addressResolutionMutex, "fillDomainName");
 #endif
@@ -2958,9 +2962,11 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   u_short keyValue=0;
   HostTraffic *el;
   char buf[BUF_SIZE];
-  DomainStats *stats[HASHNAMESIZE], tmpStats[HASHNAMESIZE], *statsEntry;
+  DomainStats *stats[HASHNAMESIZE], *tmpStats, *statsEntry;
   char htmlAnchor[128], htmlAnchor1[128], *sign, *arrowGif, *arrow[48], *theAnchor[48];
   TrafficCounter totBytesSent=0, totBytesRcvd=0;
+
+  tmpStats = (DomainStats*)malloc(sizeof(DomainStats)*HASHNAMESIZE);
 
   /* traceEvent(TRACE_INFO, "'%s' '%d' '%d'\n", domainName, sortedColumn, revertOrder); */
 
@@ -3041,6 +3047,7 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   if(numEntries == 0) {
     sendString("<CENTER><P><H1>Internet Domain Stats</H1><P>\n");
     printNoDataYet();
+    free(tmpStats);
     return;
   }
 
@@ -3301,6 +3308,8 @@ void printDomainStats(char* domainName, int sortedColumn, int revertOrder) {
   }
 
   sendString("</TABLE>"TABLE_OFF"</HTML>\n");
+
+  free(tmpStats);
 }
 
 
