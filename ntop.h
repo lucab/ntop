@@ -258,7 +258,7 @@ ntop.h
  * **************************************************************************************/
 
 #ifndef WIN32
- #include <sys/socket.h>
+#include <sys/socket.h>
 #endif
 
 #ifdef HAVE_SYS_UN_H
@@ -270,6 +270,10 @@ ntop.h
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+
+#ifdef HAVE_SCTP
+#include <netinet/sctp.h>
+#endif
 
 /* 
    Additions below courtesy of 

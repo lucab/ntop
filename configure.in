@@ -2556,6 +2556,20 @@ else
     HAS_WARNING="yes"
 fi
 
+dnl>
+dnl> SCTP - RFC 3286
+dnl>
+AC_MSG_CHECKING([sctp])
+AC_TRY_LINK([
+        #include "confdefs.h"
+        #include <netinet/sctp.h>
+        #include <sys/socket.h>],
+        [socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);],
+        AC_DEFINE_UNQUOTED(HAVE_SCTP, 1, [SCTP is supported])
+AC_MSG_RESULT(yes)
+ac_has_sctp=yes,
+AC_MSG_RESULT(no)
+ac_has_sctp=no)
 
 dnl> tcp wrappers:
 if test ".${ac_enable_tcpwrap}" = ".yes"; then

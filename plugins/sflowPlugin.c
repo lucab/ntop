@@ -886,11 +886,11 @@ static void writePcapPacket(SFSample *sample) {
   hdr.caplen     = sample->headerLen;
   hdr.len        = sample->sampledPacketSize;
 
-  if(myGlobals.sflowInSocket == 0)
-    myGlobals.initialPool = sample->samplePool;
+  if(myGlobals.sflowGlobals.sflowInSocket == 0)
+    myGlobals.sflowGlobals.initialPool = sample->samplePool;
 
-  myGlobals.numSamplesReceived++;
-  myGlobals.lastSample = sample->samplePool;
+  myGlobals.sflowGlobals.numSamplesReceived++;
+  myGlobals.sflowGlobals.lastSample = sample->samplePool;
 
   NTOHL(sample->sourceIP.s_addr);
 
@@ -916,7 +916,7 @@ static void writePcapPacket(SFSample *sample) {
     Neil McKee <neil_mckee@inmon.com>
   */
   if(sample->headerProtocol == INMHEADER_ETHERNET_ISO8023)
-    queuePacket((u_char*)myGlobals.sflowDeviceId,
+    queuePacket((u_char*)myGlobals.sflowGlobals.sflowDeviceId,
 		&hdr, sample->header); /* Pass the packet to ntop */
 #endif
 
@@ -1526,43 +1526,43 @@ static void freeSflowMatrixMemory(void) {
     NOTE: we need to lock something here (TBD)
   */
 
-  if((!myGlobals.device[myGlobals.sflowDeviceId].activeDevice) || (myGlobals.sflowDeviceId == -1)) return;
+  if((!myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].activeDevice) || (myGlobals.sflowGlobals.sflowDeviceId == -1)) return;
 
-  if(myGlobals.device[myGlobals.sflowDeviceId].ipTrafficMatrix != NULL) {
+  if(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrix != NULL) {
     int j;
 
     /* Courtesy of Wies-Software <wies@wiessoft.de> */
-    for(j=0; j<(myGlobals.device[myGlobals.sflowDeviceId].numHosts*myGlobals.device[myGlobals.sflowDeviceId].numHosts); j++)
-        if(myGlobals.device[myGlobals.sflowDeviceId].ipTrafficMatrix[j] != NULL)
-	  free(myGlobals.device[myGlobals.sflowDeviceId].ipTrafficMatrix[j]);
+    for(j=0; j<(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts*myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts); j++)
+        if(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrix[j] != NULL)
+	  free(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrix[j]);
 
-    free(myGlobals.device[myGlobals.sflowDeviceId].ipTrafficMatrix);
+    free(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrix);
   }
 
-  if(myGlobals.device[myGlobals.sflowDeviceId].ipTrafficMatrixHosts != NULL)
-    free(myGlobals.device[myGlobals.sflowDeviceId].ipTrafficMatrixHosts);
+  if(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrixHosts != NULL)
+    free(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrixHosts);
 }
 
 /* ************************************************** */
 
 static void setSflowInterfaceMatrix() {
-  if((!myGlobals.device[myGlobals.sflowDeviceId].activeDevice) || (myGlobals.sflowDeviceId == -1)) return;
+  if((!myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].activeDevice) || (myGlobals.sflowGlobals.sflowDeviceId == -1)) return;
 
-  myGlobals.device[myGlobals.sflowDeviceId].numHosts       = 0xFFFFFFFF - myGlobals.sflowIfMask.s_addr+1;
-  myGlobals.device[myGlobals.sflowDeviceId].network.s_addr = myGlobals.sflowIfAddress.s_addr;
-  myGlobals.device[myGlobals.sflowDeviceId].netmask.s_addr = myGlobals.sflowIfMask.s_addr;
-  if(myGlobals.device[myGlobals.sflowDeviceId].numHosts > MAX_SUBNET_HOSTS) {
-    myGlobals.device[myGlobals.sflowDeviceId].numHosts = MAX_SUBNET_HOSTS;
+  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts       = 0xFFFFFFFF - myGlobals.sflowGlobals.sflowIfMask.s_addr+1;
+  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].network.s_addr = myGlobals.sflowGlobals.sflowIfAddress.s_addr;
+  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].netmask.s_addr = myGlobals.sflowGlobals.sflowIfMask.s_addr;
+  if(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts > MAX_SUBNET_HOSTS) {
+    myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts = MAX_SUBNET_HOSTS;
     traceEvent(CONST_TRACE_WARNING, "SFLOW: Truncated network size (device %s) to %d hosts (real netmask %s)",
-	       myGlobals.device[myGlobals.sflowDeviceId].name, myGlobals.device[myGlobals.sflowDeviceId].numHosts,
-	       intoa(myGlobals.device[myGlobals.sflowDeviceId].netmask));
+	       myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].name, myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts,
+	       intoa(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].netmask));
   }
 
-  myGlobals.device[myGlobals.sflowDeviceId].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[myGlobals.sflowDeviceId].numHosts*
-										       myGlobals.device[myGlobals.sflowDeviceId].numHosts,
+  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrix = (TrafficEntry**)calloc(myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts*
+										       myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts,
 										       sizeof(TrafficEntry*));
-  myGlobals.device[myGlobals.sflowDeviceId].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
-												  myGlobals.device[myGlobals.sflowDeviceId].numHosts);
+  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].ipTrafficMatrixHosts = (struct hostTraffic**)calloc(sizeof(struct hostTraffic*),
+												  myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].numHosts);
 }
 
 /* ****************************** */
@@ -1586,8 +1586,8 @@ static void handlesFlowHTTPrequest(char* url) {
 
     if(value && key) {
       if(strcmp(key, "port") == 0) {
-	if(myGlobals.sflowInPort != atoi(value)) {
-	  myGlobals.sflowInPort = atoi(value);
+	if(myGlobals.sflowGlobals.sflowInPort != atoi(value)) {
+	  myGlobals.sflowGlobals.sflowInPort = atoi(value);
 	  storePrefsValue("sflow.sflowInPort", value);
 	  initSflowInSocket();
 	}
@@ -1596,14 +1596,14 @@ static void handlesFlowHTTPrequest(char* url) {
 
 	if(sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d",
 		  &a, &b, &c, &d, &a1, &b1, &c1, &d1) == 8) {
-	  myGlobals.sflowIfAddress.s_addr = (a << 24) + (b << 16) + (c << 8) + d;
-	  myGlobals.sflowIfMask.s_addr    = (a1 << 24) + (b1 << 16) + (c1 << 8) + d1;
+	  myGlobals.sflowGlobals.sflowIfAddress.s_addr = (a << 24) + (b << 16) + (c << 8) + d;
+	  myGlobals.sflowGlobals.sflowIfMask.s_addr    = (a1 << 24) + (b1 << 16) + (c1 << 8) + d1;
 	  storePrefsValue("sflow.ifNetMask", value);
 	  freeSflowMatrixMemory(); setSflowInterfaceMatrix();
 	} else
 	  traceEvent(CONST_TRACE_WARNING, "SFLOW: Parse Error (%s)", value);
      } else if(strcmp(key, "sflowDest") == 0) {
-	myGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
+	myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
 	storePrefsValue("sflow.sflowDest", value);
       } else if(strcmp(key, "debug") == 0) {
 	debug = atoi(value);
@@ -1620,20 +1620,20 @@ static void handlesFlowHTTPrequest(char* url) {
 	     "Local UDP Port</td> "
 	     "<td "TD_BG"><INPUT NAME=port SIZE=5 VALUE=");
 
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.sflowInPort) < 0)
+  if(snprintf(buf, sizeof(buf), "%d", myGlobals.sflowGlobals.sflowInPort) < 0)
     BufferTooShort();
   sendString(buf);
 
   sendString("><br>[default port is "DEFAULT_SFLOW_COLLECTOR_PORT_STR"]"
 	     "</td><td><INPUT TYPE=submit VALUE=Set></form></td></tr>\n<br>");
 
-  if(myGlobals.sflowInPort > 0) {
+  if(myGlobals.sflowGlobals.sflowInPort > 0) {
     sendString("<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG">Virtual sFlow Interface</TH><TD "TD_BG"><FORM ACTION=/plugins/sFlow METHOD=GET>"
 	       "Local Network IP Address/Mask:</td><td "TD_BG"><INPUT NAME=ifNetMask SIZE=32 VALUE=\"");
 
     if(snprintf(buf, sizeof(buf), "%s/%s",
-		_intoa(myGlobals.sflowIfAddress, buf1, sizeof(buf1)),
-		_intoa(myGlobals.sflowIfMask, buf2, sizeof(buf2))) < 0)
+		_intoa(myGlobals.sflowGlobals.sflowIfAddress, buf1, sizeof(buf1)),
+		_intoa(myGlobals.sflowGlobals.sflowIfMask, buf2, sizeof(buf2))) < 0)
       BufferTooShort();
     sendString(buf);
 
@@ -1646,7 +1646,7 @@ static void handlesFlowHTTPrequest(char* url) {
 	     "Remote Collector IP Address</td> "
 	     "<td "TD_BG"><INPUT NAME=sflowDest SIZE=15 VALUE=");
 
-  theDest.s_addr = ntohl(myGlobals.sflowDest.sin_addr.s_addr);
+  theDest.s_addr = ntohl(myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr);
   sendString(_intoa(theDest, buf, sizeof(buf)));
 
   sendString(">:6343<br>[default sampling rate is "DEFAULT_SFLOW_SAMPLING_RATE" packets]</td>"
@@ -1678,8 +1678,8 @@ static void handlesFlowHTTPrequest(char* url) {
 
   /* *************************************** */
 
-  if((myGlobals.sflowInSocket == 0)
-     || (myGlobals.numSamplesReceived == 0)) {
+  if((myGlobals.sflowGlobals.sflowInSocket == 0)
+     || (myGlobals.sflowGlobals.numSamplesReceived == 0)) {
     sendString("<p><H5>sFlow is a trademark of <A HREF=http://www.inmon.com/>InMon Corp.</A></H5>\n");
     sendString("<p align=right>[ Back to <a href=\"../" CONST_SHOW_PLUGINS_HTML "\">plugins</a> ]&nbsp;</p>\n");
     printHTMLtrailer();
@@ -1687,8 +1687,8 @@ static void handlesFlowHTTPrequest(char* url) {
   }
 
 
-  percentage = (myGlobals.lastSample-myGlobals.initialPool)/myGlobals.numSamplesReceived;
-  err = 196 * sqrt((float)(1/(float)myGlobals.numSamplesReceived));
+  percentage = (myGlobals.sflowGlobals.lastSample-myGlobals.sflowGlobals.initialPool)/myGlobals.sflowGlobals.numSamplesReceived;
+  err = 196 * sqrt((float)(1/(float)myGlobals.sflowGlobals.numSamplesReceived));
 
   if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: [%.2f %%][Error <= %.2f%%]", percentage, err);
 
@@ -1697,7 +1697,7 @@ static void handlesFlowHTTPrequest(char* url) {
 
   if(snprintf(buf, sizeof(buf),
 	      "<TR "TR_ON"><TH "TH_BG" ALIGN=LEFT "DARK_BG"># Samples</TH><TD "TD_BG" ALIGN=RIGHT>%s</TD></TR>\n",
-	      formatPkts((Counter)myGlobals.numSamplesReceived, formatBuf, sizeof(formatBuf))) < 0)
+	      formatPkts((Counter)myGlobals.sflowGlobals.numSamplesReceived, formatBuf, sizeof(formatBuf))) < 0)
     BufferTooShort();
   sendString(buf);
 
@@ -1741,7 +1741,7 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
   SFSample sample;
   struct sockaddr_in fromHost;
 
-  if(!(myGlobals.sflowInSocket > 0)) return(NULL);
+  if(!(myGlobals.sflowGlobals.sflowInSocket > 0)) return(NULL);
 
 #ifdef CFG_MULTITHREADED
   threadActive = 1;
@@ -1757,11 +1757,11 @@ static void* sFlowMainLoop(void* notUsed _UNUSED_) {
 
   for(;myGlobals.capturePackets == FLAG_NTOPSTATE_RUN;) {
     FD_ZERO(&sFlowMask);
-    FD_SET(myGlobals.sflowInSocket, &sFlowMask);
+    FD_SET(myGlobals.sflowGlobals.sflowInSocket, &sFlowMask);
 
-    if((rc = select(myGlobals.sflowInSocket+1, &sFlowMask, NULL, NULL, NULL)) > 0) {
+    if((rc = select(myGlobals.sflowGlobals.sflowInSocket+1, &sFlowMask, NULL, NULL, NULL)) > 0) {
       len = sizeof(fromHost);
-      rc = recvfrom(myGlobals.sflowInSocket, (char*)&buffer, sizeof(buffer),
+      rc = recvfrom(myGlobals.sflowGlobals.sflowInSocket, (char*)&buffer, sizeof(buffer),
 		    0, (struct sockaddr*)&fromHost, &len);
 
 #ifdef DEBUG
@@ -1803,61 +1803,61 @@ static void initSflowInSocket(void) {
   struct sockaddr_in sockIn;
   int sockopt = 1;
 
-  if(myGlobals.sflowInSocket != 0) {
+  if(myGlobals.sflowGlobals.sflowInSocket != 0) {
     if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sFlow collector terminated");
-    closeNwSocket(&myGlobals.sflowInSocket);
+    closeNwSocket(&myGlobals.sflowGlobals.sflowInSocket);
   }
 
-  if(myGlobals.sflowInPort > 0) {
-    myGlobals.sflowInSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    setsockopt(myGlobals.sflowInSocket, SOL_SOCKET, SO_REUSEADDR,
+  if(myGlobals.sflowGlobals.sflowInPort > 0) {
+    myGlobals.sflowGlobals.sflowInSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    setsockopt(myGlobals.sflowGlobals.sflowInSocket, SOL_SOCKET, SO_REUSEADDR,
 	       (char *)&sockopt, sizeof(sockopt));
 
     sockIn.sin_family            = AF_INET;
-    sockIn.sin_port              = (int)htons(myGlobals.sflowInPort);
+    sockIn.sin_port              = (int)htons(myGlobals.sflowGlobals.sflowInPort);
     sockIn.sin_addr.s_addr       = INADDR_ANY;
 
-    if(bind(myGlobals.sflowInSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
+    if(bind(myGlobals.sflowGlobals.sflowInSocket, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
       traceEvent(CONST_TRACE_ERROR, "SFLOW: Collector: port %d already in use - collector disabled",
-		 myGlobals.sflowInPort);
-      closeNwSocket(&myGlobals.sflowInSocket);
-      myGlobals.sflowInSocket = 0;
+		 myGlobals.sflowGlobals.sflowInPort);
+      closeNwSocket(&myGlobals.sflowGlobals.sflowInSocket);
+      myGlobals.sflowGlobals.sflowInSocket = 0;
       return;
     }
 
     traceEvent(CONST_TRACE_INFO, "SFLOW: Collector listening on port %d",
-	       myGlobals.sflowInPort);
+	       myGlobals.sflowGlobals.sflowInPort);
   }
 
-  if((myGlobals.sflowInSocket > 0) && (myGlobals.sflowDeviceId == -1)) {
-    myGlobals.sflowDeviceId = createDummyInterface(SFLOW_DEVICE_NAME);
+  if((myGlobals.sflowGlobals.sflowInSocket > 0) && (myGlobals.sflowGlobals.sflowDeviceId == -1)) {
+    myGlobals.sflowGlobals.sflowDeviceId = createDummyInterface(SFLOW_DEVICE_NAME);
     setSflowInterfaceMatrix();
-    myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 1;
+    myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].activeDevice = 1;
   }
 
   myGlobals.mergeInterfaces = 0; /* Use different devices */
 
-  if(myGlobals.sflowOutSocket == 0) {
+  if(myGlobals.sflowGlobals.sflowOutSocket == 0) {
     char value[32];
 
-    myGlobals.sflowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
-    setsockopt(myGlobals.sflowOutSocket, SOL_SOCKET, SO_REUSEADDR,
+    myGlobals.sflowGlobals.sflowOutSocket = socket(AF_INET, SOCK_DGRAM, 0);
+    setsockopt(myGlobals.sflowGlobals.sflowOutSocket, SOL_SOCKET, SO_REUSEADDR,
 	       (char *)&sockopt, sizeof(sockopt));
 
-    myGlobals.sflowDest.sin_addr.s_addr = 0;
-    myGlobals.sflowDest.sin_family      = AF_INET;
-    myGlobals.sflowDest.sin_port        = (int)htons(DEFAULT_SFLOW_COLLECTOR_PORT);
+    myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr = 0;
+    myGlobals.sflowGlobals.sflowDest.sin_family      = AF_INET;
+    myGlobals.sflowGlobals.sflowDest.sin_port        = (int)htons(DEFAULT_SFLOW_COLLECTOR_PORT);
 
     if(fetchPrefsValue("sflow.sflowDest", value, sizeof(value)) == -1)
       storePrefsValue("sflow.sflowDest", "");
     else if(value[0] != '\0')
-      myGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
+      myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
 
-    myGlobals.numSamplesToGo = atoi(DEFAULT_SFLOW_SAMPLING_RATE);
+    myGlobals.sflowGlobals.numSamplesToGo = atoi(DEFAULT_SFLOW_SAMPLING_RATE);
   }
 
 #ifdef CFG_MULTITHREADED
-  if((!threadActive) && (myGlobals.sflowInSocket > 0))
+  if((!threadActive) && (myGlobals.sflowGlobals.sflowInSocket > 0))
     createThread(&sFlowThread, sFlowMainLoop, NULL);
 #endif
 }
@@ -1925,7 +1925,7 @@ static void handleSflowPacket(u_char *_deviceId,
 	    memcpy(&up, p+sizeof(struct ether_header)+hlen, sizeof(struct udphdr));
 	    sport = ntohs(up.uh_sport), dport = ntohs(up.uh_dport);
 
-	    if(dport == myGlobals.sflowInPort) {
+	    if(dport == myGlobals.sflowGlobals.sflowInPort) {
 	      /* This is an sflow packet */
 	      SFSample sample;
 
@@ -1942,7 +1942,7 @@ static void handleSflowPacket(u_char *_deviceId,
     }
   }
 
-  if(myGlobals.numSamplesToGo-- > 0) return;
+  if(myGlobals.sflowGlobals.numSamplesToGo-- > 0) return;
 
 #ifdef WIN32
   deviceId = 0;
@@ -1956,11 +1956,11 @@ static void handleSflowPacket(u_char *_deviceId,
   mySample.datagramVersion   = htonl(INMDATAGRAM_VERSION2);
   mySample.addressType       = htonl(INMADDRESSTYPE_IP_V4);
   mySample.agentAddress      = htonl(myGlobals.device[deviceId].ifAddr.s_addr);
-  mySample.sequenceNo        = htonl(myGlobals.flowSampleSeqNo);
+  mySample.sequenceNo        = htonl(myGlobals.sflowGlobals.flowSampleSeqNo);
   mySample.sysUpTime         = htonl(myGlobals.actTime);
   mySample.samplesInPacket   = htonl(1);
   mySample.sampleType        = htonl(FLOWSAMPLE);
-  mySample.sampleSequenceNo  = htonl(myGlobals.flowSampleSeqNo);
+  mySample.sampleSequenceNo  = htonl(myGlobals.sflowGlobals.flowSampleSeqNo);
   mySample.samplerId         = htonl(0); /*
 					   sFlowDataSource encoded as follows:
 					   The most significant byte of the
@@ -1983,19 +1983,19 @@ static void handleSflowPacket(u_char *_deviceId,
   memcpy(mySample.packetData, p, sampledPacketSize);
   mySample.extended_data_tag = htonl(0); /* No extended data */
 
-  myGlobals.flowSampleSeqNo++;
+  myGlobals.sflowGlobals.flowSampleSeqNo++;
 
 #if 1
-  if(myGlobals.sflowDest.sin_addr.s_addr != 0) {
-    rc = sendto(myGlobals.sflowOutSocket, (const char*)&mySample, sizeof(mySample)+sampledPacketSize, 0,
-		(struct sockaddr *)&myGlobals.sflowDest, sizeof(myGlobals.sflowDest));
+  if(myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr != 0) {
+    rc = sendto(myGlobals.sflowGlobals.sflowOutSocket, (const char*)&mySample, sizeof(mySample)+sampledPacketSize, 0,
+		(struct sockaddr *)&myGlobals.sflowGlobals.sflowDest, sizeof(myGlobals.sflowGlobals.sflowDest));
 
     if(rc == 0)
       if(debug) traceEvent(CONST_TRACE_INFO, "SFLOW_DEBUG: sendto returned %d [errno=%d][sflowOutSocket=%d]",
-		 rc, errno, myGlobals.sflowOutSocket);
+		 rc, errno, myGlobals.sflowGlobals.sflowOutSocket);
   }
 #else
-  if(myGlobals.sflowDest.sin_addr.s_addr != 0) {
+  if(myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr != 0) {
     debug = 1;
     memset(&sample, 0, sizeof(sample));
     sample.rawSample           = &mySample;
@@ -2005,7 +2005,7 @@ static void handleSflowPacket(u_char *_deviceId,
   }
 #endif
 
-  myGlobals.numSamplesToGo = atoi(DEFAULT_SFLOW_SAMPLING_RATE); /* reset value */
+  myGlobals.sflowGlobals.numSamplesToGo = atoi(DEFAULT_SFLOW_SAMPLING_RATE); /* reset value */
 }
 
 /* ****************************** */
@@ -2023,33 +2023,33 @@ static int initsFlowFunct(void) {
   return(-1);
 #endif
 
-  myGlobals.sflowInSocket = 0, debug = 0;
-  myGlobals.numSamplesReceived = 0,
-    myGlobals.initialPool = 0,
-    myGlobals.lastSample = 0;
+  myGlobals.sflowGlobals.sflowInSocket = 0, debug = 0;
+  myGlobals.sflowGlobals.numSamplesReceived = 0,
+    myGlobals.sflowGlobals.initialPool = 0,
+    myGlobals.sflowGlobals.lastSample = 0;
 
   memset(probeList, 0, sizeof(probeList));
 
   if((fetchPrefsValue("sflow.ifNetMask", value, sizeof(value)) == -1)
     || (sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d", &a, &b, &c, &d, &a1, &b1, &c1, &d1) != 8)) {
     storePrefsValue("sflow.ifNetMask", "192.168.0.0/255.255.255.0");
-    myGlobals.sflowIfAddress.s_addr = 0xC0A80000;
-    myGlobals.sflowIfMask.s_addr    = 0xFFFFFF00;
+    myGlobals.sflowGlobals.sflowIfAddress.s_addr = 0xC0A80000;
+    myGlobals.sflowGlobals.sflowIfMask.s_addr    = 0xFFFFFF00;
   } else {
-    myGlobals.sflowIfAddress.s_addr = (a << 24) + (b << 16) + (c << 8) + d;
-    myGlobals.sflowIfMask.s_addr    = (a1 << 24) + (b1 << 16) + (c1 << 8) + d1;
+    myGlobals.sflowGlobals.sflowIfAddress.s_addr = (a << 24) + (b << 16) + (c << 8) + d;
+    myGlobals.sflowGlobals.sflowIfMask.s_addr    = (a1 << 24) + (b1 << 16) + (c1 << 8) + d1;
   }
 
   if(fetchPrefsValue("sflow.sflowInPort", value, sizeof(value)) == -1)
     storePrefsValue("sflow.sflowInPort", "0");
   else
-    myGlobals.sflowInPort = atoi(value);
+    myGlobals.sflowGlobals.sflowInPort = atoi(value);
 
   if(fetchPrefsValue("sflow.sflowDest", value, sizeof(value)) == -1) {
     storePrefsValue("sflow.sflowDest", "0.0.0.0");
-    myGlobals.sflowDest.sin_addr.s_addr = 0;
+    myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr = 0;
   } else
-    myGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
+    myGlobals.sflowGlobals.sflowDest.sin_addr.s_addr = inet_addr(value);
 
   if(fetchPrefsValue("sflow.debug", value, sizeof(value)) == -1)
     storePrefsValue("sflow.debug", "0");
@@ -2060,12 +2060,12 @@ static int initsFlowFunct(void) {
 
   /* http://www.inmon.com/ */
 
-    if(myGlobals.sflowInPort > 0)
+    if(myGlobals.sflowGlobals.sflowInPort > 0)
       traceEvent(CONST_TRACE_INFO, "SFLOW: Welcome to sFlow: listening on UDP port %d",
-		 myGlobals.sflowInPort);
+		 myGlobals.sflowGlobals.sflowInPort);
 
-  if(myGlobals.sflowDeviceId != -1)
-    myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 1;
+  if(myGlobals.sflowGlobals.sflowDeviceId != -1)
+    myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].activeDevice = 1;
 
   fflush(stdout);
   return(0);
@@ -2081,11 +2081,11 @@ static void termsFlowFunct(void) {
   if(threadActive) killThread(&sFlowThread);
 #endif
 
-  if(myGlobals.sflowInSocket > 0)  closeNwSocket(&myGlobals.sflowInSocket);
-  if(myGlobals.sflowOutSocket > 0) closeNwSocket(&myGlobals.sflowOutSocket);
+  if(myGlobals.sflowGlobals.sflowInSocket > 0)  closeNwSocket(&myGlobals.sflowGlobals.sflowInSocket);
+  if(myGlobals.sflowGlobals.sflowOutSocket > 0) closeNwSocket(&myGlobals.sflowGlobals.sflowOutSocket);
 
-  if(myGlobals.sflowDeviceId != -1)
-    myGlobals.device[myGlobals.sflowDeviceId].activeDevice = 0;
+  if(myGlobals.sflowGlobals.sflowDeviceId != -1)
+    myGlobals.device[myGlobals.sflowGlobals.sflowDeviceId].activeDevice = 0;
 
   traceEvent(CONST_TRACE_ALWAYSDISPLAY, "SFLOW: Done");
   fflush(stdout);

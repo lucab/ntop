@@ -1557,6 +1557,43 @@ typedef enum {
   showHostFcSessions
 } FcHostsDisplayPolicy;
 
+/* *********************************** */
+
+typedef struct netFlowGlobals {
+  u_char netFlowDebug;
+
+  /* Flow reception */
+  AggregationType netFlowAggregation;
+  int netFlowInSocket, netFlowDeviceId;
+#ifdef HAVE_SCTP
+  int netFlowInSctpSocket;
+#endif
+  u_char netFlowAssumeFTP;
+  u_short netFlowInPort;
+  struct in_addr netFlowIfAddress, netFlowIfMask;
+  char *netFlowWhiteList, *netFlowBlackList;
+  u_long numNetFlowsPktsRcvd, numNetFlowsV5Rcvd;
+  u_long numNetFlowsV1Rcvd, numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed, numNetFlowsRcvd;
+  u_long numBadNetFlowsVersionsRcvd, numBadFlowPkts, numBadFlowBytes, numBadFlowReality;
+  u_long numSrcNetFlowsEntryFailedBlackList, numSrcNetFlowsEntryFailedWhiteList,
+    numSrcNetFlowsEntryAccepted,
+    numDstNetFlowsEntryFailedBlackList, numDstNetFlowsEntryFailedWhiteList,
+    numDstNetFlowsEntryAccepted;
+  u_long numNetFlowsV9TemplRcvd, numNetFlowsV9BadTemplRcvd, numNetFlowsV9UnknTemplRcvd;
+  u_long numNflowFlowsRcvd, numNflowFlowsBadTemplRcvd, numNflowFlowsBadVersRcvd;
+} NetFlowGlobals;
+
+/* *********************************** */
+
+typedef struct sFlowGlobals {
+  int sflowOutSocket, sflowInSocket, sflowDeviceId;
+  struct in_addr sflowIfAddress, sflowIfMask;
+  u_short sflowInPort;
+  u_long numSamplesReceived, initialPool, lastSample;
+  u_int32_t flowSampleSeqNo, numSamplesToGo;
+  struct sockaddr_in sflowDest;
+} SflowGlobals;
+
 /* *************************************************************** */
 
 #define BROADCAST_HOSTS_ENTRY    0
@@ -1918,32 +1955,10 @@ typedef struct ntopGlobals {
   int numChildren;
 
   /* NetFlow */
-  u_char netFlowDebug;
-
-  /* Flow reception */
-  AggregationType netFlowAggregation;
-  int netFlowInSocket, netFlowDeviceId;
-  u_char netFlowAssumeFTP;
-  u_short netFlowInPort;
-  struct in_addr netFlowIfAddress, netFlowIfMask;
-  char *netFlowWhiteList, *netFlowBlackList;
-  u_long numNetFlowsPktsRcvd, numNetFlowsV5Rcvd;
-  u_long numNetFlowsV1Rcvd, numNetFlowsV7Rcvd, numNetFlowsV9Rcvd, numNetFlowsProcessed, numNetFlowsRcvd;
-  u_long numBadNetFlowsVersionsRcvd, numBadFlowPkts, numBadFlowBytes, numBadFlowReality;
-  u_long numSrcNetFlowsEntryFailedBlackList, numSrcNetFlowsEntryFailedWhiteList,
-    numSrcNetFlowsEntryAccepted,
-    numDstNetFlowsEntryFailedBlackList, numDstNetFlowsEntryFailedWhiteList,
-    numDstNetFlowsEntryAccepted;
-  u_long numNetFlowsV9TemplRcvd, numNetFlowsV9BadTemplRcvd, numNetFlowsV9UnknTemplRcvd;
-  u_long numNflowFlowsRcvd, numNflowFlowsBadTemplRcvd, numNflowFlowsBadVersRcvd;
+  NetFlowGlobals netflowGlobals;
 
   /* sFlow */
-  int sflowOutSocket, sflowInSocket, sflowDeviceId;
-  struct in_addr sflowIfAddress, sflowIfMask;
-  u_short sflowInPort;
-  u_long numSamplesReceived, initialPool, lastSample;
-  u_int32_t flowSampleSeqNo, numSamplesToGo;
-  struct sockaddr_in sflowDest;
+  SflowGlobals sflowGlobals;
 
   /* rrd */
   char *rrdPath;
