@@ -120,7 +120,8 @@ extern void resetLeaks(void);
 #define calloc(a, b)  ntop_calloc((unsigned int)a, (unsigned int)b, __FILE__, __LINE__)
 #define realloc(p, a) ntop_realloc((void*)p, (unsigned int)a,  __FILE__, __LINE__)
 #define strdup(a)     ntop_strdup((char*)a, __FILE__, __LINE__)
-#define free(a)       ntop_free((void*)&(a), __FILE__, __LINE__)
+/* Fix to the free prototype courtesy of Tanner Lovelace <lovelace@opennms.org> */
+#define free(a)       ntop_free((void**)&(a), __FILE__, __LINE__)
 extern void*          ntop_malloc(unsigned int sz, char* file, int line);
 extern void*          ntop_calloc(unsigned int c, unsigned int sz, char* file, int line);
 extern void*          ntop_realloc(void* ptr, unsigned int sz, char* file, int line);
