@@ -1165,12 +1165,12 @@ HostTraffic* lookupHost(HostAddr *hostIpAddress, u_char *ether_addr, short vlanI
       if((ether_addr == NULL) && (isPseudoLocalAddress(hostIpAddress, actualDeviceId)))
 	FD_SET(FLAG_SUBNET_PSEUDO_LOCALHOST, &el->flags);
 
+      setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
+
       /* Trick to fill up the address cache */
       if(myGlobals.numericFlag == 0)
 	ipaddr2str(el->hostIpAddress, 1);
-      else {
-        setResolvedName(el, el->hostNumIpAddress, FLAG_HOST_SYM_ADDR_TYPE_IP);
-      }
+
     } else {
       /* This is a new entry and hostIpAddress was NOT set.  Fill in MAC address, if we have it */
       if(symEthName[0] != '\0') {

@@ -5723,6 +5723,11 @@ void _setResolvedName(HostTraffic *el, char *updateValue, short updateType, char
 
   if(updateValue[0] == '\0') return;
 
+  /* Do not update 0 -> DNS */
+  if((updateType == FLAG_HOST_SYM_ADDR_TYPE_NAME) && 
+     (el->hostResolvedNameType == 0))
+    return;
+
   /* Only update if this is a MORE important type */
   if(updateType > el->hostResolvedNameType) {
 
