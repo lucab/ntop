@@ -1497,14 +1497,13 @@ A. The text of 'filename', is copied - ignoring line breaks and
       -u ntop
       --trace-level 3
       -m 12.239.0.0/16,10.113.0.0/16
-      -E
       -K
 
    becomes:
 
    Resolved to /usr/bin/ntop -i eth0,eth1 -p /usr/share/ntop/protocol.list
                -P /usr/share/ntop -w 192.168.42.38 -u ntop --trace-level 3
-               -m 12.239.0.0/16,10.113.0.0/16 -E -K -d -L
+               -m 12.239.0.0/16,10.113.0.0/16 -K -d -L
 
    Remember, most ntop options are "sticky", that is they just set an
    internal flag. Invoking them multiple times doesn't change ntop's
@@ -2857,7 +2856,7 @@ A. Oh yes it does... for http: connections
 
 
 Q. My filter doesn't work!  I'm running ntop like this:
-      /usr/local/bin/ntop -u nobody -L -d -E -w 3000 -S 2 \
+      /usr/local/bin/ntop -u nobody -L -d -w 3000 -S 2 \
                       -m 192.168.10.0/24,xxx.xxx.xxx.xxx/32 \
                       -M -i eth0,eth1 \
                       (src net 192.168.10.0/24 or src host xxx.xxx.xxx.xxx ) \
