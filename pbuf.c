@@ -2907,10 +2907,8 @@ static void checkNetworkRouter(HostTraffic *srcHost,
     if(broadcastHost(router)
        || multicastHost(router)
        || (!subnetLocalHost(router))
-       || (router->hostNumIpAddress[0] == '\0') /*
-						   No IP: is this a special
-						   Multicast address ?
-						*/
+       || (router->hostNumIpAddress[0] == '\0') /* No IP: is this a special
+						   Multicast address ? */
        )
       return;
 
@@ -4570,11 +4568,11 @@ void processPacket(u_char *_deviceId,
 	    case ARPOP_REPLY: /* ARP REPLY */
 	      memcpy(&addr.s_addr, arpHdr.arp_tpa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      dstHostIdx = getHostInfo(&addr, &arpHdr.arp_tha);
+	      dstHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_tha);
 	      dstHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(dstHostIdx)];
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHostIdx = getHostInfo(&addr, &arpHdr.arp_sha);
+	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha);
 	      srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	      if(srcHost != NULL) srcHost->arpReplyPktsSent++;
 	      if(dstHost != NULL) dstHost->arpReplyPktsRcvd++;
@@ -4582,7 +4580,7 @@ void processPacket(u_char *_deviceId,
 	    case ARPOP_REQUEST: /* ARP request */
 	      memcpy(&addr.s_addr, arpHdr.arp_spa, sizeof(addr.s_addr));
 	      addr.s_addr = ntohl(addr.s_addr);
-	      srcHostIdx = getHostInfo(&addr, &arpHdr.arp_sha);
+	      srcHostIdx = getHostInfo(&addr, (u_char*)&arpHdr.arp_sha);
 	      srcHost = device[actualDeviceId].hash_hostTraffic[checkSessionIdx(srcHostIdx)];
 	      if((arpOp == ARPOP_REQUEST) && (srcHost != NULL)) srcHost->arpReqPktsSent++;
 	    }
