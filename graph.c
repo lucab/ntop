@@ -249,7 +249,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     }
 
 #ifdef MULTITHREADED
-    accessMutex(&graphMutex, "pktHostTrafficDistrib");
+    accessMutex(&myGlobals.graphMutex, "pktHostTrafficDistrib");
 #endif
 
     fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -272,7 +272,7 @@ void hostTrafficDistrib(HostTraffic *theHost, short dataSent) {
     fclose(fd);
 
 #ifdef MULTITHREADED
-    releaseMutex(&graphMutex);
+    releaseMutex(&myGlobals.graphMutex);
 #endif
 
     sendGraphFile(fileName);
@@ -335,7 +335,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     }
 
 #ifdef MULTITHREADED
-    accessMutex(&graphMutex, "pktHostFragmentDistrib");
+    accessMutex(&myGlobals.graphMutex, "pktHostFragmentDistrib");
 #endif
 
     fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -358,7 +358,7 @@ void hostFragmentDistrib(HostTraffic *theHost, short dataSent) {
     fclose(fd);
 
 #ifdef MULTITHREADED
-    releaseMutex(&graphMutex);
+    releaseMutex(&myGlobals.graphMutex);
 #endif
 
     sendGraphFile(fileName);
@@ -400,7 +400,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     }
 
 #ifdef MULTITHREADED
-    accessMutex(&graphMutex, "pktHostFragmentDistrib");
+    accessMutex(&myGlobals.graphMutex, "pktHostFragmentDistrib");
 #endif
 
     fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -423,7 +423,7 @@ void hostTotalFragmentDistrib(HostTraffic *theHost, short dataSent) {
     fclose(fd);
 
 #ifdef MULTITHREADED
-    releaseMutex(&graphMutex);
+    releaseMutex(&myGlobals.graphMutex);
 #endif
 
     sendGraphFile(fileName);
@@ -459,7 +459,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   totalIPTraffic = 0;
 #endif
 
-  for(i=0; i<numIpProtosToMonitor; i++)
+  for(i=0; i<myGlobals.numIpProtosToMonitor; i++)
     if(dataSent)
       totalIPTraffic += theHost->protoIPTrafficInfos[i].sentLoc+
 	theHost->protoIPTrafficInfos[i].sentRem;
@@ -484,7 +484,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 #endif
 
   if(totalIPTraffic > 0) {
-    for(i=0; i<numIpProtosToMonitor; i++) {
+    for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
       if(dataSent)
 	traffic = theHost->protoIPTrafficInfos[i].sentLoc+
 	  theHost->protoIPTrafficInfos[i].sentRem;
@@ -504,7 +504,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
 	else if (p[num]>10.0)
 	  expl[num]=10;
 
-	lbl[num++] = protoIPTrafficInfos[i];
+	lbl[num++] = myGlobals.protoIPTrafficInfos[i];
       }
 
       if(num >= 20) break; /* Too much stuff */
@@ -517,7 +517,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   }
 
 #ifdef MULTITHREADED
-  accessMutex(&graphMutex, "pktHostTrafficDistrib");
+  accessMutex(&myGlobals.graphMutex, "pktHostTrafficDistrib");
 #endif
 
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -540,7 +540,7 @@ void hostIPTrafficDistrib(HostTraffic *theHost, short dataSent) {
   fclose(fd);
 
 #ifdef MULTITHREADED
-  releaseMutex(&graphMutex);
+  releaseMutex(&myGlobals.graphMutex);
 #endif
 
   sendGraphFile(fileName);
@@ -555,51 +555,51 @@ void pktSizeDistribPie(void) {
   int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35 };
   FILE *fd;
 
-  if(device[actualReportDeviceId].rcvdPktStats.upTo64 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo64)/
-      (float)device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo64 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo64)/
+      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 64";
   };
 
-  if(device[actualReportDeviceId].rcvdPktStats.upTo128 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo128)/
-      (float)device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo128 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo128)/
+      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 128";
   };
 
-  if(device[actualReportDeviceId].rcvdPktStats.upTo256 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo256)/
-      (float)device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo256 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo256)/
+      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 256";
   };
 
-  if(device[actualReportDeviceId].rcvdPktStats.upTo512 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo512)/
-      (float)device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo512 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo512)/
+      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 512";
   };
 
-  if(device[actualReportDeviceId].rcvdPktStats.upTo1024 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo1024)/
-      (float)device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1024 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1024)/
+      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 1024";
   };
 
-  if(device[actualReportDeviceId].rcvdPktStats.upTo1518 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.upTo1518)/
-      (float)device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1518 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.upTo1518)/
+      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "< 1518";
   };
 
-  if(device[actualReportDeviceId].rcvdPktStats.above1518 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktStats.above1518)/
-      (float)device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktStats.above1518 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktStats.above1518)/
+      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "> 1518";
   };
 
 
 #ifdef MULTITHREADED
-  accessMutex(&graphMutex, "pktSizeDistrib");
+  accessMutex(&myGlobals.graphMutex, "pktSizeDistrib");
 #endif
 
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -622,7 +622,7 @@ void pktSizeDistribPie(void) {
   fclose(fd);
 
 #ifdef MULTITHREADED
-  releaseMutex(&graphMutex);
+  releaseMutex(&myGlobals.graphMutex);
 #endif
 
   sendGraphFile(fileName);
@@ -637,56 +637,56 @@ void pktTTLDistribPie(void) {
   int num=0, expl[] = { 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55 };
   FILE *fd;
 
-  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo32 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo32)/
-      (float)device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo32 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo32)/
+      (float)myGlobals.device[actualReportDeviceId].ipPkts;
     lbl[num++] = "< 32";
   };
 
-  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo64 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo64)/
-      (float)device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo64 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo64)/
+      (float)myGlobals.device[actualReportDeviceId].ipPkts;
     lbl[num++] = "< 64";
   };
 
-  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo96 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo96)/
-      (float)device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo96 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo96)/
+      (float)myGlobals.device[actualReportDeviceId].ipPkts;
     lbl[num++] = "< 96";
   };
 
-  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo128 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo128)/
-      (float)device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo128 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo128)/
+      (float)myGlobals.device[actualReportDeviceId].ipPkts;
     lbl[num++] = "< 128";
   };
 
-  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo160 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo160)/
-      (float)device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo160 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo160)/
+      (float)myGlobals.device[actualReportDeviceId].ipPkts;
     lbl[num++] = "< 160";
   };
 
-  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo192 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo192)/
-      (float)device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo192 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo192)/
+      (float)myGlobals.device[actualReportDeviceId].ipPkts;
     lbl[num++] = "< 192";
   };
 
- if(device[actualReportDeviceId].rcvdPktTTLStats.upTo224 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo224)/
-      (float)device[actualReportDeviceId].ipPkts;
+ if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo224 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo224)/
+      (float)myGlobals.device[actualReportDeviceId].ipPkts;
     lbl[num++] = "< 224";
   };
 
-  if(device[actualReportDeviceId].rcvdPktTTLStats.upTo255 > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].rcvdPktTTLStats.upTo255)/
-      (float)device[actualReportDeviceId].ipPkts;
+  if(myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo255 > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].rcvdPktTTLStats.upTo255)/
+      (float)myGlobals.device[actualReportDeviceId].ipPkts;
     lbl[num++] = "<= 255";
   };
 
 #ifdef MULTITHREADED
-  accessMutex(&graphMutex, "pktSizeDistrib");
+  accessMutex(&myGlobals.graphMutex, "pktSizeDistrib");
 #endif
 
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -709,7 +709,7 @@ void pktTTLDistribPie(void) {
   fclose(fd);
 
 #ifdef MULTITHREADED
-  releaseMutex(&graphMutex);
+  releaseMutex(&myGlobals.graphMutex);
 #endif
 
   sendGraphFile(fileName);
@@ -726,26 +726,26 @@ void ipProtoDistribPie(void) {
 
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
 
-  p[num] = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.local+
-		   device[actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
+  p[num] = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local+
+		   myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.local)/1024;
   if(p[num] > 0) {
     lbl[num++] = "Loc";
   }
 
-  p[num] = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.remote2local+
-		   device[actualReportDeviceId].udpGlobalTrafficStats.remote2local)/1024;
+  p[num] = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.remote2local+
+		   myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.remote2local)/1024;
   if(p[num] > 0) {
     lbl[num++] = "Rem->Loc";
   }
 
-  p[num] = (float)(device[actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
-		   device[actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;
+  p[num] = (float)(myGlobals.device[actualReportDeviceId].tcpGlobalTrafficStats.local2remote+
+		   myGlobals.device[actualReportDeviceId].udpGlobalTrafficStats.local2remote)/1024;
   if(p[num] > 0) {
     lbl[num++] = "Loc->Rem";
   }
 
 #ifdef MULTITHREADED
-  accessMutex(&graphMutex, "ipProtoDistribPie");
+  accessMutex(&myGlobals.graphMutex, "ipProtoDistribPie");
 #endif
 
   GDCPIE_LineColor      = 0x000000L;
@@ -766,7 +766,7 @@ void ipProtoDistribPie(void) {
   fclose(fd);
 
 #ifdef MULTITHREADED
-  releaseMutex(&graphMutex);
+  releaseMutex(&myGlobals.graphMutex);
 #endif
 
   sendGraphFile(fileName);
@@ -784,9 +784,9 @@ void interfaceTrafficPie(void) {
   char	*lbl[MAX_NUM_DEVICES];
   int myDevices=0;
 
-  for(i=0; i<numDevices; i++)
-    if(!device[i].virtualDevice) {
-      if (pcap_stats(device[i].pcapPtr, &stat) >= 0) {
+  for(i=0; i<myGlobals.numDevices; i++)
+    if(!myGlobals.device[i].virtualDevice) {
+      if (pcap_stats(myGlobals.device[i].pcapPtr, &stat) >= 0) {
 	p[i] = (float)stat.ps_recv;
 	totPkts += stat.ps_recv;
       }
@@ -796,16 +796,16 @@ void interfaceTrafficPie(void) {
   if(totPkts == 0)
     totPkts++;
 
-  for(i=0; i<numDevices; i++) {
-    if((!device[i].virtualDevice) && (p[i] > 0))  {
+  for(i=0; i<myGlobals.numDevices; i++) {
+    if((!myGlobals.device[i].virtualDevice) && (p[i] > 0))  {
       p[myDevices]   = 100*(((float)p[i])/totPkts);
-      lbl[myDevices] = device[i].name;
+      lbl[myDevices] = myGlobals.device[i].name;
       myDevices++;
     }
   }
 
 #ifdef MULTITHREADED
-  accessMutex(&graphMutex, "interfaceTrafficPie");
+  accessMutex(&myGlobals.graphMutex, "interfaceTrafficPie");
 #endif
 
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -828,7 +828,7 @@ void interfaceTrafficPie(void) {
   fclose(fd);
 
 #ifdef MULTITHREADED
-  releaseMutex(&graphMutex);
+  releaseMutex(&myGlobals.graphMutex);
 #endif
 
   sendGraphFile(fileName);
@@ -844,22 +844,22 @@ void pktCastDistribPie(void) {
   FILE *fd;
   TrafficCounter unicastPkts;
 
-  unicastPkts = device[actualReportDeviceId].ethernetPkts
-    - device[actualReportDeviceId].broadcastPkts
-    - device[actualReportDeviceId]. multicastPkts;
+  unicastPkts = myGlobals.device[actualReportDeviceId].ethernetPkts
+    - myGlobals.device[actualReportDeviceId].broadcastPkts
+    - myGlobals.device[actualReportDeviceId]. multicastPkts;
 
   if(unicastPkts > 0) {
-    p[num] = (float)(100*unicastPkts)/(float)device[actualReportDeviceId].ethernetPkts;
+    p[num] = (float)(100*unicastPkts)/(float)myGlobals.device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "Unicast";
   };
 
-  if(device[actualReportDeviceId].broadcastPkts > 0) {
-    p[num] = (float)(100*device[actualReportDeviceId].broadcastPkts)/
-      (float)device[actualReportDeviceId].ethernetPkts;
+  if(myGlobals.device[actualReportDeviceId].broadcastPkts > 0) {
+    p[num] = (float)(100*myGlobals.device[actualReportDeviceId].broadcastPkts)/
+      (float)myGlobals.device[actualReportDeviceId].ethernetPkts;
     lbl[num++] = "Broadcast";
   };
 
-  if(device[actualReportDeviceId].multicastPkts > 0) {
+  if(myGlobals.device[actualReportDeviceId].multicastPkts > 0) {
     int i;
 
     p[num] = 100;
@@ -872,7 +872,7 @@ void pktCastDistribPie(void) {
 
 
 #ifdef MULTITHREADED
-  accessMutex(&graphMutex, "pktCastDistribPie");
+  accessMutex(&myGlobals.graphMutex, "pktCastDistribPie");
 #endif
 
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -895,7 +895,7 @@ void pktCastDistribPie(void) {
   fclose(fd);
 
 #ifdef MULTITHREADED
-  releaseMutex(&graphMutex);
+  releaseMutex(&myGlobals.graphMutex);
 #endif
 
   sendGraphFile(fileName);
@@ -911,19 +911,19 @@ void drawTrafficPie(void) {
   int num=0, expl[] = { 5, 5 };
   FILE *fd;
 
-  if(device[actualReportDeviceId].ethernetBytes == 0) return;
+  if(myGlobals.device[actualReportDeviceId].ethernetBytes == 0) return;
 
-  ip = device[actualReportDeviceId].ipBytes;
-  nonIp = device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes;
+  ip = myGlobals.device[actualReportDeviceId].ipBytes;
+  nonIp = myGlobals.device[actualReportDeviceId].ethernetBytes-myGlobals.device[actualReportDeviceId].ipBytes;
 
-  p[0] = ip*100/device[actualReportDeviceId].ethernetBytes; num++;
+  p[0] = ip*100/myGlobals.device[actualReportDeviceId].ethernetBytes; num++;
   p[1] = 100-p[0];
 
   if(p[1] > 0)
     num++;
 
 #ifdef MULTITHREADED
-  accessMutex(&graphMutex, "drawTrafficPie");
+  accessMutex(&myGlobals.graphMutex, "drawTrafficPie");
 #endif
 
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -945,7 +945,7 @@ void drawTrafficPie(void) {
   fclose(fd);
 
 #ifdef MULTITHREADED
-  releaseMutex(&graphMutex);
+  releaseMutex(&myGlobals.graphMutex);
 #endif
 
   sendGraphFile(fileName);
@@ -966,7 +966,7 @@ void drawThptGraph(int sortedColumn) {
   memset(graphData, 0, sizeof(graphData));
 
 #ifdef MULTITHREADED
-  accessMutex(&graphMutex, "drawThptGraph");
+  accessMutex(&myGlobals.graphMutex, "drawThptGraph");
 #endif
 
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -985,15 +985,15 @@ void drawThptGraph(int sortedColumn) {
       labels[i][0] = '\0';
     }
 
-    len = device[actualReportDeviceId].numThptSamples;
+    len = myGlobals.device[actualReportDeviceId].numThptSamples;
     if(len > 60) len = 60;
     for(i=0; i<len; i++) {
-      tmpTime = actTime-i*60;
+      tmpTime = myGlobals.actTime-i*60;
       strftime(labels[i], 32, "%H:%M", localtime_r(&tmpTime, &t));
     }
 
     for(maxBytesPerSecond=0, i=0; i<len; i++) {
-      graphData[59-i] = device[actualReportDeviceId].last60MinutesThpt[i].trafficValue*8 /* I want bits here */;
+      graphData[59-i] = myGlobals.device[actualReportDeviceId].last60MinutesThpt[i].trafficValue*8 /* I want bits here */;
       if(graphData[59-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[59-i];
     }
 
@@ -1010,7 +1010,7 @@ void drawThptGraph(int sortedColumn) {
     GDC_title = "Last 60 Minutes Average Throughput";
     out_graph(600, 300,    /* width, height           */
 	      fd,          /* open FILE pointer       */
-	      GDC_AREA,    /* chart type              */
+	      myGlobals.throughput_chart_type,    /* chart type              */
 	      60,          /* num points per data set */
 	      lbls,        /* X labels array of char* */
 	      1,           /* number of data sets     */
@@ -1022,15 +1022,15 @@ void drawThptGraph(int sortedColumn) {
       labels[i][0] = '\0';
     }
 
-    len = device[actualReportDeviceId].numThptSamples/60;
+    len = myGlobals.device[actualReportDeviceId].numThptSamples/60;
     if(len > 24) len = 24;
     for(i=0; i<len; i++) {
-      tmpTime = actTime-((i+1)*60*60);
+      tmpTime = myGlobals.actTime-((i+1)*60*60);
       strftime(labels[i], 32, "%b %d %H:%M", localtime_r(&tmpTime, &t));
     }
 
     for(maxBytesPerSecond=0, i=0; i<len; i++) {
-      graphData[23-i] = device[actualReportDeviceId].last24HoursThpt[i].trafficValue*8 /* I want bits here */;
+      graphData[23-i] = myGlobals.device[actualReportDeviceId].last24HoursThpt[i].trafficValue*8 /* I want bits here */;
       if(graphData[23-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[23-i];
     }
 
@@ -1047,7 +1047,7 @@ void drawThptGraph(int sortedColumn) {
     GDC_title = "Last 24 Hours Average Throughput";
     out_graph(600, 300,      /* width, height           */
 	      fd,            /* open FILE pointer       */
-	      GDC_AREA,      /* chart type              */
+	      myGlobals.throughput_chart_type,      /* chart type              */
 	      24,            /* num points per data set */
 	      lbls,          /* X labels array of char* */
 	      1,             /* number of data sets     */
@@ -1059,15 +1059,15 @@ void drawThptGraph(int sortedColumn) {
       labels[i][0] = '\0';
     }
 
-    len = device[actualReportDeviceId].numThptSamples/(24*60);
+    len = myGlobals.device[actualReportDeviceId].numThptSamples/(24*60);
     if(len > 30) len = 30;
     for(i=0; i<len; i++) {
-      tmpTime = actTime-((i+1)*(60*60*24));
+      tmpTime = myGlobals.actTime-((i+1)*(60*60*24));
       strftime(labels[i], 32, "%b %d %H:%M", localtime_r(&tmpTime, &t));
     }
 
     for(maxBytesPerSecond=0, i=0; i<len; i++) {
-      graphData[29-i] = device[actualReportDeviceId].last30daysThpt[i]*8 /* I want bits here */;
+      graphData[29-i] = myGlobals.device[actualReportDeviceId].last30daysThpt[i]*8 /* I want bits here */;
       if(graphData[29-i] > maxBytesPerSecond) maxBytesPerSecond = graphData[29-i];
     }
 
@@ -1085,7 +1085,7 @@ void drawThptGraph(int sortedColumn) {
 
     out_graph(600, 300,          /* width, height           */
 	      fd,                /* open FILE pointer       */
-	      GDC_AREA,          /* chart type              */
+	      myGlobals.throughput_chart_type,          /* chart type              */
 	      30,                /* num points per data set */
 	      lbls,              /* X labels array of char* */
 	      1,                 /* number of data sets     */
@@ -1096,7 +1096,7 @@ void drawThptGraph(int sortedColumn) {
   fclose(fd);
 
 #ifdef MULTITHREADED
-  releaseMutex(&graphMutex);
+  releaseMutex(&myGlobals.graphMutex);
 #endif
 
   sendGraphFile(fileName);
@@ -1113,42 +1113,42 @@ void drawGlobalProtoDistribution(void) {
   FILE *fd;
   int idx = 0;
 
-  ip = device[actualReportDeviceId].ipBytes;
-  nonIp = device[actualReportDeviceId].ethernetBytes-device[actualReportDeviceId].ipBytes;
+  ip = myGlobals.device[actualReportDeviceId].ipBytes;
+  nonIp = myGlobals.device[actualReportDeviceId].ethernetBytes-myGlobals.device[actualReportDeviceId].ipBytes;
 
-  if(device[actualReportDeviceId].tcpBytes > 0) {
-    p[idx] = device[actualReportDeviceId].tcpBytes; lbl[idx] = "TCP";  idx++; }
-  if(device[actualReportDeviceId].udpBytes > 0) {
-    p[idx] = device[actualReportDeviceId].udpBytes; lbl[idx] = "UDP"; idx++; }
-  if(device[actualReportDeviceId].icmpBytes > 0) {
-    p[idx] = device[actualReportDeviceId].icmpBytes; lbl[idx] = "ICMP"; idx++; }
-  if(device[actualReportDeviceId].otherIpBytes > 0) {
-    p[idx] = device[actualReportDeviceId].otherIpBytes; lbl[idx] = "Other IP"; idx++; }
-  if(device[actualReportDeviceId].arpRarpBytes > 0) {
-    p[idx] = device[actualReportDeviceId].arpRarpBytes; lbl[idx] = "(R)ARP"; idx++; }
-  if(device[actualReportDeviceId].dlcBytes > 0) {
-    p[idx] = device[actualReportDeviceId].dlcBytes; lbl[idx] = "DLC"; idx++; }
-  if(device[actualReportDeviceId].ipxBytes > 0) {
-    p[idx] = device[actualReportDeviceId].ipxBytes; lbl[idx] = "IPX"; idx++; }
-  if(device[actualReportDeviceId].decnetBytes > 0) {
-    p[idx] = device[actualReportDeviceId].decnetBytes;lbl[idx] = "Decnet";  idx++; }
-  if(device[actualReportDeviceId].atalkBytes > 0) {
-    p[idx] = device[actualReportDeviceId].atalkBytes; lbl[idx] = "AppleTalk"; idx++; }
-  if(device[actualReportDeviceId].ospfBytes > 0) {
-    p[idx] = device[actualReportDeviceId].ospfBytes; lbl[idx] = "OSPF"; idx++; }
-  if(device[actualReportDeviceId].netbiosBytes > 0) {
-    p[idx] = device[actualReportDeviceId].netbiosBytes; lbl[idx] = "NetBios"; idx++; }
-  if(device[actualReportDeviceId].igmpBytes > 0) {
-    p[idx] = device[actualReportDeviceId].igmpBytes; lbl[idx] = "IGMP"; idx++; }
-  if(device[actualReportDeviceId].osiBytes > 0) {
-    p[idx] = device[actualReportDeviceId].osiBytes; lbl[idx] = "OSI"; idx++; }
-  if(device[actualReportDeviceId].qnxBytes > 0) {
-    p[idx] = device[actualReportDeviceId].qnxBytes; lbl[idx] = "QNX"; idx++; }
-  if(device[actualReportDeviceId].otherBytes > 0) {
-    p[idx] = device[actualReportDeviceId].otherBytes; lbl[idx] = "Other"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].tcpBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].tcpBytes; lbl[idx] = "TCP";  idx++; }
+  if(myGlobals.device[actualReportDeviceId].udpBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].udpBytes; lbl[idx] = "UDP"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].icmpBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].icmpBytes; lbl[idx] = "ICMP"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].otherIpBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].otherIpBytes; lbl[idx] = "Other IP"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].arpRarpBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].arpRarpBytes; lbl[idx] = "(R)ARP"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].dlcBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].dlcBytes; lbl[idx] = "DLC"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].ipxBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].ipxBytes; lbl[idx] = "IPX"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].decnetBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].decnetBytes;lbl[idx] = "Decnet";  idx++; }
+  if(myGlobals.device[actualReportDeviceId].atalkBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].atalkBytes; lbl[idx] = "AppleTalk"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].ospfBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].ospfBytes; lbl[idx] = "OSPF"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].netbiosBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].netbiosBytes; lbl[idx] = "NetBios"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].igmpBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].igmpBytes; lbl[idx] = "IGMP"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].osiBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].osiBytes; lbl[idx] = "OSI"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].qnxBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].qnxBytes; lbl[idx] = "QNX"; idx++; }
+  if(myGlobals.device[actualReportDeviceId].otherBytes > 0) {
+    p[idx] = myGlobals.device[actualReportDeviceId].otherBytes; lbl[idx] = "Other"; idx++; }
 
 #ifdef MULTITHREADED
-  accessMutex(&graphMutex, "drawGlobalProtoDistribution");
+  accessMutex(&myGlobals.graphMutex, "drawGlobalProtoDistribution");
 #endif
 
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -1171,7 +1171,7 @@ void drawGlobalProtoDistribution(void) {
   fclose(fd);
 
 #ifdef MULTITHREADED
-  releaseMutex(&graphMutex);
+  releaseMutex(&myGlobals.graphMutex);
 #endif
 
   sendGraphFile(fileName);
@@ -1186,22 +1186,22 @@ void drawGlobalIpProtoDistribution(void) {
   char *lbl[256];
   FILE *fd;
 
-  p[numIpProtosToMonitor] = 0;
+  p[myGlobals.numIpProtosToMonitor] = 0;
 
-  for(i=0; i<numIpProtosToMonitor; i++) {
-    p[idx]  = (float)device[actualReportDeviceId].ipProtoStats[i].local
-      +device[actualReportDeviceId].ipProtoStats[i].remote;
-     p[idx] += (float)device[actualReportDeviceId].ipProtoStats[i].remote2local
-      +device[actualReportDeviceId].ipProtoStats[i].local2remote;
+  for(i=0; i<myGlobals.numIpProtosToMonitor; i++) {
+    p[idx]  = (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].local
+      +myGlobals.device[actualReportDeviceId].ipProtoStats[i].remote;
+     p[idx] += (float)myGlobals.device[actualReportDeviceId].ipProtoStats[i].remote2local
+      +myGlobals.device[actualReportDeviceId].ipProtoStats[i].local2remote;
     if(p[idx] > 0) {
-      p[numIpProtosToMonitor] += p[idx];
-      lbl[idx] = protoIPTrafficInfos[i];
+      p[myGlobals.numIpProtosToMonitor] += p[idx];
+      lbl[idx] = myGlobals.protoIPTrafficInfos[i];
       idx++;
     }
   }
 
 #ifdef MULTITHREADED
-  accessMutex(&graphMutex, "drawGlobalIpProtoDistribution");
+  accessMutex(&myGlobals.graphMutex, "drawGlobalIpProtoDistribution");
 #endif
 
   fd = getNewRandomFile(fileName, NAME_MAX); /* leave it inside the mutex */
@@ -1223,7 +1223,7 @@ void drawGlobalIpProtoDistribution(void) {
   fclose(fd);
 
 #ifdef MULTITHREADED
-  releaseMutex(&graphMutex);
+  releaseMutex(&myGlobals.graphMutex);
 #endif
 
   sendGraphFile(fileName);

@@ -57,6 +57,10 @@ typedef struct ntopGlobals {
   int ntop_argc;
   char **ntop_argv;
 
+#ifdef HAVE_GDCHART
+  int throughput_chart_type;
+#endif
+
 /* command line options */
   u_short traceLevel, debugMode, useSyslog, accuracyLevel;
   u_char enableSessionHandling, enablePacketDecoding, enableFragmentHandling;

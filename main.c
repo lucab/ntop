@@ -42,6 +42,14 @@
 #include "ntop.h"
 #include "globals-report.h"
 
+/*
+  Ntop options list
+  -- converted to getopts_long, Burton M. Strauss III (BStrauss@acm.org)
+*/
+#ifdef HAVE_GETOPT_LONG
+#include <getopt.h>
+#endif
+
 #if defined(WIN32) && defined(__GNUC__)	/* mingw compiler */
  /* we're using the winpcap getopt() implementation
   * which has the globals inside the dll, so a simple
@@ -74,83 +82,6 @@ static int inet_aton(const char *cp, struct in_addr *addr)
 
 #endif
 
-
-void usage(void) {
-  char buf[80];
-
-  if(snprintf(buf, sizeof(buf), "%s v.%s %s [%s] (%s build)", 
-	      program_name, version, THREAD_MODE, osName, buildDate) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-  traceEvent(TRACE_INFO, "%s\n", buf);
-
-  traceEvent(TRACE_INFO, "Copyright 1998-2001 by %s\n", author);
-  traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
-  if(snprintf(buf, sizeof(buf), "Written by %s.", author) < 0)
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-  traceEvent(TRACE_INFO, "%s\n", buf);
-
-  if(snprintf(buf, sizeof(buf), "Usage: %s", program_name) < 0) 
-    traceEvent(TRACE_ERROR, "Buffer overflow!");
-
-  traceEvent(TRACE_INFO, "%s\n", buf);
-
-  traceEvent(TRACE_INFO, "    %s\n",   "[-c <sticky hosts: idle hosts are not purged from hash>]");
-#ifdef WIN32
-  traceEvent(TRACE_INFO, "    [-r <refresh time (web = %d sec)>]\n", REFRESH_TIME);
-#else
-  traceEvent(TRACE_INFO, "    [-r <refresh time (interactive = %d sec/web = %d sec)>]\n",
-	     ALARM_TIME, REFRESH_TIME);
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-f <traffic dump file (see tcpdump)>]");
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    %s\n",   "[-E <enable lsof/nmap integration (if present)>]");
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-n (numeric IP addresses)]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-p <IP protocols to monitor> (see man page)]");
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface>]");
-#else
-  traceEvent(TRACE_INFO, "    %s\n",   "[-i <interface index>]");
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-S <store mode> (store persistently host stats)]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-w <HTTP port>]");
-#ifdef HAVE_OPENSSL
-  traceEvent(TRACE_INFO, "    %s\n",   "[-W <HTTPS port>]");
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-D <Internet domain name>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-e <max # table rows)]");
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    %s\n",   "[-d (run ntop in daemon mode)]");
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-m <local addresses (see man page)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-s <max hash size (default 32768)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-F <flow specs (see man page)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-b <client:port (ntop DB client)>]");
-#ifdef HAVE_MYSQL
-  traceEvent(TRACE_INFO, "    %s\n",   "[-v <username:password:dbName (ntop mySQL client)>]");
-#endif
-  traceEvent(TRACE_INFO, "    %s\n",   "[-R <matching rules file>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-N <don't use nmap if installed>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-M <don't merge network interfaces (see man page)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-q <create file ntop-suspicious-pkts.XXX.pcap>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-l <path> (dump packets captured on a file: debug only!)]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-P <path for db-files>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-g <client:port (Cisco NetFlow client)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-t (trace level [0-5])]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-A (accuracy level [0-2])]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-u <userid> | <username> (see man page)]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-U <mapper.pl URL> | \"\" for not displaying host location ]");  
-  traceEvent(TRACE_INFO, "    %s\n",   "[-k <show kernel filter expression in extra frame>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-j (set ntop in border gateway sniffing mode)]");
-#ifndef WIN32
-  traceEvent(TRACE_INFO, "    %s\n",   "[-K <enable application debug (no fork() is used)>]");
-  traceEvent(TRACE_INFO, "    %s\n",   "[-L <use syslog instead of stdout>]");
-#endif
-  traceEvent(TRACE_INFO, "    %s\n\n", "[ <filter expression (like tcpdump)>]");
-}
-
-
 /* That's the meat */
 int main(int argc, char *argv[]) {
   int pflag, i, len;
@@ -166,11 +97,76 @@ int main(int argc, char *argv[]) {
   char *cp, *localAddresses=NULL, *webAddr=NULL, *devices, *sslAddr=NULL;
   char *flowSpecs, *protoSpecs, rulesFile[128], ifStr[196], *theOpts;
   time_t lastTime;
+#ifdef HAVE_GETOPT_LONG
+  char *theOpts;
+  int getop_long_index;
+  static struct option long_options[] = {
+    /* Common options */
+    {"access-log-path", required_argument, NULL, 'a'},
+    {"accuracy-level", required_argument, NULL, 'A'},
+    {"border-sniffer-mode", no_argument, NULL, 'j'},
+    {"cisco-netflow-host", required_argument, NULL, 'g'},
+    {"create-suspicious-packets", no_argument, NULL, 'q'},
+    {"db-file-path", required_argument, NULL, 'P'},
+    {"domain", required_argument, NULL, 'D'},
+    {"filter-expression-in-extra-frame", no_argument, NULL, 'k'},
+    {"filter-rule", required_argument, NULL, 'R'},
+    {"flow-spec", required_argument, NULL, 'F'},
+    {"help", no_argument, NULL, 'h'}, /* dummy, uses default case to print usage */
+    {"http-server", required_argument, NULL, 'w'},
+#ifdef HAVE_OPENSSL
+    {"https-server", required_argument, NULL, 'W'},
+#endif
+    {"interface", required_argument, NULL, 'i'},
+    {"local-subnets", required_argument, NULL, 'm'},
+    {"mapper", required_argument, NULL, 'U'},
+    {"max-hash-size", required_argument, NULL, 's'},
+#ifndef MICRO_NTOP
+    {"max-table-rows", required_argument, NULL, 'e'},
+#endif
+    {"no-idle-host-purge", no_argument, NULL, '2'},
+    {"no-throughput-update", no_argument, NULL, '1'},
+    {"numeric-ip-addresses", no_argument, NULL, 'n'},
+    {"pcap-log", required_argument, NULL, 'l'},
+    {"protocols", required_argument, NULL, 'p'},
+    {"refresh-time", required_argument, NULL, 'r'},
+    {"sql-host", required_argument, NULL, 'b'},
+    {"sticky-hosts", no_argument, NULL, 'c'},
+    {"store-mode", required_argument, NULL, 'S'},
+    {"trace-level", required_argument, NULL, 't'},
+    {"traffic-dump-file", required_argument, NULL, 'f'},
+    /* long ONLY options - put these here with numeric arguments, 
+       over 127 (i.e. > ascii max char)
+       (since op is unsigned this is fine)
+       add corresponding case nnn: below
+    */
+#ifdef HAVE_GDCHART
+    {"throughput-bar-chart", no_argument, NULL, 129},
+#endif
+    {"B", required_argument, NULL, 'B'}, /* can't find this! */
+#if !defined(WIN32)
+    {"daemon", no_argument, NULL, 'd'},
+    {"debug", no_argument, NULL, 'K'},
+    {"enable-external-tools", no_argument, NULL, 'E'},
+    {"interactive-mode", no_argument, NULL, 'I'}, /* interactive mode no longer used */
+#ifdef HAVE_MYSQL
+    {"mysql-host", required_argument, NULL, 'v'},
+#endif
+    {"no-interface-merge", no_argument, NULL, 'M'},
+    {"no-merge", no_argument, NULL, 'M'},
+    {"no-nmap", no_argument, NULL, 'N'},
+    {"user", required_argument, NULL, 'u'},
+    {"use-syslog", no_argument, NULL, 'L'},
+#endif
+    {0, 0, 0, 0}
+  };  
+#endif /* HAVE_GETOPT_LONG */
 
   printf("Wait please: ntop is coming up...\n");
 
-  ntop_argc = argc;
-  ntop_argv = argv;
+  initNtopGlobals();
+  myGlobals.ntop_argc = argc;
+  myGlobals.ntop_argv = argv;
 
 #ifndef WIN32
   if (freopen("/dev/null", "w", stderr) == NULL) {
@@ -186,84 +182,89 @@ int main(int argc, char *argv[]) {
 
   webPort = NTOP_DEFAULT_WEB_PORT;
 #ifdef HAVE_OPENSSL
-  sslPort = 0; /* Disabled: it can enabled using -W <SSL port> */
+  myGlobals.sslPort = 0; /* Disabled: it can enabled using -W <SSL port> */
 #endif
 
-  enableSuspiciousPacketDump = 0;
-  usePersistentStorage = 0;
-  stickyHosts = 0;
-  enableNetFlowSupport = 0;
+  myGlobals.enableSuspiciousPacketDump = 0;
+  myGlobals.usePersistentStorage = 0;
+  myGlobals.stickyHosts = 0;
+  myGlobals.enableNetFlowSupport = 0;
 
   /* Initialization of local variables */
-  isLsofPresent = isNmapPresent = filterExpressionInExtraFrame = 0;
+  myGlobals.isLsofPresent = myGlobals.isNmapPresent = myGlobals.filterExpressionInExtraFrame = 0;
 
   rulesFile[0] = '\0';
   flowSpecs = NULL;
   protoSpecs = NULL;
-  flowsList = NULL;
+  myGlobals.flowsList = NULL;
   localAddrFlag = 1;
-  logTimeout = 0;
-  tcpChain = NULL, udpChain = NULL, icmpChain = NULL;
+  myGlobals.logTimeout = 0;
+  myGlobals.tcpChain = NULL, myGlobals.udpChain = NULL, myGlobals.icmpChain = NULL;
   devices = NULL;
-  daemonMode = pflag = numericFlag = debugMode = 0;
+  myGlobals.daemonMode = pflag = myGlobals.numericFlag = myGlobals.debugMode = 0;
 
 #ifndef WIN32
-  useSyslog = 0;
+  myGlobals.useSyslog = 0;
 #endif
 
   refreshRate = 0;
-  rFileName = NULL;
-  maxHashSize = MAX_HASH_SIZE;
-  traceLevel = DEFAULT_TRACE_LEVEL;
-  accuracyLevel = HIGH_ACCURACY_LEVEL;
-  domainName[0] = '\0';
+  myGlobals.rFileName = NULL;
+  myGlobals.maxHashSize = MAX_HASH_SIZE;
+  myGlobals.traceLevel = DEFAULT_TRACE_LEVEL;
+  myGlobals.accuracyLevel = HIGH_ACCURACY_LEVEL;
+  myGlobals.domainName[0] = '\0';
   /*
     If you need a good mapper look at this
     http://jake.ntop.org/cgi-bin/mapper.pl
   */
-  mapperURL[0] = '\0';
-  pcapLog = NULL;
-  actTime = time(NULL);
-  strncpy(dbPath, DBFILE_DIR, sizeof(dbPath));
+  myGlobals.mapperURL[0] = '\0';
+  myGlobals.pcapLog = NULL;
+  myGlobals.actTime = time(NULL);
+  strncpy(myGlobals.dbPath, DBFILE_DIR, sizeof(myGlobals.dbPath));
 
   if ((cp = strrchr(argv[0], '/')) != NULL)
-    program_name = cp + 1;
+    myGlobals.program_name = cp + 1;
   else
-    program_name = argv[0];
-
-  if(strcmp(program_name, "ntopd") == 0) {
-    daemonMode++;
+    myGlobals.program_name = argv[0];
+  myGlobals.currentFilterExpression = NULL;
+  
+  if(strcmp(myGlobals.program_name, "ntopd") == 0) {
+    myGlobals.daemonMode++;
   }
 
 #ifdef WIN32
-  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:kA:j";
+  theOpts = "ce:f:F:hr:p:i:nw:m:b:B:D:s:P:R:S:g:t:a:W:12l:qU:kA:jB:";
 #else
-  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kKLA:j";
+  theOpts = "cIdEe:f:F:hr:i:p:nNw:m:b:v:D:s:P:R:MS:g:t:a:u:W:12l:qU:kKLA:jB:";
 #endif
 
+#ifdef HAVE_GETOPT_LONG
+  while((op = getopt_long(argc, argv, theOpts, long_options, &getop_long_index)) != EOF) {
+#else
   while((op = getopt(argc, argv, theOpts)) != EOF) {
+#endif
     switch (op) {
       /* Courtesy of Ralf Amandi <Ralf.Amandi@accordata.net> */
 
     case 'c': /* Sticky hosts = hosts that are not purged
 		 when idle */
-      stickyHosts = 1;
+      myGlobals.stickyHosts = 1;
       break;
 
     case 'P': /* DB-Path */
       stringSanityCheck(optarg);
-      strncpy(dbPath, optarg, sizeof(dbPath)-1)[sizeof(dbPath)-1] = '\0';
+      strncpy(myGlobals.dbPath, optarg, sizeof(myGlobals.dbPath)-1)[sizeof(myGlobals.dbPath)-1] = '\0';
       break;
 
     case 'a': /* ntop access log path */
       stringSanityCheck(optarg);
-      strncpy(accessLogPath, optarg,
-	      sizeof(accessLogPath)-1)[sizeof(accessLogPath)-1] = '\0';
+      strncpy(myGlobals.accessLogPath, optarg,
+	      sizeof(myGlobals.accessLogPath)-1)[sizeof(myGlobals.accessLogPath)-1] = '\0';
       break;
 
 #ifndef WIN32
     case 'd':
-      daemonMode=1;
+      myGlobals.daemonMode=1;
       break;
 
     case 'I': /* Interactive mode */
@@ -274,7 +275,7 @@ int main(int argc, char *argv[]) {
 
     case 'q': /* allow ntop to save suspicious packets
 		 in a file in pcap (tcpdump) format */
-      enableSuspiciousPacketDump=1;
+      myGlobals.enableSuspiciousPacketDump=1;
       break;
 
     case '1': /* disable throughput update */
@@ -287,7 +288,7 @@ int main(int argc, char *argv[]) {
 
     case 'l':
       stringSanityCheck(optarg);
-      pcapLog = optarg;
+      myGlobals.pcapLog = optarg;
       break;
 
     case 'b': /* host:port */
@@ -309,13 +310,13 @@ int main(int argc, char *argv[]) {
 
     case 'D': /* domain */
       stringSanityCheck(optarg);
-      strncpy(domainName, optarg,
-	      sizeof(domainName)-1)[sizeof(domainName)-1] = '\0';
+      strncpy(myGlobals.domainName, optarg,
+	      sizeof(myGlobals.domainName)-1)[sizeof(myGlobals.domainName)-1] = '\0';
       break;
 	
     case 'f':
-      isLsofPresent = 0; /* Don't make debugging too complex */
-      rFileName = optarg;
+      myGlobals.isLsofPresent = 0; /* Don't make debugging too complex */
+      myGlobals.rFileName = optarg;
       break;
 	
     case 'r':
@@ -333,14 +334,14 @@ int main(int argc, char *argv[]) {
 #endif
 
     case 'E':
-      isLsofPresent  = checkCommand("lsof");
-      isNmapPresent  = checkCommand("nmap");
+      myGlobals.isLsofPresent  = checkCommand("lsof");
+      myGlobals.isNmapPresent  = checkCommand("nmap");
       break;
 
     case 's':
-      maxHashSize = atoi(optarg);
-      if(maxHashSize < 64) {
-	maxHashSize = 64;
+      myGlobals.maxHashSize = atoi(optarg);
+      if(myGlobals.maxHashSize < 64) {
+	myGlobals.maxHashSize = 64;
 	traceEvent(TRACE_INFO, "Max hash size set to 64 (minimum hash size)");
       }
       break;
@@ -374,11 +375,11 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'n':
-      numericFlag++;
+      myGlobals.numericFlag++;
       break;
 
     case 'N':
-      isNmapPresent = 0;
+      myGlobals.isNmapPresent = 0;
       break;
 
     case 'j':
@@ -388,7 +389,7 @@ int main(int argc, char *argv[]) {
 	 - MAC addresses are not used at all but just IP addresses
 	 - ARP packets are not handled
       */
-      borderSnifferMode = 1;
+      myGlobals.borderSnifferMode = 1;
       break;
 
     case 'w':
@@ -424,10 +425,10 @@ int main(int argc, char *argv[]) {
       */
       if((sslAddr = strchr(optarg,':'))) {
 	*sslAddr = '\0';
-	sslPort = atoi(sslAddr+1);
+	myGlobals.sslPort = atoi(sslAddr+1);
 	sslAddr = optarg;
       } else {
-	sslPort = atoi(optarg);
+	myGlobals.sslPort = atoi(optarg);
       }
 
       break;
@@ -440,7 +441,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'M':
-      mergeInterfaces = 0;
+      myGlobals.mergeInterfaces = 0;
       break;
 
     case 'S':
@@ -452,9 +453,9 @@ int main(int argc, char *argv[]) {
 	1 = store all hosts
 	2 = store only local hosts
       */
-      usePersistentStorage = atoi(optarg);
-      if((usePersistentStorage > 2)
-	 || (usePersistentStorage < 0)){
+      myGlobals.usePersistentStorage = atoi(optarg);
+      if((myGlobals.usePersistentStorage > 2)
+	 || (myGlobals.usePersistentStorage < 0)){
 	printf("FATAL ERROR: -S flag accepts value in the 0-2 range.\n");
 	exit(-1);
       }
@@ -462,16 +463,16 @@ int main(int argc, char *argv[]) {
 
     case 't':
       /* Trace Level Initialization */
-      traceLevel = atoi(optarg);
-      if(traceLevel > DETAIL_TRACE_LEVEL)
-	traceLevel = DETAIL_TRACE_LEVEL;
+      myGlobals.traceLevel = atoi(optarg);
+      if(myGlobals.traceLevel > DETAIL_TRACE_LEVEL)
+	myGlobals.traceLevel = DETAIL_TRACE_LEVEL;
       break;
 
     case 'A':
       /* Accuracy Level */
-      accuracyLevel = atoi(optarg);
-      if(accuracyLevel > HIGH_ACCURACY_LEVEL)
-	accuracyLevel = HIGH_ACCURACY_LEVEL;
+      myGlobals.accuracyLevel = atoi(optarg);
+      if(myGlobals.accuracyLevel > HIGH_ACCURACY_LEVEL)
+	myGlobals.accuracyLevel = HIGH_ACCURACY_LEVEL;
       break;
 
 #ifndef WIN32
@@ -494,27 +495,33 @@ int main(int argc, char *argv[]) {
 #endif /* WIN32 */
 
     case 'U': /* host:port */
-      if(strlen(optarg) >= (sizeof(mapperURL)-1)) {
-	strncpy(mapperURL, optarg, sizeof(mapperURL)-2);
-	mapperURL[sizeof(mapperURL)-1] = '\0';
+      if(strlen(optarg) >= (sizeof(myGlobals.mapperURL)-1)) {
+	strncpy(myGlobals.mapperURL, optarg, sizeof(myGlobals.mapperURL)-2);
+	myGlobals.mapperURL[sizeof(myGlobals.mapperURL)-1] = '\0';
       } else
-	strcpy(mapperURL, optarg);
+	strcpy(myGlobals.mapperURL, optarg);
       break;
 	
     case 'k':
       /* update info of used kernel filter expression in extra frame */
-      filterExpressionInExtraFrame=1;
+      myGlobals.filterExpressionInExtraFrame=1;
       break;
 
 #ifndef WIN32	
     case 'K':
-      debugMode = 1;
+      myGlobals.debugMode = 1;
       break;
 
     case 'L':
-      useSyslog = 1;
+      myGlobals.useSyslog = 1;
       break;
 #endif
+
+    case 'B':
+      stringSanityCheck(optarg);
+      myGlobals.currentFilterExpression = (char*)malloc(strlen(optarg)+1);
+      strcpy(myGlobals.currentFilterExpression, optarg);
+      break;
 
     default:
       usage();
@@ -525,7 +532,7 @@ int main(int argc, char *argv[]) {
 
   if(webPort == 0) {
 #ifdef HAVE_OPENSSL
-    if(sslPort == 0) {
+    if(myGlobals.sslPort == 0) {
       traceEvent(TRACE_ERROR,
 		 "FATAL ERROR: both -W and -w can't be set to 0.\n");
       exit(-1);
@@ -540,17 +547,17 @@ int main(int argc, char *argv[]) {
   /* ***************************** */
 
 #ifdef HAVE_OPENSSL
-  if(sslPort == 0)
+  if(myGlobals.sslPort == 0)
     traceEvent(TRACE_INFO, "SSL is present but https is disabled: "
 	       "use -W <https port> for enabling it\n");
 #endif
 
   initIPServices();
 
-  snprintf(accessLogPath, sizeof(accessLogPath), "%s/%s",
-	   dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
+  snprintf(myGlobals.accessLogPath, sizeof(myGlobals.accessLogPath), "%s/%s",
+	   myGlobals.dbPath, DETAIL_ACCESS_LOG_FILE_PATH);
 
-  initLogger(); /* Do not call this function before dbPath
+  initLogger(); /* Do not call this function before myGlobals.dbPath
 		   is initialized */
 
   initGlobalValues();
@@ -567,17 +574,17 @@ int main(int argc, char *argv[]) {
 	     version, THREAD_MODE, osName, buildDate);
 
   ifStr[0] = '\0';
-  if(rFileName != NULL)
+  if(myGlobals.rFileName != NULL)
     strncpy(ifStr, PCAP_NW_INTERFACE, sizeof(ifStr));
   else
-    for(i=0; i<numDevices; i++) {
+    for(i=0; i<myGlobals.numDevices; i++) {
       char tmpBuf[48];
 
       if(i>0) {
-	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", device[i].name)  < 0)
+	if(snprintf(tmpBuf, sizeof(tmpBuf), ",%s", myGlobals.device[i].name)  < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       } else {
-	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", device[i].name) < 0)
+	if(snprintf(tmpBuf, sizeof(tmpBuf), "%s", myGlobals.device[i].name) < 0)
 	  traceEvent(TRACE_ERROR, "Buffer overflow!");
       }
       strncat(ifStr, tmpBuf, sizeof(ifStr)-strlen(ifStr)-1)[sizeof(ifStr)-1] = '\0';
@@ -588,7 +595,7 @@ int main(int argc, char *argv[]) {
   traceEvent(TRACE_INFO, "Get the freshest ntop from http://www.ntop.org/\n");
   traceEvent(TRACE_INFO, "Initializing...\n");
 
-  initLibpcap(rulesFile, numDevices);
+  initLibpcap(rulesFile, myGlobals.numDevices);
 #ifndef MICRO_NTOP
   loadPlugins();
 #endif
@@ -629,8 +636,11 @@ int main(int argc, char *argv[]) {
   }
 
   initDeviceDatalink();
-  parseTrafficFilter(argv, optind);
-
+  if(myGlobals.currentFilterExpression != NULL)
+    parseTrafficFilter();
+  else
+    myGlobals.currentFilterExpression = strdup(""); /* so that it isn't NULL! */
+  
   /* Handle flows (if any) */
   if(flowSpecs != NULL) {
     if(flowSpecs[0] != '\0')
@@ -645,7 +655,18 @@ int main(int argc, char *argv[]) {
     free(protoSpecs);
   }
 
-  initCounters(mergeInterfaces);
+
+  
+  /* 
+     Moved from initialize.c (postCommandLineArgumentsInitialization) so that we
+     don't add the defaults if the user has given us at least SOMETHING to monitor 
+
+     Fix courtesy of Burton M. Strauss III <BStrauss3@attbi.com>
+  */
+  if(myGlobals.numIpProtosToMonitor == 0)
+    addDefaultProtocols();
+
+  initCounters(myGlobals.mergeInterfaces);
   initApps();
   initSignals();
 
@@ -674,7 +695,7 @@ int main(int argc, char *argv[]) {
 #ifndef WIN32
   pause();
 #endif
-  while(!endNtop) 
+  while(!myGlobals.endNtop) 
     sleep(30);
 
   return(0);

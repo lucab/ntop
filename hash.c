@@ -5,8 +5,8 @@
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either myGlobals.version 2 of the License, or
- *  (at your option) any later myGlobals.version.
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -221,11 +221,11 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
     courtesy of Wies-Software <wies@wiessoft.de>
   */
   if(myGlobals.device[deviceToExtend].actualHashSize < newSize) {
-    traceEvent(TRACE_INFO, "Extending hash: [old=%d, new=%d][myGlobals.deviceId=%d]\n",
+    traceEvent(TRACE_INFO, "Extending hash: [old=%d, new=%d][devId=%d]\n",
 	       myGlobals.device[deviceToExtend].actualHashSize, newSize, deviceToExtend);
     mappingsSize = newSize;
   } else {
-    traceEvent(TRACE_INFO, "Shrinking hash: [old=%d, new=%d][myGlobals.deviceId=%d]\n",
+    traceEvent(TRACE_INFO, "Shrinking hash: [old=%d, new=%d][devId=%d]\n",
 	       myGlobals.device[deviceToExtend].actualHashSize, newSize, deviceToExtend);
     mappingsSize = myGlobals.device[deviceToExtend].actualHashSize;
   }
@@ -239,10 +239,12 @@ void resizeHostHash(int deviceToExtend, short hashAction, int actualDeviceId) {
   memset(mappings, NO_PEER, i);
 
   /* Broadcast Entry */
-  hash_hostTraffic[myGlobals.broadcastEntryIdx] = myGlobals.device[deviceToExtend].hash_hostTraffic[myGlobals.broadcastEntryIdx];
+  hash_hostTraffic[myGlobals.broadcastEntryIdx] = myGlobals.device[deviceToExtend].
+    hash_hostTraffic[myGlobals.broadcastEntryIdx];
   mappings[myGlobals.broadcastEntryIdx] = myGlobals.broadcastEntryIdx;
 
-  hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.device[deviceToExtend].hash_hostTraffic[myGlobals.otherHostEntryIdx];
+  hash_hostTraffic[myGlobals.otherHostEntryIdx] = myGlobals.device[deviceToExtend].
+    hash_hostTraffic[myGlobals.otherHostEntryIdx];
   mappings[myGlobals.otherHostEntryIdx] = myGlobals.otherHostEntryIdx;
 
   for(i=1; i<myGlobals.device[deviceToExtend].actualHashSize; i++)

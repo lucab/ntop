@@ -19,6 +19,7 @@
  */
 
 #include "ntop.h"
+#include "globals-report.h"
 
 NtopGlobals myGlobals;
 
@@ -78,4 +79,7 @@ void initNtopGlobals() {
   myGlobals.pluginDirs     = _pluginDirs;
   myGlobals.configFileDirs = _configFileDirs;
   myGlobals.separator      = "&nbsp;";
+#ifdef HAVE_GDCHART
+  myGlobals.throughput_chart_type = GDC_AREA;
+#endif    
 }
