@@ -370,7 +370,7 @@ void purgeIdleHosts(int actDevice) {
 #ifdef DEBUG
   traceEvent(TRACE_INFO, "Purging Idle Hosts... (actDevice=%d)", actDevice);
 #endif
-#define DEBUG
+
 #ifdef MULTITHREADED
   accessMutex(&myGlobals.hostsHashMutex, "scanIdleLoop");
 #endif
@@ -415,8 +415,8 @@ void purgeIdleHosts(int actDevice) {
   /* Now free the entries */
   for(idx=0; idx<maxBucket; idx++) {
 #ifdef DEBUG
-      traceEvent(TRACE_INFO, "Purging host (idx=%d/%s) (%d hosts purged)",
-		 idx, theFlaggedHosts[idx]->hostSymIpAddress, numFreedBuckets);
+    traceEvent(TRACE_INFO, "Purging host (idx=%d/%s) (%d hosts purged)",
+	       idx, theFlaggedHosts[idx]->hostSymIpAddress, numFreedBuckets);
 #endif
 
       freeHostInfo(actDevice, theFlaggedHosts[idx], idx, actDevice);
