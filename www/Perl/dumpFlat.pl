@@ -50,15 +50,15 @@ if($content eq "") {
   print "No data. Please make sure ntop is up and running\n";
 } else {
   # evaluate the hash table
-  %hash = eval($content);
+  %ntopHash = eval($content);
   
   $recordString = "";  	#clear record string
   
-  # %hash is a hierarchical complex hash of the received entries
+  # %ntopHash is a hierarchical complex hash of the received entries
 
 
   # Walk through all of the keys and build a flat file
-  while (($key, $value) = each %hash) {
+  while (($key, $value) = each %ntopHash) {
   	
     if ($recordString ne '') {
       print $recordString."\n";   		#output previous record
