@@ -44,6 +44,7 @@
 #define SD(a,b) ((b)?((float)a)/(b):0)
 
 /* reportUtils.c */
+extern void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId);
 extern void formatUsageCounter(UsageCounter usageCtr, Counter maxValue, int actualDeviceId);
 extern void printTableDoubleEntry(char *buf, int bufLen,
 				  char *label, char* color,
@@ -92,12 +93,16 @@ extern void dumpNtopHashIndexes(FILE*, char* options, int actualDeviceId);
 extern void dumpNtopTrafficInfo(FILE*, char* options);
 extern void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId);
 extern void checkHostProvidedServices(HostTraffic *el);
-extern void printLocalHostsStats();
+extern void printLocalHostsStats(void);
 #ifdef CFG_MULTITHREADED
 extern void printMutexStatus(int textPrintFlag, PthreadMutex *mutexId, char *mutexName);
 #endif
 
 /* http.c */
+extern void printHTMLtrailer(void);
+extern void returnHTTPredirect(char* destination);
+void returnHTTPpageNotFound(void);
+
 extern void sendStringLen(char *theString, unsigned int len);
 extern void sendString(char *theString);
 extern void printHTTPtrailer(void);
@@ -112,14 +117,7 @@ extern void printHTMLheader(char *title, int  headerFlags);
 extern char* printSSLError(int errorId);
 #endif /* HAVE_OPENSSL */
 extern void sendHTTPHeader(int mimeType, int headerFlags);
-extern void returnHTTPbadRequest();
-extern void returnHTTPaccessDenied();
-extern void returnHTTPaccessForbidden();
-extern void returnHTTPpageNotFound();
-extern void returnHTTPpageGone();
-extern void returnHTTPrequestTimedOut();
-extern void returnHTTPnotImplemented();
-extern void returnHTTPversionNotSupported();
+
 #define STR_FAVICON_ICO                 "favicon.ico"
 #define STR_INDEX_HTML                  "index.html"
 #define PLUGINS_HEADER                  "plugins/"
@@ -136,24 +134,20 @@ extern void returnHTTPversionNotSupported();
 /* report.c */
 extern void initReports(void);
 extern int reportValues(time_t *lastTime);
-extern int haveTrafficHistory();
+extern void addPageIndicator(char *url, u_int beginIdx,
+			     u_int numEntries, u_int linesPerPage,
+			     int revertOrder, int numCol);
+extern void printTrafficStatistics(void);
 extern void printHostsTraffic(int reportType,
 			      int sortedColumn, int revertOrder,
 			      int pageNum, char* url);
 extern void printMulticastStats(int sortedColumn /* ignored so far */,
                                 int revertOrder, int pageNum);
-extern void addPageIndicator(char *url, u_int beginIdx,
-			     u_int numEntries, u_int linesPerPage,
-			     int revertOrder, int numCol);
-extern void printTrafficStatistics();
-extern void printVLANList(unsigned int deviceId);
 extern void printHostsInfo(int sortedColumn, int revertOrder, int pageNum);
 extern void printAllSessionsHTML(char* host, int actualDeviceId);
 extern void printLocalRoutersList(int actualDeviceId);
 extern void printIpAccounting(int remoteToLocal, int sortedColumn,
 			      int revertOrder, int pageNum);
-extern void printHTMLtrailer(void);
-extern void returnHTTPredirect(char* destination);
 extern void printActiveTCPSessions(int actualDeviceId, int pageNum, HostTraffic *el);
 extern void printIpProtocolUsage(void);
 extern void printBar(char *buf, int bufLen, unsigned short percentage,
@@ -169,16 +163,16 @@ extern void printDomainStats(char* domainName, int sortedColumn, int revertOrder
 extern void printNoDataYet(void);
 extern void printNotAvailable(void);
 extern void listNetFlows(void);
-extern void fillDomainName(HostTraffic *el);
-extern void printHostHTTPVirtualHosts(HostTraffic *el, int actualDeviceId);
+extern void printHostHourlyTraffic(HostTraffic *el);
 extern void printASList(unsigned int deviceId);
+extern void printVLANList(unsigned int deviceId);
 extern void showPortTraffic(u_short portNr);
 
 /* webInterface.c */
 extern int execCGI(char* cgiName);
 extern void showPluginsList(char* pluginName);
 /* CHECK ME: loadPlugins() and unloadPlugins() should not be in webInterface.c */
-extern void initWeb();
+extern void initWeb(void);
 extern char *calculateCellColor(Counter actualValue, Counter avgTrafficLow, Counter avgTrafficHigh);
 extern char *getCountryIconURL(char* domainName, u_short fullDomainNameIsFallback);
 extern char *getHostCountryIconURL(HostTraffic *el);
@@ -294,3 +288,4 @@ extern void drawPie(short width, short height, FILE* filepointer,
 
 /* xmldump.c */
 extern int dumpXML(int dumpToFile, char * parms);
+

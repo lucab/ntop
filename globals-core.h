@@ -121,6 +121,9 @@ extern u_int hashHost(struct in_addr *hostIpAddress,  u_char *ether_addr,
 extern void freeHostInfo(HostTraffic *host, int actualDeviceId);
 extern void freeHostInstances(int actualDeviceId);
 extern void purgeIdleHosts(int devId);
+extern void setHostSerial(HostTraffic *el);
+HostTraffic * lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr,
+			 u_char checkForMultihoming, u_char forceUsingIPaddress, int actualDeviceId);
 
 /* initialize.c */
 extern void initIPServices(void);
@@ -196,54 +199,58 @@ extern char* ntop_safestrdup(char *ptr, char* file, int line);
 #endif  /* MTRACE */
 
 /* ntop.c */
-extern void createPortHash();
-extern void handleProtocols();
+#ifndef WIN32
 extern void handleSigHup(int signalId);
+#endif
 extern void *pcapDispatch(void *_i);
+#ifndef WIN32
 #ifdef HANDLE_DIED_CHILD
 extern RETSIGTYPE handleDiedChild(int);
 #endif
-extern RETSIGTYPE dontFreeze(int signo);
+#endif
+#ifndef WIN32
 extern void daemonize(void);
 extern void detachFromTerminal(int);
-extern void handleProtocols();
+#endif
+extern void createPortHash(void);
+extern void handleProtocols(void);
 extern void addDefaultProtocols(void);
 extern int mapGlobalToLocalIdx(int port);
-extern void *updateDBHostsTrafficLoop(void* notUsed);
+#ifdef CFG_MULTITHREADED
 extern void *scanIdleLoop(void *notUsed);
-extern void createPortHash();
+#endif
 #ifndef WIN32
+#ifdef CFG_MULTITHREADED
 extern void *periodicLsofLoop(void *notUsed);
 #endif
+#endif
+#ifndef CFG_MULTITHREADED
 extern void packetCaptureLoop(time_t *lastTime, int refreshRate);
+#endif
 extern RETSIGTYPE cleanup(int signo);
-extern void* cleanupExpiredHostEntriesLoop(void*);
  
 /* pbuf.c */
-extern int handleIP(u_short port,
-		    HostTraffic *srcHost, HostTraffic *dstHost,
-		    const u_int _length,  u_short isPassiveSess,
+extern void allocateSecurityHostPkts(HostTraffic *srcHost);
+extern int handleIP(u_short port, HostTraffic *srcHost, HostTraffic *dstHost,
+		    const u_int _length, u_short isPassiveSess,
 		    u_short p2pSessionIdx, int actualDeviceId);
-extern void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
-			      TrafficCounter length,
-			      Counter pktCount,
-			      int actualDeviceId);
-extern HostTraffic* lookupHost(struct in_addr *hostIpAddress, u_char *ether_addr, 
-			       u_char checkForMultihoming,
-			       u_char forceUsingIPaddress, int actualDeviceId);
 extern void deleteFragment(IpFragment *fragment, int actualDeviceId);
 extern void purgeOldFragmentEntries(int actualDeviceId);
-extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h,
-                        const u_char *p);
+extern void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost, TrafficCounter length,
+			      Counter pktCount, int actualDeviceId);
+extern void updateHostName(HostTraffic *el);
+extern void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length);
+extern void incrementUnknownProto(HostTraffic *host, int direction, u_int16_t eth_type,
+				  u_int16_t dsap, u_int16_t ssap, u_int16_t ipProto);
+#ifdef CFG_MULTITHREADED
+extern void queuePacket(u_char * _deviceId, const struct pcap_pkthdr *h, const u_char *p);
 extern void cleanupPacketQueue(void);
-extern void allocateSecurityHostPkts(HostTraffic *srcHost);
 extern void *dequeuePacket(void* notUsed);
+#endif
 extern void updateDevicePacketStats(u_int length, int actualDeviceId);
 extern void dumpSuspiciousPacket(int actualDeviceId);
 extern void processPacket(u_char *_deviceId, const struct pcap_pkthdr *h,
                           const u_char *p);
-extern void updateHostName(HostTraffic *el);
-extern void updateInterfacePorts(int actualDeviceId, u_short sport, u_short dport, u_int length);
 
 /* protocols.c */
 extern void handleBootp(HostTraffic *srcHost, HostTraffic *dstHost,
@@ -261,11 +268,7 @@ extern int handlePluginHTTPRequest(char* url);
 extern void loadPlugins(void);
 extern void startPlugins(void);
 extern void unloadPlugins(void);
-
-/* qsort.c */
-/* typedef int (*compare_function_t) (const void *p1, const void *p2); */
-extern void quicksort(void *a, size_t n, size_t es,
-                      int (*compare_function) (const void *p1, const void *p2));
+extern PluginInfo* PluginEntryFctn(void);
 
 /* ssl.c */
 #ifdef HAVE_OPENSSL
@@ -300,15 +303,11 @@ extern void updateDeviceThpt(int deviceToUpdate, int quickUpdate);
 extern void handleAddressLists(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
 			       u_short *numNetworks, char *localAddresses, 
 			       int localAddressesLen, int flagWhat);
-extern void handleFlowsSpecs();
-extern void initPassiveSessions();
-extern void termPassiveSessions();
+extern void handleFlowsSpecs(void);
+extern void initPassiveSessions(void);
+extern void termPassiveSessions(void);
 extern void incrementTrafficCounter(TrafficCounter *ctr, Counter value);
 extern void resetTrafficCounter(TrafficCounter *ctr);
-extern int setSpecifiedUser();
-extern u_short ip2AS(u_int32_t ip);
-extern void readASs(FILE *fd);
-extern u_int16_t getHostAS(HostTraffic *el);
 extern HostTraffic* getFirstHost(u_int actualDeviceId);
 extern HostTraffic* getNextHost(u_int actualDeviceId, HostTraffic *host);
 extern HostTraffic* findHostByNumIP(struct in_addr hostIpAddress, u_int actualDeviceId);
@@ -438,6 +437,19 @@ char *i18n_xvert_locale2common(const char *input);
 char *i18n_xvert_acceptlanguage2common(const char *input);
 #endif /* MAKE_WITH_I18N */ 
 
+#ifndef HAVE_PCAP_OPEN_DEAD
+extern pcap_t *pcap_open_dead(int linktype, int snaplen);
+#endif
+extern int setSpecifiedUser(void);
+extern u_short ip2AS(u_int32_t ip);
+extern u_int16_t getHostAS(HostTraffic *el);
+extern void readASs(FILE *fd);
+extern int emptySerial(HostSerial *a);
+extern int cmpSerial(HostSerial *a, HostSerial *b);
+extern int copySerial(HostSerial *a, HostSerial *b);
+extern void setEmptySerial(HostSerial *a);
+
+
 #if defined(AIX) || defined(WIN32)
 extern int snprintf(char *str, size_t n, const char *fmt, ...);
 #endif
@@ -485,6 +497,7 @@ extern char **buildargv(const char *argv);
 #ifndef HAVE_FREEARGV
 extern void freeargv(char **argv);
 #endif
+extern void fillDomainName(HostTraffic *el);
 void handleWhiteBlackListAddresses(char* addresses, u_int32_t theNetworks[MAX_NUM_NETWORKS][3],
                                    u_short *numNets, char* outAddresses,
                                    int outAddressesLen);
@@ -505,11 +518,11 @@ extern char* getSpecialMacInfo(HostTraffic* el, short encodeString);
 extern void createVendorTable(struct stat *statbuf);
 
 /* netflow.c */
-extern void termNetFlowExporter();
+extern void termNetFlowExporter(void);
+extern void sendTCPSessionFlow(IPSession *theSession, int actualDeviceId);
 extern void sendICMPflow(HostTraffic *srcHost, HostTraffic *dstHost, u_int length, u_int actualDeviceId);
 extern void sendUDPflow(HostTraffic *srcHost, HostTraffic *dstHost, 
 			u_int sport, u_int dport, u_int length, u_int actualDeviceId);
-extern void sendTCPSessionFlow(IPSession *theSession, int actualDeviceId);
 extern void sendOTHERflow(HostTraffic *srcHost, HostTraffic *dstHost, 
 			  u_int8_t proto, u_int length, u_int actualDeviceId);
 
