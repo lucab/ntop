@@ -18,11 +18,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-/*
- * Define so that syslog.h creates the name structures...
- */
-#define SYSLOG_NAMES
-
 #define USE_CGI
 
 #include "ntop.h"
