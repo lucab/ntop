@@ -756,6 +756,7 @@ static int parseOptions(int argc, char* argv []) {
       traceEvent(CONST_TRACE_INFO, "If enabled, the netFlow and/or sFlow plugins will collect and/or transmit data");
       traceEvent(CONST_TRACE_INFO, "This may or may not be what you want");
       traceEvent(CONST_TRACE_INFO, "but without the web interface you can't set plugin parameters");
+      myGlobals.webInterfaceDisabled = 1;
       /* exit(-1); */
   }
 
@@ -1160,10 +1161,11 @@ int main(int argc, char *argv[]) {
   init_ssl();
 #endif
 
+  initReports();
+
   /* create the main listener */
-  traceEvent(CONST_TRACE_NOISY, "Starting web server");
-  initWeb();
-  traceEvent(CONST_TRACE_NOISY, "Web server started... continuing with initialization");
+  if(!myGlobals.webInterfaceDisabled)
+    initWeb();
 
   addNewIpProtocolToHandle("IGMP", 2, 0 /* no proto */);
   addNewIpProtocolToHandle("OSPF", 89, 0 /* no proto */);

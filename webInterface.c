@@ -888,6 +888,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 #endif
 			 );
 
+  printFeatureConfigInfo(textPrintFlag, "INITWEB_DEBUG",
+#ifdef INITWEB_DEBUG
+			 "yes"
+#else
+			 "no"
+#endif
+			 );
+
   printFeatureConfigInfo(textPrintFlag, "MEMORY_DEBUG",
 #ifdef MEMORY_DEBUG
 			 "yes"
@@ -2383,6 +2391,14 @@ void printNtopConfigHInfo(int textPrintFlag) {
 			 "unknown"
 #endif
 			 );
+
+  printFeatureConfigInfo(textPrintFlag, "HAVE_FILEDESCRIPTORBUG",
+#ifdef HAVE_FILEDESCRIPTORBUG
+                         "yes"
+#else
+                         "no"
+#endif
+                         );
 
   /* semi auto generated from globals-defines.h */
 
@@ -4153,6 +4169,7 @@ void printNtopConfigInfo(int textPrintFlag) {
     defined(GDBM_DEBUG)                || \
     defined(HASH_DEBUG)                || \
     defined(IDLE_PURGE_DEBUG)          || \
+    defined(INITWEB_DEBUG)             || \
     defined(HOST_FREE_DEBUG)           || \
     defined(HTTP_DEBUG)                || \
     defined(MEMORY_DEBUG)              || \
@@ -4215,14 +4232,6 @@ void printNtopConfigInfo(int textPrintFlag) {
   }
 
   sendString(texthtml("\n", "</CENTER>\n"));
-}
-
-/* ******************************* */
-
-static void initializeWeb(void) {
-  myGlobals.columnSort = 0, myGlobals.sortSendMode = 0;
-  addDefaultAdminUser();
-  initAccessLog();
 }
 
 /* *************************** */
@@ -4565,174 +4574,195 @@ void printNtopProblemReport(void) {
 
 /* **************************************** */
 
-/*
-  SSL fix courtesy of Curtis Doty <curtis@greenkey.net>
-*/
-void initWeb(void) {
-  int i, sockopt = 1;
+#define sslOrNot (isSSL ? " ssl" : "")
+
+void initSocket(int isSSL, int *port, int *sock, char *addr) {
+  int sockopt = 1, rc;
   struct sockaddr_in sockIn;
-  char value[8];
+  char value[LEN_SMALL_WORK_BUFFER];
 
-  traceEvent(CONST_TRACE_INFO, "WEB: Initializing");
+#ifdef HAVE_FILEDESCRIPTORBUG
+ #define FILEDESCRIPTORBUG_COUNT 3
+  int i;
+  int  tempF[FILEDESCRIPTORBUG_COUNT], tempFpid=getpid();
+  char tempFname[FILEDESCRIPTORBUG_COUNT][LEN_MEDIUM_WORK_BUFFER];
+#endif
 
-  initReports();
-  initializeWeb();
+  if(*port <= 0) {
+    *sock = 0;
+    return;
+  }
 
-  myGlobals.webInterfaceEnabled = 1;
+  traceEvent(CONST_TRACE_NOISY, "Initializing%s socket, port %d, address %s",
+             sslOrNot,
+             *port,
+             addr == NULL ? "(any)" : addr);
 
-  if(myGlobals.mergeInterfaces) {
-    storePrefsValue("actualReportDeviceId", "0");
-  } else if(fetchPrefsValue("actualReportDeviceId", value, sizeof(value)) == -1) {
-    storePrefsValue("actualReportDeviceId", "0");
+  memset(&sockIn, 0, sizeof(sockIn));
+  sockIn.sin_family = AF_INET;
+  sockIn.sin_port   = (int)htons((unsigned short int)(*port));
+#ifndef WIN32
+  if(addr) {
+    if(!inet_aton(addr, &sockIn.sin_addr)) {
+      traceEvent(CONST_TRACE_ERROR, "WEB: Unable to convert address '%s' - "
+                 "not binding to a particular interface", addr);
+      sockIn.sin_addr.s_addr = INADDR_ANY;
+    } else {
+      traceEvent(CONST_TRACE_INFO, "WEB: Converted address '%s' - "
+                 "binding to the specific interface", addr);
+    }
   } else {
-    myGlobals.actualReportDeviceId = atoi(value);
-    if(myGlobals.actualReportDeviceId >= myGlobals.numDevices) {
-      traceEvent(CONST_TRACE_INFO, "Note: stored actualReportDeviceId(%d) > numDevices(%d) - "
-		 "probably leftover, reset",
-		 myGlobals.actualReportDeviceId,
-		 myGlobals.numDevices);
-      storePrefsValue("actualReportDeviceId", "0");
-    }
-  }
-    
-  if(myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) {
-    /* Bad idea, set to 1st non-virtual device */
-    for(i=0; i<myGlobals.numDevices; i++) {
-#ifdef DEBUG
-      traceEvent(CONST_TRACE_INFO, "DEBUG: Device %d[%s] is v%d d%d a%d",
-		 i, myGlobals.device[i].name,
-		 myGlobals.device[i].virtualDevice,
-		 myGlobals.device[i].dummyDevice,
-		 myGlobals.device[i].activeDevice);
-#endif
-      if(!myGlobals.device[i].virtualDevice) {
-	myGlobals.actualReportDeviceId = i;
-#ifdef DEBUG
-	traceEvent(CONST_TRACE_INFO, "DEBUG: actualReportDeviceId invalid, changed to %d[%s]",
-		   myGlobals.actualReportDeviceId,
-		   myGlobals.device[myGlobals.actualReportDeviceId].name);
-#endif
-	break;
-      }
-    }
-  }
-  traceEvent(CONST_TRACE_INFO,
-	     "Note: Reporting device set to %d [%s]",
-	     myGlobals.actualReportDeviceId,
-	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName != NULL ?
-	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName :
-	     myGlobals.device[myGlobals.actualReportDeviceId].name
-	     );
-
-  if(myGlobals.webPort > 0) {
-    memset(&sockIn, 0, sizeof(sockIn));
-    sockIn.sin_family = AF_INET;
-    sockIn.sin_port   = (int)htons((unsigned short int)myGlobals.webPort);
-#ifndef WIN32
-    if(myGlobals.webAddr) {
-      if(!inet_aton(myGlobals.webAddr, &sockIn.sin_addr)) {
-	traceEvent(CONST_TRACE_ERROR, "WEB: Unable to convert address '%s' - "
-		   "not binding to a particular interface", myGlobals.webAddr);
-	sockIn.sin_addr.s_addr = INADDR_ANY;
-      } else {
-	traceEvent(CONST_TRACE_INFO, "WEB: Converted address '%s' - "
-		   "binding to the specific interface", myGlobals.webAddr);
-      }
-    } else {
-      sockIn.sin_addr.s_addr = INADDR_ANY;
-    }
-#else
     sockIn.sin_addr.s_addr = INADDR_ANY;
-#endif
-
-    myGlobals.sock = socket(AF_INET, SOCK_STREAM, 0);
-    if(myGlobals.sock <= 0) {
-      traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to create a new socket (error %d: '%s')",
-                 errno, strerror(errno));
-      exit(-1);
-    }
-
-    setsockopt(myGlobals.sock, SOL_SOCKET, SO_REUSEADDR,
-	       (char *)&sockopt, sizeof(sockopt));
-  } else
-    myGlobals.sock = 0;
-
-#ifdef HAVE_OPENSSL
-  if(myGlobals.sslInitialized) {
-    myGlobals.sock_ssl = socket(AF_INET, SOCK_STREAM, 0);
-    if(myGlobals.sock_ssl < 0) {
-      traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to create a new socket");
-      exit(-1);
-    }
-
-    setsockopt(myGlobals.sock_ssl, SOL_SOCKET, SO_REUSEADDR,
-	       (char *)&sockopt, sizeof(sockopt));
   }
-#endif
-
-  if(myGlobals.webPort > 0) {
-    if(bind(myGlobals.sock, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-      traceEvent(CONST_TRACE_FATALERROR, "WEB: Port %d already in use (is another instance of ntop running?)", 
-		 myGlobals.webPort);
-      closeNwSocket(&myGlobals.sock);
-      exit(-1);
-    }
-  }
-
-#ifdef HAVE_OPENSSL
-  if(myGlobals.sslInitialized) {
-    memset(&sockIn, 0, sizeof(sockIn));
-    sockIn.sin_family = AF_INET;
-    sockIn.sin_port   = (int)htons(myGlobals.sslPort);
-#ifndef WIN32
-    if(myGlobals.sslAddr) {
-      if(!inet_aton(myGlobals.sslAddr, &sockIn.sin_addr)) {
-	traceEvent(CONST_TRACE_ERROR, "WEB: Unable to convert address '%s' - "
-		   "not binding SSL to a particular interface", myGlobals.sslAddr);
-	sockIn.sin_addr.s_addr = INADDR_ANY;
-      } else {
-	traceEvent(CONST_TRACE_INFO, "WEB: Converted address '%s' - "
-		   "binding SSL to the specific interface", myGlobals.sslAddr);
-      }
-    } else {
-      sockIn.sin_addr.s_addr = INADDR_ANY;
-    }
 #else
-    sockIn.sin_addr.s_addr = INADDR_ANY;
+  sockIn.sin_addr.s_addr = INADDR_ANY;
 #endif
 
-    if(bind(myGlobals.sock_ssl, (struct sockaddr *)&sockIn, sizeof(sockIn)) < 0) {
-      /* Fix below courtesy of Matthias Kattanek <mattes@mykmk.com> */
-      traceEvent(CONST_TRACE_ERROR, "WEB: ssl port %d already in use (is another instance of ntop running?)",
-		 myGlobals.sslPort);
-      closeNwSocket(&myGlobals.sock_ssl);
+#ifdef INITWEB_DEBUG
+  if (snprintf(value, sizeof(value), "%d.%d.%d.%d", \
+               (int) ((sockIn.sin_addr.s_addr >> 24) & 0xff), \
+               (int) ((sockIn.sin_addr.s_addr >> 16) & 0xff), \
+               (int) ((sockIn.sin_addr.s_addr >>  8) & 0xff), \
+               (int) ((sockIn.sin_addr.s_addr >>  0) & 0xff)) < 0) \
+      BufferTooShort(); \
+  traceEvent(CONST_TRACE_INFO, "INITWEB_DEBUG: sockIn = %s:%d",
+             value,
+             ntohs(sockIn.sin_port));
+#endif
+
+#ifdef HAVE_FILEDESCRIPTORBUG
+  /* Burton - Aug2003
+   *   Work-around for file descriptor bug (FreeBSD PR51535 et al)
+   *   - burn some file descriptors so the socket() call doesn't get a dirty one.
+   *   - it's not pretty, but it works...
+   */
+  {
+    traceEvent(CONST_TRACE_INFO, "FILEDESCRIPTORBUG: Work-around activated");
+    for(i=0; i<FILEDESCRIPTORBUG_COUNT; i++) {
+      tempF[i]=0;
+      memset(&tempFname[i], 0, LEN_MEDIUM_WORK_BUFFER);
+
+      if(snprintf(tempFname[i], LEN_MEDIUM_WORK_BUFFER, "/tmp/ntop-%09u-%d", tempFpid, i) < 0)
+        BufferTooShort();
+      traceEvent(CONST_TRACE_NOISY, "FILEDESCRIPTORBUG: Creating %d, '%s'", i, tempFname[i]);
+      errno = 0;
+      tempF[i]=open(tempFname[i], O_CREAT|O_TRUNC|O_RDWR);
+      if(errno != 0) {
+        traceEvent(CONST_TRACE_ERROR,
+                   "FILEDESCRIPTORBUG: Unable to create file - may cause problems later - '%s'(%d)",
+                   strerror(errno), errno);
+      } else {
+        traceEvent(CONST_TRACE_NOISY,
+                   "FILEDESCRIPTORBUG: Created file %d - '%s'(%d)",
+                   i, tempFname[i], tempF[i]);
+      }
+    }
+#endif /* FILEDESCRIPTORBUG */
+
+    errno = 0;
+    *sock = socket(AF_INET, SOCK_STREAM, 0);
+    if((*sock <= 0) || (errno != 0) ) {
+      traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to create a new%s socket - returned %d, error is '%s'(%d)",
+                sslOrNot, *sock, strerror(errno), errno);
       exit(-1);
+    }
+    traceEvent(CONST_TRACE_NOISY, "WEB: Created a new%s socket (%d)", sslOrNot, *sock);
+
+#ifdef HAVE_FILEDESCRIPTORBUG
+    /* Close and delete the temporary - junk - files */
+    traceEvent(CONST_TRACE_INFO, "FILEDESCRIPTORBUG: Bug work-around cleanup");
+    for(i=FILEDESCRIPTORBUG_COUNT-1; i>=0; i--) {
+      if(tempF[i] >= 0) {
+        traceEvent(CONST_TRACE_NOISY, "FILEDESCRIPTORBUG: Removing %d, '%s'(%d)", i, tempFname[i], tempF[i]);
+        if(close(tempF[i])) {
+          traceEvent(CONST_TRACE_ERROR,
+                     "FILEDESCRIPTORBUG: Unable to close file %d - '%s'(%d)",
+                     i,
+                     strerror(errno), errno);
+        } else {
+          if(unlink(tempFname[i]))
+            traceEvent(CONST_TRACE_ERROR,
+                       "FILEDESCRIPTORBUG: Unable to delete file '%s' - '%s'(%d)",
+                       tempFname[i],
+                       strerror(errno), errno);
+          else
+            traceEvent(CONST_TRACE_NOISY,
+                       "FILEDESCRIPTORBUG: Removed file '%s'",
+                       tempFname[i]);
+        }
+      }
     }
   }
+#endif /* FILEDESCRIPTORBUG */
+
+#ifdef INITWEB_DEBUG
+  traceEvent(CONST_TRACE_INFO, "INITWEB_DEBUG:%s setsockopt(%d, SOL_SOCKET, SO_REUSEADDR ...",
+             sslOrNot, *sock);
 #endif
 
-  if(myGlobals.webPort > 0) {
-    if(listen(myGlobals.sock, 2) < 0) {
-      traceEvent(CONST_TRACE_FATALERROR, "WEB: listen(%d, 2) error %d %s",
-		 myGlobals.sock,
-                 strerror(errno));
-      closeNwSocket(&myGlobals.sock);
-      exit(-1);
-    }
+  errno = 0;
+  rc = setsockopt(*sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sockopt, sizeof(sockopt));
+  if((rc < 0) || (errno != 0)) {
+    traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to set%s socket options - '%s'(%d)",
+               sslOrNot, strerror(errno), errno);
+    exit(-1);
+  }
+#ifdef INITWEB_DEBUG
+  traceEvent(CONST_TRACE_INFO, "INITWEB_DEBUG:%s socket %d, options set", sslOrNot, *sock);
+#endif
+
+  errno = 0;
+  rc = bind(*sock, (struct sockaddr *)&sockIn, sizeof(sockIn));
+  if((rc < 0) || (errno != 0)) {
+    traceEvent(CONST_TRACE_FATALERROR,
+               "WEB:%s binding problem - '%s'(%d)",
+               sslOrNot, strerror(errno), errno);
+    traceEvent(CONST_TRACE_INFO, "Check if another instance of ntop is running"); 
+    closeNwSocket(&myGlobals.sock);
+    exit(-1);
   }
 
-#ifdef HAVE_OPENSSL
-  if(myGlobals.sslInitialized)
-    if(listen(myGlobals.sock_ssl, 2) < 0) {
-      traceEvent(CONST_TRACE_FATALERROR, "WEB: listen(%d, 2) error %d %s",
-		 myGlobals.sock_ssl,
-                 strerror(errno));
-      closeNwSocket(&myGlobals.sock_ssl);
-      exit(-1);
-    }
+#ifdef INITWEB_DEBUG
+  traceEvent(CONST_TRACE_INFO, "INITWEB_DEBUG:%s socket %d bound", sslOrNot, *sock);
 #endif
 
+  errno = 0;
+  rc = listen(*sock, 2);
+  if((rc < 0) || (errno != 0)) {
+    traceEvent(CONST_TRACE_FATALERROR, "WEB:%s listen(%d, 2) error %s(%d)",
+               sslOrNot,
+               *sock,
+               strerror(errno), errno);
+    closeNwSocket(&myGlobals.sock);
+    exit(-1);
+  }
+
+  traceEvent(CONST_TRACE_INFO, "Initialized%s socket, port %d, address %s",
+             sslOrNot,
+             *port,
+             addr == NULL ? "(any)" : addr);
+
+}
+
+#undef sslOrNot
+
+/* **************************************** */
+
+/* SSL fixes courtesy of Curtis Doty <curtis@greenkey.net>
+                         Matthias Kattanek <mattes@mykmk.com> */
+
+void initWeb(void) {
+
+  traceEvent(CONST_TRACE_INFO, "WEB: Initializing web server");
+
+  myGlobals.columnSort = 0, myGlobals.sortSendMode = 0;
+  addDefaultAdminUser();
+  initAccessLog();
+
+  traceEvent(CONST_TRACE_INFO, "WEB: Initializing tcp/ip socket connections for web server");
+
   if(myGlobals.webPort > 0) {
+    initSocket(FALSE, &myGlobals.webPort, &myGlobals.sock, myGlobals.webAddr);
     /* Courtesy of Daniel Savard <daniel.savard@gespro.com> */
     if(myGlobals.webAddr)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTP connections on %s port %d",
@@ -4743,7 +4773,8 @@ void initWeb(void) {
   }
 
 #ifdef HAVE_OPENSSL
-  if(myGlobals.sslInitialized) {
+  if((myGlobals.sslInitialized) && (myGlobals.sslPort > 0)) {
+    initSocket(TRUE, &myGlobals.sslPort, &myGlobals.sock_ssl, myGlobals.sslAddr);
     if(myGlobals.sslAddr)
       traceEvent(CONST_TRACE_ALWAYSDISPLAY, "WEB: Waiting for HTTPS (SSL) connections on %s port %d",
 		 myGlobals.sslAddr, myGlobals.sslPort);
@@ -4754,10 +4785,10 @@ void initWeb(void) {
 #endif
 
 #ifdef CFG_MULTITHREADED
+  traceEvent(CONST_TRACE_INFO, "WEB: Starting web server");
   createThread(&myGlobals.handleWebConnectionsThreadId, handleWebConnections, NULL);
   traceEvent(CONST_TRACE_INFO, "THREADMGMT: Started thread (%ld) for web server",
 	     myGlobals.handleWebConnectionsThreadId);
-#endif
 
 #ifdef MAKE_WITH_SSLWATCHDOG
 #ifdef MAKE_WITH_SSLWATCHDOG_RUNTIME
@@ -4765,6 +4796,8 @@ void initWeb(void) {
 #endif
     {
       int rc;
+
+      traceEvent(CONST_TRACE_INFO, "WEB: Starting https:// watchdog");
 
 #ifdef SSLWATCHDOG_DEBUG
       traceEvent(CONST_TRACE_INFO, "SSLWDDEBUG: ****S*S*L*W*A*T*C*H*D*O*G*********STARTING");
@@ -4797,6 +4830,10 @@ void initWeb(void) {
       sslwatchdogClearLock(FLAG_SSLWATCHDOG_BOTH);
     }
 #endif /* MAKE_WITH_SSLWATCHDOG */
+
+#endif /* CFG_MULTITHREADED */
+
+  traceEvent(CONST_TRACE_NOISY, "WEB: Server started... continuing with initialization");
 }
 
 

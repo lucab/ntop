@@ -36,8 +36,69 @@ static void ignoreSignal(int signalId) {
 /* ******************************* */
 
 void initReports(void) {
+  int i;
+  char value[LEN_SMALL_WORK_BUFFER];
+
   myGlobals.columnSort = 0;
   addDefaultAdminUser();
+
+  /* Show device table */
+  for(i=0; i<myGlobals.numDevices; i++) {
+    traceEvent(CONST_TRACE_NOISY, "Device %2d. %-30s%s%s%s",
+                 i,
+                 myGlobals.device[i].humanFriendlyName != NULL ?
+                     myGlobals.device[i].humanFriendlyName :
+                     myGlobals.device[i].name,
+                 myGlobals.device[i].virtualDevice ? " (virtual)" : "",
+                 myGlobals.device[i].dummyDevice ? " (dummy)" : "",
+                 myGlobals.device[i].activeDevice ? " (active)" : "");
+  }
+
+  /* Corrections on stored value */
+  if(myGlobals.mergeInterfaces) {
+    traceEvent(CONST_TRACE_NOISY,
+               "WEB: Merging interfaces, reporting device forced to 0");
+    storePrefsValue("actualReportDeviceId", "0");
+  } else if(fetchPrefsValue("actualReportDeviceId", value, sizeof(value)) == -1) {
+    traceEvent(CONST_TRACE_NOISY,
+               "WEB: Reporting device not set, defaulting to 0");
+    storePrefsValue("actualReportDeviceId", "0");
+  } else if(atoi(value) >= myGlobals.numDevices) {
+    traceEvent(CONST_TRACE_WARNING, 
+               "WEB: Reporting device (%d) invalid (> max, %d), defaulting to 0");
+    storePrefsValue("actualReportDeviceId", "0");
+  }
+  
+  /* Retrieve it */  
+  if(fetchPrefsValue("actualReportDeviceId", value, sizeof(value)) == -1) {
+    myGlobals.actualReportDeviceId = 0;
+  } else {
+    myGlobals.actualReportDeviceId = atoi(value);
+  }
+
+  if(myGlobals.device[myGlobals.actualReportDeviceId].virtualDevice) {
+    /* Bad idea, set to 1st non-virtual device */
+    traceEvent(CONST_TRACE_WARNING,
+               "WEB: Reporting device (%d) invalid (virtual), using 1st non-virtual device");
+    for(i=0; i<myGlobals.numDevices; i++) {
+      if(!myGlobals.device[i].virtualDevice) {
+        myGlobals.actualReportDeviceId = i;
+        if(snprintf(value, sizeof(value), "%d", i) < 0)
+          BufferTooShort();
+        storePrefsValue("actualReportDeviceId", value);
+	break;
+      }
+    }
+  }
+
+  traceEvent(CONST_TRACE_INFO,
+            "Note: Reporting device initally set to %d [%s]%s",
+            myGlobals.actualReportDeviceId,
+            myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName != NULL ?
+                 myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName :
+                 myGlobals.device[myGlobals.actualReportDeviceId].name,
+            myGlobals.mergeInterfaces ? " (merged)" : "");
+
 }
 
 /* **************************************** */

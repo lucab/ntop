@@ -1833,7 +1833,7 @@ typedef struct ntopGlobals {
   u_int baseMemoryUsage;
 #endif
   u_int ipTrafficMatrixMemoryUsage;
-  u_char webInterfaceEnabled;
+  u_char webInterfaceDisabled;
   int enableIdleHosts;   /* Purging of idle hosts support enabled by default */
   int sortSendMode;
   int actualReportDeviceId;

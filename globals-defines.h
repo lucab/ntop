@@ -427,6 +427,10 @@
  */
 /* #define IDLE_PURGE_DEBUG */
 
+/* INITWEB_DEBUG logs the initialization of the web server
+ */
+/* #define INITWEB_DEBUG */
+
 /* I18N_DEBUG logs the activities in and around internationalization (i18n).
  */
 /* #define I18N_DEBUG */
@@ -974,7 +978,7 @@
 #define LEN_TIME_STAMP_BUFFER               2
 #define LEN_GENERAL_WORK_BUFFER             1024
 #define LEN_MEDIUM_WORK_BUFFER              64
-#define LEN_SMALL_WORK_BUFFER               16
+#define LEN_SMALL_WORK_BUFFER               24 /* nnn.nnn.nnn.nnn\n */
 
 /*
  * Static buffer used for pcap error messages in initialize.c and ntop_win32.c.
