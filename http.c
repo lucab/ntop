@@ -60,7 +60,7 @@ struct _HTTPstatus HTTPstatus[] = {
     { 407, "Proxy Authentication Required", NULL },
     { 408, "Request Time-out", "The request was timed-out." },
     { 409, "Conflict", NULL },
-    { 410, "Gone", NULL },
+    { 410, "Gone", "The page you requested is not available in your current ntop <A HREF=/info.html>configuration</A>. See the ntop <A HREF=/ntop.html>man page</A> for more information" },
     { 411, "Length Required", NULL },
     { 412, "Precondition Failed", NULL },
     { 413, "Request Entity Too Large", NULL },
@@ -85,6 +85,7 @@ struct _HTTPstatus HTTPstatus[] = {
 #define HTTP_FLAG_STATUS_403	(18<<8)
 #define HTTP_FLAG_STATUS_404	(19<<8)
 #define HTTP_FLAG_STATUS_408	(23<<8)
+#define HTTP_FLAG_STATUS_410	(25<<8)
 #define HTTP_FLAG_STATUS_501	(32<<8)
 #define HTTP_FLAG_STATUS_505	(36<<8)
 
@@ -617,6 +618,10 @@ static void returnHTTPpageNotFound(void) {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_404);
 }
 
+static void returnHTTPpageGone(void) {
+  returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_410);
+}
+
 static void returnHTTPrequestTimedOut(void) {
   returnHTTPspecialStatusCode(HTTP_FLAG_STATUS_408);
 }
@@ -640,7 +645,8 @@ static void returnHTTPspecialStatusCode(int statusFlag) {
     statusIdx = 0;
     statusFlag = 0;
 #ifdef DEBUG
-    traceEvent(TRACE_WARNING, "INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n", statusIdx);
+    traceEvent(TRACE_WARNING,
+	       "INTERNAL ERROR: invalid HTTP status id (%d) set to zero.\n", statusIdx);
 #endif
   }
 
@@ -1124,7 +1130,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printProcessInfo(sortedColumn /* process PID */);
     } else {
-      returnHTTPpageNotFound();
+      returnHTTPpageGone();
       printTrailer=0;
     }
   } else if(strncmp(pageName, STR_LSOF_DATA, strlen(STR_LSOF_DATA)) == 0) {
@@ -1132,7 +1138,7 @@ static int returnHTTPPage(char* pageName, int postLen) {
       sendHTTPHeader(HTTP_TYPE_HTML, 0);
       printLsofData(sortedColumn);
     } else {
-      returnHTTPpageNotFound();
+      returnHTTPpageGone();
       printTrailer=0;
     }
   } else if(strcmp(pageName, "NetFlows.html") == 0) {
