@@ -4640,8 +4640,9 @@ void initWeb(void) {
 #endif
 
     myGlobals.sock = socket(AF_INET, SOCK_STREAM, 0);
-    if(myGlobals.sock < 0) {
-      traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to create a new socket");
+    if(myGlobals.sock <= 0) {
+      traceEvent(CONST_TRACE_FATALERROR, "WEB: Unable to create a new socket (error %d: '%s')",
+                 errno, strerror(errno));
       exit(-1);
     }
 
