@@ -813,13 +813,14 @@ char *dotToSlash(char *name) {
   localBuffer = strdup(name);
 
   for (i=0; i<strlen(localBuffer); i++) {
-    if (localBuffer[i] == '.')
+    if((localBuffer[i] == '.') || (localBuffer[i] == ':'))
 #ifdef WIN32
       localBuffer[i]='\\';
 #else
     localBuffer[i]='/';
 #endif
   }
+
   localBuffer[i]='\0';
   return localBuffer;
 }

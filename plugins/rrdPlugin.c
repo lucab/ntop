@@ -1552,7 +1552,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    accessMutex(&myGlobals.hostsHashMutex, "rrdDumpHosts");
 #endif
 
-	    if(el->bytesSent.value > 0) {
+	    if((el->bytesSent.value > 0) || (el->bytesRcvd.value > 0)) {
 	      if(el->hostNumIpAddress[0] != '\0') {
 		hostKey = el->hostNumIpAddress;
 
@@ -1563,8 +1563,10 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
                   releaseMutex(&myGlobals.hostsHashMutex);
 #endif
                   continue;
-                }
+                } 
 
+		if(subnetPseudoLocalHost(el))
+		  hostKey = el->ethAddressString;
 	      } else {
 		/* hostKey = el->ethAddressString; */
 		/* For the time being do not save IP-less hosts */

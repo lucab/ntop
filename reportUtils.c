@@ -3707,12 +3707,19 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
   /* RRD */
   if(el->hostNumIpAddress[0] != '\0') {
     struct stat statbuf;
+    char *key;
 
+    if(subnetPseudoLocalHost(el))
+      key = el->ethAddressString;
+    else
+      key = el->hostNumIpAddress;
+
+    
     /* Do NOT add a '/' at the end of the path because Win32 will complain about it */
     snprintf(buf, sizeof(buf), "%s/interfaces/%s/hosts/%s",
 	     myGlobals.rrdPath != NULL ? myGlobals.rrdPath : ".",
 	     myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-             dotToSlash(el->hostNumIpAddress));
+	     dotToSlash(key));
 
     if(stat(buf, &statbuf) == 0) {
       if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
@@ -3720,7 +3727,7 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
                    "<IMG BORDER=0 SRC=/graph.gif TITLE=\"link to rrd graphs\"></A> ]</TD></TR>\n",
 		  getRowColor(), "RRD Stats",
                   myGlobals.device[myGlobals.actualReportDeviceId].humanFriendlyName,
-                  dotToSlash(el->hostNumIpAddress),
+                  dotToSlash(key),
 		  el->hostSymIpAddress[0] != '\0' ? el->hostSymIpAddress : el->hostNumIpAddress) < 0)
 	BufferTooShort();
       sendString(buf);
