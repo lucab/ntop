@@ -4212,7 +4212,7 @@ void printNtopProblemReport(void) {
 /*
   SSL fix courtesy of Curtis Doty <curtis@greenkey.net>
 */
-void initWeb() {
+void initWeb(void) {
   int i, sockopt = 1;
   struct sockaddr_in sockIn;
   char value[8];

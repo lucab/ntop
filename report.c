@@ -115,7 +115,7 @@ void addPageIndicator(char *url, u_int pageNum,
 
 /* ******************************* */
 
-void printTrafficStatistics() {
+void printTrafficStatistics(void) {
   Counter unicastPkts, avgPktLen;
   int i;
   char buf[LEN_GENERAL_WORK_BUFFER];
@@ -4346,7 +4346,7 @@ void printHostHourlyTraffic(HostTraffic *el) {
 
 /* ************************** */
 
-void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
+static void dumpHostsCriteria(NtopInterface *ifName, u_char criteria) {
   u_int numEntries=0, i, maxHosts;
   HostTraffic **tmpTable, *el;
   char buf[LEN_GENERAL_WORK_BUFFER];

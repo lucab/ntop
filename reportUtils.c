@@ -403,7 +403,7 @@ void printFooterHostLink(void) {
 
 /* ******************************* */
 
-void printFooterTrafficPct(void) {
+static void printFooterTrafficPct(void) {
     char buf[LEN_GENERAL_WORK_BUFFER];
 
     if (snprintf(buf, sizeof(buf),
@@ -1017,7 +1017,7 @@ int cmpProcesses(const void *_a, const void *_b) {
 
 /* ******************************* */
 
-int cmpOSFctn(const void *_a, const void *_b) {
+static int cmpOSFctn(const void *_a, const void *_b) {
   OsNumInfo *a = (OsNumInfo *)_a;
   OsNumInfo *b = (OsNumInfo *)_b;
 
@@ -3977,7 +3977,7 @@ void printSectionTitle(char *text) {
 
 #define MAX_NUM_OS           256
 
- void printLocalHostsStats() {
+ void printLocalHostsStats(void) {
   u_int idx, numEntries=0, maxHosts;
   HostTraffic *el, **tmpTable;
   OsNumInfo theOSs[MAX_NUM_OS];

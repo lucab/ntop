@@ -265,7 +265,7 @@ char* getSAPInfo(u_int16_t sapInfo, short encodeString) {
 
 /* *********************************** */
 
-char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
+static char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
   datum key_data, data_data;
   static char tmpBuf[96];
   char *workBuf;
@@ -353,6 +353,9 @@ char* getMACInfo(int special, u_char* ethAddress, short encodeString) {
 
 char* getVendorInfo(u_char* ethAddress, short encodeString) {
   char* ret;
+
+  /* ROCCO */
+  return("");
 
   if(myGlobals.dontTrustMACaddr
      || (memcmp(ethAddress, myGlobals.otherHostEntry->ethAddress, LEN_ETHERNET_ADDRESS) == 0))

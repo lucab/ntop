@@ -784,7 +784,7 @@ char *dotToSlash(char *name) {
 /* ********************************* */
 
 /* Example: "flow1='host jake',flow2='dst host born2run'" */
-void handleFlowsSpecs() {
+void handleFlowsSpecs(void) {
   FILE *fd;
   char *flow, *buffer=NULL, *strtokState, *flows;
 
@@ -2721,7 +2721,7 @@ int isPassiveSession(u_long theHost, u_short thePort) {
 
 /* ******************************************* */
 
-void initPassiveSessions() {
+void initPassiveSessions(void) {
   int len;
 
   len = sizeof(SessionInfo)*MAX_PASSIVE_FTP_SESSION_TRACKER;
@@ -2732,7 +2732,7 @@ void initPassiveSessions() {
 
 /* ******************************* */
 
-void termPassiveSessions() {
+void termPassiveSessions(void) {
   if(myGlobals.enableSessionHandling)
     free(passiveSessions);
 }
@@ -3714,7 +3714,7 @@ pcap_t *pcap_open_dead(int linktype, int snaplen)
 
 /* ******************************** */
 
-int setSpecifiedUser() {
+int setSpecifiedUser(void) {
 #ifndef WIN32
   /*
    * set user to be as inoffensive as possible

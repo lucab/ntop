@@ -387,7 +387,7 @@ static int handleProtocolList(char* protoName,
 
 /* **************************************** */
 
-void createPortHash() {
+void createPortHash(void) {
   int theSize, i;
 
   /*
@@ -423,7 +423,7 @@ void createPortHash() {
 
 /* **************************************** */
 
-void handleProtocols() {
+void handleProtocols(void) {
   char *proto, *buffer=NULL, *strtokState, *bufferCurrent, *bufferWork;
   FILE *fd;
 

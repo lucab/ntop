@@ -706,35 +706,35 @@ static void logHTTPaccess(int rc, struct timeval *httpRequestedAt,
 
 /* ************************* */
 
- void returnHTTPbadRequest() {
+static void returnHTTPbadRequest(void) {
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_400);
 }
 
-void returnHTTPaccessDenied() {
+static void returnHTTPaccessDenied(void) {
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_401 | BITFLAG_HTTP_NEED_AUTHENTICATION);
 }
 
-void returnHTTPaccessForbidden() {
+static void returnHTTPaccessForbidden(void) {
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_403);
 }
 
-void returnHTTPpageNotFound() {
+void returnHTTPpageNotFound(void) {
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_404);
 }
 
-void returnHTTPpageGone() {
+static void returnHTTPpageGone(void) {
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_410);
 }
 
-void returnHTTPrequestTimedOut() {
+static void returnHTTPrequestTimedOut(void) {
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_408);
 }
 
-void returnHTTPnotImplemented() {
+static void returnHTTPnotImplemented(void) {
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_501);
 }
 
-void returnHTTPversionNotSupported() {
+static void returnHTTPversionNotSupported(void) {
   returnHTTPspecialStatusCode(BITFLAG_HTTP_STATUS_505);
 }
 
@@ -2413,7 +2413,7 @@ void handleHTTPrequest(struct in_addr from) {
   }
 
   if(requestedURL[0] == '\0')
-    returnHTTPpageNotFound(0);
+    returnHTTPpageNotFound();
 
 #ifdef CFG_MULTITHREADED
   accessMutex(&myGlobals.purgeMutex, "purgeIdleHosts");
@@ -2490,8 +2490,8 @@ void handleHTTPrequest(struct in_addr from) {
     }
 #endif
 
-    returnHTTPaccessForbidden(0);
+    returnHTTPaccessForbidden();
   } else if(rc == FLAG_HTTP_INVALID_PAGE) {
-    returnHTTPpageNotFound(0);
+    returnHTTPpageNotFound();
   }
 }
