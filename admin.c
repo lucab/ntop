@@ -948,6 +948,7 @@ static void addKeyIfMissing(char* key, char* value, int encryptValue,
 	  if(strcmp(pw1, pw2)) {
 	    printf("Passwords don't match. Please try again.\n");
 	    memset(pw1, 0, sizeof(pw1)); memset(pw2, 0, sizeof(pw2));
+	    sleep(1); /* It avoids message loops */
 	  }
 	}
       }

@@ -2107,5 +2107,6 @@ typedef struct pppTunnelHeader {
 #define BufferTooShort()  traceEvent(TRACE_ERROR, "Buffer too short @ %s:%d", __FILE__, __LINE__)
 #endif
 
+#define sleep(a)  ntop_sleep(a)
 
 #endif /* NTOP_H */

@@ -1425,7 +1425,7 @@ void cleanupHostEntries() {
   datum data_data, key_data, return_data;
   u_int numDbEntries = 0;
 
-  ntop_sleep(ADDRESS_PURGE_TIMEOUT);
+  sleep(ADDRESS_PURGE_TIMEOUT);
 
 #ifndef DEBUG
   traceEvent(TRACE_INFO, "Entering cleanupHostEntries()");

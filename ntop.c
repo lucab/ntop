@@ -571,7 +571,7 @@ void* updateDBHostsTrafficLoop(void* notUsed _UNUSED_) {
     traceEvent(TRACE_INFO, "Sleeping for %d seconds\n", updateTime);
 #endif
 
-    ntop_sleep(updateTime);
+    sleep(updateTime);
 
     if(!myGlobals.capturePackets) break;
 
@@ -601,7 +601,7 @@ void* scanIdleLoop(void* notUsed _UNUSED_) {
   for(;;) {
     int i;
 
-    ntop_sleep(60 /* do not change */);
+    sleep(60 /* do not change */);
 
     if(!myGlobals.capturePackets) break;
     myGlobals.actTime = time(NULL);
@@ -651,7 +651,7 @@ void* periodicLsofLoop(void* notUsed _UNUSED_) {
       traceEvent(TRACE_INFO, "Done with lsof.\n");
 #endif
     }
-    ntop_sleep(60);
+    sleep(60);
   }
   return(NULL);
 
@@ -835,7 +835,7 @@ RETSIGTYPE cleanup(int signo) {
 
 #ifdef MULTITHREADED
   traceEvent(TRACE_INFO, "Waiting until threads terminate...\n");
-  ntop_sleep(3); /* Just to wait until threads complete */
+  sleep(3); /* Just to wait until threads complete */
 #endif
 
 /* #ifdef FULL_MEMORY_FREE */

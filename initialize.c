@@ -449,6 +449,9 @@ int initGlobalValues(void) {
 #endif
   }
 
+  if(myGlobals.enableSessionHandling)
+    initPassiveSessions();
+
   return(0);
 }
 

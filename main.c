@@ -700,8 +700,6 @@ int main(int argc, char *argv[]) {
    */
   initIPServices();
 
-  initPassiveSessions();
-
 #ifdef HAVE_OPENSSL
   init_ssl();
 #endif
@@ -712,7 +710,7 @@ int main(int argc, char *argv[]) {
   reportValues(&lastTime);
 #endif /* MICRO_NTOP */
 
-  initGdbm();
+  initGdbm();  
 
 #ifndef WIN32
   if(myGlobals.daemonMode)
@@ -856,7 +854,7 @@ int main(int argc, char *argv[]) {
   pause();
 #endif
   while(!myGlobals.endNtop)
-    ntop_sleep(30);
+    sleep(30);
 
   return(0);
 }

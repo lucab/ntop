@@ -2639,7 +2639,8 @@ void initPassiveSessions() {
 /* ******************************* */
 
 void termPassiveSessions() {
-  free(passiveSessions);
+  if(myGlobals.enableSessionHandling)
+    free(passiveSessions);
 }
 
 /* ******************************* */
@@ -3150,9 +3151,11 @@ int guessHops(HostTraffic *el) {
 
 /* ************************************ */
 
- int ntop_sleep(int secs) {
-   int unsleptTime = secs;
+#undef sleep
 
-   while((unsleptTime = sleep(unsleptTime)) > 0)
-     ;
- }
+int ntop_sleep(int secs) {
+  int unsleptTime = secs;
+  
+  while((unsleptTime = sleep(unsleptTime)) > 0)
+    ;
+}
