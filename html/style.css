@@ -1,4 +1,4 @@
-/* Luca Deri 1st Semptember 2000 */
+/* Luca Deri September 1st, 2000 */
 
 body
 {font-family: Helvetica, Arial, sans-serif;
@@ -13,6 +13,13 @@ white-space: nowrap;
 }
 
 table { border: thin; spacing: 1; }
+
+span.leftmenuitem
+{
+font-family: Helvetica, Arial, sans-serif;
+font-size: 10pt;
+font-weight: bold;
+}
 
 td
 {font-family: Helvetica, Arial, sans-serif;
