@@ -50,7 +50,7 @@ AC_INIT([ntop],[2.2.98])
 dnl> The prereq is really 2.53, i.e. automake 1.6, but Darwin uses 2.52...
 AC_PREREQ([2.52])
 
-SCRIPTVER="v2.2.98.004-2003-12-23"
+SCRIPTVER="v2.2.98.005-2003-12-23"
 
 dnl>
 dnl> generate the config header
@@ -1967,6 +1967,7 @@ AC_CHECK_HEADERS([sys/ioctl.h sys/socket.h sys/time.h sys/types.h])
 # Optional - have workaround...
 AC_CHECK_HEADERS([setjmp.h])
 AC_CHECK_HEADERS([shadow.h])
+AC_CHECK_HEADERS([sys/utsname.h])
 
 # Network
 AC_CHECK_HEADERS([netdb.h])

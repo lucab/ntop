@@ -158,6 +158,10 @@ ntop.h
 #include <sys/param.h>      /* OpenBSD wants it */
 #endif
 
+#ifdef HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
+#endif
+
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>      /* AIX has it */
 #endif

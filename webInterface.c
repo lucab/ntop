@@ -3074,6 +3074,10 @@ void printNtopConfigInfo(int textPrintFlag) {
 #endif
 #endif
 
+#ifdef HAVE_SYS_UTSNAME_H
+  struct utsname unameData;
+#endif
+
   if(textPrintFlag)
       sendString("ntop Configuration\n\n");
   else
@@ -4267,6 +4271,18 @@ void printNtopConfigInfo(int textPrintFlag) {
 	      ) < 0)
     BufferTooShort();
   printFeatureConfigInfo(textPrintFlag, "GNU C (gcc) version", buf);
+
+#ifdef HAVE_SYS_UTSNAME_H
+  if (uname(&unameData) == 0) {
+    if(snprintf(buf, sizeof(buf), "sysname(%s) release(%s) version(%s) machine(%s)",
+                         unameData.sysname,
+                         unameData.release,
+                         unameData.version,
+                         unameData.machine) < 0) 
+      BufferTooShort();
+    printFeatureConfigInfo(textPrintFlag, "uname data", buf);
+  }
+#endif
 
   sendString(texthtml("\n\nInternationalization (i18n)\n\n", "<tr><th colspan=2 "DARK_BG"" TH_BG ">Internationalization (i18n)</tr>\n"));
 
