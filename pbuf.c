@@ -461,9 +461,26 @@ static void checkNetworkRouter(HostTraffic *srcHost,
 
 /* ************************************ */
 
+/* Reset the traffic at every hour */
+static void resetHourTraffic(u_short hourId) {
+  int i;
+  
+  for(i=0; i<myGlobals.numDevices; i++) {
+    HostTraffic *el;
+
+    for(el=getFirstHost(i); el != NULL; el = getNextHost(i, el)) {
+      resetTrafficCounter(&el->trafficDistribution->last24HoursBytesSent[hourId]);
+      resetTrafficCounter(&el->trafficDistribution->last24HoursBytesRcvd[hourId]);
+    }
+  }
+}
+
+/* ************************************ */
+
 void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
 		       TrafficCounter length, Counter numPkts, int actualDeviceId) {
-  unsigned short hourId;
+  static u_short lastHourId=0;
+  u_short hourId;
   struct tm t, *thisTime;
 
   if((srcHost == NULL) || (dstHost == NULL)) {
@@ -478,6 +495,11 @@ void updatePacketCount(HostTraffic *srcHost, HostTraffic *dstHost,
 
   thisTime = localtime_r(&myGlobals.actTime, &t);
   hourId = thisTime->tm_hour % 24 /* just in case... */;;
+
+  if(lastHourId != hourId) {
+    resetHourTraffic(hourId);
+    lastHourId = hourId;
+  }
 
   incrementTrafficCounter(&srcHost->pktSent, numPkts);
   incrementTrafficCounter(&srcHost->pktSentSession, numPkts);
@@ -1678,7 +1700,7 @@ void cleanupPacketQueue(void) {
 /* ************************************ */
 
 void* dequeuePacket(void* notUsed _UNUSED_) {
-  unsigned short deviceId;
+  u_short deviceId;
   struct pcap_pkthdr h;
   u_char p[MAX_PACKET_LEN];
 
@@ -1867,7 +1889,7 @@ void processPacket(u_char *_deviceId,
   u_int headerDisplacement = 0, length = h->len;
   const u_char *orig_p = p, *p1;
   u_char *ether_src=NULL, *ether_dst=NULL;
-  unsigned short eth_type=0;
+  u_short eth_type=0;
   /* Token-Ring Strings */
   struct tokenRing_llc *trllc;
   unsigned char ipxBuffer[128];
