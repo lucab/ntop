@@ -1,0 +1,41 @@
+#!/bin/sh -e
+
+if [ "$1" = "purge" ] ; then
+
+  # source debconf library
+. /usr/share/debconf/confmodule
+
+  INIT="/etc/ntop/init.cfg"
+  if [ -f $INIT ] ; then
+    # parse config file for user
+. $INIT
+
+    # remove user
+    if grep -q ^$USER: /etc/passwd; then
+      db_get ntop/createuser
+      CREATEUSER=$RET
+      if [ "$CREATEUSER" = "true" ]; then
+        deluser $USER;
+      fi
+    fi
+  fi
+
+  # Remove init.cfg file and dir
+  if [ -d /etc/ntop ] ; then
+    rm -rf /etc/ntop;
+  fi
+  # remove stored data
+  if [ -d /var/lib/ntop ] ; then
+    rm -rf /var/lib/ntop;
+  fi
+  if [ -d /var/log/ntop ] ; then
+    rm -rf /var/log/ntop;
+  fi
+
+  db_purge
+
+  update-rc.d -f ntop remove >/dev/null
+fi
+
+
+#DEBHELPER#

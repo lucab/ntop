@@ -1,0 +1,109 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This is the debhelper compatability version to use.
+export DH_COMPAT=2
+GDCHART=gdchart0.94c
+NTOP=ntop
+
+configure: configure-stamp-gdchart configure-stamp-ntop
+configure-stamp-gdchart:
+	dh_testdir
+	cd $(GDCHART) && ./configure
+
+	touch configure-stamp-gdchart
+
+configure-stamp-ntop:
+	dh_testdir
+	cd $(NTOP) && ./configure --prefix=/usr --libdir=/usr/lib/ntop \
+		--sysconfdir=/etc --localstatedir=/var/lib --bindir=/usr/sbin \
+		--mandir=/usr/share/man --enable-tcpwrap \
+		--with-zlib-lib=/usr/lib --with-zlib-include=/usr/include \
+		--with-libpng-lib=/usr/lib --with-libpng-include=/usr/include
+#		--with-gd-lib=/usr/lib --with-gd-include=/usr/include \
+
+	touch configure-stamp-ntop
+
+build: configure-stamp-gdchart build-stamp-gdchart configure-stamp-ntop build-stamp-ntop
+build-stamp-gdchart:
+	dh_testdir
+
+	cd $(GDCHART) && $(MAKE)
+
+	touch build-stamp-gdchart
+
+
+build-stamp-ntop:
+	dh_testdir
+
+	cd $(NTOP) && $(MAKE)
+
+	touch build-stamp-ntop
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp* configure-stamp*
+
+	# Add here commands to clean up after the build process.
+	-$(MAKE) -C $(NTOP) distclean
+	-$(MAKE) -C $(GDCHART) distclean
+
+	-rm $(NTOP)/config.status $(NTOP)/config.cache $(NTOP)/config.log
+	-find . -type d -name ".deps" | xargs rm -Rf
+
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	cd $(NTOP) && $(MAKE) install DESTDIR=$(CURDIR)/debian/ntop
+
+	cp debian/protocol.list $(CURDIR)/debian/ntop/etc/ntop
+
+	# Added things for logcheck ignoring.
+	cp debian/logcheck $(CURDIR)/debian/ntop/etc/logcheck/ignore.d.server/ntop
+	cp debian/logcheck $(CURDIR)/debian/ntop/etc/logcheck/ignore.d.workstation/ntop
+	cp debian/logcheck.paranoid $(CURDIR)/debian/ntop/etc/logcheck/ignore.d.paranoid/ntop
+	# Added logrotate file.
+	cp debian/logrotate $(CURDIR)/debian/ntop/etc/logrotate.d/ntop
+
+	cp $(NTOP)/ChangeLog $(CURDIR)/debian/ntop/usr/share/doc/ntop/changelog
+
+# docs for dh_installdirs
+DOCS=$(NTOP)/docs/FAQ $(NTOP)/docs/HACKING $(NTOP)/docs/KNOWN_BUGS \
+	$(NTOP)/docs/README $(NTOP)/docs/TODO
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installdebconf -n
+	dh_installdocs $(DOCS)
+	dh_installexamples
+	dh_installmenu
+	dh_installinit -n
+	dh_installcron
+	dh_installmanpages png.5 zlib.3 libpng.3 libpngpf.3 ; \
+	dh_installinfo
+	dh_installchangelogs
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-arch
+.PHONY: build clean binary-arch binary install configure

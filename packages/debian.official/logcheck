@@ -1,0 +1,35 @@
+ntop[^:]*: Extending TCP hash
+ntop[^:]*: Extending hash:
+ntop[^:]*: Found.*in URL
+ntop[^:]*: Shrinking hash:
+ntop[^:]*: Shrinking TCP hash
+ntop[^:]*: readLsofInfo completed
+ntop[^:]*: Index error idx=
+ntop[^:]*: Cleaning up...
+ntop[^:]*: Waiting until threads terminate...
+ntop[^:]*: Terminating Web connections...
+ntop[^:]*: Freeing hash host instances...
+ntop[^:]*: .* instances freed 
+ntop[^:]*: Unloading plugins \(if any\)... 
+ntop[^:]*: Done. 
+ntop[^:]*: Thanks for using
+ntop[^:]*: .* packets received by filter on
+ntop[^:]*: Freeing device
+ntop[^:]*: .* packets dropped by
+ntop[^:]*: Bye bye: I'm becoming a daemon... 
+ntop[^:]*: ntop v.* MT
+ntop[^:]*: Listening on
+ntop[^:]*: Copyright .* by Luca Deri
+ntop[^:]*: Get the freshest ntop from http://www.ntop.org/ 
+ntop[^:]*: Parsing ntop rules...
+ntop[^:]*: Loading plugins \(if any\)... 
+ntop[^:]*: Searching plugins in /usr/lib/ntop/ntop/plugins 
+ntop[^:]*: Welcome to
+ntop[^:]*: Resetting traffic statistics...
+ntop[^:]*: Started thread
+ntop[^:]*: Initializing
+ntop[^:]*: Unable to create file /var/lib/ntop/ntop.access.log. Access log is disabled.
+ntop[^:]*: Waiting for HTTP connections on port
+ntop[^:]*: Sniffying... 
+ntop[^:]*: Started thread
+ntop[^:]*: Sanity check failed

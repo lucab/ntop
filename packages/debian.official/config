@@ -1,0 +1,76 @@
+#! /bin/sh -e
+#
+# Copyright 2000,2001,2002 by Dennis Schoen <dennis@cobolt.net>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public
+# License along with this program; if not, write to the Free
+# Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+# MA  02111-1307  USA.
+
+# Source debconf library
+. /usr/share/debconf/confmodule
+
+if [ -e /etc/ntop/init.cfg ]; then
+  # Read current state from configuration file
+. /etc/ntop/init.cfg || true
+  db_set ntop/user $USER
+  db_set ntop/getopt $GETOPT
+  db_set ntop/port $PORT
+  db_set ntop/sslport $SSLPORT
+  db_set ntop/interfaces $INTERFACES
+  db_set ntop/trace $TRACE
+fi
+
+db_input medium ntop/mode || true
+db_go
+db_get ntop/mode
+
+db_input medium ntop/interfaces || true
+db_go
+db_get ntop/interfaces
+INTERFACES=$RET
+
+db_input medium ntop/port || true
+db_go
+db_get ntop/port
+PORT=$RET
+
+db_input medium ntop/sslport || true
+db_go
+db_get ntop/sslport
+SSLPORT=$RET
+
+db_input medium ntop/getopt || true
+db_go
+db_get ntop/getopt
+OPTION=$RET
+
+db_input medium ntop/trace || true
+db_go
+db_get ntop/trace
+TRACE=$RET
+
+db_input medium ntop/user || true
+db_go
+db_get ntop/user
+USER=$RET
+if grep -q ^$USER: /etc/passwd; then
+  CREATEUSER=false
+else
+  db_subst ntop/createuser USER $USER
+  db_input medium ntop/createuser || true
+  db_go
+  db_get ntop/createuser || true
+  CREATEUSER=$RET
+fi
+db_set ntop/createuser $CREATEUSER

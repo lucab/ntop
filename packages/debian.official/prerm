@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+if [ -x "/etc/init.d/ntop" ]; then
+    if [ -x /usr/sbin/invoke-rc.d ] ; then
+	invoke-rc.d ntop stop || true
+    else
+	/etc/init.d/ntop stop || true
+    fi
+fi
+
+#DEBHELPER#

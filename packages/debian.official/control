@@ -1,0 +1,16 @@
+Source: ntop
+Section: net
+Priority: optional
+Maintainer: Ola Lundqvist <opal@debian.org>
+Build-Depends: debhelper (>= 4.1.39), librrd0-dev, libpcap-dev, autoconf, automake1.7, libgdbm-dev, libpng3-dev, libncurses5-dev, libtool, libwrap0-dev, libgd-gif1-dev, libssl-dev, libjpeg62-dev
+Standards-Version: 3.5.9
+
+Package: ntop
+Architecture: any
+Depends: ${shlibs:Depends}, debconf (>= 0.2.26)
+Description: display network usage in top-like format
+ ntop is a Network Top program. It displays a summary of network usage by
+ machines on your network in a format reminiscent of the unix top utility.
+ .
+ It can also be run in web mode, which allows the display to be browsed with
+ a web browser.

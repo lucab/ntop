@@ -1,0 +1,53 @@
+#! /bin/sh
+
+DAEMON="/usr/sbin/ntop"
+NAME="ntop"
+DESC="network top daemon"
+INIT="/etc/ntop/init.cfg"
+HOMEDIR="/var/lib/ntop"
+LOGDIR="/var/log/ntop/"
+
+test -f $DAEMON || exit 0
+
+test -f $INIT || exit 0
+
+. $INIT
+
+if [ -n "$SSLPORT" ] ; then
+    SSLPOPT="-W $SSLPORT"
+fi
+if [ -n "$PORT" ] ; then
+    POPT="-w $PORT"
+fi
+
+case "$1" in
+start)
+  echo "Starting $DESC:"
+  start-stop-daemon --start --quiet --name $NAME --exec $DAEMON -- \
+  -d -L -u $USER $POPT $SSLPOPT -p /etc/ntop/protocol.list -P $HOMEDIR \
+  -a /var/lib/ntop/access.log -i $INTERFACES \
+  -t $TRACE -O $LOGDIR $GETOPT
+  ;;
+stop)
+  echo "Stopping $DESC:"
+  start-stop-daemon --stop --oknodo --name $NAME --user $USER --retry 9
+  ;;
+restart | force-reload)
+  $0 stop
+  sleep 2
+  $0 start
+  ;;
+reload)
+  if ps aux | grep -v grep | grep -q '/usr/sbin/ntop' ; then
+    $0 stop
+    sleep 2
+    $0 start
+  fi
+  ;;
+*)
+  N=/etc/init.d/$NAME
+  echo "Usage: $N {start|stop|restart|force-reload}" >&2
+  exit 1
+  ;;
+esac
+exit 0

@@ -1,0 +1,10 @@
+/var/log/ntop {
+	weekly
+	missingok
+	rotate 4
+    # ntop doesn't handle SIGHUP
+    copytruncate
+	compress
+	notifempty
+	create 640 root adm
+}

@@ -1,0 +1,25 @@
+ntop protocol list:
+===================
+
+If you start ntop in daemon mode with the supplied init script it will
+automatically use /etc/ntop/protocol.list to choose which TCP Protocols
+should be monitored. The format of this file is simply:
+
+<label>=<protocol list> 
+
+where label is used to symbolically identify the <protocol list>. The
+format of <protocol list> is <protocol>[|<protocol>], where <protocol>
+is either a valid protocol specified inside the /etc/services file or
+a numeric port range (e.g. 80, or 6000-6500).
+
+Dennis Schoen (Mon Dec 17 14:10:25 CET 2001)
+
+log and rotation:
+=================
+
+Logs are placed in /var/log/ntop/ and will be rotated every week. The
+log rotation will restart the ntop server which will reset the ntop
+statistics. If you want to keep the statistics you have to edit or delete
+the /etc/logrotate.d/ntop file.
+
+Ola Lundqvist (Thu Mar 21 20:39:42 CET 2002)

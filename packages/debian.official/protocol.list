@@ -1,0 +1,1 @@
++FTP=ftp|ftp-data,PROXY=3128|8080,HTTP=http|www|https,DNS=name|domain,Telnet=telnet|login,NBios-IP=netbios-ns|netbios-dgm|netbios-ssn,Mail=pop-2|pop-3|kpop|smtp|imap|imap2,SNMP=snmp|snmp-trap,NEWS=nntp,DHCP-BOOTP=67-68,NFS=mount|pcnfs|bwnfs|nfs|nfsd-status,X11=6000-6010,SSH=ssh,Gnutella=6346|6347|6348,Kazaa=1214,WinMX=6699|7730,eDonkey=4661-4665,Messenger=1863|5000|5001|5190-5193

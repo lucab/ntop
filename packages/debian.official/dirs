@@ -1,0 +1,10 @@
+/etc
+/etc/ntop
+/var/lib/ntop
+/var/log/ntop
+/etc/logcheck/ignore.d.server
+/etc/logcheck/ignore.d.paranoid
+/etc/logcheck/ignore.d.workstation
+/etc/logrotate.d
+/usr/share/doc/ntop
+/usr/share/ntop

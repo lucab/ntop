@@ -1,0 +1,11 @@
+/etc/ntop/protocol.list
+/etc/init.d/ntop
+/etc/logcheck/ignore.d.server/ntop
+/etc/logcheck/ignore.d.workstation/ntop
+/etc/logcheck/ignore.d.paranoid/ntop
+/etc/logrotate.d/ntop
+/etc/ntop/etter.passive.os.fp
+/etc/ntop/p2c.opt.table
+/etc/ntop/oui.txt
+/etc/ntop/specialMAC.txt
+/etc/ntop/ntop-cert.pem

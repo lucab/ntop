@@ -1,0 +1,79 @@
+Template: ntop/trace
+Type: select
+Choices: 0, 1, 2, 3, 4, 5
+Description: This flag specifies the level of ntop tracings.
+ The trace level ranges between 0 (no trace) and 5 (full debug tracings).
+ The higher is the trace level the more information are printed. Trace
+ level 1 is used to print errors only, level 2 for both warnings and
+ errors, and so on. The default debian setup outputs this information
+ to syslog, so it should show up in /var/log/syslog.
+
+Template: ntop/getopt
+Type: multiselect
+Choices: -b, -c, -o, -n, -q, -z, -C, -M
+Description: Choose additional command line options to start ntop with ?
+ Please choose additional command line options to start ntop with.
+ Typical options are:
+ .
+  -b Disable protocol decoders
+  -c idle hosts are not purged from hash
+  -o ntop will trust just IP addresses (no MACs)
+  -n Numeric IP addresses - no DNS resolution
+  -q Log suspicious packets to /var/log/ntop/ in tcpdump format.
+  -z Disable TCP session tracking
+  -C ntop will be used to analyze a large network (hint)
+  -M don't merge network interfaces (see man page)
+
+Template: ntop/mode
+Type: boolean
+Default: false
+Description: Do you want to run ntop as daemon on startup ?
+ 
+
+Template: ntop/port
+Type: string
+Default: 127.0.0.1:3000
+Description: Which is the port the ntop daemon should listen at ?
+ The ntop daemon will listen at the specified port for
+ http connections. You can also use a IP:Port notation to make
+ ntop listen on only on specified IP Adress e.g. 127.0.0.1:3000.
+
+
+Template: ntop/sslport
+Type: string
+Default: 127.0.0.1:3001
+Description: Which is the ssl port the ntop daemon should listen at ?
+ The ntop daemon will listen at the specified port for
+ https connections. You can also use a IP:Port notation to make
+ ntop listen on only on specified IP Adress e.g. 127.0.0.1:3001.
+
+
+Template: ntop/user
+Type: string
+Default: ntop
+Description: Which is the name of the user to run the ntop daemon as ?
+ The selected user will be created if not already available.
+ Don't choose root, it is not recommended and will be discarded anyway.
+
+Template: ntop/createuser
+Type: boolean
+Default: true
+Description: Should I create the user ${USER} ?
+
+Template: ntop/interfaces
+Type: string
+Default: eth0
+Description: Which interfaces should ntop listen on?
+ Please enter a comma separated list of interfaces ntop should listen on.
+
+Template: ntop/usernotice
+Type: note
+Description: Setup ntop user
+ Please remember to manually setup the ntop user and make him
+ own the /var/lib/ntop directory before attempting to start ntop.
+
+Template: ntop/adminpass
+Type: password
+Default: admin
+Description: Initial password for the admin user ?
+ Please specify the initial password that the admin account should have.
