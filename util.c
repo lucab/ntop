@@ -1265,7 +1265,6 @@ void readLsofInfo(void) {
   }
 
   fclose(fd);
-  printf("=============> %s\n", fileName);
   unlink(fileName);
 
   memcpy(tmpProcesses, processes, sizeof(processes));
