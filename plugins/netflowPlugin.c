@@ -95,12 +95,10 @@ static char* nfValue(int deviceId, char *name, int appendDeviceId) {
   static char buf[64];
 
   if(appendDeviceId) {
-    if(snprintf(buf, sizeof(buf), "netflow.%d.%s",
-		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId, name) < 0)
-      BufferTooShort();
+    safe_snprintf(buf, sizeof(buf), "netflow.%d.%s",
+		myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId, name);
   } else {
-    if(snprintf(buf, sizeof(buf), "netflow.%s", name) < 0)
-      BufferTooShort();
+    safe_snprintf(buf, sizeof(buf), "netflow.%s", name);
   }
 
 #ifdef DEBUG
@@ -131,10 +129,9 @@ static void wasteFileDescriptors(int deviceId) {
       myGlobals.device[deviceId].netflowGlobals->tempNFF[i]=0;
       memset(&myGlobals.device[deviceId].netflowGlobals->tempNFFname[i], 0, LEN_MEDIUM_WORK_BUFFER);
 
-      if(snprintf(myGlobals.device[deviceId].netflowGlobals->tempNFFname[i], LEN_MEDIUM_WORK_BUFFER, 
+      safe_snprintf(myGlobals.device[deviceId].netflowGlobals->tempNFFname[i], LEN_MEDIUM_WORK_BUFFER, 
 		  "/tmp/ntop-nf-%d-%09u-%d", deviceId, 
-		  myGlobals.device[deviceId].netflowGlobals->tempNFFpid, i) < 0)
-        BufferTooShort();
+		  myGlobals.device[deviceId].netflowGlobals->tempNFFpid, i);
       traceEvent(CONST_TRACE_NOISY, "NETFLOW: FILEDESCRIPTORBUG: Creating %d, '%s'", i, 
 		 myGlobals.device[deviceId].netflowGlobals->tempNFFname[i]);
       errno = 0;
@@ -1512,15 +1509,13 @@ static void printNetFlowDeviceConfiguration(void) {
 
     dev = strtok_r(value, ",", &strtokState);
     while(dev != NULL) {
-      if(snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s.%s\n",
-		  dev, i == 0 ? "CHECKED" : "", NETFLOW_DEVICE_NAME, dev) < 0)
-	BufferTooShort();
+      safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=radio NAME=device VALUE=%s %s>%s.%s\n",
+		  dev, i == 0 ? "CHECKED" : "", NETFLOW_DEVICE_NAME, dev);
       sendString(buf);
 
       if(pluginActive) {
-	if(snprintf(buf, sizeof(buf), "[ <A HREF=/plugins/%s?device=-%s>Delete</A> ]",
-		    netflowPluginInfo->pluginURLname, dev) < 0)
-	  BufferTooShort();
+	safe_snprintf(buf, sizeof(buf), "[ <A HREF=/plugins/%s?device=-%s>Delete</A> ]",
+		    netflowPluginInfo->pluginURLname, dev);
 	sendString(buf);
       }
 
@@ -1561,9 +1556,9 @@ static void printNetFlowConfiguration(int deviceId) {
 
   sendString("<tr><th colspan=2 "DARK_BG">NetFlow Device</th><td align=right colspan=2>");
 
-  if(snprintf(buf, sizeof(buf), "%s.%d [ <A HREF=\"/plugins/%s\"/>List</A> ]",
+  safe_snprintf(buf, sizeof(buf), "%s.%d [ <A HREF=\"/plugins/%s\"/>List</A> ]",
 	      NETFLOW_DEVICE_NAME, myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId,
-	      netflowPluginInfo->pluginName) < 0) BufferTooShort();
+	      netflowPluginInfo->pluginName);
   sendString(buf);
   sendString("</td></tr>\n");
 
@@ -1578,14 +1573,12 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n<p>");
 
-  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId) < 0)
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"port\" size=\"5\" value=\"");
-  if(snprintf(buf, sizeof(buf), "%d", myGlobals.device[deviceId].netflowGlobals->netFlowInPort) < 0)
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "%d", myGlobals.device[deviceId].netflowGlobals->netFlowInPort);
   sendString(buf);
 
   sendString("\"> [ Use a port value of 0 to disable collection ] "
@@ -1617,16 +1610,14 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n");
 
-  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId) < 0)
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString(" <input name=\"ifNetMask\" size=\"32\" value=\"");
-  if(snprintf(buf, sizeof(buf), "%s/%s",
+  safe_snprintf(buf, sizeof(buf), "%s/%s",
 	      _intoa(myGlobals.device[deviceId].netflowGlobals->netFlowIfAddress, buf1, sizeof(buf1)),
-	      _intoa(myGlobals.device[deviceId].netflowGlobals->netFlowIfMask, buf2, sizeof(buf2))) < 0)
-    BufferTooShort();
+	      _intoa(myGlobals.device[deviceId].netflowGlobals->netFlowIfMask, buf2, sizeof(buf2)));
   sendString(buf);
   sendString("\"> ");
   sendString("<input type=\"submit\" value=\"Set Interface Address\"></p>\n</form>\n");
@@ -1651,46 +1642,40 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n");
 
-  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId) < 0)
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<p><SELECT NAME=netFlowAggregation>");
 
-  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+  safe_snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
               noAggregation,
               (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == noAggregation) ? " SELECTED" : "",
-              "None (no aggregation)") < 0)
-    BufferTooShort();
+              "None (no aggregation)");
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+  safe_snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
               portAggregation,
               (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == portAggregation) ? " SELECTED" : "",
-              "TCP/UDP Port") < 0)
-    BufferTooShort();
+              "TCP/UDP Port");
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+  safe_snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
               hostAggregation,
               (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == hostAggregation) ? " SELECTED" : "",
-              "Host") < 0)
-    BufferTooShort();
+              "Host");
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+  safe_snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
               protocolAggregation,
               (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == protocolAggregation) ? " SELECTED" : "",
-              "Protocol (TCP, UDP, ICMP)") < 0)
-    BufferTooShort();
+              "Protocol (TCP, UDP, ICMP)");
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
+  safe_snprintf(buf, sizeof(buf), "<option value=\"%d\"%s>%s</option>\n",
               asAggregation,
               (myGlobals.device[deviceId].netflowGlobals->netFlowAggregation == asAggregation) ? " SELECTED" : "",
-              "AS") < 0)
-    BufferTooShort();
+              "AS");
   sendString(buf);
 
   sendString("</select>");
@@ -1729,15 +1714,13 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n");
 
-  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId) < 0)
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"whiteList\" size=\"60\" value=\"");
-  if(snprintf(buf, sizeof(buf), "%s",
-              myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList == NULL ? " " : myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList) < 0)
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "%s",
+              myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList == NULL ? " " : myGlobals.device[deviceId].netflowGlobals->netFlowWhiteList);
   sendString(buf);
   sendString("\"> <input type=\"submit\" value=\"Set White List\"></p>\n</form>\n"
              "<p>This is a list of one or more TCP/IP host(s)/network(s) which we will "
@@ -1749,15 +1732,13 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>");
 
-  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId) < 0)
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   sendString("<input name=\"blackList\" size=\"60\" value=\"");
-  if(snprintf(buf, sizeof(buf), "%s",
-              myGlobals.device[deviceId].netflowGlobals->netFlowBlackList == NULL ? " " : myGlobals.device[deviceId].netflowGlobals->netFlowBlackList) < 0)
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "%s",
+              myGlobals.device[deviceId].netflowGlobals->netFlowBlackList == NULL ? " " : myGlobals.device[deviceId].netflowGlobals->netFlowBlackList);
   sendString(buf);
   sendString("\"> <input type=\"submit\" value=\"Set Black List\"></p>\n</form>\n"
              "<p>This is a list of one or more TCP/IP host(s)/network(s) which we will "
@@ -1796,9 +1777,8 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n<p>");
 
-  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId) < 0)
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   if(myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP) {
@@ -1832,9 +1812,8 @@ static void printNetFlowConfiguration(int deviceId) {
   sendString(netflowPluginInfo->pluginURLname);
   sendString("\" method=GET>\n<p>");
 
-  if(snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
-	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId) < 0)
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "<INPUT TYPE=hidden NAME=device VALUE=%d>",
+	      myGlobals.device[deviceId].netflowGlobals->netFlowDeviceId);
   sendString(buf);
 
   if(myGlobals.device[deviceId].netflowGlobals->netFlowDebug) {
@@ -1882,49 +1861,44 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
   for(i=0; i<MAX_NUM_PROBES; i++) {
     if(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr.s_addr == 0) break;
 
-    if(snprintf(buf, sizeof(buf), "%s [%s pkts]<br>\n",
+    safe_snprintf(buf, sizeof(buf), "%s [%s pkts]<br>\n",
                 _intoa(myGlobals.device[deviceId].netflowGlobals->probeList[i].probeAddr, buf, sizeof(buf)),
-                formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts, formatBuf, sizeof(formatBuf))) < 0)
-      BufferTooShort();
+                formatPkts(myGlobals.device[deviceId].netflowGlobals->probeList[i].pkts, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
   sendString("&nbsp;</td>\n</tr>\n");
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets with Bad Version</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Packets Processed</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
               formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd -
-                         myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+                         myGlobals.device[deviceId].netflowGlobals->numBadNetFlowsVersionsRcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Valid Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsRcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   if(myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd > 0) {
@@ -1936,82 +1910,74 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       myGlobals.device[deviceId].netflowGlobals->numBadFlowReality +
       myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd;
 
-    if(snprintf(buf, sizeof(buf),
+    safe_snprintf(buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Average Number of Flows per Packet</th>\n"
                 "<td " TD_BG " align=\"right\">%.1f</td>\n"
                 "</tr>\n",
-		(float)totFlows/(float)myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd) < 0)
-      BufferTooShort();
+		(float)totFlows/(float)myGlobals.device[deviceId].netflowGlobals->numNetFlowsPktsRcvd);
     sendString(buf);
   }
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of V1 Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV1Rcvd, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV1Rcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of V5 Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV5Rcvd, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV5Rcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of V7 Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV7Rcvd, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV7Rcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of V9 Flows Received</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9Rcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   if(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9TemplRcvd) {
-    if(snprintf(buf, sizeof(buf),
+    safe_snprintf(buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Total V9 Templates Received</th>\n"
                 "<td " TD_BG " align=\"right\">%s</td>\n"
                 "</tr>\n",
-                formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9TemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
-      BufferTooShort();
+                formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9TemplRcvd, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
 
   if(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9BadTemplRcvd) {
-    if(snprintf(buf, sizeof(buf),
+    safe_snprintf(buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Bad V9 Templates Received</th>\n"
                 "<td " TD_BG " align=\"right\">%s</td>\n"
                 "</tr>\n",
-                formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9BadTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
-      BufferTooShort();
+                formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9BadTemplRcvd, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
 
   if(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd) {
-    if(snprintf(buf, sizeof(buf),
+    safe_snprintf(buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Number of V9 Flows with Unknown Templates Received</th>\n"
                 "<td " TD_BG " align=\"right\">%s</td>\n"
                 "</tr>\n",
-                formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
-      BufferTooShort();
+                formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
 
@@ -2020,49 +1986,44 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
              "<th colspan=\"2\" "DARK_BG">Discarded Flows</th>\n"
              "</tr>\n");
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Zero Packet Count</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowPkts, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowPkts, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Zero Byte Count</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowBytes, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowBytes, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Bad Data</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowReality, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numBadFlowReality, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Number of Flows with Unknown Template</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsV9UnknTemplRcvd, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Total Number of Flows Processed</th>\n"
               "<td " TD_BG " align=\"right\">%s</td>\n"
               "</tr>\n",
-              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsProcessed, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatPkts(myGlobals.device[deviceId].netflowGlobals->numNetFlowsProcessed, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   if((myGlobals.device[deviceId].netflowGlobals->numSrcNetFlowsEntryFailedWhiteList +
@@ -2079,7 +2040,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                "<th " DARK_BG">Source / Destination</th>\n"
                "</tr>\n");
 
-    if(snprintf(buf, sizeof(buf),
+    safe_snprintf(buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - Black list</th>\n"
                 "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
@@ -2087,11 +2048,10 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                 formatPkts(myGlobals.device[deviceId].netflowGlobals->numSrcNetFlowsEntryFailedBlackList,
                            formatBuf, sizeof(formatBuf)),
                 formatPkts(myGlobals.device[deviceId].netflowGlobals->numDstNetFlowsEntryFailedBlackList,
-                           formatBuf2, sizeof(formatBuf2))) < 0)
-      BufferTooShort();
+                           formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
 
-    if(snprintf(buf, sizeof(buf),
+    safe_snprintf(buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Rejected - White list</th>\n"
                 "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
@@ -2099,11 +2059,10 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                 formatPkts(myGlobals.device[deviceId].netflowGlobals->numSrcNetFlowsEntryFailedWhiteList,
                            formatBuf, sizeof(formatBuf)),
                 formatPkts(myGlobals.device[deviceId].netflowGlobals->numDstNetFlowsEntryFailedWhiteList,
-                           formatBuf2, sizeof(formatBuf2))) < 0)
-      BufferTooShort();
+                           formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
 
-    if(snprintf(buf, sizeof(buf),
+    safe_snprintf(buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Accepted</th>\n"
                 "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
@@ -2111,11 +2070,10 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                 formatPkts(myGlobals.device[deviceId].netflowGlobals->numSrcNetFlowsEntryAccepted,
                            formatBuf, sizeof(formatBuf)),
                 formatPkts(myGlobals.device[deviceId].netflowGlobals->numDstNetFlowsEntryAccepted,
-                           formatBuf2, sizeof(formatBuf2))) < 0)
-      BufferTooShort();
+                           formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
 
-    if(snprintf(buf, sizeof(buf),
+    safe_snprintf(buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
 		"<th " TH_BG " align=\"left\" "DARK_BG ">Total</th>\n"
                 "<td " TD_BG ">%s&nbsp;/&nbsp;%s</td>\n"
@@ -2127,8 +2085,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                 formatPkts(myGlobals.device[deviceId].netflowGlobals->numDstNetFlowsEntryFailedBlackList +
                            myGlobals.device[deviceId].netflowGlobals->numDstNetFlowsEntryFailedWhiteList +
                            myGlobals.device[deviceId].netflowGlobals->numDstNetFlowsEntryAccepted,
-                           formatBuf2, sizeof(formatBuf2))) < 0)
-      BufferTooShort();
+                           formatBuf2, sizeof(formatBuf2)));
     sendString(buf);
   }
 
@@ -2149,7 +2106,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                "Hostmask<br>\n");
 
     for(i=0; i<numWhiteNets; i++) {
-      if(snprintf(buf, sizeof(buf),
+      safe_snprintf(buf, sizeof(buf),
                   "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
                   "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
                   i,
@@ -2168,8 +2125,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                   ((whiteNetworks[i][2] >> 16) & 0xff),
                   ((whiteNetworks[i][2] >>  8) & 0xff),
                   ((whiteNetworks[i][2]      ) & 0xff)
-                  ) < 0)
-        BufferTooShort();
+                  );
       sendString(buf);
       if(i<numWhiteNets) sendString("<br>\n");
     }
@@ -2189,7 +2145,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                "Hostmask<br>\n");
 
     for(i=0; i<numBlackNets; i++) {
-      if(snprintf(buf, sizeof(buf),
+      safe_snprintf(buf, sizeof(buf),
                   "<br>\n%3d.&nbsp;%08x(%3d.%3d.%3d.%3d)&nbsp;"
                   "%08x(%3d.%3d.%3d.%3d)&nbsp;%08x(%3d.%3d.%3d.%3d)",
                   i,
@@ -2208,8 +2164,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                   ((blackNetworks[i][2] >> 16) & 0xff),
                   ((blackNetworks[i][2] >>  8) & 0xff),
                   ((blackNetworks[i][2]      ) & 0xff)
-                  ) < 0)
-        BufferTooShort();
+                  );
       sendString(buf);
       if(i<numBlackNets) sendString("<br>\n");
     }
@@ -2231,7 +2186,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
              "</table></th>\n"
              "</tr>\n");
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Port(s) zero (not tcp/ip)</th>\n"
               "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2240,11 +2195,10 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               "</table></td>\n"
               "</tr>\n",
               myGlobals.device[deviceId].netflowGlobals->flowIgnoredZeroPort,
-              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredZeroPortBytes, 1, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredZeroPortBytes, 1, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">netFlow port</th>\n"
               "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2253,11 +2207,10 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               "</table></td>\n"
               "</tr>\n",
               myGlobals.device[deviceId].netflowGlobals->flowIgnoredNetFlow,
-              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredNetFlowBytes, 1, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredNetFlowBytes, 1, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Unrecognized port &lt;= 1023</th>\n"
               "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2266,11 +2219,10 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               "</table></td>\n"
               "</tr>\n",
               myGlobals.device[deviceId].netflowGlobals->flowIgnoredLowPort,
-              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredLowPortBytes, 1, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredLowPortBytes, 1, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Unrecognized port &gt; 1023</th>\n"
               "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2279,8 +2231,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               "</table></td>\n"
               "</tr>\n",
               myGlobals.device[deviceId].netflowGlobals->flowIgnoredHighPort,
-              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredHighPortBytes, 1, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowIgnoredHighPortBytes, 1, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   sendString("<tr><td colspan=\"4\">&nbsp;</td></tr>\n"
@@ -2295,7 +2246,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
              "</table></th>\n"
              "</tr>\n");
 
-  if(snprintf(buf, sizeof(buf),
+  safe_snprintf(buf, sizeof(buf),
               "<tr " TR_ON ">\n"
               "<th " TH_BG " align=\"left\" "DARK_BG ">Processed</th>\n"
               "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2304,13 +2255,12 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
               "</table></td>\n"
               "</tr>\n",
               myGlobals.device[deviceId].netflowGlobals->flowProcessed,
-              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowProcessedBytes, 1, formatBuf, sizeof(formatBuf))) < 0)
-    BufferTooShort();
+              formatBytes(myGlobals.device[deviceId].netflowGlobals->flowProcessedBytes, 1, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
 
   if((myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpData>0) || (myGlobals.device[deviceId].netflowGlobals->netFlowAssumeFTP)) {
-    if(snprintf(buf, sizeof(buf),
+    safe_snprintf(buf, sizeof(buf),
                 "<tr " TR_ON ">\n"
                 "<th " TH_BG " align=\"left\" "DARK_BG ">Assumed ftpdat</th>\n"
                 "<td><table width=\"100%%\" border=\"0\" "TABLE_DEFAULTS">\n"
@@ -2319,8 +2269,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
                 "</table></td>\n"
                 "</tr>\n",
                 myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpData,
-                formatBytes(myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpDataBytes, 1, formatBuf, sizeof(formatBuf))) < 0)
-      BufferTooShort();
+                formatBytes(myGlobals.device[deviceId].netflowGlobals->flowAssumedFtpDataBytes, 1, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
 
@@ -2340,26 +2289,21 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
       if ((myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][0] != 0) &&
 	  (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] != 0) ) {
 	if(myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1) {
-	  if(snprintf(buf1, sizeof(buf1), "(%d) ", myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]) < 0)
-	    BufferTooShort();
+	  safe_snprintf(buf1, sizeof(buf1), "(%d) ", myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4]);
 	} else {
-	  if(snprintf(buf1, sizeof(buf1), "&nbsp;") < 0)
-	    BufferTooShort();
+	  safe_snprintf(buf1, sizeof(buf1), "&nbsp;");
 	}
 	if (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] > 1536*1024*1024 /* ~1.5GB */) {
-	  if(snprintf(buf2, sizeof(buf2), "%.1fGB",
-		      (float)myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0)) < 0)
-	    BufferTooShort();
+	  safe_snprintf(buf2, sizeof(buf2), "%.1fGB",
+		      (float)myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0*1024.0));
 	} else if (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][4] > 1536*1024 /* ~1.5MB */) {
-	  if(snprintf(buf2, sizeof(buf2), "%.1fMB",
-		      (float)myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0)) < 0)
-	    BufferTooShort();
+	  safe_snprintf(buf2, sizeof(buf2), "%.1fMB",
+		      (float)myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5] / (1024.0*1024.0));
 	} else {
-	  if(snprintf(buf2, sizeof(buf2), "%u",
-		      myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]) < 0)
-	    BufferTooShort();
+	  safe_snprintf(buf2, sizeof(buf2), "%u",
+		      myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][5]);
 	}
-	if(snprintf(buf, sizeof(buf),
+	safe_snprintf(buf, sizeof(buf),
 		    "<tr><td align=\"right\">%d.%d.%d.%d:%d</td>"
 		    "<td align=\"left\">-> %d.%d.%d.%d:%d</td>"
 		    "<td align=\"right\">%s</td>"
@@ -2374,8 +2318,7 @@ static void printNetFlowStatisticsRcvd(int deviceId) {
 		    (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2] >>  8) & 0xff,
 		    (myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][2]      ) & 0xff,
 		    myGlobals.device[deviceId].netflowGlobals->flowIgnored[i%MAX_NUM_IGNOREDFLOWS][3],
-		    buf2, buf1) < 0)
-	  BufferTooShort();
+		    buf2, buf1);
 	sendString(buf);
       }
     }
@@ -2392,7 +2335,7 @@ static int createNetFlowDevice(int netFlowDeviceId) {
 
   traceEvent(CONST_TRACE_INFO, "NETFLOW: createNetFlowDevice(%d)", netFlowDeviceId);
 
-  if(snprintf(buf, sizeof(buf), "%s.%d", NETFLOW_DEVICE_NAME, netFlowDeviceId) < 0) BufferTooShort();
+  safe_snprintf(buf, sizeof(buf), "%s.%d", NETFLOW_DEVICE_NAME, netFlowDeviceId);
   deviceId = createDummyInterface(buf);
 
   if(deviceId != -1) {
@@ -2679,8 +2622,7 @@ static void handleNetflowHTTPrequest(char* _url) {
 
       if(deviceId == 0) deviceId = 2;
 
-      if(snprintf(buf, sizeof(buf), "%s,%d", value1, deviceId) < 0)
-	BufferTooShort();
+      safe_snprintf(buf, sizeof(buf), "%s,%d", value1, deviceId);
 
       traceEvent(CONST_TRACE_INFO, "NETFLOW: knownDevices=%s", buf);
       storePrefsValue(nfValue(deviceId, "knownDevices", 0), buf);

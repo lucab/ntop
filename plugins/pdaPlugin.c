@@ -165,12 +165,11 @@ void printPdaData(HostTraffic* tmpTable[MAX_PDA_HOST_TABLE], u_int numEntries) {
 	  linkName[i] = '_';
     }
       
-    if(snprintf(buf, sizeof(buf),
+    safe_snprintf(buf, sizeof(buf),
 		"<tr><td><a href=\"/%s.html\">%s</a></td>"
 		"<td>%s</td></tr>\n",
 		linkName, tmpName,      
-		formatBytes(el->bytesSent.value, 1, formatBuf, sizeof(formatBuf))) < 0) 
-      BufferTooShort();
+		formatBytes(el->bytesSent.value, 1, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
 
@@ -201,12 +200,11 @@ void printPdaData(HostTraffic* tmpTable[MAX_PDA_HOST_TABLE], u_int numEntries) {
 	if(linkName[i] == ':') 
 	  linkName[i] = '_';
     }   
-    if(snprintf(buf, sizeof(buf), 
+    safe_snprintf(buf, sizeof(buf), 
 		"<tr><td><a href=\"/%s.html\">%s</a></td>"
 		"<td>%s</td></tr>\n",
 		linkName, tmpName,  
-		formatBytes(el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf))) < 0) 
-      BufferTooShort();
+		formatBytes(el->bytesRcvd.value, 1, formatBuf, sizeof(formatBuf)));
     sendString(buf);
   }
 
@@ -230,10 +228,9 @@ void printPdaSummaryData(void) {
 
   /** **/
 
-  if(snprintf(buf, sizeof(buf),"<tr><td>Sampling Time</td>"
+  safe_snprintf(buf, sizeof(buf),"<tr><td>Sampling Time</td>"
 	      "<td>%s</td></tr>\n",
-	      formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf))) < 0) 
-    BufferTooShort();
+	      formatSeconds(myGlobals.actTime-myGlobals.initialSniffTime, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
   /** **/
@@ -249,32 +246,28 @@ void printPdaSummaryData(void) {
   if(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value <= 0) 
     myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value = 1;
     
-  if(snprintf(buf, sizeof(buf),"<tr><td>Total</td><td>%s</td></tr>\n",
-	      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf, sizeof(formatBuf))) < 0) 
-    BufferTooShort();
+  safe_snprintf(buf, sizeof(buf),"<tr><td>Total</td><td>%s</td></tr>\n",
+	      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value, formatBuf, sizeof(formatBuf)));
   sendString(buf);
 
-  if(snprintf(buf, sizeof(buf),"<tr><td>Unicast</td>"
+  safe_snprintf(buf, sizeof(buf),"<tr><td>Unicast</td>"
 	      "<td>%s [%.1f%%]</td></tr>\n", 
 	      formatPkts(unicastPkts, formatBuf, sizeof(formatBuf)),
-	      (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0) 
-    BufferTooShort();
+	      (float)(100*unicastPkts)/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
   sendString(buf);
-  if(snprintf(buf, sizeof(buf),"<tr><td>Broadcast</td>"
+  safe_snprintf(buf, sizeof(buf),"<tr><td>Broadcast</td>"
 	      "<td>%s [%.1f%%]</td></tr>\n", 
 	      formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value, formatBuf, sizeof(formatBuf)),
 	      (float)(100*myGlobals.device[myGlobals.actualReportDeviceId].broadcastPkts.value)
-	      /(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0) 
-    BufferTooShort();
+	      /(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
   sendString(buf);
 
   if(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value > 0) {
-    if(snprintf(buf, sizeof(buf),"<tr><td>Multicast</td>"
+    safe_snprintf(buf, sizeof(buf),"<tr><td>Multicast</td>"
 		"<td>%s [%.1f%%]</td></tr>\n", 
 		formatPkts(myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value, formatBuf, sizeof(formatBuf)),
 		(float)(100*myGlobals.device[myGlobals.actualReportDeviceId].multicastPkts.value)
-		/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value) < 0) 
-      BufferTooShort();
+		/(float)myGlobals.device[myGlobals.actualReportDeviceId].ethernetPkts.value);
     sendString(buf);
   }
 
