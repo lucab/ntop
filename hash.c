@@ -844,6 +844,10 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
 /* ************************************ */
 
 int retrieveHost(HostSerial theSerial, HostTraffic *el) {
+  HostTraffic *theEntry;
+  int found = 0;
+  u_int idx;
+
   if((theSerial != NO_PEER)
      && (theSerial != myGlobals.broadcastEntryIdx /* Safety check: broadcast */)) {
     char theBytes[8];
@@ -892,25 +896,56 @@ int retrieveHost(HostSerial theSerial, HostTraffic *el) {
       char buf[32];
 
       memcpy(&el->hostIpAddress.s_addr, &theBytes[4], 4);
-      strncpy(el->hostNumIpAddress,
-	      _intoa(el->hostIpAddress, buf, sizeof(buf)),
-	      sizeof(el->hostNumIpAddress));
-      fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
-      if(strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
-	char sniffedName[MAXDNAME];
+
+      for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++) {
+	if((idx != myGlobals.otherHostEntryIdx) &&
+	   ((theEntry = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)) {
+	  if(el->hostIpAddress.s_addr == theEntry->hostIpAddress.s_addr) {
+	    found = 1;
+	    break;
+	  }
+	}
+      }
+      
+      if(!found) {
+	strncpy(el->hostNumIpAddress,
+		_intoa(el->hostIpAddress, buf, sizeof(buf)),
+		sizeof(el->hostNumIpAddress));
+	fetchAddressFromCache(el->hostIpAddress, el->hostSymIpAddress);
+	if(strcmp(el->hostSymIpAddress, el->hostNumIpAddress) == 0) {
+	  char sniffedName[MAXDNAME];
 	
-	if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))
-	  strcpy(el->hostSymIpAddress, sniffedName);
+	  if(getSniffedDNSName(el->hostNumIpAddress, sniffedName, sizeof(sniffedName)))
+	    strcpy(el->hostSymIpAddress, sniffedName);
+	}
+      } else {
+	memcpy(el, theEntry, sizeof(HostTraffic));
       }
     } else {
       /* MAC */
       char *ethAddr;
-      
-      memcpy(el->ethAddress, &theBytes[2], 6);
-      ethAddr = etheraddr_string(el->ethAddress);
-      strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
-      el->hostIpAddress.s_addr = 0x1234; /* dummy */
+
+      memcpy(el->ethAddress, &theBytes[2], ETHERNET_ADDRESS_LEN);
+
+      for(idx=1; idx<myGlobals.device[myGlobals.actualReportDeviceId].actualHashSize; idx++) {
+	if((idx != myGlobals.otherHostEntryIdx) &&
+	   ((theEntry = myGlobals.device[myGlobals.actualReportDeviceId].hash_hostTraffic[idx]) != NULL)) {
+	  if(memcmp(el->ethAddress, theEntry->ethAddress, ETHERNET_ADDRESS_LEN) == 0) {
+	    found = 1;
+	    break;
+	  }
+	}
+      }
+
+      if(!found) {
+	ethAddr = etheraddr_string(el->ethAddress);
+	strncpy(el->ethAddressString, ethAddr, sizeof(el->ethAddressString));
+	el->hostIpAddress.s_addr = 0x1234; /* dummy */
+      } else {
+	memcpy(el, theEntry, sizeof(HostTraffic));
+      }
     }
+
     return(0);
   } else
     return(-1);
