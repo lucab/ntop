@@ -471,7 +471,7 @@ void dumpNtopTrafficMatrix(FILE *fDescr, char* options, int actualDeviceId) {
 	  if(myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrix[idx]->bytesSent > 0) {
 	    if(numEntries == 0) initWriteArray(fDescr, lang);
 
-	    if(snprintf(buf, sizeof(buf), "%s->%s", 
+	    if(snprintf(buf, sizeof(buf), "%s_%s", 
 			myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[i]->hostNumIpAddress,
 			myGlobals.device[myGlobals.actualReportDeviceId].ipTrafficMatrixHosts[j]->hostNumIpAddress) < 0)
 	      BufferTooShort();
