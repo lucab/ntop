@@ -229,10 +229,12 @@ void handleBootp(HostTraffic *srcHost,
 		    for(i=0; i<strlen(tmpHostName); i++)
 		      if(tmpHostName[i] == '.')
 			break;
-
+		    
 		    tmpHostName[i] = '\0';
 
-		    strcpy(tmpDomainName, &bootProto.bp_vend[idx]);
+		    /* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */
+		    strncpy(tmpDomainName, &bootProto.bp_vend[idx], len);
+		    tmpDomainName[len] = '\0';
 
 		    if(strcmp(tmpHostName, tmpDomainName) != 0) {
 		      if(snprintf(tmpName, sizeof(tmpName), "%s.%s",
@@ -247,8 +249,10 @@ void handleBootp(HostTraffic *srcHost,
 			  len--;
 			}
 
-			strncpy(realDstHost->hostSymIpAddress, tmpName,
-				len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
+			/* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */			
+			if(len >= MAX_HOST_SYM_NAME_LEN) len = MAX_HOST_SYM_NAME_LEN-1;
+			strncpy(realDstHost->hostSymIpAddress, tmpName, len);
+			realDstHost->hostSymIpAddress[len] = '\0';
 				/*
 				  realDstHost->fullDomainName = realDstHost->dotDomainName =
 				  &realDstHost->hostSymIpAddress[hostLen];
@@ -486,8 +490,10 @@ void handleBootp(HostTraffic *srcHost,
 		    len--;
 		  }
 
-		  strncpy(realClientHost->hostSymIpAddress, &bootProto.bp_vend[idx],
-			  len > MAX_HOST_SYM_NAME_LEN ? MAX_HOST_SYM_NAME_LEN: len);
+		  /* Fix courtesy of Christoph Zens <chris@topfen.homeip.net> */
+		  if(len >= MAX_HOST_SYM_NAME_LEN) len = MAX_HOST_SYM_NAME_LEN-1;
+		  strncpy(realClientHost->hostSymIpAddress, &bootProto.bp_vend[idx], len);
+		  realClientHost->hostSymIpAddress[len] = '\0';
 		  idx += len;
 		  break;
 		case 53: /* DHCP Message Type */

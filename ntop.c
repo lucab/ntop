@@ -717,7 +717,7 @@ void packetCaptureLoop(time_t *lastTime, int refreshRate) {
       if(myGlobals.nextSessionTimeoutScan < myGlobals.actTime) {
 	/* It's time to check for timeout sessions */
 	scanTimedoutTCPSessions(0);
-	myGlobals.nextSessionTimeoutScan = myGlobals.actTime+SESSION_SCAN_DELAY;
+	myGlobals.nextSessionTimeoutScan = myGlobals.actTime+PURGE_HOSTS_DELAY;
       }
 
       updateThpt(); /* Update Throughput */
