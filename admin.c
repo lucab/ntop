@@ -228,7 +228,7 @@ void doAddUser(int len) {
     } else if(badChar) {
       err = "ERROR: the specified user name contains invalid characters.";
     } else {
-      char tmpBuf[64];
+      char tmpBuf[64], cpw[14];
       datum data_data, key_data;
 
       if(snprintf(tmpBuf, sizeof(tmpBuf), "1%s", user) < 0) 
@@ -728,6 +728,7 @@ static int readHTTPpostData(int len, char *buf, int buflen) {
 
 static void addKeyIfMissing(char* key, char* value, int encryptValue) {
   datum key_data, return_data, data_data;
+  char cpw[14];
 
   /* Check existence of user 'admin' */
   key_data.dptr = key;
@@ -736,21 +737,21 @@ static void addKeyIfMissing(char* key, char* value, int encryptValue) {
 
   if(return_data.dptr == NULL) {
     /* If not existing, the add user 'admin', pw 'admin' */
-	  if(encryptValue) {
+    if(encryptValue) {
 #ifdef WIN32
-	  data_data.dptr = value;
+      data_data.dptr = value;
 #else
       strncpy(cpw, (char*)crypt(value, (const char*)CRYPT_SALT), sizeof(cpw));
       cpw[sizeof(cpw)-1] = '\0';
       data_data.dptr = cpw;
 #endif
-	  } else
+    } else
       data_data.dptr = value;    
-
+    
 #ifdef DEBUG
     traceEvent(TRACE_INFO, "'%s' <-> '%s'\n", key, data_data.dptr);
 #endif
-
+    
     data_data.dsize = strlen(data_data.dptr)+1;
     gdbm_store(pwFile, key_data, data_data, GDBM_REPLACE);
   } else
