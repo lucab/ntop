@@ -59,7 +59,13 @@ DIST_COMMON += AUTHORS CONTENTS COPYING ChangeLog \
               SUPPORT_NTOP.txt THANKS \
               ntop.8 ntop.txt ntop.html \
               faq.html \
-              ntop-cert.pem
+              ntop-cert.pem \
+              p2c.opt.table \
+              etter.passive.os.fp
+
+NTOPDATA = ntop-cert.pem \
+           p2c.opt.table \
+           etter.passive.os.fp
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
            html/*.css html/*.dtd \
@@ -214,7 +220,9 @@ ntop-cert.pem:
 	/bin/rm -f privkey.pem cert.pem
 
 install-data-local:
-	@cp -p ntop-cert.pem $(DESTDIR)/etc/ntop-cert.pem
+	@for file in $(NTOPDATA); do \
+          cp -p $$file $(DESTDIR)/$(datadir)/ntop/$$file; \
+        done
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop;
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/html;

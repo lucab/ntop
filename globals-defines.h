@@ -2101,6 +2101,16 @@
  #define EMSGSIZE                           97
 #endif
 
+/*
+  Courtesy of http://ettercap.sourceforge.net/
+*/
+#define TCPOPT_EOL              0
+#define TCPOPT_NOP              1
+#define TCPOPT_MAXSEG           2
+#define TCPOPT_WSCALE           3
+#define TCPOPT_SACKOK           4
+#define TCPOPT_TIMESTAMP        8
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /* Derived constants and values                                                    */
 /*           these encapsulate complex definitions for simplicity                  */
@@ -2150,32 +2160,6 @@
  */
 #ifdef LINUX
  /* #define PARM_USE_HOST */
-#endif
-
-
-/*
-  Courtesy of http://ettercap.sourceforge.net/
-*/
-#define TCPOPT_EOL              0
-#define TCPOPT_NOP              1
-#define TCPOPT_MAXSEG           2
-#define TCPOPT_WSCALE           3
-#define TCPOPT_SACKOK           4
-#define TCPOPT_TIMESTAMP        8
-#ifndef CFG_LITTLE_ENDIAN
-#define ptohs(x) ( (u_int16_t)                       \
-                      ((u_int16_t)*((u_int8 *)x+1)<<8|  \
-                      (u_int16_t)*((u_int8 *)x+0)<<0)   \
-                    )
-
-#define ptohl(x) ( (u_int32)*((u_int8 *)x+3)<<24|  \
-                      (u_int32)*((u_int8 *)x+2)<<16|  \
-                      (u_int32)*((u_int8 *)x+1)<<8|   \
-                      (u_int32)*((u_int8 *)x+0)<<0    \
-                    )
-#else
-#define ptohs(x) *(u_int16_t *)(x)
-#define ptohl(x) *(u_int32 *)(x)
 #endif
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

@@ -158,7 +158,14 @@ DIST_COMMON = AUTHORS CONTENTS COPYING ChangeLog \
               SUPPORT_NTOP.txt THANKS \
               ntop.8 ntop.txt ntop.html \
               faq.html \
-              ntop-cert.pem
+              ntop-cert.pem \
+              p2c.opt.table \
+              etter.passive.os.fp
+
+
+NTOPDATA = ntop-cert.pem \
+           p2c.opt.table \
+           etter.passive.os.fp
 
 
 NTOPHTML = html html/*.js html/*.html  html/*.gif html/*.jpg html/*.ico html/*.png \
@@ -320,8 +327,9 @@ DIST_COMMON = README $(noinst_HEADERS) AUTHORS CONTENTS COPYING \
 	ChangeLog INSTALL MANIFESTO Makefile.am Makefile.in NEWS \
 	PORTING SUPPORT_NTOP.txt THANKS \ acinclude.m4 aclocal.m4 \
 	config.guess config.h.in config.sub configure configure.in \
-	depcomp faq.html install-sh ltconfig ltmain.sh missing \
-	mkinstalldirs ntop-cert.pem\ ntop.8 ntop.html ntop.txt
+	depcomp etter.passive.os.fp\ faq.html install-sh ltconfig \
+	ltmain.sh missing mkinstalldirs ntop-cert.pem ntop.8 ntop.html \
+	ntop.txt p2c.opt.table
 DIST_SUBDIRS = $(SUBDIRS)
 SOURCES = $(libntop_la_SOURCES) $(libntopreport_la_SOURCES) $(ntop_SOURCES) $(ntops_SOURCES)
 
@@ -934,7 +942,9 @@ ntop-cert.pem:
 	/bin/rm -f privkey.pem cert.pem
 
 install-data-local:
-	@cp -p ntop-cert.pem $(DESTDIR)/etc/ntop-cert.pem
+	@for file in $(NTOPDATA); do \
+          cp -p $$file $(DESTDIR)/$(datadir)/ntop/$$file; \
+        done
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(libdir)/plugins;
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop;
 	@$(top_srcdir)/mkinstalldirs $(DESTDIR)/$(datadir)/ntop/html;

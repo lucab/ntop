@@ -425,13 +425,14 @@ extern u_int32_t xaton(char *s);
 extern void addNodeInternal(u_int32_t ip, int prefix, char *country);
 extern char *ip2CountryCode(u_int32_t ip);
 
+#ifdef MAKE_WITH_I18N
+char *i18n_xvert_locale2common(const char *input);
+char *i18n_xvert_acceptlanguage2common(const char *input);
+#endif /* MAKE_WITH_I18N */ 
 
-#ifdef HAVE_GETOPT_H
-extern int getopt_long (int ___argc, char *const *___argv,
-                        const char *__shortopts,
-                        const struct option *__longopts, int *__longind);
-extern int getopt_long_only ();
-#endif /* HAVE_GETOPT_H */
+#if defined(AIX) || defined(WIN32)
+extern int snprintf(char *str, size_t n, const char *fmt, ...);
+#endif
 
 #ifdef PARM_SHOW_NTOP_HEARTBEAT
     #define HEARTBEAT(a, b, ...)     _HEARTBEAT(a, __FILE__, __LINE__, b, __VA_ARGS__)
@@ -440,24 +441,43 @@ extern int getopt_long_only ();
     #define HEARTBEAT
 #endif
 
-#if defined(AIX) || defined(WIN32)
-extern int snprintf(char *str, size_t n, const char *fmt, ...);
+/* pseudo- utility functions (i.e. #define only, but of utility nature) go here */
+
+/*
+  Courtesy of http://ettercap.sourceforge.net/
+*/
+#ifndef CFG_LITTLE_ENDIAN
+#define ptohs(x) ( (u_int16_t)                       \
+                      ((u_int16_t)*((u_int8_t *)x+1)<<8|  \
+                      (u_int16_t)*((u_int8_t *)x+0)<<0)   \
+                    )
+
+#define ptohl(x) ( (u_int32)*((u_int8_t *)x+3)<<24|  \
+                      (u_int32)*((u_int8_t *)x+2)<<16|  \
+                      (u_int32)*((u_int8_t *)x+1)<<8|   \
+                      (u_int32)*((u_int8_t *)x+0)<<0    \
+                    )
+#else
+#define ptohs(x) *(u_int16_t *)(x)
+#define ptohl(x) *(u_int32 *)(x)
 #endif
+
+/* Conditional utility functions - code in util.c, activated if it's not already in some library */
+
+#ifdef HAVE_GETOPT_H
+extern int getopt_long (int ___argc, char *const *___argv,
+                        const char *__shortopts,
+                        const struct option *__longopts, int *__longind);
+extern int getopt_long_only ();
+#endif /* HAVE_GETOPT_H */
+
 #ifndef HAVE_BUILDARGV
 extern char **buildargv(const char *argv);
 #endif
 #ifndef HAVE_FREEARGV
 extern void freeargv(char **argv);
 #endif
-#if defined(AIX) || defined(WIN32)
-extern int snprintf(char *str, size_t n, const char *fmt, ...);
-#endif
 
-
-#ifdef MAKE_WITH_I18N
-char *i18n_xvert_locale2common(const char *input);
-char *i18n_xvert_acceptlanguage2common(const char *input);
-#endif /* MAKE_WITH_I18N */ 
 
 /* vendor.c */
 extern char* getVendorInfo(u_char* ethAddress, short encodeString);
