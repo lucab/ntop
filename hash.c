@@ -800,7 +800,9 @@ u_int getHostInfo(struct in_addr *hostIpAddress,
       }
 
       if(hostIpAddress != NULL) {
-	if(myGlobals.dontTrustMACaddr) memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+	if(myGlobals.dontTrustMACaddr && (ether_addr != NULL))
+	  memcpy(el->lastEthAddress, ether_addr, ETHERNET_ADDRESS_LEN);
+
 	el->hostIpAddress.s_addr = hostIpAddress->s_addr;
 	strncpy(el->hostNumIpAddress,
 		_intoa(*hostIpAddress, buf, sizeof(buf)),

@@ -107,12 +107,13 @@ static void dissectFlow(NetFlow5Record *theRecord) {
     if(numFlows > V5FLOWS_PER_PAK) numFlows = V5FLOWS_PER_PAK;
 
 #ifdef DEBUG_FLOWS
-  traceEvent(TRACE_INFO, "dissectFlow(%d flows)", numFlows);
+    /* traceEvent(TRACE_INFO, "dissectFlow(%d flows)", numFlows); */
 #endif
 
     for(i=0; i<numFlows; i++) {
       int actualDeviceId, len;
       char buf[256], buf1[256], theFlags[256];
+      u_int16_t srcAS, dstAS;
       struct in_addr a, b;
       u_int srcHostIdx, dstHostIdx, numPkts;
       HostTraffic *srcHost=NULL, *dstHost=NULL;
@@ -182,7 +183,13 @@ static void dissectFlow(NetFlow5Record *theRecord) {
       srcHost->bytesSent.value   += len,     dstHost->bytesRcvd.value   += len;
       srcHost->ipBytesSent.value += len,     dstHost->ipBytesRcvd.value += len;
       
-      srcHost->hostAS = ntohs(theRecord->flowRecord[i].src_as),	dstHost->hostAS = ntohs(theRecord->flowRecord[i].dst_as);
+      srcAS = ntohs(theRecord->flowRecord[i].src_as), dstAS = ntohs(theRecord->flowRecord[i].dst_as);
+      if(srcAS != 0) srcHost->hostAS = srcAS;
+      if(dstAS != 0) dstHost->hostAS = dstAS;
+
+#ifdef DEBUG_FLOWS
+      traceEvent(TRACE_INFO, "%d/%d", srcHost->hostAS, dstHost->hostAS);
+#endif
 
       if((sport != 0) && (dport != 0)) {
 	if(dport < sport) {
@@ -615,7 +622,9 @@ static void handleNetFlowPacket(u_char *_deviceId,
 	    int   rawSampleLen = h->caplen-(sizeof(struct ether_header)+hlen+sizeof(struct udphdr));
 
 	    memcpy(&theRecord, rawSample, rawSampleLen > sizeof(theRecord) ? sizeof(theRecord) : rawSampleLen);	
+#ifdef DEBUG_FLOWS
 	    traceEvent(TRACE_INFO, "Rcvd from from %s", intoa(ip.ip_src));
+#endif
 	    dissectFlow(&theRecord);
 	  }
 	}

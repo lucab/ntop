@@ -2835,8 +2835,8 @@ void printHostDetailedInfo(HostTraffic *el, int actualDeviceId) {
 
   if(el->hostAS != 0) {
     if(snprintf(buf, sizeof(buf), "<TR %s><TH "TH_BG" ALIGN=LEFT>%s</TH><TD "TD_BG" ALIGN=RIGHT>"
-		"%d</TD></TR>\n",
-		getRowColor(), "Host Authonomous System", el->hostAS) < 0) BufferTooShort();
+		"<A HREF=\"http://ws.arin.net/cgi-bin/whois.pl?queryinput=AS%d\">%d</A></TD></TR>\n",
+		getRowColor(), "Autonomous System", el->hostAS, el->hostAS) < 0) BufferTooShort();
     sendString(buf);
   }
 
