@@ -63,6 +63,7 @@ int sumCounter(char *rrdPath, char *rrdFilePath,
 void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 		  char *startTime, char* endTime);
 void updateCounter(char *hostPath, char *key, Counter value);
+void updateGauge(char *hostPath, char *key, Counter value);
 void updateTrafficCounter(char *hostPath, char *key, TrafficCounter *counter);
 char x2c(char *what);
 void unescape_url(char *url);
@@ -369,7 +370,7 @@ void graphCounter(char *rrdPath, char *rrdName, char *rrdTitle,
 
 /* ******************************* */
 
-void updateCounter(char *hostPath, char *key, Counter value) {
+void updateRRD(char *hostPath, char *key, Counter value, int isCounter) {
   char path[512], *argv[16], cmd[64];
   struct stat statbuf;
   int argc = 0, rc, createdCounter = 0;
@@ -400,7 +401,14 @@ void updateCounter(char *hostPath, char *key, Counter value) {
     argv[argc++] = "--start";
     snprintf(startStr, sizeof(startStr), "%u", myGlobals.actTime-1 /* -1 avoids subsequent rrd_update call problems */);
     argv[argc++] = startStr;
-    snprintf(counterStr, sizeof(counterStr), "DS:counter:COUNTER:%d:0:%u", step, topValue);
+
+    if(isCounter) {
+      snprintf(counterStr, sizeof(counterStr), "DS:counter:COUNTER:%d:0:%u", step, topValue);
+    } else {
+      /* Unlimited */
+      snprintf(counterStr, sizeof(counterStr), "DS:counter:GAUGE:%d:0:u", step);
+    }
+
     argv[argc++] = counterStr;
     argv[argc++] = "RRA:AVERAGE:0.5:1:1200";
     argv[argc++] = "RRA:MIN:0.5:12:2400";
@@ -421,7 +429,6 @@ void updateCounter(char *hostPath, char *key, Counter value) {
 #endif
     createdCounter = 1;
   }
-
 
   argc = 0;
   argv[argc++] = "rrd_update";
@@ -482,6 +489,18 @@ void updateCounter(char *hostPath, char *key, Counter value) {
     traceEvent(TRACE_WARNING, "rrd_update(%s, %u, %u)=%d", path, value, rc);
 #endif
 
+}
+
+/* ******************************* */
+
+void updateCounter(char *hostPath, char *key, Counter value) {
+  updateRRD(hostPath, key, value, 1);
+}
+
+/* ******************************* */
+
+void updateGauge(char *hostPath, char *key, Counter value) {
+  updateRRD(hostPath, key, value, 0);
 }
 
 /* ******************************* */
@@ -898,8 +917,8 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	    updateTrafficCounter(rrdPath, "appletalkRcvd", &el->appletalkRcvd);
 	    updateTrafficCounter(rrdPath, "netbiosSent", &el->netbiosSent);
 	    updateTrafficCounter(rrdPath, "netbiosRcvd", &el->netbiosRcvd);
-	    updateTrafficCounter(rrdPath, "qnxSent", &el->qnxSent);
-	    updateTrafficCounter(rrdPath, "qnxRcvd", &el->qnxRcvd);
+	    updateTrafficCounter(rrdPath, "ipv6Sent", &el->ipv6Sent);
+	    updateTrafficCounter(rrdPath, "ipv6Rcvd", &el->ipv6Rcvd);
 	    updateTrafficCounter(rrdPath, "otherSent", &el->otherSent);
 	    updateTrafficCounter(rrdPath, "otherRcvd", &el->otherRcvd);
 	  }
@@ -955,10 +974,12 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	sprintf(rrdPath, "%s/rrd/interfaces/%s/", myGlobals.dbPath,  myGlobals.device[i].name);
 	mkdir_p(rrdPath);
 
-	updateCounter(rrdPath, "ethernetPkts", myGlobals.device[i].ethernetPkts.value);
+	updateCounter(rrdPath, "ethernetPkts",  myGlobals.device[i].ethernetPkts.value);
 	updateCounter(rrdPath, "broadcastPkts", myGlobals.device[i].broadcastPkts.value);
 	updateCounter(rrdPath, "multicastPkts", myGlobals.device[i].multicastPkts.value);
 	updateCounter(rrdPath, "ethernetBytes", myGlobals.device[i].ethernetBytes.value);
+	updateGauge(rrdPath,    "activeHosts",  myGlobals.device[i].hostsno);
+
 	updateCounter(rrdPath, "ipBytes", myGlobals.device[i].ipBytes.value);
 
 	if(dumpDetail >= DETAIL_MEDIUM) {
@@ -979,7 +1000,7 @@ static void* rrdMainLoop(void* notUsed _UNUSED_) {
 	  updateCounter(rrdPath, "egpBytes", myGlobals.device[i].egpBytes.value);
 	  updateCounter(rrdPath, "igmpBytes", myGlobals.device[i].igmpBytes.value);
 	  updateCounter(rrdPath, "osiBytes", myGlobals.device[i].osiBytes.value);
-	  updateCounter(rrdPath, "qnxBytes", myGlobals.device[i].qnxBytes.value);
+	  updateCounter(rrdPath, "ipv6Bytes", myGlobals.device[i].ipv6Bytes.value);
 	  updateCounter(rrdPath, "otherBytes", myGlobals.device[i].otherBytes.value);
 	  updateCounter(rrdPath, "upTo64Pkts", myGlobals.device[i].rcvdPktStats.upTo64.value);
 	  updateCounter(rrdPath, "upTo128Pkts", myGlobals.device[i].rcvdPktStats.upTo128.value);
