@@ -2785,7 +2785,11 @@ void resetSecurityHostTraffic(HostTraffic *el) {
   resetUsageCounter(&el->securityHostPkts->icmpHostNetUnreachRcvd);
   resetUsageCounter(&el->securityHostPkts->icmpProtocolUnreachRcvd);
   resetUsageCounter(&el->securityHostPkts->icmpAdminProhibitedRcvd);
-  resetUsageCounter(&el->securityHostPkts->malformedPktsRcvd);
+  resetUsageCounter(&el->securityHostPkts->malformedPktsRcvd); 
+
+  resetUsageCounter(&el->contactedSentPeers);
+  resetUsageCounter(&el->contactedRcvdPeers);
+  resetUsageCounter(&el->contactedRouters);
 }
 
 /* ********************************************* */
