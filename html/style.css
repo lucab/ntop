@@ -2,27 +2,29 @@
 
 body
 {font-family: Helvetica, Arial, sans-serif;
-font-size: 10pt}
+font-size: 12px}
 
 th
-{font-family: Helvetica, Arial, sans-serif;
-font-size: 10pt;
+{
+font-family: Helvetica, Arial, sans-serif;
+font-size: 12px;
 font-weight: bold;
 white-space: nowrap;
+background-color: #E7E9F2;
 }
 
-table { border: thin; spacing: 1; }
+table { border: thin; }
 
 span.leftmenuitem
 {
 font-family: Helvetica, Arial, sans-serif;
-font-size: 10pt;
+font-size: 12px;
 font-weight: bold;
 }
 
 td
 {font-family: Helvetica, Arial, sans-serif;
-font-size: 10pt;
+font-size: 12px;
 }
 
 address
@@ -35,7 +37,7 @@ font-size: 8pt}
 
 form
 {font-family: Helvetica, Arial, sans-serif;
-font-size: 10pt}
+font-size: 12px}
 
 h1
 {font-family: Helvetica, Verdana, Arial, sans-serif;
@@ -45,19 +47,19 @@ font-weight: bold}
 A:link
 {color: blue;
 font-family: Helvetica, Arial, sans-serif;
-font-size: 10pt;
+font-size: 12px;
 text-decoration: none}
 
 A:visited
 {color: blue;
 font-family: Helvetica, Arial, sans-serif;
-font-size: 10pt;
+font-size: 12px;
 text-decoration: none}
 
 A:hover
 {color: red;
 font-family: Helvetica, Arial, sans-serif;
-font-size: 10pt;
+font-size: 12px;
 text-decoration: underline}
 
 A:link.nav
