@@ -9,9 +9,9 @@
 <H2>SYNOPSIS</H2><PRE>
        <B>ntop</B>  [<B>-c</B>]  [<B>-E</B>]  [<B>-r</B>  <I>refresh</I> <I>time</I>] [<B>-R</B> <I>filter</I> <I>rules</I>] [<B>-f</B>
        <I>traffic</I> <I>dump</I> <I>file</I>] [<B>-n</B>] [<B>-N</B>] [<B>-M</B>] [<B>-q</B>] [<B>-p</B>] <I>TCP/UDP</I> <I>proto­</I>
-       <I>cols</I>  <I>to</I>  <I>monitor</I>]  [<B>-i</B> <I>interface</I>] [<B>-e</B> <I>num</I> <I>rows</I>] [<B>-w</B> <I>HTTP­</I>
-       port<I>]</I> [<B>-W</B> <I>HTTPS</I>port<I>]</I> [<B>-d</B>] [<B>-S</B>value<B>]</B> [<B>-P</B> <I>dbpath]</I> [<B>-m</B>  <I>local</I>
-       <I>subnet</I>]  [<B>-a</B>  <I>access</I>  <I>log</I>  <I>file</I>  <I>path</I>]  [<B>-b</B> <I>client:port</I> <I>DB</I>
+       <I>cols</I>  <I>to</I>  <I>monitor</I>]  [<B>-i</B>  <I>interface</I>] [<B>-e</B> <I>num</I> <I>rows</I>] [<B>-w</B> <I>HTTP</I>
+       <I>IP:port</I>] [<B>-W</B> <I>HTTPS</I> <I>IP:port</I>] [<B>-d</B>] [<B>-S</B>value<B>]</B> [<B>-P</B> <I>dbpath]</I> [<B>-m</B>
+       <I>local</I> <I>subnet</I>] [<B>-a</B> <I>access</I> <I>log</I> <I>file</I> <I>path</I>] [<B>-b</B> <I>client:port</I> <I>DB</I>
        <I>client</I>]  [<B>-g</B>  <I>client:port</I>  <I>NetFlow</I>  <I>Collector</I>]  [<B>-t</B>  <I>trace</I>
        <I>level</I>]  [<B>-u</B>  <I>user</I>  <I>name</I>] [<B>-l</B> <I>dump</I> <I>file</I> <I>name</I>] [<B>-U</B> <I>mapper.pl</I>
        <I>URL</I>] [<B>-F</B> <I>flow</I> <I>filter</I> <I>expression</I>] [<B>filter</B> <B>expression</B>]
@@ -140,7 +140,9 @@
         embedded into the application. If -w is set to 0 the HTTP
         port will not be enabled ('-w 0' is accepted only if <B>ntop</B>
          has been compiled with HTTPS support and  <B>ntop</B>  has  not
-        been started with '-W 0' [see below]).
+        been  started with '-W 0' [see below]).  You can also use
+        the IP:Port notation to bind ntop to  the  specified  IP-
+        Address, e.g.  <B>-w</B> <B>127.0.0.1:3000</B>
 
 
        <B>-W</B>
@@ -150,7 +152,9 @@
         port is disabled. Some examples: 1.  <B>ntop</B> <B>-w</B>  <B>80</B>  <B>-W</B>  <B>443</B>
         (both  HTTP  and HTTPS have been enabled at their default
         ports) 2.  <B>ntop</B> <B>-w</B> <B>0</B> <B>-W</B> <B>443</B> (HTTP disabled, HTTPS enabled
-        at the default port).
+        at the default port).  You can also use the IP:Port nota­
+        tion to bind ntop to the specified IP-Address,  e.g.   <B>-w</B>
+        <B>127.0.0.1:3001</B>
 
 
 
@@ -160,10 +164,10 @@
 
 
        <B>-S</B>
-        Use this flag for telling ntop to save information  about
-        host  traffic  on  shutdown.  Valid values are: 0 = don't
         store hosts, 1 = store all hosts, 2 =  store  only  local
         hosts.  This  flag allows ntop not to loose traffic stats
+        across multiple ntop sessions. Please note that  informa­
+        tion about TCP session is (obviously) lost.
 
 
        <B>-P</B>
@@ -212,10 +216,11 @@
         izes. The value specified may be either a username  or  a
         numeric  user  id.  The group id used will be the primary
         group of the user specified.
-
-
-       <B>-l</B>
         Dumps the network traffic captured by ntop in a  file  in
+        pcap format (useful for debug).
+
+
+       <B>-U</B>
         It  specifies the UTR of the mapper.pl utility (it's part
         of the ntop  distribution  [see  www/Perl/mapper.pl]  for
         displaying host location.
@@ -263,11 +268,14 @@
         handled  by  <B>ntop</B>  hence  to  select  only the traffic of
         interest. For instance, suppose to be interested only  in
         the traffic generated/received by the host jake.unipi.it.
-        <B>ntop</B> can then be started with the following filter: 'ntop
-        src  host  jake.unipi.it  or dst host jake.unipi.it'. See
         the <B>tcpdump</B> man page for further information  about  this
         topic.
 
+
+
+
+</PRE>
+<H2>WEB VIEWS</H2><PRE>
        While <B>ntop</B> is running, multiple users can access the traf­
        fic information using conventional web browsers. The  main
        HTML page, is divided is two frames. The left frame allows
@@ -303,12 +311,6 @@
        Please   send   bug  reports  to  the  ntop  mailing  list
        &lt;ntop@ntop.org&gt;.    ntop's    author    is    Luca    Deri
        &lt;deri@ntop.org&gt;.
-
-
-
-
-
-
 
 
 

@@ -29,9 +29,9 @@ ntop \- display top network users
 .RB [ -e 
 .IR "num rows" ]
 .RB [ -w 
-.IR HTTP port ]
+.IR "HTTP IP:port" ]
 .RB [ -W
-.IR HTTPS port ]
+.IR "HTTPS IP:port" ]
 .RB [ -d ]
 .RB [ -S value ]
 .RB [ -P 
@@ -150,6 +150,9 @@ needed but it's embedded into the application. If -w is set to 0 the HTTP port w
  has been compiled with HTTPS support and 
 .B ntop 
 has not been started with '-W 0' [see below]).
+You can also use the IP:Port notation to bind ntop to the specified IP-Address, e.g.
+.B -w 127.0.0.1:3000
+.
 
 .It -W 
 If 
@@ -161,6 +164,9 @@ has been compiled with HTTPS support (via OpenSSL), this flag can be used to set
 (both HTTP and HTTPS have been enabled at their default ports) 2. 
 .B ntop -w 0 -W 443 
 (HTTP disabled, HTTPS enabled at the default port).
+You can also use the IP:Port notation to bind ntop to the specified IP-Address, e.g.
+.B -w 127.0.0.1:3001
+.
 
 
 .It -d

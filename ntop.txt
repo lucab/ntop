@@ -10,9 +10,9 @@ NNAAMMEE
 SSYYNNOOPPSSIISS
        nnttoopp  [--cc]  [--EE]  [--rr  _r_e_f_r_e_s_h _t_i_m_e] [--RR _f_i_l_t_e_r _r_u_l_e_s] [--ff
        _t_r_a_f_f_i_c _d_u_m_p _f_i_l_e] [--nn] [--NN] [--MM] [--qq] [--pp] _T_C_P_/_U_D_P _p_r_o_t_o_­
-       _c_o_l_s  _t_o  _m_o_n_i_t_o_r]  [--ii _i_n_t_e_r_f_a_c_e] [--ee _n_u_m _r_o_w_s] [--ww _H_T_T_P_­
-       port_] [--WW _H_T_T_P_Sport_] [--dd] [--SSvalue]] [--PP _d_b_p_a_t_h_] [--mm  _l_o_c_a_l
-       _s_u_b_n_e_t]  [--aa  _a_c_c_e_s_s  _l_o_g  _f_i_l_e  _p_a_t_h]  [--bb _c_l_i_e_n_t_:_p_o_r_t _D_B
+       _c_o_l_s  _t_o  _m_o_n_i_t_o_r]  [--ii  _i_n_t_e_r_f_a_c_e] [--ee _n_u_m _r_o_w_s] [--ww _H_T_T_P
+       _I_P_:_p_o_r_t] [--WW _H_T_T_P_S _I_P_:_p_o_r_t] [--dd] [--SSvalue]] [--PP _d_b_p_a_t_h_] [--mm
+       _l_o_c_a_l _s_u_b_n_e_t] [--aa _a_c_c_e_s_s _l_o_g _f_i_l_e _p_a_t_h] [--bb _c_l_i_e_n_t_:_p_o_r_t _D_B
        _c_l_i_e_n_t]  [--gg  _c_l_i_e_n_t_:_p_o_r_t  _N_e_t_F_l_o_w  _C_o_l_l_e_c_t_o_r]  [--tt  _t_r_a_c_e
        _l_e_v_e_l]  [--uu  _u_s_e_r  _n_a_m_e] [--ll _d_u_m_p _f_i_l_e _n_a_m_e] [--UU _m_a_p_p_e_r_._p_l
        _U_R_L] [--FF _f_l_o_w _f_i_l_t_e_r _e_x_p_r_e_s_s_i_o_n] [ffiilltteerr eexxpprreessssiioonn]
@@ -165,7 +165,9 @@ NTOP(8)                                                   NTOP(8)
         embedded into the application. If -w is set to 0 the HTTP
         port will not be enabled ('-w 0' is accepted only if nnttoopp
          has been compiled with HTTPS support and  nnttoopp  has  not
-        been started with '-W 0' [see below]).
+        been  started with '-W 0' [see below]).  You can also use
+        the IP:Port notation to bind ntop to  the  specified  IP-
+        Address, e.g.  --ww 112277..00..00..11::33000000
 
 
        --WW
@@ -175,7 +177,9 @@ NTOP(8)                                                   NTOP(8)
         port is disabled. Some examples: 1.  nnttoopp --ww  8800  --WW  444433
         (both  HTTP  and HTTPS have been enabled at their default
         ports) 2.  nnttoopp --ww 00 --WW 444433 (HTTP disabled, HTTPS enabled
-        at the default port).
+        at the default port).  You can also use the IP:Port nota­
+        tion to bind ntop to the specified IP-Address,  e.g.   --ww
+        112277..00..00..11::33000011
 
 
 
@@ -186,10 +190,6 @@ NTOP(8)                                                   NTOP(8)
 
        --SS
         Use this flag for telling ntop to save information  about
-        host  traffic  on  shutdown.  Valid values are: 0 = don't
-        store hosts, 1 = store all hosts, 2 =  store  only  local
-        hosts.  This  flag allows ntop not to loose traffic stats
-        across  multiple  ntop   sessions.   Please   note   that
 
 
 
@@ -202,7 +202,11 @@ NTOP(8)                                                   NTOP(8)
 NTOP(8)                                                   NTOP(8)
 
 
-        information about TCP session is (obviously) lost.
+        host  traffic  on  shutdown.  Valid values are: 0 = don't
+        store hosts, 1 = store all hosts, 2 =  store  only  local
+        hosts.  This  flag allows ntop not to loose traffic stats
+        across multiple ntop sessions. Please note that  informa­
+        tion about TCP session is (obviously) lost.
 
 
        --PP
@@ -253,10 +257,6 @@ NTOP(8)                                                   NTOP(8)
         group of the user specified.
 
 
-       --ll
-        Dumps the network traffic captured by ntop in a  file  in
-        pcap format (useful for debug).
-
 
 
                             July 2001                           4
@@ -266,6 +266,11 @@ NTOP(8)                                                   NTOP(8)
 
 
 NTOP(8)                                                   NTOP(8)
+
+
+       --ll
+        Dumps the network traffic captured by ntop in a  file  in
+        pcap format (useful for debug).
 
 
        --UU
@@ -317,11 +322,6 @@ NTOP(8)                                                   NTOP(8)
         interest. For instance, suppose to be interested only  in
         the traffic generated/received by the host jake.unipi.it.
         nnttoopp can then be started with the following filter: 'ntop
-        src  host  jake.unipi.it  or dst host jake.unipi.it'. See
-        the ttccppdduummpp man page for further information  about  this
-        topic.
-
-
 
 
 
@@ -332,6 +332,12 @@ NTOP(8)                                                   NTOP(8)
 
 
 NTOP(8)                                                   NTOP(8)
+
+
+        src  host  jake.unipi.it  or dst host jake.unipi.it'. See
+        the ttccppdduummpp man page for further information  about  this
+        topic.
+
 
 
 WWEEBB VVIIEEWWSS
@@ -364,12 +370,6 @@ AAUUTTHHOORR
        Please   send   bug  reports  to  the  ntop  mailing  list
        <ntop@ntop.org>.    ntop's    author    is    Luca    Deri
        <deri@ntop.org>.
-
-
-
-
-
-
 
 
 
