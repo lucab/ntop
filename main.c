@@ -437,7 +437,7 @@ int main(int argc, char *argv[]) {
   /*
    * Initialize all global run-time parameters to reasonable values
    */
-  initNtopGlobals(effective_argc, effective_argv);
+  initNtopGlobals(effective_argc, effective_argv, argc, argv);
 
   /*
    * Parse command line options to the application via standard system calls

@@ -105,7 +105,7 @@ extern void checkUserIdentity(int userSpecified);
 /****** function declarations ***** */
 
 /* globals-core.c */
-extern void initNtopGlobals(int argc, char * argv[]);
+extern void initNtopGlobals(int argc, char * argv[], int argc_started, char * argv_started[]);
 extern void initNtop(char *devices);
 
 /* address.c */

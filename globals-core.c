@@ -137,7 +137,7 @@ static void allocateOtherHosts() {
 /*
  * Initialize all global run-time parameters to default (reasonable!!!) values
  */
-void initNtopGlobals(int argc, char * argv[]) {
+void initNtopGlobals(int argc, char * argv[], int argc_started, char *argv_started[]) {
   int i, bufLen;
   char *startedAs, *defaultPath;
 
@@ -545,15 +545,15 @@ void initNtopGlobals(int argc, char * argv[]) {
   /* ********************************** */
 
   bufLen = 0;
-  for (i=0; i<argc; i++) {
-    bufLen += (2 + strlen(argv[i]));
+  for (i=0; i<argc_started; i++) {
+    bufLen += (2 + strlen(argv_started[i]));
   }
 
   startedAs = (char*)malloc(bufLen);
   memset(startedAs, 0, (size_t) bufLen);
-  for (i=0; i<argc; i++) {
-    if (argv[i] != NULL) {
-      strncat(startedAs, argv[i], (bufLen - strlen(startedAs) - 1));
+  for (i=0; i<argc_started; i++) {
+    if (argv_started[i] != NULL) {
+      strncat(startedAs, argv_started[i], (bufLen - strlen(startedAs) - 1));
       strncat(startedAs, " ", (bufLen - strlen(startedAs) - 1));
     }
   }

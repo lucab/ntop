@@ -1722,7 +1722,7 @@ void main(int argc, char **argv)
       printf("/c                - Run ntop on a console\n");
       printf("/r                - Deinstall the service\n");
       printf("/h                - Prints this help\n\n");
-      initNtopGlobals(argc, argv); 
+      initNtopGlobals(argc, argv, argc, argv); 
       usage(stdout);
     }
 
