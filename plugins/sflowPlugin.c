@@ -1668,7 +1668,7 @@ static void handlesFlowHTTPrequest(char* url) {
       } else if(strcmp(key, "ifNetMask") == 0) {
 	int a, b, c, d, a1, b1, c1, d1;
 
-	if(sscanf(value, "%d.%d.%d.%d%%2F%d.%d.%d.%d",
+	if(sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d",
 		  &a, &b, &c, &d, &a1, &b1, &c1, &d1) == 8) {
 	  myGlobals.sflowIfAddress.s_addr = (a << 24) + (b << 16) + (c << 8) + d;
 	  myGlobals.sflowIfMask.s_addr    = (a1 << 24) + (b1 << 16) + (c1 << 8) + d1;
@@ -2147,7 +2147,7 @@ static int initsFlowFunct(void) {
   memset(probeList, 0, sizeof(probeList));
 
   if((fetchPrefsValue("sflow.ifNetMask", value, sizeof(value)) == -1)
-    || (sscanf(value, "%d.%d.%d.%d%%2F%d.%d.%d.%d", &a, &b, &c, &d, &a1, &b1, &c1, &d1) != 8)) {
+    || (sscanf(value, "%d.%d.%d.%d/%d.%d.%d.%d", &a, &b, &c, &d, &a1, &b1, &c1, &d1) != 8)) {
     storePrefsValue("sflow.ifNetMask", "192.168.0.0/255.255.255.0");
     myGlobals.sflowIfAddress.s_addr = 0xC0A80000;
     myGlobals.sflowIfMask.s_addr    = 0xFFFFFF00;
